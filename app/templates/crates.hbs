@@ -38,7 +38,7 @@
     <span class='small'>Sort by</span>
 
     <RlDropdownContainer @class="dropdown-container">
-      <RlDropdownToggle @tagName="a" @class="dropdown" data-test-current-order={{true}}>
+      <RlDropdownToggle @tagName="a" @class="dropdown" data-test-current-order>
         {{svg-jar "sort"}}
         {{ currentSortBy }}
         <span class='arrow'></span>
@@ -77,7 +77,7 @@
 </div>
 
 <nav class='pagination' aria-label="Pagination navigation">
-  <LinkTo @query={{hash page=prevPage}} class="prev" @rel="prev" @title="previous page" data-test-pagination-prev={{true}}>
+  <LinkTo @query={{hash page=prevPage}} class="prev" @rel="prev" @title="previous page" data-test-pagination-prev>
     {{svg-jar "left-pag"}}
   </LinkTo>
   <ol>
@@ -89,7 +89,7 @@
       </li>
     {{/each}}
   </ol>
-  <LinkTo @query={{hash page=nextPage}} class="next" @rel="next" @title="next page" data-test-pagination-next={{true}}>
+  <LinkTo @query={{hash page=nextPage}} class="next" @rel="next" @title="next page" data-test-pagination-next>
     {{svg-jar "right-pag"}}
   </LinkTo>
 </nav>

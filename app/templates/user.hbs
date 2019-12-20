@@ -1,9 +1,9 @@
 <div id='crates-heading' data-test-heading>
-  <UserAvatar @user={{model.user}} @size="medium" data-test-avatar={{true}} />
+  <UserAvatar @user={{model.user}} @size="medium" data-test-avatar />
   <h1 data-test-username>
     {{ model.user.login }}
   </h1>
-  <UserLink @user={{model.user}} data-test-user-link={{true}}>
+  <UserLink @user={{model.user}} data-test-user-link>
     <img alt="GitHub profile" title="GitHub profile" src="/assets/GitHub-Mark.svg">
   </UserLink>
 </div>

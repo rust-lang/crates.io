@@ -1,6 +1,6 @@
 <div class='desc'>
   <div class='info'>
-    <LinkTo @route="crate" @model={{crate.id}} data-test-crate-link={{true}}>{{ crate.name }}</LinkTo>
+    <LinkTo @route="crate" @model={{crate.id}} data-test-crate-link>{{ crate.name }}</LinkTo>
     <CrateTomlCopy @copyText={{crateTomlText}} />
     <CrateBadge @crate={{crate}} />
     {{#each crate.annotated_badges as |badge|}}

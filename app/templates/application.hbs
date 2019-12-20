@@ -30,7 +30,7 @@
   </form>
 
   <div class='nav'>
-    <LinkTo @route="crates" @query={{hash letter=null page=1}} data-test-all-crates-link={{true}}>
+    <LinkTo @route="crates" @query={{hash letter=null page=1}} data-test-all-crates-link>
       Browse All Crates
     </LinkTo>
     <span class="sep">|</span>
@@ -74,7 +74,7 @@
         </RlDropdown>
       </RlDropdownContainer>
     {{else}}
-      <LinkTo @route="login" data-test-login-link={{true}}>
+      <LinkTo @route="login" data-test-login-link>
         {{svg-jar "lock"}}
         Log in with GitHub
       </LinkTo>

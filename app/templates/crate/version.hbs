@@ -43,7 +43,7 @@
         <li><a href="{{crate.repository}}">Repository</a></li>
       {{/if}}
       <li>
-        <LinkTo @route="crate.reverse-dependencies" @query={{hash dependency=crate.crate_id}} data-test-reverse-deps-link={{true}}>
+        <LinkTo @route="crate.reverse-dependencies" @query={{hash dependency=crate.crate_id}} data-test-reverse-deps-link>
           Dependent crates
         </LinkTo>
       </li>
@@ -195,7 +195,7 @@
           </ul>
           <span class='small'>
             {{#if hasMoreVersions}}
-              <LinkTo @route="crate.versions" @model={{crate}} data-test-all-versions-link={{true}}>
+              <LinkTo @route="crate.versions" @model={{crate}} data-test-all-versions-link>
                 show all {{ crate.versions.length }} versions
               </LinkTo>
             {{/if}}

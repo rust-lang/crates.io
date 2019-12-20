@@ -1,7 +1,7 @@
 <div id='crates-heading' data-test-heading>
   <div class="wide">
     <div class='info'>
-      <UserAvatar @user={{model.team}} @size="medium" data-test-avatar={{true}} />
+      <UserAvatar @user={{model.team}} @size="medium" data-test-avatar />
       <div class='team-info'>
         <h1 data-test-org-name>
           {{ model.team.org_name }}
@@ -10,7 +10,7 @@
           {{ model.team.name }}
         </h2>
       </div>
-      <UserLink @user={{model.team}} data-test-github-link={{true}}>
+      <UserLink @user={{model.team}} data-test-github-link>
         <img alt="GitHub profile" title="GitHub profile" src="/assets/GitHub-Mark.svg">
       </UserLink>
     </div>
