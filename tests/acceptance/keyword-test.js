@@ -4,7 +4,7 @@ import { visit } from '@ember/test-helpers';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import axeConfig from '../axe-config';
 import setupMirage from '../helpers/setup-mirage';
-import { percySnapshot } from 'ember-percy';
+import percySnapshot from '@percy/ember';
 
 module('Acceptance | keywords', function(hooks) {
   setupApplicationTest(hooks);
@@ -16,7 +16,7 @@ module('Acceptance | keywords', function(hooks) {
     this.server.create('keyword', { id: 'network', keyword: 'network', crates_cnt: 38 });
 
     await visit('keywords/network');
-    percySnapshot(assert);
+    await percySnapshot(assert);
 
     await a11yAudit(axeConfig);
   });

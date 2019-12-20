@@ -6,7 +6,7 @@ import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import axeConfig from '../axe-config';
 import { title } from '../helpers/dom';
 import setupMirage from '../helpers/setup-mirage';
-import { percySnapshot } from 'ember-percy';
+import percySnapshot from '@percy/ember';
 
 module('Acceptance | crate page', function(hooks) {
   setupApplicationTest(hooks);
@@ -18,7 +18,7 @@ module('Acceptance | crate page', function(hooks) {
     this.server.create('crate', 'withVersion', { id: 'nanomsg' });
 
     await visit('/');
-    percySnapshot(assert);
+    await percySnapshot(assert);
 
     await a11yAudit(axeConfig);
   });
@@ -31,7 +31,7 @@ module('Acceptance | crate page', function(hooks) {
     this.server.create('version', { crate: 'nanomsg', num: '0.6.1' });
 
     await visit('/crates/nanomsg');
-    percySnapshot(assert);
+    await percySnapshot(assert);
 
     await a11yAudit(axeConfig);
   });
@@ -44,7 +44,7 @@ module('Acceptance | crate page', function(hooks) {
     this.server.create('version', { crate: 'nanomsg', num: '0.6.1' });
 
     await visit('/crates/nanomsg/0.6.0');
-    percySnapshot(assert);
+    await percySnapshot(assert);
 
     await a11yAudit(axeConfig);
   });
@@ -55,7 +55,7 @@ module('Acceptance | crate page', function(hooks) {
     this.server.loadFixtures();
 
     await visit('/crates/nanomsg/owners');
-    percySnapshot(assert);
+    await percySnapshot(assert);
 
     await a11yAudit(axeConfig);
   });

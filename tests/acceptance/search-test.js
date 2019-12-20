@@ -6,7 +6,7 @@ import { triggerKeyDown, triggerKeyPress } from 'ember-keyboard';
 import axeConfig from '../axe-config';
 import { title } from '../helpers/dom';
 import setupMirage from '../helpers/setup-mirage';
-import { percySnapshot } from 'ember-percy';
+import percySnapshot from '@percy/ember';
 
 module('Acceptance | search', function(hooks) {
   setupApplicationTest(hooks);
@@ -18,7 +18,7 @@ module('Acceptance | search', function(hooks) {
     this.server.loadFixtures();
 
     await visit('/');
-    percySnapshot(assert);
+    await percySnapshot(assert);
 
     await a11yAudit(axeConfig);
   });

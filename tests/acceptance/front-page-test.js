@@ -5,7 +5,7 @@ import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import axeConfig from '../axe-config';
 import { title } from '../helpers/dom';
 import setupMirage from '../helpers/setup-mirage';
-import { percySnapshot } from 'ember-percy';
+import percySnapshot from '@percy/ember';
 
 module('Acceptance | front page', function(hooks) {
   setupApplicationTest(hooks);
@@ -44,6 +44,6 @@ module('Acceptance | front page', function(hooks) {
     assert.dom('[data-test-just-updated] [data-test-crate-link="0"]').hasText('nanomsg (0.7.0-alpha)');
     assert.dom('[data-test-just-updated] [data-test-crate-link="0"]').hasAttribute('href', '/crates/nanomsg');
 
-    percySnapshot(assert);
+    await percySnapshot(assert);
   });
 });
