@@ -92,7 +92,7 @@ export default Mixin.create({
 
   clickoutHandler(event) {
     let { component } = event.data;
-    let $c = component.$();
+    let $c = $(component.element);
     let $target = $(event.target);
 
     /* There is an issue when the click triggered a dom change in the
