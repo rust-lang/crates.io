@@ -73,7 +73,6 @@
     "ember-svg-jar": "^2.2.3",
     "ember-test-selectors": "^3.0.0",
     "ember-web-app": "^3.0.1",
-    "emberx-select": "^3.1.1",
     "eslint": "^6.8.0",
     "eslint-config-prettier": "^6.7.0",
     "eslint-plugin-ember": "^7.7.2",
