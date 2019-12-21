@@ -11,6 +11,7 @@ export default Route.extend({
 
   flashMessages: service(),
 
+  // eslint-disable-next-line ember/no-observers
   refreshAfterLogin: observer('session.isLoggedIn', function() {
     this.refresh();
   }),
