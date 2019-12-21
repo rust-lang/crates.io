@@ -17,12 +17,12 @@
     </LinkTo>
   {{/each}}
 
-  <XSelect @value={{letter}} @action={{action (mut letter)}} as |xs|>
+  <select {{on "change" (action "handleSelection")}}>
     <option>Filter by the letter...</option>
     {{#each alphabet as |letter|}}
-      <xs.option @value={{letter}}>{{ letter }}</xs.option>
+      <option value={{letter}} selected={{eq letter this.letter}}>{{ letter }}</option>
     {{/each}}
-  </XSelect>
+  </select>
 </div>
 
 <div id='results'>
