@@ -10,7 +10,7 @@
 
     <div class='right'>
       {{#if session.currentUser}}
-        <button class='tan-button' {{action 'toggleFollow' this}}>
+        <button type="button" class='tan-button' {{action 'toggleFollow' this}}>
           {{#if fetchingFollowing}}
             <img src="/assets/ajax-loader.gif">
           {{else}}

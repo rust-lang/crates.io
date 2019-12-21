@@ -39,16 +39,22 @@
 
   <div class='actions'>
     {{#if api_token.isNew}}
-      <button class='small yellow-button'
-          disabled={{disableCreate}}
-          title={{if emptyName "You must specify a name" ""}}
-          {{action "saveToken"}}>
+      <button
+        type="button"
+        class='small yellow-button'
+        disabled={{disableCreate}}
+        title={{if emptyName "You must specify a name" ""}}
+        {{action "saveToken"}}
+      >
         Create
       </button>
     {{else}}
-      <button class='small tan-button'
-          disabled={{api_token.isSaving}}
-          {{action "revokeToken"}}>
+      <button
+        type="button"
+        class='small tan-button'
+        disabled={{api_token.isSaving}}
+        {{action "revokeToken"}}
+      >
         Revoke
       </button>
     {{/if}}

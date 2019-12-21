@@ -30,8 +30,8 @@
         <span class='small'>{{moment-from-now invite.created_at}}</span>
       </div>
       <div class='actions'>
-        <button class='small yellow-button' {{action 'acceptInvitation' invite}}>Accept</button>
-        <button class='small yellow-button' {{action 'declineInvitation' invite}}>Decline</button>
+        <button type="button" class='small yellow-button' {{action 'acceptInvitation' invite}}>Accept</button>
+        <button type="button" class='small yellow-button' {{action 'declineInvitation' invite}}>Decline</button>
       </div>
       {{#if isError}}
         <div class='label'>
