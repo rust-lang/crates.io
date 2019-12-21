@@ -13,6 +13,5 @@ module.exports = {
     'no-implicit-this': false,
     'no-unnecessary-concat': false,
     quotes: false,
-    'require-button-type': false,
   },
 };
