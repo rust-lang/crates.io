@@ -66,6 +66,7 @@ jobs:
       TEST_DATABASE_URL: postgres://postgres:@localhost/cargo_registry_test
       CARGO_INCREMENTAL: 0
       RUSTFLAGS: "-C debuginfo=0 -D warnings"
+      MALLOC_CONF: "background_thread:true,abort_conf:true"
 
     steps:
       - uses: actions/checkout@v2-beta
