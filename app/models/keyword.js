@@ -1,9 +1,9 @@
-import DS from 'ember-data';
+import Model, { attr, hasMany } from '@ember-data/model';
 
-export default DS.Model.extend({
-  keyword: DS.attr('string'),
-  created_at: DS.attr('date'),
-  crates_cnt: DS.attr('number'),
+export default Model.extend({
+  keyword: attr('string'),
+  created_at: attr('date'),
+  crates_cnt: attr('number'),
 
-  crates: DS.hasMany('crate', { async: true }),
+  crates: hasMany('crate', { async: true }),
 });
