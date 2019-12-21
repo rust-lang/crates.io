@@ -1,15 +1,14 @@
 <div class={{if api_token.isNew "row create-token" "row"}}>
   <div class='name'>
     {{#if api_token.isNew}}
-      {{input
-          type="text"
-          placeholder="New token name"
-          disabled=api_token.isSaving
-          value=api_token.name
-          autofocus="autofocus"
-          enter="saveToken"
-          data-test-focused-input=true
-      }}
+      <Input
+        @type="text" placeholder="New token name"
+        @disabled={{api_token.isSaving}}
+        @value={{api_token.name}}
+        @autofocus="autofocus"
+        @enter="saveToken"
+        data-test-focused-input
+      />
     {{else}}
       {{ api_token.name }}
     {{/if}}

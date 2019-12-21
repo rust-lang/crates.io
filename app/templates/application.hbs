@@ -1,19 +1,19 @@
-{{head-layout}}
+<HeadLayout />
 
 {{title "crates.io: Rust Package Registry" separator=' - ' prepend=true}}
-{{google-jsapi}}
+<GoogleJsapi />
 
 <nav id="header">
-  {{#link-to "index" tabindex="-1"}}
+  <LinkTo @route="index" @tabindex="-1">
     <img src="/assets/Cargo-Logo-Small.png" id="logo"
          height="100" width="100" alt="Cargo Logo">
-  {{/link-to}}
-  {{#link-to "index"}}
+  </LinkTo>
+  <LinkTo @route="index">
     <h1>
       crates.io
       <span class="subtitle">Rust Package Registry</span>
     </h1>
-  {{/link-to}}
+  </LinkTo>
 
   <form class='search' action='/search' {{ action "search" on="submit" }} data-test-search-form>
     <input type="text" class="search" name="q" id="cargo-desktop-search"
@@ -30,17 +30,17 @@
   </form>
 
   <div class='nav'>
-    {{#link-to "crates" (query-params letter=null page=1) data-test-all-crates-link}}
+    <LinkTo @route="crates" @query={{hash letter=null page=1}} data-test-all-crates-link>
       Browse All Crates
-    {{/link-to}}
+    </LinkTo>
     <span class="sep">|</span>
-    {{#rl-dropdown-container class="dropdown-container"}}
-      {{#rl-dropdown-toggle class="dropdown"}}
+    <RlDropdownContainer class="dropdown-container">
+      <RlDropdownToggle class="dropdown">
         Docs
         <span class='arrow'></span>
-      {{/rl-dropdown-toggle}}
+      </RlDropdownToggle>
 
-      {{#rl-dropdown tagName="ul" id="doc-links" class="dropdown"}}
+      <RlDropdown @tagName="ul" @id="doc-links" class="dropdown">
         <li><a href='https://doc.rust-lang.org/cargo/getting-started/'>Getting Started</a></li>
         <li><a href='https://doc.rust-lang.org/cargo/guide/'>Guide</a></li>
         <li><a href='https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html'>Specifying Dependencies</a></li>
@@ -53,52 +53,52 @@
         <li><a href='https://doc.rust-lang.org/cargo/reference/environment-variables.html'>Environment Variables</a></li>
         <li><a href='https://doc.rust-lang.org/cargo/reference/source-replacement.html'>Source Replacement</a></li>
         <li><a href='https://doc.rust-lang.org/cargo/reference/external-tools.html'>External Tools</a></li>
-        <li>{{#link-to 'policies'}}Policies{{/link-to}}</li>
-        <li>{{#link-to 'category-slugs'}}List of category slugs{{/link-to}}</li>
-      {{/rl-dropdown}}
-    {{/rl-dropdown-container}}
+        <li><LinkTo @route="policies">Policies</LinkTo></li>
+        <li><LinkTo @route="category-slugs">List of category slugs</LinkTo></li>
+      </RlDropdown>
+    </RlDropdownContainer>
     <span class="sep">|</span>
     {{#if session.currentUser}}
-      {{#rl-dropdown-container class="dropdown-container"}}
-        {{#rl-dropdown-toggle class="dropdown"}}
-          {{user-avatar user=session.currentUser size='small'}}
+      <RlDropdownContainer class="dropdown-container">
+        <RlDropdownToggle class="dropdown">
+          <UserAvatar @user={{session.currentUser}} @size="small" />
           {{ session.currentUser.name }}
           <span class='arrow'></span>
-        {{/rl-dropdown-toggle}}
+        </RlDropdownToggle>
 
-        {{#rl-dropdown tagName="ul" class="dropdown current-user-links"}}
-          <li>{{#link-to 'dashboard'}}Dashboard{{/link-to}}</li>
-          <li>{{#link-to 'me'}}Account Settings{{/link-to}}</li>
-          <li>{{#link-to 'me.pending-invites'}}Owner Invites{{/link-to}}</li>
-          <li class='last'>{{#link-to 'logout'}}Sign Out{{/link-to}}</li>
-        {{/rl-dropdown}}
-      {{/rl-dropdown-container}}
+        <RlDropdown @tagName="ul" class="dropdown current-user-links">
+          <li><LinkTo @route="dashboard">Dashboard</LinkTo></li>
+          <li><LinkTo @route="me">Account Settings</LinkTo></li>
+          <li><LinkTo @route="me.pending-invites">Owner Invites</LinkTo></li>
+          <li class='last'><LinkTo @route="logout">Sign Out</LinkTo></li>
+        </RlDropdown>
+      </RlDropdownContainer>
     {{else}}
-      {{#link-to "login" data-test-login-link}}
+      <LinkTo @route="login" data-test-login-link>
         {{svg-jar "lock"}}
         Log in with GitHub
-      {{/link-to}}
+      </LinkTo>
     {{/if}}
   </div>
 
   <div class='menu'>
-    {{#rl-dropdown-container class='dropdown-container'}}
-      {{#rl-dropdown-toggle class='dropdown'}}
+    <RlDropdownContainer class="dropdown-container">
+      <RlDropdownToggle class="dropdown">
         Menu
         <span class='arrow'></span>
-      {{/rl-dropdown-toggle}}
-      {{#rl-dropdown tagName='ul' class='dropdown current-user-links'}}
-        <li>{{#link-to "crates"}}Browse All Crates{{/link-to}}</li>
+      </RlDropdownToggle>
+      <RlDropdown @tagName="ul" class="dropdown current-user-links">
+        <li><LinkTo @route="crates">Browse All Crates</LinkTo></li>
         {{#if session.currentUser}}
-          <li>{{#link-to 'dashboard'}}Dashboard{{/link-to}}</li>
-          <li>{{#link-to 'me'}}Account Settings{{/link-to}}</li>
-          <li>{{#link-to 'me.pending-invites'}}Owner Invites{{/link-to}}</li>
-          <li class='last'>{{#link-to 'logout'}}Sign Out{{/link-to}}</li>
+          <li><LinkTo @route="dashboard">Dashboard</LinkTo></li>
+          <li><LinkTo @route="me">Account Settings</LinkTo></li>
+          <li><LinkTo @route="me.pending-invites">Owner Invites</LinkTo></li>
+          <li class='last'><LinkTo @route="logout">Sign Out</LinkTo></li>
         {{else}}
-          <li>{{#link-to "login"}}Log in with GitHub{{/link-to}}</li>
+          <li><LinkTo @route="login">Log in with GitHub</LinkTo></li>
         {{/if}}
-      {{/rl-dropdown}}
-    {{/rl-dropdown-container}}
+      </RlDropdown>
+    </RlDropdownContainer>
   </div>
 
   <div class='links'>
@@ -116,7 +116,7 @@
 </form>
 
 <main id="main" class='inner-content'>
-  {{flash-message}}
+  <FlashMessage />
 
   {{outlet}}
 </main>
@@ -134,7 +134,7 @@
   <span class="sep">|</span>
   <a href='https://www.rust-lang.org/policies/privacy'>Privacy notice</a>
   <span class="sep">|</span>
-  {{#link-to 'policies'}}Policies{{/link-to}}
+  <LinkTo @route="policies">Policies</LinkTo>
 </footer>
 
 <a href='https://github.com/rust-lang/crates.io' class='fork-me'>

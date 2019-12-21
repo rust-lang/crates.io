@@ -38,26 +38,26 @@
 <div id='home-crates' class='crate-lists'>
   <section id='new-crates' data-test-new-crates aria-busy="{{dataTask.isRunning}}">
     <h2>New Crates</h2>
-    {{crate-list crates=model.new_crates}}
+    <CrateList @crates={{model.new_crates}} />
   </section>
   <section id='most-downloaded' data-test-most-downloaded aria-busy="{{dataTask.isRunning}}">
     <h2>Most Downloaded</h2>
-    {{crate-list crates=model.most_downloaded}}
+    <CrateList @crates={{model.most_downloaded}} />
   </section>
   <section id='just-updated' data-test-just-updated aria-busy="{{dataTask.isRunning}}">
     <h2>Just Updated</h2>
-    {{crate-list crates=model.just_updated}}
+    <CrateList @crates={{model.just_updated}} />
   </section>
   <section id='most-recently-downloaded' data-test-most-recently-downloaded aria-busy="{{dataTask.isRunning}}">
     <h2>Most Recent Downloads</h2>
-    {{crate-list crates=model.most_recently_downloaded}}
+    <CrateList @crates={{model.most_recently_downloaded}} />
   </section>
   <section id='keywords' data-test-keywords aria-busy="{{dataTask.isRunning}}">
-    <h2>Popular Keywords {{#link-to 'keywords'}}(see all){{/link-to}}</h2>
-    {{keyword-list keywords=model.popular_keywords}}
+    <h2>Popular Keywords <LinkTo @route="keywords">(see all)</LinkTo></h2>
+    <KeywordList @keywords={{model.popular_keywords}} />
   </section>
   <section id='categories' data-test-categories aria-busy="{{dataTask.isRunning}}">
-    <h2>Popular Categories {{#link-to 'categories'}}(see all){{/link-to}}</h2>
-    {{category-list categories=model.popular_categories}}
+    <h2>Popular Categories <LinkTo @route="categories">(see all)</LinkTo></h2>
+    <CategoryList @categories={{model.popular_categories}} />
   </section>
 </div>

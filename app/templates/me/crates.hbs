@@ -18,53 +18,53 @@
 
   <div class='sort'>
     <span class='small'>Sort by</span>
-    {{#rl-dropdown-container class="dropdown-container"}}
-      {{#rl-dropdown-toggle tagName="a" class="dropdown"}}
+    <RlDropdownContainer class="dropdown-container">
+      <RlDropdownToggle @tagName="a" class="dropdown">
         {{svg-jar "sort"}}
         {{ currentSortBy }}
         <span class='arrow'></span>
-      {{/rl-dropdown-toggle}}
+      </RlDropdownToggle>
 
-      {{#rl-dropdown tagName="ul" class="dropdown"}}
+      <RlDropdown @tagName="ul" class="dropdown">
         <li>
-          {{#link-to (query-params sort="alpha")}}
+          <LinkTo @query={{hash sort="alpha"}}>
             Alphabetical
-          {{/link-to}}
+          </LinkTo>
         </li>
         <li>
-          {{#link-to (query-params sort="downloads")}}
+          <LinkTo @query={{hash sort="downloads"}}>
             All-Time Downloads
-          {{/link-to}}
+          </LinkTo>
         </li>
         <li>
-          {{#link-to (query-params sort="recent-downloads")}}
+          <LinkTo @query={{hash sort="recent-downloads"}}>
             Recent Downloads
-          {{/link-to}}
+          </LinkTo>
         </li>
         <li>
-          {{#link-to (query-params sort="recent-updates")}}
+          <LinkTo @query={{hash sort="recent-updates"}}>
             Recent Updates
-          {{/link-to}}
+          </LinkTo>
         </li>
-      {{/rl-dropdown}}
-    {{/rl-dropdown-container}}
+      </RlDropdown>
+    </RlDropdownContainer>
   </div>
 </div>
 
 <div id='crates' class='white-rows'>
   {{#each model as |crate|}}
-    {{crate-row crate=crate}}
+    <CrateRow @crate={{crate}} />
   {{/each}}
 </div>
 
 <div class='pagination'>
-  {{#link-to (query-params page=prevPage) class="prev" rel="prev" title="previous page"}}
+  <LinkTo @query={{hash page=prevPage}} class="prev" @rel="prev" @title="previous page">
     {{svg-jar "left-pag"}}
-  {{/link-to}}
+  </LinkTo>
   {{#each pages as |page|}}
-    {{#link-to (query-params page=page)}}{{ page }}{{/link-to}}
+    <LinkTo @query={{hash page=page}}>{{ page }}</LinkTo>
   {{/each}}
-  {{#link-to (query-params page=nextPage) class="next" rel="next" title="next page"}}
+  <LinkTo @query={{hash page=nextPage}} class="next" @rel="next" @title="next page">
     {{svg-jar "right-pag"}}
-  {{/link-to}}
+  </LinkTo>
 </div>

@@ -13,7 +13,7 @@
       <dt>Email</dt>
     </div>
     <form class='email-form' {{action 'saveEmail' on='submit'}}>
-      {{input type=type value=value placeholder='Email' class='form-control space-right'}}
+      <Input @type={{type}} @value={{value}} placeholder="Email" class="form-control space-right" />
       {{#if notValidEmail }}
         <div class='error'>
           <p class='small-text error'>Whoops, that email format is invalid</p>

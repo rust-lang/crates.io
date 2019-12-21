@@ -14,7 +14,7 @@
       <label class="label" for='new-owner-username'>
         Username
       </label>
-      {{input type='text' id='new-owner-username' value=username placeholder='Username' class='form-control space-right' name='username'}}
+      <Input @type="text" @id="new-owner-username" @value={{username}} placeholder="Username" class="form-control space-right" @name="username" />
 
       {{#if error}}
         <div class='error'>
@@ -47,14 +47,14 @@
   {{#each crate.owner_user as |user|}}
     <div class='crate row'>
       <div>
-        {{#link-to user.kind user.login}}
-          {{user-avatar user=user size='medium-small'}}
-        {{/link-to}}
+        <LinkTo @route={{user.kind}} @model={{user.login}}>
+          <UserAvatar @user={{user}} @size="medium-small" />
+        </LinkTo>
       </div>
       <div>
-        {{#link-to user.kind user.login}}
+        <LinkTo @route={{user.kind}} @model={{user.login}}>
           {{ user.name }}
-        {{/link-to}}
+        </LinkTo>
       </div>
       <div class='stats'>
         {{#if user.email}}
