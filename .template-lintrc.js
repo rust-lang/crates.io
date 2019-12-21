@@ -3,12 +3,16 @@
 /* eslint-env node */
 
 module.exports = {
-  extends: 'recommended',
+  extends: 'octane',
 
   rules: {
-    'img-alt-attributes': false,
+    'require-valid-alt-text': false,
+    'no-action': false,
+    'no-curly-component-invocation': false,
     'no-html-comments': false,
+    'no-implicit-this': false,
     'no-unnecessary-concat': false,
     quotes: false,
+    'require-button-type': false,
   },
 };
