@@ -83,7 +83,7 @@
     "nyc": "^14.1.1",
     "prettier": "^1.19.1",
     "qunit-dom": "^0.9.2",
-    "sass": "^1.23.0-module.beta.1",
+    "sass": "^1.24.0",
     "semver": "^6.3.0",
     "timekeeper": "^2.2.0"
   },
