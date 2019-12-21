@@ -12,6 +12,7 @@ export default Component.extend({
     return this.get('badge.attributes.status') === 'none' || !this.get('badge.attributes.status');
   }),
   status: alias('badge.attributes.status'),
+  // eslint-disable-next-line ember/require-return-from-computed
   color: computed('badge', function() {
     switch (this.get('badge.attributes.status')) {
       case 'actively-developed':

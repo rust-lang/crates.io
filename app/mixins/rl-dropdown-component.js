@@ -4,6 +4,7 @@ import { on } from '@ember/object/evented';
 import { bind, later } from '@ember/runloop';
 import $ from 'jquery';
 
+// eslint-disable-next-line ember/no-new-mixins
 export default Mixin.create({
   init() {
     this._super(...arguments);
@@ -49,6 +50,7 @@ export default Mixin.create({
 
   manageClosingEvents: on(
     'didInsertElement',
+    // eslint-disable-next-line ember/no-observers
     observer('dropdownExpanded', function() {
       let namespace = this.closingEventNamespace;
       let clickEventName = `click.${namespace}`;

@@ -4,6 +4,7 @@ import { computed } from '@ember/object';
 
 const VIEWABLE_PAGES = 9;
 
+// eslint-disable-next-line ember/no-new-mixins
 export default Mixin.create({
   // Gives page numbers to the surrounding 9 pages.
   pages: computed('currentPage', 'availablePages', function() {
