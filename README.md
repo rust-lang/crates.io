@@ -1,6 +1,6 @@
 # crates.io
 
-[![Build Status](https://travis-ci.com/rust-lang/crates.io.svg?branch=master)](https://travis-ci.com/rust-lang/crates.io)
+[![Build Status](https://github.com/rust-lang/crates.io/workflows/CI/badge.svg)](https://github.com/rust-lang/crates.io/actions?query=workflow%3ACI)
 [![What's Deployed](https://img.shields.io/badge/whatsdeployed-prod-green.svg)](https://whatsdeployed.io/s-9IG)
 
 Source code for the default [Cargo](http://doc.crates.io) registry. Viewable
