@@ -1,32 +1,33 @@
-<div class={{if api_token.isNew "row create-token" "row"}}>
+<div class={{if this.api_token.isNew "row create-token" "row"}}>
   <div class='name'>
-    {{#if api_token.isNew}}
+    {{#if this.api_token.isNew}}
       <Input
-        @type="text" placeholder="New token name"
-        @disabled={{api_token.isSaving}}
-        @value={{api_token.name}}
+        @type="text"
+        placeholder="New token name"
+        @disabled={{this.api_token.isSaving}}
+        @value={{this.api_token.name}}
         @autofocus="autofocus"
         @enter="saveToken"
         data-test-focused-input
       />
     {{else}}
-      {{ api_token.name }}
+      {{ this.api_token.name }}
     {{/if}}
   </div>
 
   <div class='spacer'></div>
 
-  {{#unless api_token.isNew}}
+  {{#unless this.api_token.isNew}}
     <div class='dates'>
       <div class='created-at'>
-        <span class='small' title={{api_token.created_at}}>
-          Created {{moment-from-now api_token.created_at}}
+        <span class='small' title={{this.api_token.created_at}}>
+          Created {{moment-from-now this.api_token.created_at}}
         </span>
       </div>
-      {{#if api_token.last_used_at}}
+      {{#if this.api_token.last_used_at}}
         <div class='last_used_at'>
-          <span class='small' title={{api_token.last_used_at}}>
-            Last used {{moment-from-now api_token.last_used_at}}
+          <span class='small' title={{this.api_token.last_used_at}}>
+            Last used {{moment-from-now this.api_token.last_used_at}}
           </span>
         </div>
       {{else}}
@@ -38,12 +39,12 @@
   {{/unless}}
 
   <div class='actions'>
-    {{#if api_token.isNew}}
+    {{#if this.api_token.isNew}}
       <button
         type="button"
         class='small yellow-button'
-        disabled={{disableCreate}}
-        title={{if emptyName "You must specify a name" ""}}
+        disabled={{this.disableCreate}}
+        title={{if this.emptyName "You must specify a name" ""}}
         {{action "saveToken"}}
       >
         Create
@@ -52,34 +53,34 @@
       <button
         type="button"
         class='small tan-button'
-        disabled={{api_token.isSaving}}
+        disabled={{this.api_token.isSaving}}
         {{action "revokeToken"}}
       >
         Revoke
       </button>
     {{/if}}
-    {{#if api_token.isSaving}}
+    {{#if this.api_token.isSaving}}
       <img class='overlay' src="/assets/ajax-loader.gif">
     {{/if}}
   </div>
 </div>
 
-{{#if serverError}}
+{{#if this.serverError}}
   <div class='row error'>
     <div>
-      {{ serverError }}
+      {{ this.serverError }}
     </div>
   </div>
 {{/if}}
 
-{{#if api_token.token}}
+{{#if this.api_token.token}}
   <div class='row new-token'>
     <div>
       Please record this token somewhere, you cannot retrieve
       its value again. For use on the command line you can save it to <code>~/.cargo/credentials</code>
       with:
 
-      <pre>cargo login {{ api_token.token }}</pre>
+      <pre>cargo login {{ this.api_token.token }}</pre>
     </div>
   </div>
 {{/if}}

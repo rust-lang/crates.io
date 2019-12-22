@@ -1,28 +1,28 @@
-{{title (concat "Search Results for '" q "'")}}
+{{title (concat "Search Results for '" this.q "'")}}
 
 <div id='crates-heading' class='crate-search' data-test-heading>
   <div class='info'>
     {{svg-jar "magnifier" width=32 height=32}}
     <h1>Search Results</h1>
   </div>
-  {{#if q}}
-    <h2>for '{{ q }}'</h2>
+  {{#if this.q}}
+    <h2>for '{{ this.q }}'</h2>
   {{/if}}
 
-  {{#if dataTask.isRunning}}<img src="/assets/ajax-loader.gif" class="loading-spinner">{{/if}}
+  {{#if this.dataTask.isRunning}}<img src="/assets/ajax-loader.gif" class="loading-spinner">{{/if}}
 </div>
 
-{{#if firstResultPending}}
+{{#if this.firstResultPending}}
   <div id="no-results">
     <h2>Loading search results...</h2>
   </div>
-{{else if hasItems}}
+{{else if this.hasItems}}
   <div id='results'>
     <div class='nav' data-test-search-nav>
       <span class='amt'>
         Displaying
-        <span class='cur'>{{ currentPageStart }}-{{ currentPageEnd }}</span>
-          of <span class='total'>{{ totalItems }}</span> total results
+        <span class='cur'>{{ this.currentPageStart }}-{{ this.currentPageEnd }}</span>
+          of <span class='total'>{{ this.totalItems }}</span> total results
       </span>
     </div>
 
@@ -32,7 +32,7 @@
       <RlDropdownContainer class="dropdown-container">
         <RlDropdownToggle @tagName="a" class="dropdown" data-test-current-order>
           {{svg-jar "sort"}}
-          {{ currentSortBy }}
+          {{ this.currentSortBy }}
           <span class='arrow'></span>
         </RlDropdownToggle>
 
@@ -63,7 +63,7 @@
   </div>
 
   <div id='crates' class='white-rows'>
-    {{#each model as |crate index|}}
+    {{#each this.model as |crate index|}}
       {{#if crate.exact_match}}
         <div class='exact-match'>
           <LinkTo @route="crate" @model={{crate}}>
@@ -80,13 +80,13 @@
   </div>
 
   <div class='pagination'>
-    <LinkTo @query={{hash page=prevPage}} class="prev">
+    <LinkTo @query={{hash page=this.prevPage}} class="prev">
       {{svg-jar "left-pag"}}
     </LinkTo>
-    {{#each pages as |page|}}
+    {{#each this.pages as |page|}}
       <LinkTo @query={{hash page=page}}>{{ page }}</LinkTo>
     {{/each}}
-    <LinkTo @query={{hash page=nextPage}} class="next">
+    <LinkTo @query={{hash page=this.nextPage}} class="next">
       {{svg-jar "right-pag"}}
     </LinkTo>
   </div>

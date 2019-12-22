@@ -3,7 +3,7 @@
 <div id='crates-heading'>
   {{svg-jar "gear"}}
   <h1>Manage Crate Owners</h1>
-  <h2>{{ crate.name }}</h2>
+  <h2>{{ this.crate.name }}</h2>
 </div>
 
 <div id="me-email">
@@ -14,17 +14,17 @@
       <label class="label" for='new-owner-username'>
         Username
       </label>
-      <Input @type="text" @id="new-owner-username" @value={{username}} placeholder="Username" class="form-control space-right" @name="username" />
+      <Input @type="text" @id="new-owner-username" @value={{this.username}} placeholder="Username" class="form-control space-right" @name="username" />
 
-      {{#if error}}
+      {{#if this.error}}
         <div class='error'>
-          <p class='small-text error'>{{error}}</p>
+          <p class='small-text error'>{{this.error}}</p>
         </div>
       {{/if}}
 
-      {{#if invited}}
+      {{#if this.invited}}
         <div class='invited'>
-          <p>{{invited}}</p>
+          <p>{{this.invited}}</p>
         </div>
       {{/if}}
 
@@ -37,14 +37,14 @@
 
 <h2>Owners</h2>
 
-{{#if removed}}
+{{#if this.removed}}
   <div class='removed'>
-    <p>{{removed}}</p>
+    <p>{{this.removed}}</p>
   </div>
 {{/if}}
 
 <div class='owners white-rows'>
-  {{#each crate.owner_user as |user|}}
+  {{#each this.crate.owner_user as |user|}}
     <div class='crate row'>
       <div>
         <LinkTo @route={{user.kind}} @model={{user.login}}>

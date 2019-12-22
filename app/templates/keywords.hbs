@@ -9,8 +9,8 @@
   <div class='nav' data-test-keywords-nav>
     <span class='amt small'>
       Displaying
-      <span class='cur'>{{ currentPageStart }}-{{ currentPageEnd }}</span>
-      of <span class='total'>{{ totalItems }}</span> total results
+      <span class='cur'>{{ this.currentPageStart }}-{{ this.currentPageEnd }}</span>
+      of <span class='total'>{{ this.totalItems }}</span> total results
     </span>
   </div>
 
@@ -19,7 +19,7 @@
     <RlDropdownContainer class="dropdown-container">
       <RlDropdownToggle @tagName="a" class="dropdown" data-test-current-order>
         {{svg-jar "sort"}}
-        {{ currentSortBy }}
+        {{ this.currentSortBy }}
         <span class='arrow'></span>
       </RlDropdownToggle>
 
@@ -40,7 +40,7 @@
 </div>
 
 <div class='white-rows'>
-  {{#each model as |keyword|}}
+  {{#each this.model as |keyword|}}
     <div class='row'>
       <div class='info'>
         <LinkTo @route="keyword" @model={{keyword}}>{{keyword.id}}</LinkTo>
@@ -53,13 +53,13 @@
 </div>
 
 <div class='pagination'>
-  <LinkTo @query={{hash page=prevPage}} class="prev" @rel="prev" @title="previous page">
+  <LinkTo @query={{hash page=this.prevPage}} class="prev" @rel="prev" @title="previous page">
     {{svg-jar "left-pag"}}
   </LinkTo>
-  {{#each pages as |page|}}
+  {{#each this.pages as |page|}}
     <LinkTo @query={{hash page=page}}>{{ page }}</LinkTo>
   {{/each}}
-  <LinkTo @query={{hash page=nextPage}} class="next" @rel="next" @title="next page">
+  <LinkTo @query={{hash page=this.nextPage}} class="next" @rel="next" @title="next page">
     {{svg-jar "right-pag"}}
   </LinkTo>
 </div>

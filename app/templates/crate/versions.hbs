@@ -1,17 +1,17 @@
 <div class='all-versions-back'>
-  <LinkTo @route="crate" @model={{model}}>&#11013; Back to Main Page</LinkTo>
+  <LinkTo @route="crate" @model={{this.model}}>&#11013; Back to Main Page</LinkTo>
 </div>
 
 <div class='info'>
   <span class='small'>
-    All <span class='num'>{{ model.versions.length }}</span>
-    versions of <span class='num'>{{ model.name }}</span> since
-    {{moment-format model.created_at 'LL'}}
+    All <span class='num'>{{ this.model.versions.length }}</span>
+    versions of <span class='num'>{{ this.model.name }}</span> since
+    {{moment-format this.model.created_at 'LL'}}
   </span>
 </div>
 
 <div id='crate-all-versions' class='white-rows'>
-  {{#each model.versions as |version|}}
+  {{#each this.model.versions as |version|}}
     <div class='row'>
       <div>
         <LinkTo @route="crate.version" @model={{version.num}}>{{ version.num }}</LinkTo>
