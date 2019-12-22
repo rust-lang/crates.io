@@ -90,6 +90,8 @@ fn set_up() -> (BadgeTestCrate, BadgeRef) {
     badge_attributes_github_actions
         .insert(String::from("repository"), String::from("rust-lang/rust"));
     badge_attributes_github_actions.insert(String::from("workflow"), String::from("build"));
+    badge_attributes_github_actions.insert(String::from("branch"), String::from("beta"));
+    badge_attributes_github_actions.insert(String::from("event"), String::from("push"));
 
     let gitlab = Badge::GitLab {
         branch: Some(String::from("beta")),
