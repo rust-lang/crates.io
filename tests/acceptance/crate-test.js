@@ -61,13 +61,17 @@ module('Acceptance | crate page', function(hooks) {
   });
 
   test('visiting a crate page from the front page', async function(assert) {
-    this.server.create('crate', 'withVersion', { id: 'nanomsg' });
+    this.server.create('crate', { id: 'nanomsg', newest_version: '0.6.1' });
+    this.server.create('version', { crate: 'nanomsg', num: '0.6.1' });
 
     await visit('/');
     await click('[data-test-just-updated] [data-test-crate-link="0"]');
 
-    assert.equal(currentURL(), '/crates/nanomsg/6.8.9');
+    assert.equal(currentURL(), '/crates/nanomsg/0.6.1');
     assert.equal(title(), 'nanomsg - crates.io: Rust Package Registry');
+
+    assert.dom('[data-test-heading] [data-test-crate-name]').hasText('nanomsg');
+    assert.dom('[data-test-heading] [data-test-crate-version]').hasText('0.6.1');
   });
 
   test('visiting /crates/nanomsg', async function(assert) {
