@@ -41,14 +41,6 @@ jobs:
         env:
           GITHUB_CONTEXT: ${{ toJson(github) }}
         run: echo "$GITHUB_CONTEXT"
-      - name: Dump job context
-        env:
-          JOB_CONTEXT: ${{ toJson(job) }}
-        run: echo "$JOB_CONTEXT"
-      - name: Dump steps context
-        env:
-          STEPS_CONTEXT: ${{ toJson(steps) }}
-        run: echo "$STEPS_CONTEXT"
       - name: Dump runner context
         env:
           RUNNER_CONTEXT: ${{ toJson(runner) }}
@@ -66,15 +58,15 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ~/.rustup
-          key: ${{ runner.os }}-rustup-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-rustup-${{ matrix.rust }}-${{ hashFiles('**/Cargo.toml') }}
           restore-key: |
-              ${{ runner.os }}-rustup-${{ matrix.rust }}-
+            ${{ runner.os }}-rustup-${{ matrix.rust }}-
 
       - name: Cache cargo registry cache
         uses: actions/cache@v1
         with:
           path: ~/.cargo/registry/cache
-          key: ${{ runner.os }}-cargo-registry-cache-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-registry-cache-${{ matrix.rust }}-${{ hashFiles('**/Cargo.toml') }}
           restore-key: |
             ${{ runner.os }}-cargo-registry-cache-${{ matrix.rust }}-
             ${{ runner.os }}-cargo-registry-cache-
@@ -85,24 +77,26 @@ jobs:
           path: ~/.cargo/registry/index
           key: ${{ runner.os }}-cargo-registry-index-${{ github.ref }}-${{ github.sha }}
           restore-key: |
-            ${{ runner.os }}-cargo-registry-index-master-
+            ${{ runner.os }}-cargo-registry-index-${{ github.ref }}-
+            ${{ runner.os }}-cargo-registry-index-ref/heads/master-
 
       - name: Cache cargo git db
         uses: actions/cache@v1
         with:
           path: ~/.cargo/git/db
-          key: ${{ runner.os }}-cargo-git-db--${{ github.ref }}-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-git-db-${{ github.ref }}-${{ hashFiles('**/Cargo.toml') }}
           restore-key: |
-            ${{ runner.os }}-cargo-git-db-master
+            ${{ runner.os }}-cargo-git-db-${{ github.ref }}-
+            ${{ runner.os }}-cargo-git-db-ref/heads/master-
 
       - name: Cache cargo build
         uses: actions/cache@v1
         with:
           path: target
-          key: ${{ runner.os }}-cargo-build-target-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-build-target-${{ matrix.rust }}-${{ github.ref }}-${{ hashFiles('**/Cargo.toml') }}
           restore-key: |
-            ${{ runner.os }}-cargo-build-target-${{ matrix.rust }}-
-            ${{ runner.os }}-cargo-build-target-
+            ${{ runner.os }}-cargo-build-target-${{ matrix.rust }}-${{ github.ref }}-
+            ${{ runner.os }}-cargo-build-target-${{ matrix.rust }}-ref/heads/master-
 
       - name: Install ${{ matrix.rust }} Rust
         run: |
@@ -131,6 +125,3 @@ jobs:
 
       - name: Test
         run: cargo test
-
-      - name: Prune unnecessary cache
-        run: script/ci/prune-cache.sh
