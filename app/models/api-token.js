@@ -1,8 +1,8 @@
-import DS from 'ember-data';
+import Model, { attr } from '@ember-data/model';
 
-export default DS.Model.extend({
-  name: DS.attr('string'),
-  token: DS.attr('string'),
-  created_at: DS.attr('date'),
-  last_used_at: DS.attr('date'),
+export default Model.extend({
+  name: attr('string'),
+  token: attr('string'),
+  created_at: attr('date'),
+  last_used_at: attr('date'),
 });

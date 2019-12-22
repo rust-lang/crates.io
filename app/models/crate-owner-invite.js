@@ -1,9 +1,9 @@
-import DS from 'ember-data';
+import Model, { attr } from '@ember-data/model';
 
-export default DS.Model.extend({
-  invited_by_username: DS.attr('string'),
-  crate_name: DS.attr('string'),
-  crate_id: DS.attr('number'),
-  created_at: DS.attr('date'),
-  accepted: DS.attr('boolean', { defaultValue: false }),
+export default Model.extend({
+  invited_by_username: attr('string'),
+  crate_name: attr('string'),
+  crate_id: attr('number'),
+  created_at: attr('date'),
+  accepted: attr('boolean', { defaultValue: false }),
 });
