@@ -12,6 +12,5 @@ module.exports = {
     'no-html-comments': false,
     'no-implicit-this': false,
     'no-unnecessary-concat': false,
-    quotes: false,
   },
 };

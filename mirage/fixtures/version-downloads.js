@@ -1,4 +1,3 @@
-/* eslint-disable quotes */
 export default [
   {
     date: '2017-02-10T00:00:00Z',
