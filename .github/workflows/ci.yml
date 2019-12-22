@@ -1,0 +1,136 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    name: Backend
+    runs-on: ubuntu-18.04
+    strategy:
+      # TODO: [ci] should be true if GitHub Actions supports ""allow failures" on matrix
+      fail-fast: false
+      matrix:
+        rust:
+          - stable
+          - beta
+          - nightly
+
+    env:
+      CARGO_INCREMENTAL: 0
+      RUSTFLAGS: "-C debuginfo=0 -D warnings"
+
+    steps:
+      - uses: actions/checkout@v2-beta
+
+      - name: Cleanup pre-installed Rust toolchains
+        # The pre-installed toolchain is under root permission, and this would
+        # make tarball fail to extract. Here we remove the symlink and install
+        # our own Rust toolchain if necessary.
+        run: |
+          which rustup
+          which cargo
+          if [[ -L "$HOME/.cargo" && -L "$HOME/.rustup" ]]; then
+              rm -v "$HOME/.rustup"
+              rm -v "$HOME/.cargo"
+          fi
+          echo "::add-path::$HOME/.cargo/bin"
+
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+      - name: Dump job context
+        env:
+          JOB_CONTEXT: ${{ toJson(job) }}
+        run: echo "$JOB_CONTEXT"
+      - name: Dump steps context
+        env:
+          STEPS_CONTEXT: ${{ toJson(steps) }}
+        run: echo "$STEPS_CONTEXT"
+      - name: Dump runner context
+        env:
+          RUNNER_CONTEXT: ${{ toJson(runner) }}
+        run: echo "$RUNNER_CONTEXT"
+      - name: Dump strategy context
+        env:
+          STRATEGY_CONTEXT: ${{ toJson(strategy) }}
+        run: echo "$STRATEGY_CONTEXT"
+      - name: Dump matrix context
+        env:
+          MATRIX_CONTEXT: ${{ toJson(matrix) }}
+        run: echo "$MATRIX_CONTEXT"
+
+      - name: Cache rustup
+        uses: actions/cache@v1
+        with:
+          path: ~/.rustup
+          key: ${{ runner.os }}-rustup-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-key: |
+              ${{ runner.os }}-rustup-${{ matrix.rust }}-
+
+      - name: Cache cargo registry cache
+        uses: actions/cache@v1
+        with:
+          path: ~/.cargo/registry/cache
+          key: ${{ runner.os }}-cargo-registry-cache-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-key: |
+            ${{ runner.os }}-cargo-registry-cache-${{ matrix.rust }}-
+            ${{ runner.os }}-cargo-registry-cache-
+
+      - name: Cache cargo registry index
+        uses: actions/cache@v1
+        with:
+          path: ~/.cargo/registry/index
+          key: ${{ runner.os }}-cargo-registry-index-${{ github.ref }}-${{ github.sha }}
+          restore-key: |
+            ${{ runner.os }}-cargo-registry-index-master-
+
+      - name: Cache cargo git db
+        uses: actions/cache@v1
+        with:
+          path: ~/.cargo/git/db
+          key: ${{ runner.os }}-cargo-git-db--${{ github.ref }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-key: |
+            ${{ runner.os }}-cargo-git-db-master
+
+      - name: Cache cargo build
+        uses: actions/cache@v1
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-target-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-key: |
+            ${{ runner.os }}-cargo-build-target-${{ matrix.rust }}-
+            ${{ runner.os }}-cargo-build-target-
+
+      - name: Install ${{ matrix.rust }} Rust
+        run: |
+          if [[ ! -d "$HOME/.cargo" || ! -d "$HOME/.rustup" ]]; then
+              curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup-init.sh
+              sh rustup-init.sh -y --default-toolchain none
+          fi
+          rustup set profile minimal
+          rustup update ${{ matrix.rust }}
+          rustup default ${{ matrix.rust }}
+
+      - name: Install lint tools
+        if: matrix.rust == 'stable'
+        run: |
+          rustup component add rustfmt
+          rustup component add clippy
+
+      - name: Cargo clean on new rustc version
+        run: script/ci/cargo-clean-on-new-rustc-version.sh
+
+      - name: Lint
+        if: matrix.rust == 'stable'
+        run: |
+          cargo fmt -- --check
+          cargo clippy --all-targets --all-features --all
+
+      - name: Test
+        run: cargo test
+
+      - name: Prune unnecessary cache
+        run: script/ci/prune-cache.sh
