@@ -1,4 +1,4 @@
-#![deny(warnings, clippy::all)]
+#![deny(clippy::all)]
 
 use conduit::{Handler, Request, Response};
 use conduit_hyper::Server;
