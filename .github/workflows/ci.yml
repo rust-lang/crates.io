@@ -41,9 +41,17 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ~/.rustup
-          key: ${{ runner.os }}-rustup-${{ matrix.rust }}-${{ hashFiles('**/Cargo.toml') }}
+          key: ${{ runner.os }}-rustup2-${{ matrix.rust }}-${{ hashFiles('**/Cargo.toml') }}
           restore-key: |
-            ${{ runner.os }}-rustup-${{ matrix.rust }}-
+            ${{ runner.os }}-rustup2-${{ matrix.rust }}-
+
+      - name: Cache cargo binaries
+        uses: actions/cache@v1
+        with:
+          path: ~/.cargo/bin
+          key: ${{ runner.os }}-cargo-bin-${{ matrix.rust }}-${{ hashFiles('**/Cargo.toml') }}
+          restore-key: |
+            ${{ runner.os }}-cargo-bin-${{ matrix.rust }}-
 
       - name: Cache cargo registry cache
         uses: actions/cache@v1
