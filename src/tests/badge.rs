@@ -83,6 +83,8 @@ fn set_up() -> (BadgeTestCrate, BadgeRef) {
     let github_actions = Badge::GitHubActions {
         repository: String::from("rust-lang/rust"),
         workflow: String::from("build"),
+        branch: Some(String::from("beta")),
+        event: Some(String::from("push")),
     };
     let mut badge_attributes_github_actions = HashMap::new();
     badge_attributes_github_actions

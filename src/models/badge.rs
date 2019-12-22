@@ -43,6 +43,8 @@ pub enum Badge {
     GitHubActions {
         repository: String,
         workflow: String,
+        branch: Option<String>,
+        event: Option<String>,
     },
     #[serde(rename = "gitlab")]
     GitLab {
