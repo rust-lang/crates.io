@@ -1,4 +1,3 @@
-/* eslint-disable quotes */
 export default [
   {
     crates_cnt: 38,
