@@ -1,6 +1,6 @@
-<LinkTo @route="crate" @model={{dep.crate_id}}>
-  {{ dep.crate_id }} {{ format-req dep.req }}
+<LinkTo @route="crate" @model={{this.dep.crate_id}}>
+  {{ this.dep.crate_id }} {{ format-req this.dep.req }}
 </LinkTo>
-{{#if dep.optional}}
+{{#if this.dep.optional}}
   <span class='optional'>optional</span>
 {{/if}}

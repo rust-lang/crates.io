@@ -16,16 +16,21 @@
   </LinkTo>
 
   <form class='search' action='/search' {{ action "search" on="submit" }} data-test-search-form>
-    <input type="text" class="search" name="q" id="cargo-desktop-search"
-            placeholder="Click or press 'S' to search..."
-            value={{searchQuery}}
-            oninput={{action (mut searchQuery) value="target.value"}}
-            autocorrect="off"
-            autocapitalize="off"
-            autofocus="autofocus"
-            spellcheck="false"
-            required
-            data-test-search-input>
+    <input
+      type="text"
+      class="search"
+      name="q"
+      id="cargo-desktop-search"
+      placeholder="Click or press 'S' to search..."
+      value={{this.searchQuery}}
+      oninput={{action (mut this.searchQuery) value="target.value"}}
+      autocorrect="off"
+      autocapitalize="off"
+      autofocus="autofocus"
+      spellcheck="false"
+      required
+      data-test-search-input
+    >
     <label for="cargo-desktop-search">Search</label>
   </form>
 
@@ -58,11 +63,11 @@
       </RlDropdown>
     </RlDropdownContainer>
     <span class="sep">|</span>
-    {{#if session.currentUser}}
+    {{#if this.session.currentUser}}
       <RlDropdownContainer class="dropdown-container">
         <RlDropdownToggle class="dropdown">
-          <UserAvatar @user={{session.currentUser}} @size="small" />
-          {{ session.currentUser.name }}
+          <UserAvatar @user={{this.session.currentUser}} @size="small" />
+          {{ this.session.currentUser.name }}
           <span class='arrow'></span>
         </RlDropdownToggle>
 
@@ -89,7 +94,7 @@
       </RlDropdownToggle>
       <RlDropdown @tagName="ul" class="dropdown current-user-links">
         <li><LinkTo @route="crates">Browse All Crates</LinkTo></li>
-        {{#if session.currentUser}}
+        {{#if this.session.currentUser}}
           <li><LinkTo @route="dashboard">Dashboard</LinkTo></li>
           <li><LinkTo @route="me">Account Settings</LinkTo></li>
           <li><LinkTo @route="me.pending-invites">Owner Invites</LinkTo></li>
@@ -106,12 +111,17 @@
 </nav>
 
 <form id='mobile-search' class='search' action='/search' {{ action "search" on="submit" }} >
-  <input type="text" class="search" name="q" id="cargo-mobile-search"
-          placeholder="Search"
-          value={{searchQuery}}
-          oninput={{action (mut searchQuery) value="target.value"}}
-          autocorrect="off"
-          required>
+  <input
+    type="text"
+    class="search"
+    name="q"
+    id="cargo-mobile-search"
+    placeholder="Search"
+    value={{this.searchQuery}}
+    oninput={{action (mut this.searchQuery) value="target.value"}}
+    autocorrect="off"
+    required
+  >
   <label for="cargo-mobile-search">Search</label>
 </form>
 

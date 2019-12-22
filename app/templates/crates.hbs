@@ -5,13 +5,13 @@
     {{svg-jar "crate"}}
     <h1>All Crates</h1>
   </div>
-  {{#if letter}}
-    <h2>starting with '{{ letter }}'</h2>
+  {{#if this.letter}}
+    <h2>starting with '{{ this.letter }}'</h2>
   {{/if}}
 </div>
 
 <div id='selection'>
-  {{#each alphabet as |letter|}}
+  {{#each this.alphabet as |letter|}}
     <LinkTo @query={{hash letter=letter page=1}}>
       {{ letter }}
     </LinkTo>
@@ -19,7 +19,7 @@
 
   <select {{on "change" (action "handleSelection")}}>
     <option>Filter by the letter...</option>
-    {{#each alphabet as |letter|}}
+    {{#each this.alphabet as |letter|}}
       <option value={{letter}} selected={{eq letter this.letter}}>{{ letter }}</option>
     {{/each}}
   </select>
@@ -29,8 +29,8 @@
   <div class='nav' data-test-crates-nav>
     <span class='amt small'>
       Displaying
-      <span class='cur' data-test-current-rows>{{ currentPageStart }}-{{ currentPageEnd }}</span>
-      of <span class='total' data-test-total-rows>{{ totalItems }}</span> total results
+      <span class='cur' data-test-current-rows>{{ this.currentPageStart }}-{{ this.currentPageEnd }}</span>
+      of <span class='total' data-test-total-rows>{{ this.totalItems }}</span> total results
     </span>
   </div>
 
@@ -40,7 +40,7 @@
     <RlDropdownContainer class="dropdown-container">
       <RlDropdownToggle @tagName="a" class="dropdown" data-test-current-order>
         {{svg-jar "sort"}}
-        {{ currentSortBy }}
+        {{ this.currentSortBy }}
         <span class='arrow'></span>
       </RlDropdownToggle>
 
@@ -71,17 +71,17 @@
 </div>
 
 <div id='crates' class='white-rows'>
-  {{#each model as |crate index|}}
+  {{#each this.model as |crate index|}}
     <CrateRow @crate={{crate}} data-test-crate-row={{index}} />
   {{/each}}
 </div>
 
 <nav class='pagination' aria-label="Pagination navigation">
-  <LinkTo @query={{hash page=prevPage}} class="prev" @rel="prev" @title="previous page" data-test-pagination-prev>
+  <LinkTo @query={{hash page=this.prevPage}} class="prev" @rel="prev" @title="previous page" data-test-pagination-prev>
     {{svg-jar "left-pag"}}
   </LinkTo>
   <ol>
-    {{#each pages as |page|}}
+    {{#each this.pages as |page|}}
       <li>
         <LinkTo @query={{hash page=page}} @title={{concat "Go to page " page}}>
           {{ page }}
@@ -89,7 +89,7 @@
       </li>
     {{/each}}
   </ol>
-  <LinkTo @query={{hash page=nextPage}} class="next" @rel="next" @title="next page" data-test-pagination-next>
+  <LinkTo @query={{hash page=this.nextPage}} class="next" @rel="next" @title="next page" data-test-pagination-next>
     {{svg-jar "right-pag"}}
   </LinkTo>
 </nav>

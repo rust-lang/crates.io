@@ -1,5 +1,5 @@
 <ul>
-  {{#each crates as |crate|}}
+  {{#each this.crates as |crate|}}
     <li>
       <LinkTo @route="crate" @model={{crate.id}} class="name">
         {{ crate.name }} ({{ crate.max_version }})
