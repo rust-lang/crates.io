@@ -3,7 +3,7 @@ import { computed } from '@ember/object';
 import { alias } from '@ember/object/computed';
 
 export default Component.extend({
-  tagName: 'li',
+  tagName: '',
 
   name: alias('ownedCrate.name'),
   controlId: computed('ownedCrate.id', function() {

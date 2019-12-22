@@ -3,9 +3,7 @@ import { computed } from '@ember/object';
 import { alias } from '@ember/object/computed';
 
 export default Component.extend({
-  tagName: 'span',
-  classNames: ['badge'],
-
+  tagName: '',
   id: alias('badge.attributes.id'),
   repository: alias('badge.attributes.repository'),
 
