@@ -5,7 +5,9 @@
       <CrateTomlCopy @copyText={{this.crateTomlText}} />
       <CrateBadge @crate={{this.crate}} />
       {{#each this.crate.annotated_badges as |badge|}}
-        {{component badge.component_name badge=badge data-test-badge=badge.badge_type}}
+        {{#let (component badge.component_name) as |Badge|}}
+          <Badge @badge={{badge}} data-test-badge={{badge.badge_type}} />
+        {{/let}}
       {{/each}}
     </div>
     <div class='summary' data-test-description>
@@ -43,5 +45,5 @@
       {{/if}}
     </ul>
   </div>
-  
+
 </div>
