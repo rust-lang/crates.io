@@ -21,7 +21,7 @@ jobs:
       PERCY_PROJECT: crates-io/crates.io
 
     steps:
-      - uses: actions/checkout@v2-beta
+      - uses: actions/checkout@v2
 
       - uses: actions/cache@v1
         with:
@@ -68,7 +68,7 @@ jobs:
       RUSTFLAGS: "-C debuginfo=0 -D warnings"
 
     steps:
-      - uses: actions/checkout@v2-beta
+      - uses: actions/checkout@v2
 
       - name: Cleanup pre-installed Rust toolchains
         # The pre-installed toolchain is under root permission, and this would
