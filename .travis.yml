@@ -28,6 +28,7 @@ env:
     - PGPORT=5433
     - PATH=$HOME/.cargo/bin:$PATH
     - RUSTFLAGS="-C debuginfo=0 -D warnings"
+    - MALLOC_CONF=background_thread:true,abort_conf:true,abort:true,junk:true
 
 install:
   - sudo cp /etc/postgresql/10/main/pg_hba.conf /etc/postgresql/11/main/pg_hba.conf
