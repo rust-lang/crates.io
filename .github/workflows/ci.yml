@@ -62,6 +62,7 @@ jobs:
           - nightly
 
     env:
+      RUST_BACKTRACE: 1
       DATABASE_URL: postgres://postgres:@localhost/cargo_registry_test
       TEST_DATABASE_URL: postgres://postgres:@localhost/cargo_registry_test
       CARGO_INCREMENTAL: 0
