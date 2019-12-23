@@ -69,7 +69,7 @@ jobs:
           key: ${{ runner.os }}-cargo-registry-index-${{ github.ref }}-${{ github.sha }}
           restore-key: |
             ${{ runner.os }}-cargo-registry-index-${{ github.ref }}-
-            ${{ runner.os }}-cargo-registry-index-ref/heads/master-
+            ${{ runner.os }}-cargo-registry-index-refs/heads/master-
 
       - name: Cache cargo git db
         uses: actions/cache@v1
@@ -78,7 +78,7 @@ jobs:
           key: ${{ runner.os }}-cargo-git-db-${{ github.ref }}-${{ hashFiles('**/Cargo.toml') }}
           restore-key: |
             ${{ runner.os }}-cargo-git-db-${{ github.ref }}-
-            ${{ runner.os }}-cargo-git-db-ref/heads/master-
+            ${{ runner.os }}-cargo-git-db-refs/heads/master-
 
       - name: Cache cargo build
         uses: actions/cache@v1
@@ -87,7 +87,7 @@ jobs:
           key: ${{ runner.os }}-cargo-build-target-${{ matrix.rust }}-${{ github.ref }}-${{ hashFiles('**/Cargo.toml') }}
           restore-key: |
             ${{ runner.os }}-cargo-build-target-${{ matrix.rust }}-${{ github.ref }}-
-            ${{ runner.os }}-cargo-build-target-${{ matrix.rust }}-ref/heads/master-
+            ${{ runner.os }}-cargo-build-target-${{ matrix.rust }}-refs/heads/master-
 
       - name: Install ${{ matrix.rust }} Rust
         run: |
