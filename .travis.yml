@@ -16,6 +16,7 @@ before_cache: script/ci/prune-cache.sh
 
 env:
   global:
+    - RUST_BACKTRACE=1
     - JOBS=1 # See https://git.io/vdao3 for details.
     - DATABASE_URL=postgres://postgres:@localhost/cargo_registry_test
     - TEST_DATABASE_URL=postgres://postgres:@localhost/cargo_registry_test
