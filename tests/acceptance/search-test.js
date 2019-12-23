@@ -17,7 +17,7 @@ module('Acceptance | search', function(hooks) {
 
     this.server.loadFixtures();
 
-    await visit('/');
+    await visit('/search?q=rust');
     percySnapshot(assert);
 
     await a11yAudit(axeConfig);

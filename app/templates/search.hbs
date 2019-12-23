@@ -79,17 +79,17 @@
     {{/each}}
   </div>
 
-  <div class='pagination'>
-    <LinkTo @query={{hash page=this.prevPage}} class="prev">
+  <nav class='pagination' aria-label="Pagination navigation">
+    <LinkTo @query={{hash page=this.prevPage}} class="prev" rel="prev" title="previous page" data-test-pagination-prev>
       {{svg-jar "left-pag"}}
     </LinkTo>
     {{#each this.pages as |page|}}
-      <LinkTo @query={{hash page=page}}>{{ page }}</LinkTo>
+      <LinkTo @query={{hash page=page}} @title={{concat "Go to page " page}}>{{ page }}</LinkTo>
     {{/each}}
-    <LinkTo @query={{hash page=this.nextPage}} class="next">
+    <LinkTo @query={{hash page=this.nextPage}} class="next" rel="next" title="next page" data-test-pagination-next>
       {{svg-jar "right-pag"}}
     </LinkTo>
-  </div>
+  </nav>
 {{else}}
   <div id="no-results">
     <h2>0 crates found. <a href='https://doc.rust-lang.org/cargo/getting-started/'>Get started</a> and create your own.</h2>
