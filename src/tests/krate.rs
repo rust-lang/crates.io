@@ -1243,6 +1243,12 @@ fn summary_new_crates() {
 
         let krate3 = CrateBuilder::new("just_updated", user.id)
             .version(VersionBuilder::new("0.1.0"))
+            .version(VersionBuilder::new("0.1.2"))
+            .expect_build(conn);
+
+        let krate4 = CrateBuilder::new("just_updated_patch", user.id)
+            .version(VersionBuilder::new("0.1.0"))
+            .version(VersionBuilder::new("0.2.0"))
             .expect_build(conn);
 
         CrateBuilder::new("with_downloads", user.id)
@@ -1269,11 +1275,25 @@ fn summary_new_crates() {
             .set(crates::updated_at.eq(updated))
             .execute(&*conn)
             .unwrap();
+
+        let plus_two = Utc::now().naive_utc() + chrono::Duration::seconds(2);
+        let newer = VersionBuilder::new("0.1.1").expect_build(krate4.id, user.id, conn);
+
+        // Update the patch version to be newer than the other versions, including the higher one.
+        update(&newer)
+            .set(versions::created_at.eq(plus_two))
+            .execute(&*conn)
+            .unwrap();
+
+        update(&krate4)
+            .set(crates::updated_at.eq(plus_two))
+            .execute(&*conn)
+            .unwrap();
     });
 
     let json: SummaryResponse = anon.get("/api/v1/summary").good();
 
-    assert_eq!(json.num_crates, 4);
+    assert_eq!(json.num_crates, 5);
     assert_eq!(json.num_downloads, 6000);
     assert_eq!(json.most_downloaded[0].name, "most_recent_downloads");
     assert_eq!(
@@ -1282,9 +1302,17 @@ fn summary_new_crates() {
     );
     assert_eq!(json.popular_keywords[0].keyword, "popular");
     assert_eq!(json.popular_categories[0].category, "Category 1");
-    assert_eq!(json.just_updated.len(), 1);
-    assert_eq!(json.just_updated[0].name, "just_updated");
-    assert_eq!(json.new_crates.len(), 4);
+    assert_eq!(json.just_updated.len(), 2);
+
+    assert_eq!(json.just_updated[0].name, "just_updated_patch");
+    assert_eq!(json.just_updated[0].max_version, "0.2.0");
+    assert_eq!(json.just_updated[0].newest_version, "0.1.1");
+
+    assert_eq!(json.just_updated[1].name, "just_updated");
+    assert_eq!(json.just_updated[1].max_version, "0.1.2");
+    assert_eq!(json.just_updated[1].newest_version, "0.1.2");
+
+    assert_eq!(json.new_crates.len(), 5);
 }
 
 #[test]

@@ -1,10 +1,11 @@
 //! Endpoints that expose metadata about a crate
 //!
-//! These endpoints provide data that could be obtained direclty from the
+//! These endpoints provide data that could be obtained directly from the
 //! index or cached metadata which was extracted (client side) from the
 //! `Cargo.toml` file.
 
 use crate::controllers::frontend_prelude::*;
+
 use crate::models::{
     Category, Crate, CrateCategory, CrateKeyword, CrateVersions, Keyword, RecentCrateDownloads,
     User, Version, VersionOwnerAction,
@@ -31,10 +32,10 @@ pub fn summary(req: &mut dyn Request) -> AppResult<Response> {
         versions
             .grouped_by(&krates)
             .into_iter()
-            .map(|versions| Version::max(versions.into_iter().map(|v| v.num)))
+            .map(|versions| Version::top(versions.into_iter().map(|v| (v.created_at, v.num))))
             .zip(krates)
-            .map(|(max_version, krate)| {
-                Ok(krate.minimal_encodable(&max_version, None, false, None))
+            .map(|(top_versions, krate)| {
+                Ok(krate.minimal_encodable(&top_versions, None, false, None))
             })
             .collect()
     };
@@ -142,7 +143,7 @@ pub fn show(req: &mut dyn Request) -> AppResult<Response> {
     let badges = badges::table
         .filter(badges::crate_id.eq(krate.id))
         .load(&*conn)?;
-    let max_version = krate.max_version(&conn)?;
+    let top_versions = krate.top_versions(&conn)?;
 
     #[derive(Serialize)]
     struct R {
@@ -154,7 +155,7 @@ pub fn show(req: &mut dyn Request) -> AppResult<Response> {
     }
     Ok(req.json(&R {
         krate: krate.clone().encodable(
-            &max_version,
+            &top_versions,
             Some(ids),
             Some(&kws),
             Some(&cats),

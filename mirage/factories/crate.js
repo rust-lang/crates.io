@@ -16,6 +16,7 @@ export default Factory.extend({
   homepage: () => faker.internet.url(),
   repository: () => faker.internet.url(),
   max_version: () => faker.system.semver(),
+  newest_version: () => faker.system.semver(),
 
   created_at: () => faker.date.past(),
   updated_at() {

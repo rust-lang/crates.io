@@ -37,6 +37,25 @@ pub struct NewVersion {
     published_by: i32,
 }
 
+/// The highest version (semver order) and the most recently updated version.
+/// Typically used for a single crate.
+#[derive(Debug, Clone)]
+pub struct TopVersions {
+    pub highest: semver::Version,
+    pub newest: semver::Version,
+}
+
+/// A default semver value, "0.0.0", for use in TopVersions
+fn default_semver_version() -> semver::Version {
+    semver::Version {
+        major: 0,
+        minor: 0,
+        patch: 0,
+        pre: vec![],
+        build: vec![],
+    }
+}
+
 impl Version {
     pub fn encodable(
         self,
@@ -96,20 +115,28 @@ impl Version {
             .load(conn)
     }
 
-    pub fn max<T>(versions: T) -> semver::Version
+    /// Return both the newest (most recently updated) and the
+    /// highest version (in semver order) for a collection of date/version pairs.
+    pub fn top<T>(pairs: T) -> TopVersions
     where
-        T: IntoIterator<Item = semver::Version>,
+        T: Clone + IntoIterator<Item = (NaiveDateTime, semver::Version)>,
     {
-        versions
-            .into_iter()
-            .max()
-            .unwrap_or_else(|| semver::Version {
-                major: 0,
-                minor: 0,
-                patch: 0,
-                pre: vec![],
-                build: vec![],
-            })
+        TopVersions {
+            newest: pairs
+                .clone()
+                .into_iter()
+                .max()
+                .unwrap_or((
+                    NaiveDateTime::from_timestamp(0, 0),
+                    default_semver_version(),
+                ))
+                .1,
+            highest: pairs
+                .into_iter()
+                .map(|(_, v)| v)
+                .max()
+                .unwrap_or_else(default_semver_version),
+        }
     }
 
     pub fn record_readme_rendering(version_id_: i32, conn: &PgConnection) -> QueryResult<usize> {

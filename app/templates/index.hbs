@@ -38,19 +38,19 @@
 <div id='home-crates' class='crate-lists'>
   <section id='new-crates' data-test-new-crates aria-busy="{{this.dataTask.isRunning}}">
     <h2>New Crates</h2>
-    <CrateList @crates={{this.model.new_crates}} />
+    <CrateListNewest @crates={{this.model.new_crates}} />
   </section>
   <section id='most-downloaded' data-test-most-downloaded aria-busy="{{this.dataTask.isRunning}}">
     <h2>Most Downloaded</h2>
-    <CrateList @crates={{this.model.most_downloaded}} />
+    <CrateListNameOnly @crates={{this.model.most_downloaded}} />
   </section>
   <section id='just-updated' data-test-just-updated aria-busy="{{this.dataTask.isRunning}}">
     <h2>Just Updated</h2>
-    <CrateList @crates={{this.model.just_updated}} />
+    <CrateListNewest @crates={{this.model.just_updated}} />
   </section>
   <section id='most-recently-downloaded' data-test-most-recently-downloaded aria-busy="{{this.dataTask.isRunning}}">
     <h2>Most Recent Downloads</h2>
-    <CrateList @crates={{this.model.most_recently_downloaded}} />
+    <CrateListNameOnly @crates={{this.model.most_recently_downloaded}} />
   </section>
   <section id='keywords' data-test-keywords aria-busy="{{this.dataTask.isRunning}}">
     <h2>Popular Keywords <LinkTo @route="keywords">(see all)</LinkTo></h2>
