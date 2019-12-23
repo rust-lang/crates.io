@@ -22,7 +22,7 @@ jobs:
       RUSTFLAGS: "-C debuginfo=0 -D warnings"
 
     steps:
-      - uses: actions/checkout@v2-beta
+      - uses: actions/checkout@v2
 
       - name: Cleanup pre-installed Rust toolchains
         # The pre-installed toolchain is under root permission, and this would
