@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - auto
+      - master
       - try
 
   pull_request:
