@@ -131,6 +131,7 @@ module('Acceptance | crate page', function(hooks) {
     await click('[data-test-all-versions-link]');
 
     assert.dom('.graph').hasText(/Downloads per minor version/);
+    assert.dom('.graph svg g g g g text[text-anchor=end]').exists({ count: 2 });
   });
 
   test('navigating to the reverse dependencies page', async function(assert) {
