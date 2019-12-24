@@ -39,13 +39,18 @@ export default Component.extend({
           return;
         }
 
-        // TODO: error handling
-        const data = await r.json();
+        let recentDownloads;
+        try {
+          recentDownloads = await r.json();
+        } catch (e) {
+          console.error(e);
+          return;
+        }
 
         // Build up the list of unique major.minor versions of this crate, and total
         // up the number of downloads for each semver version
         let downloadsPerVersion = new Map();
-        data.downloads.forEach(v => {
+        recentDownloads.downloads.forEach(v => {
           let major = semver.major(v.version);
           let minor = semver.minor(v.version);
           let downloads = v.downloads;
