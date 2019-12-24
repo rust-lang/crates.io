@@ -73,18 +73,17 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Cleanup pre-installed Rust toolchains
-        # The pre-installed toolchain is under root permission, and this would
-        # make tarball fail to extract. Here we remove the symlink and install
-        # our own Rust toolchain if necessary.
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          override: true
+
+      - name: Install lint tools on stable
+        if: matrix.rust == 'stable'
         run: |
-          which rustup
-          which cargo
-          if [[ -L "$HOME/.cargo" && -L "$HOME/.rustup" ]]; then
-              rm -v "$HOME/.rustup"
-              rm -v "$HOME/.cargo"
-          fi
-          echo "::add-path::$HOME/.cargo/bin"
+          rustup component add rustfmt
+          rustup component add clippy
 
       # FIXME: Nightly and beta channels have high churn.  The cache quickly expires, but there is
       # no way (that I can find) to overwrite an existing cache.  There is also no way to
@@ -92,33 +91,17 @@ jobs:
       # value.  Once a cached release becomes stale, every job will begin downloading the latest
       # release from upstream and the cache becomes useless for that channel.
       #
-      # Including `hashFiles('**/Cargo.lock')` below is a hack.  Ideally, we would change the `key`
+      # For some caches `hashFiles('**/Cargo.lock')` is insufficient.  Ideally, we would change the `key`
       # for each channel at the same rate as the release cadence for that channel.  For the stable
       # channel this is too frequent and for the nightly channel (and probably beta as well) it is
       # not often enough.
-      #
-      # Current size as of 2019-12-23: ~123 MB
-      - name: Cache rustup
-        uses: actions/cache@v1
-        with:
-          path: ~/.rustup
-          key: ${{ runner.os }}-rustup-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-key: |
-              ${{ runner.os }}-rustup-${{ matrix.rust }}-
-              ${{ runner.os }}-rustup-
 
-      # This step has the same tradeoffs as `Cache rustup`, however the cache size is significantly
-      # smaller.  The installed `diesel` binary is also stored here.
-      #
-      # Current size as of 2019-12-23: ~6 MB
-      - name: Cache cargo binaries
+      # Current size as of 2019-12-23: ~1 MB
+      - name: Cache diesel binary
         uses: actions/cache@v1
         with:
-          path: ~/.cargo/bin
-          key: ${{ runner.os }}-cargo-bin-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-key: |
-            ${{ runner.os }}-cargo-bin-${{ matrix.rust }}-
-            ${{ runner.os }}-cargo-bin-
+          path: ~/.cargo/bin/diesel
+          key: ${{ runner.os }}-diesel-bin-${{ matrix.rust }}-${{ hashFiles('.diesel_version') }}
 
       # Current size as of 2019-12-23: ~77 MB
       - name: Cache cargo registry cache
@@ -159,22 +142,6 @@ jobs:
           restore-key: |
             ${{ runner.os }}-cargo-build-target-${{ matrix.rust }}-
             ${{ runner.os }}-cargo-build-target-
-
-      - name: Install ${{ matrix.rust }} Rust
-        run: |
-          if [[ ! -d "$HOME/.cargo" || ! -d "$HOME/.rustup" ]]; then
-              curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup-init.sh
-              sh rustup-init.sh -y --default-toolchain none
-          fi
-          rustup set profile minimal
-          rustup update ${{ matrix.rust }}
-          rustup default ${{ matrix.rust }}
-
-      - name: Install lint tools
-        if: matrix.rust == 'stable'
-        run: |
-          rustup component add rustfmt
-          rustup component add clippy
 
       - name: Cargo clean on new rustc version
         run: script/ci/cargo-clean-on-new-rustc-version.sh
