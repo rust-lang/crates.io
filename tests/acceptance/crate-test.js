@@ -134,6 +134,17 @@ module('Acceptance | crate page', function(hooks) {
     assert.dom('.graph svg g g g g text[text-anchor=end]').exists({ count: 2 });
   });
 
+  /* TODO
+  test('viewing crate downloads graph when no recent downloads exist', async function(assert) {
+    this.server.loadFixtures();
+
+    await visit('/crates/norecentdownloads');
+    await click('[data-test-all-versions-link]');
+
+    assert.dom('.graph').hasText(/No recent downloads available/);
+  });
+  */
+
   test('navigating to the reverse dependencies page', async function(assert) {
     this.server.loadFixtures();
 
