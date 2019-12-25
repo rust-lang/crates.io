@@ -3,15 +3,18 @@ import { computed } from '@ember/object';
 import { alias } from '@ember/object/computed';
 
 export default Component.extend({
-  tagName: 'span',
-  classNames: ['badge'],
+  tagName: '',
+
   escapedStatus: computed('badge', function() {
     return this.get('badge.attributes.status').replace(/-/g, '--');
   }),
+
   none: computed('badge', function() {
     return this.get('badge.attributes.status') === 'none' || !this.get('badge.attributes.status');
   }),
+
   status: alias('badge.attributes.status'),
+
   // eslint-disable-next-line ember/require-return-from-computed
   color: computed('badge', function() {
     switch (this.get('badge.attributes.status')) {
@@ -29,5 +32,6 @@ export default Component.extend({
         return 'red';
     }
   }),
+
   text: 'Maintenance intention for this crate',
 });
