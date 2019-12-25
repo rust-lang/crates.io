@@ -36,11 +36,23 @@ impl Handler for LogRequests {
             .find::<u64>()
             .map_or(String::new(), |l| format!(" metadata_length={}", l));
 
-        print!(
+        let slow_request = if response_time > 1000 {
+            " SLOW REQUEST"
+        } else {
+            ""
+        };
+
+        let error = if let Err(ref e) = res {
+            format!(" error=\"{}\"", e.to_string())
+        } else {
+            String::new()
+        };
+
+        println!(
             "at={level} method={method} path=\"{path}\" \
              request_id={request_id} fwd=\"{ip}\" service={time_ms}ms \
              status={status} user_agent=\"{user_agent}\"\
-             {metadata_length}",
+             {metadata_length}{error}{slow_request}",
             level = level,
             method = req.method(),
             path = FullPath(req),
@@ -50,17 +62,9 @@ impl Handler for LogRequests {
             request_id = request_header(req, "X-Request-Id"),
             status = response_code,
             metadata_length = metadata_length,
+            error = error,
+            slow_request = slow_request,
         );
-
-        if let Err(ref e) = res {
-            print!(" error=\"{}\"", e.to_string());
-        }
-
-        if response_time > 1000 {
-            print!(" SLOW REQUEST");
-        }
-
-        println!();
 
         res
     }
