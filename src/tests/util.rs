@@ -233,7 +233,7 @@ impl TestAppBuilder {
                     // We only have 1 connection in tests, so trying to run more than
                     // 1 job concurrently will just block
                     .thread_count(1)
-                    .job_start_timeout(Duration::from_secs(1))
+                    .job_start_timeout(Duration::from_secs(5))
                     .build(),
             )
         } else {
