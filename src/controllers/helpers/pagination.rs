@@ -16,7 +16,7 @@ pub(crate) enum Page {
 impl Page {
     fn new(params: &IndexMap<String, String>) -> AppResult<Self> {
         if let Some(s) = params.get("page") {
-            let numeric_page = s.parse()?;
+            let numeric_page = s.parse().map_err(|e| bad_request(&e))?;
             if numeric_page < 1 {
                 return Err(cargo_err(&format_args!(
                     "page indexing starts from 1, page {} is invalid",
@@ -44,7 +44,7 @@ impl PaginationOptions {
 
         let per_page = params
             .get("per_page")
-            .map(|s| s.parse())
+            .map(|s| s.parse().map_err(|e| bad_request(&e)))
             .unwrap_or(Ok(DEFAULT_PER_PAGE))?;
 
         if per_page > MAX_PER_PAGE {
