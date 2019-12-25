@@ -43,7 +43,7 @@ impl Handler for LogRequests {
         };
 
         let error = if let Err(ref e) = res {
-            format!(" error=\"{}\"", e.to_string())
+            format!(" error=\"{}\"", e)
         } else {
             String::new()
         };
