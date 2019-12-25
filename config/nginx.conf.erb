@@ -141,7 +141,7 @@ http {
 			location / {
 				proxy_pass http://localhost:9000;
 			}
-		<% elsif ['USE_FASTBOOT'] %>
+		<% elsif ENV['USE_FASTBOOT'] && !ENV['USE_FASTBOOT'].empty? %>
 			# Fastboot is enabled only for allowed paths
 
 			location = /policies {
