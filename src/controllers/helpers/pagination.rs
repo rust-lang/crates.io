@@ -1,5 +1,5 @@
 use crate::models::helpers::with_count::*;
-use crate::util::errors::{cargo_err, AppResult};
+use crate::util::errors::{bad_request, AppResult};
 use diesel::pg::Pg;
 use diesel::prelude::*;
 use diesel::query_builder::*;
@@ -18,7 +18,7 @@ impl Page {
         if let Some(s) = params.get("page") {
             let numeric_page = s.parse().map_err(|e| bad_request(&e))?;
             if numeric_page < 1 {
-                return Err(cargo_err(&format_args!(
+                return Err(bad_request(&format_args!(
                     "page indexing starts from 1, page {} is invalid",
                     numeric_page,
                 )));
@@ -48,7 +48,7 @@ impl PaginationOptions {
             .unwrap_or(Ok(DEFAULT_PER_PAGE))?;
 
         if per_page > MAX_PER_PAGE {
-            return Err(cargo_err(&format_args!(
+            return Err(bad_request(&format_args!(
                 "cannot request more than {} items",
                 MAX_PER_PAGE,
             )));
