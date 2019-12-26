@@ -5,7 +5,7 @@ use crate::{
     OkBool, TestApp,
 };
 use cargo_registry::{
-    models::{Email, NewUser, User},
+    models::{ApiToken, Email, NewUser, User},
     schema::crate_owners,
     views::{EncodablePrivateUser, EncodablePublicUser, EncodableVersion, OwnedCrate},
 };
@@ -747,4 +747,20 @@ fn test_update_email_notifications_not_owned() {
 
     // There should be no change to the `email_notifications` value for a crate not belonging to me
     assert!(email_notifications);
+}
+
+#[test]
+fn shows_that_user_has_tokens() {
+    let (app, _, user) = TestApp::init().with_user();
+
+    let user_id = user.as_model().id;
+    app.db(|conn| {
+        vec![
+            assert_ok!(ApiToken::insert(conn, user_id, "bar")),
+            assert_ok!(ApiToken::insert(conn, user_id, "baz")),
+        ]
+    });
+
+    let json = user.show_me();
+    assert!(json.user.has_tokens);
 }

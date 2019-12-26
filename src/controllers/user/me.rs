@@ -7,14 +7,15 @@ use crate::email;
 
 use crate::controllers::helpers::pagination::Paginated;
 use crate::models::{
-    CrateOwner, Email, Follow, NewEmail, OwnerKind, User, Version, VersionOwnerAction,
+    ApiToken, CrateOwner, Email, Follow, NewEmail, OwnerKind, User, Version, VersionOwnerAction,
 };
-use crate::schema::{crate_owners, crates, emails, follows, users, versions};
+use crate::schema::{api_tokens, crate_owners, crates, emails, follows, users, versions};
 use crate::views::{EncodableMe, EncodableVersion, OwnedCrate};
 
 /// Handles the `GET /me` route.
 pub fn me(req: &mut dyn RequestExt) -> EndpointResult {
-    let user_id = req.authenticate()?.user_id();
+    let user = req.authenticate()?;
+    let user_id = user.user_id();
     let conn = req.db_conn()?;
 
     let (user, verified, email, verification_sent): (User, Option<bool>, Option<String>, bool) =
@@ -28,6 +29,11 @@ pub fn me(req: &mut dyn RequestExt) -> EndpointResult {
                 emails::token_generated_at.nullable().is_not_null(),
             ))
             .first(&*conn)?;
+
+    let tokens: Vec<ApiToken> = ApiToken::belonging_to(&user)
+        .filter(api_tokens::revoked.eq(false))
+        .load(&*conn)?;
+    let has_tokens = !tokens.is_empty();
 
     let owned_crates = CrateOwner::by_owner_kind(OwnerKind::User)
         .inner_join(crates::table)
@@ -46,7 +52,7 @@ pub fn me(req: &mut dyn RequestExt) -> EndpointResult {
     let verified = verified.unwrap_or(false);
     let verification_sent = verified || verification_sent;
     Ok(req.json(&EncodableMe {
-        user: user.encodable_private(email, verified, verification_sent),
+        user: user.encodable_private(email, verified, verification_sent, has_tokens),
         owned_crates,
     }))
 }

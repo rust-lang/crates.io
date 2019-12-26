@@ -176,6 +176,7 @@ pub struct EncodablePrivateUser {
     pub email: Option<String>,
     pub avatar: Option<String>,
     pub url: Option<String>,
+    pub has_tokens: bool,
 }
 
 /// The serialization format for the `User` model.
