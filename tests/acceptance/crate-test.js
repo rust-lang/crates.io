@@ -12,17 +12,6 @@ module('Acceptance | crate page', function(hooks) {
   setupApplicationTest(hooks);
   setupMirage(hooks);
 
-  test('is accessible', async function(assert) {
-    assert.expect(0);
-
-    this.server.create('crate', 'withVersion', { id: 'nanomsg' });
-
-    await visit('/');
-    percySnapshot(assert);
-
-    await a11yAudit(axeConfig);
-  });
-
   test('/crates/:crate is accessible', async function(assert) {
     assert.expect(0);
 
@@ -61,13 +50,17 @@ module('Acceptance | crate page', function(hooks) {
   });
 
   test('visiting a crate page from the front page', async function(assert) {
-    this.server.create('crate', 'withVersion', { id: 'nanomsg' });
+    this.server.create('crate', { id: 'nanomsg', newest_version: '0.6.1' });
+    this.server.create('version', { crate: 'nanomsg', num: '0.6.1' });
 
     await visit('/');
     await click('[data-test-just-updated] [data-test-crate-link="0"]');
 
-    assert.equal(currentURL(), '/crates/nanomsg');
+    assert.equal(currentURL(), '/crates/nanomsg/0.6.1');
     assert.equal(title(), 'nanomsg - crates.io: Rust Package Registry');
+
+    assert.dom('[data-test-heading] [data-test-crate-name]').hasText('nanomsg');
+    assert.dom('[data-test-heading] [data-test-crate-version]').hasText('0.6.1');
   });
 
   test('visiting /crates/nanomsg', async function(assert) {
@@ -152,6 +145,30 @@ module('Acceptance | crate page', function(hooks) {
 
     assert.equal(currentURL(), '/teams/github:org:thehydroimpulse');
     assert.dom('[data-test-heading] [data-test-team-name]').hasText('thehydroimpulseteam');
+  });
+
+  test('crates having normal dependencies', async function(assert) {
+    this.server.loadFixtures();
+
+    await visit('crates/nanomsg');
+
+    assert.dom('#crate-dependencies li').exists({ count: 2 });
+  });
+
+  test('crates having build dependencies', async function(assert) {
+    this.server.loadFixtures();
+
+    await visit('crates/nanomsg');
+
+    assert.dom('#crate-build-dependencies li').exists({ count: 1 });
+  });
+
+  test('crates having dev dependencies', async function(assert) {
+    this.server.loadFixtures();
+
+    await visit('crates/nanomsg');
+
+    assert.dom('#crate-dev-dependencies li').exists({ count: 1 });
   });
 
   test('crates having user-owners', async function(assert) {

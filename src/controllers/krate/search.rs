@@ -3,8 +3,8 @@
 use diesel::dsl::*;
 use diesel_full_text_search::*;
 
+use crate::controllers::cargo_prelude::*;
 use crate::controllers::helpers::Paginate;
-use crate::controllers::prelude::*;
 use crate::models::{Crate, CrateBadge, CrateOwner, CrateVersions, OwnerKind, Version};
 use crate::schema::*;
 use crate::views::EncodableCrate;
@@ -179,7 +179,7 @@ pub fn search(req: &mut dyn Request) -> AppResult<Response> {
         .load::<Version>(&*conn)?
         .grouped_by(&crates)
         .into_iter()
-        .map(|versions| Version::max(versions.into_iter().map(|v| v.num)));
+        .map(|versions| Version::top(versions.into_iter().map(|v| (v.created_at, v.num))));
 
     let badges = CrateBadge::belonging_to(&crates)
         .select((badges::crate_id, badges::all_columns))

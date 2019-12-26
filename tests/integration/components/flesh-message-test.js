@@ -15,7 +15,7 @@ module('Integration | Component | flesh-message', function(hooks) {
     await render(hbs`{{flash-message}}`);
 
     assert.equal(this.element.textContent.trim(), 'test text', 'should show right message');
-    assert.equal(this.element.querySelector('#flash').className, 'shown warning ember-view', 'should have right class');
+    assert.equal(this.element.querySelector('#flash').className, 'show warning', 'should have right class');
   });
 
   test('it renders with right passed type', async function(assert) {
@@ -26,6 +26,6 @@ module('Integration | Component | flesh-message', function(hooks) {
 
     await render(hbs`{{flash-message}}`);
 
-    assert.equal(this.element.querySelector('#flash').className, 'shown info ember-view', 'should have right class');
+    assert.equal(this.element.querySelector('#flash').className, 'show info', 'should have right class');
   });
 });

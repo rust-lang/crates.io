@@ -208,7 +208,7 @@ span.loading {
     padding: 10px;
     @include border-radius(5px);
 
-    &.shown {
+    &.show {
         display: block;
     }
 
@@ -373,4 +373,10 @@ a.arrow svg {
 abbr[title] {
     text-decoration: none;
     border-bottom: 1px dotted;
+}
+
+@media only percy {
+    #crate-downloads .graph {
+       display: none;
+    }
 }

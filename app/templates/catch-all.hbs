@@ -1,11 +1,14 @@
-<p id='flash' class='shown'>Oops, that route doesn't exist!</p>
+<p id='flash' class='show'>Oops, that route doesn't exist!</p>
 
 <p id='p404'>
   Perhaps a search of the site may help?
 
-  {{input type="text" class="search"
-          placeholder="Search"
-          value=search
-          enter="search"
-          required=true}}
+  <Input
+    @type="text"
+    class="search"
+    placeholder="Search"
+    @value={{this.search}}
+    @enter={{action "search"}}
+    required={{true}}
+  />
 </p>

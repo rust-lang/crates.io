@@ -22,11 +22,7 @@ module('Integration | Component | welcome-message', function(hooks) {
       'Welcome to crates.io! Visit account settings to verify your email address and create an API token!',
       'should show right message',
     );
-    assert.equal(
-      this.element.querySelector('#welcome-message').className,
-      'shown info ember-view',
-      'should have right class',
-    );
+    assert.equal(this.element.querySelector('#welcome-message').className, 'show info', 'should have right class');
   });
 
   test('it show reminder about email only if user has tokens', async function(assert) {
@@ -43,11 +39,7 @@ module('Integration | Component | welcome-message', function(hooks) {
       'Welcome to crates.io! Visit account settings to verify your email address!',
       'should show right message',
     );
-    assert.equal(
-      this.element.querySelector('#welcome-message').className,
-      'shown info ember-view',
-      'should have right class',
-    );
+    assert.equal(this.element.querySelector('#welcome-message').className, 'show info', 'should have right class');
   });
 
   test('it show reminder about tokens only if user has verified email', async function(assert) {
@@ -64,11 +56,7 @@ module('Integration | Component | welcome-message', function(hooks) {
       'Welcome to crates.io! Visit account settings to create an API token!',
       'should show right message',
     );
-    assert.equal(
-      this.element.querySelector('#welcome-message').className,
-      'shown info ember-view',
-      'should have right class',
-    );
+    assert.equal(this.element.querySelector('#welcome-message').className, 'show info', 'should have right class');
   });
 
   test('it not shows if user has tokens and verified email', async function(assert) {
@@ -80,10 +68,6 @@ module('Integration | Component | welcome-message', function(hooks) {
 
     await render(hbs`{{welcome-message}}`);
 
-    assert.equal(
-      this.element.querySelector('#welcome-message').className,
-      'info ember-view',
-      'should have right class',
-    );
+    assert.equal(this.element.querySelector('#welcome-message').className, 'info', 'should have right class');
   });
 });

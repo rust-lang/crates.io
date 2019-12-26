@@ -9,20 +9,20 @@
   <h2>Profile Information</h2>
 
   <div class='info'>
-    {{#user-link user=model.user }} {{user-avatar user=model.user size='medium'}} {{/user-link}}
+    <UserLink @user={{this.model.user}}> <UserAvatar @user={{this.model.user}} @size="medium" /> </UserLink>
 
     <dl>
       <dt>Name</dt>
-      <dd>{{ model.user.name }}</dd>
+      <dd>{{ this.model.user.name }}</dd>
       <dt>GitHub Account</dt>
-      <dd>{{ model.user.login }}</dd>
+      <dd>{{ this.model.user.login }}</dd>
     </dl>
   </div>
 </div>
 
 <div id='me-email'>
   <h2>User Email</h2>
-  {{email-input type='email' value=model.user.email user=model.user}}
+  <EmailInput @type="email" @value={{this.model.user.email}} @user={{this.model.user}} />
 </div>
 
 <form id='me-email-notifications' {{ action 'saveEmailNotifications' on='submit' }} >
@@ -45,19 +45,19 @@
 
   <div class='row'>
     <ul>
-      {{#each ownedCrates as |ownedCrate|}}
-        {{owned-crate-row ownedCrate=ownedCrate}}
+      {{#each this.ownedCrates as |ownedCrate|}}
+        <OwnedCrateRow @ownedCrate={{ownedCrate}} />
       {{/each}}
     </ul>
   </div>
 
   <div class='row'>
-    {{#if emailNotificationsError}}
+    {{#if this.emailNotificationsError}}
       <div class='error'>
         An error occurred while saving your email preferences.
       </div>
     {{/if}}
-    {{#if emailNotificationsSuccess}}
+    {{#if this.emailNotificationsSuccess}}
       <div class='success'>
         Your email notification preferences have been updated!
       </div>
@@ -72,7 +72,7 @@
   <div class='me-subheading'>
     <h2>API Access</h2>
     <div class='right'>
-      <button class='yellow-button' disabled={{disableCreate}} {{action "startNewToken"}}>New Token</button>
+      <button type="button" class='yellow-button' disabled={{this.disableCreate}} {{action "startNewToken"}}>New Token</button>
     </div>
   </div>
 
@@ -87,8 +87,8 @@
   </p>
 
   <div id='tokens'>
-    {{#each sortedTokens as |api_token|}}
-      {{api-token-row api_token=api_token}}
+    {{#each this.sortedTokens as |api_token|}}
+      <ApiTokenRow @api_token={{api_token}} />
     {{/each}}
   </div>
 </div>

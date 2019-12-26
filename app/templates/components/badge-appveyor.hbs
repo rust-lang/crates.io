@@ -1,8 +1,11 @@
-<a href="https://ci.appveyor.com/project/{{ projectName }}">
-  <img
-      src="{{ imageUrl }}"
-      alt="{{ text }}"
-      width="106"
-      height="20"
-      title="{{ text }}">
-</a>
+<span class="badge" ...attributes>
+  <a href="https://ci.appveyor.com/project/{{ this.projectName }}">
+    <img
+        src="{{ this.imageUrl }}"
+        alt="{{ this.text }}"
+        width="106"
+        height="20"
+        title="{{ this.text }}">
+  </a>
+  
+</span>

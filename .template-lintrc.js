@@ -3,11 +3,11 @@
 /* eslint-env node */
 
 module.exports = {
-  extends: 'recommended',
+  extends: 'octane',
 
   rules: {
-    'img-alt-attributes': false,
-    'triple-curlies': false,
-    'html-comments': false,
+    'require-valid-alt-text': false,
+    'no-action': false,
+    'no-curly-component-invocation': false,
   },
 };

@@ -1,6 +1,9 @@
-<a href="https://circleci.com/gh/{{ repository }}">
-  <img
-      src="https://circleci.com/gh/{{ repository }}/tree/{{ branch }}.svg?style=shield"
-      alt="{{ text }}"
-      title="{{ text }}">
-</a>
+<span class="badge" ...attributes>
+  <a href="https://circleci.com/gh/{{ this.repository }}">
+    <img
+        src="https://circleci.com/gh/{{ this.repository }}/tree/{{ this.branch }}.svg?style=shield"
+        alt="{{ this.text }}"
+        title="{{ this.text }}">
+  </a>
+  
+</span>

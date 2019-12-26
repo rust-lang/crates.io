@@ -53,7 +53,7 @@ impl Handler for LogRequests {
         );
 
         if let Err(ref e) = res {
-            print!(" error=\"{}\"", e.description());
+            print!(" error=\"{}\"", e.to_string());
         }
 
         if response_time > 1000 {

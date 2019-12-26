@@ -22,8 +22,5 @@ export default Component.extend({
 
   showMessage: notEmpty('text').readOnly(),
 
-  type: 'info',
-  elementId: 'welcome-message',
-  tagName: 'p',
-  classNameBindings: ['showMessage:shown', 'type'],
+  tagName: '',
 });

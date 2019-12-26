@@ -10,8 +10,9 @@ export default Component.extend({
   type: computed('flashMessages.options', function() {
     return this.get('flashMessages.options.type') || 'warning';
   }),
+  classes: computed('message', 'type', function() {
+    return `${this.message ? 'show' : ''} ${this.type}`;
+  }),
 
-  elementId: 'flash',
-  tagName: 'p',
-  classNameBindings: ['message:shown', 'type'],
+  tagName: '',
 });

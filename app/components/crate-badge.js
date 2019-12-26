@@ -2,9 +2,7 @@ import Component from '@ember/component';
 import { computed } from '@ember/object';
 
 export default Component.extend({
-  classNames: ['vers'],
-
-  tagName: 'span',
+  tagName: '',
 
   version: computed('crate.max_version', function() {
     return this.get('crate.max_version').replace('-', '--');

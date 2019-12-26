@@ -5,9 +5,9 @@ use diesel::prelude::*;
 
 use crate::util::{cargo_err, AppResult};
 
-use crate::models::{Crate, Dependency, User};
+use crate::models::{Crate, Dependency, User, VersionOwnerAction};
 use crate::schema::*;
-use crate::views::{EncodableVersion, EncodableVersionLinks};
+use crate::views::{EncodableAuditAction, EncodableVersion, EncodableVersionLinks};
 
 // Queryable has a custom implementation below
 #[derive(Clone, Identifiable, Associations, Debug, Queryable, Deserialize, Serialize)]
@@ -37,8 +37,32 @@ pub struct NewVersion {
     published_by: i32,
 }
 
+/// The highest version (semver order) and the most recently updated version.
+/// Typically used for a single crate.
+#[derive(Debug, Clone)]
+pub struct TopVersions {
+    pub highest: semver::Version,
+    pub newest: semver::Version,
+}
+
+/// A default semver value, "0.0.0", for use in TopVersions
+fn default_semver_version() -> semver::Version {
+    semver::Version {
+        major: 0,
+        minor: 0,
+        patch: 0,
+        pre: vec![],
+        build: vec![],
+    }
+}
+
 impl Version {
-    pub fn encodable(self, crate_name: &str, published_by: Option<User>) -> EncodableVersion {
+    pub fn encodable(
+        self,
+        crate_name: &str,
+        published_by: Option<User>,
+        audit_actions: Vec<(VersionOwnerAction, User)>,
+    ) -> EncodableVersion {
         let Version {
             id,
             num,
@@ -71,6 +95,14 @@ impl Version {
             },
             crate_size,
             published_by: published_by.map(User::encodable_public),
+            audit_actions: audit_actions
+                .into_iter()
+                .map(|(audit_action, user)| EncodableAuditAction {
+                    action: audit_action.action.into(),
+                    user: User::encodable_public(user),
+                    time: audit_action.time,
+                })
+                .collect(),
         }
     }
 
@@ -83,20 +115,28 @@ impl Version {
             .load(conn)
     }
 
-    pub fn max<T>(versions: T) -> semver::Version
+    /// Return both the newest (most recently updated) and the
+    /// highest version (in semver order) for a collection of date/version pairs.
+    pub fn top<T>(pairs: T) -> TopVersions
     where
-        T: IntoIterator<Item = semver::Version>,
+        T: Clone + IntoIterator<Item = (NaiveDateTime, semver::Version)>,
     {
-        versions
-            .into_iter()
-            .max()
-            .unwrap_or_else(|| semver::Version {
-                major: 0,
-                minor: 0,
-                patch: 0,
-                pre: vec![],
-                build: vec![],
-            })
+        TopVersions {
+            newest: pairs
+                .clone()
+                .into_iter()
+                .max()
+                .unwrap_or((
+                    NaiveDateTime::from_timestamp(0, 0),
+                    default_semver_version(),
+                ))
+                .1,
+            highest: pairs
+                .into_iter()
+                .map(|(_, v)| v)
+                .max()
+                .unwrap_or_else(default_semver_version),
+        }
     }
 
     pub fn record_readme_rendering(version_id_: i32, conn: &PgConnection) -> QueryResult<usize> {

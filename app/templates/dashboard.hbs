@@ -6,7 +6,7 @@
   <div id="stats">
     <div class='downloads'>
       <img class="download" src="/assets/download.svg">
-      <span class='num'>{{format-num visibleStats.total_downloads}}</span>
+      <span class='num'>{{format-num this.visibleStats.total_downloads}}</span>
       <span class='desc small'>Total Downloads</span>
     </div>
   </div>
@@ -22,13 +22,13 @@
           My Crates
         </h2>
 
-        {{#if hasMoreCrates}}
+        {{#if this.hasMoreCrates}}
           <span class='small'>
-            {{link-to 'Show all' 'me.crates'}}
+            <LinkTo @route="me.crates">Show all</LinkTo>
           </span>
         {{/if}}
       </div>
-      {{crate-downloads-list crates=visibleCrates}}
+      <CrateDownloadsList @crates={{this.visibleCrates}} />
     </div>
     <div id='my-following'>
       <div class='header'>
@@ -37,13 +37,13 @@
           Following
         </h2>
 
-        {{#if hasMoreFollowing}}
+        {{#if this.hasMoreFollowing}}
           <span class='small'>
-            {{link-to 'Show all' 'me.following'}}
+            <LinkTo @route="me.following">Show all</LinkTo>
           </span>
         {{/if}}
       </div>
-      {{crate-downloads-list crates=visibleFollowing}}
+      <CrateDownloadsList @crates={{this.visibleFollowing}} />
     </div>
   </div>
 
@@ -54,13 +54,13 @@
     </h2>
 
     <div class='white-rows'>
-      {{#each myFeed as |version|}}
+      {{#each this.myFeed as |version|}}
         <div class='row'>
           <div class='info'>
-            {{#link-to 'crate.version' version.crateName version.num}}
+            <LinkTo @route="crate.version" @models={{array version.crateName version.num}}>
               {{ version.crateName }}
               <span class='small'>{{ version.num }}</span>
-            {{/link-to}}
+            </LinkTo>
             <span class='date small'>
               {{moment-from-now version.created_at}}
             </span>
@@ -68,13 +68,13 @@
         </div>
       {{/each}}
 
-      {{#if loadingMore}}
+      {{#if this.loadingMore}}
         <span class='load-more'>
           <img src="/assets/ajax-loader.gif">
         </span>
       {{else}}
-        {{#if hasMore}}
-          <button class='load-more' {{ action 'loadMore' }}>
+        {{#if this.hasMore}}
+          <button type="button" class='load-more' {{ action 'loadMore' }}>
             Load More
           </button>
         {{/if}}

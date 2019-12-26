@@ -1,6 +1,9 @@
-<a href="https://isitmaintained.com/project/{{ repository }}">
-  <img
-      src="https://isitmaintained.com/badge/resolution/{{ repository }}.svg"
-      alt="{{ text }}"
-      title="{{ text }}">
-</a>
+<span class="badge" ...attributes>
+  <a href="https://isitmaintained.com/project/{{ this.repository }}">
+    <img
+        src="https://isitmaintained.com/badge/resolution/{{ this.repository }}.svg"
+        alt="{{ this.text }}"
+        title="{{ this.text }}">
+  </a>
+  
+</span>

@@ -1,15 +1,15 @@
-import DS from 'ember-data';
+import Model, { attr } from '@ember-data/model';
 
-export default DS.Model.extend({
-  email: DS.attr('string'),
-  email_verified: DS.attr('boolean'),
-  email_verification_sent: DS.attr('boolean'),
-  name: DS.attr('string'),
-  login: DS.attr('string'),
-  avatar: DS.attr('string'),
-  url: DS.attr('string'),
-  kind: DS.attr('string'),
-  has_tokens: DS.attr('boolean'),
+export default Model.extend({
+  email: attr('string'),
+  email_verified: attr('boolean'),
+  email_verification_sent: attr('boolean'),
+  name: attr('string'),
+  login: attr('string'),
+  avatar: attr('string'),
+  url: attr('string'),
+  kind: attr('string'),
+  has_tokens: attr('boolean'),
 
   stats() {
     return this.store.adapterFor('user').stats(this.id);

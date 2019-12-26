@@ -1,25 +1,25 @@
+import Model, { attr, belongsTo, hasMany } from '@ember-data/model';
 import { computed } from '@ember/object';
-import DS from 'ember-data';
 
-export default DS.Model.extend({
-  num: DS.attr('string'),
-  dl_path: DS.attr('string'),
-  readme_path: DS.attr('string'),
-  created_at: DS.attr('date'),
-  updated_at: DS.attr('date'),
-  downloads: DS.attr('number'),
-  yanked: DS.attr('boolean'),
-  license: DS.attr('string'),
+export default Model.extend({
+  num: attr('string'),
+  dl_path: attr('string'),
+  readme_path: attr('string'),
+  created_at: attr('date'),
+  updated_at: attr('date'),
+  downloads: attr('number'),
+  yanked: attr('boolean'),
+  license: attr('string'),
 
-  crate: DS.belongsTo('crate', {
+  crate: belongsTo('crate', {
     async: false,
   }),
-  authors: DS.hasMany('users', { async: true }),
-  dependencies: DS.hasMany('dependency', { async: true }),
-  version_downloads: DS.hasMany('version-download', { async: true }),
+  authors: hasMany('users', { async: true }),
+  dependencies: hasMany('dependency', { async: true }),
+  version_downloads: hasMany('version-download', { async: true }),
 
   crateName: computed('crate', function() {
     return this.belongsTo('crate').id();
   }),
-  crate_size: DS.attr('number'),
+  crate_size: attr('number'),
 });

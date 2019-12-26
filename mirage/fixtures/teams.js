@@ -1,4 +1,3 @@
-/* eslint-disable quotes */
 export default [
   {
     avatar: 'https://avatars.githubusercontent.com/u/565790?v=3',

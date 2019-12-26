@@ -25,4 +25,10 @@ export default Controller.extend(PaginationMixin, {
       return 'Alphabetical';
     }
   }),
+
+  actions: {
+    handleSelection(event) {
+      this.set('letter', event.target.value);
+    },
+  },
 });

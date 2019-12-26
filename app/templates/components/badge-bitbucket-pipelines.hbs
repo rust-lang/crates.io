@@ -1,6 +1,9 @@
-<a href="https://bitbucket.org/{{ repository }}/addon/pipelines/home#!/results/branch/{{ branch }}/page/1">
-  <img
-      src="https://img.shields.io/bitbucket/pipelines/{{ repository }}/{{ branch }}"
-      alt="{{ text }}"
-      title="{{ text }}">
-</a>
+<span class="badge" ...attributes>
+  <a href="https://bitbucket.org/{{ this.repository }}/addon/pipelines/home#!/results/branch/{{ this.branch }}/page/1">
+    <img
+        src="https://img.shields.io/bitbucket/pipelines/{{ this.repository }}/{{ this.branch }}"
+        alt="{{ this.text }}"
+        title="{{ this.text }}">
+  </a>
+  
+</span>

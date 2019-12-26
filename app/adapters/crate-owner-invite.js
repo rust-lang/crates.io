@@ -1,6 +1,6 @@
-import DS from 'ember-data';
+import RESTAdapter from '@ember-data/adapter/rest';
 
-export default DS.RESTAdapter.extend({
+export default RESTAdapter.extend({
   namespace: 'api/v1/me',
   pathForType() {
     return 'crate_owner_invitations';

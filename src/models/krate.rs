@@ -8,12 +8,12 @@ use url::Url;
 
 use crate::app::App;
 use crate::email;
-use crate::util::{cargo_err, AppResult};
-
+use crate::models::version::TopVersions;
 use crate::models::{
     Badge, Category, CrateOwner, CrateOwnerInvitation, Keyword, NewCrateOwnerInvitation, Owner,
     OwnerKind, ReverseDependency, User, Version,
 };
+use crate::util::{cargo_err, AppResult};
 use crate::views::{EncodableCrate, EncodableCrateLinks};
 
 use crate::models::helpers::with_count::*;
@@ -204,7 +204,7 @@ impl<'a> NewCrate<'a> {
 }
 
 impl Crate {
-    /// SQL filter based on whether the crate's name loosly matches the given
+    /// SQL filter based on whether the crate's name loosely matches the given
     /// string.
     ///
     /// The operator used varies based on the input.
@@ -281,13 +281,13 @@ impl Crate {
 
     pub fn minimal_encodable(
         self,
-        max_version: &semver::Version,
+        top_versions: &TopVersions,
         badges: Option<Vec<Badge>>,
         exact_match: bool,
         recent_downloads: Option<i64>,
     ) -> EncodableCrate {
         self.encodable(
-            max_version,
+            top_versions,
             None,
             None,
             None,
@@ -300,7 +300,7 @@ impl Crate {
     #[allow(clippy::too_many_arguments)]
     pub fn encodable(
         self,
-        max_version: &semver::Version,
+        top_versions: &TopVersions,
         versions: Option<Vec<i32>>,
         keywords: Option<&[Keyword]>,
         categories: Option<&[Category]>,
@@ -339,7 +339,8 @@ impl Crate {
             keywords: keyword_ids,
             categories: category_ids,
             badges,
-            max_version: max_version.to_string(),
+            max_version: top_versions.highest.to_string(),
+            newest_version: top_versions.newest.to_string(),
             documentation,
             homepage,
             exact_match,
@@ -384,16 +385,16 @@ impl Crate {
         }
     }
 
-    pub fn max_version(&self, conn: &PgConnection) -> AppResult<semver::Version> {
+    /// Return both the newest (most recently updated) and
+    /// highest version (in semver order) for the current crate.
+    pub fn top_versions(&self, conn: &PgConnection) -> AppResult<TopVersions> {
         use crate::schema::versions::dsl::*;
 
-        let vs = self
-            .versions()
-            .select(num)
-            .load::<String>(conn)?
-            .into_iter()
-            .map(|s| semver::Version::parse(&s).unwrap());
-        Ok(Version::max(vs))
+        Ok(Version::top(
+            self.versions()
+                .select((updated_at, num))
+                .load::<(NaiveDateTime, semver::Version)>(conn)?,
+        ))
     }
 
     pub fn owners(&self, conn: &PgConnection) -> AppResult<Vec<Owner>> {

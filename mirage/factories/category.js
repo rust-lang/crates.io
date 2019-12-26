@@ -1,4 +1,5 @@
-import { Factory, faker } from 'ember-cli-mirage';
+import { Factory } from 'ember-cli-mirage';
+import faker from 'faker';
 import { dasherize } from '@ember/string';
 
 export default Factory.extend({

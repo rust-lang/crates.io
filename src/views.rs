@@ -97,6 +97,7 @@ pub struct EncodableCrate {
     pub recent_downloads: Option<i64>,
     // NOTE: Used by shields.io, altering `max_version` requires a PR with shields.io
     pub max_version: String,
+    pub newest_version: String, // Most recently updated version, which may not be max
     pub description: Option<String>,
     pub homepage: Option<String>,
     pub documentation: Option<String>,
@@ -189,6 +190,14 @@ pub struct EncodablePublicUser {
     pub url: Option<String>,
 }
 
+#[derive(Deserialize, Serialize, Debug)]
+pub struct EncodableAuditAction {
+    pub action: String,
+    pub user: EncodablePublicUser,
+    #[serde(with = "rfc3339")]
+    pub time: NaiveDateTime,
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct EncodableVersion {
     pub id: i32,
@@ -210,6 +219,7 @@ pub struct EncodableVersion {
     pub links: EncodableVersionLinks,
     pub crate_size: Option<i32>,
     pub published_by: Option<EncodablePublicUser>,
+    pub audit_actions: Vec<EncodableAuditAction>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -314,6 +324,17 @@ mod tests {
             },
             crate_size: Some(1234),
             published_by: None,
+            audit_actions: vec![EncodableAuditAction {
+                action: "publish".to_string(),
+                user: EncodablePublicUser {
+                    id: 0,
+                    login: String::new(),
+                    name: None,
+                    avatar: None,
+                    url: None,
+                },
+                time: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 12),
+            }],
         };
         let json = serde_json::to_string(&ver).unwrap();
         assert!(json
@@ -323,6 +344,10 @@ mod tests {
         assert!(json
             .as_str()
             .find(r#""created_at":"2017-01-06T14:23:12+00:00""#)
+            .is_some());
+        assert!(json
+            .as_str()
+            .find(r#""time":"2017-01-06T14:23:12+00:00""#)
             .is_some());
     }
 
@@ -340,6 +365,7 @@ mod tests {
             downloads: 0,
             recent_downloads: None,
             max_version: "".to_string(),
+            newest_version: "".to_string(),
             description: None,
             homepage: None,
             documentation: None,

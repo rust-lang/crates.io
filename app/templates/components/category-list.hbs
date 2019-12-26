@@ -1,12 +1,12 @@
 <ul>
-  {{#each categories as |category|}}
+  {{#each this.categories as |category|}}
     <li>
-      {{#link-to 'category' category.slug class='name'}}
+      <LinkTo @route="category" @model={{category.slug}} class="name">
         <span>{{ category.category }} ({{ format-num category.crates_cnt }})</span>
         <div class='arrow-in-list'>
           {{svg-jar "right-arrow"}}
         </div>
-      {{/link-to}}
+      </LinkTo>
     </li>
   {{/each}}
 </ul>
