@@ -53,4 +53,38 @@ module('Acceptance | Login', function(hooks) {
 
     assert.dom('[data-test-user-menu] [data-test-toggle]').hasText('John Doe');
   });
+
+  test('failed login', async function(assert) {
+    let deferred = defer();
+    let fakeWindow = { closed: false };
+    window.open = () => {
+      deferred.resolve();
+      return fakeWindow;
+    };
+
+    await visit('/');
+    assert.equal(currentURL(), '/');
+
+    await click('[data-test-login-link]');
+    assert.equal(currentURL(), '/');
+
+    // wait for `window.open()` to be called
+    await deferred.promise;
+
+    // simulate the response from the `github-authorize` route
+    window.github_response = JSON.stringify({
+      ok: false,
+      data: {
+        errors: [{ detail: 'Forbidden' }],
+      },
+    });
+
+    // simulate that the window has been closed by the `github-authorize` route
+    fakeWindow.closed = true;
+
+    // wait for the error message to show up after the failed login
+    await waitFor('[data-test-flash-message].shown');
+
+    assert.dom('[data-test-flash-message]').hasText('Failed to log in: Forbidden');
+  });
 });
