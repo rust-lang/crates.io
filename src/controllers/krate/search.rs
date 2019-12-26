@@ -36,7 +36,7 @@ use crate::models::krate::{canon_crate_name, ALL_COLUMNS};
 pub fn search(req: &mut dyn Request) -> AppResult<Response> {
     use diesel::sql_types::{Bool, Text};
 
-    let conn = req.db_conn()?;
+    let conn = req.db_read_only()?;
     let params = req.query();
     let sort = params.get("sort").map(|s| &**s);
     let include_yanked = params
