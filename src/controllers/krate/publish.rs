@@ -41,7 +41,7 @@ pub fn publish(req: &mut dyn Request) -> AppResult<Response> {
 
     let new_crate = parse_new_headers(req)?;
 
-    let conn = app.diesel_database.get()?;
+    let conn = app.primary_database.get()?;
     let ids = req.authenticate(&conn)?;
     let user = ids.find_user(&conn)?;
 

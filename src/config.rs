@@ -10,6 +10,7 @@ pub struct Config {
     pub gh_client_id: String,
     pub gh_client_secret: String,
     pub db_url: String,
+    pub replica_db_url: Option<String>,
     pub env: Env,
     pub max_upload_size: u64,
     pub max_unpack_size: u64,
@@ -33,7 +34,7 @@ impl Default for Config {
     /// - `MIRROR`: Is this instance of cargo_registry a mirror of crates.io.
     /// - `HEROKU`: Is this instance of cargo_registry currently running on Heroku.
     /// - `S3_BUCKET`: The S3 bucket used to store crate files. If not present during development,
-    /// cargo_registry will fall back to a local uploader.
+    ///    cargo_registry will fall back to a local uploader.
     /// - `S3_REGION`: The region in which the bucket was created. Optional if US standard.
     /// - `S3_ACCESS_KEY`: The access key to interact with S3. Optional if running a mirror.
     /// - `S3_SECRET_KEY`: The secret key to interact with S3. Optional if running a mirror.
@@ -41,6 +42,7 @@ impl Default for Config {
     /// - `GH_CLIENT_ID`: The client ID of the associated GitHub application.
     /// - `GH_CLIENT_SECRET`: The client secret of the associated GitHub application.
     /// - `DATABASE_URL`: The URL of the postgres database to use.
+    /// - `READ_ONLY_REPLICA_URL`: The URL of an optional postgres read-only replica database.
     /// - `BLOCKED_TRAFFIC`: A list of headers and environment variables to use for blocking
     ///.  traffic. See the `block_traffic` module for more documentation.
     fn default() -> Config {
@@ -129,6 +131,7 @@ impl Default for Config {
             gh_client_id: env("GH_CLIENT_ID"),
             gh_client_secret: env("GH_CLIENT_SECRET"),
             db_url: env("DATABASE_URL"),
+            replica_db_url: dotenv::var("READ_ONLY_REPLICA_URL").ok(),
             env: cargo_env,
             max_upload_size: 10 * 1024 * 1024, // 10 MB default file upload size limit
             max_unpack_size: 512 * 1024 * 1024, // 512 MB max when decompressed
