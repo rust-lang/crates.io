@@ -19,7 +19,7 @@ pub fn downloads(req: &mut dyn Request) -> AppResult<Response> {
     use diesel::sql_types::BigInt;
 
     let crate_name = &req.params()["crate_id"];
-    let conn = req.db_conn()?;
+    let conn = req.db_read_only()?;
     let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
 
     let mut versions = krate.all_versions().load::<Version>(&*conn)?;

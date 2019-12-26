@@ -243,6 +243,18 @@ impl Crate {
         crates::table.select(ALL_COLUMNS)
     }
 
+    pub fn find_version(&self, conn: &PgConnection, version: &str) -> AppResult<Version> {
+        self.all_versions()
+            .filter(versions::num.eq(version))
+            .first(conn)
+            .map_err(|_| {
+                cargo_err(&format_args!(
+                    "crate `{}` does not have a version `{}`",
+                    self.name, version
+                ))
+            })
+    }
+
     pub fn valid_name(name: &str) -> bool {
         let under_max_length = name.chars().take(MAX_NAME_LENGTH + 1).count() <= MAX_NAME_LENGTH;
         Crate::valid_ident(name) && under_max_length
