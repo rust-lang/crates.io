@@ -5,7 +5,11 @@ use diesel::PgConnection;
 fn main() -> AppResult<()> {
     let conn = db::connect_now()?;
     let mut args = std::env::args().skip(1);
-    match &*args.next().unwrap_or_default() {
+
+    let job = args.next().unwrap_or_default();
+    println!("Enqueueing background job: {}", job);
+
+    match &*job {
         "update_downloads" => tasks::update_downloads().enqueue(&conn),
         "dump_db" => {
             let database_url = args.next().unwrap_or_else(|| env("DATABASE_URL"));
