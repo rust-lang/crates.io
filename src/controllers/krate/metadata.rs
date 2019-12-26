@@ -103,7 +103,7 @@ pub fn summary(req: &mut dyn Request) -> AppResult<Response> {
 /// Handles the `GET /crates/:crate_id` route.
 pub fn show(req: &mut dyn Request) -> AppResult<Response> {
     let name = &req.params()["crate_id"];
-    let conn = req.db_conn()?;
+    let conn = req.db_read_only()?;
     let krate = Crate::by_name(name).first::<Crate>(&*conn)?;
 
     let mut versions_and_publishers = krate
@@ -230,7 +230,7 @@ pub fn reverse_dependencies(req: &mut dyn Request) -> AppResult<Response> {
     use diesel::dsl::any;
 
     let name = &req.params()["crate_id"];
-    let conn = req.db_conn()?;
+    let conn = req.db_read_only()?;
     let krate = Crate::by_name(name).first::<Crate>(&*conn)?;
     let (rev_deps, total) = krate.reverse_dependencies(&*conn, &req.query())?;
     let rev_deps: Vec<_> = rev_deps
