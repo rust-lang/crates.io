@@ -5,12 +5,10 @@ import AuthenticatedRoute from '../../mixins/authenticated-route';
 export default Route.extend(AuthenticatedRoute, {
   actions: {
     willTransition: function() {
-      this.controller
-        .setProperties({
-          emailNotificationsSuccess: false,
-          emailNotificationsError: false,
-        })
-        .clear();
+      this.controller.setProperties({
+        emailNotificationsSuccess: false,
+        emailNotificationsError: false,
+      });
     },
   },
   model() {
