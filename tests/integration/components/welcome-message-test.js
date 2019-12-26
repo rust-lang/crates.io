@@ -68,6 +68,6 @@ module('Integration | Component | welcome-message', function(hooks) {
 
     await render(hbs`{{welcome-message}}`);
 
-    assert.equal(this.element.querySelector('#welcome-message').className, 'info', 'should have right class');
+    assert.equal(this.element.querySelector('#welcome-message').className, '', 'should have right class');
   });
 });

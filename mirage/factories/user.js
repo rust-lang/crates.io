@@ -1,9 +1,10 @@
-import { Factory, faker, trait } from 'ember-cli-mirage';
+import { Factory, trait } from 'ember-cli-mirage';
+import faker from 'faker';
 
 export default Factory.extend({
   email_verified: false,
   email_verification_sent: true,
-  name: () => faker.name.firstName(),
+  name: () => faker.name.findName(),
   login: () => faker.internet.userName(),
   avatar: () => faker.image.imageUrl(),
   url: () => faker.internet.url(),
