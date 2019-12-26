@@ -42,7 +42,7 @@ pub fn me(req: &mut dyn Request) -> AppResult<Response> {
     let tokens: Vec<ApiToken> = ApiToken::belonging_to(req.user()?)
         .filter(api_tokens::revoked.eq(false))
         .load(&*conn)?;
-    let has_tokens = tokens.len() > 0;
+    let has_tokens = !tokens.is_empty();
 
     let owned_crates = CrateOwner::by_owner_kind(OwnerKind::User)
         .inner_join(crates::table)
