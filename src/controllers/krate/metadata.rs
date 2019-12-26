@@ -199,7 +199,7 @@ pub fn readme(req: &mut dyn Request) -> AppResult<Response> {
 // this information already, but ember is definitely requesting it
 pub fn versions(req: &mut dyn Request) -> AppResult<Response> {
     let crate_name = &req.params()["crate_id"];
-    let conn = req.db_conn()?;
+    let conn = req.db_read_only()?;
     let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
     let mut versions_and_publishers: Vec<(Version, Option<User>)> = krate
         .all_versions()
