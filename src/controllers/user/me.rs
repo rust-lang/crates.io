@@ -4,7 +4,7 @@ use crate::controllers::frontend_prelude::*;
 
 use crate::controllers::helpers::*;
 use crate::email;
-use crate::util::errors::AppError;
+use crate::util::errors::{AppError, ChainError};
 
 use crate::models::{
     CrateOwner, Email, Follow, NewEmail, OwnerKind, User, Version, VersionOwnerAction,
@@ -141,12 +141,10 @@ pub fn update_user(req: &mut dyn Request) -> AppResult<Response> {
     let user_update: UserUpdate =
         serde_json::from_str(&body).map_err(|_| bad_request("invalid json request"))?;
 
-    if user_update.user.email.is_none() {
-        return Err(bad_request("empty email rejected"));
-    }
-
-    let user_email = user_update.user.email.unwrap();
-    let user_email = user_email.trim();
+    let user_email = match &user_update.user.email {
+        Some(email) => email.trim(),
+        None => return Err(bad_request("empty email rejected")),
+    };
 
     if user_email == "" {
         return Err(bad_request("empty email rejected"));
@@ -199,7 +197,9 @@ pub fn regenerate_token_and_send(req: &mut dyn Request) -> AppResult<Response> {
     use diesel::update;
 
     let user = req.user()?;
-    let name = &req.params()["user_id"].parse::<i32>().ok().unwrap();
+    let name = &req.params()["user_id"]
+        .parse::<i32>()
+        .chain_error(|| bad_request("invalid user_id"))?;
     let conn = req.db_conn()?;
 
     // need to check if current user matches user to be updated

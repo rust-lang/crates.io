@@ -54,6 +54,7 @@ impl Handler for BlockTraffic {
                  Please open an issue at https://github.com/rust-lang/crates.io \
                  or email help@crates.io \
                  and provide the request id {}",
+                // Heroku should always set this header
                 req.headers().find("X-Request-Id").unwrap()[0]
             );
             let mut headers = HashMap::new();

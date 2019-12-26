@@ -68,6 +68,10 @@ impl<'a> NewTeam<'a> {
 
 impl Team {
     /// Tries to create the Team in the DB (assumes a `:` has already been found).
+    ///
+    /// # Panics
+    ///
+    /// This function will panic if login contains less than 2 `:` characters.
     pub fn create_or_update(
         app: &App,
         conn: &PgConnection,
@@ -76,10 +80,11 @@ impl Team {
     ) -> AppResult<Self> {
         // must look like system:xxxxxxx
         let mut chunks = login.split(':');
+        // unwrap is okay, split on an empty string still has 1 chunk
         match chunks.next().unwrap() {
             // github:rust-lang:owners
             "github" => {
-                // Ok to unwrap since we know one ":" is contained
+                // unwrap is documented above as part of the calling contract
                 let org = chunks.next().unwrap();
                 let team = chunks.next().ok_or_else(|| {
                     cargo_err(

@@ -17,6 +17,13 @@ mod request_helpers;
 mod request_proxy;
 pub mod rfc3339;
 
+/// Serialize a value to JSON and build a status 200 Response
+///
+/// This helper sets appropriate values for `Content-Type` and `Content-Length`.
+///
+/// # Panics
+///
+/// This function will panic if serialization fails.
 pub fn json_response<T: Serialize>(t: &T) -> Response {
     let json = serde_json::to_string(t).unwrap();
     let mut headers = HashMap::new();
