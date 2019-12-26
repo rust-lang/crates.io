@@ -1,6 +1,5 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
-import { htmlSafe } from '@ember/string';
 
 /**
  * This route will open a popup window directed at the `github-login` route.
@@ -68,11 +67,6 @@ export default Route.extend({
       let user = this.store.push(this.store.normalize('user', data.user));
       let transition = this.get('session.savedTransition');
       this.session.loginUser(user);
-
-      const messageAfterLogin = htmlSafe(
-        "Welcome to crates.io! Visit <a href='me'>account settings</a> to verify your email address and create an API token!",
-      );
-      this.flashMessages.show(messageAfterLogin, { type: 'info' });
 
       if (transition) {
         transition.retry();
