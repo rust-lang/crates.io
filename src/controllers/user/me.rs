@@ -7,9 +7,9 @@ use crate::email;
 use crate::util::errors::AppError;
 
 use crate::models::{
-    CrateOwner, Email, Follow, NewEmail, OwnerKind, User, Version, VersionOwnerAction, ApiToken,
+    ApiToken, CrateOwner, Email, Follow, NewEmail, OwnerKind, User, Version, VersionOwnerAction,
 };
-use crate::schema::{crate_owners, crates, emails, follows, users, versions, api_tokens};
+use crate::schema::{api_tokens, crate_owners, crates, emails, follows, users, versions};
 use crate::views::{EncodableMe, EncodableVersion, OwnedCrate};
 
 /// Handles the `GET /me` route.

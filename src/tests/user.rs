@@ -5,7 +5,7 @@ use crate::{
     OkBool, TestApp,
 };
 use cargo_registry::{
-    models::{Email, NewUser, User, ApiToken},
+    models::{ApiToken, Email, NewUser, User},
     schema::crate_owners,
     views::{EncodablePrivateUser, EncodablePublicUser, EncodableVersion, OwnedCrate},
 };
