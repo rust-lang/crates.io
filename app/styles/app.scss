@@ -198,7 +198,8 @@ span.loading {
     background-image: url(/assets/ajax-loader.gif);
 }
 
-#flash {
+#flash,
+#welcome-message {
     display: none;
     font-weight: bold;
     font-size: 110%;
