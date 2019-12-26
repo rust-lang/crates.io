@@ -21,7 +21,7 @@ use crate::models::krate::ALL_COLUMNS;
 pub fn summary(req: &mut dyn Request) -> AppResult<Response> {
     use crate::schema::crates::dsl::*;
 
-    let conn = req.db_conn()?;
+    let conn = req.db_read_only()?;
     let num_crates = crates.count().get_result(&*conn)?;
     let num_downloads = metadata::table
         .select(metadata::total_downloads)
