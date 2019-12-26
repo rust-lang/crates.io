@@ -1,10 +1,13 @@
 import Component from '@ember/component';
+import { inject as service } from '@ember/service';
 import { empty, or } from '@ember/object/computed';
 
 export default Component.extend({
   emptyName: empty('api_token.name'),
   disableCreate: or('api_token.isSaving', 'emptyName'),
   serverError: null,
+  session: service(),
+  store: service(),
 
   didInsertElement() {
     let input = this.element.querySelector('input');
@@ -17,6 +20,7 @@ export default Component.extend({
     async saveToken() {
       try {
         await this.api_token.save();
+        this.set('session.currentUser.has_tokens', true);
         this.set('serverError', null);
       } catch (err) {
         let msg;
@@ -31,6 +35,11 @@ export default Component.extend({
 
     async revokeToken() {
       try {
+        // To avoid error on destroy we need to set before destroying of api-token
+        // that's why we need to set length of api-tokens to 1 in check
+        if ((await this.store.query('api-token', {})).length == 1) {
+          this.set('session.currentUser.has_tokens', false);
+        }
         await this.api_token.destroyRecord();
       } catch (err) {
         let msg;
