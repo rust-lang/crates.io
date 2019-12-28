@@ -1,5 +1,6 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
+import window from 'ember-window-mock';
 
 /**
  * This route will open a popup window directed at the `github-login` route.
