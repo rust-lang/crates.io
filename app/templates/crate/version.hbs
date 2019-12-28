@@ -71,8 +71,8 @@
         {{/if}}
       </div>
       {{#if this.crate.readme}}
-        <section class="crate-readme" aria-label="Readme">
-          <CrateReadme @rendered={{this.crate.readme}} />
+        <section class="crate-readme" aria-label="Readme" {{highlight-syntax selector="pre > code"}}>
+          {{html-safe this.crate.readme}}
         </section>
       {{else}}
         {{#if this.crate.description}}
