@@ -1,5 +1,8 @@
 #me-profile {
     border-bottom: 5px solid $gray-border;
+    @media only screen and (prefers-color-scheme: dark) {
+        border-bottom: 0.25rem solid #666;
+    }
     padding-bottom: 20px;
     margin-bottom: 20px;
 

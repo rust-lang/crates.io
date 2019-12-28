@@ -21,6 +21,9 @@ $link-color: rgb(0, 172, 91);
 html {
     background: url('/assets/noise.png');
     background-color: $html-bg;
+    @media only screen and (prefers-color-scheme: dark) {
+        background-color: #222;
+    }
 }
 
 html, body { margin: 0; }
@@ -53,6 +56,12 @@ body > div {
   box-shadow: 0px 0px 5px 2px #3b6837;
   border: 5px solid #62865f;
   color: $main-color;
+  @media only screen and (prefers-color-scheme: dark) {
+    box-shadow: none;
+    border: none;
+    background-color: #111;
+    color: #eee;
+  }
 }
 
 #header {
@@ -68,7 +77,13 @@ body > div {
         &:hover { color: darken(white, 15%); }
     }
 
-    .sep { margin: 0 10px; color: darken($html-bg, 10%); }
+    .sep {
+        margin: 0 10px;
+        color: darken($html-bg, 10%);
+        @media only screen and (prefers-color-scheme: dark) {
+            color: #666;
+        }
+    }
     .nav, .menu {
         text-align: right;
         margin-right: 5px;
@@ -82,6 +97,9 @@ body > div {
         right: 0;
         left: auto;
         min-width: 200px;
+        @media only screen and (prefers-color-scheme: dark) {
+            color: #eee;
+        }
     }
 
     button {
@@ -133,6 +151,10 @@ body > div {
     background-position: 6px 6px;
     background-size: 14px 15px;
     @include border-radius(15px);
+    @media only screen and (prefers-color-scheme: dark) {
+        background-color: #111;
+        color: #eee;
+    }
 }
 
 form.search label {
@@ -170,6 +192,9 @@ input.search {
 
 span.small {
     color: $main-color-light;
+    @media only screen and (prefers-color-scheme: dark) {
+        color: #bbb;
+    }
     font-size: 80%;
     .num {
         font-weight: bold;
@@ -231,7 +256,13 @@ a {
 
     a { color: white; }
     a:hover { color: darken(white, 10%); }
-    .sep { margin: 0 10px; color: darken($html-bg, 10%); }
+    .sep {
+        margin: 0 10px;
+        color: darken($html-bg, 10%);
+        @media only screen and (prefers-color-scheme: dark) {
+            color: #666;
+        }
+    }
 
     @media only screen and (max-width: 450px) {
         margin: 20px;
@@ -289,6 +320,11 @@ ul.dropdown {
     z-index: 10;
     overflow: hidden;
     @include border-radius(5px);
+    @media only screen and (prefers-color-scheme: dark) {
+        border: 1px solid #666;
+        background-color: #222;
+        color: #eee;
+    }
 
     li a {
         font-size: 90%;
@@ -297,6 +333,9 @@ ul.dropdown {
         padding: 8px 10px;
         text-decoration: none;
         color: $main-color !important;
+        @media only screen and (prefers-color-scheme: dark) {
+            color: #eee !important;
+        }
 
         &:hover {
             background: lighten($main-color, 15%);
@@ -349,6 +388,9 @@ h1 {
 
 .arrow-in-list svg {
     background: #fff;
+    @media only screen and (prefers-color-scheme: dark) {
+        background: #111;
+    }
 }
 
 a.arrow svg {
@@ -358,6 +400,10 @@ a.arrow svg {
 abbr[title] {
     text-decoration: none;
     border-bottom: 1px dotted;
+}
+
+nav svg {
+    filter: invert(100%);
 }
 
 @media only percy {

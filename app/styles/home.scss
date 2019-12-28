@@ -31,6 +31,10 @@
 .yellow-button {
     @include button(#fede9e, #fdc452);
     vertical-align: middle;
+    @media only screen and (prefers-color-scheme: dark) {
+        @include button(#333, #222);
+        color: #eee;
+    }
 }
 
 button.small {
@@ -45,6 +49,9 @@ button.small {
 #title-header {
     text-align: center;
     border-bottom: 5px solid $gray-border;
+    @media only screen and (prefers-color-scheme: dark) {
+        border-bottom: 0.25rem solid #666;
+    }
     padding-bottom: 40px;
 
     h1 {
@@ -80,6 +87,9 @@ button.small {
         @include flex-direction(column);
 
         border-left: 1px solid $gray-border;
+        @media only screen and (prefers-color-scheme: dark) {
+            border-left: 1px solid #666;
+        }
         padding: 10px;
 
         span { margin-left: 10px; }
@@ -145,8 +155,18 @@ button.small {
         }
 
         img { vertical-align: middle; }
+
+        @media only screen and (prefers-color-scheme: dark) {
+            background-color: #222;
+            color: #eee;
+        }
     }
-    li a:hover { background-color: darken($main-bg-dark, 5%); }
+    li a:hover {
+        background-color: darken($main-bg-dark, 5%);
+        @media only screen and (prefers-color-scheme: dark) {
+            background-color: #333;
+        }
+    }
 
 }
 
