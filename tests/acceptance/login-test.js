@@ -83,7 +83,7 @@ module('Acceptance | Login', function(hooks) {
     fakeWindow.closed = true;
 
     // wait for the error message to show up after the failed login
-    await waitFor('[data-test-flash-message].shown');
+    await waitFor('[data-test-flash-message].show');
 
     assert.dom('[data-test-flash-message]').hasText('Failed to log in: Forbidden');
   });
