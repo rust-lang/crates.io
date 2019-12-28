@@ -19,7 +19,6 @@ mod prelude {
     pub use crate::util::errors::{cargo_err, AppError, AppResult, ChainError}; // TODO: Remove cargo_err from here
 
     pub use crate::middleware::app::RequestApp;
-    pub use crate::middleware::current_user::RequestUser;
 
     use std::collections::HashMap;
     use std::io;
@@ -27,6 +26,10 @@ mod prelude {
     use indexmap::IndexMap;
     use serde::Serialize;
     use url;
+
+    pub trait UserAuthenticationExt {
+        fn authenticate(&self, conn: &PgConnection) -> AppResult<super::util::AuthenticatedUser>;
+    }
 
     pub trait RequestUtils {
         fn redirect(&self, url: String) -> Response;
@@ -77,6 +80,7 @@ mod prelude {
 }
 
 pub mod helpers;
+mod util;
 
 pub mod category;
 pub mod crate_owner_invitation;

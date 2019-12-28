@@ -40,6 +40,7 @@ macro_rules! t {
     };
 }
 
+mod authentication;
 mod badge;
 mod builders;
 mod categories;
