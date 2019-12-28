@@ -402,8 +402,10 @@ abbr[title] {
     border-bottom: 1px dotted;
 }
 
-nav svg {
-    filter: invert(100%);
+@media only screen and (prefers-color-scheme: dark) {
+    nav svg {
+        filter: invert(100%);
+    }
 }
 
 @media only percy {
