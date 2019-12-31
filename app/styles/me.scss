@@ -30,6 +30,9 @@
             padding: 10px 20px 10px 0;
             @include display-flex;
             background-color: $main-bg-dark;
+            @media only screen and (prefers-color-scheme: dark) {
+                background-color: inherit;
+            }
             .small-text {
                 font-size: 90%;
             }
@@ -70,6 +73,9 @@
 
 #me-email {
     border-bottom: 5px solid $gray-border;
+    @media only screen and (prefers-color-scheme: dark) {
+        border-bottom: 0.25rem solid #666;
+    }
     padding-bottom: 20px;
     margin-bottom: 20px;
     @include display-flex;
@@ -121,6 +127,9 @@
 
 #me-email-notifications {
     border-bottom: 5px solid $gray-border;
+    @media only screen and (prefers-color-scheme: dark) {
+        border-bottom: 0.25rem solid #666;
+    }
     padding-bottom: 20px;
     margin-bottom: 20px;
     @include display-flex;
@@ -156,6 +165,9 @@
 
         li {
             background-color: #fff;
+            @media only screen and (prefers-color-scheme: dark) {
+                background-color: inherit;
+            }
             display: block;
             position: relative;
             border: 1px solid #d5d3cb;
@@ -179,6 +191,9 @@
                 border-radius: 50%;
                 content: '';
                 background-color: $main-bg-dark;
+                @media only screen and (prefers-color-scheme: dark) {
+                    background-color: inherit;
+                }
                 position: absolute;
                 left: 50%;
                 top: 50%;
@@ -356,6 +371,9 @@
 
 #tokens {
     background-color: $main-bg-dark;
+    @media only screen and (prefers-color-scheme: dark) {
+        background-color: inherit;
+    }
     @include display-flex;
     @include flex-direction(column);
     .row {
@@ -393,6 +411,9 @@
             margin-right: 0px;
         }
         background-color: $main-bg-dark;
+        @media only screen and (prefers-color-scheme: dark) {
+            background-color: inherit;
+        }
     }
     .new-token {
         border-top-width: 0px;

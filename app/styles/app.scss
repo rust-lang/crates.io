@@ -228,6 +228,9 @@ span.loading {
     font-weight: bold;
     font-size: 110%;
     background-color: rgb(255, 213, 213);
+    @media only screen and (prefers-color-scheme: dark) {
+        background-color: #664545;
+    }
     border: 2px solid rgb(228, 136, 136);
     text-align: center;
     margin: 0 0 10px 0;
@@ -383,6 +386,12 @@ h1 {
     input {
         width: 100%;
         padding: 5px;
+
+        @media only screen and (prefers-color-scheme: dark) {
+            background-color: #222;
+            color: #eee;
+            border-color: #666;
+        }
     }
 }
 
