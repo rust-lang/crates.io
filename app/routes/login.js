@@ -68,7 +68,6 @@ export default Route.extend({
       let user = this.store.push(this.store.normalize('user', data.user));
       let transition = this.get('session.savedTransition');
       this.session.loginUser(user);
-
       if (transition) {
         transition.retry();
       }
