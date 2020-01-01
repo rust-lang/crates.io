@@ -92,9 +92,9 @@ fn new_crate_owner() {
     let crate_to_publish = PublishBuilder::new("foo_owner").version("1.0.0");
     token.enqueue_publish(crate_to_publish).good();
 
-    // Add the second user as an owner
-    let user2 = app.db_new_user("bar");
-    token.add_user_owner("foo_owner", "bar");
+    // Add the second user as an owner (with a different case to make sure that works)
+    let user2 = app.db_new_user("Bar");
+    token.add_user_owner("foo_owner", "BAR");
 
     // accept invitation for user to be added as owner
     let krate: Crate = app.db(|conn| Crate::by_name("foo_owner").first(conn).unwrap());
@@ -104,7 +104,7 @@ fn new_crate_owner() {
     let crates = user2.search_by_user_id(user2.as_model().id);
     assert_eq!(crates.crates.len(), 1);
 
-    // And upload a new crate as the second user
+    // And upload a new version as the second user
     let crate_to_publish = PublishBuilder::new("foo_owner").version("2.0.0");
     user2
         .db_new_token("bar_token")
