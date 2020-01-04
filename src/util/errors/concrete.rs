@@ -8,6 +8,7 @@ pub enum Error {
     Internal(String),
     Io(io::Error),
     JobEnqueue(swirl::EnqueueError),
+    Openssl(openssl::error::ErrorStack),
     Reqwest(reqwest::Error),
 }
 
@@ -22,6 +23,7 @@ impl fmt::Display for Error {
             Error::Internal(inner) => inner.fmt(f),
             Error::Io(inner) => inner.fmt(f),
             Error::JobEnqueue(inner) => inner.fmt(f),
+            Error::Openssl(inner) => inner.fmt(f),
             Error::Reqwest(inner) => inner.fmt(f),
         }
     }
@@ -60,6 +62,15 @@ impl From<io::Error> for Error {
 impl From<swirl::EnqueueError> for Error {
     fn from(err: swirl::EnqueueError) -> Self {
         Error::JobEnqueue(err)
+    }
+}
+
+impl From<s3::Error> for Error {
+    fn from(err: s3::Error) -> Self {
+        match err {
+            s3::Error::Openssl(e) => Error::Openssl(e),
+            s3::Error::Reqwest(e) => Error::Reqwest(e),
+        }
     }
 }
 
