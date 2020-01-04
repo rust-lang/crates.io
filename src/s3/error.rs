@@ -3,6 +3,7 @@ use std::fmt;
 use openssl::error::ErrorStack;
 use reqwest::Error as ReqwestError;
 
+#[derive(Debug)]
 pub enum Error {
     Openssl(ErrorStack),
     Reqwest(ReqwestError),
@@ -28,3 +29,5 @@ impl fmt::Display for Error {
         }
     }
 }
+
+impl std::error::Error for Error {}
