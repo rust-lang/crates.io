@@ -117,6 +117,11 @@ fn index_queries() {
         CrateBuilder::new("foo", user.id)
             .keyword("kw3")
             .expect_build(conn);
+
+        CrateBuilder::new("two-keywords", user.id)
+            .keyword("kw1")
+            .keyword("kw3")
+            .expect_build(conn);
         (krate, krate2)
     });
 
@@ -124,11 +129,11 @@ fn index_queries() {
 
     // All of these fields should be indexed/searched by the queries
     assert_eq!(anon.search("q=foo").meta.total, 2);
-    assert_eq!(anon.search("q=kw1").meta.total, 2);
+    assert_eq!(anon.search("q=kw1").meta.total, 3);
     assert_eq!(anon.search("q=readme").meta.total, 1);
     assert_eq!(anon.search("q=description").meta.total, 1);
 
-    assert_eq!(anon.search_by_user_id(user.id).crates.len(), 3);
+    assert_eq!(anon.search_by_user_id(user.id).crates.len(), 4);
     assert_eq!(anon.search_by_user_id(0).crates.len(), 0);
 
     assert_eq!(anon.search("letter=F").crates.len(), 2);
@@ -136,9 +141,10 @@ fn index_queries() {
     assert_eq!(anon.search("letter=b").crates.len(), 1);
     assert_eq!(anon.search("letter=c").crates.len(), 0);
 
-    assert_eq!(anon.search("keyword=kw1").crates.len(), 2);
-    assert_eq!(anon.search("keyword=KW1").crates.len(), 2);
+    assert_eq!(anon.search("keyword=kw1").crates.len(), 3);
+    assert_eq!(anon.search("keyword=KW1").crates.len(), 3);
     assert_eq!(anon.search("keyword=kw2").crates.len(), 0);
+    assert_eq!(anon.search("all_keywords=kw1 kw3").crates.len(), 1);
 
     assert_eq!(anon.search("q=foo&keyword=kw1").crates.len(), 1);
     assert_eq!(anon.search("q=foo2&keyword=kw1").crates.len(), 0);

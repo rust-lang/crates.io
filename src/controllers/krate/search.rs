@@ -96,7 +96,28 @@ pub fn search(req: &mut dyn Request) -> AppResult<Response> {
         );
     }
 
-    if let Some(kw) = params.get("keyword") {
+    if let Some(kws) = params.get("all_keywords") {
+        use diesel::sql_types::Array;
+        sql_function!(#[aggregate] fn array_agg<T>(x: T) -> Array<T>);
+
+        let names: Vec<_> = kws
+            .split_whitespace()
+            .map(|name| name.to_lowercase())
+            .collect();
+
+        query = query.filter(
+            // FIXME: Just use `.contains` in Diesel 2.0
+            // https://github.com/diesel-rs/diesel/issues/2066
+            Contains::new(
+                crates_keywords::table
+                    .inner_join(keywords::table)
+                    .filter(crates_keywords::crate_id.eq(crates::id))
+                    .select(array_agg(keywords::keyword))
+                    .single_value(),
+                names.into_sql::<Array<Text>>(),
+            ),
+        );
+    } else if let Some(kw) = params.get("keyword") {
         query = query.filter(
             crates::id.eq_any(
                 crates_keywords::table
@@ -227,3 +248,5 @@ pub fn search(req: &mut dyn Request) -> AppResult<Response> {
         },
     }))
 }
+
+diesel_infix_operator!(Contains, "@>");
