@@ -53,6 +53,7 @@ impl Keyword {
         if name.is_empty() {
             return false;
         }
+        // unwrap is okay because name is non-empty
         name.chars().next().unwrap().is_alphanumeric()
             && name
                 .chars()
