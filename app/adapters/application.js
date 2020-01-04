@@ -4,8 +4,23 @@ import { inject as service } from '@ember/service';
 
 export default RESTAdapter.extend({
   fastboot: service(),
+  fetcher: service(),
 
   namespace: 'api/v1',
+
+  ajax(url, type, options) {
+    if (type === 'GET') {
+      let cache = this.fetcher.get(url);
+      if (cache) {
+        return cache;
+      }
+    }
+
+    return this._super(url, type, options).then(resp => {
+      this.fetcher.put(url, resp);
+      return resp;
+    });
+  },
 
   headers: computed('fastboot.{isFastBoot,request.headers}', function () {
     if (this.fastboot.isFastBoot) {

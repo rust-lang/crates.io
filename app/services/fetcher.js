@@ -2,26 +2,40 @@ import Service, { inject as service } from '@ember/service';
 
 import ajax from '../utils/ajax';
 
+const KEY = 'ajax-cache';
+
 export default class FetcherService extends Service {
   @service fastboot;
 
-  ajax(url) {
+  get(url) {
+    let shoebox = this.fastboot.shoebox;
+    if (!shoebox) {
+      return;
+    }
+    let cache = shoebox.retrieve(KEY) || {};
+    return cache[url];
+  }
+
+  put(url, obj) {
     let fastboot = this.fastboot;
     let shoebox = this.fastboot.shoebox;
-    let cache = shoebox.retrieve('ajax-cache');
-    if (!cache) {
-      cache = {};
+    if (!(shoebox && fastboot.isFastBoot)) {
+      return;
     }
 
-    if (cache[url]) {
-      return cache[url];
+    let cache = shoebox.retrieve(KEY) || {};
+    cache[url] = deepCopy(obj);
+    shoebox.put(KEY, cache);
+  }
+
+  ajax(url) {
+    let resp = this.get(url);
+    if (resp) {
+      return resp;
     }
 
-    return ajax(url).then(function (resp) {
-      if (shoebox && fastboot.isFastBoot) {
-        cache[url] = deepCopy(resp);
-        shoebox.put('ajax-cache', cache);
-      }
+    return ajax(url).then(resp => {
+      this.put(url, resp);
       return resp;
     });
   }
