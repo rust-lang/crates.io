@@ -5,15 +5,18 @@ use crate::models::{ApiToken, User};
 use crate::util::errors::{internal, AppError, AppResult, ChainError, Unauthorized};
 
 #[derive(Debug)]
-pub struct AuthenticatedUser(i32, Option<i32>);
+pub struct AuthenticatedUser {
+    user_id: i32,
+    token_id: Option<i32>,
+}
 
 impl AuthenticatedUser {
     pub fn user_id(&self) -> i32 {
-        self.0
+        self.user_id
     }
 
     pub fn api_token_id(&self) -> Option<i32> {
-        self.1
+        self.token_id
     }
 
     pub fn find_user(&self, conn: &PgConnection) -> AppResult<User> {
@@ -23,16 +26,22 @@ impl AuthenticatedUser {
 }
 
 impl<'a> UserAuthenticationExt for dyn Request + 'a {
-    /// Obtain `CurrentUserIds` for the request or return an `Unauthorized` error
+    /// Obtain `AuthenticatedUser` for the request or return an `Unauthorized` error
     fn authenticate(&self, conn: &PgConnection) -> AppResult<AuthenticatedUser> {
         if let Some(id) = self.extensions().find::<TrustedUserId>() {
             // A trusted user_id was provided by a signed cookie (or a test `MockCookieUser`)
-            Ok(AuthenticatedUser(id.0, None))
+            Ok(AuthenticatedUser {
+                user_id: id.0,
+                token_id: None,
+            })
         } else {
             // Otherwise, look for an `Authorization` header on the request
             if let Some(headers) = self.headers().find("Authorization") {
                 ApiToken::find_by_api_token(conn, headers[0])
-                    .map(|token| AuthenticatedUser(token.user_id, Some(token.id)))
+                    .map(|token| AuthenticatedUser {
+                        user_id: token.user_id,
+                        token_id: Some(token.id),
+                    })
                     // Convert a NotFound (or other database error) into Unauthorized
                     .map_err(|_| Box::new(Unauthorized) as Box<dyn AppError>)
             } else {
