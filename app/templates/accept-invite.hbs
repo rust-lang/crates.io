@@ -1,0 +1,7 @@
+{{#if this.model.response.accepted}}
+  <h1>You've been added as a crate owner!</h1>
+  <p>Visit your <a href="/dashboard">dashboard</a> to view all of your crates, or <a href="/me">account settings</a> to manage email notification preferences for all of your crates.</p>
+{{else}}
+  <h1>Error in accepting crate ownership.</h1>
+  <p>You may want to visit <a href="/me/pending-invites">crates.io/me/pending-invites</a> to try again.</p>
+{{/if}}
