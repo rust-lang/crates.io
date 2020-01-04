@@ -17,4 +17,4 @@ path = "lib.rs"
 base64 = "0.6"
 chrono = "0.4"
 openssl = "0.10.13"
-reqwest = { git = "https://github.com/seanmonstar/reqwest/", features = ["blocking"] }
+reqwest = { version = "0.10", features = ["blocking"] }
