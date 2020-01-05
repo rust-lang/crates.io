@@ -7,7 +7,7 @@
         @disabled={{this.api_token.isSaving}}
         @value={{this.api_token.name}}
         @autofocus="autofocus"
-        @enter="saveToken"
+        @enter={{action "saveToken"}}
         data-test-focused-input
       />
     {{else}}
