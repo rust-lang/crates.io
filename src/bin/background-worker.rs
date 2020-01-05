@@ -41,6 +41,7 @@ fn main() {
 
     let repository_config = RepositoryConfig::from_environment();
     let repository = Repository::open(&repository_config).expect("Failed to clone index");
+    println!("Index cloned");
 
     let environment = Environment::new(
         repository,
