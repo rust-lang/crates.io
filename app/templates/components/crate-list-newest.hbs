@@ -1,5 +1,5 @@
 <ol>
-  {{#each this.crates as |crate index|}}
+  {{#each @crates as |crate index|}}
     <li>
       <LinkTo @route="crate.version" @models={{array crate.id crate.newest_version}} class="name" data-test-crate-link={{index}}>
         <span>{{ crate.name }} ({{ crate.newest_version }})</span>
