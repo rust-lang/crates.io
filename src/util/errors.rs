@@ -1,3 +1,17 @@
+//! This module implements several error types and traits.  The suggested usage in returned results
+//! is as follows:
+//!
+//! * The concrete `util::concrete::Error` type (re-exported as `util::Error`) is great for code
+//!   that is not part of the request/response lifecycle.  It avoids pulling in the unnecessary
+//!   infrastructure to convert errors into a user facing JSON responses (relative to `AppError`).
+//! * `diesel::QueryResult` - There is a lot of code that only deals with query errors.  If only
+//!   one type of error is possible in a function, using that specific error is preferable to the
+//!   more general `util::Error`.  This is especially common in model code.
+//! * `util::errors::AppResult` - Some failures should be converted into user facing JSON
+//!   responses.  This error type is more dynamic and is box allocated.  Low-level errors are
+//!   typically not converted to user facing errors and most usage is within the models,
+//!   controllers, and middleware layers.
+
 use std::any::{Any, TypeId};
 use std::error::Error;
 use std::fmt;
