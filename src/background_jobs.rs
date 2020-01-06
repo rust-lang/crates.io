@@ -2,7 +2,7 @@ use std::panic::AssertUnwindSafe;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
 use diesel::r2d2::PoolError;
-use swirl::errors::PerformError;
+use swirl::PerformError;
 
 use crate::db::{DieselPool, DieselPooledConn};
 use crate::git::Repository;

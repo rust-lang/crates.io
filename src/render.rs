@@ -4,7 +4,7 @@ use ammonia::{Builder, UrlRelative, UrlRelativeEvaluate};
 use htmlescape::encode_minimal;
 use std::borrow::Cow;
 use std::path::Path;
-use swirl::errors::PerformError;
+use swirl::PerformError;
 use url::Url;
 
 use crate::background_jobs::Environment;

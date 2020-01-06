@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 use std::fs::{self, OpenOptions};
 use std::path::{Path, PathBuf};
-use swirl::errors::PerformError;
+use swirl::PerformError;
 use tempdir::TempDir;
 use url::Url;
 
