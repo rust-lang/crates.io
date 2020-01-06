@@ -61,7 +61,7 @@ export default Route.extend({
                 }
               });
 
-              if (latestStableVersion == null) {
+              if (latestUnyankedVersion == null) {
                 // There's not even any unyanked version...
                 params.version_num = maxVersion;
               } else {
