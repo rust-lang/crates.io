@@ -260,9 +260,11 @@
     @media only screen and (max-width: 750px) {
         @include flex-direction(column);
 
-        #my-feed { @include order(0); }
+        #my-feed {
+            order: 0;
+        }
         #my-crate-lists {
-            @include order(1);
+            order: 1;
             margin-right: 0;
         }
         #my-crates, #my-following { margin: 0; }

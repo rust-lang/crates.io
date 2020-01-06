@@ -64,8 +64,3 @@
     -webkit-flex: $stuff;
     flex: $stuff;
 }
-
-@mixin order($ord) {
-    -webkit-order: $ord;
-    order: $ord;
-}
