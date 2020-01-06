@@ -45,9 +45,7 @@ export default Route.extend({
           .then(versions => {
             const latestStableVersion = versions.find(version => {
               // Find the latest version that is stable AND not-yanked.
-              if (!isUnstableVersion(version.get('num')) && !version.get('yanked')) {
-                return version;
-              }
+              return !isUnstableVersion(version.get('num')) && !version.get('yanked');
             });
 
             if (latestStableVersion == null) {
@@ -56,9 +54,7 @@ export default Route.extend({
               // we have to fall back to the latest one that is unstable....
               const latestUnyankedVersion = versions.find(version => {
                 // Find the latest version that is not-yanked.
-                if (!version.get('yanked')) {
-                  return version;
-                }
+                return !version.get('yanked');
               });
 
               if (latestUnyankedVersion == null) {
