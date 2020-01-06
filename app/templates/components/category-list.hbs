@@ -1,5 +1,5 @@
 <ul>
-  {{#each this.categories as |category|}}
+  {{#each @categories as |category|}}
     <li>
       <LinkTo @route="category" @model={{category.slug}} class="name">
         <span>{{ category.category }} ({{ format-num category.crates_cnt }})</span>
