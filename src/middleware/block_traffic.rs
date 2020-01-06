@@ -39,7 +39,7 @@ impl AroundMiddleware for BlockTraffic {
 }
 
 impl Handler for BlockTraffic {
-    fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
+    fn call(&self, req: &mut dyn Request) -> Result<Response> {
         let has_blocked_value = req
             .headers()
             .find(&self.header_name)

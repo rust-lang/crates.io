@@ -11,7 +11,9 @@ mod on_call;
 
 use std::env::args;
 
-fn main() {
+use cargo_registry::util::Error;
+
+fn main() -> Result<(), Error> {
     let args = args().collect::<Vec<_>>();
 
     let event_type = &*args[1];
@@ -32,5 +34,5 @@ fn main() {
         },
         _ => panic!("Event type must be trigger, acknowledge, or resolve"),
     };
-    event.send().unwrap()
+    event.send()
 }

@@ -2,7 +2,7 @@ use diesel::prelude::*;
 
 use crate::app::App;
 use crate::github::{github_api, team_url};
-use crate::util::{cargo_err, errors::NotFound, AppResult};
+use crate::util::errors::{cargo_err, AppResult, NotFound};
 
 use oauth2::{prelude::*, AccessToken};
 
@@ -178,7 +178,7 @@ impl Team {
         team_with_gh_id_contains_user(app, self.github_id, user)
     }
 
-    pub fn owning(krate: &Crate, conn: &PgConnection) -> AppResult<Vec<Owner>> {
+    pub fn owning(krate: &Crate, conn: &PgConnection) -> QueryResult<Vec<Owner>> {
         let base_query = CrateOwner::belonging_to(krate).filter(crate_owners::deleted.eq(false));
         let teams = base_query
             .inner_join(teams::table)

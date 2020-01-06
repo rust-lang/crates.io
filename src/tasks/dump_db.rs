@@ -3,7 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::{background_jobs::Environment, uploaders::Uploader, util::errors::std_error_no_send};
+use crate::{background_jobs::Environment, uploaders::Uploader};
 use reqwest::header;
 use swirl::PerformError;
 
@@ -156,16 +156,14 @@ impl DumpTarball {
         let tarfile = File::open(&self.tarball_path)?;
         let content_length = tarfile.metadata()?.len();
         // TODO Figure out the correct content type.
-        uploader
-            .upload(
-                &client,
-                target_name,
-                tarfile,
-                content_length,
-                "application/gzip",
-                header::HeaderMap::new(),
-            )
-            .map_err(std_error_no_send)?;
+        uploader.upload(
+            &client,
+            target_name,
+            tarfile,
+            content_length,
+            "application/gzip",
+            header::HeaderMap::new(),
+        )?;
         Ok(content_length)
     }
 }

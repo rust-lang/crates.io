@@ -7,7 +7,6 @@ use std::sync::Arc;
 use url::Url;
 
 use crate::middleware::app::RequestApp;
-use crate::util::AppResult;
 use crate::Env;
 
 #[allow(missing_debug_implementations)]
@@ -18,7 +17,7 @@ pub enum DieselPool {
 }
 
 impl DieselPool {
-    pub fn get(&self) -> AppResult<DieselPooledConn<'_>> {
+    pub fn get(&self) -> Result<DieselPooledConn<'_>, r2d2::PoolError> {
         match self {
             DieselPool::Pool(pool) => Ok(DieselPooledConn::Pool(pool.get()?)),
             DieselPool::Test(conn) => Ok(DieselPooledConn::Test(conn.lock())),
@@ -89,12 +88,12 @@ pub trait RequestTransaction {
     ///
     /// The connection will live for the lifetime of the request.
     // FIXME: This description does not match the implementation below.
-    fn db_conn(&self) -> AppResult<DieselPooledConn<'_>>;
+    fn db_conn(&self) -> Result<DieselPooledConn<'_>, r2d2::PoolError>;
 }
 
 impl<T: Request + ?Sized> RequestTransaction for T {
-    fn db_conn(&self) -> AppResult<DieselPooledConn<'_>> {
-        self.app().diesel_database.get().map_err(Into::into)
+    fn db_conn(&self) -> Result<DieselPooledConn<'_>, r2d2::PoolError> {
+        self.app().diesel_database.get()
     }
 }
 

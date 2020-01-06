@@ -6,15 +6,11 @@ use super::prelude::*;
 pub struct Debug;
 
 impl Middleware for Debug {
-    fn before(&self, req: &mut dyn Request) -> Result<(), Box<dyn Error + Send>> {
+    fn before(&self, req: &mut dyn Request) -> Result<()> {
         DebugRequest.before(req)
     }
 
-    fn after(
-        &self,
-        _req: &mut dyn Request,
-        res: Result<Response, Box<dyn Error + Send>>,
-    ) -> Result<Response, Box<dyn Error + Send>> {
+    fn after(&self, _req: &mut dyn Request, res: Result<Response>) -> Result<Response> {
         res.map(|res| {
             println!("  <- {:?}", res.status);
             for (k, v) in &res.headers {
@@ -29,7 +25,7 @@ impl Middleware for Debug {
 pub struct DebugRequest;
 
 impl Middleware for DebugRequest {
-    fn before(&self, req: &mut dyn Request) -> Result<(), Box<dyn Error + Send>> {
+    fn before(&self, req: &mut dyn Request) -> Result<()> {
         println!("  version: {}", req.http_version());
         println!("  method: {:?}", req.method());
         println!("  scheme: {:?}", req.scheme());

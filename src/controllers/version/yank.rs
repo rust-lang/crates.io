@@ -5,8 +5,8 @@ use swirl::Job;
 use super::version_and_crate;
 use crate::controllers::cargo_prelude::*;
 use crate::git;
-use crate::models::{insert_version_owner_action, Rights, VersionAction};
-use crate::util::AppError;
+use crate::models::Rights;
+use crate::models::{insert_version_owner_action, VersionAction};
 
 /// Handles the `DELETE /crates/:crate_id/:version/yank` route.
 /// This does not delete a crate version, it makes the crate

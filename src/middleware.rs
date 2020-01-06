@@ -1,17 +1,22 @@
 mod prelude {
     pub use conduit::{Handler, Request, Response};
     pub use conduit_middleware::{AroundMiddleware, Middleware};
-    pub use std::error::Error;
+
+    use std::error::Error;
+    pub type BoxError = Box<dyn Error + Send>;
+    pub type Result<T> = std::result::Result<T, BoxError>;
 }
 
-pub use self::app::AppMiddleware;
-pub use self::current_user::CurrentUser;
-pub use self::debug::*;
-pub use self::ember_index_rewrite::EmberIndexRewrite;
-pub use self::head::Head;
+pub use prelude::Result;
+
+use self::app::AppMiddleware;
+use self::current_user::CurrentUser;
+use self::debug::*;
+use self::ember_index_rewrite::EmberIndexRewrite;
+use self::head::Head;
 use self::log_connection_pool_status::LogConnectionPoolStatus;
-pub use self::security_headers::SecurityHeaders;
-pub use self::static_or_continue::StaticOrContinue;
+use self::security_headers::SecurityHeaders;
+use self::static_or_continue::StaticOrContinue;
 
 pub mod app;
 mod block_traffic;

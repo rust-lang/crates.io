@@ -20,7 +20,7 @@ impl AroundMiddleware for LogRequests {
 }
 
 impl Handler for LogRequests {
-    fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
+    fn call(&self, req: &mut dyn Request) -> Result<Response> {
         let request_start = Instant::now();
         let res = self.handler.as_ref().unwrap().call(req);
         let (level, response_code) = match res {

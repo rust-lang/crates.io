@@ -4,8 +4,8 @@ use openssl::error::ErrorStack;
 use openssl::hash::{Hasher, MessageDigest};
 use reqwest::header;
 
-use crate::util::LimitErrorReader;
-use crate::util::{cargo_err, internal, AppResult, ChainError, Maximums};
+use crate::util::errors::{cargo_err, internal, AppResult, ChainError};
+use crate::util::{Error, LimitErrorReader, Maximums};
 
 use std::env;
 use std::fs::{self, File};
@@ -102,19 +102,17 @@ impl Uploader {
         content_length: u64,
         content_type: &str,
         extra_headers: header::HeaderMap,
-    ) -> AppResult<Option<String>> {
+    ) -> Result<Option<String>, Error> {
         match *self {
             Uploader::S3 { ref bucket, .. } => {
-                bucket
-                    .put(
-                        client,
-                        path,
-                        content,
-                        content_length,
-                        content_type,
-                        extra_headers,
-                    )
-                    .map_err(|e| internal(&format_args!("failed to upload to S3: {}", e)))?;
+                bucket.put(
+                    client,
+                    path,
+                    content,
+                    content_length,
+                    content_type,
+                    extra_headers,
+                )?;
                 Ok(Some(String::from(path)))
             }
             Uploader::Local => {
@@ -156,7 +154,8 @@ impl Uploader {
             content_length,
             "application/x-tar",
             extra_headers,
-        )?;
+        )
+        .map_err(|e| internal(&format_args!("failed to upload crate: {}", e)))?;
         Ok(checksum)
     }
 
@@ -166,7 +165,7 @@ impl Uploader {
         crate_name: &str,
         vers: &str,
         readme: String,
-    ) -> AppResult<()> {
+    ) -> Result<(), Error> {
         let path = Uploader::readme_path(crate_name, vers);
         let content_length = readme.len() as u64;
         let content = Cursor::new(readme);

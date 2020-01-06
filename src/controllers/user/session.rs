@@ -7,7 +7,7 @@ use oauth2::{prelude::*, AuthorizationCode, TokenResponse};
 
 use crate::models::{NewUser, User};
 use crate::schema::users;
-use crate::util::errors::{AppError, ChainError, ReadOnlyMode};
+use crate::util::errors::ReadOnlyMode;
 
 /// Handles the `GET /api/private/session/begin` route.
 ///
