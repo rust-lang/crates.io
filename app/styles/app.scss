@@ -15,6 +15,7 @@ $link-color: rgb(0, 172, 91);
 @import "crate";
 @import "crate/version";
 @import "dashboard";
+@import "loading";
 @import "me";
 
 * {
@@ -79,18 +80,6 @@ span.small {
 .yanked {
     font-size: 80%;
     color: rgb(166, 0, 0)
-}
-
-div.loading-state {
-    text-align: center;
-    height: 65vh;
-    padding-top: 30vh;
-}
-span.loading {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    background-image: url(/assets/ajax-loader.gif);
 }
 
 #flash {
