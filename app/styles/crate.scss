@@ -4,26 +4,26 @@
     background-color: $main-bg-dark;
     margin-bottom: 20px;
     @include border-radius(5px);
-    @include display-flex;
-    @include flex-wrap(wrap);
-    @include align-items(center);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
 
     .wide {
-        @include display-flex;
-        @include flex-wrap(wrap);
-        @include align-items(center);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
         width: 100%;
     }
 
     .info {
-        @include display-flex;
-        @include flex-wrap(wrap);
-        @include align-items(baseline);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
         img {
-            @include align-self(center);
+            align-self: center;
         }
         .team-info {
-            @include flex-direction(column);
+            flex-direction: column;
         }
     }
     .crate-icon {
@@ -38,17 +38,17 @@
     }
     h2 { color: $main-color-light; padding-left: 10px; }
     .right {
-        @include flex(2);
-        @include display-flex;
-        @include flex-direction(row-reverse);
-        @include align-items(center);
+        flex: 2;
+        display: flex;
+        flex-direction: row-reverse;
+        align-items: center;
     }
     @media only screen and (max-width: 650px) {
-        .right { @include justify-content(center); }
+        .right { justify-content: center; }
     }
 
     &.crate-index, &.crate-search {
-        @include flex-wrap(wrap);
+        flex-wrap: wrap;
     }
 }
 
@@ -58,8 +58,8 @@
 
 #selection {
     width: 100%;
-    @include display-flex;
-    @include justify-content(space-between);
+    display: flex;
+    justify-content: space-between;
     padding: 20px;
     @include border-radius(5px);
     background-color: white;
@@ -112,8 +112,8 @@
 
 #results {
     width: 100%;
-    @include display-flex;
-    @include justify-content(space-between);
+    display: flex;
+    justify-content: space-between;
     margin-bottom: 25px;
 
     .cur, .total { color: $main-color; font-weight: bold; }
@@ -131,16 +131,16 @@
     background-color: white;
     padding: 0 20px;
     margin-bottom: 20px;
-    @include display-flex;
-    @include flex-direction(column);
+    display: flex;
+    flex-direction: column;
 
     .row {
         width: 100%;
         border-bottom: 2px solid $gray-border;
         padding: 20px 0;
-        @include display-flex;
-        @include justify-content(space-between);
-        @include flex-wrap(wrap);
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
 
         &:last-of-type { border: none; }
     }
@@ -149,8 +149,8 @@
 .crate {
     .desc {
         padding-top: 5px;
-        @include display-flex;
-        @include flex-direction(column);
+        display: flex;
+        flex-direction: column;
         width: 75%;
     }
 
@@ -198,18 +198,18 @@
         color: $main-color-light;
     }
     .downloads {
-        @include display-flex;
-        @include align-items(center);
+        display: flex;
+        align-items: center;
         padding-bottom: 5px;
     }
     .recent-downloads {
-        @include display-flex;
-        @include align-items(center);
+        display: flex;
+        align-items: center;
     }
     .updated-at {
         padding-top: 5px;
-        @include display-flex;
-        @include align-items(center);
+        display: flex;
+        align-items: center;
 
         svg {
             padding: 10px;
@@ -232,9 +232,9 @@
 
 .quick-links {
     ul {
-        @include display-flex;
-        @include flex-direction(row);
-        @include flex-wrap(wrap);
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
 
         font-size: 80%;
         list-style-type: none;
@@ -273,27 +273,27 @@
 }
 
 .crate-info {
-    @include display-flex;
-    @include flex-direction(column);
+    display: flex;
+    flex-direction: column;
     padding-bottom: 20px;
     border-bottom: 5px solid $gray-border;
     margin-bottom: 20px;
 
     @media only screen and (min-width: 890px) {
-        @include flex-direction(row);
+        flex-direction: row;
 
         .docs {
-            @include flex(7);
+            flex: 7;
             padding-right: 40px;
             max-width: 640px;
         }
         .authorship {
-            @include flex(3);
+            flex: 3;
             border-left: 2px solid $gray-border;
             padding-left: 20px;
 
             .top, .bottom {
-                @include flex-direction(column);
+                flex-direction: column;
             }
 
             ul {
@@ -305,16 +305,16 @@
     @media only screen and (max-width: 480px) {
         .authorship {
             .top, .bottom {
-                @include flex-direction(column);
+                flex-direction: column;
             }
         }
     }
 
     .authorship {
         .top, .bottom {
-            @include display-flex;
+            display: flex;
 
-            > * { @include flex(1); }
+            > * { flex: 1; }
         }
     }
 
@@ -325,8 +325,8 @@
 
 
     ul.owners, ul.keywords {
-        @include display-flex;
-        @include flex-wrap(wrap);
+        display: flex;
+        flex-wrap: wrap;
         list-style: none;
         padding: 0;
         margin: 0;
@@ -337,7 +337,7 @@
         font-size: 120%;
         padding: 10px;
         background-color: darken($main-bg-dark, 8%);
-        @include display-flex;
+        display: flex;
 
         .action {
             display: none;
@@ -346,14 +346,14 @@
             padding-right: 10px;
         }
         code {
-            @include flex(1);
+            flex: 1;
             background: $main-color;
             color: white;
             padding: 20px;
         }
         @media only screen and (min-width: 500px) {
-            .action { @include flex(2); display: block; }
-            code { @include flex(8); }
+            .action { flex: 2; display: block; }
+            code { flex: 8; }
         }
         .crate-toml-copy {
             display: flex;
@@ -444,17 +444,17 @@
 }
 
 #crate-downloads {
-    @include display-flex;
-    @include flex-wrap(wrap);
+    display: flex;
+    flex-wrap: wrap;
 
     h3 { width: 100%; }
     .stat {
         border-left: 1px solid $gray-border;
         padding: 10px 20px;
-        @include display-flex;
-        @include flex-wrap(wrap);
-        @include flex-direction(column);
-        @include flex-grow(1);
+        display: flex;
+        flex-wrap: wrap;
+        flex-direction: column;
+        flex-grow: 1;
 
         .num {
             font-size: 160%;
@@ -468,22 +468,22 @@
     }
 
     .stats {
-        @include flex-grow(7);
-        @include display-flex;
-        @include flex-wrap(wrap);
+        flex-grow: 7;
+        display: flex;
+        flex-wrap: wrap;
     }
     .versions {
-        @include flex-grow(3);
+        flex-grow: 3;
         text-align: center;
-        @include display-flex;
-        @include flex-direction(column);
+        display: flex;
+        flex-direction: column;
         .small { padding: 10px; }
     }
 
     .button-holder { position: relative; }
 
     .graph {
-        @include flex-grow(10);
+        flex-grow: 10;
         width: 100%;
         margin: 30px 0;
         padding-bottom: 20px;
@@ -497,14 +497,14 @@
 }
 
 #crate-links {
-    @include display-flex;
+    display: flex;
     padding-bottom: 20px;
     border-bottom: 5px solid $gray-border;
     margin-bottom: 30px;
 
     h3 { margin-bottom: 5px; }
     .section {
-        @include flex(1);
+        flex: 1;
         margin-right: 10px;
         li { line-height: 24px; }
         .date { color: $main-color-light; padding-left: 5px; }
@@ -513,7 +513,7 @@
     ul { list-style: none; padding: 0; }
 
     @media only screen and (max-width: 380px) {
-        @include flex-direction(column);
+        flex-direction: column;
     }
     @media only screen and (max-width: 730px) {
         #crate-dev-dependencies { display: none; }

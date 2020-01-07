@@ -3,7 +3,7 @@
     padding-bottom: 20px;
     margin-bottom: 20px;
 
-    .info { @include display-flex; }
+    .info { display: flex; }
     dl {
         margin: 0 0 0 30px;
         line-height: 150%;
@@ -17,7 +17,7 @@
         }
         dd { float: left; margin-left: 10px; }
         .align-center {
-            @include align-items(center);
+            align-items: center;
         }
         .row {
             width: 100%;
@@ -25,7 +25,7 @@
             border-bottom-width: 0px;
             &:last-child { border-bottom-width: 1px; }
             padding: 10px 20px 10px 0;
-            @include display-flex;
+            display: flex;
             background-color: $main-bg-dark;
             .small-text {
                 font-size: 90%;
@@ -34,13 +34,13 @@
                 color: rgb(216, 0, 41);
             }
             .label {
-                @include flex(1);
+                flex: 1;
                 margin-right: 0.4em;
                 font-weight: bold;
             }
             .actions {
-                @include display-flex;
-                @include align-items(center);
+                display: flex;
+                align-items: center;
             }
             .space-left {
                 margin-left: 10px;
@@ -69,35 +69,35 @@
     border-bottom: 5px solid $gray-border;
     padding-bottom: 20px;
     margin-bottom: 20px;
-    @include display-flex;
-    @include flex-direction(column);
+    display: flex;
+    flex-direction: column;
     .row {
         width: 100%;
         border: 1px solid #d5d3cb;
         border-bottom-width: 0px;
         &:last-child { border-bottom-width: 1px; }
         padding: 10px 20px;
-        @include display-flex;
-        @include align-items(center);
+        display: flex;
+        align-items: center;
         .label {
-            @include flex(1);
+            flex: 1;
             margin-right: 0.4em;
             font-weight: bold;
         }
         .email {
-            @include flex(20);
+            flex: 20;
             .verified {
                 color: green;
                 font-weight: bold;
             }
         }
         .actions {
-            @include display-flex;
-            @include align-items(center);
+            display: flex;
+            align-items: center;
             img { margin-left: 10px }
         }
         .email-form {
-            @include flex(10);
+            flex: 10;
             display: inline-flex;
             justify-content: space-between;
             flex-wrap: wrap;
@@ -120,12 +120,12 @@
     border-bottom: 5px solid $gray-border;
     padding-bottom: 20px;
     margin-bottom: 20px;
-    @include display-flex;
-    @include flex-direction(column);
+    display: flex;
+    flex-direction: column;
 
     .row {
-        @include display-flex;
-        @include flex-direction(row);
+        display: flex;
+        flex-direction: row;
 
         .error, .success {
             border-top-width: 0px;
@@ -149,7 +149,7 @@
 
     ul {
         padding: 0;
-        @include flex-grow(1);
+        flex-grow: 1;
 
         li {
             background-color: #fff;
@@ -229,10 +229,10 @@
     }
 
     .right {
-        @include flex(2);
-        @include display-flex;
-        @include justify-content(flex-end);
-        @include align-self(center);
+        flex: 2;
+        display: flex;
+        justify-content: flex-end;
+        align-self: center;
     }
 }
 
@@ -243,22 +243,22 @@
 }
 
 #my-crate-lists {
-    @include flex-direction(column);
-    @include flex-grow(2);
+    flex-direction: column;
+    flex-grow: 2;
     margin-right: 20px;
 
     .header {
-        @include display-flex;
-        @include justify-content(space-between);
-        @include align-items(center);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
 }
 
 #my-info {
-    @include display-flex;
+    display: flex;
 
     @media only screen and (max-width: 750px) {
-        @include flex-direction(column);
+        flex-direction: column;
 
         #my-feed {
             order: 0;
@@ -272,22 +272,22 @@
 }
 
 #my-feed {
-    @include flex-grow(5);
+    flex-grow: 5;
     h2 { font-size: 105%; }
 
     .row {
-        @include display-flex;
-        @include flex-direction(column);
+        display: flex;
+        flex-direction: column;
     }
 
     .small { padding-left: 10px; }
 
     .info {
-        @include display-flex;
-        @include align-items(baseline);
-        @include justify-content(space-between);
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
 
-        .date { @include flex-grow(2); text-align: right; }
+        .date { flex-grow: 2; text-align: right; }
     }
 
     .load-more {
@@ -304,19 +304,19 @@
 }
 
 #my-invites {
-    @include flex-grow(5);
+    flex-grow: 5;
 
     .row {
-        @include display-flex;
-        @include flex-direction(column);
+        display: flex;
+        flex-direction: column;
     }
 
     .info {
-        @include display-flex;
-        @include align-items(baseline);
-        @include justify-content(space-between);
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
 
-        .date { @include flex-grow(2); text-align: right; }
+        .date { flex-grow: 2; text-align: right; }
         .label {
             .small-text {
                 font-size: 90%;
@@ -338,48 +338,48 @@
         font-weight: bold;
     }
     .downloads {
-        @include display-flex;
-        @include align-items(center);
+        display: flex;
+        align-items: center;
     }
 }
 
 .me-subheading {
-    @include display-flex;
+    display: flex;
     .right {
-        @include flex(2);
-        @include display-flex;
-        @include justify-content(flex-end);
-        @include align-self(center);
+        flex: 2;
+        display: flex;
+        justify-content: flex-end;
+        align-self: center;
     }
 }
 
 #tokens {
     background-color: $main-bg-dark;
-    @include display-flex;
-    @include flex-direction(column);
+    display: flex;
+    flex-direction: column;
     .row {
         width: 100%;
         border: 1px solid #d5d3cb;
         border-bottom-width: 0px;
         &:last-child { border-bottom-width: 1px; }
         padding: 10px 20px;
-        @include display-flex;
-        @include align-items(center);
+        display: flex;
+        align-items: center;
         .name {
-            @include flex(1);
+            flex: 1;
             margin-right: 0.4em;
             font-weight: bold;
         }
         .dates {
-            @include flex(content);
-            @include display-flex;
-            @include flex-direction(column);
-            @include align-items(flex-end);
+            flex: content;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
             margin-right: 0.4em;
         }
         .actions {
-            @include display-flex;
-            @include align-items(center);
+            display: flex;
+            align-items: center;
             img { margin-left: 10px }
         }
     }
@@ -395,8 +395,8 @@
     }
     .new-token {
         border-top-width: 0px;
-        @include flex-direction(column);
-        @include justify-content(stretch);
+        flex-direction: column;
+        justify-content: stretch;
     }
     .error {
         border-top-width: 0px;
