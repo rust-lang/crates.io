@@ -13,12 +13,6 @@ impl SecurityHeaders {
     pub fn new(uploader: &Uploader) -> Self {
         let mut headers = HashMap::new();
 
-        headers.insert("X-Content-Type-Options".into(), vec!["nosniff".into()]);
-
-        headers.insert("X-Frame-Options".into(), vec!["SAMEORIGIN".into()]);
-
-        headers.insert("X-XSS-Protection".into(), vec!["1; mode=block".into()]);
-
         let s3_host = match *uploader {
             Uploader::S3 {
                 ref bucket,

@@ -121,6 +121,10 @@ http {
 			expires max;
 		}
 
+		add_header X-Content-Type-Options "no-sniff";
+		add_header X-Frame-Options "SAMEORIGIN";
+		add_header X-XSS-Protection "1; mode=block";
+
 		add_header Strict-Transport-Security "max-age=31536000" always;
 		add_header Vary 'Accept, Accept-Encoding, Cookie';
 		proxy_set_header Host $http_host;
