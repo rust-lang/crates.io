@@ -226,26 +226,6 @@
     }
 }
 
-.pagination {
-    text-align: center;
-    font-size: 90%;
-    margin-bottom: 20px;
-
-    ol {
-        list-style: none;
-        padding: 0;
-    }
-    ol, li { display: inline; }
-
-    a {
-        color: $main-color-light;
-        text-decoration: none;
-        padding: 5px 6px;
-    }
-    a:hover { background-color: $main-bg-dark; }
-    a.active { background-color: $main-bg-dark; }
-}
-
 #crate-links {
     display: flex;
     padding-bottom: 20px;
