@@ -18,6 +18,7 @@ $link-color: rgb(0, 172, 91);
 @import "crate/version";
 @import "components/crate-toml-copy";
 @import "components/flash-message";
+@import "components/pagination";
 @import "dashboard";
 @import "index";
 @import "loading";
@@ -105,35 +106,6 @@ pre {
     color: white;
     padding: 20px;
     font-family: Consolas, Monaco, 'Andale Mono', monospace;
-}
-
-.pagination {
-    text-align: center;
-    font-size: 90%;
-    margin-bottom: 20px;
-
-    ol {
-        list-style: none;
-        padding: 0;
-    }
-    ol, li { display: inline; }
-
-    a {
-        color: $main-color-light;
-        text-decoration: none;
-        padding: 5px 6px;
-    }
-    a:hover { background-color: $main-bg-dark; }
-    a.active { background-color: $main-bg-dark; }
-
-    img, svg { vertical-align: middle; }
-
-    .next.active,
-    .prev.active,
-    .next:hover,
-    .prev:hover {
-        background: none;
-    }
 }
 
 button.dropdown, a.dropdown {
