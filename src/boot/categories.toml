@@ -81,7 +81,7 @@ Algorithms for making data smaller.\
 """
 
 [computer-vision]
-name = "Computer Vision"
+name = "Computer vision"
 description = """
 Crates for comprehending the world from video or images.\
 """
