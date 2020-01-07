@@ -8,6 +8,8 @@ $main-bg-dark: #edebdd;
 $gray-border: #d5d3cb;
 $link-color: rgb(0, 172, 91);
 
+@import "buttons";
+
 @import "application";
 @import "home";
 @import "catch-all";
