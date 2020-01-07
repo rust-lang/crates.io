@@ -9,6 +9,7 @@ $gray-border: #d5d3cb;
 $link-color: rgb(0, 172, 91);
 
 @import "home";
+@import "catch-all";
 @import "crate";
 @import "me";
 
@@ -339,15 +340,6 @@ h1 {
     display: block;
     font-size: x-small;
   }
-}
-
-#p404 {
-    font-size: 120%;
-    line-height: 3em;
-    input {
-        width: 100%;
-        padding: 5px;
-    }
 }
 
 .arrow-in-list svg {
