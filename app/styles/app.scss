@@ -13,6 +13,7 @@ $link-color: rgb(0, 172, 91);
 @import "catch-all";
 @import "category-slugs";
 @import "crate";
+@import "crate/version";
 @import "dashboard";
 @import "me";
 
@@ -211,10 +212,4 @@ a.arrow svg {
 abbr[title] {
     text-decoration: none;
     border-bottom: 1px dotted;
-}
-
-@media only percy {
-    #crate-downloads .graph {
-       display: none;
-    }
 }
