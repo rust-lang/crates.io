@@ -14,6 +14,7 @@ $link-color: rgb(0, 172, 91);
 @import "category-slugs";
 @import "crate";
 @import "crate/version";
+@import "components/flash-message";
 @import "dashboard";
 @import "loading";
 @import "me";
@@ -80,22 +81,6 @@ span.small {
 .yanked {
     font-size: 80%;
     color: rgb(166, 0, 0)
-}
-
-#flash {
-    display: none;
-    font-weight: bold;
-    font-size: 110%;
-    background-color: rgb(255, 213, 213);
-    border: 2px solid rgb(228, 136, 136);
-    text-align: center;
-    margin: 0 0 10px 0;
-    padding: 10px;
-    border-radius: 5px;
-
-    &.shown {
-        display: block;
-    }
 }
 
 a {
