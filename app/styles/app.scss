@@ -16,6 +16,7 @@ $link-color: rgb(0, 172, 91);
 @import "category-slugs";
 @import "crate";
 @import "crate/version";
+@import "components/crate-toml-copy";
 @import "components/flash-message";
 @import "dashboard";
 @import "index";
