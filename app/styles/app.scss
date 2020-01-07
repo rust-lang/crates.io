@@ -41,6 +41,11 @@ body > div {
     }
 }
 
+#noscript {
+  color: white;
+  padding: 10px 0;
+}
+
 #main {
   @include display-flex;
   @include flex-direction(column);
