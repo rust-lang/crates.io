@@ -1,3 +1,14 @@
+@mixin vertical-gradient($start, $end) {
+    background: $end;
+    background: -moz-linear-gradient(top, $start 0%, $end 100%);
+    background: -webkit-gradient(linear, left top, left bottom,
+        color-stop(0%,$start),
+        color-stop(100%,$end));
+    background: -webkit-linear-gradient(top, $start 0%,$end 100%);
+    background: -ms-linear-gradient(top, $start 0%,$end 100%);
+    background: linear-gradient(to bottom, $start 0%,$end 100%);
+}
+
 @mixin button($start, $end) {
     $start_dark: darken($start, 5%);
     $end_dark: darken($end, 5%);
@@ -11,7 +22,7 @@
     font-weight: bold;
     border: none;
     outline: 0;
-    @include border-radius(30px);
+    border-radius: 30px;
     @include vertical-gradient($start, $end);
 
     img, svg {
@@ -35,7 +46,7 @@
 
 button.small {
     padding: 10px 20px;
-    @include border-radius(30px);
+    border-radius: 30px;
 }
 
 .tan-button {
@@ -70,14 +81,14 @@ button.small {
 
 #blurb {
     margin: 30px 0 40px 0;
-    @include display-flex;
+    display: flex;
 
-    #intro { @include flex(6); line-height: 25px; padding: 10px;}
+    #intro { flex: 6; line-height: 25px; padding: 10px;}
 
     #stats {
-        @include flex(4);
-        @include display-flex;
-        @include flex-direction(column);
+        flex: 4;
+        display: flex;
+        flex-direction: column;
 
         border-left: 1px solid $gray-border;
         padding: 10px;
@@ -89,25 +100,25 @@ button.small {
         }
         .crates { margin-top: 10px; }
         .crates, .downloads {
-            @include display-flex;
-            @include align-items(center);
+            display: flex;
+            align-items: center;
         }
     }
 
     @media only screen and (max-width: 530px) {
-        @include flex-direction(column);
+        flex-direction: column;
         #stats {
             border: none;
             margin: auto;
         }
         .crates, .downloads {
-            @include justify-content(center);
+            justify-content: center;
         }
     }
 }
 
 .crate-lists {
-    @include display-flex;
+    display: flex;
 
     h2 {
         font-size: 105%;
@@ -134,9 +145,9 @@ button.small {
         background-color: $main-bg-dark;
         font-size: 90%;
         padding: 20px 10px;
-        @include display-flex;
-        @include justify-content(space-between);
-        @include align-items(center);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
 
         span {
             overflow: hidden;
@@ -151,8 +162,8 @@ button.small {
 }
 
 #home-crates {
-    @include flex-wrap(wrap);
-    @include justify-content(left);
+    flex-wrap: wrap;
+    justify-content: left;
 
     > section {
       margin: 0;
