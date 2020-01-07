@@ -48,7 +48,7 @@ body > div {
   margin-bottom: 10px;
   background-color: $main-bg;
   padding: 15px;
-  @include border-radius(10px);
+  border-radius: 10px;
   box-shadow: 0px 0px 5px 2px #3b6837;
   border: 5px solid #62865f;
   color: $main-color;
@@ -131,7 +131,7 @@ body > div {
     background-repeat: no-repeat;
     background-position: 6px 6px;
     background-size: 14px 15px;
-    @include border-radius(15px);
+    border-radius: 15px;
 }
 
 form.search label {
@@ -206,7 +206,7 @@ span.loading {
     text-align: center;
     margin: 0 0 10px 0;
     padding: 10px;
-    @include border-radius(5px);
+    border-radius: 5px;
 
     &.shown {
         display: block;
@@ -287,7 +287,7 @@ ul.dropdown {
     list-style: none;
     z-index: 10;
     overflow: hidden;
-    @include border-radius(5px);
+    border-radius: 5px;
 
     li a {
         font-size: 90%;

@@ -11,7 +11,7 @@
     font-weight: bold;
     border: none;
     outline: 0;
-    @include border-radius(30px);
+    border-radius: 30px;
     @include vertical-gradient($start, $end);
 
     img, svg {
@@ -35,7 +35,7 @@
 
 button.small {
     padding: 10px 20px;
-    @include border-radius(30px);
+    border-radius: 30px;
 }
 
 .tan-button {

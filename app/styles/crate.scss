@@ -3,7 +3,7 @@
     padding: 20px;
     background-color: $main-bg-dark;
     margin-bottom: 20px;
-    @include border-radius(5px);
+    border-radius: 5px;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -61,7 +61,7 @@
     display: flex;
     justify-content: space-between;
     padding: 20px;
-    @include border-radius(5px);
+    border-radius: 5px;
     background-color: white;
     margin-bottom: 40px;
 
@@ -123,7 +123,7 @@
         background-color: $main-bg-dark;
         padding: 10px;
         display: inline-block;
-        @include border-radius(5px);
+        border-radius: 5px;
     }
 }
 
