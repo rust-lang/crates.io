@@ -127,7 +127,7 @@
   </form>
 
   <main id="main" class='inner-content'>
-    <FlashMessage />
+    <FlashMessage @message={{this.flashMessages.message}} />
 
     {{outlet}}
   </main>
