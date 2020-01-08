@@ -39,13 +39,15 @@ impl SecurityHeaders {
         // to load scripts. Remove 'unsafe-eval' if google fixes the issue:
         // https://github.com/google/google-visualization-issues/issues/1356
         // or if we switch to a different graph generation library.
+        //
+        // 'unsafe-inline' for style-src is necessary for Google Charts
         headers.insert(
             "Content-Security-Policy".into(),
             vec![format!(
                 "default-src 'self'; \
                  connect-src 'self' https://docs.rs https://{}; \
                  script-src 'self' 'unsafe-eval' https://www.google.com; \
-                 style-src 'self' https://www.google.com https://ajax.googleapis.com; \
+                 style-src 'self' 'unsafe-inline' https://www.google.com https://ajax.googleapis.com; \
                  img-src *; \
                  object-src 'none'",
                 s3_host
