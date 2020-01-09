@@ -29,7 +29,6 @@ export default Controller.extend(EKMixin, {
         queryParams: {
           q: this.searchQuery,
           page: 1,
-          all_keywords: null,
         },
       });
     },
