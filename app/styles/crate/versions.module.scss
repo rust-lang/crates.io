@@ -1,7 +1,11 @@
-#crate-all-versions {
+.list {
     margin-top: 10px;
 
-    .small { margin-left: 20px; display: inline-block; }
+    :global(.small) {
+        margin-left: 20px;
+        display: inline-block;
+    }
+
     a.arrow {
         display: inline-block;
         float: right;
