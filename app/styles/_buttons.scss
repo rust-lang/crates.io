@@ -1,0 +1,54 @@
+@mixin vertical-gradient($start, $end) {
+    background: $end;
+    background: -moz-linear-gradient(top, $start 0%, $end 100%);
+    background: -webkit-gradient(linear, left top, left bottom,
+        color-stop(0%,$start),
+        color-stop(100%,$end));
+    background: -webkit-linear-gradient(top, $start 0%,$end 100%);
+    background: -ms-linear-gradient(top, $start 0%,$end 100%);
+    background: linear-gradient(to bottom, $start 0%,$end 100%);
+}
+
+@mixin button($start, $end) {
+    $start_dark: darken($start, 5%);
+    $end_dark: darken($end, 5%);
+    $start_light: lighten($start, 5%);
+    $end_light: lighten($end, 5%);
+
+    padding: 15px 40px;
+    display: inline-block;
+    color: $main-color;
+    text-decoration: none;
+    font-weight: bold;
+    border: none;
+    outline: 0;
+    border-radius: 30px;
+    @include vertical-gradient($start, $end);
+
+    img, svg {
+        float: left;
+        display: inline-block;
+        margin-right: 10px;
+    }
+
+    &:hover, &:focus { @include vertical-gradient($start_dark, $end_dark); outline: 0; }
+    &.active { @include vertical-gradient($start_dark, $end_dark); outline: 0; }
+    &[disabled] {
+        @include vertical-gradient($start_light, $end_light);
+        color: $main-color-light;
+    }
+}
+
+.yellow-button {
+    @include button(#fede9e, #fdc452);
+    vertical-align: middle;
+}
+
+button.small {
+    padding: 10px 20px;
+    border-radius: 30px;
+}
+
+.tan-button {
+    @include button(rgb(232, 227, 199), rgb(214, 205, 153));
+}
