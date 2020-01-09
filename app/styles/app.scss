@@ -40,6 +40,11 @@ body > div {
     }
 }
 
+#noscript {
+  color: white;
+  padding: 10px 0;
+}
+
 #main {
   display: flex;
   flex-direction: column;
