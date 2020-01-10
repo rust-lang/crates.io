@@ -2364,3 +2364,31 @@ fn pagination_links_included_if_applicable() {
     assert_eq!(None, page4.meta.next_page);
     assert_eq!(Some("?page=2&per_page=1".to_string()), page3.meta.prev_page);
 }
+
+#[test]
+fn pagination_parameters_only_accept_integers() {
+    let (app, anon, user) = TestApp::init().with_user();
+    let user = user.as_model();
+
+    app.db(|conn| {
+        CrateBuilder::new("pagination_links_1", user.id).expect_build(conn);
+        CrateBuilder::new("pagination_links_2", user.id).expect_build(conn);
+        CrateBuilder::new("pagination_links_3", user.id).expect_build(conn);
+    });
+
+    let invalid_per_page_json = anon
+        .get_with_query::<()>("/api/v1/crates", "page=1&per_page=100%22%EF%BC%8Cexception")
+        .bad_with_status(400);
+    assert_eq!(
+        invalid_per_page_json.errors[0].detail,
+        "invalid digit found in string"
+    );
+
+    let invalid_page_json = anon
+        .get_with_query::<()>("/api/v1/crates", "page=100%22%EF%BC%8Cexception&per_page=1")
+        .bad_with_status(400);
+    assert_eq!(
+        invalid_page_json.errors[0].detail,
+        "invalid digit found in string"
+    );
+}
