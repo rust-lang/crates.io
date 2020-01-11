@@ -55,17 +55,6 @@
     }
 }
 
-@media only screen and (prefers-color-scheme: dark) {
-    .crate-search {
-        background-color: #111;
-        color: #eee;
-    }
-
-    .crate-search svg {
-        filter: invert(100%);
-    }
-}
-
 #selection {
     width: 100%;
     display: flex;
@@ -98,15 +87,6 @@
     }
 }
 
-.crate-toml-copy {
-    button, button:active {
-        @media only screen and (prefers-color-scheme: dark) {
-            background-color: #111;
-            color: #eee;
-        }
-    }
-}
-
 #results {
     width: 100%;
     display: flex;
@@ -135,6 +115,10 @@
 }
 
 @media only screen and (prefers-color-scheme: dark) {
+    #crates {
+        background-color: #111;
+        color: #eee;
+    }
     #crates > div {
         border-bottom: 0.25rem solid #666;
     }
@@ -163,7 +147,7 @@
     }
 }
 @media only screen and (prefers-color-scheme: dark) {
-    .white-rows svg {
+    #crates svg, .white-rows svg {
         filter: invert(100%);
     }
 }
@@ -275,80 +259,6 @@
 
             &:last-child {
                 margin-right: 0;
-            }
-        }
-    }
-}
-
-.pagination {
-    a {
-        @media only screen and (prefers-color-scheme: dark) {
-            background-color: #111;
-        }
-    }
-    a:hover {
-        @media only screen and (prefers-color-scheme: dark) {
-            background-color: #111;
-            font-weight: bolder;
-        }
-    }
-    a.active {
-        @media only screen and (prefers-color-scheme: dark) {
-            background-color: #111;
-        }
-    }
-
-    @media only screen and (prefers-color-scheme: dark) {
-        svg:hover {
-            filter: invert(100%)
-                    drop-shadow(0 0 0.5rem rgba(255, 255, 255, 0.1875));
-        }
-    }
-}
-
-.crate-info {
-    @media only screen and (prefers-color-scheme: dark) {
-        border-bottom: 0.25rem solid #666;
-    }
-
-    .install {
-        @media only screen and (prefers-color-scheme: dark) {
-            background-color: #222;
-            color: #eee;
-        }
-
-        @media only screen and (prefers-color-scheme: dark) {
-            svg {
-                filter: invert(100%);
-            }
-        }
-        .crate-toml-copy {
-            button:hover {
-                @media only screen and (prefers-color-scheme: dark) {
-                    background: #090909;
-                    color: #eee;
-                }
-            }
-        }
-    }
-    .crate-readme {
-        p {
-            code {
-                @media only screen and (prefers-color-scheme: dark) {
-                    background-color: #222;
-                    border-radius: 4px;
-                }
-            }
-        }
-    }
-}
-
-#crate-downloads {
-    .graph-data {
-        @media only screen and (prefers-color-scheme: dark) {
-            color: #eee;
-            svg {
-                filter: invert(100%);
             }
         }
     }

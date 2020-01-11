@@ -41,6 +41,10 @@
 
 .yellow-button {
     @include button(#fede9e, #fdc452);
+    @media only screen and (prefers-color-scheme: dark) {
+        @include button(#333, #222);
+        color: #eee;
+    }
     vertical-align: middle;
 }
 

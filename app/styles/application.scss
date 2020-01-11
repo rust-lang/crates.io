@@ -9,6 +9,12 @@
   box-shadow: 0px 0px 5px 2px #3b6837;
   border: 5px solid #62865f;
   color: $main-color;
+  @media only screen and (prefers-color-scheme: dark) {
+    box-shadow: none;
+    border: none;
+    background-color: #111;
+    color: #eee;
+  }
 }
 
 #header {
@@ -24,7 +30,13 @@
         &:hover { color: darken(white, 15%); }
     }
 
-    .sep { margin: 0 10px; color: darken($html-bg, 10%); }
+    .sep {
+        margin: 0 10px;
+        color: darken($html-bg, 10%);
+        @media only screen and (prefers-color-scheme: dark) {
+            color: #666;
+        }
+    }
     .nav, .menu {
         text-align: right;
         margin-right: 5px;
@@ -38,6 +50,9 @@
         right: 0;
         left: auto;
         min-width: 200px;
+        @media only screen and (prefers-color-scheme: dark) {
+            color: #eee;
+        }
     }
 
     button {
@@ -89,6 +104,10 @@
     background-position: 6px 6px;
     background-size: 14px 15px;
     border-radius: 15px;
+    @media only screen and (prefers-color-scheme: dark) {
+        background-color: #111;
+        color: #eee;
+    }
 }
 
 #header input.search {
@@ -116,7 +135,13 @@
 
     a { color: white; }
     a:hover { color: darken(white, 10%); }
-    .sep { margin: 0 10px; color: darken($html-bg, 10%); }
+    .sep {
+        margin: 0 10px;
+        color: darken($html-bg, 10%);
+        @media only screen and (prefers-color-scheme: dark) {
+            color: #666;
+        }
+    }
 
     @media only screen and (max-width: 450px) {
         margin: 20px;

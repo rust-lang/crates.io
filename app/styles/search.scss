@@ -1,3 +1,14 @@
 .crate-search .loading-spinner {
     margin: 0 15px;
 }
+
+@media only screen and (prefers-color-scheme: dark) {
+    .crate-search {
+        background-color: #111;
+        color: #eee;
+    }
+
+    .crate-search svg {
+        filter: invert(100%);
+    }
+}

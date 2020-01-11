@@ -1,6 +1,9 @@
 #title-header {
     text-align: center;
     border-bottom: 5px solid $gray-border;
+    @media only screen and (prefers-color-scheme: dark) {
+        border-bottom: 0.25rem solid #666;
+    }
     padding-bottom: 40px;
 
     h1 {
@@ -31,6 +34,9 @@
         flex-direction: column;
 
         border-left: 1px solid $gray-border;
+        @media only screen and (prefers-color-scheme: dark) {
+            border-left: 1px solid #666;
+        }
         padding: 10px;
 
         span { margin-left: 10px; }

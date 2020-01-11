@@ -1,20 +1,6 @@
-#title-header {
-    @media only screen and (prefers-color-scheme: dark) {
-        border-bottom: 0.25rem solid #666;
-    }
-}
-
 .dl {
     text-decoration: underline;
     font-weight: bold;
-}
-
-#blurb {
-    #stats {
-        @media only screen and (prefers-color-scheme: dark) {
-            border-left: 1px solid #666;
-        }
-    }
 }
 
 .crate-lists {
@@ -43,6 +29,10 @@
         color: lighten($main-color, 10%);
         text-decoration: none;
         background-color: $main-bg-dark;
+        @media only screen and (prefers-color-scheme: dark) {
+            background-color: #222;
+            color: #eee;
+        }
         font-size: 90%;
         padding: 20px 10px;
         display: flex;
@@ -56,11 +46,6 @@
         }
 
         img { vertical-align: middle; }
-
-        @media only screen and (prefers-color-scheme: dark) {
-            background-color: #222;
-            color: #eee;
-        }
     }
     li a:hover {
         background-color: darken($main-bg-dark, 5%);

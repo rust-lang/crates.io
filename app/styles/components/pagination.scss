@@ -11,11 +11,25 @@
 
     a {
         color: $main-color-light;
+        @media only screen and (prefers-color-scheme: dark) {
+            background-color: #111;
+        }
         text-decoration: none;
         padding: 5px 6px;
     }
-    a:hover { background-color: $main-bg-dark; }
-    a.active { background-color: $main-bg-dark; }
+    a:hover {
+        background-color: $main-bg-dark;
+        @media only screen and (prefers-color-scheme: dark) {
+            background-color: #111;
+            font-weight: bolder;
+        }
+    }
+    a.active {
+        background-color: $main-bg-dark;
+        @media only screen and (prefers-color-scheme: dark) {
+            background-color: #111;
+        }
+    }
 
     img, svg { vertical-align: middle; }
 
@@ -24,5 +38,12 @@
     .next:hover,
     .prev:hover {
         background: none;
+    }
+
+    @media only screen and (prefers-color-scheme: dark) {
+        svg:hover {
+            filter: invert(100%)
+                    drop-shadow(0 0 0.5rem rgba(255, 255, 255, 0.1875));
+        }
     }
 }

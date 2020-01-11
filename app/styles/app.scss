@@ -56,36 +56,6 @@ body > div {
     }
 }
 
-#main {
-  @media only screen and (prefers-color-scheme: dark) {
-    box-shadow: none;
-    border: none;
-    background-color: #111;
-    color: #eee;
-  }
-}
-
-#header {
-    .sep {
-        @media only screen and (prefers-color-scheme: dark) {
-            color: #666;
-        }
-    }
-
-    .menu ul.dropdown {
-        @media only screen and (prefers-color-scheme: dark) {
-            color: #eee;
-        }
-    }
-}
-
-#header input.search, #mobile-search input.search {
-    @media only screen and (prefers-color-scheme: dark) {
-        background-color: #111;
-        color: #eee;
-    }
-}
-
 #noscript {
     color: white;
     padding: 10px 0;
@@ -125,12 +95,6 @@ span.small {
     color: rgb(166, 0, 0)
 }
 
-#flash {
-    @media only screen and (prefers-color-scheme: dark) {
-        background-color: #664545;
-    }
-}
-
 a {
     color: $link-color;
     text-decoration: none;
@@ -141,14 +105,6 @@ a {
     text-decoration: underline;
     font-weight: normal;
     &:hover { color: darken($main-color-light, 10%); }
-}
-
-.after-main-links {
-    .sep {
-        @media only screen and (prefers-color-scheme: dark) {
-            color: #666;
-        }
-    }
 }
 
 pre {
@@ -226,16 +182,6 @@ h1 {
     display: block;
     font-size: x-small;
   }
-}
-
-#p404 {
-    input {
-        @media only screen and (prefers-color-scheme: dark) {
-            background-color: #222;
-            color: #eee;
-            border-color: #666;
-        }
-    }
 }
 
 .arrow-in-list svg {
