@@ -65,9 +65,9 @@
       </RlDropdownContainer>
       <span class="sep">|</span>
       {{#if this.session.currentUser}}
-        <RlDropdownContainer class="dropdown-container">
-          <RlDropdownToggle class="dropdown">
-            <UserAvatar @user={{this.session.currentUser}} @size="small" />
+        <RlDropdownContainer class="dropdown-container" data-test-user-menu>
+          <RlDropdownToggle class="dropdown" data-test-toggle>
+            <UserAvatar @user={{this.session.currentUser}} @size="small" data-test-avatar />
             {{ this.session.currentUser.name }}
             <span class='arrow'></span>
           </RlDropdownToggle>
@@ -127,7 +127,7 @@
   </form>
 
   <main id="main" class='inner-content'>
-    <FlashMessage />
+    <FlashMessage @message={{this.flashMessages.message}} />
 
     {{outlet}}
   </main>

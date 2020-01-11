@@ -2,7 +2,7 @@ use diesel::prelude::*;
 use std::borrow::Cow;
 
 use crate::app::App;
-use crate::util::AppResult;
+use crate::util::errors::AppResult;
 
 use crate::models::{ApiToken, Crate, CrateOwner, Email, NewEmail, Owner, OwnerKind, Rights};
 use crate::schema::{crate_owners, emails, users};
@@ -116,7 +116,7 @@ impl User {
         Self::find(conn, api_token.user_id)
     }
 
-    pub fn owning(krate: &Crate, conn: &PgConnection) -> AppResult<Vec<Owner>> {
+    pub fn owning(krate: &Crate, conn: &PgConnection) -> QueryResult<Vec<Owner>> {
         let users = CrateOwner::by_owner_kind(OwnerKind::User)
             .inner_join(users::table)
             .select(users::all_columns)
@@ -157,7 +157,7 @@ impl User {
 
     /// Queries the database for the verified emails
     /// belonging to a given user
-    pub fn verified_email(&self, conn: &PgConnection) -> AppResult<Option<String>> {
+    pub fn verified_email(&self, conn: &PgConnection) -> QueryResult<Option<String>> {
         Ok(Email::belonging_to(self)
             .select(emails::email)
             .filter(emails::verified.eq(true))

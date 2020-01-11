@@ -13,8 +13,7 @@ use crate::models::{
 };
 
 use crate::render;
-use crate::util::{read_fill, read_le_u32};
-use crate::util::{AppError, ChainError, Maximums};
+use crate::util::{read_fill, read_le_u32, Maximums};
 use crate::views::{EncodableCrateUpload, GoodCrate, PublishWarnings};
 
 /// Handles the `PUT /crates/new` route.

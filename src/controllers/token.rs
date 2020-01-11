@@ -1,9 +1,9 @@
-use super::prelude::*;
+use super::frontend_prelude::*;
 
 use crate::middleware::current_user::AuthenticationSource;
 use crate::models::ApiToken;
 use crate::schema::api_tokens;
-use crate::util::{bad_request, read_fill, ChainError};
+use crate::util::read_fill;
 use crate::views::EncodableApiTokenWithToken;
 
 use serde_json as json;

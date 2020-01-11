@@ -1,4 +1,4 @@
-use crate::util::{json_response, AppResult};
+use crate::util::{errors::AppResult, json_response};
 use conduit::Response;
 
 pub(crate) mod pagination;

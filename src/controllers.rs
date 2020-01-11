@@ -1,6 +1,6 @@
 mod cargo_prelude {
     pub use super::prelude::*;
-    pub use crate::util::cargo_err;
+    pub use crate::util::errors::cargo_err;
 }
 
 mod frontend_prelude {
@@ -16,7 +16,7 @@ mod prelude {
     pub use conduit_router::RequestParams;
 
     pub use crate::db::RequestTransaction;
-    pub use crate::util::{cargo_err, AppResult}; // TODO: Remove cargo_err from here
+    pub use crate::util::errors::{cargo_err, AppError, AppResult, ChainError}; // TODO: Remove cargo_err from here
 
     pub use crate::middleware::app::RequestApp;
     pub use crate::middleware::current_user::RequestUser;

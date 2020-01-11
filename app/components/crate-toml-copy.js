@@ -20,8 +20,7 @@ export default Component.extend({
     );
   },
   actions: {
-    copySuccess(event) {
-      event.clearSelection();
+    copySuccess() {
       this.toggleClipboardProps(true);
     },
 

@@ -1,5 +1,4 @@
 @import "normalize";
-@import "helpers";
 
 $html-bg: #3b6837;
 $main-color: #383838;
@@ -9,10 +8,22 @@ $main-bg-dark: #edebdd;
 $gray-border: #d5d3cb;
 $link-color: rgb(0, 172, 91);
 
+@import "buttons";
+
+@import "application";
 @import "home";
+@import "catch-all";
+@import "category-slugs";
 @import "crate";
-@import "install";
+@import "crate/version";
+@import "components/crate-toml-copy";
+@import "components/flash-message";
+@import "components/pagination";
+@import "dashboard";
+@import "index";
+@import "loading";
 @import "me";
+@import "search";
 
 * {
   box-sizing: border-box;
@@ -31,9 +42,9 @@ html, body { margin: 0; }
 body {
   font-family: "Helvetica Neue","Helvetica",Helvetica,Arial,sans-serif;
   font-size: 16px;
-  @include display-flex;
-  @include flex-direction(column);
-  @include align-items(center);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* .ember-application is added by Ember after initial rendering */
@@ -46,16 +57,6 @@ body > div {
 }
 
 #main {
-  @include display-flex;
-  @include flex-direction(column);
-
-  margin-bottom: 10px;
-  background-color: $main-bg;
-  padding: 15px;
-  @include border-radius(10px);
-  box-shadow: 0px 0px 5px 2px #3b6837;
-  border: 5px solid #62865f;
-  color: $main-color;
   @media only screen and (prefers-color-scheme: dark) {
     box-shadow: none;
     border: none;
@@ -65,96 +66,29 @@ body > div {
 }
 
 #header {
-    color: white;
-    position: relative;
-    height: 100px;
-    @include display-flex;
-    @include align-items(center);
-    @include justify-content(space-between);
-
-    a {
-        color: white; text-decoration: none;
-        &:hover { color: darken(white, 15%); }
-    }
-
     .sep {
-        margin: 0 10px;
-        color: darken($html-bg, 10%);
         @media only screen and (prefers-color-scheme: dark) {
             color: #666;
         }
     }
-    .nav, .menu {
-        text-align: right;
-        margin-right: 5px;
-    }
 
-    .menu {
-        @include flex-grow(2);
-        display: none;
-    }
     .menu ul.dropdown {
-        right: 0;
-        left: auto;
-        min-width: 200px;
         @media only screen and (prefers-color-scheme: dark) {
             color: #eee;
         }
     }
-
-    button {
-        background: none;
-        border: 0;
-        padding: 10px 0;
-
-        &.active {
-            background: rgb(42, 79, 39);
-            box-shadow: inset -2px 2px 4px 0px rgb(36, 61, 38);
-        }
-
-        img {
-          vertical-align: top;
-        }
-    }
-
-    .current-user-links {
-        left: auto;
-        right: 0;
-        min-width: 200px;
-    }
-    #doc-links {
-        left: auto;
-        min-width: 150px;
-    }
-    form.search {
-        @include display-flex;
-        @include flex-grow(1);
-    }
-    @media only screen and (max-width: 820px) {
-        form.search { display: none; }
-    }
-    @media only screen and (max-width: 900px) {
-        .menu { display: block; }
-        .nav { display: none; }
-    }
 }
 
 #header input.search, #mobile-search input.search {
-    font-size: 90%;
-    border: none;
-    color: black;
-    margin-left: 30px;
-    padding: 5px 5px 5px 25px;
-    background-color: white;
-    background-image: url('/assets/search.png');
-    background-repeat: no-repeat;
-    background-position: 6px 6px;
-    background-size: 14px 15px;
-    @include border-radius(15px);
     @media only screen and (prefers-color-scheme: dark) {
         background-color: #111;
         color: #eee;
     }
+}
+
+#noscript {
+    color: white;
+    padding: 10px 0;
 }
 
 form.search label {
@@ -164,26 +98,6 @@ form.search label {
     width: 1px;
     height: 1px;
     overflow: hidden;
-}
-
-#header input.search {
-    width: 100%;
-    margin-left: 16px;
-    margin-right: 16px;
-}
-
-#mobile-search {
-    display: none;
-    margin-bottom: 10px;
-    margin-left: 5px;
-    margin-right: 5px;
-    input.search {
-        width: 100%;
-        margin: 0;
-    }
-    @media only screen and (max-width: 820px) {
-        display: block;
-    }
 }
 
 input.search {
@@ -211,34 +125,9 @@ span.small {
     color: rgb(166, 0, 0)
 }
 
-div.loading-state {
-    text-align: center;
-    height: 65vh;
-    padding-top: 30vh;
-}
-span.loading {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    background-image: url(/assets/ajax-loader.gif);
-}
-
 #flash {
-    display: none;
-    font-weight: bold;
-    font-size: 110%;
-    background-color: rgb(255, 213, 213);
     @media only screen and (prefers-color-scheme: dark) {
         background-color: #664545;
-    }
-    border: 2px solid rgb(228, 136, 136);
-    text-align: center;
-    margin: 0 0 10px 0;
-    padding: 10px;
-    @include border-radius(5px);
-
-    &.shown {
-        display: block;
     }
 }
 
@@ -255,29 +144,9 @@ a {
 }
 
 .after-main-links {
-    margin: 40px;
-
-    a { color: white; }
-    a:hover { color: darken(white, 10%); }
     .sep {
-        margin: 0 10px;
-        color: darken($html-bg, 10%);
         @media only screen and (prefers-color-scheme: dark) {
             color: #666;
-        }
-    }
-
-    @media only screen and (max-width: 450px) {
-        margin: 20px;
-        .sep { display: none; }
-        @include display-flex;
-        @include flex-direction(column);
-
-        a {
-            width: 50%;
-            font-size: 110%;
-            padding: 5px;
-            &:not(:first-child) { border-top: 1px solid darken($html-bg, 10%); }
         }
     }
 }
@@ -287,17 +156,6 @@ pre {
     color: white;
     padding: 20px;
     font-family: Consolas, Monaco, 'Andale Mono', monospace;
-}
-
-.pagination {
-    img, svg { vertical-align: middle; }
-
-    .next.active,
-    .prev.active,
-    .next:hover,
-    .prev:hover {
-        background: none;
-    }
 }
 
 button.dropdown, a.dropdown {
@@ -319,15 +177,15 @@ ul.dropdown {
     padding: 0;
     background: white;
     border: 1px solid $gray-border;
-    list-style: none;
-    z-index: 10;
-    overflow: hidden;
-    @include border-radius(5px);
     @media only screen and (prefers-color-scheme: dark) {
         border: 1px solid #666;
         background-color: #222;
         color: #eee;
     }
+    list-style: none;
+    z-index: 10;
+    overflow: hidden;
+    border-radius: 5px;
 
     li a {
         font-size: 90%;
@@ -359,16 +217,6 @@ ul.dropdown {
 
 .hidden { display: none; }
 
-.fork-me {
-    position: absolute;
-    top: 0;
-    right: 0;
-
-    @media only screen and (max-width: 1180px) {
-        display: none;
-    }
-}
-
 @media only screen and (max-width: 400px) {
     h1 { font-size: 1.5em; }
 }
@@ -381,12 +229,7 @@ h1 {
 }
 
 #p404 {
-    font-size: 120%;
-    line-height: 3em;
     input {
-        width: 100%;
-        padding: 5px;
-
         @media only screen and (prefers-color-scheme: dark) {
             background-color: #222;
             color: #eee;
@@ -414,11 +257,5 @@ abbr[title] {
 @media only screen and (prefers-color-scheme: dark) {
     nav svg {
         filter: invert(100%);
-    }
-}
-
-@media only percy {
-    #crate-downloads .graph {
-       display: none;
     }
 }

@@ -117,6 +117,11 @@ fn index_queries() {
         CrateBuilder::new("foo", user.id)
             .keyword("kw3")
             .expect_build(conn);
+
+        CrateBuilder::new("two-keywords", user.id)
+            .keyword("kw1")
+            .keyword("kw3")
+            .expect_build(conn);
         (krate, krate2)
     });
 
@@ -124,11 +129,11 @@ fn index_queries() {
 
     // All of these fields should be indexed/searched by the queries
     assert_eq!(anon.search("q=foo").meta.total, 2);
-    assert_eq!(anon.search("q=kw1").meta.total, 2);
+    assert_eq!(anon.search("q=kw1").meta.total, 3);
     assert_eq!(anon.search("q=readme").meta.total, 1);
     assert_eq!(anon.search("q=description").meta.total, 1);
 
-    assert_eq!(anon.search_by_user_id(user.id).crates.len(), 3);
+    assert_eq!(anon.search_by_user_id(user.id).crates.len(), 4);
     assert_eq!(anon.search_by_user_id(0).crates.len(), 0);
 
     assert_eq!(anon.search("letter=F").crates.len(), 2);
@@ -136,9 +141,10 @@ fn index_queries() {
     assert_eq!(anon.search("letter=b").crates.len(), 1);
     assert_eq!(anon.search("letter=c").crates.len(), 0);
 
-    assert_eq!(anon.search("keyword=kw1").crates.len(), 2);
-    assert_eq!(anon.search("keyword=KW1").crates.len(), 2);
+    assert_eq!(anon.search("keyword=kw1").crates.len(), 3);
+    assert_eq!(anon.search("keyword=KW1").crates.len(), 3);
     assert_eq!(anon.search("keyword=kw2").crates.len(), 0);
+    assert_eq!(anon.search("all_keywords=kw1 kw3").crates.len(), 1);
 
     assert_eq!(anon.search("q=foo&keyword=kw1").crates.len(), 1);
     assert_eq!(anon.search("q=foo2&keyword=kw1").crates.len(), 0);
@@ -2357,4 +2363,32 @@ fn pagination_links_included_if_applicable() {
     assert_eq!(Some("?page=1&per_page=1".to_string()), page2.meta.prev_page);
     assert_eq!(None, page4.meta.next_page);
     assert_eq!(Some("?page=2&per_page=1".to_string()), page3.meta.prev_page);
+}
+
+#[test]
+fn pagination_parameters_only_accept_integers() {
+    let (app, anon, user) = TestApp::init().with_user();
+    let user = user.as_model();
+
+    app.db(|conn| {
+        CrateBuilder::new("pagination_links_1", user.id).expect_build(conn);
+        CrateBuilder::new("pagination_links_2", user.id).expect_build(conn);
+        CrateBuilder::new("pagination_links_3", user.id).expect_build(conn);
+    });
+
+    let invalid_per_page_json = anon
+        .get_with_query::<()>("/api/v1/crates", "page=1&per_page=100%22%EF%BC%8Cexception")
+        .bad_with_status(400);
+    assert_eq!(
+        invalid_per_page_json.errors[0].detail,
+        "invalid digit found in string"
+    );
+
+    let invalid_page_json = anon
+        .get_with_query::<()>("/api/v1/crates", "page=100%22%EF%BC%8Cexception&per_page=1")
+        .bad_with_status(400);
+    assert_eq!(
+        invalid_page_json.errors[0].detail,
+        "invalid digit found in string"
+    );
 }

@@ -23,7 +23,10 @@ fn update(conn: &PgConnection) -> QueryResult<()> {
         .filter(processed.eq(false))
         .filter(downloads.ne(counted))
         .load(conn)?;
+
+    println!("Updating {} versions", rows.len());
     collect(conn, &rows)?;
+    println!("Finished updating versions");
 
     // Anything older than 24 hours ago will be frozen and will not be queried
     // against again.
@@ -33,16 +36,17 @@ fn update(conn: &PgConnection) -> QueryResult<()> {
         .filter(downloads.eq(counted))
         .filter(processed.eq(false))
         .execute(conn)?;
+    println!("Finished freezing old version_downloads");
 
     no_arg_sql_function!(refresh_recent_crate_downloads, ());
     select(refresh_recent_crate_downloads).execute(conn)?;
+    println!("Finished running refresh_recent_crate_downloads");
+
     Ok(())
 }
 
 fn collect(conn: &PgConnection, rows: &[VersionDownload]) -> QueryResult<()> {
     use diesel::update;
-
-    println!("updating {} versions", rows.len());
 
     for download in rows {
         let amt = download.downloads - download.counted;
