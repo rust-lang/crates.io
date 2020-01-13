@@ -31,6 +31,10 @@ module.exports = function(defaults) {
     sassOptions: {
       includePaths: ['node_modules/normalize.css'],
     },
+    cssModules: {
+      extension: 'module.scss',
+      intermediateOutputPath: 'app/styles/_modules.scss',
+    },
     fingerprint: {
       extensions: ['js', 'css', 'png', 'jpg', 'gif', 'map', 'svg', 'ttf', 'woff', 'woff2'],
     },

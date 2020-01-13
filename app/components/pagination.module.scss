@@ -15,12 +15,12 @@
         padding: 5px 6px;
     }
     a:hover { background-color: $main-bg-dark; }
-    a.active { background-color: $main-bg-dark; }
+    a:global(.active) { background-color: $main-bg-dark; }
 
     img, svg { vertical-align: middle; }
 
-    .next.active,
-    .prev.active,
+    .next:global(.active),
+    .prev:global(.active),
     .next:hover,
     .prev:hover {
         background: none;
