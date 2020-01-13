@@ -3,6 +3,8 @@ import { setupApplicationTest } from 'ember-qunit';
 import { visit, currentURL, click, waitFor } from '@ember/test-helpers';
 import { defer } from 'rsvp';
 import window, { setupWindowMock } from 'ember-window-mock';
+
+import flashStyles from 'cargo/components/flash-message.module.scss';
 import setupMirage from '../helpers/setup-mirage';
 
 module('Acceptance | Login', function(hooks) {
@@ -83,7 +85,7 @@ module('Acceptance | Login', function(hooks) {
     fakeWindow.closed = true;
 
     // wait for the error message to show up after the failed login
-    await waitFor('[data-test-flash-message].shown');
+    await waitFor(`[data-test-flash-message].${flashStyles.shown}`);
 
     assert.dom('[data-test-flash-message]').hasText('Failed to log in: Forbidden');
   });
