@@ -1,6 +1,7 @@
 import Component from '@ember/component';
 
 export default Component.extend({
+  tagName: '',
   isAccepted: false,
   isDeclined: false,
   isError: false,

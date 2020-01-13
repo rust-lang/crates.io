@@ -1,4 +1,3 @@
-use std::error::Error;
 use std::sync::Arc;
 
 use conduit::{Handler, Request, Response};
@@ -7,7 +6,7 @@ use conduit_router::{RequestParams, RouteBuilder};
 use crate::controllers::*;
 use crate::util::errors::{std_error, AppError, AppResult, NotFound};
 use crate::util::RequestProxy;
-use crate::{App, Env};
+use crate::{middleware, App, Env};
 
 pub fn build_router(app: &App) -> R404 {
     let mut api_router = RouteBuilder::new();
@@ -140,7 +139,7 @@ pub fn build_router(app: &App) -> R404 {
 struct C(pub fn(&mut dyn Request) -> AppResult<Response>);
 
 impl Handler for C {
-    fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
+    fn call(&self, req: &mut dyn Request) -> middleware::Result<Response> {
         let C(f) = *self;
         match f(req) {
             Ok(resp) => Ok(resp),
@@ -155,7 +154,7 @@ impl Handler for C {
 struct R<H>(pub Arc<H>);
 
 impl<H: Handler> Handler for R<H> {
-    fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
+    fn call(&self, req: &mut dyn Request) -> middleware::Result<Response> {
         let path = req.params()["path"].to_string();
         let R(ref sub_router) = *self;
         sub_router.call(&mut RequestProxy::rewrite_path(req, &path))
@@ -167,7 +166,7 @@ impl<H: Handler> Handler for R<H> {
 pub struct R404(pub RouteBuilder);
 
 impl Handler for R404 {
-    fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
+    fn call(&self, req: &mut dyn Request) -> middleware::Result<Response> {
         let R404(ref router) = *self;
         match router.recognize(&req.method(), req.path()) {
             Ok(m) => {
@@ -182,7 +181,7 @@ impl Handler for R404 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::util::errors::{bad_request, cargo_err, internal, NotFound, Unauthorized};
+    use crate::util::errors::{bad_request, cargo_err, internal, AppError, NotFound, Unauthorized};
 
     use conduit_test::MockRequest;
     use diesel::result::Error as DieselError;

@@ -3,10 +3,10 @@ set -ue
 
 export FASTBOOT_DISABLED
 
-if [ "${USE_FASTBOOT:-0}" = '1' ]; then
-    unset FASTBOOT_DISABLED
-else
+if [ -z "${USE_FASTBOOT-}" ]; then
     FASTBOOT_DISABLED=1
+else
+    unset FASTBOOT_DISABLED
 fi
 
 ember "$@"

@@ -1,3 +1,17 @@
+//! This module implements several error types and traits.  The suggested usage in returned results
+//! is as follows:
+//!
+//! * The concrete `util::concrete::Error` type (re-exported as `util::Error`) is great for code
+//!   that is not part of the request/response lifecycle.  It avoids pulling in the unnecessary
+//!   infrastructure to convert errors into a user facing JSON responses (relative to `AppError`).
+//! * `diesel::QueryResult` - There is a lot of code that only deals with query errors.  If only
+//!   one type of error is possible in a function, using that specific error is preferable to the
+//!   more general `util::Error`.  This is especially common in model code.
+//! * `util::errors::AppResult` - Some failures should be converted into user facing JSON
+//!   responses.  This error type is more dynamic and is box allocated.  Low-level errors are
+//!   typically not converted to user facing errors and most usage is within the models,
+//!   controllers, and middleware layers.
+
 use std::any::{Any, TypeId};
 use std::error::Error;
 use std::fmt;
@@ -8,50 +22,60 @@ use diesel::result::Error as DieselError;
 
 use crate::util::json_response;
 
+pub(super) mod concrete;
+mod http;
+
+/// Returns an error with status 200 and the provided description as JSON
+///
+/// This is for backwards compatibility with cargo endpoints.  For all other
+/// endpoints, use helpers like `bad_request` or `server_error` which set a
+/// correct status code.
+pub fn cargo_err<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
+    Box::new(http::Ok(error.to_string()))
+}
+
+// The following are intended to be used for errors being sent back to the Ember
+// frontend, not to cargo as cargo does not handle non-200 response codes well
+// (see <https://github.com/rust-lang/cargo/issues/3995>), but Ember requires
+// non-200 response codes for its stores to work properly.
+
+/// Return an error with status 400 and the provided description as JSON
+pub fn bad_request<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
+    Box::new(http::BadRequest(error.to_string()))
+}
+
+/// Returns an error with status 500 and the provided description as JSON
+pub fn server_error<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
+    Box::new(http::ServerError(error.to_string()))
+}
+
 #[derive(Serialize)]
-struct StringError {
-    detail: String,
+struct StringError<'a> {
+    detail: &'a str,
 }
 #[derive(Serialize)]
-struct Bad {
-    errors: Vec<StringError>,
+struct Bad<'a> {
+    errors: Vec<StringError<'a>>,
+}
+
+/// Generates a response with the provided status and description as JSON
+fn json_error(detail: &str, status: (u32, &'static str)) -> Response {
+    let mut response = json_response(&Bad {
+        errors: vec![StringError { detail }],
+    });
+    response.status = status;
+    response
 }
 
 // =============================================================================
 // AppError trait
 
 pub trait AppError: Send + fmt::Display + fmt::Debug + 'static {
-    fn description(&self) -> &str;
-    fn cause(&self) -> Option<&(dyn AppError)> {
-        None
-    }
-
     /// Generate an HTTP response for the error
+    ///
+    /// If none is returned, the error will bubble up the middleware stack
+    /// where it is eventually logged and turned into a status 500 response.
     fn response(&self) -> Option<Response>;
-
-    /// Fallback logic for generating a cargo friendly response
-    ///
-    /// This behavior is deprecated and no new calls or impls should be added.
-    fn fallback_response(&self) -> Option<Response> {
-        if self.fallback_with_description_as_bad_200() {
-            Some(json_response(&Bad {
-                errors: vec![StringError {
-                    detail: self.description().to_string(),
-                }],
-            }))
-        } else {
-            self.cause().and_then(AppError::response)
-        }
-    }
-
-    /// Determines if the `fallback_response` method should send the description as a status 200
-    /// error to cargo, or send the cause response (if applicable).
-    ///
-    /// This is only to be used by the `fallback_response` method.  If your error type impls
-    /// `response`, then there is no need to impl this method.
-    fn fallback_with_description_as_bad_200(&self) -> bool {
-        false
-    }
 
     fn get_type_id(&self) -> TypeId {
         TypeId::of::<Self>()
@@ -81,15 +105,6 @@ impl dyn AppError {
 }
 
 impl AppError for Box<dyn AppError> {
-    fn description(&self) -> &str {
-        (**self).description()
-    }
-    fn cause(&self) -> Option<&dyn AppError> {
-        (**self).cause()
-    }
-    fn fallback_with_description_as_bad_200(&self) -> bool {
-        (**self).fallback_with_description_as_bad_200()
-    }
     fn response(&self) -> Option<Response> {
         (**self).response()
     }
@@ -155,17 +170,8 @@ impl<T> ChainError<T> for Option<T> {
 }
 
 impl<E: AppError> AppError for ChainedError<E> {
-    fn description(&self) -> &str {
-        self.error.description()
-    }
-    fn cause(&self) -> Option<&dyn AppError> {
-        Some(&*self.cause)
-    }
     fn response(&self) -> Option<Response> {
         self.error.response()
-    }
-    fn fallback_with_description_as_bad_200(&self) -> bool {
-        self.error.fallback_with_description_as_bad_200()
     }
 }
 
@@ -179,11 +185,8 @@ impl<E: AppError> fmt::Display for ChainedError<E> {
 // Error impls
 
 impl<E: Error + Send + 'static> AppError for E {
-    fn description(&self) -> &str {
-        Error::description(self)
-    }
     fn response(&self) -> Option<Response> {
-        self.fallback_response()
+        None
     }
 }
 
@@ -193,57 +196,34 @@ impl<E: Error + Send + 'static> From<E> for Box<dyn AppError> {
     }
 }
 // =============================================================================
-// Concrete errors
+// Internal error for use with `chain_error`
 
 #[derive(Debug)]
-struct ConcreteAppError {
+struct InternalAppError {
     description: String,
-    detail: Option<String>,
-    cause: Option<Box<dyn AppError>>,
-    cargo_err: bool,
 }
 
-impl fmt::Display for ConcreteAppError {
+impl fmt::Display for InternalAppError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.description)?;
-        if let Some(ref s) = self.detail {
-            write!(f, " ({})", s)?;
-        }
         Ok(())
     }
 }
 
-impl AppError for ConcreteAppError {
-    fn description(&self) -> &str {
-        &self.description
-    }
-    fn cause(&self) -> Option<&dyn AppError> {
-        self.cause.as_ref().map(|c| &**c)
-    }
+impl AppError for InternalAppError {
     fn response(&self) -> Option<Response> {
-        self.fallback_response()
-    }
-    fn fallback_with_description_as_bad_200(&self) -> bool {
-        self.cargo_err
+        None
     }
 }
+
+// TODO: The remaining can probably move under `http`
 
 #[derive(Debug, Clone, Copy)]
 pub struct NotFound;
 
 impl AppError for NotFound {
-    fn description(&self) -> &str {
-        "not found"
-    }
-
     fn response(&self) -> Option<Response> {
-        let mut response = json_response(&Bad {
-            errors: vec![StringError {
-                detail: "Not Found".to_string(),
-            }],
-        });
-        response.status = (404, "Not Found");
-        Some(response)
+        Some(json_error("Not Found", (404, "Not Found")))
     }
 }
 
@@ -257,18 +237,9 @@ impl fmt::Display for NotFound {
 pub struct Unauthorized;
 
 impl AppError for Unauthorized {
-    fn description(&self) -> &str {
-        "unauthorized"
-    }
-
     fn response(&self) -> Option<Response> {
-        let mut response = json_response(&Bad {
-            errors: vec![StringError {
-                detail: "must be logged in to perform that action".to_string(),
-            }],
-        });
-        response.status = (403, "Forbidden");
-        Some(response)
+        let detail = "must be logged in to perform that action";
+        Some(json_error(detail, (403, "Forbidden")))
     }
 }
 
@@ -278,80 +249,20 @@ impl fmt::Display for Unauthorized {
     }
 }
 
-#[derive(Debug)]
-struct BadRequest(String);
-
-impl AppError for BadRequest {
-    fn description(&self) -> &str {
-        self.0.as_ref()
-    }
-
-    fn response(&self) -> Option<Response> {
-        let mut response = json_response(&Bad {
-            errors: vec![StringError {
-                detail: self.0.clone(),
-            }],
-        });
-        response.status = (400, "Bad Request");
-        Some(response)
-    }
-}
-
-impl fmt::Display for BadRequest {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
 pub fn internal<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
-    Box::new(ConcreteAppError {
+    Box::new(InternalAppError {
         description: error.to_string(),
-        detail: None,
-        cause: None,
-        cargo_err: false,
     })
-}
-
-pub fn cargo_err<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
-    Box::new(ConcreteAppError {
-        description: error.to_string(),
-        detail: None,
-        cause: None,
-        cargo_err: true,
-    })
-}
-
-/// This is intended to be used for errors being sent back to the Ember
-/// frontend, not to cargo as cargo does not handle non-200 response codes well
-/// (see <https://github.com/rust-lang/cargo/issues/3995>), but Ember requires
-/// non-200 response codes for its stores to work properly.
-///
-/// Since this is going back to the UI these errors are treated the same as
-/// `cargo_err` errors, other than the HTTP status code.
-pub fn bad_request<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
-    Box::new(BadRequest(error.to_string()))
 }
 
 #[derive(Debug)]
-pub struct AppErrToStdErr(pub Box<dyn AppError>);
+struct AppErrToStdErr(pub Box<dyn AppError>);
 
-impl Error for AppErrToStdErr {
-    fn description(&self) -> &str {
-        self.0.description()
-    }
-}
+impl Error for AppErrToStdErr {}
 
 impl fmt::Display for AppErrToStdErr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)?;
-
-        let mut err = &*self.0;
-        while let Some(cause) = err.cause() {
-            err = cause;
-            write!(f, "\nCaused by: {}", err)?;
-        }
-
-        Ok(())
+        self.0.fmt(f)
     }
 }
 
@@ -359,28 +270,14 @@ pub(crate) fn std_error(e: Box<dyn AppError>) -> Box<dyn Error + Send> {
     Box::new(AppErrToStdErr(e))
 }
 
-pub(crate) fn std_error_no_send(e: Box<dyn AppError>) -> Box<dyn Error> {
-    Box::new(AppErrToStdErr(e))
-}
-
 #[derive(Debug, Clone, Copy)]
 pub struct ReadOnlyMode;
 
 impl AppError for ReadOnlyMode {
-    fn description(&self) -> &str {
-        "tried to write in read only mode"
-    }
-
     fn response(&self) -> Option<Response> {
-        let mut response = json_response(&Bad {
-            errors: vec![StringError {
-                detail: "Crates.io is currently in read-only mode for maintenance. \
-                         Please try again later."
-                    .to_string(),
-            }],
-        });
-        response.status = (503, "Service Unavailable");
-        Some(response)
+        let detail = "Crates.io is currently in read-only mode for maintenance. \
+                      Please try again later.";
+        Some(json_error(detail, (503, "Service Unavailable")))
     }
 }
 
@@ -396,25 +293,17 @@ pub struct TooManyRequests {
 }
 
 impl AppError for TooManyRequests {
-    fn description(&self) -> &str {
-        "too many requests"
-    }
-
     fn response(&self) -> Option<Response> {
         const HTTP_DATE_FORMAT: &str = "%a, %d %b %Y %H:%M:%S GMT";
         let retry_after = self.retry_after.format(HTTP_DATE_FORMAT);
 
-        let mut response = json_response(&Bad {
-            errors: vec![StringError {
-                detail: format!(
-                    "You have published too many crates in a \
-                     short period of time. Please try again after {} or email \
-                     help@crates.io to have your limit increased.",
-                    retry_after
-                ),
-            }],
-        });
-        response.status = (429, "TOO MANY REQUESTS");
+        let detail = format!(
+            "You have published too many crates in a \
+             short period of time. Please try again after {} or email \
+             help@crates.io to have your limit increased.",
+            retry_after
+        );
+        let mut response = json_error(&detail, (429, "TOO MANY REQUESTS"));
         response
             .headers
             .insert("Retry-After".into(), vec![retry_after.to_string()]);
@@ -426,4 +315,62 @@ impl fmt::Display for TooManyRequests {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         "Too many requests".fmt(f)
     }
+}
+
+#[test]
+fn chain_error_internal() {
+    assert_eq!(
+        None::<()>
+            .chain_error(|| internal("inner"))
+            .chain_error(|| internal("middle"))
+            .chain_error(|| internal("outer"))
+            .unwrap_err()
+            .to_string(),
+        "outer caused by middle caused by inner"
+    );
+    assert_eq!(
+        Err::<(), _>(internal("inner"))
+            .chain_error(|| internal("outer"))
+            .unwrap_err()
+            .to_string(),
+        "outer caused by inner"
+    );
+
+    // Don't do this, the user will see a generic 500 error instead of the intended message
+    assert_eq!(
+        Err::<(), _>(cargo_err("inner"))
+            .chain_error(|| internal("outer"))
+            .unwrap_err()
+            .to_string(),
+        "outer caused by inner"
+    );
+    assert_eq!(
+        Err::<(), _>(Unauthorized)
+            .chain_error(|| internal("outer"))
+            .unwrap_err()
+            .to_string(),
+        "outer caused by must be logged in to perform that action"
+    );
+}
+
+#[test]
+fn chain_error_user_facing() {
+    // Do this rarely, the user will only see the outer error
+    assert_eq!(
+        Err::<(), _>(cargo_err("inner"))
+            .chain_error(|| cargo_err("outer"))
+            .unwrap_err()
+            .to_string(),
+        "outer caused by inner" // never logged
+    );
+
+    // The outer error is sent as a response to the client.
+    // The inner error never bubbles up to the logging middleware
+    assert_eq!(
+        Err::<(), _>(std::io::Error::from(std::io::ErrorKind::PermissionDenied))
+            .chain_error(|| cargo_err("outer"))
+            .unwrap_err()
+            .to_string(),
+        "outer caused by permission denied" // never logged
+    );
 }

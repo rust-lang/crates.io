@@ -5,8 +5,7 @@ use std::io::Cursor;
 use conduit::Response;
 use serde::Serialize;
 
-pub use self::errors::ChainError;
-pub use self::errors::{bad_request, cargo_err, internal, AppError, AppResult};
+pub use self::errors::concrete::Error;
 pub use self::io_util::{read_fill, read_le_u32, LimitErrorReader};
 pub use self::request_helpers::*;
 pub use self::request_proxy::RequestProxy;
@@ -17,6 +16,13 @@ mod request_helpers;
 mod request_proxy;
 pub mod rfc3339;
 
+/// Serialize a value to JSON and build a status 200 Response
+///
+/// This helper sets appropriate values for `Content-Type` and `Content-Length`.
+///
+/// # Panics
+///
+/// This function will panic if serialization fails.
 pub fn json_response<T: Serialize>(t: &T) -> Response {
     let json = serde_json::to_string(t).unwrap();
     let mut headers = HashMap::new();

@@ -87,7 +87,6 @@ for another platform.
 
 These files are mostly only relevant when running crates.io's code in development mode.
 
-* `bors.toml` - Configure our instance of [bors-ng][] for continous integration
 * `.editorconfig` - Coding style definitions supported by some IDEs // TODO: Reference extensions
   for common editors
 * `.env` - Environment variables loaded by the backend - (ignored in `.gitignore`)
@@ -101,8 +100,7 @@ local development environment
   writable directory - (ignored in `.gitignore`)
 * `tmp/index-bare` - A bare git repository, used as the origin for `tmp/index-co` during
   development - (ignored in `.gitignore`)
-* `.travis.yml` - Configuration for continous integration at [Travis CI][]
+* `.github/workflows/*` - Configuration for continuous integration at [GitHub Actions]
 * `.watchmanconfig` - Use by Ember CLI to efficiently watch for file changes if you install watchman
 
-[bors-ng]: https://github.com/bors-ng/bors-ng
-[Travis CI]: https://travis-ci.com/rust-lang/crates.io
+[GitHub Actions]: https://github.com/rust-lang/crates.io/actions

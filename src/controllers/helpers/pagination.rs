@@ -1,5 +1,5 @@
 use crate::models::helpers::with_count::*;
-use crate::util::errors::*;
+use crate::util::errors::{bad_request, AppResult};
 use diesel::pg::Pg;
 use diesel::prelude::*;
 use diesel::query_builder::*;
@@ -16,9 +16,9 @@ pub(crate) enum Page {
 impl Page {
     fn new(params: &IndexMap<String, String>) -> AppResult<Self> {
         if let Some(s) = params.get("page") {
-            let numeric_page = s.parse()?;
+            let numeric_page = s.parse().map_err(|e| bad_request(&e))?;
             if numeric_page < 1 {
-                return Err(cargo_err(&format_args!(
+                return Err(bad_request(&format_args!(
                     "page indexing starts from 1, page {} is invalid",
                     numeric_page,
                 )));
@@ -44,11 +44,11 @@ impl PaginationOptions {
 
         let per_page = params
             .get("per_page")
-            .map(|s| s.parse())
+            .map(|s| s.parse().map_err(|e| bad_request(&e)))
             .unwrap_or(Ok(DEFAULT_PER_PAGE))?;
 
         if per_page > MAX_PER_PAGE {
-            return Err(cargo_err(&format_args!(
+            return Err(bad_request(&format_args!(
                 "cannot request more than {} items",
                 MAX_PER_PAGE,
             )));
@@ -180,5 +180,32 @@ where
             out.push_bind_param::<BigInt, _>(&i64::from(offset))?;
         }
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Page, PaginationOptions};
+    use indexmap::IndexMap;
+
+    #[test]
+    fn page_must_be_a_number() {
+        let mut params = IndexMap::new();
+        params.insert(String::from("page"), String::from("not a number"));
+        let page_error = Page::new(&params).unwrap_err().response().unwrap();
+
+        assert_eq!(page_error.status, (400, "Bad Request"));
+    }
+
+    #[test]
+    fn per_page_must_be_a_number() {
+        let mut params = IndexMap::new();
+        params.insert(String::from("per_page"), String::from("not a number"));
+        let per_page_error = PaginationOptions::new(&params)
+            .unwrap_err()
+            .response()
+            .unwrap();
+
+        assert_eq!(per_page_error.status, (400, "Bad Request"));
     }
 }

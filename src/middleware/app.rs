@@ -17,16 +17,12 @@ impl AppMiddleware {
 }
 
 impl Middleware for AppMiddleware {
-    fn before(&self, req: &mut dyn Request) -> Result<(), Box<dyn Error + Send>> {
+    fn before(&self, req: &mut dyn Request) -> Result<()> {
         req.mut_extensions().insert(Arc::clone(&self.app));
         Ok(())
     }
 
-    fn after(
-        &self,
-        req: &mut dyn Request,
-        res: Result<Response, Box<dyn Error + Send>>,
-    ) -> Result<Response, Box<dyn Error + Send>> {
+    fn after(&self, req: &mut dyn Request, res: Result<Response>) -> Result<Response> {
         req.mut_extensions().pop::<Arc<App>>().unwrap();
         res
     }

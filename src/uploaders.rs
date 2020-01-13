@@ -1,10 +1,11 @@
 use conduit::Request;
 use flate2::read::GzDecoder;
+use openssl::error::ErrorStack;
 use openssl::hash::{Hasher, MessageDigest};
 use reqwest::header;
 
-use crate::util::LimitErrorReader;
-use crate::util::{cargo_err, internal, AppResult, ChainError, Maximums};
+use crate::util::errors::{cargo_err, internal, AppResult, ChainError};
+use crate::util::{Error, LimitErrorReader, Maximums};
 
 use std::env;
 use std::fs::{self, File};
@@ -88,6 +89,11 @@ impl Uploader {
     /// Uploads a file using the configured uploader (either `S3`, `Local`).
     ///
     /// It returns the path of the uploaded file.
+    ///
+    /// # Panics
+    ///
+    /// This function can panic on an `Self::Local` during development.
+    /// Production and tests use `Self::S3` which should not panic.
     pub fn upload<R: std::io::Read + Send + 'static>(
         &self,
         client: &reqwest::Client,
@@ -96,19 +102,17 @@ impl Uploader {
         content_length: u64,
         content_type: &str,
         extra_headers: header::HeaderMap,
-    ) -> AppResult<Option<String>> {
+    ) -> Result<Option<String>, Error> {
         match *self {
             Uploader::S3 { ref bucket, .. } => {
-                bucket
-                    .put(
-                        client,
-                        path,
-                        content,
-                        content_length,
-                        content_type,
-                        extra_headers,
-                    )
-                    .map_err(|e| internal(&format_args!("failed to upload to S3: {}", e)))?;
+                bucket.put(
+                    client,
+                    path,
+                    content,
+                    content_length,
+                    content_type,
+                    extra_headers,
+                )?;
                 Ok(Some(String::from(path)))
             }
             Uploader::Local => {
@@ -135,11 +139,14 @@ impl Uploader {
         let mut body = Vec::new();
         LimitErrorReader::new(req.body(), maximums.max_upload_size).read_to_end(&mut body)?;
         verify_tarball(krate, vers, &body, maximums.max_unpack_size)?;
-        let checksum = hash(&body);
+        let checksum = hash(&body)?;
         let content_length = body.len() as u64;
         let content = Cursor::new(body);
         let mut extra_headers = header::HeaderMap::new();
-        extra_headers.insert(header::CACHE_CONTROL, CACHE_CONTROL_README.parse().unwrap());
+        extra_headers.insert(
+            header::CACHE_CONTROL,
+            CACHE_CONTROL_IMMUTABLE.parse().unwrap(),
+        );
         self.upload(
             app.http_client(),
             &path,
@@ -147,7 +154,8 @@ impl Uploader {
             content_length,
             "application/x-tar",
             extra_headers,
-        )?;
+        )
+        .map_err(|e| internal(&format_args!("failed to upload crate: {}", e)))?;
         Ok(checksum)
     }
 
@@ -157,15 +165,12 @@ impl Uploader {
         crate_name: &str,
         vers: &str,
         readme: String,
-    ) -> AppResult<()> {
+    ) -> Result<(), Error> {
         let path = Uploader::readme_path(crate_name, vers);
         let content_length = readme.len() as u64;
         let content = Cursor::new(readme);
         let mut extra_headers = header::HeaderMap::new();
-        extra_headers.insert(
-            header::CACHE_CONTROL,
-            CACHE_CONTROL_IMMUTABLE.parse().unwrap(),
-        );
+        extra_headers.insert(header::CACHE_CONTROL, CACHE_CONTROL_README.parse().unwrap());
         self.upload(
             http_client,
             &path,
@@ -221,8 +226,8 @@ fn verify_tarball(
     Ok(())
 }
 
-fn hash(data: &[u8]) -> Vec<u8> {
-    let mut hasher = Hasher::new(MessageDigest::sha256()).unwrap();
-    hasher.update(data).unwrap();
-    hasher.finish().unwrap().to_vec()
+fn hash(data: &[u8]) -> Result<Vec<u8>, ErrorStack> {
+    let mut hasher = Hasher::new(MessageDigest::sha256())?;
+    hasher.update(data)?;
+    Ok(hasher.finish()?.to_vec())
 }

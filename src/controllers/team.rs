@@ -1,4 +1,4 @@
-use crate::controllers::prelude::*;
+use crate::controllers::frontend_prelude::*;
 
 use crate::models::Team;
 use crate::schema::teams;

@@ -1,8 +1,7 @@
-/* eslint-disable quotes */
 export default [
   {
     crate: 'nanomsg',
-    created_at: '2016-12-27T08:40:00Z',
+    created_at: '2016-12-20T07:30:00Z',
     dl_path: '/api/v1/crates/nanomsg/0.7.0-alpha.1/download',
     downloads: 260,
     features: {
@@ -10,7 +9,7 @@ export default [
     },
     id: 40906,
     num: '0.7.0-alpha.1',
-    updated_at: '2016-12-27T08:40:00Z',
+    updated_at: '2016-12-20T07:30:00Z',
     yanked: false,
     license: 'MIT',
     crate_size: 912355,

@@ -24,7 +24,7 @@ impl AroundMiddleware for EmberIndexRewrite {
 }
 
 impl Handler for EmberIndexRewrite {
-    fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
+    fn call(&self, req: &mut dyn Request) -> Result<Response> {
         // If the client is requesting html, then we've only got one page so
         // rewrite the request.
         let wants_html = req

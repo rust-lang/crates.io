@@ -2,7 +2,7 @@ import Component from '@ember/component';
 import { later } from '@ember/runloop';
 
 export default Component.extend({
-  classNames: ['crate-toml-copy'],
+  tagName: '',
   copyText: '',
   showSuccess: false,
   showNotification: false,
@@ -20,8 +20,7 @@ export default Component.extend({
     );
   },
   actions: {
-    copySuccess(event) {
-      event.clearSelection();
+    copySuccess() {
       this.toggleClipboardProps(true);
     },
 

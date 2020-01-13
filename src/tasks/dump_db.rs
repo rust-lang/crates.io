@@ -3,7 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::{background_jobs::Environment, uploaders::Uploader, util::errors::std_error_no_send};
+use crate::{background_jobs::Environment, uploaders::Uploader};
 use reqwest::header;
 use swirl::PerformError;
 
@@ -16,10 +16,16 @@ pub fn dump_db(
     target_name: String,
 ) -> Result<(), PerformError> {
     let directory = DumpDirectory::create()?;
+
+    println!("Begin exporting database");
     directory.populate(&database_url)?;
+
+    println!("Creating tarball");
     let tarball = DumpTarball::create(&directory.export_dir)?;
-    tarball.upload(&target_name, &env.uploader)?;
-    println!("Database dump uploaded to {}.", &target_name);
+
+    println!("Uploading tarball");
+    let size = tarball.upload(&target_name, &env.uploader)?;
+    println!("Database dump uploaded {} bytes to {}.", size, &target_name);
     Ok(())
 }
 
@@ -145,22 +151,20 @@ impl DumpTarball {
         Ok(result)
     }
 
-    fn upload(&self, target_name: &str, uploader: &Uploader) -> Result<(), PerformError> {
+    fn upload(&self, target_name: &str, uploader: &Uploader) -> Result<u64, PerformError> {
         let client = reqwest::Client::new();
         let tarfile = File::open(&self.tarball_path)?;
         let content_length = tarfile.metadata()?.len();
         // TODO Figure out the correct content type.
-        uploader
-            .upload(
-                &client,
-                target_name,
-                tarfile,
-                content_length,
-                "application/gzip",
-                header::HeaderMap::new(),
-            )
-            .map_err(std_error_no_send)?;
-        Ok(())
+        uploader.upload(
+            &client,
+            target_name,
+            tarfile,
+            content_length,
+            "application/gzip",
+            header::HeaderMap::new(),
+        )?;
+        Ok(content_length)
     }
 }
 

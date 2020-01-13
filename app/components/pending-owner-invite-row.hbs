@@ -1,0 +1,46 @@
+<div ...attributes>
+  <div class='row'>
+    {{#if this.isAccepted }}
+      <p>
+        Success! You've been added as an owner of crate
+        <LinkTo @route="crate" @model={{this.invite.crate_name}}>{{this.invite.crate_name}}</LinkTo>.
+      </p>
+    {{else if this.isDeclined}}
+      <p>
+        Declined. You have not been added as an owner of crate
+        <LinkTo @route="crate" @model={{this.invite.crate_name}}>{{this.invite.crate_name}}</LinkTo>.
+      </p>
+    {{else}}
+      <div class='info'>
+        <div class='name'>
+          <h3>
+            <LinkTo @route="crate" @model={{this.invite.crate_name}}>
+              {{this.invite.crate_name}}
+            </LinkTo>
+          </h3>
+        </div>
+        <div class='invite'>
+          <p>
+            Invited by:
+            <LinkTo @route="user" @model={{this.invite.invited_by_username}}>
+              {{this.invite.invited_by_username}}
+            </LinkTo>
+          </p>
+        </div>
+        <div class='sent'>
+          <span class='small'>{{moment-from-now this.invite.created_at}}</span>
+        </div>
+        <div class='actions'>
+          <button type="button" class='small yellow-button' {{action 'acceptInvitation' this.invite}}>Accept</button>
+          <button type="button" class='small yellow-button' {{action 'declineInvitation' this.invite}}>Decline</button>
+        </div>
+        {{#if this.isError}}
+          <div class='label'>
+            <p class='small-text'>{{this.inviteError}}</p>
+          </div>
+        {{/if}}
+      </div>
+    {{/if}}
+  </div>
+  
+</div>

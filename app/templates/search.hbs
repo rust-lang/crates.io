@@ -1,95 +1,85 @@
-{{title (concat "Search Results for '" q "'")}}
+{{title (concat "Search Results for '" this.q "'")}}
 
 <div id='crates-heading' class='crate-search' data-test-heading>
   <div class='info'>
     {{svg-jar "magnifier" width=32 height=32}}
     <h1>Search Results</h1>
   </div>
-  {{#if q}}
-    <h2>for '{{ q }}'</h2>
+  {{#if this.q}}
+    <h2>for '{{ this.q }}'</h2>
   {{/if}}
 
-  {{#if dataTask.isRunning}}<img src="/assets/ajax-loader.gif" class="loading-spinner">{{/if}}
+  {{#if this.dataTask.isRunning}}<img src="/assets/ajax-loader.gif" class="loading-spinner">{{/if}}
 </div>
 
-{{#if firstResultPending}}
+{{#if this.firstResultPending}}
   <div id="no-results">
     <h2>Loading search results...</h2>
   </div>
-{{else if hasItems}}
+{{else if this.hasItems}}
   <div id='results'>
     <div class='nav' data-test-search-nav>
       <span class='amt'>
         Displaying
-        <span class='cur'>{{ currentPageStart }}-{{ currentPageEnd }}</span>
-          of <span class='total'>{{ totalItems }}</span> total results
+        <span class='cur'>{{ this.currentPageStart }}-{{ this.currentPageEnd }}</span>
+          of <span class='total'>{{ this.totalItems }}</span> total results
       </span>
     </div>
 
     <div class='sort' data-test-search-sort>
       <span class='small'>Sort by </span>
 
-      {{#rl-dropdown-container class="dropdown-container"}}
-        {{#rl-dropdown-toggle tagName="a" class="dropdown" data-test-current-order=true}}
+      <RlDropdownContainer class="dropdown-container">
+        <RlDropdownToggle @tagName="a" class="dropdown" data-test-current-order>
           {{svg-jar "sort"}}
-          {{ currentSortBy }}
+          {{ this.currentSortBy }}
           <span class='arrow'></span>
-        {{/rl-dropdown-toggle}}
+        </RlDropdownToggle>
 
-        {{#rl-dropdown tagName="ul" class="dropdown"}}
+        <RlDropdown @tagName="ul" class="dropdown">
           <li>
-            {{#link-to (query-params page=1 sort="relevance")}}
+            <LinkTo @query={{hash page=1 sort="relevance"}}>
               Relevance
-            {{/link-to}}
+            </LinkTo>
           </li>
           <li>
-            {{#link-to (query-params page=1 sort="downloads")}}
+            <LinkTo @query={{hash page=1 sort="downloads"}}>
               All-Time Downloads
-            {{/link-to}}
+            </LinkTo>
           </li>
           <li>
-            {{#link-to (query-params page=1 sort="recent-downloads")}}
+            <LinkTo @query={{hash page=1 sort="recent-downloads"}}>
               Recent Downloads
-            {{/link-to}}
+            </LinkTo>
           </li>
           <li>
-            {{#link-to (query-params page=1 sort="recent-updates")}}
+            <LinkTo @query={{hash page=1 sort="recent-updates"}}>
               Recent Updates
-            {{/link-to}}
+            </LinkTo>
           </li>
-        {{/rl-dropdown}}
-      {{/rl-dropdown-container}}
+        </RlDropdown>
+      </RlDropdownContainer>
     </div>
   </div>
 
   <div id='crates' class='white-rows'>
-    {{#each model as |crate index|}}
+    {{#each this.model as |crate index|}}
       {{#if crate.exact_match}}
         <div class='exact-match'>
-          {{#link-to "crate" crate}}
+          <LinkTo @route="crate" @model={{crate}}>
             <h1>Exact Match</h1>
-          {{/link-to}}
-          {{crate-row crate=crate data-test-crate-row=index}}
+          </LinkTo>
+          <CrateRow @crate={{crate}} data-test-crate-row={{index}} />
         </div>
       {{else}}
         <div>
-          {{crate-row crate=crate data-test-crate-row=index}}
+          <CrateRow @crate={{crate}} data-test-crate-row={{index}} />
         </div>
       {{/if}}
     {{/each}}
   </div>
 
-  <div class='pagination'>
-    {{#link-to (query-params page=prevPage) class='prev'}}
-      {{svg-jar "left-pag"}}
-    {{/link-to}}
-    {{#each pages as |page|}}
-      {{#link-to (query-params page=page)}}{{ page }}{{/link-to}}
-    {{/each}}
-    {{#link-to (query-params page=nextPage) class='next'}}
-      {{svg-jar "right-pag"}}
-    {{/link-to}}
-  </div>
+  <Pagination @pages={{this.pages}} @prevPage={{this.prevPage}} @nextPage={{this.nextPage}} />
 {{else}}
   <div id="no-results">
     <h2>0 crates found. <a href='https://doc.rust-lang.org/cargo/getting-started/'>Get started</a> and create your own.</h2>

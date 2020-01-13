@@ -5,12 +5,17 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>crates.io: Rust Package Registry</title>
+    <noscript>
+      <title>crates.io: Rust Package Registry</title>
+    </noscript>
 
     {{content-for 'head'}}
 
     <link rel="stylesheet" href="{{rootURL}}assets/vendor.css">
     <link rel="stylesheet" href="{{rootURL}}assets/cargo.css">
+
+    <link rel="manifest" href="{{rootURL}}manifest.webmanifest">
+    <meta name="msapplication-config" content="{{rootURL}}browserconfig.xml">
 
     {{content-for 'head-footer'}}
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
@@ -18,14 +23,13 @@
     <link rel="search" href="/opensearch.xml" type="application/opensearchdescription+xml" title="Cargo">
   </head>
   <body>
-    {{content-for 'body'}}
     <noscript>
-        <div id="main">
-            <div class='noscript'>
-                This site requires JavaScript to be enabled.
-            </div>
-        </div>
+      <div id='noscript'>
+        For full functionality of this site it is necessary to enable JavaScript.
+      </div>
     </noscript>
+    
+    {{content-for 'body'}}
 
     <script src="{{rootURL}}assets/vendor.js"></script>
     <script src="{{rootURL}}assets/cargo.js"></script>

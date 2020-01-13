@@ -4,7 +4,7 @@ use conduit_cookie::RequestSession;
 use diesel::prelude::*;
 
 use crate::db::RequestTransaction;
-use crate::util::errors::{std_error, AppResult, ChainError, Unauthorized};
+use crate::util::errors::{AppResult, ChainError, Unauthorized};
 
 use crate::models::ApiToken;
 use crate::models::User;
@@ -20,7 +20,7 @@ pub enum AuthenticationSource {
 }
 
 impl Middleware for CurrentUser {
-    fn before(&self, req: &mut dyn Request) -> Result<(), Box<dyn Error + Send>> {
+    fn before(&self, req: &mut dyn Request) -> Result<()> {
         // Check if the request has a session cookie with a `user_id` property inside
         let id = {
             req.session()
@@ -28,7 +28,7 @@ impl Middleware for CurrentUser {
                 .and_then(|s| s.parse::<i32>().ok())
         };
 
-        let conn = req.db_conn().map_err(std_error)?;
+        let conn = req.db_conn().map_err(|e| Box::new(e) as BoxError)?;
 
         if let Some(id) = id {
             // If it did, look for a user in the database with the given `user_id`
@@ -56,7 +56,7 @@ impl Middleware for CurrentUser {
                         })
                     })
                     .optional()
-                    .map_err(|e| Box::new(e) as Box<dyn Error + Send>)?
+                    .map_err(|e| Box::new(e) as BoxError)?
             } else {
                 None
             };

@@ -5,7 +5,7 @@
 
 use std::cmp;
 
-use crate::controllers::prelude::*;
+use crate::controllers::frontend_prelude::*;
 
 use crate::models::{Crate, CrateVersions, Version, VersionDownload};
 use crate::schema::{version_downloads, versions};

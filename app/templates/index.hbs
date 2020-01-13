@@ -2,10 +2,10 @@
   <h1>The Rust community&rsquo;s crate registry</h1>
 
   <div class='links'>
-    {{#link-to "install" class='yellow-button' data-test-install-cargo-link=true}}
+    <a href="https://doc.rust-lang.org/cargo/getting-started/installation.html" class='yellow-button' data-test-install-cargo-link>
       {{svg-jar "button-download"}}
       Install Cargo
-    {{/link-to}}
+    </a>
 
     <a href='https://doc.rust-lang.org/cargo/guide/' class='yellow-button'>
       {{svg-jar "flag"}}
@@ -24,40 +24,40 @@
   <div id='stats'>
     <div class='downloads'>
       {{svg-jar "download"}}
-      <span class='num' data-test-total-downloads>{{if hasData (format-num model.num_downloads) "---,---,---"}}</span>
+      <span class='num' data-test-total-downloads>{{if this.hasData (format-num this.model.num_downloads) "---,---,---"}}</span>
       <span class='desc small'>Downloads</span>
     </div>
     <div class='crates'>
       {{svg-jar "crate"}}
-      <span class='num' data-test-total-crates>{{if hasData (format-num model.num_crates) "---,---"}}</span>
+      <span class='num' data-test-total-crates>{{if this.hasData (format-num this.model.num_crates) "---,---"}}</span>
       <span class='desc small'>Crates in stock</span>
     </div>
   </div>
 </div>
 
 <div id='home-crates' class='crate-lists'>
-  <section id='new-crates' data-test-new-crates aria-busy="{{dataTask.isRunning}}">
+  <section id='new-crates' data-test-new-crates aria-busy="{{this.dataTask.isRunning}}">
     <h2>New Crates</h2>
-    {{crate-list crates=model.new_crates}}
+    <CrateListNewest @crates={{this.model.new_crates}} />
   </section>
-  <section id='most-downloaded' data-test-most-downloaded aria-busy="{{dataTask.isRunning}}">
+  <section id='most-downloaded' data-test-most-downloaded aria-busy="{{this.dataTask.isRunning}}">
     <h2>Most Downloaded</h2>
-    {{crate-list crates=model.most_downloaded}}
+    <CrateListNameOnly @crates={{this.model.most_downloaded}} />
   </section>
-  <section id='just-updated' data-test-just-updated aria-busy="{{dataTask.isRunning}}">
+  <section id='just-updated' data-test-just-updated aria-busy="{{this.dataTask.isRunning}}">
     <h2>Just Updated</h2>
-    {{crate-list crates=model.just_updated}}
+    <CrateListNewest @crates={{this.model.just_updated}} />
   </section>
-  <section id='most-recently-downloaded' data-test-most-recently-downloaded aria-busy="{{dataTask.isRunning}}">
+  <section id='most-recently-downloaded' data-test-most-recently-downloaded aria-busy="{{this.dataTask.isRunning}}">
     <h2>Most Recent Downloads</h2>
-    {{crate-list crates=model.most_recently_downloaded}}
+    <CrateListNameOnly @crates={{this.model.most_recently_downloaded}} />
   </section>
-  <section id='keywords' data-test-keywords aria-busy="{{dataTask.isRunning}}">
-    <h2>Popular Keywords {{#link-to 'keywords'}}(see all){{/link-to}}</h2>
-    {{keyword-list keywords=model.popular_keywords}}
+  <section id='keywords' data-test-keywords aria-busy="{{this.dataTask.isRunning}}">
+    <h2>Popular Keywords <LinkTo @route="keywords">(see all)</LinkTo></h2>
+    <KeywordList @keywords={{this.model.popular_keywords}} />
   </section>
-  <section id='categories' data-test-categories aria-busy="{{dataTask.isRunning}}">
-    <h2>Popular Categories {{#link-to 'categories'}}(see all){{/link-to}}</h2>
-    {{category-list categories=model.popular_categories}}
+  <section id='categories' data-test-categories aria-busy="{{this.dataTask.isRunning}}">
+    <h2>Popular Categories <LinkTo @route="categories">(see all)</LinkTo></h2>
+    <CategoryList @categories={{this.model.popular_categories}} />
   </section>
 </div>

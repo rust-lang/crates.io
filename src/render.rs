@@ -4,7 +4,7 @@ use ammonia::{Builder, UrlRelative, UrlRelativeEvaluate};
 use htmlescape::encode_minimal;
 use std::borrow::Cow;
 use std::path::Path;
-use swirl::errors::PerformError;
+use swirl::PerformError;
 use url::Url;
 
 use crate::background_jobs::Environment;
@@ -229,7 +229,6 @@ pub fn render_and_upload_readme(
     base_url: Option<String>,
 ) -> Result<(), PerformError> {
     use crate::schema::*;
-    use crate::util::errors::std_error_no_send;
     use diesel::prelude::*;
 
     let rendered = readme_to_html(&text, &file_name, base_url.as_ref().map(String::as_str));
@@ -243,8 +242,7 @@ pub fn render_and_upload_readme(
             .select((crates::name, versions::num))
             .first::<(String, String)>(&*conn)?;
         env.uploader
-            .upload_readme(env.http_client(), &crate_name, &vers, rendered)
-            .map_err(std_error_no_send)?;
+            .upload_readme(env.http_client(), &crate_name, &vers, rendered)?;
         Ok(())
     })
 }

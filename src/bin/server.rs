@@ -11,7 +11,6 @@ use std::{
 use civet::Server as CivetServer;
 use conduit_hyper::Service as HyperService;
 use futures::Future;
-use jemalloc_ctl;
 use reqwest::Client;
 
 enum Server {
@@ -22,8 +21,6 @@ enum Server {
 use Server::*;
 
 fn main() {
-    let _ = jemalloc_ctl::set_background_thread(true);
-
     // Initialize logging
     env_logger::init();
 

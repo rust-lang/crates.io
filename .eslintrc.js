@@ -11,9 +11,6 @@ module.exports = {
   },
   rules: {
     'prettier/prettier': 'error',
-    'ember/no-observers': 'warn',
-    'ember/no-new-mixins': 'warn',
-    'ember/require-return-from-computed': 'warn',
   },
   overrides: [
     // node files

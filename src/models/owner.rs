@@ -3,7 +3,7 @@ use diesel::prelude::*;
 
 use crate::app::App;
 use crate::github;
-use crate::util::{cargo_err, AppResult};
+use crate::util::errors::{cargo_err, AppResult};
 
 use crate::models::{Crate, Team, User};
 use crate::schema::{crate_owners, users};

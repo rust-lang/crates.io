@@ -1,2 +1,2 @@
-<title>{{ model.title }}</title>
-{{ head-tags headTags=model.headTags }}
+<title>{{ this.model.title }}</title>
+<HeadTags @headTags={{this.model.headTags}} />

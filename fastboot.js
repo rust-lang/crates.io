@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /* eslint-env node */
 
 'use strict';

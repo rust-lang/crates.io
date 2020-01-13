@@ -1,11 +1,11 @@
 <div id='crates-heading' data-test-heading>
-  {{user-avatar user=model.user size='medium' data-test-avatar=true}}
+  <UserAvatar @user={{this.model.user}} @size="medium" data-test-avatar />
   <h1 data-test-username>
-    {{ model.user.login }}
+    {{ this.model.user.login }}
   </h1>
-  {{#user-link user=model.user data-test-user-link=true}}
+  <UserLink @user={{this.model.user}} data-test-user-link>
     <img alt="GitHub profile" title="GitHub profile" src="/assets/GitHub-Mark.svg">
-  {{/user-link}}
+  </UserLink>
 </div>
 
 <div id='user-profile'>
@@ -16,62 +16,52 @@
       <div class='nav'>
         <span class='amt small'>
           Displaying
-          <span class='cur'>{{ currentPageStart }}-{{ currentPageEnd }}</span>
-          of <span class='total'>{{ totalItems }}</span> total results
+          <span class='cur'>{{ this.currentPageStart }}-{{ this.currentPageEnd }}</span>
+          of <span class='total'>{{ this.totalItems }}</span> total results
         </span>
       </div>
 
       <div class='sort'>
         <span class='small'>Sort by</span>
-        {{#rl-dropdown-container class="dropdown-container"}}
-          {{#rl-dropdown-toggle tagName="a" class="dropdown"}}
+        <RlDropdownContainer class="dropdown-container">
+          <RlDropdownToggle @tagName="a" class="dropdown">
             {{svg-jar "sort"}}
-            {{ currentSortBy }}
+            {{ this.currentSortBy }}
             <span class='arrow'></span>
-          {{/rl-dropdown-toggle}}
+          </RlDropdownToggle>
 
-          {{#rl-dropdown tagName="ul" class="dropdown"}}
+          <RlDropdown @tagName="ul" class="dropdown">
             <li>
-              {{#link-to (query-params sort="alpha")}}
+              <LinkTo @query={{hash sort="alpha"}}>
                 Alphabetical
-              {{/link-to}}
+              </LinkTo>
             </li>
             <li>
-              {{#link-to (query-params sort="downloads")}}
+              <LinkTo @query={{hash sort="downloads"}}>
                 All-Time Downloads
-              {{/link-to}}
+              </LinkTo>
             </li>
             <li>
-              {{#link-to (query-params sort="recent-downloads")}}
+              <LinkTo @query={{hash sort="recent-downloads"}}>
                 Recent Downloads
-              {{/link-to}}
+              </LinkTo>
             </li>
             <li>
-              {{#link-to (query-params sort="recent-updates")}}
+              <LinkTo @query={{hash sort="recent-updates"}}>
                 Recent Updates
-              {{/link-to}}
+              </LinkTo>
             </li>
-          {{/rl-dropdown}}
-        {{/rl-dropdown-container}}
+          </RlDropdown>
+        </RlDropdownContainer>
       </div>
     </div>
 
     <div id='crates' class='white-rows'>
-      {{#each model.crates as |crate|}}
-        {{crate-row crate=crate}}
+      {{#each this.model.crates as |crate|}}
+        <CrateRow @crate={{crate}} />
       {{/each}}
     </div>
 
-    <div class='pagination'>
-      {{#link-to (query-params page=prevPage) class="prev" rel="prev" title="previous page"}}
-        {{svg-jar "left-pag"}}
-      {{/link-to}}
-      {{#each pages as |page|}}
-        {{#link-to (query-params page=page)}}{{ page }}{{/link-to}}
-      {{/each}}
-      {{#link-to (query-params page=nextPage) class="next" rel="next" title="next page"}}
-        {{svg-jar "right-pag"}}
-      {{/link-to}}
-    </div>
+    <Pagination @pages={{this.pages}} @prevPage={{this.prevPage}} @nextPage={{this.nextPage}} />
   </div>
 </div>

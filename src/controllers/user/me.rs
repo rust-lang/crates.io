@@ -1,13 +1,13 @@
 use std::collections::HashMap;
 
-use crate::controllers::prelude::*;
+use crate::controllers::frontend_prelude::*;
 
 use crate::controllers::helpers::*;
 use crate::email;
-use crate::util::bad_request;
-use crate::util::errors::AppError;
 
-use crate::models::{CrateOwner, Email, Follow, NewEmail, OwnerKind, User, Version};
+use crate::models::{
+    CrateOwner, Email, Follow, NewEmail, OwnerKind, User, Version, VersionOwnerAction,
+};
 use crate::schema::{crate_owners, crates, emails, follows, users, versions};
 use crate::views::{EncodableMe, EncodableVersion, OwnedCrate};
 
@@ -38,10 +38,9 @@ pub fn me(req: &mut dyn Request) -> AppResult<Response> {
         ))
         .first::<(User, Option<bool>, Option<String>, bool)>(&*conn)?;
 
-    let owned_crates = crate_owners::table
+    let owned_crates = CrateOwner::by_owner_kind(OwnerKind::User)
         .inner_join(crates::table)
         .filter(crate_owners::owner_id.eq(user_id))
-        .filter(crate_owners::owner_kind.eq(OwnerKind::User as i32))
         .select((crates::id, crates::name, crate_owners::email_notifications))
         .order(crates::name.asc())
         .load(&*conn)?
@@ -81,12 +80,19 @@ pub fn updates(req: &mut dyn Request) -> AppResult<Response> {
         ))
         .paginate(&req.query())?
         .load::<(Version, String, Option<User>)>(&*conn)?;
-
     let more = data.next_page_params().is_some();
+    let versions = data.iter().map(|(v, _, _)| v).cloned().collect::<Vec<_>>();
+    let data = data
+        .into_iter()
+        .zip(VersionOwnerAction::for_versions(&conn, &versions)?.into_iter())
+        .map(|((v, cn, pb), voas)| (v, cn, pb, voas))
+        .collect::<Vec<_>>();
 
     let versions = data
         .into_iter()
-        .map(|(version, crate_name, published_by)| version.encodable(&crate_name, published_by))
+        .map(|(version, crate_name, published_by, actions)| {
+            version.encodable(&crate_name, published_by, actions)
+        })
         .collect();
 
     #[derive(Serialize)]
@@ -118,7 +124,7 @@ pub fn update_user(req: &mut dyn Request) -> AppResult<Response> {
 
     // need to check if current user matches user to be updated
     if &user.id.to_string() != name {
-        return Err(cargo_err("current user does not match requested user"));
+        return Err(bad_request("current user does not match requested user"));
     }
 
     #[derive(Deserialize)]
@@ -132,17 +138,15 @@ pub fn update_user(req: &mut dyn Request) -> AppResult<Response> {
     }
 
     let user_update: UserUpdate =
-        serde_json::from_str(&body).map_err(|_| cargo_err("invalid json request"))?;
+        serde_json::from_str(&body).map_err(|_| bad_request("invalid json request"))?;
 
-    if user_update.user.email.is_none() {
-        return Err(cargo_err("empty email rejected"));
-    }
-
-    let user_email = user_update.user.email.unwrap();
-    let user_email = user_email.trim();
+    let user_email = match &user_update.user.email {
+        Some(email) => email.trim(),
+        None => return Err(bad_request("empty email rejected")),
+    };
 
     if user_email == "" {
-        return Err(cargo_err("empty email rejected"));
+        return Err(bad_request("empty email rejected"));
     }
 
     conn.transaction::<_, Box<dyn AppError>, _>(|| {
@@ -158,7 +162,7 @@ pub fn update_user(req: &mut dyn Request) -> AppResult<Response> {
             .set(&new_email)
             .returning(emails::token)
             .get_result::<String>(&*conn)
-            .map_err(|_| cargo_err("Error in creating token"))?;
+            .map_err(|_| server_error("Error in creating token"))?;
 
         crate::email::send_user_confirm_email(user_email, &user.gh_login, &token);
 
@@ -192,12 +196,14 @@ pub fn regenerate_token_and_send(req: &mut dyn Request) -> AppResult<Response> {
     use diesel::update;
 
     let user = req.user()?;
-    let name = &req.params()["user_id"].parse::<i32>().ok().unwrap();
+    let name = &req.params()["user_id"]
+        .parse::<i32>()
+        .chain_error(|| bad_request("invalid user_id"))?;
     let conn = req.db_conn()?;
 
     // need to check if current user matches user to be updated
     if &user.id != name {
-        return Err(cargo_err("current user does not match requested user"));
+        return Err(bad_request("current user does not match requested user"));
     }
 
     conn.transaction(|| {
@@ -207,7 +213,7 @@ pub fn regenerate_token_and_send(req: &mut dyn Request) -> AppResult<Response> {
             .map_err(|_| bad_request("Email could not be found"))?;
 
         email::try_send_user_confirm_email(&email.email, &user.gh_login, &email.token)
-            .map_err(|_| bad_request("Error in sending email"))
+            .map_err(|_| server_error("Error in sending email"))
     })?;
 
     ok_true()
@@ -235,7 +241,7 @@ pub fn update_email_notifications(req: &mut dyn Request) -> AppResult<Response> 
     let user = req.user()?;
     let conn = req.db_conn()?;
 
-    // Build inserts from existing crates beloning to the current user
+    // Build inserts from existing crates belonging to the current user
     let to_insert = CrateOwner::by_owner_kind(OwnerKind::User)
         .filter(owner_id.eq(user.id))
         .select((crate_id, owner_id, owner_kind, email_notifications))

@@ -1,0 +1,70 @@
+<div ...attributes>
+  {{#if this.emailIsNull }}
+    <div class='friendly-message'>
+      <p class='small-text'>
+        Please add your email address. We will only use
+        it to contact you about your account. We promise we'll never share it!
+      </p>
+    </div>
+  {{/if}}
+  
+  {{#if this.isEditing }}
+    <div class='row'>
+      <div class='label'>
+        <dt>Email</dt>
+      </div>
+      <form class='email-form' {{action 'saveEmail' on='submit'}}>
+        <Input @type={{this.type}} @value={{this.value}} placeholder="Email" class="form-control space-right" />
+        {{#if this.notValidEmail }}
+          <div class='error'>
+            <p class='small-text error'>Whoops, that email format is invalid</p>
+          </div>
+        {{/if}}
+        <div class='actions'>
+          <button type='submit' class='small yellow-button space-right' disabled={{this.disableSave}}>Save</button>
+          <button type="button" class='small yellow-button' {{action 'cancelEdit'}}>Cancel</button>
+        </div>
+      </form>
+    </div>
+  {{else}}
+    <div class='row'>
+      <div class='label'>
+        <dt>Email</dt>
+      </div>
+      <div class='email'>
+        <dd class='no-space-left'>
+          {{ this.user.email }}
+          {{#if this.user.email_verified}}
+            <span class='verified'>Verified!</span>
+          {{/if}}
+        </dd>
+      </div>
+      <div class='actions'>
+        <button type="button" class='small yellow-button space-left' {{action 'editEmail'}}>Edit</button>
+      </div>
+    </div>
+    {{#if this.emailNotVerified }}
+      <div class='row'>
+        <div class='label'>
+          {{#if this.user.email_verification_sent}}
+            <p class='small-text'>We have sent a verification email to your address.</p>
+          {{/if}}
+          <p class='small-text'>Your email has not yet been verified.</p>
+        </div>
+        <div class='actions'>
+          <button type="button" class='small yellow-button space-left' {{action 'resendEmail'}} disabled={{this.disableResend}}>
+            {{this.resendButtonText}}
+          </button>
+        </div>
+      </div>
+    {{/if}}
+    {{#if this.isError}}
+      <div class='row'>
+        <div class='label'>
+          <p class='small-text'>{{this.emailError}}</p>
+        </div>
+      </div>
+    {{/if}}
+  {{/if}}
+  
+</div>

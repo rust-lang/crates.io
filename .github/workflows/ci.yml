@@ -1,0 +1,239 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - auto
+      - master
+      - try
+
+  pull_request:
+
+jobs:
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-16.04
+    env:
+      JOBS: 1 # See https://git.io/vdao3 for details.
+      PERCY_PARALLEL_TOTAL: 2
+      # Percy secrets are included here to enable Percy's GitHub integration
+      # on community-submitted PRs
+      PERCY_TOKEN: 0d8707a02b19aebbec79bb0bf302b8d2fa95edb33169cfe41b084289596670b1
+      PERCY_PROJECT: crates-io/crates.io
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/cache@v1
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '12.x'
+
+      - name: Install node modules
+        run: npm ci
+
+      - name: Lint
+        run: |
+          npm run lint:hbs
+          npm run lint:js
+          npm run lint:deps
+
+      - name: Add nonce for parallel tests
+        run: echo ::set-env name=PERCY_PARALLEL_NONCE::`date +%s`
+
+      - name: Test
+        run: npm test
+
+  backend:
+    name: Backend
+    runs-on: ubuntu-16.04
+    strategy:
+      # TODO: [ci] should be true if GitHub Actions supports ""allow failures" on matrix
+      fail-fast: false
+      matrix:
+        rust:
+          - stable
+          - beta
+          - nightly
+
+    env:
+      RUST_BACKTRACE: 1
+      DATABASE_URL: postgres://postgres:@localhost/cargo_registry_test
+      TEST_DATABASE_URL: postgres://postgres:@localhost/cargo_registry_test
+      CARGO_INCREMENTAL: 0
+      RUSTFLAGS: "-C debuginfo=0 -D warnings"
+      MALLOC_CONF: "background_thread:true,abort_conf:true,abort:true,junk:true"
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Cleanup pre-installed Rust toolchains
+        # The pre-installed toolchain is under root permission, and this would
+        # make tarball fail to extract. Here we remove the symlink and install
+        # our own Rust toolchain if necessary.
+        run: |
+          which rustup
+          which cargo
+          if [[ -L "$HOME/.cargo" && -L "$HOME/.rustup" ]]; then
+              rm -v "$HOME/.rustup"
+              rm -v "$HOME/.cargo"
+          fi
+          echo "::add-path::$HOME/.cargo/bin"
+
+      # FIXME: Nightly and beta channels have high churn.  The cache quickly expires, but there is
+      # no way (that I can find) to overwrite an existing cache.  There is also no way to
+      # dynamically include the latest version number for a release channel into the cache `key`
+      # value.  Once a cached release becomes stale, every job will begin downloading the latest
+      # release from upstream and the cache becomes useless for that channel.
+      #
+      # Including `hashFiles('**/Cargo.lock')` below is a hack.  Ideally, we would change the `key`
+      # for each channel at the same rate as the release cadence for that channel.  For the stable
+      # channel this is too frequent and for the nightly channel (and probably beta as well) it is
+      # not often enough.
+      #
+      # Current size as of 2019-12-23: ~123 MB
+      - name: Cache rustup
+        uses: actions/cache@v1
+        with:
+          path: ~/.rustup
+          key: ${{ runner.os }}-rustup-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-key: |
+              ${{ runner.os }}-rustup-${{ matrix.rust }}-
+              ${{ runner.os }}-rustup-
+
+      # This step has the same tradeoffs as `Cache rustup`, however the cache size is significantly
+      # smaller.  The installed `diesel` binary is also stored here.
+      #
+      # Current size as of 2019-12-23: ~6 MB
+      - name: Cache cargo binaries
+        uses: actions/cache@v1
+        with:
+          path: ~/.cargo/bin
+          key: ${{ runner.os }}-cargo-bin-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-key: |
+            ${{ runner.os }}-cargo-bin-${{ matrix.rust }}-
+            ${{ runner.os }}-cargo-bin-
+
+      # Current size as of 2019-12-23: ~77 MB
+      - name: Cache cargo registry cache
+        uses: actions/cache@v1
+        with:
+          path: ~/.cargo/registry/cache
+          key: ${{ runner.os }}-cargo-registry-cache-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-key: |
+            ${{ runner.os }}-cargo-registry-cache-${{ matrix.rust }}-
+            ${{ runner.os }}-cargo-registry-cache-
+
+      # Current size as of 2019-12-23: ~38 MB
+      - name: Cache cargo registry index
+        uses: actions/cache@v1
+        with:
+          path: ~/.cargo/registry/index
+          key: ${{ runner.os }}-cargo-registry-index-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-key: |
+            ${{ runner.os }}-cargo-registry-index-${{ matrix.rust }}-
+            ${{ runner.os }}-cargo-registry-index-
+
+      # Current size as of 2019-12-23: ~4 MB
+      - name: Cache cargo git db
+        uses: actions/cache@v1
+        with:
+          path: ~/.cargo/git/db
+          key: ${{ runner.os }}-cargo-git-db-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-key: |
+            ${{ runner.os }}-cargo-git-db-${{ matrix.rust }}-
+            ${{ runner.os }}-cargo-git-db-
+
+      # Current size as of 2019-12-23: ~336 MB
+      - name: Cache cargo build
+        uses: actions/cache@v1
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-target-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-key: |
+            ${{ runner.os }}-cargo-build-target-${{ matrix.rust }}-
+            ${{ runner.os }}-cargo-build-target-
+
+      - name: Install ${{ matrix.rust }} Rust
+        run: |
+          if [[ ! -d "$HOME/.cargo" || ! -d "$HOME/.rustup" ]]; then
+              curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup-init.sh
+              sh rustup-init.sh -y --default-toolchain none
+          fi
+          rustup set profile minimal
+          rustup update ${{ matrix.rust }}
+          rustup default ${{ matrix.rust }}
+
+      - name: Install lint tools
+        if: matrix.rust == 'stable'
+        run: |
+          rustup component add rustfmt
+          rustup component add clippy
+
+      - name: Cargo clean on new rustc version
+        run: script/ci/cargo-clean-on-new-rustc-version.sh
+
+      - name: Install required system libraries
+        run: |
+          sudo tee /etc/apt/sources.list.d/pgdg.list <<END
+          deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main
+          END
+          wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+          sudo apt-get update
+          sudo apt-get install -y libpq-dev postgresql-11
+          mkdir -p /etc/postgresql/11/main
+          sudo tee /etc/postgresql/11/main/pg_hba.conf <<END
+          local   all             all                                     trust
+          host    all             all             127.0.0.1/32            trust
+          END
+          sudo systemctl restart postgresql@11-main
+
+      - name: Setup database
+        run: |
+          which diesel || cargo install diesel_cli --vers $(cat .diesel_version) --no-default-features --features postgres
+          diesel database setup --locked-schema
+
+      - name: Lint
+        if: matrix.rust == 'stable'
+        run: |
+          cargo fmt -- --check
+          cargo clippy --all-targets --all-features --all
+
+      - name: Test
+        run: cargo test
+
+      - name: Prune unnecessary cache
+        run: script/ci/prune-cache.sh
+
+
+  # These jobs doesn't actually test anything, but they're only used to tell
+  # bors the build completed, as there is no practical way to detect when a
+  # workflow is successful listening to webhooks only.
+  #
+  # ALL THE PREVIOUS JOBS NEEDS TO BE ADDED TO THE `needs` SECTION OF THIS JOB!
+
+  end-success:
+    name: bors build finished
+    if: success()
+    runs-on: ubuntu-latest
+    needs: [frontend, backend]
+
+    steps:
+      - name: Mark the job as successful
+        run: exit 0
+
+  end-failure:
+    name: bors build finished
+    if: "!success()"
+    runs-on: ubuntu-latest
+    needs: [frontend, backend]
+
+    steps:
+      - name: Mark the job as a failure
+        run: exit 1

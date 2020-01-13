@@ -1,69 +1,59 @@
-{{ title keyword.keyword ' - Keywords' }}
+{{ title this.keyword.keyword ' - Keywords' }}
 
 <div id='crates-heading'>
   {{svg-jar "crate"}}
   <h1>All Crates</h1>
-  <h2>for keyword '{{ keyword.keyword }}'</h2>
+  <h2>for keyword '{{ this.keyword.keyword }}'</h2>
 </div>
 
 <div id='results'>
   <div class='nav' data-test-keyword-nav>
     <span class='amt small'>
       Displaying
-      <span class='cur'>{{ currentPageStart }}-{{ currentPageEnd }}</span>
-      of <span class='total'>{{ totalItems }}</span> total results
+      <span class='cur'>{{ this.currentPageStart }}-{{ this.currentPageEnd }}</span>
+      of <span class='total'>{{ this.totalItems }}</span> total results
     </span>
   </div>
 
   <div class='sort' data-test-keyword-sort>
     <span class='small'>Sort by</span>
-    {{#rl-dropdown-container class="dropdown-container"}}
-      {{#rl-dropdown-toggle tagName="a" class="dropdown" data-test-current-order=true}}
+    <RlDropdownContainer class="dropdown-container">
+      <RlDropdownToggle @tagName="a" class="dropdown" data-test-current-order>
         {{svg-jar "sort"}}
-        {{ currentSortBy }}
+        {{ this.currentSortBy }}
         <span class='arrow'></span>
-      {{/rl-dropdown-toggle}}
+      </RlDropdownToggle>
 
-      {{#rl-dropdown tagName="ul" class="dropdown"}}
+      <RlDropdown @tagName="ul" class="dropdown">
         <li>
-          {{#link-to (query-params sort="alpha")}}
+          <LinkTo @query={{hash sort="alpha"}}>
             Alphabetical
-          {{/link-to}}
+          </LinkTo>
         </li>
         <li>
-          {{#link-to (query-params sort="downloads")}}
+          <LinkTo @query={{hash sort="downloads"}}>
             All-Time Downloads
-          {{/link-to}}
+          </LinkTo>
         </li>
         <li>
-          {{#link-to (query-params sort="recent-downloads")}}
+          <LinkTo @query={{hash sort="recent-downloads"}}>
             Recent Downloads
-          {{/link-to}}
+          </LinkTo>
         </li>
         <li>
-          {{#link-to (query-params sort="recent-updates")}}
+          <LinkTo @query={{hash sort="recent-updates"}}>
             Recent Updates
-          {{/link-to}}
+          </LinkTo>
         </li>
-      {{/rl-dropdown}}
-    {{/rl-dropdown-container}}
+      </RlDropdown>
+    </RlDropdownContainer>
   </div>
 </div>
 
 <div id='crates' class='white-rows'>
-  {{#each model as |crate|}}
-    {{crate-row crate=crate}}
+  {{#each this.model as |crate|}}
+    <CrateRow @crate={{crate}} />
   {{/each}}
 </div>
 
-<div class='pagination'>
-  {{#link-to (query-params page=prevPage) class="prev" rel="prev" title="previous page"}}
-    {{svg-jar "left-pag"}}
-  {{/link-to}}
-  {{#each pages as |page|}}
-    {{#link-to (query-params page=page)}}{{ page }}{{/link-to}}
-  {{/each}}
-  {{#link-to (query-params page=nextPage) class="next" rel="next" title="next page"}}
-    {{svg-jar "right-pag"}}
-  {{/link-to}}
-</div>
+<Pagination @pages={{this.pages}} @prevPage={{this.prevPage}} @nextPage={{this.nextPage}} />

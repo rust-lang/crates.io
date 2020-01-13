@@ -1,26 +1,26 @@
-{{ title category.category ' - Categories' }}
+{{ title this.category.category ' - Categories' }}
 
 <div id='crates-heading'>
-  {{#link-to "categories" (html-attributes aria-label="Categories")}}{{svg-jar "crate"}}{{/link-to}}
+  <LinkTo @route="categories" aria-label="Categories">{{svg-jar "crate"}}</LinkTo>
   <h1>
-    {{#each category.parent_categories as |parent|}}{{link-to parent.category "category" parent.slug}}::{{/each}}
-    {{~ category.category }}
+    {{#each this.category.parent_categories as |parent|}}<LinkTo @route="category" @model={{parent.slug}}>{{parent.category}}</LinkTo>::{{/each}}
+    {{~ this.category.category }}
   </h1>
 </div>
 
 <div>
-  <p>{{ category.description }}</p>
+  <p>{{ this.category.description }}</p>
 </div>
 
-{{#if category.subcategories }}
+{{#if this.category.subcategories }}
   <div id='subcategories'>
     <h2>Subcategories</h2>
     <div class='white-rows'>
-      {{#each category.subcategories as |subcategory| }}
+      {{#each this.category.subcategories as |subcategory| }}
         <div class='row'>
           <div class='desc'>
             <div class='info'>
-              {{link-to subcategory.category "category" subcategory.slug}}
+              <LinkTo @route="category" @model={{subcategory.slug}}>{{subcategory.category}}</LinkTo>
               <span class='small'>
                 {{ pluralize (format-num subcategory.crates_cnt) "crate" }}
               </span>
@@ -42,60 +42,50 @@
   <div class='nav' data-test-category-nav>
     <span class='amt small'>
       Displaying
-      <span class='cur'>{{ currentPageStart }}-{{ currentPageEnd }}</span>
-      of <span class='total'>{{ totalItems }}</span> total results
+      <span class='cur'>{{ this.currentPageStart }}-{{ this.currentPageEnd }}</span>
+      of <span class='total'>{{ this.totalItems }}</span> total results
     </span>
   </div>
 
   <div class='sort' data-test-category-sort>
     <span class='small'>Sort by</span>
-    {{#rl-dropdown-container class="dropdown-container"}}
-      {{#rl-dropdown-toggle tagName="a" class="dropdown" data-test-current-order=true}}
+    <RlDropdownContainer class="dropdown-container">
+      <RlDropdownToggle @tagName="a" class="dropdown" data-test-current-order>
         {{svg-jar "sort"}}
-        {{ currentSortBy }}
+        {{ this.currentSortBy }}
         <span class='arrow'></span>
-      {{/rl-dropdown-toggle}}
+      </RlDropdownToggle>
 
-      {{#rl-dropdown tagName="ul" class="dropdown"}}
+      <RlDropdown @tagName="ul" class="dropdown">
         <li>
-          {{#link-to (query-params sort="alpha")}}
+          <LinkTo @query={{hash sort="alpha"}}>
             Alphabetical
-          {{/link-to}}
+          </LinkTo>
         </li>
         <li>
-          {{#link-to (query-params sort="downloads")}}
+          <LinkTo @query={{hash sort="downloads"}}>
             All-Time Downloads
-          {{/link-to}}
+          </LinkTo>
         </li>
         <li>
-          {{#link-to (query-params sort="recent-downloads")}}
+          <LinkTo @query={{hash sort="recent-downloads"}}>
             Recent Downloads
-          {{/link-to}}
+          </LinkTo>
         </li>
         <li>
-          {{#link-to (query-params sort="recent-updates")}}
+          <LinkTo @query={{hash sort="recent-updates"}}>
             Recent Updates
-          {{/link-to}}
+          </LinkTo>
         </li>
-      {{/rl-dropdown}}
-    {{/rl-dropdown-container}}
+      </RlDropdown>
+    </RlDropdownContainer>
   </div>
 </div>
 
 <div id='crates' class='white-rows'>
-  {{#each model as |crate|}}
-    {{crate-row crate=crate}}
+  {{#each this.model as |crate|}}
+    <CrateRow @crate={{crate}} />
   {{/each}}
 </div>
 
-<div class='pagination'>
-  {{#link-to (query-params page=prevPage) class="prev" rel="prev" title="previous page"}}
-    {{svg-jar "left-pag"}}
-  {{/link-to}}
-  {{#each pages as |page|}}
-    {{#link-to (query-params page=page)}}{{ page }}{{/link-to}}
-  {{/each}}
-  {{#link-to (query-params page=nextPage) class="next" rel="next" title="next page"}}
-    {{svg-jar "right-pag"}}
-  {{/link-to}}
-</div>
+<Pagination @pages={{this.pages}} @prevPage={{this.prevPage}} @nextPage={{this.nextPage}} />

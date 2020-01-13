@@ -1,4 +1,6 @@
-import semver from 'semver';
+import major from 'semver/functions/major';
+import minor from 'semver/functions/minor';
+import lt from 'semver/functions/lt';
 import fetch from 'fetch';
 import Component from '@ember/component';
 
@@ -51,14 +53,14 @@ export default Component.extend({
         // up the number of downloads for each semver version
         let downloadsPerVersion = new Map();
         recentDownloads.downloads.forEach(v => {
-          let major = semver.major(v.version);
-          let minor = semver.minor(v.version);
+          let mj = major(v.version);
+          let mn = minor(v.version);
           let downloads = v.downloads;
 
           // XXX ugly hack to get semver to parse the version correctly later on.
           // We want to do a semver-aware sort, but the `semver.lt` function only
           // understands version triples, not doubles.
-          let key = `${major}.${minor}.0`;
+          let key = `${mj}.${mn}.0`;
           if (downloadsPerVersion.has(key)) {
             let old = downloadsPerVersion.get(key);
             downloadsPerVersion.set(key, old + downloads);
@@ -112,7 +114,7 @@ function sortIncreasingBySemver(downloadsMap) {
     //
     // We use `lt` here as we want the array to be sorted in reverse order
     // (newest at the top)
-    return semver.lt(versionA, versionB);
+    return lt(versionA, versionB);
   });
 
   // Update the labels to show e.g. `0.1.x` instead of `0.1.0` which is

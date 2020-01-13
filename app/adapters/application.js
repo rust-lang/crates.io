@@ -1,6 +1,17 @@
-import DS from 'ember-data';
-import AdapterFetch from 'ember-fetch/mixins/adapter-fetch';
+import RESTAdapter from '@ember-data/adapter/rest';
+import { inject as service } from '@ember/service';
+import { computed } from '@ember/object';
 
-export default DS.RESTAdapter.extend(AdapterFetch, {
+export default RESTAdapter.extend({
+  fastboot: service(),
+
   namespace: 'api/v1',
+
+  headers: computed('fastboot.{isFastBoot,request.headers}', function() {
+    if (this.fastboot.isFastBoot) {
+      return { 'User-Agent': this.fastboot.request.headers.get('User-Agent') };
+    }
+
+    return {};
+  }),
 });

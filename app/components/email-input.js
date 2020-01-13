@@ -5,8 +5,8 @@ import { inject as service } from '@ember/service';
 import ajax from 'ember-fetch/ajax';
 
 export default Component.extend({
+  tagName: '',
   flashMessages: service(),
-
   type: '',
   value: '',
   isEditing: false,
@@ -14,19 +14,23 @@ export default Component.extend({
   disableSave: empty('user.email'),
   notValidEmail: false,
   prevEmail: '',
+
   emailIsNull: computed('user.email', function() {
     let email = this.get('user.email');
     return email == null;
   }),
+
   emailNotVerified: computed('user.{email,email_verified}', function() {
     let email = this.get('user.email');
     let verified = this.get('user.email_verified');
 
     return email != null && !verified;
   }),
+
   isError: false,
   emailError: '',
   disableResend: false,
+
   resendButtonText: computed('disableResend', 'user.email_verification_sent', function() {
     if (this.disableResend) {
       return 'Sent!';

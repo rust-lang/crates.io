@@ -1,4 +1,4 @@
-use super::prelude::*;
+use super::frontend_prelude::*;
 
 use crate::models::{CrateOwner, CrateOwnerInvitation, OwnerKind};
 use crate::schema::{crate_owner_invitations, crate_owners};
@@ -38,7 +38,7 @@ pub fn handle_invite(req: &mut dyn Request) -> AppResult<Response> {
     let conn = &*req.db_conn()?;
 
     let crate_invite: OwnerInvitation =
-        serde_json::from_str(&body).map_err(|_| cargo_err("invalid json request"))?;
+        serde_json::from_str(&body).map_err(|_| bad_request("invalid json request"))?;
 
     let crate_invite = crate_invite.crate_owner_invite;
 

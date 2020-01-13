@@ -4,7 +4,7 @@ use hex::ToHex;
 use std::sync::Arc;
 use swirl::Job;
 
-use crate::controllers::prelude::*;
+use crate::controllers::cargo_prelude::*;
 use crate::git;
 use crate::models::dependency;
 use crate::models::{
@@ -13,8 +13,7 @@ use crate::models::{
 };
 
 use crate::render;
-use crate::util::{read_fill, read_le_u32};
-use crate::util::{AppError, ChainError, Maximums};
+use crate::util::{read_fill, read_le_u32, Maximums};
 use crate::views::{EncodableCrateUpload, GoodCrate, PublishWarnings};
 
 /// Handles the `PUT /crates/new` route.
@@ -168,7 +167,7 @@ pub fn publish(req: &mut dyn Request) -> AppResult<Response> {
         // Update all badges for this crate, collecting any invalid badges in
         // order to be able to warn about them
         let ignored_invalid_badges = Badge::update_crate(&conn, &krate, new_crate.badges.as_ref())?;
-        let max_version = krate.max_version(&conn)?;
+        let top_versions = krate.top_versions(&conn)?;
 
         if let Some(readme) = new_crate.readme {
             render::render_and_upload_readme(
@@ -215,7 +214,7 @@ pub fn publish(req: &mut dyn Request) -> AppResult<Response> {
         };
 
         Ok(req.json(&GoodCrate {
-            krate: krate.minimal_encodable(&max_version, None, false, None),
+            krate: krate.minimal_encodable(&top_versions, None, false, None),
             warnings,
         }))
     })

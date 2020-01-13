@@ -1,0 +1,12 @@
+<ol>
+  {{#each @crates as |crate index|}}
+    <li>
+      <LinkTo @route="crate" @model={{crate.id}} class="name" data-test-crate-link={{index}}>
+        <span>{{ crate.name }}</span>
+        <div class='arrow-in-list'>
+          {{svg-jar "right-arrow"}}
+        </div>
+      </LinkTo>
+    </li>
+  {{/each}}
+</ol>

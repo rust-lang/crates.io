@@ -39,7 +39,7 @@ impl AroundMiddleware for BlockTraffic {
 }
 
 impl Handler for BlockTraffic {
-    fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
+    fn call(&self, req: &mut dyn Request) -> Result<Response> {
         let has_blocked_value = req
             .headers()
             .find(&self.header_name)
@@ -54,6 +54,7 @@ impl Handler for BlockTraffic {
                  Please open an issue at https://github.com/rust-lang/crates.io \
                  or email help@crates.io \
                  and provide the request id {}",
+                // Heroku should always set this header
                 req.headers().find("X-Request-Id").unwrap()[0]
             );
             let mut headers = HashMap::new();

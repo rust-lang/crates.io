@@ -1,13 +1,14 @@
 //! Endpoints that expose metadata about a crate
 //!
-//! These endpoints provide data that could be obtained direclty from the
+//! These endpoints provide data that could be obtained directly from the
 //! index or cached metadata which was extracted (client side) from the
 //! `Cargo.toml` file.
 
-use crate::controllers::prelude::*;
+use crate::controllers::frontend_prelude::*;
+
 use crate::models::{
     Category, Crate, CrateCategory, CrateKeyword, CrateVersions, Keyword, RecentCrateDownloads,
-    User, Version,
+    User, Version, VersionOwnerAction,
 };
 use crate::schema::*;
 use crate::views::{
@@ -31,10 +32,10 @@ pub fn summary(req: &mut dyn Request) -> AppResult<Response> {
         versions
             .grouped_by(&krates)
             .into_iter()
-            .map(|versions| Version::max(versions.into_iter().map(|v| v.num)))
+            .map(|versions| Version::top(versions.into_iter().map(|v| (v.created_at, v.num))))
             .zip(krates)
-            .map(|(max_version, krate)| {
-                Ok(krate.minimal_encodable(&max_version, None, false, None))
+            .map(|(top_versions, krate)| {
+                Ok(krate.minimal_encodable(&top_versions, None, false, None))
             })
             .collect()
     };
@@ -105,13 +106,26 @@ pub fn show(req: &mut dyn Request) -> AppResult<Response> {
     let conn = req.db_conn()?;
     let krate = Crate::by_name(name).first::<Crate>(&*conn)?;
 
-    let mut versions_and_publishers: Vec<(Version, Option<User>)> = krate
+    let mut versions_and_publishers = krate
         .all_versions()
         .left_outer_join(users::table)
         .select((versions::all_columns, users::all_columns.nullable()))
-        .load(&*conn)?;
+        .load::<(Version, Option<User>)>(&*conn)?;
     versions_and_publishers.sort_by(|a, b| b.0.num.cmp(&a.0.num));
-    let ids = versions_and_publishers.iter().map(|v| v.0.id).collect();
+    let versions = versions_and_publishers
+        .iter()
+        .map(|(v, _)| v)
+        .cloned()
+        .collect::<Vec<_>>();
+    let versions_publishers_and_audit_actions = versions_and_publishers
+        .into_iter()
+        .zip(VersionOwnerAction::for_versions(&conn, &versions)?.into_iter())
+        .map(|((v, pb), aas)| (v, pb, aas))
+        .collect::<Vec<_>>();
+    let ids = versions_publishers_and_audit_actions
+        .iter()
+        .map(|v| v.0.id)
+        .collect();
 
     let kws = CrateKeyword::belonging_to(&krate)
         .inner_join(keywords::table)
@@ -129,7 +143,7 @@ pub fn show(req: &mut dyn Request) -> AppResult<Response> {
     let badges = badges::table
         .filter(badges::crate_id.eq(krate.id))
         .load(&*conn)?;
-    let max_version = krate.max_version(&conn)?;
+    let top_versions = krate.top_versions(&conn)?;
 
     #[derive(Serialize)]
     struct R {
@@ -141,7 +155,7 @@ pub fn show(req: &mut dyn Request) -> AppResult<Response> {
     }
     Ok(req.json(&R {
         krate: krate.clone().encodable(
-            &max_version,
+            &top_versions,
             Some(ids),
             Some(&kws),
             Some(&cats),
@@ -149,9 +163,9 @@ pub fn show(req: &mut dyn Request) -> AppResult<Response> {
             false,
             recent_downloads,
         ),
-        versions: versions_and_publishers
+        versions: versions_publishers_and_audit_actions
             .into_iter()
-            .map(|(v, pb)| v.encodable(&krate.name, pb))
+            .map(|(v, pb, aas)| v.encodable(&krate.name, pb, aas))
             .collect(),
         keywords: kws.into_iter().map(Keyword::encodable).collect(),
         categories: cats.into_iter().map(Category::encodable).collect(),
@@ -194,8 +208,14 @@ pub fn versions(req: &mut dyn Request) -> AppResult<Response> {
         .load(&*conn)?;
     versions_and_publishers.sort_by(|a, b| b.0.num.cmp(&a.0.num));
     let versions = versions_and_publishers
+        .iter()
+        .map(|(v, _)| v)
+        .cloned()
+        .collect::<Vec<_>>();
+    let versions = versions_and_publishers
         .into_iter()
-        .map(|(v, pb)| v.encodable(crate_name, pb))
+        .zip(VersionOwnerAction::for_versions(&conn, &versions)?.into_iter())
+        .map(|((v, pb), aas)| v.encodable(crate_name, pb, aas))
         .collect();
 
     #[derive(Serialize)]
@@ -220,7 +240,7 @@ pub fn reverse_dependencies(req: &mut dyn Request) -> AppResult<Response> {
 
     let version_ids: Vec<i32> = rev_deps.iter().map(|dep| dep.version_id).collect();
 
-    let versions = versions::table
+    let versions_and_publishers = versions::table
         .filter(versions::id.eq(any(version_ids)))
         .inner_join(crates::table)
         .left_outer_join(users::table)
@@ -229,9 +249,18 @@ pub fn reverse_dependencies(req: &mut dyn Request) -> AppResult<Response> {
             crates::name,
             users::all_columns.nullable(),
         ))
-        .load::<(Version, String, Option<User>)>(&*conn)?
+        .load::<(Version, String, Option<User>)>(&*conn)?;
+    let versions = versions_and_publishers
+        .iter()
+        .map(|(v, _, _)| v)
+        .cloned()
+        .collect::<Vec<_>>();
+    let versions = versions_and_publishers
         .into_iter()
-        .map(|(version, krate_name, user)| version.encodable(&krate_name, user))
+        .zip(VersionOwnerAction::for_versions(&conn, &versions)?.into_iter())
+        .map(|((version, krate_name, published_by), actions)| {
+            version.encodable(&krate_name, published_by, actions)
+        })
         .collect();
 
     #[derive(Serialize)]

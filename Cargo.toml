@@ -60,8 +60,7 @@ derive_deref = "1.0.0"
 reqwest = "0.9.1"
 tempdir = "0.3.7"
 parking_lot = "0.7.1"
-jemallocator = { version = "0.1.8", features = ['unprefixed_malloc_on_supported_platforms', 'profiling'] }
-jemalloc-ctl = "0.2.0"
+jemallocator = { version = "0.3", features = ['unprefixed_malloc_on_supported_platforms', 'profiling'] }
 
 lettre = "0.9"
 lettre_email = "0.9"

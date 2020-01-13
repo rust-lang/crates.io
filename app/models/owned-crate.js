@@ -1,6 +1,6 @@
-import DS from 'ember-data';
+import Model, { attr } from '@ember-data/model';
 
-export default DS.Model.extend({
-  name: DS.attr('string'),
-  email_notifications: DS.attr('boolean'),
+export default Model.extend({
+  name: attr('string'),
+  email_notifications: attr('boolean'),
 });

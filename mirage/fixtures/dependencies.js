@@ -1,4 +1,3 @@
-/* eslint-disable quotes */
 export default [
   {
     crate_id: 'libc',
@@ -26,11 +25,33 @@ export default [
     crate_id: 'nanomsg',
     default_features: true,
     features: '',
-    id: 90880,
+    id: 146233,
     kind: 'normal',
     optional: false,
     req: '^0.5.0',
     target: null,
     version_id: 28674,
+  },
+  {
+    crate_id: 'mock-build-deps',
+    default_features: true,
+    features: '',
+    id: 146234,
+    kind: 'build',
+    optional: false,
+    req: '^0.6.1',
+    target: null,
+    version_id: 40905,
+  },
+  {
+    crate_id: 'mock-dev-deps',
+    default_features: true,
+    features: '',
+    id: 146235,
+    kind: 'dev',
+    optional: true,
+    req: '^0.6.1',
+    target: null,
+    version_id: 40905,
   },
 ];

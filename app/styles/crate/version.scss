@@ -1,0 +1,229 @@
+.crate-info {
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 20px;
+    border-bottom: 5px solid $gray-border;
+    margin-bottom: 20px;
+
+    @media only screen and (min-width: 890px) {
+        flex-direction: row;
+
+        .docs {
+            flex: 7;
+            padding-right: 40px;
+            max-width: 640px;
+        }
+        .authorship {
+            flex: 3;
+            border-left: 2px solid $gray-border;
+            padding-left: 20px;
+
+            .top, .bottom {
+                flex-direction: column;
+            }
+
+            ul {
+                padding-left: 20px;
+            }
+        }
+    }
+
+    @media only screen and (max-width: 480px) {
+        .authorship {
+            .top, .bottom {
+                flex-direction: column;
+            }
+        }
+    }
+
+    .authorship {
+        .top, .bottom {
+            display: flex;
+
+            > * { flex: 1; }
+        }
+    }
+
+    .about {
+        line-height: 180%;
+        margin-bottom: 40px;
+    }
+
+
+    ul.owners, ul.keywords {
+        display: flex;
+        flex-wrap: wrap;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        li { margin: 0 7px 7px 0; }
+    }
+
+    .install {
+        font-size: 120%;
+        padding: 10px;
+        background-color: darken($main-bg-dark, 8%);
+        display: flex;
+
+        .action {
+            display: none;
+            text-align: center;
+            padding-top: 18px;
+            padding-right: 10px;
+        }
+        code {
+            flex: 1;
+            background: $main-color;
+            color: white;
+            padding: 20px;
+        }
+        @media only screen and (min-width: 500px) {
+            .action { flex: 2; display: block; }
+            code { flex: 8; }
+        }
+        .crate-toml-copy {
+            display: flex;
+
+            button, button:active {
+                padding: 5px 0;
+                width: 60px;
+                cursor: pointer;
+                position: relative;
+            }
+            button:hover {
+                background: #edebdd;
+            }
+
+            .copy-notification {
+                &.copy-success {
+                    width: 100%;
+                    text-align: center;
+                }
+
+                &.copy-failure {
+                    bottom: -2rem;
+                    right: 0;
+                    width: 18rem;
+                    text-align: right;
+                }
+            }
+        }
+    }
+    .crate-readme {
+        line-height: 1.5;
+        overflow-wrap: break-word;
+
+        img {
+            max-width: 100%;
+        }
+
+        pre {
+            overflow-x: auto;
+        }
+
+        p {
+            code {
+                background-color: #fff;
+                padding: 0 2px;
+            }
+        }
+
+        table {
+            border-collapse: collapse;
+            display: block;
+            overflow-x: auto;
+
+            th, td {
+                border: 1px solid #dfe2e5;
+                padding: 6px 13px;
+            }
+        }
+    }
+    .last-update {
+        color: $main-color-light;
+        font-size: 90%;
+        line-height: 25px;
+    }
+    .date {
+        font-weight: bold;
+        margin-bottom: 40px;
+    }
+
+    /*
+        Since crate_size is a new field, older crates won't have it.
+        Preserve behaviour for older crates. For newer ones, keep
+        `Crate Size` closer to last updated.
+    */
+    .date-with-small-margin-bot {
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+    .crate-size {
+        color: $main-color-light;
+        font-size: 90%;
+        line-height: 25px;
+    }
+    .size {
+        font-weight: bold;
+        margin-bottom: 40px;
+    }
+}
+
+#crate-downloads {
+    display: flex;
+    flex-wrap: wrap;
+
+    h3 { width: 100%; }
+    .stat {
+        border-left: 1px solid $gray-border;
+        padding: 10px 20px;
+        display: flex;
+        flex-wrap: wrap;
+        flex-direction: column;
+        flex-grow: 1;
+
+        .num {
+            font-size: 160%;
+            font-weight: bold;
+            margin-bottom: 4px;
+            &__align {
+                position: relative;
+                bottom: 0.4rem;
+            }
+        }
+    }
+
+    .stats {
+        flex-grow: 7;
+        display: flex;
+        flex-wrap: wrap;
+    }
+    .versions {
+        flex-grow: 3;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        .small { padding: 10px; }
+    }
+
+    .button-holder { position: relative; }
+
+    .graph {
+        flex-grow: 10;
+        width: 100%;
+        margin: 30px 0;
+        padding-bottom: 20px;
+
+        h4 { color: $main-color-light; }
+    }
+    .graph-data {
+        width: 100%;
+        height: 500px;
+    }
+}
+
+@media only percy {
+    #crate-downloads .graph {
+       display: none;
+    }
+}

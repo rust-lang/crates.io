@@ -1,4 +1,3 @@
-/* eslint-disable quotes */
 export default [
   {
     category: 'API bindings',

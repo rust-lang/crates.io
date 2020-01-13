@@ -1,4 +1,5 @@
-import { Factory, trait, faker } from 'ember-cli-mirage';
+import { Factory, trait } from 'ember-cli-mirage';
+import faker from 'faker';
 
 export default Factory.extend({
   id(i) {
@@ -15,6 +16,7 @@ export default Factory.extend({
   homepage: () => faker.internet.url(),
   repository: () => faker.internet.url(),
   max_version: () => faker.system.semver(),
+  newest_version: () => faker.system.semver(),
 
   created_at: () => faker.date.past(),
   updated_at() {

@@ -7,8 +7,8 @@
 
 <div id='my-invites'>
   <div class='white-rows'>
-    {{#each model as |invite|}}
-      {{pending-owner-invite-row invite=invite}}
+    {{#each this.model as |invite|}}
+      <PendingOwnerInviteRow @invite={{invite}} />
     {{else}}
       <p>You don't seem to have any pending invitations.</p>
     {{/each}}
