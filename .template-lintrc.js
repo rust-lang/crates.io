@@ -9,5 +9,8 @@ module.exports = {
     'require-valid-alt-text': false,
     'no-action': false,
     'no-curly-component-invocation': false,
+    'no-implicit-this': {
+      allow: ['model'],
+    },
   },
 };
