@@ -7,7 +7,8 @@ export default Route.extend({
   session: service(),
 
   beforeModel() {
-    this.session.loadUser();
+    // trigger the task, but don't wait for the result here
+    this.session.loadUserTask.perform();
 
     // start loading the Google Charts JS library already
     this.googleCharts.load();

@@ -26,6 +26,18 @@ module('Acceptance | Login', function (hooks) {
       return fakeWindow;
     };
 
+    this.server.get('/api/v1/me', () => ({
+      user: {
+        id: 42,
+        login: 'johnnydee',
+        name: 'John Doe',
+        email: 'john@doe.name',
+        avatar: 'https://avatars2.githubusercontent.com/u/12345?v=4',
+        url: 'https://github.com/johnnydee',
+      },
+      owned_crates: [],
+    }));
+
     await visit('/');
     assert.equal(currentURL(), '/');
 
@@ -36,19 +48,7 @@ module('Acceptance | Login', function (hooks) {
     await deferred.promise;
 
     // simulate the response from the `github-authorize` route
-    window.github_response = JSON.stringify({
-      ok: true,
-      data: {
-        user: {
-          id: 42,
-          login: 'johnnydee',
-          name: 'John Doe',
-          email: 'john@doe.name',
-          avatar: 'https://avatars2.githubusercontent.com/u/12345?v=4',
-          url: 'https://github.com/johnnydee',
-        },
-      },
-    });
+    window.github_response = JSON.stringify({ ok: true });
 
     // simulate that the window has been closed by the `github-authorize` route
     fakeWindow.closed = true;

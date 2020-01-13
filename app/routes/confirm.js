@@ -12,6 +12,10 @@ export default Route.extend({
     try {
       await ajax(`/api/v1/confirm/${params.email_token}`, { method: 'PUT', body: '{}' });
 
+      // wait for the `GET /api/v1/me` call to complete before
+      // trying to update the Ember Data store
+      await this.session.loadUserTask.last;
+
       if (this.session.currentUser) {
         this.store.pushPayload({ user: { id: this.session.currentUser.id, email_verified: true } });
       }
