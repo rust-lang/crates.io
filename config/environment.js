@@ -26,6 +26,10 @@ module.exports = function(environment) {
     fastboot: {
       hostWhitelist: ['crates.io', /^localhost:\d+$/, /\.herokuapp\.com$/],
     },
+
+    'ember-cli-mirage': {
+      discoverEmberDataModels: false,
+    },
   };
 
   if (environment === 'development') {
@@ -55,6 +59,7 @@ module.exports = function(environment) {
 
   if (environment === 'production') {
     // here you can enable a production-specific feature
+    delete ENV['ember-cli-mirage'];
 
     // Heroku Git Hash support
     if (process.env.SOURCE_VERSION) {
