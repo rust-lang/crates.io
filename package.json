@@ -86,6 +86,7 @@
     "normalize.css": "^8.0.1",
     "nyc": "^15.0.0",
     "prettier": "^1.19.1",
+    "qunit-console-grouper": "^0.2.0",
     "qunit-dom": "^0.9.2",
     "sass": "^1.24.2",
     "semver": "^7.1.1",
