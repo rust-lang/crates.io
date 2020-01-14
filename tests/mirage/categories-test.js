@@ -1,0 +1,42 @@
+import { setupTest } from 'ember-qunit';
+import { module, test } from 'qunit';
+
+import setupMirage from '../helpers/setup-mirage';
+import fetch from 'fetch';
+
+module('Mirage | Categories', function(hooks) {
+  setupTest(hooks);
+  setupMirage(hooks);
+
+  module('GET /api/v1/categories/:id', function() {
+    test('returns 404 for unknown categories', async function(assert) {
+      let response = await fetch('/api/v1/categories/foo');
+      assert.equal(response.status, 404);
+
+      let responsePayload = await response.json();
+      assert.deepEqual(responsePayload, { errors: [{ detail: 'Not Found' }] });
+    });
+
+    test('returns a category object for known categories', async function(assert) {
+      this.server.create('category', {
+        category: 'no-std',
+        description: 'Crates that are able to function without the Rust standard library.',
+      });
+
+      let response = await fetch('/api/v1/categories/no-std');
+      assert.equal(response.status, 200);
+
+      let responsePayload = await response.json();
+      assert.deepEqual(responsePayload, {
+        category: {
+          id: 'no-std',
+          category: 'no-std',
+          crates_cnt: 0,
+          created_at: '2010-06-16T21:30:45Z',
+          description: 'Crates that are able to function without the Rust standard library.',
+          slug: 'no-std',
+        },
+      });
+    });
+  });
+});
