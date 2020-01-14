@@ -2,7 +2,7 @@ import { module, test } from 'qunit';
 import { setupApplicationTest } from 'ember-qunit';
 import { fillIn, currentURL, triggerEvent, visit, blur } from '@ember/test-helpers';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
-import { triggerKeyDown, triggerKeyPress } from 'ember-keyboard';
+import { keyDown, keyPress } from 'ember-keyboard/test-support/test-helpers';
 import axeConfig from '../axe-config';
 import { title } from '../helpers/dom';
 import setupMirage from '../helpers/setup-mirage';
@@ -82,19 +82,19 @@ module('Acceptance | search', function(hooks) {
     await visit('/');
 
     await blur('[data-test-search-input]');
-    await triggerKeyPress('KeyA');
+    await keyPress('KeyA');
     assert.dom('[data-test-search-input]').isNotFocused();
 
     await blur('[data-test-search-input]');
-    await triggerKeyPress('KeyS');
+    await keyPress('KeyS');
     assert.dom('[data-test-search-input]').isFocused();
 
     await blur('[data-test-search-input]');
-    await triggerKeyDown('KeyS');
+    await keyDown('KeyS');
     assert.dom('[data-test-search-input]').isFocused();
 
     await blur('[data-test-search-input]');
-    await triggerKeyDown('shift+KeyS');
+    await keyDown('shift+KeyS');
     assert.dom('[data-test-search-input]').isFocused();
   });
 
