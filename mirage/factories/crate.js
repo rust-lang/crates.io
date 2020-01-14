@@ -1,4 +1,4 @@
-import { Factory, trait } from 'ember-cli-mirage';
+import { Factory } from 'ember-cli-mirage';
 import faker from 'faker';
 
 export default Factory.extend({
@@ -30,10 +30,4 @@ export default Factory.extend({
   _extra_downloads: () => [],
   _owner_teams: () => [],
   _owner_users: () => [],
-
-  withVersion: trait({
-    afterCreate(crate, server) {
-      server.create('version', { crate: crate.id });
-    },
-  }),
 });
