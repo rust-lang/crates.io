@@ -155,6 +155,8 @@ export function register(server) {
   server.get('/api/v1/crates/:crate_id/downloads', function(schema, request) {
     let crateId = request.params.crate_id;
     let crate = schema.crates.find(crateId);
+    if (!crate) return notFound();
+
     let versionDownloads = schema.versionDownloads
       .all()
       .filter(it => crate.versions.indexOf(parseInt(it.version, 10)) !== -1);
