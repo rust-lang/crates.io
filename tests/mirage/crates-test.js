@@ -593,24 +593,20 @@ module('Mirage | Keywords', function(hooks) {
       let response = await fetch('/api/v1/crates/rand/1.0.0/downloads');
       assert.equal(response.status, 200);
 
-      // TODO Remove the `id` properties from the response
       let responsePayload = await response.json();
       assert.deepEqual(responsePayload, {
         version_downloads: [
           {
-            id: '1',
             date: '2020-01-13',
             downloads: 9380,
             version: '1',
           },
           {
-            id: '2',
             date: '2020-01-14',
             downloads: 16415,
             version: '1',
           },
           {
-            id: '3',
             date: '2020-01-15',
             downloads: 23450,
             version: '1',
@@ -903,24 +899,20 @@ module('Mirage | Keywords', function(hooks) {
       let response = await fetch('/api/v1/crates/rand/downloads');
       assert.equal(response.status, 200);
 
-      // TODO Remove the `id` properties from the response
       let responsePayload = await response.json();
       assert.deepEqual(responsePayload, {
         version_downloads: [
           {
-            id: '1',
             date: '2020-01-13',
             downloads: 9380,
             version: '1',
           },
           {
-            id: '2',
             date: '2020-01-14',
             downloads: 16415,
             version: '2',
           },
           {
-            id: '3',
             date: '2020-01-15',
             downloads: 23450,
             version: '2',

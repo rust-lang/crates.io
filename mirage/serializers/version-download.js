@@ -18,5 +18,6 @@ export default BaseSerializer.extend({
   _adjust(hash) {
     hash.version = hash.version_id;
     delete hash.version_id;
+    delete hash.id;
   },
 });
