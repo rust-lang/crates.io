@@ -463,4 +463,89 @@ module('Mirage | Keywords', function(hooks) {
       });
     });
   });
+
+  module('GET /api/v1/crates/:id/:version/dependencies', function() {
+    test('returns 404 for unknown crates', async function(assert) {
+      let response = await fetch('/api/v1/crates/foo/1.0.0/dependencies');
+      assert.equal(response.status, 404);
+
+      let responsePayload = await response.json();
+      assert.deepEqual(responsePayload, { errors: [{ detail: 'Not Found' }] });
+    });
+
+    test('returns 200 for unknown versions', async function(assert) {
+      this.server.create('crate', { name: 'rand' });
+
+      let response = await fetch('/api/v1/crates/rand/1.0.0/dependencies');
+      // we should probably return 404 for this, but the production API
+      // currently doesn't do this either
+      assert.equal(response.status, 200);
+
+      let responsePayload = await response.json();
+      assert.deepEqual(responsePayload, { errors: [{ detail: 'crate `rand` does not have a version `1.0.0`' }] });
+    });
+
+    test('empty case', async function(assert) {
+      this.server.create('crate', { name: 'rand' });
+      this.server.create('version', { crate: 'rand', num: '1.0.0' });
+
+      let response = await fetch('/api/v1/crates/rand/1.0.0/dependencies');
+      assert.equal(response.status, 200);
+
+      let responsePayload = await response.json();
+      assert.deepEqual(responsePayload, {
+        dependencies: [],
+      });
+    });
+
+    test('returns a list of dependencies belonging to the specified crate version', async function(assert) {
+      this.server.create('crate', { name: 'rand' });
+      let version = this.server.create('version', { crate: 'rand', num: '1.0.0' });
+      this.server.create('dependency', { crate_id: 'foo', version_id: version.id });
+      this.server.create('dependency', { crate_id: 'bar', version_id: version.id });
+      this.server.create('dependency', { crate_id: 'baz', version_id: version.id });
+
+      let response = await fetch('/api/v1/crates/rand/1.0.0/dependencies');
+      assert.equal(response.status, 200);
+
+      let responsePayload = await response.json();
+      assert.deepEqual(responsePayload, {
+        dependencies: [
+          {
+            id: '1',
+            crate_id: 'foo',
+            default_features: false,
+            features: [],
+            kind: 'dev',
+            optional: true,
+            req: '^0.1.0',
+            target: null,
+            version_id: '1',
+          },
+          {
+            id: '2',
+            crate_id: 'bar',
+            default_features: false,
+            features: [],
+            kind: 'normal',
+            optional: true,
+            req: '^2.1.3',
+            target: null,
+            version_id: '1',
+          },
+          {
+            id: '3',
+            crate_id: 'baz',
+            default_features: false,
+            features: [],
+            kind: 'normal',
+            optional: true,
+            req: '0.3.7',
+            target: null,
+            version_id: '1',
+          },
+        ],
+      });
+    });
+  });
 });
