@@ -663,4 +663,48 @@ module('Mirage | Keywords', function(hooks) {
       });
     });
   });
+
+  module('GET /api/v1/crates/:id/owner_team', function() {
+    test('returns 404 for unknown crates', async function(assert) {
+      let response = await fetch('/api/v1/crates/foo/owner_team');
+      assert.equal(response.status, 404);
+
+      let responsePayload = await response.json();
+      assert.deepEqual(responsePayload, { errors: [{ detail: 'Not Found' }] });
+    });
+
+    test('empty case', async function(assert) {
+      this.server.create('crate', { name: 'rand' });
+
+      let response = await fetch('/api/v1/crates/rand/owner_team');
+      assert.equal(response.status, 200);
+
+      let responsePayload = await response.json();
+      assert.deepEqual(responsePayload, {
+        teams: [],
+      });
+    });
+
+    test('returns the list of teams that own the specified crate', async function(assert) {
+      let team = this.server.create('team', { name: 'maintainers' });
+      this.server.create('crate', { name: 'rand', _owner_teams: [team.id] });
+
+      let response = await fetch('/api/v1/crates/rand/owner_team');
+      assert.equal(response.status, 200);
+
+      let responsePayload = await response.json();
+      assert.deepEqual(responsePayload, {
+        teams: [
+          {
+            id: '1',
+            avatar: 'https://avatars1.githubusercontent.com/u/14631425?v=4',
+            kind: 'team',
+            login: 'github:rust-lang:maintainers',
+            name: 'maintainers',
+            url: 'https://github.com/rust-lang',
+          },
+        ],
+      });
+    });
+  });
 });
