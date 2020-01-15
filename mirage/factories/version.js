@@ -1,32 +1,29 @@
 import { Factory } from 'ember-cli-mirage';
-import faker from 'faker';
+
+const LICENSES = ['MIT/Apache-2.0', 'MIT', 'Apache-2.0'];
 
 export default Factory.extend({
-  id: i => i,
+  num: i => `1.0.${i}`,
 
-  // crate: '...',
-
-  num: () => faker.system.semver(),
-
-  created_at: () => faker.date.past(),
-  updated_at() {
-    return faker.date.between(this.created_at, new Date());
-  },
+  created_at: '2010-06-16T21:30:45Z',
+  updated_at: '2017-02-24T12:34:56Z',
 
   yanked: false,
-  license: () => faker.hacker.abbreviation(),
+  license: i => LICENSES[i % LICENSES.length],
 
   dl_path() {
     return `/api/v1/crates/${this.crate}/${this.num}/download`;
   },
 
-  downloads: () => faker.random.number({ max: 10000 }),
+  downloads: i => (((i + 13) * 42) % 13) * 1234,
+
   features: () => {},
   _authors: () => [],
+
+  crate_size: i => (((i + 13) * 42) % 13) * 54321,
 
   afterCreate(version, server) {
     let crate = server.schema.crates.find(version.crate);
     crate.update({ versions: crate.versions.concat(parseInt(version.id, 10)) });
   },
-  crate_size: () => faker.random.number({ max: 10000000 }),
 });
