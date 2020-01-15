@@ -216,9 +216,9 @@ module('Mirage | Keywords', function(hooks) {
 
     test('includes related versions', async function(assert) {
       this.server.create('crate', { name: 'rand' });
-      this.server.create('version', { crate: 'rand', num: '1.0.0' });
-      this.server.create('version', { crate: 'rand', num: '1.1.0' });
-      this.server.create('version', { crate: 'rand', num: '1.2.0' });
+      this.server.create('version', { crateId: 'rand', num: '1.0.0' });
+      this.server.create('version', { crateId: 'rand', num: '1.1.0' });
+      this.server.create('version', { crateId: 'rand', num: '1.2.0' });
 
       let response = await fetch('/api/v1/crates/rand');
       assert.equal(response.status, 200);
@@ -342,9 +342,9 @@ module('Mirage | Keywords', function(hooks) {
 
     test('returns all versions belonging to the specified crate', async function(assert) {
       this.server.create('crate', { name: 'rand' });
-      this.server.create('version', { crate: 'rand', num: '1.0.0' });
-      this.server.create('version', { crate: 'rand', num: '1.1.0' });
-      this.server.create('version', { crate: 'rand', num: '1.2.0' });
+      this.server.create('version', { crateId: 'rand', num: '1.0.0' });
+      this.server.create('version', { crateId: 'rand', num: '1.1.0' });
+      this.server.create('version', { crateId: 'rand', num: '1.2.0' });
 
       let response = await fetch('/api/v1/crates/rand/versions');
       assert.equal(response.status, 200);
@@ -431,7 +431,7 @@ module('Mirage | Keywords', function(hooks) {
 
     test('empty case', async function(assert) {
       this.server.create('crate', { name: 'rand' });
-      this.server.create('version', { crate: 'rand', num: '1.0.0' });
+      this.server.create('version', { crateId: 'rand', num: '1.0.0' });
 
       let response = await fetch('/api/v1/crates/rand/1.0.0/authors');
       assert.equal(response.status, 200);
@@ -449,7 +449,7 @@ module('Mirage | Keywords', function(hooks) {
       let authors = ['John Doe <johnnydee@gmail.com>', 'The Rust Project Developers'];
 
       this.server.create('crate', { name: 'rand' });
-      this.server.create('version', { crate: 'rand', num: '1.0.0', _authors: authors });
+      this.server.create('version', { crateId: 'rand', num: '1.0.0', _authors: authors });
 
       let response = await fetch('/api/v1/crates/rand/1.0.0/authors');
       assert.equal(response.status, 200);
@@ -487,7 +487,7 @@ module('Mirage | Keywords', function(hooks) {
 
     test('empty case', async function(assert) {
       this.server.create('crate', { name: 'rand' });
-      this.server.create('version', { crate: 'rand', num: '1.0.0' });
+      this.server.create('version', { crateId: 'rand', num: '1.0.0' });
 
       let response = await fetch('/api/v1/crates/rand/1.0.0/dependencies');
       assert.equal(response.status, 200);
@@ -500,7 +500,7 @@ module('Mirage | Keywords', function(hooks) {
 
     test('returns a list of dependencies belonging to the specified crate version', async function(assert) {
       this.server.create('crate', { name: 'rand' });
-      let version = this.server.create('version', { crate: 'rand', num: '1.0.0' });
+      let version = this.server.create('version', { crateId: 'rand', num: '1.0.0' });
       this.server.create('dependency', { crate_id: 'foo', version_id: version.id });
       this.server.create('dependency', { crate_id: 'bar', version_id: version.id });
       this.server.create('dependency', { crate_id: 'baz', version_id: version.id });
@@ -572,7 +572,7 @@ module('Mirage | Keywords', function(hooks) {
 
     test('empty case', async function(assert) {
       this.server.create('crate', { name: 'rand' });
-      this.server.create('version', { crate: 'rand', num: '1.0.0' });
+      this.server.create('version', { crateId: 'rand', num: '1.0.0' });
 
       let response = await fetch('/api/v1/crates/rand/1.0.0/downloads');
       assert.equal(response.status, 200);
@@ -585,7 +585,7 @@ module('Mirage | Keywords', function(hooks) {
 
     test('returns a list of version downloads belonging to the specified crate version', async function(assert) {
       this.server.create('crate', { name: 'rand' });
-      let version = this.server.create('version', { crate: 'rand', num: '1.0.0' });
+      let version = this.server.create('version', { crateId: 'rand', num: '1.0.0' });
       this.server.create('version-download', { version, date: '2020-01-13' });
       this.server.create('version-download', { version, date: '2020-01-14' });
       this.server.create('version-download', { version, date: '2020-01-15' });
@@ -735,14 +735,14 @@ module('Mirage | Keywords', function(hooks) {
       this.server.create('dependency', {
         crate_id: 'foo',
         version_id: this.server.create('version', {
-          crate: this.server.create('crate', { name: 'bar' }).id,
+          crate: this.server.create('crate', { name: 'bar' }),
         }).id,
       });
 
       this.server.create('dependency', {
         crate_id: 'foo',
         version_id: this.server.create('version', {
-          crate: this.server.create('crate', { name: 'baz' }).id,
+          crate: this.server.create('crate', { name: 'baz' }),
         }).id,
       });
 
@@ -824,7 +824,7 @@ module('Mirage | Keywords', function(hooks) {
         crate_id: 'foo',
         version_id: () =>
           this.server.create('version', {
-            crate: () => this.server.create('crate', { name: 'bar' }).id,
+            crate: () => this.server.create('crate', { name: 'bar' }),
           }).id,
       });
 
@@ -844,7 +844,7 @@ module('Mirage | Keywords', function(hooks) {
         name: i => `crate-${String(i + 1).padStart(2, '0')}`,
       });
       let versions = this.server.createList('version', crates.length, {
-        crate: i => crates[i].id,
+        crate: i => crates[i],
       });
       this.server.createList('dependency', versions.length, {
         crate_id: 'foo',
@@ -891,7 +891,7 @@ module('Mirage | Keywords', function(hooks) {
 
     test('returns a list of version downloads belonging to the specified crate version', async function(assert) {
       this.server.create('crate', { name: 'rand' });
-      let versions = this.server.createList('version', 2, { crate: 'rand' });
+      let versions = this.server.createList('version', 2, { crateId: 'rand' });
       this.server.create('version-download', { version: versions[0], date: '2020-01-13' });
       this.server.create('version-download', { version: versions[1], date: '2020-01-14' });
       this.server.create('version-download', { version: versions[1], date: '2020-01-15' });

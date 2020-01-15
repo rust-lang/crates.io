@@ -34,7 +34,7 @@ module('Acceptance | search', function(hooks) {
     assert.equal(title(), "Search Results for 'rust' - crates.io: Rust Package Registry");
 
     assert.dom('[data-test-heading]').hasText("Search Results for 'rust'");
-    assert.dom('[data-test-search-nav]').hasText('Displaying 1-8 of 8 total results');
+    assert.dom('[data-test-search-nav]').hasText('Displaying 1-7 of 7 total results');
     assert
       .dom('[data-test-search-sort]')
       .hasText('Sort by Relevance Relevance All-Time Downloads Recent Downloads Recent Updates');
@@ -59,7 +59,7 @@ module('Acceptance | search', function(hooks) {
 
     assert.dom('[data-test-search-input]').hasValue('rust');
     assert.dom('[data-test-heading]').hasText("Search Results for 'rust'");
-    assert.dom('[data-test-search-nav]').hasText('Displaying 1-8 of 8 total results');
+    assert.dom('[data-test-search-nav]').hasText('Displaying 1-7 of 7 total results');
   });
 
   test('clearing search results', async function(assert) {
