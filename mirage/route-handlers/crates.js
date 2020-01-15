@@ -57,8 +57,11 @@ export function register(server) {
   });
 
   server.get('/api/v1/crates/:crate_id/versions', (schema, request) => {
-    let crate = request.params.crate_id;
-    return schema.versions.where({ crate }).sort((a, b) => compareIsoDates(b.created_at, a.created_at));
+    let crateId = request.params.crate_id;
+    let crate = schema.crates.find(crateId);
+    if (!crate) return notFound();
+
+    return schema.versions.where({ crate: crateId }).sort((a, b) => compareIsoDates(b.created_at, a.created_at));
   });
 
   server.get('/api/v1/crates/:crate_id/:version_num/authors', (schema, request) => {
