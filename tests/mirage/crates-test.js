@@ -690,7 +690,7 @@ module('Mirage | Keywords', function(hooks) {
 
     test('returns the list of teams that own the specified crate', async function(assert) {
       let team = this.server.create('team', { name: 'maintainers' });
-      this.server.create('crate', { name: 'rand', _owner_teams: [team.id] });
+      this.server.create('crate', { name: 'rand', teamOwners: [team] });
 
       let response = await fetch('/api/v1/crates/rand/owner_team');
       assert.equal(response.status, 200);

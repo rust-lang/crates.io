@@ -24,5 +24,4 @@ export default Factory.extend({
 
   badges: () => [],
   _extra_downloads: () => [],
-  _owner_teams: () => [],
 });

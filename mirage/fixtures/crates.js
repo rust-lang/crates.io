@@ -57,7 +57,7 @@ export default [
         downloads: 14,
       },
     ],
-    _owner_teams: [1, 303],
+    teamOwnerIds: [1, 303],
     userOwnerIds: [2, 303],
   },
   {

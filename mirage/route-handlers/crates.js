@@ -113,9 +113,7 @@ export function register(server) {
     let crate = schema.crates.find(crateId);
     if (!crate) return notFound();
 
-    let teams = schema.teams.find(crate._owner_teams);
-
-    let response = this.serialize(teams);
+    let response = this.serialize(crate.teamOwners);
 
     response.teams.forEach(team => {
       team.kind = 'team';
