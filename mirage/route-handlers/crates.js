@@ -85,7 +85,7 @@ export function register(server) {
     let version = schema.versions.findBy({ crateId, num });
     if (!version) return { errors: [{ detail: `crate \`${crateId}\` does not have a version \`${num}\`` }] };
 
-    return schema.dependencies.where({ version_id: version.id });
+    return schema.dependencies.where({ versionId: version.id });
   });
 
   server.get('/api/v1/crates/:crate_id/:version_num/downloads', function(schema, request) {
@@ -139,11 +139,11 @@ export function register(server) {
 
     let { start, end } = pageParams(request);
 
-    let allDependencies = schema.dependencies.where({ crate_id: crateId });
+    let allDependencies = schema.dependencies.where({ crateId: crateId });
     let dependencies = allDependencies.slice(start, end);
     let total = allDependencies.length;
 
-    let versions = schema.versions.find(dependencies.models.map(it => it.version_id));
+    let versions = schema.versions.find(dependencies.models.map(it => it.versionId));
 
     return {
       ...this.serialize(dependencies),

@@ -501,9 +501,13 @@ module('Mirage | Keywords', function(hooks) {
     test('returns a list of dependencies belonging to the specified crate version', async function(assert) {
       this.server.create('crate', { name: 'rand' });
       let version = this.server.create('version', { crateId: 'rand', num: '1.0.0' });
-      this.server.create('dependency', { crate_id: 'foo', version_id: version.id });
-      this.server.create('dependency', { crate_id: 'bar', version_id: version.id });
-      this.server.create('dependency', { crate_id: 'baz', version_id: version.id });
+
+      this.server.create('crate', { name: 'foo' });
+      this.server.create('dependency', { crateId: 'foo', versionId: version.id });
+      this.server.create('crate', { name: 'bar' });
+      this.server.create('dependency', { crateId: 'bar', versionId: version.id });
+      this.server.create('crate', { name: 'baz' });
+      this.server.create('dependency', { crateId: 'baz', versionId: version.id });
 
       let response = await fetch('/api/v1/crates/rand/1.0.0/dependencies');
       assert.equal(response.status, 200);
@@ -733,15 +737,15 @@ module('Mirage | Keywords', function(hooks) {
       this.server.create('crate', { name: 'foo' });
 
       this.server.create('dependency', {
-        crate_id: 'foo',
-        version_id: this.server.create('version', {
+        crateId: 'foo',
+        versionId: this.server.create('version', {
           crate: this.server.create('crate', { name: 'bar' }),
         }).id,
       });
 
       this.server.create('dependency', {
-        crate_id: 'foo',
-        version_id: this.server.create('version', {
+        crateId: 'foo',
+        versionId: this.server.create('version', {
           crate: this.server.create('crate', { name: 'baz' }),
         }).id,
       });
@@ -821,8 +825,8 @@ module('Mirage | Keywords', function(hooks) {
       this.server.create('crate', { name: 'foo' });
 
       this.server.createList('dependency', 25, {
-        crate_id: 'foo',
-        version_id: () =>
+        crateId: 'foo',
+        versionId: () =>
           this.server.create('version', {
             crate: () => this.server.create('crate', { name: 'bar' }),
           }).id,
@@ -847,8 +851,8 @@ module('Mirage | Keywords', function(hooks) {
         crate: i => crates[i],
       });
       this.server.createList('dependency', versions.length, {
-        crate_id: 'foo',
-        version_id: i => versions[i].id,
+        crateId: 'foo',
+        versionId: i => versions[i].id,
       });
 
       let response = await fetch('/api/v1/crates/foo/reverse_dependencies?page=2&per_page=5');
