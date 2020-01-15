@@ -133,10 +133,13 @@ export function register(server) {
   });
 
   server.get('/api/v1/crates/:crate_id/reverse_dependencies', function(schema, request) {
+    let crateId = request.params.crate_id;
+    let crate = schema.crates.find(crateId);
+    if (!crate) return notFound();
+
     let { start, end } = pageParams(request);
 
-    let crate = request.params.crate_id;
-    let allDependencies = schema.dependencies.where({ crate_id: crate });
+    let allDependencies = schema.dependencies.where({ crate_id: crateId });
     let dependencies = allDependencies.slice(start, end);
     let total = allDependencies.length;
 
