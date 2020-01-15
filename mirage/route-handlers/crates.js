@@ -38,15 +38,11 @@ export function register(server) {
     let crate = schema.crates.find(crateId);
     if (!crate) return notFound();
 
-    let versions = schema.versions
-      .all()
-      .filter(version => (crate.versions || []).indexOf(parseInt(version.id, 10)) !== -1);
-
     return {
       ...this.serialize(crate),
       ...this.serialize(crate.categories),
       ...this.serialize(crate.keywords),
-      ...this.serialize(versions),
+      ...this.serialize(crate.versions),
     };
   });
 
@@ -59,7 +55,7 @@ export function register(server) {
     let crate = schema.crates.find(crateId);
     if (!crate) return notFound();
 
-    return schema.versions.where({ crateId }).sort((a, b) => compareIsoDates(b.created_at, a.created_at));
+    return crate.versions.sort((a, b) => compareIsoDates(b.created_at, a.created_at));
   });
 
   server.get('/api/v1/crates/:crate_id/:version_num/authors', (schema, request) => {
@@ -155,9 +151,7 @@ export function register(server) {
     let crate = schema.crates.find(crateId);
     if (!crate) return notFound();
 
-    let versionDownloads = schema.versionDownloads
-      .all()
-      .filter(it => crate.versions.indexOf(parseInt(it.versionId, 10)) !== -1);
+    let versionDownloads = schema.versionDownloads.all().filter(it => it.version.crateId === crateId);
 
     return withMeta(this.serialize(versionDownloads), { extra_downloads: crate._extra_downloads });
   });

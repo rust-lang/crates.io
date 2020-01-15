@@ -224,6 +224,7 @@ module('Mirage | Keywords', function(hooks) {
       assert.equal(response.status, 200);
 
       let responsePayload = await response.json();
+      assert.deepEqual(responsePayload.crate.versions, ['1', '2', '3']);
       assert.deepEqual(responsePayload.versions, [
         {
           id: '1',

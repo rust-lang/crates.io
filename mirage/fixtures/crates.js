@@ -21,7 +21,7 @@ export default [
     name: 'kinetic-rust',
     repository: 'https://github.com/icorderi/kinetic-rust/',
     updated_at: '2015-04-21T00:15:49Z',
-    versions: null,
+    versionIds: [],
   },
   {
     badges: [
@@ -46,7 +46,7 @@ export default [
     name: 'nanomsg',
     repository: 'https://github.com/thehydroimpulse/nanomsg.rs',
     updated_at: '2016-12-28T08:40:00Z',
-    versions: [40906, 40905, 28431, 21273, 18445, 17384, 13574, 9014, 8236, 7190, 4944, 940, 924],
+    versionIds: [40906, 40905, 28431, 21273, 18445, 17384, 13574, 9014, 8236, 7190, 4944, 940, 924],
     _extra_downloads: [
       {
         date: '2017-02-02',
@@ -132,7 +132,7 @@ export default [
         badge_type: 'coveralls',
       },
     ],
-    versions: null,
+    versionIds: [],
   },
   {
     created_at: '2015-02-27T11:51:58Z',
@@ -149,7 +149,7 @@ export default [
     name: 'external_mixin',
     repository: 'https://github.com/huonw/external_mixin',
     updated_at: '2015-02-27T11:51:58Z',
-    versions: null,
+    versionIds: [],
   },
   {
     created_at: '2015-02-27T11:51:40Z',
@@ -165,7 +165,7 @@ export default [
     name: 'external_mixin_umbrella',
     repository: 'https://github.com/huonw/external_mixin',
     updated_at: '2015-02-27T11:52:30Z',
-    versions: null,
+    versionIds: [],
   },
   {
     created_at: '2015-10-10T15:26:24Z',
@@ -182,7 +182,7 @@ export default [
     name: 'Inflector',
     repository: 'https://github.com/whatisinternet/inflector',
     updated_at: '2015-10-27T01:51:42Z',
-    versions: null,
+    versionIds: [],
   },
   {
     created_at: '2015-05-21T17:43:38Z',
@@ -198,7 +198,7 @@ export default [
     name: 'rs-es',
     repository: 'https://github.com/benashford/rs-es',
     updated_at: '2015-09-09T15:34:50Z',
-    versions: null,
+    versionIds: [],
   },
   {
     created_at: '2014-11-21T05:12:08Z',
@@ -214,7 +214,7 @@ export default [
     name: 'rust-crypto',
     repository: 'https://github.com/DaGenix/rust-crypto/',
     updated_at: '2015-10-29T01:16:17Z',
-    versions: null,
+    versionIds: [],
   },
   {
     created_at: '2015-03-20T13:46:04Z',
@@ -230,7 +230,7 @@ export default [
     name: 'rust-htslib',
     repository: 'https://github.com/rust-bio/rust-htslib.git',
     updated_at: '2015-11-11T00:10:43Z',
-    versions: null,
+    versionIds: [],
   },
   {
     created_at: '2014-11-29T17:51:55Z',
@@ -246,7 +246,7 @@ export default [
     name: 'rustless',
     repository: 'https://crates.io/crates/rustless',
     updated_at: '2015-10-31T11:49:29Z',
-    versions: null,
+    versionIds: [],
   },
   {
     created_at: '2014-12-05T20:20:39Z',
@@ -262,7 +262,7 @@ export default [
     name: 'serde',
     repository: 'https://github.com/serde-rs/serde',
     updated_at: '2015-10-18T03:10:21Z',
-    versions: null,
+    versionIds: [],
   },
   {
     created_at: '2015-08-26T13:50:58Z',
@@ -278,7 +278,7 @@ export default [
     name: 'rusted_cypher',
     repository: 'https://github.com/livioribeiro/rusted-cypher',
     updated_at: '2015-11-07T17:26:55Z',
-    versions: null,
+    versionIds: [],
   },
   {
     created_at: '2015-01-02T20:54:04Z',
@@ -295,7 +295,7 @@ export default [
     name: 'zlib',
     repository: null,
     updated_at: '2015-01-02T20:54:04Z',
-    versions: null,
+    versionIds: [],
   },
   {
     created_at: '2015-05-08T19:34:16Z',
@@ -312,7 +312,7 @@ export default [
     name: 'rustful',
     repository: 'https://github.com/Ogeon/rustful',
     updated_at: '2015-09-19T21:10:27Z',
-    versions: null,
+    versionIds: [],
   },
   {
     created_at: '2014-11-24T02:34:44Z',
@@ -328,7 +328,7 @@ export default [
     name: 'postgres',
     repository: 'https://github.com/sfackler/rust-postgres',
     updated_at: '2015-11-08T00:48:59Z',
-    versions: null,
+    versionIds: [],
   },
   {
     created_at: '2014-11-21T00:20:47Z',
@@ -344,7 +344,7 @@ export default [
     name: 'quickcheck',
     repository: 'https://github.com/BurntSushi/quickcheck',
     updated_at: '2015-09-20T21:53:38Z',
-    versions: null,
+    versionIds: [],
   },
   {
     created_at: '2014-11-21T00:21:04Z',
@@ -360,7 +360,7 @@ export default [
     name: 'quickcheck_macros',
     repository: 'https://github.com/BurntSushi/quickcheck',
     updated_at: '2015-09-20T21:53:57Z',
-    versions: null,
+    versionIds: [],
   },
   {
     created_at: '2015-08-25T19:15:35Z',
@@ -377,7 +377,7 @@ export default [
     name: 'unicorn-rpc',
     repository: 'https://github.com/nicolas-cherel/rustlex',
     updated_at: '2015-08-25T19:15:35Z',
-    versions: null,
+    versionIds: [],
   },
   {
     created_at: '2015-01-17T17:47:52Z',
@@ -393,7 +393,7 @@ export default [
     name: 'nom',
     repository: 'https://github.com/Geal/nom',
     updated_at: '2015-11-22T22:00:41Z',
-    versions: null,
+    versionIds: [],
   },
   {
     id: 'libc',

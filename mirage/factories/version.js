@@ -18,12 +18,9 @@ export default Factory.extend({
 
   crate_size: i => (((i + 13) * 42) % 13) * 54321,
 
-  afterCreate(version, server) {
+  afterCreate(version) {
     if (!version.crateId) {
       throw new Error(`Missing \`crate\` relationship on \`version:${version.num}\``);
     }
-
-    let crate = server.schema.crates.find(version.crateId);
-    crate.update({ versions: crate.versions.concat(parseInt(version.id, 10)) });
   },
 });

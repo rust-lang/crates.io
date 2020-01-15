@@ -51,5 +51,8 @@ export default BaseSerializer.extend({
 
     hash.keywords = hash.keyword_ids;
     delete hash.keyword_ids;
+
+    hash.versions = hash.version_ids;
+    delete hash.version_ids;
   },
 });
