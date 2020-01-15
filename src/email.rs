@@ -90,13 +90,13 @@ https://crates.io/confirm/{}",
 /// Whether or not the email is sent, the invitation entry will be created in
 /// the database and the user will see the invitation when they visit
 /// https://crates.io/me/pending-invites/.
-pub fn send_owner_invite_email(email: &str, user_name: &str, crate_name: &str) {
+pub fn send_owner_invite_email(email: &str, user_name: &str, crate_name: &str, token: &str) {
     let subject = "Crate ownership invitation";
     let body = format!(
         "{} has invited you to become an owner of the crate {}!\n
-Please visit https://crates.io/me/pending-invites to accept or reject
-this invitation.",
-        user_name, crate_name
+Visit https://crates.io/accept-invite/{} to accept this invitation,
+or go to https://crates.io/me/pending-invites to manage all of your crate ownership invitations.",
+        user_name, crate_name, token
     );
 
     let _ = send_email(email, subject, &body);

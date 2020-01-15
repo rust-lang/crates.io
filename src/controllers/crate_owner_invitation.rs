@@ -41,22 +41,43 @@ pub fn handle_invite(req: &mut dyn Request) -> AppResult<Response> {
         serde_json::from_str(&body).map_err(|_| bad_request("invalid json request"))?;
 
     let crate_invite = crate_invite.crate_owner_invite;
+    let user_id = req.user()?.id;
 
     if crate_invite.accepted {
-        accept_invite(req, conn, crate_invite)
+        accept_invite(req, conn, crate_invite, user_id)
     } else {
         decline_invite(req, conn, crate_invite)
     }
+}
+
+/// Handles the `PUT /me/crate_owner_invitations/accept/:token` route.
+pub fn handle_invite_with_token(req: &mut dyn Request) -> AppResult<Response> {
+    let conn = req.db_conn()?;
+    let req_token = &req.params()["token"];
+
+    let crate_owner_invite: CrateOwnerInvitation = crate_owner_invitations::table
+        .filter(crate_owner_invitations::token.eq(req_token))
+        .first::<CrateOwnerInvitation>(&*conn)?;
+
+    let invite_reponse = InvitationResponse {
+        crate_id: crate_owner_invite.crate_id,
+        accepted: true,
+    };
+    accept_invite(
+        req,
+        &conn,
+        invite_reponse,
+        crate_owner_invite.invited_user_id,
+    )
 }
 
 fn accept_invite(
     req: &dyn Request,
     conn: &PgConnection,
     crate_invite: InvitationResponse,
+    user_id: i32,
 ) -> AppResult<Response> {
     use diesel::{delete, insert_into};
-
-    let user_id = req.user()?.id;
 
     conn.transaction(|| {
         let pending_crate_owner = crate_owner_invitations::table
