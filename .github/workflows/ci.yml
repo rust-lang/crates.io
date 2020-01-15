@@ -24,34 +24,12 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Cleanup pre-installed Rust toolchains
-        # The pre-installed toolchain is under root permission, and this would
-        # make tarball fail to extract. Here we remove the symlink and install
-        # our own Rust toolchain if necessary.
-        run: |
-          which rustup
-          which cargo
-          if [[ -L "$HOME/.cargo" && -L "$HOME/.rustup" ]]; then
-              rm -v "$HOME/.rustup"
-              rm -v "$HOME/.cargo"
-          fi
-          echo "::add-path::$HOME/.cargo/bin"
-
-      - name: Cache rustup
-        uses: actions/cache@v1
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
         with:
-          path: ~/.rustup
-          key: ${{ runner.os }}-rustup2-${{ matrix.rust }}-${{ hashFiles('**/Cargo.toml') }}
-          restore-key: |
-            ${{ runner.os }}-rustup2-${{ matrix.rust }}-
-
-      - name: Cache cargo binaries
-        uses: actions/cache@v1
-        with:
-          path: ~/.cargo/bin
-          key: ${{ runner.os }}-cargo-bin-${{ matrix.rust }}-${{ hashFiles('**/Cargo.toml') }}
-          restore-key: |
-            ${{ runner.os }}-cargo-bin-${{ matrix.rust }}-
+          toolchain: ${{ matrix.rust }}
+          profile: minimal
+          override: true
 
       - name: Cache cargo registry cache
         uses: actions/cache@v1
