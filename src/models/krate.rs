@@ -252,7 +252,7 @@ impl Crate {
         Self::valid_feature_name(name)
             && name
                 .chars()
-                .nth(0)
+                .next()
                 .map(char::is_alphabetic)
                 .unwrap_or(false)
     }
