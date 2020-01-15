@@ -586,9 +586,9 @@ module('Mirage | Keywords', function(hooks) {
     test('returns a list of version downloads belonging to the specified crate version', async function(assert) {
       this.server.create('crate', { name: 'rand' });
       let version = this.server.create('version', { crate: 'rand', num: '1.0.0' });
-      this.server.create('version-download', { version: version.id, date: '2020-01-13' });
-      this.server.create('version-download', { version: version.id, date: '2020-01-14' });
-      this.server.create('version-download', { version: version.id, date: '2020-01-15' });
+      this.server.create('version-download', { version, date: '2020-01-13' });
+      this.server.create('version-download', { version, date: '2020-01-14' });
+      this.server.create('version-download', { version, date: '2020-01-15' });
 
       let response = await fetch('/api/v1/crates/rand/1.0.0/downloads');
       assert.equal(response.status, 200);
@@ -896,9 +896,9 @@ module('Mirage | Keywords', function(hooks) {
     test('returns a list of version downloads belonging to the specified crate version', async function(assert) {
       this.server.create('crate', { name: 'rand' });
       let versions = this.server.createList('version', 2, { crate: 'rand' });
-      this.server.create('version-download', { version: versions[0].id, date: '2020-01-13' });
-      this.server.create('version-download', { version: versions[1].id, date: '2020-01-14' });
-      this.server.create('version-download', { version: versions[1].id, date: '2020-01-15' });
+      this.server.create('version-download', { version: versions[0], date: '2020-01-13' });
+      this.server.create('version-download', { version: versions[1], date: '2020-01-14' });
+      this.server.create('version-download', { version: versions[1], date: '2020-01-15' });
 
       let response = await fetch('/api/v1/crates/rand/downloads');
       assert.equal(response.status, 200);

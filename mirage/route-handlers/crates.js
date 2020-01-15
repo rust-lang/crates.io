@@ -97,7 +97,7 @@ export function register(server) {
     let version = schema.versions.findBy({ crate: crateId, num: versionNum });
     if (!version) return { errors: [{ detail: `crate \`${crateId}\` does not have a version \`${versionNum}\`` }] };
 
-    return schema.versionDownloads.where({ version: version.id });
+    return schema.versionDownloads.where({ versionId: version.id });
   });
 
   server.get('/api/v1/crates/:crate_id/owner_user', function(schema, request) {
@@ -159,7 +159,7 @@ export function register(server) {
 
     let versionDownloads = schema.versionDownloads
       .all()
-      .filter(it => crate.versions.indexOf(parseInt(it.version, 10)) !== -1);
+      .filter(it => crate.versions.indexOf(parseInt(it.versionId, 10)) !== -1);
 
     return withMeta(this.serialize(versionDownloads), { extra_downloads: crate._extra_downloads });
   });
