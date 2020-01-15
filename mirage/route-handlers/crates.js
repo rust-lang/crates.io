@@ -77,10 +77,15 @@ export function register(server) {
   });
 
   server.get('/api/v1/crates/:crate_id/:version_num/dependencies', (schema, request) => {
-    let crate = request.params.crate_id;
+    let crateId = request.params.crate_id;
+    let crate = schema.crates.find(crateId);
+    if (!crate) return notFound();
+
     let num = request.params.version_num;
-    let version_id = schema.versions.findBy({ crate, num }).id;
-    return schema.dependencies.where({ version_id });
+    let version = schema.versions.findBy({ crate: crateId, num });
+    if (!version) return { errors: [{ detail: `crate \`${crateId}\` does not have a version \`${num}\`` }] };
+
+    return schema.dependencies.where({ version_id: version.id });
   });
 
   server.get('/api/v1/crates/:crate_id/:version_num/downloads', function(schema, request) {
