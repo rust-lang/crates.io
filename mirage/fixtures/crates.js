@@ -32,7 +32,7 @@ export default [
         },
       },
     ],
-    categories: [],
+    categoryIds: [],
     created_at: '2014-12-08T02:08:06Z',
     description: 'A high-level, Rust idiomatic wrapper around nanomsg.',
     documentation: 'https://github.com/thehydroimpulse/nanomsg.rs',

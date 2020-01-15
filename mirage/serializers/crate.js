@@ -30,4 +30,23 @@ export default BaseSerializer.extend({
       versions: `/api/v1/crates/${crate.id}/versions`,
     };
   },
+
+  getHashForResource() {
+    let [hash, addToIncludes] = BaseSerializer.prototype.getHashForResource.apply(this, arguments);
+
+    if (Array.isArray(hash)) {
+      for (let resource of hash) {
+        this._adjust(resource);
+      }
+    } else {
+      this._adjust(hash);
+    }
+
+    return [hash, addToIncludes];
+  },
+
+  _adjust(hash) {
+    hash.categories = hash.category_ids;
+    delete hash.category_ids;
+  },
 });

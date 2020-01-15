@@ -282,12 +282,13 @@ module('Mirage | Keywords', function(hooks) {
     test('includes related categories', async function(assert) {
       this.server.create('category', { category: 'no-std' });
       this.server.create('category', { category: 'cli' });
-      this.server.create('crate', { name: 'rand', categories: ['no-std'] });
+      this.server.create('crate', { name: 'rand', categoryIds: ['no-std'] });
 
       let response = await fetch('/api/v1/crates/rand');
       assert.equal(response.status, 200);
 
       let responsePayload = await response.json();
+      assert.deepEqual(responsePayload.crate.categories, ['no-std']);
       assert.deepEqual(responsePayload.categories, [
         {
           id: 'no-std',
