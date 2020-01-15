@@ -646,7 +646,7 @@ module('Mirage | Keywords', function(hooks) {
 
     test('returns the list of users that own the specified crate', async function(assert) {
       let user = this.server.create('user', { name: 'John Doe' });
-      this.server.create('crate', { name: 'rand', _owner_users: [user.id] });
+      this.server.create('crate', { name: 'rand', userOwners: [user] });
 
       let response = await fetch('/api/v1/crates/rand/owner_user');
       assert.equal(response.status, 200);

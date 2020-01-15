@@ -54,5 +54,7 @@ export default BaseSerializer.extend({
 
     hash.versions = hash.version_ids;
     delete hash.version_ids;
+
+    delete hash.user_owner_ids;
   },
 });
