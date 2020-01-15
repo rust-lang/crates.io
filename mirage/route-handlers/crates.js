@@ -103,6 +103,8 @@ export function register(server) {
   server.get('/api/v1/crates/:crate_id/owner_user', function(schema, request) {
     let crateId = request.params.crate_id;
     let crate = schema.crates.find(crateId);
+    if (!crate) return notFound();
+
     let users = schema.users.find(crate._owner_users);
 
     let response = this.serialize(users);
