@@ -90,9 +90,14 @@ export function register(server) {
 
   server.get('/api/v1/crates/:crate_id/:version_num/downloads', function(schema, request) {
     let crateId = request.params.crate_id;
+    let crate = schema.crates.find(crateId);
+    if (!crate) return notFound();
+
     let versionNum = request.params.version_num;
-    let versionId = schema.versions.findBy({ crate: crateId, num: versionNum }).id;
-    return schema.versionDownloads.where({ version: versionId });
+    let version = schema.versions.findBy({ crate: crateId, num: versionNum });
+    if (!version) return { errors: [{ detail: `crate \`${crateId}\` does not have a version \`${versionNum}\`` }] };
+
+    return schema.versionDownloads.where({ version: version.id });
   });
 
   server.get('/api/v1/crates/:crate_id/owner_user', function(schema, request) {
