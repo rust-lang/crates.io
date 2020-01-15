@@ -38,7 +38,6 @@ export function register(server) {
     let crate = schema.crates.find(crateId);
     if (!crate) return notFound();
 
-    let keywords = schema.keywords.all().filter(keyword => (crate.keywords || []).indexOf(keyword.id) !== -1);
     let versions = schema.versions
       .all()
       .filter(version => (crate.versions || []).indexOf(parseInt(version.id, 10)) !== -1);
@@ -46,7 +45,7 @@ export function register(server) {
     return {
       ...this.serialize(crate),
       ...this.serialize(crate.categories),
-      ...this.serialize(keywords),
+      ...this.serialize(crate.keywords),
       ...this.serialize(versions),
     };
   });

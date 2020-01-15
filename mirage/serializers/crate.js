@@ -48,5 +48,8 @@ export default BaseSerializer.extend({
   _adjust(hash) {
     hash.categories = hash.category_ids;
     delete hash.category_ids;
+
+    hash.keywords = hash.keyword_ids;
+    delete hash.keyword_ids;
   },
 });

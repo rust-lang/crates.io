@@ -304,12 +304,13 @@ module('Mirage | Keywords', function(hooks) {
     test('includes related keywords', async function(assert) {
       this.server.create('keyword', { keyword: 'no-std' });
       this.server.create('keyword', { keyword: 'cli' });
-      this.server.create('crate', { name: 'rand', keywords: ['no-std'] });
+      this.server.create('crate', { name: 'rand', keywordIds: ['no-std'] });
 
       let response = await fetch('/api/v1/crates/rand');
       assert.equal(response.status, 200);
 
       let responsePayload = await response.json();
+      assert.deepEqual(responsePayload.crate.keywords, ['no-std']);
       assert.deepEqual(responsePayload.keywords, [
         {
           crates_cnt: 0,
