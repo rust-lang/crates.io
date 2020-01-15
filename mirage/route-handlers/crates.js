@@ -36,6 +36,8 @@ export function register(server) {
   server.get('/api/v1/crates/:crate_id', function(schema, request) {
     let crateId = request.params.crate_id;
     let crate = schema.crates.find(crateId);
+    if (!crate) return notFound();
+
     let categories = schema.categories.all().filter(category => (crate.categories || []).indexOf(category.id) !== -1);
     let keywords = schema.keywords.all().filter(keyword => (crate.keywords || []).indexOf(keyword.id) !== -1);
     let versions = schema.versions
