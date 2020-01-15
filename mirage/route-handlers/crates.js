@@ -65,9 +65,14 @@ export function register(server) {
   });
 
   server.get('/api/v1/crates/:crate_id/:version_num/authors', (schema, request) => {
-    let crate = request.params.crate_id;
+    let crateId = request.params.crate_id;
+    let crate = schema.crates.find(crateId);
+    if (!crate) return notFound();
+
     let num = request.params.version_num;
-    let version = schema.versions.findBy({ crate, num });
+    let version = schema.versions.findBy({ crate: crateId, num });
+    if (!version) return { errors: [{ detail: `crate \`${crateId}\` does not have a version \`${num}\`` }] };
+
     return { meta: { names: version._authors }, users: [] };
   });
 
