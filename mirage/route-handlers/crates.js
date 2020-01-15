@@ -119,6 +119,8 @@ export function register(server) {
   server.get('/api/v1/crates/:crate_id/owner_team', function(schema, request) {
     let crateId = request.params.crate_id;
     let crate = schema.crates.find(crateId);
+    if (!crate) return notFound();
+
     let teams = schema.teams.find(crate._owner_teams);
 
     let response = this.serialize(teams);
