@@ -318,4 +318,93 @@ module('Mirage | Keywords', function(hooks) {
       ]);
     });
   });
+
+  module('GET /api/v1/crates/:id/versions', function() {
+    test('returns 404 for unknown crates', async function(assert) {
+      let response = await fetch('/api/v1/crates/foo/versions');
+      assert.equal(response.status, 404);
+
+      let responsePayload = await response.json();
+      assert.deepEqual(responsePayload, { errors: [{ detail: 'Not Found' }] });
+    });
+
+    test('empty case', async function(assert) {
+      this.server.create('crate', { name: 'rand' });
+
+      let response = await fetch('/api/v1/crates/rand/versions');
+      assert.equal(response.status, 200);
+
+      let responsePayload = await response.json();
+      assert.deepEqual(responsePayload, {
+        versions: [],
+      });
+    });
+
+    test('returns all versions belonging to the specified crate', async function(assert) {
+      this.server.create('crate', { name: 'rand' });
+      this.server.create('version', { crate: 'rand', num: '1.0.0' });
+      this.server.create('version', { crate: 'rand', num: '1.1.0' });
+      this.server.create('version', { crate: 'rand', num: '1.2.0' });
+
+      let response = await fetch('/api/v1/crates/rand/versions');
+      assert.equal(response.status, 200);
+
+      let responsePayload = await response.json();
+      assert.deepEqual(responsePayload, {
+        versions: [
+          {
+            id: '1',
+            crate: 'rand',
+            crate_size: 0,
+            created_at: '2010-06-16T21:30:45Z',
+            dl_path: '/api/v1/crates/rand/1.0.0/download',
+            downloads: 0,
+            license: 'MIT/Apache-2.0',
+            links: {
+              authors: '/api/v1/crates/rand/1.0.0/authors',
+              dependencies: '/api/v1/crates/rand/1.0.0/dependencies',
+              version_downloads: '/api/v1/crates/rand/1.0.0/downloads',
+            },
+            num: '1.0.0',
+            updated_at: '2017-02-24T12:34:56Z',
+            yanked: false,
+          },
+          {
+            id: '2',
+            crate: 'rand',
+            crate_size: 162963,
+            created_at: '2010-06-16T21:30:45Z',
+            dl_path: '/api/v1/crates/rand/1.1.0/download',
+            downloads: 3702,
+            license: 'MIT',
+            links: {
+              authors: '/api/v1/crates/rand/1.1.0/authors',
+              dependencies: '/api/v1/crates/rand/1.1.0/dependencies',
+              version_downloads: '/api/v1/crates/rand/1.1.0/downloads',
+            },
+            num: '1.1.0',
+            updated_at: '2017-02-24T12:34:56Z',
+            yanked: false,
+          },
+          {
+            id: '3',
+            crate: 'rand',
+            crate_size: 325926,
+            created_at: '2010-06-16T21:30:45Z',
+            dl_path: '/api/v1/crates/rand/1.2.0/download',
+            downloads: 7404,
+            license: 'Apache-2.0',
+            links: {
+              authors: '/api/v1/crates/rand/1.2.0/authors',
+              dependencies: '/api/v1/crates/rand/1.2.0/dependencies',
+              version_downloads: '/api/v1/crates/rand/1.2.0/downloads',
+            },
+            num: '1.2.0',
+            updated_at: '2017-02-24T12:34:56Z',
+            yanked: false,
+          },
+        ],
+      });
+    });
+  });
 });
