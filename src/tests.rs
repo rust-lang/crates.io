@@ -6,7 +6,7 @@ use conduit::{Handler, Request, Response};
 use futures::prelude::*;
 use hyper::{body::to_bytes, service::Service};
 
-use super::service::ServiceError;
+use super::service::{BlockingHandler, ServiceError};
 
 struct OkResult;
 impl Handler for OkResult {
@@ -85,11 +85,11 @@ fn make_service<H: Handler>(
 > {
     use hyper::service::service_fn;
 
-    let handler = std::sync::Arc::new(handler);
+    let handler = std::sync::Arc::new(BlockingHandler::new(handler, 1));
 
     service_fn(move |request: hyper::Request<hyper::Body>| {
         let remote_addr = ([0, 0, 0, 0], 0).into();
-        super::service::blocking_handler(handler.clone(), request, remote_addr)
+        handler.clone().blocking_handler(request, remote_addr)
     })
 }
 

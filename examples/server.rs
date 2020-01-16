@@ -8,6 +8,8 @@ use std::collections::HashMap;
 use std::io::{Cursor, Error};
 use std::thread::sleep;
 
+const MAX_THREADS: usize = 1;
+
 #[tokio::main]
 async fn main() {
     env_logger::init();
@@ -15,8 +17,7 @@ async fn main() {
     let app = build_conduit_handler();
     let addr = ([127, 0, 0, 1], 12345).into();
 
-    // FIXME: Set limit on number of blocking tasks
-    Server::serve(&addr, app).await;
+    Server::serve(&addr, app, MAX_THREADS).await;
 }
 
 fn build_conduit_handler() -> impl Handler {

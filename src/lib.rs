@@ -18,11 +18,13 @@
 //! use conduit_hyper::Server;
 //! use tokio::runtime::Runtime;
 //!
+//! const MAX_THREADS: usize = 10;
+//!
 //! #[tokio::main]
 //! async fn main() {
 //!     let app = build_conduit_handler();
 //!     let addr = ([127, 0, 0, 1], 12345).into();
-//!     let server = Server::serve(&addr, app);
+//!     let server = Server::serve(&addr, app, MAX_THREADS);
 //!
 //!     server.await;
 //! }
@@ -57,4 +59,4 @@ mod tests;
 pub use semver;
 
 pub use server::Server;
-pub use service::Service;
+pub use service::{BlockingHandler, Service};
