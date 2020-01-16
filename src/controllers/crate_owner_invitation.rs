@@ -7,7 +7,7 @@ use crate::views::{EncodableCrateOwnerInvitation, InvitationResponse};
 /// Handles the `GET /me/crate_owner_invitations` route.
 pub fn list(req: &mut dyn Request) -> AppResult<Response> {
     let conn = &*req.db_conn()?;
-    let user_id = req.user()?.id;
+    let user_id = req.authenticate(conn)?.user_id();
 
     let crate_owner_invitations = crate_owner_invitations::table
         .filter(crate_owner_invitations::invited_user_id.eq(user_id))
@@ -41,7 +41,7 @@ pub fn handle_invite(req: &mut dyn Request) -> AppResult<Response> {
         serde_json::from_str(&body).map_err(|_| bad_request("invalid json request"))?;
 
     let crate_invite = crate_invite.crate_owner_invite;
-    let user_id = req.user()?.id;
+    let user_id = req.authenticate(conn)?.user_id();
 
     if crate_invite.accepted {
         accept_invite(req, conn, crate_invite, user_id)
@@ -116,8 +116,7 @@ fn decline_invite(
 ) -> AppResult<Response> {
     use diesel::delete;
 
-    let user_id = req.user()?.id;
-
+    let user_id = req.authenticate(conn)?.user_id();
     delete(crate_owner_invitations::table.find((user_id, crate_invite.crate_id))).execute(conn)?;
 
     #[derive(Serialize)]

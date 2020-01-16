@@ -1,6 +1,5 @@
 use super::frontend_prelude::*;
 
-use crate::middleware::current_user::AuthenticationSource;
 use crate::models::ApiToken;
 use crate::schema::api_tokens;
 use crate::util::read_fill;
@@ -10,10 +9,13 @@ use serde_json as json;
 
 /// Handles the `GET /me/tokens` route.
 pub fn list(req: &mut dyn Request) -> AppResult<Response> {
-    let tokens = ApiToken::belonging_to(req.user()?)
+    let conn = req.db_conn()?;
+    let user = req.authenticate(&conn)?.find_user(&conn)?;
+
+    let tokens = ApiToken::belonging_to(&user)
         .filter(api_tokens::revoked.eq(false))
         .order(api_tokens::created_at.desc())
-        .load(&*req.db_conn()?)?;
+        .load(&*conn)?;
     #[derive(Serialize)]
     struct R {
         api_tokens: Vec<ApiToken>,
@@ -33,12 +35,6 @@ pub fn new(req: &mut dyn Request) -> AppResult<Response> {
     #[derive(Deserialize, Serialize)]
     struct NewApiTokenRequest {
         api_token: NewApiToken,
-    }
-
-    if req.authentication_source()? != AuthenticationSource::SessionCookie {
-        return Err(bad_request(
-            "cannot use an API token to create a new API token",
-        ));
     }
 
     let max_size = 2000;
@@ -64,11 +60,18 @@ pub fn new(req: &mut dyn Request) -> AppResult<Response> {
         return Err(bad_request("name must have a value"));
     }
 
-    let user = req.user()?;
     let conn = req.db_conn()?;
+    let ids = req.authenticate(&conn)?;
+    let user = ids.find_user(&conn)?;
+
+    if ids.api_token_id().is_some() {
+        return Err(bad_request(
+            "cannot use an API token to create a new API token",
+        ));
+    }
 
     let max_token_per_user = 500;
-    let count = ApiToken::belonging_to(user)
+    let count = ApiToken::belonging_to(&user)
         .count()
         .get_result::<i64>(&*conn)?;
     if count >= max_token_per_user {
@@ -95,9 +98,11 @@ pub fn revoke(req: &mut dyn Request) -> AppResult<Response> {
         .parse::<i32>()
         .map_err(|e| bad_request(&format!("invalid token id: {:?}", e)))?;
 
-    diesel::update(ApiToken::belonging_to(req.user()?).find(id))
+    let conn = req.db_conn()?;
+    let user = req.authenticate(&conn)?.find_user(&conn)?;
+    diesel::update(ApiToken::belonging_to(&user).find(id))
         .set(api_tokens::revoked.eq(true))
-        .execute(&*req.db_conn()?)?;
+        .execute(&*conn)?;
 
     #[derive(Serialize)]
     struct R {}

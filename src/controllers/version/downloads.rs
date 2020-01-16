@@ -69,8 +69,7 @@ fn increment_download_counts(
 
 /// Handles the `GET /crates/:crate_id/:version/downloads` route.
 pub fn downloads(req: &mut dyn Request) -> AppResult<Response> {
-    let (version, _) = version_and_crate(req)?;
-    let conn = req.db_conn()?;
+    let (conn, version, _) = version_and_crate(req)?;
     let cutoff_end_date = req
         .query()
         .get("before_date")

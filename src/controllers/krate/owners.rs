@@ -92,9 +92,10 @@ fn parse_owners_request(req: &mut dyn Request) -> AppResult<Vec<String>> {
 fn modify_owners(req: &mut dyn Request, add: bool) -> AppResult<Response> {
     let logins = parse_owners_request(req)?;
     let app = req.app();
-    let user = req.user()?;
     let crate_name = &req.params()["crate_id"];
+
     let conn = req.db_conn()?;
+    let user = req.authenticate(&conn)?.find_user(&conn)?;
 
     conn.transaction(|| {
         let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
@@ -121,13 +122,13 @@ fn modify_owners(req: &mut dyn Request, add: bool) -> AppResult<Response> {
                 if owners.iter().any(login_test) {
                     return Err(cargo_err(&format_args!("`{}` is already an owner", login)));
                 }
-                let msg = krate.owner_add(app, &conn, user, login)?;
+                let msg = krate.owner_add(app, &conn, &user, login)?;
                 msgs.push(msg);
             }
             msgs.join(",")
         } else {
             for login in &logins {
-                krate.owner_remove(app, &conn, user, login)?;
+                krate.owner_remove(app, &conn, &user, login)?;
             }
             if User::owning(&krate, &conn)?.is_empty() {
                 return Err(cargo_err(

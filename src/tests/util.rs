@@ -27,7 +27,7 @@ use cargo_registry::{
     background_jobs::Environment,
     db::DieselPool,
     git::{Credentials, RepositoryConfig},
-    middleware::current_user::AuthenticationSource,
+    middleware::current_user::TrustedUserId,
     models::{ApiToken, User},
     App, Config,
 };
@@ -195,7 +195,12 @@ impl TestApp {
 
     /// Obtain a reference to the inner `App` value
     pub fn as_inner(&self) -> &App {
-        &*self.0.app
+        &self.0.app
+    }
+
+    /// Obtain a reference to the inner middleware builder
+    pub fn as_middleware(&self) -> &conduit_middleware::MiddlewareBuilder {
+        &self.0.middle
     }
 }
 
@@ -317,7 +322,7 @@ pub trait RequestHelper {
     where
         T: serde::de::DeserializeOwned,
     {
-        Response::new(self.app().0.middle.call(&mut request))
+        Response::new(self.app().as_middleware().call(&mut request))
     }
 
     /// Issue a GET request
@@ -438,8 +443,8 @@ impl RequestHelper for MockAnonymousUser {
 
 /// A type that can generate cookie authenticated requests
 ///
-/// The `User` is directly injected into middleware extensions and thus the cookie logic is not
-/// exercised.
+/// The `user.id` value is directly injected into a request extension and thus the conduit_cookie
+/// session logic is not exercised.
 pub struct MockCookieUser {
     app: TestApp,
     user: User,
@@ -448,10 +453,8 @@ pub struct MockCookieUser {
 impl RequestHelper for MockCookieUser {
     fn request_builder(&self, method: Method, path: &str) -> MockRequest {
         let mut request = crate::req(method, path);
-        request.mut_extensions().insert(self.user.clone());
-        request
-            .mut_extensions()
-            .insert(AuthenticationSource::SessionCookie);
+        let id = TrustedUserId(self.user.id);
+        request.mut_extensions().insert(id);
         request
     }
 

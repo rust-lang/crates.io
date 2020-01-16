@@ -154,11 +154,12 @@ pub fn search(req: &mut dyn Request) -> AppResult<Response> {
             ),
         );
     } else if params.get("following").is_some() {
+        let user_id = req.authenticate(&conn)?.user_id();
         query = query.filter(
             crates::id.eq_any(
                 follows::table
                     .select(follows::crate_id)
-                    .filter(follows::user_id.eq(req.user()?.id)),
+                    .filter(follows::user_id.eq(user_id)),
             ),
         );
     }
