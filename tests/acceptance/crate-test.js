@@ -16,8 +16,8 @@ module('Acceptance | crate page', function(hooks) {
     assert.expect(0);
 
     this.server.create('crate', { name: 'nanomsg', max_version: '0.6.1' });
-    this.server.create('version', { crate: 'nanomsg', num: '0.6.0' });
-    this.server.create('version', { crate: 'nanomsg', num: '0.6.1' });
+    this.server.create('version', { crateId: 'nanomsg', num: '0.6.0' });
+    this.server.create('version', { crateId: 'nanomsg', num: '0.6.1' });
 
     await visit('/crates/nanomsg');
     percySnapshot(assert);
@@ -29,8 +29,8 @@ module('Acceptance | crate page', function(hooks) {
     assert.expect(0);
 
     this.server.create('crate', { name: 'nanomsg', max_version: '0.6.1' });
-    this.server.create('version', { crate: 'nanomsg', num: '0.6.0' });
-    this.server.create('version', { crate: 'nanomsg', num: '0.6.1' });
+    this.server.create('version', { crateId: 'nanomsg', num: '0.6.0' });
+    this.server.create('version', { crateId: 'nanomsg', num: '0.6.1' });
 
     await visit('/crates/nanomsg/0.6.0');
     percySnapshot(assert);
@@ -51,7 +51,7 @@ module('Acceptance | crate page', function(hooks) {
 
   test('visiting a crate page from the front page', async function(assert) {
     this.server.create('crate', { name: 'nanomsg', newest_version: '0.6.1' });
-    this.server.create('version', { crate: 'nanomsg', num: '0.6.1' });
+    this.server.create('version', { crateId: 'nanomsg', num: '0.6.1' });
 
     await visit('/');
     await click('[data-test-just-updated] [data-test-crate-link="0"]');
@@ -65,8 +65,8 @@ module('Acceptance | crate page', function(hooks) {
 
   test('visiting /crates/nanomsg', async function(assert) {
     this.server.create('crate', { name: 'nanomsg', max_version: '0.6.1' });
-    this.server.create('version', { crate: 'nanomsg', num: '0.6.0' });
-    this.server.create('version', { crate: 'nanomsg', num: '0.6.1' });
+    this.server.create('version', { crateId: 'nanomsg', num: '0.6.0' });
+    this.server.create('version', { crateId: 'nanomsg', num: '0.6.1' });
 
     await visit('/crates/nanomsg');
 
@@ -80,8 +80,8 @@ module('Acceptance | crate page', function(hooks) {
 
   test('visiting /crates/nanomsg/', async function(assert) {
     this.server.create('crate', { name: 'nanomsg', max_version: '0.6.1' });
-    this.server.create('version', { crate: 'nanomsg', num: '0.6.0' });
-    this.server.create('version', { crate: 'nanomsg', num: '0.6.1' });
+    this.server.create('version', { crateId: 'nanomsg', num: '0.6.0' });
+    this.server.create('version', { crateId: 'nanomsg', num: '0.6.1' });
 
     await visit('/crates/nanomsg/');
 
@@ -95,8 +95,8 @@ module('Acceptance | crate page', function(hooks) {
 
   test('visiting /crates/nanomsg/0.6.0', async function(assert) {
     this.server.create('crate', { name: 'nanomsg', max_version: '0.6.1' });
-    this.server.create('version', { crate: 'nanomsg', num: '0.6.0' });
-    this.server.create('version', { crate: 'nanomsg', num: '0.6.1' });
+    this.server.create('version', { crateId: 'nanomsg', num: '0.6.0' });
+    this.server.create('version', { crateId: 'nanomsg', num: '0.6.1' });
 
     await visit('/crates/nanomsg/0.6.0');
 

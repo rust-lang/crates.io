@@ -11,10 +11,6 @@ export default Factory.extend({
   yanked: false,
   license: i => LICENSES[i % LICENSES.length],
 
-  dl_path() {
-    return `/api/v1/crates/${this.crate}/${this.num}/download`;
-  },
-
   downloads: i => (((i + 13) * 42) % 13) * 1234,
 
   features: () => {},
@@ -22,8 +18,9 @@ export default Factory.extend({
 
   crate_size: i => (((i + 13) * 42) % 13) * 54321,
 
-  afterCreate(version, server) {
-    let crate = server.schema.crates.find(version.crate);
-    crate.update({ versions: crate.versions.concat(parseInt(version.id, 10)) });
+  afterCreate(version) {
+    if (!version.crateId) {
+      throw new Error(`Missing \`crate\` relationship on \`version:${version.num}\``);
+    }
   },
 });

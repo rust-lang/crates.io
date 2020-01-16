@@ -32,8 +32,8 @@ module('Acceptance | front page', function(hooks) {
     assert.dom('[data-test-all-crates-link]').exists();
     assert.dom('[data-test-login-link]').exists();
 
-    assert.dom('[data-test-total-downloads]').hasText('122,669');
-    assert.dom('[data-test-total-crates]').hasText('19');
+    assert.dom('[data-test-total-downloads]').hasText('143,345');
+    assert.dom('[data-test-total-crates]').hasText('23');
 
     assert.dom('[data-test-new-crates] [data-test-crate-link="0"]').hasText('Inflector (0.1.6)');
     assert.dom('[data-test-new-crates] [data-test-crate-link="0"]').hasAttribute('href', '/crates/Inflector/0.1.6');

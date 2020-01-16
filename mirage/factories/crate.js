@@ -23,10 +23,5 @@ export default Factory.extend({
   updated_at: '2017-02-24T12:34:56Z',
 
   badges: () => [],
-  categories: () => [],
-  keywords: () => [],
-  versions: () => [],
   _extra_downloads: () => [],
-  _owner_teams: () => [],
-  _owner_users: () => [],
 });

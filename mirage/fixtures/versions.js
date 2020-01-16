@@ -1,8 +1,7 @@
 export default [
   {
-    crate: 'nanomsg',
+    crateId: 'nanomsg',
     created_at: '2016-12-20T07:30:00Z',
-    dl_path: '/api/v1/crates/nanomsg/0.7.0-alpha.1/download',
     downloads: 260,
     features: {
       bundled: ['nanomsg-sys/bundled'],
@@ -25,9 +24,8 @@ export default [
     ],
   },
   {
-    crate: 'nanomsg',
+    crateId: 'nanomsg',
     created_at: '2016-12-27T08:40:00Z',
-    dl_path: '/api/v1/crates/nanomsg/0.6.1/download',
     downloads: 260,
     features: {
       bundled: ['nanomsg-sys/bundled'],
@@ -50,9 +48,8 @@ export default [
     ],
   },
   {
-    crate: 'nanomsg',
+    crateId: 'nanomsg',
     created_at: '2016-06-10T20:03:55Z',
-    dl_path: '/api/v1/crates/nanomsg/0.6.0/download',
     downloads: 904,
     features: {},
     id: 28431,
@@ -72,9 +69,8 @@ export default [
     ],
   },
   {
-    crate: 'nanomsg',
+    crateId: 'nanomsg',
     created_at: '2016-01-24T22:07:58Z',
-    dl_path: '/api/v1/crates/nanomsg/0.5.0/download',
     downloads: 1217,
     features: {},
     id: 21273,
@@ -94,9 +90,8 @@ export default [
     ],
   },
   {
-    crate: 'nanomsg',
+    crateId: 'nanomsg',
     created_at: '2015-11-23T12:10:09Z',
-    dl_path: '/api/v1/crates/nanomsg/0.4.2/download',
     downloads: 318,
     features: {},
     id: 18445,
@@ -116,9 +111,8 @@ export default [
     ],
   },
   {
-    crate: 'nanomsg',
+    crateId: 'nanomsg',
     created_at: '2015-10-29T22:13:45Z',
-    dl_path: '/api/v1/crates/nanomsg/0.4.1/download',
     downloads: 168,
     features: {},
     id: 17384,
@@ -138,9 +132,8 @@ export default [
     ],
   },
   {
-    crate: 'nanomsg',
+    crateId: 'nanomsg',
     created_at: '2015-07-23T05:54:44Z',
-    dl_path: '/api/v1/crates/nanomsg/0.4.0/download',
     downloads: 311,
     features: {},
     id: 13574,
@@ -160,9 +153,8 @@ export default [
     ],
   },
   {
-    crate: 'nanomsg',
+    crateId: 'nanomsg',
     created_at: '2015-04-18T20:45:03Z',
-    dl_path: '/api/v1/crates/nanomsg/0.3.4/download',
     downloads: 237,
     features: {},
     id: 9014,
@@ -182,9 +174,8 @@ export default [
     ],
   },
   {
-    crate: 'nanomsg',
+    crateId: 'nanomsg',
     created_at: '2015-04-06T18:57:47Z',
-    dl_path: '/api/v1/crates/nanomsg/0.3.3/download',
     downloads: 99,
     features: {},
     id: 8236,
@@ -204,9 +195,8 @@ export default [
     ],
   },
   {
-    crate: 'nanomsg',
+    crateId: 'nanomsg',
     created_at: '2015-03-26T06:51:10Z',
-    dl_path: '/api/v1/crates/nanomsg/0.3.2/download',
     downloads: 98,
     features: {},
     id: 7190,
@@ -226,9 +216,8 @@ export default [
     ],
   },
   {
-    crate: 'nanomsg',
+    crateId: 'nanomsg',
     created_at: '2015-02-12T20:20:32Z',
-    dl_path: '/api/v1/crates/nanomsg/0.3.1/download',
     downloads: 95,
     features: {},
     id: 4944,
@@ -248,9 +237,8 @@ export default [
     ],
   },
   {
-    crate: 'nanomsg',
+    crateId: 'nanomsg',
     created_at: '2014-12-08T16:21:01Z',
-    dl_path: '/api/v1/crates/nanomsg/0.3.0/download',
     downloads: 102,
     features: {},
     id: 940,
@@ -270,9 +258,8 @@ export default [
     ],
   },
   {
-    crate: 'nanomsg',
+    crateId: 'nanomsg',
     created_at: '2014-12-08T02:08:06Z',
-    dl_path: '/api/v1/crates/nanomsg/0.2.0/download',
     downloads: 79,
     features: {},
     id: 924,
@@ -292,9 +279,8 @@ export default [
     ],
   },
   {
-    crate: 'unicorn-rpc',
+    crateId: 'unicorn-rpc',
     created_at: '2014-12-08T02:08:06Z',
-    dl_path: '/api/v1/crates/unicorn-rpc/0.2.0/download',
     downloads: 79,
     features: {},
     id: 28674,
