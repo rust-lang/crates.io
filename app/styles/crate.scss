@@ -84,8 +84,18 @@
         color: inherit;
         padding: 5px;
     }
-    a:hover { background-color: $main-bg-dark; }
-    a.active { background-color: $main-bg-dark; }
+    a:hover {
+        background-color: $main-bg-dark;
+        @media only screen and (prefers-color-scheme: dark) {
+            background-color: #333;
+        }
+    }
+    a.active {
+        background-color: $main-bg-dark;
+        @media only screen and (prefers-color-scheme: dark) {
+            background-color: #333;
+        }
+    }
 
     select {
         display: none;
