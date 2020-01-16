@@ -63,18 +63,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("Booting with a hyper based server");
 
         let mut rt = tokio::runtime::Builder::new()
-            //.blocking_threads(threads as usize) // FIXME: Impl this in conduit-hyper
             .threaded_scheduler()
             .enable_all()
             .build()
             .unwrap();
 
-        let handler = Arc::new(app);
+        let handler = Arc::new(conduit_hyper::BlockingHandler::new(app, threads as usize));
         let make_service =
             hyper::service::make_service_fn(move |socket: &hyper::server::conn::AddrStream| {
                 let addr = socket.remote_addr();
                 let handler = handler.clone();
-                async move { Service::from_conduit(handler, addr) }
+                async move { Service::from_blocking(handler, addr) }
             });
 
         let addr = ([127, 0, 0, 1], port).into();

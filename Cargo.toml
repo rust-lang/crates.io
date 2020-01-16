@@ -75,7 +75,7 @@ conduit-router = "0.8"
 conduit-static = "0.8"
 conduit-git-http-backend = "0.8"
 civet = "0.9"
-conduit-hyper = "0.2.0-alpha.3"
+conduit-hyper = "0.2.0-alpha.4"
 
 futures = "0.3"
 tokio = { version = "0.2", default-features = false, features = ["net", "signal", "io-std"]}
