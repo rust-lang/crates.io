@@ -73,6 +73,9 @@
     padding: 20px;
     border-radius: 5px;
     background-color: white;
+    @media only screen and (prefers-color-scheme: dark) {
+        background-color: #222;
+    }
     margin-bottom: 40px;
 
     a {
