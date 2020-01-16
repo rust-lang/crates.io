@@ -125,6 +125,28 @@ module('Mirage | Categories', function(hooks) {
         },
       });
     });
+
+    test('calculates `crates_cnt` correctly', async function(assert) {
+      this.server.create('category', { category: 'cli' });
+      this.server.createList('crate', 7, { categoryIds: ['cli'] });
+      this.server.create('category', { category: 'not-cli' });
+      this.server.createList('crate', 3, { categoryIds: ['not-cli'] });
+
+      let response = await fetch('/api/v1/categories/cli');
+      assert.equal(response.status, 200);
+
+      let responsePayload = await response.json();
+      assert.deepEqual(responsePayload, {
+        category: {
+          category: 'cli',
+          crates_cnt: 7,
+          created_at: '2010-06-16T21:30:45Z',
+          description: 'This is the description for the category called "cli"',
+          id: 'cli',
+          slug: 'cli',
+        },
+      });
+    });
   });
 
   module('GET /api/v1/category_slugs', function() {

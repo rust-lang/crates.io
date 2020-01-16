@@ -13,9 +13,9 @@ module('Acceptance | categories', function(hooks) {
   test('is accessible', async function(assert) {
     assert.expect(0);
 
-    this.server.create('category', { category: 'API bindings', crates_cnt: 0 });
-    this.server.create('category', { category: 'Algorithms', crates_cnt: 1 });
-    this.server.create('category', { category: 'Asynchronous', crates_cnt: 3910 });
+    this.server.create('category', { category: 'API bindings' });
+    this.server.create('category', { category: 'Algorithms' });
+    this.server.create('category', { category: 'Asynchronous' });
 
     await visit('/categories');
     percySnapshot(assert);
@@ -26,7 +26,7 @@ module('Acceptance | categories', function(hooks) {
   test('category/:category_id is accessible', async function(assert) {
     assert.expect(0);
 
-    this.server.create('category', { category: 'Algorithms', crates_cnt: 1 });
+    this.server.create('category', { category: 'Algorithms' });
 
     await visit('/categories/algorithms');
     percySnapshot(assert);
@@ -35,19 +35,21 @@ module('Acceptance | categories', function(hooks) {
   });
 
   test('listing categories', async function(assert) {
-    this.server.create('category', { category: 'API bindings', crates_cnt: 0 });
-    this.server.create('category', { category: 'Algorithms', crates_cnt: 1 });
-    this.server.create('category', { category: 'Asynchronous', crates_cnt: 3910 });
+    this.server.create('category', { category: 'API bindings' });
+    this.server.create('category', { category: 'Algorithms' });
+    this.server.createList('crate', 1, { categoryIds: ['algorithms'] });
+    this.server.create('category', { category: 'Asynchronous' });
+    this.server.createList('crate', 15, { categoryIds: ['asynchronous'] });
 
     await visit('/categories');
 
     assert.dom('[data-test-category="api-bindings"] [data-test-crate-count]').hasText('0 crates');
     assert.dom('[data-test-category="algorithms"] [data-test-crate-count]').hasText('1 crate');
-    assert.dom('[data-test-category="asynchronous"] [data-test-crate-count]').hasText('3,910 crates');
+    assert.dom('[data-test-category="asynchronous"] [data-test-crate-count]').hasText('15 crates');
   });
 
   test('category/:category_id index default sort is recent-downloads', async function(assert) {
-    this.server.create('category', { category: 'Algorithms', crates_cnt: 1 });
+    this.server.create('category', { category: 'Algorithms' });
 
     await visit('/categories/algorithms');
 
