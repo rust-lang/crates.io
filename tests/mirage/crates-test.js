@@ -4,7 +4,7 @@ import { module, test } from 'qunit';
 import setupMirage from '../helpers/setup-mirage';
 import fetch from 'fetch';
 
-module('Mirage | Keywords', function(hooks) {
+module('Mirage | Crates', function(hooks) {
   setupTest(hooks);
   setupMirage(hooks);
 
