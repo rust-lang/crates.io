@@ -29,7 +29,8 @@ module('Mirage | Summary', function(hooks) {
     test('returns the data for the front page', async function(assert) {
       this.server.createList('category', 15);
       this.server.createList('keyword', 25);
-      this.server.createList('crate', 20);
+      let crates = this.server.createList('crate', 20);
+      this.server.createList('version', crates.length, { crate: i => crates[i] });
 
       let response = await fetch('/api/v1/summary');
       assert.equal(response.status, 200);
@@ -80,7 +81,7 @@ module('Mirage | Summary', function(hooks) {
           version_downloads: '/api/v1/crates/crate-4/downloads',
           versions: '/api/v1/crates/crate-4/versions',
         },
-        max_version: '1.0.0',
+        max_version: '1.0.4',
         name: 'crate-4',
         newest_version: '1.0.0',
         repository: null,

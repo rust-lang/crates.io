@@ -1,3 +1,5 @@
+import { assert } from '@ember/debug';
+import semverSort from 'semver/functions/rsort';
 import BaseSerializer from './application';
 
 export default BaseSerializer.extend({
@@ -13,7 +15,6 @@ export default BaseSerializer.extend({
     'id',
     'keywords',
     'links',
-    'max_version',
     'newest_version',
     'name',
     'repository',
@@ -46,6 +47,13 @@ export default BaseSerializer.extend({
   },
 
   _adjust(hash) {
+    let versions = this.schema.versions.where({ crateId: hash.id });
+    assert(`crate \`${hash.id}\` has no associated versions`, versions.length !== 0);
+
+    let versionNums = versions.models.map(it => it.num);
+    semverSort(versionNums);
+    hash.max_version = versionNums[0];
+
     hash.categories = hash.category_ids;
     delete hash.category_ids;
 
