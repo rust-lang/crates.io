@@ -314,7 +314,7 @@ module('Mirage | Keywords', function(hooks) {
       assert.deepEqual(responsePayload.crate.keywords, ['no-std']);
       assert.deepEqual(responsePayload.keywords, [
         {
-          crates_cnt: 0,
+          crates_cnt: 1,
           id: 'no-std',
           keyword: 'no-std',
         },

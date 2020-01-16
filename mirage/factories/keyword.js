@@ -6,6 +6,4 @@ export default Factory.extend({
   id() {
     return this.keyword;
   },
-
-  crates_cnt: 0,
 });
