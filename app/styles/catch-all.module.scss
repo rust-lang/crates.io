@@ -1,0 +1,14 @@
+.p404 {
+    font-size: 120%;
+    line-height: 3em;
+}
+
+.search-field {
+    width: 100%;
+    padding: 5px;
+    @media only screen and (prefers-color-scheme: dark) {
+        background-color: #222;
+        color: #eee;
+        border-color: #666;
+    }
+}

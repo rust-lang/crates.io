@@ -1,5 +1,5 @@
-<nav class='pagination' aria-label="Pagination navigation">
-  <LinkTo @query={{hash page=@prevPage}} class="prev" @rel="prev" @title="previous page" data-test-pagination-prev>
+<nav local-class='pagination' aria-label="Pagination navigation">
+  <LinkTo @query={{hash page=@prevPage}} local-class="prev" @rel="prev" @title="previous page" data-test-pagination-prev>
     {{svg-jar "left-pag"}}
   </LinkTo>
   <ol>
@@ -11,7 +11,7 @@
       </li>
     {{/each}}
   </ol>
-  <LinkTo @query={{hash page=@nextPage}} class="next" @rel="next" @title="next page" data-test-pagination-next>
+  <LinkTo @query={{hash page=@nextPage}} local-class="next" @rel="next" @title="next page" data-test-pagination-next>
     {{svg-jar "right-pag"}}
   </LinkTo>
 </nav>

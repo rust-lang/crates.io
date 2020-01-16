@@ -12,18 +12,14 @@ $link-color: rgb(0, 172, 91);
 
 @import "application";
 @import "home";
-@import "catch-all";
 @import "category-slugs";
 @import "crate";
 @import "crate/version";
 @import "components/crate-toml-copy";
-@import "components/flash-message";
-@import "components/pagination";
 @import "dashboard";
-@import "index";
-@import "loading";
 @import "me";
-@import "search";
+
+@import "modules";
 
 * {
   box-sizing: border-box;

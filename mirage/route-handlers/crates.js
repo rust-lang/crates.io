@@ -36,17 +36,13 @@ export function register(server) {
   server.get('/api/v1/crates/:crate_id', function(schema, request) {
     let crateId = request.params.crate_id;
     let crate = schema.crates.find(crateId);
-    let categories = schema.categories.all().filter(category => (crate.categories || []).indexOf(category.id) !== -1);
-    let keywords = schema.keywords.all().filter(keyword => (crate.keywords || []).indexOf(keyword.id) !== -1);
-    let versions = schema.versions
-      .all()
-      .filter(version => (crate.versions || []).indexOf(parseInt(version.id, 10)) !== -1);
+    if (!crate) return notFound();
 
     return {
       ...this.serialize(crate),
-      ...this.serialize(categories),
-      ...this.serialize(keywords),
-      ...this.serialize(versions),
+      ...this.serialize(crate.categories),
+      ...this.serialize(crate.keywords),
+      ...this.serialize(crate.versions),
     };
   });
 
@@ -55,37 +51,55 @@ export function register(server) {
   });
 
   server.get('/api/v1/crates/:crate_id/versions', (schema, request) => {
-    let crate = request.params.crate_id;
-    return schema.versions.where({ crate }).sort((a, b) => compareIsoDates(b.created_at, a.created_at));
+    let crateId = request.params.crate_id;
+    let crate = schema.crates.find(crateId);
+    if (!crate) return notFound();
+
+    return crate.versions.sort((a, b) => compareIsoDates(b.created_at, a.created_at));
   });
 
   server.get('/api/v1/crates/:crate_id/:version_num/authors', (schema, request) => {
-    let crate = request.params.crate_id;
+    let crateId = request.params.crate_id;
+    let crate = schema.crates.find(crateId);
+    if (!crate) return notFound();
+
     let num = request.params.version_num;
-    let version = schema.versions.findBy({ crate, num });
+    let version = schema.versions.findBy({ crateId, num });
+    if (!version) return { errors: [{ detail: `crate \`${crateId}\` does not have a version \`${num}\`` }] };
+
     return { meta: { names: version._authors }, users: [] };
   });
 
   server.get('/api/v1/crates/:crate_id/:version_num/dependencies', (schema, request) => {
-    let crate = request.params.crate_id;
+    let crateId = request.params.crate_id;
+    let crate = schema.crates.find(crateId);
+    if (!crate) return notFound();
+
     let num = request.params.version_num;
-    let version_id = schema.versions.findBy({ crate, num }).id;
-    return schema.dependencies.where({ version_id });
+    let version = schema.versions.findBy({ crateId, num });
+    if (!version) return { errors: [{ detail: `crate \`${crateId}\` does not have a version \`${num}\`` }] };
+
+    return schema.dependencies.where({ versionId: version.id });
   });
 
   server.get('/api/v1/crates/:crate_id/:version_num/downloads', function(schema, request) {
     let crateId = request.params.crate_id;
+    let crate = schema.crates.find(crateId);
+    if (!crate) return notFound();
+
     let versionNum = request.params.version_num;
-    let versionId = schema.versions.findBy({ crate: crateId, num: versionNum }).id;
-    return schema.versionDownloads.where({ version: versionId });
+    let version = schema.versions.findBy({ crateId, num: versionNum });
+    if (!version) return { errors: [{ detail: `crate \`${crateId}\` does not have a version \`${versionNum}\`` }] };
+
+    return schema.versionDownloads.where({ versionId: version.id });
   });
 
   server.get('/api/v1/crates/:crate_id/owner_user', function(schema, request) {
     let crateId = request.params.crate_id;
     let crate = schema.crates.find(crateId);
-    let users = schema.users.find(crate._owner_users);
+    if (!crate) return notFound();
 
-    let response = this.serialize(users);
+    let response = this.serialize(crate.userOwners);
 
     response.users.forEach(user => {
       user.kind = 'user';
@@ -97,9 +111,9 @@ export function register(server) {
   server.get('/api/v1/crates/:crate_id/owner_team', function(schema, request) {
     let crateId = request.params.crate_id;
     let crate = schema.crates.find(crateId);
-    let teams = schema.teams.find(crate._owner_teams);
+    if (!crate) return notFound();
 
-    let response = this.serialize(teams);
+    let response = this.serialize(crate.teamOwners);
 
     response.teams.forEach(team => {
       team.kind = 'team';
@@ -109,14 +123,17 @@ export function register(server) {
   });
 
   server.get('/api/v1/crates/:crate_id/reverse_dependencies', function(schema, request) {
+    let crateId = request.params.crate_id;
+    let crate = schema.crates.find(crateId);
+    if (!crate) return notFound();
+
     let { start, end } = pageParams(request);
 
-    let crate = request.params.crate_id;
-    let allDependencies = schema.dependencies.where({ crate_id: crate });
+    let allDependencies = schema.dependencies.where({ crateId: crateId });
     let dependencies = allDependencies.slice(start, end);
     let total = allDependencies.length;
 
-    let versions = schema.versions.find(dependencies.models.map(it => it.version_id));
+    let versions = schema.versions.find(dependencies.models.map(it => it.versionId));
 
     return {
       ...this.serialize(dependencies),
@@ -128,9 +145,9 @@ export function register(server) {
   server.get('/api/v1/crates/:crate_id/downloads', function(schema, request) {
     let crateId = request.params.crate_id;
     let crate = schema.crates.find(crateId);
-    let versionDownloads = schema.versionDownloads
-      .all()
-      .filter(it => crate.versions.indexOf(parseInt(it.version, 10)) !== -1);
+    if (!crate) return notFound();
+
+    let versionDownloads = schema.versionDownloads.all().filter(it => it.version.crateId === crateId);
 
     return withMeta(this.serialize(versionDownloads), { extra_downloads: crate._extra_downloads });
   });
