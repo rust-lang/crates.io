@@ -1,6 +1,6 @@
 [package]
 name = "conduit-hyper"
-version = "0.2.0-alpha.3"
+version = "0.2.0-alpha.4"
 authors = ["Justin Geibel <jtgeibel@gmail.com>"]
 license = "MIT OR Apache-2.0"
 description = "Host a conduit based web application on a hyper server"
