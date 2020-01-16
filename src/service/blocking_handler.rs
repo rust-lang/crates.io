@@ -36,11 +36,11 @@ impl<H: conduit::Handler> BlockingHandler<H> {
         let full_body = hyper::body::to_bytes(body).await?;
         let mut request_info = RequestInfo::new(parts, full_body);
 
-        // The _drop_handler ensures the counter is decreased for all exit paths
-        let (_drop_handler, count) = ThreadCounter::new_and_add(&self.thread_count);
+        // The _drop_on_return ensures the counter is decreased for all exit paths
+        let (_drop_on_return, prev_count) = ThreadCounter::begin_with(&self.thread_count);
 
-        // Use `>=` for comparison because count is the "previous value" of the counter
-        if count >= self.max_thread_count {
+        // Comparison is against the "previous value" from an atomic fetch_add, so using `>=`
+        if prev_count >= self.max_thread_count {
             return Ok(over_capacity_error_response());
         }
 
@@ -113,9 +113,9 @@ struct ThreadCounter<'a> {
 }
 
 impl<'a> ThreadCounter<'a> {
-    fn new_and_add(counter: &'a AtomicUsize) -> (Self, usize) {
-        let count = counter.fetch_add(1, Ordering::SeqCst);
-        (Self { counter }, count)
+    fn begin_with(counter: &'a AtomicUsize) -> (Self, usize) {
+        let previous = counter.fetch_add(1, Ordering::SeqCst);
+        (Self { counter }, previous)
     }
 }
 

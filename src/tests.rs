@@ -69,6 +69,14 @@ impl Handler for AssertPathNormalized {
     }
 }
 
+struct Sleep;
+impl Handler for Sleep {
+    fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
+        std::thread::sleep(std::time::Duration::from_millis(100));
+        OkResult.call(req)
+    }
+}
+
 fn build_headers(msg: &str) -> HashMap<String, Vec<String>> {
     let mut headers = HashMap::new();
     headers.insert("ok".into(), vec![msg.into()]);
@@ -147,4 +155,20 @@ async fn normalize_path() {
     let resp = service.call(req).await.unwrap();
     assert_eq!(resp.status(), 200);
     assert_eq!(resp.headers().len(), 1);
+}
+
+#[tokio::test]
+async fn limits_thread_count() {
+    let mut service = make_service(Sleep);
+    let first = service.call(hyper::Request::default());
+    let second = service.call(hyper::Request::default());
+
+    let first_completed = futures::select! {
+        // The first thead is spawned and sleeps for 100ms
+        sleep = first.fuse() => sleep,
+        // The second request is rejected immediately
+        over_capacity = second.fuse() => over_capacity,
+    }.unwrap();
+
+    assert_eq!(first_completed.status(), 503)
 }
