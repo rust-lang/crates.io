@@ -18,7 +18,7 @@ impl Server {
     /// This returns an opaque `impl Future` so while it can be directly spawned on a
     /// `tokio::Runtime` it is not possible to furter configure the `hyper::Server`.  If more
     /// control, such as configuring a graceful shutdown is necessary, then call
-    /// `Service::from_conduit` instead.
+    /// `Service::from_blocking` instead.
     pub fn serve<H: conduit::Handler>(
         addr: &SocketAddr,
         handler: H,
@@ -28,7 +28,7 @@ impl Server {
         let make_service = make_service_fn(move |socket: &AddrStream| {
             let handler = handler.clone();
             let remote_addr = socket.remote_addr();
-            async move { Service::from_conduit(handler, remote_addr) }
+            async move { Service::from_blocking(handler, remote_addr) }
         });
 
         hyper::Server::bind(&addr).serve(make_service)

@@ -43,14 +43,14 @@ impl Service {
     ///     hyper::service::make_service_fn(move |socket: &hyper::server::conn::AddrStream| {
     ///         let addr = socket.remote_addr();
     ///         let handler = handler.clone();
-    ///         async move { Service::from_conduit(handler, addr) }
+    ///         async move { Service::from_blocking(handler, addr) }
     ///     });
     ///
     /// # let port = 0;
     /// let addr = ([127, 0, 0, 1], port).into();
     /// let server = hyper::Server::bind(&addr).serve(make_service);
     /// ```
-    pub fn from_conduit<H: conduit::Handler>(
+    pub fn from_blocking<H: conduit::Handler>(
         handler: Arc<BlockingHandler<H>>,
         remote_addr: SocketAddr,
     ) -> Result<
