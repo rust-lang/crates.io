@@ -83,7 +83,7 @@ module('Mirage | Summary', function(hooks) {
         },
         max_version: '1.0.4',
         name: 'crate-4',
-        newest_version: '1.0.0',
+        newest_version: '1.0.4',
         repository: null,
         updated_at: '2017-02-24T12:34:56Z',
         versions: null,
