@@ -95,10 +95,7 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ~/.cargo/bin
-          key: ${{ runner.os }}-cargo-bin-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-key: |
-            ${{ runner.os }}-cargo-bin-${{ matrix.rust }}-
-            ${{ runner.os }}-cargo-bin-
+          key: ${{ runner.os }}-cargo-bin-${{ matrix.rust }}-${{ hashFiles('.diesel_version') }}
 
       # Current size as of 2019-12-23: ~77 MB
       - name: Cache cargo registry cache
