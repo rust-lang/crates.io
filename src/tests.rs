@@ -168,7 +168,8 @@ async fn limits_thread_count() {
         sleep = first.fuse() => sleep,
         // The second request is rejected immediately
         over_capacity = second.fuse() => over_capacity,
-    }.unwrap();
+    }
+    .unwrap();
 
     assert_eq!(first_completed.status(), 503)
 }
