@@ -79,7 +79,7 @@ impl Drop for TestAppInner {
 
         // Manually verify that all jobs have completed successfully
         // This will catch any tests that enqueued a job but forgot to initialize the runner
-        let conn = self.app.diesel_database.get().unwrap();
+        let conn = self.app.primary_database.get().unwrap();
         let job_count: i64 = background_jobs.count().get_result(&*conn).unwrap();
         assert_eq!(
             0, job_count,
@@ -122,7 +122,7 @@ impl TestApp {
     /// connection before making any API calls.  Once the closure returns, the connection is
     /// dropped, ensuring it is returned to the pool and available for any future API calls.
     pub fn db<T, F: FnOnce(&PgConnection) -> T>(&self, f: F) -> T {
-        let conn = self.0.app.diesel_database.get().unwrap();
+        let conn = self.0.app.primary_database.get().unwrap();
         f(&conn)
     }
 
@@ -220,7 +220,7 @@ impl TestAppBuilder {
         let (app, middle) = crate::build_app(self.config, self.proxy);
 
         let runner = if self.build_job_runner {
-            let connection_pool = app.diesel_database.clone();
+            let connection_pool = app.primary_database.clone();
             let repository_config = RepositoryConfig {
                 index_location: Url::from_file_path(&git::bare()).unwrap(),
                 credentials: Credentials::Missing,
