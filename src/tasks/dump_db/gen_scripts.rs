@@ -42,7 +42,7 @@ struct TableConfig {
 #[derive(Debug, Serialize)]
 struct HandlebarsTableContext<'a> {
     name: &'a str,
-    filter: Option<&'a str>,
+    filter: Option<String>,
     columns: String,
     column_defaults: BTreeMap<&'a str, &'a str>,
 }
@@ -59,7 +59,7 @@ impl TableConfig {
         if columns.is_empty() {
             None
         } else {
-            let filter = self.filter.as_ref().map(String::as_str);
+            let filter = self.filter.as_ref().map(|s| s.replace('\n', " "));
             let column_defaults = self
                 .column_defaults
                 .iter()

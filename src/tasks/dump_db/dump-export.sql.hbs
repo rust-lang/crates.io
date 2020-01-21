@@ -1,11 +1,7 @@
 BEGIN ISOLATION LEVEL REPEATABLE READ, READ ONLY;
 {{~#each tables}}
 {{~#if this.filter}}
-    \copy (
-        SELECT {{this.columns}}
-        FROM "{{this.name}}"
-        WHERE {{this.filter}}
-    ) TO 'data/{{this.name}}.csv' WITH CSV HEADER
+    \copy (SELECT {{this.columns}} FROM "{{this.name}}" WHERE {{this.filter}}) TO 'data/{{this.name}}.csv' WITH CSV HEADER
 {{~else}}
     \copy "{{this.name}}" ({{this.columns}}) TO 'data/{{this.name}}.csv' WITH CSV HEADER
 {{~/if}}
