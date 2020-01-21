@@ -247,13 +247,13 @@
   <div id='crate-downloads'>
     <div class='stats'>
       {{#if this.downloadsContext.num}}
-        <h3>
+        <h3 data-test-crate-stats-label>
           Stats Overview for {{this.downloadsContext.num}}
           <LinkTo @route="crate" @model={{this.crate}}>(see all)</LinkTo>
         </h3>
         
       {{else}}
-        <h3>Stats Overview {{this.downloadsContext.num}}</h3>
+        <h3 data-test-crate-stats-label>Stats Overview</h3>
       {{/if}}
       <div class='stat'>
         <span class='num'>
