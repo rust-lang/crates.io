@@ -8,7 +8,7 @@ use crate::controllers::cargo_prelude::*;
 use crate::git;
 use crate::models::dependency;
 use crate::models::{
-    insert_version_owner_action, Badge, Category, Keyword, NewCrate, NewVersion, Rights, User,
+    insert_version_owner_action, Badge, Category, Keyword, NewCrate, NewVersion, Rights,
     VersionAction,
 };
 
@@ -39,9 +39,11 @@ pub fn publish(req: &mut dyn Request) -> AppResult<Response> {
     // - Then the .crate tarball length is passed to the upload_crate function where the actual
     //   file is read and uploaded.
 
-    let (new_crate, user) = parse_new_headers(req)?;
+    let new_crate = parse_new_headers(req)?;
 
-    let conn = app.diesel_database.get()?;
+    let conn = app.primary_database.get()?;
+    let ids = req.authenticate(&conn)?;
+    let user = ids.find_user(&conn)?;
 
     let verified_email_address = user.verified_email(&conn)?;
     let verified_email_address = verified_email_address.ok_or_else(|| {
@@ -150,7 +152,7 @@ pub fn publish(req: &mut dyn Request) -> AppResult<Response> {
             &conn,
             version.id,
             user.id,
-            req.authentication_source()?.api_token_id(),
+            ids.api_token_id(),
             VersionAction::Publish,
         )?;
 
@@ -223,9 +225,8 @@ pub fn publish(req: &mut dyn Request) -> AppResult<Response> {
 /// Used by the `krate::new` function.
 ///
 /// This function parses the JSON headers to interpret the data and validates
-/// the data during and after the parsing. Returns crate metadata and user
-/// information.
-fn parse_new_headers(req: &mut dyn Request) -> AppResult<(EncodableCrateUpload, User)> {
+/// the data during and after the parsing. Returns crate metadata.
+fn parse_new_headers(req: &mut dyn Request) -> AppResult<EncodableCrateUpload> {
     // Read the json upload request
     let metadata_length = u64::from(read_le_u32(req.body())?);
     req.mut_extensions().insert(metadata_length);
@@ -264,6 +265,5 @@ fn parse_new_headers(req: &mut dyn Request) -> AppResult<(EncodableCrateUpload, 
         )));
     }
 
-    let user = req.user()?;
-    Ok((new, user.clone()))
+    Ok(new)
 }

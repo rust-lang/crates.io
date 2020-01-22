@@ -84,16 +84,25 @@ pub fn diesel_pool(
 }
 
 pub trait RequestTransaction {
-    /// Return the lazily initialized postgres connection for this request.
-    ///
-    /// The connection will live for the lifetime of the request.
-    // FIXME: This description does not match the implementation below.
+    /// Obtain a read/write database connection from the primary pool
     fn db_conn(&self) -> Result<DieselPooledConn<'_>, r2d2::PoolError>;
+
+    /// Obtain a readonly database connection from the replica pool
+    ///
+    /// If there is no replica pool, the primary pool is used instead.
+    fn db_read_only(&self) -> Result<DieselPooledConn<'_>, r2d2::PoolError>;
 }
 
 impl<T: Request + ?Sized> RequestTransaction for T {
     fn db_conn(&self) -> Result<DieselPooledConn<'_>, r2d2::PoolError> {
-        self.app().diesel_database.get()
+        self.app().primary_database.get().map_err(Into::into)
+    }
+
+    fn db_read_only(&self) -> Result<DieselPooledConn<'_>, r2d2::PoolError> {
+        match &self.app().read_only_replica_database {
+            Some(pool) => pool.get().map_err(Into::into),
+            None => self.app().primary_database.get().map_err(Into::into),
+        }
     }
 }
 

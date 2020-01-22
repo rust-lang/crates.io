@@ -1,39 +1,27 @@
-import { Factory, trait } from 'ember-cli-mirage';
-import faker from 'faker';
+import { Factory } from 'ember-cli-mirage';
 
 export default Factory.extend({
-  id(i) {
-    return `crate-${i}`;
+  name: i => `crate-${i}`,
+
+  id() {
+    return this.name;
   },
 
-  name() {
-    return this.id;
+  description() {
+    return `This is the description for the crate called "${this.name}"`;
   },
 
-  description: () => faker.lorem.sentence(),
-  downloads: () => faker.random.number({ max: 10000 }),
-  documentation: () => faker.internet.url(),
-  homepage: () => faker.internet.url(),
-  repository: () => faker.internet.url(),
-  max_version: () => faker.system.semver(),
-  newest_version: () => faker.system.semver(),
+  downloads: i => (((i + 13) * 42) % 13) * 12345,
 
-  created_at: () => faker.date.past(),
-  updated_at() {
-    return faker.date.between(this.created_at, new Date());
-  },
+  documentation: null,
+  homepage: null,
+  repository: null,
+  max_version: '1.0.0',
+  newest_version: '1.0.0',
+
+  created_at: '2010-06-16T21:30:45Z',
+  updated_at: '2017-02-24T12:34:56Z',
 
   badges: () => [],
-  categories: () => [],
-  keywords: () => [],
-  versions: () => [],
   _extra_downloads: () => [],
-  _owner_teams: () => [],
-  _owner_users: () => [],
-
-  withVersion: trait({
-    afterCreate(crate, server) {
-      server.create('version', { crate: crate.id });
-    },
-  }),
 });

@@ -20,7 +20,7 @@ pub fn downloads(req: &mut dyn Request) -> AppResult<Response> {
     use diesel::dsl::*;
 
     let crate_name = &req.params()["crate_id"];
-    let conn = req.db_conn()?;
+    let conn = req.db_read_only()?;
     let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
     let ndays = req.app().config.ndays;
 

@@ -10,7 +10,7 @@ mod prelude {
 pub use prelude::Result;
 
 use self::app::AppMiddleware;
-use self::current_user::CurrentUser;
+use self::current_user::CaptureUserIdFromCookie;
 use self::debug::*;
 use self::ember_index_rewrite::EmberIndexRewrite;
 use self::head::Head;
@@ -79,8 +79,8 @@ pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
     }
     m.add(AppMiddleware::new(app));
 
-    // Sets the current user on each request.
-    m.add(CurrentUser);
+    // Parse and save the user_id from the session cookie as part of the authentication logic
+    m.add(CaptureUserIdFromCookie);
 
     // Serve the static files in the *dist* directory, which are the frontend assets.
     // Not needed for the backend tests.

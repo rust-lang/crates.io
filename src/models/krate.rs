@@ -243,6 +243,18 @@ impl Crate {
         crates::table.select(ALL_COLUMNS)
     }
 
+    pub fn find_version(&self, conn: &PgConnection, version: &str) -> AppResult<Version> {
+        self.all_versions()
+            .filter(versions::num.eq(version))
+            .first(conn)
+            .map_err(|_| {
+                cargo_err(&format_args!(
+                    "crate `{}` does not have a version `{}`",
+                    self.name, version
+                ))
+            })
+    }
+
     pub fn valid_name(name: &str) -> bool {
         let under_max_length = name.chars().take(MAX_NAME_LENGTH + 1).count() <= MAX_NAME_LENGTH;
         Crate::valid_ident(name) && under_max_length
@@ -252,7 +264,7 @@ impl Crate {
         Self::valid_feature_name(name)
             && name
                 .chars()
-                .nth(0)
+                .next()
                 .map(char::is_alphabetic)
                 .unwrap_or(false)
     }
@@ -440,12 +452,13 @@ impl Crate {
                     .get_result::<CrateOwnerInvitation>(conn)
                     .optional()?;
 
-                if maybe_inserted.is_some() {
+                if let Some(ownership_invitation) = maybe_inserted {
                     if let Ok(Some(email)) = user.verified_email(&conn) {
                         email::send_owner_invite_email(
                             &email.as_str(),
                             &req_user.gh_login.as_str(),
                             &self.name.as_str(),
+                            &ownership_invitation.token.as_str(),
                         );
                     }
                 }

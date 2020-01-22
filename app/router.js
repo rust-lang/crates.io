@@ -48,6 +48,7 @@ Router.map(function() {
   this.route('policies');
   this.route('data-access');
   this.route('confirm', { path: '/confirm/:email_token' });
+  this.route('accept-invite', { path: '/accept-invite/:token' });
 
   this.route('catch-all', { path: '*path' });
 });

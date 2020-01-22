@@ -36,7 +36,7 @@ use crate::models::krate::{canon_crate_name, ALL_COLUMNS};
 pub fn search(req: &mut dyn Request) -> AppResult<Response> {
     use diesel::sql_types::{Bool, Text};
 
-    let conn = req.db_conn()?;
+    let conn = req.db_read_only()?;
     let params = req.query();
     let sort = params.get("sort").map(|s| &**s);
     let include_yanked = params
@@ -154,11 +154,12 @@ pub fn search(req: &mut dyn Request) -> AppResult<Response> {
             ),
         );
     } else if params.get("following").is_some() {
+        let user_id = req.authenticate(&conn)?.user_id();
         query = query.filter(
             crates::id.eq_any(
                 follows::table
                     .select(follows::crate_id)
-                    .filter(follows::user_id.eq(req.user()?.id)),
+                    .filter(follows::user_id.eq(user_id)),
             ),
         );
     }
