@@ -75,7 +75,7 @@ conduit-router = "0.8"
 conduit-static = "0.8"
 conduit-git-http-backend = "0.8"
 civet = "0.9"
-conduit-hyper = "0.2.0-alpha.4"
+conduit-hyper = "0.2.0"
 
 futures = "0.3"
 tokio = { version = "0.2", default-features = false, features = ["net", "signal", "io-std"]}
@@ -89,7 +89,7 @@ conduit-test = "0.8"
 hyper-tls = "0.4"
 lazy_static = "1.0"
 diesel_migrations = { version = "1.3.0", features = ["postgres"] }
-tower-service = "0.3.0-alpha.2"
+tower-service = "0.3.0"
 tokio = { version = "0.2", default-features = false, features = ["stream"]}
 
 [build-dependencies]
