@@ -1,3 +1,5 @@
+use super::pg_try_advisory_xact_lock;
+use super::UPDATE_DOWNLOADS_ADVISORY_LOCK_KEY as LOCK_KEY;
 use crate::{
     background_jobs::Environment,
     models::VersionDownload,
@@ -9,9 +11,17 @@ use swirl::PerformError;
 
 #[swirl::background_job]
 pub fn update_downloads(env: &Environment) -> Result<(), PerformError> {
+    use diesel::select;
+
     let conn = env.connection()?;
-    update(&conn)?;
-    Ok(())
+    conn.transaction::<_, PerformError, _>(|| {
+        // If this job runs concurrently with itself, it could result in a overcount
+        if !select(pg_try_advisory_xact_lock(LOCK_KEY)).get_result(&*conn)? {
+            return Err("The advisory lock for update_downloads is already taken".into());
+        }
+
+        update(&conn).map_err(Into::into)
+    })
 }
 
 fn update(conn: &PgConnection) -> QueryResult<()> {
