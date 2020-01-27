@@ -13,17 +13,6 @@ use crate::views::{EncodableMe, EncodableVersion, OwnedCrate};
 
 /// Handles the `GET /me` route.
 pub fn me(req: &mut dyn Request) -> AppResult<Response> {
-    // Changed to getting User information from database because in
-    // src/tests/user.rs, when testing put and get on updating email,
-    // request seems to be somehow 'cached'. When we try to get a
-    // request from the /me route with the just updated user (call
-    // this function) the user is the same as the initial GET request
-    // and does not seem to get the updated user information from the
-    // database
-    // This change is not preferable, we'd rather fix the request,
-    // perhaps adding `req.mut_extensions().insert(user)` to the
-    // update_user route, however this somehow does not seem to work
-
     let conn = req.db_conn()?;
     let user_id = req.authenticate(&conn)?.user_id();
 
