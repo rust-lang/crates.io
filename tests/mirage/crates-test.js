@@ -294,7 +294,7 @@ module('Mirage | Crates', function(hooks) {
         {
           id: 'no-std',
           category: 'no-std',
-          crates_cnt: 0,
+          crates_cnt: 1,
           created_at: '2010-06-16T21:30:45Z',
           description: 'This is the description for the category called "no-std"',
           slug: 'no-std',
@@ -314,7 +314,7 @@ module('Mirage | Crates', function(hooks) {
       assert.deepEqual(responsePayload.crate.keywords, ['no-std']);
       assert.deepEqual(responsePayload.keywords, [
         {
-          crates_cnt: 0,
+          crates_cnt: 1,
           id: 'no-std',
           keyword: 'no-std',
         },

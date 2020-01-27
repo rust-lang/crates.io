@@ -17,5 +17,4 @@ export default Factory.extend({
   },
 
   created_at: '2010-06-16T21:30:45Z',
-  crates_cnt: 0,
 });
