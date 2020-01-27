@@ -5,6 +5,7 @@ use conduit_cookie::RequestSession;
 use failure::Fail;
 use oauth2::{prelude::*, AuthorizationCode, TokenResponse};
 
+use crate::middleware::current_user::TrustedUserId;
 use crate::models::{NewUser, User};
 use crate::schema::users;
 use crate::util::errors::ReadOnlyMode;
@@ -102,7 +103,8 @@ pub fn authorize(req: &mut dyn Request) -> AppResult<Response> {
     let user = ghuser.save_to_database(&token.secret(), &*req.db_conn()?)?;
     req.session()
         .insert("user_id".to_string(), user.id.to_string());
-    req.mut_extensions().insert(user);
+    req.mut_extensions().insert(TrustedUserId(user.id));
+
     super::me::me(req)
 }
 
