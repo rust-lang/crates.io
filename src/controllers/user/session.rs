@@ -89,8 +89,7 @@ pub fn authorize(req: &mut dyn Request) -> AppResult<Response> {
         }
     }
 
-    // Fetch the access token from github using the code we just got
-
+    // Fetch the access token from GitHub using the code we just got
     let code = AuthorizationCode::new(code);
     let token = req
         .app()
@@ -99,8 +98,12 @@ pub fn authorize(req: &mut dyn Request) -> AppResult<Response> {
         .map_err(|e| e.compat())
         .chain_error(|| server_error("Error obtaining token"))?;
     let token = token.access_token();
+
+    // Fetch the user info from GitHub using the access token we just got and create a user record
     let ghuser = github::github_api::<GithubUser>(req.app(), "/user", token)?;
     let user = ghuser.save_to_database(&token.secret(), &*req.db_conn()?)?;
+
+    // Log in by setting a cookie and the middleware authentication
     req.session()
         .insert("user_id".to_string(), user.id.to_string());
     req.mut_extensions().insert(TrustedUserId(user.id));
