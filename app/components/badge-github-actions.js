@@ -4,7 +4,6 @@ import { alias } from '@ember/object/computed';
 
 export default Component.extend({
   tagName: 'span',
-  classNames: ['badge'],
   repository: alias('badge.attributes.repository'),
   imageUrl: computed('badge.attributes.{repository,workflow,branch,event}', function() {
     const url = new URL(`https://github.com/${this.repository}/workflows/${this.workflow}/badge.svg`);
