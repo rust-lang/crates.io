@@ -5,8 +5,8 @@ import { alias } from '@ember/object/computed';
 export default Component.extend({
   tagName: 'span',
   repository: alias('badge.attributes.repository'),
-  imageUrl: computed('badge.attributes.{repository,workflow,branch,event}', function() {
-    const url = new URL(`https://github.com/${this.repository}/workflows/${this.workflow}/badge.svg`);
+  imageUrl: computed('badge.attributes.{repository,workflow_enc,branch,event}', function() {
+    const url = new URL(`https://github.com/${this.repository}/workflows/${this.workflow_enc}/badge.svg`);
 
     if (this.branch !== '') {
       url.searchParams.set('branch', this.branch);
@@ -19,6 +19,9 @@ export default Component.extend({
     return url.href;
   }),
   workflow: computed('badge.attributes.workflow', function() {
+    return this.get('badge.attributes.workflow');
+  }),
+  workflow_enc: computed('badge.attributes.workflow', function() {
     return this.get('badge.attributes.workflow')
       .split('/')
       .map(encodeURIComponent)
