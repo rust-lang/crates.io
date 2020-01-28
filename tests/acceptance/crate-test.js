@@ -15,7 +15,7 @@ module('Acceptance | crate page', function(hooks) {
   test('/crates/:crate is accessible', async function(assert) {
     assert.expect(0);
 
-    this.server.create('crate', { name: 'nanomsg', max_version: '0.6.1' });
+    this.server.create('crate', { name: 'nanomsg' });
     this.server.create('version', { crateId: 'nanomsg', num: '0.6.0' });
     this.server.create('version', { crateId: 'nanomsg', num: '0.6.1' });
 
@@ -28,7 +28,7 @@ module('Acceptance | crate page', function(hooks) {
   test('/crates/:crate/:version is accessible', async function(assert) {
     assert.expect(0);
 
-    this.server.create('crate', { name: 'nanomsg', max_version: '0.6.1' });
+    this.server.create('crate', { name: 'nanomsg' });
     this.server.create('version', { crateId: 'nanomsg', num: '0.6.0' });
     this.server.create('version', { crateId: 'nanomsg', num: '0.6.1' });
 
@@ -64,7 +64,7 @@ module('Acceptance | crate page', function(hooks) {
   });
 
   test('visiting /crates/nanomsg', async function(assert) {
-    this.server.create('crate', { name: 'nanomsg', max_version: '0.6.1' });
+    this.server.create('crate', { name: 'nanomsg' });
     this.server.create('version', { crateId: 'nanomsg', num: '0.6.0' });
     this.server.create('version', { crateId: 'nanomsg', num: '0.6.1' });
 
@@ -80,7 +80,7 @@ module('Acceptance | crate page', function(hooks) {
   });
 
   test('visiting /crates/nanomsg/', async function(assert) {
-    this.server.create('crate', { name: 'nanomsg', max_version: '0.6.1' });
+    this.server.create('crate', { name: 'nanomsg' });
     this.server.create('version', { crateId: 'nanomsg', num: '0.6.0' });
     this.server.create('version', { crateId: 'nanomsg', num: '0.6.1' });
 
@@ -96,7 +96,7 @@ module('Acceptance | crate page', function(hooks) {
   });
 
   test('visiting /crates/nanomsg/0.6.0', async function(assert) {
-    this.server.create('crate', { name: 'nanomsg', max_version: '0.6.1' });
+    this.server.create('crate', { name: 'nanomsg' });
     this.server.create('version', { crateId: 'nanomsg', num: '0.6.0' });
     this.server.create('version', { crateId: 'nanomsg', num: '0.6.1' });
 
