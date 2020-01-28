@@ -7,21 +7,17 @@ export default Component.extend({
   classNames: ['badge'],
   repository: alias('badge.attributes.repository'),
   imageUrl: computed('badge.attributes.{repository,workflow,branch,event}', function() {
-    const query = Object.entries({
-      branch: this.branch,
-      event: this.event,
-    })
-      .filter(kv => kv[1] != '')
-      .map(kv => kv.map(encodeURIComponent).join('='))
-      .join('&');
+    const url = new URL(`https://github.com/${this.repository}/workflows/${this.workflow}/badge.svg`);
 
-    const base = `https://github.com/${this.repository}/workflows/${this.workflow}/badge.svg`;
-
-    if (query != '') {
-      return `${base}?${query}`;
-    } else {
-      return base;
+    if (this.branch !== '') {
+      url.searchParams.set('branch', this.branch);
     }
+
+    if (this.event !== '') {
+      url.searchParams.set('event', this.event);
+    }
+
+    return url.href;
   }),
   workflow: computed('badge.attributes.workflow', function() {
     return this.get('badge.attributes.workflow')
