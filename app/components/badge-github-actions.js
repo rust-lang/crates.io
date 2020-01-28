@@ -18,6 +18,23 @@ export default Component.extend({
 
     return url.href;
   }),
+  url: computed('badge.attributes.{repository,workflow_enc,branch,event}', function() {
+    const url = new URL(`https://github.com/${this.repository}/actions`);
+
+    if (this.workflow_enc !== '') {
+      url.searchParams.set('workflow', this.workflow_enc);
+    }
+
+    if (this.branch !== '') {
+      url.searchParams.set('branch', this.branch);
+    }
+
+    if (this.event !== '') {
+      url.searchParams.set('event', this.event);
+    }
+
+    return url.href;
+  }),
   workflow: computed('badge.attributes.workflow', function() {
     return this.get('badge.attributes.workflow');
   }),
