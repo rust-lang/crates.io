@@ -50,10 +50,10 @@ export default Component.extend({
       .join('/');
   }),
   branch: computed('badge.attributes.branch', function() {
-    return encodeURIComponent(this.get('badge.attributes.branch') || 'master');
+    return this.get('badge.attributes.branch') || 'master';
   }),
   event: computed('badge.attributes.event', function() {
-    return encodeURIComponent(this.get('badge.attributes.event') || '');
+    return this.get('badge.attributes.event') || '';
   }),
   text: computed('badge', function() {
     return `GitHub Actions workflow status for the ${this.workflow} workflow on the ${this.branch} branch`;
