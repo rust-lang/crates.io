@@ -18,19 +18,24 @@ export default Component.extend({
 
     return url.href;
   }),
-  url: computed('badge.attributes.{repository,workflow_enc,branch,event}', function() {
+  url: computed('badge.attributes.{repository,workflow,branch,event}', function() {
     const url = new URL(`https://github.com/${this.repository}/actions`);
 
-    if (this.workflow_enc !== '') {
-      url.searchParams.set('workflow', this.workflow_enc);
+    let query = '';
+    if (this.workflow !== '') {
+      query += `workflow:"${this.workflow}"`;
     }
 
     if (this.branch !== '') {
-      url.searchParams.set('branch', this.branch);
+      query += `branch:"${this.branch}"`;
     }
 
     if (this.event !== '') {
-      url.searchParams.set('event', this.event);
+      query += `event:"${this.event}"`;
+    }
+
+    if (query !== '') {
+      url.searchParams.set('query', query);
     }
 
     return url.href;
