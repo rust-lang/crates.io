@@ -1,3 +1,21 @@
+<%
+def s3_host(env)
+	cdn = env['S3_CDN']
+	if cdn and !cdn.empty?
+		return cdn
+	end
+
+	region = env['S3_REGION']
+	bucket = env['S3_BUCKET']
+
+	if region and !region.empty?
+		region = "-#{region}"
+	end
+
+	return "#{bucket}.s3#{region}.amazonaws.com"
+end
+%>
+
 daemon off;
 #Heroku dynos have at least 4 cores.
 worker_processes <%= ENV['NGINX_WORKERS'] || 4 %>;
@@ -121,9 +139,10 @@ http {
 			expires max;
 		}
 
-		add_header X-Content-Type-Options "no-sniff";
+		add_header X-Content-Type-Options "nosniff";
 		add_header X-Frame-Options "SAMEORIGIN";
 		add_header X-XSS-Protection "1; mode=block";
+		add_header Content-Security-Policy "default-src 'self'; connect-src 'self' https://docs.rs https://<%= s3_host(ENV) %>; script-src 'self' 'unsafe-eval' https://www.google.com; style-src 'self' https://www.google.com https://ajax.googleapis.com; img-src *; object-src 'none'";
 
 		add_header Strict-Transport-Security "max-age=31536000" always;
 		add_header Vary 'Accept, Accept-Encoding, Cookie';
