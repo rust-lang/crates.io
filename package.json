@@ -89,7 +89,7 @@
     "qunit-console-grouper": "^0.2.0",
     "qunit-dom": "^0.9.2",
     "sass": "^1.25.0",
-    "semver": "^7.1.1",
+    "semver": "^7.1.2",
     "timekeeper": "^2.2.0"
   },
   "engines": {
