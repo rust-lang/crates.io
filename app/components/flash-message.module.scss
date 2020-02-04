@@ -2,28 +2,14 @@
     display: none;
     font-weight: bold;
     font-size: 110%;
+    background-color: rgb(255, 213, 213);
+    border: 2px solid rgb(228, 136, 136);
     text-align: center;
     margin: 0 0 10px 0;
     padding: 10px;
-    @include border-radius(5px);
+    border-radius: 5px;
 
-    &.show {
+    &.shown {
         display: block;
-    }
-
-    &.warning {
-        background-color: rgb(255, 213, 213);
-        border: 2px solid rgb(228, 136, 136);
-    }
-
-    &.info {
-        background-color: $main-bg-dark;
-        border: 2px solid #62865f;
-    }
-
-    &.success {
-        color: darken($html-bg, 20%);
-        background-color: $html-bg;
-        border: 2px solid darken($html-bg, 20%);
     }
 }
