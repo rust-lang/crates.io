@@ -1,0 +1,18 @@
+.welcome-message {
+    display: none;
+    font-weight: bold;
+    font-size: 110%;
+    text-align: center;
+    margin: 0 0 10px 0;
+    padding: 10px;
+    border-radius: 5px;
+
+    &.show {
+        display: block;
+    }
+
+    &.info {
+        background-color: $main-bg-dark;
+        border: 2px solid #62865f;
+    }
+}
