@@ -9,7 +9,7 @@ import PaginationMixin from '../mixins/pagination';
 
 export default Controller.extend(PaginationMixin, {
   search: service(),
-  queryParams: ['q', 'page', 'per_page', 'sort'],
+  queryParams: ['all_keywords', 'page', 'per_page', 'q', 'sort'],
   q: alias('search.q'),
   page: '1',
   per_page: 10,

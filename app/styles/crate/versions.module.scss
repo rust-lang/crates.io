@@ -1,0 +1,13 @@
+.list {
+    margin-top: 10px;
+
+    :global(.small) {
+        margin-left: 20px;
+        display: inline-block;
+    }
+
+    a.arrow {
+        display: inline-block;
+        float: right;
+    }
+}

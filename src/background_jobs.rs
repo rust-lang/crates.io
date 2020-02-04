@@ -1,21 +1,22 @@
 use std::panic::AssertUnwindSafe;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
+
+use diesel::r2d2::PoolError;
 use swirl::PerformError;
 
 use crate::db::{DieselPool, DieselPooledConn};
 use crate::git::Repository;
 use crate::uploaders::Uploader;
-use crate::util::errors::{AppErrToStdErr, AppResult};
 
 impl<'a> swirl::db::BorrowedConnection<'a> for DieselPool {
     type Connection = DieselPooledConn<'a>;
 }
 
 impl swirl::db::DieselPool for DieselPool {
-    type Error = AppErrToStdErr;
+    type Error = PoolError;
 
     fn get(&self) -> Result<swirl::db::DieselPooledConn<'_, Self>, Self::Error> {
-        self.get().map_err(AppErrToStdErr)
+        self.get()
     }
 }
 
@@ -56,13 +57,11 @@ impl Environment {
         }
     }
 
-    pub fn connection(&self) -> Result<DieselPooledConn<'_>, PerformError> {
-        self.connection_pool
-            .get()
-            .map_err(|e| AppErrToStdErr(e).into())
+    pub fn connection(&self) -> Result<DieselPooledConn<'_>, PoolError> {
+        self.connection_pool.get()
     }
 
-    pub fn lock_index(&self) -> AppResult<MutexGuard<'_, Repository>> {
+    pub fn lock_index(&self) -> Result<MutexGuard<'_, Repository>, PerformError> {
         let repo = self.index.lock().unwrap_or_else(PoisonError::into_inner);
         repo.reset_head()?;
         Ok(repo)

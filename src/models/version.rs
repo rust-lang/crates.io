@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 
-use crate::util::{cargo_err, AppResult};
+use crate::util::errors::{cargo_err, AppResult};
 
 use crate::models::{Crate, Dependency, User, VersionOwnerAction};
 use crate::schema::*;

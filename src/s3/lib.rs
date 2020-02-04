@@ -1,16 +1,15 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
-extern crate base64;
-extern crate chrono;
-extern crate openssl;
-extern crate reqwest;
-
 use base64::encode;
 use chrono::prelude::Utc;
+use openssl::error::ErrorStack;
 use openssl::hash::MessageDigest;
 use openssl::pkey::PKey;
 use openssl::sign::Signer;
-use reqwest::header;
+use reqwest::{header, Body, Client, Response};
+
+mod error;
+pub use error::Error;
 
 #[derive(Clone, Debug)]
 pub struct Bucket {
@@ -40,20 +39,20 @@ impl Bucket {
 
     pub fn put<R: std::io::Read + Send + 'static>(
         &self,
-        client: &reqwest::Client,
+        client: &Client,
         path: &str,
         content: R,
         content_length: u64,
         content_type: &str,
         extra_headers: header::HeaderMap,
-    ) -> reqwest::Result<reqwest::Response> {
+    ) -> Result<Response, Error> {
         let path = if path.starts_with('/') {
             &path[1..]
         } else {
             path
         };
         let date = Utc::now().to_rfc2822();
-        let auth = self.auth("PUT", &date, path, "", content_type);
+        let auth = self.auth("PUT", &date, path, "", content_type)?;
         let url = self.url(path);
 
         client
@@ -62,23 +61,20 @@ impl Bucket {
             .header(header::CONTENT_TYPE, content_type)
             .header(header::DATE, date)
             .headers(extra_headers)
-            .body(reqwest::Body::sized(content, content_length))
+            .body(Body::sized(content, content_length))
             .send()?
             .error_for_status()
+            .map_err(Into::into)
     }
 
-    pub fn delete(
-        &self,
-        client: &reqwest::Client,
-        path: &str,
-    ) -> reqwest::Result<reqwest::Response> {
+    pub fn delete(&self, client: &Client, path: &str) -> Result<Response, Error> {
         let path = if path.starts_with('/') {
             &path[1..]
         } else {
             path
         };
         let date = Utc::now().to_rfc2822();
-        let auth = self.auth("DELETE", &date, path, "", "");
+        let auth = self.auth("DELETE", &date, path, "", "")?;
         let url = self.url(path);
 
         client
@@ -87,6 +83,7 @@ impl Bucket {
             .header(header::AUTHORIZATION, auth)
             .send()?
             .error_for_status()
+            .map_err(Into::into)
     }
 
     pub fn host(&self) -> String {
@@ -101,7 +98,14 @@ impl Bucket {
         )
     }
 
-    fn auth(&self, verb: &str, date: &str, path: &str, md5: &str, content_type: &str) -> String {
+    fn auth(
+        &self,
+        verb: &str,
+        date: &str,
+        path: &str,
+        md5: &str,
+        content_type: &str,
+    ) -> Result<String, ErrorStack> {
         let string = format!(
             "{verb}\n{md5}\n{ty}\n{date}\n{headers}{resource}",
             verb = verb,
@@ -112,12 +116,12 @@ impl Bucket {
             resource = format!("/{}/{}", self.name, path)
         );
         let signature = {
-            let key = PKey::hmac(self.secret_key.as_bytes()).unwrap();
-            let mut signer = Signer::new(MessageDigest::sha1(), &key).unwrap();
-            signer.update(string.as_bytes()).unwrap();
-            encode(&signer.sign_to_vec().unwrap()[..])
+            let key = PKey::hmac(self.secret_key.as_bytes())?;
+            let mut signer = Signer::new(MessageDigest::sha1(), &key)?;
+            signer.update(string.as_bytes())?;
+            encode(&signer.sign_to_vec()?[..])
         };
-        format!("AWS {}:{}", self.access_key, signature)
+        Ok(format!("AWS {}:{}", self.access_key, signature))
     }
 
     fn url(&self, path: &str) -> String {

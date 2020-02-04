@@ -1,0 +1,86 @@
+<div class={{if this.api_token.isNew "row create-token" "row"}}>
+  <div class='name'>
+    {{#if this.api_token.isNew}}
+      <Input
+        @type="text"
+        placeholder="New token name"
+        @disabled={{this.api_token.isSaving}}
+        @value={{this.api_token.name}}
+        @autofocus="autofocus"
+        @enter={{action "saveToken"}}
+        data-test-focused-input
+      />
+    {{else}}
+      {{ this.api_token.name }}
+    {{/if}}
+  </div>
+
+  <div class='spacer'></div>
+
+  {{#unless this.api_token.isNew}}
+    <div class='dates'>
+      <div class='created-at'>
+        <span class='small' title={{this.api_token.created_at}}>
+          Created {{moment-from-now this.api_token.created_at}}
+        </span>
+      </div>
+      {{#if this.api_token.last_used_at}}
+        <div class='last_used_at'>
+          <span class='small' title={{this.api_token.last_used_at}}>
+            Last used {{moment-from-now this.api_token.last_used_at}}
+          </span>
+        </div>
+      {{else}}
+        <div class='last_used_at'>
+          <span class='small'>Never used</span>
+        </div>
+      {{/if}}
+    </div>
+  {{/unless}}
+
+  <div class='actions'>
+    {{#if this.api_token.isNew}}
+      <button
+        type="button"
+        class='small yellow-button'
+        disabled={{this.disableCreate}}
+        title={{if this.emptyName "You must specify a name" ""}}
+        {{action "saveToken"}}
+      >
+        Create
+      </button>
+    {{else}}
+      <button
+        type="button"
+        class='small tan-button'
+        disabled={{this.api_token.isSaving}}
+        {{action "revokeToken"}}
+      >
+        Revoke
+      </button>
+    {{/if}}
+    {{#if this.api_token.isSaving}}
+      <img class='overlay' src="/assets/ajax-loader.gif">
+    {{/if}}
+  </div>
+</div>
+
+{{#if this.serverError}}
+  <div class='row error'>
+    <div>
+      {{ this.serverError }}
+    </div>
+  </div>
+{{/if}}
+
+{{#if this.api_token.token}}
+  <div class='row new-token'>
+    <div>
+      Please record this token somewhere, you cannot retrieve
+      its value again. For use on the command line you can save it to <code>~/.cargo/credentials</code>
+      with:
+
+      <pre>cargo login {{ this.api_token.token }}</pre>
+    </div>
+  </div>
+{{/if}}

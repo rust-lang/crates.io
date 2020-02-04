@@ -2,7 +2,7 @@ import { module, test } from 'qunit';
 import { setupApplicationTest } from 'ember-qunit';
 import { fillIn, currentURL, triggerEvent, visit, blur } from '@ember/test-helpers';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
-import { triggerKeyDown, triggerKeyPress } from 'ember-keyboard';
+import { keyDown, keyPress } from 'ember-keyboard/test-support/test-helpers';
 import axeConfig from '../axe-config';
 import { title } from '../helpers/dom';
 import setupMirage from '../helpers/setup-mirage';
@@ -34,7 +34,7 @@ module('Acceptance | search', function(hooks) {
     assert.equal(title(), "Search Results for 'rust' - crates.io: Rust Package Registry");
 
     assert.dom('[data-test-heading]').hasText("Search Results for 'rust'");
-    assert.dom('[data-test-search-nav]').hasText('Displaying 1-8 of 8 total results');
+    assert.dom('[data-test-search-nav]').hasText('Displaying 1-7 of 7 total results');
     assert
       .dom('[data-test-search-sort]')
       .hasText('Sort by Relevance Relevance All-Time Downloads Recent Downloads Recent Updates');
@@ -59,7 +59,7 @@ module('Acceptance | search', function(hooks) {
 
     assert.dom('[data-test-search-input]').hasValue('rust');
     assert.dom('[data-test-heading]').hasText("Search Results for 'rust'");
-    assert.dom('[data-test-search-nav]').hasText('Displaying 1-8 of 8 total results');
+    assert.dom('[data-test-search-nav]').hasText('Displaying 1-7 of 7 total results');
   });
 
   test('clearing search results', async function(assert) {
@@ -82,19 +82,19 @@ module('Acceptance | search', function(hooks) {
     await visit('/');
 
     await blur('[data-test-search-input]');
-    await triggerKeyPress('KeyA');
+    await keyPress('KeyA');
     assert.dom('[data-test-search-input]').isNotFocused();
 
     await blur('[data-test-search-input]');
-    await triggerKeyPress('KeyS');
+    await keyPress('KeyS');
     assert.dom('[data-test-search-input]').isFocused();
 
     await blur('[data-test-search-input]');
-    await triggerKeyDown('KeyS');
+    await keyDown('KeyS');
     assert.dom('[data-test-search-input]').isFocused();
 
     await blur('[data-test-search-input]');
-    await triggerKeyDown('shift+KeyS');
+    await keyDown('shift+KeyS');
     assert.dom('[data-test-search-input]').isFocused();
   });
 

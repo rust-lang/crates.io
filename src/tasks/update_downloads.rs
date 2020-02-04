@@ -23,7 +23,10 @@ fn update(conn: &PgConnection) -> QueryResult<()> {
         .filter(processed.eq(false))
         .filter(downloads.ne(counted))
         .load(conn)?;
+
+    println!("Updating {} versions", rows.len());
     collect(conn, &rows)?;
+    println!("Finished updating versions");
 
     // Anything older than 24 hours ago will be frozen and will not be queried
     // against again.
@@ -33,26 +36,22 @@ fn update(conn: &PgConnection) -> QueryResult<()> {
         .filter(downloads.eq(counted))
         .filter(processed.eq(false))
         .execute(conn)?;
+    println!("Finished freezing old version_downloads");
 
     no_arg_sql_function!(refresh_recent_crate_downloads, ());
     select(refresh_recent_crate_downloads).execute(conn)?;
+    println!("Finished running refresh_recent_crate_downloads");
+
     Ok(())
 }
 
 fn collect(conn: &PgConnection, rows: &[VersionDownload]) -> QueryResult<()> {
     use diesel::update;
 
-    println!("updating {} versions", rows.len());
-
     for download in rows {
         let amt = download.downloads - download.counted;
 
         conn.transaction::<_, diesel::result::Error, _>(|| {
-            // increment the number of counted downloads
-            update(version_downloads::table.find(download.id()))
-                .set(version_downloads::counted.eq(version_downloads::counted + amt))
-                .execute(conn)?;
-
             // Update the total number of version downloads
             let crate_id = update(versions::table.find(download.version_id))
                 .set(versions::downloads.eq(versions::downloads + amt))
@@ -64,10 +63,16 @@ fn collect(conn: &PgConnection, rows: &[VersionDownload]) -> QueryResult<()> {
                 .set(crates::downloads.eq(crates::downloads + amt))
                 .execute(conn)?;
 
-            // Now that everything else for this crate is done, update the global counter of total
-            // downloads
+            // Update the global counter of total downloads
             update(metadata::table)
                 .set(metadata::total_downloads.eq(metadata::total_downloads + i64::from(amt)))
+                .execute(conn)?;
+
+            // Record that these downloads have been propagated to the other tables.  This is done
+            // last, immediately before the transaction is committed, to minimize lock contention
+            // with counting new downloads.
+            update(version_downloads::table.find(download.id()))
+                .set(version_downloads::counted.eq(version_downloads::counted + amt))
                 .execute(conn)?;
 
             Ok(())

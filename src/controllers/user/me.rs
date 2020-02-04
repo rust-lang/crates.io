@@ -4,7 +4,6 @@ use crate::controllers::frontend_prelude::*;
 
 use crate::controllers::helpers::*;
 use crate::email;
-use crate::util::errors::AppError;
 
 use crate::models::{
     ApiToken, CrateOwner, Email, Follow, NewEmail, OwnerKind, User, Version, VersionOwnerAction,
@@ -14,19 +13,8 @@ use crate::views::{EncodableMe, EncodableVersion, OwnedCrate};
 
 /// Handles the `GET /me` route.
 pub fn me(req: &mut dyn Request) -> AppResult<Response> {
-    // Changed to getting User information from database because in
-    // src/tests/user.rs, when testing put and get on updating email,
-    // request seems to be somehow 'cached'. When we try to get a
-    // request from the /me route with the just updated user (call
-    // this function) the user is the same as the initial GET request
-    // and does not seem to get the updated user information from the
-    // database
-    // This change is not preferable, we'd rather fix the request,
-    // perhaps adding `req.mut_extensions().insert(user)` to the
-    // update_user route, however this somehow does not seem to work
-
-    let user_id = req.user()?.id;
     let conn = req.db_conn()?;
+    let user_id = req.authenticate(&conn)?.user_id();
 
     let (user, verified, email, verification_sent) = users::table
         .find(user_id)
@@ -70,10 +58,10 @@ pub fn me(req: &mut dyn Request) -> AppResult<Response> {
 pub fn updates(req: &mut dyn Request) -> AppResult<Response> {
     use diesel::dsl::any;
 
-    let user = req.user()?;
     let conn = req.db_conn()?;
+    let user = req.authenticate(&conn)?.find_user(&conn)?;
 
-    let followed_crates = Follow::belonging_to(user).select(follows::crate_id);
+    let followed_crates = Follow::belonging_to(&user).select(follows::crate_id);
     let data = versions::table
         .inner_join(crates::table)
         .left_outer_join(users::table)
@@ -124,12 +112,12 @@ pub fn update_user(req: &mut dyn Request) -> AppResult<Response> {
     let mut body = String::new();
 
     req.body().read_to_string(&mut body)?;
-    let user = req.user()?;
-    let name = &req.params()["user_id"];
+    let param_user_id = &req.params()["user_id"];
     let conn = req.db_conn()?;
+    let user = req.authenticate(&conn)?.find_user(&conn)?;
 
     // need to check if current user matches user to be updated
-    if &user.id.to_string() != name {
+    if &user.id.to_string() != param_user_id {
         return Err(bad_request("current user does not match requested user"));
     }
 
@@ -146,12 +134,10 @@ pub fn update_user(req: &mut dyn Request) -> AppResult<Response> {
     let user_update: UserUpdate =
         serde_json::from_str(&body).map_err(|_| bad_request("invalid json request"))?;
 
-    if user_update.user.email.is_none() {
-        return Err(bad_request("empty email rejected"));
-    }
-
-    let user_email = user_update.user.email.unwrap();
-    let user_email = user_email.trim();
+    let user_email = match &user_update.user.email {
+        Some(email) => email.trim(),
+        None => return Err(bad_request("empty email rejected")),
+    };
 
     if user_email == "" {
         return Err(bad_request("empty email rejected"));
@@ -203,17 +189,19 @@ pub fn regenerate_token_and_send(req: &mut dyn Request) -> AppResult<Response> {
     use diesel::dsl::sql;
     use diesel::update;
 
-    let user = req.user()?;
-    let name = &req.params()["user_id"].parse::<i32>().ok().unwrap();
+    let param_user_id = req.params()["user_id"]
+        .parse::<i32>()
+        .chain_error(|| bad_request("invalid user_id"))?;
     let conn = req.db_conn()?;
+    let user = req.authenticate(&conn)?.find_user(&conn)?;
 
     // need to check if current user matches user to be updated
-    if &user.id != name {
+    if user.id != param_user_id {
         return Err(bad_request("current user does not match requested user"));
     }
 
     conn.transaction(|| {
-        let email = update(Email::belonging_to(user))
+        let email = update(Email::belonging_to(&user))
             .set(emails::token.eq(sql("DEFAULT")))
             .get_result::<Email>(&*conn)
             .map_err(|_| bad_request("Email could not be found"))?;
@@ -244,12 +232,12 @@ pub fn update_email_notifications(req: &mut dyn Request) -> AppResult<Response> 
         .map(|c| (c.id, c.email_notifications))
         .collect();
 
-    let user = req.user()?;
     let conn = req.db_conn()?;
+    let user_id = req.authenticate(&conn)?.user_id();
 
     // Build inserts from existing crates belonging to the current user
     let to_insert = CrateOwner::by_owner_kind(OwnerKind::User)
-        .filter(owner_id.eq(user.id))
+        .filter(owner_id.eq(user_id))
         .select((crate_id, owner_id, owner_kind, email_notifications))
         .load(&*conn)?
         .into_iter()

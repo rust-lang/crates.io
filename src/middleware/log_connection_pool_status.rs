@@ -28,7 +28,7 @@ impl LogConnectionPoolStatus {
 }
 
 impl Middleware for LogConnectionPoolStatus {
-    fn before(&self, _: &mut dyn Request) -> Result<(), Box<dyn Error + Send>> {
+    fn before(&self, _: &mut dyn Request) -> Result<()> {
         let mut last_log_time = self
             .last_log_time
             .lock()
@@ -37,19 +37,19 @@ impl Middleware for LogConnectionPoolStatus {
         if last_log_time.elapsed() >= Duration::from_secs(60) {
             *last_log_time = Instant::now();
             println!(
-                "connection_pool_status=\"{:?}\" in_flight_requests={}",
-                self.app.diesel_database.state(),
+                "primary_pool_status=\"{:?}\" read_only_pool_status=\"{:?}\" in_flight_requests={}",
+                self.app.primary_database.state(),
+                self.app
+                    .read_only_replica_database
+                    .as_ref()
+                    .map(|pool| pool.state()),
                 in_flight_requests
             );
         }
         Ok(())
     }
 
-    fn after(
-        &self,
-        _: &mut dyn Request,
-        res: Result<Response, Box<dyn Error + Send>>,
-    ) -> Result<Response, Box<dyn Error + Send>> {
+    fn after(&self, _: &mut dyn Request, res: Result<Response>) -> Result<Response> {
         self.in_flight_requests.fetch_sub(1, Ordering::SeqCst);
         res
     }

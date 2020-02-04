@@ -32,17 +32,17 @@ module('Acceptance | front page', function(hooks) {
     assert.dom('[data-test-all-crates-link]').exists();
     assert.dom('[data-test-login-link]').exists();
 
-    assert.dom('[data-test-total-downloads]').hasText('122,669');
-    assert.dom('[data-test-total-crates]').hasText('19');
+    assert.dom('[data-test-total-downloads]').hasText('143,345');
+    assert.dom('[data-test-total-crates]').hasText('23');
 
-    assert.dom('[data-test-new-crates] [data-test-crate-link="0"]').hasText('Inflector (0.1.6)');
-    assert.dom('[data-test-new-crates] [data-test-crate-link="0"]').hasAttribute('href', '/crates/Inflector/0.1.6');
+    assert.dom('[data-test-new-crates] [data-test-crate-link="0"]').hasText('Inflector (1.0.0)');
+    assert.dom('[data-test-new-crates] [data-test-crate-link="0"]').hasAttribute('href', '/crates/Inflector');
 
     assert.dom('[data-test-most-downloaded] [data-test-crate-link="0"]').hasText('serde');
     assert.dom('[data-test-most-downloaded] [data-test-crate-link="0"]').hasAttribute('href', '/crates/serde');
 
     assert.dom('[data-test-just-updated] [data-test-crate-link="0"]').hasText('nanomsg (0.6.1)');
-    assert.dom('[data-test-just-updated] [data-test-crate-link="0"]').hasAttribute('href', '/crates/nanomsg/0.6.1');
+    assert.dom('[data-test-just-updated] [data-test-crate-link="0"]').hasAttribute('href', '/crates/nanomsg');
 
     percySnapshot(assert);
   });

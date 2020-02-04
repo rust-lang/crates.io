@@ -8,15 +8,12 @@ use crate::models::{Crate, Follow};
 use crate::schema::*;
 
 fn follow_target(req: &dyn Request, conn: &DieselPooledConn<'_>) -> AppResult<Follow> {
-    let user = req.user()?;
+    let user_id = req.authenticate(conn)?.user_id();
     let crate_name = &req.params()["crate_id"];
     let crate_id = Crate::by_name(crate_name)
         .select(crates::id)
         .first(&**conn)?;
-    Ok(Follow {
-        user_id: user.id,
-        crate_id,
-    })
+    Ok(Follow { user_id, crate_id })
 }
 
 /// Handles the `PUT /crates/:crate_id/follow` route.

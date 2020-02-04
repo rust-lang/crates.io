@@ -1,113 +1,10 @@
-@mixin button($start, $end) {
-    $start_dark: darken($start, 5%);
-    $end_dark: darken($end, 5%);
-    $start_light: lighten($start, 5%);
-    $end_light: lighten($end, 5%);
-
-    padding: 15px 40px;
-    display: inline-block;
-    color: $main-color;
-    text-decoration: none;
-    font-weight: bold;
-    border: none;
-    outline: 0;
-    @include border-radius(30px);
-    @include vertical-gradient($start, $end);
-
-    img, svg {
-        float: left;
-        display: inline-block;
-        margin-right: 10px;
-    }
-
-    &:hover, &:focus { @include vertical-gradient($start_dark, $end_dark); outline: 0; }
-    &.active { @include vertical-gradient($start_dark, $end_dark); outline: 0; }
-    &[disabled] {
-        @include vertical-gradient($start_light, $end_light);
-        color: $main-color-light;
-    }
-}
-
-.yellow-button {
-    @include button(#fede9e, #fdc452);
-    vertical-align: middle;
-}
-
-button.small {
-    padding: 10px 20px;
-    @include border-radius(30px);
-}
-
-.tan-button {
-    @include button(rgb(232, 227, 199), rgb(214, 205, 153));
-}
-
-#title-header {
-    text-align: center;
-    border-bottom: 5px solid $gray-border;
-    padding-bottom: 40px;
-
-    h1 {
-        font-size: 50px;
-        @media only screen and (max-width: 370px) {
-            font-size: 40px;
-        }
-    }
-
-    .links a:not(:first-child) {
-        margin: 0 20px;
-        @media only screen and (max-width: 570px) {
-            clear: both;
-            margin: 20px 0 0 0;
-        }
-    }
-}
-
 .dl {
     text-decoration: underline;
     font-weight: bold;
 }
 
-#blurb {
-    margin: 30px 0 40px 0;
-    @include display-flex;
-
-    #intro { @include flex(6); line-height: 25px; padding: 10px;}
-
-    #stats {
-        @include flex(4);
-        @include display-flex;
-        @include flex-direction(column);
-
-        border-left: 1px solid $gray-border;
-        padding: 10px;
-
-        span { margin-left: 10px; }
-        .num {
-            font-size: 30px;
-            font-weight: bold;
-        }
-        .crates { margin-top: 10px; }
-        .crates, .downloads {
-            @include display-flex;
-            @include align-items(center);
-        }
-    }
-
-    @media only screen and (max-width: 530px) {
-        @include flex-direction(column);
-        #stats {
-            border: none;
-            margin: auto;
-        }
-        .crates, .downloads {
-            @include justify-content(center);
-        }
-    }
-}
-
 .crate-lists {
-    @include display-flex;
+    display: flex;
 
     h2 {
         font-size: 105%;
@@ -134,9 +31,9 @@ button.small {
         background-color: $main-bg-dark;
         font-size: 90%;
         padding: 20px 10px;
-        @include display-flex;
-        @include justify-content(space-between);
-        @include align-items(center);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
 
         span {
             overflow: hidden;
@@ -148,21 +45,4 @@ button.small {
     }
     li a:hover { background-color: darken($main-bg-dark, 5%); }
 
-}
-
-#home-crates {
-    @include flex-wrap(wrap);
-    @include justify-content(left);
-
-    > section {
-      margin: 0;
-      padding: 0 15px;
-      width: 33.33%;
-      @media only screen and (max-width: 750px) {
-        width: 50%;
-      }
-      @media only screen and (max-width: 550px) {
-        width: 100%;
-      }
-    }
 }

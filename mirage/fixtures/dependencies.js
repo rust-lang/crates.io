@@ -1,6 +1,6 @@
 export default [
   {
-    crate_id: 'libc',
+    crateId: 'libc',
     default_features: true,
     features: '',
     id: 146231,
@@ -8,10 +8,10 @@ export default [
     optional: false,
     req: '^0.2.18',
     target: null,
-    version_id: 40905,
+    versionId: 40905,
   },
   {
-    crate_id: 'nanomsg-sys',
+    crateId: 'nanomsg-sys',
     default_features: true,
     features: '',
     id: 146232,
@@ -19,10 +19,10 @@ export default [
     optional: false,
     req: '^0.6.1',
     target: null,
-    version_id: 40905,
+    versionId: 40905,
   },
   {
-    crate_id: 'nanomsg',
+    crateId: 'nanomsg',
     default_features: true,
     features: '',
     id: 146233,
@@ -30,10 +30,10 @@ export default [
     optional: false,
     req: '^0.5.0',
     target: null,
-    version_id: 28674,
+    versionId: 28674,
   },
   {
-    crate_id: 'mock-build-deps',
+    crateId: 'mock-build-deps',
     default_features: true,
     features: '',
     id: 146234,
@@ -41,10 +41,10 @@ export default [
     optional: false,
     req: '^0.6.1',
     target: null,
-    version_id: 40905,
+    versionId: 40905,
   },
   {
-    crate_id: 'mock-dev-deps',
+    crateId: 'mock-dev-deps',
     default_features: true,
     features: '',
     id: 146235,
@@ -52,6 +52,6 @@ export default [
     optional: true,
     req: '^0.6.1',
     target: null,
-    version_id: 40905,
+    versionId: 40905,
   },
 ];

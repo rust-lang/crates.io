@@ -1,0 +1,6 @@
+<LinkTo @route="crate" @model={{@dep.crate_id}}>
+  {{ @dep.crate_id }} {{ format-req @dep.req }}
+</LinkTo>
+{{#if @dep.optional}}
+  <span class='optional'>optional</span>
+{{/if}}

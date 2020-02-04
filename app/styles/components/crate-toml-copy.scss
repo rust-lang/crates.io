@@ -1,0 +1,21 @@
+.crate-toml-copy {
+    button, button:active {
+        background-color: #FFFFFF;
+        border: none;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .copy-notification {
+        font-size: 70%;
+        font-weight: bold;
+        position: absolute;
+
+        &.copy-success {
+            color: $link-color;
+        }
+        &.copy-failure {
+            color: red;
+        }
+    }
+}

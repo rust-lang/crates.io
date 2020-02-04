@@ -1,0 +1,75 @@
+.title-header {
+    text-align: center;
+    border-bottom: 5px solid $gray-border;
+    padding-bottom: 40px;
+
+    h1 {
+        font-size: 50px;
+        @media only screen and (max-width: 370px) {
+            font-size: 40px;
+        }
+    }
+
+    .links a:not(:first-child) {
+        margin: 0 20px;
+        @media only screen and (max-width: 570px) {
+            clear: both;
+            margin: 20px 0 0 0;
+        }
+    }
+}
+
+.blurb {
+    margin: 30px 0 40px 0;
+    display: flex;
+
+    .intro { flex: 6; line-height: 25px; padding: 10px;}
+
+    .stats {
+        flex: 4;
+        display: flex;
+        flex-direction: column;
+
+        border-left: 1px solid $gray-border;
+        padding: 10px;
+
+        span { margin-left: 10px; }
+        .num {
+            font-size: 30px;
+            font-weight: bold;
+        }
+        .crates { margin-top: 10px; }
+        .crates, .downloads {
+            display: flex;
+            align-items: center;
+        }
+    }
+
+    @media only screen and (max-width: 530px) {
+        flex-direction: column;
+        .stats {
+            border: none;
+            margin: auto;
+        }
+        .crates, .downloads {
+            justify-content: center;
+        }
+    }
+}
+
+.lists {
+    flex-wrap: wrap;
+    justify-content: left;
+
+    > section {
+        margin: 0;
+        padding: 0 15px;
+        width: 33.33%;
+        @media only screen and (max-width: 750px) {
+            width: 50%;
+        }
+        @media only screen and (max-width: 550px) {
+            width: 100%;
+        }
+    }
+}

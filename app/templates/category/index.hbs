@@ -88,14 +88,4 @@
   {{/each}}
 </div>
 
-<div class='pagination'>
-  <LinkTo @query={{hash page=this.prevPage}} class="prev" @rel="prev" @title="previous page">
-    {{svg-jar "left-pag"}}
-  </LinkTo>
-  {{#each this.pages as |page|}}
-    <LinkTo @query={{hash page=page}}>{{ page }}</LinkTo>
-  {{/each}}
-  <LinkTo @query={{hash page=this.nextPage}} class="next" @rel="next" @title="next page">
-    {{svg-jar "right-pag"}}
-  </LinkTo>
-</div>
+<Pagination @pages={{this.pages}} @prevPage={{this.prevPage}} @nextPage={{this.nextPage}} />

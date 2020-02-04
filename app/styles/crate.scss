@@ -3,27 +3,27 @@
     padding: 20px;
     background-color: $main-bg-dark;
     margin-bottom: 20px;
-    @include border-radius(5px);
-    @include display-flex;
-    @include flex-wrap(wrap);
-    @include align-items(center);
+    border-radius: 5px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
 
     .wide {
-        @include display-flex;
-        @include flex-wrap(wrap);
-        @include align-items(center);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
         width: 100%;
     }
 
     .info {
-        @include display-flex;
-        @include flex-wrap(wrap);
-        @include align-items(baseline);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
         img {
-            @include align-self(center);
+            align-self: center;
         }
         .team-info {
-            @include flex-direction(column);
+            flex-direction: column;
         }
     }
     .crate-icon {
@@ -38,30 +38,26 @@
     }
     h2 { color: $main-color-light; padding-left: 10px; }
     .right {
-        @include flex(2);
-        @include display-flex;
-        @include flex-direction(row-reverse);
-        @include align-items(center);
+        flex: 2;
+        display: flex;
+        flex-direction: row-reverse;
+        align-items: center;
     }
     @media only screen and (max-width: 650px) {
-        .right { @include justify-content(center); }
+        .right { justify-content: center; }
     }
 
     &.crate-index, &.crate-search {
-        @include flex-wrap(wrap);
+        flex-wrap: wrap;
     }
-}
-
-.crate-search .loading-spinner {
-    margin: 0 15px;
 }
 
 #selection {
     width: 100%;
-    @include display-flex;
-    @include justify-content(space-between);
+    display: flex;
+    justify-content: space-between;
     padding: 20px;
-    @include border-radius(5px);
+    border-radius: 5px;
     background-color: white;
     margin-bottom: 40px;
 
@@ -88,32 +84,10 @@
     }
 }
 
-.crate-toml-copy {
-    button, button:active {
-        background-color: #FFFFFF;
-        border: none;
-        cursor: pointer;
-        position: relative;
-    }
-
-    .copy-notification {
-        font-size: 70%;
-        font-weight: bold;
-        position: absolute;
-
-        &.copy-success {
-            color: $link-color;
-        }
-        &.copy-failure {
-            color: red;
-        }
-    }
-}
-
 #results {
     width: 100%;
-    @include display-flex;
-    @include justify-content(space-between);
+    display: flex;
+    justify-content: space-between;
     margin-bottom: 25px;
 
     .cur, .total { color: $main-color; font-weight: bold; }
@@ -123,7 +97,7 @@
         background-color: $main-bg-dark;
         padding: 10px;
         display: inline-block;
-        @include border-radius(5px);
+        border-radius: 5px;
     }
 }
 
@@ -131,16 +105,16 @@
     background-color: white;
     padding: 0 20px;
     margin-bottom: 20px;
-    @include display-flex;
-    @include flex-direction(column);
+    display: flex;
+    flex-direction: column;
 
     .row {
         width: 100%;
         border-bottom: 2px solid $gray-border;
         padding: 20px 0;
-        @include display-flex;
-        @include justify-content(space-between);
-        @include flex-wrap(wrap);
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
 
         &:last-of-type { border: none; }
     }
@@ -149,8 +123,8 @@
 .crate {
     .desc {
         padding-top: 5px;
-        @include display-flex;
-        @include flex-direction(column);
+        display: flex;
+        flex-direction: column;
         width: 75%;
     }
 
@@ -198,18 +172,18 @@
         color: $main-color-light;
     }
     .downloads {
-        @include display-flex;
-        @include align-items(center);
+        display: flex;
+        align-items: center;
         padding-bottom: 5px;
     }
     .recent-downloads {
-        @include display-flex;
-        @include align-items(center);
+        display: flex;
+        align-items: center;
     }
     .updated-at {
         padding-top: 5px;
-        @include display-flex;
-        @include align-items(center);
+        display: flex;
+        align-items: center;
 
         svg {
             padding: 10px;
@@ -232,9 +206,9 @@
 
 .quick-links {
     ul {
-        @include display-flex;
-        @include flex-direction(row);
-        @include flex-wrap(wrap);
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
 
         font-size: 80%;
         list-style-type: none;
@@ -252,259 +226,15 @@
     }
 }
 
-.pagination {
-    text-align: center;
-    font-size: 90%;
-    margin-bottom: 20px;
-
-    ol {
-        list-style: none;
-        padding: 0;
-    }
-    ol, li { display: inline; }
-
-    a {
-        color: $main-color-light;
-        text-decoration: none;
-        padding: 5px 6px;
-    }
-    a:hover { background-color: $main-bg-dark; }
-    a.active { background-color: $main-bg-dark; }
-}
-
-.crate-info {
-    @include display-flex;
-    @include flex-direction(column);
-    padding-bottom: 20px;
-    border-bottom: 5px solid $gray-border;
-    margin-bottom: 20px;
-
-    @media only screen and (min-width: 890px) {
-        @include flex-direction(row);
-
-        .docs {
-            @include flex(7);
-            padding-right: 40px;
-            max-width: 640px;
-        }
-        .authorship {
-            @include flex(3);
-            border-left: 2px solid $gray-border;
-            padding-left: 20px;
-
-            .top, .bottom {
-                @include flex-direction(column);
-            }
-
-            ul {
-              padding-left: 20px;
-            }
-        }
-    }
-
-    @media only screen and (max-width: 480px) {
-        .authorship {
-            .top, .bottom {
-                @include flex-direction(column);
-            }
-        }
-    }
-
-    .authorship {
-        .top, .bottom {
-            @include display-flex;
-
-            > * { @include flex(1); }
-        }
-    }
-
-    .about {
-        line-height: 180%;
-        margin-bottom: 40px;
-    }
-
-
-    ul.owners, ul.keywords {
-        @include display-flex;
-        @include flex-wrap(wrap);
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        li { margin: 0 7px 7px 0; }
-    }
-
-    .install {
-        font-size: 120%;
-        padding: 10px;
-        background-color: darken($main-bg-dark, 8%);
-        @include display-flex;
-
-        .action {
-            display: none;
-            text-align: center;
-            padding-top: 18px;
-            padding-right: 10px;
-        }
-        code {
-            @include flex(1);
-            background: $main-color;
-            color: white;
-            padding: 20px;
-        }
-        @media only screen and (min-width: 500px) {
-            .action { @include flex(2); display: block; }
-            code { @include flex(8); }
-        }
-        .crate-toml-copy {
-            display: flex;
-
-            button, button:active {
-                padding: 5px 0;
-                width: 60px;
-                cursor: pointer;
-                position: relative;
-            }
-            button:hover {
-                background: #edebdd;
-            }
-
-            .copy-notification {
-                &.copy-success {
-                    width: 100%;
-                    text-align: center;
-                }
-
-                &.copy-failure {
-                    bottom: -2rem;
-                    right: 0;
-                    width: 18rem;
-                    text-align: right;
-                }
-            }
-        }
-    }
-    .crate-readme {
-        line-height: 1.5;
-        overflow-wrap: break-word;
-
-        img {
-            max-width: 100%;
-        }
-
-        pre {
-            overflow-x: auto;
-        }
-
-        p {
-            code {
-                background-color: #fff;
-                padding: 0 2px;
-            }
-        }
-
-        table {
-            border-collapse: collapse;
-            display: block;
-            overflow-x: auto;
-
-            th, td {
-                border: 1px solid #dfe2e5;
-                padding: 6px 13px;
-            }
-        }
-    }
-    .last-update {
-        color: $main-color-light;
-        font-size: 90%;
-        line-height: 25px;
-    }
-    .date {
-        font-weight: bold;
-        margin-bottom: 40px;
-    }
-
-    /*
-        Since crate_size is a new field, older crates won't have it.
-        Preserve behaviour for older crates. For newer ones, keep
-        `Crate Size` closer to last updated.
-    */
-    .date-with-small-margin-bot {
-        font-weight: bold;
-        margin-bottom: 20px;
-    }
-    .crate-size {
-        color: $main-color-light;
-        font-size: 90%;
-        line-height: 25px;
-    }
-    .size {
-        font-weight: bold;
-        margin-bottom: 40px;
-    }
-}
-
-#crate-downloads {
-    @include display-flex;
-    @include flex-wrap(wrap);
-
-    h3 { width: 100%; }
-    .stat {
-        border-left: 1px solid $gray-border;
-        padding: 10px 20px;
-        @include display-flex;
-        @include flex-wrap(wrap);
-        @include flex-direction(column);
-        @include flex-grow(1);
-
-        .num {
-            font-size: 160%;
-            font-weight: bold;
-            margin-bottom: 4px;
-            &__align {
-                position: relative;
-                bottom: 0.4rem;
-            }
-        }
-    }
-
-    .stats {
-        @include flex-grow(7);
-        @include display-flex;
-        @include flex-wrap(wrap);
-    }
-    .versions {
-        @include flex-grow(3);
-        text-align: center;
-        @include display-flex;
-        @include flex-direction(column);
-        .small { padding: 10px; }
-    }
-
-    .button-holder { position: relative; }
-
-    .graph {
-        @include flex-grow(10);
-        width: 100%;
-        margin: 30px 0;
-        padding-bottom: 20px;
-
-        h4 { color: $main-color-light; }
-    }
-    .graph-data {
-        width: 100%;
-        height: 500px;
-    }
-}
-
 #crate-links {
-    @include display-flex;
+    display: flex;
     padding-bottom: 20px;
     border-bottom: 5px solid $gray-border;
     margin-bottom: 30px;
 
     h3 { margin-bottom: 5px; }
     .section {
-        @include flex(1);
+        flex: 1;
         margin-right: 10px;
         li { line-height: 24px; }
         .date { color: $main-color-light; padding-left: 5px; }
@@ -513,7 +243,7 @@
     ul { list-style: none; padding: 0; }
 
     @media only screen and (max-width: 380px) {
-        @include flex-direction(column);
+        flex-direction: column;
     }
     @media only screen and (max-width: 730px) {
         #crate-dev-dependencies { display: none; }
@@ -524,23 +254,3 @@
 }
 
 .all-versions-back { margin-bottom: 20px; }
-
-#crate-all-versions {
-    margin-top: 10px;
-
-    .small { margin-left: 20px; display: inline-block; }
-    a.arrow {
-        display: inline-block;
-        float: right;
-    }
-}
-
-#category-slugs {
-    dt {
-        margin-bottom: 5px;
-        font-weight: bold;
-    }
-    dd {
-        margin-bottom: 20px;
-    }
-}

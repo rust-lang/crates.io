@@ -13,7 +13,7 @@ module('Acceptance | keywords', function(hooks) {
   test('keyword/:keyword_id is accessible', async function(assert) {
     assert.expect(0);
 
-    this.server.create('keyword', { id: 'network', keyword: 'network', crates_cnt: 38 });
+    this.server.create('keyword', { keyword: 'network' });
 
     await visit('keywords/network');
     percySnapshot(assert);
@@ -22,7 +22,7 @@ module('Acceptance | keywords', function(hooks) {
   });
 
   test('keyword/:keyword_id index default sort is recent-downloads', async function(assert) {
-    this.server.create('keyword', { id: 'network', keyword: 'network', crates_cnt: 38 });
+    this.server.create('keyword', { keyword: 'network' });
 
     await visit('/keywords/network');
 

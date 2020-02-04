@@ -27,7 +27,7 @@ use cargo_registry::{
     background_jobs::Environment,
     db::DieselPool,
     git::{Credentials, RepositoryConfig},
-    middleware::current_user::AuthenticationSource,
+    middleware::current_user::TrustedUserId,
     models::{ApiToken, User},
     App, Config,
 };
@@ -79,7 +79,7 @@ impl Drop for TestAppInner {
 
         // Manually verify that all jobs have completed successfully
         // This will catch any tests that enqueued a job but forgot to initialize the runner
-        let conn = self.app.diesel_database.get().unwrap();
+        let conn = self.app.primary_database.get().unwrap();
         let job_count: i64 = background_jobs.count().get_result(&*conn).unwrap();
         assert_eq!(
             0, job_count,
@@ -122,7 +122,7 @@ impl TestApp {
     /// connection before making any API calls.  Once the closure returns, the connection is
     /// dropped, ensuring it is returned to the pool and available for any future API calls.
     pub fn db<T, F: FnOnce(&PgConnection) -> T>(&self, f: F) -> T {
-        let conn = self.0.app.diesel_database.get().unwrap();
+        let conn = self.0.app.primary_database.get().unwrap();
         f(&conn)
     }
 
@@ -195,7 +195,12 @@ impl TestApp {
 
     /// Obtain a reference to the inner `App` value
     pub fn as_inner(&self) -> &App {
-        &*self.0.app
+        &self.0.app
+    }
+
+    /// Obtain a reference to the inner middleware builder
+    pub fn as_middleware(&self) -> &conduit_middleware::MiddlewareBuilder {
+        &self.0.middle
     }
 }
 
@@ -215,7 +220,7 @@ impl TestAppBuilder {
         let (app, middle) = crate::build_app(self.config, self.proxy);
 
         let runner = if self.build_job_runner {
-            let connection_pool = app.diesel_database.clone();
+            let connection_pool = app.primary_database.clone();
             let repository_config = RepositoryConfig {
                 index_location: Url::from_file_path(&git::bare()).unwrap(),
                 credentials: Credentials::Missing,
@@ -317,7 +322,7 @@ pub trait RequestHelper {
     where
         T: serde::de::DeserializeOwned,
     {
-        Response::new(self.app().0.middle.call(&mut request))
+        Response::new(self.app().as_middleware().call(&mut request))
     }
 
     /// Issue a GET request
@@ -438,8 +443,8 @@ impl RequestHelper for MockAnonymousUser {
 
 /// A type that can generate cookie authenticated requests
 ///
-/// The `User` is directly injected into middleware extensions and thus the cookie logic is not
-/// exercised.
+/// The `user.id` value is directly injected into a request extension and thus the conduit_cookie
+/// session logic is not exercised.
 pub struct MockCookieUser {
     app: TestApp,
     user: User,
@@ -448,10 +453,8 @@ pub struct MockCookieUser {
 impl RequestHelper for MockCookieUser {
     fn request_builder(&self, method: Method, path: &str) -> MockRequest {
         let mut request = crate::req(method, path);
-        request.mut_extensions().insert(self.user.clone());
-        request
-            .mut_extensions()
-            .insert(AuthenticationSource::SessionCookie);
+        let id = TrustedUserId(self.user.id);
+        request.mut_extensions().insert(id);
         request
     }
 

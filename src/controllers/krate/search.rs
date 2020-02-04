@@ -7,6 +7,7 @@ use crate::controllers::cargo_prelude::*;
 use crate::controllers::helpers::Paginate;
 use crate::models::{Crate, CrateBadge, CrateOwner, CrateVersions, OwnerKind, Version};
 use crate::schema::*;
+use crate::util::errors::{bad_request, ChainError};
 use crate::views::EncodableCrate;
 
 use crate::models::krate::{canon_crate_name, ALL_COLUMNS};
@@ -35,7 +36,7 @@ use crate::models::krate::{canon_crate_name, ALL_COLUMNS};
 pub fn search(req: &mut dyn Request) -> AppResult<Response> {
     use diesel::sql_types::{Bool, Text};
 
-    let conn = req.db_conn()?;
+    let conn = req.db_read_only()?;
     let params = req.query();
     let sort = params.get("sort").map(|s| &**s);
     let include_yanked = params
@@ -95,7 +96,28 @@ pub fn search(req: &mut dyn Request) -> AppResult<Response> {
         );
     }
 
-    if let Some(kw) = params.get("keyword") {
+    if let Some(kws) = params.get("all_keywords") {
+        use diesel::sql_types::Array;
+        sql_function!(#[aggregate] fn array_agg<T>(x: T) -> Array<T>);
+
+        let names: Vec<_> = kws
+            .split_whitespace()
+            .map(|name| name.to_lowercase())
+            .collect();
+
+        query = query.filter(
+            // FIXME: Just use `.contains` in Diesel 2.0
+            // https://github.com/diesel-rs/diesel/issues/2066
+            Contains::new(
+                crates_keywords::table
+                    .inner_join(keywords::table)
+                    .filter(crates_keywords::crate_id.eq(crates::id))
+                    .select(array_agg(keywords::keyword))
+                    .single_value(),
+                names.into_sql::<Array<Text>>(),
+            ),
+        );
+    } else if let Some(kw) = params.get("keyword") {
         query = query.filter(
             crates::id.eq_any(
                 crates_keywords::table
@@ -110,7 +132,7 @@ pub fn search(req: &mut dyn Request) -> AppResult<Response> {
             letter
                 .chars()
                 .next()
-                .unwrap()
+                .chain_error(|| bad_request("letter value must contain 1 character"))?
                 .to_lowercase()
                 .collect::<String>()
         );
@@ -132,11 +154,12 @@ pub fn search(req: &mut dyn Request) -> AppResult<Response> {
             ),
         );
     } else if params.get("following").is_some() {
+        let user_id = req.authenticate(&conn)?.user_id();
         query = query.filter(
             crates::id.eq_any(
                 follows::table
                     .select(follows::crate_id)
-                    .filter(follows::user_id.eq(req.user()?.id)),
+                    .filter(follows::user_id.eq(user_id)),
             ),
         );
     }
@@ -226,3 +249,5 @@ pub fn search(req: &mut dyn Request) -> AppResult<Response> {
         },
     }))
 }
+
+diesel_infix_operator!(Contains, "@>");

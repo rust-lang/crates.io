@@ -13,7 +13,6 @@ use crate::util::{Bad, RequestHelper, TestApp};
 use cargo_registry::{
     models::{Crate, CrateOwner, Dependency, NewCategory, NewTeam, NewUser, Team, User, Version},
     schema::crate_owners,
-    util::AppResult,
     views::{
         EncodableCategory, EncodableCategoryWithSubcategories, EncodableCrate, EncodableKeyword,
         EncodableOwner, EncodableVersion, GoodCrate,
@@ -41,6 +40,7 @@ macro_rules! t {
     };
 }
 
+mod authentication;
 mod badge;
 mod builders;
 mod categories;
@@ -133,6 +133,7 @@ fn simple_config() -> Config {
         gh_client_id: dotenv::var("GH_CLIENT_ID").unwrap_or_default(),
         gh_client_secret: dotenv::var("GH_CLIENT_SECRET").unwrap_or_default(),
         db_url: env("TEST_DATABASE_URL"),
+        replica_db_url: None,
         env: Env::Test,
         max_upload_size: 3000,
         max_unpack_size: 2000,
@@ -159,7 +160,7 @@ fn build_app(
     };
 
     let app = App::new(&config, client);
-    t!(t!(app.diesel_database.get()).begin_test_transaction());
+    t!(t!(app.primary_database.get()).begin_test_transaction());
     let app = Arc::new(app);
     let handler = cargo_registry::build_handler(Arc::clone(&app));
     (app, handler)
@@ -229,7 +230,7 @@ fn new_team(login: &str) -> NewTeam<'_> {
     }
 }
 
-fn add_team_to_crate(t: &Team, krate: &Crate, u: &User, conn: &PgConnection) -> AppResult<()> {
+fn add_team_to_crate(t: &Team, krate: &Crate, u: &User, conn: &PgConnection) -> QueryResult<()> {
     let crate_owner = CrateOwner {
         crate_id: krate.id,
         owner_id: t.id,
@@ -278,8 +279,8 @@ fn multiple_live_references_to_the_same_connection_can_be_checked_out() {
     use std::ptr;
 
     let (app, _) = app();
-    let conn1 = app.diesel_database.get().unwrap();
-    let conn2 = app.diesel_database.get().unwrap();
+    let conn1 = app.primary_database.get().unwrap();
+    let conn2 = app.primary_database.get().unwrap();
     let conn1_ref: &PgConnection = &conn1;
     let conn2_ref: &PgConnection = &conn2;
 

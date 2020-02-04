@@ -92,8 +92,8 @@ http {
 
 	server_tokens off;
 
-	log_format l2met 'measure#nginx.service=$request_time request_id=$http_x_request_id';
-	access_log logs/nginx/access.log l2met;
+	# Disable access logs, keep error logs on Heroku
+	access_log /dev/null;
 	error_log logs/nginx/error.log;
 
 	include mime.types;

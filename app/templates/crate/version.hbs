@@ -246,7 +246,15 @@
 {{#unless this.currentVersion.yanked}}
   <div id='crate-downloads'>
     <div class='stats'>
-      <h3>Stats Overview</h3>
+      {{#if this.downloadsContext.num}}
+        <h3 data-test-crate-stats-label>
+          Stats Overview for {{this.downloadsContext.num}}
+          <LinkTo @route="crate" @model={{this.crate}}>(see all)</LinkTo>
+        </h3>
+        
+      {{else}}
+        <h3 data-test-crate-stats-label>Stats Overview</h3>
+      {{/if}}
       <div class='stat'>
         <span class='num'>
           {{svg-jar "download"}}

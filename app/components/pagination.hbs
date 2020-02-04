@@ -1,0 +1,17 @@
+<nav local-class='pagination' aria-label="Pagination navigation">
+  <LinkTo @query={{hash page=@prevPage}} local-class="prev" @rel="prev" @title="previous page" data-test-pagination-prev>
+    {{svg-jar "left-pag"}}
+  </LinkTo>
+  <ol>
+    {{#each @pages as |page|}}
+      <li>
+        <LinkTo @query={{hash page=page}} @title={{concat "Go to page " page}}>
+          {{ page }}
+        </LinkTo>
+      </li>
+    {{/each}}
+  </ol>
+  <LinkTo @query={{hash page=@nextPage}} local-class="next" @rel="next" @title="next page" data-test-pagination-next>
+    {{svg-jar "right-pag"}}
+  </LinkTo>
+</nav>

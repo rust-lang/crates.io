@@ -296,7 +296,7 @@ fn following() {
     assert_eq!(r.meta.more, false);
 
     user.get_with_query::<()>("/api/v1/me/updates", "page=0")
-        .bad_with_status(200); // TODO: Should be 500
+        .bad_with_status(400);
 }
 
 #[test]
