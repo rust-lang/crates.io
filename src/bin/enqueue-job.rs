@@ -13,7 +13,7 @@ fn main() -> Result<(), Error> {
     match &*job {
         "update_downloads" => Ok(tasks::update_downloads().enqueue(&conn)?),
         "dump_db" => {
-            let database_url = args.next().unwrap_or_else(|| env("DATABASE_URL"));
+            let database_url = args.next().unwrap_or_else(|| env("READ_ONLY_REPLICA_URL"));
             let target_name = args
                 .next()
                 .unwrap_or_else(|| String::from("db-dump.tar.gz"));
