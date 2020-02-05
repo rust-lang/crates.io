@@ -18,21 +18,14 @@ module('Mirage | Users', function(hooks) {
     });
 
     test('returns a user object for known users', async function(assert) {
-      let user = this.server.create('user', { name: 'John Doe' });
+      let user = this.server.create('user');
 
       let response = await fetch(`/api/v1/users/${user.login}`);
       assert.equal(response.status, 200);
 
       let responsePayload = await response.json();
-      assert.deepEqual(responsePayload, {
-        user: {
-          id: '1',
-          avatar: 'https://avatars1.githubusercontent.com/u/14631425?v=4',
-          login: 'john-doe',
-          name: 'John Doe',
-          url: 'https://github.com/john-doe',
-        },
-      });
+
+      assert.deepEqual(JSON.stringify(responsePayload), JSON.stringify({ user }));
     });
   });
 });

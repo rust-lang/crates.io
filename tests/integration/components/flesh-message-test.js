@@ -9,23 +9,9 @@ module('Integration | Component | flesh-message', function(hooks) {
   test('it renders', async function(assert) {
     assert.expect(2);
 
-    this.flashMessages = this.owner.lookup('service:flashMessages');
-    this.flashMessages.show('test text');
+    await render(hbs`<FlashMessage @message="test text" />`);
 
-    await render(hbs`{{flash-message}}`);
-
-    assert.equal(this.element.textContent.trim(), 'test text', 'should show right message');
-    assert.equal(this.element.querySelector('#flash').className, 'show warning', 'should have right class');
-  });
-
-  test('it renders with right passed type', async function(assert) {
-    assert.expect(1);
-
-    this.flashMessages = this.owner.lookup('service:flashMessages');
-    this.flashMessages.show('test', { type: 'info' });
-
-    await render(hbs`{{flash-message}}`);
-
-    assert.equal(this.element.querySelector('#flash').className, 'show info', 'should have right class');
+    assert.dom('[data-test-flash-message]').hasText('test text');
+    assert.dom('[data-test-flash-message]').isVisible();
   });
 });
