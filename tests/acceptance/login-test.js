@@ -7,12 +7,12 @@ import window, { setupWindowMock } from 'ember-window-mock';
 import flashStyles from 'cargo/components/flash-message.module.scss';
 import setupMirage from '../helpers/setup-mirage';
 
-module('Acceptance | Login', function (hooks) {
+module('Acceptance | Login', function(hooks) {
   setupApplicationTest(hooks);
   setupWindowMock(hooks);
   setupMirage(hooks);
 
-  test('successful login', async function (assert) {
+  test('successful login', async function(assert) {
     let deferred = defer();
     let fakeWindow = { closed: false };
     window.open = (url, target, features) => {
@@ -56,7 +56,7 @@ module('Acceptance | Login', function (hooks) {
     assert.dom('[data-test-user-menu] [data-test-toggle]').hasText('John Doe');
   });
 
-  test('failed login', async function (assert) {
+  test('failed login', async function(assert) {
     let deferred = defer();
     let fakeWindow = { closed: false };
     window.open = () => {
