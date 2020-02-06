@@ -9,10 +9,6 @@
           "35"
         ],
         [
-          "user-agent",
-          "reqwest/0.9.1"
-        ],
-        [
           "authorization",
           "AWS AKIAICL5IWUZYWWKA7JA:V37kbEzeh57sB4yTSZIOJACPoP4="
         ],

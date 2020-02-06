@@ -31,10 +31,6 @@
         [
           "accept",
           "*/*"
-        ],
-        [
-          "user-agent",
-          "reqwest/0.9.1"
         ]
       ],
       "body": "H4sIAAAAAAAA/+3AAQEAAACCIP+vbkhQwKsBLq+17wAEAAA="

@@ -288,7 +288,7 @@ fn replay_http(
     mut exchange: Exchange,
     stdout: &mut dyn Write,
 ) -> impl Future<Output = Result<Response<Body>, Error>> + Send {
-    static IGNORED_HEADERS: &[&str] = &["authorization", "date", "user-agent", "cache-control"];
+    static IGNORED_HEADERS: &[&str] = &["authorization", "date", "cache-control"];
 
     assert_eq!(req.uri().to_string(), exchange.request.uri);
     assert_eq!(req.method().to_string(), exchange.request.method);
@@ -303,6 +303,10 @@ fn replay_http(
             value.to_str().unwrap().to_string(),
         );
         t!(writeln!(stdout, "received: {:?}", pair));
+        if name == "user-agent" {
+            assert_eq!(value, "crates.io (https://crates.io)");
+            continue;
+        }
         if IGNORED_HEADERS.contains(&name.as_str()) {
             continue;
         }

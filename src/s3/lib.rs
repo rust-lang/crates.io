@@ -63,6 +63,7 @@ impl Bucket {
             .header(header::AUTHORIZATION, auth)
             .header(header::CONTENT_TYPE, content_type)
             .header(header::DATE, date)
+            .header(header::USER_AGENT, "crates.io (https://crates.io)")
             .headers(extra_headers)
             .body(Body::sized(content, content_length))
             .send()?
