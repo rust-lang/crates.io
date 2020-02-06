@@ -366,3 +366,36 @@ fn test_decline_invitation() {
     let json = anon.show_crate_owners("decline_invitation");
     assert_eq!(json.users.len(), 1);
 }
+
+#[test]
+fn inactive_users_dont_get_invitations() {
+    use cargo_registry::models::NewUser;
+    use std::borrow::Cow;
+
+    let (app, _, owner, owner_token) = TestApp::init().with_token();
+    let owner = owner.as_model();
+
+    // An inactive user with gh_id -1 and an active user with a non-negative gh_id both exist
+    let invited_gh_login = "user_bar";
+    let krate_name = "inactive_test";
+
+    app.db(|conn| {
+        NewUser {
+            gh_id: -1,
+            gh_login: invited_gh_login,
+            name: None,
+            gh_avatar: None,
+            gh_access_token: Cow::Borrowed("some random token"),
+        }
+        .create_or_update(None, conn)
+        .unwrap();
+        CrateBuilder::new(krate_name, owner.id).expect_build(conn);
+    });
+
+    let invited_user = app.db_new_user(invited_gh_login);
+
+    owner_token.add_user_owner(krate_name, invited_user.as_model());
+
+    let json = invited_user.list_invitations();
+    assert_eq!(json.crate_owner_invitations.len(), 1);
+}
