@@ -83,7 +83,7 @@ pub fn publish(req: &mut dyn Request) -> AppResult<Response> {
             homepage: new_crate.homepage.as_ref().map(|s| &**s),
             documentation: new_crate.documentation.as_ref().map(|s| &**s),
             readme: new_crate.readme.as_ref().map(|s| &**s),
-            repository: repo.as_ref().map(String::as_str),
+            repository: repo.as_deref(),
             max_upload_size: None,
         };
 
