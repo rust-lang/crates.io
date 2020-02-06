@@ -414,7 +414,9 @@ fn highest_gh_id_is_most_recent_account_we_know_of() {
 
     let invited_user = app.db_new_user(invited_gh_login);
 
-    app.db(|conn| { CrateBuilder::new(krate_name, owner.id).expect_build(conn); });
+    app.db(|conn| {
+        CrateBuilder::new(krate_name, owner.id).expect_build(conn);
+    });
 
     owner_token.add_user_owner(krate_name, invited_user.as_model());
 
