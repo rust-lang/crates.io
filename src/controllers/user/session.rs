@@ -83,7 +83,7 @@ pub fn authorize(req: &mut dyn Request) -> AppResult<Response> {
     // should have issued earlier.
     {
         let session_state = req.session().remove(&"github_oauth_state".to_string());
-        let session_state = session_state.as_ref().map(|a| &a[..]);
+        let session_state = session_state.as_deref();
         if Some(&state[..]) != session_state {
             return Err(bad_request("invalid state parameter"));
         }
@@ -125,11 +125,11 @@ impl GithubUser {
         NewUser::new(
             self.id,
             &self.login,
-            self.name.as_ref().map(|s| &s[..]),
-            self.avatar_url.as_ref().map(|s| &s[..]),
+            self.name.as_deref(),
+            self.avatar_url.as_deref(),
             access_token,
         )
-        .create_or_update(self.email.as_ref().map(|s| &s[..]), conn)
+        .create_or_update(self.email.as_deref(), conn)
         .map_err(Into::into)
         .or_else(|e: Box<dyn AppError>| {
             // If we're in read only mode, we can't update their details

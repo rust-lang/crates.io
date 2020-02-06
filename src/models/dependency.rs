@@ -128,7 +128,7 @@ pub fn add_dependencies(
                     optional.eq(dep.optional),
                     default_features.eq(dep.default_features),
                     features.eq(&dep.features),
-                    target.eq(dep.target.as_ref().map(|s| &**s)),
+                    target.eq(dep.target.as_deref()),
                 ),
             ))
         })
