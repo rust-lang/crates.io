@@ -223,7 +223,7 @@ fn get_readme(
                 .readme_file
                 .as_ref()
                 .map_or("README.md", |e| &**e),
-            manifest.package.repository.as_ref().map(|e| &**e),
+            manifest.package.repository.as_deref(),
         )
     };
     return Some(rendered);

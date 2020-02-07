@@ -79,15 +79,15 @@ pub fn publish(req: &mut dyn Request) -> AppResult<Response> {
         // Persist the new crate, if it doesn't already exist
         let persist = NewCrate {
             name: &name,
-            description: new_crate.description.as_ref().map(|s| &**s),
-            homepage: new_crate.homepage.as_ref().map(|s| &**s),
-            documentation: new_crate.documentation.as_ref().map(|s| &**s),
-            readme: new_crate.readme.as_ref().map(|s| &**s),
-            repository: repo.as_ref().map(String::as_str),
+            description: new_crate.description.as_deref(),
+            homepage: new_crate.homepage.as_deref(),
+            documentation: new_crate.documentation.as_deref(),
+            readme: new_crate.readme.as_deref(),
+            repository: repo.as_deref(),
             max_upload_size: None,
         };
 
-        let license_file = new_crate.license_file.as_ref().map(|s| &**s);
+        let license_file = new_crate.license_file.as_deref();
         let krate =
             persist.create_or_update(&conn, user.id, Some(&app.config.publish_rate_limit))?;
 
