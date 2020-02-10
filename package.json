@@ -73,7 +73,7 @@
     "ember-resolver": "^7.0.0",
     "ember-router-scroll": "^2.0.0",
     "ember-template-lint": "^1.13.2",
-    "ember-source": "~3.16.0",
+    "ember-source": "~3.16.1",
     "ember-svg-jar": "^2.2.3",
     "ember-test-selectors": "^3.0.0",
     "ember-web-app": "^3.0.1",
