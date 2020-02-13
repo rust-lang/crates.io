@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::fs::{self, OpenOptions};
 use std::path::{Path, PathBuf};
 use swirl::PerformError;
-use tempdir::TempDir;
+use tempfile::{Builder, TempDir};
 use url::Url;
 
 use crate::background_jobs::Environment;
@@ -148,7 +148,7 @@ pub struct Repository {
 
 impl Repository {
     pub fn open(repository_config: &RepositoryConfig) -> Result<Self, PerformError> {
-        let checkout_path = TempDir::new("git")?;
+        let checkout_path = Builder::new().prefix("git").tempdir()?;
 
         let repository = git2::build::RepoBuilder::new()
             .fetch_options(Self::fetch_options(&repository_config.credentials))
