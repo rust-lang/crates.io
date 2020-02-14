@@ -184,7 +184,6 @@ dependencies = ["versions"]
 [version_authors.columns]
 id = "public"
 version_id = "public"
-user_id = "private"
 name = "public"
 
 [version_downloads]
