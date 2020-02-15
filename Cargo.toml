@@ -58,7 +58,7 @@ docopt = "1.0"
 scheduled-thread-pool = "0.2.0"
 derive_deref = "1.0.0"
 reqwest = { version = "0.10", features = ["blocking", "gzip", "json"] }
-tempdir = "0.3.7"
+tempfile = "3"
 parking_lot = "0.7.1"
 jemallocator = { version = "0.3", features = ['unprefixed_malloc_on_supported_platforms', 'profiling'] }
 

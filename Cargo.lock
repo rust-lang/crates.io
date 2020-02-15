@@ -231,7 +231,7 @@ dependencies = [
  "serde_json 1.0.39 (registry+https://github.com/rust-lang/crates.io-index)",
  "swirl 0.1.0 (git+https://github.com/sgrif/swirl.git?rev=de5d8bb)",
  "tar 0.4.26 (registry+https://github.com/rust-lang/crates.io-index)",
- "tempdir 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tempfile 3.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "tokio 0.2.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "toml 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "tower-service 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2344,15 +2344,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tempdir"
-version = "0.3.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "rand 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "remove_dir_all 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
 name = "tempfile"
 version = "3.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3123,7 +3114,6 @@ dependencies = [
 "checksum syn 1.0.5 (registry+https://github.com/rust-lang/crates.io-index)" = "66850e97125af79138385e9b88339cbcd037e3f28ceab8c5ad98e64f0f1f80bf"
 "checksum synstructure 0.10.2 (registry+https://github.com/rust-lang/crates.io-index)" = "02353edf96d6e4dc81aea2d8490a7e9db177bf8acb0e951c24940bf866cb313f"
 "checksum tar 0.4.26 (registry+https://github.com/rust-lang/crates.io-index)" = "b3196bfbffbba3e57481b6ea32249fbaf590396a52505a2615adbb79d9d826d3"
-"checksum tempdir 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)" = "15f2b5fb00ccdf689e0149d1b1b3c03fead81c2b37735d812fa8bddbbf41b6d8"
 "checksum tempfile 3.0.4 (registry+https://github.com/rust-lang/crates.io-index)" = "55c1195ef8513f3273d55ff59fe5da6940287a0d7a98331254397f464833675b"
 "checksum tendril 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "9de21546595a0873061940d994bbbc5c35f024ae4fd61ec5c5b159115684f508"
 "checksum termcolor 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)" = "adc4587ead41bf016f11af03e55a624c06568b5a19db4e90fde573d805074f83"

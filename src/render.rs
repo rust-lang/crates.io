@@ -231,7 +231,7 @@ pub fn render_and_upload_readme(
     use crate::schema::*;
     use diesel::prelude::*;
 
-    let rendered = readme_to_html(&text, &file_name, base_url.as_ref().map(String::as_str));
+    let rendered = readme_to_html(&text, &file_name, base_url.as_deref());
     let conn = env.connection()?;
 
     conn.transaction(|| {
