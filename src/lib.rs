@@ -11,13 +11,13 @@ use std::error::Error;
 use std::io;
 use time::{Tm, ParseError};
 
-pub type Response = Result<conduit::Response, Box<Error+Send>>;
+pub type Response = Result<conduit::Response, Box<dyn Error+Send>>;
 
 #[allow(missing_copy_implementations)]
 pub struct ConditionalGet;
 
 impl Middleware for ConditionalGet {
-    fn after(&self, req: &mut Request, res: Response) -> Response {
+    fn after(&self, req: &mut dyn Request, res: Response) -> Response {
         let mut res = try!(res);
 
         match req.method() {
@@ -43,7 +43,7 @@ fn is_ok(response: &conduit::Response) -> bool {
     }
 }
 
-fn is_fresh(req: &Request, res: &conduit::Response) -> bool {
+fn is_fresh(req: &dyn Request, res: &conduit::Response) -> bool {
     let modified_since = req.headers().find("If-Modified-Since").map(header_val);
     let none_match     = req.headers().find("If-None-Match").map(header_val);
 
@@ -237,7 +237,7 @@ mod tests {
         )));
     }
 
-    fn expect_304(response: Result<Response, Box<Error+Send>>) {
+    fn expect_304(response: Result<Response, Box<dyn Error+Send>>) {
         let mut response = response.ok().expect("No response");
         let mut body = Vec::new();
         response.body.write_body(&mut body).ok().expect("No body");
@@ -246,11 +246,11 @@ mod tests {
         assert_eq!(body, b"");
     }
 
-    fn expect_200(response: Result<Response, Box<Error+Send>>) {
+    fn expect_200(response: Result<Response, Box<dyn Error+Send>>) {
         expect((200, "OK"), response);
     }
 
-    fn expect(status: (u32, &'static str), response: Result<Response, Box<Error+Send>>) {
+    fn expect(status: (u32, &'static str), response: Result<Response, Box<dyn Error+Send>>) {
         let mut response = response.ok().expect("No response");
         let mut body = Vec::new();
         response.body.write_body(&mut body).ok().expect("No body");
@@ -274,7 +274,7 @@ mod tests {
     }
 
     impl Handler for SimpleHandler {
-        fn call(&self, _: &mut Request) -> Result<Response, Box<Error+Send>> {
+        fn call(&self, _: &mut dyn Request) -> Result<Response, Box<dyn Error+Send>> {
             Ok(Response {
                 status: self.status,
                 headers: self.map.clone(),
