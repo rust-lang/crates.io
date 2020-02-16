@@ -42,7 +42,7 @@ impl Handler for Static {
             Ok(f) => f,
             Err(..) => return Ok(not_found()),
         };
-        let data = try!(file.metadata().map_err(|e| Box::new(e) as Box<dyn Error+Send>));
+        let data = file.metadata().map_err(|e| Box::new(e) as Box<dyn Error+Send>)?;
         if data.is_dir() {
             return Ok(not_found())
         }
