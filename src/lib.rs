@@ -151,7 +151,7 @@ mod tests {
                      -> Result<Response, Box<dyn Error+Send>>
         {
             res.or_else(|e| {
-                let e = e.description().to_string();
+                let e = e.to_string();
                 Ok(Response {
                     status: (500, "Internal Server Error"),
                     headers: HashMap::new(),
