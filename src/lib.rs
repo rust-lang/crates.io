@@ -18,7 +18,7 @@ pub struct ConditionalGet;
 
 impl Middleware for ConditionalGet {
     fn after(&self, req: &mut dyn Request, res: Response) -> Response {
-        let mut res = try!(res);
+        let mut res = res?;
 
         match req.method() {
             Method::Get | Method::Head => {
