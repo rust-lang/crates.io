@@ -19,7 +19,7 @@
   <div class='stats'>
     <div class='downloads' data-test-downloads>
       {{svg-jar "download"}}
-      <span class='num'>All-Time: {{ format-num this.crate.downloads }}</span>
+      <span class='num'><abbr title="Total number of downloads">All-Time:</abbr> {{ format-num this.crate.downloads }}</span>
     </div>
     <div class="recent-downloads" data-test-recent-downloads>
       {{svg-jar "download"}}
@@ -27,9 +27,12 @@
     </div>
     <div class="updated-at" >
       {{svg-jar "latest-updates" height="32" width="32"}}
-      <time title="Last updated: {{ this.crate.updated_at }}" datetime="{{ moment-format this.crate.updated_at 'YYYY-MM-DDTHH:mm:ssZ' }}" data-test-updated-at>
-        {{ moment-from-now this.crate.updated_at }}
-      </time>
+      <span>
+        <abbr title="The last time crate was updated">Updated:</abbr>
+        <time title="Last updated: {{ this.crate.updated_at }}" datetime="{{ moment-format this.crate.updated_at 'YYYY-MM-DDTHH:mm:ssZ' }}" data-test-updated-at>
+          {{ moment-from-now this.crate.updated_at }}
+        </time>
+      </span>
     </div>
   </div>
   <div class="quick-links">
