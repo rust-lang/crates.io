@@ -209,7 +209,7 @@ mod tests {
         Ok(conduit::Response {
             status: (200, "OK"),
             headers: HashMap::new(),
-            body: Box::new(io::Cursor::new(res.connect(", ").into_bytes()))
+            body: Box::new(io::Cursor::new(res.join(", ").into_bytes()))
         })
     }
 }
