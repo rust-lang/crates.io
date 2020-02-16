@@ -2,7 +2,7 @@ use std::any::{Any, TypeId};
 use std::collections::HashMap;
 
 pub struct TypeMap {
-    data: HashMap<TypeId, Box<Any>>
+    data: HashMap<TypeId, Box<dyn Any>>
 }
 
 impl TypeMap {
@@ -19,7 +19,7 @@ impl TypeMap {
     }
 
     pub fn insert<T: 'static>(&mut self, val: T) -> bool {
-        self.data.insert(TypeId::of::<T>(), Box::new(val) as Box<Any>).is_none()
+        self.data.insert(TypeId::of::<T>(), Box::new(val) as Box<dyn Any>).is_none()
     }
 
     pub fn remove<T: 'static>(&mut self) -> bool {

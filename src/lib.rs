@@ -98,10 +98,10 @@ pub trait Request {
     fn content_length(&self) -> Option<u64>;
 
     /// The request's headers, as conduit::Headers.
-    fn headers<'a>(&'a self) -> &'a Headers;
+    fn headers<'a>(&'a self) -> &'a dyn Headers;
 
     /// A Reader for the body of the request
-    fn body<'a>(&'a mut self) -> &'a mut Read;
+    fn body<'a>(&'a mut self) -> &'a mut dyn Read;
 
     /// A readable map of extensions
     fn extensions<'a>(&'a self) -> &'a Extensions;
@@ -130,21 +130,21 @@ pub struct Response {
     pub headers: HashMap<String, Vec<String>>,
 
     /// A Writer for body of the response
-    pub body: Box<WriteBody + Send>
+    pub body: Box<dyn WriteBody + Send>
 }
 
 /// A Handler takes a request and returns a response or an error.
 /// By default, a bare function implements `Handler`.
 pub trait Handler: Sync + Send + 'static {
-    fn call(&self, request: &mut Request) -> Result<Response, Box<Error+Send>>;
+    fn call(&self, request: &mut dyn Request) -> Result<Response, Box<dyn Error+Send>>;
 }
 
 impl<F, E> Handler for F
-    where F: Fn(&mut Request) -> Result<Response, E> + Sync + Send + 'static,
+    where F: Fn(&mut dyn Request) -> Result<Response, E> + Sync + Send + 'static,
           E: Error + Send + 'static
 {
-    fn call(&self, request: &mut Request) -> Result<Response, Box<Error+Send>> {
-        (*self)(request).map_err(|e| Box::new(e) as Box<Error+Send>)
+    fn call(&self, request: &mut dyn Request) -> Result<Response, Box<dyn Error+Send>> {
+        (*self)(request).map_err(|e| Box::new(e) as Box<dyn Error+Send>)
     }
 }
 
@@ -152,13 +152,13 @@ impl<F, E> Handler for F
 ///
 /// This is implemented for all `Read`ers.
 pub trait WriteBody {
-    fn write_body(&mut self, out: &mut Write) -> io::Result<u64>;
+    fn write_body(&mut self, out: &mut dyn Write) -> io::Result<u64>;
 }
 
 impl<R> WriteBody for R
     where R: Read
 {
-    fn write_body(&mut self, out: &mut Write) -> io::Result<u64> {
+    fn write_body(&mut self, out: &mut dyn Write) -> io::Result<u64> {
         io::copy(self, out)
     }
 }
