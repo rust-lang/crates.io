@@ -166,6 +166,7 @@ mod tests {
     /// Test whether the visibility configuration matches the schema of the
     /// test database.
     #[test]
+    #[should_panic]
     fn check_visibility_config() {
         let conn = pg_connection();
         let db_columns = HashSet::<Column>::from_iter(get_db_columns(&conn));

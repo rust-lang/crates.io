@@ -5,3 +5,23 @@ file = "src/schema.rs"
 with_docs = true
 import_types = ["diesel::sql_types::*", "diesel_full_text_search::{TsVector as Tsvector}"]
 patch_file = "src/schema.patch"
+
+[print_schema.filter]
+except_tables = [
+  "version_downloads_default",
+  "version_downloads_pre_2017",
+  "version_downloads_2017",
+  "version_downloads_2018_q1",
+  "version_downloads_2018_q2",
+  "version_downloads_2018_q3",
+  "version_downloads_2018_q4",
+  "version_downloads_2019_q1",
+  "version_downloads_2019_q2",
+  "version_downloads_2019_q3",
+  "version_downloads_2019_q4",
+  "version_downloads_2020_q1",
+  "version_downloads_2020_q2",
+  "version_downloads_2020_q3",
+  "version_downloads_2020_q4",
+  "version_downloads_2021_q1",
+]
