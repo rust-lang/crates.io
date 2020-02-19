@@ -9,7 +9,7 @@ use router::{Router, Match};
 use conduit::{Method, Handler, Request, Response};
 
 pub struct RouteBuilder {
-    routers: HashMap<Method, Router<Box<Handler>>>,
+    routers: HashMap<Method, Router<Box<dyn Handler>>>,
 }
 
 #[derive(Debug)]
@@ -21,7 +21,7 @@ impl RouteBuilder {
     }
 
     pub fn recognize<'a>(&'a self, method: &Method, path: &str)
-                         -> Result<Match<&'a Box<Handler>>,
+                         -> Result<Match<&'a Box<dyn Handler>>,
                                    RouterError>
     {
         match self.routers.get(method) {
@@ -69,14 +69,14 @@ impl RouteBuilder {
 }
 
 impl conduit::Handler for RouteBuilder {
-    fn call(&self, request: &mut Request) -> Result<Response, Box<Error+Send>> {
+    fn call(&self, request: &mut dyn Request) -> Result<Response, Box<dyn Error+Send>> {
         let m = {
             let method = request.method();
             let path = request.path();
 
             match self.recognize(&method, path) {
                 Ok(m) => m,
-                Err(e) => return Err(Box::new(e) as Box<Error+Send>)
+                Err(e) => return Err(Box::new(e) as Box<dyn Error+Send>)
             }
         };
 
@@ -103,12 +103,12 @@ pub trait RequestParams<'a> {
     fn params(self) -> &'a router::Params;
 }
 
-pub fn params<'a>(req: &'a Request) -> &'a router::Params {
+pub fn params<'a>(req: &'a dyn Request) -> &'a router::Params {
     req.extensions().find::<router::Params>()
         .expect("Missing params")
 }
 
-impl<'a> RequestParams<'a> for &'a (Request + 'a) {
+impl<'a> RequestParams<'a> for &'a (dyn Request + 'a) {
     fn params(self) -> &'a router::Params {
         params(self)
     }
@@ -153,8 +153,8 @@ mod tests {
         fn query_string<'a>(&'a self) -> Option<&'a str> { unimplemented!() }
         fn remote_addr(&self) -> SocketAddr { unimplemented!() }
         fn content_length(&self) -> Option<u64> { unimplemented!() }
-        fn headers<'a>(&'a self) -> &'a Headers { unimplemented!() }
-        fn body<'a>(&'a mut self) -> &'a mut io::Read { unimplemented!() }
+        fn headers<'a>(&'a self) -> &'a dyn Headers { unimplemented!() }
+        fn body<'a>(&'a mut self) -> &'a mut dyn io::Read { unimplemented!() }
         fn extensions<'a>(&'a self) -> &'a Extensions {
             &self.extensions
         }
@@ -201,7 +201,7 @@ mod tests {
         router
     }
 
-    fn test_handler(req: &mut conduit::Request) -> io::Result<conduit::Response> {
+    fn test_handler(req: &mut dyn conduit::Request) -> io::Result<conduit::Response> {
         let mut res = vec!();
         res.push(req.params()["id"].clone());
         res.push(format!("{:?}", req.method()));
@@ -209,7 +209,7 @@ mod tests {
         Ok(conduit::Response {
             status: (200, "OK"),
             headers: HashMap::new(),
-            body: Box::new(io::Cursor::new(res.connect(", ").into_bytes()))
+            body: Box::new(io::Cursor::new(res.join(", ").into_bytes()))
         })
     }
 }
