@@ -16,6 +16,7 @@ fn main() -> Result<(), Error> {
 
     check_stalled_background_jobs(&conn)?;
     check_spam_attack(&conn)?;
+    check_default_version_downloads_partition(&conn)?;
     Ok(())
 }
 
@@ -109,6 +110,34 @@ fn check_spam_attack(conn: &PgConnection) -> Result<(), Error> {
         on_call::Event::Resolve {
             incident_key: EVENT_KEY.into(),
             description: Some("No spam crates detected".into()),
+        }
+    };
+
+    log_and_trigger_event(event)?;
+    Ok(())
+}
+
+fn check_default_version_downloads_partition(conn: &PgConnection) -> Result<(), Error> {
+    use cargo_registry::schema::version_downloads_default::dsl::*;
+
+    const EVENT_KEY: &str = "version_downloads_missing_partition";
+
+    println!("Checking for data in the default `version_downloads` partition");
+    let version_downloads_in_default_partition =
+        version_downloads_default.count().get_result::<i64>(conn)?;
+
+    let event = if version_downloads_in_default_partition > 0 {
+        on_call::Event::Trigger {
+            incident_key: Some(EVENT_KEY.into()),
+            description: format!(
+                "{} rows exist in the default `version_downloads` partition",
+                version_downloads_in_default_partition
+            ),
+        }
+    } else {
+        on_call::Event::Resolve {
+            incident_key: EVENT_KEY.into(),
+            description: Some("No records in default `version_downloads` partition".into()),
         }
     };
 

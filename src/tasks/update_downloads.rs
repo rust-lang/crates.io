@@ -74,18 +74,10 @@ fn collect(conn: &PgConnection, rows: &[VersionDownload]) -> QueryResult<()> {
 
 #[cfg(test)]
 mod test {
+    use super::super::test_helpers::*;
     use super::*;
-    use crate::{
-        env,
-        models::{Crate, NewCrate, NewUser, NewVersion, User, Version},
-    };
+    use crate::models::{Crate, NewCrate, NewUser, NewVersion, User, Version};
     use std::collections::HashMap;
-
-    fn conn() -> PgConnection {
-        let conn = PgConnection::establish(&env("TEST_DATABASE_URL")).unwrap();
-        conn.begin_test_transaction().unwrap();
-        conn
-    }
 
     fn user(conn: &PgConnection) -> User {
         NewUser::new(2, "login", None, None, "access_token")

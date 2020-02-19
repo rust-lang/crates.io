@@ -9,7 +9,6 @@ patch_file = "src/schema.patch"
 [print_schema.filter]
 except_tables = [
   "version_downloads_archive",
-  "version_downloads_default",
   "version_downloads_pre_2017",
   "version_downloads_2017",
   "version_downloads_2018_q1",

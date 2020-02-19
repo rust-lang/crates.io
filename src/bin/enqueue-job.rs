@@ -11,6 +11,9 @@ fn main() -> Result<(), Error> {
     println!("Enqueueing background job: {}", job);
 
     match &*job {
+        "generate_version_downloads_partition" => {
+            Ok(tasks::generate_version_downloads_partition().enqueue(&conn)?)
+        }
         "update_downloads" => Ok(tasks::update_downloads().enqueue(&conn)?),
         "dump_db" => {
             let database_url = args.next().unwrap_or_else(|| env("READ_ONLY_REPLICA_URL"));
