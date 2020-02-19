@@ -5,47 +5,47 @@ use std::error::Error;
 use conduit::{Request, Response, Handler};
 
 pub trait Middleware: Send + Sync + 'static {
-    fn before(&self, _: &mut Request) -> Result<(), Box<Error+Send>> {
+    fn before(&self, _: &mut dyn Request) -> Result<(), Box<dyn Error+Send>> {
         Ok(())
     }
 
-    fn after(&self, _: &mut Request, res: Result<Response, Box<Error+Send>>)
-             -> Result<Response, Box<Error+Send>>
+    fn after(&self, _: &mut dyn Request, res: Result<Response, Box<dyn Error+Send>>)
+             -> Result<Response, Box<dyn Error+Send>>
     {
         res
     }
 }
 
 pub trait AroundMiddleware: Handler {
-    fn with_handler(&mut self, handler: Box<Handler>);
+    fn with_handler(&mut self, handler: Box<dyn Handler>);
 }
 
 pub struct MiddlewareBuilder {
-    middlewares: Vec<Box<Middleware>>,
-    handler: Option<Box<Handler>>
+    middlewares: Vec<Box<dyn Middleware>>,
+    handler: Option<Box<dyn Handler>>
 }
 
 impl MiddlewareBuilder {
     pub fn new<H: Handler>(handler: H) -> MiddlewareBuilder {
         MiddlewareBuilder {
             middlewares: vec!(),
-            handler: Some(Box::new(handler) as Box<Handler>)
+            handler: Some(Box::new(handler) as Box<dyn Handler>)
         }
     }
 
     pub fn add<M: Middleware>(&mut self, middleware: M) {
-        self.middlewares.push(Box::new(middleware) as Box<Middleware>);
+        self.middlewares.push(Box::new(middleware) as Box<dyn Middleware>);
     }
 
     pub fn around<M: AroundMiddleware>(&mut self, mut middleware: M) {
         let handler = self.handler.take().unwrap();
         middleware.with_handler(handler);
-        self.handler = Some(Box::new(middleware) as Box<Handler>);
+        self.handler = Some(Box::new(middleware) as Box<dyn Handler>);
     }
 }
 
 impl Handler for MiddlewareBuilder {
-    fn call(&self, req: &mut Request) -> Result<Response, Box<Error+Send>> {
+    fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error+Send>> {
         let mut error = None;
 
         for (i, middleware) in self.middlewares.iter().enumerate() {
@@ -73,10 +73,10 @@ impl Handler for MiddlewareBuilder {
     }
 }
 
-fn run_afters(middleware: &[Box<Middleware>],
-                  req: &mut Request,
-                  res: Result<Response, Box<Error+Send>>)
-                  -> Result<Response, Box<Error+Send>>
+fn run_afters(middleware: &[Box<dyn Middleware>],
+                  req: &mut dyn Request,
+                  res: Result<Response, Box<dyn Error+Send>>)
+                  -> Result<Response, Box<dyn Error+Send>>
 {
     middleware.iter().rev().fold(res, |res, m| m.after(req, res))
 }
@@ -125,8 +125,8 @@ mod tests {
         fn query_string<'a>(&'a self) -> Option<&'a str> { unimplemented!() }
         fn remote_addr(&self) -> SocketAddr { unimplemented!() }
         fn content_length(&self) -> Option<u64> { unimplemented!() }
-        fn headers<'a>(&'a self) -> &'a Headers { unimplemented!() }
-        fn body<'a>(&'a mut self) -> &'a mut Read { unimplemented!() }
+        fn headers<'a>(&'a self) -> &'a dyn Headers { unimplemented!() }
+        fn body<'a>(&'a mut self) -> &'a mut dyn Read { unimplemented!() }
         fn extensions<'a>(&'a self) -> &'a Extensions {
             &self.extensions
         }
@@ -138,7 +138,7 @@ mod tests {
     struct MyMiddleware;
 
     impl Middleware for MyMiddleware {
-        fn before<'a>(&self, req: &'a mut Request) -> Result<(), Box<Error+Send>> {
+        fn before<'a>(&self, req: &'a mut dyn Request) -> Result<(), Box<dyn Error+Send>> {
             req.mut_extensions().insert("hello".to_string());
             Ok(())
         }
@@ -147,11 +147,11 @@ mod tests {
     struct ErrorRecovery;
 
     impl Middleware for ErrorRecovery {
-        fn after(&self, _: &mut Request, res: Result<Response, Box<Error+Send>>)
-                     -> Result<Response, Box<Error+Send>>
+        fn after(&self, _: &mut dyn Request, res: Result<Response, Box<dyn Error+Send>>)
+                     -> Result<Response, Box<dyn Error+Send>>
         {
             res.or_else(|e| {
-                let e = e.description().to_string();
+                let e = e.to_string();
                 Ok(Response {
                     status: (500, "Internal Server Error"),
                     headers: HashMap::new(),
@@ -164,7 +164,7 @@ mod tests {
     struct ProducesError;
 
     impl Middleware for ProducesError {
-        fn before(&self, _: &mut Request) -> Result<(), Box<Error+Send>> {
+        fn before(&self, _: &mut dyn Request) -> Result<(), Box<dyn Error+Send>> {
             Err(Box::new(io::Error::new(io::ErrorKind::Other, "")))
         }
     }
@@ -172,8 +172,8 @@ mod tests {
     struct NotReached;
 
     impl Middleware for NotReached {
-        fn after(&self, _: &mut Request, _: Result<Response, Box<Error+Send>>)
-                     -> Result<Response, Box<Error+Send>>
+        fn after(&self, _: &mut dyn Request, _: Result<Response, Box<dyn Error+Send>>)
+                     -> Result<Response, Box<dyn Error+Send>>
         {
             Ok(Response {
                 status: (200, "OK"),
@@ -184,7 +184,7 @@ mod tests {
     }
 
     struct MyAroundMiddleware {
-        handler: Option<Box<Handler>>
+        handler: Option<Box<dyn Handler>>
     }
 
     impl MyAroundMiddleware {
@@ -196,19 +196,19 @@ mod tests {
     impl Middleware for MyAroundMiddleware {}
 
     impl AroundMiddleware for MyAroundMiddleware {
-        fn with_handler(&mut self, handler: Box<Handler>) {
+        fn with_handler(&mut self, handler: Box<dyn Handler>) {
             self.handler = Some(handler)
         }
     }
 
     impl Handler for MyAroundMiddleware {
-        fn call(&self, req: &mut Request) -> Result<Response, Box<Error+Send>> {
+        fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error+Send>> {
             req.mut_extensions().insert("hello".to_string());
             self.handler.as_ref().unwrap().call(req)
         }
     }
 
-    fn get_extension<'a, T: Any>(req: &'a Request) -> &'a T {
+    fn get_extension<'a, T: Any>(req: &'a dyn Request) -> &'a T {
         req.extensions().find::<T>().unwrap()
     }
 
@@ -220,16 +220,16 @@ mod tests {
         }
     }
 
-    fn handler(req: &mut Request) -> io::Result<Response> {
+    fn handler(req: &mut dyn Request) -> io::Result<Response> {
         let hello = get_extension::<String>(req);
         Ok(response(hello.clone()))
     }
 
-    fn error_handler(_: &mut Request) -> io::Result<Response> {
+    fn error_handler(_: &mut dyn Request) -> io::Result<Response> {
         Err(io::Error::new(io::ErrorKind::Other, "Error in handler"))
     }
 
-    fn middle_handler(req: &mut Request) -> io::Result<Response> {
+    fn middle_handler(req: &mut dyn Request) -> io::Result<Response> {
         let hello = get_extension::<String>(req);
         let middle = get_extension::<String>(req);
 
