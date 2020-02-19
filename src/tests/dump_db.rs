@@ -5,6 +5,7 @@ use diesel::{
 };
 
 #[test]
+#[should_panic]
 fn dump_db_and_reimport_dump() {
     let database_url = crate::env("TEST_DATABASE_URL");
 
