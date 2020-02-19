@@ -115,11 +115,11 @@ impl conduit::Request for MockRequest {
         self.body.as_ref().map(|b| b.len() as u64)
     }
 
-    fn headers(&self) -> &Headers {
-        &self.headers as &Headers
+    fn headers(&self) -> &dyn Headers {
+        &self.headers as &dyn Headers
     }
 
-    fn body(&mut self) -> &mut Read {
+    fn body(&mut self) -> &mut dyn Read {
         if self.reader.is_none() {
             let body = self.body.clone().unwrap_or(Vec::new());
             self.reader = Some(Cursor::new(body));
