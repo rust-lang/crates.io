@@ -13,7 +13,6 @@ pub struct VersionDownload {
     pub downloads: i32,
     pub counted: i32,
     pub date: NaiveDate,
-    pub processed: bool,
 }
 
 impl VersionDownload {
