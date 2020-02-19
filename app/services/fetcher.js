@@ -7,16 +7,17 @@ const KEY = 'ajax-cache';
 export default class FetcherService extends Service {
   @service fastboot;
 
-  get(url) {
+  get(url, options) {
     let shoebox = this.fastboot.shoebox;
     if (!shoebox) {
       return;
     }
     let cache = shoebox.retrieve(KEY) || {};
-    return cache[url];
+    let key = cacheKey(url, options);
+    return cache[key];
   }
 
-  put(url, obj) {
+  put(url, options, obj) {
     let fastboot = this.fastboot;
     let shoebox = this.fastboot.shoebox;
     if (!(shoebox && fastboot.isFastBoot)) {
@@ -24,7 +25,8 @@ export default class FetcherService extends Service {
     }
 
     let cache = shoebox.retrieve(KEY) || {};
-    cache[url] = deepCopy(obj);
+    let key = cacheKey(url, options);
+    cache[key] = deepCopy(obj);
     shoebox.put(KEY, cache);
   }
 
@@ -39,6 +41,10 @@ export default class FetcherService extends Service {
       return resp;
     });
   }
+}
+
+function cacheKey(url, options) {
+  return url + JSON.stringify(options);
 }
 
 function deepCopy(obj) {

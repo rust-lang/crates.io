@@ -10,14 +10,14 @@ export default RESTAdapter.extend({
 
   ajax(url, type, options) {
     if (type === 'GET') {
-      let cache = this.fetcher.get(url);
+      let cache = this.fetcher.get(url, options);
       if (cache) {
         return cache;
       }
     }
 
     return this._super(url, type, options).then(resp => {
-      this.fetcher.put(url, resp);
+      this.fetcher.put(url, options, resp);
       return resp;
     });
   },
