@@ -48,7 +48,7 @@ impl Handler for Static {
         }
         let mtime = FileTime::from_last_modification_time(&data);
         let ts = time::Timespec {
-            sec: mtime.seconds_relative_to_1970() as i64,
+            sec: mtime.unix_seconds() as i64,
             nsec: mtime.nanoseconds() as i32,
         };
         let tm = time::at(ts).to_utc();
