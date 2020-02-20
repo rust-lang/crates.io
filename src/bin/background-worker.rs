@@ -15,6 +15,7 @@
 use cargo_registry::git::{Repository, RepositoryConfig};
 use cargo_registry::{background_jobs::*, db};
 use diesel::r2d2;
+use reqwest::blocking::Client;
 use std::thread::sleep;
 use std::time::Duration;
 
@@ -43,12 +44,7 @@ fn main() {
     let repository = Repository::open(&repository_config).expect("Failed to clone index");
     println!("Index cloned");
 
-    let environment = Environment::new(
-        repository,
-        db_pool.clone(),
-        config.uploader,
-        reqwest::Client::new(),
-    );
+    let environment = Environment::new(repository, db_pool.clone(), config.uploader, Client::new());
 
     let build_runner = || {
         swirl::Runner::builder(db_pool.clone(), environment.clone())

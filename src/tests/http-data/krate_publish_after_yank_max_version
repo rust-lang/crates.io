@@ -9,10 +9,6 @@
           "alexcrichton-test.s3.amazonaws.com"
         ],
         [
-          "user-agent",
-          "reqwest/0.9.1"
-        ],
-        [
           "content-type",
           "application/x-tar"
         ],
@@ -82,10 +78,6 @@
         [
           "authorization",
           "AWS AKIAICL5IWUZYWWKA7JA:umuWs3XoGqsDipgMq04QAhq9Spc="
-        ],
-        [
-          "user-agent",
-          "reqwest/0.9.1"
         ],
         [
           "date",

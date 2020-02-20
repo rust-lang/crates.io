@@ -21,10 +21,6 @@
           "gzip"
         ],
         [
-          "user-agent",
-          "reqwest/0.9.1"
-        ],
-        [
           "content-type",
           "application/x-tar"
         ],

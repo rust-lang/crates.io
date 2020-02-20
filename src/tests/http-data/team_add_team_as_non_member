@@ -5,10 +5,6 @@
       "method": "GET",
       "headers": [
         [
-          "user-agent",
-          "reqwest/0.9.1"
-        ],
-        [
           "host",
           "api.github.com"
         ],
@@ -138,10 +134,6 @@
         [
           "authorization",
           "token 69551e7bd735be9c59d3702a7885669979f0cdbc"
-        ],
-        [
-          "user-agent",
-          "reqwest/0.9.1"
         ],
         [
           "accept",

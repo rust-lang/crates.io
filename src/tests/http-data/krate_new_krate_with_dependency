@@ -29,10 +29,6 @@
           "35"
         ],
         [
-          "user-agent",
-          "reqwest/0.9.1"
-        ],
-        [
           "accept",
           "*/*"
         ]

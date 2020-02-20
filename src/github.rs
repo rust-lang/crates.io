@@ -24,6 +24,7 @@ where
         .get(&url)
         .header(header::ACCEPT, "application/vnd.github.v3+json")
         .header(header::AUTHORIZATION, format!("token {}", auth.secret()))
+        .header(header::USER_AGENT, "crates.io (https://crates.io)")
         .send()?
         .error_for_status()
         .map_err(|e| handle_error_response(&e))?

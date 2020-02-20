@@ -25,10 +25,6 @@
           "AWS AKIAICL5IWUZYWWKA7JA:241ftMxnamoj94RBOB/al86Xwjk="
         ],
         [
-          "user-agent",
-          "reqwest/0.9.1"
-        ],
-        [
           "accept",
           "*/*"
         ],

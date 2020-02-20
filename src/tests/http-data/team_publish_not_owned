@@ -17,10 +17,6 @@
           "application/vnd.github.v3+json"
         ],
         [
-          "user-agent",
-          "reqwest/0.9.1"
-        ],
-        [
           "host",
           "api.github.com"
         ]
@@ -146,10 +142,6 @@
         [
           "host",
           "api.github.com"
-        ],
-        [
-          "user-agent",
-          "reqwest/0.9.1"
         ],
         [
           "accept-encoding",
@@ -279,10 +271,6 @@
           "token 7534f8b996e3a3f800f0a324f619adba12a74532"
         ],
         [
-          "user-agent",
-          "reqwest/0.9.1"
-        ],
-        [
           "accept",
           "application/vnd.github.v3+json"
         ]
@@ -408,10 +396,6 @@
         [
           "accept",
           "application/vnd.github.v3+json"
-        ],
-        [
-          "user-agent",
-          "reqwest/0.9.1"
         ],
         [
           "host",

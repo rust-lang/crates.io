@@ -13,10 +13,6 @@
           "api.github.com"
         ],
         [
-          "user-agent",
-          "reqwest/0.9.1"
-        ],
-        [
           "accept-encoding",
           "gzip"
         ],
@@ -138,10 +134,6 @@
         [
           "host",
           "api.github.com"
-        ],
-        [
-          "user-agent",
-          "reqwest/0.9.1"
         ],
         [
           "accept-encoding",
@@ -281,10 +273,6 @@
         [
           "host",
           "api.github.com"
-        ],
-        [
-          "user-agent",
-          "reqwest/0.9.1"
         ]
       ],
       "body": ""
@@ -408,10 +396,6 @@
         [
           "host",
           "api.github.com"
-        ],
-        [
-          "user-agent",
-          "reqwest/0.9.1"
         ],
         [
           "accept-encoding",
@@ -541,10 +525,6 @@
           "gzip"
         ],
         [
-          "user-agent",
-          "reqwest/0.9.1"
-        ],
-        [
           "authorization",
           "token 7534f8b996e3a3f800f0a324f619adba12a74532"
         ],
@@ -663,10 +643,6 @@
       "uri": "http://api.github.com/orgs/crates-test-org",
       "method": "GET",
       "headers": [
-        [
-          "user-agent",
-          "reqwest/0.9.1"
-        ],
         [
           "host",
           "api.github.com"
