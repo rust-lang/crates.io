@@ -3,6 +3,7 @@ import { inject as service } from '@ember/service';
 import Controller from '@ember/controller';
 import PromiseProxyMixin from '@ember/object/promise-proxy-mixin';
 import ArrayProxy from '@ember/array/proxy';
+// eslint-disable-next-line ember/no-observers
 import { computed, observer } from '@ember/object';
 import moment from 'moment';
 
