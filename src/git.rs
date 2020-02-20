@@ -203,6 +203,7 @@ impl Repository {
 
         // git push
         let mut ref_status = Ok(());
+        let mut callback_called = false;
         {
             let mut origin = self.repository.find_remote("origin")?;
             let mut callbacks = git2::RemoteCallbacks::new();
@@ -214,12 +215,18 @@ impl Repository {
                 if let Some(s) = status {
                     ref_status = Err(format!("failed to push a ref: {}", s).into())
                 }
+                callback_called = true;
                 Ok(())
             });
             let mut opts = git2::PushOptions::new();
             opts.remote_callbacks(callbacks);
             origin.push(&["refs/heads/master"], Some(&mut opts))?;
         }
+
+        if !callback_called {
+            ref_status = Err("update_reference callback was not called".into());
+        }
+
         ref_status
     }
 
