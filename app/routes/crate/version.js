@@ -1,3 +1,4 @@
+// eslint-disable-next-line ember/no-observers
 import { observer } from '@ember/object';
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
