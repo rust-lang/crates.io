@@ -36,7 +36,7 @@
       <span>
         <abbr title="The last time crate was updated">Updated:</abbr>
         <time title="Last updated: {{ @crate.updated_at }}" datetime="{{date-format-iso @crate.updated_at}}" data-test-updated-at>
-          {{ moment-from-now @crate.updated_at }}
+          {{date-format-distance-to-now @crate.updated_at addSuffix=true}}
         </time>
       </span>
     </div>
