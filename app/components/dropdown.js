@@ -103,13 +103,13 @@ export default Component.extend({
         $target.closest($c.find(component.get('dropdownSelector'))).length
       )
     ) {
-      component.send('closeDropdown');
+      this.set('dropdownExpanded', false);
     }
   },
 
   escapeHandler(event) {
     if (event.keyCode === 27) {
-      event.data.component.send('closeDropdown');
+      this.set('dropdownExpanded', false);
     }
   },
 });
