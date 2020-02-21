@@ -100,7 +100,7 @@ module('Acceptance | crate page', function (hooks) {
     await visit('/crates/nanomsg');
     await click('[data-test-all-versions-link]');
 
-    assert.dom('[data-test-page-description]').hasText(/All 13\s+versions of nanomsg since\s+December \d+, 2014/);
+    assert.dom('[data-test-page-description]').hasText(/All 13\s+versions of nanomsg since\s+December \d+th, 2014/);
   });
 
   test('navigating to the reverse dependencies page', async function (assert) {

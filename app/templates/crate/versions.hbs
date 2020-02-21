@@ -3,7 +3,7 @@
 <span local-class="page-description" data-test-page-description>
   All <strong>{{ this.model.versions.length }}</strong>
   versions of <strong>{{ this.model.name }}</strong> since
-  {{moment-format this.model.created_at 'LL'}}
+  {{date-format this.model.created_at 'PPP'}}
 </span>
 
 <div local-class="list">
@@ -12,7 +12,7 @@
       <div>
         <LinkTo @route="crate.version" @model={{version.num}}>{{ version.num }}</LinkTo>
 
-        <span local-class="date">{{moment-format version.created_at 'LL'}}</span>
+        <span local-class="date">{{date-format version.created_at 'PPP'}}</span>
         {{#if version.yanked}}
           <span local-class='yanked'>yanked</span>
         {{/if}}
