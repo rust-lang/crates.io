@@ -84,7 +84,9 @@
       <div local-class='top'>
         <div>
           <div local-class='last-update'>Last Updated</div>
-          <div local-class='{{if this.currentVersion.crate_size 'date-with-small-margin-bot' 'date'}}'>{{moment-from-now this.crate.updated_at}}</div>
+          <div local-class='{{if this.currentVersion.crate_size 'date-with-small-margin-bot' 'date'}}'>
+            {{date-format-distance-to-now this.crate.updated_at addSuffix=true}}
+          </div>
         </div>
 
         {{#if this.currentVersion.crate_size}}
