@@ -7,8 +7,6 @@ import { bind, later } from '@ember/runloop';
 import $ from 'jquery';
 
 export default Component.extend({
-  classNameBindings: ['dropdownExpanded'],
-
   init() {
     this._super(...arguments);
 
