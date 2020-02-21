@@ -4,8 +4,6 @@ import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import prerelease from 'semver/functions/prerelease';
 
-import fetch from 'fetch';
-
 import ajax from '../../utils/ajax';
 
 export default Route.extend({
@@ -93,23 +91,12 @@ export default Route.extend({
       this.flashMessages.queue(`Version '${params.version_num}' of crate '${crate.get('name')}' does not exist`);
     }
 
-    const result = version || versions.find(version => version.get('num') === maxVersion) || versions.objectAt(0);
+    return version || versions.find(version => version.get('num') === maxVersion) || versions.objectAt(0);
+  },
 
-    if (result.get('readme_path')) {
-      fetch(result.get('readme_path'))
-        .then(async r => {
-          if (r.ok) {
-            crate.set('readme', await r.text());
-          } else {
-            crate.set('readme', null);
-          }
-        })
-        .catch(() => {
-          crate.set('readme', null);
-        });
-    }
-
-    return result;
+  setupController(controller) {
+    this._super(...arguments);
+    controller.loadReadme();
   },
 
   serialize(model) {

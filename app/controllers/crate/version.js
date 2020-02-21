@@ -157,6 +157,22 @@ export default Controller.extend({
     return data;
   }),
 
+  loadReadme() {
+    if (this.currentVersion.get('readme_path')) {
+      fetch(this.currentVersion.get('readme_path'))
+        .then(async r => {
+          if (r.ok) {
+            this.crate.set('readme', await r.text());
+          } else {
+            this.crate.set('readme', null);
+          }
+        })
+        .catch(() => {
+          this.crate.set('readme', null);
+        });
+    }
+  },
+
   // eslint-disable-next-line ember/no-observers
   report: observer('crate.readme', function () {
     if (typeof document === 'undefined') {
