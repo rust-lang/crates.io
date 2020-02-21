@@ -22,13 +22,11 @@ export default Component.extend({
     return this.nearestOfType(RlDropdownContainer);
   }),
 
-  action: 'toggleDropdown',
-
   disabled: false,
 
   click() {
     if (!this.disabled) {
-      this.dropdownContainer.send(this.action);
+      this.dropdownContainer.send('toggleDropdown');
     }
   },
 });
