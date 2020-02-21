@@ -24,19 +24,11 @@ export default Component.extend({
 
   action: 'toggleDropdown',
 
-  propagateClicks: true,
-
   disabled: false,
 
-  click(event) {
+  click() {
     if (!this.disabled) {
-      let propagateClicks = this.propagateClicks;
-
       this.dropdownContainer.send(this.action);
-
-      if (propagateClicks === false || propagateClicks === 'false') {
-        event.stopPropagation();
-      }
     }
   },
 });
