@@ -3,8 +3,8 @@ import { computed } from '@ember/object';
 import { alias, gt, readOnly } from '@ember/object/computed';
 import { inject as service } from '@ember/service';
 
+import subDays from 'date-fns/subDays';
 import { task } from 'ember-concurrency';
-import moment from 'moment';
 
 import ajax from '../../utils/ajax';
 
@@ -53,9 +53,11 @@ export default class CrateVersionController extends Controller {
 
     let dates = {};
     let versions = [];
+
+    let now = new Date();
     for (let i = 0; i < 90; i++) {
-      let now = moment().subtract(i, 'days');
-      dates[now.toISOString().slice(0, 10)] = { date: now, cnt: {} };
+      let date = subDays(now, i);
+      dates[date.toISOString().slice(0, 10)] = { date, cnt: {} };
     }
 
     downloads.forEach(d => {
@@ -95,7 +97,7 @@ export default class CrateVersionController extends Controller {
     }
     let data = [headers];
     for (let date in dates) {
-      let row = [dates[date].date.toDate()];
+      let row = [dates[date].date];
       for (let version of versions) {
         row.push(dates[date].cnt[version.id] || 0);
       }
