@@ -14,9 +14,6 @@ export default Component.extend({
     this.set('boundEscapeHandler', bind(this, this.escapeHandler));
   },
 
-  onOpen() {},
-  onClose() {},
-
   dropdownExpanded: false,
 
   dropdownToggleSelector: '.rl-dropdown-toggle',
@@ -30,22 +27,14 @@ export default Component.extend({
   actions: {
     toggleDropdown() {
       this.toggleProperty('dropdownExpanded');
-
-      if (this.dropdownExpanded) {
-        this.onOpen();
-      } else {
-        this.onClose();
-      }
     },
 
     openDropdown() {
       this.set('dropdownExpanded', true);
-      this.onOpen();
     },
 
     closeDropdown() {
       this.set('dropdownExpanded', false);
-      this.onClose();
     },
   },
 
