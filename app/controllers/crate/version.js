@@ -157,19 +157,18 @@ export default Controller.extend({
     return data;
   }),
 
-  loadReadme() {
+  async loadReadme() {
     if (this.currentVersion.get('readme_path')) {
-      fetch(this.currentVersion.get('readme_path'))
-        .then(async r => {
-          if (r.ok) {
-            this.crate.set('readme', await r.text());
-          } else {
-            this.crate.set('readme', null);
-          }
-        })
-        .catch(() => {
+      try {
+        let r = await fetch(this.currentVersion.get('readme_path'));
+        if (r.ok) {
+          this.crate.set('readme', await r.text());
+        } else {
           this.crate.set('readme', null);
-        });
+        }
+      } catch (error) {
+        this.crate.set('readme', null);
+      }
     }
   },
 
