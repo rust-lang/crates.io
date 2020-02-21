@@ -2,14 +2,14 @@ import Component from '@ember/component';
 import { alias } from '@ember/object/computed';
 import { computed } from '@ember/object';
 
-import RlDropdownContainer from './rl-dropdown-container';
+import Dropdown from '../dropdown';
 
 export default Component.extend({
   classNames: ['rl-dropdown'],
   classNameBindings: ['isExpanded:open'],
 
   dropdownContainer: computed(function() {
-    return this.nearestOfType(RlDropdownContainer);
+    return this.nearestOfType(Dropdown);
   }),
 
   isExpanded: alias('dropdownContainer.dropdownExpanded'),

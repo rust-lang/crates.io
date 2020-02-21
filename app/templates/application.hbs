@@ -40,7 +40,7 @@
         Browse All Crates
       </LinkTo>
       <span class="sep">|</span>
-      <RlDropdownContainer class="dropdown-container" as |dd|>
+      <Dropdown class="dropdown-container" as |dd|>
         <dd.Trigger class="dropdown">
           Docs
           <span class='arrow'></span>
@@ -62,10 +62,10 @@
           <li><LinkTo @route="policies">Policies</LinkTo></li>
           <li><LinkTo @route="category-slugs">List of category slugs</LinkTo></li>
         </dd.Content>
-      </RlDropdownContainer>
+      </Dropdown>
       <span class="sep">|</span>
       {{#if this.session.currentUser}}
-        <RlDropdownContainer class="dropdown-container" data-test-user-menu as |dd|>
+        <Dropdown class="dropdown-container" data-test-user-menu as |dd|>
           <dd.Trigger class="dropdown" data-test-toggle>
             <UserAvatar @user={{this.session.currentUser}} @size="small" data-test-avatar />
             {{ this.session.currentUser.name }}
@@ -78,7 +78,7 @@
             <li><LinkTo @route="me.pending-invites">Owner Invites</LinkTo></li>
             <li class='last'><LinkTo @route="logout">Sign Out</LinkTo></li>
           </dd.Content>
-        </RlDropdownContainer>
+        </Dropdown>
       {{else}}
         <LinkTo @route="login" data-test-login-link>
           {{svg-jar "lock"}}
@@ -88,7 +88,7 @@
     </div>
 
     <div class='menu'>
-      <RlDropdownContainer class="dropdown-container" as |dd|>
+      <Dropdown class="dropdown-container" as |dd|>
         <dd.Trigger class="dropdown">
           Menu
           <span class='arrow'></span>
@@ -104,7 +104,7 @@
             <li><LinkTo @route="login">Log in with GitHub</LinkTo></li>
           {{/if}}
         </dd.Content>
-      </RlDropdownContainer>
+      </Dropdown>
     </div>
 
     <div class='links'>

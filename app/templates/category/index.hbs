@@ -49,7 +49,7 @@
 
   <div class='sort' data-test-category-sort>
     <span class='small'>Sort by</span>
-    <RlDropdownContainer class="dropdown-container" as |dd|>
+    <Dropdown class="dropdown-container" as |dd|>
       <dd.Trigger @tagName="a" class="dropdown" data-test-current-order>
         {{svg-jar "sort"}}
         {{ this.currentSortBy }}
@@ -78,7 +78,7 @@
           </LinkTo>
         </li>
       </dd.Content>
-    </RlDropdownContainer>
+    </Dropdown>
   </div>
 </div>
 
