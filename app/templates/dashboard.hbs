@@ -54,7 +54,7 @@
               <span local-class="feed-version">{{ version.num }}</span>
             </LinkTo>
             <span local-class="feed-date">
-              {{moment-from-now version.created_at}}
+              {{date-format-distance-to-now version.created_at addSuffix=true}}
             </span>
           </div>
         {{/each}}
