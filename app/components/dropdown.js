@@ -28,14 +28,6 @@ export default Component.extend({
     toggleDropdown() {
       this.toggleProperty('dropdownExpanded');
     },
-
-    openDropdown() {
-      this.set('dropdownExpanded', true);
-    },
-
-    closeDropdown() {
-      this.set('dropdownExpanded', false);
-    },
   },
 
   manageClosingEvents: on(
