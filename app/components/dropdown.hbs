@@ -1,4 +1,4 @@
 {{yield (hash
-  Trigger=(component "dropdown/trigger")
-  Content=(component "dropdown/content")
+  Trigger=(component "dropdown/trigger" toggle=(action "toggleDropdown"))
+  Content=(component "dropdown/content" isExpanded=this.dropdownExpanded close=(action "closeDropdown"))
 )}}

@@ -1,8 +1,6 @@
 import Component from '@ember/component';
 import { computed } from '@ember/object';
 
-import Dropdown from '../dropdown';
-
 export default Component.extend({
   classNames: ['rl-dropdown-toggle'],
 
@@ -18,15 +16,11 @@ export default Component.extend({
     return this.tagName === 'a' ? 'button' : null;
   }),
 
-  dropdownContainer: computed(function() {
-    return this.nearestOfType(Dropdown);
-  }),
-
   disabled: false,
 
   click() {
     if (!this.disabled) {
-      this.dropdownContainer.send('toggleDropdown');
+      this.toggle();
     }
   },
 });
