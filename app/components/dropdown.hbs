@@ -1,4 +1,9 @@
-{{yield (hash
-  Trigger=(component "dropdown/trigger" toggle=(action "toggleDropdown"))
-  Content=(component "dropdown/content" isExpanded=this.dropdownExpanded)
-)}}
+<div
+  ...attributes
+  {{on-click-outside (action (mut this.dropdownExpanded) false)}}
+>
+  {{yield (hash
+    Trigger=(component "dropdown/trigger" toggle=(action "toggleDropdown"))
+    Content=(component "dropdown/content" isExpanded=this.dropdownExpanded)
+  )}}
+</div>
