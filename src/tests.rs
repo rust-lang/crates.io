@@ -85,6 +85,7 @@ fn build_headers(msg: &str) -> HashMap<String, Vec<String>> {
 
 fn make_service<H: Handler>(
     handler: H,
+    max_thread_count: usize,
 ) -> impl Service<
     hyper::Request<hyper::Body>,
     Response = hyper::Response<hyper::Body>,
@@ -93,7 +94,7 @@ fn make_service<H: Handler>(
 > {
     use hyper::service::service_fn;
 
-    let handler = std::sync::Arc::new(BlockingHandler::new(handler, 1));
+    let handler = std::sync::Arc::new(BlockingHandler::new(handler, max_thread_count));
 
     service_fn(move |request: hyper::Request<hyper::Body>| {
         let remote_addr = ([0, 0, 0, 0], 0).into();
@@ -102,7 +103,7 @@ fn make_service<H: Handler>(
 }
 
 async fn simulate_request<H: Handler>(handler: H) -> hyper::Response<hyper::Body> {
-    let mut service = make_service(handler);
+    let mut service = make_service(handler, 1);
     service.call(hyper::Request::default()).await.unwrap()
 }
 
@@ -141,7 +142,7 @@ async fn recover_from_panic() {
 
 #[tokio::test]
 async fn normalize_path() {
-    let mut service = make_service(AssertPathNormalized);
+    let mut service = make_service(AssertPathNormalized, 1);
     let req = hyper::Request::put("//removed/.././.././normalized")
         .body(hyper::Body::default())
         .unwrap();
@@ -159,7 +160,7 @@ async fn normalize_path() {
 
 #[tokio::test]
 async fn limits_thread_count() {
-    let mut service = make_service(Sleep);
+    let mut service = make_service(Sleep, 1);
     let first = service.call(hyper::Request::default());
     let second = service.call(hyper::Request::default());
 
@@ -172,4 +173,23 @@ async fn limits_thread_count() {
     .unwrap();
 
     assert_eq!(first_completed.status(), 503)
+}
+
+#[tokio::test]
+async fn sleeping_doesnt_block_another_request() {
+    let mut service = make_service(Sleep, 2);
+
+    let first = service.call(hyper::Request::default());
+    let second = service.call(hyper::Request::default());
+
+    let start = std::time::Instant::now();
+
+    // Spawn 2 requests that each sleeps for 100ms
+    let (first, second) = futures::join!(first, second);
+
+    // Elapsed time should be closer to 100ms than 200ms
+    assert!(start.elapsed().as_millis() < 150);
+
+    assert_eq!(first.unwrap().status(), 200);
+    assert_eq!(second.unwrap().status(), 200);
 }
