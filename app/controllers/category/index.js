@@ -19,6 +19,8 @@ export default Controller.extend(PaginationMixin, {
       return 'All-Time Downloads';
     } else if (this.sort === 'alpha') {
       return 'Alphabetical';
+    } else if (this.sort === 'new') {
+      return 'Newly Added';
     } else if (this.get('sort') === 'recent-updates') {
       return 'Recent Updates';
     } else {
