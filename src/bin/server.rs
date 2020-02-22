@@ -50,7 +50,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map(|s| s.parse().expect("SERVER_THREADS was not a valid number"))
         .unwrap_or_else(|_| {
             if config.env == Env::Development {
-                1
+                5
             } else {
                 50
             }
