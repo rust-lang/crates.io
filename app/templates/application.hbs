@@ -40,13 +40,13 @@
         Browse All Crates
       </LinkTo>
       <span class="sep">|</span>
-      <RlDropdownContainer class="dropdown-container">
-        <RlDropdownToggle class="dropdown">
+      <Dropdown class="dropdown-container" as |dd|>
+        <dd.Trigger class="dropdown">
           Docs
           <span class='arrow'></span>
-        </RlDropdownToggle>
+        </dd.Trigger>
 
-        <RlDropdown @tagName="ul" @id="doc-links" class="dropdown">
+        <dd.Content @tagName="ul" @id="doc-links" class="dropdown">
           <li><a href='https://doc.rust-lang.org/cargo/getting-started/'>Getting Started</a></li>
           <li><a href='https://doc.rust-lang.org/cargo/guide/'>Guide</a></li>
           <li><a href='https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html'>Specifying Dependencies</a></li>
@@ -61,24 +61,24 @@
           <li><a href='https://doc.rust-lang.org/cargo/reference/external-tools.html'>External Tools</a></li>
           <li><LinkTo @route="policies">Policies</LinkTo></li>
           <li><LinkTo @route="category-slugs">List of category slugs</LinkTo></li>
-        </RlDropdown>
-      </RlDropdownContainer>
+        </dd.Content>
+      </Dropdown>
       <span class="sep">|</span>
       {{#if this.session.currentUser}}
-        <RlDropdownContainer class="dropdown-container" data-test-user-menu>
-          <RlDropdownToggle class="dropdown" data-test-toggle>
+        <Dropdown class="dropdown-container" data-test-user-menu as |dd|>
+          <dd.Trigger class="dropdown" data-test-toggle>
             <UserAvatar @user={{this.session.currentUser}} @size="small" data-test-avatar />
             {{ this.session.currentUser.name }}
             <span class='arrow'></span>
-          </RlDropdownToggle>
+          </dd.Trigger>
 
-          <RlDropdown @tagName="ul" class="dropdown current-user-links">
+          <dd.Content @tagName="ul" class="dropdown current-user-links">
             <li><LinkTo @route="dashboard">Dashboard</LinkTo></li>
             <li><LinkTo @route="me">Account Settings</LinkTo></li>
             <li><LinkTo @route="me.pending-invites">Owner Invites</LinkTo></li>
             <li class='last'><LinkTo @route="logout">Sign Out</LinkTo></li>
-          </RlDropdown>
-        </RlDropdownContainer>
+          </dd.Content>
+        </Dropdown>
       {{else}}
         <LinkTo @route="login" data-test-login-link>
           {{svg-jar "lock"}}
@@ -88,12 +88,12 @@
     </div>
 
     <div class='menu'>
-      <RlDropdownContainer class="dropdown-container">
-        <RlDropdownToggle class="dropdown">
+      <Dropdown class="dropdown-container" as |dd|>
+        <dd.Trigger class="dropdown">
           Menu
           <span class='arrow'></span>
-        </RlDropdownToggle>
-        <RlDropdown @tagName="ul" class="dropdown current-user-links">
+        </dd.Trigger>
+        <dd.Content @tagName="ul" class="dropdown current-user-links">
           <li><LinkTo @route="crates">Browse All Crates</LinkTo></li>
           {{#if this.session.currentUser}}
             <li><LinkTo @route="dashboard">Dashboard</LinkTo></li>
@@ -103,8 +103,8 @@
           {{else}}
             <li><LinkTo @route="login">Log in with GitHub</LinkTo></li>
           {{/if}}
-        </RlDropdown>
-      </RlDropdownContainer>
+        </dd.Content>
+      </Dropdown>
     </div>
 
     <div class='links'>

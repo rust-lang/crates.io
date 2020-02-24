@@ -18,14 +18,14 @@
 
   <div class='sort'>
     <span class='small'>Sort by</span>
-    <RlDropdownContainer class="dropdown-container">
-      <RlDropdownToggle @tagName="a" class="dropdown">
+    <Dropdown class="dropdown-container" as |dd|>
+      <dd.Trigger @tagName="a" class="dropdown">
         {{svg-jar "sort"}}
         {{ this.currentSortBy }}
         <span class='arrow'></span>
-      </RlDropdownToggle>
+      </dd.Trigger>
 
-      <RlDropdown @tagName="ul" class="dropdown">
+      <dd.Content @tagName="ul" class="dropdown">
         <li>
           <LinkTo @query={{hash sort="alpha"}}>
             Alphabetical
@@ -46,8 +46,8 @@
             Recent Updates
           </LinkTo>
         </li>
-      </RlDropdown>
-    </RlDropdownContainer>
+      </dd.Content>
+    </Dropdown>
   </div>
 </div>
 
