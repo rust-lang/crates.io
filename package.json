@@ -72,7 +72,7 @@
     "ember-promise-helpers": "^1.0.9",
     "ember-resolver": "^7.0.0",
     "ember-router-scroll": "^2.0.1",
-    "ember-template-lint": "^1.13.2",
+    "ember-template-lint": "^2.0.1",
     "ember-source": "~3.16.1",
     "ember-svg-jar": "^2.2.3",
     "ember-test-selectors": "^4.0.0",
