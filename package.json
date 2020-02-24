@@ -40,7 +40,7 @@
     "ember-cli-app-version": "^3.2.0",
     "ember-cli-babel": "^7.18.0",
     "ember-cli-clipboard": "^0.14.0",
-    "ember-cli-code-coverage": "^1.0.0-beta.8",
+    "ember-cli-code-coverage": "^1.0.0-beta.9",
     "ember-cli-dependency-checker": "^3.2.0",
     "ember-cli-dependency-lint": "^1.1.3",
     "ember-cli-fastboot": "^2.2.1",
