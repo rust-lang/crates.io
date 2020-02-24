@@ -1,9 +1,11 @@
 <span ...attributes>
   {{#unless this.none}}
-    <img
-        src="https://img.shields.io/badge/maintenance-{{this.escapedStatus}}-{{this.color}}.svg"
-        alt="{{this.text}}"
-        title="{{this.text}}">
+    <a href="https://doc.rust-lang.org/cargo/reference/manifest.html#package-metadata">
+      <img
+          src="https://img.shields.io/badge/maintenance-{{this.escapedStatus}}-{{this.color}}.svg"
+          alt="{{this.text}}"
+          title="{{this.text}}">
+    </a>
   {{/unless}}
 
 </span>

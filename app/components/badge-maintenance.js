@@ -33,5 +33,21 @@ export default Component.extend({
     }
   }),
 
-  text: 'Maintenance intention for this crate',
+  // eslint-disable-next-line ember/require-return-from-computed
+  text: computed('badge', function () {
+    switch (this.get('badge.attributes.status')) {
+      case 'actively-developed':
+        return 'Maintenance intention: Actively developed';
+      case 'passively-maintained':
+        return 'Maintenance intention: Passively maintained';
+      case 'as-is':
+        return 'Maintenance intention: As-is';
+      case 'experimental':
+        return 'Maintenance intention: Experimental';
+      case 'looking-for-maintainer':
+        return 'Maintenance intention: Looking for maintainer';
+      case 'deprecated':
+        return 'Maintenance intention: Deprecated';
+    }
+  }),
 });
