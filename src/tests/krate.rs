@@ -243,6 +243,7 @@ fn exact_match_first_on_queries() {
 }
 
 #[test]
+#[allow(clippy::cognitive_complexity)]
 fn index_sorting() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
@@ -270,6 +271,24 @@ fn index_sorting() {
             .description("other_sort const")
             .downloads(999_999)
             .expect_build(conn);
+
+        // Set the created at column for each crate
+        update(&krate1)
+            .set(crates::created_at.eq(now - 4.weeks()))
+            .execute(conn)
+            .unwrap();
+        update(&krate2)
+            .set(crates::created_at.eq(now - 1.weeks()))
+            .execute(conn)
+            .unwrap();
+        update(&krate3)
+            .set(crates::created_at.eq(now - 2.weeks()))
+            .execute(conn)
+            .unwrap();
+        update(&krate4)
+            .set(crates::created_at.eq(now - 3.weeks()))
+            .execute(conn)
+            .unwrap();
 
         // Set the updated at column for each crate
         update(&krate1)
@@ -314,6 +333,14 @@ fn index_sorting() {
     assert_eq!(json.crates[2].name, "bar_sort");
     assert_eq!(json.crates[3].name, "foo_sort");
 
+    // Sort by new
+    let json = anon.search("sort=new");
+    assert_eq!(json.meta.total, 4);
+    assert_eq!(json.crates[0].name, "bar_sort");
+    assert_eq!(json.crates[1].name, "baz_sort");
+    assert_eq!(json.crates[2].name, "other_sort");
+    assert_eq!(json.crates[3].name, "foo_sort");
+
     // Test for bug with showing null results first when sorting
     // by descending downloads
     let json = anon.search("sort=recent-downloads");
@@ -353,6 +380,24 @@ fn exact_match_on_queries_with_sort() {
             .description("other_sort const")
             .downloads(999_999)
             .expect_build(conn);
+
+        // Set the created at column for each crate
+        update(&krate1)
+            .set(crates::created_at.eq(now - 4.weeks()))
+            .execute(conn)
+            .unwrap();
+        update(&krate2)
+            .set(crates::created_at.eq(now - 1.weeks()))
+            .execute(conn)
+            .unwrap();
+        update(&krate3)
+            .set(crates::created_at.eq(now - 2.weeks()))
+            .execute(conn)
+            .unwrap();
+        update(&krate4)
+            .set(crates::created_at.eq(now - 3.weeks()))
+            .execute(conn)
+            .unwrap();
 
         // Set the updated at column for each crate
         update(&krate1)
@@ -411,6 +456,13 @@ fn exact_match_on_queries_with_sort() {
     assert_eq!(json.meta.total, 3);
     assert_eq!(json.crates[0].name, "baz_sort");
     assert_eq!(json.crates[1].name, "bar_sort");
+    assert_eq!(json.crates[2].name, "foo_sort");
+
+    // Sort by new
+    let json = anon.search("q=bar_sort&sort=new");
+    assert_eq!(json.meta.total, 3);
+    assert_eq!(json.crates[0].name, "bar_sort");
+    assert_eq!(json.crates[1].name, "baz_sort");
     assert_eq!(json.crates[2].name, "foo_sort");
 
     // Test for bug with showing null results first when sorting
