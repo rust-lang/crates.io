@@ -1,3 +1,5 @@
+#![warn(rust_2018_idioms)]
+
 pub extern crate semver;
 
 use std::collections::HashMap;
@@ -42,7 +44,7 @@ pub enum Method {
 }
 
 impl fmt::Display for Method {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match *self {
             Method::Get => "GET",
             Method::Post => "POST",
