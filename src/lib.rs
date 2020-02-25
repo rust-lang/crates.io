@@ -1,4 +1,5 @@
 #![cfg_attr(test, deny(warnings))]
+#![warn(rust_2018_idioms)]
 
 extern crate conduit;
 extern crate conduit_middleware as middleware;
