@@ -1,3 +1,4 @@
+#![warn(rust_2018_idioms)]
 extern crate conduit;
 extern crate semver;
 
@@ -107,7 +108,7 @@ impl conduit::Request for MockRequest {
     fn scheme(&self) -> Scheme {
         Scheme::Http
     }
-    fn host(&self) -> Host {
+    fn host(&self) -> Host<'_> {
         Host::Name("example.com")
     }
     fn virtual_root(&self) -> Option<&str> {
