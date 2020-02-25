@@ -34,7 +34,7 @@ impl MockRequest {
             headers: MockHeaders {
                 headers: HashMap::new(),
             },
-            method: method,
+            method,
             reader: None,
         }
     }
@@ -137,7 +137,7 @@ impl conduit::Request for MockRequest {
 
     fn body(&mut self) -> &mut dyn Read {
         if self.reader.is_none() {
-            let body = self.body.clone().unwrap_or(Vec::new());
+            let body = self.body.clone().unwrap_or_default();
             self.reader = Some(Cursor::new(body));
         }
         self.reader.as_mut().unwrap()
