@@ -1,12 +1,12 @@
-extern crate route_recognizer as router;
 extern crate conduit;
+extern crate route_recognizer as router;
 
-use std::collections::hash_map::{HashMap, Entry};
+use std::collections::hash_map::{Entry, HashMap};
 use std::error::Error;
 use std::fmt;
 
-use router::{Router, Match};
-use conduit::{Method, Handler, Request, Response};
+use conduit::{Handler, Method, Request, Response};
+use router::{Match, Router};
 
 pub struct RouteBuilder {
     routers: HashMap<Method, Router<Box<dyn Handler>>>,
@@ -17,21 +17,29 @@ pub struct RouterError(String);
 
 impl RouteBuilder {
     pub fn new() -> RouteBuilder {
-        RouteBuilder { routers: HashMap::new() }
+        RouteBuilder {
+            routers: HashMap::new(),
+        }
     }
 
-    pub fn recognize<'a>(&'a self, method: &Method, path: &str)
-                         -> Result<Match<&'a Box<dyn Handler>>,
-                                   RouterError>
-    {
+    pub fn recognize<'a>(
+        &'a self,
+        method: &Method,
+        path: &str,
+    ) -> Result<Match<&'a Box<dyn Handler>>, RouterError> {
         match self.routers.get(method) {
             Some(router) => router.recognize(path),
             None => Err(format!("No router found for {:?}", method)),
-        }.map_err(RouterError)
+        }
+        .map_err(RouterError)
     }
 
-    pub fn map<'a, H: Handler>(&'a mut self, method: Method, pattern: &str,
-                               handler: H) -> &'a mut RouteBuilder {
+    pub fn map<'a, H: Handler>(
+        &'a mut self,
+        method: Method,
+        pattern: &str,
+        handler: H,
+    ) -> &'a mut RouteBuilder {
         {
             let router = match self.routers.entry(method) {
                 Entry::Occupied(e) => e.into_mut(),
@@ -42,41 +50,36 @@ impl RouteBuilder {
         self
     }
 
-    pub fn get<'a, H: Handler>(&'a mut self, pattern: &str, handler: H)
-                               -> &'a mut RouteBuilder {
+    pub fn get<'a, H: Handler>(&'a mut self, pattern: &str, handler: H) -> &'a mut RouteBuilder {
         self.map(Method::Get, pattern, handler)
     }
 
-    pub fn post<'a, H: Handler>(&'a mut self, pattern: &str, handler: H)
-                                -> &'a mut RouteBuilder {
+    pub fn post<'a, H: Handler>(&'a mut self, pattern: &str, handler: H) -> &'a mut RouteBuilder {
         self.map(Method::Post, pattern, handler)
     }
 
-    pub fn put<'a, H: Handler>(&'a mut self, pattern: &str, handler: H)
-                               -> &'a mut RouteBuilder {
+    pub fn put<'a, H: Handler>(&'a mut self, pattern: &str, handler: H) -> &'a mut RouteBuilder {
         self.map(Method::Put, pattern, handler)
     }
 
-    pub fn delete<'a, H: Handler>(&'a mut self, pattern: &str, handler: H)
-                                  -> &'a mut RouteBuilder {
+    pub fn delete<'a, H: Handler>(&'a mut self, pattern: &str, handler: H) -> &'a mut RouteBuilder {
         self.map(Method::Delete, pattern, handler)
     }
 
-    pub fn head<'a, H: Handler>(&'a mut self, pattern: &str, handler: H)
-                                -> &'a mut RouteBuilder {
+    pub fn head<'a, H: Handler>(&'a mut self, pattern: &str, handler: H) -> &'a mut RouteBuilder {
         self.map(Method::Head, pattern, handler)
     }
 }
 
 impl conduit::Handler for RouteBuilder {
-    fn call(&self, request: &mut dyn Request) -> Result<Response, Box<dyn Error+Send>> {
+    fn call(&self, request: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
         let m = {
             let method = request.method();
             let path = request.path();
 
             match self.recognize(&method, path) {
                 Ok(m) => m,
-                Err(e) => return Err(Box::new(e) as Box<dyn Error+Send>)
+                Err(e) => return Err(Box::new(e) as Box<dyn Error + Send>),
             }
         };
 
@@ -90,7 +93,9 @@ impl conduit::Handler for RouteBuilder {
 }
 
 impl Error for RouterError {
-    fn description(&self) -> &str { &self.0 }
+    fn description(&self) -> &str {
+        &self.0
+    }
 }
 
 impl fmt::Display for RouterError {
@@ -104,7 +109,8 @@ pub trait RequestParams<'a> {
 }
 
 pub fn params<'a>(req: &'a dyn Request) -> &'a router::Params {
-    req.extensions().find::<router::Params>()
+    req.extensions()
+        .find::<router::Params>()
         .expect("Missing params")
 }
 
@@ -121,15 +127,15 @@ mod tests {
     use std::io;
     use std::net::SocketAddr;
 
-    use {RouteBuilder, RequestParams};
+    use {RequestParams, RouteBuilder};
 
     use conduit;
-    use conduit::{Handler, Method, Scheme, Host, Headers, Extensions, TypeMap};
+    use conduit::{Extensions, Handler, Headers, Host, Method, Scheme, TypeMap};
 
     struct RequestSentinel {
         method: Method,
         path: String,
-        extensions: conduit::Extensions
+        extensions: conduit::Extensions,
     }
 
     impl RequestSentinel {
@@ -137,24 +143,48 @@ mod tests {
             RequestSentinel {
                 path: path.to_string(),
                 extensions: TypeMap::new(),
-                method: method
+                method: method,
             }
         }
     }
 
     impl conduit::Request for RequestSentinel {
-        fn http_version(&self) -> semver::Version { unimplemented!() }
-        fn conduit_version(&self) -> semver::Version { unimplemented!() }
-        fn method(&self) -> Method { self.method.clone() }
-        fn scheme(&self) -> Scheme { unimplemented!() }
-        fn host<'a>(&'a self) -> Host<'a> { unimplemented!() }
-        fn virtual_root<'a>(&'a self) -> Option<&'a str> { unimplemented!() }
-        fn path<'a>(&'a self) -> &'a str { &self.path }
-        fn query_string<'a>(&'a self) -> Option<&'a str> { unimplemented!() }
-        fn remote_addr(&self) -> SocketAddr { unimplemented!() }
-        fn content_length(&self) -> Option<u64> { unimplemented!() }
-        fn headers<'a>(&'a self) -> &'a dyn Headers { unimplemented!() }
-        fn body<'a>(&'a mut self) -> &'a mut dyn io::Read { unimplemented!() }
+        fn http_version(&self) -> semver::Version {
+            unimplemented!()
+        }
+        fn conduit_version(&self) -> semver::Version {
+            unimplemented!()
+        }
+        fn method(&self) -> Method {
+            self.method.clone()
+        }
+        fn scheme(&self) -> Scheme {
+            unimplemented!()
+        }
+        fn host<'a>(&'a self) -> Host<'a> {
+            unimplemented!()
+        }
+        fn virtual_root<'a>(&'a self) -> Option<&'a str> {
+            unimplemented!()
+        }
+        fn path<'a>(&'a self) -> &'a str {
+            &self.path
+        }
+        fn query_string<'a>(&'a self) -> Option<&'a str> {
+            unimplemented!()
+        }
+        fn remote_addr(&self) -> SocketAddr {
+            unimplemented!()
+        }
+        fn content_length(&self) -> Option<u64> {
+            unimplemented!()
+        }
+        fn headers<'a>(&'a self) -> &'a dyn Headers {
+            unimplemented!()
+        }
+        fn body<'a>(&'a mut self) -> &'a mut dyn io::Read {
+            unimplemented!()
+        }
         fn extensions<'a>(&'a self) -> &'a Extensions {
             &self.extensions
         }
@@ -202,14 +232,14 @@ mod tests {
     }
 
     fn test_handler(req: &mut dyn conduit::Request) -> io::Result<conduit::Response> {
-        let mut res = vec!();
+        let mut res = vec![];
         res.push(req.params()["id"].clone());
         res.push(format!("{:?}", req.method()));
 
         Ok(conduit::Response {
             status: (200, "OK"),
             headers: HashMap::new(),
-            body: Box::new(io::Cursor::new(res.join(", ").into_bytes()))
+            body: Box::new(io::Cursor::new(res.join(", ").into_bytes())),
         })
     }
 }
