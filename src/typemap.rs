@@ -2,24 +2,32 @@ use std::any::{Any, TypeId};
 use std::collections::HashMap;
 
 pub struct TypeMap {
-    data: HashMap<TypeId, Box<dyn Any>>
+    data: HashMap<TypeId, Box<dyn Any>>,
 }
 
 impl TypeMap {
     pub fn new() -> TypeMap {
-        TypeMap { data: HashMap::new() }
+        TypeMap {
+            data: HashMap::new(),
+        }
     }
 
     pub fn find<T: 'static>(&self) -> Option<&T> {
-        self.data.get(&TypeId::of::<T>()).and_then(|a| a.downcast_ref())
+        self.data
+            .get(&TypeId::of::<T>())
+            .and_then(|a| a.downcast_ref())
     }
 
     pub fn find_mut<T: 'static>(&mut self) -> Option<&mut T> {
-        self.data.get_mut(&TypeId::of::<T>()).and_then(|a| a.downcast_mut())
+        self.data
+            .get_mut(&TypeId::of::<T>())
+            .and_then(|a| a.downcast_mut())
     }
 
     pub fn insert<T: 'static>(&mut self, val: T) -> bool {
-        self.data.insert(TypeId::of::<T>(), Box::new(val) as Box<dyn Any>).is_none()
+        self.data
+            .insert(TypeId::of::<T>(), Box::new(val) as Box<dyn Any>)
+            .is_none()
     }
 
     pub fn remove<T: 'static>(&mut self) -> bool {
@@ -56,4 +64,3 @@ mod tests {
         assert_eq!(m.pop::<i32>().unwrap(), 4);
     }
 }
-

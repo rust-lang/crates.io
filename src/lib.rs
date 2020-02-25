@@ -1,11 +1,11 @@
 pub extern crate semver;
 
-use std::io::prelude::*;
-use std::io;
 use std::collections::HashMap;
 use std::error::Error;
-use std::net::SocketAddr;
 use std::fmt;
+use std::io;
+use std::io::prelude::*;
+use std::net::SocketAddr;
 
 pub use self::typemap::TypeMap;
 mod typemap;
@@ -13,13 +13,13 @@ mod typemap;
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub enum Scheme {
     Http,
-    Https
+    Https,
 }
 
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub enum Host<'a> {
     Name(&'a str),
-    Socket(SocketAddr)
+    Socket(SocketAddr),
 }
 
 #[derive(PartialEq, Hash, Eq, Debug, Clone)]
@@ -38,7 +38,7 @@ pub enum Method {
     Purge,
 
     // WebDAV, Subversion, UPNP
-    Other(String)
+    Other(String),
 }
 
 impl fmt::Display for Method {
@@ -130,21 +130,22 @@ pub struct Response {
     pub headers: HashMap<String, Vec<String>>,
 
     /// A Writer for body of the response
-    pub body: Box<dyn WriteBody + Send>
+    pub body: Box<dyn WriteBody + Send>,
 }
 
 /// A Handler takes a request and returns a response or an error.
 /// By default, a bare function implements `Handler`.
 pub trait Handler: Sync + Send + 'static {
-    fn call(&self, request: &mut dyn Request) -> Result<Response, Box<dyn Error+Send>>;
+    fn call(&self, request: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>>;
 }
 
 impl<F, E> Handler for F
-    where F: Fn(&mut dyn Request) -> Result<Response, E> + Sync + Send + 'static,
-          E: Error + Send + 'static
+where
+    F: Fn(&mut dyn Request) -> Result<Response, E> + Sync + Send + 'static,
+    E: Error + Send + 'static,
 {
-    fn call(&self, request: &mut dyn Request) -> Result<Response, Box<dyn Error+Send>> {
-        (*self)(request).map_err(|e| Box::new(e) as Box<dyn Error+Send>)
+    fn call(&self, request: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
+        (*self)(request).map_err(|e| Box::new(e) as Box<dyn Error + Send>)
     }
 }
 
@@ -156,7 +157,8 @@ pub trait WriteBody {
 }
 
 impl<R> WriteBody for R
-    where R: Read
+where
+    R: Read,
 {
     fn write_body(&mut self, out: &mut dyn Write) -> io::Result<u64> {
         io::copy(self, out)
