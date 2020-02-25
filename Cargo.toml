@@ -59,7 +59,7 @@ scheduled-thread-pool = "0.2.0"
 derive_deref = "1.0.0"
 reqwest = { version = "0.10", features = ["blocking", "gzip", "json"] }
 tempfile = "3"
-parking_lot = "0.7.1"
+parking_lot = "0.10"
 jemallocator = { version = "0.3", features = ['unprefixed_malloc_on_supported_platforms', 'profiling'] }
 
 lettre = "0.9"
