@@ -9,6 +9,7 @@ use std::fmt;
 use conduit::{Handler, Method, Request, Response};
 use router::{Match, Router};
 
+#[derive(Default)]
 pub struct RouteBuilder {
     routers: HashMap<Method, Router<Box<dyn Handler>>>,
 }
@@ -109,7 +110,7 @@ pub trait RequestParams<'a> {
     fn params(self) -> &'a router::Params;
 }
 
-pub fn params<'a>(req: &'a dyn Request) -> &'a router::Params {
+pub fn params(req: &dyn Request) -> &router::Params {
     req.extensions()
         .find::<router::Params>()
         .expect("Missing params")
@@ -144,7 +145,7 @@ mod tests {
             RequestSentinel {
                 path: path.to_string(),
                 extensions: TypeMap::new(),
-                method: method,
+                method,
             }
         }
     }
