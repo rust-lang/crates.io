@@ -2,16 +2,18 @@ extern crate conduit;
 
 use std::error::Error;
 
-use conduit::{Request, Response, Handler};
+use conduit::{Handler, Request, Response};
 
 pub trait Middleware: Send + Sync + 'static {
-    fn before(&self, _: &mut dyn Request) -> Result<(), Box<dyn Error+Send>> {
+    fn before(&self, _: &mut dyn Request) -> Result<(), Box<dyn Error + Send>> {
         Ok(())
     }
 
-    fn after(&self, _: &mut dyn Request, res: Result<Response, Box<dyn Error+Send>>)
-             -> Result<Response, Box<dyn Error+Send>>
-    {
+    fn after(
+        &self,
+        _: &mut dyn Request,
+        res: Result<Response, Box<dyn Error + Send>>,
+    ) -> Result<Response, Box<dyn Error + Send>> {
         res
     }
 }
@@ -22,19 +24,20 @@ pub trait AroundMiddleware: Handler {
 
 pub struct MiddlewareBuilder {
     middlewares: Vec<Box<dyn Middleware>>,
-    handler: Option<Box<dyn Handler>>
+    handler: Option<Box<dyn Handler>>,
 }
 
 impl MiddlewareBuilder {
     pub fn new<H: Handler>(handler: H) -> MiddlewareBuilder {
         MiddlewareBuilder {
-            middlewares: vec!(),
-            handler: Some(Box::new(handler) as Box<dyn Handler>)
+            middlewares: vec![],
+            handler: Some(Box::new(handler) as Box<dyn Handler>),
         }
     }
 
     pub fn add<M: Middleware>(&mut self, middleware: M) {
-        self.middlewares.push(Box::new(middleware) as Box<dyn Middleware>);
+        self.middlewares
+            .push(Box::new(middleware) as Box<dyn Middleware>);
     }
 
     pub fn around<M: AroundMiddleware>(&mut self, mut middleware: M) {
@@ -45,7 +48,7 @@ impl MiddlewareBuilder {
 }
 
 impl Handler for MiddlewareBuilder {
-    fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error+Send>> {
+    fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
         let mut error = None;
 
         for (i, middleware) in self.middlewares.iter().enumerate() {
@@ -62,7 +65,7 @@ impl Handler for MiddlewareBuilder {
             Some((err, i)) => {
                 let middlewares = &self.middlewares[..i];
                 run_afters(middlewares, req, Err(err))
-            },
+            }
             None => {
                 let res = { self.handler.as_ref().unwrap().call(req) };
                 let middlewares = &self.middlewares;
@@ -73,35 +76,38 @@ impl Handler for MiddlewareBuilder {
     }
 }
 
-fn run_afters(middleware: &[Box<dyn Middleware>],
-                  req: &mut dyn Request,
-                  res: Result<Response, Box<dyn Error+Send>>)
-                  -> Result<Response, Box<dyn Error+Send>>
-{
-    middleware.iter().rev().fold(res, |res, m| m.after(req, res))
+fn run_afters(
+    middleware: &[Box<dyn Middleware>],
+    req: &mut dyn Request,
+    res: Result<Response, Box<dyn Error + Send>>,
+) -> Result<Response, Box<dyn Error + Send>> {
+    middleware
+        .iter()
+        .rev()
+        .fold(res, |res, m| m.after(req, res))
 }
 
 #[cfg(test)]
 mod tests {
     extern crate semver;
 
-    use {MiddlewareBuilder, Middleware, AroundMiddleware};
+    use {AroundMiddleware, Middleware, MiddlewareBuilder};
 
     use std::any::Any;
     use std::collections::HashMap;
     use std::error::Error;
-    use std::io::{self, Cursor};
     use std::io::prelude::*;
+    use std::io::{self, Cursor};
     use std::net::SocketAddr;
 
     use conduit;
-    use conduit::{Request, Response, Host, Headers, Method, Scheme, Extensions};
+    use conduit::{Extensions, Headers, Host, Method, Request, Response, Scheme};
     use conduit::{Handler, TypeMap};
 
     struct RequestSentinel {
         path: String,
         extensions: TypeMap,
-        method: Method
+        method: Method,
     }
 
     impl RequestSentinel {
@@ -109,24 +115,48 @@ mod tests {
             RequestSentinel {
                 path: path.to_string(),
                 extensions: TypeMap::new(),
-                method: method
+                method: method,
             }
         }
     }
 
     impl conduit::Request for RequestSentinel {
-        fn http_version(&self) -> semver::Version { unimplemented!() }
-        fn conduit_version(&self) -> semver::Version { unimplemented!() }
-        fn method(&self) -> Method { self.method.clone() }
-        fn scheme(&self) -> Scheme { unimplemented!() }
-        fn host<'a>(&'a self) -> Host<'a> { unimplemented!() }
-        fn virtual_root<'a>(&'a self) -> Option<&'a str> { unimplemented!() }
-        fn path<'a>(&'a self) -> &'a str { &self.path }
-        fn query_string<'a>(&'a self) -> Option<&'a str> { unimplemented!() }
-        fn remote_addr(&self) -> SocketAddr { unimplemented!() }
-        fn content_length(&self) -> Option<u64> { unimplemented!() }
-        fn headers<'a>(&'a self) -> &'a dyn Headers { unimplemented!() }
-        fn body<'a>(&'a mut self) -> &'a mut dyn Read { unimplemented!() }
+        fn http_version(&self) -> semver::Version {
+            unimplemented!()
+        }
+        fn conduit_version(&self) -> semver::Version {
+            unimplemented!()
+        }
+        fn method(&self) -> Method {
+            self.method.clone()
+        }
+        fn scheme(&self) -> Scheme {
+            unimplemented!()
+        }
+        fn host<'a>(&'a self) -> Host<'a> {
+            unimplemented!()
+        }
+        fn virtual_root<'a>(&'a self) -> Option<&'a str> {
+            unimplemented!()
+        }
+        fn path<'a>(&'a self) -> &'a str {
+            &self.path
+        }
+        fn query_string<'a>(&'a self) -> Option<&'a str> {
+            unimplemented!()
+        }
+        fn remote_addr(&self) -> SocketAddr {
+            unimplemented!()
+        }
+        fn content_length(&self) -> Option<u64> {
+            unimplemented!()
+        }
+        fn headers<'a>(&'a self) -> &'a dyn Headers {
+            unimplemented!()
+        }
+        fn body<'a>(&'a mut self) -> &'a mut dyn Read {
+            unimplemented!()
+        }
         fn extensions<'a>(&'a self) -> &'a Extensions {
             &self.extensions
         }
@@ -138,7 +168,7 @@ mod tests {
     struct MyMiddleware;
 
     impl Middleware for MyMiddleware {
-        fn before<'a>(&self, req: &'a mut dyn Request) -> Result<(), Box<dyn Error+Send>> {
+        fn before<'a>(&self, req: &'a mut dyn Request) -> Result<(), Box<dyn Error + Send>> {
             req.mut_extensions().insert("hello".to_string());
             Ok(())
         }
@@ -147,15 +177,17 @@ mod tests {
     struct ErrorRecovery;
 
     impl Middleware for ErrorRecovery {
-        fn after(&self, _: &mut dyn Request, res: Result<Response, Box<dyn Error+Send>>)
-                     -> Result<Response, Box<dyn Error+Send>>
-        {
+        fn after(
+            &self,
+            _: &mut dyn Request,
+            res: Result<Response, Box<dyn Error + Send>>,
+        ) -> Result<Response, Box<dyn Error + Send>> {
             res.or_else(|e| {
                 let e = e.to_string();
                 Ok(Response {
                     status: (500, "Internal Server Error"),
                     headers: HashMap::new(),
-                    body: Box::new(Cursor::new(e.into_bytes()))
+                    body: Box::new(Cursor::new(e.into_bytes())),
                 })
             })
         }
@@ -164,7 +196,7 @@ mod tests {
     struct ProducesError;
 
     impl Middleware for ProducesError {
-        fn before(&self, _: &mut dyn Request) -> Result<(), Box<dyn Error+Send>> {
+        fn before(&self, _: &mut dyn Request) -> Result<(), Box<dyn Error + Send>> {
             Err(Box::new(io::Error::new(io::ErrorKind::Other, "")))
         }
     }
@@ -172,19 +204,21 @@ mod tests {
     struct NotReached;
 
     impl Middleware for NotReached {
-        fn after(&self, _: &mut dyn Request, _: Result<Response, Box<dyn Error+Send>>)
-                     -> Result<Response, Box<dyn Error+Send>>
-        {
+        fn after(
+            &self,
+            _: &mut dyn Request,
+            _: Result<Response, Box<dyn Error + Send>>,
+        ) -> Result<Response, Box<dyn Error + Send>> {
             Ok(Response {
                 status: (200, "OK"),
                 headers: HashMap::new(),
-                body: Box::new(Cursor::new(vec!()))
+                body: Box::new(Cursor::new(vec![])),
             })
         }
     }
 
     struct MyAroundMiddleware {
-        handler: Option<Box<dyn Handler>>
+        handler: Option<Box<dyn Handler>>,
     }
 
     impl MyAroundMiddleware {
@@ -202,7 +236,7 @@ mod tests {
     }
 
     impl Handler for MyAroundMiddleware {
-        fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error+Send>> {
+        fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
             req.mut_extensions().insert("hello".to_string());
             self.handler.as_ref().unwrap().call(req)
         }
@@ -216,7 +250,7 @@ mod tests {
         Response {
             status: (200, "OK"),
             headers: HashMap::new(),
-            body: Box::new(Cursor::new(string.into_bytes()))
+            body: Box::new(Cursor::new(string.into_bytes())),
         }
     }
 
