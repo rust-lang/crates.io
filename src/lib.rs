@@ -102,7 +102,7 @@ fn header_val<'a>(header: Vec<&'a str>) -> Cow<'a, str> {
     }
 }
 
-fn res_header_val<'a>(header: &'a Vec<String>) -> Cow<'a, str> {
+fn res_header_val<'a>(header: &'a [String]) -> Cow<'a, str> {
     if header.len() == 1 {
         Cow::Borrowed(&header[0])
     } else {
@@ -294,9 +294,9 @@ mod tests {
             body: &'static str,
         ) -> SimpleHandler {
             SimpleHandler {
-                map: map,
-                status: status,
-                body: body,
+                map,
+                status,
+                body,
             }
         }
     }
