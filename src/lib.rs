@@ -26,7 +26,7 @@ impl Static {
     pub fn new<P: AsRef<Path>>(path: P) -> Static {
         Static {
             path: path.as_ref().to_path_buf(),
-            types: mime::Types::new().ok().expect("Couldn't load mime-types"),
+            types: mime::Types::new().expect("Couldn't load mime-types"),
         }
     }
 }
@@ -68,7 +68,7 @@ impl Handler for Static {
 
         Ok(Response {
             status: (200, "OK"),
-            headers: headers,
+            headers,
             body: Box::new(file),
         })
     }
@@ -80,7 +80,7 @@ fn not_found() -> Response {
     headers.insert("Content-Type".to_string(), vec!["text/plain".to_string()]);
     Response {
         status: (404, "Not Found"),
-        headers: headers,
+        headers,
         body: Box::new(io::empty()),
     }
 }
