@@ -1,13 +1,13 @@
-extern crate semver;
 extern crate conduit;
+extern crate semver;
 
 use std::collections::HashMap;
 use std::io::prelude::*;
 use std::io::Cursor;
-use std::net::{SocketAddr, Ipv4Addr, SocketAddrV4};
+use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 
+use conduit::{Extensions, Headers, Host, Method, Scheme, TypeMap};
 use semver::Version;
-use conduit::{Method, Scheme, Host, Extensions, Headers, TypeMap};
 
 pub struct MockRequest {
     path: String,
@@ -17,7 +17,7 @@ pub struct MockRequest {
     build_headers: HashMap<String, String>,
     headers: MockHeaders,
     extensions: TypeMap,
-    reader: Option<Cursor<Vec<u8>>>
+    reader: Option<Cursor<Vec<u8>>>,
 }
 
 impl MockRequest {
@@ -30,9 +30,11 @@ impl MockRequest {
             query_string: None,
             body: None,
             build_headers: headers,
-            headers: MockHeaders { headers: HashMap::new() },
+            headers: MockHeaders {
+                headers: HashMap::new(),
+            },
             method: method,
-            reader: None
+            reader: None,
         }
     }
 
@@ -58,8 +60,11 @@ impl MockRequest {
     }
 
     pub fn header(&mut self, name: &str, value: &str) -> &mut MockRequest {
-        self.build_headers.insert(name.to_string(), value.to_string());
-        let headers = MockHeaders { headers: self.build_headers.clone() };
+        self.build_headers
+            .insert(name.to_string(), value.to_string());
+        let headers = MockHeaders {
+            headers: self.build_headers.clone(),
+        };
         self.headers = headers;
 
         self
@@ -67,7 +72,7 @@ impl MockRequest {
 }
 
 pub struct MockHeaders {
-    headers: HashMap<String, String>
+    headers: HashMap<String, String>,
 }
 
 impl Headers for MockHeaders {
@@ -80,8 +85,10 @@ impl Headers for MockHeaders {
     }
 
     fn all(&self) -> Vec<(&str, Vec<&str>)> {
-        self.headers.iter().map(|(k,v)| (&k[..], vec![&v[..]]))
-                    .collect()
+        self.headers
+            .iter()
+            .map(|(k, v)| (&k[..], vec![&v[..]]))
+            .collect()
     }
 }
 
@@ -94,10 +101,18 @@ impl conduit::Request for MockRequest {
         Version::parse("0.1.0").unwrap()
     }
 
-    fn method(&self) -> Method { self.method.clone() }
-    fn scheme(&self) -> Scheme { Scheme::Http }
-    fn host(&self) -> Host { Host::Name("example.com") }
-    fn virtual_root(&self) -> Option<&str> { None }
+    fn method(&self) -> Method {
+        self.method.clone()
+    }
+    fn scheme(&self) -> Scheme {
+        Scheme::Http
+    }
+    fn host(&self) -> Host {
+        Host::Name("example.com")
+    }
+    fn virtual_root(&self) -> Option<&str> {
+        None
+    }
 
     fn path(&self) -> &str {
         &self.path
@@ -140,9 +155,9 @@ mod tests {
     use super::MockRequest;
     use semver::Version;
 
-    use std::net::{SocketAddr, SocketAddrV4, Ipv4Addr};
+    use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 
-    use conduit::{Request, Method, Host, Scheme};
+    use conduit::{Host, Method, Request, Scheme};
 
     #[test]
     fn simple_request_test() {
@@ -156,9 +171,10 @@ mod tests {
         assert_eq!(req.virtual_root(), None);
         assert_eq!(req.path(), "/");
         assert_eq!(req.query_string(), None);
-        assert_eq!(req.remote_addr(),
-                   SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1),
-                                                    80)));
+        assert_eq!(
+            req.remote_addr(),
+            SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1), 80))
+        );
         assert_eq!(req.content_length(), None);
         assert_eq!(req.headers().all().len(), 0);
         let mut s = String::new();
