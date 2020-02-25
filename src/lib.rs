@@ -1,4 +1,5 @@
 #![allow(trivial_casts)]
+#![warn(rust_2018_idioms)]
 #![cfg_attr(test, deny(warnings))]
 
 extern crate conduit;
