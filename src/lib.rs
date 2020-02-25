@@ -1,3 +1,4 @@
+#![warn(rust_2018_idioms)]
 extern crate conduit;
 extern crate route_recognizer as router;
 
@@ -99,7 +100,7 @@ impl Error for RouterError {
 }
 
 impl fmt::Display for RouterError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Display::fmt(&self.0, f)
     }
 }
