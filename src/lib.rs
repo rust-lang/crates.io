@@ -116,7 +116,7 @@ mod tests {
             RequestSentinel {
                 path: path.to_string(),
                 extensions: TypeMap::new(),
-                method: method,
+                method,
             }
         }
     }
