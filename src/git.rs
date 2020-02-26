@@ -267,6 +267,8 @@ pub fn add_crate(env: &Environment, krate: Crate) -> Result<(), PerformError> {
     serde_json::to_writer(&mut file, &krate)?;
     file.write_all(b"\n")?;
 
+    println!("Updating crate `{}#{}`", krate.name, krate.vers);
+
     repo.commit_and_push(
         &format!("Updating crate `{}#{}`", krate.name, krate.vers),
         &repo.relative_index_file(&krate.name),
