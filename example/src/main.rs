@@ -2,22 +2,20 @@ extern crate civet;
 extern crate conduit;
 extern crate conduit_router;
 
-use std::collections::HashMap;
-use std::io::{self, Cursor};
 use std::sync::mpsc::channel;
 
-use civet::{Config, response, Server};
-use conduit::{Request, Response};
-use conduit_router::{RouteBuilder, RequestParams};
+use civet::{Config, Server};
+use conduit::{static_to_body, vec_to_body, HttpResult, RequestExt, Response};
+use conduit_router::{RequestParams, RouteBuilder};
 
-fn name(req: &mut Request) -> io::Result<Response> {
+fn name(req: &mut dyn RequestExt) -> HttpResult {
     let name = req.params().find("name").unwrap();
     let bytes = format!("Hello {}!", name).into_bytes();
-    Ok(response(200, HashMap::new(), Cursor::new(bytes)))
+    Response::builder().body(vec_to_body(bytes))
 }
 
-fn hello(_req: &mut Request) -> io::Result<Response> {
-    Ok(response(200, HashMap::new(), "Hello world!".as_bytes()))
+fn hello(_req: &mut dyn RequestExt) -> HttpResult {
+    Response::builder().body(static_to_body(b"Hello world!"))
 }
 
 fn main() {
