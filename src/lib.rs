@@ -1,16 +1,34 @@
 #![warn(rust_2018_idioms)]
 
-pub extern crate semver;
+extern crate http;
 
-use std::collections::HashMap;
 use std::error::Error;
-use std::fmt;
-use std::io;
-use std::io::prelude::*;
+use std::io::{self, prelude::*, Cursor};
 use std::net::SocketAddr;
+
+pub use http::{header, HeaderMap, Method, Request, Response, StatusCode, Version};
 
 pub use self::typemap::TypeMap;
 mod typemap;
+
+pub type Body = Box<dyn WriteBody>;
+pub type ResponseResult<Error> = Result<Response<Body>, Error>;
+pub type HttpResult = ResponseResult<http::Error>;
+
+pub type BoxError = Box<dyn Error + Send>;
+pub type HandlerResult = Result<Response<Body>, BoxError>;
+
+pub fn static_to_body(bytes: &'static [u8]) -> Body {
+    Box::new(bytes)
+}
+
+pub fn vec_to_body(bytes: Vec<u8>) -> Body {
+    Box::new(Cursor::new(bytes))
+}
+
+pub fn box_error<E: Error + Send + 'static>(error: E) -> BoxError {
+    Box::new(error)
+}
 
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub enum Scheme {
@@ -24,56 +42,15 @@ pub enum Host<'a> {
     Socket(SocketAddr),
 }
 
-#[derive(PartialEq, Hash, Eq, Debug, Clone)]
-pub enum Method {
-    Get,
-    Post,
-    Put,
-    Delete,
-    Head,
-    Connect,
-    Options,
-    Trace,
-
-    // RFC-5789
-    Patch,
-    Purge,
-
-    // WebDAV, Subversion, UPNP
-    Other(String),
-}
-
-impl fmt::Display for Method {
-    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let s = match *self {
-            Method::Get => "GET",
-            Method::Post => "POST",
-            Method::Put => "PUT",
-            Method::Delete => "DELETE",
-            Method::Head => "HEAD",
-            Method::Connect => "CONNECT",
-            Method::Options => "OPTIONS",
-            Method::Trace => "TRACE",
-            Method::Patch => "PATCH",
-            Method::Purge => "PURGE",
-            Method::Other(ref s) => s,
-        };
-        fmt.write_str(s)
-    }
-}
-
 /// A Dictionary for extensions provided by the server or middleware
 pub type Extensions = TypeMap;
 
-pub trait Request {
+pub trait RequestExt {
     /// The version of HTTP being used
-    fn http_version(&self) -> semver::Version;
-
-    /// The version of the conduit spec being used
-    fn conduit_version(&self) -> semver::Version;
+    fn http_version(&self) -> Version;
 
     /// The request method, such as GET, POST, PUT, DELETE or PATCH
-    fn method(&self) -> Method;
+    fn method(&self) -> &Method;
 
     /// The scheme part of the request URL
     fn scheme(&self) -> Scheme;
@@ -100,7 +77,7 @@ pub trait Request {
     fn content_length(&self) -> Option<u64>;
 
     /// The request's headers, as conduit::Headers.
-    fn headers<'a>(&'a self) -> &'a dyn Headers;
+    fn headers(&self) -> &HeaderMap;
 
     /// A Reader for the body of the request
     fn body<'a>(&'a mut self) -> &'a mut dyn Read;
@@ -112,42 +89,19 @@ pub trait Request {
     fn mut_extensions<'a>(&'a mut self) -> &'a mut Extensions;
 }
 
-pub trait Headers {
-    /// Find the value of a given header. Multi-line headers are represented
-    /// as an array.
-    fn find(&self, key: &str) -> Option<Vec<&str>>;
-
-    /// Returns true if a particular header exists
-    fn has(&self, key: &str) -> bool;
-
-    /// Iterate over all of the available headers.
-    fn all(&self) -> Vec<(&str, Vec<&str>)>;
-}
-
-pub struct Response {
-    /// The status code as a tuple of the return code and status string
-    pub status: (u32, &'static str),
-
-    /// A Map of the headers
-    pub headers: HashMap<String, Vec<String>>,
-
-    /// A Writer for body of the response
-    pub body: Box<dyn WriteBody + Send>,
-}
-
 /// A Handler takes a request and returns a response or an error.
 /// By default, a bare function implements `Handler`.
 pub trait Handler: Sync + Send + 'static {
-    fn call(&self, request: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>>;
+    fn call(&self, request: &mut dyn RequestExt) -> HandlerResult;
 }
 
 impl<F, E> Handler for F
 where
-    F: Fn(&mut dyn Request) -> Result<Response, E> + Sync + Send + 'static,
+    F: Fn(&mut dyn RequestExt) -> ResponseResult<E> + Sync + Send + 'static,
     E: Error + Send + 'static,
 {
-    fn call(&self, request: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
-        (*self)(request).map_err(|e| Box::new(e) as Box<dyn Error + Send>)
+    fn call(&self, request: &mut dyn RequestExt) -> HandlerResult {
+        (*self)(request).map_err(box_error)
     }
 }
 
