@@ -14,4 +14,17 @@ export default RESTAdapter.extend({
 
     return {};
   }),
+
+  handleResponse(status, headers, payload, requestData) {
+    if (typeof payload === 'string') {
+      try {
+        payload = JSON.parse(payload);
+      } catch (ignored) {
+        // if the payload can't be parsed as JSON then let's continue
+        // with the string payload
+      }
+    }
+
+    return this._super(status, headers, payload, requestData);
+  },
 });
