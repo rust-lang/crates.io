@@ -1,39 +1,35 @@
 #![warn(rust_2018_idioms)]
 extern crate conduit;
-extern crate semver;
 
-use std::collections::HashMap;
 use std::io::prelude::*;
 use std::io::Cursor;
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 
-use conduit::{Extensions, Headers, Host, Method, Scheme, TypeMap};
-use semver::Version;
+use conduit::{
+    header::{HeaderName, HeaderValue},
+    Extensions, HeaderMap, Host, Method, Scheme, TypeMap, Version,
+};
 
 pub struct MockRequest {
     path: String,
     method: Method,
     query_string: Option<String>,
     body: Option<Vec<u8>>,
-    build_headers: HashMap<String, String>,
-    headers: MockHeaders,
+    headers: HeaderMap,
     extensions: TypeMap,
     reader: Option<Cursor<Vec<u8>>>,
 }
 
 impl MockRequest {
     pub fn new(method: Method, path: &str) -> MockRequest {
-        let headers = HashMap::new();
+        let headers = HeaderMap::new();
 
         MockRequest {
             path: path.to_string(),
             extensions: TypeMap::new(),
             query_string: None,
             body: None,
-            build_headers: headers,
-            headers: MockHeaders {
-                headers: HashMap::new(),
-            },
+            headers,
             method,
             reader: None,
         }
@@ -60,50 +56,20 @@ impl MockRequest {
         self
     }
 
-    pub fn header(&mut self, name: &str, value: &str) -> &mut MockRequest {
-        self.build_headers
-            .insert(name.to_string(), value.to_string());
-        let headers = MockHeaders {
-            headers: self.build_headers.clone(),
-        };
-        self.headers = headers;
-
+    pub fn header(&mut self, name: HeaderName, value: &str) -> &mut MockRequest {
+        self.headers
+            .insert(name, HeaderValue::from_str(value).unwrap());
         self
     }
 }
 
-pub struct MockHeaders {
-    headers: HashMap<String, String>,
-}
-
-impl Headers for MockHeaders {
-    fn find(&self, key: &str) -> Option<Vec<&str>> {
-        self.headers.get(key).map(|v| vec![&v[..]])
-    }
-
-    fn has(&self, key: &str) -> bool {
-        self.headers.contains_key(key)
-    }
-
-    fn all(&self) -> Vec<(&str, Vec<&str>)> {
-        self.headers
-            .iter()
-            .map(|(k, v)| (&k[..], vec![&v[..]]))
-            .collect()
-    }
-}
-
-impl conduit::Request for MockRequest {
+impl conduit::RequestExt for MockRequest {
     fn http_version(&self) -> Version {
-        Version::parse("1.1.0").unwrap()
+        Version::HTTP_11
     }
 
-    fn conduit_version(&self) -> Version {
-        Version::parse("0.1.0").unwrap()
-    }
-
-    fn method(&self) -> Method {
-        self.method.clone()
+    fn method(&self) -> &Method {
+        &self.method
     }
     fn scheme(&self) -> Scheme {
         Scheme::Http
@@ -131,8 +97,8 @@ impl conduit::Request for MockRequest {
         self.body.as_ref().map(|b| b.len() as u64)
     }
 
-    fn headers(&self) -> &dyn Headers {
-        &self.headers as &dyn Headers
+    fn headers(&self) -> &HeaderMap {
+        &self.headers
     }
 
     fn body(&mut self) -> &mut dyn Read {
@@ -154,19 +120,17 @@ impl conduit::Request for MockRequest {
 #[cfg(test)]
 mod tests {
     use super::MockRequest;
-    use semver::Version;
 
     use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 
-    use conduit::{Host, Method, Request, Scheme};
+    use conduit::{header, Host, Method, RequestExt, Scheme, Version};
 
     #[test]
     fn simple_request_test() {
-        let mut req = MockRequest::new(Method::Get, "/");
+        let mut req = MockRequest::new(Method::GET, "/");
 
-        assert_eq!(req.http_version(), Version::parse("1.1.0").unwrap());
-        assert_eq!(req.conduit_version(), Version::parse("0.1.0").unwrap());
-        assert_eq!(req.method(), Method::Get);
+        assert_eq!(req.http_version(), Version::HTTP_11);
+        assert_eq!(req.method(), Method::GET);
         assert_eq!(req.scheme(), Scheme::Http);
         assert_eq!(req.host(), Host::Name("example.com"));
         assert_eq!(req.virtual_root(), None);
@@ -177,7 +141,7 @@ mod tests {
             SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1), 80))
         );
         assert_eq!(req.content_length(), None);
-        assert_eq!(req.headers().all().len(), 0);
+        assert_eq!(req.headers().len(), 0);
         let mut s = String::new();
         req.body().read_to_string(&mut s).ok().expect("No body");
         assert_eq!(s, "".to_string());
@@ -185,10 +149,10 @@ mod tests {
 
     #[test]
     fn request_body_test() {
-        let mut req = MockRequest::new(Method::Post, "/articles");
+        let mut req = MockRequest::new(Method::POST, "/articles");
         req.with_body(b"Hello world");
 
-        assert_eq!(req.method(), Method::Post);
+        assert_eq!(req.method(), Method::POST);
         assert_eq!(req.path(), "/articles");
         let mut s = String::new();
         req.body().read_to_string(&mut s).ok().expect("No body");
@@ -198,7 +162,7 @@ mod tests {
 
     #[test]
     fn request_query_test() {
-        let mut req = MockRequest::new(Method::Post, "/articles");
+        let mut req = MockRequest::new(Method::POST, "/articles");
         req.with_query("foo=bar");
 
         assert_eq!(req.query_string().expect("No query string"), "foo=bar");
@@ -206,12 +170,12 @@ mod tests {
 
     #[test]
     fn request_headers() {
-        let mut req = MockRequest::new(Method::Post, "/articles");
-        req.header("User-Agent", "lulz");
-        req.header("DNT", "1");
+        let mut req = MockRequest::new(Method::POST, "/articles");
+        req.header(header::USER_AGENT, "lulz");
+        req.header(header::DNT, "1");
 
-        assert_eq!(req.headers().all().len(), 2);
-        assert_eq!(req.headers().find("User-Agent").unwrap(), vec!("lulz"));
-        assert_eq!(req.headers().find("DNT").unwrap(), vec!("1"));
+        assert_eq!(req.headers().len(), 2);
+        assert_eq!(req.headers().get(header::USER_AGENT).unwrap(), "lulz");
+        assert_eq!(req.headers().get(header::DNT).unwrap(), "1");
     }
 }
