@@ -1,8 +1,6 @@
 use std::cmp;
-use std::collections::HashMap;
-use std::io::Cursor;
 
-use conduit::Response;
+use conduit::{header, vec_to_body, Response};
 use serde::Serialize;
 
 pub use self::errors::concrete::Error;
@@ -16,6 +14,9 @@ mod request_helpers;
 mod request_proxy;
 pub mod rfc3339;
 
+pub type AppResponse = Response<conduit::Body>;
+pub type EndpointResult = Result<AppResponse, Box<dyn errors::AppError>>;
+
 /// Serialize a value to JSON and build a status 200 Response
 ///
 /// This helper sets appropriate values for `Content-Type` and `Content-Length`.
@@ -23,19 +24,13 @@ pub mod rfc3339;
 /// # Panics
 ///
 /// This function will panic if serialization fails.
-pub fn json_response<T: Serialize>(t: &T) -> Response {
+pub fn json_response<T: Serialize>(t: &T) -> AppResponse {
     let json = serde_json::to_string(t).unwrap();
-    let mut headers = HashMap::new();
-    headers.insert(
-        "Content-Type".to_string(),
-        vec!["application/json; charset=utf-8".to_string()],
-    );
-    headers.insert("Content-Length".to_string(), vec![json.len().to_string()]);
-    Response {
-        status: (200, "OK"),
-        headers,
-        body: Box::new(Cursor::new(json.into_bytes())),
-    }
+    Response::builder()
+        .header(header::CONTENT_TYPE, "application/json; charset=utf-8")
+        .header(header::CONTENT_LENGTH, json.len())
+        .body(vec_to_body(json.into_bytes()))
+        .unwrap() // Header values are well formed, so should not panic
 }
 
 #[derive(Debug, Copy, Clone)]

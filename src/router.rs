@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
-use conduit::{Handler, Request, Response};
+use conduit::{Handler, HandlerResult, RequestExt};
 use conduit_router::{RequestParams, RouteBuilder};
 
 use crate::controllers::*;
-use crate::util::errors::{std_error, AppError, AppResult, NotFound};
-use crate::util::RequestProxy;
-use crate::{middleware, App, Env};
+use crate::util::errors::{std_error, AppError, NotFound};
+use crate::util::{EndpointResult, RequestProxy};
+use crate::{App, Env};
 
 pub fn build_router(app: &App) -> R404 {
     let mut api_router = RouteBuilder::new();
@@ -136,10 +136,10 @@ pub fn build_router(app: &App) -> R404 {
     R404(router)
 }
 
-struct C(pub fn(&mut dyn Request) -> AppResult<Response>);
+struct C(pub fn(&mut dyn RequestExt) -> EndpointResult);
 
 impl Handler for C {
-    fn call(&self, req: &mut dyn Request) -> middleware::Result<Response> {
+    fn call(&self, req: &mut dyn RequestExt) -> HandlerResult {
         let C(f) = *self;
         match f(req) {
             Ok(resp) => Ok(resp),
@@ -159,7 +159,7 @@ impl Handler for C {
 struct R<H>(pub Arc<H>);
 
 impl<H: Handler> Handler for R<H> {
-    fn call(&self, req: &mut dyn Request) -> middleware::Result<Response> {
+    fn call(&self, req: &mut dyn RequestExt) -> HandlerResult {
         let path = req.params()["path"].to_string();
         let R(ref sub_router) = *self;
         sub_router.call(&mut RequestProxy::rewrite_path(req, &path))
@@ -171,7 +171,7 @@ impl<H: Handler> Handler for R<H> {
 pub struct R404(pub RouteBuilder);
 
 impl Handler for R404 {
-    fn call(&self, req: &mut dyn Request) -> middleware::Result<Response> {
+    fn call(&self, req: &mut dyn RequestExt) -> HandlerResult {
         let R404(ref router) = *self;
         match router.recognize(&req.method(), req.path()) {
             Ok(m) => {
@@ -189,40 +189,40 @@ mod tests {
     use crate::util::errors::{
         bad_request, cargo_err, internal, AppError, ChainError, NotFound, Unauthorized,
     };
+    use crate::util::EndpointResult;
 
     use conduit_test::MockRequest;
     use diesel::result::Error as DieselError;
 
-    fn err<E: AppError>(err: E) -> AppResult<Response> {
+    fn err<E: AppError>(err: E) -> EndpointResult {
         Err(Box::new(err))
     }
 
     #[test]
     fn http_error_responses() {
-        let mut req = MockRequest::new(::conduit::Method::Get, "/");
+        let mut req = MockRequest::new(::conduit::Method::GET, "/");
 
         // Types for handling common error status codes
         assert_eq!(
-            C(|_| Err(bad_request(""))).call(&mut req).unwrap().status.0,
+            C(|_| Err(bad_request(""))).call(&mut req).unwrap().status(),
             400
         );
         assert_eq!(
-            C(|_| err(Unauthorized)).call(&mut req).unwrap().status.0,
+            C(|_| err(Unauthorized)).call(&mut req).unwrap().status(),
             403
         );
         assert_eq!(
             C(|_| Err(DieselError::NotFound.into()))
                 .call(&mut req)
                 .unwrap()
-                .status
-                .0,
+                .status(),
             404
         );
-        assert_eq!(C(|_| err(NotFound)).call(&mut req).unwrap().status.0, 404);
+        assert_eq!(C(|_| err(NotFound)).call(&mut req).unwrap().status(), 404);
 
         // cargo_err errors are returned as 200 so that cargo displays this nicely on the command line
         assert_eq!(
-            C(|_| Err(cargo_err(""))).call(&mut req).unwrap().status.0,
+            C(|_| Err(cargo_err(""))).call(&mut req).unwrap().status(),
             200
         );
 
@@ -236,7 +236,7 @@ mod tests {
         })
         .call(&mut req)
         .unwrap();
-        assert_eq!(response.status.0, 400);
+        assert_eq!(response.status(), 400);
         assert_eq!(
             crate::middleware::log_request::get_log_message(&req, "cause"),
             "middle error caused by invalid digit found in string"

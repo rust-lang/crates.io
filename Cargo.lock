@@ -228,7 +228,7 @@ dependencies = [
  "rand 0.6.5",
  "reqwest",
  "scheduled-thread-pool",
- "semver 0.9.0 (git+https://github.com/steveklabnik/semver.git)",
+ "semver",
  "serde",
  "serde_json",
  "swirl",
@@ -277,14 +277,13 @@ dependencies = [
 
 [[package]]
 name = "civet"
-version = "0.12.0-alpha.1"
+version = "0.12.0-alpha.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5f5ae04519752da172ab2e82540b28244da241064aa50e64de83645d0ae8d952"
+checksum = "b6ae786c5519f3740ffe88639d6d404c102c7af4acf206a94567c68f93d25b38"
 dependencies = [
  "civet-sys",
  "conduit",
  "libc",
- "semver 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -320,18 +319,18 @@ dependencies = [
 
 [[package]]
 name = "conduit"
-version = "0.9.0-alpha.0"
+version = "0.9.0-alpha.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "37ae2b5937afd049324f246e5ecd1d628bd23ba221879b9f56cd45674e9194bf"
+checksum = "2ca703f41f1b6a01299404ea407c2ae5b1cffc09a3d77af0e760130621cb3795"
 dependencies = [
- "semver 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "http",
 ]
 
 [[package]]
 name = "conduit-conditional-get"
-version = "0.9.0-alpha.0"
+version = "0.9.0-alpha.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b1e0b06d987366f9fc85a76260bc4057bab5dcc73f85b23fb633a49d8130136"
+checksum = "9a686f3233875b24b228b3362738de7cd16c74a8c81d8acfc0617edf427a2741"
 dependencies = [
  "conduit",
  "conduit-middleware",
@@ -340,9 +339,9 @@ dependencies = [
 
 [[package]]
 name = "conduit-cookie"
-version = "0.9.0-alpha.0"
+version = "0.9.0-alpha.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8cdba83653b08d6b2f082433e678ece2039f25f554fb68daf2a39f8c9ad351af"
+checksum = "7645e2fa9b3fdbae7ce77b29a7e353af2e616c936dae950e927c6bb5209c265a"
 dependencies = [
  "base64 0.11.0",
  "conduit",
@@ -352,9 +351,9 @@ dependencies = [
 
 [[package]]
 name = "conduit-git-http-backend"
-version = "0.9.0-alpha.0"
+version = "0.9.0-alpha.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4cf9cbbd931a7f6ecc159a70325e3e487f5f96a7310d02abbf62846e12ce9eab"
+checksum = "7a5962ccb612bd8e435978519a0acc13879cb86c087902fc8f8c3ab7bf2a7d4a"
 dependencies = [
  "conduit",
  "flate2",
@@ -362,15 +361,14 @@ dependencies = [
 
 [[package]]
 name = "conduit-hyper"
-version = "0.3.0-alpha.0"
+version = "0.3.0-alpha.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8802341cb1b01e4fc706804edde75789927fc3b05f9a0235ef59507dac5b0acf"
+checksum = "c305c4a09c27fe168fad4539eef738b0898063b7ca8c26a7434605c9aa954be6"
 dependencies = [
  "conduit",
  "futures",
  "http",
  "hyper",
- "semver 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "tokio",
  "tower-service",
  "tracing",
@@ -378,12 +376,11 @@ dependencies = [
 
 [[package]]
 name = "conduit-middleware"
-version = "0.9.0-alpha.0"
+version = "0.9.0-alpha.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "83cc6359459dc275cd9715aa84954ed861d0f68bde9e1f53edf494113a9ea005"
+checksum = "800bd3641b7b986cf1305f18243d50fe668f8b4d8bb543856119f55d84622223"
 dependencies = [
  "conduit",
- "semver 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -397,20 +394,19 @@ dependencies = [
 
 [[package]]
 name = "conduit-router"
-version = "0.9.0-alpha.0"
+version = "0.9.0-alpha.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7cbe1cb2c36d3ec99795c6c2fe6fc54199513240166a16f7cf471d8b8a1d5287"
+checksum = "79f5fd8e955ceb288e230572935c323cd84f1042a2804ef5a8b41b1c67fd85c8"
 dependencies = [
  "conduit",
  "route-recognizer",
- "semver 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "conduit-static"
-version = "0.9.0-alpha.0"
+version = "0.9.0-alpha.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9937e95a4192c239ed588a1d8190126441435de5bebcc7d0db34474c21c9558c"
+checksum = "b5b0cec0864a37f86320e0a0781d173b8c8fe7d878b16421c477a345f14bece8"
 dependencies = [
  "conduit",
  "conduit-mime-types",
@@ -420,12 +416,11 @@ dependencies = [
 
 [[package]]
 name = "conduit-test"
-version = "0.9.0-alpha.0"
+version = "0.9.0-alpha.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d81b2a279a7630087a56e8772ddef85670ae4d53dd2c9dbe361866ec0be9842f"
+checksum = "a29e3574fbffef97d38eabe60757ca26a44d1f5aec8ea549543291cda91c73d9"
 dependencies = [
  "conduit",
- "semver 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -2205,15 +2200,6 @@ dependencies = [
  "diesel",
  "semver-parser",
  "serde",
-]
-
-[[package]]
-name = "semver"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1d7eb9ef2c18661902cc47e535f9bc51b78acd254da71d375c2f6720d9a40403"
-dependencies = [
- "semver-parser",
 ]
 
 [[package]]

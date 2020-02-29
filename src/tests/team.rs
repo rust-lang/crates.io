@@ -8,6 +8,7 @@ use crate::{
 use cargo_registry::models::{Crate, NewUser};
 use std::sync::Once;
 
+use conduit::StatusCode;
 use diesel::*;
 
 impl crate::util::MockAnonymousUser {
@@ -50,7 +51,7 @@ fn not_github() {
 
     let json = token
         .add_named_owner("foo_not_github", "dropbox:foo:foo")
-        .bad_with_status(200);
+        .bad_with_status(StatusCode::OK);
 
     assert!(
         json.errors[0].detail.contains("unknown organization"),
@@ -69,7 +70,7 @@ fn weird_name() {
 
     let json = token
         .add_named_owner("foo_weird_name", "github:foo/../bar:wut")
-        .bad_with_status(200);
+        .bad_with_status(StatusCode::OK);
 
     assert!(
         json.errors[0]
@@ -91,7 +92,7 @@ fn one_colon() {
 
     let json = token
         .add_named_owner("foo_one_colon", "github:foo")
-        .bad_with_status(200);
+        .bad_with_status(StatusCode::OK);
 
     assert!(
         json.errors[0].detail.contains("missing github team"),
@@ -113,7 +114,7 @@ fn nonexistent_team() {
             "foo_nonexistent",
             "github:crates-test-org:this-does-not-exist",
         )
-        .bad_with_status(200);
+        .bad_with_status(StatusCode::OK);
 
     assert!(
         json.errors[0]
@@ -170,7 +171,7 @@ fn add_team_as_non_member() {
             "foo_team_non_member",
             "github:crates-test-org:just-for-crates-2",
         )
-        .bad_with_status(200);
+        .bad_with_status(StatusCode::OK);
 
     assert!(
         json.errors[0]
@@ -200,7 +201,7 @@ fn remove_team_as_named_owner() {
     // have permission to manage ownership
     let json = token_on_both_teams
         .remove_named_owner("foo_remove_team", username)
-        .bad_with_status(200);
+        .bad_with_status(StatusCode::OK);
     assert!(json.errors[0]
         .detail
         .contains("cannot remove all individual owners of a crate"));
@@ -213,7 +214,7 @@ fn remove_team_as_named_owner() {
     let crate_to_publish = PublishBuilder::new("foo_remove_team").version("2.0.0");
     let json = user_on_one_team
         .enqueue_publish(crate_to_publish)
-        .bad_with_status(200);
+        .bad_with_status(StatusCode::OK);
 
     assert!(
         json.errors[0]
@@ -244,7 +245,7 @@ fn remove_team_as_team_owner() {
 
     let json = token_on_one_team
         .remove_named_owner("foo_remove_team_owner", "github:crates-test-org:core")
-        .bad_with_status(200);
+        .bad_with_status(StatusCode::OK);
 
     assert!(
         json.errors[0]
@@ -275,7 +276,7 @@ fn publish_not_owned() {
     let crate_to_publish = PublishBuilder::new("foo_not_owned").version("2.0.0");
     let json = user_on_one_team
         .enqueue_publish(crate_to_publish)
-        .bad_with_status(200);
+        .bad_with_status(StatusCode::OK);
 
     assert!(
         json.errors[0]
@@ -327,7 +328,7 @@ fn add_owners_as_team_owner() {
 
     let json = token_on_one_team
         .add_named_owner("foo_add_owner", "arbitrary_username")
-        .bad_with_status(200);
+        .bad_with_status(StatusCode::OK);
 
     assert!(
         json.errors[0]

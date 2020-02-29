@@ -1,18 +1,17 @@
-use conduit::Request;
+use conduit::{header::AsHeaderName, RequestExt};
 
-/// Returns the value of the request header, or an empty string if it is not
+/// Returns the value of the request header, or an empty slice if it is not
 /// present.
 ///
-/// The implementation should return only the first line if it's a multiline
-/// header, but rust-civet is just wrapping the whole thing in a `vec!` anyway,
-/// and I have no clue what the C code it's wrapping does.
+/// If a header appears multiple times, this will return only one of them.
 ///
-/// The C library rust-civet is wrapping does not document whether headers are
-/// case sensitive or not, so I have no clue if this follows the HTTP spec in
-/// that regard.
-pub fn request_header<'a>(req: &'a dyn Request, header_name: &str) -> &'a str {
+/// If the header value is invalid utf8, an empty slice will be returned.
+pub fn request_header<'a, K>(req: &'a dyn RequestExt, key: K) -> &'a str
+where
+    K: AsHeaderName,
+{
     req.headers()
-        .find(header_name)
-        .and_then(|x| x.first().cloned())
+        .get(key)
+        .map(|value| value.to_str().unwrap_or_default())
         .unwrap_or_default()
 }

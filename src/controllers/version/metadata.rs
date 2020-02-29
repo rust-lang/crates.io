@@ -19,7 +19,7 @@ use super::version_and_crate;
 /// In addition to returning cached data from the index, this returns
 /// fields for `id`, `version_id`, and `downloads` (which appears to always
 /// be 0)
-pub fn dependencies(req: &mut dyn Request) -> AppResult<Response> {
+pub fn dependencies(req: &mut dyn RequestExt) -> EndpointResult {
     let (conn, version, _) = version_and_crate(req)?;
     let deps = version.dependencies(&*conn)?;
     let deps = deps
@@ -35,7 +35,7 @@ pub fn dependencies(req: &mut dyn Request) -> AppResult<Response> {
 }
 
 /// Handles the `GET /crates/:crate_id/:version/authors` route.
-pub fn authors(req: &mut dyn Request) -> AppResult<Response> {
+pub fn authors(req: &mut dyn RequestExt) -> EndpointResult {
     let (conn, version, _) = version_and_crate(req)?;
     let names = version_authors::table
         .filter(version_authors::version_id.eq(version.id))
@@ -65,7 +65,7 @@ pub fn authors(req: &mut dyn Request) -> AppResult<Response> {
 ///
 /// The frontend doesn't appear to hit this endpoint, but our tests do, and it seems to be a useful
 /// API route to have.
-pub fn show(req: &mut dyn Request) -> AppResult<Response> {
+pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
     let (conn, version, krate) = version_and_crate(req)?;
     let published_by = version.published_by(&conn);
     let actions = VersionOwnerAction::by_version(&conn, &version)?;

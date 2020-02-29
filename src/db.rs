@@ -1,4 +1,4 @@
-use conduit::Request;
+use conduit::RequestExt;
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager, CustomizeConnection};
 use parking_lot::{ReentrantMutex, ReentrantMutexGuard};
@@ -93,7 +93,7 @@ pub trait RequestTransaction {
     fn db_read_only(&self) -> Result<DieselPooledConn<'_>, r2d2::PoolError>;
 }
 
-impl<T: Request + ?Sized> RequestTransaction for T {
+impl<T: RequestExt + ?Sized> RequestTransaction for T {
     fn db_conn(&self) -> Result<DieselPooledConn<'_>, r2d2::PoolError> {
         self.app().primary_database.get().map_err(Into::into)
     }

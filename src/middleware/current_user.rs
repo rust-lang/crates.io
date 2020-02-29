@@ -10,7 +10,7 @@
 //! This is particularly problematic for the user authentication code.  When an API token is used
 //! for authentication, the datbase must be queried to obtain the `user_id`, so endpoint code must
 //! obtain and pass in a database connection.  Because of that connection, it is no longer possible
-//! to use or pass around the `&mut dyn Request` that it was derived from and it is not possible
+//! to use or pass around the `&mut dyn RequestExt` that it was derived from and it is not possible
 //! to access the session cookie.  In order to support authentication via session cookies and API
 //! tokens via the same code path, the `user_id` is extracted from the session cookie and stored in
 //! a `TrustedUserId` that can be read from while a connection reference is live.
@@ -27,7 +27,7 @@ pub struct TrustedUserId(pub i32);
 pub(super) struct CaptureUserIdFromCookie;
 
 impl Middleware for CaptureUserIdFromCookie {
-    fn before(&self, req: &mut dyn Request) -> Result<()> {
+    fn before(&self, req: &mut dyn RequestExt) -> BeforeResult {
         if let Some(id) = req.session().get("user_id").and_then(|s| s.parse().ok()) {
             req.mut_extensions().insert(TrustedUserId(id));
         }

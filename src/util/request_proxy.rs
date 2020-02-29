@@ -2,10 +2,9 @@
 
 use std::{io::Read, net::SocketAddr};
 
-use conduit::{Method, Request};
-use conduit_hyper::semver;
+use conduit::{Method, RequestExt};
 
-type RequestMutRef<'a> = &'a mut (dyn Request + 'a);
+type RequestMutRef<'a> = &'a mut (dyn RequestExt + 'a);
 
 // Can't derive Debug because of Request.
 #[allow(missing_debug_implementations)]
@@ -35,10 +34,10 @@ impl<'a> RequestProxy<'a> {
     }
 }
 
-impl<'a> Request for RequestProxy<'a> {
+impl<'a> RequestExt for RequestProxy<'a> {
     // Use local value if available, defer to the original request
-    fn method(&self) -> conduit::Method {
-        self.method.clone().unwrap_or_else(|| self.other.method())
+    fn method(&self) -> &conduit::Method {
+        self.method.as_ref().unwrap_or_else(|| &self.other.method())
     }
 
     fn path(&self) -> &str {
@@ -46,11 +45,8 @@ impl<'a> Request for RequestProxy<'a> {
     }
 
     // Pass-through
-    fn http_version(&self) -> semver::Version {
+    fn http_version(&self) -> conduit::Version {
         self.other.http_version()
-    }
-    fn conduit_version(&self) -> semver::Version {
-        self.other.conduit_version()
     }
     fn scheme(&self) -> conduit::Scheme {
         self.other.scheme()
@@ -70,7 +66,7 @@ impl<'a> Request for RequestProxy<'a> {
     fn content_length(&self) -> Option<u64> {
         self.other.content_length()
     }
-    fn headers(&self) -> &dyn conduit::Headers {
+    fn headers(&self) -> &conduit::HeaderMap {
         self.other.headers()
     }
     fn body(&mut self) -> &mut dyn Read {

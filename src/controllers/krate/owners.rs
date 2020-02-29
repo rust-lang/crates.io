@@ -5,7 +5,7 @@ use crate::models::{Crate, Owner, Rights, Team, User};
 use crate::views::EncodableOwner;
 
 /// Handles the `GET /crates/:crate_id/owners` route.
-pub fn owners(req: &mut dyn Request) -> AppResult<Response> {
+pub fn owners(req: &mut dyn RequestExt) -> EndpointResult {
     let crate_name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
     let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
@@ -23,7 +23,7 @@ pub fn owners(req: &mut dyn Request) -> AppResult<Response> {
 }
 
 /// Handles the `GET /crates/:crate_id/owner_team` route.
-pub fn owner_team(req: &mut dyn Request) -> AppResult<Response> {
+pub fn owner_team(req: &mut dyn RequestExt) -> EndpointResult {
     let crate_name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
     let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
@@ -40,7 +40,7 @@ pub fn owner_team(req: &mut dyn Request) -> AppResult<Response> {
 }
 
 /// Handles the `GET /crates/:crate_id/owner_user` route.
-pub fn owner_user(req: &mut dyn Request) -> AppResult<Response> {
+pub fn owner_user(req: &mut dyn RequestExt) -> EndpointResult {
     let crate_name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
     let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
@@ -57,12 +57,12 @@ pub fn owner_user(req: &mut dyn Request) -> AppResult<Response> {
 }
 
 /// Handles the `PUT /crates/:crate_id/owners` route.
-pub fn add_owners(req: &mut dyn Request) -> AppResult<Response> {
+pub fn add_owners(req: &mut dyn RequestExt) -> EndpointResult {
     modify_owners(req, true)
 }
 
 /// Handles the `DELETE /crates/:crate_id/owners` route.
-pub fn remove_owners(req: &mut dyn Request) -> AppResult<Response> {
+pub fn remove_owners(req: &mut dyn RequestExt) -> EndpointResult {
     modify_owners(req, false)
 }
 
@@ -70,7 +70,7 @@ pub fn remove_owners(req: &mut dyn Request) -> AppResult<Response> {
 /// The format is
 ///
 ///     {"owners": ["username", "github:org:team", ...]}
-fn parse_owners_request(req: &mut dyn Request) -> AppResult<Vec<String>> {
+fn parse_owners_request(req: &mut dyn RequestExt) -> AppResult<Vec<String>> {
     let mut body = String::new();
     req.body().read_to_string(&mut body)?;
     #[derive(Deserialize)]
@@ -87,7 +87,7 @@ fn parse_owners_request(req: &mut dyn Request) -> AppResult<Vec<String>> {
         .ok_or_else(|| cargo_err("invalid json request"))
 }
 
-fn modify_owners(req: &mut dyn Request, add: bool) -> AppResult<Response> {
+fn modify_owners(req: &mut dyn RequestExt, add: bool) -> EndpointResult {
     let logins = parse_owners_request(req)?;
     let app = req.app();
     let crate_name = &req.params()["crate_id"];

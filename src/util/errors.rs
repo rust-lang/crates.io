@@ -17,10 +17,10 @@ use std::error::Error;
 use std::fmt;
 
 use chrono::NaiveDateTime;
-use conduit::Response;
+use conduit::{header, StatusCode};
 use diesel::result::Error as DieselError;
 
-use crate::util::json_response;
+use crate::util::{json_response, AppResponse};
 
 pub(super) mod concrete;
 mod http;
@@ -59,11 +59,11 @@ struct Bad<'a> {
 }
 
 /// Generates a response with the provided status and description as JSON
-fn json_error(detail: &str, status: (u32, &'static str)) -> Response {
+fn json_error(detail: &str, status: StatusCode) -> AppResponse {
     let mut response = json_response(&Bad {
         errors: vec![StringError { detail }],
     });
-    response.status = status;
+    *response.status_mut() = status;
     response
 }
 
@@ -75,7 +75,7 @@ pub trait AppError: Send + fmt::Display + fmt::Debug + 'static {
     ///
     /// If none is returned, the error will bubble up the middleware stack
     /// where it is eventually logged and turned into a status 500 response.
-    fn response(&self) -> Option<Response>;
+    fn response(&self) -> Option<AppResponse>;
 
     /// The cause of an error response
     ///
@@ -115,7 +115,7 @@ impl dyn AppError {
 }
 
 impl AppError for Box<dyn AppError> {
-    fn response(&self) -> Option<Response> {
+    fn response(&self) -> Option<AppResponse> {
         (**self).response()
     }
 
@@ -171,7 +171,7 @@ impl<T> ChainError<T> for Option<T> {
 }
 
 impl<E: AppError> AppError for ChainedError<E> {
-    fn response(&self) -> Option<Response> {
+    fn response(&self) -> Option<AppResponse> {
         self.error.response()
     }
 
@@ -190,7 +190,7 @@ impl<E: AppError> fmt::Display for ChainedError<E> {
 // Error impls
 
 impl<E: Error + Send + 'static> AppError for E {
-    fn response(&self) -> Option<Response> {
+    fn response(&self) -> Option<AppResponse> {
         None
     }
 }
@@ -216,7 +216,7 @@ impl fmt::Display for InternalAppError {
 }
 
 impl AppError for InternalAppError {
-    fn response(&self) -> Option<Response> {
+    fn response(&self) -> Option<AppResponse> {
         None
     }
 }
@@ -227,8 +227,8 @@ impl AppError for InternalAppError {
 pub struct NotFound;
 
 impl AppError for NotFound {
-    fn response(&self) -> Option<Response> {
-        Some(json_error("Not Found", (404, "Not Found")))
+    fn response(&self) -> Option<AppResponse> {
+        Some(json_error("Not Found", StatusCode::NOT_FOUND))
     }
 }
 
@@ -242,9 +242,9 @@ impl fmt::Display for NotFound {
 pub struct Unauthorized;
 
 impl AppError for Unauthorized {
-    fn response(&self) -> Option<Response> {
+    fn response(&self) -> Option<AppResponse> {
         let detail = "must be logged in to perform that action";
-        Some(json_error(detail, (403, "Forbidden")))
+        Some(json_error(detail, StatusCode::FORBIDDEN))
     }
 }
 
@@ -279,10 +279,10 @@ pub(crate) fn std_error(e: Box<dyn AppError>) -> Box<dyn Error + Send> {
 pub struct ReadOnlyMode;
 
 impl AppError for ReadOnlyMode {
-    fn response(&self) -> Option<Response> {
+    fn response(&self) -> Option<AppResponse> {
         let detail = "Crates.io is currently in read-only mode for maintenance. \
                       Please try again later.";
-        Some(json_error(detail, (503, "Service Unavailable")))
+        Some(json_error(detail, StatusCode::SERVICE_UNAVAILABLE))
     }
 }
 
@@ -298,7 +298,9 @@ pub struct TooManyRequests {
 }
 
 impl AppError for TooManyRequests {
-    fn response(&self) -> Option<Response> {
+    fn response(&self) -> Option<AppResponse> {
+        use std::convert::TryInto;
+
         const HTTP_DATE_FORMAT: &str = "%a, %d %b %Y %H:%M:%S GMT";
         let retry_after = self.retry_after.format(HTTP_DATE_FORMAT);
 
@@ -308,10 +310,14 @@ impl AppError for TooManyRequests {
              help@crates.io to have your limit increased.",
             retry_after
         );
-        let mut response = json_error(&detail, (429, "TOO MANY REQUESTS"));
-        response
-            .headers
-            .insert("Retry-After".into(), vec![retry_after.to_string()]);
+        let mut response = json_error(&detail, StatusCode::TOO_MANY_REQUESTS);
+        response.headers_mut().insert(
+            header::RETRY_AFTER,
+            retry_after
+                .to_string()
+                .try_into()
+                .expect("HTTP_DATE_FORMAT contains invalid char"),
+        );
         Some(response)
     }
 }

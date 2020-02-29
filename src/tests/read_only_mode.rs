@@ -1,12 +1,15 @@
 use crate::builders::CrateBuilder;
 use crate::{RequestHelper, TestApp};
+
+use conduit::StatusCode;
 use diesel::prelude::*;
 
 #[test]
 fn can_hit_read_only_endpoints_in_read_only_mode() {
     let (app, anon) = TestApp::init().empty();
     app.db(set_read_only).unwrap();
-    anon.get::<()>("/api/v1/crates").assert_status(200);
+    anon.get::<()>("/api/v1/crates")
+        .assert_status(StatusCode::OK);
 }
 
 #[test]
@@ -20,7 +23,7 @@ fn cannot_hit_endpoint_which_writes_db_in_read_only_mode() {
     });
     token
         .delete::<()>("/api/v1/crates/foo_yank_read_only/1.0.0/yank")
-        .assert_status(503);
+        .assert_status(StatusCode::SERVICE_UNAVAILABLE);
 
     // Restore the transaction so `TestApp::drop` can still access the transaction
     app.db(|conn| {
@@ -42,7 +45,7 @@ fn can_download_crate_in_read_only_mode() {
     });
 
     anon.get::<()>("/api/v1/crates/foo_download_read_only/1.0.0/download")
-        .assert_status(302);
+        .assert_status(StatusCode::FOUND);
 
     // We're in read only mode so the download should not have been counted
     app.db(|conn| {

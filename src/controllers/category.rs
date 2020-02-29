@@ -6,7 +6,7 @@ use crate::schema::categories;
 use crate::views::{EncodableCategory, EncodableCategoryWithSubcategories};
 
 /// Handles the `GET /categories` route.
-pub fn index(req: &mut dyn Request) -> AppResult<Response> {
+pub fn index(req: &mut dyn RequestExt) -> EndpointResult {
     let conn = req.db_conn()?;
     let query = req.query();
     // FIXME: There are 69 categories, 47 top level. This isn't going to
@@ -40,7 +40,7 @@ pub fn index(req: &mut dyn Request) -> AppResult<Response> {
 }
 
 /// Handles the `GET /categories/:category_id` route.
-pub fn show(req: &mut dyn Request) -> AppResult<Response> {
+pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
     let slug = &req.params()["category_id"];
     let conn = req.db_conn()?;
     let cat = Category::by_slug(slug).first::<Category>(&*conn)?;
@@ -77,7 +77,7 @@ pub fn show(req: &mut dyn Request) -> AppResult<Response> {
 }
 
 /// Handles the `GET /category_slugs` route.
-pub fn slugs(req: &mut dyn Request) -> AppResult<Response> {
+pub fn slugs(req: &mut dyn RequestExt) -> EndpointResult {
     let conn = req.db_conn()?;
     let slugs = categories::table
         .select((categories::slug, categories::slug, categories::description))

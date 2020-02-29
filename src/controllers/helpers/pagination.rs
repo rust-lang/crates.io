@@ -186,6 +186,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::{Page, PaginationOptions};
+
+    use conduit::StatusCode;
     use indexmap::IndexMap;
 
     #[test]
@@ -194,7 +196,7 @@ mod tests {
         params.insert(String::from("page"), String::from("not a number"));
         let page_error = Page::new(&params).unwrap_err().response().unwrap();
 
-        assert_eq!(page_error.status, (400, "Bad Request"));
+        assert_eq!(page_error.status(), StatusCode::BAD_REQUEST);
     }
 
     #[test]
@@ -206,6 +208,6 @@ mod tests {
             .response()
             .unwrap();
 
-        assert_eq!(per_page_error.status, (400, "Bad Request"));
+        assert_eq!(per_page_error.status(), StatusCode::BAD_REQUEST);
     }
 }

@@ -1,4 +1,4 @@
-use conduit::Request;
+use conduit::RequestExt;
 use flate2::read::GzDecoder;
 use openssl::error::ErrorStack;
 use openssl::hash::{Hasher, MessageDigest};
@@ -129,7 +129,7 @@ impl Uploader {
     /// Uploads a crate and returns the checksum of the uploaded crate file.
     pub fn upload_crate(
         &self,
-        req: &mut dyn Request,
+        req: &mut dyn RequestExt,
         krate: &Crate,
         maximums: Maximums,
         vers: &semver::Version,

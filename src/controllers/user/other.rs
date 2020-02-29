@@ -6,7 +6,7 @@ use crate::util::errors::ChainError;
 use crate::views::EncodablePublicUser;
 
 /// Handles the `GET /users/:user_id` route.
-pub fn show(req: &mut dyn Request) -> AppResult<Response> {
+pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
     use self::users::dsl::{gh_login, id, users};
 
     let name = &req.params()["user_id"].to_lowercase();
@@ -26,7 +26,7 @@ pub fn show(req: &mut dyn Request) -> AppResult<Response> {
 }
 
 /// Handles the `GET /users/:user_id/stats` route.
-pub fn stats(req: &mut dyn Request) -> AppResult<Response> {
+pub fn stats(req: &mut dyn RequestExt) -> EndpointResult {
     use diesel::dsl::sum;
 
     let user_id = &req.params()["user_id"]

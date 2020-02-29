@@ -14,7 +14,7 @@ use super::{extract_crate_name, extract_semver};
 
 /// Handles the `GET /crates/:crate_id/:version/download` route.
 /// This returns a URL to the location where the crate is stored.
-pub fn download(req: &mut dyn Request) -> AppResult<Response> {
+pub fn download(req: &mut dyn RequestExt) -> EndpointResult {
     let crate_name = &req.params()["crate_id"];
     let version = &req.params()["version"];
 
@@ -47,7 +47,7 @@ pub fn download(req: &mut dyn Request) -> AppResult<Response> {
 /// Even if failure occurs for unexpected reasons, we would rather have `cargo
 /// build` succeed and not count the download than break people's builds.
 fn increment_download_counts(
-    req: &dyn Request,
+    req: &dyn RequestExt,
     crate_name: &str,
     version: &str,
 ) -> AppResult<String> {
@@ -68,7 +68,7 @@ fn increment_download_counts(
 }
 
 /// Handles the `GET /crates/:crate_id/:version/downloads` route.
-pub fn downloads(req: &mut dyn Request) -> AppResult<Response> {
+pub fn downloads(req: &mut dyn RequestExt) -> EndpointResult {
     let crate_name = extract_crate_name(req);
     let semver = extract_semver(req)?;
 

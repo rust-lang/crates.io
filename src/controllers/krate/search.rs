@@ -33,7 +33,7 @@ use crate::models::krate::{canon_crate_name, ALL_COLUMNS};
 /// caused the break. In the future, we should look at splitting this
 /// function out to cover the different use cases, and create unit tests
 /// for them.
-pub fn search(req: &mut dyn Request) -> AppResult<Response> {
+pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
     use diesel::sql_types::{Bool, Text};
 
     let conn = req.db_read_only()?;

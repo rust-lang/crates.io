@@ -2,10 +2,8 @@ use crate::{util::RequestHelper, TestApp};
 
 use cargo_registry::middleware::current_user::TrustedUserId;
 
-use conduit::{Handler, Method, Request, Response};
+use conduit::{header, Handler, HandlerResult, Method, RequestExt, StatusCode};
 use conduit_test::MockRequest;
-
-type ResponseResult = Result<Response, Box<dyn std::error::Error + Send>>;
 
 static URL: &str = "/api/v1/me/updates";
 static MUST_LOGIN: &[u8] =
@@ -13,21 +11,21 @@ static MUST_LOGIN: &[u8] =
 static INTERNAL_ERROR_NO_USER: &str =
     "user_id from cookie or token not found in database caused by NotFound";
 
-fn call(app: &TestApp, mut request: MockRequest) -> ResponseResult {
+fn call(app: &TestApp, mut request: MockRequest) -> HandlerResult {
     app.as_middleware().call(&mut request)
 }
 
-fn into_parts(response: ResponseResult) -> (u32, Vec<u8>) {
+fn into_parts(response: HandlerResult) -> (StatusCode, Vec<u8>) {
     let mut response = response.unwrap();
     let mut body = Vec::new();
-    response.body.write_body(&mut body).unwrap();
-    (response.status.0, body)
+    response.body_mut().write_body(&mut body).unwrap();
+    (response.status(), body)
 }
 
 #[test]
 fn anonymous_user_unauthorized() {
     let (app, anon) = TestApp::init().empty();
-    let request = anon.request_builder(Method::Get, URL);
+    let request = anon.request_builder(Method::GET, URL);
 
     let (status, body) = into_parts(call(&app, request));
     assert_eq!(status, 403);
@@ -37,8 +35,8 @@ fn anonymous_user_unauthorized() {
 #[test]
 fn token_auth_cannot_find_token() {
     let (app, anon) = TestApp::init().empty();
-    let mut request = anon.request_builder(Method::Get, URL);
-    request.header("Authorization", "fake-token");
+    let mut request = anon.request_builder(Method::GET, URL);
+    request.header(header::AUTHORIZATION, "fake-token");
 
     let (status, body) = into_parts(call(&app, request));
     assert_eq!(status, 403);
@@ -51,7 +49,7 @@ fn token_auth_cannot_find_token() {
 #[test]
 fn cookie_auth_cannot_find_user() {
     let (app, anon) = TestApp::init().empty();
-    let mut request = anon.request_builder(Method::Get, URL);
+    let mut request = anon.request_builder(Method::GET, URL);
     request.mut_extensions().insert(TrustedUserId(-1));
 
     let response = call(&app, request);

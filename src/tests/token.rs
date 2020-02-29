@@ -1,4 +1,4 @@
-use crate::{user::UserShowPrivateResponse, RequestHelper, TestApp};
+use crate::{user::UserShowPrivateResponse, util::StatusCode, RequestHelper, TestApp};
 use cargo_registry::{
     models::ApiToken,
     schema::api_tokens,
@@ -111,7 +111,9 @@ fn create_token_logged_out() {
 fn create_token_invalid_request() {
     let (_, _, user) = TestApp::init().with_user();
     let invalid = br#"{ "name": "" }"#;
-    let json = user.put::<()>(URL, invalid).bad_with_status(400);
+    let json = user
+        .put::<()>(URL, invalid)
+        .bad_with_status(StatusCode::BAD_REQUEST);
 
     assert_contains!(json.errors[0].detail, "invalid new token request");
 }
@@ -120,7 +122,9 @@ fn create_token_invalid_request() {
 fn create_token_no_name() {
     let (_, _, user) = TestApp::init().with_user();
     let empty_name = br#"{ "api_token": { "name": "" } }"#;
-    let json = user.put::<()>(URL, empty_name).bad_with_status(400);
+    let json = user
+        .put::<()>(URL, empty_name)
+        .bad_with_status(StatusCode::BAD_REQUEST);
 
     assert_eq!(json.errors[0].detail, "name must have a value");
 }
@@ -129,7 +133,9 @@ fn create_token_no_name() {
 fn create_token_long_body() {
     let (_, _, user) = TestApp::init().with_user();
     let too_big = &[5; 5192]; // Send a request with a 5kB body of 5's
-    let json = user.put::<()>(URL, too_big).bad_with_status(400);
+    let json = user
+        .put::<()>(URL, too_big)
+        .bad_with_status(StatusCode::BAD_REQUEST);
 
     assert_contains!(json.errors[0].detail, "max content length");
 }
@@ -143,7 +149,9 @@ fn create_token_exceeded_tokens_per_user() {
             t!(ApiToken::insert(conn, id, &format!("token {}", i)));
         }
     });
-    let json = user.put::<()>(URL, NEW_BAR).bad_with_status(400);
+    let json = user
+        .put::<()>(URL, NEW_BAR)
+        .bad_with_status(StatusCode::BAD_REQUEST);
 
     assert_contains!(json.errors[0].detail, "maximum tokens per user");
 }
@@ -192,7 +200,7 @@ fn cannot_create_token_with_token() {
             "/api/v1/me/tokens",
             br#"{ "api_token": { "name": "baz" } }"#,
         )
-        .bad_with_status(400);
+        .bad_with_status(StatusCode::BAD_REQUEST);
 
     assert_contains!(
         json.errors[0].detail,

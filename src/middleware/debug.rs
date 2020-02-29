@@ -6,14 +6,14 @@ use super::prelude::*;
 pub struct Debug;
 
 impl Middleware for Debug {
-    fn before(&self, req: &mut dyn Request) -> Result<()> {
+    fn before(&self, req: &mut dyn RequestExt) -> BeforeResult {
         DebugRequest.before(req)
     }
 
-    fn after(&self, _req: &mut dyn Request, res: Result<Response>) -> Result<Response> {
+    fn after(&self, _req: &mut dyn RequestExt, res: AfterResult) -> AfterResult {
         res.map(|res| {
-            println!("  <- {:?}", res.status);
-            for (k, v) in &res.headers {
+            println!("  <- {:?}", res.status());
+            for (k, v) in res.headers().iter() {
                 println!("  <- {} {:?}", k, v);
             }
             res
@@ -25,15 +25,15 @@ impl Middleware for Debug {
 pub struct DebugRequest;
 
 impl Middleware for DebugRequest {
-    fn before(&self, req: &mut dyn Request) -> Result<()> {
-        println!("  version: {}", req.http_version());
+    fn before(&self, req: &mut dyn RequestExt) -> BeforeResult {
+        println!("  version: {:?}", req.http_version());
         println!("  method: {:?}", req.method());
         println!("  scheme: {:?}", req.scheme());
         println!("  host: {:?}", req.host());
         println!("  path: {}", req.path());
         println!("  query_string: {:?}", req.query_string());
         println!("  remote_addr: {:?}", req.remote_addr());
-        for &(k, ref v) in &req.headers().all() {
+        for (k, ref v) in req.headers().iter() {
             println!("  hdr: {}={:?}", k, v);
         }
         Ok(())

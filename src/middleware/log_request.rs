@@ -3,7 +3,7 @@
 
 use super::prelude::*;
 use crate::util::request_header;
-use conduit::Request;
+use conduit::{header, RequestExt, StatusCode};
 use std::fmt::{self, Display, Formatter};
 use std::time::Instant;
 
@@ -15,12 +15,12 @@ pub(super) struct LogRequests();
 struct RequestStart(Instant);
 
 impl Middleware for LogRequests {
-    fn before(&self, req: &mut dyn Request) -> Result<()> {
+    fn before(&self, req: &mut dyn RequestExt) -> BeforeResult {
         req.mut_extensions().insert(RequestStart(Instant::now()));
         Ok(())
     }
 
-    fn after(&self, req: &mut dyn Request, res: Result<Response>) -> Result<Response> {
+    fn after(&self, req: &mut dyn RequestExt, res: AfterResult) -> AfterResult {
         // Unwrap shouldn't panic as no other code has access to the private struct to remove it
         let request_start = req.extensions().find::<RequestStart>().unwrap().0;
 
@@ -45,7 +45,7 @@ struct CustomMetadata {
     entries: Vec<(&'static str, String)>,
 }
 
-pub fn add_custom_metadata<V: Display>(req: &mut dyn Request, key: &'static str, value: V) {
+pub fn add_custom_metadata<V: Display>(req: &mut dyn RequestExt, key: &'static str, value: V) {
     if let Some(metadata) = req.mut_extensions().find_mut::<CustomMetadata>() {
         metadata.entries.push((key, value.to_string()));
     } else {
@@ -58,7 +58,7 @@ pub fn add_custom_metadata<V: Display>(req: &mut dyn Request, key: &'static str,
 }
 
 #[cfg(test)]
-pub(crate) fn get_log_message(req: &dyn Request, key: &'static str) -> String {
+pub(crate) fn get_log_message(req: &dyn RequestExt, key: &'static str) -> String {
     for (k, v) in &req.extensions().find::<CustomMetadata>().unwrap().entries {
         if key == *k {
             return v.clone();
@@ -68,8 +68,8 @@ pub(crate) fn get_log_message(req: &dyn Request, key: &'static str) -> String {
 }
 
 struct RequestLine<'r> {
-    req: &'r dyn Request,
-    res: &'r Result<Response>,
+    req: &'r dyn RequestExt,
+    res: &'r AfterResult,
     response_time: u64,
 }
 
@@ -78,18 +78,18 @@ impl Display for RequestLine<'_> {
         let mut line = LogLine::new(f);
 
         let (at, status) = match self.res {
-            Ok(resp) => ("info", resp.status.0),
-            Err(_) => ("error", 500),
+            Ok(resp) => ("info", resp.status()),
+            Err(_) => ("error", StatusCode::INTERNAL_SERVER_ERROR),
         };
 
         line.add_field("at", at)?;
         line.add_field("method", self.req.method())?;
         line.add_quoted_field("path", FullPath(self.req))?;
-        line.add_field("request_id", request_header(self.req, "X-Request-Id"))?;
-        line.add_quoted_field("fwd", request_header(self.req, "X-Real-Ip"))?;
+        line.add_field("request_id", request_header(self.req, "x-request-id"))?;
+        line.add_quoted_field("fwd", request_header(self.req, "x-real-ip"))?;
         line.add_field("service", TimeMs(self.response_time))?;
         line.add_field("status", status)?;
-        line.add_quoted_field("user_agent", request_header(self.req, "User-Agent"))?;
+        line.add_quoted_field("user_agent", request_header(self.req, header::USER_AGENT))?;
 
         if let Some(metadata) = self.req.extensions().find::<CustomMetadata>() {
             for (key, value) in &metadata.entries {
@@ -109,7 +109,7 @@ impl Display for RequestLine<'_> {
     }
 }
 
-struct FullPath<'a>(&'a dyn Request);
+struct FullPath<'a>(&'a dyn RequestExt);
 
 impl<'a> Display for FullPath<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
