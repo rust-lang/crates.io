@@ -6,7 +6,7 @@ use std::io::Cursor;
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 
 use conduit::{
-    header::{HeaderName, HeaderValue},
+    header::{HeaderValue, IntoHeaderName},
     Extensions, HeaderMap, Host, Method, Scheme, TypeMap, Version,
 };
 
@@ -56,7 +56,10 @@ impl MockRequest {
         self
     }
 
-    pub fn header(&mut self, name: HeaderName, value: &str) -> &mut MockRequest {
+    pub fn header<K>(&mut self, name: K, value: &str) -> &mut MockRequest
+    where
+        K: IntoHeaderName,
+    {
         self.headers
             .insert(name, HeaderValue::from_str(value).unwrap());
         self
