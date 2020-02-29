@@ -41,6 +41,9 @@ pub fn publish(req: &mut dyn Request) -> AppResult<Response> {
 
     let new_crate = parse_new_headers(req)?;
 
+    req.log_metadata("crate_name", new_crate.name.to_string());
+    req.log_metadata("crate_version", new_crate.vers.to_string());
+
     let conn = app.primary_database.get()?;
     let ids = req.authenticate(&conn)?;
     let user = ids.find_user(&conn)?;

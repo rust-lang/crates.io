@@ -25,7 +25,7 @@ mod ember_index_rewrite;
 mod ensure_well_formed_500;
 mod head;
 mod log_connection_pool_status;
-mod log_request;
+pub mod log_request;
 mod require_user_agent;
 mod static_or_continue;
 

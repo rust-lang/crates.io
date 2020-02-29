@@ -38,6 +38,8 @@ mod prelude {
         fn query(&self) -> IndexMap<String, String>;
         fn wants_json(&self) -> bool;
         fn query_with_params(&self, params: IndexMap<String, String>) -> String;
+
+        fn log_metadata<V: std::fmt::Display>(&mut self, key: &'static str, value: V);
     }
 
     impl<'a> RequestUtils for dyn Request + 'a {
@@ -75,6 +77,10 @@ mod prelude {
                 .extend_pairs(params)
                 .finish();
             format!("?{}", query_string)
+        }
+
+        fn log_metadata<V: std::fmt::Display>(&mut self, key: &'static str, value: V) {
+            crate::middleware::log_request::add_custom_metadata(self, key, value);
         }
     }
 }
