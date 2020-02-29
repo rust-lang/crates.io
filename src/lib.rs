@@ -9,10 +9,8 @@ extern crate filetime;
 extern crate tempdir;
 extern crate time;
 
-use conduit::{Handler, Request, Response};
+use conduit::{box_error, header, Body, Handler, HandlerResult, RequestExt, Response, StatusCode};
 use filetime::FileTime;
-use std::collections::HashMap;
-use std::error::Error;
 use std::fs::File;
 use std::io;
 use std::path::{Path, PathBuf};
@@ -33,7 +31,7 @@ impl Static {
 
 impl Handler for Static {
     #[allow(deprecated)]
-    fn call(&self, request: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
+    fn call(&self, request: &mut dyn RequestExt) -> HandlerResult {
         let request_path = &request.path()[1..];
         if request_path.contains("..") {
             return Ok(not_found());
@@ -45,9 +43,7 @@ impl Handler for Static {
             Ok(f) => f,
             Err(..) => return Ok(not_found()),
         };
-        let data = file
-            .metadata()
-            .map_err(|e| Box::new(e) as Box<dyn Error + Send>)?;
+        let data = file.metadata().map_err(box_error)?;
         if data.is_dir() {
             return Ok(not_found());
         }
@@ -58,31 +54,25 @@ impl Handler for Static {
         };
         let tm = time::at(ts).to_utc();
 
-        let mut headers = HashMap::new();
-        headers.insert("Content-Type".to_string(), vec![mime.to_string()]);
-        headers.insert("Content-Length".to_string(), vec![data.len().to_string()]);
-        headers.insert(
-            "Last-Modified".to_string(),
-            vec![tm.strftime("%a, %d %b %Y %T GMT").unwrap().to_string()],
-        );
-
-        Ok(Response {
-            status: (200, "OK"),
-            headers,
-            body: Box::new(file),
-        })
+        Response::builder()
+            .header(header::CONTENT_TYPE, mime)
+            .header(header::CONTENT_LENGTH, data.len())
+            .header(
+                header::LAST_MODIFIED,
+                tm.strftime("%a, %d %b %Y %T GMT").unwrap().to_string(),
+            )
+            .body(Box::new(file) as Body)
+            .map_err(box_error)
     }
 }
 
-fn not_found() -> Response {
-    let mut headers = HashMap::new();
-    headers.insert("Content-Length".to_string(), vec!["0".to_string()]);
-    headers.insert("Content-Type".to_string(), vec!["text/plain".to_string()]);
-    Response {
-        status: (404, "Not Found"),
-        headers,
-        body: Box::new(io::empty()),
-    }
+fn not_found() -> Response<Body> {
+    Response::builder()
+        .status(StatusCode::NOT_FOUND)
+        .header(header::CONTENT_LENGTH, 0)
+        .header(header::CONTENT_TYPE, "text/plain")
+        .body(Box::new(io::empty()) as Body)
+        .unwrap()
 }
 
 #[cfg(test)]
@@ -93,7 +83,7 @@ mod tests {
     use std::io::prelude::*;
     use tempdir::TempDir;
 
-    use conduit::{Handler, Method};
+    use conduit::{header, Handler, Method, StatusCode};
     use Static;
 
     #[test]
@@ -105,19 +95,16 @@ mod tests {
             .unwrap()
             .write_all(b"[package]")
             .unwrap();
-        let mut req = test::MockRequest::new(Method::Get, "/Cargo.toml");
+        let mut req = test::MockRequest::new(Method::GET, "/Cargo.toml");
         let mut res = handler.call(&mut req).ok().expect("No response");
         let mut body = Vec::new();
-        res.body.write_body(&mut body).unwrap();
+        res.body_mut().write_body(&mut body).unwrap();
         assert_eq!(body, b"[package]");
         assert_eq!(
-            res.headers.get("Content-Type"),
-            Some(&vec!("text/plain".to_string()))
+            res.headers().get(header::CONTENT_TYPE).unwrap(),
+            "text/plain"
         );
-        assert_eq!(
-            res.headers.get("Content-Length"),
-            Some(&vec!["9".to_string()])
-        );
+        assert_eq!(res.headers().get(header::CONTENT_LENGTH).unwrap(), "9");
     }
 
     #[test]
@@ -128,16 +115,10 @@ mod tests {
         File::create(&root.join("src/fixture.css")).unwrap();
 
         let handler = Static::new(root.clone());
-        let mut req = test::MockRequest::new(Method::Get, "/src/fixture.css");
+        let mut req = test::MockRequest::new(Method::GET, "/src/fixture.css");
         let res = handler.call(&mut req).ok().expect("No response");
-        assert_eq!(
-            res.headers.get("Content-Type"),
-            Some(&vec!("text/css".to_string()))
-        );
-        assert_eq!(
-            res.headers.get("Content-Length"),
-            Some(&vec!["0".to_string()])
-        );
+        assert_eq!(res.headers().get(header::CONTENT_TYPE).unwrap(), "text/css");
+        assert_eq!(res.headers().get(header::CONTENT_LENGTH).unwrap(), "0");
     }
 
     #[test]
@@ -146,9 +127,9 @@ mod tests {
         let root = td.path();
 
         let handler = Static::new(root.clone());
-        let mut req = test::MockRequest::new(Method::Get, "/nope");
+        let mut req = test::MockRequest::new(Method::GET, "/nope");
         let res = handler.call(&mut req).ok().expect("No response");
-        assert_eq!(res.status.0, 404);
+        assert_eq!(res.status(), StatusCode::NOT_FOUND);
     }
 
     #[test]
@@ -159,9 +140,9 @@ mod tests {
         fs::create_dir(&root.join("foo")).unwrap();
 
         let handler = Static::new(root.clone());
-        let mut req = test::MockRequest::new(Method::Get, "/foo");
+        let mut req = test::MockRequest::new(Method::GET, "/foo");
         let res = handler.call(&mut req).ok().expect("No response");
-        assert_eq!(res.status.0, 404);
+        assert_eq!(res.status(), StatusCode::NOT_FOUND);
     }
 
     #[test]
@@ -170,9 +151,9 @@ mod tests {
         let root = td.path();
         File::create(&root.join("test")).unwrap();
         let handler = Static::new(root.clone());
-        let mut req = test::MockRequest::new(Method::Get, "/test");
+        let mut req = test::MockRequest::new(Method::GET, "/test");
         let res = handler.call(&mut req).ok().expect("No response");
-        assert_eq!(res.status.0, 200);
-        assert!(res.headers.get("Last-Modified").is_some());
+        assert_eq!(res.status(), StatusCode::OK);
+        assert!(res.headers().get(header::LAST_MODIFIED).is_some());
     }
 }
