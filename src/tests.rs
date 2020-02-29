@@ -1,27 +1,25 @@
-use std::collections::HashMap;
-use std::error::Error;
-use std::io::Cursor;
-
-use conduit::{Handler, Request, Response};
+use conduit::{
+    box_error, static_to_body, Handler, HandlerResult, RequestExt, Response, StatusCode,
+};
 use futures::prelude::*;
 use hyper::{body::to_bytes, service::Service};
 
 use super::service::{BlockingHandler, ServiceError};
+use super::HyperResponse;
 
 struct OkResult;
 impl Handler for OkResult {
-    fn call(&self, _req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
-        Ok(Response {
-            status: (200, "OK"),
-            headers: build_headers("value"),
-            body: Box::new(Cursor::new("Hello, world!")),
-        })
+    fn call(&self, _req: &mut dyn RequestExt) -> HandlerResult {
+        Response::builder()
+            .header("ok", "value")
+            .body(static_to_body(b"Hello, world!"))
+            .map_err(box_error)
     }
 }
 
 struct ErrorResult;
 impl Handler for ErrorResult {
-    fn call(&self, _req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
+    fn call(&self, _req: &mut dyn RequestExt) -> HandlerResult {
         let error = ::std::io::Error::last_os_error();
         Err(Box::new(error))
     }
@@ -29,38 +27,34 @@ impl Handler for ErrorResult {
 
 struct Panic;
 impl Handler for Panic {
-    fn call(&self, _req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
+    fn call(&self, _req: &mut dyn RequestExt) -> HandlerResult {
         panic!()
     }
 }
 
 struct InvalidHeader;
 impl Handler for InvalidHeader {
-    fn call(&self, _req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
-        let mut headers = build_headers("discarded");
-        headers.insert("invalid".into(), vec!["\r\n".into()]);
-        Ok(Response {
-            status: (200, "OK"),
-            headers,
-            body: Box::new(Cursor::new("discarded")),
-        })
+    fn call(&self, _req: &mut dyn RequestExt) -> HandlerResult {
+        Response::builder()
+            .header("invalid-value", "\r\n")
+            .body(static_to_body(b"discarded"))
+            .map_err(box_error)
     }
 }
 
 struct InvalidStatus;
 impl Handler for InvalidStatus {
-    fn call(&self, _req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
-        Ok(Response {
-            status: (1000, "invalid status code"),
-            headers: build_headers("discarded"),
-            body: Box::new(Cursor::new("discarded")),
-        })
+    fn call(&self, _req: &mut dyn RequestExt) -> HandlerResult {
+        Response::builder()
+            .status(1000)
+            .body(static_to_body(b""))
+            .map_err(box_error)
     }
 }
 
 struct AssertPathNormalized;
 impl Handler for AssertPathNormalized {
-    fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
+    fn call(&self, req: &mut dyn RequestExt) -> HandlerResult {
         if req.path() == "/normalized" {
             OkResult.call(req)
         } else {
@@ -71,16 +65,10 @@ impl Handler for AssertPathNormalized {
 
 struct Sleep;
 impl Handler for Sleep {
-    fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
+    fn call(&self, req: &mut dyn RequestExt) -> HandlerResult {
         std::thread::sleep(std::time::Duration::from_millis(100));
         OkResult.call(req)
     }
-}
-
-fn build_headers(msg: &str) -> HashMap<String, Vec<String>> {
-    let mut headers = HashMap::new();
-    headers.insert("ok".into(), vec![msg.into()]);
-    headers
 }
 
 fn make_service<H: Handler>(
@@ -88,8 +76,8 @@ fn make_service<H: Handler>(
     max_thread_count: usize,
 ) -> impl Service<
     hyper::Request<hyper::Body>,
-    Response = hyper::Response<hyper::Body>,
-    Future = impl Future<Output = Result<hyper::Response<hyper::Body>, ServiceError>> + Send + 'static,
+    Response = HyperResponse,
+    Future = impl Future<Output = Result<HyperResponse, ServiceError>> + Send + 'static,
     Error = ServiceError,
 > {
     use hyper::service::service_fn;
@@ -102,13 +90,13 @@ fn make_service<H: Handler>(
     })
 }
 
-async fn simulate_request<H: Handler>(handler: H) -> hyper::Response<hyper::Body> {
+async fn simulate_request<H: Handler>(handler: H) -> HyperResponse {
     let mut service = make_service(handler, 1);
     service.call(hyper::Request::default()).await.unwrap()
 }
 
-async fn assert_generic_err(resp: hyper::Response<hyper::Body>) {
-    assert_eq!(resp.status(), 500);
+async fn assert_generic_err(resp: HyperResponse) {
+    assert_eq!(resp.status(), StatusCode::INTERNAL_SERVER_ERROR);
     assert!(resp.headers().is_empty());
     let full_body = to_bytes(resp.into_body()).await.unwrap();
     assert_eq!(&*full_body, b"Internal Server Error");
@@ -117,7 +105,7 @@ async fn assert_generic_err(resp: hyper::Response<hyper::Body>) {
 #[tokio::test]
 async fn valid_ok_response() {
     let resp = simulate_request(OkResult).await;
-    assert_eq!(resp.status(), 200);
+    assert_eq!(resp.status(), StatusCode::OK);
     assert_eq!(resp.headers().len(), 1);
     let full_body = to_bytes(resp.into_body()).await.unwrap();
     assert_eq!(&*full_body, b"Hello, world!");
@@ -147,14 +135,14 @@ async fn normalize_path() {
         .body(hyper::Body::default())
         .unwrap();
     let resp = service.call(req).await.unwrap();
-    assert_eq!(resp.status(), 200);
+    assert_eq!(resp.status(), StatusCode::OK);
     assert_eq!(resp.headers().len(), 1);
 
     let req = hyper::Request::put("//normalized")
         .body(hyper::Body::default())
         .unwrap();
     let resp = service.call(req).await.unwrap();
-    assert_eq!(resp.status(), 200);
+    assert_eq!(resp.status(), StatusCode::OK);
     assert_eq!(resp.headers().len(), 1);
 }
 
@@ -172,7 +160,7 @@ async fn limits_thread_count() {
     }
     .unwrap();
 
-    assert_eq!(first_completed.status(), 503)
+    assert_eq!(first_completed.status(), StatusCode::SERVICE_UNAVAILABLE)
 }
 
 #[tokio::test]
@@ -190,6 +178,6 @@ async fn sleeping_doesnt_block_another_request() {
     // Elapsed time should be closer to 100ms than 200ms
     assert!(start.elapsed().as_millis() < 150);
 
-    assert_eq!(first.unwrap().status(), 200);
-    assert_eq!(second.unwrap().status(), 200);
+    assert_eq!(first.unwrap().status(), StatusCode::OK);
+    assert_eq!(second.unwrap().status(), StatusCode::OK);
 }

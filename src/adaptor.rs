@@ -13,10 +13,9 @@ use std::io::{Cursor, Read};
 use std::net::SocketAddr;
 use std::path::{Component, Path, PathBuf};
 
-use conduit::{Extensions, Headers, Host, Method, Request, Scheme};
-use http::{request::Parts as HttpParts, HeaderMap};
-use hyper::{body::Bytes, Method as HyperMethod, Version as HttpVersion};
-use semver::Version;
+use conduit::{Extensions, HeaderMap, Host, Method, RequestExt, Scheme, Version};
+use http::request::Parts as HttpParts;
+use hyper::body::Bytes;
 
 /// Owned data consumed by the background thread
 ///
@@ -49,44 +48,6 @@ pub(crate) struct Parts(HttpParts);
 impl Parts {
     fn headers(&self) -> &HeaderMap {
         &self.0.headers
-    }
-}
-
-impl Headers for Parts {
-    /// Find all values associated with a header, or None.
-    ///
-    /// If the value of a header is not valid UTF-8, that value
-    /// is replaced with the emtpy string.
-    fn find(&self, key: &str) -> Option<Vec<&str>> {
-        let values = self
-            .headers()
-            .get_all(key)
-            .iter()
-            .map(|v| v.to_str().unwrap_or(""))
-            .collect::<Vec<_>>();
-
-        if values.is_empty() {
-            None
-        } else {
-            Some(values)
-        }
-    }
-
-    fn has(&self, key: &str) -> bool {
-        self.headers().contains_key(key)
-    }
-
-    /// Returns a representation of all headers
-    fn all(&self) -> Vec<(&str, Vec<&str>)> {
-        let mut all = Vec::new();
-        for key in self.headers().keys() {
-            let key = key.as_str();
-            let values = self
-                .find(key)
-                .expect("all keys should have at least one value");
-            all.push((key, values));
-        }
-        all
     }
 }
 
@@ -141,35 +102,13 @@ impl ConduitRequest {
     }
 }
 
-impl Request for ConduitRequest {
+impl RequestExt for ConduitRequest {
     fn http_version(&self) -> Version {
-        match self.parts().version {
-            HttpVersion::HTTP_09 => version(0, 9),
-            HttpVersion::HTTP_10 => version(1, 0),
-            HttpVersion::HTTP_11 => version(1, 1),
-            HttpVersion::HTTP_2 => version(2, 0),
-            HttpVersion::HTTP_3 => version(3, 0),
-            _ => version(0, 0),
-        }
+        self.parts().version
     }
 
-    fn conduit_version(&self) -> Version {
-        version(0, 1)
-    }
-
-    fn method(&self) -> Method {
-        match self.parts().method {
-            HyperMethod::CONNECT => Method::Connect,
-            HyperMethod::DELETE => Method::Delete,
-            HyperMethod::GET => Method::Get,
-            HyperMethod::HEAD => Method::Head,
-            HyperMethod::OPTIONS => Method::Options,
-            HyperMethod::PATCH => Method::Patch,
-            HyperMethod::POST => Method::Post,
-            HyperMethod::PUT => Method::Put,
-            HyperMethod::TRACE => Method::Trace,
-            _ => Method::Other(self.parts().method.to_string()),
-        }
+    fn method(&self) -> &Method {
+        &self.parts().method
     }
 
     /// Always returns Http
@@ -177,8 +116,8 @@ impl Request for ConduitRequest {
         Scheme::Http
     }
 
-    fn headers(&self) -> &dyn Headers {
-        &self.parts
+    fn headers(&self) -> &HeaderMap {
+        &self.parts.headers()
     }
 
     /// Returns the length of the buffered body
@@ -226,15 +165,5 @@ impl Request for ConduitRequest {
 
     fn body(&mut self) -> &mut dyn Read {
         &mut self.body
-    }
-}
-
-fn version(major: u64, minor: u64) -> Version {
-    Version {
-        major,
-        minor,
-        patch: 0,
-        pre: vec![],
-        build: vec![],
     }
 }

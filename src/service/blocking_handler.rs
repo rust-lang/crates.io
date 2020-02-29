@@ -1,22 +1,27 @@
 use crate::adaptor::{ConduitRequest, RequestInfo};
 use crate::service::ServiceError;
+use crate::HyperResponse;
 
 use std::net::SocketAddr;
-use std::sync::{atomic::Ordering, Arc};
+use std::sync::{
+    atomic::{AtomicUsize, Ordering},
+    Arc,
+};
 
-use hyper::{Body, Request, Response, StatusCode};
+use conduit::Handler;
+use hyper::{Body, Request, Response};
 use tracing::error;
 
-use std::sync::atomic::AtomicUsize;
+type ConduitResponse = Response<conduit::Body>;
 
 #[derive(Debug)]
-pub struct BlockingHandler<H: conduit::Handler> {
+pub struct BlockingHandler<H: Handler> {
     thread_count: AtomicUsize,
     max_thread_count: usize,
     handler: Arc<H>,
 }
 
-impl<H: conduit::Handler> BlockingHandler<H> {
+impl<H: Handler> BlockingHandler<H> {
     pub fn new(handler: H, max_thread_count: usize) -> Self {
         Self {
             thread_count: AtomicUsize::new(0),
@@ -30,7 +35,7 @@ impl<H: conduit::Handler> BlockingHandler<H> {
         self: Arc<Self>,
         request: Request<Body>,
         remote_addr: SocketAddr,
-    ) -> Result<Response<Body>, ServiceError> {
+    ) -> Result<HyperResponse, ServiceError> {
         let (parts, body) = request.into_parts();
 
         let full_body = hyper::body::to_bytes(body).await?;
@@ -58,32 +63,18 @@ impl<H: conduit::Handler> BlockingHandler<H> {
 }
 
 /// Builds a `hyper::Response` given a `conduit:Response`
-fn good_response(mut response: conduit::Response) -> Response<Body> {
+fn good_response(mut response: ConduitResponse) -> HyperResponse {
     let mut body = Vec::new();
-    if response.body.write_body(&mut body).is_err() {
+    if response.body_mut().write_body(&mut body).is_err() {
         return server_error_response("Error writing body");
     }
 
-    let mut builder = Response::builder();
-    let status = match StatusCode::from_u16(response.status.0 as u16) {
-        Ok(s) => s,
-        Err(e) => return server_error_response(&e.to_string()),
-    };
-
-    for (key, values) in response.headers {
-        for value in values {
-            builder = builder.header(key.as_str(), value.as_str());
-        }
-    }
-
-    builder
-        .status(status)
-        .body(body.into())
-        .unwrap_or_else(|e| server_error_response(&e.to_string()))
+    let (parts, _) = response.into_parts();
+    Response::from_parts(parts, body.into())
 }
 
 /// Logs an error message and returns a generic status 500 response
-fn server_error_response(message: &str) -> Response<Body> {
+fn server_error_response(message: &str) -> HyperResponse {
     error!("Internal Server Error: {}", message);
     let body = Body::from("Internal Server Error");
     Response::builder()
@@ -93,7 +84,7 @@ fn server_error_response(message: &str) -> Response<Body> {
 }
 
 /// Logs an error message and returns a 503 status saying the service is over capacity
-fn over_capacity_error_response() -> Response<Body> {
+fn over_capacity_error_response() -> HyperResponse {
     const RETRY_AFTER: u32 = 2;
     error!("Server Capacity Exceeded");
     let body = Body::from(format!(

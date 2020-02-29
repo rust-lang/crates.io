@@ -35,16 +35,12 @@
 //! }
 //! #
 //! # use std::{error, io};
-//! # use conduit::{Request, Response};
+//! # use conduit::{box_error, static_to_body, Response, RequestExt, HandlerResult};
 //! #
 //! # struct Endpoint();
 //! # impl Handler for Endpoint {
-//! #     fn call(&self, _: &mut dyn Request) -> Result<Response, Box<dyn error::Error + Send>> {
-//! #         Ok(Response {
-//! #             status: (200, "OK"),
-//! #             headers: Default::default(),
-//! #             body: Box::new(io::Cursor::new("")),
-//! #         })
+//! #     fn call(&self, _: &mut dyn RequestExt) -> HandlerResult {
+//! #         Response::builder().body(static_to_body(b"")).map_err(box_error)
 //! #     }
 //! # }
 //! ```
@@ -55,8 +51,7 @@ mod service;
 #[cfg(test)]
 mod tests;
 
-// Consumers of this library need access to this particular version of `semver`
-pub use semver;
-
 pub use server::Server;
 pub use service::{BlockingHandler, Service};
+
+type HyperResponse = hyper::Response<hyper::Body>;
