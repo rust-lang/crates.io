@@ -187,6 +187,8 @@ impl Repository {
     }
 
     fn commit_and_push(&self, msg: &str, modified_file: &Path) -> Result<(), PerformError> {
+        println!("commit_and_push: Preparing \"{}\"", msg);
+
         // git add $file
         let mut index = self.repository.index()?;
         index.add_path(modified_file)?;
@@ -200,6 +202,8 @@ impl Repository {
         let sig = self.repository.signature()?;
         self.repository
             .commit(Some("HEAD"), &sig, &sig, &msg, &tree, &[&parent])?;
+
+        println!("commit_and_push: Pushing \"{}\"", msg);
 
         // git push
         let mut ref_status = Ok(());
@@ -226,6 +230,8 @@ impl Repository {
         if !callback_called {
             ref_status = Err("update_reference callback was not called".into());
         }
+
+        println!("commit_and_push: Finished with \"{}\"", msg);
 
         ref_status
     }
@@ -268,8 +274,6 @@ pub fn add_crate(env: &Environment, krate: Crate) -> Result<(), PerformError> {
     file.write_all(b"\n")?;
 
     let message: String = format!("Updating crate `{}#{}`", krate.name, krate.vers);
-
-    println!("{}", message);
 
     repo.commit_and_push(&message, &repo.relative_index_file(&krate.name))
 }
