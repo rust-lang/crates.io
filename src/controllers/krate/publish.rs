@@ -245,7 +245,9 @@ fn parse_new_headers(req: &mut dyn Request) -> AppResult<EncodableCrateUpload> {
     fn empty(s: Option<&String>) -> bool {
         s.map_or(true, String::is_empty)
     }
-    let mut missing = Vec::new();
+
+    // It can have up to three elements per below conditions.
+    let mut missing = Vec::with_capacity(3);
 
     if empty(new.description.as_ref()) {
         missing.push("description");

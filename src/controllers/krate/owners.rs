@@ -115,7 +115,7 @@ fn modify_owners(req: &mut dyn Request, add: bool) -> AppResult<Response> {
         }
 
         let comma_sep_msg = if add {
-            let mut msgs = Vec::new();
+            let mut msgs = Vec::with_capacity(logins.len());
             for login in &logins {
                 let login_test =
                     |owner: &Owner| owner.login().to_lowercase() == *login.to_lowercase();
