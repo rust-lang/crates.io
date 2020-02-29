@@ -247,7 +247,7 @@ mod tests {
             .ok()
             .expect("No body");
 
-        assert_eq!(response.status(), 304);
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
         assert_eq!(body, b"");
     }
 
