@@ -2,32 +2,30 @@
 #![warn(rust_2018_idioms)]
 
 extern crate conduit;
-extern crate conduit_middleware as middleware;
+extern crate conduit_middleware;
 extern crate time;
 
-use conduit::{Method, Request};
-use middleware::Middleware;
+use conduit::{header, Body, HeaderMap, Method, RequestExt, Response, StatusCode};
+use conduit_middleware::{AfterResult, Middleware};
 use std::borrow::Cow;
-use std::error::Error;
 use std::io;
 use time::{ParseError, Tm};
-
-pub type Response = Result<conduit::Response, Box<dyn Error + Send>>;
 
 #[allow(missing_copy_implementations)]
 pub struct ConditionalGet;
 
 impl Middleware for ConditionalGet {
-    fn after(&self, req: &mut dyn Request, res: Response) -> Response {
-        let mut res = res?;
+    fn after(&self, req: &mut dyn RequestExt, res: AfterResult) -> AfterResult {
+        let res = res?;
 
-        match req.method() {
-            Method::Get | Method::Head => {
+        match *req.method() {
+            Method::GET | Method::HEAD => {
                 if is_ok(&res) && is_fresh(req, &res) {
-                    res.status = (304, "Not Modified");
-                    res.headers.remove("Content-Type");
-                    res.headers.remove("Content-Length");
-                    res.body = Box::new(io::empty());
+                    let (mut parts, _) = res.into_parts();
+                    parts.status = StatusCode::NOT_MODIFIED;
+                    parts.headers.remove(header::CONTENT_TYPE);
+                    parts.headers.remove(header::CONTENT_LENGTH);
+                    return Ok(Response::from_parts(parts, Box::new(io::empty())));
                 }
             }
             _ => (),
@@ -37,76 +35,59 @@ impl Middleware for ConditionalGet {
     }
 }
 
-fn is_ok(response: &conduit::Response) -> bool {
-    match *response {
-        conduit::Response {
-            status: (200, _), ..
-        } => true,
-        _ => false,
-    }
+fn is_ok(response: &Response<Body>) -> bool {
+    response.status() == 200
 }
 
-fn is_fresh(req: &dyn Request, res: &conduit::Response) -> bool {
-    let modified_since = req.headers().find("If-Modified-Since").map(header_val);
-    let none_match = req.headers().find("If-None-Match").map(header_val);
+fn is_fresh(req: &dyn RequestExt, res: &Response<Body>) -> bool {
+    let modified_since = get_and_concat_header(req.headers(), header::IF_MODIFIED_SINCE);
+    let none_match = get_and_concat_header(req.headers(), header::IF_NONE_MATCH);
 
-    if modified_since
-        .as_ref()
-        .or_else(|| none_match.as_ref())
-        .is_none()
-    {
+    if modified_since.is_empty() && none_match.is_empty() {
         return false;
     }
 
-    let mut success = true;
+    let is_modified_since = match std::str::from_utf8(&modified_since) {
+        Err(_) => true,
+        Ok(string) if string.is_empty() => true,
+        Ok(modified_since) => {
+            let modified_since = parse_http_date(modified_since);
+            match modified_since {
+                Err(_) => return false, // Preserve existing behavior
+                Ok(parsed) => is_modified_since(parsed, res),
+            }
+        }
+    };
 
-    modified_since
-        .and_then(|modified_since| {
-            parse_http_date(&modified_since)
-                .map_err(|_| {
-                    success = false;
-                })
-                .ok()
-        })
-        .map(|parsed| {
-            success = success && is_modified_since(parsed, res);
-        });
-
-    none_match.map(|none_match| {
-        success = success && etag_matches(&none_match, res);
-    });
-
-    success
+    is_modified_since && etag_matches(&none_match, res)
 }
 
-fn etag_matches(none_match: &str, res: &conduit::Response) -> bool {
-    res.headers
-        .get("ETag")
-        .map(|etag| res_header_val(etag) == none_match)
-        .unwrap_or(false)
+fn etag_matches(none_match: &[u8], res: &Response<Body>) -> bool {
+    let value = get_and_concat_header(res.headers(), header::ETAG);
+    value == none_match
 }
 
-fn is_modified_since(modified_since: Tm, res: &conduit::Response) -> bool {
-    res.headers
-        .get("Last-Modified")
-        .and_then(|last_modified| parse_http_date(&res_header_val(last_modified)).ok())
-        .map(|last_modified| modified_since.to_timespec() >= last_modified.to_timespec())
-        .unwrap_or(false)
-}
+fn is_modified_since(modified_since: Tm, res: &Response<Body>) -> bool {
+    let last_modified = get_and_concat_header(res.headers(), header::LAST_MODIFIED);
 
-fn header_val<'a>(header: Vec<&'a str>) -> Cow<'a, str> {
-    if header.len() == 1 {
-        Cow::Borrowed(header[0])
-    } else {
-        Cow::Owned(header.concat())
+    match std::str::from_utf8(&last_modified) {
+        Err(_) => false,
+        Ok(last_modified) => match parse_http_date(last_modified) {
+            Err(_) => false,
+            Ok(last_modified) => modified_since.to_timespec() >= last_modified.to_timespec(),
+        },
     }
 }
 
-fn res_header_val<'a>(header: &'a [String]) -> Cow<'a, str> {
-    if header.len() == 1 {
-        Cow::Borrowed(&header[0])
+fn get_and_concat_header<'a>(headers: &'a HeaderMap, name: header::HeaderName) -> Cow<'a, [u8]> {
+    let mut values = headers.get_all(name).iter();
+    if values.size_hint() == (1, Some(1)) {
+        // Exactly 1 value, allocation is unnecessary
+        // Unwrap will not panic, because there is a value
+        Cow::Borrowed(values.next().unwrap().as_bytes())
     } else {
-        Cow::Owned(header.concat())
+        let values: Vec<_> = values.map(|val| val.as_bytes()).collect();
+        Cow::Owned(values.concat())
     }
 }
 
@@ -133,33 +114,34 @@ fn parse_asctime(string: &str) -> Result<Tm, ParseError> {
 mod tests {
     extern crate conduit_test as test;
 
-    use conduit::{Handler, Method, Request, Response};
-    use middleware::MiddlewareBuilder;
-    use std::collections::HashMap;
-    use std::error::Error;
-    use std::io::Cursor;
+    use conduit::{
+        box_error, header, static_to_body, Handler, HandlerResult, HeaderMap, Method, RequestExt,
+        Response, StatusCode,
+    };
+    use conduit_middleware::MiddlewareBuilder;
     use time;
     use time::Tm;
 
     use super::ConditionalGet;
 
     macro_rules! returning {
-        ($code:expr, $($header:expr => $value:expr),+) => ({
-            let mut headers = HashMap::new();
-            $(headers.insert($header.to_string(), vec!($value.to_string()));)+
-            let handler = SimpleHandler::new(headers, $code, "hello");
+        ($status:expr, $($header:expr => $value:expr),+) => ({
+            use std::convert::TryInto;
+            let mut headers = HeaderMap::new();
+            $(headers.append($header, $value.try_into().unwrap());)+
+            let handler = SimpleHandler::new(headers, $status, "hello");
             let mut stack = MiddlewareBuilder::new(handler);
             stack.add(ConditionalGet);
             stack
         });
         ($($header:expr => $value:expr),+) => ({
-            returning!((200, "OK"), $($header => $value),+)
+            returning!(StatusCode::OK, $($header => $value),+)
         })
     }
 
     macro_rules! request {
         ($($header:expr => $value:expr),+) => ({
-            let mut req = test::MockRequest::new(Method::Get, "/");
+            let mut req = test::MockRequest::new(Method::GET, "/");
             $(req.header($header, &$value.to_string());)+
             req
         })
@@ -167,80 +149,79 @@ mod tests {
 
     #[test]
     fn test_sends_304() {
-        let handler = returning!("Last-Modified" => httpdate(time::now()));
+        let handler = returning!(header::LAST_MODIFIED => httpdate(time::now()));
         expect_304(handler.call(&mut request!(
-            "If-Modified-Since" => httpdate(time::now())
+            header::IF_MODIFIED_SINCE => httpdate(time::now())
         )));
     }
 
     #[test]
     fn test_sends_304_if_older_than_now() {
-        let handler = returning!("Last-Modified" => before_now());
+        let handler = returning!(header::LAST_MODIFIED => before_now());
         expect_304(handler.call(&mut request!(
-            "If-Modified-Since" => httpdate(time::now())
+            header::IF_MODIFIED_SINCE => httpdate(time::now())
         )));
     }
 
     #[test]
     fn test_sends_304_with_etag() {
-        let handler = returning!("ETag" => "1234");
+        let handler = returning!(header::ETAG => "1234");
         expect_304(handler.call(&mut request!(
-            "If-None-Match" => "1234"
+            header::IF_NONE_MATCH => "1234"
         )));
     }
 
     #[test]
     fn test_sends_200_with_fresh_time_but_not_etag() {
-        let handler = returning!("Last-Modified" => before_now(), "ETag" => "1234");
+        let handler = returning!(header::LAST_MODIFIED => before_now(), header::ETAG => "1234");
         expect_200(handler.call(&mut request!(
-            "If-Modified-Since" => now(),
-            "If-None-Match" => "4321"
+            header::IF_MODIFIED_SINCE => now(),
+            header::IF_NONE_MATCH => "4321"
         )));
     }
 
     #[test]
     fn test_sends_200_with_fresh_etag_but_not_time() {
-        let handler = returning!("Last-Modified" => now(), "ETag" => "1234");
+        let handler = returning!(header::LAST_MODIFIED => now(), header::ETAG => "1234");
         expect_200(handler.call(&mut request!(
-            "If-Modified-Since" => before_now(),
-            "If-None-Match" => "1234"
+            header::IF_MODIFIED_SINCE => before_now(),
+            header::IF_NONE_MATCH => "1234"
         )));
     }
 
     #[test]
     fn test_sends_200_with_fresh_etag() {
-        let handler = returning!("ETag" => "1234");
+        let handler = returning!(header::ETAG => "1234");
         expect_200(handler.call(&mut request!(
-            "If-None-Match" => "4321"
+            header::IF_NONE_MATCH => "4321"
         )));
     }
 
     #[test]
     fn test_sends_200_with_fresh_time() {
-        let handler = returning!("Last-Modified" => now());
+        let handler = returning!(header::LAST_MODIFIED => now());
         expect_200(handler.call(&mut request!(
-            "If-Modified-Since" => before_now()
+            header::IF_MODIFIED_SINCE => before_now()
         )));
     }
 
     #[test]
     fn test_sends_304_with_fresh_time_and_etag() {
-        let handler = returning!("Last-Modified" => before_now(), "ETag" => "1234");
+        let handler = returning!(header::LAST_MODIFIED => before_now(), header::ETAG => "1234");
         expect_304(handler.call(&mut request!(
-            "If-Modified-Since" => now(),
-            "If-None-Match" => "1234"
+            header::IF_MODIFIED_SINCE => now(),
+            header::IF_NONE_MATCH => "1234"
         )));
     }
 
     #[test]
     fn test_does_not_affect_non_200() {
-        let code = (302, "Found");
-        let handler = returning!(code, "Last-Modified" => before_now(), "ETag" => "1234");
+        let handler = returning!(StatusCode::FOUND, header::LAST_MODIFIED => before_now(), header::ETAG => "1234");
         expect(
-            code,
+            StatusCode::FOUND,
             handler.call(&mut request!(
-                "If-Modified-Since" => now(),
-                "If-None-Match" => "1234"
+                header::IF_MODIFIED_SINCE => now(),
+                header::IF_NONE_MATCH => "1234"
             )),
         );
     }
@@ -251,50 +232,52 @@ mod tests {
             .strftime("%Y-%m-%d %H:%M:%S %z")
             .unwrap()
             .to_string();
-        let handler = returning!("Last-Modified" => before_now());
+        let handler = returning!(header::LAST_MODIFIED => before_now());
         expect_200(handler.call(&mut request!(
-            "If-Modified-Since" => bad_stamp
+            header::IF_MODIFIED_SINCE => bad_stamp
         )));
     }
 
-    fn expect_304(response: Result<Response, Box<dyn Error + Send>>) {
+    fn expect_304(response: HandlerResult) {
         let mut response = response.ok().expect("No response");
         let mut body = Vec::new();
-        response.body.write_body(&mut body).ok().expect("No body");
+        response
+            .body_mut()
+            .write_body(&mut body)
+            .ok()
+            .expect("No body");
 
-        assert_eq!(response.status, (304, "Not Modified"));
+        assert_eq!(response.status(), 304);
         assert_eq!(body, b"");
     }
 
-    fn expect_200(response: Result<Response, Box<dyn Error + Send>>) {
-        expect((200, "OK"), response);
+    fn expect_200(response: HandlerResult) {
+        expect(StatusCode::OK, response);
     }
 
-    fn expect(status: (u32, &'static str), response: Result<Response, Box<dyn Error + Send>>) {
+    fn expect(status: StatusCode, response: HandlerResult) {
         let mut response = response.ok().expect("No response");
         let mut body = Vec::new();
-        response.body.write_body(&mut body).ok().expect("No body");
+        response
+            .body_mut()
+            .write_body(&mut body)
+            .ok()
+            .expect("No body");
 
-        assert_eq!(response.status, status);
+        assert_eq!(response.status(), status);
         assert_eq!(body, b"hello");
     }
 
     struct SimpleHandler {
-        map: HashMap<String, Vec<String>>,
-        status: Status,
+        headers: HeaderMap,
+        status: StatusCode,
         body: &'static str,
     }
 
-    type Status = (u32, &'static str);
-
     impl SimpleHandler {
-        fn new(
-            map: HashMap<String, Vec<String>>,
-            status: Status,
-            body: &'static str,
-        ) -> SimpleHandler {
+        fn new(headers: HeaderMap, status: StatusCode, body: &'static str) -> SimpleHandler {
             SimpleHandler {
-                map,
+                headers,
                 status,
                 body,
             }
@@ -302,12 +285,12 @@ mod tests {
     }
 
     impl Handler for SimpleHandler {
-        fn call(&self, _: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
-            Ok(Response {
-                status: self.status,
-                headers: self.map.clone(),
-                body: Box::new(Cursor::new(self.body.to_string().into_bytes())),
-            })
+        fn call(&self, _: &mut dyn RequestExt) -> HandlerResult {
+            let mut builder = Response::builder().status(self.status);
+            builder.headers_mut().unwrap().extend(self.headers.clone());
+            builder
+                .body(static_to_body(self.body.as_bytes()))
+                .map_err(box_error)
         }
     }
 
