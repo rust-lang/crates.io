@@ -1,11 +1,10 @@
 #![deny(clippy::all)]
 
-use conduit::{Handler, Request, Response};
+use conduit::{header, static_to_body, Handler, RequestExt, Response, ResponseResult};
 use conduit_hyper::Server;
 use conduit_router::RouteBuilder;
 
-use std::collections::HashMap;
-use std::io::{Cursor, Error};
+use std::io;
 use std::thread::sleep;
 
 const MAX_THREADS: usize = 1;
@@ -28,29 +27,22 @@ fn build_conduit_handler() -> impl Handler {
     router
 }
 
-fn endpoint(_: &mut dyn Request) -> Result<Response, Error> {
-    let body = "Hello world!";
+fn endpoint(_: &mut dyn RequestExt) -> ResponseResult<http::Error> {
+    let body = b"Hello world!";
 
     sleep(std::time::Duration::from_secs(2));
 
-    let mut headers = HashMap::new();
-    headers.insert(
-        "Content-Type".to_string(),
-        vec!["text/plain; charset=utf-8".to_string()],
-    );
-    headers.insert("Content-Length".to_string(), vec![body.len().to_string()]);
-    Ok(Response {
-        status: (200, "OK"),
-        headers,
-        body: Box::new(Cursor::new(body)),
-    })
+    Response::builder()
+        .header(header::CONTENT_TYPE, "text/plain; charset=utf-8")
+        .header(header::CONTENT_LENGTH, body.len())
+        .body(static_to_body(body))
 }
 
-fn panic(_: &mut dyn Request) -> Result<Response, Error> {
+fn panic(_: &mut dyn RequestExt) -> ResponseResult<http::Error> {
     // For now, connection is immediately closed
     panic!("message");
 }
 
-fn error(_: &mut dyn Request) -> Result<Response, Error> {
-    Err(Error::new(std::io::ErrorKind::Other, "io error, oops"))
+fn error(_: &mut dyn RequestExt) -> ResponseResult<io::Error> {
+    Err(io::Error::new(io::ErrorKind::Other, "io error, oops"))
 }
