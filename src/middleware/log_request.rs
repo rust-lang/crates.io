@@ -42,6 +42,22 @@ impl Handler for LogRequests {
     }
 }
 
+struct CustomMetadata {
+    entries: Vec<(&'static str, String)>,
+}
+
+pub fn add_custom_metadata<V: Display>(req: &mut dyn Request, key: &'static str, value: V) {
+    if let Some(metadata) = req.mut_extensions().find_mut::<CustomMetadata>() {
+        metadata.entries.push((key, value.to_string()));
+    } else {
+        let mut metadata = CustomMetadata {
+            entries: Vec::new(),
+        };
+        metadata.entries.push((key, value.to_string()));
+        req.mut_extensions().insert(metadata);
+    }
+}
+
 struct RequestLine<'r> {
     req: &'r dyn Request,
     res: &'r Result<Response>,
@@ -65,6 +81,12 @@ impl Display for RequestLine<'_> {
         line.add_field("service", TimeMs(self.response_time))?;
         line.add_field("status", status)?;
         line.add_quoted_field("user_agent", request_header(self.req, "User-Agent"))?;
+
+        if let Some(metadata) = self.req.extensions().find::<CustomMetadata>() {
+            for (key, value) in &metadata.entries {
+                line.add_quoted_field(key, value)?;
+            }
+        }
 
         if let Some(len) = self.req.extensions().find::<u64>() {
             line.add_field("metadata_length", len)?;
