@@ -267,12 +267,11 @@ pub fn add_crate(env: &Environment, krate: Crate) -> Result<(), PerformError> {
     serde_json::to_writer(&mut file, &krate)?;
     file.write_all(b"\n")?;
 
-    println!("Updating crate `{}#{}`", krate.name, krate.vers);
+    let message: String = format!("Updating crate `{}#{}`", krate.name, krate.vers);
 
-    repo.commit_and_push(
-        &format!("Updating crate `{}#{}`", krate.name, krate.vers),
-        &repo.relative_index_file(&krate.name),
-    )
+    println!("{}", message);
+
+    repo.commit_and_push(&message, &repo.relative_index_file(&krate.name))
 }
 
 /// Yanks or unyanks a crate version. This requires finding the index
@@ -322,15 +321,14 @@ pub fn yank(
         let new = new?.join("\n") + "\n";
         fs::write(&dst, new.as_bytes())?;
 
-        repo.commit_and_push(
-            &format!(
-                "{} crate `{}#{}`",
-                if yanked { "Yanking" } else { "Unyanking" },
-                krate,
-                version.num
-            ),
-            &repo.relative_index_file(&krate),
-        )?;
+        let message: String = format!(
+            "{} crate `{}#{}`",
+            if yanked { "Yanking" } else { "Unyanking" },
+            krate,
+            version.num
+        );
+
+        repo.commit_and_push(&message, &repo.relative_index_file(&krate))?;
 
         diesel::update(&version)
             .set(versions::yanked.eq(yanked))
