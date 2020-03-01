@@ -278,7 +278,7 @@ pub fn add_crate(env: &Environment, krate: Crate) -> Result<(), PerformError> {
     serde_json::to_writer(&mut file, &krate)?;
     file.write_all(b"\n")?;
 
-    let message: String = format!("Updating crate `{}#{}`", krate.name, krate.vers);
+    let message: String = format!("Publishing crate `{}:{}`", krate.name, krate.vers);
 
     repo.commit_and_push(&message, &repo.relative_index_file(&krate.name))
 }
@@ -331,7 +331,7 @@ pub fn yank(
         fs::write(&dst, new.as_bytes())?;
 
         let message: String = format!(
-            "{} crate `{}#{}`",
+            "{} crate `{}:{}`",
             if yanked { "Yanking" } else { "Unyanking" },
             krate,
             version.num
