@@ -203,8 +203,6 @@ impl Repository {
         self.repository
             .commit(Some("HEAD"), &sig, &sig, &msg, &tree, &[&parent])?;
 
-        println!("commit_and_push: Pushing \"{}\"", msg);
-
         // git push
         let mut ref_status = Ok(());
         let mut callback_called = false;
