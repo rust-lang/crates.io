@@ -1,6 +1,4 @@
-use conduit::{
-    box_error, static_to_body, Handler, HandlerResult, RequestExt, Response, StatusCode,
-};
+use conduit::{box_error, Body, Handler, HandlerResult, RequestExt, Response, StatusCode};
 use futures::prelude::*;
 use hyper::{body::to_bytes, service::Service};
 
@@ -12,7 +10,7 @@ impl Handler for OkResult {
     fn call(&self, _req: &mut dyn RequestExt) -> HandlerResult {
         Response::builder()
             .header("ok", "value")
-            .body(static_to_body(b"Hello, world!"))
+            .body(Body::from_static(b"Hello, world!"))
             .map_err(box_error)
     }
 }
@@ -37,7 +35,7 @@ impl Handler for InvalidHeader {
     fn call(&self, _req: &mut dyn RequestExt) -> HandlerResult {
         Response::builder()
             .header("invalid-value", "\r\n")
-            .body(static_to_body(b"discarded"))
+            .body(Body::from_static(b"discarded"))
             .map_err(box_error)
     }
 }
@@ -47,7 +45,7 @@ impl Handler for InvalidStatus {
     fn call(&self, _req: &mut dyn RequestExt) -> HandlerResult {
         Response::builder()
             .status(1000)
-            .body(static_to_body(b""))
+            .body(Body::empty())
             .map_err(box_error)
     }
 }

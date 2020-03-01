@@ -1,6 +1,6 @@
 use crate::adaptor::{ConduitRequest, RequestInfo};
 use crate::service::ServiceError;
-use crate::HyperResponse;
+use crate::{conduit_into_hyper, HyperResponse};
 
 use std::net::SocketAddr;
 use std::sync::{
@@ -8,11 +8,9 @@ use std::sync::{
     Arc,
 };
 
-use conduit::Handler;
+use conduit::{header, Handler, StatusCode};
 use hyper::{Body, Request, Response};
 use tracing::error;
-
-type ConduitResponse = Response<conduit::Body>;
 
 #[derive(Debug)]
 pub struct BlockingHandler<H: Handler> {
@@ -54,7 +52,7 @@ impl<H: Handler> BlockingHandler<H> {
             let mut request = ConduitRequest::new(&mut request_info, remote_addr);
             handler
                 .call(&mut request)
-                .map(good_response)
+                .map(conduit_into_hyper)
                 .unwrap_or_else(|e| server_error_response(&e.to_string()))
         })
         .await
@@ -62,23 +60,12 @@ impl<H: Handler> BlockingHandler<H> {
     }
 }
 
-/// Builds a `hyper::Response` given a `conduit:Response`
-fn good_response(mut response: ConduitResponse) -> HyperResponse {
-    let mut body = Vec::new();
-    if response.body_mut().write_body(&mut body).is_err() {
-        return server_error_response("Error writing body");
-    }
-
-    let (parts, _) = response.into_parts();
-    Response::from_parts(parts, body.into())
-}
-
 /// Logs an error message and returns a generic status 500 response
 fn server_error_response(message: &str) -> HyperResponse {
     error!("Internal Server Error: {}", message);
-    let body = Body::from("Internal Server Error");
+    let body = hyper::Body::from("Internal Server Error");
     Response::builder()
-        .status(500)
+        .status(StatusCode::INTERNAL_SERVER_ERROR)
         .body(body)
         .expect("Unexpected invalid header")
 }
@@ -87,13 +74,13 @@ fn server_error_response(message: &str) -> HyperResponse {
 fn over_capacity_error_response() -> HyperResponse {
     const RETRY_AFTER: u32 = 2;
     error!("Server Capacity Exceeded");
-    let body = Body::from(format!(
+    let body = hyper::Body::from(format!(
         "Service Unavailable: Please retry after {} seconds.",
         RETRY_AFTER
     ));
     Response::builder()
-        .status(503)
-        .header("Retry-After", RETRY_AFTER)
+        .status(StatusCode::SERVICE_UNAVAILABLE)
+        .header(header::RETRY_AFTER, RETRY_AFTER)
         .body(body)
         .expect("Unexpected invalid header")
 }

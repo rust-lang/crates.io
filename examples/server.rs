@@ -1,6 +1,6 @@
 #![deny(clippy::all)]
 
-use conduit::{header, static_to_body, Handler, RequestExt, Response, ResponseResult};
+use conduit::{header, Body, Handler, RequestExt, Response, ResponseResult};
 use conduit_hyper::Server;
 use conduit_router::RouteBuilder;
 
@@ -35,7 +35,7 @@ fn endpoint(_: &mut dyn RequestExt) -> ResponseResult<http::Error> {
     Response::builder()
         .header(header::CONTENT_TYPE, "text/plain; charset=utf-8")
         .header(header::CONTENT_LENGTH, body.len())
-        .body(static_to_body(body))
+        .body(Body::from_static(body))
 }
 
 fn panic(_: &mut dyn RequestExt) -> ResponseResult<http::Error> {
