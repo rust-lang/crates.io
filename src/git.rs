@@ -236,7 +236,7 @@ impl Repository {
         self.perform_commit_and_push(message, modified_file)
             .map(|_| println!("Commit and push finished for \"{}\"", message))
             .map_err(|err| {
-                eprintln!("Commit and push errored: {}", err);
+                eprintln!("Commit and push for \"{}\" errored: {}", message, err);
                 err
             })
     }
