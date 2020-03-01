@@ -58,6 +58,16 @@ pub fn add_custom_metadata<V: Display>(req: &mut dyn Request, key: &'static str,
     }
 }
 
+#[cfg(test)]
+pub(crate) fn get_log_message(req: &dyn Request, key: &'static str) -> String {
+    for (k, v) in &req.extensions().find::<CustomMetadata>().unwrap().entries {
+        if key == *k {
+            return v.clone();
+        }
+    }
+    String::new()
+}
+
 struct RequestLine<'r> {
     req: &'r dyn Request,
     res: &'r Result<Response>,

@@ -143,10 +143,15 @@ impl Handler for C {
         let C(f) = *self;
         match f(req) {
             Ok(resp) => Ok(resp),
-            Err(e) => match e.response() {
-                Some(response) => Ok(response),
-                None => Err(std_error(e)),
-            },
+            Err(e) => {
+                if let Some(cause) = e.cause() {
+                    req.log_metadata("cause", cause.to_string())
+                };
+                match e.response() {
+                    Some(response) => Ok(response),
+                    None => Err(std_error(e)),
+                }
+            }
         }
     }
 }
@@ -181,7 +186,9 @@ impl Handler for R404 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::util::errors::{bad_request, cargo_err, internal, AppError, NotFound, Unauthorized};
+    use crate::util::errors::{
+        bad_request, cargo_err, internal, AppError, ChainError, NotFound, Unauthorized,
+    };
 
     use conduit_test::MockRequest;
     use diesel::result::Error as DieselError;
@@ -217,6 +224,21 @@ mod tests {
         assert_eq!(
             C(|_| Err(cargo_err(""))).call(&mut req).unwrap().status.0,
             200
+        );
+
+        // Inner errors are captured for logging when wrapped by a user facing error
+        let response = C(|_| {
+            Err("-1"
+                .parse::<u8>()
+                .chain_error(|| bad_request("outer user facing error"))
+                .unwrap_err())
+        })
+        .call(&mut req)
+        .unwrap();
+        assert_eq!(response.status.0, 400);
+        assert_eq!(
+            crate::middleware::log_request::get_log_message(&req, "cause"),
+            "invalid digit found in string"
         );
 
         // All other error types are propogated up the middleware, eventually becoming status 500
