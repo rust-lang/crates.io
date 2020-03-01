@@ -98,10 +98,6 @@ impl Display for RequestLine<'_> {
             }
         }
 
-        if let Some(len) = self.req.extensions().find::<u64>() {
-            line.add_field("metadata_length", len)?;
-        }
-
         if let Err(err) = self.res {
             line.add_quoted_field("error", err)?;
         }

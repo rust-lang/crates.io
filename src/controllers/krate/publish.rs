@@ -232,7 +232,7 @@ pub fn publish(req: &mut dyn Request) -> AppResult<Response> {
 fn parse_new_headers(req: &mut dyn Request) -> AppResult<EncodableCrateUpload> {
     // Read the json upload request
     let metadata_length = u64::from(read_le_u32(req.body())?);
-    req.mut_extensions().insert(metadata_length);
+    req.log_metadata("metadata_length", metadata_length);
 
     let max = req.app().config.max_upload_size;
     if metadata_length > max {
