@@ -257,7 +257,7 @@ mod tests {
         builder.add(MyMiddleware);
 
         let mut req = RequestSentinel::new(Method::GET, "/");
-        let res = builder.call(&mut req).ok().expect("No response");
+        let res = builder.call(&mut req).expect("No response");
 
         assert_eq!(res.into_cow(), "hello".as_bytes());
     }
@@ -271,7 +271,7 @@ mod tests {
         builder.add(NotReached);
 
         let mut req = RequestSentinel::new(Method::GET, "/");
-        let res = builder.call(&mut req).ok().expect("Error not handled");
+        let res = builder.call(&mut req).expect("Error not handled");
 
         assert_eq!(res.status(), StatusCode::INTERNAL_SERVER_ERROR);
     }
@@ -282,7 +282,7 @@ mod tests {
         builder.add(ErrorRecovery);
 
         let mut req = RequestSentinel::new(Method::GET, "/");
-        let res = builder.call(&mut req).ok().expect("Error not handled");
+        let res = builder.call(&mut req).expect("Error not handled");
 
         assert_eq!(res.into_cow(), "Error in handler".as_bytes());
     }
@@ -294,7 +294,7 @@ mod tests {
         builder.around(MyAroundMiddleware::new());
 
         let mut req = RequestSentinel::new(Method::GET, "/");
-        let res = builder.call(&mut req).ok().expect("No response");
+        let res = builder.call(&mut req).expect("No response");
 
         assert_eq!(res.into_cow(), "hello hello".as_bytes());
     }
