@@ -3,7 +3,8 @@
 extern crate http;
 
 use std::error::Error;
-use std::io::{self, prelude::*, Cursor};
+use std::fs::File;
+use std::io::Read;
 use std::net::SocketAddr;
 
 pub use http::{header, HeaderMap, Method, Request, Response, StatusCode, Version};
@@ -11,19 +12,30 @@ pub use http::{header, HeaderMap, Method, Request, Response, StatusCode, Version
 pub use self::typemap::TypeMap;
 mod typemap;
 
-pub type Body = Box<dyn WriteBody>;
 pub type ResponseResult<Error> = Result<Response<Body>, Error>;
 pub type HttpResult = ResponseResult<http::Error>;
 
 pub type BoxError = Box<dyn Error + Send>;
 pub type HandlerResult = Result<Response<Body>, BoxError>;
 
-pub fn static_to_body(bytes: &'static [u8]) -> Body {
-    Box::new(bytes)
+pub enum Body {
+    Static(&'static [u8]),
+    Owned(Vec<u8>),
+    File(File),
 }
 
-pub fn vec_to_body(bytes: Vec<u8>) -> Body {
-    Box::new(Cursor::new(bytes))
+impl Body {
+    pub fn empty() -> Self {
+        Self::from_static(b"")
+    }
+
+    pub fn from_static(bytes: &'static [u8]) -> Self {
+        Self::Static(bytes)
+    }
+
+    pub fn from_vec(bytes: Vec<u8>) -> Self {
+        Self::Owned(bytes)
+    }
 }
 
 pub fn box_error<E: Error + Send + 'static>(error: E) -> BoxError {
@@ -102,21 +114,5 @@ where
 {
     fn call(&self, request: &mut dyn RequestExt) -> HandlerResult {
         (*self)(request).map_err(box_error)
-    }
-}
-
-/// A trait which writes the response body out to a `Write`r.
-///
-/// This is implemented for all `Read`ers.
-pub trait WriteBody {
-    fn write_body(&mut self, out: &mut dyn Write) -> io::Result<u64>;
-}
-
-impl<R> WriteBody for R
-where
-    R: Read,
-{
-    fn write_body(&mut self, out: &mut dyn Write) -> io::Result<u64> {
-        io::copy(self, out)
     }
 }
