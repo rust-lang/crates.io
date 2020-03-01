@@ -186,9 +186,7 @@ impl Repository {
         }
     }
 
-    fn commit_and_push(&self, msg: &str, modified_file: &Path) -> Result<(), PerformError> {
-        println!("commit_and_push: Preparing \"{}\"", msg);
-
+    fn perform_commit_and_push(&self, msg: &str, modified_file: &Path) -> Result<(), PerformError> {
         // git add $file
         let mut index = self.repository.index()?;
         index.add_path(modified_file)?;
@@ -229,9 +227,18 @@ impl Repository {
             ref_status = Err("update_reference callback was not called".into());
         }
 
-        println!("commit_and_push: Finished with \"{}\"", msg);
-
         ref_status
+    }
+
+    pub fn commit_and_push(&self, message: &str, modified_file: &Path) -> Result<(), PerformError> {
+        println!("Committing and pushing \"{}\"", message);
+
+        self.perform_commit_and_push(message, modified_file)
+            .map(|_| println!("Commit and push finished for \"{}\"", message))
+            .map_err(|err| {
+                eprintln!("Commit and push errored: {}", err);
+                err
+            })
     }
 
     pub fn reset_head(&self) -> Result<(), PerformError> {
