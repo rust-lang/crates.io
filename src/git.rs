@@ -186,7 +186,7 @@ impl Repository {
         }
     }
 
-    fn commit_and_push(&self, msg: &str, modified_file: &Path) -> Result<(), PerformError> {
+    fn perform_commit_and_push(&self, msg: &str, modified_file: &Path) -> Result<(), PerformError> {
         // git add $file
         let mut index = self.repository.index()?;
         index.add_path(modified_file)?;
@@ -230,6 +230,17 @@ impl Repository {
         ref_status
     }
 
+    pub fn commit_and_push(&self, message: &str, modified_file: &Path) -> Result<(), PerformError> {
+        println!("Committing and pushing \"{}\"", message);
+
+        self.perform_commit_and_push(message, modified_file)
+            .map(|_| println!("Commit and push finished for \"{}\"", message))
+            .map_err(|err| {
+                eprintln!("Commit and push for \"{}\" errored: {}", message, err);
+                err
+            })
+    }
+
     pub fn reset_head(&self) -> Result<(), PerformError> {
         let mut origin = self.repository.find_remote("origin")?;
         origin.fetch(
@@ -267,10 +278,9 @@ pub fn add_crate(env: &Environment, krate: Crate) -> Result<(), PerformError> {
     serde_json::to_writer(&mut file, &krate)?;
     file.write_all(b"\n")?;
 
-    repo.commit_and_push(
-        &format!("Updating crate `{}#{}`", krate.name, krate.vers),
-        &repo.relative_index_file(&krate.name),
-    )
+    let message: String = format!("Updating crate `{}#{}`", krate.name, krate.vers);
+
+    repo.commit_and_push(&message, &repo.relative_index_file(&krate.name))
 }
 
 /// Yanks or unyanks a crate version. This requires finding the index
@@ -320,15 +330,14 @@ pub fn yank(
         let new = new?.join("\n") + "\n";
         fs::write(&dst, new.as_bytes())?;
 
-        repo.commit_and_push(
-            &format!(
-                "{} crate `{}#{}`",
-                if yanked { "Yanking" } else { "Unyanking" },
-                krate,
-                version.num
-            ),
-            &repo.relative_index_file(&krate),
-        )?;
+        let message: String = format!(
+            "{} crate `{}#{}`",
+            if yanked { "Yanking" } else { "Unyanking" },
+            krate,
+            version.num
+        );
+
+        repo.commit_and_push(&message, &repo.relative_index_file(&krate))?;
 
         diesel::update(&version)
             .set(versions::yanked.eq(yanked))
