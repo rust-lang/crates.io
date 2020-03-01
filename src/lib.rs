@@ -146,7 +146,7 @@ mod tests {
         assert_eq!(req.content_length(), None);
         assert_eq!(req.headers().len(), 0);
         let mut s = String::new();
-        req.body().read_to_string(&mut s).ok().expect("No body");
+        req.body().read_to_string(&mut s).expect("No body");
         assert_eq!(s, "".to_string());
     }
 
@@ -158,7 +158,7 @@ mod tests {
         assert_eq!(req.method(), Method::POST);
         assert_eq!(req.path(), "/articles");
         let mut s = String::new();
-        req.body().read_to_string(&mut s).ok().expect("No body");
+        req.body().read_to_string(&mut s).expect("No body");
         assert_eq!(s, "Hello world".to_string());
         assert_eq!(req.content_length(), Some(11));
     }
