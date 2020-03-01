@@ -65,7 +65,7 @@ pub(crate) fn get_log_message(req: &dyn Request, key: &'static str) -> String {
             return v.clone();
         }
     }
-    String::new()
+    panic!("expected log message for {} not found", key);
 }
 
 struct RequestLine<'r> {

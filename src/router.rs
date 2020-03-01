@@ -230,6 +230,7 @@ mod tests {
         let response = C(|_| {
             Err("-1"
                 .parse::<u8>()
+                .chain_error(|| internal("middle error"))
                 .chain_error(|| bad_request("outer user facing error"))
                 .unwrap_err())
         })
@@ -238,7 +239,7 @@ mod tests {
         assert_eq!(response.status.0, 400);
         assert_eq!(
             crate::middleware::log_request::get_log_message(&req, "cause"),
-            "invalid digit found in string"
+            "middle error caused by invalid digit found in string"
         );
 
         // All other error types are propogated up the middleware, eventually becoming status 500
