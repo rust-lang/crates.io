@@ -124,14 +124,17 @@ impl<'a> RequestParams<'a> for &'a (dyn RequestExt + 'a) {
 
 #[cfg(test)]
 mod tests {
+    extern crate conduit_test;
+
     use std::io;
     use std::net::SocketAddr;
 
     use {RequestParams, RouteBuilder};
 
+    use self::conduit_test::ResponseExt;
     use conduit::{
-        vec_to_body, Extensions, Handler, HeaderMap, Host, Method, Response, Scheme, StatusCode,
-        TypeMap, Version,
+        Body, Extensions, Handler, HeaderMap, Host, Method, Response, Scheme, StatusCode, TypeMap,
+        Version,
     };
 
     struct RequestSentinel {
@@ -196,24 +199,20 @@ mod tests {
     fn basic_get() {
         let router = test_router();
         let mut req = RequestSentinel::new(Method::GET, "/posts/1");
-        let mut res = router.call(&mut req).ok().expect("No response");
+        let res = router.call(&mut req).expect("No response");
 
         assert_eq!(res.status(), StatusCode::OK);
-        let mut s = Vec::new();
-        res.body_mut().write_body(&mut s).unwrap();
-        assert_eq!(s, b"1, GET");
+        assert_eq!(res.into_cow(), "1, GET".as_bytes());
     }
 
     #[test]
     fn basic_post() {
         let router = test_router();
         let mut req = RequestSentinel::new(Method::POST, "/posts/10");
-        let mut res = router.call(&mut req).ok().expect("No response");
+        let res = router.call(&mut req).expect("No response");
 
         assert_eq!(res.status(), StatusCode::OK);
-        let mut s = Vec::new();
-        res.body_mut().write_body(&mut s).unwrap();
-        assert_eq!(s, b"10, POST");
+        assert_eq!(res.into_cow(), "10, POST".as_bytes());
     }
 
     #[test]
@@ -236,6 +235,6 @@ mod tests {
         res.push(format!("{:?}", req.method()));
 
         let bytes = res.join(", ").into_bytes();
-        Response::builder().body(vec_to_body(bytes))
+        Response::builder().body(Body::from_vec(bytes))
     }
 }
