@@ -3,7 +3,6 @@
 use super::prelude::*;
 
 use crate::util::request_header;
-use std::io::Cursor;
 
 // Can't derive debug because of Handler.
 #[allow(missing_debug_implementations)]
@@ -32,7 +31,7 @@ impl Handler for RequireUserAgent {
             Response::builder()
                 .status(StatusCode::FORBIDDEN)
                 .header(header::CONTENT_LENGTH, body.len())
-                .body(Box::new(Cursor::new(body.into_bytes())) as Body)
+                .body(Body::from_vec(body.into_bytes()))
                 .map_err(box_error)
         } else {
             self.handler.as_ref().unwrap().call(req)

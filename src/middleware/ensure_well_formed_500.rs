@@ -14,7 +14,7 @@ impl Middleware for EnsureWellFormed500 {
             Response::builder()
                 .status(StatusCode::INTERNAL_SERVER_ERROR)
                 .header(header::CONTENT_LENGTH, body.len())
-                .body(Box::new(body.as_bytes()) as Body)
+                .body(Body::from_static(body.as_bytes()))
                 .map_err(box_error)
         })
     }

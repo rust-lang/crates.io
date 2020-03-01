@@ -10,8 +10,6 @@
 
 use super::prelude::*;
 
-use std::io::Cursor;
-
 // Can't derive debug because of Handler.
 #[allow(missing_debug_implementations)]
 #[derive(Default)]
@@ -65,7 +63,7 @@ impl Handler for BlockTraffic {
             Response::builder()
                 .status(StatusCode::FORBIDDEN)
                 .header(header::CONTENT_LENGTH, body.len())
-                .body(Box::new(Cursor::new(body.into_bytes())) as Body)
+                .body(Body::from_vec(body.into_bytes()) as Body)
                 .map_err(box_error)
         } else {
             self.handler.as_ref().unwrap().call(req)

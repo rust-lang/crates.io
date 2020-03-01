@@ -28,7 +28,7 @@ use std::{
     },
 };
 
-use conduit::header;
+use conduit::{header, Body};
 use conduit_test::MockRequest;
 use diesel::prelude::*;
 use reqwest::{blocking::Client, Proxy};
@@ -198,9 +198,17 @@ fn json<T>(r: &mut AppResponse) -> T
 where
     for<'de> T: serde::Deserialize<'de>,
 {
-    let mut data = Vec::new();
-    r.body_mut().write_body(&mut data).unwrap();
-    let s = std::str::from_utf8(&data).unwrap();
+    use conduit::Body::*;
+
+    let mut body = Body::empty();
+    std::mem::swap(r.body_mut(), &mut body);
+    let body: std::borrow::Cow<'static, [u8]> = match body {
+        Static(slice) => slice.into(),
+        Owned(vec) => vec.into(),
+        File(_) => unimplemented!(),
+    };
+
+    let s = std::str::from_utf8(&body).unwrap();
     match serde_json::from_str(s) {
         Ok(t) => t,
         Err(e) => panic!("failed to decode: {:?}\n{}", e, s),

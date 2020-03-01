@@ -4,7 +4,6 @@ use super::prelude::*;
 
 use crate::util::RequestProxy;
 use conduit::Method;
-use std::io;
 
 // Can't derive debug because of Handler.
 #[allow(missing_debug_implementations)]
@@ -24,7 +23,7 @@ impl Handler for Head {
         if req.method() == Method::HEAD {
             let mut req = RequestProxy::rewrite_method(req, Method::GET);
             self.handler.as_ref().unwrap().call(&mut req).map(|mut r| {
-                *r.body_mut() = Box::new(io::empty()) as Body;
+                *r.body_mut() = Body::empty();
                 r
             })
         } else {

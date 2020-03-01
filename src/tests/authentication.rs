@@ -15,11 +15,11 @@ fn call(app: &TestApp, mut request: MockRequest) -> HandlerResult {
     app.as_middleware().call(&mut request)
 }
 
-fn into_parts(response: HandlerResult) -> (StatusCode, Vec<u8>) {
-    let mut response = response.unwrap();
-    let mut body = Vec::new();
-    response.body_mut().write_body(&mut body).unwrap();
-    (response.status(), body)
+fn into_parts(response: HandlerResult) -> (StatusCode, std::borrow::Cow<'static, [u8]>) {
+    use conduit_test::ResponseExt;
+
+    let response = response.unwrap();
+    (response.status(), response.into_cow())
 }
 
 #[test]

@@ -1,6 +1,6 @@
 use std::cmp;
 
-use conduit::{header, vec_to_body, Response};
+use conduit::{header, Body, Response};
 use serde::Serialize;
 
 pub use self::errors::concrete::Error;
@@ -29,7 +29,7 @@ pub fn json_response<T: Serialize>(t: &T) -> AppResponse {
     Response::builder()
         .header(header::CONTENT_TYPE, "application/json; charset=utf-8")
         .header(header::CONTENT_LENGTH, json.len())
-        .body(vec_to_body(json.into_bytes()))
+        .body(Body::from_vec(json.into_bytes()))
         .unwrap() // Header values are well formed, so should not panic
 }
 

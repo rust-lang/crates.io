@@ -22,8 +22,6 @@ mod prelude {
     pub use crate::util::errors::{cargo_err, AppError, AppResult, ChainError}; // TODO: Remove cargo_err from here
     pub use crate::util::{AppResponse, EndpointResult};
 
-    use std::io;
-
     use indexmap::IndexMap;
     use serde::Serialize;
 
@@ -57,7 +55,7 @@ mod prelude {
             conduit::Response::builder()
                 .status(StatusCode::FOUND)
                 .header(header::LOCATION, url)
-                .body(Box::new(io::empty()) as conduit::Body)
+                .body(conduit::Body::empty())
                 .unwrap() // Should not panic unless url contains "\r\n"
         }
 
