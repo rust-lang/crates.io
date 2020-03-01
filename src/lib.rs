@@ -1,14 +1,43 @@
 #![warn(rust_2018_idioms)]
 extern crate conduit;
 
-use std::io::prelude::*;
-use std::io::Cursor;
+use std::borrow::Cow;
+use std::io::{Cursor, Read};
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 
 use conduit::{
     header::{HeaderValue, IntoHeaderName},
-    Extensions, HeaderMap, Host, Method, Scheme, TypeMap, Version,
+    Body, Extensions, HeaderMap, Host, Method, Response, Scheme, TypeMap, Version,
 };
+
+pub trait ResponseExt {
+    fn into_cow(self) -> Cow<'static, [u8]>;
+}
+
+impl ResponseExt for Response<Body> {
+    /// Convert the request into a copy-on-write body
+    ///
+    /// # Blocking
+    ///
+    /// This function may block if the value is a `Body::File`.
+    ///
+    /// # Panics
+    ///
+    /// This function panics if there is an error reading a `Body::File`.
+    fn into_cow(self) -> Cow<'static, [u8]> {
+        use conduit::Body::*;
+
+        match self.into_body() {
+            Static(slice) => slice.into(),
+            Owned(vec) => vec.into(),
+            File(mut file) => {
+                let mut vec = Vec::new();
+                std::io::copy(&mut file, &mut vec).unwrap();
+                vec.into()
+            }
+        }
+    }
+}
 
 pub struct MockRequest {
     path: String,
