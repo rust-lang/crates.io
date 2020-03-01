@@ -58,6 +58,16 @@ pub fn add_custom_metadata<V: Display>(req: &mut dyn Request, key: &'static str,
     }
 }
 
+#[cfg(test)]
+pub(crate) fn get_log_message(req: &dyn Request, key: &'static str) -> String {
+    for (k, v) in &req.extensions().find::<CustomMetadata>().unwrap().entries {
+        if key == *k {
+            return v.clone();
+        }
+    }
+    panic!("expected log message for {} not found", key);
+}
+
 struct RequestLine<'r> {
     req: &'r dyn Request,
     res: &'r Result<Response>,
@@ -86,10 +96,6 @@ impl Display for RequestLine<'_> {
             for (key, value) in &metadata.entries {
                 line.add_quoted_field(key, value)?;
             }
-        }
-
-        if let Some(len) = self.req.extensions().find::<u64>() {
-            line.add_field("metadata_length", len)?;
         }
 
         if let Err(err) = self.res {

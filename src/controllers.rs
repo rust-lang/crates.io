@@ -8,6 +8,8 @@ mod frontend_prelude {
     pub use crate::util::errors::{bad_request, server_error};
 }
 
+pub(crate) use prelude::RequestUtils;
+
 mod prelude {
     pub use super::helpers::ok_true;
     pub use diesel::prelude::*;
