@@ -12,7 +12,6 @@ extern crate time;
 use conduit::{box_error, header, Body, Handler, HandlerResult, RequestExt, Response, StatusCode};
 use filetime::FileTime;
 use std::fs::File;
-use std::io;
 use std::path::{Path, PathBuf};
 
 pub struct Static {
@@ -61,7 +60,7 @@ impl Handler for Static {
                 header::LAST_MODIFIED,
                 tm.strftime("%a, %d %b %Y %T GMT").unwrap().to_string(),
             )
-            .body(Box::new(file) as Body)
+            .body(Body::File(file))
             .map_err(box_error)
     }
 }
@@ -71,18 +70,19 @@ fn not_found() -> Response<Body> {
         .status(StatusCode::NOT_FOUND)
         .header(header::CONTENT_LENGTH, 0)
         .header(header::CONTENT_TYPE, "text/plain")
-        .body(Box::new(io::empty()) as Body)
+        .body(Body::empty())
         .unwrap()
 }
 
 #[cfg(test)]
 mod tests {
-    extern crate conduit_test as test;
+    extern crate conduit_test;
 
     use std::fs::{self, File};
     use std::io::prelude::*;
     use tempdir::TempDir;
 
+    use self::conduit_test::{MockRequest, ResponseExt};
     use conduit::{header, Handler, Method, StatusCode};
     use Static;
 
@@ -95,16 +95,14 @@ mod tests {
             .unwrap()
             .write_all(b"[package]")
             .unwrap();
-        let mut req = test::MockRequest::new(Method::GET, "/Cargo.toml");
-        let mut res = handler.call(&mut req).ok().expect("No response");
-        let mut body = Vec::new();
-        res.body_mut().write_body(&mut body).unwrap();
-        assert_eq!(body, b"[package]");
+        let mut req = MockRequest::new(Method::GET, "/Cargo.toml");
+        let res = handler.call(&mut req).expect("No response");
         assert_eq!(
             res.headers().get(header::CONTENT_TYPE).unwrap(),
             "text/plain"
         );
         assert_eq!(res.headers().get(header::CONTENT_LENGTH).unwrap(), "9");
+        assert_eq!(res.into_cow(), "[package]".as_bytes());
     }
 
     #[test]
@@ -115,8 +113,8 @@ mod tests {
         File::create(&root.join("src/fixture.css")).unwrap();
 
         let handler = Static::new(root.clone());
-        let mut req = test::MockRequest::new(Method::GET, "/src/fixture.css");
-        let res = handler.call(&mut req).ok().expect("No response");
+        let mut req = MockRequest::new(Method::GET, "/src/fixture.css");
+        let res = handler.call(&mut req).expect("No response");
         assert_eq!(res.headers().get(header::CONTENT_TYPE).unwrap(), "text/css");
         assert_eq!(res.headers().get(header::CONTENT_LENGTH).unwrap(), "0");
     }
@@ -127,8 +125,8 @@ mod tests {
         let root = td.path();
 
         let handler = Static::new(root.clone());
-        let mut req = test::MockRequest::new(Method::GET, "/nope");
-        let res = handler.call(&mut req).ok().expect("No response");
+        let mut req = MockRequest::new(Method::GET, "/nope");
+        let res = handler.call(&mut req).expect("No response");
         assert_eq!(res.status(), StatusCode::NOT_FOUND);
     }
 
@@ -140,8 +138,8 @@ mod tests {
         fs::create_dir(&root.join("foo")).unwrap();
 
         let handler = Static::new(root.clone());
-        let mut req = test::MockRequest::new(Method::GET, "/foo");
-        let res = handler.call(&mut req).ok().expect("No response");
+        let mut req = MockRequest::new(Method::GET, "/foo");
+        let res = handler.call(&mut req).expect("No response");
         assert_eq!(res.status(), StatusCode::NOT_FOUND);
     }
 
@@ -151,8 +149,8 @@ mod tests {
         let root = td.path();
         File::create(&root.join("test")).unwrap();
         let handler = Static::new(root.clone());
-        let mut req = test::MockRequest::new(Method::GET, "/test");
-        let res = handler.call(&mut req).ok().expect("No response");
+        let mut req = MockRequest::new(Method::GET, "/test");
+        let res = handler.call(&mut req).expect("No response");
         assert_eq!(res.status(), StatusCode::OK);
         assert!(res.headers().get(header::LAST_MODIFIED).is_some());
     }

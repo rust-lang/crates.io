@@ -1,7 +1,7 @@
 [package]
 
 name = "conduit-static"
-version = "0.9.0-alpha.1"
+version = "0.9.0-alpha.2"
 authors = ["wycats@gmail.com",
            "Alex Crichton <alex@alexcrichton.com>"]
 description = "Middleware for serving static files for conduit"
@@ -9,12 +9,12 @@ repository = "https://github.com/conduit-rust/conduit-static"
 license = "MIT"
 
 [dependencies]
-conduit = "0.9.0-alpha.1"
+conduit = { git = "https://github.com/jtgeibel/conduit", rev = "0deff5b" } # "0.9.0-alpha.2"
 conduit-mime-types = "0.7"
 time = "0.1"
 filetime = "0.2"
 
 [dev-dependencies]
-civet = "0.12.0-alpha.2"
-conduit-test = "0.9.0-alpha.1"
+civet = { git = "https://github.com/jtgeibel/rust-civet", rev = "1c145ce" } # "0.12.0-alpha.3"
+conduit-test = { git = "https://github.com/jtgeibel/conduit-test", rev = "b71595f" } # "0.9.0-alpha.2"
 tempdir = "0.3"
