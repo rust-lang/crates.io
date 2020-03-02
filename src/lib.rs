@@ -8,7 +8,6 @@ extern crate time;
 use conduit::{header, Body, HeaderMap, Method, RequestExt, Response, StatusCode};
 use conduit_middleware::{AfterResult, Middleware};
 use std::borrow::Cow;
-use std::io;
 use time::{ParseError, Tm};
 
 #[allow(missing_copy_implementations)]
@@ -25,7 +24,7 @@ impl Middleware for ConditionalGet {
                     parts.status = StatusCode::NOT_MODIFIED;
                     parts.headers.remove(header::CONTENT_TYPE);
                     parts.headers.remove(header::CONTENT_LENGTH);
-                    return Ok(Response::from_parts(parts, Box::new(io::empty())));
+                    return Ok(Response::from_parts(parts, Body::empty()));
                 }
             }
             _ => (),
@@ -112,11 +111,12 @@ fn parse_asctime(string: &str) -> Result<Tm, ParseError> {
 
 #[cfg(test)]
 mod tests {
-    extern crate conduit_test as test;
+    extern crate conduit_test;
 
+    use self::conduit_test::{MockRequest, ResponseExt};
     use conduit::{
-        box_error, header, static_to_body, Handler, HandlerResult, HeaderMap, Method, RequestExt,
-        Response, StatusCode,
+        box_error, header, Body, Handler, HandlerResult, HeaderMap, Method, RequestExt, Response,
+        StatusCode,
     };
     use conduit_middleware::MiddlewareBuilder;
     use time;
@@ -141,7 +141,7 @@ mod tests {
 
     macro_rules! request {
         ($($header:expr => $value:expr),+) => ({
-            let mut req = test::MockRequest::new(Method::GET, "/");
+            let mut req = MockRequest::new(Method::GET, "/");
             $(req.header($header, &$value.to_string());)+
             req
         })
@@ -239,16 +239,9 @@ mod tests {
     }
 
     fn expect_304(response: HandlerResult) {
-        let mut response = response.ok().expect("No response");
-        let mut body = Vec::new();
-        response
-            .body_mut()
-            .write_body(&mut body)
-            .ok()
-            .expect("No body");
-
+        let response = response.expect("No response");
         assert_eq!(response.status(), StatusCode::NOT_MODIFIED);
-        assert_eq!(body, b"");
+        assert_eq!(response.into_cow(), "".as_bytes());
     }
 
     fn expect_200(response: HandlerResult) {
@@ -256,16 +249,9 @@ mod tests {
     }
 
     fn expect(status: StatusCode, response: HandlerResult) {
-        let mut response = response.ok().expect("No response");
-        let mut body = Vec::new();
-        response
-            .body_mut()
-            .write_body(&mut body)
-            .ok()
-            .expect("No body");
-
+        let response = response.expect("No response");
         assert_eq!(response.status(), status);
-        assert_eq!(body, b"hello");
+        assert_eq!(response.into_cow(), "hello".as_bytes());
     }
 
     struct SimpleHandler {
@@ -289,7 +275,7 @@ mod tests {
             let mut builder = Response::builder().status(self.status);
             builder.headers_mut().unwrap().extend(self.headers.clone());
             builder
-                .body(static_to_body(self.body.as_bytes()))
+                .body(Body::from_static(self.body.as_bytes()))
                 .map_err(box_error)
         }
     }
