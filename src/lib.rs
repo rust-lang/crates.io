@@ -1,6 +1,4 @@
 #![warn(rust_2018_idioms)]
-extern crate conduit;
-
 use conduit::{BoxError, Handler, RequestExt};
 
 pub type BeforeResult = Result<(), BoxError>;
@@ -87,16 +85,14 @@ fn run_afters(
 
 #[cfg(test)]
 mod tests {
-    extern crate conduit_test;
-
-    use {AfterResult, AroundMiddleware, BeforeResult, Middleware, MiddlewareBuilder};
+    use super::{AfterResult, AroundMiddleware, BeforeResult, Middleware, MiddlewareBuilder};
 
     use std::any::Any;
     use std::io;
     use std::io::prelude::*;
     use std::net::SocketAddr;
 
-    use self::conduit_test::ResponseExt;
+    use conduit_test::ResponseExt;
 
     use conduit::{
         box_error, Body, Extensions, Handler, HeaderMap, Host, Method, RequestExt, Response,
