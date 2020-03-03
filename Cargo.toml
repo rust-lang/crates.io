@@ -7,6 +7,7 @@ authors = ["wycats@gmail.com",
 description = "Common HTTP server interface"
 license = "MIT"
 repository = "https://github.com/conduit-rust/conduit"
+edition = "2018"
 
 [dependencies]
 http = "0.2"
