@@ -1,6 +1,4 @@
 #![warn(rust_2018_idioms)]
-extern crate conduit;
-
 use conduit::{BoxError, Handler, RequestExt};
 
 pub type BeforeResult = Result<(), BoxError>;
@@ -87,16 +85,18 @@ fn run_afters(
 
 #[cfg(test)]
 mod tests {
-    use {AfterResult, AroundMiddleware, BeforeResult, Middleware, MiddlewareBuilder};
+    use super::{AfterResult, AroundMiddleware, BeforeResult, Middleware, MiddlewareBuilder};
 
     use std::any::Any;
     use std::io;
     use std::io::prelude::*;
     use std::net::SocketAddr;
 
+    use conduit_test::ResponseExt;
+
     use conduit::{
-        box_error, static_to_body, vec_to_body, Body, Extensions, Handler, HeaderMap, Host, Method,
-        RequestExt, Response, Scheme, StatusCode, TypeMap, Version,
+        box_error, Body, Extensions, Handler, HeaderMap, Host, Method, RequestExt, Response,
+        Scheme, StatusCode, TypeMap, Version,
     };
 
     struct RequestSentinel {
@@ -174,7 +174,7 @@ mod tests {
                 let e = e.to_string().into_bytes();
                 Response::builder()
                     .status(StatusCode::INTERNAL_SERVER_ERROR)
-                    .body(vec_to_body(e))
+                    .body(Body::from_vec(e))
                     .map_err(box_error)
             })
         }
@@ -192,9 +192,7 @@ mod tests {
 
     impl Middleware for NotReached {
         fn after(&self, _: &mut dyn RequestExt, _: AfterResult) -> AfterResult {
-            Response::builder()
-                .body(static_to_body(b""))
-                .map_err(box_error)
+            Response::builder().body(Body::empty()).map_err(box_error)
         }
     }
 
@@ -229,7 +227,7 @@ mod tests {
 
     fn response(string: String) -> Response<Body> {
         Response::builder()
-            .body(vec_to_body(string.into_bytes()))
+            .body(Body::from_vec(string.into_bytes()))
             .unwrap()
     }
 
@@ -255,11 +253,9 @@ mod tests {
         builder.add(MyMiddleware);
 
         let mut req = RequestSentinel::new(Method::GET, "/");
-        let mut res = builder.call(&mut req).ok().expect("No response");
+        let res = builder.call(&mut req).expect("No response");
 
-        let mut s = Vec::new();
-        res.body_mut().write_body(&mut s).unwrap();
-        assert_eq!(s, b"hello");
+        assert_eq!(res.into_cow(), "hello".as_bytes());
     }
 
     #[test]
@@ -271,7 +267,7 @@ mod tests {
         builder.add(NotReached);
 
         let mut req = RequestSentinel::new(Method::GET, "/");
-        let res = builder.call(&mut req).ok().expect("Error not handled");
+        let res = builder.call(&mut req).expect("Error not handled");
 
         assert_eq!(res.status(), StatusCode::INTERNAL_SERVER_ERROR);
     }
@@ -282,12 +278,9 @@ mod tests {
         builder.add(ErrorRecovery);
 
         let mut req = RequestSentinel::new(Method::GET, "/");
-        let mut res = builder.call(&mut req).ok().expect("Error not handled");
+        let res = builder.call(&mut req).expect("Error not handled");
 
-        assert_eq!(res.status(), StatusCode::INTERNAL_SERVER_ERROR);
-        let mut s = Vec::new();
-        res.body_mut().write_body(&mut s).unwrap();
-        assert_eq!(s, b"Error in handler");
+        assert_eq!(res.into_cow(), "Error in handler".as_bytes());
     }
 
     #[test]
@@ -297,10 +290,8 @@ mod tests {
         builder.around(MyAroundMiddleware::new());
 
         let mut req = RequestSentinel::new(Method::GET, "/");
-        let mut res = builder.call(&mut req).ok().expect("No response");
+        let res = builder.call(&mut req).expect("No response");
 
-        let mut s = Vec::new();
-        res.body_mut().write_body(&mut s).unwrap();
-        assert_eq!(s, b"hello hello");
+        assert_eq!(res.into_cow(), "hello hello".as_bytes());
     }
 }
