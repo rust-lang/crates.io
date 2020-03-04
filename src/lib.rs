@@ -35,17 +35,18 @@
 //! }
 //! #
 //! # use std::{error, io};
-//! # use conduit::{box_error, static_to_body, Response, RequestExt, HandlerResult};
+//! # use conduit::{box_error, Body, Response, RequestExt, HandlerResult};
 //! #
 //! # struct Endpoint();
 //! # impl Handler for Endpoint {
 //! #     fn call(&self, _: &mut dyn RequestExt) -> HandlerResult {
-//! #         Response::builder().body(static_to_body(b"")).map_err(box_error)
+//! #         Response::builder().body(Body::empty()).map_err(box_error)
 //! #     }
 //! # }
 //! ```
 
 mod adaptor;
+mod file_stream;
 mod server;
 mod service;
 #[cfg(test)]
@@ -55,3 +56,18 @@ pub use server::Server;
 pub use service::{BlockingHandler, Service};
 
 type HyperResponse = hyper::Response<hyper::Body>;
+type ConduitResponse = conduit::Response<conduit::Body>;
+use crate::file_stream::FileStream;
+
+/// Turns a `ConduitResponse` into a `HyperResponse`
+fn conduit_into_hyper(response: ConduitResponse) -> HyperResponse {
+    use conduit::Body::*;
+
+    let (parts, body) = response.into_parts();
+    let body = match body {
+        Static(slice) => slice.into(),
+        Owned(vec) => vec.into(),
+        File(file) => FileStream::from_std(file).into_streamed_body(),
+    };
+    HyperResponse::from_parts(parts, body)
+}
