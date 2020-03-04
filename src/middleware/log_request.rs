@@ -88,7 +88,7 @@ impl Display for RequestLine<'_> {
         line.add_field("request_id", request_header(self.req, "x-request-id"))?;
         line.add_quoted_field("fwd", request_header(self.req, "x-real-ip"))?;
         line.add_field("service", TimeMs(self.response_time))?;
-        line.add_field("status", status)?;
+        line.add_field("status", status.as_str())?;
         line.add_quoted_field("user_agent", request_header(self.req, header::USER_AGENT))?;
 
         if let Some(metadata) = self.req.extensions().find::<CustomMetadata>() {
