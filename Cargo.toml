@@ -1,12 +1,13 @@
 [package]
 
 name = "conduit"
-version = "0.9.0-alpha.1"
+version = "0.9.0-alpha.2"
 authors = ["wycats@gmail.com",
            "Alex Crichton <alex@alexcrichton.com>"]
 description = "Common HTTP server interface"
 license = "MIT"
 repository = "https://github.com/conduit-rust/conduit"
+edition = "2018"
 
 [dependencies]
 http = "0.2"
