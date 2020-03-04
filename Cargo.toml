@@ -9,7 +9,7 @@ readme = "README.md"
 edition = "2018"
 
 [dependencies]
-conduit = { git = "https://github.com/jtgeibel/conduit", rev = "0deff5b" } # "0.9.0-alpha.2"
+conduit = "0.9.0-alpha.2"
 futures = "0.3"
 hyper = "0.13"
 http = "0.2"
@@ -18,6 +18,6 @@ tokio = { version = "0.2", features = ["blocking", "fs", "rt-threaded", "stream"
 tower-service = "0.3"
 
 [dev-dependencies]
-conduit-router = { git = "https://github.com/jtgeibel/conduit-router", rev = "14b1cc3" } # "0.9.0-alpha.2"
+conduit-router = "0.9.0-alpha.2"
 env_logger = "0.7"
 tokio = { version = "0.2", features = ["macros"] }
