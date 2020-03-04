@@ -9,4 +9,4 @@ repository = "https://github.com/conduit-rust/conduit-test"
 license = "MIT"
 
 [dependencies]
-conduit = { git = "https://github.com/jtgeibel/conduit", rev = "0deff5b" } # "0.9.0-alpha.2"
+conduit = "0.9.0-alpha.2"
