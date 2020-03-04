@@ -1,14 +1,43 @@
 #![warn(rust_2018_idioms)]
 extern crate conduit;
 
-use std::io::prelude::*;
-use std::io::Cursor;
+use std::borrow::Cow;
+use std::io::{Cursor, Read};
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 
 use conduit::{
     header::{HeaderValue, IntoHeaderName},
-    Extensions, HeaderMap, Host, Method, Scheme, TypeMap, Version,
+    Body, Extensions, HeaderMap, Host, Method, Response, Scheme, TypeMap, Version,
 };
+
+pub trait ResponseExt {
+    fn into_cow(self) -> Cow<'static, [u8]>;
+}
+
+impl ResponseExt for Response<Body> {
+    /// Convert the request into a copy-on-write body
+    ///
+    /// # Blocking
+    ///
+    /// This function may block if the value is a `Body::File`.
+    ///
+    /// # Panics
+    ///
+    /// This function panics if there is an error reading a `Body::File`.
+    fn into_cow(self) -> Cow<'static, [u8]> {
+        use conduit::Body::*;
+
+        match self.into_body() {
+            Static(slice) => slice.into(),
+            Owned(vec) => vec.into(),
+            File(mut file) => {
+                let mut vec = Vec::new();
+                std::io::copy(&mut file, &mut vec).unwrap();
+                vec.into()
+            }
+        }
+    }
+}
 
 pub struct MockRequest {
     path: String,
@@ -146,7 +175,7 @@ mod tests {
         assert_eq!(req.content_length(), None);
         assert_eq!(req.headers().len(), 0);
         let mut s = String::new();
-        req.body().read_to_string(&mut s).ok().expect("No body");
+        req.body().read_to_string(&mut s).expect("No body");
         assert_eq!(s, "".to_string());
     }
 
@@ -158,7 +187,7 @@ mod tests {
         assert_eq!(req.method(), Method::POST);
         assert_eq!(req.path(), "/articles");
         let mut s = String::new();
-        req.body().read_to_string(&mut s).ok().expect("No body");
+        req.body().read_to_string(&mut s).expect("No body");
         assert_eq!(s, "Hello world".to_string());
         assert_eq!(req.content_length(), Some(11));
     }
