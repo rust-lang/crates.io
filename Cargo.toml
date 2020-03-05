@@ -84,6 +84,9 @@ ctrlc = { version = "3.0", features = ["termination"] }
 indexmap = "1.0.2"
 handlebars = "2.0.1"
 
+# FIXME: Remove this once failure_derive replaces private item.
+quote = "=1.0.2"
+
 [dev-dependencies]
 conduit-test = "0.8"
 hyper-tls = "0.4"
