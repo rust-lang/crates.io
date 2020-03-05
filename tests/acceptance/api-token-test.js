@@ -1,6 +1,6 @@
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'ember-qunit';
-import { currentURL, findAll, click } from '@ember/test-helpers';
+import { currentURL, findAll, click, fillIn } from '@ember/test-helpers';
 import window, { setupWindowMock } from 'ember-window-mock';
 import { Response } from 'ember-cli-mirage';
 
@@ -100,5 +100,50 @@ module('Acceptance | api-tokens', function(hooks) {
     assert.dom('[data-test-api-token="2"]').exists();
     assert.dom('[data-test-api-token="1"]').exists();
     assert.dom('[data-test-error]').includesText('An error occurred while revoking this token');
+  });
+
+  test('new API tokens can be created', async function(assert) {
+    prepare(this);
+
+    this.server.put('/api/v1/me/tokens', function(schema, request) {
+      assert.step('put');
+
+      let { api_token } = JSON.parse(request.requestBody);
+
+      return {
+        api_token: {
+          id: 5,
+          name: api_token.name,
+          token: 'zuz6nYcXJOzPDvnA9vucNwccG0lFSGbh',
+          revoked: false,
+          created_at: api_token.created_at,
+          last_used_at: api_token.last_used_at,
+        },
+      };
+    });
+
+    await visit('/me');
+    assert.equal(currentURL(), '/me');
+    assert.dom('[data-test-api-token]').exists({ count: 2 });
+    assert.dom('[data-test-focused-input]').doesNotExist();
+    assert.dom('[data-test-save-token-button]').doesNotExist();
+
+    await click('[data-test-new-token-button]');
+    assert.dom('[data-test-new-token-button]').isDisabled();
+    assert.dom('[data-test-focused-input]').exists();
+    assert.dom('[data-test-save-token-button]').exists();
+
+    await fillIn('[data-test-focused-input]', 'the new token');
+    await click('[data-test-save-token-button]');
+    assert.verifySteps(['put']);
+    assert.dom('[data-test-focused-input]').doesNotExist();
+    assert.dom('[data-test-save-token-button]').doesNotExist();
+
+    assert.dom('[data-test-api-token="5"] [data-test-name]').hasText('the new token');
+    assert.dom('[data-test-api-token="5"] [data-test-save-token-button]').doesNotExist();
+    assert.dom('[data-test-api-token="5"] [data-test-revoke-token-button]').exists();
+    assert.dom('[data-test-api-token="5"] [data-test-saving-spinner]').doesNotExist();
+    assert.dom('[data-test-api-token="5"] [data-test-error]').doesNotExist();
+    assert.dom('[data-test-token]').includesText('cargo login zuz6nYcXJOzPDvnA9vucNwccG0lFSGbh');
   });
 });
