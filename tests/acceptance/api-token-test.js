@@ -1,7 +1,8 @@
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'ember-qunit';
-import { currentURL, findAll } from '@ember/test-helpers';
+import { currentURL, findAll, click } from '@ember/test-helpers';
 import window, { setupWindowMock } from 'ember-window-mock';
+import { Response } from 'ember-cli-mirage';
 
 import setupMirage from '../helpers/setup-mirage';
 import { visit } from '../helpers/visit-ignoring-abort';
@@ -61,5 +62,43 @@ module('Acceptance | api-tokens', function(hooks) {
     assert.dom('[data-test-saving-spinner]', row2).doesNotExist();
     assert.dom('[data-test-error]', row2).doesNotExist();
     assert.dom('[data-test-token]', row2).doesNotExist();
+  });
+
+  test('API tokens can be revoked', async function(assert) {
+    prepare(this);
+
+    this.server.delete('/api/v1/me/tokens/:id', function(schema, request) {
+      assert.step(`delete id:${request.params.id}`);
+      return {};
+    });
+
+    await visit('/me');
+    assert.equal(currentURL(), '/me');
+    assert.dom('[data-test-api-token]').exists({ count: 2 });
+
+    await click('[data-test-api-token="1"] [data-test-revoke-token-button]');
+    assert.verifySteps(['delete id:1']);
+
+    assert.dom('[data-test-api-token]').exists({ count: 1 });
+    assert.dom('[data-test-api-token="2"]').exists();
+    assert.dom('[data-test-error]').doesNotExist();
+  });
+
+  test('failed API tokens revocation shows an error', async function(assert) {
+    prepare(this);
+
+    this.server.delete('/api/v1/me/tokens/:id', function() {
+      return new Response(500, {}, {});
+    });
+
+    await visit('/me');
+    assert.equal(currentURL(), '/me');
+    assert.dom('[data-test-api-token]').exists({ count: 2 });
+
+    await click('[data-test-api-token="1"] [data-test-revoke-token-button]');
+    assert.dom('[data-test-api-token]').exists({ count: 2 });
+    assert.dom('[data-test-api-token="2"]').exists();
+    assert.dom('[data-test-api-token="1"]').exists();
+    assert.dom('[data-test-error]').includesText('An error occurred while revoking this token');
   });
 });
