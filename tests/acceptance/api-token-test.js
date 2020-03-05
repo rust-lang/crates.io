@@ -31,8 +31,13 @@ module('Acceptance | api-tokens', function(hooks) {
 
     context.server.get('/api/v1/me/tokens', {
       api_tokens: [
-        { id: 2, name: 'BAR', created_at: '2017-11-19T17:59:22Z', last_used_at: null },
-        { id: 1, name: 'foo', created_at: '2017-08-01T12:34:56Z', last_used_at: '2017-11-02T01:45:14Z' },
+        { id: 2, name: 'BAR', created_at: new Date('2017-11-19T17:59:22').toISOString(), last_used_at: null },
+        {
+          id: 1,
+          name: 'foo',
+          created_at: new Date('2017-08-01T12:34:56').toISOString(),
+          last_used_at: new Date('2017-11-02T01:45:14').toISOString(),
+        },
       ],
     });
   }
@@ -46,7 +51,7 @@ module('Acceptance | api-tokens', function(hooks) {
 
     let [row1, row2] = findAll('[data-test-api-token]');
     assert.dom('[data-test-name]', row1).hasText('BAR');
-    assert.dom('[data-test-created-at]', row1).hasText('Created 17 hours ago');
+    assert.dom('[data-test-created-at]', row1).hasText('Created 18 hours ago');
     assert.dom('[data-test-last-used-at]', row1).hasText('Never used');
     assert.dom('[data-test-save-token-button]', row1).doesNotExist();
     assert.dom('[data-test-revoke-token-button]', row1).exists();
