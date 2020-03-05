@@ -1,6 +1,7 @@
 import { A } from '@ember/array';
 import Service, { inject as service } from '@ember/service';
 import ajax from 'ember-fetch/ajax';
+import window from 'ember-window-mock';
 
 export default Service.extend({
   savedTransition: null,
@@ -17,7 +18,7 @@ export default Service.extend({
     this._super(...arguments);
     let isLoggedIn;
     try {
-      isLoggedIn = localStorage.getItem('isLoggedIn') === '1';
+      isLoggedIn = window.localStorage.getItem('isLoggedIn') === '1';
     } catch (e) {
       isLoggedIn = false;
     }
@@ -29,7 +30,7 @@ export default Service.extend({
     this.set('isLoggedIn', true);
     this.set('currentUser', user);
     try {
-      localStorage.setItem('isLoggedIn', '1');
+      window.localStorage.setItem('isLoggedIn', '1');
     } catch (e) {
       // ignore error
     }
@@ -42,7 +43,7 @@ export default Service.extend({
     this.set('currentUser', null);
 
     try {
-      localStorage.removeItem('isLoggedIn');
+      window.localStorage.removeItem('isLoggedIn');
     } catch (e) {
       // ignore error
     }
