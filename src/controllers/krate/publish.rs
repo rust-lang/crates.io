@@ -192,8 +192,7 @@ pub fn publish(req: &mut dyn Request) -> AppResult<Response> {
             .uploader
             .upload_crate(req, &krate, maximums, vers)?;
 
-        let mut hex_cksum = String::new();
-        cksum.write_hex(&mut hex_cksum)?;
+        let hex_cksum = cksum.encode_hex::<String>();
 
         // Register this crate in our local git repo.
         let git_crate = git::Crate {
