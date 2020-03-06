@@ -181,9 +181,9 @@ export function register(server) {
 
     const body = JSON.parse(request.requestBody);
     const [ownerId] = body.owners;
-    const user = schema.users.findBy({ login: ownerId });
+    const owner = schema.users.findBy({ login: ownerId }) || schema.teams.findBy({ login: ownerId });
 
-    if (!user) {
+    if (!owner) {
       return notFound();
     }
 

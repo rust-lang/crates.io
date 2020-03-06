@@ -44,8 +44,32 @@
 {{/if}}
 
 <div class='owners white-rows'>
+  {{#each this.crate.owner_team as |team|}}
+    <div class='crate row' data-test-owner-team={{team.login}}>
+      <div>
+        <LinkTo @route={{team.kind}} @model={{team.login}}>
+          <UserAvatar @user={{team}} @size="medium-small" />
+        </LinkTo>
+      </div>
+      <div>
+        <LinkTo @route={{team.kind}} @model={{team.login}}>
+          {{team.display_name}}
+        </LinkTo>
+      </div>
+      <div class='stats'>
+        {{#if team.email}}
+          {{team.email}}
+        {{else}}
+          &nbsp;
+        {{/if}}
+      </div>
+      <div class='stats downloads'>
+        <button type="button" class='remove-owner small yellow-button' {{action 'removeOwner' team}}>Remove</button>
+      </div>
+    </div>
+  {{/each}}
   {{#each this.crate.owner_user as |user|}}
-    <div class='crate row'>
+    <div class='crate row' data-test-owner-user={{user.login}}>
       <div>
         <LinkTo @route={{user.kind}} @model={{user.login}}>
           <UserAvatar @user={{user}} @size="medium-small" />
