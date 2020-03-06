@@ -27,7 +27,6 @@ mod prelude {
 
     use indexmap::IndexMap;
     use serde::Serialize;
-    use url;
 
     pub trait UserAuthenticationExt {
         fn authenticate(&self, conn: &PgConnection) -> AppResult<super::util::AuthenticatedUser>;
