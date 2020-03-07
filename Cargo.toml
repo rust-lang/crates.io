@@ -82,7 +82,7 @@ tokio = { version = "0.2", default-features = false, features = ["net", "signal"
 hyper = "0.13"
 ctrlc = { version = "3.0", features = ["termination"] }
 indexmap = "1.0.2"
-handlebars = "2.0.1"
+handlebars = "3.0.1"
 
 [dev-dependencies]
 conduit-test = "0.8"
