@@ -42,11 +42,12 @@ impl<'a> UserAuthenticationExt for dyn Request + 'a {
                         user_id: token.user_id,
                         token_id: Some(token.id),
                     })
-                    // Convert a NotFound (or other database error) into Unauthorized
-                    .map_err(|_| Box::new(Unauthorized) as Box<dyn AppError>)
+                    .chain_error(|| internal("invalid token"))
+                    .chain_error(|| Box::new(Unauthorized) as Box<dyn AppError>)
             } else {
                 // Unable to authenticate the user
-                Err(Box::new(Unauthorized))
+                Err(internal("no cookie session or auth header found"))
+                    .chain_error(|| Box::new(Unauthorized) as Box<dyn AppError>)
             }
         }
     }
