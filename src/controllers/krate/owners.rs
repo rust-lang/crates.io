@@ -1,7 +1,5 @@
 //! All routes related to managing owners of a crate
 
-use serde_json;
-
 use crate::controllers::prelude::*;
 use crate::models::{Crate, Owner, Rights, Team, User};
 use crate::views::EncodableOwner;

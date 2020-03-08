@@ -70,7 +70,6 @@ impl ApiToken {
 mod tests {
     use super::*;
     use chrono::NaiveDate;
-    use serde_json;
 
     #[test]
     fn api_token_serializes_to_rfc3339() {
