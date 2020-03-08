@@ -1,3 +1,5 @@
+use super::with_advisory_lock;
+use super::UPDATE_DOWNLOADS_ADVISORY_LOCK_KEY as LOCK_KEY;
 use crate::{
     models::VersionDownload,
     schema::{crates, metadata, version_downloads, versions},
@@ -8,7 +10,7 @@ use swirl::PerformError;
 
 #[swirl::background_job]
 pub fn update_downloads(conn: &PgConnection) -> Result<(), PerformError> {
-    update(&conn)?;
+    with_advisory_lock(&conn, LOCK_KEY, update)?;
     Ok(())
 }
 
