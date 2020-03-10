@@ -10,7 +10,6 @@ edition = "2018"
 
 [dependencies]
 conduit = "0.9.0-alpha.2"
-futures = "0.3"
 hyper = "0.13"
 http = "0.2"
 tracing = { version = "0.1", features = ["log"] }
@@ -20,4 +19,5 @@ tower-service = "0.3"
 [dev-dependencies]
 conduit-router = "0.9.0-alpha.2"
 env_logger = "0.7"
+futures-util = "0.3"
 tokio = { version = "0.2", features = ["macros"] }
