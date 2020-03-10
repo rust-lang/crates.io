@@ -183,8 +183,7 @@ pub fn publish(req: &mut dyn Request) -> AppResult<Response> {
                     .unwrap_or_else(|| String::from("README.md")),
                 repo,
             )
-            .enqueue(&conn)
-            .map_err(|e| AppError::from_std_error(e))?;
+            .enqueue(&conn)?;
         }
 
         let cksum = app
@@ -205,8 +204,7 @@ pub fn publish(req: &mut dyn Request) -> AppResult<Response> {
             links,
         };
         git::add_crate(git_crate)
-            .enqueue(&conn)
-            .map_err(|e| AppError::from_std_error(e))?;
+            .enqueue(&conn)?;
 
         // The `other` field on `PublishWarnings` was introduced to handle a temporary warning
         // that is no longer needed. As such, crates.io currently does not return any `other`
