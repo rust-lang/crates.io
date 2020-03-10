@@ -10,7 +10,7 @@ use std::{
 
 use civet::Server as CivetServer;
 use conduit_hyper::Service;
-use futures::prelude::*;
+use futures_util::future::FutureExt;
 use reqwest::blocking::Client;
 
 enum Server {
@@ -84,7 +84,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let server = server.with_graceful_shutdown(async move {
             // Wait for either signal
-            futures::select! {
+            futures_util::select! {
                 _ = sig_int.recv().fuse() => (),
                 _ = sig_term.recv().fuse() => (),
             };

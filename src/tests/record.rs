@@ -4,6 +4,7 @@ use std::{
     borrow::Cow,
     collections::HashSet,
     fs::{self, File},
+    future::Future,
     io::{self, prelude::*},
     path::PathBuf,
     pin::Pin,
@@ -13,7 +14,8 @@ use std::{
     thread,
 };
 
-use futures::{channel::oneshot, future, prelude::*};
+use futures_channel::oneshot;
+use futures_util::future;
 use hyper::{body::to_bytes, Body, Error, Request, Response, Server, StatusCode, Uri};
 use tokio::{
     net::{TcpListener, TcpStream},
