@@ -16,6 +16,7 @@ use cargo_registry::git::{Repository, RepositoryConfig};
 use cargo_registry::{background_jobs::*, db};
 use diesel::r2d2;
 use reqwest::blocking::Client;
+use std::sync::{Arc, Mutex};
 use std::thread::sleep;
 use std::time::Duration;
 
@@ -23,15 +24,6 @@ fn main() {
     println!("Booting runner");
 
     let config = cargo_registry::Config::default();
-
-    // 2x the thread pool size -- not all our jobs need a DB connection,
-    // but we want to always be able to run our jobs in parallel, rather
-    // than adjusting based on how many concurrent jobs need a connection.
-    // Eventually swirl will do this for us, and this will be the default
-    // -- we should just let it do a thread pool size of CPU count, and a
-    // a connection pool size of 2x that when that lands.
-    let db_config = r2d2::Pool::builder().max_size(4);
-    let db_pool = db::diesel_pool(&config.db_url, config.env, db_config);
 
     let job_start_timeout = dotenv::var("BACKGROUND_JOB_TIMEOUT")
         .unwrap_or_else(|_| "30".into())
@@ -41,13 +33,27 @@ fn main() {
     println!("Cloning index");
 
     let repository_config = RepositoryConfig::from_environment();
-    let repository = Repository::open(&repository_config).expect("Failed to clone index");
+    let repository = Arc::new(Mutex::new(
+        Repository::open(&repository_config).expect("Failed to clone index"),
+    ));
     println!("Index cloned");
 
-    let environment = Environment::new(repository, db_pool.clone(), config.uploader, Client::new());
-
     let build_runner = || {
-        swirl::Runner::builder(db_pool.clone(), environment.clone())
+        // 2x the thread pool size -- not all our jobs need a DB connection,
+        // but we want to always be able to run our jobs in parallel, rather
+        // than adjusting based on how many concurrent jobs need a connection.
+        // Eventually swirl will do this for us, and this will be the default
+        // -- we should just let it do a thread pool size of CPU count, and a
+        // a connection pool size of 2x that when that lands.
+        let db_config = r2d2::Pool::builder().max_size(4);
+        let db_pool = db::diesel_pool(&config.db_url, config.env, db_config);
+        let environment = Environment::new_shared(
+            repository.clone(),
+            db_pool.clone(),
+            config.uploader.clone(),
+            Client::new(),
+        );
+        swirl::Runner::builder(db_pool, environment)
             .thread_count(2)
             .job_start_timeout(Duration::from_secs(job_start_timeout))
             .build()

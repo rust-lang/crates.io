@@ -50,8 +50,22 @@ impl Environment {
         uploader: Uploader,
         http_client: Client,
     ) -> Self {
+        Self::new_shared(
+            Arc::new(Mutex::new(index)),
+            connection_pool,
+            uploader,
+            http_client,
+        )
+    }
+
+    pub fn new_shared(
+        index: Arc<Mutex<Repository>>,
+        connection_pool: DieselPool,
+        uploader: Uploader,
+        http_client: Client,
+    ) -> Self {
         Self {
-            index: Arc::new(Mutex::new(index)),
+            index,
             connection_pool: AssertUnwindSafe(connection_pool),
             uploader,
             http_client: AssertUnwindSafe(http_client),
