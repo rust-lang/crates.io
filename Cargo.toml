@@ -77,7 +77,8 @@ conduit-git-http-backend = "0.8"
 civet = "0.9"
 conduit-hyper = "0.2.0"
 
-futures = "0.3"
+futures-util = "0.3"
+futures-channel = { version = "0.3.1", default-features = false }
 tokio = { version = "0.2", default-features = false, features = ["net", "signal", "io-std"]}
 hyper = "0.13"
 ctrlc = { version = "3.0", features = ["termination"] }
