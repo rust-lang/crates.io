@@ -1,5 +1,5 @@
 use conduit::{box_error, Body, Handler, HandlerResult, RequestExt, Response, StatusCode};
-use futures::prelude::*;
+use futures_util::future::{Future, FutureExt};
 use hyper::{body::to_bytes, service::Service};
 
 use super::service::{BlockingHandler, ServiceError};
@@ -150,7 +150,7 @@ async fn limits_thread_count() {
     let first = service.call(hyper::Request::default());
     let second = service.call(hyper::Request::default());
 
-    let first_completed = futures::select! {
+    let first_completed = futures_util::select! {
         // The first thead is spawned and sleeps for 100ms
         sleep = first.fuse() => sleep,
         // The second request is rejected immediately
@@ -171,7 +171,7 @@ async fn sleeping_doesnt_block_another_request() {
     let start = std::time::Instant::now();
 
     // Spawn 2 requests that each sleeps for 100ms
-    let (first, second) = futures::join!(first, second);
+    let (first, second) = futures_util::join!(first, second);
 
     // Elapsed time should be closer to 100ms than 200ms
     assert!(start.elapsed().as_millis() < 150);
