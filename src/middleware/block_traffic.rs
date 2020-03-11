@@ -47,7 +47,8 @@ impl Handler for BlockTraffic {
             .iter()
             .any(|value| self.blocked_values.iter().any(|v| v == value));
         if has_blocked_value {
-            super::log_request::add_custom_metadata(req, "cause", "blocked");
+            let cause = format!("blocked due to contents of header {}", self.header_name);
+            super::log_request::add_custom_metadata(req, "cause", cause);
             let body = format!(
                 "We are unable to process your request at this time. \
                  This usually means that you are in violation of our crawler \
