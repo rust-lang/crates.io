@@ -15,6 +15,7 @@ export default Model.extend({
     return login_split[1];
   }),
   display_name: computed('name', 'org_name', function() {
-    return `${this.org_name}/${this.name}`;
+    let { name, org_name } = this.getProperties('name', 'org_name');
+    return `${org_name}/${name}`;
   }),
 });
