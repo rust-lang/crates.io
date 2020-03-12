@@ -14,7 +14,7 @@ export default Model.extend({
     let login_split = login.split(':');
     return login_split[1];
   }),
-  display_name: computed('org_name', function() {
+  display_name: computed('name', 'org_name', function() {
     return `${this.org_name}/${this.name}`;
   }),
 });
