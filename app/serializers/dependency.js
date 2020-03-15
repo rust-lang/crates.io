@@ -1,7 +1,7 @@
 import ApplicationSerializer from './application';
 
-export default ApplicationSerializer.extend({
-  attrs: {
+export default class DependencySerializer extends ApplicationSerializer {
+  attrs = {
     version: 'version_id',
-  },
-});
+  };
+}
