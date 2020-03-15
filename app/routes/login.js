@@ -9,9 +9,9 @@ import window from 'ember-window-mock';
  *
  * @see `github-authorize` route
  */
-export default Route.extend({
-  flashMessages: service(),
-  session: service(),
+export default class LoginRoute extends Route {
+  @service flashMessages;
+  @service session;
 
   beforeModel(transition) {
     try {
@@ -74,5 +74,5 @@ export default Route.extend({
     }, 200);
 
     transition.abort();
-  },
-});
+  }
+}

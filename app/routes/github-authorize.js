@@ -15,7 +15,7 @@ import { serializeQueryParams } from 'ember-fetch/utils/serialize-query-params';
  * @see https://developer.github.com/v3/oauth/#github-redirects-back-to-your-site
  * @see `/login` route
  */
-export default Route.extend({
+export default class GithubAuthorizeRoute extends Route {
   async beforeModel(transition) {
     try {
       let queryParams = serializeQueryParams(transition.to.queryParams);
@@ -33,5 +33,5 @@ export default Route.extend({
     } finally {
       window.close();
     }
-  },
-});
+  }
+}

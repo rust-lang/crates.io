@@ -2,13 +2,13 @@ import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import RSVP from 'rsvp';
 
-export default Route.extend({
-  flashMessages: service(),
+export default class UserRoute extends Route {
+  @service flashMessages;
 
-  queryParams: {
+  queryParams = {
     page: { refreshModel: true },
     sort: { refreshModel: true },
-  },
+  };
 
   model(params) {
     const { user_id } = params;
@@ -28,5 +28,5 @@ export default Route.extend({
         }
       },
     );
-  },
-});
+  }
+}

@@ -1,8 +1,8 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
-export default Route.extend({
-  flashMessages: service(),
+export default class KeywordRoute extends Route {
+  @service flashMessages;
 
   model({ keyword_id }) {
     return this.store.find('keyword', keyword_id).catch(e => {
@@ -11,5 +11,5 @@ export default Route.extend({
         return this.replaceWith('index');
       }
     });
-  },
-});
+  }
+}

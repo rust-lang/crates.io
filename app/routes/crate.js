@@ -1,8 +1,8 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
-export default Route.extend({
-  flashMessages: service(),
+export default class CrateRoute extends Route {
+  @service flashMessages;
 
   model(params) {
     return this.store.find('crate', params.crate_id).catch(e => {
@@ -11,13 +11,13 @@ export default Route.extend({
         return;
       }
     });
-  },
+  }
 
   afterModel(model) {
     if (model && typeof model.get === 'function') {
       this.setHeadTags(model);
     }
-  },
+  }
 
   setHeadTags(model) {
     let headTags = [
@@ -32,5 +32,5 @@ export default Route.extend({
     ];
 
     this.set('headTags', headTags);
-  },
-});
+  }
+}

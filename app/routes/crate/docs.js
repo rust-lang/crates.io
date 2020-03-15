@@ -1,9 +1,9 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
-export default Route.extend({
-  flashMessages: service(),
-  redirector: service(),
+export default class DocsRoute extends Route {
+  @service flashMessages;
+  @service redirector;
 
   redirect() {
     let crate = this.modelFor('crate');
@@ -18,5 +18,5 @@ export default Route.extend({
       this.flashMessages.queue(message);
       this.replaceWith('crate', crate);
     }
-  },
-});
+  }
+}

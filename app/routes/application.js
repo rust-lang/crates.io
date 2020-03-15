@@ -1,17 +1,17 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
+import { action } from '@ember/object';
 
-export default Route.extend({
-  flashMessages: service(),
-  session: service(),
+export default class ApplicationRoute extends Route {
+  @service flashMessages;
+  @service session;
 
   beforeModel() {
     this.session.loadUser();
-  },
+  }
 
-  actions: {
-    didTransition() {
-      this.flashMessages.step();
-    },
-  },
-});
+  @action
+  didTransition() {
+    this.flashMessages.step();
+  }
+}

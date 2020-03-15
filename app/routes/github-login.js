@@ -14,9 +14,9 @@ import ajax from 'ember-fetch/ajax';
  * @see https://developer.github.com/v3/oauth/#redirect-users-to-request-github-access
  * @see `github-authorize` route
  */
-export default Route.extend({
+export default class GithubLoginRoute extends Route {
   async beforeModel() {
     let url = await ajax(`/api/private/session/begin`);
     window.location = url.url;
-  },
-});
+  }
+}

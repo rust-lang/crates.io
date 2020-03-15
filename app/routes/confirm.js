@@ -2,9 +2,9 @@ import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import ajax from 'ember-fetch/ajax';
 
-export default Route.extend({
-  flashMessages: service(),
-  session: service(),
+export default class ConfirmRoute extends Route {
+  @service flashMessages;
+  @service session;
 
   async model(params) {
     try {
@@ -34,5 +34,5 @@ export default Route.extend({
         return this.replaceWith('index');
       }
     }
-  },
-});
+  }
+}
