@@ -3,19 +3,20 @@ import Service, { inject as service } from '@ember/service';
 import ajax from 'ember-fetch/ajax';
 import window from 'ember-window-mock';
 
-export default Service.extend({
-  savedTransition: null,
-  abortedTransition: null,
-  isLoggedIn: false,
-  currentUser: null,
-  currentUserDetected: false,
-  ownedCrates: A(),
+export default class SessionService extends Service {
+  @service store;
+  @service router;
 
-  store: service(),
-  router: service(),
+  savedTransition = null;
+  abortedTransition = null;
+  isLoggedIn = false;
+  currentUser = null;
+  currentUserDetected = false;
+  ownedCrates = A();
 
-  init() {
-    this._super(...arguments);
+  constructor() {
+    super(...arguments);
+
     let isLoggedIn;
     try {
       isLoggedIn = window.localStorage.getItem('isLoggedIn') === '1';
@@ -24,7 +25,7 @@ export default Service.extend({
     }
     this.set('isLoggedIn', isLoggedIn);
     this.set('currentUser', null);
-  },
+  }
 
   loginUser(user) {
     this.set('isLoggedIn', true);
@@ -34,7 +35,7 @@ export default Service.extend({
     } catch (e) {
       // ignore error
     }
-  },
+  }
 
   logoutUser() {
     this.set('savedTransition', null);
@@ -47,7 +48,7 @@ export default Service.extend({
     } catch (e) {
       // ignore error
     }
-  },
+  }
 
   loadUser() {
     if (this.isLoggedIn && !this.currentUser) {
@@ -64,7 +65,7 @@ export default Service.extend({
     } else {
       this.set('currentUserDetected', true);
     }
-  },
+  }
 
   fetchUser() {
     return ajax('/api/v1/me').then(response => {
@@ -73,7 +74,7 @@ export default Service.extend({
         response.owned_crates.map(c => this.store.push(this.store.normalize('owned-crate', c))),
       );
     });
-  },
+  }
 
   checkCurrentUser(transition, beforeRedirect) {
     if (this.currentUser) {
@@ -94,5 +95,5 @@ export default Service.extend({
       }
       return this.router.transitionTo('index');
     }
-  },
-});
+  }
+}
