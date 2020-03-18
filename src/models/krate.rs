@@ -280,6 +280,9 @@ impl Crate {
     pub fn valid_feature(name: &str) -> bool {
         let mut parts = name.split('/');
         match parts.next() {
+            Some(part) if part.starts_with("crate:") => {
+                return Crate::valid_feature_name(&part[6..]) && parts.next().is_none();
+            }
             Some(part) if !Crate::valid_feature_name(part) => return false,
             None => return false,
             _ => {}
