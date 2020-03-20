@@ -2,6 +2,8 @@
 
 const EmberApp = require('ember-cli/lib/broccoli/ember-app');
 
+const { USE_EMBROIDER } = process.env;
+
 module.exports = function (defaults) {
   const highlightedLanguages = [
     'bash',
@@ -52,6 +54,11 @@ module.exports = function (defaults) {
   app.import('node_modules/normalize.css/normalize.css');
 
   app.import('vendor/qunit.css', { type: 'test' });
+
+  if (USE_EMBROIDER) {
+    const { Webpack } = require('@embroider/webpack');
+    return require('@embroider/compat').compatBuild(app, Webpack);
+  }
 
   return app.toTree();
 };
