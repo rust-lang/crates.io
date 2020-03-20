@@ -1,0 +1,6 @@
+.application {
+    width: 960px;
+    @media only screen and (max-width: 960px) {
+        width: 100%;
+    }
+}
