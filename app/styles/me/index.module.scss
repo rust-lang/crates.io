@@ -1,3 +1,13 @@
+.me-subheading {
+    display: flex;
+    .right {
+        flex: 2;
+        display: flex;
+        justify-content: flex-end;
+        align-self: center;
+    }
+}
+
 .token-list {
     background-color: $main-bg-dark;
     display: flex;

@@ -275,13 +275,3 @@
         align-items: center;
     }
 }
-
-.me-subheading {
-    display: flex;
-    .right {
-        flex: 2;
-        display: flex;
-        justify-content: flex-end;
-        align-self: center;
-    }
-}
