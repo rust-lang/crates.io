@@ -3,6 +3,7 @@ import { setupApplicationTest } from 'ember-qunit';
 import { currentURL, findAll, click, fillIn } from '@ember/test-helpers';
 import window, { setupWindowMock } from 'ember-window-mock';
 import { Response } from 'ember-cli-mirage';
+import { percySnapshot } from 'ember-percy';
 
 import setupMirage from '../helpers/setup-mirage';
 import { visit } from '../helpers/visit-ignoring-abort';
@@ -139,6 +140,8 @@ module('Acceptance | api-tokens', function(hooks) {
     assert.dom('[data-test-save-token-button]').exists();
 
     await fillIn('[data-test-focused-input]', 'the new token');
+    percySnapshot(assert);
+
     await click('[data-test-save-token-button]');
     assert.verifySteps(['put']);
     assert.dom('[data-test-focused-input]').doesNotExist();
