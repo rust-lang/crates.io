@@ -29,6 +29,19 @@ noscript {
     max-width: 960px;
 }
 
+.main {
+    display: flex;
+    flex-direction: column;
+
+    margin-bottom: 10px;
+    background-color: $main-bg;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 5px 2px #3b6837;
+    border: 5px solid #62865f;
+    color: $main-color;
+}
+
 .after-main-links {
     margin: 40px;
 
