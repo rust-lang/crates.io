@@ -46,10 +46,6 @@
     @media only screen and (max-width: 650px) {
         .right { justify-content: center; }
     }
-
-    &.crate-index, &.crate-search {
-        flex-wrap: wrap;
-    }
 }
 
 #selection {
