@@ -4,7 +4,9 @@
   <h1>
     {{svg-jar "crate"}}
     All Crates
-    <small>starting with '{{this.letter}}'</small>
+    {{#if this.letter}}
+      <small>starting with '{{this.letter}}'</small>
+    {{/if}}
   </h1>
 </div>
 
