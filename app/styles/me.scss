@@ -236,12 +236,6 @@
     }
 }
 
-#me-api {
-    @media only screen and (max-width: 350px) {
-        .api { display: none; }
-    }
-}
-
 #my-invites {
     flex-grow: 5;
 
