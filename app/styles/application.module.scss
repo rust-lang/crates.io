@@ -32,6 +32,15 @@ noscript {
     }
 }
 
+.desktop-search-form {
+    display: flex;
+    flex-grow: 1;
+
+    @media only screen and (max-width: 820px) {
+        display: none;
+    }
+}
+
 .search-label {
     position: absolute;
     left: -10000px;
