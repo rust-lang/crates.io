@@ -1,5 +1,5 @@
-<div class={{if this.api_token.isNew "row create-token" "row"}} data-test-api-token={{this.api_token.id}}>
-  <div class='name' data-test-name>
+<div local-class="row {{if this.api_token.isNew "create-token"}}" data-test-api-token={{this.api_token.id}}>
+  <div local-class="name" data-test-name>
     {{#if this.api_token.isNew}}
       <Input
         @type="text"
@@ -18,7 +18,7 @@
   <div class='spacer'></div>
 
   {{#unless this.api_token.isNew}}
-    <div class='dates'>
+    <div local-class='dates'>
       <div class='created-at' data-test-created-at>
         <span class='small' title={{this.api_token.created_at}}>
           Created {{moment-from-now this.api_token.created_at}}
@@ -38,7 +38,7 @@
     </div>
   {{/unless}}
 
-  <div class='actions'>
+  <div local-class='actions'>
     {{#if this.api_token.isNew}}
       <button
         type="button"
@@ -68,7 +68,7 @@
 </div>
 
 {{#if this.serverError}}
-  <div class='row error' data-test-error>
+  <div local-class="row error" data-test-error>
     <div>
       {{ this.serverError }}
     </div>
@@ -76,7 +76,7 @@
 {{/if}}
 
 {{#if this.api_token.token}}
-  <div class='row new-token' data-test-token>
+  <div local-class="row new-token" data-test-token>
     <div>
       Please record this token somewhere, you cannot retrieve
       its value again. For use on the command line you can save it to <code>~/.cargo/credentials</code>

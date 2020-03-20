@@ -1,13 +1,11 @@
 {{ title 'Crates' }}
 
-<div id='crates-heading'>
-  <div class='info'>
+<div class="crates-heading">
+  <h1>
     {{svg-jar "crate"}}
-    <h1>All Crates</h1>
-  </div>
-  {{#if this.letter}}
-    <h2>starting with '{{ this.letter }}'</h2>
-  {{/if}}
+    All Crates
+    <small>starting with '{{this.letter}}'</small>
+  </h1>
 </div>
 
 <div id='selection'>

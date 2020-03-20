@@ -247,7 +247,7 @@ module('Acceptance | crate page', function(hooks) {
     await visit('/crates/nanomsg');
     await click('#crate-owners p a');
 
-    assert.dom('#crates-heading h1').hasText('Manage Crate Owners');
+    assert.dom('.crates-heading h1').hasText('Manage Crate Owners');
   });
 
   test('listing crate owners', async function(assert) {
