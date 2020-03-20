@@ -32,6 +32,15 @@ noscript {
     }
 }
 
+.search-label {
+    position: absolute;
+    left: -10000px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
 .main {
     display: flex;
     flex-direction: column;
