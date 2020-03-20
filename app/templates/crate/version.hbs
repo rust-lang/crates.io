@@ -206,7 +206,7 @@
           <h3>Dependencies</h3>
           <ul>
             {{#each this.currentDependencies as |dep|}}
-              <LinkToDep @tagName="li" @dep={{dep}} />
+              <li><LinkToDep @dep={{dep}} /></li>
             {{else}}
               {{#if (is-pending this.currentDependencies)}}
                 <li>Loading…</li>
@@ -222,7 +222,7 @@
             <h3>Build-Dependencies</h3>
             <ul>
               {{#each this.currentBuildDependencies as |dep|}}
-                <LinkToDep @tagName="li" @dep={{dep}} />
+                <li><LinkToDep @dep={{dep}} /></li>
               {{/each}}
             </ul>
           </div>
@@ -233,7 +233,7 @@
             <h3>Dev-Dependencies</h3>
             <ul>
               {{#each this.currentDevDependencies as |dep|}}
-                <LinkToDep @tagName="li" @dep={{dep}} />
+                <li><LinkToDep @dep={{dep}} /></li>
               {{/each}}
             </ul>
           </div>
@@ -251,7 +251,7 @@
           Stats Overview for {{this.downloadsContext.num}}
           <LinkTo @route="crate" @model={{this.crate}}>(see all)</LinkTo>
         </h3>
-        
+
       {{else}}
         <h3 data-test-crate-stats-label>Stats Overview</h3>
       {{/if}}
