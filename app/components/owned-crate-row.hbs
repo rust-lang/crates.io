@@ -2,7 +2,7 @@
   <Input
     @type="checkbox"
     @name={{this.controlId}}
-    @id={{this.controlId}}
+    id={{this.controlId}}
     @checked={{this.emailNotifications}}
     @change={{action "toggleEmailNotifications"}}
     class="form-control"
@@ -10,5 +10,4 @@
   <label for="{{ this.controlId }}">
     {{ this.name }}
   </label>
-  
 </li>
