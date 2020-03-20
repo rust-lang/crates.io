@@ -3,7 +3,7 @@
 {{title "crates.io: Rust Package Registry" separator=' - ' prepend=true}}
 <GoogleJsapi />
 
-<div>
+<div local-class="application">
   <nav id="header">
     <LinkTo @route="index" @tabindex="-1">
       <img src="/assets/Cargo-Logo-Small.png" id="logo"
@@ -126,29 +126,29 @@
     <label for="cargo-mobile-search">Search</label>
   </form>
 
-  <main id="main" class='inner-content'>
+  <main local-class="main">
     <FlashMessage @message={{this.flashMessages.message}} />
 
     {{outlet}}
   </main>
 
-  <footer class='after-main-links'>
+  <footer local-class='after-main-links'>
     <a href='https://doc.rust-lang.org/cargo/getting-started/installation.html'>Install</a>
-    <span class="sep">|</span>
+    <span local-class="sep">|</span>
     <a href='https://doc.rust-lang.org/cargo/'>Getting Started</a>
-    <span class="sep">|</span>
+    <span local-class="sep">|</span>
     <a href='https://doc.rust-lang.org/cargo/guide/'>Guide</a>
-    <span class="sep">|</span>
+    <span local-class="sep">|</span>
     <a href='mailto:help@crates.io'>Send us an email</a>
-    <span class="sep">|</span>
+    <span local-class="sep">|</span>
     <a href='https://www.rust-lang.org/policies/security'>Report a security issue</a>
-    <span class="sep">|</span>
+    <span local-class="sep">|</span>
     <a href='https://www.rust-lang.org/policies/privacy'>Privacy notice</a>
-    <span class="sep">|</span>
+    <span local-class="sep">|</span>
     <LinkTo @route="policies">Policies</LinkTo>
   </footer>
 
-  <a href='https://github.com/rust-lang/crates.io' class='fork-me'>
+  <a href='https://github.com/rust-lang/crates.io' local-class='fork-me'>
     <img src='/assets/forkme.png' alt="Fork me on GitHub">
   </a>
 </div>

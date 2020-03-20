@@ -1,0 +1,75 @@
+* {
+    box-sizing: border-box;
+}
+
+html {
+    background: url('/assets/noise.png');
+    background-color: $html-bg;
+}
+
+html, body {
+    margin: 0;
+}
+
+body {
+    // Use the modern font stack inspired by Bootstrap 4
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    font-size: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+noscript {
+    color: white;
+    padding: 10px 0;
+}
+
+.application {
+    max-width: 960px;
+}
+
+.main {
+    display: flex;
+    flex-direction: column;
+
+    margin-bottom: 10px;
+    background-color: $main-bg;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 5px 2px #3b6837;
+    border: 5px solid #62865f;
+    color: $main-color;
+}
+
+.after-main-links {
+    margin: 40px;
+
+    a { color: white; }
+    a:hover { color: darken(white, 10%); }
+    .sep { margin: 0 10px; color: darken($html-bg, 10%); }
+
+    @media only screen and (max-width: 450px) {
+        margin: 20px;
+        .sep { display: none; }
+        display: flex;
+        flex-direction: column;
+
+        a {
+            width: 50%;
+            font-size: 110%;
+            padding: 5px;
+            &:not(:first-child) { border-top: 1px solid darken($html-bg, 10%); }
+        }
+    }
+}
+
+.fork-me {
+    position: absolute;
+    top: 0;
+    right: 0;
+
+    @media only screen and (max-width: 1180px) {
+        display: none;
+    }
+}
