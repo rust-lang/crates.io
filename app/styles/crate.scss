@@ -30,7 +30,7 @@
         padding-left: 10px;
         padding-right: 10px;
     }
-    h2 { color: $main-color-light; padding-left: 10px; }
+    h2, small { color: $main-color-light; padding-left: 10px; }
     .right {
         flex: 2;
         display: flex;
