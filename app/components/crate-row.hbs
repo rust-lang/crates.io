@@ -2,7 +2,7 @@
   <div class='desc'>
     <div class='info'>
       <LinkTo @route="crate" @model={{this.crate.id}} data-test-crate-link>{{ this.crate.name }}</LinkTo>
-      <CrateTomlCopy @copyText={{this.crateTomlText}} />
+      <CrateTomlCopy @copyText={{this.crateTomlText}} @inline={{true}} />
       <CrateBadge @crate={{this.crate}} />
       {{#each this.crate.annotated_badges as |badge|}}
         {{#let (component badge.component_name) as |Badge|}}

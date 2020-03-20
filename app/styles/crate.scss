@@ -118,35 +118,6 @@
         width: 75%;
     }
 
-    .crate-toml-copy {
-        display: inline-block;
-
-        button, button:active {
-            padding: 0 .2rem;
-            outline: 0;
-
-            &:hover {
-                background: inherit;
-            }
-
-            svg {
-                height: 1rem;
-                width: 1rem;
-            }
-
-            .copy-notification {
-                top: -1.25rem;
-                left: 0;
-                padding: 0;
-                text-align: left;
-                width: 4rem;
-
-                &.copy-failure {
-                    width: 15rem;
-                }
-            }
-        }
-    }
     .info a {
         color: $main-color;
         font-weight: bold;
