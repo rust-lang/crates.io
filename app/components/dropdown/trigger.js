@@ -2,8 +2,6 @@ import Component from '@ember/component';
 import { computed } from '@ember/object';
 
 export default Component.extend({
-  classNames: ['rl-dropdown-toggle'],
-
   tagName: 'button',
 
   attributeBindings: ['type', 'role', 'disabled'],
