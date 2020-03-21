@@ -83,12 +83,9 @@ export default Route.extend({
 
     controller.set('crate', crate);
     controller.set('requestedVersion', requestedVersion);
-    controller.set('fetchingFollowing', true);
 
     if (this.get('session.currentUser')) {
-      ajax(`/api/v1/crates/${crate.get('name')}/following`)
-        .then(d => controller.set('following', d.following))
-        .finally(() => controller.set('fetchingFollowing', false));
+      controller.requestFollowState();
     }
 
     // Find version model

@@ -6,6 +6,7 @@ import ArrayProxy from '@ember/array/proxy';
 // eslint-disable-next-line ember/no-observers
 import { computed, observer } from '@ember/object';
 import moment from 'moment';
+import ajax from 'ember-fetch/ajax';
 
 const NUM_VERSIONS = 5;
 
@@ -162,6 +163,13 @@ export default Controller.extend({
 
     return data;
   }),
+
+  requestFollowState() {
+    this.set('fetchingFollowing', true);
+    ajax(`/api/v1/crates/${this.crate.get('name')}/following`)
+      .then(d => this.set('following', d.following))
+      .finally(() => this.set('fetchingFollowing', false));
+  },
 
   actions: {
     toggleFollow() {
