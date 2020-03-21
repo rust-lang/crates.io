@@ -1,13 +1,13 @@
 {{ title 'Crates' }}
 
-<div id='crates-heading' class='crate-index'>
-  <div class='info'>
+<div class="crates-heading">
+  <h1>
     {{svg-jar "crate"}}
-    <h1>All Crates</h1>
-  </div>
-  {{#if this.letter}}
-    <h2>starting with '{{ this.letter }}'</h2>
-  {{/if}}
+    All Crates
+    {{#if this.letter}}
+      <small>starting with '{{this.letter}}'</small>
+    {{/if}}
+  </h1>
 </div>
 
 <div id='selection'>
@@ -37,14 +37,14 @@
   <div class='sort' data-test-crates-sort>
     <span class='small'>Sort by</span>
 
-    <RlDropdownContainer class="dropdown-container">
-      <RlDropdownToggle @tagName="a" class="dropdown" data-test-current-order>
+    <Dropdown class="dropdown-container" as |dd|>
+      <dd.Trigger class="dropdown dropdown-button" data-test-current-order>
         {{svg-jar "sort"}}
         {{ this.currentSortBy }}
         <span class='arrow'></span>
-      </RlDropdownToggle>
+      </dd.Trigger>
 
-      <RlDropdown @tagName="ul" class="dropdown">
+      <dd.Content @tagName="ul" class="dropdown">
         <li>
           <LinkTo @query={{hash page=1 sort="alpha"}}>
             Alphabetical
@@ -65,8 +65,13 @@
             Recent Updates
           </LinkTo>
         </li>
-      </RlDropdown>
-    </RlDropdownContainer>
+        <li>
+          <LinkTo @query={{hash page=1 sort="new"}}>
+            Newly Added
+          </LinkTo>
+        </li>
+      </dd.Content>
+    </Dropdown>
   </div>
 </div>
 

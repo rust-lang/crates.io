@@ -5,7 +5,7 @@ use std::{path::PathBuf, sync::Arc, time::Duration};
 
 use diesel::r2d2;
 use oauth2::basic::BasicClient;
-use reqwest::Client;
+use reqwest::blocking::Client;
 use scheduled_thread_pool::ScheduledThreadPool;
 
 /// The `App` struct holds the main components of the application like

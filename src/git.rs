@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::fs::{self, OpenOptions};
 use std::path::{Path, PathBuf};
 use swirl::PerformError;
-use tempdir::TempDir;
+use tempfile::{Builder, TempDir};
 use url::Url;
 
 use crate::background_jobs::Environment;
@@ -148,7 +148,7 @@ pub struct Repository {
 
 impl Repository {
     pub fn open(repository_config: &RepositoryConfig) -> Result<Self, PerformError> {
-        let checkout_path = TempDir::new("git")?;
+        let checkout_path = Builder::new().prefix("git").tempdir()?;
 
         let repository = git2::build::RepoBuilder::new()
             .fetch_options(Self::fetch_options(&repository_config.credentials))
@@ -186,7 +186,7 @@ impl Repository {
         }
     }
 
-    fn commit_and_push(&self, msg: &str, modified_file: &Path) -> Result<(), PerformError> {
+    fn perform_commit_and_push(&self, msg: &str, modified_file: &Path) -> Result<(), PerformError> {
         // git add $file
         let mut index = self.repository.index()?;
         index.add_path(modified_file)?;
@@ -203,6 +203,7 @@ impl Repository {
 
         // git push
         let mut ref_status = Ok(());
+        let mut callback_called = false;
         {
             let mut origin = self.repository.find_remote("origin")?;
             let mut callbacks = git2::RemoteCallbacks::new();
@@ -214,13 +215,30 @@ impl Repository {
                 if let Some(s) = status {
                     ref_status = Err(format!("failed to push a ref: {}", s).into())
                 }
+                callback_called = true;
                 Ok(())
             });
             let mut opts = git2::PushOptions::new();
             opts.remote_callbacks(callbacks);
             origin.push(&["refs/heads/master"], Some(&mut opts))?;
         }
+
+        if !callback_called {
+            ref_status = Err("update_reference callback was not called".into());
+        }
+
         ref_status
+    }
+
+    pub fn commit_and_push(&self, message: &str, modified_file: &Path) -> Result<(), PerformError> {
+        println!("Committing and pushing \"{}\"", message);
+
+        self.perform_commit_and_push(message, modified_file)
+            .map(|_| println!("Commit and push finished for \"{}\"", message))
+            .map_err(|err| {
+                eprintln!("Commit and push for \"{}\" errored: {}", message, err);
+                err
+            })
     }
 
     pub fn reset_head(&self) -> Result<(), PerformError> {
@@ -260,10 +278,9 @@ pub fn add_crate(env: &Environment, krate: Crate) -> Result<(), PerformError> {
     serde_json::to_writer(&mut file, &krate)?;
     file.write_all(b"\n")?;
 
-    repo.commit_and_push(
-        &format!("Updating crate `{}#{}`", krate.name, krate.vers),
-        &repo.relative_index_file(&krate.name),
-    )
+    let message: String = format!("Updating crate `{}#{}`", krate.name, krate.vers);
+
+    repo.commit_and_push(&message, &repo.relative_index_file(&krate.name))
 }
 
 /// Yanks or unyanks a crate version. This requires finding the index
@@ -313,15 +330,14 @@ pub fn yank(
         let new = new?.join("\n") + "\n";
         fs::write(&dst, new.as_bytes())?;
 
-        repo.commit_and_push(
-            &format!(
-                "{} crate `{}#{}`",
-                if yanked { "Yanking" } else { "Unyanking" },
-                krate,
-                version.num
-            ),
-            &repo.relative_index_file(&krate),
-        )?;
+        let message: String = format!(
+            "{} crate `{}#{}`",
+            if yanked { "Yanking" } else { "Unyanking" },
+            krate,
+            version.num
+        );
+
+        repo.commit_and_push(&message, &repo.relative_index_file(&krate))?;
 
         diesel::update(&version)
             .set(versions::yanked.eq(yanked))

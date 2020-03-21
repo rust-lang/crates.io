@@ -81,33 +81,6 @@
             .action { flex: 2; display: block; }
             code { flex: 8; }
         }
-        .crate-toml-copy {
-            display: flex;
-
-            button, button:active {
-                padding: 5px 0;
-                width: 60px;
-                cursor: pointer;
-                position: relative;
-            }
-            button:hover {
-                background: #edebdd;
-            }
-
-            .copy-notification {
-                &.copy-success {
-                    width: 100%;
-                    text-align: center;
-                }
-
-                &.copy-failure {
-                    bottom: -2rem;
-                    right: 0;
-                    width: 18rem;
-                    text-align: right;
-                }
-            }
-        }
     }
     .crate-readme {
         line-height: 1.5;

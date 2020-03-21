@@ -4,16 +4,23 @@ use std::{
     borrow::Cow,
     collections::HashSet,
     fs::{self, File},
+    future::Future,
     io::{self, prelude::*},
-    net,
     path::PathBuf,
+    pin::Pin,
     str,
-    sync::{Arc, Mutex, Once},
+    sync::{mpsc, Arc, Mutex, Once},
+    task::{Context, Poll},
     thread,
 };
 
-use futures::{future, sync::oneshot, Future, Stream};
-use tokio_core::{net::TcpListener, reactor::Core};
+use futures_channel::oneshot;
+use futures_util::future;
+use hyper::{body::to_bytes, Body, Error, Request, Response, Server, StatusCode, Uri};
+use tokio::{
+    net::{TcpListener, TcpStream},
+    runtime,
+};
 
 // A "bomb" so when the test task exists we know when to shut down
 // the server and fail if the subtask failed.
@@ -81,8 +88,7 @@ pub fn proxy() -> (String, Bomb) {
     let me = thread::current().name().unwrap().to_string();
     let record = dotenv::var("RECORD").is_ok();
 
-    let a = t!(net::TcpListener::bind("127.0.0.1:0"));
-    let ret = format!("http://{}", t!(a.local_addr()));
+    let (url_tx, url_rx) = mpsc::channel();
 
     let data = cache_file(&me.replace("::", "_"));
     let record = if record && !data.exists() {
@@ -101,26 +107,34 @@ pub fn proxy() -> (String, Bomb) {
     let (quittx, quitrx) = oneshot::channel();
 
     let thread = thread::spawn(move || {
-        let mut core = t!(Core::new());
-        let handle = core.handle();
-        let addr = t!(a.local_addr());
-        let listener = t!(TcpListener::from_listener(a, &addr, &handle));
+        let mut rt = t!(runtime::Builder::new()
+            .basic_scheduler()
+            .enable_io()
+            .build());
+
         let client = if let Record::Capture(_, _) = record {
-            Some(hyper::Client::builder().build(hyper_tls::HttpsConnector::new(4).unwrap()))
+            Some(hyper::Client::builder().build(hyper_tls::HttpsConnector::new()))
         } else {
             None
         };
 
+        let mut listener = t!(rt.block_on(TcpListener::bind("127.0.0.1:0")));
+        url_tx
+            .send(format!("http://{}", t!(listener.local_addr())))
+            .unwrap();
+
         let record = Arc::new(Mutex::new(record));
-        let srv = hyper::Server::builder(listener.incoming().map(|(l, _)| l))
+        let srv = Server::builder(hyper::server::accept::from_stream(listener.incoming()))
             .serve(Proxy {
                 sink: sink2,
                 record: Arc::clone(&record),
                 client,
             })
-            .map_err(|e| eprintln!("server connection error: {}", e));
+            .with_graceful_shutdown(async {
+                quitrx.await.ok();
+            });
 
-        drop(core.run(srv.select2(quitrx)));
+        rt.block_on(srv).ok();
 
         let record = record.lock().unwrap();
         match *record {
@@ -133,7 +147,7 @@ pub fn proxy() -> (String, Bomb) {
     });
 
     (
-        ret,
+        url_rx.recv().unwrap(),
         Bomb {
             iorx: Sink(sink),
             quittx: Some(quittx),
@@ -149,52 +163,57 @@ struct Proxy {
     client: Option<Client>,
 }
 
-impl hyper::service::Service for Proxy {
-    type ReqBody = hyper::Body;
-    type ResBody = hyper::Body;
-    type Error = hyper::Error;
-    type Future =
-        Box<dyn Future<Item = hyper::Response<Self::ResBody>, Error = Self::Error> + Send>;
+impl tower_service::Service<Request<Body>> for Proxy {
+    type Response = Response<Body>;
+    type Error = Error;
+    type Future = Pin<Box<dyn Future<Output = Result<Response<Body>, Error>> + Send>>;
 
-    fn call(&mut self, req: hyper::Request<Self::ReqBody>) -> Self::Future {
-        let record2 = self.record.clone();
+    fn poll_ready(&mut self, _: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        Poll::Ready(Ok(()))
+    }
+
+    fn call(&mut self, req: Request<Body>) -> Self::Future {
         match *self.record.lock().unwrap() {
-            Record::Capture(_, _) => Box::new(record_http(req, self.client.as_ref().unwrap()).map(
-                move |(response, exchange)| {
+            Record::Capture(_, _) => {
+                let client = self.client.as_ref().unwrap().clone();
+                let record2 = self.record.clone();
+                Box::pin(async move {
+                    let (response, exchange) = record_http(req, client).await?;
                     if let Record::Capture(ref mut d, _) = *record2.lock().unwrap() {
                         d.push(exchange);
                     }
-                    response
-                },
-            )),
+                    Ok(response)
+                })
+            }
             Record::Replay(ref mut exchanges) => {
-                replay_http(req, exchanges.remove(0), &mut &self.sink)
+                Box::pin(replay_http(req, exchanges.remove(0), &mut &self.sink))
             }
         }
     }
 }
 
-impl hyper::service::NewService for Proxy {
-    type ReqBody = hyper::Body;
-    type ResBody = hyper::Body;
-    type Error = hyper::Error;
-    type Service = Proxy;
-    type Future = Box<dyn Future<Item = Self::Service, Error = Self::InitError> + Send>;
-    type InitError = hyper::Error;
+impl<'a> tower_service::Service<&'a TcpStream> for Proxy {
+    type Response = Proxy;
+    type Error = Error;
+    type Future = Pin<Box<dyn Future<Output = Result<Proxy, Error>> + Send + 'static>>;
 
-    fn new_service(&self) -> Self::Future {
-        Box::new(future::ok(self.clone()))
+    fn poll_ready(&mut self, _: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        Poll::Ready(Ok(()))
+    }
+
+    fn call(&mut self, _: &'a TcpStream) -> Self::Future {
+        Box::pin(future::ok(self.clone()))
     }
 }
 
 #[derive(Serialize, Deserialize)]
 struct Exchange {
-    request: Request,
-    response: Response,
+    request: RecordedRequest,
+    response: RecordedResponse,
 }
 
 #[derive(Serialize, Deserialize)]
-struct Request {
+struct RecordedRequest {
     uri: String,
     method: String,
     headers: HashSet<(String, String)>,
@@ -202,77 +221,76 @@ struct Request {
 }
 
 #[derive(Serialize, Deserialize)]
-struct Response {
+struct RecordedResponse {
     status: u16,
     headers: HashSet<(String, String)>,
     body: String,
 }
 
 type Client = hyper::Client<hyper_tls::HttpsConnector<hyper::client::HttpConnector>>;
+type ResponseAndExchange = (Response<Body>, Exchange);
 
-fn record_http(
-    req: hyper::Request<hyper::Body>,
-    client: &Client,
-) -> Box<dyn Future<Item = (hyper::Response<hyper::Body>, Exchange), Error = hyper::Error> + Send> {
+async fn record_http(req: Request<Body>, client: Client) -> Result<ResponseAndExchange, Error> {
+    // Deconstruct the incoming request and await for the full body
     let (header_parts, body) = req.into_parts();
     let method = header_parts.method;
     let uri = header_parts.uri;
     let headers = header_parts.headers;
+    let body = to_bytes(body).await?;
 
-    let mut request = Request {
+    // Save info on the incoming request for the exchange log
+    let request = RecordedRequest {
         uri: uri.to_string(),
         method: method.to_string(),
         headers: headers
             .iter()
             .map(|h| (h.0.as_str().to_string(), h.1.to_str().unwrap().to_string()))
             .collect(),
-        body: String::new(),
+        body: base64::encode(&body.to_vec()),
     };
-    let body = body.concat2();
 
-    let client = client.clone();
-    let response = body.and_then(move |body| {
-        request.body = base64::encode(&body.to_vec());
-        let uri = uri.to_string().replace("http://", "https://");
-        let uri = uri.parse::<hyper::Uri>().unwrap();
-        let mut req = hyper::Request::builder()
-            .method(method.clone())
-            .uri(uri)
-            .body(body.into())
-            .unwrap();
-        *req.headers_mut() = headers.clone();
-        client.request(req).map(|r| (r, request))
-    });
+    // Construct an outgoing request
+    let uri = uri.to_string().replace("http://", "https://");
+    let uri = uri.parse::<Uri>().unwrap();
+    let mut req = Request::builder()
+        .method(method.clone())
+        .uri(uri)
+        .body(body.into())
+        .unwrap();
+    *req.headers_mut() = headers.clone();
 
-    Box::new(response.and_then(|(hyper_response, request)| {
-        let status = hyper_response.status();
-        let headers = hyper_response.headers().clone();
-        let mut response = Response {
-            status: status.as_u16(),
-            headers: headers
-                .iter()
-                .map(|h| (h.0.as_str().to_string(), h.1.to_str().unwrap().to_string()))
-                .collect(),
-            body: String::new(),
-        };
+    // Deconstruct the incoming response and await for the full body
+    let hyper_response = client.request(req).await?;
+    let status = hyper_response.status();
+    let headers = hyper_response.headers().clone();
+    let body = to_bytes(hyper_response.into_body()).await?;
 
-        hyper_response.into_body().concat2().map(move |body| {
-            response.body = base64::encode(&body.to_vec());
-            let mut hyper_response = hyper::Response::builder();
-            hyper_response.status(status);
-            let mut hyper_response = hyper_response.body(body.into()).unwrap();
-            *hyper_response.headers_mut() = headers;
-            (hyper_response, Exchange { response, request })
-        })
-    }))
+    // Save the response for the exchange log
+    let response = RecordedResponse {
+        status: status.as_u16(),
+        headers: headers
+            .iter()
+            .map(|h| (h.0.as_str().to_string(), h.1.to_str().unwrap().to_string()))
+            .collect(),
+        body: base64::encode(&body.to_vec()),
+    };
+
+    // Construct an outgoing response
+    let mut hyper_response = Response::builder()
+        .status(status)
+        .body(body.into())
+        .unwrap();
+    *hyper_response.headers_mut() = headers;
+
+    Ok((hyper_response, Exchange { response, request }))
 }
 
 fn replay_http(
-    req: hyper::Request<hyper::Body>,
+    req: Request<Body>,
     mut exchange: Exchange,
     stdout: &mut dyn Write,
-) -> Box<dyn Future<Item = hyper::Response<hyper::Body>, Error = hyper::Error> + Send> {
-    static IGNORED_HEADERS: &[&str] = &["authorization", "date", "user-agent", "cache-control"];
+) -> impl Future<Output = Result<Response<Body>, Error>> + Send {
+    static IGNORED_HEADERS: &[&str] = &["authorization", "date", "cache-control"];
 
     assert_eq!(req.uri().to_string(), exchange.request.uri);
     assert_eq!(req.method().to_string(), exchange.request.method);
@@ -287,6 +305,10 @@ fn replay_http(
             value.to_str().unwrap().to_string(),
         );
         t!(writeln!(stdout, "received: {:?}", pair));
+        if name == "user-agent" {
+            assert_eq!(value, "crates.io (https://crates.io)");
+            continue;
+        }
         if IGNORED_HEADERS.contains(&name.as_str()) {
             continue;
         }
@@ -300,21 +322,23 @@ fn replay_http(
         }
         panic!("didn't find header {:?}", (name, value));
     }
-    let req_body = exchange.request.body;
-    let verify_body = req.into_body().concat2().map(move |body| {
-        let req_body = base64::decode(&req_body).unwrap();
-        assert_eq!(body.into_bytes(), req_body);
-    });
 
-    let mut response = hyper::Response::builder();
-    response.status(hyper::StatusCode::from_u16(exchange.response.status).unwrap());
-    for (key, value) in exchange.response.headers {
-        response.header(key.as_str(), value.as_str());
+    async {
+        assert_eq!(
+            to_bytes(req.into_body()).await.unwrap(),
+            base64::decode(&exchange.request.body).unwrap()
+        );
+
+        let mut builder = Response::builder();
+        for (key, value) in exchange.response.headers {
+            builder = builder.header(key.as_str(), value.as_str());
+        }
+        let body = base64::decode(exchange.response.body.as_bytes()).unwrap();
+        let status = StatusCode::from_u16(exchange.response.status).unwrap();
+        let response = builder.status(status).body(body.into()).unwrap();
+
+        Ok(response)
     }
-    let req_body2 = base64::decode(exchange.response.body.as_bytes()).unwrap();
-    let response = response.body(req_body2.into()).unwrap();
-
-    Box::new(verify_body.map(|()| response))
 }
 
 impl GhUser {
@@ -351,7 +375,7 @@ impl GhUser {
             client_id: String,
             client_secret: String,
         }
-        let client = reqwest::Client::new();
+        let client = reqwest::blocking::Client::new();
         let req = client
             .post("https://api.github.com/authorizations")
             .json(&Authorization {
@@ -362,7 +386,9 @@ impl GhUser {
             })
             .basic_auth(self.login, Some(password));
 
-        let mut response = t!(req.send().and_then(reqwest::Response::error_for_status));
+        let response = t!(req
+            .send()
+            .and_then(reqwest::blocking::Response::error_for_status));
 
         #[derive(Deserialize)]
         struct Response {

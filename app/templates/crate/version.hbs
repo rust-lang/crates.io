@@ -1,26 +1,16 @@
 {{title this.crate.name}}
 
-<div id='crates-heading' data-test-heading>
+<div class="crates-heading" data-test-heading>
   <div class="wide">
     <div class='info'>
-      {{svg-jar "crate" class='crate-icon'}}
+      {{svg-jar "crate" local-class='crate-icon'}}
       <h1 data-test-crate-name>{{ this.crate.name }}</h1>
       <h2 data-test-crate-version>{{ this.currentVersion.num }}</h2>
     </div>
 
     <div class='right'>
       {{#if this.session.currentUser}}
-        <button type="button" class='tan-button' {{action 'toggleFollow' this}}>
-          {{#if this.fetchingFollowing}}
-            <img src="/assets/ajax-loader.gif">
-          {{else}}
-            {{#if this.following}}
-              Unfollow
-            {{else}}
-              Follow
-            {{/if}}
-          {{/if}}
-        </button>
+        <FollowButton @crate={{this.crate}}/>
       {{/if}}
     </div>
   </div>
@@ -206,7 +196,7 @@
           <h3>Dependencies</h3>
           <ul>
             {{#each this.currentDependencies as |dep|}}
-              <LinkToDep @tagName="li" @dep={{dep}} />
+              <li><LinkToDep @dep={{dep}} /></li>
             {{else}}
               {{#if (is-pending this.currentDependencies)}}
                 <li>Loading…</li>
@@ -222,7 +212,7 @@
             <h3>Build-Dependencies</h3>
             <ul>
               {{#each this.currentBuildDependencies as |dep|}}
-                <LinkToDep @tagName="li" @dep={{dep}} />
+                <li><LinkToDep @dep={{dep}} /></li>
               {{/each}}
             </ul>
           </div>
@@ -233,7 +223,7 @@
             <h3>Dev-Dependencies</h3>
             <ul>
               {{#each this.currentDevDependencies as |dep|}}
-                <LinkToDep @tagName="li" @dep={{dep}} />
+                <li><LinkToDep @dep={{dep}} /></li>
               {{/each}}
             </ul>
           </div>
@@ -251,7 +241,7 @@
           Stats Overview for {{this.downloadsContext.num}}
           <LinkTo @route="crate" @model={{this.crate}}>(see all)</LinkTo>
         </h3>
-        
+
       {{else}}
         <h3 data-test-crate-stats-label>Stats Overview</h3>
       {{/if}}

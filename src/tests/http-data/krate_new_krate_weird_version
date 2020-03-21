@@ -13,10 +13,6 @@
           "gzip"
         ],
         [
-          "user-agent",
-          "reqwest/0.9.1"
-        ],
-        [
           "authorization",
           "AWS AKIAICL5IWUZYWWKA7JA:eW1SP7V3WdqHXWZLcbN1BI2Zo0g="
         ],

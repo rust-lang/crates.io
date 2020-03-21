@@ -1,8 +1,8 @@
 import Service, { inject as service } from '@ember/service';
 import window from 'ember-window-mock';
 
-export default Service.extend({
-  fastboot: service(),
+export default class RedirectorService extends Service {
+  @service fastboot;
 
   redirectTo(url) {
     if (this.fastboot.isFastBoot) {
@@ -12,5 +12,5 @@ export default Service.extend({
     } else {
       window.location = url;
     }
-  },
-});
+  }
+}

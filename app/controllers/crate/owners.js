@@ -31,14 +31,20 @@ export default Controller.extend({
       }
     },
 
-    async removeOwner(user) {
+    async removeOwner(owner) {
       this.set('removed', false);
-
       try {
-        await this.crate.removeOwner(user.get('login'));
-        this.set('removed', `User ${user.get('login')} removed as crate owner`);
-
-        this.get('crate.owner_user').removeObject(user);
+        await this.crate.removeOwner(owner.get('login'));
+        switch (owner.kind) {
+          case 'user':
+            this.set('removed', `User ${owner.get('login')} removed as crate owner`);
+            this.get('crate.owner_user').removeObject(owner);
+            break;
+          case 'team':
+            this.set('removed', `Team ${owner.get('display_name')} removed as crate owner`);
+            this.get('crate.owner_team').removeObject(owner);
+            break;
+        }
       } catch (error) {
         if (error.errors) {
           this.set('removed', `Error removing owner: ${error.errors[0].detail}`);

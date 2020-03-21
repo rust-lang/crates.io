@@ -15,7 +15,6 @@ use self::debug::*;
 use self::ember_index_rewrite::EmberIndexRewrite;
 use self::head::Head;
 use self::log_connection_pool_status::LogConnectionPoolStatus;
-use self::security_headers::SecurityHeaders;
 use self::static_or_continue::StaticOrContinue;
 
 pub mod app;
@@ -26,9 +25,8 @@ mod ember_index_rewrite;
 mod ensure_well_formed_500;
 mod head;
 mod log_connection_pool_status;
-mod log_request;
+pub mod log_request;
 mod require_user_agent;
-mod security_headers;
 mod static_or_continue;
 
 use conduit_conditional_get::ConditionalGet;
@@ -74,9 +72,6 @@ pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
         env == Env::Production,
     ));
 
-    if env == Env::Production {
-        m.add(SecurityHeaders::new(&config.uploader));
-    }
     m.add(AppMiddleware::new(app));
 
     // Parse and save the user_id from the session cookie as part of the authentication logic

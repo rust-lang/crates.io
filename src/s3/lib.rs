@@ -6,7 +6,10 @@ use openssl::error::ErrorStack;
 use openssl::hash::MessageDigest;
 use openssl::pkey::PKey;
 use openssl::sign::Signer;
-use reqwest::{header, Body, Client, Response};
+use reqwest::{
+    blocking::{Body, Client, Response},
+    header,
+};
 
 mod error;
 pub use error::Error;
@@ -60,6 +63,7 @@ impl Bucket {
             .header(header::AUTHORIZATION, auth)
             .header(header::CONTENT_TYPE, content_type)
             .header(header::DATE, date)
+            .header(header::USER_AGENT, "crates.io (https://crates.io)")
             .headers(extra_headers)
             .body(Body::sized(content, content_length))
             .send()?

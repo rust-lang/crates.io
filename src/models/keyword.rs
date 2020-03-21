@@ -98,7 +98,6 @@ impl Keyword {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use diesel;
     use diesel::connection::SimpleConnection;
 
     fn pg_connection() -> PgConnection {

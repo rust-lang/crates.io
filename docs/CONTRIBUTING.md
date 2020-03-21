@@ -188,6 +188,20 @@ methods we'd recommend for each operating system:
 Then, once Postgres is installed, ensure that you can run `psql` (and then exit
 by typing `\q`) without any errors to connect to your running Postgres server.
 
+> If you see an error that looks like this:
+>
+> ```
+> psql: could not connect to server: No such file or directory
+> Is the server running locally and accepting
+> connections on Unix domain socket "/var/run/postgresql/.s.PGSQL.5432"?  
+> ```
+> You may need to start the postgreql server on your system. On a Linux system,
+> you can start it with this command:
+>
+> ```
+> sudo service postgresql start
+> ```
+
 > Depending on your system, its permissions, and how Postgres was installed, you
 > may need to use the `postgres` user for some operations (by using `sudo su -
 > postgres`). Generally, the problem is that by default the postgres server is
@@ -288,6 +302,18 @@ Try using `postgres://postgres@localhost/cargo_registry` first.
 > - Replace `[database_name]` with the name of the database you'd like to use.
 >   We're going to create a database named `cargo_registry` in the next
 >   section; change this if you'd like to name it something else.
+
+
+> If you receive an error that looks like:
+>
+> ```
+> password authentication failed for user \"postgres\"\nFATAL:  
+> password authentication failed for user \"postgres\"\n"` 
+> ```
+>
+> You may need to update the pg_hba.conf file on your development workstation.
+> For a guide to finding your pg_hba.conf file, check out [this post](https://askubuntu.com/questions/256534/how-do-i-find-the-path-to-pg-hba-conf-from-the-shell) on the Ubuntu Stack Exchange.
+> For information on updating your pg_hba.conf file and reloading it, see [this post](https://stackoverflow.com/questions/17996957/fe-sendauth-no-password-supplied) on Stack Overflow.
 
 ##### Creating the database
 

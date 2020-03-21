@@ -22,7 +22,7 @@ use crate::schema::*;
 
 /// Hosts in this list are known to not be hosting documentation,
 /// and are possibly of malicious intent e.g. ad tracking networks, etc.
-const DOCUMENTATION_BLOCKLIST: [&str; 1] = ["rust-ci.org"];
+const DOCUMENTATION_BLOCKLIST: [&str; 2] = ["rust-ci.org", "rustless.org"];
 
 #[derive(Debug, Queryable, Identifiable, Associations, Clone, Copy)]
 #[belongs_to(Crate)]

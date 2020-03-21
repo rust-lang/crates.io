@@ -1,3 +1,4 @@
+use reqwest::blocking::Client;
 use std::panic::AssertUnwindSafe;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
@@ -26,7 +27,7 @@ pub struct Environment {
     // FIXME: https://github.com/sfackler/r2d2/pull/70
     pub connection_pool: AssertUnwindSafe<DieselPool>,
     pub uploader: Uploader,
-    http_client: AssertUnwindSafe<reqwest::Client>,
+    http_client: AssertUnwindSafe<Client>,
 }
 
 // FIXME: AssertUnwindSafe should be `Clone`, this can be replaced with
@@ -47,10 +48,24 @@ impl Environment {
         index: Repository,
         connection_pool: DieselPool,
         uploader: Uploader,
-        http_client: reqwest::Client,
+        http_client: Client,
+    ) -> Self {
+        Self::new_shared(
+            Arc::new(Mutex::new(index)),
+            connection_pool,
+            uploader,
+            http_client,
+        )
+    }
+
+    pub fn new_shared(
+        index: Arc<Mutex<Repository>>,
+        connection_pool: DieselPool,
+        uploader: Uploader,
+        http_client: Client,
     ) -> Self {
         Self {
-            index: Arc::new(Mutex::new(index)),
+            index,
             connection_pool: AssertUnwindSafe(connection_pool),
             uploader,
             http_client: AssertUnwindSafe(http_client),
@@ -68,7 +83,7 @@ impl Environment {
     }
 
     /// Returns a client for making HTTP requests to upload crate files.
-    pub(crate) fn http_client(&self) -> &reqwest::Client {
+    pub(crate) fn http_client(&self) -> &Client {
         &self.http_client
     }
 }

@@ -5,10 +5,6 @@
       "method": "GET",
       "headers": [
         [
-          "user-agent",
-          "reqwest/0.9.1"
-        ],
-        [
           "authorization",
           "token 7534f8b996e3a3f800f0a324f619adba12a74532"
         ],
@@ -150,10 +146,6 @@
         [
           "accept-encoding",
           "gzip"
-        ],
-        [
-          "user-agent",
-          "reqwest/0.9.1"
         ]
       ],
       "body": ""
@@ -266,10 +258,6 @@
       "uri": "http://api.github.com/orgs/Crates-Test-Org",
       "method": "GET",
       "headers": [
-        [
-          "user-agent",
-          "reqwest/0.9.1"
-        ],
         [
           "accept",
           "application/vnd.github.v3+json"

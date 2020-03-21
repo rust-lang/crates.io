@@ -12,47 +12,13 @@ $link-color: rgb(0, 172, 91);
 
 @import "application";
 @import "home";
-@import "category-slugs";
+@import "categories";
 @import "crate";
 @import "crate/version";
-@import "components/crate-toml-copy";
 @import "dashboard";
 @import "me";
 
 @import "modules";
-
-* {
-  box-sizing: border-box;
-}
-
-html {
-    background: url('/assets/noise.png');
-    background-color: $html-bg;
-}
-
-html, body { margin: 0; }
-
-body {
-  font-family: "Helvetica Neue","Helvetica",Helvetica,Arial,sans-serif;
-  font-size: 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-/* .ember-application is added by Ember after initial rendering */
-.ember-application > div,
-body > div {
-    width: 960px;
-    @media only screen and (max-width: 960px) {
-        width: 100%;
-    }
-}
-
-#noscript {
-    color: white;
-    padding: 10px 0;
-}
 
 form.search label {
     position: absolute;
@@ -76,10 +42,6 @@ span.small {
     }
 }
 
-.optional {
-    font-size: 80%;
-}
-
 .yanked {
     font-size: 80%;
     color: rgb(166, 0, 0)
@@ -101,7 +63,8 @@ pre {
     background: $main-color;
     color: white;
     padding: 20px;
-    font-family: Consolas, Monaco, 'Andale Mono', monospace;
+    // Use the modern font stack inspired by Bootstrap 4
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 button.dropdown, a.dropdown {

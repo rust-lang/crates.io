@@ -1,4 +1,4 @@
-#crates-heading {
+.crates-heading {
     width: 100%;
     padding: 20px;
     background-color: $main-bg-dark;
@@ -26,17 +26,11 @@
             flex-direction: column;
         }
     }
-    .crate-icon {
-        // Icon doesn't align nicely with text (which is being
-        // aligned by their baselines) so manual adjustment needed.
-        position: relative;
-        top: 4px;
-    }
     h1 {
         padding-left: 10px;
         padding-right: 10px;
     }
-    h2 { color: $main-color-light; padding-left: 10px; }
+    h2, small { color: $main-color-light; padding-left: 10px; }
     .right {
         flex: 2;
         display: flex;
@@ -45,10 +39,6 @@
     }
     @media only screen and (max-width: 650px) {
         .right { justify-content: center; }
-    }
-
-    &.crate-index, &.crate-search {
-        flex-wrap: wrap;
     }
 }
 
@@ -93,10 +83,11 @@
     .cur, .total { color: $main-color; font-weight: bold; }
 
     .dropdown-container { font-size: 85%; }
-    a.dropdown {
+    .dropdown-button {
         background-color: $main-bg-dark;
         padding: 10px;
         display: inline-block;
+        border: none;
         border-radius: 5px;
     }
 }
@@ -128,35 +119,6 @@
         width: 75%;
     }
 
-    .crate-toml-copy {
-        display: inline-block;
-
-        button, button:active {
-            padding: 0 .2rem;
-            outline: 0;
-
-            &:hover {
-                background: inherit;
-            }
-
-            svg {
-                height: 1rem;
-                width: 1rem;
-            }
-
-            .copy-notification {
-                top: -1.25rem;
-                left: 0;
-                padding: 0;
-                text-align: left;
-                width: 4rem;
-
-                &.copy-failure {
-                    width: 15rem;
-                }
-            }
-        }
-    }
     .info a {
         color: $main-color;
         font-weight: bold;

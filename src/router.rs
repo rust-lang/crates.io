@@ -143,10 +143,15 @@ impl Handler for C {
         let C(f) = *self;
         match f(req) {
             Ok(resp) => Ok(resp),
-            Err(e) => match e.response() {
-                Some(response) => Ok(response),
-                None => Err(std_error(e)),
-            },
+            Err(e) => {
+                if let Some(cause) = e.cause() {
+                    req.log_metadata("cause", cause.to_string())
+                };
+                match e.response() {
+                    Some(response) => Ok(response),
+                    None => Err(std_error(e)),
+                }
+            }
         }
     }
 }
@@ -181,7 +186,9 @@ impl Handler for R404 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::util::errors::{bad_request, cargo_err, internal, AppError, NotFound, Unauthorized};
+    use crate::util::errors::{
+        bad_request, cargo_err, internal, AppError, ChainError, NotFound, Unauthorized,
+    };
 
     use conduit_test::MockRequest;
     use diesel::result::Error as DieselError;
@@ -219,15 +226,29 @@ mod tests {
             200
         );
 
+        // Inner errors are captured for logging when wrapped by a user facing error
+        let response = C(|_| {
+            Err("-1"
+                .parse::<u8>()
+                .chain_error(|| internal("middle error"))
+                .chain_error(|| bad_request("outer user facing error"))
+                .unwrap_err())
+        })
+        .call(&mut req)
+        .unwrap();
+        assert_eq!(response.status.0, 400);
+        assert_eq!(
+            crate::middleware::log_request::get_log_message(&req, "cause"),
+            "middle error caused by invalid digit found in string"
+        );
+
         // All other error types are propogated up the middleware, eventually becoming status 500
         assert!(C(|_| Err(internal(""))).call(&mut req).is_err());
-        assert!(C(|_| err(::serde_json::Error::syntax(
-            ::serde_json::error::ErrorCode::ExpectedColon,
-            0,
-            0
-        )))
-        .call(&mut req)
-        .is_err());
+        assert!(
+            C(|_| err::<::serde_json::Error>(::serde::de::Error::custom("ExpectedColon")))
+                .call(&mut req)
+                .is_err()
+        );
         assert!(
             C(|_| err(::std::io::Error::new(::std::io::ErrorKind::Other, "")))
                 .call(&mut req)

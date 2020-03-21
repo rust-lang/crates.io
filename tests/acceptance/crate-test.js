@@ -247,7 +247,7 @@ module('Acceptance | crate page', function(hooks) {
     await visit('/crates/nanomsg');
     await click('#crate-owners p a');
 
-    assert.dom('#crates-heading h1').hasText('Manage Crate Owners');
+    assert.dom('.crates-heading h1').hasText('Manage Crate Owners');
   });
 
   test('listing crate owners', async function(assert) {
@@ -255,7 +255,9 @@ module('Acceptance | crate page', function(hooks) {
 
     await visit('/crates/nanomsg/owners');
 
-    assert.dom('.owners .row').exists({ count: 2 });
+    assert.dom('.owners .row').exists({ count: 4 });
+    assert.dom('a[href="/teams/github:org:thehydroimpulse"]').exists();
+    assert.dom('a[href="/teams/github:org:blabaere"]').exists();
     assert.dom('a[href="/users/thehydroimpulse"]').exists();
     assert.dom('a[href="/users/blabaere"]').exists();
   });
@@ -268,7 +270,7 @@ module('Acceptance | crate page', function(hooks) {
 
     assert.dom('.error').exists();
     assert.dom('.error').hasText('Please enter a username');
-    assert.dom('.owners .row').exists({ count: 2 });
+    assert.dom('.owners .row').exists({ count: 4 });
   });
 
   test('attempting to add non-existent owner', async function(assert) {
@@ -280,7 +282,7 @@ module('Acceptance | crate page', function(hooks) {
 
     assert.dom('.error').exists();
     assert.dom('.error').hasText('Error sending invite: Not Found');
-    assert.dom('.owners .row').exists({ count: 2 });
+    assert.dom('.owners .row').exists({ count: 4 });
   });
 
   test('add a new owner', async function(assert) {
@@ -292,16 +294,26 @@ module('Acceptance | crate page', function(hooks) {
 
     assert.dom('.invited').exists();
     assert.dom('.invited').hasText('An invite has been sent to iain8');
-    assert.dom('.owners .row').exists({ count: 2 });
+    assert.dom('.owners .row').exists({ count: 4 });
   });
 
-  test('remove a crate owner', async function(assert) {
+  test('remove a crate owner when owner is a user', async function(assert) {
     this.server.loadFixtures();
 
     await visit('/crates/nanomsg/owners');
-    await click('.owners .row:first-child .remove-owner');
+    await click('[data-test-owner-user="thehydroimpulse"] .remove-owner');
 
-    assert.dom('.removed').exists();
-    assert.dom('.owners .row').exists({ count: 1 });
+    assert.dom('.removed').hasText('User thehydroimpulse removed as crate owner');
+    assert.dom('[data-test-owner-user]').exists({ count: 1 });
+  });
+
+  test('remove a crate owner when owner is a team', async function(assert) {
+    this.server.loadFixtures();
+
+    await visit('/crates/nanomsg/owners');
+    await click('[data-test-owner-team="github:org:thehydroimpulse"] .remove-owner');
+
+    assert.dom('.removed').hasText('Team org/thehydroimpulseteam removed as crate owner');
+    assert.dom('[data-test-owner-team]').exists({ count: 1 });
   });
 });

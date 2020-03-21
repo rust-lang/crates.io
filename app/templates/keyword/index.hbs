@@ -1,6 +1,6 @@
 {{ title this.keyword.keyword ' - Keywords' }}
 
-<div id='crates-heading'>
+<div class="crates-heading">
   {{svg-jar "crate"}}
   <h1>All Crates</h1>
   <h2>for keyword '{{ this.keyword.keyword }}'</h2>
@@ -17,14 +17,14 @@
 
   <div class='sort' data-test-keyword-sort>
     <span class='small'>Sort by</span>
-    <RlDropdownContainer class="dropdown-container">
-      <RlDropdownToggle @tagName="a" class="dropdown" data-test-current-order>
+    <Dropdown class="dropdown-container" as |dd|>
+      <dd.Trigger class="dropdown dropdown-button" data-test-current-order>
         {{svg-jar "sort"}}
         {{ this.currentSortBy }}
         <span class='arrow'></span>
-      </RlDropdownToggle>
+      </dd.Trigger>
 
-      <RlDropdown @tagName="ul" class="dropdown">
+      <dd.Content @tagName="ul" class="dropdown">
         <li>
           <LinkTo @query={{hash sort="alpha"}}>
             Alphabetical
@@ -45,8 +45,13 @@
             Recent Updates
           </LinkTo>
         </li>
-      </RlDropdown>
-    </RlDropdownContainer>
+        <li>
+          <LinkTo @query={{hash sort="new"}}>
+            Newly Added
+          </LinkTo>
+        </li>
+      </dd.Content>
+    </Dropdown>
   </div>
 </div>
 

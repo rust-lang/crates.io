@@ -1,6 +1,6 @@
 {{title (concat "Search Results for '" this.q "'")}}
 
-<div id='crates-heading' class='crate-search' data-test-heading>
+<div class="crates-heading" data-test-heading>
   <div class='info'>
     {{svg-jar "magnifier" width=32 height=32}}
     <h1>Search Results</h1>
@@ -29,14 +29,14 @@
     <div class='sort' data-test-search-sort>
       <span class='small'>Sort by </span>
 
-      <RlDropdownContainer class="dropdown-container">
-        <RlDropdownToggle @tagName="a" class="dropdown" data-test-current-order>
+      <Dropdown class="dropdown-container" as |dd|>
+        <dd.Trigger class="dropdown dropdown-button" data-test-current-order>
           {{svg-jar "sort"}}
           {{ this.currentSortBy }}
           <span class='arrow'></span>
-        </RlDropdownToggle>
+        </dd.Trigger>
 
-        <RlDropdown @tagName="ul" class="dropdown">
+        <dd.Content @tagName="ul" class="dropdown">
           <li>
             <LinkTo @query={{hash page=1 sort="relevance"}}>
               Relevance
@@ -57,8 +57,13 @@
               Recent Updates
             </LinkTo>
           </li>
-        </RlDropdown>
-      </RlDropdownContainer>
+          <li>
+            <LinkTo @query={{hash page=1 sort="new"}}>
+              Newly Added
+            </LinkTo>
+          </li>
+        </dd.Content>
+      </Dropdown>
     </div>
   </div>
 

@@ -1,6 +1,6 @@
 {{ title 'Categories' }}
 
-<div id='crates-heading'>
+<div class="crates-heading">
   {{svg-jar "crate"}}
   <h1>All Categories</h1>
 </div>
@@ -16,14 +16,14 @@
 
   <div class='sort' data-test-categories-sort>
     <span class='small'>Sort by</span>
-    <RlDropdownContainer class="dropdown-container">
-      <RlDropdownToggle @tagName="a" class="dropdown" data-test-current-order>
+    <Dropdown class="dropdown-container" as |dd|>
+      <dd.Trigger class="dropdown dropdown-button" data-test-current-order>
         {{svg-jar "sort"}}
         {{ this.currentSortBy }}
         <span class='arrow'></span>
-      </RlDropdownToggle>
+      </dd.Trigger>
 
-      <RlDropdown @tagName="ul" class="dropdown">
+      <dd.Content @tagName="ul" class="dropdown">
         <li>
           <LinkTo @query={{hash sort="alpha"}}>
             Alphabetical
@@ -34,8 +34,8 @@
             # Crates
           </LinkTo>
         </li>
-      </RlDropdown>
-    </RlDropdownContainer>
+      </dd.Content>
+    </Dropdown>
   </div>
 </div>
 
@@ -60,3 +60,8 @@
 </div>
 
 <Pagination @pages={{this.pages}} @prevPage={{this.prevPage}} @nextPage={{this.nextPage}} />
+
+<div class='categories-footer'>
+  Want to categorize your crate?
+  <a href='http://doc.crates.io/manifest.html#package-metadata'>Add metadata!</a>
+</div>

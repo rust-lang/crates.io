@@ -21,10 +21,6 @@
           "AWS AKIAICL5IWUZYWWKA7JA:kDm23yhf8YuOKpTcbHhNBa6BtQw="
         ],
         [
-          "user-agent",
-          "reqwest/0.9.1"
-        ],
-        [
           "host",
           "alexcrichton-test.s3.amazonaws.com"
         ],

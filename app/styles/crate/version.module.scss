@@ -1,0 +1,6 @@
+.crate-icon {
+    // Icon doesn't align nicely with text (which is being
+    // aligned by their baselines) so manual adjustment needed.
+    position: relative;
+    top: 4px;
+}

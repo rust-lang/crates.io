@@ -1,4 +1,4 @@
-<div id='crates-heading' data-test-heading>
+<div class="crates-heading" data-test-heading>
   <UserAvatar @user={{this.model.user}} @size="medium" data-test-avatar />
   <h1 data-test-username>
     {{ this.model.user.login }}
@@ -23,14 +23,14 @@
 
       <div class='sort'>
         <span class='small'>Sort by</span>
-        <RlDropdownContainer class="dropdown-container">
-          <RlDropdownToggle @tagName="a" class="dropdown">
+        <Dropdown class="dropdown-container" as |dd|>
+          <dd.Trigger class="dropdown dropdown-button">
             {{svg-jar "sort"}}
             {{ this.currentSortBy }}
             <span class='arrow'></span>
-          </RlDropdownToggle>
+          </dd.Trigger>
 
-          <RlDropdown @tagName="ul" class="dropdown">
+          <dd.Content @tagName="ul" class="dropdown">
             <li>
               <LinkTo @query={{hash sort="alpha"}}>
                 Alphabetical
@@ -51,8 +51,13 @@
                 Recent Updates
               </LinkTo>
             </li>
-          </RlDropdown>
-        </RlDropdownContainer>
+            <li>
+              <LinkTo @query={{hash sort="new"}}>
+                Newly Added
+              </LinkTo>
+            </li>
+          </dd.Content>
+        </Dropdown>
       </div>
     </div>
 

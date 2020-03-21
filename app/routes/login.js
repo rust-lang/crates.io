@@ -15,7 +15,7 @@ export default Route.extend({
 
   beforeModel(transition) {
     try {
-      localStorage.removeItem('github_response');
+      window.localStorage.removeItem('github_response');
     } catch (e) {
       // ignore error
     }

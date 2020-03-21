@@ -152,7 +152,7 @@ impl DumpTarball {
     }
 
     fn upload(&self, target_name: &str, uploader: &Uploader) -> Result<u64, PerformError> {
-        let client = reqwest::Client::new();
+        let client = reqwest::blocking::Client::new();
         let tarfile = File::open(&self.tarball_path)?;
         let content_length = tarfile.metadata()?.len();
         // TODO Figure out the correct content type.

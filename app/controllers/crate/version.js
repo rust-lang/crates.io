@@ -3,6 +3,7 @@ import { inject as service } from '@ember/service';
 import Controller from '@ember/controller';
 import PromiseProxyMixin from '@ember/object/promise-proxy-mixin';
 import ArrayProxy from '@ember/array/proxy';
+// eslint-disable-next-line ember/no-observers
 import { computed, observer } from '@ember/object';
 import moment from 'moment';
 
@@ -21,8 +22,6 @@ export default Controller.extend({
   downloads: alias('downloadsContext.version_downloads'),
   extraDownloads: alias('downloads.content.meta.extra_downloads'),
 
-  fetchingFollowing: true,
-  following: false,
   currentVersion: alias('model'),
   crateTomlText: computed('crate.name', 'currentVersion.num', function() {
     return `${this.get('crate.name')} = "${this.get('currentVersion.num')}"`;
@@ -161,17 +160,6 @@ export default Controller.extend({
 
     return data;
   }),
-
-  actions: {
-    toggleFollow() {
-      this.set('fetchingFollowing', true);
-
-      let crate = this.crate;
-      let op = this.toggleProperty('following') ? crate.follow() : crate.unfollow();
-
-      return op.finally(() => this.set('fetchingFollowing', false));
-    },
-  },
 
   // eslint-disable-next-line ember/no-observers
   report: observer('crate.readme', function() {
