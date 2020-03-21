@@ -7,6 +7,7 @@ import ArrayProxy from '@ember/array/proxy';
 import { computed, observer } from '@ember/object';
 import moment from 'moment';
 import ajax from 'ember-fetch/ajax';
+import { task } from 'ember-concurrency';
 
 const NUM_VERSIONS = 5;
 
@@ -164,15 +165,15 @@ export default Controller.extend({
     return data;
   }),
 
-  async requestFollowState() {
+  followStateTask: task(function*() {
     this.set('fetchingFollowing', true);
     try {
-      let d = await ajax(`/api/v1/crates/${this.crate.get('name')}/following`);
+      let d = yield ajax(`/api/v1/crates/${this.crate.get('name')}/following`);
       this.set('following', d.following);
     } finally {
       this.set('fetchingFollowing', false);
     }
-  },
+  }).drop(),
 
   actions: {
     toggleFollow() {

@@ -85,7 +85,7 @@ export default Route.extend({
     controller.set('requestedVersion', requestedVersion);
 
     if (this.get('session.currentUser')) {
-      controller.requestFollowState();
+      controller.followStateTask.perform();
     }
 
     // Find version model
