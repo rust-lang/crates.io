@@ -60,7 +60,6 @@ jobs:
         rust:
           - stable
           - beta
-          - nightly
 
     env:
       RUST_BACKTRACE: 1
