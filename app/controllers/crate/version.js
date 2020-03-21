@@ -176,13 +176,19 @@ export default Controller.extend({
   }).drop(),
 
   actions: {
-    toggleFollow() {
+    async toggleFollow() {
       this.set('fetchingFollowing', true);
 
       let crate = this.crate;
-      let op = this.toggleProperty('following') ? crate.follow() : crate.unfollow();
-
-      return op.finally(() => this.set('fetchingFollowing', false));
+      try {
+        if (this.toggleProperty('following')) {
+          await crate.follow();
+        } else {
+          await crate.unfollow();
+        }
+      } finally {
+        this.set('fetchingFollowing', false);
+      }
     },
   },
 
