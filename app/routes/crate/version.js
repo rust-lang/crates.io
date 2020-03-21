@@ -84,10 +84,6 @@ export default Route.extend({
     controller.set('crate', crate);
     controller.set('requestedVersion', requestedVersion);
 
-    if (this.get('session.currentUser')) {
-      controller.followStateTask.perform();
-    }
-
     // Find version model
     let versions = await crate.get('versions');
 

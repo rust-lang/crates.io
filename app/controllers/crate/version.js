@@ -6,8 +6,6 @@ import ArrayProxy from '@ember/array/proxy';
 // eslint-disable-next-line ember/no-observers
 import { computed, observer } from '@ember/object';
 import moment from 'moment';
-import ajax from 'ember-fetch/ajax';
-import { task } from 'ember-concurrency';
 
 const NUM_VERSIONS = 5;
 
@@ -24,7 +22,6 @@ export default Controller.extend({
   downloads: alias('downloadsContext.version_downloads'),
   extraDownloads: alias('downloads.content.meta.extra_downloads'),
 
-  following: false,
   currentVersion: alias('model'),
   crateTomlText: computed('crate.name', 'currentVersion.num', function() {
     return `${this.get('crate.name')} = "${this.get('currentVersion.num')}"`;
@@ -162,20 +159,6 @@ export default Controller.extend({
     }
 
     return data;
-  }),
-
-  followStateTask: task(function*() {
-    let d = yield ajax(`/api/v1/crates/${this.crate.get('name')}/following`);
-    this.set('following', d.following);
-  }).drop(),
-
-  toggleFollowTask: task(function*() {
-    let crate = this.crate;
-    if (this.toggleProperty('following')) {
-      yield crate.follow();
-    } else {
-      yield crate.unfollow();
-    }
   }),
 
   // eslint-disable-next-line ember/no-observers
