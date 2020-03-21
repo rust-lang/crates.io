@@ -175,22 +175,20 @@ export default Controller.extend({
     }
   }).drop(),
 
-  actions: {
-    async toggleFollow() {
-      this.set('fetchingFollowing', true);
+  toggleFollowTask: task(function*() {
+    this.set('fetchingFollowing', true);
 
-      let crate = this.crate;
-      try {
-        if (this.toggleProperty('following')) {
-          await crate.follow();
-        } else {
-          await crate.unfollow();
-        }
-      } finally {
-        this.set('fetchingFollowing', false);
+    let crate = this.crate;
+    try {
+      if (this.toggleProperty('following')) {
+        yield crate.follow();
+      } else {
+        yield crate.unfollow();
       }
-    },
-  },
+    } finally {
+      this.set('fetchingFollowing', false);
+    }
+  }),
 
   // eslint-disable-next-line ember/no-observers
   report: observer('crate.readme', function() {
