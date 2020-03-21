@@ -10,17 +10,7 @@
 
     <div class='right'>
       {{#if this.session.currentUser}}
-        <button type="button" class='tan-button' {{action 'toggleFollow' this}}>
-          {{#if this.fetchingFollowing}}
-            <img src="/assets/ajax-loader.gif">
-          {{else}}
-            {{#if this.following}}
-              Unfollow
-            {{else}}
-              Follow
-            {{/if}}
-          {{/if}}
-        </button>
+        <FollowButton @crate={{this.crate}}/>
       {{/if}}
     </div>
   </div>
