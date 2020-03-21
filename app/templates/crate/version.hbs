@@ -10,9 +10,9 @@
 
     <div class='right'>
       {{#if this.session.currentUser}}
-        <button type="button" class='tan-button' {{action 'toggleFollow' this}}>
+        <button type="button" class='tan-button' {{action 'toggleFollow' this}} data-test-follow-button>
           {{#if this.fetchingFollowing}}
-            <img src="/assets/ajax-loader.gif">
+            <img src="/assets/ajax-loader.gif" data-test-spinner>
           {{else}}
             {{#if this.following}}
               Unfollow
