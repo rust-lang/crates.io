@@ -1,30 +1,32 @@
-import Component from '@ember/component';
+import Component from '@glimmer/component';
+import { tracked } from '@glimmer/tracking';
 import { task } from 'ember-concurrency';
 import ajax from 'ember-fetch/ajax';
 
 export default class extends Component {
-  tagName = '';
+  @tracked following = false;
 
-  following = false;
-
-  init() {
-    super.init(...arguments);
+  constructor() {
+    super(...arguments);
     this.followStateTask.perform();
   }
 
   @(task(function*() {
-    let d = yield ajax(`/api/v1/crates/${this.crate.name}/following`);
-    this.set('following', d.following);
+    let d = yield ajax(`/api/v1/crates/${this.args.crate.name}/following`);
+    this.following = d.following;
   }).drop())
   followStateTask;
 
   @task(function*() {
-    let crate = this.crate;
-    if (this.toggleProperty('following')) {
+    let crate = this.args.crate;
+
+    if (!this.following) {
       yield crate.follow();
     } else {
       yield crate.unfollow();
     }
+
+    this.following = !this.following;
   })
   toggleFollowTask;
 }
