@@ -24,7 +24,6 @@ export default Controller.extend({
   downloads: alias('downloadsContext.version_downloads'),
   extraDownloads: alias('downloads.content.meta.extra_downloads'),
 
-  fetchingFollowing: true,
   following: false,
   currentVersion: alias('model'),
   crateTomlText: computed('crate.name', 'currentVersion.num', function() {
@@ -166,27 +165,16 @@ export default Controller.extend({
   }),
 
   followStateTask: task(function*() {
-    this.set('fetchingFollowing', true);
-    try {
-      let d = yield ajax(`/api/v1/crates/${this.crate.get('name')}/following`);
-      this.set('following', d.following);
-    } finally {
-      this.set('fetchingFollowing', false);
-    }
+    let d = yield ajax(`/api/v1/crates/${this.crate.get('name')}/following`);
+    this.set('following', d.following);
   }).drop(),
 
   toggleFollowTask: task(function*() {
-    this.set('fetchingFollowing', true);
-
     let crate = this.crate;
-    try {
-      if (this.toggleProperty('following')) {
-        yield crate.follow();
-      } else {
-        yield crate.unfollow();
-      }
-    } finally {
-      this.set('fetchingFollowing', false);
+    if (this.toggleProperty('following')) {
+      yield crate.follow();
+    } else {
+      yield crate.unfollow();
     }
   }),
 

@@ -11,7 +11,7 @@
     <div class='right'>
       {{#if this.session.currentUser}}
         <button type="button" class='tan-button' {{on "click" (perform this.toggleFollowTask)}} data-test-follow-button>
-          {{#if this.fetchingFollowing}}
+          {{#if (or this.followStateTask.isRunning this.toggleFollowTask.isRunning)}}
             <img src="/assets/ajax-loader.gif" data-test-spinner>
           {{else}}
             {{#if this.following}}
