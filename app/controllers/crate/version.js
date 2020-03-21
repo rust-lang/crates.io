@@ -164,11 +164,14 @@ export default Controller.extend({
     return data;
   }),
 
-  requestFollowState() {
+  async requestFollowState() {
     this.set('fetchingFollowing', true);
-    ajax(`/api/v1/crates/${this.crate.get('name')}/following`)
-      .then(d => this.set('following', d.following))
-      .finally(() => this.set('fetchingFollowing', false));
+    try {
+      let d = await ajax(`/api/v1/crates/${this.crate.get('name')}/following`);
+      this.set('following', d.following);
+    } finally {
+      this.set('fetchingFollowing', false);
+    }
   },
 
   actions: {
