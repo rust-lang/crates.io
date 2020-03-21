@@ -38,7 +38,7 @@
     <span class='small'>Sort by</span>
 
     <Dropdown class="dropdown-container" as |dd|>
-      <dd.Trigger @tagName="a" class="dropdown" data-test-current-order>
+      <dd.Trigger class="dropdown dropdown-button" data-test-current-order>
         {{svg-jar "sort"}}
         {{ this.currentSortBy }}
         <span class='arrow'></span>
