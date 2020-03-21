@@ -1,8 +1,8 @@
 import Service, { inject as service } from '@ember/service';
 import ajax from 'ember-fetch/ajax';
 
-export default Service.extend({
-  fastboot: service(),
+export default class FetcherService extends Service {
+  @service fastboot;
 
   ajax(url) {
     let fastboot = this.fastboot;
@@ -23,8 +23,8 @@ export default Service.extend({
       }
       return resp;
     });
-  },
-});
+  }
+}
 
 function deepCopy(obj) {
   return JSON.parse(JSON.stringify(obj));
