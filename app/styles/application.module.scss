@@ -101,6 +101,17 @@ input.search {
     }
 }
 
+.menu {
+    text-align: right;
+    margin-right: 5px;
+    flex-grow: 2;
+    display: none;
+
+    @media only screen and (max-width: 900px) {
+        display: block;
+    }
+}
+
 .dropdown-button {
     background: none;
     border: 0;

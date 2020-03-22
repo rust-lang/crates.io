@@ -11,23 +11,6 @@
         &:hover { color: darken(white, 15%); }
     }
 
-    .menu {
-        text-align: right;
-        margin-right: 5px;
-        flex-grow: 2;
-        display: none;
-
-        @media only screen and (max-width: 900px) {
-            display: block;
-        }
-    }
-
-    .menu ul.dropdown {
-        right: 0;
-        left: auto;
-        min-width: 200px;
-    }
-
     .current-user-links {
         left: auto;
         right: 0;
