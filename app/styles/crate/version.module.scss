@@ -5,6 +5,18 @@
     top: 4px;
 }
 
+.crate-info {
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 20px;
+    border-bottom: 5px solid $gray-border;
+    margin-bottom: 20px;
+
+    @media only screen and (min-width: 890px) {
+        flex-direction: row;
+    }
+}
+
 .docs {
     @media only screen and (min-width: 890px) {
         flex: 7;
@@ -70,7 +82,7 @@
     margin-bottom: 40px;
 }
 
-:global(.crate-info) .authorship {
+.crate-info .authorship {
     ul.owners, ul.keywords {
         display: flex;
         flex-wrap: wrap;
