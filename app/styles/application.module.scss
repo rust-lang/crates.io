@@ -32,6 +32,20 @@ noscript {
     }
 }
 
+.header {
+    color: white;
+    position: relative;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    a {
+        color: white; text-decoration: none;
+        &:hover { color: darken(white, 15%); }
+    }
+}
+
 .desktop-search-form {
     display: flex;
     flex-grow: 1;
