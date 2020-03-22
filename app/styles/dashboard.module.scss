@@ -12,3 +12,20 @@
         align-items: center;
     }
 }
+
+.my-crate-lists {
+    flex-direction: column;
+    flex-grow: 2;
+    margin-right: 20px;
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    @media only screen and (max-width: 750px) {
+        order: 1;
+        margin-right: 0;
+    }
+}

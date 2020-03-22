@@ -1,15 +1,3 @@
-#my-crate-lists {
-    flex-direction: column;
-    flex-grow: 2;
-    margin-right: 20px;
-
-    .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-}
-
 #my-info {
     display: flex;
 
@@ -18,10 +6,6 @@
 
         #my-feed {
             order: 0;
-        }
-        #my-crate-lists {
-            order: 1;
-            margin-right: 0;
         }
     }
 }
