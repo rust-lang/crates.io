@@ -13,7 +13,7 @@
     }
 
     .label {
-        color: #858585;
+        color: $main-color-light;
         font-size: 80%;
     }
 }
@@ -69,10 +69,37 @@
     }
 }
 
+.feed {
+    background: white;
+    padding: 0 20px;
+}
+
+.feed-list {
+    margin: 0;
+    padding: 0;
+}
+
 .feed-row {
-    composes: row from global;
     display: flex;
-    flex-direction: column;
+    align-items: baseline;
+    padding: 20px 0;
+    border-bottom: 2px solid $gray-border;
+
+    &:last-of-type {
+        border: none;
+    }
+
+    .version {
+        color: $main-color-light;
+        font-size: 80%;
+    }
+
+    .date {
+        flex-grow: 1;
+        text-align: right;
+        color: $main-color-light;
+        font-size: 80%;
+    }
 }
 
 .info {
@@ -88,6 +115,7 @@
 .load-more {
     $bg: rgb(219, 217, 207);
     text-align: center;
+    width: 100%;
     padding: 10px;
     outline: 0;
     border: 0;

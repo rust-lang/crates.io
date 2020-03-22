@@ -45,20 +45,20 @@
       Latest Updates
     </h2>
 
-    <div class='white-rows'>
-      {{#each this.myFeed as |version|}}
-        <div local-class="feed-row">
-          <div local-class="info">
+    <div local-class="feed">
+      <ul local-class="feed-list">
+        {{#each this.myFeed as |version|}}
+          <div local-class="feed-row">
             <LinkTo @route="crate.version" @models={{array version.crateName version.num}}>
               {{ version.crateName }}
-              <span class='small'>{{ version.num }}</span>
+              <span local-class="version">{{ version.num }}</span>
             </LinkTo>
-            <span local-class="date" class='small'>
+            <span local-class="date">
               {{moment-from-now version.created_at}}
             </span>
           </div>
-        </div>
-      {{/each}}
+        {{/each}}
+      </ul>
 
       {{#if this.loadingMore}}
         <span local-class='load-more'>
