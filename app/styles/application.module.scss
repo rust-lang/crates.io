@@ -82,6 +82,11 @@ input.search {
     overflow: hidden;
 }
 
+.sep {
+    margin: 0 10px;
+    color: darken($html-bg, 10%);
+}
+
 .doc-links {
     left: auto;
     min-width: 150px;
@@ -115,7 +120,6 @@ input.search {
 
     a { color: white; }
     a:hover { color: darken(white, 10%); }
-    .sep { margin: 0 10px; color: darken($html-bg, 10%); }
 
     @media only screen and (max-width: 450px) {
         margin: 20px;

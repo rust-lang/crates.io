@@ -39,7 +39,7 @@
       <LinkTo @route="crates" @query={{hash letter=null page=1}} data-test-all-crates-link>
         Browse All Crates
       </LinkTo>
-      <span class="sep">|</span>
+      <span local-class="sep">|</span>
       <Dropdown class="dropdown-container" as |dd|>
         <dd.Trigger class="dropdown" local-class="dropdown-button">
           Docs
@@ -63,7 +63,7 @@
           <li><LinkTo @route="category-slugs">List of category slugs</LinkTo></li>
         </dd.Content>
       </Dropdown>
-      <span class="sep">|</span>
+      <span local-class="sep">|</span>
       {{#if this.session.currentUser}}
         <Dropdown class="dropdown-container" data-test-user-menu as |dd|>
           <dd.Trigger class="dropdown" local-class="dropdown-button" data-test-toggle>
