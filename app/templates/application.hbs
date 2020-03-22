@@ -19,7 +19,7 @@
     <form local-class="desktop-search-form" action='/search' {{ action "search" on="submit" }} data-test-search-form>
       <input
         type="text"
-        class="search"
+        local-class="search"
         name="q"
         id="cargo-desktop-search"
         placeholder="Click or press 'S' to search..."
@@ -111,10 +111,10 @@
     </div>
   </nav>
 
-  <form id='mobile-search' class='search' action='/search' {{ action "search" on="submit" }} >
+  <form local-class='mobile-search' class='search' action='/search' {{ action "search" on="submit" }} >
     <input
       type="text"
-      class="search"
+      local-class="search"
       name="q"
       id="cargo-mobile-search"
       placeholder="Search"

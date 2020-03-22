@@ -56,37 +56,3 @@
         .nav { display: none; }
     }
 }
-
-#header input.search, #mobile-search input.search {
-    font-size: 90%;
-    border: none;
-    color: black;
-    margin-left: 30px;
-    padding: 5px 5px 5px 25px;
-    background-color: white;
-    background-image: url('/assets/search.png');
-    background-repeat: no-repeat;
-    background-position: 6px 6px;
-    background-size: 14px 15px;
-    border-radius: 15px;
-}
-
-#header input.search {
-    width: 100%;
-    margin-left: 16px;
-    margin-right: 16px;
-}
-
-#mobile-search {
-    display: none;
-    margin-bottom: 10px;
-    margin-left: 5px;
-    margin-right: 5px;
-    input.search {
-        width: 100%;
-        margin: 0;
-    }
-    @media only screen and (max-width: 820px) {
-        display: block;
-    }
-}
