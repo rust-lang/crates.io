@@ -7,35 +7,5 @@
 
     @media only screen and (min-width: 890px) {
         flex-direction: row;
-
-        .authorship {
-            flex: 3;
-            border-left: 2px solid $gray-border;
-            padding-left: 20px;
-
-            .top, .bottom {
-                flex-direction: column;
-            }
-
-            ul {
-                padding-left: 20px;
-            }
-        }
-    }
-
-    @media only screen and (max-width: 480px) {
-        .authorship {
-            .top, .bottom {
-                flex-direction: column;
-            }
-        }
-    }
-
-    .authorship {
-        .top, .bottom {
-            display: flex;
-
-            > * { flex: 1; }
-        }
     }
 }

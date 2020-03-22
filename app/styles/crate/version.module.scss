@@ -70,7 +70,7 @@
     margin-bottom: 40px;
 }
 
-:global(.crate-info .authorship) {
+:global(.crate-info) .authorship {
     ul.owners, ul.keywords {
         display: flex;
         flex-wrap: wrap;
@@ -83,6 +83,35 @@
         }
     }
 }
+
+.authorship {
+    .top, .bottom {
+        display: flex;
+
+        > * { flex: 1; }
+    }
+
+    @media only screen and (min-width: 890px) {
+        flex: 3;
+        border-left: 2px solid $gray-border;
+        padding-left: 20px;
+
+        .top, .bottom {
+            flex-direction: column;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+    }
+
+    @media only screen and (max-width: 480px) {
+        .top, .bottom {
+            flex-direction: column;
+        }
+    }
+}
+
 
 .about {
     line-height: 180%;

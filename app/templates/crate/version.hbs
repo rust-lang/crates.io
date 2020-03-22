@@ -75,8 +75,8 @@
     {{/if}}
   </div>
   {{#if this.notYankedOrIsOwner}}
-    <section class='authorship' aria-label="Crate metadata">
-      <div class='top'>
+    <section local-class='authorship' aria-label="Crate metadata">
+      <div local-class='top'>
         <div>
           <div local-class='last-update'><span class='small'>Last Updated</span></div>
           <div local-class='{{if this.currentVersion.crate_size 'date-with-small-margin-bot' 'date'}}'>{{moment-from-now this.crate.updated_at}}</div>
@@ -104,7 +104,7 @@
         </div>
       </div>
 
-      <div class='bottom'>
+      <div local-class='bottom'>
         {{#if this.currentVersion.license}}
           <div>
             <h3>License</h3>
