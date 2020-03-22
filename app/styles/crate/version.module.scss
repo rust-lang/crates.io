@@ -5,6 +5,14 @@
     top: 4px;
 }
 
+.docs {
+    @media only screen and (min-width: 890px) {
+        flex: 7;
+        padding-right: 40px;
+        max-width: 640px;
+    }
+}
+
 .install {
     font-size: 120%;
     padding: 10px;
