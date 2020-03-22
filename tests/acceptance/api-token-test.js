@@ -5,8 +5,8 @@ import window, { setupWindowMock } from 'ember-window-mock';
 import { Response } from 'ember-cli-mirage';
 import { percySnapshot } from 'ember-percy';
 
-import setupMirage from '../helpers/setup-mirage';
-import { visit } from '../helpers/visit-ignoring-abort';
+import setupMirage from '../test-helpers/setup-mirage';
+import { visit } from '../test-helpers/visit-ignoring-abort';
 
 module('Acceptance | api-tokens', function(hooks) {
   setupApplicationTest(hooks);

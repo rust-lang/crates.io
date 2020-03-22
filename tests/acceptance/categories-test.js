@@ -3,7 +3,7 @@ import { setupApplicationTest } from 'ember-qunit';
 import { visit } from '@ember/test-helpers';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import axeConfig from '../axe-config';
-import setupMirage from '../helpers/setup-mirage';
+import setupMirage from '../test-helpers/setup-mirage';
 import { percySnapshot } from 'ember-percy';
 
 module('Acceptance | categories', function(hooks) {

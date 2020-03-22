@@ -1,7 +1,7 @@
 import { setupTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
-import setupMirage from '../helpers/setup-mirage';
+import setupMirage from '../test-helpers/setup-mirage';
 import fetch from 'fetch';
 
 module('Mirage | Categories', function(hooks) {

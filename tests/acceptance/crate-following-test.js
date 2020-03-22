@@ -4,7 +4,7 @@ import { visit, waitFor, settled, click } from '@ember/test-helpers';
 import window, { setupWindowMock } from 'ember-window-mock';
 import { defer } from 'rsvp';
 
-import setupMirage from '../helpers/setup-mirage';
+import setupMirage from '../test-helpers/setup-mirage';
 
 module('Acceptance | Crate following', function(hooks) {
   setupApplicationTest(hooks);

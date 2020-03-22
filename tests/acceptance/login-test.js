@@ -5,7 +5,7 @@ import { defer } from 'rsvp';
 import window, { setupWindowMock } from 'ember-window-mock';
 
 import flashStyles from 'cargo/components/flash-message.module.scss';
-import setupMirage from '../helpers/setup-mirage';
+import setupMirage from '../test-helpers/setup-mirage';
 
 module('Acceptance | Login', function(hooks) {
   setupApplicationTest(hooks);
