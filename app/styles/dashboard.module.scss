@@ -43,6 +43,18 @@
     }
 }
 
+.my-crates-link,
+.followed-crates-link {
+    color: $main-color-light;
+    text-decoration: underline;
+    font-size: 90%;
+    font-weight: normal;
+
+    &:hover {
+        color: darken($main-color-light, 10%);
+    }
+}
+
 .my-feed {
     flex-grow: 5;
     h2 { font-size: 105%; }

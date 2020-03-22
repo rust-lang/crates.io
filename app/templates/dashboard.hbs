@@ -21,9 +21,7 @@
       </h2>
 
       {{#if this.hasMoreCrates}}
-        <span class='small'>
-          <LinkTo @route="me.crates">Show all</LinkTo>
-        </span>
+        <LinkTo @route="me.crates" local-class="my-crates-link">Show all</LinkTo>
       {{/if}}
     </div>
     <CrateDownloadsList @crates={{this.visibleCrates}} />
@@ -35,9 +33,7 @@
       </h2>
 
       {{#if this.hasMoreFollowing}}
-        <span class='small'>
-          <LinkTo @route="me.following">Show all</LinkTo>
-        </span>
+        <LinkTo @route="me.following" local-class="followed-crates-link">Show all</LinkTo>
       {{/if}}
     </div>
     <CrateDownloadsList @crates={{this.visibleFollowing}} />
