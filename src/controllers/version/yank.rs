@@ -44,9 +44,7 @@ fn modify_yank(req: &mut dyn Request, yanked: bool) -> AppResult<Response> {
 
     insert_version_owner_action(&conn, version.id, user.id, ids.api_token_id(), action)?;
 
-    git::yank(krate.name, version, yanked)
-        .enqueue(&conn)
-        .map_err(|e| AppError::from_std_error(e))?;
+    git::yank(krate.name, version, yanked).enqueue(&conn)?;
 
     ok_true()
 }
