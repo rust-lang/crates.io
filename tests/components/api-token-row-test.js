@@ -3,7 +3,7 @@ import { setupRenderingTest } from 'ember-qunit';
 import { render } from '@ember/test-helpers';
 import { hbs } from 'ember-cli-htmlbars';
 
-module('Integration | Component | api-token-row', function(hooks) {
+module('Component | api-token-row', function(hooks) {
   setupRenderingTest(hooks);
 
   test('input is focused if token is new', async function(assert) {
