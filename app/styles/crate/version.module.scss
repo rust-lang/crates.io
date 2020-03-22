@@ -4,3 +4,210 @@
     position: relative;
     top: 4px;
 }
+
+.crate-info {
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 20px;
+    border-bottom: 5px solid $gray-border;
+    margin-bottom: 20px;
+
+    @media only screen and (min-width: 890px) {
+        flex-direction: row;
+    }
+}
+
+.docs {
+    @media only screen and (min-width: 890px) {
+        flex: 7;
+        padding-right: 40px;
+        max-width: 640px;
+    }
+}
+
+.install {
+    font-size: 120%;
+    padding: 10px;
+    background-color: darken($main-bg-dark, 8%);
+    display: flex;
+
+    code {
+        flex: 1;
+        background: $main-color;
+        color: white;
+        padding: 20px;
+
+        @media only screen and (min-width: 500px) {
+            flex: 8;
+        }
+    }
+}
+
+.install-action {
+    display: none;
+    text-align: center;
+    padding-top: 18px;
+    padding-right: 10px;
+
+    @media only screen and (min-width: 500px) {
+        flex: 2;
+        display: block;
+    }
+}
+
+.last-update,
+.crate-size {
+    color: $main-color-light;
+    font-size: 90%;
+    line-height: 25px;
+}
+
+.date {
+    font-weight: bold;
+    margin-bottom: 40px;
+}
+
+/*
+    Since crate_size is a new field, older crates won't have it.
+    Preserve behaviour for older crates. For newer ones, keep
+    `Crate Size` closer to last updated.
+*/
+.date-with-small-margin-bot {
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.size {
+    font-weight: bold;
+    margin-bottom: 40px;
+}
+
+.crate-info .authorship {
+    ul.owners, ul.keywords {
+        display: flex;
+        flex-wrap: wrap;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+
+        li {
+            margin: 0 7px 7px 0;
+        }
+    }
+}
+
+.authorship {
+    .top, .bottom {
+        display: flex;
+
+        > * { flex: 1; }
+    }
+
+    @media only screen and (min-width: 890px) {
+        flex: 3;
+        border-left: 2px solid $gray-border;
+        padding-left: 20px;
+
+        .top, .bottom {
+            flex-direction: column;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+    }
+
+    @media only screen and (max-width: 480px) {
+        .top, .bottom {
+            flex-direction: column;
+        }
+    }
+}
+
+
+.about {
+    line-height: 180%;
+    margin-bottom: 40px;
+}
+
+.crate-readme {
+    line-height: 1.5;
+    overflow-wrap: break-word;
+
+    img {
+        max-width: 100%;
+    }
+
+    pre {
+        overflow-x: auto;
+    }
+
+    p {
+        code {
+            background-color: #fff;
+            padding: 0 2px;
+        }
+    }
+
+    table {
+        border-collapse: collapse;
+        display: block;
+        overflow-x: auto;
+
+        th, td {
+            border: 1px solid #dfe2e5;
+            padding: 6px 13px;
+        }
+    }
+}
+
+.crate-downloads {
+    display: flex;
+    flex-wrap: wrap;
+
+    h3 { width: 100%; }
+}
+
+.stats {
+    flex-grow: 7;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.stat {
+    border-left: 1px solid $gray-border;
+    padding: 10px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: column;
+    flex-grow: 1;
+
+    .num {
+        font-size: 160%;
+        font-weight: bold;
+        margin-bottom: 4px;
+    }
+
+    .num__align {
+        position: relative;
+        bottom: 0.4rem;
+    }
+}
+
+.graph {
+    flex-grow: 10;
+    width: 100%;
+    margin: 30px 0;
+    padding-bottom: 20px;
+
+    h4 { color: $main-color-light; }
+
+    @media only percy {
+        display: none;
+    }
+}
+
+.graph-data {
+    width: 100%;
+    height: 500px;
+}
