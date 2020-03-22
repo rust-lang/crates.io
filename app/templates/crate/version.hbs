@@ -79,7 +79,7 @@
       <div class='top'>
         <div>
           <div local-class='last-update'><span class='small'>Last Updated</span></div>
-          <div class='{{if this.currentVersion.crate_size 'date-with-small-margin-bot' 'date'}}'>{{moment-from-now this.crate.updated_at}}</div>
+          <div local-class='{{if this.currentVersion.crate_size 'date-with-small-margin-bot' 'date'}}'>{{moment-from-now this.crate.updated_at}}</div>
           {{#each this.crate.annotated_badges as |badge|}}
             <p>
               {{component badge.component_name badge=badge}}

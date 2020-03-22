@@ -38,19 +38,4 @@
             > * { flex: 1; }
         }
     }
-
-    .date {
-        font-weight: bold;
-        margin-bottom: 40px;
-    }
-
-    /*
-        Since crate_size is a new field, older crates won't have it.
-        Preserve behaviour for older crates. For newer ones, keep
-        `Crate Size` closer to last updated.
-    */
-    .date-with-small-margin-bot {
-        font-weight: bold;
-        margin-bottom: 20px;
-    }
 }
