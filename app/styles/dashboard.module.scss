@@ -1,0 +1,126 @@
+.stats {
+    margin-left: auto;
+    padding: 10px;
+
+    span { margin-left: 10px; }
+    .num {
+        font-size: 30px;
+        font-weight: bold;
+    }
+    .downloads {
+        display: flex;
+        align-items: center;
+    }
+
+    .label {
+        color: $main-color-light;
+        font-size: 80%;
+    }
+}
+
+.my-info {
+    display: flex;
+
+    @media only screen and (max-width: 750px) {
+        flex-direction: column;
+    }
+}
+
+.my-crate-lists {
+    flex-direction: column;
+    flex-grow: 2;
+    margin-right: 20px;
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        h2 {
+            font-size: 105%;
+            line-height: 20px;
+        }
+    }
+
+    @media only screen and (max-width: 750px) {
+        order: 1;
+        margin-right: 0;
+    }
+}
+
+.my-crates-link,
+.followed-crates-link {
+    color: $main-color-light;
+    text-decoration: underline;
+    font-size: 90%;
+    font-weight: normal;
+
+    &:hover {
+        color: darken($main-color-light, 10%);
+    }
+}
+
+.my-feed {
+    flex-grow: 5;
+    h2 { font-size: 105%; }
+
+    @media only screen and (max-width: 750px) {
+        order: 0;
+    }
+}
+
+.feed {
+    background: white;
+    padding: 0 20px;
+}
+
+.feed-list {
+    margin: 0;
+    padding: 0;
+}
+
+.feed-row {
+    display: flex;
+    align-items: baseline;
+    padding: 20px 0;
+    border-bottom: 2px solid $gray-border;
+
+    &:last-of-type {
+        border: none;
+    }
+
+    .version {
+        color: $main-color-light;
+        font-size: 80%;
+    }
+
+    .date {
+        flex-grow: 1;
+        text-align: right;
+        color: $main-color-light;
+        font-size: 80%;
+    }
+}
+
+.info {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+
+    span { padding-left: 10px; }
+
+    .date { flex-grow: 2; text-align: right; }
+}
+
+.load-more {
+    $bg: rgb(219, 217, 207);
+    text-align: center;
+    width: 100%;
+    padding: 10px;
+    outline: 0;
+    border: 0;
+    margin-bottom: 20px;
+    background-color: $bg;
+    color: white;
+    &:hover, &:focus { background-color: darken($bg, 10%); }
+}

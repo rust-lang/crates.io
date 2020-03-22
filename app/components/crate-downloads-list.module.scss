@@ -1,0 +1,18 @@
+.list {
+    list-style: none;
+    padding: 0;
+}
+
+.row {
+    margin: 8px 0;
+}
+
+.link {
+    color: #525252;
+    background-color: #edebdd;
+    font-size: 90%;
+    padding: 20px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
