@@ -30,6 +30,15 @@
     }
 }
 
+.my-feed {
+    flex-grow: 5;
+    h2 { font-size: 105%; }
+
+    @media only screen and (max-width: 750px) {
+        order: 0;
+    }
+}
+
 .feed-row {
     composes: row from global;
     display: flex;
