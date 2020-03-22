@@ -54,7 +54,7 @@
       </p>
     {{else}}
       <div class='install'>
-        <div class='action'>Cargo.toml</div>
+        <div local-class='install-action'>Cargo.toml</div>
         <code>{{ this.crateTomlText }}</code>
         {{#if (is-clipboard-supported)}}
           <CrateTomlCopy @copyText={{this.crateTomlText}} />

@@ -5,6 +5,18 @@
     top: 4px;
 }
 
+.install-action {
+    display: none;
+    text-align: center;
+    padding-top: 18px;
+    padding-right: 10px;
+
+    @media only screen and (min-width: 500px) {
+        flex: 2;
+        display: block;
+    }
+}
+
 .last-update,
 .crate-size {
     color: $main-color-light;

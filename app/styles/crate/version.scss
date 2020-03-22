@@ -50,12 +50,6 @@
         background-color: darken($main-bg-dark, 8%);
         display: flex;
 
-        .action {
-            display: none;
-            text-align: center;
-            padding-top: 18px;
-            padding-right: 10px;
-        }
         code {
             flex: 1;
             background: $main-color;
@@ -63,7 +57,6 @@
             padding: 20px;
         }
         @media only screen and (min-width: 500px) {
-            .action { flex: 2; display: block; }
             code { flex: 8; }
         }
     }
