@@ -108,12 +108,4 @@
     flex-wrap: wrap;
 
     h3 { width: 100%; }
-
-    .versions {
-        flex-grow: 3;
-        text-align: center;
-        display: flex;
-        flex-direction: column;
-        .small { padding: 10px; }
-    }
 }
