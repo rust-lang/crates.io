@@ -30,21 +30,20 @@
       </div>
       <CrateDownloadsList @crates={{this.visibleCrates}} />
     </div>
-    <div id='my-following'>
-      <div class='header'>
-        <h2>
-          {{svg-jar "following"}}
-          Following
-        </h2>
 
-        {{#if this.hasMoreFollowing}}
-          <span class='small'>
-            <LinkTo @route="me.following">Show all</LinkTo>
-          </span>
-        {{/if}}
-      </div>
-      <CrateDownloadsList @crates={{this.visibleFollowing}} />
+    <div class='header'>
+      <h2>
+        {{svg-jar "following"}}
+        Following
+      </h2>
+
+      {{#if this.hasMoreFollowing}}
+        <span class='small'>
+          <LinkTo @route="me.following">Show all</LinkTo>
+        </span>
+      {{/if}}
     </div>
+    <CrateDownloadsList @crates={{this.visibleFollowing}} />
   </div>
 
   <div id='my-feed'>
