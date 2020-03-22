@@ -1,0 +1,14 @@
+.stats {
+    margin-left: auto;
+    padding: 10px;
+
+    span { margin-left: 10px; }
+    .num {
+        font-size: 30px;
+        font-weight: bold;
+    }
+    .downloads {
+        display: flex;
+        align-items: center;
+    }
+}
