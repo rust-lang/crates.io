@@ -112,6 +112,12 @@ input.search {
     }
 }
 
+:global(.dropdown).current-user-links {
+    left: auto;
+    right: 0;
+    min-width: 200px;
+}
+
 .dropdown-button {
     background: none;
     border: 0;

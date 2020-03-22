@@ -10,10 +10,4 @@
         color: white; text-decoration: none;
         &:hover { color: darken(white, 15%); }
     }
-
-    .current-user-links {
-        left: auto;
-        right: 0;
-        min-width: 200px;
-    }
 }
