@@ -1,7 +1,7 @@
-import { formatCrateSize } from '../../../helpers/format-crate-size';
+import { formatCrateSize } from '../../helpers/format-crate-size';
 import { module, test } from 'qunit';
 
-module('Unit | Helper | format-crate-size', function() {
+module('Helper | format-crate-size', function() {
   test('Small crate size formats in kB', function(assert) {
     assert.equal(formatCrateSize(531), '0.53 kB');
   });

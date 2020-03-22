@@ -1,7 +1,7 @@
-import { formatEmail } from '../../../helpers/format-email';
+import { formatEmail } from '../../helpers/format-email';
 import { module, test } from 'qunit';
 
-module('Unit | Helper | format-email', function() {
+module('Helper | format-email', function() {
   // Replace this with your real tests.
   test('it works', function(assert) {
     assert.equal(formatEmail('foo'), 'foo');
