@@ -53,7 +53,7 @@
         one that has not been yanked.
       </p>
     {{else}}
-      <div class='install'>
+      <div local-class='install'>
         <div local-class='install-action'>Cargo.toml</div>
         <code>{{ this.crateTomlText }}</code>
         {{#if (is-clipboard-supported)}}

@@ -44,22 +44,6 @@
         }
     }
 
-    .install {
-        font-size: 120%;
-        padding: 10px;
-        background-color: darken($main-bg-dark, 8%);
-        display: flex;
-
-        code {
-            flex: 1;
-            background: $main-color;
-            color: white;
-            padding: 20px;
-        }
-        @media only screen and (min-width: 500px) {
-            code { flex: 8; }
-        }
-    }
     .date {
         font-weight: bold;
         margin-bottom: 40px;

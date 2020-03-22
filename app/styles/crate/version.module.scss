@@ -5,6 +5,24 @@
     top: 4px;
 }
 
+.install {
+    font-size: 120%;
+    padding: 10px;
+    background-color: darken($main-bg-dark, 8%);
+    display: flex;
+
+    code {
+        flex: 1;
+        background: $main-color;
+        color: white;
+        padding: 20px;
+
+        @media only screen and (min-width: 500px) {
+            flex: 8;
+        }
+    }
+}
+
 .install-action {
     display: none;
     text-align: center;
