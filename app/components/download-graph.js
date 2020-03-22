@@ -4,7 +4,6 @@ import Component from '@ember/component';
 const COLORS = ['#67001f', '#b2182b', '#d6604d', '#f4a582', '#92c5de', '#4393c3', '#2166ac', '#053061'];
 
 export default Component.extend({
-  classNames: 'graph-data',
   resizeHandler: undefined,
 
   didInsertElement() {
