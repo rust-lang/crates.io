@@ -11,15 +11,17 @@
         &:hover { color: darken(white, 15%); }
     }
 
-    .nav, .menu {
+    .menu {
         text-align: right;
         margin-right: 5px;
-    }
-
-    .menu {
         flex-grow: 2;
         display: none;
+
+        @media only screen and (max-width: 900px) {
+            display: block;
+        }
     }
+
     .menu ul.dropdown {
         right: 0;
         left: auto;
@@ -30,9 +32,5 @@
         left: auto;
         right: 0;
         min-width: 200px;
-    }
-    @media only screen and (max-width: 900px) {
-        .menu { display: block; }
-        .nav { display: none; }
     }
 }

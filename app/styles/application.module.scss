@@ -92,6 +92,15 @@ input.search {
     min-width: 150px;
 }
 
+.nav {
+    text-align: right;
+    margin-right: 5px;
+
+    @media only screen and (max-width: 900px) {
+        display: none;
+    }
+}
+
 .dropdown-button {
     background: none;
     border: 0;
