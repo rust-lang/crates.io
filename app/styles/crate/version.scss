@@ -108,24 +108,6 @@
     flex-wrap: wrap;
 
     h3 { width: 100%; }
-    .stat {
-        border-left: 1px solid $gray-border;
-        padding: 10px 20px;
-        display: flex;
-        flex-wrap: wrap;
-        flex-direction: column;
-        flex-grow: 1;
-
-        .num {
-            font-size: 160%;
-            font-weight: bold;
-            margin-bottom: 4px;
-            &__align {
-                position: relative;
-                bottom: 0.4rem;
-            }
-        }
-    }
 
     .stats {
         flex-grow: 7;

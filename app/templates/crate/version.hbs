@@ -245,17 +245,17 @@
       {{else}}
         <h3 data-test-crate-stats-label>Stats Overview</h3>
       {{/if}}
-      <div class='stat'>
-        <span class='num'>
+      <div local-class='stat'>
+        <span local-class='num'>
           {{svg-jar "download"}}
-          <span class="num__align">{{ format-num this.downloadsContext.downloads }}</span>
+          <span local-class="num__align">{{ format-num this.downloadsContext.downloads }}</span>
         </span>
         <span class='desc small'>Downloads all time</span>
       </div>
-      <div class='stat'>
-        <span class="{{if this.crate.versions.isPending 'loading'}} num">
+      <div local-class='stat'>
+        <span class="{{if this.crate.versions.isPending 'loading'}}" local-class="num">
           {{svg-jar "crate"}}
-          <span class="num__align">{{ this.crate.versions.length }}</span>
+          <span local-class="num__align">{{ this.crate.versions.length }}</span>
         </span>
         <span class='desc small'>Versions published</span>
       </div>
