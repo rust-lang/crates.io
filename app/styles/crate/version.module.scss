@@ -47,6 +47,12 @@
     }
 }
 
+.stats {
+    flex-grow: 7;
+    display: flex;
+    flex-wrap: wrap;
+}
+
 .stat {
     border-left: 1px solid $gray-border;
     padding: 10px 20px;
