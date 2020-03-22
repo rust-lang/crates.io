@@ -66,12 +66,12 @@
       {{/each}}
 
       {{#if this.loadingMore}}
-        <span class='load-more'>
+        <span local-class='load-more'>
           <img src="/assets/ajax-loader.gif">
         </span>
       {{else}}
         {{#if this.hasMore}}
-          <button type="button" class='load-more' {{ action 'loadMore' }}>
+          <button type="button" local-class='load-more' {{ action 'loadMore' }}>
             Load More
           </button>
         {{/if}}

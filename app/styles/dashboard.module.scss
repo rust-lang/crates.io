@@ -29,3 +29,15 @@
         margin-right: 0;
     }
 }
+
+.load-more {
+    $bg: rgb(219, 217, 207);
+    text-align: center;
+    padding: 10px;
+    outline: 0;
+    border: 0;
+    margin-bottom: 20px;
+    background-color: $bg;
+    color: white;
+    &:hover, &:focus { background-color: darken($bg, 10%); }
+}
