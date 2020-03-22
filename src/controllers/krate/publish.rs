@@ -203,8 +203,7 @@ pub fn publish(req: &mut dyn Request) -> AppResult<Response> {
             yanked: Some(false),
             links,
         };
-        git::add_crate(git_crate)
-            .enqueue(&conn)?;
+        git::add_crate(git_crate).enqueue(&conn)?;
 
         // The `other` field on `PublishWarnings` was introduced to handle a temporary warning
         // that is no longer needed. As such, crates.io currently does not return any `other`

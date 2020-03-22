@@ -40,13 +40,9 @@ fn main() {
     println!("Index cloned");
 
     let build_runner = || {
-        let environment = Environment::new_shared(
-            repository.clone(),
-            config.uploader.clone(),
-            Client::new(),
-        );
-        let db_config = r2d2::Pool::builder()
-            .min_idle(Some(0));
+        let environment =
+            Environment::new_shared(repository.clone(), config.uploader.clone(), Client::new());
+        let db_config = r2d2::Pool::builder().min_idle(Some(0));
         swirl::Runner::builder(environment)
             .connection_pool_builder(&db_url, db_config)
             .job_start_timeout(Duration::from_secs(job_start_timeout))

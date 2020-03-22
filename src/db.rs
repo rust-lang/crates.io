@@ -78,8 +78,7 @@ pub fn diesel_pool(
 ) -> DieselPool {
     let url = connection_url(url);
     if env == Env::Test {
-        let conn =
-            PgConnection::establish(&url).expect("failed to establish connection");
+        let conn = PgConnection::establish(&url).expect("failed to establish connection");
         DieselPool::test_conn(conn)
     } else {
         let manager = ConnectionManager::new(url);

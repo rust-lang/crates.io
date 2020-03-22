@@ -41,16 +41,8 @@ impl Clone for Environment {
 }
 
 impl Environment {
-    pub fn new(
-        index: Repository,
-        uploader: Uploader,
-        http_client: Client,
-    ) -> Self {
-        Self::new_shared(
-            Arc::new(Mutex::new(index)),
-            uploader,
-            http_client,
-        )
+    pub fn new(index: Repository, uploader: Uploader, http_client: Client) -> Self {
+        Self::new_shared(Arc::new(Mutex::new(index)), uploader, http_client)
     }
 
     pub fn new_shared(
