@@ -10,26 +10,12 @@ $link-color: rgb(0, 172, 91);
 
 @import "buttons";
 
-@import "application";
 @import "home";
 @import "crate";
 @import "dashboard";
 @import "me";
 
 @import "modules";
-
-form.search label {
-    position: absolute;
-    left: -10000px;
-    top: auto;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-}
-
-input.search {
-    box-shadow: none;
-}
 
 span.small {
     color: $main-color-light;

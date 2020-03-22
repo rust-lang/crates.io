@@ -32,6 +32,116 @@ noscript {
     }
 }
 
+.header {
+    color: white;
+    position: relative;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    a {
+        color: white; text-decoration: none;
+        &:hover { color: darken(white, 15%); }
+    }
+}
+
+.desktop-search-form {
+    display: flex;
+    flex-grow: 1;
+
+    @media only screen and (max-width: 820px) {
+        display: none;
+    }
+}
+
+input.search {
+    font-size: 90%;
+    border: none;
+    color: black;
+    width: 100%;
+    margin-left: 16px;
+    margin-right: 16px;
+    padding: 5px 5px 5px 25px;
+    background-color: white;
+    background-image: url('/assets/search.png');
+    background-repeat: no-repeat;
+    background-position: 6px 6px;
+    background-size: 14px 15px;
+    border-radius: 15px;
+    box-shadow: none;
+}
+
+.mobile-search {
+    display: none;
+    margin-bottom: 10px;
+    margin-left: 5px;
+    margin-right: 5px;
+
+    input.search {
+        margin: 0;
+    }
+
+    @media only screen and (max-width: 820px) {
+        display: block;
+    }
+}
+
+.search-label {
+    position: absolute;
+    left: -10000px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
+.sep {
+    margin: 0 10px;
+    color: darken($html-bg, 10%);
+}
+
+.doc-links {
+    left: auto;
+    min-width: 150px;
+}
+
+.nav {
+    text-align: right;
+    margin-right: 5px;
+
+    @media only screen and (max-width: 900px) {
+        display: none;
+    }
+}
+
+.menu {
+    text-align: right;
+    margin-right: 5px;
+    flex-grow: 2;
+    display: none;
+
+    @media only screen and (max-width: 900px) {
+        display: block;
+    }
+}
+
+:global(.dropdown).current-user-links {
+    left: auto;
+    right: 0;
+    min-width: 200px;
+}
+
+.dropdown-button {
+    background: none;
+    border: 0;
+    padding: 10px 0;
+
+    img {
+        vertical-align: top;
+    }
+}
+
 .main {
     display: flex;
     flex-direction: column;
@@ -50,7 +160,6 @@ noscript {
 
     a { color: white; }
     a:hover { color: darken(white, 10%); }
-    .sep { margin: 0 10px; color: darken($html-bg, 10%); }
 
     @media only screen and (max-width: 450px) {
         margin: 20px;

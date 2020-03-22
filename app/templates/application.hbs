@@ -4,7 +4,7 @@
 <GoogleJsapi />
 
 <div local-class="application">
-  <nav id="header">
+  <nav local-class="header">
     <LinkTo @route="index" @tabindex="-1">
       <img src="/assets/Cargo-Logo-Small.png" id="logo"
            height="100" width="100" alt="Cargo Logo">
@@ -16,10 +16,10 @@
       </h1>
     </LinkTo>
 
-    <form class='search' action='/search' {{ action "search" on="submit" }} data-test-search-form>
+    <form local-class="desktop-search-form" action='/search' {{ action "search" on="submit" }} data-test-search-form>
       <input
         type="text"
-        class="search"
+        local-class="search"
         name="q"
         id="cargo-desktop-search"
         placeholder="Click or press 'S' to search..."
@@ -32,21 +32,21 @@
         required
         data-test-search-input
       >
-      <label for="cargo-desktop-search">Search</label>
+      <label for="cargo-desktop-search" local-class="search-label">Search</label>
     </form>
 
-    <div class='nav'>
+    <div local-class='nav'>
       <LinkTo @route="crates" @query={{hash letter=null page=1}} data-test-all-crates-link>
         Browse All Crates
       </LinkTo>
-      <span class="sep">|</span>
+      <span local-class="sep">|</span>
       <Dropdown class="dropdown-container" as |dd|>
-        <dd.Trigger class="dropdown">
+        <dd.Trigger class="dropdown" local-class="dropdown-button">
           Docs
           <span class='arrow'></span>
         </dd.Trigger>
 
-        <dd.Content @tagName="ul" id="doc-links" class="dropdown">
+        <dd.Content @tagName="ul" local-class="doc-links" class="dropdown">
           <li><a href='https://doc.rust-lang.org/cargo/getting-started/'>Getting Started</a></li>
           <li><a href='https://doc.rust-lang.org/cargo/guide/'>Guide</a></li>
           <li><a href='https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html'>Specifying Dependencies</a></li>
@@ -63,16 +63,16 @@
           <li><LinkTo @route="category-slugs">List of category slugs</LinkTo></li>
         </dd.Content>
       </Dropdown>
-      <span class="sep">|</span>
+      <span local-class="sep">|</span>
       {{#if this.session.currentUser}}
         <Dropdown class="dropdown-container" data-test-user-menu as |dd|>
-          <dd.Trigger class="dropdown" data-test-toggle>
+          <dd.Trigger class="dropdown" local-class="dropdown-button" data-test-toggle>
             <UserAvatar @user={{this.session.currentUser}} @size="small" data-test-avatar />
             {{ this.session.currentUser.name }}
             <span class='arrow'></span>
           </dd.Trigger>
 
-          <dd.Content @tagName="ul" class="dropdown current-user-links">
+          <dd.Content @tagName="ul" class="dropdown" local-class="current-user-links">
             <li><LinkTo @route="dashboard">Dashboard</LinkTo></li>
             <li><LinkTo @route="me">Account Settings</LinkTo></li>
             <li><LinkTo @route="me.pending-invites">Owner Invites</LinkTo></li>
@@ -87,13 +87,13 @@
       {{/if}}
     </div>
 
-    <div class='menu'>
+    <div local-class='menu'>
       <Dropdown class="dropdown-container" as |dd|>
-        <dd.Trigger class="dropdown">
+        <dd.Trigger class="dropdown" local-class="dropdown-button">
           Menu
           <span class='arrow'></span>
         </dd.Trigger>
-        <dd.Content @tagName="ul" class="dropdown current-user-links">
+        <dd.Content @tagName="ul" class="dropdown" local-class="current-user-links">
           <li><LinkTo @route="crates">Browse All Crates</LinkTo></li>
           {{#if this.session.currentUser}}
             <li><LinkTo @route="dashboard">Dashboard</LinkTo></li>
@@ -106,15 +106,12 @@
         </dd.Content>
       </Dropdown>
     </div>
-
-    <div class='links'>
-    </div>
   </nav>
 
-  <form id='mobile-search' class='search' action='/search' {{ action "search" on="submit" }} >
+  <form local-class='mobile-search' class='search' action='/search' {{ action "search" on="submit" }} >
     <input
       type="text"
-      class="search"
+      local-class="search"
       name="q"
       id="cargo-mobile-search"
       placeholder="Search"
@@ -123,7 +120,7 @@
       autocorrect="off"
       required
     >
-    <label for="cargo-mobile-search">Search</label>
+    <label for="cargo-mobile-search" local-class="search-label">Search</label>
   </form>
 
   <main local-class="main">
