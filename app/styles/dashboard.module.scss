@@ -36,6 +36,16 @@
     flex-direction: column;
 }
 
+.info {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+
+    span { padding-left: 10px; }
+
+    .date { flex-grow: 2; text-align: right; }
+}
+
 .load-more {
     $bg: rgb(219, 217, 207);
     text-align: center;

@@ -13,14 +13,4 @@
 #my-feed {
     flex-grow: 5;
     h2 { font-size: 105%; }
-
-    .small { padding-left: 10px; }
-
-    .info {
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-
-        .date { flex-grow: 2; text-align: right; }
-    }
 }

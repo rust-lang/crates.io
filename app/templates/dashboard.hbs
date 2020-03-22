@@ -53,12 +53,12 @@
     <div class='white-rows'>
       {{#each this.myFeed as |version|}}
         <div local-class="feed-row">
-          <div class='info'>
+          <div local-class="info">
             <LinkTo @route="crate.version" @models={{array version.crateName version.num}}>
               {{ version.crateName }}
               <span class='small'>{{ version.num }}</span>
             </LinkTo>
-            <span class='date small'>
+            <span local-class="date" class='small'>
               {{moment-from-now version.created_at}}
             </span>
           </div>
