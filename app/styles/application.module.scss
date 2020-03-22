@@ -82,6 +82,11 @@ input.search {
     overflow: hidden;
 }
 
+.doc-links {
+    left: auto;
+    min-width: 150px;
+}
+
 .main {
     display: flex;
     flex-direction: column;
