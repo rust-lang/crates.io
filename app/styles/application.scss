@@ -27,21 +27,6 @@
         min-width: 200px;
     }
 
-    button {
-        background: none;
-        border: 0;
-        padding: 10px 0;
-
-        &.active {
-            background: rgb(42, 79, 39);
-            box-shadow: inset -2px 2px 4px 0px rgb(36, 61, 38);
-        }
-
-        img {
-          vertical-align: top;
-        }
-    }
-
     .current-user-links {
         left: auto;
         right: 0;

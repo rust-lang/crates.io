@@ -87,6 +87,16 @@ input.search {
     min-width: 150px;
 }
 
+.dropdown-button {
+    background: none;
+    border: 0;
+    padding: 10px 0;
+
+    img {
+        vertical-align: top;
+    }
+}
+
 .main {
     display: flex;
     flex-direction: column;

@@ -41,7 +41,7 @@
       </LinkTo>
       <span class="sep">|</span>
       <Dropdown class="dropdown-container" as |dd|>
-        <dd.Trigger class="dropdown">
+        <dd.Trigger class="dropdown" local-class="dropdown-button">
           Docs
           <span class='arrow'></span>
         </dd.Trigger>
@@ -66,7 +66,7 @@
       <span class="sep">|</span>
       {{#if this.session.currentUser}}
         <Dropdown class="dropdown-container" data-test-user-menu as |dd|>
-          <dd.Trigger class="dropdown" data-test-toggle>
+          <dd.Trigger class="dropdown" local-class="dropdown-button" data-test-toggle>
             <UserAvatar @user={{this.session.currentUser}} @size="small" data-test-avatar />
             {{ this.session.currentUser.name }}
             <span class='arrow'></span>
@@ -89,7 +89,7 @@
 
     <div class='menu'>
       <Dropdown class="dropdown-container" as |dd|>
-        <dd.Trigger class="dropdown">
+        <dd.Trigger class="dropdown" local-class="dropdown-button">
           Menu
           <span class='arrow'></span>
         </dd.Trigger>
