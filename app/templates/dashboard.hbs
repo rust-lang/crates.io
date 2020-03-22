@@ -15,21 +15,19 @@
 
 <div id='my-info'>
   <div id='my-crate-lists' class='crate-lists'>
-    <div id='my-crates'>
-      <div class='header'>
-        <h2>
-          {{svg-jar "my-packages"}}
-          My Crates
-        </h2>
+    <div class='header'>
+      <h2>
+        {{svg-jar "my-packages"}}
+        My Crates
+      </h2>
 
-        {{#if this.hasMoreCrates}}
-          <span class='small'>
-            <LinkTo @route="me.crates">Show all</LinkTo>
-          </span>
-        {{/if}}
-      </div>
-      <CrateDownloadsList @crates={{this.visibleCrates}} />
+      {{#if this.hasMoreCrates}}
+        <span class='small'>
+          <LinkTo @route="me.crates">Show all</LinkTo>
+        </span>
+      {{/if}}
     </div>
+    <CrateDownloadsList @crates={{this.visibleCrates}} />
 
     <div class='header'>
       <h2>
