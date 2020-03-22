@@ -30,6 +30,11 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+
+        h2 {
+            font-size: 105%;
+            line-height: 20px;
+        }
     }
 
     @media only screen and (max-width: 750px) {
