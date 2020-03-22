@@ -47,6 +47,13 @@
     }
 }
 
+.crate-downloads {
+    display: flex;
+    flex-wrap: wrap;
+
+    h3 { width: 100%; }
+}
+
 .stats {
     flex-grow: 7;
     display: flex;
