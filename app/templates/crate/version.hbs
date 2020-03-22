@@ -116,7 +116,7 @@
           {{#if this.anyKeywords}}
             <div>
               <h3>Keywords</h3>
-              <ul class='keywords'>
+              <ul local-class='keywords'>
                 {{#each this.keywords as |keyword|}}
                   <li><LinkTo @route="keyword" @model={{keyword}}>{{keyword.id}}</LinkTo></li>
                 {{/each}}
@@ -149,7 +149,7 @@
             </p>
           {{/if}}
 
-          <ul class='owners' data-test-owners>
+          <ul local-class='owners' data-test-owners>
             {{#each this.crate.owner_team as |team|}}
               <li>
                 <LinkTo @route={{team.kind}} @model={{team.login}} data-test-team-link={{team.login}}>
