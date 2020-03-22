@@ -52,7 +52,7 @@
 
     <div class='white-rows'>
       {{#each this.myFeed as |version|}}
-        <div class='row'>
+        <div local-class="feed-row">
           <div class='info'>
             <LinkTo @route="crate.version" @models={{array version.crateName version.num}}>
               {{ version.crateName }}

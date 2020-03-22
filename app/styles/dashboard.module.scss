@@ -30,6 +30,12 @@
     }
 }
 
+.feed-row {
+    composes: row from global;
+    display: flex;
+    flex-direction: column;
+}
+
 .load-more {
     $bg: rgb(219, 217, 207);
     text-align: center;
