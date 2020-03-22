@@ -141,19 +141,4 @@
     }
 
     .button-holder { position: relative; }
-
-    .graph {
-        flex-grow: 10;
-        width: 100%;
-        margin: 30px 0;
-        padding-bottom: 20px;
-
-        h4 { color: $main-color-light; }
-    }
-}
-
-@media only percy {
-    #crate-downloads .graph {
-       display: none;
-    }
 }
