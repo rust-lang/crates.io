@@ -3,7 +3,7 @@ import { setupTest } from 'ember-qunit';
 import { A } from '@ember/array';
 import Service from '@ember/service';
 
-module('Unit | Controller | crate/version', function(hooks) {
+module('Controller | crate/version', function(hooks) {
   setupTest(hooks);
   const userId = 1;
   // stub the session service
