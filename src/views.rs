@@ -249,7 +249,6 @@ pub use self::krate_publish::{EncodableCrateDependency, EncodableCrateUpload};
 mod tests {
     use super::*;
     use chrono::NaiveDate;
-    use serde_json;
 
     #[test]
     fn category_dates_serializes_to_rfc3339() {

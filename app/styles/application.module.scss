@@ -1,0 +1,218 @@
+* {
+    box-sizing: border-box;
+}
+
+html {
+    background: url('/assets/noise.png');
+    background-color: $html-bg;
+    @media only screen and (prefers-color-scheme: dark) {
+        background-color: #222;
+    }
+}
+
+html, body {
+    margin: 0;
+}
+
+body {
+    // Use the modern font stack inspired by Bootstrap 4
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    font-size: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+noscript {
+    color: white;
+    padding: 10px 0;
+}
+
+.application {
+    width: 960px;
+    @media only screen and (max-width: 960px) {
+        width: 100%;
+    }
+}
+
+.header {
+    color: white;
+    position: relative;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    a {
+        color: white; text-decoration: none;
+        &:hover { color: darken(white, 15%); }
+    }
+}
+
+.desktop-search-form {
+    display: flex;
+    flex-grow: 1;
+
+    @media only screen and (max-width: 820px) {
+        display: none;
+    }
+}
+
+input.search {
+    font-size: 90%;
+    border: none;
+    color: black;
+    width: 100%;
+    margin-left: 16px;
+    margin-right: 16px;
+    padding: 5px 5px 5px 25px;
+    background-color: white;
+    background-image: url('/assets/search.png');
+    background-repeat: no-repeat;
+    background-position: 6px 6px;
+    background-size: 14px 15px;
+    border-radius: 15px;
+    box-shadow: none;
+
+    @media only screen and (prefers-color-scheme: dark) {
+        background-color: #111;
+        color: #eee;
+    }
+}
+
+.mobile-search {
+    display: none;
+    margin-bottom: 10px;
+    margin-left: 5px;
+    margin-right: 5px;
+
+    input.search {
+        margin: 0;
+    }
+
+    @media only screen and (max-width: 820px) {
+        display: block;
+    }
+
+    @media only screen and (prefers-color-scheme: dark) {
+        background-color: #111;
+        color: #eee;
+    }
+}
+
+.search-label {
+    position: absolute;
+    left: -10000px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
+.sep {
+    margin: 0 10px;
+    color: darken($html-bg, 10%);
+    @media only screen and (prefers-color-scheme: dark) {
+        color: #666;
+    }
+}
+
+.doc-links {
+    left: auto;
+    min-width: 150px;
+}
+
+.nav {
+    text-align: right;
+    margin-right: 5px;
+
+    @media only screen and (max-width: 900px) {
+        display: none;
+    }
+}
+
+.menu {
+    text-align: right;
+    margin-right: 5px;
+    flex-grow: 2;
+    display: none;
+
+    @media only screen and (max-width: 900px) {
+        display: block;
+    }
+}
+
+:global(.dropdown).current-user-links {
+    left: auto;
+    right: 0;
+    min-width: 200px;
+    @media only screen and (prefers-color-scheme: dark) {
+        color: #eee;
+    }
+}
+
+.dropdown-button {
+    background: none;
+    border: 0;
+    padding: 10px 0;
+
+    img {
+        vertical-align: top;
+    }
+}
+
+.main {
+    display: flex;
+    flex-direction: column;
+
+    margin-bottom: 10px;
+    background-color: $main-bg;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 5px 2px #3b6837;
+    border: 5px solid #62865f;
+    color: $main-color;
+
+    @media only screen and (prefers-color-scheme: dark) {
+        box-shadow: none;
+        border: none;
+        background-color: #111;
+        color: #eee;
+    }
+}
+
+.after-main-links {
+    margin: 40px;
+
+    a { color: white; }
+    a:hover { color: darken(white, 10%); }
+
+    @media only screen and (max-width: 450px) {
+        margin: 20px;
+        .sep {
+            display: none;
+            @media only screen and (prefers-color-scheme: dark) {
+                color: #666;
+            }
+        }
+        display: flex;
+        flex-direction: column;
+
+        a {
+            width: 50%;
+            font-size: 110%;
+            padding: 5px;
+            &:not(:first-child) { border-top: 1px solid darken($html-bg, 10%); }
+        }
+    }
+}
+
+.fork-me {
+    position: absolute;
+    top: 0;
+    right: 0;
+
+    @media only screen and (max-width: 1180px) {
+        display: none;
+    }
+}

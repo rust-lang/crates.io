@@ -1,13 +1,13 @@
 import ApplicationSerializer from './application';
 
-export default ApplicationSerializer.extend({
-  isNewSerializerAPI: true,
+export default class CrateSerializer extends ApplicationSerializer {
+  isNewSerializerAPI = true;
 
   extractRelationships(modelClass, resourceHash) {
     if (resourceHash.versions == null) {
       delete resourceHash.versions;
     }
 
-    return this._super(...arguments);
-  },
-});
+    return super.extractRelationships(...arguments);
+  }
+}

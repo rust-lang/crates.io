@@ -1,7 +1,7 @@
 import ApplicationSerializer from './application';
 
-export default ApplicationSerializer.extend({
+export default class VersionDownloadSerializer extends ApplicationSerializer {
   extractId(modelClass, resourceHash) {
     return `${resourceHash.date}-${resourceHash.version}`;
-  },
-});
+  }
+}

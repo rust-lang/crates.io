@@ -1,9 +1,9 @@
-<ul>
+<ul local-class="list">
   {{#each @crates as |crate|}}
-    <li>
-      <LinkTo @route="crate" @model={{crate.id}} class="name">
+    <li local-class="row">
+      <LinkTo @route="crate" @model={{crate.id}} local-class="link">
         {{ crate.name }} ({{ crate.max_version }})
-        <div class='right'>
+        <div>
           {{svg-jar "download-clear-back"}}
           {{ format-num crate.downloads }}
         </div>

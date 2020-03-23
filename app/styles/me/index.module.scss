@@ -1,0 +1,18 @@
+.me-subheading {
+    display: flex;
+    .right {
+        flex: 2;
+        display: flex;
+        justify-content: flex-end;
+        align-self: center;
+    }
+}
+
+.token-list {
+    background-color: $main-bg-dark;
+    @media only screen and (prefers-color-scheme: dark) {
+        background-color: inherit;
+    }
+    display: flex;
+    flex-direction: column;
+}

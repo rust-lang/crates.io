@@ -5,6 +5,7 @@ use conduit_cookie::RequestSession;
 use failure::Fail;
 use oauth2::{prelude::*, AuthorizationCode, TokenResponse};
 
+use crate::middleware::current_user::TrustedUserId;
 use crate::models::{NewUser, User};
 use crate::schema::users;
 use crate::util::errors::ReadOnlyMode;
@@ -82,14 +83,13 @@ pub fn authorize(req: &mut dyn Request) -> AppResult<Response> {
     // should have issued earlier.
     {
         let session_state = req.session().remove(&"github_oauth_state".to_string());
-        let session_state = session_state.as_ref().map(|a| &a[..]);
+        let session_state = session_state.as_deref();
         if Some(&state[..]) != session_state {
             return Err(bad_request("invalid state parameter"));
         }
     }
 
-    // Fetch the access token from github using the code we just got
-
+    // Fetch the access token from GitHub using the code we just got
     let code = AuthorizationCode::new(code);
     let token = req
         .app()
@@ -98,11 +98,16 @@ pub fn authorize(req: &mut dyn Request) -> AppResult<Response> {
         .map_err(|e| e.compat())
         .chain_error(|| server_error("Error obtaining token"))?;
     let token = token.access_token();
+
+    // Fetch the user info from GitHub using the access token we just got and create a user record
     let ghuser = github::github_api::<GithubUser>(req.app(), "/user", token)?;
     let user = ghuser.save_to_database(&token.secret(), &*req.db_conn()?)?;
+
+    // Log in by setting a cookie and the middleware authentication
     req.session()
         .insert("user_id".to_string(), user.id.to_string());
-    req.mut_extensions().insert(user);
+    req.mut_extensions().insert(TrustedUserId(user.id));
+
     super::me::me(req)
 }
 
@@ -120,11 +125,11 @@ impl GithubUser {
         NewUser::new(
             self.id,
             &self.login,
-            self.name.as_ref().map(|s| &s[..]),
-            self.avatar_url.as_ref().map(|s| &s[..]),
+            self.name.as_deref(),
+            self.avatar_url.as_deref(),
             access_token,
         )
-        .create_or_update(self.email.as_ref().map(|s| &s[..]), conn)
+        .create_or_update(self.email.as_deref(), conn)
         .map_err(Into::into)
         .or_else(|e: Box<dyn AppError>| {
             // If we're in read only mode, we can't update their details

@@ -4,7 +4,7 @@ import { module, test } from 'qunit';
 import setupMirage from '../helpers/setup-mirage';
 import fetch from 'fetch';
 
-module('Mirage | Keywords', function(hooks) {
+module('Mirage | Crates', function(hooks) {
   setupTest(hooks);
   setupMirage(hooks);
 
@@ -24,6 +24,7 @@ module('Mirage | Keywords', function(hooks) {
 
     test('returns a paginated crates list', async function(assert) {
       this.server.create('crate', { name: 'rand' });
+      this.server.create('version', { crateId: 'rand', num: '1.0.0' });
 
       let response = await fetch('/api/v1/crates');
       assert.equal(response.status, 200);
@@ -53,7 +54,7 @@ module('Mirage | Keywords', function(hooks) {
             newest_version: '1.0.0',
             repository: null,
             updated_at: '2017-02-24T12:34:56Z',
-            versions: [],
+            versions: ['1'],
           },
         ],
         meta: {
@@ -63,7 +64,8 @@ module('Mirage | Keywords', function(hooks) {
     });
 
     test('never returns more than 10 results', async function(assert) {
-      this.server.createList('crate', 25);
+      let crates = this.server.createList('crate', 25);
+      this.server.createList('version', crates.length, { crate: i => crates[i] });
 
       let response = await fetch('/api/v1/crates');
       assert.equal(response.status, 200);
@@ -74,9 +76,10 @@ module('Mirage | Keywords', function(hooks) {
     });
 
     test('supports `page` and `per_page` parameters', async function(assert) {
-      this.server.createList('crate', 25, {
+      let crates = this.server.createList('crate', 25, {
         name: i => `crate-${String(i + 1).padStart(2, '0')}`,
       });
+      this.server.createList('version', crates.length, { crate: i => crates[i] });
 
       let response = await fetch('/api/v1/crates?page=2&per_page=5');
       assert.equal(response.status, 200);
@@ -92,8 +95,11 @@ module('Mirage | Keywords', function(hooks) {
 
     test('supports a `letter` parameter', async function(assert) {
       this.server.create('crate', { name: 'foo' });
+      this.server.create('version', { crateId: 'foo' });
       this.server.create('crate', { name: 'bar' });
+      this.server.create('version', { crateId: 'bar' });
       this.server.create('crate', { name: 'BAZ' });
+      this.server.create('version', { crateId: 'BAZ' });
 
       let response = await fetch('/api/v1/crates?letter=b');
       assert.equal(response.status, 200);
@@ -109,8 +115,11 @@ module('Mirage | Keywords', function(hooks) {
 
     test('supports a `q` parameter', async function(assert) {
       this.server.create('crate', { name: '123456' });
+      this.server.create('version', { crateId: '123456' });
       this.server.create('crate', { name: '00123' });
+      this.server.create('version', { crateId: '00123' });
       this.server.create('crate', { name: '87654' });
+      this.server.create('version', { crateId: '87654' });
 
       let response = await fetch('/api/v1/crates?q=123');
       assert.equal(response.status, 200);
@@ -126,8 +135,11 @@ module('Mirage | Keywords', function(hooks) {
 
     test('supports a `user_id` parameter', async function(assert) {
       this.server.create('crate', { name: 'foo' });
+      this.server.create('version', { crateId: 'foo' });
       this.server.create('crate', { name: 'bar', _owner_users: [42] });
+      this.server.create('version', { crateId: 'bar' });
       this.server.create('crate', { name: 'baz', _owner_users: [13] });
+      this.server.create('version', { crateId: 'baz' });
 
       let response = await fetch('/api/v1/crates?user_id=42');
       assert.equal(response.status, 200);
@@ -140,8 +152,11 @@ module('Mirage | Keywords', function(hooks) {
 
     test('supports a `team_id` parameter', async function(assert) {
       this.server.create('crate', { name: 'foo' });
+      this.server.create('version', { crateId: 'foo' });
       this.server.create('crate', { name: 'bar', _owner_teams: [42] });
+      this.server.create('version', { crateId: 'bar' });
       this.server.create('crate', { name: 'baz', _owner_teams: [13] });
+      this.server.create('version', { crateId: 'baz' });
 
       let response = await fetch('/api/v1/crates?team_id=42');
       assert.equal(response.status, 200);
@@ -154,8 +169,11 @@ module('Mirage | Keywords', function(hooks) {
 
     test('supports a `team_id` parameter', async function(assert) {
       this.server.create('crate', { name: 'foo' });
+      this.server.create('version', { crateId: 'foo' });
       this.server.create('crate', { name: 'bar', _owner_teams: [42] });
+      this.server.create('version', { crateId: 'bar' });
       this.server.create('crate', { name: 'baz', _owner_teams: [13] });
+      this.server.create('version', { crateId: 'baz' });
 
       let response = await fetch('/api/v1/crates?team_id=42');
       assert.equal(response.status, 200);
@@ -178,6 +196,7 @@ module('Mirage | Keywords', function(hooks) {
 
     test('returns a crate object for known crates', async function(assert) {
       this.server.create('crate', { name: 'rand' });
+      this.server.create('version', { crateId: 'rand', num: '1.0.0' });
 
       let response = await fetch('/api/v1/crates/rand');
       assert.equal(response.status, 200);
@@ -207,10 +226,28 @@ module('Mirage | Keywords', function(hooks) {
           newest_version: '1.0.0',
           repository: null,
           updated_at: '2017-02-24T12:34:56Z',
-          versions: [],
+          versions: ['1'],
         },
         keywords: [],
-        versions: [],
+        versions: [
+          {
+            id: '1',
+            crate: 'rand',
+            crate_size: 0,
+            created_at: '2010-06-16T21:30:45Z',
+            dl_path: '/api/v1/crates/rand/1.0.0/download',
+            downloads: 0,
+            license: 'MIT/Apache-2.0',
+            links: {
+              authors: '/api/v1/crates/rand/1.0.0/authors',
+              dependencies: '/api/v1/crates/rand/1.0.0/dependencies',
+              version_downloads: '/api/v1/crates/rand/1.0.0/downloads',
+            },
+            num: '1.0.0',
+            updated_at: '2017-02-24T12:34:56Z',
+            yanked: false,
+          },
+        ],
       });
     });
 
@@ -284,6 +321,7 @@ module('Mirage | Keywords', function(hooks) {
       this.server.create('category', { category: 'no-std' });
       this.server.create('category', { category: 'cli' });
       this.server.create('crate', { name: 'rand', categoryIds: ['no-std'] });
+      this.server.create('version', { crateId: 'rand' });
 
       let response = await fetch('/api/v1/crates/rand');
       assert.equal(response.status, 200);
@@ -294,7 +332,7 @@ module('Mirage | Keywords', function(hooks) {
         {
           id: 'no-std',
           category: 'no-std',
-          crates_cnt: 0,
+          crates_cnt: 1,
           created_at: '2010-06-16T21:30:45Z',
           description: 'This is the description for the category called "no-std"',
           slug: 'no-std',
@@ -306,6 +344,7 @@ module('Mirage | Keywords', function(hooks) {
       this.server.create('keyword', { keyword: 'no-std' });
       this.server.create('keyword', { keyword: 'cli' });
       this.server.create('crate', { name: 'rand', keywordIds: ['no-std'] });
+      this.server.create('version', { crateId: 'rand' });
 
       let response = await fetch('/api/v1/crates/rand');
       assert.equal(response.status, 200);
@@ -314,7 +353,7 @@ module('Mirage | Keywords', function(hooks) {
       assert.deepEqual(responsePayload.crate.keywords, ['no-std']);
       assert.deepEqual(responsePayload.keywords, [
         {
-          crates_cnt: 0,
+          crates_cnt: 1,
           id: 'no-std',
           keyword: 'no-std',
         },

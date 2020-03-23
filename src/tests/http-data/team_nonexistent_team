@@ -13,10 +13,6 @@
           "gzip"
         ],
         [
-          "user-agent",
-          "reqwest/0.9.1"
-        ],
-        [
           "accept",
           "application/vnd.github.v3+json"
         ],

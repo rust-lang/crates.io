@@ -63,37 +63,49 @@ pub fn connect_now() -> ConnectionResult<PgConnection> {
     PgConnection::establish(&url.to_string())
 }
 
+pub fn connection_url(url: &str) -> String {
+    let mut url = Url::parse(url).expect("Invalid database URL");
+    if dotenv::var("HEROKU").is_ok() && !url.query_pairs().any(|(k, _)| k == "sslmode") {
+        url.query_pairs_mut().append_pair("sslmode", "require");
+    }
+    url.into_string()
+}
+
 pub fn diesel_pool(
     url: &str,
     env: Env,
     config: r2d2::Builder<ConnectionManager<PgConnection>>,
 ) -> DieselPool {
-    let mut url = Url::parse(url).expect("Invalid database URL");
-    if dotenv::var("HEROKU").is_ok() && !url.query_pairs().any(|(k, _)| k == "sslmode") {
-        url.query_pairs_mut().append_pair("sslmode", "require");
-    }
-
+    let url = connection_url(url);
     if env == Env::Test {
-        let conn =
-            PgConnection::establish(&url.into_string()).expect("failed to establish connection");
+        let conn = PgConnection::establish(&url).expect("failed to establish connection");
         DieselPool::test_conn(conn)
     } else {
-        let manager = ConnectionManager::new(url.into_string());
+        let manager = ConnectionManager::new(url);
         DieselPool::Pool(config.build(manager).unwrap())
     }
 }
 
 pub trait RequestTransaction {
-    /// Return the lazily initialized postgres connection for this request.
-    ///
-    /// The connection will live for the lifetime of the request.
-    // FIXME: This description does not match the implementation below.
+    /// Obtain a read/write database connection from the primary pool
     fn db_conn(&self) -> Result<DieselPooledConn<'_>, r2d2::PoolError>;
+
+    /// Obtain a readonly database connection from the replica pool
+    ///
+    /// If there is no replica pool, the primary pool is used instead.
+    fn db_read_only(&self) -> Result<DieselPooledConn<'_>, r2d2::PoolError>;
 }
 
 impl<T: Request + ?Sized> RequestTransaction for T {
     fn db_conn(&self) -> Result<DieselPooledConn<'_>, r2d2::PoolError> {
-        self.app().diesel_database.get()
+        self.app().primary_database.get().map_err(Into::into)
+    }
+
+    fn db_read_only(&self) -> Result<DieselPooledConn<'_>, r2d2::PoolError> {
+        match &self.app().read_only_replica_database {
+            Some(pool) => pool.get().map_err(Into::into),
+            None => self.app().primary_database.get().map_err(Into::into),
+        }
     }
 }
 

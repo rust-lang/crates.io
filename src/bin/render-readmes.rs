@@ -21,7 +21,7 @@ use chrono::{TimeZone, Utc};
 use diesel::{dsl::any, prelude::*};
 use docopt::Docopt;
 use flate2::read::GzDecoder;
-use reqwest::{header, Client};
+use reqwest::{blocking::Client, header};
 use tar::{self, Archive};
 
 const CACHE_CONTROL_README: &str = "public,max-age=604800";
@@ -170,7 +170,7 @@ fn get_readme(
         .uploader
         .crate_location(krate_name, &version.num.to_string());
 
-    let mut response = match client.get(&location).send() {
+    let response = match client.get(&location).send() {
         Ok(r) => r,
         Err(err) => {
             println!(
@@ -223,7 +223,7 @@ fn get_readme(
                 .readme_file
                 .as_ref()
                 .map_or("README.md", |e| &**e),
-            manifest.package.repository.as_ref().map(|e| &**e),
+            manifest.package.repository.as_deref(),
         )
     };
     return Some(rendered);

@@ -47,7 +47,8 @@ module('Acceptance | crates page', function(hooks) {
 
   test('listing crates', async function(assert) {
     for (let i = 1; i <= per_page; i++) {
-      this.server.create('crate');
+      let crate = this.server.create('crate');
+      this.server.create('version', { crate });
     }
 
     await visit('/crates');
@@ -58,7 +59,8 @@ module('Acceptance | crates page', function(hooks) {
 
   test('navigating to next page of crates', async function(assert) {
     for (let i = 1; i <= per_page + 2; i++) {
-      this.server.create('crate');
+      let crate = this.server.create('crate');
+      this.server.create('version', { crate });
     }
     const page_start = per_page + 1;
     const total = per_page + 2;

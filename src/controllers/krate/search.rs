@@ -36,7 +36,7 @@ use crate::models::krate::{canon_crate_name, ALL_COLUMNS};
 pub fn search(req: &mut dyn Request) -> AppResult<Response> {
     use diesel::sql_types::{Bool, Text};
 
-    let conn = req.db_conn()?;
+    let conn = req.db_read_only()?;
     let params = req.query();
     let sort = params.get("sort").map(|s| &**s);
     let include_yanked = params
@@ -178,6 +178,8 @@ pub fn search(req: &mut dyn Request) -> AppResult<Response> {
         query = query.then_order_by(recent_crate_downloads::downloads.desc().nulls_last())
     } else if sort == Some("recent-updates") {
         query = query.order(crates::updated_at.desc());
+    } else if sort == Some("new") {
+        query = query.order(crates::created_at.desc());
     } else {
         query = query.then_order_by(crates::name.asc())
     }

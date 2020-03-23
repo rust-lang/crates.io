@@ -41,7 +41,10 @@ pub fn publish(req: &mut dyn Request) -> AppResult<Response> {
 
     let new_crate = parse_new_headers(req)?;
 
-    let conn = app.diesel_database.get()?;
+    req.log_metadata("crate_name", new_crate.name.to_string());
+    req.log_metadata("crate_version", new_crate.vers.to_string());
+
+    let conn = app.primary_database.get()?;
     let ids = req.authenticate(&conn)?;
     let user = ids.find_user(&conn)?;
 
@@ -79,15 +82,15 @@ pub fn publish(req: &mut dyn Request) -> AppResult<Response> {
         // Persist the new crate, if it doesn't already exist
         let persist = NewCrate {
             name: &name,
-            description: new_crate.description.as_ref().map(|s| &**s),
-            homepage: new_crate.homepage.as_ref().map(|s| &**s),
-            documentation: new_crate.documentation.as_ref().map(|s| &**s),
-            readme: new_crate.readme.as_ref().map(|s| &**s),
-            repository: repo.as_ref().map(String::as_str),
+            description: new_crate.description.as_deref(),
+            homepage: new_crate.homepage.as_deref(),
+            documentation: new_crate.documentation.as_deref(),
+            readme: new_crate.readme.as_deref(),
+            repository: repo.as_deref(),
             max_upload_size: None,
         };
 
-        let license_file = new_crate.license_file.as_ref().map(|s| &**s);
+        let license_file = new_crate.license_file.as_deref();
         let krate =
             persist.create_or_update(&conn, user.id, Some(&app.config.publish_rate_limit))?;
 
@@ -180,8 +183,7 @@ pub fn publish(req: &mut dyn Request) -> AppResult<Response> {
                     .unwrap_or_else(|| String::from("README.md")),
                 repo,
             )
-            .enqueue(&conn)
-            .map_err(|e| AppError::from_std_error(e))?;
+            .enqueue(&conn)?;
         }
 
         let cksum = app
@@ -189,8 +191,7 @@ pub fn publish(req: &mut dyn Request) -> AppResult<Response> {
             .uploader
             .upload_crate(req, &krate, maximums, vers)?;
 
-        let mut hex_cksum = String::new();
-        cksum.write_hex(&mut hex_cksum)?;
+        let hex_cksum = cksum.encode_hex::<String>();
 
         // Register this crate in our local git repo.
         let git_crate = git::Crate {
@@ -202,9 +203,7 @@ pub fn publish(req: &mut dyn Request) -> AppResult<Response> {
             yanked: Some(false),
             links,
         };
-        git::add_crate(git_crate)
-            .enqueue(&conn)
-            .map_err(|e| AppError::from_std_error(e))?;
+        git::add_crate(git_crate).enqueue(&conn)?;
 
         // The `other` field on `PublishWarnings` was introduced to handle a temporary warning
         // that is no longer needed. As such, crates.io currently does not return any `other`
@@ -229,7 +228,7 @@ pub fn publish(req: &mut dyn Request) -> AppResult<Response> {
 fn parse_new_headers(req: &mut dyn Request) -> AppResult<EncodableCrateUpload> {
     // Read the json upload request
     let metadata_length = u64::from(read_le_u32(req.body())?);
-    req.mut_extensions().insert(metadata_length);
+    req.log_metadata("metadata_length", metadata_length);
 
     let max = req.app().config.max_upload_size;
     if metadata_length > max {
@@ -245,7 +244,9 @@ fn parse_new_headers(req: &mut dyn Request) -> AppResult<EncodableCrateUpload> {
     fn empty(s: Option<&String>) -> bool {
         s.map_or(true, String::is_empty)
     }
-    let mut missing = Vec::new();
+
+    // It can have up to three elements per below conditions.
+    let mut missing = Vec::with_capacity(3);
 
     if empty(new.description.as_ref()) {
         missing.push("description");

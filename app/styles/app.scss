@@ -10,65 +10,10 @@ $link-color: rgb(0, 172, 91);
 
 @import "buttons";
 
-@import "application";
-@import "home";
-@import "category-slugs";
 @import "crate";
-@import "crate/version";
-@import "components/crate-toml-copy";
-@import "dashboard";
 @import "me";
 
 @import "modules";
-
-* {
-  box-sizing: border-box;
-}
-
-html {
-    background: url('/assets/noise.png');
-    background-color: $html-bg;
-    @media only screen and (prefers-color-scheme: dark) {
-        background-color: #222;
-    }
-}
-
-html, body { margin: 0; }
-
-body {
-  font-family: "Helvetica Neue","Helvetica",Helvetica,Arial,sans-serif;
-  font-size: 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-/* .ember-application is added by Ember after initial rendering */
-.ember-application > div,
-body > div {
-    width: 960px;
-    @media only screen and (max-width: 960px) {
-        width: 100%;
-    }
-}
-
-#noscript {
-    color: white;
-    padding: 10px 0;
-}
-
-form.search label {
-    position: absolute;
-    left: -10000px;
-    top: auto;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-}
-
-input.search {
-    box-shadow: none;
-}
 
 span.small {
     color: $main-color-light;
@@ -80,10 +25,6 @@ span.small {
         font-weight: bold;
         color: $main-color;
     }
-}
-
-.optional {
-    font-size: 80%;
 }
 
 .yanked {
@@ -107,7 +48,8 @@ pre {
     background: $main-color;
     color: white;
     padding: 20px;
-    font-family: Consolas, Monaco, 'Andale Mono', monospace;
+    // Use the modern font stack inspired by Bootstrap 4
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 button.dropdown, a.dropdown {
@@ -166,8 +108,6 @@ ul.dropdown {
     display: inline-block;
     position: relative;
 }
-
-.hidden { display: none; }
 
 @media only screen and (max-width: 400px) {
     h1 { font-size: 1.5em; }

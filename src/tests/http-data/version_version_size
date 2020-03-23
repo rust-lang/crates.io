@@ -25,10 +25,6 @@
           "alexcrichton-test.s3.amazonaws.com"
         ],
         [
-          "user-agent",
-          "reqwest/0.9.1"
-        ],
-        [
           "accept-encoding",
           "gzip"
         ],
@@ -98,10 +94,6 @@
         [
           "content-type",
           "application/x-tar"
-        ],
-        [
-          "user-agent",
-          "reqwest/0.9.1"
         ],
         [
           "host",

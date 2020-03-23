@@ -1,3 +1,4 @@
+// eslint-disable-next-line ember/no-observers
 import { observer } from '@ember/object';
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
@@ -82,13 +83,6 @@ export default Route.extend({
 
     controller.set('crate', crate);
     controller.set('requestedVersion', requestedVersion);
-    controller.set('fetchingFollowing', true);
-
-    if (this.get('session.currentUser')) {
-      ajax(`/api/v1/crates/${crate.get('name')}/following`)
-        .then(d => controller.set('following', d.following))
-        .finally(() => controller.set('fetchingFollowing', false));
-    }
 
     // Find version model
     let versions = await crate.get('versions');

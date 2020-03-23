@@ -22,7 +22,7 @@ use crate::schema::*;
 
 /// Hosts in this list are known to not be hosting documentation,
 /// and are possibly of malicious intent e.g. ad tracking networks, etc.
-const DOCUMENTATION_BLOCKLIST: [&str; 1] = ["rust-ci.org"];
+const DOCUMENTATION_BLOCKLIST: [&str; 2] = ["rust-ci.org", "rustless.org"];
 
 #[derive(Debug, Queryable, Identifiable, Associations, Clone, Copy)]
 #[belongs_to(Crate)]
@@ -241,6 +241,18 @@ impl Crate {
 
     pub fn all() -> All {
         crates::table.select(ALL_COLUMNS)
+    }
+
+    pub fn find_version(&self, conn: &PgConnection, version: &str) -> AppResult<Version> {
+        self.all_versions()
+            .filter(versions::num.eq(version))
+            .first(conn)
+            .map_err(|_| {
+                cargo_err(&format_args!(
+                    "crate `{}` does not have a version `{}`",
+                    self.name, version
+                ))
+            })
     }
 
     pub fn valid_name(name: &str) -> bool {

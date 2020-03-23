@@ -1,80 +1,72 @@
 {{ title 'Dashboard' }}
 
-<div id='crates-heading'>
+<div class="crates-heading">
   {{svg-jar "dashboard"}}
   <h1>My Dashboard</h1>
-  <div id="stats">
-    <div class='downloads'>
-      <img class="download" src="/assets/download.svg">
-      <span class='num'>{{format-num this.visibleStats.total_downloads}}</span>
-      <span class='desc small'>Total Downloads</span>
+  <div local-class="stats">
+    <div local-class='downloads'>
+      <img src="/assets/download.svg">
+      <span local-class='num'>{{format-num this.visibleStats.total_downloads}}</span>
+      <span local-class="label">Total Downloads</span>
     </div>
   </div>
 </div>
 
+<div local-class="my-info">
+  <div local-class="my-crate-lists">
+    <div local-class="header">
+      <h2>
+        {{svg-jar "my-packages"}}
+        My Crates
+      </h2>
 
-<div id='my-info'>
-  <div id='my-crate-lists' class='crate-lists'>
-    <div id='my-crates'>
-      <div class='header'>
-        <h2>
-          {{svg-jar "my-packages"}}
-          My Crates
-        </h2>
-
-        {{#if this.hasMoreCrates}}
-          <span class='small'>
-            <LinkTo @route="me.crates">Show all</LinkTo>
-          </span>
-        {{/if}}
-      </div>
-      <CrateDownloadsList @crates={{this.visibleCrates}} />
+      {{#if this.hasMoreCrates}}
+        <LinkTo @route="me.crates" local-class="my-crates-link">Show all</LinkTo>
+      {{/if}}
     </div>
-    <div id='my-following'>
-      <div class='header'>
-        <h2>
-          {{svg-jar "following"}}
-          Following
-        </h2>
+    <CrateDownloadsList @crates={{this.visibleCrates}} />
 
-        {{#if this.hasMoreFollowing}}
-          <span class='small'>
-            <LinkTo @route="me.following">Show all</LinkTo>
-          </span>
-        {{/if}}
-      </div>
-      <CrateDownloadsList @crates={{this.visibleFollowing}} />
+    <div local-class='header'>
+      <h2>
+        {{svg-jar "following"}}
+        Following
+      </h2>
+
+      {{#if this.hasMoreFollowing}}
+        <LinkTo @route="me.following" local-class="followed-crates-link">Show all</LinkTo>
+      {{/if}}
     </div>
+    <CrateDownloadsList @crates={{this.visibleFollowing}} />
   </div>
 
-  <div id='my-feed'>
+  <div local-class="my-feed">
     <h2>
       {{svg-jar "latest-updates"}}
       Latest Updates
     </h2>
 
-    <div class='white-rows'>
-      {{#each this.myFeed as |version|}}
-        <div class='row'>
-          <div class='info'>
+    <div local-class="feed">
+      <ul local-class="feed-list">
+        {{#each this.myFeed as |version|}}
+          <div local-class="feed-row">
             <LinkTo @route="crate.version" @models={{array version.crateName version.num}}>
               {{ version.crateName }}
-              <span class='small'>{{ version.num }}</span>
+              <span local-class="version">{{ version.num }}</span>
             </LinkTo>
-            <span class='date small'>
+            <span local-class="date">
               {{moment-from-now version.created_at}}
             </span>
           </div>
-        </div>
-      {{/each}}
+        {{/each}}
+      </ul>
 
       {{#if this.loadingMore}}
-        <span class='load-more'>
+        <span local-class='load-more'>
           <img src="/assets/ajax-loader.gif">
         </span>
       {{else}}
         {{#if this.hasMore}}
-          <button type="button" class='load-more' {{ action 'loadMore' }}>
+          <button type="button" local-class='load-more' {{ action 'loadMore' }}>
             Load More
           </button>
         {{/if}}

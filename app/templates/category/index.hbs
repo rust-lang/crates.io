@@ -1,6 +1,6 @@
 {{ title this.category.category ' - Categories' }}
 
-<div id='crates-heading'>
+<div class="crates-heading">
   <LinkTo @route="categories" aria-label="Categories">{{svg-jar "crate"}}</LinkTo>
   <h1>
     {{#each this.category.parent_categories as |parent|}}<LinkTo @route="category" @model={{parent.slug}}>{{parent.category}}</LinkTo>::{{/each}}
@@ -49,14 +49,14 @@
 
   <div class='sort' data-test-category-sort>
     <span class='small'>Sort by</span>
-    <RlDropdownContainer class="dropdown-container">
-      <RlDropdownToggle @tagName="a" class="dropdown" data-test-current-order>
+    <Dropdown class="dropdown-container" as |dd|>
+      <dd.Trigger class="dropdown dropdown-button" data-test-current-order>
         {{svg-jar "sort"}}
         {{ this.currentSortBy }}
         <span class='arrow'></span>
-      </RlDropdownToggle>
+      </dd.Trigger>
 
-      <RlDropdown @tagName="ul" class="dropdown">
+      <dd.Content @tagName="ul" class="dropdown">
         <li>
           <LinkTo @query={{hash sort="alpha"}}>
             Alphabetical
@@ -77,8 +77,13 @@
             Recent Updates
           </LinkTo>
         </li>
-      </RlDropdown>
-    </RlDropdownContainer>
+        <li>
+          <LinkTo @query={{hash sort="new"}}>
+            Newly Added
+          </LinkTo>
+        </li>
+      </dd.Content>
+    </Dropdown>
   </div>
 </div>
 

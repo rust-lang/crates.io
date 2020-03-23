@@ -1,11 +1,10 @@
-import EmberRouter from '@ember/routing/router';
 import config from './config/environment';
 import RouterScroll from 'ember-router-scroll';
 
-const Router = EmberRouter.extend(RouterScroll, {
-  location: config.locationType,
-  rootURL: config.rootURL,
-});
+export default class Router extends RouterScroll {
+  location = config.locationType;
+  rootURL = config.rootURL;
+}
 
 Router.map(function() {
   this.route('logout');
@@ -52,5 +51,3 @@ Router.map(function() {
 
   this.route('catch-all', { path: '*path' });
 });
-
-export default Router;

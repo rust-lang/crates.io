@@ -107,5 +107,24 @@ module('Mirage | Keywords', function(hooks) {
         },
       });
     });
+
+    test('calculates `crates_cnt` correctly', async function(assert) {
+      this.server.create('keyword', { keyword: 'cli' });
+      this.server.createList('crate', 7, { keywordIds: ['cli'] });
+      this.server.create('keyword', { keyword: 'not-cli' });
+      this.server.createList('crate', 3, { keywordIds: ['not-cli'] });
+
+      let response = await fetch('/api/v1/keywords/cli');
+      assert.equal(response.status, 200);
+
+      let responsePayload = await response.json();
+      assert.deepEqual(responsePayload, {
+        keyword: {
+          id: 'cli',
+          crates_cnt: 7,
+          keyword: 'cli',
+        },
+      });
+    });
   });
 });

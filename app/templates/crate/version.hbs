@@ -1,26 +1,16 @@
 {{title this.crate.name}}
 
-<div id='crates-heading' data-test-heading>
+<div class="crates-heading" data-test-heading>
   <div class="wide">
     <div class='info'>
-      {{svg-jar "crate" class='crate-icon'}}
+      {{svg-jar "crate" local-class='crate-icon'}}
       <h1 data-test-crate-name>{{ this.crate.name }}</h1>
       <h2 data-test-crate-version>{{ this.currentVersion.num }}</h2>
     </div>
 
     <div class='right'>
       {{#if this.session.currentUser}}
-        <button type="button" class='tan-button' {{action 'toggleFollow' this}}>
-          {{#if this.fetchingFollowing}}
-            <img src="/assets/ajax-loader.gif">
-          {{else}}
-            {{#if this.following}}
-              Unfollow
-            {{else}}
-              Follow
-            {{/if}}
-          {{/if}}
-        </button>
+        <FollowButton @crate={{this.crate}}/>
       {{/if}}
     </div>
   </div>
@@ -51,8 +41,8 @@
   </div>
 </div>
 
-<div class='crate-info'>
-  <div class='docs'>
+<div local-class='crate-info'>
+  <div local-class="docs">
     {{#if this.currentVersion.yanked}}
       <p>
         This crate has been yanked, but it is still available for download for other crates that
@@ -63,20 +53,20 @@
         one that has not been yanked.
       </p>
     {{else}}
-      <div class='install'>
-        <div class='action'>Cargo.toml</div>
-        <code id="crate-toml">{{ this.crateTomlText }}</code>
+      <div local-class='install'>
+        <div local-class='install-action'>Cargo.toml</div>
+        <code>{{ this.crateTomlText }}</code>
         {{#if (is-clipboard-supported)}}
           <CrateTomlCopy @copyText={{this.crateTomlText}} />
         {{/if}}
       </div>
       {{#if this.crate.readme}}
-        <section class="crate-readme" aria-label="Readme" {{highlight-syntax selector="pre > code"}}>
+        <section local-class="crate-readme" aria-label="Readme" {{highlight-syntax selector="pre > code"}}>
           {{html-safe this.crate.readme}}
         </section>
       {{else}}
         {{#if this.crate.description}}
-          <div class='about'>
+          <div local-class='about'>
             <h3>About This Package</h3>
             <p>{{ this.crate.description }}</p>
           </div>
@@ -85,11 +75,11 @@
     {{/if}}
   </div>
   {{#if this.notYankedOrIsOwner}}
-    <section class='authorship' aria-label="Crate metadata">
-      <div class='top'>
+    <section local-class='authorship' aria-label="Crate metadata">
+      <div local-class='top'>
         <div>
-          <div class='last-update'><span class='small'>Last Updated</span></div>
-          <div class='{{if this.currentVersion.crate_size 'date-with-small-margin-bot' 'date'}}'>{{moment-from-now this.crate.updated_at}}</div>
+          <div local-class='last-update'><span class='small'>Last Updated</span></div>
+          <div local-class='{{if this.currentVersion.crate_size 'date-with-small-margin-bot' 'date'}}'>{{moment-from-now this.crate.updated_at}}</div>
           {{#each this.crate.annotated_badges as |badge|}}
             <p>
               {{component badge.component_name badge=badge}}
@@ -99,12 +89,12 @@
 
         {{#if this.currentVersion.crate_size}}
           <div>
-            <div class='crate-size'><span class='small'>Crate Size</span></div>
-            <div class='size'>{{format-crate-size this.currentVersion.crate_size}}</div>
+            <div local-class='crate-size'><span class='small'>Crate Size</span></div>
+            <div local-class='size'>{{format-crate-size this.currentVersion.crate_size}}</div>
           </div>
         {{/if}}
 
-        <div class="authors">
+        <div>
           <h3>Authors</h3>
           <ul>
             {{#each this.displayedAuthors as |author|}}
@@ -114,7 +104,7 @@
         </div>
       </div>
 
-      <div class='bottom'>
+      <div local-class='bottom'>
         {{#if this.currentVersion.license}}
           <div>
             <h3>License</h3>
@@ -126,7 +116,7 @@
           {{#if this.anyKeywords}}
             <div>
               <h3>Keywords</h3>
-              <ul class='keywords'>
+              <ul local-class='keywords'>
                 {{#each this.keywords as |keyword|}}
                   <li><LinkTo @route="keyword" @model={{keyword}}>{{keyword.id}}</LinkTo></li>
                 {{/each}}
@@ -159,7 +149,7 @@
             </p>
           {{/if}}
 
-          <ul class='owners' data-test-owners>
+          <ul local-class='owners' data-test-owners>
             {{#each this.crate.owner_team as |team|}}
               <li>
                 <LinkTo @route={{team.kind}} @model={{team.login}} data-test-team-link={{team.login}}>
@@ -206,7 +196,7 @@
           <h3>Dependencies</h3>
           <ul>
             {{#each this.currentDependencies as |dep|}}
-              <LinkToDep @tagName="li" @dep={{dep}} />
+              <li><LinkToDep @dep={{dep}} /></li>
             {{else}}
               {{#if (is-pending this.currentDependencies)}}
                 <li>Loading…</li>
@@ -222,7 +212,7 @@
             <h3>Build-Dependencies</h3>
             <ul>
               {{#each this.currentBuildDependencies as |dep|}}
-                <LinkToDep @tagName="li" @dep={{dep}} />
+                <li><LinkToDep @dep={{dep}} /></li>
               {{/each}}
             </ul>
           </div>
@@ -233,7 +223,7 @@
             <h3>Dev-Dependencies</h3>
             <ul>
               {{#each this.currentDevDependencies as |dep|}}
-                <LinkToDep @tagName="li" @dep={{dep}} />
+                <li><LinkToDep @dep={{dep}} /></li>
               {{/each}}
             </ul>
           </div>
@@ -244,27 +234,35 @@
 </div>
 
 {{#unless this.currentVersion.yanked}}
-  <div id='crate-downloads'>
-    <div class='stats'>
-      <h3>Stats Overview</h3>
-      <div class='stat'>
-        <span class='num'>
+  <div local-class='crate-downloads'>
+    <div local-class='stats'>
+      {{#if this.downloadsContext.num}}
+        <h3 data-test-crate-stats-label>
+          Stats Overview for {{this.downloadsContext.num}}
+          <LinkTo @route="crate" @model={{this.crate}}>(see all)</LinkTo>
+        </h3>
+
+      {{else}}
+        <h3 data-test-crate-stats-label>Stats Overview</h3>
+      {{/if}}
+      <div local-class='stat'>
+        <span local-class='num'>
           {{svg-jar "download"}}
-          <span class="num__align">{{ format-num this.downloadsContext.downloads }}</span>
+          <span local-class="num__align">{{ format-num this.downloadsContext.downloads }}</span>
         </span>
         <span class='desc small'>Downloads all time</span>
       </div>
-      <div class='stat'>
-        <span class="{{if this.crate.versions.isPending 'loading'}} num">
+      <div local-class='stat'>
+        <span class="{{if this.crate.versions.isPending 'loading'}}" local-class="num">
           {{svg-jar "crate"}}
-          <span class="num__align">{{ this.crate.versions.length }}</span>
+          <span local-class="num__align">{{ this.crate.versions.length }}</span>
         </span>
         <span class='desc small'>Versions published</span>
       </div>
     </div>
-    <div class='graph'>
+    <div local-class='graph'>
       <h4>Downloads over the last 90 days</h4>
-      <DownloadGraph @data={{this.downloadData}} />
+      <DownloadGraph @data={{this.downloadData}} local-class="graph-data" />
     </div>
   </div>
 {{/unless}}

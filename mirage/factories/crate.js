@@ -16,8 +16,6 @@ export default Factory.extend({
   documentation: null,
   homepage: null,
   repository: null,
-  max_version: '1.0.0',
-  newest_version: '1.0.0',
 
   created_at: '2010-06-16T21:30:45Z',
   updated_at: '2017-02-24T12:34:56Z',

@@ -60,7 +60,6 @@ jobs:
         rust:
           - stable
           - beta
-          - nightly
 
     env:
       RUST_BACKTRACE: 1
@@ -86,39 +85,16 @@ jobs:
           fi
           echo "::add-path::$HOME/.cargo/bin"
 
-      # FIXME: Nightly and beta channels have high churn.  The cache quickly expires, but there is
-      # no way (that I can find) to overwrite an existing cache.  There is also no way to
-      # dynamically include the latest version number for a release channel into the cache `key`
-      # value.  Once a cached release becomes stale, every job will begin downloading the latest
-      # release from upstream and the cache becomes useless for that channel.
+      # Cache `diesel` binary
       #
-      # Including `hashFiles('**/Cargo.lock')` below is a hack.  Ideally, we would change the `key`
-      # for each channel at the same rate as the release cadence for that channel.  For the stable
-      # channel this is too frequent and for the nightly channel (and probably beta as well) it is
-      # not often enough.
-      #
-      # Current size as of 2019-12-23: ~123 MB
-      - name: Cache rustup
-        uses: actions/cache@v1
-        with:
-          path: ~/.rustup
-          key: ${{ runner.os }}-rustup-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-key: |
-              ${{ runner.os }}-rustup-${{ matrix.rust }}-
-              ${{ runner.os }}-rustup-
-
-      # This step has the same tradeoffs as `Cache rustup`, however the cache size is significantly
-      # smaller.  The installed `diesel` binary is also stored here.
+      # The other binaries (like `rustc`) will be overwritten by rustup.
       #
       # Current size as of 2019-12-23: ~6 MB
       - name: Cache cargo binaries
         uses: actions/cache@v1
         with:
           path: ~/.cargo/bin
-          key: ${{ runner.os }}-cargo-bin-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-key: |
-            ${{ runner.os }}-cargo-bin-${{ matrix.rust }}-
-            ${{ runner.os }}-cargo-bin-
+          key: ${{ runner.os }}-cargo-bin-${{ matrix.rust }}-${{ hashFiles('.diesel_version') }}
 
       # Current size as of 2019-12-23: ~77 MB
       - name: Cache cargo registry cache
@@ -150,16 +126,6 @@ jobs:
             ${{ runner.os }}-cargo-git-db-${{ matrix.rust }}-
             ${{ runner.os }}-cargo-git-db-
 
-      # Current size as of 2019-12-23: ~336 MB
-      - name: Cache cargo build
-        uses: actions/cache@v1
-        with:
-          path: target
-          key: ${{ runner.os }}-cargo-build-target-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-key: |
-            ${{ runner.os }}-cargo-build-target-${{ matrix.rust }}-
-            ${{ runner.os }}-cargo-build-target-
-
       - name: Install ${{ matrix.rust }} Rust
         run: |
           if [[ ! -d "$HOME/.cargo" || ! -d "$HOME/.rustup" ]]; then
@@ -175,6 +141,19 @@ jobs:
         run: |
           rustup component add rustfmt
           rustup component add clippy
+
+      - id: rustc
+        run:
+          echo "::set-output name=version::$(rustc -V)"
+
+      # Current size as of 2019-12-23: ~336 MB
+      - name: Cache cargo build
+        uses: actions/cache@v1
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-target-${{ steps.rustc.outputs.version }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-key: |
+            ${{ runner.os }}-cargo-build-target-${{ steps.rustc.outputs.version }}-
 
       - name: Cargo clean on new rustc version
         run: script/ci/cargo-clean-on-new-rustc-version.sh

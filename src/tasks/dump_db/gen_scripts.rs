@@ -42,7 +42,7 @@ struct TableConfig {
 #[derive(Debug, Serialize)]
 struct HandlebarsTableContext<'a> {
     name: &'a str,
-    filter: Option<&'a str>,
+    filter: Option<String>,
     columns: String,
     column_defaults: BTreeMap<&'a str, &'a str>,
 }
@@ -59,7 +59,7 @@ impl TableConfig {
         if columns.is_empty() {
             None
         } else {
-            let filter = self.filter.as_ref().map(String::as_str);
+            let filter = self.filter.as_ref().map(|s| s.replace('\n', " "));
             let column_defaults = self
                 .column_defaults
                 .iter()
@@ -91,7 +91,6 @@ impl VisibilityConfig {
     ///
     /// Returns a vector of table names.
     fn topological_sort(&self) -> Vec<&str> {
-        let mut result = Vec::new();
         let mut num_deps = BTreeMap::new();
         let mut rev_deps: BTreeMap<_, Vec<_>> = BTreeMap::new();
         for (table, config) in self.0.iter() {
@@ -108,6 +107,7 @@ impl VisibilityConfig {
             .filter(|(_, &count)| count == 0)
             .map(|(&table, _)| table)
             .collect();
+        let mut result = Vec::with_capacity(ready.len());
         while let Some(table) = ready.pop_front() {
             result.push(table);
             for dep in rev_deps.get(table).iter().cloned().flatten() {

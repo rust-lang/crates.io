@@ -5,7 +5,7 @@ use std::{path::PathBuf, sync::Arc, time::Duration};
 
 use diesel::r2d2;
 use oauth2::basic::BasicClient;
-use reqwest::Client;
+use reqwest::blocking::Client;
 use scheduled_thread_pool::ScheduledThreadPool;
 
 /// The `App` struct holds the main components of the application like
@@ -13,8 +13,11 @@ use scheduled_thread_pool::ScheduledThreadPool;
 // The db, oauth, and git2 types don't implement debug.
 #[allow(missing_debug_implementations)]
 pub struct App {
-    /// The database connection pool
-    pub diesel_database: db::DieselPool,
+    /// The primary database connection pool
+    pub primary_database: db::DieselPool,
+
+    /// The read-only replica database connection pool
+    pub read_only_replica_database: Option<db::DieselPool>,
 
     /// The GitHub OAuth2 configuration
     pub github: BasicClient,
@@ -78,29 +81,53 @@ impl App {
             _ => 1,
         };
 
+        // Used as the connection and statement timeout value for the database pool(s)
         let db_connection_timeout = match (dotenv::var("DB_TIMEOUT"), config.env) {
             (Ok(num), _) => num.parse().expect("couldn't parse DB_TIMEOUT"),
             (_, Env::Production) => 10,
             (_, Env::Test) => 1,
             _ => 30,
         };
+
+        // Determine if the primary pool is also read-only
         let read_only_mode = dotenv::var("READ_ONLY_MODE").is_ok();
-        let connection_config = db::ConnectionConfig {
+        let primary_db_connection_config = db::ConnectionConfig {
             statement_timeout: db_connection_timeout,
             read_only: read_only_mode,
         };
 
         let thread_pool = Arc::new(ScheduledThreadPool::new(db_helper_threads));
 
-        let diesel_db_config = r2d2::Pool::builder()
+        let primary_db_config = r2d2::Pool::builder()
             .max_size(db_pool_size)
             .min_idle(db_min_idle)
             .connection_timeout(Duration::from_secs(db_connection_timeout))
-            .connection_customizer(Box::new(connection_config))
-            .thread_pool(thread_pool);
+            .connection_customizer(Box::new(primary_db_connection_config))
+            .thread_pool(thread_pool.clone());
+
+        let primary_database = db::diesel_pool(&config.db_url, config.env, primary_db_config);
+
+        let read_only_replica_database = if let Some(url) = &config.replica_db_url {
+            let replica_db_connection_config = db::ConnectionConfig {
+                statement_timeout: db_connection_timeout,
+                read_only: true,
+            };
+
+            let replica_db_config = r2d2::Pool::builder()
+                .max_size(db_pool_size)
+                .min_idle(db_min_idle)
+                .connection_timeout(Duration::from_secs(db_connection_timeout))
+                .connection_customizer(Box::new(replica_db_connection_config))
+                .thread_pool(thread_pool);
+
+            Some(db::diesel_pool(&url, config.env, replica_db_config))
+        } else {
+            None
+        };
 
         App {
-            diesel_database: db::diesel_pool(&config.db_url, config.env, diesel_db_config),
+            primary_database,
+            read_only_replica_database,
             github,
             session_key: config.session_key.clone(),
             git_repo_checkout: config.git_repo_checkout.clone(),

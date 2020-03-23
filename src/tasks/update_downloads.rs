@@ -1,5 +1,4 @@
 use crate::{
-    background_jobs::Environment,
     models::VersionDownload,
     schema::{crates, metadata, version_downloads, versions},
 };
@@ -8,8 +7,7 @@ use diesel::prelude::*;
 use swirl::PerformError;
 
 #[swirl::background_job]
-pub fn update_downloads(env: &Environment) -> Result<(), PerformError> {
-    let conn = env.connection()?;
+pub fn update_downloads(conn: &PgConnection) -> Result<(), PerformError> {
     update(&conn)?;
     Ok(())
 }
@@ -52,11 +50,6 @@ fn collect(conn: &PgConnection, rows: &[VersionDownload]) -> QueryResult<()> {
         let amt = download.downloads - download.counted;
 
         conn.transaction::<_, diesel::result::Error, _>(|| {
-            // increment the number of counted downloads
-            update(version_downloads::table.find(download.id()))
-                .set(version_downloads::counted.eq(version_downloads::counted + amt))
-                .execute(conn)?;
-
             // Update the total number of version downloads
             let crate_id = update(versions::table.find(download.version_id))
                 .set(versions::downloads.eq(versions::downloads + amt))
@@ -68,10 +61,16 @@ fn collect(conn: &PgConnection, rows: &[VersionDownload]) -> QueryResult<()> {
                 .set(crates::downloads.eq(crates::downloads + amt))
                 .execute(conn)?;
 
-            // Now that everything else for this crate is done, update the global counter of total
-            // downloads
+            // Update the global counter of total downloads
             update(metadata::table)
                 .set(metadata::total_downloads.eq(metadata::total_downloads + i64::from(amt)))
+                .execute(conn)?;
+
+            // Record that these downloads have been propagated to the other tables.  This is done
+            // last, immediately before the transaction is committed, to minimize lock contention
+            // with counting new downloads.
+            update(version_downloads::table.find(download.id()))
+                .set(version_downloads::counted.eq(version_downloads::counted + amt))
                 .execute(conn)?;
 
             Ok(())

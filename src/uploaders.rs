@@ -2,7 +2,7 @@ use conduit::Request;
 use flate2::read::GzDecoder;
 use openssl::error::ErrorStack;
 use openssl::hash::{Hasher, MessageDigest};
-use reqwest::header;
+use reqwest::{blocking::Client, header};
 
 use crate::util::errors::{cargo_err, internal, AppResult, ChainError};
 use crate::util::{Error, LimitErrorReader, Maximums};
@@ -96,7 +96,7 @@ impl Uploader {
     /// Production and tests use `Self::S3` which should not panic.
     pub fn upload<R: std::io::Read + Send + 'static>(
         &self,
-        client: &reqwest::Client,
+        client: &Client,
         path: &str,
         mut content: R,
         content_length: u64,
@@ -161,7 +161,7 @@ impl Uploader {
 
     pub(crate) fn upload_readme(
         &self,
-        http_client: &reqwest::Client,
+        http_client: &Client,
         crate_name: &str,
         vers: &str,
         readme: String,

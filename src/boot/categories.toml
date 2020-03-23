@@ -80,6 +80,12 @@ description = """
 Algorithms for making data smaller.\
 """
 
+[computer-vision]
+name = "Computer vision"
+description = """
+Crates for comprehending the world from video or images.\
+"""
+
 [config]
 name = "Configuration"
 description = """

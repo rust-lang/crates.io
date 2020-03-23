@@ -1,4 +1,8 @@
-#category-slugs {
+.list {
+    composes: white-rows from global;
+    padding-top: 20px;
+    margin: 0;
+
     dt {
         margin-bottom: 5px;
         font-weight: bold;

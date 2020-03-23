@@ -77,6 +77,16 @@ pub trait AppError: Send + fmt::Display + fmt::Debug + 'static {
     /// where it is eventually logged and turned into a status 500 response.
     fn response(&self) -> Option<Response>;
 
+    /// The cause of an error response
+    ///
+    /// If present, an error provided to the `LogRequests` middleware.
+    ///
+    /// This is intended for use with the `ChainError` trait, where a user facing
+    /// error may wrap an internal error we still want to log.
+    fn cause(&self) -> Option<&dyn AppError> {
+        None
+    }
+
     fn get_type_id(&self) -> TypeId {
         TypeId::of::<Self>()
     }
@@ -85,10 +95,6 @@ pub trait AppError: Send + fmt::Display + fmt::Debug + 'static {
 impl dyn AppError {
     pub fn is<T: Any>(&self) -> bool {
         self.get_type_id() == TypeId::of::<T>()
-    }
-
-    pub fn from_std_error(err: Box<dyn Error + Send>) -> Box<dyn AppError> {
-        Self::try_convert(&*err).unwrap_or_else(|| internal(&err))
     }
 
     fn try_convert(err: &(dyn Error + Send + 'static)) -> Option<Box<Self>> {
@@ -108,6 +114,10 @@ impl AppError for Box<dyn AppError> {
     fn response(&self) -> Option<Response> {
         (**self).response()
     }
+
+    fn cause(&self) -> Option<&dyn AppError> {
+        (**self).cause()
+    }
 }
 
 pub type AppResult<T> = Result<T, Box<dyn AppError>>;
@@ -126,19 +136,6 @@ pub trait ChainError<T> {
 struct ChainedError<E> {
     error: E,
     cause: Box<dyn AppError>,
-}
-
-impl<T, F> ChainError<T> for F
-where
-    F: FnOnce() -> AppResult<T>,
-{
-    fn chain_error<E, C>(self, callback: C) -> AppResult<T>
-    where
-        E: AppError,
-        C: FnOnce() -> E,
-    {
-        self().chain_error(callback)
-    }
 }
 
 impl<T, E: AppError> ChainError<T> for Result<T, E> {
@@ -172,6 +169,10 @@ impl<T> ChainError<T> for Option<T> {
 impl<E: AppError> AppError for ChainedError<E> {
     fn response(&self) -> Option<Response> {
         self.error.response()
+    }
+
+    fn cause(&self) -> Option<&dyn AppError> {
+        Some(&*self.cause)
     }
 }
 

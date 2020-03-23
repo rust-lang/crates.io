@@ -17,10 +17,6 @@
           "*/*"
         ],
         [
-          "user-agent",
-          "reqwest/0.9.1"
-        ],
-        [
           "authorization",
           "AWS AKIAICL5IWUZYWWKA7JA:xCp3sUdUdmScjI6ct58zFv6BoGQ="
         ],

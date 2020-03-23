@@ -1,6 +1,6 @@
 {{ title 'Settings' }}
 
-<div id='crates-heading'>
+<div class="crates-heading">
   {{svg-jar "gear"}}
   <h1>Account Settings</h1>
 </div>
@@ -68,27 +68,33 @@
   </div>
 </form>
 
-<div id='me-api'>
-  <div class='me-subheading'>
-    <h2>API Access</h2>
-    <div class='right'>
-      <button type="button" class='yellow-button' disabled={{this.disableCreate}} {{action "startNewToken"}}>New Token</button>
-    </div>
+<div local-class="me-subheading">
+  <h2>API Access</h2>
+  <div local-class="right">
+    <button
+      type="button"
+      class='yellow-button'
+      disabled={{this.disableCreate}}
+      data-test-new-token-button
+      {{action "startNewToken"}}
+    >
+      New Token
+    </button>
   </div>
+</div>
 
-  <p>
-    If you want to use package commands from the command line, you will need to
-    login with <code>cargo login (token)</code> using one of the tokens listed below.
-  </p>
-  <p>
-    When working in shared environments, supplying the token on the command line could
-    expose it to prying eyes. To avoid this, enter <code>cargo login</code> and supply your
-    token when prompted.
-  </p>
+<p>
+  If you want to use package commands from the command line, you will need to
+  login with <code>cargo login (token)</code> using one of the tokens listed below.
+</p>
+<p>
+  When working in shared environments, supplying the token on the command line could
+  expose it to prying eyes. To avoid this, enter <code>cargo login</code> and supply your
+  token when prompted.
+</p>
 
-  <div id='tokens'>
-    {{#each this.sortedTokens as |api_token|}}
-      <ApiTokenRow @api_token={{api_token}} />
-    {{/each}}
-  </div>
+<div local-class="token-list">
+  {{#each this.sortedTokens as |api_token|}}
+    <ApiTokenRow @api_token={{api_token}} />
+  {{/each}}
 </div>
