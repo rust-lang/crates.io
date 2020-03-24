@@ -13,13 +13,11 @@
     {{! TODO: reduce duplication with templates/crates.hbs }}
 
     <div id='results'>
-      <div class='nav'>
-        <span class='amt small'>
-          Displaying
-          <span class='cur'>{{ this.currentPageStart }}-{{ this.currentPageEnd }}</span>
-          of <span class='total'>{{ this.totalItems }}</span> total results
-        </span>
-      </div>
+      <ResultsCount
+        @start={{this.currentPageStart}}
+        @end={{this.currentPageEnd}}
+        @total={{this.totalItems}}
+      />
 
       <div class='sort'>
         <span class='small'>Sort by</span>
