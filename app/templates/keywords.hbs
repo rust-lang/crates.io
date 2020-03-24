@@ -44,7 +44,7 @@
     <div class='row'>
       <div class='info'>
         <LinkTo @route="keyword" @model={{keyword}}>{{keyword.id}}</LinkTo>
-        <span class='vers small'>
+        <span class='small'>
           {{ pluralize (format-num keyword.crates_cnt) "crate" }}
         </span>
       </div>
