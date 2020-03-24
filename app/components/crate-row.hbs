@@ -10,7 +10,7 @@
         {{ this.crate.name }}
       </LinkTo>
       <CrateTomlCopy @copyText={{this.crateTomlText}} @inline={{true}} />
-      <CrateBadge @crate={{this.crate}} />
+      <CrateBadge @crate={{this.crate}} local-class="version-badge" />
       {{#each this.crate.annotated_badges as |badge|}}
         {{#let (component badge.component_name) as |Badge|}}
           <Badge @badge={{badge}} data-test-badge={{badge.badge_type}} />
