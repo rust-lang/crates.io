@@ -74,11 +74,11 @@
           <LinkTo @route="crate" @model={{crate}}>
             <h1>Exact Match</h1>
           </LinkTo>
-          <CrateRow @crate={{crate}} data-test-crate-row={{index}} />
+          <CrateRow @crate={{crate}} class="row" data-test-crate-row={{index}} />
         </div>
       {{else}}
         <div>
-          <CrateRow @crate={{crate}} data-test-crate-row={{index}} />
+          <CrateRow @crate={{crate}} class="row" data-test-crate-row={{index}} />
         </div>
       {{/if}}
     {{/each}}

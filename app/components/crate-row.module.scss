@@ -1,0 +1,74 @@
+.crate-row {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.description-box {
+    padding-top: 5px;
+    display: flex;
+    flex-direction: column;
+    width: 75%;
+}
+
+.name {
+    color: $main-color;
+    font-weight: bold;
+    text-decoration: none;
+    font-size: 120%;
+}
+
+.version-badge {
+    margin-left: 10px;
+}
+
+.description {
+    margin-top: 8px;
+    color: $main-color-light;
+    font-size: 80%;
+}
+
+.stats {
+    width: 25%;
+    color: $main-color-light;
+}
+
+.downloads {
+    display: flex;
+    align-items: center;
+    padding-bottom: 5px;
+}
+
+.recent-downloads {
+    display: flex;
+    align-items: center;
+}
+
+.updated-at {
+    padding-top: 5px;
+    display: flex;
+    align-items: center;
+
+    svg {
+        padding: 10px;
+    }
+}
+
+ul.quick-links {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+
+    font-size: 80%;
+    list-style-type: none;
+    margin: 1em 0 0 0;
+    padding: 0;
+
+
+    li {
+        margin-right: 1em;
+
+        &:last-child {
+            margin-right: 0;
+        }
+    }
+}
