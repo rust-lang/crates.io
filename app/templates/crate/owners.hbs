@@ -13,18 +13,16 @@
     <p data-test-error-message>{{this.error}}</p>
   {{/if}}
 
+  {{#if this.invited}}
+    <p data-test-invited-message>{{this.invited}}</p>
+  {{/if}}
+
   <div class="row">
     <form class="email-form" {{action 'addOwner' on='submit'}}>
       <label class="label" for='new-owner-username'>
         Username
       </label>
       <Input @type="text" id="new-owner-username" @value={{this.username}} placeholder="Username" class="form-control space-right" @name="username" />
-
-      {{#if this.invited}}
-        <div class='invited'>
-          <p>{{this.invited}}</p>
-        </div>
-      {{/if}}
 
       <div class="actions">
         <button type="submit" local-class="submit-button" data-test-save-button>Save</button>

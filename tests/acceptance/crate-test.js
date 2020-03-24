@@ -293,8 +293,7 @@ module('Acceptance | crate page', function (hooks) {
     await fillIn('input[name="username"]', 'iain8');
     await click('[data-test-save-button]');
 
-    assert.dom('.invited').exists();
-    assert.dom('.invited').hasText('An invite has been sent to iain8');
+    assert.dom('[data-test-invited-message]').hasText('An invite has been sent to iain8');
     assert.dom('[data-test-owners] [data-test-owner-team]').exists({ count: 2 });
     assert.dom('[data-test-owners] [data-test-owner-user]').exists({ count: 2 });
   });
