@@ -52,7 +52,7 @@
       <LinkTo @route={{team.kind}} @model={{team.login}}>
         {{team.display_name}}
       </LinkTo>
-      <div class='stats'>
+      <div local-class="email-column">
         {{#if team.email}}
           {{team.email}}
         {{else}}
@@ -70,7 +70,7 @@
       <LinkTo @route={{user.kind}} @model={{user.login}}>
         {{ user.name }}
       </LinkTo>
-      <div class='stats'>
+      <div local-class="email-column">
         {{#if user.email}}
           {{user.email}}
         {{else}}

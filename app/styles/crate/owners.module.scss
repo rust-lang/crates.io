@@ -1,3 +1,8 @@
+.email-column {
+    width: 25%;
+    color: $main-color-light;
+}
+
 .remove-button {
     composes: small yellow-button from global;
 }
