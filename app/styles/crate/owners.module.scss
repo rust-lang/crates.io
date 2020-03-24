@@ -1,3 +1,8 @@
+.email-input {
+    width: 400px;
+    margin-right: 10px;
+}
+
 .submit-button {
     composes: small yellow-button from global;
     margin-right: 10px;
