@@ -255,7 +255,7 @@ module('Acceptance | crate page', function (hooks) {
 
     await visit('/crates/nanomsg/owners');
 
-    assert.dom('.owners .row').exists({ count: 4 });
+    assert.dom('[data-test-owners] .row').exists({ count: 4 });
     assert.dom('a[href="/teams/github:org:thehydroimpulse"]').exists();
     assert.dom('a[href="/teams/github:org:blabaere"]').exists();
     assert.dom('a[href="/users/thehydroimpulse"]').exists();
@@ -270,7 +270,7 @@ module('Acceptance | crate page', function (hooks) {
 
     assert.dom('.error').exists();
     assert.dom('.error').hasText('Please enter a username');
-    assert.dom('.owners .row').exists({ count: 4 });
+    assert.dom('[data-test-owners] .row').exists({ count: 4 });
   });
 
   test('attempting to add non-existent owner', async function (assert) {
@@ -282,7 +282,7 @@ module('Acceptance | crate page', function (hooks) {
 
     assert.dom('.error').exists();
     assert.dom('.error').hasText('Error sending invite: Not Found');
-    assert.dom('.owners .row').exists({ count: 4 });
+    assert.dom('[data-test-owners] .row').exists({ count: 4 });
   });
 
   test('add a new owner', async function (assert) {
@@ -294,7 +294,7 @@ module('Acceptance | crate page', function (hooks) {
 
     assert.dom('.invited').exists();
     assert.dom('.invited').hasText('An invite has been sent to iain8');
-    assert.dom('.owners .row').exists({ count: 4 });
+    assert.dom('[data-test-owners] .row').exists({ count: 4 });
   });
 
   test('remove a crate owner when owner is a user', async function (assert) {
