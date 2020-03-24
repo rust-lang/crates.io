@@ -38,9 +38,7 @@
 <h2>Owners</h2>
 
 {{#if this.removed}}
-  <div class='removed'>
-    <p>{{this.removed}}</p>
-  </div>
+  <p data-test-removed-message>{{this.removed}}</p>
 {{/if}}
 
 <div local-class='list' data-test-owners>
