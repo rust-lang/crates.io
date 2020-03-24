@@ -30,6 +30,7 @@
     "test-coverage": "COVERAGE=true npm run test && ember coverage-merge && rm -rf coverage_* coverage/coverage-summary.json && nyc report"
   },
   "prettier": {
+    "arrowParens": "avoid",
     "printWidth": 120,
     "singleQuote": true,
     "tabWidth": 2,
