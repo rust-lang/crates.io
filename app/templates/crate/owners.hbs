@@ -19,7 +19,7 @@
 
   <div class="row">
     <form class="email-form" {{action 'addOwner' on='submit'}}>
-      <label class="label" for='new-owner-username'>
+      <label local-class="email-input-label" for='new-owner-username'>
         Username
       </label>
       <Input @type="text" id="new-owner-username" @value={{this.username}} placeholder="Username" local-class="email-input" @name="username" />
