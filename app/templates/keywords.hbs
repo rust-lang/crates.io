@@ -6,13 +6,12 @@
 </div>
 
 <div id='results'>
-  <div class='nav' data-test-keywords-nav>
-    <span class='small'>
-      Displaying
-      <span class='cur'>{{ this.currentPageStart }}-{{ this.currentPageEnd }}</span>
-      of <span class='total'>{{ this.totalItems }}</span> total results
-    </span>
-  </div>
+  <ResultsCount
+    @start={{this.currentPageStart}}
+    @end={{this.currentPageEnd}}
+    @total={{this.totalItems}}
+    data-test-keywords-nav
+  />
 
   <div class='sort' data-test-keywords-sort>
     <span class='small'>Sort by</span>
