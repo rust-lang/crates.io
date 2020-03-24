@@ -67,7 +67,7 @@
   <div class='white-rows'>
     {{#each this.model as |crate index|}}
       {{#if crate.exact_match}}
-        <div class='exact-match'>
+        <div local-class="exact-match">
           <LinkTo @route="crate" @model={{crate}}>
             <h1>Exact Match</h1>
           </LinkTo>
