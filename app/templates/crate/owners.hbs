@@ -49,11 +49,9 @@
       <LinkTo @route={{team.kind}} @model={{team.login}}>
         <UserAvatar @user={{team}} @size="medium-small" />
       </LinkTo>
-      <div>
-        <LinkTo @route={{team.kind}} @model={{team.login}}>
-          {{team.display_name}}
-        </LinkTo>
-      </div>
+      <LinkTo @route={{team.kind}} @model={{team.login}}>
+        {{team.display_name}}
+      </LinkTo>
       <div class='stats'>
         {{#if team.email}}
           {{team.email}}
@@ -69,11 +67,9 @@
       <LinkTo @route={{user.kind}} @model={{user.login}}>
         <UserAvatar @user={{user}} @size="medium-small" />
       </LinkTo>
-      <div>
-        <LinkTo @route={{user.kind}} @model={{user.login}}>
-          {{ user.name }}
-        </LinkTo>
-      </div>
+      <LinkTo @route={{user.kind}} @model={{user.login}}>
+        {{ user.name }}
+      </LinkTo>
       <div class='stats'>
         {{#if user.email}}
           {{user.email}}
