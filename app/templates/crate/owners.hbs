@@ -17,15 +17,13 @@
     <p data-test-invited-message>{{this.invited}}</p>
   {{/if}}
 
-  <div class="row">
-    <form class="email-form" {{action 'addOwner' on='submit'}}>
-      <label local-class="email-input-label" for='new-owner-username'>
-        Username
-      </label>
-      <Input @type="text" id="new-owner-username" @value={{this.username}} placeholder="Username" local-class="email-input" @name="username" />
-      <button type="submit" local-class="submit-button" data-test-save-button>Save</button>
-    </form>
-  </div>
+  <form local-class="email-form" {{action 'addOwner' on='submit'}}>
+    <label local-class="email-input-label" for='new-owner-username'>
+      Username
+    </label>
+    <Input @type="text" id="new-owner-username" @value={{this.username}} placeholder="Username" local-class="email-input" @name="username" />
+    <button type="submit" local-class="submit-button" data-test-save-button>Save</button>
+  </form>
 </div>
 
 <h2>Owners</h2>

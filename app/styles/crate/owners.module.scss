@@ -1,3 +1,12 @@
+.email-form {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    border: 2px solid $gray-border;
+    padding: 10px 20px;
+}
+
 .email-input-label {
     font-weight: bold;
     margin-right: 10px;
@@ -10,7 +19,6 @@
 
 .submit-button {
     composes: small yellow-button from global;
-    margin-right: 10px;
 }
 
 .list {
