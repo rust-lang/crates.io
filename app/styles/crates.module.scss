@@ -1,0 +1,31 @@
+.selection {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 20px;
+    border-radius: 5px;
+    background-color: white;
+    margin-bottom: 40px;
+
+    a {
+        text-decoration: none;
+        font-weight: bold;
+        color: inherit;
+        padding: 5px;
+    }
+    a:hover { background-color: $main-bg-dark; }
+    a:global(.active) { background-color: $main-bg-dark; }
+
+    select {
+        display: none;
+        width: 100%;
+        padding: 5px;
+    }
+
+    @media only screen and (max-width: 650px) {
+        padding: 0;
+        background-color: inherit;
+        a { display: none; }
+        select { display: block; }
+    }
+}
