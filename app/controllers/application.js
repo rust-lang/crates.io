@@ -12,7 +12,7 @@ export default Controller.extend(EKMixin, {
 
   keyboardActivated: true,
 
-  focusSearch: on(keyDown('KeyS'), keyPress('KeyS'), keyDown('shift+KeyS'), function(event) {
+  focusSearch: on(keyDown('KeyS'), keyPress('KeyS'), keyDown('shift+KeyS'), function (event) {
     if (event.ctrlKey || event.altKey || event.metaKey) {
       return;
     }

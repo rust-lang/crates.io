@@ -6,7 +6,7 @@ export default Component.extend({
   tagName: '',
 
   name: alias('ownedCrate.name'),
-  controlId: computed('ownedCrate.id', function() {
+  controlId: computed('ownedCrate.id', function () {
     return `${this.ownedCrate.id}-email-notifications`;
   }),
   emailNotifications: alias('ownedCrate.email_notifications'),

@@ -5,18 +5,18 @@ import { alias } from '@ember/object/computed';
 export default Component.extend({
   tagName: '',
 
-  escapedStatus: computed('badge', function() {
+  escapedStatus: computed('badge', function () {
     return this.get('badge.attributes.status').replace(/-/g, '--');
   }),
 
-  none: computed('badge', function() {
+  none: computed('badge', function () {
     return this.get('badge.attributes.status') === 'none' || !this.get('badge.attributes.status');
   }),
 
   status: alias('badge.attributes.status'),
 
   // eslint-disable-next-line ember/require-return-from-computed
-  color: computed('badge', function() {
+  color: computed('badge', function () {
     switch (this.get('badge.attributes.status')) {
       case 'actively-developed':
         return 'brightgreen';

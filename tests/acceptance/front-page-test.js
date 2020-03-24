@@ -7,11 +7,11 @@ import { title } from '../helpers/dom';
 import setupMirage from '../helpers/setup-mirage';
 import { percySnapshot } from 'ember-percy';
 
-module('Acceptance | front page', function(hooks) {
+module('Acceptance | front page', function (hooks) {
   setupApplicationTest(hooks);
   setupMirage(hooks);
 
-  test('is accessible', async function(assert) {
+  test('is accessible', async function (assert) {
     assert.expect(0);
 
     this.server.loadFixtures();
@@ -20,7 +20,7 @@ module('Acceptance | front page', function(hooks) {
     await a11yAudit(axeConfig);
   });
 
-  test('visiting /', async function(assert) {
+  test('visiting /', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/');

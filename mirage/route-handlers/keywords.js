@@ -1,7 +1,7 @@
 import { pageParams, withMeta, notFound } from './-utils';
 
 export function register(server) {
-  server.get('/api/v1/keywords', function(schema, request) {
+  server.get('/api/v1/keywords', function (schema, request) {
     let { start, end } = pageParams(request);
 
     let allKeywords = schema.keywords.all().sort((a, b) => a.crates_cnt - b.crates_cnt);

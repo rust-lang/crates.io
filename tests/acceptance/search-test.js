@@ -8,11 +8,11 @@ import { title } from '../helpers/dom';
 import setupMirage from '../helpers/setup-mirage';
 import { percySnapshot } from 'ember-percy';
 
-module('Acceptance | search', function(hooks) {
+module('Acceptance | search', function (hooks) {
   setupApplicationTest(hooks);
   setupMirage(hooks);
 
-  test('/search?q=rust is accessible', async function(assert) {
+  test('/search?q=rust is accessible', async function (assert) {
     assert.expect(0);
 
     this.server.loadFixtures();
@@ -23,7 +23,7 @@ module('Acceptance | search', function(hooks) {
     await a11yAudit(axeConfig);
   });
 
-  test('searching for "rust"', async function(assert) {
+  test('searching for "rust"', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/');
@@ -49,7 +49,7 @@ module('Acceptance | search', function(hooks) {
     assert.dom('[data-test-crate-row="0"] [data-test-updated-at]').exists();
   });
 
-  test('searching for "rust" from query', async function(assert) {
+  test('searching for "rust" from query', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/search?q=rust');
@@ -62,7 +62,7 @@ module('Acceptance | search', function(hooks) {
     assert.dom('[data-test-search-nav]').hasText('Displaying 1-7 of 7 total results');
   });
 
-  test('clearing search results', async function(assert) {
+  test('clearing search results', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/search?q=rust');
@@ -76,7 +76,7 @@ module('Acceptance | search', function(hooks) {
     assert.dom('[data-test-search-input]').hasValue('');
   });
 
-  test('pressing S key to focus the search bar', async function(assert) {
+  test('pressing S key to focus the search bar', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/');
@@ -98,7 +98,7 @@ module('Acceptance | search', function(hooks) {
     assert.dom('[data-test-search-input]').isFocused();
   });
 
-  test('check search results are by default displayed by relevance', async function(assert) {
+  test('check search results are by default displayed by relevance', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/');

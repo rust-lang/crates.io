@@ -15,12 +15,12 @@ export default Component.extend({
   notValidEmail: false,
   prevEmail: '',
 
-  emailIsNull: computed('user.email', function() {
+  emailIsNull: computed('user.email', function () {
     let email = this.get('user.email');
     return email == null;
   }),
 
-  emailNotVerified: computed('user.{email,email_verified}', function() {
+  emailNotVerified: computed('user.{email,email_verified}', function () {
     let email = this.get('user.email');
     let verified = this.get('user.email_verified');
 
@@ -31,7 +31,7 @@ export default Component.extend({
   emailError: '',
   disableResend: false,
 
-  resendButtonText: computed('disableResend', 'user.email_verification_sent', function() {
+  resendButtonText: computed('disableResend', 'user.email_verification_sent', function () {
     if (this.disableResend) {
       return 'Sent!';
     } else if (this.get('user.email_verification_sent')) {
@@ -44,7 +44,7 @@ export default Component.extend({
   actions: {
     editEmail() {
       let email = this.value;
-      let isEmailNull = function(email) {
+      let isEmailNull = function (email) {
         return email == null;
       };
 
@@ -57,7 +57,7 @@ export default Component.extend({
       let userEmail = this.value;
       let user = this.user;
 
-      let emailIsProperFormat = function(userEmail) {
+      let emailIsProperFormat = function (userEmail) {
         let regExp = /^\S+@\S+\.\S+$/;
         return regExp.test(userEmail);
       };

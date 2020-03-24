@@ -7,7 +7,7 @@ const VIEWABLE_PAGES = 9;
 // eslint-disable-next-line ember/no-new-mixins
 export default Mixin.create({
   // Gives page numbers to the surrounding 9 pages.
-  pages: computed('currentPage', 'availablePages', function() {
+  pages: computed('currentPage', 'availablePages', function () {
     let pages = [];
     let currentPage = this.currentPage;
     let availablePages = this.availablePages;
@@ -32,22 +32,22 @@ export default Mixin.create({
     return pages;
   }),
 
-  currentPage: computed('selectedPage', function() {
+  currentPage: computed('selectedPage', function () {
     return parseInt(this.selectedPage, 10) || 1;
   }),
 
-  currentPageStart: computed('currentPage', 'itemsPerPage', 'totalItems', function() {
+  currentPageStart: computed('currentPage', 'itemsPerPage', 'totalItems', function () {
     if (this.totalItems === 0) {
       return 0;
     }
     return (this.currentPage - 1) * this.itemsPerPage + 1;
   }),
 
-  currentPageEnd: computed('currentPage', 'itemsPerPage', 'totalItems', function() {
+  currentPageEnd: computed('currentPage', 'itemsPerPage', 'totalItems', function () {
     return Math.min(this.currentPage * this.itemsPerPage, this.totalItems);
   }),
 
-  nextPage: computed('currentPage', 'availablePages', function() {
+  nextPage: computed('currentPage', 'availablePages', function () {
     let nextPage = this.currentPage + 1;
     let availablePages = this.availablePages;
     if (nextPage <= availablePages) {
@@ -57,7 +57,7 @@ export default Mixin.create({
     }
   }),
 
-  prevPage: computed('currentPage', function() {
+  prevPage: computed('currentPage', function () {
     let prevPage = this.currentPage - 1;
     if (prevPage > 0) {
       return prevPage;
@@ -66,7 +66,7 @@ export default Mixin.create({
     }
   }),
 
-  availablePages: computed('totalItems', 'itemsPerPage', function() {
+  availablePages: computed('totalItems', 'itemsPerPage', function () {
     return Math.ceil(this.totalItems / this.itemsPerPage || 1);
   }),
 

@@ -16,17 +16,17 @@ export default Controller.extend(PaginationMixin, {
 
   model: readOnly('dataTask.lastSuccessful.value'),
 
-  hasData: computed('dataTask.{lastSuccessful,isRunning}', function() {
+  hasData: computed('dataTask.{lastSuccessful,isRunning}', function () {
     return this.get('dataTask.lastSuccessful') || !this.get('dataTask.isRunning');
   }),
 
-  firstResultPending: computed('dataTask.{lastSuccessful,isRunning}', function() {
+  firstResultPending: computed('dataTask.{lastSuccessful,isRunning}', function () {
     return !this.get('dataTask.lastSuccessful') && this.get('dataTask.isRunning');
   }),
 
   totalItems: readOnly('model.meta.total'),
 
-  currentSortBy: computed('sort', function() {
+  currentSortBy: computed('sort', function () {
     if (this.sort === 'downloads') {
       return 'All-Time Downloads';
     } else if (this.sort === 'recent-downloads') {
@@ -42,7 +42,7 @@ export default Controller.extend(PaginationMixin, {
 
   hasItems: bool('totalItems'),
 
-  dataTask: task(function*(params) {
+  dataTask: task(function* (params) {
     if (params.q !== null) {
       params.q = params.q.trim();
     }

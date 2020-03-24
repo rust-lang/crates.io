@@ -4,12 +4,12 @@ import { module, test } from 'qunit';
 import setupMirage from '../helpers/setup-mirage';
 import fetch from 'fetch';
 
-module('Mirage | Summary', function(hooks) {
+module('Mirage | Summary', function (hooks) {
   setupTest(hooks);
   setupMirage(hooks);
 
-  module('GET /api/v1/summary', function() {
-    test('empty case', async function(assert) {
+  module('GET /api/v1/summary', function () {
+    test('empty case', async function (assert) {
       let response = await fetch('/api/v1/summary');
       assert.equal(response.status, 200);
 
@@ -26,7 +26,7 @@ module('Mirage | Summary', function(hooks) {
       });
     });
 
-    test('returns the data for the front page', async function(assert) {
+    test('returns the data for the front page', async function (assert) {
       this.server.createList('category', 15);
       this.server.createList('keyword', 25);
       let crates = this.server.createList('crate', 20);

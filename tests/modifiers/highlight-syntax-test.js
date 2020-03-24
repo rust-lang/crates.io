@@ -3,10 +3,10 @@ import { setupRenderingTest } from 'ember-qunit';
 import { render } from '@ember/test-helpers';
 import { hbs } from 'ember-cli-htmlbars';
 
-module('Modifier | highlight-syntax', function(hooks) {
+module('Modifier | highlight-syntax', function (hooks) {
   setupRenderingTest(hooks);
 
-  test('uses Prism.js to apply syntax highlighting', async function(assert) {
+  test('uses Prism.js to apply syntax highlighting', async function (assert) {
     await render(hbs`
       <pre class="language-rust" {{highlight-syntax}}>
 #[macro_use]
@@ -17,7 +17,7 @@ extern crate bitflags;
     assert.dom('.keyword').exists({ count: 2 });
   });
 
-  test('accepts a `selector` argument', async function(assert) {
+  test('accepts a `selector` argument', async function (assert) {
     await render(hbs`
       <div {{highlight-syntax selector=".b"}}>
         <pre class="language-rust a">

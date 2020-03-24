@@ -4,12 +4,12 @@ import { module, test } from 'qunit';
 import setupMirage from '../helpers/setup-mirage';
 import fetch from 'fetch';
 
-module('Mirage | Crates', function(hooks) {
+module('Mirage | Crates', function (hooks) {
   setupTest(hooks);
   setupMirage(hooks);
 
-  module('GET /api/v1/crates', function() {
-    test('empty case', async function(assert) {
+  module('GET /api/v1/crates', function () {
+    test('empty case', async function (assert) {
       let response = await fetch('/api/v1/crates');
       assert.equal(response.status, 200);
 
@@ -22,7 +22,7 @@ module('Mirage | Crates', function(hooks) {
       });
     });
 
-    test('returns a paginated crates list', async function(assert) {
+    test('returns a paginated crates list', async function (assert) {
       this.server.create('crate', { name: 'rand' });
       this.server.create('version', { crateId: 'rand', num: '1.0.0' });
 
@@ -63,7 +63,7 @@ module('Mirage | Crates', function(hooks) {
       });
     });
 
-    test('never returns more than 10 results', async function(assert) {
+    test('never returns more than 10 results', async function (assert) {
       let crates = this.server.createList('crate', 25);
       this.server.createList('version', crates.length, { crate: i => crates[i] });
 
@@ -75,7 +75,7 @@ module('Mirage | Crates', function(hooks) {
       assert.equal(responsePayload.meta.total, 25);
     });
 
-    test('supports `page` and `per_page` parameters', async function(assert) {
+    test('supports `page` and `per_page` parameters', async function (assert) {
       let crates = this.server.createList('crate', 25, {
         name: i => `crate-${String(i + 1).padStart(2, '0')}`,
       });
@@ -93,7 +93,7 @@ module('Mirage | Crates', function(hooks) {
       assert.equal(responsePayload.meta.total, 25);
     });
 
-    test('supports a `letter` parameter', async function(assert) {
+    test('supports a `letter` parameter', async function (assert) {
       this.server.create('crate', { name: 'foo' });
       this.server.create('version', { crateId: 'foo' });
       this.server.create('crate', { name: 'bar' });
@@ -113,7 +113,7 @@ module('Mirage | Crates', function(hooks) {
       assert.equal(responsePayload.meta.total, 2);
     });
 
-    test('supports a `q` parameter', async function(assert) {
+    test('supports a `q` parameter', async function (assert) {
       this.server.create('crate', { name: '123456' });
       this.server.create('version', { crateId: '123456' });
       this.server.create('crate', { name: '00123' });
@@ -133,7 +133,7 @@ module('Mirage | Crates', function(hooks) {
       assert.equal(responsePayload.meta.total, 2);
     });
 
-    test('supports a `user_id` parameter', async function(assert) {
+    test('supports a `user_id` parameter', async function (assert) {
       this.server.create('crate', { name: 'foo' });
       this.server.create('version', { crateId: 'foo' });
       this.server.create('crate', { name: 'bar', _owner_users: [42] });
@@ -150,7 +150,7 @@ module('Mirage | Crates', function(hooks) {
       assert.equal(responsePayload.meta.total, 1);
     });
 
-    test('supports a `team_id` parameter', async function(assert) {
+    test('supports a `team_id` parameter', async function (assert) {
       this.server.create('crate', { name: 'foo' });
       this.server.create('version', { crateId: 'foo' });
       this.server.create('crate', { name: 'bar', _owner_teams: [42] });
@@ -167,7 +167,7 @@ module('Mirage | Crates', function(hooks) {
       assert.equal(responsePayload.meta.total, 1);
     });
 
-    test('supports a `team_id` parameter', async function(assert) {
+    test('supports a `team_id` parameter', async function (assert) {
       this.server.create('crate', { name: 'foo' });
       this.server.create('version', { crateId: 'foo' });
       this.server.create('crate', { name: 'bar', _owner_teams: [42] });
@@ -185,8 +185,8 @@ module('Mirage | Crates', function(hooks) {
     });
   });
 
-  module('GET /api/v1/crates/:id', function() {
-    test('returns 404 for unknown crates', async function(assert) {
+  module('GET /api/v1/crates/:id', function () {
+    test('returns 404 for unknown crates', async function (assert) {
       let response = await fetch('/api/v1/crates/foo');
       assert.equal(response.status, 404);
 
@@ -194,7 +194,7 @@ module('Mirage | Crates', function(hooks) {
       assert.deepEqual(responsePayload, { errors: [{ detail: 'Not Found' }] });
     });
 
-    test('returns a crate object for known crates', async function(assert) {
+    test('returns a crate object for known crates', async function (assert) {
       this.server.create('crate', { name: 'rand' });
       this.server.create('version', { crateId: 'rand', num: '1.0.0' });
 
@@ -251,7 +251,7 @@ module('Mirage | Crates', function(hooks) {
       });
     });
 
-    test('includes related versions', async function(assert) {
+    test('includes related versions', async function (assert) {
       this.server.create('crate', { name: 'rand' });
       this.server.create('version', { crateId: 'rand', num: '1.0.0' });
       this.server.create('version', { crateId: 'rand', num: '1.1.0' });
@@ -317,7 +317,7 @@ module('Mirage | Crates', function(hooks) {
       ]);
     });
 
-    test('includes related categories', async function(assert) {
+    test('includes related categories', async function (assert) {
       this.server.create('category', { category: 'no-std' });
       this.server.create('category', { category: 'cli' });
       this.server.create('crate', { name: 'rand', categoryIds: ['no-std'] });
@@ -340,7 +340,7 @@ module('Mirage | Crates', function(hooks) {
       ]);
     });
 
-    test('includes related keywords', async function(assert) {
+    test('includes related keywords', async function (assert) {
       this.server.create('keyword', { keyword: 'no-std' });
       this.server.create('keyword', { keyword: 'cli' });
       this.server.create('crate', { name: 'rand', keywordIds: ['no-std'] });
@@ -361,8 +361,8 @@ module('Mirage | Crates', function(hooks) {
     });
   });
 
-  module('GET /api/v1/crates/:id/versions', function() {
-    test('returns 404 for unknown crates', async function(assert) {
+  module('GET /api/v1/crates/:id/versions', function () {
+    test('returns 404 for unknown crates', async function (assert) {
       let response = await fetch('/api/v1/crates/foo/versions');
       assert.equal(response.status, 404);
 
@@ -370,7 +370,7 @@ module('Mirage | Crates', function(hooks) {
       assert.deepEqual(responsePayload, { errors: [{ detail: 'Not Found' }] });
     });
 
-    test('empty case', async function(assert) {
+    test('empty case', async function (assert) {
       this.server.create('crate', { name: 'rand' });
 
       let response = await fetch('/api/v1/crates/rand/versions');
@@ -382,7 +382,7 @@ module('Mirage | Crates', function(hooks) {
       });
     });
 
-    test('returns all versions belonging to the specified crate', async function(assert) {
+    test('returns all versions belonging to the specified crate', async function (assert) {
       this.server.create('crate', { name: 'rand' });
       this.server.create('version', { crateId: 'rand', num: '1.0.0' });
       this.server.create('version', { crateId: 'rand', num: '1.1.0' });
@@ -450,8 +450,8 @@ module('Mirage | Crates', function(hooks) {
     });
   });
 
-  module('GET /api/v1/crates/:id/:version/authors', function() {
-    test('returns 404 for unknown crates', async function(assert) {
+  module('GET /api/v1/crates/:id/:version/authors', function () {
+    test('returns 404 for unknown crates', async function (assert) {
       let response = await fetch('/api/v1/crates/foo/1.0.0/authors');
       assert.equal(response.status, 404);
 
@@ -459,7 +459,7 @@ module('Mirage | Crates', function(hooks) {
       assert.deepEqual(responsePayload, { errors: [{ detail: 'Not Found' }] });
     });
 
-    test('returns 200 for unknown versions', async function(assert) {
+    test('returns 200 for unknown versions', async function (assert) {
       this.server.create('crate', { name: 'rand' });
 
       let response = await fetch('/api/v1/crates/rand/1.0.0/authors');
@@ -471,7 +471,7 @@ module('Mirage | Crates', function(hooks) {
       assert.deepEqual(responsePayload, { errors: [{ detail: 'crate `rand` does not have a version `1.0.0`' }] });
     });
 
-    test('empty case', async function(assert) {
+    test('empty case', async function (assert) {
       this.server.create('crate', { name: 'rand' });
       this.server.create('version', { crateId: 'rand', num: '1.0.0' });
 
@@ -487,7 +487,7 @@ module('Mirage | Crates', function(hooks) {
       });
     });
 
-    test('returns a list of authors belonging to the specified crate version', async function(assert) {
+    test('returns a list of authors belonging to the specified crate version', async function (assert) {
       let authors = ['John Doe <johnnydee@gmail.com>', 'The Rust Project Developers'];
 
       this.server.create('crate', { name: 'rand' });
@@ -506,8 +506,8 @@ module('Mirage | Crates', function(hooks) {
     });
   });
 
-  module('GET /api/v1/crates/:id/:version/dependencies', function() {
-    test('returns 404 for unknown crates', async function(assert) {
+  module('GET /api/v1/crates/:id/:version/dependencies', function () {
+    test('returns 404 for unknown crates', async function (assert) {
       let response = await fetch('/api/v1/crates/foo/1.0.0/dependencies');
       assert.equal(response.status, 404);
 
@@ -515,7 +515,7 @@ module('Mirage | Crates', function(hooks) {
       assert.deepEqual(responsePayload, { errors: [{ detail: 'Not Found' }] });
     });
 
-    test('returns 200 for unknown versions', async function(assert) {
+    test('returns 200 for unknown versions', async function (assert) {
       this.server.create('crate', { name: 'rand' });
 
       let response = await fetch('/api/v1/crates/rand/1.0.0/dependencies');
@@ -527,7 +527,7 @@ module('Mirage | Crates', function(hooks) {
       assert.deepEqual(responsePayload, { errors: [{ detail: 'crate `rand` does not have a version `1.0.0`' }] });
     });
 
-    test('empty case', async function(assert) {
+    test('empty case', async function (assert) {
       this.server.create('crate', { name: 'rand' });
       this.server.create('version', { crateId: 'rand', num: '1.0.0' });
 
@@ -540,7 +540,7 @@ module('Mirage | Crates', function(hooks) {
       });
     });
 
-    test('returns a list of dependencies belonging to the specified crate version', async function(assert) {
+    test('returns a list of dependencies belonging to the specified crate version', async function (assert) {
       this.server.create('crate', { name: 'rand' });
       let version = this.server.create('version', { crateId: 'rand', num: '1.0.0' });
 
@@ -595,8 +595,8 @@ module('Mirage | Crates', function(hooks) {
     });
   });
 
-  module('GET /api/v1/crates/:id/:version/downloads', function() {
-    test('returns 404 for unknown crates', async function(assert) {
+  module('GET /api/v1/crates/:id/:version/downloads', function () {
+    test('returns 404 for unknown crates', async function (assert) {
       let response = await fetch('/api/v1/crates/foo/1.0.0/downloads');
       assert.equal(response.status, 404);
 
@@ -604,7 +604,7 @@ module('Mirage | Crates', function(hooks) {
       assert.deepEqual(responsePayload, { errors: [{ detail: 'Not Found' }] });
     });
 
-    test('returns 200 for unknown versions', async function(assert) {
+    test('returns 200 for unknown versions', async function (assert) {
       this.server.create('crate', { name: 'rand' });
 
       let response = await fetch('/api/v1/crates/rand/1.0.0/downloads');
@@ -616,7 +616,7 @@ module('Mirage | Crates', function(hooks) {
       assert.deepEqual(responsePayload, { errors: [{ detail: 'crate `rand` does not have a version `1.0.0`' }] });
     });
 
-    test('empty case', async function(assert) {
+    test('empty case', async function (assert) {
       this.server.create('crate', { name: 'rand' });
       this.server.create('version', { crateId: 'rand', num: '1.0.0' });
 
@@ -629,7 +629,7 @@ module('Mirage | Crates', function(hooks) {
       });
     });
 
-    test('returns a list of version downloads belonging to the specified crate version', async function(assert) {
+    test('returns a list of version downloads belonging to the specified crate version', async function (assert) {
       this.server.create('crate', { name: 'rand' });
       let version = this.server.create('version', { crateId: 'rand', num: '1.0.0' });
       this.server.create('version-download', { version, date: '2020-01-13' });
@@ -662,8 +662,8 @@ module('Mirage | Crates', function(hooks) {
     });
   });
 
-  module('GET /api/v1/crates/:id/owner_user', function() {
-    test('returns 404 for unknown crates', async function(assert) {
+  module('GET /api/v1/crates/:id/owner_user', function () {
+    test('returns 404 for unknown crates', async function (assert) {
       let response = await fetch('/api/v1/crates/foo/owner_user');
       assert.equal(response.status, 404);
 
@@ -671,7 +671,7 @@ module('Mirage | Crates', function(hooks) {
       assert.deepEqual(responsePayload, { errors: [{ detail: 'Not Found' }] });
     });
 
-    test('empty case', async function(assert) {
+    test('empty case', async function (assert) {
       this.server.create('crate', { name: 'rand' });
 
       let response = await fetch('/api/v1/crates/rand/owner_user');
@@ -683,7 +683,7 @@ module('Mirage | Crates', function(hooks) {
       });
     });
 
-    test('returns the list of users that own the specified crate', async function(assert) {
+    test('returns the list of users that own the specified crate', async function (assert) {
       let user = this.server.create('user', { name: 'John Doe' });
       this.server.create('crate', { name: 'rand', userOwners: [user] });
 
@@ -706,8 +706,8 @@ module('Mirage | Crates', function(hooks) {
     });
   });
 
-  module('GET /api/v1/crates/:id/owner_team', function() {
-    test('returns 404 for unknown crates', async function(assert) {
+  module('GET /api/v1/crates/:id/owner_team', function () {
+    test('returns 404 for unknown crates', async function (assert) {
       let response = await fetch('/api/v1/crates/foo/owner_team');
       assert.equal(response.status, 404);
 
@@ -715,7 +715,7 @@ module('Mirage | Crates', function(hooks) {
       assert.deepEqual(responsePayload, { errors: [{ detail: 'Not Found' }] });
     });
 
-    test('empty case', async function(assert) {
+    test('empty case', async function (assert) {
       this.server.create('crate', { name: 'rand' });
 
       let response = await fetch('/api/v1/crates/rand/owner_team');
@@ -727,7 +727,7 @@ module('Mirage | Crates', function(hooks) {
       });
     });
 
-    test('returns the list of teams that own the specified crate', async function(assert) {
+    test('returns the list of teams that own the specified crate', async function (assert) {
       let team = this.server.create('team', { name: 'maintainers' });
       this.server.create('crate', { name: 'rand', teamOwners: [team] });
 
@@ -750,8 +750,8 @@ module('Mirage | Crates', function(hooks) {
     });
   });
 
-  module('GET /api/v1/crates/:id/reverse_dependencies', function() {
-    test('returns 404 for unknown crates', async function(assert) {
+  module('GET /api/v1/crates/:id/reverse_dependencies', function () {
+    test('returns 404 for unknown crates', async function (assert) {
       let response = await fetch('/api/v1/crates/foo/reverse_dependencies');
       assert.equal(response.status, 404);
 
@@ -759,7 +759,7 @@ module('Mirage | Crates', function(hooks) {
       assert.deepEqual(responsePayload, { errors: [{ detail: 'Not Found' }] });
     });
 
-    test('empty case', async function(assert) {
+    test('empty case', async function (assert) {
       this.server.create('crate', { name: 'rand' });
 
       let response = await fetch('/api/v1/crates/rand/reverse_dependencies');
@@ -775,7 +775,7 @@ module('Mirage | Crates', function(hooks) {
       });
     });
 
-    test('returns a paginated list of crate versions depending to the specified crate', async function(assert) {
+    test('returns a paginated list of crate versions depending to the specified crate', async function (assert) {
       this.server.create('crate', { name: 'foo' });
 
       this.server.create('dependency', {
@@ -863,7 +863,7 @@ module('Mirage | Crates', function(hooks) {
       });
     });
 
-    test('never returns more than 10 results', async function(assert) {
+    test('never returns more than 10 results', async function (assert) {
       this.server.create('crate', { name: 'foo' });
 
       this.server.createList('dependency', 25, {
@@ -883,7 +883,7 @@ module('Mirage | Crates', function(hooks) {
       assert.equal(responsePayload.meta.total, 25);
     });
 
-    test('supports `page` and `per_page` parameters', async function(assert) {
+    test('supports `page` and `per_page` parameters', async function (assert) {
       this.server.create('crate', { name: 'foo' });
 
       let crates = this.server.createList('crate', 25, {
@@ -911,8 +911,8 @@ module('Mirage | Crates', function(hooks) {
     });
   });
 
-  module('GET /api/v1/crates/:id/downloads', function() {
-    test('returns 404 for unknown crates', async function(assert) {
+  module('GET /api/v1/crates/:id/downloads', function () {
+    test('returns 404 for unknown crates', async function (assert) {
       let response = await fetch('/api/v1/crates/foo/downloads');
       assert.equal(response.status, 404);
 
@@ -920,7 +920,7 @@ module('Mirage | Crates', function(hooks) {
       assert.deepEqual(responsePayload, { errors: [{ detail: 'Not Found' }] });
     });
 
-    test('empty case', async function(assert) {
+    test('empty case', async function (assert) {
       this.server.create('crate', { name: 'rand' });
 
       let response = await fetch('/api/v1/crates/rand/downloads');
@@ -935,7 +935,7 @@ module('Mirage | Crates', function(hooks) {
       });
     });
 
-    test('returns a list of version downloads belonging to the specified crate version', async function(assert) {
+    test('returns a list of version downloads belonging to the specified crate version', async function (assert) {
       this.server.create('crate', { name: 'rand' });
       let versions = this.server.createList('version', 2, { crateId: 'rand' });
       this.server.create('version-download', { version: versions[0], date: '2020-01-13' });

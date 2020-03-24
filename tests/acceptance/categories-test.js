@@ -6,11 +6,11 @@ import axeConfig from '../axe-config';
 import setupMirage from '../helpers/setup-mirage';
 import { percySnapshot } from 'ember-percy';
 
-module('Acceptance | categories', function(hooks) {
+module('Acceptance | categories', function (hooks) {
   setupApplicationTest(hooks);
   setupMirage(hooks);
 
-  test('is accessible', async function(assert) {
+  test('is accessible', async function (assert) {
     assert.expect(0);
 
     this.server.create('category', { category: 'API bindings' });
@@ -23,7 +23,7 @@ module('Acceptance | categories', function(hooks) {
     await a11yAudit(axeConfig);
   });
 
-  test('category/:category_id is accessible', async function(assert) {
+  test('category/:category_id is accessible', async function (assert) {
     assert.expect(0);
 
     this.server.create('category', { category: 'Algorithms' });
@@ -34,7 +34,7 @@ module('Acceptance | categories', function(hooks) {
     await a11yAudit(axeConfig);
   });
 
-  test('listing categories', async function(assert) {
+  test('listing categories', async function (assert) {
     this.server.create('category', { category: 'API bindings' });
     this.server.create('category', { category: 'Algorithms' });
     this.server.createList('crate', 1, { categoryIds: ['algorithms'] });
@@ -48,7 +48,7 @@ module('Acceptance | categories', function(hooks) {
     assert.dom('[data-test-category="asynchronous"] [data-test-crate-count]').hasText('15 crates');
   });
 
-  test('category/:category_id index default sort is recent-downloads', async function(assert) {
+  test('category/:category_id index default sort is recent-downloads', async function (assert) {
     this.server.create('category', { category: 'Algorithms' });
 
     await visit('/categories/algorithms');
@@ -56,7 +56,7 @@ module('Acceptance | categories', function(hooks) {
     assert.dom('[data-test-category-sort] [data-test-current-order]').hasText('Recent Downloads');
   });
 
-  test('listing category slugs', async function(assert) {
+  test('listing category slugs', async function (assert) {
     this.server.create('category', { category: 'Algorithms', description: 'Crates for algorithms' });
     this.server.create('category', { category: 'Asynchronous', description: 'Async crates' });
 

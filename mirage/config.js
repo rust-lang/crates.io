@@ -6,7 +6,7 @@ import * as Summary from './route-handlers/summary';
 import * as Teams from './route-handlers/teams';
 import * as Users from './route-handlers/users';
 
-export default function() {
+export default function () {
   Categories.register(this);
   Crates.register(this);
   DocsRS.register(this);

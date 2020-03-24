@@ -35,12 +35,12 @@ export function initialize() {
 
   // If clicking on a link to the same fragment as currently in the address bar,
   // hashchange won't be fired, so we need to manually trigger rescroll.
-  document.addEventListener('click', function(event) {
+  document.addEventListener('click', function (event) {
     if (event.target.tagName !== 'A') {
       return;
     }
     if (this.href === location.href && location.hash.length > 1) {
-      setTimeout(function() {
+      setTimeout(function () {
         if (!event.defaultPrevented) {
           hashchange();
         }
