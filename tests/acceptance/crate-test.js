@@ -267,7 +267,7 @@ module('Acceptance | crate page', function (hooks) {
     this.server.loadFixtures();
 
     await visit('/crates/nanomsg/owners');
-    await click('#add-owner');
+    await click('[data-test-save-button]');
 
     assert.dom('.error').exists();
     assert.dom('.error').hasText('Please enter a username');
@@ -280,7 +280,7 @@ module('Acceptance | crate page', function (hooks) {
 
     await visit('/crates/nanomsg/owners');
     await fillIn('input[name="username"]', 'spookyghostboo');
-    await click('#add-owner');
+    await click('[data-test-save-button]');
 
     assert.dom('.error').exists();
     assert.dom('.error').hasText('Error sending invite: Not Found');
@@ -293,7 +293,7 @@ module('Acceptance | crate page', function (hooks) {
 
     await visit('/crates/nanomsg/owners');
     await fillIn('input[name="username"]', 'iain8');
-    await click('#add-owner');
+    await click('[data-test-save-button]');
 
     assert.dom('.invited').exists();
     assert.dom('.invited').hasText('An invite has been sent to iain8');
