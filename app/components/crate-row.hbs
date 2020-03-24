@@ -1,7 +1,14 @@
 <div class="crate row" data-test-crate-row ...attributes>
   <div class='desc'>
     <div class='info'>
-      <LinkTo @route="crate" @model={{this.crate.id}} data-test-crate-link>{{ this.crate.name }}</LinkTo>
+      <LinkTo
+        @route="crate"
+        @model={{this.crate.id}}
+        local-class="name"
+        data-test-crate-link
+      >
+        {{ this.crate.name }}
+      </LinkTo>
       <CrateTomlCopy @copyText={{this.crateTomlText}} @inline={{true}} />
       <CrateBadge @crate={{this.crate}} />
       {{#each this.crate.annotated_badges as |badge|}}
