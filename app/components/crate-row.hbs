@@ -40,18 +40,16 @@
       </span>
     </div>
   </div>
-  <div local-class="quick-links">
-    <ul>
-      {{#if this.crate.homepage}}
-        <li><a href="{{this.crate.homepage}}">Homepage</a></li>
-      {{/if}}
-      {{#if this.crate.documentation}}
-        <li><a href="{{this.crate.documentation}}">Documentation</a></li>
-      {{/if}}
-      {{#if this.crate.repository}}
-        <li><a href="{{this.crate.repository}}">Repository</a></li>
-      {{/if}}
-    </ul>
-  </div>
+  <ul local-class="quick-links">
+    {{#if this.crate.homepage}}
+      <li><a href="{{this.crate.homepage}}">Homepage</a></li>
+    {{/if}}
+    {{#if this.crate.documentation}}
+      <li><a href="{{this.crate.documentation}}">Documentation</a></li>
+    {{/if}}
+    {{#if this.crate.repository}}
+      <li><a href="{{this.crate.repository}}">Repository</a></li>
+    {{/if}}
+  </ul>
 
 </div>
