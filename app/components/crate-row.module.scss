@@ -20,3 +20,29 @@
     color: $main-color-light;
     font-size: 80%;
 }
+
+.stats {
+    width: 25%;
+    color: $main-color-light;
+}
+
+.downloads {
+    display: flex;
+    align-items: center;
+    padding-bottom: 5px;
+}
+
+.recent-downloads {
+    display: flex;
+    align-items: center;
+}
+
+.updated-at {
+    padding-top: 5px;
+    display: flex;
+    align-items: center;
+
+    svg {
+        padding: 10px;
+    }
+}
