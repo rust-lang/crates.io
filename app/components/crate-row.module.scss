@@ -1,3 +1,10 @@
+.description-box {
+    padding-top: 5px;
+    display: flex;
+    flex-direction: column;
+    width: 75%;
+}
+
 .name {
     color: $main-color;
     font-weight: bold;
