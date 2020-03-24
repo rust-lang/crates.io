@@ -63,9 +63,7 @@
           &nbsp;
         {{/if}}
       </div>
-      <div class='stats downloads'>
-        <button type="button" local-class="remove-button" data-test-remove-owner-button {{action 'removeOwner' team}}>Remove</button>
-      </div>
+      <button type="button" local-class="remove-button" data-test-remove-owner-button {{action 'removeOwner' team}}>Remove</button>
     </div>
   {{/each}}
   {{#each this.crate.owner_user as |user|}}
@@ -87,9 +85,7 @@
           &nbsp;
         {{/if}}
       </div>
-      <div class='stats downloads'>
-        <button type="button" local-class="remove-button" data-test-remove-owner-button {{action 'removeOwner' user}}>Remove</button>
-      </div>
+      <button type="button" local-class="remove-button" data-test-remove-owner-button {{action 'removeOwner' user}}>Remove</button>
     </div>
   {{/each}}
 </div>
