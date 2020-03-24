@@ -43,9 +43,9 @@
   </div>
 {{/if}}
 
-<div class='white-rows' data-test-owners>
+<div local-class='list' data-test-owners>
   {{#each this.crate.owner_team as |team|}}
-    <div class='row' data-test-owner-team={{team.login}}>
+    <div local-class='row' data-test-owner-team={{team.login}}>
       <LinkTo @route={{team.kind}} @model={{team.login}}>
         <UserAvatar @user={{team}} @size="medium-small" />
       </LinkTo>
@@ -59,7 +59,7 @@
     </div>
   {{/each}}
   {{#each this.crate.owner_user as |user|}}
-    <div class='row' data-test-owner-user={{user.login}}>
+    <div local-class='row' data-test-owner-user={{user.login}}>
       <LinkTo @route={{user.kind}} @model={{user.login}}>
         <UserAvatar @user={{user}} @size="medium-small" />
       </LinkTo>

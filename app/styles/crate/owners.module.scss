@@ -1,3 +1,19 @@
+.list {
+    background-color: white;
+    padding: 0 20px;
+}
+
+.row {
+    border-bottom: 2px solid $gray-border;
+    padding: 20px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+
+    &:last-of-type { border: none; }
+}
+
 .email-column {
     width: 25%;
     color: $main-color-light;
