@@ -7,11 +7,11 @@ export default Component.extend({
   project: alias('badge.attributes.project'),
   pipeline: alias('badge.attributes.pipeline'),
 
-  build: computed('badge.attributes.build', function() {
+  build: computed('badge.attributes.build', function () {
     return this.get('badge.attributes.build') || '1';
   }),
 
-  text: computed('pipeline', function() {
+  text: computed('pipeline', function () {
     return `Azure Devops build status for the ${this.pipeline} pipeline`;
   }),
 });

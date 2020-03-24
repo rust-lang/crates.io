@@ -7,14 +7,14 @@ import { title } from '../helpers/dom';
 import setupMirage from '../helpers/setup-mirage';
 import { percySnapshot } from 'ember-percy';
 
-module('Acceptance | crates page', function(hooks) {
+module('Acceptance | crates page', function (hooks) {
   setupApplicationTest(hooks);
   setupMirage(hooks);
 
   // should match the default set in the crates controller
   const per_page = 50;
 
-  test('/crates is accessible', async function(assert) {
+  test('/crates is accessible', async function (assert) {
     assert.expect(0);
 
     this.server.loadFixtures();
@@ -25,7 +25,7 @@ module('Acceptance | crates page', function(hooks) {
     await a11yAudit(axeConfig);
   });
 
-  test('visiting the crates page from the front page', async function(assert) {
+  test('visiting the crates page from the front page', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/');
@@ -35,7 +35,7 @@ module('Acceptance | crates page', function(hooks) {
     assert.equal(title(), 'Crates - crates.io: Rust Package Registry');
   });
 
-  test('visiting the crates page directly', async function(assert) {
+  test('visiting the crates page directly', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/crates');
@@ -45,7 +45,7 @@ module('Acceptance | crates page', function(hooks) {
     assert.equal(title(), 'Crates - crates.io: Rust Package Registry');
   });
 
-  test('listing crates', async function(assert) {
+  test('listing crates', async function (assert) {
     for (let i = 1; i <= per_page; i++) {
       let crate = this.server.create('crate');
       this.server.create('version', { crate });
@@ -57,7 +57,7 @@ module('Acceptance | crates page', function(hooks) {
     assert.dom('[data-test-crates-nav] [data-test-total-rows]').hasText(`${per_page}`);
   });
 
-  test('navigating to next page of crates', async function(assert) {
+  test('navigating to next page of crates', async function (assert) {
     for (let i = 1; i <= per_page + 2; i++) {
       let crate = this.server.create('crate');
       this.server.create('version', { crate });
@@ -73,7 +73,7 @@ module('Acceptance | crates page', function(hooks) {
     assert.dom('[data-test-crates-nav] [data-test-total-rows]').hasText(`${total}`);
   });
 
-  test('crates default sort is alphabetical', async function(assert) {
+  test('crates default sort is alphabetical', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/crates');
@@ -81,14 +81,14 @@ module('Acceptance | crates page', function(hooks) {
     assert.dom('[data-test-crates-sort] [data-test-current-order]').hasText('Alphabetical');
   });
 
-  test('downloads appears for each crate on crate list', async function(assert) {
+  test('downloads appears for each crate on crate list', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/crates');
     assert.dom('[data-test-crate-row="0"] [data-test-downloads]').hasText('All-Time: 497');
   });
 
-  test('recent downloads appears for each crate on crate list', async function(assert) {
+  test('recent downloads appears for each crate on crate list', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/crates');

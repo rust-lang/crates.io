@@ -1,7 +1,7 @@
 import { pageParams, compareStrings, withMeta, compareIsoDates, notFound } from './-utils';
 
 export function register(server) {
-  server.get('/api/v1/crates', function(schema, request) {
+  server.get('/api/v1/crates', function (schema, request) {
     const { start, end } = pageParams(request);
 
     let crates = schema.crates.all();
@@ -33,7 +33,7 @@ export function register(server) {
     return withMeta(this.serialize(crates.slice(start, end)), { total: crates.length });
   });
 
-  server.get('/api/v1/crates/:crate_id', function(schema, request) {
+  server.get('/api/v1/crates/:crate_id', function (schema, request) {
     let crateId = request.params.crate_id;
     let crate = schema.crates.find(crateId);
     if (!crate) return notFound();
@@ -82,7 +82,7 @@ export function register(server) {
     return schema.dependencies.where({ versionId: version.id });
   });
 
-  server.get('/api/v1/crates/:crate_id/:version_num/downloads', function(schema, request) {
+  server.get('/api/v1/crates/:crate_id/:version_num/downloads', function (schema, request) {
     let crateId = request.params.crate_id;
     let crate = schema.crates.find(crateId);
     if (!crate) return notFound();
@@ -94,7 +94,7 @@ export function register(server) {
     return schema.versionDownloads.where({ versionId: version.id });
   });
 
-  server.get('/api/v1/crates/:crate_id/owner_user', function(schema, request) {
+  server.get('/api/v1/crates/:crate_id/owner_user', function (schema, request) {
     let crateId = request.params.crate_id;
     let crate = schema.crates.find(crateId);
     if (!crate) return notFound();
@@ -108,7 +108,7 @@ export function register(server) {
     return response;
   });
 
-  server.get('/api/v1/crates/:crate_id/owner_team', function(schema, request) {
+  server.get('/api/v1/crates/:crate_id/owner_team', function (schema, request) {
     let crateId = request.params.crate_id;
     let crate = schema.crates.find(crateId);
     if (!crate) return notFound();
@@ -122,7 +122,7 @@ export function register(server) {
     return response;
   });
 
-  server.get('/api/v1/crates/:crate_id/reverse_dependencies', function(schema, request) {
+  server.get('/api/v1/crates/:crate_id/reverse_dependencies', function (schema, request) {
     let crateId = request.params.crate_id;
     let crate = schema.crates.find(crateId);
     if (!crate) return notFound();
@@ -142,7 +142,7 @@ export function register(server) {
     };
   });
 
-  server.get('/api/v1/crates/:crate_id/downloads', function(schema, request) {
+  server.get('/api/v1/crates/:crate_id/downloads', function (schema, request) {
     let crateId = request.params.crate_id;
     let crate = schema.crates.find(crateId);
     if (!crate) return notFound();

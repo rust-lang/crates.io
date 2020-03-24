@@ -7,7 +7,7 @@ export default Component.extend(EKMixin, EKOnInsertMixin, {
 
   dropdownExpanded: false,
 
-  onEscape: on(keyDown('Escape'), function() {
+  onEscape: on(keyDown('Escape'), function () {
     this.set('dropdownExpanded', false);
   }),
 

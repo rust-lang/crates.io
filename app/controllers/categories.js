@@ -12,7 +12,7 @@ export default Controller.extend(PaginationMixin, {
 
   totalItems: readOnly('model.meta.total'),
 
-  currentSortBy: computed('sort', function() {
+  currentSortBy: computed('sort', function () {
     return this.sort === 'crates' ? '# Crates' : 'Alphabetical';
   }),
 });

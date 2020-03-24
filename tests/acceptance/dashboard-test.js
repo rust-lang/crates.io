@@ -7,18 +7,18 @@ import { percySnapshot } from 'ember-percy';
 import setupMirage from '../helpers/setup-mirage';
 import { visit } from '../helpers/visit-ignoring-abort';
 
-module('Acceptance | Dashboard', function(hooks) {
+module('Acceptance | Dashboard', function (hooks) {
   setupApplicationTest(hooks);
   setupWindowMock(hooks);
   setupMirage(hooks);
 
-  test('redirects to / when not logged in', async function(assert) {
+  test('redirects to / when not logged in', async function (assert) {
     await visit('/dashboard');
     assert.equal(currentURL(), '/');
     assert.dom('[data-test-flash-message]').hasText('Please log in to proceed');
   });
 
-  test('shows the dashboard when logged in', async function(assert) {
+  test('shows the dashboard when logged in', async function (assert) {
     window.localStorage.setItem('isLoggedIn', '1');
 
     {

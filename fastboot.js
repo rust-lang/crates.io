@@ -32,7 +32,7 @@ class LoggerWithoutTimestamp {
 function writeAppInitializedWhenReady(logger) {
   let timeout;
 
-  timeout = setInterval(function() {
+  timeout = setInterval(function () {
     logger.writeLine('waiting backend');
     if (fs.existsSync('/tmp/backend-initialized')) {
       logger.writeLine('backend is up. let heroku know the app is ready');

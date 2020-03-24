@@ -16,7 +16,7 @@ export default class FetcherService extends Service {
       return cache[url];
     }
 
-    return ajax(url).then(function(resp) {
+    return ajax(url).then(function (resp) {
       if (shoebox && fastboot.isFastBoot) {
         cache[url] = deepCopy(resp);
         shoebox.put('ajax-cache', cache);

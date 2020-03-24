@@ -6,11 +6,11 @@ import axeConfig from '../axe-config';
 import setupMirage from '../helpers/setup-mirage';
 import { percySnapshot } from 'ember-percy';
 
-module('Acceptance | keywords', function(hooks) {
+module('Acceptance | keywords', function (hooks) {
   setupApplicationTest(hooks);
   setupMirage(hooks);
 
-  test('keyword/:keyword_id is accessible', async function(assert) {
+  test('keyword/:keyword_id is accessible', async function (assert) {
     assert.expect(0);
 
     this.server.create('keyword', { keyword: 'network' });
@@ -21,7 +21,7 @@ module('Acceptance | keywords', function(hooks) {
     await a11yAudit(axeConfig);
   });
 
-  test('keyword/:keyword_id index default sort is recent-downloads', async function(assert) {
+  test('keyword/:keyword_id index default sort is recent-downloads', async function (assert) {
     this.server.create('keyword', { keyword: 'network' });
 
     await visit('/keywords/network');

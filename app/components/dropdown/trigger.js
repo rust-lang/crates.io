@@ -6,11 +6,11 @@ export default Component.extend({
 
   attributeBindings: ['type', 'role', 'disabled'],
 
-  type: computed('tagName', function() {
+  type: computed('tagName', function () {
     return this.tagName === 'button' ? 'button' : null;
   }),
 
-  role: computed('tagName', function() {
+  role: computed('tagName', function () {
     return this.tagName === 'a' ? 'button' : null;
   }),
 

@@ -1,7 +1,7 @@
 import { compareIsoDates } from './-utils';
 
 export function register(server) {
-  server.get('/api/v1/summary', function(schema) {
+  server.get('/api/v1/summary', function (schema) {
     let crates = schema.crates.all();
 
     let just_updated = crates.sort((a, b) => compareIsoDates(b.updated_at, a.updated_at)).slice(0, 10);

@@ -6,7 +6,7 @@ import { defer } from 'rsvp';
 
 import setupMirage from '../helpers/setup-mirage';
 
-module('Acceptance | Crate following', function(hooks) {
+module('Acceptance | Crate following', function (hooks) {
   setupApplicationTest(hooks);
   setupWindowMock(hooks);
   setupMirage(hooks);
@@ -36,14 +36,14 @@ module('Acceptance | Crate following', function(hooks) {
     }
   }
 
-  test("unauthenticated users don't see the follow button", async function(assert) {
+  test("unauthenticated users don't see the follow button", async function (assert) {
     prepare(this, { loggedIn: false });
 
     await visit('/crates/nanomsg');
     assert.dom('[data-test-follow-button]').doesNotExist();
   });
 
-  test('authenticated users see a loading spinner and can follow/unfollow crates', async function(assert) {
+  test('authenticated users see a loading spinner and can follow/unfollow crates', async function (assert) {
     prepare(this);
 
     let followingDeferred = defer();

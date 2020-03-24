@@ -18,7 +18,7 @@ export default Model.extend({
   dependencies: hasMany('dependency', { async: true }),
   version_downloads: hasMany('version-download', { async: true }),
 
-  crateName: computed('crate', function() {
+  crateName: computed('crate', function () {
     return this.belongsTo('crate').id();
   }),
   crate_size: attr('number'),

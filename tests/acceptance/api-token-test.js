@@ -8,7 +8,7 @@ import { percySnapshot } from 'ember-percy';
 import setupMirage from '../helpers/setup-mirage';
 import { visit } from '../helpers/visit-ignoring-abort';
 
-module('Acceptance | api-tokens', function(hooks) {
+module('Acceptance | api-tokens', function (hooks) {
   setupApplicationTest(hooks);
   setupWindowMock(hooks);
   setupMirage(hooks);
@@ -43,7 +43,7 @@ module('Acceptance | api-tokens', function(hooks) {
     });
   }
 
-  test('/me is showing the list of active API tokens', async function(assert) {
+  test('/me is showing the list of active API tokens', async function (assert) {
     prepare(this);
 
     await visit('/me');
@@ -70,10 +70,10 @@ module('Acceptance | api-tokens', function(hooks) {
     assert.dom('[data-test-token]', row2).doesNotExist();
   });
 
-  test('API tokens can be revoked', async function(assert) {
+  test('API tokens can be revoked', async function (assert) {
     prepare(this);
 
-    this.server.delete('/api/v1/me/tokens/:id', function(schema, request) {
+    this.server.delete('/api/v1/me/tokens/:id', function (schema, request) {
       assert.step(`delete id:${request.params.id}`);
       return {};
     });
@@ -90,10 +90,10 @@ module('Acceptance | api-tokens', function(hooks) {
     assert.dom('[data-test-error]').doesNotExist();
   });
 
-  test('failed API tokens revocation shows an error', async function(assert) {
+  test('failed API tokens revocation shows an error', async function (assert) {
     prepare(this);
 
-    this.server.delete('/api/v1/me/tokens/:id', function() {
+    this.server.delete('/api/v1/me/tokens/:id', function () {
       return new Response(500, {}, {});
     });
 
@@ -108,10 +108,10 @@ module('Acceptance | api-tokens', function(hooks) {
     assert.dom('[data-test-error]').includesText('An error occurred while revoking this token');
   });
 
-  test('new API tokens can be created', async function(assert) {
+  test('new API tokens can be created', async function (assert) {
     prepare(this);
 
-    this.server.put('/api/v1/me/tokens', function(schema, request) {
+    this.server.put('/api/v1/me/tokens', function (schema, request) {
       assert.step('put');
 
       let { api_token } = JSON.parse(request.requestBody);

@@ -1,6 +1,6 @@
 'use strict';
 
-module.exports = function(/* environment, appConfig */) {
+module.exports = function (/* environment, appConfig */) {
   return {
     name: 'crates.io: Rust Package Registry',
     short_name: 'crates.io',

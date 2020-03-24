@@ -6,11 +6,11 @@ import axeConfig from '../axe-config';
 import setupMirage from '../helpers/setup-mirage';
 import { percySnapshot } from 'ember-percy';
 
-module('Acceptance | user page', function(hooks) {
+module('Acceptance | user page', function (hooks) {
   setupApplicationTest(hooks);
   setupMirage(hooks);
 
-  test('is accessible', async function(assert) {
+  test('is accessible', async function (assert) {
     assert.expect(0);
 
     this.server.loadFixtures();
@@ -21,7 +21,7 @@ module('Acceptance | user page', function(hooks) {
     await a11yAudit(axeConfig);
   });
 
-  test('has user display', async function(assert) {
+  test('has user display', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/users/thehydroimpulse');
@@ -29,7 +29,7 @@ module('Acceptance | user page', function(hooks) {
     assert.dom('[data-test-heading] [data-test-username]').hasText('thehydroimpulse');
   });
 
-  test('has link to github in user header', async function(assert) {
+  test('has link to github in user header', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/users/thehydroimpulse');
@@ -37,7 +37,7 @@ module('Acceptance | user page', function(hooks) {
     assert.dom('[data-test-heading] [data-test-user-link]').hasAttribute('href', 'https://github.com/thehydroimpulse');
   });
 
-  test('github link has image in user header', async function(assert) {
+  test('github link has image in user header', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/users/thehydroimpulse');
@@ -45,7 +45,7 @@ module('Acceptance | user page', function(hooks) {
     assert.dom('[data-test-heading] [data-test-user-link] img').hasAttribute('src', '/assets/GitHub-Mark.svg');
   });
 
-  test('user details has github profile icon', async function(assert) {
+  test('user details has github profile icon', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/users/thehydroimpulse');
