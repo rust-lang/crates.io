@@ -10,10 +10,8 @@
         {{/let}}
       {{/each}}
     </div>
-    <div class='summary' data-test-description>
-      <span class='small'>
-        {{ truncate-text this.crate.description }}
-      </span>
+    <div local-class="description" data-test-description>
+      {{ truncate-text this.crate.description }}
     </div>
   </div>
   <div class='stats'>
