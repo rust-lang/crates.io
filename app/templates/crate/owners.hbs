@@ -64,7 +64,7 @@
         {{/if}}
       </div>
       <div class='stats downloads'>
-        <button type="button" class='remove-owner small yellow-button' {{action 'removeOwner' team}}>Remove</button>
+        <button type="button" class='small yellow-button' data-test-remove-owner-button {{action 'removeOwner' team}}>Remove</button>
       </div>
     </div>
   {{/each}}
@@ -88,7 +88,7 @@
         {{/if}}
       </div>
       <div class='stats downloads'>
-        <button type="button" class='remove-owner small yellow-button' {{action 'removeOwner' user}}>Remove</button>
+        <button type="button" class='small yellow-button' data-test-remove-owner-button {{action 'removeOwner' user}}>Remove</button>
       </div>
     </div>
   {{/each}}

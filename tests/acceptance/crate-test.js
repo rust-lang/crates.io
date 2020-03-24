@@ -301,7 +301,7 @@ module('Acceptance | crate page', function (hooks) {
     this.server.loadFixtures();
 
     await visit('/crates/nanomsg/owners');
-    await click('[data-test-owner-user="thehydroimpulse"] .remove-owner');
+    await click('[data-test-owner-user="thehydroimpulse"] [data-test-remove-owner-button]');
 
     assert.dom('.removed').hasText('User thehydroimpulse removed as crate owner');
     assert.dom('[data-test-owner-user]').exists({ count: 1 });
@@ -311,7 +311,7 @@ module('Acceptance | crate page', function (hooks) {
     this.server.loadFixtures();
 
     await visit('/crates/nanomsg/owners');
-    await click('[data-test-owner-team="github:org:thehydroimpulse"] .remove-owner');
+    await click('[data-test-owner-team="github:org:thehydroimpulse"] [data-test-remove-owner-button]');
 
     assert.dom('.removed').hasText('Team org/thehydroimpulseteam removed as crate owner');
     assert.dom('[data-test-owner-team]').exists({ count: 1 });
