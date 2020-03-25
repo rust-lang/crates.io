@@ -255,7 +255,8 @@ module('Acceptance | crate page', function (hooks) {
 
     await visit('/crates/nanomsg/owners');
 
-    assert.dom('.owners .row').exists({ count: 4 });
+    assert.dom('[data-test-owners] [data-test-owner-team]').exists({ count: 2 });
+    assert.dom('[data-test-owners] [data-test-owner-user]').exists({ count: 2 });
     assert.dom('a[href="/teams/github:org:thehydroimpulse"]').exists();
     assert.dom('a[href="/teams/github:org:blabaere"]').exists();
     assert.dom('a[href="/users/thehydroimpulse"]').exists();
@@ -266,11 +267,11 @@ module('Acceptance | crate page', function (hooks) {
     this.server.loadFixtures();
 
     await visit('/crates/nanomsg/owners');
-    await click('#add-owner');
+    await click('[data-test-save-button]');
 
-    assert.dom('.error').exists();
-    assert.dom('.error').hasText('Please enter a username');
-    assert.dom('.owners .row').exists({ count: 4 });
+    assert.dom('[data-test-error-message]').hasText('Please enter a username');
+    assert.dom('[data-test-owners] [data-test-owner-team]').exists({ count: 2 });
+    assert.dom('[data-test-owners] [data-test-owner-user]').exists({ count: 2 });
   });
 
   test('attempting to add non-existent owner', async function (assert) {
@@ -278,11 +279,11 @@ module('Acceptance | crate page', function (hooks) {
 
     await visit('/crates/nanomsg/owners');
     await fillIn('input[name="username"]', 'spookyghostboo');
-    await click('#add-owner');
+    await click('[data-test-save-button]');
 
-    assert.dom('.error').exists();
-    assert.dom('.error').hasText('Error sending invite: Not Found');
-    assert.dom('.owners .row').exists({ count: 4 });
+    assert.dom('[data-test-error-message]').hasText('Error sending invite: Not Found');
+    assert.dom('[data-test-owners] [data-test-owner-team]').exists({ count: 2 });
+    assert.dom('[data-test-owners] [data-test-owner-user]').exists({ count: 2 });
   });
 
   test('add a new owner', async function (assert) {
@@ -290,20 +291,20 @@ module('Acceptance | crate page', function (hooks) {
 
     await visit('/crates/nanomsg/owners');
     await fillIn('input[name="username"]', 'iain8');
-    await click('#add-owner');
+    await click('[data-test-save-button]');
 
-    assert.dom('.invited').exists();
-    assert.dom('.invited').hasText('An invite has been sent to iain8');
-    assert.dom('.owners .row').exists({ count: 4 });
+    assert.dom('[data-test-invited-message]').hasText('An invite has been sent to iain8');
+    assert.dom('[data-test-owners] [data-test-owner-team]').exists({ count: 2 });
+    assert.dom('[data-test-owners] [data-test-owner-user]').exists({ count: 2 });
   });
 
   test('remove a crate owner when owner is a user', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/crates/nanomsg/owners');
-    await click('[data-test-owner-user="thehydroimpulse"] .remove-owner');
+    await click('[data-test-owner-user="thehydroimpulse"] [data-test-remove-owner-button]');
 
-    assert.dom('.removed').hasText('User thehydroimpulse removed as crate owner');
+    assert.dom('[data-test-removed-message]').hasText('User thehydroimpulse removed as crate owner');
     assert.dom('[data-test-owner-user]').exists({ count: 1 });
   });
 
@@ -311,9 +312,9 @@ module('Acceptance | crate page', function (hooks) {
     this.server.loadFixtures();
 
     await visit('/crates/nanomsg/owners');
-    await click('[data-test-owner-team="github:org:thehydroimpulse"] .remove-owner');
+    await click('[data-test-owner-team="github:org:thehydroimpulse"] [data-test-remove-owner-button]');
 
-    assert.dom('.removed').hasText('Team org/thehydroimpulseteam removed as crate owner');
+    assert.dom('[data-test-removed-message]').hasText('Team org/thehydroimpulseteam removed as crate owner');
     assert.dom('[data-test-owner-team]').exists({ count: 1 });
   });
 });

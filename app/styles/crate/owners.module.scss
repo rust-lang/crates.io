@@ -1,0 +1,53 @@
+.me-email {
+    border-bottom: 5px solid $gray-border;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+}
+
+.email-form {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    border: 2px solid $gray-border;
+    padding: 10px 20px;
+}
+
+.email-input-label {
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.email-input {
+    width: 400px;
+    margin-right: 10px;
+}
+
+.submit-button {
+    composes: small yellow-button from global;
+}
+
+.list {
+    background-color: white;
+    padding: 0 20px;
+}
+
+.row {
+    border-bottom: 2px solid $gray-border;
+    padding: 20px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+
+    &:last-of-type { border: none; }
+}
+
+.email-column {
+    width: 25%;
+    color: $main-color-light;
+}
+
+.remove-button {
+    composes: small yellow-button from global;
+}

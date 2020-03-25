@@ -6,90 +6,59 @@
   <h2>{{ this.crate.name }}</h2>
 </div>
 
-<div id="me-email">
+<div local-class="me-email">
   <h2>Add Owner</h2>
 
-  <div class="row">
-    <form class="email-form" {{action 'addOwner' on='submit'}}>
-      <label class="label" for='new-owner-username'>
-        Username
-      </label>
-      <Input @type="text" id="new-owner-username" @value={{this.username}} placeholder="Username" class="form-control space-right" @name="username" />
+  {{#if this.error}}
+    <p data-test-error-message>{{this.error}}</p>
+  {{/if}}
 
-      {{#if this.error}}
-        <div class='error'>
-          <p class='error'>{{this.error}}</p>
-        </div>
-      {{/if}}
+  {{#if this.invited}}
+    <p data-test-invited-message>{{this.invited}}</p>
+  {{/if}}
 
-      {{#if this.invited}}
-        <div class='invited'>
-          <p>{{this.invited}}</p>
-        </div>
-      {{/if}}
-
-      <div class="actions">
-        <button id="add-owner" type="submit" class="small yellow-button space-right">Save</button>
-      </div>
-    </form>
-  </div>
+  <form local-class="email-form" {{action 'addOwner' on='submit'}}>
+    <label local-class="email-input-label" for='new-owner-username'>
+      Username
+    </label>
+    <Input @type="text" id="new-owner-username" @value={{this.username}} placeholder="Username" local-class="email-input" @name="username" />
+    <button type="submit" local-class="submit-button" data-test-save-button>Save</button>
+  </form>
 </div>
 
 <h2>Owners</h2>
 
 {{#if this.removed}}
-  <div class='removed'>
-    <p>{{this.removed}}</p>
-  </div>
+  <p data-test-removed-message>{{this.removed}}</p>
 {{/if}}
 
-<div class='owners white-rows'>
+<div local-class='list' data-test-owners>
   {{#each this.crate.owner_team as |team|}}
-    <div class='crate row' data-test-owner-team={{team.login}}>
-      <div>
-        <LinkTo @route={{team.kind}} @model={{team.login}}>
-          <UserAvatar @user={{team}} @size="medium-small" />
-        </LinkTo>
+    <div local-class='row' data-test-owner-team={{team.login}}>
+      <LinkTo @route={{team.kind}} @model={{team.login}}>
+        <UserAvatar @user={{team}} @size="medium-small" />
+      </LinkTo>
+      <LinkTo @route={{team.kind}} @model={{team.login}}>
+        {{team.display_name}}
+      </LinkTo>
+      <div local-class="email-column">
+        {{team.email}}
       </div>
-      <div>
-        <LinkTo @route={{team.kind}} @model={{team.login}}>
-          {{team.display_name}}
-        </LinkTo>
-      </div>
-      <div class='stats'>
-        {{#if team.email}}
-          {{team.email}}
-        {{else}}
-          &nbsp;
-        {{/if}}
-      </div>
-      <div class='stats downloads'>
-        <button type="button" class='remove-owner small yellow-button' {{action 'removeOwner' team}}>Remove</button>
-      </div>
+      <button type="button" local-class="remove-button" data-test-remove-owner-button {{action 'removeOwner' team}}>Remove</button>
     </div>
   {{/each}}
   {{#each this.crate.owner_user as |user|}}
-    <div class='crate row' data-test-owner-user={{user.login}}>
-      <div>
-        <LinkTo @route={{user.kind}} @model={{user.login}}>
-          <UserAvatar @user={{user}} @size="medium-small" />
-        </LinkTo>
+    <div local-class='row' data-test-owner-user={{user.login}}>
+      <LinkTo @route={{user.kind}} @model={{user.login}}>
+        <UserAvatar @user={{user}} @size="medium-small" />
+      </LinkTo>
+      <LinkTo @route={{user.kind}} @model={{user.login}}>
+        {{ user.name }}
+      </LinkTo>
+      <div local-class="email-column">
+        {{user.email}}
       </div>
-      <div>
-        <LinkTo @route={{user.kind}} @model={{user.login}}>
-          {{ user.name }}
-        </LinkTo>
-      </div>
-      <div class='stats'>
-        {{#if user.email}}
-          {{user.email}}
-        {{else}}
-          &nbsp;
-        {{/if}}
-      </div>
-      <div class='stats downloads'>
-        <button type="button" class='remove-owner small yellow-button' {{action 'removeOwner' user}}>Remove</button>
-      </div>
+      <button type="button" local-class="remove-button" data-test-remove-owner-button {{action 'removeOwner' user}}>Remove</button>
     </div>
   {{/each}}
 </div>
