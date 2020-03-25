@@ -13,9 +13,7 @@
 </div>
 
 {{#if this.firstResultPending}}
-  <div id="no-results">
-    <h2>Loading search results...</h2>
-  </div>
+  <h2>Loading search results...</h2>
 {{else if this.hasItems}}
   <div id='results'>
     <ResultsCount
@@ -85,7 +83,5 @@
 
   <Pagination @pages={{this.pages}} @prevPage={{this.prevPage}} @nextPage={{this.nextPage}} />
 {{else}}
-  <div id="no-results">
-    <h2>0 crates found. <a href='https://doc.rust-lang.org/cargo/getting-started/'>Get started</a> and create your own.</h2>
-  </div>
+  <h2>0 crates found. <a href='https://doc.rust-lang.org/cargo/getting-started/'>Get started</a> and create your own.</h2>
 {{/if}}
