@@ -15,30 +15,28 @@
     </div>
   </div>
 
-  <div class="quick-links">
-    <ul>
-      {{#if this.crate.homepage}}
-        <li><a href="{{this.crate.homepage}}">Homepage</a></li>
-      {{/if}}
-      {{#if this.crate.wiki}}
-        <li><a href="{{this.crate.wiki}}">Wiki</a></li>
-      {{/if}}
-      {{#if this.crate.mailing_list}}
-        <li><a href="{{this.crate.mailing_list}}">Mailing list</a></li>
-      {{/if}}
-      {{#if this.crate.documentation}}
-        <li><a href="{{this.crate.documentation}}">Documentation</a></li>
-      {{/if}}
-      {{#if this.crate.repository}}
-        <li><a href="{{this.crate.repository}}">Repository</a></li>
-      {{/if}}
-      <li>
-        <LinkTo @route="crate.reverse-dependencies" @query={{hash dependency=this.crate.crate_id}} data-test-reverse-deps-link>
-          Dependent crates
-        </LinkTo>
-      </li>
-    </ul>
-  </div>
+  <ul local-class="quick-links">
+    {{#if this.crate.homepage}}
+      <li><a href="{{this.crate.homepage}}">Homepage</a></li>
+    {{/if}}
+    {{#if this.crate.wiki}}
+      <li><a href="{{this.crate.wiki}}">Wiki</a></li>
+    {{/if}}
+    {{#if this.crate.mailing_list}}
+      <li><a href="{{this.crate.mailing_list}}">Mailing list</a></li>
+    {{/if}}
+    {{#if this.crate.documentation}}
+      <li><a href="{{this.crate.documentation}}">Documentation</a></li>
+    {{/if}}
+    {{#if this.crate.repository}}
+      <li><a href="{{this.crate.repository}}">Repository</a></li>
+    {{/if}}
+    <li>
+      <LinkTo @route="crate.reverse-dependencies" @query={{hash dependency=this.crate.crate_id}} data-test-reverse-deps-link>
+        Dependent crates
+      </LinkTo>
+    </li>
+  </ul>
 </div>
 
 <div local-class='crate-info'>
