@@ -16,48 +16,6 @@
             clear: both;
         }
         dd { float: left; margin-left: 10px; }
-        .align-center {
-            align-items: center;
-        }
-        .row {
-            width: 100%;
-            border: 1px solid #d5d3cb;
-            border-bottom-width: 0px;
-            &:last-child { border-bottom-width: 1px; }
-            padding: 10px 20px 10px 0;
-            display: flex;
-            background-color: $main-bg-dark;
-            .small-text {
-                font-size: 90%;
-            }
-            .error {
-                color: rgb(216, 0, 41);
-            }
-            .label {
-                flex: 1;
-                margin-right: 0.4em;
-                font-weight: bold;
-            }
-            .actions {
-                display: flex;
-                align-items: center;
-            }
-            .space-left {
-                margin-left: 10px;
-            }
-            .space-right {
-                margin-right: 10px;
-            }
-            .no-space-left {
-                margin-left: 0px;
-            }
-            p {
-                width: 80%;
-            }
-            .space-bottom {
-                margin-bottom: 10px;
-            }
-        }
     }
 
     @media only screen and (max-width: 550px) {
