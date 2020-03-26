@@ -5,12 +5,10 @@
   <h1>Pending Owner Invites</h1>
 </div>
 
-<div id='my-invites'>
-  <div class='white-rows'>
-    {{#each this.model as |invite|}}
-      <PendingOwnerInviteRow @invite={{invite}} data-test-invite={{invite.crate_name}} />
-    {{else}}
-      <p data-test-empty-state>You don't seem to have any pending invitations.</p>
-    {{/each}}
-  </div>
+<div local-class="list">
+  {{#each this.model as |invite|}}
+    <PendingOwnerInviteRow @invite={{invite}} local-class="row" data-test-invite={{invite.crate_name}} />
+  {{else}}
+    <p local-class="row" data-test-empty-state>You don't seem to have any pending invitations.</p>
+  {{/each}}
 </div>

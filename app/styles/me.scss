@@ -168,28 +168,3 @@
         align-self: center;
     }
 }
-
-#my-invites {
-    flex-grow: 5;
-
-    .row {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .info {
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-
-        .date { flex-grow: 2; text-align: right; }
-        .label {
-            .small-text {
-                font-size: 90%;
-            }
-        }
-        .name {
-            width: 200px;
-        }
-    }
-}
