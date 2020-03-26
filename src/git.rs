@@ -289,7 +289,6 @@ pub fn add_crate(env: &Environment, krate: Crate) -> Result<(), PerformError> {
 /// push the changes.
 #[swirl::background_job]
 pub fn yank(
-    conn: &PgConnection,
     env: &Environment,
     krate: String,
     version: Version,
@@ -299,6 +298,8 @@ pub fn yank(
 
     let repo = env.lock_index()?;
     let dst = repo.index_file(&krate);
+
+    let conn = env.connection()?;
 
     conn.transaction(|| {
         let yanked_in_db = versions::table
