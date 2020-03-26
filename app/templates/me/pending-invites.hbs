@@ -8,9 +8,9 @@
 <div id='my-invites'>
   <div class='white-rows'>
     {{#each this.model as |invite|}}
-      <PendingOwnerInviteRow @invite={{invite}} />
+      <PendingOwnerInviteRow @invite={{invite}} data-test-invite={{invite.crate_name}} />
     {{else}}
-      <p>You don't seem to have any pending invitations.</p>
+      <p data-test-empty-state>You don't seem to have any pending invitations.</p>
     {{/each}}
   </div>
 </div>
