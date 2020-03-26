@@ -13,8 +13,7 @@
     }
 
     .label {
-        color: $main-color-light;
-        font-size: 80%;
+        composes: small from './shared/typography.module.scss';
     }
 }
 
@@ -90,15 +89,13 @@
     }
 
     .version {
-        color: $main-color-light;
-        font-size: 80%;
+        composes: small from './shared/typography.module.scss';
     }
 
     .date {
+        composes: small from './shared/typography.module.scss';
         flex-grow: 1;
         text-align: right;
-        color: $main-color-light;
-        font-size: 80%;
     }
 }
 
