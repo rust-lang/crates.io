@@ -18,8 +18,8 @@ $link-color: rgb(0, 172, 91);
 span.small {
     color: $main-color-light;
     font-size: 80%;
-    .num {
-        font-weight: bold;
+
+    strong {
         color: $main-color;
     }
 }
