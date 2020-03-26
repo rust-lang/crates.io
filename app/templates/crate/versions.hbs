@@ -18,7 +18,7 @@
 
         <span class='small'>{{moment-format version.created_at 'LL'}}</span>
         {{#if version.yanked}}
-          <span class='yanked'>yanked</span>
+          <span local-class='yanked'>yanked</span>
         {{/if}}
       </div>
       <LinkTo @route="crate.version" @model={{version.num}} class="arrow">

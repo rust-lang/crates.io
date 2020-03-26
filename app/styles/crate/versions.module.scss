@@ -11,3 +11,7 @@
         float: right;
     }
 }
+
+.yanked {
+    composes: yanked from '../shared/typography.module.scss';
+}
