@@ -43,7 +43,6 @@
       <Dropdown class="dropdown-container" as |dd|>
         <dd.Trigger class="dropdown" local-class="dropdown-button">
           Docs
-          <span class='arrow'></span>
         </dd.Trigger>
 
         <dd.Content @tagName="ul" local-class="doc-links" class="dropdown">
@@ -69,7 +68,6 @@
           <dd.Trigger class="dropdown" local-class="dropdown-button" data-test-toggle>
             <UserAvatar @user={{this.session.currentUser}} @size="small" data-test-avatar />
             {{ this.session.currentUser.name }}
-            <span class='arrow'></span>
           </dd.Trigger>
 
           <dd.Content @tagName="ul" class="dropdown" local-class="current-user-links">
@@ -91,7 +89,6 @@
       <Dropdown class="dropdown-container" as |dd|>
         <dd.Trigger class="dropdown" local-class="dropdown-button">
           Menu
-          <span class='arrow'></span>
         </dd.Trigger>
         <dd.Content @tagName="ul" class="dropdown" local-class="current-user-links">
           <li><LinkTo @route="crates">Browse All Crates</LinkTo></li>
