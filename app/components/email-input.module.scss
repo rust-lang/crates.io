@@ -1,0 +1,6 @@
+.save-button,
+.cancel-button,
+.edit-button,
+.resend-button {
+    composes: yellow-button small from '../styles/shared/buttons.module.scss';
+}
