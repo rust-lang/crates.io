@@ -1,8 +1,6 @@
 <li>
-  <LinkTo @route={{@route}} @model={{@model}} ...attributes>
+  <LinkTo @route={{@route}} @model={{@model}} local-class="link" ...attributes>
     <span>{{yield}}</span>
-    <div class='arrow-in-list'>
-      {{svg-jar "right-arrow"}}
-    </div>
+    {{svg-jar "right-arrow"}}
   </LinkTo>
 </li>

@@ -1,5 +1,5 @@
 {{#if @ordered}}
-  <ol>{{yield (component "front-page-list/item")}}</ol>
+  <ol local-class="list">{{yield (component "front-page-list/item")}}</ol>
 {{else}}
-  <ul>{{yield (component "front-page-list/item")}}</ul>
+  <ul local-class="list">{{yield (component "front-page-list/item")}}</ul>
 {{/if}}
