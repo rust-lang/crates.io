@@ -22,6 +22,16 @@ span.small {
     strong {
         color: $main-color;
     }
+
+    a {
+        color: $main-color-light;
+        text-decoration: underline;
+        font-weight: normal;
+
+        &:hover {
+            color: darken($main-color-light, 10%);
+        }
+    }
 }
 
 .yanked {
@@ -33,12 +43,6 @@ a {
     color: $link-color;
     text-decoration: none;
     &:hover { color: darken($link-color, 10%); }
-}
-.small a {
-    color: $main-color-light;
-    text-decoration: underline;
-    font-weight: normal;
-    &:hover { color: darken($main-color-light, 10%); }
 }
 
 pre {
