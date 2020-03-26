@@ -1,12 +1,7 @@
-<ul>
+<FrontPageList as |Item|>
   {{#each @categories as |category|}}
-    <li>
-      <LinkTo @route="category" @model={{category.slug}}>
-        <span>{{ category.category }} ({{ format-num category.crates_cnt }})</span>
-        <div class='arrow-in-list'>
-          {{svg-jar "right-arrow"}}
-        </div>
-      </LinkTo>
-    </li>
+    <Item @route="category" @model={{category.slug}}>
+      {{ category.category }} ({{ format-num category.crates_cnt }})
+    </Item>
   {{/each}}
-</ul>
+</FrontPageList>
