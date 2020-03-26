@@ -49,14 +49,6 @@ pre {
     font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
-button.dropdown {
-    color: inherit;
-    cursor: pointer;
-    .arrow { font-size: 50%; display: inline-block; vertical-align: middle; }
-    .arrow::after { content: "▼"; }
-    &.active .arrow::after { content: "▲"; }
-}
-
 ul.dropdown {
     display: none;
     position: absolute;
