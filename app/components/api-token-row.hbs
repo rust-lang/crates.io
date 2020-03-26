@@ -15,23 +15,21 @@
     {{/if}}
   </div>
 
-  <div class='spacer'></div>
-
   {{#unless this.api_token.isNew}}
     <div local-class='dates'>
-      <div class='created-at' data-test-created-at>
+      <div data-test-created-at>
         <span class='small' title={{this.api_token.created_at}}>
           Created {{moment-from-now this.api_token.created_at}}
         </span>
       </div>
       {{#if this.api_token.last_used_at}}
-        <div class='last_used_at' data-test-last-used-at>
+        <div data-test-last-used-at>
           <span class='small' title={{this.api_token.last_used_at}}>
             Last used {{moment-from-now this.api_token.last_used_at}}
           </span>
         </div>
       {{else}}
-        <div class='last_used_at' data-test-last-used-at>
+        <div data-test-last-used-at>
           <span class='small'>Never used</span>
         </div>
       {{/if}}
@@ -62,7 +60,7 @@
       </button>
     {{/if}}
     {{#if this.api_token.isSaving}}
-      <img class='overlay' src="/assets/ajax-loader.gif" data-test-saving-spinner>
+      <img src="/assets/ajax-loader.gif" data-test-saving-spinner>
     {{/if}}
   </div>
 </div>
