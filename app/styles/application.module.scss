@@ -163,7 +163,7 @@ input.search {
     border-top: 1px solid $gray-border;
 }
 
-:global(.dropdown).current-user-links {
+.current-user-links {
     left: auto;
     right: 0;
     min-width: 200px;

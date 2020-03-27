@@ -46,7 +46,7 @@
         </dd.Trigger>
 
         <dd.Content local-class="doc-links">
-          <ul>
+          <ul class="dropdown-menu">
             <li><a href='https://doc.rust-lang.org/cargo/getting-started/'>Getting Started</a></li>
             <li><a href='https://doc.rust-lang.org/cargo/guide/'>Guide</a></li>
             <li><a href='https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html'>Specifying Dependencies</a></li>
@@ -73,7 +73,7 @@
           </dd.Trigger>
 
           <dd.Content local-class="current-user-links">
-            <ul>
+            <ul class="dropdown-menu">
               <li><LinkTo @route="dashboard">Dashboard</LinkTo></li>
               <li><LinkTo @route="me">Account Settings</LinkTo></li>
               <li><LinkTo @route="me.pending-invites">Owner Invites</LinkTo></li>
@@ -95,7 +95,7 @@
           Menu
         </dd.Trigger>
         <dd.Content local-class="current-user-links">
-          <ul>
+          <ul class="dropdown-menu">
             <li><LinkTo @route="crates">Browse All Crates</LinkTo></li>
             {{#if this.session.currentUser}}
               <li><LinkTo @route="dashboard">Dashboard</LinkTo></li>
