@@ -16,27 +16,26 @@ $link-color: rgb(0, 172, 91);
 span.small {
     color: $main-color-light;
     font-size: 80%;
-    .num {
-        font-weight: bold;
+
+    strong {
         color: $main-color;
     }
-}
 
-.yanked {
-    font-size: 80%;
-    color: rgb(166, 0, 0)
+    a {
+        color: $main-color-light;
+        text-decoration: underline;
+        font-weight: normal;
+
+        &:hover {
+            color: darken($main-color-light, 10%);
+        }
+    }
 }
 
 a {
     color: $link-color;
     text-decoration: none;
     &:hover { color: darken($link-color, 10%); }
-}
-.small a {
-    color: $main-color-light;
-    text-decoration: underline;
-    font-weight: normal;
-    &:hover { color: darken($main-color-light, 10%); }
 }
 
 pre {

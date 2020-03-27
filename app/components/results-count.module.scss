@@ -1,6 +1,5 @@
 .results-count {
-    color: $main-color-light;
-    font-size: 80%;
+    composes: small from '../styles/shared/typography.module.scss';
 }
 
 .highlight {

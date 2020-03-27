@@ -22,9 +22,8 @@
 }
 
 .description {
+    composes: small from '../styles/shared/typography.module.scss';
     margin-top: 8px;
-    color: $main-color-light;
-    font-size: 80%;
 }
 
 .stats {

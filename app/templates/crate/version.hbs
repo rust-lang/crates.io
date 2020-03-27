@@ -76,7 +76,7 @@
     <section local-class='authorship' aria-label="Crate metadata">
       <div local-class='top'>
         <div>
-          <div local-class='last-update'><span class='small'>Last Updated</span></div>
+          <div local-class='last-update'>Last Updated</div>
           <div local-class='{{if this.currentVersion.crate_size 'date-with-small-margin-bot' 'date'}}'>{{moment-from-now this.crate.updated_at}}</div>
           {{#each this.crate.annotated_badges as |badge|}}
             <p>
@@ -87,7 +87,7 @@
 
         {{#if this.currentVersion.crate_size}}
           <div>
-            <div local-class='crate-size'><span class='small'>Crate Size</span></div>
+            <div local-class='crate-size'>Crate Size</div>
             <div local-class='size'>{{format-crate-size this.currentVersion.crate_size}}</div>
           </div>
         {{/if}}
@@ -176,18 +176,16 @@
                 </LinkTo>
                 <span class='date'>{{moment-format version.created_at 'll'}}</span>
                 {{#if version.yanked}}
-                  <span class='yanked'>yanked</span>
+                  <span local-class='yanked'>yanked</span>
                 {{/if}}
               </li>
             {{/each}}
           </ul>
-          <span class='small'>
-            {{#if this.hasMoreVersions}}
-              <LinkTo @route="crate.versions" @model={{this.crate}} data-test-all-versions-link>
-                show all {{ this.crate.versions.length }} versions
-              </LinkTo>
-            {{/if}}
-          </span>
+          {{#if this.hasMoreVersions}}
+            <LinkTo @route="crate.versions" @model={{this.crate}} local-class="more-versions-link" data-test-all-versions-link>
+              show all {{ this.crate.versions.length }} versions
+            </LinkTo>
+          {{/if}}
         </div>
 
         <div class='section' id='crate-dependencies'>
