@@ -45,7 +45,7 @@
           Docs
         </dd.Trigger>
 
-        <dd.Content local-class="doc-links" class="dropdown">
+        <dd.Content local-class="doc-links">
           <ul>
             <li><a href='https://doc.rust-lang.org/cargo/getting-started/'>Getting Started</a></li>
             <li><a href='https://doc.rust-lang.org/cargo/guide/'>Guide</a></li>
@@ -72,7 +72,7 @@
             {{ this.session.currentUser.name }}
           </dd.Trigger>
 
-          <dd.Content class="dropdown" local-class="current-user-links">
+          <dd.Content local-class="current-user-links">
             <ul>
               <li><LinkTo @route="dashboard">Dashboard</LinkTo></li>
               <li><LinkTo @route="me">Account Settings</LinkTo></li>
@@ -94,7 +94,7 @@
         <dd.Trigger local-class="dropdown-button">
           Menu
         </dd.Trigger>
-        <dd.Content class="dropdown" local-class="current-user-links">
+        <dd.Content local-class="current-user-links">
           <ul>
             <li><LinkTo @route="crates">Browse All Crates</LinkTo></li>
             {{#if this.session.currentUser}}
