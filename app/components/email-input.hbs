@@ -14,7 +14,7 @@
         <dt>Email</dt>
       </div>
       <form class='email-form' {{action 'saveEmail' on='submit'}}>
-        <Input @type={{this.type}} @value={{this.value}} placeholder="Email" class="space-right" />
+        <Input @type={{this.type}} @value={{this.value}} placeholder="Email" local-class="input" />
         {{#if this.notValidEmail }}
           <div class='error'>
             <p class='error'>Whoops, that email format is invalid</p>
