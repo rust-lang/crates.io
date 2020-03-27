@@ -4,6 +4,12 @@
     margin-right: auto;
 }
 
+.label {
+    flex: 1;
+    margin-right: 0.4em;
+    font-weight: bold;
+}
+
 .email-column {
     flex: 20;
 }
