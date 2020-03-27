@@ -1,6 +1,61 @@
+.friendly-message {
+    width: 95%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.row {
+    width: 100%;
+    border: 1px solid #d5d3cb;
+    border-bottom-width: 0;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+
+    &:last-child {
+        border-bottom-width: 1px;
+    }
+}
+
+.label {
+    flex: 1;
+    margin-right: 0.4em;
+    font-weight: bold;
+}
+
+.email-column {
+    flex: 20;
+}
+
+.verified {
+    color: green;
+    font-weight: bold;
+}
+
+.email-form {
+    flex: 10;
+    display: inline-flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+.input {
+    width: 400px;
+    margin-right: 10px;
+}
+
+.actions {
+    display: flex;
+    align-items: center;
+}
+
 .save-button,
 .cancel-button,
 .edit-button,
 .resend-button {
     composes: yellow-button small from '../styles/shared/buttons.module.scss';
+}
+
+.save-button {
+    margin-right: 10px;
 }

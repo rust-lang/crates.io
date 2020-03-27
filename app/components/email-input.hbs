@@ -1,6 +1,6 @@
 <div ...attributes>
   {{#if this.emailIsNull }}
-    <div class='friendly-message'>
+    <div local-class="friendly-message">
       <p>
         Please add your email address. We will only use
         it to contact you about your account. We promise we'll never share it!
@@ -9,58 +9,58 @@
   {{/if}}
 
   {{#if this.isEditing }}
-    <div class='row'>
-      <div class='label'>
+    <div local-class="row">
+      <div local-class="label">
         <dt>Email</dt>
       </div>
-      <form class='email-form' {{action 'saveEmail' on='submit'}}>
-        <Input @type={{this.type}} @value={{this.value}} placeholder="Email" class="form-control space-right" />
+      <form local-class="email-form" {{action 'saveEmail' on='submit'}}>
+        <Input @type={{this.type}} @value={{this.value}} placeholder="Email" local-class="input" />
         {{#if this.notValidEmail }}
-          <div class='error'>
-            <p class='error'>Whoops, that email format is invalid</p>
+          <div>
+            <p>Whoops, that email format is invalid</p>
           </div>
         {{/if}}
-        <div class='actions'>
-          <button type='submit' local-class="save-button" class='space-right' disabled={{this.disableSave}}>Save</button>
+        <div local-class="actions">
+          <button type='submit' local-class="save-button" disabled={{this.disableSave}}>Save</button>
           <button type="button" local-class="cancel-button" {{action 'cancelEdit'}}>Cancel</button>
         </div>
       </form>
     </div>
   {{else}}
-    <div class='row'>
-      <div class='label'>
+    <div local-class="row">
+      <div local-class="label">
         <dt>Email</dt>
       </div>
-      <div class='email'>
-        <dd class='no-space-left'>
+      <div local-class="email-column">
+        <dd>
           {{ this.user.email }}
           {{#if this.user.email_verified}}
-            <span class='verified'>Verified!</span>
+            <span local-class="verified">Verified!</span>
           {{/if}}
         </dd>
       </div>
-      <div class='actions'>
-        <button type="button" local-class="edit-button" class='space-left' {{action 'editEmail'}}>Edit</button>
+      <div local-class="actions">
+        <button type="button" local-class="edit-button" {{action 'editEmail'}}>Edit</button>
       </div>
     </div>
     {{#if this.emailNotVerified }}
-      <div class='row'>
-        <div class='label'>
+      <div local-class="row">
+        <div local-class="label">
           {{#if this.user.email_verification_sent}}
             <p>We have sent a verification email to your address.</p>
           {{/if}}
           <p>Your email has not yet been verified.</p>
         </div>
-        <div class='actions'>
-          <button type="button" local-class="resend-button" class='space-left' {{action 'resendEmail'}} disabled={{this.disableResend}}>
+        <div local-class="actions">
+          <button type="button" local-class="resend-button" {{action 'resendEmail'}} disabled={{this.disableResend}}>
             {{this.resendButtonText}}
           </button>
         </div>
       </div>
     {{/if}}
     {{#if this.isError}}
-      <div class='row'>
-        <div class='label'>
+      <div local-class="row">
+        <div local-class="label">
           <p>{{this.emailError}}</p>
         </div>
       </div>
