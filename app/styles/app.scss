@@ -31,20 +31,6 @@ span.small {
     }
 }
 
-a {
-    color: $link-color;
-    text-decoration: none;
-    &:hover { color: darken($link-color, 10%); }
-}
-
-pre {
-    background: $main-color;
-    color: white;
-    padding: 20px;
-    // Use the modern font stack inspired by Bootstrap 4
-    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-}
-
 ul.dropdown {
     display: none;
     position: absolute;
@@ -80,10 +66,6 @@ ul.dropdown {
         visibility: visible;
         opacity: 1;
     }
-}
-
-@media only screen and (max-width: 400px) {
-    h1 { font-size: 1.5em; }
 }
 
 a.arrow svg {
