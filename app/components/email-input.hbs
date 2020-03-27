@@ -31,8 +31,8 @@
       <div class='label'>
         <dt>Email</dt>
       </div>
-      <div class='email'>
-        <dd class='no-space-left'>
+      <div local-class="email-column">
+        <dd>
           {{ this.user.email }}
           {{#if this.user.email_verified}}
             <span local-class="verified">Verified!</span>
