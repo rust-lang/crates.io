@@ -16,8 +16,8 @@
       <form local-class="email-form" {{action 'saveEmail' on='submit'}}>
         <Input @type={{this.type}} @value={{this.value}} placeholder="Email" local-class="input" />
         {{#if this.notValidEmail }}
-          <div class='error'>
-            <p class='error'>Whoops, that email format is invalid</p>
+          <div>
+            <p>Whoops, that email format is invalid</p>
           </div>
         {{/if}}
         <div local-class="actions">
@@ -40,7 +40,7 @@
         </dd>
       </div>
       <div local-class="actions">
-        <button type="button" local-class="edit-button" class='space-left' {{action 'editEmail'}}>Edit</button>
+        <button type="button" local-class="edit-button" {{action 'editEmail'}}>Edit</button>
       </div>
     </div>
     {{#if this.emailNotVerified }}
@@ -52,7 +52,7 @@
           <p>Your email has not yet been verified.</p>
         </div>
         <div local-class="actions">
-          <button type="button" local-class="resend-button" class='space-left' {{action 'resendEmail'}} disabled={{this.disableResend}}>
+          <button type="button" local-class="resend-button" {{action 'resendEmail'}} disabled={{this.disableResend}}>
             {{this.resendButtonText}}
           </button>
         </div>
