@@ -94,7 +94,7 @@
           <li><LinkTo @route="crates">Browse All Crates</LinkTo></li>
           {{#if this.session.currentUser}}
             <li><LinkTo @route="dashboard">Dashboard</LinkTo></li>
-            <li><LinkTo @route="me">Account Settings</LinkTo></li>
+            <li><LinkTo @route="me" data-test-me-link>Account Settings</LinkTo></li>
             <li><LinkTo @route="me.pending-invites">Owner Invites</LinkTo></li>
             <li class='last'><LinkTo @route="logout">Sign Out</LinkTo></li>
           {{else}}
