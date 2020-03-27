@@ -1,0 +1,19 @@
+.row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+.crate-column {
+    width: 200px;
+}
+
+.date-column {
+    color: $main-color-light;
+    font-size: 80%;
+}
+
+.error-message {
+    font-size: 90%;
+}

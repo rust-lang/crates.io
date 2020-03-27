@@ -1,46 +1,39 @@
-<div ...attributes>
-  <div class='row'>
-    {{#if this.isAccepted }}
-      <p data-test-accepted-message>
-        Success! You've been added as an owner of crate
-        <LinkTo @route="crate" @model={{this.invite.crate_name}}>{{this.invite.crate_name}}</LinkTo>.
+{{#if this.isAccepted }}
+  <p data-test-accepted-message ...attributes>
+    Success! You've been added as an owner of crate
+    <LinkTo @route="crate" @model={{this.invite.crate_name}}>{{this.invite.crate_name}}</LinkTo>.
+  </p>
+{{else if this.isDeclined}}
+  <p data-test-declined-message ...attributes>
+    Declined. You have not been added as an owner of crate
+    <LinkTo @route="crate" @model={{this.invite.crate_name}}>{{this.invite.crate_name}}</LinkTo>.
+  </p>
+{{else}}
+  <div local-class="row" ...attributes>
+    <div local-class="crate-column">
+      <h3>
+        <LinkTo @route="crate" @model={{this.invite.crate_name}} data-test-crate-link>
+          {{this.invite.crate_name}}
+        </LinkTo>
+      </h3>
+    </div>
+    <div>
+      <p>
+        Invited by:
+        <LinkTo @route="user" @model={{this.invite.invited_by_username}} data-test-inviter-link>
+          {{this.invite.invited_by_username}}
+        </LinkTo>
       </p>
-    {{else if this.isDeclined}}
-      <p data-test-declined-message>
-        Declined. You have not been added as an owner of crate
-        <LinkTo @route="crate" @model={{this.invite.crate_name}}>{{this.invite.crate_name}}</LinkTo>.
-      </p>
-    {{else}}
-      <div class='info'>
-        <div class='name'>
-          <h3>
-            <LinkTo @route="crate" @model={{this.invite.crate_name}} data-test-crate-link>
-              {{this.invite.crate_name}}
-            </LinkTo>
-          </h3>
-        </div>
-        <div class='invite'>
-          <p>
-            Invited by:
-            <LinkTo @route="user" @model={{this.invite.invited_by_username}} data-test-inviter-link>
-              {{this.invite.invited_by_username}}
-            </LinkTo>
-          </p>
-        </div>
-        <div class='sent' data-test-date>
-          <span class='small'>{{moment-from-now this.invite.created_at}}</span>
-        </div>
-        <div class='actions'>
-          <button type="button" class='small yellow-button' data-test-accept-button {{action 'acceptInvitation' this.invite}}>Accept</button>
-          <button type="button" class='small yellow-button' data-test-decline-button {{action 'declineInvitation' this.invite}}>Decline</button>
-        </div>
-        {{#if this.isError}}
-          <div class='label'>
-            <p class='small-text' data-test-error-message>{{this.inviteError}}</p>
-          </div>
-        {{/if}}
-      </div>
+    </div>
+    <div local-class="date-column" data-test-date>
+      {{moment-from-now this.invite.created_at}}
+    </div>
+    <div>
+      <button type="button" class='small yellow-button' data-test-accept-button {{action 'acceptInvitation' this.invite}}>Accept</button>
+      <button type="button" class='small yellow-button' data-test-decline-button {{action 'declineInvitation' this.invite}}>Decline</button>
+    </div>
+    {{#if this.isError}}
+      <p local-class="error-message" data-test-error-message>{{this.inviteError}}</p>
     {{/if}}
   </div>
-
-</div>
+{{/if}}

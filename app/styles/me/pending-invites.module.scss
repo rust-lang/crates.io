@@ -1,0 +1,13 @@
+.list {
+    background: white;
+}
+
+.row {
+    margin: 0;
+    padding: 20px;
+    border-bottom: 2px solid #d5d3cb;
+
+    &:last-of-type {
+        border: none;
+    }
+}

@@ -110,7 +110,7 @@ module('Acceptance | /me/pending-invites', function (hooks) {
     assert.dom('[data-test-error-message]').doesNotExist();
     assert.dom('[data-test-accepted-message]').doesNotExist();
     assert
-      .dom('[data-test-invite="nanomsg"] [data-test-declined-message]')
+      .dom('[data-test-invite="nanomsg"][data-test-declined-message]')
       .hasText('Declined. You have not been added as an owner of crate nanomsg.');
     assert.dom('[data-test-invite="nanomsg"] [data-test-crate-link]').doesNotExist();
     assert.dom('[data-test-invite="nanomsg"] [data-test-inviter-link]').doesNotExist();
@@ -152,7 +152,7 @@ module('Acceptance | /me/pending-invites', function (hooks) {
     assert.dom('[data-test-error-message]').doesNotExist();
     assert.dom('[data-test-declined-message]').doesNotExist();
     assert
-      .dom('[data-test-invite="nanomsg"] [data-test-accepted-message]')
+      .dom('[data-test-invite="nanomsg"][data-test-accepted-message]')
       .hasText("Success! You've been added as an owner of crate nanomsg.");
     assert.dom('[data-test-invite="nanomsg"] [data-test-crate-link]').doesNotExist();
     assert.dom('[data-test-invite="nanomsg"] [data-test-inviter-link]').doesNotExist();
