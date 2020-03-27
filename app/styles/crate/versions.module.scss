@@ -1,17 +1,44 @@
+.back-link {
+    margin-bottom: 20px;
+}
+
+.page-description {
+    composes: small from '../shared/typography.module.scss';
+}
+
 .list {
     margin-top: 10px;
+    padding: 0 20px;
+    background-color: white;
+}
 
-    :global(.small) {
-        margin-left: 20px;
-        display: inline-block;
-    }
+.row {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    padding: 20px 0;
+    border-bottom: 2px solid #d5d3cb;
 
-    a.arrow {
-        display: inline-block;
-        float: right;
+    &:last-of-type {
+        border: none;
     }
+}
+
+.date {
+    composes: small from '../shared/typography.module.scss';
+    display: inline-block;
+    margin-left: 20px;
 }
 
 .yanked {
     composes: yanked from '../shared/typography.module.scss';
+}
+
+.arrow {
+    display: inline-block;
+    float: right;
+
+    svg {
+        background: #EEECDD;
+    }
 }
