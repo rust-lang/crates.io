@@ -1,19 +1,17 @@
 <div class="crates-heading" data-test-heading>
-  <div class="wide">
-    <div class='info'>
-      <UserAvatar @user={{this.model.team}} @size="medium" data-test-avatar />
-      <div class='team-info'>
-        <h1 data-test-org-name>
-          {{ this.model.team.org_name }}
-        </h1>
-        <h2 data-test-team-name>
-          {{ this.model.team.name }}
-        </h2>
-      </div>
-      <UserLink @user={{this.model.team}} data-test-github-link>
-        <img alt="GitHub profile" title="GitHub profile" src="/assets/GitHub-Mark.svg">
-      </UserLink>
+  <div class='info'>
+    <UserAvatar @user={{this.model.team}} @size="medium" data-test-avatar />
+    <div class='team-info'>
+      <h1 data-test-org-name>
+        {{ this.model.team.org_name }}
+      </h1>
+      <h2 data-test-team-name>
+        {{ this.model.team.name }}
+      </h2>
     </div>
+    <UserLink @user={{this.model.team}} data-test-github-link>
+      <img alt="GitHub profile" title="GitHub profile" src="/assets/GitHub-Mark.svg">
+    </UserLink>
   </div>
 </div>
 
@@ -22,13 +20,11 @@
     {{! TODO: reduce duplication with templates/crates.hbs }}
 
     <div id='results'>
-      <div class='nav'>
-        <span class='amt small'>
-          Displaying
-          <span class='cur'>{{ this.currentPageStart }}-{{ this.currentPageEnd }}</span>
-          of <span class='total'>{{ this.totalItems }}</span> total results
-        </span>
-      </div>
+      <ResultsCount
+        @start={{this.currentPageStart}}
+        @end={{this.currentPageEnd}}
+        @total={{this.totalItems}}
+      />
 
       <div class='sort'>
         <span class='small'>Sort by</span>
@@ -36,7 +32,6 @@
           <dd.Trigger class="dropdown dropdown-button">
             {{svg-jar "sort"}}
             {{ this.currentSortBy }}
-            <span class='arrow'></span>
           </dd.Trigger>
 
           <dd.Content @tagName="ul" class="dropdown">
@@ -70,9 +65,9 @@
       </div>
     </div>
 
-    <div id='crates' class='white-rows'>
+    <div class='white-rows'>
       {{#each this.model.crates as |crate|}}
-        <CrateRow @crate={{crate}} />
+        <CrateRow @crate={{crate}} class="row" />
       {{/each}}
     </div>
 

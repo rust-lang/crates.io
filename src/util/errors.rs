@@ -97,6 +97,10 @@ impl dyn AppError {
         self.get_type_id() == TypeId::of::<T>()
     }
 
+    pub fn from_std_error(err: Box<dyn Error + Send>) -> Box<dyn AppError> {
+        Self::try_convert(&*err).unwrap_or_else(|| internal(&err))
+    }
+
     fn try_convert(err: &(dyn Error + Send + 'static)) -> Option<Box<Self>> {
         match err.downcast_ref() {
             Some(DieselError::NotFound) => Some(Box::new(NotFound)),

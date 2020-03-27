@@ -7,7 +7,7 @@ export default RESTAdapter.extend({
 
   namespace: 'api/v1',
 
-  headers: computed('fastboot.{isFastBoot,request.headers}', function() {
+  headers: computed('fastboot.{isFastBoot,request.headers}', function () {
     if (this.fastboot.isFastBoot) {
       return { 'User-Agent': this.fastboot.request.headers.get('User-Agent') };
     }

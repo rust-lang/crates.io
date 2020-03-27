@@ -95,8 +95,8 @@ export default Component.extend({
     // use a DataView to calculate an x-day moving average
     let days = 7;
     let view = new window.google.visualization.DataView(myData);
-    let moving_avg_func_for_col = function(col) {
-      return function(dt, row) {
+    let moving_avg_func_for_col = function (col) {
+      return function (dt, row) {
         // For the last rows (the *first* days, remember, the dataset is
         // backwards), we cannot calculate the avg. of previous days.
         if (row >= dt.getNumberOfRows() - days) {

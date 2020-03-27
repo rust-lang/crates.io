@@ -2447,12 +2447,11 @@ checksum = "032c03039aae92b350aad2e3779c352e104d919cb192ba2fabbd7b831ce4f0f6"
 [[package]]
 name = "swirl"
 version = "0.1.0"
-source = "git+https://github.com/sgrif/swirl.git?rev=6ef8c4cd#6ef8c4cda725e62df1ba82075aea96c51a4bdc11"
+source = "git+https://github.com/sgrif/swirl.git?rev=de5d8bb#de5d8bbcfbf7878aa2c248c105938567b32ed8a8"
 dependencies = [
  "diesel",
  "inventory",
  "serde",
- "serde_derive",
  "serde_json",
  "swirl_proc_macro",
  "threadpool",
@@ -2461,11 +2460,11 @@ dependencies = [
 [[package]]
 name = "swirl_proc_macro"
 version = "0.1.0"
-source = "git+https://github.com/sgrif/swirl.git?rev=6ef8c4cd#6ef8c4cda725e62df1ba82075aea96c51a4bdc11"
+source = "git+https://github.com/sgrif/swirl.git?rev=de5d8bb#de5d8bbcfbf7878aa2c248c105938567b32ed8a8"
 dependencies = [
- "proc-macro2 1.0.9",
- "quote 1.0.3",
- "syn 1.0.16",
+ "proc-macro2 0.4.30",
+ "quote 0.6.13",
+ "syn 0.15.44",
 ]
 
 [[package]]

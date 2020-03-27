@@ -94,13 +94,6 @@ export default [
       },
       {
         attributes: {
-          branch: 'master',
-          repository: 'huonw/external_mixin',
-        },
-        badge_type: 'gitlab',
-      },
-      {
-        attributes: {
           repository: 'huonw/external_mixin',
         },
         badge_type: 'is-it-maintained-issue-resolution',

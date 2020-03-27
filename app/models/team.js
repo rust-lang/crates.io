@@ -9,12 +9,12 @@ export default Model.extend({
   avatar: attr('string'),
   url: attr('string'),
   kind: attr('string'),
-  org_name: computed('login', function() {
+  org_name: computed('login', function () {
     let login = this.login;
     let login_split = login.split(':');
     return login_split[1];
   }),
-  display_name: computed('name', 'org_name', function() {
+  display_name: computed('name', 'org_name', function () {
     let { name, org_name } = this.getProperties('name', 'org_name');
     return `${org_name}/${name}`;
   }),

@@ -6,13 +6,13 @@ export default class Router extends RouterScroll {
   rootURL = config.rootURL;
 }
 
-Router.map(function() {
+Router.map(function () {
   this.route('logout');
   this.route('login');
   this.route('github-login', { path: 'github_login' });
   this.route('github-authorize', { path: '/authorize/github' });
   this.route('crates');
-  this.route('crate', { path: '/crates/:crate_id' }, function() {
+  this.route('crate', { path: '/crates/:crate_id' }, function () {
     this.route('download');
     this.route('versions');
     this.route('version', { path: '/:version_num' });
@@ -25,7 +25,7 @@ Router.map(function() {
     this.route('docs');
     this.route('repo');
   });
-  this.route('me', function() {
+  this.route('me', function () {
     this.route('crates');
     this.route('following');
     this.route('pending-invites');
@@ -35,11 +35,11 @@ Router.map(function() {
   this.route('search');
   this.route('dashboard');
   this.route('keywords');
-  this.route('keyword', { path: '/keywords/:keyword_id' }, function() {
+  this.route('keyword', { path: '/keywords/:keyword_id' }, function () {
     this.route('index', { path: '/' });
   });
   this.route('categories');
-  this.route('category', { path: '/categories/:category_id' }, function() {
+  this.route('category', { path: '/categories/:category_id' }, function () {
     this.route('index', { path: '/' });
   });
   this.route('category-slugs', { path: 'category_slugs' });

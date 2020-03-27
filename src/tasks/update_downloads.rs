@@ -1,4 +1,5 @@
 use crate::{
+    background_jobs::Environment,
     models::VersionDownload,
     schema::{crates, metadata, version_downloads, versions},
 };
@@ -7,7 +8,8 @@ use diesel::prelude::*;
 use swirl::PerformError;
 
 #[swirl::background_job]
-pub fn update_downloads(conn: &PgConnection) -> Result<(), PerformError> {
+pub fn update_downloads(env: &Environment) -> Result<(), PerformError> {
+    let conn = env.connection()?;
     update(&conn)?;
     Ok(())
 }

@@ -13,18 +13,15 @@
 </div>
 
 {{#if this.firstResultPending}}
-  <div id="no-results">
-    <h2>Loading search results...</h2>
-  </div>
+  <h2>Loading search results...</h2>
 {{else if this.hasItems}}
   <div id='results'>
-    <div class='nav' data-test-search-nav>
-      <span class='amt'>
-        Displaying
-        <span class='cur'>{{ this.currentPageStart }}-{{ this.currentPageEnd }}</span>
-          of <span class='total'>{{ this.totalItems }}</span> total results
-      </span>
-    </div>
+    <ResultsCount
+      @start={{this.currentPageStart}}
+      @end={{this.currentPageEnd}}
+      @total={{this.totalItems}}
+      data-test-search-nav
+    />
 
     <div class='sort' data-test-search-sort>
       <span class='small'>Sort by </span>
@@ -33,7 +30,6 @@
         <dd.Trigger class="dropdown dropdown-button" data-test-current-order>
           {{svg-jar "sort"}}
           {{ this.currentSortBy }}
-          <span class='arrow'></span>
         </dd.Trigger>
 
         <dd.Content @tagName="ul" class="dropdown">
@@ -67,18 +63,18 @@
     </div>
   </div>
 
-  <div id='crates' class='white-rows'>
+  <div class='white-rows'>
     {{#each this.model as |crate index|}}
       {{#if crate.exact_match}}
-        <div class='exact-match'>
+        <div local-class="exact-match">
           <LinkTo @route="crate" @model={{crate}}>
             <h1>Exact Match</h1>
           </LinkTo>
-          <CrateRow @crate={{crate}} data-test-crate-row={{index}} />
+          <CrateRow @crate={{crate}} class="row" data-test-crate-row={{index}} />
         </div>
       {{else}}
         <div>
-          <CrateRow @crate={{crate}} data-test-crate-row={{index}} />
+          <CrateRow @crate={{crate}} class="row" data-test-crate-row={{index}} />
         </div>
       {{/if}}
     {{/each}}
@@ -86,7 +82,5 @@
 
   <Pagination @pages={{this.pages}} @prevPage={{this.prevPage}} @nextPage={{this.nextPage}} />
 {{else}}
-  <div id="no-results">
-    <h2>0 crates found. <a href='https://doc.rust-lang.org/cargo/getting-started/'>Get started</a> and create your own.</h2>
-  </div>
+  <h2>0 crates found. <a href='https://doc.rust-lang.org/cargo/getting-started/'>Get started</a> and create your own.</h2>
 {{/if}}

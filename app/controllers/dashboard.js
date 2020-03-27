@@ -17,23 +17,23 @@ export default Controller.extend({
     this.myStats = 0;
   },
 
-  visibleCrates: computed('myCrates.[]', function() {
+  visibleCrates: computed('myCrates.[]', function () {
     return this.myCrates.slice(0, TO_SHOW);
   }),
 
-  visibleFollowing: computed('myFollowing.[]', function() {
+  visibleFollowing: computed('myFollowing.[]', function () {
     return this.myFollowing.slice(0, TO_SHOW);
   }),
 
-  visibleStats: computed('myStats', function() {
+  visibleStats: computed('myStats', function () {
     return this.myStats;
   }),
 
-  hasMoreCrates: computed('myCrates.[]', function() {
+  hasMoreCrates: computed('myCrates.[]', function () {
     return this.get('myCrates.length') > TO_SHOW;
   }),
 
-  hasMoreFollowing: computed('myFollowing.[]', function() {
+  hasMoreFollowing: computed('myFollowing.[]', function () {
     return this.get('myFollowing.length') > TO_SHOW;
   }),
 

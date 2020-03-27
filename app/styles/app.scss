@@ -24,6 +24,9 @@ span.small {
     .num {
         font-weight: bold;
         color: $main-color;
+        @media only screen and (prefers-color-scheme: dark) {
+            color: #eee;
+        }
     }
 }
 
@@ -39,9 +42,17 @@ a {
 }
 .small a {
     color: $main-color-light;
+    @media only screen and (prefers-color-scheme: dark) {
+        color: #bbb;
+    }
     text-decoration: underline;
     font-weight: normal;
-    &:hover { color: darken($main-color-light, 10%); }
+    &:hover {
+        color: darken($main-color-light, 10%);
+        @media only screen and (prefers-color-scheme: dark) {
+            color: #9b9b9b;
+        }
+    }
 }
 
 pre {
@@ -50,14 +61,6 @@ pre {
     padding: 20px;
     // Use the modern font stack inspired by Bootstrap 4
     font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-}
-
-button.dropdown, a.dropdown {
-    color: inherit;
-    cursor: pointer;
-    .arrow { font-size: 50%; display: inline-block; vertical-align: middle; }
-    .arrow::after { content: "▼"; }
-    &.active .arrow::after { content: "▲"; }
 }
 
 ul.dropdown {
@@ -129,15 +132,4 @@ h1 {
 
 a.arrow svg {
     background: #EEECDD;
-}
-
-abbr[title] {
-    text-decoration: none;
-    border-bottom: 1px dotted;
-}
-
-@media only screen and (prefers-color-scheme: dark) {
-    nav svg {
-        filter: invert(100%);
-    }
 }

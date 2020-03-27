@@ -6,11 +6,11 @@ export default Component.extend({
   tagName: '',
   repository: alias('badge.attributes.repository'),
 
-  branch: computed('badge.attributes.branch', function() {
+  branch: computed('badge.attributes.branch', function () {
     return this.get('badge.attributes.branch') || 'master';
   }),
 
-  text: computed('badge', function() {
+  text: computed('badge', function () {
     return `GitLab build status for the ${this.branch} branch`;
   }),
 });

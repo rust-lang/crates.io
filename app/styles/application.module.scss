@@ -23,6 +23,17 @@ body {
     align-items: center;
 }
 
+abbr[title] {
+    text-decoration: none;
+    border-bottom: 1px dotted;
+}
+
+@media only screen and (prefers-color-scheme: dark) {
+    nav svg {
+        filter: invert(100%);
+    }
+}
+
 noscript {
     color: white;
     padding: 10px 0;

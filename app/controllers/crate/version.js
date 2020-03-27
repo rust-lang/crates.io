@@ -16,36 +16,36 @@ export default Controller.extend({
 
   isDownloading: false,
 
-  downloadsContext: computed('requestedVersion', 'model', 'crate', function() {
+  downloadsContext: computed('requestedVersion', 'model', 'crate', function () {
     return this.requestedVersion ? this.model : this.crate;
   }),
   downloads: alias('downloadsContext.version_downloads'),
   extraDownloads: alias('downloads.content.meta.extra_downloads'),
 
   currentVersion: alias('model'),
-  crateTomlText: computed('crate.name', 'currentVersion.num', function() {
+  crateTomlText: computed('crate.name', 'currentVersion.num', function () {
     return `${this.get('crate.name')} = "${this.get('currentVersion.num')}"`;
   }),
   requestedVersion: null,
   keywords: alias('crate.keywords'),
   categories: alias('crate.categories'),
   badges: alias('crate.badges'),
-  isOwner: computed('crate.owner_user', 'session.currentUser.id', function() {
+  isOwner: computed('crate.owner_user', 'session.currentUser.id', function () {
     return this.get('crate.owner_user').findBy('id', this.get('session.currentUser.id'));
   }),
-  notYankedOrIsOwner: computed('model', 'crate.owner_user', 'session.currentUser.id', function() {
+  notYankedOrIsOwner: computed('model', 'crate.owner_user', 'session.currentUser.id', function () {
     return !this.get('model').yanked || this.get('crate.owner_user').findBy('id', this.get('session.currentUser.id'));
   }),
 
   sortedVersions: readOnly('crate.versions'),
 
-  smallSortedVersions: computed('sortedVersions', function() {
+  smallSortedVersions: computed('sortedVersions', function () {
     return this.sortedVersions.slice(0, NUM_VERSIONS);
   }),
 
   hasMoreVersions: gt('sortedVersions.length', NUM_VERSIONS),
 
-  displayedAuthors: computed('currentVersion.authors.[]', function() {
+  displayedAuthors: computed('currentVersion.authors.[]', function () {
     return PromiseArray.create({
       promise: this.get('currentVersion.authors').then(authors => {
         let ret = authors.slice();
@@ -61,7 +61,7 @@ export default Controller.extend({
   anyKeywords: gt('keywords.length', 0),
   anyCategories: gt('categories.length', 0),
 
-  currentDependencies: computed('currentVersion.dependencies', function() {
+  currentDependencies: computed('currentVersion.dependencies', function () {
     let deps = this.get('currentVersion.dependencies');
 
     if (deps === null) {
@@ -73,7 +73,7 @@ export default Controller.extend({
     });
   }),
 
-  currentBuildDependencies: computed('currentVersion.dependencies', function() {
+  currentBuildDependencies: computed('currentVersion.dependencies', function () {
     let deps = this.get('currentVersion.dependencies');
 
     if (deps === null) {
@@ -85,7 +85,7 @@ export default Controller.extend({
     });
   }),
 
-  currentDevDependencies: computed('currentVersion.dependencies', function() {
+  currentDevDependencies: computed('currentVersion.dependencies', function () {
     let deps = this.get('currentVersion.dependencies');
     if (deps === null) {
       return [];
@@ -95,7 +95,7 @@ export default Controller.extend({
     });
   }),
 
-  downloadData: computed('downloads', 'extraDownloads', 'requestedVersion', function() {
+  downloadData: computed('downloads', 'extraDownloads', 'requestedVersion', function () {
     let downloads = this.downloads;
     if (!downloads) {
       return;
@@ -112,9 +112,7 @@ export default Controller.extend({
 
     downloads.forEach(d => {
       let version_id = d.get('version.id');
-      let key = moment(d.get('date'))
-        .utc()
-        .format('MMM D');
+      let key = moment(d.get('date')).utc().format('MMM D');
       if (dates[key]) {
         let prev = dates[key].cnt[version_id] || 0;
         dates[key].cnt[version_id] = prev + d.get('downloads');
@@ -122,9 +120,7 @@ export default Controller.extend({
     });
 
     extra.forEach(d => {
-      let key = moment(d.date)
-        .utc()
-        .format('MMM D');
+      let key = moment(d.date).utc().format('MMM D');
       if (dates[key]) {
         let prev = dates[key].cnt[null] || 0;
         dates[key].cnt[null] = prev + d.downloads;
@@ -162,7 +158,7 @@ export default Controller.extend({
   }),
 
   // eslint-disable-next-line ember/no-observers
-  report: observer('crate.readme', function() {
+  report: observer('crate.readme', function () {
     if (typeof document === 'undefined') {
       return;
     }

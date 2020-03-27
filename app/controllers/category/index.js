@@ -14,7 +14,7 @@ export default Controller.extend(PaginationMixin, {
 
   category: null,
 
-  currentSortBy: computed('sort', function() {
+  currentSortBy: computed('sort', function () {
     if (this.sort === 'downloads') {
       return 'All-Time Downloads';
     } else if (this.sort === 'alpha') {

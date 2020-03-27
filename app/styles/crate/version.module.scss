@@ -5,6 +5,26 @@
     top: 4px;
 }
 
+.quick-links {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+
+    font-size: 80%;
+    list-style-type: none;
+    margin: 1em 0 0 0;
+    padding: 0;
+
+
+    li {
+        margin-right: 1em;
+
+        &:last-child {
+            margin-right: 0;
+        }
+    }
+}
+
 .crate-info {
     display: flex;
     flex-direction: column;
@@ -70,6 +90,9 @@
 .last-update,
 .crate-size {
     color: $main-color-light;
+    @media only screen and (prefers-color-scheme: dark) {
+        color: #bbb;
+    }
     font-size: 90%;
     line-height: 25px;
 }
@@ -216,7 +239,12 @@
     margin: 30px 0;
     padding-bottom: 20px;
 
-    h4 { color: $main-color-light; }
+    h4 {
+        color: $main-color-light;
+        @media only screen and (prefers-color-scheme: dark) {
+            color: #bbb;
+        }
+    }
 
     @media only percy {
         display: none;

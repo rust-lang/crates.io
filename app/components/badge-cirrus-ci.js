@@ -6,11 +6,11 @@ export default Component.extend({
   tagName: '',
   repository: alias('badge.attributes.repository'),
 
-  branch: computed('badge.attributes.branch', function() {
+  branch: computed('badge.attributes.branch', function () {
     return encodeURIComponent(this.get('badge.attributes.branch') || 'master');
   }),
 
-  text: computed('branch', function() {
+  text: computed('branch', function () {
     return `Cirrus CI build status for the ${this.branch} branch`;
   }),
 });

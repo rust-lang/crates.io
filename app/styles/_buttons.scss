@@ -36,6 +36,9 @@
     &[disabled] {
         @include vertical-gradient($start_light, $end_light);
         color: $main-color-light;
+        @media only screen and (prefers-color-scheme: dark) {
+            color: #bbb;
+        }
     }
 }
 

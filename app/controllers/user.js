@@ -13,7 +13,7 @@ export default Controller.extend(PaginationMixin, {
 
   totalItems: readOnly('model.crates.meta.total'),
 
-  currentSortBy: computed('sort', function() {
+  currentSortBy: computed('sort', function () {
     if (this.sort === 'downloads') {
       return 'All-Time Downloads';
     } else if (this.sort === 'recent-downloads') {

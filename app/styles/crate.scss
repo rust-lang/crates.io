@@ -33,7 +33,13 @@
         padding-left: 10px;
         padding-right: 10px;
     }
-    h2, small { color: $main-color-light; padding-left: 10px; }
+    h2, small {
+        color: $main-color-light;
+        @media only screen and (prefers-color-scheme: dark) {
+            color: #bbb;
+        }
+        padding-left: 10px;
+    }
     .right {
         flex: 2;
         display: flex;
@@ -56,64 +62,11 @@
     }
 }
 
-#selection {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    padding: 20px;
-    border-radius: 5px;
-    background-color: white;
-    @media only screen and (prefers-color-scheme: dark) {
-        background-color: #222;
-    }
-    margin-bottom: 40px;
-
-    a {
-        text-decoration: none;
-        font-weight: bold;
-        color: inherit;
-        padding: 5px;
-    }
-    a:hover {
-        background-color: $main-bg-dark;
-        @media only screen and (prefers-color-scheme: dark) {
-            background-color: #333;
-        }
-    }
-    a.active {
-        background-color: $main-bg-dark;
-        @media only screen and (prefers-color-scheme: dark) {
-            background-color: #333;
-        }
-    }
-
-    select {
-        display: none;
-        width: 100%;
-        padding: 5px;
-    }
-
-    @media only screen and (max-width: 650px) {
-        padding: 0;
-        background-color: inherit;
-        a { display: none; }
-        select { display: block; }
-    }
-}
-
 #results {
     width: 100%;
     display: flex;
     justify-content: space-between;
     margin-bottom: 25px;
-
-    .cur, .total {
-        color: $main-color;
-        font-weight: bold;
-        @media only screen and (prefers-color-scheme: dark) {
-            color: #fff;
-        }
-    }
 
     .dropdown-container { font-size: 85%; }
     .dropdown-button {
@@ -184,9 +137,6 @@
         text-decoration: none;
         font-size: 120%;
     }
-    .vers {
-        margin-left: 10px;
-    }
 
     .stats {
         width: 25%;
@@ -215,69 +165,6 @@
     }
 
     .rev-dep-downloads {padding-left: 7px}
-}
-
-.exact-match {
-    margin-bottom: 40px;
-    border-bottom: solid beige;
-    div {
-        padding: 10px;
-    }
-    h1 {
-        color: green
-    }
-}
-
-.quick-links {
-    ul {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-
-        font-size: 80%;
-        list-style-type: none;
-        margin: 1em 0 0 0;
-        padding: 0;
-
-
-        li {
-            margin-right: 1em;
-
-            &:last-child {
-                margin-right: 0;
-            }
-        }
-    }
-}
-
-#crate-links {
-    display: flex;
-    padding-bottom: 20px;
-    border-bottom: 5px solid $gray-border;
-    @media only screen and (prefers-color-scheme: dark) {
-        border-bottom: 0.25rem solid #666;
-    }
-    margin-bottom: 30px;
-
-    h3 { margin-bottom: 5px; }
-    .section {
-        flex: 1;
-        margin-right: 10px;
-        li { line-height: 24px; }
-        .date { color: $main-color-light; padding-left: 5px; }
-    }
-
-    ul { list-style: none; padding: 0; }
-
-    @media only screen and (max-width: 380px) {
-        flex-direction: column;
-    }
-    @media only screen and (max-width: 730px) {
-        #crate-dev-dependencies { display: none; }
-    }
-    @media only screen and (max-width: 430px) {
-        #crate-dependencies { display: none; }
-    }
 }
 
 .all-versions-back { margin-bottom: 20px; }

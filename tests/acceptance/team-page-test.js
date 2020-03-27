@@ -6,11 +6,11 @@ import axeConfig from '../axe-config';
 import setupMirage from '../helpers/setup-mirage';
 import { percySnapshot } from 'ember-percy';
 
-module('Acceptance | team page', function(hooks) {
+module('Acceptance | team page', function (hooks) {
   setupApplicationTest(hooks);
   setupMirage(hooks);
 
-  test('is accessible', async function(assert) {
+  test('is accessible', async function (assert) {
     assert.expect(0);
 
     this.server.loadFixtures();
@@ -21,7 +21,7 @@ module('Acceptance | team page', function(hooks) {
     await a11yAudit(axeConfig);
   });
 
-  test('has team organization display', async function(assert) {
+  test('has team organization display', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/teams/github:org:thehydroimpulse');
@@ -30,7 +30,7 @@ module('Acceptance | team page', function(hooks) {
     assert.dom('[data-test-heading] [data-test-team-name]').hasText('thehydroimpulseteam');
   });
 
-  test('has link to github in team header', async function(assert) {
+  test('has link to github in team header', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/teams/github:org:thehydroimpulse');
@@ -38,7 +38,7 @@ module('Acceptance | team page', function(hooks) {
     assert.dom('[data-test-heading] [data-test-github-link]').hasAttribute('href', 'https://github.com/org_test');
   });
 
-  test('github link has image in team header', async function(assert) {
+  test('github link has image in team header', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/teams/github:org:thehydroimpulse');
@@ -46,7 +46,7 @@ module('Acceptance | team page', function(hooks) {
     assert.dom('[data-test-heading] [data-test-github-link] img').hasAttribute('src', '/assets/GitHub-Mark.svg');
   });
 
-  test('team organization details has github profile icon', async function(assert) {
+  test('team organization details has github profile icon', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/teams/github:org:thehydroimpulse');

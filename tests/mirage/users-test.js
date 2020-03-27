@@ -4,12 +4,12 @@ import { module, test } from 'qunit';
 import setupMirage from '../helpers/setup-mirage';
 import fetch from 'fetch';
 
-module('Mirage | Users', function(hooks) {
+module('Mirage | Users', function (hooks) {
   setupTest(hooks);
   setupMirage(hooks);
 
-  module('GET /api/v1/users/:id', function() {
-    test('returns 404 for unknown users', async function(assert) {
+  module('GET /api/v1/users/:id', function () {
+    test('returns 404 for unknown users', async function (assert) {
       let response = await fetch('/api/v1/users/foo');
       assert.equal(response.status, 404);
 
@@ -17,7 +17,7 @@ module('Mirage | Users', function(hooks) {
       assert.deepEqual(responsePayload, { errors: [{ detail: 'Not Found' }] });
     });
 
-    test('returns a user object for known users', async function(assert) {
+    test('returns a user object for known users', async function (assert) {
       let user = this.server.create('user', { name: 'John Doe' });
 
       let response = await fetch(`/api/v1/users/${user.login}`);

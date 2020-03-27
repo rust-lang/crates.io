@@ -30,6 +30,7 @@
     "test-coverage": "COVERAGE=true npm run test && ember coverage-merge && rm -rf coverage_* coverage/coverage-summary.json && nyc report"
   },
   "prettier": {
+    "arrowParens": "avoid",
     "printWidth": 120,
     "singleQuote": true,
     "tabWidth": 2,
@@ -93,12 +94,12 @@
     "ember-window-mock": "^0.6.0",
     "eslint": "^6.8.0",
     "eslint-config-prettier": "^6.10.1",
-    "eslint-plugin-ember": "^7.10.1",
+    "eslint-plugin-ember": "^7.11.0",
     "eslint-plugin-prettier": "^3.1.2",
     "loader.js": "^4.7.0",
     "normalize.css": "^8.0.1",
     "nyc": "^15.0.0",
-    "prettier": "^1.19.1",
+    "prettier": "^2.0.1",
     "qunit-console-grouper": "^0.2.0",
     "qunit-dom": "^1.1.0",
     "sass": "^1.26.3",

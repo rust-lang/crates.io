@@ -4,12 +4,12 @@ import { module, test } from 'qunit';
 import setupMirage from '../helpers/setup-mirage';
 import fetch from 'fetch';
 
-module('Mirage | Categories', function(hooks) {
+module('Mirage | Categories', function (hooks) {
   setupTest(hooks);
   setupMirage(hooks);
 
-  module('GET /api/v1/categories', function() {
-    test('empty case', async function(assert) {
+  module('GET /api/v1/categories', function () {
+    test('empty case', async function (assert) {
       let response = await fetch('/api/v1/categories');
       assert.equal(response.status, 200);
 
@@ -22,7 +22,7 @@ module('Mirage | Categories', function(hooks) {
       });
     });
 
-    test('returns a paginated categories list', async function(assert) {
+    test('returns a paginated categories list', async function (assert) {
       this.server.create('category', {
         category: 'no-std',
         description: 'Crates that are able to function without the Rust standard library.',
@@ -66,7 +66,7 @@ module('Mirage | Categories', function(hooks) {
       });
     });
 
-    test('never returns more than 10 results', async function(assert) {
+    test('never returns more than 10 results', async function (assert) {
       this.server.createList('category', 25);
 
       let response = await fetch('/api/v1/categories');
@@ -77,7 +77,7 @@ module('Mirage | Categories', function(hooks) {
       assert.equal(responsePayload.meta.total, 25);
     });
 
-    test('supports `page` and `per_page` parameters', async function(assert) {
+    test('supports `page` and `per_page` parameters', async function (assert) {
       this.server.createList('category', 25, {
         category: i => `cat-${String(i + 1).padStart(2, '0')}`,
       });
@@ -95,8 +95,8 @@ module('Mirage | Categories', function(hooks) {
     });
   });
 
-  module('GET /api/v1/categories/:id', function() {
-    test('returns 404 for unknown categories', async function(assert) {
+  module('GET /api/v1/categories/:id', function () {
+    test('returns 404 for unknown categories', async function (assert) {
       let response = await fetch('/api/v1/categories/foo');
       assert.equal(response.status, 404);
 
@@ -104,7 +104,7 @@ module('Mirage | Categories', function(hooks) {
       assert.deepEqual(responsePayload, { errors: [{ detail: 'Not Found' }] });
     });
 
-    test('returns a category object for known categories', async function(assert) {
+    test('returns a category object for known categories', async function (assert) {
       this.server.create('category', {
         category: 'no-std',
         description: 'Crates that are able to function without the Rust standard library.',
@@ -126,7 +126,7 @@ module('Mirage | Categories', function(hooks) {
       });
     });
 
-    test('calculates `crates_cnt` correctly', async function(assert) {
+    test('calculates `crates_cnt` correctly', async function (assert) {
       this.server.create('category', { category: 'cli' });
       this.server.createList('crate', 7, { categoryIds: ['cli'] });
       this.server.create('category', { category: 'not-cli' });
@@ -149,8 +149,8 @@ module('Mirage | Categories', function(hooks) {
     });
   });
 
-  module('GET /api/v1/category_slugs', function() {
-    test('empty case', async function(assert) {
+  module('GET /api/v1/category_slugs', function () {
+    test('empty case', async function (assert) {
       let response = await fetch('/api/v1/category_slugs');
       assert.equal(response.status, 200);
 
@@ -160,7 +160,7 @@ module('Mirage | Categories', function(hooks) {
       });
     });
 
-    test('returns a category slugs list', async function(assert) {
+    test('returns a category slugs list', async function (assert) {
       this.server.create('category', {
         category: 'no-std',
         description: 'Crates that are able to function without the Rust standard library.',
@@ -192,7 +192,7 @@ module('Mirage | Categories', function(hooks) {
       });
     });
 
-    test('has no pagination', async function(assert) {
+    test('has no pagination', async function (assert) {
       this.server.createList('category', 25);
 
       let response = await fetch('/api/v1/category_slugs');

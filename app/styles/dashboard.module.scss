@@ -14,6 +14,9 @@
 
     .label {
         color: $main-color-light;
+        @media only screen and (prefers-color-scheme: dark) {
+            color: #bbb;
+        }
         font-size: 80%;
     }
 }
@@ -51,12 +54,18 @@
 .my-crates-link,
 .followed-crates-link {
     color: $main-color-light;
+    @media only screen and (prefers-color-scheme: dark) {
+        color: #bbb;
+    }
     text-decoration: underline;
     font-size: 90%;
     font-weight: normal;
 
     &:hover {
         color: darken($main-color-light, 10%);
+        @media only screen and (prefers-color-scheme: dark) {
+            color: #9b9b9b;
+        }
     }
 }
 
@@ -91,6 +100,9 @@
 
     .version {
         color: $main-color-light;
+        @media only screen and (prefers-color-scheme: dark) {
+            color: #bbb;
+        }
         font-size: 80%;
     }
 
@@ -98,6 +110,9 @@
         flex-grow: 1;
         text-align: right;
         color: $main-color-light;
+        @media only screen and (prefers-color-scheme: dark) {
+            color: #bbb;
+        }
         font-size: 80%;
     }
 }

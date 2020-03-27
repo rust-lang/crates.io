@@ -8,11 +8,11 @@ import { title } from '../helpers/dom';
 import setupMirage from '../helpers/setup-mirage';
 import { percySnapshot } from 'ember-percy';
 
-module('Acceptance | crate page', function(hooks) {
+module('Acceptance | crate page', function (hooks) {
   setupApplicationTest(hooks);
   setupMirage(hooks);
 
-  test('/crates/:crate is accessible', async function(assert) {
+  test('/crates/:crate is accessible', async function (assert) {
     assert.expect(0);
 
     this.server.create('crate', { name: 'nanomsg' });
@@ -25,7 +25,7 @@ module('Acceptance | crate page', function(hooks) {
     await a11yAudit(axeConfig);
   });
 
-  test('/crates/:crate/:version is accessible', async function(assert) {
+  test('/crates/:crate/:version is accessible', async function (assert) {
     assert.expect(0);
 
     this.server.create('crate', { name: 'nanomsg' });
@@ -38,7 +38,7 @@ module('Acceptance | crate page', function(hooks) {
     await a11yAudit(axeConfig);
   });
 
-  test('/crates/:crate/owners is accessible', async function(assert) {
+  test('/crates/:crate/owners is accessible', async function (assert) {
     assert.expect(0);
 
     this.server.loadFixtures();
@@ -49,7 +49,7 @@ module('Acceptance | crate page', function(hooks) {
     await a11yAudit(axeConfig);
   });
 
-  test('visiting a crate page from the front page', async function(assert) {
+  test('visiting a crate page from the front page', async function (assert) {
     this.server.create('crate', { name: 'nanomsg', newest_version: '0.6.1' });
     this.server.create('version', { crateId: 'nanomsg', num: '0.6.1' });
 
@@ -63,7 +63,7 @@ module('Acceptance | crate page', function(hooks) {
     assert.dom('[data-test-heading] [data-test-crate-version]').hasText('0.6.1');
   });
 
-  test('visiting /crates/nanomsg', async function(assert) {
+  test('visiting /crates/nanomsg', async function (assert) {
     this.server.create('crate', { name: 'nanomsg' });
     this.server.create('version', { crateId: 'nanomsg', num: '0.6.0' });
     this.server.create('version', { crateId: 'nanomsg', num: '0.6.1' });
@@ -79,7 +79,7 @@ module('Acceptance | crate page', function(hooks) {
     assert.dom('[data-test-crate-stats-label]').hasText('Stats Overview');
   });
 
-  test('visiting /crates/nanomsg/', async function(assert) {
+  test('visiting /crates/nanomsg/', async function (assert) {
     this.server.create('crate', { name: 'nanomsg' });
     this.server.create('version', { crateId: 'nanomsg', num: '0.6.0' });
     this.server.create('version', { crateId: 'nanomsg', num: '0.6.1' });
@@ -95,7 +95,7 @@ module('Acceptance | crate page', function(hooks) {
     assert.dom('[data-test-crate-stats-label]').hasText('Stats Overview');
   });
 
-  test('visiting /crates/nanomsg/0.6.0', async function(assert) {
+  test('visiting /crates/nanomsg/0.6.0', async function (assert) {
     this.server.create('crate', { name: 'nanomsg' });
     this.server.create('version', { crateId: 'nanomsg', num: '0.6.0' });
     this.server.create('version', { crateId: 'nanomsg', num: '0.6.1' });
@@ -111,7 +111,7 @@ module('Acceptance | crate page', function(hooks) {
     assert.dom('[data-test-crate-stats-label]').hasText('Stats Overview for 0.6.0 (see all)');
   });
 
-  test('navigating to the all versions page', async function(assert) {
+  test('navigating to the all versions page', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/crates/nanomsg');
@@ -120,7 +120,7 @@ module('Acceptance | crate page', function(hooks) {
     assert.dom('.info').hasText(/All 13\s+versions of nanomsg since\s+December \d+, 2014/);
   });
 
-  test('navigating to the reverse dependencies page', async function(assert) {
+  test('navigating to the reverse dependencies page', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/crates/nanomsg');
@@ -130,7 +130,7 @@ module('Acceptance | crate page', function(hooks) {
     assert.dom('a[href="/crates/unicorn-rpc"]').hasText('unicorn-rpc');
   });
 
-  test('navigating to a user page', async function(assert) {
+  test('navigating to a user page', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/crates/nanomsg');
@@ -140,7 +140,7 @@ module('Acceptance | crate page', function(hooks) {
     assert.dom('[data-test-heading] [data-test-username]').hasText('blabaere');
   });
 
-  test('navigating to a team page', async function(assert) {
+  test('navigating to a team page', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/crates/nanomsg');
@@ -150,7 +150,7 @@ module('Acceptance | crate page', function(hooks) {
     assert.dom('[data-test-heading] [data-test-team-name]').hasText('thehydroimpulseteam');
   });
 
-  test('crates having normal dependencies', async function(assert) {
+  test('crates having normal dependencies', async function (assert) {
     this.server.loadFixtures();
 
     await visit('crates/nanomsg');
@@ -158,7 +158,7 @@ module('Acceptance | crate page', function(hooks) {
     assert.dom('#crate-dependencies li').exists({ count: 2 });
   });
 
-  test('crates having build dependencies', async function(assert) {
+  test('crates having build dependencies', async function (assert) {
     this.server.loadFixtures();
 
     await visit('crates/nanomsg');
@@ -166,7 +166,7 @@ module('Acceptance | crate page', function(hooks) {
     assert.dom('#crate-build-dependencies li').exists({ count: 1 });
   });
 
-  test('crates having dev dependencies', async function(assert) {
+  test('crates having dev dependencies', async function (assert) {
     this.server.loadFixtures();
 
     await visit('crates/nanomsg');
@@ -174,7 +174,7 @@ module('Acceptance | crate page', function(hooks) {
     assert.dom('#crate-dev-dependencies li').exists({ count: 1 });
   });
 
-  test('crates having user-owners', async function(assert) {
+  test('crates having user-owners', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/crates/nanomsg');
@@ -186,7 +186,7 @@ module('Acceptance | crate page', function(hooks) {
     assert.dom('[data-test-owners] li').exists({ count: 4 });
   });
 
-  test('crates having team-owners', async function(assert) {
+  test('crates having team-owners', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/crates/nanomsg');
@@ -195,7 +195,7 @@ module('Acceptance | crate page', function(hooks) {
     assert.dom('[data-test-owners] li').exists({ count: 4 });
   });
 
-  test('crates license is supplied by version', async function(assert) {
+  test('crates license is supplied by version', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/crates/nanomsg');
@@ -205,7 +205,7 @@ module('Acceptance | crate page', function(hooks) {
     assert.dom('[data-test-license]').hasText('MIT/Apache-2.0');
   });
 
-  test('navigating to the owners page when not logged in', async function(assert) {
+  test('navigating to the owners page when not logged in', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/crates/nanomsg');
@@ -213,7 +213,7 @@ module('Acceptance | crate page', function(hooks) {
     assert.dom('#crate-owners p a').doesNotExist();
   });
 
-  test('navigating to the owners page when not an owner', async function(assert) {
+  test('navigating to the owners page when not an owner', async function (assert) {
     this.server.loadFixtures();
 
     this.owner.register(
@@ -231,7 +231,7 @@ module('Acceptance | crate page', function(hooks) {
     assert.dom('#crate-owners p a').doesNotExist();
   });
 
-  test('navigating to the owners page', async function(assert) {
+  test('navigating to the owners page', async function (assert) {
     this.server.loadFixtures();
 
     this.owner.register(
@@ -250,70 +250,71 @@ module('Acceptance | crate page', function(hooks) {
     assert.dom('.crates-heading h1').hasText('Manage Crate Owners');
   });
 
-  test('listing crate owners', async function(assert) {
+  test('listing crate owners', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/crates/nanomsg/owners');
 
-    assert.dom('.owners .row').exists({ count: 4 });
+    assert.dom('[data-test-owners] [data-test-owner-team]').exists({ count: 2 });
+    assert.dom('[data-test-owners] [data-test-owner-user]').exists({ count: 2 });
     assert.dom('a[href="/teams/github:org:thehydroimpulse"]').exists();
     assert.dom('a[href="/teams/github:org:blabaere"]').exists();
     assert.dom('a[href="/users/thehydroimpulse"]').exists();
     assert.dom('a[href="/users/blabaere"]').exists();
   });
 
-  test('attempting to add owner without username', async function(assert) {
+  test('attempting to add owner without username', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/crates/nanomsg/owners');
-    await click('#add-owner');
+    await click('[data-test-save-button]');
 
-    assert.dom('.error').exists();
-    assert.dom('.error').hasText('Please enter a username');
-    assert.dom('.owners .row').exists({ count: 4 });
+    assert.dom('[data-test-error-message]').hasText('Please enter a username');
+    assert.dom('[data-test-owners] [data-test-owner-team]').exists({ count: 2 });
+    assert.dom('[data-test-owners] [data-test-owner-user]').exists({ count: 2 });
   });
 
-  test('attempting to add non-existent owner', async function(assert) {
+  test('attempting to add non-existent owner', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/crates/nanomsg/owners');
     await fillIn('input[name="username"]', 'spookyghostboo');
-    await click('#add-owner');
+    await click('[data-test-save-button]');
 
-    assert.dom('.error').exists();
-    assert.dom('.error').hasText('Error sending invite: Not Found');
-    assert.dom('.owners .row').exists({ count: 4 });
+    assert.dom('[data-test-error-message]').hasText('Error sending invite: Not Found');
+    assert.dom('[data-test-owners] [data-test-owner-team]').exists({ count: 2 });
+    assert.dom('[data-test-owners] [data-test-owner-user]').exists({ count: 2 });
   });
 
-  test('add a new owner', async function(assert) {
+  test('add a new owner', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/crates/nanomsg/owners');
     await fillIn('input[name="username"]', 'iain8');
-    await click('#add-owner');
+    await click('[data-test-save-button]');
 
-    assert.dom('.invited').exists();
-    assert.dom('.invited').hasText('An invite has been sent to iain8');
-    assert.dom('.owners .row').exists({ count: 4 });
+    assert.dom('[data-test-invited-message]').hasText('An invite has been sent to iain8');
+    assert.dom('[data-test-owners] [data-test-owner-team]').exists({ count: 2 });
+    assert.dom('[data-test-owners] [data-test-owner-user]').exists({ count: 2 });
   });
 
-  test('remove a crate owner when owner is a user', async function(assert) {
+  test('remove a crate owner when owner is a user', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/crates/nanomsg/owners');
-    await click('[data-test-owner-user="thehydroimpulse"] .remove-owner');
+    await click('[data-test-owner-user="thehydroimpulse"] [data-test-remove-owner-button]');
 
-    assert.dom('.removed').hasText('User thehydroimpulse removed as crate owner');
+    assert.dom('[data-test-removed-message]').hasText('User thehydroimpulse removed as crate owner');
     assert.dom('[data-test-owner-user]').exists({ count: 1 });
   });
 
-  test('remove a crate owner when owner is a team', async function(assert) {
+  test('remove a crate owner when owner is a team', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/crates/nanomsg/owners');
-    await click('[data-test-owner-team="github:org:thehydroimpulse"] .remove-owner');
+    await click('[data-test-owner-team="github:org:thehydroimpulse"] [data-test-remove-owner-button]');
 
-    assert.dom('.removed').hasText('Team org/thehydroimpulseteam removed as crate owner');
+    assert.dom('[data-test-removed-message]').hasText('Team org/thehydroimpulseteam removed as crate owner');
     assert.dom('[data-test-owner-team]').exists({ count: 1 });
   });
 });

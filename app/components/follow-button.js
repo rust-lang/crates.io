@@ -11,13 +11,13 @@ export default class extends Component {
     this.followStateTask.perform();
   }
 
-  @(task(function*() {
+  @(task(function* () {
     let d = yield ajax(`/api/v1/crates/${this.args.crate.name}/following`);
     this.following = d.following;
   }).drop())
   followStateTask;
 
-  @task(function*() {
+  @task(function* () {
     let crate = this.args.crate;
 
     if (!this.following) {

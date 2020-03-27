@@ -12,6 +12,7 @@
     a {
         color: $main-color-light;
         @media only screen and (prefers-color-scheme: dark) {
+            color: #bbb;
             background-color: #111;
         }
         text-decoration: none;

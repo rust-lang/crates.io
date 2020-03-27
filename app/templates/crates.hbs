@@ -10,7 +10,7 @@
   </h1>
 </div>
 
-<div id='selection'>
+<div local-class='selection'>
   {{#each this.alphabet as |letter|}}
     <LinkTo @query={{hash letter=letter page=1}}>
       {{ letter }}
@@ -26,13 +26,12 @@
 </div>
 
 <div id='results'>
-  <div class='nav' data-test-crates-nav>
-    <span class='amt small'>
-      Displaying
-      <span class='cur' data-test-current-rows>{{ this.currentPageStart }}-{{ this.currentPageEnd }}</span>
-      of <span class='total' data-test-total-rows>{{ this.totalItems }}</span> total results
-    </span>
-  </div>
+  <ResultsCount
+    @start={{this.currentPageStart}}
+    @end={{this.currentPageEnd}}
+    @total={{this.totalItems}}
+    data-test-crates-nav
+  />
 
   <div class='sort' data-test-crates-sort>
     <span class='small'>Sort by</span>
@@ -41,7 +40,6 @@
       <dd.Trigger class="dropdown dropdown-button" data-test-current-order>
         {{svg-jar "sort"}}
         {{ this.currentSortBy }}
-        <span class='arrow'></span>
       </dd.Trigger>
 
       <dd.Content @tagName="ul" class="dropdown">
@@ -75,9 +73,9 @@
   </div>
 </div>
 
-<div id='crates' class='white-rows'>
+<div class='white-rows'>
   {{#each this.model as |crate index|}}
-    <CrateRow @crate={{crate}} data-test-crate-row={{index}} />
+    <CrateRow @crate={{crate}} class="row" data-test-crate-row={{index}} />
   {{/each}}
 </div>
 

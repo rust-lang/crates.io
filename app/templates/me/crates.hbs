@@ -8,13 +8,11 @@
 {{! TODO: reduce duplication with templates/crates.hbs }}
 
 <div id='results'>
-  <div class='nav'>
-    <span class='amt small'>
-      Displaying
-      <span class='cur'>{{ this.currentPageStart }}-{{ this.currentPageEnd }}</span>
-      of <span class='total'>{{ this.totalItems }}</span> total results
-    </span>
-  </div>
+  <ResultsCount
+    @start={{this.currentPageStart}}
+    @end={{this.currentPageEnd}}
+    @total={{this.totalItems}}
+  />
 
   <div class='sort'>
     <span class='small'>Sort by</span>
@@ -22,7 +20,6 @@
       <dd.Trigger class="dropdown dropdown-button">
         {{svg-jar "sort"}}
         {{ this.currentSortBy }}
-        <span class='arrow'></span>
       </dd.Trigger>
 
       <dd.Content @tagName="ul" class="dropdown">
@@ -56,9 +53,9 @@
   </div>
 </div>
 
-<div id='crates' class='white-rows'>
+<div class='white-rows'>
   {{#each this.model as |crate|}}
-    <CrateRow @crate={{crate}} />
+    <CrateRow @crate={{crate}} class="row" />
   {{/each}}
 </div>
 

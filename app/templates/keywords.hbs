@@ -6,13 +6,12 @@
 </div>
 
 <div id='results'>
-  <div class='nav' data-test-keywords-nav>
-    <span class='amt small'>
-      Displaying
-      <span class='cur'>{{ this.currentPageStart }}-{{ this.currentPageEnd }}</span>
-      of <span class='total'>{{ this.totalItems }}</span> total results
-    </span>
-  </div>
+  <ResultsCount
+    @start={{this.currentPageStart}}
+    @end={{this.currentPageEnd}}
+    @total={{this.totalItems}}
+    data-test-keywords-nav
+  />
 
   <div class='sort' data-test-keywords-sort>
     <span class='small'>Sort by</span>
@@ -20,7 +19,6 @@
       <dd.Trigger class="dropdown dropdown-button" data-test-current-order>
         {{svg-jar "sort"}}
         {{ this.currentSortBy }}
-        <span class='arrow'></span>
       </dd.Trigger>
 
       <dd.Content @tagName="ul" class="dropdown">
@@ -44,7 +42,7 @@
     <div class='row'>
       <div class='info'>
         <LinkTo @route="keyword" @model={{keyword}}>{{keyword.id}}</LinkTo>
-        <span class='vers small'>
+        <span class='small'>
           {{ pluralize (format-num keyword.crates_cnt) "crate" }}
         </span>
       </div>

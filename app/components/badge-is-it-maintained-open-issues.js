@@ -6,7 +6,7 @@ export default Component.extend({
   tagName: '',
   repository: alias('badge.attributes.repository'),
 
-  text: computed('badge', function() {
+  text: computed('badge', function () {
     return `Is It Maintained percentage of issues still open`;
   }),
 });

@@ -24,7 +24,6 @@ fn main() {
     println!("Booting runner");
 
     let config = cargo_registry::Config::default();
-    let db_url = db::connection_url(&config.db_url);
 
     let job_start_timeout = dotenv::var("BACKGROUND_JOB_TIMEOUT")
         .unwrap_or_else(|_| "30".into())
@@ -40,11 +39,22 @@ fn main() {
     println!("Index cloned");
 
     let build_runner = || {
-        let environment =
-            Environment::new_shared(repository.clone(), config.uploader.clone(), Client::new());
-        let db_config = r2d2::Pool::builder().min_idle(Some(0));
-        swirl::Runner::builder(environment)
-            .connection_pool_builder(&db_url, db_config)
+        // 2x the thread pool size -- not all our jobs need a DB connection,
+        // but we want to always be able to run our jobs in parallel, rather
+        // than adjusting based on how many concurrent jobs need a connection.
+        // Eventually swirl will do this for us, and this will be the default
+        // -- we should just let it do a thread pool size of CPU count, and a
+        // a connection pool size of 2x that when that lands.
+        let db_config = r2d2::Pool::builder().max_size(4);
+        let db_pool = db::diesel_pool(&config.db_url, config.env, db_config);
+        let environment = Environment::new_shared(
+            repository.clone(),
+            db_pool.clone(),
+            config.uploader.clone(),
+            Client::new(),
+        );
+        swirl::Runner::builder(db_pool, environment)
+            .thread_count(2)
             .job_start_timeout(Duration::from_secs(job_start_timeout))
             .build()
     };
