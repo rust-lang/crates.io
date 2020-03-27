@@ -16,7 +16,7 @@ export default Route.extend(AuthenticatedRoute, {
   async model() {
     let { ownedCrates, currentUser: user } = this.session;
 
-    if (ownedCrates.length === 0) {
+    if (!ownedCrates) {
       await this.session.fetchUser();
       ({ ownedCrates } = this.session);
     }
