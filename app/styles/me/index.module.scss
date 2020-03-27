@@ -31,10 +31,53 @@
     flex-direction: column;
 }
 
+.me-email-notifications {
+    border-bottom: 5px solid $gray-border;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+
+    .right {
+        flex: 2;
+        display: flex;
+        justify-content: flex-end;
+        align-self: center;
+    }
+}
+
+.notifications-list {
+    padding: 0;
+    flex-grow: 1;
+}
+
+.notifications-row {
+    display: flex;
+    flex-direction: row;
+}
+
 .select-all-button,
 .deselect-all-button {
     composes: yellow-button small from '../shared/buttons.module.scss';
+    margin-right: 1rem;
 }
+
+.notifications-error,
+.notifications-success {
+    border-top-width: 0;
+    font-weight: bold;
+
+    padding: 0 10px 10px 20px;
+}
+
+.notifications-error {
+    color: rgb(216, 0, 41);
+}
+
+.notifications-success {
+    color: green;
+}
+
 
 .update-notifications-button {
     composes: yellow-button from '../shared/buttons.module.scss';
