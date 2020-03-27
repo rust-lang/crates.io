@@ -20,7 +20,7 @@
             <p class='error'>Whoops, that email format is invalid</p>
           </div>
         {{/if}}
-        <div class='actions'>
+        <div local-class="actions">
           <button type='submit' local-class="save-button" class='space-right' disabled={{this.disableSave}}>Save</button>
           <button type="button" local-class="cancel-button" {{action 'cancelEdit'}}>Cancel</button>
         </div>
@@ -39,7 +39,7 @@
           {{/if}}
         </dd>
       </div>
-      <div class='actions'>
+      <div local-class="actions">
         <button type="button" local-class="edit-button" class='space-left' {{action 'editEmail'}}>Edit</button>
       </div>
     </div>
@@ -51,7 +51,7 @@
           {{/if}}
           <p>Your email has not yet been verified.</p>
         </div>
-        <div class='actions'>
+        <div local-class="actions">
           <button type="button" local-class="resend-button" class='space-left' {{action 'resendEmail'}} disabled={{this.disableResend}}>
             {{this.resendButtonText}}
           </button>

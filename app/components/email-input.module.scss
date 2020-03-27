@@ -4,6 +4,11 @@
     margin-right: auto;
 }
 
+.actions {
+    display: flex;
+    align-items: center;
+}
+
 .save-button,
 .cancel-button,
 .edit-button,
