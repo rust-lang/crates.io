@@ -36,6 +36,12 @@
     margin-right: 0.4em;
 }
 
+.created-at,
+.last-used-at {
+    composes: small from '../styles/shared/typography.module.scss';
+    line-height: 1.15rem;
+}
+
 .actions {
     display: flex;
     align-items: center;
