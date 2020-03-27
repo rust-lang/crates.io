@@ -24,3 +24,7 @@
 .resend-button {
     composes: yellow-button small from '../styles/shared/buttons.module.scss';
 }
+
+.save-button {
+    margin-right: 10px;
+}
