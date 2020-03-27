@@ -25,7 +25,7 @@
   <EmailInput @type="email" @value={{this.model.user.email}} @user={{this.model.user}} />
 </div>
 
-<form id='me-email-notifications' {{ action 'saveEmailNotifications' on='submit' }} >
+<form local-class="me-email-notifications" {{ action 'saveEmailNotifications' on='submit' }} >
   <h2>Email Notification Preferences</h2>
 
   <p>
@@ -39,7 +39,7 @@
     <button type='button' local-class="deselect-all-button" {{action 'emailNotificationsSelectNone'}}>Deselect All</button>
   </div>
 
-  <ul>
+  <ul local-class="notifications-list">
     {{#each this.ownedCrates as |ownedCrate|}}
       <OwnedCrateRow @ownedCrate={{ownedCrate}} />
     {{/each}}
@@ -56,7 +56,7 @@
         Your email notification preferences have been updated!
       </div>
     {{/if}}
-    <div class='right'>
+    <div local-class="right">
       <button type='submit' local-class="update-notifications-button">Update</button>
     </div>
   </div>

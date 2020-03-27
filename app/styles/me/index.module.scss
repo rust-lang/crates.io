@@ -31,6 +31,26 @@
     flex-direction: column;
 }
 
+.me-email-notifications {
+    border-bottom: 5px solid $gray-border;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+
+    .right {
+        flex: 2;
+        display: flex;
+        justify-content: flex-end;
+        align-self: center;
+    }
+}
+
+.notifications-list {
+    padding: 0;
+    flex-grow: 1;
+}
+
 .notifications-row {
     display: flex;
     flex-direction: row;
