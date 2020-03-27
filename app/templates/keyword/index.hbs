@@ -22,32 +22,34 @@
         {{ this.currentSortBy }}
       </dd.Trigger>
 
-      <dd.Content @tagName="ul" class="dropdown">
-        <li>
-          <LinkTo @query={{hash sort="alpha"}}>
-            Alphabetical
-          </LinkTo>
-        </li>
-        <li>
-          <LinkTo @query={{hash sort="downloads"}}>
-            All-Time Downloads
-          </LinkTo>
-        </li>
-        <li>
-          <LinkTo @query={{hash sort="recent-downloads"}}>
-            Recent Downloads
-          </LinkTo>
-        </li>
-        <li>
-          <LinkTo @query={{hash sort="recent-updates"}}>
-            Recent Updates
-          </LinkTo>
-        </li>
-        <li>
-          <LinkTo @query={{hash sort="new"}}>
-            Newly Added
-          </LinkTo>
-        </li>
+      <dd.Content class="dropdown">
+        <ul>
+          <li>
+            <LinkTo @query={{hash sort="alpha"}}>
+              Alphabetical
+            </LinkTo>
+          </li>
+          <li>
+            <LinkTo @query={{hash sort="downloads"}}>
+              All-Time Downloads
+            </LinkTo>
+          </li>
+          <li>
+            <LinkTo @query={{hash sort="recent-downloads"}}>
+              Recent Downloads
+            </LinkTo>
+          </li>
+          <li>
+            <LinkTo @query={{hash sort="recent-updates"}}>
+              Recent Updates
+            </LinkTo>
+          </li>
+          <li>
+            <LinkTo @query={{hash sort="new"}}>
+              Newly Added
+            </LinkTo>
+          </li>
+        </ul>
       </dd.Content>
     </Dropdown>
   </div>

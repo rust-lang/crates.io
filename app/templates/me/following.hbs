@@ -20,17 +20,19 @@
         {{ this.currentSortBy }}
       </dd.Trigger>
 
-      <dd.Content @tagName="ul" class="dropdown">
-        <li>
-          <LinkTo @query={{hash sort="alpha"}}>
-            Alphabetical
-          </LinkTo>
-        </li>
-        <li>
-          <LinkTo @query={{hash sort="downloads"}}>
-            Downloads
-          </LinkTo>
-        </li>
+      <dd.Content class="dropdown">
+        <ul>
+          <li>
+            <LinkTo @query={{hash sort="alpha"}}>
+              Alphabetical
+            </LinkTo>
+          </li>
+          <li>
+            <LinkTo @query={{hash sort="downloads"}}>
+              Downloads
+            </LinkTo>
+          </li>
+        </ul>
       </dd.Content>
     </Dropdown>
   </div>
