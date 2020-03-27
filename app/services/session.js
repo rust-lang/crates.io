@@ -1,4 +1,3 @@
-import { A } from '@ember/array';
 import Service, { inject as service } from '@ember/service';
 import ajax from 'ember-fetch/ajax';
 import window from 'ember-window-mock';
@@ -12,7 +11,7 @@ export default class SessionService extends Service {
   isLoggedIn = false;
   currentUser = null;
   currentUserDetected = false;
-  ownedCrates = A();
+  ownedCrates = null;
 
   constructor() {
     super(...arguments);
@@ -70,7 +69,8 @@ export default class SessionService extends Service {
   fetchUser() {
     return ajax('/api/v1/me').then(response => {
       this.set('currentUser', this.store.push(this.store.normalize('user', response.user)));
-      this.ownedCrates.pushObjects(
+      this.set(
+        'ownedCrates',
         response.owned_crates.map(c => this.store.push(this.store.normalize('owned-crate', c))),
       );
     });

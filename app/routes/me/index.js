@@ -13,11 +13,16 @@ export default Route.extend(AuthenticatedRoute, {
         .clear();
     },
   },
-  model() {
-    return {
-      user: this.get('session.currentUser'),
-      ownedCrates: this.get('session.ownedCrates'),
-      api_tokens: this.store.findAll('api-token'),
-    };
+  async model() {
+    let { ownedCrates, currentUser: user } = this.session;
+
+    if (!ownedCrates) {
+      await this.session.fetchUser();
+      ({ ownedCrates } = this.session);
+    }
+
+    let apiTokens = this.store.findAll('api-token');
+
+    return { user, ownedCrates, api_tokens: apiTokens };
   },
 });
