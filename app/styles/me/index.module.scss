@@ -34,6 +34,7 @@
 .select-all-button,
 .deselect-all-button {
     composes: yellow-button small from '../shared/buttons.module.scss';
+    margin-right: 1rem;
 }
 
 .update-notifications-button {
