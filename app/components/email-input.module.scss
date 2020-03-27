@@ -4,6 +4,19 @@
     margin-right: auto;
 }
 
+.row {
+    width: 100%;
+    border: 1px solid #d5d3cb;
+    border-bottom-width: 0;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+
+    &:last-child {
+        border-bottom-width: 1px;
+    }
+}
+
 .label {
     flex: 1;
     margin-right: 0.4em;

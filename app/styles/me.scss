@@ -4,15 +4,6 @@
     margin-bottom: 20px;
     display: flex;
     flex-direction: column;
-    .row {
-        width: 100%;
-        border: 1px solid #d5d3cb;
-        border-bottom-width: 0px;
-        &:last-child { border-bottom-width: 1px; }
-        padding: 10px 20px;
-        display: flex;
-        align-items: center;
-    }
 }
 
 #me-email-notifications {
