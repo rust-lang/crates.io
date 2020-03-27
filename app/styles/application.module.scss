@@ -20,6 +20,12 @@ body {
     align-items: center;
 }
 
+h1 {
+    @media only screen and (max-width: 400px) {
+        font-size: 1.5em;
+    }
+}
+
 a {
     color: $link-color;
     text-decoration: none;
