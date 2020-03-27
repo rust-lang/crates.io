@@ -1,0 +1,27 @@
+.link {
+    margin: 8px 0;
+    width: 100%;
+    color: lighten($main-color, 10%);
+    text-decoration: none;
+    background-color: $main-bg-dark;
+    font-size: 90%;
+    padding: 20px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    &:hover {
+        background-color: darken($main-bg-dark, 5%);
+    }
+
+    span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    svg {
+        flex-shrink: 0;
+        background: #fff;
+    }
+}

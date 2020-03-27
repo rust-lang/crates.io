@@ -1,12 +1,7 @@
-<ol>
+<FrontPageList @ordered={{true}} as |Item|>
   {{#each @crates as |crate index|}}
-    <li>
-      <LinkTo @route="crate" @model={{crate.id}} data-test-crate-link={{index}}>
-        <span>{{ crate.name }}</span>
-        <div class='arrow-in-list'>
-          {{svg-jar "right-arrow"}}
-        </div>
-      </LinkTo>
-    </li>
+    <Item @route="crate" @model={{crate.id}} data-test-crate-link={{index}}>
+      {{ crate.name }}
+    </Item>
   {{/each}}
-</ol>
+</FrontPageList>

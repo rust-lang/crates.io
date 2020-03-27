@@ -1,12 +1,7 @@
-<ul>
+<FrontPageList as |Item|>
   {{#each @keywords as |keyword|}}
-    <li>
-      <LinkTo @route="keyword" @model={{keyword}}>
-        <span>{{ keyword.id }} ({{ format-num keyword.crates_cnt }})</span>
-        <div class='arrow-in-list'>
-          {{svg-jar "right-arrow"}}
-        </div>
-      </LinkTo>
-    </li>
+    <Item @route="keyword" @model={{keyword}}>
+      {{ keyword.id }} ({{ format-num keyword.crates_cnt }})
+    </Item>
   {{/each}}
-</ul>
+</FrontPageList>
