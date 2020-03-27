@@ -37,37 +37,39 @@
     <span class='small'>Sort by</span>
 
     <Dropdown as |dd|>
-      <dd.Trigger class="dropdown dropdown-button" data-test-current-order>
+      <dd.Trigger class="dropdown-button" data-test-current-order>
         {{svg-jar "sort"}}
         {{ this.currentSortBy }}
       </dd.Trigger>
 
-      <dd.Content @tagName="ul" class="dropdown">
-        <li>
-          <LinkTo @query={{hash page=1 sort="alpha"}}>
-            Alphabetical
-          </LinkTo>
-        </li>
-        <li>
-          <LinkTo @query={{hash page=1 sort="downloads"}}>
-            All-Time Downloads
-          </LinkTo>
-        </li>
-        <li>
-          <LinkTo @query={{hash page=1 sort="recent-downloads"}}>
-            Recent Downloads
-          </LinkTo>
-        </li>
-        <li>
-          <LinkTo @query={{hash page=1 sort="recent-updates"}}>
-            Recent Updates
-          </LinkTo>
-        </li>
-        <li>
-          <LinkTo @query={{hash page=1 sort="new"}}>
-            Newly Added
-          </LinkTo>
-        </li>
+      <dd.Content>
+        <ul class="dropdown-menu">
+          <li>
+            <LinkTo @query={{hash page=1 sort="alpha"}}>
+              Alphabetical
+            </LinkTo>
+          </li>
+          <li>
+            <LinkTo @query={{hash page=1 sort="downloads"}}>
+              All-Time Downloads
+            </LinkTo>
+          </li>
+          <li>
+            <LinkTo @query={{hash page=1 sort="recent-downloads"}}>
+              Recent Downloads
+            </LinkTo>
+          </li>
+          <li>
+            <LinkTo @query={{hash page=1 sort="recent-updates"}}>
+              Recent Updates
+            </LinkTo>
+          </li>
+          <li>
+            <LinkTo @query={{hash page=1 sort="new"}}>
+              Newly Added
+            </LinkTo>
+          </li>
+        </ul>
       </dd.Content>
     </Dropdown>
   </div>

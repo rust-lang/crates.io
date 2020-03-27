@@ -159,7 +159,11 @@ input.search {
     }
 }
 
-:global(.dropdown).current-user-links {
+.menu-item-with-separator {
+    border-top: 1px solid $gray-border;
+}
+
+.current-user-links {
     left: auto;
     right: 0;
     min-width: 200px;
