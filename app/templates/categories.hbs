@@ -37,21 +37,19 @@
   </div>
 </div>
 
-<div class='white-rows'>
+<div local-class="list">
   {{#each this.model as |category|}}
-    <div class='row' data-test-category={{category.slug}}>
-      <div class='desc'>
-        <div class='info'>
-          <LinkTo @route="category" @model={{category.slug}}>{{category.category}}</LinkTo>
-          <span class='small' data-test-crate-count>
-            {{ pluralize (format-num category.crates_cnt) "crate" }}
-          </span>
-        </div>
-        <div class='summary'>
-          <span class='small'>
-            {{ category.description }}
-          </span>
-        </div>
+    <div local-class='row' data-test-category={{category.slug}}>
+      <div>
+        <LinkTo @route="category" @model={{category.slug}} local-class="category-link">
+          {{category.category}}
+        </LinkTo>
+        <span local-class="crate-count" data-test-crate-count>
+          {{ pluralize (format-num category.crates_cnt) "crate" }}
+        </span>
+      </div>
+      <div local-class="description">
+        {{ category.description }}
       </div>
     </div>
   {{/each}}
