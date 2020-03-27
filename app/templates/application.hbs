@@ -40,7 +40,7 @@
         Browse All Crates
       </LinkTo>
       <span local-class="sep">|</span>
-      <Dropdown class="dropdown-container" as |dd|>
+      <Dropdown as |dd|>
         <dd.Trigger class="dropdown" local-class="dropdown-button">
           Docs
         </dd.Trigger>
@@ -64,7 +64,7 @@
       </Dropdown>
       <span local-class="sep">|</span>
       {{#if this.session.currentUser}}
-        <Dropdown class="dropdown-container" data-test-user-menu as |dd|>
+        <Dropdown data-test-user-menu as |dd|>
           <dd.Trigger class="dropdown" local-class="dropdown-button" data-test-toggle>
             <UserAvatar @user={{this.session.currentUser}} @size="small" data-test-avatar />
             {{ this.session.currentUser.name }}
@@ -86,7 +86,7 @@
     </div>
 
     <div local-class='menu'>
-      <Dropdown class="dropdown-container" as |dd|>
+      <Dropdown as |dd|>
         <dd.Trigger class="dropdown" local-class="dropdown-button">
           Menu
         </dd.Trigger>
