@@ -31,19 +31,25 @@ span.small {
     }
 }
 
-ul.dropdown {
-    display: none;
+.dropdown {
     position: absolute;
-    top: 100%;
-    left: 0;
+    display: none;
     width: 100%;
+    z-index: 10;
+
+    &.open {
+        display: block;
+    }
+}
+
+ul.dropdown,
+.dropdown ul {
     margin: 0;
     text-align: left;
     padding: 0;
     background: white;
     border: 1px solid $gray-border;
     list-style: none;
-    z-index: 10;
     overflow: hidden;
     border-radius: 5px;
 
@@ -59,11 +65,6 @@ ul.dropdown {
             background: lighten($main-color, 15%);
             color: white !important;
         }
-    }
-    &.open {
-        display: block;
-        visibility: visible;
-        opacity: 1;
     }
 }
 
