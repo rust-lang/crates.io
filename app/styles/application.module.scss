@@ -159,6 +159,10 @@ input.search {
     }
 }
 
+.menu-item-with-separator {
+    border-top: 1px solid $gray-border;
+}
+
 :global(.dropdown).current-user-links {
     left: auto;
     right: 0;

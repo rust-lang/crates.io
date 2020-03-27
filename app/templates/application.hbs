@@ -74,7 +74,7 @@
             <li><LinkTo @route="dashboard">Dashboard</LinkTo></li>
             <li><LinkTo @route="me">Account Settings</LinkTo></li>
             <li><LinkTo @route="me.pending-invites">Owner Invites</LinkTo></li>
-            <li class='last'><LinkTo @route="logout">Sign Out</LinkTo></li>
+            <li local-class="menu-item-with-separator"><LinkTo @route="logout">Sign Out</LinkTo></li>
           </dd.Content>
         </Dropdown>
       {{else}}
@@ -96,7 +96,7 @@
             <li><LinkTo @route="dashboard">Dashboard</LinkTo></li>
             <li><LinkTo @route="me" data-test-me-link>Account Settings</LinkTo></li>
             <li><LinkTo @route="me.pending-invites">Owner Invites</LinkTo></li>
-            <li class='last'><LinkTo @route="logout">Sign Out</LinkTo></li>
+            <li local-class="menu-item-with-separator"><LinkTo @route="logout">Sign Out</LinkTo></li>
           {{else}}
             <li><LinkTo @route="login">Log in with GitHub</LinkTo></li>
           {{/if}}
