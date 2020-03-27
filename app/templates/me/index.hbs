@@ -39,13 +39,11 @@
     <button type='button' local-class="deselect-all-button" {{action 'emailNotificationsSelectNone'}}>Deselect All</button>
   </div>
 
-  <div local-class="notifications-row">
-    <ul>
-      {{#each this.ownedCrates as |ownedCrate|}}
-        <OwnedCrateRow @ownedCrate={{ownedCrate}} />
-      {{/each}}
-    </ul>
-  </div>
+  <ul>
+    {{#each this.ownedCrates as |ownedCrate|}}
+      <OwnedCrateRow @ownedCrate={{ownedCrate}} />
+    {{/each}}
+  </ul>
 
   <div local-class="notifications-row">
     {{#if this.emailNotificationsError}}
