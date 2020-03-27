@@ -49,12 +49,12 @@
 
   <div class='row'>
     {{#if this.emailNotificationsError}}
-      <div class='error'>
+      <div local-class="notifications-error">
         An error occurred while saving your email preferences.
       </div>
     {{/if}}
     {{#if this.emailNotificationsSuccess}}
-      <div class='success'>
+      <div local-class="notifications-success">
         Your email notification preferences have been updated!
       </div>
     {{/if}}

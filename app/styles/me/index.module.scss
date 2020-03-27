@@ -37,6 +37,23 @@
     margin-right: 1rem;
 }
 
+.notifications-error,
+.notifications-success {
+    border-top-width: 0;
+    font-weight: bold;
+
+    padding: 0 10px 10px 20px;
+}
+
+.notifications-error {
+    color: rgb(216, 0, 41);
+}
+
+.notifications-success {
+    color: green;
+}
+
+
 .update-notifications-button {
     composes: yellow-button from '../shared/buttons.module.scss';
 }

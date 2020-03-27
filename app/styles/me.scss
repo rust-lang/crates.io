@@ -8,21 +8,6 @@
     .row {
         display: flex;
         flex-direction: row;
-
-        .error, .success {
-            border-top-width: 0px;
-            font-weight: bold;
-
-            padding: 0px 10px 10px 20px;
-        }
-
-        .error {
-            color: rgb(216, 0, 41);
-        }
-
-        .success {
-            color: green;
-        }
     }
 
     ul {
