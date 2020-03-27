@@ -19,6 +19,13 @@
     font-weight: bold;
 }
 
+.email-form {
+    flex: 10;
+    display: inline-flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
 .input {
     width: 400px;
     margin-right: 10px;
