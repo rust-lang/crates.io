@@ -1,12 +1,13 @@
 .list {
-    composes: white-rows from global;
-    padding-top: 20px;
+    background-color: white;
+    padding: 20px 20px 0;
     margin: 0;
 
     dt {
         margin-bottom: 5px;
         font-weight: bold;
     }
+
     dd {
         margin-bottom: 20px;
     }
