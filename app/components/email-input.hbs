@@ -21,8 +21,8 @@
           </div>
         {{/if}}
         <div class='actions'>
-          <button type='submit' class='small yellow-button space-right' disabled={{this.disableSave}}>Save</button>
-          <button type="button" class='small yellow-button' {{action 'cancelEdit'}}>Cancel</button>
+          <button type='submit' local-class="save-button" class='space-right' disabled={{this.disableSave}}>Save</button>
+          <button type="button" local-class="cancel-button" {{action 'cancelEdit'}}>Cancel</button>
         </div>
       </form>
     </div>
@@ -40,7 +40,7 @@
         </dd>
       </div>
       <div class='actions'>
-        <button type="button" class='small yellow-button space-left' {{action 'editEmail'}}>Edit</button>
+        <button type="button" local-class="edit-button" class='space-left' {{action 'editEmail'}}>Edit</button>
       </div>
     </div>
     {{#if this.emailNotVerified }}
@@ -52,7 +52,7 @@
           <p>Your email has not yet been verified.</p>
         </div>
         <div class='actions'>
-          <button type="button" class='small yellow-button space-left' {{action 'resendEmail'}} disabled={{this.disableResend}}>
+          <button type="button" local-class="resend-button" class='space-left' {{action 'resendEmail'}} disabled={{this.disableResend}}>
             {{this.resendButtonText}}
           </button>
         </div>

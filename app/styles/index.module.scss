@@ -19,6 +19,10 @@
     }
 }
 
+.hero-button {
+    composes: yellow-button from '../styles/shared/buttons.module.scss';
+}
+
 .blurb {
     margin: 30px 0 40px 0;
     display: flex;
@@ -87,3 +91,4 @@
         width: 16px;
     }
 }
+

@@ -42,6 +42,14 @@
     img { margin-left: 10px }
 }
 
+.save-button {
+    composes: yellow-button small from '../styles/shared/buttons.module.scss';
+}
+
+.revoke-button {
+    composes: tan-button small from '../styles/shared/buttons.module.scss';
+}
+
 .new-token {
     border-top-width: 0;
     flex-direction: column;

@@ -36,10 +36,10 @@
 
   <div class='row'>
     <div class='button-container'>
-      <button type='button' class='yellow-button small' {{action 'emailNotificationsSelectAll'}}>Select All</button>
+      <button type='button' local-class="select-all-button" {{action 'emailNotificationsSelectAll'}}>Select All</button>
     </div>
     <div class='button-container'>
-      <button type='button' class='yellow-button small' {{action 'emailNotificationsSelectNone'}}>Deselect All</button>
+      <button type='button' local-class="deselect-all-button" {{action 'emailNotificationsSelectNone'}}>Deselect All</button>
     </div>
   </div>
 
@@ -63,7 +63,7 @@
       </div>
     {{/if}}
     <div class='right'>
-      <button type='submit' class='yellow-button'>Update</button>
+      <button type='submit' local-class="update-notifications-button">Update</button>
     </div>
   </div>
 </form>
@@ -73,7 +73,7 @@
   <div local-class="right">
     <button
       type="button"
-      class='yellow-button'
+      local-class="new-token-button"
       disabled={{this.disableCreate}}
       data-test-new-token-button
       {{action "startNewToken"}}

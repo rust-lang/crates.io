@@ -2,11 +2,11 @@
     background: $end;
     background: -moz-linear-gradient(top, $start 0%, $end 100%);
     background: -webkit-gradient(linear, left top, left bottom,
-        color-stop(0%,$start),
-        color-stop(100%,$end));
-    background: -webkit-linear-gradient(top, $start 0%,$end 100%);
-    background: -ms-linear-gradient(top, $start 0%,$end 100%);
-    background: linear-gradient(to bottom, $start 0%,$end 100%);
+        color-stop(0%, $start),
+        color-stop(100%, $end));
+    background: -webkit-linear-gradient(top, $start 0%, $end 100%);
+    background: -ms-linear-gradient(top, $start 0%, $end 100%);
+    background: linear-gradient(to bottom, $start 0%, $end 100%);
 }
 
 @mixin button($start, $end) {
@@ -31,8 +31,14 @@
         margin-right: 10px;
     }
 
-    &:hover, &:focus { @include vertical-gradient($start_dark, $end_dark); outline: 0; }
-    &.active { @include vertical-gradient($start_dark, $end_dark); outline: 0; }
+    &:hover, &:focus {
+        @include vertical-gradient($start_dark, $end_dark);
+        outline: 0;
+    }
+    &.active {
+        @include vertical-gradient($start_dark, $end_dark);
+        outline: 0;
+    }
     &[disabled] {
         @include vertical-gradient($start_light, $end_light);
         color: $main-color-light;
@@ -44,11 +50,11 @@
     vertical-align: middle;
 }
 
-button.small {
-    padding: 10px 20px;
-    border-radius: 30px;
-}
-
 .tan-button {
     @include button(rgb(232, 227, 199), rgb(214, 205, 153));
+}
+
+.small {
+    padding: 10px 20px;
+    border-radius: 30px;
 }

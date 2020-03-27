@@ -23,6 +23,15 @@
     }
 }
 
+.select-all-button,
+.deselect-all-button {
+    composes: yellow-button small from '../shared/buttons.module.scss';
+}
+
+.update-notifications-button {
+    composes: yellow-button from '../shared/buttons.module.scss';
+}
+
 .me-subheading {
     display: flex;
     .right {
@@ -31,6 +40,10 @@
         justify-content: flex-end;
         align-self: center;
     }
+}
+
+.new-token-button {
+    composes: yellow-button from '../shared/buttons.module.scss';
 }
 
 .token-list {

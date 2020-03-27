@@ -42,7 +42,7 @@
     {{#if this.api_token.isNew}}
       <button
         type="button"
-        class='small yellow-button'
+        local-class="save-button"
         disabled={{this.disableCreate}}
         title={{if this.emptyName "You must specify a name" ""}}
         data-test-save-token-button
@@ -53,7 +53,7 @@
     {{else}}
       <button
         type="button"
-        class='small tan-button'
+        local-class="revoke-button"
         disabled={{this.api_token.isSaving}}
         data-test-revoke-token-button
         {{action "revokeToken"}}

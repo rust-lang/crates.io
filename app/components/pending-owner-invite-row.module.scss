@@ -14,6 +14,11 @@
     font-size: 80%;
 }
 
+.accept-button,
+.decline-button {
+    composes: yellow-button small from '../styles/shared/buttons.module.scss';
+}
+
 .error-message {
     font-size: 90%;
 }
