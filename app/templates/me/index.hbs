@@ -34,12 +34,12 @@
     emails off for any of your crates listed below.
   </p>
 
-  <div class='row'>
+  <div local-class="notifications-row">
     <button type='button' local-class="select-all-button" {{action 'emailNotificationsSelectAll'}}>Select All</button>
     <button type='button' local-class="deselect-all-button" {{action 'emailNotificationsSelectNone'}}>Deselect All</button>
   </div>
 
-  <div class='row'>
+  <div local-class="notifications-row">
     <ul>
       {{#each this.ownedCrates as |ownedCrate|}}
         <OwnedCrateRow @ownedCrate={{ownedCrate}} />
@@ -47,7 +47,7 @@
     </ul>
   </div>
 
-  <div class='row'>
+  <div local-class="notifications-row">
     {{#if this.emailNotificationsError}}
       <div local-class="notifications-error">
         An error occurred while saving your email preferences.
