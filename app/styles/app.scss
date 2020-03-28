@@ -30,28 +30,3 @@ span.small {
         }
     }
 }
-
-ul.dropdown-menu {
-    margin: 0;
-    text-align: left;
-    padding: 0;
-    background: white;
-    border: 1px solid $gray-border;
-    list-style: none;
-    overflow: hidden;
-    border-radius: 5px;
-
-    li a {
-        font-size: 90%;
-        width: 100%;
-        display: inline-block;
-        padding: 8px 10px;
-        text-decoration: none;
-        color: $main-color !important;
-
-        &:hover {
-            background: lighten($main-color, 15%);
-            color: white !important;
-        }
-    }
-}

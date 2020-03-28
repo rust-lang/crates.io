@@ -32,35 +32,33 @@
           {{ this.currentSortBy }}
         </dd.Trigger>
 
-        <dd.Content>
-          <ul class="dropdown-menu">
-            <li>
-              <LinkTo @query={{hash page=1 sort="relevance"}}>
-                Relevance
-              </LinkTo>
-            </li>
-            <li>
-              <LinkTo @query={{hash page=1 sort="downloads"}}>
-                All-Time Downloads
-              </LinkTo>
-            </li>
-            <li>
-              <LinkTo @query={{hash page=1 sort="recent-downloads"}}>
-                Recent Downloads
-              </LinkTo>
-            </li>
-            <li>
-              <LinkTo @query={{hash page=1 sort="recent-updates"}}>
-                Recent Updates
-              </LinkTo>
-            </li>
-            <li>
-              <LinkTo @query={{hash page=1 sort="new"}}>
-                Newly Added
-              </LinkTo>
-            </li>
-          </ul>
-        </dd.Content>
+        <dd.Menu as |menu|>
+          <menu.Item>
+            <LinkTo @query={{hash page=1 sort="relevance"}}>
+              Relevance
+            </LinkTo>
+          </menu.Item>
+          <menu.Item>
+            <LinkTo @query={{hash page=1 sort="downloads"}}>
+              All-Time Downloads
+            </LinkTo>
+          </menu.Item>
+          <menu.Item>
+            <LinkTo @query={{hash page=1 sort="recent-downloads"}}>
+              Recent Downloads
+            </LinkTo>
+          </menu.Item>
+          <menu.Item>
+            <LinkTo @query={{hash page=1 sort="recent-updates"}}>
+              Recent Updates
+            </LinkTo>
+          </menu.Item>
+          <menu.Item>
+            <LinkTo @query={{hash page=1 sort="new"}}>
+              Newly Added
+            </LinkTo>
+          </menu.Item>
+        </dd.Menu>
       </Dropdown>
     </div>
   </div>
