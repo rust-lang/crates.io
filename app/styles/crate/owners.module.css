@@ -24,7 +24,7 @@
 }
 
 .submit-button {
-    composes: small yellow-button from '../shared/buttons.module.scss';
+    composes: small yellow-button from '../shared/buttons.module.css';
 }
 
 .list {
@@ -49,5 +49,5 @@
 }
 
 .remove-button {
-    composes: small yellow-button from '../shared/buttons.module.scss';
+    composes: small yellow-button from '../shared/buttons.module.css';
 }

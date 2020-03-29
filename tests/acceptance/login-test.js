@@ -4,7 +4,7 @@ import { visit, currentURL, click, waitFor } from '@ember/test-helpers';
 import { defer } from 'rsvp';
 import window, { setupWindowMock } from 'ember-window-mock';
 
-import flashStyles from 'cargo/components/flash-message.module.scss';
+import flashStyles from 'cargo/components/flash-message.module.css';
 import setupMirage from '../helpers/setup-mirage';
 
 module('Acceptance | Login', function (hooks) {

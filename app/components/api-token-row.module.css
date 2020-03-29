@@ -38,7 +38,7 @@
 
 .created-at,
 .last-used-at {
-    composes: small from '../styles/shared/typography.module.scss';
+    composes: small from '../styles/shared/typography.module.css';
     line-height: 1.15rem;
 }
 
@@ -49,11 +49,11 @@
 }
 
 .save-button {
-    composes: yellow-button small from '../styles/shared/buttons.module.scss';
+    composes: yellow-button small from '../styles/shared/buttons.module.css';
 }
 
 .revoke-button {
-    composes: tan-button small from '../styles/shared/buttons.module.scss';
+    composes: tan-button small from '../styles/shared/buttons.module.css';
 }
 
 .new-token {

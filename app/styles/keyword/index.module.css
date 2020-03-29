@@ -6,7 +6,7 @@
 }
 
 .sort-by-label {
-    composes: small from './shared/typography.module.scss';
+    composes: small from '../shared/typography.module.css';
 }
 
 .list {
@@ -16,14 +16,10 @@
 }
 
 .row {
-    border-bottom: 2px solid var(--gray-border);
     padding: 20px 0;
+    border-bottom: 2px solid var(--gray-border);
 
     &:last-of-type {
         border: none;
     }
-}
-
-.crate-count {
-    composes: small from './shared/typography.module.scss';
 }

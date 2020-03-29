@@ -10,12 +10,12 @@
 }
 
 .date-column {
-    composes: small from '../styles/shared/typography.module.scss';
+    composes: small from '../styles/shared/typography.module.css';
 }
 
 .accept-button,
 .decline-button {
-    composes: yellow-button small from '../styles/shared/buttons.module.scss';
+    composes: yellow-button small from '../styles/shared/buttons.module.css';
 }
 
 .error-message {

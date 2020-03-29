@@ -7,6 +7,30 @@
     }
 }
 
+.subcategories {
+    background-color: white;
+    padding: 0 20px;
+    margin-bottom: 20px;
+}
+
+.subcategory {
+    border-bottom: 2px solid var(--gray-border);
+    padding: 20px 0;
+
+    &:last-of-type {
+        border: none;
+    }
+}
+
+.crate-count,
+.category-description {
+    composes: small from '../shared/typography.module.css';
+}
+
+.category-description {
+    margin-top: 6px;
+}
+
 .results-meta {
     display: flex;
     align-items: center;
@@ -15,7 +39,7 @@
 }
 
 .sort-by-label {
-    composes: small from './shared/typography.module.scss';
+    composes: small from '../shared/typography.module.css';
 }
 
 .list {

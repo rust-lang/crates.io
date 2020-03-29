@@ -58,7 +58,7 @@
 
 .select-all-button,
 .deselect-all-button {
-    composes: yellow-button small from '../shared/buttons.module.scss';
+    composes: yellow-button small from '../shared/buttons.module.css';
     margin-right: 1rem;
 }
 
@@ -80,7 +80,7 @@
 
 
 .update-notifications-button {
-    composes: yellow-button from '../shared/buttons.module.scss';
+    composes: yellow-button from '../shared/buttons.module.css';
 }
 
 .me-subheading {
@@ -94,7 +94,7 @@
 }
 
 .new-token-button {
-    composes: yellow-button from '../shared/buttons.module.scss';
+    composes: yellow-button from '../shared/buttons.module.css';
 }
 
 .token-list {

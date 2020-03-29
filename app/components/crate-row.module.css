@@ -22,7 +22,7 @@
 }
 
 .description {
-    composes: small from '../styles/shared/typography.module.scss';
+    composes: small from '../styles/shared/typography.module.css';
     margin-top: 8px;
 }
 

@@ -26,7 +26,7 @@
 }
 
 .stats-label {
-    composes: small from './shared/typography.module.scss';
+    composes: small from './shared/typography.module.css';
 }
 
 .my-info {
@@ -102,11 +102,11 @@
 }
 
 .feed-version {
-    composes: small from './shared/typography.module.scss';
+    composes: small from './shared/typography.module.css';
 }
 
 .feed-date {
-    composes: small from './shared/typography.module.scss';
+    composes: small from './shared/typography.module.css';
     flex-grow: 1;
     text-align: right;
 }

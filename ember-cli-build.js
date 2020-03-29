@@ -29,7 +29,7 @@ module.exports = function (defaults) {
       components: highlightedLanguages,
     },
     cssModules: {
-      extension: 'module.scss',
+      extension: 'module.css',
       plugins: {
         before: [require('postcss-nested')],
       },

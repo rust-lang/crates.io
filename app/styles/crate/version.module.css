@@ -103,7 +103,7 @@ div.header {
 
 .last-update,
 .crate-size {
-    composes: small from '../shared/typography.module.scss';
+    composes: small from '../shared/typography.module.css';
     line-height: 25px;
 }
 
@@ -142,7 +142,7 @@ div.header {
 }
 
 .more-versions-link {
-    composes: small from '../shared/typography.module.scss';
+    composes: small from '../shared/typography.module.css';
 }
 
 .authorship {
@@ -244,7 +244,7 @@ div.header {
 }
 
 .stat-description {
-    composes: small from '../shared/typography.module.scss';
+    composes: small from '../shared/typography.module.css';
 }
 
 .graph {
@@ -268,5 +268,5 @@ div.header {
 }
 
 .yanked {
-    composes: yanked from '../shared/typography.module.scss';
+    composes: yanked from '../shared/typography.module.css';
 }

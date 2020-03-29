@@ -20,7 +20,7 @@
 }
 
 .hero-button {
-    composes: yellow-button from '../styles/shared/buttons.module.scss';
+    composes: yellow-button from '../styles/shared/buttons.module.css';
 }
 
 .blurb {
@@ -62,7 +62,7 @@
 }
 
 .stats-label {
-    composes: small from './shared/typography.module.scss';
+    composes: small from './shared/typography.module.css';
 }
 
 .lists {
