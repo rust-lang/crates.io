@@ -1,6 +1,6 @@
 .header {
     padding: 20px;
-    background-color: $main-bg-dark;
+    background-color: var(--main-bg-dark);
     margin-bottom: 20px;
     border-radius: 5px;
 }
@@ -18,7 +18,7 @@
 }
 
 .suffix {
-    color: $main-color-light;
+    color: var(--main-color-light);
     padding-left: 10px;
 }
 

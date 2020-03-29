@@ -21,7 +21,7 @@
             height: 10px;
             border-radius: 50%;
             content: '';
-            background-color: $main-bg-dark;
+            background-color: var(--main-bg-dark);
             position: absolute;
             left: 50%;
             top: 50%;

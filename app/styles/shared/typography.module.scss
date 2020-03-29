@@ -1,19 +1,19 @@
 .small {
-    color: $main-color-light;
+    color: var(--main-color-light);
     font-size: 80%;
 
     strong {
-        color: $main-color;
+        color: var(--main-color);
     }
 }
 
 .small a, a.small {
-    color: $main-color-light;
+    color: var(--main-color-light);
     text-decoration: underline;
     font-weight: normal;
 
     &:hover {
-        color: darken($main-color-light, 10%);
+        color: #6b6b6b;
     }
 }
 

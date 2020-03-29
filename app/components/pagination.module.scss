@@ -10,12 +10,12 @@
     ol, li { display: inline; }
 
     a {
-        color: $main-color-light;
+        color: var(--main-color-light);
         text-decoration: none;
         padding: 5px 6px;
     }
-    a:hover { background-color: $main-bg-dark; }
-    a:global(.active) { background-color: $main-bg-dark; }
+    a:hover { background-color: var(--main-bg-dark); }
+    a:global(.active) { background-color: var(--main-bg-dark); }
 
     img, svg { vertical-align: middle; }
 

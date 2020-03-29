@@ -12,7 +12,7 @@
         position: absolute;
 
         &.copy-success {
-            color: $link-color;
+            color: var(--link-color);
         }
 
         &.copy-failure {

@@ -61,13 +61,13 @@
 
 .my-crates-link,
 .followed-crates-link {
-    color: $main-color-light;
+    color: var(--main-color-light);
     text-decoration: underline;
     font-size: 90%;
     font-weight: normal;
 
     &:hover {
-        color: darken($main-color-light, 10%);
+        color: #6b6b6b;
     }
 }
 
@@ -94,7 +94,7 @@
     display: flex;
     align-items: baseline;
     padding: 20px 0;
-    border-bottom: 2px solid $gray-border;
+    border-bottom: 2px solid var(--gray-border);
 
     &:last-of-type {
         border: none;
@@ -122,14 +122,16 @@
 }
 
 .load-more {
-    $bg: rgb(219, 217, 207);
     text-align: center;
     width: 100%;
     padding: 10px;
     outline: 0;
     border: 0;
     margin-bottom: 20px;
-    background-color: $bg;
+    background-color: #dbd9cf;
     color: white;
-    &:hover, &:focus { background-color: darken($bg, 10%); }
+
+    &:hover, &:focus {
+        background-color: #c5c2b2;
+    }
 }

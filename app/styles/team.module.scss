@@ -9,7 +9,7 @@
 
     h2 {
         margin-top: 10px;
-        color: $main-color-light;
+        color: var(--main-color-light);
     }
 }
 
@@ -45,7 +45,7 @@
 
 .row {
     padding: 20px 0;
-    border-bottom: 2px solid $gray-border;
+    border-bottom: 2px solid var(--gray-border);
 
     &:last-of-type {
         border: none;

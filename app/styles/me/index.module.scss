@@ -1,5 +1,5 @@
 .me-profile {
-    border-bottom: 5px solid $gray-border;
+    border-bottom: 5px solid var(--gray-border);
     padding-bottom: 20px;
     margin-bottom: 20px;
 
@@ -24,7 +24,7 @@
 }
 
 .me-email {
-    border-bottom: 5px solid $gray-border;
+    border-bottom: 5px solid var(--gray-border);
     padding-bottom: 20px;
     margin-bottom: 20px;
     display: flex;
@@ -32,7 +32,7 @@
 }
 
 .me-email-notifications {
-    border-bottom: 5px solid $gray-border;
+    border-bottom: 5px solid var(--gray-border);
     padding-bottom: 20px;
     margin-bottom: 20px;
     display: flex;
@@ -98,7 +98,7 @@
 }
 
 .token-list {
-    background-color: $main-bg-dark;
+    background-color: var(--main-bg-dark);
     display: flex;
     flex-direction: column;
 }

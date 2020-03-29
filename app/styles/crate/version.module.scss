@@ -19,7 +19,7 @@ div.header {
     }
 
     h2 {
-        color: $main-color-light;
+        color: var(--main-color-light);
         margin-left: 10px;
     }
 }
@@ -55,7 +55,7 @@ div.header {
     display: flex;
     flex-direction: column;
     padding-bottom: 20px;
-    border-bottom: 5px solid $gray-border;
+    border-bottom: 5px solid var(--gray-border);
     margin-bottom: 20px;
 
     @media only screen and (min-width: 890px) {
@@ -74,12 +74,12 @@ div.header {
 .install {
     font-size: 120%;
     padding: 10px;
-    background-color: darken($main-bg-dark, 8%);
+    background-color: #dfdbc2;
     display: flex;
 
     code {
         flex: 1;
-        background: $main-color;
+        background: var(--main-color);
         color: white;
         padding: 20px;
 
@@ -154,7 +154,7 @@ div.header {
 
     @media only screen and (min-width: 890px) {
         flex: 3;
-        border-left: 2px solid $gray-border;
+        border-left: 2px solid var(--gray-border);
         padding-left: 20px;
 
         .top, .bottom {
@@ -224,7 +224,7 @@ div.header {
 }
 
 .stat {
-    border-left: 1px solid $gray-border;
+    border-left: 1px solid var(--gray-border);
     padding: 10px 20px;
     display: flex;
     flex-wrap: wrap;
@@ -253,7 +253,9 @@ div.header {
     margin: 30px 0;
     padding-bottom: 20px;
 
-    h4 { color: $main-color-light; }
+    h4 {
+        color: var(--main-color-light);
+    }
 
     @media only percy {
         display: none;
