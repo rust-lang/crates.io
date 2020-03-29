@@ -1,14 +1,3 @@
-@mixin vertical-gradient($start, $end) {
-    background: $end;
-    background: -moz-linear-gradient(top, $start 0%, $end 100%);
-    background: -webkit-gradient(linear, left top, left bottom,
-        color-stop(0%, $start),
-        color-stop(100%, $end));
-    background: -webkit-linear-gradient(top, $start 0%, $end 100%);
-    background: -ms-linear-gradient(top, $start 0%, $end 100%);
-    background: linear-gradient(to bottom, $start 0%, $end 100%);
-}
-
 @mixin button($start, $end) {
     $start_dark: darken($start, 5%);
     $end_dark: darken($end, 5%);
@@ -23,7 +12,7 @@
     border: none;
     outline: 0;
     border-radius: 30px;
-    @include vertical-gradient($start, $end);
+    background: linear-gradient(to bottom, $start 0%, $end 100%);
 
     img, svg {
         float: left;
@@ -32,15 +21,15 @@
     }
 
     &:hover, &:focus {
-        @include vertical-gradient($start_dark, $end_dark);
+        background: linear-gradient(to bottom, $start_dark 0%, $end_dark 100%);
         outline: 0;
     }
     &.active {
-        @include vertical-gradient($start_dark, $end_dark);
+        background: linear-gradient(to bottom, $start_dark 0%, $end_dark 100%);
         outline: 0;
     }
     &[disabled] {
-        @include vertical-gradient($start_light, $end_light);
+        background: linear-gradient(to bottom, $start_light 0%, $end_light 100%);
         color: $main-color-light;
     }
 }
