@@ -30,6 +30,9 @@ module.exports = function (defaults) {
     },
     cssModules: {
       extension: 'module.scss',
+      plugins: {
+        before: [require('postcss-nested')],
+      },
     },
     fingerprint: {
       extensions: ['js', 'css', 'png', 'jpg', 'gif', 'map', 'svg', 'ttf', 'woff', 'woff2'],
