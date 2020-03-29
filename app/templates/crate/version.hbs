@@ -127,7 +127,7 @@
           {{#if this.anyCategories}}
             <div>
               <h3>Categories</h3>
-              <ul class='categories'>
+              <ul>
                 {{#each this.categories as |category|}}
                   <li><LinkTo @route="category" @model={{category.slug}}>{{category.category}}</LinkTo></li>
                 {{/each}}
