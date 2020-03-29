@@ -30,7 +30,6 @@ module.exports = function (defaults) {
     },
     cssModules: {
       extension: 'module.scss',
-      intermediateOutputPath: 'app/styles/_modules.scss',
     },
     fingerprint: {
       extensions: ['js', 'css', 'png', 'jpg', 'gif', 'map', 'svg', 'ttf', 'woff', 'woff2'],
