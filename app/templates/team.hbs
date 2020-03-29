@@ -28,40 +28,13 @@
 
       <div>
         <span class='small'>Sort by</span>
-        <Dropdown as |dd|>
-          <dd.Trigger class="dropdown-button">
-            {{svg-jar "sort"}}
-            {{ this.currentSortBy }}
-          </dd.Trigger>
-
-          <dd.Menu as |menu|>
-            <menu.Item>
-              <LinkTo @query={{hash sort="alpha"}}>
-                Alphabetical
-              </LinkTo>
-            </menu.Item>
-            <menu.Item>
-              <LinkTo @query={{hash sort="downloads"}}>
-                All-Time Downloads
-              </LinkTo>
-            </menu.Item>
-            <menu.Item>
-              <LinkTo @query={{hash sort="recent-downloads"}}>
-                Recent Downloads
-              </LinkTo>
-            </menu.Item>
-            <menu.Item>
-              <LinkTo @query={{hash sort="recent-updates"}}>
-                Recent Updates
-              </LinkTo>
-            </menu.Item>
-            <menu.Item>
-              <LinkTo @query={{hash sort="new"}}>
-                Newly Added
-              </LinkTo>
-            </menu.Item>
-          </dd.Menu>
-        </Dropdown>
+        <SortDropdown @current={{this.currentSortBy}} as |sd|>
+          <sd.Option @query={{hash sort="alpha"}}>Alphabetical</sd.Option>
+          <sd.Option @query={{hash sort="downloads"}}>All-Time Downloads</sd.Option>
+          <sd.Option @query={{hash sort="recent-downloads"}}>Recent Downloads</sd.Option>
+          <sd.Option @query={{hash sort="recent-updates"}}>Recent Updates</sd.Option>
+          <sd.Option @query={{hash sort="new"}}>Newly Added</sd.Option>
+        </SortDropdown>
       </div>
     </div>
 

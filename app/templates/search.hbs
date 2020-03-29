@@ -25,41 +25,13 @@
 
     <div data-test-search-sort>
       <span class='small'>Sort by </span>
-
-      <Dropdown as |dd|>
-        <dd.Trigger class="dropdown-button" data-test-current-order>
-          {{svg-jar "sort"}}
-          {{ this.currentSortBy }}
-        </dd.Trigger>
-
-        <dd.Menu as |menu|>
-          <menu.Item>
-            <LinkTo @query={{hash page=1 sort="relevance"}}>
-              Relevance
-            </LinkTo>
-          </menu.Item>
-          <menu.Item>
-            <LinkTo @query={{hash page=1 sort="downloads"}}>
-              All-Time Downloads
-            </LinkTo>
-          </menu.Item>
-          <menu.Item>
-            <LinkTo @query={{hash page=1 sort="recent-downloads"}}>
-              Recent Downloads
-            </LinkTo>
-          </menu.Item>
-          <menu.Item>
-            <LinkTo @query={{hash page=1 sort="recent-updates"}}>
-              Recent Updates
-            </LinkTo>
-          </menu.Item>
-          <menu.Item>
-            <LinkTo @query={{hash page=1 sort="new"}}>
-              Newly Added
-            </LinkTo>
-          </menu.Item>
-        </dd.Menu>
-      </Dropdown>
+      <SortDropdown @current={{this.currentSortBy}} as |sd|>
+        <sd.Option @query={{hash page=1 sort="relevance"}}>Relevance</sd.Option>
+        <sd.Option @query={{hash page=1 sort="downloads"}}>All-Time Downloads</sd.Option>
+        <sd.Option @query={{hash page=1 sort="recent-downloads"}}>Recent Downloads</sd.Option>
+        <sd.Option @query={{hash page=1 sort="recent-updates"}}>Recent Updates</sd.Option>
+        <sd.Option @query={{hash page=1 sort="new"}}>Newly Added</sd.Option>
+      </SortDropdown>
     </div>
   </div>
 
