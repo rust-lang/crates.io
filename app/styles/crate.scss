@@ -61,22 +61,3 @@
         border-radius: 5px;
     }
 }
-
-.white-rows {
-    background-color: white;
-    padding: 0 20px;
-    margin-bottom: 20px;
-    display: flex;
-    flex-direction: column;
-
-    .row {
-        width: 100%;
-        border-bottom: 2px solid $gray-border;
-        padding: 20px 0;
-        display: flex;
-        justify-content: space-between;
-        flex-wrap: wrap;
-
-        &:last-of-type { border: none; }
-    }
-}
