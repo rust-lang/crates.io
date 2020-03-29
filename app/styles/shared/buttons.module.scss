@@ -1,29 +1,25 @@
-@mixin vertical-gradient($start, $end) {
-    background: $end;
-    background: -moz-linear-gradient(top, $start 0%, $end 100%);
-    background: -webkit-gradient(linear, left top, left bottom,
-        color-stop(0%, $start),
-        color-stop(100%, $end));
-    background: -webkit-linear-gradient(top, $start 0%, $end 100%);
-    background: -ms-linear-gradient(top, $start 0%, $end 100%);
-    background: linear-gradient(to bottom, $start 0%, $end 100%);
-}
+.button {
+    --text-color: #383838;
+    --disabled-text-color: #858585;
 
-@mixin button($start, $end) {
-    $start_dark: darken($start, 5%);
-    $end_dark: darken($end, 5%);
-    $start_light: lighten($start, 5%);
-    $end_light: lighten($end, 5%);
+    --bg-color-top: #fede9e;
+    --bg-color-bottom: #fdc452;
+
+    --bg-color-top-light: #fee7b7;
+    --bg-color-bottom-light: #fdcd6b;
+
+    --bg-color-top-dark: #fed585;
+    --bg-color-bottom-dark: #fdbb39;
 
     padding: 15px 40px;
     display: inline-block;
-    color: $main-color;
+    color: var(--text-color);
     text-decoration: none;
     font-weight: bold;
     border: none;
     outline: 0;
     border-radius: 30px;
-    @include vertical-gradient($start, $end);
+    background: linear-gradient(to bottom, var(--bg-color-top) 0%, var(--bg-color-bottom) 100%);
 
     img, svg {
         float: left;
@@ -31,27 +27,33 @@
         margin-right: 10px;
     }
 
-    &:hover, &:focus {
-        @include vertical-gradient($start_dark, $end_dark);
+    &:hover, &:focus, &.active {
+        background: linear-gradient(to bottom, var(--bg-color-top-dark) 0%, var(--bg-color-bottom-dark) 100%);
         outline: 0;
     }
-    &.active {
-        @include vertical-gradient($start_dark, $end_dark);
-        outline: 0;
-    }
+
     &[disabled] {
-        @include vertical-gradient($start_light, $end_light);
-        color: $main-color-light;
+        background: linear-gradient(to bottom, var(--bg-color-top-light) 0%, var(--bg-color-bottom-light) 100%);
+        color: var(--disabled-text-color);
     }
 }
 
 .yellow-button {
-    @include button(#fede9e, #fdc452);
+    composes: button;
     vertical-align: middle;
 }
 
 .tan-button {
-    @include button(rgb(232, 227, 199), rgb(214, 205, 153));
+    composes: button;
+
+    --bg-color-top: #e8e3c7;
+    --bg-color-bottom: #d6cd99;
+
+    --bg-color-top-light: #efecd9;
+    --bg-color-bottom-light: #ddd6ab;
+
+    --bg-color-top-dark: #e1dab5;
+    --bg-color-bottom-dark: #cfc487;
 }
 
 .small {
