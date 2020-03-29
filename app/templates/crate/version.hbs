@@ -246,14 +246,14 @@
           {{svg-jar "download"}}
           <span local-class="num__align">{{ format-num this.downloadsContext.downloads }}</span>
         </span>
-        <span class='desc small'>Downloads all time</span>
+        <span local-class="stat-description">Downloads all time</span>
       </div>
       <div local-class='stat'>
         <span local-class="num">
           {{svg-jar "crate"}}
           <span local-class="num__align">{{ this.crate.versions.length }}</span>
         </span>
-        <span class='desc small'>Versions published</span>
+        <span local-class="stat-description">Versions published</span>
       </div>
     </div>
     <div local-class='graph'>
