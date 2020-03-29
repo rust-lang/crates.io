@@ -22,6 +22,13 @@
     margin-top: 6px;
 }
 
+.results-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 25px;
+}
+
 .sort-by-label {
     composes: small from '../shared/typography.module.scss';
 }

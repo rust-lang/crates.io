@@ -2,7 +2,7 @@
   <LinkTo @route="crate" @model={{this.crate.id}}>&#11013; Back to {{ this.crate.name }}</LinkTo>
 </div>
 
-<div id='results'>
+<div local-class="results-meta">
   <ResultsCount
     @start={{this.currentPageStart}}
     @end={{this.currentPageEnd}}
