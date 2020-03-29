@@ -1,0 +1,18 @@
+.list {
+    background-color: white;
+    padding: 0 20px;
+    margin-bottom: 20px;
+}
+
+.row {
+    border-bottom: 2px solid $gray-border;
+    padding: 20px 0;
+
+    &:last-of-type {
+        border: none;
+    }
+}
+
+.crate-count {
+    composes: small from './shared/typography.module.scss';
+}
