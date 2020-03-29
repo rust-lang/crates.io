@@ -28,9 +28,6 @@ module.exports = function (defaults) {
       theme: 'twilight',
       components: highlightedLanguages,
     },
-    sassOptions: {
-      includePaths: ['node_modules/normalize.css'],
-    },
     cssModules: {
       extension: 'module.scss',
       intermediateOutputPath: 'app/styles/_modules.scss',
@@ -39,6 +36,8 @@ module.exports = function (defaults) {
       extensions: ['js', 'css', 'png', 'jpg', 'gif', 'map', 'svg', 'ttf', 'woff', 'woff2'],
     },
   });
+
+  app.import('node_modules/normalize.css/normalize.css');
 
   return app.toTree();
 };
