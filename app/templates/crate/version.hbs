@@ -174,7 +174,7 @@
                 <LinkTo @route="crate.version" @model={{version.num}} data-test-version-link={{version.num}}>
                   {{ version.num }}
                 </LinkTo>
-                <span class='date'>{{moment-format version.created_at 'll'}}</span>
+                {{moment-format version.created_at 'll'}}
                 {{#if version.yanked}}
                   <span local-class='yanked'>yanked</span>
                 {{/if}}
