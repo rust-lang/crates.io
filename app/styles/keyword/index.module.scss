@@ -1,0 +1,14 @@
+.list {
+    background-color: white;
+    padding: 0 20px;
+    margin-bottom: 20px;
+}
+
+.row {
+    padding: 20px 0;
+    border-bottom: 2px solid $gray-border;
+
+    &:last-of-type {
+        border: none;
+    }
+}
