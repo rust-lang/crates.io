@@ -1,9 +1,6 @@
 {{ title 'Pending Invites' }}
 
-<div class="crates-heading">
-  {{svg-jar "gear"}}
-  <h1>Pending Owner Invites</h1>
-</div>
+<PageHeader @title="Pending Owner Invites" @icon="gear"/>
 
 <div local-class="list">
   {{#each this.model as |invite|}}

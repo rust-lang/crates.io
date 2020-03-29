@@ -1,0 +1,27 @@
+.header {
+    padding: 20px;
+    background-color: $main-bg-dark;
+    margin-bottom: 20px;
+    border-radius: 5px;
+}
+
+.heading {
+    display: flex;
+    align-items: center;
+}
+
+.icon {
+    flex-shrink: 0;
+    margin-right: 10px;
+    width: 32px;
+    height: 32px;
+}
+
+.suffix {
+    color: $main-color-light;
+    padding-left: 10px;
+}
+
+.loading-spinner {
+    margin: 0 15px;
+}

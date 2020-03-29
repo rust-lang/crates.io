@@ -1,19 +1,19 @@
-<div class="crates-heading" data-test-heading>
-  <div class='info'>
-    <UserAvatar @user={{this.model.team}} @size="medium" data-test-avatar />
-    <div class='team-info'>
+<PageHeader local-class="header" data-test-heading>
+  <UserAvatar @user={{this.model.team}} @size="medium" local-class="avatar" data-test-avatar />
+  <div>
+    <div local-class="header-row">
       <h1 data-test-org-name>
         {{ this.model.team.org_name }}
       </h1>
-      <h2 data-test-team-name>
-        {{ this.model.team.name }}
-      </h2>
+      <UserLink @user={{this.model.team}} local-class="github-link" data-test-github-link>
+        <img alt="GitHub profile" title="GitHub profile" src="/assets/GitHub-Mark.svg">
+      </UserLink>
     </div>
-    <UserLink @user={{this.model.team}} data-test-github-link>
-      <img alt="GitHub profile" title="GitHub profile" src="/assets/GitHub-Mark.svg">
-    </UserLink>
+    <h2 data-test-team-name>
+      {{ this.model.team.name }}
+    </h2>
   </div>
-</div>
+</PageHeader>
 
 <div local-class="results-meta">
   <ResultsCount

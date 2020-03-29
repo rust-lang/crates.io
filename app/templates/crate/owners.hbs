@@ -1,10 +1,10 @@
 {{ title 'Manage Crate Owners' }}
 
-<div class="crates-heading">
-  {{svg-jar "gear"}}
-  <h1>Manage Crate Owners</h1>
-  <h2>{{ this.crate.name }}</h2>
-</div>
+<PageHeader
+  @title="Manager Crate Owners"
+  @suffix={{this.crate.name}}
+  @icon="gear"
+/>
 
 <div local-class="me-email">
   <h2>Add Owner</h2>

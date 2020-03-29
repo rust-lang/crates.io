@@ -1,18 +1,16 @@
 {{title this.crate.name}}
 
-<div class="crates-heading" data-test-heading>
-  <div class="wide">
-    <div class='info'>
+<PageHeader local-class="header" data-test-heading>
+  <div local-class="header-row">
+    <div local-class="heading">
       {{svg-jar "crate" local-class='crate-icon'}}
       <h1 data-test-crate-name>{{ this.crate.name }}</h1>
       <h2 data-test-crate-version>{{ this.currentVersion.num }}</h2>
     </div>
 
-    <div class='right'>
-      {{#if this.session.currentUser}}
-        <FollowButton @crate={{this.crate}}/>
-      {{/if}}
-    </div>
+    {{#if this.session.currentUser}}
+      <FollowButton @crate={{this.crate}}/>
+    {{/if}}
   </div>
 
   <ul local-class="quick-links">
@@ -37,7 +35,7 @@
       </LinkTo>
     </li>
   </ul>
-</div>
+</PageHeader>
 
 <div local-class='crate-info'>
   <div local-class="docs">

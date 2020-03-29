@@ -1,3 +1,15 @@
+.header {
+    display: flex;
+    align-items: center;
+}
+
+.header-icon {
+    flex-shrink: 0;
+    margin-right: 10px;
+    width: 32px;
+    height: 32px;
+}
+
 .stats {
     margin-left: auto;
     padding: 10px;
@@ -11,10 +23,10 @@
         display: flex;
         align-items: center;
     }
+}
 
-    .label {
-        composes: small from './shared/typography.module.scss';
-    }
+.stats-label {
+    composes: small from './shared/typography.module.scss';
 }
 
 .my-info {

@@ -1,14 +1,6 @@
 {{ title 'Crates' }}
 
-<div class="crates-heading">
-  <h1>
-    {{svg-jar "crate"}}
-    All Crates
-    {{#if this.letter}}
-      <small>starting with '{{this.letter}}'</small>
-    {{/if}}
-  </h1>
-</div>
+<PageHeader @title="All Crates" @suffix={{if this.letter (concat "starting with '" this.letter "'")}}/>
 
 <div local-class='selection'>
   {{#each this.alphabet as |letter|}}

@@ -1,10 +1,6 @@
 {{ title this.keyword.keyword ' - Keywords' }}
 
-<div class="crates-heading">
-  {{svg-jar "crate"}}
-  <h1>All Crates</h1>
-  <h2>for keyword '{{ this.keyword.keyword }}'</h2>
-</div>
+<PageHeader @title="All Crates" @suffix="for keyword '{{this.keyword.keyword}}'"/>
 
 <div local-class="results-meta">
   <ResultsCount

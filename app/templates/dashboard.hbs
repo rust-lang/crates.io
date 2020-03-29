@@ -1,16 +1,16 @@
 {{ title 'Dashboard' }}
 
-<div class="crates-heading">
-  {{svg-jar "dashboard"}}
+<PageHeader local-class="header">
+  {{svg-jar "dashboard" local-class="header-icon"}}
   <h1>My Dashboard</h1>
   <div local-class="stats">
     <div local-class='downloads'>
       <img src="/assets/download.svg">
       <span local-class='num'>{{format-num this.visibleStats.total_downloads}}</span>
-      <span local-class="label">Total Downloads</span>
+      <span local-class="stats-label">Total Downloads</span>
     </div>
   </div>
-</div>
+</PageHeader>
 
 <div local-class="my-info">
   <div local-class="my-crate-lists">
