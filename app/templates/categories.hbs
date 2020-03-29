@@ -14,7 +14,7 @@
   />
 
   <div data-test-categories-sort>
-    <span class='small'>Sort by</span>
+    <span local-class="sort-by-label">Sort by</span>
     <SortDropdown @current={{this.currentSortBy}} as |sd|>
       <sd.Option @query={{hash sort="alpha"}}>Alphabetical</sd.Option>
       <sd.Option @query={{hash sort="crates"}}># Crates</sd.Option>

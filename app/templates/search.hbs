@@ -24,7 +24,7 @@
     />
 
     <div data-test-search-sort>
-      <span class='small'>Sort by </span>
+      <span local-class="sort-by-label">Sort by </span>
       <SortDropdown @current={{this.currentSortBy}} as |sd|>
         <sd.Option @query={{hash page=1 sort="relevance"}}>Relevance</sd.Option>
         <sd.Option @query={{hash page=1 sort="downloads"}}>All-Time Downloads</sd.Option>
