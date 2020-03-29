@@ -9,22 +9,3 @@ $link-color: rgb(0, 172, 91);
 @import "crate";
 
 @import "modules";
-
-span.small {
-    color: $main-color-light;
-    font-size: 80%;
-
-    strong {
-        color: $main-color;
-    }
-
-    a {
-        color: $main-color-light;
-        text-decoration: underline;
-        font-weight: normal;
-
-        &:hover {
-            color: darken($main-color-light, 10%);
-        }
-    }
-}
