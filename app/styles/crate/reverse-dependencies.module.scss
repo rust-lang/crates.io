@@ -1,0 +1,36 @@
+.back-link {
+    margin-bottom: 20px;
+}
+
+.list {
+    background-color: white;
+    padding: 0 20px;
+    margin-bottom: 20px;
+}
+
+.row {
+    border-bottom: 2px solid $gray-border;
+    padding: 20px 0;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+
+    &:last-of-type {
+        border: none;
+    }
+}
+
+.stats {
+    width: 25%;
+    color: $main-color-light;
+}
+
+.downloads {
+    display: flex;
+    align-items: center;
+    padding-bottom: 5px;
+}
+
+.rev-dep-downloads {
+    padding-left: 7px
+}
