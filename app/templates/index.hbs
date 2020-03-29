@@ -25,12 +25,12 @@
     <div local-class='downloads'>
       {{svg-jar "download"}}
       <span local-class='num' data-test-total-downloads>{{if this.hasData (format-num this.model.num_downloads) "---,---,---"}}</span>
-      <span class='desc small'>Downloads</span>
+      <span local-class="stats-label">Downloads</span>
     </div>
     <div local-class='crates'>
       {{svg-jar "crate"}}
       <span local-class='num' data-test-total-crates>{{if this.hasData (format-num this.model.num_crates) "---,---"}}</span>
-      <span class='desc small'>Crates in stock</span>
+      <span local-class="stats-label">Crates in stock</span>
     </div>
   </div>
 </div>

@@ -61,6 +61,10 @@
     }
 }
 
+.stats-label {
+    composes: small from './shared/typography.module.scss';
+}
+
 .lists {
     display: flex;
     flex-wrap: wrap;
