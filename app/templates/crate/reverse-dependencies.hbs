@@ -1,4 +1,4 @@
-<div class='all-versions-back'>
+<div local-class="back-link">
   <LinkTo @route="crate" @model={{this.crate.id}}>&#11013; Back to {{ this.crate.name }}</LinkTo>
 </div>
 
@@ -11,15 +11,15 @@
   />
 </div>
 
-<div class='white-rows'>
+<div local-class="list">
   {{#each this.model as |dependency|}}
-    <div class='crate row'>
+    <div local-class="row">
       <div>
         <LinkTo @route="crate" @model={{dependency.version.crateName}}>{{dependency.version.crateName}}</LinkTo> requires {{dependency.req}}
       </div>
-      <div class='stats downloads'>
+      <div local-class="stats downloads">
         {{svg-jar "download-clear-back"}}
-        <span class='num rev-dep-downloads'>{{ format-num dependency.downloads }}</span>
+        <span local-class="rev-dep-downloads">{{ format-num dependency.downloads }}</span>
       </div>
     </div>
   {{/each}}
