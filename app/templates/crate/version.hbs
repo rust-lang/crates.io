@@ -166,7 +166,7 @@
           </ul>
         </div>
 
-        <div class='section' id='crate-versions' data-test-versions>
+        <div id='crate-versions' data-test-versions>
           <h3>Versions</h3>
           <ul>
             {{#each this.smallSortedVersions as |version|}}
@@ -188,7 +188,7 @@
           {{/if}}
         </div>
 
-        <div class='section' id='crate-dependencies'>
+        <div id='crate-dependencies'>
           <h3>Dependencies</h3>
           <ul>
             {{#each this.currentDependencies as |dep|}}
@@ -204,7 +204,7 @@
         </div>
 
         {{#if this.currentBuildDependencies}}
-          <div class='section' id='crate-build-dependencies'>
+          <div id='crate-build-dependencies'>
             <h3>Build-Dependencies</h3>
             <ul>
               {{#each this.currentBuildDependencies as |dep|}}
@@ -215,7 +215,7 @@
         {{/if}}
 
         {{#if this.currentDevDependencies}}
-          <div class='section' id='crate-dev-dependencies'>
+          <div id='crate-dev-dependencies'>
             <h3>Dev-Dependencies</h3>
             <ul>
               {{#each this.currentDevDependencies as |dep|}}
