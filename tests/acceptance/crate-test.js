@@ -155,7 +155,7 @@ module('Acceptance | crate page', function (hooks) {
 
     await visit('crates/nanomsg');
 
-    assert.dom('#crate-dependencies li').exists({ count: 2 });
+    assert.dom('[data-test-dependencies] li').exists({ count: 2 });
   });
 
   test('crates having build dependencies', async function (assert) {
@@ -163,7 +163,7 @@ module('Acceptance | crate page', function (hooks) {
 
     await visit('crates/nanomsg');
 
-    assert.dom('#crate-build-dependencies li').exists({ count: 1 });
+    assert.dom('[data-test-build-dependencies] li').exists({ count: 1 });
   });
 
   test('crates having dev dependencies', async function (assert) {
@@ -171,7 +171,7 @@ module('Acceptance | crate page', function (hooks) {
 
     await visit('crates/nanomsg');
 
-    assert.dom('#crate-dev-dependencies li').exists({ count: 1 });
+    assert.dom('[data-test-dev-dependencies] li').exists({ count: 1 });
   });
 
   test('crates having user-owners', async function (assert) {
@@ -210,7 +210,7 @@ module('Acceptance | crate page', function (hooks) {
 
     await visit('/crates/nanomsg');
 
-    assert.dom('#crate-owners p a').doesNotExist();
+    assert.dom('[data-test-manage-owners-link]').doesNotExist();
   });
 
   test('navigating to the owners page when not an owner', async function (assert) {
@@ -228,7 +228,7 @@ module('Acceptance | crate page', function (hooks) {
 
     await visit('/crates/nanomsg');
 
-    assert.dom('#crate-owners p a').doesNotExist();
+    assert.dom('[data-test-manage-owners-link]').doesNotExist();
   });
 
   test('navigating to the owners page', async function (assert) {
@@ -245,9 +245,9 @@ module('Acceptance | crate page', function (hooks) {
     );
 
     await visit('/crates/nanomsg');
-    await click('#crate-owners p a');
+    await click('[data-test-manage-owners-link]');
 
-    assert.dom('.crates-heading h1').hasText('Manage Crate Owners');
+    assert.equal(currentURL(), '/crates/nanomsg/owners');
   });
 
   test('listing crate owners', async function (assert) {

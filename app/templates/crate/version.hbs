@@ -136,12 +136,12 @@
           {{/if}}
         {{/unless}}
 
-        <div id='crate-owners'>
+        <div>
           <h3>Owners</h3>
 
           {{#if this.isOwner}}
             <p>
-              <LinkTo @route="crate.owners" @model={{this.crate}}>
+              <LinkTo @route="crate.owners" @model={{this.crate}} data-test-manage-owners-link>
                 Manage owners
               </LinkTo>
             </p>
@@ -166,7 +166,7 @@
           </ul>
         </div>
 
-        <div id='crate-versions' data-test-versions>
+        <div data-test-versions>
           <h3>Versions</h3>
           <ul>
             {{#each this.smallSortedVersions as |version|}}
@@ -188,9 +188,9 @@
           {{/if}}
         </div>
 
-        <div id='crate-dependencies'>
+        <div>
           <h3>Dependencies</h3>
-          <ul>
+          <ul data-test-dependencies>
             {{#each this.currentDependencies as |dep|}}
               <li><LinkToDep @dep={{dep}} /></li>
             {{else}}
@@ -204,9 +204,9 @@
         </div>
 
         {{#if this.currentBuildDependencies}}
-          <div id='crate-build-dependencies'>
+          <div>
             <h3>Build-Dependencies</h3>
-            <ul>
+            <ul data-test-build-dependencies>
               {{#each this.currentBuildDependencies as |dep|}}
                 <li><LinkToDep @dep={{dep}} /></li>
               {{/each}}
@@ -215,9 +215,9 @@
         {{/if}}
 
         {{#if this.currentDevDependencies}}
-          <div id='crate-dev-dependencies'>
+          <div>
             <h3>Dev-Dependencies</h3>
-            <ul>
+            <ul data-test-dev-dependencies>
               {{#each this.currentDevDependencies as |dep|}}
                 <li><LinkToDep @dep={{dep}} /></li>
               {{/each}}
