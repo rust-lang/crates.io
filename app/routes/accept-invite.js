@@ -7,10 +7,10 @@ export default Route.extend({
     try {
       await ajax(`/api/v1/me/crate_owner_invitations/accept/${params.token}`, { method: 'PUT', body: '{}' });
       this.set('response', { accepted: true });
-      return { response: this.get('response') };
+      return { response: this.response };
     } catch (error) {
       this.set('response', { accepted: false });
-      return { response: this.get('response') };
+      return { response: this.response };
     }
   },
 });
