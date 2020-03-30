@@ -1,7 +1,8 @@
 import Controller from '@ember/controller';
 import { A } from '@ember/array';
 import { computed } from '@ember/object';
-import ajax from 'ember-fetch/ajax';
+
+import ajax from '../utils/ajax';
 
 const TO_SHOW = 5;
 

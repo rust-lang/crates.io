@@ -5,7 +5,8 @@ import { inject as service } from '@ember/service';
 import prerelease from 'semver/functions/prerelease';
 
 import fetch from 'fetch';
-import ajax from 'ember-fetch/ajax';
+
+import ajax from '../../utils/ajax';
 
 export default Route.extend({
   session: service(),

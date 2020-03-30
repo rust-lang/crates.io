@@ -1,6 +1,7 @@
 import Service, { inject as service } from '@ember/service';
-import ajax from 'ember-fetch/ajax';
 import window from 'ember-window-mock';
+
+import ajax from '../utils/ajax';
 
 export default class SessionService extends Service {
   @service store;

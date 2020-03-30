@@ -1,5 +1,6 @@
 import Service, { inject as service } from '@ember/service';
-import ajax from 'ember-fetch/ajax';
+
+import ajax from '../utils/ajax';
 
 export default class FetcherService extends Service {
   @service fastboot;

@@ -1,5 +1,6 @@
 import Route from '@ember/routing/route';
-import ajax from 'ember-fetch/ajax';
+
+import ajax from '../utils/ajax';
 
 export default Route.extend({
   async model(params) {

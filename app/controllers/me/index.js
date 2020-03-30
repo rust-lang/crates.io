@@ -1,7 +1,8 @@
 import Controller from '@ember/controller';
 import { alias, sort, filterBy, notEmpty } from '@ember/object/computed';
 import { inject as service } from '@ember/service';
-import ajax from 'ember-fetch/ajax';
+
+import ajax from '../../utils/ajax';
 
 export default Controller.extend({
   // eslint-disable-next-line ember/avoid-leaking-state-in-ember-objects

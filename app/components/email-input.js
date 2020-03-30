@@ -2,7 +2,8 @@ import Component from '@ember/component';
 import { empty } from '@ember/object/computed';
 import { computed } from '@ember/object';
 import { inject as service } from '@ember/service';
-import ajax from 'ember-fetch/ajax';
+
+import ajax from '../utils/ajax';
 
 export default Component.extend({
   tagName: '',

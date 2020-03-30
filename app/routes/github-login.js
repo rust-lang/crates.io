@@ -1,5 +1,6 @@
 import Route from '@ember/routing/route';
-import ajax from 'ember-fetch/ajax';
+
+import ajax from '../utils/ajax';
 
 /**
  * Calling this route will query the `/api/private/session/begin` API endpoint
