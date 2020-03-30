@@ -1,3 +1,31 @@
+.header {
+    display: flex;
+    align-items: center;
+
+    h1, h2 {
+        margin: 0;
+        padding: 0;
+    }
+
+    h2 {
+        margin-top: 10px;
+        color: $main-color-light;
+    }
+}
+
+.avatar {
+    margin-right: 20px;
+}
+
+.header-row {
+    display: flex;
+    align-items: center;
+}
+
+.github-link {
+    margin-left: 16px;
+}
+
 .results-meta {
     display: flex;
     align-items: center;

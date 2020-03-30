@@ -1,0 +1,16 @@
+<div local-class="header" ...attributes>
+  {{#if hasBlock}}
+    {{yield}}
+  {{else}}
+    <h1 local-class="heading">
+      {{svg-jar this.icon local-class="icon"}}
+      {{@title}}
+      {{#if @suffix}}
+        <small local-class="suffix">{{@suffix}}</small>
+      {{/if}}
+      {{#if @showSpinner}}
+        <img src="/assets/ajax-loader.gif" local-class="loading-spinner">
+      {{/if}}
+    </h1>
+  {{/if}}
+</div>

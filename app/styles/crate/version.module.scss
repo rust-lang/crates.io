@@ -1,8 +1,34 @@
+div.header {
+    padding-top: 30px;
+    padding-bottom: 30px;
+}
+
+.header-row {
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 10px;
+}
+
+.heading {
+    display: flex;
+    align-items: center;
+
+    h1, h2 {
+        margin: 0;
+        padding: 0;
+    }
+
+    h2 {
+        color: $main-color-light;
+        margin-left: 10px;
+    }
+}
+
 .crate-icon {
-    // Icon doesn't align nicely with text (which is being
-    // aligned by their baselines) so manual adjustment needed.
-    position: relative;
-    top: 4px;
+    flex-shrink: 0;
+    margin-right: 10px;
+    width: 32px;
+    height: 32px;
 }
 
 .quick-links {

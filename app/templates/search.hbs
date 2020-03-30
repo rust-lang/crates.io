@@ -1,16 +1,12 @@
 {{title (concat "Search Results for '" this.q "'")}}
 
-<div class="crates-heading" data-test-heading>
-  <div class='info'>
-    {{svg-jar "magnifier" width=32 height=32}}
-    <h1>Search Results</h1>
-  </div>
-  {{#if this.q}}
-    <h2>for '{{ this.q }}'</h2>
-  {{/if}}
-
-  {{#if this.dataTask.isRunning}}<img src="/assets/ajax-loader.gif" local-class="loading-spinner">{{/if}}
-</div>
+<PageHeader
+  @title="Search Results"
+  @suffix={{if this.q (concat "for '" this.q "'")}}
+  @icon="magnifier"
+  @showSpinner={{this.dataTask.isRunning}}
+  data-test-header
+/>
 
 {{#if this.firstResultPending}}
   <h2>Loading search results...</h2>

@@ -1,3 +1,12 @@
+.header {
+    display: flex;
+    align-items: center;
+
+    h1 {
+        padding: 0 10px;
+    }
+}
+
 .results-meta {
     display: flex;
     align-items: center;

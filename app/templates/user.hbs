@@ -1,4 +1,4 @@
-<div class="crates-heading" data-test-heading>
+<PageHeader local-class="header" data-test-heading>
   <UserAvatar @user={{this.model.user}} @size="medium" data-test-avatar />
   <h1 data-test-username>
     {{ this.model.user.login }}
@@ -6,7 +6,7 @@
   <UserLink @user={{this.model.user}} data-test-user-link>
     <img alt="GitHub profile" title="GitHub profile" src="/assets/GitHub-Mark.svg">
   </UserLink>
-</div>
+</PageHeader>
 
 <div local-class="results-meta">
   <ResultsCount
