@@ -8,35 +8,29 @@
   </UserLink>
 </div>
 
-<div id='user-profile'>
-  <div class='info'>
-    {{! TODO: reduce duplication with templates/crates.hbs }}
+<div id='results'>
+  <ResultsCount
+    @start={{this.currentPageStart}}
+    @end={{this.currentPageEnd}}
+    @total={{this.totalItems}}
+  />
 
-    <div id='results'>
-      <ResultsCount
-        @start={{this.currentPageStart}}
-        @end={{this.currentPageEnd}}
-        @total={{this.totalItems}}
-      />
-
-      <div>
-        <span local-class="sort-by-label">Sort by</span>
-        <SortDropdown @current={{this.currentSortBy}} as |sd|>
-          <sd.Option @query={{hash sort="alpha"}}>Alphabetical</sd.Option>
-          <sd.Option @query={{hash sort="downloads"}}>All-Time Downloads</sd.Option>
-          <sd.Option @query={{hash sort="recent-downloads"}}>Recent Downloads</sd.Option>
-          <sd.Option @query={{hash sort="recent-updates"}}>Recent Updates</sd.Option>
-          <sd.Option @query={{hash sort="new"}}>Newly Added</sd.Option>
-        </SortDropdown>
-      </div>
-    </div>
-
-    <div local-class="list">
-      {{#each this.model.crates as |crate|}}
-        <CrateRow @crate={{crate}} local-class="row" />
-      {{/each}}
-    </div>
-
-    <Pagination @pages={{this.pages}} @prevPage={{this.prevPage}} @nextPage={{this.nextPage}} />
+  <div>
+    <span local-class="sort-by-label">Sort by</span>
+    <SortDropdown @current={{this.currentSortBy}} as |sd|>
+      <sd.Option @query={{hash sort="alpha"}}>Alphabetical</sd.Option>
+      <sd.Option @query={{hash sort="downloads"}}>All-Time Downloads</sd.Option>
+      <sd.Option @query={{hash sort="recent-downloads"}}>Recent Downloads</sd.Option>
+      <sd.Option @query={{hash sort="recent-updates"}}>Recent Updates</sd.Option>
+      <sd.Option @query={{hash sort="new"}}>Newly Added</sd.Option>
+    </SortDropdown>
   </div>
 </div>
+
+<div local-class="list">
+  {{#each this.model.crates as |crate|}}
+    <CrateRow @crate={{crate}} local-class="row" />
+  {{/each}}
+</div>
+
+<Pagination @pages={{this.pages}} @prevPage={{this.prevPage}} @nextPage={{this.nextPage}} />
