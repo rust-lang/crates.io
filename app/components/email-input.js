@@ -3,6 +3,8 @@ import { empty } from '@ember/object/computed';
 import { computed } from '@ember/object';
 import { inject as service } from '@ember/service';
 
+import { task } from 'ember-concurrency';
+
 import ajax from '../utils/ajax';
 
 export default Component.extend({
@@ -39,6 +41,23 @@ export default Component.extend({
       return 'Resend';
     } else {
       return 'Send verification email';
+    }
+  }),
+
+  resendEmailTask: task(function* () {
+    let user = this.user;
+
+    try {
+      yield ajax(`/api/v1/users/${user.id}/resend`, { method: 'PUT' });
+      this.set('disableResend', true);
+    } catch (error) {
+      if (error.errors) {
+        this.set('isError', true);
+        this.set('emailError', `Error in resending message: ${error.errors[0].detail}`);
+      } else {
+        this.set('isError', true);
+        this.set('emailError', 'Unknown error in resending message');
+      }
     }
   }),
 
@@ -96,23 +115,6 @@ export default Component.extend({
     cancelEdit() {
       this.set('isEditing', false);
       this.set('value', this.prevEmail);
-    },
-
-    async resendEmail() {
-      let user = this.user;
-
-      try {
-        await ajax(`/api/v1/users/${user.id}/resend`, { method: 'PUT' });
-        this.set('disableResend', true);
-      } catch (error) {
-        if (error.errors) {
-          this.set('isError', true);
-          this.set('emailError', `Error in resending message: ${error.errors[0].detail}`);
-        } else {
-          this.set('isError', true);
-          this.set('emailError', 'Unknown error in resending message');
-        }
-      }
     },
   },
 });
