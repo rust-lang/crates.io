@@ -51,9 +51,9 @@
           <div local-class="feed-row">
             <LinkTo @route="crate.version" @models={{array version.crateName version.num}}>
               {{ version.crateName }}
-              <span local-class="version">{{ version.num }}</span>
+              <span local-class="feed-version">{{ version.num }}</span>
             </LinkTo>
-            <span local-class="date">
+            <span local-class="feed-date">
               {{moment-from-now version.created_at}}
             </span>
           </div>

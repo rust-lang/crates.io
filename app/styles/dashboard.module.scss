@@ -87,16 +87,16 @@
     &:last-of-type {
         border: none;
     }
+}
 
-    .version {
-        composes: small from './shared/typography.module.scss';
-    }
+.feed-version {
+    composes: small from './shared/typography.module.scss';
+}
 
-    .date {
-        composes: small from './shared/typography.module.scss';
-        flex-grow: 1;
-        text-align: right;
-    }
+.feed-date {
+    composes: small from './shared/typography.module.scss';
+    flex-grow: 1;
+    text-align: right;
 }
 
 .info {
