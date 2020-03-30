@@ -96,7 +96,7 @@ export default Route.extend({
 
   setupController(controller) {
     this._super(...arguments);
-    controller.loadReadme();
+    controller.loadReadmeTask.perform();
   },
 
   serialize(model) {

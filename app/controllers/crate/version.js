@@ -5,6 +5,7 @@ import PromiseProxyMixin from '@ember/object/promise-proxy-mixin';
 import ArrayProxy from '@ember/array/proxy';
 import { computed } from '@ember/object';
 import moment from 'moment';
+import { task } from 'ember-concurrency';
 
 const NUM_VERSIONS = 5;
 
@@ -156,12 +157,12 @@ export default Controller.extend({
     return data;
   }),
 
-  async loadReadme() {
+  loadReadmeTask: task(function* () {
     if (this.currentVersion.get('readme_path')) {
       try {
-        let r = await fetch(this.currentVersion.get('readme_path'));
+        let r = yield fetch(this.currentVersion.get('readme_path'));
         if (r.ok) {
-          this.crate.set('readme', await r.text());
+          this.crate.set('readme', yield r.text());
 
           if (typeof document !== 'undefined') {
             setTimeout(() => {
@@ -177,5 +178,5 @@ export default Controller.extend({
         this.crate.set('readme', null);
       }
     }
-  },
+  }),
 });
