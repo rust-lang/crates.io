@@ -15,6 +15,12 @@ module.exports = {
   },
   rules: {
     'prettier/prettier': 'error',
+
+    'ember/no-empty-attrs': 'off',
+    'ember/no-get': 'off',
+    'ember/no-mixins': 'off',
+    'ember/require-computed-macros': 'off',
+    'ember/require-computed-property-dependencies': 'off',
   },
   overrides: [
     // node files
