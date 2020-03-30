@@ -25,10 +25,6 @@ export default Controller.extend({
     return this.myFollowing.slice(0, TO_SHOW);
   }),
 
-  visibleStats: computed('myStats', function () {
-    return this.myStats;
-  }),
-
   hasMoreCrates: computed('myCrates.[]', function () {
     return this.get('myCrates.length') > TO_SHOW;
   }),
