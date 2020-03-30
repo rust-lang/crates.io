@@ -5,10 +5,10 @@
         display: inline-block;
         padding: 8px 10px;
         text-decoration: none;
-        color: $main-color !important;
+        color: var(--main-color) !important;
 
         &:hover {
-            background: lighten($main-color, 15%);
+            background: #5e5e5e;
             color: white !important;
         }
     }

@@ -3,8 +3,17 @@
 }
 
 html {
+    --main-color: #383838;
+    --main-color-light: #858585;
+    --main-bg: #f9f7ec;
+    --main-bg-dark: #edebdd;
+    --gray-border: #d5d3cb;
+    --link-color: rgb(0, 172, 91);
+    --link-hover-color: #007940;
+    --separator-color: #284725;
+
     background: url('/assets/noise.png');
-    background-color: $html-bg;
+    background-color: #3b6837;
 }
 
 html, body {
@@ -27,16 +36,16 @@ h1 {
 }
 
 a {
-    color: $link-color;
+    color: var(--link-color);
     text-decoration: none;
 
     &:hover {
-        color: darken($link-color, 10%);
+        color: var(--link-hover-color);
     }
 }
 
 pre {
-    background: $main-color;
+    background: var(--main-color);
     color: white;
     padding: 20px;
     /* Use the modern font stack inspired by Bootstrap 4 */
@@ -131,7 +140,7 @@ input.search {
 
 .sep {
     margin: 0 10px;
-    color: darken($html-bg, 10%);
+    color: var(--separator-color);
 }
 
 .doc-links {
@@ -160,7 +169,7 @@ input.search {
 }
 
 .menu-item-with-separator {
-    border-top: 1px solid $gray-border;
+    border-top: 1px solid var(--gray-border);
 }
 
 .current-user-links {
@@ -184,12 +193,12 @@ input.search {
     flex-direction: column;
 
     margin-bottom: 10px;
-    background-color: $main-bg;
+    background-color: var(--main-bg);
     padding: 15px;
     border-radius: 10px;
     box-shadow: 0px 0px 5px 2px #3b6837;
     border: 5px solid #62865f;
-    color: $main-color;
+    color: var(--main-color);
 }
 
 .after-main-links {
@@ -208,7 +217,10 @@ input.search {
             width: 50%;
             font-size: 110%;
             padding: 5px;
-            &:not(:first-child) { border-top: 1px solid darken($html-bg, 10%); }
+
+            &:not(:first-child) {
+                border-top: 1px solid var(--separator-color);
+            }
         }
     }
 }

@@ -19,7 +19,7 @@
 
 .row {
     width: 100%;
-    border-bottom: 2px solid $gray-border;
+    border-bottom: 2px solid var(--gray-border);
     padding: 20px 0;
 
     &:last-of-type { border: none; }

@@ -10,7 +10,7 @@
 }
 
 .create-token {
-    background-color: $main-bg-dark;
+    background-color: var(--main-bg-dark);
 
     .name {
         padding-right: 20px;

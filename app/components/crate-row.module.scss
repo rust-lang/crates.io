@@ -11,7 +11,7 @@
 }
 
 .name {
-    color: $main-color;
+    color: var(--main-color);
     font-weight: bold;
     text-decoration: none;
     font-size: 120%;
@@ -28,7 +28,7 @@
 
 .stats {
     width: 25%;
-    color: $main-color-light;
+    color: var(--main-color-light);
 }
 
 .downloads {

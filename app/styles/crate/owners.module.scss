@@ -1,5 +1,5 @@
 .me-email {
-    border-bottom: 5px solid $gray-border;
+    border-bottom: 5px solid var(--gray-border);
     padding-bottom: 20px;
     margin-bottom: 20px;
 }
@@ -9,7 +9,7 @@
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    border: 2px solid $gray-border;
+    border: 2px solid var(--gray-border);
     padding: 10px 20px;
 }
 
@@ -33,7 +33,7 @@
 }
 
 .row {
-    border-bottom: 2px solid $gray-border;
+    border-bottom: 2px solid var(--gray-border);
     padding: 20px 0;
     display: flex;
     justify-content: space-between;
@@ -45,7 +45,7 @@
 
 .email-column {
     width: 25%;
-    color: $main-color-light;
+    color: var(--main-color-light);
 }
 
 .remove-button {
