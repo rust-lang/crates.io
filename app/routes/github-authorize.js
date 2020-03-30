@@ -1,6 +1,5 @@
 import Route from '@ember/routing/route';
 import fetch from 'fetch';
-import { serializeQueryParams } from 'ember-fetch/utils/serialize-query-params';
 import window from 'ember-window-mock';
 
 /**
@@ -19,8 +18,8 @@ import window from 'ember-window-mock';
 export default Route.extend({
   async beforeModel(transition) {
     try {
-      let queryParams = serializeQueryParams(transition.to.queryParams);
-      let resp = await fetch(`/api/private/session/authorize?${queryParams}`);
+      let { code, state } = transition.to.queryParams;
+      let resp = await fetch(`/api/private/session/authorize?code=${code}&state=${state}`);
       let json = await resp.json();
       let item = JSON.stringify({ ok: resp.ok, data: json });
       if (window.opener) {
