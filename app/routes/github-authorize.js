@@ -1,6 +1,7 @@
 import Route from '@ember/routing/route';
 import fetch from 'fetch';
 import { serializeQueryParams } from 'ember-fetch/utils/serialize-query-params';
+import window from 'ember-window-mock';
 
 /**
  * This route will be called from the GitHub OAuth flow once the user has
