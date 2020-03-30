@@ -3,7 +3,7 @@
 }
 
 .page-description {
-    composes: small from '../shared/typography.module.scss';
+    composes: small from '../shared/typography.module.css';
 }
 
 .list {
@@ -25,13 +25,13 @@
 }
 
 .date {
-    composes: small from '../shared/typography.module.scss';
+    composes: small from '../shared/typography.module.css';
     display: inline-block;
     margin-left: 20px;
 }
 
 .yanked {
-    composes: yanked from '../shared/typography.module.scss';
+    composes: yanked from '../shared/typography.module.css';
 }
 
 .arrow {

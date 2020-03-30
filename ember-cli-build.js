@@ -29,7 +29,10 @@ module.exports = function (defaults) {
       components: highlightedLanguages,
     },
     cssModules: {
-      extension: 'module.scss',
+      extension: 'module.css',
+      plugins: {
+        before: [require('postcss-nested')],
+      },
     },
     fingerprint: {
       extensions: ['js', 'css', 'png', 'jpg', 'gif', 'map', 'svg', 'ttf', 'woff', 'woff2'],
