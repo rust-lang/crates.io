@@ -29,8 +29,8 @@
       {{moment-from-now this.invite.created_at}}
     </div>
     <div>
-      <button type="button" local-class="accept-button" data-test-accept-button {{action 'acceptInvitation' this.invite}}>Accept</button>
-      <button type="button" local-class="decline-button" data-test-decline-button {{action 'declineInvitation' this.invite}}>Decline</button>
+      <button type="button" local-class="accept-button" data-test-accept-button {{action (perform this.acceptInvitationTask)}}>Accept</button>
+      <button type="button" local-class="decline-button" data-test-decline-button {{action (perform this.declineInvitationTask)}}>Decline</button>
     </div>
     {{#if this.isError}}
       <p local-class="error-message" data-test-error-message>{{this.inviteError}}</p>
