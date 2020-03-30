@@ -47,17 +47,4 @@
     display: flex;
     justify-content: space-between;
     margin-bottom: 25px;
-
-    .dropdown-button,
-    .dropdown {
-        font-size: 85%;
-    }
-
-    .dropdown-button {
-        background-color: $main-bg-dark;
-        padding: 10px;
-        display: inline-block;
-        border: none;
-        border-radius: 5px;
-    }
 }

@@ -1,0 +1,10 @@
+<Dropdown as |dd|>
+  <dd.Trigger local-class="trigger" data-test-current-order>
+    {{svg-jar "sort"}}
+    {{@current}}
+  </dd.Trigger>
+
+  <dd.Menu as |menu|>
+    {{yield (hash Option=(component "sort-dropdown/option" menu=menu))}}
+  </dd.Menu>
+</Dropdown>
