@@ -15,21 +15,17 @@
 {{#if this.category.subcategories }}
   <div id='subcategories'>
     <h2>Subcategories</h2>
-    <div class='white-rows'>
+    <div local-class="subcategories">
       {{#each this.category.subcategories as |subcategory| }}
-        <div class='row'>
-          <div class='desc'>
-            <div class='info'>
-              <LinkTo @route="category" @model={{subcategory.slug}}>{{subcategory.category}}</LinkTo>
-              <span class='small'>
-                {{ pluralize (format-num subcategory.crates_cnt) "crate" }}
-              </span>
-            </div>
-            <div class='summary'>
-              <span class='small'>
-                {{ subcategory.description }}
-              </span>
-            </div>
+        <div local-class="subcategory">
+          <div>
+            <LinkTo @route="category" @model={{subcategory.slug}}>{{subcategory.category}}</LinkTo>
+            <span local-class="crate-count">
+              {{ pluralize (format-num subcategory.crates_cnt) "crate" }}
+            </span>
+          </div>
+          <div local-class="category-description">
+            {{ subcategory.description }}
           </div>
         </div>
       {{/each}}
@@ -85,9 +81,9 @@
   </div>
 </div>
 
-<div class='white-rows'>
+<div local-class="list">
   {{#each this.model as |crate|}}
-    <CrateRow @crate={{crate}} class="row" />
+    <CrateRow @crate={{crate}} local-class="row" />
   {{/each}}
 </div>
 

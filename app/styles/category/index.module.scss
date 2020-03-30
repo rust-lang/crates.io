@@ -1,0 +1,38 @@
+.subcategories {
+    background-color: white;
+    padding: 0 20px;
+    margin-bottom: 20px;
+}
+
+.subcategory {
+    border-bottom: 2px solid $gray-border;
+    padding: 20px 0;
+
+    &:last-of-type {
+        border: none;
+    }
+}
+
+.crate-count,
+.category-description {
+    composes: small from '../shared/typography.module.scss';
+}
+
+.category-description {
+    margin-top: 6px;
+}
+
+.list {
+    background-color: white;
+    padding: 0 20px;
+    margin-bottom: 20px;
+}
+
+.row {
+    padding: 20px 0;
+    border-bottom: 2px solid $gray-border;
+
+    &:last-of-type {
+        border: none;
+    }
+}

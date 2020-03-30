@@ -73,9 +73,9 @@
   </div>
 </div>
 
-<div class='white-rows'>
+<div local-class="list">
   {{#each this.model as |crate index|}}
-    <CrateRow @crate={{crate}} class="row" data-test-crate-row={{index}} />
+    <CrateRow @crate={{crate}} local-class="row" data-test-crate-row={{index}} />
   {{/each}}
 </div>
 

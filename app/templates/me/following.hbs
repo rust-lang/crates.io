@@ -36,9 +36,9 @@
   </div>
 </div>
 
-<div class='white-rows'>
+<div local-class="list">
   {{#each this.model as |crate|}}
-    <CrateRow @crate={{crate}} class="row" />
+    <CrateRow @crate={{crate}} local-class="row" />
   {{/each}}
 </div>
 
