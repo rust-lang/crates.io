@@ -13,7 +13,7 @@ export default Component.extend({
 
   actions: {
     toggleEmailNotifications() {
-      this.set('emailNotifications', !this.get('emailNotifications'));
+      this.set('emailNotifications', !this.emailNotifications);
     },
   },
 });

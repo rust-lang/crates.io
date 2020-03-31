@@ -19,7 +19,7 @@ export default Controller.extend(PaginationMixin, {
       return 'Alphabetical';
     } else if (this.sort === 'new') {
       return 'Newly Added';
-    } else if (this.get('sort') === 'recent-updates') {
+    } else if (this.sort === 'recent-updates') {
       return 'Recent Updates';
     } else {
       return 'Recent Downloads';
