@@ -7,7 +7,7 @@
         @disabled={{this.api_token.isSaving}}
         @value={{this.api_token.name}}
         @autofocus="autofocus"
-        @enter={{action "saveToken"}}
+        @enter={{action (perform this.saveTokenTask)}}
         data-test-focused-input
       />
     {{else}}
@@ -38,7 +38,7 @@
         disabled={{this.disableCreate}}
         title={{if this.emptyName "You must specify a name" ""}}
         data-test-save-token-button
-        {{action "saveToken"}}
+        {{action (perform this.saveTokenTask)}}
       >
         Create
       </button>
@@ -48,7 +48,7 @@
         local-class="revoke-button"
         disabled={{this.api_token.isSaving}}
         data-test-revoke-token-button
-        {{action "revokeToken"}}
+        {{action (perform this.revokeTokenTask)}}
       >
         Revoke
       </button>

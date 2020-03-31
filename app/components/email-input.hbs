@@ -52,7 +52,7 @@
           <p>Your email has not yet been verified.</p>
         </div>
         <div local-class="actions">
-          <button type="button" local-class="resend-button" {{action 'resendEmail'}} disabled={{this.disableResend}}>
+          <button type="button" local-class="resend-button" {{action (perform this.resendEmailTask)}} disabled={{this.disableResend}}>
             {{this.resendButtonText}}
           </button>
         </div>
