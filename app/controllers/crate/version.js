@@ -3,9 +3,9 @@ import { inject as service } from '@ember/service';
 import Controller from '@ember/controller';
 import PromiseProxyMixin from '@ember/object/promise-proxy-mixin';
 import ArrayProxy from '@ember/array/proxy';
-// eslint-disable-next-line ember/no-observers
-import { computed, observer } from '@ember/object';
+import { computed } from '@ember/object';
 import moment from 'moment';
+import { task } from 'ember-concurrency';
 
 const NUM_VERSIONS = 5;
 
@@ -157,15 +157,26 @@ export default Controller.extend({
     return data;
   }),
 
-  // eslint-disable-next-line ember/no-observers
-  report: observer('crate.readme', function () {
-    if (typeof document === 'undefined') {
-      return;
+  loadReadmeTask: task(function* () {
+    if (this.currentVersion.get('readme_path')) {
+      try {
+        let r = yield fetch(this.currentVersion.get('readme_path'));
+        if (r.ok) {
+          this.crate.set('readme', yield r.text());
+
+          if (typeof document !== 'undefined') {
+            setTimeout(() => {
+              let e = document.createEvent('CustomEvent');
+              e.initCustomEvent('hashchange', true, true);
+              window.dispatchEvent(e);
+            });
+          }
+        } else {
+          this.crate.set('readme', null);
+        }
+      } catch (error) {
+        this.crate.set('readme', null);
+      }
     }
-    setTimeout(() => {
-      let e = document.createEvent('CustomEvent');
-      e.initCustomEvent('hashchange', true, true);
-      window.dispatchEvent(e);
-    });
   }),
 });
