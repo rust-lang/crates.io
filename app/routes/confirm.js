@@ -6,25 +6,14 @@ import ajax from '../utils/ajax';
 export default Route.extend({
   flashMessages: service(),
   session: service(),
+  store: service(),
 
   async model(params) {
     try {
       await ajax(`/api/v1/confirm/${params.email_token}`, { method: 'PUT', body: '{}' });
 
-      /*  We need this block to reload the user model from the database,
-                without which if we haven't submitted another GET /me after
-                clicking the link and before checking their account info page,
-                the user will still see that their email has not yet been
-                validated and could potentially be confused, resend the email,
-                and set up a situation where their email has been verified but
-                they have an unverified token sitting in the DB.
-
-                Suggestions of a more ideomatic way to fix/test this are welcome!
-            */
-      if (this.get('session.isLoggedIn')) {
-        ajax('/api/v1/me').then(response => {
-          this.session.set('currentUser', this.store.push(this.store.normalize('user', response.user)));
-        });
+      if (this.session.currentUser) {
+        this.store.pushPayload({ user: { id: this.session.currentUser.id, email_verified: true } });
       }
     } catch (error) {
       if (error.errors) {
