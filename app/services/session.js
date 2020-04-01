@@ -50,31 +50,32 @@ export default class SessionService extends Service {
     }
   }
 
-  loadUser() {
+  async loadUser() {
     if (this.isLoggedIn && !this.currentUser) {
-      this.fetchUser()
-        .catch(() => this.logoutUser())
-        .finally(() => {
-          this.set('currentUserDetected', true);
-          let transition = this.abortedTransition;
-          if (transition) {
-            transition.retry();
-            this.set('abortedTransition', null);
-          }
-        });
+      try {
+        await this.fetchUser();
+      } catch (error) {
+        this.logoutUser();
+      } finally {
+        this.set('currentUserDetected', true);
+        let transition = this.abortedTransition;
+        if (transition) {
+          transition.retry();
+          this.set('abortedTransition', null);
+        }
+      }
     } else {
       this.set('currentUserDetected', true);
     }
   }
 
-  fetchUser() {
-    return ajax('/api/v1/me').then(response => {
-      this.set('currentUser', this.store.push(this.store.normalize('user', response.user)));
-      this.set(
-        'ownedCrates',
-        response.owned_crates.map(c => this.store.push(this.store.normalize('owned-crate', c))),
-      );
-    });
+  async fetchUser() {
+    let response = await ajax('/api/v1/me');
+    this.set('currentUser', this.store.push(this.store.normalize('user', response.user)));
+    this.set(
+      'ownedCrates',
+      response.owned_crates.map(c => this.store.push(this.store.normalize('owned-crate', c))),
+    );
   }
 
   checkCurrentUser(transition, beforeRedirect) {
