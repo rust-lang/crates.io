@@ -165,7 +165,7 @@ export function register(server) {
     const user = schema.users.findBy({ login: ownerId });
 
     if (!user) {
-      return notFound();
+      return { errors: [{ detail: `could not find user with login \`${ownerId}\`` }] };
     }
 
     return { ok: true };

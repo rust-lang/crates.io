@@ -33,8 +33,8 @@ module('Model | Crate', function (hooks) {
       let crateRecord = await this.store.findRecord('crate', crate.id);
 
       await assert.rejects(crateRecord.inviteOwner('unknown'), function (error) {
-        assert.deepEqual(error.errors, [{ detail: 'Not Found' }]);
-        return error instanceof AdapterError;
+        assert.deepEqual(error.errors, [{ detail: 'could not find user with login `unknown`' }]);
+        return true;
       });
     });
   });

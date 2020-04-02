@@ -281,7 +281,9 @@ module('Acceptance | crate page', function (hooks) {
     await fillIn('input[name="username"]', 'spookyghostboo');
     await click('[data-test-save-button]');
 
-    assert.dom('[data-test-error-message]').hasText('Error sending invite: Not Found');
+    assert
+      .dom('[data-test-error-message]')
+      .hasText('Error sending invite: could not find user with login `spookyghostboo`');
     assert.dom('[data-test-owners] [data-test-owner-team]').exists({ count: 2 });
     assert.dom('[data-test-owners] [data-test-owner-user]').exists({ count: 2 });
   });
