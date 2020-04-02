@@ -18,12 +18,12 @@ export function register(server) {
 
     if (request.queryParams.user_id) {
       let userId = parseInt(request.queryParams.user_id, 10);
-      crates = crates.filter(crate => (crate._owner_users || []).indexOf(userId) !== -1);
+      crates = crates.filter(crate => schema.crateOwnerships.findBy({ crateId: crate.id, userId }));
     }
 
     if (request.queryParams.team_id) {
       let teamId = parseInt(request.queryParams.team_id, 10);
-      crates = crates.filter(crate => (crate._owner_teams || []).indexOf(teamId) !== -1);
+      crates = crates.filter(crate => schema.crateOwnerships.findBy({ crateId: crate.id, teamId }));
     }
 
     if (request.queryParams.sort === 'alpha') {

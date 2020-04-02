@@ -33,7 +33,8 @@ module('Acceptance | Dashboard', function (hooks) {
     }
 
     {
-      let crate = this.server.create('crate', { name: 'nanomsg', _owner_users: [42] });
+      let crate = this.server.create('crate', { name: 'nanomsg' });
+      this.server.create('crate-ownership', { crate, user });
       this.server.create('version', { crate, num: '0.1.0' });
     }
 
