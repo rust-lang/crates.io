@@ -32,6 +32,25 @@ module('Mirage | /me', function (hooks) {
       });
     });
 
+    test('returns a list of `owned_crates`', async function (assert) {
+      let user = this.server.create('user');
+      this.server.create('mirage-session', { user });
+
+      let [crate1, , crate3] = this.server.createList('crate', 3);
+
+      this.server.create('crate-ownership', { crate: crate1, user });
+      this.server.create('crate-ownership', { crate: crate3, user });
+
+      let response = await fetch('/api/v1/me');
+      assert.equal(response.status, 200);
+
+      let responsePayload = await response.json();
+      assert.deepEqual(responsePayload.owned_crates, [
+        { id: 'crate-0', name: 'crate-0', email_notifications: true },
+        { id: 'crate-2', name: 'crate-2', email_notifications: true },
+      ]);
+    });
+
     test('returns an error if unauthenticated', async function (assert) {
       this.server.create('user');
 

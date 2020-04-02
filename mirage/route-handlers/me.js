@@ -9,10 +9,15 @@ export function register(server) {
       return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
     }
 
+    let ownerships = schema.crateOwnerships.where({ userId: user.id }).models;
+
     let json = this.serialize(user);
 
-    // TODO fill this with data from the `schema`
-    json.owned_crates = [];
+    json.owned_crates = ownerships.map(ownership => ({
+      id: ownership.crate.id,
+      name: ownership.crate.name,
+      email_notifications: ownership.emailNotifications,
+    }));
 
     return json;
   });
