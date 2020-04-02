@@ -1,7 +1,6 @@
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'ember-qunit';
 import { currentURL } from '@ember/test-helpers';
-import window, { setupWindowMock } from 'ember-window-mock';
 import { percySnapshot } from 'ember-percy';
 
 import setupMirage from '../helpers/setup-mirage';
@@ -9,7 +8,6 @@ import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Acceptance | Dashboard', function (hooks) {
   setupApplicationTest(hooks);
-  setupWindowMock(hooks);
   setupMirage(hooks);
 
   test('redirects to / when not logged in', async function (assert) {
@@ -26,8 +24,7 @@ module('Acceptance | Dashboard', function (hooks) {
       avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',
     });
 
-    this.server.create('mirage-session', { user });
-    window.localStorage.setItem('isLoggedIn', '1');
+    this.authenticateAs(user);
 
     {
       let crate = this.server.create('crate', { name: 'rand' });

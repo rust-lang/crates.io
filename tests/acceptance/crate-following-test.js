@@ -1,14 +1,12 @@
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'ember-qunit';
 import { visit, waitFor, settled, click } from '@ember/test-helpers';
-import window, { setupWindowMock } from 'ember-window-mock';
 import { defer } from 'rsvp';
 
 import setupMirage from '../helpers/setup-mirage';
 
 module('Acceptance | Crate following', function (hooks) {
   setupApplicationTest(hooks);
-  setupWindowMock(hooks);
   setupMirage(hooks);
 
   function prepare(context, { loggedIn = true } = {}) {
@@ -19,8 +17,7 @@ module('Acceptance | Crate following', function (hooks) {
 
     if (loggedIn) {
       let user = server.create('user');
-      server.create('mirage-session', { user });
-      window.localStorage.setItem('isLoggedIn', '1');
+      context.authenticateAs(user);
     }
   }
 

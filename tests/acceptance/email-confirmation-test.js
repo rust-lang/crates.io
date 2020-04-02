@@ -1,14 +1,12 @@
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'ember-qunit';
 import { currentURL } from '@ember/test-helpers';
-import window, { setupWindowMock } from 'ember-window-mock';
 
 import { visit } from '../helpers/visit-ignoring-abort';
 import setupMirage from '../helpers/setup-mirage';
 
 module('Acceptance | Email Confirmation', function (hooks) {
   setupApplicationTest(hooks);
-  setupWindowMock(hooks);
   setupMirage(hooks);
 
   test('unauthenticated happy path', async function (assert) {
@@ -27,8 +25,7 @@ module('Acceptance | Email Confirmation', function (hooks) {
     let user = this.server.create('user', { emailVerificationToken: 'badc0ffee' });
     assert.strictEqual(user.emailVerified, false);
 
-    this.server.create('mirage-session', { user });
-    window.localStorage.setItem('isLoggedIn', '1');
+    this.authenticateAs(user);
 
     await visit('/confirm/badc0ffee');
     assert.equal(currentURL(), '/confirm/badc0ffee');

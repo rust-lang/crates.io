@@ -1,7 +1,6 @@
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'ember-qunit';
 import { currentURL, findAll, click, fillIn } from '@ember/test-helpers';
-import window, { setupWindowMock } from 'ember-window-mock';
 import { Response } from 'ember-cli-mirage';
 import { percySnapshot } from 'ember-percy';
 
@@ -10,7 +9,6 @@ import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Acceptance | api-tokens', function (hooks) {
   setupApplicationTest(hooks);
-  setupWindowMock(hooks);
   setupMirage(hooks);
 
   function prepare(context) {
@@ -20,9 +18,6 @@ module('Acceptance | api-tokens', function (hooks) {
       email: 'john@doe.com',
       avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',
     });
-
-    context.server.create('mirage-session', { user });
-    window.localStorage.setItem('isLoggedIn', '1');
 
     context.server.get('/api/v1/me/tokens', {
       api_tokens: [
@@ -35,6 +30,8 @@ module('Acceptance | api-tokens', function (hooks) {
         },
       ],
     });
+
+    context.authenticateAs(user);
   }
 
   test('/me is showing the list of active API tokens', async function (assert) {
