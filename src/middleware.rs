@@ -46,6 +46,7 @@ pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
 
     if env != Env::Test {
         m.add(ensure_well_formed_500::EnsureWellFormed500);
+        m.add(log_request::LogRequests::default());
     }
 
     if env == Env::Development {
@@ -93,10 +94,6 @@ pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
     }
 
     m.around(require_user_agent::RequireUserAgent::default());
-
-    if env != Env::Test {
-        m.around(log_request::LogRequests::default());
-    }
 
     m
 }
