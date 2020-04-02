@@ -18,6 +18,12 @@ export default Factory.extend({
 
   avatar: 'https://avatars1.githubusercontent.com/u/14631425?v=4',
 
-  emailVerified: true,
-  emailVerificationSent: true,
+  emailVerified: null,
+  emailVerificationToken: null,
+
+  afterCreate(model) {
+    if (model.emailVerified === null) {
+      model.update({ emailVerified: !model.emailVerificationToken });
+    }
+  },
 });

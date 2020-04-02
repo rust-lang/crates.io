@@ -16,4 +16,17 @@ export function register(server) {
 
     return json;
   });
+
+  server.put('/api/v1/confirm/:token', (schema, request) => {
+    let { token } = request.params;
+
+    let user = schema.users.findBy({ emailVerificationToken: token });
+    if (!user) {
+      return new Response(400, {}, { errors: [{ detail: 'Email belonging to token not found.' }] });
+    }
+
+    user.update({ emailVerified: true, emailVerificationToken: null });
+
+    return { ok: true };
+  });
 }

@@ -23,7 +23,10 @@ export default BaseSerializer.extend({
     if (removePrivateData) {
       delete hash.email;
       delete hash.email_verified;
-      delete hash.email_verification_sent;
+    } else {
+      hash.email_verification_sent = hash.email_verified || Boolean(hash.email_verification_token);
     }
+
+    delete hash.email_verification_token;
   },
 });
