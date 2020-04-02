@@ -685,7 +685,8 @@ module('Mirage | Crates', function (hooks) {
 
     test('returns the list of users that own the specified crate', async function (assert) {
       let user = this.server.create('user', { name: 'John Doe' });
-      this.server.create('crate', { name: 'rand', userOwners: [user] });
+      let crate = this.server.create('crate', { name: 'rand' });
+      this.server.create('crate-ownership', { crate, user });
 
       let response = await fetch('/api/v1/crates/rand/owner_user');
       assert.equal(response.status, 200);
@@ -729,7 +730,8 @@ module('Mirage | Crates', function (hooks) {
 
     test('returns the list of teams that own the specified crate', async function (assert) {
       let team = this.server.create('team', { name: 'maintainers' });
-      this.server.create('crate', { name: 'rand', teamOwners: [team] });
+      let crate = this.server.create('crate', { name: 'rand' });
+      this.server.create('crate-ownership', { crate, team });
 
       let response = await fetch('/api/v1/crates/rand/owner_team');
       assert.equal(response.status, 200);
