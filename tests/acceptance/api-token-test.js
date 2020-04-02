@@ -14,21 +14,15 @@ module('Acceptance | api-tokens', function (hooks) {
   setupMirage(hooks);
 
   function prepare(context) {
-    window.localStorage.setItem('isLoggedIn', '1');
-
-    context.server.get('/api/v1/me', {
-      user: {
-        id: 42,
-        login: 'johnnydee',
-        email_verified: true,
-        email_verification_sent: true,
-        name: 'John Doe',
-        email: 'john@doe.com',
-        avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',
-        url: 'https://github.com/johnnydee',
-      },
-      owned_crates: [],
+    let user = context.server.create('user', {
+      login: 'johnnydee',
+      name: 'John Doe',
+      email: 'john@doe.com',
+      avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',
     });
+
+    context.server.create('mirage-session', { user });
+    window.localStorage.setItem('isLoggedIn', '1');
 
     context.server.get('/api/v1/me/tokens', {
       api_tokens: [
