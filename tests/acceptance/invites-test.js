@@ -14,21 +14,9 @@ module('Acceptance | /me/pending-invites', function (hooks) {
   setupMirage(hooks);
 
   function prepare(context) {
+    let user = context.server.create('user');
+    context.server.create('mirage-session', { user });
     window.localStorage.setItem('isLoggedIn', '1');
-
-    context.server.get('/api/v1/me', {
-      user: {
-        id: 42,
-        login: 'johnnydee',
-        email_verified: true,
-        email_verification_sent: true,
-        name: 'John Doe',
-        email: 'john@doe.com',
-        avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',
-        url: 'https://github.com/johnnydee',
-      },
-      owned_crates: [],
-    });
 
     context.server.get('/api/v1/me/crate_owner_invitations', {
       crate_owner_invitations: [
