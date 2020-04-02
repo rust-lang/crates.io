@@ -26,7 +26,7 @@ module('Mirage | Teams', function (hooks) {
       let responsePayload = await response.json();
       assert.deepEqual(responsePayload, {
         team: {
-          id: '1',
+          id: 1,
           avatar: 'https://avatars1.githubusercontent.com/u/14631425?v=4',
           login: 'github:rust-lang:maintainers',
           name: 'maintainers',

@@ -738,7 +738,7 @@ module('Mirage | Crates', function (hooks) {
       assert.deepEqual(responsePayload, {
         teams: [
           {
-            id: '1',
+            id: 1,
             avatar: 'https://avatars1.githubusercontent.com/u/14631425?v=4',
             kind: 'team',
             login: 'github:rust-lang:maintainers',
