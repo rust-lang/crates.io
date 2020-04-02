@@ -8,9 +8,16 @@ export default Factory.extend({
     return dasherize(this.name);
   },
 
+  email() {
+    return `${this.login}@crates.io`;
+  },
+
   url() {
     return `https://github.com/${this.login}`;
   },
 
   avatar: 'https://avatars1.githubusercontent.com/u/14631425?v=4',
+
+  emailVerified: true,
+  emailVerificationSent: true,
 });

@@ -17,5 +17,9 @@ export default BaseSerializer.extend({
 
   _adjust(hash) {
     hash.id = Number(hash.id);
+
+    delete hash.email;
+    delete hash.email_verified;
+    delete hash.email_verification_sent;
   },
 });
