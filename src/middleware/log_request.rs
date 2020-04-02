@@ -9,22 +9,21 @@ use std::time::Instant;
 
 const SLOW_REQUEST_THRESHOLD_MS: u64 = 1000;
 
-#[allow(missing_debug_implementations)] // We can't
 #[derive(Default)]
-pub struct LogRequests {
-    handler: Option<Box<dyn Handler>>,
-}
+pub(super) struct LogRequests();
 
-impl AroundMiddleware for LogRequests {
-    fn with_handler(&mut self, handler: Box<dyn Handler>) {
-        self.handler = Some(handler);
+struct RequestStart(Instant);
+
+impl Middleware for LogRequests {
+    fn before(&self, req: &mut dyn Request) -> Result<()> {
+        req.mut_extensions().insert(RequestStart(Instant::now()));
+        Ok(())
     }
-}
 
-impl Handler for LogRequests {
-    fn call(&self, req: &mut dyn Request) -> Result<Response> {
-        let request_start = Instant::now();
-        let res = self.handler.as_ref().unwrap().call(req);
+    fn after(&self, req: &mut dyn Request, res: Result<Response>) -> Result<Response> {
+        // Unwrap shouldn't panic as no other code has access to the private struct to remove it
+        let request_start = req.extensions().find::<RequestStart>().unwrap().0;
+
         let response_time = request_start.elapsed();
         let response_time =
             response_time.as_secs() * 1000 + u64::from(response_time.subsec_nanos()) / 1_000_000;
