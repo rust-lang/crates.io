@@ -22,6 +22,43 @@ export function register(server) {
     return json;
   });
 
+  server.get('/api/v1/me/tokens', function (schema) {
+    let { user } = getSession(schema);
+    if (!user) {
+      return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
+    }
+
+    return schema.apiTokens.where({ userId: user.id }).sort((a, b) => Number(b.id) - Number(a.id));
+  });
+
+  server.put('/api/v1/me/tokens', function (schema) {
+    let { user } = getSession(schema);
+    if (!user) {
+      return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
+    }
+
+    let { name } = this.normalizedRequestAttrs('api-token');
+    let token = server.create('api-token', { user, name, createdAt: new Date().toISOString() });
+
+    let json = this.serialize(token);
+    json.api_token.revoked = false;
+    json.api_token.token = token.token;
+    return json;
+  });
+
+  server.delete('/api/v1/me/tokens/:tokenId', function (schema, request) {
+    let { user } = getSession(schema);
+    if (!user) {
+      return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
+    }
+
+    let { tokenId } = request.params;
+    let token = schema.apiTokens.findBy({ id: tokenId, userId: user.id });
+    if (token) token.destroy();
+
+    return {};
+  });
+
   server.put('/api/v1/confirm/:token', (schema, request) => {
     let { token } = request.params;
 
