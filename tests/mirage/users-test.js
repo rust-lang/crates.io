@@ -26,7 +26,7 @@ module('Mirage | Users', function (hooks) {
       let responsePayload = await response.json();
       assert.deepEqual(responsePayload, {
         user: {
-          id: '1',
+          id: 1,
           avatar: 'https://avatars1.githubusercontent.com/u/14631425?v=4',
           login: 'john-doe',
           name: 'John Doe',
