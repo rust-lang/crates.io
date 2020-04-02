@@ -134,14 +134,19 @@ module('Mirage | Crates', function (hooks) {
     });
 
     test('supports a `user_id` parameter', async function (assert) {
+      let user1 = this.server.create('user');
+      let user2 = this.server.create('user');
+
       this.server.create('crate', { name: 'foo' });
       this.server.create('version', { crateId: 'foo' });
-      this.server.create('crate', { name: 'bar', _owner_users: [42] });
+      let bar = this.server.create('crate', { name: 'bar' });
+      this.server.create('crate-ownership', { crate: bar, user: user1 });
       this.server.create('version', { crateId: 'bar' });
-      this.server.create('crate', { name: 'baz', _owner_users: [13] });
+      let baz = this.server.create('crate', { name: 'baz' });
+      this.server.create('crate-ownership', { crate: baz, user: user2 });
       this.server.create('version', { crateId: 'baz' });
 
-      let response = await fetch('/api/v1/crates?user_id=42');
+      let response = await fetch(`/api/v1/crates?user_id=${user1.id}`);
       assert.equal(response.status, 200);
 
       let responsePayload = await response.json();
@@ -151,31 +156,19 @@ module('Mirage | Crates', function (hooks) {
     });
 
     test('supports a `team_id` parameter', async function (assert) {
+      let team1 = this.server.create('team');
+      let team2 = this.server.create('team');
+
       this.server.create('crate', { name: 'foo' });
       this.server.create('version', { crateId: 'foo' });
-      this.server.create('crate', { name: 'bar', _owner_teams: [42] });
+      let bar = this.server.create('crate', { name: 'bar' });
+      this.server.create('crate-ownership', { crate: bar, team: team1 });
       this.server.create('version', { crateId: 'bar' });
-      this.server.create('crate', { name: 'baz', _owner_teams: [13] });
+      let baz = this.server.create('crate', { name: 'baz' });
+      this.server.create('crate-ownership', { crate: baz, team: team2 });
       this.server.create('version', { crateId: 'baz' });
 
-      let response = await fetch('/api/v1/crates?team_id=42');
-      assert.equal(response.status, 200);
-
-      let responsePayload = await response.json();
-      assert.equal(responsePayload.crates.length, 1);
-      assert.equal(responsePayload.crates[0].id, 'bar');
-      assert.equal(responsePayload.meta.total, 1);
-    });
-
-    test('supports a `team_id` parameter', async function (assert) {
-      this.server.create('crate', { name: 'foo' });
-      this.server.create('version', { crateId: 'foo' });
-      this.server.create('crate', { name: 'bar', _owner_teams: [42] });
-      this.server.create('version', { crateId: 'bar' });
-      this.server.create('crate', { name: 'baz', _owner_teams: [13] });
-      this.server.create('version', { crateId: 'baz' });
-
-      let response = await fetch('/api/v1/crates?team_id=42');
+      let response = await fetch(`/api/v1/crates?team_id=${team1.id}`);
       assert.equal(response.status, 200);
 
       let responsePayload = await response.json();
@@ -685,7 +678,8 @@ module('Mirage | Crates', function (hooks) {
 
     test('returns the list of users that own the specified crate', async function (assert) {
       let user = this.server.create('user', { name: 'John Doe' });
-      this.server.create('crate', { name: 'rand', userOwners: [user] });
+      let crate = this.server.create('crate', { name: 'rand' });
+      this.server.create('crate-ownership', { crate, user });
 
       let response = await fetch('/api/v1/crates/rand/owner_user');
       assert.equal(response.status, 200);
@@ -694,7 +688,7 @@ module('Mirage | Crates', function (hooks) {
       assert.deepEqual(responsePayload, {
         users: [
           {
-            id: '1',
+            id: 1,
             avatar: 'https://avatars1.githubusercontent.com/u/14631425?v=4',
             kind: 'user',
             login: 'john-doe',
@@ -729,7 +723,8 @@ module('Mirage | Crates', function (hooks) {
 
     test('returns the list of teams that own the specified crate', async function (assert) {
       let team = this.server.create('team', { name: 'maintainers' });
-      this.server.create('crate', { name: 'rand', teamOwners: [team] });
+      let crate = this.server.create('crate', { name: 'rand' });
+      this.server.create('crate-ownership', { crate, team });
 
       let response = await fetch('/api/v1/crates/rand/owner_team');
       assert.equal(response.status, 200);
@@ -738,7 +733,7 @@ module('Mirage | Crates', function (hooks) {
       assert.deepEqual(responsePayload, {
         teams: [
           {
-            id: '1',
+            id: 1,
             avatar: 'https://avatars1.githubusercontent.com/u/14631425?v=4',
             kind: 'team',
             login: 'github:rust-lang:maintainers',

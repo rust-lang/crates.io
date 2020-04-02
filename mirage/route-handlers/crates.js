@@ -18,12 +18,12 @@ export function register(server) {
 
     if (request.queryParams.user_id) {
       let userId = parseInt(request.queryParams.user_id, 10);
-      crates = crates.filter(crate => (crate._owner_users || []).indexOf(userId) !== -1);
+      crates = crates.filter(crate => schema.crateOwnerships.findBy({ crateId: crate.id, userId }));
     }
 
     if (request.queryParams.team_id) {
       let teamId = parseInt(request.queryParams.team_id, 10);
-      crates = crates.filter(crate => (crate._owner_teams || []).indexOf(teamId) !== -1);
+      crates = crates.filter(crate => schema.crateOwnerships.findBy({ crateId: crate.id, teamId }));
     }
 
     if (request.queryParams.sort === 'alpha') {
@@ -99,13 +99,15 @@ export function register(server) {
     let crate = schema.crates.find(crateId);
     if (!crate) return notFound();
 
-    let response = this.serialize(crate.userOwners);
+    let ownerships = schema.crateOwnerships.where({ crateId }).filter(it => it.userId).models;
 
-    response.users.forEach(user => {
-      user.kind = 'user';
-    });
-
-    return response;
+    return {
+      users: ownerships.map(it => {
+        let json = this.serialize(it.user, 'user').user;
+        json.kind = 'user';
+        return json;
+      }),
+    };
   });
 
   server.get('/api/v1/crates/:crate_id/owner_team', function (schema, request) {
@@ -113,13 +115,15 @@ export function register(server) {
     let crate = schema.crates.find(crateId);
     if (!crate) return notFound();
 
-    let response = this.serialize(crate.teamOwners);
+    let ownerships = schema.crateOwnerships.where({ crateId }).filter(it => it.teamId).models;
 
-    response.teams.forEach(team => {
-      team.kind = 'team';
-    });
-
-    return response;
+    return {
+      teams: ownerships.map(it => {
+        let json = this.serialize(it.team, 'team').team;
+        json.kind = 'team';
+        return json;
+      }),
+    };
   });
 
   server.get('/api/v1/crates/:crate_id/reverse_dependencies', function (schema, request) {

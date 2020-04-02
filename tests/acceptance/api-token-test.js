@@ -1,7 +1,6 @@
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'ember-qunit';
 import { currentURL, findAll, click, fillIn } from '@ember/test-helpers';
-import window, { setupWindowMock } from 'ember-window-mock';
 import { Response } from 'ember-cli-mirage';
 import { percySnapshot } from 'ember-percy';
 
@@ -10,37 +9,31 @@ import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Acceptance | api-tokens', function (hooks) {
   setupApplicationTest(hooks);
-  setupWindowMock(hooks);
   setupMirage(hooks);
 
   function prepare(context) {
-    window.localStorage.setItem('isLoggedIn', '1');
-
-    context.server.get('/api/v1/me', {
-      user: {
-        id: 42,
-        login: 'johnnydee',
-        email_verified: true,
-        email_verification_sent: true,
-        name: 'John Doe',
-        email: 'john@doe.com',
-        avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',
-        url: 'https://github.com/johnnydee',
-      },
-      owned_crates: [],
+    let user = context.server.create('user', {
+      login: 'johnnydee',
+      name: 'John Doe',
+      email: 'john@doe.com',
+      avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',
     });
 
-    context.server.get('/api/v1/me/tokens', {
-      api_tokens: [
-        { id: 2, name: 'BAR', created_at: new Date('2017-11-19T17:59:22').toISOString(), last_used_at: null },
-        {
-          id: 1,
-          name: 'foo',
-          created_at: new Date('2017-08-01T12:34:56').toISOString(),
-          last_used_at: new Date('2017-11-02T01:45:14').toISOString(),
-        },
-      ],
+    context.server.create('api-token', {
+      user,
+      name: 'foo',
+      createdAt: '2017-08-01T12:34:56',
+      lastUsedAt: '2017-11-02T01:45:14',
     });
+
+    context.server.create('api-token', {
+      user,
+      name: 'BAR',
+      createdAt: '2017-11-19T17:59:22',
+      lastUsedAt: null,
+    });
+
+    context.authenticateAs(user);
   }
 
   test('/me is showing the list of active API tokens', async function (assert) {
@@ -73,17 +66,12 @@ module('Acceptance | api-tokens', function (hooks) {
   test('API tokens can be revoked', async function (assert) {
     prepare(this);
 
-    this.server.delete('/api/v1/me/tokens/:id', function (schema, request) {
-      assert.step(`delete id:${request.params.id}`);
-      return {};
-    });
-
     await visit('/me');
     assert.equal(currentURL(), '/me');
     assert.dom('[data-test-api-token]').exists({ count: 2 });
 
     await click('[data-test-api-token="1"] [data-test-revoke-token-button]');
-    assert.verifySteps(['delete id:1']);
+    assert.equal(this.server.schema.apiTokens.all().length, 1, 'API token has been deleted from the backend database');
 
     assert.dom('[data-test-api-token]').exists({ count: 1 });
     assert.dom('[data-test-api-token="2"]').exists();
@@ -111,23 +99,6 @@ module('Acceptance | api-tokens', function (hooks) {
   test('new API tokens can be created', async function (assert) {
     prepare(this);
 
-    this.server.put('/api/v1/me/tokens', function (schema, request) {
-      assert.step('put');
-
-      let { api_token } = JSON.parse(request.requestBody);
-
-      return {
-        api_token: {
-          id: 5,
-          name: api_token.name,
-          token: 'zuz6nYcXJOzPDvnA9vucNwccG0lFSGbh',
-          revoked: false,
-          created_at: api_token.created_at,
-          last_used_at: api_token.last_used_at,
-        },
-      };
-    });
-
     await visit('/me');
     assert.equal(currentURL(), '/me');
     assert.dom('[data-test-api-token]').exists({ count: 2 });
@@ -143,15 +114,18 @@ module('Acceptance | api-tokens', function (hooks) {
     percySnapshot(assert);
 
     await click('[data-test-save-token-button]');
-    assert.verifySteps(['put']);
+
+    let token = this.server.schema.apiTokens.findBy({ name: 'the new token' });
+    assert.ok(Boolean(token), 'API token has been created in the backend database');
+
     assert.dom('[data-test-focused-input]').doesNotExist();
     assert.dom('[data-test-save-token-button]').doesNotExist();
 
-    assert.dom('[data-test-api-token="5"] [data-test-name]').hasText('the new token');
-    assert.dom('[data-test-api-token="5"] [data-test-save-token-button]').doesNotExist();
-    assert.dom('[data-test-api-token="5"] [data-test-revoke-token-button]').exists();
-    assert.dom('[data-test-api-token="5"] [data-test-saving-spinner]').doesNotExist();
-    assert.dom('[data-test-api-token="5"] [data-test-error]').doesNotExist();
-    assert.dom('[data-test-token]').includesText('cargo login zuz6nYcXJOzPDvnA9vucNwccG0lFSGbh');
+    assert.dom('[data-test-api-token="3"] [data-test-name]').hasText('the new token');
+    assert.dom('[data-test-api-token="3"] [data-test-save-token-button]').doesNotExist();
+    assert.dom('[data-test-api-token="3"] [data-test-revoke-token-button]').exists();
+    assert.dom('[data-test-api-token="3"] [data-test-saving-spinner]').doesNotExist();
+    assert.dom('[data-test-api-token="3"] [data-test-error]').doesNotExist();
+    assert.dom('[data-test-token]').includesText(`cargo login ${token.token}`);
   });
 });

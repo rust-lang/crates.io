@@ -1,14 +1,12 @@
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'ember-qunit';
 import { visit, waitFor, settled, click } from '@ember/test-helpers';
-import window, { setupWindowMock } from 'ember-window-mock';
 import { defer } from 'rsvp';
 
 import setupMirage from '../helpers/setup-mirage';
 
 module('Acceptance | Crate following', function (hooks) {
   setupApplicationTest(hooks);
-  setupWindowMock(hooks);
   setupMirage(hooks);
 
   function prepare(context, { loggedIn = true } = {}) {
@@ -18,21 +16,8 @@ module('Acceptance | Crate following', function (hooks) {
     server.create('version', { crate, num: '0.6.0' });
 
     if (loggedIn) {
-      server.get('/api/v1/me', {
-        user: {
-          id: 42,
-          login: 'johnnydee',
-          email_verified: true,
-          email_verification_sent: true,
-          name: 'John Doe',
-          email: 'john@doe.com',
-          avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',
-          url: 'https://github.com/johnnydee',
-        },
-        owned_crates: [],
-      });
-
-      window.localStorage.setItem('isLoggedIn', '1');
+      let user = server.create('user');
+      context.authenticateAs(user);
     }
   }
 

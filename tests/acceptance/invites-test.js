@@ -1,7 +1,6 @@
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'ember-qunit';
 import { currentURL, click } from '@ember/test-helpers';
-import window, { setupWindowMock } from 'ember-window-mock';
 import { percySnapshot } from 'ember-percy';
 import Response from 'ember-cli-mirage/response';
 
@@ -10,25 +9,11 @@ import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Acceptance | /me/pending-invites', function (hooks) {
   setupApplicationTest(hooks);
-  setupWindowMock(hooks);
   setupMirage(hooks);
 
   function prepare(context) {
-    window.localStorage.setItem('isLoggedIn', '1');
-
-    context.server.get('/api/v1/me', {
-      user: {
-        id: 42,
-        login: 'johnnydee',
-        email_verified: true,
-        email_verification_sent: true,
-        name: 'John Doe',
-        email: 'john@doe.com',
-        avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',
-        url: 'https://github.com/johnnydee',
-      },
-      owned_crates: [],
-    });
+    let user = context.server.create('user');
+    context.authenticateAs(user);
 
     context.server.get('/api/v1/me/crate_owner_invitations', {
       crate_owner_invitations: [

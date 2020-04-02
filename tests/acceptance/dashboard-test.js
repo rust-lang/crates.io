@@ -1,7 +1,6 @@
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'ember-qunit';
 import { currentURL } from '@ember/test-helpers';
-import window, { setupWindowMock } from 'ember-window-mock';
 import { percySnapshot } from 'ember-percy';
 
 import setupMirage from '../helpers/setup-mirage';
@@ -9,7 +8,6 @@ import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Acceptance | Dashboard', function (hooks) {
   setupApplicationTest(hooks);
-  setupWindowMock(hooks);
   setupMirage(hooks);
 
   test('redirects to / when not logged in', async function (assert) {
@@ -19,7 +17,14 @@ module('Acceptance | Dashboard', function (hooks) {
   });
 
   test('shows the dashboard when logged in', async function (assert) {
-    window.localStorage.setItem('isLoggedIn', '1');
+    let user = this.server.create('user', {
+      login: 'johnnydee',
+      name: 'John Doe',
+      email: 'john@doe.com',
+      avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',
+    });
+
+    this.authenticateAs(user);
 
     {
       let crate = this.server.create('crate', { name: 'rand' });
@@ -28,26 +33,10 @@ module('Acceptance | Dashboard', function (hooks) {
     }
 
     {
-      let crate = this.server.create('crate', { name: 'nanomsg', _owner_users: [42] });
+      let crate = this.server.create('crate', { name: 'nanomsg' });
+      this.server.create('crate-ownership', { crate, user });
       this.server.create('version', { crate, num: '0.1.0' });
     }
-
-    this.server.get('/api/v1/me', {
-      user: {
-        id: 42,
-        login: 'johnnydee',
-        email_verified: true,
-        email_verification_sent: true,
-        name: 'John Doe',
-        email: 'john@doe.com',
-        avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',
-        url: 'https://github.com/johnnydee',
-      },
-      owned_crates: [
-        { id: 123, name: 'foo-bar', email_notifications: true },
-        { id: 56456, name: 'barrrrr', email_notifications: false },
-      ],
-    });
 
     this.server.get('/api/v1/me/updates', {
       versions: [
@@ -145,7 +134,7 @@ module('Acceptance | Dashboard', function (hooks) {
       meta: { more: true },
     });
 
-    this.server.get('/api/v1/users/42/stats', { total_downloads: 3892 });
+    this.server.get(`/api/v1/users/${user.id}/stats`, { total_downloads: 3892 });
 
     await visit('/dashboard');
     assert.equal(currentURL(), '/dashboard');
