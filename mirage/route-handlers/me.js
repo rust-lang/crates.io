@@ -1,6 +1,7 @@
 import { Response } from 'ember-cli-mirage';
 
 import { getSession } from '../utils/session';
+import { withMeta } from './-utils';
 
 export function register(server) {
   server.get('/api/v1/me', function (schema) {
@@ -57,6 +58,32 @@ export function register(server) {
     if (token) token.destroy();
 
     return {};
+  });
+
+  server.get('/api/v1/me/updates', function (schema, request) {
+    let { user } = getSession(schema);
+    if (!user) {
+      return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
+    }
+
+    let allVersions = schema.versions
+      .all()
+      .filter(version => user.followedCrates.includes(version.crate))
+      .sort((a, b) => Number(b.id) - Number(a.id));
+
+    let page = Number(request.queryParams.page) || 1;
+    let perPage = 10;
+
+    let begin = (page - 1) * perPage;
+    let end = begin + perPage;
+
+    let versions = allVersions.slice(begin, end);
+
+    let totalCount = allVersions.length;
+    let totalPages = Math.ceil(totalCount / perPage);
+    let more = page < totalPages;
+
+    return withMeta(this.serialize(versions), { more });
   });
 
   server.put('/api/v1/confirm/:token', (schema, request) => {
