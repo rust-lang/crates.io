@@ -270,6 +270,7 @@ module('Mirage | Crates', function (hooks) {
               version_downloads: '/api/v1/crates/rand/1.0.0-beta.1/downloads',
             },
             num: '1.0.0-beta.1',
+            published_by: null,
             updated_at: '2017-02-24T12:34:56Z',
             yanked: false,
           },
@@ -303,6 +304,7 @@ module('Mirage | Crates', function (hooks) {
             version_downloads: '/api/v1/crates/rand/1.0.0/downloads',
           },
           num: '1.0.0',
+          published_by: null,
           updated_at: '2017-02-24T12:34:56Z',
           yanked: false,
         },
@@ -320,6 +322,7 @@ module('Mirage | Crates', function (hooks) {
             version_downloads: '/api/v1/crates/rand/1.1.0/downloads',
           },
           num: '1.1.0',
+          published_by: null,
           updated_at: '2017-02-24T12:34:56Z',
           yanked: false,
         },
@@ -337,6 +340,7 @@ module('Mirage | Crates', function (hooks) {
             version_downloads: '/api/v1/crates/rand/1.2.0/downloads',
           },
           num: '1.2.0',
+          published_by: null,
           updated_at: '2017-02-24T12:34:56Z',
           yanked: false,
         },
@@ -540,9 +544,10 @@ module('Mirage | Crates', function (hooks) {
     });
 
     test('returns all versions belonging to the specified crate', async function (assert) {
+      let user = this.server.create('user');
       this.server.create('crate', { name: 'rand' });
       this.server.create('version', { crateId: 'rand', num: '1.0.0' });
-      this.server.create('version', { crateId: 'rand', num: '1.1.0' });
+      this.server.create('version', { crateId: 'rand', num: '1.1.0', publishedBy: user });
       this.server.create('version', { crateId: 'rand', num: '1.2.0' });
 
       let response = await fetch('/api/v1/crates/rand/versions');
@@ -565,6 +570,7 @@ module('Mirage | Crates', function (hooks) {
               version_downloads: '/api/v1/crates/rand/1.0.0/downloads',
             },
             num: '1.0.0',
+            published_by: null,
             updated_at: '2017-02-24T12:34:56Z',
             yanked: false,
           },
@@ -582,6 +588,13 @@ module('Mirage | Crates', function (hooks) {
               version_downloads: '/api/v1/crates/rand/1.1.0/downloads',
             },
             num: '1.1.0',
+            published_by: {
+              id: 1,
+              avatar: 'https://avatars1.githubusercontent.com/u/14631425?v=4',
+              login: 'user-1',
+              name: 'User 1',
+              url: 'https://github.com/user-1',
+            },
             updated_at: '2017-02-24T12:34:56Z',
             yanked: false,
           },
@@ -599,6 +612,7 @@ module('Mirage | Crates', function (hooks) {
               version_downloads: '/api/v1/crates/rand/1.2.0/downloads',
             },
             num: '1.2.0',
+            published_by: null,
             updated_at: '2017-02-24T12:34:56Z',
             yanked: false,
           },
@@ -995,6 +1009,7 @@ module('Mirage | Crates', function (hooks) {
               version_downloads: '/api/v1/crates/bar/1.0.0/downloads',
             },
             num: '1.0.0',
+            published_by: null,
             updated_at: '2017-02-24T12:34:56Z',
             yanked: false,
           },
@@ -1012,6 +1027,7 @@ module('Mirage | Crates', function (hooks) {
               version_downloads: '/api/v1/crates/baz/1.0.1/downloads',
             },
             num: '1.0.1',
+            published_by: null,
             updated_at: '2017-02-24T12:34:56Z',
             yanked: false,
           },

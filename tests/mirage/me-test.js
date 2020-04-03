@@ -241,6 +241,7 @@ module('Mirage | /me', function (hooks) {
               version_downloads: '/api/v1/crates/foo/1.2.3/downloads',
             },
             num: '1.2.3',
+            published_by: null,
             updated_at: '2017-02-24T12:34:56Z',
             yanked: false,
           },
