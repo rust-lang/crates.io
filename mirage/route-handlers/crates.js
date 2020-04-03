@@ -1,4 +1,6 @@
-import { pageParams, compareStrings, withMeta, compareIsoDates, notFound } from './-utils';
+import { Response } from 'ember-cli-mirage';
+import { compareIsoDates, compareStrings, notFound, pageParams, withMeta } from './-utils';
+import { getSession } from '../utils/session';
 
 export function register(server) {
   server.get('/api/v1/crates', function (schema, request) {
@@ -46,8 +48,21 @@ export function register(server) {
     };
   });
 
-  server.get('/api/v1/crates/:crate_id/following', (/* schema, request */) => {
-    // TODO
+  server.get('/api/v1/crates/:crateId/following', (schema, request) => {
+    let { user } = getSession(schema);
+    if (!user) {
+      return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
+    }
+
+    let { crateId } = request.params;
+    let crate = schema.crates.find(crateId);
+    if (!crate) {
+      return new Response(404, {}, { errors: [{ detail: 'Not Found' }] });
+    }
+
+    let following = user.followedCrates.includes(crate);
+
+    return { following };
   });
 
   server.get('/api/v1/crates/:crate_id/versions', (schema, request) => {
