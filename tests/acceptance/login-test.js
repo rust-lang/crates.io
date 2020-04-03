@@ -1,10 +1,13 @@
-import { module, test } from 'qunit';
-import { setupApplicationTest } from 'ember-qunit';
 import { visit, currentURL, click, waitFor } from '@ember/test-helpers';
+import { setupApplicationTest } from 'ember-qunit';
+import { module, test } from 'qunit';
+
 import { defer } from 'rsvp';
+
 import window, { setupWindowMock } from 'ember-window-mock';
 
 import flashStyles from 'cargo/components/flash-message.module.css';
+
 import setupMirage from '../helpers/setup-mirage';
 
 module('Acceptance | Login', function (hooks) {

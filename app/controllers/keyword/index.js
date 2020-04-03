@@ -1,6 +1,6 @@
-import { readOnly } from '@ember/object/computed';
 import Controller from '@ember/controller';
 import { computed } from '@ember/object';
+import { readOnly } from '@ember/object/computed';
 
 import PaginationMixin from '../../mixins/pagination';
 

@@ -1,8 +1,9 @@
-import { module, test } from 'qunit';
-import { setupApplicationTest } from 'ember-qunit';
 import { currentURL, click } from '@ember/test-helpers';
-import { percySnapshot } from 'ember-percy';
+import { setupApplicationTest } from 'ember-qunit';
+import { module, test } from 'qunit';
+
 import Response from 'ember-cli-mirage/response';
+import { percySnapshot } from 'ember-percy';
 
 import setupMirage from '../helpers/setup-mirage';
 import { visit } from '../helpers/visit-ignoring-abort';

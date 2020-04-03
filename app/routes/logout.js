@@ -1,5 +1,5 @@
-import { run } from '@ember/runloop';
 import Route from '@ember/routing/route';
+import { run } from '@ember/runloop';
 import { inject as service } from '@ember/service';
 
 import ajax from '../utils/ajax';

@@ -1,12 +1,14 @@
-import { module, test } from 'qunit';
-import { setupApplicationTest } from 'ember-qunit';
 import { fillIn, currentURL, triggerEvent, visit, blur } from '@ember/test-helpers';
+import { setupApplicationTest } from 'ember-qunit';
+import { module, test } from 'qunit';
+
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import { keyDown, keyPress } from 'ember-keyboard/test-support/test-helpers';
+import { percySnapshot } from 'ember-percy';
+
 import axeConfig from '../axe-config';
 import { title } from '../helpers/dom';
 import setupMirage from '../helpers/setup-mirage';
-import { percySnapshot } from 'ember-percy';
 
 module('Acceptance | search', function (hooks) {
   setupApplicationTest(hooks);

@@ -1,6 +1,6 @@
+import { computed } from '@ember/object';
 import { readOnly } from '@ember/object/computed';
 import Mixin from '@ember/object/mixin';
-import { computed } from '@ember/object';
 
 const VIEWABLE_PAGES = 9;
 

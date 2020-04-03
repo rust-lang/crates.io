@@ -1,5 +1,5 @@
-import Controller from '@ember/controller';
 import { A } from '@ember/array';
+import Controller from '@ember/controller';
 import { computed } from '@ember/object';
 
 import ajax from '../utils/ajax';

@@ -1,6 +1,7 @@
-import { module, test } from 'qunit';
-import { setupApplicationTest } from 'ember-qunit';
 import { currentURL } from '@ember/test-helpers';
+import { setupApplicationTest } from 'ember-qunit';
+import { module, test } from 'qunit';
+
 import { percySnapshot } from 'ember-percy';
 
 import setupMirage from '../helpers/setup-mirage';

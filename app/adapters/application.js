@@ -1,6 +1,6 @@
 import RESTAdapter from '@ember-data/adapter/rest';
-import { inject as service } from '@ember/service';
 import { computed } from '@ember/object';
+import { inject as service } from '@ember/service';
 
 export default RESTAdapter.extend({
   fastboot: service(),

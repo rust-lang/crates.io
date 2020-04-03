@@ -1,5 +1,6 @@
-import config from './config/environment';
 import RouterScroll from 'ember-router-scroll';
+
+import config from './config/environment';
 
 export default class Router extends RouterScroll {
   location = config.locationType;

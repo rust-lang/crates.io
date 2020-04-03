@@ -93,6 +93,7 @@
     "eslint": "^6.8.0",
     "eslint-config-prettier": "^6.10.1",
     "eslint-plugin-ember": "^8.1.1",
+    "eslint-plugin-import-helpers": "^1.0.2",
     "eslint-plugin-prettier": "^3.1.2",
     "loader.js": "^4.7.0",
     "normalize.css": "^8.0.1",

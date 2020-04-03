@@ -1,6 +1,7 @@
 import Route from '@ember/routing/route';
-import fetch from 'fetch';
+
 import window from 'ember-window-mock';
+import fetch from 'fetch';
 
 /**
  * This route will be called from the GitHub OAuth flow once the user has

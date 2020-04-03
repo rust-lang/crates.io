@@ -1,5 +1,6 @@
-import { pluralize } from 'ember-inflector';
 import { underscore, decamelize } from '@ember/string';
+
+import { pluralize } from 'ember-inflector';
 
 import ApplicationAdapter from './application';
 

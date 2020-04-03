@@ -1,5 +1,6 @@
-import { module, test } from 'qunit';
 import { setupTest } from 'ember-qunit';
+import { module, test } from 'qunit';
+
 import { A } from '@ember/array';
 import Service from '@ember/service';
 
