@@ -28,5 +28,6 @@ export default BaseSerializer.extend({
     }
 
     delete hash.email_verification_token;
+    delete hash.followed_crate_ids;
   },
 });
