@@ -83,6 +83,24 @@ export function register(server) {
     return { ok: true };
   });
 
+  server.delete('/api/v1/crates/:crateId/follow', (schema, request) => {
+    let { user } = getSession(schema);
+    if (!user) {
+      return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
+    }
+
+    let { crateId } = request.params;
+    let crate = schema.crates.find(crateId);
+    if (!crate) {
+      return new Response(404, {}, { errors: [{ detail: 'Not Found' }] });
+    }
+
+    user.followedCrates.remove(crate);
+    user.save();
+
+    return { ok: true };
+  });
+
   server.get('/api/v1/crates/:crate_id/versions', (schema, request) => {
     let crateId = request.params.crate_id;
     let crate = schema.crates.find(crateId);
