@@ -8,6 +8,15 @@ export function register(server) {
 
     let crates = schema.crates.all();
 
+    if (request.queryParams.following === '1') {
+      let { user } = getSession(schema);
+      if (!user) {
+        return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
+      }
+
+      crates = user.followedCrates;
+    }
+
     if (request.queryParams.letter) {
       let letter = request.queryParams.letter.toLowerCase();
       crates = crates.filter(crate => crate.id[0].toLowerCase() === letter);

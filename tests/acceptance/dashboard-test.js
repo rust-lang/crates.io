@@ -30,13 +30,17 @@ module('Acceptance | Dashboard', function (hooks) {
       let crate = this.server.create('crate', { name: 'rand' });
       this.server.create('version', { crate, num: '1.0.0' });
       this.server.create('version', { crate, num: '1.1.0' });
+      user.followedCrates.add(crate);
     }
 
     {
       let crate = this.server.create('crate', { name: 'nanomsg' });
       this.server.create('crate-ownership', { crate, user });
       this.server.create('version', { crate, num: '0.1.0' });
+      user.followedCrates.add(crate);
     }
+
+    user.save();
 
     this.server.get('/api/v1/me/updates', {
       versions: [
