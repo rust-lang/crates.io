@@ -72,6 +72,8 @@ impl Owner {
         } else {
             users::table
                 .filter(users::gh_login.eq(name))
+                .filter(users::gh_id.ne(-1))
+                .order(users::gh_id.desc())
                 .first(conn)
                 .map(Owner::User)
                 .map_err(|_| cargo_err(&format_args!("could not find user with login `{}`", name)))

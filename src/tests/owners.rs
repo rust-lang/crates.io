@@ -366,3 +366,60 @@ fn test_decline_invitation() {
     let json = anon.show_crate_owners("decline_invitation");
     assert_eq!(json.users.len(), 1);
 }
+
+#[test]
+fn inactive_users_dont_get_invitations() {
+    use cargo_registry::models::NewUser;
+    use std::borrow::Cow;
+
+    let (app, _, owner, owner_token) = TestApp::init().with_token();
+    let owner = owner.as_model();
+
+    // An inactive user with gh_id -1 and an active user with a non-negative gh_id both exist
+    let invited_gh_login = "user_bar";
+    let krate_name = "inactive_test";
+
+    app.db(|conn| {
+        NewUser {
+            gh_id: -1,
+            gh_login: invited_gh_login,
+            name: None,
+            gh_avatar: None,
+            gh_access_token: Cow::Borrowed("some random token"),
+        }
+        .create_or_update(None, conn)
+        .unwrap();
+        CrateBuilder::new(krate_name, owner.id).expect_build(conn);
+    });
+
+    let invited_user = app.db_new_user(invited_gh_login);
+
+    owner_token.add_user_owner(krate_name, invited_user.as_model());
+
+    let json = invited_user.list_invitations();
+    assert_eq!(json.crate_owner_invitations.len(), 1);
+}
+
+#[test]
+fn highest_gh_id_is_most_recent_account_we_know_of() {
+    let (app, _, owner, owner_token) = TestApp::init().with_token();
+    let owner = owner.as_model();
+
+    // An inactive user with a lower gh_id and an active user with a higher gh_id both exist
+    let invited_gh_login = "user_bar";
+    let krate_name = "newer_user_test";
+
+    // This user will get a lower gh_id, given how crate::new_user works
+    app.db_new_user(invited_gh_login);
+
+    let invited_user = app.db_new_user(invited_gh_login);
+
+    app.db(|conn| {
+        CrateBuilder::new(krate_name, owner.id).expect_build(conn);
+    });
+
+    owner_token.add_user_owner(krate_name, invited_user.as_model());
+
+    let json = invited_user.list_invitations();
+    assert_eq!(json.crate_owner_invitations.len(), 1);
+}
