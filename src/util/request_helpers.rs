@@ -6,7 +6,7 @@ use conduit::{header::AsHeaderName, RequestExt};
 /// If a header appears multiple times, this will return only one of them.
 ///
 /// If the header value is invalid utf8, an empty slice will be returned.
-pub fn request_header<'a, K>(req: &'a dyn RequestExt, key: K) -> &'a str
+pub fn request_header<K>(req: &dyn RequestExt, key: K) -> &str
 where
     K: AsHeaderName,
 {
