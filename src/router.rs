@@ -191,6 +191,7 @@ mod tests {
     };
     use crate::util::EndpointResult;
 
+    use conduit::StatusCode;
     use conduit_test::MockRequest;
     use diesel::result::Error as DieselError;
 
@@ -205,25 +206,28 @@ mod tests {
         // Types for handling common error status codes
         assert_eq!(
             C(|_| Err(bad_request(""))).call(&mut req).unwrap().status(),
-            400
+            StatusCode::BAD_REQUEST
         );
         assert_eq!(
             C(|_| err(Unauthorized)).call(&mut req).unwrap().status(),
-            403
+            StatusCode::FORBIDDEN
         );
         assert_eq!(
             C(|_| Err(DieselError::NotFound.into()))
                 .call(&mut req)
                 .unwrap()
                 .status(),
-            404
+            StatusCode::NOT_FOUND
         );
-        assert_eq!(C(|_| err(NotFound)).call(&mut req).unwrap().status(), 404);
+        assert_eq!(
+            C(|_| err(NotFound)).call(&mut req).unwrap().status(),
+            StatusCode::NOT_FOUND
+        );
 
         // cargo_err errors are returned as 200 so that cargo displays this nicely on the command line
         assert_eq!(
             C(|_| Err(cargo_err(""))).call(&mut req).unwrap().status(),
-            200
+            StatusCode::OK
         );
 
         // Inner errors are captured for logging when wrapped by a user facing error
@@ -236,7 +240,7 @@ mod tests {
         })
         .call(&mut req)
         .unwrap();
-        assert_eq!(response.status(), 400);
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
         assert_eq!(
             crate::middleware::log_request::get_log_message(&req, "cause"),
             "middle error caused by invalid digit found in string"

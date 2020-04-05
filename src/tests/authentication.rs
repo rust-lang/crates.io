@@ -28,7 +28,7 @@ fn anonymous_user_unauthorized() {
     let request = anon.request_builder(Method::GET, URL);
 
     let (status, body) = into_parts(call(&app, request));
-    assert_eq!(status, 403);
+    assert_eq!(status, StatusCode::FORBIDDEN);
     assert_eq!(body, MUST_LOGIN);
 }
 
@@ -39,7 +39,7 @@ fn token_auth_cannot_find_token() {
     request.header(header::AUTHORIZATION, "fake-token");
 
     let (status, body) = into_parts(call(&app, request));
-    assert_eq!(status, 403);
+    assert_eq!(status, StatusCode::FORBIDDEN);
     assert_eq!(body, MUST_LOGIN);
 }
 
