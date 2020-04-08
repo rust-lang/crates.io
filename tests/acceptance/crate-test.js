@@ -1,4 +1,3 @@
-import Service from '@ember/service';
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'ember-qunit';
 import { click, fillIn, currentURL, currentRouteName, visit } from '@ember/test-helpers';
@@ -216,15 +215,8 @@ module('Acceptance | crate page', function (hooks) {
   test('navigating to the owners page when not an owner', async function (assert) {
     this.server.loadFixtures();
 
-    this.owner.register(
-      'service:session',
-      Service.extend({
-        get currentUser() {
-          return { login: 'iain8' };
-        },
-        loadUser() {},
-      }),
-    );
+    let user = this.server.schema.users.findBy({ login: 'iain8' });
+    this.authenticateAs(user);
 
     await visit('/crates/nanomsg');
 
@@ -234,15 +226,8 @@ module('Acceptance | crate page', function (hooks) {
   test('navigating to the owners page', async function (assert) {
     this.server.loadFixtures();
 
-    this.owner.register(
-      'service:session',
-      Service.extend({
-        get currentUser() {
-          return { login: 'thehydroimpulse', id: '2' };
-        },
-        loadUser() {},
-      }),
-    );
+    let user = this.server.schema.users.findBy({ login: 'thehydroimpulse' });
+    this.authenticateAs(user);
 
     await visit('/crates/nanomsg');
     await click('[data-test-manage-owners-link]');

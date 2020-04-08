@@ -1,10 +1,21 @@
-import { pageParams, compareStrings, withMeta, compareIsoDates, notFound } from './-utils';
+import { Response } from 'ember-cli-mirage';
+import { compareIsoDates, compareStrings, notFound, pageParams, withMeta } from './-utils';
+import { getSession } from '../utils/session';
 
 export function register(server) {
   server.get('/api/v1/crates', function (schema, request) {
     const { start, end } = pageParams(request);
 
     let crates = schema.crates.all();
+
+    if (request.queryParams.following === '1') {
+      let { user } = getSession(schema);
+      if (!user) {
+        return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
+      }
+
+      crates = user.followedCrates;
+    }
 
     if (request.queryParams.letter) {
       let letter = request.queryParams.letter.toLowerCase();
@@ -46,8 +57,57 @@ export function register(server) {
     };
   });
 
-  server.get('/api/v1/crates/:crate_id/following', (/* schema, request */) => {
-    // TODO
+  server.get('/api/v1/crates/:crateId/following', (schema, request) => {
+    let { user } = getSession(schema);
+    if (!user) {
+      return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
+    }
+
+    let { crateId } = request.params;
+    let crate = schema.crates.find(crateId);
+    if (!crate) {
+      return new Response(404, {}, { errors: [{ detail: 'Not Found' }] });
+    }
+
+    let following = user.followedCrates.includes(crate);
+
+    return { following };
+  });
+
+  server.put('/api/v1/crates/:crateId/follow', (schema, request) => {
+    let { user } = getSession(schema);
+    if (!user) {
+      return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
+    }
+
+    let { crateId } = request.params;
+    let crate = schema.crates.find(crateId);
+    if (!crate) {
+      return new Response(404, {}, { errors: [{ detail: 'Not Found' }] });
+    }
+
+    user.followedCrates.add(crate);
+    user.save();
+
+    return { ok: true };
+  });
+
+  server.delete('/api/v1/crates/:crateId/follow', (schema, request) => {
+    let { user } = getSession(schema);
+    if (!user) {
+      return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
+    }
+
+    let { crateId } = request.params;
+    let crate = schema.crates.find(crateId);
+    if (!crate) {
+      return new Response(404, {}, { errors: [{ detail: 'Not Found' }] });
+    }
+
+    user.followedCrates.remove(crate);
+    user.save();
+
+    return { ok: true };
   });
 
   server.get('/api/v1/crates/:crate_id/versions', (schema, request) => {

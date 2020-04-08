@@ -176,6 +176,24 @@ module('Mirage | Crates', function (hooks) {
       assert.equal(responsePayload.crates[0].id, 'bar');
       assert.equal(responsePayload.meta.total, 1);
     });
+
+    test('supports a `following` parameter', async function (assert) {
+      this.server.create('crate', { name: 'foo' });
+      this.server.create('version', { crateId: 'foo' });
+      this.server.create('crate', { name: 'bar' });
+      this.server.create('version', { crateId: 'bar' });
+
+      let user = this.server.create('user', { followedCrateIds: ['bar'] });
+      this.authenticateAs(user);
+
+      let response = await fetch(`/api/v1/crates?following=1`);
+      assert.equal(response.status, 200);
+
+      let responsePayload = await response.json();
+      assert.equal(responsePayload.crates.length, 1);
+      assert.equal(responsePayload.crates[0].id, 'bar');
+      assert.equal(responsePayload.meta.total, 1);
+    });
   });
 
   module('GET /api/v1/crates/:id', function () {
@@ -351,6 +369,137 @@ module('Mirage | Crates', function (hooks) {
           keyword: 'no-std',
         },
       ]);
+    });
+  });
+
+  module('GET /api/v1/crates/:crateId/following', function () {
+    test('returns 403 if unauthenticated', async function (assert) {
+      let response = await fetch('/api/v1/crates/foo/following');
+      assert.equal(response.status, 403);
+
+      let responsePayload = await response.json();
+      assert.deepEqual(responsePayload, {
+        errors: [{ detail: 'must be logged in to perform that action' }],
+      });
+    });
+
+    test('returns 404 for unknown crates', async function (assert) {
+      let user = this.server.create('user');
+      this.authenticateAs(user);
+
+      let response = await fetch('/api/v1/crates/foo/following');
+      assert.equal(response.status, 404);
+
+      let responsePayload = await response.json();
+      assert.deepEqual(responsePayload, { errors: [{ detail: 'Not Found' }] });
+    });
+
+    test('returns true if the authenticated user follows the crate', async function (assert) {
+      let crate = this.server.create('crate', { name: 'rand' });
+
+      let user = this.server.create('user', { followedCrates: [crate] });
+      this.authenticateAs(user);
+
+      let response = await fetch('/api/v1/crates/rand/following');
+      assert.equal(response.status, 200);
+
+      let responsePayload = await response.json();
+      assert.deepEqual(responsePayload, { following: true });
+    });
+
+    test('returns false if the authenticated user is not following the crate', async function (assert) {
+      this.server.create('crate', { name: 'rand' });
+
+      let user = this.server.create('user');
+      this.authenticateAs(user);
+
+      let response = await fetch('/api/v1/crates/rand/following');
+      assert.equal(response.status, 200);
+
+      let responsePayload = await response.json();
+      assert.deepEqual(responsePayload, { following: false });
+    });
+  });
+
+  module('PUT /api/v1/crates/:crateId/follow', function () {
+    test('returns 403 if unauthenticated', async function (assert) {
+      let response = await fetch('/api/v1/crates/foo/follow', { method: 'PUT' });
+      assert.equal(response.status, 403);
+
+      let responsePayload = await response.json();
+      assert.deepEqual(responsePayload, {
+        errors: [{ detail: 'must be logged in to perform that action' }],
+      });
+    });
+
+    test('returns 404 for unknown crates', async function (assert) {
+      let user = this.server.create('user');
+      this.authenticateAs(user);
+
+      let response = await fetch('/api/v1/crates/foo/follow', { method: 'PUT' });
+      assert.equal(response.status, 404);
+
+      let responsePayload = await response.json();
+      assert.deepEqual(responsePayload, { errors: [{ detail: 'Not Found' }] });
+    });
+
+    test('makes the authenticated user follow the crate', async function (assert) {
+      let crate = this.server.create('crate', { name: 'rand' });
+
+      let user = this.server.create('user');
+      this.authenticateAs(user);
+
+      assert.deepEqual(user.followedCrateIds, []);
+
+      let response = await fetch('/api/v1/crates/rand/follow', { method: 'PUT' });
+      assert.equal(response.status, 200);
+
+      let responsePayload = await response.json();
+      assert.deepEqual(responsePayload, { ok: true });
+
+      user.reload();
+      assert.deepEqual(user.followedCrateIds, [crate.id]);
+    });
+  });
+
+  module('DELETE /api/v1/crates/:crateId/follow', function () {
+    test('returns 403 if unauthenticated', async function (assert) {
+      let response = await fetch('/api/v1/crates/foo/follow', { method: 'DELETE' });
+      assert.equal(response.status, 403);
+
+      let responsePayload = await response.json();
+      assert.deepEqual(responsePayload, {
+        errors: [{ detail: 'must be logged in to perform that action' }],
+      });
+    });
+
+    test('returns 404 for unknown crates', async function (assert) {
+      let user = this.server.create('user');
+      this.authenticateAs(user);
+
+      let response = await fetch('/api/v1/crates/foo/follow', { method: 'DELETE' });
+      assert.equal(response.status, 404);
+
+      let responsePayload = await response.json();
+      assert.deepEqual(responsePayload, { errors: [{ detail: 'Not Found' }] });
+    });
+
+    test('makes the authenticated user unfollow the crate', async function (assert) {
+      let crate = this.server.create('crate', { name: 'rand' });
+
+      let user = this.server.create('user', { followedCrates: [crate] });
+      this.authenticateAs(user);
+
+      assert.deepEqual(user.followedCrateIds, [crate.id]);
+
+      let response = await fetch('/api/v1/crates/rand/follow', { method: 'DELETE' });
+      assert.equal(response.status, 200);
+
+      let responsePayload = await response.json();
+      assert.deepEqual(responsePayload, { ok: true });
+
+      user.reload();
+      assert.deepEqual(user.followedCrateIds, []);
     });
   });
 
