@@ -1,6 +1,6 @@
 import setupMirage from 'ember-cli-mirage/test-support/setup-mirage';
-import timekeeper from 'timekeeper';
 import window, { setupWindowMock } from 'ember-window-mock';
+import timekeeper from 'timekeeper';
 
 export default function (hooks) {
   setupMirage(hooks);

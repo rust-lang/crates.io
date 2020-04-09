@@ -1,5 +1,5 @@
-import Route from '@ember/routing/route';
 import { A } from '@ember/array';
+import Route from '@ember/routing/route';
 import RSVP from 'rsvp';
 
 import AuthenticatedRoute from '../mixins/authenticated-route';

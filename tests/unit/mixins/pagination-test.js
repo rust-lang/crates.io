@@ -1,5 +1,6 @@
-import EmberObject from '@ember/object';
 import { module, test } from 'qunit';
+
+import EmberObject from '@ember/object';
 
 import PaginationMixin from '../../../mixins/pagination';
 

@@ -2,13 +2,12 @@
 
 'use strict';
 
-const fs = require('fs');
-const os = require('os');
-const FastBootAppServer = require('fastboot-app-server');
-
 // because fastboot-app-server uses cluster, but it might change in future
 const cluster = require('cluster');
+const fs = require('fs');
+const os = require('os');
 
+const FastBootAppServer = require('fastboot-app-server');
 const morgan = require('morgan');
 
 class LoggerWithoutTimestamp {

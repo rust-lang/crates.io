@@ -1,4 +1,5 @@
 import Model, { belongsTo, attr } from '@ember-data/model';
+
 import Inflector from 'ember-inflector';
 
 Inflector.inflector.irregular('dependency', 'dependencies');

@@ -1,11 +1,12 @@
-import { alias, readOnly, gt } from '@ember/object/computed';
-import { inject as service } from '@ember/service';
-import Controller from '@ember/controller';
-import PromiseProxyMixin from '@ember/object/promise-proxy-mixin';
 import ArrayProxy from '@ember/array/proxy';
+import Controller from '@ember/controller';
 import { computed } from '@ember/object';
-import moment from 'moment';
+import { alias, readOnly, gt } from '@ember/object/computed';
+import PromiseProxyMixin from '@ember/object/promise-proxy-mixin';
+import { inject as service } from '@ember/service';
+
 import { task } from 'ember-concurrency';
+import moment from 'moment';
 
 const NUM_VERSIONS = 5;
 

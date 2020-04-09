@@ -1,4 +1,5 @@
 import Service, { inject as service } from '@ember/service';
+
 import window from 'ember-window-mock';
 
 import ajax from '../utils/ajax';

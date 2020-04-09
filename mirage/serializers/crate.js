@@ -1,7 +1,9 @@
 import { assert } from '@ember/debug';
+
 import semverSort from 'semver/functions/rsort';
-import BaseSerializer from './application';
+
 import { compareIsoDates } from '../route-handlers/-utils';
+import BaseSerializer from './application';
 
 export default BaseSerializer.extend({
   attrs: [

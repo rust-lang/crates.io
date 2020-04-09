@@ -1,6 +1,7 @@
 import Component from '@ember/component';
-import { EKMixin, EKOnInsertMixin, keyDown } from 'ember-keyboard';
 import { on } from '@ember/object/evented';
+
+import { EKMixin, EKOnInsertMixin, keyDown } from 'ember-keyboard';
 
 export default Component.extend(EKMixin, EKOnInsertMixin, {
   tagName: '',

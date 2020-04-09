@@ -1,8 +1,9 @@
 import Controller from '@ember/controller';
-import { inject as service } from '@ember/service';
 import { oneWay } from '@ember/object/computed';
-import { EKMixin, keyDown, keyPress } from 'ember-keyboard';
 import { on } from '@ember/object/evented';
+import { inject as service } from '@ember/service';
+
+import { EKMixin, keyDown, keyPress } from 'ember-keyboard';
 
 export default Controller.extend(EKMixin, {
   flashMessages: service(),

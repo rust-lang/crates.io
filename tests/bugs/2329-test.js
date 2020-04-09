@@ -1,6 +1,7 @@
-import { module, test } from 'qunit';
-import { setupApplicationTest } from 'ember-qunit';
 import { currentURL, click, waitFor } from '@ember/test-helpers';
+import { setupApplicationTest } from 'ember-qunit';
+import { module, test } from 'qunit';
+
 import window, { setupWindowMock } from 'ember-window-mock';
 
 import setupMirage from '../helpers/setup-mirage';

@@ -1,5 +1,6 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
+
 import prerelease from 'semver/functions/prerelease';
 
 import ajax from '../../utils/ajax';

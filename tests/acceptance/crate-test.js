@@ -1,11 +1,13 @@
-import { module, test } from 'qunit';
-import { setupApplicationTest } from 'ember-qunit';
 import { click, fillIn, currentURL, currentRouteName, visit } from '@ember/test-helpers';
+import { setupApplicationTest } from 'ember-qunit';
+import { module, test } from 'qunit';
+
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
+import { percySnapshot } from 'ember-percy';
+
 import axeConfig from '../axe-config';
 import { title } from '../helpers/dom';
 import setupMirage from '../helpers/setup-mirage';
-import { percySnapshot } from 'ember-percy';
 
 module('Acceptance | crate page', function (hooks) {
   setupApplicationTest(hooks);

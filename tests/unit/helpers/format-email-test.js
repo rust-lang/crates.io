@@ -1,5 +1,6 @@
-import { formatEmail } from '../../../helpers/format-email';
 import { module, test } from 'qunit';
+
+import { formatEmail } from '../../../helpers/format-email';
 
 module('Unit | Helper | format-email', function () {
   // Replace this with your real tests.
