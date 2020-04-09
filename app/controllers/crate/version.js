@@ -19,8 +19,8 @@ export default Controller.extend({
 
   isDownloading: false,
 
-  downloadsContext: computed('requestedVersion', 'model', 'crate', function () {
-    return this.requestedVersion ? this.model : this.crate;
+  downloadsContext: computed('requestedVersion', 'currentVersion', 'crate', function () {
+    return this.requestedVersion ? this.currentVersion : this.crate;
   }),
   downloads: alias('downloadsContext.version_downloads'),
   extraDownloads: alias('downloads.content.meta.extra_downloads'),
@@ -36,8 +36,8 @@ export default Controller.extend({
   isOwner: computed('crate.owner_user', 'session.currentUser.id', function () {
     return this.get('crate.owner_user').findBy('id', this.get('session.currentUser.id'));
   }),
-  notYankedOrIsOwner: computed('model', 'crate.owner_user', 'session.currentUser.id', function () {
-    return !this.get('model').yanked || this.get('crate.owner_user').findBy('id', this.get('session.currentUser.id'));
+  notYankedOrIsOwner: computed('currentVersion', 'crate.owner_user', 'session.currentUser.id', function () {
+    return !this.currentVersion.yanked || this.get('crate.owner_user').findBy('id', this.get('session.currentUser.id'));
   }),
 
   sortedVersions: readOnly('crate.versions'),
@@ -130,7 +130,7 @@ export default Controller.extend({
       }
     });
     if (this.requestedVersion) {
-      versions.push(this.model.getProperties('id', 'num'));
+      versions.push(this.currentVersion.getProperties('id', 'num'));
     } else {
       this.smallSortedVersions.forEach(version => {
         versions.push(version.getProperties('id', 'num'));
