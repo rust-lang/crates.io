@@ -1,5 +1,3 @@
-// eslint-disable-next-line ember/no-observers
-import { observer } from '@ember/object';
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import prerelease from 'semver/functions/prerelease';
@@ -7,14 +5,7 @@ import prerelease from 'semver/functions/prerelease';
 import ajax from '../../utils/ajax';
 
 export default Route.extend({
-  session: service(),
-
   flashMessages: service(),
-
-  // eslint-disable-next-line ember/no-observers
-  refreshAfterLogin: observer('session.isLoggedIn', function () {
-    this.refresh();
-  }),
 
   async model(params) {
     const requestedVersion = params.version_num === 'all' ? '' : params.version_num;
