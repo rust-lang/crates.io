@@ -112,6 +112,19 @@ module('Acceptance | crate page', function (hooks) {
     assert.dom('[data-test-crate-stats-label]').hasText('Stats Overview for 0.6.0 (see all)');
   });
 
+  test('unknown versions fall back to latest version and show an error message', async function (assert) {
+    this.server.create('crate', { name: 'nanomsg' });
+    this.server.create('version', { crateId: 'nanomsg', num: '0.6.0' });
+    this.server.create('version', { crateId: 'nanomsg', num: '0.6.1' });
+
+    await visit('/crates/nanomsg/0.7.0');
+
+    assert.equal(currentURL(), '/crates/nanomsg/0.7.0');
+    assert.dom('[data-test-heading] [data-test-crate-name]').hasText('nanomsg');
+    assert.dom('[data-test-heading] [data-test-crate-version]').hasText('0.6.1');
+    assert.dom('[data-test-flash-message]').hasText("Version '0.7.0' of crate 'nanomsg' does not exist");
+  });
+
   test('navigating to the all versions page', async function (assert) {
     this.server.loadFixtures();
 
