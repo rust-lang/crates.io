@@ -7,7 +7,7 @@ export default Route.extend({
   flashMessages: service(),
 
   async model(params) {
-    const requestedVersion = params.version_num === 'all' ? '' : params.version_num;
+    const requestedVersion = params.version_num;
     const crate = this.modelFor('crate');
     const controller = this.controllerFor(this.routeName);
     const maxVersion = crate.get('max_version');
@@ -16,7 +16,7 @@ export default Route.extend({
 
     // Fallback to the crate's last stable version
     // If `max_version` is `0.0.0` then all versions have been yanked
-    if (!requestedVersion && maxVersion !== '0.0.0') {
+    if (!params.version_num && maxVersion !== '0.0.0') {
       if (isUnstableVersion(maxVersion)) {
         crate.get('versions').then(versions => {
           const latestStableVersion = versions.find(version => {
