@@ -3,8 +3,6 @@ import { inject as service } from '@ember/service';
 
 import prerelease from 'semver/functions/prerelease';
 
-import ajax from '../../utils/ajax';
-
 export default Route.extend({
   flashMessages: service(),
 
@@ -16,60 +14,42 @@ export default Route.extend({
 
     const isUnstableVersion = version => !!prerelease(version);
 
-    const fetchCrateDocumentation = () => {
-      if (!crate.get('documentation') || crate.get('documentation').substr(0, 16) === 'https://docs.rs/') {
-        let crateName = crate.get('name');
-        let crateVersion = params.version_num;
-        ajax(`https://docs.rs/crate/${crateName}/${crateVersion}/builds.json`, { mode: 'cors' }).then(r => {
-          if (r.length > 0 && r[0].build_status === true) {
-            crate.set('documentation', `https://docs.rs/${crateName}/${crateVersion}/`);
-          }
-        });
-      }
-    };
-
     // Fallback to the crate's last stable version
     // If `max_version` is `0.0.0` then all versions have been yanked
     if (!requestedVersion && maxVersion !== '0.0.0') {
       if (isUnstableVersion(maxVersion)) {
-        crate
-          .get('versions')
-          .then(versions => {
-            const latestStableVersion = versions.find(version => {
+        crate.get('versions').then(versions => {
+          const latestStableVersion = versions.find(version => {
+            // Find the latest version that is stable AND not-yanked.
+            if (!isUnstableVersion(version.get('num')) && !version.get('yanked')) {
+              return version;
+            }
+          });
+
+          if (latestStableVersion == null) {
+            // Cannot find any version that is stable AND not-yanked.
+            // The fact that "maxVersion" itself cannot be found means that
+            // we have to fall back to the latest one that is unstable....
+            const latestUnyankedVersion = versions.find(version => {
               // Find the latest version that is stable AND not-yanked.
-              if (!isUnstableVersion(version.get('num')) && !version.get('yanked')) {
+              if (!version.get('yanked')) {
                 return version;
               }
             });
 
             if (latestStableVersion == null) {
-              // Cannot find any version that is stable AND not-yanked.
-              // The fact that "maxVersion" itself cannot be found means that
-              // we have to fall back to the latest one that is unstable....
-              const latestUnyankedVersion = versions.find(version => {
-                // Find the latest version that is stable AND not-yanked.
-                if (!version.get('yanked')) {
-                  return version;
-                }
-              });
-
-              if (latestStableVersion == null) {
-                // There's not even any unyanked version...
-                params.version_num = maxVersion;
-              } else {
-                params.version_num = latestUnyankedVersion;
-              }
+              // There's not even any unyanked version...
+              params.version_num = maxVersion;
             } else {
-              params.version_num = latestStableVersion.get('num');
+              params.version_num = latestUnyankedVersion;
             }
-          })
-          .then(fetchCrateDocumentation);
+          } else {
+            params.version_num = latestStableVersion.get('num');
+          }
+        });
       } else {
         params.version_num = maxVersion;
-        fetchCrateDocumentation();
       }
-    } else {
-      fetchCrateDocumentation();
     }
 
     controller.set('crate', crate);
@@ -89,6 +69,11 @@ export default Route.extend({
   setupController(controller) {
     this._super(...arguments);
     controller.loadReadmeTask.perform();
+
+    let { crate } = controller;
+    if (!crate.documentation || crate.documentation.startsWith('https://docs.rs/')) {
+      controller.loadDocsBuilds.perform();
+    }
   },
 
   serialize(model) {
