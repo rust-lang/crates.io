@@ -21,23 +21,16 @@ export default Route.extend({
     // If `max_version` is `0.0.0` then all versions have been yanked
     if (!params.version_num && maxVersion !== '0.0.0') {
       if (isUnstableVersion(maxVersion)) {
-        const latestStableVersion = versions.find(version => {
-          // Find the latest version that is stable AND not-yanked.
-          if (!isUnstableVersion(version.num) && !version.yanked) {
-            return version;
-          }
-        });
+        // Find the latest version that is stable AND not-yanked.
+        const latestStableVersion = versions.find(version => !isUnstableVersion(version.num) && !version.yanked);
 
         if (latestStableVersion == null) {
           // Cannot find any version that is stable AND not-yanked.
           // The fact that "maxVersion" itself cannot be found means that
           // we have to fall back to the latest one that is unstable....
-          const latestUnyankedVersion = versions.find(version => {
-            // Find the latest version that is stable AND not-yanked.
-            if (!version.yanked) {
-              return version;
-            }
-          });
+
+          // Find the latest version that not yanked.
+          const latestUnyankedVersion = versions.find(version => !version.yanked);
 
           if (latestStableVersion == null) {
             // There's not even any unyanked version...
