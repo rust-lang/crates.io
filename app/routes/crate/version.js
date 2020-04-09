@@ -3,81 +3,73 @@ import { inject as service } from '@ember/service';
 
 import prerelease from 'semver/functions/prerelease';
 
+function isUnstableVersion(version) {
+  return !!prerelease(version);
+}
+
 export default Route.extend({
   flashMessages: service(),
 
   async model(params) {
-    const requestedVersion = params.version_num === 'all' ? '' : params.version_num;
+    const requestedVersion = params.version_num;
     const crate = this.modelFor('crate');
-    const controller = this.controllerFor(this.routeName);
-    const maxVersion = crate.get('max_version');
+    const maxVersion = crate.max_version;
 
-    const isUnstableVersion = version => !!prerelease(version);
+    let versions = await crate.get('versions');
 
     // Fallback to the crate's last stable version
     // If `max_version` is `0.0.0` then all versions have been yanked
-    if (!requestedVersion && maxVersion !== '0.0.0') {
+    if (!params.version_num && maxVersion !== '0.0.0') {
       if (isUnstableVersion(maxVersion)) {
-        crate.get('versions').then(versions => {
-          const latestStableVersion = versions.find(version => {
-            // Find the latest version that is stable AND not-yanked.
-            if (!isUnstableVersion(version.get('num')) && !version.get('yanked')) {
-              return version;
-            }
-          });
+        // Find the latest version that is stable AND not-yanked.
+        const latestStableVersion = versions.find(version => !isUnstableVersion(version.num) && !version.yanked);
+
+        if (latestStableVersion == null) {
+          // Cannot find any version that is stable AND not-yanked.
+          // The fact that "maxVersion" itself cannot be found means that
+          // we have to fall back to the latest one that is unstable....
+
+          // Find the latest version that not yanked.
+          const latestUnyankedVersion = versions.find(version => !version.yanked);
 
           if (latestStableVersion == null) {
-            // Cannot find any version that is stable AND not-yanked.
-            // The fact that "maxVersion" itself cannot be found means that
-            // we have to fall back to the latest one that is unstable....
-            const latestUnyankedVersion = versions.find(version => {
-              // Find the latest version that is stable AND not-yanked.
-              if (!version.get('yanked')) {
-                return version;
-              }
-            });
-
-            if (latestStableVersion == null) {
-              // There's not even any unyanked version...
-              params.version_num = maxVersion;
-            } else {
-              params.version_num = latestUnyankedVersion;
-            }
+            // There's not even any unyanked version...
+            params.version_num = maxVersion;
           } else {
-            params.version_num = latestStableVersion.get('num');
+            params.version_num = latestUnyankedVersion;
           }
-        });
+        } else {
+          params.version_num = latestStableVersion.num;
+        }
       } else {
         params.version_num = maxVersion;
       }
     }
 
-    controller.set('crate', crate);
-    controller.set('requestedVersion', requestedVersion);
-
-    // Find version model
-    let versions = await crate.get('versions');
-
-    const version = versions.find(version => version.get('num') === params.version_num);
+    const version = versions.find(version => version.num === params.version_num);
     if (params.version_num && !version) {
-      this.flashMessages.queue(`Version '${params.version_num}' of crate '${crate.get('name')}' does not exist`);
+      this.flashMessages.queue(`Version '${params.version_num}' of crate '${crate.name}' does not exist`);
     }
 
-    return version || versions.find(version => version.get('num') === maxVersion) || versions.objectAt(0);
+    return {
+      crate,
+      requestedVersion,
+      version: version || versions.find(version => version.num === maxVersion) || versions.objectAt(0),
+    };
   },
 
-  setupController(controller) {
+  setupController(controller, model) {
     this._super(...arguments);
     controller.loadReadmeTask.perform();
 
-    let { crate } = controller;
+    let { crate } = model;
     if (!crate.documentation || crate.documentation.startsWith('https://docs.rs/')) {
       controller.loadDocsBuilds.perform();
     }
   },
 
   serialize(model) {
-    let version_num = model.get('num');
+    let version_num = model.num;
     return { version_num };
   },
 });
