@@ -9,7 +9,6 @@ export default Route.extend({
   async model(params) {
     const requestedVersion = params.version_num;
     const crate = this.modelFor('crate');
-    const controller = this.controllerFor(this.routeName);
     const maxVersion = crate.get('max_version');
 
     let versions = await crate.get('versions');
@@ -52,22 +51,23 @@ export default Route.extend({
       }
     }
 
-    controller.set('crate', crate);
-    controller.set('requestedVersion', requestedVersion);
-
     const version = versions.find(version => version.get('num') === params.version_num);
     if (params.version_num && !version) {
       this.flashMessages.queue(`Version '${params.version_num}' of crate '${crate.get('name')}' does not exist`);
     }
 
-    return { version: version || versions.find(version => version.get('num') === maxVersion) || versions.objectAt(0) };
+    return {
+      crate,
+      requestedVersion,
+      version: version || versions.find(version => version.get('num') === maxVersion) || versions.objectAt(0),
+    };
   },
 
-  setupController(controller) {
+  setupController(controller, model) {
     this._super(...arguments);
     controller.loadReadmeTask.perform();
 
-    let { crate } = controller;
+    let { crate } = model;
     if (!crate.documentation || crate.documentation.startsWith('https://docs.rs/')) {
       controller.loadDocsBuilds.perform();
     }

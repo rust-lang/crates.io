@@ -25,11 +25,12 @@ export default Controller.extend({
   downloads: alias('downloadsContext.version_downloads'),
   extraDownloads: alias('downloads.content.meta.extra_downloads'),
 
+  crate: alias('model.crate'),
+  requestedVersion: alias('model.requestedVersion'),
   currentVersion: alias('model.version'),
   crateTomlText: computed('crate.name', 'currentVersion.num', function () {
     return `${this.get('crate.name')} = "${this.get('currentVersion.num')}"`;
   }),
-  requestedVersion: null,
   keywords: alias('crate.keywords'),
   categories: alias('crate.categories'),
   badges: alias('crate.badges'),
