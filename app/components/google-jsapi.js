@@ -10,17 +10,35 @@ export default Component.extend({
   tagName: '',
 
   didInsertElement() {
-    let script = document.createElement('script');
-    script.onload = () => {
-      window.google.load('visualization', '1.0', {
-        packages: ['corechart'],
-        callback() {
-          window.googleChartsLoaded = true;
-          document.dispatchEvent(createEvent('googleChartsLoaded'));
-        },
+    loadJsApi()
+      .then(api => loadCoreChart(api))
+      .then(() => {
+        window.googleChartsLoaded = true;
+        document.dispatchEvent(createEvent('googleChartsLoaded'));
       });
-    };
-    document.body.appendChild(script);
-    script.src = 'https://www.google.com/jsapi';
   },
 });
+
+async function loadScript(src) {
+  await new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload = resolve;
+    script.onerror = reject;
+    document.body.appendChild(script);
+  });
+}
+
+async function loadJsApi() {
+  await loadScript('https://www.google.com/jsapi');
+  return window.google;
+}
+
+async function loadCoreChart(api) {
+  await new Promise(resolve => {
+    api.load('visualization', '1.0', {
+      packages: ['corechart'],
+      callback: resolve,
+    });
+  });
+}
