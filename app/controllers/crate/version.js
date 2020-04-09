@@ -25,7 +25,7 @@ export default Controller.extend({
   downloads: alias('downloadsContext.version_downloads'),
   extraDownloads: alias('downloads.content.meta.extra_downloads'),
 
-  currentVersion: alias('model'),
+  currentVersion: alias('model.version'),
   crateTomlText: computed('crate.name', 'currentVersion.num', function () {
     return `${this.get('crate.name')} = "${this.get('currentVersion.num')}"`;
   }),

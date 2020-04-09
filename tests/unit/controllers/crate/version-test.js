@@ -19,7 +19,7 @@ module('Unit | Controller | crate/version', function (hooks) {
   test('notYankedOrIsOwner is true when conditions fulfilled', function (assert) {
     assert.expect(2);
     let controller = this.owner.lookup('controller:crate/version');
-    controller.model = { yanked: false };
+    controller.model = { version: { yanked: false } };
     controller.crate = { owner_user: A([{ id: userId }]) };
     assert.ok(controller);
     assert.ok(controller.notYankedOrIsOwner);
@@ -28,7 +28,7 @@ module('Unit | Controller | crate/version', function (hooks) {
   test('notYankedOrIsOwner is false when conditions fulfilled', function (assert) {
     assert.expect(2);
     let controller = this.owner.lookup('controller:crate/version');
-    controller.model = { yanked: true };
+    controller.model = { version: { yanked: true } };
     controller.crate = { owner_user: A([{ id: userId }]) };
     assert.ok(controller);
     assert.notOk(controller.notYankedOrIsOwner);

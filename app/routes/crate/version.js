@@ -60,7 +60,7 @@ export default Route.extend({
       this.flashMessages.queue(`Version '${params.version_num}' of crate '${crate.get('name')}' does not exist`);
     }
 
-    return version || versions.find(version => version.get('num') === maxVersion) || versions.objectAt(0);
+    return { version: version || versions.find(version => version.get('num') === maxVersion) || versions.objectAt(0) };
   },
 
   setupController(controller) {
