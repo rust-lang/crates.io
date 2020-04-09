@@ -1,15 +1,22 @@
 import Service from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 
+import { task } from 'ember-concurrency';
+
 export default class GoogleChartsService extends Service {
   @tracked loaded = false;
 
   async load() {
-    let api = await loadJsApi();
-    await loadCoreChart(api);
+    await this.loadTask.perform();
+  }
+
+  @(task(function* () {
+    let api = yield loadJsApi();
+    yield loadCoreChart(api);
     this.loaded = true;
     document.dispatchEvent(createEvent('googleChartsLoaded'));
-  }
+  }).drop())
+  loadTask;
 }
 
 async function loadScript(src) {
