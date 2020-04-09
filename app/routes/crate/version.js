@@ -3,6 +3,10 @@ import { inject as service } from '@ember/service';
 
 import prerelease from 'semver/functions/prerelease';
 
+function isUnstableVersion(version) {
+  return !!prerelease(version);
+}
+
 export default Route.extend({
   flashMessages: service(),
 
@@ -12,8 +16,6 @@ export default Route.extend({
     const maxVersion = crate.get('max_version');
 
     let versions = await crate.get('versions');
-
-    const isUnstableVersion = version => !!prerelease(version);
 
     // Fallback to the crate's last stable version
     // If `max_version` is `0.0.0` then all versions have been yanked
