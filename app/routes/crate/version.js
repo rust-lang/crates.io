@@ -12,41 +12,41 @@ export default Route.extend({
     const controller = this.controllerFor(this.routeName);
     const maxVersion = crate.get('max_version');
 
+    let versions = await crate.get('versions');
+
     const isUnstableVersion = version => !!prerelease(version);
 
     // Fallback to the crate's last stable version
     // If `max_version` is `0.0.0` then all versions have been yanked
     if (!params.version_num && maxVersion !== '0.0.0') {
       if (isUnstableVersion(maxVersion)) {
-        crate.get('versions').then(versions => {
-          const latestStableVersion = versions.find(version => {
+        const latestStableVersion = versions.find(version => {
+          // Find the latest version that is stable AND not-yanked.
+          if (!isUnstableVersion(version.get('num')) && !version.get('yanked')) {
+            return version;
+          }
+        });
+
+        if (latestStableVersion == null) {
+          // Cannot find any version that is stable AND not-yanked.
+          // The fact that "maxVersion" itself cannot be found means that
+          // we have to fall back to the latest one that is unstable....
+          const latestUnyankedVersion = versions.find(version => {
             // Find the latest version that is stable AND not-yanked.
-            if (!isUnstableVersion(version.get('num')) && !version.get('yanked')) {
+            if (!version.get('yanked')) {
               return version;
             }
           });
 
           if (latestStableVersion == null) {
-            // Cannot find any version that is stable AND not-yanked.
-            // The fact that "maxVersion" itself cannot be found means that
-            // we have to fall back to the latest one that is unstable....
-            const latestUnyankedVersion = versions.find(version => {
-              // Find the latest version that is stable AND not-yanked.
-              if (!version.get('yanked')) {
-                return version;
-              }
-            });
-
-            if (latestStableVersion == null) {
-              // There's not even any unyanked version...
-              params.version_num = maxVersion;
-            } else {
-              params.version_num = latestUnyankedVersion;
-            }
+            // There's not even any unyanked version...
+            params.version_num = maxVersion;
           } else {
-            params.version_num = latestStableVersion.get('num');
+            params.version_num = latestUnyankedVersion;
           }
-        });
+        } else {
+          params.version_num = latestStableVersion.get('num');
+        }
       } else {
         params.version_num = maxVersion;
       }
@@ -54,9 +54,6 @@ export default Route.extend({
 
     controller.set('crate', crate);
     controller.set('requestedVersion', requestedVersion);
-
-    // Find version model
-    let versions = await crate.get('versions');
 
     const version = versions.find(version => version.get('num') === params.version_num);
     if (params.version_num && !version) {
