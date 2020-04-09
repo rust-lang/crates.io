@@ -3,6 +3,8 @@ import { inject as service } from '@ember/service';
 
 import { task } from 'ember-concurrency';
 
+import { ignoreCancellation } from '../utils/concurrency';
+
 // Colors by http://colorbrewer2.org/#type=diverging&scheme=RdBu&n=10
 const COLORS = ['#67001f', '#b2182b', '#d6604d', '#f4a582', '#92c5de', '#4393c3', '#2166ac', '#053061'];
 
@@ -14,7 +16,7 @@ export default Component.extend({
   didInsertElement() {
     this._super(...arguments);
 
-    this.loadTask.perform();
+    this.loadTask.perform().catch(ignoreCancellation);
 
     this.resizeHandler = () => this.rerender();
     window.addEventListener('resize', this.resizeHandler, false);

@@ -3,12 +3,14 @@ import Service from '@ember/service';
 
 import { task } from 'ember-concurrency';
 
+import { ignoreCancellation } from '../utils/concurrency';
+
 export default class GoogleChartsService extends Service {
   @alias('loadTask.lastSuccessful.value') visualization;
   @bool('visualization') loaded;
 
   async load() {
-    await this.loadTask.perform();
+    await this.loadTask.perform().catch(ignoreCancellation);
   }
 
   @(task(function* () {
