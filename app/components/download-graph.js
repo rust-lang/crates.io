@@ -1,9 +1,12 @@
 import Component from '@ember/component';
+import { inject as service } from '@ember/service';
 
 // Colors by http://colorbrewer2.org/#type=diverging&scheme=RdBu&n=10
 const COLORS = ['#67001f', '#b2182b', '#d6604d', '#f4a582', '#92c5de', '#4393c3', '#2166ac', '#053061'];
 
 export default Component.extend({
+  googleCharts: service(),
+
   resizeHandler: undefined,
 
   didInsertElement() {
@@ -69,7 +72,7 @@ export default Component.extend({
       }
     }
 
-    let show = data && window.google && window.googleChartsLoaded;
+    let show = data && this.googleCharts.loaded;
     this.element.style.display = show ? '' : 'none';
     if (!show) {
       return;

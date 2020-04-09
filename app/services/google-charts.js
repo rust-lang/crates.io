@@ -1,10 +1,13 @@
 import Service from '@ember/service';
+import { tracked } from '@glimmer/tracking';
 
 export default class GoogleChartsService extends Service {
+  @tracked loaded = false;
+
   async load() {
     let api = await loadJsApi();
     await loadCoreChart(api);
-    window.googleChartsLoaded = true;
+    this.loaded = true;
     document.dispatchEvent(createEvent('googleChartsLoaded'));
   }
 }
