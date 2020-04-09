@@ -1,13 +1,11 @@
 import Service from '@ember/service';
 
 export default class GoogleChartsService extends Service {
-  load() {
-    return loadJsApi()
-      .then(api => loadCoreChart(api))
-      .then(() => {
-        window.googleChartsLoaded = true;
-        document.dispatchEvent(createEvent('googleChartsLoaded'));
-      });
+  async load() {
+    let api = await loadJsApi();
+    await loadCoreChart(api);
+    window.googleChartsLoaded = true;
+    document.dispatchEvent(createEvent('googleChartsLoaded'));
   }
 }
 
