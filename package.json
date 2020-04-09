@@ -88,6 +88,7 @@
     "ember-svg-jar": "^2.2.3",
     "ember-template-lint": "^2.4.1",
     "ember-test-selectors": "^4.0.0",
+    "ember-truth-helpers": "^2.1.0",
     "ember-web-app": "^4.0.0",
     "ember-window-mock": "^0.6.0",
     "eslint": "^6.8.0",
