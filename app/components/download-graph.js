@@ -72,32 +72,34 @@ export default Component.extend({
       }
     }
 
-    let show = data && this.googleCharts.loaded;
+    let { loaded, visualization } = this.googleCharts;
+
+    let show = data && loaded;
     this.element.style.display = show ? '' : 'none';
     if (!show) {
       return;
     }
 
-    let myData = window.google.visualization.arrayToDataTable(data);
+    let myData = visualization.arrayToDataTable(data);
 
-    let dateFmt = new window.google.visualization.DateFormat({
+    let dateFmt = new visualization.DateFormat({
       pattern: 'LLL d, yyyy',
     });
     dateFmt.format(myData, 0);
 
     // Create a formatter to use for daily download numbers
-    let numberFormatWhole = new window.google.visualization.NumberFormat({
+    let numberFormatWhole = new visualization.NumberFormat({
       pattern: '#,##0',
     });
 
     // Create a formatter to use for 7-day average numbers
-    let numberFormatDecimal = new window.google.visualization.NumberFormat({
+    let numberFormatDecimal = new visualization.NumberFormat({
       pattern: '#,##0.0',
     });
 
     // use a DataView to calculate an x-day moving average
     let days = 7;
-    let view = new window.google.visualization.DataView(myData);
+    let view = new visualization.DataView(myData);
     let moving_avg_func_for_col = function (col) {
       return function (dt, row) {
         // For the last rows (the *first* days, remember, the dataset is
@@ -152,7 +154,7 @@ export default Component.extend({
     });
     view.setColumns(columns);
 
-    let chart = new window.google.visualization.ComboChart(this.element);
+    let chart = new visualization.ComboChart(this.element);
     chart.draw(view, {
       chartArea: { left: 85, width: '77%', height: '80%' },
       hAxis: {

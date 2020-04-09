@@ -1,10 +1,11 @@
-import { bool } from '@ember/object/computed';
+import { alias, bool } from '@ember/object/computed';
 import Service from '@ember/service';
 
 import { task } from 'ember-concurrency';
 
 export default class GoogleChartsService extends Service {
-  @bool('loadTask.lastSuccessful') loaded;
+  @alias('loadTask.lastSuccessful.value') visualization;
+  @bool('visualization') loaded;
 
   async load() {
     await this.loadTask.perform();
@@ -14,6 +15,7 @@ export default class GoogleChartsService extends Service {
     let api = yield loadJsApi();
     yield loadCoreChart(api);
     document.dispatchEvent(createEvent('googleChartsLoaded'));
+    return api.visualization;
   }).drop())
   loadTask;
 }
