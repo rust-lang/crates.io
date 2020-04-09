@@ -13,7 +13,7 @@ export default Route.extend({
   async model(params) {
     const requestedVersion = params.version_num;
     const crate = this.modelFor('crate');
-    const maxVersion = crate.get('max_version');
+    const maxVersion = crate.max_version;
 
     let versions = await crate.get('versions');
 
@@ -23,7 +23,7 @@ export default Route.extend({
       if (isUnstableVersion(maxVersion)) {
         const latestStableVersion = versions.find(version => {
           // Find the latest version that is stable AND not-yanked.
-          if (!isUnstableVersion(version.get('num')) && !version.get('yanked')) {
+          if (!isUnstableVersion(version.num) && !version.yanked) {
             return version;
           }
         });
@@ -34,7 +34,7 @@ export default Route.extend({
           // we have to fall back to the latest one that is unstable....
           const latestUnyankedVersion = versions.find(version => {
             // Find the latest version that is stable AND not-yanked.
-            if (!version.get('yanked')) {
+            if (!version.yanked) {
               return version;
             }
           });
@@ -46,22 +46,22 @@ export default Route.extend({
             params.version_num = latestUnyankedVersion;
           }
         } else {
-          params.version_num = latestStableVersion.get('num');
+          params.version_num = latestStableVersion.num;
         }
       } else {
         params.version_num = maxVersion;
       }
     }
 
-    const version = versions.find(version => version.get('num') === params.version_num);
+    const version = versions.find(version => version.num === params.version_num);
     if (params.version_num && !version) {
-      this.flashMessages.queue(`Version '${params.version_num}' of crate '${crate.get('name')}' does not exist`);
+      this.flashMessages.queue(`Version '${params.version_num}' of crate '${crate.name}' does not exist`);
     }
 
     return {
       crate,
       requestedVersion,
-      version: version || versions.find(version => version.get('num') === maxVersion) || versions.objectAt(0),
+      version: version || versions.find(version => version.num === maxVersion) || versions.objectAt(0),
     };
   },
 
@@ -76,7 +76,7 @@ export default Route.extend({
   },
 
   serialize(model) {
-    let version_num = model.get('num');
+    let version_num = model.num;
     return { version_num };
   },
 });
