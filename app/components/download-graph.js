@@ -1,6 +1,8 @@
 import Component from '@ember/component';
 import { inject as service } from '@ember/service';
 
+import { task } from 'ember-concurrency';
+
 // Colors by http://colorbrewer2.org/#type=diverging&scheme=RdBu&n=10
 const COLORS = ['#67001f', '#b2182b', '#d6604d', '#f4a582', '#92c5de', '#4393c3', '#2166ac', '#053061'];
 
@@ -12,15 +14,22 @@ export default Component.extend({
   didInsertElement() {
     this._super(...arguments);
 
+    this.loadTask.perform();
+
     this.resizeHandler = () => this.rerender();
     window.addEventListener('resize', this.resizeHandler, false);
-    document.addEventListener('googleChartsLoaded', this.resizeHandler, false);
   },
 
   willDestroyElement() {
     window.removeEventListener('resize', this.resizeHandler);
-    document.removeEventListener('googleChartsLoaded', this.resizeHandler);
   },
+
+  loadTask: task(function* () {
+    if (!this.googleCharts.loaded) {
+      yield this.googleCharts.load();
+      this.rerender();
+    }
+  }),
 
   didRender() {
     this._super(...arguments);

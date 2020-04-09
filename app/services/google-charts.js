@@ -14,9 +14,8 @@ export default class GoogleChartsService extends Service {
   @(task(function* () {
     let api = yield loadJsApi();
     yield loadCoreChart(api);
-    document.dispatchEvent(createEvent('googleChartsLoaded'));
     return api.visualization;
-  }).drop())
+  }).keepLatest())
   loadTask;
 }
 
@@ -44,10 +43,4 @@ async function loadCoreChart(api) {
       callback: resolve,
     });
   });
-}
-
-function createEvent(name) {
-  let event = document.createEvent('Event');
-  event.initEvent(name, true, true);
-  return event;
 }
