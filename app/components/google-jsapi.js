@@ -30,7 +30,9 @@ async function loadScript(src) {
 }
 
 async function loadJsApi() {
-  await loadScript('https://www.google.com/jsapi');
+  if (!window.google) {
+    await loadScript('https://www.google.com/jsapi');
+  }
   return window.google;
 }
 
