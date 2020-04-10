@@ -43,11 +43,26 @@ export default Model.extend({
   follow: memberAction({ type: 'PUT', path: 'follow' }),
   unfollow: memberAction({ type: 'DELETE', path: 'follow' }),
 
-  inviteOwner(username) {
-    return this.store.adapterFor('crate').inviteOwner(this.id, username);
-  },
+  inviteOwner: memberAction({
+    type: 'PUT',
+    path: 'owners',
+    before(username) {
+      return { owners: [username] };
+    },
+    after(response) {
+      if (response.ok) {
+        return response;
+      } else {
+        throw response;
+      }
+    },
+  }),
 
-  removeOwner(username) {
-    return this.store.adapterFor('crate').removeOwner(this.id, username);
-  },
+  removeOwner: memberAction({
+    type: 'DELETE',
+    path: 'owners',
+    before(username) {
+      return { owners: [username] };
+    },
+  }),
 });
