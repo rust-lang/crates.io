@@ -10,6 +10,8 @@ export default Route.extend({
     } catch (e) {
       if (e.errors?.some(e => e.detail === 'Not Found')) {
         this.flashMessages.show(`Crate '${params.crate_id}' does not exist`);
+      } else {
+        throw e;
       }
     }
   },
