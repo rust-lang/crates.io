@@ -65,39 +65,9 @@ export default Controller.extend({
   anyKeywords: gt('keywords.length', 0),
   anyCategories: gt('categories.length', 0),
 
-  currentDependencies: computed('currentVersion.dependencies', function () {
-    let deps = this.get('currentVersion.dependencies');
-
-    if (deps === null) {
-      return [];
-    }
-
-    return PromiseArray.create({
-      promise: deps.then(deps => deps.filterBy('kind', 'normal').uniqBy('crate_id')),
-    });
-  }),
-
-  currentBuildDependencies: computed('currentVersion.dependencies', function () {
-    let deps = this.get('currentVersion.dependencies');
-
-    if (deps === null) {
-      return [];
-    }
-
-    return PromiseArray.create({
-      promise: deps.then(deps => deps.filterBy('kind', 'build').uniqBy('crate_id')),
-    });
-  }),
-
-  currentDevDependencies: computed('currentVersion.dependencies', function () {
-    let deps = this.get('currentVersion.dependencies');
-    if (deps === null) {
-      return [];
-    }
-    return PromiseArray.create({
-      promise: deps.then(deps => deps.filterBy('kind', 'dev').uniqBy('crate_id')),
-    });
-  }),
+  currentDependencies: alias('loadDepsTask.last.value.normal'),
+  currentBuildDependencies: alias('loadDepsTask.last.value.build'),
+  currentDevDependencies: alias('loadDepsTask.last.value.dev'),
 
   downloadData: computed('downloads', 'extraDownloads', 'requestedVersion', function () {
     let downloads = this.downloads;
@@ -160,6 +130,16 @@ export default Controller.extend({
 
     return data;
   }),
+
+  loadDepsTask: task(function* () {
+    let dependencies = yield this.currentVersion.get('dependencies');
+
+    let normal = dependencies.filterBy('kind', 'normal').uniqBy('crate_id');
+    let build = dependencies.filterBy('kind', 'build').uniqBy('crate_id');
+    let dev = dependencies.filterBy('kind', 'dev').uniqBy('crate_id');
+
+    return { normal, build, dev };
+  }).drop(),
 
   loadReadmeTask: task(function* () {
     if (this.currentVersion.get('readme_path')) {

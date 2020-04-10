@@ -192,7 +192,7 @@
             {{#each this.currentDependencies as |dep|}}
               <li><LinkToDep @dep={{dep}} /></li>
             {{else}}
-              {{#if (is-pending this.currentDependencies)}}
+              {{#if this.loadDepsTask.isRunning}}
                 <li>Loading…</li>
               {{else}}
                 <li>None</li>
