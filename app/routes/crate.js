@@ -8,7 +8,7 @@ export default Route.extend({
     try {
       return await this.store.find('crate', params.crate_id);
     } catch (e) {
-      if (e.errors.some(e => e.detail === 'Not Found')) {
+      if (e.errors?.some(e => e.detail === 'Not Found')) {
         this.flashMessages.show(`Crate '${params.crate_id}' does not exist`);
       }
     }
