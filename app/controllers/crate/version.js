@@ -127,20 +127,24 @@ export default Controller.extend({
     return data;
   }),
 
-  loadReadmeTask: task(function* () {
-    try {
-      this.crate.set('readme', yield this.currentVersion.loadReadmeTask.perform());
+  readme: alias('loadReadmeTask.last.value'),
 
-      if (typeof document !== 'undefined') {
-        setTimeout(() => {
-          let e = document.createEvent('CustomEvent');
-          e.initCustomEvent('hashchange', true, true);
-          window.dispatchEvent(e);
-        });
-      }
-    } catch (error) {
-      this.crate.set('readme', null);
+  loadReadmeTask: task(function* () {
+    let version = this.currentVersion;
+
+    let readme = version.loadReadmeTask.lastSuccessful
+      ? version.loadReadmeTask.lastSuccessful.value
+      : yield version.loadReadmeTask.perform();
+
+    if (typeof document !== 'undefined') {
+      setTimeout(() => {
+        let e = document.createEvent('CustomEvent');
+        e.initCustomEvent('hashchange', true, true);
+        window.dispatchEvent(e);
+      });
     }
+
+    return readme;
   }),
 
   documentationLink: computed(
