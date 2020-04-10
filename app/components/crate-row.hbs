@@ -9,7 +9,7 @@
       >
         {{ @crate.name }}
       </LinkTo>
-      <CrateTomlCopy @copyText={{this.crateTomlText}} @inline={{true}} />
+      <CrateTomlCopy @copyText='{{@crate.name}} = "{{@crate.max_version}}"' @inline={{true}} />
       <CrateBadge @crate={{@crate}} local-class="version-badge" />
       {{#each @crate.annotated_badges as |badge|}}
         {{#let (component badge.component_name) as |Badge|}}
