@@ -39,4 +39,15 @@ export default Model.extend({
 
     return { normal, build, dev };
   }).keepLatest(),
+
+  loadReadmeTask: task(function* () {
+    if (this.readme_path) {
+      let response = yield fetch(this.readme_path);
+      if (!response.ok) {
+        throw new Error(`README request for ${this.crateName} v${this.num} failed`);
+      }
+
+      return yield response.text();
+    }
+  }).keepLatest(),
 });

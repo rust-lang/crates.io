@@ -128,25 +128,18 @@ export default Controller.extend({
   }),
 
   loadReadmeTask: task(function* () {
-    if (this.currentVersion.get('readme_path')) {
-      try {
-        let r = yield fetch(this.currentVersion.get('readme_path'));
-        if (r.ok) {
-          this.crate.set('readme', yield r.text());
+    try {
+      this.crate.set('readme', yield this.currentVersion.loadReadmeTask.perform());
 
-          if (typeof document !== 'undefined') {
-            setTimeout(() => {
-              let e = document.createEvent('CustomEvent');
-              e.initCustomEvent('hashchange', true, true);
-              window.dispatchEvent(e);
-            });
-          }
-        } else {
-          this.crate.set('readme', null);
-        }
-      } catch (error) {
-        this.crate.set('readme', null);
+      if (typeof document !== 'undefined') {
+        setTimeout(() => {
+          let e = document.createEvent('CustomEvent');
+          e.initCustomEvent('hashchange', true, true);
+          window.dispatchEvent(e);
+        });
       }
+    } catch (error) {
+      this.crate.set('readme', null);
     }
   }),
 
