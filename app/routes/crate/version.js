@@ -62,7 +62,9 @@ export default Route.extend({
     this._super(...arguments);
 
     model.version.loadDepsTask.perform();
-    controller.loadReadmeTask.perform();
+    controller.loadReadmeTask.perform().catch(() => {
+      // ignored
+    });
 
     let { crate } = model;
     if (!crate.documentation || crate.documentation.startsWith('https://docs.rs/')) {

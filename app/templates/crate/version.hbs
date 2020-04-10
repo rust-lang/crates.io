@@ -56,9 +56,9 @@
           <CrateTomlCopy @copyText={{this.crateTomlText}} />
         {{/if}}
       </div>
-      {{#if this.crate.readme}}
+      {{#if this.readme}}
         <section local-class="crate-readme" aria-label="Readme" {{highlight-syntax selector="pre > code"}}>
-          {{html-safe this.crate.readme}}
+          {{html-safe this.readme}}
         </section>
       {{else}}
         {{#if this.crate.description}}

@@ -125,27 +125,24 @@ export default Controller.extend({
     return data;
   }),
 
-  loadReadmeTask: task(function* () {
-    if (this.currentVersion.get('readme_path')) {
-      try {
-        let r = yield fetch(this.currentVersion.get('readme_path'));
-        if (r.ok) {
-          this.crate.set('readme', yield r.text());
+  readme: alias('loadReadmeTask.last.value'),
 
-          if (typeof document !== 'undefined') {
-            setTimeout(() => {
-              let e = document.createEvent('CustomEvent');
-              e.initCustomEvent('hashchange', true, true);
-              window.dispatchEvent(e);
-            });
-          }
-        } else {
-          this.crate.set('readme', null);
-        }
-      } catch (error) {
-        this.crate.set('readme', null);
-      }
+  loadReadmeTask: task(function* () {
+    let version = this.currentVersion;
+
+    let readme = version.loadReadmeTask.lastSuccessful
+      ? version.loadReadmeTask.lastSuccessful.value
+      : yield version.loadReadmeTask.perform();
+
+    if (typeof document !== 'undefined') {
+      setTimeout(() => {
+        let e = document.createEvent('CustomEvent');
+        e.initCustomEvent('hashchange', true, true);
+        window.dispatchEvent(e);
+      });
     }
+
+    return readme;
   }),
 
   documentationLink: computed(
