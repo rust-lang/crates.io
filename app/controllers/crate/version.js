@@ -17,8 +17,6 @@ const PromiseArray = ArrayProxy.extend(PromiseProxyMixin);
 export default Controller.extend({
   session: service(),
 
-  isDownloading: false,
-
   downloadsContext: computed('requestedVersion', 'currentVersion', 'crate', function () {
     return this.requestedVersion ? this.currentVersion : this.crate;
   }),
