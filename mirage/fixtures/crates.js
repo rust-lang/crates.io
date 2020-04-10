@@ -355,23 +355,27 @@ export default [
     name: 'libc',
     downloads: 5169,
     recent_downloads: 69,
+    updated_at: '2015-04-21T00:15:49Z',
   },
   {
     id: 'nanomsg-sys',
     name: 'nanomsg-sys',
     downloads: 5169,
     recent_downloads: 69,
+    updated_at: '2015-04-21T00:15:49Z',
   },
   {
     id: 'mock-build-deps',
     name: 'mock-build-deps',
     downloads: 5169,
     recent_downloads: 69,
+    updated_at: '2015-04-21T00:15:49Z',
   },
   {
     id: 'mock-dev-deps',
     name: 'mock-dev-deps',
     downloads: 5169,
     recent_downloads: 69,
+    updated_at: '2015-04-21T00:15:49Z',
   },
 ];
