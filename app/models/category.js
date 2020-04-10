@@ -1,14 +1,14 @@
 import Model, { attr, hasMany } from '@ember-data/model';
 
-export default Model.extend({
-  category: attr('string'),
-  slug: attr('string'),
-  description: attr('string'),
-  created_at: attr('date'),
-  crates_cnt: attr('number'),
+export default class Category extends Model {
+  @attr('string') category;
+  @attr('string') slug;
+  @attr('string') description;
+  @attr('date') created_at;
+  @attr('number') crates_cnt;
 
-  subcategories: attr(),
-  parent_categories: attr(),
+  @attr() subcategories;
+  @attr() parent_categories;
 
-  crates: hasMany('crate', { async: true }),
-});
+  @hasMany('crate', { async: true }) crates;
+}

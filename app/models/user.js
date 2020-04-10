@@ -2,15 +2,15 @@ import Model, { attr } from '@ember-data/model';
 
 import { memberAction } from 'ember-api-actions';
 
-export default Model.extend({
-  email: attr('string'),
-  email_verified: attr('boolean'),
-  email_verification_sent: attr('boolean'),
-  name: attr('string'),
-  login: attr('string'),
-  avatar: attr('string'),
-  url: attr('string'),
-  kind: attr('string'),
+export default class User extends Model {
+  @attr('string') email;
+  @attr('boolean') email_verified;
+  @attr('boolean') email_verification_sent;
+  @attr('string') name;
+  @attr('string') login;
+  @attr('string') avatar;
+  @attr('string') url;
+  @attr('string') kind;
 
-  stats: memberAction({ type: 'GET', path: 'stats' }),
-});
+  stats = memberAction({ type: 'GET', path: 'stats' });
+}

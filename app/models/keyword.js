@@ -1,9 +1,9 @@
 import Model, { attr, hasMany } from '@ember-data/model';
 
-export default Model.extend({
-  keyword: attr('string'),
-  created_at: attr('date'),
-  crates_cnt: attr('number'),
+export default class Keyword extends Model {
+  @attr('string') keyword;
+  @attr('date') created_at;
+  @attr('number') crates_cnt;
 
-  crates: hasMany('crate', { async: true }),
-});
+  @hasMany('crate', { async: true }) crates;
+}
