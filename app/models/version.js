@@ -1,5 +1,6 @@
 import Model, { attr, belongsTo, hasMany } from '@ember-data/model';
 import { computed } from '@ember/object';
+import { alias } from '@ember/object/computed';
 
 import { task } from 'ember-concurrency';
 
@@ -24,6 +25,10 @@ export default Model.extend({
     return this.belongsTo('crate').id();
   }),
   crate_size: attr('number'),
+
+  normalDependencies: alias('loadDepsTask.last.value.normal'),
+  buildDependencies: alias('loadDepsTask.last.value.build'),
+  devDependencies: alias('loadDepsTask.last.value.dev'),
 
   loadDepsTask: task(function* () {
     let dependencies = yield this.get('dependencies');

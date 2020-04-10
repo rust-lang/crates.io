@@ -65,10 +65,6 @@ export default Controller.extend({
   anyKeywords: gt('keywords.length', 0),
   anyCategories: gt('categories.length', 0),
 
-  currentDependencies: alias('currentVersion.loadDepsTask.last.value.normal'),
-  currentBuildDependencies: alias('currentVersion.loadDepsTask.last.value.build'),
-  currentDevDependencies: alias('currentVersion.loadDepsTask.last.value.dev'),
-
   downloadData: computed('downloads', 'extraDownloads', 'requestedVersion', function () {
     let downloads = this.downloads;
     if (!downloads) {
