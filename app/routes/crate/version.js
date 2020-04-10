@@ -60,6 +60,8 @@ export default Route.extend({
 
   setupController(controller, model) {
     this._super(...arguments);
+
+    model.version.loadDepsTask.perform();
     controller.loadReadmeTask.perform();
 
     let { crate } = model;

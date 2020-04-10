@@ -189,10 +189,10 @@
         <div>
           <h3>Dependencies</h3>
           <ul data-test-dependencies>
-            {{#each this.currentDependencies as |dep|}}
+            {{#each this.currentVersion.normalDependencies as |dep|}}
               <li><LinkToDep @dep={{dep}} /></li>
             {{else}}
-              {{#if (is-pending this.currentDependencies)}}
+              {{#if this.currentVersion.loadDepsTask.isRunning}}
                 <li>Loading…</li>
               {{else}}
                 <li>None</li>
@@ -201,22 +201,22 @@
           </ul>
         </div>
 
-        {{#if this.currentBuildDependencies}}
+        {{#if this.currentVersion.buildDependencies}}
           <div>
             <h3>Build-Dependencies</h3>
             <ul data-test-build-dependencies>
-              {{#each this.currentBuildDependencies as |dep|}}
+              {{#each this.currentVersion.buildDependencies as |dep|}}
                 <li><LinkToDep @dep={{dep}} /></li>
               {{/each}}
             </ul>
           </div>
         {{/if}}
 
-        {{#if this.currentDevDependencies}}
+        {{#if this.currentVersion.devDependencies}}
           <div>
             <h3>Dev-Dependencies</h3>
             <ul data-test-dev-dependencies>
-              {{#each this.currentDevDependencies as |dep|}}
+              {{#each this.currentVersion.devDependencies as |dep|}}
                 <li><LinkToDep @dep={{dep}} /></li>
               {{/each}}
             </ul>

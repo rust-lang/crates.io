@@ -65,40 +65,6 @@ export default Controller.extend({
   anyKeywords: gt('keywords.length', 0),
   anyCategories: gt('categories.length', 0),
 
-  currentDependencies: computed('currentVersion.dependencies', function () {
-    let deps = this.get('currentVersion.dependencies');
-
-    if (deps === null) {
-      return [];
-    }
-
-    return PromiseArray.create({
-      promise: deps.then(deps => deps.filterBy('kind', 'normal').uniqBy('crate_id')),
-    });
-  }),
-
-  currentBuildDependencies: computed('currentVersion.dependencies', function () {
-    let deps = this.get('currentVersion.dependencies');
-
-    if (deps === null) {
-      return [];
-    }
-
-    return PromiseArray.create({
-      promise: deps.then(deps => deps.filterBy('kind', 'build').uniqBy('crate_id')),
-    });
-  }),
-
-  currentDevDependencies: computed('currentVersion.dependencies', function () {
-    let deps = this.get('currentVersion.dependencies');
-    if (deps === null) {
-      return [];
-    }
-    return PromiseArray.create({
-      promise: deps.then(deps => deps.filterBy('kind', 'dev').uniqBy('crate_id')),
-    });
-  }),
-
   downloadData: computed('downloads', 'extraDownloads', 'requestedVersion', function () {
     let downloads = this.downloads;
     if (!downloads) {
