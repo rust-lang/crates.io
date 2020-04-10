@@ -48,6 +48,7 @@
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "broccoli-asset-rev": "^3.0.0",
     "ember-a11y-testing": "^2.0.0",
+    "ember-api-actions": "^0.2.9",
     "ember-auto-import": "^1.5.3",
     "ember-cli": "~3.17.0",
     "ember-cli-app-version": "^3.2.0",
