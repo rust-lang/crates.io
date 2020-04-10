@@ -1,6 +1,8 @@
 import Model, { attr, belongsTo, hasMany } from '@ember-data/model';
 import { computed } from '@ember/object';
 
+import { task } from 'ember-concurrency';
+
 export default Model.extend({
   num: attr('string'),
   dl_path: attr('string'),
@@ -22,4 +24,14 @@ export default Model.extend({
     return this.belongsTo('crate').id();
   }),
   crate_size: attr('number'),
+
+  loadDepsTask: task(function* () {
+    let dependencies = yield this.get('dependencies');
+
+    let normal = dependencies.filterBy('kind', 'normal').uniqBy('crate_id');
+    let build = dependencies.filterBy('kind', 'build').uniqBy('crate_id');
+    let dev = dependencies.filterBy('kind', 'dev').uniqBy('crate_id');
+
+    return { normal, build, dev };
+  }).keepLatest(),
 });
