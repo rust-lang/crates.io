@@ -3,52 +3,52 @@
     <div>
       <LinkTo
         @route="crate"
-        @model={{this.crate.id}}
+        @model={{@crate.id}}
         local-class="name"
         data-test-crate-link
       >
-        {{ this.crate.name }}
+        {{ @crate.name }}
       </LinkTo>
-      <CrateTomlCopy @copyText={{this.crateTomlText}} @inline={{true}} />
-      <CrateBadge @crate={{this.crate}} local-class="version-badge" />
-      {{#each this.crate.annotated_badges as |badge|}}
+      <CrateTomlCopy @copyText='{{@crate.name}} = "{{@crate.max_version}}"' @inline={{true}} />
+      <CrateBadge @crate={{@crate}} local-class="version-badge" />
+      {{#each @crate.annotated_badges as |badge|}}
         {{#let (component badge.component_name) as |Badge|}}
           <Badge @badge={{badge}} data-test-badge={{badge.badge_type}} />
         {{/let}}
       {{/each}}
     </div>
     <div local-class="description" data-test-description>
-      {{ truncate-text this.crate.description }}
+      {{ truncate-text @crate.description }}
     </div>
   </div>
   <div local-class='stats'>
     <div local-class='downloads' data-test-downloads>
       {{svg-jar "download"}}
-      <span><abbr title="Total number of downloads">All-Time:</abbr> {{ format-num this.crate.downloads }}</span>
+      <span><abbr title="Total number of downloads">All-Time:</abbr> {{ format-num @crate.downloads }}</span>
     </div>
     <div local-class="recent-downloads" data-test-recent-downloads>
       {{svg-jar "download"}}
-      <span><abbr title="Downloads in the last 90 days">Recent:</abbr> {{ format-num this.crate.recent_downloads }}</span>
+      <span><abbr title="Downloads in the last 90 days">Recent:</abbr> {{ format-num @crate.recent_downloads }}</span>
     </div>
     <div local-class="updated-at" >
       {{svg-jar "latest-updates" height="32" width="32"}}
       <span>
         <abbr title="The last time crate was updated">Updated:</abbr>
-        <time title="Last updated: {{ this.crate.updated_at }}" datetime="{{ moment-format this.crate.updated_at 'YYYY-MM-DDTHH:mm:ssZ' }}" data-test-updated-at>
-          {{ moment-from-now this.crate.updated_at }}
+        <time title="Last updated: {{ @crate.updated_at }}" datetime="{{ moment-format @crate.updated_at 'YYYY-MM-DDTHH:mm:ssZ' }}" data-test-updated-at>
+          {{ moment-from-now @crate.updated_at }}
         </time>
       </span>
     </div>
   </div>
   <ul local-class="quick-links">
-    {{#if this.crate.homepage}}
-      <li><a href="{{this.crate.homepage}}">Homepage</a></li>
+    {{#if @crate.homepage}}
+      <li><a href="{{@crate.homepage}}">Homepage</a></li>
     {{/if}}
-    {{#if this.crate.documentation}}
-      <li><a href="{{this.crate.documentation}}">Documentation</a></li>
+    {{#if @crate.documentation}}
+      <li><a href="{{@crate.documentation}}">Documentation</a></li>
     {{/if}}
-    {{#if this.crate.repository}}
-      <li><a href="{{this.crate.repository}}">Repository</a></li>
+    {{#if @crate.repository}}
+      <li><a href="{{@crate.repository}}">Repository</a></li>
     {{/if}}
   </ul>
 
