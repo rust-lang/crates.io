@@ -1,5 +1,7 @@
 import Model, { attr } from '@ember-data/model';
 
+import { memberAction } from 'ember-api-actions';
+
 export default Model.extend({
   email: attr('string'),
   email_verified: attr('boolean'),
@@ -10,7 +12,5 @@ export default Model.extend({
   url: attr('string'),
   kind: attr('string'),
 
-  stats() {
-    return this.store.adapterFor('user').stats(this.id);
-  },
+  stats: memberAction({ type: 'GET', path: 'stats' }),
 });
