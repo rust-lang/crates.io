@@ -1,6 +1,8 @@
 import Model, { attr, hasMany } from '@ember-data/model';
 import { map, sort } from '@ember/object/computed';
 
+import { memberAction } from 'ember-api-actions';
+
 export default Model.extend({
   name: attr('string'),
   downloads: attr('number'),
@@ -38,9 +40,8 @@ export default Model.extend({
   categories: hasMany('categories', { async: true }),
   reverse_dependencies: hasMany('dependency', { async: true }),
 
-  follow() {
-    return this.store.adapterFor('crate').follow(this.id);
-  },
+  follow: memberAction({ type: 'PUT', path: 'follow' }),
+  unfollow: memberAction({ type: 'DELETE', path: 'follow' }),
 
   inviteOwner(username) {
     return this.store.adapterFor('crate').inviteOwner(this.id, username);
@@ -48,9 +49,5 @@ export default Model.extend({
 
   removeOwner(username) {
     return this.store.adapterFor('crate').removeOwner(this.id, username);
-  },
-
-  unfollow() {
-    return this.store.adapterFor('crate').unfollow(this.id);
   },
 });

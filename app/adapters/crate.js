@@ -1,10 +1,6 @@
 import ApplicationAdapter from './application';
 
 export default ApplicationAdapter.extend({
-  follow(id) {
-    return this.ajax(this.urlForFollowAction(id), 'PUT');
-  },
-
   async inviteOwner(id, username) {
     let result = await this.ajax(this.urlForOwnerAction(id), 'PUT', {
       data: {
@@ -25,14 +21,6 @@ export default ApplicationAdapter.extend({
         owners: [username],
       },
     });
-  },
-
-  unfollow(id) {
-    return this.ajax(this.urlForFollowAction(id), 'DELETE');
-  },
-
-  urlForFollowAction(id) {
-    return `${this.buildURL('crate', id)}/follow`;
   },
 
   urlForOwnerAction(id) {
