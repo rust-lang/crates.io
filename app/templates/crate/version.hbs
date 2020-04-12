@@ -70,7 +70,7 @@
       {{/if}}
     {{/if}}
   </div>
-  {{#if this.notYankedOrIsOwner}}
+  {{#if (or this.isOwner (not this.currentVersion.yanked))}}
     <section local-class='authorship' aria-label="Crate metadata">
       <div local-class='top'>
         <div>
