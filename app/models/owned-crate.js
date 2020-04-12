@@ -1,6 +1,6 @@
 import Model, { attr } from '@ember-data/model';
 
-export default Model.extend({
-  name: attr('string'),
-  email_notifications: attr('boolean'),
-});
+export default class OwnedCrate extends Model {
+  @attr('string') name;
+  @attr('boolean') email_notifications;
+}

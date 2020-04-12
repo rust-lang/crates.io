@@ -1,6 +1,6 @@
 import Model, { attr } from '@ember-data/model';
 
-export default Model.extend({
-  slug: attr('string'),
-  description: attr('string'),
-});
+export default class CategorySlug extends Model {
+  @attr('string') slug;
+  @attr('string') description;
+}

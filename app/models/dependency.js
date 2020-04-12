@@ -4,15 +4,14 @@ import Inflector from 'ember-inflector';
 
 Inflector.inflector.irregular('dependency', 'dependencies');
 
-export default Model.extend({
-  version: belongsTo('version', {
-    async: false,
-  }),
-  crate_id: attr('string'),
-  req: attr('string'),
-  optional: attr('boolean'),
-  default_features: attr('boolean'),
-  features: attr({ defaultValue: () => [] }),
-  kind: attr('string'),
-  downloads: attr('number'),
-});
+export default class Dependency extends Model {
+  @attr('string') crate_id;
+  @attr('string') req;
+  @attr('boolean') optional;
+  @attr('boolean') default_features;
+  @attr({ defaultValue: () => [] }) features;
+  @attr('string') kind;
+  @attr('number') downloads;
+
+  @belongsTo('version', { async: false }) version;
+}

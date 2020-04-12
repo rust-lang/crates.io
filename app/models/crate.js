@@ -3,47 +3,47 @@ import { map, sort } from '@ember/object/computed';
 
 import { memberAction } from 'ember-api-actions';
 
-export default Model.extend({
-  name: attr('string'),
-  downloads: attr('number'),
-  recent_downloads: attr('number'),
-  created_at: attr('date'),
-  updated_at: attr('date'),
-  max_version: attr('string'),
-  newest_version: attr('string'),
+export default class Crate extends Model {
+  @attr('string') name;
+  @attr('number') downloads;
+  @attr('number') recent_downloads;
+  @attr('date') created_at;
+  @attr('date') updated_at;
+  @attr('string') max_version;
+  @attr('string') newest_version;
 
-  description: attr('string'),
-  homepage: attr('string'),
-  wiki: attr('string'),
-  mailing_list: attr('string'),
-  issues: attr('string'),
-  documentation: attr('string'),
-  repository: attr('string'),
-  exact_match: attr('boolean'),
+  @attr('string') description;
+  @attr('string') homepage;
+  @attr('string') wiki;
+  @attr('string') mailing_list;
+  @attr('string') issues;
+  @attr('string') documentation;
+  @attr('string') repository;
+  @attr('boolean') exact_match;
 
-  versions: hasMany('versions', { async: true }),
-  badges: attr(),
-  enhanced_badges: map('badges', badge => ({
+  @hasMany('versions', { async: true }) versions;
+  @attr() badges;
+  @map('badges', badge => ({
     ...badge,
     component_name: `badge-${badge.badge_type}`,
-  })),
+  }))
+  enhanced_badges;
 
-  // eslint-disable-next-line ember/avoid-leaking-state-in-ember-objects
-  badge_sort: ['badge_type'],
-  annotated_badges: sort('enhanced_badges', 'badge_sort'),
+  badge_sort = ['badge_type'];
+  @sort('enhanced_badges', 'badge_sort') annotated_badges;
 
-  owners: hasMany('users', { async: true }),
-  owner_team: hasMany('teams', { async: true }),
-  owner_user: hasMany('users', { async: true }),
-  version_downloads: hasMany('version-download', { async: true }),
-  keywords: hasMany('keywords', { async: true }),
-  categories: hasMany('categories', { async: true }),
-  reverse_dependencies: hasMany('dependency', { async: true }),
+  @hasMany('users', { async: true }) owners;
+  @hasMany('teams', { async: true }) owner_team;
+  @hasMany('users', { async: true }) owner_user;
+  @hasMany('version-download', { async: true }) version_downloads;
+  @hasMany('keywords', { async: true }) keywords;
+  @hasMany('categories', { async: true }) categories;
+  @hasMany('dependency', { async: true }) reverse_dependencies;
 
-  follow: memberAction({ type: 'PUT', path: 'follow' }),
-  unfollow: memberAction({ type: 'DELETE', path: 'follow' }),
+  follow = memberAction({ type: 'PUT', path: 'follow' });
+  unfollow = memberAction({ type: 'DELETE', path: 'follow' });
 
-  inviteOwner: memberAction({
+  inviteOwner = memberAction({
     type: 'PUT',
     path: 'owners',
     before(username) {
@@ -56,13 +56,13 @@ export default Model.extend({
         throw response;
       }
     },
-  }),
+  });
 
-  removeOwner: memberAction({
+  removeOwner = memberAction({
     type: 'DELETE',
     path: 'owners',
     before(username) {
       return { owners: [username] };
     },
-  }),
-});
+  });
+}

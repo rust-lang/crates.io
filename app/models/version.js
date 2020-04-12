@@ -4,33 +4,33 @@ import { alias } from '@ember/object/computed';
 
 import { task } from 'ember-concurrency';
 
-export default Model.extend({
-  num: attr('string'),
-  dl_path: attr('string'),
-  readme_path: attr('string'),
-  created_at: attr('date'),
-  updated_at: attr('date'),
-  downloads: attr('number'),
-  yanked: attr('boolean'),
-  license: attr('string'),
+export default class Version extends Model {
+  @attr('string') num;
+  @attr('string') dl_path;
+  @attr('string') readme_path;
+  @attr('date') created_at;
+  @attr('date') updated_at;
+  @attr('number') downloads;
+  @attr('boolean') yanked;
+  @attr('string') license;
+  @attr('number') crate_size;
 
-  crate: belongsTo('crate', {
-    async: false,
-  }),
-  authors: hasMany('users', { async: true }),
-  dependencies: hasMany('dependency', { async: true }),
-  version_downloads: hasMany('version-download', { async: true }),
+  @belongsTo('crate', { async: false }) crate;
 
-  crateName: computed('crate', function () {
+  @hasMany('users', { async: true }) authors;
+  @hasMany('dependency', { async: true }) dependencies;
+  @hasMany('version-download', { async: true }) version_downloads;
+
+  @computed('crate', function () {
     return this.belongsTo('crate').id();
-  }),
-  crate_size: attr('number'),
+  })
+  crateName;
 
-  normalDependencies: alias('loadDepsTask.last.value.normal'),
-  buildDependencies: alias('loadDepsTask.last.value.build'),
-  devDependencies: alias('loadDepsTask.last.value.dev'),
+  @alias('loadDepsTask.last.value.normal') normalDependencies;
+  @alias('loadDepsTask.last.value.build') buildDependencies;
+  @alias('loadDepsTask.last.value.dev') devDependencies;
 
-  loadDepsTask: task(function* () {
+  @(task(function* () {
     let dependencies = yield this.get('dependencies');
 
     let normal = dependencies.filterBy('kind', 'normal').uniqBy('crate_id');
@@ -38,9 +38,10 @@ export default Model.extend({
     let dev = dependencies.filterBy('kind', 'dev').uniqBy('crate_id');
 
     return { normal, build, dev };
-  }).keepLatest(),
+  }).keepLatest())
+  loadDepsTask;
 
-  loadReadmeTask: task(function* () {
+  @(task(function* () {
     if (this.readme_path) {
       let response = yield fetch(this.readme_path);
       if (!response.ok) {
@@ -49,5 +50,6 @@ export default Model.extend({
 
       return yield response.text();
     }
-  }).keepLatest(),
-});
+  }).keepLatest())
+  loadReadmeTask;
+}
