@@ -19,17 +19,15 @@ export default class SessionService extends Service {
   constructor() {
     super(...arguments);
 
-    let isLoggedIn;
     try {
-      isLoggedIn = window.localStorage.getItem('isLoggedIn') === '1';
+      this.isLoggedIn = window.localStorage.getItem('isLoggedIn') === '1';
     } catch (e) {
-      isLoggedIn = false;
+      this.isLoggedIn = false;
     }
-    this.set('isLoggedIn', isLoggedIn);
   }
 
   login() {
-    this.set('isLoggedIn', true);
+    this.isLoggedIn = true;
     try {
       window.localStorage.setItem('isLoggedIn', '1');
     } catch (e) {
@@ -47,8 +45,8 @@ export default class SessionService extends Service {
   }
 
   logoutUser() {
-    this.set('savedTransition', null);
-    this.set('isLoggedIn', null);
+    this.savedTransition = null;
+    this.isLoggedIn = false;
 
     this.loadUserTask.cancelAll({ resetState: true });
 
