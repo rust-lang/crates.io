@@ -12,7 +12,7 @@ use crate::schema::{crate_owners, crates, emails, follows, users, versions};
 use crate::views::{EncodableMe, EncodableVersion, OwnedCrate};
 
 /// Handles the `GET /me` route.
-pub fn me(req: &mut dyn Request) -> AppResult<Response> {
+pub fn me(req: &mut dyn RequestExt) -> EndpointResult {
     let conn = req.db_conn()?;
     let user_id = req.authenticate(&conn)?.user_id();
 
@@ -50,7 +50,7 @@ pub fn me(req: &mut dyn Request) -> AppResult<Response> {
 }
 
 /// Handles the `GET /me/updates` route.
-pub fn updates(req: &mut dyn Request) -> AppResult<Response> {
+pub fn updates(req: &mut dyn RequestExt) -> EndpointResult {
     use diesel::dsl::any;
 
     let conn = req.db_conn()?;
@@ -100,7 +100,7 @@ pub fn updates(req: &mut dyn Request) -> AppResult<Response> {
 }
 
 /// Handles the `PUT /user/:user_id` route.
-pub fn update_user(req: &mut dyn Request) -> AppResult<Response> {
+pub fn update_user(req: &mut dyn RequestExt) -> EndpointResult {
     use self::emails::user_id;
     use diesel::insert_into;
 
@@ -162,7 +162,7 @@ pub fn update_user(req: &mut dyn Request) -> AppResult<Response> {
 }
 
 /// Handles the `PUT /confirm/:email_token` route
-pub fn confirm_user_email(req: &mut dyn Request) -> AppResult<Response> {
+pub fn confirm_user_email(req: &mut dyn RequestExt) -> EndpointResult {
     use diesel::update;
 
     let conn = req.db_conn()?;
@@ -180,7 +180,7 @@ pub fn confirm_user_email(req: &mut dyn Request) -> AppResult<Response> {
 }
 
 /// Handles `PUT /user/:user_id/resend` route
-pub fn regenerate_token_and_send(req: &mut dyn Request) -> AppResult<Response> {
+pub fn regenerate_token_and_send(req: &mut dyn RequestExt) -> EndpointResult {
     use diesel::dsl::sql;
     use diesel::update;
 
@@ -209,7 +209,7 @@ pub fn regenerate_token_and_send(req: &mut dyn Request) -> AppResult<Response> {
 }
 
 /// Handles `PUT /me/email_notifications` route
-pub fn update_email_notifications(req: &mut dyn Request) -> AppResult<Response> {
+pub fn update_email_notifications(req: &mut dyn RequestExt) -> EndpointResult {
     use self::crate_owners::dsl::*;
     use diesel::pg::upsert::excluded;
 

@@ -3,8 +3,6 @@
 use super::prelude::*;
 
 use crate::util::request_header;
-use std::collections::HashMap;
-use std::io::Cursor;
 
 // Can't derive debug because of Handler.
 #[allow(missing_debug_implementations)]
@@ -20,22 +18,21 @@ impl AroundMiddleware for RequireUserAgent {
 }
 
 impl Handler for RequireUserAgent {
-    fn call(&self, req: &mut dyn Request) -> Result<Response> {
-        let has_user_agent = request_header(req, "User-Agent") != "";
+    fn call(&self, req: &mut dyn RequestExt) -> AfterResult {
+        let has_user_agent = request_header(req, header::USER_AGENT) != "";
         let is_download = req.path().ends_with("download");
         if !has_user_agent && !is_download {
             super::log_request::add_custom_metadata(req, "cause", "no user agent");
             let body = format!(
                 include_str!("no_user_agent_message.txt"),
-                request_header(req, "X-Request-Id"),
+                request_header(req, "x-request-id"),
             );
-            let mut headers = HashMap::new();
-            headers.insert("Content-Length".to_string(), vec![body.len().to_string()]);
-            Ok(Response {
-                status: (403, "Forbidden"),
-                headers,
-                body: Box::new(Cursor::new(body.into_bytes())),
-            })
+
+            Response::builder()
+                .status(StatusCode::FORBIDDEN)
+                .header(header::CONTENT_LENGTH, body.len())
+                .body(Body::from_vec(body.into_bytes()))
+                .map_err(box_error)
         } else {
             self.handler.as_ref().unwrap().call(req)
         }

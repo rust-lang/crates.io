@@ -13,6 +13,7 @@ use crate::util::{Bad, RequestHelper, TestApp};
 use cargo_registry::{
     models::{Crate, CrateOwner, Dependency, NewCategory, NewTeam, NewUser, Team, User, Version},
     schema::crate_owners,
+    util::AppResponse,
     views::{
         EncodableCategory, EncodableCategoryWithSubcategories, EncodableCrate, EncodableKeyword,
         EncodableOwner, EncodableVersion, GoodCrate,
@@ -27,6 +28,7 @@ use std::{
     },
 };
 
+use conduit::{header, Body};
 use conduit_test::MockRequest;
 use diesel::prelude::*;
 use reqwest::{blocking::Client, Proxy};
@@ -180,15 +182,11 @@ fn env(var: &str) -> String {
 
 fn req(method: conduit::Method, path: &str) -> MockRequest {
     let mut request = MockRequest::new(method, path);
-    request.header("User-Agent", "conduit-test");
+    request.header(header::USER_AGENT, "conduit-test");
     request
 }
 
-fn ok_resp(r: &conduit::Response) -> bool {
-    r.status.0 == 200
-}
-
-fn bad_resp(r: &mut conduit::Response) -> Option<Bad> {
+fn bad_resp(r: &mut AppResponse) -> Option<Bad> {
     let bad = json::<Bad>(r);
     if bad.errors.is_empty() {
         return None;
@@ -196,13 +194,21 @@ fn bad_resp(r: &mut conduit::Response) -> Option<Bad> {
     Some(bad)
 }
 
-fn json<T>(r: &mut conduit::Response) -> T
+fn json<T>(r: &mut AppResponse) -> T
 where
     for<'de> T: serde::Deserialize<'de>,
 {
-    let mut data = Vec::new();
-    r.body.write_body(&mut data).unwrap();
-    let s = std::str::from_utf8(&data).unwrap();
+    use conduit::Body::*;
+
+    let mut body = Body::empty();
+    std::mem::swap(r.body_mut(), &mut body);
+    let body: std::borrow::Cow<'static, [u8]> = match body {
+        Static(slice) => slice.into(),
+        Owned(vec) => vec.into(),
+        File(_) => unimplemented!(),
+    };
+
+    let s = std::str::from_utf8(&body).unwrap();
     match serde_json::from_str(s) {
         Ok(t) => t,
         Err(e) => panic!("failed to decode: {:?}\n{}", e, s),

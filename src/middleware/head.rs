@@ -4,7 +4,6 @@ use super::prelude::*;
 
 use crate::util::RequestProxy;
 use conduit::Method;
-use std::io;
 
 // Can't derive debug because of Handler.
 #[allow(missing_debug_implementations)]
@@ -20,17 +19,13 @@ impl AroundMiddleware for Head {
 }
 
 impl Handler for Head {
-    fn call(&self, req: &mut dyn Request) -> Result<Response> {
-        if req.method() == Method::Head {
-            let mut req = RequestProxy::rewrite_method(req, Method::Get);
-            self.handler
-                .as_ref()
-                .unwrap()
-                .call(&mut req)
-                .map(|r| Response {
-                    body: Box::new(io::empty()),
-                    ..r
-                })
+    fn call(&self, req: &mut dyn RequestExt) -> AfterResult {
+        if req.method() == Method::HEAD {
+            let mut req = RequestProxy::rewrite_method(req, Method::GET);
+            self.handler.as_ref().unwrap().call(&mut req).map(|mut r| {
+                *r.body_mut() = Body::empty();
+                r
+            })
         } else {
             self.handler.as_ref().unwrap().call(req)
         }

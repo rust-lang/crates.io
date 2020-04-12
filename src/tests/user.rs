@@ -1,7 +1,7 @@
 use crate::{
     builders::{CrateBuilder, VersionBuilder},
     new_user,
-    util::{MockCookieUser, RequestHelper, Response},
+    util::{MockCookieUser, RequestHelper, Response, StatusCode},
     OkBool, TestApp,
 };
 use cargo_registry::{
@@ -115,7 +115,7 @@ fn access_token_needs_data() {
     let (_, anon) = TestApp::init().empty();
     let json = anon
         .get::<()>("/api/private/session/authorize")
-        .bad_with_status(400);
+        .bad_with_status(StatusCode::BAD_REQUEST);
     assert!(json.errors[0].detail.contains("invalid state"));
 }
 
@@ -296,7 +296,7 @@ fn following() {
     assert_eq!(r.meta.more, false);
 
     user.get_with_query::<()>("/api/v1/me/updates", "page=0")
-        .bad_with_status(400);
+        .bad_with_status(StatusCode::BAD_REQUEST);
 }
 
 #[test]
@@ -486,7 +486,7 @@ fn test_empty_email_not_added() {
 
     let json = user
         .update_email_more_control(model.id, Some(""))
-        .bad_with_status(400);
+        .bad_with_status(StatusCode::BAD_REQUEST);
     assert!(
         json.errors[0].detail.contains("empty email rejected"),
         "{:?}",
@@ -495,7 +495,7 @@ fn test_empty_email_not_added() {
 
     let json = user
         .update_email_more_control(model.id, None)
-        .bad_with_status(400);
+        .bad_with_status(StatusCode::BAD_REQUEST);
 
     assert!(
         json.errors[0].detail.contains("empty email rejected"),
@@ -521,7 +521,7 @@ fn test_other_users_cannot_change_my_email() {
             another_user_model.id,
             Some("pineapple@pineapples.pineapple"),
         )
-        .bad_with_status(400);
+        .bad_with_status(StatusCode::BAD_REQUEST);
     assert!(
         json.errors[0]
             .detail
@@ -534,7 +534,7 @@ fn test_other_users_cannot_change_my_email() {
         another_user_model.id,
         Some("pineapple@pineapples.pineapple"),
     )
-    .bad_with_status(403);
+    .bad_with_status(StatusCode::FORBIDDEN);
 }
 
 /* Given a new user, test that their email can be added

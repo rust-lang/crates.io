@@ -17,12 +17,12 @@ impl AppMiddleware {
 }
 
 impl Middleware for AppMiddleware {
-    fn before(&self, req: &mut dyn Request) -> Result<()> {
+    fn before(&self, req: &mut dyn RequestExt) -> BeforeResult {
         req.mut_extensions().insert(Arc::clone(&self.app));
         Ok(())
     }
 
-    fn after(&self, req: &mut dyn Request, res: Result<Response>) -> Result<Response> {
+    fn after(&self, req: &mut dyn RequestExt, res: AfterResult) -> AfterResult {
         req.mut_extensions().pop::<Arc<App>>().unwrap();
         res
     }
@@ -33,7 +33,7 @@ pub trait RequestApp {
     fn app(&self) -> &Arc<App>;
 }
 
-impl<T: Request + ?Sized> RequestApp for T {
+impl<T: RequestExt + ?Sized> RequestApp for T {
     fn app(&self) -> &Arc<App> {
         self.extensions().find::<Arc<App>>().expect("Missing app")
     }

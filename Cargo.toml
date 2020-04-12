@@ -66,16 +66,17 @@ lettre = "0.9"
 lettre_email = "0.9"
 failure = "0.1.1"
 
-conduit = "0.9.0-alpha.0"
-conduit-conditional-get = "0.9.0-alpha.0"
-conduit-cookie = "0.9.0-alpha.0"
+conduit = "0.9.0-alpha.2"
+conduit-conditional-get = "0.9.0-alpha.2"
+conduit-cookie = "0.9.0-alpha.2"
 cookie = { version = "0.12", features = ["secure"] }
-conduit-middleware = "0.9.0-alpha.0"
-conduit-router = "0.9.0-alpha.0"
-conduit-static = "0.9.0-alpha.0"
-conduit-git-http-backend = "0.9.0-alpha.0"
-civet = "0.12.0-alpha.1"
-conduit-hyper = "0.3.0-alpha.0"
+conduit-middleware = "0.9.0-alpha.2"
+conduit-router = "0.9.0-alpha.2"
+conduit-static = "0.9.0-alpha.2"
+conduit-git-http-backend = "0.9.0-alpha.2"
+civet = "0.12.0-alpha.3"
+conduit-hyper = "0.3.0-alpha.2"
+http = "0.2"
 
 futures-util = "0.3"
 futures-channel = { version = "0.3.1", default-features = false }
@@ -86,7 +87,7 @@ indexmap = "1.0.2"
 handlebars = "3.0.1"
 
 [dev-dependencies]
-conduit-test = "0.9.0-alpha.0"
+conduit-test = "0.9.0-alpha.2"
 hyper-tls = "0.4"
 lazy_static = "1.0"
 diesel_migrations = { version = "1.3.0", features = ["postgres"] }

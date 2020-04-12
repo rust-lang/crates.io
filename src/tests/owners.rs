@@ -10,6 +10,7 @@ use cargo_registry::{
     views::{EncodableCrateOwnerInvitation, EncodableOwner, InvitationResponse},
 };
 
+use conduit::StatusCode;
 use diesel::prelude::*;
 
 #[derive(Deserialize)]
@@ -136,7 +137,7 @@ fn owners_can_remove_self() {
     // Deleting yourself when you're the only owner isn't allowed.
     let json = token
         .remove_named_owner("owners_selfremove", username)
-        .bad_with_status(200);
+        .bad_with_status(StatusCode::OK);
     assert!(json.errors[0]
         .detail
         .contains("cannot remove all individual owners of a crate"));
@@ -152,7 +153,7 @@ fn owners_can_remove_self() {
     // After you delete yourself, you no longer have permisions to manage the crate.
     let json = token
         .remove_named_owner("owners_selfremove", username)
-        .bad_with_status(200);
+        .bad_with_status(StatusCode::OK);
     assert!(json.errors[0]
         .detail
         .contains("only owners have permission to modify owners",));
@@ -173,7 +174,7 @@ fn modify_multiple_owners() {
     // Deleting all owners is not allowed.
     let json = token
         .remove_named_owners("owners_multiple", &[username, "user2", "user3"])
-        .bad_with_status(200);
+        .bad_with_status(StatusCode::OK);
     assert!(&json.errors[0]
         .detail
         .contains("cannot remove all individual owners of a crate"));
@@ -189,7 +190,7 @@ fn modify_multiple_owners() {
     // Adding multiple users fails if one of them already is an owner.
     let json = token
         .add_named_owners("owners_multiple", &["user2", username])
-        .bad_with_status(200);
+        .bad_with_status(StatusCode::OK);
     assert!(&json.errors[0].detail.contains("is already an owner"));
     assert_eq!(app.db(|conn| krate.owners(&conn).unwrap()).len(), 1);
 

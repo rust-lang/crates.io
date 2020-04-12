@@ -1,8 +1,9 @@
 use std::fmt;
 
-use conduit::Response;
-
 use super::{json_error, AppError};
+use crate::util::AppResponse;
+
+use conduit::StatusCode;
 
 #[derive(Debug)]
 pub(super) struct Ok(pub(super) String);
@@ -12,8 +13,8 @@ pub(super) struct BadRequest(pub(super) String);
 pub(super) struct ServerError(pub(super) String);
 
 impl AppError for Ok {
-    fn response(&self) -> Option<Response> {
-        Some(json_error(&self.0, (200, "OK")))
+    fn response(&self) -> Option<AppResponse> {
+        Some(json_error(&self.0, StatusCode::OK))
     }
 }
 
@@ -24,8 +25,8 @@ impl fmt::Display for Ok {
 }
 
 impl AppError for BadRequest {
-    fn response(&self) -> Option<Response> {
-        Some(json_error(&self.0, (400, "Bad Request")))
+    fn response(&self) -> Option<AppResponse> {
+        Some(json_error(&self.0, StatusCode::BAD_REQUEST))
     }
 }
 
@@ -36,8 +37,8 @@ impl fmt::Display for BadRequest {
 }
 
 impl AppError for ServerError {
-    fn response(&self) -> Option<Response> {
-        Some(json_error(&self.0, (500, "Internal Server Error")))
+    fn response(&self) -> Option<AppResponse> {
+        Some(json_error(&self.0, StatusCode::INTERNAL_SERVER_ERROR))
     }
 }
 

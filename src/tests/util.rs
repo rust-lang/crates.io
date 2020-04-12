@@ -29,19 +29,22 @@ use cargo_registry::{
     git::{Credentials, RepositoryConfig},
     middleware::current_user::TrustedUserId,
     models::{ApiToken, User},
+    util::AppResponse,
     App, Config,
 };
 use diesel::PgConnection;
 use std::{rc::Rc, sync::Arc, time::Duration};
 use swirl::Runner;
 
-use conduit::{Handler, Method, Request};
+use conduit::{Handler, HandlerResult, Method, RequestExt};
 use conduit_test::MockRequest;
 
 use cargo_registry::git::Repository as WorkerRepository;
 use git2::Repository as UpstreamRepository;
 
 use url::Url;
+
+pub use conduit::{header, StatusCode};
 
 struct TestAppInner {
     app: Arc<App>,
@@ -330,7 +333,7 @@ pub trait RequestHelper {
     where
         for<'de> T: serde::Deserialize<'de>,
     {
-        let request = self.request_builder(Method::Get, path);
+        let request = self.request_builder(Method::GET, path);
         self.run(request)
     }
 
@@ -339,7 +342,7 @@ pub trait RequestHelper {
     where
         for<'de> T: serde::Deserialize<'de>,
     {
-        let mut request = self.request_builder(Method::Get, path);
+        let mut request = self.request_builder(Method::GET, path);
         request.with_query(query);
         self.run(request)
     }
@@ -349,7 +352,7 @@ pub trait RequestHelper {
     where
         for<'de> T: serde::Deserialize<'de>,
     {
-        let mut request = self.request_builder(Method::Put, path);
+        let mut request = self.request_builder(Method::PUT, path);
         request.with_body(body);
         self.run(request)
     }
@@ -359,7 +362,7 @@ pub trait RequestHelper {
     where
         for<'de> T: serde::Deserialize<'de>,
     {
-        let request = self.request_builder(Method::Delete, path);
+        let request = self.request_builder(Method::DELETE, path);
         self.run(request)
     }
 
@@ -368,7 +371,7 @@ pub trait RequestHelper {
     where
         for<'de> T: serde::Deserialize<'de>,
     {
-        let mut request = self.request_builder(Method::Delete, path);
+        let mut request = self.request_builder(Method::DELETE, path);
         request.with_body(body);
         self.run(request)
     }
@@ -500,7 +503,7 @@ pub struct MockTokenUser {
 impl RequestHelper for MockTokenUser {
     fn request_builder(&self, method: Method, path: &str) -> MockRequest {
         let mut request = crate::req(method, path);
-        request.header("Authorization", &self.token.token);
+        request.header(header::AUTHORIZATION, &self.token.token);
         request
     }
 
@@ -560,12 +563,10 @@ pub struct Bad {
     pub errors: Vec<Error>,
 }
 
-type ResponseResult = Result<conduit::Response, Box<dyn std::error::Error + Send>>;
-
 /// A type providing helper methods for working with responses
 #[must_use]
 pub struct Response<T> {
-    response: conduit::Response,
+    response: AppResponse,
     callback_on_good: Option<Box<dyn Fn(&T)>>,
 }
 
@@ -573,7 +574,7 @@ impl<T> Response<T>
 where
     for<'de> T: serde::Deserialize<'de>,
 {
-    fn new(response: ResponseResult) -> Self {
+    fn new(response: HandlerResult) -> Self {
         Self {
             response: t!(response),
             callback_on_good: None,
@@ -589,8 +590,8 @@ where
 
     /// Assert that the response is good and deserialize the message
     pub fn good(mut self) -> T {
-        if !crate::ok_resp(&self.response) {
-            panic!("bad response: {:?}", self.response.status);
+        if !self.response.status().is_success() {
+            panic!("bad response: {:?}", self.response.status());
         }
         let good = crate::json(&mut self.response);
         if let Some(callback) = self.callback_on_good {
@@ -602,21 +603,28 @@ where
     /// Assert the response status code and deserialze into a list of errors
     ///
     /// Cargo endpoints return a status 200 on error instead of 400.
-    pub fn bad_with_status(&mut self, code: u32) -> Bad {
-        assert_eq!(self.response.status.0, code);
+    pub fn bad_with_status(&mut self, expected: StatusCode) -> Bad {
+        assert_eq!(self.response.status(), expected);
         match crate::bad_resp(&mut self.response) {
-            None => panic!("ok response: {:?}", self.response.status),
+            None => panic!("ok response: {:?}", self.response.status()),
             Some(b) => b,
         }
     }
 
-    pub fn assert_status(&self, status: u32) -> &Self {
-        assert_eq!(status, self.response.status.0);
+    pub fn assert_status(&self, status: StatusCode) -> &Self {
+        assert_eq!(status, self.response.status());
         self
     }
 
     pub fn assert_redirect_ends_with(&self, target: &str) -> &Self {
-        assert!(self.response.headers["Location"][0].ends_with(target));
+        assert!(self
+            .response
+            .headers()
+            .get(header::LOCATION)
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .ends_with(target));
         self
     }
 }
@@ -624,11 +632,11 @@ where
 impl Response<()> {
     /// Assert that the status code is 404
     pub fn assert_not_found(&self) {
-        assert_eq!((404, "Not Found"), self.response.status);
+        assert_eq!(StatusCode::NOT_FOUND, self.response.status());
     }
 
     /// Assert that the status code is 403
     pub fn assert_forbidden(&self) {
-        assert_eq!((403, "Forbidden"), self.response.status);
+        assert_eq!(StatusCode::FORBIDDEN, self.response.status());
     }
 }

@@ -25,7 +25,7 @@ impl AuthenticatedUser {
     }
 }
 
-impl<'a> UserAuthenticationExt for dyn Request + 'a {
+impl<'a> UserAuthenticationExt for dyn RequestExt + 'a {
     /// Obtain `AuthenticatedUser` for the request or return an `Unauthorized` error
     fn authenticate(&self, conn: &PgConnection) -> AppResult<AuthenticatedUser> {
         if let Some(id) = self.extensions().find::<TrustedUserId>() {
@@ -36,8 +36,8 @@ impl<'a> UserAuthenticationExt for dyn Request + 'a {
             })
         } else {
             // Otherwise, look for an `Authorization` header on the request
-            if let Some(headers) = self.headers().find("Authorization") {
-                ApiToken::find_by_api_token(conn, headers[0])
+            if let Some(headers) = self.headers().get(header::AUTHORIZATION) {
+                ApiToken::find_by_api_token(conn, headers.to_str().unwrap_or_default())
                     .map(|token| AuthenticatedUser {
                         user_id: token.user_id,
                         token_id: Some(token.id),

@@ -10,9 +10,6 @@
 
 use super::prelude::*;
 
-use std::collections::HashMap;
-use std::io::Cursor;
-
 // Can't derive debug because of Handler.
 #[allow(missing_debug_implementations)]
 #[derive(Default)]
@@ -39,12 +36,12 @@ impl AroundMiddleware for BlockTraffic {
 }
 
 impl Handler for BlockTraffic {
-    fn call(&self, req: &mut dyn Request) -> Result<Response> {
+    fn call(&self, req: &mut dyn RequestExt) -> AfterResult {
         let has_blocked_value = req
             .headers()
-            .find(&self.header_name)
-            .unwrap_or_default()
+            .get_all(&self.header_name)
             .iter()
+            .map(|val| val.to_str().unwrap_or_default())
             .any(|value| self.blocked_values.iter().any(|v| v == value));
         if has_blocked_value {
             let cause = format!("blocked due to contents of header {}", self.header_name);
@@ -57,15 +54,17 @@ impl Handler for BlockTraffic {
                  or email help@crates.io \
                  and provide the request id {}",
                 // Heroku should always set this header
-                req.headers().find("X-Request-Id").unwrap()[0]
+                req.headers()
+                    .get("x-request-id")
+                    .map(|val| val.to_str().unwrap_or_default())
+                    .unwrap_or_default()
             );
-            let mut headers = HashMap::new();
-            headers.insert("Content-Length".to_string(), vec![body.len().to_string()]);
-            Ok(Response {
-                status: (403, "Forbidden"),
-                headers,
-                body: Box::new(Cursor::new(body.into_bytes())),
-            })
+
+            Response::builder()
+                .status(StatusCode::FORBIDDEN)
+                .header(header::CONTENT_LENGTH, body.len())
+                .body(Body::from_vec(body.into_bytes()))
+                .map_err(box_error)
         } else {
             self.handler.as_ref().unwrap().call(req)
         }

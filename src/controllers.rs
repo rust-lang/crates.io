@@ -14,16 +14,13 @@ mod prelude {
     pub use super::helpers::ok_true;
     pub use diesel::prelude::*;
 
-    pub use conduit::{Request, Response};
+    pub use conduit::{header, RequestExt, StatusCode};
     pub use conduit_router::RequestParams;
 
     pub use crate::db::RequestTransaction;
-    pub use crate::util::errors::{cargo_err, AppError, AppResult, ChainError}; // TODO: Remove cargo_err from here
-
     pub use crate::middleware::app::RequestApp;
-
-    use std::collections::HashMap;
-    use std::io;
+    pub use crate::util::errors::{cargo_err, AppError, AppResult, ChainError}; // TODO: Remove cargo_err from here
+    pub use crate::util::{AppResponse, EndpointResult};
 
     use indexmap::IndexMap;
     use serde::Serialize;
@@ -33,9 +30,9 @@ mod prelude {
     }
 
     pub trait RequestUtils {
-        fn redirect(&self, url: String) -> Response;
+        fn redirect(&self, url: String) -> AppResponse;
 
-        fn json<T: Serialize>(&self, t: &T) -> Response;
+        fn json<T: Serialize>(&self, t: &T) -> AppResponse;
         fn query(&self) -> IndexMap<String, String>;
         fn wants_json(&self) -> bool;
         fn query_with_params(&self, params: IndexMap<String, String>) -> String;
@@ -43,8 +40,8 @@ mod prelude {
         fn log_metadata<V: std::fmt::Display>(&mut self, key: &'static str, value: V);
     }
 
-    impl<'a> RequestUtils for dyn Request + 'a {
-        fn json<T: Serialize>(&self, t: &T) -> Response {
+    impl<'a> RequestUtils for dyn RequestExt + 'a {
+        fn json<T: Serialize>(&self, t: &T) -> AppResponse {
             crate::util::json_response(t)
         }
 
@@ -54,21 +51,19 @@ mod prelude {
                 .collect()
         }
 
-        fn redirect(&self, url: String) -> Response {
-            let mut headers = HashMap::new();
-            headers.insert("Location".to_string(), vec![url]);
-            Response {
-                status: (302, "Found"),
-                headers,
-                body: Box::new(io::empty()),
-            }
+        fn redirect(&self, url: String) -> AppResponse {
+            conduit::Response::builder()
+                .status(StatusCode::FOUND)
+                .header(header::LOCATION, url)
+                .body(conduit::Body::empty())
+                .unwrap() // Should not panic unless url contains "\r\n"
         }
 
         fn wants_json(&self) -> bool {
             self.headers()
-                .find("Accept")
-                .map(|accept| accept.iter().any(|s| s.contains("json")))
-                .unwrap_or(false)
+                .get_all(header::ACCEPT)
+                .iter()
+                .any(|val| val.to_str().unwrap_or_default().contains("json"))
         }
 
         fn query_with_params(&self, new_params: IndexMap<String, String>) -> String {

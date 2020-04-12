@@ -1,13 +1,7 @@
 mod prelude {
-    pub use conduit::{Handler, Request, Response};
-    pub use conduit_middleware::{AroundMiddleware, Middleware};
-
-    use std::error::Error;
-    pub type BoxError = Box<dyn Error + Send>;
-    pub type Result<T> = std::result::Result<T, BoxError>;
+    pub use conduit::{box_error, header, Body, Handler, RequestExt, Response, StatusCode};
+    pub use conduit_middleware::{AfterResult, AroundMiddleware, BeforeResult, Middleware};
 }
-
-pub use prelude::Result;
 
 use self::app::AppMiddleware;
 use self::current_user::CaptureUserIdFromCookie;

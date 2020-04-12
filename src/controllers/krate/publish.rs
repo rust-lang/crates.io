@@ -23,7 +23,7 @@ use crate::views::{EncodableCrateUpload, GoodCrate, PublishWarnings};
 /// Currently blocks the HTTP thread, perhaps some function calls can spawn new
 /// threads and return completion or error through other methods  a `cargo publish
 /// --status` command, via crates.io's front end, or email.
-pub fn publish(req: &mut dyn Request) -> AppResult<Response> {
+pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
     let app = Arc::clone(req.app());
 
     // The format of the req.body() of a publish request is as follows:
@@ -228,7 +228,7 @@ pub fn publish(req: &mut dyn Request) -> AppResult<Response> {
 ///
 /// This function parses the JSON headers to interpret the data and validates
 /// the data during and after the parsing. Returns crate metadata.
-fn parse_new_headers(req: &mut dyn Request) -> AppResult<EncodableCrateUpload> {
+fn parse_new_headers(req: &mut dyn RequestExt) -> AppResult<EncodableCrateUpload> {
     // Read the json upload request
     let metadata_length = u64::from(read_le_u32(req.body())?);
     req.log_metadata("metadata_length", metadata_length);

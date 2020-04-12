@@ -5,7 +5,7 @@ use crate::schema::{crate_owner_invitations, crate_owners};
 use crate::views::{EncodableCrateOwnerInvitation, InvitationResponse};
 
 /// Handles the `GET /me/crate_owner_invitations` route.
-pub fn list(req: &mut dyn Request) -> AppResult<Response> {
+pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
     let conn = &*req.db_conn()?;
     let user_id = req.authenticate(conn)?.user_id();
 
@@ -31,7 +31,7 @@ struct OwnerInvitation {
 }
 
 /// Handles the `PUT /me/crate_owner_invitations/:crate_id` route.
-pub fn handle_invite(req: &mut dyn Request) -> AppResult<Response> {
+pub fn handle_invite(req: &mut dyn RequestExt) -> EndpointResult {
     let mut body = String::new();
     req.body().read_to_string(&mut body)?;
 
@@ -51,7 +51,7 @@ pub fn handle_invite(req: &mut dyn Request) -> AppResult<Response> {
 }
 
 /// Handles the `PUT /me/crate_owner_invitations/accept/:token` route.
-pub fn handle_invite_with_token(req: &mut dyn Request) -> AppResult<Response> {
+pub fn handle_invite_with_token(req: &mut dyn RequestExt) -> EndpointResult {
     let conn = req.db_conn()?;
     let req_token = &req.params()["token"];
 
@@ -72,11 +72,11 @@ pub fn handle_invite_with_token(req: &mut dyn Request) -> AppResult<Response> {
 }
 
 fn accept_invite(
-    req: &dyn Request,
+    req: &dyn RequestExt,
     conn: &PgConnection,
     crate_invite: InvitationResponse,
     user_id: i32,
-) -> AppResult<Response> {
+) -> EndpointResult {
     use diesel::{delete, insert_into};
 
     conn.transaction(|| {
@@ -110,10 +110,10 @@ fn accept_invite(
 }
 
 fn decline_invite(
-    req: &dyn Request,
+    req: &dyn RequestExt,
     conn: &PgConnection,
     crate_invite: InvitationResponse,
-) -> AppResult<Response> {
+) -> EndpointResult {
     use diesel::delete;
 
     let user_id = req.authenticate(conn)?.user_id();

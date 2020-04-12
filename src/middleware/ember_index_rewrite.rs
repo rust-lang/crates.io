@@ -24,14 +24,14 @@ impl AroundMiddleware for EmberIndexRewrite {
 }
 
 impl Handler for EmberIndexRewrite {
-    fn call(&self, req: &mut dyn Request) -> Result<Response> {
+    fn call(&self, req: &mut dyn RequestExt) -> AfterResult {
         // If the client is requesting html, then we've only got one page so
         // rewrite the request.
         let wants_html = req
             .headers()
-            .find("Accept")
-            .map(|accept| accept.iter().any(|s| s.contains("html")))
-            .unwrap_or(false);
+            .get_all(header::ACCEPT)
+            .iter()
+            .any(|val| val.to_str().unwrap_or_default().contains("html"));
         // If the route starts with /api, just assume they want the API
         // response and fall through.
         let is_api_path = req.path().starts_with("/api");

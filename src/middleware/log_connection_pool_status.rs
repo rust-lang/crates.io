@@ -3,7 +3,7 @@
 use super::prelude::*;
 use crate::app::App;
 
-use conduit::Request;
+use conduit::RequestExt;
 use std::sync::{
     atomic::{AtomicUsize, Ordering},
     Arc, Mutex, PoisonError,
@@ -28,7 +28,7 @@ impl LogConnectionPoolStatus {
 }
 
 impl Middleware for LogConnectionPoolStatus {
-    fn before(&self, _: &mut dyn Request) -> Result<()> {
+    fn before(&self, _: &mut dyn RequestExt) -> BeforeResult {
         let mut last_log_time = self
             .last_log_time
             .lock()
@@ -49,7 +49,7 @@ impl Middleware for LogConnectionPoolStatus {
         Ok(())
     }
 
-    fn after(&self, _: &mut dyn Request, res: Result<Response>) -> Result<Response> {
+    fn after(&self, _: &mut dyn RequestExt, res: AfterResult) -> AfterResult {
         self.in_flight_requests.fetch_sub(1, Ordering::SeqCst);
         res
     }
