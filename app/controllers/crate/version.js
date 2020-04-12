@@ -1,8 +1,6 @@
-import ArrayProxy from '@ember/array/proxy';
 import Controller from '@ember/controller';
 import { computed } from '@ember/object';
 import { alias, readOnly, gt } from '@ember/object/computed';
-import PromiseProxyMixin from '@ember/object/promise-proxy-mixin';
 import { inject as service } from '@ember/service';
 
 import { task } from 'ember-concurrency';
@@ -11,8 +9,6 @@ import moment from 'moment';
 import ajax from '../../utils/ajax';
 
 const NUM_VERSIONS = 5;
-
-const PromiseArray = ArrayProxy.extend(PromiseProxyMixin);
 
 export default Controller.extend({
   session: service(),
@@ -46,19 +42,6 @@ export default Controller.extend({
   }),
 
   hasMoreVersions: gt('sortedVersions.length', NUM_VERSIONS),
-
-  displayedAuthors: computed('currentVersion.authors.[]', function () {
-    return PromiseArray.create({
-      promise: this.get('currentVersion.authors').then(authors => {
-        let ret = authors.slice();
-        let others = authors.get('meta');
-        for (let i = 0; i < others.names.length; i++) {
-          ret.push({ name: others.names[i] });
-        }
-        return ret;
-      }),
-    });
-  }),
 
   anyKeywords: gt('keywords.length', 0),
   anyCategories: gt('categories.length', 0),

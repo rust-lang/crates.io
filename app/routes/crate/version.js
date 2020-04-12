@@ -62,6 +62,10 @@ export default Route.extend({
     this._super(...arguments);
 
     model.version.loadDepsTask.perform();
+    if (!model.version.authorNames) {
+      model.version.loadAuthorsTask.perform();
+    }
+
     controller.loadReadmeTask.perform().catch(() => {
       // ignored
     });
