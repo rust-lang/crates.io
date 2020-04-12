@@ -26,9 +26,7 @@ export default Controller.extend({
   crate: alias('model.crate'),
   requestedVersion: alias('model.requestedVersion'),
   currentVersion: alias('model.version'),
-  crateTomlText: computed('crate.name', 'currentVersion.num', function () {
-    return `${this.get('crate.name')} = "${this.get('currentVersion.num')}"`;
-  }),
+
   keywords: alias('crate.keywords'),
   categories: alias('crate.categories'),
   badges: alias('crate.badges'),
