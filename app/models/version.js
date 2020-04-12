@@ -26,6 +26,14 @@ export default class Version extends Model {
   })
   crateName;
 
+  @alias('loadAuthorsTask.last.value') authorNames;
+
+  @(task(function* () {
+    let authors = yield this.get('authors');
+    return authors.meta.names;
+  }).keepLatest())
+  loadAuthorsTask;
+
   @alias('loadDepsTask.last.value.normal') normalDependencies;
   @alias('loadDepsTask.last.value.build') buildDependencies;
   @alias('loadDepsTask.last.value.dev') devDependencies;

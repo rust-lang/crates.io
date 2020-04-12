@@ -93,8 +93,8 @@
         <div>
           <h3>Authors</h3>
           <ul>
-            {{#each this.displayedAuthors as |author|}}
-              <li>{{ format-email author.name }}</li>
+            {{#each this.currentVersion.authorNames as |author|}}
+              <li>{{ format-email author }}</li>
             {{/each}}
           </ul>
         </div>
