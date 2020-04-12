@@ -1,8 +1,6 @@
-import Route from '@ember/routing/route';
+import AuthenticatedRoute from '../-authenticated-route';
 
-import AuthenticatedRoute from '../../mixins/authenticated-route';
-
-export default Route.extend(AuthenticatedRoute, {
+export default AuthenticatedRoute.extend({
   model() {
     return this.store.findAll('crate-owner-invite');
   },

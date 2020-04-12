@@ -1,8 +1,7 @@
-import Mixin from '@ember/object/mixin';
+import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
-// eslint-disable-next-line ember/no-new-mixins
-export default Mixin.create({
+export default Route.extend({
   flashMessages: service(),
   router: service(),
   session: service(),
