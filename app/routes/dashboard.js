@@ -5,12 +5,8 @@ import RSVP from 'rsvp';
 import AuthenticatedRoute from '../mixins/authenticated-route';
 
 export default Route.extend(AuthenticatedRoute, {
-  setupController(controller, model) {
+  setupController(controller) {
     this._super(...arguments);
-
-    controller.set('myCrates', model.myCrates);
-    controller.set('myFollowing', model.myFollowing);
-    controller.set('myStats', model.myStats);
 
     if (!controller.loadingMore) {
       controller.set('myFeed', A());

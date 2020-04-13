@@ -1,6 +1,7 @@
 import { A } from '@ember/array';
 import Controller from '@ember/controller';
 import { computed } from '@ember/object';
+import { alias } from '@ember/object/computed';
 
 import ajax from '../utils/ajax';
 
@@ -12,11 +13,12 @@ export default Controller.extend({
 
     this.loadingMore = false;
     this.hasMore = false;
-    this.myCrates = A();
-    this.myFollowing = A();
     this.myFeed = A();
-    this.myStats = 0;
   },
+
+  myCrates: alias('model.myCrates'),
+  myFollowing: alias('model.myFollowing'),
+  myStats: alias('model.myStats'),
 
   visibleCrates: computed('myCrates.[]', function () {
     return this.myCrates.slice(0, TO_SHOW);
