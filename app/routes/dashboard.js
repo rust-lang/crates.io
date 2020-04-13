@@ -10,7 +10,7 @@ export default Route.extend(AuthenticatedRoute, {
 
     if (!controller.loadingMore) {
       controller.set('myFeed', A());
-      controller.send('loadMore');
+      controller.loadMoreTask.perform();
     }
   },
 

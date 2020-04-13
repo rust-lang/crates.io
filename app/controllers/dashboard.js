@@ -3,6 +3,8 @@ import Controller from '@ember/controller';
 import { computed } from '@ember/object';
 import { alias } from '@ember/object/computed';
 
+import { task } from 'ember-concurrency';
+
 import ajax from '../utils/ajax';
 
 const TO_SHOW = 5;
@@ -36,20 +38,18 @@ export default Controller.extend({
     return this.get('myFollowing.length') > TO_SHOW;
   }),
 
-  actions: {
-    async loadMore() {
-      this.set('loadingMore', true);
-      let page = this.myFeed.length / 10 + 1;
+  loadMoreTask: task(function* () {
+    this.set('loadingMore', true);
+    let page = this.myFeed.length / 10 + 1;
 
-      try {
-        let data = await ajax(`/api/v1/me/updates?page=${page}`);
-        let versions = data.versions.map(version => this.store.push(this.store.normalize('version', version)));
+    try {
+      let data = yield ajax(`/api/v1/me/updates?page=${page}`);
+      let versions = data.versions.map(version => this.store.push(this.store.normalize('version', version)));
 
-        this.myFeed.pushObjects(versions);
-        this.set('hasMore', data.meta.more);
-      } finally {
-        this.set('loadingMore', false);
-      }
-    },
-  },
+      this.myFeed.pushObjects(versions);
+      this.set('hasMore', data.meta.more);
+    } finally {
+      this.set('loadingMore', false);
+    }
+  }),
 });
