@@ -5,15 +5,6 @@ import RSVP from 'rsvp';
 import AuthenticatedRoute from '../mixins/authenticated-route';
 
 export default Route.extend(AuthenticatedRoute, {
-  setupController(controller) {
-    this._super(...arguments);
-
-    if (!controller.isRunning) {
-      controller.set('myFeed', A());
-      controller.loadMoreTask.perform();
-    }
-  },
-
   async model() {
     let user = this.session.currentUser;
 
@@ -22,5 +13,14 @@ export default Route.extend(AuthenticatedRoute, {
     let myStats = user.stats();
 
     return await RSVP.hash({ myCrates, myFollowing, myStats });
+  },
+
+  setupController(controller) {
+    this._super(...arguments);
+
+    if (!controller.isRunning) {
+      controller.set('myFeed', A());
+      controller.loadMoreTask.perform();
+    }
   },
 });
