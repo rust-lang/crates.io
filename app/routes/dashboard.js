@@ -8,7 +8,7 @@ export default Route.extend(AuthenticatedRoute, {
   setupController(controller) {
     this._super(...arguments);
 
-    if (!controller.loadingMore) {
+    if (!controller.isRunning) {
       controller.set('myFeed', A());
       controller.loadMoreTask.perform();
     }

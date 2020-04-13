@@ -60,7 +60,7 @@
         {{/each}}
       </ul>
 
-      {{#if this.loadingMore}}
+      {{#if this.loadMoreTask.isRunning}}
         <span local-class='load-more'>
           <img src="/assets/ajax-loader.gif">
         </span>

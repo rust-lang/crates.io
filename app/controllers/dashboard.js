@@ -13,7 +13,6 @@ export default Controller.extend({
   init() {
     this._super(...arguments);
 
-    this.loadingMore = false;
     this.hasMore = false;
     this.myFeed = A();
   },
@@ -39,17 +38,12 @@ export default Controller.extend({
   }),
 
   loadMoreTask: task(function* () {
-    this.set('loadingMore', true);
     let page = this.myFeed.length / 10 + 1;
 
-    try {
-      let data = yield ajax(`/api/v1/me/updates?page=${page}`);
-      let versions = data.versions.map(version => this.store.push(this.store.normalize('version', version)));
+    let data = yield ajax(`/api/v1/me/updates?page=${page}`);
+    let versions = data.versions.map(version => this.store.push(this.store.normalize('version', version)));
 
-      this.myFeed.pushObjects(versions);
-      this.set('hasMore', data.meta.more);
-    } finally {
-      this.set('loadingMore', false);
-    }
+    this.myFeed.pushObjects(versions);
+    this.set('hasMore', data.meta.more);
   }),
 });
