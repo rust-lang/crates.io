@@ -83,7 +83,7 @@
     "ember-prism": "^0.6.1",
     "ember-promise-helpers": "^1.0.9",
     "ember-qunit": "^4.6.0",
-    "ember-resolver": "^7.0.0",
+    "ember-resolver": "^8.0.0",
     "ember-router-scroll": "^2.0.1",
     "ember-source": "~3.16.6",
     "ember-svg-jar": "^2.2.3",
