@@ -103,7 +103,7 @@
     "postcss-nested": "^4.2.1",
     "prettier": "^2.0.4",
     "qunit-console-grouper": "^0.2.0",
-    "qunit-dom": "^1.1.0",
+    "qunit-dom": "^1.2.0",
     "sass": "^1.26.3",
     "semver": "^7.2.2",
     "timekeeper": "^2.2.0"
