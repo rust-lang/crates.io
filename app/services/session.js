@@ -11,28 +11,32 @@ export default class SessionService extends Service {
   @service router;
 
   savedTransition = null;
-  isLoggedIn = false;
 
   @alias('loadUserTask.last.value.currentUser') currentUser;
   @alias('loadUserTask.last.value.ownedCrates') ownedCrates;
 
-  constructor() {
-    super(...arguments);
-
+  get isLoggedIn() {
     try {
-      this.isLoggedIn = window.localStorage.getItem('isLoggedIn') === '1';
+      return window.localStorage.getItem('isLoggedIn') === '1';
     } catch (e) {
-      this.isLoggedIn = false;
+      return false;
+    }
+  }
+
+  set isLoggedIn(value) {
+    try {
+      if (value) {
+        window.localStorage.setItem('isLoggedIn', '1');
+      } else {
+        window.localStorage.removeItem('isLoggedIn');
+      }
+    } catch (e) {
+      // ignore error
     }
   }
 
   login() {
     this.isLoggedIn = true;
-    try {
-      window.localStorage.setItem('isLoggedIn', '1');
-    } catch (e) {
-      // ignore error
-    }
 
     // just trigger the task, but don't wait for the result here
     this.loadUserTask.perform();
@@ -49,12 +53,6 @@ export default class SessionService extends Service {
     this.isLoggedIn = false;
 
     this.loadUserTask.cancelAll({ resetState: true });
-
-    try {
-      window.localStorage.removeItem('isLoggedIn');
-    } catch (e) {
-      // ignore error
-    }
   }
 
   @(task(function* () {
