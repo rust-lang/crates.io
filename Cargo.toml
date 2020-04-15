@@ -45,7 +45,7 @@ hex = "0.4"
 htmlescape = "0.3.1"
 license-exprs = "^1.4"
 dotenv = "0.15"
-toml = "0.4"
+toml = "0.5"
 diesel = { version = "1.4.0", features = ["postgres", "serde_json", "chrono", "r2d2"] }
 diesel_full_text_search = "1.0.0"
 swirl = { git = "https://github.com/sgrif/swirl.git", rev = "de5d8bb" }
