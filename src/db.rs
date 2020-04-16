@@ -31,8 +31,17 @@ impl DieselPool {
         }
     }
 
-    fn test_conn(conn: PgConnection) -> Self {
+    pub fn test_conn(conn: PgConnection) -> Self {
         DieselPool::Test(Arc::new(ReentrantMutex::new(conn)))
+    }
+
+    pub fn unwrap_test_conn(self) -> Result<PgConnection, Self> {
+        match self {
+            DieselPool::Test(shared_conn) => Arc::try_unwrap(shared_conn)
+                .map(|c| c.into_inner())
+                .map_err(Self::Test),
+            other => Err(other),
+        }
     }
 }
 
