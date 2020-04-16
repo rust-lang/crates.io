@@ -122,6 +122,7 @@
 }
 
 .load-more {
+    display: block;
     text-align: center;
     width: 100%;
     padding: 10px;

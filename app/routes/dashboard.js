@@ -5,34 +5,22 @@ import RSVP from 'rsvp';
 import AuthenticatedRoute from '../mixins/authenticated-route';
 
 export default Route.extend(AuthenticatedRoute, {
+  async model() {
+    let user = this.session.currentUser;
+
+    let myCrates = this.store.query('crate', { user_id: user.get('id') });
+    let myFollowing = this.store.query('crate', { following: 1 });
+    let myStats = user.stats();
+
+    return await RSVP.hash({ myCrates, myFollowing, myStats });
+  },
+
   setupController(controller) {
     this._super(...arguments);
 
-    controller.set('myCrates', this.get('data.myCrates'));
-    controller.set('myFollowing', this.get('data.myFollowing'));
-    controller.set('myStats', this.get('data.myStats'));
-
-    if (!controller.loadingMore) {
+    if (!controller.isRunning) {
       controller.set('myFeed', A());
-      controller.send('loadMore');
+      controller.loadMoreTask.perform();
     }
-  },
-
-  model() {
-    return this.get('session.currentUser');
-  },
-
-  async afterModel(user) {
-    let myCrates = this.store.query('crate', {
-      user_id: user.get('id'),
-    });
-
-    let myFollowing = this.store.query('crate', {
-      following: 1,
-    });
-
-    let myStats = user.stats();
-
-    this.set('data', await RSVP.hash({ myCrates, myFollowing, myStats }));
   },
 });

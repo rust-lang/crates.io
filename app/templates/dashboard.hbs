@@ -60,13 +60,13 @@
         {{/each}}
       </ul>
 
-      {{#if this.loadingMore}}
+      {{#if this.loadMoreTask.isRunning}}
         <span local-class='load-more'>
           <img src="/assets/ajax-loader.gif">
         </span>
       {{else}}
         {{#if this.hasMore}}
-          <button type="button" local-class='load-more' {{ action 'loadMore' }}>
+          <button type="button" local-class='load-more' {{on "click" (perform this.loadMoreTask)}}>
             Load More
           </button>
         {{/if}}
