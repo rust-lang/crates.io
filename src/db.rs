@@ -63,22 +63,25 @@ pub fn connect_now() -> ConnectionResult<PgConnection> {
     PgConnection::establish(&url.to_string())
 }
 
+pub fn connection_url(url: &str) -> String {
+    let mut url = Url::parse(url).expect("Invalid database URL");
+    if dotenv::var("HEROKU").is_ok() && !url.query_pairs().any(|(k, _)| k == "sslmode") {
+        url.query_pairs_mut().append_pair("sslmode", "require");
+    }
+    url.into_string()
+}
+
 pub fn diesel_pool(
     url: &str,
     env: Env,
     config: r2d2::Builder<ConnectionManager<PgConnection>>,
 ) -> DieselPool {
-    let mut url = Url::parse(url).expect("Invalid database URL");
-    if dotenv::var("HEROKU").is_ok() && !url.query_pairs().any(|(k, _)| k == "sslmode") {
-        url.query_pairs_mut().append_pair("sslmode", "require");
-    }
-
+    let url = connection_url(url);
     if env == Env::Test {
-        let conn =
-            PgConnection::establish(&url.into_string()).expect("failed to establish connection");
+        let conn = PgConnection::establish(&url).expect("failed to establish connection");
         DieselPool::test_conn(conn)
     } else {
-        let manager = ConnectionManager::new(url.into_string());
+        let manager = ConnectionManager::new(url);
         DieselPool::Pool(config.build(manager).unwrap())
     }
 }
