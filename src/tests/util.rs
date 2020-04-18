@@ -649,6 +649,19 @@ where
             .ends_with(target));
         self
     }
+
+    pub fn assert_redirects_to(&self, target: &str) -> &Self {
+        assert_eq!(
+            self.response
+                .headers()
+                .get(header::LOCATION)
+                .unwrap()
+                .to_str()
+                .unwrap(),
+            target
+        );
+        self
+    }
 }
 
 impl Response<()> {

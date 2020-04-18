@@ -66,6 +66,10 @@ pub fn build_router(app: &App) -> R404 {
         "/crates/:crate_id/reverse_dependencies",
         C(krate::metadata::reverse_dependencies),
     );
+    api_router.get(
+        "/crates/:crate_id/maintenance.svg",
+        C(krate::badges::maintenance),
+    );
     api_router.get("/keywords", C(keyword::index));
     api_router.get("/keywords/:keyword_id", C(keyword::show));
     api_router.get("/categories", C(category::index));

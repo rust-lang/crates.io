@@ -1,3 +1,4 @@
+pub mod badges;
 pub mod downloads;
 pub mod follow;
 pub mod metadata;
