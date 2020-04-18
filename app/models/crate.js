@@ -1,5 +1,4 @@
 import Model, { attr, hasMany } from '@ember-data/model';
-import { map, sort } from '@ember/object/computed';
 
 import { memberAction } from 'ember-api-actions';
 
@@ -22,15 +21,6 @@ export default class Crate extends Model {
   @attr('boolean') exact_match;
 
   @hasMany('versions', { async: true }) versions;
-  @attr() badges;
-  @map('badges', badge => ({
-    ...badge,
-    component_name: `badge-${badge.badge_type}`,
-  }))
-  enhanced_badges;
-
-  badge_sort = ['badge_type'];
-  @sort('enhanced_badges', 'badge_sort') annotated_badges;
 
   @hasMany('users', { async: true }) owners;
   @hasMany('teams', { async: true }) owner_team;
