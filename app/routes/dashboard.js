@@ -1,10 +1,9 @@
 import { A } from '@ember/array';
-import Route from '@ember/routing/route';
 import RSVP from 'rsvp';
 
-import AuthenticatedRoute from '../mixins/authenticated-route';
+import AuthenticatedRoute from './-authenticated-route';
 
-export default Route.extend(AuthenticatedRoute, {
+export default AuthenticatedRoute.extend({
   async model() {
     let user = this.session.currentUser;
 
