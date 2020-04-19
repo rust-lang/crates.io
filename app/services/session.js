@@ -1,5 +1,7 @@
+import { alias } from '@ember/object/computed';
 import Service, { inject as service } from '@ember/service';
 
+import { task } from 'ember-concurrency';
 import window from 'ember-window-mock';
 
 import ajax from '../utils/ajax';
@@ -9,94 +11,64 @@ export default class SessionService extends Service {
   @service router;
 
   savedTransition = null;
-  abortedTransition = null;
-  isLoggedIn = false;
-  currentUser = null;
-  currentUserDetected = false;
-  ownedCrates = null;
 
-  constructor() {
-    super(...arguments);
+  @alias('loadUserTask.last.value.currentUser') currentUser;
+  @alias('loadUserTask.last.value.ownedCrates') ownedCrates;
 
-    let isLoggedIn;
+  get isLoggedIn() {
     try {
-      isLoggedIn = window.localStorage.getItem('isLoggedIn') === '1';
+      return window.localStorage.getItem('isLoggedIn') === '1';
     } catch (e) {
-      isLoggedIn = false;
+      return false;
     }
-    this.set('isLoggedIn', isLoggedIn);
-    this.set('currentUser', null);
   }
 
-  loginUser(user) {
-    this.set('isLoggedIn', true);
-    this.set('currentUser', user);
+  set isLoggedIn(value) {
     try {
-      window.localStorage.setItem('isLoggedIn', '1');
+      if (value) {
+        window.localStorage.setItem('isLoggedIn', '1');
+      } else {
+        window.localStorage.removeItem('isLoggedIn');
+      }
     } catch (e) {
       // ignore error
+    }
+  }
+
+  login() {
+    this.isLoggedIn = true;
+
+    // just trigger the task, but don't wait for the result here
+    this.loadUserTask.perform();
+
+    // perform the originally saved transition, if it exists
+    let transition = this.savedTransition;
+    if (transition) {
+      transition.retry();
     }
   }
 
   logoutUser() {
-    this.set('savedTransition', null);
-    this.set('abortedTransition', null);
-    this.set('isLoggedIn', null);
-    this.set('currentUser', null);
+    this.savedTransition = null;
+    this.isLoggedIn = false;
 
+    this.loadUserTask.cancelAll({ resetState: true });
+  }
+
+  @(task(function* () {
+    if (!this.isLoggedIn) return {};
+
+    let response;
     try {
-      window.localStorage.removeItem('isLoggedIn');
-    } catch (e) {
-      // ignore error
-    }
-  }
-
-  async loadUser() {
-    if (this.isLoggedIn && !this.currentUser) {
-      try {
-        await this.fetchUser();
-      } catch (error) {
-        this.logoutUser();
-      } finally {
-        this.set('currentUserDetected', true);
-        let transition = this.abortedTransition;
-        if (transition) {
-          transition.retry();
-          this.set('abortedTransition', null);
-        }
-      }
-    } else {
-      this.set('currentUserDetected', true);
-    }
-  }
-
-  async fetchUser() {
-    let response = await ajax('/api/v1/me');
-    this.set('currentUser', this.store.push(this.store.normalize('user', response.user)));
-    this.set(
-      'ownedCrates',
-      response.owned_crates.map(c => this.store.push(this.store.normalize('owned-crate', c))),
-    );
-  }
-
-  checkCurrentUser(transition, beforeRedirect) {
-    if (this.currentUser) {
-      return;
+      response = yield ajax('/api/v1/me');
+    } catch (error) {
+      return {};
     }
 
-    // The current user is loaded asynchronously, so if we haven't actually
-    // loaded the current user yet then we need to wait for it to be loaded.
-    // Once we've done that we can retry the transition and start the whole
-    // process over again!
-    if (!this.currentUserDetected) {
-      transition.abort();
-      this.set('abortedTransition', transition);
-    } else {
-      this.set('savedTransition', transition);
-      if (beforeRedirect) {
-        beforeRedirect();
-      }
-      return this.router.transitionTo('index');
-    }
-  }
+    let currentUser = this.store.push(this.store.normalize('user', response.user));
+    let ownedCrates = response.owned_crates.map(c => this.store.push(this.store.normalize('owned-crate', c)));
+
+    return { currentUser, ownedCrates };
+  }).drop())
+  loadUserTask;
 }
