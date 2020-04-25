@@ -11,11 +11,6 @@
       </LinkTo>
       <CrateTomlCopy @copyText='{{@crate.name}} = "{{@crate.max_version}}"' @inline={{true}} />
       <CrateBadge @crate={{@crate}} local-class="version-badge" />
-      {{#each @crate.annotated_badges as |badge|}}
-        {{#let (component badge.component_name) as |Badge|}}
-          <Badge @badge={{badge}} data-test-badge={{badge.badge_type}} />
-        {{/let}}
-      {{/each}}
     </div>
     <div local-class="description" data-test-description>
       {{ truncate-text @crate.description }}

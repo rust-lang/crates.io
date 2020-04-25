@@ -47,7 +47,6 @@ module('Acceptance | search', function (hooks) {
       .dom('[data-test-crate-row="0"] [data-test-description]')
       .hasText('A Kinetic protocol library written in Rust');
     assert.dom('[data-test-crate-row="0"] [data-test-downloads]').hasText('All-Time: 225');
-    assert.dom('[data-test-crate-row="0"] [data-test-badge="maintenance"]').exists();
     assert.dom('[data-test-crate-row="0"] [data-test-updated-at]').exists();
   });
 
