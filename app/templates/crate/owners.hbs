@@ -17,7 +17,7 @@
     <p data-test-invited-message>{{this.invited}}</p>
   {{/if}}
 
-  <form local-class="email-form" {{action 'addOwner' on='submit'}}>
+  <form local-class="email-form" {{on "submit" (perform this.addOwnerTask)}}>
     <label local-class="email-input-label" for='new-owner-username'>
       Username
     </label>
@@ -44,7 +44,7 @@
       <div local-class="email-column">
         {{team.email}}
       </div>
-      <button type="button" local-class="remove-button" data-test-remove-owner-button {{action 'removeOwner' team}}>Remove</button>
+      <button type="button" local-class="remove-button" data-test-remove-owner-button {{on "click" (perform this.removeOwnerTask team)}}>Remove</button>
     </div>
   {{/each}}
   {{#each this.crate.owner_user as |user|}}
@@ -58,7 +58,7 @@
       <div local-class="email-column">
         {{user.email}}
       </div>
-      <button type="button" local-class="remove-button" data-test-remove-owner-button {{action 'removeOwner' user}}>Remove</button>
+      <button type="button" local-class="remove-button" data-test-remove-owner-button {{on "click" (perform this.removeOwnerTask user)}}>Remove</button>
     </div>
   {{/each}}
 </div>
