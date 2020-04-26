@@ -77,17 +77,23 @@ noscript {
     display: grid;
     grid-template-columns: auto auto 1fr auto;
     align-items: center;
+    padding: 10px;
     color: white;
 
     a {
         color: white; text-decoration: none;
         &:hover { color: darken(white, 15%); }
     }
+
+    h1 {
+        font-size: 24px;
+        margin: 0.67em 0 0.67em 10px;
+    }
 }
 
-.subtitle {
-    display: block;
-    font-size: x-small;
+.logo {
+    width: 60px;
+    height: auto;
 }
 
 .desktop-search-form {
