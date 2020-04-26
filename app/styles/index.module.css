@@ -86,14 +86,9 @@
         font-size: 105%;
         line-height: 20px;
     }
-
-    > section[aria-busy="true"] > h2::after {
-        content: '';
-        background-image: url('/assets/ajax-loader.gif');
-        display: inline-block;
-        height: 16px;
-        width: 16px;
-        margin-left: 10px;
-    }
 }
 
+.list {
+    list-style: none;
+    padding: 0;
+}

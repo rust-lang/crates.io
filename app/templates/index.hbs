@@ -36,28 +36,149 @@
 </div>
 
 <div local-class='lists'>
-  <section data-test-new-crates aria-busy="{{this.dataTask.isRunning}}">
+  <section data-test-new-crates>
     <h2>New Crates</h2>
-    <CrateListNewest @crates={{this.model.new_crates}} />
+    <ol local-class="list" aria-busy="{{this.dataTask.isRunning}}">
+      {{#if this.dataTask.isRunning}}
+        {{#each (placeholders 10)}}
+          <li>
+            <FrontPageList::Item::Placeholder @withSubtitle={{true}} />
+          </li>
+        {{/each}}
+      {{else}}
+        {{#each this.model.new_crates as |crate index|}}
+          <li>
+            <FrontPageList::Item
+              @route="crate"
+              @model={{crate.id}}
+              @title={{crate.name}}
+              @subtitle="v{{crate.newest_version}}"
+              data-test-crate-link={{index}}
+            />
+          </li>
+        {{/each}}
+      {{/if}}
+    </ol>
   </section>
-  <section data-test-most-downloaded aria-busy="{{this.dataTask.isRunning}}">
+
+  <section data-test-most-downloaded>
     <h2>Most Downloaded</h2>
-    <CrateListNameOnly @crates={{this.model.most_downloaded}} />
+    <ol local-class="list" aria-busy="{{this.dataTask.isRunning}}">
+      {{#if this.dataTask.isRunning}}
+        {{#each (placeholders 10)}}
+          <li>
+            <FrontPageList::Item::Placeholder />
+          </li>
+        {{/each}}
+      {{else}}
+        {{#each this.model.most_downloaded as |crate index|}}
+          <li>
+            <FrontPageList::Item
+              @route="crate"
+              @model={{crate.id}}
+              @title={{crate.name}}
+              data-test-crate-link={{index}}
+            />
+          </li>
+        {{/each}}
+      {{/if}}
+    </ol>
   </section>
-  <section data-test-just-updated aria-busy="{{this.dataTask.isRunning}}">
+
+  <section data-test-just-updated>
     <h2>Just Updated</h2>
-    <CrateListNewest @crates={{this.model.just_updated}} />
+    <ol local-class="list" aria-busy="{{this.dataTask.isRunning}}">
+      {{#if this.dataTask.isRunning}}
+        {{#each (placeholders 10)}}
+          <li>
+            <FrontPageList::Item::Placeholder @withSubtitle={{true}} />
+          </li>
+        {{/each}}
+      {{else}}
+        {{#each this.model.just_updated as |crate index|}}
+          <li>
+            <FrontPageList::Item
+              @route="crate"
+              @model={{crate.id}}
+              @title={{crate.name}}
+              @subtitle="v{{crate.newest_version}}"
+              data-test-crate-link={{index}}
+            />
+          </li>
+        {{/each}}
+      {{/if}}
+    </ol>
   </section>
-  <section data-test-most-recently-downloaded aria-busy="{{this.dataTask.isRunning}}">
+
+  <section data-test-most-recently-downloaded>
     <h2>Most Recent Downloads</h2>
-    <CrateListNameOnly @crates={{this.model.most_recently_downloaded}} />
+    <ol local-class="list" aria-busy="{{this.dataTask.isRunning}}">
+      {{#if this.dataTask.isRunning}}
+        {{#each (placeholders 10)}}
+          <li>
+            <FrontPageList::Item::Placeholder />
+          </li>
+        {{/each}}
+      {{else}}
+        {{#each this.model.most_recently_downloaded as |crate index|}}
+          <li>
+            <FrontPageList::Item
+              @route="crate"
+              @model={{crate.id}}
+              @title={{crate.name}}
+              data-test-crate-link={{index}}
+            />
+          </li>
+        {{/each}}
+      {{/if}}
+    </ol>
   </section>
-  <section data-test-keywords aria-busy="{{this.dataTask.isRunning}}">
+
+  <section data-test-keywords>
     <h2>Popular Keywords <LinkTo @route="keywords">(see all)</LinkTo></h2>
-    <KeywordList @keywords={{this.model.popular_keywords}} />
+    <ul local-class="list" aria-busy="{{this.dataTask.isRunning}}">
+      {{#if this.dataTask.isRunning}}
+        {{#each (placeholders 10)}}
+          <li>
+            <FrontPageList::Item::Placeholder @withSubtitle={{true}} />
+          </li>
+        {{/each}}
+      {{else}}
+        {{#each this.model.popular_keywords as |keyword|}}
+          <li>
+            <FrontPageList::Item
+              @route="keyword"
+              @model={{keyword}}
+              @title={{keyword.id}}
+              @subtitle="{{format-num keyword.crates_cnt}} crates"
+            />
+          </li>
+        {{/each}}
+      {{/if}}
+    </ul>
   </section>
-  <section data-test-categories aria-busy="{{this.dataTask.isRunning}}">
+
+  <section data-test-categories>
     <h2>Popular Categories <LinkTo @route="categories">(see all)</LinkTo></h2>
-    <CategoryList @categories={{this.model.popular_categories}} />
+    <ul local-class="list" aria-busy="{{this.dataTask.isRunning}}">
+      {{#if this.dataTask.isRunning}}
+        {{#each (placeholders 10)}}
+          <li>
+            <FrontPageList::Item::Placeholder @withSubtitle={{true}} />
+          </li>
+        {{/each}}
+      {{else}}
+        {{#each this.model.popular_categories as |category|}}
+          <li>
+            <FrontPageList::Item
+              @route="category"
+              @model={{category.slug}}
+              @title={{category.category}}
+              @subtitle="{{format-num category.crates_cnt}} crates"
+            />
+          </li>
+        {{/each}}
+      {{/if}}
+    </ul>
   </section>
 </div>
