@@ -3,7 +3,7 @@
 {{title "crates.io: Rust Package Registry" separator=' - ' prepend=true}}
 
 <div local-class="application">
-  <nav local-class="header">
+  <header local-class="header">
     <LinkTo @route="index" @tabindex="-1">
       <img src="/assets/Cargo-Logo-Small.png" height="100" width="100" alt="Cargo Logo">
     </LinkTo>
@@ -33,7 +33,7 @@
       <label for="cargo-desktop-search" local-class="search-label">Search</label>
     </form>
 
-    <div local-class='nav'>
+    <nav local-class='nav'>
       <LinkTo @route="crates" @query={{hash letter=null page=1}} data-test-all-crates-link>
         Browse All Crates
       </LinkTo>
@@ -81,7 +81,7 @@
           Log in with GitHub
         </LinkTo>
       {{/if}}
-    </div>
+    </nav>
 
     <div local-class='menu'>
       <Dropdown as |dd|>
@@ -101,7 +101,7 @@
         </dd.Menu>
       </Dropdown>
     </div>
-  </nav>
+  </header>
 
   <form local-class='mobile-search' action='/search' {{ action "search" on="submit" }} >
     <input
