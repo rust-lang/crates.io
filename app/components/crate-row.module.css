@@ -17,8 +17,17 @@
     font-size: 120%;
 }
 
-.version-badge {
+.version {
     margin-left: 10px;
+}
+
+.copy-button {
+    opacity: 0;
+    transition: 50ms;
+
+    .crate-row:hover & {
+        opacity: 1;
+    }
 }
 
 .description {
