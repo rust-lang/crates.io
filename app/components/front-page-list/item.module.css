@@ -37,6 +37,8 @@
 
 .right {
     flex-shrink: 0;
+    height: 16px;
+    width: auto;
     margin-left: 10px;
-    background: #fff;
+    color: rgb(118, 131, 138);
 }
