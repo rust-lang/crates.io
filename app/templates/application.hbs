@@ -101,22 +101,22 @@
         </dd.Menu>
       </Dropdown>
     </div>
-  </header>
 
-  <form local-class='mobile-search' action='/search' {{ action "search" on="submit" }} >
-    <input
-      type="text"
-      local-class="search"
-      name="q"
-      id="cargo-mobile-search"
-      placeholder="Search"
-      value={{this.searchQuery}}
-      oninput={{action (mut this.searchQuery) value="target.value"}}
-      autocorrect="off"
-      required
-    >
-    <label for="cargo-mobile-search" local-class="search-label">Search</label>
-  </form>
+    <form local-class='mobile-search' action='/search' {{ action "search" on="submit" }} >
+      <input
+        type="text"
+        local-class="search"
+        name="q"
+        id="cargo-mobile-search"
+        placeholder="Search"
+        value={{this.searchQuery}}
+        oninput={{action (mut this.searchQuery) value="target.value"}}
+        autocorrect="off"
+        required
+      >
+      <label for="cargo-mobile-search" local-class="search-label">Search</label>
+    </form>
+  </header>
 
   <main local-class="main">
     <FlashMessage @message={{this.flashMessages.message}} />
