@@ -1387,10 +1387,13 @@ fn summary_new_crates() {
     assert_eq!(json.num_crates, 5);
     assert_eq!(json.num_downloads, 6000);
     assert_eq!(json.most_downloaded[0].name, "most_recent_downloads");
+    assert_eq!(json.most_downloaded[0].downloads, 5000);
+    assert_eq!(json.most_downloaded[0].recent_downloads, Some(50));
     assert_eq!(
         json.most_recently_downloaded[0].name,
         "most_recent_downloads"
     );
+    assert_eq!(json.most_recently_downloaded[0].recent_downloads, Some(50));
     assert_eq!(json.popular_keywords[0].keyword, "popular");
     assert_eq!(json.popular_categories[0].category, "Category 1");
     assert_eq!(json.just_updated.len(), 2);
