@@ -1,8 +1,4 @@
-* {
-    box-sizing: border-box;
-}
-
-html {
+:root {
     --main-color: #383838;
     --main-color-light: #858585;
     --main-bg: #f9f7ec;
@@ -11,7 +7,13 @@ html {
     --link-color: rgb(0, 172, 91);
     --link-hover-color: #007940;
     --separator-color: #284725;
+}
 
+* {
+    box-sizing: border-box;
+}
+
+html {
     background: url('/assets/noise.png');
     background-color: #3b6837;
 }
