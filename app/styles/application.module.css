@@ -64,7 +64,7 @@ noscript {
     padding: 10px 0;
 }
 
-.application {
+.width-limit {
     width: 960px;
     @media only screen and (max-width: 960px) {
         width: 100%;
@@ -72,12 +72,12 @@ noscript {
 }
 
 .header {
-    color: white;
-    position: relative;
-    height: 100px;
-    display: flex;
+    composes: width-limit;
+
+    display: grid;
+    grid-template-columns: auto auto 1fr auto;
     align-items: center;
-    justify-content: space-between;
+    color: white;
 
     a {
         color: white; text-decoration: none;
@@ -118,9 +118,9 @@ input.search {
 
 .mobile-search {
     display: none;
-    margin-bottom: 10px;
-    margin-left: 5px;
-    margin-right: 5px;
+    grid-row: 2;
+    grid-column: span 4;
+    margin: 0 10px 10px;
 
     input.search {
         margin: 0;
@@ -192,19 +192,24 @@ input.search {
 
 .main {
     display: flex;
-    flex-direction: column;
-
-    margin-bottom: 10px;
+    justify-content: center;
+    width: 100%;
     background-color: var(--main-bg);
-    padding: 15px;
-    border-radius: 10px;
-    box-shadow: 0px 0px 5px 2px #3b6837;
-    border: 5px solid #62865f;
     color: var(--main-color);
 }
 
+.inner-main {
+    composes: width-limit;
+    display: flex;
+    flex-direction: column;
+    margin: 15px;
+}
+
 .after-main-links {
+    composes: width-limit;
+
     margin: 40px;
+    text-align: center;
 
     a { color: white; }
     a:hover { color: darken(white, 10%); }
@@ -214,6 +219,7 @@ input.search {
         .sep { display: none; }
         display: flex;
         flex-direction: column;
+        align-items: center;
 
         a {
             width: 50%;
