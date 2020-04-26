@@ -10,7 +10,7 @@
         {{ @crate.name }}
       </LinkTo>
       <span local-class="version" data-test-version>v{{@crate.max_version}}</span>
-      <CrateTomlCopy @copyText='{{@crate.name}} = "{{@crate.max_version}}"' @inline={{true}} />
+      <CrateTomlCopy @copyText='{{@crate.name}} = "{{@crate.max_version}}"' @inline={{true}} local-class="copy-button" />
     </div>
     <div local-class="description" data-test-description>
       {{ truncate-text @crate.description }}

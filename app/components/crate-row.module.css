@@ -21,6 +21,15 @@
     margin-left: 10px;
 }
 
+.copy-button {
+    opacity: 0;
+    transition: 50ms;
+
+    .crate-row:hover & {
+        opacity: 1;
+    }
+}
+
 .description {
     composes: small from '../styles/shared/typography.module.css';
     margin-top: 8px;
