@@ -71,7 +71,15 @@ noscript {
     }
 }
 
-.header {
+.header,
+.main,
+.footer {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.header-inner {
     composes: width-limit;
 
     display: grid;
@@ -202,9 +210,6 @@ input.search {
 }
 
 .main {
-    display: flex;
-    justify-content: center;
-    width: 100%;
     background-color: var(--main-bg);
     color: var(--main-color);
 }
