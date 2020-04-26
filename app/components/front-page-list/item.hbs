@@ -1,6 +1,9 @@
 <li>
   <LinkTo @route={{@route}} @model={{@model}} local-class="link" ...attributes>
-    <span>{{yield}}</span>
+    <span>
+      {{@title}}
+      {{#if @subtitle}}({{@subtitle}}){{/if}}
+    </span>
     {{svg-jar "right-arrow"}}
   </LinkTo>
 </li>

@@ -1,7 +1,10 @@
 <FrontPageList @ordered={{true}} as |Item|>
   {{#each @crates as |crate index|}}
-    <Item @route="crate" @model={{crate.id}} data-test-crate-link={{index}}>
-      {{ crate.name }}
-    </Item>
+    <Item
+      @route="crate"
+      @model={{crate.id}}
+      @title={{crate.name}}
+      data-test-crate-link={{index}}
+    />
   {{/each}}
 </FrontPageList>
