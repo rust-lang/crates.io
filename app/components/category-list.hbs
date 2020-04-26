@@ -4,7 +4,7 @@
       @route="category"
       @model={{category.slug}}
       @title={{category.category}}
-      @subtitle={{format-num category.crates_cnt}}
+      @subtitle="{{format-num category.crates_cnt}} crates"
     />
   {{/each}}
 </FrontPageList>

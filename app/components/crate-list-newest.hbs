@@ -4,7 +4,7 @@
       @route="crate"
       @model={{crate.id}}
       @title={{crate.name}}
-      @subtitle={{crate.newest_version}}
+      @subtitle="v{{crate.newest_version}}"
       data-test-crate-link={{index}}
     />
   {{/each}}
