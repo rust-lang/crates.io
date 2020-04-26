@@ -41,7 +41,7 @@ module('Acceptance | search', function (hooks) {
       .dom('[data-test-search-sort]')
       .hasText('Sort by Relevance Relevance All-Time Downloads Recent Downloads Recent Updates Newly Added');
     assert.dom('[data-test-crate-row="0"] [data-test-crate-link]').hasText('kinetic-rust');
-    assert.dom('[data-test-crate-row="0"] [data-test-version-badge]').hasAttribute('alt', '0.0.16');
+    assert.dom('[data-test-crate-row="0"] [data-test-version]').hasText('v0.0.16');
 
     assert
       .dom('[data-test-crate-row="0"] [data-test-description]')
