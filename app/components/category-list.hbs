@@ -1,7 +1,10 @@
 <FrontPageList as |Item|>
   {{#each @categories as |category|}}
-    <Item @route="category" @model={{category.slug}}>
-      {{ category.category }} ({{ format-num category.crates_cnt }})
-    </Item>
+    <Item
+      @route="category"
+      @model={{category.slug}}
+      @title={{category.category}}
+      @subtitle="{{format-num category.crates_cnt}} crates"
+    />
   {{/each}}
 </FrontPageList>

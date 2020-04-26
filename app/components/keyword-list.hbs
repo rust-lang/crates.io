@@ -1,7 +1,10 @@
 <FrontPageList as |Item|>
   {{#each @keywords as |keyword|}}
-    <Item @route="keyword" @model={{keyword}}>
-      {{ keyword.id }} ({{ format-num keyword.crates_cnt }})
-    </Item>
+    <Item
+      @route="keyword"
+      @model={{keyword}}
+      @title={{keyword.id}}
+      @subtitle="{{format-num keyword.crates_cnt}} crates"
+    />
   {{/each}}
 </FrontPageList>

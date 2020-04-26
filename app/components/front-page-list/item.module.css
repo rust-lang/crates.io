@@ -1,27 +1,44 @@
 .link {
-    margin: 8px 0;
+    display: flex;
+    align-items: center;
     width: 100%;
+    min-height: 60px;
+    margin: 8px 0;
+    padding: 0 10px;
+    background-color: var(--main-bg-dark);
     color: #525252;
     text-decoration: none;
-    background-color: var(--main-bg-dark);
-    font-size: 90%;
-    padding: 20px 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
 
     &:hover {
         background-color: #e4e1cc;
     }
+}
 
-    span {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
+.left {
+    flex-grow: 1;
+    width: 0;
+}
 
-    svg {
-        flex-shrink: 0;
-        background: #fff;
-    }
+.title, .subtitle {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.title {
+    font-size: 16px;
+}
+
+.subtitle {
+    margin-top: 4px;
+    font-size: 13px;
+    color: rgb(118, 131, 138);
+}
+
+.right {
+    flex-shrink: 0;
+    height: 16px;
+    width: auto;
+    margin-left: 10px;
+    color: rgb(118, 131, 138);
 }
