@@ -104,7 +104,7 @@
     "prettier": "^2.0.5",
     "qunit-console-grouper": "^0.2.0",
     "qunit-dom": "^1.2.0",
-    "sass": "^1.26.3",
+    "sass": "^1.26.5",
     "semver": "^7.3.2",
     "timekeeper": "^2.2.0"
   },
