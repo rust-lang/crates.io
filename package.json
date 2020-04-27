@@ -93,7 +93,7 @@
     "ember-web-app": "^4.0.0",
     "ember-window-mock": "^0.6.0",
     "eslint": "^6.8.0",
-    "eslint-config-prettier": "^6.10.1",
+    "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-ember": "^8.4.0",
     "eslint-plugin-import-helpers": "^1.0.2",
     "eslint-plugin-prettier": "^3.1.3",
