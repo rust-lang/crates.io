@@ -14,7 +14,6 @@
     margin-left: auto;
     padding: 10px;
 
-    span { margin-left: 10px; }
     .num {
         font-size: 30px;
         font-weight: bold;
@@ -27,6 +26,7 @@
 
 .stats-label {
     composes: small from './shared/typography.module.css';
+    margin-left: 5px;
 }
 
 .my-info {
