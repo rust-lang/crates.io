@@ -1,0 +1,39 @@
+.link {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 60px;
+    margin: 8px 0;
+    padding: 0 10px;
+    background-color: var(--main-bg-dark);
+}
+
+.left {
+    flex-grow: 1;
+    width: 0;
+}
+
+.title {
+    height: 16px;
+    width: 150px;
+    border-radius: 8px;
+    background: rgb(118, 131, 138);
+    opacity: 0.25;
+}
+
+.subtitle {
+    height: 13px;
+    width: 90px;
+    margin-top: 4px;
+    border-radius: 6.5px;
+    background: rgb(118, 131, 138);
+    opacity: 0.2;
+}
+
+.right {
+    flex-shrink: 0;
+    height: 16px;
+    width: auto;
+    margin-left: 10px;
+    color: rgb(118, 131, 138);
+}

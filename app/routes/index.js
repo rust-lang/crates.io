@@ -2,7 +2,7 @@ import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
 export default Route.extend({
-  fetcher: service(),
+  fastboot: service(),
 
   headTags() {
     return [
@@ -16,26 +16,12 @@ export default Route.extend({
     ];
   },
 
-  setupController(controller, model) {
-    this._super(controller, model);
+  setupController(controller) {
     this.controllerFor('application').set('searchQuery', null);
-  },
 
-  model() {
-    return this.fetcher.ajax('/api/v1/summary');
-  },
-
-  // eslint-disable-next-line no-unused-vars
-  afterModel(model, transition) {
-    addCrates(this.store, model.new_crates);
-    addCrates(this.store, model.most_downloaded);
-    addCrates(this.store, model.just_updated);
-    addCrates(this.store, model.most_recently_downloaded);
+    let promise = controller.dataTask.perform();
+    if (this.fastboot.isFastBoot) {
+      this.fastboot.deferRendering(promise);
+    }
   },
 });
-
-function addCrates(store, crates) {
-  for (let i = 0; i < crates.length; i++) {
-    crates[i] = store.push(store.normalize('crate', crates[i]));
-  }
-}
