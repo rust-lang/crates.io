@@ -12,6 +12,8 @@ export default Route.extend({
         this.flashMessages.queue(`Category '${params.category_id}' does not exist`);
         return this.replaceWith('index');
       }
+
+      throw e;
     }
   },
 });
