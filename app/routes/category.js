@@ -1,3 +1,4 @@
+import { NotFoundError } from '@ember-data/adapter/error';
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
@@ -8,7 +9,7 @@ export default Route.extend({
     try {
       return await this.store.find('category', params.category_id);
     } catch (e) {
-      if (e.errors.some(e => e.detail === 'Not Found')) {
+      if (e instanceof NotFoundError) {
         this.flashMessages.queue(`Category '${params.category_id}' does not exist`);
         return this.replaceWith('index');
       }
