@@ -5,7 +5,7 @@
   <h1>My Dashboard</h1>
   <div local-class="stats">
     <div local-class='downloads'>
-      <img src="/assets/download.svg">
+      {{svg-jar "download" local-class="header-icon"}}
       <span local-class='num'>{{format-num this.myStats.total_downloads}}</span>
       <span local-class="stats-label">Total Downloads</span>
     </div>
