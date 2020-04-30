@@ -81,7 +81,7 @@
         {{#if this.currentVersion.crate_size}}
           <div>
             <div local-class='crate-size'>Crate Size</div>
-            <div local-class='size'>{{format-crate-size this.currentVersion.crate_size}}</div>
+            <div local-class='size'>{{pretty-bytes this.currentVersion.crate_size}}</div>
           </div>
         {{/if}}
 
