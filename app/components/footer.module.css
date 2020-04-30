@@ -1,0 +1,38 @@
+.footer {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.sep {
+    margin: 0 10px;
+    color: var(--separator-color);
+}
+
+.after-main-links {
+    composes: width-limit from '../styles/application.module.css';
+
+    margin: 40px;
+    text-align: center;
+
+    a { color: white; }
+    a:hover { color: darken(white, 10%); }
+
+    @media only screen and (max-width: 450px) {
+        margin: 20px;
+        .sep { display: none; }
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
+        a {
+            width: 50%;
+            font-size: 110%;
+            padding: 5px;
+
+            &:not(:first-child) {
+                border-top: 1px solid var(--separator-color);
+            }
+        }
+    }
+}
