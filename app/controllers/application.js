@@ -1,14 +1,12 @@
 import Controller from '@ember/controller';
-import { oneWay } from '@ember/object/computed';
 import { on } from '@ember/object/evented';
 import { inject as service } from '@ember/service';
 
 import { EKMixin, keyDown, keyPress } from 'ember-keyboard';
 
 export default Controller.extend(EKMixin, {
+  header: service(),
   flashMessages: service(),
-  search: service(),
-  searchQuery: oneWay('search.q'),
   session: service(),
 
   keyboardActivated: true,
@@ -28,7 +26,7 @@ export default Controller.extend(EKMixin, {
     search() {
       this.transitionToRoute('search', {
         queryParams: {
-          q: this.searchQuery,
+          q: this.header.searchValue,
           page: 1,
         },
       });

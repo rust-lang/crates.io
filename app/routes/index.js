@@ -17,8 +17,6 @@ export default Route.extend({
   },
 
   setupController(controller) {
-    this.controllerFor('application').set('searchQuery', null);
-
     if (!controller.dataTask.hasData) {
       let promise = controller.dataTask.perform();
       if (this.fastboot.isFastBoot) {
