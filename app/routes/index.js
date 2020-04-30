@@ -3,7 +3,6 @@ import { inject as service } from '@ember/service';
 
 export default Route.extend({
   fastboot: service(),
-  search: service(),
 
   headTags() {
     return [
@@ -18,8 +17,6 @@ export default Route.extend({
   },
 
   setupController(controller) {
-    this.search.set('inputValue', null);
-
     if (!controller.dataTask.hasData) {
       let promise = controller.dataTask.perform();
       if (this.fastboot.isFastBoot) {

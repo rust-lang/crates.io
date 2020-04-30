@@ -21,4 +21,9 @@ export default Route.extend({
     this.search.set('inputValue', params.q);
     controller.dataTask.perform(params);
   },
+
+  deactivate() {
+    this._super(...arguments);
+    this.search.set('inputValue', null);
+  },
 });
