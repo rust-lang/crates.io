@@ -5,8 +5,8 @@ import { inject as service } from '@ember/service';
 import { EKMixin, keyDown, keyPress } from 'ember-keyboard';
 
 export default Controller.extend(EKMixin, {
+  header: service(),
   flashMessages: service(),
-  search: service(),
   session: service(),
 
   keyboardActivated: true,
@@ -26,7 +26,7 @@ export default Controller.extend(EKMixin, {
     search() {
       this.transitionToRoute('search', {
         queryParams: {
-          q: this.search.inputValue,
+          q: this.header.searchValue,
           page: 1,
         },
       });

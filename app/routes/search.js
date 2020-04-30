@@ -2,7 +2,7 @@ import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
 export default Route.extend({
-  search: service(),
+  header: service(),
 
   queryParams: {
     all_keywords: { refreshModel: true },
@@ -18,12 +18,12 @@ export default Route.extend({
   },
 
   setupController(controller, params) {
-    this.search.set('inputValue', params.q);
+    this.header.set('searchValue', params.q);
     controller.dataTask.perform(params);
   },
 
   deactivate() {
     this._super(...arguments);
-    this.search.set('inputValue', null);
+    this.header.set('searchValue', null);
   },
 });
