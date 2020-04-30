@@ -12,6 +12,8 @@ export default Route.extend({
         this.flashMessages.queue(`Keyword '${keyword_id}' does not exist`);
         return this.replaceWith('index');
       }
+
+      throw e;
     }
   },
 });
