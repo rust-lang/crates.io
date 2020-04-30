@@ -12,6 +12,7 @@ use self::log_connection_pool_status::LogConnectionPoolStatus;
 use self::static_or_continue::StaticOrContinue;
 
 pub mod app;
+mod balance_capacity;
 mod block_traffic;
 pub mod current_user;
 mod debug;
@@ -73,6 +74,27 @@ pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
     m.add(CaptureUserIdFromCookie);
 
     // Note: The following `m.around()` middleware is run from bottom to top
+
+    // This is currently the final middleware to run. If a middleware layer requires a database
+    // connection, it should be run after this middleware so that the potential pool usage can be
+    // tracked here.
+    //
+    // In production we currently have 2 equally sized pools (primary and a read-only replica).
+    // Because such a large portion of production traffic is for download requests (which update
+    // download counts), we consider only the primary pool here.
+    if let Ok(capacity) = env::var("DB_POOL_SIZE") {
+        if let Ok(capacity) = capacity.parse() {
+            if capacity >= 10 {
+                println!(
+                    "Enabling BalanceCapacity middleware with {} pool capacity",
+                    capacity
+                );
+                m.around(balance_capacity::BalanceCapacity::new(capacity))
+            } else {
+                println!("BalanceCapacity middleware not enabled. DB_POOL_SIZE is too low.");
+            }
+        }
+    }
 
     // Serve the static files in the *dist* directory, which are the frontend assets.
     // Not needed for the backend tests.
