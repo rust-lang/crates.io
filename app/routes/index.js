@@ -19,9 +19,11 @@ export default Route.extend({
   setupController(controller) {
     this.controllerFor('application').set('searchQuery', null);
 
-    let promise = controller.dataTask.perform();
-    if (this.fastboot.isFastBoot) {
-      this.fastboot.deferRendering(promise);
+    if (!controller.dataTask.hasData) {
+      let promise = controller.dataTask.perform();
+      if (this.fastboot.isFastBoot) {
+        this.fastboot.deferRendering(promise);
+      }
     }
   },
 });
