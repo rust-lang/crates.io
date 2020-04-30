@@ -12,16 +12,12 @@ fn root() -> PathBuf {
         .join(thread::current().name().unwrap())
 }
 
-pub fn checkout() -> PathBuf {
-    root().join("checkout")
-}
 pub fn bare() -> PathBuf {
     root().join("bare")
 }
 
 pub fn init() {
     static INIT: Once = Once::new();
-    let _ = fs::remove_dir_all(&checkout());
     let _ = fs::remove_dir_all(&bare());
 
     INIT.call_once(|| {

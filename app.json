@@ -42,8 +42,7 @@
           "generator": "secret"
       },
       "HEROKU": "1",
-      "MIRROR": "1",
-      "GIT_REPO_CHECKOUT": "./tmp/index-co"
+      "MIRROR": "1"
   },
   "formation": {
       "web": {
