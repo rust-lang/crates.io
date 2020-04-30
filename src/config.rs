@@ -1,12 +1,10 @@
 use crate::publish_rate_limit::PublishRateLimit;
 use crate::{env, uploaders::Uploader, Env, Replica};
-use std::path::PathBuf;
 
 #[derive(Clone, Debug)]
 pub struct Config {
     pub uploader: Uploader,
     pub session_key: String,
-    pub git_repo_checkout: PathBuf,
     pub gh_client_id: String,
     pub gh_client_secret: String,
     pub db_url: String,
@@ -30,7 +28,6 @@ impl Default for Config {
     ///
     /// Pulls values from the following environment variables:
     ///
-    /// - `GIT_REPO_CHECKOUT`: The directory where the registry index was cloned.
     /// - `MIRROR`: Is this instance of cargo_registry a mirror of crates.io.
     /// - `HEROKU`: Is this instance of cargo_registry currently running on Heroku.
     /// - `S3_BUCKET`: The S3 bucket used to store crate files. If not present during development,
@@ -46,7 +43,6 @@ impl Default for Config {
     /// - `BLOCKED_TRAFFIC`: A list of headers and environment variables to use for blocking
     ///.  traffic. See the `block_traffic` module for more documentation.
     fn default() -> Config {
-        let checkout = PathBuf::from(env("GIT_REPO_CHECKOUT"));
         let api_protocol = String::from("https");
         let mirror = if dotenv::var("MIRROR").is_ok() {
             Replica::ReadOnlyMirror
@@ -127,7 +123,6 @@ impl Default for Config {
         Config {
             uploader,
             session_key: env("SESSION_KEY"),
-            git_repo_checkout: checkout,
             gh_client_id: env("GH_CLIENT_ID"),
             gh_client_secret: env("GH_CLIENT_SECRET"),
             db_url: env("DATABASE_URL"),

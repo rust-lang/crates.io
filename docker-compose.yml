@@ -18,7 +18,6 @@ services:
       DATABASE_URL: postgres://postgres:password@postgres/cargo_registry
       SESSION_KEY: badkeyabcdefghijklmnopqrstuvwxyzabcdef
       GIT_REPO_URL: file://./tmp/index-bare
-      GIT_REPO_CHECKOUT: ./tmp/index-co
       GH_CLIENT_ID: ""
       GH_CLIENT_SECRET: ""
     links:

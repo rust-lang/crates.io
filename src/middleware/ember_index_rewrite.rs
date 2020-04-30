@@ -40,7 +40,8 @@ impl Handler for EmberIndexRewrite {
     fn call(&self, req: &mut dyn RequestExt) -> HandlerResult {
         let handler = self.handler.as_ref().unwrap();
 
-        if req.path().starts_with("/api") {
+        // The "/git/" prefix is only used in development (when within a docker container)
+        if req.path().starts_with("/api/") || req.path().starts_with("/git/") {
             handler.call(req)
         } else {
             if let Some(client) = &self.fastboot_client {

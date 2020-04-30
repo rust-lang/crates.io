@@ -1,7 +1,7 @@
 //! Application-wide components in a struct accessible from each request
 
 use crate::{db, Config, Env};
-use std::{path::PathBuf, sync::Arc, time::Duration};
+use std::{sync::Arc, time::Duration};
 
 use diesel::r2d2;
 use oauth2::basic::BasicClient;
@@ -24,10 +24,6 @@ pub struct App {
 
     /// A unique key used with conduit_cookie to generate cookies
     pub session_key: String,
-
-    /// The location on disk of the checkout of the crate index git repository
-    /// Only used in the development environment.
-    pub git_repo_checkout: PathBuf,
 
     /// The server configuration
     pub config: Config,
@@ -130,7 +126,6 @@ impl App {
             read_only_replica_database,
             github,
             session_key: config.session_key.clone(),
-            git_repo_checkout: config.git_repo_checkout.clone(),
             config: config.clone(),
             http_client,
         }
