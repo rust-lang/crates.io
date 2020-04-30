@@ -3,14 +3,9 @@
 {{title "crates.io: Rust Package Registry" separator=' - ' prepend=true}}
 
 <header local-class="header">
-  <LinkTo @route="index" @tabindex="-1">
-    <img src="/assets/Cargo-Logo-Small.png" height="100" width="100" alt="Cargo Logo">
-  </LinkTo>
-  <LinkTo @route="index">
-    <h1>
-      crates.io
-      <span local-class="subtitle">Rust Package Registry</span>
-    </h1>
+  <LinkTo @route="index" local-class="index-link">
+    <img src="/assets/Cargo-Logo-Small.png" role="presentation" alt="" local-class="logo">
+    <h1>crates.io</h1>
   </LinkTo>
 
   <form local-class="desktop-search-form" action='/search' {{ action "search" on="submit" }} data-test-search-form>

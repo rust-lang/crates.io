@@ -75,8 +75,9 @@ noscript {
     composes: width-limit;
 
     display: grid;
-    grid-template-columns: auto auto 1fr auto;
+    grid-template-columns: auto 1fr auto;
     align-items: center;
+    padding: 10px;
     color: white;
 
     a {
@@ -85,9 +86,19 @@ noscript {
     }
 }
 
-.subtitle {
-    display: block;
-    font-size: x-small;
+.index-link {
+    display: flex;
+    align-items: center;
+
+    h1 {
+        font-size: 24px;
+    }
+}
+
+.logo {
+    width: 60px;
+    height: auto;
+    margin-right: 10px;
 }
 
 .desktop-search-form {
@@ -119,7 +130,7 @@ input.search {
 .mobile-search {
     display: none;
     grid-row: 2;
-    grid-column: span 4;
+    grid-column: span 3;
     margin: 0 10px 10px;
 
     input.search {
