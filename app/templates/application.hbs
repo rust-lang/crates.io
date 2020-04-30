@@ -15,8 +15,8 @@
       name="q"
       id="cargo-desktop-search"
       placeholder="Click or press 'S' to search..."
-      value={{this.searchQuery}}
-      oninput={{action (mut this.searchQuery) value="target.value"}}
+      value={{this.search.inputValue}}
+      oninput={{action (mut this.search.inputValue) value="target.value"}}
       autocorrect="off"
       autocapitalize="off"
       autofocus="autofocus"
@@ -103,8 +103,8 @@
       name="q"
       id="cargo-mobile-search"
       placeholder="Search"
-      value={{this.searchQuery}}
-      oninput={{action (mut this.searchQuery) value="target.value"}}
+      value={{this.search.inputValue}}
+      oninput={{action (mut this.search.inputValue) value="target.value"}}
       autocorrect="off"
       required
     >

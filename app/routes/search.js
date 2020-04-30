@@ -1,6 +1,9 @@
 import Route from '@ember/routing/route';
+import { inject as service } from '@ember/service';
 
 export default Route.extend({
+  search: service(),
+
   queryParams: {
     all_keywords: { refreshModel: true },
     page: { refreshModel: true },
@@ -15,7 +18,7 @@ export default Route.extend({
   },
 
   setupController(controller, params) {
-    this.controllerFor('application').set('searchQuery', params.q);
+    this.search.set('inputValue', params.q);
     controller.dataTask.perform(params);
   },
 });
