@@ -34,6 +34,9 @@ module.exports = function (defaults) {
         before: [require('postcss-nested')],
       },
     },
+    'ember-cli-page-progress': {
+      includeCss: false,
+    },
     fingerprint: {
       extensions: ['js', 'css', 'png', 'jpg', 'gif', 'map', 'svg', 'ttf', 'woff', 'woff2'],
     },

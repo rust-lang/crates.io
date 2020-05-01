@@ -7,6 +7,7 @@
     --link-color: rgb(0, 172, 91);
     --link-hover-color: #007940;
     --separator-color: #284725;
+    --yellow: #ffc833;
 }
 
 * {
@@ -29,6 +30,20 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+}
+
+:global(.page-progress) {
+    position: fixed;
+    pointer-events: none;
+
+    :global(.bar) {
+        position: fixed;
+        left: 0;
+        width: 0;
+        height: 3px;
+        box-shadow: 0 0 10px rgba(0, 13, 41, 0.8);
+        background: var(--yellow) !important;
+    }
 }
 
 h1 {

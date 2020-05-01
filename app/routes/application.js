@@ -4,6 +4,7 @@ import { inject as service } from '@ember/service';
 export default Route.extend({
   flashMessages: service(),
   googleCharts: service(),
+  pageProgress: service(),
   session: service(),
 
   beforeModel() {
@@ -15,6 +16,13 @@ export default Route.extend({
   },
 
   actions: {
+    loading(transition) {
+      let { pageProgress } = this;
+      pageProgress.start(transition.targetName);
+      transition.promise.finally(() => pageProgress.done());
+      return true;
+    },
+
     didTransition() {
       this.flashMessages.step();
     },
