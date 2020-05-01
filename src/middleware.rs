@@ -47,8 +47,6 @@ pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
     if env == Env::Development {
         // Print a log for each request.
         m.add(Debug);
-        // Locally serve crates and readmes
-        m.around(StaticOrContinue::new("local_uploads"));
     }
 
     if env::var_os("DEBUG_REQUESTS").is_some() {
@@ -101,6 +99,11 @@ pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
     if env != Env::Test {
         m.around(EmberHtml::new("dist"));
         m.around(StaticOrContinue::new("dist"));
+    }
+
+    if env == Env::Development {
+        // Locally serve crates and readmes
+        m.around(StaticOrContinue::new("local_uploads"));
     }
 
     m.around(Head::default());
