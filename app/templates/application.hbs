@@ -17,3 +17,13 @@
 <a href='https://github.com/rust-lang/crates.io' local-class='fork-me'>
   <img src='/assets/forkme.png' alt="Fork me on GitHub">
 </a>
+
+{{#if this.design.showToggleButton}}
+  <button type="button" local-class="toggle-design-button" {{on "click" this.design.toggle}}>
+    Toggle Design
+  </button>
+{{/if}}
+{{#if this.design.useNewDesign}}
+  {{! template-lint-disable no-curly-component-invocation }}
+  {{add-html-class class="new-design"}}
+{{/if}}

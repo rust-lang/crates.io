@@ -2,6 +2,7 @@
     display: flex;
     justify-content: center;
     width: 100%;
+    background: var(--footer-bg-color);
 }
 
 .sep {
