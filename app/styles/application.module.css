@@ -1,4 +1,11 @@
 :root {
+    --violet: #2e2359;
+    --dark-grey: #2a3439;
+    --dark-green: #3b6837;
+
+    --header-bg-color: var(--dark-green);
+    --footer-bg-color: var(--dark-green);
+
     --main-color: #383838;
     --main-color-light: #858585;
     --main-bg: #f9f7ec;
@@ -9,12 +16,18 @@
     --separator-color: #284725;
 }
 
+:global(.new-design) {
+    --header-bg-color: var(--violet);
+    --main-bg: white;
+    --footer-bg-color: var(--dark-grey);
+}
+
 * {
     box-sizing: border-box;
 }
 
 html {
-    background-color: #3b6837;
+    background-color: var(--header-bg-color);
 }
 
 html, body {
@@ -92,5 +105,24 @@ noscript {
 
     @media only screen and (max-width: 1180px) {
         display: none;
+    }
+}
+
+.toggle-design-button {
+    position: fixed;
+    bottom: 30px;
+    left: 30px;
+    z-index: 100;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background: white;
+    box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
+    color: black;
+    cursor: pointer;
+
+    &:hover {
+        background: #f7f7f7;
+        box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
     }
 }
