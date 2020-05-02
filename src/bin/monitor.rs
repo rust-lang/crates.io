@@ -22,6 +22,7 @@ fn main() -> Result<(), Error> {
 fn check_stalled_background_jobs(conn: &PgConnection) -> Result<(), Error> {
     use cargo_registry::schema::background_jobs::dsl::*;
     use diesel::dsl::*;
+    use diesel::sql_types::Integer;
 
     const EVENT_KEY: &str = "background_jobs";
 
@@ -32,9 +33,12 @@ fn check_stalled_background_jobs(conn: &PgConnection) -> Result<(), Error> {
         .unwrap_or(15);
 
     let stalled_job_count = background_jobs
+        .select(1.into_sql::<Integer>())
         .filter(created_at.lt(now - max_job_time.minutes()))
-        .count()
-        .get_result::<i64>(conn)?;
+        .for_update()
+        .skip_locked()
+        .load::<i32>(conn)?
+        .len();
 
     let event = if stalled_job_count > 0 {
         on_call::Event::Trigger {
