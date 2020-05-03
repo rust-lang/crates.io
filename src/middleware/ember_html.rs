@@ -1,5 +1,12 @@
-//! Rewrite the request path to "index.html" if the path doesn't start
-//! with "/api" and the Accept header contains "html".
+//! Serve the Ember.js frontend HTML
+//!
+//! Paths intended for the inner `api_handler` are passed along to the remaining middleware layers
+//! as normal. Requests not intended for the backend will be served HTML to boot the Ember.js
+//! frontend. During local development, if so configured, these requests will instead be proxied to
+//! Ember FastBoot (`node ./fastboot.js`).
+//!
+//! For now, there is an additional check to see if the `Accept` header contains "html". This is
+//! likely to be removed in the future.
 
 use super::prelude::*;
 use std::fmt::Write;
@@ -7,42 +14,43 @@ use std::fmt::Write;
 use crate::util::{errors::NotFound, AppResponse, Error, RequestProxy};
 
 use conduit::{Body, HandlerResult};
+use conduit_static::Static;
 use reqwest::blocking::Client;
 
-// Can't derive debug because of Handler and Static.
-#[allow(missing_debug_implementations)]
-pub struct EmberIndexRewrite {
-    handler: Option<Box<dyn Handler>>,
+pub(super) struct EmberHtml {
+    api_handler: Option<Box<dyn Handler>>,
+    static_handler: Static,
     fastboot_client: Option<Client>,
 }
 
-impl Default for EmberIndexRewrite {
-    fn default() -> EmberIndexRewrite {
+impl EmberHtml {
+    pub fn new(path: &str) -> Self {
         let fastboot_client = match dotenv::var("USE_FASTBOOT") {
             Ok(val) if val == "staging-experimental" => Some(Client::new()),
             _ => None,
         };
 
-        EmberIndexRewrite {
-            handler: None,
+        Self {
+            api_handler: None,
+            static_handler: Static::new(path),
             fastboot_client,
         }
     }
 }
 
-impl AroundMiddleware for EmberIndexRewrite {
+impl AroundMiddleware for EmberHtml {
     fn with_handler(&mut self, handler: Box<dyn Handler>) {
-        self.handler = Some(handler);
+        self.api_handler = Some(handler);
     }
 }
 
-impl Handler for EmberIndexRewrite {
+impl Handler for EmberHtml {
     fn call(&self, req: &mut dyn RequestExt) -> HandlerResult {
-        let handler = self.handler.as_ref().unwrap();
+        let api_handler = self.api_handler.as_ref().unwrap();
 
         // The "/git/" prefix is only used in development (when within a docker container)
         if req.path().starts_with("/api/") || req.path().starts_with("/git/") {
-            handler.call(req)
+            api_handler.call(req)
         } else {
             if let Some(client) = &self.fastboot_client {
                 // During local fastboot development, forward requests to the local fastboot server.
@@ -58,7 +66,8 @@ impl Handler for EmberIndexRewrite {
                 .any(|val| val.to_str().unwrap_or_default().contains("html"))
             {
                 // Serve static Ember page to bootstrap the frontend
-                handler.call(&mut RequestProxy::rewrite_path(req, "/index.html"))
+                self.static_handler
+                    .call(&mut RequestProxy::rewrite_path(req, "/index.html"))
             } else {
                 // Return a 404 to crawlers that don't send `Accept: text/hml`.
                 // This is to preserve legacy behavior and will likely change.

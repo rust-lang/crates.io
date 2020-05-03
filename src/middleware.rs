@@ -6,7 +6,7 @@ mod prelude {
 use self::app::AppMiddleware;
 use self::current_user::CaptureUserIdFromCookie;
 use self::debug::*;
-use self::ember_index_rewrite::EmberIndexRewrite;
+use self::ember_html::EmberHtml;
 use self::head::Head;
 use self::log_connection_pool_status::LogConnectionPoolStatus;
 use self::static_or_continue::StaticOrContinue;
@@ -15,7 +15,7 @@ pub mod app;
 mod block_traffic;
 pub mod current_user;
 mod debug;
-mod ember_index_rewrite;
+mod ember_html;
 mod ensure_well_formed_500;
 mod head;
 mod log_connection_pool_status;
@@ -72,13 +72,13 @@ pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
     // Parse and save the user_id from the session cookie as part of the authentication logic
     m.add(CaptureUserIdFromCookie);
 
+    // Note: The following `m.around()` middleware is run from bottom to top
+
     // Serve the static files in the *dist* directory, which are the frontend assets.
     // Not needed for the backend tests.
     if env != Env::Test {
+        m.around(EmberHtml::new("dist"));
         m.around(StaticOrContinue::new("dist"));
-        m.around(EmberIndexRewrite::default());
-        m.around(StaticOrContinue::new("dist"));
-        // Note: around middleware is run from bottom to top, so the rewrite occurs first
     }
 
     m.around(Head::default());
