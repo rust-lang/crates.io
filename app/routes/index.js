@@ -17,7 +17,7 @@ export default Route.extend({
   },
 
   setupController(controller) {
-    if (!controller.dataTask.hasData) {
+    if (!controller.hasData) {
       let promise = controller.dataTask.perform();
       if (this.fastboot.isFastBoot) {
         this.fastboot.deferRendering(promise);
