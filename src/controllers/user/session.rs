@@ -31,7 +31,7 @@ pub fn begin(req: &mut dyn RequestExt) -> EndpointResult {
         .github
         .authorize_url(oauth2::CsrfToken::new_random);
     let state = state.secret().to_string();
-    req.session()
+    req.session_mut()
         .insert("github_oauth_state".to_string(), state.clone());
 
     #[derive(Serialize)]
@@ -82,7 +82,7 @@ pub fn authorize(req: &mut dyn RequestExt) -> EndpointResult {
     // Make sure that the state we just got matches the session state that we
     // should have issued earlier.
     {
-        let session_state = req.session().remove(&"github_oauth_state".to_string());
+        let session_state = req.session_mut().remove(&"github_oauth_state".to_string());
         let session_state = session_state.as_deref();
         if Some(&state[..]) != session_state {
             return Err(bad_request("invalid state parameter"));
@@ -104,7 +104,7 @@ pub fn authorize(req: &mut dyn RequestExt) -> EndpointResult {
     let user = ghuser.save_to_database(&token.secret(), &*req.db_conn()?)?;
 
     // Log in by setting a cookie and the middleware authentication
-    req.session()
+    req.session_mut()
         .insert("user_id".to_string(), user.id.to_string());
     req.mut_extensions().insert(TrustedUserId(user.id));
 
@@ -149,7 +149,7 @@ impl GithubUser {
 
 /// Handles the `DELETE /api/private/session` route.
 pub fn logout(req: &mut dyn RequestExt) -> EndpointResult {
-    req.session().remove(&"user_id".to_string());
+    req.session_mut().remove(&"user_id".to_string());
     Ok(req.json(&true))
 }
 
