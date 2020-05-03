@@ -13,6 +13,7 @@ use conduit::{box_error, header, Body, Handler, HandlerResult, RequestExt, Respo
 use filetime::FileTime;
 use std::fs::File;
 use std::path::{Path, PathBuf};
+use time::OffsetDateTime;
 
 pub struct Static {
     path: PathBuf,
@@ -47,18 +48,14 @@ impl Handler for Static {
             return Ok(not_found());
         }
         let mtime = FileTime::from_last_modification_time(&data);
-        let ts = time::Timespec {
-            sec: mtime.unix_seconds() as i64,
-            nsec: mtime.nanoseconds() as i32,
-        };
-        let tm = time::at(ts).to_utc();
+        let mtime = OffsetDateTime::from_unix_timestamp(mtime.unix_seconds() as i64);
 
         Response::builder()
             .header(header::CONTENT_TYPE, mime)
             .header(header::CONTENT_LENGTH, data.len())
             .header(
                 header::LAST_MODIFIED,
-                tm.strftime("%a, %d %b %Y %T GMT").unwrap().to_string(),
+                mtime.format("%a, %d %b %Y %T GMT"),
             )
             .body(Body::File(file))
             .map_err(box_error)
