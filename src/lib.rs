@@ -125,16 +125,16 @@ mod tests {
         fn scheme(&self) -> Scheme {
             unimplemented!()
         }
-        fn host<'a>(&'a self) -> Host<'a> {
+        fn host(&self) -> Host<'_> {
             unimplemented!()
         }
-        fn virtual_root<'a>(&'a self) -> Option<&'a str> {
+        fn virtual_root(&self) -> Option<&str> {
             unimplemented!()
         }
-        fn path<'a>(&'a self) -> &'a str {
+        fn path(&self) -> &str {
             &self.path
         }
-        fn query_string<'a>(&'a self) -> Option<&'a str> {
+        fn query_string(&self) -> Option<&str> {
             unimplemented!()
         }
         fn remote_addr(&self) -> SocketAddr {
@@ -146,13 +146,13 @@ mod tests {
         fn headers(&self) -> &HeaderMap {
             unimplemented!()
         }
-        fn body<'a>(&'a mut self) -> &'a mut dyn Read {
+        fn body(&mut self) -> &mut dyn Read {
             unimplemented!()
         }
-        fn extensions<'a>(&'a self) -> &'a Extensions {
+        fn extensions(&self) -> &Extensions {
             &self.extensions
         }
-        fn mut_extensions<'a>(&'a mut self) -> &'a mut Extensions {
+        fn mut_extensions(&mut self) -> &mut Extensions {
             &mut self.extensions
         }
     }
@@ -221,7 +221,7 @@ mod tests {
         }
     }
 
-    fn get_extension<'a, T: Any>(req: &'a dyn RequestExt) -> &'a T {
+    fn get_extension<T: Any>(req: &dyn RequestExt) -> &T {
         req.extensions().find::<T>().unwrap()
     }
 
@@ -255,7 +255,7 @@ mod tests {
         let mut req = RequestSentinel::new(Method::GET, "/");
         let res = builder.call(&mut req).expect("No response");
 
-        assert_eq!(res.into_cow(), "hello".as_bytes());
+        assert_eq!(*res.into_cow(), b"hello"[..]);
     }
 
     #[test]
@@ -280,7 +280,7 @@ mod tests {
         let mut req = RequestSentinel::new(Method::GET, "/");
         let res = builder.call(&mut req).expect("Error not handled");
 
-        assert_eq!(res.into_cow(), "Error in handler".as_bytes());
+        assert_eq!(*res.into_cow(), b"Error in handler"[..]);
     }
 
     #[test]
@@ -292,6 +292,6 @@ mod tests {
         let mut req = RequestSentinel::new(Method::GET, "/");
         let res = builder.call(&mut req).expect("No response");
 
-        assert_eq!(res.into_cow(), "hello hello".as_bytes());
+        assert_eq!(*res.into_cow(), b"hello hello"[..]);
     }
 }
