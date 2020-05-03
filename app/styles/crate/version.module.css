@@ -148,9 +148,12 @@ div.header {
 .authorship {
     .top, .bottom {
         display: flex;
+        flex-wrap: wrap;
 
-        > * { flex: 1; }
+        > * { margin-right: 1em; }
     }
+
+    .top > * { flex: 1 }
 
     @media only screen and (min-width: 890px) {
         flex: 3;

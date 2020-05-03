@@ -99,7 +99,8 @@ noscript {
     composes: width-limit;
     display: flex;
     flex-direction: column;
-    margin: 15px;
+    margin: 15px 0;
+    padding: 0 15px;
 }
 
 .fork-me {
