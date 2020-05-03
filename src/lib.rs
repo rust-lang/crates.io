@@ -24,6 +24,7 @@ impl RouteBuilder {
         }
     }
 
+    #[allow(clippy::borrowed_box)]
     pub fn recognize<'a>(
         &'a self,
         method: &Method,
@@ -163,16 +164,16 @@ mod tests {
         fn scheme(&self) -> Scheme {
             unimplemented!()
         }
-        fn host<'a>(&'a self) -> Host<'a> {
+        fn host(&self) -> Host<'_> {
             unimplemented!()
         }
-        fn virtual_root<'a>(&'a self) -> Option<&'a str> {
+        fn virtual_root(&self) -> Option<&str> {
             unimplemented!()
         }
-        fn path<'a>(&'a self) -> &'a str {
+        fn path(&self) -> &str {
             &self.path
         }
-        fn query_string<'a>(&'a self) -> Option<&'a str> {
+        fn query_string(&self) -> Option<&str> {
             unimplemented!()
         }
         fn remote_addr(&self) -> SocketAddr {
@@ -181,16 +182,16 @@ mod tests {
         fn content_length(&self) -> Option<u64> {
             unimplemented!()
         }
-        fn headers<'a>(&'a self) -> &HeaderMap {
+        fn headers(&self) -> &HeaderMap {
             unimplemented!()
         }
-        fn body<'a>(&'a mut self) -> &'a mut dyn io::Read {
+        fn body(&mut self) -> &mut dyn io::Read {
             unimplemented!()
         }
-        fn extensions<'a>(&'a self) -> &'a Extensions {
+        fn extensions(&self) -> &Extensions {
             &self.extensions
         }
-        fn mut_extensions<'a>(&'a mut self) -> &'a mut Extensions {
+        fn mut_extensions(&mut self) -> &mut Extensions {
             &mut self.extensions
         }
     }
@@ -202,7 +203,7 @@ mod tests {
         let res = router.call(&mut req).expect("No response");
 
         assert_eq!(res.status(), StatusCode::OK);
-        assert_eq!(res.into_cow(), "1, GET".as_bytes());
+        assert_eq!(*res.into_cow(), b"1, GET"[..]);
     }
 
     #[test]
@@ -212,7 +213,7 @@ mod tests {
         let res = router.call(&mut req).expect("No response");
 
         assert_eq!(res.status(), StatusCode::OK);
-        assert_eq!(res.into_cow(), "10, POST".as_bytes());
+        assert_eq!(*res.into_cow(), b"10, POST"[..]);
     }
 
     #[test]
