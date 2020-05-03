@@ -78,7 +78,7 @@ fn is_modified_since(modified_since: Tm, res: &Response<Body>) -> bool {
     }
 }
 
-fn get_and_concat_header<'a>(headers: &'a HeaderMap, name: header::HeaderName) -> Cow<'a, [u8]> {
+fn get_and_concat_header(headers: &HeaderMap, name: header::HeaderName) -> Cow<'_, [u8]> {
     let mut values = headers.get_all(name).iter();
     if values.size_hint() == (1, Some(1)) {
         // Exactly 1 value, allocation is unnecessary
@@ -241,7 +241,7 @@ mod tests {
     fn expect_304(response: HandlerResult) {
         let response = response.expect("No response");
         assert_eq!(response.status(), StatusCode::NOT_MODIFIED);
-        assert_eq!(response.into_cow(), "".as_bytes());
+        assert_eq!(*response.into_cow(), b""[..]);
     }
 
     fn expect_200(response: HandlerResult) {
@@ -251,7 +251,7 @@ mod tests {
     fn expect(status: StatusCode, response: HandlerResult) {
         let response = response.expect("No response");
         assert_eq!(response.status(), status);
-        assert_eq!(response.into_cow(), "hello".as_bytes());
+        assert_eq!(*response.into_cow(), b"hello"[..]);
     }
 
     struct SimpleHandler {
