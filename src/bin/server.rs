@@ -13,6 +13,7 @@ use conduit_hyper::Service;
 use futures_util::future::FutureExt;
 use reqwest::blocking::Client;
 
+#[allow(clippy::large_enum_variant)]
 enum Server {
     Civet(CivetServer),
     Hyper(tokio::runtime::Runtime, tokio::task::JoinHandle<()>),
