@@ -8,7 +8,7 @@ extern crate time;
 use conduit::{header, Body, HeaderMap, Method, RequestExt, Response, StatusCode};
 use conduit_middleware::{AfterResult, Middleware};
 use std::borrow::Cow;
-use time::{ParseError, Tm};
+use time::{OffsetDateTime, ParseError, PrimitiveDateTime};
 
 #[allow(missing_copy_implementations)]
 pub struct ConditionalGet;
@@ -66,14 +66,14 @@ fn etag_matches(none_match: &[u8], res: &Response<Body>) -> bool {
     value == none_match
 }
 
-fn is_modified_since(modified_since: Tm, res: &Response<Body>) -> bool {
+fn is_modified_since(modified_since: OffsetDateTime, res: &Response<Body>) -> bool {
     let last_modified = get_and_concat_header(res.headers(), header::LAST_MODIFIED);
 
     match std::str::from_utf8(&last_modified) {
         Err(_) => false,
         Ok(last_modified) => match parse_http_date(last_modified) {
             Err(_) => false,
-            Ok(last_modified) => modified_since.to_timespec() >= last_modified.to_timespec(),
+            Ok(last_modified) => modified_since.timestamp() >= last_modified.timestamp(),
         },
     }
 }
@@ -90,23 +90,24 @@ fn get_and_concat_header(headers: &HeaderMap, name: header::HeaderName) -> Cow<'
     }
 }
 
-fn parse_http_date(string: &str) -> Result<Tm, ()> {
+fn parse_http_date(string: &str) -> Result<OffsetDateTime, ()> {
     parse_rfc1123(string)
         .or_else(|_| parse_rfc850(string))
         .or_else(|_| parse_asctime(string))
         .map_err(|_| ())
 }
 
-fn parse_rfc1123(string: &str) -> Result<Tm, ParseError> {
-    time::strptime(string, "%a, %d %b %Y %T GMT")
+fn parse_rfc1123(string: &str) -> Result<OffsetDateTime, ParseError> {
+    Ok(PrimitiveDateTime::parse(string, "%a, %d %b %Y %T GMT")?.assume_utc())
 }
 
-fn parse_rfc850(string: &str) -> Result<Tm, ParseError> {
-    time::strptime(string, "%a, %d-%m-%y %T GMT")
+fn parse_rfc850(string: &str) -> Result<OffsetDateTime, ParseError> {
+    Ok(PrimitiveDateTime::parse(string, "%a, %d-%m-%y %T GMT")?.assume_utc())
 }
 
-fn parse_asctime(string: &str) -> Result<Tm, ParseError> {
-    time::strptime(string, "%a %m%t%d %T %Y")
+fn parse_asctime(string: &str) -> Result<OffsetDateTime, ParseError> {
+    // TODO: should this be "%a %b %d %T %Y"?
+    Ok(PrimitiveDateTime::parse(string, "%a %m\t%d %T %Y")?.assume_utc())
 }
 
 #[cfg(test)]
@@ -119,8 +120,7 @@ mod tests {
         StatusCode,
     };
     use conduit_middleware::MiddlewareBuilder;
-    use time;
-    use time::Tm;
+    use time::{Duration, OffsetDateTime};
 
     use super::ConditionalGet;
 
@@ -149,9 +149,9 @@ mod tests {
 
     #[test]
     fn test_sends_304() {
-        let handler = returning!(header::LAST_MODIFIED => httpdate(time::now()));
+        let handler = returning!(header::LAST_MODIFIED => httpdate(OffsetDateTime::now_utc()));
         expect_304(handler.call(&mut request!(
-            header::IF_MODIFIED_SINCE => httpdate(time::now())
+            header::IF_MODIFIED_SINCE => httpdate(OffsetDateTime::now_utc())
         )));
     }
 
@@ -159,7 +159,7 @@ mod tests {
     fn test_sends_304_if_older_than_now() {
         let handler = returning!(header::LAST_MODIFIED => before_now());
         expect_304(handler.call(&mut request!(
-            header::IF_MODIFIED_SINCE => httpdate(time::now())
+            header::IF_MODIFIED_SINCE => httpdate(OffsetDateTime::now_utc())
         )));
     }
 
@@ -228,10 +228,7 @@ mod tests {
 
     #[test]
     fn test_does_not_affect_malformed_timestamp() {
-        let bad_stamp = time::now()
-            .strftime("%Y-%m-%d %H:%M:%S %z")
-            .unwrap()
-            .to_string();
+        let bad_stamp = OffsetDateTime::now_utc().format("%Y-%m-%d %H:%M:%S %z");
         let handler = returning!(header::LAST_MODIFIED => before_now());
         expect_200(handler.call(&mut request!(
             header::IF_MODIFIED_SINCE => bad_stamp
@@ -281,16 +278,15 @@ mod tests {
     }
 
     fn before_now() -> String {
-        let mut now = time::now();
-        now.tm_year -= 1;
-        httpdate(now)
+        let now = OffsetDateTime::now_utc();
+        httpdate(now - Duration::weeks(52))
     }
 
     fn now() -> String {
-        httpdate(time::now())
+        httpdate(OffsetDateTime::now_utc())
     }
 
-    fn httpdate(time: Tm) -> String {
-        time.strftime("%a, %d-%m-%y %T GMT").unwrap().to_string()
+    fn httpdate(time: OffsetDateTime) -> String {
+        time.format("%a, %d-%m-%y %T GMT")
     }
 }
