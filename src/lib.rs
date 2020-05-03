@@ -90,7 +90,7 @@ mod tests {
     fn test_static() {
         let td = TempDir::new("conduit-static").unwrap();
         let root = td.path();
-        let handler = Static::new(root.clone());
+        let handler = Static::new(root);
         File::create(&root.join("Cargo.toml"))
             .unwrap()
             .write_all(b"[package]")
@@ -102,7 +102,7 @@ mod tests {
             "text/plain"
         );
         assert_eq!(res.headers().get(header::CONTENT_LENGTH).unwrap(), "9");
-        assert_eq!(res.into_cow(), "[package]".as_bytes());
+        assert_eq!(*res.into_cow(), b"[package]"[..]);
     }
 
     #[test]
@@ -112,7 +112,7 @@ mod tests {
         fs::create_dir(&root.join("src")).unwrap();
         File::create(&root.join("src/fixture.css")).unwrap();
 
-        let handler = Static::new(root.clone());
+        let handler = Static::new(root);
         let mut req = MockRequest::new(Method::GET, "/src/fixture.css");
         let res = handler.call(&mut req).expect("No response");
         assert_eq!(res.headers().get(header::CONTENT_TYPE).unwrap(), "text/css");
@@ -124,7 +124,7 @@ mod tests {
         let td = TempDir::new("conduit-static").unwrap();
         let root = td.path();
 
-        let handler = Static::new(root.clone());
+        let handler = Static::new(root);
         let mut req = MockRequest::new(Method::GET, "/nope");
         let res = handler.call(&mut req).expect("No response");
         assert_eq!(res.status(), StatusCode::NOT_FOUND);
@@ -137,7 +137,7 @@ mod tests {
 
         fs::create_dir(&root.join("foo")).unwrap();
 
-        let handler = Static::new(root.clone());
+        let handler = Static::new(root);
         let mut req = MockRequest::new(Method::GET, "/foo");
         let res = handler.call(&mut req).expect("No response");
         assert_eq!(res.status(), StatusCode::NOT_FOUND);
@@ -148,7 +148,7 @@ mod tests {
         let td = TempDir::new("conduit-static").unwrap();
         let root = td.path();
         File::create(&root.join("test")).unwrap();
-        let handler = Static::new(root.clone());
+        let handler = Static::new(root);
         let mut req = MockRequest::new(Method::GET, "/test");
         let res = handler.call(&mut req).expect("No response");
         assert_eq!(res.status(), StatusCode::OK);
