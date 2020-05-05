@@ -27,7 +27,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = cargo_registry::Config::default();
     let client = Client::new();
 
-    let app = App::new(&config, Some(client));
+    let app = App::new(config.clone(), Some(client));
     let app = cargo_registry::build_handler(Arc::new(app));
 
     // On every server restart, ensure the categories available in the database match
