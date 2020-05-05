@@ -18,6 +18,9 @@ pub(super) struct BalanceCapacity {
     handler: Option<Box<dyn Handler>>,
     capacity: usize,
     in_flight_requests: AtomicUsize,
+    log_at_percentage: usize,
+    throttle_at_percentage: usize,
+    dl_only_at_percentage: usize,
 }
 
 impl BalanceCapacity {
@@ -26,6 +29,9 @@ impl BalanceCapacity {
             handler: None,
             capacity,
             in_flight_requests: AtomicUsize::new(0),
+            log_at_percentage: read_env_percentage("WEB_CAPACITY_LOG_PCT", 20),
+            throttle_at_percentage: read_env_percentage("WEB_CAPACITY_THROTTLE_PCT", 70),
+            dl_only_at_percentage: read_env_percentage("WEB_CAPACITY_DL_ONLY_PCT", 80),
         }
     }
 }
@@ -43,8 +49,8 @@ impl Handler for BalanceCapacity {
         let handler = self.handler.as_ref().unwrap();
         let load = 100 * count / self.capacity;
 
-        // Begin logging request count at 20% capacity
-        if load >= 20 {
+        // Begin logging request count so early stages of load increase can be located
+        if load >= self.log_at_percentage {
             super::log_request::add_custom_metadata(request, "in_flight_requests", count);
         }
 
@@ -53,29 +59,38 @@ impl Handler for BalanceCapacity {
             return handler.call(request);
         }
 
-        // Reject read-only requests after reaching 70% load. Bots are likely to send only safe
+        // Reject read-only requests as load nears capacity. Bots are likely to send only safe
         // requests and this helps prioritize requests that users may be reluctant to retry.
-        if load >= 70 && request.method().is_safe() {
-            return over_capcity_response();
+        if load >= self.throttle_at_percentage && request.method().is_safe() {
+            return over_capacity_response(request);
         }
 
-        // At 80% load, all non-download requests are rejected
-        if load >= 80 {
-            return over_capcity_response();
+        // As load reaches capacity, all non-download requests are rejected
+        if load >= self.dl_only_at_percentage {
+            return over_capacity_response(request);
         }
 
         handler.call(request)
     }
 }
 
-fn over_capcity_response() -> AfterResult {
+fn over_capacity_response(request: &mut dyn RequestExt) -> AfterResult {
     // TODO: Generate an alert so we can investigate
+    super::log_request::add_custom_metadata(request, "cause", "over capacity");
     let body = "Service temporarily unavailable";
     Response::builder()
         .status(StatusCode::SERVICE_UNAVAILABLE)
         .header(header::CONTENT_LENGTH, body.len())
         .body(Body::from_static(body.as_bytes()))
         .map_err(box_error)
+}
+
+fn read_env_percentage(name: &str, default: usize) -> usize {
+    if let Ok(value) = std::env::var(name) {
+        value.parse().unwrap_or(default)
+    } else {
+        default
+    }
 }
 
 // FIXME(JTG): I've copied the following from my `conduit-hyper` crate.  Once we transition from
