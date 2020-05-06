@@ -37,5 +37,5 @@ touch tmp/index-bare/git-daemon-export-ok
 cat - <<-EOF
 Your local git index is ready to go!
 
-Please refer to https://github.com/rust-lang/crates.io/blob/master/README.md for more info!
+Please refer to https://github.com/rust-lang/crates.io/blob/master/docs/CONTRIBUTING.md for more info!
 EOF
