@@ -8,6 +8,7 @@
 //! we should avoid dropping download requests even if that means rejecting some legitimate
 //! requests to other endpoints.
 
+use std::env;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use super::prelude::*;
@@ -18,6 +19,7 @@ pub(super) struct BalanceCapacity {
     handler: Option<Box<dyn Handler>>,
     capacity: usize,
     in_flight_requests: AtomicUsize,
+    report_only: bool,
     log_at_percentage: usize,
     throttle_at_percentage: usize,
     dl_only_at_percentage: usize,
@@ -29,7 +31,8 @@ impl BalanceCapacity {
             handler: None,
             capacity,
             in_flight_requests: AtomicUsize::new(0),
-            log_at_percentage: read_env_percentage("WEB_CAPACITY_LOG_PCT", 20),
+            report_only: env::var("WEB_CAPACITY_REPORT_ONLY").ok().is_some(),
+            log_at_percentage: read_env_percentage("WEB_CAPACITY_LOG_PCT", 50),
             throttle_at_percentage: read_env_percentage("WEB_CAPACITY_THROTTLE_PCT", 70),
             dl_only_at_percentage: read_env_percentage("WEB_CAPACITY_DL_ONLY_PCT", 80),
         }
@@ -52,6 +55,11 @@ impl Handler for BalanceCapacity {
         // Begin logging request count so early stages of load increase can be located
         if load >= self.log_at_percentage {
             super::log_request::add_custom_metadata(request, "in_flight_requests", count);
+        }
+
+        // In report-only mode we serve all requests and only enforce the logging limit above
+        if self.report_only {
+            return handler.call(request);
         }
 
         // Download requests are always accepted
@@ -86,7 +94,7 @@ fn over_capacity_response(request: &mut dyn RequestExt) -> AfterResult {
 }
 
 fn read_env_percentage(name: &str, default: usize) -> usize {
-    if let Ok(value) = std::env::var(name) {
+    if let Ok(value) = env::var(name) {
         value.parse().unwrap_or(default)
     } else {
         default
