@@ -338,13 +338,13 @@ dependencies = [
 
 [[package]]
 name = "conduit-conditional-get"
-version = "0.9.0-alpha.2"
+version = "0.9.0-alpha.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "769c01b79af748e1be176bea12603a2f7087608b84c1857a31ddd861d34de5a8"
+checksum = "9674cc09c0832fe181ea1db5f5f7a3d1741d756cc142e4640d8cf7a1b39b6dfa"
 dependencies = [
  "conduit",
  "conduit-middleware",
- "time 0.1.42",
+ "time 0.2.15",
 ]
 
 [[package]]
@@ -415,14 +415,14 @@ dependencies = [
 
 [[package]]
 name = "conduit-static"
-version = "0.9.0-alpha.2"
+version = "0.9.0-alpha.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e89d5ef0f88a5cbf0ba01e35ec2114d87527090508de47c3a1de7f5740ab69a5"
+checksum = "5d9ba1f0cc203d25ec9baf659a2e02503117b3cdf12eb7067563f087d9c9c2d1"
 dependencies = [
  "conduit",
  "conduit-mime-types",
  "filetime",
- "time 0.1.42",
+ "time 0.2.15",
 ]
 
 [[package]]
