@@ -450,13 +450,13 @@ live crates.io, you won't be able to publish that crate locally.
 In your crate directory, run:
 
 ```
-cargo publish --index file:///path/to/your/crates.io/checkout/tmp/index-co
+cargo publish --index file:///path/to/your/crates.io/tmp/index-bare --token $YOUR_TOKEN
 ```
 
 > If you're using an older version of cargo you should use `--host` instead of `--index`.
 
-where `file:///path/to/your/crates.io/checkout` is the directory that you have
-crates.io's code in, and `tmp/index-co` is the directory with the git index
+where `file:///path/to/your/crates.io` is the directory that you have
+crates.io's code in, and `tmp/index-bare` is the directory with the git index
 that `./script/init-local-index.sh` set up.
 
 Note that when you're running crates.io in development mode without the S3
@@ -478,7 +478,7 @@ content:
 [source]
 
 [source.mirror]
-registry = "file:///path/to/your/crates.io/checkout/tmp/index-co"
+registry = "file:///path/to/your/crates.io/tmp/index-bare"
 
 [source.crates-io]
 replace-with = "mirror"
@@ -488,8 +488,8 @@ Then add the crate you published to your local crates.io as a dependency in
 this crate's `Cargo.toml`, and `cargo build` should display output like this:
 
 ```
-    Updating registry `file:///path/to/your/crates.io/checkout/tmp/index-co`
- Downloading yourcrate v0.1.0 (registry file:///path/to/your/crates.io/checkout/tmp/index-co)
+    Updating registry `file:///path/to/your/crates.io/tmp/index-bare`
+ Downloading yourcrate v0.1.0 (registry file:///path/to/your/crates.io/tmp/index-bare)
    Compiling yourcrate v0.1.0
    Compiling thiscrate v0.1.0 (file:///path/to/thiscrate)
     Finished dev [unoptimized + debuginfo] target(s) in 0.56 secs
