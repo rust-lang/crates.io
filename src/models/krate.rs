@@ -269,26 +269,31 @@ impl Crate {
                 .unwrap_or(false)
     }
 
+    /// Validates the THIS parts of `features = ["THIS", "and/THIS"]`.
     pub fn valid_feature_name(name: &str) -> bool {
         !name.is_empty()
             && name
                 .chars()
-                .all(|c| c.is_alphanumeric() || c == '_' || c == '-')
-            && name.chars().all(|c| c.is_ascii())
+                .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-' || c == '+')
     }
 
+    /// Validates the prefix in front of the slash: `features = ["THIS/feature"]`.
+    /// Normally this corresponds to the crate name of a dependency.
+    fn valid_feature_prefix(name: &str) -> bool {
+        !name.is_empty()
+            && name
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
+    }
+
+    /// Validates a whole feature string, `features = ["THIS", "ALL/THIS"]`.
     pub fn valid_feature(name: &str) -> bool {
         let mut parts = name.split('/');
-        match parts.next() {
-            Some(part) if !Crate::valid_feature_name(part) => return false,
-            None => return false,
-            _ => {}
-        }
-        match parts.next() {
-            Some(part) if !Crate::valid_feature_name(part) => return false,
-            _ => {}
-        }
+        let name_part = parts.next_back(); // required
+        let prefix_part = parts.next_back(); // optional
         parts.next().is_none()
+            && name_part.map_or(false, Crate::valid_feature_name)
+            && prefix_part.map_or(true, Crate::valid_feature_prefix)
     }
 
     pub fn minimal_encodable(
