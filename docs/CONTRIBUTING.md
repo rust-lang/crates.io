@@ -455,7 +455,7 @@ cargo publish --index file:///path/to/your/crates.io/tmp/index-bare --token $YOU
 
 > If you're using an older version of cargo you should use `--host` instead of `--index`.
 
-where `file:///path/to/your/crates.io/checkout` is the directory that you have
+where `file:///path/to/your/crates.io` is the directory that you have
 crates.io's code in, and `tmp/index-bare` is the directory with the git index
 that `./script/init-local-index.sh` set up.
 

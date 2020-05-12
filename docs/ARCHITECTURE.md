@@ -34,8 +34,6 @@ These files and directories have to do with the backend:
 * `src/` - The backend's source code
 * `target/` - Compiled output, including dependencies and final binary artifacts - (ignored in
   `.gitignore`)
-* `tmp/index-bare` - The registry repository; in production this is cloned from Github and in
-  development from `tmp/index-bare` - (ignored in `.gitignore`)
 
 The backend stores information in a Postgres database.
 
