@@ -282,7 +282,7 @@ dependencies = [
  "num-integer",
  "num-traits",
  "serde",
- "time 0.1.42",
+ "time 0.1.43",
 ]
 
 [[package]]
@@ -625,7 +625,7 @@ dependencies = [
  "encoding",
  "lazy_static",
  "rand 0.4.2",
- "time 0.1.42",
+ "time 0.1.43",
  "version_check 0.1.5",
 ]
 
@@ -1110,7 +1110,7 @@ dependencies = [
  "log",
  "net2",
  "pin-project",
- "time 0.1.42",
+ "time 0.1.43",
  "tokio",
  "tower-service",
  "want",
@@ -1280,7 +1280,7 @@ dependencies = [
  "email",
  "lettre",
  "mime",
- "time 0.1.42",
+ "time 0.1.43",
  "uuid",
 ]
 
@@ -2093,7 +2093,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_urlencoded",
- "time 0.1.42",
+ "time 0.1.43",
  "tokio",
  "tokio-tls",
  "url 2.1.1",
@@ -3008,5 +3008,5 @@ dependencies = [
  "log",
  "mac",
  "markup5ever",
- "time 0.1.42",
+ "time 0.1.43",
 ]
