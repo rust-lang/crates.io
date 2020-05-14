@@ -313,9 +313,9 @@ dependencies = [
 
 [[package]]
 name = "comrak"
-version = "0.4.4"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c6a70fb894be1bf51ca939f9e9008d93679908541793a6bf752bd313640a1d8"
+checksum = "e17058cc536cf290563e88787d7b9e6030ce4742943017cc2ffb71f88034021c"
 dependencies = [
  "entities",
  "lazy_static",
@@ -2694,11 +2694,12 @@ checksum = "e604eb7b43c06650e854be16a2a03155743d3752dd1c943f6829e26b7a36e382"
 
 [[package]]
 name = "twoway"
-version = "0.1.8"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "59b11b2b5241ba34be09c3cc85a36e56e48f9888862e19cedf23336d35316ed1"
+checksum = "6b40075910de3a912adbd80b5d8bad6ad10a23eeb1f5bf9d4006839e899ba5bc"
 dependencies = [
  "memchr",
+ "unchecked-index",
 ]
 
 [[package]]
@@ -2718,6 +2719,12 @@ name = "ucd-trie"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "71a9c5b1fe77426cf144cc30e49e955270f5086e31a6441dfa8b32efc09b9d77"
+
+[[package]]
+name = "unchecked-index"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eeba86d422ce181a719445e51872fa30f1f7413b62becb52e95ec91aa262d85c"
 
 [[package]]
 name = "unicase"
