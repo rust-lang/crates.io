@@ -3,6 +3,8 @@ import { inject as service } from '@ember/service';
 
 import window from 'ember-window-mock';
 
+import * as localStorage from '../utils/local-storage';
+
 /**
  * This route will open a popup window directed at the `github-login` route.
  * After the window has opened it will wait for the window to close and
@@ -15,11 +17,7 @@ export default Route.extend({
   session: service(),
 
   beforeModel(transition) {
-    try {
-      window.localStorage.removeItem('github_response');
-    } catch (e) {
-      // ignore error
-    }
+    localStorage.removeItem('github_response');
 
     window.github_response = undefined;
     let windowDimensions = [
