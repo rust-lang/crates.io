@@ -88,7 +88,7 @@
     "ember-router-scroll": "^2.0.1",
     "ember-source": "~3.18.1",
     "ember-svg-jar": "^2.2.3",
-    "ember-template-lint": "^2.6.0",
+    "ember-template-lint": "^2.7.0",
     "ember-test-selectors": "^4.1.0",
     "ember-truth-helpers": "^2.1.0",
     "ember-web-app": "^4.0.0",
