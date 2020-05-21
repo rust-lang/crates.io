@@ -34,8 +34,6 @@ These files and directories have to do with the backend:
 * `src/` - The backend's source code
 * `target/` - Compiled output, including dependencies and final binary artifacts - (ignored in
   `.gitignore`)
-* `tmp/index-co` - The registry repository; in production this is cloned from Github and in
-  development from `tmp/index-bare` - (ignored in `.gitignore`)
 
 The backend stores information in a Postgres database.
 
@@ -98,8 +96,7 @@ local development environment
 * `script/init-local-index.sh` - Creates registry repositories used during development
 * `tmp/` - Temporary files created during development; when deployed on Heroku this is the only
   writable directory - (ignored in `.gitignore`)
-* `tmp/index-bare` - A bare git repository, used as the origin for `tmp/index-co` during
-  development - (ignored in `.gitignore`)
+* `tmp/index-bare` - A bare git repository during development - (ignored in `.gitignore`)
 * `.github/workflows/*` - Configuration for continuous integration at [GitHub Actions]
 * `.watchmanconfig` - Use by Ember CLI to efficiently watch for file changes if you install watchman
 

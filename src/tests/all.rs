@@ -160,7 +160,7 @@ fn build_app(
         None
     };
 
-    let app = App::new(&config, client);
+    let app = App::new(config, client);
     t!(t!(app.primary_database.get()).begin_test_transaction());
     let app = Arc::new(app);
     let handler = cargo_registry::build_handler(Arc::clone(&app));

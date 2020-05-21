@@ -29,7 +29,7 @@ rustdoc-args = [
 
 [dependencies]
 cargo-registry-s3 = { path = "src/s3", version = "0.2.0" }
-rand = "0.6"
+rand = "0.7"
 git2 = "0.13.0"
 flate2 = "1.0"
 semver = { version = "0.9", git = "https://github.com/steveklabnik/semver.git", features = ["diesel", "serde"] }
@@ -48,15 +48,15 @@ dotenv = "0.15"
 toml = "0.5"
 diesel = { version = "1.4.0", features = ["postgres", "serde_json", "chrono", "r2d2"] }
 diesel_full_text_search = "1.0.0"
-swirl = { git = "https://github.com/sgrif/swirl.git", rev = "de5d8bb" }
+swirl = { git = "https://github.com/sgrif/swirl.git", rev = "e87cf37" }
 serde_json = "1.0.0"
 serde = { version = "1.0.0", features = ["derive"] }
 chrono = { version = "0.4.0", features = ["serde"] }
-comrak = { version = "0.4.0", default-features = false }
+comrak = { version = "0.7", default-features = false }
 ammonia = "3.0.0"
 docopt = "1.0"
 scheduled-thread-pool = "0.2.0"
-derive_deref = "1.0.0"
+derive_deref = { version = "1.0.0", git = "https://github.com/azriel91/derive_deref.git", rev = "63527ab" }
 reqwest = { version = "0.10", features = ["blocking", "gzip", "json"] }
 tempfile = "3"
 parking_lot = "0.10"
@@ -67,12 +67,12 @@ lettre_email = "0.9"
 failure = "0.1.1"
 
 conduit = "0.9.0-alpha.2"
-conduit-conditional-get = "0.9.0-alpha.2"
-conduit-cookie = "0.9.0-alpha.2"
-cookie = { version = "0.12", features = ["secure"] }
+conduit-conditional-get = "0.9.0-alpha.3"
+conduit-cookie = "0.9.0-alpha.3"
+cookie = { version = "0.13", features = ["secure"] }
 conduit-middleware = "0.9.0-alpha.2"
 conduit-router = "0.9.0-alpha.2"
-conduit-static = "0.9.0-alpha.2"
+conduit-static = "0.9.0-alpha.3"
 conduit-git-http-backend = "0.9.0-alpha.2"
 civet = "0.12.0-alpha.3"
 conduit-hyper = "0.3.0-alpha.2"

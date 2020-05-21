@@ -77,7 +77,7 @@ impl Drop for TestAppInner {
         // Lazily run any remaining jobs
         if let Some(runner) = &self.runner {
             runner.run_all_pending_jobs().expect("Could not run jobs");
-            runner.assert_no_failed_jobs().expect("Failed jobs remain");
+            runner.check_for_failed_jobs().expect("Failed jobs remain");
         }
 
         // Manually verify that all jobs have completed successfully
@@ -192,7 +192,7 @@ impl TestApp {
 
         runner.run_all_pending_jobs().expect("Could not run jobs");
         runner
-            .assert_no_failed_jobs()
+            .check_for_failed_jobs()
             .expect("Could not determine if jobs failed");
     }
 
@@ -223,7 +223,6 @@ impl TestAppBuilder {
         let (app, middle) = crate::build_app(self.config, self.proxy);
 
         let runner = if self.build_job_runner {
-            let connection_pool = app.primary_database.clone();
             let repository_config = RepositoryConfig {
                 index_location: Url::from_file_path(&git::bare()).unwrap(),
                 credentials: Credentials::Missing,
@@ -231,16 +230,16 @@ impl TestAppBuilder {
             let index = WorkerRepository::open(&repository_config).expect("Could not clone index");
             let environment = Environment::new(
                 index,
-                connection_pool.clone(),
                 app.config.uploader.clone(),
                 app.http_client().clone(),
             );
 
             Some(
-                Runner::builder(connection_pool, environment)
+                Runner::builder(environment)
                     // We only have 1 connection in tests, so trying to run more than
                     // 1 job concurrently will just block
                     .thread_count(1)
+                    .connection_pool(app.primary_database.clone())
                     .job_start_timeout(Duration::from_secs(5))
                     .build(),
             )

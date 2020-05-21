@@ -2,9 +2,9 @@ import { alias } from '@ember/object/computed';
 import Service, { inject as service } from '@ember/service';
 
 import { task } from 'ember-concurrency';
-import window from 'ember-window-mock';
 
 import ajax from '../utils/ajax';
+import * as localStorage from '../utils/local-storage';
 
 export default class SessionService extends Service {
   @service store;
@@ -16,22 +16,14 @@ export default class SessionService extends Service {
   @alias('loadUserTask.last.value.ownedCrates') ownedCrates;
 
   get isLoggedIn() {
-    try {
-      return window.localStorage.getItem('isLoggedIn') === '1';
-    } catch (e) {
-      return false;
-    }
+    return localStorage.getItem('isLoggedIn') === '1';
   }
 
   set isLoggedIn(value) {
-    try {
-      if (value) {
-        window.localStorage.setItem('isLoggedIn', '1');
-      } else {
-        window.localStorage.removeItem('isLoggedIn');
-      }
-    } catch (e) {
-      // ignore error
+    if (value) {
+      localStorage.setItem('isLoggedIn', '1');
+    } else {
+      localStorage.removeItem('isLoggedIn');
     }
   }
 

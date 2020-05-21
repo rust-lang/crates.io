@@ -113,7 +113,7 @@ impl<'de> Deserialize<'de> for EncodableFeatureName {
         if !Crate::valid_feature_name(&s) {
             let value = de::Unexpected::Str(&s);
             let expected = "a valid feature name containing only letters, \
-                            numbers, hyphens, or underscores";
+                            numbers, '-', '+', or '_'";
             Err(de::Error::invalid_value(value, &expected))
         } else {
             Ok(EncodableFeatureName(s))

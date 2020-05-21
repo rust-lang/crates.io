@@ -27,40 +27,50 @@ pub fn summary(req: &mut dyn RequestExt) -> EndpointResult {
         .select(metadata::total_downloads)
         .get_result(&*conn)?;
 
-    let encode_crates = |krates: Vec<Crate>| -> AppResult<Vec<_>> {
+    let encode_crates = |data: Vec<(Crate, Option<i64>)>| -> AppResult<Vec<_>> {
+        let recent_downloads = data.iter().map(|&(_, s)| s).collect::<Vec<_>>();
+
+        let krates = data.into_iter().map(|(c, _)| c).collect::<Vec<_>>();
+
         let versions = krates.versions().load::<Version>(&*conn)?;
         versions
             .grouped_by(&krates)
             .into_iter()
             .map(|versions| Version::top(versions.into_iter().map(|v| (v.created_at, v.num))))
             .zip(krates)
-            .map(|(top_versions, krate)| {
-                Ok(krate.minimal_encodable(&top_versions, None, false, None))
+            .zip(recent_downloads)
+            .map(|((top_versions, krate), recent_downloads)| {
+                Ok(krate.minimal_encodable(&top_versions, None, false, recent_downloads))
             })
             .collect()
     };
 
+    let selection = (ALL_COLUMNS, recent_crate_downloads::downloads.nullable());
+
     let new_crates = crates
+        .left_join(recent_crate_downloads::table)
         .order(created_at.desc())
-        .select(ALL_COLUMNS)
+        .select(selection)
         .limit(10)
         .load(&*conn)?;
     let just_updated = crates
+        .left_join(recent_crate_downloads::table)
         .filter(updated_at.ne(created_at))
         .order(updated_at.desc())
-        .select(ALL_COLUMNS)
+        .select(selection)
         .limit(10)
         .load(&*conn)?;
     let most_downloaded = crates
-        .order(downloads.desc())
-        .select(ALL_COLUMNS)
+        .left_join(recent_crate_downloads::table)
+        .then_order_by(downloads.desc())
+        .select(selection)
         .limit(10)
         .load(&*conn)?;
 
     let most_recently_downloaded = crates
         .inner_join(recent_crate_downloads::table)
-        .order(recent_crate_downloads::downloads.desc())
-        .select(ALL_COLUMNS)
+        .then_order_by(recent_crate_downloads::downloads.desc())
+        .select(selection)
         .limit(10)
         .load(&*conn)?;
 

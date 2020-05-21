@@ -44,7 +44,7 @@ impl App {
     /// - GitHub OAuth
     /// - Database connection pools
     /// - A `git2::Repository` instance from the index repo checkout (that server.rs ensures exists)
-    pub fn new(config: &Config, http_client: Option<Client>) -> App {
+    pub fn new(config: Config, http_client: Option<Client>) -> App {
         use oauth2::prelude::*;
         use oauth2::{AuthUrl, ClientId, ClientSecret, Scope, TokenUrl};
         use url::Url;
@@ -126,7 +126,7 @@ impl App {
             read_only_replica_database,
             github,
             session_key: config.session_key.clone(),
-            config: config.clone(),
+            config,
             http_client,
         }
     }

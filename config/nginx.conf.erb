@@ -156,8 +156,10 @@ http {
 		add_header X-Content-Type-Options "nosniff";
 		add_header X-Frame-Options "SAMEORIGIN";
 		add_header X-XSS-Protection "1; mode=block";
-		add_header Content-Security-Policy "default-src 'self'; connect-src 'self' https://docs.rs https://<%= s3_host(ENV) %>; script-src 'self' 'unsafe-eval' https://www.google.com; style-src 'self' 'unsafe-inline' https://www.google.com https://ajax.googleapis.com; img-src *; object-src 'none'";
-        add_header Access-Control-Allow-Origin "*";
+
+		add_header Content-Security-Policy "default-src 'self'; connect-src 'self' https://docs.rs https://<%= s3_host(ENV) %>; script-src 'self' 'unsafe-eval' https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://www.google.com https://ajax.googleapis.com https://fonts.googleapis.com; font-src: https://fonts.gstatic.com; img-src *; object-src 'none'";
+    add_header Access-Control-Allow-Origin "*";
+
 		add_header Strict-Transport-Security "max-age=31536000" always;
 		add_header Vary 'Accept, Accept-Encoding, Cookie';
 		proxy_set_header Host $http_host;

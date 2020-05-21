@@ -13,6 +13,7 @@ use conduit_hyper::Service;
 use futures_util::future::FutureExt;
 use reqwest::blocking::Client;
 
+#[allow(clippy::large_enum_variant)]
 enum Server {
     Civet(CivetServer),
     Hyper(tokio::runtime::Runtime, tokio::task::JoinHandle<()>),
@@ -27,7 +28,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = cargo_registry::Config::default();
     let client = Client::new();
 
-    let app = App::new(&config, Some(client));
+    let app = App::new(config.clone(), Some(client));
     let app = cargo_registry::build_handler(Arc::new(app));
 
     // On every server restart, ensure the categories available in the database match
