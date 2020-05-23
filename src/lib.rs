@@ -1,5 +1,4 @@
 #![deny(clippy::all, missing_debug_implementations, rust_2018_idioms)]
-#![allow(clippy::needless_doctest_main, clippy::unknown_clippy_lints)] // using the tokio::main attribute
 
 //! A wrapper for integrating `hyper 0.13` with a `conduit 0.8` blocking application stack.
 //!
@@ -57,17 +56,3 @@ pub use service::{BlockingHandler, Service};
 
 type HyperResponse = hyper::Response<hyper::Body>;
 type ConduitResponse = conduit::Response<conduit::Body>;
-use crate::file_stream::FileStream;
-
-/// Turns a `ConduitResponse` into a `HyperResponse`
-fn conduit_into_hyper(response: ConduitResponse) -> HyperResponse {
-    use conduit::Body::*;
-
-    let (parts, body) = response.into_parts();
-    let body = match body {
-        Static(slice) => slice.into(),
-        Owned(vec) => vec.into(),
-        File(file) => FileStream::from_std(file).into_streamed_body(),
-    };
-    HyperResponse::from_parts(parts, body)
-}

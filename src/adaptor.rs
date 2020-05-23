@@ -153,7 +153,7 @@ impl RequestExt for ConduitRequest {
         let host = self
             .parts
             .headers()
-            .get("host")
+            .get(http::header::HOST)
             .map(|h| h.to_str().unwrap_or(""))
             .unwrap_or("");
         Host::Name(host)
