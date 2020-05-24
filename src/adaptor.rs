@@ -11,7 +11,6 @@
 
 use std::io::{Cursor, Read};
 use std::net::SocketAddr;
-use std::path::{Component, Path, PathBuf};
 
 use conduit::{Extensions, HeaderMap, Host, Method, RequestExt, Scheme, Version};
 use http::request::Parts as HttpParts;
@@ -63,30 +62,6 @@ impl ConduitRequest {
     pub(crate) fn new(info: &mut RequestInfo, remote_addr: SocketAddr) -> Self {
         let (parts, body) = info.take();
         let path = parts.0.uri.path().to_string();
-        let path = Path::new(&path);
-        let path = path
-            .components()
-            // Normalize path (needed by crates.io)
-            // TODO: Make this optional?
-            .fold(PathBuf::new(), |mut result, p| match p {
-                Component::Normal(x) => {
-                    if x != "" {
-                        result.push(x)
-                    };
-                    result
-                }
-                Component::ParentDir => {
-                    result.pop();
-                    result
-                }
-                Component::RootDir => {
-                    result.push(Component::RootDir);
-                    result
-                }
-                _ => result,
-            })
-            .to_string_lossy()
-            .to_string(); // non-Unicode is replaced with U+FFFD REPLACEMENT CHARACTER
 
         Self {
             parts,
