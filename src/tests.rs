@@ -126,24 +126,6 @@ async fn recover_from_panic() {
 }
 
 #[tokio::test]
-async fn normalize_path() {
-    let mut service = make_service(AssertPathNormalized);
-    let req = hyper::Request::put("//removed/.././.././normalized")
-        .body(hyper::Body::default())
-        .unwrap();
-    let resp = service.call(req).await.unwrap();
-    assert_eq!(resp.status(), StatusCode::OK);
-    assert_eq!(resp.headers().len(), 1);
-
-    let req = hyper::Request::put("//normalized")
-        .body(hyper::Body::default())
-        .unwrap();
-    let resp = service.call(req).await.unwrap();
-    assert_eq!(resp.status(), StatusCode::OK);
-    assert_eq!(resp.headers().len(), 1);
-}
-
-#[tokio::test]
 async fn sleeping_doesnt_block_another_request() {
     let mut service = make_service(Sleep);
 
