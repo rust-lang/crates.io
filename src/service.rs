@@ -32,8 +32,7 @@ impl Service {
     /// #     }
     /// # }
     /// # let app = Endpoint();
-    /// const MAX_THREADS: usize = 10;
-    /// let handler = Arc::new(BlockingHandler::new(app, MAX_THREADS));
+    /// let handler = Arc::new(BlockingHandler::new(app));
     /// let make_service =
     ///     hyper::service::make_service_fn(move |socket: &hyper::server::conn::AddrStream| {
     ///         let addr = socket.remote_addr();

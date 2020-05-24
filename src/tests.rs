@@ -1,5 +1,5 @@
 use conduit::{box_error, Body, Handler, HandlerResult, RequestExt, Response, StatusCode};
-use futures_util::future::{Future, FutureExt};
+use futures_util::future::Future;
 use hyper::{body::to_bytes, service::Service};
 
 use super::service::{BlockingHandler, ServiceError};
@@ -71,7 +71,6 @@ impl Handler for Sleep {
 
 fn make_service<H: Handler>(
     handler: H,
-    max_thread_count: usize,
 ) -> impl Service<
     hyper::Request<hyper::Body>,
     Response = HyperResponse,
@@ -80,7 +79,7 @@ fn make_service<H: Handler>(
 > {
     use hyper::service::service_fn;
 
-    let handler = std::sync::Arc::new(BlockingHandler::new(handler, max_thread_count));
+    let handler = std::sync::Arc::new(BlockingHandler::new(handler));
 
     service_fn(move |request: hyper::Request<hyper::Body>| {
         let remote_addr = ([0, 0, 0, 0], 0).into();
@@ -89,7 +88,7 @@ fn make_service<H: Handler>(
 }
 
 async fn simulate_request<H: Handler>(handler: H) -> HyperResponse {
-    let mut service = make_service(handler, 1);
+    let mut service = make_service(handler);
     service.call(hyper::Request::default()).await.unwrap()
 }
 
@@ -128,7 +127,7 @@ async fn recover_from_panic() {
 
 #[tokio::test]
 async fn normalize_path() {
-    let mut service = make_service(AssertPathNormalized, 1);
+    let mut service = make_service(AssertPathNormalized);
     let req = hyper::Request::put("//removed/.././.././normalized")
         .body(hyper::Body::default())
         .unwrap();
@@ -145,25 +144,8 @@ async fn normalize_path() {
 }
 
 #[tokio::test]
-async fn limits_thread_count() {
-    let mut service = make_service(Sleep, 1);
-    let first = service.call(hyper::Request::default());
-    let second = service.call(hyper::Request::default());
-
-    let first_completed = futures_util::select! {
-        // The first thead is spawned and sleeps for 100ms
-        sleep = first.fuse() => sleep,
-        // The second request is rejected immediately
-        over_capacity = second.fuse() => over_capacity,
-    }
-    .unwrap();
-
-    assert_eq!(first_completed.status(), StatusCode::SERVICE_UNAVAILABLE)
-}
-
-#[tokio::test]
 async fn sleeping_doesnt_block_another_request() {
-    let mut service = make_service(Sleep, 2);
+    let mut service = make_service(Sleep);
 
     let first = service.call(hyper::Request::default());
     let second = service.call(hyper::Request::default());
