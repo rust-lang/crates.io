@@ -19,12 +19,8 @@ impl Server {
     /// `tokio::Runtime` it is not possible to furter configure the `hyper::Server`.  If more
     /// control, such as configuring a graceful shutdown is necessary, then call
     /// `Service::from_blocking` instead.
-    pub fn serve<H: conduit::Handler>(
-        addr: &SocketAddr,
-        handler: H,
-        max_threads: usize,
-    ) -> impl Future {
-        let handler = Arc::new(BlockingHandler::new(handler, max_threads));
+    pub fn serve<H: conduit::Handler>(addr: &SocketAddr, handler: H) -> impl Future {
+        let handler = Arc::new(BlockingHandler::new(handler));
         let make_service = make_service_fn(move |socket: &AddrStream| {
             let handler = handler.clone();
             let remote_addr = socket.remote_addr();

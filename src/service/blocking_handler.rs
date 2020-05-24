@@ -4,27 +4,20 @@ use crate::service::ServiceError;
 use crate::{ConduitResponse, HyperResponse};
 
 use std::net::SocketAddr;
-use std::sync::{
-    atomic::{AtomicUsize, Ordering},
-    Arc,
-};
+use std::sync::Arc;
 
-use conduit::{header, Handler, StatusCode};
+use conduit::{Handler, StatusCode};
 use hyper::{Body, Request, Response};
 use tracing::error;
 
 #[derive(Debug)]
 pub struct BlockingHandler<H: Handler> {
-    thread_count: AtomicUsize,
-    max_thread_count: usize,
     handler: Arc<H>,
 }
 
 impl<H: Handler> BlockingHandler<H> {
-    pub fn new(handler: H, max_thread_count: usize) -> Self {
+    pub fn new(handler: H) -> Self {
         Self {
-            thread_count: AtomicUsize::new(0),
-            max_thread_count,
             handler: Arc::new(handler),
         }
     }
@@ -39,14 +32,6 @@ impl<H: Handler> BlockingHandler<H> {
 
         let full_body = hyper::body::to_bytes(body).await?;
         let mut request_info = RequestInfo::new(parts, full_body);
-
-        // The _drop_on_return ensures the counter is decreased for all exit paths
-        let (_drop_on_return, prev_count) = ThreadCounter::begin_with(&self.thread_count);
-
-        // Comparison is against the "previous value" from an atomic fetch_add, so using `>=`
-        if prev_count >= self.max_thread_count {
-            return Ok(over_capacity_error_response());
-        }
 
         let handler = self.handler.clone();
         tokio::task::spawn_blocking(move || {
@@ -82,37 +67,4 @@ fn server_error_response(message: &str) -> HyperResponse {
         .status(StatusCode::INTERNAL_SERVER_ERROR)
         .body(body)
         .expect("Unexpected invalid header")
-}
-
-/// Logs an error message and returns a 503 status saying the service is over capacity
-fn over_capacity_error_response() -> HyperResponse {
-    const RETRY_AFTER: u32 = 2;
-    error!("Server Capacity Exceeded");
-    let body = hyper::Body::from(format!(
-        "Service Unavailable: Please retry after {} seconds.",
-        RETRY_AFTER
-    ));
-    Response::builder()
-        .status(StatusCode::SERVICE_UNAVAILABLE)
-        .header(header::RETRY_AFTER, RETRY_AFTER)
-        .body(body)
-        .expect("Unexpected invalid header")
-}
-
-/// A struct that stores a reference to an atomic counter so it can be decremented when dropped
-struct ThreadCounter<'a> {
-    counter: &'a AtomicUsize,
-}
-
-impl<'a> ThreadCounter<'a> {
-    fn begin_with(counter: &'a AtomicUsize) -> (Self, usize) {
-        let previous = counter.fetch_add(1, Ordering::SeqCst);
-        (Self { counter }, previous)
-    }
-}
-
-impl<'a> Drop for ThreadCounter<'a> {
-    fn drop(&mut self) {
-        self.counter.fetch_sub(1, Ordering::SeqCst);
-    }
 }
