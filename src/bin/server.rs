@@ -66,10 +66,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let mut rt = tokio::runtime::Builder::new()
             .threaded_scheduler()
             .enable_all()
+            .core_threads(4)
+            .max_threads(threads as usize)
             .build()
             .unwrap();
 
-        let handler = Arc::new(conduit_hyper::BlockingHandler::new(app, threads as usize));
+        let handler = Arc::new(conduit_hyper::BlockingHandler::new(app));
         let make_service =
             hyper::service::make_service_fn(move |socket: &hyper::server::conn::AddrStream| {
                 let addr = socket.remote_addr();
