@@ -32,7 +32,7 @@ cargo-registry-s3 = { path = "src/s3", version = "0.2.0" }
 rand = "0.7"
 git2 = "0.13.0"
 flate2 = "1.0"
-semver = { version = "0.9", git = "https://github.com/steveklabnik/semver.git", features = ["diesel", "serde"] }
+semver = { version = "0.10", features = ["diesel", "serde"] }
 url = "1.2.1"
 tar = "0.4.16"
 base64 = "0.11"
