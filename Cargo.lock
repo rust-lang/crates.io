@@ -372,13 +372,14 @@ dependencies = [
 
 [[package]]
 name = "conduit-hyper"
-version = "0.3.0-alpha.3"
+version = "0.3.0-alpha.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fd8258f712af3fc3b9ca293f12e322024f192aa9c793c07ab15f2eda544eef0e"
+checksum = "d4d0c38b49434c95e0a7cd8dc805c90e3c6975cb9454e158c994c35fa1bfe641"
 dependencies = [
  "conduit",
  "http",
  "hyper",
+ "percent-encoding 2.1.0",
  "tokio",
  "tower-service",
  "tracing",
