@@ -58,6 +58,17 @@ impl Handler for Sleep {
     }
 }
 
+struct AssertPercentDecodedPath;
+impl Handler for AssertPercentDecodedPath {
+    fn call(&self, req: &mut dyn RequestExt) -> HandlerResult {
+        if req.path() == "/:" && req.query_string() == Some("%3a") {
+            OkResult.call(req)
+        } else {
+            ErrorResult.call(req)
+        }
+    }
+}
+
 fn make_service<H: Handler>(
     handler: H,
 ) -> impl Service<
@@ -131,4 +142,14 @@ async fn sleeping_doesnt_block_another_request() {
 
     assert_eq!(first.unwrap().status(), StatusCode::OK);
     assert_eq!(second.unwrap().status(), StatusCode::OK);
+}
+
+#[tokio::test]
+async fn path_is_percent_decoded_but_not_query_string() {
+    let mut service = make_service(AssertPercentDecodedPath);
+    let req = hyper::Request::put("/%3a?%3a")
+        .body(hyper::Body::default())
+        .unwrap();
+    let resp = service.call(req).await.unwrap();
+    assert_eq!(resp.status(), StatusCode::OK);
 }

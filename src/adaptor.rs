@@ -61,7 +61,10 @@ pub(crate) struct ConduitRequest {
 impl ConduitRequest {
     pub(crate) fn new(info: &mut RequestInfo, remote_addr: SocketAddr) -> Self {
         let (parts, body) = info.take();
-        let path = parts.0.uri.path().to_string();
+        let path = parts.0.uri.path().as_bytes();
+        let path = percent_encoding::percent_decode(path)
+            .decode_utf8_lossy()
+            .into_owned();
 
         Self {
             parts,
