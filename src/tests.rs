@@ -50,17 +50,6 @@ impl Handler for InvalidStatus {
     }
 }
 
-struct AssertPathNormalized;
-impl Handler for AssertPathNormalized {
-    fn call(&self, req: &mut dyn RequestExt) -> HandlerResult {
-        if req.path() == "/normalized" {
-            OkResult.call(req)
-        } else {
-            ErrorResult.call(req)
-        }
-    }
-}
-
 struct Sleep;
 impl Handler for Sleep {
     fn call(&self, req: &mut dyn RequestExt) -> HandlerResult {
