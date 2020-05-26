@@ -13,6 +13,8 @@ use conduit_hyper::Service;
 use futures_util::future::FutureExt;
 use reqwest::blocking::Client;
 
+const CORE_THREADS: usize = 4;
+
 #[allow(clippy::large_enum_variant)]
 enum Server {
     Civet(CivetServer),
@@ -66,8 +68,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let mut rt = tokio::runtime::Builder::new()
             .threaded_scheduler()
             .enable_all()
-            .core_threads(4)
-            .max_threads(threads as usize)
+            .core_threads(CORE_THREADS)
+            .max_threads(threads as usize + CORE_THREADS)
             .build()
             .unwrap();
 
