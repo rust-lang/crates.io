@@ -102,7 +102,7 @@ jobs:
         with:
           path: ~/.cargo/registry/cache
           key: ${{ runner.os }}-cargo-registry-cache-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-key: |
+          restore-keys: |
             ${{ runner.os }}-cargo-registry-cache-${{ matrix.rust }}-
             ${{ runner.os }}-cargo-registry-cache-
 
@@ -112,7 +112,7 @@ jobs:
         with:
           path: ~/.cargo/registry/index
           key: ${{ runner.os }}-cargo-registry-index-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-key: |
+          restore-keys: |
             ${{ runner.os }}-cargo-registry-index-${{ matrix.rust }}-
             ${{ runner.os }}-cargo-registry-index-
 
@@ -122,7 +122,7 @@ jobs:
         with:
           path: ~/.cargo/git/db
           key: ${{ runner.os }}-cargo-git-db-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-key: |
+          restore-keys: |
             ${{ runner.os }}-cargo-git-db-${{ matrix.rust }}-
             ${{ runner.os }}-cargo-git-db-
 
@@ -152,7 +152,7 @@ jobs:
         with:
           path: target
           key: ${{ runner.os }}-cargo-build-target-${{ steps.rustc.outputs.version }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-key: |
+          restore-keys: |
             ${{ runner.os }}-cargo-build-target-${{ steps.rustc.outputs.version }}-
 
       - name: Cargo clean on new rustc version
