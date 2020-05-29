@@ -110,6 +110,15 @@ pub fn summary(req: &mut dyn RequestExt) -> EndpointResult {
     }))
 }
 
+/// Handles the `GET /crates/:crate_id/metadata` route.
+pub fn minimal_metadata(req: &mut dyn RequestExt) -> EndpointResult {
+    let name = &req.params()["crate_id"];
+    let conn = req.db_read_only()?;
+    let krate = Crate::by_name(name).first::<Crate>(&*conn)?;
+    let top_versions = krate.top_versions(&conn)?;
+    Ok(req.json(&krate.minimal_encodable(&top_versions, None, false, None)))
+}
+
 /// Handles the `GET /crates/:crate_id` route.
 pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
     let name = &req.params()["crate_id"];
