@@ -194,7 +194,7 @@ name = "cargo-registry"
 version = "0.2.2"
 dependencies = [
  "ammonia",
- "base64 0.11.0",
+ "base64 0.12.1",
  "cargo-registry-s3",
  "chrono",
  "civet",
@@ -257,7 +257,7 @@ dependencies = [
 name = "cargo-registry-s3"
 version = "0.2.0"
 dependencies = [
- "base64 0.11.0",
+ "base64 0.12.1",
  "chrono",
  "openssl",
  "reqwest",
