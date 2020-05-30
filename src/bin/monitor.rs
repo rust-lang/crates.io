@@ -15,10 +15,12 @@ fn main() -> Result<(), Error> {
     let conn = db::connect_now()?;
 
     check_stalled_background_jobs(&conn)?;
+    check_stalled_update_downloads(&conn)?;
     check_spam_attack(&conn)?;
     Ok(())
 }
 
+/// Check for old background jobs that are not currently running
 fn check_stalled_background_jobs(conn: &PgConnection) -> Result<(), Error> {
     use cargo_registry::schema::background_jobs::dsl::*;
     use diesel::dsl::*;
@@ -59,6 +61,43 @@ fn check_stalled_background_jobs(conn: &PgConnection) -> Result<(), Error> {
     Ok(())
 }
 
+/// Check for an `update_downloads` job that has run longer than expected
+fn check_stalled_update_downloads(conn: &PgConnection) -> Result<(), Error> {
+    use cargo_registry::schema::background_jobs::dsl::*;
+    use chrono::{DateTime, NaiveDateTime, Utc};
+
+    const EVENT_KEY: &str = "update_downloads_stalled";
+
+    println!("Checking for stalled background jobs");
+
+    let max_job_time = dotenv::var("MONITOR_MAX_UPDATE_DOWNLOADS_TIME")
+        .map(|s| s.parse::<u32>().unwrap() as i64)
+        .unwrap_or(120);
+
+    let start_time = background_jobs
+        .filter(job_type.eq("update_downloads"))
+        .select(created_at)
+        .first::<NaiveDateTime>(conn);
+
+    if let Ok(start_time) = start_time {
+        let start_time = DateTime::<Utc>::from_utc(start_time, Utc);
+        let minutes = Utc::now().signed_duration_since(start_time).num_minutes();
+
+        if minutes > max_job_time {
+            return log_and_trigger_event(on_call::Event::Trigger {
+                incident_key: Some(EVENT_KEY.into()),
+                description: format!("update_downloads job running for {} minutes", minutes),
+            });
+        }
+    };
+
+    log_and_trigger_event(on_call::Event::Resolve {
+        incident_key: EVENT_KEY.into(),
+        description: Some("No stalled update_downloads job".into()),
+    })
+}
+
+/// Check for known spam patterns
 fn check_spam_attack(conn: &PgConnection) -> Result<(), Error> {
     use cargo_registry::models::krate::canon_crate_name;
     use diesel::dsl::*;
