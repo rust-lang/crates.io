@@ -9,6 +9,8 @@
 //! examples). Values of the headers must match exactly.
 
 use super::prelude::*;
+use crate::App;
+use std::sync::Arc;
 
 // Can't derive debug because of Handler.
 #[allow(missing_debug_implementations)]
@@ -37,6 +39,9 @@ impl AroundMiddleware for BlockTraffic {
 
 impl Handler for BlockTraffic {
     fn call(&self, req: &mut dyn RequestExt) -> AfterResult {
+        let app = req.extensions().find::<Arc<App>>().expect("Missing app");
+        let domain_name = app.config.domain_name.clone();
+
         let has_blocked_value = req
             .headers()
             .get_all(&self.header_name)
@@ -49,10 +54,11 @@ impl Handler for BlockTraffic {
             let body = format!(
                 "We are unable to process your request at this time. \
                  This usually means that you are in violation of our crawler \
-                 policy (https://crates.io/policies#crawlers). \
+                 policy (https://{}/policies#crawlers). \
                  Please open an issue at https://github.com/rust-lang/crates.io \
                  or email help@crates.io \
                  and provide the request id {}",
+                domain_name,
                 // Heroku should always set this header
                 req.headers()
                     .get("x-request-id")
