@@ -100,7 +100,7 @@
     "eslint-plugin-prettier": "^3.1.3",
     "loader.js": "^4.7.0",
     "normalize.css": "^8.0.1",
-    "nyc": "^15.0.1",
+    "nyc": "^15.1.0",
     "postcss-nested": "^4.2.1",
     "prettier": "^2.0.5",
     "qunit-console-grouper": "^0.2.0",
