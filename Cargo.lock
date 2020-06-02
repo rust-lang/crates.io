@@ -2,9 +2,9 @@
 # It is not intended for manual editing.
 [[package]]
 name = "addr2line"
-version = "0.12.0"
+version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "456d75cbb82da1ad150c8a9d97285ffcd21c9931dcb11e995903e7d75141b38b"
+checksum = "a49806b9dadc843c61e7c97e72490ad7f7220ae249012fbda9ad0609457c0543"
 dependencies = [
  "gimli",
 ]
@@ -188,9 +188,9 @@ checksum = "40e38929add23cdf8a366df9b0e088953150724bcbe5fc330b0d8eb3b328eec8"
 
 [[package]]
 name = "bumpalo"
-version = "3.3.0"
+version = "3.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5356f1d23ee24a1f785a56d1d1a5f0fd5b0f6a0c0fb2412ce11da71649ab78f6"
+checksum = "2e8c087f005730276d1096a652e92a8bacee2e2472bcc9715a74d2bec38b5820"
 
 [[package]]
 name = "byte-tools"
@@ -376,7 +376,7 @@ checksum = "9674cc09c0832fe181ea1db5f5f7a3d1741d756cc142e4640d8cf7a1b39b6dfa"
 dependencies = [
  "conduit",
  "conduit-middleware",
- "time 0.2.15",
+ "time 0.2.16",
 ]
 
 [[package]]
@@ -389,7 +389,7 @@ dependencies = [
  "conduit",
  "conduit-middleware",
  "cookie",
- "time 0.2.15",
+ "time 0.2.16",
 ]
 
 [[package]]
@@ -454,7 +454,7 @@ dependencies = [
  "conduit",
  "conduit-mime-types",
  "filetime",
- "time 0.2.15",
+ "time 0.2.16",
 ]
 
 [[package]]
@@ -474,7 +474,7 @@ checksum = "0c60ef6d0bbf56ad2674249b6bb74f2c6aeb98b98dd57b5d3e37cace33011d69"
 dependencies = [
  "base64 0.11.0",
  "ring",
- "time 0.2.15",
+ "time 0.2.16",
 ]
 
 [[package]]
@@ -1184,9 +1184,9 @@ dependencies = [
 
 [[package]]
 name = "indexmap"
-version = "1.3.2"
+version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "076f042c5b7b98f31d205f1249267e12a6518c1481e9dae9764af19b707d2292"
+checksum = "c398b2b113b55809ceb9ee3e753fcbac793f1956663f3c36549c1346015c2afe"
 dependencies = [
  "autocfg 1.0.0",
 ]
@@ -1821,9 +1821,9 @@ dependencies = [
 
 [[package]]
 name = "pin-project-lite"
-version = "0.1.5"
+version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f7505eeebd78492e0f6108f7171c4948dbb120ee8119d9d77d0afa5469bef67f"
+checksum = "9df32da11d84f3a7d70205549562966279adb900e080fad3dccd8e64afccf0ad"
 
 [[package]]
 name = "pin-utils"
@@ -2366,9 +2366,9 @@ dependencies = [
 
 [[package]]
 name = "siphasher"
-version = "0.3.2"
+version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8e88f89a550c01e4cd809f3df4f52dc9e939f3273a2017eabd5c6d12fd98bb23"
+checksum = "fa8f3741c7372e75519bd9346068370c9cdaabcc1f9599cbcf2a2719352286b7"
 
 [[package]]
 name = "slab"
@@ -2609,9 +2609,9 @@ dependencies = [
 
 [[package]]
 name = "time"
-version = "0.2.15"
+version = "0.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e1330829d2e6c06771eeae476be12ff1aa9eb5e29ca718a431ab27168efde6c1"
+checksum = "3a51cadc5b1eec673a685ff7c33192ff7b7603d0b75446fb354939ee615acb15"
 dependencies = [
  "cfg-if",
  "libc",
@@ -2862,9 +2862,9 @@ dependencies = [
 
 [[package]]
 name = "vcpkg"
-version = "0.2.8"
+version = "0.2.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3fc439f2794e98976c88a2a2dafce96b930fe8010b0a256b3c2199a773933168"
+checksum = "55d1e41d56121e07f1e223db0a4def204e45c85425f6a16d462fd07c8d10d74c"
 
 [[package]]
 name = "version_check"
@@ -3008,9 +3008,9 @@ checksum = "ac3b87c63620426dd9b991e5ce0329eff545bccbbb34f3be09ff6fb6ab51b7b6"
 
 [[package]]
 name = "winapi-util"
-version = "0.1.3"
+version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4ccfbf554c6ad11084fb7517daca16cfdcaccbdadba4fc336f032a8b12c2ad80"
+checksum = "70ec6ce85bb158151cae5e5c87f95a8e97d2c0c4b001223f33a334e3ce5de178"
 dependencies = [
  "winapi 0.3.8",
 ]
