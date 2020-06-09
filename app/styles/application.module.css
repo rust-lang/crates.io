@@ -6,8 +6,7 @@
     --header-bg-color: var(--dark-green);
     --footer-bg-color: var(--dark-green);
 
-    /* Use the modern font stack inspired by Bootstrap 4 */
-    --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    --font-family: "Fira Sans", sans-serif;
 
     --main-color: #383838;
     --main-color-light: #858585;
@@ -23,8 +22,6 @@
     --header-bg-color: var(--violet);
     --main-bg: white;
     --footer-bg-color: var(--dark-grey);
-
-    --font-family: "Fira Sans", sans-serif;
 }
 
 * {
