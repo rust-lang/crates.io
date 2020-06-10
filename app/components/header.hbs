@@ -22,6 +22,8 @@
         data-test-search-input
       >
       <label for="cargo-desktop-search" local-class="search-label">Search</label>
+      {{on-key 's' (focus '#cargo-desktop-search')}}
+      {{on-key 'shift+s' (focus '#cargo-desktop-search')}}
     </form>
 
     <nav local-class='nav'>

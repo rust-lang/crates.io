@@ -2,6 +2,7 @@
   local-class="container"
   ...attributes
   {{on-click-outside (action (mut this.dropdownExpanded) false)}}
+  {{on-key 'Escape' (action (mut this.dropdownExpanded) false)}}
 >
   {{yield (hash
     Trigger=(component "dropdown/trigger" toggle=(action "toggleDropdown"))
