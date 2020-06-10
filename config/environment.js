@@ -30,6 +30,9 @@ module.exports = function (environment) {
     'ember-cli-mirage': {
       discoverEmberDataModels: false,
     },
+    emberKeyboard: {
+      disableInputsInitializer: true,
+    },
   };
 
   if (environment === 'development') {
