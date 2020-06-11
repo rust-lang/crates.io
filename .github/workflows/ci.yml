@@ -63,11 +63,25 @@ jobs:
 
     env:
       RUST_BACKTRACE: 1
-      DATABASE_URL: postgres://postgres:@localhost/cargo_registry_test
-      TEST_DATABASE_URL: postgres://postgres:@localhost/cargo_registry_test
+      DATABASE_URL: postgres://postgres:postgres@localhost/cargo_registry_test
+      TEST_DATABASE_URL: postgres://postgres:postgres@localhost/cargo_registry_test
       CARGO_INCREMENTAL: 0
       RUSTFLAGS: "-C debuginfo=0 -D warnings"
       MALLOC_CONF: "background_thread:true,abort_conf:true,abort:true,junk:true"
+
+    services:
+      postgres:
+        image: postgres:11
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
 
     steps:
       - uses: actions/checkout@v2
@@ -157,21 +171,6 @@ jobs:
 
       - name: Cargo clean on new rustc version
         run: script/ci/cargo-clean-on-new-rustc-version.sh
-
-      - name: Install required system libraries
-        run: |
-          sudo tee /etc/apt/sources.list.d/pgdg.list <<END
-          deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main
-          END
-          wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-          sudo apt-get update
-          sudo apt-get install -y libpq-dev postgresql-11
-          mkdir -p /etc/postgresql/11/main
-          sudo tee /etc/postgresql/11/main/pg_hba.conf <<END
-          local   all             all                                     trust
-          host    all             all             127.0.0.1/32            trust
-          END
-          sudo systemctl restart postgresql@11-main
 
       - name: Setup database
         run: |
