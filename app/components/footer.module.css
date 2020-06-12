@@ -13,7 +13,7 @@
 .after-main-links {
     composes: width-limit from '../styles/application.module.css';
 
-    margin: 40px;
+    margin: 40px 20px 40px 20px;
     text-align: center;
 
     a { color: white; }
