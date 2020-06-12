@@ -11,13 +11,17 @@
 }
 
 .after-main-links {
-    composes: width-limit from '../styles/application.module.css';
+    width: 1025px;
 
-    margin: 40px 20px 40px 20px;
+    margin: 40px;
     text-align: center;
 
     a { color: white; }
     a:hover { color: darken(white, 10%); }
+    
+    @media only screen and (max-width: 1025px) {
+        width: 100%;
+    }
 
     @media only screen and (max-width: 450px) {
         margin: 20px;
