@@ -27,24 +27,25 @@ where
         .header(header::USER_AGENT, "crates.io (https://crates.io)")
         .send()?
         .error_for_status()
-        .map_err(|e| handle_error_response(&e))?
+        .map_err(|e| handle_error_response(app, &e))?
         .json()
         .map_err(Into::into)
 }
 
-fn handle_error_response(error: &reqwest::Error) -> Box<dyn AppError> {
+fn handle_error_response(app: &App, error: &reqwest::Error) -> Box<dyn AppError> {
     use reqwest::StatusCode as Status;
 
     match error.status() {
-        Some(Status::UNAUTHORIZED) | Some(Status::FORBIDDEN) => cargo_err(
+        Some(Status::UNAUTHORIZED) | Some(Status::FORBIDDEN) => cargo_err(&format!(
             "It looks like you don't have permission \
              to query a necessary property from Github \
              to complete this request. \
              You may need to re-authenticate on \
              crates.io to grant permission to read \
              github org memberships. Just go to \
-             https://crates.io/login",
-        ),
+             https://{}/login",
+            app.config.domain_name,
+        )),
         Some(Status::NOT_FOUND) => Box::new(NotFound),
         _ => internal(&format_args!(
             "didn't get a 200 result from github: {}",

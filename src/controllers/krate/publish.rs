@@ -50,10 +50,11 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
 
     let verified_email_address = user.verified_email(&conn)?;
     let verified_email_address = verified_email_address.ok_or_else(|| {
-        cargo_err(
+        cargo_err(&format!(
             "A verified email address is required to publish crates to crates.io. \
-             Visit https://crates.io/me to set and verify your email address.",
-        )
+             Visit https://{}/me to set and verify your email address.",
+            app.config.domain_name,
+        ))
     })?;
 
     // Create a transaction on the database, if there are no errors,

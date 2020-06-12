@@ -16,6 +16,7 @@ pub struct Config {
     pub api_protocol: String,
     pub publish_rate_limit: PublishRateLimit,
     pub blocked_traffic: Vec<(String, Vec<String>)>,
+    pub domain_name: String,
 }
 
 impl Default for Config {
@@ -134,8 +135,13 @@ impl Default for Config {
             api_protocol,
             publish_rate_limit: Default::default(),
             blocked_traffic: blocked_traffic(),
+            domain_name: domain_name(),
         }
     }
+}
+
+pub(crate) fn domain_name() -> String {
+    dotenv::var("DOMAIN_NAME").unwrap_or_else(|_| "crates.io".into())
 }
 
 fn blocked_traffic() -> Vec<(String, Vec<String>)> {
