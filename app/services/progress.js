@@ -13,7 +13,6 @@ export default class ProgressService extends Service {
   @service router;
 
   count = 0;
-  progress = 0;
 
   @tracked _style = '';
 
@@ -47,31 +46,31 @@ export default class ProgressService extends Service {
   @(task(function* () {
     let token = waiter.beginAsync();
 
-    this.progress = 0;
+    let progress = 0;
     this._style = `width: 0%`;
 
     while (this.count !== 0) {
       yield rawTimeout(SPEED);
 
       let currentAmount;
-      if (this.progress >= 0 && this.progress < 0.2) {
+      if (progress >= 0 && progress < 0.2) {
         currentAmount = 0.1;
-      } else if (this.progress >= 0.2 && this.progress < 0.5) {
+      } else if (progress >= 0.2 && progress < 0.5) {
         currentAmount = 0.04;
-      } else if (this.progress >= 0.5 && this.progress < 0.8) {
+      } else if (progress >= 0.5 && progress < 0.8) {
         currentAmount = 0.02;
-      } else if (this.progress >= 0.8 && this.progress < 0.99) {
+      } else if (progress >= 0.8 && progress < 0.99) {
         currentAmount = 0.005;
       } else {
         currentAmount = 0;
       }
 
-      this.progress += currentAmount;
-      if (this.progress > 0.998) {
-        this.progress = 0.998;
+      progress += currentAmount;
+      if (progress > 0.998) {
+        progress = 0.998;
       }
 
-      this._style = `transition: width ${SPEED}ms linear; width: ${this.progress * 100}%`;
+      this._style = `transition: width ${SPEED}ms linear; width: ${progress * 100}%`;
     }
 
     this._style = `transition: width ${SPEED}ms linear; width: 100%`;
