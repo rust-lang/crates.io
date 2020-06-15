@@ -58,7 +58,7 @@
     "ember-cli-code-coverage": "^1.0.0-beta.9",
     "ember-cli-dependency-checker": "^3.2.0",
     "ember-cli-dependency-lint": "^1.1.3",
-    "ember-cli-fastboot": "^2.2.2",
+    "ember-cli-fastboot": "^2.2.3",
     "ember-cli-htmlbars": "^5.1.2",
     "ember-cli-inject-live-reload": "2.0.2",
     "ember-cli-meta-tags": "^6.0.0",
