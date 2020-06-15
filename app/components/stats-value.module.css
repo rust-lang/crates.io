@@ -1,0 +1,20 @@
+.stats-value {
+    display: flex;
+    align-items: center;
+
+    @media only screen and (max-width: 530px) {
+        justify-content: center;
+    }
+}
+
+.value {
+    margin-left: 10px;
+    font-size: 30px;
+    font-weight: bold;
+}
+
+.label {
+    composes: small from '../styles/shared/typography.module.css';
+    margin-left: 10px;
+}
+

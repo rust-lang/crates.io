@@ -37,16 +37,7 @@
         border-left: 1px solid var(--gray-border);
         padding: 10px;
 
-        span { margin-left: 10px; }
-        .num {
-            font-size: 30px;
-            font-weight: bold;
-        }
         .crates { margin-top: 10px; }
-        .crates, .downloads {
-            display: flex;
-            align-items: center;
-        }
     }
 
     @media only screen and (max-width: 530px) {
@@ -55,14 +46,7 @@
             border: none;
             margin: auto;
         }
-        .crates, .downloads {
-            justify-content: center;
-        }
     }
-}
-
-.stats-label {
-    composes: small from './shared/typography.module.css';
 }
 
 .lists {
