@@ -40,6 +40,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+    min-height: 100vh;
 }
 
 h1 {
@@ -95,6 +96,7 @@ noscript {
 }
 
 .main {
+    flex-grow: 1;
     display: flex;
     justify-content: center;
     width: 100%;
