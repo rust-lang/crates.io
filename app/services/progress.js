@@ -12,8 +12,6 @@ let waiter = buildWaiter('progress-bar');
 export default class ProgressService extends Service {
   @service router;
 
-  count = 0;
-
   @tracked _style = '';
 
   get style() {
@@ -24,22 +22,9 @@ export default class ProgressService extends Service {
     this.counterTask.perform(thenable);
   }
 
-  increaseCounter() {
-    this.count += 1;
-    this.updateTask.perform();
-  }
-
-  decreaseCounter() {
-    this.count -= 1;
-  }
-
   @task(function* (promise) {
-    try {
-      this.increaseCounter();
-      yield promise;
-    } finally {
-      this.decreaseCounter();
-    }
+    this.updateTask.perform();
+    yield promise;
   })
   counterTask;
 
@@ -49,7 +34,7 @@ export default class ProgressService extends Service {
     let progress = 0;
     this._style = `width: 0%`;
 
-    while (this.count !== 0) {
+    while (this.counterTask.isRunning) {
       yield rawTimeout(SPEED);
 
       let currentAmount;
