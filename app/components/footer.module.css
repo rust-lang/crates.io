@@ -1,39 +1,104 @@
 .footer {
+    --heading-color: white;
+    --link-color: rgba(255, 255, 255, .75);
+    --link-hover-color: white;
+
+    :global(.new-design) & {
+        --link-color: var(--yellow);
+        --link-hover-color: #ffdea7;
+    }
+
     display: flex;
     justify-content: center;
     width: 100%;
     background: var(--footer-bg-color);
-}
 
-.sep {
-    margin: 0 10px;
-    color: var(--separator-color);
-}
+    a {
+        transition: color 100ms;
+    }
 
-.after-main-links {
-    composes: width-limit from '../styles/application.module.css';
+    h2 {
+        margin: 0 0 16px;
+        color: var(--heading-color);
+        font-size: 24px;
+        line-height: 40px;
+    }
 
-    margin: 40px;
-    text-align: center;
+    svg {
+        height: 40px;
+        width: auto;
+    }
 
-    a { color: white; }
-    a:hover { color: darken(white, 10%); }
+    ul {
+        --item-margin: 5px;
 
-    @media only screen and (max-width: 450px) {
-        margin: 20px;
-        .sep { display: none; }
-        display: flex;
-        flex-direction: column;
-        align-items: center;
+        margin: 0 0 calc(0 - var(--item-margin));
+        padding: 0;
+        list-style: none;
+        font-size: 16px;
+        line-height: 30px;
 
-        a {
-            width: 50%;
-            font-size: 110%;
-            padding: 5px;
-
-            &:not(:first-child) {
-                border-top: 1px solid var(--separator-color);
-            }
+        > li {
+            margin-bottom: var(--item-margin);
         }
+    }
+}
+
+.inner {
+    composes: width-limit from '../styles/application.module.css';
+    padding: 40px;
+    display: grid;
+
+    @media (min-width: 576px) {
+        grid-template-columns: 50% 50%;
+        grid-template-rows: auto auto auto;
+    }
+
+    @media (min-width: 768px) {
+        grid-template-columns: 40% 30% 30%;
+    }
+
+    @media (min-width: 992px) {
+        grid-template-columns: 50% 25% 25%;
+        padding: 60px 15px;
+    }
+}
+
+.docs {
+    @media (min-width: 576px) {
+        grid-row-start: span 3;
+    }
+
+    @media (min-width: 992px) {
+        ul {
+            display: grid;
+            grid-template-columns: 50% 50%;
+        }
+    }
+}
+
+.contact {
+    margin-top: 35px;
+
+    @media (min-width: 576px) {
+        margin-top: 0;
+    }
+}
+
+.social {
+    margin-top: 35px;
+
+    ul > li {
+        display: inline;
+        margin-right: 20px;
+        margin-bottom: 0;
+    }
+}
+
+.policies {
+    margin-top: 35px;
+
+    @media (min-width: 768px) {
+        margin-top: 0;
     }
 }

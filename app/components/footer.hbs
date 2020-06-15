@@ -1,17 +1,52 @@
 <footer local-class="footer">
-  <div local-class='after-main-links'>
-    <a href='https://doc.rust-lang.org/cargo/getting-started/installation.html'>Install</a>
-    <span local-class="sep">|</span>
-    <a href='https://doc.rust-lang.org/cargo/'>Getting Started</a>
-    <span local-class="sep">|</span>
-    <a href='https://doc.rust-lang.org/cargo/guide/'>Guide</a>
-    <span local-class="sep">|</span>
-    <a href='mailto:help@crates.io'>Send us an email</a>
-    <span local-class="sep">|</span>
-    <a href='https://www.rust-lang.org/policies/security'>Report a security issue</a>
-    <span local-class="sep">|</span>
-    <a href='https://www.rust-lang.org/policies/privacy'>Privacy notice</a>
-    <span local-class="sep">|</span>
-    <LinkTo @route="policies">Policies</LinkTo>
+  <div local-class="inner">
+    <div local-class="docs">
+      <h2>Documentation</h2>
+      <ul>
+        <li><a href="https://doc.rust-lang.org/cargo/getting-started/installation.html">Install Cargo</a></li>
+        <li><a href="https://doc.rust-lang.org/cargo/getting-started/">Getting Started</a></li>
+        <li><a href="https://doc.rust-lang.org/cargo/guide/">Cargo Guide</a></li>
+        <li><a href="https://doc.rust-lang.org/cargo/reference/config.html">Configuration</a></li>
+        <li><a href="https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html">Specifying Dependencies</a></li>
+        <li><a href="https://doc.rust-lang.org/cargo/faq.html">FAQ</a></li>
+        <li><a href="https://doc.rust-lang.org/cargo/reference/publishing.html">Publishing on crates.io</a></li>
+        <li><a href="https://doc.rust-lang.org/cargo/reference/build-scripts.html">Build Scripts</a></li>
+        <li><a href="https://doc.rust-lang.org/cargo/reference/manifest.html">Cargo.toml Format</a></li>
+        <li><a href="https://doc.rust-lang.org/cargo/reference/pkgid-spec.html">Package ID specs</a></li>
+        <li><a href="https://doc.rust-lang.org/cargo/reference/environment-variables.html">Environment Variables</a></li>
+        <li><a href="https://doc.rust-lang.org/cargo/reference/external-tools.html">External Tools</a></li>
+        <li><a href="https://doc.rust-lang.org/cargo/reference/source-replacement.html">Source Replacement</a></li>
+        <li><LinkTo @route="category-slugs">List of category slugs</LinkTo></li>
+      </ul>
+    </div>
+
+    <div local-class="contact-and-social">
+      <div local-class="contact">
+        <h2>Contact</h2>
+        <ul>
+          <li><a href="mailto:help@crates.io">Send us an email</a></li>
+          <li><a href="https://www.rust-lang.org/policies/security">Report a security issue</a></li>
+          <li><a href="https://status.crates.io/">Server Status</a></li>
+        </ul>
+      </div>
+
+      <div local-class="social">
+        <h2>Social</h2>
+        <ul>
+          <li><a href="https://twitter.com/cratesiostatus">{{svg-jar "twitter" role="img" aria-label="Twitter"}}</a></li>
+          <li><a href="https://discord.gg/rust-lang">{{svg-jar "discord" role="img" aria-label="Discord"}}</a></li>
+          <li><a href="https://github.com/rust-lang/crates.io/">{{svg-jar "github" role="img" aria-label="GitHub"}}</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div local-class="policies">
+      <h2>Terms and Policies</h2>
+      <ul>
+        <li><a href="https://www.rust-lang.org/policies/privacy">Privacy notice</a></li>
+        <li><LinkTo @route="policies">Policies</LinkTo></li>
+        <li><a href="https://www.rust-lang.org/policies/code-of-conduct">Code of Conduct</a></li>
+      </ul>
+    </div>
   </div>
 </footer>
