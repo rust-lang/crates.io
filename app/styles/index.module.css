@@ -37,7 +37,7 @@
         border-left: 1px solid var(--gray-border);
         padding: 10px;
 
-        .crates { margin-top: 10px; }
+        .crates { margin-top: 16px; }
     }
 
     @media only screen and (max-width: 530px) {
