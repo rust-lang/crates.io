@@ -34,7 +34,6 @@
         display: flex;
         flex-direction: column;
 
-        border-left: 1px solid var(--gray-border);
         padding: 10px;
 
         .crates { margin-top: 16px; }
