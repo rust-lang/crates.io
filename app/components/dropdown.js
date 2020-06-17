@@ -1,13 +1,13 @@
 import Component from '@ember/component';
+import { action } from '@ember/object';
 
-export default Component.extend({
-  tagName: '',
+export default class Dropdown extends Component {
+  tagName = '';
 
-  dropdownExpanded: false,
+  dropdownExpanded = false;
 
-  actions: {
-    toggleDropdown() {
-      this.toggleProperty('dropdownExpanded');
-    },
-  },
-});
+  @action
+  toggleDropdown() {
+    this.toggleProperty('dropdownExpanded');
+  }
+}
