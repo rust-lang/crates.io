@@ -8,33 +8,34 @@ import { ignoreCancellation } from '../utils/concurrency';
 // Colors by http://colorbrewer2.org/#type=diverging&scheme=RdBu&n=10
 const COLORS = ['#67001f', '#b2182b', '#d6604d', '#f4a582', '#92c5de', '#4393c3', '#2166ac', '#053061'];
 
-export default Component.extend({
-  googleCharts: service(),
+export default class DownloadGraph extends Component {
+  @service googleCharts;
 
-  resizeHandler: undefined,
+  resizeHandler = undefined;
 
   didInsertElement() {
-    this._super(...arguments);
+    super.didInsertElement(...arguments);
 
     this.loadTask.perform().catch(ignoreCancellation);
 
     this.resizeHandler = () => this.rerender();
     window.addEventListener('resize', this.resizeHandler, false);
-  },
+  }
 
   willDestroyElement() {
     window.removeEventListener('resize', this.resizeHandler);
-  },
+  }
 
-  loadTask: task(function* () {
+  @task(function* () {
     if (!this.googleCharts.loaded) {
       yield this.googleCharts.load();
       this.rerender();
     }
-  }),
+  })
+  loadTask;
 
   didRender() {
-    this._super(...arguments);
+    super.didRender(...arguments);
 
     let data = this.data;
 
@@ -180,8 +181,8 @@ export default Component.extend({
       seriesType: 'scatter',
       series: seriesOption,
     });
-  },
-});
+  }
+}
 
 function range(start, end, step) {
   let array = [];
