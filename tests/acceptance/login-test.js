@@ -7,8 +7,6 @@ import { defer } from 'rsvp';
 import window from 'ember-window-mock';
 import { setupWindowMock } from 'ember-window-mock/test-support';
 
-import flashStyles from 'cargo/components/flash-message.module.css';
-
 import setupMirage from '../helpers/setup-mirage';
 
 module('Acceptance | Login', function (hooks) {
@@ -89,8 +87,8 @@ module('Acceptance | Login', function (hooks) {
     fakeWindow.closed = true;
 
     // wait for the error message to show up after the failed login
-    await waitFor(`[data-test-flash-message].${flashStyles.shown}`);
+    await waitFor(`[data-test-notification-message]`);
 
-    assert.dom('[data-test-flash-message]').hasText('Failed to log in: Forbidden');
+    assert.dom('[data-test-notification-message]').hasText('Failed to log in: Forbidden');
   });
 });
