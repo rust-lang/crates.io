@@ -1,11 +1,9 @@
-import Component from '@ember/component';
 import { action } from '@ember/object';
 import { later } from '@ember/runloop';
+import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 
 export default class CrateTomlCopy extends Component {
-  tagName = '';
-
   @tracked showSuccess = false;
   @tracked showNotification = false;
 
