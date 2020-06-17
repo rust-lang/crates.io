@@ -6,14 +6,14 @@
     @title="Copy Cargo.toml snippet to clipboard"
   >
     {{svg-jar "copy" alt="Copy Cargo.toml snippet to clipboard"}}
-    <div local-class="copy-notification {{if this.showSuccess "copy-success" "copy-failure"}}">
-      {{#if this.showNotification}}
+    {{#if this.showNotification}}
+      <div local-class="copy-notification {{if this.showSuccess "copy-success" "copy-failure"}}">
         {{#if this.showSuccess}}
           Copied!
         {{else}}
           An error occured. Please use CTRL+C.
         {{/if}}
-      {{/if}}
-    </div>
+      </div>
+    {{/if}}
   </CopyButton>
 </div>
