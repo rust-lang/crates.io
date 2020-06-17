@@ -2,13 +2,14 @@ import Component from '@ember/component';
 import { computed } from '@ember/object';
 import { readOnly } from '@ember/object/computed';
 
-export default Component.extend({
-  size: 'small',
-  user: null,
+export default class UserAvatar extends Component {
+  size = 'small';
+  user = null;
 
-  tagName: '',
+  tagName = '';
 
-  width: computed('size', function () {
+  @computed('size')
+  get width() {
     if (this.size === 'small') {
       return 22;
     } else if (this.size === 'medium-small') {
@@ -16,15 +17,17 @@ export default Component.extend({
     } else {
       return 85; // medium
     }
-  }),
+  }
 
-  height: readOnly('width'),
+  @readOnly('width') height;
 
-  alt: computed('user', function () {
+  @computed('user')
+  get alt() {
     return `${this.get('user.name')} (${this.get('user.login')})`;
-  }),
+  }
 
-  src: computed('size', 'user', function () {
+  @computed('size', 'user')
+  get src() {
     return `${this.get('user.avatar')}&s=${this.width * 2}`;
-  }),
-});
+  }
+}
