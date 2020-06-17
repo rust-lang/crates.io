@@ -5,8 +5,8 @@ import { readOnly } from '@ember/object/computed';
 export default Component.extend({
   size: 'small',
   user: null,
-  attributeBindings: ['src', 'width', 'height', 'alt'],
-  tagName: 'img',
+
+  tagName: '',
 
   width: computed('size', function () {
     if (this.size === 'small') {
