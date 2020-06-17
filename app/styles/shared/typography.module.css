@@ -13,11 +13,11 @@
     font-weight: normal;
 
     &:hover {
-        color: #6b6b6b;
+        color: hsl(0, 0%, 42%);
     }
 }
 
 .yanked {
     font-size: 80%;
-    color: rgb(166, 0, 0)
+    color: hsl(0, 100%, 33%)
 }

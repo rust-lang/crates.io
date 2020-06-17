@@ -6,7 +6,7 @@
 
 .row {
     width: 100%;
-    border: 1px solid #d5d3cb;
+    border: 1px solid hsl(48, 11%, 82%);
     border-bottom-width: 0;
     padding: 10px 20px;
     display: flex;
@@ -28,7 +28,7 @@
 }
 
 .verified {
-    color: green;
+    color: hsl(120, 100%, 25%);
     font-weight: bold;
 }
 

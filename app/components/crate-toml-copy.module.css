@@ -1,6 +1,6 @@
 .crate-toml-copy {
     button, button:active {
-        background-color: #FFFFFF;
+        background-color: hsl(0, 0%, 100%);
         border: none;
         cursor: pointer;
         position: relative;
@@ -61,7 +61,7 @@
         }
 
         button:hover {
-            background: #edebdd;
+            background: hsl(52, 31%, 90%);
         }
 
         .copy-notification {

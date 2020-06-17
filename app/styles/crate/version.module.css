@@ -74,13 +74,13 @@ div.header {
 .install {
     font-size: 120%;
     padding: 10px;
-    background-color: #dfdbc2;
+    background-color: hsl(52, 31%, 82%);
     display: flex;
 
     code {
         flex: 1;
         background: var(--main-color);
-        color: white;
+        color: hsl(0, 0%, 100%);
         padding: 20px;
 
         @media only screen and (min-width: 500px) {
@@ -196,7 +196,7 @@ div.header {
 
     p {
         code {
-            background-color: #fff;
+            background-color: hsl(0, 0%, 100%);
             padding: 0 2px;
         }
     }
@@ -207,7 +207,7 @@ div.header {
         overflow-x: auto;
 
         th, td {
-            border: 1px solid #dfe2e5;
+            border: 1px solid hsl(210, 10%, 89%);
             padding: 6px 13px;
         }
     }

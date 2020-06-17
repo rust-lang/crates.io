@@ -14,7 +14,7 @@
 .label {
     grid-column: 1;
     grid-row: 2;
-    color: #76838a;
+    color: hsl(201, 8%, 50%);
     font-size: 16px;
     font-weight: normal;
     line-height: 27px;
@@ -27,5 +27,5 @@
     height: 40px;
     margin-left: 16px;
     margin-top: 4px;
-    color: #76838a;
+    color: hsl(201, 8%, 50%);
 }

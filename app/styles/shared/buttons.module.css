@@ -1,15 +1,15 @@
 .button {
-    --text-color: #383838;
-    --disabled-text-color: #858585;
+    --text-color: hsl(0, 0%, 22%);
+    --disabled-text-color: hsl(0, 0%, 52%);
 
-    --bg-color-top: #fede9e;
-    --bg-color-bottom: #fdc452;
+    --bg-color-top: hsl(40, 98%, 81%);
+    --bg-color-bottom: hsl(40, 98%, 66%);
 
-    --bg-color-top-light: #fee7b7;
-    --bg-color-bottom-light: #fdcd6b;
+    --bg-color-top-light: hsl(41, 97%, 86%);
+    --bg-color-bottom-light: hsl(40, 97%, 71%);
 
-    --bg-color-top-dark: #fed585;
-    --bg-color-bottom-dark: #fdbb39;
+    --bg-color-top-dark: hsl(40, 98%, 76%);
+    --bg-color-bottom-dark: hsl(40, 98%, 61%);
 
     padding: 15px 40px;
     display: inline-block;
@@ -46,14 +46,14 @@
 .tan-button {
     composes: button;
 
-    --bg-color-top: #e8e3c7;
-    --bg-color-bottom: #d6cd99;
+    --bg-color-top: hsl(51, 42%, 85%);
+    --bg-color-bottom: hsl(51, 43%, 72%);
 
-    --bg-color-top-light: #efecd9;
-    --bg-color-bottom-light: #ddd6ab;
+    --bg-color-top-light: hsl(52, 41%, 89%);
+    --bg-color-bottom-light: hsl(52, 42%, 77%);
 
-    --bg-color-top-dark: #e1dab5;
-    --bg-color-bottom-dark: #cfc487;
+    --bg-color-top-dark: hsl(50, 42%, 80%);
+    --bg-color-bottom-dark: hsl(51, 43%, 67%);
 }
 
 .small {

@@ -1,6 +1,6 @@
 .row {
     width: 100%;
-    border: 1px solid #d5d3cb;
+    border: 1px solid hsl(48, 11%, 82%);
     border-bottom-width: 0;
     padding: 10px 20px;
     display: flex;
@@ -65,6 +65,6 @@
 .error {
     border-top-width: 0;
     font-weight: bold;
-    color: rgb(216, 0, 41);
+    color: hsl(349, 100%, 42%);
     padding: 0 10px 10px 20px;
 }

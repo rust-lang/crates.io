@@ -9,7 +9,7 @@
 .list {
     margin-top: 10px;
     padding: 0 20px;
-    background-color: white;
+    background-color: hsl(0, 0%, 100%);
 }
 
 .row {
@@ -17,7 +17,7 @@
     justify-content: space-between;
     flex-wrap: wrap;
     padding: 20px 0;
-    border-bottom: 2px solid #d5d3cb;
+    border-bottom: 2px solid hsl(48, 11%, 82%);
 
     &:last-of-type {
         border: none;
@@ -39,6 +39,6 @@
     float: right;
 
     svg {
-        background: #EEECDD;
+        background: hsl(53, 33%, 90%);
     }
 }

@@ -67,7 +67,7 @@
     font-weight: normal;
 
     &:hover {
-        color: #6b6b6b;
+        color: hsl(0, 0%, 42%);
     }
 }
 
@@ -129,10 +129,10 @@
     outline: 0;
     border: 0;
     margin-bottom: 20px;
-    background-color: #dbd9cf;
-    color: white;
+    background-color: hsl(50, 14%, 84%);
+    color: hsl(0, 0%, 100%);
 
     &:hover, &:focus {
-        background-color: #c5c2b2;
+        background-color: hsl(51, 14%, 74%);
     }
 }

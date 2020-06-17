@@ -8,8 +8,8 @@
 }
 
 .link {
-    color: #525252;
-    background-color: #edebdd;
+    color: hsl(0, 0%, 32%);
+    background-color: hsl(52, 31%, 90%);
     font-size: 90%;
     padding: 20px 10px;
     display: flex;

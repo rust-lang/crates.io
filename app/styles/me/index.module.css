@@ -71,11 +71,11 @@
 }
 
 .notifications-error {
-    color: rgb(216, 0, 41);
+    color: hsl(349, 100%, 42%);
 }
 
 .notifications-success {
-    color: green;
+    color: hsl(120, 100%, 25%);
 }
 
 

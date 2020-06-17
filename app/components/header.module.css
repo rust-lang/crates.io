@@ -11,11 +11,15 @@
     grid-template-columns: auto 1fr auto;
     align-items: center;
     padding: 10px;
-    color: white;
+    color: hsl(0, 0%, 100%);
 
     a {
-        color: white; text-decoration: none;
-        &:hover { color: white; }
+        color: hsl(0, 0%, 100%);
+        text-decoration: none;
+
+        &:hover {
+            color: hsl(0, 0%, 100%);
+        }
     }
 }
 
@@ -46,12 +50,12 @@
 input.search {
     font-size: 90%;
     border: none;
-    color: black;
+    color: hsl(0, 0%, 0%);
     width: 100%;
     margin-left: 16px;
     margin-right: 16px;
     padding: 5px 5px 5px 25px;
-    background-color: white;
+    background-color: hsl(0, 0%, 100%);
     background-image: url('/assets/search.png');
     background-repeat: no-repeat;
     background-position: 6px 6px;

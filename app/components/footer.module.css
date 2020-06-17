@@ -1,11 +1,11 @@
 .footer {
-    --heading-color: white;
-    --link-color: rgba(255, 255, 255, .75);
-    --link-hover-color: white;
+    --heading-color: hsl(0, 0%, 100%);
+    --link-color: hsla(0, 0%, 100%, 0.75);
+    --link-hover-color: hsl(0, 0%, 100%);
 
     :global(.new-design) & {
         --link-color: var(--yellow);
-        --link-hover-color: #ffdea7;
+        --link-hover-color: hsl(37, 100%, 83%);
     }
 
     display: flex;

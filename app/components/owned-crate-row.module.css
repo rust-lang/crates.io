@@ -1,8 +1,8 @@
 .row {
-    background-color: #fff;
+    background-color: hsl(0, 0%, 100%);
     display: block;
     position: relative;
-    border: 1px solid #d5d3cb;
+    border: 1px solid hsl(48, 11%, 82%);
 
     label {
         padding: 20px 30px;
@@ -34,7 +34,7 @@
             width: 32px;
             height: 32px;
             content: '';
-            border: 2px solid #d5d3cb;
+            border: 2px solid hsl(48, 11%, 82%);
             border-radius: 50%;
             z-index: 2;
             position: absolute;
@@ -52,8 +52,8 @@
         }
 
         &:after {
-            background-color: #cfc487;
-            border-color: #cfc487;
+            background-color: hsl(51, 43%, 67%);
+            border-color: hsl(51, 43%, 67%);
             background-image: url('/assets/check-mark.svg');
             background-repeat: no-repeat;
             background-position: 3px 4px;

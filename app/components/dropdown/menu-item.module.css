@@ -8,8 +8,8 @@
         color: var(--main-color) !important;
 
         &:hover {
-            background: #5e5e5e;
-            color: white !important;
+            background: hsl(0, 0%, 37%);
+            color: hsl(0, 0%, 100%) !important;
         }
     }
 }

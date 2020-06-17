@@ -1,22 +1,22 @@
 :root {
-    --violet: #2e2359;
-    --dark-grey: #2a3439;
-    --dark-green: #3b6837;
-    --yellow: #ffc833;
+    --violet: hsl(252, 44%, 24%);
+    --dark-grey: hsl(200, 15%, 19%);
+    --dark-green: hsl(115, 31%, 31%);
+    --yellow: hsl(44, 100%, 60%);
 
     --header-bg-color: var(--dark-green);
     --footer-bg-color: var(--dark-green);
 
     --font-family: "Fira Sans", sans-serif;
 
-    --main-color: #383838;
-    --main-color-light: #858585;
-    --main-bg: #f9f7ec;
-    --main-bg-dark: #edebdd;
-    --gray-border: #d5d3cb;
-    --link-color: rgb(0, 172, 91);
-    --link-hover-color: #007940;
-    --separator-color: #284725;
+    --main-color: hsl(0, 0%, 22%);
+    --main-color-light: hsl(0, 0%, 52%);
+    --main-bg: hsl(51, 52%, 95%);
+    --main-bg-dark: hsl(52, 31%, 90%);
+    --gray-border: hsl(48, 11%, 82%);
+    --link-color: hsl(152, 100%, 34%);
+    --link-hover-color: hsl(152, 100%, 24%);
+    --separator-color: hsl(115, 31%, 21%);
 }
 
 :global(.new-design) {
@@ -62,7 +62,7 @@ a {
 
 pre {
     background: var(--main-color);
-    color: white;
+    color: hsl(0, 0%, 100%);
     padding: 20px;
     /* Use the modern font stack inspired by Bootstrap 4 */
     font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -74,7 +74,7 @@ abbr[title] {
 }
 
 noscript {
-    color: white;
+    color: hsl(0, 0%, 100%);
     padding: 10px 0;
 }
 
@@ -110,13 +110,13 @@ noscript {
     border: none;
     border-radius: 5px;
     background: white;
-    box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
-    color: black;
+    box-shadow: 0 0 3px hsla(0, 0%, 0%, 0.2);
+    color: hsl(0, 0%, 0%);
     font-family: sans-serif;
     cursor: pointer;
 
     &:hover {
-        background: #f7f7f7;
-        box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
+        background: hsl(0, 0%, 97%);
+        box-shadow: 0 0 6px hsla(0, 0%, 0%, 0.2);
     }
 }

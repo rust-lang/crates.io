@@ -6,11 +6,11 @@
     margin: 8px 0;
     padding: 0 10px;
     background-color: var(--main-bg-dark);
-    color: #525252;
+    color: hsl(0, 0%, 32%);
     text-decoration: none;
 
     &:hover {
-        background-color: #e4e1cc;
+        background-color: hsl(52, 31%, 85%);
     }
 }
 
@@ -32,7 +32,7 @@
 .subtitle {
     margin-top: 4px;
     font-size: 13px;
-    color: rgb(118, 131, 138);
+    color: hsl(201, 8%, 50%);
 }
 
 .right {
@@ -40,5 +40,5 @@
     height: 16px;
     width: auto;
     margin-left: 10px;
-    color: rgb(118, 131, 138);
+    color: hsl(201, 8%, 50%);
 }

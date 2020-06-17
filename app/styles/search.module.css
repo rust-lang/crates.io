@@ -10,7 +10,7 @@
 }
 
 .list {
-    background-color: white;
+    background-color: hsl(0, 0%, 100%);
     padding: 0 20px;
     margin-bottom: 20px;
 }
@@ -24,6 +24,6 @@
     border-bottom: solid beige;
 
     h1 {
-        color: green
+        color: hsl(120, 100%, 25%)
     }
 }

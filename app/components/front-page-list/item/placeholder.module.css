@@ -17,7 +17,7 @@
     height: 16px;
     width: 150px;
     border-radius: 8px;
-    background: rgb(118, 131, 138);
+    background: hsl(201, 8%, 50%);
     opacity: 0.25;
 }
 
@@ -26,7 +26,7 @@
     width: 90px;
     margin-top: 4px;
     border-radius: 6.5px;
-    background: rgb(118, 131, 138);
+    background: hsl(201, 8%, 50%);
     opacity: 0.2;
 }
 
@@ -35,5 +35,5 @@
     height: 16px;
     width: auto;
     margin-left: 10px;
-    color: rgb(118, 131, 138);
+    color: hsl(201, 8%, 50%);
 }
