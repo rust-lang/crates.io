@@ -8,15 +8,14 @@ import { rawTimeout, task } from 'ember-concurrency';
 export default class CrateTomlCopy extends Component {
   @tracked showSuccess = false;
 
-  @(task(function* (isSuccess) {
-    this.showSuccess = isSuccess;
+  @(task(function* () {
     yield rawTimeout(2000);
   }).restartable())
   showNotificationTask;
 
   @action
   copy() {
-    let isSuccess = copy(this.args.copyText);
-    this.showNotificationTask.perform(isSuccess);
+    this.showSuccess = copy(this.args.copyText);
+    this.showNotificationTask.perform();
   }
 }
