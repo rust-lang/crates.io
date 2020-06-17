@@ -1,6 +1,6 @@
-import Component from '@ember/component';
 import { action } from '@ember/object';
 import { inject as service } from '@ember/service';
+import Component from '@glimmer/component';
 
 import { task } from 'ember-concurrency';
 
@@ -11,8 +11,6 @@ const COLORS = ['#67001f', '#b2182b', '#d6604d', '#f4a582', '#92c5de', '#4393c3'
 
 export default class DownloadGraph extends Component {
   @service googleCharts;
-
-  tagName = '';
 
   resizeHandler = () => this.renderChart();
 
@@ -46,7 +44,7 @@ export default class DownloadGraph extends Component {
       return;
     }
 
-    let data = this.data;
+    let data = this.args.data;
 
     let subarray_length = (data[1] || []).length;
 
