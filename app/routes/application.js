@@ -2,7 +2,6 @@ import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
 export default Route.extend({
-  flashMessages: service(),
   googleCharts: service(),
   progress: service(),
   session: service(),
@@ -19,9 +18,6 @@ export default Route.extend({
     loading(transition) {
       this.progress.handle(transition);
       return true;
-    },
-    didTransition() {
-      this.flashMessages.step();
     },
   },
 });

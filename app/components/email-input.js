@@ -1,7 +1,6 @@
 import Component from '@ember/component';
 import { computed } from '@ember/object';
 import { empty } from '@ember/object/computed';
-import { inject as service } from '@ember/service';
 
 import { task } from 'ember-concurrency';
 
@@ -9,7 +8,6 @@ import ajax from '../utils/ajax';
 
 export default Component.extend({
   tagName: '',
-  flashMessages: service(),
   type: '',
   value: '',
   isEditing: false,
