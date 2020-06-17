@@ -1,4 +1,5 @@
 import Component from '@ember/component';
+import { action } from '@ember/object';
 import { inject as service } from '@ember/service';
 
 import { task } from 'ember-concurrency';
@@ -11,7 +12,9 @@ const COLORS = ['#67001f', '#b2182b', '#d6604d', '#f4a582', '#92c5de', '#4393c3'
 export default class DownloadGraph extends Component {
   @service googleCharts;
 
-  resizeHandler = () => this.rerender();
+  tagName = '';
+
+  resizeHandler = () => this.renderChart();
 
   constructor() {
     super(...arguments);
@@ -28,13 +31,20 @@ export default class DownloadGraph extends Component {
   @task(function* () {
     if (!this.googleCharts.loaded) {
       yield this.googleCharts.load();
-      this.rerender();
+      this.renderChart();
     }
   })
   loadTask;
 
-  didRender() {
-    super.didRender(...arguments);
+  @action
+  renderChart(element) {
+    if (element) {
+      this.chartElement = element;
+    } else if (this.chartElement) {
+      element = this.chartElement;
+    } else {
+      return;
+    }
 
     let data = this.data;
 
@@ -86,7 +96,7 @@ export default class DownloadGraph extends Component {
     let { loaded, visualization } = this.googleCharts;
 
     let show = data && loaded;
-    this.element.style.display = show ? '' : 'none';
+    element.style.display = show ? '' : 'none';
     if (!show) {
       return;
     }
@@ -165,7 +175,7 @@ export default class DownloadGraph extends Component {
     });
     view.setColumns(columns);
 
-    let chart = new visualization.ComboChart(this.element);
+    let chart = new visualization.ComboChart(element);
     chart.draw(view, {
       chartArea: { left: 85, width: '77%', height: '80%' },
       hAxis: {
