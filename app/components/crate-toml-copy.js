@@ -1,22 +1,22 @@
 import Component from '@ember/component';
 import { action } from '@ember/object';
 import { later } from '@ember/runloop';
+import { tracked } from '@glimmer/tracking';
 
 export default class CrateTomlCopy extends Component {
   tagName = '';
 
-  showSuccess = false;
-  showNotification = false;
+  @tracked showSuccess = false;
+  @tracked showNotification = false;
 
   toggleClipboardProps(isSuccess) {
-    this.setProperties({
-      showSuccess: isSuccess,
-      showNotification: true,
-    });
+    this.showSuccess = isSuccess;
+    this.showNotification = true;
+
     later(
       this,
       () => {
-        this.set('showNotification', false);
+        this.showNotification = false;
       },
       2000,
     );
