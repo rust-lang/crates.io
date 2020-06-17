@@ -1,10 +1,13 @@
 import Component from '@ember/component';
+import { action } from '@ember/object';
 import { later } from '@ember/runloop';
 
-export default Component.extend({
-  tagName: '',
-  showSuccess: false,
-  showNotification: false,
+export default class CrateTomlCopy extends Component {
+  tagName = '';
+
+  showSuccess = false;
+  showNotification = false;
+
   toggleClipboardProps(isSuccess) {
     this.setProperties({
       showSuccess: isSuccess,
@@ -17,14 +20,15 @@ export default Component.extend({
       },
       2000,
     );
-  },
-  actions: {
-    copySuccess() {
-      this.toggleClipboardProps(true);
-    },
+  }
 
-    copyError() {
-      this.toggleClipboardProps(false);
-    },
-  },
-});
+  @action
+  copySuccess() {
+    this.toggleClipboardProps(true);
+  }
+
+  @action
+  copyError() {
+    this.toggleClipboardProps(false);
+  }
+}
