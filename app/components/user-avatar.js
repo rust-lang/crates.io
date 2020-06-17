@@ -3,8 +3,6 @@ import { computed } from '@ember/object';
 import { readOnly } from '@ember/object/computed';
 
 export default class UserAvatar extends Component {
-  user = null;
-
   tagName = '';
 
   @computed('size')
