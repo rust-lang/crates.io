@@ -1,4 +1,3 @@
-import { action } from '@ember/object';
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 
@@ -15,14 +14,4 @@ export default class CrateTomlCopy extends Component {
     this.showNotification = false;
   }).restartable())
   showNotificationTask;
-
-  @action
-  copySuccess() {
-    this.showNotificationTask.perform(true);
-  }
-
-  @action
-  copyError() {
-    this.showNotificationTask.perform(false);
-  }
 }
