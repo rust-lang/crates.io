@@ -1,31 +1,21 @@
-import Component from '@ember/component';
-import { later } from '@ember/runloop';
+import { action } from '@ember/object';
+import Component from '@glimmer/component';
+import { tracked } from '@glimmer/tracking';
 
-export default Component.extend({
-  tagName: '',
-  copyText: '',
-  showSuccess: false,
-  showNotification: false,
-  toggleClipboardProps(isSuccess) {
-    this.setProperties({
-      showSuccess: isSuccess,
-      showNotification: true,
-    });
-    later(
-      this,
-      () => {
-        this.set('showNotification', false);
-      },
-      2000,
-    );
-  },
-  actions: {
-    copySuccess() {
-      this.toggleClipboardProps(true);
-    },
+import copy from 'copy-text-to-clipboard';
+import { rawTimeout, task } from 'ember-concurrency';
 
-    copyError() {
-      this.toggleClipboardProps(false);
-    },
-  },
-});
+export default class CrateTomlCopy extends Component {
+  @tracked showSuccess = false;
+
+  @(task(function* () {
+    yield rawTimeout(2000);
+  }).restartable())
+  showNotificationTask;
+
+  @action
+  copy() {
+    this.showSuccess = copy(this.args.copyText);
+    this.showNotificationTask.perform();
+  }
+}
