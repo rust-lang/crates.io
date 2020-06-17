@@ -2,7 +2,7 @@ import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
 export default Route.extend({
-  flashMessages: service(),
+  notifications: service(),
   redirector: service(),
 
   redirect() {
@@ -15,7 +15,7 @@ export default Route.extend({
       // Redirect to the crate's main page and show a flash error if
       // no documentation is found
       let message = 'Crate does not supply a documentation URL';
-      this.flashMessages.queue(message);
+      this.notifications.error(message);
       this.replaceWith('crate', crate);
     }
   },
