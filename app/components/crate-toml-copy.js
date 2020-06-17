@@ -3,7 +3,6 @@ import { later } from '@ember/runloop';
 
 export default Component.extend({
   tagName: '',
-  copyText: '',
   showSuccess: false,
   showNotification: false,
   toggleClipboardProps(isSuccess) {
