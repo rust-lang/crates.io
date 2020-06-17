@@ -43,7 +43,7 @@
         flex-direction: column;
         .stats {
             border: none;
-            margin: auto;
+            margin: 32px auto 0;
         }
     }
 }
