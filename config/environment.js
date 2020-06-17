@@ -30,6 +30,9 @@ module.exports = function (environment) {
     'ember-cli-mirage': {
       discoverEmberDataModels: false,
     },
+    'ember-cli-notifications': {
+      autoClear: true,
+    },
     emberKeyboard: {
       disableInputsInitializer: true,
     },
@@ -58,6 +61,9 @@ module.exports = function (environment) {
 
     ENV.APP.rootElement = '#ember-testing';
     ENV.APP.autoboot = false;
+
+    // disable auto clearing so that we can manually clear the queue if needed
+    ENV['ember-cli-notifications'].autoClear = false;
   }
 
   if (environment === 'production') {
