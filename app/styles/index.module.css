@@ -34,35 +34,18 @@
         display: flex;
         flex-direction: column;
 
-        border-left: 1px solid var(--gray-border);
         padding: 10px;
 
-        span { margin-left: 10px; }
-        .num {
-            font-size: 30px;
-            font-weight: bold;
-        }
-        .crates { margin-top: 10px; }
-        .crates, .downloads {
-            display: flex;
-            align-items: center;
-        }
+        .crates { margin-top: 16px; }
     }
 
     @media only screen and (max-width: 530px) {
         flex-direction: column;
         .stats {
             border: none;
-            margin: auto;
-        }
-        .crates, .downloads {
-            justify-content: center;
+            margin: 32px auto 0;
         }
     }
-}
-
-.stats-label {
-    composes: small from './shared/typography.module.css';
 }
 
 .lists {
