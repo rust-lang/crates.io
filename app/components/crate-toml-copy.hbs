@@ -5,7 +5,7 @@
     {{on "click" this.copy}}
   >
     {{svg-jar "copy" alt="Copy Cargo.toml snippet to clipboard"}}
-    {{#if this.showNotification}}
+    {{#if this.showNotificationTask.isRunning}}
       <div local-class="copy-notification {{if this.showSuccess "copy-success" "copy-failure"}}">
         {{#if this.showSuccess}}
           Copied!
