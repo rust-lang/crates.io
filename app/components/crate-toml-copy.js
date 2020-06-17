@@ -1,32 +1,28 @@
 import { action } from '@ember/object';
-import { later } from '@ember/runloop';
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
+
+import { rawTimeout, task } from 'ember-concurrency';
 
 export default class CrateTomlCopy extends Component {
   @tracked showSuccess = false;
   @tracked showNotification = false;
 
-  toggleClipboardProps(isSuccess) {
+  @(task(function* (isSuccess) {
     this.showSuccess = isSuccess;
     this.showNotification = true;
-
-    later(
-      this,
-      () => {
-        this.showNotification = false;
-      },
-      2000,
-    );
-  }
+    yield rawTimeout(2000);
+    this.showNotification = false;
+  }).restartable())
+  showNotificationTask;
 
   @action
   copySuccess() {
-    this.toggleClipboardProps(true);
+    this.showNotificationTask.perform(true);
   }
 
   @action
   copyError() {
-    this.toggleClipboardProps(false);
+    this.showNotificationTask.perform(false);
   }
 }
