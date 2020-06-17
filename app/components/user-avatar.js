@@ -23,11 +23,11 @@ export default class UserAvatar extends Component {
 
   @computed('user')
   get alt() {
-    return `${this.get('user.name')} (${this.get('user.login')})`;
+    return `${this.user.name} (${this.user.login})`;
   }
 
   @computed('size', 'user')
   get src() {
-    return `${this.get('user.avatar')}&s=${this.width * 2}`;
+    return `${this.user.avatar}&s=${this.width * 2}`;
   }
 }
