@@ -18,12 +18,12 @@ export default Route.extend({
   },
 
   setupController(controller, params) {
-    this.header.set('searchValue', params.q);
+    this.header.searchValue = params.q;
     controller.dataTask.perform(params);
   },
 
   deactivate() {
     this._super(...arguments);
-    this.header.set('searchValue', null);
+    this.header.searchValue = null;
   },
 });
