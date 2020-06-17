@@ -1,13 +1,12 @@
-import Component from '@ember/component';
+import { action } from '@ember/object';
+import Component from '@glimmer/component';
+import { tracked } from '@glimmer/tracking';
 
-export default Component.extend({
-  tagName: '',
+export default class Dropdown extends Component {
+  @tracked dropdownExpanded = false;
 
-  dropdownExpanded: false,
-
-  actions: {
-    toggleDropdown() {
-      this.toggleProperty('dropdownExpanded');
-    },
-  },
-});
+  @action
+  toggleDropdown() {
+    this.dropdownExpanded = !this.dropdownExpanded;
+  }
+}
