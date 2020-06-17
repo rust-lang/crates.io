@@ -37,6 +37,7 @@
     "trailingComma": "all"
   },
   "dependencies": {
+    "copy-text-to-clipboard": "^2.2.0",
     "fastboot-app-server": "^2.0.0",
     "morgan": "^1.10.0",
     "pretty-bytes": "^5.3.0"
@@ -54,7 +55,6 @@
     "ember-cli": "~3.18.0",
     "ember-cli-app-version": "^3.2.0",
     "ember-cli-babel": "^7.21.0",
-    "ember-cli-clipboard": "^0.14.0",
     "ember-cli-code-coverage": "^1.0.0-beta.9",
     "ember-cli-dependency-checker": "^3.2.0",
     "ember-cli-dependency-lint": "^1.1.3",

@@ -1,6 +1,8 @@
+import { action } from '@ember/object';
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 
+import copy from 'copy-text-to-clipboard';
 import { rawTimeout, task } from 'ember-concurrency';
 
 export default class CrateTomlCopy extends Component {
@@ -14,4 +16,10 @@ export default class CrateTomlCopy extends Component {
     this.showNotification = false;
   }).restartable())
   showNotificationTask;
+
+  @action
+  copy() {
+    let isSuccess = copy(this.args.copyText);
+    this.showNotificationTask.perform(isSuccess);
+  }
 }

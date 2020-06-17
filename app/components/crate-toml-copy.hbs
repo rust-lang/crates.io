@@ -1,9 +1,8 @@
 <div local-class="crate-toml-copy {{if @inline "inline" "block"}}" ...attributes>
-  <CopyButton
-    @clipboardText={{@copyText}}
-    @success={{perform this.showNotificationTask true}}
-    @error={{perform this.showNotificationTask false}}
-    @title="Copy Cargo.toml snippet to clipboard"
+  <button
+    type="button"
+    title="Copy Cargo.toml snippet to clipboard"
+    {{on "click" this.copy}}
   >
     {{svg-jar "copy" alt="Copy Cargo.toml snippet to clipboard"}}
     {{#if this.showNotification}}
@@ -15,5 +14,5 @@
         {{/if}}
       </div>
     {{/if}}
-  </CopyButton>
+  </button>
 </div>
