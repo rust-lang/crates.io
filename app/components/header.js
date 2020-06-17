@@ -1,13 +1,11 @@
-import Component from '@ember/component';
 import { action } from '@ember/object';
 import { inject as service } from '@ember/service';
+import Component from '@glimmer/component';
 
 export default class Header extends Component {
   @service header;
   @service router;
   @service session;
-
-  tagName = '';
 
   @action
   search(event) {
