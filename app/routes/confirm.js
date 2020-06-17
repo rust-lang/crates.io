@@ -4,7 +4,7 @@ import { inject as service } from '@ember/service';
 import ajax from '../utils/ajax';
 
 export default Route.extend({
-  flashMessages: service(),
+  notifications: service(),
   session: service(),
   store: service(),
 
@@ -21,10 +21,10 @@ export default Route.extend({
       }
     } catch (error) {
       if (error.errors) {
-        this.flashMessages.queue(`Error in email confirmation: ${error.errors[0].detail}`);
+        this.notifications.error(`Error in email confirmation: ${error.errors[0].detail}`);
         return this.replaceWith('index');
       } else {
-        this.flashMessages.queue(`Unknown error in email confirmation`);
+        this.notifications.error(`Unknown error in email confirmation`);
         return this.replaceWith('index');
       }
     }
