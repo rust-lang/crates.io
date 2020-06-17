@@ -11,18 +11,17 @@ const COLORS = ['#67001f', '#b2182b', '#d6604d', '#f4a582', '#92c5de', '#4393c3'
 export default class DownloadGraph extends Component {
   @service googleCharts;
 
-  resizeHandler = undefined;
+  resizeHandler = () => this.rerender();
 
-  didInsertElement() {
-    super.didInsertElement(...arguments);
+  constructor() {
+    super(...arguments);
 
     this.loadTask.perform().catch(ignoreCancellation);
 
-    this.resizeHandler = () => this.rerender();
     window.addEventListener('resize', this.resizeHandler, false);
   }
 
-  willDestroyElement() {
+  willDestroy() {
     window.removeEventListener('resize', this.resizeHandler);
   }
 
