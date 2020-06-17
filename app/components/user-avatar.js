@@ -3,19 +3,18 @@ import { computed } from '@ember/object';
 import { readOnly } from '@ember/object/computed';
 
 export default class UserAvatar extends Component {
-  size = 'small';
   user = null;
 
   tagName = '';
 
   @computed('size')
   get width() {
-    if (this.size === 'small') {
-      return 22;
+    if (this.size === 'medium') {
+      return 85;
     } else if (this.size === 'medium-small') {
       return 32;
     } else {
-      return 85; // medium
+      return 22; // small
     }
   }
 
