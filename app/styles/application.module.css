@@ -39,13 +39,8 @@
     --violet200: hsl(252, 60%, 86%);
     --violet100: hsl(252, 69%, 95%);
 
-    --violet: var(--violet800);
-    --dark-grey: var(--grey900);
-    --dark-green: var(--green800);
-    --yellow: var(--yellow500);
-
-    --header-bg-color: var(--dark-green);
-    --footer-bg-color: var(--dark-green);
+    --header-bg-color: var(--green800);
+    --footer-bg-color: var(--green800);
 
     --font-family: "Fira Sans", sans-serif;
 
@@ -60,9 +55,9 @@
 }
 
 :global(.new-design) {
-    --header-bg-color: var(--violet);
+    --header-bg-color: var(--violet800);
     --main-bg: white;
-    --footer-bg-color: var(--dark-grey);
+    --footer-bg-color: var(--grey900);
 }
 
 * {
