@@ -24,6 +24,7 @@ module('Color Scheme', function (hooks) {
         <thead>
           <tr>
             <th></th>
+            <th>999</th>
             <th>900</th>
             <th>800</th>
             <th>700</th>
@@ -33,11 +34,13 @@ module('Color Scheme', function (hooks) {
             <th>300</th>
             <th>200</th>
             <th>100</th>
+            <th>000</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <th>Grey</th>
+            <td class="box" style="background: var(--grey999)"></td>
             <td class="box" style="background: var(--grey900)"></td>
             <td class="box" style="background: var(--grey800)"></td>
             <td class="box" style="background: var(--grey700)"></td>
@@ -47,9 +50,11 @@ module('Color Scheme', function (hooks) {
             <td class="box" style="background: var(--grey300)"></td>
             <td class="box" style="background: var(--grey200)"></td>
             <td class="box" style="background: var(--grey100)"></td>
+            <td class="box" style="background: var(--grey000)"></td>
           </tr>
           <tr>
             <th>Yellow</th>
+            <td></td>
             <td class="box" style="background: var(--yellow900)"></td>
             <td class="box" style="background: var(--yellow800)"></td>
             <td class="box" style="background: var(--yellow700)"></td>
@@ -59,9 +64,11 @@ module('Color Scheme', function (hooks) {
             <td class="box" style="background: var(--yellow300)"></td>
             <td class="box" style="background: var(--yellow200)"></td>
             <td class="box" style="background: var(--yellow100)"></td>
+            <td></td>
           </tr>
           <tr>
             <th>Green</th>
+            <td></td>
             <td class="box" style="background: var(--green900)"></td>
             <td class="box" style="background: var(--green800)"></td>
             <td class="box" style="background: var(--green700)"></td>
@@ -71,9 +78,11 @@ module('Color Scheme', function (hooks) {
             <td class="box" style="background: var(--green300)"></td>
             <td class="box" style="background: var(--green200)"></td>
             <td class="box" style="background: var(--green100)"></td>
+            <td></td>
           </tr>
           <tr>
             <th>Violet</th>
+            <td></td>
             <td class="box" style="background: var(--violet900)"></td>
             <td class="box" style="background: var(--violet800)"></td>
             <td class="box" style="background: var(--violet700)"></td>
@@ -83,6 +92,7 @@ module('Color Scheme', function (hooks) {
             <td class="box" style="background: var(--violet300)"></td>
             <td class="box" style="background: var(--violet200)"></td>
             <td class="box" style="background: var(--violet100)"></td>
+            <td></td>
           </tr>
         </tbody>
       </table>
