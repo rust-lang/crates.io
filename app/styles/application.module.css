@@ -1,8 +1,48 @@
 :root {
-    --violet: hsl(252, 44%, 24%);
-    --dark-grey: hsl(200, 15%, 19%);
-    --dark-green: hsl(115, 31%, 31%);
-    --yellow: hsl(44, 100%, 60%);
+    --grey900: hsl(200, 15%, 19%);
+    --grey800: hsl(200, 14%, 32%);
+    --grey700: hsl(200, 11%, 43%);
+    --grey600: hsl(200, 13%, 60%);
+    --grey500: hsl(200, 18%, 74%);
+    --grey400: hsl(200, 19%, 83%);
+    --grey300: hsl(200, 19%, 91%);
+    --grey200: hsl(200, 17%, 96%);
+    --grey100: hsl(200, 26%, 98%);
+
+    --yellow900: hsl(37, 100%, 21%);
+    --yellow800: hsl(37, 87%, 30%);
+    --yellow700: hsl(40, 87%, 39%);
+    --yellow600: hsl(42, 87%, 50%);
+    --yellow500: hsl(44, 100%, 60%);
+    --yellow400: hsl(44, 100%, 76%);
+    --yellow300: hsl(44, 100%, 82%);
+    --yellow200: hsl(44, 100%, 88%);
+    --yellow100: hsl(44, 100%, 93%);
+
+    --green900: hsl(115, 81%, 13%);
+    --green800: hsl(115, 31%, 31%);
+    --green700: hsl(115, 39%, 40%);
+    --green600: hsl(115, 42%, 48%);
+    --green500: hsl(115, 48%, 56%);
+    --green400: hsl(115, 46%, 72%);
+    --green300: hsl(115, 44%, 80%);
+    --green200: hsl(115, 44%, 90%);
+    --green100: hsl(115, 50%, 95%);
+
+    --violet900: hsl(252, 95%, 11%);
+    --violet800: hsl(252, 44%, 24%);
+    --violet700: hsl(252, 45%, 37%);
+    --violet600: hsl(252, 44%, 45%);
+    --violet500: hsl(252, 46%, 52%);
+    --violet400: hsl(252, 56%, 68%);
+    --violet300: hsl(252, 66%, 77%);
+    --violet200: hsl(252, 60%, 86%);
+    --violet100: hsl(252, 69%, 95%);
+
+    --violet: var(--violet800);
+    --dark-grey: var(--grey900);
+    --dark-green: var(--green800);
+    --yellow: var(--yellow500);
 
     --header-bg-color: var(--dark-green);
     --footer-bg-color: var(--dark-green);
