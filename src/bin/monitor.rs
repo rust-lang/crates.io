@@ -14,22 +14,30 @@ use diesel::prelude::*;
 fn main() -> Result<(), Error> {
     let conn = db::connect_now()?;
 
-    check_stalled_background_jobs(&conn)?;
+    check_failing_background_jobs(&conn)?;
     check_stalled_update_downloads(&conn)?;
     check_spam_attack(&conn)?;
     Ok(())
 }
 
-/// Check for old background jobs that are not currently running
-fn check_stalled_background_jobs(conn: &PgConnection) -> Result<(), Error> {
+/// Check for old background jobs that are not currently running.
+///
+/// This check includes `skip_locked` in the query and will only trigger on
+/// enqueued jobs that have attempted to run and have failed (and are in the
+/// queue awaiting a retry).
+///
+/// Within the default 15 minute time, a job should have already had several
+/// failed retry attempts.
+fn check_failing_background_jobs(conn: &PgConnection) -> Result<(), Error> {
     use cargo_registry::schema::background_jobs::dsl::*;
     use diesel::dsl::*;
     use diesel::sql_types::Integer;
 
     const EVENT_KEY: &str = "background_jobs";
 
-    println!("Checking for stalled background jobs");
+    println!("Checking for failed background jobs");
 
+    // Max job execution time in minutes
     let max_job_time = dotenv::var("MAX_JOB_TIME")
         .map(|s| s.parse::<i32>().unwrap())
         .unwrap_or(15);
@@ -70,6 +78,7 @@ fn check_stalled_update_downloads(conn: &PgConnection) -> Result<(), Error> {
 
     println!("Checking for stalled background jobs");
 
+    // Max job execution time in minutes
     let max_job_time = dotenv::var("MONITOR_MAX_UPDATE_DOWNLOADS_TIME")
         .map(|s| s.parse::<u32>().unwrap() as i64)
         .unwrap_or(120);
