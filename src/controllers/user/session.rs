@@ -3,7 +3,8 @@ use crate::controllers::frontend_prelude::*;
 use crate::github;
 use conduit_cookie::RequestSession;
 use failure::Fail;
-use oauth2::{prelude::*, AuthorizationCode, TokenResponse};
+use oauth2::reqwest::http_client;
+use oauth2::{AuthorizationCode, Scope, TokenResponse};
 
 use crate::middleware::current_user::TrustedUserId;
 use crate::models::{NewUser, User};
@@ -29,7 +30,9 @@ pub fn begin(req: &mut dyn RequestExt) -> EndpointResult {
     let (url, state) = req
         .app()
         .github
-        .authorize_url(oauth2::CsrfToken::new_random);
+        .authorize_url(oauth2::CsrfToken::new_random)
+        .add_scope(Scope::new("read:org".to_string()))
+        .url();
     let state = state.secret().to_string();
     req.session_mut()
         .insert("github_oauth_state".to_string(), state.clone());
@@ -95,6 +98,7 @@ pub fn authorize(req: &mut dyn RequestExt) -> EndpointResult {
         .app()
         .github
         .exchange_code(code)
+        .request(http_client)
         .map_err(|e| e.compat())
         .chain_error(|| server_error("Error obtaining token"))?;
     let token = token.access_token();

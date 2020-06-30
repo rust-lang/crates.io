@@ -45,19 +45,16 @@ impl App {
     /// - Database connection pools
     /// - A `git2::Repository` instance from the index repo checkout (that server.rs ensures exists)
     pub fn new(config: Config, http_client: Option<Client>) -> App {
-        use oauth2::prelude::*;
-        use oauth2::{AuthUrl, ClientId, ClientSecret, Scope, TokenUrl};
-        use url::Url;
+        use oauth2::{AuthUrl, ClientId, ClientSecret, TokenUrl};
 
         let github = BasicClient::new(
             ClientId::new(config.gh_client_id.clone()),
             Some(ClientSecret::new(config.gh_client_secret.clone())),
-            AuthUrl::new(Url::parse("https://github.com/login/oauth/authorize").unwrap()),
-            Some(TokenUrl::new(
-                Url::parse("https://github.com/login/oauth/access_token").unwrap(),
-            )),
-        )
-        .add_scope(Scope::new("read:org".to_string()));
+            AuthUrl::new(String::from("https://github.com/login/oauth/authorize")).unwrap(),
+            Some(
+                TokenUrl::new(String::from("https://github.com/login/oauth/access_token")).unwrap(),
+            ),
+        );
 
         let db_pool_size = match (dotenv::var("DB_POOL_SIZE"), config.env) {
             (Ok(num), _) => num.parse().expect("couldn't parse DB_POOL_SIZE"),
