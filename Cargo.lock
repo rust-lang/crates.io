@@ -348,6 +348,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "cloudabi"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4344512281c643ae7638bbabc3af17a11307803ec8f0fcad9fae512a8bf36467"
+dependencies = [
+ "bitflags",
+]
+
+[[package]]
 name = "comrak"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1209,6 +1218,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "instant"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "69da7ce1490173c2bf4d26bc8be429aaeeaf4cce6c4b970b7949651fa17655fe"
+
+[[package]]
 name = "inventory"
 version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1386,9 +1401,9 @@ checksum = "eb374efe4669153b6bb170a7c5063a4e570a4eb45e5daf0dab4c1543d4d6f197"
 
 [[package]]
 name = "lock_api"
-version = "0.3.4"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c4da24a77a3d8a6d4862d95f72e6fdb9c09a643ecdb402d754004a557f2bec75"
+checksum = "de302ce1fe7482db13738fbaf2e21cfb06a986b89c0bf38d88abf16681aada4e"
 dependencies = [
  "scopeguard",
 ]
@@ -1712,22 +1727,24 @@ dependencies = [
 
 [[package]]
 name = "parking_lot"
-version = "0.10.2"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d3a704eb390aafdc107b0e392f56a82b668e3a71366993b5340f5833fd62505e"
+checksum = "a4893845fa2ca272e647da5d0e46660a314ead9c2fdd9a883aabc32e481a8733"
 dependencies = [
+ "instant",
  "lock_api",
  "parking_lot_core",
 ]
 
 [[package]]
 name = "parking_lot_core"
-version = "0.7.2"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d58c7c768d4ba344e3e8d72518ac13e259d7c7ade24167003b8488e10b6740a3"
+checksum = "c361aa727dd08437f2f1447be8b59a33b0edd15e0fcee698f935613d9efbca9b"
 dependencies = [
  "cfg-if",
- "cloudabi",
+ "cloudabi 0.1.0",
+ "instant",
  "libc",
  "redox_syscall",
  "smallvec",
@@ -1924,9 +1941,9 @@ dependencies = [
 
 [[package]]
 name = "r2d2"
-version = "0.8.8"
+version = "0.8.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1497e40855348e4a8a40767d8e55174bce1e445a3ac9254ad44ad468ee0485af"
+checksum = "545c5bc2b880973c9c10e4067418407a0ccaa3091781d1671d46eb35107cb26f"
 dependencies = [
  "log",
  "parking_lot",
@@ -2067,7 +2084,7 @@ version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7b75f676a1e053fc562eafbb47838d67c84801e38fc1ba459e8f180deabd5071"
 dependencies = [
- "cloudabi",
+ "cloudabi 0.0.3",
  "fuchsia-cprng",
  "libc",
  "rand_core 0.4.2",
@@ -2247,9 +2264,9 @@ dependencies = [
 
 [[package]]
 name = "scheduled-thread-pool"
-version = "0.2.4"
+version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0988d7fdf88d5e5fcf5923a0f1e8ab345f3e98ab4bc6bc45a2d5ff7f7458fbf6"
+checksum = "dc6f74fd1204073fa02d5d5d68bec8021be4c38690b61264b2fdb48083d0e7d7"
 dependencies = [
  "parking_lot",
 ]
