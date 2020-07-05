@@ -152,11 +152,7 @@ impl UrlRelativeEvaluate for SanitizeUrl {
                 is_media,
                 add_sanitize_query,
             } = is_media_url(url);
-            new_url += if is_media {
-                "raw/master"
-            } else {
-                "blob/master"
-            };
+            new_url += if is_media { "raw/HEAD" } else { "blob/HEAD" };
             if !url.starts_with('/') {
                 new_url.push('/');
             }
@@ -357,7 +353,7 @@ mod tests {
                 assert_eq!(
                     result,
                     format!(
-                        "<p><a href=\"https://{}/rust-lang/test/blob/master/hi\" rel=\"nofollow noopener noreferrer\">hi</a></p>\n",
+                        "<p><a href=\"https://{}/rust-lang/test/blob/HEAD/hi\" rel=\"nofollow noopener noreferrer\">hi</a></p>\n",
                         host
                     )
                 );
@@ -366,7 +362,7 @@ mod tests {
                 assert_eq!(
                     result,
                     format!(
-                        "<p><a href=\"https://{}/rust-lang/test/blob/master/there\" rel=\"nofollow noopener noreferrer\">there</a></p>\n",
+                        "<p><a href=\"https://{}/rust-lang/test/blob/HEAD/there\" rel=\"nofollow noopener noreferrer\">there</a></p>\n",
                         host
                     )
                 );
@@ -375,7 +371,7 @@ mod tests {
                 assert_eq!(
                     result,
                     format!(
-                 "<p><img src=\"https://{}/rust-lang/test/raw/master/img.png\" alt=\"alt\"></p>\n",
+                        "<p><img src=\"https://{}/rust-lang/test/raw/HEAD/img.png\" alt=\"alt\"></p>\n",
                         host
                     )
                 );
@@ -384,7 +380,7 @@ mod tests {
                 assert_eq!(
                     result,
                     format!(
-                        "<p><img src=\"https://{}/rust-lang/test/raw/master/sanitize.svg?sanitize=true\" alt=\"alt\"></p>\n",
+                        "<p><img src=\"https://{}/rust-lang/test/raw/HEAD/sanitize.svg?sanitize=true\" alt=\"alt\"></p>\n",
                         host
                     )
                 );
