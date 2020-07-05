@@ -1,6 +1,6 @@
 //! This module implements functionality for interacting with GitHub.
 
-use oauth2::{prelude::*, AccessToken};
+use oauth2::AccessToken;
 use reqwest::{self, header};
 
 use serde::de::DeserializeOwned;

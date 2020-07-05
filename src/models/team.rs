@@ -4,7 +4,7 @@ use crate::app::App;
 use crate::github::{github_api, team_url};
 use crate::util::errors::{cargo_err, AppResult, NotFound};
 
-use oauth2::{prelude::*, AccessToken};
+use oauth2::AccessToken;
 
 use crate::models::{Crate, CrateOwner, Owner, OwnerKind, User};
 use crate::schema::{crate_owners, teams};

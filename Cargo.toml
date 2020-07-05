@@ -33,12 +33,12 @@ rand = "0.7"
 git2 = "0.13.0"
 flate2 = "1.0"
 semver = { version = "0.10", features = ["diesel", "serde"] }
-url = "1.2.1"
+url = "2.1"
 tar = "0.4.16"
 base64 = "0.12"
 
 openssl = "0.10.13"
-oauth2 = "2.0.0"
+oauth2 = { version = "3.0.0", default-features = false, features = ["reqwest-010"] }
 log = "0.4"
 env_logger = "0.7"
 hex = "0.4"
