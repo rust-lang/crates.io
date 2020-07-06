@@ -1,15 +1,14 @@
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 
+#[derive(Default)]
 pub struct TypeMap {
     data: HashMap<TypeId, Box<dyn Any>>,
 }
 
 impl TypeMap {
-    pub fn new() -> TypeMap {
-        TypeMap {
-            data: HashMap::new(),
-        }
+    pub fn new() -> Self {
+        Self::default()
     }
 
     pub fn find<T: 'static>(&self) -> Option<&T> {

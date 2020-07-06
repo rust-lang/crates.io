@@ -84,18 +84,18 @@ pub trait RequestExt {
     fn scheme(&self) -> Scheme;
 
     /// The host part of the requested URL
-    fn host<'a>(&'a self) -> Host<'a>;
+    fn host(&self) -> Host<'_>;
 
     /// The initial part of the request URL's path that corresponds
     /// to a virtual root. This allows an application to have a
     /// virtual location that consumes part of the path.
-    fn virtual_root<'a>(&'a self) -> Option<&'a str>;
+    fn virtual_root(&self) -> Option<&str>;
 
     /// The remainder of the path.
-    fn path<'a>(&'a self) -> &'a str;
+    fn path(&self) -> &str;
 
     /// The portion of the request URL that follows the "?"
-    fn query_string<'a>(&'a self) -> Option<&'a str>;
+    fn query_string(&self) -> Option<&str>;
 
     /// The remote IP address of the client or the last proxy that
     /// sent the request.
@@ -113,13 +113,13 @@ pub trait RequestExt {
     ///
     /// The returned value implements the blocking `Read` API and should only
     /// be read from while in a blocking context.
-    fn body<'a>(&'a mut self) -> &'a mut dyn Read;
+    fn body(&mut self) -> &mut dyn Read;
 
     /// A readable map of extensions
-    fn extensions<'a>(&'a self) -> &'a Extensions;
+    fn extensions(&self) -> &Extensions;
 
     /// A mutable map of extensions
-    fn mut_extensions<'a>(&'a mut self) -> &'a mut Extensions;
+    fn mut_extensions(&mut self) -> &mut Extensions;
 }
 
 /// A Handler takes a request and returns a response or an error.
