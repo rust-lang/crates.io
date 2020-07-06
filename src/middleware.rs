@@ -62,7 +62,7 @@ pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
     m.add(Cookie::new());
     m.add(SessionMiddleware::new(
         "cargo_session",
-        cookie::Key::from_master(app.session_key.as_bytes()),
+        cookie::Key::derive_from(app.session_key.as_bytes()),
         env == Env::Production,
     ));
 
