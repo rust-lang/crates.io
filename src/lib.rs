@@ -134,6 +134,9 @@ mod tests {
         fn path(&self) -> &str {
             &self.path
         }
+        fn path_mut(&mut self) -> &mut String {
+            &mut self.path
+        }
         fn query_string(&self) -> Option<&str> {
             unimplemented!()
         }

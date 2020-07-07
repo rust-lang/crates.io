@@ -1,7 +1,7 @@
 [package]
 
 name = "conduit-middleware"
-version = "0.9.0-alpha.2"
+version = "0.9.0-alpha.3"
 authors = ["wycats@gmail.com",
            "Alex Crichton <alex@alexcrichton.com>"]
 description = "HTTP Middleware interface using the conduit interface"
@@ -10,7 +10,7 @@ license = "MIT"
 edition = "2018"
 
 [dependencies]
-conduit = "0.9.0-alpha.2"
+conduit = "0.9.0-alpha.3"
 
 [dev-dependencies]
-conduit-test = "0.9.0-alpha.2"
+conduit-test = "0.9.0-alpha.3"
