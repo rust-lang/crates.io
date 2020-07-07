@@ -1,6 +1,6 @@
 [package]
 name = "conduit-hyper"
-version = "0.3.0-alpha.4"
+version = "0.3.0-alpha.5"
 authors = ["Justin Geibel <jtgeibel@gmail.com>"]
 license = "MIT OR Apache-2.0"
 description = "Host a conduit based web application on a hyper server"
@@ -9,7 +9,7 @@ readme = "README.md"
 edition = "2018"
 
 [dependencies]
-conduit = "0.9.0-alpha.2"
+conduit = "0.9.0-alpha.3"
 hyper = "0.13"
 http = "0.2"
 percent-encoding = "2"
@@ -18,7 +18,7 @@ tokio = { version = "0.2", features = ["blocking", "fs", "rt-threaded", "stream"
 tower-service = "0.3"
 
 [dev-dependencies]
-conduit-router = "0.9.0-alpha.2"
+conduit-router = "0.9.0-alpha.3"
 env_logger = "0.7"
 futures-util = "0.3"
 tokio = { version = "0.2", features = ["macros"] }
