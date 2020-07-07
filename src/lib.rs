@@ -117,6 +117,10 @@ impl conduit::RequestExt for MockRequest {
         &self.path
     }
 
+    fn path_mut(&mut self) -> &mut String {
+        &mut self.path
+    }
+
     fn query_string(&self) -> Option<&str> {
         self.query_string.as_ref().map(|s| &s[..])
     }
