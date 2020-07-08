@@ -13,10 +13,13 @@ const SLOW_REQUEST_THRESHOLD_MS: u64 = 1000;
 pub(super) struct LogRequests();
 
 struct RequestStart(Instant);
+struct OriginalPath(String);
 
 impl Middleware for LogRequests {
     fn before(&self, req: &mut dyn RequestExt) -> BeforeResult {
         req.mut_extensions().insert(RequestStart(Instant::now()));
+        let path = OriginalPath(req.path().to_string());
+        req.mut_extensions().insert(path);
         Ok(())
     }
 
@@ -59,6 +62,7 @@ pub fn add_custom_metadata<V: Display>(req: &mut dyn RequestExt, key: &'static s
 
 #[cfg(test)]
 pub(crate) fn get_log_message(req: &dyn RequestExt, key: &'static str) -> String {
+    // Unwrap shouldn't panic as no other code has access to the private struct to remove it
     for (k, v) in &req.extensions().find::<CustomMetadata>().unwrap().entries {
         if key == *k {
             return v.clone();
@@ -113,7 +117,12 @@ struct FullPath<'a>(&'a dyn RequestExt);
 
 impl<'a> Display for FullPath<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0.path())?;
+        // Unwrap shouldn't panic as no other code has access to the private struct to remove it
+        write!(
+            f,
+            "{}",
+            self.0.extensions().find::<OriginalPath>().unwrap().0
+        )?;
         if let Some(q_string) = self.0.query_string() {
             write!(f, "?{}", q_string)?;
         }
