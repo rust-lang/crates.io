@@ -11,7 +11,7 @@
 use super::prelude::*;
 use std::fmt::Write;
 
-use crate::util::{errors::NotFound, AppResponse, Error, RequestProxy};
+use crate::util::{errors::NotFound, AppResponse, Error};
 
 use conduit::{Body, HandlerResult};
 use conduit_static::Static;
@@ -66,8 +66,8 @@ impl Handler for EmberHtml {
                 .any(|val| val.to_str().unwrap_or_default().contains("html"))
             {
                 // Serve static Ember page to bootstrap the frontend
-                self.static_handler
-                    .call(&mut RequestProxy::rewrite_path(req, "/index.html"))
+                *req.path_mut() = String::from("/index.html");
+                self.static_handler.call(req)
             } else {
                 // Return a 404 to crawlers that don't send `Accept: text/hml`.
                 // This is to preserve legacy behavior and will likely change.
