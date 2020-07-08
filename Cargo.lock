@@ -369,9 +369,9 @@ dependencies = [
 
 [[package]]
 name = "civet"
-version = "0.12.0-alpha.3"
+version = "0.12.0-alpha.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f360e1a48dd03961dfac6120d9d90a189e2274a09b00c9f536cce844d462239d"
+checksum = "2adfa9a0117908b89125b42475fa45da5cbfae6a32f06ef67043918ad054587a"
 dependencies = [
  "civet-sys",
  "conduit",
@@ -420,9 +420,9 @@ dependencies = [
 
 [[package]]
 name = "conduit"
-version = "0.9.0-alpha.2"
+version = "0.9.0-alpha.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "47432edd46e337326eed753ec7c9a9163a5e297f82a299d24f106221a2dee412"
+checksum = "68f55ff2e3601329f850eaa86fe6dff2cd66a58ac1df26188e850162126a0432"
 dependencies = [
  "http 0.2.1",
 ]
@@ -463,9 +463,9 @@ dependencies = [
 
 [[package]]
 name = "conduit-hyper"
-version = "0.3.0-alpha.4"
+version = "0.3.0-alpha.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d4d0c38b49434c95e0a7cd8dc805c90e3c6975cb9454e158c994c35fa1bfe641"
+checksum = "50f2fc542431a2f71cdf7897594e180efe0deda7044a52c3bd1e31f12356b4eb"
 dependencies = [
  "conduit",
  "http 0.2.1",
@@ -478,9 +478,9 @@ dependencies = [
 
 [[package]]
 name = "conduit-middleware"
-version = "0.9.0-alpha.2"
+version = "0.9.0-alpha.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bda9153060cd9c67b2f13e04c93f2f0d4f3c49c22e35763d7a700ce2a26afb04"
+checksum = "d11aae989fb790857867a76d27cc02304d7ca743b49667e711fdb6b1ee6a5f1f"
 dependencies = [
  "conduit",
 ]
@@ -496,9 +496,9 @@ dependencies = [
 
 [[package]]
 name = "conduit-router"
-version = "0.9.0-alpha.2"
+version = "0.9.0-alpha.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6eaa68ea0121fc61e2bf515f6dce485fa7674e57d17a2201762bfbc9380f65ec"
+checksum = "4dd55e9910b2a8c0df19155a66e7b6bcb87e3abfba2ef6ff47fa1b607e63035e"
 dependencies = [
  "conduit",
  "route-recognizer",
@@ -518,9 +518,9 @@ dependencies = [
 
 [[package]]
 name = "conduit-test"
-version = "0.9.0-alpha.2"
+version = "0.9.0-alpha.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "19f72c6a9f57a45242f3df7a46907d1f1983d1ee279e8d9b8c355679732122dc"
+checksum = "75b2f3bd0554c5ca215e78d8569b093a9dea8e384c0f2497a30dd0cccafe1ef5"
 dependencies = [
  "conduit",
 ]
