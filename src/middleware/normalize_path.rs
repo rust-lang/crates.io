@@ -14,33 +14,32 @@ impl Middleware for NormalizePath {
             return Ok(());
         }
 
-        let original = path.to_string();
-        let length = path.len();
-        let path = Path::new(path);
-
-        let path = path
+        let path = Path::new(path)
             .components()
-            .fold(PathBuf::with_capacity(length), |mut result, p| match p {
-                Component::Normal(x) => {
-                    if x != "" {
-                        result.push(x)
-                    };
-                    result
-                }
-                Component::ParentDir => {
-                    result.pop();
-                    result
-                }
-                Component::RootDir => {
-                    result.push(Component::RootDir);
-                    result
-                }
-                _ => result,
-            })
+            .fold(
+                PathBuf::with_capacity(path.len()),
+                |mut result, p| match p {
+                    Component::Normal(x) => {
+                        if x != "" {
+                            result.push(x)
+                        };
+                        result
+                    }
+                    Component::ParentDir => {
+                        result.pop();
+                        result
+                    }
+                    Component::RootDir => {
+                        result.push(Component::RootDir);
+                        result
+                    }
+                    _ => result,
+                },
+            )
             .to_string_lossy()
             .to_string(); // non-Unicode is replaced with U+FFFD REPLACEMENT CHARACTER
 
-        super::log_request::add_custom_metadata(req, "original_path", original);
+        super::log_request::add_custom_metadata(req, "normalized_path", path.clone());
         *req.path_mut() = path;
         Ok(())
     }
