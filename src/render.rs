@@ -57,15 +57,23 @@ impl<'a> MarkdownRenderer<'a> {
 
     /// Renders the given markdown to HTML using the current settings.
     fn to_html(&self, text: &str) -> String {
-        let options = comrak::ComrakOptions {
-            unsafe_: true, // The output will be sanitized with `ammonia`
-            ext_autolink: true,
-            ext_strikethrough: true,
-            ext_table: true,
-            ext_tagfilter: true,
-            ext_tasklist: true,
-            ext_header_ids: Some("user-content-".to_string()),
-            ..comrak::ComrakOptions::default()
+        use comrak::{ComrakExtensionOptions, ComrakOptions, ComrakRenderOptions};
+
+        let options = ComrakOptions {
+            render: ComrakRenderOptions {
+                unsafe_: true, // The output will be sanitized with `ammonia`
+                ..ComrakRenderOptions::default()
+            },
+            extension: ComrakExtensionOptions {
+                autolink: true,
+                strikethrough: true,
+                table: true,
+                tagfilter: true,
+                tasklist: true,
+                header_ids: Some("user-content-".to_string()),
+                ..ComrakExtensionOptions::default()
+            },
+            ..ComrakOptions::default()
         };
         let rendered = comrak::markdown_to_html(text, &options);
         self.html_sanitizer.clean(&rendered).to_string()
