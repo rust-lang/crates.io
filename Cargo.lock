@@ -597,8 +597,9 @@ dependencies = [
 
 [[package]]
 name = "derive_deref"
-version = "1.1.0"
-source = "git+https://github.com/azriel91/derive_deref.git?rev=63527ab#63527ab47cb56ee740a003d6445e81cf80f3340a"
+version = "1.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dcdbcee2d9941369faba772587a565f4f534e42cb8d17e5295871de730163b2b"
 dependencies = [
  "proc-macro2",
  "quote",
