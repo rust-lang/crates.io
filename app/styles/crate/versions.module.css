@@ -37,6 +37,7 @@
 .arrow {
     display: inline-block;
     float: right;
+    margin-left: 8px;
 
     svg {
         background: #EEECDD;

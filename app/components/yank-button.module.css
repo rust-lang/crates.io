@@ -1,0 +1,5 @@
+.button {
+    composes: yellow-button from '../styles/shared/buttons.module.css';
+    padding: 6px 12px;
+    border-radius: 18px;
+}

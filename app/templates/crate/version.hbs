@@ -163,13 +163,17 @@
           <h3>Versions</h3>
           <ul>
             {{#each this.smallSortedVersions as |version|}}
-              <li>
+              <li local-class="version">
                 <LinkTo @route="crate.version" @model={{version.num}} data-test-version-link={{version.num}}>
                   {{ version.num }}
                 </LinkTo>
                 {{moment-format version.created_at 'll'}}
-                {{#if version.yanked}}
-                  <span local-class='yanked'>yanked</span>
+                {{#if this.isOwner}}
+                  <YankButton @version={{version}}/>
+                {{else}}
+                  {{#if version.yanked}}
+                    <span local-class='yanked'>yanked</span>
+                  {{/if}}
                 {{/if}}
               </li>
             {{/each}}

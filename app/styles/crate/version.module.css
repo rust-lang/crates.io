@@ -273,3 +273,7 @@ div.header {
 .yanked {
     composes: yanked from '../shared/typography.module.css';
 }
+
+.version {
+    padding: 4px 0;
+}

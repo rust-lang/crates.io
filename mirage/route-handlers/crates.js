@@ -254,4 +254,28 @@ export function register(server) {
 
     return {};
   });
+
+  server.delete('/api/v1/crates/:crate_id/:version/yank', (schema, request) => {
+    const crateId = request.params.crate_id;
+    const versionNum = request.params.version;
+
+    const version = schema.versions.findBy({ crateId, num: versionNum });
+    if (!version) {
+      return notFound();
+    }
+
+    return {};
+  });
+
+  server.put('/api/v1/crates/:crate_id/:version/unyank', (schema, request) => {
+    const crateId = request.params.crate_id;
+    const versionNum = request.params.version;
+
+    const version = schema.versions.findBy({ crateId, num: versionNum });
+    if (!version) {
+      return notFound();
+    }
+
+    return {};
+  });
 }

@@ -60,4 +60,26 @@ export default class Version extends Model {
     }
   }).keepLatest())
   loadReadmeTask;
+
+  @(task(function* () {
+    let response = yield fetch(`/api/v1/crates/${this.crate.id}/${this.num}/yank`, { method: 'DELETE' });
+    if (!response.ok) {
+      throw new Error(`Yank request for ${this.crateName} v${this.num} failed`);
+    }
+    this.set('yanked', true);
+
+    return yield response.text();
+  }).keepLatest())
+  yankTask;
+
+  @(task(function* () {
+    let response = yield fetch(`/api/v1/crates/${this.crate.id}/${this.num}/unyank`, { method: 'PUT' });
+    if (!response.ok) {
+      throw new Error(`Unyank request for ${this.crateName} v${this.num} failed`);
+    }
+    this.set('yanked', false);
+
+    return yield response.text();
+  }).keepLatest())
+  unyankTask;
 }

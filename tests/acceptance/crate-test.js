@@ -1,4 +1,4 @@
-import { click, fillIn, currentURL, currentRouteName, visit } from '@ember/test-helpers';
+import { click, fillIn, currentURL, currentRouteName, visit, waitFor } from '@ember/test-helpers';
 import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
@@ -217,6 +217,25 @@ module('Acceptance | crate page', function (hooks) {
 
     await click('[data-test-version-link="0.5.0"]');
     assert.dom('[data-test-license]').hasText('MIT/Apache-2.0');
+  });
+
+  test('crates can be yanked by owner', async function (assert) {
+    this.server.loadFixtures();
+
+    let user = this.server.schema.users.findBy({ login: 'thehydroimpulse' });
+    this.authenticateAs(user);
+
+    await visit('/crates/nanomsg');
+    await click('[data-test-version-yank-button="0.5.0"]');
+    assert.dom('[data-test-version-yank-button="0.5.0"]').hasText('Yanking...');
+    assert.dom('[data-test-version-yank-button="0.5.0"]').isDisabled();
+
+    await waitFor('[data-test-version-unyank-button="0.5.0"]');
+    await click('[data-test-version-unyank-button="0.5.0"]');
+    assert.dom('[data-test-version-unyank-button="0.5.0"]').hasText('Unyanking...');
+    assert.dom('[data-test-version-unyank-button="0.5.0"]').isDisabled();
+
+    await waitFor('[data-test-version-yank-button="0.5.0"]');
   });
 
   test('navigating to the owners page when not logged in', async function (assert) {
