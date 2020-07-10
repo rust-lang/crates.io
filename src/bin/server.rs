@@ -59,7 +59,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         });
 
-    let server = if dotenv::var("USE_HYPER").is_ok() {
+    let server = if dotenv::var("WEB_USE_CIVET").is_err() {
         use tokio::io::AsyncWriteExt;
         use tokio::signal::unix::{signal, SignalKind};
 
