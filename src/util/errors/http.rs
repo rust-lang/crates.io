@@ -5,6 +5,28 @@ use crate::util::AppResponse;
 
 use conduit::StatusCode;
 
+// The following structs are emtpy and do not provide a custom message to the user
+
+#[derive(Debug)]
+pub(super) struct Forbidden;
+#[derive(Debug)]
+pub struct NotFound;
+
+impl AppError for Forbidden {
+    fn response(&self) -> Option<AppResponse> {
+        let detail = "must be logged in to perform that action";
+        Some(json_error(detail, StatusCode::FORBIDDEN))
+    }
+}
+
+impl fmt::Display for Forbidden {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        "must be logged in to perform that action".fmt(f)
+    }
+}
+
+// The following structs wrap a String and provide a custom message to the user
+
 #[derive(Debug)]
 pub(super) struct Ok(pub(super) String);
 #[derive(Debug)]

@@ -2,7 +2,7 @@ use super::prelude::*;
 
 use crate::middleware::current_user::TrustedUserId;
 use crate::models::{ApiToken, User};
-use crate::util::errors::{internal, AppError, AppResult, ChainError, Forbidden};
+use crate::util::errors::{forbidden, internal, AppResult, ChainError};
 
 #[derive(Debug)]
 pub struct AuthenticatedUser {
@@ -43,11 +43,10 @@ impl<'a> UserAuthenticationExt for dyn RequestExt + 'a {
                         token_id: Some(token.id),
                     })
                     .chain_error(|| internal("invalid token"))
-                    .chain_error(|| Box::new(Forbidden) as Box<dyn AppError>)
+                    .chain_error(forbidden)
             } else {
                 // Unable to authenticate the user
-                Err(internal("no cookie session or auth header found"))
-                    .chain_error(|| Box::new(Forbidden) as Box<dyn AppError>)
+                Err(internal("no cookie session or auth header found")).chain_error(forbidden)
             }
         }
     }

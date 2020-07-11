@@ -44,6 +44,10 @@ pub fn bad_request<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
     Box::new(http::BadRequest(error.to_string()))
 }
 
+pub fn forbidden() -> Box<dyn AppError> {
+    Box::new(http::Forbidden)
+}
+
 /// Returns an error with status 500 and the provided description as JSON
 pub fn server_error<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
     Box::new(http::ServerError(error.to_string()))
@@ -240,22 +244,6 @@ impl fmt::Display for NotFound {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct Forbidden;
-
-impl AppError for Forbidden {
-    fn response(&self) -> Option<AppResponse> {
-        let detail = "must be logged in to perform that action";
-        Some(json_error(detail, StatusCode::FORBIDDEN))
-    }
-}
-
-impl fmt::Display for Forbidden {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        "must be logged in to perform that action".fmt(f)
-    }
-}
-
 pub fn internal<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
     Box::new(InternalAppError {
         description: error.to_string(),
@@ -358,7 +346,7 @@ fn chain_error_internal() {
         "outer caused by inner"
     );
     assert_eq!(
-        Err::<(), _>(Forbidden)
+        Err::<(), _>(forbidden())
             .chain_error(|| internal("outer"))
             .unwrap_err()
             .to_string(),

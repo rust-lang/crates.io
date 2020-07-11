@@ -187,7 +187,7 @@ impl Handler for R404 {
 mod tests {
     use super::*;
     use crate::util::errors::{
-        bad_request, cargo_err, internal, AppError, ChainError, Forbidden, NotFound,
+        bad_request, cargo_err, forbidden, internal, AppError, ChainError, NotFound,
     };
     use crate::util::EndpointResult;
 
@@ -209,7 +209,7 @@ mod tests {
             StatusCode::BAD_REQUEST
         );
         assert_eq!(
-            C(|_| err(Forbidden)).call(&mut req).unwrap().status(),
+            C(|_| Err(forbidden())).call(&mut req).unwrap().status(),
             StatusCode::FORBIDDEN
         );
         assert_eq!(
