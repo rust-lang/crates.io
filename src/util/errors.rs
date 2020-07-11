@@ -241,16 +241,16 @@ impl fmt::Display for NotFound {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct Unauthorized;
+pub struct Forbidden;
 
-impl AppError for Unauthorized {
+impl AppError for Forbidden {
     fn response(&self) -> Option<AppResponse> {
         let detail = "must be logged in to perform that action";
         Some(json_error(detail, StatusCode::FORBIDDEN))
     }
 }
 
-impl fmt::Display for Unauthorized {
+impl fmt::Display for Forbidden {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         "must be logged in to perform that action".fmt(f)
     }
@@ -358,7 +358,7 @@ fn chain_error_internal() {
         "outer caused by inner"
     );
     assert_eq!(
-        Err::<(), _>(Unauthorized)
+        Err::<(), _>(Forbidden)
             .chain_error(|| internal("outer"))
             .unwrap_err()
             .to_string(),
