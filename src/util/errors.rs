@@ -16,16 +16,14 @@ use std::any::{Any, TypeId};
 use std::error::Error;
 use std::fmt;
 
-use chrono::NaiveDateTime;
-use conduit::{header, StatusCode};
 use diesel::result::Error as DieselError;
 
-use crate::util::{json_response, AppResponse};
+use crate::util::AppResponse;
 
 pub(super) mod concrete;
-mod http;
+mod json;
 
-pub(crate) use self::http::NotFound;
+pub(crate) use json::{NotFound, ReadOnlyMode, TooManyRequests};
 
 /// Returns an error with status 200 and the provided description as JSON
 ///
@@ -33,7 +31,7 @@ pub(crate) use self::http::NotFound;
 /// endpoints, use helpers like `bad_request` or `server_error` which set a
 /// correct status code.
 pub fn cargo_err<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
-    Box::new(http::Ok(error.to_string()))
+    Box::new(json::Ok(error.to_string()))
 }
 
 // The following are intended to be used for errors being sent back to the Ember
@@ -43,38 +41,20 @@ pub fn cargo_err<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
 
 /// Return an error with status 400 and the provided description as JSON
 pub fn bad_request<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
-    Box::new(http::BadRequest(error.to_string()))
+    Box::new(json::BadRequest(error.to_string()))
 }
 
 pub fn forbidden() -> Box<dyn AppError> {
-    Box::new(http::Forbidden)
+    Box::new(json::Forbidden)
 }
 
 pub fn not_found() -> Box<dyn AppError> {
-    Box::new(http::NotFound)
+    Box::new(json::NotFound)
 }
 
 /// Returns an error with status 500 and the provided description as JSON
 pub fn server_error<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
-    Box::new(http::ServerError(error.to_string()))
-}
-
-#[derive(Serialize)]
-struct StringError<'a> {
-    detail: &'a str,
-}
-#[derive(Serialize)]
-struct Bad<'a> {
-    errors: Vec<StringError<'a>>,
-}
-
-/// Generates a response with the provided status and description as JSON
-fn json_error(detail: &str, status: StatusCode) -> AppResponse {
-    let mut response = json_response(&Bad {
-        errors: vec![StringError { detail }],
-    });
-    *response.status_mut() = status;
-    response
+    Box::new(json::ServerError(error.to_string()))
 }
 
 // =============================================================================
@@ -246,59 +226,6 @@ impl fmt::Display for AppErrToStdErr {
 
 pub(crate) fn std_error(e: Box<dyn AppError>) -> Box<dyn Error + Send> {
     Box::new(AppErrToStdErr(e))
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct ReadOnlyMode;
-
-impl AppError for ReadOnlyMode {
-    fn response(&self) -> Option<AppResponse> {
-        let detail = "Crates.io is currently in read-only mode for maintenance. \
-                      Please try again later.";
-        Some(json_error(detail, StatusCode::SERVICE_UNAVAILABLE))
-    }
-}
-
-impl fmt::Display for ReadOnlyMode {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        "Tried to write in read only mode".fmt(f)
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct TooManyRequests {
-    pub retry_after: NaiveDateTime,
-}
-
-impl AppError for TooManyRequests {
-    fn response(&self) -> Option<AppResponse> {
-        use std::convert::TryInto;
-
-        const HTTP_DATE_FORMAT: &str = "%a, %d %b %Y %H:%M:%S GMT";
-        let retry_after = self.retry_after.format(HTTP_DATE_FORMAT);
-
-        let detail = format!(
-            "You have published too many crates in a \
-             short period of time. Please try again after {} or email \
-             help@crates.io to have your limit increased.",
-            retry_after
-        );
-        let mut response = json_error(&detail, StatusCode::TOO_MANY_REQUESTS);
-        response.headers_mut().insert(
-            header::RETRY_AFTER,
-            retry_after
-                .to_string()
-                .try_into()
-                .expect("HTTP_DATE_FORMAT contains invalid char"),
-        );
-        Some(response)
-    }
-}
-
-impl fmt::Display for TooManyRequests {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        "Too many requests".fmt(f)
-    }
 }
 
 #[test]
