@@ -28,17 +28,28 @@ impl AuthenticatedUser {
 impl<'a> UserAuthenticationExt for dyn RequestExt + 'a {
     /// Obtain `AuthenticatedUser` for the request or return an `Unauthorized` error
     fn authenticate(&self, conn: &PgConnection) -> AppResult<AuthenticatedUser> {
-        let origin_headers = self.headers().get_all(header::ORIGIN);
-        let expected_origin = match (self.scheme(), self.host()) {
-            (conduit::Scheme::Http, conduit::Host::Name(host)) => format!("http://{}", host),
-            (conduit::Scheme::Https, conduit::Host::Name(host)) => format!("https://{}", host),
+        let forwarded_host = self.headers().get("x-forwarded-host");
+        let forwarded_proto = self.headers().get("x-forwarded-proto");
+        let expected_origin = match (forwarded_host, forwarded_proto) {
+            (Some(host), Some(proto)) => format!(
+                "{}://{}",
+                proto.to_str().unwrap_or_default(),
+                host.to_str().unwrap_or_default()
+            ),
             _ => "".to_string(),
         };
-        if origin_headers
+
+        let bad_origin = self
+            .headers()
+            .get_all(header::ORIGIN)
             .iter()
-            .any(|h| h.as_bytes() != expected_origin.as_bytes())
-        {
-            return Err(internal("only same-origin requests can be authenticated"))
+            .find(|h| h.to_str().unwrap_or_default() != expected_origin);
+        if let Some(bad_origin) = bad_origin {
+            let error_message = format!(
+                "only same-origin requests can be authenticated. expected {}, got {:?}",
+                expected_origin, bad_origin
+            );
+            return Err(internal(&error_message))
                 .chain_error(|| Box::new(Unauthorized) as Box<dyn AppError>);
         }
         if let Some(id) = self.extensions().find::<TrustedUserId>() {

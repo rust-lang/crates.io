@@ -19,7 +19,7 @@ cd tmp/index-tmp
 cat > config.json <<-EOF
 {
   "dl": "http://localhost:8888/api/v1/crates",
-  "api": "http://localhost:8888/"
+  "api": "http://localhost:4200/"
 }
 EOF
 git add config.json
