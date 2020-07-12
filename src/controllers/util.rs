@@ -28,6 +28,19 @@ impl AuthenticatedUser {
 impl<'a> UserAuthenticationExt for dyn RequestExt + 'a {
     /// Obtain `AuthenticatedUser` for the request or return an `Unauthorized` error
     fn authenticate(&self, conn: &PgConnection) -> AppResult<AuthenticatedUser> {
+        let origin_headers = self.headers().get_all(header::ORIGIN);
+        let expected_origin = match (self.scheme(), self.host()) {
+            (conduit::Scheme::Http, conduit::Host::Name(host)) => format!("http://{}", host),
+            (conduit::Scheme::Https, conduit::Host::Name(host)) => format!("https://{}", host),
+            _ => "".to_string(),
+        };
+        if origin_headers
+            .iter()
+            .any(|h| h.as_bytes() != expected_origin.as_bytes())
+        {
+            return Err(internal("only same-origin requests can be authenticated"))
+                .chain_error(|| Box::new(Unauthorized) as Box<dyn AppError>);
+        }
         if let Some(id) = self.extensions().find::<TrustedUserId>() {
             // A trusted user_id was provided by a signed cookie (or a test `MockCookieUser`)
             Ok(AuthenticatedUser {
