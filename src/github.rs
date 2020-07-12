@@ -8,7 +8,7 @@ use serde::de::DeserializeOwned;
 use std::str;
 
 use crate::app::App;
-use crate::util::errors::{cargo_err, internal, AppError, AppResult, NotFound};
+use crate::util::errors::{cargo_err, internal, not_found, AppError, AppResult};
 
 /// Does all the nonsense for sending a GET to Github. Doesn't handle parsing
 /// because custom error-code handling may be desirable. Use
@@ -46,7 +46,7 @@ fn handle_error_response(app: &App, error: &reqwest::Error) -> Box<dyn AppError>
              https://{}/login",
             app.config.domain_name,
         )),
-        Some(Status::NOT_FOUND) => Box::new(NotFound),
+        Some(Status::NOT_FOUND) => not_found(),
         _ => internal(&format_args!(
             "didn't get a 200 result from github: {}",
             error

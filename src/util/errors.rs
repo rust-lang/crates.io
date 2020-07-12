@@ -25,6 +25,8 @@ use crate::util::{json_response, AppResponse};
 pub(super) mod concrete;
 mod http;
 
+pub(crate) use self::http::NotFound;
+
 /// Returns an error with status 200 and the provided description as JSON
 ///
 /// This is for backwards compatibility with cargo endpoints.  For all other
@@ -46,6 +48,10 @@ pub fn bad_request<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
 
 pub fn forbidden() -> Box<dyn AppError> {
     Box::new(http::Forbidden)
+}
+
+pub fn not_found() -> Box<dyn AppError> {
+    Box::new(http::NotFound)
 }
 
 /// Returns an error with status 500 and the provided description as JSON
@@ -103,7 +109,7 @@ impl dyn AppError {
 
     fn try_convert(err: &(dyn Error + Send + 'static)) -> Option<Box<Self>> {
         match err.downcast_ref() {
-            Some(DieselError::NotFound) => Some(Box::new(NotFound)),
+            Some(DieselError::NotFound) => Some(not_found()),
             Some(DieselError::DatabaseError(_, info))
                 if info.message().ends_with("read-only transaction") =>
             {
@@ -218,29 +224,6 @@ impl fmt::Display for InternalAppError {
 impl AppError for InternalAppError {
     fn response(&self) -> Option<AppResponse> {
         None
-    }
-}
-
-// TODO: The remaining can probably move under `http`
-
-#[derive(Debug, Clone, Copy)]
-pub struct NotFound;
-
-impl From<NotFound> for AppResponse {
-    fn from(_: NotFound) -> AppResponse {
-        json_error("Not Found", StatusCode::NOT_FOUND)
-    }
-}
-
-impl AppError for NotFound {
-    fn response(&self) -> Option<AppResponse> {
-        Some(NotFound.into())
-    }
-}
-
-impl fmt::Display for NotFound {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        "Not Found".fmt(f)
     }
 }
 

@@ -8,9 +8,29 @@ use conduit::StatusCode;
 // The following structs are emtpy and do not provide a custom message to the user
 
 #[derive(Debug)]
-pub(super) struct Forbidden;
+pub(crate) struct NotFound;
+
+// This struct has this helper impl for use as `NotFound.into()`
+impl From<NotFound> for AppResponse {
+    fn from(_: NotFound) -> AppResponse {
+        json_error("Not Found", StatusCode::NOT_FOUND)
+    }
+}
+
+impl AppError for NotFound {
+    fn response(&self) -> Option<AppResponse> {
+        Some(Self.into())
+    }
+}
+
+impl fmt::Display for NotFound {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        "Not Found".fmt(f)
+    }
+}
+
 #[derive(Debug)]
-pub struct NotFound;
+pub(super) struct Forbidden;
 
 impl AppError for Forbidden {
     fn response(&self) -> Option<AppResponse> {
