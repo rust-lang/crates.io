@@ -4,7 +4,8 @@ import { module, test } from 'qunit';
 
 import { defer } from 'rsvp';
 
-import window, { setupWindowMock } from 'ember-window-mock';
+import window from 'ember-window-mock';
+import { setupWindowMock } from 'ember-window-mock/test-support';
 
 import flashStyles from 'cargo/components/flash-message.module.css';
 
