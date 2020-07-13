@@ -2,13 +2,10 @@ use std::path::Path;
 
 use crate::util::errors::{server_error, AppResult};
 
-use failure::Fail;
-use lettre::file::FileTransport;
-use lettre::smtp::authentication::{Credentials, Mechanism};
-use lettre::smtp::SmtpClient;
-use lettre::{SendableEmail, Transport};
-
-use lettre_email::Email;
+use lettre::transport::file::FileTransport;
+use lettre::transport::smtp::authentication::{Credentials, Mechanism};
+use lettre::transport::smtp::SmtpTransport;
+use lettre::{Message, Transport};
 
 #[derive(Debug)]
 pub struct MailgunConfigVars {
@@ -37,19 +34,17 @@ fn build_email(
     subject: &str,
     body: &str,
     mailgun_config: &Option<MailgunConfigVars>,
-) -> AppResult<SendableEmail> {
+) -> AppResult<Message> {
     let sender = mailgun_config
         .as_ref()
         .map(|s| s.smtp_login.as_str())
         .unwrap_or("test@localhost");
 
-    let email = Email::builder()
-        .to(recipient)
-        .from(sender)
+    let email = Message::builder()
+        .to(recipient.parse().unwrap())
+        .from(sender.parse().unwrap())
         .subject(subject)
-        .body(body)
-        .build()
-        .map_err(|e| e.compat())?;
+        .body(body)?;
 
     Ok(email.into())
 }
@@ -113,21 +108,20 @@ fn send_email(recipient: &str, subject: &str, body: &str) -> AppResult<()> {
 
     match mailgun_config {
         Some(mailgun_config) => {
-            let mut transport = SmtpClient::new_simple(&mailgun_config.smtp_server)?
+            let transport = SmtpTransport::builder(&mailgun_config.smtp_server)
                 .credentials(Credentials::new(
                     mailgun_config.smtp_login,
                     mailgun_config.smtp_password,
                 ))
-                .smtp_utf8(true)
-                .authentication_mechanism(Mechanism::Plain)
-                .transport();
+                .authentication(vec![Mechanism::Plain])
+                .build();
 
-            let result = transport.send(email);
+            let result = transport.send(&email);
             result.map_err(|_| server_error("Error in sending email"))?;
         }
         None => {
-            let mut sender = FileTransport::new(Path::new("/tmp"));
-            let result = sender.send(email);
+            let sender = FileTransport::new(Path::new("/tmp"));
+            let result = sender.send(&email);
             result.map_err(|_| server_error("Email file could not be generated"))?;
         }
     }
