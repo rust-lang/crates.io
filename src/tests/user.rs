@@ -355,7 +355,7 @@ fn user_total_downloads_no_crates() {
 fn updating_existing_user_doesnt_change_api_token() {
     let (app, _, user, token) = TestApp::init().with_token();
     let gh_id = user.as_model().gh_id;
-    let token = &token.as_model().token;
+    let token = token.plaintext();
 
     let user = app.db(|conn| {
         // Reuse gh_id but use new gh_login and gh_access_token

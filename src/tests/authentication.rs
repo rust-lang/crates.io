@@ -36,7 +36,7 @@ fn anonymous_user_unauthorized() {
 fn token_auth_cannot_find_token() {
     let (app, anon) = TestApp::init().empty();
     let mut request = anon.request_builder(Method::GET, URL);
-    request.header(header::AUTHORIZATION, "fake-token");
+    request.header(header::AUTHORIZATION, "cio1tkfake-token");
 
     let (status, body) = into_parts(call(&app, request));
     assert_eq!(status, StatusCode::FORBIDDEN);
