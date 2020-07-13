@@ -62,7 +62,7 @@ tempfile = "3"
 parking_lot = "0.11"
 jemallocator = { version = "0.3", features = ['unprefixed_malloc_on_supported_platforms', 'profiling'] }
 
-lettre = "0.10.0-alpha.1"
+lettre = { version = "0.10.0-alpha.1", default-features = false, features = ["file-transport", "smtp-transport", "native-tls", "hostname", "builder"] }
 lettre_email = "0.9"
 failure = "0.1.1"
 
