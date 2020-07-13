@@ -41,8 +41,8 @@ fn build_email(
         .unwrap_or("test@localhost");
 
     let email = Message::builder()
-        .to(recipient.parse().unwrap())
-        .from(sender.parse().unwrap())
+        .to(recipient.parse()?)
+        .from(sender.parse()?)
         .subject(subject)
         .body(body)?;
 
