@@ -46,7 +46,7 @@ fn build_email(
         .subject(subject)
         .body(body)?;
 
-    Ok(email.into())
+    Ok(email)
 }
 
 /// Attempts to send a confirmation email. Swallows all errors.
