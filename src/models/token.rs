@@ -1,10 +1,15 @@
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
+use diesel::sql_types::{Bytea, Text};
 
 use crate::models::User;
 use crate::schema::api_tokens;
+use crate::util::errors::{AppResult, InsecurelyGeneratedTokenRevoked};
 use crate::util::rfc3339;
 use crate::views::EncodableApiTokenWithToken;
+
+const TOKEN_LENGTH: usize = 32;
+const TOKEN_PREFIX: &str = "cio"; // Crates.IO
 
 /// The model representing a row in the `api_tokens` database table.
 #[derive(Clone, Debug, PartialEq, Eq, Identifiable, Queryable, Associations, Serialize)]
@@ -13,8 +18,9 @@ pub struct ApiToken {
     pub id: i32,
     #[serde(skip)]
     pub user_id: i32,
+    // Nothing should ever access the plaintext token.
     #[serde(skip)]
-    pub token: String,
+    token: Vec<u8>,
     pub name: String,
     #[serde(with = "rfc3339")]
     pub created_at: NaiveDateTime,
@@ -24,36 +30,41 @@ pub struct ApiToken {
     pub revoked: bool,
 }
 
+diesel::sql_function! {
+    fn digest(input: Text, method: Text) -> Bytea;
+}
+
 impl ApiToken {
     /// Generates a new named API token for a user
-    pub fn insert(conn: &PgConnection, user_id: i32, name: &str) -> QueryResult<ApiToken> {
-        diesel::insert_into(api_tokens::table)
-            .values((api_tokens::user_id.eq(user_id), api_tokens::name.eq(name)))
-            .get_result::<ApiToken>(conn)
+    pub fn insert(conn: &PgConnection, user_id: i32, name: &str) -> AppResult<CreatedApiToken> {
+        let plaintext = format!(
+            "{}{}",
+            TOKEN_PREFIX,
+            crate::util::generate_secure_alphanumeric_string(TOKEN_LENGTH)
+        );
+
+        let model = diesel::insert_into(api_tokens::table)
+            .values((
+                api_tokens::user_id.eq(user_id),
+                api_tokens::name.eq(name),
+                api_tokens::token.eq(digest(&plaintext, "sha256")),
+            ))
+            .get_result::<ApiToken>(conn)?;
+
+        Ok(CreatedApiToken { plaintext, model })
     }
 
-    /// Converts this `ApiToken` model into an `EncodableApiToken` including
-    /// the actual token value for JSON serialization.  This should only be
-    /// used when initially creating a new token to minimize the chance of
-    /// token leaks.
-    pub fn encodable_with_token(self) -> EncodableApiTokenWithToken {
-        EncodableApiTokenWithToken {
-            id: self.id,
-            name: self.name,
-            token: self.token,
-            revoked: self.revoked,
-            created_at: self.created_at,
-            last_used_at: self.last_used_at,
-        }
-    }
-
-    pub fn find_by_api_token(conn: &PgConnection, token_: &str) -> QueryResult<ApiToken> {
-        use crate::schema::api_tokens::dsl::{api_tokens, last_used_at, revoked, token};
+    pub fn find_by_api_token(conn: &PgConnection, token_: &str) -> AppResult<ApiToken> {
+        use crate::schema::api_tokens::dsl::*;
         use diesel::{dsl::now, update};
 
+        if !token_.starts_with(TOKEN_PREFIX) {
+            return Err(InsecurelyGeneratedTokenRevoked::boxed());
+        }
+
         let tokens = api_tokens
-            .filter(token.eq(token_))
-            .filter(revoked.eq(false));
+            .filter(revoked.eq(false))
+            .filter(token.eq(digest(token_, "sha256")));
 
         // If the database is in read only mode, we can't update last_used_at.
         // Try updating in a new transaction, if that fails, fall back to reading
@@ -63,6 +74,37 @@ impl ApiToken {
                 .get_result::<ApiToken>(conn)
         })
         .or_else(|_| tokens.first(conn))
+        .map_err(Into::into)
+    }
+}
+
+pub struct CreatedApiToken {
+    pub model: ApiToken,
+    pub plaintext: String,
+}
+
+impl CreatedApiToken {
+    /// Converts this `CreatedApiToken` into an `EncodableApiToken` including
+    /// the actual token value for JSON serialization.
+    pub fn encodable_with_token(self) -> EncodableApiTokenWithToken {
+        EncodableApiTokenWithToken {
+            id: self.model.id,
+            name: self.model.name,
+            token: self.plaintext,
+            revoked: self.model.revoked,
+            created_at: self.model.created_at,
+            last_used_at: self.model.last_used_at,
+        }
+    }
+}
+
+// Use a custom implementation of Debug to hide the plaintext token.
+impl std::fmt::Debug for CreatedApiToken {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CreatedApiToken")
+            .field("model", &self.model)
+            .field("plaintext", &"(sensitive)")
+            .finish()
     }
 }
 
@@ -72,11 +114,19 @@ mod tests {
     use chrono::NaiveDate;
 
     #[test]
+    fn test_token_constants() {
+        // Changing this by itself will implicitly revoke all existing tokens.
+        // If this test needs to be change, make sure you're handling tokens
+        // with the old prefix or that you wanted to revoke them.
+        assert_eq!("cio", TOKEN_PREFIX);
+    }
+
+    #[test]
     fn api_token_serializes_to_rfc3339() {
         let tok = ApiToken {
             id: 12345,
             user_id: 23456,
-            token: "".to_string(),
+            token: Vec::new(),
             revoked: false,
             name: "".to_string(),
             created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),

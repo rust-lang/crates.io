@@ -28,7 +28,7 @@ use cargo_registry::{
     db::DieselPool,
     git::{Credentials, RepositoryConfig},
     middleware::current_user::TrustedUserId,
-    models::{ApiToken, User},
+    models::{ApiToken, CreatedApiToken, User},
     util::AppResponse,
     App, Config,
 };
@@ -327,13 +327,17 @@ pub trait RequestHelper {
         Response::new(self.app().as_middleware().call(&mut request))
     }
 
+    /// Create a get request
+    fn get_request(&self, path: &str) -> MockRequest {
+        self.request_builder(Method::GET, path)
+    }
+
     /// Issue a GET request
     fn get<T>(&self, path: &str) -> Response<T>
     where
         for<'de> T: serde::Deserialize<'de>,
     {
-        let request = self.request_builder(Method::GET, path);
-        self.run(request)
+        self.run(self.get_request(path))
     }
 
     /// Issue a GET request that includes query parameters
@@ -496,13 +500,13 @@ impl MockCookieUser {
 /// A type that can generate token authenticated requests
 pub struct MockTokenUser {
     app: TestApp,
-    token: ApiToken,
+    token: CreatedApiToken,
 }
 
 impl RequestHelper for MockTokenUser {
     fn request_builder(&self, method: Method, path: &str) -> MockRequest {
         let mut request = crate::req(method, path);
-        request.header(header::AUTHORIZATION, &self.token.token);
+        request.header(header::AUTHORIZATION, &self.token.plaintext);
         request
     }
 
@@ -514,7 +518,11 @@ impl RequestHelper for MockTokenUser {
 impl MockTokenUser {
     /// Returns a reference to the database `ApiToken` model
     pub fn as_model(&self) -> &ApiToken {
-        &self.token
+        &self.token.model
+    }
+
+    pub fn plaintext(&self) -> &str {
+        &self.token.plaintext
     }
 
     /// Add to the specified crate the specified owners.

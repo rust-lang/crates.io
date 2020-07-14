@@ -2,7 +2,9 @@ use super::prelude::*;
 
 use crate::middleware::current_user::TrustedUserId;
 use crate::models::{ApiToken, User};
-use crate::util::errors::{forbidden, internal, AppResult, ChainError};
+use crate::util::errors::{
+    forbidden, internal, AppError, AppResult, ChainError, InsecurelyGeneratedTokenRevoked,
+};
 
 #[derive(Debug)]
 pub struct AuthenticatedUser {
@@ -42,8 +44,13 @@ impl<'a> UserAuthenticationExt for dyn RequestExt + 'a {
                         user_id: token.user_id,
                         token_id: Some(token.id),
                     })
-                    .chain_error(|| internal("invalid token"))
-                    .chain_error(forbidden)
+                    .map_err(|e| {
+                        if e.is::<InsecurelyGeneratedTokenRevoked>() {
+                            e
+                        } else {
+                            e.chain(internal("invalid token")).chain(forbidden())
+                        }
+                    })
             } else {
                 // Unable to authenticate the user
                 Err(internal("no cookie session or auth header found")).chain_error(forbidden)

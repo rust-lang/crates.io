@@ -725,7 +725,7 @@ fn new_wrong_token() {
     // Try to publish with the wrong token (by changing the token in the database)
     app.db(|conn| {
         diesel::update(api_tokens::table)
-            .set(api_tokens::token.eq("bad"))
+            .set(api_tokens::token.eq(b"bad" as &[u8]))
             .execute(conn)
             .unwrap();
     });

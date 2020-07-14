@@ -23,7 +23,7 @@ use crate::util::AppResponse;
 pub(super) mod concrete;
 mod json;
 
-pub(crate) use json::{NotFound, ReadOnlyMode, TooManyRequests};
+pub(crate) use json::{InsecurelyGeneratedTokenRevoked, NotFound, ReadOnlyMode, TooManyRequests};
 
 /// Returns an error with status 200 and the provided description as JSON
 ///
@@ -80,6 +80,17 @@ pub trait AppError: Send + fmt::Display + fmt::Debug + 'static {
     fn get_type_id(&self) -> TypeId {
         TypeId::of::<Self>()
     }
+
+    fn chain<E>(self, error: E) -> Box<dyn AppError>
+    where
+        Self: Sized,
+        E: AppError,
+    {
+        Box::new(ChainedError {
+            error,
+            cause: Box::new(self),
+        })
+    }
 }
 
 impl dyn AppError {
@@ -108,6 +119,10 @@ impl AppError for Box<dyn AppError> {
     fn cause(&self) -> Option<&dyn AppError> {
         (**self).cause()
     }
+
+    fn get_type_id(&self) -> TypeId {
+        (**self).get_type_id()
+    }
 }
 
 pub type AppResult<T> = Result<T, Box<dyn AppError>>;
@@ -134,12 +149,7 @@ impl<T, E: AppError> ChainError<T> for Result<T, E> {
         E2: AppError,
         C: FnOnce() -> E2,
     {
-        self.map_err(move |err| {
-            Box::new(ChainedError {
-                error: callback(),
-                cause: Box::new(err),
-            }) as Box<dyn AppError>
-        })
+        self.map_err(move |err| err.chain(callback()))
     }
 }
 
@@ -202,6 +212,24 @@ impl fmt::Display for InternalAppError {
 }
 
 impl AppError for InternalAppError {
+    fn response(&self) -> Option<AppResponse> {
+        None
+    }
+}
+
+#[derive(Debug)]
+struct InternalAppErrorStatic {
+    description: &'static str,
+}
+
+impl fmt::Display for InternalAppErrorStatic {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.description)?;
+        Ok(())
+    }
+}
+
+impl AppError for InternalAppErrorStatic {
     fn response(&self) -> Option<AppResponse> {
         None
     }

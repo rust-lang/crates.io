@@ -1,6 +1,6 @@
 use std::fmt;
 
-use super::AppError;
+use super::{AppError, InternalAppErrorStatic};
 use crate::util::{json_response, AppResponse};
 
 use chrono::NaiveDateTime;
@@ -157,5 +157,43 @@ impl AppError for TooManyRequests {
 impl fmt::Display for TooManyRequests {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         "Too many requests".fmt(f)
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct InsecurelyGeneratedTokenRevoked;
+
+impl InsecurelyGeneratedTokenRevoked {
+    pub fn boxed() -> Box<dyn AppError> {
+        Box::new(Self)
+    }
+}
+
+impl AppError for InsecurelyGeneratedTokenRevoked {
+    fn response(&self) -> Option<AppResponse> {
+        Some(json_error(&self.to_string(), StatusCode::UNAUTHORIZED))
+    }
+
+    fn cause(&self) -> Option<&dyn AppError> {
+        Some(&InternalAppErrorStatic {
+            description: "insecurely generated, revoked 2020-07",
+        })
+    }
+}
+
+impl fmt::Display for InsecurelyGeneratedTokenRevoked {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(
+            "The given API token does not match the format used by crates.io. \
+            \
+            Tokens generated before 2020-07-14 were generated with an insecure \
+            random number generator, and have been revoked. You can generate a \
+            new token at https://crates.io/me. \
+            \
+            For more information please see \
+            https://blog.rust-lang.org/2020/07/14/crates-io-security-advisory.html. \
+            We apologize for any inconvenience.",
+        )?;
+        Result::Ok(())
     }
 }
