@@ -1,7 +1,7 @@
 use conduit::RequestExt;
 use flate2::read::GzDecoder;
-use sha2::{Sha256, Digest};
 use reqwest::{blocking::Client, header};
+use sha2::{Digest, Sha256};
 
 use crate::util::errors::{cargo_err, internal, AppResult, ChainError};
 use crate::util::{Error, LimitErrorReader, Maximums};

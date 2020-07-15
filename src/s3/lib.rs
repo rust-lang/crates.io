@@ -2,11 +2,11 @@
 
 use chrono::prelude::Utc;
 use hmac::{Hmac, Mac, NewMac};
-use sha1::Sha1;
 use reqwest::{
     blocking::{Body, Client, Response},
     header,
 };
+use sha1::Sha1;
 
 pub use reqwest::Error;
 
@@ -98,14 +98,7 @@ impl Bucket {
         )
     }
 
-    fn auth(
-        &self,
-        verb: &str,
-        date: &str,
-        path: &str,
-        md5: &str,
-        content_type: &str,
-    ) -> String {
+    fn auth(&self, verb: &str, date: &str, path: &str, md5: &str, content_type: &str) -> String {
         let string = format!(
             "{verb}\n{md5}\n{ty}\n{date}\n{headers}{resource}",
             verb = verb,
@@ -117,8 +110,7 @@ impl Bucket {
         );
         let signature = {
             let key = self.secret_key.as_bytes();
-            let mut h = Hmac::<Sha1>::new_varkey(key)
-                .expect("HMAC can take key of any size");
+            let mut h = Hmac::<Sha1>::new_varkey(key).expect("HMAC can take key of any size");
             h.update(string.as_bytes());
             let res = h.finalize().into_bytes();
             base64::encode(&res)
