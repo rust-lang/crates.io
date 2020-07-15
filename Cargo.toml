@@ -37,7 +37,7 @@ url = "2.1"
 tar = "0.4.16"
 base64 = "0.12"
 
-openssl = "0.10.13"
+sha2 = "0.9"
 oauth2 = { version = "3.0.0", default-features = false, features = ["reqwest-010"] }
 log = "0.4"
 env_logger = "0.7"

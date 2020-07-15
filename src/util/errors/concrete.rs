@@ -9,7 +9,6 @@ pub enum Error {
     Internal(String),
     Io(io::Error),
     JobEnqueue(swirl::EnqueueError),
-    Openssl(openssl::error::ErrorStack),
     Reqwest(reqwest::Error),
 }
 
