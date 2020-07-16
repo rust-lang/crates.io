@@ -8,6 +8,8 @@
       <h2 data-test-crate-version>{{ this.currentVersion.num }}</h2>
     </div>
 
+    <a target='_blank' rel='noopener noreferer' href='/api/v1/crates/{{this.crate.name}}/{{this.currentVersion.num}}/download' type='application/gzip' download='{{this.crate.name}}-{{this.currentVersion.num}}.tar.gz' local-class='big-green-download-button'>Download</a>
+
     {{#if this.session.currentUser}}
       <FollowButton @crate={{this.crate}}/>
     {{/if}}

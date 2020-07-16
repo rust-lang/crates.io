@@ -273,3 +273,14 @@ div.header {
 .yanked {
     composes: yanked from '../shared/typography.module.css';
 }
+
+.big-green-download-button {
+    display: inline-block;
+    float: right;
+    background-color: #0c0;
+    color: #000;
+    padding: 5px;
+    border: 1px solid #070;
+    border-radius: 20px;
+    font-size: 50px;
+}
