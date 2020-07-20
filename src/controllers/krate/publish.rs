@@ -45,7 +45,7 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
     req.log_metadata("crate_version", new_crate.vers.to_string());
 
     let conn = app.primary_database.get()?;
-    let ids = req.authenticate(&conn)?;
+    let ids = req.authenticate()?;
     let user = ids.find_user(&conn)?;
 
     let verified_email_address = user.verified_email(&conn)?;

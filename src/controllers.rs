@@ -26,7 +26,7 @@ mod prelude {
     use serde::Serialize;
 
     pub trait UserAuthenticationExt {
-        fn authenticate(&self, conn: &PgConnection) -> AppResult<super::util::AuthenticatedUser>;
+        fn authenticate(&mut self) -> AppResult<super::util::AuthenticatedUser>;
     }
 
     pub trait RequestUtils {

@@ -9,8 +9,9 @@ use serde_json as json;
 
 /// Handles the `GET /me/tokens` route.
 pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
+    let authenticated_user = req.authenticate()?;
     let conn = req.db_conn()?;
-    let user = req.authenticate(&conn)?.find_user(&conn)?;
+    let user = authenticated_user.find_user(&conn)?;
 
     let tokens = ApiToken::belonging_to(&user)
         .filter(api_tokens::revoked.eq(false))
@@ -60,15 +61,15 @@ pub fn new(req: &mut dyn RequestExt) -> EndpointResult {
         return Err(bad_request("name must have a value"));
     }
 
-    let conn = req.db_conn()?;
-    let ids = req.authenticate(&conn)?;
-    let user = ids.find_user(&conn)?;
-
-    if ids.api_token_id().is_some() {
+    let authenticated_user = req.authenticate()?;
+    if authenticated_user.api_token_id().is_some() {
         return Err(bad_request(
             "cannot use an API token to create a new API token",
         ));
     }
+
+    let conn = req.db_conn()?;
+    let user = authenticated_user.find_user(&conn)?;
 
     let max_token_per_user = 500;
     let count = ApiToken::belonging_to(&user)
@@ -98,8 +99,9 @@ pub fn revoke(req: &mut dyn RequestExt) -> EndpointResult {
         .parse::<i32>()
         .map_err(|e| bad_request(&format!("invalid token id: {:?}", e)))?;
 
+    let authenticated_user = req.authenticate()?;
     let conn = req.db_conn()?;
-    let user = req.authenticate(&conn)?.find_user(&conn)?;
+    let user = authenticated_user.find_user(&conn)?;
     diesel::update(ApiToken::belonging_to(&user).find(id))
         .set(api_tokens::revoked.eq(true))
         .execute(&*conn)?;
