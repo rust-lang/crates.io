@@ -6,7 +6,7 @@ use crate::views::{EncodableCrateOwnerInvitation, InvitationResponse};
 
 /// Handles the `GET /me/crate_owner_invitations` route.
 pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
-    let user_id = { req.authenticate()? }.user_id();
+    let user_id = req.authenticate()?.user_id();
     let conn = &*req.db_conn()?;
 
     let crate_owner_invitations = crate_owner_invitations::table
