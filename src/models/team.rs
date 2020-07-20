@@ -123,14 +123,11 @@ impl Team {
         // check that `team` is the `slug` in results, and grab its data
 
         // "sanitization"
-        fn whitelist(c: char) -> bool {
-            match c {
-                'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_' => false,
-                _ => true,
-            }
+        fn is_allowed_char(c: char) -> bool {
+            matches!(c, 'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_')
         }
 
-        if let Some(c) = org_name.chars().find(|c| whitelist(*c)) {
+        if let Some(c) = org_name.chars().find(|c| !is_allowed_char(*c)) {
             return Err(cargo_err(&format_args!(
                 "organization cannot contain special \
                  characters like {}",
