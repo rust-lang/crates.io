@@ -39,6 +39,7 @@ impl<'a> MarkdownRenderer<'a> {
                 "language-rust",
                 "language-scss",
                 "language-sql",
+                "language-toml",
                 "yaml",
             ]),
         )]);
