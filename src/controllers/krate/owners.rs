@@ -88,12 +88,13 @@ fn parse_owners_request(req: &mut dyn RequestExt) -> AppResult<Vec<String>> {
 }
 
 fn modify_owners(req: &mut dyn RequestExt, add: bool) -> EndpointResult {
+    let authenticated_user = req.authenticate()?;
     let logins = parse_owners_request(req)?;
     let app = req.app();
     let crate_name = &req.params()["crate_id"];
 
     let conn = req.db_conn()?;
-    let user = req.authenticate(&conn)?.find_user(&conn)?;
+    let user = authenticated_user.find_user(&conn)?;
 
     conn.transaction(|| {
         let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;

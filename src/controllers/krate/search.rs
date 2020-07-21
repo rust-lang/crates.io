@@ -5,6 +5,7 @@ use diesel_full_text_search::*;
 
 use crate::controllers::cargo_prelude::*;
 use crate::controllers::helpers::Paginate;
+use crate::controllers::util::AuthenticatedUser;
 use crate::models::{Crate, CrateBadge, CrateOwner, CrateVersions, OwnerKind, Version};
 use crate::schema::*;
 use crate::util::errors::{bad_request, ChainError};
@@ -36,6 +37,9 @@ use crate::models::krate::{canon_crate_name, ALL_COLUMNS};
 pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
     use diesel::sql_types::{Bool, Text};
 
+    // Don't require that authentication succeed, because it's only necessary
+    // if the "following" param is set.
+    let authenticated_user: AppResult<AuthenticatedUser> = req.authenticate();
     let conn = req.db_read_only()?;
     let params = req.query();
     let sort = params.get("sort").map(|s| &**s);
@@ -154,7 +158,7 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
             ),
         );
     } else if params.get("following").is_some() {
-        let user_id = req.authenticate(&conn)?.user_id();
+        let user_id = authenticated_user?.user_id();
         query = query.filter(
             crates::id.eq_any(
                 follows::table
