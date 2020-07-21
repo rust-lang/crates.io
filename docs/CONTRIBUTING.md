@@ -350,6 +350,12 @@ with `CTRL-C` and rerun this command every time you change the backend code):
 cargo run --bin server
 ```
 
+Then start the background worker (which will process uploaded READMEs):
+
+```
+cargo run --bin background-worker
+```
+
 Then start a frontend that uses this backend by running this command in another
 terminal session (the frontend picks up frontend changes using live reload
 without a restart needed, and you can leave the frontend running while you
