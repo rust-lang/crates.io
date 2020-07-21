@@ -87,12 +87,13 @@ impl<'a> MarkdownRenderer<'a> {
         // Tweak annotations of code blocks.
         iter_nodes(root, &|node| {
             if let NodeValue::CodeBlock(ref mut ncb) = node.data.borrow_mut().value {
-                let mut orig_annot = String::from_utf8(ncb.info.to_vec()).unwrap();
-
-                // Ignore characters after a comma for syntax highlighting to work correctly.
-                if let Some(offset) = orig_annot.find(',') {
-                    let _ = orig_annot.drain(offset..orig_annot.len());
-                    ncb.info = orig_annot.as_bytes().to_vec();
+                // If annot includes invalid UTF-8 char, do nothing.
+                if let Ok(mut orig_annot) = String::from_utf8(ncb.info.to_vec()) {
+                    // Ignore characters after a comma for syntax highlighting to work correctly.
+                    if let Some(offset) = orig_annot.find(',') {
+                        let _ = orig_annot.drain(offset..orig_annot.len());
+                        ncb.info = orig_annot.as_bytes().to_vec();
+                    }
                 }
             }
         });
