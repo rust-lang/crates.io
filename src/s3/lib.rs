@@ -1,18 +1,14 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
-use base64::encode;
 use chrono::prelude::Utc;
-use openssl::error::ErrorStack;
-use openssl::hash::MessageDigest;
-use openssl::pkey::PKey;
-use openssl::sign::Signer;
+use hmac::{Hmac, Mac, NewMac};
 use reqwest::{
     blocking::{Body, Client, Response},
     header,
 };
+use sha1::Sha1;
 
-mod error;
-pub use error::Error;
+pub use reqwest::Error;
 
 #[derive(Clone, Debug)]
 pub struct Bucket {
@@ -55,7 +51,7 @@ impl Bucket {
             path
         };
         let date = Utc::now().to_rfc2822();
-        let auth = self.auth("PUT", &date, path, "", content_type)?;
+        let auth = self.auth("PUT", &date, path, "", content_type);
         let url = self.url(path);
 
         client
@@ -78,7 +74,7 @@ impl Bucket {
             path
         };
         let date = Utc::now().to_rfc2822();
-        let auth = self.auth("DELETE", &date, path, "", "")?;
+        let auth = self.auth("DELETE", &date, path, "", "");
         let url = self.url(path);
 
         client
@@ -102,14 +98,7 @@ impl Bucket {
         )
     }
 
-    fn auth(
-        &self,
-        verb: &str,
-        date: &str,
-        path: &str,
-        md5: &str,
-        content_type: &str,
-    ) -> Result<String, ErrorStack> {
+    fn auth(&self, verb: &str, date: &str, path: &str, md5: &str, content_type: &str) -> String {
         let string = format!(
             "{verb}\n{md5}\n{ty}\n{date}\n{headers}{resource}",
             verb = verb,
@@ -120,12 +109,13 @@ impl Bucket {
             resource = format!("/{}/{}", self.name, path)
         );
         let signature = {
-            let key = PKey::hmac(self.secret_key.as_bytes())?;
-            let mut signer = Signer::new(MessageDigest::sha1(), &key)?;
-            signer.update(string.as_bytes())?;
-            encode(&signer.sign_to_vec()?[..])
+            let key = self.secret_key.as_bytes();
+            let mut h = Hmac::<Sha1>::new_varkey(key).expect("HMAC can take key of any size");
+            h.update(string.as_bytes());
+            let res = h.finalize().into_bytes();
+            base64::encode(&res)
         };
-        Ok(format!("AWS {}:{}", self.access_key, signature))
+        format!("AWS {}:{}", self.access_key, signature)
     }
 
     fn url(&self, path: &str) -> String {

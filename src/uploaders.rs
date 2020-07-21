@@ -1,8 +1,7 @@
 use conduit::RequestExt;
 use flate2::read::GzDecoder;
-use openssl::error::ErrorStack;
-use openssl::hash::{Hasher, MessageDigest};
 use reqwest::{blocking::Client, header};
+use sha2::{Digest, Sha256};
 
 use crate::util::errors::{cargo_err, internal, AppResult, ChainError};
 use crate::util::{Error, LimitErrorReader, Maximums};
@@ -133,13 +132,13 @@ impl Uploader {
         krate: &Crate,
         maximums: Maximums,
         vers: &semver::Version,
-    ) -> AppResult<Vec<u8>> {
+    ) -> AppResult<[u8; 32]> {
         let app = Arc::clone(req.app());
         let path = Uploader::crate_path(&krate.name, &vers.to_string());
         let mut body = Vec::new();
         LimitErrorReader::new(req.body(), maximums.max_upload_size).read_to_end(&mut body)?;
         verify_tarball(krate, vers, &body, maximums.max_unpack_size)?;
-        let checksum = hash(&body)?;
+        let checksum = Sha256::digest(&body);
         let content_length = body.len() as u64;
         let content = Cursor::new(body);
         let mut extra_headers = header::HeaderMap::new();
@@ -156,7 +155,7 @@ impl Uploader {
             extra_headers,
         )
         .map_err(|e| internal(&format_args!("failed to upload crate: {}", e)))?;
-        Ok(checksum)
+        Ok(checksum.into())
     }
 
     pub(crate) fn upload_readme(
@@ -224,10 +223,4 @@ fn verify_tarball(
         }
     }
     Ok(())
-}
-
-fn hash(data: &[u8]) -> Result<Vec<u8>, ErrorStack> {
-    let mut hasher = Hasher::new(MessageDigest::sha256())?;
-    hasher.update(data)?;
-    Ok(hasher.finish()?.to_vec())
 }
