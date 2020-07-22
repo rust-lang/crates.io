@@ -1,4 +1,8 @@
-use crate::{user::UserShowPrivateResponse, util::StatusCode, RequestHelper, TestApp};
+use crate::{
+    user::UserShowPrivateResponse,
+    util::{header, StatusCode},
+    RequestHelper, TestApp,
+};
 use cargo_registry::{
     models::ApiToken,
     schema::api_tokens,
@@ -67,7 +71,10 @@ fn list_tokens() {
             .into_iter()
             .map(|t| t.name)
             .collect::<HashSet<_>>(),
-        tokens.into_iter().map(|t| t.name).collect::<HashSet<_>>()
+        tokens
+            .into_iter()
+            .map(|t| t.model.name)
+            .collect::<HashSet<_>>()
     );
 }
 
@@ -88,7 +95,7 @@ fn list_tokens_exclude_revoked() {
 
     // Revoke the first token.
     let _json: RevokedResponse = user
-        .delete(&format!("/api/v1/me/tokens/{}", tokens[0].id))
+        .delete(&format!("/api/v1/me/tokens/{}", tokens[0].model.id))
         .good();
 
     // Check that we now have one less token being listed.
@@ -97,7 +104,7 @@ fn list_tokens_exclude_revoked() {
     assert!(json
         .api_tokens
         .iter()
-        .find(|token| token.name == tokens[0].name)
+        .find(|token| token.name == tokens[0].model.name)
         .is_none());
 }
 
@@ -167,7 +174,6 @@ fn create_token_success() {
     let tokens = app.db(|conn| t!(ApiToken::belonging_to(user.as_model()).load::<ApiToken>(conn)));
     assert_eq!(tokens.len(), 1);
     assert_eq!(tokens[0].name, "bar");
-    assert_eq!(tokens[0].token, json.api_token.token);
     assert_eq!(tokens[0].revoked, false);
     assert_eq!(tokens[0].last_used_at, None);
 }
@@ -296,4 +302,18 @@ fn using_token_updates_last_used_at() {
     // Would check that it updates the timestamp here, but the timestamp is
     // based on the start of the database transaction so it doesn't work in
     // this test framework.
+}
+
+#[test]
+fn old_tokens_give_specific_error_message() {
+    let url = "/api/v1/me";
+    let (_, anon) = TestApp::init().empty();
+
+    let mut request = anon.get_request(url);
+    request.header(header::AUTHORIZATION, "oldtoken");
+    let json = anon
+        .run::<()>(request)
+        .bad_with_status(StatusCode::UNAUTHORIZED);
+
+    assert_contains!(json.errors[0].detail, "revoked");
 }

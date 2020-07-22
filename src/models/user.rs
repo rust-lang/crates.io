@@ -110,10 +110,10 @@ impl User {
     }
 
     /// Queries the database for a user with a certain `api_token` value.
-    pub fn find_by_api_token(conn: &PgConnection, token: &str) -> QueryResult<User> {
+    pub fn find_by_api_token(conn: &PgConnection, token: &str) -> AppResult<User> {
         let api_token = ApiToken::find_by_api_token(conn, token)?;
 
-        Self::find(conn, api_token.user_id)
+        Ok(Self::find(conn, api_token.user_id)?)
     }
 
     pub fn owning(krate: &Crate, conn: &PgConnection) -> QueryResult<Vec<Owner>> {

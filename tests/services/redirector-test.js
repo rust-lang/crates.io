@@ -1,7 +1,8 @@
 import { setupTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
-import window, { setupWindowMock } from 'ember-window-mock';
+import window from 'ember-window-mock';
+import { setupWindowMock } from 'ember-window-mock/test-support';
 
 const URL = 'https://turbo.fish/';
 

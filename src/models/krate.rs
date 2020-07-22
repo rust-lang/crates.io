@@ -261,7 +261,7 @@ impl Crate {
     }
 
     fn valid_ident(name: &str) -> bool {
-        Self::valid_feature_name(name)
+        Self::valid_feature_prefix(name)
             && name
                 .chars()
                 .next()
@@ -598,6 +598,17 @@ mod tests {
             ),),),
             None
         );
+    }
+
+    #[test]
+    fn valid_name() {
+        assert!(Crate::valid_name("foo"));
+        assert!(!Crate::valid_name("京"));
+        assert!(!Crate::valid_name(""));
+        assert!(!Crate::valid_name("💝"));
+        assert!(Crate::valid_name("foo_underscore"));
+        assert!(Crate::valid_name("foo-dash"));
+        assert!(!Crate::valid_name("foo+plus"));
     }
 }
 

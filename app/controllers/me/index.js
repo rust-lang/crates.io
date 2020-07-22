@@ -1,6 +1,8 @@
 import Controller from '@ember/controller';
+import { computed } from '@ember/object';
 import { alias, sort, filterBy, notEmpty } from '@ember/object/computed';
 import { inject as service } from '@ember/service';
+import Ember from 'ember';
 
 import ajax from '../../utils/ajax';
 
@@ -21,6 +23,10 @@ export default Controller.extend({
 
   emailNotificationsError: false,
   emailNotificationsSuccess: false,
+
+  hasEmailNotificationFeature: computed(function () {
+    return Ember.testing;
+  }),
 
   setAllEmailNotifications(value) {
     this.get('ownedCrates').forEach(c => {

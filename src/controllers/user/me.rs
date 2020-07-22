@@ -13,8 +13,8 @@ use crate::views::{EncodableMe, EncodableVersion, OwnedCrate};
 
 /// Handles the `GET /me` route.
 pub fn me(req: &mut dyn RequestExt) -> EndpointResult {
+    let user_id = req.authenticate()?.user_id();
     let conn = req.db_conn()?;
-    let user_id = req.authenticate(&conn)?.user_id();
 
     let (user, verified, email, verification_sent) = users::table
         .find(user_id)
@@ -53,8 +53,9 @@ pub fn me(req: &mut dyn RequestExt) -> EndpointResult {
 pub fn updates(req: &mut dyn RequestExt) -> EndpointResult {
     use diesel::dsl::any;
 
+    let authenticated_user = req.authenticate()?;
     let conn = req.db_conn()?;
-    let user = req.authenticate(&conn)?.find_user(&conn)?;
+    let user = authenticated_user.find_user(&conn)?;
 
     let followed_crates = Follow::belonging_to(&user).select(follows::crate_id);
     let data = versions::table
@@ -104,12 +105,14 @@ pub fn update_user(req: &mut dyn RequestExt) -> EndpointResult {
     use self::emails::user_id;
     use diesel::insert_into;
 
-    let mut body = String::new();
+    let authenticated_user = req.authenticate()?;
 
+    let mut body = String::new();
     req.body().read_to_string(&mut body)?;
+
     let param_user_id = &req.params()["user_id"];
     let conn = req.db_conn()?;
-    let user = req.authenticate(&conn)?.find_user(&conn)?;
+    let user = authenticated_user.find_user(&conn)?;
 
     // need to check if current user matches user to be updated
     if &user.id.to_string() != param_user_id {
@@ -187,8 +190,9 @@ pub fn regenerate_token_and_send(req: &mut dyn RequestExt) -> EndpointResult {
     let param_user_id = req.params()["user_id"]
         .parse::<i32>()
         .chain_error(|| bad_request("invalid user_id"))?;
+    let authenticated_user = req.authenticate()?;
     let conn = req.db_conn()?;
-    let user = req.authenticate(&conn)?.find_user(&conn)?;
+    let user = authenticated_user.find_user(&conn)?;
 
     // need to check if current user matches user to be updated
     if user.id != param_user_id {
@@ -227,8 +231,8 @@ pub fn update_email_notifications(req: &mut dyn RequestExt) -> EndpointResult {
         .map(|c| (c.id, c.email_notifications))
         .collect();
 
+    let user_id = req.authenticate()?.user_id();
     let conn = req.db_conn()?;
-    let user_id = req.authenticate(&conn)?.user_id();
 
     // Build inserts from existing crates belonging to the current user
     let to_insert = CrateOwner::by_owner_kind(OwnerKind::User)

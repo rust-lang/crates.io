@@ -1,4 +1,4 @@
-//! A helper that wraps a request and can overwrite either the path or the method.
+//! A helper that wraps a request to overwrite the method.
 
 use std::{io::Read, net::SocketAddr};
 
@@ -10,38 +10,27 @@ type RequestMutRef<'a> = &'a mut (dyn RequestExt + 'a);
 #[allow(missing_debug_implementations)]
 pub struct RequestProxy<'a> {
     other: RequestMutRef<'a>,
-    path: Option<&'a str>,
-    method: Option<conduit::Method>,
+    method: conduit::Method,
 }
 
 impl<'a> RequestProxy<'a> {
-    /// Wrap a request and overwrite the path with the provided value.
-    pub(crate) fn rewrite_path(req: RequestMutRef<'a>, path: &'a str) -> Self {
-        RequestProxy {
-            other: req,
-            path: Some(path),
-            method: None, // Defer to original request
-        }
-    }
-
     /// Wrap a request and overwrite the method with the provided value.
     pub(crate) fn rewrite_method(req: RequestMutRef<'a>, method: Method) -> Self {
-        RequestProxy {
-            other: req,
-            path: None, // Defer to original request
-            method: Some(method),
-        }
+        RequestProxy { other: req, method }
     }
 }
 
 impl<'a> RequestExt for RequestProxy<'a> {
-    // Use local value if available, defer to the original request
     fn method(&self) -> &conduit::Method {
-        self.method.as_ref().unwrap_or_else(|| &self.other.method())
+        &self.method
     }
 
     fn path(&self) -> &str {
-        self.path.unwrap_or_else(|| self.other.path())
+        self.other.path()
+    }
+
+    fn path_mut(&mut self) -> &mut String {
+        self.other.path_mut()
     }
 
     // Pass-through

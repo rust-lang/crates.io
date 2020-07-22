@@ -78,8 +78,10 @@ pub fn try_send_user_confirm_email(email: &str, user_name: &str, token: &str) ->
     let body = format!(
         "Hello {}! Welcome to Crates.io. Please click the
 link below to verify your email address. Thank you!\n
-https://crates.io/confirm/{}",
-        user_name, token
+https://{}/confirm/{}",
+        user_name,
+        crate::config::domain_name(),
+        token
     );
 
     send_email(email, subject, &body)
@@ -94,9 +96,12 @@ pub fn send_owner_invite_email(email: &str, user_name: &str, crate_name: &str, t
     let subject = "Crate ownership invitation";
     let body = format!(
         "{} has invited you to become an owner of the crate {}!\n
-Visit https://crates.io/accept-invite/{} to accept this invitation,
-or go to https://crates.io/me/pending-invites to manage all of your crate ownership invitations.",
-        user_name, crate_name, token
+Visit https://{domain}/accept-invite/{} to accept this invitation,
+or go to https://{domain}/me/pending-invites to manage all of your crate ownership invitations.",
+        user_name,
+        crate_name,
+        token,
+        domain = crate::config::domain_name()
     );
 
     let _ = send_email(email, subject, &body);

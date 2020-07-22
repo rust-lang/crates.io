@@ -1,39 +1,21 @@
-import Component from '@ember/component';
-import { on } from '@ember/object/evented';
+import { action } from '@ember/object';
 import { inject as service } from '@ember/service';
+import Component from '@glimmer/component';
 
-import { EKMixin, keyDown, keyPress } from 'ember-keyboard';
+export default class Header extends Component {
+  @service header;
+  @service router;
+  @service session;
 
-export default Component.extend(EKMixin, {
-  header: service(),
-  router: service(),
-  session: service(),
+  @action
+  search(event) {
+    event.preventDefault();
 
-  tagName: '',
-
-  keyboardActivated: true,
-
-  focusSearch: on(keyDown('KeyS'), keyPress('KeyS'), keyDown('shift+KeyS'), function (event) {
-    if (event.ctrlKey || event.altKey || event.metaKey) {
-      return;
-    }
-
-    if (document.activeElement === document.body) {
-      event.preventDefault();
-      document.querySelector('#cargo-desktop-search').focus();
-    }
-  }),
-
-  actions: {
-    search(event) {
-      event.preventDefault();
-
-      this.router.transitionTo('search', {
-        queryParams: {
-          q: this.header.searchValue,
-          page: 1,
-        },
-      });
-    },
-  },
-});
+    this.router.transitionTo('search', {
+      queryParams: {
+        q: this.header.searchValue,
+        page: 1,
+      },
+    });
+  }
+}

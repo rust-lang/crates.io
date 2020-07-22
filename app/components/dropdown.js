@@ -1,20 +1,12 @@
-import Component from '@ember/component';
-import { on } from '@ember/object/evented';
+import { action } from '@ember/object';
+import Component from '@glimmer/component';
+import { tracked } from '@glimmer/tracking';
 
-import { EKMixin, EKOnInsertMixin, keyDown } from 'ember-keyboard';
+export default class Dropdown extends Component {
+  @tracked dropdownExpanded = false;
 
-export default Component.extend(EKMixin, EKOnInsertMixin, {
-  tagName: '',
-
-  dropdownExpanded: false,
-
-  onEscape: on(keyDown('Escape'), function () {
-    this.set('dropdownExpanded', false);
-  }),
-
-  actions: {
-    toggleDropdown() {
-      this.toggleProperty('dropdownExpanded');
-    },
-  },
-});
+  @action
+  toggleDropdown() {
+    this.dropdownExpanded = !this.dropdownExpanded;
+  }
+}

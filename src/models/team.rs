@@ -4,7 +4,7 @@ use crate::app::App;
 use crate::github::{github_api, team_url};
 use crate::util::errors::{cargo_err, AppResult, NotFound};
 
-use oauth2::{prelude::*, AccessToken};
+use oauth2::AccessToken;
 
 use crate::models::{Crate, CrateOwner, Owner, OwnerKind, User};
 use crate::schema::{crate_owners, teams};
@@ -123,14 +123,11 @@ impl Team {
         // check that `team` is the `slug` in results, and grab its data
 
         // "sanitization"
-        fn whitelist(c: char) -> bool {
-            match c {
-                'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_' => false,
-                _ => true,
-            }
+        fn is_allowed_char(c: char) -> bool {
+            matches!(c, 'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_')
         }
 
-        if let Some(c) = org_name.chars().find(|c| whitelist(*c)) {
+        if let Some(c) = org_name.chars().find(|c| !is_allowed_char(*c)) {
             return Err(cargo_err(&format_args!(
                 "organization cannot contain special \
                  characters like {}",

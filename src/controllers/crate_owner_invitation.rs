@@ -6,8 +6,8 @@ use crate::views::{EncodableCrateOwnerInvitation, InvitationResponse};
 
 /// Handles the `GET /me/crate_owner_invitations` route.
 pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
+    let user_id = req.authenticate()?.user_id();
     let conn = &*req.db_conn()?;
-    let user_id = req.authenticate(conn)?.user_id();
 
     let crate_owner_invitations = crate_owner_invitations::table
         .filter(crate_owner_invitations::invited_user_id.eq(user_id))
@@ -35,18 +35,17 @@ pub fn handle_invite(req: &mut dyn RequestExt) -> EndpointResult {
     let mut body = String::new();
     req.body().read_to_string(&mut body)?;
 
-    let conn = &*req.db_conn()?;
-
     let crate_invite: OwnerInvitation =
         serde_json::from_str(&body).map_err(|_| bad_request("invalid json request"))?;
 
     let crate_invite = crate_invite.crate_owner_invite;
-    let user_id = req.authenticate(conn)?.user_id();
+    let user_id = req.authenticate()?.user_id();
+    let conn = &*req.db_conn()?;
 
     if crate_invite.accepted {
         accept_invite(req, conn, crate_invite, user_id)
     } else {
-        decline_invite(req, conn, crate_invite)
+        decline_invite(req, conn, crate_invite, user_id)
     }
 }
 
@@ -113,10 +112,10 @@ fn decline_invite(
     req: &dyn RequestExt,
     conn: &PgConnection,
     crate_invite: InvitationResponse,
+    user_id: i32,
 ) -> EndpointResult {
     use diesel::delete;
 
-    let user_id = req.authenticate(conn)?.user_id();
     delete(crate_owner_invitations::table.find((user_id, crate_invite.crate_id))).execute(conn)?;
 
     #[derive(Serialize)]

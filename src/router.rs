@@ -5,7 +5,7 @@ use conduit_router::{RequestParams, RouteBuilder};
 
 use crate::controllers::*;
 use crate::util::errors::{std_error, AppError, NotFound};
-use crate::util::{EndpointResult, RequestProxy};
+use crate::util::EndpointResult;
 use crate::{App, Env};
 
 pub fn build_router(app: &App) -> R404 {
@@ -160,9 +160,9 @@ struct R<H>(pub Arc<H>);
 
 impl<H: Handler> Handler for R<H> {
     fn call(&self, req: &mut dyn RequestExt) -> HandlerResult {
-        let path = req.params()["path"].to_string();
+        *req.path_mut() = req.params()["path"].to_string();
         let R(ref sub_router) = *self;
-        sub_router.call(&mut RequestProxy::rewrite_path(req, &path))
+        sub_router.call(req)
     }
 }
 
@@ -178,7 +178,7 @@ impl Handler for R404 {
                 req.mut_extensions().insert(m.params.clone());
                 m.handler.call(req)
             }
-            Err(..) => Ok(NotFound.response().unwrap()),
+            Err(..) => Ok(NotFound.into()),
         }
     }
 }
@@ -187,7 +187,7 @@ impl Handler for R404 {
 mod tests {
     use super::*;
     use crate::util::errors::{
-        bad_request, cargo_err, internal, AppError, ChainError, NotFound, Unauthorized,
+        bad_request, cargo_err, forbidden, internal, not_found, AppError, ChainError,
     };
     use crate::util::EndpointResult;
 
@@ -209,7 +209,7 @@ mod tests {
             StatusCode::BAD_REQUEST
         );
         assert_eq!(
-            C(|_| err(Unauthorized)).call(&mut req).unwrap().status(),
+            C(|_| Err(forbidden())).call(&mut req).unwrap().status(),
             StatusCode::FORBIDDEN
         );
         assert_eq!(
@@ -220,7 +220,7 @@ mod tests {
             StatusCode::NOT_FOUND
         );
         assert_eq!(
-            C(|_| err(NotFound)).call(&mut req).unwrap().status(),
+            C(|_| Err(not_found())).call(&mut req).unwrap().status(),
             StatusCode::NOT_FOUND
         );
 

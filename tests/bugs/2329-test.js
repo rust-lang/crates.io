@@ -2,7 +2,8 @@ import { currentURL, click, waitFor } from '@ember/test-helpers';
 import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
-import window, { setupWindowMock } from 'ember-window-mock';
+import window from 'ember-window-mock';
+import { setupWindowMock } from 'ember-window-mock/test-support';
 
 import setupMirage from '../helpers/setup-mirage';
 import { visit } from '../helpers/visit-ignoring-abort';

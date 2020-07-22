@@ -1,5 +1,6 @@
-import Component from '@ember/component';
+import { action } from '@ember/object';
 import { inject as service } from '@ember/service';
+import Component from '@glimmer/component';
 
 import { task } from 'ember-concurrency';
 
@@ -8,35 +9,42 @@ import { ignoreCancellation } from '../utils/concurrency';
 // Colors by http://colorbrewer2.org/#type=diverging&scheme=RdBu&n=10
 const COLORS = ['#67001f', '#b2182b', '#d6604d', '#f4a582', '#92c5de', '#4393c3', '#2166ac', '#053061'];
 
-export default Component.extend({
-  googleCharts: service(),
+export default class DownloadGraph extends Component {
+  @service googleCharts;
 
-  resizeHandler: undefined,
+  resizeHandler = () => this.renderChart();
 
-  didInsertElement() {
-    this._super(...arguments);
+  constructor() {
+    super(...arguments);
 
     this.loadTask.perform().catch(ignoreCancellation);
 
-    this.resizeHandler = () => this.rerender();
     window.addEventListener('resize', this.resizeHandler, false);
-  },
+  }
 
-  willDestroyElement() {
+  willDestroy() {
     window.removeEventListener('resize', this.resizeHandler);
-  },
+  }
 
-  loadTask: task(function* () {
+  @task(function* () {
     if (!this.googleCharts.loaded) {
       yield this.googleCharts.load();
-      this.rerender();
+      this.renderChart();
     }
-  }),
+  })
+  loadTask;
 
-  didRender() {
-    this._super(...arguments);
+  @action
+  renderChart(element) {
+    if (element) {
+      this.chartElement = element;
+    } else if (this.chartElement) {
+      element = this.chartElement;
+    } else {
+      return;
+    }
 
-    let data = this.data;
+    let data = this.args.data;
 
     let subarray_length = (data[1] || []).length;
 
@@ -86,7 +94,7 @@ export default Component.extend({
     let { loaded, visualization } = this.googleCharts;
 
     let show = data && loaded;
-    this.element.style.display = show ? '' : 'none';
+    element.style.display = show ? '' : 'none';
     if (!show) {
       return;
     }
@@ -165,7 +173,7 @@ export default Component.extend({
     });
     view.setColumns(columns);
 
-    let chart = new visualization.ComboChart(this.element);
+    let chart = new visualization.ComboChart(element);
     chart.draw(view, {
       chartArea: { left: 85, width: '77%', height: '80%' },
       hAxis: {
@@ -180,8 +188,8 @@ export default Component.extend({
       seriesType: 'scatter',
       series: seriesOption,
     });
-  },
-});
+  }
+}
 
 function range(start, end, step) {
   let array = [];

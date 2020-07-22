@@ -21,6 +21,7 @@ mod ensure_well_formed_500;
 mod head;
 mod log_connection_pool_status;
 pub mod log_request;
+mod normalize_path;
 mod require_user_agent;
 mod static_or_continue;
 
@@ -57,12 +58,13 @@ pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
         m.add(LogConnectionPoolStatus::new(&app));
     }
 
+    m.add(normalize_path::NormalizePath);
     m.add(ConditionalGet);
 
     m.add(Cookie::new());
     m.add(SessionMiddleware::new(
         "cargo_session",
-        cookie::Key::from_master(app.session_key.as_bytes()),
+        cookie::Key::derive_from(app.session_key.as_bytes()),
         env == Env::Production,
     ));
 

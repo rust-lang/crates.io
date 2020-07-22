@@ -22,16 +22,20 @@
   </div>
 
   <div local-class='stats'>
-    <div local-class='downloads'>
-      {{svg-jar "download"}}
-      <span local-class='num' data-test-total-downloads>{{if this.hasData (format-num this.model.num_downloads) "---,---,---"}}</span>
-      <span local-class="stats-label">Downloads</span>
-    </div>
-    <div local-class='crates'>
-      {{svg-jar "crate"}}
-      <span local-class='num' data-test-total-crates>{{if this.hasData (format-num this.model.num_crates) "---,---"}}</span>
-      <span local-class="stats-label">Crates in stock</span>
-    </div>
+    <StatsValue
+      @label="Downloads"
+      @value={{if this.hasData (format-num this.model.num_downloads) "---,---,---"}}
+      @icon="file-archive"
+      local-class="downloads"
+      data-test-total-downloads
+    />
+    <StatsValue
+      @label="Crates in stock"
+      @value={{if this.hasData (format-num this.model.num_crates) "---,---"}}
+      @icon="box"
+      local-class="crates"
+      data-test-total-crates
+    />
   </div>
 </div>
 

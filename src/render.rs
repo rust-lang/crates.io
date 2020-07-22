@@ -57,15 +57,23 @@ impl<'a> MarkdownRenderer<'a> {
 
     /// Renders the given markdown to HTML using the current settings.
     fn to_html(&self, text: &str) -> String {
-        let options = comrak::ComrakOptions {
-            unsafe_: true, // The output will be sanitized with `ammonia`
-            ext_autolink: true,
-            ext_strikethrough: true,
-            ext_table: true,
-            ext_tagfilter: true,
-            ext_tasklist: true,
-            ext_header_ids: Some("user-content-".to_string()),
-            ..comrak::ComrakOptions::default()
+        use comrak::{ComrakExtensionOptions, ComrakOptions, ComrakRenderOptions};
+
+        let options = ComrakOptions {
+            render: ComrakRenderOptions {
+                unsafe_: true, // The output will be sanitized with `ammonia`
+                ..ComrakRenderOptions::default()
+            },
+            extension: ComrakExtensionOptions {
+                autolink: true,
+                strikethrough: true,
+                table: true,
+                tagfilter: true,
+                tasklist: true,
+                header_ids: Some("user-content-".to_string()),
+                ..ComrakExtensionOptions::default()
+            },
+            ..ComrakOptions::default()
         };
         let rendered = comrak::markdown_to_html(text, &options);
         self.html_sanitizer.clean(&rendered).to_string()
@@ -152,11 +160,7 @@ impl UrlRelativeEvaluate for SanitizeUrl {
                 is_media,
                 add_sanitize_query,
             } = is_media_url(url);
-            new_url += if is_media {
-                "raw/master"
-            } else {
-                "blob/master"
-            };
+            new_url += if is_media { "raw/HEAD" } else { "blob/HEAD" };
             if !url.starts_with('/') {
                 new_url.push('/');
             }
@@ -357,7 +361,7 @@ mod tests {
                 assert_eq!(
                     result,
                     format!(
-                        "<p><a href=\"https://{}/rust-lang/test/blob/master/hi\" rel=\"nofollow noopener noreferrer\">hi</a></p>\n",
+                        "<p><a href=\"https://{}/rust-lang/test/blob/HEAD/hi\" rel=\"nofollow noopener noreferrer\">hi</a></p>\n",
                         host
                     )
                 );
@@ -366,7 +370,7 @@ mod tests {
                 assert_eq!(
                     result,
                     format!(
-                        "<p><a href=\"https://{}/rust-lang/test/blob/master/there\" rel=\"nofollow noopener noreferrer\">there</a></p>\n",
+                        "<p><a href=\"https://{}/rust-lang/test/blob/HEAD/there\" rel=\"nofollow noopener noreferrer\">there</a></p>\n",
                         host
                     )
                 );
@@ -375,7 +379,7 @@ mod tests {
                 assert_eq!(
                     result,
                     format!(
-                 "<p><img src=\"https://{}/rust-lang/test/raw/master/img.png\" alt=\"alt\"></p>\n",
+                        "<p><img src=\"https://{}/rust-lang/test/raw/HEAD/img.png\" alt=\"alt\"></p>\n",
                         host
                     )
                 );
@@ -384,7 +388,7 @@ mod tests {
                 assert_eq!(
                     result,
                     format!(
-                        "<p><img src=\"https://{}/rust-lang/test/raw/master/sanitize.svg?sanitize=true\" alt=\"alt\"></p>\n",
+                        "<p><img src=\"https://{}/rust-lang/test/raw/HEAD/sanitize.svg?sanitize=true\" alt=\"alt\"></p>\n",
                         host
                     )
                 );
