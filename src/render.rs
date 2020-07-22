@@ -1,6 +1,7 @@
 //! Render README files to HTML.
 
 use ammonia::{Builder, UrlRelative, UrlRelativeEvaluate};
+use comrak::nodes::{AstNode, NodeValue};
 use htmlescape::encode_minimal;
 use std::borrow::Cow;
 use std::path::Path;
@@ -38,6 +39,7 @@ impl<'a> MarkdownRenderer<'a> {
                 "language-rust",
                 "language-scss",
                 "language-sql",
+                "language-toml",
                 "yaml",
             ]),
         )]);
@@ -57,7 +59,10 @@ impl<'a> MarkdownRenderer<'a> {
 
     /// Renders the given markdown to HTML using the current settings.
     fn to_html(&self, text: &str) -> String {
-        use comrak::{ComrakExtensionOptions, ComrakOptions, ComrakRenderOptions};
+        use comrak::{
+            format_html, parse_document, Arena, ComrakExtensionOptions, ComrakOptions,
+            ComrakRenderOptions,
+        };
 
         let options = ComrakOptions {
             render: ComrakRenderOptions {
@@ -75,8 +80,39 @@ impl<'a> MarkdownRenderer<'a> {
             },
             ..ComrakOptions::default()
         };
-        let rendered = comrak::markdown_to_html(text, &options);
+
+        let arena = Arena::new();
+        let root = parse_document(&arena, text, &options);
+
+        // Tweak annotations of code blocks.
+        iter_nodes(root, &|node| {
+            if let NodeValue::CodeBlock(ref mut ncb) = node.data.borrow_mut().value {
+                // If annot includes invalid UTF-8 char, do nothing.
+                if let Ok(mut orig_annot) = String::from_utf8(ncb.info.to_vec()) {
+                    // Ignore characters after a comma for syntax highlighting to work correctly.
+                    if let Some(offset) = orig_annot.find(',') {
+                        let _ = orig_annot.drain(offset..orig_annot.len());
+                        ncb.info = orig_annot.as_bytes().to_vec();
+                    }
+                }
+            }
+        });
+
+        let mut html = Vec::new();
+        format_html(root, &options, &mut html).unwrap();
+        let rendered = String::from_utf8(html).unwrap();
         self.html_sanitizer.clean(&rendered).to_string()
+    }
+}
+
+/// Iterate the nodes in the CommonMark AST, used in comrak.
+fn iter_nodes<'a, F>(node: &'a AstNode<'a>, f: &F)
+where
+    F: Fn(&'a AstNode<'a>),
+{
+    f(node);
+    for c in node.children() {
+        iter_nodes(c, f);
     }
 }
 
@@ -117,7 +153,7 @@ struct MediaUrl {
     add_sanitize_query: bool,
 }
 
-/// Determine whether the given URL has a media file externsion.
+/// Determine whether the given URL has a media file extension.
 /// Also check if `sanitize=true` must be added to the query string,
 /// which is required to load SVGs properly from GitHub.
 fn is_media_url(url: &str) -> MediaUrl {
@@ -328,6 +364,15 @@ mod tests {
     #[test]
     fn code_block_with_syntax_highlighting() {
         let code_block = r#"```rust \
+                            println!("Hello World"); \
+                           ```"#;
+        let result = markdown_to_html(code_block, None);
+        assert!(result.contains("<code class=\"language-rust\">"));
+    }
+
+    #[test]
+    fn code_block_with_syntax_highlighting_even_if_annot_has_no_run() {
+        let code_block = r#"```rust  ,  no_run \
                             println!("Hello World"); \
                            ```"#;
         let result = markdown_to_html(code_block, None);
