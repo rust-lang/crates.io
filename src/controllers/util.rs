@@ -6,6 +6,7 @@ use crate::models::{ApiToken, User};
 use crate::util::errors::{
     forbidden, internal, AppError, AppResult, ChainError, InsecurelyGeneratedTokenRevoked,
 };
+use conduit::Host;
 
 #[derive(Debug)]
 pub struct AuthenticatedUser {
@@ -28,33 +29,50 @@ impl AuthenticatedUser {
     }
 }
 
+// The Origin header (https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Origin)
+// is sent with CORS requests and POST requests, and indicates where the request comes from.
+// We don't want to accept authenticated requests that originated from other sites, so this
+// function returns an error if the Origin header doesn't match what we expect "this site" to
+// be: https://crates.io in production, or http://localhost:port/ in development.
+fn verify_origin(req: &dyn RequestExt) -> AppResult<()> {
+    let headers = req.headers();
+    // If x-forwarded-host and -proto are present, trust those to tell us what the proto and host
+    // are; otherwise (in local dev) trust the Host header and the scheme.
+    let forwarded_host = headers.get("x-forwarded-host");
+    let forwarded_proto = headers.get("x-forwarded-proto");
+    let expected_origin = match (forwarded_host, forwarded_proto) {
+        (Some(host), Some(proto)) => format!(
+            "{}://{}",
+            proto.to_str().unwrap_or_default(),
+            host.to_str().unwrap_or_default()
+        ),
+        // For the default case we assume HTTP, because we know we're not serving behind a reverse
+        // proxy, and we also know that crates by itself doesn't serve HTTPS.
+        _ => match req.host() {
+            Host::Name(a) => format!("http://{}", a),
+            Host::Socket(a) => format!("http://{}", a.to_string()),
+        },
+    };
+
+    let bad_origin = headers
+        .get_all(header::ORIGIN)
+        .iter()
+        .find(|h| h.to_str().unwrap_or_default() != expected_origin);
+    if let Some(bad_origin) = bad_origin {
+        let error_message = format!(
+            "only same-origin requests can be authenticated. expected {}, got {:?}",
+            expected_origin, bad_origin
+        );
+        return Err(internal(&error_message))
+            .chain_error(|| Box::new(forbidden()) as Box<dyn AppError>);
+    }
+    Ok(())
+}
+
 impl<'a> UserAuthenticationExt for dyn RequestExt + 'a {
     /// Obtain `AuthenticatedUser` for the request or return an `Forbidden` error
     fn authenticate(&mut self) -> AppResult<AuthenticatedUser> {
-        let forwarded_host = self.headers().get("x-forwarded-host");
-        let forwarded_proto = self.headers().get("x-forwarded-proto");
-        let expected_origin = match (forwarded_host, forwarded_proto) {
-            (Some(host), Some(proto)) => format!(
-                "{}://{}",
-                proto.to_str().unwrap_or_default(),
-                host.to_str().unwrap_or_default()
-            ),
-            _ => "".to_string(),
-        };
-
-        let bad_origin = self
-            .headers()
-            .get_all(header::ORIGIN)
-            .iter()
-            .find(|h| h.to_str().unwrap_or_default() != expected_origin);
-        if let Some(bad_origin) = bad_origin {
-            let error_message = format!(
-                "only same-origin requests can be authenticated. expected {}, got {:?}",
-                expected_origin, bad_origin
-            );
-            return Err(internal(&error_message))
-                .chain_error(|| Box::new(forbidden()) as Box<dyn AppError>);
-        }
+        verify_origin(self)?;
         if let Some(id) = self.extensions().find::<TrustedUserId>().map(|x| x.0) {
             log_request::add_custom_metadata(self, "uid", id);
             Ok(AuthenticatedUser {
