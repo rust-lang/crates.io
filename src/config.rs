@@ -17,6 +17,7 @@ pub struct Config {
     pub publish_rate_limit: PublishRateLimit,
     pub blocked_traffic: Vec<(String, Vec<String>)>,
     pub domain_name: String,
+    pub allowed_origins: Vec<String>,
 }
 
 impl Default for Config {
@@ -121,6 +122,10 @@ impl Default for Config {
                 }
             }
         };
+        let allowed_origins = env("WEB_ALLOWED_ORIGINS")
+            .split(',')
+            .map(ToString::to_string)
+            .collect();
         Config {
             uploader,
             session_key: env("SESSION_KEY"),
@@ -136,6 +141,7 @@ impl Default for Config {
             publish_rate_limit: Default::default(),
             blocked_traffic: blocked_traffic(),
             domain_name: domain_name(),
+            allowed_origins,
         }
     }
 }

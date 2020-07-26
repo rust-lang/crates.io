@@ -6,7 +6,6 @@ use crate::models::{ApiToken, User};
 use crate::util::errors::{
     forbidden, internal, AppError, AppResult, ChainError, InsecurelyGeneratedTokenRevoked,
 };
-use conduit::Host;
 
 #[derive(Debug)]
 pub struct AuthenticatedUser {
@@ -36,32 +35,22 @@ impl AuthenticatedUser {
 // be: https://crates.io in production, or http://localhost:port/ in development.
 fn verify_origin(req: &dyn RequestExt) -> AppResult<()> {
     let headers = req.headers();
-    // If x-forwarded-host and -proto are present, trust those to tell us what the proto and host
-    // are; otherwise (in local dev) trust the Host header and the scheme.
-    let forwarded_host = headers.get("x-forwarded-host");
-    let forwarded_proto = headers.get("x-forwarded-proto");
-    let expected_origin = match (forwarded_host, forwarded_proto) {
-        (Some(host), Some(proto)) => format!(
-            "{}://{}",
-            proto.to_str().unwrap_or_default(),
-            host.to_str().unwrap_or_default()
-        ),
-        // For the default case we assume HTTP, because we know we're not serving behind a reverse
-        // proxy, and we also know that crates by itself doesn't serve HTTPS.
-        _ => match req.host() {
-            Host::Name(a) => format!("http://{}", a),
-            Host::Socket(a) => format!("http://{}", a.to_string()),
-        },
-    };
+    let allowed_origins = req
+        .app()
+        .config
+        .allowed_origins
+        .iter()
+        .map(|s| &**s)
+        .collect::<Vec<_>>();
 
     let bad_origin = headers
         .get_all(header::ORIGIN)
         .iter()
-        .find(|h| h.to_str().unwrap_or_default() != expected_origin);
+        .find(|h| !allowed_origins.contains(&h.to_str().unwrap_or_default()));
     if let Some(bad_origin) = bad_origin {
         let error_message = format!(
-            "only same-origin requests can be authenticated. expected {}, got {:?}",
-            expected_origin, bad_origin
+            "only same-origin requests can be authenticated. got {:?}",
+            bad_origin
         );
         return Err(internal(&error_message))
             .chain_error(|| Box::new(forbidden()) as Box<dyn AppError>);
