@@ -145,6 +145,7 @@ fn simple_config() -> Config {
         publish_rate_limit: Default::default(),
         blocked_traffic: Default::default(),
         domain_name: "crates.io".into(),
+        allowed_origins: Vec::new(),
     }
 }
 
