@@ -349,6 +349,12 @@ description = """
 Bindings to operating system-specific APIs.\
 """
 
+[os.categories.linux-apis]
+name = "Linux APIs"
+description = """
+Bindings to Linux-specific APIs.\
+"""
+
 [os.categories.macos-apis]
 name = "mac OS APIs"
 description = """
