@@ -350,9 +350,9 @@ Bindings to operating system-specific APIs.\
 """
 
 [os.categories.macos-apis]
-name = "mac OS APIs"
+name = "macOS APIs"
 description = """
-Bindings to mac OS-specific APIs.\
+Bindings to macOS-specific APIs.\
 """
 
 [os.categories.unix-apis]
