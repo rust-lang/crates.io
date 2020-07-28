@@ -108,7 +108,8 @@ fn send_email(recipient: &str, subject: &str, body: &str) -> AppResult<()> {
 
     match mailgun_config {
         Some(mailgun_config) => {
-            let transport = SmtpTransport::relay(&mailgun_config.smtp_server).unwrap()
+            let transport = SmtpTransport::relay(&mailgun_config.smtp_server)
+                .unwrap()
                 .credentials(Credentials::new(
                     mailgun_config.smtp_login,
                     mailgun_config.smtp_password,
