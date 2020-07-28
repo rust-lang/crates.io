@@ -596,6 +596,7 @@ where
     }
 
     /// Assert that the response is good and deserialize the message
+    #[track_caller]
     pub fn good(mut self) -> T {
         if !self.response.status().is_success() {
             panic!("bad response: {:?}", self.response.status());
@@ -610,6 +611,7 @@ where
     /// Assert the response status code and deserialze into a list of errors
     ///
     /// Cargo endpoints return a status 200 on error instead of 400.
+    #[track_caller]
     pub fn bad_with_status(&mut self, expected: StatusCode) -> Bad {
         assert_eq!(self.response.status(), expected);
         match crate::bad_resp(&mut self.response) {
@@ -618,11 +620,13 @@ where
         }
     }
 
+    #[track_caller]
     pub fn assert_status(&self, status: StatusCode) -> &Self {
         assert_eq!(status, self.response.status());
         self
     }
 
+    #[track_caller]
     pub fn assert_redirect_ends_with(&self, target: &str) -> &Self {
         assert!(self
             .response
@@ -638,11 +642,13 @@ where
 
 impl Response<()> {
     /// Assert that the status code is 404
+    #[track_caller]
     pub fn assert_not_found(&self) {
         assert_eq!(StatusCode::NOT_FOUND, self.response.status());
     }
 
     /// Assert that the status code is 403
+    #[track_caller]
     pub fn assert_forbidden(&self) {
         assert_eq!(StatusCode::FORBIDDEN, self.response.status());
     }
