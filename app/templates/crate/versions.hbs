@@ -17,14 +17,13 @@
           <span local-class='yanked'>yanked</span>
         {{/if}}
       </div>
-      <div>
-        {{#if this.isOwner}}
-          <YankButton @version={{version}} />
-        {{/if}}
+      {{#if this.isOwner}}
+        <YankButton @version={{version}} />
+      {{else}}
         <LinkTo @route="crate.version" @model={{version.num}} local-class="arrow">
           {{svg-jar "right-arrow"}}
         </LinkTo>
-      </div>
+      {{/if}}
     </div>
   {{/each}}
 </div>

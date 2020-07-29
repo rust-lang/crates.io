@@ -6,6 +6,9 @@
       {{svg-jar "crate" local-class='crate-icon'}}
       <h1 data-test-crate-name>{{ this.crate.name }}</h1>
       <h2 data-test-crate-version>{{ this.currentVersion.num }}</h2>
+      {{#if this.isOwner }}
+        <YankButton @version={{this.currentVersion}} />
+      {{/if}}
     </div>
 
     {{#if this.session.currentUser}}
@@ -163,17 +166,13 @@
           <h3>Versions</h3>
           <ul>
             {{#each this.smallSortedVersions as |version|}}
-              <li local-class="version">
+              <li>
                 <LinkTo @route="crate.version" @model={{version.num}} data-test-version-link={{version.num}}>
                   {{ version.num }}
                 </LinkTo>
                 {{moment-format version.created_at 'll'}}
-                {{#if this.isOwner}}
-                  <YankButton @version={{version}}/>
-                {{else}}
-                  {{#if version.yanked}}
-                    <span local-class='yanked'>yanked</span>
-                  {{/if}}
+                {{#if version.yanked}}
+                  <span local-class='yanked'>yanked</span>
                 {{/if}}
               </li>
             {{/each}}
