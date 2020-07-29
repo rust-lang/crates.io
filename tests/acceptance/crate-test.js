@@ -225,7 +225,7 @@ module('Acceptance | crate page', function (hooks) {
     let user = this.server.schema.users.findBy({ login: 'thehydroimpulse' });
     this.authenticateAs(user);
 
-    await visit('/crates/nanomsg');
+    await visit('/crates/nanomsg/0.5.0');
     await click('[data-test-version-yank-button="0.5.0"]');
     assert.dom('[data-test-version-yank-button="0.5.0"]').hasText('Yanking...');
     assert.dom('[data-test-version-yank-button="0.5.0"]').isDisabled();
