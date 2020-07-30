@@ -7,7 +7,7 @@
       <h1 data-test-crate-name>{{ this.crate.name }}</h1>
       <h2 data-test-crate-version>{{ this.currentVersion.num }}</h2>
       {{#if this.isOwner }}
-        <YankButton @version={{this.currentVersion}} />
+        <YankButton @version={{this.currentVersion}} @tan={{true}} />
       {{/if}}
     </div>
 

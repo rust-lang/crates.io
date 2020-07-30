@@ -1,7 +1,7 @@
 {{#if @version.yanked}}
   <button
     type="button"
-    local-class="button"
+    local-class="{{this.localClass}}"
     ...attributes
     data-test-version-unyank-button={{@version.num}}
     disabled={{@version.unyankTask.isRunning}}
@@ -16,7 +16,7 @@
 {{else}}
   <button
     type="button"
-    local-class="button"
+    local-class="{{this.localClass}}"
     ...attributes
     data-test-version-yank-button={{@version.num}}
     disabled={{@version.yankTask.isRunning}}
