@@ -21,6 +21,7 @@
 
 .hero-button {
     composes: yellow-button from '../styles/shared/buttons.module.css';
+    vertical-align: initial;
 }
 
 .blurb {
