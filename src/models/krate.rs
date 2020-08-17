@@ -319,6 +319,17 @@ impl Crate {
         Ok(users.chain(teams).collect())
     }
 
+    pub fn owners_with_notification_email(&self, conn: &PgConnection) -> QueryResult<Vec<String>> {
+        CrateOwner::by_owner_kind(OwnerKind::User)
+            .filter(crate_owners::crate_id.eq(self.id))
+            .filter(crate_owners::email_notifications.eq(true))
+            .inner_join(emails::table.on(crate_owners::owner_id.eq(emails::user_id)))
+            .filter(emails::verified.eq(true))
+            .select(emails::email)
+            .distinct()
+            .load(conn)
+    }
+
     pub fn owner_add(
         &self,
         app: &App,

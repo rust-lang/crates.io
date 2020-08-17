@@ -83,6 +83,25 @@ impl MockCookieUser {
     fn list_invitations(&self) -> InvitationListResponse {
         self.get("/api/v1/me/crate_owner_invitations").good()
     }
+
+    fn set_email_notifications(&self, krate_id: i32, email_notifications: bool) {
+        let body = json!([
+            {
+                "id": krate_id,
+                "email_notifications": email_notifications,
+            }
+        ]);
+
+        #[derive(Deserialize)]
+        struct Empty {}
+
+        let _: Empty = self
+            .put(
+                "/api/v1/me/email_notifications",
+                body.to_string().as_bytes(),
+            )
+            .good();
+    }
 }
 
 impl MockAnonymousUser {
@@ -509,4 +528,41 @@ fn extract_token_from_invite_email(emails: &Emails) -> String {
     let before_pos = body.find(before_token).unwrap() + before_token.len();
     let after_pos = before_pos + (&body[before_pos..]).find(after_token).unwrap();
     body[before_pos..after_pos].to_string()
+}
+
+#[test]
+fn test_list_owners_with_notification_email() {
+    let (app, _, owner, owner_token) = TestApp::init().with_token();
+    let owner = owner.as_model();
+
+    let krate_name = "notification_crate";
+    let user_name = "notification_user";
+
+    let new_user = app.db_new_user(user_name);
+    let krate = app.db(|conn| CrateBuilder::new(krate_name, owner.id).expect_build(conn));
+
+    // crate author gets notified
+    let (owners_notification, email) = app.db(|conn| {
+        let owners_notification = krate.owners_with_notification_email(conn).unwrap();
+        let email = owner.verified_email(conn).unwrap().unwrap();
+        (owners_notification, email)
+    });
+    assert_eq!(owners_notification, [email.clone()]);
+
+    // crate author and the new crate owner get notified
+    owner_token.add_named_owner(krate_name, user_name).good();
+    new_user.accept_ownership_invitation(&krate.name, krate.id);
+
+    let (owners_notification, new_user_email) = app.db(|conn| {
+        let new_user_email = new_user.as_model().verified_email(conn).unwrap().unwrap();
+        let owners_notification = krate.owners_with_notification_email(conn).unwrap();
+        (owners_notification, new_user_email)
+    });
+    assert_eq!(owners_notification, [email.clone(), new_user_email]);
+
+    // crate owners who disabled notifications don't get notified
+    new_user.set_email_notifications(krate.id, false);
+
+    let owners_notification = app.db(|conn| krate.owners_with_notification_email(conn).unwrap());
+    assert_eq!(owners_notification, [email]);
 }

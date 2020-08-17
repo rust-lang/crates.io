@@ -204,7 +204,8 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
 
         let hex_cksum = cksum.encode_hex::<String>();
 
-        // Register this crate in our local git repo.
+        // Register this crate in our local git repo and send notification emails
+        // to owners who haven't opted out of them.
         let git_crate = git::Crate {
             name: name.0,
             vers: vers.to_string(),
@@ -214,7 +215,8 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
             yanked: Some(false),
             links,
         };
-        git::add_crate(git_crate).enqueue(&conn)?;
+        let emails = krate.owners_with_notification_email(&conn)?;
+        git::add_crate(git_crate, emails, user.name, verified_email_address).enqueue(&conn)?;
 
         // The `other` field on `PublishWarnings` was introduced to handle a temporary warning
         // that is no longer needed. As such, crates.io currently does not return any `other`

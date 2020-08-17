@@ -6,9 +6,9 @@ use diesel::r2d2::PoolError;
 use swirl::PerformError;
 
 use crate::db::{DieselPool, DieselPooledConn};
+use crate::email::Emails;
 use crate::git::Repository;
 use crate::uploaders::Uploader;
-use crate::email::Emails;
 
 impl<'a> swirl::db::BorrowedConnection<'a> for DieselPool {
     type Connection = DieselPooledConn<'a>;
@@ -43,7 +43,12 @@ impl Clone for Environment {
 
 impl Environment {
     pub fn new(index: Repository, uploader: Uploader, http_client: Client, emails: Emails) -> Self {
-        Self::new_shared(Arc::new(Mutex::new(index)), uploader, http_client, Arc::new(emails))
+        Self::new_shared(
+            Arc::new(Mutex::new(index)),
+            uploader,
+            http_client,
+            Arc::new(emails),
+        )
     }
 
     pub fn new_shared(

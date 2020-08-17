@@ -61,7 +61,7 @@ https://{}/confirm/{}",
             token
         );
 
-        self.send(email, subject, &body)
+        self.send(&[email], subject, &body)
     }
 
     /// Attempts to send an ownership invitation.
@@ -83,7 +83,45 @@ or go to https://{domain}/me/pending-invites to manage all of your crate ownersh
             domain = crate::config::domain_name()
         );
 
-        self.send(email, subject, &body)
+        self.send(&[email], subject, &body)
+    }
+
+    /// Attempts to send a new crate version published notification to crate owners.
+    pub fn notify_owners(
+        &self,
+        emails: &[&str],
+        crate_name: &str,
+        crate_version: &str,
+        publisher_name: Option<&str>,
+        publisher_email: &str,
+    ) -> AppResult<()> {
+        let subject = format!(
+            "Crate {} ({}) published to {}",
+            crate_name,
+            crate_version,
+            crate::config::domain_name()
+        );
+        let body = format!(
+            "A crate you have publish access to has recently released a new version.
+Crate: {} ({})
+Published by: {} <{}>
+Published at: {}
+If this publish is expected, you do not need to take further action.
+Only if this publish is unexpected, please take immediate steps to secure your account:
+* If you suspect your GitHub account was compromised, change your password
+* Revoke your API Token
+* Yank the version of the crate reported in this email
+* Report this incident to RustSec https://rustsec.org
+To stop receiving these messages, update your email notification settings at https://{domain}/me",
+            crate_name,
+            crate_version,
+            publisher_name.unwrap_or("(unknown username)"),
+            publisher_email,
+            chrono::Utc::now().to_rfc2822(),
+            domain = crate::config::domain_name()
+        );
+
+        self.send(emails, &subject, &body)
     }
 
     /// This is supposed to be used only during tests, to retrieve the messages stored in the
@@ -96,9 +134,19 @@ or go to https://{domain}/me/pending-invites to manage all of your crate ownersh
         }
     }
 
-    fn send(&self, recipient: &str, subject: &str, body: &str) -> AppResult<()> {
-        let email = Message::builder()
-            .to(recipient.parse()?)
+    fn send(&self, recipients: &[&str], subject: &str, body: &str) -> AppResult<()> {
+        let mut recipients_iter = recipients.iter();
+
+        let mut builder = Message::builder();
+        let to = recipients_iter
+            .next()
+            .ok_or_else(|| server_error("Email has no recipients"))?;
+        builder = builder.to(to.parse()?);
+        for bcc in recipients_iter {
+            builder = builder.bcc(bcc.parse()?);
+        }
+
+        let email = builder
             .from(self.sender_address().parse()?)
             .subject(subject)
             .body(body.to_string())?;
@@ -122,7 +170,12 @@ or go to https://{domain}/me/pending-invites to manage all of your crate ownersh
                     .map_err(|_| server_error("Email file could not be generated"))?;
             }
             EmailBackend::Memory { mails } => mails.lock().unwrap().push(StoredEmail {
-                to: recipient.into(),
+                to: to.to_string(),
+                bcc: recipients
+                    .iter()
+                    .skip(1)
+                    .map(|address| address.to_string())
+                    .collect(),
                 subject: subject.into(),
                 body: body.into(),
             }),
@@ -176,6 +229,7 @@ impl std::fmt::Debug for EmailBackend {
 #[derive(Debug, Clone)]
 pub struct StoredEmail {
     pub to: String,
+    pub bcc: Vec<String>,
     pub subject: String,
     pub body: String,
 }
@@ -189,7 +243,7 @@ mod tests {
         let emails = Emails::new_in_memory();
 
         assert_err!(emails.send(
-            "String.Format(\"{0}.{1}@live.com\", FirstName, LastName)",
+            &["String.Format(\"{0}.{1}@live.com\", FirstName, LastName)"],
             "test",
             "test",
         ));
@@ -199,6 +253,6 @@ mod tests {
     fn sending_to_valid_email_succeeds() {
         let emails = Emails::new_in_memory();
 
-        assert_ok!(emails.send("someone@example.com", "test", "test"));
+        assert_ok!(emails.send(&["someone@example.com"], "test", "test"));
     }
 }

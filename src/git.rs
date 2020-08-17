@@ -266,7 +266,13 @@ impl Repository {
 }
 
 #[swirl::background_job]
-pub fn add_crate(env: &Environment, krate: Crate) -> Result<(), PerformError> {
+pub fn add_crate(
+    env: &Environment,
+    krate: Crate,
+    owners_emails: Vec<String>,
+    publisher_name: Option<String>,
+    publisher_email: String,
+) -> Result<(), PerformError> {
     use std::io::prelude::*;
 
     let repo = env.lock_index()?;
@@ -279,8 +285,19 @@ pub fn add_crate(env: &Environment, krate: Crate) -> Result<(), PerformError> {
     file.write_all(b"\n")?;
 
     let message: String = format!("Updating crate `{}#{}`", krate.name, krate.vers);
+    repo.commit_and_push(&message, &repo.relative_index_file(&krate.name))?;
 
-    repo.commit_and_push(&message, &repo.relative_index_file(&krate.name))
+    // Notify crate owners of this new version being published
+    let emails = owners_emails.iter().map(AsRef::as_ref).collect::<Vec<_>>();
+    let _ = env.emails.notify_owners(
+        &emails,
+        &krate.name,
+        &krate.vers,
+        publisher_name.as_deref(),
+        &publisher_email,
+    );
+
+    Ok(())
 }
 
 /// Yanks or unyanks a crate version. This requires finding the index

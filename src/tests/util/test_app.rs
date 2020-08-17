@@ -100,7 +100,7 @@ impl TestApp {
         use diesel::prelude::*;
 
         let user = self.db(|conn| {
-            let email = "something@example.com";
+            let email = format!("something+{}@example.com", username);
 
             let user = crate::new_user(username)
                 .create_or_update(None, &self.0.app.emails, conn)

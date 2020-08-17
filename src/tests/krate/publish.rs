@@ -630,7 +630,7 @@ fn new_krate_records_verified_email() {
             .select(versions_published_by::email)
             .first(conn)
             .unwrap();
-        assert_eq!(email, "something@example.com");
+        assert_eq!(email, "something+foo@example.com");
     });
 }
 

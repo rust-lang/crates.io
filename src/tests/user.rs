@@ -464,7 +464,7 @@ fn test_email_get_and_put() {
     let (_app, _anon, user) = TestApp::init().with_user();
 
     let json = user.show_me();
-    assert_eq!(json.user.email.unwrap(), "something@example.com");
+    assert_eq!(json.user.email.unwrap(), "something+foo@example.com");
 
     user.update_email("mango@mangos.mango");
 
