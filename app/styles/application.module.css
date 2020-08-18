@@ -78,6 +78,18 @@ noscript {
     padding: 10px 0;
 }
 
+:global {
+    .c-notification__icon {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .c-notification__content {
+        line-height: 1.5;
+    }
+}
+
 .width-limit {
     width: 960px;
     @media only screen and (max-width: 960px) {

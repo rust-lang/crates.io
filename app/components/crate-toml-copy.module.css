@@ -6,20 +6,6 @@
         position: relative;
     }
 
-    .copy-notification {
-        font-size: 70%;
-        font-weight: bold;
-        position: absolute;
-
-        &.copy-success {
-            color: var(--link-color);
-        }
-
-        &.copy-failure {
-            color: red;
-        }
-    }
-
     &.inline {
         display: inline-block;
 
@@ -34,18 +20,6 @@
             svg {
                 height: 1rem;
                 width: 1rem;
-            }
-
-            .copy-notification {
-                top: -1.25rem;
-                left: 0;
-                padding: 0;
-                text-align: left;
-                width: 4rem;
-
-                &.copy-failure {
-                    width: 15rem;
-                }
             }
         }
     }
@@ -62,20 +36,6 @@
 
         button:hover {
             background: #edebdd;
-        }
-
-        .copy-notification {
-            &.copy-success {
-                width: 100%;
-                text-align: center;
-            }
-
-            &.copy-failure {
-                bottom: -2rem;
-                right: 0;
-                width: 18rem;
-                text-align: right;
-            }
         }
     }
 }

@@ -8,7 +8,7 @@ function isUnstableVersion(version) {
 }
 
 export default Route.extend({
-  flashMessages: service(),
+  notifications: service(),
 
   async model(params) {
     const requestedVersion = params.version_num;
@@ -48,7 +48,7 @@ export default Route.extend({
 
     const version = versions.find(version => version.num === params.version_num);
     if (params.version_num && !version) {
-      this.flashMessages.queue(`Version '${params.version_num}' of crate '${crate.name}' does not exist`);
+      this.notifications.error(`Version '${params.version_num}' of crate '${crate.name}' does not exist`);
     }
 
     return {

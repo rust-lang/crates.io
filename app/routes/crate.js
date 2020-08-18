@@ -2,14 +2,15 @@ import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
 export default Route.extend({
-  flashMessages: service(),
+  notifications: service(),
 
   async model(params) {
     try {
       return await this.store.find('crate', params.crate_id);
     } catch (e) {
       if (e.errors?.some(e => e.detail === 'Not Found')) {
-        this.flashMessages.show(`Crate '${params.crate_id}' does not exist`);
+        this.notifications.error(`Crate '${params.crate_id}' does not exist`);
+        this.replaceWith('index');
       } else {
         throw e;
       }

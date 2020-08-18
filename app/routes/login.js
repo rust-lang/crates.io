@@ -13,7 +13,7 @@ import * as localStorage from '../utils/local-storage';
  * @see `github-authorize` route
  */
 export default Route.extend({
-  flashMessages: service(),
+  notifications: service(),
   session: service(),
 
   beforeModel(transition) {
@@ -56,11 +56,10 @@ export default Route.extend({
 
       let { data } = response;
       if (data && data.errors) {
-        let error = `Failed to log in: ${data.errors[0].detail}`;
-        this.flashMessages.show(error);
+        this.notifications.error(`Failed to log in: ${data.errors[0].detail}`);
         return;
       } else if (!response.ok) {
-        this.flashMessages.show('Failed to log in');
+        this.notifications.error('Failed to log in');
         return;
       }
 

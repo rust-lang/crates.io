@@ -122,7 +122,7 @@ module('Acceptance | crate page', function (hooks) {
     assert.equal(currentURL(), '/crates/nanomsg/0.7.0');
     assert.dom('[data-test-heading] [data-test-crate-name]').hasText('nanomsg');
     assert.dom('[data-test-heading] [data-test-crate-version]').hasText('0.6.1');
-    assert.dom('[data-test-flash-message]').hasText("Version '0.7.0' of crate 'nanomsg' does not exist");
+    assert.dom('[data-test-notification-message]').hasText("Version '0.7.0' of crate 'nanomsg' does not exist");
   });
 
   test('navigating to the all versions page', async function (assert) {

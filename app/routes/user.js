@@ -2,7 +2,7 @@ import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
 export default Route.extend({
-  flashMessages: service(),
+  notifications: service(),
 
   queryParams: {
     page: { refreshModel: true },
@@ -21,7 +21,7 @@ export default Route.extend({
       return { crates, user };
     } catch (e) {
       if (e.errors.some(e => e.detail === 'Not Found')) {
-        this.flashMessages.queue(`User '${params.user_id}' does not exist`);
+        this.notifications.error(`User '${params.user_id}' does not exist`);
         return this.replaceWith('index');
       }
     }

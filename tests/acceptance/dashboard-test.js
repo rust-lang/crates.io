@@ -14,7 +14,7 @@ module('Acceptance | Dashboard', function (hooks) {
   test('redirects to / when not logged in', async function (assert) {
     await visit('/dashboard');
     assert.equal(currentURL(), '/');
-    assert.dom('[data-test-flash-message]').hasText('Please log in to proceed');
+    assert.dom('[data-test-notification-message]').hasText('Please log in to proceed');
   });
 
   test('shows the dashboard when logged in', async function (assert) {

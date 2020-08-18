@@ -37,7 +37,7 @@ module('Acceptance | /me/pending-invites', function (hooks) {
   test('redirects to / when not logged in', async function (assert) {
     await visit('/me/pending-invites');
     assert.equal(currentURL(), '/');
-    assert.dom('[data-test-flash-message]').hasText('Please log in to proceed');
+    assert.dom('[data-test-notification-message]').hasText('Please log in to proceed');
   });
 
   test('list all pending crate owner invites', async function (assert) {

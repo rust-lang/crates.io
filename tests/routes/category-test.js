@@ -12,7 +12,7 @@ module('Route | category', function (hooks) {
   test("shows an error message if the category can't be found", async function (assert) {
     await visit('/categories/unknown');
     assert.equal(currentURL(), '/');
-    assert.dom('[data-test-flash-message]').hasText("Category 'unknown' does not exist");
+    assert.dom('[data-test-notification-message]').hasText("Category 'unknown' does not exist");
   });
 
   test('server error causes the error page to be shown', async function (assert) {

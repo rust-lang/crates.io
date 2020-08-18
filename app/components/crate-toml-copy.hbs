@@ -5,14 +5,5 @@
     {{on "click" this.copy}}
   >
     {{svg-jar "copy" alt="Copy Cargo.toml snippet to clipboard"}}
-    {{#if this.showNotificationTask.isRunning}}
-      <div local-class="copy-notification {{if this.showSuccess "copy-success" "copy-failure"}}">
-        {{#if this.showSuccess}}
-          Copied!
-        {{else}}
-          An error occured. Please use CTRL+C.
-        {{/if}}
-      </div>
-    {{/if}}
   </button>
 </div>

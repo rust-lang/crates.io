@@ -1,7 +1,6 @@
 import Controller from '@ember/controller';
 import { computed } from '@ember/object';
 import { alias, sort, filterBy, notEmpty } from '@ember/object/computed';
-import { inject as service } from '@ember/service';
 import Ember from 'ember';
 
 import ajax from '../../utils/ajax';
@@ -11,8 +10,6 @@ export default Controller.extend({
   tokenSort: ['created_at:desc'],
 
   sortedTokens: sort('model.api_tokens', 'tokenSort'),
-
-  flashMessages: service(),
 
   isResetting: false,
 

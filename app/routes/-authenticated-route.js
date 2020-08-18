@@ -2,7 +2,7 @@ import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
 export default Route.extend({
-  flashMessages: service(),
+  notifications: service(),
   router: service(),
   session: service(),
 
@@ -12,7 +12,7 @@ export default Route.extend({
     let result = await this.session.loadUserTask.last;
 
     if (!result.currentUser) {
-      this.flashMessages.queue('Please log in to proceed');
+      this.notifications.error('Please log in to proceed');
       this.session.savedTransition = transition;
       this.router.transitionTo('index');
     }

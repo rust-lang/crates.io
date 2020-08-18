@@ -3,13 +3,12 @@
 {{page-title "crates.io: Rust Package Registry" separator=' - ' prepend=true}}
 
 <ProgressBar/>
+<NotificationContainer @position="top-right"/>
 
 <Header/>
 
 <main local-class="main">
   <div local-class="inner-main">
-    <FlashMessage @message={{this.flashMessages.message}} />
-
     {{outlet}}
   </div>
 </main>

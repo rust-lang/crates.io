@@ -41,6 +41,6 @@ module('Acceptance | Email Confirmation', function (hooks) {
   test('error case', async function (assert) {
     await visit('/confirm/badc0ffee');
     assert.equal(currentURL(), '/');
-    assert.dom('[data-test-flash-message]').hasText('Unknown error in email confirmation');
+    assert.dom('[data-test-notification-message]').hasText('Unknown error in email confirmation');
   });
 });
