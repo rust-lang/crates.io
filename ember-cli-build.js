@@ -5,6 +5,7 @@ const EmberApp = require('ember-cli/lib/broccoli/ember-app');
 module.exports = function (defaults) {
   const highlightedLanguages = [
     'bash',
+    'c',
     'clike',
     'glsl',
     'go',
