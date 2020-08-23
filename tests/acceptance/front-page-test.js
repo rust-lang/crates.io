@@ -2,8 +2,8 @@ import { currentURL, visit } from '@ember/test-helpers';
 import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
+import percySnapshot from '@percy/ember';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
-import { percySnapshot } from 'ember-percy';
 
 import axeConfig from '../axe-config';
 import { title } from '../helpers/dom';
@@ -46,6 +46,6 @@ module('Acceptance | front page', function (hooks) {
     assert.dom('[data-test-just-updated] [data-test-crate-link="0"]').hasText('nanomsg v0.6.1');
     assert.dom('[data-test-just-updated] [data-test-crate-link="0"]').hasAttribute('href', '/crates/nanomsg');
 
-    percySnapshot(assert);
+    await percySnapshot(assert);
   });
 });

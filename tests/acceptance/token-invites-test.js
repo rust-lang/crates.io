@@ -2,8 +2,8 @@ import { currentURL } from '@ember/test-helpers';
 import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
+import percySnapshot from '@percy/ember';
 import Response from 'ember-cli-mirage/response';
-import { percySnapshot } from 'ember-percy';
 
 import setupMirage from '../helpers/setup-mirage';
 import { visit } from '../helpers/visit-ignoring-abort';
@@ -53,6 +53,6 @@ module('Acceptance | /accept-invite/:token', function (hooks) {
         'Visit your dashboard to view all of your crates, or account settings to manage email notification preferences for all of your crates.',
       );
 
-    percySnapshot(assert);
+    await percySnapshot(assert);
   });
 });

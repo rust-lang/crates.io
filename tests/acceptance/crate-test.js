@@ -2,8 +2,8 @@ import { click, fillIn, currentURL, currentRouteName, visit } from '@ember/test-
 import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
+import percySnapshot from '@percy/ember';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
-import { percySnapshot } from 'ember-percy';
 
 import axeConfig from '../axe-config';
 import { title } from '../helpers/dom';
@@ -21,7 +21,7 @@ module('Acceptance | crate page', function (hooks) {
     this.server.create('version', { crateId: 'nanomsg', num: '0.6.1' });
 
     await visit('/crates/nanomsg');
-    percySnapshot(assert);
+    await percySnapshot(assert);
 
     await a11yAudit(axeConfig);
   });
@@ -34,7 +34,7 @@ module('Acceptance | crate page', function (hooks) {
     this.server.create('version', { crateId: 'nanomsg', num: '0.6.1' });
 
     await visit('/crates/nanomsg/0.6.0');
-    percySnapshot(assert);
+    await percySnapshot(assert);
 
     await a11yAudit(axeConfig);
   });
@@ -45,7 +45,7 @@ module('Acceptance | crate page', function (hooks) {
     this.server.loadFixtures();
 
     await visit('/crates/nanomsg/owners');
-    percySnapshot(assert);
+    await percySnapshot(assert);
 
     await a11yAudit(axeConfig);
   });

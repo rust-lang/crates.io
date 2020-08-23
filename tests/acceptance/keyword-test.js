@@ -2,8 +2,8 @@ import { visit } from '@ember/test-helpers';
 import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
+import percySnapshot from '@percy/ember';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
-import { percySnapshot } from 'ember-percy';
 
 import axeConfig from '../axe-config';
 import setupMirage from '../helpers/setup-mirage';
@@ -18,7 +18,7 @@ module('Acceptance | keywords', function (hooks) {
     this.server.create('keyword', { keyword: 'network' });
 
     await visit('keywords/network');
-    percySnapshot(assert);
+    await percySnapshot(assert);
 
     await a11yAudit(axeConfig);
   });
