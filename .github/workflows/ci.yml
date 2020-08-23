@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-16.04
     env:
       JOBS: 1 # See https://git.io/vdao3 for details.
-      PERCY_PARALLEL_TOTAL: 2
+
       # Percy secrets are included here to enable Percy's GitHub integration
       # on community-submitted PRs
       PERCY_TOKEN: 0d8707a02b19aebbec79bb0bf302b8d2fa95edb33169cfe41b084289596670b1
@@ -47,8 +47,9 @@ jobs:
       - name: Add nonce for parallel tests
         run: echo ::set-env name=PERCY_PARALLEL_NONCE::`date +%s`
 
-      - name: Test
-        run: npm test
+      - uses: percy/exec-action@v0.3.0
+        with:
+          command: npm test
 
   backend:
     name: Backend

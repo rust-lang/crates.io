@@ -2,7 +2,7 @@ import { currentURL } from '@ember/test-helpers';
 import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
-import { percySnapshot } from 'ember-percy';
+import percySnapshot from '@percy/ember';
 
 import setupMirage from '../helpers/setup-mirage';
 import { visit } from '../helpers/visit-ignoring-abort';
@@ -56,6 +56,6 @@ module('Acceptance | Dashboard', function (hooks) {
 
     await visit('/dashboard');
     assert.equal(currentURL(), '/dashboard');
-    percySnapshot(assert);
+    await percySnapshot(assert);
   });
 });

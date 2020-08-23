@@ -2,8 +2,8 @@ import { currentURL, click } from '@ember/test-helpers';
 import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
+import percySnapshot from '@percy/ember';
 import Response from 'ember-cli-mirage/response';
-import { percySnapshot } from 'ember-percy';
 
 import setupMirage from '../helpers/setup-mirage';
 import { visit } from '../helpers/visit-ignoring-abort';
@@ -143,7 +143,7 @@ module('Acceptance | /me/pending-invites', function (hooks) {
     assert.dom('[data-test-invite="nanomsg"] [data-test-crate-link]').doesNotExist();
     assert.dom('[data-test-invite="nanomsg"] [data-test-inviter-link]').doesNotExist();
 
-    percySnapshot(assert);
+    await percySnapshot(assert);
   });
 
   test('error message is shown if accept request fails', async function (assert) {

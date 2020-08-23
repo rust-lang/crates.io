@@ -2,9 +2,9 @@ import { fillIn, currentURL, triggerEvent, visit, blur } from '@ember/test-helpe
 import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
+import percySnapshot from '@percy/ember';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import { keyDown } from 'ember-keyboard/test-support/test-helpers';
-import { percySnapshot } from 'ember-percy';
 
 import axeConfig from '../axe-config';
 import { title } from '../helpers/dom';
@@ -20,7 +20,7 @@ module('Acceptance | search', function (hooks) {
     this.server.loadFixtures();
 
     await visit('/search?q=rust');
-    percySnapshot(assert);
+    await percySnapshot(assert);
 
     await a11yAudit(axeConfig);
   });
