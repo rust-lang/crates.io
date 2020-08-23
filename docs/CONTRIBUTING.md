@@ -88,7 +88,7 @@ as well.
 In order to run the frontend on Windows and macOS, you will need to have installed:
 
 - [node](https://nodejs.org/en/) >= 12.9.1 (see `package.json` and `.github/workflows/ci.yml` for what we currently use)
-- [npm](https://www.npmjs.com/get-npm) >= 6.10.2
+- [yarn](https://classic.yarnpkg.com/en/docs/install) v1.x
 
 Follow the links for each of these tools for their recommended installation
 instructions. If you already have these tools, or you have a different
@@ -105,7 +105,7 @@ into any trouble.
 To install the npm packages that crates.io uses, run:
 
 ```
-npm install
+yarn install
 ```
 
 You'll need to run these commands any time the libraries or versions of these
@@ -113,17 +113,17 @@ libraries that crates.io uses change. Usually you'll know they've changed
 because you'll run the next step and it will fail saying it can't find some
 libraries.
 
-To build and serve the frontend assets, use the command `npm run start`. There
+To build and serve the frontend assets, use the command `yarn start`. There
 are variations on this command that change which backend your frontend tries to
 talk to:
 
 | Command | Backend | Use case |
 |---------|---------|----------|
-| `npm run start:live` | https://crates.io | Testing UI changes with the full live site's data |
-| `npm run start:staging` | https://staging-crates-io.herokuapp.com | Testing UI changes with a smaller set of realistic data |
-| `npm run start` | Static fixture test data in `mirage/fixtures` | Setting up particular situations, see note |
-| `npm run start:local` | Backend server running locally | See the Working on the backend section for setup |
-| `npm run start -- --proxy https://crates.io` | Whatever is specified in `--proxy` arg | If your use case is not covered here |
+| `yarn start:live` | https://crates.io | Testing UI changes with the full live site's data |
+| `yarn start:staging` | https://staging-crates-io.herokuapp.com | Testing UI changes with a smaller set of realistic data |
+| `yarn start` | Static fixture test data in `mirage/fixtures` | Setting up particular situations, see note |
+| `yarn start:local` | Backend server running locally | See the Working on the backend section for setup |
+| `yarn start -- --proxy https://crates.io` | Whatever is specified in `--proxy` arg | If your use case is not covered here |
 
 > Note: If you want to set up a particular situation, you can edit the fixture
 > data used for tests in `mirage/fixtures`. The fixture data does not currently
@@ -135,7 +135,7 @@ talk to:
 You can run the frontend tests with:
 
 ```
-npm test
+yarn test
 ```
 
 ### Working on the Backend
@@ -362,7 +362,7 @@ without a restart needed, and you can leave the frontend running while you
 restart the server):
 
 ```
-npm run start:local
+yarn start:local
 ```
 
 And then you should be able to visit http://localhost:4200!

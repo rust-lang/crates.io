@@ -10,8 +10,8 @@ branches:
 
 cache:
   cargo: true
-  directories:
-    - $HOME/.npm
+  yarn: true
+
 before_cache: script/ci/prune-cache.sh
 
 env:
@@ -63,13 +63,13 @@ jobs:
       addons:
         chrome: stable
       install:
-        - npm ci
+        - yarn install
       before_script: skip
       script:
-        - npm run lint:hbs
-        - npm run lint:js
-        - npm run lint:deps
-        - if [ "$TRAVIS_REPO_SLUG" == "rust-lang/crates.io" ]; then percy exec -- npm run test-coverage; fi
+        - yarn lint:hbs
+        - yarn lint:js
+        - yarn lint:deps
+        - if [ "$TRAVIS_REPO_SLUG" == "rust-lang/crates.io" ]; then percy exec -- yarn test-coverage; fi
     - rust: beta
       script:
         - cargo test

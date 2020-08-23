@@ -24,25 +24,18 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
       - uses: actions/setup-node@v1
         with:
           node-version: '14.x'
 
       - name: Install node modules
-        run: npm ci
+        run: yarn install
 
       - name: Lint
         run: |
-          npm run lint:hbs
-          npm run lint:js
-          npm run lint:deps
+          yarn lint:hbs
+          yarn lint:js
+          yarn lint:deps
 
       - name: Run percy exec
         if: github.repository == 'rust-lang/crates.io'
@@ -50,7 +43,7 @@ jobs:
 
       - name: test-coverage
         if: github.repository != 'rust-lang/crates.io'
-        run: npm run test-coverage
+        run: yarn test-coverage
 
   backend:
     name: Backend
