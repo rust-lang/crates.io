@@ -1,0 +1,7 @@
+.yellow-button {
+    composes: yellow-button small from '../styles/shared/buttons.module.css';
+}
+
+.tan-button {
+    composes: tan-button small from '../styles/shared/buttons.module.css';
+}

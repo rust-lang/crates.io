@@ -79,6 +79,24 @@ impl crate::util::MockTokenUser {
     }
 }
 
+impl crate::util::MockCookieUser {
+    /// Yank the specified version of the specified crate and run all pending background jobs
+    fn yank(&self, krate_name: &str, version: &str) -> crate::util::Response<OkBool> {
+        let url = format!("/api/v1/crates/{}/{}/yank", krate_name, version);
+        let response = self.delete(&url);
+        self.app().run_pending_background_jobs();
+        response
+    }
+
+    /// Unyank the specified version of the specified crate and run all pending background jobs
+    fn unyank(&self, krate_name: &str, version: &str) -> crate::util::Response<OkBool> {
+        let url = format!("/api/v1/crates/{}/{}/unyank", krate_name, version);
+        let response = self.put(&url, &[]);
+        self.app().run_pending_background_jobs();
+        response
+    }
+}
+
 #[test]
 fn index() {
     let (app, anon) = TestApp::init().empty();
@@ -1574,7 +1592,7 @@ fn following() {
 
 #[test]
 fn yank_works_as_intended() {
-    let (app, anon, _, token) = TestApp::full().with_token();
+    let (app, anon, cookie, token) = TestApp::full().with_token();
 
     // Upload a new crate, putting it in the git index
     let crate_to_publish = PublishBuilder::new("fyk");
@@ -1601,6 +1619,26 @@ fn yank_works_as_intended() {
 
     // un-yank it
     token.unyank("fyk", "1.0.0").good();
+
+    let crates = app.crates_from_index_head("3/f/fyk");
+    assert!(crates.len() == 1);
+    assert!(!crates[0].yanked.unwrap());
+
+    let json = anon.show_version("fyk", "1.0.0");
+    assert!(!json.version.yanked);
+
+    // yank it
+    cookie.yank("fyk", "1.0.0").good();
+
+    let crates = app.crates_from_index_head("3/f/fyk");
+    assert!(crates.len() == 1);
+    assert!(crates[0].yanked.unwrap());
+
+    let json = anon.show_version("fyk", "1.0.0");
+    assert!(json.version.yanked);
+
+    // un-yank it
+    cookie.unyank("fyk", "1.0.0").good();
 
     let crates = app.crates_from_index_head("3/f/fyk");
     assert!(crates.len() == 1);
