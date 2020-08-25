@@ -30,7 +30,8 @@ pub fn unyank(req: &mut dyn RequestExt) -> EndpointResult {
 fn modify_yank(req: &mut dyn RequestExt, yanked: bool) -> EndpointResult {
     let authenticated_user = req.authenticate()?;
     let (conn, version, krate) = version_and_crate(req)?;
-    let user = authenticated_user.find_user(&conn)?;
+    let api_token_id = authenticated_user.api_token_id();
+    let user = authenticated_user.user();
     let owners = krate.owners(&conn)?;
 
     if user.rights(req.app(), &owners)? < Rights::Publish {
@@ -42,13 +43,7 @@ fn modify_yank(req: &mut dyn RequestExt, yanked: bool) -> EndpointResult {
         VersionAction::Unyank
     };
 
-    insert_version_owner_action(
-        &conn,
-        version.id,
-        user.id,
-        authenticated_user.api_token_id(),
-        action,
-    )?;
+    insert_version_owner_action(&conn, version.id, user.id, api_token_id, action)?;
 
     git::yank(krate.name, version, yanked).enqueue(&conn)?;
 

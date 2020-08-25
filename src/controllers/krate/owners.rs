@@ -94,7 +94,7 @@ fn modify_owners(req: &mut dyn RequestExt, add: bool) -> EndpointResult {
     let crate_name = &req.params()["crate_id"];
 
     let conn = req.db_conn()?;
-    let user = authenticated_user.find_user(&conn)?;
+    let user = authenticated_user.user();
 
     conn.transaction(|| {
         let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
