@@ -173,6 +173,8 @@ gh_login = "public"
 name = "public"
 gh_avatar = "public"
 gh_id = "public"
+account_lock_reason = "private"
+account_lock_until = "private"
 [users.column_defaults]
 gh_access_token = "''"
 
