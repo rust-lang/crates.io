@@ -1,10 +1,13 @@
+use chrono::Utc;
+
 use super::prelude::*;
 
 use crate::middleware::current_user::TrustedUserId;
 use crate::middleware::log_request;
 use crate::models::{ApiToken, User};
 use crate::util::errors::{
-    forbidden, internal, AppError, AppResult, ChainError, InsecurelyGeneratedTokenRevoked,
+    account_locked, forbidden, internal, AppError, AppResult, ChainError,
+    InsecurelyGeneratedTokenRevoked,
 };
 
 #[derive(Debug)]
@@ -101,6 +104,20 @@ impl<'a> UserAuthenticationExt for dyn RequestExt + 'a {
         verify_origin(self)?;
 
         let authenticated_user = authenticate_user(self)?;
+
+        if let Some(reason) = &authenticated_user.user.account_lock_reason {
+            let still_locked = if let Some(until) = authenticated_user.user.account_lock_until {
+                until > Utc::now().naive_utc()
+            } else {
+                true
+            };
+            if still_locked {
+                return Err(account_locked(
+                    &reason,
+                    authenticated_user.user.account_lock_until,
+                ));
+            }
+        }
 
         log_request::add_custom_metadata(self, "uid", authenticated_user.user_id());
         if let Some(id) = authenticated_user.api_token_id() {
