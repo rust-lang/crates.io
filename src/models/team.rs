@@ -27,6 +27,8 @@ pub struct Team {
     /// Sugary goodness
     pub name: Option<String>,
     pub avatar: Option<String>,
+    /// The GitHub Organization ID this team sits under
+    pub org_id: Option<i32>,
 }
 
 #[derive(Insertable, AsChangeset, Debug)]
@@ -36,11 +38,13 @@ pub struct NewTeam<'a> {
     pub github_id: i32,
     pub name: Option<String>,
     pub avatar: Option<String>,
+    pub org_id: i32,
 }
 
 impl<'a> NewTeam<'a> {
     pub fn new(
         login: &'a str,
+        org_id: i32,
         github_id: i32,
         name: Option<String>,
         avatar: Option<String>,
@@ -50,6 +54,7 @@ impl<'a> NewTeam<'a> {
             github_id,
             name,
             avatar,
+            org_id,
         }
     }
 
@@ -136,9 +141,15 @@ impl Team {
         }
 
         #[derive(Deserialize)]
+        struct GithubOrganization {
+            id: i32, // unique GH id (needed for membership queries)
+        }
+
+        #[derive(Deserialize)]
         struct GithubTeam {
             id: i32,              // unique GH id (needed for membership queries)
             name: Option<String>, // Pretty name
+            organization: GithubOrganization,
         }
 
         let url = format!("/orgs/{}/teams/{}", org_name, team_name);
@@ -149,6 +160,8 @@ impl Team {
                 org_name, team_name
             ))
         })?;
+
+        let org_id = team.organization.id;
 
         if !team_with_gh_id_contains_user(app, team.id, req_user)? {
             return Err(cargo_err("only members of a team can add it as an owner"));
@@ -162,9 +175,15 @@ impl Team {
         let url = format!("/orgs/{}", org_name);
         let org = github_api::<Org>(app, &url, &token)?;
 
-        NewTeam::new(&login.to_lowercase(), team.id, team.name, org.avatar_url)
-            .create_or_update(conn)
-            .map_err(Into::into)
+        NewTeam::new(
+            &login.to_lowercase(),
+            org_id,
+            team.id,
+            team.name,
+            org.avatar_url,
+        )
+        .create_or_update(conn)
+        .map_err(Into::into)
     }
 
     /// Phones home to Github to ask if this User is a member of the given team.

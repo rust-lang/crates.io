@@ -232,6 +232,7 @@ fn new_user(login: &str) -> NewUser<'_> {
 
 fn new_team(login: &str) -> NewTeam<'_> {
     NewTeam {
+        org_id: NEXT_GH_ID.fetch_add(1, Ordering::SeqCst) as i32,
         github_id: NEXT_GH_ID.fetch_add(1, Ordering::SeqCst) as i32,
         login,
         name: None,
