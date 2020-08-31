@@ -40,7 +40,7 @@
     "copy-text-to-clipboard": "2.2.0",
     "fastboot-app-server": "2.0.0",
     "morgan": "1.10.0",
-    "pretty-bytes": "5.4.0"
+    "pretty-bytes": "5.4.1"
   },
   "devDependencies": {
     "@ember/optional-features": "2.0.0",
