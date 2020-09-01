@@ -11,7 +11,7 @@ use serde_json as json;
 pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
     let authenticated_user = req.authenticate()?;
     let conn = req.db_conn()?;
-    let user = authenticated_user.find_user(&conn)?;
+    let user = authenticated_user.user();
 
     let tokens = ApiToken::belonging_to(&user)
         .filter(api_tokens::revoked.eq(false))
@@ -69,7 +69,7 @@ pub fn new(req: &mut dyn RequestExt) -> EndpointResult {
     }
 
     let conn = req.db_conn()?;
-    let user = authenticated_user.find_user(&conn)?;
+    let user = authenticated_user.user();
 
     let max_token_per_user = 500;
     let count = ApiToken::belonging_to(&user)
@@ -101,7 +101,7 @@ pub fn revoke(req: &mut dyn RequestExt) -> EndpointResult {
 
     let authenticated_user = req.authenticate()?;
     let conn = req.db_conn()?;
-    let user = authenticated_user.find_user(&conn)?;
+    let user = authenticated_user.user();
     diesel::update(ApiToken::belonging_to(&user).find(id))
         .set(api_tokens::revoked.eq(true))
         .execute(&*conn)?;

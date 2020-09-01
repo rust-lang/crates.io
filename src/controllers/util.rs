@@ -1,30 +1,32 @@
+use chrono::Utc;
+
 use super::prelude::*;
 
 use crate::middleware::current_user::TrustedUserId;
 use crate::middleware::log_request;
 use crate::models::{ApiToken, User};
 use crate::util::errors::{
-    forbidden, internal, AppError, AppResult, ChainError, InsecurelyGeneratedTokenRevoked,
+    account_locked, forbidden, internal, AppError, AppResult, ChainError,
+    InsecurelyGeneratedTokenRevoked,
 };
 
 #[derive(Debug)]
 pub struct AuthenticatedUser {
-    user_id: i32,
+    user: User,
     token_id: Option<i32>,
 }
 
 impl AuthenticatedUser {
     pub fn user_id(&self) -> i32 {
-        self.user_id
+        self.user.id
     }
 
     pub fn api_token_id(&self) -> Option<i32> {
         self.token_id
     }
 
-    pub fn find_user(&self, conn: &PgConnection) -> AppResult<User> {
-        User::find(conn, self.user_id())
-            .chain_error(|| internal("user_id from cookie or token not found in database"))
+    pub fn user(self) -> User {
+        self.user
     }
 }
 
@@ -58,47 +60,70 @@ fn verify_origin(req: &dyn RequestExt) -> AppResult<()> {
     Ok(())
 }
 
+fn authenticate_user(req: &dyn RequestExt) -> AppResult<AuthenticatedUser> {
+    let conn = req.db_conn()?;
+    let (user_id, token_id) = if let Some(id) =
+        req.extensions().find::<TrustedUserId>().map(|x| x.0)
+    {
+        (id, None)
+    } else {
+        // Otherwise, look for an `Authorization` header on the request
+        let maybe_authorization: Option<String> = {
+            req.headers()
+                .get(header::AUTHORIZATION)
+                .and_then(|h| h.to_str().ok())
+                .map(|h| h.to_string())
+        };
+        if let Some(header_value) = maybe_authorization {
+            let (user_id, token_id) = ApiToken::find_by_api_token(&conn, &header_value)
+                .map(|token| (token.user_id, Some(token.id)))
+                .map_err(|e| {
+                    if e.is::<InsecurelyGeneratedTokenRevoked>() {
+                        e
+                    } else {
+                        e.chain(internal("invalid token")).chain(forbidden())
+                    }
+                })?;
+
+            (user_id, token_id)
+        } else {
+            // Unable to authenticate the user
+            return Err(internal("no cookie session or auth header found")).chain_error(forbidden);
+        }
+    };
+
+    let user = User::find(&conn, user_id)
+        .chain_error(|| internal("user_id from cookie or token not found in database"))?;
+
+    Ok(AuthenticatedUser { user, token_id })
+}
+
 impl<'a> UserAuthenticationExt for dyn RequestExt + 'a {
     /// Obtain `AuthenticatedUser` for the request or return an `Forbidden` error
     fn authenticate(&mut self) -> AppResult<AuthenticatedUser> {
         verify_origin(self)?;
-        if let Some(id) = self.extensions().find::<TrustedUserId>().map(|x| x.0) {
-            log_request::add_custom_metadata(self, "uid", id);
-            Ok(AuthenticatedUser {
-                user_id: id,
-                token_id: None,
-            })
-        } else {
-            // Otherwise, look for an `Authorization` header on the request
-            let maybe_authorization: Option<String> = {
-                self.headers()
-                    .get(header::AUTHORIZATION)
-                    .and_then(|h| h.to_str().ok())
-                    .map(|h| h.to_string())
-            };
-            if let Some(header_value) = maybe_authorization {
-                let user = {
-                    let conn = self.db_conn()?;
-                    ApiToken::find_by_api_token(&conn, &header_value)
-                        .map(|token| AuthenticatedUser {
-                            user_id: token.user_id,
-                            token_id: Some(token.id),
-                        })
-                        .map_err(|e| {
-                            if e.is::<InsecurelyGeneratedTokenRevoked>() {
-                                e
-                            } else {
-                                e.chain(internal("invalid token")).chain(forbidden())
-                            }
-                        })?
-                };
-                log_request::add_custom_metadata(self, "uid", user.user_id);
-                log_request::add_custom_metadata(self, "tokenid", user.token_id.unwrap_or(0));
-                Ok(user)
+
+        let authenticated_user = authenticate_user(self)?;
+
+        if let Some(reason) = &authenticated_user.user.account_lock_reason {
+            let still_locked = if let Some(until) = authenticated_user.user.account_lock_until {
+                until > Utc::now().naive_utc()
             } else {
-                // Unable to authenticate the user
-                Err(internal("no cookie session or auth header found")).chain_error(forbidden)
+                true
+            };
+            if still_locked {
+                return Err(account_locked(
+                    &reason,
+                    authenticated_user.user.account_lock_until,
+                ));
             }
         }
+
+        log_request::add_custom_metadata(self, "uid", authenticated_user.user_id());
+        if let Some(id) = authenticated_user.api_token_id() {
+            log_request::add_custom_metadata(self, "tokenid", id);
+        }
+
+        Ok(authenticated_user)
     }
 }

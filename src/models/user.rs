@@ -1,3 +1,4 @@
+use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use std::borrow::Cow;
 
@@ -17,6 +18,8 @@ pub struct User {
     pub name: Option<String>,
     pub gh_avatar: Option<String>,
     pub gh_id: i32,
+    pub account_lock_reason: Option<String>,
+    pub account_lock_until: Option<NaiveDateTime>,
 }
 
 /// Represents a new user record insertable to the `users` table

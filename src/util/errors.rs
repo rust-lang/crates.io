@@ -16,6 +16,7 @@ use std::any::{Any, TypeId};
 use std::error::Error;
 use std::fmt;
 
+use chrono::NaiveDateTime;
 use diesel::result::Error as DieselError;
 
 use crate::util::AppResponse;
@@ -42,6 +43,13 @@ pub fn cargo_err<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
 /// Return an error with status 400 and the provided description as JSON
 pub fn bad_request<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
     Box::new(json::BadRequest(error.to_string()))
+}
+
+pub fn account_locked(reason: &str, until: Option<NaiveDateTime>) -> Box<dyn AppError> {
+    Box::new(json::AccountLocked {
+        reason: reason.to_string(),
+        until,
+    })
 }
 
 pub fn forbidden() -> Box<dyn AppError> {

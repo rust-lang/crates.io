@@ -46,7 +46,8 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
 
     let conn = app.primary_database.get()?;
     let ids = req.authenticate()?;
-    let user = ids.find_user(&conn)?;
+    let api_token_id = ids.api_token_id();
+    let user = ids.user();
 
     let verified_email_address = user.verified_email(&conn)?;
     let verified_email_address = verified_email_address.ok_or_else(|| {
@@ -156,7 +157,7 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
             &conn,
             version.id,
             user.id,
-            ids.api_token_id(),
+            api_token_id,
             VersionAction::Publish,
         )?;
 

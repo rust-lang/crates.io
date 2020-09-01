@@ -42,6 +42,7 @@ macro_rules! t {
     };
 }
 
+mod account_lock;
 mod authentication;
 mod badge;
 mod builders;

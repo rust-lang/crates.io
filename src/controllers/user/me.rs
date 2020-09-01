@@ -55,7 +55,7 @@ pub fn updates(req: &mut dyn RequestExt) -> EndpointResult {
 
     let authenticated_user = req.authenticate()?;
     let conn = req.db_conn()?;
-    let user = authenticated_user.find_user(&conn)?;
+    let user = authenticated_user.user();
 
     let followed_crates = Follow::belonging_to(&user).select(follows::crate_id);
     let data = versions::table
@@ -112,7 +112,7 @@ pub fn update_user(req: &mut dyn RequestExt) -> EndpointResult {
 
     let param_user_id = &req.params()["user_id"];
     let conn = req.db_conn()?;
-    let user = authenticated_user.find_user(&conn)?;
+    let user = authenticated_user.user();
 
     // need to check if current user matches user to be updated
     if &user.id.to_string() != param_user_id {
@@ -192,7 +192,7 @@ pub fn regenerate_token_and_send(req: &mut dyn RequestExt) -> EndpointResult {
         .chain_error(|| bad_request("invalid user_id"))?;
     let authenticated_user = req.authenticate()?;
     let conn = req.db_conn()?;
-    let user = authenticated_user.find_user(&conn)?;
+    let user = authenticated_user.user();
 
     // need to check if current user matches user to be updated
     if user.id != param_user_id {
