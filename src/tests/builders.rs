@@ -28,6 +28,7 @@ impl<'a> VersionBuilder<'a> {
     /// # Panics
     ///
     /// Panics if `num` cannot be parsed as a valid `semver::Version`.
+    #[track_caller]
     pub fn new(num: &str) -> Self {
         let num = semver::Version::parse(num).unwrap_or_else(|e| {
             panic!("The version {} is not valid: {}", num, e);
@@ -124,6 +125,7 @@ impl<'a> VersionBuilder<'a> {
     /// # Panics
     ///
     /// Panics (and fails the test) if any part of inserting the version record fails.
+    #[track_caller]
     pub fn expect_build(
         self,
         crate_id: i32,
@@ -281,6 +283,7 @@ impl<'a> CrateBuilder<'a> {
     /// # Panics
     ///
     /// Panics (and fails the test) if any part of inserting the crate record fails.
+    #[track_caller]
     pub fn expect_build(self, connection: &PgConnection) -> Crate {
         let name = self.krate.name;
         self.build(connection).unwrap_or_else(|e| {
@@ -555,6 +558,7 @@ impl DependencyBuilder {
     /// # Panics
     ///
     /// Panics if the `version_req` string specified isn't a valid `semver::VersionReq`.
+    #[track_caller]
     pub fn version_req(mut self, version_req: &str) -> Self {
         self.version_req = u::EncodableCrateVersionReq(
             semver::VersionReq::parse(version_req)

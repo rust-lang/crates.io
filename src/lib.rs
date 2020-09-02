@@ -96,6 +96,7 @@ pub fn build_handler(app: Arc<App>) -> MiddlewareBuilder {
 ///
 /// Panics if the environment variable with the name passed in as an argument is not defined
 /// in the current environment.
+#[track_caller]
 pub fn env(s: &str) -> String {
     dotenv::var(s).unwrap_or_else(|_| panic!("must have `{}` defined", s))
 }
