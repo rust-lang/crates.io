@@ -151,7 +151,7 @@ npm test
 
 In order to run the backend, you will need to have installed:
 
-- [Rust](https://www.rust-lang.org/en-US/) stable >= 1.16.0 and cargo, which comes with Rust
+- [Rust](https://www.rust-lang.org/) stable >= 1.16.0 and Cargo, which comes with Rust
 - [Postgres](https://www.postgresql.org/) >= 9.5
 - [OpenSSL](https://www.openssl.org/) >= 1.0.2k
 - [diesel_cli](http://diesel.rs/guides/getting-started/) >= 1.2.0
@@ -159,7 +159,7 @@ In order to run the backend, you will need to have installed:
 ##### Rust
 
 - [rustup](https://rustup.rs/) is the installation method we'd recommend for
-  all platforms.
+  all platforms
 
 ##### Postgres
 
