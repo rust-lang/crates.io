@@ -9,8 +9,8 @@
       >
         {{ @crate.name }}
       </LinkTo>
-      <span local-class="version" data-test-version>v{{@crate.max_version}}</span>
-      <CrateTomlCopy @copyText='{{@crate.name}} = "{{@crate.max_version}}"' @inline={{true}} local-class="copy-button" />
+      <span local-class="version" data-test-version>v{{@crate.newest_version}}</span>
+      <CrateTomlCopy @copyText='{{@crate.name}} = "{{@crate.newest_version}}"' @inline={{true}} local-class="copy-button" />
     </div>
     <div local-class="description" data-test-description>
       {{ truncate-text @crate.description }}
@@ -28,7 +28,7 @@
     <div local-class="updated-at" >
       {{svg-jar "latest-updates" height="32" width="32"}}
       <span>
-        <abbr title="The last time crate was updated">Updated:</abbr>
+        <abbr title="The last time the crate was updated">Updated:</abbr>
         <time title="Last updated: {{ @crate.updated_at }}" datetime="{{ moment-format @crate.updated_at 'YYYY-MM-DDTHH:mm:ssZ' }}" data-test-updated-at>
           {{ moment-from-now @crate.updated_at }}
         </time>
