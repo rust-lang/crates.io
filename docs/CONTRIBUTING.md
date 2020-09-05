@@ -54,8 +54,8 @@ for guidelines on how to do that.
 
 ## Setting up a development environment
 
-First, you'll need git to clone the repo. [GitHub has help pages about setting
-up git](https://help.github.com/articles/set-up-git/), and once you've done
+First, you'll need Git to clone the repo. [GitHub has help pages about setting
+up Git](https://help.github.com/articles/set-up-git/), and once you've done
 that, you should be able to clone the repo and change into the repo's directory
 from your terminal:
 
@@ -112,6 +112,13 @@ You'll need to run these commands any time the libraries or versions of these
 libraries that crates.io uses change. Usually you'll know they've changed
 because you'll run the next step and it will fail saying it can't find some
 libraries.
+
+You will also need a global installation of the Ember CLI. If you don't have it
+already, you can install it by running:
+
+```
+npm install -g ember-cli
+```
 
 To build and serve the frontend assets, use the command `npm run start`. There
 are variations on this command that change which backend your frontend tries to
