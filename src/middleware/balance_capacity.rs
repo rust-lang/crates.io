@@ -17,21 +17,27 @@ use conduit::{RequestExt, StatusCode};
 #[derive(Default)]
 pub(super) struct BalanceCapacity {
     handler: Option<Box<dyn Handler>>,
-    capacity: usize,
+    in_flight_total: AtomicUsize,
+    db_capacity: usize,
     in_flight_non_dl_requests: AtomicUsize,
     report_only: bool,
+    log_total_at_count: usize,
     log_at_percentage: usize,
     throttle_at_percentage: usize,
     dl_only_at_percentage: usize,
 }
 
 impl BalanceCapacity {
-    pub fn new(capacity: usize) -> Self {
+    pub fn new(db_capacity: usize) -> Self {
         Self {
             handler: None,
-            capacity,
+            in_flight_total: AtomicUsize::new(0),
+            db_capacity,
             in_flight_non_dl_requests: AtomicUsize::new(0),
+
             report_only: env::var("WEB_CAPACITY_REPORT_ONLY").ok().is_some(),
+            log_total_at_count: read_env_percentage("WEB_CAPACITY_LOG_TOTAL_AT_COUNT", 50),
+            // The following are a percentage of `db_capacity`
             log_at_percentage: read_env_percentage("WEB_CAPACITY_LOG_PCT", 50),
             throttle_at_percentage: read_env_percentage("WEB_CAPACITY_THROTTLE_PCT", 70),
             dl_only_at_percentage: read_env_percentage("WEB_CAPACITY_DL_ONLY_PCT", 80),
@@ -73,14 +79,19 @@ impl AroundMiddleware for BalanceCapacity {
 
 impl Handler for BalanceCapacity {
     fn call(&self, request: &mut dyn RequestExt) -> AfterResult {
+        let (_drop_on_exit1, in_flight_total) = RequestCounter::add_one(&self.in_flight_total);
+        if in_flight_total >= self.log_total_at_count {
+            super::log_request::add_custom_metadata(request, "in_flight_total", in_flight_total);
+        }
+
         // Download requests are always accepted and do not affect the request count
         if request.path().starts_with("/api/v1/crates/") && request.path().ends_with("/download") {
             return self.handle(request);
         }
 
         // The _drop_on_exit ensures the counter is decremented for all exit paths (including panics)
-        let (_drop_on_exit, count) = RequestCounter::add_one(&self.in_flight_non_dl_requests);
-        let load = 100 * count / self.capacity;
+        let (_drop_on_exit2, count) = RequestCounter::add_one(&self.in_flight_non_dl_requests);
+        let load = 100 * count / self.db_capacity;
 
         // Begin logging request count so early stages of load increase can be located
         if load >= self.log_at_percentage {
