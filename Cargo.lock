@@ -157,12 +157,6 @@ checksum = "1b20b618342cf9891c292c4f5ac2cde7287cc5c87e87e9c769d617793607dec1"
 
 [[package]]
 name = "base64"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b41b7ea54a0c9d92199de89e20e58d49f02f8e699814ef3fdf266f6f748d15c7"
-
-[[package]]
-name = "base64"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3441f0f7b02788e948e47f457ca01f1d7e6d92c693bc132c22b087d3141c03ff"
@@ -213,12 +207,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bufstream"
-version = "0.1.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "40e38929add23cdf8a366df9b0e088953150724bcbe5fc330b0d8eb3b328eec8"
-
-[[package]]
 name = "bumpalo"
 version = "3.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -257,7 +245,7 @@ name = "cargo-registry"
 version = "0.2.2"
 dependencies = [
  "ammonia",
- "base64 0.12.3",
+ "base64",
  "cargo-registry-s3",
  "chrono",
  "civet",
@@ -319,7 +307,7 @@ dependencies = [
 name = "cargo-registry-s3"
 version = "0.2.0"
 dependencies = [
- "base64 0.12.3",
+ "base64",
  "chrono",
  "hmac",
  "reqwest",
@@ -421,7 +409,7 @@ version = "0.9.0-alpha.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ae03deb30e24d1dbcbb39cfb1c4a8ec4b584935aa928cf59fd93bb4b37099d68"
 dependencies = [
- "base64 0.12.3",
+ "base64",
  "conduit",
  "conduit-middleware",
  "cookie",
@@ -509,7 +497,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1373a16a4937bc34efec7b391f9c1500c30b8478a701a4f44c9165cc0475a6e0"
 dependencies = [
  "aes-gcm",
- "base64 0.12.3",
+ "base64",
  "hkdf",
  "hmac",
  "rand",
@@ -1147,11 +1135,11 @@ dependencies = [
 
 [[package]]
 name = "hyperx"
-version = "1.0.0"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "81d7ed6ec7d25c4de28b999a5693f14609a8b756137b1b4cb4927d119f59ef25"
+checksum = "9eae1ec4abdc4530fb001ebf585fd14e52ed17f0aacd3e13de497b71ed451750"
 dependencies = [
- "base64 0.11.0",
+ "base64",
  "bytes 0.5.6",
  "http 0.2.1",
  "httparse",
@@ -1296,25 +1284,23 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
 name = "lettre"
-version = "0.10.0-alpha.1"
+version = "0.10.0-alpha.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "deaf9b74d40fcb52d0f762eb08e45d5152b4db59d29bb73edd4cac7fe796862c"
+checksum = "8ef0e6a22631e37078148cff6ce1ef92984bdc2fbd2cb2cc804836db8196cc57"
 dependencies = [
- "base64 0.12.3",
- "bufstream",
+ "base64",
  "hostname",
  "hyperx",
  "idna",
- "line-wrap",
  "mime",
  "native-tls",
  "nom",
  "once_cell",
  "quoted_printable",
+ "rand",
  "regex",
  "serde",
  "serde_json",
- "textnonce",
  "uuid",
 ]
 
@@ -1382,15 +1368,6 @@ name = "license-exprs"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eb374efe4669153b6bb170a7c5063a4e570a4eb45e5daf0dab4c1543d4d6f197"
-
-[[package]]
-name = "line-wrap"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f30344350a2a51da54c1d53be93fade8a237e545dbcc4bdbe635413f2117cab9"
-dependencies = [
- "safemem",
-]
 
 [[package]]
 name = "lock_api"
@@ -1657,7 +1634,7 @@ version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "88d21857941367fdd2514553ff1578254267afd9c1e69d2d8592ba98223560a0"
 dependencies = [
- "base64 0.12.3",
+ "base64",
  "failure",
  "failure_derive",
  "http 0.1.21",
@@ -2054,7 +2031,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "12427a5577082c24419c9c417db35cfeb65962efc7675bb6b0d5f1f9d315bfe6"
 dependencies = [
  "async-compression",
- "base64 0.12.3",
+ "base64",
  "bytes 0.5.6",
  "encoding_rs",
  "futures-core",
@@ -2116,12 +2093,6 @@ name = "ryu"
 version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "71d301d4193d031abdd79ff7e3dd721168a9572ef3fe51a1517aba235bd8f86e"
-
-[[package]]
-name = "safemem"
-version = "0.3.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ef703b7cb59335eae2eb93ceb664c0eb7ea6bf567079d843e09420219668e072"
 
 [[package]]
 name = "schannel"
@@ -2537,19 +2508,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bb6bfa289a4d7c5766392812c0a1f4c1ba45afa1ad47803c11e1f407d846d75f"
 dependencies = [
  "winapi-util",
-]
-
-[[package]]
-name = "textnonce"
-version = "0.7.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "acc659075a12c12c07bbb384862c352506707f6597f5b495f65427d08519b617"
-dependencies = [
- "base64 0.12.3",
- "byteorder",
- "chrono",
- "rand",
- "serde",
 ]
 
 [[package]]

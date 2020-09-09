@@ -2,10 +2,8 @@ use std::path::Path;
 
 use crate::util::errors::{server_error, AppResult};
 
-use lettre::transport::file::FileTransport;
 use lettre::transport::smtp::authentication::{Credentials, Mechanism};
-use lettre::transport::smtp::SmtpTransport;
-use lettre::{Message, Transport};
+use lettre::{FileTransport, Message, SmtpTransport, Transport};
 
 #[derive(Debug)]
 pub struct MailgunConfigVars {
