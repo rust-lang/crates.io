@@ -89,6 +89,36 @@
         {{/if}}
 
         <div>
+          <h3>Owners</h3>
+
+          {{#if this.isOwner}}
+            <p>
+              <LinkTo @route="crate.owners" @model={{this.crate}} data-test-manage-owners-link>
+                Manage owners
+              </LinkTo>
+            </p>
+          {{/if}}
+
+          <ul local-class='owners' data-test-owners>
+            {{#each this.crate.owner_team as |team|}}
+              <li>
+                <LinkTo @route={{team.kind}} @model={{team.login}} data-test-team-link={{team.login}}>
+                  <UserAvatar @user={{team}} @size="medium-small" />
+                </LinkTo>
+              </li>
+            {{/each}}
+
+            {{#each this.crate.owner_user as |user|}}
+              <li>
+                <LinkTo @route={{user.kind}} @model={{user.login}} data-test-user-link={{user.login}}>
+                  <UserAvatar @user={{user}} @size="medium-small" />
+                </LinkTo>
+              </li>
+            {{/each}}
+          </ul>
+        </div>
+
+        <div>
           <h3>Authors</h3>
           <ul>
             {{#each this.currentVersion.authorNames as |author|}}
@@ -131,36 +161,6 @@
             </div>
           {{/if}}
         {{/unless}}
-
-        <div>
-          <h3>Owners</h3>
-
-          {{#if this.isOwner}}
-            <p>
-              <LinkTo @route="crate.owners" @model={{this.crate}} data-test-manage-owners-link>
-                Manage owners
-              </LinkTo>
-            </p>
-          {{/if}}
-
-          <ul local-class='owners' data-test-owners>
-            {{#each this.crate.owner_team as |team|}}
-              <li>
-                <LinkTo @route={{team.kind}} @model={{team.login}} data-test-team-link={{team.login}}>
-                  <UserAvatar @user={{team}} @size="medium-small" />
-                </LinkTo>
-              </li>
-            {{/each}}
-
-            {{#each this.crate.owner_user as |user|}}
-              <li>
-                <LinkTo @route={{user.kind}} @model={{user.login}} data-test-user-link={{user.login}}>
-                  <UserAvatar @user={{user}} @size="medium-small" />
-                </LinkTo>
-              </li>
-            {{/each}}
-          </ul>
-        </div>
 
         <div data-test-versions>
           <h3>Versions</h3>
