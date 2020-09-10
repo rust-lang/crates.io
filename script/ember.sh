@@ -9,4 +9,4 @@ else
     unset FASTBOOT_DISABLED
 fi
 
-ember "$@"
+./node_modules/.bin/ember "$@"
