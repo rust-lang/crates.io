@@ -1,13 +1,11 @@
 import Service, { inject as service } from '@ember/service';
 import { htmlSafe } from '@ember/string';
 import { tracked } from '@glimmer/tracking';
+import Ember from 'ember';
 
 import { rawTimeout, task } from 'ember-concurrency';
-import { buildWaiter } from 'ember-test-waiters';
 
 const SPEED = 200;
-
-let waiter = buildWaiter('progress-bar');
 
 export default class ProgressService extends Service {
   @service router;
@@ -29,7 +27,7 @@ export default class ProgressService extends Service {
   counterTask;
 
   @(task(function* () {
-    let token = waiter.beginAsync();
+    if (Ember.testing) return;
 
     let progress = 0;
     this._style = `width: 0%`;
@@ -61,8 +59,6 @@ export default class ProgressService extends Service {
     this._style = `transition: width ${SPEED}ms linear; width: 100%`;
     yield rawTimeout(SPEED);
     this._style = `transition: opacity ${SPEED * 2}ms linear; width: 100%; opacity: 0`;
-
-    waiter.endAsync(token);
   }).drop())
   updateTask;
 }
