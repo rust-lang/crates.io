@@ -1,16 +1,6 @@
 import AuthenticatedRoute from '../-authenticated-route';
 
 export default AuthenticatedRoute.extend({
-  actions: {
-    willTransition: function () {
-      this.controller
-        .setProperties({
-          emailNotificationsSuccess: false,
-          emailNotificationsError: false,
-        })
-        .clear();
-    },
-  },
   async model() {
     let { ownedCrates, currentUser: user } = this.session;
 
@@ -22,5 +12,14 @@ export default AuthenticatedRoute.extend({
     let apiTokens = this.store.findAll('api-token');
 
     return { user, ownedCrates, api_tokens: apiTokens };
+  },
+
+  setupController(controller) {
+    this._super(...arguments);
+
+    controller.setProperties({
+      emailNotificationsSuccess: false,
+      emailNotificationsError: false,
+    });
   },
 });
