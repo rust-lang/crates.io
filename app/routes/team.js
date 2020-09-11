@@ -21,10 +21,12 @@ export default Route.extend({
 
       return { crates, team };
     } catch (e) {
-      if (e.errors.some(e => e.detail === 'Not Found')) {
+      if (e.errors?.some(e => e.detail === 'Not Found')) {
         this.notifications.error(`Team '${params.team_id}' does not exist`);
         return this.replaceWith('index');
       }
+
+      throw e;
     }
   },
 });
