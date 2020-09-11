@@ -1,5 +1,3 @@
-/* eslint-env node */
-
 'use strict';
 
 // because fastboot-app-server uses cluster, but it might change in future
