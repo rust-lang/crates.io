@@ -1,6 +1,6 @@
-import RESTAdapter from '@ember-data/adapter/rest';
+import ApplicationAdapter from './application';
 
-export default RESTAdapter.extend({
+export default ApplicationAdapter.extend({
   namespace: 'api/v1/me',
   pathForType() {
     return 'tokens';
