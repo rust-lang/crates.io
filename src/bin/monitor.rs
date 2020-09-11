@@ -8,10 +8,11 @@
 
 mod on_call;
 
-use cargo_registry::{db, schema::*, util::Error};
+use anyhow::Result;
+use cargo_registry::{db, schema::*};
 use diesel::prelude::*;
 
-fn main() -> Result<(), Error> {
+fn main() -> Result<()> {
     let conn = db::connect_now()?;
 
     check_failing_background_jobs(&conn)?;
@@ -28,7 +29,7 @@ fn main() -> Result<(), Error> {
 ///
 /// Within the default 15 minute time, a job should have already had several
 /// failed retry attempts.
-fn check_failing_background_jobs(conn: &PgConnection) -> Result<(), Error> {
+fn check_failing_background_jobs(conn: &PgConnection) -> Result<()> {
     use cargo_registry::schema::background_jobs::dsl::*;
     use diesel::dsl::*;
     use diesel::sql_types::Integer;
@@ -70,7 +71,7 @@ fn check_failing_background_jobs(conn: &PgConnection) -> Result<(), Error> {
 }
 
 /// Check for an `update_downloads` job that has run longer than expected
-fn check_stalled_update_downloads(conn: &PgConnection) -> Result<(), Error> {
+fn check_stalled_update_downloads(conn: &PgConnection) -> Result<()> {
     use cargo_registry::schema::background_jobs::dsl::*;
     use chrono::{DateTime, NaiveDateTime, Utc};
 
@@ -107,7 +108,7 @@ fn check_stalled_update_downloads(conn: &PgConnection) -> Result<(), Error> {
 }
 
 /// Check for known spam patterns
-fn check_spam_attack(conn: &PgConnection) -> Result<(), Error> {
+fn check_spam_attack(conn: &PgConnection) -> Result<()> {
     use cargo_registry::models::krate::canon_crate_name;
     use diesel::dsl::*;
     use diesel::sql_types::Bool;
@@ -168,7 +169,7 @@ fn check_spam_attack(conn: &PgConnection) -> Result<(), Error> {
     Ok(())
 }
 
-fn log_and_trigger_event(event: on_call::Event) -> Result<(), Error> {
+fn log_and_trigger_event(event: on_call::Event) -> Result<()> {
     match event {
         on_call::Event::Trigger {
             ref description, ..

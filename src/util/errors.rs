@@ -21,7 +21,6 @@ use diesel::result::Error as DieselError;
 
 use crate::util::AppResponse;
 
-pub(super) mod concrete;
 mod json;
 
 pub(crate) use json::{InsecurelyGeneratedTokenRevoked, NotFound, ReadOnlyMode, TooManyRequests};

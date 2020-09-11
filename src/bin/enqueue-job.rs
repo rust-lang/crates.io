@@ -1,11 +1,12 @@
 #![deny(clippy::all)]
 
-use cargo_registry::{db, env, tasks, util::Error};
+use anyhow::{anyhow, Result};
+use cargo_registry::{db, env, tasks};
 use diesel::prelude::*;
 use swirl::schema::background_jobs::dsl::*;
 use swirl::Job;
 
-fn main() -> Result<(), Error> {
+fn main() -> Result<()> {
     let conn = db::connect_now()?;
     let mut args = std::env::args().skip(1);
 
@@ -34,6 +35,6 @@ fn main() -> Result<(), Error> {
                 .unwrap_or_else(|| String::from("db-dump.tar.gz"));
             Ok(tasks::dump_db(database_url, target_name).enqueue(&conn)?)
         }
-        other => Err(Error::from(format!("Unrecognized job type `{}`", other))),
+        other => Err(anyhow!("Unrecognized job type `{}`", other)),
     }
 }
