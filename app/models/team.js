@@ -2,13 +2,13 @@ import Model, { attr } from '@ember-data/model';
 import { computed } from '@ember/object';
 
 export default class Team extends Model {
-  @attr('string') email;
-  @attr('string') name;
-  @attr('string') login;
-  @attr('string') api_token;
-  @attr('string') avatar;
-  @attr('string') url;
-  @attr('string') kind;
+  @attr email;
+  @attr name;
+  @attr login;
+  @attr api_token;
+  @attr avatar;
+  @attr url;
+  @attr kind;
 
   @computed('login', function () {
     let login = this.login;

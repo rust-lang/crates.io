@@ -5,13 +5,13 @@ import Inflector from 'ember-inflector';
 Inflector.inflector.irregular('dependency', 'dependencies');
 
 export default class Dependency extends Model {
-  @attr('string') crate_id;
-  @attr('string') req;
-  @attr('boolean') optional;
-  @attr('boolean') default_features;
+  @attr crate_id;
+  @attr req;
+  @attr optional;
+  @attr default_features;
   @attr({ defaultValue: () => [] }) features;
-  @attr('string') kind;
-  @attr('number') downloads;
+  @attr kind;
+  @attr downloads;
 
   @belongsTo('version', { async: false }) version;
 }

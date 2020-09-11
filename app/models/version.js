@@ -5,15 +5,15 @@ import { alias } from '@ember/object/computed';
 import { task } from 'ember-concurrency';
 
 export default class Version extends Model {
-  @attr('string') num;
-  @attr('string') dl_path;
-  @attr('string') readme_path;
+  @attr num;
+  @attr dl_path;
+  @attr readme_path;
   @attr('date') created_at;
   @attr('date') updated_at;
-  @attr('number') downloads;
-  @attr('boolean') yanked;
-  @attr('string') license;
-  @attr('number') crate_size;
+  @attr downloads;
+  @attr yanked;
+  @attr license;
+  @attr crate_size;
 
   @belongsTo('crate', { async: false }) crate;
 
