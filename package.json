@@ -19,7 +19,7 @@
   "scripts": {
     "build": "ember build --environment=production",
     "lint:deps": "ember dependency-lint",
-    "lint:hbs": "ember-template-lint app/templates",
+    "lint:hbs": "ember-template-lint app",
     "lint:js": "eslint . --cache",
     "prettier": "prettier --write '**/*.js'",
     "start": "./script/ember.sh serve",
