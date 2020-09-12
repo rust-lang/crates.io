@@ -19,7 +19,8 @@ impl AroundMiddleware for RequireUserAgent {
 
 impl Handler for RequireUserAgent {
     fn call(&self, req: &mut dyn RequestExt) -> AfterResult {
-        let has_user_agent = request_header(req, header::USER_AGENT) != "";
+        let agent = request_header(req, header::USER_AGENT);
+        let has_user_agent = agent != "" && agent != "Amazon CloudFront";
         let is_download = req.path().ends_with("download");
         if !has_user_agent && !is_download {
             super::log_request::add_custom_metadata(req, "cause", "no user agent");
