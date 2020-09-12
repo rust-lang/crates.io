@@ -10,9 +10,6 @@
     "docker": {
         "enabled": false
     },
-    "rust": {
-        "enabled": false
-    },
     "postUpdateOptions": ["npmDedupe"],
     "packageRules": [{
         "groupName": "embroider",
