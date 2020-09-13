@@ -17,6 +17,9 @@
       <div>
         <LinkTo @route="crate" @model={{dependency.version.crateName}}>{{dependency.version.crateName}}</LinkTo> requires {{dependency.req}}
       </div>
+      <div local-class="description" data-test-description>
+        {{ dependency.version.description }}
+      </div>
       <div local-class="stats downloads">
         {{svg-jar "download-clear-back"}}
         <span local-class="rev-dep-downloads">{{ format-num dependency.downloads }}</span>

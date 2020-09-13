@@ -6,6 +6,7 @@ import { task } from 'ember-concurrency';
 
 export default class Version extends Model {
   @attr('string') num;
+  @attr('string') description;
   @attr('string') dl_path;
   @attr('string') readme_path;
   @attr('date') created_at;
