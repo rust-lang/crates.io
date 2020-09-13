@@ -93,7 +93,7 @@
     "ember-template-lint": "2.12.1",
     "ember-test-selectors": "5.0.0",
     "ember-truth-helpers": "2.1.0",
-    "ember-web-app": "4.0.0",
+    "ember-web-app": "5.0.0",
     "ember-window-mock": "0.7.1",
     "eslint": "7.8.1",
     "eslint-config-prettier": "6.11.0",
