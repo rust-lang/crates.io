@@ -175,7 +175,7 @@ pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
         ),
         versions: versions_publishers_and_audit_actions
             .into_iter()
-            .map(|(v, pb, aas)| v.encodable(&krate.name, pb, aas))
+            .map(|(v, pb, aas)| v.encodable(&krate.name, pb, aas, None))
             .collect(),
         keywords: kws.into_iter().map(Keyword::encodable).collect(),
         categories: cats.into_iter().map(Category::encodable).collect(),
@@ -225,7 +225,7 @@ pub fn versions(req: &mut dyn RequestExt) -> EndpointResult {
     let versions = versions_and_publishers
         .into_iter()
         .zip(VersionOwnerAction::for_versions(&conn, &versions)?.into_iter())
-        .map(|((v, pb), aas)| v.encodable(crate_name, pb, aas))
+        .map(|((v, pb), aas)| v.encodable(crate_name, pb, aas, None))
         .collect();
 
     #[derive(Serialize)]
@@ -257,20 +257,23 @@ pub fn reverse_dependencies(req: &mut dyn RequestExt) -> EndpointResult {
         .select((
             versions::all_columns,
             crates::name,
+            crates::description,
             users::all_columns.nullable(),
         ))
-        .load::<(Version, String, Option<User>)>(&*conn)?;
+        .load::<(Version, String, Option<String>, Option<User>)>(&*conn)?;
     let versions = versions_and_publishers
         .iter()
-        .map(|(v, _, _)| v)
+        .map(|(v, _, _, _)| v)
         .cloned()
         .collect::<Vec<_>>();
     let versions = versions_and_publishers
         .into_iter()
         .zip(VersionOwnerAction::for_versions(&conn, &versions)?.into_iter())
-        .map(|((version, krate_name, published_by), actions)| {
-            version.encodable(&krate_name, published_by, actions)
-        })
+        .map(
+            |((version, krate_name, description, published_by), actions)| {
+                version.encodable(&krate_name, published_by, actions, description)
+            },
+        )
         .collect();
 
     #[derive(Serialize)]

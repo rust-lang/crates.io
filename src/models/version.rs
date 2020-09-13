@@ -62,6 +62,7 @@ impl Version {
         crate_name: &str,
         published_by: Option<User>,
         audit_actions: Vec<(VersionOwnerAction, User)>,
+        description: Option<String>,
     ) -> EncodableVersion {
         let Version {
             id,
@@ -82,6 +83,7 @@ impl Version {
             num: num.clone(),
             id,
             krate: crate_name.to_string(),
+            description,
             updated_at,
             created_at,
             downloads,

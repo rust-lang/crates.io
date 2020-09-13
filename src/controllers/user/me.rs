@@ -81,7 +81,7 @@ pub fn updates(req: &mut dyn RequestExt) -> EndpointResult {
     let versions = data
         .into_iter()
         .map(|(version, crate_name, published_by, actions)| {
-            version.encodable(&crate_name, published_by, actions)
+            version.encodable(&crate_name, published_by, actions, None)
         })
         .collect();
 

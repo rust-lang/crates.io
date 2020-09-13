@@ -75,6 +75,6 @@ pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
         version: EncodableVersion,
     }
     Ok(req.json(&R {
-        version: version.encodable(&krate.name, published_by, actions),
+        version: version.encodable(&krate.name, published_by, actions, None),
     }))
 }
