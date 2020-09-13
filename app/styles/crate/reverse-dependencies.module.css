@@ -38,3 +38,15 @@
 .rev-dep-downloads {
     padding-left: 7px
 }
+
+.description-box {
+    padding-top: 5px;
+    display: flex;
+    flex-direction: column;
+    width: 75%;
+}
+
+.description {
+    composes: small from '../shared/typography.module.css';
+    margin-top: 8px;
+}

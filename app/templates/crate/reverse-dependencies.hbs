@@ -14,11 +14,13 @@
 <div local-class="list">
   {{#each this.model as |dependency|}}
     <div local-class="row">
-      <div>
-        <LinkTo @route="crate" @model={{dependency.version.crateName}}>{{dependency.version.crateName}}</LinkTo> requires {{dependency.req}}
-      </div>
-      <div local-class="description" data-test-description>
-        {{ dependency.version.description }}
+      <div local-class="description-box">
+          <div>
+            <LinkTo @route="crate" @model={{dependency.version.crateName}}>{{dependency.version.crateName}}</LinkTo> requires {{dependency.req}}
+          </div>
+          <div local-class="description" data-test-description>
+            {{ truncate-text dependency.version.description }}
+          </div>
       </div>
       <div local-class="stats downloads">
         {{svg-jar "download-clear-back"}}
