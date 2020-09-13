@@ -494,7 +494,8 @@ index = "file:///path/to/your/crates.io/tmp/index-bare"
 ```
 
 Then add the crate you published to your local crates.io as a dependency in
-this crate's `Cargo.toml`, and `cargo build` should display output like this:
+this crate's `Cargo.toml` (`yourcrate = { version = "0.1.0", registry = "mirror" }`),
+and `cargo build` should display output like this:
 
 ```
     Updating registry `file:///path/to/your/crates.io/tmp/index-bare`
