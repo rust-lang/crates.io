@@ -488,6 +488,9 @@ registry = "file:///path/to/your/crates.io/tmp/index-bare"
 
 [source.crates-io]
 replace-with = "mirror"
+
+[registries.mirror]
+index = "file:///path/to/your/crates.io/tmp/index-bare"
 ```
 
 Then add the crate you published to your local crates.io as a dependency in
