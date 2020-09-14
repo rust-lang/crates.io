@@ -1980,6 +1980,7 @@ fn reverse_dependencies() {
     app.db(|conn| {
         let c1 = CrateBuilder::new("c1", user.id).expect_build(conn);
         CrateBuilder::new("c2", user.id)
+            .description("c2 description")
             .version(VersionBuilder::new("1.0.0").dependency(&c1, None))
             .version(
                 VersionBuilder::new("1.1.0")
@@ -1996,6 +1997,10 @@ fn reverse_dependencies() {
     assert_eq!(deps.versions.len(), 1);
     assert_eq!(deps.versions[0].krate, "c2");
     assert_eq!(deps.versions[0].num, "1.1.0");
+    assert_eq!(
+        deps.versions[0].description,
+        Some("c2 description".to_string())
+    );
 
     // c1 has no dependent crates.
     let deps = anon.reverse_dependencies("c2");
