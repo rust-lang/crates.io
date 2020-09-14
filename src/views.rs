@@ -307,6 +307,7 @@ mod tests {
         let ver = EncodableVersion {
             id: 1,
             krate: "".to_string(),
+            description: Some("".to_string()),
             num: "".to_string(),
             dl_path: "".to_string(),
             readme_path: "".to_string(),
