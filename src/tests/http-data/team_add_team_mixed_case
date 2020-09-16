@@ -128,7 +128,7 @@
   },
   {
     "request": {
-      "uri": "http://api.github.com/teams/1699377/memberships/crates-tester-2",
+      "uri": "http://api.github.com/organizations/13804222/team/1699377/memberships/crates-tester-2",
       "method": "GET",
       "headers": [
         [
