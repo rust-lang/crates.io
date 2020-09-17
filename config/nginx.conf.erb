@@ -23,7 +23,7 @@ worker_processes <%= ENV['NGINX_WORKERS'] || 4 %>;
 events {
 	use epoll;
 	accept_mutex on;
-	worker_connections 1024;
+	worker_connections 2048;
 }
 
 http {
@@ -33,32 +33,48 @@ http {
 	real_ip_recursive on;
 
 	# CloudFront IP addresses from http://d7uri8nf7uskq.cloudfront.net/tools/list-cloudfront-ips
-	# Last updated: 2020-05-22
+	# Last updated: 2020-09-12
+	set_real_ip_from 3.10.17.128/25;
+	set_real_ip_from 3.11.53.0/24;
+	set_real_ip_from 3.128.93.0/24;
+	set_real_ip_from 3.134.215.0/24;
 	set_real_ip_from 3.231.2.0/25;
 	set_real_ip_from 3.234.232.224/27;
+	set_real_ip_from 3.236.48.0/23;
+	set_real_ip_from 3.236.169.192/26;
 	set_real_ip_from 13.32.0.0/15;
 	set_real_ip_from 13.35.0.0/16;
+	set_real_ip_from 13.48.32.0/24;
 	set_real_ip_from 13.54.63.128/26;
 	set_real_ip_from 13.59.250.0/26;
+	set_real_ip_from 13.113.196.64/26;
 	set_real_ip_from 13.113.203.0/24;
 	set_real_ip_from 13.124.199.0/24;
 	set_real_ip_from 13.210.67.128/26;
 	set_real_ip_from 13.224.0.0/14;
 	set_real_ip_from 13.228.69.0/24;
+	set_real_ip_from 13.233.177.192/26;
 	set_real_ip_from 13.249.0.0/16;
+	set_real_ip_from 15.188.184.0/24;
+	set_real_ip_from 15.207.13.128/25;
+	set_real_ip_from 15.207.213.128/25;
+	set_real_ip_from 18.192.142.0/23;
 	set_real_ip_from 18.200.212.0/23;
 	set_real_ip_from 18.216.170.128/25;
+	set_real_ip_from 18.229.220.192/26;
 	set_real_ip_from 34.195.252.0/24;
 	set_real_ip_from 34.216.51.0/25;
 	set_real_ip_from 34.223.12.224/27;
 	set_real_ip_from 34.223.80.192/26;
 	set_real_ip_from 34.226.14.0/24;
-	set_real_ip_from 34.232.163.208/29;
 	set_real_ip_from 35.158.136.0/24;
 	set_real_ip_from 35.162.63.192/26;
 	set_real_ip_from 35.167.191.128/26;
 	set_real_ip_from 36.103.232.0/25;
 	set_real_ip_from 36.103.232.128/26;
+	set_real_ip_from 44.227.178.0/24;
+	set_real_ip_from 44.234.90.252/30;
+	set_real_ip_from 44.234.108.128/25;
 	set_real_ip_from 52.15.127.128/26;
 	set_real_ip_from 52.46.0.0/18;
 	set_real_ip_from 52.47.139.0/24;

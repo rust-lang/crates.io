@@ -79,12 +79,15 @@ impl AroundMiddleware for BalanceCapacity {
 
 impl Handler for BalanceCapacity {
     fn call(&self, request: &mut dyn RequestExt) -> AfterResult {
+        // The _drop_on_exit ensures the counter is decremented for all exit paths (including panics)
         let (_drop_on_exit1, in_flight_total) = RequestCounter::add_one(&self.in_flight_total);
+
+        // Begin logging total request count so early stages of load increase can be located
         if in_flight_total >= self.log_total_at_count {
             super::log_request::add_custom_metadata(request, "in_flight_total", in_flight_total);
         }
 
-        // Download requests are always accepted and do not affect the request count
+        // Download requests are always accepted and do not affect the capacity tracking
         if request.path().starts_with("/api/v1/crates/") && request.path().ends_with("/download") {
             return self.handle(request);
         }
@@ -93,7 +96,7 @@ impl Handler for BalanceCapacity {
         let (_drop_on_exit2, count) = RequestCounter::add_one(&self.in_flight_non_dl_requests);
         let load = 100 * count / self.db_capacity;
 
-        // Begin logging request count so early stages of load increase can be located
+        // Begin logging non-download request count so early stages of non-download load increase can be located
         if load >= self.log_at_percentage {
             super::log_request::add_custom_metadata(request, "in_flight_non_dl_requests", count);
         }
