@@ -70,10 +70,15 @@ module.exports = function (environment) {
     // here you can enable a production-specific feature
     delete ENV['ember-cli-mirage'];
 
+    ENV.sentry = {
+      dsn: 'https://dafb34e83c054b9289dc733ff336cabc@o242099.ingest.sentry.io/5430576',
+    };
+
     // Heroku Git Hash support
     if (process.env.SOURCE_VERSION) {
       let hash = process.env.SOURCE_VERSION.substr(0, 7);
       ENV['ember-cli-app-version'] = { version: hash };
+      ENV.sentry.release = hash;
     }
   }
 
