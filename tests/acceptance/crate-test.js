@@ -1,6 +1,6 @@
 import { click, fillIn, currentURL, currentRouteName, visit, waitFor } from '@ember/test-helpers';
 import { setupApplicationTest } from 'ember-qunit';
-import { module, test } from 'qunit';
+import { module, test, skip } from 'qunit';
 
 import percySnapshot from '@percy/ember';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
@@ -219,7 +219,7 @@ module('Acceptance | crate page', function (hooks) {
     assert.dom('[data-test-license]').hasText('MIT/Apache-2.0');
   });
 
-  test('crates can be yanked by owner', async function (assert) {
+  skip('crates can be yanked by owner', async function (assert) {
     this.server.loadFixtures();
 
     let user = this.server.schema.users.findBy({ login: 'thehydroimpulse' });
