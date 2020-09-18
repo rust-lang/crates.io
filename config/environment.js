@@ -71,7 +71,7 @@ module.exports = function (environment) {
     delete ENV['ember-cli-mirage'];
 
     ENV.sentry = {
-      dsn: 'https://dafb34e83c054b9289dc733ff336cabc@o242099.ingest.sentry.io/5430576',
+      dsn: process.env.SENTRY_DSN_WEB,
     };
 
     // Heroku Git Hash support
