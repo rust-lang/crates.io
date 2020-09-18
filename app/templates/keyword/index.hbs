@@ -4,8 +4,8 @@
 
 <div local-class="results-meta">
   <ResultsCount
-    @start={{this.currentPageStart}}
-    @end={{this.currentPageEnd}}
+    @start={{this.pagination.currentPageStart}}
+    @end={{this.pagination.currentPageEnd}}
     @total={{this.totalItems}}
     data-test-keyword-nav
   />
@@ -28,4 +28,4 @@
   {{/each}}
 </div>
 
-<Pagination @pages={{this.pages}} @prevPage={{this.prevPage}} @nextPage={{this.nextPage}} />
+<Pagination @pages={{this.pagination.pages}} @prevPage={{this.pagination.prevPage}} @nextPage={{this.pagination.nextPage}} />

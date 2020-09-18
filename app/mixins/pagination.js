@@ -1,5 +1,4 @@
 import { computed } from '@ember/object';
-import { readOnly } from '@ember/object/computed';
 import Mixin from '@ember/object/mixin';
 
 const VIEWABLE_PAGES = 9;
@@ -7,17 +6,6 @@ const VIEWABLE_PAGES = 9;
 // eslint-disable-next-line ember/no-new-mixins
 export default Mixin.create({
   pagination: pagination(),
-
-  currentPage: readOnly('pagination.currentPage'),
-  currentPageStart: readOnly('pagination.currentPageStart'),
-  currentPageEnd: readOnly('pagination.currentPageEnd'),
-
-  availablePages: readOnly('pagination.availablePages'),
-
-  nextPage: readOnly('pagination.nextPage'),
-  prevPage: readOnly('pagination.prevPage'),
-
-  pages: readOnly('pagination.pages'),
 });
 
 function pagination() {
