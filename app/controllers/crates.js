@@ -2,9 +2,9 @@ import Controller from '@ember/controller';
 import { computed } from '@ember/object';
 import { readOnly } from '@ember/object/computed';
 
-import PaginationMixin from '../mixins/pagination';
+import { pagination } from '../utils/pagination';
 
-export default Controller.extend(PaginationMixin, {
+export default Controller.extend({
   queryParams: ['letter', 'page', 'per_page', 'sort'],
   letter: null,
   page: '1',
@@ -13,6 +13,7 @@ export default Controller.extend(PaginationMixin, {
   alphabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''),
 
   totalItems: readOnly('model.meta.total'),
+  pagination: pagination(),
 
   currentSortBy: computed('sort', function () {
     if (this.sort === 'downloads') {

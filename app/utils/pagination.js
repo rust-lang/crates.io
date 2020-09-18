@@ -1,14 +1,8 @@
 import { computed } from '@ember/object';
-import Mixin from '@ember/object/mixin';
 
 const VIEWABLE_PAGES = 9;
 
-// eslint-disable-next-line ember/no-new-mixins
-export default Mixin.create({
-  pagination: pagination(),
-});
-
-function pagination() {
+export function pagination() {
   return computed('page', 'per_page', 'totalItems', function () {
     let { page, per_page: perPage, totalItems } = this;
     return _pagination(page, perPage, totalItems);
