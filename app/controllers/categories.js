@@ -2,15 +2,16 @@ import Controller from '@ember/controller';
 import { computed } from '@ember/object';
 import { readOnly } from '@ember/object/computed';
 
-import PaginationMixin from '../mixins/pagination';
+import { pagination } from '../utils/pagination';
 
-export default Controller.extend(PaginationMixin, {
+export default Controller.extend({
   queryParams: ['page', 'per_page', 'sort'],
   page: '1',
   per_page: 100,
   sort: 'alpha',
 
   totalItems: readOnly('model.meta.total'),
+  pagination: pagination(),
 
   currentSortBy: computed('sort', function () {
     return this.sort === 'crates' ? '# Crates' : 'Alphabetical';

@@ -4,8 +4,8 @@
 
 <div local-class="results-meta">
   <ResultsCount
-    @start={{this.currentPageStart}}
-    @end={{this.currentPageEnd}}
+    @start={{this.pagination.currentPageStart}}
+    @end={{this.pagination.currentPageEnd}}
     @total={{this.totalItems}}
   />
 
@@ -24,4 +24,4 @@
   {{/each}}
 </div>
 
-<Pagination @pages={{this.pages}} @prevPage={{this.prevPage}} @nextPage={{this.nextPage}} />
+<Pagination @pagination={{this.pagination}} />

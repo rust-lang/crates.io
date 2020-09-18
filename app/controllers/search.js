@@ -4,9 +4,9 @@ import { bool, readOnly } from '@ember/object/computed';
 
 import { task } from 'ember-concurrency';
 
-import PaginationMixin from '../mixins/pagination';
+import { pagination } from '../utils/pagination';
 
-export default Controller.extend(PaginationMixin, {
+export default Controller.extend({
   queryParams: ['all_keywords', 'page', 'per_page', 'q', 'sort'],
   q: null,
   page: '1',
@@ -23,6 +23,7 @@ export default Controller.extend(PaginationMixin, {
   }),
 
   totalItems: readOnly('model.meta.total'),
+  pagination: pagination(),
 
   currentSortBy: computed('sort', function () {
     if (this.sort === 'downloads') {
