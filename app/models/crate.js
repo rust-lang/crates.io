@@ -3,22 +3,22 @@ import Model, { attr, hasMany } from '@ember-data/model';
 import { memberAction } from 'ember-api-actions';
 
 export default class Crate extends Model {
-  @attr('string') name;
-  @attr('number') downloads;
-  @attr('number') recent_downloads;
+  @attr name;
+  @attr downloads;
+  @attr recent_downloads;
   @attr('date') created_at;
   @attr('date') updated_at;
-  @attr('string') max_version;
-  @attr('string') newest_version;
+  @attr max_version;
+  @attr newest_version;
 
-  @attr('string') description;
-  @attr('string') homepage;
-  @attr('string') wiki;
-  @attr('string') mailing_list;
-  @attr('string') issues;
-  @attr('string') documentation;
-  @attr('string') repository;
-  @attr('boolean') exact_match;
+  @attr description;
+  @attr homepage;
+  @attr wiki;
+  @attr mailing_list;
+  @attr issues;
+  @attr documentation;
+  @attr repository;
+  @attr exact_match;
 
   @hasMany('versions', { async: true }) versions;
 

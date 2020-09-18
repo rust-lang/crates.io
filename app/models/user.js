@@ -3,14 +3,14 @@ import Model, { attr } from '@ember-data/model';
 import { memberAction } from 'ember-api-actions';
 
 export default class User extends Model {
-  @attr('string') email;
-  @attr('boolean') email_verified;
-  @attr('boolean') email_verification_sent;
-  @attr('string') name;
-  @attr('string') login;
-  @attr('string') avatar;
-  @attr('string') url;
-  @attr('string') kind;
+  @attr email;
+  @attr email_verified;
+  @attr email_verification_sent;
+  @attr name;
+  @attr login;
+  @attr avatar;
+  @attr url;
+  @attr kind;
 
   stats = memberAction({ type: 'GET', path: 'stats' });
 }
