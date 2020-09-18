@@ -33,7 +33,7 @@
       <li><a href="{{this.crate.repository}}">Repository</a></li>
     {{/if}}
     <li>
-      <LinkTo @route="crate.reverse-dependencies" @query={{hash dependency=this.crate.crate_id}} data-test-reverse-deps-link>
+      <LinkTo @route="crate.reverse-dependencies" data-test-reverse-deps-link>
         Dependent crates
       </LinkTo>
     </li>
