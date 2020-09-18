@@ -48,7 +48,7 @@
     {{/each}}
   </div>
 
-  <Pagination @pages={{this.pagination.pages}} @prevPage={{this.pagination.prevPage}} @nextPage={{this.pagination.nextPage}} />
+  <Pagination @pagination={{this.pagination}} />
 {{else}}
   <h2>0 crates found. <a href='https://doc.rust-lang.org/cargo/getting-started/'>Get started</a> and create your own.</h2>
 {{/if}}
