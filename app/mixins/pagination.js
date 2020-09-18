@@ -6,6 +6,48 @@ const VIEWABLE_PAGES = 9;
 
 // eslint-disable-next-line ember/no-new-mixins
 export default Mixin.create({
+  // wire up these ember-style variables to the expected query parameters
+  itemsPerPage: readOnly('per_page'),
+  selectedPage: readOnly('page'),
+
+  currentPage: computed('selectedPage', function () {
+    return parseInt(this.selectedPage, 10) || 1;
+  }),
+
+  currentPageStart: computed('currentPage', 'itemsPerPage', 'totalItems', function () {
+    if (this.totalItems === 0) {
+      return 0;
+    }
+    return (this.currentPage - 1) * this.itemsPerPage + 1;
+  }),
+
+  currentPageEnd: computed('currentPage', 'itemsPerPage', 'totalItems', function () {
+    return Math.min(this.currentPage * this.itemsPerPage, this.totalItems);
+  }),
+
+  availablePages: computed('totalItems', 'itemsPerPage', function () {
+    return Math.ceil(this.totalItems / this.itemsPerPage || 1);
+  }),
+
+  nextPage: computed('currentPage', 'availablePages', function () {
+    let nextPage = this.currentPage + 1;
+    let availablePages = this.availablePages;
+    if (nextPage <= availablePages) {
+      return nextPage;
+    } else {
+      return this.currentPage;
+    }
+  }),
+
+  prevPage: computed('currentPage', function () {
+    let prevPage = this.currentPage - 1;
+    if (prevPage > 0) {
+      return prevPage;
+    } else {
+      return this.currentPage;
+    }
+  }),
+
   // Gives page numbers to the surrounding 9 pages.
   pages: computed('currentPage', 'availablePages', function () {
     let pages = [];
@@ -31,46 +73,4 @@ export default Mixin.create({
     }
     return pages;
   }),
-
-  currentPage: computed('selectedPage', function () {
-    return parseInt(this.selectedPage, 10) || 1;
-  }),
-
-  currentPageStart: computed('currentPage', 'itemsPerPage', 'totalItems', function () {
-    if (this.totalItems === 0) {
-      return 0;
-    }
-    return (this.currentPage - 1) * this.itemsPerPage + 1;
-  }),
-
-  currentPageEnd: computed('currentPage', 'itemsPerPage', 'totalItems', function () {
-    return Math.min(this.currentPage * this.itemsPerPage, this.totalItems);
-  }),
-
-  nextPage: computed('currentPage', 'availablePages', function () {
-    let nextPage = this.currentPage + 1;
-    let availablePages = this.availablePages;
-    if (nextPage <= availablePages) {
-      return nextPage;
-    } else {
-      return this.currentPage;
-    }
-  }),
-
-  prevPage: computed('currentPage', function () {
-    let prevPage = this.currentPage - 1;
-    if (prevPage > 0) {
-      return prevPage;
-    } else {
-      return this.currentPage;
-    }
-  }),
-
-  availablePages: computed('totalItems', 'itemsPerPage', function () {
-    return Math.ceil(this.totalItems / this.itemsPerPage || 1);
-  }),
-
-  // wire up these ember-style variables to the expected query parameters
-  itemsPerPage: readOnly('per_page'),
-  selectedPage: readOnly('page'),
 });
