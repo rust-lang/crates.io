@@ -1,5 +1,4 @@
-use cargo_registry::util::Error;
-
+use anyhow::{anyhow, Result};
 use reqwest::{blocking::Client, header, StatusCode as Status};
 
 #[derive(serde::Serialize, Debug)]
@@ -25,7 +24,7 @@ impl Event {
     ///
     /// If the variant is `Trigger`, this will page whoever is on call
     /// (potentially waking them up at 3 AM).
-    pub fn send(self) -> Result<(), Error> {
+    pub fn send(self) -> Result<()> {
         let api_token = dotenv::var("PAGERDUTY_API_TOKEN")?;
         let service_key = dotenv::var("PAGERDUTY_INTEGRATION_KEY")?;
 
@@ -43,15 +42,15 @@ impl Event {
             s if s.is_success() => Ok(()),
             Status::BAD_REQUEST => {
                 let error = response.json::<InvalidEvent>()?;
-                Err(format!("pagerduty error: {:?}", error))
+                Err(anyhow!("pagerduty error: {:?}", error))
             }
-            Status::FORBIDDEN => Err("rate limited by pagerduty".to_string()),
-            n => Err(format!(
+            Status::FORBIDDEN => Err(anyhow!("rate limited by pagerduty")),
+            n => Err(anyhow!(
                 "Got a non 200 response code from pagerduty: {} with {:?}",
-                n, response
+                n,
+                response
             )),
         }
-        .map_err(Into::into)
     }
 }
 

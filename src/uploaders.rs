@@ -1,10 +1,11 @@
+use anyhow::Result;
 use conduit::RequestExt;
 use flate2::read::GzDecoder;
 use reqwest::{blocking::Client, header};
 use sha2::{Digest, Sha256};
 
 use crate::util::errors::{cargo_err, internal, AppResult, ChainError};
-use crate::util::{Error, LimitErrorReader, Maximums};
+use crate::util::{LimitErrorReader, Maximums};
 
 use std::env;
 use std::fs::{self, File};
@@ -101,7 +102,7 @@ impl Uploader {
         content_length: u64,
         content_type: &str,
         extra_headers: header::HeaderMap,
-    ) -> Result<Option<String>, Error> {
+    ) -> Result<Option<String>> {
         match *self {
             Uploader::S3 { ref bucket, .. } => {
                 bucket.put(
@@ -164,7 +165,7 @@ impl Uploader {
         crate_name: &str,
         vers: &str,
         readme: String,
-    ) -> Result<(), Error> {
+    ) -> Result<()> {
         let path = Uploader::readme_path(crate_name, vers);
         let content_length = readme.len() as u64;
         let content = Cursor::new(readme);

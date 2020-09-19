@@ -94,6 +94,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "anyhow"
+version = "1.0.32"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6b602bfe940d21c130f3895acd65221e8a61270debe89d628b9cb4e3ccb8569b"
+
+[[package]]
 name = "arc-swap"
 version = "0.4.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -257,6 +263,7 @@ name = "cargo-registry"
 version = "0.2.2"
 dependencies = [
  "ammonia",
+ "anyhow",
  "base64 0.12.3",
  "cargo-registry-s3",
  "chrono",

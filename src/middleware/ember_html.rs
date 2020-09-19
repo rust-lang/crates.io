@@ -11,8 +11,9 @@
 use super::prelude::*;
 use std::fmt::Write;
 
-use crate::util::{errors::NotFound, AppResponse, Error};
+use crate::util::{errors::NotFound, AppResponse};
 
+use anyhow::{ensure, Result};
 use conduit::{Body, HandlerResult};
 use conduit_static::Static;
 use reqwest::blocking::Client;
@@ -56,7 +57,7 @@ impl Handler for EmberHtml {
                 // During local fastboot development, forward requests to the local fastboot server.
                 // In prodution, including when running with fastboot, nginx proxies the requests
                 // to the correct endpoint and requests should never make it here.
-                return proxy_to_fastboot(client, req).map_err(box_error);
+                return proxy_to_fastboot(client, req).map_err(From::from);
             }
 
             if req
@@ -86,14 +87,16 @@ impl Handler for EmberHtml {
 /// # Panics
 ///
 /// This function can panic and should only be used in development mode.
-fn proxy_to_fastboot(client: &Client, req: &mut dyn RequestExt) -> Result<AppResponse, Error> {
-    if req.method() != conduit::Method::GET {
-        return Err(format!("Only support GET but request method was {}", req.method()).into());
-    }
+fn proxy_to_fastboot(client: &Client, req: &mut dyn RequestExt) -> Result<AppResponse> {
+    ensure!(
+        req.method() == conduit::Method::GET,
+        "Only support GET but request method was {}",
+        req.method()
+    );
 
     let mut url = format!("http://127.0.0.1:9000{}", req.path());
     if let Some(query) = req.query_string() {
-        write!(url, "?{}", query).map_err(|e| e.to_string())?;
+        write!(url, "?{}", query)?;
     }
     let mut fastboot_response = client
         .request(req.method().into(), &*url)
@@ -107,5 +110,5 @@ fn proxy_to_fastboot(client: &Client, req: &mut dyn RequestExt) -> Result<AppRes
         .headers_mut()
         .unwrap()
         .extend(fastboot_response.headers().clone());
-    builder.body(Body::from_vec(body)).map_err(Into::into)
+    Ok(builder.body(Body::from_vec(body))?)
 }

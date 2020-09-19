@@ -1,8 +1,9 @@
 // Sync available crate categories from `src/categories.toml`.
 // Runs when the server is started.
 
-use crate::{db, util::Error};
+use crate::db;
 
+use anyhow::{Context, Result};
 use diesel::prelude::*;
 
 #[derive(Debug)]
@@ -34,16 +35,10 @@ impl Category {
     }
 }
 
-fn required_string_from_toml<'a>(
-    toml: &'a toml::value::Table,
-    key: &str,
-) -> Result<&'a str, Error> {
-    toml.get(key).and_then(toml::Value::as_str).ok_or_else(|| {
-        Error::from(format!(
-            "Expected category TOML attribute '{}' to be a String",
-            key
-        ))
-    })
+fn required_string_from_toml<'a>(toml: &'a toml::value::Table, key: &str) -> Result<&'a str> {
+    toml.get(key)
+        .and_then(toml::Value::as_str)
+        .with_context(|| format!("Expected category TOML attribute '{}' to be a String", key))
 }
 
 fn optional_string_from_toml<'a>(toml: &'a toml::value::Table, key: &str) -> &'a str {
@@ -53,13 +48,13 @@ fn optional_string_from_toml<'a>(toml: &'a toml::value::Table, key: &str) -> &'a
 fn categories_from_toml(
     categories: &toml::value::Table,
     parent: Option<&Category>,
-) -> Result<Vec<Category>, Error> {
+) -> Result<Vec<Category>> {
     let mut result = vec![];
 
     for (slug, details) in categories {
         let details = details
             .as_table()
-            .ok_or_else(|| Error::from(format!("category {} was not a TOML table", slug)))?;
+            .with_context(|| format!("category {} was not a TOML table", slug))?;
 
         let category = Category::from_parent(
             slug,
@@ -71,7 +66,7 @@ fn categories_from_toml(
         if let Some(categories) = details.get("categories") {
             let categories = categories
                 .as_table()
-                .ok_or_else(|| format!("child categories of {} were not a table", slug))?;
+                .with_context(|| format!("child categories of {} were not a table", slug))?;
 
             result.extend(categories_from_toml(categories, Some(&category))?);
         }
@@ -82,18 +77,18 @@ fn categories_from_toml(
     Ok(result)
 }
 
-pub fn sync(toml_str: &str) -> Result<(), Error> {
-    let conn = db::connect_now().unwrap();
+pub fn sync(toml_str: &str) -> Result<()> {
+    let conn = db::connect_now()?;
     sync_with_connection(toml_str, &conn)
 }
 
-pub fn sync_with_connection(toml_str: &str, conn: &PgConnection) -> Result<(), Error> {
+pub fn sync_with_connection(toml_str: &str, conn: &PgConnection) -> Result<()> {
     use crate::schema::categories::dsl::*;
     use diesel::dsl::all;
     use diesel::pg::upsert::excluded;
 
     let toml: toml::value::Table =
-        toml::from_str(toml_str).expect("Could not parse categories toml");
+        toml::from_str(toml_str).context("Could not parse categories toml")?;
 
     let to_insert = categories_from_toml(&toml, None)
         .expect("Could not convert categories from TOML")

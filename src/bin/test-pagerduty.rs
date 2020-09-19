@@ -11,9 +11,9 @@ mod on_call;
 
 use std::env::args;
 
-use cargo_registry::util::Error;
+use anyhow::Result;
 
-fn main() -> Result<(), Error> {
+fn main() -> Result<()> {
     let args = args().collect::<Vec<_>>();
 
     let event_type = &*args[1];
