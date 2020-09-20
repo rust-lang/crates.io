@@ -1,5 +1,6 @@
 language: rust
 dist: bionic
+os: linux
 
 branches:
   only:
@@ -36,14 +37,13 @@ before_script:
   - diesel database setup --locked-schema
 
 addons:
-  chrome: stable
   postgresql: "11"
   apt:
     packages:
       - postgresql-11
       - postgresql-client-11
 
-matrix:
+jobs:
   fast_finish: true
   allow_failures:
     - rust: nightly
@@ -60,6 +60,8 @@ matrix:
     - name: Frontend
       language: node_js
       node_js: 12
+      addons:
+        chrome: stable
       install:
         - npm ci
       before_script: skip
