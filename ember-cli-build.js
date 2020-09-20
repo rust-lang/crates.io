@@ -18,6 +18,7 @@ module.exports = function (defaults) {
     'rust',
     'scss',
     'sql',
+    'toml',
     'yaml',
   ];
 
