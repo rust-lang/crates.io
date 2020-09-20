@@ -40,7 +40,7 @@ impl<'a> MarkdownRenderer<'a> {
                 "language-scss",
                 "language-sql",
                 "language-toml",
-                "yaml",
+                "language-yaml",
             ]),
         )]);
         let sanitize_url = UrlRelative::Custom(Box::new(SanitizeUrl::new(base_url)));
