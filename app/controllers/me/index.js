@@ -62,9 +62,7 @@ export default Controller.extend({
       this.setAllEmailNotifications(false);
     },
     startNewToken() {
-      this.store.createRecord('api-token', {
-        created_at: new Date(Date.now() + 2000),
-      });
+      this.store.createRecord('api-token');
     },
   },
 });
