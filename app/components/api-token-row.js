@@ -3,19 +3,20 @@ import { empty, or } from '@ember/object/computed';
 
 import { task } from 'ember-concurrency';
 
-export default Component.extend({
-  emptyName: empty('api_token.name'),
-  disableCreate: or('api_token.isSaving', 'emptyName'),
-  serverError: null,
+export default class ApiTokenRow extends Component {
+  @empty('api_token.name') emptyName;
+  @or('api_token.isSaving', 'emptyName') disableCreate;
+
+  serverError = null;
 
   didInsertElement() {
     let input = this.element.querySelector('input');
     if (input && input.focus) {
       input.focus();
     }
-  },
+  }
 
-  saveTokenTask: task(function* () {
+  @task(function* () {
     try {
       yield this.api_token.save();
       this.set('serverError', null);
@@ -28,9 +29,10 @@ export default Component.extend({
       }
       this.set('serverError', msg);
     }
-  }),
+  })
+  saveTokenTask;
 
-  revokeTokenTask: task(function* () {
+  @task(function* () {
     try {
       yield this.api_token.destroyRecord();
     } catch (err) {
@@ -42,5 +44,6 @@ export default Component.extend({
       }
       this.set('serverError', msg);
     }
-  }),
-});
+  })
+  revokeTokenTask;
+}
