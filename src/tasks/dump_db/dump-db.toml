@@ -158,6 +158,7 @@ login = "public"
 github_id = "public"
 name = "public"
 avatar = "public"
+org_id = "public"
 
 [users]
 filter = """
