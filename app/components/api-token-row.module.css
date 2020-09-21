@@ -64,10 +64,3 @@
     flex-direction: column;
     justify-content: stretch;
 }
-
-.error {
-    border-top-width: 0;
-    font-weight: bold;
-    color: rgb(216, 0, 41);
-    padding: 0 10px 10px 20px;
-}

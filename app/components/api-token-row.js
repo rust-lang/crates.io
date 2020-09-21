@@ -1,18 +1,18 @@
 import Component from '@ember/component';
 import { empty, or } from '@ember/object/computed';
+import { inject as service } from '@ember/service';
 
 import { task } from 'ember-concurrency';
 
 export default class ApiTokenRow extends Component {
+  @service notifications;
+
   @empty('token.name') emptyName;
   @or('token.isSaving', 'emptyName') disableCreate;
-
-  serverError = null;
 
   @task(function* () {
     try {
       yield this.token.save();
-      this.set('serverError', null);
     } catch (err) {
       let msg;
       if (err.errors && err.errors[0] && err.errors[0].detail) {
@@ -20,7 +20,7 @@ export default class ApiTokenRow extends Component {
       } else {
         msg = 'An unknown error occurred while saving this token';
       }
-      this.set('serverError', msg);
+      this.notifications.error(msg);
     }
   })
   saveTokenTask;
@@ -35,7 +35,7 @@ export default class ApiTokenRow extends Component {
       } else {
         msg = 'An unknown error occurred while revoking this token';
       }
-      this.set('serverError', msg);
+      this.notifications.error(msg);
     }
   })
   revokeTokenTask;

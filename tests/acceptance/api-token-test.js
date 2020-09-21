@@ -94,7 +94,7 @@ module('Acceptance | api-tokens', function (hooks) {
     assert.dom('[data-test-api-token]').exists({ count: 2 });
     assert.dom('[data-test-api-token="2"]').exists();
     assert.dom('[data-test-api-token="1"]').exists();
-    assert.dom('[data-test-error]').includesText('An error occurred while revoking this token');
+    assert.dom('[data-test-notification-message="error"]').includesText('An error occurred while revoking this token');
   });
 
   test('new API tokens can be created', async function (assert) {
