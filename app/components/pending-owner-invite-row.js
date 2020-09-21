@@ -2,14 +2,15 @@ import Component from '@ember/component';
 
 import { task } from 'ember-concurrency';
 
-export default Component.extend({
-  tagName: '',
-  isAccepted: false,
-  isDeclined: false,
-  isError: false,
-  inviteError: 'default error message',
+export default class PendingOwnerInviteRow extends Component {
+  tagName = '';
 
-  acceptInvitationTask: task(function* () {
+  isAccepted = false;
+  isDeclined = false;
+  isError = false;
+  inviteError = 'default error message';
+
+  @task(function* () {
     this.invite.set('accepted', true);
 
     try {
@@ -23,9 +24,10 @@ export default Component.extend({
         this.set('inviteError', 'Error in accepting invite');
       }
     }
-  }),
+  })
+  acceptInvitationTask;
 
-  declineInvitationTask: task(function* () {
+  @task(function* () {
     this.invite.set('accepted', false);
 
     try {
@@ -39,5 +41,6 @@ export default Component.extend({
         this.set('inviteError', 'Error in declining invite');
       }
     }
-  }),
-});
+  })
+  declineInvitationTask;
+}
