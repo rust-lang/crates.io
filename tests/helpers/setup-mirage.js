@@ -9,7 +9,7 @@ export default function (hooks) {
 
   // To have deterministic visual tests, the seed has to be constant
   hooks.beforeEach(function () {
-    timekeeper.freeze(new Date('11/20/2017 12:00'));
+    timekeeper.travel(new Date('2017-11-20T12:00:00'));
 
     this.authenticateAs = user => {
       this.server.create('mirage-session', { user });
