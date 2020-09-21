@@ -45,7 +45,10 @@
 .actions {
     display: flex;
     align-items: center;
-    img { margin-left: 10px }
+}
+
+.spinner {
+    margin-left: 10px
 }
 
 .save-button {
