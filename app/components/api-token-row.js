@@ -1,20 +1,18 @@
-import Component from '@ember/component';
 import { empty, or } from '@ember/object/computed';
 import { inject as service } from '@ember/service';
+import Component from '@glimmer/component';
 
 import { task } from 'ember-concurrency';
 
 export default class ApiTokenRow extends Component {
-  tagName = '';
-
   @service notifications;
 
-  @empty('token.name') emptyName;
-  @or('token.isSaving', 'emptyName') disableCreate;
+  @empty('args.token.name') emptyName;
+  @or('args.token.isSaving', 'emptyName') disableCreate;
 
   @task(function* () {
     try {
-      yield this.token.save();
+      yield this.args.token.save();
     } catch (err) {
       let msg;
       if (err.errors && err.errors[0] && err.errors[0].detail) {
@@ -29,7 +27,7 @@ export default class ApiTokenRow extends Component {
 
   @task(function* () {
     try {
-      yield this.token.destroyRecord();
+      yield this.args.token.destroyRecord();
     } catch (err) {
       let msg;
       if (err.errors && err.errors[0] && err.errors[0].detail) {
