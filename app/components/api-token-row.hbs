@@ -1,12 +1,11 @@
 {{#if @token.isNew}}
-  <div local-class="row create-token">
+  <form local-class="row create-token" {{on "submit" (perform this.saveTokenTask)}}>
     <div local-class="name">
       <Input
         @type="text"
         placeholder="New token name"
         @disabled={{@token.isSaving}}
         @value={{@token.name}}
-        @enter={{perform this.saveTokenTask}}
         data-test-focused-input
         {{auto-focus}}
       />
@@ -14,12 +13,11 @@
 
     <div local-class="actions">
       <button
-        type="button"
+        type="submit"
         local-class="save-button"
         disabled={{this.disableCreate}}
         title={{if this.emptyName "You must specify a name" ""}}
         data-test-save-token-button
-        {{on "click" (perform this.saveTokenTask)}}
       >
         Create
       </button>
@@ -27,7 +25,7 @@
         <LoadingSpinner local-class="spinner" data-test-saving-spinner />
       {{/if}}
     </div>
-  </div>
+  </form>
 {{else}}
   <div local-class="row" data-test-api-token={{@token.id}}>
     <div local-class="name" data-test-name>
