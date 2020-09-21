@@ -19,6 +19,10 @@
     }
 }
 
+.message {
+    composes: sr-only from '../styles/shared/a11y.module.css';
+}
+
 @keyframes spinner {
     0% {
         transform: rotate(0deg);
