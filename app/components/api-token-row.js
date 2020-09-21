@@ -5,6 +5,8 @@ import { inject as service } from '@ember/service';
 import { task } from 'ember-concurrency';
 
 export default class ApiTokenRow extends Component {
+  tagName = '';
+
   @service notifications;
 
   @empty('token.name') emptyName;
