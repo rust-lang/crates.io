@@ -1,7 +1,6 @@
 import { module, test } from 'qunit';
 
 import fetch from 'fetch';
-import timekeeper from 'timekeeper';
 
 import { setupTest } from '../../../helpers';
 import setupMirage from '../../../helpers/setup-mirage';
@@ -11,7 +10,7 @@ module('Mirage | PUT /api/v1/me/tokens', function (hooks) {
   setupMirage(hooks);
 
   test('creates a new API token', async function (assert) {
-    timekeeper.freeze(new Date('2017-11-20T11:23:45Z'));
+    this.clock.setSystemTime(new Date('2017-11-20T11:23:45Z'));
 
     let user = this.server.create('user');
     this.server.create('mirage-session', { user });

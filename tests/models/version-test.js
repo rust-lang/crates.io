@@ -2,11 +2,13 @@ import { setupTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
 import setupMirage from 'ember-cli-mirage/test-support/setup-mirage';
-import timekeeper from 'timekeeper';
+
+import { setupFakeTimers } from '../helpers/fake-timers';
 
 module('Model | Version', function (hooks) {
   setupTest(hooks);
   setupMirage(hooks);
+  setupFakeTimers(hooks);
 
   hooks.beforeEach(function () {
     this.store = this.owner.lookup('service:store');
@@ -21,16 +23,16 @@ module('Model | Version', function (hooks) {
     let crateRecord = await store.findRecord('crate', crate.name);
     let versions = (await crateRecord.versions).toArray();
 
-    timekeeper.travel(new Date('2010-06-16T21:40:45Z'));
+    this.clock.setSystemTime(new Date('2010-06-16T21:40:45Z'));
     assert.true(versions[0].isNew);
 
-    timekeeper.travel(new Date('2010-06-23T21:40:45Z'));
+    this.clock.setSystemTime(new Date('2010-06-23T21:40:45Z'));
     assert.true(versions[0].isNew);
 
-    timekeeper.travel(new Date('2010-06-24T21:40:45Z'));
+    this.clock.setSystemTime(new Date('2010-06-24T21:40:45Z'));
     assert.false(versions[0].isNew);
 
-    timekeeper.travel(new Date('2014-06-24T21:40:45Z'));
+    this.clock.setSystemTime(new Date('2014-06-24T21:40:45Z'));
     assert.false(versions[0].isNew);
   });
 
