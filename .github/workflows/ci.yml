@@ -49,7 +49,7 @@ jobs:
 
       - uses: percy/exec-action@v0.3.0
         with:
-          command: npm test
+          command: npm run test-coverage
 
   backend:
     name: Backend
