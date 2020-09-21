@@ -6,9 +6,9 @@
         placeholder="New token name"
         @disabled={{this.api_token.isSaving}}
         @value={{this.api_token.name}}
-        @autofocus="autofocus"
         @enter={{action (perform this.saveTokenTask)}}
         data-test-focused-input
+        {{auto-focus}}
       />
     {{else}}
       {{ this.api_token.name }}
