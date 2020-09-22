@@ -5,19 +5,16 @@ import Resolver from 'ember-resolver';
 
 import config from './config/environment';
 
-const App = Application.extend({
-  modulePrefix: config.modulePrefix,
-  podModulePrefix: config.podModulePrefix,
-  Resolver,
+export default class App extends Application {
+  modulePrefix = config.modulePrefix;
+  podModulePrefix = config.podModulePrefix;
+  Resolver = Resolver;
 
-  // eslint-disable-next-line ember/avoid-leaking-state-in-ember-objects
-  customEvents: {
+  customEvents = {
     // prevent non-passive listeners for touchstart/touchmove events
     touchstart: null,
     touchmove: null,
-  },
-});
+  };
+}
 
 loadInitializers(App, config.modulePrefix);
-
-export default App;
