@@ -37,10 +37,8 @@
     "trailingComma": "all"
   },
   "dependencies": {
-    "copy-text-to-clipboard": "2.2.0",
     "fastboot-app-server": "2.0.0",
-    "morgan": "1.10.0",
-    "pretty-bytes": "5.4.1"
+    "morgan": "1.10.0"
   },
   "devDependencies": {
     "@ember/optional-features": "2.0.0",
@@ -51,6 +49,7 @@
     "babel-eslint": "10.1.0",
     "babel-plugin-transform-object-rest-spread": "6.26.0",
     "broccoli-asset-rev": "3.0.0",
+    "copy-text-to-clipboard": "2.2.0",
     "ember-a11y-testing": "3.0.2",
     "ember-api-actions": "0.2.9",
     "ember-auto-import": "1.6.0",
@@ -105,6 +104,7 @@
     "nyc": "15.1.0",
     "postcss-nested": "4.2.3",
     "prettier": "2.1.2",
+    "pretty-bytes": "5.4.1",
     "qunit-console-grouper": "0.2.0",
     "qunit-dom": "1.5.0",
     "sass": "1.26.11",
