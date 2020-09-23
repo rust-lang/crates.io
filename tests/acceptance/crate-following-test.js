@@ -37,7 +37,7 @@ module('Acceptance | Crate following', function (hooks) {
 
     visit('/crates/nanomsg');
     await waitFor('[data-test-follow-button] [data-test-spinner]');
-    assert.dom('[data-test-follow-button]').hasText('');
+    assert.dom('[data-test-follow-button]').hasText('Loading…');
     assert.dom('[data-test-follow-button] [data-test-spinner]').exists();
 
     followingDeferred.resolve({ following: false });
@@ -50,7 +50,7 @@ module('Acceptance | Crate following', function (hooks) {
 
     click('[data-test-follow-button]');
     await waitFor('[data-test-follow-button] [data-test-spinner]');
-    assert.dom('[data-test-follow-button]').hasText('');
+    assert.dom('[data-test-follow-button]').hasText('Loading…');
     assert.dom('[data-test-follow-button] [data-test-spinner]').exists();
 
     followDeferred.resolve({ ok: true });
@@ -63,7 +63,7 @@ module('Acceptance | Crate following', function (hooks) {
 
     click('[data-test-follow-button]');
     await waitFor('[data-test-follow-button] [data-test-spinner]');
-    assert.dom('[data-test-follow-button]').hasText('');
+    assert.dom('[data-test-follow-button]').hasText('Loading…');
     assert.dom('[data-test-follow-button] [data-test-spinner]').exists();
 
     unfollowDeferred.resolve({ ok: true });
