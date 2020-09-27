@@ -4,18 +4,20 @@ import { readOnly } from '@ember/object/computed';
 
 import { pagination } from '../../utils/pagination';
 
-export default Controller.extend({
-  queryParams: ['page', 'per_page', 'sort'],
-  page: '1',
-  per_page: 10,
-  sort: 'recent-downloads',
+export default class CategoryIndexController extends Controller {
+  queryParams = ['page', 'per_page', 'sort'];
+  page = '1';
+  per_page = 10;
+  sort = 'recent-downloads';
 
-  totalItems: readOnly('model.meta.total'),
-  pagination: pagination(),
+  @readOnly('model.meta.total') totalItems;
 
-  category: null,
+  @pagination() pagination;
 
-  currentSortBy: computed('sort', function () {
+  category = null;
+
+  @computed('sort')
+  get currentSortBy() {
     if (this.sort === 'downloads') {
       return 'All-Time Downloads';
     } else if (this.sort === 'alpha') {
@@ -27,5 +29,5 @@ export default Controller.extend({
     } else {
       return 'Recent Downloads';
     }
-  }),
-});
+  }
+}

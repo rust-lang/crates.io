@@ -1,31 +1,35 @@
 import Controller from '@ember/controller';
 import { computed } from '@ember/object';
-import { bool, readOnly } from '@ember/object/computed';
+import { readOnly, bool } from '@ember/object/computed';
 
 import { task } from 'ember-concurrency';
 
 import { pagination } from '../utils/pagination';
 
-export default Controller.extend({
-  queryParams: ['all_keywords', 'page', 'per_page', 'q', 'sort'],
-  q: null,
-  page: '1',
-  per_page: 10,
+export default class SearchController extends Controller {
+  queryParams = ['all_keywords', 'page', 'per_page', 'q', 'sort'];
+  q = null;
+  page = '1';
+  per_page = 10;
 
-  model: readOnly('dataTask.lastSuccessful.value'),
+  @readOnly('dataTask.lastSuccessful.value') model;
 
-  hasData: computed('dataTask.{lastSuccessful,isRunning}', function () {
+  @computed('dataTask.{lastSuccessful,isRunning}')
+  get hasData() {
     return this.get('dataTask.lastSuccessful') || !this.get('dataTask.isRunning');
-  }),
+  }
 
-  firstResultPending: computed('dataTask.{lastSuccessful,isRunning}', function () {
+  @computed('dataTask.{lastSuccessful,isRunning}')
+  get firstResultPending() {
     return !this.get('dataTask.lastSuccessful') && this.get('dataTask.isRunning');
-  }),
+  }
 
-  totalItems: readOnly('model.meta.total'),
-  pagination: pagination(),
+  @readOnly('model.meta.total') totalItems;
 
-  currentSortBy: computed('sort', function () {
+  @pagination() pagination;
+
+  @computed('sort')
+  get currentSortBy() {
     if (this.sort === 'downloads') {
       return 'All-Time Downloads';
     } else if (this.sort === 'recent-downloads') {
@@ -37,15 +41,16 @@ export default Controller.extend({
     } else {
       return 'Relevance';
     }
-  }),
+  }
 
-  hasItems: bool('totalItems'),
+  @bool('totalItems') hasItems;
 
-  dataTask: task(function* (params) {
+  @(task(function* (params) {
     if (params.q !== null) {
       params.q = params.q.trim();
     }
 
     return yield this.store.query('crate', params);
-  }).drop(),
-});
+  }).drop())
+  dataTask;
+}

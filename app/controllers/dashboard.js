@@ -9,35 +9,35 @@ import ajax from '../utils/ajax';
 
 const TO_SHOW = 5;
 
-export default Controller.extend({
-  init() {
-    this._super(...arguments);
+export default class DashboardController extends Controller {
+  hasMore = false;
+  myFeed = A();
 
-    this.hasMore = false;
-    this.myFeed = A();
-  },
+  @alias('model.myCrates') myCrates;
+  @alias('model.myFollowing') myFollowing;
+  @alias('model.myStats') myStats;
 
-  myCrates: alias('model.myCrates'),
-  myFollowing: alias('model.myFollowing'),
-  myStats: alias('model.myStats'),
-
-  visibleCrates: computed('myCrates.[]', function () {
+  @computed('myCrates.[]')
+  get visibleCrates() {
     return this.myCrates.slice(0, TO_SHOW);
-  }),
+  }
 
-  visibleFollowing: computed('myFollowing.[]', function () {
+  @computed('myFollowing.[]')
+  get visibleFollowing() {
     return this.myFollowing.slice(0, TO_SHOW);
-  }),
+  }
 
-  hasMoreCrates: computed('myCrates.[]', function () {
+  @computed('myCrates.[]')
+  get hasMoreCrates() {
     return this.get('myCrates.length') > TO_SHOW;
-  }),
+  }
 
-  hasMoreFollowing: computed('myFollowing.[]', function () {
+  @computed('myFollowing.[]')
+  get hasMoreFollowing() {
     return this.get('myFollowing.length') > TO_SHOW;
-  }),
+  }
 
-  loadMoreTask: task(function* () {
+  @task(function* () {
     let page = this.myFeed.length / 10 + 1;
 
     let data = yield ajax(`/api/v1/me/updates?page=${page}`);
@@ -45,5 +45,6 @@ export default Controller.extend({
 
     this.myFeed.pushObjects(versions);
     this.set('hasMore', data.meta.more);
-  }),
-});
+  })
+  loadMoreTask;
+}

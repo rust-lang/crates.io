@@ -1,7 +1,7 @@
 import Controller from '@ember/controller';
 import { inject as service } from '@ember/service';
 
-export default Controller.extend({
-  design: service(),
-  progress: service(),
-});
+export default class ApplicationController extends Controller {
+  @service design;
+  @service progress;
+}

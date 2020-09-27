@@ -5,16 +5,17 @@ import { inject as service } from '@ember/service';
 
 import { task } from 'ember-concurrency';
 
-export default Controller.extend({
-  fetcher: service(),
+export default class IndexController extends Controller {
+  @service fetcher;
 
-  model: readOnly('dataTask.lastSuccessful.value'),
+  @readOnly('dataTask.lastSuccessful.value') model;
 
-  hasData: computed('dataTask.{lastSuccessful,isRunning}', function () {
+  @computed('dataTask.{lastSuccessful,isRunning}')
+  get hasData() {
     return this.get('dataTask.lastSuccessful') && !this.get('dataTask.isRunning');
-  }),
+  }
 
-  dataTask: task(function* () {
+  @(task(function* () {
     let data = yield this.fetcher.ajax('/api/v1/summary');
 
     addCrates(this.store, data.new_crates);
@@ -23,8 +24,9 @@ export default Controller.extend({
     addCrates(this.store, data.most_recently_downloaded);
 
     return data;
-  }).drop(),
-});
+  }).drop())
+  dataTask;
+}
 
 function addCrates(store, crates) {
   for (let i = 0; i < crates.length; i++) {

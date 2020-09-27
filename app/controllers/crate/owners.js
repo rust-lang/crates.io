@@ -2,14 +2,14 @@ import Controller from '@ember/controller';
 
 import { task } from 'ember-concurrency';
 
-export default Controller.extend({
-  crate: null,
-  error: false,
-  invited: false,
-  removed: false,
-  username: '',
+export default class CrateOwnersController extends Controller {
+  crate = null;
+  error = false;
+  invited = false;
+  removed = false;
+  username = '';
 
-  addOwnerTask: task(function* (event) {
+  @task(function* (event) {
     event.preventDefault();
 
     this.set('error', false);
@@ -32,9 +32,10 @@ export default Controller.extend({
         this.set('error', 'Error sending invite');
       }
     }
-  }),
+  })
+  addOwnerTask;
 
-  removeOwnerTask: task(function* (owner) {
+  @task(function* (owner) {
     this.set('removed', false);
     try {
       yield this.crate.removeOwner(owner.get('login'));
@@ -55,5 +56,6 @@ export default Controller.extend({
         this.set('removed', 'Error removing owner');
       }
     }
-  }),
-});
+  })
+  removeOwnerTask;
+}
