@@ -17,7 +17,3 @@
 .decline-button {
     composes: yellow-button small from '../styles/shared/buttons.module.css';
 }
-
-.error-message {
-    font-size: 90%;
-}

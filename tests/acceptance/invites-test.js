@@ -111,7 +111,7 @@ module('Acceptance | /me/pending-invites', function (hooks) {
     assert.equal(currentURL(), '/me/pending-invites');
 
     await click('[data-test-invite="nanomsg"] [data-test-decline-button]');
-    assert.dom('[data-test-error-message]').containsText('Error in declining invite');
+    assert.dom('[data-test-notification-message="error"]').containsText('Error in declining invite');
     assert.dom('[data-test-accepted-message]').doesNotExist();
     assert.dom('[data-test-declined-message]').doesNotExist();
   });
@@ -155,7 +155,7 @@ module('Acceptance | /me/pending-invites', function (hooks) {
     assert.equal(currentURL(), '/me/pending-invites');
 
     await click('[data-test-invite="nanomsg"] [data-test-accept-button]');
-    assert.dom('[data-test-error-message]').containsText('Error in accepting invite');
+    assert.dom('[data-test-notification-message="error"]').containsText('Error in accepting invite');
     assert.dom('[data-test-accepted-message]').doesNotExist();
     assert.dom('[data-test-declined-message]').doesNotExist();
   });
