@@ -101,6 +101,17 @@ div.header {
     }
 }
 
+.copy-button {
+    width: 60px;
+    background: white;
+    border: none;
+    cursor: pointer;
+
+    &:hover {
+        background: #edebdd;
+    }
+}
+
 .last-update,
 .crate-size {
     composes: small from '../shared/typography.module.css';
