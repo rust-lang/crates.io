@@ -67,7 +67,7 @@
     "ember-cli-meta-tags": "6.0.0",
     "ember-cli-mirage": "1.1.8",
     "ember-cli-moment-shim": "3.8.0",
-    "ember-cli-notifications": "6.3.0",
+    "ember-cli-notifications": "6.3.1",
     "ember-cli-sri": "2.1.1",
     "ember-cli-uglify": "3.0.0",
     "ember-click-outside": "1.3.0",
