@@ -9,13 +9,6 @@ export default class ApiTokenRow extends Component {
 
   serverError = null;
 
-  didInsertElement() {
-    let input = this.element.querySelector('input');
-    if (input && input.focus) {
-      input.focus();
-    }
-  }
-
   @task(function* () {
     try {
       yield this.api_token.save();

@@ -108,7 +108,7 @@ module('Acceptance | api-tokens', function (hooks) {
 
     await click('[data-test-new-token-button]');
     assert.dom('[data-test-new-token-button]').isDisabled();
-    assert.dom('[data-test-focused-input]').exists();
+    assert.dom('[data-test-focused-input]').isFocused();
     assert.dom('[data-test-save-token-button]').exists();
 
     await fillIn('[data-test-focused-input]', 'the new token');
