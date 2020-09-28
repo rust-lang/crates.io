@@ -20,10 +20,12 @@ export default Route.extend({
 
       return { crates, user };
     } catch (e) {
-      if (e.errors.some(e => e.detail === 'Not Found')) {
+      if (e.errors?.some(e => e.detail === 'Not Found')) {
         this.notifications.error(`User '${params.user_id}' does not exist`);
         return this.replaceWith('index');
       }
+
+      throw e;
     }
   },
 });
