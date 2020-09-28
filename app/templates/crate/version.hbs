@@ -56,7 +56,13 @@
         <div local-class='install-action'>Cargo.toml</div>
         <code>{{this.crate.name}} = "{{this.currentVersion.num}}"</code>
         {{#if (is-clipboard-supported)}}
-          <CrateTomlCopy @copyText='{{this.crate.name}} = "{{this.currentVersion.num}}"' />
+          <CopyButton
+            @copyText='{{this.crate.name}} = "{{this.currentVersion.num}}"'
+            title="Copy Cargo.toml snippet to clipboard"
+            local-class="copy-button"
+          >
+            {{svg-jar "copy" alt="Copy Cargo.toml snippet to clipboard"}}
+          </CopyButton>
         {{/if}}
       </div>
       {{#if this.readme}}

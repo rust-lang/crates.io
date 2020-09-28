@@ -22,11 +22,21 @@
 }
 
 .copy-button {
+    padding: 1px 6px;
+    background: transparent;
+    border: none;
+    outline: none;
+    cursor: pointer;
     opacity: 0;
     transition: 50ms;
 
     .crate-row:hover & {
         opacity: 1;
+    }
+
+    svg {
+        height: 1rem;
+        width: 1rem;
     }
 }
 
