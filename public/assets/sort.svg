@@ -1,11 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="11px" height="12px" viewBox="0 0 11 12" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <g fill="#1A9C5D">
-        <rect x="3" y="1" width="8" height="2"></rect>
-        <rect x="-1" y="1" width="3" height="2"></rect>
-        <rect x="-1" y="5" width="3" height="2"></rect>
-        <rect x="-1" y="9" width="3" height="2"></rect>
-        <rect x="3" y="9" width="8" height="2"></rect>
-        <rect x="3" y="5" width="8" height="2"></rect>
-    </g>
+<svg width="11" height="12" viewBox="0 0 11 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+    <rect x="3" y="1" width="8" height="2"/>
+    <rect x="-1" y="1" width="3" height="2"/>
+    <rect x="-1" y="5" width="3" height="2"/>
+    <rect x="-1" y="9" width="3" height="2"/>
+    <rect x="3" y="9" width="8" height="2"/>
+    <rect x="3" y="5" width="8" height="2"/>
 </svg>
