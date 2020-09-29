@@ -30,10 +30,19 @@ export default class SessionService extends Service {
   }
 
   /**
-   * This task will open a popup window directed at the `github-login` route.
-   * After the window has opened it will wait for the window to send a message
-   * back and then evaluate whether the OAuth flow was successful.
+   * This task will open a popup window, query the `/api/private/session/begin` API
+   * endpoint and then navigate the popup window to the received URL.
    *
+   * Example URL:
+   * https://github.com/login/oauth/authorize?client_id=...&state=...&scope=read%3Aorg
+   *
+   * Once the user has allowed the OAuth flow access the page will redirect him
+   * to the `github-authorize` route of this application.
+   *
+   * The task will then wait for the window to send a message back and evaluate
+   * whether the OAuth flow was successful.
+   *
+   * @see https://developer.github.com/v3/oauth/#redirect-users-to-request-github-access
    * @see `github-authorize` route
    */
   @task(function* () {
@@ -48,10 +57,19 @@ export default class SessionService extends Service {
       'menuBar=0',
     ].join(',');
 
-    let win = window.open('/github_login', 'Authorization', windowDimensions);
+    let win = window.open('', '_blank', windowDimensions);
     if (!win) {
       return;
     }
+
+    win.document.write('<html><head></head><body>Please wait while we redirect you…</body></html>');
+    win.document.close();
+
+    // we can't call `window.open()` with this URL directly, because it might trigger
+    // the popup window prevention mechanism of the browser, since the async opening
+    // can not be associated with the original user click event
+    let { url } = yield ajax(`/api/private/session/begin`);
+    win.location = url;
 
     let event = yield waitForEvent(window, 'message');
     if (event.origin !== window.location.origin || !event.data) {

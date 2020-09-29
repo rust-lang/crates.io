@@ -24,12 +24,14 @@ module('Bug #2329', function (hooks) {
     this.server.create('crate-ownership', { crate: bar, user, emailNotifications: false });
     this.server.create('version', { crate: bar });
 
+    this.server.get('/api/private/session/begin', { url: 'url-to-github-including-state-secret' });
+
     this.server.get('/api/private/session/authorize', () => {
       this.server.create('mirage-session', { user });
       return { ok: true };
     });
 
-    let fakeWindow = {};
+    let fakeWindow = { document: { write() {}, close() {} } };
     window.open = () => fakeWindow;
 
     // 1. Sign out.

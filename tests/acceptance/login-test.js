@@ -18,12 +18,14 @@ module('Acceptance | Login', function (hooks) {
     let deferred = defer();
 
     window.open = (url, target, features) => {
-      assert.equal(url, '/github_login');
-      assert.equal(target, 'Authorization');
+      assert.equal(url, '');
+      assert.equal(target, '_blank');
       assert.equal(features, 'width=1000,height=450,toolbar=0,scrollbars=1,status=1,resizable=1,location=1,menuBar=0');
       deferred.resolve();
-      return {};
+      return { document: { write() {}, close() {} } };
     };
+
+    this.server.get('/api/private/session/begin', { url: 'url-to-github-including-state-secret' });
 
     this.server.get('/api/private/session/authorize', (schema, request) => {
       assert.deepEqual(request.queryParams, {
@@ -72,8 +74,10 @@ module('Acceptance | Login', function (hooks) {
 
     window.open = () => {
       deferred.resolve();
-      return {};
+      return { document: { write() {}, close() {} } };
     };
+
+    this.server.get('/api/private/session/begin', { url: 'url-to-github-including-state-secret' });
 
     let payload = { errors: [{ detail: 'Forbidden' }] };
     this.server.get('/api/private/session/authorize', payload, 403);
