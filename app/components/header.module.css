@@ -146,7 +146,8 @@ input.search {
     }
 }
 
-.login-menu-item {
+.login-menu-item,
+.logout-menu-item {
     composes: button-reset from '../styles/shared/buttons.module.css';
     cursor: pointer;
 }

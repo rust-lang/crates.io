@@ -1,9 +1,12 @@
 import { action } from '@ember/object';
+import { run } from '@ember/runloop';
 import { inject as service } from '@ember/service';
 import Component from '@glimmer/component';
 
 import { task, waitForEvent } from 'ember-concurrency';
 import window from 'ember-window-mock';
+
+import ajax from '../utils/ajax';
 
 export default class Header extends Component {
   @service header;
@@ -68,4 +71,13 @@ export default class Header extends Component {
     this.session.login();
   })
   loginTask;
+
+  @task(function* () {
+    yield ajax(`/api/private/session`, { method: 'DELETE' });
+    run(() => {
+      this.session.logoutUser();
+      this.transitionTo('index');
+    });
+  })
+  logoutTask;
 }
