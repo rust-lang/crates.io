@@ -12,9 +12,9 @@ import * as localStorage from '../utils/local-storage';
  *
  * @see `github-authorize` route
  */
-export default Route.extend({
-  notifications: service(),
-  session: service(),
+export default class LoginRoute extends Route {
+  @service notifications;
+  @service session;
 
   beforeModel(transition) {
     localStorage.removeItem('github_response');
@@ -67,5 +67,5 @@ export default Route.extend({
     }, 200);
 
     transition.abort();
-  },
-});
+  }
+}
