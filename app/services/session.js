@@ -58,12 +58,20 @@ export default class SessionService extends Service {
       return;
     }
 
-    let { data } = event.data;
-    if (data && data.errors) {
-      this.notifications.error(`Failed to log in: ${data.errors[0].detail}`);
+    let { code, state } = event.data;
+    if (!code || !state) {
       return;
-    } else if (!event.data.ok) {
-      this.notifications.error('Failed to log in');
+    }
+
+    let response = yield fetch(`/api/private/session/authorize?code=${code}&state=${state}`);
+    if (!response.ok) {
+      let json = yield response.json();
+
+      if (json && json.errors) {
+        this.notifications.error(`Failed to log in: ${json.errors[0].detail}`);
+      } else {
+        this.notifications.error('Failed to log in');
+      }
       return;
     }
 

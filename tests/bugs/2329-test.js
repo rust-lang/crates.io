@@ -24,6 +24,11 @@ module('Bug #2329', function (hooks) {
     this.server.create('crate-ownership', { crate: bar, user, emailNotifications: false });
     this.server.create('version', { crate: bar });
 
+    this.server.get('/api/private/session/authorize', () => {
+      this.server.create('mirage-session', { user });
+      return { ok: true };
+    });
+
     let fakeWindow = {};
     window.open = () => fakeWindow;
 
@@ -41,11 +46,8 @@ module('Bug #2329', function (hooks) {
 
     // 5. Complete the authentication workflow if necessary.
 
-    // simulate login on the mirage side
-    this.server.create('mirage-session', { user });
-
     // simulate the response from the `github-authorize` route
-    window.postMessage({ ok: true }, window.location.origin);
+    window.postMessage({ code: 'foo', state: 'bar' }, window.location.origin);
 
     // wait for the user menu to show up after the successful login
     await waitFor('[data-test-user-menu]');
