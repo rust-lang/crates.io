@@ -1,28 +1,28 @@
-<div local-class="row {{if this.api_token.isNew "create-token"}}" data-test-api-token={{this.api_token.id}}>
+<div local-class="row {{if @token.isNew "create-token"}}" data-test-api-token={{@token.id}}>
   <div local-class="name" data-test-name>
-    {{#if this.api_token.isNew}}
+    {{#if @token.isNew}}
       <Input
         @type="text"
         placeholder="New token name"
-        @disabled={{this.api_token.isSaving}}
-        @value={{this.api_token.name}}
+        @disabled={{@token.isSaving}}
+        @value={{@token.name}}
         @enter={{action (perform this.saveTokenTask)}}
         data-test-focused-input
         {{auto-focus}}
       />
     {{else}}
-      {{ this.api_token.name }}
+      {{@token.name}}
     {{/if}}
   </div>
 
-  {{#unless this.api_token.isNew}}
+  {{#unless @token.isNew}}
     <div local-class='dates'>
-      <span title={{this.api_token.created_at}} local-class="created-at" data-test-created-at>
-        Created {{moment-from-now this.api_token.created_at}}
+      <span title={{@token.created_at}} local-class="created-at" data-test-created-at>
+        Created {{moment-from-now @token.created_at}}
       </span>
-      <span title={{this.api_token.last_used_at}} local-class="last-used-at" data-test-last-used-at>
-        {{#if this.api_token.last_used_at}}
-          Last used {{moment-from-now this.api_token.last_used_at}}
+      <span title={{@token.last_used_at}} local-class="last-used-at" data-test-last-used-at>
+        {{#if @token.last_used_at}}
+          Last used {{moment-from-now @token.last_used_at}}
         {{else}}
           Never used
         {{/if}}
@@ -31,7 +31,7 @@
   {{/unless}}
 
   <div local-class='actions'>
-    {{#if this.api_token.isNew}}
+    {{#if @token.isNew}}
       <button
         type="button"
         local-class="save-button"
@@ -46,14 +46,14 @@
       <button
         type="button"
         local-class="revoke-button"
-        disabled={{this.api_token.isSaving}}
+        disabled={{@token.isSaving}}
         data-test-revoke-token-button
         {{action (perform this.revokeTokenTask)}}
       >
         Revoke
       </button>
     {{/if}}
-    {{#if this.api_token.isSaving}}
+    {{#if @token.isSaving}}
       <LoadingSpinner local-class="spinner" data-test-saving-spinner />
     {{/if}}
   </div>
@@ -67,14 +67,14 @@
   </div>
 {{/if}}
 
-{{#if this.api_token.token}}
+{{#if @token.token}}
   <div local-class="row new-token" data-test-token>
     <div>
       Please record this token somewhere, you cannot retrieve
       its value again. For use on the command line you can save it to <code>~/.cargo/credentials</code>
       with:
 
-      <pre>cargo login {{ this.api_token.token }}</pre>
+      <pre>cargo login {{@token.token}}</pre>
     </div>
   </div>
 {{/if}}

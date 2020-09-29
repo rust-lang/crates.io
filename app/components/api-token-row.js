@@ -4,14 +4,14 @@ import { empty, or } from '@ember/object/computed';
 import { task } from 'ember-concurrency';
 
 export default class ApiTokenRow extends Component {
-  @empty('api_token.name') emptyName;
-  @or('api_token.isSaving', 'emptyName') disableCreate;
+  @empty('token.name') emptyName;
+  @or('token.isSaving', 'emptyName') disableCreate;
 
   serverError = null;
 
   @task(function* () {
     try {
-      yield this.api_token.save();
+      yield this.token.save();
       this.set('serverError', null);
     } catch (err) {
       let msg;
@@ -27,7 +27,7 @@ export default class ApiTokenRow extends Component {
 
   @task(function* () {
     try {
-      yield this.api_token.destroyRecord();
+      yield this.token.destroyRecord();
     } catch (err) {
       let msg;
       if (err.errors && err.errors[0] && err.errors[0].detail) {
