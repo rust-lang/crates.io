@@ -48,7 +48,7 @@ module('Bug #2329', function (hooks) {
     await visit('/');
 
     // 4. Click the "Log in with GitHub" link.
-    await click('[data-test-login-link]');
+    await click('[data-test-login-button]');
 
     // 5. Complete the authentication workflow if necessary.
 

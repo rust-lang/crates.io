@@ -18,4 +18,8 @@ export default class Header extends Component {
       },
     });
   }
+
+  @action login() {
+    this.router.transitionTo('login');
+  }
 }

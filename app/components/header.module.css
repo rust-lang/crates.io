@@ -118,6 +118,13 @@ input.search {
     border-top: 1px solid var(--gray-border);
 }
 
+.login-button {
+    composes: button-reset from '../styles/shared/buttons.module.css';
+    margin: 0 -5px;
+    padding: 5px;
+    cursor: pointer;
+}
+
 .login-icon {
     color: #141414;
     opacity: 0.5;
@@ -137,4 +144,9 @@ input.search {
     img {
         vertical-align: top;
     }
+}
+
+.login-menu-item {
+    composes: button-reset from '../styles/shared/buttons.module.css';
+    cursor: pointer;
 }
