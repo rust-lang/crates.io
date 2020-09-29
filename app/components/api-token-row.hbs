@@ -59,14 +59,6 @@
   </div>
 </div>
 
-{{#if this.serverError}}
-  <div local-class="row error" data-test-error>
-    <div>
-      {{ this.serverError }}
-    </div>
-  </div>
-{{/if}}
-
 {{#if @token.token}}
   <div local-class="row new-token" data-test-token>
     <div>
