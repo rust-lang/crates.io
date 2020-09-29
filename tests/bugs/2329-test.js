@@ -35,7 +35,7 @@ module('Bug #2329', function (hooks) {
 
     this.server.get('/api/v1/me/tokens', { api_tokens: [] });
 
-    let fakeWindow = { closed: false };
+    let fakeWindow = {};
     window.open = () => fakeWindow;
 
     // 1. Sign out.
@@ -53,10 +53,7 @@ module('Bug #2329', function (hooks) {
     // 5. Complete the authentication workflow if necessary.
 
     // simulate the response from the `github-authorize` route
-    window.github_response = JSON.stringify({ ok: true, data: { user } });
-
-    // simulate that the window has been closed by the `github-authorize` route
-    fakeWindow.closed = true;
+    window.postMessage({ ok: true, data: { user } }, window.location.origin);
 
     // wait for the user menu to show up after the successful login
     await waitFor('[data-test-user-menu]');

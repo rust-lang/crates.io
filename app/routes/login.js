@@ -1,10 +1,8 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
-import { rawTimeout, task } from 'ember-concurrency';
+import { task, waitForEvent } from 'ember-concurrency';
 import window from 'ember-window-mock';
-
-import * as localStorage from '../utils/local-storage';
 
 /**
  * This route will open a popup window directed at the `github-login` route.
@@ -23,9 +21,6 @@ export default class LoginRoute extends Route {
   }
 
   @task(function* () {
-    localStorage.removeItem('github_response');
-
-    window.github_response = undefined;
     let windowDimensions = [
       'width=1000',
       'height=450',
@@ -42,28 +37,16 @@ export default class LoginRoute extends Route {
       return;
     }
 
-    // For the life of me I cannot figure out how to do this other than
-    // polling
-    while (!win.closed) {
-      yield rawTimeout(200);
-    }
-
-    let json = window.github_response;
-    window.github_response = undefined;
-    if (!json) {
+    let event = yield waitForEvent(window, 'message');
+    if (event.origin !== window.location.origin || !event.data) {
       return;
     }
 
-    let response = JSON.parse(json);
-    if (!response) {
-      return;
-    }
-
-    let { data } = response;
+    let { data } = event.data;
     if (data && data.errors) {
       this.notifications.error(`Failed to log in: ${data.errors[0].detail}`);
       return;
-    } else if (!response.ok) {
+    } else if (!event.data.ok) {
       this.notifications.error('Failed to log in');
       return;
     }

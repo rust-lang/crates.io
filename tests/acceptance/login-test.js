@@ -16,13 +16,13 @@ module('Acceptance | Login', function (hooks) {
 
   test('successful login', async function (assert) {
     let deferred = defer();
-    let fakeWindow = { closed: false };
+
     window.open = (url, target, features) => {
       assert.equal(url, '/github_login');
       assert.equal(target, 'Authorization');
       assert.equal(features, 'width=1000,height=450,toolbar=0,scrollbars=1,status=1,resizable=1,location=1,menuBar=0');
       deferred.resolve();
-      return fakeWindow;
+      return {};
     };
 
     this.server.get('/api/v1/me', () => ({
@@ -47,10 +47,7 @@ module('Acceptance | Login', function (hooks) {
     await deferred.promise;
 
     // simulate the response from the `github-authorize` route
-    window.github_response = JSON.stringify({ ok: true });
-
-    // simulate that the window has been closed by the `github-authorize` route
-    fakeWindow.closed = true;
+    window.postMessage({ ok: true }, window.location.origin);
 
     // wait for the user menu to show up after the successful login
     await waitFor('[data-test-user-menu]');
@@ -60,10 +57,10 @@ module('Acceptance | Login', function (hooks) {
 
   test('failed login', async function (assert) {
     let deferred = defer();
-    let fakeWindow = { closed: false };
+
     window.open = () => {
       deferred.resolve();
-      return fakeWindow;
+      return {};
     };
 
     await visit('/');
@@ -76,15 +73,13 @@ module('Acceptance | Login', function (hooks) {
     await deferred.promise;
 
     // simulate the response from the `github-authorize` route
-    window.github_response = JSON.stringify({
+    let message = {
       ok: false,
       data: {
         errors: [{ detail: 'Forbidden' }],
       },
-    });
-
-    // simulate that the window has been closed by the `github-authorize` route
-    fakeWindow.closed = true;
+    };
+    window.postMessage(message, window.location.origin);
 
     // wait for the error message to show up after the failed login
     await waitFor(`[data-test-notification-message]`);

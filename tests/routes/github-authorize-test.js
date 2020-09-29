@@ -14,10 +14,17 @@ module('Route | github-authorized', function (hooks) {
   setupMirage(hooks);
 
   test('happy path', async function (assert) {
-    assert.expect(4);
+    assert.expect(5);
 
     window.close = () => assert.step('window.close()');
-    window.opener = {};
+
+    let message = null;
+    window.opener = {
+      postMessage(_message) {
+        assert.step('window.opener.postMessage()');
+        message = _message;
+      },
+    };
 
     this.server.get('/api/private/session/authorize', (schema, request) => {
       assert.deepEqual(request.queryParams, {
@@ -41,7 +48,7 @@ module('Route | github-authorized', function (hooks) {
 
     await visit('/authorize/github?code=901dd10e07c7e9fa1cd5&state=fYcUY3FMdUUz00FC7vLT7A');
 
-    assert.deepEqual(JSON.parse(window.opener.github_response), {
+    assert.deepEqual(message, {
       data: {
         user: {
           id: 42,
@@ -57,20 +64,26 @@ module('Route | github-authorized', function (hooks) {
       ok: true,
     });
 
-    assert.verifySteps(['window.close()']);
+    assert.verifySteps(['window.opener.postMessage()', 'window.close()']);
   });
 
   test('sad path', async function (assert) {
-    assert.expect(3);
+    assert.expect(4);
 
     window.close = () => assert.step('window.close()');
-    window.opener = {};
+    let message = null;
+    window.opener = {
+      postMessage(_message) {
+        assert.step('window.opener.postMessage()');
+        message = _message;
+      },
+    };
 
     this.server.get('/api/private/session/authorize', () => new Response(500));
 
     await visit('/authorize/github?code=901dd10e07c7e9fa1cd5&state=fYcUY3FMdUUz00FC7vLT7A');
 
-    assert.strictEqual(JSON.parse(window.opener.github_response).ok, false);
-    assert.verifySteps(['window.close()']);
+    assert.strictEqual(message.ok, false);
+    assert.verifySteps(['window.opener.postMessage()', 'window.close()']);
   });
 });
