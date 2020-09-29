@@ -4,7 +4,7 @@
       <LinkTo @route="crate" @model={{crate.id}} local-class="link">
         {{ crate.name }} ({{ crate.max_version }})
         <div>
-          {{svg-jar "download-clear-back"}}
+          {{svg-jar "download-clear-back" local-class="download-icon"}}
           {{ format-num crate.downloads }}
         </div>
       </LinkTo>
