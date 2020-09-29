@@ -1,6 +1,7 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
+import { rawTimeout, task } from 'ember-concurrency';
 import window from 'ember-window-mock';
 
 import * as localStorage from '../utils/local-storage';
@@ -17,6 +18,11 @@ export default class LoginRoute extends Route {
   @service session;
 
   beforeModel(transition) {
+    transition.abort();
+    this.loginTask.perform();
+  }
+
+  @task(function* () {
     localStorage.removeItem('github_response');
 
     window.github_response = undefined;
@@ -38,34 +44,31 @@ export default class LoginRoute extends Route {
 
     // For the life of me I cannot figure out how to do this other than
     // polling
-    let oauthInterval = window.setInterval(() => {
-      if (!win.closed) {
-        return;
-      }
-      window.clearInterval(oauthInterval);
-      let json = window.github_response;
-      window.github_response = undefined;
-      if (!json) {
-        return;
-      }
+    while (!win.closed) {
+      yield rawTimeout(200);
+    }
 
-      let response = JSON.parse(json);
-      if (!response) {
-        return;
-      }
+    let json = window.github_response;
+    window.github_response = undefined;
+    if (!json) {
+      return;
+    }
 
-      let { data } = response;
-      if (data && data.errors) {
-        this.notifications.error(`Failed to log in: ${data.errors[0].detail}`);
-        return;
-      } else if (!response.ok) {
-        this.notifications.error('Failed to log in');
-        return;
-      }
+    let response = JSON.parse(json);
+    if (!response) {
+      return;
+    }
 
-      this.session.login();
-    }, 200);
+    let { data } = response;
+    if (data && data.errors) {
+      this.notifications.error(`Failed to log in: ${data.errors[0].detail}`);
+      return;
+    } else if (!response.ok) {
+      this.notifications.error('Failed to log in');
+      return;
+    }
 
-    transition.abort();
-  }
+    this.session.login();
+  })
+  loginTask;
 }
