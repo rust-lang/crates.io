@@ -9,7 +9,6 @@ export default class Router extends RouterScroll {
 
 Router.map(function () {
   this.route('logout');
-  this.route('login');
   this.route('github-login', { path: 'github_login' });
   this.route('github-authorize', { path: '/authorize/github' });
   this.route('crates');
