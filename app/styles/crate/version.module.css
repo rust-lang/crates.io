@@ -104,6 +104,7 @@ div.header {
 .copy-button {
     composes: button-reset from '../shared/buttons.module.css';
     width: 60px;
+    color: var(--main-color);
     background: white;
     cursor: pointer;
 
