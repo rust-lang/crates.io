@@ -26,10 +26,16 @@
     padding: 1px 6px;
     cursor: pointer;
     opacity: 0;
-    transition: 50ms;
+    transition: 250ms;
 
     .crate-row:hover & {
+        opacity: .8;
+        transition: 0s;
+    }
+
+    .crate-row:hover &:hover, &:focus {
         opacity: 1;
+        transition: 0s;
     }
 
     svg {
