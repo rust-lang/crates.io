@@ -4,14 +4,9 @@
     background-color: #fff;
     border: 1px solid #d5d3cb;
     padding: 20px 30px;
-    width: 100%;
-    text-align: left;
     font-weight: bold;
     cursor: pointer;
-    position: relative;
-    z-index: 2;
     transition: color 200ms ease-in;
-    overflow: hidden;
 
     &.checked {
         background-color: var(--main-bg-dark);
