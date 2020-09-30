@@ -1,4 +1,4 @@
-<li local-class="row" data-test-owned-crate={{this.name}} ...attributes>
+<li local-class="row" data-test-owned-crate={{@ownedCrate.name}} ...attributes>
   <Input
     @type="checkbox"
     @name={{this.controlId}}
@@ -8,6 +8,6 @@
     local-class="input"
   />
   <label for="{{ this.controlId }}" local-class="label">
-    {{ this.name }}
+    {{@ownedCrate.name}}
   </label>
 </li>
