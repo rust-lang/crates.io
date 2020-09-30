@@ -118,6 +118,11 @@ input.search {
     border-top: 1px solid var(--gray-border);
 }
 
+.login-icon {
+    color: #141414;
+    opacity: 0.5;
+}
+
 .current-user-links {
     left: auto;
     right: 0;
