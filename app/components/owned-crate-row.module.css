@@ -46,7 +46,7 @@
     }
 }
 
-.input:checked ~ .label {
+.label.checked {
     &:before {
         transform: translate(-50%, -50%) scale3d(56, 56, 1);
         opacity: 1;

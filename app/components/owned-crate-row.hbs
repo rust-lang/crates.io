@@ -6,7 +6,7 @@
     local-class="input"
     {{on "change" this.setEmailNotifications}}
   />
-  <label for="{{ this.controlId }}" local-class="label">
+  <label for="{{ this.controlId }}" local-class="label {{if @ownedCrate.email_notifications "checked"}}">
     {{@ownedCrate.name}}
   </label>
 </li>
