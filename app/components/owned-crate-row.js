@@ -12,10 +12,8 @@ export default class OwnedCrateRow extends Component {
     return `${this.ownedCrate.id}-email-notifications`;
   }
 
-  @alias('ownedCrate.email_notifications') emailNotifications;
-
   @action setEmailNotifications(event) {
     let { checked } = event.target;
-    this.set('emailNotifications', checked);
+    this.ownedCrate.set('email_notifications', checked);
   }
 }

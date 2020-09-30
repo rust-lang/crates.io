@@ -3,7 +3,7 @@
     @type="checkbox"
     @name={{this.controlId}}
     id={{this.controlId}}
-    @checked={{this.emailNotifications}}
+    @checked={{@ownedCrate.email_notifications}}
     @change={{this.setEmailNotifications}}
   />
   <label for="{{ this.controlId }}">
