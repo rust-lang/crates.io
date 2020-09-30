@@ -35,6 +35,10 @@
     padding-bottom: 5px;
 }
 
+.download-icon {
+    color: #b13b89;
+}
+
 .rev-dep-downloads {
     padding-left: 7px
 }

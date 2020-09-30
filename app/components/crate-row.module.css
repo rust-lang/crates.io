@@ -24,6 +24,7 @@
 .copy-button {
     composes: button-reset from '../styles/shared/buttons.module.css';
     padding: 1px 6px;
+    color: var(--main-color);
     cursor: pointer;
     opacity: 0;
     transition: 250ms;
