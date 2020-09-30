@@ -1,32 +1,32 @@
 {{#if this.isAccepted }}
   <p data-test-accepted-message ...attributes>
     Success! You've been added as an owner of crate
-    <LinkTo @route="crate" @model={{this.invite.crate_name}}>{{this.invite.crate_name}}</LinkTo>.
+    <LinkTo @route="crate" @model={{@invite.crate_name}}>{{@invite.crate_name}}</LinkTo>.
   </p>
 {{else if this.isDeclined}}
   <p data-test-declined-message ...attributes>
     Declined. You have not been added as an owner of crate
-    <LinkTo @route="crate" @model={{this.invite.crate_name}}>{{this.invite.crate_name}}</LinkTo>.
+    <LinkTo @route="crate" @model={{@invite.crate_name}}>{{@invite.crate_name}}</LinkTo>.
   </p>
 {{else}}
   <div local-class="row" ...attributes>
     <div local-class="crate-column">
       <h3>
-        <LinkTo @route="crate" @model={{this.invite.crate_name}} data-test-crate-link>
-          {{this.invite.crate_name}}
+        <LinkTo @route="crate" @model={{@invite.crate_name}} data-test-crate-link>
+          {{@invite.crate_name}}
         </LinkTo>
       </h3>
     </div>
     <div>
       <p>
         Invited by:
-        <LinkTo @route="user" @model={{this.invite.invited_by_username}} data-test-inviter-link>
-          {{this.invite.invited_by_username}}
+        <LinkTo @route="user" @model={{@invite.invited_by_username}} data-test-inviter-link>
+          {{@invite.invited_by_username}}
         </LinkTo>
       </p>
     </div>
     <div local-class="date-column" data-test-date>
-      {{moment-from-now this.invite.created_at}}
+      {{moment-from-now @invite.created_at}}
     </div>
     <div>
       <button type="button" local-class="accept-button" data-test-accept-button {{action (perform this.acceptInvitationTask)}}>Accept</button>
