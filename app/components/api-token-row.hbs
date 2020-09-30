@@ -6,7 +6,7 @@
         placeholder="New token name"
         @disabled={{@token.isSaving}}
         @value={{@token.name}}
-        @enter={{action (perform this.saveTokenTask)}}
+        @enter={{perform this.saveTokenTask}}
         data-test-focused-input
         {{auto-focus}}
       />
@@ -38,7 +38,7 @@
         disabled={{this.disableCreate}}
         title={{if this.emptyName "You must specify a name" ""}}
         data-test-save-token-button
-        {{action (perform this.saveTokenTask)}}
+        {{on "click" (perform this.saveTokenTask)}}
       >
         Create
       </button>
@@ -48,7 +48,7 @@
         local-class="revoke-button"
         disabled={{@token.isSaving}}
         data-test-revoke-token-button
-        {{action (perform this.revokeTokenTask)}}
+        {{on "click" (perform this.revokeTokenTask)}}
       >
         Revoke
       </button>
