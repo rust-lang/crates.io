@@ -1,9 +1,10 @@
 .label {
+    display: flex;
+    align-items: center;
     background-color: #fff;
     border: 1px solid #d5d3cb;
     padding: 20px 30px;
     width: 100%;
-    display: block;
     text-align: left;
     font-weight: bold;
     cursor: pointer;
@@ -12,30 +13,28 @@
     transition: color 200ms ease-in;
     overflow: hidden;
 
-    &:after {
-        width: 32px;
-        height: 32px;
-        content: '';
-        border: 2px solid #d5d3cb;
-        border-radius: 50%;
-        z-index: 2;
-        position: absolute;
-        right: 30px;
-        top: 50%;
-        transform: translateY(-50%);
-        cursor: pointer;
+    &.checked {
+        background-color: var(--main-bg-dark);
     }
 }
 
-.label.checked {
-    background-color: var(--main-bg-dark);
+.name {
+    flex-grow: 1;
+}
 
-    &:after {
+.checkbox {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    margin-left: 10px;
+    border: 2px solid #d5d3cb;
+    border-radius: 50%;
+
+    .checked & {
         background-color: #cfc487;
         border-color: #cfc487;
-        background-image: url('/assets/check-mark.svg');
-        background-repeat: no-repeat;
-        background-position: 3px 4px;
     }
 }
 

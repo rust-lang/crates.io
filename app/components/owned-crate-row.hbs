@@ -3,7 +3,15 @@
   data-test-owned-crate={{@ownedCrate.name}}
   ...attributes
 >
-  {{@ownedCrate.name}}
+  <span local-class="name">
+    {{@ownedCrate.name}}
+  </span>
+
+  <div aria-hidden="true" local-class="checkbox">
+    {{#if @ownedCrate.email_notifications}}
+      {{svg-jar "check-mark"}}
+    {{/if}}
+  </div>
 
   <input
     type="checkbox"
