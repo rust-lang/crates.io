@@ -5,8 +5,9 @@
     id={{this.controlId}}
     @checked={{@ownedCrate.email_notifications}}
     @change={{this.setEmailNotifications}}
+    local-class="input"
   />
-  <label for="{{ this.controlId }}">
+  <label for="{{ this.controlId }}" local-class="label">
     {{ this.name }}
   </label>
 </li>
