@@ -102,9 +102,9 @@ div.header {
 }
 
 .copy-button {
+    composes: button-reset from '../shared/buttons.module.css';
     width: 60px;
     background: white;
-    border: none;
     cursor: pointer;
 
     &:hover {

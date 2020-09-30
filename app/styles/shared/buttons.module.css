@@ -1,3 +1,12 @@
+.button-reset {
+    padding: 0;
+    border: none;
+    outline: none;
+    font: inherit;
+    color: inherit;
+    background: none;
+}
+
 .button {
     --text-color: #383838;
     --disabled-text-color: #858585;
