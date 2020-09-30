@@ -1,11 +1,10 @@
 .row {
-    background-color: #fff;
     display: block;
-    position: relative;
-    border: 1px solid #d5d3cb;
 }
 
 .label {
+    background-color: #fff;
+    border: 1px solid #d5d3cb;
     padding: 20px 30px;
     width: 100%;
     display: block;
