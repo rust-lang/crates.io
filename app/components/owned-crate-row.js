@@ -1,13 +1,11 @@
 import Component from '@ember/component';
-import { action, computed } from '@ember/object';
+import { action } from '@ember/object';
+import { guidFor } from '@ember/object/internals';
 
 export default class OwnedCrateRow extends Component {
   tagName = '';
 
-  @computed('ownedCrate.id')
-  get controlId() {
-    return `${this.ownedCrate.id}-email-notifications`;
-  }
+  controlId = `${guidFor(this)}-checkbox`;
 
   @action setEmailNotifications(event) {
     let { checked } = event.target;
