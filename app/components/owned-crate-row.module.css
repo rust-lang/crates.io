@@ -17,20 +17,6 @@
     transition: color 200ms ease-in;
     overflow: hidden;
 
-    &:before {
-        width: 100%;
-        height: 10px;
-        border-radius: 50%;
-        content: '';
-        background-color: var(--main-bg-dark);
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%) scale3d(1, 1, 1);
-        opacity: 0;
-        z-index: -1;
-    }
-
     &:after {
         width: 32px;
         height: 32px;
@@ -47,10 +33,7 @@
 }
 
 .label.checked {
-    &:before {
-        transform: translate(-50%, -50%) scale3d(56, 56, 1);
-        opacity: 1;
-    }
+    background-color: var(--main-bg-dark);
 
     &:after {
         background-color: #cfc487;
