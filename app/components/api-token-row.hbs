@@ -1,22 +1,38 @@
-<div local-class="row {{if @token.isNew "create-token"}}" data-test-api-token={{@token.id}}>
-  <div local-class="name" data-test-name>
-    {{#if @token.isNew}}
+{{#if @token.isNew}}
+  <form local-class="row create-token" {{on "submit" (perform this.saveTokenTask)}}>
+    <div local-class="name">
       <Input
         @type="text"
         placeholder="New token name"
         @disabled={{@token.isSaving}}
         @value={{@token.name}}
-        @enter={{perform this.saveTokenTask}}
         data-test-focused-input
         {{auto-focus}}
       />
-    {{else}}
-      {{@token.name}}
-    {{/if}}
-  </div>
+    </div>
 
-  {{#unless @token.isNew}}
-    <div local-class='dates'>
+    <div local-class="actions">
+      <button
+        type="submit"
+        local-class="save-button"
+        disabled={{this.disableCreate}}
+        title={{if this.emptyName "You must specify a name" ""}}
+        data-test-save-token-button
+      >
+        Create
+      </button>
+      {{#if @token.isSaving}}
+        <LoadingSpinner local-class="spinner" data-test-saving-spinner />
+      {{/if}}
+    </div>
+  </form>
+{{else}}
+  <div local-class="row" data-test-api-token={{@token.id}}>
+    <div local-class="name" data-test-name>
+      {{@token.name}}
+    </div>
+
+    <div local-class="dates">
       <span title={{@token.created_at}} local-class="created-at" data-test-created-at>
         Created {{moment-from-now @token.created_at}}
       </span>
@@ -28,21 +44,8 @@
         {{/if}}
       </span>
     </div>
-  {{/unless}}
 
-  <div local-class='actions'>
-    {{#if @token.isNew}}
-      <button
-        type="button"
-        local-class="save-button"
-        disabled={{this.disableCreate}}
-        title={{if this.emptyName "You must specify a name" ""}}
-        data-test-save-token-button
-        {{on "click" (perform this.saveTokenTask)}}
-      >
-        Create
-      </button>
-    {{else}}
+    <div local-class="actions">
       <button
         type="button"
         local-class="revoke-button"
@@ -52,21 +55,21 @@
       >
         Revoke
       </button>
-    {{/if}}
-    {{#if @token.isSaving}}
-      <LoadingSpinner local-class="spinner" data-test-saving-spinner />
-    {{/if}}
-  </div>
-</div>
-
-{{#if @token.token}}
-  <div local-class="row new-token" data-test-token>
-    <div>
-      Please record this token somewhere, you cannot retrieve
-      its value again. For use on the command line you can save it to <code>~/.cargo/credentials</code>
-      with:
-
-      <pre>cargo login {{@token.token}}</pre>
+      {{#if @token.isSaving}}
+        <LoadingSpinner local-class="spinner" data-test-saving-spinner />
+      {{/if}}
     </div>
   </div>
+
+  {{#if @token.token}}
+    <div local-class="row new-token" data-test-token>
+      <div>
+        Please record this token somewhere, you cannot retrieve
+        its value again. For use on the command line you can save it to <code>~/.cargo/credentials</code>
+        with:
+
+        <pre>cargo login {{@token.token}}</pre>
+      </div>
+    </div>
+  {{/if}}
 {{/if}}
