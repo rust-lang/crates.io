@@ -4,16 +4,18 @@ import { readOnly } from '@ember/object/computed';
 
 import { pagination } from '../utils/pagination';
 
-export default Controller.extend({
-  queryParams: ['page', 'per_page', 'sort'],
-  page: '1',
-  per_page: 100,
-  sort: 'alpha',
+export default class CategoriesController extends Controller {
+  queryParams = ['page', 'per_page', 'sort'];
+  page = '1';
+  per_page = 100;
+  sort = 'alpha';
 
-  totalItems: readOnly('model.meta.total'),
-  pagination: pagination(),
+  @readOnly('model.meta.total') totalItems;
 
-  currentSortBy: computed('sort', function () {
+  @pagination() pagination;
+
+  @computed('sort')
+  get currentSortBy() {
     return this.sort === 'crates' ? '# Crates' : 'Alphabetical';
-  }),
-});
+  }
+}

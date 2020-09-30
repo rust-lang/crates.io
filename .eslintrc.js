@@ -14,6 +14,9 @@ module.exports = {
     browser: true,
   },
   rules: {
+    // it's fine to use `return` without a value and rely on the implicit `undefined` return value
+    'getter-return': 'off',
+
     'prettier/prettier': 'error',
 
     'ember/no-empty-attrs': 'off',

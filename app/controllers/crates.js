@@ -1,21 +1,22 @@
 import Controller from '@ember/controller';
-import { computed } from '@ember/object';
+import { action, computed } from '@ember/object';
 import { readOnly } from '@ember/object/computed';
 
 import { pagination } from '../utils/pagination';
 
-export default Controller.extend({
-  queryParams: ['letter', 'page', 'per_page', 'sort'],
-  letter: null,
-  page: '1',
-  per_page: 50,
-  sort: 'alpha',
-  alphabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''),
+export default class CratesController extends Controller {
+  queryParams = ['letter', 'page', 'per_page', 'sort'];
+  letter = null;
+  page = '1';
+  per_page = 50;
+  sort = 'alpha';
+  alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
-  totalItems: readOnly('model.meta.total'),
-  pagination: pagination(),
+  @readOnly('model.meta.total') totalItems;
+  @pagination() pagination;
 
-  currentSortBy: computed('sort', function () {
+  @computed('sort')
+  get currentSortBy() {
     if (this.sort === 'downloads') {
       return 'All-Time Downloads';
     } else if (this.sort === 'recent-downloads') {
@@ -27,11 +28,9 @@ export default Controller.extend({
     } else {
       return 'Alphabetical';
     }
-  }),
+  }
 
-  actions: {
-    handleSelection(event) {
-      this.set('letter', event.target.value);
-    },
-  },
-});
+  @action handleSelection(event) {
+    this.set('letter', event.target.value);
+  }
+}

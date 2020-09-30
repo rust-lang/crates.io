@@ -1,6 +1,6 @@
 import Controller from '@ember/controller';
 import { computed } from '@ember/object';
-import { alias, readOnly, gt } from '@ember/object/computed';
+import { gt, readOnly, alias } from '@ember/object/computed';
 import { inject as service } from '@ember/service';
 
 import { task } from 'ember-concurrency';
@@ -10,37 +10,40 @@ import ajax from '../../utils/ajax';
 
 const NUM_VERSIONS = 5;
 
-export default Controller.extend({
-  session: service(),
+export default class CrateVersionController extends Controller {
+  @service session;
 
-  downloadsContext: computed('requestedVersion', 'currentVersion', 'crate', function () {
+  @computed('requestedVersion', 'currentVersion', 'crate')
+  get downloadsContext() {
     return this.requestedVersion ? this.currentVersion : this.crate;
-  }),
-  downloads: alias('downloadsContext.version_downloads'),
-  extraDownloads: alias('downloads.content.meta.extra_downloads'),
+  }
 
-  crate: alias('model.crate'),
-  requestedVersion: alias('model.requestedVersion'),
-  currentVersion: alias('model.version'),
+  @alias('downloadsContext.version_downloads') downloads;
+  @alias('downloads.content.meta.extra_downloads') extraDownloads;
+  @alias('model.crate') crate;
+  @alias('model.requestedVersion') requestedVersion;
+  @alias('model.version') currentVersion;
+  @alias('crate.keywords') keywords;
+  @alias('crate.categories') categories;
 
-  keywords: alias('crate.keywords'),
-  categories: alias('crate.categories'),
-  isOwner: computed('crate.owner_user', 'session.currentUser.id', function () {
+  @computed('crate.owner_user', 'session.currentUser.id')
+  get isOwner() {
     return this.get('crate.owner_user').findBy('id', this.get('session.currentUser.id'));
-  }),
+  }
 
-  sortedVersions: readOnly('crate.versions'),
+  @readOnly('crate.versions') sortedVersions;
 
-  smallSortedVersions: computed('sortedVersions', function () {
+  @computed('sortedVersions')
+  get smallSortedVersions() {
     return this.sortedVersions.slice(0, NUM_VERSIONS);
-  }),
+  }
 
-  hasMoreVersions: gt('sortedVersions.length', NUM_VERSIONS),
+  @gt('sortedVersions.length', NUM_VERSIONS) hasMoreVersions;
+  @gt('keywords.length', 0) anyKeywords;
+  @gt('categories.length', 0) anyCategories;
 
-  anyKeywords: gt('keywords.length', 0),
-  anyCategories: gt('categories.length', 0),
-
-  downloadData: computed('downloads', 'extraDownloads', 'requestedVersion', function () {
+  @computed('downloads', 'extraDownloads', 'requestedVersion')
+  get downloadData() {
     let downloads = this.downloads;
     if (!downloads) {
       return;
@@ -100,11 +103,11 @@ export default Controller.extend({
     }
 
     return data;
-  }),
+  }
 
-  readme: alias('loadReadmeTask.last.value'),
+  @alias('loadReadmeTask.last.value') readme;
 
-  loadReadmeTask: task(function* () {
+  @task(function* () {
     let version = this.currentVersion;
 
     let readme = version.loadReadmeTask.lastSuccessful
@@ -120,36 +123,34 @@ export default Controller.extend({
     }
 
     return readme;
-  }),
+  })
+  loadReadmeTask;
 
-  documentationLink: computed(
-    'crate.{documentation,name}',
-    'currentVersion.num',
-    'loadDocsBuilds.lastSuccessful.value',
-    function () {
-      // if this is *not* a docs.rs link we'll return it directly
-      if (this.crate.documentation && !this.crate.documentation.startsWith('https://docs.rs/')) {
-        return this.crate.documentation;
+  @computed('crate.{documentation,name}', 'currentVersion.num', 'loadDocsBuilds.lastSuccessful.value')
+  get documentationLink() {
+    // if this is *not* a docs.rs link we'll return it directly
+    if (this.crate.documentation && !this.crate.documentation.startsWith('https://docs.rs/')) {
+      return this.crate.documentation;
+    }
+
+    // if we know about a successful docs.rs build, we'll return a link to that
+    if (this.loadDocsBuilds.lastSuccessful) {
+      let docsBuilds = this.loadDocsBuilds.lastSuccessful.value;
+      if (docsBuilds.length > 0 && docsBuilds[0].build_status === true) {
+        return `https://docs.rs/${this.crate.name}/${this.currentVersion.num}`;
       }
+    }
 
-      // if we know about a successful docs.rs build, we'll return a link to that
-      if (this.loadDocsBuilds.lastSuccessful) {
-        let docsBuilds = this.loadDocsBuilds.lastSuccessful.value;
-        if (docsBuilds.length > 0 && docsBuilds[0].build_status === true) {
-          return `https://docs.rs/${this.crate.name}/${this.currentVersion.num}`;
-        }
-      }
+    // finally, we'll return the specified documentation link, whatever it is
+    if (this.crate.documentation) {
+      return this.crate.documentation;
+    }
 
-      // finally, we'll return the specified documentation link, whatever it is
-      if (this.crate.documentation) {
-        return this.crate.documentation;
-      }
+    return null;
+  }
 
-      return null;
-    },
-  ),
-
-  loadDocsBuilds: task(function* () {
+  @task(function* () {
     return yield ajax(`https://docs.rs/crate/${this.crate.name}/${this.currentVersion.num}/builds.json`);
-  }),
-});
+  })
+  loadDocsBuilds;
+}
