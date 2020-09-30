@@ -22,14 +22,12 @@ export default Route.extend({
       let { code, state } = transition.to.queryParams;
       let resp = await fetch(`/api/private/session/authorize?code=${code}&state=${state}`);
       let json = await resp.json();
-      let item = JSON.stringify({ ok: resp.ok, data: json });
       if (window.opener) {
-        window.opener.github_response = item;
+        window.opener.postMessage({ ok: resp.ok, data: json }, window.location.origin);
       }
     } catch (d) {
-      let item = JSON.stringify({ ok: false, data: d });
       if (window.opener) {
-        window.opener.github_response = item;
+        window.opener.postMessage({ ok: false, data: d }, window.location.origin);
       }
     } finally {
       window.close();
