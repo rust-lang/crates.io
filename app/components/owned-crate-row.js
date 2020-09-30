@@ -14,8 +14,8 @@ export default class OwnedCrateRow extends Component {
 
   @alias('ownedCrate.email_notifications') emailNotifications;
 
-  @action
-  toggleEmailNotifications() {
-    this.set('emailNotifications', !this.emailNotifications);
+  @action setEmailNotifications(event) {
+    let { checked } = event.target;
+    this.set('emailNotifications', checked);
   }
 }
