@@ -1,11 +1,11 @@
 <li local-class="row" data-test-owned-crate={{@ownedCrate.name}} ...attributes>
-  <Input
-    @type="checkbox"
-    @name={{this.controlId}}
+  <input
+    type="checkbox"
+    name={{this.controlId}}
     id={{this.controlId}}
-    @checked={{@ownedCrate.email_notifications}}
-    @change={{this.setEmailNotifications}}
+    checked={{@ownedCrate.email_notifications}}
     local-class="input"
+    {{on "change" this.setEmailNotifications}}
   />
   <label for="{{ this.controlId }}" local-class="label">
     {{@ownedCrate.name}}
