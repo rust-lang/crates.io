@@ -1,12 +1,14 @@
-<li local-class="row" data-test-owned-crate={{@ownedCrate.name}} ...attributes>
-  <label local-class="label {{if @ownedCrate.email_notifications "checked"}}">
-    {{@ownedCrate.name}}
+<label
+  local-class="label {{if @ownedCrate.email_notifications "checked"}}"
+  data-test-owned-crate={{@ownedCrate.name}}
+  ...attributes
+>
+  {{@ownedCrate.name}}
 
-    <input
-      type="checkbox"
-      checked={{@ownedCrate.email_notifications}}
-      local-class="input"
-      {{on "change" this.setEmailNotifications}}
-    />
-  </label>
-</li>
+  <input
+    type="checkbox"
+    checked={{@ownedCrate.email_notifications}}
+    local-class="input"
+    {{on "change" this.setEmailNotifications}}
+  />
+</label>

@@ -47,6 +47,7 @@
 }
 
 .notifications-list {
+    list-style: none;
     padding: 0;
     flex-grow: 1;
 }
