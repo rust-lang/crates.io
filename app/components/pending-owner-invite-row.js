@@ -1,5 +1,5 @@
-import Component from '@ember/component';
 import { inject as service } from '@ember/service';
+import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 
 import { task } from 'ember-concurrency';
@@ -7,16 +7,14 @@ import { task } from 'ember-concurrency';
 export default class PendingOwnerInviteRow extends Component {
   @service notifications;
 
-  tagName = '';
-
   @tracked isAccepted = false;
   @tracked isDeclined = false;
 
   @task(function* () {
-    this.invite.set('accepted', true);
+    this.args.invite.set('accepted', true);
 
     try {
-      yield this.invite.save();
+      yield this.args.invite.save();
       this.isAccepted = true;
     } catch (error) {
       if (error.errors) {
@@ -29,10 +27,10 @@ export default class PendingOwnerInviteRow extends Component {
   acceptInvitationTask;
 
   @task(function* () {
-    this.invite.set('accepted', false);
+    this.args.invite.set('accepted', false);
 
     try {
-      yield this.invite.save();
+      yield this.args.invite.save();
       this.isDeclined = true;
     } catch (error) {
       if (error.errors) {
