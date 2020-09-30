@@ -1,7 +1,5 @@
 # crates.io
 
-[![What's Deployed](https://img.shields.io/badge/whatsdeployed-prod-green.svg)](https://whatsdeployed.io/s-9IG)
-
 Source code for the default [Cargo](http://doc.crates.io) registry. Viewable
 online at [crates.io](https://crates.io).
 
