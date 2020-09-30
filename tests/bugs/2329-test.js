@@ -14,26 +14,15 @@ module('Bug #2329', function (hooks) {
   setupMirage(hooks);
 
   test('is fixed', async function (assert) {
-    let user = {
-      id: 42,
-      login: 'johnnydee',
-      email_verified: true,
-      email_verification_sent: true,
-      name: 'John Doe',
-      email: 'john@doe.com',
-      avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',
-      url: 'https://github.com/johnnydee',
-    };
+    let user = this.server.create('user');
 
-    this.server.get('/api/v1/me', {
-      user,
-      owned_crates: [
-        { id: 123, name: 'foo-bar', email_notifications: true },
-        { id: 56456, name: 'barrrrr', email_notifications: false },
-      ],
-    });
+    let foobar = this.server.create('crate', { name: 'foo-bar' });
+    this.server.create('crate-ownership', { crate: foobar, user, emailNotifications: true });
+    this.server.create('version', { crate: foobar });
 
-    this.server.get('/api/v1/me/tokens', { api_tokens: [] });
+    let bar = this.server.create('crate', { name: 'barrrrr' });
+    this.server.create('crate-ownership', { crate: bar, user, emailNotifications: false });
+    this.server.create('version', { crate: bar });
 
     let fakeWindow = {};
     window.open = () => fakeWindow;
@@ -52,8 +41,11 @@ module('Bug #2329', function (hooks) {
 
     // 5. Complete the authentication workflow if necessary.
 
+    // simulate login on the mirage side
+    this.server.create('mirage-session', { user });
+
     // simulate the response from the `github-authorize` route
-    window.postMessage({ ok: true, data: { user } }, window.location.origin);
+    window.postMessage({ ok: true }, window.location.origin);
 
     // wait for the user menu to show up after the successful login
     await waitFor('[data-test-user-menu]');
