@@ -29,12 +29,6 @@ variety of skill levels.
 Please see [docs/CONTRIBUTING.md](https://github.com/rust-lang/crates.io/blob/master/docs/CONTRIBUTING.md) for ideas about what to work on and how to set up a development
 environment.
 
-<a href="https://www.browserstack.com">
-    <img src="browserstack-logo.png" alt="BrowserStack" />
-</a>
-
-We also use [BrowserStack](https://www.browserstack.com) to help us verify that the frontend works in all of our supported browsers. Thanks, BrowserStack!
-
 ### Categories
 
 Adding or editing the categories and corresponding descriptions displayed on
