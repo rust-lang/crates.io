@@ -185,7 +185,7 @@ module('Acceptance | Email Change', function (hooks) {
 
       await click('[data-test-email-input] [data-test-resend-button]');
       assert.dom('[data-test-email-input] [data-test-resend-button]').isEnabled().hasText('Resend');
-      assert.dom('[data-test-email-input] [data-test-error]').hasText('Unknown error in resending message');
+      assert.dom('[data-test-email-input] [data-test-error]').hasText('Error in resending message: [object Object]');
     });
   });
 });

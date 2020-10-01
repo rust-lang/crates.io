@@ -4,8 +4,6 @@ import { empty } from '@ember/object/computed';
 
 import { task } from 'ember-concurrency';
 
-import ajax from '../utils/ajax';
-
 export default class EmailInput extends Component {
   tagName = '';
 
@@ -49,10 +47,8 @@ export default class EmailInput extends Component {
   }
 
   @task(function* () {
-    let user = this.user;
-
     try {
-      yield ajax(`/api/v1/users/${user.id}/resend`, { method: 'PUT' });
+      yield this.user.resendVerificationEmail();
       this.set('disableResend', true);
     } catch (error) {
       if (error.errors) {

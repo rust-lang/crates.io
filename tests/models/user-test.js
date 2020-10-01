@@ -49,4 +49,37 @@ module('Model | User', function (hooks) {
       });
     });
   });
+
+  module('resendVerificationEmail()', function () {
+    test('happy path', async function (assert) {
+      assert.expect(0);
+
+      let user = this.server.create('user', { emailVerificationToken: 'secret123' });
+      this.authenticateAs(user);
+
+      let { currentUser } = await this.owner.lookup('service:session').loadUserTask.perform();
+
+      await currentUser.resendVerificationEmail();
+    });
+
+    test('error handling', async function (assert) {
+      let user = this.server.create('user', { emailVerificationToken: 'secret123' });
+      this.authenticateAs(user);
+
+      this.server.put('/api/v1/users/:user_id/resend', {}, 500);
+
+      let { currentUser } = await this.owner.lookup('service:session').loadUserTask.perform();
+
+      await assert.rejects(currentUser.resendVerificationEmail(), function (error) {
+        assert.deepEqual(error.errors, [
+          {
+            detail: '[object Object]',
+            status: '500',
+            title: 'The backend responded with an error',
+          },
+        ]);
+        return true;
+      });
+    });
+  });
 });
