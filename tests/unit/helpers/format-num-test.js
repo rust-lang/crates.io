@@ -6,6 +6,8 @@ module('Unit | Helper | format-num', function () {
   test('it works', function (assert) {
     assert.equal(formatNum(42), '42');
     assert.equal(formatNum(0), '0');
+    assert.equal(formatNum(0.2), '0.2');
     assert.equal(formatNum(1000), '1,000');
+    assert.equal(formatNum(1000000), '1,000,000');
   });
 });
