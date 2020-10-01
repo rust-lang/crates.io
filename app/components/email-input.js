@@ -93,13 +93,10 @@ export default class EmailInput extends Component {
       return;
     }
 
-    user.set('email', userEmail);
     user
-      .save()
+      .changeEmail(userEmail)
       .then(() => {
         this.set('serverError', null);
-        this.set('user.email_verification_sent', true);
-        this.set('user.email_verified', false);
       })
       .catch(err => {
         let msg;
