@@ -115,6 +115,7 @@
   },
   "engines": {
     "node": "^12.9.1",
-    "npm": "^6.10.2"
+    "npm": "^6.10.2",
+    "yarn": "please_use_npm"
   }
 }
