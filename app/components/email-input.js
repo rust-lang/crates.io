@@ -8,7 +8,7 @@ import { task } from 'ember-concurrency';
 export default class EmailInput extends Component {
   tagName = '';
 
-  value = '';
+  @tracked value;
   @tracked isEditing = false;
   user = null;
 
@@ -55,7 +55,7 @@ export default class EmailInput extends Component {
 
   @action
   editEmail() {
-    this.set('value', this.user.email);
+    this.value = this.user.email;
     this.isEditing = true;
   }
 
