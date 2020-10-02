@@ -13,6 +13,8 @@ export default class EmailInput extends Component {
 
   @tracked value;
   @tracked isEditing = false;
+  @tracked disableResend = false;
+
   user = null;
 
   @empty('value') disableSave;
@@ -24,8 +26,6 @@ export default class EmailInput extends Component {
 
     return email != null && !verified;
   }
-
-  disableResend = false;
 
   @computed('disableResend', 'user.email_verification_sent')
   get resendButtonText() {
@@ -41,7 +41,7 @@ export default class EmailInput extends Component {
   @task(function* () {
     try {
       yield this.user.resendVerificationEmail();
-      this.set('disableResend', true);
+      this.disableResend = true;
     } catch (error) {
       if (error.errors) {
         this.notifications.error(`Error in resending message: ${error.errors[0].detail}`);
@@ -74,7 +74,7 @@ export default class EmailInput extends Component {
     });
 
     this.isEditing = false;
-    this.set('disableResend', false);
+    this.disableResend = false;
   }
 
   @action
