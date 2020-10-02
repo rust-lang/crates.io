@@ -19,14 +19,16 @@ export default Route.extend({
       if (this.session.currentUser) {
         this.store.pushPayload({ user: { id: this.session.currentUser.id, email_verified: true } });
       }
+
+      this.notifications.success('Thank you for confirming your email! :)');
     } catch (error) {
       if (error.errors) {
         this.notifications.error(`Error in email confirmation: ${error.errors[0].detail}`);
-        return this.replaceWith('index');
       } else {
         this.notifications.error(`Unknown error in email confirmation`);
-        return this.replaceWith('index');
       }
     }
+
+    this.replaceWith('index');
   },
 });
