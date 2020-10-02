@@ -74,23 +74,17 @@ export default class EmailInput extends Component {
     let userEmail = this.value;
     let user = this.user;
 
-    user
-      .changeEmail(userEmail)
-      .then(() => {
-        this.set('serverError', null);
-      })
-      .catch(err => {
-        let msg;
-        if (err.errors && err.errors[0] && err.errors[0].detail) {
-          msg = `An error occurred while saving this email, ${err.errors[0].detail}`;
-        } else {
-          msg = 'An unknown error occurred while saving this email.';
-        }
-        user.set('email', this.prevEmail);
-        this.set('serverError', msg);
-        this.set('isError', true);
-        this.set('emailError', `Error in saving email: ${msg}`);
-      });
+    user.changeEmail(userEmail).catch(err => {
+      let msg;
+      if (err.errors && err.errors[0] && err.errors[0].detail) {
+        msg = `An error occurred while saving this email, ${err.errors[0].detail}`;
+      } else {
+        msg = 'An unknown error occurred while saving this email.';
+      }
+      user.set('email', this.prevEmail);
+      this.set('isError', true);
+      this.set('emailError', `Error in saving email: ${msg}`);
+    });
 
     this.isEditing = false;
     this.set('disableResend', false);
