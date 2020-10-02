@@ -1,6 +1,5 @@
 import Component from '@ember/component';
 import { action } from '@ember/object';
-import { empty } from '@ember/object/computed';
 import { inject as service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 
@@ -16,8 +15,6 @@ export default class EmailInput extends Component {
   @tracked disableResend = false;
 
   user = null;
-
-  @empty('value') disableSave;
 
   @task(function* () {
     try {
