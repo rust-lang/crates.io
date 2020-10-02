@@ -74,6 +74,7 @@ module('Acceptance | Email Change', function (hooks) {
     assert.dom('[data-test-email-input] [data-test-save-button]').isEnabled();
 
     await click('[data-test-email-input] [data-test-save-button]');
+    assert.dom('[data-test-email-input] [data-test-no-email]').doesNotExist();
     assert.dom('[data-test-email-input] [data-test-email-address]').includesText('new@email.com');
     assert.dom('[data-test-email-input] [data-test-verified]').doesNotExist();
     assert.dom('[data-test-email-input] [data-test-not-verified]').exists();
