@@ -1,6 +1,7 @@
 import Component from '@ember/component';
 import { action, computed } from '@ember/object';
 import { empty } from '@ember/object/computed';
+import { tracked } from '@glimmer/tracking';
 
 import { task } from 'ember-concurrency';
 
@@ -8,7 +9,7 @@ export default class EmailInput extends Component {
   tagName = '';
 
   value = '';
-  isEditing = false;
+  @tracked isEditing = false;
   user = null;
 
   @empty('user.email') disableSave;
@@ -69,7 +70,7 @@ export default class EmailInput extends Component {
     };
 
     this.set('emailIsNull', isEmailNull(email));
-    this.set('isEditing', true);
+    this.isEditing = true;
     this.set('prevEmail', this.value);
   }
 
@@ -106,14 +107,14 @@ export default class EmailInput extends Component {
         this.set('emailError', `Error in saving email: ${msg}`);
       });
 
-    this.set('isEditing', false);
+    this.isEditing = false;
     this.set('notValidEmail', false);
     this.set('disableResend', false);
   }
 
   @action
   cancelEdit() {
-    this.set('isEditing', false);
+    this.isEditing = false;
     this.set('value', this.prevEmail);
   }
 }
