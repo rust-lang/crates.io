@@ -83,7 +83,13 @@
             disabled={{this.disableResend}}
             data-test-resend-button
           >
-            {{this.resendButtonText}}
+            {{#if this.disableResend}}
+              Sent!
+            {{else if @user.email_verification_sent}}
+              Resend
+            {{else}}
+              Send verification email
+            {{/if}}
           </button>
         </div>
       </div>

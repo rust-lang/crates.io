@@ -1,5 +1,5 @@
 import Component from '@ember/component';
-import { action, computed } from '@ember/object';
+import { action } from '@ember/object';
 import { empty } from '@ember/object/computed';
 import { inject as service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
@@ -18,17 +18,6 @@ export default class EmailInput extends Component {
   user = null;
 
   @empty('value') disableSave;
-
-  @computed('disableResend', 'user.email_verification_sent')
-  get resendButtonText() {
-    if (this.disableResend) {
-      return 'Sent!';
-    } else if (this.get('user.email_verification_sent')) {
-      return 'Resend';
-    } else {
-      return 'Send verification email';
-    }
-  }
 
   @task(function* () {
     try {
