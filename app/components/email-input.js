@@ -65,11 +65,7 @@ export default class EmailInput extends Component {
   @action
   editEmail() {
     let email = this.value;
-    let isEmailNull = function (email) {
-      return email == null;
-    };
-
-    this.set('emailIsNull', isEmailNull(email));
+    this.set('emailIsNull', email == null);
     this.isEditing = true;
     this.set('prevEmail', this.value);
   }
