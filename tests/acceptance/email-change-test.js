@@ -86,20 +86,6 @@ module('Acceptance | Email Change', function (hooks) {
     assert.ok(user.emailVerificationToken);
   });
 
-  test('invalid email address', async function (assert) {
-    let user = this.server.create('user', { email: 'old@email.com' });
-
-    this.authenticateAs(user);
-
-    await visit('/me');
-    await click('[data-test-email-input] [data-test-edit-button]');
-    await fillIn('[data-test-email-input] [data-test-input]', 'foo@bar');
-    assert.dom('[data-test-email-input] [data-test-invalid-email-warning]').doesNotExist();
-
-    await click('[data-test-email-input] [data-test-save-button]');
-    assert.dom('[data-test-email-input] [data-test-invalid-email-warning]').exists();
-  });
-
   test('cancel button', async function (assert) {
     let user = this.server.create('user', { email: 'old@email.com' });
 

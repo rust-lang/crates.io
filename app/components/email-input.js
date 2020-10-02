@@ -14,7 +14,6 @@ export default class EmailInput extends Component {
 
   @empty('user.email') disableSave;
 
-  notValidEmail = false;
   prevEmail = '';
 
   @computed('user.email')
@@ -75,16 +74,6 @@ export default class EmailInput extends Component {
     let userEmail = this.value;
     let user = this.user;
 
-    let emailIsProperFormat = function (userEmail) {
-      let regExp = /^\S+@\S+\.\S+$/;
-      return regExp.test(userEmail);
-    };
-
-    if (!emailIsProperFormat(userEmail)) {
-      this.set('notValidEmail', true);
-      return;
-    }
-
     user
       .changeEmail(userEmail)
       .then(() => {
@@ -104,7 +93,6 @@ export default class EmailInput extends Component {
       });
 
     this.isEditing = false;
-    this.set('notValidEmail', false);
     this.set('disableResend', false);
   }
 
