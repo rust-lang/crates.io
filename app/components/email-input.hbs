@@ -1,12 +1,12 @@
 <div ...attributes>
-  {{#if this.emailIsNull }}
+  {{#unless @user.email}}
     <div local-class="friendly-message" data-test-no-email>
       <p>
         Please add your email address. We will only use
         it to contact you about your account. We promise we'll never share it!
       </p>
     </div>
-  {{/if}}
+  {{/unless}}
 
   {{#if this.isEditing }}
     <div local-class="row">

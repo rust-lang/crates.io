@@ -14,12 +14,6 @@ export default class EmailInput extends Component {
 
   @empty('value') disableSave;
 
-  @computed('user.email')
-  get emailIsNull() {
-    let email = this.get('user.email');
-    return email == null;
-  }
-
   @computed('user.{email,email_verified}')
   get emailNotVerified() {
     let email = this.get('user.email');
