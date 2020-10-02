@@ -24,7 +24,7 @@ export default Factory.extend({
 
   afterCreate(model) {
     if (model.emailVerified === null) {
-      model.update({ emailVerified: !model.emailVerificationToken });
+      model.update({ emailVerified: model.email && !model.emailVerificationToken });
     }
   },
 });
