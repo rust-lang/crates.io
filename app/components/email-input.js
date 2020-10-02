@@ -37,7 +37,9 @@ export default class EmailInput extends Component {
   }
 
   @action
-  saveEmail() {
+  saveEmail(event) {
+    event.preventDefault();
+
     let userEmail = this.value;
     let user = this.user;
 

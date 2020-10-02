@@ -13,7 +13,7 @@
       <div local-class="label">
         <dt>Email</dt>
       </div>
-      <form local-class="email-form" {{action 'saveEmail' on='submit'}}>
+      <form local-class="email-form" {{on "submit" this.saveEmail}}>
         <Input
           @type="email"
           @value={{this.value}}
@@ -61,7 +61,7 @@
           type="button"
           local-class="edit-button"
           data-test-edit-button
-          {{action 'editEmail'}}
+          {{on "click" this.editEmail}}
         >
           Edit
         </button>
@@ -79,9 +79,9 @@
           <button
             type="button"
             local-class="resend-button"
-            {{action (perform this.resendEmailTask)}}
             disabled={{this.disableResend}}
             data-test-resend-button
+            {{on "click" (perform this.resendEmailTask)}}
           >
             {{#if this.disableResend}}
               Sent!
