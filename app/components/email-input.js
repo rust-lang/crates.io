@@ -36,14 +36,15 @@ export default class EmailInput extends Component {
     this.isEditing = true;
   }
 
-  @action
-  saveEmail(event) {
+  @task(function* (event) {
     event.preventDefault();
 
     let userEmail = this.value;
     let user = this.user;
 
-    user.changeEmail(userEmail).catch(err => {
+    try {
+      yield user.changeEmail(userEmail);
+    } catch (err) {
       let msg;
       if (err.errors && err.errors[0] && err.errors[0].detail) {
         msg = `An error occurred while saving this email, ${err.errors[0].detail}`;
@@ -51,9 +52,10 @@ export default class EmailInput extends Component {
         msg = 'An unknown error occurred while saving this email.';
       }
       this.notifications.error(`Error in saving email: ${msg}`);
-    });
+    }
 
     this.isEditing = false;
     this.disableResend = false;
-  }
+  })
+  saveEmailTask;
 }

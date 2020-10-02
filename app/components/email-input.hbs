@@ -13,7 +13,7 @@
       <div local-class="label">
         <dt>Email</dt>
       </div>
-      <form local-class="email-form" {{on "submit" this.saveEmail}}>
+      <form local-class="email-form" {{on "submit" (perform this.saveEmailTask)}}>
         <Input
           @type="email"
           @value={{this.value}}
