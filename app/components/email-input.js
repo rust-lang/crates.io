@@ -1,24 +1,20 @@
-import Component from '@ember/component';
 import { action } from '@ember/object';
 import { inject as service } from '@ember/service';
+import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 
 import { task } from 'ember-concurrency';
 
 export default class EmailInput extends Component {
-  tagName = '';
-
   @service notifications;
 
   @tracked value;
   @tracked isEditing = false;
   @tracked disableResend = false;
 
-  user = null;
-
   @task(function* () {
     try {
-      yield this.user.resendVerificationEmail();
+      yield this.args.user.resendVerificationEmail();
       this.disableResend = true;
     } catch (error) {
       if (error.errors) {
@@ -32,7 +28,7 @@ export default class EmailInput extends Component {
 
   @action
   editEmail() {
-    this.value = this.user.email;
+    this.value = this.args.user.email;
     this.isEditing = true;
   }
 
@@ -40,7 +36,7 @@ export default class EmailInput extends Component {
     event.preventDefault();
 
     let userEmail = this.value;
-    let user = this.user;
+    let user = this.args.user;
 
     try {
       yield user.changeEmail(userEmail);
