@@ -76,9 +76,4 @@ export default class EmailInput extends Component {
     this.isEditing = false;
     this.disableResend = false;
   }
-
-  @action
-  cancelEdit() {
-    this.isEditing = false;
-  }
 }

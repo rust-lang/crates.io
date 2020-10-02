@@ -36,7 +36,7 @@
             type="button"
             local-class="cancel-button"
             data-test-cancel-button
-            {{action 'cancelEdit'}}
+            {{on "click" (fn (mut this.isEditing) false)}}
           >
             Cancel
           </button>
