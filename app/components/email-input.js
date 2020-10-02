@@ -14,8 +14,6 @@ export default class EmailInput extends Component {
 
   @empty('value') disableSave;
 
-  prevEmail = '';
-
   @computed('user.email')
   get emailIsNull() {
     let email = this.get('user.email');
@@ -67,7 +65,6 @@ export default class EmailInput extends Component {
     let email = this.value;
     this.set('emailIsNull', email == null);
     this.isEditing = true;
-    this.set('prevEmail', this.value);
   }
 
   @action
@@ -82,7 +79,6 @@ export default class EmailInput extends Component {
       } else {
         msg = 'An unknown error occurred while saving this email.';
       }
-      user.set('email', this.prevEmail);
       this.set('isError', true);
       this.set('emailError', `Error in saving email: ${msg}`);
     });
@@ -94,6 +90,5 @@ export default class EmailInput extends Component {
   @action
   cancelEdit() {
     this.isEditing = false;
-    this.set('value', this.prevEmail);
   }
 }
