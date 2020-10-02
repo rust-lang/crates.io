@@ -12,7 +12,7 @@ export default class EmailInput extends Component {
   @tracked isEditing = false;
   user = null;
 
-  @empty('user.email') disableSave;
+  @empty('value') disableSave;
 
   prevEmail = '';
 
