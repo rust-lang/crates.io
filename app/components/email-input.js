@@ -7,7 +7,6 @@ import { task } from 'ember-concurrency';
 export default class EmailInput extends Component {
   tagName = '';
 
-  type = '';
   value = '';
   isEditing = false;
   user = null;
