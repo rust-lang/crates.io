@@ -14,8 +14,8 @@ module('Acceptance | Email Confirmation', function (hooks) {
     assert.strictEqual(user.emailVerified, false);
 
     await visit('/confirm/badc0ffee');
-    assert.equal(currentURL(), '/confirm/badc0ffee');
-    assert.dom('[data-test-success-message]').exists();
+    assert.equal(currentURL(), '/');
+    assert.dom('[data-test-notification-message="success"]').exists();
 
     user.reload();
     assert.strictEqual(user.emailVerified, true);
@@ -28,8 +28,8 @@ module('Acceptance | Email Confirmation', function (hooks) {
     this.authenticateAs(user);
 
     await visit('/confirm/badc0ffee');
-    assert.equal(currentURL(), '/confirm/badc0ffee');
-    assert.dom('[data-test-success-message]').exists();
+    assert.equal(currentURL(), '/');
+    assert.dom('[data-test-notification-message="success"]').exists();
 
     let { currentUser } = this.owner.lookup('service:session');
     assert.strictEqual(currentUser.email_verified, true);
