@@ -121,10 +121,8 @@ module('Acceptance | Email Change', function (hooks) {
     await fillIn('[data-test-email-input] [data-test-input]', 'new@email.com');
 
     await click('[data-test-email-input] [data-test-save-button]');
-    assert.dom('[data-test-email-input] [data-test-email-address]').includesText('old@email.com');
-    assert.dom('[data-test-email-input] [data-test-verified]').exists();
-    assert.dom('[data-test-email-input] [data-test-not-verified]').doesNotExist();
-    assert.dom('[data-test-email-input] [data-test-verification-sent]').doesNotExist();
+    assert.dom('[data-test-email-input] [data-test-input]').hasValue('new@email.com');
+    assert.dom('[data-test-email-input] [data-test-email-address]').doesNotExist();
     assert
       .dom('[data-test-notification-message="error"]')
       .includesText('Error in saving email: An error occurred while saving this email');

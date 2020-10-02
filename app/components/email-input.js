@@ -44,6 +44,9 @@ export default class EmailInput extends Component {
 
     try {
       yield user.changeEmail(userEmail);
+
+      this.isEditing = false;
+      this.disableResend = false;
     } catch (err) {
       let msg;
       if (err.errors && err.errors[0] && err.errors[0].detail) {
@@ -53,9 +56,6 @@ export default class EmailInput extends Component {
       }
       this.notifications.error(`Error in saving email: ${msg}`);
     }
-
-    this.isEditing = false;
-    this.disableResend = false;
   })
   saveEmailTask;
 }
