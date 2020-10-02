@@ -1,12 +1,15 @@
 import Component from '@ember/component';
 import { action, computed } from '@ember/object';
 import { empty } from '@ember/object/computed';
+import { inject as service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 
 import { task } from 'ember-concurrency';
 
 export default class EmailInput extends Component {
   tagName = '';
+
+  @service notifications;
 
   @tracked value;
   @tracked isEditing = false;
@@ -22,8 +25,6 @@ export default class EmailInput extends Component {
     return email != null && !verified;
   }
 
-  isError = false;
-  emailError = '';
   disableResend = false;
 
   @computed('disableResend', 'user.email_verification_sent')
@@ -43,11 +44,9 @@ export default class EmailInput extends Component {
       this.set('disableResend', true);
     } catch (error) {
       if (error.errors) {
-        this.set('isError', true);
-        this.set('emailError', `Error in resending message: ${error.errors[0].detail}`);
+        this.notifications.error(`Error in resending message: ${error.errors[0].detail}`);
       } else {
-        this.set('isError', true);
-        this.set('emailError', 'Unknown error in resending message');
+        this.notifications.error('Unknown error in resending message');
       }
     }
   })
@@ -71,8 +70,7 @@ export default class EmailInput extends Component {
       } else {
         msg = 'An unknown error occurred while saving this email.';
       }
-      this.set('isError', true);
-      this.set('emailError', `Error in saving email: ${msg}`);
+      this.notifications.error(`Error in saving email: ${msg}`);
     });
 
     this.isEditing = false;

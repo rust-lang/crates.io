@@ -126,7 +126,7 @@ module('Acceptance | Email Change', function (hooks) {
     assert.dom('[data-test-email-input] [data-test-not-verified]').doesNotExist();
     assert.dom('[data-test-email-input] [data-test-verification-sent]').doesNotExist();
     assert
-      .dom('[data-test-email-input] [data-test-error]')
+      .dom('[data-test-notification-message="error"]')
       .includesText('Error in saving email: An error occurred while saving this email');
 
     user.reload();
@@ -172,7 +172,7 @@ module('Acceptance | Email Change', function (hooks) {
 
       await click('[data-test-email-input] [data-test-resend-button]');
       assert.dom('[data-test-email-input] [data-test-resend-button]').isEnabled().hasText('Resend');
-      assert.dom('[data-test-email-input] [data-test-error]').hasText('Error in resending message: [object Object]');
+      assert.dom('[data-test-notification-message="error"]').hasText('Error in resending message: [object Object]');
     });
   });
 });
