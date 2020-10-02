@@ -50,8 +50,8 @@
       </div>
       <div local-class="email-column" data-test-email-address>
         <dd>
-          {{ this.user.email }}
-          {{#if this.user.email_verified}}
+          {{ @user.email }}
+          {{#if @user.email_verified}}
             <span local-class="verified" data-test-verified>Verified!</span>
           {{/if}}
         </dd>
@@ -70,7 +70,7 @@
     {{#if this.emailNotVerified }}
       <div local-class="row">
         <div local-class="label">
-          {{#if this.user.email_verification_sent}}
+          {{#if @user.email_verification_sent}}
             <p data-test-verification-sent>We have sent a verification email to your address.</p>
           {{/if}}
           <p data-test-not-verified>Your email has not yet been verified.</p>
