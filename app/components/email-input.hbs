@@ -67,7 +67,7 @@
         </button>
       </div>
     </div>
-    {{#if this.emailNotVerified }}
+    {{#if (and @user.email (not @user.email_verified))}}
       <div local-class="row">
         <div local-class="label">
           {{#if @user.email_verification_sent}}

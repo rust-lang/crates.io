@@ -19,14 +19,6 @@ export default class EmailInput extends Component {
 
   @empty('value') disableSave;
 
-  @computed('user.{email,email_verified}')
-  get emailNotVerified() {
-    let email = this.get('user.email');
-    let verified = this.get('user.email_verified');
-
-    return email != null && !verified;
-  }
-
   @computed('disableResend', 'user.email_verification_sent')
   get resendButtonText() {
     if (this.disableResend) {
