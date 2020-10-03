@@ -1,5 +1,4 @@
 import { action } from '@ember/object';
-import { run } from '@ember/runloop';
 import { inject as service } from '@ember/service';
 import Component from '@glimmer/component';
 
@@ -74,10 +73,8 @@ export default class Header extends Component {
 
   @task(function* () {
     yield ajax(`/api/private/session`, { method: 'DELETE' });
-    run(() => {
-      this.session.logoutUser();
-      this.transitionTo('index');
-    });
+    this.session.logoutUser();
+    this.transitionTo('index');
   })
   logoutTask;
 }
