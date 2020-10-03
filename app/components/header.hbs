@@ -69,10 +69,15 @@
           </dd.Menu>
         </Dropdown>
       {{else}}
-        <LinkTo @route="login" data-test-login-link>
+        <button
+          type="button"
+          local-class="login-button"
+          data-test-login-button
+          {{on "click" this.login}}
+        >
           {{svg-jar "lock" local-class="login-icon"}}
           Log in with GitHub
-        </LinkTo>
+        </button>
       {{/if}}
     </nav>
 
@@ -89,7 +94,11 @@
             <menu.Item><LinkTo @route="me.pending-invites">Owner Invites</LinkTo></menu.Item>
             <menu.Item local-class="menu-item-with-separator"><LinkTo @route="logout">Sign Out</LinkTo></menu.Item>
           {{else}}
-            <menu.Item><LinkTo @route="login">Log in with GitHub</LinkTo></menu.Item>
+            <menu.Item>
+              <button type="button" local-class="login-menu-item" {{on "click" this.login}}>
+                Log in with GitHub
+              </button>
+            </menu.Item>
           {{/if}}
         </dd.Menu>
       </Dropdown>

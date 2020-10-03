@@ -40,7 +40,7 @@ module('Acceptance | Login', function (hooks) {
     await visit('/');
     assert.equal(currentURL(), '/');
 
-    await click('[data-test-login-link]');
+    await click('[data-test-login-button]');
     assert.equal(currentURL(), '/');
 
     // wait for `window.open()` to be called
@@ -66,7 +66,7 @@ module('Acceptance | Login', function (hooks) {
     await visit('/');
     assert.equal(currentURL(), '/');
 
-    await click('[data-test-login-link]');
+    await click('[data-test-login-button]');
     assert.equal(currentURL(), '/');
 
     // wait for `window.open()` to be called

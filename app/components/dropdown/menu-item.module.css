@@ -1,8 +1,9 @@
 .item {
-    a {
+    > a, button {
         font-size: 90%;
         width: 100%;
         display: inline-block;
+        text-align: start;
         padding: 8px 10px;
         text-decoration: none;
         color: var(--main-color) !important;

@@ -32,7 +32,7 @@ module('Acceptance | front page', function (hooks) {
 
     assert.dom('[data-test-install-cargo-link]').exists();
     assert.dom('[data-test-all-crates-link]').exists();
-    assert.dom('[data-test-login-link]').exists();
+    assert.dom('[data-test-login-button]').exists();
 
     assert.dom('[data-test-total-downloads] [data-test-value]').hasText('143,345');
     assert.dom('[data-test-total-crates] [data-test-value]').hasText('23');
