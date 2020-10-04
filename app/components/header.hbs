@@ -65,7 +65,9 @@
             <menu.Item><LinkTo @route="dashboard">Dashboard</LinkTo></menu.Item>
             <menu.Item><LinkTo @route="me">Account Settings</LinkTo></menu.Item>
             <menu.Item><LinkTo @route="me.pending-invites">Owner Invites</LinkTo></menu.Item>
-            <menu.Item local-class="menu-item-with-separator"><LinkTo @route="logout">Sign Out</LinkTo></menu.Item>
+            <menu.Item local-class="menu-item-with-separator">
+              <button type="button" local-class="logout-menu-item" {{on "click" (perform this.logoutTask)}}>Sign Out</button>
+            </menu.Item>
           </dd.Menu>
         </Dropdown>
       {{else}}
@@ -92,7 +94,9 @@
             <menu.Item><LinkTo @route="dashboard">Dashboard</LinkTo></menu.Item>
             <menu.Item><LinkTo @route="me" data-test-me-link>Account Settings</LinkTo></menu.Item>
             <menu.Item><LinkTo @route="me.pending-invites">Owner Invites</LinkTo></menu.Item>
-            <menu.Item local-class="menu-item-with-separator"><LinkTo @route="logout">Sign Out</LinkTo></menu.Item>
+            <menu.Item local-class="menu-item-with-separator">
+              <button type="button" local-class="logout-menu-item" {{on "click" (perform this.logoutTask)}}>Sign Out</button>
+            </menu.Item>
           {{else}}
             <menu.Item>
               <button type="button" local-class="login-menu-item" {{on "click" this.login}}>
