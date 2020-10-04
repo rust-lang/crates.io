@@ -39,6 +39,11 @@ module.exports = function (defaults) {
     fingerprint: {
       extensions: ['js', 'css', 'png', 'jpg', 'gif', 'map', 'svg', 'ttf', 'woff', 'woff2'],
     },
+
+    sourcemaps: {
+      enabled: true,
+      extensions: ['js'],
+    },
   });
 
   app.import('node_modules/normalize.css/normalize.css');
