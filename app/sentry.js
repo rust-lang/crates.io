@@ -17,5 +17,17 @@ export function init() {
     environment,
     ...config.sentry,
     integrations,
+
+    beforeSend(event, hint) {
+      let error = hint?.originalException;
+
+      // Ignoring these errors due to https://github.com/emberjs/ember.js/issues/12505
+      // and https://github.com/emberjs/ember.js/issues/18416
+      if (error && error.name === 'TransitionAborted') {
+        return null;
+      }
+
+      return event;
+    },
   });
 }
