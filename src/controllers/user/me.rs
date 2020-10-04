@@ -100,7 +100,7 @@ pub fn updates(req: &mut dyn RequestExt) -> EndpointResult {
     }))
 }
 
-/// Handles the `PUT /user/:user_id` route.
+/// Handles the `PUT /users/:user_id` route.
 pub fn update_user(req: &mut dyn RequestExt) -> EndpointResult {
     use self::emails::user_id;
     use diesel::insert_into;
