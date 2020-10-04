@@ -26,9 +26,20 @@ async function loadScript(src) {
     const script = document.createElement('script');
     script.src = src;
     script.onload = resolve;
-    script.onerror = reject;
+    script.onerror = event => {
+      reject(new ExternalScriptError(event.target.src));
+    };
     document.body.appendChild(script);
   });
+}
+
+class ExternalScriptError extends Error {
+  constructor(url) {
+    let message = `Failed to load script at ${url}`;
+    super(message);
+    this.name = 'ExternalScriptError';
+    this.url = url;
+  }
 }
 
 async function loadJsApi() {
