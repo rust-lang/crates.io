@@ -4,6 +4,7 @@ import Component from '@glimmer/component';
 
 import { task } from 'ember-concurrency';
 
+import { ExternalScriptError } from '../services/google-charts';
 import { ignoreCancellation } from '../utils/concurrency';
 
 // Colors by http://colorbrewer2.org/#type=diverging&scheme=RdBu&n=10
@@ -17,7 +18,15 @@ export default class DownloadGraph extends Component {
   constructor() {
     super(...arguments);
 
-    this.loadTask.perform().catch(ignoreCancellation);
+    this.loadTask
+      .perform()
+      .catch(ignoreCancellation)
+      .catch(error => {
+        // ignore `ExternalScriptError` errors since we handle those in the template
+        if (!(error instanceof ExternalScriptError)) {
+          throw error;
+        }
+      });
 
     window.addEventListener('resize', this.resizeHandler, false);
   }
