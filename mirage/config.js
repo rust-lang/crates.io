@@ -3,6 +3,7 @@ import * as Crates from './route-handlers/crates';
 import * as DocsRS from './route-handlers/docs-rs';
 import * as Keywords from './route-handlers/keywords';
 import * as Me from './route-handlers/me';
+import * as Session from './route-handlers/session';
 import * as Summary from './route-handlers/summary';
 import * as Teams from './route-handlers/teams';
 import * as Users from './route-handlers/users';
@@ -13,6 +14,7 @@ export default function () {
   DocsRS.register(this);
   Keywords.register(this);
   Me.register(this);
+  Session.register(this);
   Summary.register(this);
   Teams.register(this);
   Users.register(this);
