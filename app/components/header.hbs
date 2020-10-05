@@ -70,7 +70,7 @@
                 type="button"
                 local-class="logout-menu-item"
                 data-test-logout-button
-                {{on "click" (perform this.logoutTask)}}
+                {{on "click" (perform this.session.logoutTask)}}
               >
                 Sign Out
               </button>
@@ -102,7 +102,7 @@
             <menu.Item><LinkTo @route="me" data-test-me-link>Account Settings</LinkTo></menu.Item>
             <menu.Item><LinkTo @route="me.pending-invites">Owner Invites</LinkTo></menu.Item>
             <menu.Item local-class="menu-item-with-separator">
-              <button type="button" local-class="logout-menu-item" {{on "click" (perform this.logoutTask)}}>Sign Out</button>
+              <button type="button" local-class="logout-menu-item" {{on "click" (perform this.session.logoutTask)}}>Sign Out</button>
             </menu.Item>
           {{else}}
             <menu.Item>

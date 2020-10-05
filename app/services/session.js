@@ -40,6 +40,13 @@ export default class SessionService extends Service {
     }
   }
 
+  @task(function* () {
+    yield ajax(`/api/private/session`, { method: 'DELETE' });
+    this.logoutUser();
+    this.router.transitionTo('index');
+  })
+  logoutTask;
+
   logoutUser() {
     this.savedTransition = null;
     this.isLoggedIn = false;
