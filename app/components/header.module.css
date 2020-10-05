@@ -122,12 +122,15 @@ input.search {
 
 .login-button {
     composes: button-reset from '../styles/shared/buttons.module.css';
+    display: inline-flex;
+    align-items: center;
     margin: 0 -5px;
     padding: 5px;
     cursor: pointer;
 }
 
 .login-icon {
+    margin-right: 6px;
     color: #141414;
     opacity: 0.5;
 }
