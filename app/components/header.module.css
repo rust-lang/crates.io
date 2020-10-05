@@ -127,9 +127,14 @@ input.search {
     margin: 0 -5px;
     padding: 5px;
     cursor: pointer;
+
+    .spinner {
+        margin-right: 6px;
+    }
 }
 
 .login-icon {
+    width: 16px;
     margin-right: 6px;
     color: #141414;
     opacity: 0.5;
@@ -159,4 +164,8 @@ input.search {
 .logout-menu-item {
     composes: button-reset from '../styles/shared/buttons.module.css';
     cursor: pointer;
+
+    .spinner {
+        margin-right: 6px;
+    }
 }
