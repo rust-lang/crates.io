@@ -57,7 +57,7 @@
       {{#if this.session.currentUser}}
         <Dropdown data-test-user-menu as |dd|>
           <dd.Trigger local-class="dropdown-button" data-test-toggle>
-            <UserAvatar @user={{this.session.currentUser}} @size="small" data-test-avatar />
+            <UserAvatar @user={{this.session.currentUser}} @size="small" local-class="avatar" data-test-avatar />
             {{ this.session.currentUser.name }}
           </dd.Trigger>
 

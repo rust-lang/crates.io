@@ -1,8 +1,11 @@
 .button {
+    display: inline-flex;
+    align-items: center;
     color: inherit;
     cursor: pointer;
 
     .arrow {
+        margin-left: 0.6em;
         font-size: 50%;
         display: inline-block;
         vertical-align: middle;

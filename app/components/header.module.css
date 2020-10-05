@@ -135,6 +135,10 @@ input.search {
     opacity: 0.5;
 }
 
+.avatar {
+    margin-right: 0.5em;
+}
+
 .current-user-links {
     left: auto;
     right: 0;
