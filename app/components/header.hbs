@@ -68,6 +68,7 @@
             <menu.Item local-class="menu-item-with-separator">
               <button
                 type="button"
+                disabled={{this.session.logoutTask.isRunning}}
                 local-class="logout-menu-item"
                 data-test-logout-button
                 {{on "click" (perform this.session.logoutTask)}}
@@ -83,6 +84,7 @@
       {{else}}
         <button
           type="button"
+          disabled={{this.session.loginTask.isRunning}}
           local-class="login-button"
           data-test-login-button
           {{on "click" (perform this.session.loginTask)}}
@@ -111,6 +113,7 @@
             <menu.Item local-class="menu-item-with-separator">
               <button
                 type="button"
+                disabled={{this.session.logoutTask.isRunning}}
                 local-class="logout-menu-item"
                 {{on "click" (perform this.session.logoutTask)}}
               >
@@ -122,7 +125,12 @@
             </menu.Item>
           {{else}}
             <menu.Item>
-              <button type="button" local-class="login-menu-item" {{on "click" (perform this.session.loginTask)}}>
+              <button
+                type="button"
+                disabled={{this.session.loginTask.isRunning}}
+                local-class="login-menu-item"
+                {{on "click" (perform this.session.loginTask)}}
+              >
                 {{#if this.session.loginTask.isRunning}}
                   <LoadingSpinner local-class="spinner"/>
                 {{/if}}

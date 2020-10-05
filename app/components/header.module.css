@@ -128,6 +128,10 @@ input.search {
     padding: 5px;
     cursor: pointer;
 
+    &:disabled {
+        cursor: wait;
+    }
+
     .spinner {
         margin-right: 6px;
     }
@@ -164,6 +168,10 @@ input.search {
 .logout-menu-item {
     composes: button-reset from '../styles/shared/buttons.module.css';
     cursor: pointer;
+
+    &:disabled {
+        cursor: wait;
+    }
 
     .spinner {
         margin-right: 6px;
