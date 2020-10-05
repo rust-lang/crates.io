@@ -1,6 +1,10 @@
 <h1 data-test-404-header>Oops, that route doesn't exist!</h1>
 
-<p local-class='p404'>
+<form
+  local-class='p404'
+  data-test-404-search-form
+  {{on "submit" this.search}}
+>
   Perhaps a search of the site may help?
 
   <Input
@@ -8,8 +12,7 @@
     local-class="search-field"
     placeholder="Search"
     @value={{this.header.searchValue}}
-    @enter={{action "search"}}
     required={{true}}
     data-test-404-search-input
   />
-</p>
+</form>

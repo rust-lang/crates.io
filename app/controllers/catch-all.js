@@ -5,7 +5,8 @@ import { inject as service } from '@ember/service';
 export default class CatchAllController extends Controller {
   @service header;
 
-  @action search(query) {
-    return this.transitionToRoute('search', { queryParams: { q: query } });
+  @action search(event) {
+    event.preventDefault();
+    return this.transitionToRoute('search', { queryParams: { q: this.header.searchValue } });
   }
 }

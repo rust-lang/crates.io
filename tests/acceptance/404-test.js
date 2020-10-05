@@ -1,4 +1,4 @@
-import { fillIn, currentURL, visit } from '@ember/test-helpers';
+import { fillIn, currentURL, triggerEvent, visit } from '@ember/test-helpers';
 import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
@@ -21,8 +21,7 @@ module('Acceptance | 404', function (hooks) {
     await fillIn('[data-test-404-search-input]', 'rust');
     assert.dom('[data-test-404-search-input]').hasValue('rust');
 
-    // TODO wrap the input field in a `<form>` and submit that instead
-    // await triggerKeyEvent('[data-test-404-search-input]', 'keydown', 'Enter');
-    // assert.equal(currentURL(), '/search');
+    await triggerEvent('[data-test-404-search-form]', 'submit');
+    assert.equal(currentURL(), '/search?q=rust');
   });
 });
