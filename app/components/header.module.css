@@ -95,6 +95,8 @@ input.search {
 }
 
 .nav {
+    display: flex;
+    align-items: center;
     text-align: right;
     margin-right: 5px;
 
