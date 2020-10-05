@@ -26,6 +26,9 @@ module.exports = function (defaults) {
     babel6: {
       plugins: ['transform-object-rest-spread'],
     },
+    'ember-fetch': {
+      preferNative: true,
+    },
     'ember-prism': {
       theme: 'twilight',
       components: highlightedLanguages,
