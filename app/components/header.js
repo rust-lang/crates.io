@@ -74,7 +74,7 @@ export default class Header extends Component {
   @task(function* () {
     yield ajax(`/api/private/session`, { method: 'DELETE' });
     this.session.logoutUser();
-    this.transitionTo('index');
+    this.router.transitionTo('index');
   })
   logoutTask;
 }
