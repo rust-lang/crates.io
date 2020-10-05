@@ -82,7 +82,7 @@
           type="button"
           local-class="login-button"
           data-test-login-button
-          {{on "click" (perform this.loginTask)}}
+          {{on "click" (perform this.session.loginTask)}}
         >
           {{svg-jar "lock" local-class="login-icon"}}
           Log in with GitHub
@@ -106,7 +106,7 @@
             </menu.Item>
           {{else}}
             <menu.Item>
-              <button type="button" local-class="login-menu-item" {{on "click" (perform this.loginTask)}}>
+              <button type="button" local-class="login-menu-item" {{on "click" (perform this.session.loginTask)}}>
                 Log in with GitHub
               </button>
             </menu.Item>
