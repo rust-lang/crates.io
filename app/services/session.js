@@ -69,8 +69,7 @@ export default class SessionService extends Service {
 
     this.isLoggedIn = true;
 
-    // just trigger the task, but don't wait for the result here
-    this.loadUserTask.perform();
+    yield this.loadUserTask.perform();
 
     // perform the originally saved transition, if it exists
     let transition = this.savedTransition;
