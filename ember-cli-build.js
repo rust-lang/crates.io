@@ -48,5 +48,7 @@ module.exports = function (defaults) {
 
   app.import('node_modules/normalize.css/normalize.css');
 
+  app.import('vendor/qunit.css', { type: 'test' });
+
   return app.toTree();
 };
