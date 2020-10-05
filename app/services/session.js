@@ -67,11 +67,6 @@ export default class SessionService extends Service {
       return;
     }
 
-    this.login();
-  })
-  loginTask;
-
-  login() {
     this.isLoggedIn = true;
 
     // just trigger the task, but don't wait for the result here
@@ -82,7 +77,8 @@ export default class SessionService extends Service {
     if (transition) {
       transition.retry();
     }
-  }
+  })
+  loginTask;
 
   @task(function* () {
     yield ajax(`/api/private/session`, { method: 'DELETE' });
