@@ -1,7 +1,7 @@
 import { alias } from '@ember/object/computed';
 import Service, { inject as service } from '@ember/service';
 
-import { task, waitForEvent } from 'ember-concurrency';
+import { race, rawTimeout, task, waitForEvent } from 'ember-concurrency';
 import window from 'ember-window-mock';
 
 import ajax from '../utils/ajax';
@@ -71,7 +71,12 @@ export default class SessionService extends Service {
     let { url } = yield ajax(`/api/private/session/begin`);
     win.location = url;
 
-    let event = yield waitForEvent(window, 'message');
+    let event = yield race([waitForEvent(window, 'message'), this.windowCloseWatcherTask.perform(win)]);
+    if (event.closed) {
+      this.notifications.warning('Login was canceled because the popup window was closed.');
+      return;
+    }
+
     if (event.origin !== window.location.origin || !event.data) {
       return;
     }
@@ -104,6 +109,16 @@ export default class SessionService extends Service {
     }
   })
   loginTask;
+
+  @task(function* (window) {
+    while (true) {
+      if (window.closed) {
+        return { closed: true };
+      }
+      yield rawTimeout(10);
+    }
+  })
+  windowCloseWatcherTask;
 
   @task(function* () {
     yield ajax(`/api/private/session`, { method: 'DELETE' });
