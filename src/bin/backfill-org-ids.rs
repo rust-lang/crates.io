@@ -16,11 +16,7 @@ use std::env;
 fn main() {
     let conn = db::connect_now().unwrap();
     let client = Client::new();
-    conn.transaction::<_, diesel::result::Error, _>(|| {
-        backfill_org_ids(&conn, &client);
-        Ok(())
-    })
-    .unwrap()
+    backfill_org_ids(&conn, &client);
 }
 
 fn backfill_org_ids(conn: &PgConnection, client: &Client) {
