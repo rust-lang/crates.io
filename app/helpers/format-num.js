@@ -2,13 +2,16 @@ import { helper } from '@ember/component/helper';
 
 import window from 'ember-window-mock';
 
-let numberFormat;
+function newNumberFormat() {
+  try {
+    return new Intl.NumberFormat(window.navigator.languages || window.navigator.language);
+  } catch (error) {
+    return new Intl.NumberFormat('en');
+  }
+}
 
 export function formatNum(value) {
-  if (!numberFormat) {
-    numberFormat = new Intl.NumberFormat(window.navigator.languages || window.navigator.language);
-  }
-  return numberFormat.format(value);
+  return newNumberFormat().format(value);
 }
 
 export default helper(params => formatNum(params[0]));
