@@ -22,7 +22,7 @@ module('Acceptance | Login', function (hooks) {
       assert.equal(target, '_blank');
       assert.equal(features, 'width=1000,height=450,toolbar=0,scrollbars=1,status=1,resizable=1,location=1,menuBar=0');
       deferred.resolve();
-      return { document: { write() {}, close() {} } };
+      return { document: { write() {}, close() {} }, close() {} };
     };
 
     this.server.get('/api/private/session/begin', { url: 'url-to-github-including-state-secret' });
@@ -74,7 +74,7 @@ module('Acceptance | Login', function (hooks) {
 
     window.open = () => {
       deferred.resolve();
-      return { document: { write() {}, close() {} } };
+      return { document: { write() {}, close() {} }, close() {} };
     };
 
     this.server.get('/api/private/session/begin', { url: 'url-to-github-including-state-secret' });

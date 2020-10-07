@@ -31,7 +31,7 @@ module('Bug #2329', function (hooks) {
       return { ok: true };
     });
 
-    let fakeWindow = { document: { write() {}, close() {} } };
+    let fakeWindow = { document: { write() {}, close() {} }, close() {} };
     window.open = () => fakeWindow;
 
     // 1. Sign out.

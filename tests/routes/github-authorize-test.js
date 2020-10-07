@@ -13,8 +13,6 @@ module('Route | github-authorized', function (hooks) {
   setupMirage(hooks);
 
   test('forwards code and state to window.opener.postMessage()', async function (assert) {
-    window.close = () => assert.step('window.close()');
-
     let message = null;
     window.opener = {
       postMessage(_message) {
@@ -30,6 +28,6 @@ module('Route | github-authorized', function (hooks) {
       state: 'fYcUY3FMdUUz00FC7vLT7A',
     });
 
-    assert.verifySteps(['window.opener.postMessage()', 'window.close()']);
+    assert.verifySteps(['window.opener.postMessage()']);
   });
 });

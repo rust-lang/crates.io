@@ -20,6 +20,5 @@ export default Route.extend({
   beforeModel(transition) {
     let { code, state } = transition.to.queryParams;
     window.opener?.postMessage({ code, state }, window.location.origin);
-    window.close();
   },
 });

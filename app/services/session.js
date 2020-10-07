@@ -77,6 +77,7 @@ export default class SessionService extends Service {
       return;
     }
 
+    win.close();
     if (event.origin !== window.location.origin || !event.data) {
       return;
     }
