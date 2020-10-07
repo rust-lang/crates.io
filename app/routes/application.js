@@ -11,7 +11,10 @@ export default Route.extend({
     this.session.loadUserTask.perform();
 
     // start loading the Google Charts JS library already
-    this.googleCharts.load();
+    // and ignore any errors since we will catch them again
+    // anyway when we call `load()` from the `DownloadGraph`
+    // component
+    this.googleCharts.load().catch(() => {});
   },
 
   actions: {

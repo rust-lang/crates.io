@@ -33,7 +33,7 @@ async function loadScript(src) {
   });
 }
 
-class ExternalScriptError extends Error {
+export class ExternalScriptError extends Error {
   constructor(url) {
     let message = `Failed to load script at ${url}`;
     super(message);

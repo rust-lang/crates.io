@@ -1,5 +1,12 @@
-<div
-  {{did-insert this.renderChart}}
-  {{did-update this.renderChart @data}}
-  ...attributes
-></div>
+{{#if this.loadTask.last.error}}
+  <span data-test-google-api-error>
+    There was an error loading the Google Charts code.
+    Please try again later.
+  </span>
+{{else}}
+  <div
+    {{did-insert this.renderChart}}
+    {{did-update this.renderChart @data}}
+    ...attributes
+  ></div>
+{{/if}}
