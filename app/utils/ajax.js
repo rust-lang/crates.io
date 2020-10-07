@@ -10,7 +10,7 @@ export default async function ajax(input, init) {
 
 export class HttpError extends Error {
   constructor(url, init, response) {
-    let method = init.method ?? 'GET';
+    let method = init?.method ?? 'GET';
     let message = `${method} ${url} failed with: ${response.status} ${response.statusText}`;
     super(message);
     this.name = 'HttpError';
