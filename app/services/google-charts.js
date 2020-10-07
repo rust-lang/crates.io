@@ -44,7 +44,7 @@ export class ExternalScriptError extends Error {
 
 async function loadJsApi() {
   if (!window.google) {
-    await loadScript('https://www.google.com/jsapi');
+    await loadScript('https://www.gstatic.com/charts/loader.js');
   }
   return window.google;
 }
