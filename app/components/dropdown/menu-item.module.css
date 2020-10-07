@@ -2,7 +2,7 @@
     > a, button {
         font-size: 90%;
         width: 100%;
-        display: inline-block;
+        display: inline-flex;
         text-align: start;
         padding: 8px 10px;
         text-decoration: none;

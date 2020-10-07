@@ -57,7 +57,7 @@
       {{#if this.session.currentUser}}
         <Dropdown data-test-user-menu as |dd|>
           <dd.Trigger local-class="dropdown-button" data-test-toggle>
-            <UserAvatar @user={{this.session.currentUser}} @size="small" data-test-avatar />
+            <UserAvatar @user={{this.session.currentUser}} @size="small" local-class="avatar" data-test-avatar />
             {{ this.session.currentUser.name }}
           </dd.Trigger>
 
@@ -68,10 +68,14 @@
             <menu.Item local-class="menu-item-with-separator">
               <button
                 type="button"
+                disabled={{this.session.logoutTask.isRunning}}
                 local-class="logout-menu-item"
                 data-test-logout-button
-                {{on "click" (perform this.logoutTask)}}
+                {{on "click" (perform this.session.logoutTask)}}
               >
+                {{#if this.session.logoutTask.isRunning}}
+                  <LoadingSpinner local-class="spinner"/>
+                {{/if}}
                 Sign Out
               </button>
             </menu.Item>
@@ -80,11 +84,16 @@
       {{else}}
         <button
           type="button"
+          disabled={{this.session.loginTask.isRunning}}
           local-class="login-button"
           data-test-login-button
-          {{on "click" this.login}}
+          {{on "click" (perform this.session.loginTask)}}
         >
-          {{svg-jar "lock" local-class="login-icon"}}
+          {{#if this.session.loginTask.isRunning}}
+            <LoadingSpinner local-class="spinner"/>
+          {{else}}
+            {{svg-jar "lock" local-class="login-icon"}}
+          {{/if}}
           Log in with GitHub
         </button>
       {{/if}}
@@ -102,11 +111,29 @@
             <menu.Item><LinkTo @route="me" data-test-me-link>Account Settings</LinkTo></menu.Item>
             <menu.Item><LinkTo @route="me.pending-invites">Owner Invites</LinkTo></menu.Item>
             <menu.Item local-class="menu-item-with-separator">
-              <button type="button" local-class="logout-menu-item" {{on "click" (perform this.logoutTask)}}>Sign Out</button>
+              <button
+                type="button"
+                disabled={{this.session.logoutTask.isRunning}}
+                local-class="logout-menu-item"
+                {{on "click" (perform this.session.logoutTask)}}
+              >
+                {{#if this.session.logoutTask.isRunning}}
+                  <LoadingSpinner local-class="spinner"/>
+                {{/if}}
+                Sign Out
+              </button>
             </menu.Item>
           {{else}}
             <menu.Item>
-              <button type="button" local-class="login-menu-item" {{on "click" this.login}}>
+              <button
+                type="button"
+                disabled={{this.session.loginTask.isRunning}}
+                local-class="login-menu-item"
+                {{on "click" (perform this.session.loginTask)}}
+              >
+                {{#if this.session.loginTask.isRunning}}
+                  <LoadingSpinner local-class="spinner"/>
+                {{/if}}
                 Log in with GitHub
               </button>
             </menu.Item>

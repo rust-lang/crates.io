@@ -95,6 +95,8 @@ input.search {
 }
 
 .nav {
+    display: flex;
+    align-items: center;
     text-align: right;
     margin-right: 5px;
 
@@ -120,14 +122,30 @@ input.search {
 
 .login-button {
     composes: button-reset from '../styles/shared/buttons.module.css';
+    display: inline-flex;
+    align-items: center;
     margin: 0 -5px;
     padding: 5px;
     cursor: pointer;
+
+    &:disabled {
+        cursor: wait;
+    }
+
+    .spinner {
+        margin-right: 6px;
+    }
 }
 
 .login-icon {
+    width: 16px;
+    margin-right: 6px;
     color: #141414;
     opacity: 0.5;
+}
+
+.avatar {
+    margin-right: 0.5em;
 }
 
 .current-user-links {
@@ -150,4 +168,12 @@ input.search {
 .logout-menu-item {
     composes: button-reset from '../styles/shared/buttons.module.css';
     cursor: pointer;
+
+    &:disabled {
+        cursor: wait;
+    }
+
+    .spinner {
+        margin-right: 6px;
+    }
 }
