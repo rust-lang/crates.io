@@ -45,11 +45,10 @@ jobs:
           npm run lint:deps
 
       - name: Add nonce for parallel tests
-        run: echo ::set-env name=PERCY_PARALLEL_NONCE::`date +%s`
+        run: echo "PERCY_PARALLEL_NONCE=`date +%s`" >> $GITHUB_ENV
 
-      - uses: percy/exec-action@v0.3.0
-        with:
-          command: npm run test-coverage
+      - name: Run percy exec
+        run: npx percy exec -- npm run test-coverage
 
   backend:
     name: Backend
@@ -98,7 +97,7 @@ jobs:
               rm -v "$HOME/.rustup"
               rm -v "$HOME/.cargo"
           fi
-          echo "::add-path::$HOME/.cargo/bin"
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
       # Cache `diesel` binary
       #
