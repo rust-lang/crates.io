@@ -44,9 +44,6 @@ jobs:
           npm run lint:js
           npm run lint:deps
 
-      - name: Add nonce for parallel tests
-        run: echo "PERCY_PARALLEL_NONCE=`date +%s`" >> $GITHUB_ENV
-
       - name: Run percy exec
         if: github.repository == 'rust-lang/crates.io'
         run: npx percy exec -- npm run test-coverage
