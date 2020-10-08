@@ -108,6 +108,7 @@ export default class EmailInput extends Component {
         } else {
           msg = 'An unknown error occurred while saving this email.';
         }
+        user.set('email', this.prevEmail);
         this.set('serverError', msg);
         this.set('isError', true);
         this.set('emailError', `Error in saving email: ${msg}`);

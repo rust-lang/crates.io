@@ -19,7 +19,12 @@
 
 <div local-class="me-email">
   <h2>User Email</h2>
-  <EmailInput @type="email" @value={{this.model.user.email}} @user={{this.model.user}} />
+  <EmailInput
+    @type="email"
+    @value={{this.model.user.email}}
+    @user={{this.model.user}}
+    data-test-email-input
+  />
 </div>
 
 <form local-class="me-email-notifications" {{ action 'saveEmailNotifications' on='submit' }} >
