@@ -48,6 +48,10 @@ jobs:
         if: github.repository == 'rust-lang/crates.io'
         run: npx percy exec -- npm run test-coverage
 
+      - name: test-coverage
+        if: github.repository != 'rust-lang/crates.io'
+        run: npm run test-coverage
+
   backend:
     name: Backend
     runs-on: ubuntu-16.04
