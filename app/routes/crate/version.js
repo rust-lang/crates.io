@@ -32,7 +32,7 @@ export default Route.extend({
           // Find the latest version that not yanked.
           const latestUnyankedVersion = versions.find(version => !version.yanked);
 
-          if (latestStableVersion == null) {
+          if (latestUnyankedVersion == null) {
             // There's not even any unyanked version...
             params.version_num = maxVersion;
           } else {
