@@ -59,7 +59,7 @@ jobs:
         - cargo test
     - name: Frontend
       language: node_js
-      node_js: 12
+      node_js: 14
       addons:
         chrome: stable
       install:
