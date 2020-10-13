@@ -13,4 +13,28 @@ export default class User extends Model {
   @attr kind;
 
   stats = memberAction({ type: 'GET', path: 'stats' });
+
+  async changeEmail(email) {
+    await this.#changeEmail(email);
+    this.store.pushPayload({
+      user: {
+        id: this.id,
+        email,
+        email_verified: false,
+        email_verification_sent: true,
+      },
+    });
+  }
+
+  #changeEmail = memberAction({
+    type: 'PUT',
+    before(email) {
+      return { user: { email } };
+    },
+  });
+
+  resendVerificationEmail = memberAction({
+    type: 'PUT',
+    path: 'resend',
+  });
 }
