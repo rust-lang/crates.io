@@ -1,12 +1,22 @@
-<li local-class="row" data-test-owned-crate={{this.name}} ...attributes>
-  <Input
-    @type="checkbox"
-    @name={{this.controlId}}
-    id={{this.controlId}}
-    @checked={{this.emailNotifications}}
-    @change={{action "toggleEmailNotifications"}}
+<label
+  local-class="label {{if @ownedCrate.email_notifications "checked"}}"
+  data-test-owned-crate={{@ownedCrate.name}}
+  ...attributes
+>
+  <span local-class="name">
+    {{@ownedCrate.name}}
+  </span>
+
+  <div aria-hidden="true" local-class="checkbox">
+    {{#if @ownedCrate.email_notifications}}
+      {{svg-jar "check-mark"}}
+    {{/if}}
+  </div>
+
+  <input
+    type="checkbox"
+    checked={{@ownedCrate.email_notifications}}
+    local-class="input"
+    {{on "change" this.setEmailNotifications}}
   />
-  <label for="{{ this.controlId }}">
-    {{ this.name }}
-  </label>
-</li>
+</label>

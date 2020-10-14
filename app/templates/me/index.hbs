@@ -44,7 +44,9 @@
 
     <ul local-class="notifications-list">
       {{#each this.ownedCrates as |ownedCrate|}}
-        <OwnedCrateRow @ownedCrate={{ownedCrate}} />
+        <li>
+          <OwnedCrateRow @ownedCrate={{ownedCrate}} />
+        </li>
       {{/each}}
     </ul>
 

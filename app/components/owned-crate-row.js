@@ -1,21 +1,9 @@
-import Component from '@ember/component';
-import { action, computed } from '@ember/object';
-import { alias } from '@ember/object/computed';
+import { action } from '@ember/object';
+import Component from '@glimmer/component';
 
 export default class OwnedCrateRow extends Component {
-  tagName = '';
-
-  @alias('ownedCrate.name') name;
-
-  @computed('ownedCrate.id')
-  get controlId() {
-    return `${this.ownedCrate.id}-email-notifications`;
-  }
-
-  @alias('ownedCrate.email_notifications') emailNotifications;
-
-  @action
-  toggleEmailNotifications() {
-    this.set('emailNotifications', !this.emailNotifications);
+  @action setEmailNotifications(event) {
+    let { checked } = event.target;
+    this.args.ownedCrate.set('email_notifications', checked);
   }
 }
