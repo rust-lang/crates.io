@@ -74,6 +74,7 @@ module('Acceptance | Email Change', function (hooks) {
     assert.dom('[data-test-email-input] [data-test-save-button]').isEnabled();
 
     await click('[data-test-email-input] [data-test-save-button]');
+    assert.dom('[data-test-email-input] [data-test-no-email]').doesNotExist();
     assert.dom('[data-test-email-input] [data-test-email-address]').includesText('new@email.com');
     assert.dom('[data-test-email-input] [data-test-verified]').doesNotExist();
     assert.dom('[data-test-email-input] [data-test-not-verified]').exists();
@@ -84,20 +85,6 @@ module('Acceptance | Email Change', function (hooks) {
     assert.strictEqual(user.email, 'new@email.com');
     assert.strictEqual(user.emailVerified, false);
     assert.ok(user.emailVerificationToken);
-  });
-
-  test('invalid email address', async function (assert) {
-    let user = this.server.create('user', { email: 'old@email.com' });
-
-    this.authenticateAs(user);
-
-    await visit('/me');
-    await click('[data-test-email-input] [data-test-edit-button]');
-    await fillIn('[data-test-email-input] [data-test-input]', 'foo@bar');
-    assert.dom('[data-test-email-input] [data-test-invalid-email-warning]').doesNotExist();
-
-    await click('[data-test-email-input] [data-test-save-button]');
-    assert.dom('[data-test-email-input] [data-test-invalid-email-warning]').exists();
   });
 
   test('cancel button', async function (assert) {
@@ -134,12 +121,10 @@ module('Acceptance | Email Change', function (hooks) {
     await fillIn('[data-test-email-input] [data-test-input]', 'new@email.com');
 
     await click('[data-test-email-input] [data-test-save-button]');
-    assert.dom('[data-test-email-input] [data-test-email-address]').includesText('old@email.com');
-    assert.dom('[data-test-email-input] [data-test-verified]').exists();
-    assert.dom('[data-test-email-input] [data-test-not-verified]').doesNotExist();
-    assert.dom('[data-test-email-input] [data-test-verification-sent]').doesNotExist();
+    assert.dom('[data-test-email-input] [data-test-input]').hasValue('new@email.com');
+    assert.dom('[data-test-email-input] [data-test-email-address]').doesNotExist();
     assert
-      .dom('[data-test-email-input] [data-test-error]')
+      .dom('[data-test-notification-message="error"]')
       .includesText('Error in saving email: An error occurred while saving this email');
 
     user.reload();
@@ -185,7 +170,7 @@ module('Acceptance | Email Change', function (hooks) {
 
       await click('[data-test-email-input] [data-test-resend-button]');
       assert.dom('[data-test-email-input] [data-test-resend-button]').isEnabled().hasText('Resend');
-      assert.dom('[data-test-email-input] [data-test-error]').hasText('Error in resending message: [object Object]');
+      assert.dom('[data-test-notification-message="error"]').hasText('Error in resending message: [object Object]');
     });
   });
 });

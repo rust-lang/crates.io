@@ -1,38 +1,32 @@
 <div ...attributes>
-  {{#if this.emailIsNull }}
+  {{#unless @user.email}}
     <div local-class="friendly-message" data-test-no-email>
       <p>
         Please add your email address. We will only use
         it to contact you about your account. We promise we'll never share it!
       </p>
     </div>
-  {{/if}}
+  {{/unless}}
 
   {{#if this.isEditing }}
     <div local-class="row">
       <div local-class="label">
         <dt>Email</dt>
       </div>
-      <form local-class="email-form" {{action 'saveEmail' on='submit'}}>
+      <form local-class="email-form" {{on "submit" (perform this.saveEmailTask)}}>
         <Input
-          @type={{this.type}}
+          @type="email"
           @value={{this.value}}
           placeholder="Email"
           local-class="input"
           data-test-input
         />
 
-        {{#if this.notValidEmail }}
-          <div data-test-invalid-email-warning>
-            <p>Whoops, that email format is invalid</p>
-          </div>
-        {{/if}}
-
         <div local-class="actions">
           <button
             type='submit'
             local-class="save-button"
-            disabled={{this.disableSave}}
+            disabled={{not this.value}}
             data-test-save-button
           >
             Save
@@ -42,7 +36,7 @@
             type="button"
             local-class="cancel-button"
             data-test-cancel-button
-            {{action 'cancelEdit'}}
+            {{on "click" (fn (mut this.isEditing) false)}}
           >
             Cancel
           </button>
@@ -56,8 +50,8 @@
       </div>
       <div local-class="email-column" data-test-email-address>
         <dd>
-          {{ this.user.email }}
-          {{#if this.user.email_verified}}
+          {{ @user.email }}
+          {{#if @user.email_verified}}
             <span local-class="verified" data-test-verified>Verified!</span>
           {{/if}}
         </dd>
@@ -67,16 +61,16 @@
           type="button"
           local-class="edit-button"
           data-test-edit-button
-          {{action 'editEmail'}}
+          {{on "click" this.editEmail}}
         >
           Edit
         </button>
       </div>
     </div>
-    {{#if this.emailNotVerified }}
+    {{#if (and @user.email (not @user.email_verified))}}
       <div local-class="row">
         <div local-class="label">
-          {{#if this.user.email_verification_sent}}
+          {{#if @user.email_verification_sent}}
             <p data-test-verification-sent>We have sent a verification email to your address.</p>
           {{/if}}
           <p data-test-not-verified>Your email has not yet been verified.</p>
@@ -85,19 +79,18 @@
           <button
             type="button"
             local-class="resend-button"
-            {{action (perform this.resendEmailTask)}}
             disabled={{this.disableResend}}
             data-test-resend-button
+            {{on "click" (perform this.resendEmailTask)}}
           >
-            {{this.resendButtonText}}
+            {{#if this.disableResend}}
+              Sent!
+            {{else if @user.email_verification_sent}}
+              Resend
+            {{else}}
+              Send verification email
+            {{/if}}
           </button>
-        </div>
-      </div>
-    {{/if}}
-    {{#if this.isError}}
-      <div local-class="row">
-        <div local-class="label">
-          <p data-test-error>{{this.emailError}}</p>
         </div>
       </div>
     {{/if}}
