@@ -14,7 +14,7 @@ name = "s3"
 path = "lib.rs"
 
 [dependencies]
-base64 = "0.12"
+base64 = "0.13"
 chrono = "0.4"
 sha-1 = "0.9"
 hmac = "0.8"
