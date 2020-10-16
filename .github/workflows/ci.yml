@@ -44,12 +44,13 @@ jobs:
           npm run lint:js
           npm run lint:deps
 
-      - name: Add nonce for parallel tests
-        run: echo ::set-env name=PERCY_PARALLEL_NONCE::`date +%s`
+      - name: Run percy exec
+        if: github.repository == 'rust-lang/crates.io'
+        run: npx percy exec -- npm run test-coverage
 
-      - uses: percy/exec-action@v0.3.0
-        with:
-          command: npm run test-coverage
+      - name: test-coverage
+        if: github.repository != 'rust-lang/crates.io'
+        run: npm run test-coverage
 
   backend:
     name: Backend
@@ -98,7 +99,7 @@ jobs:
               rm -v "$HOME/.rustup"
               rm -v "$HOME/.cargo"
           fi
-          echo "::add-path::$HOME/.cargo/bin"
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
       # Cache `diesel` binary
       #

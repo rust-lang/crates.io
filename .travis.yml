@@ -69,7 +69,7 @@ jobs:
         - npm run lint:hbs
         - npm run lint:js
         - npm run lint:deps
-        - percy exec -- npm run test-coverage
+        - if [ "$TRAVIS_REPO_SLUG" == "rust-lang/crates.io" ]; then percy exec -- npm run test-coverage; fi
     - rust: beta
       script:
         - cargo test
