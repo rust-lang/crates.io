@@ -29,15 +29,12 @@
     box-sizing: border-box;
 }
 
-html {
-    background-color: var(--header-bg-color);
-}
-
 html, body {
     margin: 0;
 }
 
 body {
+    background-color: var(--header-bg-color);
     font-family: var(--font-family);
     font-size: 16px;
     display: flex;
