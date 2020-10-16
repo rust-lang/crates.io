@@ -355,6 +355,12 @@ description = """
 Bindings to Linux-specific APIs.\
 """
 
+[os.categories.freebsd-apis]
+name = "FreeBSD APIs"
+description = """
+Bindings to FreeBSD-specific APIs.\
+"""
+
 [os.categories.macos-apis]
 name = "macOS APIs"
 description = """
