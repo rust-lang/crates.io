@@ -13,7 +13,7 @@
     "rust": {
         "enabled": false
     },
-    "postUpdateOptions": ["npmDedupe"],
+    "postUpdateOptions": ["yarnDedupeHighest"],
     "packageRules": [{
         "groupName": "embroider",
         "packagePatterns": [

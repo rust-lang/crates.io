@@ -1,10 +1,10 @@
 FROM node:12.9-alpine
 
 WORKDIR /app
-COPY package.json package-lock.json /app/
+COPY package.json yarn.lock /app/
 
-RUN npm install
+RUN yarn install
 
 COPY . /app
 
-ENTRYPOINT ["npm", "run", "start:staging"]
+ENTRYPOINT ["yarn", "start:staging"]
