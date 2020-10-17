@@ -6853,7 +6853,7 @@ ember-router-scroll@3.3.3:
     ember-cli-babel "^7.11.1"
     ember-compatibility-helpers "^1.1.2"
 
-ember-set-body-class@^1.0.1:
+ember-set-body-class@1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/ember-set-body-class/-/ember-set-body-class-1.0.1.tgz#94c0126a5fdb1e780e6568f41c443b0c657f5724"
   integrity sha512-W4y36lozFstvrv1XERCghgQx8s7RuyJbnPhM+9PTrdwwLpSEQYLEdeASHgeCLqb6Bz7AQeIbyf++2b7u5jPfTw==
@@ -6957,7 +6957,7 @@ ember-test-selectors@5.0.0:
     ember-cli-babel "^7.22.1"
     ember-cli-version-checker "^5.1.1"
 
-ember-test-waiters@^1.1.1, ember-test-waiters@^2.0.0:
+ember-test-waiters@2.1.3, ember-test-waiters@^1.1.1, ember-test-waiters@^2.0.0:
   version "2.1.3"
   resolved "https://registry.yarnpkg.com/ember-test-waiters/-/ember-test-waiters-2.1.3.tgz#40fe7b674d5ef1005f665e0e040753f88c5a2175"
   integrity sha512-xDjvq8/1C3b9z3NGpez7aslbq5gsLrxsdjD3apyziHkImh/PTeXZr2bxo/YAUgOwGOtpZ1So0fIsppiSN0u1Ng==
