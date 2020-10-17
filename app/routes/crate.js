@@ -1,8 +1,8 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
-export default Route.extend({
-  notifications: service(),
+export default class CrateRoute extends Route {
+  @service notifications;
 
   async model(params) {
     try {
@@ -15,13 +15,13 @@ export default Route.extend({
         throw e;
       }
     }
-  },
+  }
 
   afterModel(model) {
     if (model && typeof model.get === 'function') {
       this.setHeadTags(model);
     }
-  },
+  }
 
   setHeadTags(model) {
     let headTags = [
@@ -36,5 +36,5 @@ export default Route.extend({
     ];
 
     this.set('headTags', headTags);
-  },
-});
+  }
+}

@@ -1,8 +1,8 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
-export default Route.extend({
-  fastboot: service(),
+export default class IndexRoute extends Route {
+  @service fastboot;
 
   headTags() {
     return [
@@ -14,7 +14,7 @@ export default Route.extend({
         },
       },
     ];
-  },
+  }
 
   setupController(controller) {
     if (!controller.hasData) {
@@ -23,5 +23,5 @@ export default Route.extend({
         this.fastboot.deferRendering(promise);
       }
     }
-  },
-});
+  }
+}

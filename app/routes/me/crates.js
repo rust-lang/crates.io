@@ -1,13 +1,13 @@
 import AuthenticatedRoute from '../-authenticated-route';
 
-export default AuthenticatedRoute.extend({
-  queryParams: {
+export default class MeCratesRoute extends AuthenticatedRoute {
+  queryParams = {
     page: { refreshModel: true },
     sort: { refreshModel: true },
-  },
+  };
 
   model(params) {
     params.user_id = this.get('session.currentUser.id');
     return this.store.query('crate', params);
-  },
-});
+  }
+}

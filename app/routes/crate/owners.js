@@ -1,9 +1,9 @@
 import Route from '@ember/routing/route';
 
-export default Route.extend({
+export default class OwnersRoute extends Route {
   setupController(controller) {
-    this._super(...arguments);
+    super.setupController(...arguments);
     let crate = this.modelFor('crate');
     controller.set('crate', crate);
-  },
-});
+  }
+}

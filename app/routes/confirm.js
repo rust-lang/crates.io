@@ -3,10 +3,10 @@ import { inject as service } from '@ember/service';
 
 import ajax from '../utils/ajax';
 
-export default Route.extend({
-  notifications: service(),
-  session: service(),
-  store: service(),
+export default class ConfirmRoute extends Route {
+  @service notifications;
+  @service session;
+  @service store;
 
   async model(params) {
     try {
@@ -30,5 +30,5 @@ export default Route.extend({
     }
 
     this.replaceWith('index');
-  },
-});
+  }
+}

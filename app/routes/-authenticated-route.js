@@ -1,10 +1,10 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
-export default Route.extend({
-  notifications: service(),
-  router: service(),
-  session: service(),
+export default class AuthenticatedRoute extends Route {
+  @service notifications;
+  @service router;
+  @service session;
 
   async beforeModel(transition) {
     // wait for the `loadUserTask.perform()` of either the `application` route,
@@ -16,5 +16,5 @@ export default Route.extend({
       this.session.savedTransition = transition;
       this.router.transitionTo('index');
     }
-  },
-});
+  }
+}

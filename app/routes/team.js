@@ -1,13 +1,13 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
-export default Route.extend({
-  notifications: service(),
+export default class TeamRoute extends Route {
+  @service notifications;
 
-  queryParams: {
+  queryParams = {
     page: { refreshModel: true },
     sort: { refreshModel: true },
-  },
+  };
 
   async model(params) {
     const { team_id } = params;
@@ -28,5 +28,5 @@ export default Route.extend({
 
       throw e;
     }
-  },
-});
+  }
+}

@@ -1,9 +1,9 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
-export default Route.extend({
-  notifications: service(),
-  redirector: service(),
+export default class RepoRoute extends Route {
+  @service notifications;
+  @service redirector;
 
   redirect() {
     let crate = this.modelFor('crate');
@@ -18,5 +18,5 @@ export default Route.extend({
       this.notifications.error(message);
       this.replaceWith('crate', crate);
     }
-  },
-});
+  }
+}

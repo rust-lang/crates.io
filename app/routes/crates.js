@@ -1,11 +1,11 @@
 import Route from '@ember/routing/route';
 
-export default Route.extend({
-  queryParams: {
+export default class CratesRoute extends Route {
+  queryParams = {
     letter: { refreshModel: true },
     page: { refreshModel: true },
     sort: { refreshModel: true },
-  },
+  };
 
   model(params) {
     // The backend throws an error if the letter param is
@@ -15,5 +15,5 @@ export default Route.extend({
     }
 
     return this.store.query('crate', params);
-  },
-});
+  }
+}

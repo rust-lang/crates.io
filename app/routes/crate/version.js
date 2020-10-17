@@ -7,8 +7,8 @@ function isUnstableVersion(version) {
   return !!prerelease(version);
 }
 
-export default Route.extend({
-  notifications: service(),
+export default class VersionRoute extends Route {
+  @service notifications;
 
   async model(params) {
     const requestedVersion = params.version_num;
@@ -56,10 +56,10 @@ export default Route.extend({
       requestedVersion,
       version: version || versions.find(version => version.num === maxVersion) || versions.objectAt(0),
     };
-  },
+  }
 
   setupController(controller, model) {
-    this._super(...arguments);
+    super.setupController(...arguments);
 
     model.version.loadDepsTask.perform();
     if (!model.version.authorNames) {
@@ -74,10 +74,10 @@ export default Route.extend({
     if (!crate.documentation || crate.documentation.startsWith('https://docs.rs/')) {
       controller.loadDocsBuilds.perform();
     }
-  },
+  }
 
   serialize(model) {
     let version_num = model.num;
     return { version_num };
-  },
-});
+  }
+}
