@@ -25,7 +25,7 @@
   />
 </div>
 
-<form local-class="me-email-notifications" {{ action 'saveEmailNotifications' on='submit' }} >
+<form local-class="me-email-notifications" {{on "submit" this.saveEmailNotifications}} >
   <h2>Email Notification Preferences</h2>
 
   {{#if this.hasEmailNotificationFeature}}
@@ -36,8 +36,8 @@
     </p>
 
     <div local-class="notifications-row">
-      <button type='button' local-class="select-all-button" {{action 'emailNotificationsSelectAll'}}>Select All</button>
-      <button type='button' local-class="deselect-all-button" {{action 'emailNotificationsSelectNone'}}>Deselect All</button>
+      <button type='button' local-class="select-all-button" {{on "click" this.emailNotificationsSelectAll}}>Select All</button>
+      <button type='button' local-class="deselect-all-button" {{on "click" this.emailNotificationsSelectNone}}>Deselect All</button>
     </div>
 
     <ul local-class="notifications-list">
@@ -80,7 +80,7 @@
       local-class="new-token-button"
       disabled={{this.disableCreate}}
       data-test-new-token-button
-      {{action "startNewToken"}}
+      {{on "click" this.startNewToken}}
     >
       New Token
     </button>

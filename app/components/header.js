@@ -7,6 +7,11 @@ export default class Header extends Component {
   @service router;
   @service session;
 
+  @action updateSearchValue(event) {
+    let { value } = event.target;
+    this.header.searchValue = value;
+  }
+
   @action
   search(event) {
     event.preventDefault();

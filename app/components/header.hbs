@@ -5,7 +5,7 @@
       <h1>crates.io</h1>
     </LinkTo>
 
-    <form local-class="desktop-search-form" action='/search' {{on "submit" (action "search")}} data-test-search-form>
+    <form local-class="desktop-search-form" action='/search' {{on "submit" this.search}} data-test-search-form>
       <input
         type="text"
         local-class="search"
@@ -13,7 +13,7 @@
         id="cargo-desktop-search"
         placeholder="Click or press 'S' to search..."
         value={{this.header.searchValue}}
-        oninput={{action (mut this.header.searchValue) value="target.value"}}
+        oninput={{this.updateSearchValue}}
         autocorrect="off"
         autocapitalize="off"
         autofocus="autofocus"
@@ -142,7 +142,7 @@
       </Dropdown>
     </div>
 
-    <form local-class='mobile-search' action='/search' {{on "submit" (action "search")}}>
+    <form local-class='mobile-search' action='/search' {{on "submit" this.search}}>
       <input
         type="text"
         local-class="search"
@@ -150,7 +150,7 @@
         id="cargo-mobile-search"
         placeholder="Search"
         value={{this.header.searchValue}}
-        oninput={{action (mut this.header.searchValue) value="target.value"}}
+        oninput={{this.updateSearchValue}}
         autocorrect="off"
         required
       >
