@@ -92,6 +92,7 @@
     "ember-qunit": "4.6.0",
     "ember-resolver": "8.0.2",
     "ember-router-scroll": "2.0.2",
+    "ember-set-body-class": "^1.0.1",
     "ember-source": "3.22.0",
     "ember-svg-jar": "2.2.3",
     "ember-template-lint": "2.14.0",
