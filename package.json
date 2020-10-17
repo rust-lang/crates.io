@@ -91,7 +91,7 @@
     "ember-promise-helpers": "1.0.9",
     "ember-qunit": "4.6.0",
     "ember-resolver": "8.0.2",
-    "ember-router-scroll": "2.0.2",
+    "ember-router-scroll": "3.3.3",
     "ember-set-body-class": "^1.0.1",
     "ember-source": "3.22.0",
     "ember-svg-jar": "2.2.3",
@@ -119,5 +119,8 @@
   "engines": {
     "node": "^14.9.0",
     "npm": "^6.10.2"
+  },
+  "resolutions": {
+    "ember-test-waiters": "^2.0.0"
   }
 }

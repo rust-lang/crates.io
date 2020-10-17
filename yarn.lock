@@ -5879,16 +5879,17 @@ ember-api-actions@0.2.9:
     ember-cli-babel "^7.1.3"
     ember-cli-typescript "^3.0.0"
 
-ember-app-scheduler@^1.0.5:
-  version "1.0.8"
-  resolved "https://registry.yarnpkg.com/ember-app-scheduler/-/ember-app-scheduler-1.0.8.tgz#37adacce2fa5ab59324e2c0b08f3c4a3568025b4"
-  integrity sha512-fYCOhQTLb1b+TZ2PBSqyvHXVAxf7qfWD0ZSJTd/IdU/xbLJSt34X75w7qK2uBHZCkVvCNm/ATW3pjFC/0zYk7A==
+ember-app-scheduler@^5.0.1:
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/ember-app-scheduler/-/ember-app-scheduler-5.0.1.tgz#8f73a6c04538b4d156d6e179ce29a29c4a0058dc"
+  integrity sha512-WnsdC5MF3/2ArANFJ/m5jH/TIUCQKaxOp+AU9oZhrzd1ucm30sx/MSOOtnpktuJMSjfWXWTOLhAfPKlT08bGjw==
   dependencies:
     "@types/ember" "^3.1.0"
     "@types/rsvp" "^4.0.2"
-    ember-cli-babel "^7.1.3"
-    ember-cli-typescript "^2.0.0"
+    ember-cli-babel "^7.19.0"
+    ember-cli-typescript "^3.1.4"
     ember-compatibility-helpers "^1.1.2"
+    ember-test-waiters "^2.0.0"
 
 ember-assign-polyfill@^2.5.0, ember-assign-polyfill@^2.6.0:
   version "2.7.2"
@@ -6370,7 +6371,7 @@ ember-cli-typescript@3.0.0:
     stagehand "^1.0.0"
     walk-sync "^2.0.0"
 
-ember-cli-typescript@^2.0.0, ember-cli-typescript@^2.0.2:
+ember-cli-typescript@^2.0.2:
   version "2.0.2"
   resolved "https://registry.yarnpkg.com/ember-cli-typescript/-/ember-cli-typescript-2.0.2.tgz#464984131fbdc05655eb61d1c3cdd911d3137f0d"
   integrity sha512-7I5azCTxOgRDN8aSSnJZIKSqr+MGnT+jLTUbBYqF8wu6ojs2DUnTePxUcQMcvNh3Q3B1ySv7Q/uZFSjdU9gSjA==
@@ -6388,7 +6389,7 @@ ember-cli-typescript@^2.0.0, ember-cli-typescript@^2.0.2:
     stagehand "^1.0.0"
     walk-sync "^1.0.0"
 
-ember-cli-typescript@^3.0.0, ember-cli-typescript@^3.1.3:
+ember-cli-typescript@^3.0.0, ember-cli-typescript@^3.1.3, ember-cli-typescript@^3.1.4:
   version "3.1.4"
   resolved "https://registry.yarnpkg.com/ember-cli-typescript/-/ember-cli-typescript-3.1.4.tgz#21d6ccd670d1f2e34c9cce68c6e32c442f46806b"
   integrity sha512-HJ73kL45OGRmIkPhBNFt31I1SGUvdZND+LCH21+qpq3pPlFpJG8GORyXpP+2ze8PbnITNLzwe5AwUrpyuRswdQ==
@@ -6843,12 +6844,12 @@ ember-router-generator@^2.0.0:
     "@babel/traverse" "^7.4.5"
     recast "^0.18.1"
 
-ember-router-scroll@2.0.2:
-  version "2.0.2"
-  resolved "https://registry.yarnpkg.com/ember-router-scroll/-/ember-router-scroll-2.0.2.tgz#3f68af91e98fc3d494fab352c17a4f29b17db06d"
-  integrity sha512-fPpIzrjeyEieIAQuFk1CLq30JXB7oAzHxvKV9el9/LD7K2PykM56g9Q0lE+Ss0OUkczWFmmT18I9v/W+Ywxb/g==
+ember-router-scroll@3.3.3:
+  version "3.3.3"
+  resolved "https://registry.yarnpkg.com/ember-router-scroll/-/ember-router-scroll-3.3.3.tgz#65321318b74bfe5b06a243953d1b7d5e9faf1e82"
+  integrity sha512-n+TpZ9Dt/UQaRiNpNVTOUur+TsA6hAkorgi4hj7kjbchPd7/n54ZXUTSH0GVyMEkqsZHJeAmuNADjv3zHTfQDQ==
   dependencies:
-    ember-app-scheduler "^1.0.5"
+    ember-app-scheduler "^5.0.1"
     ember-cli-babel "^7.11.1"
     ember-compatibility-helpers "^1.1.2"
 
@@ -6956,13 +6957,15 @@ ember-test-selectors@5.0.0:
     ember-cli-babel "^7.22.1"
     ember-cli-version-checker "^5.1.1"
 
-ember-test-waiters@^1.1.1:
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/ember-test-waiters/-/ember-test-waiters-1.2.0.tgz#c12ead4313934c24cff41857020cacdbf8e6effe"
-  integrity sha512-aEw7YuutLuJT4NUuPTNiGFwgTYl23ThqmBxSkfFimQAn+keWjAftykk3dlFELuhsJhYW/S8YoVjN0bSAQRLNtw==
+ember-test-waiters@^1.1.1, ember-test-waiters@^2.0.0:
+  version "2.1.3"
+  resolved "https://registry.yarnpkg.com/ember-test-waiters/-/ember-test-waiters-2.1.3.tgz#40fe7b674d5ef1005f665e0e040753f88c5a2175"
+  integrity sha512-xDjvq8/1C3b9z3NGpez7aslbq5gsLrxsdjD3apyziHkImh/PTeXZr2bxo/YAUgOwGOtpZ1So0fIsppiSN0u1Ng==
   dependencies:
-    ember-cli-babel "^7.11.0"
-    semver "^6.3.0"
+    ember-cli-babel "^7.21.0"
+    ember-cli-typescript "^3.1.3"
+    ember-cli-version-checker "^5.1.1"
+    semver "^7.1.3"
 
 ember-truth-helpers@3.0.0:
   version "3.0.0"
