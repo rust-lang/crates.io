@@ -6779,10 +6779,10 @@ ember-moment@8.0.0:
     ember-getowner-polyfill "^2.2.0"
     ember-macro-helpers "^4.2.2"
 
-ember-page-title@6.0.1:
-  version "6.0.1"
-  resolved "https://registry.yarnpkg.com/ember-page-title/-/ember-page-title-6.0.1.tgz#5f0166887c7a874c53492bc941c5d261e55b6c09"
-  integrity sha512-iSi/JfVw0yKonpbnA2MlQF+0cgABIvg9nCEgWzDHok+crTmwMH/tV+dAdkZ66y6S5hCITp14TukO433NmviuUA==
+ember-page-title@6.0.2:
+  version "6.0.2"
+  resolved "https://registry.yarnpkg.com/ember-page-title/-/ember-page-title-6.0.2.tgz#bda7729d803a2e89289fcac9683709d258c82c31"
+  integrity sha512-iKHQ0Tg/7JsDlVUPnF1hF1zJVR2yiY5iEZtBh2QpGi5vxWV6nD+R3qdZ9fBXbnMjnncBjct+PCYTHZzfSPX6BQ==
   dependencies:
     ember-cli-babel "^7.22.1"
 
