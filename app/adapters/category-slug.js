@@ -4,9 +4,9 @@ import { pluralize } from 'ember-inflector';
 
 import ApplicationAdapter from './application';
 
-export default ApplicationAdapter.extend({
+export default class CategorySlugAdapter extends ApplicationAdapter {
   pathForType(modelName) {
     let decamelized = underscore(decamelize(modelName));
     return pluralize(decamelized);
-  },
-});
+  }
+}

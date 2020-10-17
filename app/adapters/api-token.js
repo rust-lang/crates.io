@@ -1,10 +1,12 @@
 import ApplicationAdapter from './application';
 
-export default ApplicationAdapter.extend({
-  namespace: 'api/v1/me',
+export default class ApiTokenAdapter extends ApplicationAdapter {
+  namespace = 'api/v1/me';
+
   pathForType() {
     return 'tokens';
-  },
+  }
+
   createRecord(store, type, snapshot) {
     let data = {};
     let serializer = store.serializerFor(type.modelName);
@@ -13,5 +15,5 @@ export default ApplicationAdapter.extend({
     serializer.serializeIntoHash(data, type, snapshot, { includeId: true });
 
     return this.ajax(url, 'PUT', { data });
-  },
-});
+  }
+}
