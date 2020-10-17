@@ -9,7 +9,7 @@
     </LinkTo>
   {{/each}}
 
-  <select {{on "change" (action "handleSelection")}}>
+  <select {{on "change" this.handleSelection}}>
     <option>Filter by the letter...</option>
     {{#each this.alphabet as |letter|}}
       <option value={{letter}} selected={{eq letter this.letter}}>{{ letter }}</option>
