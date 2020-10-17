@@ -584,7 +584,7 @@ impl Bad {
 /// A type providing helper methods for working with responses
 #[must_use]
 pub struct Response<T> {
-    response: AppResponse,
+    pub response: AppResponse,
     callback_on_good: Option<Box<dyn Fn(&T)>>,
 }
 
@@ -604,6 +604,15 @@ where
             response: self.response,
             callback_on_good: Some(callback_on_good),
         }
+    }
+
+    /// Assert that the response is good and deserialize the message
+    #[track_caller]
+    pub fn good_text(mut self) -> String {
+        if !self.response.status().is_success() {
+            panic!("bad response: {:?}", self.response.status());
+        }
+        crate::text(&mut self.response)
     }
 
     /// Assert that the response is good and deserialize the message
@@ -647,19 +656,6 @@ where
             .to_str()
             .unwrap()
             .ends_with(target));
-        self
-    }
-
-    pub fn assert_redirects_to(&self, target: &str) -> &Self {
-        assert_eq!(
-            self.response
-                .headers()
-                .get(header::LOCATION)
-                .unwrap()
-                .to_str()
-                .unwrap(),
-            target
-        );
         self
     }
 }

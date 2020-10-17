@@ -198,10 +198,7 @@ fn bad_resp(r: &mut AppResponse) -> Option<Bad> {
     Some(bad)
 }
 
-fn json<T>(r: &mut AppResponse) -> T
-where
-    for<'de> T: serde::Deserialize<'de>,
-{
+fn text(r: &mut AppResponse) -> String {
     use conduit::Body::*;
 
     let mut body = Body::empty();
@@ -212,8 +209,15 @@ where
         File(_) => unimplemented!(),
     };
 
-    let s = std::str::from_utf8(&body).unwrap();
-    match serde_json::from_str(s) {
+    std::str::from_utf8(&body).unwrap().to_owned()
+}
+
+fn json<T>(r: &mut AppResponse) -> T
+where
+    for<'de> T: serde::Deserialize<'de>,
+{
+    let s = text(r);
+    match serde_json::from_str(&s) {
         Ok(t) => t,
         Err(e) => panic!("failed to decode: {:?}\n{}", e, s),
     }

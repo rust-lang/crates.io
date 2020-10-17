@@ -30,6 +30,7 @@ rustdoc-args = [
 [dependencies]
 ammonia = "3.0.0"
 anyhow = "1.0"
+badge = "0.3.0"
 base64 = "0.13"
 cargo-registry-s3 = { path = "src/s3", version = "0.2.0" }
 chrono = { version = "0.4.0", features = ["serde"] }

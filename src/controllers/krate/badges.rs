@@ -21,51 +21,57 @@ pub fn maintenance(req: &mut dyn RequestExt) -> EndpointResult {
 
     let krate = krate.unwrap();
 
-    let maintenance_badge = CrateBadge::belonging_to(&krate)
+    let maintenance_badge: Option<CrateBadge> = CrateBadge::belonging_to(&krate)
         .select((badges::crate_id, badges::all_columns))
         .load::<CrateBadge>(&*conn)?
         .into_iter()
         .find(|cb| matches!(cb.badge, Badge::Maintenance { .. }));
 
-    if maintenance_badge.is_none() {
-        return Ok(req.redirect(
-            "https://img.shields.io/badge/maintenance-unknown-lightgrey.svg".to_owned(),
-        ));
-    }
+    let status = maintenance_badge
+        .map(|it| match it.badge {
+            Badge::Maintenance { status } => Some(status),
+            _ => None,
+        })
+        .flatten();
 
-    let status = match maintenance_badge {
-        Some(CrateBadge {
-            badge: Badge::Maintenance { status },
-            ..
-        }) => Some(status),
-        _ => None,
-    };
+    let badge = generate_badge(status);
 
-    let status = status.unwrap();
+    let response = Response::builder()
+        .status(200)
+        .body(Body::from_vec(badge.into_bytes()))
+        .unwrap();
 
+    Ok(response)
+}
+
+fn generate_badge(status: Option<MaintenanceStatus>) -> String {
     let message = match status {
-        MaintenanceStatus::ActivelyDeveloped => "actively--developed",
-        MaintenanceStatus::PassivelyMaintained => "passively--maintained",
-        MaintenanceStatus::AsIs => "as--is",
-        MaintenanceStatus::None => "unknown",
-        MaintenanceStatus::Experimental => "experimental",
-        MaintenanceStatus::LookingForMaintainer => "looking--for--maintainer",
-        MaintenanceStatus::Deprecated => "deprecated",
+        Some(MaintenanceStatus::ActivelyDeveloped) => "actively-developed",
+        Some(MaintenanceStatus::PassivelyMaintained) => "passively-maintained",
+        Some(MaintenanceStatus::AsIs) => "as-is",
+        Some(MaintenanceStatus::None) => "unknown",
+        Some(MaintenanceStatus::Experimental) => "experimental",
+        Some(MaintenanceStatus::LookingForMaintainer) => "looking-for-maintainer",
+        Some(MaintenanceStatus::Deprecated) => "deprecated",
+        None => "unknown",
     };
 
     let color = match status {
-        MaintenanceStatus::ActivelyDeveloped => "brightgreen",
-        MaintenanceStatus::PassivelyMaintained => "yellowgreen",
-        MaintenanceStatus::AsIs => "yellow",
-        MaintenanceStatus::None => "lightgrey",
-        MaintenanceStatus::Experimental => "blue",
-        MaintenanceStatus::LookingForMaintainer => "orange",
-        MaintenanceStatus::Deprecated => "red",
+        Some(MaintenanceStatus::ActivelyDeveloped) => "brightgreen",
+        Some(MaintenanceStatus::PassivelyMaintained) => "yellowgreen",
+        Some(MaintenanceStatus::AsIs) => "yellow",
+        Some(MaintenanceStatus::None) => "lightgrey",
+        Some(MaintenanceStatus::Experimental) => "blue",
+        Some(MaintenanceStatus::LookingForMaintainer) => "orange",
+        Some(MaintenanceStatus::Deprecated) => "red",
+        None => "lightgrey",
     };
 
-    let url = format!(
-        "https://img.shields.io/badge/maintenance-{}-{}.svg",
-        message, color
-    );
-    Ok(req.redirect(url))
+    let badge_options = badge::BadgeOptions {
+        subject: "maintenance".to_owned(),
+        status: message.to_owned(),
+        color: color.to_string(),
+    };
+
+    badge::Badge::new(badge_options).unwrap().to_svg()
 }

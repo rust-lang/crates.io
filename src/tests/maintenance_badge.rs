@@ -31,20 +31,24 @@ fn set_up() -> MockAnonymousUser {
 fn crate_with_maintenance_badge() {
     let anon = set_up();
 
-    anon.get::<()>("/api/v1/crates/foo/maintenance.svg")
-        .assert_status(StatusCode::FOUND)
-        .assert_redirects_to(
-            "https://img.shields.io/badge/maintenance-looking--for--maintainer-orange.svg",
-        );
+    let response = anon
+        .get::<String>("/api/v1/crates/foo/maintenance.svg")
+        .good_text();
+
+    assert!(response.contains("looking-for-maintainer"));
+    assert!(response.contains("fill=\"orange\""));
 }
 
 #[test]
 fn crate_without_maintenance_badge() {
     let anon = set_up();
 
-    anon.get::<()>("/api/v1/crates/bar/maintenance.svg")
-        .assert_status(StatusCode::FOUND)
-        .assert_redirects_to("https://img.shields.io/badge/maintenance-unknown-lightgrey.svg");
+    let response = anon
+        .get::<String>("/api/v1/crates/bar/maintenance.svg")
+        .good_text();
+
+    assert!(response.contains("unknown"));
+    assert!(response.contains("fill=\"lightgrey\""));
 }
 
 #[test]
