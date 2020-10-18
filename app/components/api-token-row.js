@@ -15,10 +15,10 @@ export default class ApiTokenRow extends Component {
 
     try {
       yield this.args.token.save();
-    } catch (err) {
+    } catch (error) {
       let msg;
-      if (err.errors && err.errors[0] && err.errors[0].detail) {
-        msg = `An error occurred while saving this token, ${err.errors[0].detail}`;
+      if (error.errors && error.errors[0] && error.errors[0].detail) {
+        msg = `An error occurred while saving this token, ${error.errors[0].detail}`;
       } else {
         msg = 'An unknown error occurred while saving this token';
       }
@@ -30,10 +30,10 @@ export default class ApiTokenRow extends Component {
   @task(function* () {
     try {
       yield this.args.token.destroyRecord();
-    } catch (err) {
+    } catch (error) {
       let msg;
-      if (err.errors && err.errors[0] && err.errors[0].detail) {
-        msg = `An error occurred while revoking this token, ${err.errors[0].detail}`;
+      if (error.errors && error.errors[0] && error.errors[0].detail) {
+        msg = `An error occurred while revoking this token, ${error.errors[0].detail}`;
       } else {
         msg = 'An unknown error occurred while revoking this token';
       }

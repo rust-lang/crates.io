@@ -19,13 +19,13 @@ export default Route.extend({
       let crates = await this.store.query('crate', params);
 
       return { crates, user };
-    } catch (e) {
-      if (e.errors?.some(e => e.detail === 'Not Found')) {
+    } catch (error) {
+      if (error.errors?.some(e => e.detail === 'Not Found')) {
         this.notifications.error(`User '${params.user_id}' does not exist`);
         return this.replaceWith('index');
       }
 
-      throw e;
+      throw error;
     }
   },
 });

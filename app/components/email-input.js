@@ -43,10 +43,10 @@ export default class EmailInput extends Component {
 
       this.isEditing = false;
       this.disableResend = false;
-    } catch (err) {
+    } catch (error) {
       let msg;
-      if (err.errors && err.errors[0] && err.errors[0].detail) {
-        msg = `An error occurred while saving this email, ${err.errors[0].detail}`;
+      if (error.errors && error.errors[0] && error.errors[0].detail) {
+        msg = `An error occurred while saving this email, ${error.errors[0].detail}`;
       } else {
         msg = 'An unknown error occurred while saving this email.';
       }
