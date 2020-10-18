@@ -11,7 +11,7 @@ function findElementByFragmentName(document, name) {
     return;
   }
 
-  return document.getElementById(name) || document.getElementsByName(name)[0];
+  return document.querySelector(`#${name}`) || document.getElementsByName(name)[0];
 }
 
 function hashchange() {
