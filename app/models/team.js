@@ -18,8 +18,7 @@ export default class Team extends Model {
   org_name;
 
   @computed('name', 'org_name', function () {
-    let { name, org_name } = this.getProperties('name', 'org_name');
-    return `${org_name}/${name}`;
+    return `${this.org_name}/${this.name}`;
   })
   display_name;
 }
