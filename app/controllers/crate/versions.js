@@ -7,6 +7,6 @@ export default class CrateVersionsController extends Controller {
 
   @computed('model.owner_user', 'session.currentUser.id')
   get isOwner() {
-    return this.get('model.owner_user').findBy('id', this.get('session.currentUser.id'));
+    return this.model.owner_user.findBy('id', this.session.currentUser?.id);
   }
 }
