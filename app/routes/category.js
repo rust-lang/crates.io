@@ -8,13 +8,13 @@ export default Route.extend({
   async model(params) {
     try {
       return await this.store.find('category', params.category_id);
-    } catch (e) {
-      if (e instanceof NotFoundError) {
+    } catch (error) {
+      if (error instanceof NotFoundError) {
         this.notifications.error(`Category '${params.category_id}' does not exist`);
         return this.replaceWith('index');
       }
 
-      throw e;
+      throw error;
     }
   },
 });

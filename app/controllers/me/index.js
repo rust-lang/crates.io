@@ -51,8 +51,8 @@ export default class MeIndexController extends Controller {
         emailNotificationsError: false,
         emailNotificationsSuccess: true,
       });
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error(error);
       this.setProperties({
         emailNotificationsError: true,
         emailNotificationsSuccess: false,

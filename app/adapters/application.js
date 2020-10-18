@@ -18,7 +18,7 @@ export default class ApplicationAdapter extends RESTAdapter {
     if (typeof payload === 'string') {
       try {
         payload = JSON.parse(payload);
-      } catch (ignored) {
+      } catch {
         // if the payload can't be parsed as JSON then let's continue
         // with the string payload
       }

@@ -20,13 +20,13 @@ export default Route.extend({
       let crates = await this.store.query('crate', params);
 
       return { crates, team };
-    } catch (e) {
-      if (e.errors?.some(e => e.detail === 'Not Found')) {
+    } catch (error) {
+      if (error.errors?.some(e => e.detail === 'Not Found')) {
         this.notifications.error(`Team '${params.team_id}' does not exist`);
         return this.replaceWith('index');
       }
 
-      throw e;
+      throw error;
     }
   },
 });
