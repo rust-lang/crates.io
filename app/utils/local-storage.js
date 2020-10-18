@@ -3,7 +3,7 @@ import window from 'ember-window-mock';
 export function getItem(key) {
   try {
     return window.localStorage.getItem(key);
-  } catch (e) {
+  } catch {
     return null;
   }
 }
@@ -11,7 +11,7 @@ export function getItem(key) {
 export function setItem(key, value) {
   try {
     window.localStorage.setItem(key, value);
-  } catch (e) {
+  } catch {
     // ignored
   }
 }
@@ -19,7 +19,7 @@ export function setItem(key, value) {
 export function removeItem(key) {
   try {
     window.localStorage.removeItem(key);
-  } catch (e) {
+  } catch {
     // ignored
   }
 }

@@ -1,7 +1,7 @@
 function decodeFragmentValue(hash) {
   try {
     return decodeURIComponent(hash.slice(1));
-  } catch (_) {
+  } catch {
     return '';
   }
 }

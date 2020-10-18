@@ -5,7 +5,7 @@ import window from 'ember-window-mock';
 function newNumberFormat() {
   try {
     return new Intl.NumberFormat(window.navigator.languages || window.navigator.language);
-  } catch (error) {
+  } catch {
     return new Intl.NumberFormat('en');
   }
 }

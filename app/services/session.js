@@ -139,7 +139,7 @@ export default class SessionService extends Service {
     let response;
     try {
       response = yield ajax('/api/v1/me');
-    } catch (error) {
+    } catch {
       return {};
     }
 
