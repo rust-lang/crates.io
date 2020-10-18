@@ -7,7 +7,7 @@ export default class MeCratesRoute extends AuthenticatedRoute {
   };
 
   model(params) {
-    params.user_id = this.get('session.currentUser.id');
+    params.user_id = this.session.currentUser.id;
     return this.store.query('crate', params);
   }
 }
