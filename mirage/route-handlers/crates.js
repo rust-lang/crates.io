@@ -25,7 +25,7 @@ export function register(server) {
 
     if (request.queryParams.q) {
       let q = request.queryParams.q.toLowerCase();
-      crates = crates.filter(crate => crate.id.toLowerCase().indexOf(q) !== -1);
+      crates = crates.filter(crate => crate.id.toLowerCase().includes(q));
     }
 
     if (request.queryParams.user_id) {
