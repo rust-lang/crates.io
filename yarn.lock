@@ -6193,7 +6193,7 @@ ember-cli-htmlbars@^3.0.0:
     json-stable-stringify "^1.0.1"
     strip-bom "^3.0.0"
 
-ember-cli-htmlbars@^4.0.2, ember-cli-htmlbars@^4.2.0, ember-cli-htmlbars@^4.2.2, ember-cli-htmlbars@^4.3.1:
+ember-cli-htmlbars@^4.2.0, ember-cli-htmlbars@^4.2.2, ember-cli-htmlbars@^4.2.3, ember-cli-htmlbars@^4.3.1:
   version "4.4.0"
   resolved "https://registry.yarnpkg.com/ember-cli-htmlbars/-/ember-cli-htmlbars-4.4.0.tgz#7ca17d5ca8f7550984346d9e6e93da0c3323f8d9"
   integrity sha512-ohgctqk7dXIZR4TgN0xRoUYltWhghFJgqmtuswQTpZ7p74RxI9PKx+E8WV/95mGcPzraesvMNBg5utQNvcqgNg==
@@ -6548,13 +6548,14 @@ ember-cli@3.22.0:
     workerpool "^6.0.1"
     yam "^1.0.0"
 
-ember-click-outside@1.3.0:
-  version "1.3.0"
-  resolved "https://registry.yarnpkg.com/ember-click-outside/-/ember-click-outside-1.3.0.tgz#70f16c94c4137d863e52b9deb8407c2640ba8543"
-  integrity sha512-WMZ4k2rzpzUae5aJf7bkR+BrsunbpAIveW9kk65j151u6UI8CoXXtdn7D2LpEWw/K54Cm5mnQS6TrGJ1/aT02A==
+ember-click-outside@2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/ember-click-outside/-/ember-click-outside-2.0.0.tgz#4b056a1f737ed2b2c933b05fff7b3501c967cd8f"
+  integrity sha512-d53L+Of9rRhB8RU32xKFDG58e8MJZRPFF9HAuUIcn3Hl5U7v8Gb9YqB59khcryCkRXWzLOvVgmNFjNaV9iZJyQ==
   dependencies:
-    ember-cli-babel "^7.10.0"
-    ember-cli-htmlbars "^4.0.2"
+    ember-cli-babel "^7.18.0"
+    ember-cli-htmlbars "^4.2.3"
+    ember-modifier "^2.1.0"
 
 ember-compatibility-helpers@^1.1.1, ember-compatibility-helpers@^1.1.2, ember-compatibility-helpers@^1.2.0, ember-compatibility-helpers@^1.2.1:
   version "1.2.1"
