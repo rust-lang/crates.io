@@ -16,12 +16,12 @@ export default class SearchController extends Controller {
 
   @computed('dataTask.{lastSuccessful,isRunning}')
   get hasData() {
-    return this.get('dataTask.lastSuccessful') || !this.get('dataTask.isRunning');
+    return this.dataTask.lastSuccessful || !this.dataTask.isRunning;
   }
 
   @computed('dataTask.{lastSuccessful,isRunning}')
   get firstResultPending() {
-    return !this.get('dataTask.lastSuccessful') && this.get('dataTask.isRunning');
+    return !this.dataTask.lastSuccessful && this.dataTask.isRunning;
   }
 
   @readOnly('model.meta.total') totalItems;
