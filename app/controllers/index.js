@@ -12,7 +12,7 @@ export default class IndexController extends Controller {
 
   @computed('dataTask.{lastSuccessful,isRunning}')
   get hasData() {
-    return this.get('dataTask.lastSuccessful') && !this.get('dataTask.isRunning');
+    return this.dataTask.lastSuccessful && !this.dataTask.isRunning;
   }
 
   @(task(function* () {
