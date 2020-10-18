@@ -9,7 +9,12 @@ module.exports = {
     },
   },
   plugins: ['ember', 'prettier', 'import-helpers'],
-  extends: ['eslint:recommended', 'plugin:ember/recommended', 'plugin:prettier/recommended'],
+  extends: [
+    'eslint:recommended',
+    'plugin:ember/recommended',
+    'plugin:unicorn/recommended',
+    'plugin:prettier/recommended',
+  ],
   env: {
     browser: true,
   },
@@ -22,6 +27,18 @@ module.exports = {
     'ember/no-classic-classes': 'error',
     'ember/no-empty-attrs': 'off',
     'ember/require-computed-property-dependencies': 'off',
+
+    // disabled because we need `null` since JSON has no `undefined`
+    'unicorn/no-null': 'off',
+    // disabled because this rule conflicts with prettier
+    'unicorn/no-nested-ternary': 'off',
+    // disabled because of unfixable false positives
+    'unicorn/prevent-abbreviations': 'off',
+    // disabled because it seems unnecessary
+    'unicorn/prefer-number-properties': 'off',
+    // disabled because it seems unnecessary
+    'unicorn/prefer-reflect-apply': 'off',
+    'unicorn/filename-case': ['error', { case: 'kebabCase', ignore: ['^-'] }],
 
     'import-helpers/order-imports': [
       'error',
@@ -43,6 +60,24 @@ module.exports = {
     ],
   },
   overrides: [
+    // test files
+    {
+      files: ['tests/**/*.js'],
+      rules: {
+        // disabled because of our nested `prepare()` functions
+        'unicorn/consistent-function-scoping': 'off',
+      },
+    },
+
+    // mirage files
+    {
+      files: ['mirage/**/*.js'],
+      rules: {
+        // disabled because of different `.find()` meaning
+        'unicorn/no-fn-reference-in-iterator': 'off',
+      },
+    },
+
     // node files
     {
       files: [
