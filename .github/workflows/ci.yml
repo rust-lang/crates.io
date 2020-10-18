@@ -45,6 +45,22 @@ jobs:
         if: github.repository != 'rust-lang/crates.io'
         run: yarn test-coverage
 
+  embroider:
+    name: Frontend (embroider)
+    runs-on: ubuntu-18.04
+    env:
+      USE_EMBROIDER: 'true'
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '14.x'
+
+      - run: yarn install
+      - run: yarn test
+
   backend:
     name: Backend
     runs-on: ubuntu-16.04
