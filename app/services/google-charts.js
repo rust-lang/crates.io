@@ -29,7 +29,7 @@ async function loadScript(src) {
     script.addEventListener('error', event => {
       reject(new ExternalScriptError(event.target.src));
     });
-    document.body.appendChild(script);
+    document.body.append(script);
   });
 }
 
