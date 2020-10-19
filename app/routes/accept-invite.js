@@ -2,7 +2,7 @@ import Route from '@ember/routing/route';
 
 import ajax from '../utils/ajax';
 
-export default Route.extend({
+export default class AcceptInviteRoute extends Route {
   async model(params) {
     try {
       await ajax(`/api/v1/me/crate_owner_invitations/accept/${params.token}`, { method: 'PUT', body: '{}' });
@@ -12,5 +12,5 @@ export default Route.extend({
       this.set('response', { accepted: false });
       return { response: this.response };
     }
-  },
-});
+  }
+}

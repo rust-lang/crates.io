@@ -2,8 +2,8 @@ import { NotFoundError } from '@ember-data/adapter/error';
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
-export default Route.extend({
-  notifications: service(),
+export default class KeywordRoute extends Route {
+  @service notifications;
 
   async model({ keyword_id }) {
     try {
@@ -16,5 +16,5 @@ export default Route.extend({
 
       throw error;
     }
-  },
-});
+  }
+}

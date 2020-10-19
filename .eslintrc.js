@@ -19,6 +19,7 @@ module.exports = {
 
     'prettier/prettier': 'error',
 
+    'ember/no-classic-classes': 'error',
     'ember/no-empty-attrs': 'off',
     'ember/no-get': 'off',
     'ember/require-computed-property-dependencies': 'off',

@@ -16,9 +16,9 @@ import window from 'ember-window-mock';
  * @see https://developer.github.com/v3/oauth/#github-redirects-back-to-your-site
  * @see `/login` route
  */
-export default Route.extend({
+export default class GithubAuthorizeRoute extends Route {
   beforeModel(transition) {
     let { code, state } = transition.to.queryParams;
     window.opener?.postMessage({ code, state }, window.location.origin);
-  },
-});
+  }
+}

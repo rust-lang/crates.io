@@ -1,6 +1,6 @@
 import AuthenticatedRoute from '../-authenticated-route';
 
-export default AuthenticatedRoute.extend({
+export default class MeIndexRoute extends AuthenticatedRoute {
   async model() {
     let { ownedCrates, currentUser: user } = this.session;
 
@@ -12,14 +12,14 @@ export default AuthenticatedRoute.extend({
     let apiTokens = this.store.findAll('api-token');
 
     return { user, ownedCrates, api_tokens: apiTokens };
-  },
+  }
 
   setupController(controller) {
-    this._super(...arguments);
+    super.setupController(...arguments);
 
     controller.setProperties({
       emailNotificationsSuccess: false,
       emailNotificationsError: false,
     });
-  },
-});
+  }
+}
