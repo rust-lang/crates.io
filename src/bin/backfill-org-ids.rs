@@ -11,7 +11,7 @@ use diesel::prelude::*;
 use regex::Regex;
 use reqwest::blocking::{Client, Response};
 use serde::Deserialize;
-use std::env;
+use std::{env, thread, time};
 
 fn main() {
     let conn = db::connect_now().unwrap();
@@ -44,6 +44,7 @@ fn backfill_org_ids(conn: &PgConnection, client: &Client) {
             }
             None => println!("could not find org id for team '{}'", team.login),
         }
+        thread::sleep(time::Duration::from_secs(1));
     }
 
     println!(
