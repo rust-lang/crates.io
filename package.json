@@ -75,7 +75,7 @@
     "ember-cli-uglify": "3.0.0",
     "ember-click-outside": "2.0.0",
     "ember-concurrency": "1.3.0",
-    "ember-css-modules": "1.3.2",
+    "ember-css-modules": "1.3.3",
     "ember-data": "3.22.0",
     "ember-disable-prototype-extensions": "1.1.3",
     "ember-exam": "6.0.0",
