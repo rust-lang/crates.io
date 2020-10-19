@@ -6499,10 +6499,10 @@ ember-concurrency@1.3.0:
     ember-compatibility-helpers "^1.2.0"
     ember-maybe-import-regenerator "^0.1.6"
 
-ember-css-modules@1.3.2:
-  version "1.3.2"
-  resolved "https://registry.yarnpkg.com/ember-css-modules/-/ember-css-modules-1.3.2.tgz#5288ceb7793cc34a1e6de9203b2b7a9bce21068e"
-  integrity sha512-s5splTyO0ElloI9IJx9iWU090fnmtsm/taFr8BYs1LpSIeM0GBDAnRADW3qyf6irkQvGstMNY7hJJqkBG4Dc+w==
+ember-css-modules@1.3.3:
+  version "1.3.3"
+  resolved "https://registry.yarnpkg.com/ember-css-modules/-/ember-css-modules-1.3.3.tgz#80d46db65f75e6c9053ade38625c578912dc8d23"
+  integrity sha512-Mdv/zl35EkPChCiOqQOtfAou+eObjPk7bBwAKgiiASCed3Y/Uyz5yJt4Cg/TWVvvmf1sBpuRsDTvkRX8ZFc5aw==
   dependencies:
     broccoli-bridge "^1.0.0"
     broccoli-concat "^3.2.2"
