@@ -7,26 +7,21 @@ export default class CrateOwnersController extends Controller {
   @service notifications;
 
   crate = null;
-  error = false;
-  invited = false;
   username = '';
 
   @task(function* (event) {
     event.preventDefault();
 
-    this.set('error', false);
-    this.set('invited', false);
-
     const username = this.username;
 
     try {
       yield this.crate.inviteOwner(username);
-      this.set('invited', `An invite has been sent to ${username}`);
+      this.notifications.success(`An invite has been sent to ${username}`);
     } catch (error) {
       if (error.errors) {
-        this.set('error', `Error sending invite: ${error.errors[0].detail}`);
+        this.notifications.error(`Error sending invite: ${error.errors[0].detail}`);
       } else {
-        this.set('error', 'Error sending invite');
+        this.notifications.error('Error sending invite');
       }
     }
   })

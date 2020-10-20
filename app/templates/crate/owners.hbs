@@ -9,14 +9,6 @@
 <div local-class="me-email">
   <h2>Add Owner</h2>
 
-  {{#if this.error}}
-    <p data-test-error-message>{{this.error}}</p>
-  {{/if}}
-
-  {{#if this.invited}}
-    <p data-test-invited-message>{{this.invited}}</p>
-  {{/if}}
-
   <form local-class="email-form" {{on "submit" (perform this.addOwnerTask)}}>
     <label local-class="email-input-label" for='new-owner-username'>
       Username
