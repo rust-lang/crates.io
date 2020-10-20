@@ -30,15 +30,13 @@ export default class CrateOwnersController extends Controller {
   @task(function* (owner) {
     try {
       yield this.crate.removeOwner(owner.get('login'));
-      switch (owner.kind) {
-        case 'user':
-          this.notifications.success(`User ${owner.get('login')} removed as crate owner`);
-          this.crate.owner_user.removeObject(owner);
-          break;
-        case 'team':
-          this.notifications.success(`Team ${owner.get('display_name')} removed as crate owner`);
-          this.crate.owner_team.removeObject(owner);
-          break;
+
+      if (owner.kind === 'team') {
+        this.notifications.success(`Team ${owner.get('display_name')} removed as crate owner`);
+        this.crate.owner_team.removeObject(owner);
+      } else {
+        this.notifications.success(`User ${owner.get('login')} removed as crate owner`);
+        this.crate.owner_user.removeObject(owner);
       }
     } catch (error) {
       let subject = owner.kind === 'team' ? `team ${owner.get('display_name')}` : `user ${owner.get('login')}`;
