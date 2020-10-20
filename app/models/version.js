@@ -29,7 +29,8 @@ export default class Version extends Model {
   @alias('loadAuthorsTask.last.value') authorNames;
 
   @(task(function* () {
-    let authors = yield this.get('authors');
+    // trigger the async relationship to load the content
+    let authors = yield this.authors;
     return authors.meta.names;
   }).keepLatest())
   loadAuthorsTask;
@@ -39,7 +40,8 @@ export default class Version extends Model {
   @alias('loadDepsTask.last.value.dev') devDependencies;
 
   @(task(function* () {
-    let dependencies = yield this.get('dependencies');
+    // trigger the async relationship to load the content
+    let dependencies = yield this.dependencies;
 
     let normal = dependencies.filterBy('kind', 'normal').uniqBy('crate_id');
     let build = dependencies.filterBy('kind', 'build').uniqBy('crate_id');

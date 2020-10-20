@@ -29,12 +29,12 @@ export default class DashboardController extends Controller {
 
   @computed('myCrates.[]')
   get hasMoreCrates() {
-    return this.get('myCrates.length') > TO_SHOW;
+    return this.myCrates.length > TO_SHOW;
   }
 
   @computed('myFollowing.[]')
   get hasMoreFollowing() {
-    return this.get('myFollowing.length') > TO_SHOW;
+    return this.myFollowing.length > TO_SHOW;
   }
 
   @task(function* () {

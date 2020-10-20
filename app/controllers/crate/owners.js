@@ -42,11 +42,11 @@ export default class CrateOwnersController extends Controller {
       switch (owner.kind) {
         case 'user':
           this.set('removed', `User ${owner.get('login')} removed as crate owner`);
-          this.get('crate.owner_user').removeObject(owner);
+          this.crate.owner_user.removeObject(owner);
           break;
         case 'team':
           this.set('removed', `Team ${owner.get('display_name')} removed as crate owner`);
-          this.get('crate.owner_team').removeObject(owner);
+          this.crate.owner_team.removeObject(owner);
           break;
       }
     } catch (error) {

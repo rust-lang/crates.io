@@ -28,7 +28,7 @@ export default class MeIndexController extends Controller {
   }
 
   setAllEmailNotifications(value) {
-    this.get('ownedCrates').forEach(c => {
+    this.ownedCrates.forEach(c => {
       c.set('email_notifications', value);
     });
   }
@@ -41,7 +41,7 @@ export default class MeIndexController extends Controller {
       await ajax(`/api/v1/me/email_notifications`, {
         method: 'PUT',
         body: JSON.stringify(
-          this.get('ownedCrates').map(c => ({
+          this.ownedCrates.map(c => ({
             id: parseInt(c.id, 10),
             email_notifications: c.email_notifications,
           })),

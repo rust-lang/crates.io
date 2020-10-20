@@ -28,7 +28,7 @@ export default class CrateVersionController extends Controller {
 
   @computed('crate.owner_user', 'session.currentUser.id')
   get isOwner() {
-    return this.get('crate.owner_user').findBy('id', this.get('session.currentUser.id'));
+    return this.crate.owner_user.findBy('id', this.session.currentUser?.id);
   }
 
   @readOnly('crate.versions') sortedVersions;
