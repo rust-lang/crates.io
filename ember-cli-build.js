@@ -49,7 +49,7 @@ module.exports = function (defaults) {
     },
   });
 
-  app.import('node_modules/normalize.css/normalize.css');
+  app.import('node_modules/normalize.css/normalize.css', { prepend: true });
 
   app.import('vendor/qunit.css', { type: 'test' });
 
