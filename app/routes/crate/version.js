@@ -49,6 +49,7 @@ export default class VersionRoute extends Route {
     const version = versions.find(version => version.num === params.version_num);
     if (params.version_num && !version) {
       this.notifications.error(`Version '${params.version_num}' of crate '${crate.name}' does not exist`);
+      this.replaceWith('index');
     }
 
     return {
