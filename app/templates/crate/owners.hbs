@@ -28,10 +28,6 @@
 
 <h2>Owners</h2>
 
-{{#if this.removed}}
-  <p data-test-removed-message>{{this.removed}}</p>
-{{/if}}
-
 <div local-class='list' data-test-owners>
   {{#each this.crate.owner_team as |team|}}
     <div local-class='row' data-test-owner-team={{team.login}}>
