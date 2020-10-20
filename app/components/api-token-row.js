@@ -10,9 +10,7 @@ export default class ApiTokenRow extends Component {
   @empty('args.token.name') emptyName;
   @or('args.token.isSaving', 'emptyName') disableCreate;
 
-  @task(function* (event) {
-    event.preventDefault();
-
+  @task(function* () {
     try {
       yield this.args.token.save();
     } catch (error) {

@@ -9,7 +9,7 @@
 <div local-class="me-email">
   <h2>Add Owner</h2>
 
-  <form local-class="email-form" {{on "submit" (perform this.addOwnerTask)}}>
+  <form local-class="email-form" {{on "submit" (prevent-default (perform this.addOwnerTask))}}>
     <label local-class="email-input-label" for='new-owner-username'>
       Username
     </label>

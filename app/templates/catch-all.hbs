@@ -3,7 +3,7 @@
 <form
   local-class='p404'
   data-test-404-search-form
-  {{on "submit" this.search}}
+  {{on "submit" (prevent-default this.search)}}
 >
   Perhaps a search of the site may help?
 

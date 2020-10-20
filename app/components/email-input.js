@@ -32,9 +32,7 @@ export default class EmailInput extends Component {
     this.isEditing = true;
   }
 
-  @task(function* (event) {
-    event.preventDefault();
-
+  @task(function* () {
     let userEmail = this.value;
     let user = this.args.user;
 

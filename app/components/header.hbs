@@ -5,7 +5,7 @@
       <h1>crates.io</h1>
     </LinkTo>
 
-    <form local-class="desktop-search-form" action='/search' {{on "submit" this.search}} data-test-search-form>
+    <form local-class="desktop-search-form" action='/search' {{on "submit" (prevent-default this.search)}} data-test-search-form>
       <input
         type="text"
         local-class="search"
@@ -142,7 +142,7 @@
       </Dropdown>
     </div>
 
-    <form local-class='mobile-search' action='/search' {{on "submit" this.search}}>
+    <form local-class='mobile-search' action='/search' {{on "submit" (prevent-default this.search)}}>
       <input
         type="text"
         local-class="search"

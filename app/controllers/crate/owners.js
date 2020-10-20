@@ -9,9 +9,7 @@ export default class CrateOwnersController extends Controller {
   crate = null;
   username = '';
 
-  @task(function* (event) {
-    event.preventDefault();
-
+  @task(function* () {
     const username = this.username;
 
     try {
