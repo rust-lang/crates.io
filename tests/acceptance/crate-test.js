@@ -286,11 +286,8 @@ module('Acceptance | crate page', function (hooks) {
     this.server.loadFixtures();
 
     await visit('/crates/nanomsg/owners');
-    await click('[data-test-save-button]');
-
-    assert.dom('[data-test-error-message]').hasText('Please enter a username');
-    assert.dom('[data-test-owners] [data-test-owner-team]').exists({ count: 2 });
-    assert.dom('[data-test-owners] [data-test-owner-user]').exists({ count: 2 });
+    await fillIn('input[name="username"]', '');
+    assert.dom('[data-test-save-button]').isDisabled();
   });
 
   test('attempting to add non-existent owner', async function (assert) {

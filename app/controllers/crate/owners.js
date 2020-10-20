@@ -19,11 +19,6 @@ export default class CrateOwnersController extends Controller {
 
     const username = this.username;
 
-    if (!username) {
-      this.set('error', 'Please enter a username');
-      return false;
-    }
-
     try {
       yield this.crate.inviteOwner(username);
       this.set('invited', `An invite has been sent to ${username}`);
