@@ -9,28 +9,16 @@
 <div local-class="me-email">
   <h2>Add Owner</h2>
 
-  {{#if this.error}}
-    <p data-test-error-message>{{this.error}}</p>
-  {{/if}}
-
-  {{#if this.invited}}
-    <p data-test-invited-message>{{this.invited}}</p>
-  {{/if}}
-
   <form local-class="email-form" {{on "submit" (perform this.addOwnerTask)}}>
     <label local-class="email-input-label" for='new-owner-username'>
       Username
     </label>
     <Input @type="text" id="new-owner-username" @value={{this.username}} placeholder="Username" local-class="email-input" @name="username" />
-    <button type="submit" local-class="submit-button" data-test-save-button>Save</button>
+    <button type="submit" disabled={{not this.username}} local-class="submit-button" data-test-save-button>Save</button>
   </form>
 </div>
 
 <h2>Owners</h2>
-
-{{#if this.removed}}
-  <p data-test-removed-message>{{this.removed}}</p>
-{{/if}}
 
 <div local-class='list' data-test-owners>
   {{#each this.crate.owner_team as |team|}}
