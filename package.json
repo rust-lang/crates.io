@@ -37,8 +37,8 @@
     "trailingComma": "all"
   },
   "dependencies": {
-    "@sentry/browser": "5.26.0",
-    "@sentry/integrations": "5.26.0",
+    "@sentry/browser": "5.27.0",
+    "@sentry/integrations": "5.27.0",
     "copy-text-to-clipboard": "2.2.0",
     "fastboot-app-server": "2.0.0",
     "morgan": "1.10.0",
