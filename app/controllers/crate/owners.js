@@ -36,7 +36,7 @@ export default class CrateOwnersController extends Controller {
         this.notifications.success(`User ${owner.get('login')} removed as crate owner`);
         this.crate.owner_user.removeObject(owner);
       }
-    } catch (error) {
+    } catch {
       let subject = owner.kind === 'team' ? `team ${owner.get('display_name')}` : `user ${owner.get('login')}`;
       this.notifications.error(`Failed to remove the ${subject} as crate owner`);
     }
