@@ -1,4 +1,3 @@
-import { empty, or } from '@ember/object/computed';
 import { inject as service } from '@ember/service';
 import Component from '@glimmer/component';
 
@@ -6,9 +5,6 @@ import { task } from 'ember-concurrency';
 
 export default class ApiTokenRow extends Component {
   @service notifications;
-
-  @empty('args.token.name') emptyName;
-  @or('args.token.isSaving', 'emptyName') disableCreate;
 
   @task(function* () {
     try {

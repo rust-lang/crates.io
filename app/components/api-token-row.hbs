@@ -15,8 +15,8 @@
       <button
         type="submit"
         local-class="save-button"
-        disabled={{this.disableCreate}}
-        title={{if this.emptyName "You must specify a name" ""}}
+        disabled={{or @token.isSaving (not @token.name)}}
+        title={{unless @token.name "You must specify a name"}}
         data-test-save-token-button
       >
         Create
