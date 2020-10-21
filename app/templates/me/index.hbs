@@ -25,7 +25,7 @@
   />
 </div>
 
-<form local-class="me-email-notifications" {{on "submit" this.saveEmailNotifications}} >
+<form local-class="me-email-notifications" {{on "submit" (prevent-default this.saveEmailNotifications)}} >
   <h2>Email Notification Preferences</h2>
 
   {{#if this.hasEmailNotificationFeature}}

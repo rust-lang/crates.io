@@ -34,9 +34,7 @@ export default class MeIndexController extends Controller {
   }
 
   @action
-  async saveEmailNotifications(event) {
-    event?.preventDefault();
-
+  async saveEmailNotifications() {
     try {
       await ajax(`/api/v1/me/email_notifications`, {
         method: 'PUT',

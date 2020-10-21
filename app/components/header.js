@@ -12,10 +12,7 @@ export default class Header extends Component {
     this.header.searchValue = value;
   }
 
-  @action
-  search(event) {
-    event.preventDefault();
-
+  @action search() {
     this.router.transitionTo('search', {
       queryParams: {
         q: this.header.searchValue,
