@@ -72,33 +72,4 @@
   {{/if}}
 </form>
 
-<div local-class="me-subheading">
-  <h2>API Access</h2>
-  <div local-class="right">
-    <button
-      type="button"
-      local-class="new-token-button"
-      disabled={{this.disableCreate}}
-      data-test-new-token-button
-      {{on "click" this.startNewToken}}
-    >
-      New Token
-    </button>
-  </div>
-</div>
-
-<p>
-  If you want to use package commands from the command line, you will need to
-  login with <code>cargo login (token)</code> using one of the tokens listed below.
-</p>
-<p>
-  When working in shared environments, supplying the token on the command line could
-  expose it to prying eyes. To avoid this, enter <code>cargo login</code> and supply your
-  token when prompted.
-</p>
-
-<div local-class="token-list">
-  {{#each this.sortedTokens as |token|}}
-    <ApiTokenRow @token={{token}} />
-  {{/each}}
-</div>
+<Settings::ApiTokens @tokens={{@model.api_tokens}} />

@@ -83,23 +83,3 @@
 .update-notifications-button {
     composes: yellow-button from '../shared/buttons.module.css';
 }
-
-.me-subheading {
-    display: flex;
-    .right {
-        flex: 2;
-        display: flex;
-        justify-content: flex-end;
-        align-self: center;
-    }
-}
-
-.new-token-button {
-    composes: yellow-button from '../shared/buttons.module.css';
-}
-
-.token-list {
-    background-color: var(--main-bg-dark);
-    display: flex;
-    flex-direction: column;
-}
