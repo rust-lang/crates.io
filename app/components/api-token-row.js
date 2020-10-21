@@ -6,9 +6,9 @@ import { task } from 'ember-concurrency';
 export default class ApiTokenRow extends Component {
   @service notifications;
 
-  @task(function* () {
+  @task(function* (token) {
     try {
-      yield this.args.token.save();
+      yield token.save();
     } catch (error) {
       let msg =
         error.errors && error.errors[0] && error.errors[0].detail
@@ -20,9 +20,9 @@ export default class ApiTokenRow extends Component {
   })
   saveTokenTask;
 
-  @task(function* () {
+  @task(function* (token) {
     try {
-      yield this.args.token.destroyRecord();
+      yield token.destroyRecord();
     } catch (error) {
       let msg =
         error.errors && error.errors[0] && error.errors[0].detail

@@ -1,5 +1,5 @@
 {{#if @token.isNew}}
-  <form local-class="row create-token" {{on "submit" (prevent-default (perform this.saveTokenTask))}}>
+  <form local-class="row create-token" {{on "submit" (prevent-default (perform this.saveTokenTask @token))}}>
     <div local-class="name">
       <Input
         @type="text"
@@ -51,7 +51,7 @@
         local-class="revoke-button"
         disabled={{@token.isSaving}}
         data-test-revoke-token-button
-        {{on "click" (perform this.revokeTokenTask)}}
+        {{on "click" (perform this.revokeTokenTask @token)}}
       >
         Revoke
       </button>
