@@ -109,7 +109,7 @@
     "eslint-plugin-ember": "9.3.0",
     "eslint-plugin-import-helpers": "1.1.0",
     "eslint-plugin-prettier": "3.1.4",
-    "eslint-plugin-unicorn": "^23.0.0",
+    "eslint-plugin-unicorn": "23.0.0",
     "loader.js": "4.7.0",
     "normalize.css": "8.0.1",
     "nyc": "15.1.0",
