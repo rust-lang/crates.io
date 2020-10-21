@@ -1,15 +1,31 @@
 import Route from '@ember/routing/route';
+import { inject as service } from '@ember/service';
 
 export default class ReverseDependenciesRoute extends Route {
+  @service notifications;
+
   queryParams = {
     page: { refreshModel: true },
   };
 
-  model(params) {
+  async model(params) {
     params.reverse = true;
     params.crate = this.modelFor('crate');
+    let crateName = params.crate.name;
 
-    return this.store.query('dependency', params);
+    try {
+      return await this.store.query('dependency', params);
+    } catch (error) {
+      let message = `Could not load reverse dependencies for the "${crateName}" crate`;
+
+      let details = error.errors?.[0]?.detail;
+      if (details && details !== '[object Object]') {
+        message += `: ${details}`;
+      }
+
+      this.notifications.error(message);
+      this.replaceWith('index');
+    }
   }
 
   setupController(controller) {
