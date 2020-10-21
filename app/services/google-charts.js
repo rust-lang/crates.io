@@ -25,11 +25,11 @@ async function loadScript(src) {
   await new Promise((resolve, reject) => {
     const script = document.createElement('script');
     script.src = src;
-    script.onload = resolve;
-    script.onerror = event => {
+    script.addEventListener('load', resolve);
+    script.addEventListener('error', event => {
       reject(new ExternalScriptError(event.target.src));
-    };
-    document.body.appendChild(script);
+    });
+    document.body.append(script);
   });
 }
 

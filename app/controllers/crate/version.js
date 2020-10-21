@@ -90,14 +90,14 @@ export default class CrateVersionController extends Controller {
 
     let headers = ['Date'];
     versions.sort(b => b.num).reverse();
-    for (let i = 0; i < versions.length; i++) {
-      headers.push(versions[i].num);
+    for (let version of versions) {
+      headers.push(version.num);
     }
     let data = [headers];
     for (let date in dates) {
       let row = [dates[date].date.toDate()];
-      for (let i = 0; i < versions.length; i++) {
-        row.push(dates[date].cnt[versions[i].id] || 0);
+      for (let version of versions) {
+        row.push(dates[date].cnt[version.id] || 0);
       }
       data.push(row);
     }

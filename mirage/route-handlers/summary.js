@@ -10,6 +10,7 @@ export function register(server) {
     let most_recently_downloaded = crates.sort((a, b) => b.recent_downloads - a.recent_downloads).slice(0, 10);
 
     let num_crates = crates.length;
+    // eslint-disable-next-line unicorn/no-reduce
     let num_downloads = crates.models.reduce((sum, crate) => sum + crate.downloads, 0);
 
     let popular_categories = schema.categories
