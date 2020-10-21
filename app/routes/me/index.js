@@ -9,9 +9,9 @@ export default class MeIndexRoute extends AuthenticatedRoute {
       ({ ownedCrates } = this.session);
     }
 
-    let apiTokens = this.store.findAll('api-token');
+    let apiTokens = await this.store.findAll('api-token');
 
-    return { user, ownedCrates, api_tokens: apiTokens };
+    return { user, ownedCrates, api_tokens: apiTokens.toArray() };
   }
 
   setupController(controller) {

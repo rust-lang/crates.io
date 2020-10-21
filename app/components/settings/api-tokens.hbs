@@ -4,7 +4,7 @@
     <button
       type="button"
       local-class="new-token-button"
-      disabled={{this.disableCreate}}
+      disabled={{this.newToken}}
       data-test-new-token-button
       {{on "click" this.startNewToken}}
     >
@@ -24,81 +24,81 @@
 </p>
 
 <div local-class="token-list">
-  {{#each this.sortedTokens as |token|}}
-    {{#if token.isNew}}
-      <form local-class="row create-token" {{on "submit" (prevent-default (perform this.saveTokenTask token))}}>
-        <div local-class="name">
-          <Input
-            @type="text"
-            placeholder="New token name"
-            @disabled={{token.isSaving}}
-            @value={{token.name}}
-            data-test-focused-input
-            {{auto-focus}}
-          />
-        </div>
-
-        <div local-class="actions">
-          <button
-            type="submit"
-            local-class="save-button"
-            disabled={{or token.isSaving (not token.name)}}
-            title={{unless token.name "You must specify a name"}}
-            data-test-save-token-button
-          >
-            Create
-          </button>
-          {{#if token.isSaving}}
-            <LoadingSpinner local-class="spinner" data-test-saving-spinner />
-          {{/if}}
-        </div>
-      </form>
-    {{else}}
-      <div local-class="row" data-test-api-token={{token.id}}>
-        <div local-class="name" data-test-name>
-          {{token.name}}
-        </div>
-
-        <div local-class="dates">
-          <span title={{token.created_at}} local-class="created-at" data-test-created-at>
-            Created {{moment-from-now token.created_at}}
-          </span>
-          <span title={{token.last_used_at}} local-class="last-used-at" data-test-last-used-at>
-            {{#if token.last_used_at}}
-              Last used {{moment-from-now token.last_used_at}}
-            {{else}}
-              Never used
-            {{/if}}
-          </span>
-        </div>
-
-        <div local-class="actions">
-          <button
-            type="button"
-            local-class="revoke-button"
-            disabled={{token.isSaving}}
-            data-test-revoke-token-button
-            {{on "click" (perform this.revokeTokenTask token)}}
-          >
-            Revoke
-          </button>
-          {{#if token.isSaving}}
-            <LoadingSpinner local-class="spinner" data-test-saving-spinner />
-          {{/if}}
-        </div>
+  {{#if this.newToken}}
+    <form local-class="row create-token" {{on "submit" (prevent-default (perform this.saveTokenTask))}}>
+      <div local-class="name">
+        <Input
+          @type="text"
+          placeholder="New token name"
+          @disabled={{this.newToken.isSaving}}
+          @value={{this.newToken.name}}
+          data-test-focused-input
+          {{auto-focus}}
+        />
       </div>
 
-      {{#if token.token}}
-        <div local-class="row new-token" data-test-token>
-          <div>
-            Please record this token somewhere, you cannot retrieve
-            its value again. For use on the command line you can save it to <code>~/.cargo/credentials</code>
-            with:
+      <div local-class="actions">
+        <button
+          type="submit"
+          local-class="save-button"
+          disabled={{or this.newToken.isSaving (not this.newToken.name)}}
+          title={{unless this.newToken.name "You must specify a name"}}
+          data-test-save-token-button
+        >
+          Create
+        </button>
+        {{#if this.newToken.isSaving}}
+          <LoadingSpinner local-class="spinner" data-test-saving-spinner />
+        {{/if}}
+      </div>
+    </form>
+  {{/if}}
 
-            <pre>cargo login {{token.token}}</pre>
-          </div>
+  {{#each this.sortedTokens as |token|}}
+    <div local-class="row" data-test-api-token={{token.id}}>
+      <div local-class="name" data-test-name>
+        {{token.name}}
+      </div>
+
+      <div local-class="dates">
+        <span title={{token.created_at}} local-class="created-at" data-test-created-at>
+          Created {{moment-from-now token.created_at}}
+        </span>
+        <span title={{token.last_used_at}} local-class="last-used-at" data-test-last-used-at>
+          {{#if token.last_used_at}}
+            Last used {{moment-from-now token.last_used_at}}
+          {{else}}
+            Never used
+          {{/if}}
+        </span>
+      </div>
+
+      <div local-class="actions">
+        <button
+          type="button"
+          local-class="revoke-button"
+          disabled={{token.isSaving}}
+          data-test-revoke-token-button
+          {{on "click" (perform this.revokeTokenTask token)}}
+        >
+          Revoke
+        </button>
+        {{#if token.isSaving}}
+          <LoadingSpinner local-class="spinner" data-test-saving-spinner />
+        {{/if}}
+      </div>
+    </div>
+
+    {{#if token.token}}
+      <div local-class="row new-token" data-test-token>
+        <div>
+          Please record this token somewhere, you cannot retrieve
+          its value again. For use on the command line you can save it to <code>~/.cargo/credentials</code>
+          with:
+
+          <pre>cargo login {{token.token}}</pre>
         </div>
-      {{/if}}
+      </div>
     {{/if}}
   {{/each}}
 </div>
