@@ -1,0 +1,17 @@
+---
+source: src/tests/keyword.rs
+expression: json
+---
+{
+  "keywords": [
+    {
+      "crates_cnt": 0,
+      "created_at": "[datetime]",
+      "id": "foo",
+      "keyword": "foo"
+    }
+  ],
+  "meta": {
+    "total": 1
+  }
+}

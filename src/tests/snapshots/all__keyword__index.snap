@@ -1,0 +1,10 @@
+---
+source: src/tests/keyword.rs
+expression: json
+---
+{
+  "keywords": [],
+  "meta": {
+    "total": 0
+  }
+}

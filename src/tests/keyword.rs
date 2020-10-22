@@ -1,15 +1,9 @@
+use crate::insta::rfc3339_redaction;
 use crate::{builders::CrateBuilder, RequestHelper, TestApp};
 use cargo_registry::{models::Keyword, views::EncodableKeyword};
+use insta::assert_json_snapshot;
+use serde_json::Value;
 
-#[derive(Deserialize)]
-struct KeywordList {
-    keywords: Vec<EncodableKeyword>,
-    meta: KeywordMeta,
-}
-#[derive(Deserialize)]
-struct KeywordMeta {
-    total: i32,
-}
 #[derive(Deserialize)]
 struct GoodKeyword {
     keyword: EncodableKeyword,
@@ -19,18 +13,15 @@ struct GoodKeyword {
 fn index() {
     let url = "/api/v1/keywords";
     let (app, anon) = TestApp::init().empty();
-    let json: KeywordList = anon.get(url).good();
-    assert_eq!(json.keywords.len(), 0);
-    assert_eq!(json.meta.total, 0);
+    let json: Value = anon.get(url).good();
+    assert_json_snapshot!(json);
 
     app.db(|conn| {
         Keyword::find_or_create_all(conn, &["foo"]).unwrap();
     });
 
-    let json: KeywordList = anon.get(url).good();
-    assert_eq!(json.keywords.len(), 1);
-    assert_eq!(json.meta.total, 1);
-    assert_eq!(json.keywords[0].keyword.as_str(), "foo");
+    let json: Value = anon.get(url).good();
+    assert_json_snapshot!(json, { ".**.created_at" => rfc3339_redaction() });
 }
 
 #[test]
@@ -42,8 +33,9 @@ fn show() {
     app.db(|conn| {
         Keyword::find_or_create_all(conn, &["foo"]).unwrap();
     });
-    let json: GoodKeyword = anon.get(url).good();
-    assert_eq!(json.keyword.keyword.as_str(), "foo");
+
+    let json: Value = anon.get(url).good();
+    assert_json_snapshot!(json, { ".**.created_at" => rfc3339_redaction() });
 }
 
 #[test]
@@ -55,8 +47,9 @@ fn uppercase() {
     app.db(|conn| {
         Keyword::find_or_create_all(conn, &["UPPER"]).unwrap();
     });
-    let json: GoodKeyword = anon.get(url).good();
-    assert_eq!(json.keyword.keyword.as_str(), "upper");
+
+    let json: Value = anon.get(url).good();
+    assert_json_snapshot!(json, { ".**.created_at" => rfc3339_redaction() });
 }
 
 #[test]
