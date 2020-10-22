@@ -296,7 +296,7 @@ fn using_token_updates_last_used_at() {
     // Use the token once
     token.get::<EncodableMe>("/api/v1/me").good();
 
-    let token = app.db(|conn| t!(ApiToken::belonging_to(user.as_model()).first::<ApiToken>(conn)));
+    let token: ApiToken = app.db(|conn| t!(ApiToken::belonging_to(user.as_model()).first(conn)));
     assert!(token.last_used_at.is_some());
 
     // Would check that it updates the timestamp here, but the timestamp is

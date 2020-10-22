@@ -44,10 +44,10 @@ fn delete(conn: &PgConnection) {
         Some(s) => s,
     };
 
-    let krate = Crate::by_name(&name).first::<Crate>(conn).unwrap();
-    let v = Version::belonging_to(&krate)
+    let krate: Crate = Crate::by_name(&name).first(conn).unwrap();
+    let v: Version = Version::belonging_to(&krate)
         .filter(versions::num.eq(&version))
-        .first::<Version>(conn)
+        .first(conn)
         .unwrap();
     print!(
         "Are you sure you want to delete {}#{} ({}) [y/N]: ",

@@ -20,7 +20,7 @@ pub fn downloads(req: &mut dyn RequestExt) -> EndpointResult {
 
     let crate_name = &req.params()["crate_id"];
     let conn = req.db_read_only()?;
-    let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
+    let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
 
     let mut versions = krate.all_versions().load::<Version>(&*conn)?;
     versions.sort_by(|a, b| b.num.cmp(&a.num));

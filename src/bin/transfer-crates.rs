@@ -43,13 +43,13 @@ fn transfer(conn: &PgConnection) {
         Some(s) => s,
     };
 
-    let from = users::table
+    let from: User = users::table
         .filter(users::gh_login.eq(from))
-        .first::<User>(conn)
+        .first(conn)
         .unwrap();
-    let to = users::table
+    let to: User = users::table
         .filter(users::gh_login.eq(to))
-        .first::<User>(conn)
+        .first(conn)
         .unwrap();
 
     if from.gh_id != to.gh_id {

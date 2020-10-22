@@ -16,16 +16,17 @@ pub fn me(req: &mut dyn RequestExt) -> EndpointResult {
     let user_id = req.authenticate()?.user_id();
     let conn = req.db_conn()?;
 
-    let (user, verified, email, verification_sent) = users::table
-        .find(user_id)
-        .left_join(emails::table)
-        .select((
-            users::all_columns,
-            emails::verified.nullable(),
-            emails::email.nullable(),
-            emails::token_generated_at.nullable().is_not_null(),
-        ))
-        .first::<(User, Option<bool>, Option<String>, bool)>(&*conn)?;
+    let (user, verified, email, verification_sent): (User, Option<bool>, Option<String>, bool) =
+        users::table
+            .find(user_id)
+            .left_join(emails::table)
+            .select((
+                users::all_columns,
+                emails::verified.nullable(),
+                emails::email.nullable(),
+                emails::token_generated_at.nullable().is_not_null(),
+            ))
+            .first(&*conn)?;
 
     let owned_crates = CrateOwner::by_owner_kind(OwnerKind::User)
         .inner_join(crates::table)

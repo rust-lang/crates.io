@@ -68,10 +68,10 @@ impl PublishRateLimit {
         sql_function!(fn greatest<T>(x: T, y: T) -> T);
         sql_function!(fn least<T>(x: T, y: T) -> T);
 
-        let burst = publish_rate_overrides::table
+        let burst: i32 = publish_rate_overrides::table
             .find(uploader)
             .select(publish_rate_overrides::burst)
-            .first::<i32>(conn)
+            .first(conn)
             .optional()?
             .unwrap_or(self.burst);
 

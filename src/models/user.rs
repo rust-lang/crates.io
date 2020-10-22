@@ -164,7 +164,7 @@ impl User {
         Ok(Email::belonging_to(self)
             .select(emails::email)
             .filter(emails::verified.eq(true))
-            .first::<String>(&*conn)
+            .first(&*conn)
             .optional()?)
     }
 
@@ -200,7 +200,7 @@ impl User {
     pub fn email(&self, conn: &PgConnection) -> AppResult<Option<String>> {
         Ok(Email::belonging_to(self)
             .select(emails::email)
-            .first::<String>(&*conn)
+            .first(&*conn)
             .optional()?)
     }
 

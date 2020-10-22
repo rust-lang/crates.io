@@ -1319,9 +1319,9 @@ fn new_krate_records_verified_email() {
     token.enqueue_publish(crate_to_publish).good();
 
     app.db(|conn| {
-        let email = versions_published_by::table
+        let email: String = versions_published_by::table
             .select(versions_published_by::email)
-            .first::<String>(conn)
+            .first(conn)
             .unwrap();
         assert_eq!(email, "something@example.com");
     });

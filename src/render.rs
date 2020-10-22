@@ -276,11 +276,11 @@ pub fn render_and_upload_readme(
 
     conn.transaction(|| {
         Version::record_readme_rendering(version_id, &conn)?;
-        let (crate_name, vers) = versions::table
+        let (crate_name, vers): (String, String) = versions::table
             .find(version_id)
             .inner_join(crates::table)
             .select((crates::name, versions::num))
-            .first::<(String, String)>(&*conn)?;
+            .first(&*conn)?;
         env.uploader
             .upload_readme(env.http_client(), &crate_name, &vers, rendered)?;
         Ok(())

@@ -114,7 +114,7 @@ pub fn summary(req: &mut dyn RequestExt) -> EndpointResult {
 pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
     let name = &req.params()["crate_id"];
     let conn = req.db_read_only()?;
-    let krate = Crate::by_name(name).first::<Crate>(&*conn)?;
+    let krate: Crate = Crate::by_name(name).first(&*conn)?;
 
     let mut versions_and_publishers = krate
         .all_versions()
@@ -210,7 +210,7 @@ pub fn readme(req: &mut dyn RequestExt) -> EndpointResult {
 pub fn versions(req: &mut dyn RequestExt) -> EndpointResult {
     let crate_name = &req.params()["crate_id"];
     let conn = req.db_read_only()?;
-    let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
+    let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
     let mut versions_and_publishers: Vec<(Version, Option<User>)> = krate
         .all_versions()
         .left_outer_join(users::table)
@@ -241,7 +241,7 @@ pub fn reverse_dependencies(req: &mut dyn RequestExt) -> EndpointResult {
 
     let name = &req.params()["crate_id"];
     let conn = req.db_read_only()?;
-    let krate = Crate::by_name(name).first::<Crate>(&*conn)?;
+    let krate: Crate = Crate::by_name(name).first(&*conn)?;
     let (rev_deps, total) = krate.reverse_dependencies(&*conn, &req.query())?;
     let rev_deps: Vec<_> = rev_deps
         .into_iter()

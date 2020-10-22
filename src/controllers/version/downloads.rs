@@ -73,9 +73,8 @@ pub fn downloads(req: &mut dyn RequestExt) -> EndpointResult {
     let semver = extract_semver(req)?;
 
     let conn = req.db_read_only()?;
-    let version = Crate::by_name(crate_name)
-        .first::<Crate>(&*conn)?
-        .find_version(&conn, semver)?;
+    let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
+    let version = krate.find_version(&conn, semver)?;
 
     let cutoff_end_date = req
         .query()

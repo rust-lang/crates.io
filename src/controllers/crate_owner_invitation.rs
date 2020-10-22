@@ -56,7 +56,7 @@ pub fn handle_invite_with_token(req: &mut dyn RequestExt) -> EndpointResult {
 
     let crate_owner_invite: CrateOwnerInvitation = crate_owner_invitations::table
         .filter(crate_owner_invitations::token.eq(req_token))
-        .first::<CrateOwnerInvitation>(&*conn)?;
+        .first(&*conn)?;
 
     let invite_reponse = InvitationResponse {
         crate_id: crate_owner_invite.crate_id,
@@ -79,9 +79,9 @@ fn accept_invite(
     use diesel::{delete, insert_into};
 
     conn.transaction(|| {
-        let pending_crate_owner = crate_owner_invitations::table
+        let pending_crate_owner: CrateOwnerInvitation = crate_owner_invitations::table
             .find((user_id, crate_invite.crate_id))
-            .first::<CrateOwnerInvitation>(&*conn)?;
+            .first(&*conn)?;
 
         insert_into(crate_owners::table)
             .values(&CrateOwner {

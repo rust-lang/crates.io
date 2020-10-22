@@ -43,7 +43,7 @@ pub fn index(req: &mut dyn RequestExt) -> EndpointResult {
 pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
     let slug = &req.params()["category_id"];
     let conn = req.db_conn()?;
-    let cat = Category::by_slug(slug).first::<Category>(&*conn)?;
+    let cat: Category = Category::by_slug(slug).first(&*conn)?;
     let subcats = cat
         .subcategories(&conn)?
         .into_iter()
