@@ -1,0 +1,12 @@
+[package]
+name = "tools"
+version = "0.0.0"
+authors = ["Alex Crichton <alex@alexcrichton.com>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/rust-lang/crates.io"
+description = "crates.io tools for common maintenance tasks"
+edition = "2018"
+
+[dependencies]
+cargo-registry = { path = "../.." }
+diesel = { version = "1.4.0", features = ["postgres", "serde_json", "chrono", "r2d2"] }

@@ -8,7 +8,7 @@ description = "Backend of crates.io"
 edition = "2018"
 
 [workspace]
-members = [".", "src/on_call", "src/s3"]
+members = [".", "src/on_call", "src/s3", "src/tools"]
 
 [profile.release]
 opt-level = 2
