@@ -1,0 +1,17 @@
+[package]
+name = "on-call"
+authors = ["Alex Crichton <alex@alexcrichton.com>"]
+version = "0.0.0"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/rust-lang/crates.io"
+description = "crates.io on-call tools"
+edition = "2018"
+
+[dependencies]
+anyhow = "1.0"
+cargo-registry = { path = "../cargo-registry" }
+chrono = { version = "0.4.0", features = ["serde"] }
+diesel = { version = "1.4.0", features = ["postgres", "serde_json", "chrono", "r2d2"] }
+dotenv = "0.15"
+reqwest = { version = "0.10", features = ["blocking", "gzip", "json"] }
+serde = { version = "1.0.0", features = ["derive"] }
