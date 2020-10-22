@@ -103,7 +103,7 @@ pub fn sync_with_connection(toml_str: &str, conn: &PgConnection) -> Result<()> {
         .collect::<Vec<_>>();
 
     conn.transaction(|| {
-        let slugs = diesel::insert_into(categories)
+        let slugs: Vec<String> = diesel::insert_into(categories)
             .values(&to_insert)
             .on_conflict(slug)
             .do_update()
@@ -112,7 +112,7 @@ pub fn sync_with_connection(toml_str: &str, conn: &PgConnection) -> Result<()> {
                 description.eq(excluded(description)),
             ))
             .returning(slug)
-            .get_results::<String>(&*conn)?;
+            .get_results(&*conn)?;
 
         diesel::delete(categories)
             .filter(slug.ne(all(slugs)))
