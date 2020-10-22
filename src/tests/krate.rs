@@ -1,15 +1,13 @@
 use crate::{
     builders::{CrateBuilder, DependencyBuilder, PublishBuilder, VersionBuilder},
+    insta::rfc3339_redaction,
     new_category, new_dependency, new_user, CrateMeta, CrateResponse, GoodCrate, OkBool,
     RequestHelper, TestApp,
 };
 use cargo_registry::{
     models::{krate::MAX_NAME_LENGTH, Category, Crate},
     schema::{api_tokens, crates, emails, metadata, versions, versions_published_by},
-    views::{
-        EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword, EncodableVersion,
-        EncodableVersionDownload,
-    },
+    views::{EncodableDependency, EncodableVersion, EncodableVersionDownload},
 };
 use std::{
     collections::HashMap,
@@ -22,6 +20,8 @@ use chrono::Utc;
 use conduit::StatusCode;
 use diesel::{dsl::*, prelude::*, update};
 use flate2::{write::GzEncoder, Compression};
+use insta::assert_json_snapshot;
+use serde_json::Value;
 
 #[derive(Deserialize)]
 struct VersionsList {
@@ -40,18 +40,6 @@ struct RevDeps {
 #[derive(Deserialize)]
 struct Downloads {
     version_downloads: Vec<EncodableVersionDownload>,
-}
-
-#[derive(Deserialize)]
-struct SummaryResponse {
-    num_downloads: i64,
-    num_crates: i64,
-    new_crates: Vec<EncodableCrate>,
-    most_downloaded: Vec<EncodableCrate>,
-    most_recently_downloaded: Vec<EncodableCrate>,
-    just_updated: Vec<EncodableCrate>,
-    popular_keywords: Vec<EncodableKeyword>,
-    popular_categories: Vec<EncodableCategory>,
 }
 
 impl crate::util::MockAnonymousUser {
@@ -1330,7 +1318,8 @@ fn new_krate_records_verified_email() {
 #[test]
 fn summary_doesnt_die() {
     let (_, anon) = TestApp::init().empty();
-    anon.get::<SummaryResponse>("/api/v1/summary").good();
+    let json: Value = anon.get("/api/v1/summary").good();
+    assert_json_snapshot!(json);
 }
 
 #[test]
@@ -1403,31 +1392,11 @@ fn summary_new_crates() {
             .unwrap();
     });
 
-    let json: SummaryResponse = anon.get("/api/v1/summary").good();
-
-    assert_eq!(json.num_crates, 5);
-    assert_eq!(json.num_downloads, 6000);
-    assert_eq!(json.most_downloaded[0].name, "most_recent_downloads");
-    assert_eq!(json.most_downloaded[0].downloads, 5000);
-    assert_eq!(json.most_downloaded[0].recent_downloads, Some(50));
-    assert_eq!(
-        json.most_recently_downloaded[0].name,
-        "most_recent_downloads"
-    );
-    assert_eq!(json.most_recently_downloaded[0].recent_downloads, Some(50));
-    assert_eq!(json.popular_keywords[0].keyword, "popular");
-    assert_eq!(json.popular_categories[0].category, "Category 1");
-    assert_eq!(json.just_updated.len(), 2);
-
-    assert_eq!(json.just_updated[0].name, "just_updated_patch");
-    assert_eq!(json.just_updated[0].max_version, "0.2.0");
-    assert_eq!(json.just_updated[0].newest_version, "0.1.1");
-
-    assert_eq!(json.just_updated[1].name, "just_updated");
-    assert_eq!(json.just_updated[1].max_version, "0.1.2");
-    assert_eq!(json.just_updated[1].newest_version, "0.1.2");
-
-    assert_eq!(json.new_crates.len(), 5);
+    let json: Value = anon.get("/api/v1/summary").good();
+    assert_json_snapshot!(json, {
+        ".**.created_at" => rfc3339_redaction(),
+        ".**.updated_at" => rfc3339_redaction(),
+    });
 }
 
 #[test]

@@ -50,6 +50,7 @@ mod categories;
 mod category;
 mod dump_db;
 mod git;
+mod insta;
 mod keyword;
 mod krate;
 mod owners;

@@ -1,0 +1,14 @@
+---
+source: src/tests/krate.rs
+expression: json
+---
+{
+  "just_updated": [],
+  "most_downloaded": [],
+  "most_recently_downloaded": [],
+  "new_crates": [],
+  "num_crates": 0,
+  "num_downloads": 0,
+  "popular_categories": [],
+  "popular_keywords": []
+}
