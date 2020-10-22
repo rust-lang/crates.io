@@ -52,9 +52,8 @@ fn can_download_crate_in_read_only_mode() {
         use cargo_registry::schema::version_downloads::dsl::*;
         use diesel::dsl::sum;
 
-        let dl_count = version_downloads
-            .select(sum(downloads))
-            .get_result::<Option<i64>>(conn);
+        let dl_count: Result<Option<i64>, _> =
+            version_downloads.select(sum(downloads)).get_result(conn);
         assert_eq!(Ok(None), dl_count);
     })
 }

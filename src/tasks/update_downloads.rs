@@ -51,10 +51,10 @@ fn collect(conn: &PgConnection, rows: &[VersionDownload]) -> QueryResult<()> {
 
         conn.transaction::<_, diesel::result::Error, _>(|| {
             // Update the total number of version downloads
-            let crate_id = update(versions::table.find(download.version_id))
+            let crate_id: i32 = update(versions::table.find(download.version_id))
                 .set(versions::downloads.eq(versions::downloads + amt))
                 .returning(versions::crate_id)
-                .get_result::<i32>(conn)?;
+                .get_result(conn)?;
 
             // Update the total number of crate downloads
             update(crates::table.find(crate_id))

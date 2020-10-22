@@ -210,9 +210,7 @@ impl NewVersion {
                 )));
             }
 
-            let version = insert_into(versions)
-                .values(self)
-                .get_result::<Version>(conn)?;
+            let version: Version = insert_into(versions).values(self).get_result(conn)?;
 
             insert_into(versions_published_by::table)
                 .values((

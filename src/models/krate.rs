@@ -163,10 +163,10 @@ impl<'a> NewCrate<'a> {
         use diesel::dsl::exists;
         use diesel::select;
 
-        let reserved_name = select(exists(
+        let reserved_name: bool = select(exists(
             reserved_crate_names.filter(canon_crate_name(name).eq(canon_crate_name(self.name))),
         ))
-        .get_result::<bool>(conn)?;
+        .get_result(conn)?;
         if reserved_name {
             Err(cargo_err("cannot upload a crate with a reserved name"))
         } else {
@@ -178,11 +178,11 @@ impl<'a> NewCrate<'a> {
         use crate::schema::crates::dsl::*;
 
         conn.transaction(|| {
-            let maybe_inserted = diesel::insert_into(crates)
+            let maybe_inserted: Option<Crate> = diesel::insert_into(crates)
                 .values(self)
                 .on_conflict_do_nothing()
                 .returning(ALL_COLUMNS)
-                .get_result::<Crate>(conn)
+                .get_result(conn)
                 .optional()?;
 
             if let Some(ref krate) = maybe_inserted {
@@ -445,15 +445,16 @@ impl Crate {
         match owner {
             // Users are invited and must accept before being added
             Owner::User(user) => {
-                let maybe_inserted = insert_into(crate_owner_invitations::table)
-                    .values(&NewCrateOwnerInvitation {
-                        invited_user_id: user.id,
-                        invited_by_user_id: req_user.id,
-                        crate_id: self.id,
-                    })
-                    .on_conflict_do_nothing()
-                    .get_result::<CrateOwnerInvitation>(conn)
-                    .optional()?;
+                let maybe_inserted: Option<CrateOwnerInvitation> =
+                    insert_into(crate_owner_invitations::table)
+                        .values(&NewCrateOwnerInvitation {
+                            invited_user_id: user.id,
+                            invited_by_user_id: req_user.id,
+                            crate_id: self.id,
+                        })
+                        .on_conflict_do_nothing()
+                        .get_result(conn)
+                        .optional()?;
 
                 if let Some(ownership_invitation) = maybe_inserted {
                     if let Ok(Some(email)) = user.verified_email(&conn) {

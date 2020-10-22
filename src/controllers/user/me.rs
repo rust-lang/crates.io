@@ -149,13 +149,13 @@ pub fn update_user(req: &mut dyn RequestExt) -> EndpointResult {
             email: user_email,
         };
 
-        let token = insert_into(emails::table)
+        let token: String = insert_into(emails::table)
             .values(&new_email)
             .on_conflict(user_id)
             .do_update()
             .set(&new_email)
             .returning(emails::token)
-            .get_result::<String>(&*conn)
+            .get_result(&*conn)
             .map_err(|_| server_error("Error in creating token"))?;
 
         crate::email::send_user_confirm_email(user_email, &user.gh_login, &token);
@@ -202,9 +202,9 @@ pub fn regenerate_token_and_send(req: &mut dyn RequestExt) -> EndpointResult {
     }
 
     conn.transaction(|| {
-        let email = update(Email::belonging_to(&user))
+        let email: Email = update(Email::belonging_to(&user))
             .set(emails::token.eq(sql("DEFAULT")))
-            .get_result::<Email>(&*conn)
+            .get_result(&*conn)
             .map_err(|_| bad_request("Email could not be found"))?;
 
         email::try_send_user_confirm_email(&email.email, &user.gh_login, &email.token)

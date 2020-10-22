@@ -63,7 +63,7 @@ impl<'a> NewUser<'a> {
         use diesel::sql_types::Integer;
 
         conn.transaction(|| {
-            let user = insert_into(users)
+            let user: User = insert_into(users)
                 .values(self)
                 // We need the `WHERE gh_id > 0` condition here because `gh_id` set
                 // to `-1` indicates that we were unable to find a GitHub ID for
@@ -81,7 +81,7 @@ impl<'a> NewUser<'a> {
                     gh_avatar.eq(excluded(gh_avatar)),
                     gh_access_token.eq(excluded(gh_access_token)),
                 ))
-                .get_result::<User>(conn)?;
+                .get_result(conn)?;
 
             // To send the user an account verification email
             if let Some(user_email) = email {
@@ -90,11 +90,11 @@ impl<'a> NewUser<'a> {
                     email: user_email,
                 };
 
-                let token = insert_into(emails::table)
+                let token: Option<String> = insert_into(emails::table)
                     .values(&new_email)
                     .on_conflict_do_nothing()
                     .returning(emails::token)
-                    .get_result::<String>(conn)
+                    .get_result(conn)
                     .optional()?;
 
                 if let Some(token) = token {
