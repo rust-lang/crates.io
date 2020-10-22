@@ -5,6 +5,7 @@ use crate::controllers::frontend_prelude::*;
 use crate::controllers::helpers::*;
 use crate::email;
 
+use crate::controllers::helpers::pagination::Paginated;
 use crate::models::{
     CrateOwner, Email, Follow, NewEmail, OwnerKind, User, Version, VersionOwnerAction,
 };
@@ -59,7 +60,7 @@ pub fn updates(req: &mut dyn RequestExt) -> EndpointResult {
     let user = authenticated_user.user();
 
     let followed_crates = Follow::belonging_to(&user).select(follows::crate_id);
-    let data = versions::table
+    let data: Paginated<(Version, String, Option<User>)> = versions::table
         .inner_join(crates::table)
         .left_outer_join(users::table)
         .filter(crates::id.eq(any(followed_crates)))
@@ -70,7 +71,7 @@ pub fn updates(req: &mut dyn RequestExt) -> EndpointResult {
             users::all_columns.nullable(),
         ))
         .paginate(&req.query())?
-        .load::<(Version, String, Option<User>)>(&*conn)?;
+        .load(&*conn)?;
     let more = data.next_page_params().is_some();
     let versions = data.iter().map(|(v, _, _)| v).cloned().collect::<Vec<_>>();
     let data = data

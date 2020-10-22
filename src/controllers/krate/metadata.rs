@@ -32,7 +32,7 @@ pub fn summary(req: &mut dyn RequestExt) -> EndpointResult {
 
         let krates = data.into_iter().map(|(c, _)| c).collect::<Vec<_>>();
 
-        let versions = krates.versions().load::<Version>(&*conn)?;
+        let versions: Vec<Version> = krates.versions().load(&*conn)?;
         versions
             .grouped_by(&krates)
             .into_iter()
@@ -116,11 +116,11 @@ pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
     let conn = req.db_read_only()?;
     let krate: Crate = Crate::by_name(name).first(&*conn)?;
 
-    let mut versions_and_publishers = krate
+    let mut versions_and_publishers: Vec<(Version, Option<User>)> = krate
         .all_versions()
         .left_outer_join(users::table)
         .select((versions::all_columns, users::all_columns.nullable()))
-        .load::<(Version, Option<User>)>(&*conn)?;
+        .load(&*conn)?;
     versions_and_publishers.sort_by(|a, b| b.0.num.cmp(&a.0.num));
     let versions = versions_and_publishers
         .iter()
@@ -250,7 +250,7 @@ pub fn reverse_dependencies(req: &mut dyn RequestExt) -> EndpointResult {
 
     let version_ids: Vec<i32> = rev_deps.iter().map(|dep| dep.version_id).collect();
 
-    let versions_and_publishers = versions::table
+    let versions_and_publishers: Vec<(Version, String, Option<User>)> = versions::table
         .filter(versions::id.eq(any(version_ids)))
         .inner_join(crates::table)
         .left_outer_join(users::table)
@@ -259,7 +259,7 @@ pub fn reverse_dependencies(req: &mut dyn RequestExt) -> EndpointResult {
             crates::name,
             users::all_columns.nullable(),
         ))
-        .load::<(Version, String, Option<User>)>(&*conn)?;
+        .load(&*conn)?;
     let versions = versions_and_publishers
         .iter()
         .map(|(v, _, _)| v)

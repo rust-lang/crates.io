@@ -91,7 +91,7 @@ impl VersionOwnerAction {
         Ok(Self::belonging_to(versions)
             .inner_join(users::table)
             .order(version_owner_actions::dsl::id)
-            .load::<(VersionOwnerAction, User)>(conn)?
+            .load(conn)?
             .grouped_by(versions))
     }
 }

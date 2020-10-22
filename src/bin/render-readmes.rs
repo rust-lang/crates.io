@@ -80,7 +80,7 @@ fn main() {
         query = query.filter(crates::name.eq(crate_name));
     }
 
-    let version_ids = query.load::<i32>(&conn).expect("error loading version ids");
+    let version_ids: Vec<i32> = query.load(&conn).expect("error loading version ids");
 
     let total_versions = version_ids.len();
     println!("Rendering {} versions", total_versions);
@@ -103,11 +103,11 @@ fn main() {
             total_pages
         );
 
-        let versions = versions::table
+        let versions: Vec<(Version, String)> = versions::table
             .inner_join(crates::table)
             .filter(versions::id.eq(any(version_ids_chunk)))
             .select((versions::all_columns, crates::name))
-            .load::<(Version, String)>(&conn)
+            .load(&conn)
             .expect("error loading versions");
 
         let mut tasks = Vec::with_capacity(page_size as usize);

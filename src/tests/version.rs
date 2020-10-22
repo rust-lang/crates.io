@@ -26,10 +26,7 @@ fn index() {
             .version(VersionBuilder::new("2.0.0").license(Some("MIT")))
             .version(VersionBuilder::new("2.0.1").license(Some("MIT/Apache-2.0")))
             .expect_build(conn);
-        let ids = versions::table
-            .select(versions::id)
-            .load::<i32>(conn)
-            .unwrap();
+        let ids: Vec<i32> = versions::table.select(versions::id).load(conn).unwrap();
         (ids[0], ids[1])
     });
 

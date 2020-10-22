@@ -82,7 +82,7 @@ impl Category {
         slugs: &[&str],
     ) -> QueryResult<Vec<String>> {
         conn.transaction(|| {
-            let categories = Category::by_slugs_case_sensitive(slugs).load::<Category>(conn)?;
+            let categories: Vec<Category> = Category::by_slugs_case_sensitive(slugs).load(conn)?;
             let invalid_categories = slugs
                 .iter()
                 .cloned()

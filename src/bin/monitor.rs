@@ -43,13 +43,14 @@ fn check_failing_background_jobs(conn: &PgConnection) -> Result<()> {
         .map(|s| s.parse::<i32>().unwrap())
         .unwrap_or(15);
 
-    let stalled_job_count = background_jobs
+    let stalled_jobs: Vec<i32> = background_jobs
         .select(1.into_sql::<Integer>())
         .filter(created_at.lt(now - max_job_time.minutes()))
         .for_update()
         .skip_locked()
-        .load::<i32>(conn)?
-        .len();
+        .load(conn)?;
+
+    let stalled_job_count = stalled_jobs.len();
 
     let event = if stalled_job_count > 0 {
         on_call::Event::Trigger {

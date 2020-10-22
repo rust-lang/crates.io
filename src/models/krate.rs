@@ -408,9 +408,7 @@ impl Crate {
         use crate::schema::versions::dsl::*;
 
         Ok(Version::top(
-            self.versions()
-                .select((updated_at, num))
-                .load::<(NaiveDateTime, semver::Version)>(conn)?,
+            self.versions().select((updated_at, num)).load(conn)?,
         ))
     }
 
@@ -535,11 +533,12 @@ impl Crate {
         // or `QueryableByName` to load things?"
         let options = PaginationOptions::new(params)?;
         let offset = options.offset().unwrap_or_default();
-        let rows = sql_query(include_str!("krate_reverse_dependencies.sql"))
-            .bind::<Integer, _>(self.id)
-            .bind::<BigInt, _>(i64::from(offset))
-            .bind::<BigInt, _>(i64::from(options.per_page))
-            .load::<WithCount<ReverseDependency>>(conn)?;
+        let rows: Vec<WithCount<ReverseDependency>> =
+            sql_query(include_str!("krate_reverse_dependencies.sql"))
+                .bind::<Integer, _>(self.id)
+                .bind::<BigInt, _>(i64::from(offset))
+                .bind::<BigInt, _>(i64::from(options.per_page))
+                .load(conn)?;
 
         Ok(rows.records_and_total())
     }

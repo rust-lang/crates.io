@@ -22,7 +22,7 @@ pub fn downloads(req: &mut dyn RequestExt) -> EndpointResult {
     let conn = req.db_read_only()?;
     let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
 
-    let mut versions = krate.all_versions().load::<Version>(&*conn)?;
+    let mut versions: Vec<Version> = krate.all_versions().load(&*conn)?;
     versions.sort_by(|a, b| b.num.cmp(&a.num));
     let (latest_five, rest) = versions.split_at(cmp::min(5, versions.len()));
 
@@ -35,7 +35,7 @@ pub fn downloads(req: &mut dyn RequestExt) -> EndpointResult {
         .collect::<Vec<_>>();
 
     let sum_downloads = sql::<BigInt>("SUM(version_downloads.downloads)");
-    let extra = VersionDownload::belonging_to(rest)
+    let extra: Vec<ExtraDownload> = VersionDownload::belonging_to(rest)
         .select((
             to_char(version_downloads::date, "YYYY-MM-DD"),
             sum_downloads,
@@ -43,7 +43,7 @@ pub fn downloads(req: &mut dyn RequestExt) -> EndpointResult {
         .filter(version_downloads::date.gt(date(now - 90.days())))
         .group_by(version_downloads::date)
         .order(version_downloads::date.asc())
-        .load::<ExtraDownload>(&*conn)?;
+        .load(&*conn)?;
 
     #[derive(Serialize, Queryable)]
     struct ExtraDownload {

@@ -73,9 +73,9 @@ fn transfer(conn: &PgConnection) {
     let crate_owners = crate_owners::table
         .filter(crate_owners::owner_id.eq(from.id))
         .filter(crate_owners::owner_kind.eq(OwnerKind::User as i32));
-    let crates = Crate::all()
+    let crates: Vec<Crate> = Crate::all()
         .filter(crates::id.eq_any(crate_owners.select(crate_owners::crate_id)))
-        .load::<Crate>(conn)
+        .load(conn)
         .unwrap();
 
     for krate in crates {

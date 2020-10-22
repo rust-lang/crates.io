@@ -11,6 +11,7 @@ use crate::schema::*;
 use crate::util::errors::{bad_request, ChainError};
 use crate::views::EncodableCrate;
 
+use crate::controllers::helpers::pagination::Paginated;
 use crate::models::krate::{canon_crate_name, ALL_COLUMNS};
 
 /// Handles the `GET /crates` route.
@@ -188,9 +189,7 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
         query = query.then_order_by(crates::name.asc())
     }
 
-    let data = query
-        .paginate(&req.query())?
-        .load::<(Crate, bool, Option<i64>)>(&*conn)?;
+    let data: Paginated<(Crate, bool, Option<i64>)> = query.paginate(&req.query())?.load(&*conn)?;
     let total = data.total();
 
     let next_page = data.next_page_params().map(|p| req.query_with_params(p));
@@ -203,16 +202,16 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
         .collect::<Vec<_>>();
     let crates = data.into_iter().map(|(c, _, _)| c).collect::<Vec<_>>();
 
-    let versions = crates
-        .versions()
-        .load::<Version>(&*conn)?
+    let versions: Vec<Version> = crates.versions().load(&*conn)?;
+    let versions = versions
         .grouped_by(&crates)
         .into_iter()
         .map(|versions| Version::top(versions.into_iter().map(|v| (v.created_at, v.num))));
 
-    let badges = CrateBadge::belonging_to(&crates)
+    let badges: Vec<CrateBadge> = CrateBadge::belonging_to(&crates)
         .select((badges::crate_id, badges::all_columns))
-        .load::<CrateBadge>(&*conn)?
+        .load(&*conn)?;
+    let badges = badges
         .grouped_by(&crates)
         .into_iter()
         .map(|badges| badges.into_iter().map(|cb| cb.badge).collect());
