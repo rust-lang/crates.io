@@ -24,5 +24,4 @@ testem.log
 .env
 docker-compose.override.yml
 *~
-src/schema.rs.orig
-
+schema.rs.orig
