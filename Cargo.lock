@@ -1692,6 +1692,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "37fd5004feb2ce328a52b0b3d01dbf4ffff72583493900ed15f22d4111c51693"
 
 [[package]]
+name = "on_call"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "cargo-registry",
+ "chrono",
+ "diesel",
+ "dotenv",
+ "reqwest",
+ "serde",
+]
+
+[[package]]
 name = "once_cell"
 version = "1.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"

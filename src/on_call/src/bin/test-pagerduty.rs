@@ -7,8 +7,6 @@
 
 #![warn(clippy::all, rust_2018_idioms)]
 
-mod on_call;
-
 use std::env::args;
 
 use anyhow::Result;
