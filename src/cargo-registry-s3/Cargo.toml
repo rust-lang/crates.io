@@ -1,5 +1,4 @@
 [package]
-
 name = "cargo-registry-s3"
 version = "0.2.0"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
@@ -9,9 +8,7 @@ description = "Interaction between crates.io and S3 for storing crate files"
 edition = "2018"
 
 [lib]
-
 name = "s3"
-path = "lib.rs"
 
 [dependencies]
 base64 = "0.13"
