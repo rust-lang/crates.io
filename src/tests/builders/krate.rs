@@ -4,6 +4,7 @@ use cargo_registry::{
     util::errors::AppResult,
 };
 
+use chrono::NaiveDateTime;
 use diesel::prelude::*;
 
 use super::VersionBuilder;
@@ -17,6 +18,7 @@ pub struct CrateBuilder<'a> {
     krate: NewCrate<'a>,
     owner_id: i32,
     recent_downloads: Option<i32>,
+    updated_at: Option<NaiveDateTime>,
     versions: Vec<VersionBuilder<'a>>,
 }
 
@@ -33,6 +35,7 @@ impl<'a> CrateBuilder<'a> {
             },
             owner_id,
             recent_downloads: None,
+            updated_at: None,
             versions: Vec::new(),
         }
     }
@@ -94,6 +97,12 @@ impl<'a> CrateBuilder<'a> {
         self
     }
 
+    /// Sets the crate's `updated_at` value.
+    pub fn updated_at(mut self, updated_at: NaiveDateTime) -> Self {
+        self.updated_at = Some(updated_at);
+        self
+    }
+
     pub fn build(mut self, connection: &PgConnection) -> AppResult<Crate> {
         use diesel::{insert_into, select, update};
 
@@ -136,6 +145,13 @@ impl<'a> CrateBuilder<'a> {
 
         if !self.keywords.is_empty() {
             Keyword::update_crate(connection, &krate, &self.keywords)?;
+        }
+
+        if let Some(updated_at) = self.updated_at {
+            krate = update(&krate)
+                .set(crates::updated_at.eq(updated_at))
+                .returning(cargo_registry::models::krate::ALL_COLUMNS)
+                .get_result(connection)?;
         }
 
         Ok(krate)
