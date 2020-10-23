@@ -197,8 +197,10 @@ jobs:
           cargo fmt -- --check
           cargo clippy --all-targets --all-features --all
 
-      - name: Test
-        run: cargo test
+      - name: Run cargo-tarpaulin
+        uses: actions-rs/tarpaulin@v0.1.3
+        with:
+          version: '0.17.0'
 
       - name: Prune unnecessary cache
         run: script/ci/prune-cache.sh
