@@ -1338,6 +1338,9 @@ fn summary_new_crates() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
     app.db(|conn| {
+        let now_ = Utc::now().naive_utc();
+        let now_plus_two = now_ + chrono::Duration::seconds(2);
+
         let krate = CrateBuilder::new("some_downloads", user.id)
             .version(VersionBuilder::new("0.1.0"))
             .description("description")
@@ -1382,21 +1385,18 @@ fn summary_new_crates() {
             .unwrap();
 
         // update 'just_updated' krate. Others won't appear because updated_at == created_at.
-        let updated = Utc::now().naive_utc();
         update(&krate3)
-            .set(crates::updated_at.eq(updated))
+            .set(crates::updated_at.eq(now_))
             .execute(&*conn)
             .unwrap();
 
-        let plus_two = Utc::now().naive_utc() + chrono::Duration::seconds(2);
-
         // Add a patch version be newer than the other versions, including the higher one.
         VersionBuilder::new("0.1.1")
-            .created_at(plus_two)
+            .created_at(now_plus_two)
             .expect_build(krate4.id, user.id, conn);
 
         update(&krate4)
-            .set(crates::updated_at.eq(plus_two))
+            .set(crates::updated_at.eq(now_plus_two))
             .execute(&*conn)
             .unwrap();
     });
