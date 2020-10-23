@@ -1,3 +1,24 @@
+.me-subheading {
+    display: flex;
+
+    .right {
+        flex: 2;
+        display: flex;
+        justify-content: flex-end;
+        align-self: center;
+    }
+}
+
+.new-token-button {
+    composes: yellow-button from '../../styles/shared/buttons.module.css';
+}
+
+.token-list {
+    background-color: var(--main-bg-dark);
+    display: flex;
+    flex-direction: column;
+}
+
 .row {
     width: 100%;
     border: 1px solid #d5d3cb;
@@ -38,7 +59,7 @@
 
 .created-at,
 .last-used-at {
-    composes: small from '../styles/shared/typography.module.css';
+    composes: small from '../../styles/shared/typography.module.css';
     line-height: 1.15rem;
 }
 
@@ -52,11 +73,11 @@
 }
 
 .save-button {
-    composes: yellow-button small from '../styles/shared/buttons.module.css';
+    composes: yellow-button small from '../../styles/shared/buttons.module.css';
 }
 
 .revoke-button {
-    composes: tan-button small from '../styles/shared/buttons.module.css';
+    composes: tan-button small from '../../styles/shared/buttons.module.css';
 }
 
 .new-token {

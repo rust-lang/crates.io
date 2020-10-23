@@ -1,18 +1,31 @@
-import { empty, or } from '@ember/object/computed';
+import { action } from '@ember/object';
+import { sort } from '@ember/object/computed';
 import { inject as service } from '@ember/service';
 import Component from '@glimmer/component';
+import { tracked } from '@glimmer/tracking';
 
 import { task } from 'ember-concurrency';
 
-export default class ApiTokenRow extends Component {
+export default class ApiTokens extends Component {
+  @service store;
   @service notifications;
 
-  @empty('args.token.name') emptyName;
-  @or('args.token.isSaving', 'emptyName') disableCreate;
+  @tracked newToken;
+
+  tokenSort = ['created_at:desc'];
+  @sort('args.tokens', 'tokenSort') sortedTokens;
+
+  @action startNewToken() {
+    this.newToken = this.store.createRecord('api-token');
+  }
 
   @task(function* () {
+    let token = this.newToken;
+
     try {
-      yield this.args.token.save();
+      yield token.save();
+      this.args.tokens.unshiftObject(token);
+      this.newToken = undefined;
     } catch (error) {
       let msg =
         error.errors && error.errors[0] && error.errors[0].detail
@@ -24,9 +37,10 @@ export default class ApiTokenRow extends Component {
   })
   saveTokenTask;
 
-  @task(function* () {
+  @task(function* (token) {
     try {
-      yield this.args.token.destroyRecord();
+      yield token.destroyRecord();
+      this.args.tokens.removeObject(token);
     } catch (error) {
       let msg =
         error.errors && error.errors[0] && error.errors[0].detail
