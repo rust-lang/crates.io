@@ -1389,13 +1389,11 @@ fn summary_new_crates() {
             .unwrap();
 
         let plus_two = Utc::now().naive_utc() + chrono::Duration::seconds(2);
-        let newer = VersionBuilder::new("0.1.1").expect_build(krate4.id, user.id, conn);
 
-        // Update the patch version to be newer than the other versions, including the higher one.
-        update(&newer)
-            .set(versions::created_at.eq(plus_two))
-            .execute(&*conn)
-            .unwrap();
+        // Add a patch version be newer than the other versions, including the higher one.
+        VersionBuilder::new("0.1.1")
+            .created_at(plus_two)
+            .expect_build(krate4.id, user.id, conn);
 
         update(&krate4)
             .set(crates::updated_at.eq(plus_two))

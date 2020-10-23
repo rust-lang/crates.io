@@ -5,10 +5,12 @@ use cargo_registry::{
 };
 use std::collections::HashMap;
 
+use chrono::NaiveDateTime;
 use diesel::prelude::*;
 
 /// A builder to create version records for the purpose of inserting directly into the database.
 pub struct VersionBuilder<'a> {
+    created_at: Option<NaiveDateTime>,
     num: semver::Version,
     license: Option<&'a str>,
     license_file: Option<&'a str>,
@@ -31,6 +33,7 @@ impl<'a> VersionBuilder<'a> {
         });
 
         VersionBuilder {
+            created_at: None,
             num,
             license: None,
             license_file: None,
@@ -39,6 +42,12 @@ impl<'a> VersionBuilder<'a> {
             yanked: false,
             size: 0,
         }
+    }
+
+    /// Sets the version's `created_at` value.
+    pub fn created_at(mut self, created_at: NaiveDateTime) -> Self {
+        self.created_at = Some(created_at);
+        self
     }
 
     /// Sets the version's `license` value.
@@ -91,6 +100,12 @@ impl<'a> VersionBuilder<'a> {
         if self.yanked {
             vers = update(&vers)
                 .set(versions::yanked.eq(true))
+                .get_result(connection)?;
+        }
+
+        if let Some(created_at) = self.created_at {
+            vers = update(&vers)
+                .set(versions::created_at.eq(created_at))
                 .get_result(connection)?;
         }
 
