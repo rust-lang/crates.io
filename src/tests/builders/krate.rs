@@ -12,12 +12,12 @@ use super::VersionBuilder;
 /// If you want to test logic that happens as part of a publish request, use `PublishBuilder`
 /// instead.
 pub struct CrateBuilder<'a> {
-    owner_id: i32,
-    krate: NewCrate<'a>,
     downloads: Option<i32>,
+    keywords: Vec<&'a str>,
+    krate: NewCrate<'a>,
+    owner_id: i32,
     recent_downloads: Option<i32>,
     versions: Vec<VersionBuilder<'a>>,
-    keywords: Vec<&'a str>,
 }
 
 impl<'a> CrateBuilder<'a> {
@@ -25,15 +25,15 @@ impl<'a> CrateBuilder<'a> {
     /// doesn't exist in the database, `expect_build` will fail.
     pub fn new(name: &str, owner_id: i32) -> CrateBuilder<'_> {
         CrateBuilder {
-            owner_id,
+            downloads: None,
+            keywords: Vec::new(),
             krate: NewCrate {
                 name,
                 ..NewCrate::default()
             },
-            downloads: None,
+            owner_id,
             recent_downloads: None,
             versions: Vec::new(),
-            keywords: Vec::new(),
         }
     }
 

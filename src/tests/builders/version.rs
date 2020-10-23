@@ -11,13 +11,13 @@ use diesel::prelude::*;
 /// A builder to create version records for the purpose of inserting directly into the database.
 pub struct VersionBuilder<'a> {
     created_at: Option<NaiveDateTime>,
-    num: semver::Version,
+    dependencies: Vec<(i32, Option<&'static str>)>,
+    features: HashMap<String, Vec<String>>,
     license: Option<&'a str>,
     license_file: Option<&'a str>,
-    features: HashMap<String, Vec<String>>,
-    dependencies: Vec<(i32, Option<&'static str>)>,
-    yanked: bool,
+    num: semver::Version,
     size: i32,
+    yanked: bool,
 }
 
 impl<'a> VersionBuilder<'a> {
@@ -34,13 +34,13 @@ impl<'a> VersionBuilder<'a> {
 
         VersionBuilder {
             created_at: None,
-            num,
+            dependencies: Vec::new(),
+            features: HashMap::new(),
             license: None,
             license_file: None,
-            features: HashMap::new(),
-            dependencies: Vec::new(),
-            yanked: false,
+            num,
             size: 0,
+            yanked: false,
         }
     }
 

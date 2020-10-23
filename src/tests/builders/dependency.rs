@@ -2,9 +2,9 @@ use cargo_registry::views::krate_publish as u;
 
 /// A builder for constructing a dependency of another crate.
 pub struct DependencyBuilder {
+    explicit_name_in_toml: Option<u::EncodableCrateName>,
     name: String,
     registry: Option<String>,
-    explicit_name_in_toml: Option<u::EncodableCrateName>,
     version_req: u::EncodableCrateVersionReq,
 }
 
@@ -12,9 +12,9 @@ impl DependencyBuilder {
     /// Create a dependency on the crate with the given name.
     pub fn new(name: &str) -> Self {
         DependencyBuilder {
+            explicit_name_in_toml: None,
             name: name.to_string(),
             registry: None,
-            explicit_name_in_toml: None,
             version_req: u::EncodableCrateVersionReq(semver::VersionReq::parse(">= 0").unwrap()),
         }
     }

@@ -24,19 +24,19 @@ lazy_static! {
 /// a crate to exist and don't need to test behavior caused by the publish request, inserting
 /// a crate into the database directly by using CrateBuilder will be faster.
 pub struct PublishBuilder {
-    pub krate_name: String,
-    version: semver::Version,
-    tarball: Vec<u8>,
+    authors: Vec<String>,
+    badges: HashMap<String, HashMap<String, String>>,
+    categories: Vec<String>,
     deps: Vec<u::EncodableCrateDependency>,
     desc: Option<String>,
-    readme: Option<String>,
     doc_url: Option<String>,
     keywords: Vec<String>,
-    categories: Vec<String>,
-    badges: HashMap<String, HashMap<String, String>>,
+    pub krate_name: String,
     license: Option<String>,
     license_file: Option<String>,
-    authors: Vec<String>,
+    readme: Option<String>,
+    tarball: Vec<u8>,
+    version: semver::Version,
 }
 
 impl PublishBuilder {
@@ -44,19 +44,19 @@ impl PublishBuilder {
     /// in its tarball.
     pub fn new(krate_name: &str) -> Self {
         PublishBuilder {
-            krate_name: krate_name.into(),
-            version: semver::Version::parse("1.0.0").unwrap(),
-            tarball: EMPTY_TARBALL_BYTES.to_vec(),
+            authors: vec!["foo".to_string()],
+            badges: HashMap::new(),
+            categories: vec![],
             deps: vec![],
             desc: Some("description".to_string()),
-            readme: None,
             doc_url: None,
             keywords: vec![],
-            categories: vec![],
-            badges: HashMap::new(),
+            krate_name: krate_name.into(),
             license: Some("MIT".to_string()),
             license_file: None,
-            authors: vec!["foo".to_string()],
+            readme: None,
+            tarball: EMPTY_TARBALL_BYTES.to_vec(),
+            version: semver::Version::parse("1.0.0").unwrap(),
         }
     }
 
