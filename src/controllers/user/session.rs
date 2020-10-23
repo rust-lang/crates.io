@@ -2,7 +2,6 @@ use crate::controllers::frontend_prelude::*;
 
 use crate::github;
 use conduit_cookie::RequestSession;
-use failure::Fail;
 use oauth2::reqwest::http_client;
 use oauth2::{AuthorizationCode, Scope, TokenResponse};
 
@@ -99,7 +98,6 @@ pub fn authorize(req: &mut dyn RequestExt) -> EndpointResult {
         .github
         .exchange_code(code)
         .request(http_client)
-        .map_err(|e| e.compat())
         .chain_error(|| server_error("Error obtaining token"))?;
     let token = token.access_token();
 
