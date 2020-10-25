@@ -79,3 +79,17 @@
     list-style: none;
     padding: 0;
 }
+
+.error-message {
+    line-height: 25px;
+}
+
+.try-again-button {
+    composes: yellow-button from './shared/buttons.module.css';
+    align-self: center;
+    margin: 20px 0;
+
+    .spinner {
+        margin-left: 7px;
+    }
+}
