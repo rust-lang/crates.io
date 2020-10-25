@@ -12,17 +12,6 @@ module('Acceptance | team page', function (hooks) {
   setupApplicationTest(hooks);
   setupMirage(hooks);
 
-  test('is accessible', async function (assert) {
-    assert.expect(0);
-
-    this.server.loadFixtures();
-
-    await visit('/teams/github:org:thehydroimpulse');
-    await percySnapshot(assert);
-
-    await a11yAudit(axeConfig);
-  });
-
   test('has team organization display', async function (assert) {
     this.server.loadFixtures();
 
@@ -30,6 +19,9 @@ module('Acceptance | team page', function (hooks) {
 
     assert.dom('[data-test-heading] [data-test-org-name]').hasText('org');
     assert.dom('[data-test-heading] [data-test-team-name]').hasText('thehydroimpulseteam');
+
+    await percySnapshot(assert);
+    await a11yAudit(axeConfig);
   });
 
   test('has link to github in team header', async function (assert) {

@@ -14,17 +14,6 @@ module('Acceptance | search', function (hooks) {
   setupApplicationTest(hooks);
   setupMirage(hooks);
 
-  test('/search?q=rust is accessible', async function (assert) {
-    assert.expect(0);
-
-    this.server.loadFixtures();
-
-    await visit('/search?q=rust');
-    await percySnapshot(assert);
-
-    await a11yAudit(axeConfig);
-  });
-
   test('searching for "rust"', async function (assert) {
     this.server.loadFixtures();
 
@@ -48,6 +37,9 @@ module('Acceptance | search', function (hooks) {
       .hasText('A Kinetic protocol library written in Rust');
     assert.dom('[data-test-crate-row="0"] [data-test-downloads]').hasText('All-Time: 225');
     assert.dom('[data-test-crate-row="0"] [data-test-updated-at]').exists();
+
+    await percySnapshot(assert);
+    await a11yAudit(axeConfig);
   });
 
   test('searching for "rust" from query', async function (assert) {

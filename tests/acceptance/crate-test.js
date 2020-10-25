@@ -13,43 +13,6 @@ module('Acceptance | crate page', function (hooks) {
   setupApplicationTest(hooks);
   setupMirage(hooks);
 
-  test('/crates/:crate is accessible', async function (assert) {
-    assert.expect(0);
-
-    this.server.create('crate', { name: 'nanomsg' });
-    this.server.create('version', { crateId: 'nanomsg', num: '0.6.0' });
-    this.server.create('version', { crateId: 'nanomsg', num: '0.6.1' });
-
-    await visit('/crates/nanomsg');
-    await percySnapshot(assert);
-
-    await a11yAudit(axeConfig);
-  });
-
-  test('/crates/:crate/:version is accessible', async function (assert) {
-    assert.expect(0);
-
-    this.server.create('crate', { name: 'nanomsg' });
-    this.server.create('version', { crateId: 'nanomsg', num: '0.6.0' });
-    this.server.create('version', { crateId: 'nanomsg', num: '0.6.1' });
-
-    await visit('/crates/nanomsg/0.6.0');
-    await percySnapshot(assert);
-
-    await a11yAudit(axeConfig);
-  });
-
-  test('/crates/:crate/owners is accessible', async function (assert) {
-    assert.expect(0);
-
-    this.server.loadFixtures();
-
-    await visit('/crates/nanomsg/owners');
-    await percySnapshot(assert);
-
-    await a11yAudit(axeConfig);
-  });
-
   test('visiting a crate page from the front page', async function (assert) {
     this.server.create('crate', { name: 'nanomsg', newest_version: '0.6.1' });
     this.server.create('version', { crateId: 'nanomsg', num: '0.6.1' });
@@ -78,6 +41,9 @@ module('Acceptance | crate page', function (hooks) {
     assert.dom('[data-test-heading] [data-test-crate-name]').hasText('nanomsg');
     assert.dom('[data-test-heading] [data-test-crate-version]').hasText('0.6.1');
     assert.dom('[data-test-crate-stats-label]').hasText('Stats Overview');
+
+    await percySnapshot(assert);
+    await a11yAudit(axeConfig);
   });
 
   test('visiting /crates/nanomsg/', async function (assert) {
@@ -110,6 +76,9 @@ module('Acceptance | crate page', function (hooks) {
     assert.dom('[data-test-heading] [data-test-crate-name]').hasText('nanomsg');
     assert.dom('[data-test-heading] [data-test-crate-version]').hasText('0.6.0');
     assert.dom('[data-test-crate-stats-label]').hasText('Stats Overview for 0.6.0 (see all)');
+
+    await percySnapshot(assert);
+    await a11yAudit(axeConfig);
   });
 
   test('unknown versions fall back to latest version and show an error message', async function (assert) {

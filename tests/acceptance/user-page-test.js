@@ -12,23 +12,15 @@ module('Acceptance | user page', function (hooks) {
   setupApplicationTest(hooks);
   setupMirage(hooks);
 
-  test('is accessible', async function (assert) {
-    assert.expect(0);
-
-    this.server.loadFixtures();
-
-    await visit('/users/thehydroimpulse');
-    await percySnapshot(assert);
-
-    await a11yAudit(axeConfig);
-  });
-
   test('has user display', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/users/thehydroimpulse');
 
     assert.dom('[data-test-heading] [data-test-username]').hasText('thehydroimpulse');
+
+    await percySnapshot(assert);
+    await a11yAudit(axeConfig);
   });
 
   test('has link to github in user header', async function (assert) {

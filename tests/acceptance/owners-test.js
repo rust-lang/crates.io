@@ -2,6 +2,10 @@ import { click, fillIn, visit } from '@ember/test-helpers';
 import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
+import percySnapshot from '@percy/ember';
+import a11yAudit from 'ember-a11y-testing/test-support/audit';
+
+import axeConfig from '../axe-config';
 import setupMirage from '../helpers/setup-mirage';
 
 module('Acceptance | /crates/:name/owners', function (hooks) {
@@ -19,6 +23,9 @@ module('Acceptance | /crates/:name/owners', function (hooks) {
     assert.dom('a[href="/teams/github:org:blabaere"]').exists();
     assert.dom('a[href="/users/thehydroimpulse"]').exists();
     assert.dom('a[href="/users/blabaere"]').exists();
+
+    await percySnapshot(assert);
+    await a11yAudit(axeConfig);
   });
 
   test('attempting to add owner without username', async function (assert) {
