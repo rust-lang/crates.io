@@ -187,5 +187,5 @@ fn parse_traffic_patterns_splits_on_comma_and_looks_for_equal_sign() {
     let patterns_2 = parse_traffic_patterns(pattern_string_2).collect::<Vec<_>>();
     assert_eq!(vec![("Baz", "QUX")], patterns_2);
 
-    assert!(parse_traffic_patterns(pattern_string_3).next().is_none());
+    assert_none!(parse_traffic_patterns(pattern_string_3).next());
 }

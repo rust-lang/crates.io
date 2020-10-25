@@ -44,8 +44,10 @@ fn show() {
 
     // Create a category and a subcategory
     app.db(|conn| {
-        t!(new_category("Foo Bar", "foo-bar", "Foo Bar crates").create_or_update(conn));
-        t!(new_category("Foo Bar::Baz", "foo-bar::baz", "Baz crates").create_or_update(conn));
+        assert_ok!(new_category("Foo Bar", "foo-bar", "Foo Bar crates").create_or_update(conn));
+        assert_ok!(
+            new_category("Foo Bar::Baz", "foo-bar::baz", "Baz crates").create_or_update(conn)
+        );
     });
 
     // The category and its subcategories should be in the json
@@ -69,8 +71,10 @@ fn update_crate() {
     let user = user.as_model();
 
     app.db(|conn| {
-        t!(new_category("cat1", "cat1", "Category 1 crates").create_or_update(conn));
-        t!(new_category("Category 2", "category-2", "Category 2 crates").create_or_update(conn));
+        assert_ok!(new_category("cat1", "cat1", "Category 1 crates").create_or_update(conn));
+        assert_ok!(
+            new_category("Category 2", "category-2", "Category 2 crates").create_or_update(conn)
+        );
         let krate = CrateBuilder::new("foo_crate", user.id).expect_build(&conn);
 
         // Updating with no categories has no effect
@@ -122,7 +126,7 @@ fn update_crate() {
         assert_eq!(count(&anon, "category-2"), 0);
 
         // Add a category and its subcategory
-        t!(new_category("cat1::bar", "cat1::bar", "bar crates").create_or_update(conn));
+        assert_ok!(new_category("cat1::bar", "cat1::bar", "bar crates").create_or_update(conn));
         Category::update_crate(&conn, &krate, &["cat1", "cat1::bar"]).unwrap();
 
         assert_eq!(count(&anon, "cat1"), 1);

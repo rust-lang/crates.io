@@ -233,10 +233,10 @@ impl ToSql<Text, Pg> for EncodableFeature {
 fn feature_deserializes_for_valid_features() {
     use serde_json as json;
 
-    assert!(json::from_str::<EncodableFeature>("\"foo\"").is_ok());
-    assert!(json::from_str::<EncodableFeature>("\"\"").is_err());
-    assert!(json::from_str::<EncodableFeature>("\"/\"").is_err());
-    assert!(json::from_str::<EncodableFeature>("\"%/%\"").is_err());
-    assert!(json::from_str::<EncodableFeature>("\"a/a\"").is_ok());
-    assert!(json::from_str::<EncodableFeature>("\"32-column-tables\"").is_ok());
+    assert_ok!(json::from_str::<EncodableFeature>("\"foo\""));
+    assert_err!(json::from_str::<EncodableFeature>("\"\""));
+    assert_err!(json::from_str::<EncodableFeature>("\"/\""));
+    assert_err!(json::from_str::<EncodableFeature>("\"%/%\""));
+    assert_ok!(json::from_str::<EncodableFeature>("\"a/a\""));
+    assert_ok!(json::from_str::<EncodableFeature>("\"32-column-tables\""));
 }

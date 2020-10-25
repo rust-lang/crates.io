@@ -271,6 +271,7 @@ dependencies = [
  "cargo-registry-s3",
  "chrono",
  "civet",
+ "claim",
  "comrak",
  "conduit",
  "conduit-conditional-get",
@@ -390,6 +391,15 @@ name = "civet-sys"
 version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "958d15372bf28b7983cb35e1d4bf36dd843b0d42e507c1c73aad7150372c5936"
+
+[[package]]
+name = "claim"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "68ad37958d55b29a7088909368968d2fe876a24c203f8441195130f3b15194b9"
+dependencies = [
+ "autocfg",
+]
 
 [[package]]
 name = "cloudabi"

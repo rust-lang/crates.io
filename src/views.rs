@@ -261,10 +261,9 @@ mod tests {
             created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
         };
         let json = serde_json::to_string(&cat).unwrap();
-        assert!(json
+        assert_some!(json
             .as_str()
-            .find(r#""created_at":"2017-01-06T14:23:11+00:00""#)
-            .is_some());
+            .find(r#""created_at":"2017-01-06T14:23:11+00:00""#));
     }
 
     #[test]
@@ -280,10 +279,9 @@ mod tests {
             parent_categories: vec![],
         };
         let json = serde_json::to_string(&cat).unwrap();
-        assert!(json
+        assert_some!(json
             .as_str()
-            .find(r#""created_at":"2017-01-06T14:23:11+00:00""#)
-            .is_some());
+            .find(r#""created_at":"2017-01-06T14:23:11+00:00""#));
     }
 
     #[test]
@@ -295,10 +293,9 @@ mod tests {
             crates_cnt: 0,
         };
         let json = serde_json::to_string(&key).unwrap();
-        assert!(json
+        assert_some!(json
             .as_str()
-            .find(r#""created_at":"2017-01-06T14:23:11+00:00""#)
-            .is_some());
+            .find(r#""created_at":"2017-01-06T14:23:11+00:00""#));
     }
 
     #[test]
@@ -335,18 +332,13 @@ mod tests {
             }],
         };
         let json = serde_json::to_string(&ver).unwrap();
-        assert!(json
+        assert_some!(json
             .as_str()
-            .find(r#""updated_at":"2017-01-06T14:23:11+00:00""#)
-            .is_some());
-        assert!(json
+            .find(r#""updated_at":"2017-01-06T14:23:11+00:00""#));
+        assert_some!(json
             .as_str()
-            .find(r#""created_at":"2017-01-06T14:23:12+00:00""#)
-            .is_some());
-        assert!(json
-            .as_str()
-            .find(r#""time":"2017-01-06T14:23:12+00:00""#)
-            .is_some());
+            .find(r#""created_at":"2017-01-06T14:23:12+00:00""#));
+        assert_some!(json.as_str().find(r#""time":"2017-01-06T14:23:12+00:00""#));
     }
 
     #[test]
@@ -379,14 +371,12 @@ mod tests {
             exact_match: false,
         };
         let json = serde_json::to_string(&crt).unwrap();
-        assert!(json
+        assert_some!(json
             .as_str()
-            .find(r#""updated_at":"2017-01-06T14:23:11+00:00""#)
-            .is_some());
-        assert!(json
+            .find(r#""updated_at":"2017-01-06T14:23:11+00:00""#));
+        assert_some!(json
             .as_str()
-            .find(r#""created_at":"2017-01-06T14:23:12+00:00""#)
-            .is_some());
+            .find(r#""created_at":"2017-01-06T14:23:12+00:00""#));
     }
 
     #[test]
@@ -398,9 +388,8 @@ mod tests {
             created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
         };
         let json = serde_json::to_string(&inv).unwrap();
-        assert!(json
+        assert_some!(json
             .as_str()
-            .find(r#""created_at":"2017-01-06T14:23:11+00:00""#)
-            .is_some());
+            .find(r#""created_at":"2017-01-06T14:23:11+00:00""#));
     }
 }

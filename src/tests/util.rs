@@ -594,7 +594,7 @@ where
 {
     fn new(response: HandlerResult) -> Self {
         Self {
-            response: t!(response),
+            response: assert_ok!(response),
             callback_on_good: None,
         }
     }

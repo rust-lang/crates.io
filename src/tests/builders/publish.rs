@@ -14,7 +14,7 @@ lazy_static! {
         {
             let mut ar =
                 tar::Builder::new(GzEncoder::new(&mut empty_tarball, Compression::default()));
-            t!(ar.finish());
+            assert_ok!(ar.finish());
         }
         empty_tarball
     };
@@ -88,12 +88,12 @@ impl PublishBuilder {
             let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, Compression::default()));
             for &mut (name, ref mut data, size) in files {
                 let mut header = tar::Header::new_gnu();
-                t!(header.set_path(name));
+                assert_ok!(header.set_path(name));
                 header.set_size(size);
                 header.set_cksum();
-                t!(ar.append(&header, data));
+                assert_ok!(ar.append(&header, data));
             }
-            t!(ar.finish());
+            assert_ok!(ar.finish());
         }
 
         self.tarball = tarball;

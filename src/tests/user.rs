@@ -164,7 +164,7 @@ fn show_latest_user_case_insensitively() {
         // should be used for uniquely identifying GitHub accounts whenever possible. For the
         // crates.io/user/:username pages, the best we can do is show the last crates.io account
         // created with that username.
-        t!(NewUser::new(
+        assert_ok!(NewUser::new(
             1,
             "foobar",
             Some("I was first then deleted my github account"),
@@ -172,7 +172,7 @@ fn show_latest_user_case_insensitively() {
             "bar"
         )
         .create_or_update(None, conn));
-        t!(NewUser::new(
+        assert_ok!(NewUser::new(
             2,
             "FOOBAR",
             Some("I was second, I took the foobar username on github"),
@@ -270,7 +270,7 @@ fn following() {
         .iter()
         .find(|v| v.krate == "foo_fighters")
         .unwrap();
-    assert!(foo_version.published_by.is_none());
+    assert_none!(&foo_version.published_by);
     let bar_version = r
         .versions
         .iter()
@@ -357,13 +357,16 @@ fn updating_existing_user_doesnt_change_api_token() {
     let gh_id = user.as_model().gh_id;
     let token = token.plaintext();
 
-    let user = app.db(|conn| {
-        // Reuse gh_id but use new gh_login and gh_access_token
-        t!(NewUser::new(gh_id, "bar", None, None, "bar_token").create_or_update(None, conn));
+    let user =
+        app.db(|conn| {
+            // Reuse gh_id but use new gh_login and gh_access_token
+            assert_ok!(
+                NewUser::new(gh_id, "bar", None, None, "bar_token").create_or_update(None, conn)
+            );
 
-        // Use the original API token to find the now updated user
-        t!(User::find_by_api_token(conn, token))
-    });
+            // Use the original API token to find the now updated user
+            assert_ok!(User::find_by_api_token(conn, token))
+        });
 
     assert_eq!("bar", user.gh_login);
     assert_eq!("bar_token", user.gh_access_token);
