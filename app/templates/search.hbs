@@ -10,6 +10,22 @@
 
 {{#if this.firstResultPending}}
   <h2>Loading search results...</h2>
+{{else if this.dataTask.lastComplete.error}}
+  <p data-test-error-message>
+    Unfortunately something went wrong while loading the search results. Feel
+    free to try again, or let the <a href="mailto:help@crates.io">crates.io
+    team</a> know if the problem persists.
+  </p>
+
+  <button
+    type="button"
+    disabled={{this.dataTask.isRunning}}
+    local-class="try-again-button"
+    data-test-try-again-button
+    {{on "click" this.fetchData}}
+  >
+    Try Again
+  </button>
 {{else if this.hasItems}}
   <div local-class="results-meta">
     <ResultsCount

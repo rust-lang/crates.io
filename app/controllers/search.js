@@ -1,5 +1,5 @@
 import Controller from '@ember/controller';
-import { computed } from '@ember/object';
+import { action, computed } from '@ember/object';
 import { readOnly, bool } from '@ember/object/computed';
 
 import { task } from 'ember-concurrency';
@@ -19,9 +19,9 @@ export default class SearchController extends Controller {
     return this.dataTask.lastSuccessful || !this.dataTask.isRunning;
   }
 
-  @computed('dataTask.{lastSuccessful,isRunning}')
+  @computed('dataTask.{lastComplete,isRunning}')
   get firstResultPending() {
-    return !this.dataTask.lastSuccessful && this.dataTask.isRunning;
+    return !this.dataTask.lastComplete && this.dataTask.isRunning;
   }
 
   @readOnly('model.meta.total') totalItems;
@@ -44,6 +44,12 @@ export default class SearchController extends Controller {
   }
 
   @bool('totalItems') hasItems;
+
+  @action fetchData() {
+    this.dataTask.perform().catch(() => {
+      // we ignore errors here because they are handled in the template already
+    });
+  }
 
   @(task(function* () {
     let { all_keywords, page, per_page, q, sort } = this;

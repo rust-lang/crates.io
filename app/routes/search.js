@@ -19,7 +19,7 @@ export default class SearchRoute extends Route {
 
   setupController(controller, params) {
     this.header.searchValue = params.q;
-    controller.dataTask.perform();
+    controller.fetchData();
   }
 
   deactivate() {

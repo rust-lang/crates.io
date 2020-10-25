@@ -27,3 +27,9 @@
         color: green
     }
 }
+
+.try-again-button {
+    composes: yellow-button from './shared/buttons.module.css';
+    align-self: center;
+    margin-top: 20px;
+}
