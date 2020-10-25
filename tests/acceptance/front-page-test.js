@@ -1,10 +1,13 @@
-import { currentURL, visit } from '@ember/test-helpers';
+import { currentURL, visit, click, waitFor, settled } from '@ember/test-helpers';
 import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
+
+import { defer } from 'rsvp';
 
 import percySnapshot from '@percy/ember';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 
+import { summary } from '../../mirage/route-handlers/summary';
 import axeConfig from '../axe-config';
 import { title } from '../helpers/dom';
 import setupMirage from '../helpers/setup-mirage';
@@ -39,5 +42,32 @@ module('Acceptance | front page', function (hooks) {
 
     await percySnapshot(assert);
     await a11yAudit(axeConfig);
+  });
+
+  test('error handling', async function (assert) {
+    this.server.get('/api/v1/summary', {}, 500);
+
+    await visit('/');
+    assert.dom('[data-test-lists]').doesNotExist();
+    assert.dom('[data-test-error-message]').exists();
+    assert.dom('[data-test-try-again-button]').isEnabled();
+
+    let deferred = defer();
+    this.server.get('/api/v1/summary', async function (schema, request) {
+      await deferred.promise;
+      return summary.call(this, schema, request);
+    });
+
+    click('[data-test-try-again-button]');
+    await waitFor('[data-test-try-again-button] [data-test-spinner]');
+    assert.dom('[data-test-lists]').doesNotExist();
+    assert.dom('[data-test-error-message]').exists();
+    assert.dom('[data-test-try-again-button]').isDisabled();
+
+    deferred.resolve();
+    await settled();
+    assert.dom('[data-test-lists]').exists();
+    assert.dom('[data-test-error-message]').doesNotExist();
+    assert.dom('[data-test-try-again-button]').doesNotExist();
   });
 });

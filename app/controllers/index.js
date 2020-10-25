@@ -1,5 +1,5 @@
 import Controller from '@ember/controller';
-import { computed } from '@ember/object';
+import { action, computed } from '@ember/object';
 import { readOnly } from '@ember/object/computed';
 import { inject as service } from '@ember/service';
 
@@ -13,6 +13,12 @@ export default class IndexController extends Controller {
   @computed('dataTask.{lastSuccessful,isRunning}')
   get hasData() {
     return this.dataTask.lastSuccessful && !this.dataTask.isRunning;
+  }
+
+  @action fetchData() {
+    this.dataTask.perform().catch(() => {
+      // we ignore errors here because they are handled in the template already
+    });
   }
 
   @(task(function* () {

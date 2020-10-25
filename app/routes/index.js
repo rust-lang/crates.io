@@ -18,7 +18,7 @@ export default class IndexRoute extends Route {
 
   setupController(controller) {
     if (!controller.hasData) {
-      let promise = controller.dataTask.perform();
+      let promise = controller.fetchData();
       if (this.fastboot.isFastBoot) {
         this.fastboot.deferRendering(promise);
       }

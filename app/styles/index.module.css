@@ -21,7 +21,6 @@
 
 .hero-button {
     composes: yellow-button from '../styles/shared/buttons.module.css';
-    vertical-align: initial;
 
     .icon {
         color: #c4890e;
@@ -79,4 +78,18 @@
 .list {
     list-style: none;
     padding: 0;
+}
+
+.error-message {
+    line-height: 25px;
+}
+
+.try-again-button {
+    composes: yellow-button from './shared/buttons.module.css';
+    align-self: center;
+    margin: 20px 0;
+
+    .spinner {
+        margin-left: 7px;
+    }
 }
