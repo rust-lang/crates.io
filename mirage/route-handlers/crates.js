@@ -3,47 +3,49 @@ import { Response } from 'ember-cli-mirage';
 import { getSession } from '../utils/session';
 import { compareIsoDates, compareStrings, notFound, pageParams, withMeta } from './-utils';
 
+export function list(schema, request) {
+  const { start, end } = pageParams(request);
+
+  let crates = schema.crates.all();
+
+  if (request.queryParams.following === '1') {
+    let { user } = getSession(schema);
+    if (!user) {
+      return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
+    }
+
+    crates = user.followedCrates;
+  }
+
+  if (request.queryParams.letter) {
+    let letter = request.queryParams.letter.toLowerCase();
+    crates = crates.filter(crate => crate.id[0].toLowerCase() === letter);
+  }
+
+  if (request.queryParams.q) {
+    let q = request.queryParams.q.toLowerCase();
+    crates = crates.filter(crate => crate.id.toLowerCase().includes(q));
+  }
+
+  if (request.queryParams.user_id) {
+    let userId = parseInt(request.queryParams.user_id, 10);
+    crates = crates.filter(crate => schema.crateOwnerships.findBy({ crateId: crate.id, userId }));
+  }
+
+  if (request.queryParams.team_id) {
+    let teamId = parseInt(request.queryParams.team_id, 10);
+    crates = crates.filter(crate => schema.crateOwnerships.findBy({ crateId: crate.id, teamId }));
+  }
+
+  if (request.queryParams.sort === 'alpha') {
+    crates = crates.sort((a, b) => compareStrings(a.id.toLowerCase(), b.id.toLowerCase()));
+  }
+
+  return withMeta(this.serialize(crates.slice(start, end)), { total: crates.length });
+}
+
 export function register(server) {
-  server.get('/api/v1/crates', function (schema, request) {
-    const { start, end } = pageParams(request);
-
-    let crates = schema.crates.all();
-
-    if (request.queryParams.following === '1') {
-      let { user } = getSession(schema);
-      if (!user) {
-        return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
-      }
-
-      crates = user.followedCrates;
-    }
-
-    if (request.queryParams.letter) {
-      let letter = request.queryParams.letter.toLowerCase();
-      crates = crates.filter(crate => crate.id[0].toLowerCase() === letter);
-    }
-
-    if (request.queryParams.q) {
-      let q = request.queryParams.q.toLowerCase();
-      crates = crates.filter(crate => crate.id.toLowerCase().includes(q));
-    }
-
-    if (request.queryParams.user_id) {
-      let userId = parseInt(request.queryParams.user_id, 10);
-      crates = crates.filter(crate => schema.crateOwnerships.findBy({ crateId: crate.id, userId }));
-    }
-
-    if (request.queryParams.team_id) {
-      let teamId = parseInt(request.queryParams.team_id, 10);
-      crates = crates.filter(crate => schema.crateOwnerships.findBy({ crateId: crate.id, teamId }));
-    }
-
-    if (request.queryParams.sort === 'alpha') {
-      crates = crates.sort((a, b) => compareStrings(a.id.toLowerCase(), b.id.toLowerCase()));
-    }
-
-    return withMeta(this.serialize(crates.slice(start, end)), { total: crates.length });
-  });
+  server.get('/api/v1/crates', list);
 
   server.get('/api/v1/crates/:crate_id', function (schema, request) {
     let crateId = request.params.crate_id;
