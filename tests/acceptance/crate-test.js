@@ -167,7 +167,7 @@ module('Acceptance | crate page', function (hooks) {
   test('crates having normal dependencies', async function (assert) {
     this.server.loadFixtures();
 
-    await visit('crates/nanomsg');
+    await visit('/crates/nanomsg');
 
     assert.dom('[data-test-dependencies] li').exists({ count: 2 });
   });
@@ -175,7 +175,7 @@ module('Acceptance | crate page', function (hooks) {
   test('crates having build dependencies', async function (assert) {
     this.server.loadFixtures();
 
-    await visit('crates/nanomsg');
+    await visit('/crates/nanomsg');
 
     assert.dom('[data-test-build-dependencies] li').exists({ count: 1 });
   });
@@ -183,7 +183,7 @@ module('Acceptance | crate page', function (hooks) {
   test('crates having dev dependencies', async function (assert) {
     this.server.loadFixtures();
 
-    await visit('crates/nanomsg');
+    await visit('/crates/nanomsg');
 
     assert.dom('[data-test-dev-dependencies] li').exists({ count: 1 });
   });

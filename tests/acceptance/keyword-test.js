@@ -17,7 +17,7 @@ module('Acceptance | keywords', function (hooks) {
 
     this.server.create('keyword', { keyword: 'network' });
 
-    await visit('keywords/network');
+    await visit('/keywords/network');
     await percySnapshot(assert);
 
     await a11yAudit(axeConfig);
