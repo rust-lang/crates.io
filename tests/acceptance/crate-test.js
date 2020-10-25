@@ -1,4 +1,4 @@
-import { click, fillIn, currentURL, currentRouteName, visit, waitFor } from '@ember/test-helpers';
+import { click, currentURL, currentRouteName, visit, waitFor } from '@ember/test-helpers';
 import { setupApplicationTest } from 'ember-qunit';
 import { module, test, skip } from 'qunit';
 
@@ -267,74 +267,5 @@ module('Acceptance | crate page', function (hooks) {
     await click('[data-test-manage-owners-link]');
 
     assert.equal(currentURL(), '/crates/nanomsg/owners');
-  });
-
-  test('listing crate owners', async function (assert) {
-    this.server.loadFixtures();
-
-    await visit('/crates/nanomsg/owners');
-
-    assert.dom('[data-test-owners] [data-test-owner-team]').exists({ count: 2 });
-    assert.dom('[data-test-owners] [data-test-owner-user]').exists({ count: 2 });
-    assert.dom('a[href="/teams/github:org:thehydroimpulse"]').exists();
-    assert.dom('a[href="/teams/github:org:blabaere"]').exists();
-    assert.dom('a[href="/users/thehydroimpulse"]').exists();
-    assert.dom('a[href="/users/blabaere"]').exists();
-  });
-
-  test('attempting to add owner without username', async function (assert) {
-    this.server.loadFixtures();
-
-    await visit('/crates/nanomsg/owners');
-    await fillIn('input[name="username"]', '');
-    assert.dom('[data-test-save-button]').isDisabled();
-  });
-
-  test('attempting to add non-existent owner', async function (assert) {
-    this.server.loadFixtures();
-
-    await visit('/crates/nanomsg/owners');
-    await fillIn('input[name="username"]', 'spookyghostboo');
-    await click('[data-test-save-button]');
-
-    assert
-      .dom('[data-test-notification-message="error"]')
-      .hasText('Error sending invite: could not find user with login `spookyghostboo`');
-    assert.dom('[data-test-owners] [data-test-owner-team]').exists({ count: 2 });
-    assert.dom('[data-test-owners] [data-test-owner-user]').exists({ count: 2 });
-  });
-
-  test('add a new owner', async function (assert) {
-    this.server.loadFixtures();
-
-    await visit('/crates/nanomsg/owners');
-    await fillIn('input[name="username"]', 'iain8');
-    await click('[data-test-save-button]');
-
-    assert.dom('[data-test-notification-message="success"]').hasText('An invite has been sent to iain8');
-    assert.dom('[data-test-owners] [data-test-owner-team]').exists({ count: 2 });
-    assert.dom('[data-test-owners] [data-test-owner-user]').exists({ count: 2 });
-  });
-
-  test('remove a crate owner when owner is a user', async function (assert) {
-    this.server.loadFixtures();
-
-    await visit('/crates/nanomsg/owners');
-    await click('[data-test-owner-user="thehydroimpulse"] [data-test-remove-owner-button]');
-
-    assert.dom('[data-test-notification-message="success"]').hasText('User thehydroimpulse removed as crate owner');
-    assert.dom('[data-test-owner-user]').exists({ count: 1 });
-  });
-
-  test('remove a crate owner when owner is a team', async function (assert) {
-    this.server.loadFixtures();
-
-    await visit('/crates/nanomsg/owners');
-    await click('[data-test-owner-team="github:org:thehydroimpulse"] [data-test-remove-owner-button]');
-
-    assert
-      .dom('[data-test-notification-message="success"]')
-      .hasText('Team org/thehydroimpulseteam removed as crate owner');
-    assert.dom('[data-test-owner-team]').exists({ count: 1 });
   });
 });
