@@ -1,4 +1,4 @@
-<div local-class="header" ...attributes>
+<div local-class="header" data-test-page-header ...attributes>
   {{#if hasBlock}}
     {{yield}}
   {{else}}
@@ -9,7 +9,7 @@
         <small local-class="suffix">{{@suffix}}</small>
       {{/if}}
       {{#if @showSpinner}}
-        <LoadingSpinner local-class="loading-spinner" />
+        <LoadingSpinner local-class="loading-spinner" data-test-spinner />
       {{/if}}
     </h1>
   {{/if}}

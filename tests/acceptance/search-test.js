@@ -1,11 +1,14 @@
-import { fillIn, currentURL, triggerEvent, visit, blur } from '@ember/test-helpers';
+import { click, fillIn, currentURL, triggerEvent, visit, blur, waitFor, settled } from '@ember/test-helpers';
 import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
+
+import { defer } from 'rsvp';
 
 import percySnapshot from '@percy/ember';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import { keyDown } from 'ember-keyboard/test-support/test-helpers';
 
+import { list as listCrates } from '../../mirage/route-handlers/crates';
 import axeConfig from '../axe-config';
 import { title } from '../helpers/dom';
 import setupMirage from '../helpers/setup-mirage';
@@ -107,5 +110,71 @@ module('Acceptance | search', function (hooks) {
     await triggerEvent('[data-test-search-form]', 'submit');
 
     assert.dom('[data-test-search-sort] [data-test-current-order]').hasText('Relevance');
+  });
+
+  test('error handling when searching from the frontpage', async function (assert) {
+    this.server.create('crate', { name: 'rust' });
+    this.server.create('version', { crateId: 'rust', num: '1.0.0' });
+
+    this.server.get('/api/v1/crates', {}, 500);
+
+    await visit('/');
+    await fillIn('[data-test-search-input]', 'rust');
+    await triggerEvent('[data-test-search-form]', 'submit');
+    assert.dom('[data-test-crate-row]').doesNotExist();
+    assert.dom('[data-test-error-message]').exists();
+    assert.dom('[data-test-try-again-button]').isEnabled();
+
+    let deferred = defer();
+    this.server.get('/api/v1/crates', async function (schema, request) {
+      await deferred.promise;
+      return listCrates.call(this, schema, request);
+    });
+
+    click('[data-test-try-again-button]');
+    await waitFor('[data-test-page-header] [data-test-spinner]');
+    assert.dom('[data-test-crate-row]').doesNotExist();
+    assert.dom('[data-test-error-message]').exists();
+    assert.dom('[data-test-try-again-button]').isDisabled();
+
+    deferred.resolve();
+    await settled();
+    assert.dom('[data-test-error-message]').doesNotExist();
+    assert.dom('[data-test-try-again-button]').doesNotExist();
+    assert.dom('[data-test-crate-row]').exists({ count: 1 });
+  });
+
+  test('error handling when searching from the search page', async function (assert) {
+    this.server.create('crate', { name: 'rust' });
+    this.server.create('version', { crateId: 'rust', num: '1.0.0' });
+
+    await visit('/search?q=rust');
+    assert.dom('[data-test-crate-row]').exists({ count: 1 });
+    assert.dom('[data-test-error-message]').doesNotExist();
+    assert.dom('[data-test-try-again-button]').doesNotExist();
+
+    this.server.get('/api/v1/crates', {}, 500);
+
+    await fillIn('[data-test-search-input]', 'ru');
+    await triggerEvent('[data-test-search-form]', 'submit');
+    assert.dom('[data-test-crate-row]').doesNotExist();
+    assert.dom('[data-test-error-message]').exists();
+    assert.dom('[data-test-try-again-button]').isEnabled();
+
+    let deferred = defer();
+    this.server.get('/api/v1/crates', async function (schema, request) {
+      await deferred.promise;
+      return listCrates.call(this, schema, request);
+    });
+
+    click('[data-test-try-again-button]');
+    await waitFor('[data-test-page-header] [data-test-spinner]');
+    assert.dom('[data-test-crate-row]').doesNotExist();
+    assert.dom('[data-test-error-message]').exists();
+    assert.dom('[data-test-try-again-button]').isDisabled();
+
+    deferred.resolve();
+    await settled();
+    assert.dom('[data-test-crate-row]').exists({ count: 1 });
   });
 });
