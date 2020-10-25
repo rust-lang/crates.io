@@ -45,12 +45,14 @@ export default class SearchController extends Controller {
 
   @bool('totalItems') hasItems;
 
-  @(task(function* (params) {
-    if (params.q !== null) {
-      params.q = params.q.trim();
+  @(task(function* () {
+    let { all_keywords, page, per_page, q, sort } = this;
+
+    if (q !== null) {
+      q = q.trim();
     }
 
-    return yield this.store.query('crate', params);
+    return yield this.store.query('crate', { all_keywords, page, per_page, q, sort });
   }).drop())
   dataTask;
 }
