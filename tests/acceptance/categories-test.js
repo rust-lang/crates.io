@@ -12,30 +12,6 @@ module('Acceptance | categories', function (hooks) {
   setupApplicationTest(hooks);
   setupMirage(hooks);
 
-  test('is accessible', async function (assert) {
-    assert.expect(0);
-
-    this.server.create('category', { category: 'API bindings' });
-    this.server.create('category', { category: 'Algorithms' });
-    this.server.create('category', { category: 'Asynchronous' });
-
-    await visit('/categories');
-    await percySnapshot(assert);
-
-    await a11yAudit(axeConfig);
-  });
-
-  test('category/:category_id is accessible', async function (assert) {
-    assert.expect(0);
-
-    this.server.create('category', { category: 'Algorithms' });
-
-    await visit('/categories/algorithms');
-    await percySnapshot(assert);
-
-    await a11yAudit(axeConfig);
-  });
-
   test('listing categories', async function (assert) {
     this.server.create('category', { category: 'API bindings' });
     this.server.create('category', { category: 'Algorithms' });
@@ -48,6 +24,9 @@ module('Acceptance | categories', function (hooks) {
     assert.dom('[data-test-category="api-bindings"] [data-test-crate-count]').hasText('0 crates');
     assert.dom('[data-test-category="algorithms"] [data-test-crate-count]').hasText('1 crate');
     assert.dom('[data-test-category="asynchronous"] [data-test-crate-count]').hasText('15 crates');
+
+    await percySnapshot(assert);
+    await a11yAudit(axeConfig);
   });
 
   test('category/:category_id index default sort is recent-downloads', async function (assert) {
@@ -56,6 +35,9 @@ module('Acceptance | categories', function (hooks) {
     await visit('/categories/algorithms');
 
     assert.dom('[data-test-category-sort] [data-test-current-order]').hasText('Recent Downloads');
+
+    await percySnapshot(assert);
+    await a11yAudit(axeConfig);
   });
 
   test('listing category slugs', async function (assert) {

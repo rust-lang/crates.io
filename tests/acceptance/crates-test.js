@@ -16,17 +16,6 @@ module('Acceptance | crates page', function (hooks) {
   // should match the default set in the crates controller
   const per_page = 50;
 
-  test('/crates is accessible', async function (assert) {
-    assert.expect(0);
-
-    this.server.loadFixtures();
-
-    await visit('/crates');
-    await percySnapshot(assert);
-
-    await a11yAudit(axeConfig);
-  });
-
   test('visiting the crates page from the front page', async function (assert) {
     this.server.loadFixtures();
 
@@ -35,6 +24,9 @@ module('Acceptance | crates page', function (hooks) {
 
     assert.equal(currentURL(), '/crates');
     assert.equal(title(), 'Crates - crates.io: Rust Package Registry');
+
+    await percySnapshot(assert);
+    await a11yAudit(axeConfig);
   });
 
   test('visiting the crates page directly', async function (assert) {

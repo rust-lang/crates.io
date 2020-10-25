@@ -13,15 +13,6 @@ module('Acceptance | front page', function (hooks) {
   setupApplicationTest(hooks);
   setupMirage(hooks);
 
-  test('is accessible', async function (assert) {
-    assert.expect(0);
-
-    this.server.loadFixtures();
-
-    await visit('/');
-    await a11yAudit(axeConfig);
-  });
-
   test('visiting /', async function (assert) {
     this.server.loadFixtures();
 
@@ -47,5 +38,6 @@ module('Acceptance | front page', function (hooks) {
     assert.dom('[data-test-just-updated] [data-test-crate-link="0"]').hasAttribute('href', '/crates/nanomsg');
 
     await percySnapshot(assert);
+    await a11yAudit(axeConfig);
   });
 });
