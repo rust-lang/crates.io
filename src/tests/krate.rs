@@ -1341,17 +1341,23 @@ fn summary_new_crates() {
         let now_ = Utc::now().naive_utc();
         let now_plus_two = now_ + chrono::Duration::seconds(2);
 
-        let krate = CrateBuilder::new("some_downloads", user.id)
+        new_category("Category 1", "cat1", "Category 1 crates")
+            .create_or_update(conn)
+            .unwrap();
+
+        CrateBuilder::new("some_downloads", user.id)
             .version(VersionBuilder::new("0.1.0"))
             .description("description")
             .keyword("popular")
+            .category("cat1")
             .downloads(20)
             .recent_downloads(10)
             .expect_build(conn);
 
-        let krate2 = CrateBuilder::new("most_recent_downloads", user.id)
+        CrateBuilder::new("most_recent_downloads", user.id)
             .version(VersionBuilder::new("0.2.0"))
             .keyword("popular")
+            .category("cat1")
             .downloads(5000)
             .recent_downloads(50)
             .expect_build(conn);
@@ -1376,12 +1382,6 @@ fn summary_new_crates() {
             .keyword("popular")
             .downloads(1000)
             .expect_build(conn);
-
-        new_category("Category 1", "cat1", "Category 1 crates")
-            .create_or_update(conn)
-            .unwrap();
-        Category::update_crate(conn, &krate, &["cat1"]).unwrap();
-        Category::update_crate(conn, &krate2, &["cat1"]).unwrap();
 
         // set total_downloads global value for `num_downloads` prop
         update(metadata::table)

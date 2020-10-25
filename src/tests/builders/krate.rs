@@ -1,5 +1,5 @@
 use cargo_registry::{
-    models::{Crate, Keyword, NewCrate},
+    models::{Category, Crate, Keyword, NewCrate},
     schema::{crates, version_downloads},
     util::errors::AppResult,
 };
@@ -13,6 +13,7 @@ use super::VersionBuilder;
 /// If you want to test logic that happens as part of a publish request, use `PublishBuilder`
 /// instead.
 pub struct CrateBuilder<'a> {
+    categories: Vec<&'a str>,
     downloads: Option<i32>,
     keywords: Vec<&'a str>,
     krate: NewCrate<'a>,
@@ -27,6 +28,7 @@ impl<'a> CrateBuilder<'a> {
     /// doesn't exist in the database, `expect_build` will fail.
     pub fn new(name: &str, owner_id: i32) -> CrateBuilder<'_> {
         CrateBuilder {
+            categories: Vec::new(),
             downloads: None,
             keywords: Vec::new(),
             krate: NewCrate {
@@ -91,6 +93,12 @@ impl<'a> CrateBuilder<'a> {
         self
     }
 
+    /// Adds a category to the crate.
+    pub fn category(mut self, category: &'a str) -> Self {
+        self.categories.push(category);
+        self
+    }
+
     /// Adds a keyword to the crate.
     pub fn keyword(mut self, keyword: &'a str) -> Self {
         self.keywords.push(keyword);
@@ -141,6 +149,10 @@ impl<'a> CrateBuilder<'a> {
 
             no_arg_sql_function!(refresh_recent_crate_downloads, ());
             select(refresh_recent_crate_downloads).execute(connection)?;
+        }
+
+        if !self.categories.is_empty() {
+            Category::update_crate(connection, &krate, &self.categories)?;
         }
 
         if !self.keywords.is_empty() {
