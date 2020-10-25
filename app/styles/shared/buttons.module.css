@@ -21,7 +21,8 @@
     --bg-color-bottom-dark: #fdbb39;
 
     padding: 15px 40px;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
     color: var(--text-color);
     text-decoration: none;
     font-weight: bold;
@@ -49,7 +50,6 @@
 
 .yellow-button {
     composes: button;
-    vertical-align: middle;
 }
 
 .tan-button {
