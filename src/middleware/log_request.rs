@@ -3,8 +3,11 @@
 
 use super::prelude::*;
 use crate::util::request_header;
-use conduit::{header, RequestExt, StatusCode};
+use conduit::{header, Host, RequestExt, Scheme, StatusCode};
+use sentry::protocol::IpAddress;
+use sentry::Level;
 use std::fmt::{self, Display, Formatter};
+use std::net::IpAddr;
 use std::time::Instant;
 
 const SLOW_REQUEST_THRESHOLD_MS: u64 = 1000;
@@ -40,6 +43,8 @@ impl Middleware for LogRequests {
             }
         );
 
+        report_to_sentry(req, &res, response_time);
+
         res
     }
 }
@@ -58,6 +63,104 @@ pub fn add_custom_metadata<V: Display>(req: &mut dyn RequestExt, key: &'static s
         metadata.entries.push((key, value.to_string()));
         req.mut_extensions().insert(metadata);
     }
+}
+
+fn report_to_sentry(req: &dyn RequestExt, res: &AfterResult, response_time: u64) {
+    let (message, level) = match res {
+        Err(e) => (e.to_string(), Level::Error),
+        Ok(_) => {
+            if response_time <= SLOW_REQUEST_THRESHOLD_MS {
+                return;
+            }
+
+            let message = format!("Slow Request: {} {}", req.method(), req.path());
+            (message, Level::Info)
+        }
+    };
+
+    let config = |scope: &mut sentry::Scope| {
+        let method = Some(req.method().as_str().to_owned());
+
+        let scheme = match req.scheme() {
+            Scheme::Http => "http",
+            Scheme::Https => "https",
+        };
+
+        let host = match req.host() {
+            Host::Name(name) => name.to_owned(),
+            Host::Socket(addr) => addr.to_string(),
+        };
+
+        let path = &req.extensions().find::<OriginalPath>().unwrap().0;
+
+        let url = format!("{}://{}{}", scheme, host, path).parse().ok();
+
+        {
+            let ip_addr = match req.headers().get("x-real-ip") {
+                Some(value) => value
+                    .to_str()
+                    .ok()
+                    .and_then(|str| str.parse::<IpAddr>().ok()),
+                None => Some(req.remote_addr().ip()),
+            };
+
+            let user = sentry::User {
+                ip_address: ip_addr.map(IpAddress::Exact),
+                ..Default::default()
+            };
+
+            scope.set_user(Some(user));
+        }
+
+        {
+            let headers = req
+                .headers()
+                .iter()
+                .map(|(k, v)| (k.to_string(), v.to_str().unwrap_or_default().to_string()))
+                .collect();
+
+            let sentry_req = sentry::protocol::Request {
+                method,
+                url,
+                headers,
+                ..Default::default()
+            };
+
+            scope.add_event_processor(Box::new(move |mut event| {
+                if event.request.is_none() {
+                    event.request = Some(sentry_req.clone());
+                }
+                Some(event)
+            }));
+        }
+
+        if let Some(request_id) = req
+            .headers()
+            .get("x-request-id")
+            .and_then(|value| value.to_str().ok())
+        {
+            scope.set_tag("request.id", request_id);
+        }
+
+        {
+            let status = res
+                .as_ref()
+                .map(|resp| resp.status())
+                .unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
+
+            scope.set_tag("response.status", status.as_str());
+        }
+
+        scope.set_extra("Response time [ms]", response_time.into());
+
+        if let Some(metadata) = req.extensions().find::<CustomMetadata>() {
+            for (key, value) in &metadata.entries {
+                scope.set_extra(key, value.to_string().into());
+            }
+        }
+    };
+
+    sentry::with_scope(config, || sentry::capture_message(&message, level));
 }
 
 #[cfg(test)]
