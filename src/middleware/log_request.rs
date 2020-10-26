@@ -2,12 +2,11 @@
 //! information that we care about like User-Agent
 
 use super::prelude::*;
+use crate::middleware::current_user::TrustedUserId;
 use crate::util::request_header;
 use conduit::{header, Host, RequestExt, Scheme, StatusCode};
-use sentry::protocol::IpAddress;
 use sentry::Level;
 use std::fmt::{self, Display, Formatter};
-use std::net::IpAddr;
 use std::time::Instant;
 
 const SLOW_REQUEST_THRESHOLD_MS: u64 = 1000;
@@ -96,16 +95,13 @@ fn report_to_sentry(req: &dyn RequestExt, res: &AfterResult, response_time: u64)
         let url = format!("{}://{}{}", scheme, host, path).parse().ok();
 
         {
-            let ip_addr = match req.headers().get("x-real-ip") {
-                Some(value) => value
-                    .to_str()
-                    .ok()
-                    .and_then(|str| str.parse::<IpAddr>().ok()),
-                None => Some(req.remote_addr().ip()),
-            };
+            let id = req
+                .extensions()
+                .find::<TrustedUserId>()
+                .map(|x| x.0.to_string());
 
             let user = sentry::User {
-                ip_address: ip_addr.map(IpAddress::Exact),
+                id,
                 ..Default::default()
             };
 
