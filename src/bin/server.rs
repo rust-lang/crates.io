@@ -2,6 +2,7 @@
 
 use cargo_registry::{boot, App, Env};
 use std::{
+    borrow::Cow,
     fs::File,
     sync::{mpsc::channel, Arc, Mutex},
     thread,
@@ -12,6 +13,7 @@ use civet::Server as CivetServer;
 use conduit_hyper::Service;
 use futures_util::future::FutureExt;
 use reqwest::blocking::Client;
+use sentry::{ClientOptions, IntoDsn};
 
 const CORE_THREADS: usize = 4;
 
@@ -24,6 +26,21 @@ enum Server {
 use Server::*;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let _sentry = dotenv::var("SENTRY_DSN_API")
+        .ok()
+        .into_dsn()
+        .expect("SENTRY_DSN_API is not a valid Sentry DSN value")
+        .map(|dsn| {
+            let mut opts = ClientOptions::from(dsn);
+            opts.environment = Some(
+                dotenv::var("SENTRY_ENV_API")
+                    .map(Cow::Owned)
+                    .expect("SENTRY_ENV_API must be set when using SENTRY_DSN_API"),
+            );
+
+            sentry::init(opts)
+        });
+
     // Initialize logging
     env_logger::init();
 
