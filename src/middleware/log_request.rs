@@ -11,6 +11,8 @@ use std::time::Instant;
 
 const SLOW_REQUEST_THRESHOLD_MS: u64 = 1000;
 
+const FILTERED_HEADERS: [&str; 3] = ["Authorization", "Cookie", "X-Real-Ip"];
+
 #[derive(Default)]
 pub(super) struct LogRequests();
 
@@ -109,12 +111,10 @@ fn report_to_sentry(req: &dyn RequestExt, res: &AfterResult, response_time: u64)
         }
 
         {
-            let filtered_headers = vec!["Authorization", "Cookie", "X-Real-Ip"];
-
             let headers = req
                 .headers()
                 .iter()
-                .filter(|(k, _v)| !filtered_headers.iter().any(|name| k == name))
+                .filter(|(k, _v)| !FILTERED_HEADERS.iter().any(|name| k == name))
                 .map(|(k, v)| (k.to_string(), v.to_str().unwrap_or_default().to_string()))
                 .collect();
 
