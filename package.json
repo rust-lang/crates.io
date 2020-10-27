@@ -49,7 +49,7 @@
     "@ember/render-modifiers": "1.0.2",
     "@embroider/compat": "0.29.0",
     "@embroider/core": "0.29.0",
-    "@embroider/webpack": "0.28.0",
+    "@embroider/webpack": "0.29.0",
     "@glimmer/component": "1.0.2",
     "@glimmer/tracking": "1.0.2",
     "@percy/ember": "2.1.4",

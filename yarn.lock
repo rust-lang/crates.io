@@ -1095,10 +1095,10 @@
     ember-cli-htmlbars-inline-precompile "^2.1.0"
     ember-test-waiters "^1.1.1"
 
-"@embroider/babel-loader-7@0.28.0":
-  version "0.28.0"
-  resolved "https://registry.yarnpkg.com/@embroider/babel-loader-7/-/babel-loader-7-0.28.0.tgz#11ca3842b3422dfadcf12a4146665be5282c3407"
-  integrity sha512-TY1R6QJwU0bLCUT6kl+uer9CTaj8GY04D6ZWLnZQz6CmxkZIH4c1PDhigy9EVxqeQjbNv3AraoOgiIYdebPWew==
+"@embroider/babel-loader-7@0.29.0":
+  version "0.29.0"
+  resolved "https://registry.yarnpkg.com/@embroider/babel-loader-7/-/babel-loader-7-0.29.0.tgz#a4b7709927b66dc4e3383dd0f41f4b98107cf45d"
+  integrity sha512-D9z2GpQP7e7AdxjYiVFIyKai0+yMUCXwNDbofF0ohgzcxjL5E25U6Wm6QzTww1e5DWhQIPhfWi94w9X8yMFA8Q==
   dependencies:
     babel-core "^6.26.3"
     babel-loader "7"
@@ -1288,15 +1288,15 @@
     resolve "^1.8.1"
     semver "^5.6.0"
 
-"@embroider/webpack@0.28.0":
-  version "0.28.0"
-  resolved "https://registry.yarnpkg.com/@embroider/webpack/-/webpack-0.28.0.tgz#a84f29bef0dce179a5b69fdccb5f3b9ac7f5c3e9"
-  integrity sha512-kuyUH/PAHQCFODgedmXUVeXRdXQWjBpUfiUAJ/odZ2tVqnm5T3KOMVC8umRmglWico/o8Q15EGyxo4sZx3/DKQ==
+"@embroider/webpack@0.29.0":
+  version "0.29.0"
+  resolved "https://registry.yarnpkg.com/@embroider/webpack/-/webpack-0.29.0.tgz#76eff4636da15154283569718891e713ada47c71"
+  integrity sha512-LI7rqI7juNQ+AyJ4FZWQt/pURgsmbJHgN10roUmSs5UfVmv7pl2uSLHCO0bgzqmSzWRP/XJI78TfrCnhMecS+Q==
   dependencies:
     "@babel/core" "^7.12.3"
     "@babel/plugin-proposal-nullish-coalescing-operator" "^7.12.1"
     "@babel/plugin-proposal-optional-chaining" "^7.12.1"
-    "@embroider/babel-loader-7" "0.28.0"
+    "@embroider/babel-loader-7" "0.29.0"
     "@types/source-map" "^0.5.7"
     babel-core "^6.26.3"
     babel-loader "8"
