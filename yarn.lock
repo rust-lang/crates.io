@@ -1103,17 +1103,17 @@
     babel-core "^6.26.3"
     babel-loader "7"
 
-"@embroider/compat@0.28.0":
-  version "0.28.0"
-  resolved "https://registry.yarnpkg.com/@embroider/compat/-/compat-0.28.0.tgz#869d4d3cafcf1f5187f3dbe8857cb96e975b905f"
-  integrity sha512-V5Qeq89Hjrf19QKCmO5qzlm/P+jAMkrpiy8aS1e+JxAb8OPSYBRL4NguLZpRI+aV8ff4NzUjA1A8eTrBaN7u/g==
+"@embroider/compat@0.29.0":
+  version "0.29.0"
+  resolved "https://registry.yarnpkg.com/@embroider/compat/-/compat-0.29.0.tgz#199ede3da7d456e925729265bf2058c721575483"
+  integrity sha512-rOEAibm1fUw67cn6fbi0+xRhJz44VaQLC4FKP5LNZuq+cb6ZqqUlVmi1akU9QWJ+oYNQSvSNdyoAJgR/btwMLQ==
   dependencies:
     "@babel/core" "^7.12.3"
     "@babel/plugin-syntax-dynamic-import" "^7.8.3"
     "@babel/preset-env" "^7.12.1"
     "@babel/traverse" "^7.12.1"
     "@babel/types" "^7.12.1"
-    "@embroider/macros" "0.28.0"
+    "@embroider/macros" "0.29.0"
     assert-never "^1.1.0"
     babel-plugin-syntax-dynamic-import "^6.18.0"
     babylon "^6.18.0"
@@ -1136,7 +1136,7 @@
     pkg-up "^2.0.0"
     resolve "^1.8.1"
     resolve-package-path "^1.2.2"
-    semver "^5.5.0"
+    semver "^7.3.2"
     symlink-or-copy "^1.2.0"
     tree-sync "^2.0.0"
     typescript-memoize "^1.0.0-alpha.3"
@@ -1177,17 +1177,17 @@
     walk-sync "^1.1.3"
     wrap-legacy-hbs-plugin-if-needed "^1.0.1"
 
-"@embroider/core@0.28.0":
-  version "0.28.0"
-  resolved "https://registry.yarnpkg.com/@embroider/core/-/core-0.28.0.tgz#d005e718ac8e8d87f24d7adcaefe5b8b607b2ff3"
-  integrity sha512-uzY04htrbOdkGpE7KBEnV46EFl91i06+zYKKfUPqO37NMP+yMLaevEpTF87wLJnj9hWw7Z49/ybPNgKR+RbjHw==
+"@embroider/core@0.29.0":
+  version "0.29.0"
+  resolved "https://registry.yarnpkg.com/@embroider/core/-/core-0.29.0.tgz#51421fbb2bcee607dc6e162400e3502a121230d2"
+  integrity sha512-2i0QtV1y1jJpj1aiIA3FVZHfuLBN2yCUcJs0PkOsqZYi7J796KT4t7WwAk8gmBq00yGzHDWLw/iH4ULTomPS8A==
   dependencies:
     "@babel/core" "^7.12.3"
     "@babel/parser" "^7.12.3"
     "@babel/plugin-syntax-dynamic-import" "^7.8.3"
     "@babel/traverse" "^7.12.1"
     "@babel/types" "^7.12.1"
-    "@embroider/macros" "0.28.0"
+    "@embroider/macros" "0.29.0"
     assert-never "^1.1.0"
     babel-plugin-syntax-dynamic-import "^6.18.0"
     broccoli-persistent-filter "^2.2.2"
@@ -1206,7 +1206,7 @@
     pkg-up "^2.0.0"
     resolve "^1.8.1"
     resolve-package-path "^1.2.2"
-    semver "^5.5.0"
+    semver "^7.3.2"
     strip-bom "^3.0.0"
     typescript-memoize "^1.0.0-alpha.3"
     walk-sync "^1.1.3"
@@ -1261,20 +1261,20 @@
     resolve "^1.8.1"
     semver "^5.6.0"
 
-"@embroider/macros@0.28.0":
-  version "0.28.0"
-  resolved "https://registry.yarnpkg.com/@embroider/macros/-/macros-0.28.0.tgz#95f9006f3ebfa515453d38afd74e7aca1303ba2c"
-  integrity sha512-QWlJf4svkEvMSbGB2R0zWixYZWWUOW8cAPRAxcG8U/CUI70IQQvsPWBjZ+jn4CRKB0EffCfQD6zcTckjhFT1nA==
+"@embroider/macros@0.29.0":
+  version "0.29.0"
+  resolved "https://registry.yarnpkg.com/@embroider/macros/-/macros-0.29.0.tgz#33048069b0abdda17efc7ff438b18b0c2c237bff"
+  integrity sha512-Kg8we7U7TpgUZ0EBKlTC4UGItPa91OrGT5Bzxa2cJi/pPp1z8Amgd7Y+m29N+aLBZwlv+OxlhnOCm0Fhjw/dag==
   dependencies:
     "@babel/core" "^7.12.3"
     "@babel/traverse" "^7.12.1"
     "@babel/types" "^7.12.1"
-    "@embroider/core" "0.28.0"
+    "@embroider/core" "0.29.0"
     assert-never "^1.1.0"
     ember-cli-babel "^7.23.0"
     lodash "^4.17.10"
     resolve "^1.8.1"
-    semver "^5.6.0"
+    semver "^7.3.2"
 
 "@embroider/macros@0.4.3":
   version "0.4.3"
