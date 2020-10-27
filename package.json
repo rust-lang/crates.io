@@ -104,7 +104,7 @@
     "ember-truth-helpers": "3.0.0",
     "ember-web-app": "5.0.0",
     "ember-window-mock": "0.7.1",
-    "eslint": "7.12.0",
+    "eslint": "7.12.1",
     "eslint-config-prettier": "6.14.0",
     "eslint-plugin-ember": "9.3.0",
     "eslint-plugin-import-helpers": "1.1.0",
