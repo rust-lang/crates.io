@@ -1338,29 +1338,43 @@ fn summary_new_crates() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
     app.db(|conn| {
-        let krate = CrateBuilder::new("some_downloads", user.id)
+        let now_ = Utc::now().naive_utc();
+        let now_plus_two = now_ + chrono::Duration::seconds(2);
+
+        new_category("Category 1", "cat1", "Category 1 crates")
+            .create_or_update(conn)
+            .unwrap();
+
+        CrateBuilder::new("some_downloads", user.id)
             .version(VersionBuilder::new("0.1.0"))
             .description("description")
             .keyword("popular")
+            .category("cat1")
             .downloads(20)
             .recent_downloads(10)
             .expect_build(conn);
 
-        let krate2 = CrateBuilder::new("most_recent_downloads", user.id)
+        CrateBuilder::new("most_recent_downloads", user.id)
             .version(VersionBuilder::new("0.2.0"))
             .keyword("popular")
+            .category("cat1")
             .downloads(5000)
             .recent_downloads(50)
             .expect_build(conn);
 
-        let krate3 = CrateBuilder::new("just_updated", user.id)
+        CrateBuilder::new("just_updated", user.id)
             .version(VersionBuilder::new("0.1.0"))
             .version(VersionBuilder::new("0.1.2"))
+            // update 'just_updated' krate. Others won't appear because updated_at == created_at.
+            .updated_at(now_)
             .expect_build(conn);
 
-        let krate4 = CrateBuilder::new("just_updated_patch", user.id)
+        CrateBuilder::new("just_updated_patch", user.id)
             .version(VersionBuilder::new("0.1.0"))
             .version(VersionBuilder::new("0.2.0"))
+            // Add a patch version be newer than the other versions, including the higher one.
+            .version(VersionBuilder::new("0.1.1").created_at(now_plus_two))
+            .updated_at(now_plus_two)
             .expect_build(conn);
 
         CrateBuilder::new("with_downloads", user.id)
@@ -1369,36 +1383,9 @@ fn summary_new_crates() {
             .downloads(1000)
             .expect_build(conn);
 
-        new_category("Category 1", "cat1", "Category 1 crates")
-            .create_or_update(conn)
-            .unwrap();
-        Category::update_crate(conn, &krate, &["cat1"]).unwrap();
-        Category::update_crate(conn, &krate2, &["cat1"]).unwrap();
-
         // set total_downloads global value for `num_downloads` prop
         update(metadata::table)
             .set(metadata::total_downloads.eq(6000))
-            .execute(&*conn)
-            .unwrap();
-
-        // update 'just_updated' krate. Others won't appear because updated_at == created_at.
-        let updated = Utc::now().naive_utc();
-        update(&krate3)
-            .set(crates::updated_at.eq(updated))
-            .execute(&*conn)
-            .unwrap();
-
-        let plus_two = Utc::now().naive_utc() + chrono::Duration::seconds(2);
-        let newer = VersionBuilder::new("0.1.1").expect_build(krate4.id, user.id, conn);
-
-        // Update the patch version to be newer than the other versions, including the higher one.
-        update(&newer)
-            .set(versions::created_at.eq(plus_two))
-            .execute(&*conn)
-            .unwrap();
-
-        update(&krate4)
-            .set(crates::updated_at.eq(plus_two))
             .execute(&*conn)
             .unwrap();
     });
