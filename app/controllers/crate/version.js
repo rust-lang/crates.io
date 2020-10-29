@@ -59,11 +59,11 @@ export default class CrateVersionController extends Controller {
     }
 
     downloads.forEach(d => {
-      let version_id = d.get('version.id');
+      let version_id = d.version.id;
       let key = d.date;
       if (dates[key]) {
         let prev = dates[key].cnt[version_id] || 0;
-        dates[key].cnt[version_id] = prev + d.get('downloads');
+        dates[key].cnt[version_id] = prev + d.downloads;
       }
     });
 
