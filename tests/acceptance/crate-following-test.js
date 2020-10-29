@@ -37,12 +37,12 @@ module('Acceptance | Crate following', function (hooks) {
 
     visit('/crates/nanomsg');
     await waitFor('[data-test-follow-button] [data-test-spinner]');
-    assert.dom('[data-test-follow-button]').hasText('Loading…');
+    assert.dom('[data-test-follow-button]').hasText('Loading…').isDisabled();
     assert.dom('[data-test-follow-button] [data-test-spinner]').exists();
 
     followingDeferred.resolve({ following: false });
     await settled();
-    assert.dom('[data-test-follow-button]').hasText('Follow');
+    assert.dom('[data-test-follow-button]').hasText('Follow').isEnabled();
     assert.dom('[data-test-follow-button] [data-test-spinner]').doesNotExist();
 
     let followDeferred = defer();
@@ -50,12 +50,12 @@ module('Acceptance | Crate following', function (hooks) {
 
     click('[data-test-follow-button]');
     await waitFor('[data-test-follow-button] [data-test-spinner]');
-    assert.dom('[data-test-follow-button]').hasText('Loading…');
+    assert.dom('[data-test-follow-button]').hasText('Loading…').isDisabled();
     assert.dom('[data-test-follow-button] [data-test-spinner]').exists();
 
     followDeferred.resolve({ ok: true });
     await settled();
-    assert.dom('[data-test-follow-button]').hasText('Unfollow');
+    assert.dom('[data-test-follow-button]').hasText('Unfollow').isEnabled();
     assert.dom('[data-test-follow-button] [data-test-spinner]').doesNotExist();
 
     let unfollowDeferred = defer();
@@ -63,12 +63,12 @@ module('Acceptance | Crate following', function (hooks) {
 
     click('[data-test-follow-button]');
     await waitFor('[data-test-follow-button] [data-test-spinner]');
-    assert.dom('[data-test-follow-button]').hasText('Loading…');
+    assert.dom('[data-test-follow-button]').hasText('Loading…').isDisabled();
     assert.dom('[data-test-follow-button] [data-test-spinner]').exists();
 
     unfollowDeferred.resolve({ ok: true });
     await settled();
-    assert.dom('[data-test-follow-button]').hasText('Follow');
+    assert.dom('[data-test-follow-button]').hasText('Follow').isEnabled();
     assert.dom('[data-test-follow-button] [data-test-spinner]').doesNotExist();
   });
 });

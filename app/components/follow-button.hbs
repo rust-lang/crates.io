@@ -1,5 +1,6 @@
 <button
   type="button"
+  disabled={{or this.followStateTask.isRunning this.toggleFollowTask.isRunning}}
   local-class="button"
   data-test-follow-button
   {{on "click" (perform this.toggleFollowTask)}}
