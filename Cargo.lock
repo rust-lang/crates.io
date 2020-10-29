@@ -311,7 +311,6 @@ dependencies = [
  "parking_lot",
  "parse_link_header",
  "rand",
- "regex",
  "reqwest",
  "scheduled-thread-pool",
  "semver 0.10.0",
