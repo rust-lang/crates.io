@@ -1,8 +1,10 @@
 import Model, { belongsTo, attr } from '@ember-data/model';
 
 export default class VersionDownload extends Model {
+  /** @type number */
   @attr downloads;
-  @attr('date') date;
+  /** @type string */
+  @attr date;
 
   @belongsTo('version', { async: false }) version;
 }
