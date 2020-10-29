@@ -1,3 +1,4 @@
+import { inject as service } from '@ember/service';
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 
@@ -6,6 +7,8 @@ import { task } from 'ember-concurrency';
 import ajax from '../utils/ajax';
 
 export default class extends Component {
+  @service notifications;
+
   @tracked following = false;
 
   constructor() {
@@ -22,9 +25,16 @@ export default class extends Component {
   @task(function* () {
     let crate = this.args.crate;
 
-    yield this.following ? crate.unfollow() : crate.follow();
-
-    this.following = !this.following;
+    try {
+      yield this.following ? crate.unfollow() : crate.follow();
+      this.following = !this.following;
+    } catch {
+      this.notifications.error(
+        `Something went wrong when ${this.following ? 'unfollowing' : 'following'} the ${
+          crate.name
+        } crate. Please try again later!`,
+      );
+    }
   })
   toggleFollowTask;
 }

@@ -10,14 +10,15 @@ module('Acceptance | Crate following', function (hooks) {
   setupApplicationTest(hooks);
   setupMirage(hooks);
 
-  function prepare(context, { loggedIn = true } = {}) {
+  function prepare(context, { loggedIn = true, following = false } = {}) {
     let server = context.server;
 
     let crate = server.create('crate', { name: 'nanomsg' });
     server.create('version', { crate, num: '0.6.0' });
 
     if (loggedIn) {
-      let user = server.create('user');
+      let followedCrates = following ? [crate] : [];
+      let user = server.create('user', { followedCrates });
       context.authenticateAs(user);
     }
   }
@@ -70,5 +71,29 @@ module('Acceptance | Crate following', function (hooks) {
     await settled();
     assert.dom('[data-test-follow-button]').hasText('Follow').isEnabled();
     assert.dom('[data-test-follow-button] [data-test-spinner]').doesNotExist();
+  });
+
+  test('error handling when follow fails', async function (assert) {
+    prepare(this);
+
+    this.server.put('/api/v1/crates/:crate_id/follow', {}, 500);
+
+    await visit('/crates/nanomsg');
+    await click('[data-test-follow-button]');
+    assert
+      .dom('[data-test-notification-message="error"]')
+      .hasText('Something went wrong when following the nanomsg crate. Please try again later!');
+  });
+
+  test('error handling when unfollow fails', async function (assert) {
+    prepare(this, { following: true });
+
+    this.server.del('/api/v1/crates/:crate_id/follow', {}, 500);
+
+    await visit('/crates/nanomsg');
+    await click('[data-test-follow-button]');
+    assert
+      .dom('[data-test-notification-message="error"]')
+      .hasText('Something went wrong when unfollowing the nanomsg crate. Please try again later!');
   });
 });
