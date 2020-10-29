@@ -73,6 +73,20 @@ module('Acceptance | Crate following', function (hooks) {
     assert.dom('[data-test-follow-button] [data-test-spinner]').doesNotExist();
   });
 
+  test('error handling when loading following state fails', async function (assert) {
+    prepare(this);
+
+    this.server.get('/api/v1/crates/:crate_id/following', {}, 500);
+
+    await visit('/crates/nanomsg');
+    assert.dom('[data-test-follow-button]').hasText('Follow').isDisabled();
+    assert
+      .dom('[data-test-notification-message="error"]')
+      .hasText(
+        'Something went wrong while trying to figure out if you are already following the nanomsg crate. Please try again later!',
+      );
+  });
+
   test('error handling when follow fails', async function (assert) {
     prepare(this);
 
