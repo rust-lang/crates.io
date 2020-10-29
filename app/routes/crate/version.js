@@ -36,7 +36,7 @@ export default class VersionRoute extends Route {
             // There's not even any unyanked version...
             params.version_num = maxVersion;
           } else {
-            params.version_num = latestUnyankedVersion;
+            params.version_num = latestUnyankedVersion.num;
           }
         } else {
           params.version_num = latestStableVersion.num;
