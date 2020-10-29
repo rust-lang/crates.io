@@ -1,4 +1,5 @@
 #![warn(clippy::all, rust_2018_idioms)]
+#![allow(clippy::unknown_clippy_lints)]
 
 use cargo_registry::{boot, App, Env};
 use std::{
@@ -101,6 +102,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             });
 
         let addr = ([127, 0, 0, 1], port).into();
+        #[allow(clippy::async_yields_async)]
         let server = rt.block_on(async { hyper::Server::bind(&addr).serve(make_service) });
 
         let mut sig_int = rt.block_on(async { signal(SignalKind::interrupt()) })?;
