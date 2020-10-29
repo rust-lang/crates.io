@@ -8,7 +8,7 @@ module.exports = {
       legacyDecorators: true,
     },
   },
-  plugins: ['ember', 'prettier', 'import-helpers'],
+  plugins: ['ember', 'ember-concurrency', 'prettier', 'import-helpers'],
   extends: [
     'eslint:recommended',
     'plugin:ember/recommended',
@@ -27,6 +27,9 @@ module.exports = {
     'ember/no-classic-classes': 'error',
     'ember/no-empty-attrs': 'off',
     'ember/require-computed-property-dependencies': 'off',
+
+    'ember-concurrency/no-perform-without-catch': 'warn',
+    'ember-concurrency/require-task-name-suffix': 'error',
 
     // disabled because we need `null` since JSON has no `undefined`
     'unicorn/no-null': 'off',

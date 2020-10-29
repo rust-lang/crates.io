@@ -72,7 +72,7 @@ export default class VersionRoute extends Route {
 
     let { crate } = model;
     if (!crate.documentation || crate.documentation.startsWith('https://docs.rs/')) {
-      controller.loadDocsBuilds.perform();
+      controller.loadDocsBuildsTask.perform();
     }
   }
 
