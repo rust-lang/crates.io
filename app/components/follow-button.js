@@ -22,7 +22,7 @@ export default class extends Component {
   @task(function* () {
     let crate = this.args.crate;
 
-    yield !this.following ? crate.follow() : crate.unfollow();
+    yield this.following ? crate.unfollow() : crate.follow();
 
     this.following = !this.following;
   })
