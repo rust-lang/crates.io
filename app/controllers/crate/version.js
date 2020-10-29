@@ -55,12 +55,12 @@ export default class CrateVersionController extends Controller {
     let versions = [];
     for (let i = 0; i < 90; i++) {
       let now = moment().subtract(i, 'days');
-      dates[now.format('MMM D')] = { date: now, cnt: {} };
+      dates[now.toISOString().slice(0, 10)] = { date: now, cnt: {} };
     }
 
     downloads.forEach(d => {
       let version_id = d.get('version.id');
-      let key = moment(d.get('date')).utc().format('MMM D');
+      let key = d.date;
       if (dates[key]) {
         let prev = dates[key].cnt[version_id] || 0;
         dates[key].cnt[version_id] = prev + d.get('downloads');
@@ -68,7 +68,7 @@ export default class CrateVersionController extends Controller {
     });
 
     extra.forEach(d => {
-      let key = moment(d.date).utc().format('MMM D');
+      let key = d.date;
       if (dates[key]) {
         let prev = dates[key].cnt[null] || 0;
         dates[key].cnt[null] = prev + d.downloads;
