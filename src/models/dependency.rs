@@ -87,8 +87,8 @@ pub fn add_dependencies(
             }
 
             // Match only identical names to ensure the index always references the original crate name
-            let krate = Crate::by_exact_name(&dep.name)
-                .first::<Crate>(&*conn)
+            let krate:Crate = Crate::by_exact_name(&dep.name)
+                .first(&*conn)
                 .map_err(|_| cargo_err(&format_args!("no known crate named `{}`", &*dep.name)))?;
             if dep.version_req == semver::VersionReq::parse("*").unwrap() {
                 return Err(cargo_err(

@@ -49,7 +49,7 @@ fn select_slugs(conn: &PgConnection) -> Vec<String> {
     categories::table
         .select(categories::slug)
         .order(categories::slug)
-        .load::<String>(conn)
+        .load(conn)
         .unwrap()
 }
 

@@ -33,7 +33,7 @@ fn delete(conn: &PgConnection) {
         Some(s) => s,
     };
 
-    let krate = Crate::by_name(&name).first::<Crate>(conn).unwrap();
+    let krate: Crate = Crate::by_name(&name).first(conn).unwrap();
     print!(
         "Are you sure you want to delete {} ({}) [y/N]: ",
         name, krate.id

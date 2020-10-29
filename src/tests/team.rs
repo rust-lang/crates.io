@@ -141,9 +141,7 @@ fn add_team_mixed_case() {
         .good();
 
     app.db(|conn| {
-        let krate = Crate::by_name("foo_mixed_case")
-            .first::<Crate>(conn)
-            .unwrap();
+        let krate: Crate = Crate::by_name("foo_mixed_case").first(conn).unwrap();
         let owners = krate.owners(conn).unwrap();
         assert_eq!(owners.len(), 2);
         let owner = &owners[1];

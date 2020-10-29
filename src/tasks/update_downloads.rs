@@ -51,10 +51,10 @@ fn collect(conn: &PgConnection, rows: &[VersionDownload]) -> QueryResult<()> {
 
         conn.transaction::<_, diesel::result::Error, _>(|| {
             // Update the total number of version downloads
-            let crate_id = update(versions::table.find(download.version_id))
+            let crate_id: i32 = update(versions::table.find(download.version_id))
                 .set(versions::downloads.eq(versions::downloads + amt))
                 .returning(versions::crate_id)
-                .get_result::<i32>(conn)?;
+                .get_result(conn)?;
 
             // Update the total number of crate downloads
             update(crates::table.find(crate_id))
@@ -244,32 +244,23 @@ mod test {
             .execute(&conn)
             .unwrap();
 
-        let version_before = versions::table
-            .find(version.id)
-            .first::<Version>(&conn)
-            .unwrap();
-        let krate_before = Crate::all()
+        let version_before: Version = versions::table.find(version.id).first(&conn).unwrap();
+        let krate_before: Crate = Crate::all()
             .filter(crates::id.eq(krate.id))
-            .first::<Crate>(&conn)
+            .first(&conn)
             .unwrap();
         super::update(&conn).unwrap();
-        let version2 = versions::table
-            .find(version.id)
-            .first::<Version>(&conn)
-            .unwrap();
+        let version2: Version = versions::table.find(version.id).first(&conn).unwrap();
         assert_eq!(version2.downloads, 2);
         assert_eq!(version2.updated_at, version_before.updated_at);
-        let krate2 = Crate::all()
+        let krate2: Crate = Crate::all()
             .filter(crates::id.eq(krate.id))
-            .first::<Crate>(&conn)
+            .first(&conn)
             .unwrap();
         assert_eq!(krate2.downloads, 2);
         assert_eq!(krate2.updated_at, krate_before.updated_at);
         super::update(&conn).unwrap();
-        let version3 = versions::table
-            .find(version.id)
-            .first::<Version>(&conn)
-            .unwrap();
+        let version3: Version = versions::table.find(version.id).first(&conn).unwrap();
         assert_eq!(version3.downloads, 2);
     }
 

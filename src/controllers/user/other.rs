@@ -11,10 +11,10 @@ pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
 
     let name = &req.params()["user_id"].to_lowercase();
     let conn = req.db_conn()?;
-    let user = users
+    let user: User = users
         .filter(crate::lower(gh_login).eq(name))
         .order(id.desc())
-        .first::<User>(&*conn)?;
+        .first(&*conn)?;
 
     #[derive(Serialize)]
     struct R {
@@ -34,7 +34,7 @@ pub fn stats(req: &mut dyn RequestExt) -> EndpointResult {
         .chain_error(|| bad_request("invalid user_id"))?;
     let conn = req.db_conn()?;
 
-    let data = CrateOwner::by_owner_kind(OwnerKind::User)
+    let data: i64 = CrateOwner::by_owner_kind(OwnerKind::User)
         .inner_join(crates::table)
         .filter(crate_owners::owner_id.eq(user_id))
         .select(sum(crates::downloads))

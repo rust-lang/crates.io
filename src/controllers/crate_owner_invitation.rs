@@ -9,9 +9,10 @@ pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
     let user_id = req.authenticate()?.user_id();
     let conn = &*req.db_conn()?;
 
-    let crate_owner_invitations = crate_owner_invitations::table
+    let crate_owner_invitations: Vec<CrateOwnerInvitation> = crate_owner_invitations::table
         .filter(crate_owner_invitations::invited_user_id.eq(user_id))
-        .load::<CrateOwnerInvitation>(&*conn)?
+        .load(&*conn)?;
+    let crate_owner_invitations = crate_owner_invitations
         .into_iter()
         .map(|i| i.encodable(conn))
         .collect();
@@ -56,7 +57,7 @@ pub fn handle_invite_with_token(req: &mut dyn RequestExt) -> EndpointResult {
 
     let crate_owner_invite: CrateOwnerInvitation = crate_owner_invitations::table
         .filter(crate_owner_invitations::token.eq(req_token))
-        .first::<CrateOwnerInvitation>(&*conn)?;
+        .first(&*conn)?;
 
     let invite_reponse = InvitationResponse {
         crate_id: crate_owner_invite.crate_id,
@@ -79,9 +80,9 @@ fn accept_invite(
     use diesel::{delete, insert_into};
 
     conn.transaction(|| {
-        let pending_crate_owner = crate_owner_invitations::table
+        let pending_crate_owner: CrateOwnerInvitation = crate_owner_invitations::table
             .find((user_id, crate_invite.crate_id))
-            .first::<CrateOwnerInvitation>(&*conn)?;
+            .first(&*conn)?;
 
         insert_into(crate_owners::table)
             .values(&CrateOwner {

@@ -171,7 +171,8 @@ fn create_token_success() {
     assert_eq!(json.api_token.name, "bar");
     assert!(!json.api_token.token.is_empty());
 
-    let tokens = app.db(|conn| t!(ApiToken::belonging_to(user.as_model()).load::<ApiToken>(conn)));
+    let tokens: Vec<ApiToken> =
+        app.db(|conn| t!(ApiToken::belonging_to(user.as_model()).load(conn)));
     assert_eq!(tokens.len(), 1);
     assert_eq!(tokens[0].name, "bar");
     assert_eq!(tokens[0].revoked, false);
@@ -229,7 +230,7 @@ fn revoke_token_doesnt_revoke_other_users_token() {
 
     // List tokens for first user contains the token
     app.db(|conn| {
-        let tokens = t!(ApiToken::belonging_to(user1).load::<ApiToken>(conn));
+        let tokens: Vec<ApiToken> = t!(ApiToken::belonging_to(user1).load(conn));
         assert_eq!(tokens.len(), 1);
         assert_eq!(tokens[0].name, token.name);
     });
@@ -241,7 +242,7 @@ fn revoke_token_doesnt_revoke_other_users_token() {
 
     // List tokens for first user still contains the token
     app.db(|conn| {
-        let tokens = t!(ApiToken::belonging_to(user1).load::<ApiToken>(conn));
+        let tokens: Vec<ApiToken> = t!(ApiToken::belonging_to(user1).load(conn));
         assert_eq!(tokens.len(), 1);
         assert_eq!(tokens[0].name, token.name);
     });
@@ -253,7 +254,7 @@ fn revoke_token_success() {
 
     // List tokens contains the token
     app.db(|conn| {
-        let tokens = t!(ApiToken::belonging_to(user.as_model()).load::<ApiToken>(conn));
+        let tokens: Vec<ApiToken> = t!(ApiToken::belonging_to(user.as_model()).load(conn));
         assert_eq!(tokens.len(), 1);
         assert_eq!(tokens[0].name, token.as_model().name);
     });
@@ -296,7 +297,7 @@ fn using_token_updates_last_used_at() {
     // Use the token once
     token.get::<EncodableMe>("/api/v1/me").good();
 
-    let token = app.db(|conn| t!(ApiToken::belonging_to(user.as_model()).first::<ApiToken>(conn)));
+    let token: ApiToken = app.db(|conn| t!(ApiToken::belonging_to(user.as_model()).first(conn)));
     assert!(token.last_used_at.is_some());
 
     // Would check that it updates the timestamp here, but the timestamp is

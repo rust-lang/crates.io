@@ -10,7 +10,7 @@ pub fn show_team(req: &mut dyn RequestExt) -> EndpointResult {
 
     let name = &req.params()["team_id"];
     let conn = req.db_conn()?;
-    let team = teams.filter(login.eq(name)).first::<Team>(&*conn)?;
+    let team: Team = teams.filter(login.eq(name)).first(&*conn)?;
 
     #[derive(Serialize)]
     struct R {

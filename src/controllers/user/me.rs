@@ -5,6 +5,7 @@ use crate::controllers::frontend_prelude::*;
 use crate::controllers::helpers::*;
 use crate::email;
 
+use crate::controllers::helpers::pagination::Paginated;
 use crate::models::{
     CrateOwner, Email, Follow, NewEmail, OwnerKind, User, Version, VersionOwnerAction,
 };
@@ -16,16 +17,17 @@ pub fn me(req: &mut dyn RequestExt) -> EndpointResult {
     let user_id = req.authenticate()?.user_id();
     let conn = req.db_conn()?;
 
-    let (user, verified, email, verification_sent) = users::table
-        .find(user_id)
-        .left_join(emails::table)
-        .select((
-            users::all_columns,
-            emails::verified.nullable(),
-            emails::email.nullable(),
-            emails::token_generated_at.nullable().is_not_null(),
-        ))
-        .first::<(User, Option<bool>, Option<String>, bool)>(&*conn)?;
+    let (user, verified, email, verification_sent): (User, Option<bool>, Option<String>, bool) =
+        users::table
+            .find(user_id)
+            .left_join(emails::table)
+            .select((
+                users::all_columns,
+                emails::verified.nullable(),
+                emails::email.nullable(),
+                emails::token_generated_at.nullable().is_not_null(),
+            ))
+            .first(&*conn)?;
 
     let owned_crates = CrateOwner::by_owner_kind(OwnerKind::User)
         .inner_join(crates::table)
@@ -58,7 +60,7 @@ pub fn updates(req: &mut dyn RequestExt) -> EndpointResult {
     let user = authenticated_user.user();
 
     let followed_crates = Follow::belonging_to(&user).select(follows::crate_id);
-    let data = versions::table
+    let data: Paginated<(Version, String, Option<User>)> = versions::table
         .inner_join(crates::table)
         .left_outer_join(users::table)
         .filter(crates::id.eq(any(followed_crates)))
@@ -69,7 +71,7 @@ pub fn updates(req: &mut dyn RequestExt) -> EndpointResult {
             users::all_columns.nullable(),
         ))
         .paginate(&req.query())?
-        .load::<(Version, String, Option<User>)>(&*conn)?;
+        .load(&*conn)?;
     let more = data.next_page_params().is_some();
     let versions = data.iter().map(|(v, _, _)| v).cloned().collect::<Vec<_>>();
     let data = data
@@ -147,13 +149,13 @@ pub fn update_user(req: &mut dyn RequestExt) -> EndpointResult {
             email: user_email,
         };
 
-        let token = insert_into(emails::table)
+        let token: String = insert_into(emails::table)
             .values(&new_email)
             .on_conflict(user_id)
             .do_update()
             .set(&new_email)
             .returning(emails::token)
-            .get_result::<String>(&*conn)
+            .get_result(&*conn)
             .map_err(|_| server_error("Error in creating token"))?;
 
         crate::email::send_user_confirm_email(user_email, &user.gh_login, &token);
@@ -200,9 +202,9 @@ pub fn regenerate_token_and_send(req: &mut dyn RequestExt) -> EndpointResult {
     }
 
     conn.transaction(|| {
-        let email = update(Email::belonging_to(&user))
+        let email: Email = update(Email::belonging_to(&user))
             .set(emails::token.eq(sql("DEFAULT")))
-            .get_result::<Email>(&*conn)
+            .get_result(&*conn)
             .map_err(|_| bad_request("Email could not be found"))?;
 
         email::try_send_user_confirm_email(&email.email, &user.gh_login, &email.token)

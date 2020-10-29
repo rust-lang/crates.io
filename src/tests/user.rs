@@ -425,10 +425,10 @@ fn github_with_email_does_not_overwrite_email() {
 
     let (app, _, user) = TestApp::init().with_user();
     let model = user.as_model();
-    let original_email = app.db(|conn| {
+    let original_email: String = app.db(|conn| {
         Email::belonging_to(model)
             .select(emails::email)
-            .first::<String>(&*conn)
+            .first(&*conn)
             .unwrap()
     });
 
@@ -562,10 +562,10 @@ fn test_confirm_user_email() {
     });
     let user_model = user.as_model();
 
-    let email_token = app.db(|conn| {
+    let email_token: String = app.db(|conn| {
         Email::belonging_to(user_model)
             .select(emails::token)
-            .first::<String>(&*conn)
+            .first(&*conn)
             .unwrap()
     });
 
@@ -733,12 +733,12 @@ fn test_update_email_notifications_not_owned() {
         email_notifications: false,
     }]);
 
-    let email_notifications = app
+    let email_notifications: bool = app
         .db(|conn| {
             crate_owners::table
                 .select(crate_owners::email_notifications)
                 .filter(crate_owners::crate_id.eq(not_my_crate.id))
-                .first::<bool>(&*conn)
+                .first(&*conn)
         })
         .unwrap();
 

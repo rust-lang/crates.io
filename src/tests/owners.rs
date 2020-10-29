@@ -97,8 +97,8 @@ fn new_crate_owner() {
     token.add_user_owner("foo_owner", user2.as_model());
 
     // accept invitation for user to be added as owner
-    let crate_id = app.db(|conn| Crate::by_name("foo_owner").first::<Crate>(conn).unwrap().id);
-    user2.accept_ownership_invitation("foo_owner", crate_id);
+    let krate: Crate = app.db(|conn| Crate::by_name("foo_owner").first(conn).unwrap());
+    user2.accept_ownership_invitation("foo_owner", krate.id);
 
     // Make sure this shows up as one of their crates.
     let crates = user2.search_by_user_id(user2.as_model().id);

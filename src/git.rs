@@ -301,11 +301,11 @@ pub fn yank(
     let dst = repo.index_file(&krate);
 
     conn.transaction(|| {
-        let yanked_in_db = versions::table
+        let yanked_in_db: bool = versions::table
             .find(version.id)
             .select(versions::yanked)
             .for_update()
-            .first::<bool>(&*conn)?;
+            .first(&*conn)?;
 
         if yanked_in_db == yanked {
             // The crate is alread in the state requested, nothing to do

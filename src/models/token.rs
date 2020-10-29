@@ -43,13 +43,13 @@ impl ApiToken {
             crate::util::generate_secure_alphanumeric_string(TOKEN_LENGTH)
         );
 
-        let model = diesel::insert_into(api_tokens::table)
+        let model: ApiToken = diesel::insert_into(api_tokens::table)
             .values((
                 api_tokens::user_id.eq(user_id),
                 api_tokens::name.eq(name),
                 api_tokens::token.eq(digest(&plaintext, "sha256")),
             ))
-            .get_result::<ApiToken>(conn)?;
+            .get_result(conn)?;
 
         Ok(CreatedApiToken { plaintext, model })
     }
@@ -71,7 +71,7 @@ impl ApiToken {
         conn.transaction(|| {
             update(tokens)
                 .set(last_used_at.eq(now.nullable()))
-                .get_result::<ApiToken>(conn)
+                .get_result(conn)
         })
         .or_else(|_| tokens.first(conn))
         .map_err(Into::into)

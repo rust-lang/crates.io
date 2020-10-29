@@ -22,7 +22,7 @@ pub fn index(req: &mut dyn RequestExt) -> EndpointResult {
         .filter_map(|(ref a, ref b)| if *a == "ids[]" { b.parse().ok() } else { None })
         .collect::<Vec<i32>>();
 
-    let versions_and_publishers = versions::table
+    let versions_and_publishers: Vec<(Version, String, Option<User>)> = versions::table
         .inner_join(crates::table)
         .left_outer_join(users::table)
         .select((
@@ -31,7 +31,7 @@ pub fn index(req: &mut dyn RequestExt) -> EndpointResult {
             users::all_columns.nullable(),
         ))
         .filter(versions::id.eq(any(ids)))
-        .load::<(Version, String, Option<User>)>(&*conn)?;
+        .load(&*conn)?;
     let versions = versions_and_publishers
         .iter()
         .map(|(v, _, _)| v)

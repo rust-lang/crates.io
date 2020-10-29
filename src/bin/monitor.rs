@@ -43,13 +43,14 @@ fn check_failing_background_jobs(conn: &PgConnection) -> Result<()> {
         .map(|s| s.parse::<i32>().unwrap())
         .unwrap_or(15);
 
-    let stalled_job_count = background_jobs
+    let stalled_jobs: Vec<i32> = background_jobs
         .select(1.into_sql::<Integer>())
         .filter(created_at.lt(now - max_job_time.minutes()))
         .for_update()
         .skip_locked()
-        .load::<i32>(conn)?
-        .len();
+        .load(conn)?;
+
+    let stalled_job_count = stalled_jobs.len();
 
     let event = if stalled_job_count > 0 {
         on_call::Event::Trigger {
@@ -84,10 +85,10 @@ fn check_stalled_update_downloads(conn: &PgConnection) -> Result<()> {
         .map(|s| s.parse::<u32>().unwrap() as i64)
         .unwrap_or(120);
 
-    let start_time = background_jobs
+    let start_time: Result<NaiveDateTime, _> = background_jobs
         .filter(job_type.eq("update_downloads"))
         .select(created_at)
-        .first::<NaiveDateTime>(conn);
+        .first(conn);
 
     if let Ok(start_time) = start_time {
         let start_time = DateTime::<Utc>::from_utc(start_time, Utc);
@@ -130,10 +131,10 @@ fn check_spam_attack(conn: &PgConnection) -> Result<()> {
 
     let mut event_description = None;
 
-    let bad_crate = crates::table
+    let bad_crate: Option<String> = crates::table
         .filter(canon_crate_name(crates::name).eq(any(bad_crate_names)))
         .select(crates::name)
-        .first::<String>(conn)
+        .first(conn)
         .optional()?;
 
     if let Some(bad_crate) = bad_crate {
@@ -147,7 +148,7 @@ fn check_spam_attack(conn: &PgConnection) -> Result<()> {
     for author_pattern in bad_author_patterns {
         query = query.or_filter(version_authors::name.like(author_pattern));
     }
-    let bad_author = query.first::<String>(conn).optional()?;
+    let bad_author: Option<String> = query.first(conn).optional()?;
 
     if let Some(bad_author) = bad_author {
         event_description = Some(format!("Crate with author {} published", bad_author));

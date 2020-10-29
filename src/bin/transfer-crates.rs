@@ -43,13 +43,13 @@ fn transfer(conn: &PgConnection) {
         Some(s) => s,
     };
 
-    let from = users::table
+    let from: User = users::table
         .filter(users::gh_login.eq(from))
-        .first::<User>(conn)
+        .first(conn)
         .unwrap();
-    let to = users::table
+    let to: User = users::table
         .filter(users::gh_login.eq(to))
-        .first::<User>(conn)
+        .first(conn)
         .unwrap();
 
     if from.gh_id != to.gh_id {
@@ -73,9 +73,9 @@ fn transfer(conn: &PgConnection) {
     let crate_owners = crate_owners::table
         .filter(crate_owners::owner_id.eq(from.id))
         .filter(crate_owners::owner_kind.eq(OwnerKind::User as i32));
-    let crates = Crate::all()
+    let crates: Vec<Crate> = Crate::all()
         .filter(crates::id.eq_any(crate_owners.select(crate_owners::crate_id)))
-        .load::<Crate>(conn)
+        .load(conn)
         .unwrap();
 
     for krate in crates {

@@ -82,7 +82,7 @@ impl Category {
         slugs: &[&str],
     ) -> QueryResult<Vec<String>> {
         conn.transaction(|| {
-            let categories = Category::by_slugs_case_sensitive(slugs).load::<Category>(conn)?;
+            let categories: Vec<Category> = Category::by_slugs_case_sensitive(slugs).load(conn)?;
             let invalid_categories = slugs
                 .iter()
                 .cloned()
@@ -395,9 +395,7 @@ mod tests {
             .execute(&conn)
             .unwrap();
 
-        let cat = Category::by_slug("cat1::sub1")
-            .first::<Category>(&conn)
-            .unwrap();
+        let cat: Category = Category::by_slug("cat1::sub1").first(&conn).unwrap();
         let subcats = cat.subcategories(&conn).unwrap();
         let parents = cat.parent_categories(&conn).unwrap();
 
