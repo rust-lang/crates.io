@@ -7197,17 +7197,17 @@ ember-truth-helpers@3.0.0:
   dependencies:
     ember-cli-babel "^7.22.1"
 
-ember-web-app@5.0.0:
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/ember-web-app/-/ember-web-app-5.0.0.tgz#fa0bcd78a0c5fdd7380407fa800bef5dc86741ed"
-  integrity sha512-cOYrwI7lFWC/Bj7lwhXXaFk8nH9lyaDXGeJzEyyLzTs7iRtM2j7PPw0dsHZowOFp5tf/W7x/Mjycv0cWq1zTLQ==
+ember-web-app@5.0.1:
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/ember-web-app/-/ember-web-app-5.0.1.tgz#f0bb8dc670ab0e04677c6c6dc7bfabf0e681ab29"
+  integrity sha512-437ue2c2dy8zwjoUohjLqs+Opb4c8bHVw6U3keKYb8F3Mk/XoFTFsgKgFHIUlb7SyBiAQD+6JsNjGXX71Kljcg==
   dependencies:
     broccoli-asset-rev "^3.0.0"
     broccoli-caching-writer "^3.0.3"
     broccoli-merge-trees "^4.2.0"
-    ember-cli-babel "^7.22.1"
+    ember-cli-babel "^7.23.0"
     jsdom "^16.4.0"
-    web-app-manifest-validator "^1.0.0"
+    web-app-manifest-validator "^1.1.0"
     xmlbuilder "^15.1.1"
 
 ember-window-mock@0.7.1:
@@ -14962,10 +14962,10 @@ wcwidth@^1.0.1:
   dependencies:
     defaults "^1.0.3"
 
-web-app-manifest-validator@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/web-app-manifest-validator/-/web-app-manifest-validator-1.0.0.tgz#b4265b83d527bbd2f89a217c2d49ce26b24ac204"
-  integrity sha1-tCZbg9Unu9L4miF8LUnOJrJKwgQ=
+web-app-manifest-validator@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/web-app-manifest-validator/-/web-app-manifest-validator-1.1.0.tgz#f84f03af2df9819755cf1fedb7063a7db4972755"
+  integrity sha512-svXrKIh5OGymneZwVCWJmCIeKkaaz+kngb2PbZ7rEuamlwr0imVQRH4M9ZKwGYUcyJ0wL1i+awtJ/kj+9PySEw==
   dependencies:
     is-array "^1.0.1"
 
