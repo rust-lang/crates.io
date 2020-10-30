@@ -8,5 +8,6 @@ module.exports = {
     'last 1 iOS version',
     'last 1 Edge version',
     'last 1 UCAndroid version',
+    'last 1 years',
   ],
 };
