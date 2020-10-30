@@ -11,7 +11,15 @@ use router::{Match, Router};
 
 #[derive(Default)]
 pub struct RouteBuilder {
-    routers: HashMap<Method, Router<Box<dyn Handler>>>,
+    routers: HashMap<Method, Router<WrappedHandler>>,
+}
+
+#[derive(Clone)]
+struct RoutePattern(String);
+
+pub struct WrappedHandler {
+    pattern: RoutePattern,
+    handler: Box<dyn Handler>,
 }
 
 #[derive(Debug)]
@@ -29,7 +37,7 @@ impl RouteBuilder {
         &'a self,
         method: &Method,
         path: &str,
-    ) -> Result<Match<&'a Box<dyn Handler>>, RouterError> {
+    ) -> Result<Match<&WrappedHandler>, RouterError> {
         match self.routers.get(method) {
             Some(router) => router.recognize(path),
             None => Err(format!("No router found for {:?}", method)),
@@ -48,7 +56,11 @@ impl RouteBuilder {
                 Entry::Occupied(e) => e.into_mut(),
                 Entry::Vacant(e) => e.insert(Router::new()),
             };
-            router.add(pattern, Box::new(handler));
+            let wrapped_handler = WrappedHandler {
+                pattern: RoutePattern(pattern.to_string()),
+                handler: Box::new(handler)
+            };
+            router.add(pattern, wrapped_handler);
         }
         self
     }
@@ -88,10 +100,11 @@ impl conduit::Handler for RouteBuilder {
 
         {
             let extensions = request.mut_extensions();
+            extensions.insert(m.handler.pattern.clone());
             extensions.insert(m.params.clone());
         }
 
-        (*m.handler).call(request)
+        (*m.handler.handler).call(request)
     }
 }
 
@@ -130,7 +143,7 @@ mod tests {
     use std::io;
     use std::net::SocketAddr;
 
-    use {RequestParams, RouteBuilder};
+    use {RequestParams, RouteBuilder, RoutePattern};
 
     use self::conduit_test::ResponseExt;
     use conduit::{
@@ -206,7 +219,7 @@ mod tests {
         let res = router.call(&mut req).expect("No response");
 
         assert_eq!(res.status(), StatusCode::OK);
-        assert_eq!(*res.into_cow(), b"1, GET"[..]);
+        assert_eq!(*res.into_cow(), b"1, GET, /posts/:id"[..]);
     }
 
     #[test]
@@ -216,7 +229,7 @@ mod tests {
         let res = router.call(&mut req).expect("No response");
 
         assert_eq!(res.status(), StatusCode::OK);
-        assert_eq!(*res.into_cow(), b"10, POST"[..]);
+        assert_eq!(*res.into_cow(), b"10, POST, /posts/:id"[..]);
     }
 
     #[test]
@@ -237,6 +250,7 @@ mod tests {
         let mut res = vec![];
         res.push(req.params()["id"].clone());
         res.push(format!("{:?}", req.method()));
+        res.push(req.extensions().find::<RoutePattern>().unwrap().0.clone());
 
         let bytes = res.join(", ").into_bytes();
         Response::builder().body(Body::from_vec(bytes))
