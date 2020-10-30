@@ -15,7 +15,7 @@ pub struct RouteBuilder {
 }
 
 #[derive(Clone)]
-struct RoutePattern(String);
+struct RoutePattern(&'static str);
 
 pub struct WrappedHandler {
     pattern: RoutePattern,
@@ -48,7 +48,7 @@ impl RouteBuilder {
     pub fn map<'a, H: Handler>(
         &'a mut self,
         method: Method,
-        pattern: &str,
+        pattern: &'static str,
         handler: H,
     ) -> &'a mut RouteBuilder {
         {
@@ -57,7 +57,7 @@ impl RouteBuilder {
                 Entry::Vacant(e) => e.insert(Router::new()),
             };
             let wrapped_handler = WrappedHandler {
-                pattern: RoutePattern(pattern.to_string()),
+                pattern: RoutePattern(pattern),
                 handler: Box::new(handler)
             };
             router.add(pattern, wrapped_handler);
@@ -65,23 +65,23 @@ impl RouteBuilder {
         self
     }
 
-    pub fn get<'a, H: Handler>(&'a mut self, pattern: &str, handler: H) -> &'a mut RouteBuilder {
+    pub fn get<'a, H: Handler>(&'a mut self, pattern: &'static str, handler: H) -> &'a mut RouteBuilder {
         self.map(Method::GET, pattern, handler)
     }
 
-    pub fn post<'a, H: Handler>(&'a mut self, pattern: &str, handler: H) -> &'a mut RouteBuilder {
+    pub fn post<'a, H: Handler>(&'a mut self, pattern: &'static str, handler: H) -> &'a mut RouteBuilder {
         self.map(Method::POST, pattern, handler)
     }
 
-    pub fn put<'a, H: Handler>(&'a mut self, pattern: &str, handler: H) -> &'a mut RouteBuilder {
+    pub fn put<'a, H: Handler>(&'a mut self, pattern: &'static str, handler: H) -> &'a mut RouteBuilder {
         self.map(Method::PUT, pattern, handler)
     }
 
-    pub fn delete<'a, H: Handler>(&'a mut self, pattern: &str, handler: H) -> &'a mut RouteBuilder {
+    pub fn delete<'a, H: Handler>(&'a mut self, pattern: &'static str, handler: H) -> &'a mut RouteBuilder {
         self.map(Method::DELETE, pattern, handler)
     }
 
-    pub fn head<'a, H: Handler>(&'a mut self, pattern: &str, handler: H) -> &'a mut RouteBuilder {
+    pub fn head<'a, H: Handler>(&'a mut self, pattern: &'static str, handler: H) -> &'a mut RouteBuilder {
         self.map(Method::HEAD, pattern, handler)
     }
 }
@@ -250,7 +250,7 @@ mod tests {
         let mut res = vec![];
         res.push(req.params()["id"].clone());
         res.push(format!("{:?}", req.method()));
-        res.push(req.extensions().find::<RoutePattern>().unwrap().0.clone());
+        res.push(req.extensions().find::<RoutePattern>().unwrap().0.to_string());
 
         let bytes = res.join(", ").into_bytes();
         Response::builder().body(Body::from_vec(bytes))
