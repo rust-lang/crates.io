@@ -69,14 +69,7 @@ pub fn add_custom_metadata<V: Display>(req: &mut dyn RequestExt, key: &'static s
 fn report_to_sentry(req: &dyn RequestExt, res: &AfterResult, response_time: u64) {
     let (message, level) = match res {
         Err(e) => (e.to_string(), Level::Error),
-        Ok(_) => {
-            if response_time <= SLOW_REQUEST_THRESHOLD_MS {
-                return;
-            }
-
-            let message = format!("Slow Request: {} {}", req.method(), req.path());
-            (message, Level::Info)
-        }
+        Ok(_) => return,
     };
 
     let config = |scope: &mut sentry::Scope| {
