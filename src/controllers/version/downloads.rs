@@ -18,13 +18,19 @@ pub fn download(req: &mut dyn RequestExt) -> EndpointResult {
     let crate_name = &req.params()["crate_id"];
     let version = &req.params()["version"];
 
-    let crate_name = increment_download_counts(req, crate_name, version)?;
+    let (crate_name, was_counted) = increment_download_counts(req, crate_name, version)?;
 
     let redirect_url = req
         .app()
         .config
         .uploader
         .crate_location(&crate_name, version);
+
+    // Adding log metadata requires &mut access, so we have to defer this step until
+    // after the (immutable) query parameters are no longer used.
+    if !was_counted {
+        req.log_metadata("uncounted_dl", "true");
+    }
 
     if req.wants_json() {
         #[derive(Serialize)]
@@ -50,7 +56,7 @@ fn increment_download_counts(
     req: &dyn RequestExt,
     crate_name: &str,
     version: &str,
-) -> AppResult<String> {
+) -> AppResult<(String, bool)> {
     use self::versions::dsl::*;
 
     let conn = req.db_conn()?;
@@ -63,8 +69,8 @@ fn increment_download_counts(
 
     // Wrap in a transaction so we don't poison the outer transaction if this
     // fails
-    let _ = conn.transaction(|| VersionDownload::create_or_increment(version_id, &conn));
-    Ok(crate_name)
+    let res = conn.transaction(|| VersionDownload::create_or_increment(version_id, &conn));
+    Ok((crate_name, res.is_ok()))
 }
 
 /// Handles the `GET /crates/:crate_id/:version/downloads` route.
