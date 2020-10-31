@@ -73,8 +73,7 @@
           {{#each this.model.new_crates as |crate index|}}
             <li>
               <FrontPageList::Item
-                @route="crate"
-                @model={{crate.id}}
+                @link={{link "crate" crate.id}}
                 @title={{crate.name}}
                 @subtitle="v{{crate.newest_version}}"
                 data-test-crate-link={{index}}
@@ -98,8 +97,7 @@
           {{#each this.model.most_downloaded as |crate index|}}
             <li>
               <FrontPageList::Item
-                @route="crate"
-                @model={{crate.id}}
+                @link={{link "crate" crate.id}}
                 @title={{crate.name}}
                 data-test-crate-link={{index}}
               />
@@ -122,8 +120,7 @@
           {{#each this.model.just_updated as |crate index|}}
             <li>
               <FrontPageList::Item
-                @route="crate"
-                @model={{crate.id}}
+                @link={{link "crate" crate.id}}
                 @title={{crate.name}}
                 @subtitle="v{{crate.newest_version}}"
                 data-test-crate-link={{index}}
@@ -147,8 +144,7 @@
           {{#each this.model.most_recently_downloaded as |crate index|}}
             <li>
               <FrontPageList::Item
-                @route="crate"
-                @model={{crate.id}}
+                @link={{link "crate" crate.id}}
                 @title={{crate.name}}
                 data-test-crate-link={{index}}
               />
@@ -171,8 +167,7 @@
           {{#each this.model.popular_keywords as |keyword|}}
             <li>
               <FrontPageList::Item
-                @route="keyword"
-                @model={{keyword}}
+                @link={{link "keyword" keyword}}
                 @title={{keyword.id}}
                 @subtitle="{{format-num keyword.crates_cnt}} crates"
               />
@@ -195,8 +190,7 @@
           {{#each this.model.popular_categories as |category|}}
             <li>
               <FrontPageList::Item
-                @route="category"
-                @model={{category.slug}}
+                @link={{link "category" category.slug}}
                 @title={{category.category}}
                 @subtitle="{{format-num category.crates_cnt}} crates"
               />
