@@ -1,8 +1,3 @@
-// Transfer all crates from one user to another.
-//
-// Usage:
-//      cargo run --bin transfer-crates from-user to-user
-
 #![warn(clippy::all, rust_2018_idioms)]
 
 use cargo_registry::{
@@ -11,12 +6,24 @@ use cargo_registry::{
     schema::{crate_owners, crates, users},
 };
 use std::{
-    env,
     io::{self, prelude::*},
     process::exit,
 };
 
+use clap::Clap;
 use diesel::prelude::*;
+
+#[derive(Clap, Debug)]
+#[clap(
+    name = "transfer-crates",
+    about = "Transfer all crates from one user to another."
+)]
+struct Opts {
+    /// GitHub login of the "from" user
+    from_user: String,
+    /// GitHub login of the "to" user
+    to_user: String,
+}
 
 fn main() {
     let conn = db::connect_now().unwrap();
@@ -28,27 +35,15 @@ fn main() {
 }
 
 fn transfer(conn: &PgConnection) {
-    let from = match env::args().nth(1) {
-        None => {
-            println!("needs a from-user argument");
-            return;
-        }
-        Some(s) => s,
-    };
-    let to = match env::args().nth(2) {
-        None => {
-            println!("needs a to-user argument");
-            return;
-        }
-        Some(s) => s,
-    };
+    let opts: Opts = Opts::parse();
 
     let from: User = users::table
-        .filter(users::gh_login.eq(from))
+        .filter(users::gh_login.eq(opts.from_user))
         .first(conn)
         .unwrap();
+
     let to: User = users::table
-        .filter(users::gh_login.eq(to))
+        .filter(users::gh_login.eq(opts.to_user))
         .first(conn)
         .unwrap();
 
