@@ -17,6 +17,12 @@ pub struct RouteBuilder {
 #[derive(Clone, Copy)]
 pub struct RoutePattern(&'static str);
 
+impl RoutePattern {
+    pub fn pattern(&self) -> &str {
+        self.0
+    }
+}
+
 pub struct WrappedHandler {
     pattern: RoutePattern,
     handler: Box<dyn Handler>,
@@ -260,7 +266,7 @@ mod tests {
             req.extensions()
                 .find::<RoutePattern>()
                 .unwrap()
-                .0
+                .pattern()
                 .to_string(),
         );
 
