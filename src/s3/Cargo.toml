@@ -17,5 +17,5 @@ path = "lib.rs"
 base64 = "0.13"
 chrono = "0.4"
 sha-1 = "0.9"
-hmac = "0.8"
+hmac = "0.10"
 reqwest = { version = "0.10", features = ["blocking"] }
