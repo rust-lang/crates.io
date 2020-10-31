@@ -15,7 +15,7 @@ pub struct RouteBuilder {
 }
 
 #[derive(Clone, Copy)]
-struct RoutePattern(&'static str);
+pub struct RoutePattern(&'static str);
 
 pub struct WrappedHandler {
     pattern: RoutePattern,
