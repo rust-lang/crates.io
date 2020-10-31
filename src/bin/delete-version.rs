@@ -5,9 +5,9 @@ use cargo_registry::{
     models::{Crate, Version},
     schema::versions,
 };
-use std::io::{self, prelude::*};
 
 use clap::Clap;
+use dialoguer::Confirm;
 use diesel::prelude::*;
 
 #[derive(Clap, Debug)]
@@ -39,14 +39,18 @@ fn delete(conn: &PgConnection) {
         .filter(versions::num.eq(&opts.version))
         .first(conn)
         .unwrap();
-    print!(
-        "Are you sure you want to delete {}#{} ({}) [y/N]: ",
+
+    let prompt = format!(
+        "Are you sure you want to delete {}#{} ({})?",
         opts.crate_name, opts.version, v.id
     );
-    io::stdout().flush().unwrap();
-    let mut line = String::new();
-    io::stdin().read_line(&mut line).unwrap();
-    if !line.starts_with('y') {
+    if !Confirm::new()
+        .with_prompt(prompt)
+        .default(false)
+        .wait_for_newline(true)
+        .interact()
+        .unwrap()
+    {
         return;
     }
 
@@ -55,11 +59,13 @@ fn delete(conn: &PgConnection) {
         .execute(conn)
         .unwrap();
 
-    print!("commit? [y/N]: ");
-    io::stdout().flush().unwrap();
-    let mut line = String::new();
-    io::stdin().read_line(&mut line).unwrap();
-    if !line.starts_with('y') {
+    if !Confirm::new()
+        .with_prompt("commit?")
+        .default(false)
+        .wait_for_newline(true)
+        .interact()
+        .unwrap()
+    {
         panic!("aborting transaction");
     }
 }
