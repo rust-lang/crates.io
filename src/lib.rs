@@ -22,6 +22,12 @@ pub struct WrappedHandler {
     handler: Box<dyn Handler>,
 }
 
+impl conduit::Handler for WrappedHandler {
+    fn call(&self, request: &mut dyn RequestExt) -> HandlerResult {
+        self.handler.call(request)
+    }
+}
+
 #[derive(Debug)]
 pub struct RouterError(String);
 
@@ -104,7 +110,7 @@ impl conduit::Handler for RouteBuilder {
             extensions.insert(m.params.clone());
         }
 
-        (*m.handler.handler).call(request)
+        (*m.handler).call(request)
     }
 }
 
