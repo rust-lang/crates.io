@@ -1,38 +1,55 @@
-//! Send a test event to pagerduty
-//!
-//! Usage:
-//!     cargo run --bin test-pagerduty event_type [description]
-//!
-//! Event type can be trigger, acknowledge, or resolve
-
 #![warn(clippy::all, rust_2018_idioms)]
 
 mod on_call;
 
-use std::env::args;
-
 use anyhow::Result;
+use clap::Clap;
+use failure::_core::str::FromStr;
+
+#[derive(Debug)]
+enum EventType {
+    Trigger,
+    Acknowledge,
+    Resolve,
+}
+
+impl FromStr for EventType {
+    type Err = &'static str;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        match value {
+            "trigger" => Ok(EventType::Trigger),
+            "acknowledge" => Ok(EventType::Acknowledge),
+            "resolve" => Ok(EventType::Resolve),
+            _ => Err("Event type must be trigger, acknowledge, or resolve"),
+        }
+    }
+}
+
+#[derive(Clap, Debug)]
+#[clap(name = "test-pagerduty", about = "Send a test event to pagerduty")]
+struct Opts {
+    #[clap(possible_values = &["trigger", "acknowledge", "resolve"])]
+    event_type: EventType,
+    description: Option<String>,
+}
 
 fn main() -> Result<()> {
-    let args = args().collect::<Vec<_>>();
+    let opts: Opts = Opts::parse();
 
-    let event_type = &*args[1];
-    let description = args.get(2).cloned();
-
-    let event = match event_type {
-        "trigger" => on_call::Event::Trigger {
+    let event = match opts.event_type {
+        EventType::Trigger => on_call::Event::Trigger {
             incident_key: Some("test".into()),
-            description: description.unwrap_or_else(|| "Test event".into()),
+            description: opts.description.unwrap_or_else(|| "Test event".into()),
         },
-        "acknowledge" => on_call::Event::Acknowledge {
+        EventType::Acknowledge => on_call::Event::Acknowledge {
             incident_key: "test".into(),
-            description,
+            description: opts.description,
         },
-        "resolve" => on_call::Event::Resolve {
+        EventType::Resolve => on_call::Event::Resolve {
             incident_key: "test".into(),
-            description,
+            description: opts.description,
         },
-        _ => panic!("Event type must be trigger, acknowledge, or resolve"),
     };
     event.send()
 }
