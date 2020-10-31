@@ -38,7 +38,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .map(Cow::Owned)
                     .expect("SENTRY_ENV_API must be set when using SENTRY_DSN_API"),
             );
-            opts.release = option_env!("CRATES_IO_GIT_COMMIT").map(Into::into);
+
+            opts.release = dotenv::var("HEROKU_SLUG_COMMIT").ok().map(Into::into);
 
             sentry::init(opts)
         });
