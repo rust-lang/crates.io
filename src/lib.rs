@@ -7,6 +7,9 @@
 #![warn(clippy::all, rust_2018_idioms)]
 #![warn(missing_debug_implementations, missing_copy_implementations)]
 
+#[cfg(test)]
+#[macro_use]
+extern crate claim;
 #[macro_use]
 extern crate derive_deref;
 #[macro_use]

@@ -99,7 +99,7 @@ fn show_by_crate_name_and_semver_no_published_by() {
     });
 
     let json: VersionResponse = anon.show_version("foo_vers_show_no_pb", "1.0.0");
-    assert!(json.version.published_by.is_none());
+    assert_none!(json.version.published_by);
 }
 
 #[test]

@@ -59,8 +59,8 @@ fn list_tokens() {
     let id = user.as_model().id;
     let tokens = app.db(|conn| {
         vec![
-            t!(ApiToken::insert(conn, id, "bar")),
-            t!(ApiToken::insert(conn, id, "baz")),
+            assert_ok!(ApiToken::insert(conn, id, "bar")),
+            assert_ok!(ApiToken::insert(conn, id, "baz")),
         ]
     });
 
@@ -84,8 +84,8 @@ fn list_tokens_exclude_revoked() {
     let id = user.as_model().id;
     let tokens = app.db(|conn| {
         vec![
-            t!(ApiToken::insert(conn, id, "bar")),
-            t!(ApiToken::insert(conn, id, "baz")),
+            assert_ok!(ApiToken::insert(conn, id, "bar")),
+            assert_ok!(ApiToken::insert(conn, id, "baz")),
         ]
     });
 
@@ -153,7 +153,7 @@ fn create_token_exceeded_tokens_per_user() {
     let id = user.as_model().id;
     app.db(|conn| {
         for i in 0..1000 {
-            t!(ApiToken::insert(conn, id, &format!("token {}", i)));
+            assert_ok!(ApiToken::insert(conn, id, &format!("token {}", i)));
         }
     });
     let json = user
@@ -172,7 +172,7 @@ fn create_token_success() {
     assert!(!json.api_token.token.is_empty());
 
     let tokens: Vec<ApiToken> =
-        app.db(|conn| t!(ApiToken::belonging_to(user.as_model()).load(conn)));
+        app.db(|conn| assert_ok!(ApiToken::belonging_to(user.as_model()).load(conn)));
     assert_eq!(tokens.len(), 1);
     assert_eq!(tokens[0].name, "bar");
     assert_eq!(tokens[0].revoked, false);
@@ -230,7 +230,7 @@ fn revoke_token_doesnt_revoke_other_users_token() {
 
     // List tokens for first user contains the token
     app.db(|conn| {
-        let tokens: Vec<ApiToken> = t!(ApiToken::belonging_to(user1).load(conn));
+        let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user1).load(conn));
         assert_eq!(tokens.len(), 1);
         assert_eq!(tokens[0].name, token.name);
     });
@@ -242,7 +242,7 @@ fn revoke_token_doesnt_revoke_other_users_token() {
 
     // List tokens for first user still contains the token
     app.db(|conn| {
-        let tokens: Vec<ApiToken> = t!(ApiToken::belonging_to(user1).load(conn));
+        let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user1).load(conn));
         assert_eq!(tokens.len(), 1);
         assert_eq!(tokens[0].name, token.name);
     });
@@ -254,7 +254,7 @@ fn revoke_token_success() {
 
     // List tokens contains the token
     app.db(|conn| {
-        let tokens: Vec<ApiToken> = t!(ApiToken::belonging_to(user.as_model()).load(conn));
+        let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user.as_model()).load(conn));
         assert_eq!(tokens.len(), 1);
         assert_eq!(tokens[0].name, token.as_model().name);
     });
@@ -292,13 +292,14 @@ fn using_token_updates_last_used_at() {
 
     anon.get(url).assert_forbidden();
     user.get::<EncodableMe>(url).good();
-    assert!(token.as_model().last_used_at.is_none());
+    assert_none!(token.as_model().last_used_at);
 
     // Use the token once
     token.get::<EncodableMe>("/api/v1/me").good();
 
-    let token: ApiToken = app.db(|conn| t!(ApiToken::belonging_to(user.as_model()).first(conn)));
-    assert!(token.last_used_at.is_some());
+    let token: ApiToken =
+        app.db(|conn| assert_ok!(ApiToken::belonging_to(user.as_model()).first(conn)));
+    assert_some!(token.last_used_at);
 
     // Would check that it updates the timestamp here, but the timestamp is
     // based on the start of the database transaction so it doesn't work in

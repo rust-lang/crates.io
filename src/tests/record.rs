@@ -65,7 +65,7 @@ impl Drop for Bomb {
             Ok(_) if thread::panicking() => {}
             Ok(None) => {}
             Ok(Some((data, file))) => {
-                t!(t!(File::create(&file)).write_all(&data));
+                assert_ok!(assert_ok!(File::create(&file)).write_all(&data));
             }
         }
     }
@@ -97,7 +97,7 @@ pub fn proxy() -> (String, Bomb) {
         Record::Replay(serde_json::from_slice(b"[]").unwrap())
     } else {
         let mut body = Vec::new();
-        t!(t!(File::open(&data)).read_to_end(&mut body));
+        assert_ok!(assert_ok!(File::open(&data)).read_to_end(&mut body));
         Record::Replay(serde_json::from_slice(&body).unwrap())
     };
 
@@ -107,7 +107,7 @@ pub fn proxy() -> (String, Bomb) {
     let (quittx, quitrx) = oneshot::channel();
 
     let thread = thread::spawn(move || {
-        let mut rt = t!(runtime::Builder::new()
+        let mut rt = assert_ok!(runtime::Builder::new()
             .basic_scheduler()
             .enable_io()
             .build());
@@ -118,9 +118,9 @@ pub fn proxy() -> (String, Bomb) {
             None
         };
 
-        let mut listener = t!(rt.block_on(TcpListener::bind("127.0.0.1:0")));
+        let mut listener = assert_ok!(rt.block_on(TcpListener::bind("127.0.0.1:0")));
         url_tx
-            .send(format!("http://{}", t!(listener.local_addr())))
+            .send(format!("http://{}", assert_ok!(listener.local_addr())))
             .unwrap();
 
         let record = Arc::new(Mutex::new(record));
@@ -139,7 +139,7 @@ pub fn proxy() -> (String, Bomb) {
         let record = record.lock().unwrap();
         match *record {
             Record::Capture(ref data, ref path) => {
-                let data = t!(serde_json::to_string_pretty(data));
+                let data = assert_ok!(serde_json::to_string_pretty(data));
                 Some((data.into_bytes(), path.clone()))
             }
             Record::Replay(..) => None,
@@ -294,7 +294,7 @@ fn replay_http(
 
     assert_eq!(req.uri().to_string(), exchange.request.uri);
     assert_eq!(req.method().to_string(), exchange.request.method);
-    t!(writeln!(
+    assert_ok!(writeln!(
         stdout,
         "expecting: {:?}",
         exchange.request.headers
@@ -304,7 +304,7 @@ fn replay_http(
             name.as_str().to_string(),
             value.to_str().unwrap().to_string(),
         );
-        t!(writeln!(stdout, "received: {:?}", pair));
+        assert_ok!(writeln!(stdout, "received: {:?}", pair));
         if name == "user-agent" {
             assert_eq!(value, "crates.io (https://crates.io)");
             continue;
@@ -386,7 +386,7 @@ impl GhUser {
             })
             .basic_auth(self.login, Some(password));
 
-        let response = t!(req
+        let response = assert_ok!(req
             .send()
             .and_then(reqwest::blocking::Response::error_for_status));
 
@@ -394,7 +394,7 @@ impl GhUser {
         struct Response {
             token: String,
         }
-        let resp: Response = t!(response.json());
+        let resp: Response = assert_ok!(response.json());
         File::create(&self.filename())
             .unwrap()
             .write_all(resp.token.as_bytes())

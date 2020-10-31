@@ -626,7 +626,7 @@ fn show() {
     assert_eq!(json.versions[0].id, versions[0]);
     assert_eq!(json.versions[0].krate, json.krate.id);
     assert_eq!(json.versions[0].num, "1.0.0");
-    assert!(json.versions[0].published_by.is_none());
+    assert_none!(&json.versions[0].published_by);
     let suffix = "/api/v1/crates/foo_show/1.0.0/download";
     assert!(
         json.versions[0].dl_path.ends_with(suffix),
@@ -688,7 +688,7 @@ fn versions() {
     assert_eq!(json.versions[0].num, "1.0.0");
     assert_eq!(json.versions[1].num, "0.5.1");
     assert_eq!(json.versions[2].num, "0.5.0");
-    assert!(json.versions[0].published_by.is_none());
+    assert_none!(&json.versions[0].published_by);
     assert_eq!(
         json.versions[1].published_by.as_ref().unwrap().login,
         user.gh_login
@@ -1182,7 +1182,7 @@ fn new_krate_git_upload() {
     app.run_pending_background_jobs();
 
     let crates = app.crates_from_index_head("3/f/fgt");
-    assert!(crates.len() == 1);
+    assert_eq!(crates.len(), 1);
     assert_eq!(crates[0].name, "fgt");
     assert_eq!(crates[0].vers, "1.0.0");
     assert!(crates[0].deps.is_empty());
@@ -1587,8 +1587,8 @@ fn yank_works_as_intended() {
     app.run_pending_background_jobs();
 
     let crates = app.crates_from_index_head("3/f/fyk");
-    assert!(crates.len() == 1);
-    assert!(!crates[0].yanked.unwrap());
+    assert_eq!(crates.len(), 1);
+    assert_some_eq!(crates[0].yanked, false);
 
     // make sure it's not yanked
     let json = anon.show_version("fyk", "1.0.0");
@@ -1598,8 +1598,8 @@ fn yank_works_as_intended() {
     token.yank("fyk", "1.0.0").good();
 
     let crates = app.crates_from_index_head("3/f/fyk");
-    assert!(crates.len() == 1);
-    assert!(crates[0].yanked.unwrap());
+    assert_eq!(crates.len(), 1);
+    assert_some_eq!(crates[0].yanked, true);
 
     let json = anon.show_version("fyk", "1.0.0");
     assert!(json.version.yanked);
@@ -1608,8 +1608,8 @@ fn yank_works_as_intended() {
     token.unyank("fyk", "1.0.0").good();
 
     let crates = app.crates_from_index_head("3/f/fyk");
-    assert!(crates.len() == 1);
-    assert!(!crates[0].yanked.unwrap());
+    assert_eq!(crates.len(), 1);
+    assert_some_eq!(crates[0].yanked, false);
 
     let json = anon.show_version("fyk", "1.0.0");
     assert!(!json.version.yanked);
@@ -1618,8 +1618,8 @@ fn yank_works_as_intended() {
     cookie.yank("fyk", "1.0.0").good();
 
     let crates = app.crates_from_index_head("3/f/fyk");
-    assert!(crates.len() == 1);
-    assert!(crates[0].yanked.unwrap());
+    assert_eq!(crates.len(), 1);
+    assert_some_eq!(crates[0].yanked, true);
 
     let json = anon.show_version("fyk", "1.0.0");
     assert!(json.version.yanked);
@@ -1628,8 +1628,8 @@ fn yank_works_as_intended() {
     cookie.unyank("fyk", "1.0.0").good();
 
     let crates = app.crates_from_index_head("3/f/fyk");
-    assert!(crates.len() == 1);
-    assert!(!crates[0].yanked.unwrap());
+    assert_eq!(crates.len(), 1);
+    assert_some_eq!(crates[0].yanked, false);
 
     let json = anon.show_version("fyk", "1.0.0");
     assert!(!json.version.yanked);
@@ -2118,7 +2118,7 @@ fn reverse_dependencies_includes_published_by_user_when_present() {
     assert_eq!(deps.versions.len(), 2);
 
     let c2_version = deps.versions.iter().find(|v| v.krate == "c2").unwrap();
-    assert!(c2_version.published_by.is_none());
+    assert_none!(&c2_version.published_by);
 
     let c3_version = deps.versions.iter().find(|v| v.krate == "c3").unwrap();
     assert_eq!(
@@ -2406,13 +2406,13 @@ fn new_krate_tarball_with_hard_links() {
     {
         let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, Compression::default()));
         let mut header = tar::Header::new_gnu();
-        t!(header.set_path("foo-1.1.0/bar"));
+        assert_ok!(header.set_path("foo-1.1.0/bar"));
         header.set_size(0);
         header.set_cksum();
         header.set_entry_type(tar::EntryType::hard_link());
-        t!(header.set_link_name("foo-1.1.0/another"));
-        t!(ar.append(&header, &[][..]));
-        t!(ar.finish());
+        assert_ok!(header.set_link_name("foo-1.1.0/another"));
+        assert_ok!(ar.append(&header, &[][..]));
+        assert_ok!(ar.finish());
     }
 
     let crate_to_publish = PublishBuilder::new("foo").version("1.1.0").tarball(tarball);

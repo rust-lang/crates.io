@@ -141,12 +141,12 @@ mod tests {
             "test",
             "test",
         );
-        assert!(result.is_err());
+        assert_err!(result);
     }
 
     #[test]
     fn sending_to_valid_email_succeeds() {
         let result = send_email("someone@example.com", "test", "test");
-        assert!(result.is_ok());
+        assert_ok!(result);
     }
 }

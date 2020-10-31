@@ -1,6 +1,8 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
 #[macro_use]
+extern crate claim;
+#[macro_use]
 extern crate diesel;
 #[macro_use]
 extern crate lazy_static;
@@ -32,15 +34,6 @@ use conduit::{header, Body};
 use conduit_test::MockRequest;
 use diesel::prelude::*;
 use reqwest::{blocking::Client, Proxy};
-
-macro_rules! t {
-    ($e:expr) => {
-        match $e {
-            Ok(e) => e,
-            Err(m) => panic!("{} failed with: {}", stringify!($e), m),
-        }
-    };
-}
 
 mod account_lock;
 mod authentication;
@@ -164,7 +157,7 @@ fn build_app(
     };
 
     let app = App::new(config, client);
-    t!(t!(app.primary_database.get()).begin_test_transaction());
+    assert_ok!(assert_ok!(app.primary_database.get()).begin_test_transaction());
     let app = Arc::new(app);
     let handler = cargo_registry::build_handler(Arc::clone(&app));
     (app, handler)

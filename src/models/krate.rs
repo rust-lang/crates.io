@@ -564,7 +564,7 @@ mod tests {
             repository: None,
             max_upload_size: None,
         };
-        assert!(krate.validate().is_err());
+        assert_err!(krate.validate());
     }
 
     #[test]
