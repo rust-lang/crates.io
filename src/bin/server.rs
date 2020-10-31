@@ -39,9 +39,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .expect("SENTRY_ENV_API must be set when using SENTRY_DSN_API"),
             );
 
-            if let Ok(commit) = dotenv::var("HEROKU_SLUG_COMMIT") {
-                opts.release = Some(commit.into());
-            }
+            opts.release = dotenv::var("HEROKU_SLUG_COMMIT").ok().map(Into::into);
 
             sentry::init(opts)
         });
