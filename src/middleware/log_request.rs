@@ -11,7 +11,7 @@ use std::time::Instant;
 
 const SLOW_REQUEST_THRESHOLD_MS: u64 = 1000;
 
-const FILTERED_HEADERS: [&str; 3] = ["Authorization", "Cookie", "X-Real-Ip"];
+const FILTERED_HEADERS: &[&str] = &["Authorization", "Cookie", "X-Real-Ip", "X-Forwarded-For"];
 
 #[derive(Default)]
 pub(super) struct LogRequests();
