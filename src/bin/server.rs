@@ -39,9 +39,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .expect("SENTRY_ENV_API must be set when using SENTRY_DSN_API"),
             );
 
-            if let Some(commit) = option_env!("CRATES_IO_GIT_COMMIT") {
-                opts.release = Some(commit.into());
-            } else if let Ok(commit) = dotenv::var("HEROKU_SLUG_COMMIT") {
+            if let Ok(commit) = dotenv::var("HEROKU_SLUG_COMMIT") {
                 opts.release = Some(commit.into());
             }
 
