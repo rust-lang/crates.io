@@ -14,7 +14,7 @@ pub struct RouteBuilder {
     routers: HashMap<Method, Router<WrappedHandler>>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 struct RoutePattern(&'static str);
 
 pub struct WrappedHandler {
@@ -100,7 +100,7 @@ impl conduit::Handler for RouteBuilder {
 
         {
             let extensions = request.mut_extensions();
-            extensions.insert(m.handler.pattern.clone());
+            extensions.insert(m.handler.pattern);
             extensions.insert(m.params.clone());
         }
 
