@@ -1,10 +1,3 @@
-// Purge all references to a crate's version from the database.
-//
-// Please be super sure you want to do this before running this.
-//
-// Usage:
-//      cargo run --bin delete-version crate-name version-number
-
 #![warn(clippy::all, rust_2018_idioms)]
 
 use cargo_registry::{
@@ -12,12 +5,22 @@ use cargo_registry::{
     models::{Crate, Version},
     schema::versions,
 };
-use std::{
-    env,
-    io::{self, prelude::*},
-};
+use std::io::{self, prelude::*};
 
+use clap::Clap;
 use diesel::prelude::*;
+
+#[derive(Clap, Debug)]
+#[clap(
+    name = "delete-version",
+    about = "Purge all references to a crate's version from the database.\n\nPlease be super sure you want to do this before running this."
+)]
+struct Opts {
+    /// Name of the crate
+    crate_name: String,
+    /// Version number that should be deleted
+    version: String,
+}
 
 fn main() {
     let conn = db::connect_now().unwrap();
@@ -29,29 +32,16 @@ fn main() {
 }
 
 fn delete(conn: &PgConnection) {
-    let name = match env::args().nth(1) {
-        None => {
-            println!("needs a crate-name argument");
-            return;
-        }
-        Some(s) => s,
-    };
-    let version = match env::args().nth(2) {
-        None => {
-            println!("needs a version argument");
-            return;
-        }
-        Some(s) => s,
-    };
+    let opts: Opts = Opts::parse();
 
-    let krate: Crate = Crate::by_name(&name).first(conn).unwrap();
+    let krate: Crate = Crate::by_name(&opts.crate_name).first(conn).unwrap();
     let v: Version = Version::belonging_to(&krate)
-        .filter(versions::num.eq(&version))
+        .filter(versions::num.eq(&opts.version))
         .first(conn)
         .unwrap();
     print!(
         "Are you sure you want to delete {}#{} ({}) [y/N]: ",
-        name, version, v.id
+        opts.crate_name, opts.version, v.id
     );
     io::stdout().flush().unwrap();
     let mut line = String::new();
