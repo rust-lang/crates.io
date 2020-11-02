@@ -1,14 +1,11 @@
 <div local-class="crate-row" data-test-crate-row ...attributes>
   <div local-class="description-box">
     <div>
-      <LinkTo
-        @route="crate"
-        @model={{@crate.id}}
-        local-class="name"
-        data-test-crate-link
-      >
-        {{ @crate.name }}
-      </LinkTo>
+      {{#let (link "crate" @crate.id) as |l|}}
+        <a href={{l.url}} local-class="name" data-test-crate-link {{on "click" l.transitionTo}}>
+          {{@crate.name}}
+        </a>
+      {{/let}}
       <span local-class="version" data-test-version>v{{@crate.max_version}}</span>
       <CopyButton
         @copyText='{{@crate.name}} = "{{@crate.max_version}}"'
