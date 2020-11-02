@@ -1,8 +1,3 @@
-// Iterates over every crate versions ever uploaded and (re-)renders their
-// readme using the readme renderer from the cargo_registry crate.
-//
-// Warning: this can take a lot of time.
-
 #![warn(clippy::all, rust_2018_idioms)]
 
 #[macro_use]
@@ -18,42 +13,45 @@ use cargo_registry::{
 use std::{io::Read, path::Path, thread};
 
 use chrono::{TimeZone, Utc};
+use clap::Clap;
 use diesel::{dsl::any, prelude::*};
-use docopt::Docopt;
 use flate2::read::GzDecoder;
 use reqwest::{blocking::Client, header};
 use tar::{self, Archive};
 
 const CACHE_CONTROL_README: &str = "public,max-age=604800";
-const DEFAULT_PAGE_SIZE: usize = 25;
-const USAGE: &str = "
-Usage: render-readmes [options]
-       render-readmes --help
 
-Options:
-    -h, --help         Show this message.
-    --page-size NUM    How many versions should be queried and processed at a time.
-    --older-than DATE  Only rerender readmes that are older than this date.
-    --crate NAME       Only rerender readmes for the specified crate.
-";
+#[derive(Clap, Debug)]
+#[clap(
+    name = "render-readmes",
+    about = "Iterates over every crate versions ever uploaded and (re-)renders their \
+        readme using the readme renderer from the cargo_registry crate.\n\
+        \n\
+        Warning: this can take a lot of time."
+)]
+struct Opts {
+    /// How many versions should be queried and processed at a time.
+    #[clap(long, default_value = "25")]
+    page_size: usize,
 
-#[derive(Deserialize)]
-struct Args {
-    flag_page_size: Option<usize>,
-    flag_older_than: Option<String>,
-    flag_crate: Option<String>,
+    /// Only rerender readmes that are older than this date.
+    #[clap(long)]
+    older_than: Option<String>,
+
+    /// Only rerender readmes for the specified crate.
+    #[clap(long = "crate")]
+    crate_name: Option<String>,
 }
 
 fn main() {
-    let args: Args = Docopt::new(USAGE)
-        .and_then(|d| d.deserialize())
-        .unwrap_or_else(|e| e.exit());
+    let opts: Opts = Opts::parse();
+
     let config = Config::default();
     let conn = db::connect_now().unwrap();
 
     let start_time = Utc::now();
 
-    let older_than = if let Some(ref time) = args.flag_older_than {
+    let older_than = if let Some(ref time) = opts.older_than {
         Utc.datetime_from_str(time, "%Y-%m-%d %H:%M:%S")
             .expect("Could not parse --older-than argument as a time")
     } else {
@@ -75,7 +73,7 @@ fn main() {
         .select(versions::id)
         .into_boxed();
 
-    if let Some(crate_name) = args.flag_crate {
+    if let Some(crate_name) = opts.crate_name {
         println!("Rendering readmes for {}", crate_name);
         query = query.filter(crates::name.eq(crate_name));
     }
@@ -85,7 +83,7 @@ fn main() {
     let total_versions = version_ids.len();
     println!("Rendering {} versions", total_versions);
 
-    let page_size = args.flag_page_size.unwrap_or(DEFAULT_PAGE_SIZE);
+    let page_size = opts.page_size;
 
     let total_pages = total_versions / page_size;
     let total_pages = if total_versions % page_size == 0 {
