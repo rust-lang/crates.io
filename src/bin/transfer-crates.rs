@@ -8,8 +8,9 @@ use cargo_registry::{
 use std::process::exit;
 
 use clap::Clap;
-use dialoguer::Confirm;
 use diesel::prelude::*;
+
+mod dialoguer;
 
 #[derive(Clap, Debug)]
 #[clap(
@@ -87,13 +88,7 @@ fn transfer(conn: &PgConnection) {
 }
 
 fn get_confirm(msg: &str) {
-    if !Confirm::new()
-        .with_prompt(msg)
-        .default(false)
-        .wait_for_newline(true)
-        .interact()
-        .unwrap()
-    {
+    if !dialoguer::confirm(msg) {
         exit(0);
     }
 }

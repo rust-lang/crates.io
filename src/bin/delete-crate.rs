@@ -3,8 +3,9 @@
 use cargo_registry::{db, models::Crate, schema::crates};
 
 use clap::Clap;
-use dialoguer::Confirm;
 use diesel::prelude::*;
+
+mod dialoguer;
 
 #[derive(Clap, Debug)]
 #[clap(
@@ -34,13 +35,7 @@ fn delete(conn: &PgConnection) {
         "Are you sure you want to delete {} ({})?",
         opts.crate_name, krate.id
     );
-    if !Confirm::new()
-        .with_prompt(prompt)
-        .default(false)
-        .wait_for_newline(true)
-        .interact()
-        .unwrap()
-    {
+    if !dialoguer::confirm(&prompt) {
         return;
     }
 
@@ -50,13 +45,7 @@ fn delete(conn: &PgConnection) {
         .unwrap();
     println!("  {} deleted", n);
 
-    if !Confirm::new()
-        .with_prompt("commit?")
-        .default(false)
-        .wait_for_newline(true)
-        .interact()
-        .unwrap()
-    {
+    if !dialoguer::confirm("commit?") {
         panic!("aborting transaction");
     }
 }
