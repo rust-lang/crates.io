@@ -26,6 +26,12 @@
 #   `@`, `:`, or `.`. They should be all lowercase.
 #
 
+[accessibility]
+name = "Accessibility"
+description = """
+Crates that implement features for the convenience of disabled people. \
+"""
+
 [algorithms]
 name = "Algorithms"
 description = """
