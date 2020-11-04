@@ -11,11 +11,14 @@
   />
 </div>
 
-<div local-class="list">
-  {{#each this.model as |dependency|}}
-    <div local-class="row">
+<div local-class="list" data-test-list>
+  {{#each this.model as |dependency index|}}
+    <div local-class="row" data-test-row={{index}}>
       <div>
-        <LinkTo @route="crate" @model={{dependency.version.crateName}}>{{dependency.version.crateName}}</LinkTo> requires {{dependency.req}}
+        <LinkTo @route="crate" @model={{dependency.version.crateName}} data-test-crate-name>
+          {{dependency.version.crateName}}
+        </LinkTo>
+        requires {{dependency.req}}
       </div>
       <div local-class="stats downloads">
         {{svg-jar "download-arrow" local-class="download-icon"}}
