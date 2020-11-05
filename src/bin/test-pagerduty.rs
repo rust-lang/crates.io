@@ -1,10 +1,10 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
-mod on_call;
-
 use anyhow::Result;
 use clap::Clap;
 use failure::_core::str::FromStr;
+
+use cargo_registry::admin::on_call;
 
 #[derive(Debug)]
 enum EventType {

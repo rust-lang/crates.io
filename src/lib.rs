@@ -30,6 +30,7 @@ use jemallocator::Jemalloc;
 #[global_allocator]
 static ALLOC: Jemalloc = Jemalloc;
 
+pub mod admin;
 mod app;
 pub mod background_jobs;
 pub mod boot;

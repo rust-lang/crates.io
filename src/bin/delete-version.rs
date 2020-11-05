@@ -1,6 +1,7 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
 use cargo_registry::{
+    admin::dialoguer,
     db,
     models::{Crate, Version},
     schema::versions,
@@ -8,8 +9,6 @@ use cargo_registry::{
 
 use clap::Clap;
 use diesel::prelude::*;
-
-mod dialoguer;
 
 #[derive(Clap, Debug)]
 #[clap(

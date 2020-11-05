@@ -6,10 +6,8 @@
 
 #![warn(clippy::all, rust_2018_idioms)]
 
-mod on_call;
-
 use anyhow::Result;
-use cargo_registry::{db, schema::*};
+use cargo_registry::{admin::on_call, db, schema::*};
 use diesel::prelude::*;
 
 fn main() -> Result<()> {

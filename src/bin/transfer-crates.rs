@@ -1,6 +1,7 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
 use cargo_registry::{
+    admin::dialoguer,
     db,
     models::{Crate, OwnerKind, User},
     schema::{crate_owners, crates, users},
@@ -9,8 +10,6 @@ use std::process::exit;
 
 use clap::Clap;
 use diesel::prelude::*;
-
-mod dialoguer;
 
 #[derive(Clap, Debug)]
 #[clap(

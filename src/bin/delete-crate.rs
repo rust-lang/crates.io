@@ -1,11 +1,9 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
-use cargo_registry::{db, models::Crate, schema::crates};
+use cargo_registry::{admin::dialoguer, db, models::Crate, schema::crates};
 
 use clap::Clap;
 use diesel::prelude::*;
-
-mod dialoguer;
 
 #[derive(Clap, Debug)]
 #[clap(
