@@ -2288,14 +2288,14 @@
   resolved "https://registry.yarnpkg.com/@xtuc/long/-/long-4.2.2.tgz#d291c6a4e97989b5c61d9acf396ae4fe133a718d"
   integrity sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==
 
-"@zestia/ember-auto-focus@4.1.4":
-  version "4.1.4"
-  resolved "https://registry.yarnpkg.com/@zestia/ember-auto-focus/-/ember-auto-focus-4.1.4.tgz#9c8511b313837714006b5cda33c51bc763102587"
-  integrity sha512-YCHG/Y6Cm2Ef9jkoPAeSyyhjxEoBSoJMahMhGrNhdwrbBPL/Gy87OFCzDyY8WaLTajGnCEJfDOVx3GcLdMQoFg==
+"@zestia/ember-auto-focus@4.1.5":
+  version "4.1.5"
+  resolved "https://registry.yarnpkg.com/@zestia/ember-auto-focus/-/ember-auto-focus-4.1.5.tgz#52c0b8efc56fbfcc9ab0e16fff716b86b02fd048"
+  integrity sha512-CNjqVLLpJF2eYWwWV5AjQWQDBnDE6HQPGHffMzJldfsGDEFsoW4ibwaVeA22Murcq1k8bwe3LxZVJzhOuMNo2w==
   dependencies:
-    ember-cli-babel "^7.22.1"
+    ember-cli-babel "^7.23.0"
     ember-cli-htmlbars "^5.3.1"
-    ember-modifier "^2.1.0"
+    ember-modifier "^2.1.1"
 
 abab@^2.0.0, abab@^2.0.3:
   version "2.0.5"
@@ -6922,7 +6922,7 @@ ember-modifier-manager-polyfill@^1.1.0, ember-modifier-manager-polyfill@^1.2.0:
     ember-cli-version-checker "^2.1.2"
     ember-compatibility-helpers "^1.2.0"
 
-ember-modifier@2.1.1, ember-modifier@^2.1.0:
+ember-modifier@2.1.1, ember-modifier@^2.1.0, ember-modifier@^2.1.1:
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/ember-modifier/-/ember-modifier-2.1.1.tgz#aa3a12e2d6cf1622f774f3f1eab4880982a43fa9"
   integrity sha512-g9mcpFWgw5lgNU40YNf0USNWqoGTJ+EqjDQKjm7556gaRNDeGnLylFKqx9O3opwLHEt6ZODnRDy9U0S5YEMREg==
