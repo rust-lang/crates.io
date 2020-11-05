@@ -44,7 +44,10 @@ struct Opts {
 
 fn main() {
     let opts: Opts = Opts::parse();
+    run(opts)
+}
 
+fn run(opts: Opts) {
     let config = Config::default();
     let conn = db::connect_now().unwrap();
 

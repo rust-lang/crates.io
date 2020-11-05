@@ -17,14 +17,17 @@ struct Opts {
 }
 
 fn main() {
-    let conn = db::connect_now().unwrap();
-    conn.transaction(|| update(&conn)).unwrap();
+    let opts: Opts = Opts::parse();
+    run(opts)
 }
 
-fn update(conn: &PgConnection) -> QueryResult<()> {
-    use diesel::dsl::*;
+fn run(opts: Opts) {
+    let conn = db::connect_now().unwrap();
+    conn.transaction(|| update(opts, &conn)).unwrap();
+}
 
-    let opts: Opts = Opts::parse();
+fn update(opts: Opts, conn: &PgConnection) -> QueryResult<()> {
+    use diesel::dsl::*;
 
     for id in opts.version_ids {
         let mut rng = thread_rng();

@@ -24,17 +24,20 @@ struct Opts {
 }
 
 fn main() {
+    let opts: Opts = Opts::parse();
+    run(opts)
+}
+
+fn run(opts: Opts) {
     let conn = db::connect_now().unwrap();
     conn.transaction::<_, diesel::result::Error, _>(|| {
-        transfer(&conn);
+        transfer(opts, &conn);
         Ok(())
     })
     .unwrap()
 }
 
-fn transfer(conn: &PgConnection) {
-    let opts: Opts = Opts::parse();
-
+fn transfer(opts: Opts, conn: &PgConnection) {
     let from: User = users::table
         .filter(users::gh_login.eq(opts.from_user))
         .first(conn)

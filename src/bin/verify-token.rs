@@ -14,9 +14,12 @@ struct Opts {
     api_token: String,
 }
 
-fn main() -> AppResult<()> {
+fn main() {
     let opts: Opts = Opts::parse();
+    run(opts).unwrap()
+}
 
+fn run(opts: Opts) -> AppResult<()> {
     let conn = db::connect_now()?;
     let user = User::find_by_api_token(&conn, &opts.api_token)?;
     println!("The token belongs to user {}", user.gh_login);

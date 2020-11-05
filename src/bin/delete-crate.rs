@@ -17,17 +17,20 @@ struct Opts {
 }
 
 fn main() {
+    let opts: Opts = Opts::parse();
+    run(opts)
+}
+
+fn run(opts: Opts) {
     let conn = db::connect_now().unwrap();
     conn.transaction::<_, diesel::result::Error, _>(|| {
-        delete(&conn);
+        delete(opts, &conn);
         Ok(())
     })
     .unwrap()
 }
 
-fn delete(conn: &PgConnection) {
-    let opts: Opts = Opts::parse();
-
+fn delete(opts: Opts, conn: &PgConnection) {
     let krate: Crate = Crate::by_name(&opts.crate_name).first(conn).unwrap();
 
     let prompt = format!(

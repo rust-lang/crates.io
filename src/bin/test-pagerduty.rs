@@ -34,9 +34,12 @@ struct Opts {
     description: Option<String>,
 }
 
-fn main() -> Result<()> {
+fn main() {
     let opts: Opts = Opts::parse();
+    run(opts).unwrap()
+}
 
+fn run(opts: Opts) -> Result<()> {
     let event = match opts.event_type {
         EventType::Trigger => on_call::Event::Trigger {
             incident_key: Some("test".into()),
