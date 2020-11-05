@@ -13,7 +13,8 @@ use diesel::prelude::*;
 #[derive(Clap, Debug)]
 #[clap(
     name = "delete-version",
-    about = "Purge all references to a crate's version from the database.\n\nPlease be super sure you want to do this before running this."
+    about = "Purge all references to a crate's version from the database.",
+    after_help = "Please be super sure you want to do this before running this!"
 )]
 struct Opts {
     /// Name of the crate

@@ -25,9 +25,8 @@ const CACHE_CONTROL_README: &str = "public,max-age=604800";
 #[clap(
     name = "render-readmes",
     about = "Iterates over every crate versions ever uploaded and (re-)renders their \
-        readme using the readme renderer from the cargo_registry crate.\n\
-        \n\
-        Warning: this can take a lot of time."
+        readme using the readme renderer from the cargo_registry crate.",
+    after_help = "Warning: this can take a lot of time."
 )]
 struct Opts {
     /// How many versions should be queried and processed at a time.
