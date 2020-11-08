@@ -90,7 +90,7 @@
     "ember-load-initializers": "2.1.2",
     "ember-maybe-import-regenerator": "0.1.6",
     "ember-modifier": "2.1.1",
-    "ember-moment": "8.0.0",
+    "ember-moment": "8.0.1",
     "ember-page-title": "6.0.3",
     "ember-prism": "0.9.0",
     "ember-promise-helpers": "1.0.9",
