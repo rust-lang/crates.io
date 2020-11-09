@@ -6381,10 +6381,10 @@ ember-cli-lodash-subset@2.0.1, ember-cli-lodash-subset@^2.0.1:
   resolved "https://registry.yarnpkg.com/ember-cli-lodash-subset/-/ember-cli-lodash-subset-2.0.1.tgz#20cb68a790fe0fde2488ddfd8efbb7df6fe766f2"
   integrity sha1-IMtop5D+D94kiN39jvu332/nZvI=
 
-ember-cli-meta-tags@6.1.1:
-  version "6.1.1"
-  resolved "https://registry.yarnpkg.com/ember-cli-meta-tags/-/ember-cli-meta-tags-6.1.1.tgz#14bd3e2bd0b10893c35c29db7c03f3cbd4ee2c9b"
-  integrity sha512-EFL4W34IFHONlEofpUe0Go67Mz+uGF9ocET8jKs1IbXgdhGnBhzqGdRo5IlexrSfsiBF/sxEMVZTva6a+pz0sg==
+ember-cli-meta-tags@6.1.2:
+  version "6.1.2"
+  resolved "https://registry.yarnpkg.com/ember-cli-meta-tags/-/ember-cli-meta-tags-6.1.2.tgz#3984fdc221ac84ff9c3677b656a920f1ff11dc25"
+  integrity sha512-KPdf4ZXS0BsotdkBT+BYUyaecFJLy67hjH/5LiDWDG6qwLppDkePqkrdRbEzcwLgrVXcBAMFScX7cAq8/ceYnw==
   dependencies:
     ember-cli-babel "~7.17.2"
     ember-cli-head "^1.0.0"
