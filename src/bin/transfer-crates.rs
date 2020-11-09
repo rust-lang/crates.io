@@ -5,13 +5,12 @@ use cargo_registry::{
     models::{Crate, OwnerKind, User},
     schema::{crate_owners, crates, users},
 };
-use std::{
-    io::{self, prelude::*},
-    process::exit,
-};
+use std::process::exit;
 
 use clap::Clap;
 use diesel::prelude::*;
+
+mod dialoguer;
 
 #[derive(Clap, Debug)]
 #[clap(
@@ -59,11 +58,11 @@ fn transfer(conn: &PgConnection) {
         get_confirm("continue?");
     }
 
-    println!(
-        "Are you sure you want to transfer crates from {} to {}",
+    let prompt = format!(
+        "Are you sure you want to transfer crates from {} to {}?",
         from.gh_login, to.gh_login
     );
-    get_confirm("continue");
+    get_confirm(&prompt);
 
     let crate_owners = crate_owners::table
         .filter(crate_owners::owner_id.eq(from.id))
@@ -89,11 +88,7 @@ fn transfer(conn: &PgConnection) {
 }
 
 fn get_confirm(msg: &str) {
-    print!("{} [y/N]: ", msg);
-    io::stdout().flush().unwrap();
-    let mut line = String::new();
-    io::stdin().read_line(&mut line).unwrap();
-    if !line.starts_with('y') {
+    if !dialoguer::confirm(msg) {
         exit(0);
     }
 }
