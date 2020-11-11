@@ -79,6 +79,7 @@ semver = { version = "0.10", features = ["diesel", "serde"] }
 sentry = "0.20.1"
 serde = { version = "1.0.0", features = ["derive"] }
 serde_json = "1.0.0"
+serde_urlencoded = "0.7.0"
 sha2 = "0.9"
 swirl = { git = "https://github.com/sgrif/swirl.git", rev = "e87cf37" }
 tar = "0.4.16"

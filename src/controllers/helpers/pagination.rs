@@ -5,7 +5,7 @@ use diesel::prelude::*;
 use diesel::query_builder::*;
 use diesel::query_dsl::LoadQuery;
 use diesel::sql_types::BigInt;
-use indexmap::IndexMap;
+use serde::Deserialize;
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum Page {
@@ -31,34 +31,30 @@ pub(crate) struct PaginationOptions {
     pub(crate) per_page: u32,
 }
 
+#[derive(Deserialize, Debug, Clone, Copy)]
+struct QueryParams {
+    page: Option<u32>,
+    per_page: Option<u32>,
+}
+
 impl PaginationOptions {
     pub(crate) fn new(query: &str) -> AppResult<Self> {
         const DEFAULT_PER_PAGE: u32 = 10;
         const MAX_PER_PAGE: u32 = 100;
 
-        let params: IndexMap<String, String> = url::form_urlencoded::parse(query.as_bytes())
-            .into_owned()
-            .collect();
+        let params =
+            serde_urlencoded::from_str::<QueryParams>(query).map_err(|e| bad_request(&e))?;
 
-        let page = match params.get("page") {
-            Some(page) => {
-                let numeric_page = page.parse::<u32>().map_err(|e| bad_request(&e))?;
-                if numeric_page < 1 {
-                    return Err(bad_request(&format_args!(
-                        "page indexing starts from 1, page {} is invalid",
-                        numeric_page,
-                    )));
-                }
-
-                Some(numeric_page)
+        if let Some(page) = params.page {
+            if page < 1 {
+                return Err(bad_request(&format_args!(
+                    "page indexing starts from 1, page {} is invalid",
+                    page,
+                )));
             }
-            None => None,
-        };
+        }
 
-        let per_page = params
-            .get("per_page")
-            .map(|s| s.parse().map_err(|e| bad_request(&e)))
-            .unwrap_or(Ok(DEFAULT_PER_PAGE))?;
+        let per_page = params.per_page.unwrap_or(DEFAULT_PER_PAGE);
 
         if per_page > MAX_PER_PAGE {
             return Err(bad_request(&format_args!(
@@ -68,7 +64,7 @@ impl PaginationOptions {
         }
 
         Ok(Self {
-            page: Page::new(page),
+            page: Page::new(params.page),
             per_page,
         })
     }
@@ -193,7 +189,6 @@ mod tests {
     use super::PaginationOptions;
 
     use conduit::StatusCode;
-    use indexmap::IndexMap;
 
     #[test]
     fn page_must_be_a_number() {
