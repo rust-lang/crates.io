@@ -3,6 +3,7 @@
 use diesel::dsl::*;
 use diesel_full_text_search::*;
 use indexmap::IndexMap;
+use serde::Deserialize;
 
 use crate::controllers::cargo_prelude::*;
 use crate::controllers::helpers::Paginate;
@@ -14,6 +15,20 @@ use crate::views::EncodableCrate;
 
 use crate::controllers::helpers::pagination::Paginated;
 use crate::models::krate::{canon_crate_name, ALL_COLUMNS};
+
+#[derive(Deserialize, Debug, Clone, Copy)]
+struct QueryParams<'a> {
+    all_keywords: Option<&'a str>,
+    category: Option<&'a str>,
+    following: Option<&'a str>,
+    include_yanked: Option<&'a str>,
+    keyword: Option<&'a str>,
+    letter: Option<&'a str>,
+    q: Option<&'a str>,
+    sort: Option<&'a str>,
+    team_id: Option<i32>,
+    user_id: Option<i32>,
+}
 
 /// Handles the `GET /crates` route.
 /// Returns a list of crates. Called in a variety of scenarios in the
@@ -43,12 +58,12 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
     // if the "following" param is set.
     let authenticated_user: AppResult<AuthenticatedUser> = req.authenticate();
     let conn = req.db_read_only()?;
-    let params = req.query();
-    let sort = params.get("sort").map(|s| &**s);
-    let include_yanked = params
-        .get("include_yanked")
-        .map(|s| s == "yes")
-        .unwrap_or(true);
+
+    let params = serde_urlencoded::from_str::<QueryParams<'_>>(req.query_string().unwrap_or(""))
+        .map_err(|e| bad_request(&e))?;
+
+    let sort = params.sort;
+    let include_yanked = params.include_yanked.map(|s| s == "yes").unwrap_or(true);
 
     let selection = (
         ALL_COLUMNS,
@@ -60,9 +75,9 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
         .select(selection)
         .into_boxed();
 
-    if let Some(q_string) = params.get("q") {
+    if let Some(q_string) = params.q {
         if !q_string.is_empty() {
-            let sort = params.get("sort").map(|s| &**s).unwrap_or("relevance");
+            let sort = params.sort.unwrap_or("relevance");
 
             let q = sql::<TsQuery>("plainto_tsquery('english', ")
                 .bind::<Text, _>(q_string)
@@ -87,7 +102,7 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
         }
     }
 
-    if let Some(cat) = params.get("category") {
+    if let Some(cat) = params.category {
         query = query.filter(
             crates::id.eq_any(
                 crates_categories::table
@@ -102,7 +117,7 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
         );
     }
 
-    if let Some(kws) = params.get("all_keywords") {
+    if let Some(kws) = params.all_keywords {
         use diesel::sql_types::Array;
         sql_function!(#[aggregate] fn array_agg<T>(x: T) -> Array<T>);
 
@@ -123,7 +138,7 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
                 names.into_sql::<Array<Text>>(),
             ),
         );
-    } else if let Some(kw) = params.get("keyword") {
+    } else if let Some(kw) = params.keyword {
         query = query.filter(
             crates::id.eq_any(
                 crates_keywords::table
@@ -132,7 +147,7 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
                     .filter(crate::lower(keywords::keyword).eq(crate::lower(kw))),
             ),
         );
-    } else if let Some(letter) = params.get("letter") {
+    } else if let Some(letter) = params.letter {
         let pattern = format!(
             "{}%",
             letter
@@ -143,7 +158,7 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
                 .collect::<String>()
         );
         query = query.filter(canon_crate_name(crates::name).like(pattern));
-    } else if let Some(user_id) = params.get("user_id").and_then(|s| s.parse::<i32>().ok()) {
+    } else if let Some(user_id) = params.user_id {
         query = query.filter(
             crates::id.eq_any(
                 CrateOwner::by_owner_kind(OwnerKind::User)
@@ -151,7 +166,7 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
                     .filter(crate_owners::owner_id.eq(user_id)),
             ),
         );
-    } else if let Some(team_id) = params.get("team_id").and_then(|s| s.parse::<i32>().ok()) {
+    } else if let Some(team_id) = params.team_id {
         query = query.filter(
             crates::id.eq_any(
                 CrateOwner::by_owner_kind(OwnerKind::Team)
@@ -159,7 +174,7 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
                     .filter(crate_owners::owner_id.eq(team_id)),
             ),
         );
-    } else if params.get("following").is_some() {
+    } else if params.following.is_some() {
         let user_id = authenticated_user?.user_id();
         query = query.filter(
             crates::id.eq_any(
