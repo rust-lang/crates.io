@@ -109,16 +109,14 @@ impl<T> Paginated<T> {
     }
 
     pub(crate) fn prev_page_params(&self) -> Option<IndexMap<String, String>> {
-        if let Page::Numeric(1) | Page::Unspecified = self.options.page {
-            return None;
-        }
-
-        let mut opts = IndexMap::new();
         match self.options.page {
-            Page::Numeric(n) => opts.insert("page".into(), (n - 1).to_string()),
-            Page::Unspecified => unreachable!(),
-        };
-        Some(opts)
+            Page::Numeric(1) | Page::Unspecified => None,
+            Page::Numeric(n) => {
+                let mut opts = IndexMap::new();
+                opts.insert("page".into(), (n - 1).to_string());
+                Some(opts)
+            }
+        }
     }
 
     pub(crate) fn iter(&self) -> impl Iterator<Item = &T> {
