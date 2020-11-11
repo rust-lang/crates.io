@@ -72,7 +72,7 @@ pub fn updates(req: &mut dyn RequestExt) -> EndpointResult {
         ))
         .paginate(&req.query())?
         .load(&*conn)?;
-    let more = data.next_page_params().is_some();
+    let more = data.next_page().is_some();
     let versions = data.iter().map(|(v, _, _)| v).cloned().collect::<Vec<_>>();
     let data = data
         .into_iter()
