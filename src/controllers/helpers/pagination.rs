@@ -177,7 +177,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::{Page, PaginationOptions};
+    use super::PaginationOptions;
 
     use conduit::StatusCode;
     use indexmap::IndexMap;
@@ -186,7 +186,10 @@ mod tests {
     fn page_must_be_a_number() {
         let mut params = IndexMap::new();
         params.insert(String::from("page"), String::from("not a number"));
-        let page_error = Page::new(&params).unwrap_err().response().unwrap();
+        let page_error = PaginationOptions::new(&params)
+            .unwrap_err()
+            .response()
+            .unwrap();
 
         assert_eq!(page_error.status(), StatusCode::BAD_REQUEST);
     }
