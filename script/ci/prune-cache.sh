@@ -12,7 +12,7 @@ du -hs target/debug
 
 crate_name="cargo-registry"
 test_name="all"
-bin_names="background-worker crates-admin delete-crate delete-version enqueue-job monitor populate render-readmes server test-pagerduty transfer-crates verify-token"
+bin_names="background-worker crates-admin enqueue-job monitor server"
 
 normalized_crate_name=${crate_name//-/_}
 rm -vf target/debug/$normalized_crate_name-*
