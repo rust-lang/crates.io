@@ -95,28 +95,38 @@ impl<T> Paginated<T> {
         )
     }
 
-    pub(crate) fn next_page_params(&self) -> Option<IndexMap<String, String>> {
+    pub(crate) fn next_page(&self) -> Option<u32> {
         if self.records_and_total.len() < self.options.per_page as usize {
             return None;
         }
 
-        let mut opts = IndexMap::new();
         match self.options.page {
-            Page::Numeric(n) => opts.insert("page".into(), (n + 1).to_string()),
-            Page::Unspecified => opts.insert("page".into(), 2.to_string()),
-        };
-        Some(opts)
+            Page::Numeric(n) => Some(n + 1),
+            Page::Unspecified => Some(2),
+        }
+    }
+
+    pub(crate) fn prev_page(&self) -> Option<u32> {
+        match self.options.page {
+            Page::Numeric(1) | Page::Unspecified => None,
+            Page::Numeric(n) => Some(n - 1),
+        }
+    }
+
+    pub(crate) fn next_page_params(&self) -> Option<IndexMap<String, String>> {
+        self.next_page().map(|page| {
+            let mut opts = IndexMap::new();
+            opts.insert("page".into(), page.to_string());
+            opts
+        })
     }
 
     pub(crate) fn prev_page_params(&self) -> Option<IndexMap<String, String>> {
-        match self.options.page {
-            Page::Numeric(1) | Page::Unspecified => None,
-            Page::Numeric(n) => {
-                let mut opts = IndexMap::new();
-                opts.insert("page".into(), (n - 1).to_string());
-                Some(opts)
-            }
-        }
+        self.prev_page().map(|page| {
+            let mut opts = IndexMap::new();
+            opts.insert("page".into(), page.to_string());
+            opts
+        })
     }
 
     pub(crate) fn iter(&self) -> impl Iterator<Item = &T> {
