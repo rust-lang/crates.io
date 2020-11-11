@@ -14,19 +14,13 @@ pub(crate) enum Page {
 }
 
 impl Page {
-    fn new(params: &IndexMap<String, String>) -> AppResult<Self> {
-        if let Some(s) = params.get("page") {
-            let numeric_page = s.parse().map_err(|e| bad_request(&e))?;
-            if numeric_page < 1 {
-                return Err(bad_request(&format_args!(
-                    "page indexing starts from 1, page {} is invalid",
-                    numeric_page,
-                )));
+    fn new(page: Option<u32>) -> Page {
+        match page {
+            Some(page) => {
+                assert_ne!(page, 0);
+                Page::Numeric(page)
             }
-
-            Ok(Page::Numeric(numeric_page))
-        } else {
-            Ok(Page::Unspecified)
+            None => Page::Unspecified,
         }
     }
 }
@@ -42,6 +36,21 @@ impl PaginationOptions {
         const DEFAULT_PER_PAGE: u32 = 10;
         const MAX_PER_PAGE: u32 = 100;
 
+        let page = match params.get("page") {
+            Some(page) => {
+                let numeric_page = page.parse::<u32>().map_err(|e| bad_request(&e))?;
+                if numeric_page < 1 {
+                    return Err(bad_request(&format_args!(
+                        "page indexing starts from 1, page {} is invalid",
+                        numeric_page,
+                    )));
+                }
+
+                Some(numeric_page)
+            }
+            None => None,
+        };
+
         let per_page = params
             .get("per_page")
             .map(|s| s.parse().map_err(|e| bad_request(&e)))
@@ -55,7 +64,7 @@ impl PaginationOptions {
         }
 
         Ok(Self {
-            page: Page::new(params)?,
+            page: Page::new(page),
             per_page,
         })
     }
