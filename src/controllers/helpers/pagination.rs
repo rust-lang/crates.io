@@ -113,23 +113,9 @@ impl<T> Paginated<T> {
         }
     }
 
-    pub(crate) fn next_page_params(&self) -> Option<IndexMap<String, String>> {
-        self.next_page().map(|page| to_page_map(page))
-    }
-
-    pub(crate) fn prev_page_params(&self) -> Option<IndexMap<String, String>> {
-        self.prev_page().map(|page| to_page_map(page))
-    }
-
     pub(crate) fn iter(&self) -> impl Iterator<Item = &T> {
         self.records_and_total.iter().map(|row| &row.record)
     }
-}
-
-fn to_page_map(page: u32) -> IndexMap<String, String> {
-    let mut opts = IndexMap::new();
-    opts.insert("page".into(), page.to_string());
-    opts
 }
 
 impl<T: 'static> IntoIterator for Paginated<T> {

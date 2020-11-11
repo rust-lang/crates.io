@@ -2,6 +2,7 @@
 
 use diesel::dsl::*;
 use diesel_full_text_search::*;
+use indexmap::IndexMap;
 
 use crate::controllers::cargo_prelude::*;
 use crate::controllers::helpers::Paginate;
@@ -192,8 +193,12 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
     let data: Paginated<(Crate, bool, Option<i64>)> = query.paginate(&req.query())?.load(&*conn)?;
     let total = data.total();
 
-    let next_page = data.next_page_params().map(|p| req.query_with_params(p));
-    let prev_page = data.prev_page_params().map(|p| req.query_with_params(p));
+    let next_page = data
+        .next_page()
+        .map(|p| req.query_with_params(to_page_map(p)));
+    let prev_page = data
+        .prev_page()
+        .map(|p| req.query_with_params(to_page_map(p)));
 
     let perfect_matches = data.iter().map(|&(_, b, _)| b).collect::<Vec<_>>();
     let recent_downloads = data
@@ -253,6 +258,12 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
             prev_page,
         },
     }))
+}
+
+fn to_page_map(page: u32) -> IndexMap<String, String> {
+    let mut opts = IndexMap::new();
+    opts.insert("page".into(), page.to_string());
+    opts
 }
 
 diesel_infix_operator!(Contains, "@>");
