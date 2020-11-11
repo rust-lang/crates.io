@@ -15,6 +15,7 @@ use crate::views::{
     EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword, EncodableVersion,
 };
 
+use crate::controllers::helpers::pagination::PaginationOptions;
 use crate::models::krate::ALL_COLUMNS;
 
 /// Handles the `GET /summary` route.
@@ -242,7 +243,14 @@ pub fn reverse_dependencies(req: &mut dyn RequestExt) -> EndpointResult {
     let name = &req.params()["crate_id"];
     let conn = req.db_read_only()?;
     let krate: Crate = Crate::by_name(name).first(&*conn)?;
-    let (rev_deps, total) = krate.reverse_dependencies(&*conn, &req.query())?;
+
+    let pagination = PaginationOptions::new(&req.query())?;
+
+    let (rev_deps, total) = krate.reverse_dependencies(
+        &*conn,
+        pagination.offset().unwrap_or_default(),
+        pagination.per_page,
+    )?;
     let rev_deps: Vec<_> = rev_deps
         .into_iter()
         .map(|dep| dep.encodable(&krate.name))
