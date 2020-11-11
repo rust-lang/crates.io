@@ -32,9 +32,13 @@ pub(crate) struct PaginationOptions {
 }
 
 impl PaginationOptions {
-    pub(crate) fn new(params: &IndexMap<String, String>) -> AppResult<Self> {
+    pub(crate) fn new(query: &str) -> AppResult<Self> {
         const DEFAULT_PER_PAGE: u32 = 10;
         const MAX_PER_PAGE: u32 = 100;
+
+        let params: IndexMap<String, String> = url::form_urlencoded::parse(query.as_bytes())
+            .into_owned()
+            .collect();
 
         let page = match params.get("page") {
             Some(page) => {
@@ -79,10 +83,10 @@ impl PaginationOptions {
 }
 
 pub(crate) trait Paginate: Sized {
-    fn paginate(self, params: &IndexMap<String, String>) -> AppResult<PaginatedQuery<Self>> {
+    fn paginate(self, query: &str) -> AppResult<PaginatedQuery<Self>> {
         Ok(PaginatedQuery {
             query: self,
-            options: PaginationOptions::new(params)?,
+            options: PaginationOptions::new(query)?,
         })
     }
 }
@@ -193,9 +197,7 @@ mod tests {
 
     #[test]
     fn page_must_be_a_number() {
-        let mut params = IndexMap::new();
-        params.insert(String::from("page"), String::from("not a number"));
-        let page_error = PaginationOptions::new(&params)
+        let page_error = PaginationOptions::new("page=not a number")
             .unwrap_err()
             .response()
             .unwrap();
@@ -205,9 +207,7 @@ mod tests {
 
     #[test]
     fn per_page_must_be_a_number() {
-        let mut params = IndexMap::new();
-        params.insert(String::from("per_page"), String::from("not a number"));
-        let per_page_error = PaginationOptions::new(&params)
+        let per_page_error = PaginationOptions::new("per_page=not a number")
             .unwrap_err()
             .response()
             .unwrap();

@@ -190,7 +190,9 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
         query = query.then_order_by(crates::name.asc())
     }
 
-    let data: Paginated<(Crate, bool, Option<i64>)> = query.paginate(&req.query())?.load(&*conn)?;
+    let data: Paginated<(Crate, bool, Option<i64>)> = query
+        .paginate(&req.query_string().unwrap_or(""))?
+        .load(&*conn)?;
     let total = data.total();
 
     let next_page = data

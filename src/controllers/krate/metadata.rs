@@ -244,7 +244,7 @@ pub fn reverse_dependencies(req: &mut dyn RequestExt) -> EndpointResult {
     let conn = req.db_read_only()?;
     let krate: Crate = Crate::by_name(name).first(&*conn)?;
 
-    let pagination = PaginationOptions::new(&req.query())?;
+    let pagination = PaginationOptions::new(&req.query_string().unwrap_or(""))?;
 
     let (rev_deps, total) = krate.reverse_dependencies(
         &*conn,

@@ -70,7 +70,7 @@ pub fn updates(req: &mut dyn RequestExt) -> EndpointResult {
             crates::name,
             users::all_columns.nullable(),
         ))
-        .paginate(&req.query())?
+        .paginate(&req.query_string().unwrap_or(""))?
         .load(&*conn)?;
     let more = data.next_page().is_some();
     let versions = data.iter().map(|(v, _, _)| v).cloned().collect::<Vec<_>>();

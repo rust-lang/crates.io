@@ -20,7 +20,9 @@ pub fn index(req: &mut dyn RequestExt) -> EndpointResult {
         query = query.order(keywords::keyword.asc());
     }
 
-    let data: Paginated<Keyword> = query.paginate(&req.query())?.load(&*conn)?;
+    let data: Paginated<Keyword> = query
+        .paginate(&req.query_string().unwrap_or(""))?
+        .load(&*conn)?;
     let total = data.total();
     let kws = data.into_iter().map(Keyword::encodable).collect::<Vec<_>>();
 
