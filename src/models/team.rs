@@ -163,7 +163,7 @@ impl Team {
 
         let org_id = team.organization.id;
 
-        if !team_with_gh_id_contains_user(app, team.id, req_user)? {
+        if !team_with_gh_id_contains_user(app, org_id, team.id, req_user)? {
             return Err(cargo_err("only members of a team can add it as an owner"));
         }
 
@@ -191,7 +191,14 @@ impl Team {
     /// the answer. If this is not the case, then we could accidentally leak
     /// private membership information here.
     pub fn contains_user(&self, app: &App, user: &User) -> AppResult<bool> {
-        team_with_gh_id_contains_user(app, self.github_id, user)
+        match self.org_id {
+            Some(org_id) => team_with_gh_id_contains_user(app, org_id, self.github_id, user),
+            // This means we don't have an org_id on file for the `self` team. It much
+            // probably was deleted from github by the time we backfilled the database.
+            // Short-circuiting to false since a non-existent team cannot contain any
+            // user
+            None => Ok(false),
+        }
     }
 
     pub fn owning(krate: &Crate, conn: &PgConnection) -> QueryResult<Vec<Owner>> {
@@ -227,8 +234,13 @@ impl Team {
     }
 }
 
-fn team_with_gh_id_contains_user(app: &App, github_id: i32, user: &User) -> AppResult<bool> {
-    // GET teams/:team_id/memberships/:user_name
+fn team_with_gh_id_contains_user(
+    app: &App,
+    github_org_id: i32,
+    github_team_id: i32,
+    user: &User,
+) -> AppResult<bool> {
+    // GET /organizations/:org_id/team/:team_id/memberships/:username
     // check that "state": "active"
 
     #[derive(Deserialize)]
@@ -236,7 +248,10 @@ fn team_with_gh_id_contains_user(app: &App, github_id: i32, user: &User) -> AppR
         state: String,
     }
 
-    let url = format!("/teams/{}/memberships/{}", &github_id, &user.gh_login);
+    let url = format!(
+        "/organizations/{}/team/{}/memberships/{}",
+        &github_org_id, &github_team_id, &user.gh_login
+    );
     let token = AccessToken::new(user.gh_access_token.clone());
     let membership = match github_api::<Membership>(app, &url, &token) {
         // Officially how `false` is returned
