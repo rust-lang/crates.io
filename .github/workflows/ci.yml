@@ -63,7 +63,7 @@ jobs:
 
   backend:
     name: Backend
-    runs-on: ubuntu-16.04
+    runs-on: ubuntu-18.04
     strategy:
       # TODO: [ci] should be true if GitHub Actions supports ""allow failures" on matrix
       fail-fast: false
