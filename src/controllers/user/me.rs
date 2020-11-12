@@ -139,7 +139,7 @@ pub fn update_user(req: &mut dyn RequestExt) -> EndpointResult {
         None => return Err(bad_request("empty email rejected")),
     };
 
-    if user_email == "" {
+    if user_email.is_empty() {
         return Err(bad_request("empty email rejected"));
     }
 

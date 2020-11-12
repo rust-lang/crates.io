@@ -20,7 +20,7 @@ impl Middleware for NormalizePath {
                 PathBuf::with_capacity(path.len()),
                 |mut result, p| match p {
                     Component::Normal(x) => {
-                        if x != "" {
+                        if !x.is_empty() {
                             result.push(x)
                         };
                         result

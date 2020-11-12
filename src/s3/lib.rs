@@ -83,7 +83,7 @@ impl Bucket {
             "{}.s3{}.amazonaws.com",
             self.name,
             match self.region {
-                Some(ref r) if r != "" => format!("-{}", r),
+                Some(ref r) if !r.is_empty() => format!("-{}", r),
                 Some(_) => String::new(),
                 None => String::new(),
             }
