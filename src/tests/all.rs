@@ -167,7 +167,7 @@ fn build_app(
 #[track_caller]
 fn env(var: &str) -> String {
     match dotenv::var(var) {
-        Ok(ref s) if s == "" => panic!("environment variable `{}` must not be empty", var),
+        Ok(ref s) if s.is_empty() => panic!("environment variable `{}` must not be empty", var),
         Ok(s) => s,
         _ => panic!(
             "environment variable `{}` must be defined and valid unicode",
