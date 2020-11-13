@@ -113,8 +113,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let server = server.with_graceful_shutdown(async move {
             // Wait for either signal
             futures_util::select! {
-                _ = sig_int.recv().fuse() => (),
-                _ = sig_term.recv().fuse() => (),
+                _ = sig_int.recv().fuse() => {},
+                _ = sig_term.recv().fuse() => {},
             };
             let mut stdout = tokio::io::stdout();
             stdout.write_all(b"Starting graceful shutdown\n").await.ok();
