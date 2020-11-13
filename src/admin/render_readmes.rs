@@ -1,9 +1,4 @@
-#![warn(clippy::all, rust_2018_idioms)]
-
-#[macro_use]
-extern crate serde;
-
-use cargo_registry::{
+use crate::{
     db,
     models::Version,
     render::readme_to_html,
@@ -25,11 +20,10 @@ const CACHE_CONTROL_README: &str = "public,max-age=604800";
 #[clap(
     name = "render-readmes",
     about = "Iterates over every crate versions ever uploaded and (re-)renders their \
-        readme using the readme renderer from the cargo_registry crate.\n\
-        \n\
-        Warning: this can take a lot of time."
+        readme using the readme renderer from the cargo_registry crate.",
+    after_help = "Warning: this can take a lot of time."
 )]
-struct Opts {
+pub struct Opts {
     /// How many versions should be queried and processed at a time.
     #[clap(long, default_value = "25")]
     page_size: usize,
@@ -43,9 +37,7 @@ struct Opts {
     crate_name: Option<String>,
 }
 
-fn main() {
-    let opts: Opts = Opts::parse();
-
+pub fn run(opts: Opts) {
     let config = Config::default();
     let conn = db::connect_now().unwrap();
 

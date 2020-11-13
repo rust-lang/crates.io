@@ -1,6 +1,5 @@
-#![warn(clippy::all, rust_2018_idioms)]
-
-use cargo_registry::{
+use crate::{
+    admin::dialoguer,
     db,
     models::{Crate, Version},
     schema::versions,
@@ -9,32 +8,29 @@ use cargo_registry::{
 use clap::Clap;
 use diesel::prelude::*;
 
-mod dialoguer;
-
 #[derive(Clap, Debug)]
 #[clap(
     name = "delete-version",
-    about = "Purge all references to a crate's version from the database.\n\nPlease be super sure you want to do this before running this."
+    about = "Purge all references to a crate's version from the database.",
+    after_help = "Please be super sure you want to do this before running this!"
 )]
-struct Opts {
+pub struct Opts {
     /// Name of the crate
     crate_name: String,
     /// Version number that should be deleted
     version: String,
 }
 
-fn main() {
+pub fn run(opts: Opts) {
     let conn = db::connect_now().unwrap();
     conn.transaction::<_, diesel::result::Error, _>(|| {
-        delete(&conn);
+        delete(opts, &conn);
         Ok(())
     })
     .unwrap()
 }
 
-fn delete(conn: &PgConnection) {
-    let opts: Opts = Opts::parse();
-
+fn delete(opts: Opts, conn: &PgConnection) {
     let krate: Crate = Crate::by_name(&opts.crate_name).first(conn).unwrap();
     let v: Version = Version::belonging_to(&krate)
         .filter(versions::num.eq(&opts.version))

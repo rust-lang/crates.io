@@ -1,6 +1,4 @@
-#![warn(clippy::all, rust_2018_idioms)]
-
-use cargo_registry::{db, schema::version_downloads};
+use crate::{db, schema::version_downloads};
 
 use clap::Clap;
 use diesel::prelude::*;
@@ -11,20 +9,18 @@ use rand::{thread_rng, Rng};
     name = "populate",
     about = "Populate a set of dummy download statistics for a specific version in the database."
 )]
-struct Opts {
+pub struct Opts {
     #[clap(required = true)]
     version_ids: Vec<i32>,
 }
 
-fn main() {
+pub fn run(opts: Opts) {
     let conn = db::connect_now().unwrap();
-    conn.transaction(|| update(&conn)).unwrap();
+    conn.transaction(|| update(opts, &conn)).unwrap();
 }
 
-fn update(conn: &PgConnection) -> QueryResult<()> {
+fn update(opts: Opts, conn: &PgConnection) -> QueryResult<()> {
     use diesel::dsl::*;
-
-    let opts: Opts = Opts::parse();
 
     for id in opts.version_ids {
         let mut rng = thread_rng();

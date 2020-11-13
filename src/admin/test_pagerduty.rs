@@ -1,13 +1,11 @@
-#![warn(clippy::all, rust_2018_idioms)]
-
-mod on_call;
-
 use anyhow::Result;
 use clap::Clap;
 use failure::_core::str::FromStr;
 
-#[derive(Debug)]
-enum EventType {
+use crate::admin::on_call;
+
+#[derive(Debug, Copy, Clone)]
+pub enum EventType {
     Trigger,
     Acknowledge,
     Resolve,
@@ -28,15 +26,13 @@ impl FromStr for EventType {
 
 #[derive(Clap, Debug)]
 #[clap(name = "test-pagerduty", about = "Send a test event to pagerduty")]
-struct Opts {
+pub struct Opts {
     #[clap(possible_values = &["trigger", "acknowledge", "resolve"])]
     event_type: EventType,
     description: Option<String>,
 }
 
-fn main() -> Result<()> {
-    let opts: Opts = Opts::parse();
-
+pub fn run(opts: Opts) -> Result<()> {
     let event = match opts.event_type {
         EventType::Trigger => on_call::Event::Trigger {
             incident_key: Some("test".into()),

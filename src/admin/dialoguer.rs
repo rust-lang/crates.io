@@ -10,7 +10,7 @@ pub fn confirm(msg: &str) -> bool {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub struct CustomTheme;
+struct CustomTheme;
 
 impl Theme for CustomTheme {
     fn format_confirm_prompt(

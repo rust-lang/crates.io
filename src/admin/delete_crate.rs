@@ -1,34 +1,29 @@
-#![warn(clippy::all, rust_2018_idioms)]
-
-use cargo_registry::{db, models::Crate, schema::crates};
+use crate::{admin::dialoguer, db, models::Crate, schema::crates};
 
 use clap::Clap;
 use diesel::prelude::*;
 
-mod dialoguer;
-
 #[derive(Clap, Debug)]
 #[clap(
     name = "delete-crate",
-    about = "Purge all references to a crate from the database.\n\nPlease be super sure you want to do this before running this."
+    about = "Purge all references to a crate from the database.",
+    after_help = "Please be super sure you want to do this before running this!"
 )]
-struct Opts {
+pub struct Opts {
     /// Name of the crate
     crate_name: String,
 }
 
-fn main() {
+pub fn run(opts: Opts) {
     let conn = db::connect_now().unwrap();
     conn.transaction::<_, diesel::result::Error, _>(|| {
-        delete(&conn);
+        delete(opts, &conn);
         Ok(())
     })
     .unwrap()
 }
 
-fn delete(conn: &PgConnection) {
-    let opts: Opts = Opts::parse();
-
+fn delete(opts: Opts, conn: &PgConnection) {
     let krate: Crate = Crate::by_name(&opts.crate_name).first(conn).unwrap();
 
     let prompt = format!(

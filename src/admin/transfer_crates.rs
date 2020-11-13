@@ -1,6 +1,5 @@
-#![warn(clippy::all, rust_2018_idioms)]
-
-use cargo_registry::{
+use crate::{
+    admin::dialoguer,
     db,
     models::{Crate, OwnerKind, User},
     schema::{crate_owners, crates, users},
@@ -10,32 +9,28 @@ use std::process::exit;
 use clap::Clap;
 use diesel::prelude::*;
 
-mod dialoguer;
-
 #[derive(Clap, Debug)]
 #[clap(
     name = "transfer-crates",
     about = "Transfer all crates from one user to another."
 )]
-struct Opts {
+pub struct Opts {
     /// GitHub login of the "from" user
     from_user: String,
     /// GitHub login of the "to" user
     to_user: String,
 }
 
-fn main() {
+pub fn run(opts: Opts) {
     let conn = db::connect_now().unwrap();
     conn.transaction::<_, diesel::result::Error, _>(|| {
-        transfer(&conn);
+        transfer(opts, &conn);
         Ok(())
     })
     .unwrap()
 }
 
-fn transfer(conn: &PgConnection) {
-    let opts: Opts = Opts::parse();
-
+fn transfer(opts: Opts, conn: &PgConnection) {
     let from: User = users::table
         .filter(users::gh_login.eq(opts.from_user))
         .first(conn)
