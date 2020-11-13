@@ -251,6 +251,17 @@ mod tests {
         router.call(&mut req).err().expect("No response");
     }
 
+    #[test]
+    fn catch_all() {
+        let mut router = RouteBuilder::new();
+        router.get("/*", test_handler);
+
+        let mut req = RequestSentinel::new(Method::GET, "/foo");
+        let res = router.call(&mut req).expect("No response");
+        assert_eq!(res.status(), StatusCode::OK);
+        assert_eq!(*res.into_cow(), b", GET, /*"[..]);
+    }
+
     fn test_router() -> RouteBuilder {
         let mut router = RouteBuilder::new();
         router.post("/posts/:id", test_handler);
@@ -260,7 +271,7 @@ mod tests {
 
     fn test_handler(req: &mut dyn conduit::RequestExt) -> conduit::HttpResult {
         let mut res = vec![];
-        res.push(req.params()["id"].clone());
+        res.push(req.params().find("id").unwrap_or("").to_string());
         res.push(format!("{:?}", req.method()));
         res.push(
             req.extensions()
