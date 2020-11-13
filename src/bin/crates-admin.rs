@@ -18,9 +18,6 @@ struct Opts {
 enum SubCommand {
     DeleteCrate(delete_crate::Opts),
     DeleteVersion(delete_version::Opts),
-    #[clap(
-        about = "Checks for any invariants we expect to be true, and pages whoever is on call if they are not."
-    )]
     Populate(populate::Opts),
     RenderReadmes(render_readmes::Opts),
     TestPagerduty(test_pagerduty::Opts),
