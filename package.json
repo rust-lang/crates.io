@@ -86,7 +86,7 @@
     "ember-export-application-global": "2.0.1",
     "ember-fetch": "8.0.2",
     "ember-keyboard": "6.0.2",
-    "ember-link": "1.2.0",
+    "ember-link": "1.2.1",
     "ember-load-initializers": "2.1.2",
     "ember-maybe-import-regenerator": "0.1.6",
     "ember-modifier": "2.1.1",
