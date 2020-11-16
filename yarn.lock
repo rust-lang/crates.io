@@ -1444,7 +1444,7 @@
     "@handlebars/parser" "^1.1.0"
     simple-html-tokenizer "^0.5.9"
 
-"@glimmer/tracking@1.0.2", "@glimmer/tracking@~1.0.1":
+"@glimmer/tracking@1.0.2", "@glimmer/tracking@~1.0.2":
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/@glimmer/tracking/-/tracking-1.0.2.tgz#4fe9ca89e3f4a2ae8e37c8bd8e4ea0d886d9abbf"
   integrity sha512-9Vp04TM2IDTShGFdxccfvnmcaj4NwqLrwbOXm4iju5KL/WkeB8mqoCSLtO3kUg+80DqU0pKE8tR460lQP8CutA==
@@ -6043,7 +6043,7 @@ ember-assign-polyfill@^2.5.0, ember-assign-polyfill@^2.6.0:
     ember-cli-babel "^7.20.5"
     ember-cli-version-checker "^2.0.0"
 
-ember-auto-import@1.7.0, ember-auto-import@^1.2.19, ember-auto-import@^1.6.0:
+ember-auto-import@1.7.0, ember-auto-import@^1.2.19, ember-auto-import@^1.7.0:
   version "1.7.0"
   resolved "https://registry.yarnpkg.com/ember-auto-import/-/ember-auto-import-1.7.0.tgz#dd809fbe3d40647f2af443072405094d0e77ecf5"
   integrity sha512-onp7XZKwiit3BgkOPV/obi3fvLJmDNKTTjRsVtYz63yWeyT3ahiM8BIvJYzHGL4cxlGLvwpTJy2HYBDs6ZtvoQ==
@@ -6560,6 +6560,22 @@ ember-cli-typescript@^3.0.0, ember-cli-typescript@^3.1.3, ember-cli-typescript@^
     stagehand "^1.0.0"
     walk-sync "^2.0.0"
 
+ember-cli-typescript@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/ember-cli-typescript/-/ember-cli-typescript-4.0.0.tgz#690f0cd3d15f4a69ae6d89f25b70b5997ae59161"
+  integrity sha512-ZwnBbBJ0yAIKq4FVgNFkxfMwqJhw6PyT45Enp2RvWIgzgaYCId8brrSgg3tvVWWjA7N5hiT4Ilyz5jrQwrnU1Q==
+  dependencies:
+    ansi-to-html "^0.6.6"
+    broccoli-stew "^3.0.0"
+    debug "^4.0.0"
+    execa "^4.0.0"
+    fs-extra "^9.0.1"
+    resolve "^1.5.0"
+    rsvp "^4.8.1"
+    semver "^7.3.2"
+    stagehand "^1.0.0"
+    walk-sync "^2.2.0"
+
 ember-cli-version-checker@5.1.1, ember-cli-version-checker@^5.0.2, ember-cli-version-checker@^5.1.1:
   version "5.1.1"
   resolved "https://registry.yarnpkg.com/ember-cli-version-checker/-/ember-cli-version-checker-5.1.1.tgz#3185c526c14671609cbd22ab0d0925787fc84f3d"
@@ -6874,16 +6890,16 @@ ember-keyboard@6.0.2:
     ember-compatibility-helpers "^1.2.1"
     ember-modifier "^2.1.0"
 
-ember-link@1.2.0:
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/ember-link/-/ember-link-1.2.0.tgz#8145da3ac25a7c84110bb611ccd0d7eea13103d1"
-  integrity sha512-UYfljC5rGcKTqWneR6z2Ap8HaySfhs0U2gxC3fSEyXcR0GTdZGlouQAxy8QRLLdqYgU7tymfJGRS+c1VUsesgQ==
+ember-link@1.2.1:
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/ember-link/-/ember-link-1.2.1.tgz#add22e804343039dd797b140d22c3a608b930c00"
+  integrity sha512-IKFDtbvNV/blInPksG2QUsmDMc8u2Bfwe+OES+2KMfiN6uMgqsbxyCl++fTcYol8xRu3DFyltaMz3+B3Zf2hKg==
   dependencies:
-    "@glimmer/tracking" "~1.0.1"
-    ember-auto-import "^1.6.0"
-    ember-cli-babel "^7.22.1"
-    ember-cli-htmlbars "^5.2.0"
-    ember-cli-typescript "^3.1.4"
+    "@glimmer/tracking" "~1.0.2"
+    ember-auto-import "^1.7.0"
+    ember-cli-babel "^7.23.0"
+    ember-cli-htmlbars "^5.3.1"
+    ember-cli-typescript "^4.0.0"
     fast-json-stable-stringify "^2.1.0"
 
 ember-load-initializers@2.1.2:
@@ -7657,10 +7673,10 @@ execa@^3.0.0:
     signal-exit "^3.0.2"
     strip-final-newline "^2.0.0"
 
-execa@^4.0.3:
-  version "4.0.3"
-  resolved "https://registry.yarnpkg.com/execa/-/execa-4.0.3.tgz#0a34dabbad6d66100bd6f2c576c8669403f317f2"
-  integrity sha512-WFDXGHckXPWZX19t1kCsXzOpqX9LWYNqn4C+HqZlk/V0imTkzJZqf87ZBhvpHaftERYknpk0fjSylnXVlVgI0A==
+execa@^4.0.0, execa@^4.0.3:
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/execa/-/execa-4.1.0.tgz#4e5491ad1572f2f17a77d388c6c857135b22847a"
+  integrity sha512-j5W0//W7f8UxAn8hXVnwG8tLwdiUy4FJLcSupCg6maBYZDpyBvTApK7KyuI4bKj8KOh1r2YH+6ucuYtJv1bTZA==
   dependencies:
     cross-spawn "^7.0.0"
     get-stream "^5.0.0"
