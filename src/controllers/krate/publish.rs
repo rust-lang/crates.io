@@ -93,7 +93,7 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
         };
 
         let license_file = new_crate.license_file.as_deref();
-        let krate =
+        let mut krate =
             persist.create_or_update(&conn, user.id, Some(&app.config.publish_rate_limit))?;
 
         let owners = krate.owners(&conn)?;
@@ -107,11 +107,20 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
         }
 
         if krate.name != *name {
-            return Err(cargo_err(&format_args!(
-                "crate was previously named `{}`",
-                krate.name
-            )));
+            // Case change is allowed for the name. However as the name isn't normally updated in
+            // the database, we'll need to do it manually here.
+            if krate.name.to_lowercase() == *name.to_lowercase() {
+                krate.rename(&conn, &name)?;
+            } else {
+                return Err(cargo_err(&format_args!(
+                    "crate was previously named `{}`",
+                    krate.name
+                )));
+            }
         }
+
+        // No need for mutability anymore.
+        let krate = krate;
 
         // Length of the .crate tarball, which appears after the metadata in the request body.
         // TODO: Not sure why we're using the total content length (metadata + .crate file length)

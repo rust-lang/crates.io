@@ -543,6 +543,16 @@ impl Crate {
 
         Ok(rows.records_and_total())
     }
+
+    pub fn rename(&mut self, conn: &PgConnection, new_name: &str) -> AppResult<()> {
+        diesel::update(crates::table)
+            .filter(crates::id.eq(self.id))
+            .set(crates::name.eq(new_name))
+            .execute(conn)?;
+        self.name = new_name.to_string();
+
+        Ok(())
+    }
 }
 
 use diesel::sql_types::{Date, Text};

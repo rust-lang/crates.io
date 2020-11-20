@@ -1109,7 +1109,7 @@ fn new_krate_duplicate_version() {
 
 #[test]
 fn new_crate_similar_name() {
-    let (app, _, user, token) = TestApp::init().with_token();
+    let (app, _, user, token) = TestApp::full().with_token();
 
     app.db(|conn| {
         CrateBuilder::new("Foo_similar", user.as_model().id)
@@ -1118,15 +1118,10 @@ fn new_crate_similar_name() {
     });
 
     let crate_to_publish = PublishBuilder::new("foo_similar").version("1.1.0");
-    let json = token
-        .enqueue_publish(crate_to_publish)
-        .bad_with_status(StatusCode::OK);
+    let json = token.enqueue_publish(crate_to_publish).good();
 
-    assert!(
-        json.errors[0].detail.contains("previously named"),
-        "{:?}",
-        json.errors
-    );
+    assert_eq!(json.krate.name, "foo_similar");
+    assert_eq!(json.krate.max_version, "1.1.0");
 }
 
 #[test]
@@ -1471,6 +1466,55 @@ fn download() {
 }
 
 #[test]
+fn download_renamed_crate() {
+    use chrono::{Duration, Utc};
+    let (_, anon, _, token) = TestApp::full().with_token();
+
+    let crate_to_publish = PublishBuilder::new("FOO_RENAMED");
+    token.enqueue_publish(crate_to_publish).good();
+
+    let crate_to_publish = PublishBuilder::new("foo_renamed").version("1.1.0");
+    let json = token.enqueue_publish(crate_to_publish).good();
+
+    let assert_dl_count = |name_and_version: &str, query: Option<&str>, count: i32| {
+        let url = format!("/api/v1/crates/{}/downloads", name_and_version);
+        let downloads: Downloads = if let Some(query) = query {
+            anon.get_with_query(&url, query).good()
+        } else {
+            anon.get(&url).good()
+        };
+        let total_downloads = downloads
+            .version_downloads
+            .iter()
+            .map(|vd| vd.downloads)
+            .sum::<i32>();
+        assert_eq!(total_downloads, count);
+    };
+
+    let download = |name_and_version: &str| {
+        let url = format!("/api/v1/crates/{}/download", name_and_version);
+        anon.get::<()>(&url)
+            .assert_redirect_ends_with("foo_renamed-1.0.0.crate")
+            .assert_status(StatusCode::FOUND);
+        // TODO: test the with_json code path
+    };
+
+    // The important assert here is to ensure the download succeeds to ensure
+    // the old version blobs are still retrieved from the backend storage with
+    // their
+
+    download("FOO_RENAMED/1.0.0");
+    download("foo_renamed/1.0.0");
+    assert_dl_count("FOO_RENAMED/1.0.0", None, 2);
+    assert_dl_count("FOO_RENAMED", None, 2);
+
+    download("FOO_RENAMED/1.1.0");
+    download("foo_renamed/1.1.0");
+    assert_dl_count("foo_renamed/1.1.0", None, 2);
+    assert_dl_count("foo_renamed", None, 4);
+}
+
+#[test]
 fn download_nonexistent_version_of_existing_crate_404s() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
@@ -1496,7 +1540,7 @@ fn download_noncanonical_crate_name() {
 
     // Request download for "foo-download" with a dash instead of an underscore,
     // and assert that the correct download link is returned.
-    anon.get::<()>("/api/v1/crates/foo-download/1.0.0/download")
+    anon.get::<()>("/api/v1/crates/Foo-Download/1.0.0/download")
         .assert_redirect_ends_with("/crates/foo_download/foo_download-1.0.0.crate");
 }
 
