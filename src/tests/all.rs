@@ -190,6 +190,7 @@ fn bad_resp(r: &mut AppResponse) -> Option<Bad> {
     Some(bad)
 }
 
+#[track_caller]
 fn json<T>(r: &mut AppResponse) -> T
 where
     for<'de> T: serde::Deserialize<'de>,
