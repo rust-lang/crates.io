@@ -27,7 +27,7 @@
           {{category.category}}
         </LinkTo>
         <span local-class="crate-count" data-test-crate-count>
-          {{ pluralize (format-num category.crates_cnt) "crate" }}
+          {{format-num category.crates_cnt}} {{if (eq category.crates_cnt 1) "crate" "crates"}}
         </span>
       </div>
       <div local-class="description">

@@ -21,7 +21,7 @@
           <div>
             <LinkTo @route="category" @model={{subcategory.slug}}>{{subcategory.category}}</LinkTo>
             <span local-class="crate-count">
-              {{ pluralize (format-num subcategory.crates_cnt) "crate" }}
+              {{format-num subcategory.crates_cnt}} {{if (eq subcategory.crates_cnt 1) "crate" "crates"}}
             </span>
           </div>
           <div local-class="category-description">

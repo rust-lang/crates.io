@@ -24,7 +24,7 @@
     <div local-class="row">
       <LinkTo @route="keyword" @model={{keyword}}>{{keyword.id}}</LinkTo>
       <span local-class="crate-count">
-        {{ pluralize (format-num keyword.crates_cnt) "crate" }}
+        {{format-num keyword.crates_cnt}} {{if (eq keyword.crates_cnt 1) "crate" "crates"}}
       </span>
     </div>
   {{/each}}
