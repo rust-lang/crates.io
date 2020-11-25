@@ -29,7 +29,7 @@
 [accessibility]
 name = "Accessibility"
 description = """
-Crates that implement features for the convenience of disabled people. \
+Tools for making your creations usable by as many people as possible. \
 """
 
 [algorithms]
