@@ -59,6 +59,6 @@ export default class SearchController extends Controller {
     }
 
     return yield this.store.query('crate', { all_keywords, page, per_page, q, sort });
-  }).drop())
+  }).restartable())
   dataTask;
 }
