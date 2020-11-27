@@ -155,7 +155,7 @@ pub(crate) fn domain_name() -> String {
 }
 
 fn require_email_verification() -> bool {
-    !dotenv::var("DISABLE_EMAIL_VERIFICATION_REQUIREMENT").is_ok()
+    dotenv::var("DISABLE_EMAIL_VERIFICATION_REQUIREMENT").is_err()
 }
 
 fn blocked_traffic() -> Vec<(String, Vec<String>)> {
