@@ -15,7 +15,7 @@ impl DependencyBuilder {
             explicit_name_in_toml: None,
             name: name.to_string(),
             registry: None,
-            version_req: u::EncodableCrateVersionReq(semver::VersionReq::parse("> 0").unwrap()),
+            version_req: u::EncodableCrateVersionReq(semver::VersionReq::parse(">= 0").unwrap()),
         }
     }
 
