@@ -439,11 +439,21 @@ OAuth Applications](https://github.com/settings/developers) and click on the
 - Homepage URL: `http://localhost:4200/`
 - Authorization callback URL: `http://localhost:4200/authorize/github`
 
-Create the application, then take the Client ID ad Client Secret values and use
+Create the application, then take the Client ID and Client Secret values and use
 them as the values of the `GH_CLIENT_ID` and `GH_CLIENT_SECRET` in your `.env`.
 
 Then restart your backend, and you should be able to log in to your local
 crates.io with your GitHub account.
+
+The next step is that you need to verify your email address to be able
+to publish crates. When you log in for the first time, an email will
+be sent with a verification link. In development, the sending of
+emails is simulated by a file representing the email being created in
+your local `/tmp/` directory. You need to find that email file and
+follow the link to verify your email. As an easier alternative, you
+can disable requiring a verified email in development by setting
+`DISABLE_EMAIL_VERIFICATION_REQUIREMENT` in your `.env` file and
+restart your backend.
 
 Go to http://localhost:4200/me to get your API token and run the `cargo login`
 command as directed.
