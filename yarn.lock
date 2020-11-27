@@ -6902,10 +6902,10 @@ ember-keyboard@6.0.2:
     ember-compatibility-helpers "^1.2.1"
     ember-modifier "^2.1.0"
 
-ember-link@1.2.1:
-  version "1.2.1"
-  resolved "https://registry.yarnpkg.com/ember-link/-/ember-link-1.2.1.tgz#add22e804343039dd797b140d22c3a608b930c00"
-  integrity sha512-IKFDtbvNV/blInPksG2QUsmDMc8u2Bfwe+OES+2KMfiN6uMgqsbxyCl++fTcYol8xRu3DFyltaMz3+B3Zf2hKg==
+ember-link@1.2.2:
+  version "1.2.2"
+  resolved "https://registry.yarnpkg.com/ember-link/-/ember-link-1.2.2.tgz#75a2b2433116a2e3b441d182380e6ddb63aa8433"
+  integrity sha512-kLyrEEd0Pjdz0+KwHZ+0JFczF2J/kXae9B9AtShw+LvLc+R9G4eb443hjPtA77AHizweSfX7d0ADfdzYnMF/5A==
   dependencies:
     "@glimmer/tracking" "~1.0.2"
     ember-auto-import "^1.7.0"
