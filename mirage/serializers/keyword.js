@@ -19,6 +19,6 @@ export default BaseSerializer.extend({
     let allCrates = this.schema.crates.all();
     let associatedCrates = allCrates.filter(it => it.keywordIds.includes(hash.id));
 
-    hash.crates_cnt = associatedCrates.length;
+    hash.crates_cnt ??= associatedCrates.length;
   },
 });
