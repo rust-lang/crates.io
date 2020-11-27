@@ -173,7 +173,9 @@ fn new_with_renamed_dependency() {
 
 #[test]
 fn new_krate_with_dependency() {
-    let (app, _, user, token) = TestApp::full().with_token();
+    use super::dependencies::Deps;
+
+    let (app, anon, user, token) = TestApp::full().with_token();
 
     app.db(|conn| {
         // Insert a crate directly into the database so that new_dep can depend on it
@@ -183,12 +185,22 @@ fn new_krate_with_dependency() {
         CrateBuilder::new("foo-dep", user.as_model().id).expect_build(conn);
     });
 
-    let dependency = DependencyBuilder::new("foo-dep");
+    let dependency = DependencyBuilder::new("foo-dep").version_req("1.0.0");
 
     let crate_to_publish = PublishBuilder::new("new_dep")
         .version("1.0.0")
         .dependency(dependency);
+
     token.enqueue_publish(crate_to_publish).good();
+
+    let dependencies = anon
+        .get::<Deps>("/api/v1/crates/new_dep/1.0.0/dependencies")
+        .good()
+        .dependencies;
+
+    assert_eq!(dependencies.len(), 1);
+    assert_eq!(dependencies[0].crate_id, "foo-dep");
+    assert_eq!(dependencies[0].req, "^1.0.0");
 }
 
 #[test]
