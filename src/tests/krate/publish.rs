@@ -204,6 +204,40 @@ fn new_krate_with_dependency() {
 }
 
 #[test]
+fn new_krate_with_broken_dependency_requirement() {
+    let (app, _, user, token) = TestApp::full().with_token();
+
+    app.db(|conn| {
+        // Insert a crate directly into the database so that new_dep can depend on it
+        // The name choice of `foo-dep` is important! It has the property of
+        // name != canon_crate_name(name) and is a regression test for
+        // https://github.com/rust-lang/crates.io/issues/651
+        CrateBuilder::new("foo-dep", user.as_model().id).expect_build(conn);
+    });
+
+    let dependency = DependencyBuilder::new("foo-dep").version_req("1.2.3");
+
+    let crate_to_publish = PublishBuilder::new("new_dep")
+        .version("1.0.0")
+        .dependency(dependency);
+
+    // create a request body with `version_req: "broken"`
+    let (json, tarball) = crate_to_publish.build();
+    let new_json = json.replace("\"version_req\":\"^1.2.3\"", "\"version_req\":\"broken\"");
+    assert_ne!(json, new_json);
+    let body = PublishBuilder::create_publish_body(&new_json, &tarball);
+
+    let response = token
+        .put::<serde_json::Value>("/api/v1/crates/new", &body)
+        .good();
+
+    assert_eq!(
+        response,
+        json!({"errors": [{"detail": "invalid upload request: invalid value: string \"broken\", expected a valid version req at line 1 column 136"}]})
+    );
+}
+
+#[test]
 fn reject_new_krate_with_non_exact_dependency() {
     let (app, _, user, token) = TestApp::init().with_token();
 
