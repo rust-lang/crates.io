@@ -18,6 +18,7 @@ pub struct Config {
     pub blocked_traffic: Vec<(String, Vec<String>)>,
     pub domain_name: String,
     pub allowed_origins: Vec<String>,
+    pub require_email_verification: bool,
 }
 
 impl Default for Config {
@@ -44,6 +45,8 @@ impl Default for Config {
     /// - `READ_ONLY_REPLICA_URL`: The URL of an optional postgres read-only replica database.
     /// - `BLOCKED_TRAFFIC`: A list of headers and environment variables to use for blocking
     ///.  traffic. See the `block_traffic` module for more documentation.
+    /// - `DISABLE_EMAIL_VERIFICATION_REQUIREMENT`: Disable the requirement that email must be
+    ///.  verified before publishing a crate.
     fn default() -> Config {
         let api_protocol = String::from("https");
         let mirror = if dotenv::var("MIRROR").is_ok() {
@@ -142,12 +145,17 @@ impl Default for Config {
             blocked_traffic: blocked_traffic(),
             domain_name: domain_name(),
             allowed_origins,
+            require_email_verification: require_email_verification(),
         }
     }
 }
 
 pub(crate) fn domain_name() -> String {
     dotenv::var("DOMAIN_NAME").unwrap_or_else(|_| "crates.io".into())
+}
+
+fn require_email_verification() -> bool {
+    !dotenv::var("DISABLE_EMAIL_VERIFICATION_REQUIREMENT").is_ok()
 }
 
 fn blocked_traffic() -> Vec<(String, Vec<String>)> {

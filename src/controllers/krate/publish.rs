@@ -55,14 +55,25 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
     let api_token_id = ids.api_token_id();
     let user = ids.user();
 
-    let verified_email_address = user.verified_email(&conn)?;
-    let verified_email_address = verified_email_address.ok_or_else(|| {
-        cargo_err(&format!(
-            "A verified email address is required to publish crates to crates.io. \
-             Visit https://{}/me to set and verify your email address.",
-            app.config.domain_name,
-        ))
-    })?;
+    let email_address = if app.config.require_email_verification {
+        let verified_email_address = user.verified_email(&conn)?;
+        verified_email_address.ok_or_else(|| {
+            cargo_err(&format!(
+                "A verified email address is required to publish crates to crates.io. \
+                 Visit https://{}/me to set and verify your email address.",
+                app.config.domain_name,
+            ))
+        })?
+    } else {
+        let email_address = user.email(&conn)?;
+        email_address.ok_or_else(|| {
+            cargo_err(&format!(
+                "An email address is required to publish crates to crates.io. \
+                 Visit https://{}/me to set and verify your email address.",
+                app.config.domain_name,
+            ))
+        })?
+    };
 
     // Create a transaction on the database, if there are no errors,
     // commit the transactions to record a new or updated crate.
@@ -152,7 +163,7 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
             file_length as i32,
             user.id,
         )?
-        .save(&conn, &new_crate.authors, &verified_email_address)?;
+        .save(&conn, &new_crate.authors, &email_address)?;
 
         insert_version_owner_action(
             &conn,

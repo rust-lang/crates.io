@@ -142,6 +142,7 @@ fn simple_config() -> Config {
         blocked_traffic: Default::default(),
         domain_name: "crates.io".into(),
         allowed_origins: Vec::new(),
+        require_email_verification: true,
     }
 }
 

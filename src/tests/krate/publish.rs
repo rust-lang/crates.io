@@ -619,6 +619,32 @@ fn new_krate_with_unverified_email_fails() {
 }
 
 #[test]
+fn new_krate_records_with_unverified_email_if_email_verification_disabled() {
+    let (app, _, _, token) = TestApp::full()
+        .with_config(|c| c.require_email_verification = false)
+        .with_token();
+
+    app.db(|conn| {
+        update(emails::table)
+            .set((emails::verified.eq(false),))
+            .execute(conn)
+            .unwrap();
+    });
+
+    let crate_to_publish = PublishBuilder::new("foo_unverified_email");
+
+    token.enqueue_publish(crate_to_publish).good();
+
+    app.db(|conn| {
+        let email: String = versions_published_by::table
+            .select(versions_published_by::email)
+            .first(conn)
+            .unwrap();
+        assert_eq!(email, "something@example.com");
+    });
+}
+
+#[test]
 fn new_krate_records_verified_email() {
     let (app, _, _, token) = TestApp::full().with_token();
 
