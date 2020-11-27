@@ -95,7 +95,7 @@ pub fn add_dependencies(
             let krate:Crate = Crate::by_exact_name(&dep.name)
                 .first(&*conn)
                 .map_err(|_| cargo_err(&format_args!("no known crate named `{}`", &*dep.name)))?;
-            if dep.version_req == semver::VersionReq::parse("*").unwrap() {
+            if semver::VersionReq::parse(&dep.version_req.0) == semver::VersionReq::parse("*") {
                 return Err(cargo_err(WILDCARD_ERROR_MESSAGE));
             }
 
