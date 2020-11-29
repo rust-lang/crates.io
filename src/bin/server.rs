@@ -103,7 +103,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 async move { Service::from_blocking(handler, addr) }
             });
 
-        let addr = ([127, 0, 0, 1], port).into();
+        let addr = ([0, 0, 0, 0], port).into();
         #[allow(clippy::async_yields_async)]
         let server = rt.block_on(async { hyper::Server::bind(&addr).serve(make_service) });
 

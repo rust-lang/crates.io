@@ -20,6 +20,7 @@ services:
       GIT_REPO_URL: file://./tmp/index-bare
       GH_CLIENT_ID: ""
       GH_CLIENT_SECRET: ""
+      WEB_ALLOWED_ORIGINS: http://localhost:8888,http://localhost:4200
     links:
       - postgres
     ports:
