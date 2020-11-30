@@ -1,4 +1,14 @@
-<button type="button" local-class="button" {{on "click" (perform this.toggleFollowTask)}} data-test-follow-button>
+<button
+  type="button"
+  disabled={{or
+    this.followStateTask.isRunning
+    this.followStateTask.last.error
+    this.toggleFollowTask.isRunning
+  }}
+  local-class="button"
+  data-test-follow-button
+  {{on "click" (perform this.toggleFollowTask)}}
+>
   {{#if (or this.followStateTask.isRunning this.toggleFollowTask.isRunning)}}
     <LoadingSpinner data-test-spinner />
   {{else}}
