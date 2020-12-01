@@ -119,7 +119,7 @@
     "prettier": "2.2.1",
     "qunit-console-grouper": "0.2.0",
     "qunit-dom": "1.6.0",
-    "semver": "7.3.2",
+    "semver": "7.3.4",
     "timekeeper": "2.2.0"
   },
   "engines": {
