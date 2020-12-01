@@ -33,7 +33,7 @@ use cargo_registry::{
     App, Config,
 };
 use diesel::PgConnection;
-use std::{rc::Rc, sync::Arc, time::Duration};
+use std::{marker::PhantomData, rc::Rc, sync::Arc, time::Duration};
 use swirl::Runner;
 
 use conduit::{Handler, HandlerResult, Method, RequestExt};
@@ -582,7 +582,7 @@ impl Bad {
 #[must_use]
 pub struct Response<T> {
     response: AppResponse,
-    callback_on_good: Option<Box<dyn Fn(&T)>>,
+    return_type: PhantomData<T>,
 }
 
 impl<T> Response<T>
@@ -592,7 +592,7 @@ where
     fn new(response: HandlerResult) -> Self {
         Self {
             response: assert_ok!(response),
-            callback_on_good: None,
+            return_type: PhantomData,
         }
     }
 
@@ -602,11 +602,7 @@ where
         if !self.response.status().is_success() {
             panic!("bad response: {:?}", self.response.status());
         }
-        let good = crate::json(&mut self.response);
-        if let Some(callback) = self.callback_on_good {
-            callback(&good)
-        }
-        good
+        crate::json(&mut self.response)
     }
 
     /// Assert the response status code and deserialze into a list of errors
