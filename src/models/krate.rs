@@ -610,6 +610,19 @@ mod tests {
         assert!(Crate::valid_name("foo-dash"));
         assert!(!Crate::valid_name("foo+plus"));
     }
+
+    #[test]
+    fn valid_feature_names() {
+        assert!(Crate::valid_feature("foo"));
+        assert!(!Crate::valid_feature(""));
+        assert!(!Crate::valid_feature("/"));
+        assert!(!Crate::valid_feature("%/%"));
+        assert!(Crate::valid_feature("a/a"));
+        assert!(Crate::valid_feature("32-column-tables"));
+        assert!(Crate::valid_feature("c++20"));
+        assert!(Crate::valid_feature("krate/c++20"));
+        assert!(!Crate::valid_feature("c++20/wow"));
+    }
 }
 
 pub trait CrateVersions {

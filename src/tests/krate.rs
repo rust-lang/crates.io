@@ -4,7 +4,7 @@ use crate::{
     RequestHelper, TestApp,
 };
 use cargo_registry::{
-    models::{krate::MAX_NAME_LENGTH, Category, Crate},
+    models::{krate::MAX_NAME_LENGTH, Category},
     schema::{api_tokens, crates, emails, metadata, versions, versions_published_by},
     views::{
         EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword, EncodableVersion,
@@ -990,20 +990,6 @@ fn new_krate_wrong_user() {
         "{:?}",
         json.errors
     );
-}
-
-// TODO: Move this test to the main crate
-#[test]
-fn valid_feature_names() {
-    assert!(Crate::valid_feature("foo"));
-    assert!(!Crate::valid_feature(""));
-    assert!(!Crate::valid_feature("/"));
-    assert!(!Crate::valid_feature("%/%"));
-    assert!(Crate::valid_feature("a/a"));
-    assert!(Crate::valid_feature("32-column-tables"));
-    assert!(Crate::valid_feature("c++20"));
-    assert!(Crate::valid_feature("krate/c++20"));
-    assert!(!Crate::valid_feature("c++20/wow"));
 }
 
 #[test]
