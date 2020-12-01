@@ -596,13 +596,6 @@ where
         }
     }
 
-    fn with_callback(self, callback_on_good: Box<dyn Fn(&T)>) -> Self {
-        Self {
-            response: self.response,
-            callback_on_good: Some(callback_on_good),
-        }
-    }
-
     /// Assert that the response is good and deserialize the message
     #[track_caller]
     pub fn good(mut self) -> T {
