@@ -33,6 +33,7 @@ use cargo_registry::{
     App, Config,
 };
 use diesel::PgConnection;
+use serde_json::Value;
 use std::{marker::PhantomData, rc::Rc, sync::Arc, time::Duration};
 use swirl::Runner;
 
@@ -585,6 +586,11 @@ where
             response: assert_ok!(response),
             return_type: PhantomData,
         }
+    }
+
+    #[track_caller]
+    pub fn json(mut self) -> Value {
+        crate::json(&mut self.response)
     }
 
     /// Assert that the response is good and deserialize the message
