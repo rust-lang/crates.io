@@ -397,10 +397,7 @@ pub trait RequestHelper {
     /// Any pending jobs are run when the `TestApp` is dropped to ensure that the test fails unless
     /// all background tasks complete successfully.
     fn enqueue_publish(&self, publish_builder: PublishBuilder) -> Response<GoodCrate> {
-        let krate_name = publish_builder.krate_name.clone();
-        let response = self.put("/api/v1/crates/new", &publish_builder.body());
-        let callback_on_good = move |json: &GoodCrate| assert_eq!(json.krate.name, krate_name);
-        response.with_callback(Box::new(callback_on_good))
+        self.put("/api/v1/crates/new", &publish_builder.body())
     }
 
     /// Request the JSON used for a crate's page
