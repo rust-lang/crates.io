@@ -112,7 +112,7 @@ fn create_token_invalid_request() {
     let (_, _, user) = TestApp::init().with_user();
     let invalid = br#"{ "name": "" }"#;
     let response = user.put::<()>(URL, invalid);
-    response.assert_status(StatusCode::BAD_REQUEST);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "invalid new token request: Error(\"missing field `api_token`\", line: 1, column: 14)" }] })
@@ -124,7 +124,7 @@ fn create_token_no_name() {
     let (_, _, user) = TestApp::init().with_user();
     let empty_name = br#"{ "api_token": { "name": "" } }"#;
     let response = user.put::<()>(URL, empty_name);
-    response.assert_status(StatusCode::BAD_REQUEST);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "name must have a value" }] })
@@ -136,7 +136,7 @@ fn create_token_long_body() {
     let (_, _, user) = TestApp::init().with_user();
     let too_big = &[5; 5192]; // Send a request with a 5kB body of 5's
     let response = user.put::<()>(URL, too_big);
-    response.assert_status(StatusCode::BAD_REQUEST);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "max content length is: 2000" }] })
@@ -153,7 +153,7 @@ fn create_token_exceeded_tokens_per_user() {
         }
     });
     let response = user.put::<()>(URL, NEW_BAR);
-    response.assert_status(StatusCode::BAD_REQUEST);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "maximum tokens per user is: 500" }] })
@@ -203,7 +203,7 @@ fn cannot_create_token_with_token() {
         "/api/v1/me/tokens",
         br#"{ "api_token": { "name": "baz" } }"#,
     );
-    response.assert_status(StatusCode::BAD_REQUEST);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "cannot use an API token to create a new API token" }] })
@@ -309,7 +309,7 @@ fn old_tokens_give_specific_error_message() {
     let mut request = anon.get_request(url);
     request.header(header::AUTHORIZATION, "oldtoken");
     let response = anon.run::<()>(request);
-    response.assert_status(StatusCode::UNAUTHORIZED);
+    assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": TOKEN_FORMAT_ERROR }] })

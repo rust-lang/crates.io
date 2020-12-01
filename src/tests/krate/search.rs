@@ -699,7 +699,7 @@ fn pagination_parameters_only_accept_integers() {
 
     let response =
         anon.get_with_query::<()>("/api/v1/crates", "page=1&per_page=100%22%EF%BC%8Cexception");
-    response.assert_status(StatusCode::BAD_REQUEST);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "invalid digit found in string" }] })
@@ -707,7 +707,7 @@ fn pagination_parameters_only_accept_integers() {
 
     let response =
         anon.get_with_query::<()>("/api/v1/crates", "page=100%22%EF%BC%8Cexception&per_page=1");
-    response.assert_status(StatusCode::BAD_REQUEST);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "invalid digit found in string" }] })

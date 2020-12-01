@@ -50,7 +50,7 @@ fn not_github() {
     });
 
     let response = token.add_named_owner("foo_not_github", "dropbox:foo:foo");
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "unknown organization handler, only 'github:org:team' is supported" }] })
@@ -66,7 +66,7 @@ fn weird_name() {
     });
 
     let response = token.add_named_owner("foo_weird_name", "github:foo/../bar:wut");
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "organization cannot contain special characters like /" }] })
@@ -83,7 +83,7 @@ fn one_colon() {
     });
 
     let response = token.add_named_owner("foo_one_colon", "github:foo");
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "missing github team argument; format is github:org:team" }] })
@@ -102,7 +102,7 @@ fn nonexistent_team() {
         "foo_nonexistent",
         "github:crates-test-org:this-does-not-exist",
     );
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "could not find the github team crates-test-org/this-does-not-exist" }] })
@@ -152,7 +152,7 @@ fn add_team_as_non_member() {
         "foo_team_non_member",
         "github:crates-test-org:just-for-crates-2",
     );
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "only members of a team can add it as an owner" }] })
@@ -177,7 +177,7 @@ fn remove_team_as_named_owner() {
     // Removing the individual owner is not allowed, since team members don't
     // have permission to manage ownership
     let response = token_on_both_teams.remove_named_owner("foo_remove_team", username);
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "cannot remove all individual owners of a crate. Team member don't have permission to modify owners, so at least one individual owner is required." }] })
@@ -190,7 +190,7 @@ fn remove_team_as_named_owner() {
     let user_on_one_team = app.db_new_user(mock_user_on_only_one_team().gh_login);
     let crate_to_publish = PublishBuilder::new("foo_remove_team").version("2.0.0");
     let response = user_on_one_team.enqueue_publish(crate_to_publish);
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "this crate exists but you don't seem to be an owner. If you believe this is a mistake, perhaps you need to accept an invitation to be an owner before publishing." }] })
@@ -217,7 +217,7 @@ fn remove_team_as_team_owner() {
 
     let response = token_on_one_team
         .remove_named_owner("foo_remove_team_owner", "github:crates-test-org:core");
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "team members don't have permission to modify owners" }] })
@@ -243,7 +243,7 @@ fn publish_not_owned() {
 
     let crate_to_publish = PublishBuilder::new("foo_not_owned").version("2.0.0");
     let response = user_on_one_team.enqueue_publish(crate_to_publish);
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "this crate exists but you don't seem to be an owner. If you believe this is a mistake, perhaps you need to accept an invitation to be an owner before publishing." }] })
@@ -290,7 +290,7 @@ fn add_owners_as_team_owner() {
     let token_on_one_team = user_on_one_team.db_new_token("arbitrary token name");
 
     let response = token_on_one_team.add_named_owner("foo_add_owner", "arbitrary_username");
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "team members don't have permission to modify owners" }] })

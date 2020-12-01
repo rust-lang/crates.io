@@ -136,7 +136,7 @@ fn owners_can_remove_self() {
 
     // Deleting yourself when you're the only owner isn't allowed.
     let response = token.remove_named_owner("owners_selfremove", username);
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "cannot remove all individual owners of a crate. Team member don't have permission to modify owners, so at least one individual owner is required." }] })
@@ -146,7 +146,7 @@ fn owners_can_remove_self() {
 
     // Deleting yourself when there are other owners is allowed.
     let response = token.remove_named_owner("owners_selfremove", username);
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "msg": "owners successfully removed", "ok": true })
@@ -154,7 +154,7 @@ fn owners_can_remove_self() {
 
     // After you delete yourself, you no longer have permisions to manage the crate.
     let response = token.remove_named_owner("owners_selfremove", username);
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "only owners have permission to modify owners" }] })
@@ -175,7 +175,7 @@ fn modify_multiple_owners() {
 
     // Deleting all owners is not allowed.
     let response = token.remove_named_owners("owners_multiple", &[username, "user2", "user3"]);
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "cannot remove all individual owners of a crate. Team member don't have permission to modify owners, so at least one individual owner is required." }] })
@@ -184,7 +184,7 @@ fn modify_multiple_owners() {
 
     // Deleting two owners at once is allowed.
     let response = token.remove_named_owners("owners_multiple", &["user2", "user3"]);
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "msg": "owners successfully removed", "ok": true })
@@ -193,7 +193,7 @@ fn modify_multiple_owners() {
 
     // Adding multiple users fails if one of them already is an owner.
     let response = token.add_named_owners("owners_multiple", &["user2", username]);
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "`foo` is already an owner" }] })
@@ -202,7 +202,7 @@ fn modify_multiple_owners() {
 
     // Adding multiple users at once succeeds.
     let response = token.add_named_owners("owners_multiple", &["user2", "user3"]);
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({
