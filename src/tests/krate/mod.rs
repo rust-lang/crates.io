@@ -1,6 +1,6 @@
 use crate::{
     builders::{CrateBuilder, PublishBuilder, VersionBuilder},
-    new_category, new_dependency, new_user, CrateMeta, OkBool, RequestHelper, TestApp,
+    new_category, new_user, CrateMeta, OkBool, RequestHelper, TestApp,
 };
 use cargo_registry::{
     models::Category,
@@ -11,15 +11,12 @@ use cargo_registry::{
 use conduit::StatusCode;
 use diesel::{dsl::*, prelude::*, update};
 
+mod dependencies;
 mod downloads;
 mod publish;
 mod summary;
 mod versions;
 
-#[derive(Deserialize)]
-struct Deps {
-    dependencies: Vec<EncodableDependency>,
-}
 #[derive(Deserialize)]
 struct RevDeps {
     dependencies: Vec<EncodableDependency>,
@@ -635,27 +632,6 @@ fn yanked_versions_are_not_considered_for_max_version() {
     let json = anon.search("q=foo");
     assert_eq!(json.meta.total, 1);
     assert_eq!(json.crates[0].max_version, "1.0.0");
-}
-
-#[test]
-fn dependencies() {
-    let (app, anon, user) = TestApp::init().with_user();
-    let user = user.as_model();
-
-    app.db(|conn| {
-        let c1 = CrateBuilder::new("foo_deps", user.id).expect_build(conn);
-        let v = VersionBuilder::new("1.0.0").expect_build(c1.id, user.id, conn);
-        let c2 = CrateBuilder::new("bar_deps", user.id).expect_build(conn);
-        new_dependency(conn, &v, &c2);
-    });
-
-    let deps: Deps = anon
-        .get("/api/v1/crates/foo_deps/1.0.0/dependencies")
-        .good();
-    assert_eq!(deps.dependencies[0].crate_id, "bar_deps");
-
-    anon.get::<()>("/api/v1/crates/foo_deps/1.0.2/dependencies")
-        .bad_with_status(StatusCode::OK);
 }
 
 #[test]
