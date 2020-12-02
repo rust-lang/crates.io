@@ -4,7 +4,7 @@ use crate::{
 };
 use cargo_registry::{
     models::Category,
-    schema::{crates, versions},
+    schema::crates,
     views::{EncodableDependency, EncodableVersion, EncodableVersionDownload},
 };
 
@@ -13,11 +13,8 @@ use diesel::{dsl::*, prelude::*, update};
 
 mod publish;
 mod summary;
+mod versions;
 
-#[derive(Deserialize)]
-struct VersionsList {
-    versions: Vec<EncodableVersion>,
-}
 #[derive(Deserialize)]
 struct Deps {
     dependencies: Vec<EncodableDependency>,
@@ -566,6 +563,8 @@ fn show() {
     let user = user.as_model();
 
     let krate = app.db(|conn| {
+        use cargo_registry::schema::versions;
+
         let krate = CrateBuilder::new("foo_show", user.id)
             .description("description")
             .documentation("https://example.com")
@@ -639,39 +638,6 @@ fn yanked_versions_are_not_considered_for_max_version() {
     let json = anon.search("q=foo");
     assert_eq!(json.meta.total, 1);
     assert_eq!(json.crates[0].max_version, "1.0.0");
-}
-
-#[test]
-fn versions() {
-    let (app, anon, user) = TestApp::init().with_user();
-    let user = user.as_model();
-    app.db(|conn| {
-        CrateBuilder::new("foo_versions", user.id)
-            .version("0.5.1")
-            .version("1.0.0")
-            .version("0.5.0")
-            .expect_build(conn);
-        // Make version 1.0.0 mimic a version published before we started recording who published
-        // versions
-        let none: Option<i32> = None;
-        update(versions::table)
-            .filter(versions::num.eq("1.0.0"))
-            .set(versions::published_by.eq(none))
-            .execute(conn)
-            .unwrap();
-    });
-
-    let json: VersionsList = anon.get("/api/v1/crates/foo_versions/versions").good();
-
-    assert_eq!(json.versions.len(), 3);
-    assert_eq!(json.versions[0].num, "1.0.0");
-    assert_eq!(json.versions[1].num, "0.5.1");
-    assert_eq!(json.versions[2].num, "0.5.0");
-    assert_none!(&json.versions[0].published_by);
-    assert_eq!(
-        json.versions[1].published_by.as_ref().unwrap().login,
-        user.gh_login
-    );
 }
 
 #[test]
@@ -1159,6 +1125,8 @@ fn yanked_versions_not_included_in_reverse_dependencies() {
     assert_eq!(deps.dependencies[0].crate_id, "c1");
 
     app.db(|conn| {
+        use cargo_registry::schema::versions;
+
         diesel::update(versions::table.filter(versions::num.eq("2.0.0")))
             .set(versions::yanked.eq(true))
             .execute(conn)
@@ -1176,6 +1144,8 @@ fn reverse_dependencies_includes_published_by_user_when_present() {
     let user = user.as_model();
 
     app.db(|conn| {
+        use cargo_registry::schema::versions;
+
         let c1 = CrateBuilder::new("c1", user.id)
             .version("1.0.0")
             .expect_build(conn);
