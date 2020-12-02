@@ -7044,10 +7044,10 @@ ember-router-scroll@3.3.3:
     ember-cli-babel "^7.11.1"
     ember-compatibility-helpers "^1.1.2"
 
-ember-set-body-class@1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/ember-set-body-class/-/ember-set-body-class-1.0.1.tgz#94c0126a5fdb1e780e6568f41c443b0c657f5724"
-  integrity sha512-W4y36lozFstvrv1XERCghgQx8s7RuyJbnPhM+9PTrdwwLpSEQYLEdeASHgeCLqb6Bz7AQeIbyf++2b7u5jPfTw==
+ember-set-body-class@1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/ember-set-body-class/-/ember-set-body-class-1.0.2.tgz#a970933f00e57ece6b6a88b96daf22f2374c3c34"
+  integrity sha512-SEsTwFp9SHTg4LgebhkUuLgYWg1VZD7I1QcrV2sTY583wu216OThoSs5szvS/KgSc1xD1Z22TFvOb848t2hGfw==
   dependencies:
     ember-cli-babel "^7.22.1"
 
