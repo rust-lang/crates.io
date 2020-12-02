@@ -33,7 +33,7 @@ use cargo_registry::{
     App, Config,
 };
 use diesel::PgConnection;
-use std::{rc::Rc, sync::Arc, time::Duration};
+use std::{marker::PhantomData, rc::Rc, sync::Arc, time::Duration};
 use swirl::Runner;
 
 use conduit::{Handler, HandlerResult, Method, RequestExt};
@@ -397,10 +397,7 @@ pub trait RequestHelper {
     /// Any pending jobs are run when the `TestApp` is dropped to ensure that the test fails unless
     /// all background tasks complete successfully.
     fn enqueue_publish(&self, publish_builder: PublishBuilder) -> Response<GoodCrate> {
-        let krate_name = publish_builder.krate_name.clone();
-        let response = self.put("/api/v1/crates/new", &publish_builder.body());
-        let callback_on_good = move |json: &GoodCrate| assert_eq!(json.krate.name, krate_name);
-        response.with_callback(Box::new(callback_on_good))
+        self.put("/api/v1/crates/new", &publish_builder.body())
     }
 
     /// Request the JSON used for a crate's page
@@ -585,7 +582,7 @@ impl Bad {
 #[must_use]
 pub struct Response<T> {
     response: AppResponse,
-    callback_on_good: Option<Box<dyn Fn(&T)>>,
+    return_type: PhantomData<T>,
 }
 
 impl<T> Response<T>
@@ -595,14 +592,7 @@ where
     fn new(response: HandlerResult) -> Self {
         Self {
             response: assert_ok!(response),
-            callback_on_good: None,
-        }
-    }
-
-    fn with_callback(self, callback_on_good: Box<dyn Fn(&T)>) -> Self {
-        Self {
-            response: self.response,
-            callback_on_good: Some(callback_on_good),
+            return_type: PhantomData,
         }
     }
 
@@ -612,11 +602,7 @@ where
         if !self.response.status().is_success() {
             panic!("bad response: {:?}", self.response.status());
         }
-        let good = crate::json(&mut self.response);
-        if let Some(callback) = self.callback_on_good {
-            callback(&good)
-        }
-        good
+        crate::json(&mut self.response)
     }
 
     /// Assert the response status code and deserialze into a list of errors
