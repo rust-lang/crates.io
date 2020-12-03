@@ -43,6 +43,9 @@ pub struct NewVersion {
 pub struct TopVersions {
     /// The "highest" version in terms of semver
     pub highest: Option<semver::Version>,
+    /// The "highest" non-prerelease version, or, if only
+    /// prereleases exist, the "highest" version
+    pub highest_stable: Option<semver::Version>,
     /// The "newest" version in terms of publishing date
     pub newest: Option<semver::Version>,
 }
@@ -61,9 +64,20 @@ impl TopVersions {
         T: Clone + IntoIterator<Item = (NaiveDateTime, semver::Version)>,
     {
         let newest = pairs.clone().into_iter().max().map(|(_, v)| v);
-        let highest = pairs.into_iter().map(|(_, v)| v).max();
+        let highest = pairs.clone().into_iter().map(|(_, v)| v).max();
 
-        Self { newest, highest }
+        let highest_stable = pairs
+            .into_iter()
+            .map(|(_, v)| v)
+            .filter(|v| !v.is_prerelease())
+            .max()
+            .or_else(|| highest.clone());
+
+        Self {
+            newest,
+            highest,
+            highest_stable,
+        }
     }
 }
 
@@ -262,6 +276,7 @@ mod tests {
             TopVersions::from_date_version_pairs(versions),
             TopVersions {
                 highest: None,
+                highest_stable: None,
                 newest: None,
             }
         );
@@ -274,7 +289,21 @@ mod tests {
             TopVersions::from_date_version_pairs(versions),
             TopVersions {
                 highest: Some(version("1.0.0")),
+                highest_stable: Some(version("1.0.0")),
                 newest: Some(version("1.0.0")),
+            }
+        );
+    }
+
+    #[test]
+    fn top_versions_prerelease() {
+        let versions = vec![(date("2020-12-03T12:34:56"), version("1.0.0-beta.5"))];
+        assert_eq!(
+            TopVersions::from_date_version_pairs(versions),
+            TopVersions {
+                highest: Some(version("1.0.0-beta.5")),
+                highest_stable: Some(version("1.0.0-beta.5")),
+                newest: Some(version("1.0.0-beta.5")),
             }
         );
     }
@@ -285,12 +314,14 @@ mod tests {
             (date("2018-12-03T12:34:56"), version("1.0.0")),
             (date("2019-12-03T12:34:56"), version("2.0.0-alpha.1")),
             (date("2020-12-03T12:34:56"), version("1.1.0")),
+            (date("2020-12-31T12:34:56"), version("1.0.4")),
         ];
         assert_eq!(
             TopVersions::from_date_version_pairs(versions),
             TopVersions {
                 highest: Some(version("2.0.0-alpha.1")),
-                newest: Some(version("1.1.0")),
+                highest_stable: Some(version("1.1.0")),
+                newest: Some(version("1.0.4")),
             }
         );
     }
