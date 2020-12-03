@@ -39,7 +39,7 @@ pub struct NewVersion {
 
 /// The highest version (semver order) and the most recently updated version.
 /// Typically used for a single crate.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct TopVersions {
     pub highest: semver::Version,
     pub newest: semver::Version,
