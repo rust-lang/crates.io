@@ -25,6 +25,8 @@ module.exports = {
     'prettier/prettier': 'error',
 
     'ember/no-classic-classes': 'error',
+    // disabled because we still use quite a few CPs
+    'ember/no-computed-properties-in-native-classes': 'off',
     'ember/no-empty-attrs': 'off',
     'ember/require-computed-property-dependencies': 'off',
 
