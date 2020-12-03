@@ -156,6 +156,7 @@ pub struct EncodableCrate {
     // NOTE: Used by shields.io, altering `max_version` requires a PR with shields.io
     pub max_version: String,
     pub newest_version: String, // Most recently updated version, which may not be max
+    pub max_stable_version: Option<String>,
     pub description: Option<String>,
     pub homepage: Option<String>,
     pub documentation: Option<String>,
@@ -510,6 +511,7 @@ mod tests {
             recent_downloads: None,
             max_version: "".to_string(),
             newest_version: "".to_string(),
+            max_stable_version: None,
             description: None,
             homepage: None,
             documentation: None,

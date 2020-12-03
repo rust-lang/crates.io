@@ -508,6 +508,27 @@ fn yanked_versions_are_not_considered_for_max_version() {
     assert_eq!(json.crates[0].max_version, "1.0.0");
 }
 
+#[test]
+fn max_stable_version() {
+    let (app, anon, user) = TestApp::init().with_user();
+    let user = user.as_model();
+
+    app.db(|conn| {
+        CrateBuilder::new("foo", user.id)
+            .description("foo")
+            .version("0.3.0")
+            .version("1.0.0")
+            .version(VersionBuilder::new("1.1.0").yanked(true))
+            .version("2.0.0-beta.1")
+            .version("0.3.1")
+            .expect_build(conn);
+    });
+
+    let json = anon.search("q=foo");
+    assert_eq!(json.meta.total, 1);
+    assert_eq!(json.crates[0].max_stable_version, Some("1.0.0".to_string()));
+}
+
 /*  Given two crates, one with downloads less than 90 days ago, the
     other with all downloads greater than 90 days ago, check that
     the order returned is by recent downloads, descending. Check
