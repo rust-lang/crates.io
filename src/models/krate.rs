@@ -345,6 +345,18 @@ impl Crate {
         let badges = badges.map(|bs| bs.into_iter().map(Badge::into).collect());
         let documentation = Crate::remove_blocked_documentation_urls(documentation);
 
+        let max_version = top_versions
+            .highest
+            .as_ref()
+            .map(|v| v.to_string())
+            .unwrap_or_else(|| "0.0.0".to_string());
+
+        let newest_version = top_versions
+            .newest
+            .as_ref()
+            .map(|v| v.to_string())
+            .unwrap_or_else(|| "0.0.0".to_string());
+
         EncodableCrate {
             id: name.clone(),
             name: name.clone(),
@@ -356,8 +368,8 @@ impl Crate {
             keywords: keyword_ids,
             categories: category_ids,
             badges,
-            max_version: top_versions.highest.to_string(),
-            newest_version: top_versions.newest.to_string(),
+            max_version,
+            newest_version,
             documentation,
             homepage,
             exact_match,

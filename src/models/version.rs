@@ -42,9 +42,9 @@ pub struct NewVersion {
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct TopVersions {
     /// The "highest" version in terms of semver
-    pub highest: semver::Version,
+    pub highest: Option<semver::Version>,
     /// The "newest" version in terms of publishing date
-    pub newest: semver::Version,
+    pub newest: Option<semver::Version>,
 }
 
 impl TopVersions {
@@ -63,21 +63,7 @@ impl TopVersions {
         let newest = pairs.clone().into_iter().max().map(|(_, v)| v);
         let highest = pairs.into_iter().map(|(_, v)| v).max();
 
-        Self {
-            newest: newest.unwrap_or_else(default_semver_version),
-            highest: highest.unwrap_or_else(default_semver_version),
-        }
-    }
-}
-
-/// A default semver value, "0.0.0", for use in TopVersions
-fn default_semver_version() -> semver::Version {
-    semver::Version {
-        major: 0,
-        minor: 0,
-        patch: 0,
-        pre: vec![],
-        build: vec![],
+        Self { newest, highest }
     }
 }
 
@@ -275,8 +261,8 @@ mod tests {
         assert_eq!(
             TopVersions::from_date_version_pairs(versions),
             TopVersions {
-                highest: version("0.0.0"),
-                newest: version("0.0.0"),
+                highest: None,
+                newest: None,
             }
         );
     }
@@ -287,8 +273,8 @@ mod tests {
         assert_eq!(
             TopVersions::from_date_version_pairs(versions),
             TopVersions {
-                highest: version("1.0.0"),
-                newest: version("1.0.0"),
+                highest: Some(version("1.0.0")),
+                newest: Some(version("1.0.0")),
             }
         );
     }
@@ -303,8 +289,8 @@ mod tests {
         assert_eq!(
             TopVersions::from_date_version_pairs(versions),
             TopVersions {
-                highest: version("2.0.0-alpha.1"),
-                newest: version("1.1.0"),
+                highest: Some(version("2.0.0-alpha.1")),
+                newest: Some(version("1.1.0")),
             }
         );
     }
