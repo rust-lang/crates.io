@@ -261,13 +261,30 @@ fn parse_new_headers(req: &mut dyn RequestExt) -> AppResult<EncodableCrateUpload
         missing.push("authors");
     }
     if !missing.is_empty() {
-        return Err(cargo_err(&format_args!(
-            "missing or empty metadata fields: {}. Please \
-             see https://doc.rust-lang.org/cargo/reference/manifest.html for \
-             how to upload metadata",
-            missing.join(", ")
-        )));
+        let message = missing_metadata_error_message(&missing);
+        return Err(cargo_err(&message));
     }
 
     Ok(new)
+}
+
+pub fn missing_metadata_error_message(missing: &[&str]) -> String {
+    format!(
+        "missing or empty metadata fields: {}. Please \
+         see https://doc.rust-lang.org/cargo/reference/manifest.html for \
+         how to upload metadata",
+        missing.join(", ")
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::missing_metadata_error_message;
+
+    #[test]
+    fn missing_metadata_error_message_test() {
+        assert_eq!(missing_metadata_error_message(&["a"]), "missing or empty metadata fields: a. Please see https://doc.rust-lang.org/cargo/reference/manifest.html for how to upload metadata");
+        assert_eq!(missing_metadata_error_message(&["a", "b"]), "missing or empty metadata fields: a, b. Please see https://doc.rust-lang.org/cargo/reference/manifest.html for how to upload metadata");
+        assert_eq!(missing_metadata_error_message(&["a", "b", "c"]), "missing or empty metadata fields: a, b, c. Please see https://doc.rust-lang.org/cargo/reference/manifest.html for how to upload metadata");
+    }
 }
