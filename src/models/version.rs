@@ -45,6 +45,32 @@ pub struct TopVersions {
     pub newest: semver::Version,
 }
 
+impl TopVersions {
+    /// Return both the newest (most recently updated) and the
+    /// highest version (in semver order) for a collection of date/version pairs.
+    pub fn from_date_version_pairs<T>(pairs: T) -> Self
+    where
+        T: Clone + IntoIterator<Item = (NaiveDateTime, semver::Version)>,
+    {
+        Self {
+            newest: pairs
+                .clone()
+                .into_iter()
+                .max()
+                .unwrap_or((
+                    NaiveDateTime::from_timestamp(0, 0),
+                    default_semver_version(),
+                ))
+                .1,
+            highest: pairs
+                .into_iter()
+                .map(|(_, v)| v)
+                .max()
+                .unwrap_or_else(default_semver_version),
+        }
+    }
+}
+
 /// A default semver value, "0.0.0", for use in TopVersions
 fn default_semver_version() -> semver::Version {
     semver::Version {
@@ -121,22 +147,7 @@ impl Version {
     where
         T: Clone + IntoIterator<Item = (NaiveDateTime, semver::Version)>,
     {
-        TopVersions {
-            newest: pairs
-                .clone()
-                .into_iter()
-                .max()
-                .unwrap_or((
-                    NaiveDateTime::from_timestamp(0, 0),
-                    default_semver_version(),
-                ))
-                .1,
-            highest: pairs
-                .into_iter()
-                .map(|(_, v)| v)
-                .max()
-                .unwrap_or_else(default_semver_version),
-        }
+        TopVersions::from_date_version_pairs(pairs)
     }
 
     pub fn record_readme_rendering(version_id_: i32, conn: &PgConnection) -> QueryResult<usize> {
