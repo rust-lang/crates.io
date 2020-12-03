@@ -37,11 +37,7 @@ pub fn summary(req: &mut dyn RequestExt) -> EndpointResult {
         versions
             .grouped_by(&krates)
             .into_iter()
-            .map(|versions| {
-                TopVersions::from_date_version_pairs(
-                    versions.into_iter().map(|v| (v.created_at, v.num)),
-                )
-            })
+            .map(TopVersions::from_versions)
             .zip(krates)
             .zip(recent_downloads)
             .map(|((top_versions, krate), recent_downloads)| {

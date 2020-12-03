@@ -206,9 +206,10 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
     let crates = data.into_iter().map(|(c, _, _)| c).collect::<Vec<_>>();
 
     let versions: Vec<Version> = crates.versions().load(&*conn)?;
-    let versions = versions.grouped_by(&crates).into_iter().map(|versions| {
-        TopVersions::from_date_version_pairs(versions.into_iter().map(|v| (v.created_at, v.num)))
-    });
+    let versions = versions
+        .grouped_by(&crates)
+        .into_iter()
+        .map(TopVersions::from_versions);
 
     let badges: Vec<CrateBadge> = CrateBadge::belonging_to(&crates)
         .select((badges::crate_id, badges::all_columns))

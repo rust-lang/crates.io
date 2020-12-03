@@ -47,6 +47,12 @@ pub struct TopVersions {
 
 impl TopVersions {
     /// Return both the newest (most recently updated) and the
+    /// highest version (in semver order) for a list of `Version` instances.
+    pub fn from_versions(versions: Vec<Version>) -> Self {
+        Self::from_date_version_pairs(versions.into_iter().map(|v| (v.created_at, v.num)))
+    }
+
+    /// Return both the newest (most recently updated) and the
     /// highest version (in semver order) for a collection of date/version pairs.
     pub fn from_date_version_pairs<T>(pairs: T) -> Self
     where
