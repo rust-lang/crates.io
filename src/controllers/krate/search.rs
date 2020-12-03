@@ -6,7 +6,9 @@ use diesel_full_text_search::*;
 use crate::controllers::cargo_prelude::*;
 use crate::controllers::helpers::Paginate;
 use crate::controllers::util::AuthenticatedUser;
-use crate::models::{Crate, CrateBadge, CrateOwner, CrateVersions, OwnerKind, Version};
+use crate::models::{
+    Crate, CrateBadge, CrateOwner, CrateVersions, OwnerKind, TopVersions, Version,
+};
 use crate::schema::*;
 use crate::util::errors::{bad_request, ChainError};
 use crate::views::EncodableCrate;
@@ -204,10 +206,9 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
     let crates = data.into_iter().map(|(c, _, _)| c).collect::<Vec<_>>();
 
     let versions: Vec<Version> = crates.versions().load(&*conn)?;
-    let versions = versions
-        .grouped_by(&crates)
-        .into_iter()
-        .map(|versions| Version::top(versions.into_iter().map(|v| (v.created_at, v.num))));
+    let versions = versions.grouped_by(&crates).into_iter().map(|versions| {
+        TopVersions::from_date_version_pairs(versions.into_iter().map(|v| (v.created_at, v.num)))
+    });
 
     let badges: Vec<CrateBadge> = CrateBadge::belonging_to(&crates)
         .select((badges::crate_id, badges::all_columns))

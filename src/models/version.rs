@@ -141,15 +141,6 @@ impl Version {
             .load(conn)
     }
 
-    /// Return both the newest (most recently updated) and the
-    /// highest version (in semver order) for a collection of date/version pairs.
-    pub fn top<T>(pairs: T) -> TopVersions
-    where
-        T: Clone + IntoIterator<Item = (NaiveDateTime, semver::Version)>,
-    {
-        TopVersions::from_date_version_pairs(pairs)
-    }
-
     pub fn record_readme_rendering(version_id_: i32, conn: &PgConnection) -> QueryResult<usize> {
         use crate::schema::readme_renderings::dsl::*;
         use diesel::dsl::now;
@@ -266,7 +257,7 @@ impl NewVersion {
 
 #[cfg(test)]
 mod tests {
-    use super::{TopVersions, Version};
+    use super::TopVersions;
     use chrono::NaiveDateTime;
 
     #[track_caller]
@@ -283,7 +274,7 @@ mod tests {
     fn top_versions_empty() {
         let versions = vec![];
         assert_eq!(
-            Version::top(versions),
+            TopVersions::from_date_version_pairs(versions),
             TopVersions {
                 highest: version("0.0.0"),
                 newest: version("0.0.0"),
@@ -295,7 +286,7 @@ mod tests {
     fn top_versions_single() {
         let versions = vec![(date("2020-12-03T12:34:56"), version("1.0.0"))];
         assert_eq!(
-            Version::top(versions),
+            TopVersions::from_date_version_pairs(versions),
             TopVersions {
                 highest: version("1.0.0"),
                 newest: version("1.0.0"),
@@ -311,7 +302,7 @@ mod tests {
             (date("2020-12-03T12:34:56"), version("1.1.0")),
         ];
         assert_eq!(
-            Version::top(versions),
+            TopVersions::from_date_version_pairs(versions),
             TopVersions {
                 highest: version("2.0.0-alpha.1"),
                 newest: version("1.1.0"),

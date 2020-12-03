@@ -407,7 +407,7 @@ impl Crate {
     pub fn top_versions(&self, conn: &PgConnection) -> QueryResult<TopVersions> {
         use crate::schema::versions::dsl::*;
 
-        Ok(Version::top(
+        Ok(TopVersions::from_date_version_pairs(
             self.versions().select((updated_at, num)).load(conn)?,
         ))
     }
