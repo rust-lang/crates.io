@@ -1,6 +1,10 @@
 use crate::builders::{CrateBuilder, DependencyBuilder, PublishBuilder};
 use crate::new_category;
 use crate::util::{RequestHelper, TestApp};
+use cargo_registry::controllers::krate::publish::{
+    missing_metadata_error_message, MISSING_RIGHTS_ERROR_MESSAGE,
+};
+use cargo_registry::models::dependency::WILDCARD_ERROR_MESSAGE;
 use cargo_registry::models::krate::MAX_NAME_LENGTH;
 use cargo_registry::schema::{api_tokens, emails, versions_published_by};
 use cargo_registry::views::GoodCrate;
@@ -52,15 +56,11 @@ fn new_wrong_token() {
 
     // Try to publish without a token
     let crate_to_publish = PublishBuilder::new("foo");
-    let json = anon
-        .enqueue_publish(crate_to_publish)
-        .bad_with_status(StatusCode::FORBIDDEN);
-    assert!(
-        json.errors[0]
-            .detail
-            .contains("must be logged in to perform that action"),
-        "{:?}",
-        json.errors
+    let response = anon.enqueue_publish(crate_to_publish);
+    response.assert_status(StatusCode::FORBIDDEN);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
     );
 
     // Try to publish with the wrong token (by changing the token in the database)
@@ -72,15 +72,11 @@ fn new_wrong_token() {
     });
 
     let crate_to_publish = PublishBuilder::new("foo");
-    let json = token
-        .enqueue_publish(crate_to_publish)
-        .bad_with_status(StatusCode::FORBIDDEN);
-    assert!(
-        json.errors[0]
-            .detail
-            .contains("must be logged in to perform that action"),
-        "{:?}",
-        json.errors
+    let response = token.enqueue_publish(crate_to_publish);
+    response.assert_status(StatusCode::FORBIDDEN);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
     );
 }
 
@@ -235,15 +231,11 @@ fn reject_new_crate_with_alternative_registry_dependency() {
         DependencyBuilder::new("dep").registry("https://server.example/path/to/registry");
 
     let crate_to_publish = PublishBuilder::new("depends-on-alt-registry").dependency(dependency);
-    let json = token
-        .enqueue_publish(crate_to_publish)
-        .bad_with_status(StatusCode::OK);
-    assert!(
-        json.errors[0]
-            .detail
-            .contains("Cross-registry dependencies are not permitted on crates.io."),
-        "{:?}",
-        json.errors
+    let response = token.enqueue_publish(crate_to_publish);
+    response.assert_status(StatusCode::OK);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": "Dependency `dep` is hosted on another registry. Cross-registry dependencies are not permitted on crates.io." }] })
     );
 }
 
@@ -262,13 +254,11 @@ fn new_krate_with_wildcard_dependency() {
         .version("1.0.0")
         .dependency(dependency);
 
-    let json = token
-        .enqueue_publish(crate_to_publish)
-        .bad_with_status(StatusCode::OK);
-    assert!(
-        json.errors[0].detail.contains("dependency constraints"),
-        "{:?}",
-        json.errors
+    let response = token.enqueue_publish(crate_to_publish);
+    response.assert_status(StatusCode::OK);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": WILDCARD_ERROR_MESSAGE }] })
     );
 }
 
@@ -303,15 +293,11 @@ fn new_krate_wrong_user() {
     let another_user = app.db_new_user("another").db_new_token("bar");
     let crate_to_publish = PublishBuilder::new("foo_wrong").version("2.0.0");
 
-    let json = another_user
-        .enqueue_publish(crate_to_publish)
-        .bad_with_status(StatusCode::OK);
-    assert!(
-        json.errors[0]
-            .detail
-            .contains("this crate exists but you don't seem to be an owner."),
-        "{:?}",
-        json.errors
+    let response = another_user.enqueue_publish(crate_to_publish);
+    response.assert_status(StatusCode::OK);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": MISSING_RIGHTS_ERROR_MESSAGE }] })
     );
 }
 
@@ -322,15 +308,11 @@ fn new_krate_too_big() {
     let files = [("foo_big-1.0.0/big", &[b'a'; 2000] as &[_])];
     let builder = PublishBuilder::new("foo_big").files(&files);
 
-    let json = user
-        .enqueue_publish(builder)
-        .bad_with_status(StatusCode::OK);
-    assert!(
-        json.errors[0]
-            .detail
-            .contains("uploaded tarball is malformed or too large when decompressed"),
-        "{:?}",
-        json.errors
+    let response = user.enqueue_publish(builder);
+    response.assert_status(StatusCode::OK);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": "uploaded tarball is malformed or too large when decompressed" }] })
     );
 }
 
@@ -359,13 +341,11 @@ fn new_krate_wrong_files() {
     let files = [("foo-1.0.0/a", data), ("bar-1.0.0/a", data)];
     let builder = PublishBuilder::new("foo").files(&files);
 
-    let json = user
-        .enqueue_publish(builder)
-        .bad_with_status(StatusCode::OK);
-    assert!(
-        json.errors[0].detail.contains("invalid tarball uploaded"),
-        "{:?}",
-        json.errors
+    let response = user.enqueue_publish(builder);
+    response.assert_status(StatusCode::OK);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": "invalid tarball uploaded" }] })
     );
 }
 
@@ -380,16 +360,11 @@ fn new_krate_gzip_bomb() {
         .version("1.1.0")
         .files_with_io(&mut [("foo-1.1.0/a", &mut body, len)]);
 
-    let json = token
-        .enqueue_publish(crate_to_publish)
-        .bad_with_status(StatusCode::OK);
-
-    assert!(
-        json.errors[0]
-            .detail
-            .contains("too large when decompressed"),
-        "{:?}",
-        json.errors
+    let response = token.enqueue_publish(crate_to_publish);
+    response.assert_status(StatusCode::OK);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": "uploaded tarball is malformed or too large when decompressed" }] })
     );
 }
 
@@ -405,14 +380,11 @@ fn new_krate_duplicate_version() {
     });
 
     let crate_to_publish = PublishBuilder::new("foo_dupe").version("1.0.0");
-    let json = token
-        .enqueue_publish(crate_to_publish)
-        .bad_with_status(StatusCode::OK);
-
-    assert!(
-        json.errors[0].detail.contains("already uploaded"),
-        "{:?}",
-        json.errors
+    let response = token.enqueue_publish(crate_to_publish);
+    response.assert_status(StatusCode::OK);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": "crate version `1.0.0` is already uploaded" }] })
     );
 }
 
@@ -427,14 +399,11 @@ fn new_crate_similar_name() {
     });
 
     let crate_to_publish = PublishBuilder::new("foo_similar").version("1.1.0");
-    let json = token
-        .enqueue_publish(crate_to_publish)
-        .bad_with_status(StatusCode::OK);
-
-    assert!(
-        json.errors[0].detail.contains("previously named"),
-        "{:?}",
-        json.errors
+    let response = token.enqueue_publish(crate_to_publish);
+    response.assert_status(StatusCode::OK);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": "crate was previously named `Foo_similar`" }] })
     );
 }
 
@@ -449,14 +418,11 @@ fn new_crate_similar_name_hyphen() {
     });
 
     let crate_to_publish = PublishBuilder::new("foo-bar-hyphen").version("1.1.0");
-    let json = token
-        .enqueue_publish(crate_to_publish)
-        .bad_with_status(StatusCode::OK);
-
-    assert!(
-        json.errors[0].detail.contains("previously named"),
-        "{:?}",
-        json.errors
+    let response = token.enqueue_publish(crate_to_publish);
+    response.assert_status(StatusCode::OK);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": "crate was previously named `foo_bar_hyphen`" }] })
     );
 }
 
@@ -471,14 +437,11 @@ fn new_crate_similar_name_underscore() {
     });
 
     let crate_to_publish = PublishBuilder::new("foo_bar_underscore").version("1.1.0");
-    let json = token
-        .enqueue_publish(crate_to_publish)
-        .bad_with_status(StatusCode::OK);
-
-    assert!(
-        json.errors[0].detail.contains("previously named"),
-        "{:?}",
-        json.errors
+    let response = token.enqueue_publish(crate_to_publish);
+    response.assert_status(StatusCode::OK);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": "crate was previously named `foo-bar-underscore`" }] })
     );
 }
 
@@ -547,15 +510,11 @@ fn new_krate_dependency_missing() {
     let dependency = DependencyBuilder::new("bar_missing");
     let crate_to_publish = PublishBuilder::new("foo_missing").dependency(dependency);
 
-    let json = token
-        .enqueue_publish(crate_to_publish)
-        .bad_with_status(StatusCode::OK);
-    assert!(
-        json.errors[0]
-            .detail
-            .contains("no known crate named `bar_missing`"),
-        "{:?}",
-        json.errors
+    let response = token.enqueue_publish(crate_to_publish);
+    response.assert_status(StatusCode::OK);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": "no known crate named `bar_missing`" }] })
     );
 }
 
@@ -580,16 +539,11 @@ fn new_krate_without_any_email_fails() {
 
     let crate_to_publish = PublishBuilder::new("foo_no_email");
 
-    let json = token
-        .enqueue_publish(crate_to_publish)
-        .bad_with_status(StatusCode::OK);
-
-    assert!(
-        json.errors[0]
-            .detail
-            .contains("A verified email address is required to publish crates to crates.io"),
-        "{:?}",
-        json.errors
+    let response = token.enqueue_publish(crate_to_publish);
+    response.assert_status(StatusCode::OK);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": "A verified email address is required to publish crates to crates.io. Visit https://crates.io/me to set and verify your email address." }] })
     );
 }
 
@@ -606,16 +560,11 @@ fn new_krate_with_unverified_email_fails() {
 
     let crate_to_publish = PublishBuilder::new("foo_unverified_email");
 
-    let json = token
-        .enqueue_publish(crate_to_publish)
-        .bad_with_status(StatusCode::OK);
-
-    assert!(
-        json.errors[0]
-            .detail
-            .contains("A verified email address is required to publish crates to crates.io"),
-        "{:?}",
-        json.errors
+    let response = token.enqueue_publish(crate_to_publish);
+    response.assert_status(StatusCode::OK);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": "A verified email address is required to publish crates to crates.io. Visit https://crates.io/me to set and verify your email address." }] })
     );
 }
 
@@ -820,15 +769,11 @@ fn author_license_and_description_required() {
         .unset_description()
         .unset_authors();
 
-    let json = token
-        .enqueue_publish(crate_to_publish)
-        .bad_with_status(StatusCode::OK);
-    assert!(
-        json.errors[0].detail.contains("author")
-            && json.errors[0].detail.contains("description")
-            && json.errors[0].detail.contains("license"),
-        "{:?}",
-        json.errors
+    let response = token.enqueue_publish(crate_to_publish);
+    response.assert_status(StatusCode::OK);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": missing_metadata_error_message(&["description", "license", "authors"]) }] })
     );
 
     let crate_to_publish = PublishBuilder::new("foo_metadata")
@@ -837,15 +782,11 @@ fn author_license_and_description_required() {
         .unset_authors()
         .author("");
 
-    let json = token
-        .enqueue_publish(crate_to_publish)
-        .bad_with_status(StatusCode::OK);
-    assert!(
-        json.errors[0].detail.contains("author")
-            && json.errors[0].detail.contains("description")
-            && !json.errors[0].detail.contains("license"),
-        "{:?}",
-        json.errors
+    let response = token.enqueue_publish(crate_to_publish);
+    response.assert_status(StatusCode::OK);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": missing_metadata_error_message(&["description", "authors"]) }] })
     );
 
     let crate_to_publish = PublishBuilder::new("foo_metadata")
@@ -854,15 +795,11 @@ fn author_license_and_description_required() {
         .license_file("foo")
         .unset_description();
 
-    let json = token
-        .enqueue_publish(crate_to_publish)
-        .bad_with_status(StatusCode::OK);
-    assert!(
-        !json.errors[0].detail.contains("author")
-            && json.errors[0].detail.contains("description")
-            && !json.errors[0].detail.contains("license"),
-        "{:?}",
-        json.errors
+    let response = token.enqueue_publish(crate_to_publish);
+    response.assert_status(StatusCode::OK);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": missing_metadata_error_message(&["description"]) }] })
     );
 }
 
@@ -885,16 +822,11 @@ fn new_krate_tarball_with_hard_links() {
 
     let crate_to_publish = PublishBuilder::new("foo").version("1.1.0").tarball(tarball);
 
-    let json = token
-        .enqueue_publish(crate_to_publish)
-        .bad_with_status(StatusCode::OK);
-
-    assert!(
-        json.errors[0]
-            .detail
-            .contains("too large when decompressed"),
-        "{:?}",
-        json.errors
+    let response = token.enqueue_publish(crate_to_publish);
+    response.assert_status(StatusCode::OK);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": "uploaded tarball is malformed or too large when decompressed" }] })
     );
 }
 
