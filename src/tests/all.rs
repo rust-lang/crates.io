@@ -32,8 +32,7 @@ use std::{
     },
 };
 
-use conduit::{header, Body};
-use conduit_test::MockRequest;
+use conduit::Body;
 use diesel::prelude::*;
 use reqwest::{blocking::Client, Proxy};
 
@@ -176,12 +175,6 @@ fn env(var: &str) -> String {
             var
         ),
     }
-}
-
-fn req(method: conduit::Method, path: &str) -> MockRequest {
-    let mut request = MockRequest::new(method, path);
-    request.header(header::USER_AGENT, "conduit-test");
-    request
 }
 
 fn json<T>(r: &mut AppResponse) -> T

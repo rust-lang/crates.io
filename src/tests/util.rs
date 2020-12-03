@@ -431,6 +431,12 @@ pub trait RequestHelper {
     }
 }
 
+fn req(method: conduit::Method, path: &str) -> MockRequest {
+    let mut request = MockRequest::new(method, path);
+    request.header(header::USER_AGENT, "conduit-test");
+    request
+}
+
 /// A type that can generate unauthenticated requests
 pub struct MockAnonymousUser {
     app: TestApp,
@@ -438,7 +444,7 @@ pub struct MockAnonymousUser {
 
 impl RequestHelper for MockAnonymousUser {
     fn request_builder(&self, method: Method, path: &str) -> MockRequest {
-        crate::req(method, path)
+        req(method, path)
     }
 
     fn app(&self) -> &TestApp {
@@ -457,7 +463,7 @@ pub struct MockCookieUser {
 
 impl RequestHelper for MockCookieUser {
     fn request_builder(&self, method: Method, path: &str) -> MockRequest {
-        let mut request = crate::req(method, path);
+        let mut request = req(method, path);
         let id = TrustedUserId(self.user.id);
         request.mut_extensions().insert(id);
         request
@@ -504,7 +510,7 @@ pub struct MockTokenUser {
 
 impl RequestHelper for MockTokenUser {
     fn request_builder(&self, method: Method, path: &str) -> MockRequest {
-        let mut request = crate::req(method, path);
+        let mut request = req(method, path);
         request.header(header::AUTHORIZATION, &self.token.plaintext);
         request
     }
