@@ -302,7 +302,6 @@ dependencies = [
  "log",
  "oauth2",
  "parking_lot",
- "parse_link_header",
  "rand",
  "reqwest",
  "scheduled-thread-pool",
@@ -1889,16 +1888,6 @@ dependencies = [
  "redox_syscall",
  "smallvec 1.5.0",
  "winapi 0.3.9",
-]
-
-[[package]]
-name = "parse_link_header"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4b09f37bc2b55b5237baf3139b9e6304aea937baf38e8f43207b41cc3934b3a1"
-dependencies = [
- "http 0.2.1",
- "regex",
 ]
 
 [[package]]
