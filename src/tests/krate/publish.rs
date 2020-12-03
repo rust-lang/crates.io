@@ -859,9 +859,9 @@ fn new_krate_tarball_with_hard_links() {
         let mut header = tar::Header::new_gnu();
         assert_ok!(header.set_path("foo-1.1.0/bar"));
         header.set_size(0);
-        header.set_cksum();
         header.set_entry_type(tar::EntryType::hard_link());
         assert_ok!(header.set_link_name("foo-1.1.0/another"));
+        header.set_cksum();
         assert_ok!(ar.append(&header, &[][..]));
         assert_ok!(ar.finish());
     }
@@ -872,7 +872,7 @@ fn new_krate_tarball_with_hard_links() {
     response.assert_status(StatusCode::OK);
     assert_eq!(
         response.json(),
-        json!({ "errors": [{ "detail": "uploaded tarball is malformed or too large when decompressed" }] })
+        json!({ "errors": [{ "detail": "invalid tarball uploaded" }] })
     );
 }
 
