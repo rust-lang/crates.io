@@ -16,6 +16,12 @@ use crate::render;
 use crate::util::{read_fill, read_le_u32, Maximums};
 use crate::views::{EncodableCrateUpload, GoodCrate, PublishWarnings};
 
+pub const MISSING_RIGHTS_ERROR_MESSAGE: &str =
+    "this crate exists but you don't seem to be an owner. \
+     If you believe this is a mistake, perhaps you need \
+     to accept an invitation to be an owner before \
+     publishing.";
+
 /// Handles the `PUT /crates/new` route.
 /// Used by `cargo publish` to publish a new crate or to publish a new version of an
 /// existing crate.
@@ -98,12 +104,7 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
 
         let owners = krate.owners(&conn)?;
         if user.rights(req.app(), &owners)? < Rights::Publish {
-            return Err(cargo_err(
-                "this crate exists but you don't seem to be an owner. \
-                 If you believe this is a mistake, perhaps you need \
-                 to accept an invitation to be an owner before \
-                 publishing.",
-            ));
+            return Err(cargo_err(MISSING_RIGHTS_ERROR_MESSAGE));
         }
 
         if krate.name != *name {
