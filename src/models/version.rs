@@ -58,22 +58,23 @@ impl TopVersions {
     where
         T: Clone + IntoIterator<Item = (NaiveDateTime, semver::Version)>,
     {
-        Self {
-            newest: pairs
-                .clone()
-                .into_iter()
-                .max()
-                .unwrap_or((
-                    NaiveDateTime::from_timestamp(0, 0),
-                    default_semver_version(),
-                ))
-                .1,
-            highest: pairs
-                .into_iter()
-                .map(|(_, v)| v)
-                .max()
-                .unwrap_or_else(default_semver_version),
-        }
+        let newest = pairs
+            .clone()
+            .into_iter()
+            .max()
+            .unwrap_or((
+                NaiveDateTime::from_timestamp(0, 0),
+                default_semver_version(),
+            ))
+            .1;
+
+        let highest = pairs
+            .into_iter()
+            .map(|(_, v)| v)
+            .max()
+            .unwrap_or_else(default_semver_version);
+
+        Self { newest, highest }
     }
 }
 
