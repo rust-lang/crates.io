@@ -7,6 +7,11 @@ use crate::models::{Crate, Version};
 use crate::schema::*;
 use crate::views::{EncodableCrateDependency, EncodableDependency};
 
+pub const WILDCARD_ERROR_MESSAGE: &str = "wildcard (`*`) dependency constraints are not allowed \
+     on crates.io. See https://doc.rust-lang.org/cargo/faq.html#can-\
+     libraries-use--as-a-version-for-their-dependencies for more \
+     information";
+
 #[derive(Identifiable, Associations, Debug, Queryable, QueryableByName)]
 #[belongs_to(Version)]
 #[belongs_to(Crate)]
@@ -91,12 +96,7 @@ pub fn add_dependencies(
                 .first(&*conn)
                 .map_err(|_| cargo_err(&format_args!("no known crate named `{}`", &*dep.name)))?;
             if dep.version_req == semver::VersionReq::parse("*").unwrap() {
-                return Err(cargo_err(
-                    "wildcard (`*`) dependency constraints are not allowed \
-                     on crates.io. See https://doc.rust-lang.org/cargo/faq.html#can-\
-                     libraries-use--as-a-version-for-their-dependencies for more \
-                     information",
-                ));
+                return Err(cargo_err(WILDCARD_ERROR_MESSAGE));
             }
 
             // If this dependency has an explicit name in `Cargo.toml` that
