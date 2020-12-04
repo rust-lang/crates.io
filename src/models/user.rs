@@ -174,7 +174,6 @@ impl User {
         email: Option<String>,
         email_verified: bool,
         email_verification_sent: bool,
-        has_tokens: bool,
     ) -> EncodablePrivateUser {
         let User {
             id,
@@ -190,7 +189,6 @@ impl User {
             email,
             email_verified,
             email_verification_sent,
-            has_tokens,
             avatar: gh_avatar,
             login: gh_login,
             name,

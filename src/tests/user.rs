@@ -7,7 +7,9 @@ use crate::{
 use cargo_registry::{
     models::{ApiToken, Email, NewUser, User},
     schema::crate_owners,
-    views::{EncodablePrivateUser, EncodablePublicUser, EncodableVersion, OwnedCrate},
+    views::{
+        EncodableMeMeta, EncodablePrivateUser, EncodablePublicUser, EncodableVersion, OwnedCrate,
+    },
 };
 
 use diesel::prelude::*;
@@ -27,6 +29,7 @@ pub struct UserShowPublicResponse {
 pub struct UserShowPrivateResponse {
     pub user: EncodablePrivateUser,
     pub owned_crates: Vec<OwnedCrate>,
+    pub meta: EncodableMeMeta,
 }
 
 #[derive(Deserialize)]
@@ -754,7 +757,7 @@ fn shows_that_user_has_tokens() {
     let (app, _, user) = TestApp::init().with_user();
 
     let json = user.show_me();
-    assert!(!json.user.has_tokens);
+    assert!(!json.meta.has_tokens);
 
     let user_id = user.as_model().id;
     app.db(|conn| {
@@ -765,5 +768,5 @@ fn shows_that_user_has_tokens() {
     });
 
     let json = user.show_me();
-    assert!(json.user.has_tokens);
+    assert!(json.meta.has_tokens);
 }

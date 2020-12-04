@@ -161,6 +161,12 @@ pub struct OwnedCrate {
 pub struct EncodableMe {
     pub user: EncodablePrivateUser,
     pub owned_crates: Vec<OwnedCrate>,
+    pub meta: EncodableMeMeta,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
+pub struct EncodableMeMeta {
+    pub has_tokens: bool,
 }
 
 /// The serialization format for the `User` model.
@@ -176,7 +182,6 @@ pub struct EncodablePrivateUser {
     pub email: Option<String>,
     pub avatar: Option<String>,
     pub url: Option<String>,
-    pub has_tokens: bool,
 }
 
 /// The serialization format for the `User` model.
