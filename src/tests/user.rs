@@ -753,6 +753,9 @@ fn test_update_email_notifications_not_owned() {
 fn shows_that_user_has_tokens() {
     let (app, _, user) = TestApp::init().with_user();
 
+    let json = user.show_me();
+    assert!(!json.user.has_tokens);
+
     let user_id = user.as_model().id;
     app.db(|conn| {
         vec![
