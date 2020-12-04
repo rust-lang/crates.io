@@ -30,11 +30,10 @@ pub fn me(req: &mut dyn RequestExt) -> EndpointResult {
             ))
             .first(&*conn)?;
 
-    let tokens: Vec<ApiToken> = ApiToken::belonging_to(&user)
+    let token_count = ApiToken::belonging_to(&user)
         .filter(api_tokens::revoked.eq(false))
-        .load(&*conn)?;
-
-    let token_count = tokens.len() as i64;
+        .count()
+        .get_result(&*conn)?;
 
     let owned_crates = CrateOwner::by_owner_kind(OwnerKind::User)
         .inner_join(crates::table)
