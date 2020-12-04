@@ -166,7 +166,7 @@ pub struct EncodableMe {
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub struct EncodableMeMeta {
-    pub has_tokens: bool,
+    pub token_count: i64,
 }
 
 /// The serialization format for the `User` model.

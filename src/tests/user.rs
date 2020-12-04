@@ -757,7 +757,7 @@ fn shows_that_user_has_tokens() {
     let (app, _, user) = TestApp::init().with_user();
 
     let json = user.show_me();
-    assert!(!json.meta.has_tokens);
+    assert_eq!(json.meta.token_count, 0);
 
     let user_id = user.as_model().id;
     app.db(|conn| {
@@ -768,5 +768,5 @@ fn shows_that_user_has_tokens() {
     });
 
     let json = user.show_me();
-    assert!(json.meta.has_tokens);
+    assert_eq!(json.meta.token_count, 2);
 }

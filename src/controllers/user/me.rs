@@ -33,7 +33,8 @@ pub fn me(req: &mut dyn RequestExt) -> EndpointResult {
     let tokens: Vec<ApiToken> = ApiToken::belonging_to(&user)
         .filter(api_tokens::revoked.eq(false))
         .load(&*conn)?;
-    let has_tokens = !tokens.is_empty();
+
+    let token_count = tokens.len() as i64;
 
     let owned_crates = CrateOwner::by_owner_kind(OwnerKind::User)
         .inner_join(crates::table)
@@ -54,7 +55,7 @@ pub fn me(req: &mut dyn RequestExt) -> EndpointResult {
     Ok(req.json(&EncodableMe {
         user: user.encodable_private(email, verified, verification_sent),
         owned_crates,
-        meta: EncodableMeMeta { has_tokens },
+        meta: EncodableMeMeta { token_count },
     }))
 }
 
