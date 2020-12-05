@@ -55,15 +55,6 @@ struct TestAppInner {
     runner: Option<Runner<Environment, DieselPool>>,
 }
 
-use swirl::schema::background_jobs;
-// FIXME: This is copied from swirl::storage, because it is private
-#[derive(Queryable, Identifiable, Debug, Clone)]
-struct BackgroundJob {
-    pub id: i64,
-    pub job_type: String,
-    pub data: serde_json::Value,
-}
-
 impl Drop for TestAppInner {
     fn drop(&mut self) {
         use diesel::prelude::*;
