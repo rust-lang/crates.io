@@ -1,6 +1,6 @@
 import Controller from '@ember/controller';
 import { computed } from '@ember/object';
-import { gt, readOnly, alias } from '@ember/object/computed';
+import { alias, gt, readOnly } from '@ember/object/computed';
 import { inject as service } from '@ember/service';
 
 import { task } from 'ember-concurrency';

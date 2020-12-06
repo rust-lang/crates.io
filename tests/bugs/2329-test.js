@@ -1,4 +1,4 @@
-import { currentURL, click, waitFor } from '@ember/test-helpers';
+import { click, currentURL, waitFor } from '@ember/test-helpers';
 import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 

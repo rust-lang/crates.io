@@ -1,4 +1,4 @@
-import { underscore, decamelize } from '@ember/string';
+import { decamelize, underscore } from '@ember/string';
 
 import { pluralize } from 'ember-inflector';
 

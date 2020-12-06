@@ -22,6 +22,9 @@ module.exports = {
     // it's fine to use `return` without a value and rely on the implicit `undefined` return value
     'getter-return': 'off',
 
+    // declaration sort is taken care of by `import-helpers/order-imports`
+    'sort-imports': ['error', { ignoreDeclarationSort: true, ignoreCase: true }],
+
     'prettier/prettier': 'error',
 
     // disabled because we still use `this.set()` in a few places and it works just fine

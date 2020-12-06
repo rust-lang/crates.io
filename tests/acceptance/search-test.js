@@ -1,4 +1,4 @@
-import { click, fillIn, currentURL, triggerEvent, visit, blur, waitFor, settled } from '@ember/test-helpers';
+import { blur, click, currentURL, fillIn, settled, triggerEvent, visit, waitFor } from '@ember/test-helpers';
 import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 

@@ -1,4 +1,4 @@
-import { visit, waitFor, settled, click } from '@ember/test-helpers';
+import { click, settled, visit, waitFor } from '@ember/test-helpers';
 import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 

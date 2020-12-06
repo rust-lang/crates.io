@@ -1,4 +1,4 @@
-import { fillIn, currentURL, triggerEvent, visit } from '@ember/test-helpers';
+import { currentURL, fillIn, triggerEvent, visit } from '@ember/test-helpers';
 import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 

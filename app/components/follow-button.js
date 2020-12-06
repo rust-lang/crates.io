@@ -2,7 +2,7 @@ import { inject as service } from '@ember/service';
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 
-import { task, didCancel } from 'ember-concurrency';
+import { didCancel, task } from 'ember-concurrency';
 
 import ajax from '../utils/ajax';
 
