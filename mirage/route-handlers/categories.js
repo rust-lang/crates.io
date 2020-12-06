@@ -1,4 +1,4 @@
-import { pageParams, compareStrings, withMeta, notFound } from './-utils';
+import { compareStrings, notFound, pageParams, withMeta } from './-utils';
 
 export function register(server) {
   server.get('/api/v1/categories', function (schema, request) {

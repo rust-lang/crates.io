@@ -1,4 +1,4 @@
-import { Model, belongsTo } from 'ember-cli-mirage';
+import { belongsTo, Model } from 'ember-cli-mirage';
 
 /**
  * This is a mirage-only model, that is used to keep track of the current

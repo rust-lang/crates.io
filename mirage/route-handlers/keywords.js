@@ -1,4 +1,4 @@
-import { pageParams, withMeta, notFound } from './-utils';
+import { notFound, pageParams, withMeta } from './-utils';
 
 export function register(server) {
   server.get('/api/v1/keywords', function (schema, request) {

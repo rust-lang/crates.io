@@ -1,6 +1,6 @@
 import Controller from '@ember/controller';
 import { action, computed } from '@ember/object';
-import { readOnly, bool } from '@ember/object/computed';
+import { bool, readOnly } from '@ember/object/computed';
 
 import { task } from 'ember-concurrency';
 

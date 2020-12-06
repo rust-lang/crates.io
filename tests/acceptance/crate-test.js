@@ -1,6 +1,6 @@
-import { click, currentURL, currentRouteName, visit, waitFor } from '@ember/test-helpers';
+import { click, currentRouteName, currentURL, visit, waitFor } from '@ember/test-helpers';
 import { setupApplicationTest } from 'ember-qunit';
-import { module, test, skip } from 'qunit';
+import { module, skip, test } from 'qunit';
 
 import percySnapshot from '@percy/ember';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';

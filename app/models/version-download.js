@@ -1,4 +1,4 @@
-import Model, { belongsTo, attr } from '@ember-data/model';
+import Model, { attr, belongsTo } from '@ember-data/model';
 
 export default class VersionDownload extends Model {
   /** @type number */

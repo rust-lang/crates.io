@@ -1,4 +1,4 @@
-import { settled, visit as _visit } from '@ember/test-helpers';
+import { visit as _visit, settled } from '@ember/test-helpers';
 
 // see https://github.com/emberjs/ember-test-helpers/issues/332
 export async function visit(url) {
