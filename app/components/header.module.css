@@ -58,6 +58,12 @@ input.search {
     background-size: 14px 15px;
     border-radius: 15px;
     box-shadow: none;
+    transition: box-shadow 150ms;
+
+    &:focus {
+        outline: none;
+        box-shadow: 0 0 0 4px var(--yellow);
+    }
 }
 
 .mobile-search {
