@@ -543,8 +543,8 @@ impl MockTokenUser {
     }
 
     /// Add a user as an owner for a crate.
-    pub fn add_user_owner(&self, krate_name: &str, user: &User) {
-        self.add_named_owner(krate_name, &user.gh_login).good();
+    pub fn add_user_owner(&self, krate_name: &str, username: &str) {
+        self.add_named_owner(krate_name, username).good();
     }
 }
 

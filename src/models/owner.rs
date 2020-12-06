@@ -71,7 +71,7 @@ impl Owner {
             )?))
         } else {
             users::table
-                .filter(users::gh_login.eq(name))
+                .filter(crate::lower(users::gh_login).eq(name.to_lowercase()))
                 .filter(users::gh_id.ne(-1))
                 .order(users::gh_id.desc())
                 .first(conn)

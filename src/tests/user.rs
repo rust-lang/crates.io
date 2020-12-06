@@ -142,14 +142,14 @@ fn me() {
 #[test]
 fn show() {
     let (app, anon, _) = TestApp::init().with_user();
-    app.db_new_user("bar");
+    app.db_new_user("Bar");
 
     let json: UserShowPublicResponse = anon.get("/api/v1/users/foo").good();
     assert_eq!("foo", json.user.login);
 
-    let json: UserShowPublicResponse = anon.get("/api/v1/users/bar").good();
-    assert_eq!("bar", json.user.login);
-    assert_eq!(Some("https://github.com/bar".into()), json.user.url);
+    let json: UserShowPublicResponse = anon.get("/api/v1/users/bAr").good();
+    assert_eq!("Bar", json.user.login);
+    assert_eq!(Some("https://github.com/Bar".into()), json.user.url);
 }
 
 #[test]
