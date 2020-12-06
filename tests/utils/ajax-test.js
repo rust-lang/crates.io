@@ -1,7 +1,7 @@
 import { setupTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
-import ajax, { HttpError } from 'cargo/utils/ajax';
+import ajax, { AjaxError, HttpError } from 'cargo/utils/ajax';
 
 import setupMirage from '../helpers/setup-mirage';
 
@@ -29,13 +29,21 @@ module('ajax()', function (hooks) {
     this.server.get('/foo', { foo: 42 }, 500);
 
     await assert.rejects(ajax('/foo'), function (error) {
-      assert.ok(error instanceof HttpError);
-      assert.equal(error.name, 'HttpError');
-      assert.equal(error.message, 'GET /foo failed with: 500 Internal Server Error');
+      assert.ok(error instanceof AjaxError);
+      assert.equal(error.name, 'AjaxError');
+      assert.equal(error.message, 'GET /foo failed');
       assert.equal(error.method, 'GET');
       assert.equal(error.url, '/foo');
-      assert.ok(error.response);
-      assert.equal(error.response.url, '/foo');
+      assert.ok(error.cause);
+
+      let { cause } = error;
+      assert.ok(cause instanceof HttpError);
+      assert.equal(cause.name, 'HttpError');
+      assert.equal(cause.message, 'GET /foo failed with: 500 Internal Server Error');
+      assert.equal(cause.method, 'GET');
+      assert.equal(cause.url, '/foo');
+      assert.ok(cause.response);
+      assert.equal(cause.response.url, '/foo');
       return true;
     });
   });
@@ -44,9 +52,17 @@ module('ajax()', function (hooks) {
     this.server.get('/foo', () => '{ foo: 42');
 
     await assert.rejects(ajax('/foo'), function (error) {
-      assert.ok(!(error instanceof HttpError));
-      assert.equal(error.name, 'SyntaxError');
-      assert.equal(error.message, 'Unexpected token f in JSON at position 2');
+      assert.ok(error instanceof AjaxError);
+      assert.equal(error.name, 'AjaxError');
+      assert.equal(error.message, 'GET /foo failed');
+      assert.equal(error.method, 'GET');
+      assert.equal(error.url, '/foo');
+      assert.ok(error.cause);
+
+      let { cause } = error;
+      assert.ok(!(cause instanceof HttpError));
+      assert.equal(cause.name, 'SyntaxError');
+      assert.equal(cause.message, 'Unexpected token f in JSON at position 2');
       return true;
     });
   });
@@ -57,9 +73,17 @@ module('ajax()', function (hooks) {
     };
 
     await assert.rejects(ajax('/foo'), function (error) {
-      assert.ok(!(error instanceof HttpError));
-      assert.equal(error.name, 'TypeError');
-      assert.equal(error.message, 'NetworkError when attempting to fetch resource.');
+      assert.ok(error instanceof AjaxError);
+      assert.equal(error.name, 'AjaxError');
+      assert.equal(error.message, 'GET /foo failed');
+      assert.equal(error.method, 'GET');
+      assert.equal(error.url, '/foo');
+      assert.ok(error.cause);
+
+      let { cause } = error;
+      assert.ok(!(cause instanceof HttpError));
+      assert.equal(cause.name, 'TypeError');
+      assert.equal(cause.message, 'NetworkError when attempting to fetch resource.');
       return true;
     });
   });

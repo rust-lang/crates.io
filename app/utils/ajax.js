@@ -1,11 +1,20 @@
 import fetch from 'fetch';
 
 export default async function ajax(input, init) {
-  let response = await fetch(input, init);
-  if (response.ok) {
-    return await response.json();
+  let method = init?.method ?? 'GET';
+
+  let cause;
+  try {
+    let response = await fetch(input, init);
+    if (response.ok) {
+      return await response.json();
+    }
+    cause = new HttpError({ url: input, method, response });
+  } catch (error) {
+    cause = error;
   }
-  throw new HttpError({ url: input, method: init?.method ?? 'GET', response });
+
+  throw new AjaxError({ url: input, method, cause });
 }
 
 export class HttpError extends Error {
@@ -16,5 +25,15 @@ export class HttpError extends Error {
     this.method = method;
     this.url = url;
     this.response = response;
+  }
+}
+
+export class AjaxError extends Error {
+  constructor({ url, method, cause }) {
+    super(`${method} ${url} failed`);
+    this.name = 'AjaxError';
+    this.method = method;
+    this.url = url;
+    this.cause = cause;
   }
 }
