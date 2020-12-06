@@ -1,7 +1,10 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
+import * as Sentry from '@sentry/browser';
 import prerelease from 'semver/functions/prerelease';
+
+import { AjaxError } from '../../utils/ajax';
 
 function isUnstableVersion(version) {
   return !!prerelease(version);
@@ -72,7 +75,12 @@ export default class VersionRoute extends Route {
 
     let { crate } = model;
     if (!crate.documentation || crate.documentation.startsWith('https://docs.rs/')) {
-      controller.loadDocsBuildsTask.perform();
+      controller.loadDocsBuildsTask.perform().catch(error => {
+        // report unexpected errors to Sentry and ignore `ajax()` errors
+        if (!(error instanceof AjaxError)) {
+          Sentry.captureException(error);
+        }
+      });
     }
   }
 

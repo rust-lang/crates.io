@@ -73,4 +73,14 @@ module('Route | crate.version | docs link', function (hooks) {
     await visit('/crates/foo');
     assert.dom('[data-test-docs-link]').hasAttribute('href', 'https://docs.rs/foo/1.0.0');
   });
+
+  test('ajax errors are ignored', async function (assert) {
+    this.server.create('crate', { name: 'foo', documentation: 'https://docs.rs/foo/0.6.2' });
+    this.server.create('version', { crateId: 'foo', num: '1.0.0' });
+
+    this.server.get('https://docs.rs/crate/:crate/:version/builds.json', {}, 500);
+
+    await visit('/crates/foo');
+    assert.dom('[data-test-docs-link]').hasAttribute('href', 'https://docs.rs/foo/0.6.2');
+  });
 });
