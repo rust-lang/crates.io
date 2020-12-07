@@ -49,6 +49,7 @@
   "devDependencies": {
     "@ember/optional-features": "2.0.0",
     "@ember/render-modifiers": "1.0.2",
+    "@ember/test-helpers": "2.1.4",
     "@embroider/compat": "0.36.0",
     "@embroider/core": "0.36.0",
     "@embroider/webpack": "0.36.0",
@@ -117,6 +118,7 @@
     "nyc": "15.1.0",
     "postcss-nested": "4.2.3",
     "prettier": "2.2.1",
+    "qunit": "2.13.0",
     "qunit-console-grouper": "0.3.0",
     "qunit-dom": "1.6.0",
     "semver": "7.3.4",
