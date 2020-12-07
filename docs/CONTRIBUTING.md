@@ -165,8 +165,9 @@ methods we'd recommend for each operating system:
   [Homebrew](https://brew.sh/) by running `brew install postgresql` and
   following the post-installation instructions
 - Linux: Postgres is generally available in the distribution repositories as
-  `postgresql` or `postgresql-server`. You will also need `postgresql-devel`,
-  which might be called `postgresql-contrib`, and possibly `libpq-dev`. Here
+  `postgresql` or `postgresql-server`. You will also need the developer package 
+  (known either as `postgresql-devel` or `libpq-dev`),
+  as well as `postgresql-contrib`. Here
   are some examples of installation commands that have been tested for the
   following distributions:
 
