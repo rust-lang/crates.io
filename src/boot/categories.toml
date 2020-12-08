@@ -285,27 +285,6 @@ description = """
 Compilers, interpreters, transpilers implemented for particular programming languages.\
 """
 
-[language-implementations.categories.transpilers]
-name = "Transpiler implementations"
-description = """
-Transpilers deal with source to source translations, such as\
-Python <-> Rust
-"""
-
-[language-implementations.categories.compilers]
-name = "Compiler implementations"
-description = """
-Compilers deal with source to machine translations, like compiling\
-Rust for x86 architectures.
-"""
-
-[language-implementations.categories.interpreters]
-name = "Interpreter implementations"
-description = """
-Interpreters deal with source to some IR translations, such as AST or\
-bytecode based interpreters like CPython or Rust's MIRI.
-"""
-
 [localization]
 name = "Localization (L10n)"
 description = """
