@@ -100,7 +100,7 @@
     "ember-set-body-class": "1.0.2",
     "ember-source": "3.23.1",
     "ember-svg-jar": "2.2.3",
-    "ember-template-lint": "2.14.0",
+    "ember-template-lint": "2.15.0",
     "ember-test-selectors": "5.0.0",
     "ember-truth-helpers": "3.0.0",
     "ember-web-app": "5.0.1",
