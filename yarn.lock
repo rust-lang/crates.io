@@ -1295,10 +1295,10 @@
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
 
-"@glimmer/component@1.0.2":
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/@glimmer/component/-/component-1.0.2.tgz#679307972d29a849225c13062ab11c779956ff60"
-  integrity sha512-st6YroDjkvUeYWE36NglNG9hXmJOuOI8t44UEp1tufGc4B1L/CTlt1ziQGkaxkhY7/o2r0ZCcWHvf5bpq838YQ==
+"@glimmer/component@1.0.3":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@glimmer/component/-/component-1.0.3.tgz#38c26fc4855fd7ad0e0816d18d80d32c578e5140"
+  integrity sha512-GD3gcN+Pr2flmxkt2lm5K86jwX+KRD9QQpNH+wiEQGjBXOzd46+XD5npH1sRByqLYml9rW4klflcrEfNb7dnQw==
   dependencies:
     "@glimmer/di" "^0.1.9"
     "@glimmer/env" "^0.1.7"
@@ -1399,10 +1399,10 @@
     "@handlebars/parser" "^1.1.0"
     simple-html-tokenizer "^0.5.9"
 
-"@glimmer/tracking@1.0.2", "@glimmer/tracking@~1.0.2":
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/@glimmer/tracking/-/tracking-1.0.2.tgz#4fe9ca89e3f4a2ae8e37c8bd8e4ea0d886d9abbf"
-  integrity sha512-9Vp04TM2IDTShGFdxccfvnmcaj4NwqLrwbOXm4iju5KL/WkeB8mqoCSLtO3kUg+80DqU0pKE8tR460lQP8CutA==
+"@glimmer/tracking@1.0.3", "@glimmer/tracking@~1.0.2":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@glimmer/tracking/-/tracking-1.0.3.tgz#8b9b42aff6c206edeaaea178a95acc1eff62e61e"
+  integrity sha512-21WR13vPdzt1IQ6JmPPAu4szjV9yKdmLHV3nD0MLDj6/EoYv1c2PqpFBBlp++6xW8OnyDa++cQ8OFoQDP+MRpA==
   dependencies:
     "@glimmer/env" "^0.1.7"
     "@glimmer/validator" "^0.44.0"
