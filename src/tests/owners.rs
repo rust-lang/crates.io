@@ -92,13 +92,9 @@ fn new_crate_owner() {
     let crate_to_publish = PublishBuilder::new("foo_owner").version("1.0.0");
     token.enqueue_publish(crate_to_publish).good();
 
-    // Add the second user as an owner (with a different case to make sure that works)
-    let user2 = app.db_new_user("Bar");
-    token.add_user_owner("foo_owner", "BAR");
-
-    // accept invitation for user to be added as owner
+    // Add the second user as an owner
     let krate: Crate = app.db(|conn| Crate::by_name("foo_owner").first(conn).unwrap());
-    user2.accept_ownership_invitation("foo_owner", krate.id);
+    let user2 = create_and_add_owner(&app, &token, "Bar", &krate);
 
     // Make sure this shows up as one of their crates.
     let crates = user2.search_by_user_id(user2.as_model().id);
@@ -119,7 +115,8 @@ fn create_and_add_owner(
     krate: &Crate,
 ) -> MockCookieUser {
     let user = app.db_new_user(username);
-    token.add_user_owner(&krate.name, username);
+    // Use a different case for username to make sure that works
+    token.add_user_owner(&krate.name, &username.to_uppercase());
     user.accept_ownership_invitation(&krate.name, krate.id);
     user
 }
