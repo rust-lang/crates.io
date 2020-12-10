@@ -1,5 +1,6 @@
-//! This module implements several error types and traits.  The suggested usage in returned results
-//! is as follows:
+//! This module implements several error types and traits.
+//!
+//! The suggested usage in returned results is as follows:
 //!
 //! * The concrete `util::concrete::Error` type (re-exported as `util::Error`) is great for code
 //!   that is not part of the request/response lifecycle.  It avoids pulling in the unnecessary
