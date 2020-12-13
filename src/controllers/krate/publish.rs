@@ -16,6 +16,12 @@ use crate::render;
 use crate::util::{read_fill, read_le_u32, Maximums};
 use crate::views::{EncodableCrateUpload, GoodCrate, PublishWarnings};
 
+pub const MISSING_RIGHTS_ERROR_MESSAGE: &str =
+    "this crate exists but you don't seem to be an owner. \
+     If you believe this is a mistake, perhaps you need \
+     to accept an invitation to be an owner before \
+     publishing.";
+
 /// Handles the `PUT /crates/new` route.
 /// Used by `cargo publish` to publish a new crate or to publish a new version of an
 /// existing crate.
@@ -98,12 +104,7 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
 
         let owners = krate.owners(&conn)?;
         if user.rights(req.app(), &owners)? < Rights::Publish {
-            return Err(cargo_err(
-                "this crate exists but you don't seem to be an owner. \
-                 If you believe this is a mistake, perhaps you need \
-                 to accept an invitation to be an owner before \
-                 publishing.",
-            ));
+            return Err(cargo_err(MISSING_RIGHTS_ERROR_MESSAGE));
         }
 
         if krate.name != *name {
@@ -260,13 +261,30 @@ fn parse_new_headers(req: &mut dyn RequestExt) -> AppResult<EncodableCrateUpload
         missing.push("authors");
     }
     if !missing.is_empty() {
-        return Err(cargo_err(&format_args!(
-            "missing or empty metadata fields: {}. Please \
-             see https://doc.rust-lang.org/cargo/reference/manifest.html for \
-             how to upload metadata",
-            missing.join(", ")
-        )));
+        let message = missing_metadata_error_message(&missing);
+        return Err(cargo_err(&message));
     }
 
     Ok(new)
+}
+
+pub fn missing_metadata_error_message(missing: &[&str]) -> String {
+    format!(
+        "missing or empty metadata fields: {}. Please \
+         see https://doc.rust-lang.org/cargo/reference/manifest.html for \
+         how to upload metadata",
+        missing.join(", ")
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::missing_metadata_error_message;
+
+    #[test]
+    fn missing_metadata_error_message_test() {
+        assert_eq!(missing_metadata_error_message(&["a"]), "missing or empty metadata fields: a. Please see https://doc.rust-lang.org/cargo/reference/manifest.html for how to upload metadata");
+        assert_eq!(missing_metadata_error_message(&["a", "b"]), "missing or empty metadata fields: a, b. Please see https://doc.rust-lang.org/cargo/reference/manifest.html for how to upload metadata");
+        assert_eq!(missing_metadata_error_message(&["a", "b", "c"]), "missing or empty metadata fields: a, b, c. Please see https://doc.rust-lang.org/cargo/reference/manifest.html for how to upload metadata");
+    }
 }
