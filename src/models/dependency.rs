@@ -20,7 +20,7 @@ pub struct Dependency {
     pub id: i32,
     pub version_id: i32,
     pub crate_id: i32,
-    pub req: semver::VersionReq,
+    pub req: String,
     pub optional: bool,
     pub default_features: bool,
     pub features: Vec<String>,
@@ -56,7 +56,7 @@ impl Dependency {
             id: self.id,
             version_id: self.version_id,
             crate_id: crate_name.into(),
-            req: self.req.to_string(),
+            req: self.req,
             optional: self.optional,
             default_features: self.default_features,
             features: self.features,
@@ -95,7 +95,7 @@ pub fn add_dependencies(
             let krate:Crate = Crate::by_exact_name(&dep.name)
                 .first(&*conn)
                 .map_err(|_| cargo_err(&format_args!("no known crate named `{}`", &*dep.name)))?;
-            if dep.version_req == semver::VersionReq::parse("*").unwrap() {
+            if semver::VersionReq::parse(&dep.version_req.0) == semver::VersionReq::parse("*") {
                 return Err(cargo_err(WILDCARD_ERROR_MESSAGE));
             }
 

@@ -1,0 +1,69 @@
+[
+  {
+    "request": {
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/crates/new_dep/new_dep-1.0.0.crate",
+      "method": "PUT",
+      "headers": [
+        [
+          "host",
+          "alexcrichton-test.s3.amazonaws.com"
+        ],
+        [
+          "authorization",
+          "AWS AKIAICL5IWUZYWWKA7JA:lH91IZJxBDr21vB3eSZXwXTQelk="
+        ],
+        [
+          "date",
+          "Fri, 15 Sep 2017 07:53:06 -0700"
+        ],
+        [
+          "content-type",
+          "application/x-tar"
+        ],
+        [
+          "accept-encoding",
+          "gzip"
+        ],
+        [
+          "content-length",
+          "35"
+        ],
+        [
+          "accept",
+          "*/*"
+        ]
+      ],
+      "body": "H4sIAAAAAAAA/+3AAQEAAACCIP+vbkhQwKsBLq+17wAEAAA="
+    },
+    "response": {
+      "status": 200,
+      "headers": [
+        [
+          "Server",
+          "AmazonS3"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "x-amz-request-id",
+          "8190F375F5651D47"
+        ],
+        [
+          "x-amz-id-2",
+          "PQEXq2S9IgVfG/u0l2cjHuWU8EDPlRSwxqai2oNPCz8TyX/CEwn2ydL+A1qnNK3Ng+FpC9ukVl8="
+        ],
+        [
+          "date",
+          "Fri, 15 Sep 2017 14:53:07 GMT"
+        ],
+        [
+          "ETag",
+          "\"f9016ad360cebb4fe2e6e96e5949f022\""
+        ]
+      ],
+      "body": ""
+    }
+  }
+]

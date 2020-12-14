@@ -5,8 +5,8 @@ use cargo_registry::views::EncodableDependency;
 use http::StatusCode;
 
 #[derive(Deserialize)]
-struct Deps {
-    dependencies: Vec<EncodableDependency>,
+pub struct Deps {
+    pub dependencies: Vec<EncodableDependency>,
 }
 
 #[test]

@@ -180,8 +180,7 @@ impl PublishBuilder {
         self
     }
 
-    /// Consume this builder to make the Put request body
-    pub fn body(self) -> Vec<u8> {
+    pub fn build(self) -> (String, Vec<u8>) {
         let new_crate = u::EncodableCrateUpload {
             name: u::EncodableCrateName(self.krate_name.clone()),
             vers: u::EncodableCrateVersion(self.version),
@@ -209,7 +208,16 @@ impl PublishBuilder {
             links: None,
         };
 
-        let json = serde_json::to_string(&new_crate).unwrap();
+        (serde_json::to_string(&new_crate).unwrap(), self.tarball)
+    }
+
+    /// Consume this builder to make the Put request body
+    pub fn body(self) -> Vec<u8> {
+        let (json, tarball) = self.build();
+        PublishBuilder::create_publish_body(&json, &tarball)
+    }
+
+    pub fn create_publish_body(json: &str, tarball: &[u8]) -> Vec<u8> {
         let mut body = Vec::new();
         body.extend(
             [
@@ -223,7 +231,6 @@ impl PublishBuilder {
         );
         body.extend(json.as_bytes().iter().cloned());
 
-        let tarball = &self.tarball;
         body.extend(&[
             tarball.len() as u8,
             (tarball.len() >> 8) as u8,

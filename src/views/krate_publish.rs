@@ -41,7 +41,7 @@ pub struct EncodableCrateName(pub String);
 #[derive(Debug, Deref)]
 pub struct EncodableCrateVersion(pub semver::Version);
 #[derive(Debug, Deref)]
-pub struct EncodableCrateVersionReq(pub semver::VersionReq);
+pub struct EncodableCrateVersionReq(pub String);
 #[derive(Serialize, Debug, Deref, Default)]
 pub struct EncodableKeywordList(pub Vec<EncodableKeyword>);
 #[derive(Serialize, Debug, Deref)]
@@ -152,22 +152,13 @@ impl<'de> Deserialize<'de> for EncodableCrateVersionReq {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<EncodableCrateVersionReq, D::Error> {
         let s = String::deserialize(d)?;
         match semver::VersionReq::parse(&s) {
-            Ok(v) => Ok(EncodableCrateVersionReq(v)),
+            Ok(_) => Ok(EncodableCrateVersionReq(s)),
             Err(..) => {
                 let value = de::Unexpected::Str(&s);
                 let expected = "a valid version req";
                 Err(de::Error::invalid_value(value, &expected))
             }
         }
-    }
-}
-
-impl<T: ?Sized> PartialEq<T> for EncodableCrateVersionReq
-where
-    semver::VersionReq: PartialEq<T>,
-{
-    fn eq(&self, rhs: &T) -> bool {
-        self.0 == *rhs
     }
 }
 
