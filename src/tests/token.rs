@@ -29,14 +29,6 @@ struct NewResponse {
 #[derive(Deserialize)]
 struct RevokedResponse {}
 
-macro_rules! assert_contains {
-    ($e:expr, $f:expr) => {
-        if !$e.contains($f) {
-            panic!(format!("expected '{}' to contain '{}'", $e, $f));
-        }
-    };
-}
-
 // Default values used by many tests
 static URL: &str = "/api/v1/me/tokens";
 static NEW_BAR: &[u8] = br#"{ "api_token": { "name": "bar" } }"#;
