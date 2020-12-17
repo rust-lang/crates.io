@@ -554,11 +554,6 @@ pub struct Error {
     pub detail: String,
 }
 
-#[derive(Deserialize)]
-pub struct Bad {
-    pub errors: Vec<Error>,
-}
-
 /// A type providing helper methods for working with responses
 #[must_use]
 pub struct Response<T> {
@@ -589,18 +584,6 @@ where
             panic!("bad response: {:?}", self.response.status());
         }
         crate::json(&mut self.response)
-    }
-
-    /// Assert the response status code and deserialze into a list of errors
-    ///
-    /// Cargo endpoints return a status 200 on error instead of 400.
-    #[track_caller]
-    pub fn bad_with_status(&mut self, expected: StatusCode) -> Bad {
-        assert_eq!(self.response.status(), expected);
-        match crate::bad_resp(&mut self.response) {
-            None => panic!("ok response: {:?}", self.response.status()),
-            Some(b) => b,
-        }
     }
 
     #[track_caller]

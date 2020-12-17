@@ -11,7 +11,7 @@ extern crate serde;
 #[macro_use]
 extern crate serde_json;
 
-use crate::util::{Bad, RequestHelper, TestApp};
+use crate::util::{RequestHelper, TestApp};
 use cargo_registry::{
     models::{Crate, CrateOwner, Dependency, NewCategory, NewTeam, NewUser, Team, User, Version},
     schema::crate_owners,
@@ -180,14 +180,6 @@ fn req(method: conduit::Method, path: &str) -> MockRequest {
     let mut request = MockRequest::new(method, path);
     request.header(header::USER_AGENT, "conduit-test");
     request
-}
-
-fn bad_resp(r: &mut AppResponse) -> Option<Bad> {
-    let bad = json::<Bad>(r);
-    if bad.errors.is_empty() {
-        return None;
-    }
-    Some(bad)
 }
 
 fn json<T>(r: &mut AppResponse) -> T
