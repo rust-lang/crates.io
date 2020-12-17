@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::Clap;
-use failure::_core::str::FromStr;
+use std::str::FromStr;
 
 use crate::admin::on_call;
 
