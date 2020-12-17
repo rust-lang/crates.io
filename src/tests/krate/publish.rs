@@ -9,12 +9,12 @@ use cargo_registry::models::krate::MAX_NAME_LENGTH;
 use cargo_registry::schema::{api_tokens, emails, versions_published_by};
 use cargo_registry::views::GoodCrate;
 use diesel::{delete, update, ExpressionMethods, QueryDsl, RunQueryDsl};
-use failure::_core::time::Duration;
 use flate2::write::GzEncoder;
 use flate2::Compression;
 use http::StatusCode;
 use std::collections::HashMap;
 use std::io::Read;
+use std::time::Duration;
 use std::{io, thread};
 
 #[test]
