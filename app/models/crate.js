@@ -54,5 +54,12 @@ export default class Crate extends Model {
     before(username) {
       return { owners: [username] };
     },
+    after(response) {
+      if (response.ok) {
+        return response;
+      } else {
+        throw response;
+      }
+    },
   });
 }
