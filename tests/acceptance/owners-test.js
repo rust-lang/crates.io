@@ -90,7 +90,9 @@ module('Acceptance | /crates/:name/owners', function (hooks) {
     await visit(`/crates/${crate.name}/owners`);
     await click(`[data-test-owner-user="${user2.login}"] [data-test-remove-owner-button]`);
 
-    assert.dom('[data-test-notification-message="error"]').hasText('Failed to remove the user user-2 as crate owner');
+    assert
+      .dom('[data-test-notification-message="error"]')
+      .hasText('Failed to remove the user user-2 as crate owner: nope');
     assert.dom('[data-test-owner-user]').exists({ count: 2 });
   });
 
@@ -126,7 +128,7 @@ module('Acceptance | /crates/:name/owners', function (hooks) {
 
     assert
       .dom('[data-test-notification-message="error"]')
-      .hasText('Failed to remove the team rust-lang/team-1 as crate owner');
+      .hasText('Failed to remove the team rust-lang/team-1 as crate owner: nope');
     assert.dom('[data-test-owner-team]').exists({ count: 1 });
     assert.dom('[data-test-owner-user]').exists({ count: 1 });
   });
