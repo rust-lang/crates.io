@@ -559,17 +559,6 @@ pub struct Bad {
     pub errors: Vec<Error>,
 }
 
-impl Bad {
-    pub fn assert_error(&self, expected: &str) {
-        assert_eq!(
-            1,
-            self.errors.len(),
-            "the number of errors in this response is not 1"
-        );
-        assert_eq!(expected, self.errors[0].detail);
-    }
-}
-
 /// A type providing helper methods for working with responses
 #[must_use]
 pub struct Response<T> {
