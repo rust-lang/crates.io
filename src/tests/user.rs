@@ -297,8 +297,12 @@ fn following() {
     assert_eq!(r.versions.len(), 0);
     assert_eq!(r.meta.more, false);
 
-    user.get_with_query::<()>("/api/v1/me/updates", "page=0")
-        .bad_with_status(StatusCode::BAD_REQUEST);
+    let response = user.get_with_query::<()>("/api/v1/me/updates", "page=0");
+    response.assert_status(StatusCode::BAD_REQUEST);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": "page indexing starts from 1, page 0 is invalid" }] })
+    );
 }
 
 #[test]
@@ -526,11 +530,15 @@ fn test_other_users_cannot_change_my_email() {
         json!({ "errors": [{ "detail": "current user does not match requested user" }] })
     );
 
-    anon.update_email_more_control(
+    let response = anon.update_email_more_control(
         another_user_model.id,
         Some("pineapple@pineapples.pineapple"),
-    )
-    .bad_with_status(StatusCode::FORBIDDEN);
+    );
+    response.assert_status(StatusCode::FORBIDDEN);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
+    );
 }
 
 /* Given a new user, test that their email can be added

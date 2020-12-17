@@ -86,15 +86,15 @@ fn invalid_names() {
 
     let bad_name = |name: &str, error_message: &str| {
         let crate_to_publish = PublishBuilder::new(name).version("1.0.0");
-        let json = token
-            .enqueue_publish(crate_to_publish)
-            .bad_with_status(StatusCode::OK);
+        let response = token.enqueue_publish(crate_to_publish);
+        response.assert_status(StatusCode::OK);
 
-        assert!(
-            json.errors[0].detail.contains(error_message,),
-            "{:?}",
-            json.errors
-        );
+        let json = response.json();
+        let json = json.as_object().unwrap();
+        let errors = json.get("errors").unwrap().as_array().unwrap();
+        let first_error = errors.first().unwrap().as_object().unwrap();
+        let detail = first_error.get("detail").unwrap().as_str().unwrap();
+        assert!(detail.contains(error_message), "{:?}", detail);
     };
 
     let error_message = "expected a valid crate name";
@@ -251,9 +251,13 @@ fn reject_new_krate_with_non_exact_dependency() {
     let crate_to_publish = PublishBuilder::new("new_dep")
         .version("1.0.0")
         .dependency(dependency);
-    token
-        .enqueue_publish(crate_to_publish)
-        .bad_with_status(StatusCode::OK);
+
+    let response = token.enqueue_publish(crate_to_publish);
+    response.assert_status(StatusCode::OK);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": "no known crate named `foo_dep`" }] })
+    );
 }
 
 #[test]
@@ -696,19 +700,28 @@ fn bad_keywords() {
     let (_, _, _, token) = TestApp::init().with_token();
     let crate_to_publish =
         PublishBuilder::new("foo_bad_key").keyword("super-long-keyword-name-oh-no");
-    token
-        .enqueue_publish(crate_to_publish)
-        .bad_with_status(StatusCode::OK);
+    let response = token.enqueue_publish(crate_to_publish);
+    response.assert_status(StatusCode::OK);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": "invalid upload request: invalid length 29, expected a keyword with less than 20 characters at line 1 column 221" }] })
+    );
 
     let crate_to_publish = PublishBuilder::new("foo_bad_key").keyword("?@?%");
-    token
-        .enqueue_publish(crate_to_publish)
-        .bad_with_status(StatusCode::OK);
+    let response = token.enqueue_publish(crate_to_publish);
+    response.assert_status(StatusCode::OK);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": "invalid upload request: invalid value: string \"?@?%\", expected a valid keyword specifier at line 1 column 196" }] })
+    );
 
     let crate_to_publish = PublishBuilder::new("foo_bad_key").keyword("áccênts");
-    token
-        .enqueue_publish(crate_to_publish)
-        .bad_with_status(StatusCode::OK);
+    let response = token.enqueue_publish(crate_to_publish);
+    response.assert_status(StatusCode::OK);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": "invalid upload request: invalid value: string \"áccênts\", expected a valid keyword specifier at line 1 column 201" }] })
+    );
 }
 
 #[test]
