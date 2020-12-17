@@ -26,12 +26,17 @@ fn account_locked_indefinitely() {
     let (app, _anon, user) = TestApp::init().with_user();
     lock_account(&app, user.as_model().id, None);
 
-    user.get::<()>(URL)
-        .bad_with_status(StatusCode::FORBIDDEN)
-        .assert_error(&format!(
-            "This account is indefinitely locked. Reason: {}",
-            LOCK_REASON
-        ));
+    let response = user.get::<()>(URL);
+    response.assert_status(StatusCode::FORBIDDEN);
+
+    let error_message = format!(
+        "This account is indefinitely locked. Reason: {}",
+        LOCK_REASON
+    );
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": error_message }] })
+    );
 }
 
 #[test]
@@ -42,12 +47,17 @@ fn account_locked_with_future_expiry() {
     lock_account(&app, user.as_model().id, Some(until));
 
     let until = until.format("%Y-%m-%d at %H:%M:%S UTC");
-    user.get::<()>(URL)
-        .bad_with_status(StatusCode::FORBIDDEN)
-        .assert_error(&format!(
-            "This account is locked until {}. Reason: {}",
-            until, LOCK_REASON,
-        ));
+    let response = user.get::<()>(URL);
+    response.assert_status(StatusCode::FORBIDDEN);
+
+    let error_message = format!(
+        "This account is locked until {}. Reason: {}",
+        until, LOCK_REASON,
+    );
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": error_message }] })
+    );
 }
 
 #[test]

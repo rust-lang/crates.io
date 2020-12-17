@@ -109,12 +109,11 @@ fn yank_by_a_non_owner_fails() {
             .expect_build(conn);
     });
 
-    let json = token
-        .yank("foo_not", "1.0.0")
-        .bad_with_status(StatusCode::OK);
+    let response = token.yank("foo_not", "1.0.0");
+    response.assert_status(StatusCode::OK);
     assert_eq!(
-        json.errors[0].detail,
-        "must already be an owner to yank or unyank"
+        response.json(),
+        json!({ "errors": [{ "detail": "must already be an owner to yank or unyank" }] })
     );
 }
 

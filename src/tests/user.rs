@@ -113,10 +113,12 @@ fn auth_gives_a_token() {
 #[test]
 fn access_token_needs_data() {
     let (_, anon) = TestApp::init().empty();
-    let json = anon
-        .get::<()>("/api/private/session/authorize")
-        .bad_with_status(StatusCode::BAD_REQUEST);
-    assert!(json.errors[0].detail.contains("invalid state"));
+    let response = anon.get::<()>("/api/private/session/authorize");
+    response.assert_status(StatusCode::BAD_REQUEST);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": "invalid state parameter" }] })
+    );
 }
 
 #[test]
@@ -487,23 +489,18 @@ fn test_empty_email_not_added() {
     let (_app, _anon, user) = TestApp::init().with_user();
     let model = user.as_model();
 
-    let json = user
-        .update_email_more_control(model.id, Some(""))
-        .bad_with_status(StatusCode::BAD_REQUEST);
-    assert!(
-        json.errors[0].detail.contains("empty email rejected"),
-        "{:?}",
-        json.errors
+    let response = user.update_email_more_control(model.id, Some(""));
+    response.assert_status(StatusCode::BAD_REQUEST);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": "empty email rejected" }] })
     );
 
-    let json = user
-        .update_email_more_control(model.id, None)
-        .bad_with_status(StatusCode::BAD_REQUEST);
-
-    assert!(
-        json.errors[0].detail.contains("empty email rejected"),
-        "{:?}",
-        json.errors
+    let response = user.update_email_more_control(model.id, None);
+    response.assert_status(StatusCode::BAD_REQUEST);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": "empty email rejected" }] })
     );
 }
 
@@ -519,18 +516,14 @@ fn test_other_users_cannot_change_my_email() {
     let another_user = app.db_new_user("not_me");
     let another_user_model = another_user.as_model();
 
-    let json = user
-        .update_email_more_control(
-            another_user_model.id,
-            Some("pineapple@pineapples.pineapple"),
-        )
-        .bad_with_status(StatusCode::BAD_REQUEST);
-    assert!(
-        json.errors[0]
-            .detail
-            .contains("current user does not match requested user",),
-        "{:?}",
-        json.errors
+    let response = user.update_email_more_control(
+        another_user_model.id,
+        Some("pineapple@pineapples.pineapple"),
+    );
+    response.assert_status(StatusCode::BAD_REQUEST);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": "current user does not match requested user" }] })
     );
 
     anon.update_email_more_control(
