@@ -49,7 +49,7 @@ module('Model | Crate', function (hooks) {
       let crateRecord = await this.store.findRecord('crate', crate.id);
 
       let result = await crateRecord.removeOwner(user.login);
-      assert.deepEqual(result, {});
+      assert.deepEqual(result, { ok: true, msg: 'owners successfully removed' });
     });
 
     test('error handling', async function (assert) {

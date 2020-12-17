@@ -254,7 +254,7 @@ export function register(server) {
       return notFound();
     }
 
-    return {};
+    return { ok: true, msg: 'owners successfully removed' };
   });
 
   server.delete('/api/v1/crates/:crate_id/:version/yank', (schema, request) => {
