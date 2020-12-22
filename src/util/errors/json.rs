@@ -181,19 +181,20 @@ impl AppError for InsecurelyGeneratedTokenRevoked {
     }
 }
 
+pub const TOKEN_FORMAT_ERROR: &str =
+    "The given API token does not match the format used by crates.io. \
+    \
+    Tokens generated before 2020-07-14 were generated with an insecure \
+    random number generator, and have been revoked. You can generate a \
+    new token at https://crates.io/me. \
+    \
+    For more information please see \
+    https://blog.rust-lang.org/2020/07/14/crates-io-security-advisory.html. \
+    We apologize for any inconvenience.";
+
 impl fmt::Display for InsecurelyGeneratedTokenRevoked {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(
-            "The given API token does not match the format used by crates.io. \
-            \
-            Tokens generated before 2020-07-14 were generated with an insecure \
-            random number generator, and have been revoked. You can generate a \
-            new token at https://crates.io/me. \
-            \
-            For more information please see \
-            https://blog.rust-lang.org/2020/07/14/crates-io-security-advisory.html. \
-            We apologize for any inconvenience.",
-        )?;
+        f.write_str(TOKEN_FORMAT_ERROR)?;
         Result::Ok(())
     }
 }

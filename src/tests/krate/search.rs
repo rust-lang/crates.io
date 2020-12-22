@@ -676,19 +676,19 @@ fn pagination_parameters_only_accept_integers() {
         CrateBuilder::new("pagination_links_3", user.id).expect_build(conn);
     });
 
-    let invalid_per_page_json = anon
-        .get_with_query::<()>("/api/v1/crates", "page=1&per_page=100%22%EF%BC%8Cexception")
-        .bad_with_status(StatusCode::BAD_REQUEST);
+    let response =
+        anon.get_with_query::<()>("/api/v1/crates", "page=1&per_page=100%22%EF%BC%8Cexception");
+    response.assert_status(StatusCode::BAD_REQUEST);
     assert_eq!(
-        invalid_per_page_json.errors[0].detail,
-        "invalid digit found in string"
+        response.json(),
+        json!({ "errors": [{ "detail": "invalid digit found in string" }] })
     );
 
-    let invalid_page_json = anon
-        .get_with_query::<()>("/api/v1/crates", "page=100%22%EF%BC%8Cexception&per_page=1")
-        .bad_with_status(StatusCode::BAD_REQUEST);
+    let response =
+        anon.get_with_query::<()>("/api/v1/crates", "page=100%22%EF%BC%8Cexception&per_page=1");
+    response.assert_status(StatusCode::BAD_REQUEST);
     assert_eq!(
-        invalid_page_json.errors[0].detail,
-        "invalid digit found in string"
+        response.json(),
+        json!({ "errors": [{ "detail": "invalid digit found in string" }] })
     );
 }

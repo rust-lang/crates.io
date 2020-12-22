@@ -6,6 +6,7 @@ use crate::{
 use cargo_registry::{
     models::ApiToken,
     schema::api_tokens,
+    util::errors::TOKEN_FORMAT_ERROR,
     views::{EncodableApiTokenWithToken, EncodableMe},
 };
 use std::collections::HashSet;
@@ -27,14 +28,6 @@ struct NewResponse {
 }
 #[derive(Deserialize)]
 struct RevokedResponse {}
-
-macro_rules! assert_contains {
-    ($e:expr, $f:expr) => {
-        if !$e.contains($f) {
-            panic!(format!("expected '{}' to contain '{}'", $e, $f));
-        }
-    };
-}
 
 // Default values used by many tests
 static URL: &str = "/api/v1/me/tokens";
@@ -118,33 +111,36 @@ fn create_token_logged_out() {
 fn create_token_invalid_request() {
     let (_, _, user) = TestApp::init().with_user();
     let invalid = br#"{ "name": "" }"#;
-    let json = user
-        .put::<()>(URL, invalid)
-        .bad_with_status(StatusCode::BAD_REQUEST);
-
-    assert_contains!(json.errors[0].detail, "invalid new token request");
+    let response = user.put::<()>(URL, invalid);
+    response.assert_status(StatusCode::BAD_REQUEST);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": "invalid new token request: Error(\"missing field `api_token`\", line: 1, column: 14)" }] })
+    );
 }
 
 #[test]
 fn create_token_no_name() {
     let (_, _, user) = TestApp::init().with_user();
     let empty_name = br#"{ "api_token": { "name": "" } }"#;
-    let json = user
-        .put::<()>(URL, empty_name)
-        .bad_with_status(StatusCode::BAD_REQUEST);
-
-    assert_eq!(json.errors[0].detail, "name must have a value");
+    let response = user.put::<()>(URL, empty_name);
+    response.assert_status(StatusCode::BAD_REQUEST);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": "name must have a value" }] })
+    );
 }
 
 #[test]
 fn create_token_long_body() {
     let (_, _, user) = TestApp::init().with_user();
     let too_big = &[5; 5192]; // Send a request with a 5kB body of 5's
-    let json = user
-        .put::<()>(URL, too_big)
-        .bad_with_status(StatusCode::BAD_REQUEST);
-
-    assert_contains!(json.errors[0].detail, "max content length");
+    let response = user.put::<()>(URL, too_big);
+    response.assert_status(StatusCode::BAD_REQUEST);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": "max content length is: 2000" }] })
+    );
 }
 
 #[test]
@@ -156,11 +152,12 @@ fn create_token_exceeded_tokens_per_user() {
             assert_ok!(ApiToken::insert(conn, id, &format!("token {}", i)));
         }
     });
-    let json = user
-        .put::<()>(URL, NEW_BAR)
-        .bad_with_status(StatusCode::BAD_REQUEST);
-
-    assert_contains!(json.errors[0].detail, "maximum tokens per user");
+    let response = user.put::<()>(URL, NEW_BAR);
+    response.assert_status(StatusCode::BAD_REQUEST);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": "maximum tokens per user is: 500" }] })
+    );
 }
 
 #[test]
@@ -202,16 +199,14 @@ fn create_token_multiple_users_have_different_values() {
 #[test]
 fn cannot_create_token_with_token() {
     let (_, _, _, token) = TestApp::init().with_token();
-    let json = token
-        .put::<()>(
-            "/api/v1/me/tokens",
-            br#"{ "api_token": { "name": "baz" } }"#,
-        )
-        .bad_with_status(StatusCode::BAD_REQUEST);
-
-    assert_contains!(
-        json.errors[0].detail,
-        "cannot use an API token to create a new API token"
+    let response = token.put::<()>(
+        "/api/v1/me/tokens",
+        br#"{ "api_token": { "name": "baz" } }"#,
+    );
+    response.assert_status(StatusCode::BAD_REQUEST);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": "cannot use an API token to create a new API token" }] })
     );
 }
 
@@ -313,9 +308,10 @@ fn old_tokens_give_specific_error_message() {
 
     let mut request = anon.get_request(url);
     request.header(header::AUTHORIZATION, "oldtoken");
-    let json = anon
-        .run::<()>(request)
-        .bad_with_status(StatusCode::UNAUTHORIZED);
-
-    assert_contains!(json.errors[0].detail, "revoked");
+    let response = anon.run::<()>(request);
+    response.assert_status(StatusCode::UNAUTHORIZED);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": TOKEN_FORMAT_ERROR }] })
+    );
 }

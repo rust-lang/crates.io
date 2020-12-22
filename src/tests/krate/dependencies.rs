@@ -26,6 +26,10 @@ fn dependencies() {
         .good();
     assert_eq!(deps.dependencies[0].crate_id, "bar_deps");
 
-    anon.get::<()>("/api/v1/crates/foo_deps/1.0.2/dependencies")
-        .bad_with_status(StatusCode::OK);
+    let response = anon.get::<()>("/api/v1/crates/foo_deps/1.0.2/dependencies");
+    response.assert_status(StatusCode::OK);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": "crate `foo_deps` does not have a version `1.0.2`" }] })
+    );
 }
