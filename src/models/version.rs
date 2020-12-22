@@ -39,7 +39,7 @@ pub struct NewVersion {
 
 /// The highest version (semver order) and the most recently updated version.
 /// Typically used for a single crate.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct TopVersions {
     pub highest: semver::Version,
     pub newest: semver::Version,
@@ -250,5 +250,61 @@ impl NewVersion {
             self.license = Some(String::from("non-standard"));
         }
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{TopVersions, Version};
+    use chrono::NaiveDateTime;
+
+    #[track_caller]
+    fn date(str: &str) -> NaiveDateTime {
+        str.parse().unwrap()
+    }
+
+    #[track_caller]
+    fn version(str: &str) -> semver::Version {
+        semver::Version::parse(str).unwrap()
+    }
+
+    #[test]
+    fn top_versions_empty() {
+        let versions = vec![];
+        assert_eq!(
+            Version::top(versions),
+            TopVersions {
+                highest: version("0.0.0"),
+                newest: version("0.0.0"),
+            }
+        );
+    }
+
+    #[test]
+    fn top_versions_single() {
+        let versions = vec![(date("2020-12-03T12:34:56"), version("1.0.0"))];
+        assert_eq!(
+            Version::top(versions),
+            TopVersions {
+                highest: version("1.0.0"),
+                newest: version("1.0.0"),
+            }
+        );
+    }
+
+    #[test]
+    fn top_versions_multiple() {
+        let versions = vec![
+            (date("2018-12-03T12:34:56"), version("1.0.0")),
+            (date("2019-12-03T12:34:56"), version("2.0.0-alpha.1")),
+            (date("2020-12-03T12:34:56"), version("1.1.0")),
+        ];
+        assert_eq!(
+            Version::top(versions),
+            TopVersions {
+                highest: version("2.0.0-alpha.1"),
+                newest: version("1.1.0"),
+            }
+        );
     }
 }
