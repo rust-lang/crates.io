@@ -248,7 +248,7 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
     Ok(req.json(&R {
         crates,
         meta: Meta {
-            total,
+            total: Some(total),
             next_page,
             prev_page,
         },
