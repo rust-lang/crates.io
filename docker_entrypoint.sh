@@ -8,4 +8,4 @@ done
 
 ./script/init-local-index.sh
 
-cargo run --bin server
+cargo run

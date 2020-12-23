@@ -348,7 +348,7 @@ Build and start the server by running this command (you'll need to stop this
 with `CTRL-C` and rerun this command every time you change the backend code):
 
 ```
-cargo run --bin server
+cargo run
 ```
 
 Then start the background worker (which will process uploaded READMEs):
