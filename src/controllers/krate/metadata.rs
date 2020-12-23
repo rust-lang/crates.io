@@ -5,6 +5,7 @@
 //! `Cargo.toml` file.
 
 use crate::controllers::frontend_prelude::*;
+use crate::controllers::helpers::pagination::PaginationOptions;
 
 use crate::models::{
     Category, Crate, CrateCategory, CrateKeyword, CrateVersions, Keyword, RecentCrateDownloads,
@@ -239,10 +240,11 @@ pub fn versions(req: &mut dyn RequestExt) -> EndpointResult {
 pub fn reverse_dependencies(req: &mut dyn RequestExt) -> EndpointResult {
     use diesel::dsl::any;
 
+    let pagination_options = PaginationOptions::new(req)?;
     let name = &req.params()["crate_id"];
     let conn = req.db_read_only()?;
     let krate: Crate = Crate::by_name(name).first(&*conn)?;
-    let (rev_deps, total) = krate.reverse_dependencies(&*conn, &req.query())?;
+    let (rev_deps, total) = krate.reverse_dependencies(&*conn, pagination_options)?;
     let rev_deps: Vec<_> = rev_deps
         .into_iter()
         .map(|dep| dep.encodable(&krate.name))

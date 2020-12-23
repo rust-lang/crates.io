@@ -41,7 +41,6 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
     // Don't require that authentication succeed, because it's only necessary
     // if the "following" param is set.
     let authenticated_user: AppResult<AuthenticatedUser> = req.authenticate();
-    let conn = req.db_read_only()?;
     let params = req.query();
     let sort = params.get("sort").map(|s| &**s);
     let include_yanked = params
@@ -189,7 +188,9 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
         query = query.then_order_by(crates::name.asc())
     }
 
-    let data: Paginated<(Crate, bool, Option<i64>)> = query.paginate(&req.query())?.load(&*conn)?;
+    let query = query.paginate(req)?;
+    let conn = req.db_read_only()?;
+    let data: Paginated<(Crate, bool, Option<i64>)> = query.load(&*conn)?;
     let total = data.total();
 
     let next_page = data.next_page_params().map(|p| req.query_with_params(p));
