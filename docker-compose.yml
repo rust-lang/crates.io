@@ -48,6 +48,13 @@ services:
       interval: 5s
       start_period: 300s
 
+  worker:
+    <<: *backend
+    entrypoint: cargo run --bin background-worker
+    depends_on:
+      backend:
+        condition: service_healthy
+
   frontend:
     build:
       context: .
