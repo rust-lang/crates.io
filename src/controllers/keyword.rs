@@ -36,7 +36,7 @@ pub fn index(req: &mut dyn RequestExt) -> EndpointResult {
 
     Ok(req.json(&R {
         keywords: kws,
-        meta: Meta { total },
+        meta: Meta { total: Some(total) },
     }))
 }
 
