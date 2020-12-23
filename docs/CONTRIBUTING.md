@@ -513,9 +513,6 @@ one go:
 docker-compose up -d
 ```
 
-> **Note:** set `DEV_DOCKER=1` in a `.env` or `docker-compose.override.yml` 
-file when working with Docker in development.
-
 The Compose file is filled out with a sane set of defaults that should Just
 Work™ out of the box without any modification. Individual settings can be
 overridden by creating a `docker-compose.override.yml` with the updated config.
@@ -529,7 +526,6 @@ services:
     environment:
       GH_CLIENT_ID: blahblah_ID
       GH_CLIENT_SECRET: blahblah_secret
-      DEV_DOCKER: 1
 ```
 
 These environment variables can also be defined in a local `.env` file, see `.env.sample`

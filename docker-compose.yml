@@ -15,6 +15,7 @@ services:
       context: .
       dockerfile: backend.Dockerfile
     environment:
+      DEV_DOCKER: "true"
       DATABASE_URL: postgres://postgres:password@postgres/cargo_registry
       SESSION_KEY: badkeyabcdefghijklmnopqrstuvwxyzabcdef
       GIT_REPO_URL: file://./tmp/index-bare
