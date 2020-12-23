@@ -45,7 +45,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         });
 
     // Initialize logging
-    env_logger::init();
+    tracing_subscriber::fmt::init();
 
     let config = cargo_registry::Config::default();
     let client = Client::new();

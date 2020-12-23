@@ -54,7 +54,6 @@ dialoguer = "0.7.1"
 diesel = { version = "1.4.0", features = ["postgres", "serde_json", "chrono", "r2d2"] }
 diesel_full_text_search = "1.0.0"
 dotenv = "0.15"
-env_logger = "0.8"
 failure = "0.1.1"
 flate2 = "1.0"
 futures-channel = { version = "0.3.1", default-features = false }
@@ -85,6 +84,7 @@ tempfile = "3"
 tokio = { version = "0.2", default-features = false, features = ["net", "signal", "io-std"]}
 toml = "0.5"
 tracing = "0.1"
+tracing-subscriber = "0.2"
 url = "2.1"
 
 [dev-dependencies]
