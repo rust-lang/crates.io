@@ -56,11 +56,10 @@ pub fn updates(req: &mut dyn RequestExt) -> EndpointResult {
     use diesel::dsl::any;
 
     let authenticated_user = req.authenticate()?;
-    let conn = req.db_conn()?;
     let user = authenticated_user.user();
 
     let followed_crates = Follow::belonging_to(&user).select(follows::crate_id);
-    let data: Paginated<(Version, String, Option<User>)> = versions::table
+    let query = versions::table
         .inner_join(crates::table)
         .left_outer_join(users::table)
         .filter(crates::id.eq(any(followed_crates)))
@@ -70,8 +69,9 @@ pub fn updates(req: &mut dyn RequestExt) -> EndpointResult {
             crates::name,
             users::all_columns.nullable(),
         ))
-        .paginate(&req.query())?
-        .load(&*conn)?;
+        .paginate(req)?;
+    let conn = req.db_conn()?;
+    let data: Paginated<(Version, String, Option<User>)> = query.load(&*conn)?;
     let more = data.next_page_params().is_some();
     let versions = data.iter().map(|(v, _, _)| v).cloned().collect::<Vec<_>>();
     let data = data

@@ -8,7 +8,6 @@ use crate::views::EncodableKeyword;
 pub fn index(req: &mut dyn RequestExt) -> EndpointResult {
     use crate::schema::keywords;
 
-    let conn = req.db_conn()?;
     let query = req.query();
     let sort = query.get("sort").map(|s| &s[..]).unwrap_or("alpha");
 
@@ -20,7 +19,9 @@ pub fn index(req: &mut dyn RequestExt) -> EndpointResult {
         query = query.order(keywords::keyword.asc());
     }
 
-    let data: Paginated<Keyword> = query.paginate(&req.query())?.load(&*conn)?;
+    let query = query.paginate(req)?;
+    let conn = req.db_conn()?;
+    let data: Paginated<Keyword> = query.load(&*conn)?;
     let total = data.total();
     let kws = data.into_iter().map(Keyword::encodable).collect::<Vec<_>>();
 

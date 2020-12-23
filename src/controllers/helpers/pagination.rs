@@ -1,7 +1,8 @@
+use crate::controllers::prelude::*;
 use crate::models::helpers::with_count::*;
 use crate::util::errors::{bad_request, AppResult};
+
 use diesel::pg::Pg;
-use diesel::prelude::*;
 use diesel::query_builder::*;
 use diesel::query_dsl::LoadQuery;
 use diesel::sql_types::BigInt;
@@ -14,7 +15,10 @@ pub(crate) enum Page {
 }
 
 impl Page {
-    fn new(params: &IndexMap<String, String>) -> AppResult<Self> {
+    fn new(req: &mut dyn RequestExt) -> AppResult<Self> {
+        const MAX_PAGE_BEFORE_SUSPECTED_BOT: u32 = 10;
+
+        let params = req.query();
         if let Some(s) = params.get("page") {
             let numeric_page = s.parse().map_err(|e| bad_request(&e))?;
             if numeric_page < 1 {
@@ -22,6 +26,10 @@ impl Page {
                     "page indexing starts from 1, page {} is invalid",
                     numeric_page,
                 )));
+            }
+
+            if numeric_page > MAX_PAGE_BEFORE_SUSPECTED_BOT {
+                req.log_metadata("bot", "suspected");
             }
 
             Ok(Page::Numeric(numeric_page))
@@ -38,10 +46,11 @@ pub(crate) struct PaginationOptions {
 }
 
 impl PaginationOptions {
-    pub(crate) fn new(params: &IndexMap<String, String>) -> AppResult<Self> {
+    pub(crate) fn new(req: &mut dyn RequestExt) -> AppResult<Self> {
         const DEFAULT_PER_PAGE: u32 = 10;
         const MAX_PER_PAGE: u32 = 100;
 
+        let params = req.query();
         let per_page = params
             .get("per_page")
             .map(|s| s.parse().map_err(|e| bad_request(&e)))
@@ -55,7 +64,7 @@ impl PaginationOptions {
         }
 
         Ok(Self {
-            page: Page::new(params)?,
+            page: Page::new(req)?,
             per_page,
         })
     }
@@ -70,10 +79,10 @@ impl PaginationOptions {
 }
 
 pub(crate) trait Paginate: Sized {
-    fn paginate(self, params: &IndexMap<String, String>) -> AppResult<PaginatedQuery<Self>> {
+    fn paginate(self, req: &mut dyn RequestExt) -> AppResult<PaginatedQuery<Self>> {
         Ok(PaginatedQuery {
             query: self,
-            options: PaginationOptions::new(params)?,
+            options: PaginationOptions::new(req)?,
         })
     }
 }
@@ -186,26 +195,54 @@ mod tests {
     use super::{Page, PaginationOptions};
 
     use conduit::StatusCode;
-    use indexmap::IndexMap;
+    use conduit_test::MockRequest;
+
+    fn mock(query: &str) -> MockRequest {
+        let mut req = MockRequest::new(http::Method::GET, "");
+        req.with_query(query);
+        req
+    }
 
     #[test]
     fn page_must_be_a_number() {
-        let mut params = IndexMap::new();
-        params.insert(String::from("page"), String::from("not a number"));
-        let page_error = Page::new(&params).unwrap_err().response().unwrap();
+        let mut req = mock("page=");
+        let page_error = Page::new(&mut req).unwrap_err().response().unwrap();
+
+        assert_eq!(page_error.status(), StatusCode::BAD_REQUEST);
+
+        let mut req = mock("page=not_a_number");
+        let page_error = Page::new(&mut req).unwrap_err().response().unwrap();
+
+        assert_eq!(page_error.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[test]
+    fn page_must_be_non_zero_positive_integer() {
+        let mut req = mock("page=0");
+        let page_error = Page::new(&mut req).unwrap_err().response().unwrap();
+
+        assert_eq!(page_error.status(), StatusCode::BAD_REQUEST);
+
+        let mut req = mock("page=1.0");
+        let page_error = Page::new(&mut req).unwrap_err().response().unwrap();
 
         assert_eq!(page_error.status(), StatusCode::BAD_REQUEST);
     }
 
     #[test]
     fn per_page_must_be_a_number() {
-        let mut params = IndexMap::new();
-        params.insert(String::from("per_page"), String::from("not a number"));
-        let per_page_error = PaginationOptions::new(&params)
+        let mut req = mock("per_page=");
+        let per_page_error = PaginationOptions::new(&mut req)
             .unwrap_err()
             .response()
             .unwrap();
+        assert_eq!(per_page_error.status(), StatusCode::BAD_REQUEST);
 
+        let mut req = mock("per_page=not_a_number");
+        let per_page_error = PaginationOptions::new(&mut req)
+            .unwrap_err()
+            .response()
+            .unwrap();
         assert_eq!(per_page_error.status(), StatusCode::BAD_REQUEST);
     }
 }
