@@ -299,7 +299,6 @@ dependencies = [
  "lazy_static",
  "lettre",
  "license-exprs",
- "log",
  "oauth2",
  "parking_lot",
  "rand",
@@ -316,6 +315,7 @@ dependencies = [
  "tokio",
  "toml",
  "tower-service",
+ "tracing",
  "url",
 ]
 
