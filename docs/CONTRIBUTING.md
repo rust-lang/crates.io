@@ -528,6 +528,9 @@ services:
       GH_CLIENT_SECRET: blahblah_secret
 ```
 
+These environment variables can also be defined in a local `.env` file, see `.env.sample`
+for various configuration options. 
+
 #### Accessing services
 
 By default, the services will be exposed on their normal ports:

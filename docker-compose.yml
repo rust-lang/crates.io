@@ -1,4 +1,5 @@
 version: "3"
+
 services:
   postgres:
     image: postgres:9.6
@@ -10,16 +11,19 @@ services:
       - 5432:5432
     volumes:
       - postgres-data:/var/lib/postgresql/data
+
   backend:
     build:
       context: .
       dockerfile: backend.Dockerfile
     environment:
+      DEV_DOCKER: "true"
       DATABASE_URL: postgres://postgres:password@postgres/cargo_registry
       SESSION_KEY: badkeyabcdefghijklmnopqrstuvwxyzabcdef
       GIT_REPO_URL: file://./tmp/index-bare
       GH_CLIENT_ID: ""
       GH_CLIENT_SECRET: ""
+      WEB_ALLOWED_ORIGINS: http://localhost:8888,http://localhost:4200
     links:
       - postgres
     ports:
@@ -32,6 +36,7 @@ services:
       - index:/app/tmp
       - cargo-cache:/usr/local/cargo/registry
       - target-cache:/app/target
+
   frontend:
     build:
       context: .

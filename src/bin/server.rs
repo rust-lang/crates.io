@@ -60,7 +60,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let heroku = dotenv::var("HEROKU").is_ok();
     let fastboot = dotenv::var("USE_FASTBOOT").is_ok();
+    let dev_docker = dotenv::var("DEV_DOCKER").is_ok();
 
+    let ip = if dev_docker {
+        [0, 0, 0, 0]
+    } else {
+        [127, 0, 0, 1]
+    };
     let port = if heroku {
         8888
     } else {
@@ -103,7 +109,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 async move { Service::from_blocking(handler, addr) }
             });
 
-        let addr = ([127, 0, 0, 1], port).into();
+        let addr = (ip, port).into();
         #[allow(clippy::async_yields_async)]
         let server = rt.block_on(async { hyper::Server::bind(&addr).serve(make_service) });
 
