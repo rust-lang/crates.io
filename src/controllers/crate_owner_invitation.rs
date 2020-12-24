@@ -7,7 +7,7 @@ use crate::views::{EncodableCrateOwnerInvitation, InvitationResponse};
 /// Handles the `GET /me/crate_owner_invitations` route.
 pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
     let user_id = req.authenticate()?.user_id();
-    let conn = &*req.db_conn()?;
+    let conn = &*req.db_read_only()?;
 
     let crate_owner_invitations: Vec<CrateOwnerInvitation> = crate_owner_invitations::table
         .filter(crate_owner_invitations::invited_user_id.eq(user_id))
