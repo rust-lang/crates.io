@@ -10,7 +10,7 @@ use crate::models::VersionOwnerAction;
 use crate::schema::*;
 use crate::views::{EncodableDependency, EncodablePublicUser, EncodableVersion};
 
-use super::version_and_crate;
+use super::{extract_crate_name_and_semver, version_and_crate};
 
 /// Handles the `GET /crates/:crate_id/:version/dependencies` route.
 ///
@@ -20,8 +20,10 @@ use super::version_and_crate;
 /// fields for `id`, `version_id`, and `downloads` (which appears to always
 /// be 0)
 pub fn dependencies(req: &mut dyn RequestExt) -> EndpointResult {
-    let (conn, version, _) = version_and_crate(req)?;
-    let deps = version.dependencies(&*conn)?;
+    let (crate_name, semver) = extract_crate_name_and_semver(req)?;
+    let conn = req.db_read_only()?;
+    let (version, _) = version_and_crate(&conn, crate_name, semver)?;
+    let deps = version.dependencies(&conn)?;
     let deps = deps
         .into_iter()
         .map(|(dep, crate_name)| dep.encodable(&crate_name, None))
@@ -36,7 +38,9 @@ pub fn dependencies(req: &mut dyn RequestExt) -> EndpointResult {
 
 /// Handles the `GET /crates/:crate_id/:version/authors` route.
 pub fn authors(req: &mut dyn RequestExt) -> EndpointResult {
-    let (conn, version, _) = version_and_crate(req)?;
+    let (crate_name, semver) = extract_crate_name_and_semver(req)?;
+    let conn = req.db_read_only()?;
+    let (version, _) = version_and_crate(&conn, crate_name, semver)?;
     let names = version_authors::table
         .filter(version_authors::version_id.eq(version.id))
         .select(version_authors::name)
@@ -66,7 +70,9 @@ pub fn authors(req: &mut dyn RequestExt) -> EndpointResult {
 /// The frontend doesn't appear to hit this endpoint, but our tests do, and it seems to be a useful
 /// API route to have.
 pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
-    let (conn, version, krate) = version_and_crate(req)?;
+    let (crate_name, semver) = extract_crate_name_and_semver(req)?;
+    let conn = req.db_read_only()?;
+    let (version, krate) = version_and_crate(&conn, crate_name, semver)?;
     let published_by = version.published_by(&conn);
     let actions = VersionOwnerAction::by_version(&conn, &version)?;
 

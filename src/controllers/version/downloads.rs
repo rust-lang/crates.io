@@ -10,7 +10,7 @@ use crate::models::{Crate, VersionDownload};
 use crate::schema::*;
 use crate::views::EncodableVersionDownload;
 
-use super::{extract_crate_name, extract_semver};
+use super::{extract_crate_name_and_semver, version_and_crate};
 
 /// Handles the `GET /crates/:crate_id/:version/download` route.
 /// This returns a URL to the location where the crate is stored.
@@ -75,12 +75,10 @@ fn increment_download_counts(
 
 /// Handles the `GET /crates/:crate_id/:version/downloads` route.
 pub fn downloads(req: &mut dyn RequestExt) -> EndpointResult {
-    let crate_name = extract_crate_name(req);
-    let semver = extract_semver(req)?;
+    let (crate_name, semver) = extract_crate_name_and_semver(req)?;
 
     let conn = req.db_read_only()?;
-    let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
-    let version = krate.find_version(&conn, semver)?;
+    let (version, _) = version_and_crate(&conn, crate_name, semver)?;
 
     let cutoff_end_date = req
         .query()

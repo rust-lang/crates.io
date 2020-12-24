@@ -5,18 +5,23 @@ pub mod yank;
 
 use super::prelude::*;
 
-use crate::db::DieselPooledConn;
 use crate::models::{Crate, Version};
 
-fn version_and_crate(req: &dyn RequestExt) -> AppResult<(DieselPooledConn<'_>, Version, Crate)> {
-    let crate_name = extract_crate_name(req);
-    let semver = extract_semver(req)?;
-
-    let conn = req.db_conn()?;
-    let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
+fn version_and_crate(
+    conn: &PgConnection,
+    crate_name: &str,
+    semver: &str,
+) -> AppResult<(Version, Crate)> {
+    let krate: Crate = Crate::by_name(crate_name).first(conn)?;
     let version = krate.find_version(&conn, semver)?;
 
-    Ok((conn, version, krate))
+    Ok((version, krate))
+}
+
+fn extract_crate_name_and_semver(req: &dyn RequestExt) -> AppResult<(&str, &str)> {
+    let name = extract_crate_name(req);
+    let version = extract_semver(req)?;
+    Ok((name, version))
 }
 
 fn extract_crate_name(req: &dyn RequestExt) -> &str {
