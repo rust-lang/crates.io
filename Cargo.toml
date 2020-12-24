@@ -9,16 +9,18 @@ readme = "README.md"
 edition = "2018"
 
 [dependencies]
+bytes = "1"
 conduit = "0.9.0-alpha.3"
-hyper = "0.13"
+hyper = { version = "0.14", features = ["server", "http1", "stream", "tcp"] }
 http = "0.2"
 percent-encoding = "2"
 tracing = { version = "0.1", features = ["log"] }
-tokio = { version = "0.2", features = ["blocking", "fs", "rt-threaded", "stream"] }
+tokio = { version = "1", features = ["fs"] }
+tokio-stream = "0.1"
 tower-service = "0.3"
 
 [dev-dependencies]
 conduit-router = "0.9.0-alpha.3"
 env_logger = "0.7"
 futures-util = "0.3"
-tokio = { version = "0.2", features = ["macros"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }

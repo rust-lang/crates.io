@@ -1,8 +1,10 @@
 use std::task::{Context, Poll};
 use std::{io::Error, pin::Pin};
 
-use hyper::body::{Body, Bytes};
-use tokio::{fs::File, io::AsyncRead, stream::Stream};
+use bytes::Bytes;
+use hyper::body::Body;
+use tokio::{fs::File, io::AsyncRead};
+use tokio_stream::Stream;
 
 const BUFFER_SIZE: usize = 8 * 1024;
 
@@ -31,9 +33,10 @@ impl Stream for FileStream {
             ref mut file,
             ref mut buffer,
         } = *self;
-        match Pin::new(file).poll_read(cx, &mut buffer[..]) {
-            Poll::Ready(Ok(0)) => Poll::Ready(None),
-            Poll::Ready(Ok(size)) => Poll::Ready(Some(Ok(self.buffer[..size].to_owned().into()))),
+        let mut buf = tokio::io::ReadBuf::new(&mut buffer[..]);
+        match Pin::new(file).poll_read(cx, &mut buf) {
+            Poll::Ready(Ok(())) if buf.filled().is_empty() => Poll::Ready(None),
+            Poll::Ready(Ok(())) => Poll::Ready(Some(Ok(Bytes::copy_from_slice(buf.filled())))),
             Poll::Ready(Err(e)) => Poll::Ready(Some(Err(e))),
             Poll::Pending => Poll::Pending,
         }
