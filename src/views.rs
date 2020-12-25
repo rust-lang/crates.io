@@ -322,6 +322,12 @@ pub struct EncodablePublicUser {
     pub url: Option<String>,
 }
 
+impl From<User> for EncodablePublicUser {
+    fn from(user: User) -> Self {
+        user.encodable_public()
+    }
+}
+
 #[derive(Deserialize, Serialize, Debug)]
 pub struct EncodableAuditAction {
     pub action: String,

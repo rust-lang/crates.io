@@ -20,9 +20,7 @@ pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
     struct R {
         user: EncodablePublicUser,
     }
-    Ok(req.json(&R {
-        user: user.encodable_public(),
-    }))
+    Ok(req.json(&R { user: user.into() }))
 }
 
 /// Handles the `GET /users/:user_id/stats` route.
