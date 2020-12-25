@@ -2,12 +2,10 @@ use diesel::pg::Pg;
 use diesel::prelude::*;
 
 use crate::app::App;
-use crate::github;
 use crate::util::errors::{cargo_err, AppResult};
 
 use crate::models::{Crate, Team, User};
 use crate::schema::{crate_owners, users};
-use crate::views::EncodableOwner;
 
 #[derive(Insertable, Associations, Identifiable, Debug, Clone, Copy)]
 #[belongs_to(Crate)]
@@ -98,45 +96,6 @@ impl Owner {
         match *self {
             Owner::User(ref user) => user.id,
             Owner::Team(ref team) => team.id,
-        }
-    }
-
-    pub fn encodable(self) -> EncodableOwner {
-        match self {
-            Owner::User(User {
-                id,
-                name,
-                gh_login,
-                gh_avatar,
-                ..
-            }) => {
-                let url = format!("https://github.com/{}", gh_login);
-                EncodableOwner {
-                    id,
-                    login: gh_login,
-                    avatar: gh_avatar,
-                    url: Some(url),
-                    name,
-                    kind: String::from("user"),
-                }
-            }
-            Owner::Team(Team {
-                id,
-                name,
-                login,
-                avatar,
-                ..
-            }) => {
-                let url = github::team_url(&login);
-                EncodableOwner {
-                    id,
-                    login,
-                    url: Some(url),
-                    avatar,
-                    name,
-                    kind: String::from("team"),
-                }
-            }
         }
     }
 }

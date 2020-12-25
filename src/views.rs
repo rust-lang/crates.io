@@ -1,7 +1,8 @@
 use chrono::NaiveDateTime;
 use std::collections::HashMap;
 
-use crate::models::{Badge, Category, DependencyKind, Keyword, Owner, VersionDownload};
+use crate::github;
+use crate::models::{Badge, Category, DependencyKind, Keyword, Owner, Team, User, VersionDownload};
 use crate::util::rfc3339;
 
 #[derive(PartialEq, Debug, Serialize, Deserialize)]
@@ -183,7 +184,42 @@ pub struct EncodableOwner {
 
 impl From<Owner> for EncodableOwner {
     fn from(owner: Owner) -> Self {
-        owner.encodable()
+        match owner {
+            Owner::User(User {
+                id,
+                name,
+                gh_login,
+                gh_avatar,
+                ..
+            }) => {
+                let url = format!("https://github.com/{}", gh_login);
+                Self {
+                    id,
+                    login: gh_login,
+                    avatar: gh_avatar,
+                    url: Some(url),
+                    name,
+                    kind: String::from("user"),
+                }
+            }
+            Owner::Team(Team {
+                id,
+                name,
+                login,
+                avatar,
+                ..
+            }) => {
+                let url = github::team_url(&login);
+                Self {
+                    id,
+                    login,
+                    url: Some(url),
+                    avatar,
+                    name,
+                    kind: String::from("team"),
+                }
+            }
+        }
     }
 }
 
