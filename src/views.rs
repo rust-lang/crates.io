@@ -101,7 +101,11 @@ pub struct EncodableVersionDownload {
 
 impl From<VersionDownload> for EncodableVersionDownload {
     fn from(download: VersionDownload) -> Self {
-        download.encodable()
+        Self {
+            version: download.version_id,
+            downloads: download.downloads,
+            date: download.date.to_string(),
+        }
     }
 }
 

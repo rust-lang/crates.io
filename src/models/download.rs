@@ -3,7 +3,6 @@ use diesel::prelude::*;
 
 use crate::models::Version;
 use crate::schema::version_downloads;
-use crate::views::EncodableVersionDownload;
 
 #[derive(Queryable, Identifiable, Associations, Debug, Clone, Copy)]
 #[belongs_to(Version)]
@@ -30,13 +29,5 @@ impl VersionDownload {
             .set(downloads.eq(downloads + 1))
             .execute(conn)?;
         Ok(())
-    }
-
-    pub fn encodable(self) -> EncodableVersionDownload {
-        EncodableVersionDownload {
-            version: self.version_id,
-            downloads: self.downloads,
-            date: self.date.to_string(),
-        }
     }
 }
