@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use crate::github;
 use crate::models::{
     Badge, Category, CrateOwnerInvitation, CreatedApiToken, Dependency, DependencyKind, Keyword,
-    Owner, ReverseDependency, Team, User, VersionDownload,
+    Owner, ReverseDependency, Team, User, Version, VersionDownload, VersionOwnerAction,
 };
 use crate::util::rfc3339;
 
@@ -444,6 +444,17 @@ pub struct EncodableVersion {
     pub crate_size: Option<i32>,
     pub published_by: Option<EncodablePublicUser>,
     pub audit_actions: Vec<EncodableAuditAction>,
+}
+
+impl EncodableVersion {
+    pub fn from(
+        version: Version,
+        crate_name: &str,
+        published_by: Option<User>,
+        audit_actions: Vec<(VersionOwnerAction, User)>,
+    ) -> Self {
+        version.encodable(crate_name, published_by, audit_actions)
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]

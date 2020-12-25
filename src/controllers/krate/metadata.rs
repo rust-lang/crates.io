@@ -176,7 +176,7 @@ pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
         ),
         versions: versions_publishers_and_audit_actions
             .into_iter()
-            .map(|(v, pb, aas)| v.encodable(&krate.name, pb, aas))
+            .map(|(v, pb, aas)| EncodableVersion::from(v, &krate.name, pb, aas))
             .collect(),
         keywords: kws.into_iter().map(Keyword::into).collect(),
         categories: cats.into_iter().map(Category::into).collect(),
@@ -226,7 +226,7 @@ pub fn versions(req: &mut dyn RequestExt) -> EndpointResult {
     let versions = versions_and_publishers
         .into_iter()
         .zip(VersionOwnerAction::for_versions(&conn, &versions)?.into_iter())
-        .map(|((v, pb), aas)| v.encodable(crate_name, pb, aas))
+        .map(|((v, pb), aas)| EncodableVersion::from(v, crate_name, pb, aas))
         .collect();
 
     #[derive(Serialize)]
@@ -271,7 +271,7 @@ pub fn reverse_dependencies(req: &mut dyn RequestExt) -> EndpointResult {
         .into_iter()
         .zip(VersionOwnerAction::for_versions(&conn, &versions)?.into_iter())
         .map(|((version, krate_name, published_by), actions)| {
-            version.encodable(&krate_name, published_by, actions)
+            EncodableVersion::from(version, &krate_name, published_by, actions)
         })
         .collect();
 

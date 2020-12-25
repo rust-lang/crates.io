@@ -41,7 +41,7 @@ pub fn index(req: &mut dyn RequestExt) -> EndpointResult {
         .into_iter()
         .zip(VersionOwnerAction::for_versions(&conn, &versions)?.into_iter())
         .map(|((version, crate_name, published_by), actions)| {
-            version.encodable(&crate_name, published_by, actions)
+            EncodableVersion::from(version, &crate_name, published_by, actions)
         })
         .collect();
 
@@ -76,6 +76,6 @@ pub fn show_by_id(req: &mut dyn RequestExt) -> EndpointResult {
         version: EncodableVersion,
     }
     Ok(req.json(&R {
-        version: version.encodable(&krate.name, published_by, audit_actions),
+        version: EncodableVersion::from(version, &krate.name, published_by, audit_actions),
     }))
 }
