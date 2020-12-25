@@ -247,7 +247,7 @@ pub fn reverse_dependencies(req: &mut dyn RequestExt) -> EndpointResult {
     let (rev_deps, total) = krate.reverse_dependencies(&*conn, pagination_options)?;
     let rev_deps: Vec<_> = rev_deps
         .into_iter()
-        .map(|dep| dep.encodable(&krate.name))
+        .map(|dep| EncodableDependency::from_reverse_dep(dep, &krate.name))
         .collect();
 
     let version_ids: Vec<i32> = rev_deps.iter().map(|dep| dep.version_id).collect();

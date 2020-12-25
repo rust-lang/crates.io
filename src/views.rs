@@ -3,7 +3,8 @@ use std::collections::HashMap;
 
 use crate::github;
 use crate::models::{
-    Badge, Category, CreatedApiToken, DependencyKind, Keyword, Owner, Team, User, VersionDownload,
+    Badge, Category, CreatedApiToken, Dependency, DependencyKind, Keyword, Owner,
+    ReverseDependency, Team, User, VersionDownload,
 };
 use crate::util::rfc3339;
 
@@ -93,6 +94,17 @@ pub struct EncodableDependency {
     pub target: Option<String>,
     pub kind: DependencyKind,
     pub downloads: i32,
+}
+
+impl EncodableDependency {
+    pub fn from_dep(dependency: Dependency, crate_name: &str) -> Self {
+        dependency.encodable(crate_name, None)
+    }
+
+    pub fn from_reverse_dep(rev_dep: ReverseDependency, crate_name: &str) -> Self {
+        let dependency = rev_dep.dependency;
+        dependency.encodable(crate_name, Some(rev_dep.crate_downloads))
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]

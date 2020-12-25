@@ -67,13 +67,6 @@ impl Dependency {
     }
 }
 
-impl ReverseDependency {
-    pub fn encodable(self, crate_name: &str) -> EncodableDependency {
-        self.dependency
-            .encodable(crate_name, Some(self.crate_downloads))
-    }
-}
-
 pub fn add_dependencies(
     conn: &PgConnection,
     deps: &[EncodableCrateDependency],

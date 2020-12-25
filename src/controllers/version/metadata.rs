@@ -26,7 +26,7 @@ pub fn dependencies(req: &mut dyn RequestExt) -> EndpointResult {
     let deps = version.dependencies(&conn)?;
     let deps = deps
         .into_iter()
-        .map(|(dep, crate_name)| dep.encodable(&crate_name, None))
+        .map(|(dep, crate_name)| EncodableDependency::from_dep(dep, &crate_name))
         .collect();
 
     #[derive(Serialize)]
