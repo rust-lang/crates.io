@@ -2,7 +2,9 @@ use chrono::NaiveDateTime;
 use std::collections::HashMap;
 
 use crate::github;
-use crate::models::{Badge, Category, DependencyKind, Keyword, Owner, Team, User, VersionDownload};
+use crate::models::{
+    Badge, Category, CreatedApiToken, DependencyKind, Keyword, Owner, Team, User, VersionDownload,
+};
 use crate::util::rfc3339;
 
 #[derive(PartialEq, Debug, Serialize, Deserialize)]
@@ -266,6 +268,12 @@ pub struct EncodableApiTokenWithToken {
     pub created_at: NaiveDateTime,
     #[serde(with = "rfc3339::option")]
     pub last_used_at: Option<NaiveDateTime>,
+}
+
+impl From<CreatedApiToken> for EncodableApiTokenWithToken {
+    fn from(token: CreatedApiToken) -> Self {
+        token.encodable_with_token()
+    }
 }
 
 #[derive(Deserialize, Serialize, Debug)]
