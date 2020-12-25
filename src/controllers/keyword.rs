@@ -23,7 +23,7 @@ pub fn index(req: &mut dyn RequestExt) -> EndpointResult {
     let conn = req.db_conn()?;
     let data: Paginated<Keyword> = query.load(&*conn)?;
     let total = data.total();
-    let kws = data.into_iter().map(Keyword::encodable).collect::<Vec<_>>();
+    let kws = data.into_iter().map(Keyword::into).collect::<Vec<_>>();
 
     #[derive(Serialize)]
     struct R {
@@ -52,7 +52,5 @@ pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
     struct R {
         keyword: EncodableKeyword,
     }
-    Ok(req.json(&R {
-        keyword: kw.encodable(),
-    }))
+    Ok(req.json(&R { keyword: kw.into() }))
 }

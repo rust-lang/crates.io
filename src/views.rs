@@ -1,7 +1,7 @@
 use chrono::NaiveDateTime;
 use std::collections::HashMap;
 
-use crate::models::{Badge, Category, DependencyKind, VersionDownload};
+use crate::models::{Badge, Category, DependencyKind, Keyword, VersionDownload};
 use crate::util::rfc3339;
 
 #[derive(PartialEq, Debug, Serialize, Deserialize)]
@@ -116,6 +116,12 @@ pub struct EncodableKeyword {
     #[serde(with = "rfc3339")]
     pub created_at: NaiveDateTime,
     pub crates_cnt: i32,
+}
+
+impl From<Keyword> for EncodableKeyword {
+    fn from(keyword: Keyword) -> Self {
+        keyword.encodable()
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
