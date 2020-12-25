@@ -79,7 +79,12 @@ pub struct EncodableCrateOwnerInvitation {
 
 impl EncodableCrateOwnerInvitation {
     pub fn from(invitation: CrateOwnerInvitation, conn: &PgConnection) -> Self {
-        invitation.encodable(conn)
+        Self {
+            invited_by_username: invitation.invited_by_username(conn),
+            crate_name: invitation.crate_name(conn),
+            crate_id: invitation.crate_id,
+            created_at: invitation.created_at,
+        }
     }
 }
 
