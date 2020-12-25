@@ -120,7 +120,18 @@ pub struct EncodableKeyword {
 
 impl From<Keyword> for EncodableKeyword {
     fn from(keyword: Keyword) -> Self {
-        keyword.encodable()
+        let Keyword {
+            crates_cnt,
+            keyword,
+            created_at,
+            ..
+        } = keyword;
+        Self {
+            id: keyword.clone(),
+            created_at,
+            crates_cnt,
+            keyword,
+        }
     }
 }
 
