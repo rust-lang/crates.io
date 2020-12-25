@@ -12,7 +12,8 @@ pub struct EncodableBadge {
 
 impl From<Badge> for EncodableBadge {
     fn from(badge: Badge) -> Self {
-        badge.encodable()
+        // The serde attributes on Badge ensure it can be deserialized to EncodableBadge
+        serde_json::from_value(serde_json::to_value(badge).unwrap()).unwrap()
     }
 }
 

@@ -5,7 +5,6 @@ use std::collections::HashMap;
 
 use crate::models::Crate;
 use crate::schema::badges;
-use crate::views::EncodableBadge;
 
 /// A combination of a `Badge` and a crate ID.
 ///
@@ -108,11 +107,6 @@ impl Queryable<badges::SqlType, Pg> for Badge {
 }
 
 impl Badge {
-    pub fn encodable(self) -> EncodableBadge {
-        // The serde attributes on Badge ensure it can be deserialized to EncodableBadge
-        serde_json::from_value(serde_json::to_value(self).unwrap()).unwrap()
-    }
-
     pub fn update_crate(
         conn: &PgConnection,
         krate: &Crate,
