@@ -92,6 +92,7 @@ conduit-test = "0.9.0-alpha.4"
 diesel_migrations = { version = "1.3.0", features = ["postgres"] }
 hyper-tls = "0.5"
 lazy_static = "1.0"
+mockito = "0.28"
 tokio = "1"
 tower-service = "0.3.0"
 
