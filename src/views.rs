@@ -1,13 +1,19 @@
 use chrono::NaiveDateTime;
 use std::collections::HashMap;
 
-use crate::models::DependencyKind;
+use crate::models::{Badge, DependencyKind};
 use crate::util::rfc3339;
 
 #[derive(PartialEq, Debug, Serialize, Deserialize)]
 pub struct EncodableBadge {
     pub badge_type: String,
     pub attributes: HashMap<String, Option<String>>,
+}
+
+impl From<Badge> for EncodableBadge {
+    fn from(badge: Badge) -> Self {
+        badge.encodable()
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
