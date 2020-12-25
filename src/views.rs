@@ -322,9 +322,24 @@ pub struct EncodablePublicUser {
     pub url: Option<String>,
 }
 
+/// Converts a `User` model into an `EncodablePublicUser` for JSON serialization.
 impl From<User> for EncodablePublicUser {
     fn from(user: User) -> Self {
-        user.encodable_public()
+        let User {
+            id,
+            name,
+            gh_login,
+            gh_avatar,
+            ..
+        } = user;
+        let url = format!("https://github.com/{}", gh_login);
+        EncodablePublicUser {
+            id,
+            avatar: gh_avatar,
+            login: gh_login,
+            name,
+            url: Some(url),
+        }
     }
 }
 
