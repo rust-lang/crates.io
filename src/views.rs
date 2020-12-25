@@ -234,7 +234,22 @@ pub struct EncodableTeam {
 
 impl From<Team> for EncodableTeam {
     fn from(team: Team) -> Self {
-        team.encodable()
+        let Team {
+            id,
+            name,
+            login,
+            avatar,
+            ..
+        } = team;
+        let url = github::team_url(&login);
+
+        EncodableTeam {
+            id,
+            login,
+            name,
+            avatar,
+            url: Some(url),
+        }
     }
 }
 
