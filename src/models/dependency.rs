@@ -5,7 +5,7 @@ use crate::util::errors::{cargo_err, AppResult};
 
 use crate::models::{Crate, Version};
 use crate::schema::*;
-use crate::views::{EncodableCrateDependency, EncodableDependency};
+use crate::views::EncodableCrateDependency;
 
 pub const WILDCARD_ERROR_MESSAGE: &str = "wildcard (`*`) dependency constraints are not allowed \
      on crates.io. See https://doc.rust-lang.org/cargo/faq.html#can-\
@@ -47,24 +47,6 @@ pub enum DependencyKind {
     Build = 1,
     Dev = 2,
     // if you add a kind here, be sure to update `from_row` below.
-}
-
-impl Dependency {
-    // `downloads` need only be specified when generating a reverse dependency
-    pub fn encodable(self, crate_name: &str, downloads: Option<i32>) -> EncodableDependency {
-        EncodableDependency {
-            id: self.id,
-            version_id: self.version_id,
-            crate_id: crate_name.into(),
-            req: self.req,
-            optional: self.optional,
-            default_features: self.default_features,
-            features: self.features,
-            target: self.target,
-            kind: self.kind,
-            downloads: downloads.unwrap_or(0),
-        }
-    }
 }
 
 pub fn add_dependencies(

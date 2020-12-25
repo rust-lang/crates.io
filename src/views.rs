@@ -98,12 +98,28 @@ pub struct EncodableDependency {
 
 impl EncodableDependency {
     pub fn from_dep(dependency: Dependency, crate_name: &str) -> Self {
-        dependency.encodable(crate_name, None)
+        Self::encode(dependency, crate_name, None)
     }
 
     pub fn from_reverse_dep(rev_dep: ReverseDependency, crate_name: &str) -> Self {
         let dependency = rev_dep.dependency;
-        dependency.encodable(crate_name, Some(rev_dep.crate_downloads))
+        Self::encode(dependency, crate_name, Some(rev_dep.crate_downloads))
+    }
+
+    // `downloads` need only be specified when generating a reverse dependency
+    fn encode(dependency: Dependency, crate_name: &str, downloads: Option<i32>) -> Self {
+        Self {
+            id: dependency.id,
+            version_id: dependency.version_id,
+            crate_id: crate_name.into(),
+            req: dependency.req,
+            optional: dependency.optional,
+            default_features: dependency.default_features,
+            features: dependency.features,
+            target: dependency.target,
+            kind: dependency.kind,
+            downloads: downloads.unwrap_or(0),
+        }
     }
 }
 
