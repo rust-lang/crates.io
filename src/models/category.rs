@@ -3,7 +3,6 @@ use diesel::{self, *};
 
 use crate::models::Crate;
 use crate::schema::*;
-use crate::views::EncodableCategory;
 
 #[derive(Clone, Identifiable, Queryable, QueryableByName, Debug)]
 #[table_name = "categories"]
@@ -55,25 +54,6 @@ impl Category {
 
     pub fn by_slugs_case_sensitive<'a>(slugs: &'a [&'a str]) -> BySlugsCaseSensitive<'a> {
         categories::table.filter(Self::with_slugs_case_sensitive(slugs))
-    }
-
-    pub fn encodable(self) -> EncodableCategory {
-        let Category {
-            crates_cnt,
-            category,
-            slug,
-            description,
-            created_at,
-            ..
-        } = self;
-        EncodableCategory {
-            id: slug.clone(),
-            slug,
-            description,
-            created_at,
-            crates_cnt,
-            category: category.rsplit("::").collect::<Vec<_>>()[0].to_string(),
-        }
     }
 
     pub fn update_crate(

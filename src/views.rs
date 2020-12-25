@@ -30,7 +30,22 @@ pub struct EncodableCategory {
 
 impl From<Category> for EncodableCategory {
     fn from(category: Category) -> Self {
-        category.encodable()
+        let Category {
+            crates_cnt,
+            category,
+            slug,
+            description,
+            created_at,
+            ..
+        } = category;
+        Self {
+            id: slug.clone(),
+            slug,
+            description,
+            created_at,
+            crates_cnt,
+            category: category.rsplit("::").collect::<Vec<_>>()[0].to_string(),
+        }
     }
 }
 
