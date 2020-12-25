@@ -7,7 +7,6 @@ use crate::util::errors::AppResult;
 
 use crate::models::{ApiToken, Crate, CrateOwner, Email, NewEmail, Owner, OwnerKind, Rights};
 use crate::schema::{crate_owners, emails, users};
-use crate::views::EncodablePrivateUser;
 
 /// The model representing a row in the `users` database table.
 #[derive(Clone, Debug, PartialEq, Eq, Queryable, Identifiable, AsChangeset, Associations)]
@@ -166,34 +165,6 @@ impl User {
             .filter(emails::verified.eq(true))
             .first(&*conn)
             .optional()?)
-    }
-
-    /// Converts this `User` model into an `EncodablePrivateUser` for JSON serialization.
-    pub fn encodable_private(
-        self,
-        email: Option<String>,
-        email_verified: bool,
-        email_verification_sent: bool,
-    ) -> EncodablePrivateUser {
-        let User {
-            id,
-            name,
-            gh_login,
-            gh_avatar,
-            ..
-        } = self;
-        let url = format!("https://github.com/{}", gh_login);
-
-        EncodablePrivateUser {
-            id,
-            email,
-            email_verified,
-            email_verification_sent,
-            avatar: gh_avatar,
-            login: gh_login,
-            name,
-            url: Some(url),
-        }
     }
 
     /// Queries for the email belonging to a particular user
