@@ -1,7 +1,7 @@
 use chrono::NaiveDateTime;
 use std::collections::HashMap;
 
-use crate::models::{Badge, Category, DependencyKind};
+use crate::models::{Badge, Category, DependencyKind, VersionDownload};
 use crate::util::rfc3339;
 
 #[derive(PartialEq, Debug, Serialize, Deserialize)]
@@ -97,6 +97,12 @@ pub struct EncodableVersionDownload {
     pub version: i32,
     pub downloads: i32,
     pub date: String,
+}
+
+impl From<VersionDownload> for EncodableVersionDownload {
+    fn from(download: VersionDownload) -> Self {
+        download.encodable()
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]

@@ -94,7 +94,7 @@ pub fn downloads(req: &mut dyn RequestExt) -> EndpointResult {
         .order(version_downloads::date)
         .load(&*conn)?
         .into_iter()
-        .map(VersionDownload::encodable)
+        .map(VersionDownload::into)
         .collect();
 
     #[derive(Serialize)]
