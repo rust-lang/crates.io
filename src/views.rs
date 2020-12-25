@@ -1,7 +1,7 @@
 use chrono::NaiveDateTime;
 use std::collections::HashMap;
 
-use crate::models::{Badge, Category, DependencyKind, Keyword, VersionDownload};
+use crate::models::{Badge, Category, DependencyKind, Keyword, Owner, VersionDownload};
 use crate::util::rfc3339;
 
 #[derive(PartialEq, Debug, Serialize, Deserialize)]
@@ -179,6 +179,12 @@ pub struct EncodableOwner {
     pub url: Option<String>,
     pub name: Option<String>,
     pub avatar: Option<String>,
+}
+
+impl From<Owner> for EncodableOwner {
+    fn from(owner: Owner) -> Self {
+        owner.encodable()
+    }
 }
 
 #[derive(Serialize, Debug)]
