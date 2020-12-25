@@ -41,7 +41,13 @@ pub fn summary(req: &mut dyn RequestExt) -> EndpointResult {
             .zip(krates)
             .zip(recent_downloads)
             .map(|((top_versions, krate), recent_downloads)| {
-                Ok(krate.minimal_encodable(&top_versions, None, false, recent_downloads))
+                Ok(EncodableCrate::from_minimal(
+                    krate,
+                    &top_versions,
+                    None,
+                    false,
+                    recent_downloads,
+                ))
             })
             .collect()
     };
@@ -165,7 +171,8 @@ pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
         categories: Vec<EncodableCategory>,
     }
     Ok(req.json(&R {
-        krate: krate.clone().encodable(
+        krate: EncodableCrate::from(
+            krate.clone(),
             &top_versions,
             Some(ids),
             Some(&kws),

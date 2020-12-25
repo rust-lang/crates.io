@@ -296,24 +296,6 @@ impl Crate {
             && prefix_part.map_or(true, Crate::valid_feature_prefix)
     }
 
-    pub fn minimal_encodable(
-        self,
-        top_versions: &TopVersions,
-        badges: Option<Vec<Badge>>,
-        exact_match: bool,
-        recent_downloads: Option<i64>,
-    ) -> EncodableCrate {
-        self.encodable(
-            top_versions,
-            None,
-            None,
-            None,
-            badges,
-            exact_match,
-            recent_downloads,
-        )
-    }
-
     #[allow(clippy::too_many_arguments)]
     pub fn encodable(
         self,

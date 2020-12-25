@@ -226,7 +226,8 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
         .zip(badges)
         .map(
             |((((max_version, krate), perfect_match), recent_downloads), badges)| {
-                krate.minimal_encodable(
+                EncodableCrate::from_minimal(
+                    krate,
                     &max_version,
                     Some(badges),
                     perfect_match,

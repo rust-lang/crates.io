@@ -4,8 +4,8 @@ use std::collections::HashMap;
 
 use crate::github;
 use crate::models::{
-    Badge, Category, CrateOwnerInvitation, CreatedApiToken, Dependency, DependencyKind, Keyword,
-    Owner, ReverseDependency, Team, User, Version, VersionDownload, VersionOwnerAction,
+    Badge, Category, Crate, CrateOwnerInvitation, CreatedApiToken, Dependency, DependencyKind,
+    Keyword, Owner, ReverseDependency, Team, User, Version, VersionDownload, VersionOwnerAction,
 };
 use crate::util::rfc3339;
 
@@ -203,6 +203,49 @@ pub struct EncodableCrate {
     pub repository: Option<String>,
     pub links: EncodableCrateLinks,
     pub exact_match: bool,
+}
+
+impl EncodableCrate {
+    #[allow(clippy::too_many_arguments)]
+    pub fn from(
+        krate: Crate,
+        top_versions: &TopVersions,
+        versions: Option<Vec<i32>>,
+        keywords: Option<&[Keyword]>,
+        categories: Option<&[Category]>,
+        badges: Option<Vec<Badge>>,
+        exact_match: bool,
+        recent_downloads: Option<i64>,
+    ) -> Self {
+        krate.encodable(
+            top_versions,
+            versions,
+            keywords,
+            categories,
+            badges,
+            exact_match,
+            recent_downloads,
+        )
+    }
+
+    pub fn from_minimal(
+        krate: Crate,
+        top_versions: &TopVersions,
+        badges: Option<Vec<Badge>>,
+        exact_match: bool,
+        recent_downloads: Option<i64>,
+    ) -> Self {
+        Self::from(
+            krate,
+            top_versions,
+            None,
+            None,
+            None,
+            badges,
+            exact_match,
+            recent_downloads,
+        )
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
