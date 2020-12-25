@@ -232,6 +232,12 @@ pub struct EncodableTeam {
     pub url: Option<String>,
 }
 
+impl From<Team> for EncodableTeam {
+    fn from(team: Team) -> Self {
+        team.encodable()
+    }
+}
+
 /// The serialization format for the `ApiToken` model with its token value.
 /// This should only be used when initially creating a new token to minimize
 /// the chance of token leaks.

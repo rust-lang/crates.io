@@ -16,7 +16,5 @@ pub fn show_team(req: &mut dyn RequestExt) -> EndpointResult {
     struct R {
         team: EncodableTeam,
     }
-    Ok(req.json(&R {
-        team: team.encodable(),
-    }))
+    Ok(req.json(&R { team: team.into() }))
 }
