@@ -1,7 +1,7 @@
 use chrono::NaiveDateTime;
 use std::collections::HashMap;
 
-use crate::models::{Badge, DependencyKind};
+use crate::models::{Badge, Category, DependencyKind};
 use crate::util::rfc3339;
 
 #[derive(PartialEq, Debug, Serialize, Deserialize)]
@@ -26,6 +26,12 @@ pub struct EncodableCategory {
     #[serde(with = "rfc3339")]
     pub created_at: NaiveDateTime,
     pub crates_cnt: i32,
+}
+
+impl From<Category> for EncodableCategory {
+    fn from(category: Category) -> Self {
+        category.encodable()
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]

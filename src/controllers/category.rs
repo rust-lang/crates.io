@@ -18,7 +18,7 @@ pub fn index(req: &mut dyn RequestExt) -> EndpointResult {
     let conn = req.db_conn()?;
     let categories =
         Category::toplevel(&conn, sort, i64::from(options.per_page), i64::from(offset))?;
-    let categories = categories.into_iter().map(Category::encodable).collect();
+    let categories = categories.into_iter().map(Category::into).collect();
 
     // Query for the total count of categories
     let total = Category::count_toplevel(&conn)?;
@@ -47,15 +47,15 @@ pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
     let subcats = cat
         .subcategories(&conn)?
         .into_iter()
-        .map(Category::encodable)
+        .map(Category::into)
         .collect();
     let parents = cat
         .parent_categories(&conn)?
         .into_iter()
-        .map(Category::encodable)
+        .map(Category::into)
         .collect();
 
-    let cat = cat.encodable();
+    let cat = EncodableCategory::from(cat);
     let cat_with_subcats = EncodableCategoryWithSubcategories {
         id: cat.id,
         category: cat.category,
