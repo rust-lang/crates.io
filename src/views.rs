@@ -272,7 +272,14 @@ pub struct EncodableApiTokenWithToken {
 
 impl From<CreatedApiToken> for EncodableApiTokenWithToken {
     fn from(token: CreatedApiToken) -> Self {
-        token.encodable_with_token()
+        EncodableApiTokenWithToken {
+            id: token.model.id,
+            name: token.model.name,
+            token: token.plaintext,
+            revoked: token.model.revoked,
+            created_at: token.model.created_at,
+            last_used_at: token.model.last_used_at,
+        }
     }
 }
 
