@@ -453,7 +453,49 @@ impl EncodableVersion {
         published_by: Option<User>,
         audit_actions: Vec<(VersionOwnerAction, User)>,
     ) -> Self {
-        version.encodable(crate_name, published_by, audit_actions)
+        let Version {
+            id,
+            num,
+            updated_at,
+            created_at,
+            downloads,
+            features,
+            yanked,
+            license,
+            crate_size,
+            ..
+        } = version;
+
+        let num = num.to_string();
+
+        Self {
+            dl_path: format!("/api/v1/crates/{}/{}/download", crate_name, num),
+            readme_path: format!("/api/v1/crates/{}/{}/readme", crate_name, num),
+            num: num.clone(),
+            id,
+            krate: crate_name.to_string(),
+            updated_at,
+            created_at,
+            downloads,
+            features,
+            yanked,
+            license,
+            links: EncodableVersionLinks {
+                dependencies: format!("/api/v1/crates/{}/{}/dependencies", crate_name, num),
+                version_downloads: format!("/api/v1/crates/{}/{}/downloads", crate_name, num),
+                authors: format!("/api/v1/crates/{}/{}/authors", crate_name, num),
+            },
+            crate_size,
+            published_by: published_by.map(User::into),
+            audit_actions: audit_actions
+                .into_iter()
+                .map(|(audit_action, user)| EncodableAuditAction {
+                    action: audit_action.action.into(),
+                    user: user.into(),
+                    time: audit_action.time,
+                })
+                .collect(),
+        }
     }
 }
 
