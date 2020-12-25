@@ -352,6 +352,17 @@ pub struct EncodablePrivateUser {
     pub url: Option<String>,
 }
 
+impl EncodablePrivateUser {
+    pub fn from(
+        user: User,
+        email: Option<String>,
+        email_verified: bool,
+        email_verification_sent: bool,
+    ) -> Self {
+        user.encodable_private(email, email_verified, email_verification_sent)
+    }
+}
+
 /// The serialization format for the `User` model.
 /// Same as private user, except no email field
 #[derive(Deserialize, Serialize, Debug)]
