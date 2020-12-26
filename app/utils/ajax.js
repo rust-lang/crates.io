@@ -1,3 +1,5 @@
+import { runInDebug } from '@ember/debug';
+
 import fetch from 'fetch';
 
 export default async function ajax(input, init) {
@@ -30,7 +32,14 @@ export class HttpError extends Error {
 
 export class AjaxError extends Error {
   constructor({ url, method, cause }) {
-    super(`${method} ${url} failed`);
+    let message = `${method} ${url} failed`;
+    runInDebug(() => {
+      if (cause?.stack) {
+        message += `\n\ncaused by: ${cause.stack}`;
+      }
+    });
+
+    super(message);
     this.name = 'AjaxError';
     this.method = method;
     this.url = url;

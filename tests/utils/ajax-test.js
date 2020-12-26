@@ -29,9 +29,11 @@ module('ajax()', function (hooks) {
     this.server.get('/foo', { foo: 42 }, 500);
 
     await assert.rejects(ajax('/foo'), function (error) {
+      let expectedMessage = 'GET /foo failed\n\ncaused by: HttpError: GET /foo failed with: 500 Internal Server Error';
+
       assert.ok(error instanceof AjaxError);
       assert.equal(error.name, 'AjaxError');
-      assert.equal(error.message, 'GET /foo failed');
+      assert.ok(error.message.startsWith(expectedMessage), error.message);
       assert.equal(error.method, 'GET');
       assert.equal(error.url, '/foo');
       assert.ok(error.cause);
@@ -52,9 +54,11 @@ module('ajax()', function (hooks) {
     this.server.get('/foo', () => '{ foo: 42');
 
     await assert.rejects(ajax('/foo'), function (error) {
+      let expectedMessage = 'GET /foo failed\n\ncaused by: SyntaxError';
+
       assert.ok(error instanceof AjaxError);
       assert.equal(error.name, 'AjaxError');
-      assert.equal(error.message, 'GET /foo failed');
+      assert.ok(error.message.startsWith(expectedMessage), error.message);
       assert.equal(error.method, 'GET');
       assert.equal(error.url, '/foo');
       assert.ok(error.cause);
@@ -73,9 +77,11 @@ module('ajax()', function (hooks) {
     };
 
     await assert.rejects(ajax('/foo'), function (error) {
+      let expectedMessage = 'GET /foo failed\n\ncaused by: TypeError';
+
       assert.ok(error instanceof AjaxError);
       assert.equal(error.name, 'AjaxError');
-      assert.equal(error.message, 'GET /foo failed');
+      assert.ok(error.message.startsWith(expectedMessage), error.message);
       assert.equal(error.method, 'GET');
       assert.equal(error.url, '/foo');
       assert.ok(error.cause);
