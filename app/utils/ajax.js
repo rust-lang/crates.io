@@ -45,4 +45,12 @@ export class AjaxError extends Error {
     this.url = url;
     this.cause = cause;
   }
+
+  async json() {
+    try {
+      return await this.cause.response.json();
+    } catch {
+      // ignore errors and implicitly return `undefined`
+    }
+  }
 }

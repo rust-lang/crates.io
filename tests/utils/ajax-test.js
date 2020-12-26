@@ -93,6 +93,34 @@ module('ajax()', function (hooks) {
       return true;
     });
   });
+
+  module('json()', function () {
+    test('resolves with the JSON payload', async function (assert) {
+      this.server.get('/foo', { foo: 42 }, 500);
+
+      let error;
+      await assert.rejects(ajax('/foo'), function (_error) {
+        error = _error;
+        return true;
+      });
+
+      let json = await error.json();
+      assert.deepEqual(json, { foo: 42 });
+    });
+
+    test('resolves with `undefined` if there is no JSON payload', async function (assert) {
+      this.server.get('/foo', () => '{ foo: 42', 500);
+
+      let error;
+      await assert.rejects(ajax('/foo'), function (_error) {
+        error = _error;
+        return true;
+      });
+
+      let json = await error.json();
+      assert.strictEqual(json, undefined);
+    });
+  });
 });
 
 function setupFetchRestore(hooks) {
