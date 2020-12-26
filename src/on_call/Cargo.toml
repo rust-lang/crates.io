@@ -1,0 +1,19 @@
+[package]
+
+name = "cargo-on-call"
+version = "0.0.0"
+authors = ["Alex Crichton <alex@alexcrichton.com>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/rust-lang/crates.io"
+description = "PagerDuty integration code for crates.io"
+edition = "2018"
+
+[lib]
+name = "cargo_on_call"
+path = "lib.rs"
+
+[dependencies]
+anyhow = "1.0"
+dotenv = "0.15"
+reqwest = { version = "0.11", features = ["blocking", "gzip", "json"] }
+serde = { version = "1.0.0", features = ["derive"] }

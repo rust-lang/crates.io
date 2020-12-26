@@ -1,3 +1,5 @@
+#![warn(clippy::all, rust_2018_idioms)]
+
 use anyhow::{anyhow, Result};
 use reqwest::{blocking::Client, header, StatusCode as Status};
 

@@ -7,7 +7,8 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
 use anyhow::Result;
-use cargo_registry::{admin::on_call, db, schema::*};
+use cargo_on_call::Event;
+use cargo_registry::{db, schema::*};
 use diesel::prelude::*;
 
 fn main() -> Result<()> {
@@ -51,7 +52,7 @@ fn check_failing_background_jobs(conn: &PgConnection) -> Result<()> {
     let stalled_job_count = stalled_jobs.len();
 
     let event = if stalled_job_count > 0 {
-        on_call::Event::Trigger {
+        Event::Trigger {
             incident_key: Some(EVENT_KEY.into()),
             description: format!(
                 "{} jobs have been in the queue for more than {} minutes",
@@ -59,7 +60,7 @@ fn check_failing_background_jobs(conn: &PgConnection) -> Result<()> {
             ),
         }
     } else {
-        on_call::Event::Resolve {
+        Event::Resolve {
             incident_key: EVENT_KEY.into(),
             description: Some("No stalled background jobs".into()),
         }
@@ -93,14 +94,14 @@ fn check_stalled_update_downloads(conn: &PgConnection) -> Result<()> {
         let minutes = Utc::now().signed_duration_since(start_time).num_minutes();
 
         if minutes > max_job_time {
-            return log_and_trigger_event(on_call::Event::Trigger {
+            return log_and_trigger_event(Event::Trigger {
                 incident_key: Some(EVENT_KEY.into()),
                 description: format!("update_downloads job running for {} minutes", minutes),
             });
         }
     };
 
-    log_and_trigger_event(on_call::Event::Resolve {
+    log_and_trigger_event(Event::Resolve {
         incident_key: EVENT_KEY.into(),
         description: Some("No stalled update_downloads job".into()),
     })
@@ -153,12 +154,12 @@ fn check_spam_attack(conn: &PgConnection) -> Result<()> {
     }
 
     let event = if let Some(event_description) = event_description {
-        on_call::Event::Trigger {
+        Event::Trigger {
             incident_key: Some(EVENT_KEY.into()),
             description: format!("{}, possible spam attack underway", event_description,),
         }
     } else {
-        on_call::Event::Resolve {
+        Event::Resolve {
             incident_key: EVENT_KEY.into(),
             description: Some("No spam crates detected".into()),
         }
@@ -168,12 +169,12 @@ fn check_spam_attack(conn: &PgConnection) -> Result<()> {
     Ok(())
 }
 
-fn log_and_trigger_event(event: on_call::Event) -> Result<()> {
+fn log_and_trigger_event(event: Event) -> Result<()> {
     match event {
-        on_call::Event::Trigger {
+        Event::Trigger {
             ref description, ..
         } => println!("Paging on-call: {}", description),
-        on_call::Event::Resolve {
+        Event::Resolve {
             description: Some(ref description),
             ..
         } => println!("{}", description),

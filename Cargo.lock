@@ -245,12 +245,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b700ce4376041dcd0a327fd0097c41095743c4c8af8887265942faf1100bd040"
 
 [[package]]
+name = "cargo-on-call"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "dotenv",
+ "reqwest",
+ "serde",
+]
+
+[[package]]
 name = "cargo-registry"
 version = "0.2.2"
 dependencies = [
  "ammonia",
  "anyhow",
  "base64 0.13.0",
+ "cargo-on-call",
  "cargo-registry-s3",
  "chrono",
  "civet",
