@@ -13,7 +13,7 @@
     "rust": {
         "enabled": false
     },
-    "postUpdateOptions": ["yarnDedupeHighest"],
+    "postUpdateOptions": ["yarnDedupeFewer"],
     "packageRules": [{
         "packageNames": ["ember-cli", "ember-data", "ember-source"],
         "separateMinorPatch": true
