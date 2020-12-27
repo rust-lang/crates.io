@@ -15,17 +15,6 @@
     },
     "postUpdateOptions": ["yarnDedupeHighest"],
     "packageRules": [{
-        "groupName": "embroider",
-        "packagePatterns": [
-            "^@embroider/"
-        ]
-    }, {
-        "groupName": "glimmer",
-        "packagePatterns": [
-            "@glimmer/component",
-            "@glimmer/tracking"
-        ]
-    }, {
         "packageNames": ["ember-cli", "ember-data", "ember-source"],
         "separateMinorPatch": true
     }]
