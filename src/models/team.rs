@@ -1,14 +1,13 @@
 use diesel::prelude::*;
 
 use crate::app::App;
-use crate::github::{github_api, team_url};
+use crate::github::github_api;
 use crate::util::errors::{cargo_err, AppResult, NotFound};
 
 use oauth2::AccessToken;
 
 use crate::models::{Crate, CrateOwner, Owner, OwnerKind, User};
 use crate::schema::{crate_owners, teams};
-use crate::views::EncodableTeam;
 
 /// For now, just a Github Team. Can be upgraded to other teams
 /// later if desirable.
@@ -212,25 +211,6 @@ impl Team {
             .map(Owner::Team);
 
         Ok(teams.collect())
-    }
-
-    pub fn encodable(self) -> EncodableTeam {
-        let Team {
-            id,
-            name,
-            login,
-            avatar,
-            ..
-        } = self;
-        let url = team_url(&login);
-
-        EncodableTeam {
-            id,
-            login,
-            name,
-            avatar,
-            url: Some(url),
-        }
     }
 }
 

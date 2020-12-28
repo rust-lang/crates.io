@@ -87,7 +87,7 @@ pub fn new(req: &mut dyn RequestExt) -> EndpointResult {
         api_token: EncodableApiTokenWithToken,
     }
     Ok(req.json(&R {
-        api_token: api_token.encodable_with_token(),
+        api_token: api_token.into(),
     }))
 }
 

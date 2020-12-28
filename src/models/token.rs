@@ -6,7 +6,6 @@ use crate::models::User;
 use crate::schema::api_tokens;
 use crate::util::errors::{AppResult, InsecurelyGeneratedTokenRevoked};
 use crate::util::rfc3339;
-use crate::views::EncodableApiTokenWithToken;
 
 const TOKEN_LENGTH: usize = 32;
 const TOKEN_PREFIX: &str = "cio"; // Crates.IO
@@ -83,21 +82,6 @@ pub struct CreatedApiToken {
     pub plaintext: String,
 }
 
-impl CreatedApiToken {
-    /// Converts this `CreatedApiToken` into an `EncodableApiToken` including
-    /// the actual token value for JSON serialization.
-    pub fn encodable_with_token(self) -> EncodableApiTokenWithToken {
-        EncodableApiTokenWithToken {
-            id: self.model.id,
-            name: self.model.name,
-            token: self.plaintext,
-            revoked: self.model.revoked,
-            created_at: self.model.created_at,
-            last_used_at: self.model.last_used_at,
-        }
-    }
-}
-
 // Use a custom implementation of Debug to hide the plaintext token.
 impl std::fmt::Debug for CreatedApiToken {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -111,6 +95,7 @@ impl std::fmt::Debug for CreatedApiToken {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::views::EncodableApiTokenWithToken;
     use chrono::NaiveDate;
 
     #[test]

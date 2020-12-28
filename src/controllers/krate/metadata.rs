@@ -80,7 +80,7 @@ pub fn summary(req: &mut dyn RequestExt) -> EndpointResult {
         .limit(10)
         .load(&*conn)?
         .into_iter()
-        .map(Keyword::encodable)
+        .map(Keyword::into)
         .collect();
 
     let popular_categories = Category::toplevel(&conn, "crates", 10, 0)?
@@ -178,7 +178,7 @@ pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
             .into_iter()
             .map(|(v, pb, aas)| v.encodable(&krate.name, pb, aas))
             .collect(),
-        keywords: kws.into_iter().map(Keyword::encodable).collect(),
+        keywords: kws.into_iter().map(Keyword::into).collect(),
         categories: cats.into_iter().map(Category::into).collect(),
     }))
 }

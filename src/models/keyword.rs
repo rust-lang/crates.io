@@ -3,7 +3,6 @@ use diesel::prelude::*;
 
 use crate::models::Crate;
 use crate::schema::*;
-use crate::views::EncodableKeyword;
 
 #[derive(Clone, Identifiable, Queryable, Debug)]
 pub struct Keyword {
@@ -59,21 +58,6 @@ impl Keyword {
                 .chars()
                 .all(|c| c.is_alphanumeric() || c == '_' || c == '-')
             && name.chars().all(|c| c.is_ascii())
-    }
-
-    pub fn encodable(self) -> EncodableKeyword {
-        let Keyword {
-            crates_cnt,
-            keyword,
-            created_at,
-            ..
-        } = self;
-        EncodableKeyword {
-            id: keyword.clone(),
-            created_at,
-            crates_cnt,
-            keyword,
-        }
     }
 
     pub fn update_crate(conn: &PgConnection, krate: &Crate, keywords: &[&str]) -> QueryResult<()> {

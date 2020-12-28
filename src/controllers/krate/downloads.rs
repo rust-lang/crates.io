@@ -31,7 +31,7 @@ pub fn downloads(req: &mut dyn RequestExt) -> EndpointResult {
         .order(version_downloads::date.asc())
         .load(&*conn)?
         .into_iter()
-        .map(VersionDownload::encodable)
+        .map(VersionDownload::into)
         .collect::<Vec<_>>();
 
     let sum_downloads = sql::<BigInt>("SUM(version_downloads.downloads)");

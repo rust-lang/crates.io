@@ -94,12 +94,12 @@ impl Version {
                 authors: format!("/api/v1/crates/{}/{}/authors", crate_name, num),
             },
             crate_size,
-            published_by: published_by.map(User::encodable_public),
+            published_by: published_by.map(User::into),
             audit_actions: audit_actions
                 .into_iter()
                 .map(|(audit_action, user)| EncodableAuditAction {
                     action: audit_action.action.into(),
-                    user: User::encodable_public(user),
+                    user: user.into(),
                     time: audit_action.time,
                 })
                 .collect(),
