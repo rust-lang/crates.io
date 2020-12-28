@@ -81,7 +81,7 @@ export default class CrateVersionController extends Controller {
         versions.push(version.getProperties('id', 'num'));
       });
     }
-    if (extra.length > 0) {
+    if (extra.length !== 0) {
       versions.push({
         id: null,
         num: 'Other',
@@ -136,7 +136,7 @@ export default class CrateVersionController extends Controller {
     // if we know about a successful docs.rs build, we'll return a link to that
     if (this.loadDocsBuildsTask.lastSuccessful) {
       let docsBuilds = this.loadDocsBuildsTask.lastSuccessful.value;
-      if (docsBuilds.length > 0 && docsBuilds[0].build_status === true) {
+      if (docsBuilds.length !== 0 && docsBuilds[0].build_status === true) {
         return `https://docs.rs/${this.crate.name}/${this.currentVersion.num}`;
       }
     }

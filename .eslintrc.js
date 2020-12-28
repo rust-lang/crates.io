@@ -38,6 +38,7 @@ module.exports = {
     'ember-concurrency/no-perform-without-catch': 'warn',
     'ember-concurrency/require-task-name-suffix': 'error',
 
+    'unicorn/explicit-length-check': ['error', { 'non-zero': 'not-equal' }],
     // disabled because we need `null` since JSON has no `undefined`
     'unicorn/no-null': 'off',
     // disabled because this rule conflicts with prettier
@@ -84,7 +85,7 @@ module.exports = {
       files: ['mirage/**/*.js'],
       rules: {
         // disabled because of different `.find()` meaning
-        'unicorn/no-fn-reference-in-iterator': 'off',
+        'unicorn/no-array-callback-reference': 'off',
       },
     },
 
