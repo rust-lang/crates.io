@@ -292,6 +292,7 @@ fn replay_http(
 ) -> impl Future<Output = Result<Response<Body>, Error>> + Send {
     static IGNORED_HEADERS: &[&str] = &["authorization", "date", "cache-control"];
 
+    debug!("<- {:?}", req);
     assert_eq!(req.uri().to_string(), exchange.request.uri);
     assert_eq!(req.method().to_string(), exchange.request.method);
     assert_ok!(writeln!(
@@ -337,6 +338,7 @@ fn replay_http(
         let status = StatusCode::from_u16(exchange.response.status).unwrap();
         let response = builder.status(status).body(body.into()).unwrap();
 
+        debug!("-> {:?}", response);
         Ok(response)
     }
 }

@@ -47,6 +47,13 @@ use url::Url;
 
 pub use conduit::{header, StatusCode};
 
+pub fn init_logger() {
+    let _ = env_logger::builder()
+        .format_timestamp(None)
+        .is_test(true)
+        .try_init();
+}
+
 struct TestAppInner {
     app: Arc<App>,
     // The bomb (if created) needs to be held in scope until the end of the test.
@@ -92,6 +99,8 @@ pub struct TestApp(Rc<TestAppInner>);
 impl TestApp {
     /// Initialize an application with an `Uploader` that panics
     pub fn init() -> TestAppBuilder {
+        init_logger();
+
         TestAppBuilder {
             config: crate::simple_config(),
             proxy: None,
