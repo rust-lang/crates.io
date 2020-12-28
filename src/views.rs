@@ -1,13 +1,20 @@
 use chrono::NaiveDateTime;
 use std::collections::HashMap;
 
-use crate::models::DependencyKind;
+use crate::models::{Badge, Category, DependencyKind};
 use crate::util::rfc3339;
 
 #[derive(PartialEq, Debug, Serialize, Deserialize)]
 pub struct EncodableBadge {
     pub badge_type: String,
     pub attributes: HashMap<String, Option<String>>,
+}
+
+impl From<Badge> for EncodableBadge {
+    fn from(badge: Badge) -> Self {
+        // The serde attributes on Badge ensure it can be deserialized to EncodableBadge
+        serde_json::from_value(serde_json::to_value(badge).unwrap()).unwrap()
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -19,6 +26,27 @@ pub struct EncodableCategory {
     #[serde(with = "rfc3339")]
     pub created_at: NaiveDateTime,
     pub crates_cnt: i32,
+}
+
+impl From<Category> for EncodableCategory {
+    fn from(category: Category) -> Self {
+        let Category {
+            crates_cnt,
+            category,
+            slug,
+            description,
+            created_at,
+            ..
+        } = category;
+        Self {
+            id: slug.clone(),
+            slug,
+            description,
+            created_at,
+            crates_cnt,
+            category: category.rsplit("::").collect::<Vec<_>>()[0].to_string(),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
