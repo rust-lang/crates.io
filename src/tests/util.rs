@@ -48,9 +48,10 @@ use url::Url;
 pub use conduit::{header, StatusCode};
 
 pub fn init_logger() {
-    let _ = env_logger::builder()
-        .format_timestamp(None)
-        .is_test(true)
+    let _ = tracing_subscriber::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .without_time()
+        .with_test_writer()
         .try_init();
 }
 
