@@ -84,7 +84,7 @@ module.exports = {
       files: ['mirage/**/*.js'],
       rules: {
         // disabled because of different `.find()` meaning
-        'unicorn/no-fn-reference-in-iterator': 'off',
+        'unicorn/no-array-callback-reference': 'off',
       },
     },
 
