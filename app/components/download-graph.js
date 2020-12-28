@@ -32,6 +32,7 @@ export default class DownloadGraph extends Component {
   }
 
   willDestroy() {
+    super.willDestroy(...arguments);
     window.removeEventListener('resize', this.resizeHandler);
   }
 
