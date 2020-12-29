@@ -25,6 +25,13 @@ module.exports = function (defaults) {
   ];
 
   let app = new EmberApp(defaults, {
+    autoImport: {
+      webpack: {
+        externals: {
+          moment: 'moment',
+        },
+      },
+    },
     babel: {
       plugins: [require.resolve('ember-auto-import/babel-plugin')],
     },
@@ -52,6 +59,7 @@ module.exports = function (defaults) {
   });
 
   app.import('node_modules/normalize.css/normalize.css', { prepend: true });
+  app.import('node_modules/chart.js/dist/Chart.min.css');
 
   app.import('vendor/qunit.css', { type: 'test' });
 

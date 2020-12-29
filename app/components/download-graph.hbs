@@ -1,12 +1,30 @@
-{{#if this.loadTask.last.error}}
-  <span data-test-google-api-error>
-    There was an error loading the Google Charts code.
-    Please try again later.
-  </span>
-{{else}}
-  <div
-    {{did-insert this.renderChart}}
-    {{did-update this.renderChart @data}}
-    ...attributes
-  ></div>
-{{/if}}
+<div
+  local-class="
+    wrapper
+    {{if this.chartjs.loadTask.lastSuccessful.value "auto-height"}}
+  "
+  data-test-download-graph
+  ...attributes
+  {{did-insert this.loadChartJs}}
+>
+  {{#if this.chartjs.loadTask.isRunning}}
+    <LoadingSpinner local-class="spinner" data-test-spinner />
+  {{else if this.chartjs.loadTask.lastSuccessful.value}}
+    <canvas
+      {{did-insert this.createChart}}
+      {{did-update this.updateChart @data}}
+      {{will-destroy this.destroyChart}}
+    />
+  {{else}}
+    <div local-class="error" data-test-error>
+      <p>Sorry, there was a problem loading the graphing code.</p>
+      <button
+        type="button"
+        data-test-reload
+        {{on "click" this.reloadPage}}
+      >
+        Try again
+      </button>
+    </div>
+  {{/if}}
+</div>
