@@ -25,8 +25,8 @@ module.exports = function (defaults) {
   ];
 
   let app = new EmberApp(defaults, {
-    babel6: {
-      plugins: ['transform-object-rest-spread'],
+    babel: {
+      plugins: [require.resolve('ember-auto-import/babel-plugin')],
     },
     'ember-fetch': {
       preferNative: true,
