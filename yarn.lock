@@ -7408,10 +7408,10 @@ eslint-config-prettier@7.1.0:
   resolved "https://registry.yarnpkg.com/eslint-config-prettier/-/eslint-config-prettier-7.1.0.tgz#5402eb559aa94b894effd6bddfa0b1ca051c858f"
   integrity sha512-9sm5/PxaFG7qNJvJzTROMM1Bk1ozXVTKI0buKOyb0Bsr1hrwi0H/TzxF/COtf1uxikIK8SwhX7K6zg78jAzbeA==
 
-eslint-plugin-ember-concurrency@0.3.0:
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/eslint-plugin-ember-concurrency/-/eslint-plugin-ember-concurrency-0.3.0.tgz#809c17a83e6706819e8dad7ed284b314d1b49e39"
-  integrity sha512-51YIVl1Xt8Mge8EvpLiANRl8JIIaSsVz1T+iSjV5xU7XRuyRjOe44K8z1WJBewoKW4GhzX2pm8ZgMmR+4uozMw==
+eslint-plugin-ember-concurrency@0.3.1:
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-ember-concurrency/-/eslint-plugin-ember-concurrency-0.3.1.tgz#7d6a929488ce94d6c4224b5b6e464b01e5163aff"
+  integrity sha512-ihhW9cTv4WU4j3a458gwVIsQQ3FdEJKgwBgNRvUC3pMJzSCqizpbMGO5KJihT2JLWaHtCuibvGaO1ZTJEwwBUQ==
 
 eslint-plugin-ember@10.1.1:
   version "10.1.1"
