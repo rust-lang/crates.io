@@ -1363,7 +1363,7 @@
   dependencies:
     tslib "^2.0.1"
 
-"@formatjs/intl-getcanonicallocales@1.5.3", "@formatjs/intl-getcanonicallocales@^1.5.3":
+"@formatjs/intl-getcanonicallocales@1.5.3":
   version "1.5.3"
   resolved "https://registry.yarnpkg.com/@formatjs/intl-getcanonicallocales/-/intl-getcanonicallocales-1.5.3.tgz#b5978462340da1502502c3fde1c4abccff8f3b8e"
   integrity sha512-QVBnSPZ32Y80wkXbf36hP9VbyklbOb8edppxFcgO9Lbd47zagllw65Y81QOHEn/j11JcTn2OhW0vea95LHvQmA==
@@ -1371,7 +1371,7 @@
     cldr-core "38"
     tslib "^2.0.1"
 
-"@formatjs/intl-locale@^2.4.11":
+"@formatjs/intl-locale@2.4.11":
   version "2.4.11"
   resolved "https://registry.yarnpkg.com/@formatjs/intl-locale/-/intl-locale-2.4.11.tgz#bd0f23d5c30410e9e7a336b9fbc44e502bcf190f"
   integrity sha512-Rus5jUOHWKKX17ZbyNa8tjghMPc3WWXnC8SSqNWWtUIaPkkKvBEfKEcRivzrGEr56NyZa86dcsDzSUb8ldjcsA==
@@ -1381,7 +1381,7 @@
     cldr-core "38"
     tslib "^2.0.1"
 
-"@formatjs/intl-numberformat@^6.1.1":
+"@formatjs/intl-numberformat@6.1.1":
   version "6.1.1"
   resolved "https://registry.yarnpkg.com/@formatjs/intl-numberformat/-/intl-numberformat-6.1.1.tgz#43f021d1ea241e5cef883221ee2eaf454d5dfebd"
   integrity sha512-ne+xoNAYHLvOQTzZ6WPaREDo3VVP2mds9j2NAzoVUn3ozPU2yXRTxPX3Z1hKK5rfMJTq4dBfKL+suhYRpwdB6Q==
@@ -1389,7 +1389,7 @@
     "@formatjs/ecma402-abstract" "1.5.0"
     tslib "^2.0.1"
 
-"@formatjs/intl-pluralrules@^4.0.1":
+"@formatjs/intl-pluralrules@4.0.1":
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/@formatjs/intl-pluralrules/-/intl-pluralrules-4.0.1.tgz#a1d3222f11647ca3222d91c52482c7f7411cc940"
   integrity sha512-FIFSP1N0ZRPdhe2pnV4psKb34RD9Ci6ISYgsluAZsPzaR8UERb46oz7jag/OXlMcAPU4BoiZ2EHRGy++CePQtw==
