@@ -3,6 +3,7 @@ import { htmlSafe } from '@ember/string';
 import { tracked } from '@glimmer/tracking';
 import Ember from 'ember';
 
+import * as Sentry from '@sentry/browser';
 import { rawTimeout, task } from 'ember-concurrency';
 
 const SPEED = 200;
@@ -17,11 +18,18 @@ export default class ProgressService extends Service {
   }
 
   handle(thenable) {
-    this.counterTask.perform(thenable);
+    this.counterTask.perform(thenable).catch(() => {
+      // the `counterTask` performs the passed in `thenable` (aka. `Promise`), which might be rejected
+      // and cause the task to fail too. since we don't care about the failure here, we'll just ignore it.
+    });
   }
 
   @task(function* (promise) {
-    this.updateTask.perform();
+    this.updateTask.perform().catch(error => {
+      // this task shouldn't be able to fail, but if it does we'll let Sentry know
+      Sentry.captureException(error);
+    });
+
     yield promise;
   })
   counterTask;
