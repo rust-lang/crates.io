@@ -15,6 +15,12 @@ export default class ApplicationRoute extends Route {
 
   async beforeModel() {
     // trigger the task, but don't wait for the result here
+    //
+    // we don't need a `catch()` block here because network
+    // errors are already dealt with inside of the task
+    // and any other errors should end up on Sentry.
+    //
+    // eslint-disable-next-line ember-concurrency/no-perform-without-catch
     this.session.loadUserTask.perform();
 
     // start loading the Google Charts JS library already
