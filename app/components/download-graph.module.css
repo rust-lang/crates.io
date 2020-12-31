@@ -4,10 +4,6 @@
     border: solid 1px var(--gray-border);
     border-radius: 5px;
     min-height: 400px;
-
-    &.auto-height {
-        min-height: auto;
-    }
 }
 
 .spinner {

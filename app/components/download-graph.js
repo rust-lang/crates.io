@@ -25,6 +25,7 @@ export default class DownloadGraph extends Component {
       type: 'line',
       data: this.data,
       options: {
+        maintainAspectRatio: false,
         layout: {
           padding: 10,
         },
