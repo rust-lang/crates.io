@@ -277,11 +277,6 @@ div.header {
     }
 }
 
-.graph-data {
-    width: 100%;
-    height: 500px;
-}
-
 .yanked {
     composes: yanked from '../shared/typography.module.css';
 }

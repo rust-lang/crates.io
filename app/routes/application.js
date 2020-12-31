@@ -8,7 +8,6 @@ import { shouldPolyfill as shouldPolyfillNumberFormat } from '@formatjs/intl-num
 import { shouldPolyfill as shouldPolyfillPluralRules } from '@formatjs/intl-pluralrules/should-polyfill';
 
 export default class ApplicationRoute extends Route {
-  @service googleCharts;
   @service notifications;
   @service progress;
   @service session;
@@ -22,12 +21,6 @@ export default class ApplicationRoute extends Route {
     //
     // eslint-disable-next-line ember-concurrency/no-perform-without-catch
     this.session.loadUserTask.perform();
-
-    // start loading the Google Charts JS library already
-    // and ignore any errors since we will catch them again
-    // anyway when we call `load()` from the `DownloadGraph`
-    // component
-    this.googleCharts.load().catch(() => {});
 
     // load `Intl` polyfills if necessary
     let polyfillImports = [];
