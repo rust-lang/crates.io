@@ -43,7 +43,7 @@
     "@formatjs/intl-pluralrules": "4.0.1",
     "@sentry/browser": "5.29.2",
     "@sentry/integrations": "5.29.2",
-    "chart.js": "^2.9.4",
+    "chart.js": "2.9.4",
     "copy-text-to-clipboard": "2.2.0",
     "fastboot-app-server": "3.0.0",
     "morgan": "1.10.0",
