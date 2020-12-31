@@ -14,7 +14,7 @@ use crate::views::EncodableVersion;
 /// Handles the `GET /versions` route.
 pub fn index(req: &mut dyn RequestExt) -> EndpointResult {
     use diesel::dsl::any;
-    let conn = req.db_conn()?;
+    let conn = req.db_read_only()?;
 
     // Extract all ids requested.
     let query = url::form_urlencoded::parse(req.query_string().unwrap_or("").as_bytes());
@@ -58,7 +58,7 @@ pub fn index(req: &mut dyn RequestExt) -> EndpointResult {
 pub fn show_by_id(req: &mut dyn RequestExt) -> EndpointResult {
     let id = &req.params()["version_id"];
     let id = id.parse().unwrap_or(0);
-    let conn = req.db_conn()?;
+    let conn = req.db_read_only()?;
     let (version, krate, published_by): (Version, Crate, Option<User>) = versions::table
         .find(id)
         .inner_join(crates::table)

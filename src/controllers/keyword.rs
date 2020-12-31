@@ -20,7 +20,7 @@ pub fn index(req: &mut dyn RequestExt) -> EndpointResult {
     }
 
     let query = query.paginate(req)?;
-    let conn = req.db_conn()?;
+    let conn = req.db_read_only()?;
     let data: Paginated<Keyword> = query.load(&*conn)?;
     let total = data.total();
     let kws = data.into_iter().map(Keyword::into).collect::<Vec<_>>();
@@ -44,7 +44,7 @@ pub fn index(req: &mut dyn RequestExt) -> EndpointResult {
 /// Handles the `GET /keywords/:keyword_id` route.
 pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
     let name = &req.params()["keyword_id"];
-    let conn = req.db_conn()?;
+    let conn = req.db_read_only()?;
 
     let kw = Keyword::find_by_keyword(&conn, name)?;
 

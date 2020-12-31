@@ -2,7 +2,7 @@
 
 use swirl::Job;
 
-use super::version_and_crate;
+use super::{extract_crate_name_and_semver, version_and_crate};
 use crate::controllers::cargo_prelude::*;
 use crate::git;
 use crate::models::Rights;
@@ -28,8 +28,13 @@ pub fn unyank(req: &mut dyn RequestExt) -> EndpointResult {
 
 /// Changes `yanked` flag on a crate version record
 fn modify_yank(req: &mut dyn RequestExt, yanked: bool) -> EndpointResult {
+    // FIXME: Should reject bad requests before authentication, but can't due to
+    // lifetime issues with `req`.
     let authenticated_user = req.authenticate()?;
-    let (conn, version, krate) = version_and_crate(req)?;
+    let (crate_name, semver) = extract_crate_name_and_semver(req)?;
+
+    let conn = req.db_conn()?;
+    let (version, krate) = version_and_crate(&conn, crate_name, semver)?;
     let api_token_id = authenticated_user.api_token_id();
     let user = authenticated_user.user();
     let owners = krate.owners(&conn)?;

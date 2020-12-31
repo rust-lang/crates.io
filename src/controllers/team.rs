@@ -9,7 +9,7 @@ pub fn show_team(req: &mut dyn RequestExt) -> EndpointResult {
     use self::teams::dsl::{login, teams};
 
     let name = &req.params()["team_id"];
-    let conn = req.db_conn()?;
+    let conn = req.db_read_only()?;
     let team: Team = teams.filter(login.eq(name)).first(&*conn)?;
 
     #[derive(Serialize)]
