@@ -1371,28 +1371,28 @@
     cldr-core "38"
     tslib "^2.0.1"
 
-"@formatjs/intl-locale@2.4.11":
-  version "2.4.11"
-  resolved "https://registry.yarnpkg.com/@formatjs/intl-locale/-/intl-locale-2.4.11.tgz#bd0f23d5c30410e9e7a336b9fbc44e502bcf190f"
-  integrity sha512-Rus5jUOHWKKX17ZbyNa8tjghMPc3WWXnC8SSqNWWtUIaPkkKvBEfKEcRivzrGEr56NyZa86dcsDzSUb8ldjcsA==
+"@formatjs/intl-locale@2.4.12":
+  version "2.4.12"
+  resolved "https://registry.yarnpkg.com/@formatjs/intl-locale/-/intl-locale-2.4.12.tgz#0a320864f84e87876149bdee88357bdc02919a5d"
+  integrity sha512-40khHPYtZRdqjQs1fItNj94eMoiGwJJOAKN//9qUhAsHrXvGxseFVBSg+mItV0Orwb3wqItUj3hu6evrouhstw==
   dependencies:
     "@formatjs/ecma402-abstract" "1.5.0"
     "@formatjs/intl-getcanonicallocales" "1.5.3"
     cldr-core "38"
     tslib "^2.0.1"
 
-"@formatjs/intl-numberformat@6.1.1":
-  version "6.1.1"
-  resolved "https://registry.yarnpkg.com/@formatjs/intl-numberformat/-/intl-numberformat-6.1.1.tgz#43f021d1ea241e5cef883221ee2eaf454d5dfebd"
-  integrity sha512-ne+xoNAYHLvOQTzZ6WPaREDo3VVP2mds9j2NAzoVUn3ozPU2yXRTxPX3Z1hKK5rfMJTq4dBfKL+suhYRpwdB6Q==
+"@formatjs/intl-numberformat@6.1.2":
+  version "6.1.2"
+  resolved "https://registry.yarnpkg.com/@formatjs/intl-numberformat/-/intl-numberformat-6.1.2.tgz#2fd8d67a3bbb09993114be5c3c721e56a41595d0"
+  integrity sha512-td0XggQKu8dlPUlP2f322NW0WY58zWLlOoiUVh4eolcWqOs4maKL8tjmFBPXSQt55JiKy14ZrDw1dljyNHLB0g==
   dependencies:
     "@formatjs/ecma402-abstract" "1.5.0"
     tslib "^2.0.1"
 
-"@formatjs/intl-pluralrules@4.0.1":
-  version "4.0.1"
-  resolved "https://registry.yarnpkg.com/@formatjs/intl-pluralrules/-/intl-pluralrules-4.0.1.tgz#a1d3222f11647ca3222d91c52482c7f7411cc940"
-  integrity sha512-FIFSP1N0ZRPdhe2pnV4psKb34RD9Ci6ISYgsluAZsPzaR8UERb46oz7jag/OXlMcAPU4BoiZ2EHRGy++CePQtw==
+"@formatjs/intl-pluralrules@4.0.2":
+  version "4.0.2"
+  resolved "https://registry.yarnpkg.com/@formatjs/intl-pluralrules/-/intl-pluralrules-4.0.2.tgz#73dafc7f3872b50faec65fce15822f210f334386"
+  integrity sha512-Oh4zmA3odkXBCPAGVhZuAnP3IfCPy8DyizA9s4QkYptVICX38RbUvXwzr2a9DVpKNiZ7i2TnV4Qkeo06N/6b7Q==
   dependencies:
     "@formatjs/ecma402-abstract" "1.5.0"
     tslib "^2.0.1"

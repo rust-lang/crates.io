@@ -38,9 +38,9 @@
   },
   "dependencies": {
     "@formatjs/intl-getcanonicallocales": "1.5.3",
-    "@formatjs/intl-locale": "2.4.11",
-    "@formatjs/intl-numberformat": "6.1.1",
-    "@formatjs/intl-pluralrules": "4.0.1",
+    "@formatjs/intl-locale": "2.4.12",
+    "@formatjs/intl-numberformat": "6.1.2",
+    "@formatjs/intl-pluralrules": "4.0.2",
     "@sentry/browser": "5.29.2",
     "@sentry/integrations": "5.29.2",
     "chart.js": "2.9.4",
