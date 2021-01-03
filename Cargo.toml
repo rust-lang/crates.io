@@ -34,15 +34,15 @@ anyhow = "1.0"
 base64 = "0.13"
 cargo-registry-s3 = { path = "src/s3", version = "0.2.0" }
 chrono = { version = "0.4.0", features = ["serde"] }
-civet = "0.12.0-alpha.4"
+civet = "0.12.0-alpha.5"
 clap = "=3.0.0-beta.2"
 comrak = { version = "0.9", default-features = false }
 
-conduit = "0.9.0-alpha.3"
+conduit = "0.9.0-alpha.5"
 conduit-conditional-get = "0.9.0-alpha.3"
 conduit-cookie = "0.9.0-alpha.4"
 conduit-git-http-backend = "0.9.0-alpha.2"
-conduit-hyper = "=0.3.0-alpha.5"
+conduit-hyper = "=0.3.0-alpha.5.1"
 conduit-middleware = "0.9.0-alpha.3"
 conduit-router = "0.9.0-alpha.3"
 conduit-static = "0.9.0-alpha.3"
