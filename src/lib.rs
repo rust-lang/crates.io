@@ -4,6 +4,7 @@ use std::error::Error;
 use std::fs::File;
 use std::io::Read;
 use std::net::SocketAddr;
+use std::time::Instant;
 
 pub use http::{header, HeaderMap, Method, Request, Response, StatusCode, Version};
 
@@ -15,6 +16,18 @@ pub type HttpResult = ResponseResult<http::Error>;
 
 pub type BoxError = Box<dyn Error + Send>;
 pub type HandlerResult = Result<Response<Body>, BoxError>;
+
+/// A type representing the instant a request was received
+///
+/// Servers must add this to the request's extensions, capturing the moment
+/// request headers were received.
+pub struct StartInstant(Instant);
+
+impl StartInstant {
+    pub fn now() -> Self {
+        Self(Instant::now())
+    }
+}
 
 /// A type representing a `Response` body.
 ///
