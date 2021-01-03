@@ -4,10 +4,11 @@
 use super::prelude::*;
 use crate::middleware::current_user::TrustedUserId;
 use crate::util::request_header;
+
 use conduit::{header, Host, RequestExt, Scheme, StatusCode};
 use sentry::Level;
+
 use std::fmt::{self, Display, Formatter};
-use std::time::Instant;
 
 const SLOW_REQUEST_THRESHOLD_MS: u64 = 1000;
 
@@ -16,22 +17,17 @@ const FILTERED_HEADERS: &[&str] = &["Authorization", "Cookie", "X-Real-Ip", "X-F
 #[derive(Default)]
 pub(super) struct LogRequests();
 
-struct RequestStart(Instant);
 struct OriginalPath(String);
 
 impl Middleware for LogRequests {
     fn before(&self, req: &mut dyn RequestExt) -> BeforeResult {
-        req.mut_extensions().insert(RequestStart(Instant::now()));
         let path = OriginalPath(req.path().to_string());
         req.mut_extensions().insert(path);
         Ok(())
     }
 
     fn after(&self, req: &mut dyn RequestExt, res: AfterResult) -> AfterResult {
-        // Unwrap shouldn't panic as no other code has access to the private struct to remove it
-        let request_start = req.extensions().find::<RequestStart>().unwrap().0;
-
-        let response_time = request_start.elapsed();
+        let response_time = req.elapsed();
         let response_time =
             response_time.as_secs() * 1000 + u64::from(response_time.subsec_nanos()) / 1_000_000;
 
