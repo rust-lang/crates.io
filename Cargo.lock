@@ -519,9 +519,9 @@ dependencies = [
 
 [[package]]
 name = "conduit-middleware"
-version = "0.9.0-alpha.3"
+version = "0.9.0-alpha.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d11aae989fb790857867a76d27cc02304d7ca743b49667e711fdb6b1ee6a5f1f"
+checksum = "ddc5fb08579847c817024b06fb144f6ef39f66588f2cd4df1e300c1fd4769d1b"
 dependencies = [
  "conduit",
 ]
@@ -559,9 +559,9 @@ dependencies = [
 
 [[package]]
 name = "conduit-test"
-version = "0.9.0-alpha.3"
+version = "0.9.0-alpha.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "75b2f3bd0554c5ca215e78d8569b093a9dea8e384c0f2497a30dd0cccafe1ef5"
+checksum = "3c4cfaa2c193186237c6b7dd18b2511f36f4bb0926d8fe54cc27746a7ed394d2"
 dependencies = [
  "conduit",
 ]
