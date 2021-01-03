@@ -1,6 +1,6 @@
 [package]
 name = "conduit-hyper"
-version = "0.3.0-alpha.6"
+version = "0.3.0-alpha.7"
 authors = ["Justin Geibel <jtgeibel@gmail.com>"]
 license = "MIT OR Apache-2.0"
 description = "Host a conduit based web application on a hyper server"
@@ -10,7 +10,7 @@ edition = "2018"
 
 [dependencies]
 bytes = "1"
-conduit = "0.9.0-alpha.3"
+conduit = "0.9.0-alpha.4"
 hyper = { version = "0.14", features = ["server", "http1", "stream", "tcp"] }
 http = "0.2"
 percent-encoding = "2"

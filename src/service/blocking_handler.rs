@@ -6,7 +6,7 @@ use crate::{ConduitResponse, HyperResponse};
 use std::net::SocketAddr;
 use std::sync::Arc;
 
-use conduit::{Handler, StatusCode};
+use conduit::{Handler, StartInstant, StatusCode};
 use hyper::{Body, Request, Response};
 use tracing::error;
 
@@ -29,13 +29,14 @@ impl<H: Handler> BlockingHandler<H> {
         remote_addr: SocketAddr,
     ) -> Result<HyperResponse, ServiceError> {
         let (parts, body) = request.into_parts();
+        let now = StartInstant::now();
 
         let full_body = hyper::body::to_bytes(body).await?;
         let mut request_info = RequestInfo::new(parts, full_body);
 
         let handler = self.handler.clone();
         tokio::task::spawn_blocking(move || {
-            let mut request = ConduitRequest::new(&mut request_info, remote_addr);
+            let mut request = ConduitRequest::new(&mut request_info, remote_addr, now);
             handler
                 .call(&mut request)
                 .map(conduit_into_hyper)

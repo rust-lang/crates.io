@@ -12,7 +12,7 @@
 use std::io::{Cursor, Read};
 use std::net::SocketAddr;
 
-use conduit::{Extensions, HeaderMap, Host, Method, RequestExt, Scheme, Version};
+use conduit::{Extensions, HeaderMap, Host, Method, RequestExt, Scheme, StartInstant, Version};
 use http::request::Parts as HttpParts;
 use hyper::body::Bytes;
 
@@ -59,19 +59,21 @@ pub(crate) struct ConduitRequest {
 }
 
 impl ConduitRequest {
-    pub(crate) fn new(info: &mut RequestInfo, remote_addr: SocketAddr) -> Self {
+    pub(crate) fn new(info: &mut RequestInfo, remote_addr: SocketAddr, now: StartInstant) -> Self {
         let (parts, body) = info.take();
         let path = parts.0.uri.path().as_bytes();
         let path = percent_encoding::percent_decode(path)
             .decode_utf8_lossy()
             .into_owned();
+        let mut extensions = Extensions::new();
+        extensions.insert(now);
 
         Self {
             parts,
             path,
             remote_addr,
             body: Cursor::new(body),
-            extensions: Extensions::new(),
+            extensions,
         }
     }
 
