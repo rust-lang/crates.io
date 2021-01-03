@@ -8,7 +8,6 @@ use std::time::Instant;
 
 pub use http::{header, HeaderMap, Method, Request, Response, StatusCode, Version};
 
-pub use self::typemap::TypeMap;
 mod typemap;
 
 pub type ResponseResult<Error> = Result<Response<Body>, Error>;
@@ -84,7 +83,7 @@ pub enum Host<'a> {
 }
 
 /// A Dictionary for extensions provided by the server or middleware
-pub type Extensions = TypeMap;
+pub type Extensions = typemap::TypeMap;
 
 pub trait RequestExt {
     /// The version of HTTP being used
