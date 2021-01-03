@@ -159,8 +159,7 @@ mod tests {
 
     use self::conduit_test::ResponseExt;
     use conduit::{
-        Body, Extensions, Handler, HeaderMap, Host, Method, Response, Scheme, StatusCode, TypeMap,
-        Version,
+        Body, Extensions, Handler, HeaderMap, Host, Method, Response, Scheme, StatusCode, Version,
     };
 
     struct RequestSentinel {
@@ -173,7 +172,7 @@ mod tests {
         fn new(method: Method, path: &'static str) -> RequestSentinel {
             RequestSentinel {
                 path: path.to_string(),
-                extensions: TypeMap::new(),
+                extensions: Extensions::new(),
                 method,
             }
         }
