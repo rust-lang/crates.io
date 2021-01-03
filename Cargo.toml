@@ -1,7 +1,7 @@
 [package]
 
 name = "conduit-test"
-version = "0.9.0-alpha.3"
+version = "0.9.0-alpha.4"
 authors = ["wycats@gmail.com",
            "Alex Crichton <alex@alexcrichton.com>"]
 description = "Testing utilities for conduit-based stacks"
@@ -9,4 +9,4 @@ repository = "https://github.com/conduit-rust/conduit-test"
 license = "MIT"
 
 [dependencies]
-conduit = "0.9.0-alpha.3"
+conduit = "0.9.0-alpha.4"

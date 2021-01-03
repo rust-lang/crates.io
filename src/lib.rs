@@ -7,7 +7,7 @@ use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 
 use conduit::{
     header::{HeaderValue, IntoHeaderName},
-    Body, Extensions, HeaderMap, Host, Method, Response, Scheme, TypeMap, Version,
+    Body, Extensions, HeaderMap, Host, Method, Response, Scheme, Version,
 };
 
 pub trait ResponseExt {
@@ -45,7 +45,7 @@ pub struct MockRequest {
     query_string: Option<String>,
     body: Option<Vec<u8>>,
     headers: HeaderMap,
-    extensions: TypeMap,
+    extensions: Extensions,
     reader: Option<Cursor<Vec<u8>>>,
 }
 
@@ -55,7 +55,7 @@ impl MockRequest {
 
         MockRequest {
             path: path.to_string(),
-            extensions: TypeMap::new(),
+            extensions: Extensions::new(),
             query_string: None,
             body: None,
             headers,
