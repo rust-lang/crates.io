@@ -1,4 +1,4 @@
-import { helper } from '@ember/component/helper';
+import Helper from '@ember/component/helper';
 
 import window from 'ember-window-mock';
 
@@ -10,8 +10,8 @@ function newNumberFormat() {
   }
 }
 
-export function formatNum(value) {
-  return newNumberFormat().format(value);
+export default class FormatNumHelper extends Helper {
+  compute([value]) {
+    return newNumberFormat().format(value);
+  }
 }
-
-export default helper(params => formatNum(params[0]));
