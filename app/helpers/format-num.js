@@ -1,17 +1,10 @@
-import { helper } from '@ember/component/helper';
+import Helper from '@ember/component/helper';
+import { inject as service } from '@ember/service';
 
-import window from 'ember-window-mock';
+export default class FormatNumHelper extends Helper {
+  @service intl;
 
-function newNumberFormat() {
-  try {
-    return new Intl.NumberFormat(window.navigator.languages || window.navigator.language);
-  } catch {
-    return new Intl.NumberFormat('en');
+  compute([value]) {
+    return this.intl.formatNumber(value);
   }
 }
-
-export function formatNum(value) {
-  return newNumberFormat().format(value);
-}
-
-export default helper(params => formatNum(params[0]));
