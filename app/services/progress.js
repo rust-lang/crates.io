@@ -4,7 +4,7 @@ import { tracked } from '@glimmer/tracking';
 import Ember from 'ember';
 
 import * as Sentry from '@sentry/browser';
-import { rawTimeout, task } from 'ember-concurrency';
+import { didCancel, rawTimeout, task } from 'ember-concurrency';
 
 const SPEED = 200;
 
@@ -26,8 +26,10 @@ export default class ProgressService extends Service {
 
   @task(function* (promise) {
     this.updateTask.perform().catch(error => {
-      // this task shouldn't be able to fail, but if it does we'll let Sentry know
-      Sentry.captureException(error);
+      if (!didCancel(error)) {
+        // this task shouldn't be able to fail, but if it does we'll let Sentry know
+        Sentry.captureException(error);
+      }
     });
 
     yield promise;
