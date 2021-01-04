@@ -4,19 +4,16 @@ import { module, test } from 'qunit';
 
 import percySnapshot from '@percy/ember';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
-import window from 'ember-window-mock';
-import { setupWindowMock } from 'ember-window-mock/test-support';
 
 import axeConfig from '../axe-config';
 import setupMirage from '../helpers/setup-mirage';
 
 module('Acceptance | categories', function (hooks) {
   setupApplicationTest(hooks);
-  setupWindowMock(hooks);
   setupMirage(hooks);
 
   test('listing categories', async function (assert) {
-    window.navigator = { languages: ['en'] };
+    this.owner.lookup('service:intl').locale = 'en';
 
     this.server.create('category', { category: 'API bindings' });
     this.server.create('category', { category: 'Algorithms' });
@@ -37,7 +34,7 @@ module('Acceptance | categories', function (hooks) {
   });
 
   test('listing categories (locale: de)', async function (assert) {
-    window.navigator = { languages: ['de'] };
+    this.owner.lookup('service:intl').locale = 'de';
 
     this.server.create('category', { category: 'Everything', crates_cnt: 1234 });
 

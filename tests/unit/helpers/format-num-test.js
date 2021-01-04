@@ -3,15 +3,12 @@ import { setupRenderingTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
 import { hbs } from 'ember-cli-htmlbars';
-import window from 'ember-window-mock';
-import { setupWindowMock } from 'ember-window-mock/test-support';
 
 module('Unit | Helper | format-num', function (hooks) {
   setupRenderingTest(hooks);
-  setupWindowMock(hooks);
 
   test('it works', async function (assert) {
-    window.navigator = { language: 'en' };
+    this.owner.lookup('service:intl').locale = 'en';
 
     await render(hbs`{{format-num 42}}`);
     assert.dom().hasText('42');
