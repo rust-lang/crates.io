@@ -9,7 +9,7 @@ use crate::controllers::helpers::pagination::PaginationOptions;
 
 use crate::models::{
     Category, Crate, CrateCategory, CrateKeyword, CrateVersions, Keyword, RecentCrateDownloads,
-    User, Version, VersionOwnerAction,
+    TopVersions, User, Version, VersionOwnerAction,
 };
 use crate::schema::*;
 use crate::views::{
@@ -37,7 +37,7 @@ pub fn summary(req: &mut dyn RequestExt) -> EndpointResult {
         versions
             .grouped_by(&krates)
             .into_iter()
-            .map(|versions| Version::top(versions.into_iter().map(|v| (v.created_at, v.num))))
+            .map(TopVersions::from_versions)
             .zip(krates)
             .zip(recent_downloads)
             .map(|((top_versions, krate), recent_downloads)| {

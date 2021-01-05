@@ -41,18 +41,29 @@ pub struct NewVersion {
 /// Typically used for a single crate.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct TopVersions {
-    pub highest: semver::Version,
-    pub newest: semver::Version,
+    /// The "highest" version in terms of semver
+    pub highest: Option<semver::Version>,
+    /// The "newest" version in terms of publishing date
+    pub newest: Option<semver::Version>,
 }
 
-/// A default semver value, "0.0.0", for use in TopVersions
-fn default_semver_version() -> semver::Version {
-    semver::Version {
-        major: 0,
-        minor: 0,
-        patch: 0,
-        pre: vec![],
-        build: vec![],
+impl TopVersions {
+    /// Return both the newest (most recently updated) and the
+    /// highest version (in semver order) for a list of `Version` instances.
+    pub fn from_versions(versions: Vec<Version>) -> Self {
+        Self::from_date_version_pairs(versions.into_iter().map(|v| (v.created_at, v.num)))
+    }
+
+    /// Return both the newest (most recently updated) and the
+    /// highest version (in semver order) for a collection of date/version pairs.
+    pub fn from_date_version_pairs<T>(pairs: T) -> Self
+    where
+        T: Clone + IntoIterator<Item = (NaiveDateTime, semver::Version)>,
+    {
+        let newest = pairs.clone().into_iter().max().map(|(_, v)| v);
+        let highest = pairs.into_iter().map(|(_, v)| v).max();
+
+        Self { newest, highest }
     }
 }
 
@@ -113,30 +124,6 @@ impl Version {
             .select((dependencies::all_columns, crates::name))
             .order((dependencies::optional, crates::name))
             .load(conn)
-    }
-
-    /// Return both the newest (most recently updated) and the
-    /// highest version (in semver order) for a collection of date/version pairs.
-    pub fn top<T>(pairs: T) -> TopVersions
-    where
-        T: Clone + IntoIterator<Item = (NaiveDateTime, semver::Version)>,
-    {
-        TopVersions {
-            newest: pairs
-                .clone()
-                .into_iter()
-                .max()
-                .unwrap_or((
-                    NaiveDateTime::from_timestamp(0, 0),
-                    default_semver_version(),
-                ))
-                .1,
-            highest: pairs
-                .into_iter()
-                .map(|(_, v)| v)
-                .max()
-                .unwrap_or_else(default_semver_version),
-        }
     }
 
     pub fn record_readme_rendering(version_id_: i32, conn: &PgConnection) -> QueryResult<usize> {
@@ -255,7 +242,7 @@ impl NewVersion {
 
 #[cfg(test)]
 mod tests {
-    use super::{TopVersions, Version};
+    use super::TopVersions;
     use chrono::NaiveDateTime;
 
     #[track_caller]
@@ -272,10 +259,10 @@ mod tests {
     fn top_versions_empty() {
         let versions = vec![];
         assert_eq!(
-            Version::top(versions),
+            TopVersions::from_date_version_pairs(versions),
             TopVersions {
-                highest: version("0.0.0"),
-                newest: version("0.0.0"),
+                highest: None,
+                newest: None,
             }
         );
     }
@@ -284,10 +271,10 @@ mod tests {
     fn top_versions_single() {
         let versions = vec![(date("2020-12-03T12:34:56"), version("1.0.0"))];
         assert_eq!(
-            Version::top(versions),
+            TopVersions::from_date_version_pairs(versions),
             TopVersions {
-                highest: version("1.0.0"),
-                newest: version("1.0.0"),
+                highest: Some(version("1.0.0")),
+                newest: Some(version("1.0.0")),
             }
         );
     }
@@ -300,10 +287,10 @@ mod tests {
             (date("2020-12-03T12:34:56"), version("1.1.0")),
         ];
         assert_eq!(
-            Version::top(versions),
+            TopVersions::from_date_version_pairs(versions),
             TopVersions {
-                highest: version("2.0.0-alpha.1"),
-                newest: version("1.1.0"),
+                highest: Some(version("2.0.0-alpha.1")),
+                newest: Some(version("1.1.0")),
             }
         );
     }
