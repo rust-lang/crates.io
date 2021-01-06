@@ -43,8 +43,7 @@ pub struct NewVersion {
 pub struct TopVersions {
     /// The "highest" version in terms of semver
     pub highest: Option<semver::Version>,
-    /// The "highest" non-prerelease version, or, if only
-    /// prereleases exist, the "highest" version
+    /// The "highest" non-prerelease version
     pub highest_stable: Option<semver::Version>,
     /// The "newest" version in terms of publishing date
     pub newest: Option<semver::Version>,
@@ -70,8 +69,7 @@ impl TopVersions {
             .into_iter()
             .map(|(_, v)| v)
             .filter(|v| !v.is_prerelease())
-            .max()
-            .or_else(|| highest.clone());
+            .max();
 
         Self {
             newest,
@@ -302,7 +300,7 @@ mod tests {
             TopVersions::from_date_version_pairs(versions),
             TopVersions {
                 highest: Some(version("1.0.0-beta.5")),
-                highest_stable: Some(version("1.0.0-beta.5")),
+                highest_stable: None,
                 newest: Some(version("1.0.0-beta.5")),
             }
         );
