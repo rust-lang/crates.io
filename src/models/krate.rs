@@ -357,6 +357,8 @@ impl Crate {
             .map(|v| v.to_string())
             .unwrap_or_else(|| "0.0.0".to_string());
 
+        let max_stable_version = top_versions.highest_stable.as_ref().map(|v| v.to_string());
+
         EncodableCrate {
             id: name.clone(),
             name: name.clone(),
@@ -370,6 +372,7 @@ impl Crate {
             badges,
             max_version,
             newest_version,
+            max_stable_version,
             documentation,
             homepage,
             exact_match,
