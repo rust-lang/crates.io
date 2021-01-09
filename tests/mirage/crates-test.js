@@ -25,7 +25,18 @@ module('Mirage | Crates', function (hooks) {
 
     test('returns a paginated crates list', async function (assert) {
       this.server.create('crate', { name: 'rand' });
-      this.server.create('version', { crateId: 'rand', num: '1.0.0' });
+      this.server.create('version', {
+        crateId: 'rand',
+        created_at: '2020-11-06T12:34:56Z',
+        num: '1.0.0',
+        updated_at: '2020-11-06T12:34:56Z',
+      });
+      this.server.create('version', {
+        crateId: 'rand',
+        created_at: '2020-12-25T12:34:56Z',
+        num: '2.0.0-beta.1',
+        updated_at: '2020-12-25T12:34:56Z',
+      });
 
       let response = await fetch('/api/v1/crates');
       assert.equal(response.status, 200);
@@ -50,12 +61,13 @@ module('Mirage | Crates', function (hooks) {
               version_downloads: '/api/v1/crates/rand/downloads',
               versions: '/api/v1/crates/rand/versions',
             },
-            max_version: '1.0.0',
+            max_version: '2.0.0-beta.1',
+            max_stable_version: '1.0.0',
             name: 'rand',
-            newest_version: '1.0.0',
+            newest_version: '2.0.0-beta.1',
             repository: null,
             updated_at: '2017-02-24T12:34:56Z',
-            versions: ['1'],
+            versions: ['1', '2'],
           },
         ],
         meta: {
@@ -208,7 +220,7 @@ module('Mirage | Crates', function (hooks) {
 
     test('returns a crate object for known crates', async function (assert) {
       this.server.create('crate', { name: 'rand' });
-      this.server.create('version', { crateId: 'rand', num: '1.0.0' });
+      this.server.create('version', { crateId: 'rand', num: '1.0.0-beta.1' });
 
       let response = await fetch('/api/v1/crates/rand');
       assert.equal(response.status, 200);
@@ -233,9 +245,10 @@ module('Mirage | Crates', function (hooks) {
             version_downloads: '/api/v1/crates/rand/downloads',
             versions: '/api/v1/crates/rand/versions',
           },
-          max_version: '1.0.0',
+          max_version: '1.0.0-beta.1',
+          max_stable_version: null,
           name: 'rand',
-          newest_version: '1.0.0',
+          newest_version: '1.0.0-beta.1',
           repository: null,
           updated_at: '2017-02-24T12:34:56Z',
           versions: ['1'],
@@ -247,15 +260,15 @@ module('Mirage | Crates', function (hooks) {
             crate: 'rand',
             crate_size: 0,
             created_at: '2010-06-16T21:30:45Z',
-            dl_path: '/api/v1/crates/rand/1.0.0/download',
+            dl_path: '/api/v1/crates/rand/1.0.0-beta.1/download',
             downloads: 0,
             license: 'MIT/Apache-2.0',
             links: {
-              authors: '/api/v1/crates/rand/1.0.0/authors',
-              dependencies: '/api/v1/crates/rand/1.0.0/dependencies',
-              version_downloads: '/api/v1/crates/rand/1.0.0/downloads',
+              authors: '/api/v1/crates/rand/1.0.0-beta.1/authors',
+              dependencies: '/api/v1/crates/rand/1.0.0-beta.1/dependencies',
+              version_downloads: '/api/v1/crates/rand/1.0.0-beta.1/downloads',
             },
-            num: '1.0.0',
+            num: '1.0.0-beta.1',
             updated_at: '2017-02-24T12:34:56Z',
             yanked: false,
           },
