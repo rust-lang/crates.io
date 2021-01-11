@@ -1,5 +1,6 @@
 import { assert } from '@ember/debug';
 
+import prerelease from 'semver/functions/prerelease';
 import semverSort from 'semver/functions/rsort';
 
 import { compareIsoDates } from '../route-handlers/-utils';
@@ -56,6 +57,7 @@ export default BaseSerializer.extend({
     let versionNums = versions.models.map(it => it.num);
     semverSort(versionNums);
     hash.max_version = versionNums[0];
+    hash.max_stable_version = versionNums.find(it => !prerelease(it)) ?? null;
 
     let newestVersions = versions.sort((a, b) => compareIsoDates(b.updated_at, a.updated_at));
     hash.newest_version = newestVersions.models[0].num;
