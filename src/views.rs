@@ -1,10 +1,11 @@
 use chrono::NaiveDateTime;
+use diesel::PgConnection;
 use std::collections::HashMap;
 
 use crate::github;
 use crate::models::{
-    Badge, Category, CreatedApiToken, Dependency, DependencyKind, Keyword, Owner,
-    ReverseDependency, Team, User, VersionDownload,
+    Badge, Category, CrateOwnerInvitation, CreatedApiToken, Dependency, DependencyKind, Keyword,
+    Owner, ReverseDependency, Team, User, VersionDownload,
 };
 use crate::util::rfc3339;
 
@@ -74,6 +75,17 @@ pub struct EncodableCrateOwnerInvitation {
     pub crate_id: i32,
     #[serde(with = "rfc3339")]
     pub created_at: NaiveDateTime,
+}
+
+impl EncodableCrateOwnerInvitation {
+    pub fn from(invitation: CrateOwnerInvitation, conn: &PgConnection) -> Self {
+        Self {
+            invited_by_username: invitation.invited_by_username(conn),
+            crate_name: invitation.crate_name(conn),
+            crate_id: invitation.crate_id,
+            created_at: invitation.created_at,
+        }
+    }
 }
 
 #[derive(Deserialize, Serialize, Debug, Copy, Clone)]

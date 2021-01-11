@@ -14,7 +14,7 @@ pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
         .load(&*conn)?;
     let crate_owner_invitations = crate_owner_invitations
         .into_iter()
-        .map(|i| i.encodable(conn))
+        .map(|i| EncodableCrateOwnerInvitation::from(i, conn))
         .collect();
 
     #[derive(Serialize)]

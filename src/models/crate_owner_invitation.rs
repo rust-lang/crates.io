@@ -2,7 +2,6 @@ use chrono::NaiveDateTime;
 use diesel::prelude::*;
 
 use crate::schema::{crate_owner_invitations, crates, users};
-use crate::views::EncodableCrateOwnerInvitation;
 
 /// The model representing a row in the `crate_owner_invitations` database table.
 #[derive(Clone, Debug, PartialEq, Eq, Identifiable, Queryable)]
@@ -39,14 +38,5 @@ impl CrateOwnerInvitation {
             .select(crates::name)
             .first(&*conn)
             .unwrap_or_else(|_| String::from("(unknown crate name)"))
-    }
-
-    pub fn encodable(self, conn: &PgConnection) -> EncodableCrateOwnerInvitation {
-        EncodableCrateOwnerInvitation {
-            invited_by_username: self.invited_by_username(conn),
-            crate_name: self.crate_name(conn),
-            crate_id: self.crate_id,
-            created_at: self.created_at,
-        }
     }
 }
