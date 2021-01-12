@@ -53,6 +53,7 @@ export default BaseSerializer.extend({
   _adjust(hash) {
     let versions = this.schema.versions.where({ crateId: hash.id });
     assert(`crate \`${hash.id}\` has no associated versions`, versions.length !== 0);
+    versions = versions.filter(it => !it.yanked);
 
     let versionNums = versions.models.map(it => it.num);
     semverSort(versionNums);
