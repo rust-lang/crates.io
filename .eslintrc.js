@@ -49,6 +49,8 @@ module.exports = {
     'unicorn/prefer-number-properties': 'off',
     // disabled because it seems unnecessary
     'unicorn/prefer-reflect-apply': 'off',
+    // disabled because of false positives
+    'unicorn/consistent-destructuring': 'off',
     'unicorn/filename-case': ['error', { case: 'kebabCase', ignore: ['^-'] }],
 
     'import-helpers/order-imports': [
