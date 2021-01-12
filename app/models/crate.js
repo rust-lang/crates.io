@@ -9,6 +9,7 @@ export default class Crate extends Model {
   @attr('date') created_at;
   @attr('date') updated_at;
   @attr max_version;
+  @attr max_stable_version;
   @attr newest_version;
 
   @attr description;
