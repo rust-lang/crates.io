@@ -10,7 +10,7 @@ use crate::models::{
     CrateOwner, Email, Follow, NewEmail, OwnerKind, User, Version, VersionOwnerAction,
 };
 use crate::schema::{crate_owners, crates, emails, follows, users, versions};
-use crate::views::{EncodableMe, EncodableVersion, OwnedCrate};
+use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCrate};
 
 /// Handles the `GET /me` route.
 pub fn me(req: &mut dyn RequestExt) -> EndpointResult {
@@ -46,7 +46,7 @@ pub fn me(req: &mut dyn RequestExt) -> EndpointResult {
     let verified = verified.unwrap_or(false);
     let verification_sent = verified || verification_sent;
     Ok(req.json(&EncodableMe {
-        user: user.encodable_private(email, verified, verification_sent),
+        user: EncodablePrivateUser::from(user, email, verified, verification_sent),
         owned_crates,
     }))
 }

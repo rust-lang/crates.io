@@ -352,6 +352,36 @@ pub struct EncodablePrivateUser {
     pub url: Option<String>,
 }
 
+impl EncodablePrivateUser {
+    /// Converts this `User` model into an `EncodablePrivateUser` for JSON serialization.
+    pub fn from(
+        user: User,
+        email: Option<String>,
+        email_verified: bool,
+        email_verification_sent: bool,
+    ) -> Self {
+        let User {
+            id,
+            name,
+            gh_login,
+            gh_avatar,
+            ..
+        } = user;
+        let url = format!("https://github.com/{}", gh_login);
+
+        EncodablePrivateUser {
+            id,
+            email,
+            email_verified,
+            email_verification_sent,
+            avatar: gh_avatar,
+            login: gh_login,
+            name,
+            url: Some(url),
+        }
+    }
+}
+
 /// The serialization format for the `User` model.
 /// Same as private user, except no email field
 #[derive(Deserialize, Serialize, Debug)]
