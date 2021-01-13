@@ -74,7 +74,7 @@ rand = "0.7"
 reqwest = { version = "0.11", features = ["blocking", "gzip", "json"] }
 scheduled-thread-pool = "0.2.0"
 semver = { version = "0.10", features = ["diesel", "serde"] }
-sentry = "0.21.0"
+sentry = "0.22"
 serde = { version = "1.0.0", features = ["derive"] }
 serde_json = "1.0.0"
 sha2 = "0.9"
