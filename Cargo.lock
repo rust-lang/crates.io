@@ -491,9 +491,9 @@ dependencies = [
 
 [[package]]
 name = "conduit-hyper"
-version = "0.3.0-alpha.6"
+version = "0.3.0-alpha.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e8472a55fd8db2bcb94b5723e2d0adec94a7537fc64d0ea60925e5a65ce08ed6"
+checksum = "1b607a5f4d4ede64ce36dd062eb22ce8998476e272f4f7f8d4e87c1bb34e7ebc"
 dependencies = [
  "bytes 1.0.1",
  "conduit",
