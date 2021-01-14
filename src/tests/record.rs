@@ -107,10 +107,7 @@ pub fn proxy() -> (String, Bomb) {
     let (quittx, quitrx) = oneshot::channel();
 
     let thread = thread::spawn(move || {
-        let mut rt = assert_ok!(runtime::Builder::new()
-            .basic_scheduler()
-            .enable_io()
-            .build());
+        let rt = assert_ok!(runtime::Builder::new_current_thread().enable_io().build());
 
         let client = if let Record::Capture(_, _) = record {
             Some(hyper::Client::builder().build(hyper_tls::HttpsConnector::new()))
@@ -118,21 +115,25 @@ pub fn proxy() -> (String, Bomb) {
             None
         };
 
-        let mut listener = assert_ok!(rt.block_on(TcpListener::bind("127.0.0.1:0")));
+        let listener = assert_ok!(rt.block_on(TcpListener::bind("127.0.0.1:0")));
         url_tx
             .send(format!("http://{}", assert_ok!(listener.local_addr())))
             .unwrap();
 
         let record = Arc::new(Mutex::new(record));
-        let srv = Server::builder(hyper::server::accept::from_stream(listener.incoming()))
-            .serve(Proxy {
-                sink: sink2,
-                record: Arc::clone(&record),
-                client,
-            })
-            .with_graceful_shutdown(async {
-                quitrx.await.ok();
-            });
+        let srv = Server::builder(hyper::server::accept::poll_fn(move |cx| {
+            listener
+                .poll_accept(cx)
+                .map(|res| Some(res.map(|(stream, _)| stream)))
+        }))
+        .serve(Proxy {
+            sink: sink2,
+            record: Arc::clone(&record),
+            client,
+        })
+        .with_graceful_shutdown(async {
+            quitrx.await.ok();
+        });
 
         rt.block_on(srv).ok();
 

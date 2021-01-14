@@ -93,11 +93,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         println!("Booting with a hyper based server");
 
-        let mut rt = tokio::runtime::Builder::new()
-            .threaded_scheduler()
+        let rt = tokio::runtime::Builder::new_multi_thread()
             .enable_all()
-            .core_threads(CORE_THREADS)
-            .max_threads(threads as usize + CORE_THREADS)
+            .worker_threads(CORE_THREADS)
+            .max_blocking_threads(threads as usize)
             .build()
             .unwrap();
 
@@ -154,7 +153,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Block the main thread until the server has shutdown
     match server {
-        Hyper(mut rt, server) => {
+        Hyper(rt, server) => {
             rt.block_on(async { server.await.unwrap() });
         }
         Civet(server) => {
