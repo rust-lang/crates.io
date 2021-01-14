@@ -17,6 +17,8 @@ module('Acceptance | front page', function (hooks) {
   setupMirage(hooks);
 
   test('visiting /', async function (assert) {
+    this.owner.lookup('service:intl').locale = 'en';
+
     this.server.loadFixtures();
 
     await visit('/');
