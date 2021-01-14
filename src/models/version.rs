@@ -5,9 +5,8 @@ use diesel::prelude::*;
 
 use crate::util::errors::{cargo_err, AppResult};
 
-use crate::models::{Crate, Dependency, User, VersionOwnerAction};
+use crate::models::{Crate, Dependency, User};
 use crate::schema::*;
-use crate::views::{EncodableAuditAction, EncodableVersion, EncodableVersionLinks};
 
 // Queryable has a custom implementation below
 #[derive(Clone, Identifiable, Associations, Debug, Queryable, Deserialize, Serialize)]
@@ -80,55 +79,6 @@ impl TopVersions {
 }
 
 impl Version {
-    pub fn encodable(
-        self,
-        crate_name: &str,
-        published_by: Option<User>,
-        audit_actions: Vec<(VersionOwnerAction, User)>,
-    ) -> EncodableVersion {
-        let Version {
-            id,
-            num,
-            updated_at,
-            created_at,
-            downloads,
-            features,
-            yanked,
-            license,
-            crate_size,
-            ..
-        } = self;
-        let num = num.to_string();
-        EncodableVersion {
-            dl_path: format!("/api/v1/crates/{}/{}/download", crate_name, num),
-            readme_path: format!("/api/v1/crates/{}/{}/readme", crate_name, num),
-            num: num.clone(),
-            id,
-            krate: crate_name.to_string(),
-            updated_at,
-            created_at,
-            downloads,
-            features,
-            yanked,
-            license,
-            links: EncodableVersionLinks {
-                dependencies: format!("/api/v1/crates/{}/{}/dependencies", crate_name, num),
-                version_downloads: format!("/api/v1/crates/{}/{}/downloads", crate_name, num),
-                authors: format!("/api/v1/crates/{}/{}/authors", crate_name, num),
-            },
-            crate_size,
-            published_by: published_by.map(User::into),
-            audit_actions: audit_actions
-                .into_iter()
-                .map(|(audit_action, user)| EncodableAuditAction {
-                    action: audit_action.action.into(),
-                    user: user.into(),
-                    time: audit_action.time,
-                })
-                .collect(),
-        }
-    }
-
     /// Returns (dependency, crate dependency name)
     pub fn dependencies(&self, conn: &PgConnection) -> QueryResult<Vec<(Dependency, String)>> {
         Dependency::belonging_to(self)

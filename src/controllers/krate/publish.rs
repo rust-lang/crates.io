@@ -14,7 +14,7 @@ use crate::models::{
 
 use crate::render;
 use crate::util::{read_fill, read_le_u32, Maximums};
-use crate::views::{EncodableCrateUpload, GoodCrate, PublishWarnings};
+use crate::views::{EncodableCrate, EncodableCrateUpload, GoodCrate, PublishWarnings};
 
 pub const MISSING_RIGHTS_ERROR_MESSAGE: &str =
     "this crate exists but you don't seem to be an owner. \
@@ -218,7 +218,7 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
         };
 
         Ok(req.json(&GoodCrate {
-            krate: krate.minimal_encodable(&top_versions, None, false, None),
+            krate: EncodableCrate::from_minimal(krate, &top_versions, None, false, None),
             warnings,
         }))
     })

@@ -10,19 +10,14 @@ use crate::controllers::helpers::pagination::*;
 use crate::email;
 use crate::models::version::TopVersions;
 use crate::models::{
-    Badge, Category, CrateOwner, CrateOwnerInvitation, Keyword, NewCrateOwnerInvitation, Owner,
-    OwnerKind, ReverseDependency, User, Version,
+    Badge, CrateOwner, CrateOwnerInvitation, NewCrateOwnerInvitation, Owner, OwnerKind,
+    ReverseDependency, User, Version,
 };
 use crate::util::errors::{cargo_err, AppResult};
-use crate::views::{EncodableCrate, EncodableCrateLinks};
 
 use crate::models::helpers::with_count::*;
 use crate::publish_rate_limit::PublishRateLimit;
 use crate::schema::*;
-
-/// Hosts in this list are known to not be hosting documentation,
-/// and are possibly of malicious intent e.g. ad tracking networks, etc.
-const DOCUMENTATION_BLOCKLIST: [&str; 2] = ["rust-ci.org", "rustless.org"];
 
 #[derive(Debug, Queryable, Identifiable, Associations, Clone, Copy)]
 #[belongs_to(Crate)]
@@ -296,127 +291,6 @@ impl Crate {
             && prefix_part.map_or(true, Crate::valid_feature_prefix)
     }
 
-    pub fn minimal_encodable(
-        self,
-        top_versions: &TopVersions,
-        badges: Option<Vec<Badge>>,
-        exact_match: bool,
-        recent_downloads: Option<i64>,
-    ) -> EncodableCrate {
-        self.encodable(
-            top_versions,
-            None,
-            None,
-            None,
-            badges,
-            exact_match,
-            recent_downloads,
-        )
-    }
-
-    #[allow(clippy::too_many_arguments)]
-    pub fn encodable(
-        self,
-        top_versions: &TopVersions,
-        versions: Option<Vec<i32>>,
-        keywords: Option<&[Keyword]>,
-        categories: Option<&[Category]>,
-        badges: Option<Vec<Badge>>,
-        exact_match: bool,
-        recent_downloads: Option<i64>,
-    ) -> EncodableCrate {
-        let Crate {
-            name,
-            created_at,
-            updated_at,
-            downloads,
-            description,
-            homepage,
-            documentation,
-            repository,
-            ..
-        } = self;
-        let versions_link = match versions {
-            Some(..) => None,
-            None => Some(format!("/api/v1/crates/{}/versions", name)),
-        };
-        let keyword_ids = keywords.map(|kws| kws.iter().map(|kw| kw.keyword.clone()).collect());
-        let category_ids = categories.map(|cats| cats.iter().map(|cat| cat.slug.clone()).collect());
-        let badges = badges.map(|bs| bs.into_iter().map(Badge::into).collect());
-        let documentation = Crate::remove_blocked_documentation_urls(documentation);
-
-        let max_version = top_versions
-            .highest
-            .as_ref()
-            .map(|v| v.to_string())
-            .unwrap_or_else(|| "0.0.0".to_string());
-
-        let newest_version = top_versions
-            .newest
-            .as_ref()
-            .map(|v| v.to_string())
-            .unwrap_or_else(|| "0.0.0".to_string());
-
-        let max_stable_version = top_versions.highest_stable.as_ref().map(|v| v.to_string());
-
-        EncodableCrate {
-            id: name.clone(),
-            name: name.clone(),
-            updated_at,
-            created_at,
-            downloads,
-            recent_downloads,
-            versions,
-            keywords: keyword_ids,
-            categories: category_ids,
-            badges,
-            max_version,
-            newest_version,
-            max_stable_version,
-            documentation,
-            homepage,
-            exact_match,
-            description,
-            repository,
-            links: EncodableCrateLinks {
-                version_downloads: format!("/api/v1/crates/{}/downloads", name),
-                versions: versions_link,
-                owners: Some(format!("/api/v1/crates/{}/owners", name)),
-                owner_team: Some(format!("/api/v1/crates/{}/owner_team", name)),
-                owner_user: Some(format!("/api/v1/crates/{}/owner_user", name)),
-                reverse_dependencies: format!("/api/v1/crates/{}/reverse_dependencies", name),
-            },
-        }
-    }
-
-    /// Return `None` if the documentation URL host matches a blocked host
-    fn remove_blocked_documentation_urls(url: Option<String>) -> Option<String> {
-        // Handles if documentation URL is None
-        let url = match url {
-            Some(url) => url,
-            None => return None,
-        };
-
-        // Handles unsuccessful parsing of documentation URL
-        let parsed_url = match Url::parse(&url) {
-            Ok(parsed_url) => parsed_url,
-            Err(_) => return None,
-        };
-
-        // Extract host string from documentation URL
-        let url_host = match parsed_url.host_str() {
-            Some(url_host) => url_host,
-            None => return None,
-        };
-
-        // Match documentation URL host against blocked host array elements
-        if DOCUMENTATION_BLOCKLIST.contains(&url_host) {
-            None
-        } else {
-            Some(url)
-        }
-    }
-
     /// Return both the newest (most recently updated) and
     /// highest version (in semver order) for the current crate.
     pub fn top_versions(&self, conn: &PgConnection) -> QueryResult<TopVersions> {
@@ -574,39 +448,6 @@ mod tests {
             max_upload_size: None,
         };
         assert_err!(krate.validate());
-    }
-
-    #[test]
-    fn documentation_blocked_no_url_provided() {
-        assert_eq!(Crate::remove_blocked_documentation_urls(None), None);
-    }
-
-    #[test]
-    fn documentation_blocked_invalid_url() {
-        assert_eq!(
-            Crate::remove_blocked_documentation_urls(Some(String::from("not a url"))),
-            None
-        );
-    }
-
-    #[test]
-    fn documentation_blocked_url_contains_partial_match() {
-        assert_eq!(
-            Crate::remove_blocked_documentation_urls(Some(String::from(
-                "http://rust-ci.organists.com"
-            )),),
-            Some(String::from("http://rust-ci.organists.com"))
-        );
-    }
-
-    #[test]
-    fn documentation_blocked_url() {
-        assert_eq!(
-            Crate::remove_blocked_documentation_urls(Some(String::from(
-                "http://rust-ci.org/crate/crate-0.1/doc/crate-0.1",
-            ),),),
-            None
-        );
     }
 
     #[test]

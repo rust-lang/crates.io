@@ -1,13 +1,19 @@
 use chrono::NaiveDateTime;
 use diesel::PgConnection;
 use std::collections::HashMap;
+use url::Url;
 
 use crate::github;
 use crate::models::{
-    Badge, Category, CrateOwnerInvitation, CreatedApiToken, Dependency, DependencyKind, Keyword,
-    Owner, ReverseDependency, Team, User, VersionDownload,
+    Badge, Category, Crate, CrateOwnerInvitation, CreatedApiToken, Dependency, DependencyKind,
+    Keyword, Owner, ReverseDependency, Team, TopVersions, User, Version, VersionDownload,
+    VersionOwnerAction,
 };
 use crate::util::rfc3339;
+
+/// Hosts in this list are known to not be hosting documentation,
+/// and are possibly of malicious intent e.g. ad tracking networks, etc.
+const DOCUMENTATION_BLOCKLIST: [&str; 2] = ["rust-ci.org", "rustless.org"];
 
 #[derive(PartialEq, Debug, Serialize, Deserialize)]
 pub struct EncodableBadge {
@@ -203,6 +209,130 @@ pub struct EncodableCrate {
     pub repository: Option<String>,
     pub links: EncodableCrateLinks,
     pub exact_match: bool,
+}
+
+impl EncodableCrate {
+    #[allow(clippy::too_many_arguments)]
+    pub fn from(
+        krate: Crate,
+        top_versions: &TopVersions,
+        versions: Option<Vec<i32>>,
+        keywords: Option<&[Keyword]>,
+        categories: Option<&[Category]>,
+        badges: Option<Vec<Badge>>,
+        exact_match: bool,
+        recent_downloads: Option<i64>,
+    ) -> Self {
+        let Crate {
+            name,
+            created_at,
+            updated_at,
+            downloads,
+            description,
+            homepage,
+            documentation,
+            repository,
+            ..
+        } = krate;
+        let versions_link = match versions {
+            Some(..) => None,
+            None => Some(format!("/api/v1/crates/{}/versions", name)),
+        };
+        let keyword_ids = keywords.map(|kws| kws.iter().map(|kw| kw.keyword.clone()).collect());
+        let category_ids = categories.map(|cats| cats.iter().map(|cat| cat.slug.clone()).collect());
+        let badges = badges.map(|bs| bs.into_iter().map(Badge::into).collect());
+        let documentation = Self::remove_blocked_documentation_urls(documentation);
+
+        let max_version = top_versions
+            .highest
+            .as_ref()
+            .map(|v| v.to_string())
+            .unwrap_or_else(|| "0.0.0".to_string());
+
+        let newest_version = top_versions
+            .newest
+            .as_ref()
+            .map(|v| v.to_string())
+            .unwrap_or_else(|| "0.0.0".to_string());
+
+        let max_stable_version = top_versions.highest_stable.as_ref().map(|v| v.to_string());
+
+        EncodableCrate {
+            id: name.clone(),
+            name: name.clone(),
+            updated_at,
+            created_at,
+            downloads,
+            recent_downloads,
+            versions,
+            keywords: keyword_ids,
+            categories: category_ids,
+            badges,
+            max_version,
+            newest_version,
+            max_stable_version,
+            documentation,
+            homepage,
+            exact_match,
+            description,
+            repository,
+            links: EncodableCrateLinks {
+                version_downloads: format!("/api/v1/crates/{}/downloads", name),
+                versions: versions_link,
+                owners: Some(format!("/api/v1/crates/{}/owners", name)),
+                owner_team: Some(format!("/api/v1/crates/{}/owner_team", name)),
+                owner_user: Some(format!("/api/v1/crates/{}/owner_user", name)),
+                reverse_dependencies: format!("/api/v1/crates/{}/reverse_dependencies", name),
+            },
+        }
+    }
+
+    pub fn from_minimal(
+        krate: Crate,
+        top_versions: &TopVersions,
+        badges: Option<Vec<Badge>>,
+        exact_match: bool,
+        recent_downloads: Option<i64>,
+    ) -> Self {
+        Self::from(
+            krate,
+            top_versions,
+            None,
+            None,
+            None,
+            badges,
+            exact_match,
+            recent_downloads,
+        )
+    }
+
+    /// Return `None` if the documentation URL host matches a blocked host
+    fn remove_blocked_documentation_urls(url: Option<String>) -> Option<String> {
+        // Handles if documentation URL is None
+        let url = match url {
+            Some(url) => url,
+            None => return None,
+        };
+
+        // Handles unsuccessful parsing of documentation URL
+        let parsed_url = match Url::parse(&url) {
+            Ok(parsed_url) => parsed_url,
+            Err(_) => return None,
+        };
+
+        // Extract host string from documentation URL
+        let url_host = match parsed_url.host_str() {
+            Some(url_host) => url_host,
+            None => return None,
+        };
+
+        // Match documentation URL host against blocked host array elements
+        if DOCUMENTATION_BLOCKLIST.contains(&url_host) {
+            None
+        } else {
+            Some(url)
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -446,6 +576,59 @@ pub struct EncodableVersion {
     pub audit_actions: Vec<EncodableAuditAction>,
 }
 
+impl EncodableVersion {
+    pub fn from(
+        version: Version,
+        crate_name: &str,
+        published_by: Option<User>,
+        audit_actions: Vec<(VersionOwnerAction, User)>,
+    ) -> Self {
+        let Version {
+            id,
+            num,
+            updated_at,
+            created_at,
+            downloads,
+            features,
+            yanked,
+            license,
+            crate_size,
+            ..
+        } = version;
+
+        let num = num.to_string();
+
+        Self {
+            dl_path: format!("/api/v1/crates/{}/{}/download", crate_name, num),
+            readme_path: format!("/api/v1/crates/{}/{}/readme", crate_name, num),
+            num: num.clone(),
+            id,
+            krate: crate_name.to_string(),
+            updated_at,
+            created_at,
+            downloads,
+            features,
+            yanked,
+            license,
+            links: EncodableVersionLinks {
+                dependencies: format!("/api/v1/crates/{}/{}/dependencies", crate_name, num),
+                version_downloads: format!("/api/v1/crates/{}/{}/downloads", crate_name, num),
+                authors: format!("/api/v1/crates/{}/{}/authors", crate_name, num),
+            },
+            crate_size,
+            published_by: published_by.map(User::into),
+            audit_actions: audit_actions
+                .into_iter()
+                .map(|(audit_action, user)| EncodableAuditAction {
+                    action: audit_action.action.into(),
+                    user: user.into(),
+                    time: audit_action.time,
+                })
+                .collect(),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct EncodableVersionLinks {
     pub dependencies: String,
@@ -617,5 +800,41 @@ mod tests {
         assert_some!(json
             .as_str()
             .find(r#""created_at":"2017-01-06T14:23:11+00:00""#));
+    }
+
+    #[test]
+    fn documentation_blocked_no_url_provided() {
+        assert_eq!(
+            EncodableCrate::remove_blocked_documentation_urls(None),
+            None
+        );
+    }
+
+    #[test]
+    fn documentation_blocked_invalid_url() {
+        assert_eq!(
+            EncodableCrate::remove_blocked_documentation_urls(Some(String::from("not a url"))),
+            None
+        );
+    }
+
+    #[test]
+    fn documentation_blocked_url_contains_partial_match() {
+        assert_eq!(
+            EncodableCrate::remove_blocked_documentation_urls(Some(String::from(
+                "http://rust-ci.organists.com"
+            )),),
+            Some(String::from("http://rust-ci.organists.com"))
+        );
+    }
+
+    #[test]
+    fn documentation_blocked_url() {
+        assert_eq!(
+            EncodableCrate::remove_blocked_documentation_urls(Some(String::from(
+                "http://rust-ci.org/crate/crate-0.1/doc/crate-0.1",
+            ),),),
+            None
+        );
     }
 }
