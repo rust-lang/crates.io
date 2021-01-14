@@ -6,14 +6,17 @@
           {{@crate.name}}
         </a>
       {{/let}}
-      <span local-class="version" data-test-version>v{{@crate.max_version}}</span>
-      <CopyButton
-        @copyText='{{@crate.name}} = "{{@crate.max_version}}"'
-        title="Copy Cargo.toml snippet to clipboard"
-        local-class="copy-button"
-      >
-        {{svg-jar "copy" alt="Copy Cargo.toml snippet to clipboard"}}
-      </CopyButton>
+      {{#if @crate.defaultVersion}}
+        <span local-class="version" data-test-version>v{{@crate.defaultVersion}}</span>
+        <CopyButton
+          @copyText='{{@crate.name}} = "{{@crate.defaultVersion}}"'
+          title="Copy Cargo.toml snippet to clipboard"
+          local-class="copy-button"
+          data-test-copy-toml-button
+        >
+          {{svg-jar "copy" alt="Copy Cargo.toml snippet to clipboard"}}
+        </CopyButton>
+      {{/if}}
     </div>
     <div local-class="description" data-test-description>
       {{ truncate-text @crate.description }}
