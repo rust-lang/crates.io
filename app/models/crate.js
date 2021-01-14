@@ -9,6 +9,7 @@ export default class Crate extends Model {
   @attr('date') created_at;
   @attr('date') updated_at;
   @attr max_version;
+  @attr max_stable_version;
   @attr newest_version;
 
   @attr description;
@@ -29,6 +30,21 @@ export default class Crate extends Model {
   @hasMany('keywords', { async: true }) keywords;
   @hasMany('categories', { async: true }) categories;
   @hasMany('dependency', { async: true }) reverse_dependencies;
+
+  /**
+   * This is the default version that will be shown when visiting the crate
+   * details page. Note that this can be `undefined` if all versions of the crate
+   * have been yanked.
+   * @return {string}
+   */
+  get defaultVersion() {
+    if (this.max_stable_version) {
+      return this.max_stable_version;
+    }
+    if (this.max_version && this.max_version !== '0.0.0') {
+      return this.max_version;
+    }
+  }
 
   follow = memberAction({ type: 'PUT', path: 'follow' });
   unfollow = memberAction({ type: 'DELETE', path: 'follow' });
