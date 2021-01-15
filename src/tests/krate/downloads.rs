@@ -37,7 +37,8 @@ fn download() {
 
     let download = |name_and_version: &str| {
         let url = format!("/api/v1/crates/{}/download", name_and_version);
-        anon.get::<()>(&url).assert_status(StatusCode::FOUND);
+        let response = anon.get::<()>(&url);
+        assert_eq!(response.status(), StatusCode::FOUND);
         // TODO: test the with_json code path
     };
 

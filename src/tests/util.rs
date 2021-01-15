@@ -590,16 +590,14 @@ where
     /// Assert that the response is good and deserialize the message
     #[track_caller]
     pub fn good(mut self) -> T {
-        if !self.response.status().is_success() {
-            panic!("bad response: {:?}", self.response.status());
+        if !self.status().is_success() {
+            panic!("bad response: {:?}", self.status());
         }
         crate::json(&mut self.response)
     }
 
-    #[track_caller]
-    pub fn assert_status(&self, status: StatusCode) -> &Self {
-        assert_eq!(status, self.response.status());
-        self
+    pub fn status(&self) -> StatusCode {
+        self.response.status()
     }
 
     #[track_caller]
@@ -620,12 +618,12 @@ impl Response<()> {
     /// Assert that the status code is 404
     #[track_caller]
     pub fn assert_not_found(&self) {
-        assert_eq!(StatusCode::NOT_FOUND, self.response.status());
+        assert_eq!(StatusCode::NOT_FOUND, self.status());
     }
 
     /// Assert that the status code is 403
     #[track_caller]
     pub fn assert_forbidden(&self) {
-        assert_eq!(StatusCode::FORBIDDEN, self.response.status());
+        assert_eq!(StatusCode::FORBIDDEN, self.status());
     }
 }

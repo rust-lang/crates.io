@@ -57,7 +57,7 @@ fn new_wrong_token() {
     // Try to publish without a token
     let crate_to_publish = PublishBuilder::new("foo");
     let response = anon.enqueue_publish(crate_to_publish);
-    response.assert_status(StatusCode::FORBIDDEN);
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
@@ -73,7 +73,7 @@ fn new_wrong_token() {
 
     let crate_to_publish = PublishBuilder::new("foo");
     let response = token.enqueue_publish(crate_to_publish);
-    response.assert_status(StatusCode::FORBIDDEN);
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
@@ -87,7 +87,7 @@ fn invalid_names() {
     let bad_name = |name: &str, error_message: &str| {
         let crate_to_publish = PublishBuilder::new(name).version("1.0.0");
         let response = token.enqueue_publish(crate_to_publish);
-        response.assert_status(StatusCode::OK);
+        assert_eq!(response.status(), StatusCode::OK);
 
         let json = response.json();
         let json = json.as_object().unwrap();
@@ -253,7 +253,7 @@ fn reject_new_krate_with_non_exact_dependency() {
         .dependency(dependency);
 
     let response = token.enqueue_publish(crate_to_publish);
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "no known crate named `foo_dep`" }] })
@@ -282,7 +282,7 @@ fn reject_new_crate_with_alternative_registry_dependency() {
 
     let crate_to_publish = PublishBuilder::new("depends-on-alt-registry").dependency(dependency);
     let response = token.enqueue_publish(crate_to_publish);
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "Dependency `dep` is hosted on another registry. Cross-registry dependencies are not permitted on crates.io." }] })
@@ -305,7 +305,7 @@ fn new_krate_with_wildcard_dependency() {
         .dependency(dependency);
 
     let response = token.enqueue_publish(crate_to_publish);
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": WILDCARD_ERROR_MESSAGE }] })
@@ -344,7 +344,7 @@ fn new_krate_wrong_user() {
     let crate_to_publish = PublishBuilder::new("foo_wrong").version("2.0.0");
 
     let response = another_user.enqueue_publish(crate_to_publish);
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": MISSING_RIGHTS_ERROR_MESSAGE }] })
@@ -359,7 +359,7 @@ fn new_krate_too_big() {
     let builder = PublishBuilder::new("foo_big").files(&files);
 
     let response = user.enqueue_publish(builder);
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "uploaded tarball is malformed or too large when decompressed" }] })
@@ -392,7 +392,7 @@ fn new_krate_wrong_files() {
     let builder = PublishBuilder::new("foo").files(&files);
 
     let response = user.enqueue_publish(builder);
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "invalid tarball uploaded" }] })
@@ -411,7 +411,7 @@ fn new_krate_gzip_bomb() {
         .files_with_io(&mut [("foo-1.1.0/a", &mut body, len)]);
 
     let response = token.enqueue_publish(crate_to_publish);
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "uploaded tarball is malformed or too large when decompressed" }] })
@@ -431,7 +431,7 @@ fn new_krate_duplicate_version() {
 
     let crate_to_publish = PublishBuilder::new("foo_dupe").version("1.0.0");
     let response = token.enqueue_publish(crate_to_publish);
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "crate version `1.0.0` is already uploaded" }] })
@@ -450,7 +450,7 @@ fn new_crate_similar_name() {
 
     let crate_to_publish = PublishBuilder::new("foo_similar").version("1.1.0");
     let response = token.enqueue_publish(crate_to_publish);
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "crate was previously named `Foo_similar`" }] })
@@ -469,7 +469,7 @@ fn new_crate_similar_name_hyphen() {
 
     let crate_to_publish = PublishBuilder::new("foo-bar-hyphen").version("1.1.0");
     let response = token.enqueue_publish(crate_to_publish);
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "crate was previously named `foo_bar_hyphen`" }] })
@@ -488,7 +488,7 @@ fn new_crate_similar_name_underscore() {
 
     let crate_to_publish = PublishBuilder::new("foo_bar_underscore").version("1.1.0");
     let response = token.enqueue_publish(crate_to_publish);
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "crate was previously named `foo-bar-underscore`" }] })
@@ -561,7 +561,7 @@ fn new_krate_dependency_missing() {
     let crate_to_publish = PublishBuilder::new("foo_missing").dependency(dependency);
 
     let response = token.enqueue_publish(crate_to_publish);
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "no known crate named `bar_missing`" }] })
@@ -590,7 +590,7 @@ fn new_krate_without_any_email_fails() {
     let crate_to_publish = PublishBuilder::new("foo_no_email");
 
     let response = token.enqueue_publish(crate_to_publish);
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "A verified email address is required to publish crates to crates.io. Visit https://crates.io/me to set and verify your email address." }] })
@@ -611,7 +611,7 @@ fn new_krate_with_unverified_email_fails() {
     let crate_to_publish = PublishBuilder::new("foo_unverified_email");
 
     let response = token.enqueue_publish(crate_to_publish);
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "A verified email address is required to publish crates to crates.io. Visit https://crates.io/me to set and verify your email address." }] })
@@ -701,7 +701,7 @@ fn bad_keywords() {
     let crate_to_publish =
         PublishBuilder::new("foo_bad_key").keyword("super-long-keyword-name-oh-no");
     let response = token.enqueue_publish(crate_to_publish);
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "invalid upload request: invalid length 29, expected a keyword with less than 20 characters at line 1 column 221" }] })
@@ -709,7 +709,7 @@ fn bad_keywords() {
 
     let crate_to_publish = PublishBuilder::new("foo_bad_key").keyword("?@?%");
     let response = token.enqueue_publish(crate_to_publish);
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "invalid upload request: invalid value: string \"?@?%\", expected a valid keyword specifier at line 1 column 196" }] })
@@ -717,7 +717,7 @@ fn bad_keywords() {
 
     let crate_to_publish = PublishBuilder::new("foo_bad_key").keyword("áccênts");
     let response = token.enqueue_publish(crate_to_publish);
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "invalid upload request: invalid value: string \"áccênts\", expected a valid keyword specifier at line 1 column 201" }] })
@@ -829,7 +829,7 @@ fn author_license_and_description_required() {
         .unset_authors();
 
     let response = token.enqueue_publish(crate_to_publish);
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": missing_metadata_error_message(&["description", "license", "authors"]) }] })
@@ -842,7 +842,7 @@ fn author_license_and_description_required() {
         .author("");
 
     let response = token.enqueue_publish(crate_to_publish);
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": missing_metadata_error_message(&["description", "authors"]) }] })
@@ -855,7 +855,7 @@ fn author_license_and_description_required() {
         .unset_description();
 
     let response = token.enqueue_publish(crate_to_publish);
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": missing_metadata_error_message(&["description"]) }] })
@@ -882,7 +882,7 @@ fn new_krate_tarball_with_hard_links() {
     let crate_to_publish = PublishBuilder::new("foo").version("1.1.0").tarball(tarball);
 
     let response = token.enqueue_publish(crate_to_publish);
-    response.assert_status(StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "invalid tarball uploaded" }] })
@@ -901,13 +901,12 @@ fn publish_new_crate_rate_limited() {
 
     // Uploading a second crate is limited
     let crate_to_publish = PublishBuilder::new("rate_limited2");
-    token
-        .enqueue_publish(crate_to_publish)
-        .assert_status(StatusCode::TOO_MANY_REQUESTS);
+    let response = token.enqueue_publish(crate_to_publish);
+    assert_eq!(response.status(), StatusCode::TOO_MANY_REQUESTS);
     app.run_pending_background_jobs();
 
-    anon.get::<()>("/api/v1/crates/rate_limited2")
-        .assert_status(StatusCode::NOT_FOUND);
+    let response = anon.get::<()>("/api/v1/crates/rate_limited2");
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
 
     // Wait for the limit to be up
     thread::sleep(Duration::from_millis(500));

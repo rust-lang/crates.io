@@ -10,7 +10,7 @@ fn user_agent_is_required() {
     let mut req = anon.request_builder(Method::GET, "/api/v1/crates");
     req.header(header::USER_AGENT, "");
     let resp = anon.run::<()>(req);
-    resp.assert_status(StatusCode::FORBIDDEN);
+    assert_eq!(resp.status(), StatusCode::FORBIDDEN);
 }
 
 #[test]
@@ -24,7 +24,7 @@ fn user_agent_is_not_required_for_download() {
     let mut req = anon.request_builder(Method::GET, "/api/v1/crates/dl_no_ua/0.99.0/download");
     req.header(header::USER_AGENT, "");
     let resp = anon.run::<()>(req);
-    resp.assert_status(StatusCode::FOUND);
+    assert_eq!(resp.status(), StatusCode::FOUND);
 }
 
 #[test]
@@ -42,7 +42,7 @@ fn blocked_traffic_doesnt_panic_if_checked_header_is_not_present() {
     let mut req = anon.request_builder(Method::GET, "/api/v1/crates/dl_no_ua/0.99.0/download");
     req.header(header::USER_AGENT, "");
     let resp = anon.run::<()>(req);
-    resp.assert_status(StatusCode::FOUND);
+    assert_eq!(resp.status(), StatusCode::FOUND);
 }
 
 #[test]
@@ -67,7 +67,7 @@ fn block_traffic_via_arbitrary_header_and_value() {
         "abcd",
     );
     let resp = anon.run::<()>(req);
-    resp.assert_status(StatusCode::FORBIDDEN);
+    assert_eq!(resp.status(), StatusCode::FORBIDDEN);
 
     let mut req = anon.request_builder(Method::GET, "/api/v1/crates/dl_no_ua/0.99.0/download");
     // A request with a header value we don't want to block is allowed, even though there might
@@ -77,5 +77,5 @@ fn block_traffic_via_arbitrary_header_and_value() {
         "1value-must-match-exactly-this-is-allowed",
     );
     let resp = anon.run::<()>(req);
-    resp.assert_status(StatusCode::FOUND);
+    assert_eq!(resp.status(), StatusCode::FOUND);
 }

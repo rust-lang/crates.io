@@ -27,7 +27,7 @@ fn account_locked_indefinitely() {
     lock_account(&app, user.as_model().id, None);
 
     let response = user.get::<()>(URL);
-    response.assert_status(StatusCode::FORBIDDEN);
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
 
     let error_message = format!(
         "This account is indefinitely locked. Reason: {}",
@@ -48,7 +48,7 @@ fn account_locked_with_future_expiry() {
 
     let until = until.format("%Y-%m-%d at %H:%M:%S UTC");
     let response = user.get::<()>(URL);
-    response.assert_status(StatusCode::FORBIDDEN);
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
 
     let error_message = format!(
         "This account is locked until {}. Reason: {}",
