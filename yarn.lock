@@ -6306,7 +6306,7 @@ ember-cli-htmlbars-inline-precompile@^2.1.0:
     heimdalljs-logger "^0.1.9"
     silent-error "^1.1.0"
 
-ember-cli-htmlbars@5.3.1, ember-cli-htmlbars@^5.2.0, ember-cli-htmlbars@^5.3.1:
+ember-cli-htmlbars@5.3.1, ember-cli-htmlbars@^5.3.1:
   version "5.3.1"
   resolved "https://registry.yarnpkg.com/ember-cli-htmlbars/-/ember-cli-htmlbars-5.3.1.tgz#61793964fc2599ce750db9e972ab55c6dd177c48"
   integrity sha512-ZjQTt44euDoqLvUkWbt1svgNCXgLzOztEbc2qqYMQvhQig416LMrWK7l3SSbNU+BtLD5UIxmwvLfF1tsO2CVyA==
@@ -7159,14 +7159,14 @@ ember-web-app@5.0.1:
     web-app-manifest-validator "^1.1.0"
     xmlbuilder "^15.1.1"
 
-ember-window-mock@0.7.1:
-  version "0.7.1"
-  resolved "https://registry.yarnpkg.com/ember-window-mock/-/ember-window-mock-0.7.1.tgz#f7e8027846c542356ea1b4e19c423940cf3eea1c"
-  integrity sha512-xfpANDBJjQEvPbgoFM7EDGCIb7WV6+xAPnQ/ZY4n3nTpIz22Cz1pLpIzqLAAvAc0IP2ec+efiJ9NARlIGz5xXQ==
+ember-window-mock@0.7.2:
+  version "0.7.2"
+  resolved "https://registry.yarnpkg.com/ember-window-mock/-/ember-window-mock-0.7.2.tgz#9f43c6c6d3047ac4b8c85aa67c2912a6a2c76ce6"
+  integrity sha512-+zRvJbiiUkc2O9TocRG5REbx5DxPmBWU/zTBCrpc4Fdu4JVQucrs9JfMfl+HLWldjJEU6x5UEDg+PIi8VREZHg==
   dependencies:
     broccoli-funnel "^3.0.3"
-    ember-cli-babel "^7.21.0"
-    ember-cli-htmlbars "^5.2.0"
+    ember-cli-babel "^7.23.0"
+    ember-cli-htmlbars "^5.3.1"
 
 emoji-regex@^7.0.1:
   version "7.0.3"
