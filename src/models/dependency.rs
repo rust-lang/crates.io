@@ -52,6 +52,17 @@ pub enum DependencyKind {
     // if you add a kind here, be sure to update `from_row` below.
 }
 
+impl FromSql<Integer, Pg> for DependencyKind {
+    fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
+        match <i32 as FromSql<Integer, Pg>>::from_sql(bytes)? {
+            0 => Ok(DependencyKind::Normal),
+            1 => Ok(DependencyKind::Build),
+            2 => Ok(DependencyKind::Dev),
+            n => Err(format!("unknown kind: {}", n).into()),
+        }
+    }
+}
+
 pub fn add_dependencies(
     conn: &PgConnection,
     deps: &[EncodableCrateDependency],
@@ -120,15 +131,4 @@ pub fn add_dependencies(
         .execute(conn)?;
 
     Ok(git_deps)
-}
-
-impl FromSql<Integer, Pg> for DependencyKind {
-    fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
-        match <i32 as FromSql<Integer, Pg>>::from_sql(bytes)? {
-            0 => Ok(DependencyKind::Normal),
-            1 => Ok(DependencyKind::Build),
-            2 => Ok(DependencyKind::Dev),
-            n => Err(format!("unknown kind: {}", n).into()),
-        }
-    }
 }
