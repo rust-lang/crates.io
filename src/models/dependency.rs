@@ -1,4 +1,7 @@
+use diesel::deserialize::{self, FromSql};
+use diesel::pg::Pg;
 use diesel::prelude::*;
+use diesel::sql_types::Integer;
 
 use crate::git;
 use crate::util::errors::{cargo_err, AppResult};
@@ -118,10 +121,6 @@ pub fn add_dependencies(
 
     Ok(git_deps)
 }
-
-use diesel::deserialize::{self, FromSql};
-use diesel::pg::Pg;
-use diesel::sql_types::Integer;
 
 impl FromSql<Integer, Pg> for DependencyKind {
     fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
