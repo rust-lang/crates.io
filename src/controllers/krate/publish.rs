@@ -6,21 +6,29 @@ use swirl::Job;
 
 use crate::controllers::cargo_prelude::*;
 use crate::git;
-use crate::models::dependency;
 use crate::models::{
-    insert_version_owner_action, Badge, Category, Keyword, NewCrate, NewVersion, Rights,
-    VersionAction,
+    insert_version_owner_action, Badge, Category, Crate, DependencyKind, Keyword, NewCrate,
+    NewVersion, Rights, VersionAction,
 };
 
 use crate::render;
+use crate::schema::*;
+use crate::util::errors::{cargo_err, AppResult};
 use crate::util::{read_fill, read_le_u32, Maximums};
-use crate::views::{EncodableCrate, EncodableCrateUpload, GoodCrate, PublishWarnings};
+use crate::views::{
+    EncodableCrate, EncodableCrateDependency, EncodableCrateUpload, GoodCrate, PublishWarnings,
+};
 
 pub const MISSING_RIGHTS_ERROR_MESSAGE: &str =
     "this crate exists but you don't seem to be an owner. \
      If you believe this is a mistake, perhaps you need \
      to accept an invitation to be an owner before \
      publishing.";
+
+pub const WILDCARD_ERROR_MESSAGE: &str = "wildcard (`*`) dependency constraints are not allowed \
+     on crates.io. See https://doc.rust-lang.org/cargo/faq.html#can-\
+     libraries-use--as-a-version-for-their-dependencies for more \
+     information";
 
 /// Handles the `PUT /crates/new` route.
 /// Used by `cargo publish` to publish a new crate or to publish a new version of an
@@ -163,7 +171,7 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
         )?;
 
         // Link this new version to all dependencies
-        let git_deps = dependency::add_dependencies(&conn, &new_crate.deps, version.id)?;
+        let git_deps = add_dependencies(&conn, &new_crate.deps, version.id)?;
 
         // Update all keywords for this crate
         Keyword::update_crate(&conn, &krate, &keywords)?;
@@ -275,6 +283,76 @@ pub fn missing_metadata_error_message(missing: &[&str]) -> String {
          how to upload metadata",
         missing.join(", ")
     )
+}
+
+pub fn add_dependencies(
+    conn: &PgConnection,
+    deps: &[EncodableCrateDependency],
+    target_version_id: i32,
+) -> AppResult<Vec<git::Dependency>> {
+    use self::dependencies::dsl::*;
+    use diesel::insert_into;
+
+    let git_and_new_dependencies = deps
+        .iter()
+        .map(|dep| {
+            if let Some(registry) = &dep.registry {
+                if !registry.is_empty() {
+                    return Err(cargo_err(&format_args!("Dependency `{}` is hosted on another registry. Cross-registry dependencies are not permitted on crates.io.", &*dep.name)));
+                }
+            }
+
+            // Match only identical names to ensure the index always references the original crate name
+            let krate:Crate = Crate::by_exact_name(&dep.name)
+                .first(&*conn)
+                .map_err(|_| cargo_err(&format_args!("no known crate named `{}`", &*dep.name)))?;
+            if semver::VersionReq::parse(&dep.version_req.0) == semver::VersionReq::parse("*") {
+                return Err(cargo_err(WILDCARD_ERROR_MESSAGE));
+            }
+
+            // If this dependency has an explicit name in `Cargo.toml` that
+            // means that the `name` we have listed is actually the package name
+            // that we're depending on. The `name` listed in the index is the
+            // Cargo.toml-written-name which is what cargo uses for
+            // `--extern foo=...`
+            let (name, package) = match &dep.explicit_name_in_toml {
+                Some(explicit) => (explicit.to_string(), Some(dep.name.to_string())),
+                None => (dep.name.to_string(), None),
+            };
+
+            Ok((
+                git::Dependency {
+                    name,
+                    req: dep.version_req.to_string(),
+                    features: dep.features.iter().map(|s| s.0.to_string()).collect(),
+                    optional: dep.optional,
+                    default_features: dep.default_features,
+                    target: dep.target.clone(),
+                    kind: dep.kind.or(Some(DependencyKind::Normal)),
+                    package,
+                },
+                (
+                    version_id.eq(target_version_id),
+                    crate_id.eq(krate.id),
+                    req.eq(dep.version_req.to_string()),
+                    dep.kind.map(|k| kind.eq(k as i32)),
+                    optional.eq(dep.optional),
+                    default_features.eq(dep.default_features),
+                    features.eq(&dep.features),
+                    target.eq(dep.target.as_deref()),
+                ),
+            ))
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+
+    let (git_deps, new_dependencies): (Vec<_>, Vec<_>) =
+        git_and_new_dependencies.into_iter().unzip();
+
+    insert_into(dependencies)
+        .values(&new_dependencies)
+        .execute(conn)?;
+
+    Ok(git_deps)
 }
 
 #[cfg(test)]
