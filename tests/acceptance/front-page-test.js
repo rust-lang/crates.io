@@ -6,10 +6,10 @@ import { defer } from 'rsvp';
 
 import percySnapshot from '@percy/ember';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
+import { getPageTitle } from 'ember-page-title/test-support';
 
 import { summary } from '../../mirage/route-handlers/summary';
 import axeConfig from '../axe-config';
-import { title } from '../helpers/dom';
 import setupMirage from '../helpers/setup-mirage';
 
 module('Acceptance | front page', function (hooks) {
@@ -24,7 +24,7 @@ module('Acceptance | front page', function (hooks) {
     await visit('/');
 
     assert.equal(currentURL(), '/');
-    assert.equal(title(), 'crates.io: Rust Package Registry');
+    assert.equal(getPageTitle(), 'crates.io: Rust Package Registry');
 
     assert.dom('[data-test-install-cargo-link]').exists();
     assert.dom('[data-test-all-crates-link]').exists();

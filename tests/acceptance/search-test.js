@@ -7,10 +7,10 @@ import { defer } from 'rsvp';
 import percySnapshot from '@percy/ember';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import { keyDown } from 'ember-keyboard/test-support/test-helpers';
+import { getPageTitle } from 'ember-page-title/test-support';
 
 import { list as listCrates } from '../../mirage/route-handlers/crates';
 import axeConfig from '../axe-config';
-import { title } from '../helpers/dom';
 import setupMirage from '../helpers/setup-mirage';
 
 module('Acceptance | search', function (hooks) {
@@ -25,7 +25,7 @@ module('Acceptance | search', function (hooks) {
     await triggerEvent('[data-test-search-form]', 'submit');
 
     assert.equal(currentURL(), '/search?q=rust');
-    assert.equal(title(), "Search Results for 'rust' - crates.io: Rust Package Registry");
+    assert.equal(getPageTitle(), "Search Results for 'rust' - crates.io: Rust Package Registry");
 
     assert.dom('[data-test-header]').hasText("Search Results for 'rust'");
     assert.dom('[data-test-search-nav]').hasText('Displaying 1-7 of 7 total results');
@@ -51,7 +51,7 @@ module('Acceptance | search', function (hooks) {
     await visit('/search?q=rust');
 
     assert.equal(currentURL(), '/search?q=rust');
-    assert.equal(title(), "Search Results for 'rust' - crates.io: Rust Package Registry");
+    assert.equal(getPageTitle(), "Search Results for 'rust' - crates.io: Rust Package Registry");
 
     assert.dom('[data-test-search-input]').hasValue('rust');
     assert.dom('[data-test-header]').hasText("Search Results for 'rust'");
