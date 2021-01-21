@@ -13,7 +13,7 @@ use crate::util::rfc3339;
 
 /// Hosts in this list are known to not be hosting documentation,
 /// and are possibly of malicious intent e.g. ad tracking networks, etc.
-const DOCUMENTATION_BLOCKLIST: [&str; 2] = ["rust-ci.org", "rustless.org"];
+const DOCUMENTATION_BLOCKLIST: &[&str] = &["rust-ci.org", "rustless.org", "ironframework.io"];
 
 #[derive(PartialEq, Debug, Serialize, Deserialize)]
 pub struct EncodableBadge {
