@@ -48,9 +48,9 @@
   "devDependencies": {
     "@ember/optional-features": "2.0.0",
     "@ember/render-modifiers": "1.0.2",
-    "@embroider/compat": "0.35.1",
-    "@embroider/core": "0.35.1",
-    "@embroider/webpack": "0.35.1",
+    "@embroider/compat": "0.36.0",
+    "@embroider/core": "0.36.0",
+    "@embroider/webpack": "0.36.0",
     "@glimmer/component": "1.0.3",
     "@glimmer/tracking": "1.0.3",
     "@percy/ember": "2.1.4",
