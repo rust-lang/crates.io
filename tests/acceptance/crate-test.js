@@ -4,9 +4,9 @@ import { module, skip, test } from 'qunit';
 
 import percySnapshot from '@percy/ember';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
+import { getPageTitle } from 'ember-page-title/test-support';
 
 import axeConfig from '../axe-config';
-import { title } from '../helpers/dom';
 import setupMirage from '../helpers/setup-mirage';
 
 module('Acceptance | crate page', function (hooks) {
@@ -21,7 +21,7 @@ module('Acceptance | crate page', function (hooks) {
     await click('[data-test-just-updated] [data-test-crate-link="0"]');
 
     assert.equal(currentURL(), '/crates/nanomsg');
-    assert.equal(title(), 'nanomsg - crates.io: Rust Package Registry');
+    assert.equal(getPageTitle(), 'nanomsg - crates.io: Rust Package Registry');
 
     assert.dom('[data-test-heading] [data-test-crate-name]').hasText('nanomsg');
     assert.dom('[data-test-heading] [data-test-crate-version]').hasText('0.6.1');
@@ -36,7 +36,7 @@ module('Acceptance | crate page', function (hooks) {
 
     assert.equal(currentURL(), '/crates/nanomsg');
     assert.equal(currentRouteName(), 'crate.index');
-    assert.equal(title(), 'nanomsg - crates.io: Rust Package Registry');
+    assert.equal(getPageTitle(), 'nanomsg - crates.io: Rust Package Registry');
 
     assert.dom('[data-test-heading] [data-test-crate-name]').hasText('nanomsg');
     assert.dom('[data-test-heading] [data-test-crate-version]').hasText('0.6.1');
@@ -55,7 +55,7 @@ module('Acceptance | crate page', function (hooks) {
 
     assert.equal(currentURL(), '/crates/nanomsg/');
     assert.equal(currentRouteName(), 'crate.index');
-    assert.equal(title(), 'nanomsg - crates.io: Rust Package Registry');
+    assert.equal(getPageTitle(), 'nanomsg - crates.io: Rust Package Registry');
 
     assert.dom('[data-test-heading] [data-test-crate-name]').hasText('nanomsg');
     assert.dom('[data-test-heading] [data-test-crate-version]').hasText('0.6.1');
@@ -71,7 +71,7 @@ module('Acceptance | crate page', function (hooks) {
 
     assert.equal(currentURL(), '/crates/nanomsg/0.6.0');
     assert.equal(currentRouteName(), 'crate.version');
-    assert.equal(title(), 'nanomsg - crates.io: Rust Package Registry');
+    assert.equal(getPageTitle(), 'nanomsg - crates.io: Rust Package Registry');
 
     assert.dom('[data-test-heading] [data-test-crate-name]').hasText('nanomsg');
     assert.dom('[data-test-heading] [data-test-crate-version]').hasText('0.6.0');
