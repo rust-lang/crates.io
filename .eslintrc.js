@@ -39,6 +39,8 @@ module.exports = {
     'ember-concurrency/require-task-name-suffix': 'error',
 
     'unicorn/explicit-length-check': ['error', { 'non-zero': 'not-equal' }],
+    // disabled because of false positives related to `EmberArray`
+    'unicorn/no-array-for-each': 'off',
     // disabled because we need `null` since JSON has no `undefined`
     'unicorn/no-null': 'off',
     // disabled because this rule conflicts with prettier
