@@ -119,4 +119,22 @@
       {{/if}}
     {{/unless}}
   </div>
+
+  {{#if this.playgroundLink}}
+    <div>
+      <a
+        href={{this.playgroundLink}}
+        target="_blank"
+        rel="noopener noreferrer"
+        local-class="playground-button"
+        data-test-playground-button
+      >
+        Try on Rust Playground
+      </a>
+      <p local-class="playground-help" data-test-playground-help>
+        The top 100 crates are available on the Rust Playground for you to
+        try out directly in your browser.
+      </p>
+    </div>
+  {{/if}}
 </section>
