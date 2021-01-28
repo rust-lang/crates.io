@@ -2,9 +2,8 @@ use crate::builders::{CrateBuilder, DependencyBuilder, PublishBuilder};
 use crate::new_category;
 use crate::util::{RequestHelper, TestApp};
 use cargo_registry::controllers::krate::publish::{
-    missing_metadata_error_message, MISSING_RIGHTS_ERROR_MESSAGE,
+    missing_metadata_error_message, MISSING_RIGHTS_ERROR_MESSAGE, WILDCARD_ERROR_MESSAGE,
 };
-use cargo_registry::models::dependency::WILDCARD_ERROR_MESSAGE;
 use cargo_registry::models::krate::MAX_NAME_LENGTH;
 use cargo_registry::schema::{api_tokens, emails, versions_published_by};
 use cargo_registry::views::GoodCrate;
