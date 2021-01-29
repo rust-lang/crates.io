@@ -37,8 +37,8 @@
     "trailingComma": "all"
   },
   "dependencies": {
-    "@sentry/browser": "6.0.2",
-    "@sentry/integrations": "6.0.2",
+    "@sentry/browser": "6.0.3",
+    "@sentry/integrations": "6.0.3",
     "chart.js": "2.9.4",
     "copy-text-to-clipboard": "3.0.0",
     "fastboot-app-server": "3.0.0",
