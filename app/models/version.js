@@ -4,6 +4,8 @@ import { alias } from '@ember/object/computed';
 
 import { task } from 'ember-concurrency';
 
+import ajax from '../utils/ajax';
+
 export default class Version extends Model {
   @attr num;
   @attr dl_path;
@@ -62,6 +64,11 @@ export default class Version extends Model {
     }
   }).keepLatest())
   loadReadmeTask;
+
+  @task(function* () {
+    return yield ajax(`https://docs.rs/crate/${this.crateName}/${this.num}/builds.json`);
+  })
+  loadDocsBuildsTask;
 
   @(task(function* () {
     let response = yield fetch(`/api/v1/crates/${this.crate.id}/${this.num}/yank`, { method: 'DELETE' });

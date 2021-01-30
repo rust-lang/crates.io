@@ -6,8 +6,6 @@ import { inject as service } from '@ember/service';
 import { task } from 'ember-concurrency';
 import moment from 'moment';
 
-import ajax from '../../utils/ajax';
-
 const NUM_VERSIONS = 5;
 
 export default class CrateVersionController extends Controller {
@@ -126,7 +124,7 @@ export default class CrateVersionController extends Controller {
   })
   loadReadmeTask;
 
-  @computed('crate.{documentation,name}', 'currentVersion.num', 'loadDocsBuildsTask.lastSuccessful.value')
+  @computed('crate.{documentation,name}', 'currentVersion.{num,loadDocsBuildsTask.lastSuccessful.value}')
   get documentationLink() {
     // if this is *not* a docs.rs link we'll return it directly
     if (this.crate.documentation && !this.crate.documentation.startsWith('https://docs.rs/')) {
@@ -134,8 +132,8 @@ export default class CrateVersionController extends Controller {
     }
 
     // if we know about a successful docs.rs build, we'll return a link to that
-    if (this.loadDocsBuildsTask.lastSuccessful) {
-      let docsBuilds = this.loadDocsBuildsTask.lastSuccessful.value;
+    if (this.currentVersion.loadDocsBuildsTask.lastSuccessful) {
+      let docsBuilds = this.currentVersion.loadDocsBuildsTask.lastSuccessful.value;
       if (docsBuilds.length !== 0 && docsBuilds[0].build_status === true) {
         return `https://docs.rs/${this.crate.name}/${this.currentVersion.num}`;
       }
@@ -148,9 +146,4 @@ export default class CrateVersionController extends Controller {
 
     return null;
   }
-
-  @task(function* () {
-    return yield ajax(`https://docs.rs/crate/${this.crate.name}/${this.currentVersion.num}/builds.json`);
-  })
-  loadDocsBuildsTask;
 }
