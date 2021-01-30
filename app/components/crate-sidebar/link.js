@@ -12,4 +12,8 @@ export default class CrateSidebarLink extends Component {
 
     return url;
   }
+
+  get isGitHub() {
+    return this.text.startsWith('github.com/');
+  }
 }
