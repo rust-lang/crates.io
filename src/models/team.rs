@@ -155,13 +155,7 @@ impl Team {
             return Err(cargo_err("only members of a team can add it as an owner"));
         }
 
-        #[derive(Deserialize)]
-        struct Org {
-            avatar_url: Option<String>,
-        }
-
-        let url = format!("/orgs/{}", org_name);
-        let org = app.github.request::<Org>(&url, &token)?;
+        let org = app.github.org_by_name(org_name, &token)?;
 
         NewTeam::new(
             &login.to_lowercase(),
