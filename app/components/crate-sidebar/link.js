@@ -6,6 +6,9 @@ export default class CrateSidebarLink extends Component {
     if (url.startsWith('https://')) {
       url = url.slice('https://'.length);
     }
+    if (url.startsWith('www.')) {
+      url = url.slice('www.'.length);
+    }
 
     return url;
   }
