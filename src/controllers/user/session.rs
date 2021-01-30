@@ -103,7 +103,7 @@ pub fn authorize(req: &mut dyn RequestExt) -> EndpointResult {
 
     // Fetch the user info from GitHub using the access token we just got and create a user record
     let ghuser = github::github_api::<GithubUser>(req.app(), "/user", token)?;
-    let user = ghuser.save_to_database(&token.secret(), &*req.db_conn()?)?;
+    let user = save_user_to_database(&ghuser, &token.secret(), &*req.db_conn()?)?;
 
     // Log in by setting a cookie and the middleware authentication
     req.session_mut()
@@ -122,31 +122,33 @@ struct GithubUser {
     avatar_url: Option<String>,
 }
 
-impl GithubUser {
-    fn save_to_database(&self, access_token: &str, conn: &PgConnection) -> AppResult<User> {
-        NewUser::new(
-            self.id,
-            &self.login,
-            self.name.as_deref(),
-            self.avatar_url.as_deref(),
-            access_token,
-        )
-        .create_or_update(self.email.as_deref(), conn)
-        .map_err(Into::into)
-        .or_else(|e: Box<dyn AppError>| {
-            // If we're in read only mode, we can't update their details
-            // just look for an existing user
-            if e.is::<ReadOnlyMode>() {
-                users::table
-                    .filter(users::gh_id.eq(self.id))
-                    .first(conn)
-                    .optional()?
-                    .ok_or(e)
-            } else {
-                Err(e)
-            }
-        })
-    }
+fn save_user_to_database(
+    user: &GithubUser,
+    access_token: &str,
+    conn: &PgConnection,
+) -> AppResult<User> {
+    NewUser::new(
+        user.id,
+        &user.login,
+        user.name.as_deref(),
+        user.avatar_url.as_deref(),
+        access_token,
+    )
+    .create_or_update(user.email.as_deref(), conn)
+    .map_err(Into::into)
+    .or_else(|e: Box<dyn AppError>| {
+        // If we're in read only mode, we can't update their details
+        // just look for an existing user
+        if e.is::<ReadOnlyMode>() {
+            users::table
+                .filter(users::gh_id.eq(user.id))
+                .first(conn)
+                .optional()?
+                .ok_or(e)
+        } else {
+            Err(e)
+        }
+    })
 }
 
 /// Handles the `DELETE /api/private/session` route.
@@ -175,7 +177,7 @@ mod tests {
             id: -1,
             avatar_url: None,
         };
-        let result = gh_user.save_to_database("arbitrary_token", &conn);
+        let result = save_user_to_database(&gh_user, "arbitrary_token", &conn);
 
         assert!(
             result.is_ok(),
