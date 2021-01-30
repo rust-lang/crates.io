@@ -40,36 +40,39 @@
 
     <div>
       {{#if (and @crate.homepage (not-eq @crate.repository @crate.homepage))}}
-        <h3>Homepage</h3>
-        <a href="{{@crate.homepage}}">
-          {{@crate.homepage}}
-        </a>
+        <CrateSidebar::Link
+          @title="Homepage"
+          @url={{@crate.homepage}}
+        />
       {{/if}}
+
       {{#if @crate.wiki}}
-        <h3>Wiki</h3>
-        <a href="{{@crate.wiki}}">
-          {{@crate.wiki}}
-        </a>
+        <CrateSidebar::Link
+          @title="Wiki"
+          @url={{@crate.wiki}}
+        />
       {{/if}}
+
       {{#if @crate.mailing_list}}
-        <h3>Mailing list</h3>
-        <a href="{{@crate.mailing_list}}">
-          {{@crate.mailing_list}}
-        </a>
+        <CrateSidebar::Link
+          @title="Mailing list"
+          @url={{@crate.mailing_list}}
+        />
       {{/if}}
+
       {{#if @version.documentationLink}}
-        <h3>Documentation</h3>
-        <div>
-          <a href="{{@version.documentationLink}}" data-test-docs-link>
-            {{@version.documentationLink}}
-          </a>
-        </div>
+        <CrateSidebar::Link
+          @title="Documentation"
+          @url={{@version.documentationLink}}
+          data-test-docs-link
+        />
       {{/if}}
+
       {{#if @crate.repository}}
-        <h3>Repository</h3>
-        <a href="{{@crate.repository}}">
-          {{@crate.repository}}
-        </a>
+        <CrateSidebar::Link
+          @title="Repository"
+          @url={{@crate.repository}}
+        />
       {{/if}}
     </div>
 
