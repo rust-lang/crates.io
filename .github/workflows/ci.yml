@@ -197,8 +197,17 @@ jobs:
           cargo fmt -- --check
           cargo clippy --all-targets --all-features --all
 
-      - run: cargo install cargo-tarpaulin
-      - run: cargo tarpaulin
+      - name: Install cargo-tarpaulin
+        if: matrix.rust == 'stable'
+        run: which cargo-tarpaulin || cargo install cargo-tarpaulin
+
+      - name: Run tests (with coverage report)
+        if: matrix.rust == 'stable'
+        run: cargo tarpaulin
+
+      - name: Run tests
+        if: matrix.rust != 'stable'
+        run: cargo test
 
       - name: Prune unnecessary cache
         run: script/ci/prune-cache.sh
