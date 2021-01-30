@@ -138,23 +138,10 @@ impl Team {
             )));
         }
 
-        #[derive(Deserialize)]
-        struct GithubOrganization {
-            id: i32, // unique GH id (needed for membership queries)
-        }
-
-        #[derive(Deserialize)]
-        struct GithubTeam {
-            id: i32,              // unique GH id (needed for membership queries)
-            name: Option<String>, // Pretty name
-            organization: GithubOrganization,
-        }
-
-        let url = format!("/orgs/{}/teams/{}", org_name, team_name);
         let token = AccessToken::new(req_user.gh_access_token.clone());
         let team = app
             .github
-            .request::<GithubTeam>(&url, &token)
+            .team_by_name(org_name, team_name, &token)
             .map_err(|_| {
                 cargo_err(&format_args!(
                     "could not find the github team {}/{}",

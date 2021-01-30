@@ -25,6 +25,16 @@ impl GitHubClient {
         self.request("/user", auth)
     }
 
+    pub fn team_by_name(
+        &self,
+        org_name: &str,
+        team_name: &str,
+        auth: &AccessToken,
+    ) -> AppResult<GitHubTeam> {
+        let url = format!("/orgs/{}/teams/{}", org_name, team_name);
+        self.request(&url, auth)
+    }
+
     pub fn team_membership(
         &self,
         org_id: i32,
@@ -104,6 +114,18 @@ pub struct GithubUser {
     pub id: i32,
     pub login: String,
     pub name: Option<String>,
+}
+
+#[derive(Debug, Deserialize, Copy)]
+pub struct GitHubOrganization {
+    pub id: i32, // unique GH id (needed for membership queries)
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GitHubTeam {
+    pub id: i32,              // unique GH id (needed for membership queries)
+    pub name: Option<String>, // Pretty name
+    pub organization: GitHubOrganization,
 }
 
 #[derive(Debug, Deserialize)]
