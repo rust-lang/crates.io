@@ -39,6 +39,41 @@
     </div>
 
     <div>
+      {{#if @crate.homepage}}
+        <h3>Homepage</h3>
+        <a href="{{@crate.homepage}}">
+          {{@crate.homepage}}
+        </a>
+      {{/if}}
+      {{#if @crate.wiki}}
+        <h3>Wiki</h3>
+        <a href="{{@crate.wiki}}">
+          {{@crate.wiki}}
+        </a>
+      {{/if}}
+      {{#if @crate.mailing_list}}
+        <h3>Mailing list</h3>
+        <a href="{{@crate.mailing_list}}">
+          {{@crate.mailing_list}}
+        </a>
+      {{/if}}
+      {{#if @version.documentationLink}}
+        <h3>Documentation</h3>
+        <div>
+          <a href="{{@version.documentationLink}}" data-test-docs-link>
+            {{@version.documentationLink}}
+          </a>
+        </div>
+      {{/if}}
+      {{#if @crate.repository}}
+        <h3>Repository</h3>
+        <a href="{{@crate.repository}}">
+          {{@crate.repository}}
+        </a>
+      {{/if}}
+    </div>
+
+    <div>
       <h3>Owners</h3>
 
       {{#if this.isOwner}}
