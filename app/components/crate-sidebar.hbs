@@ -39,7 +39,7 @@
     </div>
 
     <div>
-      {{#if @crate.homepage}}
+      {{#if (and @crate.homepage (not-eq @crate.repository @crate.homepage))}}
         <h3>Homepage</h3>
         <a href="{{@crate.homepage}}">
           {{@crate.homepage}}
