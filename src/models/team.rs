@@ -225,21 +225,16 @@ fn team_with_gh_id_contains_user(
     // GET /organizations/:org_id/team/:team_id/memberships/:username
     // check that "state": "active"
 
-    #[derive(Deserialize)]
-    struct Membership {
-        state: String,
-    }
-
-    let url = format!(
-        "/organizations/{}/team/{}/memberships/{}",
-        &github_org_id, &github_team_id, &user.gh_login
-    );
     let token = AccessToken::new(user.gh_access_token.clone());
-    let membership = match app.github.request::<Membership>(&url, &token) {
-        // Officially how `false` is returned
-        Err(ref e) if e.is::<NotFound>() => return Ok(false),
-        x => x?,
-    };
+    let membership =
+        match app
+            .github
+            .team_membership(github_org_id, github_team_id, &user.gh_login, &token)
+        {
+            // Officially how `false` is returned
+            Err(ref e) if e.is::<NotFound>() => return Ok(false),
+            x => x?,
+        };
 
     // There is also `state: pending` for which we could possibly give
     // some feedback, but it's not obvious how that should work.

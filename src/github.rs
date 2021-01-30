@@ -25,6 +25,20 @@ impl GitHubClient {
         self.request("/user", auth)
     }
 
+    pub fn team_membership(
+        &self,
+        org_id: i32,
+        team_id: i32,
+        username: &str,
+        auth: &AccessToken,
+    ) -> AppResult<GitHubTeamMembership> {
+        let url = format!(
+            "/organizations/{}/team/{}/memberships/{}",
+            org_id, team_id, username
+        );
+        self.request(&url, auth)
+    }
+
     /// Does all the nonsense for sending a GET to Github. Doesn't handle parsing
     /// because custom error-code handling may be desirable. Use
     /// `parse_github_response` to handle the "common" processing of responses.
@@ -90,6 +104,11 @@ pub struct GithubUser {
     pub id: i32,
     pub login: String,
     pub name: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GitHubTeamMembership {
+    pub state: String,
 }
 
 pub fn team_url(login: &str) -> String {
