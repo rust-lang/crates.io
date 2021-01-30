@@ -70,24 +70,35 @@ export default class Version extends Model {
   })
   loadDocsBuildsTask;
 
-  @computed('crate.{documentation,name}', 'num', 'loadDocsBuildsTask.lastSuccessful.value')
+  @computed('loadDocsBuildsTask.lastSuccessful.value')
+  get hasDocsRsLink() {
+    let docsBuilds = this.loadDocsBuildsTask.lastSuccessful?.value;
+    return docsBuilds && docsBuilds.length !== 0 && docsBuilds[0].build_status === true;
+  }
+
+  get docsRsLink() {
+    if (this.hasDocsRsLink) {
+      return `https://docs.rs/${this.crateName}/${this.num}`;
+    }
+  }
+
   get documentationLink() {
+    let crateDocsLink = this.crate.documentation;
+
     // if this is *not* a docs.rs link we'll return it directly
-    if (this.crate.documentation && !this.crate.documentation.startsWith('https://docs.rs/')) {
-      return this.crate.documentation;
+    if (crateDocsLink && !crateDocsLink.startsWith('https://docs.rs/')) {
+      return crateDocsLink;
     }
 
     // if we know about a successful docs.rs build, we'll return a link to that
-    if (this.loadDocsBuildsTask.lastSuccessful) {
-      let docsBuilds = this.loadDocsBuildsTask.lastSuccessful.value;
-      if (docsBuilds.length !== 0 && docsBuilds[0].build_status === true) {
-        return `https://docs.rs/${this.crateName}/${this.num}`;
-      }
+    let { docsRsLink } = this;
+    if (docsRsLink) {
+      return docsRsLink;
     }
 
     // finally, we'll return the specified documentation link, whatever it is
-    if (this.crate.documentation) {
-      return this.crate.documentation;
+    if (crateDocsLink) {
+      return crateDocsLink;
     }
 
     return null;
