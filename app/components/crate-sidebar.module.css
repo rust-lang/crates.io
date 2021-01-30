@@ -71,6 +71,7 @@ ul.owners, ul.keywords {
     composes: yanked from '../styles/shared/typography.module.css';
 }
 
-.more-versions-link {
+.more-versions-link,
+.reverse-deps-link {
     composes: small from '../styles/shared/typography.module.css';
 }
