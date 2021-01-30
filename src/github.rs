@@ -21,6 +21,10 @@ impl GitHubClient {
         Self { client, base_url }
     }
 
+    pub fn current_user(&self, auth: &AccessToken) -> AppResult<GithubUser> {
+        self.request("/user", auth)
+    }
+
     /// Does all the nonsense for sending a GET to Github. Doesn't handle parsing
     /// because custom error-code handling may be desirable. Use
     /// `parse_github_response` to handle the "common" processing of responses.
@@ -77,6 +81,15 @@ fn handle_error_response(error: &reqwest::Error) -> Box<dyn AppError> {
             error
         )),
     }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GithubUser {
+    pub avatar_url: Option<String>,
+    pub email: Option<String>,
+    pub id: i32,
+    pub login: String,
+    pub name: Option<String>,
 }
 
 pub fn team_url(login: &str) -> String {
