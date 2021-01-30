@@ -1,6 +1,10 @@
 <div ...attributes>
   <h3 data-test-title>{{@title}}</h3>
-  <a href={{@url}} data-test-link>
-    {{this.text}}
-  </a>
+  <div local-class="content">
+    {{svg-jar "link" local-class="icon" data-test-icon="link"}}
+
+    <a href={{@url}} data-test-link>
+      {{this.text}}
+    </a>
+  </div>
 </div>
