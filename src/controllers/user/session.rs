@@ -1,6 +1,5 @@
 use crate::controllers::frontend_prelude::*;
 
-use crate::github;
 use conduit_cookie::RequestSession;
 use oauth2::reqwest::http_client;
 use oauth2::{AuthorizationCode, Scope, TokenResponse};
@@ -102,7 +101,7 @@ pub fn authorize(req: &mut dyn RequestExt) -> EndpointResult {
     let token = token.access_token();
 
     // Fetch the user info from GitHub using the access token we just got and create a user record
-    let ghuser = github::github_api::<GithubUser>(req.app(), "/user", token)?;
+    let ghuser = req.app().github.request::<GithubUser>("/user", token)?;
     let user = save_user_to_database(&ghuser, &token.secret(), &*req.db_conn()?)?;
 
     // Log in by setting a cookie and the middleware authentication

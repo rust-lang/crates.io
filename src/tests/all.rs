@@ -129,6 +129,7 @@ fn simple_config() -> Config {
         session_key: "test this has to be over 32 bytes long".to_string(),
         gh_client_id: dotenv::var("GH_CLIENT_ID").unwrap_or_default(),
         gh_client_secret: dotenv::var("GH_CLIENT_SECRET").unwrap_or_default(),
+        gh_base_url: "http://api.github.com".to_string(),
         db_url: env("TEST_DATABASE_URL"),
         replica_db_url: None,
         env: Env::Test,

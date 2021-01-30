@@ -3,6 +3,7 @@
 use crate::{db, Config, Env};
 use std::{sync::Arc, time::Duration};
 
+use crate::github::GitHubClient;
 use diesel::r2d2;
 use oauth2::basic::BasicClient;
 use reqwest::blocking::Client;
@@ -18,6 +19,9 @@ pub struct App {
 
     /// The read-only replica database connection pool
     pub read_only_replica_database: Option<db::DieselPool>,
+
+    /// GitHub API client
+    pub github: GitHubClient,
 
     /// The GitHub OAuth2 configuration
     pub github_oauth: BasicClient,
@@ -46,6 +50,8 @@ impl App {
     /// - A `git2::Repository` instance from the index repo checkout (that server.rs ensures exists)
     pub fn new(config: Config, http_client: Option<Client>) -> App {
         use oauth2::{AuthUrl, ClientId, ClientSecret, TokenUrl};
+
+        let github = GitHubClient::new(http_client.clone(), config.gh_base_url.clone());
 
         let github_oauth = BasicClient::new(
             ClientId::new(config.gh_client_id.clone()),
@@ -121,6 +127,7 @@ impl App {
         App {
             primary_database,
             read_only_replica_database,
+            github,
             github_oauth,
             session_key: config.session_key.clone(),
             config,

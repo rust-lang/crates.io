@@ -1,7 +1,6 @@
 use diesel::prelude::*;
 
 use crate::app::App;
-use crate::github::github_api;
 use crate::util::errors::{cargo_err, AppResult, NotFound};
 
 use oauth2::AccessToken;
@@ -153,12 +152,15 @@ impl Team {
 
         let url = format!("/orgs/{}/teams/{}", org_name, team_name);
         let token = AccessToken::new(req_user.gh_access_token.clone());
-        let team = github_api::<GithubTeam>(app, &url, &token).map_err(|_| {
-            cargo_err(&format_args!(
-                "could not find the github team {}/{}",
-                org_name, team_name
-            ))
-        })?;
+        let team = app
+            .github
+            .request::<GithubTeam>(&url, &token)
+            .map_err(|_| {
+                cargo_err(&format_args!(
+                    "could not find the github team {}/{}",
+                    org_name, team_name
+                ))
+            })?;
 
         let org_id = team.organization.id;
 
@@ -172,7 +174,7 @@ impl Team {
         }
 
         let url = format!("/orgs/{}", org_name);
-        let org = github_api::<Org>(app, &url, &token)?;
+        let org = app.github.request::<Org>(&url, &token)?;
 
         NewTeam::new(
             &login.to_lowercase(),
@@ -233,7 +235,7 @@ fn team_with_gh_id_contains_user(
         &github_org_id, &github_team_id, &user.gh_login
     );
     let token = AccessToken::new(user.gh_access_token.clone());
-    let membership = match github_api::<Membership>(app, &url, &token) {
+    let membership = match app.github.request::<Membership>(&url, &token) {
         // Officially how `false` is returned
         Err(ref e) if e.is::<NotFound>() => return Ok(false),
         x => x?,
