@@ -13,6 +13,10 @@ export default class CrateSidebarLink extends Component {
     return url;
   }
 
+  get isDocsRs() {
+    return this.text.startsWith('docs.rs/');
+  }
+
   get isGitHub() {
     return this.text.startsWith('github.com/');
   }
