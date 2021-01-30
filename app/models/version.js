@@ -70,6 +70,29 @@ export default class Version extends Model {
   })
   loadDocsBuildsTask;
 
+  @computed('crate.{documentation,name}', 'num', 'loadDocsBuildsTask.lastSuccessful.value')
+  get documentationLink() {
+    // if this is *not* a docs.rs link we'll return it directly
+    if (this.crate.documentation && !this.crate.documentation.startsWith('https://docs.rs/')) {
+      return this.crate.documentation;
+    }
+
+    // if we know about a successful docs.rs build, we'll return a link to that
+    if (this.loadDocsBuildsTask.lastSuccessful) {
+      let docsBuilds = this.loadDocsBuildsTask.lastSuccessful.value;
+      if (docsBuilds.length !== 0 && docsBuilds[0].build_status === true) {
+        return `https://docs.rs/${this.crateName}/${this.num}`;
+      }
+    }
+
+    // finally, we'll return the specified documentation link, whatever it is
+    if (this.crate.documentation) {
+      return this.crate.documentation;
+    }
+
+    return null;
+  }
+
   @(task(function* () {
     let response = yield fetch(`/api/v1/crates/${this.crate.id}/${this.num}/yank`, { method: 'DELETE' });
     if (!response.ok) {
