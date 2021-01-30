@@ -20,7 +20,7 @@ pub struct App {
     pub read_only_replica_database: Option<db::DieselPool>,
 
     /// The GitHub OAuth2 configuration
-    pub github: BasicClient,
+    pub github_oauth: BasicClient,
 
     /// A unique key used with conduit_cookie to generate cookies
     pub session_key: String,
@@ -47,7 +47,7 @@ impl App {
     pub fn new(config: Config, http_client: Option<Client>) -> App {
         use oauth2::{AuthUrl, ClientId, ClientSecret, TokenUrl};
 
-        let github = BasicClient::new(
+        let github_oauth = BasicClient::new(
             ClientId::new(config.gh_client_id.clone()),
             Some(ClientSecret::new(config.gh_client_secret.clone())),
             AuthUrl::new(String::from("https://github.com/login/oauth/authorize")).unwrap(),
@@ -121,7 +121,7 @@ impl App {
         App {
             primary_database,
             read_only_replica_database,
-            github,
+            github_oauth,
             session_key: config.session_key.clone(),
             config,
             http_client,

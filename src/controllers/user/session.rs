@@ -28,7 +28,7 @@ use crate::util::errors::ReadOnlyMode;
 pub fn begin(req: &mut dyn RequestExt) -> EndpointResult {
     let (url, state) = req
         .app()
-        .github
+        .github_oauth
         .authorize_url(oauth2::CsrfToken::new_random)
         .add_scope(Scope::new("read:org".to_string()))
         .url();
@@ -95,7 +95,7 @@ pub fn authorize(req: &mut dyn RequestExt) -> EndpointResult {
     let code = AuthorizationCode::new(code);
     let token = req
         .app()
-        .github
+        .github_oauth
         .exchange_code(code)
         .request(http_client)
         .chain_error(|| server_error("Error obtaining token"))?;
