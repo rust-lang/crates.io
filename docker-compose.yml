@@ -35,19 +35,11 @@ services:
       - 5432:5432
     volumes:
       - postgres-data:/var/lib/postgresql/data
-    healthcheck:
-      test: pg_isready -U postgres
-      interval: 5s
-      start_period: 30s
 
   backend:
     <<: *backend
     ports:
       - 8888:8888
-    healthcheck:
-      test: curl http://backend:8888/api/v1/site_metadata
-      interval: 5s
-      start_period: 300s
     depends_on:
       - postgres
 
@@ -69,10 +61,6 @@ services:
     volumes:
       # Mount the app/ directory so live reload works
       - ./app:/app/app:ro
-    healthcheck:
-      test: wget http://frontend:4200/ -O /dev/null
-      interval: 5s
-      start_period: 120s
 
 volumes:
   postgres-data:
