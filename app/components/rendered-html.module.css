@@ -2,6 +2,14 @@
     line-height: 1.5;
     overflow-wrap: break-word;
 
+    > :first-child {
+        margin-top: 0;
+    }
+
+    > :last-child {
+        margin-bottom: 0;
+    }
+
     img {
         max-width: 100%;
     }

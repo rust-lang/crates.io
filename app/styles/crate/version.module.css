@@ -194,6 +194,11 @@ div.header {
     margin-bottom: 40px;
 }
 
+.readme {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
 .crate-downloads {
     display: flex;
     flex-wrap: wrap;

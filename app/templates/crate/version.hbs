@@ -67,7 +67,7 @@
       </div>
       {{#if this.readme}}
         <section aria-label="Readme">
-          <RenderedHtml @html={{this.readme}} />
+          <RenderedHtml @html={{this.readme}} local-class="readme" />
         </section>
       {{else}}
         {{#if this.crate.description}}
