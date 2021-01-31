@@ -1,4 +1,4 @@
-version: "3"
+version: "3.4"
 
 x-backend: &backend
   build:
@@ -8,7 +8,7 @@ x-backend: &backend
     DEV_DOCKER: "true"
     DATABASE_URL: postgres://postgres:password@postgres/cargo_registry
     SESSION_KEY: badkeyabcdefghijklmnopqrstuvwxyzabcdef
-    GIT_REPO_URL: file://./tmp/index-bare
+    GIT_REPO_URL: file:///app/tmp/index-bare
     GH_CLIENT_ID: ""
     GH_CLIENT_SECRET: ""
     WEB_ALLOWED_ORIGINS: http://localhost:8888,http://localhost:4200
@@ -22,6 +22,7 @@ x-backend: &backend
     - index:/app/tmp
     - cargo-cache:/usr/local/cargo/registry
     - target-cache:/app/target
+    - local-uploads:/app/local_uploads
 
 services:
   postgres:
@@ -47,13 +48,14 @@ services:
       test: curl http://backend:8888/api/v1/site_metadata
       interval: 5s
       start_period: 300s
+    depends_on:
+      - postgres
 
   worker:
     <<: *backend
     entrypoint: cargo run --bin background-worker
     depends_on:
-      backend:
-        condition: service_healthy
+      - backend
 
   frontend:
     build:
@@ -77,3 +79,4 @@ volumes:
   cargo-cache:
   target-cache:
   index:
+  local-uploads:
