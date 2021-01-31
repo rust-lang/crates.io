@@ -66,8 +66,8 @@
         {{/if}}
       </div>
       {{#if this.readme}}
-        <section local-class="crate-readme" aria-label="Readme" {{highlight-syntax selector="pre > code"}}>
-          {{html-safe this.readme}}
+        <section aria-label="Readme">
+          <RenderedHtml @html={{this.readme}} />
         </section>
       {{else}}
         {{#if this.crate.description}}
