@@ -1,4 +1,28 @@
-version: "3"
+version: "3.4"
+
+x-backend: &backend
+  build:
+    context: .
+    dockerfile: backend.Dockerfile
+  environment:
+    DEV_DOCKER: "true"
+    DATABASE_URL: postgres://postgres:password@postgres/cargo_registry
+    SESSION_KEY: badkeyabcdefghijklmnopqrstuvwxyzabcdef
+    GIT_REPO_URL: file:///app/tmp/index-bare
+    GH_CLIENT_ID: ""
+    GH_CLIENT_SECRET: ""
+    WEB_ALLOWED_ORIGINS: http://localhost:8888,http://localhost:4200
+  links:
+    - postgres
+  volumes:
+    # Mount the src/ directory so we don't have to rebuild the Docker image
+    # when we want to change some code
+    - ./src:/app/src:ro
+
+    - index:/app/tmp
+    - cargo-cache:/usr/local/cargo/registry
+    - target-cache:/app/target
+    - local-uploads:/app/local_uploads
 
 services:
   postgres:
@@ -13,29 +37,17 @@ services:
       - postgres-data:/var/lib/postgresql/data
 
   backend:
-    build:
-      context: .
-      dockerfile: backend.Dockerfile
-    environment:
-      DEV_DOCKER: "true"
-      DATABASE_URL: postgres://postgres:password@postgres/cargo_registry
-      SESSION_KEY: badkeyabcdefghijklmnopqrstuvwxyzabcdef
-      GIT_REPO_URL: file://./tmp/index-bare
-      GH_CLIENT_ID: ""
-      GH_CLIENT_SECRET: ""
-      WEB_ALLOWED_ORIGINS: http://localhost:8888,http://localhost:4200
-    links:
-      - postgres
+    <<: *backend
     ports:
       - 8888:8888
-    volumes:
-      # Mount the src/ directory so we don't have to rebuild the Docker image
-      # when we want to change some code
-      - ./src:/app/src:ro
+    depends_on:
+      - postgres
 
-      - index:/app/tmp
-      - cargo-cache:/usr/local/cargo/registry
-      - target-cache:/app/target
+  worker:
+    <<: *backend
+    entrypoint: cargo run --bin background-worker
+    depends_on:
+      - backend
 
   frontend:
     build:
@@ -55,3 +67,4 @@ volumes:
   cargo-cache:
   target-cache:
   index:
+  local-uploads:
