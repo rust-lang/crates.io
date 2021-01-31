@@ -11,7 +11,11 @@ function findElementByFragmentName(document, name) {
     return;
   }
 
-  return document.querySelector(`#${name}`) || document.getElementsByName(name)[0];
+  try {
+    return document.querySelector(`#${name}`) || document.getElementsByName(name)[0];
+  } catch { //catches execptions thrown when an anchor in a readme was invalid (see issue #3108)
+    return;
+  }
 }
 
 function hashchange() {
