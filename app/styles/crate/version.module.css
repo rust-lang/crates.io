@@ -74,10 +74,13 @@ div.header {
 .about {
     line-height: 180%;
     margin-bottom: 40px;
+
+    > h3 {
+        margin-top: 0;
+    }
 }
 
 .readme {
-    margin-top: 20px;
     margin-bottom: 20px;
 }
 
