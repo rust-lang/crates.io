@@ -11,7 +11,6 @@ Router.map(function () {
   this.route('github-authorize', { path: '/authorize/github' });
   this.route('crates');
   this.route('crate', { path: '/crates/:crate_id' }, function () {
-    this.route('download');
     this.route('versions');
     this.route('version', { path: '/:version_num' });
 
