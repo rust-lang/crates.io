@@ -47,7 +47,7 @@ module('Acceptance | /me/pending-invites', function (hooks) {
     assert.equal(currentURL(), '/me/pending-invites');
     assert.dom('[data-test-invite]').exists({ count: 2 });
     assert.dom('[data-test-invite="nanomsg"]').exists();
-    assert.dom('[data-test-invite="nanomsg"] [data-test-date]').hasText('a year ago');
+    assert.dom('[data-test-invite="nanomsg"] [data-test-date]').hasText('11 months ago');
     assert.dom('[data-test-invite="nanomsg"] [data-test-accept-button]').exists();
     assert.dom('[data-test-invite="nanomsg"] [data-test-decline-button]').exists();
     assert.dom('[data-test-invite="ember-rs"]').exists();
@@ -55,7 +55,7 @@ module('Acceptance | /me/pending-invites', function (hooks) {
     assert.dom('[data-test-invite="ember-rs"] [data-test-crate-link]').hasAttribute('href', '/crates/ember-rs');
     assert.dom('[data-test-invite="ember-rs"] [data-test-inviter-link]').hasText('wycats');
     assert.dom('[data-test-invite="ember-rs"] [data-test-inviter-link]').hasAttribute('href', '/users/wycats');
-    assert.dom('[data-test-invite="ember-rs"] [data-test-date]').hasText('in 3 years');
+    assert.dom('[data-test-invite="ember-rs"] [data-test-date]').hasText('in about 3 years');
     assert.dom('[data-test-invite="ember-rs"] [data-test-accept-button]').exists();
     assert.dom('[data-test-invite="ember-rs"] [data-test-decline-button]').exists();
     assert.dom('[data-test-error-message]').doesNotExist();

@@ -46,7 +46,7 @@ module('Acceptance | api-tokens', function (hooks) {
 
     let [row1, row2] = findAll('[data-test-api-token]');
     assert.dom('[data-test-name]', row1).hasText('BAR');
-    assert.dom('[data-test-created-at]', row1).hasText('Created 18 hours ago');
+    assert.dom('[data-test-created-at]', row1).hasText('Created about 18 hours ago');
     assert.dom('[data-test-last-used-at]', row1).hasText('Never used');
     assert.dom('[data-test-save-token-button]', row1).doesNotExist();
     assert.dom('[data-test-revoke-token-button]', row1).exists();

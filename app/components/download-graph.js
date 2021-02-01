@@ -30,7 +30,7 @@ export default class DownloadGraph extends Component {
           padding: 10,
         },
         scales: {
-          xAxes: [{ type: 'time', time: { stepSize: 7, tooltipFormat: 'MMM D', unit: 'day' } }],
+          xAxes: [{ type: 'time', time: { stepSize: 7, tooltipFormat: 'MMM d', unit: 'day' } }],
           yAxes: [{ stacked: true, ticks: { min: 0, precision: 0 } }],
         },
         tooltips: {

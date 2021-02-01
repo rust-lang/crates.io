@@ -26,7 +26,7 @@
       </p>
     </div>
     <div local-class="date-column" data-test-date>
-      {{moment-from-now @invite.created_at}}
+      {{date-format-distance-to-now @invite.created_at addSuffix=true}}
     </div>
     <div>
       <button type="button" local-class="accept-button" data-test-accept-button {{on "click" (perform this.acceptInvitationTask)}}>Accept</button>

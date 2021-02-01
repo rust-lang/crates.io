@@ -62,11 +62,11 @@
 
       <div local-class="dates">
         <span title={{token.created_at}} local-class="created-at" data-test-created-at>
-          Created {{moment-from-now token.created_at}}
+          Created {{date-format-distance-to-now token.created_at addSuffix=true}}
         </span>
         <span title={{token.last_used_at}} local-class="last-used-at" data-test-last-used-at>
           {{#if token.last_used_at}}
-            Last used {{moment-from-now token.last_used_at}}
+            Last used {{date-format-distance-to-now token.last_used_at addSuffix=true}}
           {{else}}
             Never used
           {{/if}}

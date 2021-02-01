@@ -35,8 +35,8 @@
       {{svg-jar "latest-updates" height="32" width="32"}}
       <span>
         <abbr title="The last time crate was updated">Updated:</abbr>
-        <time title="Last updated: {{ @crate.updated_at }}" datetime="{{ moment-format @crate.updated_at 'YYYY-MM-DDTHH:mm:ssZ' }}" data-test-updated-at>
-          {{ moment-from-now @crate.updated_at }}
+        <time title="Last updated: {{ @crate.updated_at }}" datetime="{{date-format-iso @crate.updated_at}}" data-test-updated-at>
+          {{date-format-distance-to-now @crate.updated_at addSuffix=true}}
         </time>
       </span>
     </div>

@@ -41,6 +41,7 @@
     "@sentry/integrations": "6.0.3",
     "chart.js": "2.9.4",
     "copy-text-to-clipboard": "3.0.0",
+    "date-fns": "2.16.1",
     "fastboot-app-server": "3.0.0",
     "morgan": "1.10.0",
     "pretty-bytes": "5.5.0"
@@ -73,7 +74,6 @@
     "ember-cli-inject-live-reload": "2.0.2",
     "ember-cli-meta-tags": "6.1.2",
     "ember-cli-mirage": "2.0.1",
-    "ember-cli-moment-shim": "3.8.0",
     "ember-cli-notifications": "6.3.2",
     "ember-cli-sri": "2.1.1",
     "ember-cli-terser": "4.0.1",
@@ -91,7 +91,6 @@
     "ember-load-initializers": "2.1.2",
     "ember-maybe-import-regenerator": "0.1.6",
     "ember-modifier": "2.1.1",
-    "ember-moment": "8.0.1",
     "ember-page-title": "6.2.0",
     "ember-prism": "0.9.0",
     "ember-promise-helpers": "1.0.9",

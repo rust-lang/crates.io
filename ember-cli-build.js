@@ -28,6 +28,7 @@ module.exports = function (defaults) {
     autoImport: {
       webpack: {
         externals: {
+          // prevent Chart.js from bundling Moment.js
           moment: 'moment',
         },
       },
