@@ -1,10 +1,10 @@
 use crate::controllers::frontend_prelude::*;
 
-use crate::github;
 use conduit_cookie::RequestSession;
 use oauth2::reqwest::http_client;
 use oauth2::{AuthorizationCode, Scope, TokenResponse};
 
+use crate::github::GithubUser;
 use crate::middleware::current_user::TrustedUserId;
 use crate::models::{NewUser, User};
 use crate::schema::users;
@@ -28,7 +28,7 @@ use crate::util::errors::ReadOnlyMode;
 pub fn begin(req: &mut dyn RequestExt) -> EndpointResult {
     let (url, state) = req
         .app()
-        .github
+        .github_oauth
         .authorize_url(oauth2::CsrfToken::new_random)
         .add_scope(Scope::new("read:org".to_string()))
         .url();
@@ -95,15 +95,15 @@ pub fn authorize(req: &mut dyn RequestExt) -> EndpointResult {
     let code = AuthorizationCode::new(code);
     let token = req
         .app()
-        .github
+        .github_oauth
         .exchange_code(code)
         .request(http_client)
         .chain_error(|| server_error("Error obtaining token"))?;
     let token = token.access_token();
 
     // Fetch the user info from GitHub using the access token we just got and create a user record
-    let ghuser = github::github_api::<GithubUser>(req.app(), "/user", token)?;
-    let user = ghuser.save_to_database(&token.secret(), &*req.db_conn()?)?;
+    let ghuser = req.app().github.current_user(token)?;
+    let user = save_user_to_database(&ghuser, &token.secret(), &*req.db_conn()?)?;
 
     // Log in by setting a cookie and the middleware authentication
     req.session_mut()
@@ -113,40 +113,33 @@ pub fn authorize(req: &mut dyn RequestExt) -> EndpointResult {
     super::me::me(req)
 }
 
-#[derive(Deserialize)]
-struct GithubUser {
-    email: Option<String>,
-    name: Option<String>,
-    login: String,
-    id: i32,
-    avatar_url: Option<String>,
-}
-
-impl GithubUser {
-    fn save_to_database(&self, access_token: &str, conn: &PgConnection) -> AppResult<User> {
-        NewUser::new(
-            self.id,
-            &self.login,
-            self.name.as_deref(),
-            self.avatar_url.as_deref(),
-            access_token,
-        )
-        .create_or_update(self.email.as_deref(), conn)
-        .map_err(Into::into)
-        .or_else(|e: Box<dyn AppError>| {
-            // If we're in read only mode, we can't update their details
-            // just look for an existing user
-            if e.is::<ReadOnlyMode>() {
-                users::table
-                    .filter(users::gh_id.eq(self.id))
-                    .first(conn)
-                    .optional()?
-                    .ok_or(e)
-            } else {
-                Err(e)
-            }
-        })
-    }
+fn save_user_to_database(
+    user: &GithubUser,
+    access_token: &str,
+    conn: &PgConnection,
+) -> AppResult<User> {
+    NewUser::new(
+        user.id,
+        &user.login,
+        user.name.as_deref(),
+        user.avatar_url.as_deref(),
+        access_token,
+    )
+    .create_or_update(user.email.as_deref(), conn)
+    .map_err(Into::into)
+    .or_else(|e: Box<dyn AppError>| {
+        // If we're in read only mode, we can't update their details
+        // just look for an existing user
+        if e.is::<ReadOnlyMode>() {
+            users::table
+                .filter(users::gh_id.eq(user.id))
+                .first(conn)
+                .optional()?
+                .ok_or(e)
+        } else {
+            Err(e)
+        }
+    })
 }
 
 /// Handles the `DELETE /api/private/session` route.
@@ -175,7 +168,7 @@ mod tests {
             id: -1,
             avatar_url: None,
         };
-        let result = gh_user.save_to_database("arbitrary_token", &conn);
+        let result = save_user_to_database(&gh_user, "arbitrary_token", &conn);
 
         assert!(
             result.is_ok(),

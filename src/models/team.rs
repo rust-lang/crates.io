@@ -1,7 +1,6 @@
 use diesel::prelude::*;
 
 use crate::app::App;
-use crate::github::github_api;
 use crate::util::errors::{cargo_err, AppResult, NotFound};
 
 use oauth2::AccessToken;
@@ -139,26 +138,16 @@ impl Team {
             )));
         }
 
-        #[derive(Deserialize)]
-        struct GithubOrganization {
-            id: i32, // unique GH id (needed for membership queries)
-        }
-
-        #[derive(Deserialize)]
-        struct GithubTeam {
-            id: i32,              // unique GH id (needed for membership queries)
-            name: Option<String>, // Pretty name
-            organization: GithubOrganization,
-        }
-
-        let url = format!("/orgs/{}/teams/{}", org_name, team_name);
         let token = AccessToken::new(req_user.gh_access_token.clone());
-        let team = github_api::<GithubTeam>(app, &url, &token).map_err(|_| {
-            cargo_err(&format_args!(
-                "could not find the github team {}/{}",
-                org_name, team_name
-            ))
-        })?;
+        let team = app
+            .github
+            .team_by_name(org_name, team_name, &token)
+            .map_err(|_| {
+                cargo_err(&format_args!(
+                    "could not find the github team {}/{}",
+                    org_name, team_name
+                ))
+            })?;
 
         let org_id = team.organization.id;
 
@@ -166,13 +155,7 @@ impl Team {
             return Err(cargo_err("only members of a team can add it as an owner"));
         }
 
-        #[derive(Deserialize)]
-        struct Org {
-            avatar_url: Option<String>,
-        }
-
-        let url = format!("/orgs/{}", org_name);
-        let org = github_api::<Org>(app, &url, &token)?;
+        let org = app.github.org_by_name(org_name, &token)?;
 
         NewTeam::new(
             &login.to_lowercase(),
@@ -223,21 +206,16 @@ fn team_with_gh_id_contains_user(
     // GET /organizations/:org_id/team/:team_id/memberships/:username
     // check that "state": "active"
 
-    #[derive(Deserialize)]
-    struct Membership {
-        state: String,
-    }
-
-    let url = format!(
-        "/organizations/{}/team/{}/memberships/{}",
-        &github_org_id, &github_team_id, &user.gh_login
-    );
     let token = AccessToken::new(user.gh_access_token.clone());
-    let membership = match github_api::<Membership>(app, &url, &token) {
-        // Officially how `false` is returned
-        Err(ref e) if e.is::<NotFound>() => return Ok(false),
-        x => x?,
-    };
+    let membership =
+        match app
+            .github
+            .team_membership(github_org_id, github_team_id, &user.gh_login, &token)
+        {
+            // Officially how `false` is returned
+            Err(ref e) if e.is::<NotFound>() => return Ok(false),
+            x => x?,
+        };
 
     // There is also `state: pending` for which we could possibly give
     // some feedback, but it's not obvious how that should work.
