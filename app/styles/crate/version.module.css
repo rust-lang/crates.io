@@ -113,82 +113,6 @@ div.header {
     }
 }
 
-.last-update,
-.crate-size {
-    composes: small from '../shared/typography.module.css';
-    line-height: 25px;
-}
-
-.date {
-    font-weight: bold;
-    margin-bottom: 40px;
-}
-
-/*
-    Since crate_size is a new field, older crates won't have it.
-    Preserve behaviour for older crates. For newer ones, keep
-    `Crate Size` closer to last updated.
-*/
-.date-with-small-margin-bot {
-    font-weight: bold;
-    margin-bottom: 20px;
-}
-
-.size {
-    font-weight: bold;
-    margin-bottom: 40px;
-}
-
-.crate-info .authorship {
-    ul.owners, ul.keywords {
-        display: flex;
-        flex-wrap: wrap;
-        list-style: none;
-        padding: 0;
-        margin: 0;
-
-        li {
-            margin: 0 7px 7px 0;
-        }
-    }
-}
-
-.more-versions-link {
-    composes: small from '../shared/typography.module.css';
-}
-
-.authorship {
-    .top, .bottom {
-        display: flex;
-        flex-wrap: wrap;
-
-        > * { margin-right: 1em; }
-    }
-
-    .top > * { flex: 1 }
-
-    @media only screen and (min-width: 890px) {
-        flex: 3;
-        border-left: 2px solid var(--gray-border);
-        padding-left: 20px;
-
-        .top, .bottom {
-            flex-direction: column;
-        }
-
-        ul {
-            padding-left: 20px;
-        }
-    }
-
-    @media only screen and (max-width: 480px) {
-        .top, .bottom {
-            flex-direction: column;
-        }
-    }
-}
-
-
 .about {
     line-height: 180%;
     margin-bottom: 40px;
@@ -249,8 +173,4 @@ div.header {
     @media only percy {
         display: none;
     }
-}
-
-.yanked {
-    composes: yanked from '../shared/typography.module.css';
 }

@@ -1,0 +1,154 @@
+<section
+  local-class='authorship'
+  aria-label="Crate metadata"
+  ...attributes
+>
+  <div local-class='top'>
+    <div>
+      <div local-class='last-update'>Last Updated</div>
+      <div local-class='{{if @version.crate_size 'date-with-small-margin-bot' 'date'}}'>
+        {{date-format-distance-to-now @crate.updated_at addSuffix=true}}
+      </div>
+    </div>
+
+    {{#if @version.crate_size}}
+      <div>
+        <div local-class='crate-size'>Crate Size</div>
+        <div local-class='size'>{{pretty-bytes @version.crate_size}}</div>
+      </div>
+    {{/if}}
+
+    <div>
+      <h3>Owners</h3>
+
+      {{#if this.isOwner}}
+        <p>
+          <LinkTo @route="crate.owners" @model={{@crate}} data-test-manage-owners-link>
+            Manage owners
+          </LinkTo>
+        </p>
+      {{/if}}
+
+      <ul local-class='owners' data-test-owners>
+        {{#each @crate.owner_team as |team|}}
+          <li>
+            <LinkTo @route={{team.kind}} @model={{team.login}} data-test-team-link={{team.login}}>
+              <UserAvatar @user={{team}} @size="medium-small" />
+            </LinkTo>
+          </li>
+        {{/each}}
+
+        {{#each @crate.owner_user as |user|}}
+          <li>
+            <LinkTo @route={{user.kind}} @model={{user.login}} data-test-user-link={{user.login}}>
+              <UserAvatar @user={{user}} @size="medium-small" />
+            </LinkTo>
+          </li>
+        {{/each}}
+      </ul>
+    </div>
+
+    <div>
+      <h3>Authors</h3>
+      <ul>
+        {{#each @version.authorNames as |author|}}
+          <li>{{ format-email author }}</li>
+        {{/each}}
+      </ul>
+    </div>
+  </div>
+
+  <div local-class='bottom'>
+    {{#if @version.license}}
+      <div>
+        <h3>License</h3>
+        <p data-test-license>{{ @version.license }}</p>
+      </div>
+    {{/if}}
+
+    {{#unless @crate.keywords.isPending}}
+      {{#if @crate.keywords}}
+        <div>
+          <h3>Keywords</h3>
+          <ul local-class='keywords'>
+            {{#each @crate.keywords as |keyword|}}
+              <li><LinkTo @route="keyword" @model={{keyword}}>{{keyword.id}}</LinkTo></li>
+            {{/each}}
+          </ul>
+        </div>
+      {{/if}}
+    {{/unless}}
+
+    {{#unless @crate.categories.isPending}}
+      {{#if @crate.categories}}
+        <div>
+          <h3>Categories</h3>
+          <ul>
+            {{#each @crate.categories as |category|}}
+              <li><LinkTo @route="category" @model={{category.slug}}>{{category.category}}</LinkTo></li>
+            {{/each}}
+          </ul>
+        </div>
+      {{/if}}
+    {{/unless}}
+
+    <div data-test-versions>
+      <h3>Versions</h3>
+      <ul>
+        {{#each this.smallSortedVersions as |version|}}
+          <li>
+            <LinkTo @route="crate.version" @model={{version.num}} data-test-version-link={{version.num}}>
+              {{ version.num }}
+            </LinkTo>
+            {{date-format version.created_at "PP"}}
+            {{#if version.yanked}}
+              <span local-class='yanked'>yanked</span>
+            {{/if}}
+          </li>
+        {{/each}}
+      </ul>
+      {{#if this.hasMoreVersions}}
+        <LinkTo @route="crate.versions" @model={{@crate}} local-class="more-versions-link" data-test-all-versions-link>
+          show all {{ @crate.versions.length }} versions
+        </LinkTo>
+      {{/if}}
+    </div>
+
+    <div>
+      <h3>Dependencies</h3>
+      <ul data-test-dependencies>
+        {{#each @version.normalDependencies as |dep|}}
+          <li><LinkToDep @dep={{dep}} /></li>
+        {{else}}
+          {{#if @version.loadDepsTask.isRunning}}
+            <li>Loading…</li>
+          {{else}}
+            <li>None</li>
+          {{/if}}
+        {{/each}}
+      </ul>
+    </div>
+
+    {{#if @version.buildDependencies}}
+      <div>
+        <h3>Build-Dependencies</h3>
+        <ul data-test-build-dependencies>
+          {{#each @version.buildDependencies as |dep|}}
+            <li><LinkToDep @dep={{dep}} /></li>
+          {{/each}}
+        </ul>
+      </div>
+    {{/if}}
+
+    {{#if @version.devDependencies}}
+      <div>
+        <h3>Dev-Dependencies</h3>
+        <ul data-test-dev-dependencies>
+          {{#each @version.devDependencies as |dep|}}
+            <li><LinkToDep @dep={{dep}} /></li>
+          {{/each}}
+        </ul>
+      </div>
+    {{/if}}
+  </div>
+</section>

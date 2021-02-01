@@ -1,6 +1,6 @@
 import Controller from '@ember/controller';
 import { computed } from '@ember/object';
-import { alias, gt, readOnly } from '@ember/object/computed';
+import { alias, readOnly } from '@ember/object/computed';
 import { inject as service } from '@ember/service';
 
 import subDays from 'date-fns/subDays';
@@ -21,8 +21,6 @@ export default class CrateVersionController extends Controller {
   @alias('model.crate') crate;
   @alias('model.requestedVersion') requestedVersion;
   @alias('model.version') currentVersion;
-  @alias('crate.keywords') keywords;
-  @alias('crate.categories') categories;
 
   @computed('crate.owner_user', 'session.currentUser.id')
   get isOwner() {
@@ -35,10 +33,6 @@ export default class CrateVersionController extends Controller {
   get smallSortedVersions() {
     return this.sortedVersions.slice(0, NUM_VERSIONS);
   }
-
-  @gt('sortedVersions.length', NUM_VERSIONS) hasMoreVersions;
-  @gt('keywords.length', 0) anyKeywords;
-  @gt('categories.length', 0) anyCategories;
 
   @computed('downloads', 'extraDownloads', 'requestedVersion')
   get downloadData() {
