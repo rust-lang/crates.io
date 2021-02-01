@@ -1,0 +1,38 @@
+.wrapper {
+    line-height: 1.5;
+    overflow-wrap: break-word;
+
+    > :first-child {
+        margin-top: 0;
+    }
+
+    > :last-child {
+        margin-bottom: 0;
+    }
+
+    img {
+        max-width: 100%;
+    }
+
+    pre {
+        overflow-x: auto;
+    }
+
+    p {
+        code {
+            background-color: #fff;
+            padding: 0 2px;
+        }
+    }
+
+    table {
+        border-collapse: collapse;
+        display: block;
+        overflow-x: auto;
+
+        th, td {
+            border: 1px solid #dfe2e5;
+            padding: 6px 13px;
+        }
+    }
+}

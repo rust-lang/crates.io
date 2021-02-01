@@ -66,7 +66,7 @@ div.header {
 .docs {
     @media only screen and (min-width: 890px) {
         flex: 7;
-        padding-right: 40px;
+        padding-right: 20px;
         max-width: 640px;
     }
 }
@@ -194,35 +194,9 @@ div.header {
     margin-bottom: 40px;
 }
 
-.crate-readme {
-    line-height: 1.5;
-    overflow-wrap: break-word;
-
-    img {
-        max-width: 100%;
-    }
-
-    pre {
-        overflow-x: auto;
-    }
-
-    p {
-        code {
-            background-color: #fff;
-            padding: 0 2px;
-        }
-    }
-
-    table {
-        border-collapse: collapse;
-        display: block;
-        overflow-x: auto;
-
-        th, td {
-            border: 1px solid #dfe2e5;
-            padding: 6px 13px;
-        }
-    }
+.readme {
+    margin-top: 20px;
+    margin-bottom: 20px;
 }
 
 .crate-downloads {

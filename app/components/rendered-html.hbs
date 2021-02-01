@@ -1,0 +1,7 @@
+{{!--
+  This component renders raw HTML. Be very careful with this since it
+  can enable cross-site scripting attacks!
+--}}
+<div local-class="wrapper" ...attributes {{highlight-syntax selector="pre > code"}}>
+  {{html-safe @html}}
+</div>
