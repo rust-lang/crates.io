@@ -4,6 +4,8 @@ import { alias } from '@ember/object/computed';
 
 import { task } from 'ember-concurrency';
 
+import ajax from '../utils/ajax';
+
 export default class Version extends Model {
   @attr num;
   @attr dl_path;
@@ -62,6 +64,45 @@ export default class Version extends Model {
     }
   }).keepLatest())
   loadReadmeTask;
+
+  @task(function* () {
+    return yield ajax(`https://docs.rs/crate/${this.crateName}/${this.num}/builds.json`);
+  })
+  loadDocsBuildsTask;
+
+  @computed('loadDocsBuildsTask.lastSuccessful.value')
+  get hasDocsRsLink() {
+    let docsBuilds = this.loadDocsBuildsTask.lastSuccessful?.value;
+    return docsBuilds && docsBuilds.length !== 0 && docsBuilds[0].build_status === true;
+  }
+
+  get docsRsLink() {
+    if (this.hasDocsRsLink) {
+      return `https://docs.rs/${this.crateName}/${this.num}`;
+    }
+  }
+
+  get documentationLink() {
+    let crateDocsLink = this.crate.documentation;
+
+    // if this is *not* a docs.rs link we'll return it directly
+    if (crateDocsLink && !crateDocsLink.startsWith('https://docs.rs/')) {
+      return crateDocsLink;
+    }
+
+    // if we know about a successful docs.rs build, we'll return a link to that
+    let { docsRsLink } = this;
+    if (docsRsLink) {
+      return docsRsLink;
+    }
+
+    // finally, we'll return the specified documentation link, whatever it is
+    if (crateDocsLink) {
+      return crateDocsLink;
+    }
+
+    return null;
+  }
 
   @(task(function* () {
     let response = yield fetch(`/api/v1/crates/${this.crate.id}/${this.num}/yank`, { method: 'DELETE' });
