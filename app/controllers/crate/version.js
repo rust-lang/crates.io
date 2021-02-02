@@ -1,12 +1,10 @@
 import Controller from '@ember/controller';
 import { computed } from '@ember/object';
-import { alias, readOnly } from '@ember/object/computed';
+import { alias } from '@ember/object/computed';
 import { inject as service } from '@ember/service';
 
 import subDays from 'date-fns/subDays';
 import { task } from 'ember-concurrency';
-
-const NUM_VERSIONS = 5;
 
 export default class CrateVersionController extends Controller {
   @service session;
@@ -27,14 +25,7 @@ export default class CrateVersionController extends Controller {
     return this.crate.owner_user.findBy('id', this.session.currentUser?.id);
   }
 
-  @readOnly('crate.versions') sortedVersions;
-
-  @computed('sortedVersions')
-  get smallSortedVersions() {
-    return this.sortedVersions.slice(0, NUM_VERSIONS);
-  }
-
-  @computed('downloads', 'extraDownloads', 'requestedVersion')
+  @computed('downloads', 'extraDownloads')
   get downloadData() {
     let downloads = this.downloads;
     if (!downloads) {
@@ -44,7 +35,7 @@ export default class CrateVersionController extends Controller {
     let extra = this.extraDownloads || [];
 
     let dates = {};
-    let versions = [];
+    let versions = new Set([]);
 
     let now = new Date();
     for (let i = 0; i < 90; i++) {
@@ -53,45 +44,37 @@ export default class CrateVersionController extends Controller {
     }
 
     downloads.forEach(d => {
-      let version_id = d.version.id;
+      let version_num = d.version.num;
+
+      versions.add(version_num);
+
       let key = d.date;
       if (dates[key]) {
-        let prev = dates[key].cnt[version_id] || 0;
-        dates[key].cnt[version_id] = prev + d.downloads;
+        let prev = dates[key].cnt[version_num] || 0;
+        dates[key].cnt[version_num] = prev + d.downloads;
       }
     });
 
     extra.forEach(d => {
       let key = d.date;
       if (dates[key]) {
-        let prev = dates[key].cnt[null] || 0;
-        dates[key].cnt[null] = prev + d.downloads;
+        let prev = dates[key].cnt['Other'] || 0;
+        dates[key].cnt['Other'] = prev + d.downloads;
       }
     });
-    if (this.requestedVersion) {
-      versions.push(this.currentVersion.getProperties('id', 'num'));
-    } else {
-      this.smallSortedVersions.forEach(version => {
-        versions.push(version.getProperties('id', 'num'));
-      });
-    }
+
+    let versionsList = [...versions].sort();
     if (extra.length !== 0) {
-      versions.push({
-        id: null,
-        num: 'Other',
-      });
+      versionsList.unshift('Other');
     }
 
-    let headers = ['Date'];
-    versions.sort(b => b.num).reverse();
-    for (let version of versions) {
-      headers.push(version.num);
-    }
+    let headers = ['Date', ...versionsList];
+
     let data = [headers];
     for (let date in dates) {
       let row = [dates[date].date];
-      for (let version of versions) {
-        row.push(dates[date].cnt[version.id] || 0);
+      for (let version of versionsList) {
+        row.push(dates[date].cnt[version] || 0);
       }
       data.push(row);
     }
