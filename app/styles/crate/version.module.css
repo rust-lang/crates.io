@@ -71,55 +71,16 @@ div.header {
     }
 }
 
-.install {
-    font-size: 120%;
-    padding: 10px;
-    background-color: #dfdbc2;
-    display: flex;
-
-    code {
-        flex: 1;
-        background: var(--main-color);
-        color: white;
-        padding: 20px;
-
-        @media only screen and (min-width: 500px) {
-            flex: 8;
-        }
-    }
-}
-
-.install-action {
-    display: none;
-    text-align: center;
-    padding-top: 18px;
-    padding-right: 10px;
-
-    @media only screen and (min-width: 500px) {
-        flex: 2;
-        display: block;
-    }
-}
-
-.copy-button {
-    composes: button-reset from '../shared/buttons.module.css';
-    width: 60px;
-    color: var(--main-color);
-    background: white;
-    cursor: pointer;
-
-    &:hover {
-        background: #edebdd;
-    }
-}
-
 .about {
     line-height: 180%;
     margin-bottom: 40px;
+
+    > h3 {
+        margin-top: 0;
+    }
 }
 
 .readme {
-    margin-top: 20px;
     margin-bottom: 20px;
 }
 

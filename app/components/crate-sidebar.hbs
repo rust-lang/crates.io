@@ -19,6 +19,26 @@
     {{/if}}
 
     <div>
+      <h3>Install</h3>
+
+      <p local-class="copy-help">Add the following line to your Cargo.toml file:</p>
+      {{#if (is-clipboard-supported)}}
+        <CopyButton
+          @copyText='{{@crate.name}} = "{{@version.num}}"'
+          title="Copy Cargo.toml snippet to clipboard"
+          local-class="copy-button"
+        >
+          <span>{{@crate.name}} = "{{@version.num}}"</span>
+          {{svg-jar "copy" aria-hidden="true" local-class="copy-icon"}}
+        </CopyButton>
+      {{else}}
+        <code local-class="copy-fallback">
+          {{@crate.name}} = "{{@version.num}}"
+        </code>
+      {{/if}}
+    </div>
+
+    <div>
       <h3>Owners</h3>
 
       {{#if this.isOwner}}

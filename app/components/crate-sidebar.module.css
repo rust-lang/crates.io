@@ -55,6 +55,50 @@
     margin-bottom: 40px;
 }
 
+.copy-help {
+    font-size: 12px;
+}
+
+.copy-button,
+.copy-fallback {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 12px;
+    font-family: monospace;
+    font-size: 14px;
+    line-height: 1.5em;
+    color: var(--main-color);
+    background: transparent;
+    border-radius: 5px;
+    border: solid 2px var(--gray-border);
+}
+
+.copy-button {
+    text-align: start;
+    cursor: pointer;
+
+    &:hover {
+        background-color: white;
+    }
+}
+
+.copy-icon {
+    flex-shrink: 0;
+    height: 1.1em;
+    width: auto;
+    /* for slightly nicer alignment... */
+    margin-top: -3px;
+    margin-left: 10px;
+    opacity: 0;
+    transition: opacity 100ms;
+
+    .copy-button:hover & {
+        opacity: 1;
+    }
+}
+
 ul.owners, ul.keywords {
     display: flex;
     flex-wrap: wrap;

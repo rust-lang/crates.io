@@ -52,19 +52,6 @@
         one that has not been yanked.
       </p>
     {{else}}
-      <div local-class='install'>
-        <div local-class='install-action'>Cargo.toml</div>
-        <code>{{this.crate.name}} = "{{this.currentVersion.num}}"</code>
-        {{#if (is-clipboard-supported)}}
-          <CopyButton
-            @copyText='{{this.crate.name}} = "{{this.currentVersion.num}}"'
-            title="Copy Cargo.toml snippet to clipboard"
-            local-class="copy-button"
-          >
-            {{svg-jar "copy" alt="Copy Cargo.toml snippet to clipboard"}}
-          </CopyButton>
-        {{/if}}
-      </div>
       {{#if this.readme}}
         <section aria-label="Readme">
           <RenderedHtml @html={{this.readme}} local-class="readme" />
