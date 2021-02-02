@@ -124,7 +124,7 @@
   },
   "engines": {
     "node": "^14.9.0",
-    "npm": "^6.10.2"
+    "npm": "^7.0.0"
   },
   "resolutions": {
     "ember-test-waiters": "2.1.3"
