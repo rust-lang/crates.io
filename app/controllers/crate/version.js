@@ -15,7 +15,6 @@ export default class CrateVersionController extends Controller {
   }
 
   @alias('downloadsContext.version_downloads') downloads;
-  @alias('downloads.content.meta.extra_downloads') extraDownloads;
   @alias('model.crate') crate;
   @alias('model.requestedVersion') requestedVersion;
   @alias('model.version') currentVersion;
@@ -25,14 +24,14 @@ export default class CrateVersionController extends Controller {
     return this.crate.owner_user.findBy('id', this.session.currentUser?.id);
   }
 
-  @computed('downloads', 'extraDownloads')
+  @computed('downloads')
   get downloadData() {
     let downloads = this.downloads;
     if (!downloads) {
       return;
     }
 
-    let extra = this.extraDownloads || [];
+    let extra = downloads.content?.meta?.extra_downloads ?? [];
 
     let dates = {};
     let versions = new Set([]);
