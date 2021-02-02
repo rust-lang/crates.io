@@ -66,35 +66,9 @@ export default class DownloadGraph extends Component {
   }
 
   get data() {
-    let [labels, ...rows] = this.downloadData;
-
-    let datasets = labels
-      .slice(1)
-      .map((label, index) => ({
-        data: rows.map(row => ({ x: row[0], y: row[index + 1] })),
-        label: label,
-      }))
-      .reverse()
-      .map(({ label, data }, index) => {
-        return {
-          backgroundColor: BG_COLORS[index],
-          borderColor: COLORS[index],
-          borderWidth: 2,
-          cubicInterpolationMode: 'monotone',
-          data: data,
-          label: label,
-          pointHoverBorderWidth: 2,
-          pointHoverRadius: 5,
-        };
-      });
-
-    return { datasets };
-  }
-
-  get downloadData() {
     let downloads = this.args.data;
     if (!downloads) {
-      return;
+      return { datasets: [] };
     }
 
     let extra = downloads.content?.meta?.extra_downloads ?? [];
@@ -133,17 +107,30 @@ export default class DownloadGraph extends Component {
       versionsList.unshift('Other');
     }
 
-    let headers = ['Date', ...versionsList];
+    let rows = Object.keys(dates).map(date => [
+      dates[date].date,
+      ...versionsList.map(version => dates[date].cnt[version] || 0),
+    ]);
 
-    let data = [headers];
-    for (let date in dates) {
-      let row = [dates[date].date];
-      for (let version of versionsList) {
-        row.push(dates[date].cnt[version] || 0);
-      }
-      data.push(row);
-    }
+    let datasets = versionsList
+      .map((label, index) => ({
+        data: rows.map(row => ({ x: row[0], y: row[index + 1] })),
+        label: label,
+      }))
+      .reverse()
+      .map(({ label, data }, index) => {
+        return {
+          backgroundColor: BG_COLORS[index],
+          borderColor: COLORS[index],
+          borderWidth: 2,
+          cubicInterpolationMode: 'monotone',
+          data: data,
+          label: label,
+          pointHoverBorderWidth: 2,
+          pointHoverRadius: 5,
+        };
+      });
 
-    return data;
+    return { datasets };
   }
 }
