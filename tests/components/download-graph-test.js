@@ -78,11 +78,39 @@ module('Component | DownloadGraph', function (hooks) {
 });
 
 function exampleData() {
-  return [
-    ['Date', 'Other', '1.0.52', '1.0.53', '1.0.54', '1.0.55', '1.0.56'],
-    [new Date('2020-12-30'), 36745, 201, 2228, 4298, 3702, 30520],
-    [new Date('2020-12-29'), 33242, 261, 1650, 4277, 4157, 31631],
-    [new Date('2020-12-28'), 19981, 181, 968, 2786, 2414, 23616],
-    [new Date('2020-12-27'), 19064, 186, 873, 2477, 15713, 3815],
+  let downloads = [
+    { version: { num: '1.0.52' }, date: '2020-12-30', downloads: 201 },
+    { version: { num: '1.0.53' }, date: '2020-12-30', downloads: 2228 },
+    { version: { num: '1.0.54' }, date: '2020-12-30', downloads: 4298 },
+    { version: { num: '1.0.55' }, date: '2020-12-30', downloads: 3702 },
+    { version: { num: '1.0.56' }, date: '2020-12-30', downloads: 30520 },
+    { version: { num: '1.0.52' }, date: '2020-12-29', downloads: 261 },
+    { version: { num: '1.0.53' }, date: '2020-12-29', downloads: 1650 },
+    { version: { num: '1.0.54' }, date: '2020-12-29', downloads: 4277 },
+    { version: { num: '1.0.55' }, date: '2020-12-29', downloads: 4157 },
+    { version: { num: '1.0.56' }, date: '2020-12-29', downloads: 31631 },
+    { version: { num: '1.0.52' }, date: '2020-12-28', downloads: 181 },
+    { version: { num: '1.0.53' }, date: '2020-12-28', downloads: 968 },
+    { version: { num: '1.0.54' }, date: '2020-12-28', downloads: 2786 },
+    { version: { num: '1.0.55' }, date: '2020-12-28', downloads: 2414 },
+    { version: { num: '1.0.56' }, date: '2020-12-28', downloads: 23616 },
+    { version: { num: '1.0.52' }, date: '2020-12-27', downloads: 186 },
+    { version: { num: '1.0.53' }, date: '2020-12-27', downloads: 873 },
+    { version: { num: '1.0.54' }, date: '2020-12-27', downloads: 2477 },
+    { version: { num: '1.0.55' }, date: '2020-12-27', downloads: 15713 },
+    { version: { num: '1.0.56' }, date: '2020-12-27', downloads: 3815 },
   ];
+
+  downloads.content = {
+    meta: {
+      extra_downloads: [
+        { date: '2020-12-30', downloads: 36745 },
+        { date: '2020-12-29', downloads: 33242 },
+        { date: '2020-12-28', downloads: 19981 },
+        { date: '2020-12-27', downloads: 19064 },
+      ],
+    },
+  };
+
+  return downloads;
 }

@@ -3,6 +3,7 @@ import { inject as service } from '@ember/service';
 import { waitForPromise } from '@ember/test-waiters';
 import Component from '@glimmer/component';
 
+import subDays from 'date-fns/subDays';
 import window from 'ember-window-mock';
 
 // Colors by http://colorbrewer2.org/#type=diverging&scheme=RdBu&n=10
@@ -65,10 +66,53 @@ export default class DownloadGraph extends Component {
   }
 
   get data() {
-    let [labels, ...rows] = this.args.data;
+    let downloads = this.args.data;
+    if (!downloads) {
+      return { datasets: [] };
+    }
 
-    let datasets = labels
-      .slice(1)
+    let extra = downloads.content?.meta?.extra_downloads ?? [];
+
+    let dates = {};
+    let versions = new Set([]);
+
+    let now = new Date();
+    for (let i = 0; i < 90; i++) {
+      let date = subDays(now, i);
+      dates[date.toISOString().slice(0, 10)] = { date, cnt: {} };
+    }
+
+    downloads.forEach(d => {
+      let version_num = d.version.num;
+
+      versions.add(version_num);
+
+      let key = d.date;
+      if (dates[key]) {
+        let prev = dates[key].cnt[version_num] || 0;
+        dates[key].cnt[version_num] = prev + d.downloads;
+      }
+    });
+
+    extra.forEach(d => {
+      let key = d.date;
+      if (dates[key]) {
+        let prev = dates[key].cnt['Other'] || 0;
+        dates[key].cnt['Other'] = prev + d.downloads;
+      }
+    });
+
+    let versionsList = [...versions].sort();
+    if (extra.length !== 0) {
+      versionsList.unshift('Other');
+    }
+
+    let rows = Object.keys(dates).map(date => [
+      dates[date].date,
+      ...versionsList.map(version => dates[date].cnt[version] || 0),
+    ]);
+
+    let datasets = versionsList
       .map((label, index) => ({
         data: rows.map(row => ({ x: row[0], y: row[index + 1] })),
         label: label,
