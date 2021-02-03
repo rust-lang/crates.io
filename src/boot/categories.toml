@@ -64,7 +64,7 @@ the results.\
 [compilers]
 name = "Compilers"
 description = """
-Compiler implementations, for translating high-level languages into lower level ones.\
+Compiler implementations, including interpreters and transpilers.\
 """
 
 [command-line-interface]
@@ -283,13 +283,6 @@ name = "Internationalization (i18n)"
 description = """
 Crates to help develop software capable of adapting to various \
 languages and regions.\
-"""
-
-[interpreters]
-name = "Interpreters"
-description = """
-Interpreter implementations, without requiring them previously to have been compiled \
-into a machine language program.\
 """
 
 [localization]
