@@ -61,6 +61,12 @@ Crates to store the results of previous computations in order to reuse \
 the results.\
 """
 
+[compilers]
+name = "Compilers"
+description = """
+Compiler implementations, for translating high-level languages into lower level ones.\
+"""
+
 [command-line-interface]
 name = "Command-line interface"
 description = """
@@ -279,10 +285,11 @@ Crates to help develop software capable of adapting to various \
 languages and regions.\
 """
 
-[language-implementations]
-name = "Language implementations"
+[interpreters]
+name = "Interpreters"
 description = """
-Compilers, interpreters, transpilers implemented for particular programming languages.\
+Interpreter implementations, without requiring them previously to have been compiled \
+into a machine language program.\
 """
 
 [localization]
