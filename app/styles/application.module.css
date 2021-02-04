@@ -1,8 +1,8 @@
 :root {
-    --violet800: #2e2359;
-    --grey900: #2a3439;
-    --green800: #3b6837;
-    --yellow500: #ffc833;
+    --violet800: hsl(252, 44%, 24%);
+    --grey900: hsl(200, 15%, 19%);
+    --green800: hsl(115, 31%, 31%);
+    --yellow500: hsl(44, 100%, 60%);
 
     --header-bg-color: var(--green800);
     --footer-bg-color: var(--green800);
