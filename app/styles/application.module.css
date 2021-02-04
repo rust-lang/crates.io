@@ -1,11 +1,11 @@
 :root {
-    --violet: #2e2359;
-    --dark-grey: #2a3439;
-    --dark-green: #3b6837;
-    --yellow: #ffc833;
+    --violet800: #2e2359;
+    --grey900: #2a3439;
+    --green800: #3b6837;
+    --yellow500: #ffc833;
 
-    --header-bg-color: var(--dark-green);
-    --footer-bg-color: var(--dark-green);
+    --header-bg-color: var(--green800);
+    --footer-bg-color: var(--green800);
 
     --font-family: "Fira Sans", sans-serif;
 
@@ -20,9 +20,9 @@
 }
 
 :global(.new-design) {
-    --header-bg-color: var(--violet);
+    --header-bg-color: var(--violet800);
     --main-bg: white;
-    --footer-bg-color: var(--dark-grey);
+    --footer-bg-color: var(--grey900);
 }
 
 * {
