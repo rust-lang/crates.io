@@ -59,7 +59,9 @@ jobs:
           node-version: '14.x'
 
       - run: yarn install
-      - run: yarn test
+
+      # `yarn test` currently does not work due to https://github.com/embroider-build/embroider/issues/677
+      - run: yarn build
         continue-on-error: true
 
   backend:
