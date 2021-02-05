@@ -62,7 +62,7 @@ input.search {
 
     &:focus {
         outline: none;
-        box-shadow: 0 0 0 4px var(--yellow);
+        box-shadow: 0 0 0 4px var(--yellow500);
     }
 }
 
