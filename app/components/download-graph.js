@@ -5,6 +5,7 @@ import Component from '@glimmer/component';
 
 import subDays from 'date-fns/subDays';
 import window from 'ember-window-mock';
+import semverSort from 'semver/functions/sort';
 
 // Colors by http://colorbrewer2.org/#type=diverging&scheme=RdBu&n=10
 const COLORS = ['#67001f', '#b2182b', '#d6604d', '#f4a582', '#92c5de', '#4393c3', '#2166ac', '#053061'];
@@ -102,7 +103,7 @@ export default class DownloadGraph extends Component {
       }
     });
 
-    let versionsList = [...versions].sort();
+    let versionsList = semverSort([...versions]);
     if (extra.length !== 0) {
       versionsList.unshift('Other');
     }
