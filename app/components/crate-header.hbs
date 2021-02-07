@@ -3,7 +3,9 @@
     <div local-class="heading">
       {{svg-jar "crate" local-class="crate-icon"}}
       <h1 data-test-crate-name>{{@crate.name}}</h1>
-      <h2 data-test-crate-version>{{@version.num}}</h2>
+      {{#if @version}}
+        <h2 data-test-crate-version>{{@version.num}}</h2>
+      {{/if}}
     </div>
 
     {{#if this.session.currentUser}}
@@ -21,8 +23,8 @@
     {{#if @crate.mailing_list}}
       <li><a href="{{@crate.mailing_list}}">Mailing list</a></li>
     {{/if}}
-    {{#if @version.documentationLink}}
-      <li><a href="{{@version.documentationLink}}" data-test-docs-link>Documentation</a></li>
+    {{#if this.documentationLink}}
+      <li><a href="{{this.documentationLink}}" data-test-docs-link>Documentation</a></li>
     {{/if}}
     {{#if @crate.repository}}
       <li><a href="{{@crate.repository}}">Repository</a></li>
