@@ -67,6 +67,12 @@ Crates to store the results of previous computations in order to reuse \
 the results.\
 """
 
+[compilers]
+name = "Compilers"
+description = """
+Compiler implementations, including interpreters and transpilers.\
+"""
+
 [command-line-interface]
 name = "Command-line interface"
 description = """
