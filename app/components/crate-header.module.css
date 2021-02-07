@@ -1,0 +1,52 @@
+.header {
+    padding-top: 30px;
+    padding-bottom: 30px;
+}
+
+.header-row {
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 10px;
+}
+
+.heading {
+    display: flex;
+    align-items: center;
+
+    h1, h2 {
+        margin: 0;
+        padding: 0;
+    }
+
+    h2 {
+        color: var(--main-color-light);
+        margin-left: 10px;
+    }
+}
+
+.crate-icon {
+    flex-shrink: 0;
+    margin-right: 10px;
+    width: 32px;
+    height: 32px;
+}
+
+.quick-links {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+
+    font-size: 80%;
+    list-style-type: none;
+    margin: 1em 0 0 0;
+    padding: 0;
+
+
+    li {
+        margin-right: 1em;
+
+        &:last-child {
+            margin-right: 0;
+        }
+    }
+}
