@@ -1,12 +1,10 @@
 import { visit } from '@ember/test-helpers';
-import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
-import setupMirage from '../../../helpers/setup-mirage';
+import { setupApplicationTest } from 'cargo/tests/helpers';
 
 module('Route | crate.version | docs link', function (hooks) {
   setupApplicationTest(hooks);
-  setupMirage(hooks);
 
   test('shows regular documentation link', async function (assert) {
     this.server.create('crate', { name: 'foo', documentation: 'https://foo.io/docs' });

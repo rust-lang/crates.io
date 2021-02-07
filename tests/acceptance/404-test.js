@@ -1,12 +1,10 @@
 import { currentURL, fillIn, triggerEvent, visit } from '@ember/test-helpers';
-import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
-import setupMirage from '../helpers/setup-mirage';
+import { setupApplicationTest } from 'cargo/tests/helpers';
 
 module('Acceptance | 404', function (hooks) {
   setupApplicationTest(hooks);
-  setupMirage(hooks);
 
   test('/unknown-route shows a 404 page', async function (assert) {
     await visit('/unknown-route');

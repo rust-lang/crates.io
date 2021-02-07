@@ -1,16 +1,14 @@
 import { visit } from '@ember/test-helpers';
-import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
 import window from 'ember-window-mock';
 import { setupWindowMock } from 'ember-window-mock/test-support';
 
-import setupMirage from '../helpers/setup-mirage';
+import { setupApplicationTest } from 'cargo/tests/helpers';
 
 module('Route | github-authorized', function (hooks) {
   setupApplicationTest(hooks);
   setupWindowMock(hooks);
-  setupMirage(hooks);
 
   test('forwards code and state to window.opener.postMessage()', async function (assert) {
     let message = null;

@@ -1,17 +1,16 @@
 import { click, currentURL, waitFor } from '@ember/test-helpers';
-import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
 import window from 'ember-window-mock';
 import { setupWindowMock } from 'ember-window-mock/test-support';
 
-import setupMirage from '../helpers/setup-mirage';
+import { setupApplicationTest } from 'cargo/tests/helpers';
+
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Bug #2329', function (hooks) {
   setupApplicationTest(hooks);
   setupWindowMock(hooks);
-  setupMirage(hooks);
 
   test('is fixed', async function (assert) {
     let user = this.server.create('user');

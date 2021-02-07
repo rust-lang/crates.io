@@ -1,13 +1,12 @@
 import { currentURL } from '@ember/test-helpers';
-import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
-import setupMirage from '../helpers/setup-mirage';
+import { setupApplicationTest } from 'cargo/tests/helpers';
+
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Acceptance | Email Confirmation', function (hooks) {
   setupApplicationTest(hooks);
-  setupMirage(hooks);
 
   test('unauthenticated happy path', async function (assert) {
     let user = this.server.create('user', { emailVerificationToken: 'badc0ffee' });

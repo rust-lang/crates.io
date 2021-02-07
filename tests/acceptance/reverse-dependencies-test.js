@@ -1,13 +1,12 @@
 import { click, currentURL } from '@ember/test-helpers';
-import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
-import setupMirage from '../helpers/setup-mirage';
+import { setupApplicationTest } from 'cargo/tests/helpers';
+
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Acceptance | /crates/:crate_id/reverse_dependencies', function (hooks) {
   setupApplicationTest(hooks);
-  setupMirage(hooks);
 
   function prepare({ server }) {
     let foo = server.create('crate', { name: 'foo' });

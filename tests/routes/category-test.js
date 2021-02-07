@@ -1,13 +1,12 @@
 import { currentURL } from '@ember/test-helpers';
-import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
-import setupMirage from '../helpers/setup-mirage';
+import { setupApplicationTest } from 'cargo/tests/helpers';
+
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Route | category', function (hooks) {
   setupApplicationTest(hooks);
-  setupMirage(hooks);
 
   test("shows an error message if the category can't be found", async function (assert) {
     await visit('/categories/unknown');

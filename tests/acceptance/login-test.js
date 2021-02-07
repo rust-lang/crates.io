@@ -1,5 +1,4 @@
 import { click, currentURL, visit, waitFor } from '@ember/test-helpers';
-import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
 import { defer } from 'rsvp';
@@ -7,12 +6,11 @@ import { defer } from 'rsvp';
 import window from 'ember-window-mock';
 import { setupWindowMock } from 'ember-window-mock/test-support';
 
-import setupMirage from '../helpers/setup-mirage';
+import { setupApplicationTest } from 'cargo/tests/helpers';
 
 module('Acceptance | Login', function (hooks) {
   setupApplicationTest(hooks);
   setupWindowMock(hooks);
-  setupMirage(hooks);
 
   test('successful login', async function (assert) {
     let deferred = defer();

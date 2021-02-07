@@ -1,12 +1,10 @@
 import { click, currentURL, visit } from '@ember/test-helpers';
-import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
-import setupMirage from '../helpers/setup-mirage';
+import { setupApplicationTest } from 'cargo/tests/helpers';
 
 module('Acceptance | Logout', function (hooks) {
   setupApplicationTest(hooks);
-  setupMirage(hooks);
 
   test('successful logout', async function (assert) {
     let user = this.server.create('user', { name: 'John Doe' });

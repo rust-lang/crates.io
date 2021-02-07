@@ -1,16 +1,15 @@
 import { visit } from '@ember/test-helpers';
-import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
 import percySnapshot from '@percy/ember';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 
+import { setupApplicationTest } from 'cargo/tests/helpers';
+
 import axeConfig from '../axe-config';
-import setupMirage from '../helpers/setup-mirage';
 
 module('Acceptance | user page', function (hooks) {
   setupApplicationTest(hooks);
-  setupMirage(hooks);
 
   test('has user display', async function (assert) {
     this.server.loadFixtures();

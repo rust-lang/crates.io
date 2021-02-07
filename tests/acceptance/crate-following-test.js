@@ -1,14 +1,12 @@
 import { click, settled, visit, waitFor } from '@ember/test-helpers';
-import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
 import { defer } from 'rsvp';
 
-import setupMirage from '../helpers/setup-mirage';
+import { setupApplicationTest } from 'cargo/tests/helpers';
 
 module('Acceptance | Crate following', function (hooks) {
   setupApplicationTest(hooks);
-  setupMirage(hooks);
 
   function prepare(context, { loggedIn = true, following = false } = {}) {
     let server = context.server;

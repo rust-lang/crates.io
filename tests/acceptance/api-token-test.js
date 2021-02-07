@@ -1,16 +1,15 @@
 import { click, currentURL, fillIn, findAll } from '@ember/test-helpers';
-import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
 import percySnapshot from '@percy/ember';
 import { Response } from 'ember-cli-mirage';
 
-import setupMirage from '../helpers/setup-mirage';
+import { setupApplicationTest } from 'cargo/tests/helpers';
+
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Acceptance | api-tokens', function (hooks) {
   setupApplicationTest(hooks);
-  setupMirage(hooks);
 
   function prepare(context) {
     let user = context.server.create('user', {

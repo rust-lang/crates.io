@@ -1,12 +1,10 @@
 import { currentURL, visit } from '@ember/test-helpers';
-import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
-import setupMirage from '../../../helpers/setup-mirage';
+import { setupApplicationTest } from 'cargo/tests/helpers';
 
 module('Route | crate.version | model() hook', function (hooks) {
   setupApplicationTest(hooks);
-  setupMirage(hooks);
 
   module('with explicit version number in the URL', function () {
     test('shows yanked versions', async function (assert) {

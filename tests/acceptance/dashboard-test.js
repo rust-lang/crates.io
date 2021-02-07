@@ -1,15 +1,14 @@
 import { currentURL } from '@ember/test-helpers';
-import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
 import percySnapshot from '@percy/ember';
 
-import setupMirage from '../helpers/setup-mirage';
+import { setupApplicationTest } from 'cargo/tests/helpers';
+
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Acceptance | Dashboard', function (hooks) {
   setupApplicationTest(hooks);
-  setupMirage(hooks);
 
   test('redirects to / when not logged in', async function (assert) {
     await visit('/dashboard');
