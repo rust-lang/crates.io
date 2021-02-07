@@ -13,6 +13,8 @@
 }
 
 .num-link {
+    font-variant-numeric: tabular-nums;
+
     &::after {
         content: '';
         position: absolute;
