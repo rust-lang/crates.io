@@ -32,6 +32,7 @@
     composes: small from '../../styles/shared/typography.module.css';
     display: inline-block;
     margin-left: 20px;
+    position: relative;
 }
 
 .yanked {
