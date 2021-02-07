@@ -1,39 +1,6 @@
 {{page-title this.crate.name}}
 
-<PageHeader local-class="header" data-test-heading>
-  <div local-class="header-row">
-    <div local-class="heading">
-      {{svg-jar "crate" local-class='crate-icon'}}
-      <h1 data-test-crate-name>{{ this.crate.name }}</h1>
-      <h2 data-test-crate-version>{{ this.currentVersion.num }}</h2>
-      {{#if this.isOwner }}
-        {{!-- <YankButton @version={{this.currentVersion}} @tan={{true}} /> --}}
-      {{/if}}
-    </div>
-
-    {{#if this.session.currentUser}}
-      <FollowButton @crate={{this.crate}}/>
-    {{/if}}
-  </div>
-
-  <ul local-class="quick-links">
-    {{#if this.crate.homepage}}
-      <li><a href="{{this.crate.homepage}}">Homepage</a></li>
-    {{/if}}
-    {{#if this.crate.wiki}}
-      <li><a href="{{this.crate.wiki}}">Wiki</a></li>
-    {{/if}}
-    {{#if this.crate.mailing_list}}
-      <li><a href="{{this.crate.mailing_list}}">Mailing list</a></li>
-    {{/if}}
-    {{#if this.currentVersion.documentationLink}}
-      <li><a href="{{this.currentVersion.documentationLink}}" data-test-docs-link>Documentation</a></li>
-    {{/if}}
-    {{#if this.crate.repository}}
-      <li><a href="{{this.crate.repository}}">Repository</a></li>
-    {{/if}}
-  </ul>
-</PageHeader>
+<CrateHeader @crate={{this.crate}} @version={{this.currentVersion}} />
 
 <div local-class='crate-info'>
   <div local-class="docs">

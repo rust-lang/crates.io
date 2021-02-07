@@ -1,0 +1,31 @@
+<PageHeader local-class="header" data-test-heading>
+  <div local-class="header-row">
+    <div local-class="heading">
+      {{svg-jar "crate" local-class="crate-icon"}}
+      <h1 data-test-crate-name>{{@crate.name}}</h1>
+      <h2 data-test-crate-version>{{@version.num}}</h2>
+    </div>
+
+    {{#if this.session.currentUser}}
+      <FollowButton @crate={{@crate}}/>
+    {{/if}}
+  </div>
+
+  <ul local-class="quick-links">
+    {{#if @crate.homepage}}
+      <li><a href="{{@crate.homepage}}">Homepage</a></li>
+    {{/if}}
+    {{#if @crate.wiki}}
+      <li><a href="{{@crate.wiki}}">Wiki</a></li>
+    {{/if}}
+    {{#if @crate.mailing_list}}
+      <li><a href="{{@crate.mailing_list}}">Mailing list</a></li>
+    {{/if}}
+    {{#if @version.documentationLink}}
+      <li><a href="{{@version.documentationLink}}" data-test-docs-link>Documentation</a></li>
+    {{/if}}
+    {{#if @crate.repository}}
+      <li><a href="{{@crate.repository}}">Repository</a></li>
+    {{/if}}
+  </ul>
+</PageHeader>
