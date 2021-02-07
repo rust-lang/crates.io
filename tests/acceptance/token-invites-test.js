@@ -6,12 +6,10 @@ import Response from 'ember-cli-mirage/response';
 
 import { setupApplicationTest } from 'cargo/tests/helpers';
 
-import setupMirage from '../helpers/setup-mirage';
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Acceptance | /accept-invite/:token', function (hooks) {
   setupApplicationTest(hooks);
-  setupMirage(hooks);
 
   test('visiting to /accept-invite shows 404 page', async function (assert) {
     await visit('/accept-invite');

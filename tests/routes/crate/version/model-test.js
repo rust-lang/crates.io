@@ -3,11 +3,8 @@ import { module, test } from 'qunit';
 
 import { setupApplicationTest } from 'cargo/tests/helpers';
 
-import setupMirage from '../../../helpers/setup-mirage';
-
 module('Route | crate.version | model() hook', function (hooks) {
   setupApplicationTest(hooks);
-  setupMirage(hooks);
 
   module('with explicit version number in the URL', function () {
     test('shows yanked versions', async function (assert) {

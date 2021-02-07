@@ -3,11 +3,8 @@ import { module, test } from 'qunit';
 
 import { setupApplicationTest } from 'cargo/tests/helpers';
 
-import setupMirage from '../helpers/setup-mirage';
-
 module('Acceptance | 404', function (hooks) {
   setupApplicationTest(hooks);
-  setupMirage(hooks);
 
   test('/unknown-route shows a 404 page', async function (assert) {
     await visit('/unknown-route');

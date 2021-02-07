@@ -6,13 +6,11 @@ import { setupWindowMock } from 'ember-window-mock/test-support';
 
 import { setupApplicationTest } from 'cargo/tests/helpers';
 
-import setupMirage from '../helpers/setup-mirage';
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Bug #2329', function (hooks) {
   setupApplicationTest(hooks);
   setupWindowMock(hooks);
-  setupMirage(hooks);
 
   test('is fixed', async function (assert) {
     let user = this.server.create('user');

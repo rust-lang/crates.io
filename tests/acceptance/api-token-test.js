@@ -6,12 +6,10 @@ import { Response } from 'ember-cli-mirage';
 
 import { setupApplicationTest } from 'cargo/tests/helpers';
 
-import setupMirage from '../helpers/setup-mirage';
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Acceptance | api-tokens', function (hooks) {
   setupApplicationTest(hooks);
-  setupMirage(hooks);
 
   function prepare(context) {
     let user = context.server.create('user', {

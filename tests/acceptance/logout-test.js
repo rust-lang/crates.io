@@ -3,11 +3,8 @@ import { module, test } from 'qunit';
 
 import { setupApplicationTest } from 'cargo/tests/helpers';
 
-import setupMirage from '../helpers/setup-mirage';
-
 module('Acceptance | Logout', function (hooks) {
   setupApplicationTest(hooks);
-  setupMirage(hooks);
 
   test('successful logout', async function (assert) {
     let user = this.server.create('user', { name: 'John Doe' });

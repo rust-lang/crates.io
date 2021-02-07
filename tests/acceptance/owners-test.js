@@ -7,11 +7,9 @@ import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import { setupApplicationTest } from 'cargo/tests/helpers';
 
 import axeConfig from '../axe-config';
-import setupMirage from '../helpers/setup-mirage';
 
 module('Acceptance | /crates/:name/owners', function (hooks) {
   setupApplicationTest(hooks);
-  setupMirage(hooks);
 
   test('listing crate owners', async function (assert) {
     this.server.loadFixtures();

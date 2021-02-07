@@ -3,12 +3,10 @@ import { module, test } from 'qunit';
 
 import { setupApplicationTest } from 'cargo/tests/helpers';
 
-import setupMirage from '../helpers/setup-mirage';
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Acceptance | Email Change', function (hooks) {
   setupApplicationTest(hooks);
-  setupMirage(hooks);
 
   test('happy path', async function (assert) {
     let user = this.server.create('user', { email: 'old@email.com' });

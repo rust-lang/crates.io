@@ -7,11 +7,9 @@ import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import { setupApplicationTest } from 'cargo/tests/helpers';
 
 import axeConfig from '../axe-config';
-import setupMirage from '../helpers/setup-mirage';
 
 module('Acceptance | team page', function (hooks) {
   setupApplicationTest(hooks);
-  setupMirage(hooks);
 
   test('has team organization display', async function (assert) {
     this.server.loadFixtures();

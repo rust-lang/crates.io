@@ -6,12 +6,9 @@ import { setupWindowMock } from 'ember-window-mock/test-support';
 
 import { setupApplicationTest } from 'cargo/tests/helpers';
 
-import setupMirage from '../helpers/setup-mirage';
-
 module('Route | github-authorized', function (hooks) {
   setupApplicationTest(hooks);
   setupWindowMock(hooks);
-  setupMirage(hooks);
 
   test('forwards code and state to window.opener.postMessage()', async function (assert) {
     let message = null;

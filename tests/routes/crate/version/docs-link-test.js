@@ -3,11 +3,8 @@ import { module, test } from 'qunit';
 
 import { setupApplicationTest } from 'cargo/tests/helpers';
 
-import setupMirage from '../../../helpers/setup-mirage';
-
 module('Route | crate.version | docs link', function (hooks) {
   setupApplicationTest(hooks);
-  setupMirage(hooks);
 
   test('shows regular documentation link', async function (assert) {
     this.server.create('crate', { name: 'foo', documentation: 'https://foo.io/docs' });

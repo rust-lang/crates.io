@@ -8,11 +8,9 @@ import { getPageTitle } from 'ember-page-title/test-support';
 import { setupApplicationTest } from 'cargo/tests/helpers';
 
 import axeConfig from '../axe-config';
-import setupMirage from '../helpers/setup-mirage';
 
 module('Acceptance | crate page', function (hooks) {
   setupApplicationTest(hooks);
-  setupMirage(hooks);
 
   test('visiting a crate page from the front page', async function (assert) {
     this.server.create('crate', { name: 'nanomsg', newest_version: '0.6.1' });

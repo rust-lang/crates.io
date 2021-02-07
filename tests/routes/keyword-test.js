@@ -3,12 +3,10 @@ import { module, test } from 'qunit';
 
 import { setupApplicationTest } from 'cargo/tests/helpers';
 
-import setupMirage from '../helpers/setup-mirage';
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Route | keyword', function (hooks) {
   setupApplicationTest(hooks);
-  setupMirage(hooks);
 
   test("shows an error message if the keyword can't be found", async function (assert) {
     await visit('/keywords/unknown');

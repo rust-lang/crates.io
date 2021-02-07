@@ -5,11 +5,8 @@ import { defer } from 'rsvp';
 
 import { setupApplicationTest } from 'cargo/tests/helpers';
 
-import setupMirage from '../helpers/setup-mirage';
-
 module('Acceptance | Crate following', function (hooks) {
   setupApplicationTest(hooks);
-  setupMirage(hooks);
 
   function prepare(context, { loggedIn = true, following = false } = {}) {
     let server = context.server;

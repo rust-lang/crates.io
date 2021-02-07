@@ -12,11 +12,9 @@ import { setupApplicationTest } from 'cargo/tests/helpers';
 
 import { list as listCrates } from '../../mirage/route-handlers/crates';
 import axeConfig from '../axe-config';
-import setupMirage from '../helpers/setup-mirage';
 
 module('Acceptance | search', function (hooks) {
   setupApplicationTest(hooks);
-  setupMirage(hooks);
 
   test('searching for "rust"', async function (assert) {
     this.server.loadFixtures();

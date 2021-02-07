@@ -5,12 +5,10 @@ import percySnapshot from '@percy/ember';
 
 import { setupApplicationTest } from 'cargo/tests/helpers';
 
-import setupMirage from '../helpers/setup-mirage';
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Acceptance | Dashboard', function (hooks) {
   setupApplicationTest(hooks);
-  setupMirage(hooks);
 
   test('redirects to / when not logged in', async function (assert) {
     await visit('/dashboard');

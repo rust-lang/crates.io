@@ -8,11 +8,9 @@ import { getPageTitle } from 'ember-page-title/test-support';
 import { setupApplicationTest } from 'cargo/tests/helpers';
 
 import axeConfig from '../axe-config';
-import setupMirage from '../helpers/setup-mirage';
 
 module('Acceptance | crates page', function (hooks) {
   setupApplicationTest(hooks);
-  setupMirage(hooks);
 
   // should match the default set in the crates controller
   const per_page = 50;

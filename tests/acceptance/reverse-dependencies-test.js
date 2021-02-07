@@ -3,12 +3,10 @@ import { module, test } from 'qunit';
 
 import { setupApplicationTest } from 'cargo/tests/helpers';
 
-import setupMirage from '../helpers/setup-mirage';
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Acceptance | /crates/:crate_id/reverse_dependencies', function (hooks) {
   setupApplicationTest(hooks);
-  setupMirage(hooks);
 
   function prepare({ server }) {
     let foo = server.create('crate', { name: 'foo' });

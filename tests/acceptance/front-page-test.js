@@ -11,11 +11,9 @@ import { setupApplicationTest } from 'cargo/tests/helpers';
 
 import { summary } from '../../mirage/route-handlers/summary';
 import axeConfig from '../axe-config';
-import setupMirage from '../helpers/setup-mirage';
 
 module('Acceptance | front page', function (hooks) {
   setupApplicationTest(hooks);
-  setupMirage(hooks);
 
   test('visiting /', async function (assert) {
     this.owner.lookup('service:intl').locale = 'en';

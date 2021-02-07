@@ -8,12 +8,9 @@ import { setupWindowMock } from 'ember-window-mock/test-support';
 
 import { setupApplicationTest } from 'cargo/tests/helpers';
 
-import setupMirage from '../helpers/setup-mirage';
-
 module('Acceptance | Login', function (hooks) {
   setupApplicationTest(hooks);
   setupWindowMock(hooks);
-  setupMirage(hooks);
 
   test('successful login', async function (assert) {
     let deferred = defer();
