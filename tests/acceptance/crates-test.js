@@ -1,10 +1,11 @@
 import { click, currentURL, visit } from '@ember/test-helpers';
-import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
 import percySnapshot from '@percy/ember';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import { getPageTitle } from 'ember-page-title/test-support';
+
+import { setupApplicationTest } from 'cargo/tests/helpers';
 
 import axeConfig from '../axe-config';
 import setupMirage from '../helpers/setup-mirage';

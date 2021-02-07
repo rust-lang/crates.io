@@ -1,11 +1,12 @@
 import { click, currentURL, visit, waitFor } from '@ember/test-helpers';
-import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
 import { defer } from 'rsvp';
 
 import window from 'ember-window-mock';
 import { setupWindowMock } from 'ember-window-mock/test-support';
+
+import { setupApplicationTest } from 'cargo/tests/helpers';
 
 import setupMirage from '../helpers/setup-mirage';
 

@@ -1,5 +1,4 @@
 import { blur, click, currentURL, fillIn, settled, triggerEvent, visit, waitFor } from '@ember/test-helpers';
-import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
 import { defer } from 'rsvp';
@@ -8,6 +7,8 @@ import percySnapshot from '@percy/ember';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import { keyDown } from 'ember-keyboard/test-support/test-helpers';
 import { getPageTitle } from 'ember-page-title/test-support';
+
+import { setupApplicationTest } from 'cargo/tests/helpers';
 
 import { list as listCrates } from '../../mirage/route-handlers/crates';
 import axeConfig from '../axe-config';

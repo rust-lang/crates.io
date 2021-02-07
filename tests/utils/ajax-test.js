@@ -1,6 +1,6 @@
-import { setupTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
+import { setupTest } from 'cargo/tests/helpers';
 import ajax, { AjaxError, HttpError } from 'cargo/utils/ajax';
 
 import setupMirage from '../helpers/setup-mirage';

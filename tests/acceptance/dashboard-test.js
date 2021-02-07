@@ -1,8 +1,9 @@
 import { currentURL } from '@ember/test-helpers';
-import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
 import percySnapshot from '@percy/ember';
+
+import { setupApplicationTest } from 'cargo/tests/helpers';
 
 import setupMirage from '../helpers/setup-mirage';
 import { visit } from '../helpers/visit-ignoring-abort';

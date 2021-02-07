@@ -1,6 +1,7 @@
 import { currentURL, fillIn, triggerEvent, visit } from '@ember/test-helpers';
-import { setupApplicationTest } from 'ember-qunit';
 import { module, test } from 'qunit';
+
+import { setupApplicationTest } from 'cargo/tests/helpers';
 
 import setupMirage from '../helpers/setup-mirage';
 

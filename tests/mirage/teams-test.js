@@ -1,7 +1,8 @@
-import { setupTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
 import fetch from 'fetch';
+
+import { setupTest } from 'cargo/tests/helpers';
 
 import setupMirage from '../helpers/setup-mirage';
 

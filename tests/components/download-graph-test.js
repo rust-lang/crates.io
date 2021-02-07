@@ -1,5 +1,4 @@
 import { click, render, settled, waitFor } from '@ember/test-helpers';
-import { setupRenderingTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
 import Service from '@ember/service';
@@ -9,6 +8,8 @@ import { hbs } from 'ember-cli-htmlbars';
 import { task } from 'ember-concurrency';
 import window from 'ember-window-mock';
 import { setupWindowMock } from 'ember-window-mock/test-support';
+
+import { setupRenderingTest } from 'cargo/tests/helpers';
 
 module('Component | DownloadGraph', function (hooks) {
   setupRenderingTest(hooks);
