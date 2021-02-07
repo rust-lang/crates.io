@@ -1,0 +1,18 @@
+<div local-class="row" ...attributes>
+  <div>
+    <LinkTo @route="crate.version" @model={{@version.num}}>{{@version.num}}</LinkTo>
+
+    <span local-class="date">{{date-format @version.created_at 'PPP'}}</span>
+    {{#if @version.yanked}}
+      <span local-class='yanked'>yanked</span>
+    {{/if}}
+  </div>
+
+  {{#if this.isOwner}}
+    <YankButton @version={{@version}} />
+  {{else}}
+    <LinkTo @route="crate.version" @model={{@version.num}} local-class="arrow">
+      {{svg-jar "right-arrow"}}
+    </LinkTo>
+  {{/if}}
+</div>

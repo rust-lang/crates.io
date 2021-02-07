@@ -1,0 +1,25 @@
+.row {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    padding: 20px 0;
+}
+
+.date {
+    composes: small from '../../styles/shared/typography.module.css';
+    display: inline-block;
+    margin-left: 20px;
+}
+
+.yanked {
+    composes: yanked from '../../styles/shared/typography.module.css';
+}
+
+.arrow {
+    display: inline-block;
+    float: right;
+
+    svg {
+        background: #EEECDD;
+    }
+}
