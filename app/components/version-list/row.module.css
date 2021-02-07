@@ -1,7 +1,6 @@
 .row {
     display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
+    align-items: center;
     position: relative;
     padding: 20px;
     transition: background-color 300ms;
@@ -9,6 +8,10 @@
     &:hover {
         background-color: var(--grey200);
         transition: background-color 0ms;
+    }
+
+    & >:first-child {
+        flex-grow: 1;
     }
 }
 
@@ -37,4 +40,5 @@
 
 .yank-button {
     position: relative;
+    margin-left: 10px;
 }

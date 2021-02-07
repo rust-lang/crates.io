@@ -8,11 +8,12 @@
       {{@version.num}}
     </LinkTo>
 
-    <span local-class="date">{{date-format @version.created_at 'PPP'}}</span>
     {{#if @version.yanked}}
       <span local-class='yanked'>yanked</span>
     {{/if}}
   </div>
+
+  <span local-class="date">{{date-format @version.created_at 'PPP'}}</span>
 
   {{#if this.isOwner}}
     <YankButton @version={{@version}} local-class="yank-button" />
