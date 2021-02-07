@@ -10,12 +10,13 @@
     margin-top: 10px;
     padding: 0 20px;
     background-color: white;
-}
+    list-style: none;
 
-.row {
-    border-bottom: 2px solid #d5d3cb;
+    > li {
+        border-bottom: 2px solid #d5d3cb;
 
-    &:last-of-type {
-        border: none;
+        &:last-of-type {
+            border: none;
+        }
     }
 }

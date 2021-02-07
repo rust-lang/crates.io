@@ -8,8 +8,10 @@
   {{date-format this.model.created_at 'PPP'}}
 </span>
 
-<div local-class="list">
+<ul local-class="list">
   {{#each this.model.versions as |version|}}
-    <VersionList::Row @version={{version}} local-class="row" />
+    <li>
+      <VersionList::Row @version={{version}} local-class="row" />
+    </li>
   {{/each}}
-</div>
+</ul>
