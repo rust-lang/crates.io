@@ -7,7 +7,7 @@
   "
   ...attributes
 >
-  <div title={{if @version.yanked "This version was yanked"}} local-class="release-track">
+  <div title={{this.releaseTrackTitle}} local-class="release-track">
     {{#if @version.yanked}}
       {{svg-jar "trash"}}
     {{else}}
