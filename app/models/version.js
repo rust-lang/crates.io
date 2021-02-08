@@ -35,6 +35,11 @@ export default class Version extends Model {
     return semverParse(this.num);
   }
 
+  get releaseTrack() {
+    let { semver } = this;
+    return `${semver.major}.${semver.major === 0 ? semver.minor : 'x'}`;
+  }
+
   get featureList() {
     let { features } = this;
     if (typeof features !== 'object' || features === null) {
