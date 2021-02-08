@@ -1,4 +1,7 @@
 .row {
+    --bg-color: var(--grey200);
+    --fg-color: var(--grey700);
+
     display: flex;
     align-items: center;
     position: relative;
@@ -13,6 +16,21 @@
     & >:nth-child(2) {
         flex-grow: 1;
     }
+
+    &.latest {
+        --bg-color: hsl(109, 75%, 87%);
+        --fg-color: hsl(136, 67%, 38%);
+    }
+
+    &.prerelease {
+        --bg-color: hsl(39, 100%, 91%);
+        --fg-color: hsl(39, 71%, 45%);
+    }
+
+    &.yanked {
+        --bg-color: hsl(0, 92%, 90%);
+        --fg-color: hsl(0, 84%, 32%);
+    }
 }
 
 .release-track {
@@ -22,29 +40,14 @@
     height: 3em;
     margin-right: 20px;
     font-weight: bold;
-    color: var(--grey700);
-    background-color: var(--grey200);
+    color: var(--fg-color);
+    background-color: var(--bg-color);
     border: 2px solid white;
     border-radius: 50%;
 
     > svg {
         height: 1em;
         width: auto;
-    }
-
-    .latest & {
-        background: hsl(109, 75%, 87%);
-        color: hsl(136, 67%, 38%);
-    }
-
-    .prerelease & {
-        background: hsl(39, 100%, 91%);
-        color: hsl(39, 71%, 45%);
-    }
-
-    .yanked & {
-        background: hsl(0, 92%, 90%);
-        color: hsl(0, 84%, 32%);
     }
 }
 
