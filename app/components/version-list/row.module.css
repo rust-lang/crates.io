@@ -39,7 +39,7 @@
     width: 3em;
     height: 3em;
     margin-right: 20px;
-    font-weight: bold;
+    font-weight: 500;
     color: var(--fg-color);
     background-color: var(--bg-color);
     border: 2px solid white;
@@ -53,6 +53,7 @@
 
 .num-link {
     color: var(--fg-color);
+    font-weight: 500;
     font-variant-numeric: tabular-nums;
 
     &:hover {
