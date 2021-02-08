@@ -10,9 +10,22 @@
         transition: background-color 0ms;
     }
 
-    & >:first-child {
+    & >:nth-child(2) {
         flex-grow: 1;
     }
+}
+
+.release-track {
+    display: grid;
+    place-items: center;
+    width: 3em;
+    height: 3em;
+    margin-right: 20px;
+    font-weight: bold;
+    color: var(--grey700);
+    background-color: var(--grey200);
+    border: 2px solid white;
+    border-radius: 50%;
 }
 
 .num-link {

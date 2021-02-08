@@ -1,4 +1,8 @@
 <div local-class="row" ...attributes>
+  <div local-class="release-track">
+    {{@version.releaseTrack}}
+  </div>
+
   <div>
     <LinkTo
       @route="crate.version"
