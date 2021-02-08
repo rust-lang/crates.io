@@ -3,6 +3,7 @@ import { computed } from '@ember/object';
 import { alias } from '@ember/object/computed';
 
 import { task } from 'ember-concurrency';
+import semverParse from 'semver/functions/parse';
 
 import ajax from '../utils/ajax';
 
@@ -29,6 +30,10 @@ export default class Version extends Model {
     return this.belongsTo('crate').id();
   })
   crateName;
+
+  get semver() {
+    return semverParse(this.num);
+  }
 
   get featureList() {
     let { features } = this;

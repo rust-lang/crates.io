@@ -11,6 +11,37 @@ module('Model | Version', function (hooks) {
     this.store = this.owner.lookup('service:store');
   });
 
+  module('semver', function () {
+    async function prepare(context, { num }) {
+      let { server, store } = context;
+
+      let crate = server.create('crate');
+      server.create('version', { crate, num });
+
+      let crateRecord = await store.findRecord('crate', crate.id);
+      let versions = (await crateRecord.versions).toArray();
+      return versions[0];
+    }
+
+    test('parses 1.2.3 correctly', async function (assert) {
+      let { semver } = await prepare(this, { num: '1.2.3' });
+      assert.strictEqual(semver.major, 1);
+      assert.strictEqual(semver.minor, 2);
+      assert.strictEqual(semver.patch, 3);
+      assert.deepEqual(semver.prerelease, []);
+      assert.deepEqual(semver.build, []);
+    });
+
+    test('parses 0.0.0-alpha.1+1234 correctly', async function (assert) {
+      let { semver } = await prepare(this, { num: '0.0.0-alpha.1+1234' });
+      assert.strictEqual(semver.major, 0);
+      assert.strictEqual(semver.minor, 0);
+      assert.strictEqual(semver.patch, 0);
+      assert.deepEqual(semver.prerelease, ['alpha', 1]);
+      assert.deepEqual(semver.build, ['1234']);
+    });
+  });
+
   module('featuresList', function () {
     async function prepare(context, { features }) {
       let { server, store } = context;
