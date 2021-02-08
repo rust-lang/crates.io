@@ -14,10 +14,6 @@
         transition: background-color 0ms;
     }
 
-    & >:nth-child(2) {
-        flex-grow: 1;
-    }
-
     &.latest {
         --bg-color: hsl(109, 75%, 87%);
         --fg-color: hsl(136, 67%, 38%);
@@ -73,15 +69,16 @@
     }
 }
 
-.date, .publisher {
-    margin-left: 20px;
-    position: relative;
+.metadata {
+    flex-grow: 1;
+    margin-left: 30px;
     color: var(--grey600);
     text-transform: uppercase;
     letter-spacing: .7px;
     font-size: 13px;
 
     a {
+        position: relative;
         color: var(--grey600);
 
         &:hover {
@@ -96,6 +93,20 @@
     margin-left: 3px;
     margin-bottom: -.4em;
     border-radius: 3px;
+}
+
+.metadata-row {
+    &:not(:first-of-type) {
+        margin-top: 10px;
+    }
+
+    > *:not(:first-of-type) {
+        margin-left: 20px;
+    }
+}
+
+.bytes {
+    font-variant-numeric: tabular-nums;
 }
 
 .yank-button {

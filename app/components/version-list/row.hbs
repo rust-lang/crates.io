@@ -15,30 +15,47 @@
     {{/if}}
   </div>
 
-  <div>
-    <LinkTo
-      @route="crate.version"
-      @model={{@version.num}}
-      local-class="num-link"
-    >
-      {{@version.num}}
-    </LinkTo>
+  <LinkTo
+    @route="crate.version"
+    @model={{@version.num}}
+    local-class="num-link"
+  >
+    {{@version.num}}
+  </LinkTo>
 
-    {{#if @version.published_by}}
-      <span local-class="publisher">
-        by
-        <LinkTo @route="user" @model={{@version.published_by.login}}>
-          <UserAvatar @user={{@version.published_by}} local-class="avatar" />
-          {{@version.published_by.name}}
-        </LinkTo>
+  <div local-class="metadata">
+    <div local-class="metadata-row">
+      {{#if @version.published_by}}
+        <span local-class="publisher">
+          by
+          <LinkTo @route="user" @model={{@version.published_by.login}}>
+            <UserAvatar @user={{@version.published_by}} local-class="avatar" />
+            {{@version.published_by.name}}
+          </LinkTo>
+        </span>
+      {{/if}}
+
+      <span title={{date-format @version.created_at 'PPP'}} local-class="date">
+        {{date-format-distance-to-now @version.created_at addSuffix=true}}
       </span>
-    {{/if}}
+    </div>
 
-    <span title={{date-format @version.created_at 'PPP'}} local-class="date">
-      {{date-format-distance-to-now @version.created_at addSuffix=true}}
-    </span>
+    <div local-class="metadata-row">
+      {{#if @version.crate_size}}
+        <span local-class="bytes">
+          {{pretty-bytes @version.crate_size}}
+        </span>
+      {{/if}}
+
+      <span local-class="license">{{@version.license}}</span>
+
+      {{#if @version.featureList}}
+        <span local-class="num-features">
+          {{@version.featureList.length}} Features
+        </span>
+      {{/if}}
+    </div>
   </div>
-
 
   {{#if this.isOwner}}
     <YankButton @version={{@version}} local-class="yank-button" />
