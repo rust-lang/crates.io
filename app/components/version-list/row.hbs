@@ -36,6 +36,7 @@
       {{/if}}
 
       <span title={{date-format @version.created_at 'PPP'}} local-class="date">
+        {{svg-jar "calendar"}}
         {{date-format-distance-to-now @version.created_at addSuffix=true}}
       </span>
     </div>
@@ -43,14 +44,19 @@
     <div local-class="metadata-row">
       {{#if @version.crate_size}}
         <span local-class="bytes">
+          {{svg-jar "weight"}}
           {{pretty-bytes @version.crate_size}}
         </span>
       {{/if}}
 
-      <span local-class="license">{{@version.license}}</span>
+      <span local-class="license">
+        {{svg-jar "license"}}
+        {{@version.license}}
+      </span>
 
       {{#if @version.featureList}}
         <span local-class="num-features">
+          {{svg-jar "checkbox"}}
           {{@version.featureList.length}} Features
         </span>
       {{/if}}

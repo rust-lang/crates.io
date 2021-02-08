@@ -85,6 +85,13 @@
             color: var(--grey900);
         }
     }
+
+    svg {
+        height: 1em;
+        width: auto;
+        margin-right: 2px;
+        margin-bottom: -.1em;
+    }
 }
 
 .avatar {
