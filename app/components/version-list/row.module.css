@@ -52,7 +52,12 @@
 }
 
 .num-link {
+    color: var(--fg-color);
     font-variant-numeric: tabular-nums;
+
+    &:hover {
+        color: var(--fg-color);
+    }
 
     &::after {
         content: '';
