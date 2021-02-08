@@ -7,21 +7,23 @@
   "
   ...attributes
 >
-  <div title={{this.releaseTrackTitle}} local-class="release-track">
-    {{#if @version.yanked}}
-      {{svg-jar "trash"}}
-    {{else}}
-      {{@version.releaseTrack}}
-    {{/if}}
-  </div>
+  <div local-class="version">
+    <div title={{this.releaseTrackTitle}} local-class="release-track">
+      {{#if @version.yanked}}
+        {{svg-jar "trash"}}
+      {{else}}
+        {{@version.releaseTrack}}
+      {{/if}}
+    </div>
 
-  <LinkTo
-    @route="crate.version"
-    @model={{@version.num}}
-    local-class="num-link"
-  >
-    {{@version.num}}
-  </LinkTo>
+    <LinkTo
+      @route="crate.version"
+      @model={{@version.num}}
+      local-class="num-link"
+    >
+      {{@version.num}}
+    </LinkTo>
+  </div>
 
   <div local-class="metadata">
     <div local-class="metadata-row">

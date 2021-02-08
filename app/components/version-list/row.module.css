@@ -36,6 +36,16 @@
     }
 }
 
+.version {
+    display: grid;
+    grid-template-columns: auto auto;
+    place-items: center;
+
+    @media only screen and (max-width: 550px) {
+        grid-template-columns: auto;
+    }
+}
+
 .release-track {
     flex-shrink: 0;
     display: grid;
@@ -54,6 +64,10 @@
     > svg {
         height: 1em;
         width: auto;
+    }
+
+    @media only screen and (max-width: 550px) {
+        margin: 0 10px 10px;
     }
 }
 
@@ -117,6 +131,17 @@
     > *:not(:first-of-type) {
         margin-left: 20px;
     }
+
+    @media only screen and (max-width: 750px) {
+        > * {
+            display: block;
+
+            &:not(:first-of-type) {
+                margin-left: 0;
+                margin-top: 10px;
+            }
+        }
+    }
 }
 
 .bytes {
@@ -126,4 +151,8 @@
 .yank-button {
     position: relative;
     margin-left: 10px;
+
+    @media only screen and (max-width: 550px) {
+        display: none;
+    }
 }
