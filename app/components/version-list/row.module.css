@@ -73,13 +73,29 @@
     }
 }
 
-.date {
+.date, .publisher {
     margin-left: 20px;
     position: relative;
     color: var(--grey600);
     text-transform: uppercase;
     letter-spacing: .7px;
     font-size: 13px;
+
+    a {
+        color: var(--grey600);
+
+        &:hover {
+            color: var(--grey900);
+        }
+    }
+}
+
+.avatar {
+    height: 1.5em;
+    width: auto;
+    margin-left: 3px;
+    margin-bottom: -.4em;
+    border-radius: 3px;
 }
 
 .yank-button {
