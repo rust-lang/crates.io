@@ -26,6 +26,11 @@
     background-color: var(--grey200);
     border: 2px solid white;
     border-radius: 50%;
+
+    .yanked & {
+        background: hsl(0, 92%, 90%);
+        color: hsl(0, 84%, 32%);
+    }
 }
 
 .num-link {

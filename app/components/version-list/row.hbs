@@ -1,5 +1,5 @@
-<div local-class="row" ...attributes>
-  <div local-class="release-track">
+<div local-class="row {{if @version.yanked "yanked"}}" ...attributes>
+  <div title={{if @version.yanked "This version was yanked"}} local-class="release-track">
     {{@version.releaseTrack}}
   </div>
 
