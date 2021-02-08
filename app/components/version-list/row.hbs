@@ -1,6 +1,7 @@
 <div
   local-class="
     row
+    {{if @version.isHighestOfReleaseTrack "latest"}}
     {{if @version.yanked "yanked"}}
     {{if @version.isPrerelease "prerelease"}}
   "

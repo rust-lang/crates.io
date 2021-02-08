@@ -32,6 +32,11 @@
         width: auto;
     }
 
+    .latest & {
+        background: hsl(109, 75%, 87%);
+        color: hsl(136, 67%, 38%);
+    }
+
     .prerelease & {
         background: hsl(39, 100%, 91%);
         color: hsl(39, 71%, 45%);
