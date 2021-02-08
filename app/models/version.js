@@ -13,6 +13,7 @@ export default class Version extends Model {
   @attr('date') created_at;
   @attr('date') updated_at;
   @attr downloads;
+  @attr features;
   @attr yanked;
   @attr license;
   @attr crate_size;
@@ -28,6 +29,19 @@ export default class Version extends Model {
     return this.belongsTo('crate').id();
   })
   crateName;
+
+  get featureList() {
+    let { features } = this;
+    if (typeof features !== 'object' || features === null) {
+      return [];
+    }
+
+    let defaultFeatures = features.default ?? [];
+    return Object.keys(features)
+      .filter(name => name !== 'default')
+      .sort()
+      .map(name => ({ name, isDefault: defaultFeatures.includes(name), dependencies: features[name] }));
+  }
 
   @alias('loadAuthorsTask.last.value') authorNames;
 
