@@ -28,6 +28,12 @@
         --bg-color: hsl(0, 92%, 90%);
         --fg-color: hsl(0, 84%, 32%);
     }
+
+    [title] {
+        position: relative;
+        z-index: 1;
+        cursor: help;
+    }
 }
 
 .release-track {
