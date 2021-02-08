@@ -1,4 +1,11 @@
-<div local-class="row {{if @version.yanked "yanked"}}" ...attributes>
+<div
+  local-class="
+    row
+    {{if @version.yanked "yanked"}}
+    {{if @version.isPrerelease "prerelease"}}
+  "
+  ...attributes
+>
   <div title={{if @version.yanked "This version was yanked"}} local-class="release-track">
     {{#if @version.yanked}}
       {{svg-jar "trash"}}

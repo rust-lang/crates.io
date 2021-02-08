@@ -32,6 +32,11 @@
         width: auto;
     }
 
+    .prerelease & {
+        background: hsl(39, 100%, 91%);
+        color: hsl(39, 71%, 45%);
+    }
+
     .yanked & {
         background: hsl(0, 92%, 90%);
         color: hsl(0, 84%, 32%);
