@@ -5,7 +5,8 @@
     display: flex;
     align-items: center;
     position: relative;
-    padding: 20px;
+    font-size: 18px;
+    padding: 15px 25px;
     transition: background-color 300ms;
 
     &:hover {
