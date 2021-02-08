@@ -36,6 +36,7 @@
     place-items: center;
     width: 3em;
     height: 3em;
+    overflow: hidden;
     margin-right: 20px;
     font-weight: 500;
     font-variant-numeric: tabular-nums;
