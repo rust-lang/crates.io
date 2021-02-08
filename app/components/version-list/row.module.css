@@ -35,6 +35,7 @@
 }
 
 .release-track {
+    flex-shrink: 0;
     display: grid;
     place-items: center;
     width: 3em;
