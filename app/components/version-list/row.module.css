@@ -42,6 +42,7 @@
     height: 3em;
     margin-right: 20px;
     font-weight: 500;
+    font-variant-numeric: tabular-nums;
     color: var(--fg-color);
     background-color: var(--bg-color);
     border: 2px solid white;
