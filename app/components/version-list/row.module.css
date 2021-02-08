@@ -124,11 +124,11 @@
 }
 
 .metadata-row {
-    &:not(:first-of-type) {
+    &:not(:first-child) {
         margin-top: 10px;
     }
 
-    > *:not(:first-of-type) {
+    > *:not(:first-child) {
         margin-left: 20px;
     }
 
@@ -136,7 +136,7 @@
         > * {
             display: block;
 
-            &:not(:first-of-type) {
+            &:not(:first-child) {
                 margin-left: 0;
                 margin-top: 10px;
             }

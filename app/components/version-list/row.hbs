@@ -37,10 +37,10 @@
         </span>
       {{/if}}
 
-      <span title={{date-format @version.created_at 'PPP'}} local-class="date">
+      <time title={{date-format @version.created_at 'PPP'}} datetime={{date-format-iso @version.updated_at}} local-class="date">
         {{svg-jar "calendar"}}
         {{date-format-distance-to-now @version.created_at addSuffix=true}}
-      </span>
+      </time>
     </div>
 
     <div local-class="metadata-row">
