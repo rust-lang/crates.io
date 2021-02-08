@@ -19,6 +19,7 @@ export default class Version extends Model {
 
   @belongsTo('crate', { async: false }) crate;
 
+  @belongsTo('user', { async: false }) published_by;
   @hasMany('users', { async: true }) authors;
   @hasMany('dependency', { async: true }) dependencies;
   @hasMany('version-download', { async: true }) version_downloads;
