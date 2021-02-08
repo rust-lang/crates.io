@@ -27,6 +27,11 @@
     border: 2px solid white;
     border-radius: 50%;
 
+    > svg {
+        height: 1em;
+        width: auto;
+    }
+
     .yanked & {
         background: hsl(0, 92%, 90%);
         color: hsl(0, 84%, 32%);
