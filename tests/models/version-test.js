@@ -24,32 +24,35 @@ module('Model | Version', function (hooks) {
     }
 
     test('parses 1.2.3 correctly', async function (assert) {
-      let { semver, releaseTrack } = await prepare(this, { num: '1.2.3' });
+      let { semver, releaseTrack, isPrerelease } = await prepare(this, { num: '1.2.3' });
       assert.strictEqual(semver.major, 1);
       assert.strictEqual(semver.minor, 2);
       assert.strictEqual(semver.patch, 3);
       assert.deepEqual(semver.prerelease, []);
       assert.deepEqual(semver.build, []);
+      assert.false(isPrerelease);
       assert.strictEqual(releaseTrack, '1.x');
     });
 
     test('parses 0.3.1-rc.1 correctly', async function (assert) {
-      let { semver, releaseTrack } = await prepare(this, { num: '0.3.1-rc.1' });
+      let { semver, releaseTrack, isPrerelease } = await prepare(this, { num: '0.3.1-rc.1' });
       assert.strictEqual(semver.major, 0);
       assert.strictEqual(semver.minor, 3);
       assert.strictEqual(semver.patch, 1);
       assert.deepEqual(semver.prerelease, ['rc', 1]);
       assert.deepEqual(semver.build, []);
+      assert.true(isPrerelease);
       assert.strictEqual(releaseTrack, '0.3');
     });
 
     test('parses 0.0.0-alpha.1+1234 correctly', async function (assert) {
-      let { semver, releaseTrack } = await prepare(this, { num: '0.0.0-alpha.1+1234' });
+      let { semver, releaseTrack, isPrerelease } = await prepare(this, { num: '0.0.0-alpha.1+1234' });
       assert.strictEqual(semver.major, 0);
       assert.strictEqual(semver.minor, 0);
       assert.strictEqual(semver.patch, 0);
       assert.deepEqual(semver.prerelease, ['alpha', 1]);
       assert.deepEqual(semver.build, ['1234']);
+      assert.true(isPrerelease);
       assert.strictEqual(releaseTrack, '0.0');
     });
   });
