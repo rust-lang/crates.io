@@ -10,35 +10,17 @@
     margin-top: 10px;
     padding: 0 20px;
     background-color: white;
+    list-style: none;
+
+    > li {
+        border-bottom: 2px solid #d5d3cb;
+
+        &:last-of-type {
+            border: none;
+        }
+    }
 }
 
 .row {
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    padding: 20px 0;
-    border-bottom: 2px solid #d5d3cb;
-
-    &:last-of-type {
-        border: none;
-    }
-}
-
-.date {
-    composes: small from '../shared/typography.module.css';
-    display: inline-block;
-    margin-left: 20px;
-}
-
-.yanked {
-    composes: yanked from '../shared/typography.module.css';
-}
-
-.arrow {
-    display: inline-block;
-    float: right;
-
-    svg {
-        background: #EEECDD;
-    }
+    margin: 0 -20px;
 }

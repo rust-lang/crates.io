@@ -1,0 +1,45 @@
+.row {
+    display: flex;
+    align-items: center;
+    position: relative;
+    padding: 20px;
+    transition: background-color 300ms;
+
+    &:hover {
+        background-color: var(--grey200);
+        transition: background-color 0ms;
+    }
+
+    & >:first-child {
+        flex-grow: 1;
+    }
+}
+
+.num-link {
+    font-variant-numeric: tabular-nums;
+
+    &::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+    }
+}
+
+.date {
+    composes: small from '../../styles/shared/typography.module.css';
+    display: inline-block;
+    margin-left: 20px;
+    position: relative;
+}
+
+.yanked {
+    composes: yanked from '../../styles/shared/typography.module.css';
+}
+
+.yank-button {
+    position: relative;
+    margin-left: 10px;
+}
