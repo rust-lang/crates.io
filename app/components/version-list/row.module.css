@@ -35,7 +35,7 @@
     position: relative;
 }
 
-.yanked {
+.yanked-label {
     composes: yanked from '../../styles/shared/typography.module.css';
 }
 
