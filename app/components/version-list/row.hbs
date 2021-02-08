@@ -15,10 +15,6 @@
     >
       {{@version.num}}
     </LinkTo>
-
-    {{#if @version.yanked}}
-      <span local-class="yanked-label">yanked</span>
-    {{/if}}
   </div>
 
   <span title={{date-format @version.created_at 'PPP'}} local-class="date">
