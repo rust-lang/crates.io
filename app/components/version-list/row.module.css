@@ -71,10 +71,12 @@
 }
 
 .date {
-    composes: small from '../../styles/shared/typography.module.css';
-    display: inline-block;
     margin-left: 20px;
     position: relative;
+    color: var(--grey600);
+    text-transform: uppercase;
+    letter-spacing: .7px;
+    font-size: 13px;
 }
 
 .yank-button {
