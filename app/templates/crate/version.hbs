@@ -15,9 +15,9 @@
       </p>
     {{else}}
       {{#if this.readme}}
-        <section aria-label="Readme">
+        <article aria-label="Readme">
           <RenderedHtml @html={{this.readme}} local-class="readme" />
-        </section>
+        </article>
       {{else}}
         {{#if this.crate.description}}
           <div local-class='about'>
