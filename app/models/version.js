@@ -37,6 +37,12 @@ export default class Version extends Model {
     return Date.now() - this.created_at.getTime() < EIGHT_DAYS;
   }
 
+  get isFirst() {
+    let { versions } = this.crate;
+    let oldestVersion = versions.sortBy('created_at')[0];
+    return oldestVersion === this;
+  }
+
   get semver() {
     return semverParse(this.num);
   }

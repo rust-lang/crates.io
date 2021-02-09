@@ -11,6 +11,8 @@
     <div title={{this.releaseTrackTitle}} local-class="release-track">
       {{#if @version.yanked}}
         {{svg-jar "trash"}}
+      {{else if @version.isFirst}}
+        {{svg-jar "star"}}
       {{else}}
         {{@version.releaseTrack}}
       {{/if}}

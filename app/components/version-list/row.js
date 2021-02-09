@@ -10,6 +10,9 @@ export default class VersionRow extends Component {
     if (version.yanked) {
       return 'This version was yanked';
     }
+    if (version.isFirst) {
+      return 'This is the first version that was released';
+    }
 
     let { releaseTrack } = version;
 
