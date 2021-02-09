@@ -7,6 +7,8 @@ import semverParse from 'semver/functions/parse';
 
 import ajax from '../utils/ajax';
 
+const EIGHT_DAYS = 8 * 24 * 60 * 60 * 1000;
+
 export default class Version extends Model {
   @attr num;
   @attr dl_path;
@@ -30,6 +32,10 @@ export default class Version extends Model {
     return this.belongsTo('crate').id();
   })
   crateName;
+
+  get isNew() {
+    return Date.now() - this.created_at.getTime() < EIGHT_DAYS;
+  }
 
   get semver() {
     return semverParse(this.num);

@@ -2,6 +2,7 @@ import { setupTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
 import setupMirage from 'ember-cli-mirage/test-support/setup-mirage';
+import timekeeper from 'timekeeper';
 
 module('Model | Version', function (hooks) {
   setupTest(hooks);
@@ -9,6 +10,28 @@ module('Model | Version', function (hooks) {
 
   hooks.beforeEach(function () {
     this.store = this.owner.lookup('service:store');
+  });
+
+  test('isNew', async function (assert) {
+    let { server, store } = this;
+
+    let crate = server.create('crate');
+    server.create('version', { crate, created_at: '2010-06-16T21:30:45Z' });
+
+    let crateRecord = await store.findRecord('crate', crate.id);
+    let versions = (await crateRecord.versions).toArray();
+
+    timekeeper.travel(new Date('2010-06-16T21:40:45Z'));
+    assert.true(versions[0].isNew);
+
+    timekeeper.travel(new Date('2010-06-23T21:40:45Z'));
+    assert.true(versions[0].isNew);
+
+    timekeeper.travel(new Date('2010-06-24T21:40:45Z'));
+    assert.false(versions[0].isNew);
+
+    timekeeper.travel(new Date('2014-06-24T21:40:45Z'));
+    assert.false(versions[0].isNew);
   });
 
   module('semver', function () {
