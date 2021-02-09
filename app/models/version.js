@@ -3,8 +3,11 @@ import { computed } from '@ember/object';
 import { alias } from '@ember/object/computed';
 
 import { task } from 'ember-concurrency';
+import semverParse from 'semver/functions/parse';
 
 import ajax from '../utils/ajax';
+
+const EIGHT_DAYS = 8 * 24 * 60 * 60 * 1000;
 
 export default class Version extends Model {
   @attr num;
@@ -29,6 +32,42 @@ export default class Version extends Model {
     return this.belongsTo('crate').id();
   })
   crateName;
+
+  get isNew() {
+    return Date.now() - this.created_at.getTime() < EIGHT_DAYS;
+  }
+
+  get isFirst() {
+    let { versions } = this.crate;
+    let oldestVersion = versions.sortBy('created_at')[0];
+    return oldestVersion === this;
+  }
+
+  get semver() {
+    return semverParse(this.num);
+  }
+
+  get isPrerelease() {
+    return this.semver.prerelease.length !== 0;
+  }
+
+  get releaseTrack() {
+    let { semver } = this;
+    return `${semver.major}.${semver.major === 0 ? semver.minor : 'x'}`;
+  }
+
+  get isHighestOfReleaseTrack() {
+    if (this.isPrerelease) {
+      return false;
+    }
+
+    let { crate, semver, releaseTrack } = this;
+    let { versions } = crate;
+    // find all other non-prerelease versions on the same release track
+    let sameTrackVersions = versions.filter(it => it !== this && !it.isPrerelease && it.releaseTrack === releaseTrack);
+    // check if we're the "highest"
+    return sameTrackVersions.every(it => it.semver.compare(semver) === -1);
+  }
 
   get featureList() {
     let { features } = this;

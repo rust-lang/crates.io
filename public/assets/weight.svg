@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   fill="currentColor"
+   viewBox="0 0 100 100"
+   version="1.1"
+   id="svg835"
+   sodipodi:docname="weight.svg"
+   width="100"
+   height="100"
+   inkscape:version="1.0.1 (c497b03c, 2020-09-10)">
+  <!--! Font Awesome Free 5.15.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) -->
+  <metadata
+     id="metadata841">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs839" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1792"
+     inkscape:window-height="1075"
+     id="namedview837"
+     showgrid="false"
+     inkscape:zoom="3.2860066"
+     inkscape:cx="80.567853"
+     inkscape:cy="90.394741"
+     inkscape:window-x="0"
+     inkscape:window-y="23"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg835" />
+  <path
+     id="path833"
+     style="stroke-width:0.195313"
+     d="m 50.001953,0 c -10.355502,0 -18.75,8.3944982 -18.75,18.75 0,2.203132 0.449217,4.287103 1.148438,6.25 H 20.632812 c -2.818369,0 -5.28906,2.058584 -6.029296,5.023438 L 0.3359375,87.082031 C -1.2910208,93.587911 3.1991989,100 9.3808594,100 H 90.621094 c 6.179707,0 10.669916,-6.412089 9.042968,-12.917969 L 85.400391,30.023438 C 84.658201,27.056632 82.189462,25 79.371094,25 H 67.603516 c 0.697268,-1.962897 1.148437,-4.046868 1.148437,-6.25 0,-10.3555018 -8.394498,-18.75 -18.75,-18.75 z M 50,12.498047 c 3.445323,0 6.25,2.804677 6.25,6.25 0,3.445324 -2.804677,6.25 -6.25,6.25 -3.445324,0 -6.25,-2.804676 -6.25,-6.25 0,-3.445323 2.804676,-6.25 6.25,-6.25 z M 23.908,34.792969 H 76.318359 L 90.011,89.602 H 10.279 Z"
+     sodipodi:nodetypes="sscsccssccscsssssssccccc" />
+</svg>

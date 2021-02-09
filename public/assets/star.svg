@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   fill="currentColor"
+   viewBox="0 0 100 100"
+   version="1.1"
+   id="svg835"
+   sodipodi:docname="star.svg"
+   width="100"
+   height="100"
+   inkscape:version="1.0.1 (c497b03c, 2020-09-10)">
+  <!--! Font Awesome Free 5.15.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) -->
+  <metadata
+     id="metadata841">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs839" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1920"
+     inkscape:window-height="1035"
+     id="namedview837"
+     showgrid="false"
+     inkscape:zoom="1.1684028"
+     inkscape:cx="288"
+     inkscape:cy="256"
+     inkscape:window-x="0"
+     inkscape:window-y="23"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg835" />
+  <path
+     fill="currentColor"
+     d="M 44.635523,5.4731668 32.429937,30.220787 5.1215742,34.202088 c -4.89718702,0.710279 -6.859801,6.747651 -3.308405,10.205589 L 21.570143,63.65998 16.897254,90.856193 c -0.84112,4.915879 4.336441,8.598115 8.672882,6.299054 L 49.999999,84.314148 74.429862,97.155247 c 4.336441,2.28037 9.514002,-1.383175 8.672882,-6.299054 L 78.429855,63.65998 98.186834,44.407677 c 3.551386,-3.457938 1.58878,-9.49531 -3.30841,-10.205589 L 67.570061,30.220787 55.364476,5.4731668 c -2.186912,-4.4112071 -8.52335,-4.4672818 -10.728953,0 z"
+     id="path833"
+     style="stroke-width:0.186916" />
+</svg>

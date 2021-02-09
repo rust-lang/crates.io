@@ -2,6 +2,7 @@ import { setupTest } from 'ember-qunit';
 import { module, test } from 'qunit';
 
 import setupMirage from 'ember-cli-mirage/test-support/setup-mirage';
+import timekeeper from 'timekeeper';
 
 module('Model | Version', function (hooks) {
   setupTest(hooks);
@@ -9,6 +10,158 @@ module('Model | Version', function (hooks) {
 
   hooks.beforeEach(function () {
     this.store = this.owner.lookup('service:store');
+  });
+
+  test('isNew', async function (assert) {
+    let { server, store } = this;
+
+    let crate = server.create('crate');
+    server.create('version', { crate, created_at: '2010-06-16T21:30:45Z' });
+
+    let crateRecord = await store.findRecord('crate', crate.id);
+    let versions = (await crateRecord.versions).toArray();
+
+    timekeeper.travel(new Date('2010-06-16T21:40:45Z'));
+    assert.true(versions[0].isNew);
+
+    timekeeper.travel(new Date('2010-06-23T21:40:45Z'));
+    assert.true(versions[0].isNew);
+
+    timekeeper.travel(new Date('2010-06-24T21:40:45Z'));
+    assert.false(versions[0].isNew);
+
+    timekeeper.travel(new Date('2014-06-24T21:40:45Z'));
+    assert.false(versions[0].isNew);
+  });
+
+  module('semver', function () {
+    async function prepare(context, { num }) {
+      let { server, store } = context;
+
+      let crate = server.create('crate');
+      server.create('version', { crate, num });
+
+      let crateRecord = await store.findRecord('crate', crate.id);
+      let versions = (await crateRecord.versions).toArray();
+      return versions[0];
+    }
+
+    test('parses 1.2.3 correctly', async function (assert) {
+      let { semver, releaseTrack, isPrerelease } = await prepare(this, { num: '1.2.3' });
+      assert.strictEqual(semver.major, 1);
+      assert.strictEqual(semver.minor, 2);
+      assert.strictEqual(semver.patch, 3);
+      assert.deepEqual(semver.prerelease, []);
+      assert.deepEqual(semver.build, []);
+      assert.false(isPrerelease);
+      assert.strictEqual(releaseTrack, '1.x');
+    });
+
+    test('parses 0.3.1-rc.1 correctly', async function (assert) {
+      let { semver, releaseTrack, isPrerelease } = await prepare(this, { num: '0.3.1-rc.1' });
+      assert.strictEqual(semver.major, 0);
+      assert.strictEqual(semver.minor, 3);
+      assert.strictEqual(semver.patch, 1);
+      assert.deepEqual(semver.prerelease, ['rc', 1]);
+      assert.deepEqual(semver.build, []);
+      assert.true(isPrerelease);
+      assert.strictEqual(releaseTrack, '0.3');
+    });
+
+    test('parses 0.0.0-alpha.1+1234 correctly', async function (assert) {
+      let { semver, releaseTrack, isPrerelease } = await prepare(this, { num: '0.0.0-alpha.1+1234' });
+      assert.strictEqual(semver.major, 0);
+      assert.strictEqual(semver.minor, 0);
+      assert.strictEqual(semver.patch, 0);
+      assert.deepEqual(semver.prerelease, ['alpha', 1]);
+      assert.deepEqual(semver.build, ['1234']);
+      assert.true(isPrerelease);
+      assert.strictEqual(releaseTrack, '0.0');
+    });
+  });
+
+  test('isHighestOfReleaseTrack', async function (assert) {
+    let nums = [
+      '0.4.0-rc.1',
+      '0.3.23',
+      '0.3.22',
+      '0.3.21-pre.0',
+      '0.3.20',
+      '0.3.3',
+      '0.3.2',
+      '0.3.1',
+      '0.3.0',
+      '0.2.1',
+      '0.2.0',
+      '0.1.2',
+      '0.1.1',
+    ];
+
+    let crate = this.server.create('crate');
+    for (let num of nums) {
+      this.server.create('version', { crate, num });
+    }
+
+    let crateRecord = await this.store.findRecord('crate', crate.id);
+    let versions = (await crateRecord.versions).toArray();
+
+    assert.deepEqual(
+      versions.map(it => ({ num: it.num, isHighestOfReleaseTrack: it.isHighestOfReleaseTrack })),
+      [
+        {
+          isHighestOfReleaseTrack: false,
+          num: '0.4.0-rc.1',
+        },
+        {
+          isHighestOfReleaseTrack: true,
+          num: '0.3.23',
+        },
+        {
+          isHighestOfReleaseTrack: false,
+          num: '0.3.22',
+        },
+        {
+          isHighestOfReleaseTrack: false,
+          num: '0.3.21-pre.0',
+        },
+        {
+          isHighestOfReleaseTrack: false,
+          num: '0.3.20',
+        },
+        {
+          isHighestOfReleaseTrack: false,
+          num: '0.3.3',
+        },
+        {
+          isHighestOfReleaseTrack: false,
+          num: '0.3.2',
+        },
+        {
+          isHighestOfReleaseTrack: false,
+          num: '0.3.1',
+        },
+        {
+          isHighestOfReleaseTrack: false,
+          num: '0.3.0',
+        },
+        {
+          isHighestOfReleaseTrack: true,
+          num: '0.2.1',
+        },
+        {
+          isHighestOfReleaseTrack: false,
+          num: '0.2.0',
+        },
+        {
+          isHighestOfReleaseTrack: true,
+          num: '0.1.2',
+        },
+        {
+          isHighestOfReleaseTrack: false,
+          num: '0.1.1',
+        },
+      ],
+    );
   });
 
   module('featuresList', function () {
