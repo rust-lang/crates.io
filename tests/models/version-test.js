@@ -79,6 +79,17 @@ module('Model | Version', function (hooks) {
       assert.strictEqual(releaseTrack, '0.0');
     });
 
+    test('123.0.0 has 123 release track', async function (assert) {
+      let { semver, releaseTrack, isPrerelease } = await prepare(this, { num: '123.0.0' });
+      assert.strictEqual(semver.major, 123);
+      assert.strictEqual(semver.minor, 0);
+      assert.strictEqual(semver.patch, 0);
+      assert.deepEqual(semver.prerelease, []);
+      assert.deepEqual(semver.build, []);
+      assert.false(isPrerelease);
+      assert.strictEqual(releaseTrack, '123');
+    });
+
     test('parses 0.3.0-alpha.01 (non-standard) correctly', async function (assert) {
       let { semver, releaseTrack, isPrerelease } = await prepare(this, { num: '0.3.0-alpha.01' });
       assert.strictEqual(semver.major, 0);
