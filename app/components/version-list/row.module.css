@@ -36,7 +36,7 @@
         --fg-color: hsl(0, 84%, 32%);
     }
 
-    [title] {
+    [title], :global(.ember-tooltip-target) {
         position: relative;
         z-index: 1;
         cursor: help;
@@ -125,6 +125,11 @@
         width: auto;
         margin-right: 2px;
         margin-bottom: -.1em;
+    }
+
+    :global(.ember-tooltip) {
+        text-transform: none;
+        letter-spacing: normal;
     }
 }
 
