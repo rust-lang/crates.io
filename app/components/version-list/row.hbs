@@ -4,6 +4,7 @@
     {{if @version.isHighestOfReleaseTrack "latest"}}
     {{if @version.yanked "yanked"}}
     {{if @version.isPrerelease "prerelease"}}
+    {{if this.focused "focused"}}
   "
   ...attributes
 >
@@ -22,6 +23,8 @@
       @route="crate.version"
       @model={{@version.num}}
       local-class="num-link"
+      {{on "focusin" (fn this.setFocused true)}}
+      {{on "focusout" (fn this.setFocused false)}}
     >
       {{@version.num}}
     </LinkTo>
