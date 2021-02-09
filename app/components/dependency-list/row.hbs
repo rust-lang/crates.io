@@ -12,8 +12,8 @@
 
   <span>
     <LinkTo
-      @route="crate"
-      @model={{@dependency.crate_id}}
+      @route="crate.range"
+      @models={{array @dependency.crate_id @dependency.req}}
       local-class="link"
       {{on "focusin" (fn this.setFocused true)}}
       {{on "focusout" (fn this.setFocused false)}}
