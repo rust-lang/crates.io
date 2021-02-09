@@ -172,6 +172,12 @@
     font-variant-numeric: tabular-nums;
 }
 
+.feature-list {
+    padding: 0;
+    margin: 10px 5px;
+    list-style: none;
+}
+
 .yank-button {
     position: relative;
     margin-left: 10px;

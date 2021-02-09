@@ -69,6 +69,17 @@
         <span local-class="num-features">
           {{svg-jar "checkbox"}}
           {{@version.featureList.length}} Features
+
+          <EmberTooltip>
+            <ul local-class="feature-list">
+              {{#each @version.featureList as |feature|}}
+                <li>
+                  {{svg-jar (if feature.isDefault "checkbox" "checkbox-empty")}}
+                  {{feature.name}}
+                </li>
+              {{/each}}
+            </ul>
+          </EmberTooltip>
         </span>
       {{/if}}
     </div>
