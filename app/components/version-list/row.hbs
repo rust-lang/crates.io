@@ -32,7 +32,7 @@
           by
           <LinkTo @route="user" @model={{@version.published_by.login}}>
             <UserAvatar @user={{@version.published_by}} local-class="avatar" />
-            {{@version.published_by.name}}
+            {{or @version.published_by.name @version.published_by.login}}
           </LinkTo>
         </span>
       {{/if}}
