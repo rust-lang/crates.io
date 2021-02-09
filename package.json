@@ -45,7 +45,8 @@
     "fastboot-app-server": "3.0.0",
     "morgan": "1.10.0",
     "pretty-bytes": "5.5.0",
-    "semver": "7.3.4"
+    "semver": "7.3.4",
+    "tracked-toolbox": "^1.2.1"
   },
   "devDependencies": {
     "@ember/optional-features": "2.0.0",
