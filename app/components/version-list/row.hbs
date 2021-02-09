@@ -37,7 +37,11 @@
         </span>
       {{/if}}
 
-      <time title={{date-format @version.created_at 'PPP'}} datetime={{date-format-iso @version.updated_at}} local-class="date">
+      <time
+        title={{date-format @version.created_at 'PPP'}}
+        datetime={{date-format-iso @version.updated_at}}
+        local-class="date {{if @version.isNew "new"}}"
+      >
         {{svg-jar "calendar"}}
         {{date-format-distance-to-now @version.created_at addSuffix=true}}
       </time>

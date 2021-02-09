@@ -144,6 +144,12 @@
     }
 }
 
+.date {
+    &.new {
+        color: hsl(39, 98%, 47%);
+    }
+}
+
 .bytes {
     font-variant-numeric: tabular-nums;
 }
