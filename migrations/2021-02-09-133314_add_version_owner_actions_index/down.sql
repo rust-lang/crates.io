@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS index_version_owner_actions_by_version_id;
