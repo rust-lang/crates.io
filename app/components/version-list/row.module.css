@@ -65,12 +65,18 @@
     font-variant-numeric: tabular-nums;
     color: var(--fg-color);
     background-color: var(--bg-color);
-    border: 2px solid white;
+    border: 1px solid white;
     border-radius: 50%;
+    transition: all 150ms;
 
     > svg {
         height: 1em;
         width: auto;
+    }
+
+    .row:hover & {
+        border: 2px solid white;
+        box-shadow: 0 1px 3px var(--fg-color);
     }
 
     @media only screen and (max-width: 550px) {
