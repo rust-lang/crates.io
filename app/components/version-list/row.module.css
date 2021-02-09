@@ -9,7 +9,7 @@
     padding: 15px 25px;
     background-color: white;
     border-radius: 7px;
-    box-shadow: 0 1px 3px hsla(0, 0%, 0%, .2);
+    box-shadow: 0 1px 3px hsla(51, 90%, 42%, .35);
     transition: background-color 300ms;
 
     &:hover {
