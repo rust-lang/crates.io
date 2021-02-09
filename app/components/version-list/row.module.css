@@ -1,5 +1,6 @@
 .row {
     --bg-color: var(--grey200);
+    --hover-bg-color: hsl(217, 37%, 98%);
     --fg-color: var(--grey700);
 
     display: flex;
@@ -13,22 +14,25 @@
     transition: background-color 300ms;
 
     &:hover {
-        background-color: var(--grey200);
+        background-color: var(--hover-bg-color);
         transition: background-color 0ms;
     }
 
     &.latest {
         --bg-color: hsl(109, 75%, 87%);
+        --hover-bg-color: hsl(109, 75%, 97%);
         --fg-color: hsl(136, 67%, 38%);
     }
 
     &.prerelease {
         --bg-color: hsl(39, 100%, 91%);
+        --hover-bg-color: hsl(39, 100%, 97%);
         --fg-color: hsl(39, 71%, 45%);
     }
 
     &.yanked {
         --bg-color: hsl(0, 92%, 90%);
+        --hover-bg-color: hsl(0, 92%, 98%);
         --fg-color: hsl(0, 84%, 32%);
     }
 
