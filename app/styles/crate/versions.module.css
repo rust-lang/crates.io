@@ -1,5 +1,8 @@
-.back-link {
-    margin-bottom: 20px;
+.results-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
 }
 
 .page-description {
