@@ -59,7 +59,7 @@ export default class DownloadGraph extends Component {
   }
 
   @action destroyChart() {
-    this.chart.destroy();
+    this.chart?.destroy();
   }
 
   @action reloadPage() {
