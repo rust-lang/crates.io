@@ -2,6 +2,7 @@ import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
 import * as Sentry from '@sentry/browser';
+import { didCancel } from 'ember-concurrency';
 
 import { AjaxError } from '../../utils/ajax';
 
@@ -44,7 +45,7 @@ export default class VersionRoute extends Route {
     if (!crate.documentation || crate.documentation.startsWith('https://docs.rs/')) {
       version.loadDocsBuildsTask.perform().catch(error => {
         // report unexpected errors to Sentry and ignore `ajax()` errors
-        if (!(error instanceof AjaxError)) {
+        if (!didCancel(error) && !(error instanceof AjaxError)) {
           Sentry.captureException(error);
         }
       });
