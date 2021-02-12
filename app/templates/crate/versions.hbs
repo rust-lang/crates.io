@@ -1,6 +1,18 @@
 <CrateHeader @crate={{this.model}} />
 
-<LinkTo @route="crate" @model={{this.model}} local-class="back-link">&#11013; Back to Main Page</LinkTo>
+<div local-class="results-meta">
+  <LinkTo @route="crate" @model={{this.model}} local-class="back-link">
+    &#11013; Back to Main Page
+  </LinkTo>
+
+  <div data-test-search-sort>
+    <span local-class="sort-by-label">Sort by </span>
+    <SortDropdown @current={{this.currentSortBy}} as |sd|>
+      <sd.Option @query={{hash sort="date"}} data-test-date-sort>Date</sd.Option>
+      <sd.Option @query={{hash sort="semver"}} data-test-semver-sort>SemVer</sd.Option>
+    </SortDropdown>
+  </div>
+</div>
 
 <span local-class="page-description" data-test-page-description>
   All <strong>{{ this.model.versions.length }}</strong>
@@ -9,9 +21,9 @@
 </span>
 
 <ul local-class="list">
-  {{#each this.model.versions as |version|}}
+  {{#each this.sortedVersions as |version|}}
     <li>
-      <VersionList::Row @version={{version}} local-class="row" />
+      <VersionList::Row @version={{version}} local-class="row" data-test-version={{version.num}} />
     </li>
   {{/each}}
 </ul>
