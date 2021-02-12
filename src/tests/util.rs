@@ -27,7 +27,6 @@ use cargo_registry::{
     background_jobs::Environment,
     db::DieselPool,
     git::{Credentials, RepositoryConfig},
-    middleware::current_user::TrustedUserId,
     models::{ApiToken, CreatedApiToken, User},
     util::AppResponse,
     App, Config,
@@ -37,7 +36,8 @@ use serde_json::Value;
 use std::{marker::PhantomData, rc::Rc, sync::Arc, time::Duration};
 use swirl::Runner;
 
-use conduit::{Handler, HandlerResult, Method, RequestExt};
+use conduit::{Handler, HandlerResult, Method};
+use conduit_cookie::SessionMiddleware;
 use conduit_test::MockRequest;
 
 use cargo_registry::git::Repository as WorkerRepository;
@@ -46,6 +46,8 @@ use git2::Repository as UpstreamRepository;
 use url::Url;
 
 pub use conduit::{header, StatusCode};
+use cookie::Cookie;
+use std::collections::HashMap;
 
 pub fn init_logger() {
     let _ = tracing_subscriber::fmt()
@@ -207,6 +209,37 @@ impl TestApp {
     pub fn as_middleware(&self) -> &conduit_middleware::MiddlewareBuilder {
         &self.0.middle
     }
+}
+
+/// This function can be used to create a `Cookie` header for mock requests that
+/// include cookie-based authentication.
+///
+/// ```
+/// let cookie = encode_session_header(session_key, user_id);
+/// request.header(header::COOKIE, &cookie);
+/// ```
+///
+/// The implementation matches roughly what is happening inside of the
+/// `SessionMiddleware` from `conduit_cookie`.
+pub fn encode_session_header(session_key: &str, user_id: i32) -> String {
+    let cookie_name = "cargo_session";
+    let cookie_key = cookie::Key::derive_from(session_key.as_bytes());
+
+    // build session data map
+    let mut map = HashMap::new();
+    map.insert("user_id".into(), user_id.to_string());
+
+    // encode the map into a cookie value string
+    let session_middleware = SessionMiddleware::new(cookie_name, cookie_key.clone(), false);
+    let encoded = session_middleware.encode(&map);
+
+    // put the cookie into a signed cookie jar
+    let cookie = Cookie::build(cookie_name, encoded).finish();
+    let mut jar = cookie::CookieJar::new();
+    jar.signed(&cookie_key).add(cookie);
+
+    // read the raw cookie from the cookie jar
+    jar.get(&cookie_name).unwrap().to_string()
 }
 
 pub struct TestAppBuilder {
@@ -463,9 +496,11 @@ pub struct MockCookieUser {
 
 impl RequestHelper for MockCookieUser {
     fn request_builder(&self, method: Method, path: &str) -> MockRequest {
+        let session_key = &self.app.as_inner().session_key;
+        let cookie = encode_session_header(session_key, self.user.id);
+
         let mut request = req(method, path);
-        let id = TrustedUserId(self.user.id);
-        request.mut_extensions().insert(id);
+        request.header(header::COOKIE, &cookie);
         request
     }
 
