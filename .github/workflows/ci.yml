@@ -80,7 +80,7 @@ jobs:
       DATABASE_URL: postgres://postgres:postgres@localhost/cargo_registry_test
       TEST_DATABASE_URL: postgres://postgres:postgres@localhost/cargo_registry_test
       CARGO_INCREMENTAL: 0
-      RUSTFLAGS: "-C debuginfo=0 -D warnings"
+      RUSTFLAGS: "-D warnings"
       MALLOC_CONF: "background_thread:true,abort_conf:true,abort:true,junk:true"
 
     services:
@@ -197,7 +197,16 @@ jobs:
           cargo fmt -- --check
           cargo clippy --all-targets --all-features --all
 
-      - name: Test
+      - name: Install cargo-tarpaulin
+        if: matrix.rust == 'stable'
+        run: which cargo-tarpaulin || cargo install cargo-tarpaulin
+
+      - name: Run tests (with coverage report)
+        if: matrix.rust == 'stable'
+        run: cargo tarpaulin
+
+      - name: Run tests
+        if: matrix.rust != 'stable'
         run: cargo test
 
       - name: Prune unnecessary cache
