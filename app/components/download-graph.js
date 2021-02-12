@@ -84,7 +84,10 @@ export default class DownloadGraph extends Component {
     }
 
     downloads.forEach(d => {
-      let version_num = d.version.num;
+      let version = d.version;
+      if (!version) return;
+
+      let version_num = version.num;
 
       versions.add(version_num);
 
