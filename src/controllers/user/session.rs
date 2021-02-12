@@ -5,7 +5,6 @@ use oauth2::reqwest::http_client;
 use oauth2::{AuthorizationCode, Scope, TokenResponse};
 
 use crate::github::GithubUser;
-use crate::middleware::current_user::TrustedUserId;
 use crate::models::{NewUser, User};
 use crate::schema::users;
 use crate::util::errors::ReadOnlyMode;
@@ -108,7 +107,6 @@ pub fn authorize(req: &mut dyn RequestExt) -> EndpointResult {
     // Log in by setting a cookie and the middleware authentication
     req.session_mut()
         .insert("user_id".to_string(), user.id.to_string());
-    req.mut_extensions().insert(TrustedUserId(user.id));
 
     super::me::me(req)
 }

@@ -2,10 +2,10 @@
 //! information that we care about like User-Agent
 
 use super::prelude::*;
-use crate::middleware::current_user::TrustedUserId;
 use crate::util::request_header;
 
 use conduit::{header, Host, RequestExt, Scheme, StatusCode};
+use conduit_cookie::RequestSession;
 use sentry::Level;
 
 use std::fmt::{self, Display, Formatter};
@@ -86,10 +86,7 @@ fn report_to_sentry(req: &dyn RequestExt, res: &AfterResult, response_time: u64)
         let url = format!("{}://{}{}", scheme, host, path).parse().ok();
 
         {
-            let id = req
-                .extensions()
-                .find::<TrustedUserId>()
-                .map(|x| x.0.to_string());
+            let id = req.session().get("user_id").map(|str| str.to_string());
 
             let user = sentry::User {
                 id,

@@ -1,8 +1,8 @@
 use chrono::Utc;
+use conduit_cookie::RequestSession;
 
 use super::prelude::*;
 
-use crate::middleware::current_user::TrustedUserId;
 use crate::middleware::log_request;
 use crate::models::{ApiToken, User};
 use crate::util::errors::{
@@ -62,9 +62,11 @@ fn verify_origin(req: &dyn RequestExt) -> AppResult<()> {
 
 fn authenticate_user(req: &dyn RequestExt) -> AppResult<AuthenticatedUser> {
     let conn = req.db_conn()?;
-    let (user_id, token_id) = if let Some(id) =
-        req.extensions().find::<TrustedUserId>().map(|x| x.0)
-    {
+
+    let session = req.session();
+    let user_id_from_session = session.get("user_id").and_then(|s| s.parse::<i32>().ok());
+
+    let (user_id, token_id) = if let Some(id) = user_id_from_session {
         (id, None)
     } else {
         // Otherwise, look for an `Authorization` header on the request
