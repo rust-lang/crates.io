@@ -80,88 +80,70 @@ module('Model | Version', function (hooks) {
     });
   });
 
-  test('isHighestOfReleaseTrack', async function (assert) {
-    let nums = [
-      '0.4.0-rc.1',
-      '0.3.23',
-      '0.3.22',
-      '0.3.21-pre.0',
-      '0.3.20',
-      '0.3.3',
-      '0.3.2',
-      '0.3.1',
-      '0.3.0',
-      '0.2.1',
-      '0.2.0',
-      '0.1.2',
-      '0.1.1',
-    ];
+  module('isHighestOfReleaseTrack', function () {
+    test('happy path', async function (assert) {
+      let nums = [
+        '0.4.0-rc.1',
+        '0.3.23',
+        '0.3.22',
+        '0.3.21-pre.0',
+        '0.3.20',
+        '0.3.3',
+        '0.3.2',
+        '0.3.1',
+        '0.3.0',
+        '0.2.1',
+        '0.2.0',
+        '0.1.2',
+        '0.1.1',
+      ];
 
-    let crate = this.server.create('crate');
-    for (let num of nums) {
-      this.server.create('version', { crate, num });
-    }
+      let crate = this.server.create('crate');
+      for (let num of nums) {
+        this.server.create('version', { crate, num });
+      }
 
-    let crateRecord = await this.store.findRecord('crate', crate.id);
-    let versions = (await crateRecord.versions).toArray();
+      let crateRecord = await this.store.findRecord('crate', crate.id);
+      let versions = (await crateRecord.versions).toArray();
 
-    assert.deepEqual(
-      versions.map(it => ({ num: it.num, isHighestOfReleaseTrack: it.isHighestOfReleaseTrack })),
-      [
-        {
-          isHighestOfReleaseTrack: false,
-          num: '0.4.0-rc.1',
-        },
-        {
-          isHighestOfReleaseTrack: true,
-          num: '0.3.23',
-        },
-        {
-          isHighestOfReleaseTrack: false,
-          num: '0.3.22',
-        },
-        {
-          isHighestOfReleaseTrack: false,
-          num: '0.3.21-pre.0',
-        },
-        {
-          isHighestOfReleaseTrack: false,
-          num: '0.3.20',
-        },
-        {
-          isHighestOfReleaseTrack: false,
-          num: '0.3.3',
-        },
-        {
-          isHighestOfReleaseTrack: false,
-          num: '0.3.2',
-        },
-        {
-          isHighestOfReleaseTrack: false,
-          num: '0.3.1',
-        },
-        {
-          isHighestOfReleaseTrack: false,
-          num: '0.3.0',
-        },
-        {
-          isHighestOfReleaseTrack: true,
-          num: '0.2.1',
-        },
-        {
-          isHighestOfReleaseTrack: false,
-          num: '0.2.0',
-        },
-        {
-          isHighestOfReleaseTrack: true,
-          num: '0.1.2',
-        },
-        {
-          isHighestOfReleaseTrack: false,
-          num: '0.1.1',
-        },
-      ],
-    );
+      assert.deepEqual(
+        versions.map(it => ({ num: it.num, isHighestOfReleaseTrack: it.isHighestOfReleaseTrack })),
+        [
+          { num: '0.4.0-rc.1', isHighestOfReleaseTrack: false },
+          { num: '0.3.23', isHighestOfReleaseTrack: true },
+          { num: '0.3.22', isHighestOfReleaseTrack: false },
+          { num: '0.3.21-pre.0', isHighestOfReleaseTrack: false },
+          { num: '0.3.20', isHighestOfReleaseTrack: false },
+          { num: '0.3.3', isHighestOfReleaseTrack: false },
+          { num: '0.3.2', isHighestOfReleaseTrack: false },
+          { num: '0.3.1', isHighestOfReleaseTrack: false },
+          { num: '0.3.0', isHighestOfReleaseTrack: false },
+          { num: '0.2.1', isHighestOfReleaseTrack: true },
+          { num: '0.2.0', isHighestOfReleaseTrack: false },
+          { num: '0.1.2', isHighestOfReleaseTrack: true },
+          { num: '0.1.1', isHighestOfReleaseTrack: false },
+        ],
+      );
+    });
+
+    test('ignores yanked versions', async function (assert) {
+      let crate = this.server.create('crate');
+      this.server.create('version', { crate, num: '0.4.0' });
+      this.server.create('version', { crate, num: '0.4.1' });
+      this.server.create('version', { crate, num: '0.4.2', yanked: true });
+
+      let crateRecord = await this.store.findRecord('crate', crate.id);
+      let versions = (await crateRecord.versions).toArray();
+
+      assert.deepEqual(
+        versions.map(it => ({ num: it.num, isHighestOfReleaseTrack: it.isHighestOfReleaseTrack })),
+        [
+          { num: '0.4.0', isHighestOfReleaseTrack: false },
+          { num: '0.4.1', isHighestOfReleaseTrack: true },
+          { num: '0.4.2', isHighestOfReleaseTrack: true },
+        ],
+      );
+    });
   });
 
   module('featuresList', function () {

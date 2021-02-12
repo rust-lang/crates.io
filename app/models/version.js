@@ -64,7 +64,9 @@ export default class Version extends Model {
     let { crate, semver, releaseTrack } = this;
     let { versions } = crate;
     // find all other non-prerelease versions on the same release track
-    let sameTrackVersions = versions.filter(it => it !== this && !it.isPrerelease && it.releaseTrack === releaseTrack);
+    let sameTrackVersions = versions.filter(
+      it => it !== this && !it.yanked && !it.isPrerelease && it.releaseTrack === releaseTrack,
+    );
     // check if we're the "highest"
     return sameTrackVersions.every(it => it.semver.compare(semver) === -1);
   }
