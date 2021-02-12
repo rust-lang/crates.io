@@ -6848,10 +6848,10 @@ ember-modifier@2.1.1, ember-modifier@^2.1.0, ember-modifier@^2.1.1:
     ember-destroyable-polyfill "^2.0.2"
     ember-modifier-manager-polyfill "^1.2.0"
 
-ember-page-title@6.2.0:
-  version "6.2.0"
-  resolved "https://registry.yarnpkg.com/ember-page-title/-/ember-page-title-6.2.0.tgz#d79f7422299ebb8f8ac819399596e8f54f01a0e9"
-  integrity sha512-mgzI59rVH6Q00uG1OnsbrSfic+MxFQbtsjX3BuDWGgU7hWahDhAAgaQrKIFx99aEqWoiL+OiX4tQLPnxyZEceA==
+ember-page-title@6.2.1:
+  version "6.2.1"
+  resolved "https://registry.yarnpkg.com/ember-page-title/-/ember-page-title-6.2.1.tgz#aa2d539fab8eddb618289cdba91adf699debf7da"
+  integrity sha512-cfBDuP14KBJCdz/AeBQJFGnJbUHd2gmenG+i0ilR2kYX0G0zHAsseFZFuTNVZDNiQ8BnMdrdjRnfjx9Vdi/dag==
   dependencies:
     ember-cli-babel "^7.22.1"
 
