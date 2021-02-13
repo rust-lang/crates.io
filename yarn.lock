@@ -6042,7 +6042,7 @@ ember-assign-polyfill@^2.5.0:
     ember-cli-babel "^7.20.5"
     ember-cli-version-checker "^2.0.0"
 
-ember-auto-import@1.10.1, ember-auto-import@^1.10.0, ember-auto-import@^1.10.1, ember-auto-import@^1.2.19:
+ember-auto-import@1.10.1, ember-auto-import@^1.10.1, ember-auto-import@^1.2.19:
   version "1.10.1"
   resolved "https://registry.yarnpkg.com/ember-auto-import/-/ember-auto-import-1.10.1.tgz#6c93a875e494aa0a58b759867d3f20adfd514ae3"
   integrity sha512-7bOWzPELlVwdWDOkB+phDIjg8BNW+/2RiLLQ+Xa/eIvCLT4ABYhHV5wqW5gs5BnXTDVLfE4ddKZdllnGuPGGDQ==
@@ -6887,16 +6887,16 @@ ember-promise-helpers@1.0.9:
   dependencies:
     ember-cli-babel "^6.16.0"
 
-ember-qunit@5.1.1:
-  version "5.1.1"
-  resolved "https://registry.yarnpkg.com/ember-qunit/-/ember-qunit-5.1.1.tgz#cd192e016889cf768ba661b7b91a2896f5274642"
-  integrity sha512-6kWWKPeqGtPu0AwrV3ZyVp2Z9EKykKx6B5pclOHoGcmcUy93UUGG8micicPSO//8pLnnFx4R34RvuKJd/Scifw==
+ember-qunit@5.1.2:
+  version "5.1.2"
+  resolved "https://registry.yarnpkg.com/ember-qunit/-/ember-qunit-5.1.2.tgz#72ce175f5d1c96a40fe810928c4d4a822a2e2c60"
+  integrity sha512-mrnFaUhAJWkJWeRZKajLuuRmKsifRrhAla1sQAfIiuh7OCVY1eqFvSUFzLR7/WgdNwPrUzEOOx39MdVRZBd/7A==
   dependencies:
     broccoli-funnel "^3.0.3"
     broccoli-merge-trees "^3.0.2"
     common-tags "^1.8.0"
-    ember-auto-import "^1.10.0"
-    ember-cli-babel "^7.23.0"
+    ember-auto-import "^1.10.1"
+    ember-cli-babel "^7.23.1"
     ember-cli-test-loader "^3.0.0"
     resolve-package-path "^3.1.0"
     silent-error "^1.1.1"
