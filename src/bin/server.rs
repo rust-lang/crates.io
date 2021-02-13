@@ -1,5 +1,5 @@
 #![warn(clippy::all, rust_2018_idioms)]
-#![allow(clippy::unknown_clippy_lints)]
+#![allow(unknown_lints)]
 
 use cargo_registry::{boot, App, Env};
 use std::{
