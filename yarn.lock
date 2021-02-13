@@ -7049,7 +7049,7 @@ ember-test-selectors@5.0.0:
     ember-cli-babel "^7.22.1"
     ember-cli-version-checker "^5.1.1"
 
-ember-tooltips@^3.4.6:
+ember-tooltips@3.4.6:
   version "3.4.6"
   resolved "https://registry.yarnpkg.com/ember-tooltips/-/ember-tooltips-3.4.6.tgz#a6fa7f8c73843f4048e3763892b38e90f203e05b"
   integrity sha512-MnbxlT2IqeraFnKg/oNDWUZeinf1Sz6CFKzxehektxlNn550JKWNUd3CHlHCiUfbiLuE9GEtJzFBPel+g/Q2hg==
