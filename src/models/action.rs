@@ -20,9 +20,9 @@ pub enum VersionAction {
     Unyank = 2,
 }
 
-impl Into<&'static str> for VersionAction {
-    fn into(self) -> &'static str {
-        match self {
+impl From<VersionAction> for &'static str {
+    fn from(action: VersionAction) -> Self {
+        match action {
             VersionAction::Publish => "publish",
             VersionAction::Yank => "yank",
             VersionAction::Unyank => "unyank",
@@ -30,9 +30,9 @@ impl Into<&'static str> for VersionAction {
     }
 }
 
-impl Into<String> for VersionAction {
-    fn into(self) -> String {
-        let string: &'static str = self.into();
+impl From<VersionAction> for String {
+    fn from(action: VersionAction) -> Self {
+        let string: &'static str = action.into();
 
         string.into()
     }

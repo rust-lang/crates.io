@@ -160,11 +160,11 @@ impl User {
     /// Queries the database for the verified emails
     /// belonging to a given user
     pub fn verified_email(&self, conn: &PgConnection) -> QueryResult<Option<String>> {
-        Ok(Email::belonging_to(self)
+        Email::belonging_to(self)
             .select(emails::email)
             .filter(emails::verified.eq(true))
             .first(&*conn)
-            .optional()?)
+            .optional()
     }
 
     /// Queries for the email belonging to a particular user
