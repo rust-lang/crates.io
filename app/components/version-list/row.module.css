@@ -36,7 +36,7 @@
         --fg-color: hsl(0, 84%, 32%);
     }
 
-    [title] {
+    [title], :global(.ember-tooltip-target) {
         position: relative;
         z-index: 1;
         cursor: help;
@@ -126,6 +126,11 @@
         margin-right: 2px;
         margin-bottom: -.1em;
     }
+
+    :global(.ember-tooltip) {
+        text-transform: none;
+        letter-spacing: normal;
+    }
 }
 
 .avatar {
@@ -165,6 +170,12 @@
 
 .bytes {
     font-variant-numeric: tabular-nums;
+}
+
+.feature-list {
+    padding: 0;
+    margin: 10px 5px;
+    list-style: none;
 }
 
 .yank-button {

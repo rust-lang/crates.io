@@ -8,7 +8,7 @@
   ...attributes
 >
   <div local-class="version">
-    <div title={{this.releaseTrackTitle}} local-class="release-track">
+    <div local-class="release-track">
       {{#if @version.yanked}}
         {{svg-jar "trash"}}
       {{else if @version.isFirst}}
@@ -16,6 +16,8 @@
       {{else}}
         {{@version.releaseTrack}}
       {{/if}}
+
+      <EmberTooltip @text={{this.releaseTrackTitle}} @side="right" />
     </div>
 
     <LinkTo
@@ -40,12 +42,13 @@
       {{/if}}
 
       <time
-        title={{date-format @version.created_at 'PPP'}}
         datetime={{date-format-iso @version.updated_at}}
         local-class="date {{if @version.isNew "new"}}"
       >
         {{svg-jar "calendar"}}
         {{date-format-distance-to-now @version.created_at addSuffix=true}}
+
+        <EmberTooltip @text={{date-format @version.created_at 'PPP'}} />
       </time>
     </div>
 
@@ -66,6 +69,17 @@
         <span local-class="num-features">
           {{svg-jar "checkbox"}}
           {{@version.featureList.length}} Features
+
+          <EmberTooltip>
+            <ul local-class="feature-list">
+              {{#each @version.featureList as |feature|}}
+                <li>
+                  {{svg-jar (if feature.isDefault "checkbox" "checkbox-empty")}}
+                  {{feature.name}}
+                </li>
+              {{/each}}
+            </ul>
+          </EmberTooltip>
         </span>
       {{/if}}
     </div>
