@@ -64,6 +64,49 @@ jobs:
       - run: yarn build
         continue-on-error: true
 
+  backend-lint:
+    name: Backend (linting)
+    runs-on: ubuntu-18.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      # Current size as of 2021-02-15: ~105 MB
+      - name: Cache cargo registry and git deps
+        uses: actions/cache@v2.1.4
+        with:
+          path: |
+            ~/.cargo/registry/cache
+            ~/.cargo/registry/index
+            ~/.cargo/git/db
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - id: rustc
+        run:
+          echo "::set-output name=version::$(rustc -V)"
+
+      - name: Cache cargo build
+        uses: actions/cache@v2.1.4
+        with:
+          path: target
+          key: v2-${{ runner.os }}-cargo-clippy-${{ steps.rustc.outputs.version }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            v2-${{ runner.os }}-cargo-clippy-${{ steps.rustc.outputs.version }}-
+
+      - name: Install Rust
+        run: |
+          rustup set profile minimal
+          rustup update stable
+          rustup default stable
+
+      - run: rustup component add rustfmt
+      - run: rustup component add clippy
+
+      - run: cargo fmt -- --check
+      - run: cargo clippy --all-targets --all-features --all
+
   backend:
     name: Backend
     runs-on: ubuntu-18.04
@@ -146,12 +189,6 @@ jobs:
           rustup update ${{ matrix.rust }}
           rustup default ${{ matrix.rust }}
 
-      - name: Install lint tools
-        if: matrix.rust == 'stable'
-        run: |
-          rustup component add rustfmt
-          rustup component add clippy
-
       - id: rustc
         run:
           echo "::set-output name=version::$(rustc -V)"
@@ -169,12 +206,6 @@ jobs:
         run: |
           which diesel || cargo install diesel_cli --vers $(cat .diesel_version) --no-default-features --features postgres --debug
           diesel database setup --locked-schema
-
-      - name: Lint
-        if: matrix.rust == 'stable'
-        run: |
-          cargo fmt -- --check
-          cargo clippy --all-targets --all-features --all
 
       - name: Install cargo-tarpaulin
         if: matrix.rust == 'stable'
@@ -202,7 +233,7 @@ jobs:
     name: bors build finished
     if: success()
     runs-on: ubuntu-latest
-    needs: [frontend, backend]
+    needs: [frontend, backend, backend-lint]
 
     steps:
       - name: Mark the job as successful
@@ -212,7 +243,7 @@ jobs:
     name: bors build finished
     if: "!success()"
     runs-on: ubuntu-latest
-    needs: [frontend, backend]
+    needs: [frontend, backend, backend-lint]
 
     steps:
       - name: Mark the job as a failure
