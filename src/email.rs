@@ -32,7 +32,7 @@ pub fn init_config_vars() -> Option<MailgunConfigVars> {
 fn build_email(
     recipient: &str,
     subject: &str,
-    body: &str,
+    body: String,
     mailgun_config: &Option<MailgunConfigVars>,
 ) -> AppResult<Message> {
     let sender = mailgun_config
@@ -79,7 +79,7 @@ https://{}/confirm/{}",
         token
     );
 
-    send_email(email, subject, &body)
+    send_email(email, subject, body)
 }
 
 /// Attempts to send a crate owner invitation email. Swallows all errors.
@@ -99,10 +99,10 @@ or go to https://{domain}/me/pending-invites to manage all of your crate ownersh
         domain = crate::config::domain_name()
     );
 
-    let _ = send_email(email, subject, &body);
+    let _ = send_email(email, subject, body);
 }
 
-fn send_email(recipient: &str, subject: &str, body: &str) -> AppResult<()> {
+fn send_email(recipient: &str, subject: &str, body: String) -> AppResult<()> {
     let mailgun_config = init_config_vars();
     let email = build_email(recipient, subject, body, &mailgun_config)?;
 
@@ -139,14 +139,14 @@ mod tests {
         let result = send_email(
             "String.Format(\"{0}.{1}@live.com\", FirstName, LastName)",
             "test",
-            "test",
+            "test".to_string(),
         );
         assert_err!(result);
     }
 
     #[test]
     fn sending_to_valid_email_succeeds() {
-        let result = send_email("someone@example.com", "test", "test");
+        let result = send_email("someone@example.com", "test", "test".to_string());
         assert_ok!(result);
     }
 }
