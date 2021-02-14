@@ -165,9 +165,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-build-target-${{ steps.rustc.outputs.version }}-
 
-      - name: Cargo clean on new rustc version
-        run: script/ci/cargo-clean-on-new-rustc-version.sh
-
       - name: Setup database
         run: |
           which diesel || cargo install diesel_cli --vers $(cat .diesel_version) --no-default-features --features postgres --debug
