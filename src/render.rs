@@ -49,6 +49,7 @@ impl<'a> MarkdownRenderer<'a> {
         html_sanitizer
             .add_tags(&["input"])
             .link_rel(Some("nofollow noopener noreferrer"))
+            .add_generic_attributes(&["align"])
             .add_tag_attributes("a", &["id", "target"])
             .add_tag_attributes("input", &["checked", "disabled", "type"])
             .allowed_classes(allowed_classes)
@@ -508,6 +509,16 @@ mod tests {
         assert_eq!(
             result,
             "<table><tbody><tr><th rowspan=\"1\" colspan=\"2\">Target</th></tr></tbody></table>\n"
+        );
+    }
+
+    #[test]
+    fn text_alignment() {
+        let text = "<h1 align=\"center\">foo-bar</h1>\n<h5 align=\"center\">Hello World!</h5>\n";
+        let result = markdown_to_html(text, None);
+        assert_eq!(
+            result,
+            "<h1 align=\"center\">foo-bar</h1>\n<h5 align=\"center\">Hello World!</h5>\n"
         );
     }
 }
