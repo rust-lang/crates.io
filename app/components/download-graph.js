@@ -106,7 +106,14 @@ export default class DownloadGraph extends Component {
       }
     });
 
-    let versionsList = semverSort([...versions]);
+    let versionsList = [...versions];
+    try {
+      semverSort(versionsList);
+    } catch {
+      // Catches exceptions thrown when a version number is invalid
+      // see issue #3295
+    }
+
     if (extra.length !== 0) {
       versionsList.unshift('Other');
     }
