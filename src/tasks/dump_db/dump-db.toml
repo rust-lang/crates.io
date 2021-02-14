@@ -152,6 +152,16 @@ rendered_at = "private"
 [reserved_crate_names.columns]
 name = "public"
 
+[sessions.columns]
+id = "private"
+user_id = "private"
+hashed_token = "private"
+created_at = "private"
+last_used_at = "private"
+revoked = "private"
+last_ip_address = "private"
+last_user_agent = "private"
+
 [teams.columns]
 id = "public"
 login = "public"
