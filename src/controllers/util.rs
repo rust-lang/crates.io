@@ -66,14 +66,13 @@ fn authenticate_user(req: &dyn RequestExt) -> AppResult<AuthenticatedUser> {
         (id, None)
     } else {
         // Otherwise, look for an `Authorization` header on the request
-        let maybe_authorization: Option<String> = {
-            req.headers()
-                .get(header::AUTHORIZATION)
-                .and_then(|h| h.to_str().ok())
-                .map(|h| h.to_string())
-        };
+        let maybe_authorization = req
+            .headers()
+            .get(header::AUTHORIZATION)
+            .and_then(|h| h.to_str().ok());
+
         if let Some(header_value) = maybe_authorization {
-            let token = ApiToken::find_by_api_token(&conn, &header_value).map_err(|e| {
+            let token = ApiToken::find_by_api_token(&conn, header_value).map_err(|e| {
                 if e.is::<InsecurelyGeneratedTokenRevoked>() {
                     e
                 } else {
