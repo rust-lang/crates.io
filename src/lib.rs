@@ -11,6 +11,8 @@
 #[macro_use]
 extern crate claim;
 #[macro_use]
+extern crate derive_builder;
+#[macro_use]
 extern crate derive_deref;
 #[macro_use]
 extern crate diesel;
