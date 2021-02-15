@@ -51,7 +51,7 @@ cookie = { version = "0.14", features = ["secure"] }
 ctrlc = { version = "3.0", features = ["termination"] }
 derive_deref = "1.1.1"
 dialoguer = "0.7.1"
-diesel = { version = "1.4.0", features = ["postgres", "serde_json", "chrono", "r2d2"] }
+diesel = { version = "1.4.0", features = ["postgres", "serde_json", "chrono", "r2d2", "network-address"] }
 diesel_full_text_search = "1.0.0"
 dotenv = "0.15"
 flate2 = "1.0"
@@ -64,6 +64,7 @@ htmlescape = "0.3.1"
 http = "0.2"
 hyper = { version = "0.14", features = ["client", "http1"] }
 indexmap = "1.0.2"
+ipnetwork = "0.16.0"
 jemallocator = { version = "0.3", features = ['unprefixed_malloc_on_supported_platforms', 'profiling'] }
 lettre = { version = "0.10.0-alpha.1", default-features = false, features = ["file-transport", "smtp-transport", "native-tls", "hostname", "builder"] }
 license-exprs = "^1.4"
