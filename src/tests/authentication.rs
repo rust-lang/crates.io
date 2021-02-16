@@ -1,8 +1,7 @@
 use crate::{util::RequestHelper, TestApp};
 
-use cargo_registry::middleware::current_user::TrustedUserId;
-
-use conduit::{header, Handler, HandlerResult, Method, RequestExt, StatusCode};
+use crate::util::encode_session_header;
+use conduit::{header, Handler, HandlerResult, Method, StatusCode};
 use conduit_test::MockRequest;
 
 static URL: &str = "/api/v1/me/updates";
@@ -49,8 +48,12 @@ fn token_auth_cannot_find_token() {
 #[test]
 fn cookie_auth_cannot_find_user() {
     let (app, anon) = TestApp::init().empty();
+
+    let session_key = &app.as_inner().session_key;
+    let cookie = encode_session_header(session_key, -1);
+
     let mut request = anon.request_builder(Method::GET, URL);
-    request.mut_extensions().insert(TrustedUserId(-1));
+    request.header(header::COOKIE, &cookie);
 
     let response = call(&app, request);
     let log_message = response.map(|_| ()).unwrap_err().to_string();

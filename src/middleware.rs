@@ -4,7 +4,6 @@ mod prelude {
 }
 
 use self::app::AppMiddleware;
-use self::current_user::CaptureUserIdFromCookie;
 use self::debug::*;
 use self::ember_html::EmberHtml;
 use self::head::Head;
@@ -14,7 +13,6 @@ use self::static_or_continue::StaticOrContinue;
 pub mod app;
 mod balance_capacity;
 mod block_traffic;
-pub mod current_user;
 mod debug;
 mod ember_html;
 mod ensure_well_formed_500;
@@ -69,9 +67,6 @@ pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
     ));
 
     m.add(AppMiddleware::new(app));
-
-    // Parse and save the user_id from the session cookie as part of the authentication logic
-    m.add(CaptureUserIdFromCookie);
 
     // Note: The following `m.around()` middleware is run from bottom to top
 
