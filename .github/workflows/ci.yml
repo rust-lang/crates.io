@@ -117,15 +117,15 @@ jobs:
       #
       # The other binaries (like `rustc`) will be overwritten by rustup.
       #
-      # Current size as of 2019-12-23: ~6 MB
+      # Current size as of 2021-02-15: ~15 MB
       - name: Cache cargo binaries
         uses: actions/cache@main
         with:
           path: ~/.cargo/bin
           key: ${{ runner.os }}-cargo-bin-${{ matrix.rust }}-${{ hashFiles('.diesel_version') }}-v2
 
-      # Current size as of 2019-12-23: ~77 MB
-      - name: Cache cargo registry cache
+      # Current size as of 2021-02-15: ~105 MB
+      - name: Cache cargo registry and git deps
         uses: actions/cache@main
         with:
           path: |
@@ -156,7 +156,7 @@ jobs:
         run:
           echo "::set-output name=version::$(rustc -V)"
 
-      # Current size as of 2019-12-23: ~336 MB
+      # Current size as of 2021-02-12: ~325 MB
       - name: Cache cargo build
         uses: actions/cache@main
         with:
