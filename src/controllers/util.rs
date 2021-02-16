@@ -62,8 +62,11 @@ fn authenticate_user(req: &dyn RequestExt) -> AppResult<AuthenticatedUser> {
     let session = req.session();
     let user_id_from_session = session.get("user_id").and_then(|s| s.parse::<i32>().ok());
 
-    let (user_id, token_id) = if let Some(id) = user_id_from_session {
-        (id, None)
+    let (user, token_id) = if let Some(id) = user_id_from_session {
+        let user = User::find(&conn, id)
+            .chain_error(|| internal("user_id from cookie not found in database"))?;
+
+        (user, None)
     } else {
         // Otherwise, look for an `Authorization` header on the request
         let maybe_authorization = req
@@ -80,15 +83,15 @@ fn authenticate_user(req: &dyn RequestExt) -> AppResult<AuthenticatedUser> {
                 }
             })?;
 
-            (token.user_id, Some(token.id))
+            let user = User::find(&conn, token.user_id)
+                .chain_error(|| internal("user_id from token not found in database"))?;
+
+            (user, Some(token.id))
         } else {
             // Unable to authenticate the user
             return Err(internal("no cookie session or auth header found")).chain_error(forbidden);
         }
     };
-
-    let user = User::find(&conn, user_id)
-        .chain_error(|| internal("user_id from cookie or token not found in database"))?;
 
     Ok(AuthenticatedUser { user, token_id })
 }
