@@ -161,9 +161,9 @@ jobs:
         uses: actions/cache@main
         with:
           path: target
-          key: ${{ runner.os }}-cargo-build-target-${{ steps.rustc.outputs.version }}-${{ hashFiles('**/Cargo.lock') }}
+          key: v2-${{ runner.os }}-cargo-build-target-${{ steps.rustc.outputs.version }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-build-target-${{ steps.rustc.outputs.version }}-
+            v2-${{ runner.os }}-cargo-build-target-${{ steps.rustc.outputs.version }}-
 
       - name: Setup database
         run: |
