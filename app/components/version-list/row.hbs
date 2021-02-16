@@ -12,6 +12,8 @@
     <div local-class="release-track">
       {{#if @version.yanked}}
         {{svg-jar "trash"}}
+      {{else if @version.invalidSemver}}
+        ?
       {{else if @version.isFirst}}
         {{svg-jar "star"}}
       {{else}}

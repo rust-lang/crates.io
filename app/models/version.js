@@ -44,21 +44,33 @@ export default class Version extends Model {
     return oldestVersion === this;
   }
 
-  @cached get semver() {
-    return semverParse(this.num);
+  get semver() {
+    return semverParse(this.num, { loose: true });
+  }
+
+  get invalidSemver() {
+    return this.semver === null;
   }
 
   get isPrerelease() {
+    if (this.invalidSemver) {
+      return false;
+    }
+
     return this.semver.prerelease.length !== 0;
   }
 
   get releaseTrack() {
+    if (this.invalidSemver) {
+      return null;
+    }
+
     let { semver } = this;
     return `${semver.major}.${semver.major === 0 ? semver.minor : 'x'}`;
   }
 
   @cached get isHighestOfReleaseTrack() {
-    if (this.isPrerelease) {
+    if (this.isPrerelease || this.invalidSemver) {
       return false;
     }
 
@@ -66,7 +78,7 @@ export default class Version extends Model {
     let { versions } = crate;
     // find all other non-prerelease versions on the same release track
     let sameTrackVersions = versions.filter(
-      it => it !== this && !it.yanked && !it.isPrerelease && it.releaseTrack === releaseTrack,
+      it => it !== this && !it.yanked && !it.isPrerelease && !it.invalidSemver && it.releaseTrack === releaseTrack,
     );
     // check if we're the "highest"
     return sameTrackVersions.every(it => it.semver.compare(semver) === -1);

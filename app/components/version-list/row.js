@@ -13,6 +13,9 @@ export default class VersionRow extends Component {
     if (version.yanked) {
       return 'This version was yanked';
     }
+    if (version.invalidSemver) {
+      return `Failed to parse version ${version.num}`;
+    }
     if (version.isFirst) {
       return 'This is the first version that was released';
     }
