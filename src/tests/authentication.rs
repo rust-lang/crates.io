@@ -1,6 +1,7 @@
 use crate::{util::RequestHelper, TestApp};
 
 use crate::util::encode_session_header;
+use cargo_registry::controllers::util::auth_cookie;
 use conduit::{header, Handler, HandlerResult, Method, StatusCode};
 use conduit_test::MockRequest;
 use serde_json::Value;
@@ -11,6 +12,18 @@ static INTERNAL_ERROR_NO_USER: &str =
 
 fn call(app: &TestApp, mut request: MockRequest) -> HandlerResult {
     app.as_middleware().call(&mut request)
+}
+
+#[test]
+fn session_user() {
+    let token = "some-random-token";
+
+    let (app, _) = TestApp::init().empty();
+    let session_user = app.db_new_user("user1").with_session(token);
+    let request = session_user.request_builder(Method::GET, URL);
+
+    let response = session_user.run::<Value>(request);
+    assert_eq!(response.status(), StatusCode::OK);
 }
 
 #[test]
@@ -35,6 +48,22 @@ fn token_user() {
 fn anonymous_user_unauthorized() {
     let (_app, anon) = TestApp::init().empty();
     let request = anon.request_builder(Method::GET, URL);
+
+    let response = anon.run::<Value>(request);
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_eq!(
+        response.json(),
+        json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
+    );
+}
+
+#[test]
+fn session_auth_cannot_find_token() {
+    let cookie = auth_cookie("some-unknown-token", false).to_string();
+
+    let (_app, anon) = TestApp::init().empty();
+    let mut request = anon.request_builder(Method::GET, URL);
+    request.header(header::COOKIE, &cookie);
 
     let response = anon.run::<Value>(request);
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
