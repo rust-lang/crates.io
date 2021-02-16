@@ -105,6 +105,25 @@ impl Session {
             .map(|changed_rows| changed_rows == 1)
     }
 
+    /// Looks for an unrevoked session with a `hashed_token` that matches the
+    /// given `token` and revokes it, if it exists. The `bool` return value
+    /// indicates whether a corresponding session was found or not.
+    pub fn revoke_by_token(
+        conn: &PgConnection,
+        token: &str,
+    ) -> Result<bool, diesel::result::Error> {
+        let hashed_token = Self::hash_token(token);
+
+        let sessions = sessions::table
+            .filter(sessions::hashed_token.eq(hashed_token.as_slice()))
+            .filter(sessions::revoked.eq(false));
+
+        diesel::update(sessions)
+            .set(sessions::revoked.eq(true))
+            .execute(conn)
+            .map(|changed_rows| changed_rows == 1)
+    }
+
     /// Generates a new plaintext token
     ///
     /// Note that this needs to be hashed before saving it in the database!
