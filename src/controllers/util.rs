@@ -1,5 +1,6 @@
 use chrono::Utc;
 use conduit_cookie::{RequestCookies, RequestSession};
+use cookie::{Cookie, SameSite};
 
 use super::prelude::*;
 
@@ -9,8 +10,9 @@ use crate::util::errors::{
     account_locked, forbidden, internal, AppError, AppResult, ChainError,
     InsecurelyGeneratedTokenRevoked,
 };
+use std::borrow::Cow;
 
-const AUTH_COOKIE_NAME: &str = "cargo_auth";
+pub const AUTH_COOKIE_NAME: &str = "cargo_auth";
 
 #[derive(Debug)]
 pub struct AuthenticatedUser {
@@ -60,6 +62,18 @@ fn verify_origin(req: &dyn RequestExt) -> AppResult<()> {
             .chain_error(|| Box::new(forbidden()) as Box<dyn AppError>);
     }
     Ok(())
+}
+
+pub fn auth_cookie<'c, T>(token: T, secure: bool) -> Cookie<'c>
+where
+    T: Into<Cow<'c, str>>,
+{
+    Cookie::build(AUTH_COOKIE_NAME, token)
+        .http_only(true)
+        .secure(secure)
+        .same_site(SameSite::Strict)
+        .path("/")
+        .finish()
 }
 
 fn authenticate_user(req: &dyn RequestExt) -> AppResult<AuthenticatedUser> {

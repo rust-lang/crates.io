@@ -82,7 +82,7 @@ mod prelude {
 }
 
 pub mod helpers;
-mod util;
+pub mod util;
 
 pub mod category;
 pub mod crate_owner_invitation;
