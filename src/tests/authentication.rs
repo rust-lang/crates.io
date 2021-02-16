@@ -14,6 +14,24 @@ fn call(app: &TestApp, mut request: MockRequest) -> HandlerResult {
 }
 
 #[test]
+fn cookie_user() {
+    let (_app, _, cookie_user) = TestApp::init().with_user();
+    let request = cookie_user.request_builder(Method::GET, URL);
+
+    let response = cookie_user.run::<Value>(request);
+    assert_eq!(response.status(), StatusCode::OK);
+}
+
+#[test]
+fn token_user() {
+    let (_app, _, _, token_user) = TestApp::init().with_token();
+    let request = token_user.request_builder(Method::GET, URL);
+
+    let response = token_user.run::<Value>(request);
+    assert_eq!(response.status(), StatusCode::OK);
+}
+
+#[test]
 fn anonymous_user_unauthorized() {
     let (_app, anon) = TestApp::init().empty();
     let request = anon.request_builder(Method::GET, URL);
