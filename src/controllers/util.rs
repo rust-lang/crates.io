@@ -73,17 +73,15 @@ fn authenticate_user(req: &dyn RequestExt) -> AppResult<AuthenticatedUser> {
                 .map(|h| h.to_string())
         };
         if let Some(header_value) = maybe_authorization {
-            let (user_id, token_id) = ApiToken::find_by_api_token(&conn, &header_value)
-                .map(|token| (token.user_id, Some(token.id)))
-                .map_err(|e| {
-                    if e.is::<InsecurelyGeneratedTokenRevoked>() {
-                        e
-                    } else {
-                        e.chain(internal("invalid token")).chain(forbidden())
-                    }
-                })?;
+            let token = ApiToken::find_by_api_token(&conn, &header_value).map_err(|e| {
+                if e.is::<InsecurelyGeneratedTokenRevoked>() {
+                    e
+                } else {
+                    e.chain(internal("invalid token")).chain(forbidden())
+                }
+            })?;
 
-            (user_id, token_id)
+            (token.user_id, Some(token.id))
         } else {
             // Unable to authenticate the user
             return Err(internal("no cookie session or auth header found")).chain_error(forbidden);
