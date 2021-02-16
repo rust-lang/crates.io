@@ -21,7 +21,7 @@
   resolved "https://registry.yarnpkg.com/@babel/compat-data/-/compat-data-7.12.13.tgz#27e19e0ed3726ccf54067ced4109501765e7e2e8"
   integrity sha512-U/hshG5R+SIoW7HVWIdmy1cB7s3ki+r3FpyEZiCgpi4tFgPnX/vynY80ZGSASOIrUM6O7VxOgCZgdt7h97bUGg==
 
-"@babel/core@^7.1.6", "@babel/core@^7.12.0", "@babel/core@^7.12.3", "@babel/core@^7.12.9", "@babel/core@^7.3.4", "@babel/core@^7.7.5", "@babel/core@^7.8.4":
+"@babel/core@^7.1.6", "@babel/core@^7.12.0", "@babel/core@^7.12.10", "@babel/core@^7.12.3", "@babel/core@^7.3.4", "@babel/core@^7.7.5", "@babel/core@^7.8.4":
   version "7.12.16"
   resolved "https://registry.yarnpkg.com/@babel/core/-/core-7.12.16.tgz#8c6ba456b23b680a6493ddcfcd9d3c3ad51cab7c"
   integrity sha512-t/hHIB504wWceOeaOoONOhu+gX+hpjfeN6YRBT209X/4sibZQfSF1I0HFRRlBe97UZZosGx5XwUg1ZgNbelmNw==
@@ -6550,12 +6550,12 @@ ember-cli-version-checker@^5.1.1, ember-cli-version-checker@^5.1.2:
     semver "^7.3.4"
     silent-error "^1.1.1"
 
-ember-cli@3.24.0:
-  version "3.24.0"
-  resolved "https://registry.yarnpkg.com/ember-cli/-/ember-cli-3.24.0.tgz#dbda4938e74fdafe4da1c42b49356f9d14c10697"
-  integrity sha512-dLurYpluRcE+XjCHy/JzUBcW4dBKhjmXH3zUjyof89gFjj+8EFjB0b2tqyS6buKqBasinVaX8lZZVIXYCdFtNA==
+ember-cli@3.25.0:
+  version "3.25.0"
+  resolved "https://registry.yarnpkg.com/ember-cli/-/ember-cli-3.25.0.tgz#061c5f263e959a2c0c255adbfc38c0fbbb7941b5"
+  integrity sha512-l8fOqxaBTCVU5IeSzEBBGl7oGCvt7KGVJTMA5uR8nNM1Eaeip8RKWskJvzSXtchwGY7ikR71vm2XOiGrzt/6pw==
   dependencies:
-    "@babel/core" "^7.12.9"
+    "@babel/core" "^7.12.10"
     "@babel/plugin-transform-modules-amd" "^7.12.1"
     amd-name-resolver "^1.3.1"
     babel-plugin-module-resolver "^4.0.0"
@@ -6619,7 +6619,7 @@ ember-cli@3.24.0:
     json-stable-stringify "^1.0.1"
     leek "0.0.24"
     lodash.template "^4.5.0"
-    markdown-it "^12.0.2"
+    markdown-it "^12.0.4"
     markdown-it-terminal "0.2.1"
     minimatch "^3.0.4"
     morgan "^1.10.0"
@@ -6633,7 +6633,7 @@ ember-cli@3.24.0:
     resolve "^1.19.0"
     resolve-package-path "^3.1.0"
     sane "^4.1.0"
-    semver "^7.3.2"
+    semver "^7.3.4"
     silent-error "^1.1.1"
     sort-package-json "^1.48.0"
     symlink-or-copy "^1.3.1"
@@ -6641,7 +6641,7 @@ ember-cli@3.24.0:
     testem "^3.2.0"
     tiny-lr "^2.0.0"
     tree-sync "^2.1.0"
-    uuid "^8.3.1"
+    uuid "^8.3.2"
     walk-sync "^2.2.0"
     watch-detector "^1.0.0"
     workerpool "^6.0.3"
@@ -10390,7 +10390,7 @@ markdown-it-terminal@0.2.1:
     lodash.merge "^4.6.2"
     markdown-it "^8.3.1"
 
-markdown-it@^12.0.2:
+markdown-it@^12.0.4:
   version "12.0.4"
   resolved "https://registry.yarnpkg.com/markdown-it/-/markdown-it-12.0.4.tgz#eec8247d296327eac3ba9746bdeec9cfcc751e33"
   integrity sha512-34RwOXZT8kyuOJy25oJNJoulO8L0bTHYWXcdZBYZqFnjIy3NgjeoM3FmPXIOFQ26/lSHYMr8oc62B6adxXcb3Q==
@@ -14410,7 +14410,7 @@ uuid@^3.3.2, uuid@^3.3.3:
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-3.4.0.tgz#b23e4358afa8a202fe7a100af1f5f883f02007ee"
   integrity sha512-HjSDRw6gZE5JMggctHBcjVak08+KEVhSIiDzFnT9S9aegmp85S/bReBVTb4QTFaRNptJ9kuYaNhnbNEOkbKb/A==
 
-uuid@^8.3.1:
+uuid@^8.3.2:
   version "8.3.2"
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-8.3.2.tgz#80d5b5ced271bb9af6c445f21a1a04c606cefbe2"
   integrity sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==
