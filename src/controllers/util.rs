@@ -70,34 +70,34 @@ fn authenticate_user(req: &dyn RequestExt) -> AppResult<AuthenticatedUser> {
             user,
             token_id: None,
         });
-    } else {
-        // Otherwise, look for an `Authorization` header on the request
-        let maybe_authorization = req
-            .headers()
-            .get(header::AUTHORIZATION)
-            .and_then(|h| h.to_str().ok());
-
-        if let Some(header_value) = maybe_authorization {
-            let token = ApiToken::find_by_api_token(&conn, header_value).map_err(|e| {
-                if e.is::<InsecurelyGeneratedTokenRevoked>() {
-                    e
-                } else {
-                    e.chain(internal("invalid token")).chain(forbidden())
-                }
-            })?;
-
-            let user = User::find(&conn, token.user_id)
-                .chain_error(|| internal("user_id from token not found in database"))?;
-
-            return Ok(AuthenticatedUser {
-                user,
-                token_id: Some(token.id),
-            });
-        } else {
-            // Unable to authenticate the user
-            return Err(internal("no cookie session or auth header found")).chain_error(forbidden);
-        }
     }
+
+    // Otherwise, look for an `Authorization` header on the request
+    let maybe_authorization = req
+        .headers()
+        .get(header::AUTHORIZATION)
+        .and_then(|h| h.to_str().ok());
+
+    if let Some(header_value) = maybe_authorization {
+        let token = ApiToken::find_by_api_token(&conn, header_value).map_err(|e| {
+            if e.is::<InsecurelyGeneratedTokenRevoked>() {
+                e
+            } else {
+                e.chain(internal("invalid token")).chain(forbidden())
+            }
+        })?;
+
+        let user = User::find(&conn, token.user_id)
+            .chain_error(|| internal("user_id from token not found in database"))?;
+
+        return Ok(AuthenticatedUser {
+            user,
+            token_id: Some(token.id),
+        });
+    }
+
+    // Unable to authenticate the user
+    return Err(internal("no cookie session or auth header found")).chain_error(forbidden);
 }
 
 impl<'a> UserAuthenticationExt for dyn RequestExt + 'a {
