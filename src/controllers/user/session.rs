@@ -143,6 +143,28 @@ fn save_user_to_database(
 /// Handles the `DELETE /api/private/session` route.
 pub fn logout(req: &mut dyn RequestExt) -> EndpointResult {
     req.session_mut().remove(&"user_id".to_string());
+
+    // read the current session token, if it exists
+    let session_token = req
+        .cookies()
+        .get(AUTH_COOKIE_NAME)
+        .map(|cookie| cookie.value().to_string());
+
+    if let Some(token) = session_token {
+        let app = req.app();
+        let secure = app.config.env == Env::Production;
+
+        // remove the `cargo_auth` cookie
+        req.cookies_mut().remove(auth_cookie("", secure));
+
+        // try to revoke the session in the database, but explicitly
+        // ignore failures
+        let _result: Result<_, Box<dyn AppError>> = req
+            .db_conn()
+            .map_err(Into::into)
+            .and_then(|conn| Session::revoke_by_token(&conn, &token).map_err(Into::into));
+    }
+
     Ok(req.json(&true))
 }
 
