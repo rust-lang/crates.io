@@ -1,13 +1,15 @@
 use crate::controllers::frontend_prelude::*;
 
-use conduit_cookie::RequestSession;
+use conduit_cookie::{RequestCookies, RequestSession};
 use oauth2::reqwest::http_client;
 use oauth2::{AuthorizationCode, Scope, TokenResponse};
 
+use crate::controllers::util::{auth_cookie, AUTH_COOKIE_NAME};
 use crate::github::GithubUser;
-use crate::models::{NewUser, User};
+use crate::models::{NewUser, Session, User};
 use crate::schema::users;
 use crate::util::errors::ReadOnlyMode;
+use crate::Env;
 
 /// Handles the `GET /api/private/session/begin` route.
 ///
@@ -104,9 +106,32 @@ pub fn authorize(req: &mut dyn RequestExt) -> EndpointResult {
     let ghuser = req.app().github.current_user(token)?;
     let user = save_user_to_database(&ghuser, &token.secret(), &*req.db_conn()?)?;
 
-    // Log in by setting a cookie and the middleware authentication
-    req.session_mut()
-        .insert("user_id".to_string(), user.id.to_string());
+    // Create a new `Session`
+    let token = Session::generate_token();
+
+    let ip_addr = req.remote_addr().ip();
+
+    let user_agent = req
+        .headers()
+        .get(header::USER_AGENT)
+        .and_then(|value| value.to_str().ok())
+        .map(|value| value.to_string())
+        .unwrap_or_default();
+
+    Session::new()
+        .user_id(user.id)
+        .token(&token)
+        .last_ip_address(ip_addr)
+        .last_user_agent(user_agent)
+        .build()
+        .map_err(|_err| server_error("Error obtaining token"))?
+        .insert(&*req.db_conn()?)?;
+
+    // Log in by setting an auth cookie
+    let app = req.app();
+    let secure = app.config.env == Env::Production;
+
+    req.cookies_mut().add(auth_cookie(token, secure));
 
     super::me::me(req)
 }
