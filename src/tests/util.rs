@@ -27,7 +27,7 @@ use cargo_registry::{
     background_jobs::Environment,
     db::DieselPool,
     git::{Credentials, RepositoryConfig},
-    models::{ApiToken, CreatedApiToken, User},
+    models::{ApiToken, CreatedApiToken, Session, User},
     util::AppResponse,
     App, Config,
 };
@@ -45,9 +45,12 @@ use git2::Repository as UpstreamRepository;
 
 use url::Url;
 
+use cargo_registry::controllers::util::auth_cookie;
 pub use conduit::{header, StatusCode};
 use cookie::Cookie;
 use std::collections::HashMap;
+use std::net::IpAddr;
+use std::str::FromStr;
 
 pub fn init_logger() {
     let _ = tracing_subscriber::fmt()
@@ -534,6 +537,47 @@ impl MockCookieUser {
             app: TestApp(Rc::clone(&self.app.0)),
             token,
         }
+    }
+
+    pub fn with_session(&self, token: &str) -> MockSessionUser {
+        let ip_addr = "192.168.0.42";
+        let user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36";
+
+        self.app.db(|conn| {
+            Session::new()
+                .user_id(self.user.id)
+                .token(&token)
+                .last_ip_address(IpAddr::from_str(ip_addr).unwrap())
+                .last_user_agent(user_agent)
+                .build()
+                .unwrap()
+                .insert(&conn)
+                .unwrap()
+        });
+
+        MockSessionUser {
+            app: TestApp(Rc::clone(&self.app.0)),
+            token: token.to_string(),
+        }
+    }
+}
+
+pub struct MockSessionUser {
+    app: TestApp,
+    token: String,
+}
+
+impl RequestHelper for MockSessionUser {
+    fn request_builder(&self, method: Method, path: &str) -> MockRequest {
+        let cookie = auth_cookie(&self.token, false).to_string();
+
+        let mut request = req(method, path);
+        request.header(header::COOKIE, &cookie);
+        request
+    }
+
+    fn app(&self) -> &TestApp {
+        &self.app
     }
 }
 
