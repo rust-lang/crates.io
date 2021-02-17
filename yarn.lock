@@ -1157,41 +1157,6 @@
     walk-sync "^1.1.3"
     yargs "^16.1.0"
 
-"@embroider/core@0.29.0":
-  version "0.29.0"
-  resolved "https://registry.yarnpkg.com/@embroider/core/-/core-0.29.0.tgz#51421fbb2bcee607dc6e162400e3502a121230d2"
-  integrity sha512-2i0QtV1y1jJpj1aiIA3FVZHfuLBN2yCUcJs0PkOsqZYi7J796KT4t7WwAk8gmBq00yGzHDWLw/iH4ULTomPS8A==
-  dependencies:
-    "@babel/core" "^7.12.3"
-    "@babel/parser" "^7.12.3"
-    "@babel/plugin-syntax-dynamic-import" "^7.8.3"
-    "@babel/traverse" "^7.12.1"
-    "@babel/types" "^7.12.1"
-    "@embroider/macros" "0.29.0"
-    assert-never "^1.1.0"
-    babel-plugin-syntax-dynamic-import "^6.18.0"
-    broccoli-persistent-filter "^2.2.2"
-    broccoli-plugin "^3.0.0"
-    broccoli-source "^1.1.0"
-    debug "^3.1.0"
-    fast-sourcemap-concat "^1.4.0"
-    filesize "^4.1.2"
-    fs-extra "^7.0.1"
-    fs-tree-diff "^2.0.0"
-    handlebars "^4.4.2"
-    js-string-escape "^1.0.1"
-    jsdom "^16.4.0"
-    json-stable-stringify "^1.0.1"
-    lodash "^4.17.10"
-    pkg-up "^2.0.0"
-    resolve "^1.8.1"
-    resolve-package-path "^1.2.2"
-    semver "^7.3.2"
-    strip-bom "^3.0.0"
-    typescript-memoize "^1.0.0-alpha.3"
-    walk-sync "^1.1.3"
-    wrap-legacy-hbs-plugin-if-needed "^1.0.1"
-
 "@embroider/core@0.33.0", "@embroider/core@^0.33.0":
   version "0.33.0"
   resolved "https://registry.yarnpkg.com/@embroider/core/-/core-0.33.0.tgz#0fb1752d6e34ea45368e65c42e13220a57ffae76"
@@ -1277,21 +1242,6 @@
   dependencies:
     loader-utils "^1.1.0"
 
-"@embroider/macros@0.29.0", "@embroider/macros@^0.29.0":
-  version "0.29.0"
-  resolved "https://registry.yarnpkg.com/@embroider/macros/-/macros-0.29.0.tgz#33048069b0abdda17efc7ff438b18b0c2c237bff"
-  integrity sha512-Kg8we7U7TpgUZ0EBKlTC4UGItPa91OrGT5Bzxa2cJi/pPp1z8Amgd7Y+m29N+aLBZwlv+OxlhnOCm0Fhjw/dag==
-  dependencies:
-    "@babel/core" "^7.12.3"
-    "@babel/traverse" "^7.12.1"
-    "@babel/types" "^7.12.1"
-    "@embroider/core" "0.29.0"
-    assert-never "^1.1.0"
-    ember-cli-babel "^7.23.0"
-    lodash "^4.17.10"
-    resolve "^1.8.1"
-    semver "^7.3.2"
-
 "@embroider/macros@0.33.0", "@embroider/macros@^0.33.0":
   version "0.33.0"
   resolved "https://registry.yarnpkg.com/@embroider/macros/-/macros-0.33.0.tgz#d5826ea7565bb69b57ba81ed528315fe77acbf9d"
@@ -1307,7 +1257,7 @@
     resolve "^1.8.1"
     semver "^7.3.2"
 
-"@embroider/macros@0.36.0":
+"@embroider/macros@0.36.0", "@embroider/macros@^0.36.0":
   version "0.36.0"
   resolved "https://registry.yarnpkg.com/@embroider/macros/-/macros-0.36.0.tgz#5330f1e6f12112f0f68e34b3e4855dc7dd3c69a5"
   integrity sha512-w37G4uXG+Wi3K3EHSFBSr/n6kGFXYG8nzZ9ptzDOC7LP3Oh5/MskBnVZW3+JkHXUPEqKsDGlxPxCVpPl1kQyjQ==
@@ -4120,7 +4070,7 @@ broccoli-persistent-filter@^1.1.5, broccoli-persistent-filter@^1.1.6, broccoli-p
     symlink-or-copy "^1.0.1"
     walk-sync "^0.3.1"
 
-broccoli-persistent-filter@^2.1.0, broccoli-persistent-filter@^2.2.1, broccoli-persistent-filter@^2.2.2, broccoli-persistent-filter@^2.3.0, broccoli-persistent-filter@^2.3.1:
+broccoli-persistent-filter@^2.1.0, broccoli-persistent-filter@^2.2.1, broccoli-persistent-filter@^2.3.0, broccoli-persistent-filter@^2.3.1:
   version "2.3.1"
   resolved "https://registry.yarnpkg.com/broccoli-persistent-filter/-/broccoli-persistent-filter-2.3.1.tgz#4a052e0e0868b344c3a2977e35a3d497aa9eca72"
   integrity sha512-hVsmIgCDrl2NFM+3Gs4Cr2TA6UPaIZip99hN8mtkaUPgM8UeVnCbxelCvBjUBHo0oaaqP5jzqqnRVvb568Yu5g==
@@ -4187,7 +4137,7 @@ broccoli-plugin@^2.0.0, broccoli-plugin@^2.1.0:
     rimraf "^2.3.4"
     symlink-or-copy "^1.1.8"
 
-broccoli-plugin@^3.0.0, broccoli-plugin@^3.1.0:
+broccoli-plugin@^3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/broccoli-plugin/-/broccoli-plugin-3.1.0.tgz#54ba6dd90a42ec3db5624063292610e326b1e542"
   integrity sha512-7w7FP8WJYjLvb0eaw27LO678TGGaom++49O1VYIuzjhXjK5kn2+AMlDm7CaUFw4F7CLGoVQeZ84d8gICMJa4lA==
@@ -6739,16 +6689,18 @@ ember-event-helpers@0.1.1:
   dependencies:
     ember-cli-babel "^7.19.0"
 
-ember-exam@6.0.1:
-  version "6.0.1"
-  resolved "https://registry.yarnpkg.com/ember-exam/-/ember-exam-6.0.1.tgz#0a6412c81aa1dfb571b537c6428ceb671dd7ebb4"
-  integrity sha512-L63kB4Dxon7R/SAbGpvpJUlVFFlVbDDqfI7YYitXhufc2uKuhx3TkZfld9prEbaVPExKw4EuIWZkkuYjwJbttQ==
+ember-exam@6.1.0:
+  version "6.1.0"
+  resolved "https://registry.yarnpkg.com/ember-exam/-/ember-exam-6.1.0.tgz#1ea2c0ece27ac8ad6a80d959b1c207611b7dfdd7"
+  integrity sha512-H9tg7eUgqkjAsr1/15UzxGyZobGLgsyTi56Ng0ySnkYGCRfvVpwtVc3xgcNOFnUaa9RExUFpxC0adjW3K87Uxw==
   dependencies:
-    "@embroider/macros" "^0.29.0"
+    "@embroider/macros" "^0.36.0"
     chalk "^4.1.0"
     cli-table3 "^0.6.0"
     debug "^4.2.0"
+    ember-auto-import "^1.10.1"
     ember-cli-babel "^7.21.0"
+    ember-cli-version-checker "^5.1.2"
     execa "^4.0.3"
     fs-extra "^9.0.1"
     js-yaml "^3.14.0"
