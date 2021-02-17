@@ -56,9 +56,9 @@ export default BaseSerializer.extend({
     versions = versions.filter(it => !it.yanked);
 
     let versionNums = versions.models.map(it => it.num);
-    semverSort(versionNums);
+    semverSort(versionNums, { loose: true });
     hash.max_version = versionNums[0] ?? '0.0.0';
-    hash.max_stable_version = versionNums.find(it => !prerelease(it)) ?? null;
+    hash.max_stable_version = versionNums.find(it => !prerelease(it, { loose: true })) ?? null;
 
     let newestVersions = versions.models.sort((a, b) => compareIsoDates(b.updated_at, a.updated_at));
     hash.newest_version = newestVersions[0]?.num ?? '0.0.0';
