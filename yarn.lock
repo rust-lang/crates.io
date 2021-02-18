@@ -1080,19 +1080,17 @@
   dependencies:
     ember-cli-babel "^7.4.0"
 
-"@ember/test-helpers@2.2.0":
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/@ember/test-helpers/-/test-helpers-2.2.0.tgz#7a7ad1b991caefca74de283f3b16e425cbb600d6"
-  integrity sha512-LexeWURLr2WV7NrVYSZiVkwV34rqB7BuBDoOz6aK4KaSBnEZPs94PMJDtb0Zbyh0qSOIs2QERKSK3qn92jhxtg==
+"@ember/test-helpers@2.2.1":
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/@ember/test-helpers/-/test-helpers-2.2.1.tgz#584eb8359c4bf84670320a95e6af629d7526bc2a"
+  integrity sha512-S8GKP0tBkggim/8ReMREIKWRRsRilNTZGvnm4js673pnDZ1QIpxDx/EHZEf1V3loTvRGQGGmDbGFVlVIfW0vQg==
   dependencies:
     "@ember/test-waiters" "^2.4.0"
     broccoli-debug "^0.6.5"
     broccoli-funnel "^3.0.3"
-    ember-auto-import "^1.10.1"
     ember-cli-babel "^7.23.1"
     ember-cli-htmlbars "^5.2.0"
     ember-destroyable-polyfill "^2.0.3"
-    es6-promise "^4.2.8"
 
 "@ember/test-waiters@^2.3.0", "@ember/test-waiters@^2.4.0":
   version "2.4.0"
@@ -7231,11 +7229,6 @@ es6-promise-pool@^2.5.0:
   version "2.5.0"
   resolved "https://registry.yarnpkg.com/es6-promise-pool/-/es6-promise-pool-2.5.0.tgz#147c612b36b47f105027f9d2bf54a598a99d9ccb"
   integrity sha1-FHxhKza0fxBQJ/nSv1SlmKmdnMs=
-
-es6-promise@^4.2.8:
-  version "4.2.8"
-  resolved "https://registry.yarnpkg.com/es6-promise/-/es6-promise-4.2.8.tgz#4eb21594c972bc40553d276e510539143db53e0a"
-  integrity sha512-HJDGx5daxeIvxdBxvG2cb9g4tEvwIk3i8+nhX0yGrYmZUzbkdg8QbDevheDB8gd0//uPj4c1EQua8Q+MViT0/w==
 
 escalade@^3.1.1:
   version "3.1.1"
