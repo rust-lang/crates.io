@@ -2,6 +2,7 @@
     --bg-color: var(--grey200);
     --hover-bg-color: hsl(217, 37%, 98%);
     --fg-color: var(--grey700);
+    --shadow: 0 1px 3px hsla(51, 90%, 42%, .35);
 
     display: flex;
     align-items: center;
@@ -10,12 +11,16 @@
     padding: 15px 25px;
     background-color: white;
     border-radius: 7px;
-    box-shadow: 0 1px 3px hsla(51, 90%, 42%, .35);
-    transition: background-color 300ms;
+    box-shadow: var(--shadow);
+    transition: all 300ms;
 
-    &:hover {
+    &:hover, &.focused {
         background-color: var(--hover-bg-color);
-        transition: background-color 0ms;
+        transition: all 0ms;
+    }
+
+    &.focused {
+        box-shadow: 0 0 0 3px var(--yellow500), var(--shadow);
     }
 
     &.latest {
@@ -74,7 +79,7 @@
         width: auto;
     }
 
-    .row:hover & {
+    .row:hover &, .row.focused & {
         border: 2px solid white;
         box-shadow: 0 1px 3px var(--fg-color);
     }
@@ -88,6 +93,7 @@
     color: var(--fg-color);
     font-weight: 500;
     font-variant-numeric: tabular-nums;
+    outline: none;
 
     &:hover {
         color: var(--fg-color);
