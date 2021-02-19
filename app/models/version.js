@@ -4,6 +4,7 @@ import { alias } from '@ember/object/computed';
 
 import { task } from 'ember-concurrency';
 import semverParse from 'semver/functions/parse';
+import { cached } from 'tracked-toolbox';
 
 import ajax from '../utils/ajax';
 
@@ -37,13 +38,13 @@ export default class Version extends Model {
     return Date.now() - this.created_at.getTime() < EIGHT_DAYS;
   }
 
-  get isFirst() {
+  @cached get isFirst() {
     let { versions } = this.crate;
     let oldestVersion = versions.sortBy('created_at')[0];
     return oldestVersion === this;
   }
 
-  get semver() {
+  @cached get semver() {
     return semverParse(this.num);
   }
 
@@ -56,7 +57,7 @@ export default class Version extends Model {
     return `${semver.major}.${semver.major === 0 ? semver.minor : 'x'}`;
   }
 
-  get isHighestOfReleaseTrack() {
+  @cached get isHighestOfReleaseTrack() {
     if (this.isPrerelease) {
       return false;
     }
