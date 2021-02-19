@@ -14062,7 +14062,7 @@ tracked-maps-and-sets@^2.0.0:
     "@glimmer/tracking" "^1.0.0"
     ember-cli-babel "^7.17.2"
 
-tracked-toolbox@^1.2.1:
+tracked-toolbox@1.2.1:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/tracked-toolbox/-/tracked-toolbox-1.2.1.tgz#0750fbf76c80ff6ba7c583a7fd8cce4c60d9b846"
   integrity sha512-SEAzpVDJNOf79IhztkUoYfwMA78pGs47k/35Dg23RCINdrnWNnXcCQAx6KOATsvyinqUJkzmTdNpwTgAbtSStg==
