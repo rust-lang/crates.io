@@ -62,7 +62,7 @@
 
       <span local-class="license">
         {{svg-jar "license"}}
-        {{@version.license}}
+        <LicenseExpression @license={{@version.license}} />
       </span>
 
       {{#if @version.featureList}}

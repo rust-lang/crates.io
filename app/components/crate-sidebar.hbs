@@ -82,7 +82,9 @@
     {{#if @version.license}}
       <div>
         <h3>License</h3>
-        <p data-test-license>{{ @version.license }}</p>
+        <p data-test-license>
+          <LicenseExpression @license={{@version.license }} />
+        </p>
       </div>
     {{/if}}
 
