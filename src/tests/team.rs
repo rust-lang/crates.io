@@ -122,7 +122,7 @@ fn add_renamed_team() {
         CrateBuilder::new("foo_renamed_team", user.as_model().id).expect_build(conn);
 
         // create team with same ID and different name compared to http mock
-        // used for `add_renamed_owner`
+        // used for `add_named_owner`
         NewTeam::new(
             "github:crates-test-org:not_core", // different team name
             13804222,                          // same org ID
