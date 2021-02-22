@@ -21,4 +21,8 @@ export default class DownloadGraph extends Component {
   }
 
   @gt('sortedVersions.length', NUM_VERSIONS) hasMoreVersions;
+
+  get tomlSnippet() {
+    return `${this.args.crate.name} = "${this.args.version.num}"`;
+  }
 }
