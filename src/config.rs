@@ -20,6 +20,7 @@ pub struct Config {
     pub domain_name: String,
     pub allowed_origins: Vec<String>,
     pub downloads_persist_interval_ms: usize,
+    pub ownership_invitations_expiration_days: u64,
 }
 
 impl Default for Config {
@@ -29,6 +30,7 @@ impl Default for Config {
     ///
     /// - `Config::max_upload_size`: 10MiB
     /// - `Config::api_protocol`: `https`
+    /// - `Config::ownership_invitations_expiration_days`: 30
     ///
     /// Pulls values from the following environment variables:
     ///
@@ -153,6 +155,7 @@ impl Default for Config {
                         .expect("invalid DOWNLOADS_PERSIST_INTERVAL_MS")
                 })
                 .unwrap_or(60_000), // 1 minute
+            ownership_invitations_expiration_days: 30,
         }
     }
 }

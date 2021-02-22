@@ -96,10 +96,11 @@ pub fn handle_invite(req: &mut dyn RequestExt) -> EndpointResult {
     let crate_invite = crate_invite.crate_owner_invite;
     let user_id = req.authenticate()?.user_id();
     let conn = &*req.db_conn()?;
+    let config = &req.app().config;
 
     let invitation = CrateOwnerInvitation::find_by_id(user_id, crate_invite.crate_id, &conn)?;
     if crate_invite.accepted {
-        invitation.accept(&conn)?;
+        invitation.accept(&conn, config)?;
     } else {
         invitation.decline(&conn)?;
     }
@@ -115,12 +116,13 @@ pub fn handle_invite(req: &mut dyn RequestExt) -> EndpointResult {
 
 /// Handles the `PUT /me/crate_owner_invitations/accept/:token` route.
 pub fn handle_invite_with_token(req: &mut dyn RequestExt) -> EndpointResult {
+    let config = &req.app().config;
     let conn = req.db_conn()?;
     let req_token = &req.params()["token"];
 
     let invitation = CrateOwnerInvitation::find_by_token(req_token, &conn)?;
     let crate_id = invitation.crate_id;
-    invitation.accept(&conn)?;
+    invitation.accept(&conn, config)?;
 
     #[derive(Serialize)]
     struct R {

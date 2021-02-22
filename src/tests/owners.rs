@@ -2,7 +2,7 @@ use crate::{
     add_team_to_crate,
     builders::{CrateBuilder, PublishBuilder},
     new_team,
-    util::{MockAnonymousUser, MockCookieUser, MockTokenUser, RequestHelper},
+    util::{MockAnonymousUser, MockCookieUser, MockTokenUser, RequestHelper, Response},
     TestApp,
 };
 use cargo_registry::{
@@ -13,6 +13,7 @@ use cargo_registry::{
     Emails,
 };
 
+use chrono::{Duration, Utc};
 use conduit::StatusCode;
 use diesel::prelude::*;
 
@@ -32,9 +33,11 @@ struct InvitationListResponse {
 
 // Implementing locally for now, unless these are needed elsewhere
 impl MockCookieUser {
-    /// As the currently logged in user, accept an invitation to become an owner of the named
-    /// crate.
-    fn accept_ownership_invitation(&self, krate_name: &str, krate_id: i32) {
+    fn try_accept_ownership_invitation<T: serde::de::DeserializeOwned>(
+        &self,
+        krate_name: &str,
+        krate_id: i32,
+    ) -> Response<T> {
         let body = json!({
             "crate_owner_invite": {
                 "invited_by_username": "",
@@ -45,14 +48,22 @@ impl MockCookieUser {
             }
         });
 
+        let url = format!("/api/v1/me/crate_owner_invitations/{}", krate_id);
+        self.put(&url, body.to_string().as_bytes())
+    }
+
+    /// As the currently logged in user, accept an invitation to become an owner of the named
+    /// crate.
+    fn accept_ownership_invitation(&self, krate_name: &str, krate_id: i32) {
         #[derive(Deserialize)]
         struct CrateOwnerInvitation {
             crate_owner_invitation: InvitationResponse,
         }
 
-        let url = format!("/api/v1/me/crate_owner_invitations/{}", krate_id);
-        let crate_owner_invite: CrateOwnerInvitation =
-            self.put(&url, body.to_string().as_bytes()).good();
+        let crate_owner_invite: CrateOwnerInvitation = self
+            .try_accept_ownership_invitation(krate_name, krate_id)
+            .good();
+
         assert!(crate_owner_invite.crate_owner_invitation.accepted);
         assert_eq!(crate_owner_invite.crate_owner_invitation.crate_id, krate_id);
     }
@@ -95,9 +106,16 @@ impl MockAnonymousUser {
             crate_owner_invitation: InvitationResponse,
         }
 
-        let url = format!("/api/v1/me/crate_owner_invitations/accept/{}", token);
-        let response: Response = self.put(&url, &[]).good();
+        let response: Response = self.try_accept_ownership_invitation_by_token(token).good();
         assert!(response.crate_owner_invitation.accepted);
+    }
+
+    fn try_accept_ownership_invitation_by_token<T: serde::de::DeserializeOwned>(
+        &self,
+        token: &str,
+    ) -> Response<T> {
+        let url = format!("/api/v1/me/crate_owner_invitations/accept/{}", token);
+        self.put(&url, &[])
     }
 }
 
@@ -470,6 +488,113 @@ fn test_accept_invitation_by_mail() {
     // New owner is now listed as an owner, so the crate has two owners
     let json = anon.show_crate_owners("accept_invitation");
     assert_eq!(json.users.len(), 2);
+}
+
+/// Hacky way to simulate the expiration of an ownership invitation. Instead of letting a month
+/// pass, the creation date of the invite is moved back a month.
+fn expire_invitation(app: &TestApp, crate_id: i32) {
+    use cargo_registry::schema::crate_owner_invitations;
+
+    app.db(|conn| {
+        let expiration = app.as_inner().config.ownership_invitations_expiration_days as i64;
+        let created_at = (Utc::now() - Duration::days(expiration)).naive_utc();
+
+        diesel::update(crate_owner_invitations::table)
+            .set(crate_owner_invitations::created_at.eq(created_at))
+            .filter(crate_owner_invitations::crate_id.eq(crate_id))
+            .execute(conn)
+            .expect("failed to override the creation time");
+    });
+}
+
+#[test]
+fn test_accept_expired_invitation() {
+    let (app, anon, owner, owner_token) = TestApp::init().with_token();
+    let owner = owner.as_model();
+    let invited_user = app.db_new_user("demo_user");
+    let krate = app.db(|conn| CrateBuilder::new("demo_crate", owner.id).expect_build(conn));
+
+    // Invite a new user
+    owner_token.add_user_owner("demo_crate", "demo_user");
+
+    // Manually update the creation time to simulate the invite expiring
+    expire_invitation(&app, krate.id);
+
+    // New owner tries to accept the invitation but it fails
+    let resp = invited_user.try_accept_ownership_invitation::<()>(&krate.name, krate.id);
+    assert_eq!(StatusCode::GONE, resp.status());
+    assert_eq!(
+        json!({
+            "errors": [
+                {
+                    "detail": "The invitation to become an owner of the demo_crate crate expired. \
+                               Please reach out to an owner of the crate to request a new invitation.",
+                }
+            ]
+        }),
+        resp.json()
+    );
+
+    // Invited user is NOT listed as an owner, so the crate still only has one owner
+    let json = anon.show_crate_owners("demo_crate");
+    assert_eq!(json.users.len(), 1);
+}
+
+#[test]
+fn test_decline_expired_invitation() {
+    let (app, anon, owner, owner_token) = TestApp::init().with_token();
+    let owner = owner.as_model();
+    let invited_user = app.db_new_user("demo_user");
+    let krate = app.db(|conn| CrateBuilder::new("demo_crate", owner.id).expect_build(conn));
+
+    // Invite a new user
+    owner_token.add_user_owner("demo_crate", "demo_user");
+
+    // Manually update the creation time to simulate the invite expiring
+    expire_invitation(&app, krate.id);
+
+    // New owner declines the invitation and it succeeds, even though the invitation expired.
+    invited_user.decline_ownership_invitation(&krate.name, krate.id);
+
+    // Invited user is NOT listed as an owner, so the crate still only has one owner
+    let json = anon.show_crate_owners("demo_crate");
+    assert_eq!(json.users.len(), 1);
+}
+
+#[test]
+fn test_accept_expired_invitation_by_mail() {
+    let (app, anon, owner, owner_token) = TestApp::init().with_token();
+    let owner = owner.as_model();
+    let _invited_user = app.db_new_user("demo_user");
+    let krate = app.db(|conn| CrateBuilder::new("demo_crate", owner.id).expect_build(conn));
+
+    // Invite a new owner
+    owner_token.add_user_owner("demo_crate", "demo_user");
+
+    // Manually update the creation time to simulate the invite expiring
+    expire_invitation(&app, krate.id);
+
+    // Retrieve the ownership invitation
+    let invite_token = extract_token_from_invite_email(&app.as_inner().emails);
+
+    // Try to accept the invitation, and ensure it fails.
+    let resp = anon.try_accept_ownership_invitation_by_token::<()>(&invite_token);
+    assert_eq!(StatusCode::GONE, resp.status());
+    assert_eq!(
+        json!({
+            "errors": [
+                {
+                    "detail": "The invitation to become an owner of the demo_crate crate expired. \
+                               Please reach out to an owner of the crate to request a new invitation.",
+                }
+            ]
+        }),
+        resp.json()
+    );
+
+    // Invited user is NOT listed as an owner, so the crate still only has one owner
+    let json = anon.show_crate_owners("demo_crate");
+    assert_eq!(json.users.len(), 1);
 }
 
 #[test]

@@ -1,9 +1,10 @@
-use chrono::NaiveDateTime;
-
-use crate::models::{CrateOwner, OwnerKind};
-use crate::schema::{crate_owner_invitations, crate_owners};
-use crate::util::errors::AppResult;
+use chrono::{NaiveDateTime, Utc};
 use diesel::prelude::*;
+
+use crate::config::Config;
+use crate::models::{CrateOwner, OwnerKind};
+use crate::schema::{crate_owner_invitations, crate_owners, crates};
+use crate::util::errors::{AppResult, OwnershipInvitationExpired};
 
 #[derive(Debug)]
 pub enum NewCrateOwnerInvitationOutcome {
@@ -68,7 +69,15 @@ impl CrateOwnerInvitation {
             .first::<Self>(&*conn)?)
     }
 
-    pub fn accept(self, conn: &PgConnection) -> AppResult<()> {
+    pub fn accept(self, conn: &PgConnection, config: &Config) -> AppResult<()> {
+        if self.is_expired(config) {
+            let crate_name = crates::table
+                .find(self.crate_id)
+                .select(crates::name)
+                .first(conn)?;
+            return Err(Box::new(OwnershipInvitationExpired { crate_name }));
+        }
+
         conn.transaction(|| {
             diesel::insert_into(crate_owners::table)
                 .values(&CrateOwner {
@@ -90,7 +99,20 @@ impl CrateOwnerInvitation {
     }
 
     pub fn decline(self, conn: &PgConnection) -> AppResult<()> {
+        // The check to prevent declining expired invitations is *explicitly* missing. We do not
+        // care if an expired invitation is declined, as that just removes the invitation from the
+        // database.
+
         diesel::delete(&self).execute(conn)?;
         Ok(())
+    }
+
+    fn is_expired(&self, config: &Config) -> bool {
+        self.expires_at(config) <= Utc::now().naive_utc()
+    }
+
+    fn expires_at(&self, config: &Config) -> NaiveDateTime {
+        let days = chrono::Duration::days(config.ownership_invitations_expiration_days as i64);
+        self.created_at + days
     }
 }
