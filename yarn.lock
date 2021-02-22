@@ -1436,7 +1436,7 @@
     "@handlebars/parser" "^1.1.0"
     simple-html-tokenizer "^0.5.10"
 
-"@glimmer/tracking@1.0.3", "@glimmer/tracking@^1.0.0", "@glimmer/tracking@~1.0.3":
+"@glimmer/tracking@1.0.3", "@glimmer/tracking@^1.0.0", "@glimmer/tracking@^1.0.2", "@glimmer/tracking@~1.0.3":
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/@glimmer/tracking/-/tracking-1.0.3.tgz#8b9b42aff6c206edeaaea178a95acc1eff62e61e"
   integrity sha512-21WR13vPdzt1IQ6JmPPAu4szjV9yKdmLHV3nD0MLDj6/EoYv1c2PqpFBBlp++6xW8OnyDa++cQ8OFoQDP+MRpA==
@@ -6617,14 +6617,16 @@ ember-compatibility-helpers@^1.1.1, ember-compatibility-helpers@^1.1.2, ember-co
     ember-cli-version-checker "^5.1.1"
     semver "^5.4.1"
 
-ember-concurrency@1.3.0:
-  version "1.3.0"
-  resolved "https://registry.yarnpkg.com/ember-concurrency/-/ember-concurrency-1.3.0.tgz#66f90fb792687470bcee1172adc0ebf33f5e8b9c"
-  integrity sha512-DwGlfWFpYyAkTwsedlEtK4t1DznJSculAW6Vq5S1C0shVPc5b6tTpHB2FFYisannSYkm+wpm1f1Pd40qiNPtOQ==
+ember-concurrency@2.0.2:
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/ember-concurrency/-/ember-concurrency-2.0.2.tgz#0fdadb6afae417908970c04492f98f8f2e9d06ec"
+  integrity sha512-dIlSg1NFZpNFJf7gEW0etrzfeivnBZKnjx6cSgbP1QUsaYgECoKXmNnuPK9YPZofqAnRZdCawQv4yMmW5zUNiw==
   dependencies:
-    ember-cli-babel "^7.7.3"
+    "@glimmer/tracking" "^1.0.2"
+    ember-cli-babel "^7.22.1"
+    ember-cli-htmlbars "^5.3.1"
     ember-compatibility-helpers "^1.2.0"
-    ember-maybe-import-regenerator "^0.1.6"
+    ember-destroyable-polyfill "^2.0.2"
 
 ember-css-modules@1.3.4:
   version "1.3.4"
@@ -6790,7 +6792,7 @@ ember-load-initializers@2.1.2:
     ember-cli-babel "^7.13.0"
     ember-cli-typescript "^2.0.2"
 
-ember-maybe-import-regenerator@0.1.6, ember-maybe-import-regenerator@^0.1.6:
+ember-maybe-import-regenerator@0.1.6:
   version "0.1.6"
   resolved "https://registry.yarnpkg.com/ember-maybe-import-regenerator/-/ember-maybe-import-regenerator-0.1.6.tgz#35d41828afa6d6a59bc0da3ce47f34c573d776ca"
   integrity sha1-NdQYKK+m1qWbwNo85H80xXPXdso=
