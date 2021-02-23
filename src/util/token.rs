@@ -74,20 +74,11 @@ macro_rules! secure_token_kind {
         }
 
         impl $name {
-            fn from_token(token: &str) -> Option<Self> {
-                $(
-                    if token.starts_with($repr) {
-                        return Some(Self::$key);
-                    }
-                )*
-                None
-            }
+            const VARIANTS: &'static [Self] = &[$(Self::$key,)*];
 
             fn prefix(&self) -> &'static str {
                 match self {
-                    $(
-                        Self::$key => $repr,
-                    )*
+                    $(Self::$key => $repr,)*
                 }
             }
         }
@@ -103,6 +94,15 @@ secure_token_kind! {
     #[derive(Debug, Copy, Clone, Eq, PartialEq)]
     pub(crate) enum SecureTokenKind {
         API => "cio", // Crates.IO
+    }
+}
+
+impl SecureTokenKind {
+    fn from_token(token: &str) -> Option<Self> {
+        Self::VARIANTS
+            .iter()
+            .find(|v| token.starts_with(v.prefix()))
+            .copied()
     }
 }
 
