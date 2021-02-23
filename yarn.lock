@@ -6939,10 +6939,10 @@ ember-source@3.25.1:
     semver "^6.1.1"
     silent-error "^1.1.1"
 
-ember-svg-jar@2.3.1:
-  version "2.3.1"
-  resolved "https://registry.yarnpkg.com/ember-svg-jar/-/ember-svg-jar-2.3.1.tgz#afc4169d9c14d69cc552c223249ada0a7e0ed069"
-  integrity sha512-PEefQginX2g+ae2AcQy6y1oL5MYT+mLISCruswPhHvdP0C9XtRFM7nGmCVBg9P3K1XR2LlxZzIDpxKyzD1g6Cg==
+ember-svg-jar@2.3.3:
+  version "2.3.3"
+  resolved "https://registry.yarnpkg.com/ember-svg-jar/-/ember-svg-jar-2.3.3.tgz#aede3f23e58bdcacc0e59a297c1ebad71a472e31"
+  integrity sha512-Obs8vEMKPfS2R48bKBAfNSLphFsDwUMRqi8TVKtlLE6okTXC8NebGg7pA/IutIGnakqJRAz4/dWAZyI74duDuQ==
   dependencies:
     broccoli-caching-writer "^3.0.3"
     broccoli-concat "^3.7.4"
