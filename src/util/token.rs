@@ -91,7 +91,7 @@ secure_token_kind! {
     ///
     /// NEVER CHANGE THE PREFIX OF EXISTING TOKEN TYPES!!! Doing so will implicitly revoke all the
     /// tokens of that kind, distrupting production users.
-    #[derive(Debug, Copy, Clone, Eq, PartialEq)]
+    #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
     pub(crate) enum SecureTokenKind {
         API => "cio", // Crates.IO
     }
@@ -109,6 +109,7 @@ impl SecureTokenKind {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashSet;
 
     #[test]
     fn test_generated_and_parse() {
@@ -129,5 +130,41 @@ mod tests {
     #[test]
     fn test_parse_no_kind() {
         assert!(SecureToken::parse(SecureTokenKind::API, "nokind").is_none());
+    }
+
+    #[test]
+    fn test_persistent_prefixes() {
+        // Changing prefixes will implicitly revoke all the tokens of that kind, disrupting users.
+        // This test serves as a reminder for future maintainers not to change the prefixes, and
+        // to ensure all the variants are tested by this test.
+        let mut remaining: HashSet<_> = SecureTokenKind::VARIANTS.iter().copied().collect();
+        let mut ensure = |kind: SecureTokenKind, prefix| {
+            assert_eq!(kind.prefix(), prefix);
+            remaining.remove(&kind);
+        };
+
+        ensure(SecureTokenKind::API, "cio");
+
+        assert!(
+            remaining.is_empty(),
+            "not all variants have a test to check the prefix"
+        );
+    }
+
+    #[test]
+    fn test_conflicting_prefixes() {
+        // This sanity check prevents multiple tokens from starting with the same prefix, which
+        // would mess up the token kind detection. If this test fails after adding another variant
+        // do not change the test, choose another prefix instead.
+        for variant in SecureTokenKind::VARIANTS {
+            for other in SecureTokenKind::VARIANTS {
+                if variant == other {
+                    continue;
+                }
+                if variant.prefix().starts_with(other.prefix()) {
+                    panic!("variants {:?} and {:?} share a prefix", variant, other);
+                }
+            }
+        }
     }
 }
