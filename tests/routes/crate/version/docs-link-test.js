@@ -11,7 +11,7 @@ module('Route | crate.version | docs link', function (hooks) {
     this.server.create('version', { crateId: 'foo', num: '1.0.0' });
 
     await visit('/crates/foo');
-    assert.dom('[data-test-docs-link]').hasAttribute('href', 'https://foo.io/docs');
+    assert.dom('[data-test-docs-link] a').hasAttribute('href', 'https://foo.io/docs');
   });
 
   test('show no docs link if `documentation` is unspecified and there are no related docs.rs builds', async function (assert) {
@@ -21,7 +21,7 @@ module('Route | crate.version | docs link', function (hooks) {
     this.server.get('https://docs.rs/crate/:crate/:version/builds.json', []);
 
     await visit('/crates/foo');
-    assert.dom('[data-test-docs-link]').doesNotExist();
+    assert.dom('[data-test-docs-link] a').doesNotExist();
   });
 
   test('show docs link if `documentation` is unspecified and there are related docs.rs builds', async function (assert) {
@@ -40,7 +40,7 @@ module('Route | crate.version | docs link', function (hooks) {
     ]);
 
     await visit('/crates/foo');
-    assert.dom('[data-test-docs-link]').hasAttribute('href', 'https://docs.rs/foo/1.0.0');
+    assert.dom('[data-test-docs-link] a').hasAttribute('href', 'https://docs.rs/foo/1.0.0');
   });
 
   test('show original docs link if `documentation` points to docs.rs and there are no related docs.rs builds', async function (assert) {
@@ -50,7 +50,7 @@ module('Route | crate.version | docs link', function (hooks) {
     this.server.get('https://docs.rs/crate/:crate/:version/builds.json', []);
 
     await visit('/crates/foo');
-    assert.dom('[data-test-docs-link]').hasAttribute('href', 'https://docs.rs/foo/0.6.2');
+    assert.dom('[data-test-docs-link] a').hasAttribute('href', 'https://docs.rs/foo/0.6.2');
   });
 
   test('show updated docs link if `documentation` points to docs.rs and there are related docs.rs builds', async function (assert) {
@@ -69,7 +69,7 @@ module('Route | crate.version | docs link', function (hooks) {
     ]);
 
     await visit('/crates/foo');
-    assert.dom('[data-test-docs-link]').hasAttribute('href', 'https://docs.rs/foo/1.0.0');
+    assert.dom('[data-test-docs-link] a').hasAttribute('href', 'https://docs.rs/foo/1.0.0');
   });
 
   test('ajax errors are ignored', async function (assert) {
@@ -79,6 +79,6 @@ module('Route | crate.version | docs link', function (hooks) {
     this.server.get('https://docs.rs/crate/:crate/:version/builds.json', {}, 500);
 
     await visit('/crates/foo');
-    assert.dom('[data-test-docs-link]').hasAttribute('href', 'https://docs.rs/foo/0.6.2');
+    assert.dom('[data-test-docs-link] a').hasAttribute('href', 'https://docs.rs/foo/0.6.2');
   });
 });

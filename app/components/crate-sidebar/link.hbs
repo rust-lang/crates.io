@@ -1,0 +1,16 @@
+<div ...attributes>
+  <h3 data-test-title>{{@title}}</h3>
+  <div local-class="content">
+    {{#if this.isDocsRs}}
+      {{svg-jar "docs-rs" local-class="icon" data-test-icon="docs-rs"}}
+    {{else if this.isGitHub}}
+      {{svg-jar "GitHub-Mark" local-class="icon" data-test-icon="github"}}
+    {{else}}
+      {{svg-jar "link" local-class="icon" data-test-icon="link"}}
+    {{/if}}
+
+    <a href={{@url}} data-test-link>
+      {{this.text}}
+    </a>
+  </div>
+</div>

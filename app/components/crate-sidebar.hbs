@@ -39,6 +39,44 @@
     </div>
 
     <div>
+      {{#if (and @crate.homepage (not-eq @crate.repository @crate.homepage))}}
+        <CrateSidebar::Link
+          @title="Homepage"
+          @url={{@crate.homepage}}
+        />
+      {{/if}}
+
+      {{#if @crate.wiki}}
+        <CrateSidebar::Link
+          @title="Wiki"
+          @url={{@crate.wiki}}
+        />
+      {{/if}}
+
+      {{#if @crate.mailing_list}}
+        <CrateSidebar::Link
+          @title="Mailing list"
+          @url={{@crate.mailing_list}}
+        />
+      {{/if}}
+
+      {{#if @version.documentationLink}}
+        <CrateSidebar::Link
+          @title="Documentation"
+          @url={{@version.documentationLink}}
+          data-test-docs-link
+        />
+      {{/if}}
+
+      {{#if @crate.repository}}
+        <CrateSidebar::Link
+          @title="Repository"
+          @url={{@crate.repository}}
+        />
+      {{/if}}
+    </div>
+
+    <div>
       <h3>Owners</h3>
 
       {{#if this.isOwner}}
