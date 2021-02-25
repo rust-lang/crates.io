@@ -12,6 +12,9 @@ export default class CrateSidebarLink extends Component {
     if (url.endsWith('/')) {
       url = url.slice(0, -1);
     }
+    if (url.startsWith('github.com/') && url.endsWith('.git')) {
+      url = url.slice(0, -4);
+    }
 
     return url;
   }
