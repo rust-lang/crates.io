@@ -14,7 +14,11 @@
         one that has not been yanked.
       </p>
     {{else}}
-      {{#if this.readme}}
+      {{#if this.loadReadmeTask.isRunning}}
+        <div local-class="readme-spinner">
+          <LoadingSpinner/>
+        </div>
+      {{else if this.readme}}
         <article aria-label="Readme">
           <RenderedHtml @html={{this.readme}} local-class="readme" />
         </article>

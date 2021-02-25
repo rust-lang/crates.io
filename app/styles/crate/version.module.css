@@ -31,6 +31,22 @@
     margin-bottom: 20px;
 }
 
+.readme-spinner {
+    padding: 40px 15px;
+    text-align: center;
+    font-size: 20px;
+    font-weight: 300;
+
+    code {
+        font-size: 18px;
+        font-weight: 500;
+    }
+}
+
+.readme-spinner > div {
+    --spinner-size: 35px;
+}
+
 .crate-downloads {
     display: flex;
     flex-wrap: wrap;
