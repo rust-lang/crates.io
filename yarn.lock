@@ -6078,7 +6078,7 @@ ember-cli-babel@7.23.1, ember-cli-babel@^7.0.0, ember-cli-babel@^7.1.0, ember-cl
     rimraf "^3.0.1"
     semver "^5.5.0"
 
-ember-cli-babel@^6.0.0-beta.4, ember-cli-babel@^6.16.0, ember-cli-babel@^6.3.0, ember-cli-babel@^6.6.0:
+ember-cli-babel@^6.0.0-beta.4, ember-cli-babel@^6.16.0, ember-cli-babel@^6.3.0:
   version "6.18.0"
   resolved "https://registry.yarnpkg.com/ember-cli-babel/-/ember-cli-babel-6.18.0.tgz#3f6435fd275172edeff2b634ee7b29ce74318957"
   integrity sha512-7ceC8joNYxY2wES16iIBlbPSxwKDBhYwC8drU3ZEvuPDMwVv1KzxCNu1fvxyFEBWhwaRNTUxSCsEVoTd9nosGA==
@@ -6755,14 +6755,7 @@ ember-in-element-polyfill@^1.0.0, ember-in-element-polyfill@^1.0.1:
     ember-cli-htmlbars "^5.3.1"
     ember-cli-version-checker "^5.1.2"
 
-"ember-inflector@^2.0.0 || ^3.0.0":
-  version "3.0.1"
-  resolved "https://registry.yarnpkg.com/ember-inflector/-/ember-inflector-3.0.1.tgz#04be6df4d7e4000f6d6bd70787cdc995f77be4ab"
-  integrity sha512-fngrwMsnhkBt51KZgwNwQYxgURwV4lxtoHdjxf7RueGZ5zM7frJLevhHw7pbQNGqXZ3N+MRkhfNOLkdDK9kFdA==
-  dependencies:
-    ember-cli-babel "^6.6.0"
-
-ember-inflector@^4.0.1:
+ember-inflector@4.0.1, "ember-inflector@^2.0.0 || ^3.0.0", ember-inflector@^4.0.1:
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/ember-inflector/-/ember-inflector-4.0.1.tgz#e0aa9e39119156a278c80bb8cdec8462ecb8e6ab"
   integrity sha512-D14nH2wVMp13ciOONcHMXwdL/IoMBSDXsGObF2rsQX7F8vGjwp+jnSNzZuGjjIvlBFQydOJ+R2n86J2e8HRTQA==

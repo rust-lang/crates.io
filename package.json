@@ -126,6 +126,9 @@
     "qunit-dom": "1.6.0",
     "timekeeper": "2.2.0"
   },
+  "resolutions": {
+    "ember-inflector": "4.0.1"
+  },
   "engines": {
     "node": "^14.9.0",
     "npm": "^7.0.0"
