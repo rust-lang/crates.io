@@ -59,4 +59,23 @@ module('Route | crate.version | crate links', function (hooks) {
       .hasText('github.com/rust-lang/crates.io')
       .hasAttribute('href', 'https://github.com/rust-lang/crates.io');
   });
+
+  test('hide the homepage link if it is the same as the repository plus `.git`', async function (assert) {
+    this.server.create('crate', {
+      name: 'foo',
+      homepage: 'https://github.com/rust-lang/crates.io/',
+      repository: 'https://github.com/rust-lang/crates.io.git',
+    });
+    this.server.create('version', { crateId: 'foo', num: '1.0.0' });
+
+    await visit('/crates/foo');
+
+    assert.dom('[data-test-homepage-link]').doesNotExist();
+    assert.dom('[data-test-docs-link]').doesNotExist();
+
+    assert
+      .dom('[data-test-repository-link] a')
+      .hasText('github.com/rust-lang/crates.io')
+      .hasAttribute('href', 'https://github.com/rust-lang/crates.io.git');
+  });
 });
