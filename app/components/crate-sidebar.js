@@ -14,6 +14,10 @@ export default class DownloadGraph extends Component {
 
   @gt('sortedVersions.length', NUM_VERSIONS) hasMoreVersions;
 
+  get showHomepage() {
+    return this.args.crate.homepage && this.args.crate.repository !== this.args.crate.homepage;
+  }
+
   get tomlSnippet() {
     return `${this.args.crate.name} = "${this.args.version.num}"`;
   }

@@ -39,7 +39,7 @@
     </div>
 
     <div>
-      {{#if (and @crate.homepage (not-eq @crate.repository @crate.homepage))}}
+      {{#if this.showHomepage}}
         <CrateSidebar::Link
           @title="Homepage"
           @url={{@crate.homepage}}
