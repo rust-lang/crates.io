@@ -128,7 +128,7 @@ export default class SessionService extends Service {
     this.savedTransition = null;
     this.isLoggedIn = false;
 
-    this.loadUserTask.cancelAll({ resetState: true });
+    yield this.loadUserTask.cancelAll({ resetState: true });
     Sentry.setUser(null);
 
     this.router.transitionTo('index');
