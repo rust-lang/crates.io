@@ -1,10 +1,6 @@
 {{page-title 'Manage Crate Owners'}}
 
-<PageHeader
-  @title="Manage Crate Owners"
-  @suffix={{this.crate.name}}
-  @icon="gear"
-/>
+<CrateHeader @crate={{this.crate}} />
 
 <div local-class="me-email">
   <h2>Add Owner</h2>

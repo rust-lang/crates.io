@@ -79,14 +79,6 @@
     <div>
       <h3>Owners</h3>
 
-      {{#if this.isOwner}}
-        <p>
-          <LinkTo @route="crate.owners" @model={{@crate}} data-test-manage-owners-link>
-            Manage owners
-          </LinkTo>
-        </p>
-      {{/if}}
-
       <ul local-class='owners' data-test-owners>
         {{#each @crate.owner_team as |team|}}
           <li>
@@ -152,28 +144,6 @@
       {{/if}}
     {{/unless}}
 
-    <div data-test-versions>
-      <h3>Versions</h3>
-      <ul>
-        {{#each this.smallSortedVersions as |version|}}
-          <li>
-            <LinkTo @route="crate.version" @model={{version.num}} data-test-version-link={{version.num}}>
-              {{ version.num }}
-            </LinkTo>
-            {{date-format version.created_at "PP"}}
-            {{#if version.yanked}}
-              <span local-class='yanked'>yanked</span>
-            {{/if}}
-          </li>
-        {{/each}}
-      </ul>
-      {{#if this.hasMoreVersions}}
-        <LinkTo @route="crate.versions" @model={{@crate}} local-class="more-versions-link" data-test-all-versions-link>
-          show all {{ @crate.versions.length }} versions
-        </LinkTo>
-      {{/if}}
-    </div>
-
     <div>
       <h3>Dependencies</h3>
       <ul data-test-dependencies>
@@ -187,10 +157,6 @@
           {{/if}}
         {{/each}}
       </ul>
-
-      <LinkTo @route="crate.reverse-dependencies" local-class="reverse-deps-link" data-test-reverse-deps-link>
-        Show dependent crates
-      </LinkTo>
     </div>
 
     {{#if @version.buildDependencies}}

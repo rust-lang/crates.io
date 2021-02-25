@@ -97,7 +97,7 @@ module('Acceptance | crate page', function (hooks) {
     this.server.loadFixtures();
 
     await visit('/crates/nanomsg');
-    await click('[data-test-all-versions-link]');
+    await click('[data-test-versions-tab] a');
 
     assert.dom('[data-test-page-description]').hasText(/All 13\s+versions of nanomsg since\s+December \d+th, 2014/);
   });
@@ -106,7 +106,7 @@ module('Acceptance | crate page', function (hooks) {
     this.server.loadFixtures();
 
     await visit('/crates/nanomsg');
-    await click('[data-test-reverse-deps-link]');
+    await click('[data-test-rev-deps-tab] a');
 
     assert.equal(currentURL(), '/crates/nanomsg/reverse_dependencies');
     assert.dom('a[href="/crates/unicorn-rpc"]').hasText('unicorn-rpc');
@@ -183,7 +183,7 @@ module('Acceptance | crate page', function (hooks) {
     await visit('/crates/nanomsg');
     assert.dom('[data-test-license]').hasText('Apache-2.0');
 
-    await click('[data-test-version-link="0.5.0"]');
+    await visit('/crates/nanomsg/0.5.0');
     assert.dom('[data-test-license]').hasText('MIT OR Apache-2.0');
   });
 
@@ -211,7 +211,7 @@ module('Acceptance | crate page', function (hooks) {
 
     await visit('/crates/nanomsg');
 
-    assert.dom('[data-test-manage-owners-link]').doesNotExist();
+    assert.dom('[data-test-settings-tab]').doesNotExist();
   });
 
   test('navigating to the owners page when not an owner', async function (assert) {
@@ -222,7 +222,7 @@ module('Acceptance | crate page', function (hooks) {
 
     await visit('/crates/nanomsg');
 
-    assert.dom('[data-test-manage-owners-link]').doesNotExist();
+    assert.dom('[data-test-settings-tab]').doesNotExist();
   });
 
   test('navigating to the owners page', async function (assert) {
@@ -232,7 +232,7 @@ module('Acceptance | crate page', function (hooks) {
     this.authenticateAs(user);
 
     await visit('/crates/nanomsg');
-    await click('[data-test-manage-owners-link]');
+    await click('[data-test-settings-tab] a');
 
     assert.equal(currentURL(), '/crates/nanomsg/owners');
   });

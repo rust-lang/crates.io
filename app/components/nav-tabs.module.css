@@ -1,0 +1,18 @@
+.list {
+    --nav-tabs-border-width: 2px;
+    --nav-tabs-padding-h: 20px;
+    --nav-tabs-padding-v: 12px;
+    --nav-tabs-radius: 5px;
+
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-bottom: var(--nav-tabs-border-width) solid var(--gray-border);
+
+    @media only screen and (max-width: 550px) {
+        flex-direction: column;
+        border-left: var(--nav-tabs-border-width) solid var(--gray-border);
+        border-bottom: none;
+    }
+}

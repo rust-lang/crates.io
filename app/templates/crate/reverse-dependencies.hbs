@@ -1,9 +1,5 @@
 <CrateHeader @crate={{this.crate}} />
 
-<div local-class="back-link">
-  <LinkTo @route="crate" @model={{this.crate.id}}>&#11013; Back to {{ this.crate.name }}</LinkTo>
-</div>
-
 <div local-class="results-meta">
   <ResultsCount
     @start={{this.pagination.currentPageStart}}
