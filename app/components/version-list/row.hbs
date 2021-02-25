@@ -9,16 +9,18 @@
   ...attributes
 >
   <div local-class="version">
-    <div local-class="release-track">
+    <div local-class="release-track" data-test-release-track>
       {{#if @version.yanked}}
         {{svg-jar "trash"}}
+      {{else if @version.invalidSemver}}
+        ?
       {{else if @version.isFirst}}
         {{svg-jar "star"}}
       {{else}}
         {{@version.releaseTrack}}
       {{/if}}
 
-      <EmberTooltip @text={{this.releaseTrackTitle}} @side="right" />
+      <EmberTooltip @text={{this.releaseTrackTitle}} @side="right" data-test-release-track-title/>
     </div>
 
     <LinkTo
@@ -27,6 +29,7 @@
       local-class="num-link"
       {{on "focusin" (fn this.setFocused true)}}
       {{on "focusout" (fn this.setFocused false)}}
+      data-test-release-track-link
     >
       {{@version.num}}
     </LinkTo>

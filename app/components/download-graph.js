@@ -108,7 +108,7 @@ export default class DownloadGraph extends Component {
 
     let versionsList = [...versions];
     try {
-      semverSort(versionsList);
+      semverSort(versionsList, { loose: true });
     } catch {
       // Catches exceptions thrown when a version number is invalid
       // see issue #3295

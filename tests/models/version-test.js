@@ -78,12 +78,30 @@ module('Model | Version', function (hooks) {
       assert.true(isPrerelease);
       assert.strictEqual(releaseTrack, '0.0');
     });
+
+    test('parses 0.3.0-alpha.01 (non-standard) correctly', async function (assert) {
+      let { semver, releaseTrack, isPrerelease } = await prepare(this, { num: '0.3.0-alpha.01' });
+      assert.strictEqual(semver.major, 0);
+      assert.strictEqual(semver.minor, 3);
+      assert.strictEqual(semver.patch, 0);
+      assert.deepEqual(semver.prerelease, ['alpha', 1]);
+      assert.true(isPrerelease);
+      assert.strictEqual(releaseTrack, '0.3');
+    });
+
+    test('invalidSemver is true for unparseable versions', async function (assert) {
+      let { invalidSemver } = await prepare(this, {
+        num: '18446744073709551615.18446744073709551615.1844674407370955161',
+      });
+      assert.true(invalidSemver);
+    });
   });
 
   module('isHighestOfReleaseTrack', function () {
     test('happy path', async function (assert) {
       let nums = [
         '0.4.0-rc.1',
+        '0.3.24-alpha.02',
         '0.3.23',
         '0.3.22',
         '0.3.21-pre.0',
@@ -91,6 +109,7 @@ module('Model | Version', function (hooks) {
         '0.3.3',
         '0.3.2',
         '0.3.1',
+        '0.3.0-alpha.01',
         '0.3.0',
         '0.2.1',
         '0.2.0',
@@ -110,6 +129,7 @@ module('Model | Version', function (hooks) {
         versions.map(it => ({ num: it.num, isHighestOfReleaseTrack: it.isHighestOfReleaseTrack })),
         [
           { num: '0.4.0-rc.1', isHighestOfReleaseTrack: false },
+          { num: '0.3.24-alpha.02', isHighestOfReleaseTrack: false },
           { num: '0.3.23', isHighestOfReleaseTrack: true },
           { num: '0.3.22', isHighestOfReleaseTrack: false },
           { num: '0.3.21-pre.0', isHighestOfReleaseTrack: false },
@@ -117,6 +137,7 @@ module('Model | Version', function (hooks) {
           { num: '0.3.3', isHighestOfReleaseTrack: false },
           { num: '0.3.2', isHighestOfReleaseTrack: false },
           { num: '0.3.1', isHighestOfReleaseTrack: false },
+          { num: '0.3.0-alpha.01', isHighestOfReleaseTrack: false },
           { num: '0.3.0', isHighestOfReleaseTrack: false },
           { num: '0.2.1', isHighestOfReleaseTrack: true },
           { num: '0.2.0', isHighestOfReleaseTrack: false },

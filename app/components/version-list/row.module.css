@@ -46,6 +46,10 @@
         z-index: 1;
         cursor: help;
     }
+
+    :global(.ember-tooltip) {
+        word-break: break-all;
+    }
 }
 
 .version {
