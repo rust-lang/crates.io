@@ -33,4 +33,10 @@
   <nav.Tab @link={{link "crate.reverse-dependencies" @crate}} data-test-rev-deps-tab>
     Dependents
   </nav.Tab>
+
+  {{#if this.isOwner}}
+    <nav.Tab @link={{link "crate.owners" @crate}} data-test-settings-tab>
+      Settings
+    </nav.Tab>
+  {{/if}}
 </NavTabs>
