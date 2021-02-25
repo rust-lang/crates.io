@@ -2763,7 +2763,7 @@ aws4@^1.8.0:
   resolved "https://registry.yarnpkg.com/aws4/-/aws4-1.11.0.tgz#d61f46d83b2519250e2784daf5b09479a8b41c59"
   integrity sha512-xh1Rl34h6Fi1DC2WWKfxUTVqRsNnr6LsKz2+hfwDxQJWmrx8+c7ylaqBMcHfl1U1r2dsifOvKX3LQuLNZ+XSvA==
 
-axe-core@^4.0.1:
+axe-core@^4.1.2:
   version "4.1.2"
   resolved "https://registry.yarnpkg.com/axe-core/-/axe-core-4.1.2.tgz#7cf783331320098bfbef620df3b3c770147bc224"
   integrity sha512-V+Nq70NxKhYt89ArVcaNL9FDryB3vQOd+BFXZIfO3RP6rwtj+2yqqqdHEkacutglPaZLkJeuXKCjCJDMGPtPqg==
@@ -5950,12 +5950,12 @@ elliptic@^6.5.3:
     minimalistic-assert "^1.0.1"
     minimalistic-crypto-utils "^1.0.1"
 
-ember-a11y-testing@4.0.1:
-  version "4.0.1"
-  resolved "https://registry.yarnpkg.com/ember-a11y-testing/-/ember-a11y-testing-4.0.1.tgz#a6431ea09e0ff8117df9fa0436793b2bdf86b183"
-  integrity sha512-gjqEiKqKqyK8ebEIClOipmA0fuLWRgqA9IxNaF7yBlCd3/J8uZTZprarIgC0NiOghNS5MVyD+RIrJ+2JjKVPXA==
+ember-a11y-testing@4.0.2:
+  version "4.0.2"
+  resolved "https://registry.yarnpkg.com/ember-a11y-testing/-/ember-a11y-testing-4.0.2.tgz#960ee9582bd315bd16d9dedbf450fd508d021d99"
+  integrity sha512-3pa+6bibbY4Vsl3uKFpD0OH4Mzd8NQUwenaWWWngiJo+R/U6AgJllxo/apORzRgvLxKtBCEpXVocUp/gkZ3rOQ==
   dependencies:
-    axe-core "^4.0.1"
+    axe-core "^4.1.2"
     body-parser "^1.19.0"
     broccoli-funnel "^3.0.3"
     broccoli-merge-trees "^4.2.0"
