@@ -106,7 +106,7 @@ module('Acceptance | crate page', function (hooks) {
     this.server.loadFixtures();
 
     await visit('/crates/nanomsg');
-    await click('[data-test-reverse-deps-link]');
+    await click('[data-test-rev-deps-tab] a');
 
     assert.equal(currentURL(), '/crates/nanomsg/reverse_dependencies');
     assert.dom('a[href="/crates/unicorn-rpc"]').hasText('unicorn-rpc');
