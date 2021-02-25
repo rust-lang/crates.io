@@ -211,7 +211,7 @@ module('Acceptance | crate page', function (hooks) {
 
     await visit('/crates/nanomsg');
 
-    assert.dom('[data-test-manage-owners-link]').doesNotExist();
+    assert.dom('[data-test-settings-tab]').doesNotExist();
   });
 
   test('navigating to the owners page when not an owner', async function (assert) {
@@ -222,7 +222,7 @@ module('Acceptance | crate page', function (hooks) {
 
     await visit('/crates/nanomsg');
 
-    assert.dom('[data-test-manage-owners-link]').doesNotExist();
+    assert.dom('[data-test-settings-tab]').doesNotExist();
   });
 
   test('navigating to the owners page', async function (assert) {
@@ -232,7 +232,7 @@ module('Acceptance | crate page', function (hooks) {
     this.authenticateAs(user);
 
     await visit('/crates/nanomsg');
-    await click('[data-test-manage-owners-link]');
+    await click('[data-test-settings-tab] a');
 
     assert.equal(currentURL(), '/crates/nanomsg/owners');
   });

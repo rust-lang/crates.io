@@ -79,14 +79,6 @@
     <div>
       <h3>Owners</h3>
 
-      {{#if this.isOwner}}
-        <p>
-          <LinkTo @route="crate.owners" @model={{@crate}} data-test-manage-owners-link>
-            Manage owners
-          </LinkTo>
-        </p>
-      {{/if}}
-
       <ul local-class='owners' data-test-owners>
         {{#each @crate.owner_team as |team|}}
           <li>
