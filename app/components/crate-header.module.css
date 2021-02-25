@@ -30,6 +30,11 @@
     height: 32px;
 }
 
+.description {
+    margin-top: 15px;
+    line-height: 1.35;
+}
+
 .nav {
     margin-bottom: 20px;
 }

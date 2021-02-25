@@ -12,6 +12,11 @@
       <FollowButton @crate={{@crate}}/>
     {{/if}}
   </div>
+  {{#if @crate.description}}
+    <div local-class="description">
+      {{@crate.description}}
+    </div>
+  {{/if}}
 </PageHeader>
 
 <NavTabs aria-label="{{@crate.name}} crate subpages" local-class="nav" as |nav|>
