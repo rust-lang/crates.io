@@ -1,7 +1,6 @@
 use std::cmp;
 
 use conduit::{header, Body, Response};
-use rand::{distributions::Uniform, rngs::OsRng, Rng};
 use serde::Serialize;
 
 pub use self::io_util::{read_fill, read_le_u32, LimitErrorReader};
@@ -13,6 +12,7 @@ mod io_util;
 mod request_helpers;
 mod request_proxy;
 pub mod rfc3339;
+pub(crate) mod token;
 
 pub type AppResponse = Response<conduit::Body>;
 pub type EndpointResult = Result<AppResponse, Box<dyn errors::AppError>>;
@@ -31,16 +31,6 @@ pub fn json_response<T: Serialize>(t: &T) -> AppResponse {
         .header(header::CONTENT_LENGTH, json.len())
         .body(Body::from_vec(json.into_bytes()))
         .unwrap() // Header values are well formed, so should not panic
-}
-
-pub fn generate_secure_alphanumeric_string(len: usize) -> String {
-    const CHARS: &[u8] = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-
-    OsRng
-        .sample_iter(Uniform::from(0..CHARS.len()))
-        .map(|idx| CHARS[idx] as char)
-        .take(len)
-        .collect()
 }
 
 #[derive(Debug, Copy, Clone)]
