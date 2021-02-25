@@ -34,4 +34,9 @@ module('Component | CrateSidebar::Link', function (hooks) {
     await render(hbs`<CrateSidebar::Link @url="http://www.rust-lang.org" />`);
     assert.dom('[data-test-link]').hasAttribute('href', 'http://www.rust-lang.org').hasText('http://www.rust-lang.org');
   });
+
+  test('strips trailing slashes', async function (assert) {
+    await render(hbs`<CrateSidebar::Link @url="https://www.rust-lang.org/" />`);
+    assert.dom('[data-test-link]').hasAttribute('href', 'https://www.rust-lang.org/').hasText('rust-lang.org');
+  });
 });
