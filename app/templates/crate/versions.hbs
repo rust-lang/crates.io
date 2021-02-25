@@ -1,9 +1,11 @@
 <CrateHeader @crate={{this.model}} />
 
 <div local-class="results-meta">
-  <LinkTo @route="crate" @model={{this.model}} local-class="back-link">
-    &#11013; Back to Main Page
-  </LinkTo>
+  <span local-class="page-description" data-test-page-description>
+    All <strong>{{ this.model.versions.length }}</strong>
+    versions of <strong>{{ this.model.name }}</strong> since
+    {{date-format this.model.created_at 'PPP'}}
+  </span>
 
   <div data-test-search-sort>
     <span local-class="sort-by-label">Sort by </span>
@@ -13,12 +15,6 @@
     </SortDropdown>
   </div>
 </div>
-
-<span local-class="page-description" data-test-page-description>
-  All <strong>{{ this.model.versions.length }}</strong>
-  versions of <strong>{{ this.model.name }}</strong> since
-  {{date-format this.model.created_at 'PPP'}}
-</span>
 
 <ul local-class="list">
   {{#each this.sortedVersions as |version|}}

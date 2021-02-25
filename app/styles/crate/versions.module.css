@@ -3,10 +3,19 @@
     align-items: center;
     justify-content: space-between;
     margin-bottom: 10px;
+
+    @media only screen and (max-width: 550px) {
+        display: block;
+    }
 }
 
 .page-description {
     composes: small from '../shared/typography.module.css';
+
+    @media only screen and (max-width: 550px) {
+        display: block;
+        margin-bottom: 15px;
+    }
 }
 
 .list {
