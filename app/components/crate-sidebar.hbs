@@ -46,20 +46,6 @@
         />
       {{/if}}
 
-      {{#if @crate.wiki}}
-        <CrateSidebar::Link
-          @title="Wiki"
-          @url={{@crate.wiki}}
-        />
-      {{/if}}
-
-      {{#if @crate.mailing_list}}
-        <CrateSidebar::Link
-          @title="Mailing list"
-          @url={{@crate.mailing_list}}
-        />
-      {{/if}}
-
       {{#if @version.documentationLink}}
         <CrateSidebar::Link
           @title="Documentation"

@@ -14,9 +14,6 @@ export default class Crate extends Model {
 
   @attr description;
   @attr homepage;
-  @attr wiki;
-  @attr mailing_list;
-  @attr issues;
   @attr documentation;
   @attr repository;
   @attr exact_match;
