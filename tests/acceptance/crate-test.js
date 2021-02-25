@@ -97,7 +97,7 @@ module('Acceptance | crate page', function (hooks) {
     this.server.loadFixtures();
 
     await visit('/crates/nanomsg');
-    await click('[data-test-all-versions-link]');
+    await click('[data-test-versions-tab] a');
 
     assert.dom('[data-test-page-description]').hasText(/All 13\s+versions of nanomsg since\s+December \d+th, 2014/);
   });
@@ -183,7 +183,7 @@ module('Acceptance | crate page', function (hooks) {
     await visit('/crates/nanomsg');
     assert.dom('[data-test-license]').hasText('Apache-2.0');
 
-    await click('[data-test-version-link="0.5.0"]');
+    await visit('/crates/nanomsg/0.5.0');
     assert.dom('[data-test-license]').hasText('MIT OR Apache-2.0');
   });
 

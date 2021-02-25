@@ -152,28 +152,6 @@
       {{/if}}
     {{/unless}}
 
-    <div data-test-versions>
-      <h3>Versions</h3>
-      <ul>
-        {{#each this.smallSortedVersions as |version|}}
-          <li>
-            <LinkTo @route="crate.version" @model={{version.num}} data-test-version-link={{version.num}}>
-              {{ version.num }}
-            </LinkTo>
-            {{date-format version.created_at "PP"}}
-            {{#if version.yanked}}
-              <span local-class='yanked'>yanked</span>
-            {{/if}}
-          </li>
-        {{/each}}
-      </ul>
-      {{#if this.hasMoreVersions}}
-        <LinkTo @route="crate.versions" @model={{@crate}} local-class="more-versions-link" data-test-all-versions-link>
-          show all {{ @crate.versions.length }} versions
-        </LinkTo>
-      {{/if}}
-    </div>
-
     <div>
       <h3>Dependencies</h3>
       <ul data-test-dependencies>
