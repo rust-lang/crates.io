@@ -3016,10 +3016,10 @@ babel-plugin-ember-modules-api-polyfill@^2.12.0, babel-plugin-ember-modules-api-
   dependencies:
     ember-rfc176-data "^0.3.13"
 
-babel-plugin-ember-modules-api-polyfill@^3.2.1:
-  version "3.2.2"
-  resolved "https://registry.yarnpkg.com/babel-plugin-ember-modules-api-polyfill/-/babel-plugin-ember-modules-api-polyfill-3.2.2.tgz#17cb486781307bf596e9c5e43f05411c7b26b7a9"
-  integrity sha512-dH8tFWvDg2uSdu29ceVVC2FVxFyl30Nb7zZWnp03oS6iVLi0OjKxamb+4ruQLHBjmjsv62GAS4C9/GHB29bCfg==
+babel-plugin-ember-modules-api-polyfill@^3.2.1, babel-plugin-ember-modules-api-polyfill@^3.4.0:
+  version "3.4.0"
+  resolved "https://registry.yarnpkg.com/babel-plugin-ember-modules-api-polyfill/-/babel-plugin-ember-modules-api-polyfill-3.4.0.tgz#3f5e0457e135f8a29b3a8b6910806bb5b524649e"
+  integrity sha512-nVu/LqbZBAup1zLij6xGvQwVLWVk4XYu2fl4vIOUR3S6ukdonMLhKAb0d4QXSzH30Pd7OczVTlPffWbiwahdJw==
   dependencies:
     ember-rfc176-data "^0.3.16"
 
@@ -3036,10 +3036,12 @@ babel-plugin-htmlbars-inline-precompile@^3.2.0:
   resolved "https://registry.yarnpkg.com/babel-plugin-htmlbars-inline-precompile/-/babel-plugin-htmlbars-inline-precompile-3.2.0.tgz#c4882ea875d0f5683f0d91c1f72e29a4f14b5606"
   integrity sha512-IUeZmgs9tMUGXYu1vfke5I18yYJFldFGdNFQOWslXTnDWXzpwPih7QFduUqvT+awDpDuNtXpdt5JAf43Q1Hhzg==
 
-babel-plugin-htmlbars-inline-precompile@^4.2.1:
-  version "4.2.1"
-  resolved "https://registry.yarnpkg.com/babel-plugin-htmlbars-inline-precompile/-/babel-plugin-htmlbars-inline-precompile-4.2.1.tgz#9a367f8d7ecb9fb2c2e886edfe285caf7cb9766d"
-  integrity sha512-MCJXk+1R0YjlF/F52eDbhJTpsnqRVYsPYVP9d0jEu7E46AcRPEWDL5tfSweiQWHLKG017BIedATb91KcIoT3zA==
+babel-plugin-htmlbars-inline-precompile@^4.4.1:
+  version "4.4.3"
+  resolved "https://registry.yarnpkg.com/babel-plugin-htmlbars-inline-precompile/-/babel-plugin-htmlbars-inline-precompile-4.4.3.tgz#e45a6386786583009e2d7c8bd2dc5ec51132c041"
+  integrity sha512-tJQP1cdJ/ISX5++s+7xKfy6MAZ9CYV2i78zHQ8zCrPVxAmstUWQeOkxglRMqvCoP6G0frvRSZgz+W26GyknoXw==
+  dependencies:
+    babel-plugin-ember-modules-api-polyfill "^3.4.0"
 
 babel-plugin-istanbul@^6.0.0:
   version "6.0.0"
@@ -6228,13 +6230,13 @@ ember-cli-head@^1.0.0:
     json-stable-stringify "^1.0.1"
     strip-bom "^3.0.0"
 
-ember-cli-htmlbars@5.3.2, ember-cli-htmlbars@^5.2.0, ember-cli-htmlbars@^5.3.1:
-  version "5.3.2"
-  resolved "https://registry.yarnpkg.com/ember-cli-htmlbars/-/ember-cli-htmlbars-5.3.2.tgz#d0e1a4ccd2e7c6f91be51ea0cc1ef7650a9b67e7"
-  integrity sha512-S/spDVzBxkdMhnjiT6gG9xqpM9sT0Z7HskWSvSIAAW1sQsKPOCfRYp/1CqJ3+V5aX8ct0j5aHsdRanQYyHya2w==
+ember-cli-htmlbars@5.4.0, ember-cli-htmlbars@^5.2.0, ember-cli-htmlbars@^5.3.1:
+  version "5.4.0"
+  resolved "https://registry.yarnpkg.com/ember-cli-htmlbars/-/ember-cli-htmlbars-5.4.0.tgz#1eabd0a2a6b9e8877c2e79d3ab3a0627fde90ddc"
+  integrity sha512-AOThrNG+G6SejHvvfYja72PgpQ5lKJHVEhXyFpuwUPGGeXxqTDzpfh/UYnok/esVBIuM/eJW6qpTHMuZQcPNQg==
   dependencies:
     "@ember/edition-utils" "^1.2.0"
-    babel-plugin-htmlbars-inline-precompile "^4.2.1"
+    babel-plugin-htmlbars-inline-precompile "^4.4.1"
     broccoli-debug "^0.6.5"
     broccoli-persistent-filter "^3.1.2"
     broccoli-plugin "^4.0.3"
