@@ -31,7 +31,8 @@
     margin-bottom: 20px;
 }
 
-.readme-spinner {
+.readme-spinner,
+.no-readme {
     padding: 40px 15px;
     text-align: center;
     font-size: 20px;
