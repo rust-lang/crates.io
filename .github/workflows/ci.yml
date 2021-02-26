@@ -22,6 +22,16 @@ jobs:
           override: true
           components: rustfmt, clippy
 
+      - name: Cache cargo registry and git deps
+        uses: actions/cache@main
+        with:
+          path: |
+            ~/.cargo/registry/cache
+            ~/.cargo/registry/index
+          key: ${{ runner.os }}-cargo-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
       - name: cargo fmt
         uses: actions-rs/cargo@v1
         with:
@@ -49,6 +59,16 @@ jobs:
           profile: minimal
           toolchain: ${{ matrix.rust }}
           override: true
+
+      - name: Cache cargo registry and git deps
+        uses: actions/cache@main
+        with:
+          path: |
+            ~/.cargo/registry/cache
+            ~/.cargo/registry/index
+          key: ${{ runner.os }}-cargo-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
 
       - name: cargo build
         uses: actions-rs/cargo@v1
