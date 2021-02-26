@@ -1425,9 +1425,9 @@ dependencies = [
 
 [[package]]
 name = "license-exprs"
-version = "1.5.0"
+version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eb374efe4669153b6bb170a7c5063a4e570a4eb45e5daf0dab4c1543d4d6f197"
+checksum = "a577c3a5f3982766dd577c4440b86c53c6ffd42007e4c1d83d2da3ce9f99cc3d"
 
 [[package]]
 name = "lock_api"
