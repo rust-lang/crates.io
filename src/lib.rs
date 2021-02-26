@@ -73,7 +73,7 @@ fn is_modified_since(modified_since: OffsetDateTime, res: &Response<Body>) -> bo
         Err(_) => false,
         Ok(last_modified) => match parse_http_date(last_modified) {
             Err(_) => false,
-            Ok(last_modified) => modified_since.timestamp() >= last_modified.timestamp(),
+            Ok(last_modified) => modified_since.unix_timestamp() >= last_modified.unix_timestamp(),
         },
     }
 }
