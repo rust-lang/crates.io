@@ -40,14 +40,14 @@ comrak = { version = "0.9", default-features = false }
 
 conduit = "0.9.0-alpha.5"
 conduit-conditional-get = "0.9.0-alpha.3"
-conduit-cookie = "0.9.0-alpha.4"
+conduit-cookie = "0.9.0-alpha.5"
 conduit-git-http-backend = "0.9.0-alpha.2"
 conduit-hyper = "0.3.0-alpha.7"
 conduit-middleware = "0.9.0-alpha.4"
-conduit-router = "0.9.0-alpha.3"
+conduit-router = "0.9.0-alpha.6"
 conduit-static = "0.9.0-alpha.3"
 
-cookie = { version = "0.14", features = ["secure"] }
+cookie = { version = "0.15", features = ["secure"] }
 ctrlc = { version = "3.0", features = ["termination"] }
 derive_deref = "1.1.1"
 dialoguer = "0.7.1"

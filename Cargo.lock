@@ -463,11 +463,11 @@ dependencies = [
 
 [[package]]
 name = "conduit-cookie"
-version = "0.9.0-alpha.4"
+version = "0.9.0-alpha.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ae03deb30e24d1dbcbb39cfb1c4a8ec4b584935aa928cf59fd93bb4b37099d68"
+checksum = "6df0d72704718f2206dc4d50d65fffedc461bc946d39239643086b8429727f4b"
 dependencies = [
- "base64 0.12.3",
+ "base64 0.13.0",
  "conduit",
  "conduit-middleware",
  "cookie",
@@ -521,9 +521,9 @@ dependencies = [
 
 [[package]]
 name = "conduit-router"
-version = "0.9.0-alpha.5"
+version = "0.9.0-alpha.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e1bbff14b0e1fb1c7a0f7f0991baeb6fbfb3b6e1c478b960a38b2abcb6e9e10b"
+checksum = "c17affd4f27912a18866139ff22cfb011b5c7e9fd7546e5bfef29fb7cba60173"
 dependencies = [
  "conduit",
  "route-recognizer",
@@ -574,16 +574,17 @@ checksum = "28b9d6de7f49e22cf97ad17fc4036ece69300032f45f78f30b4a4482cdc3f4a6"
 
 [[package]]
 name = "cookie"
-version = "0.14.3"
+version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "784ad0fbab4f3e9cef09f20e0aea6000ae08d2cb98ac4c0abc53df18803d702f"
+checksum = "ffdf8865bac3d9a3bde5bde9088ca431b11f5d37c7a578b8086af77248b76627"
 dependencies = [
  "aes-gcm",
- "base64 0.12.3",
+ "base64 0.13.0",
  "hkdf",
  "hmac",
- "rand 0.7.3",
+ "rand 0.8.3",
  "sha2",
+ "subtle",
  "time 0.2.25",
  "version_check",
 ]
@@ -2221,9 +2222,9 @@ dependencies = [
 
 [[package]]
 name = "route-recognizer"
-version = "0.2.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "56770675ebc04927ded3e60633437841581c285dc6236109ea25fbf3beb7b59e"
+checksum = "824172f0afccf3773c3905f5550ac94572144efe0deaf49a1f22bbca188d193e"
 
 [[package]]
 name = "rustc-demangle"

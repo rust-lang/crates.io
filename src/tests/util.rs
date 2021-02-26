@@ -230,13 +230,12 @@ pub fn encode_session_header(session_key: &str, user_id: i32) -> String {
     map.insert("user_id".into(), user_id.to_string());
 
     // encode the map into a cookie value string
-    let session_middleware = SessionMiddleware::new(cookie_name, cookie_key.clone(), false);
-    let encoded = session_middleware.encode(&map);
+    let encoded = SessionMiddleware::encode(&map);
 
     // put the cookie into a signed cookie jar
     let cookie = Cookie::build(cookie_name, encoded).finish();
     let mut jar = cookie::CookieJar::new();
-    jar.signed(&cookie_key).add(cookie);
+    jar.signed_mut(&cookie_key).add(cookie);
 
     // read the raw cookie from the cookie jar
     jar.get(&cookie_name).unwrap().to_string()
