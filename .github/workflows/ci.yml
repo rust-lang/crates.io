@@ -6,7 +6,7 @@ on:
       - master
   pull_request:
   schedule:
-    - cron: '0 3 * * *' # daily, at 3am
+    - cron: '0 3 * * 0' # weekly, Sunday at 3am
 
 jobs:
   lint:
