@@ -25,7 +25,8 @@ pub const MISSING_RIGHTS_ERROR_MESSAGE: &str =
      to accept an invitation to be an owner before \
      publishing.";
 
-pub const WILDCARD_ERROR_MESSAGE: &str = "wildcard (`*`) dependency constraints are not allowed \
+pub const WILDCARD_ERROR_MESSAGE: &str =
+    "wildcard (`*` or `>= 0`) dependency constraints are not allowed \
      on crates.io. See https://doc.rust-lang.org/cargo/faq.html#can-\
      libraries-use--as-a-version-for-their-dependencies for more \
      information";

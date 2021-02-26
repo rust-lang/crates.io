@@ -178,6 +178,7 @@ fn env(var: &str) -> String {
     }
 }
 
+#[track_caller]
 fn json<T>(r: &mut AppResponse) -> T
 where
     for<'de> T: serde::Deserialize<'de>,
