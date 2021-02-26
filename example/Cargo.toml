@@ -6,4 +6,4 @@ authors = ["Example User <mail@example.com>"]
 [dependencies]
 civet = "0.12.0-alpha.5"
 conduit = "0.9.0-alpha.5"
-conduit-router = "0.9.0-alpha.2"
+conduit-router = "0.9.0-alpha.6"
