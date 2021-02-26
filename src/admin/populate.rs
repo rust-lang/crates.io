@@ -24,10 +24,10 @@ fn update(opts: Opts, conn: &PgConnection) -> QueryResult<()> {
 
     for id in opts.version_ids {
         let mut rng = thread_rng();
-        let mut dls = rng.gen_range(5_000i32, 10_000);
+        let mut dls = rng.gen_range(5_000i32..10_000);
 
         for day in 0..90 {
-            dls += rng.gen_range(-100, 100);
+            dls += rng.gen_range(-100..100);
 
             diesel::insert_into(version_downloads::table)
                 .values((
