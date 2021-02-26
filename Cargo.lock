@@ -291,7 +291,7 @@ dependencies = [
  "license-exprs",
  "oauth2",
  "parking_lot",
- "rand 0.7.3",
+ "rand 0.8.3",
  "reqwest",
  "scheduled-thread-pool",
  "semver 0.10.0",
