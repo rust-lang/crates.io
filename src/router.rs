@@ -175,8 +175,8 @@ impl Handler for R404 {
         let R404(ref router) = *self;
         match router.recognize(&req.method(), req.path()) {
             Ok(m) => {
-                req.mut_extensions().insert(m.params.clone());
-                m.handler.call(req)
+                req.mut_extensions().insert(m.params().clone());
+                m.handler().call(req)
             }
             Err(..) => Ok(NotFound.into()),
         }
