@@ -112,11 +112,11 @@ impl conduit::Handler for RouteBuilder {
 
         {
             let extensions = request.mut_extensions();
-            extensions.insert(m.handler.pattern);
-            extensions.insert(m.params.clone());
+            extensions.insert(m.handler().pattern);
+            extensions.insert(m.params().clone());
         }
 
-        (*m.handler).call(request)
+        m.handler().call(request)
     }
 }
 
