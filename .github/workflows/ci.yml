@@ -32,6 +32,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
+      - name: Cache cargo build
+        uses: actions/cache@main
+        with:
+          path: target
+          key: ${{ runner.os }}-lint-target-${{ steps.rustc.outputs.version }}-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-lint-target-${{ steps.rustc.outputs.version }}-
+
       - name: cargo fmt
         uses: actions-rs/cargo@v1
         with:
@@ -69,6 +77,14 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ github.run_id }}
           restore-keys: |
             ${{ runner.os }}-cargo-
+
+      - name: Cache cargo build
+        uses: actions/cache@main
+        with:
+          path: target
+          key: ${{ runner.os }}-target-${{ steps.rustc.outputs.version }}-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-target-${{ steps.rustc.outputs.version }}-
 
       - name: cargo build
         uses: actions-rs/cargo@v1
