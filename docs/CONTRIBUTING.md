@@ -1,5 +1,13 @@
 # Contributing to Crates.io
 
+## Attending the weekly team meetings
+
+Each Friday at 10:30am US east coast time the crates.io team gets together
+on [Discord] (`#crates-io-team`) for our weekly team meeting and we invite
+everyone who wants to contribute to crates.io to participate.
+
+[Discord]: https://discord.gg/rust-lang
+
 ## Finding an issue to work on
 
 We try to keep a variety of issues tagged with
