@@ -14,17 +14,18 @@
         one that has not been yanked.
       </p>
     {{else}}
-      {{#if this.readme}}
+      {{#if this.loadReadmeTask.isRunning}}
+        <div local-class="readme-spinner">
+          <LoadingSpinner/>
+        </div>
+      {{else if this.readme}}
         <article aria-label="Readme">
           <RenderedHtml @html={{this.readme}} local-class="readme" />
         </article>
       {{else}}
-        {{#if this.crate.description}}
-          <div local-class='about'>
-            <h3>About This Package</h3>
-            <p>{{ this.crate.description }}</p>
-          </div>
-        {{/if}}
+        <div local-class="no-readme">
+          {{this.crate.name}} v{{this.currentVersion.num}} appears to have no <code>README.md</code> file
+        </div>
       {{/if}}
     {{/if}}
   </div>

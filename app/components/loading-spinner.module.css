@@ -1,19 +1,20 @@
 .spinner {
     --spinner-color: black;
     --spinner-bg-color: rgba(0, 0, 0, .2);
+    --spinner-size: 16px;
 
     display: inline-block;
-    height: 16px;
-    width: 16px;
+    height: var(--spinner-size);
+    width: var(--spinner-size);
 
     &:after {
         content: " ";
         display: block;
         box-sizing: border-box;
-        width: 16px;
-        height: 16px;
+        width: var(--spinner-size);
+        height: var(--spinner-size);
         border-radius: 50%;
-        border: 3px solid var(--spinner-color);
+        border: calc(var(--spinner-size) / 5.5) solid var(--spinner-color);
         border-color: var(--spinner-bg-color) var(--spinner-bg-color) var(--spinner-color) var(--spinner-bg-color);
         animation: spinner 1.2s linear infinite;
     }
