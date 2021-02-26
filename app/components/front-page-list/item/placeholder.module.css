@@ -1,11 +1,17 @@
 .link {
+    --shadow: 0 2px 3px hsla(51, 50%, 44%, .35);
+
     display: flex;
     align-items: center;
     width: 100%;
-    min-height: 60px;
+    height: 60px;
     margin: 8px 0;
-    padding: 0 10px;
-    background-color: var(--main-bg-dark);
+    padding: 0 15px;
+    background-color: white;
+    color: #525252;
+    border-radius: 7px;
+    box-shadow: var(--shadow);
+    cursor: wait;
 }
 
 .left {
@@ -17,8 +23,7 @@
     height: 16px;
     width: 150px;
     border-radius: 8px;
-    background: rgb(118, 131, 138);
-    opacity: 0.25;
+    background: hsla(59deg, 19%, 50%, 0.25);
 }
 
 .subtitle {
@@ -26,8 +31,7 @@
     width: 90px;
     margin-top: 4px;
     border-radius: 6.5px;
-    background: rgb(118, 131, 138);
-    opacity: 0.2;
+    background: hsla(59deg, 19%, 50%, 0.2);
 }
 
 .right {
