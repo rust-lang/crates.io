@@ -112,11 +112,11 @@ impl conduit::Handler for RouteBuilder {
 
         {
             let extensions = request.mut_extensions();
-            extensions.insert(m.handler.pattern);
-            extensions.insert(m.params.clone());
+            extensions.insert(m.handler().pattern);
+            extensions.insert(m.params().clone());
         }
 
-        (*m.handler).call(request)
+        m.handler().call(request)
     }
 }
 
@@ -269,16 +269,15 @@ mod tests {
     }
 
     fn test_handler(req: &mut dyn conduit::RequestExt) -> conduit::HttpResult {
-        let mut res = vec![];
-        res.push(req.params().find("id").unwrap_or("").to_string());
-        res.push(format!("{:?}", req.method()));
-        res.push(
+        let res = vec![
+            req.params().find("id").unwrap_or("").to_string(),
+            format!("{:?}", req.method()),
             req.extensions()
                 .find::<RoutePattern>()
                 .unwrap()
                 .pattern()
                 .to_string(),
-        );
+        ];
 
         let bytes = res.join(", ").into_bytes();
         Response::builder().body(Body::from_vec(bytes))

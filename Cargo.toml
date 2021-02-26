@@ -1,7 +1,7 @@
 [package]
 
 name = "conduit-router"
-version = "0.9.0-alpha.5"
+version = "0.9.0-alpha.6"
 authors = ["wycats@gmail.com"]
 license = "MIT"
 description = "Router middleware for conduit based on route-recognizer"
@@ -9,7 +9,7 @@ repository = "https://github.com/conduit-rust/conduit-router"
 
 [dependencies]
 conduit = "0.9.0-alpha.5"
-route-recognizer = "0.2"
+route-recognizer = "0.3"
 
 [dev-dependencies]
 conduit-test = "0.9.0-alpha.4"
