@@ -11,7 +11,7 @@ the response is fresh.
 """
 
 [dependencies]
-conduit = "0.9.0-alpha.2"
+conduit = "0.9.0-alpha.5"
 conduit-middleware = "0.9.0-alpha.2"
 time = { version = "0.2", default-features = false, features = ["std"] }
 
