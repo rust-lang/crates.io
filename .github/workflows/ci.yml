@@ -15,7 +15,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - uses: actions-rs/toolchain@v1
+      - id: toolchain
+        uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           toolchain: stable
@@ -36,9 +37,9 @@ jobs:
         uses: actions/cache@main
         with:
           path: target
-          key: ${{ runner.os }}-lint-target-${{ steps.rustc.outputs.version }}-${{ github.run_id }}
+          key: ${{ runner.os }}-lint-target-${{ steps.toolchain.outputs.rustc }}-${{ github.run_id }}
           restore-keys: |
-            ${{ runner.os }}-lint-target-${{ steps.rustc.outputs.version }}-
+            ${{ runner.os }}-lint-target-${{ steps.toolchain.outputs.rustc }}-
 
       - name: cargo fmt
         uses: actions-rs/cargo@v1
@@ -62,7 +63,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - uses: actions-rs/toolchain@v1
+      - id: toolchain
+        uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           toolchain: ${{ matrix.rust }}
@@ -82,9 +84,9 @@ jobs:
         uses: actions/cache@main
         with:
           path: target
-          key: ${{ runner.os }}-target-${{ steps.rustc.outputs.version }}-${{ github.run_id }}
+          key: ${{ runner.os }}-target-${{ steps.toolchain.outputs.rustc }}-${{ github.run_id }}
           restore-keys: |
-            ${{ runner.os }}-target-${{ steps.rustc.outputs.version }}-
+            ${{ runner.os }}-target-${{ steps.toolchain.outputs.rustc }}-
 
       - name: cargo build
         uses: actions-rs/cargo@v1
