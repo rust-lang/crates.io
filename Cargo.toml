@@ -9,4 +9,4 @@ repository = "https://github.com/conduit-rust/conduit-test"
 license = "MIT"
 
 [dependencies]
-conduit = "0.9.0-alpha.4"
+conduit = "0.9.0-alpha.5"
