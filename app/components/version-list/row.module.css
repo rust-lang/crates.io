@@ -128,6 +128,11 @@
         &:hover {
             color: var(--grey900);
         }
+
+        &:focus-visible {
+            outline: none;
+            color: var(--yellow500);
+        }
     }
 
     svg {
