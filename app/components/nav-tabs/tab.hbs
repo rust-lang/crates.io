@@ -2,6 +2,7 @@
   <a
     href={{@link.url}}
     local-class="link {{if @link.isActive "active"}}"
+    data-test-active={{@link.isActive}}
     {{on "click" @link.transitionTo}}
   >
     {{yield}}
