@@ -119,14 +119,14 @@ jobs:
       #
       # Current size as of 2021-02-15: ~15 MB
       - name: Cache cargo binaries
-        uses: actions/cache@main
+        uses: actions/cache@v2.1.4
         with:
           path: ~/.cargo/bin
           key: ${{ runner.os }}-cargo-bin-${{ matrix.rust }}-${{ hashFiles('.diesel_version') }}-v2
 
       # Current size as of 2021-02-15: ~105 MB
       - name: Cache cargo registry and git deps
-        uses: actions/cache@main
+        uses: actions/cache@v2.1.4
         with:
           path: |
             ~/.cargo/registry/cache
@@ -158,7 +158,7 @@ jobs:
 
       # Current size as of 2021-02-12: ~325 MB
       - name: Cache cargo build
-        uses: actions/cache@main
+        uses: actions/cache@v2.1.4
         with:
           path: target
           key: v2-${{ runner.os }}-cargo-build-target-${{ steps.rustc.outputs.version }}-${{ hashFiles('**/Cargo.lock') }}
