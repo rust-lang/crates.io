@@ -129,42 +129,5 @@
         </div>
       {{/if}}
     {{/unless}}
-
-    <div>
-      <h3>Dependencies</h3>
-      <ul data-test-dependencies>
-        {{#each @version.normalDependencies as |dep|}}
-          <li><LinkToDep @dep={{dep}} /></li>
-        {{else}}
-          {{#if @version.loadDepsTask.isRunning}}
-            <li>Loading…</li>
-          {{else}}
-            <li>None</li>
-          {{/if}}
-        {{/each}}
-      </ul>
-    </div>
-
-    {{#if @version.buildDependencies}}
-      <div>
-        <h3>Build-Dependencies</h3>
-        <ul data-test-build-dependencies>
-          {{#each @version.buildDependencies as |dep|}}
-            <li><LinkToDep @dep={{dep}} /></li>
-          {{/each}}
-        </ul>
-      </div>
-    {{/if}}
-
-    {{#if @version.devDependencies}}
-      <div>
-        <h3>Dev-Dependencies</h3>
-        <ul data-test-dev-dependencies>
-          {{#each @version.devDependencies as |dep|}}
-            <li><LinkToDep @dep={{dep}} /></li>
-          {{/each}}
-        </ul>
-      </div>
-    {{/if}}
   </div>
 </section>

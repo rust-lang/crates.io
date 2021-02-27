@@ -132,30 +132,6 @@ module('Acceptance | crate page', function (hooks) {
     assert.dom('[data-test-heading] [data-test-team-name]').hasText('thehydroimpulseteam');
   });
 
-  test('crates having normal dependencies', async function (assert) {
-    this.server.loadFixtures();
-
-    await visit('/crates/nanomsg');
-
-    assert.dom('[data-test-dependencies] li').exists({ count: 2 });
-  });
-
-  test('crates having build dependencies', async function (assert) {
-    this.server.loadFixtures();
-
-    await visit('/crates/nanomsg');
-
-    assert.dom('[data-test-build-dependencies] li').exists({ count: 1 });
-  });
-
-  test('crates having dev dependencies', async function (assert) {
-    this.server.loadFixtures();
-
-    await visit('/crates/nanomsg');
-
-    assert.dom('[data-test-dev-dependencies] li').exists({ count: 1 });
-  });
-
   test('crates having user-owners', async function (assert) {
     this.server.loadFixtures();
 
