@@ -35,6 +35,17 @@
     {{@crate.versions.length}} Versions
   </nav.Tab>
 
+  <nav.Tab
+    @link={{if
+      @versionNum
+      (link "crate.version-dependencies" @crate @versionNum)
+      (link "crate.dependencies" @crate)
+    }}
+    data-test-deps-tab
+  >
+    Dependencies
+  </nav.Tab>
+
   <nav.Tab @link={{link "crate.reverse-dependencies" @crate}} data-test-rev-deps-tab>
     Dependents
   </nav.Tab>

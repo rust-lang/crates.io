@@ -1,0 +1,31 @@
+<div
+  local-class="
+    row
+    {{if @dependency.optional "optional"}}
+    {{if this.focused "focused"}}
+  "
+  ...attributes
+>
+  <span local-class="range" data-test-range>
+    {{format-req @dependency.req}}
+  </span>
+
+  <span>
+    <LinkTo
+      @route="crate"
+      @model={{@dependency.crate_id}}
+      local-class="link"
+      {{on "focusin" (fn this.setFocused true)}}
+      {{on "focusout" (fn this.setFocused false)}}
+      data-test-release-track-link
+    >
+      {{@dependency.crate_id}}
+    </LinkTo>
+
+    <span local-class="metadata">
+      {{#if @dependency.optional}}
+        optional
+      {{/if}}
+    </span>
+  </span>
+</div>

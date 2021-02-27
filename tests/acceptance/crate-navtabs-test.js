@@ -5,6 +5,7 @@ import { setupApplicationTest } from 'cargo/tests/helpers';
 
 const TAB_README = '[data-test-readme-tab] a';
 const TAB_VERSIONS = '[data-test-versions-tab] a';
+const TAB_DEPS = '[data-test-deps-tab] a';
 const TAB_REV_DEPS = '[data-test-rev-deps-tab] a';
 const TAB_SETTINGS = '[data-test-settings-tab] a';
 
@@ -20,6 +21,7 @@ module('Acceptance | crate navigation tabs', function (hooks) {
 
     assert.dom(TAB_README).hasAttribute('href', '/crates/nanomsg').hasAttribute('data-test-active');
     assert.dom(TAB_VERSIONS).hasAttribute('href', '/crates/nanomsg/versions').hasNoAttribute('data-test-active');
+    assert.dom(TAB_DEPS).hasAttribute('href', '/crates/nanomsg/dependencies').hasNoAttribute('data-test-active');
     assert
       .dom(TAB_REV_DEPS)
       .hasAttribute('href', '/crates/nanomsg/reverse_dependencies')
@@ -31,6 +33,19 @@ module('Acceptance | crate navigation tabs', function (hooks) {
 
     assert.dom(TAB_README).hasAttribute('href', '/crates/nanomsg').hasNoAttribute('data-test-active');
     assert.dom(TAB_VERSIONS).hasAttribute('href', '/crates/nanomsg/versions').hasAttribute('data-test-active');
+    assert.dom(TAB_DEPS).hasAttribute('href', '/crates/nanomsg/dependencies').hasNoAttribute('data-test-active');
+    assert
+      .dom(TAB_REV_DEPS)
+      .hasAttribute('href', '/crates/nanomsg/reverse_dependencies')
+      .hasNoAttribute('data-test-active');
+    assert.dom(TAB_SETTINGS).doesNotExist();
+
+    await click(TAB_DEPS);
+    assert.equal(currentURL(), '/crates/nanomsg/0.6.1/dependencies');
+
+    assert.dom(TAB_README).hasAttribute('href', '/crates/nanomsg/0.6.1').hasNoAttribute('data-test-active');
+    assert.dom(TAB_VERSIONS).hasAttribute('href', '/crates/nanomsg/versions').hasNoAttribute('data-test-active');
+    assert.dom(TAB_DEPS).hasAttribute('href', '/crates/nanomsg/0.6.1/dependencies').hasAttribute('data-test-active');
     assert
       .dom(TAB_REV_DEPS)
       .hasAttribute('href', '/crates/nanomsg/reverse_dependencies')
@@ -42,6 +57,7 @@ module('Acceptance | crate navigation tabs', function (hooks) {
 
     assert.dom(TAB_README).hasAttribute('href', '/crates/nanomsg').hasNoAttribute('data-test-active');
     assert.dom(TAB_VERSIONS).hasAttribute('href', '/crates/nanomsg/versions').hasNoAttribute('data-test-active');
+    assert.dom(TAB_DEPS).hasAttribute('href', '/crates/nanomsg/dependencies').hasNoAttribute('data-test-active');
     assert
       .dom(TAB_REV_DEPS)
       .hasAttribute('href', '/crates/nanomsg/reverse_dependencies')

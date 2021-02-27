@@ -1,0 +1,38 @@
+{{page-title this.crate.name}}
+
+<CrateHeader
+  @crate={{this.crate}}
+  @version={{this.version}}
+  @versionNum={{this.version.num}}
+/>
+
+<h3 local-class="heading">Dependencies</h3>
+{{#if this.version.normalDependencies}}
+  <ul local-class="list" data-test-dependencies>
+    {{#each this.version.normalDependencies as |dependency|}}
+      <li><DependencyList::Row @dependency={{dependency}} /></li>
+    {{/each}}
+  </ul>
+{{else}}
+  <div local-class="no-deps" data-test-no-dependencies>
+    This version of the "{{this.crate.name}}" crate has no dependencies
+  </div>
+{{/if}}
+
+{{#if this.version.buildDependencies}}
+  <h3 local-class="heading">Build-Dependencies</h3>
+  <ul local-class="list" data-test-build-dependencies>
+    {{#each this.version.buildDependencies as |dependency|}}
+      <li><DependencyList::Row @dependency={{dependency}} /></li>
+    {{/each}}
+  </ul>
+{{/if}}
+
+{{#if this.version.devDependencies}}
+  <h3 local-class="heading">Dev-Dependencies</h3>
+  <ul local-class="list" data-test-dev-dependencies>
+    {{#each this.version.devDependencies as |dependency|}}
+      <li><DependencyList::Row @dependency={{dependency}} /></li>
+    {{/each}}
+  </ul>
+{{/if}}

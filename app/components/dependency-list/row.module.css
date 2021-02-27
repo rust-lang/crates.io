@@ -1,0 +1,100 @@
+.row {
+    --bg-color: var(--grey200);
+    --hover-bg-color: hsl(217, 37%, 98%);
+    --range-color: var(--grey900);
+    --crate-color: var(--grey700);
+    --shadow: 0 1px 3px hsla(51, 90%, 42%, .35);
+
+    display: flex;
+    align-items: center;
+    position: relative;
+    font-size: 18px;
+    padding: 15px 25px;
+    background-color: white;
+    border-radius: 7px;
+    box-shadow: var(--shadow);
+    transition: all 300ms;
+
+    &:hover, &.focused {
+        background-color: var(--hover-bg-color);
+        transition: all 0ms;
+    }
+
+    &.focused {
+        box-shadow: 0 0 0 3px var(--yellow500), var(--shadow);
+    }
+
+    &.optional {
+        --range-color: var(--grey600);
+        --crate-color: var(--grey600);
+    }
+
+    [title], :global(.ember-tooltip-target) {
+        position: relative;
+        z-index: 1;
+        cursor: help;
+    }
+
+    :global(.ember-tooltip) {
+        word-break: break-all;
+    }
+
+    @media only screen and (max-width: 550px) {
+        display: block
+    }
+}
+
+.range {
+    margin-right: 15px;
+    min-width: 100px;
+    color: var(--range-color);
+    font-variant: tabular-nums;
+}
+
+.link {
+    color: var(--crate-color);
+    font-weight: 500;
+    margin-right: 15px;
+    outline: none;
+
+    &:hover {
+        color: var(--crate-color);
+    }
+
+    &::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+    }
+}
+
+.metadata {
+    color: var(--grey600);
+    text-transform: uppercase;
+    letter-spacing: .7px;
+    font-size: 13px;
+
+    a {
+        position: relative;
+        color: var(--grey600);
+
+        &:hover {
+            color: var(--grey900);
+        }
+    }
+
+    svg {
+        height: 1em;
+        width: auto;
+        margin-right: 2px;
+        margin-bottom: -.1em;
+    }
+
+    :global(.ember-tooltip) {
+        text-transform: none;
+        letter-spacing: normal;
+    }
+}
