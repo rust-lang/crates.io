@@ -1,6 +1,8 @@
 .list {
     background-color: white;
+    margin: 0;
     padding: 0 20px;
+    list-style: none;
 }
 
 .row {
@@ -13,10 +15,8 @@
 }
 
 .exact-match {
-    padding-bottom: 40px;
-    border-bottom: 2px solid var(--gray-border);
-
     h1 {
+        margin-top: 0;
         color: green
     }
 }
