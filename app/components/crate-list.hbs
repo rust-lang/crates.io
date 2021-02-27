@@ -1,0 +1,14 @@
+<div local-class="list" ...attributes>
+  {{#if @exactMatch}}
+    <div local-class="exact-match">
+      <LinkTo @route="crate" @model={{@exactMatch}}>
+        <h1>Exact Match</h1>
+      </LinkTo>
+      <CrateRow @crate={{@exactMatch}} local-class="row" data-test-crate-row="exact-match" />
+    </div>
+  {{/if}}
+
+  {{#each @crates as |crate index|}}
+    <CrateRow @crate={{crate}} local-class="row" data-test-crate-row={{index}} />
+  {{/each}}
+</div>

@@ -18,10 +18,6 @@
   </div>
 </div>
 
-<div local-class="list">
-  {{#each this.model as |crate|}}
-    <CrateRow @crate={{crate}} local-class="row" />
-  {{/each}}
-</div>
+<CrateList @crates={{this.model}} local-class="list" />
 
 <Pagination @pagination={{this.pagination}} />

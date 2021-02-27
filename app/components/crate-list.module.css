@@ -1,0 +1,22 @@
+.list {
+    background-color: white;
+    padding: 0 20px;
+}
+
+.row {
+    border-bottom: 2px solid var(--gray-border);
+    padding: 20px 0;
+
+    &:last-of-type {
+        border: none;
+    }
+}
+
+.exact-match {
+    padding-bottom: 40px;
+    border-bottom: 2px solid var(--gray-border);
+
+    h1 {
+        color: green
+    }
+}

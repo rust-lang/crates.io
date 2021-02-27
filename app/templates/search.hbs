@@ -47,22 +47,7 @@
     </div>
   </div>
 
-  <div local-class="list">
-    {{#each this.model as |crate index|}}
-      {{#if crate.exact_match}}
-        <div local-class="exact-match">
-          <LinkTo @route="crate" @model={{crate}}>
-            <h1>Exact Match</h1>
-          </LinkTo>
-          <CrateRow @crate={{crate}} local-class="row" data-test-crate-row={{index}} />
-        </div>
-      {{else}}
-        <div>
-          <CrateRow @crate={{crate}} local-class="row" data-test-crate-row={{index}} />
-        </div>
-      {{/if}}
-    {{/each}}
-  </div>
+  <CrateList @exactMatch={{this.exactMatch}} @crates={{this.otherCrates}} local-class="list" />
 
   <Pagination @pagination={{this.pagination}} />
 {{else}}
