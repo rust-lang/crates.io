@@ -7375,10 +7375,10 @@ ember-svg-jar@2.3.3:
     mkdirp "^0.5.1"
     path-posix "^1.0.0"
 
-ember-template-lint@2.20.0:
-  version "2.20.0"
-  resolved "https://registry.yarnpkg.com/ember-template-lint/-/ember-template-lint-2.20.0.tgz#73844a588acb167df8fe281f227c7a0837d1bc2d"
-  integrity sha512-J1iO/fAsWQe9CHAx102tEjALSTIOxeNGn5GjqJzWmfyxfSJlTMq1XqhfBBXoqTM9zmi/WFf5m6uH5cPIQSBStQ==
+ember-template-lint@2.21.0:
+  version "2.21.0"
+  resolved "https://registry.yarnpkg.com/ember-template-lint/-/ember-template-lint-2.21.0.tgz#7e120abf309a8810eeed26c52377943faf15a95b"
+  integrity sha512-19QbEqJQdMfcRS7PsQsubflRowEtnkbD0tpYR4q/xq4lodmhU7hhOFvlTQgbxD/jwW5Ur+tkOwH4KFy9JwOyXA==
   dependencies:
     chalk "^4.0.0"
     ember-template-recast "^5.0.1"
