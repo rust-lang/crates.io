@@ -1,20 +1,18 @@
 .list {
-    background-color: white;
     margin: 0;
-    padding: 0 20px;
+    padding: 0;
     list-style: none;
 }
 
 .row {
-    border-bottom: 2px solid var(--gray-border);
-    padding: 20px 0;
-
-    &:last-of-type {
-        border: none;
+    &:not(:last-child) {
+        margin-bottom: 15px;
     }
 }
 
-.exact-match {
+.exact-match:not(:last-child) {
+    margin-bottom: 60px;
+
     h1 {
         margin-top: 0;
         color: green
