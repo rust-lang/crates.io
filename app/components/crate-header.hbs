@@ -22,8 +22,8 @@
 <NavTabs aria-label="{{@crate.name}} crate subpages" local-class="nav" as |nav|>
   <nav.Tab
     @link={{if
-      (eq this.router.currentRouteName "crate.version")
-      (link "crate.version" @crate @version.num)
+      @versionNum
+      (link "crate.version" @crate @versionNum)
       (link "crate.index" @crate)
     }}
     data-test-readme-tab

@@ -1,6 +1,10 @@
 {{page-title this.crate.name}}
 
-<CrateHeader @crate={{this.crate}} @version={{this.currentVersion}} />
+<CrateHeader
+  @crate={{this.crate}}
+  @version={{this.currentVersion}}
+  @versionNum={{this.requestedVersion}}
+/>
 
 <div local-class='crate-info'>
   <div local-class="docs">
