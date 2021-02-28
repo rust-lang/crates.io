@@ -24,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
         with:
           node-version: '14.x'
 
@@ -54,7 +54,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
         with:
           node-version: '14.x'
 
@@ -117,42 +117,24 @@ jobs:
       #
       # The other binaries (like `rustc`) will be overwritten by rustup.
       #
-      # Current size as of 2019-12-23: ~6 MB
+      # Current size as of 2021-02-15: ~15 MB
       - name: Cache cargo binaries
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: ~/.cargo/bin
           key: ${{ runner.os }}-cargo-bin-${{ matrix.rust }}-${{ hashFiles('.diesel_version') }}-v2
 
-      # Current size as of 2019-12-23: ~77 MB
-      - name: Cache cargo registry cache
-        uses: actions/cache@v2
+      # Current size as of 2021-02-15: ~105 MB
+      - name: Cache cargo registry and git deps
+        uses: actions/cache@v2.1.4
         with:
-          path: ~/.cargo/registry/cache
-          key: ${{ runner.os }}-cargo-registry-cache-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+          path: |
+            ~/.cargo/registry/cache
+            ~/.cargo/registry/index
+            ~/.cargo/git/db
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-registry-cache-${{ matrix.rust }}-
-            ${{ runner.os }}-cargo-registry-cache-
-
-      # Current size as of 2019-12-23: ~38 MB
-      - name: Cache cargo registry index
-        uses: actions/cache@v2
-        with:
-          path: ~/.cargo/registry/index
-          key: ${{ runner.os }}-cargo-registry-index-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-registry-index-${{ matrix.rust }}-
-            ${{ runner.os }}-cargo-registry-index-
-
-      # Current size as of 2019-12-23: ~4 MB
-      - name: Cache cargo git db
-        uses: actions/cache@v2
-        with:
-          path: ~/.cargo/git/db
-          key: ${{ runner.os }}-cargo-git-db-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-git-db-${{ matrix.rust }}-
-            ${{ runner.os }}-cargo-git-db-
+            ${{ runner.os }}-cargo-
 
       - name: Install ${{ matrix.rust }} Rust
         run: |
@@ -174,17 +156,14 @@ jobs:
         run:
           echo "::set-output name=version::$(rustc -V)"
 
-      # Current size as of 2019-12-23: ~336 MB
+      # Current size as of 2021-02-12: ~325 MB
       - name: Cache cargo build
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: target
-          key: ${{ runner.os }}-cargo-build-target-${{ steps.rustc.outputs.version }}-${{ hashFiles('**/Cargo.lock') }}
+          key: v2-${{ runner.os }}-cargo-build-target-${{ steps.rustc.outputs.version }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-build-target-${{ steps.rustc.outputs.version }}-
-
-      - name: Cargo clean on new rustc version
-        run: script/ci/cargo-clean-on-new-rustc-version.sh
+            v2-${{ runner.os }}-cargo-build-target-${{ steps.rustc.outputs.version }}-
 
       - name: Setup database
         run: |
