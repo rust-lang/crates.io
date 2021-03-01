@@ -12,7 +12,9 @@ Router.map(function () {
   this.route('crates');
   this.route('crate', { path: '/crates/:crate_id' }, function () {
     this.route('versions');
+    this.route('dependencies');
     this.route('version', { path: '/:version_num' });
+    this.route('version-dependencies', { path: '/:version_num/dependencies' });
 
     this.route('reverse-dependencies', { path: 'reverse_dependencies' });
 

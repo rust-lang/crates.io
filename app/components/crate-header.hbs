@@ -22,8 +22,8 @@
 <NavTabs aria-label="{{@crate.name}} crate subpages" local-class="nav" as |nav|>
   <nav.Tab
     @link={{if
-      (eq this.router.currentRouteName "crate.version")
-      (link "crate.version" @crate @version.num)
+      @versionNum
+      (link "crate.version" @crate @versionNum)
       (link "crate.index" @crate)
     }}
     data-test-readme-tab
@@ -33,6 +33,17 @@
 
   <nav.Tab @link={{link "crate.versions" @crate}} data-test-versions-tab>
     {{@crate.versions.length}} Versions
+  </nav.Tab>
+
+  <nav.Tab
+    @link={{if
+      @versionNum
+      (link "crate.version-dependencies" @crate @versionNum)
+      (link "crate.dependencies" @crate)
+    }}
+    data-test-deps-tab
+  >
+    Dependencies
   </nav.Tab>
 
   <nav.Tab @link={{link "crate.reverse-dependencies" @crate}} data-test-rev-deps-tab>
