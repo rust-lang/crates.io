@@ -66,7 +66,7 @@ export default class Version extends Model {
     }
 
     let { semver } = this;
-    return `${semver.major}.${semver.major === 0 ? semver.minor : 'x'}`;
+    return semver.major >= 100 ? String(semver.major) : `${semver.major}.${semver.major === 0 ? semver.minor : 'x'}`;
   }
 
   @cached get isHighestOfReleaseTrack() {
