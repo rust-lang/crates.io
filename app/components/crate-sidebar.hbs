@@ -104,19 +104,6 @@
       </div>
     {{/if}}
 
-    {{#unless @crate.keywords.isPending}}
-      {{#if @crate.keywords}}
-        <div>
-          <h3>Keywords</h3>
-          <ul local-class='keywords'>
-            {{#each @crate.keywords as |keyword|}}
-              <li><LinkTo @route="keyword" @model={{keyword}}>{{keyword.id}}</LinkTo></li>
-            {{/each}}
-          </ul>
-        </div>
-      {{/if}}
-    {{/unless}}
-
     {{#unless @crate.categories.isPending}}
       {{#if @crate.categories}}
         <div>

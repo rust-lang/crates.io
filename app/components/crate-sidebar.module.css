@@ -99,7 +99,7 @@
     }
 }
 
-ul.owners, ul.keywords {
+ul.owners {
     display: flex;
     flex-wrap: wrap;
     list-style: none;

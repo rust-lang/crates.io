@@ -12,10 +12,23 @@
       <FollowButton @crate={{@crate}}/>
     {{/if}}
   </div>
+
   {{#if @crate.description}}
     <div local-class="description">
       {{@crate.description}}
     </div>
+  {{/if}}
+
+  {{#if @crate.keywords}}
+    <ul local-class="keywords">
+      {{#each @crate.keywords as |keyword|}}
+        <li>
+          <LinkTo @route="keyword" @model={{keyword}}>
+            <span local-class="hash">#</span>{{keyword.id}}
+          </LinkTo>
+        </li>
+      {{/each}}
+    </ul>
   {{/if}}
 </PageHeader>
 
