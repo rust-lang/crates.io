@@ -34,4 +34,22 @@ module('Component | CrateSidebar::Link', function (hooks) {
     await render(hbs`<CrateSidebar::Link @url="http://www.rust-lang.org" />`);
     assert.dom('[data-test-link]').hasAttribute('href', 'http://www.rust-lang.org').hasText('http://www.rust-lang.org');
   });
+
+  test('strips trailing slashes', async function (assert) {
+    await render(hbs`<CrateSidebar::Link @url="https://www.rust-lang.org/" />`);
+    assert.dom('[data-test-link]').hasAttribute('href', 'https://www.rust-lang.org/').hasText('rust-lang.org');
+  });
+
+  test('strips the trailing `.git` from GitHub project URLs', async function (assert) {
+    await render(hbs`<CrateSidebar::Link @url="https://github.com/rust-lang/crates.io.git" />`);
+    assert
+      .dom('[data-test-link]')
+      .hasAttribute('href', 'https://github.com/rust-lang/crates.io.git')
+      .hasText('github.com/rust-lang/crates.io');
+  });
+
+  test('does not strip the trailing `.git` from other URLs', async function (assert) {
+    await render(hbs`<CrateSidebar::Link @url="https://foo.git/" />`);
+    assert.dom('[data-test-link]').hasAttribute('href', 'https://foo.git/').hasText('foo.git');
+  });
 });
