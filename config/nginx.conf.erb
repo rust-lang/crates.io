@@ -211,7 +211,7 @@ http {
 		add_header X-Frame-Options "SAMEORIGIN";
 		add_header X-XSS-Protection "1; mode=block";
 
-		add_header Content-Security-Policy "default-src 'self'; connect-src 'self' *.ingest.sentry.io https://docs.rs https://<%= s3_host(ENV) %>; script-src 'self' 'unsafe-eval' 'sha256-n1+BB7Ckjcal1Pr7QNBh/dKRTtBQsIytFodRiIosXdE='; style-src 'self' 'unsafe-inline' https://code.cdn.mozilla.net; font-src https://code.cdn.mozilla.net; img-src *; object-src 'none'";
+		add_header Content-Security-Policy "default-src 'self'; connect-src 'self' *.ingest.sentry.io https://docs.rs https://play.rust-lang.org https://<%= s3_host(ENV) %>; script-src 'self' 'unsafe-eval' 'sha256-n1+BB7Ckjcal1Pr7QNBh/dKRTtBQsIytFodRiIosXdE='; style-src 'self' 'unsafe-inline' https://code.cdn.mozilla.net; font-src https://code.cdn.mozilla.net; img-src *; object-src 'none'";
 		add_header Access-Control-Allow-Origin "*";
 
 		add_header Strict-Transport-Security "max-age=31536000" always;

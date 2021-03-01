@@ -119,3 +119,17 @@ ul.owners {
 .reverse-deps-link {
     composes: small from '../styles/shared/typography.module.css';
 }
+
+.playground-button {
+    composes: yellow-button small from '../styles/shared/buttons.module.css';
+    justify-content: center;
+    width: 220px;
+    margin-top: 20px;
+}
+
+.playground-help {
+    composes: small from '../styles/shared/typography.module.css';
+    max-width: 220px;
+    text-align: justify;
+    line-height: 1.3em;
+}

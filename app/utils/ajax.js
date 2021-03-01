@@ -46,6 +46,26 @@ export class AjaxError extends Error {
     this.cause = cause;
   }
 
+  get isJsonError() {
+    return this.cause instanceof SyntaxError;
+  }
+
+  get isNetworkError() {
+    return this.cause instanceof TypeError;
+  }
+
+  get isHttpError() {
+    return this.cause instanceof HttpError;
+  }
+
+  get isServerError() {
+    return this.isHttpError && this.cause.response.status >= 500 && this.cause.response.status < 600;
+  }
+
+  get isClientError() {
+    return this.isHttpError && this.cause.response.status >= 400 && this.cause.response.status < 500;
+  }
+
   async json() {
     try {
       return await this.cause.response.json();
