@@ -1,0 +1,19 @@
+<div ...attributes>
+  {{!-- The extra div wrapper is needed for specificity issues with `margin` --}}
+  <ol local-class="list">
+    {{#if @exactMatch}}
+      <li local-class="row exact-match">
+        <LinkTo @route="crate" @model={{@exactMatch}}>
+          <h1>Exact Match</h1>
+        </LinkTo>
+        <CrateRow @crate={{@exactMatch}} data-test-crate-row="exact-match" />
+      </li>
+    {{/if}}
+
+    {{#each @crates as |crate index|}}
+      <li local-class="row">
+        <CrateRow @crate={{crate}} data-test-crate-row={{index}} />
+      </li>
+    {{/each}}
+  </ol>
+</div>

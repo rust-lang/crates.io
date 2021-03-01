@@ -10,22 +10,7 @@
 }
 
 .list {
-    background-color: white;
-    padding: 0 20px;
     margin-bottom: 20px;
-}
-
-.row {
-    padding: 20px 0;
-}
-
-.exact-match {
-    margin-bottom: 40px;
-    border-bottom: solid beige;
-
-    h1 {
-        color: green
-    }
 }
 
 .try-again-button {

@@ -61,4 +61,12 @@ export default class SearchController extends Controller {
     return yield this.store.query('crate', { all_keywords, page, per_page, q, sort });
   }).restartable())
   dataTask;
+
+  get exactMatch() {
+    return this.model.find(it => it.exact_match);
+  }
+
+  get otherCrates() {
+    return this.model.filter(it => !it.exact_match);
+  }
 }
