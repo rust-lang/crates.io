@@ -7417,10 +7417,10 @@ ember-test-selectors@5.0.0:
     ember-cli-babel "^7.22.1"
     ember-cli-version-checker "^5.1.1"
 
-ember-tooltips@3.4.6:
-  version "3.4.6"
-  resolved "https://registry.yarnpkg.com/ember-tooltips/-/ember-tooltips-3.4.6.tgz#a6fa7f8c73843f4048e3763892b38e90f203e05b"
-  integrity sha512-MnbxlT2IqeraFnKg/oNDWUZeinf1Sz6CFKzxehektxlNn550JKWNUd3CHlHCiUfbiLuE9GEtJzFBPel+g/Q2hg==
+ember-tooltips@3.4.7:
+  version "3.4.7"
+  resolved "https://registry.yarnpkg.com/ember-tooltips/-/ember-tooltips-3.4.7.tgz#4ef0710e9cef0d83711b94ac4b2de894f088110f"
+  integrity sha512-tTcLi6gteB7N7gHo0LeMNN0k++lPpNNqf1aeho8dqs/0MV0LwUdf6GgzP6Urf92pvF50aw2lZcpd4FVRz5+XbQ==
   dependencies:
     broccoli-file-creator "^2.1.1"
     broccoli-funnel "^2.0.2"
