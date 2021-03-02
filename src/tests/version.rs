@@ -162,3 +162,28 @@ fn version_size() {
         .expect("Could not find v2.0.0");
     assert_eq!(version2.crate_size, Some(91));
 }
+
+#[test]
+fn accepts_complicated_semver_prerelease_and_build_identifiers() {
+    #[track_caller]
+    fn parse(s: &str) {
+        semver::Version::parse(s).expect("couldn't parse as Version");
+        semver::VersionReq::parse(s).expect("couldn't parse as VersionReq");
+    }
+
+    // Must provide at least major, minor, and patch so that it can parse as a Version
+    parse("1.0.0");
+
+    parse("1.0.0-1a");
+    parse("1.0.0-1.a");
+    parse("1.0.0-a1");
+    parse("1.0.0-a.1");
+
+    parse("1.0.0+01a");
+    parse("1.0.0+1.a");
+    parse("1.0.0+a01");
+    parse("1.0.0+a.01");
+
+    parse("1.0.0-01+01");
+    parse("1.0.0-01.-.a+01.a-01a-01a");
+}
