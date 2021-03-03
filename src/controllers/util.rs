@@ -62,38 +62,42 @@ fn authenticate_user(req: &dyn RequestExt) -> AppResult<AuthenticatedUser> {
     let session = req.session();
     let user_id_from_session = session.get("user_id").and_then(|s| s.parse::<i32>().ok());
 
-    let (user_id, token_id) = if let Some(id) = user_id_from_session {
-        (id, None)
-    } else {
-        // Otherwise, look for an `Authorization` header on the request
-        let maybe_authorization: Option<String> = {
-            req.headers()
-                .get(header::AUTHORIZATION)
-                .and_then(|h| h.to_str().ok())
-                .map(|h| h.to_string())
-        };
-        if let Some(header_value) = maybe_authorization {
-            let (user_id, token_id) = ApiToken::find_by_api_token(&conn, &header_value)
-                .map(|token| (token.user_id, Some(token.id)))
-                .map_err(|e| {
-                    if e.is::<InsecurelyGeneratedTokenRevoked>() {
-                        e
-                    } else {
-                        e.chain(internal("invalid token")).chain(forbidden())
-                    }
-                })?;
+    if let Some(id) = user_id_from_session {
+        let user = User::find(&conn, id)
+            .chain_error(|| internal("user_id from cookie not found in database"))?;
 
-            (user_id, token_id)
-        } else {
-            // Unable to authenticate the user
-            return Err(internal("no cookie session or auth header found")).chain_error(forbidden);
-        }
-    };
+        return Ok(AuthenticatedUser {
+            user,
+            token_id: None,
+        });
+    }
 
-    let user = User::find(&conn, user_id)
-        .chain_error(|| internal("user_id from cookie or token not found in database"))?;
+    // Otherwise, look for an `Authorization` header on the request
+    let maybe_authorization = req
+        .headers()
+        .get(header::AUTHORIZATION)
+        .and_then(|h| h.to_str().ok());
 
-    Ok(AuthenticatedUser { user, token_id })
+    if let Some(header_value) = maybe_authorization {
+        let token = ApiToken::find_by_api_token(&conn, header_value).map_err(|e| {
+            if e.is::<InsecurelyGeneratedTokenRevoked>() {
+                e
+            } else {
+                e.chain(internal("invalid token")).chain(forbidden())
+            }
+        })?;
+
+        let user = User::find(&conn, token.user_id)
+            .chain_error(|| internal("user_id from token not found in database"))?;
+
+        return Ok(AuthenticatedUser {
+            user,
+            token_id: Some(token.id),
+        });
+    }
+
+    // Unable to authenticate the user
+    return Err(internal("no cookie session or auth header found")).chain_error(forbidden);
 }
 
 impl<'a> UserAuthenticationExt for dyn RequestExt + 'a {

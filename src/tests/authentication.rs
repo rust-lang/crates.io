@@ -8,7 +8,7 @@ static URL: &str = "/api/v1/me/updates";
 static MUST_LOGIN: &[u8] =
     b"{\"errors\":[{\"detail\":\"must be logged in to perform that action\"}]}";
 static INTERNAL_ERROR_NO_USER: &str =
-    "user_id from cookie or token not found in database caused by NotFound";
+    "user_id from cookie not found in database caused by NotFound";
 
 fn call(app: &TestApp, mut request: MockRequest) -> HandlerResult {
     app.as_middleware().call(&mut request)
