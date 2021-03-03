@@ -6,7 +6,7 @@ on:
       - master
   pull_request:
   schedule:
-    - cron: '0 3 * * *' # daily, at 3am
+    - cron: '0 3 * * 0' # weekly, Sunday at 3am
 
 jobs:
   lint:
@@ -15,12 +15,31 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - uses: actions-rs/toolchain@v1
+      - id: toolchain
+        uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           toolchain: stable
           override: true
           components: rustfmt, clippy
+
+      - name: Cache cargo registry and git deps
+        uses: actions/cache@main
+        with:
+          path: |
+            ~/.cargo/registry/cache
+            ~/.cargo/registry/index
+          key: ${{ runner.os }}-cargo-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Cache cargo build
+        uses: actions/cache@main
+        with:
+          path: target
+          key: ${{ runner.os }}-lint-target-${{ steps.toolchain.outputs.rustc }}-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-lint-target-${{ steps.toolchain.outputs.rustc }}-
 
       - name: cargo fmt
         uses: actions-rs/cargo@v1
@@ -44,11 +63,30 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - uses: actions-rs/toolchain@v1
+      - id: toolchain
+        uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           toolchain: ${{ matrix.rust }}
           override: true
+
+      - name: Cache cargo registry and git deps
+        uses: actions/cache@main
+        with:
+          path: |
+            ~/.cargo/registry/cache
+            ~/.cargo/registry/index
+          key: ${{ runner.os }}-cargo-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Cache cargo build
+        uses: actions/cache@main
+        with:
+          path: target
+          key: ${{ runner.os }}-target-${{ steps.toolchain.outputs.rustc }}-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-target-${{ steps.toolchain.outputs.rustc }}-
 
       - name: cargo build
         uses: actions-rs/cargo@v1
