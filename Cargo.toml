@@ -73,6 +73,7 @@ rand = "0.7"
 reqwest = { version = "0.11", features = ["blocking", "gzip", "json"] }
 scheduled-thread-pool = "0.2.0"
 semver = { version = "0.10", features = ["diesel", "serde"] } # TODO: Bump to 0.11 after steveklabnik/semver#217 is resolved
+semver_next = { version = "0.11", package = "semver" }
 sentry = "0.22"
 serde = { version = "1.0.0", features = ["derive"] }
 serde_json = "1.0.0"

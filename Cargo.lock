@@ -295,6 +295,7 @@ dependencies = [
  "reqwest",
  "scheduled-thread-pool",
  "semver 0.10.0",
+ "semver 0.11.0",
  "sentry",
  "serde",
  "serde_json",
