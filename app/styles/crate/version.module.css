@@ -1,9 +1,6 @@
 .crate-info {
     display: flex;
     flex-direction: column;
-    padding-bottom: 20px;
-    border-bottom: 5px solid var(--gray-border);
-    margin-bottom: 20px;
 
     @media only screen and (min-width: 890px) {
         flex-direction: row;
@@ -59,6 +56,8 @@
 .crate-downloads {
     display: flex;
     flex-wrap: wrap;
+    margin-top: 20px;
+    border-top: 5px solid var(--gray-border);
 
     h3 { width: 100%; }
 }
