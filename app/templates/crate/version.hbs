@@ -6,18 +6,20 @@
   @versionNum={{this.requestedVersion}}
 />
 
-<div local-class='crate-info'>
-  <div local-class="docs">
-    {{#if this.currentVersion.yanked}}
-      <p>
-        This crate has been yanked, but it is still available for download for other crates that
-        may be depending on it.
-      </p>
-      <p>
-        You may wish to <LinkTo @route="crate.versions" @model={{this.crate}}>view all versions</LinkTo> to find
-        one that has not been yanked.
-      </p>
-    {{else}}
+{{#if this.currentVersion.yanked}}
+  <div>
+    <p>
+      This crate has been yanked, but it is still available for download for other crates that
+      may be depending on it.
+    </p>
+    <p>
+      You may wish to <LinkTo @route="crate.versions" @model={{this.crate}}>view all versions</LinkTo> to find
+      one that has not been yanked.
+    </p>
+  </div>
+{{else}}
+  <div local-class='crate-info'>
+    <div local-class="docs">
       {{#if this.loadReadmeTask.isRunning}}
         <div local-class="readme-spinner">
           <LoadingSpinner/>
@@ -31,18 +33,15 @@
           {{this.crate.name}} v{{this.currentVersion.num}} appears to have no <code>README.md</code> file
         </div>
       {{/if}}
-    {{/if}}
-  </div>
-  {{#if (or this.isOwner (not this.currentVersion.yanked))}}
+    </div>
+
     <CrateSidebar
       @crate={{this.crate}}
       @version={{this.currentVersion}}
       local-class="sidebar"
     />
-  {{/if}}
-</div>
+  </div>
 
-{{#unless this.currentVersion.yanked}}
   <div local-class='crate-downloads'>
     <div local-class='stats'>
       {{#if this.downloadsContext.num}}
@@ -74,4 +73,4 @@
       <DownloadGraph @data={{this.downloads}} local-class="graph-data" />
     </div>
   </div>
-{{/unless}}
+{{/if}}
