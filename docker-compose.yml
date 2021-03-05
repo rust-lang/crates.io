@@ -28,12 +28,12 @@ services:
   postgres:
     image: postgres:9.6
     environment:
-      POSTGRES_DB: cargo_registry
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
     ports:
-      - 5432:5432
+      - 127.0.0.1:5432:5432
     volumes:
+      - ./docker/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
       - postgres-data:/var/lib/postgresql/data
 
   backend:
