@@ -65,7 +65,7 @@ http = "0.2"
 hyper = { version = "0.14", features = ["client", "http1"] }
 indexmap = "1.0.2"
 jemallocator = { version = "0.3", features = ['unprefixed_malloc_on_supported_platforms', 'profiling'] }
-lettre = { version = "0.10.0-alpha.1", default-features = false, features = ["file-transport", "smtp-transport", "native-tls", "hostname", "builder"] }
+lettre = { version = "=0.10.0-beta.1", default-features = false, features = ["file-transport", "smtp-transport", "native-tls", "hostname", "builder"] }
 license-exprs = "1.6"
 oauth2 = { version = "4.0.0-alpha.3", default-features = false, features = ["reqwest"] }
 parking_lot = "0.11"
