@@ -41,6 +41,10 @@ export default class DownloadGraph extends Component {
     return `https://play.rust-lang.org/?code=use%20${playgroundCrate.id}%3B%0A%0Afn%20main()%20%7B%0A%20%20%20%20%2F%2F%20try%20using%20the%20%60${playgroundCrate.id}%60%20crate%20here%0A%7D`;
   }
 
+  get canHover() {
+    return window?.matchMedia('(hover: hover)').matches;
+  }
+
   constructor() {
     super(...arguments);
 

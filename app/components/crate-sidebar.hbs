@@ -139,11 +139,17 @@
         data-test-playground-button
       >
         Try on Rust Playground
+
+        {{#if this.canHover}}
+          <EmberTooltip @text="The top 100 crates are available on the Rust Playground for you to try out directly in your browser." />
+        {{/if}}
       </a>
-      <p local-class="playground-help" data-test-playground-help>
-        The top 100 crates are available on the Rust Playground for you to
-        try out directly in your browser.
-      </p>
+      {{#unless this.canHover}}
+        <p local-class="playground-help" data-test-playground-help>
+          The top 100 crates are available on the Rust Playground for you to
+          try out directly in your browser.
+        </p>
+      {{/unless}}
     </div>
   {{/if}}
 </section>
