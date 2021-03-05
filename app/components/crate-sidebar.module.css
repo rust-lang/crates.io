@@ -2,8 +2,6 @@
     .top, .bottom {
         display: flex;
         flex-wrap: wrap;
-
-        > * { margin-right: 1em; }
     }
 
     .top > * { flex: 1 }
