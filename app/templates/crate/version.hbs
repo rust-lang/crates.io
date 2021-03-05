@@ -34,7 +34,11 @@
     {{/if}}
   </div>
   {{#if (or this.isOwner (not this.currentVersion.yanked))}}
-    <CrateSidebar @crate={{this.crate}} @version={{this.currentVersion}} />
+    <CrateSidebar
+      @crate={{this.crate}}
+      @version={{this.currentVersion}}
+      local-class="sidebar"
+    />
   {{/if}}
 </div>
 

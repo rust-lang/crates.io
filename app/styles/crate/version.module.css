@@ -48,6 +48,14 @@
     --spinner-size: 35px;
 }
 
+.sidebar {
+    @media only screen and (min-width: 890px) {
+        flex: 3;
+        border-left: 2px solid var(--gray-border);
+        padding-left: 20px;
+    }
+}
+
 .crate-downloads {
     display: flex;
     flex-wrap: wrap;
