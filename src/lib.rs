@@ -1,6 +1,4 @@
 #![warn(rust_2018_idioms)]
-extern crate conduit;
-extern crate route_recognizer as router;
 
 #[macro_use]
 extern crate tracing;
@@ -10,7 +8,10 @@ use std::error::Error;
 use std::fmt;
 
 use conduit::{box_error, Handler, HandlerResult, Method, RequestExt};
-use router::{Match, Router};
+use route_recognizer::{Match, Params, Router};
+
+static UNKNOWN_METHOD: &str = "Invalid method";
+static NOT_FOUND: &str = "Path not found";
 
 #[derive(Default)]
 pub struct RouteBuilder {
@@ -38,7 +39,10 @@ impl conduit::Handler for WrappedHandler {
 }
 
 #[derive(Debug)]
-pub struct RouterError(String);
+pub enum RouterError {
+    UnknownMethod,
+    PathNotFound,
+}
 
 impl RouteBuilder {
     pub fn new() -> RouteBuilder {
@@ -48,17 +52,15 @@ impl RouteBuilder {
     }
 
     #[instrument(level = "trace", skip(self))]
-    #[allow(clippy::borrowed_box)]
     pub fn recognize<'a>(
         &'a self,
         method: &Method,
         path: &str,
     ) -> Result<Match<&WrappedHandler>, RouterError> {
         match self.routers.get(method) {
-            Some(router) => router.recognize(path),
-            None => Err(format!("No router found for {:?}", method)),
+            Some(router) => router.recognize(path).or(Err(RouterError::PathNotFound)),
+            None => Err(RouterError::UnknownMethod),
         }
-        .map_err(RouterError)
     }
 
     #[instrument(level = "trace", skip(self, handler))]
@@ -106,18 +108,23 @@ impl RouteBuilder {
 impl conduit::Handler for RouteBuilder {
     #[instrument(level = "trace", skip(self, request))]
     fn call(&self, request: &mut dyn RequestExt) -> HandlerResult {
-        let m = {
+        let mut m = {
             let method = request.method();
             let path = request.path();
 
             match self.recognize(&method, path) {
                 Ok(m) => m,
                 Err(e) => {
-                    info!("{}", e.0);
+                    info!("{}", e);
                     return Err(box_error(e));
                 }
             }
         };
+
+        // We don't have `pub` access to the fields to destructure `Params`, so swap with an empty
+        // value to avoid an allocation.
+        let mut params = Params::new();
+        std::mem::swap(m.params_mut(), &mut params);
 
         let pattern = m.handler().pattern;
         debug!(pattern = pattern.0, "matching route handler found");
@@ -125,7 +132,7 @@ impl conduit::Handler for RouteBuilder {
         {
             let extensions = request.mut_extensions();
             extensions.insert(pattern);
-            extensions.insert(m.params().clone());
+            extensions.insert(params);
         }
 
         let span = trace_span!("handler", pattern = pattern.0);
@@ -135,47 +142,45 @@ impl conduit::Handler for RouteBuilder {
 
 impl Error for RouterError {
     fn description(&self) -> &str {
-        &self.0
+        match self {
+            Self::UnknownMethod => UNKNOWN_METHOD,
+            Self::PathNotFound => NOT_FOUND,
+        }
     }
 }
 
 impl fmt::Display for RouterError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(&self.0, f)
+        #[allow(deprecated)]
+        self.description().fmt(f)
     }
 }
 
 pub trait RequestParams<'a> {
-    fn params(self) -> &'a router::Params;
+    fn params(self) -> &'a Params;
 }
 
-pub fn params(req: &dyn RequestExt) -> &router::Params {
-    req.extensions()
-        .find::<router::Params>()
-        .expect("Missing params")
+pub fn params(req: &dyn RequestExt) -> &Params {
+    req.extensions().find::<Params>().expect("Missing params")
 }
 
 impl<'a> RequestParams<'a> for &'a (dyn RequestExt + 'a) {
-    fn params(self) -> &'a router::Params {
+    fn params(self) -> &'a Params {
         params(self)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    extern crate conduit_test;
-    extern crate lazy_static;
-    extern crate tracing_subscriber;
-
     use std::io;
     use std::net::SocketAddr;
 
-    use {RequestParams, RouteBuilder, RoutePattern};
+    use super::{RequestParams, RouteBuilder, RoutePattern};
 
-    use self::conduit_test::ResponseExt;
     use conduit::{
         Body, Extensions, Handler, HeaderMap, Host, Method, Response, Scheme, StatusCode, Version,
     };
+    use conduit_test::ResponseExt;
 
     lazy_static::lazy_static! {
         static ref TRACING: () = {
@@ -273,16 +278,31 @@ mod tests {
     }
 
     #[test]
-    fn nonexistent_route() {
+    fn path_not_found() {
         lazy_static::initialize(&TRACING);
 
         let router = test_router();
         let mut req = RequestSentinel::new(Method::POST, "/nonexistent");
-        router.call(&mut req).err().expect("No response");
+        let err = router.call(&mut req).err().unwrap();
+
+        assert_eq!(err.to_string(), super::NOT_FOUND);
+    }
+
+    #[test]
+    fn unknown_method() {
+        lazy_static::initialize(&TRACING);
+
+        let router = test_router();
+        let mut req = RequestSentinel::new(Method::DELETE, "/posts/1");
+        let err = router.call(&mut req).err().unwrap();
+
+        assert_eq!(err.to_string(), super::UNKNOWN_METHOD);
     }
 
     #[test]
     fn catch_all() {
+        lazy_static::initialize(&TRACING);
+
         let mut router = RouteBuilder::new();
         router.get("/*", test_handler);
 
