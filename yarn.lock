@@ -6307,10 +6307,10 @@ ember-cli-head@^1.0.0:
     json-stable-stringify "^1.0.1"
     strip-bom "^3.0.0"
 
-ember-cli-htmlbars@5.6.3, ember-cli-htmlbars@^5.2.0, ember-cli-htmlbars@^5.3.1:
-  version "5.6.3"
-  resolved "https://registry.yarnpkg.com/ember-cli-htmlbars/-/ember-cli-htmlbars-5.6.3.tgz#4916d1ea2b6d69ea5e7252c0c59e56d7031ee310"
-  integrity sha512-pn2pW49KmsrjlG4PEMmd3ZrsbS2WHKn+1NLLCWUjxmc5g4/lHxHicB8IN5z95ANmgqDHAwp+rw1XTyWy9r0xyQ==
+ember-cli-htmlbars@5.6.4, ember-cli-htmlbars@^5.2.0, ember-cli-htmlbars@^5.3.1:
+  version "5.6.4"
+  resolved "https://registry.yarnpkg.com/ember-cli-htmlbars/-/ember-cli-htmlbars-5.6.4.tgz#97c1ce813dfe79961c575b4516fbb30cbb782b43"
+  integrity sha512-I4zSc6PJpWiDuhru7jozQsodo4tAsNENJP/Ry0LTL0DtlZASEa5cwahPsxBjzEmAnr30oI2AExZhrDcZBryTjQ==
   dependencies:
     "@ember/edition-utils" "^1.2.0"
     babel-plugin-htmlbars-inline-precompile "^4.4.1"
