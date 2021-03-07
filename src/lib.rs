@@ -1,6 +1,4 @@
 #![warn(rust_2018_idioms)]
-extern crate conduit;
-extern crate route_recognizer as router;
 
 #[macro_use]
 extern crate tracing;
@@ -10,7 +8,7 @@ use std::error::Error;
 use std::fmt;
 
 use conduit::{box_error, Handler, HandlerResult, Method, RequestExt};
-use router::{Match, Router};
+use route_recognizer::{Match, Params, Router};
 
 static UNKNOWN_METHOD: &str = "Invalid method";
 static NOT_FOUND: &str = "Path not found";
@@ -110,7 +108,7 @@ impl RouteBuilder {
 impl conduit::Handler for RouteBuilder {
     #[instrument(level = "trace", skip(self, request))]
     fn call(&self, request: &mut dyn RequestExt) -> HandlerResult {
-        let m = {
+        let mut m = {
             let method = request.method();
             let path = request.path();
 
@@ -123,13 +121,18 @@ impl conduit::Handler for RouteBuilder {
             }
         };
 
+        // We don't have `pub` access to the fields to destructure `Params`, so swap with an empty
+        // value to avoid an allocation.
+        let mut params = Params::new();
+        std::mem::swap(m.params_mut(), &mut params);
+
         let pattern = m.handler().pattern;
         debug!(pattern = pattern.0, "matching route handler found");
 
         {
             let extensions = request.mut_extensions();
             extensions.insert(pattern);
-            extensions.insert(m.params().clone());
+            extensions.insert(params);
         }
 
         let span = trace_span!("handler", pattern = pattern.0);
@@ -154,36 +157,30 @@ impl fmt::Display for RouterError {
 }
 
 pub trait RequestParams<'a> {
-    fn params(self) -> &'a router::Params;
+    fn params(self) -> &'a Params;
 }
 
-pub fn params(req: &dyn RequestExt) -> &router::Params {
-    req.extensions()
-        .find::<router::Params>()
-        .expect("Missing params")
+pub fn params(req: &dyn RequestExt) -> &Params {
+    req.extensions().find::<Params>().expect("Missing params")
 }
 
 impl<'a> RequestParams<'a> for &'a (dyn RequestExt + 'a) {
-    fn params(self) -> &'a router::Params {
+    fn params(self) -> &'a Params {
         params(self)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    extern crate conduit_test;
-    extern crate lazy_static;
-    extern crate tracing_subscriber;
-
     use std::io;
     use std::net::SocketAddr;
 
-    use {RequestParams, RouteBuilder, RoutePattern};
+    use super::{RequestParams, RouteBuilder, RoutePattern};
 
-    use self::conduit_test::ResponseExt;
     use conduit::{
         Body, Extensions, Handler, HeaderMap, Host, Method, Response, Scheme, StatusCode, Version,
     };
+    use conduit_test::ResponseExt;
 
     lazy_static::lazy_static! {
         static ref TRACING: () = {
