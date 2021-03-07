@@ -2,6 +2,9 @@
 extern crate conduit;
 extern crate route_recognizer as router;
 
+#[macro_use]
+extern crate tracing;
+
 use std::collections::hash_map::{Entry, HashMap};
 use std::error::Error;
 use std::fmt;
@@ -44,6 +47,7 @@ impl RouteBuilder {
         }
     }
 
+    #[instrument(level = "trace", skip(self))]
     #[allow(clippy::borrowed_box)]
     pub fn recognize<'a>(
         &'a self,
@@ -57,6 +61,7 @@ impl RouteBuilder {
         .map_err(RouterError)
     }
 
+    #[instrument(level = "trace", skip(self, handler))]
     pub fn map<H: Handler>(
         &mut self,
         method: Method,
@@ -99,6 +104,7 @@ impl RouteBuilder {
 }
 
 impl conduit::Handler for RouteBuilder {
+    #[instrument(level = "trace", skip(self, request))]
     fn call(&self, request: &mut dyn RequestExt) -> HandlerResult {
         let m = {
             let method = request.method();
@@ -106,17 +112,24 @@ impl conduit::Handler for RouteBuilder {
 
             match self.recognize(&method, path) {
                 Ok(m) => m,
-                Err(e) => return Err(box_error(e)),
+                Err(e) => {
+                    info!("{}", e.0);
+                    return Err(box_error(e));
+                }
             }
         };
 
+        let pattern = m.handler().pattern;
+        debug!(pattern = pattern.0, "matching route handler found");
+
         {
             let extensions = request.mut_extensions();
-            extensions.insert(m.handler().pattern);
+            extensions.insert(pattern);
             extensions.insert(m.params().clone());
         }
 
-        m.handler().call(request)
+        let span = trace_span!("handler", pattern = pattern.0);
+        span.in_scope(|| m.handler().call(request))
     }
 }
 
@@ -151,6 +164,8 @@ impl<'a> RequestParams<'a> for &'a (dyn RequestExt + 'a) {
 #[cfg(test)]
 mod tests {
     extern crate conduit_test;
+    extern crate lazy_static;
+    extern crate tracing_subscriber;
 
     use std::io;
     use std::net::SocketAddr;
@@ -161,6 +176,16 @@ mod tests {
     use conduit::{
         Body, Extensions, Handler, HeaderMap, Host, Method, Response, Scheme, StatusCode, Version,
     };
+
+    lazy_static::lazy_static! {
+        static ref TRACING: () = {
+            tracing_subscriber::FmtSubscriber::builder()
+                .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+                .with_span_events(tracing_subscriber::fmt::format::FmtSpan::FULL)
+                .with_test_writer()
+                .init();
+        };
+    }
 
     struct RequestSentinel {
         method: Method,
@@ -225,6 +250,8 @@ mod tests {
 
     #[test]
     fn basic_get() {
+        lazy_static::initialize(&TRACING);
+
         let router = test_router();
         let mut req = RequestSentinel::new(Method::GET, "/posts/1");
         let res = router.call(&mut req).expect("No response");
@@ -235,6 +262,8 @@ mod tests {
 
     #[test]
     fn basic_post() {
+        lazy_static::initialize(&TRACING);
+
         let router = test_router();
         let mut req = RequestSentinel::new(Method::POST, "/posts/10");
         let res = router.call(&mut req).expect("No response");
@@ -245,6 +274,8 @@ mod tests {
 
     #[test]
     fn nonexistent_route() {
+        lazy_static::initialize(&TRACING);
+
         let router = test_router();
         let mut req = RequestSentinel::new(Method::POST, "/nonexistent");
         router.call(&mut req).err().expect("No response");
