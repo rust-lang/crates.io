@@ -12,6 +12,9 @@ use std::fmt;
 use conduit::{box_error, Handler, HandlerResult, Method, RequestExt};
 use router::{Match, Router};
 
+static UNKNOWN_METHOD: &str = "Invalid method";
+static NOT_FOUND: &str = "Path not found";
+
 #[derive(Default)]
 pub struct RouteBuilder {
     routers: HashMap<Method, Router<WrappedHandler>>,
@@ -38,7 +41,10 @@ impl conduit::Handler for WrappedHandler {
 }
 
 #[derive(Debug)]
-pub struct RouterError(String);
+pub enum RouterError {
+    UnknownMethod,
+    PathNotFound,
+}
 
 impl RouteBuilder {
     pub fn new() -> RouteBuilder {
@@ -48,17 +54,15 @@ impl RouteBuilder {
     }
 
     #[instrument(level = "trace", skip(self))]
-    #[allow(clippy::borrowed_box)]
     pub fn recognize<'a>(
         &'a self,
         method: &Method,
         path: &str,
     ) -> Result<Match<&WrappedHandler>, RouterError> {
         match self.routers.get(method) {
-            Some(router) => router.recognize(path),
-            None => Err(format!("No router found for {:?}", method)),
+            Some(router) => router.recognize(path).or(Err(RouterError::PathNotFound)),
+            None => Err(RouterError::UnknownMethod),
         }
-        .map_err(RouterError)
     }
 
     #[instrument(level = "trace", skip(self, handler))]
@@ -113,7 +117,7 @@ impl conduit::Handler for RouteBuilder {
             match self.recognize(&method, path) {
                 Ok(m) => m,
                 Err(e) => {
-                    info!("{}", e.0);
+                    info!("{}", e);
                     return Err(box_error(e));
                 }
             }
@@ -135,13 +139,17 @@ impl conduit::Handler for RouteBuilder {
 
 impl Error for RouterError {
     fn description(&self) -> &str {
-        &self.0
+        match self {
+            Self::UnknownMethod => UNKNOWN_METHOD,
+            Self::PathNotFound => NOT_FOUND,
+        }
     }
 }
 
 impl fmt::Display for RouterError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(&self.0, f)
+        #[allow(deprecated)]
+        self.description().fmt(f)
     }
 }
 
