@@ -1,14 +1,14 @@
 use std::sync::Arc;
 
 use conduit::{Handler, HandlerResult, RequestExt};
-use conduit_router::{RequestParams, RouteBuilder, RouterError};
+use conduit_router::{RequestParams, RouteBuilder};
 
 use crate::controllers::*;
-use crate::util::errors::{std_error, AppError, NotFound};
+use crate::util::errors::{std_error, AppError};
 use crate::util::EndpointResult;
 use crate::{App, Env};
 
-pub fn build_router(app: &App) -> R404 {
+pub fn build_router(app: &App) -> RouteBuilder {
     let mut api_router = RouteBuilder::new();
 
     // Route used by both `cargo search` and the frontend
@@ -133,7 +133,7 @@ pub fn build_router(app: &App) -> R404 {
         router.post("/git/index/*path", R(s));
     }
 
-    R404(router)
+    router
 }
 
 struct C(pub fn(&mut dyn RequestExt) -> EndpointResult);
@@ -166,20 +166,6 @@ impl<H: Handler> Handler for R<H> {
     }
 }
 
-// Can't derive Debug because of RouteBuilder.
-#[allow(missing_debug_implementations)]
-pub struct R404(pub RouteBuilder);
-
-impl Handler for R404 {
-    fn call(&self, req: &mut dyn RequestExt) -> HandlerResult {
-        let R404(ref router) = *self;
-        match router.call(req) {
-            Err(e) if e.downcast_ref::<RouterError>().is_some() => Ok(NotFound.into()),
-            other => other,
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -188,7 +174,7 @@ mod tests {
     };
     use crate::util::EndpointResult;
 
-    use conduit::{Body, StatusCode};
+    use conduit::StatusCode;
     use conduit_test::MockRequest;
     use diesel::result::Error as DieselError;
 
@@ -255,18 +241,5 @@ mod tests {
                 .call(&mut req)
                 .is_err()
         );
-    }
-
-    #[test]
-    fn router_produces_json_not_found() {
-        let route_builder = RouteBuilder::new();
-        let mut req = MockRequest::new(::conduit::Method::GET, "/");
-
-        let (parts, body) = R404(route_builder).call(&mut req).unwrap().into_parts();
-        assert_eq!(parts.status, StatusCode::NOT_FOUND);
-        assert!(matches!(
-            body,
-            Body::Owned(vec) if vec == br#"{"errors":[{"detail":"Not Found"}]}"#
-        ));
     }
 }
