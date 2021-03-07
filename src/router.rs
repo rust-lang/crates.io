@@ -191,7 +191,7 @@ mod tests {
     };
     use crate::util::EndpointResult;
 
-    use conduit::StatusCode;
+    use conduit::{Body, StatusCode};
     use conduit_test::MockRequest;
     use diesel::result::Error as DieselError;
 
@@ -258,5 +258,18 @@ mod tests {
                 .call(&mut req)
                 .is_err()
         );
+    }
+
+    #[test]
+    fn router_produces_json_not_found() {
+        let route_builder = RouteBuilder::new();
+        let mut req = MockRequest::new(::conduit::Method::GET, "/");
+
+        let (parts, body) = R404(route_builder).call(&mut req).unwrap().into_parts();
+        assert_eq!(parts.status, StatusCode::NOT_FOUND);
+        assert!(matches!(
+            body,
+            Body::Owned(vec) if vec == br#"{"errors":[{"detail":"Not Found"}]}"#
+        ));
     }
 }
