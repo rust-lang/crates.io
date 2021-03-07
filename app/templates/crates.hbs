@@ -9,12 +9,16 @@
     </LinkTo>
   {{/each}}
 
-  <select {{on "change" this.handleSelection}}>
-    <option>Filter by the letter...</option>
-    {{#each this.alphabet as |letter|}}
-      <option value={{letter}} selected={{eq letter this.letter}}>{{ letter }}</option>
-    {{/each}}
-  </select>
+  <label local-class="filter-dropdown-label">
+    Filter by letter:
+
+    <select local-class="filter-dropdown" {{on "change" this.handleSelection}}>
+      <option value="">No Filter</option>
+      {{#each this.alphabet as |letter|}}
+        <option value={{letter}} selected={{eq letter this.letter}}>{{ letter }}</option>
+      {{/each}}
+    </select>
+  </label>
 </div>
 
 <div local-class="results-meta">

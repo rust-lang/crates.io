@@ -9,7 +9,7 @@
     <label local-class="email-input-label" for='new-owner-username'>
       Username
     </label>
-    <Input @type="text" id="new-owner-username" @value={{this.username}} placeholder="Username" local-class="email-input" @name="username" />
+    <Input @type="text" id="new-owner-username" @value={{this.username}} placeholder="Username" local-class="email-input" name="username" />
     <button type="submit" disabled={{not this.username}} local-class="submit-button" data-test-save-button>Save</button>
   </form>
 </div>

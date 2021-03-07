@@ -16,18 +16,26 @@
     a:hover { background-color: var(--main-bg-dark); }
     a:global(.active) { background-color: var(--main-bg-dark); }
 
-    select {
-        display: none;
-        width: 100%;
-        padding: 5px;
-    }
-
     @media only screen and (max-width: 650px) {
         padding: 0;
         background-color: inherit;
         a { display: none; }
-        select { display: block; }
     }
+}
+
+.filter-dropdown-label {
+    display: none;
+
+    @media only screen and (max-width: 650px) {
+        display: flex;
+        align-items: center;
+        width: 100%;
+    }
+}
+
+.filter-dropdown {
+    flex-grow: 1;
+    margin-left: 20px;
 }
 
 .results-meta {
