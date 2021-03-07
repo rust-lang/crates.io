@@ -281,16 +281,31 @@ mod tests {
     }
 
     #[test]
-    fn nonexistent_route() {
+    fn path_not_found() {
         lazy_static::initialize(&TRACING);
 
         let router = test_router();
         let mut req = RequestSentinel::new(Method::POST, "/nonexistent");
-        router.call(&mut req).err().expect("No response");
+        let err = router.call(&mut req).err().unwrap();
+
+        assert_eq!(err.to_string(), super::NOT_FOUND);
+    }
+
+    #[test]
+    fn unknown_method() {
+        lazy_static::initialize(&TRACING);
+
+        let router = test_router();
+        let mut req = RequestSentinel::new(Method::DELETE, "/posts/1");
+        let err = router.call(&mut req).err().unwrap();
+
+        assert_eq!(err.to_string(), super::UNKNOWN_METHOD);
     }
 
     #[test]
     fn catch_all() {
+        lazy_static::initialize(&TRACING);
+
         let mut router = RouteBuilder::new();
         router.get("/*", test_handler);
 
