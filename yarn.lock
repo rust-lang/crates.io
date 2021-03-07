@@ -1072,6 +1072,16 @@
     ember-cli-typescript "^4.0.0"
     heimdalljs "^0.3.0"
 
+"@ember-template-lint/todo-utils@^8.0.0-beta.3":
+  version "8.0.0-beta.3"
+  resolved "https://registry.yarnpkg.com/@ember-template-lint/todo-utils/-/todo-utils-8.0.0-beta.3.tgz#9a048c2787c781f80a6ae682787fbfcb5ea8e03d"
+  integrity sha512-L0XXY8U6Jk4c4OGSydhxa5K3/kyUpaqc6IpYW4wU8g1yu/zOj7XgKgmp48+t3dt1p6Xa+CHKnD1I86m99BEYXg==
+  dependencies:
+    "@types/eslint" "^7.2.6"
+    fs-extra "^9.0.1"
+    slash "^3.0.0"
+    tslib "^2.1.0"
+
 "@ember/edition-utils@^1.2.0":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@ember/edition-utils/-/edition-utils-1.2.0.tgz#a039f542dc14c8e8299c81cd5abba95e2459cfa6"
@@ -2012,6 +2022,14 @@
   resolved "https://registry.yarnpkg.com/@types/ember__utils/-/ember__utils-3.16.2.tgz#3fa9a0666a3e8204262e2a2960289aaf01f29467"
   integrity sha512-tBbqewgegiKSpGZvGh3pbcoXwLCMvKVdLRE97vys75nAEz/vBzkGJm+PDz1HVaTkRukWbRhlDiTm2qFH8qRnSw==
 
+"@types/eslint@^7.2.6":
+  version "7.2.6"
+  resolved "https://registry.yarnpkg.com/@types/eslint/-/eslint-7.2.6.tgz#5e9aff555a975596c03a98b59ecd103decc70c3c"
+  integrity sha512-I+1sYH+NPQ3/tVqCeUSBwTE/0heyvtXqpIopUUArlBm0Kpocb8FbMa3AZ/ASKIFpN3rnEx932TTXDbt9OXsNDw==
+  dependencies:
+    "@types/estree" "*"
+    "@types/json-schema" "*"
+
 "@types/estree@*":
   version "0.0.46"
   resolved "https://registry.yarnpkg.com/@types/estree/-/estree-0.0.46.tgz#0fb6bfbbeabd7a30880504993369c4bf1deab1fe"
@@ -2070,7 +2088,7 @@
   dependencies:
     "@types/sizzle" "*"
 
-"@types/json-schema@^7.0.5":
+"@types/json-schema@*", "@types/json-schema@^7.0.5":
   version "7.0.7"
   resolved "https://registry.yarnpkg.com/@types/json-schema/-/json-schema-7.0.7.tgz#98a993516c859eb0d5c4c8f098317a9ea68db9ad"
   integrity sha512-cxWFQVseBm6O9Gbw1IWb8r6OS4OhSt3hPZLkFApLjM8TEXROBuQGLAH2i2gZpcXdLBIrpXuTDhH7Vbm1iXmNGA==
@@ -7023,11 +7041,12 @@ ember-svg-jar@2.3.3:
     mkdirp "^0.5.1"
     path-posix "^1.0.0"
 
-ember-template-lint@2.21.0:
-  version "2.21.0"
-  resolved "https://registry.yarnpkg.com/ember-template-lint/-/ember-template-lint-2.21.0.tgz#7e120abf309a8810eeed26c52377943faf15a95b"
-  integrity sha512-19QbEqJQdMfcRS7PsQsubflRowEtnkbD0tpYR4q/xq4lodmhU7hhOFvlTQgbxD/jwW5Ur+tkOwH4KFy9JwOyXA==
+ember-template-lint@3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/ember-template-lint/-/ember-template-lint-3.1.0.tgz#3f634c733ac5e4b19d8ad782b653b02da04910cd"
+  integrity sha512-muGPBr71ZfesSxYtm6lLqbO3mpGh8JJnamqByPdN474/7MNexWGvmWDvV7bklrQ7UOoZ66Miu/0WRb9PYPrX9w==
   dependencies:
+    "@ember-template-lint/todo-utils" "^8.0.0-beta.3"
     chalk "^4.0.0"
     ember-template-recast "^5.0.1"
     find-up "^5.0.0"
@@ -14213,7 +14232,7 @@ tslib@^1, tslib@^1.9.0, tslib@^1.9.3:
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.14.1.tgz#cf2d38bdc34a134bcaf1091c41f6619e2f672d00"
   integrity sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==
 
-tslib@^2.0.0, tslib@^2.0.3:
+tslib@^2.0.0, tslib@^2.0.3, tslib@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.1.0.tgz#da60860f1c2ecaa5703ab7d39bc05b6bf988b97a"
   integrity sha512-hcVC3wYEziELGGmEEXue7D75zbwIIVUMWAVbHItGPx0ziyXxrOMQx4rQEVEV45Ut/1IotuEvwqPopzIOkDMf0A==
