@@ -111,10 +111,6 @@ ul.owners {
     }
 }
 
-.yanked {
-    composes: yanked from '../styles/shared/typography.module.css';
-}
-
 .more-versions-link,
 .reverse-deps-link {
     composes: small from '../styles/shared/typography.module.css';
