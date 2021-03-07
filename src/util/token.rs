@@ -93,7 +93,7 @@ secure_token_kind! {
     /// tokens of that kind, distrupting production users.
     #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
     pub(crate) enum SecureTokenKind {
-        API => "cio", // Crates.IO
+        Api => "cio", // Crates.IO
     }
 }
 
@@ -113,7 +113,7 @@ mod tests {
 
     #[test]
     fn test_generated_and_parse() {
-        const KIND: SecureTokenKind = SecureTokenKind::API;
+        const KIND: SecureTokenKind = SecureTokenKind::Api;
 
         let token = SecureToken::generate(KIND);
         assert!(token.plaintext().starts_with(KIND.prefix()));
@@ -129,7 +129,7 @@ mod tests {
 
     #[test]
     fn test_parse_no_kind() {
-        assert!(SecureToken::parse(SecureTokenKind::API, "nokind").is_none());
+        assert!(SecureToken::parse(SecureTokenKind::Api, "nokind").is_none());
     }
 
     #[test]
@@ -143,7 +143,7 @@ mod tests {
             remaining.remove(&kind);
         };
 
-        ensure(SecureTokenKind::API, "cio");
+        ensure(SecureTokenKind::Api, "cio");
 
         assert!(
             remaining.is_empty(),

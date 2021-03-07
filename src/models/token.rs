@@ -29,7 +29,7 @@ pub struct ApiToken {
 impl ApiToken {
     /// Generates a new named API token for a user
     pub fn insert(conn: &PgConnection, user_id: i32, name: &str) -> AppResult<CreatedApiToken> {
-        let token = SecureToken::generate(SecureTokenKind::API);
+        let token = SecureToken::generate(SecureTokenKind::Api);
 
         let model: ApiToken = diesel::insert_into(api_tokens::table)
             .values((
@@ -49,7 +49,7 @@ impl ApiToken {
         use crate::schema::api_tokens::dsl::*;
         use diesel::{dsl::now, update};
 
-        let token_ = SecureToken::parse(SecureTokenKind::API, token_)
+        let token_ = SecureToken::parse(SecureTokenKind::Api, token_)
             .ok_or_else(InsecurelyGeneratedTokenRevoked::boxed)?;
 
         let tokens = api_tokens

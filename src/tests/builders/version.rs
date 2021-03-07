@@ -81,10 +81,7 @@ impl<'a> VersionBuilder<'a> {
     ) -> AppResult<Version> {
         use diesel::{insert_into, update};
 
-        let license = match self.license {
-            Some(license) => Some(license.to_owned()),
-            None => None,
-        };
+        let license = self.license.map(|license| license.to_owned());
 
         let mut vers = NewVersion::new(
             crate_id,

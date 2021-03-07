@@ -283,7 +283,7 @@ async fn record_http(req: Request<Body>, client: Client) -> Result<ResponseAndEx
         .unwrap();
     *hyper_response.headers_mut() = headers;
 
-    Ok((hyper_response, Exchange { response, request }))
+    Ok((hyper_response, Exchange { request, response }))
 }
 
 fn replay_http(
