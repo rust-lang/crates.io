@@ -14,11 +14,11 @@ fn json_error(detail: &str, status: StatusCode) -> AppResponse {
     }
     #[derive(Serialize)]
     struct Bad<'a> {
-        errors: Vec<StringError<'a>>,
+        errors: [StringError<'a>; 1],
     }
 
     let mut response = json_response(&Bad {
-        errors: vec![StringError { detail }],
+        errors: [StringError { detail }],
     });
     *response.status_mut() = status;
     response
