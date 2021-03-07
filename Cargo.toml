@@ -10,7 +10,7 @@ repository = "https://github.com/conduit-rust/conduit-router"
 [dependencies]
 conduit = "0.9.0-alpha.5"
 route-recognizer = "0.3"
-tracing = "0.1.21"
+tracing = "0.1.25"
 
 [dev-dependencies]
 conduit-test = "0.9.0-alpha.4"
