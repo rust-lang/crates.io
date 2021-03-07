@@ -182,7 +182,7 @@ mod tests {
             tracing_subscriber::FmtSubscriber::builder()
                 .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
                 .with_span_events(tracing_subscriber::fmt::format::FmtSpan::FULL)
-                .with_thread_names(true)
+                .with_test_writer()
                 .init();
         };
     }
