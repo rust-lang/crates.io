@@ -11,6 +11,7 @@
     --footer-bg-color: var(--green800);
 
     --font-family: "Fira Sans", sans-serif;
+    --font-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
     --main-color: #383838;
     --main-color-light: #858585;
@@ -65,8 +66,7 @@ pre {
     background: var(--main-color);
     color: white;
     padding: 20px;
-    /* Use the modern font stack inspired by Bootstrap 4 */
-    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-family: var(--font-monospace);
 }
 
 abbr[title] {

@@ -51,7 +51,7 @@
 
 .hash {
     margin-right: 1px;
-    font-family: monospace;
+    font-family: var(--font-monospace);
     font-size: 90%;
 }
 
