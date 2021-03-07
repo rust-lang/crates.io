@@ -103,7 +103,7 @@ pub fn build_router(app: &App) -> R404 {
         C(user::me::regenerate_token_and_send),
     );
     api_router.get("/site_metadata", C(site_metadata::show_deployed_sha));
-    let api_router = Arc::new(R404(api_router));
+    let api_router = Arc::new(api_router);
 
     let mut router = RouteBuilder::new();
 
