@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use conduit::{Handler, HandlerResult, RequestExt};
-use conduit_router::{RequestParams, RouteBuilder};
+use conduit_router::{RequestParams, RouteBuilder, RouterError};
 
 use crate::controllers::*;
 use crate::util::errors::{std_error, AppError, NotFound};
@@ -173,12 +173,9 @@ pub struct R404(pub RouteBuilder);
 impl Handler for R404 {
     fn call(&self, req: &mut dyn RequestExt) -> HandlerResult {
         let R404(ref router) = *self;
-        match router.recognize(&req.method(), req.path()) {
-            Ok(m) => {
-                req.mut_extensions().insert(m.params().clone());
-                m.handler().call(req)
-            }
-            Err(..) => Ok(NotFound.into()),
+        match router.call(req) {
+            Err(e) if e.downcast_ref::<RouterError>().is_some() => Ok(NotFound.into()),
+            other => other,
         }
     }
 }
