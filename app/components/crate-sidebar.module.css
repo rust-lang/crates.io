@@ -29,30 +29,35 @@
     }
 }
 
-.last-update,
-.crate-size {
-    composes: small from '../styles/shared/typography.module.css';
-    line-height: 25px;
+.date,
+.license,
+.bytes {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+
+    svg {
+        flex-shrink: 0;
+        margin-right: 7px;
+        height: 1em;
+        width: auto;
+    }
 }
 
 .date {
-    font-weight: bold;
-    margin-bottom: 40px;
+    [title], :global(.ember-tooltip-target) {
+        cursor: help;
+    }
 }
 
-/*
-    Since crate_size is a new field, older crates won't have it.
-    Preserve behaviour for older crates. For newer ones, keep
-    `Crate Size` closer to last updated.
-*/
-.date-with-small-margin-bot {
-    font-weight: bold;
-    margin-bottom: 20px;
+.license {
+    a {
+        color: var(--main-color);
+    }
 }
 
-.size {
-    font-weight: bold;
-    margin-bottom: 40px;
+.bytes {
+    font-variant-numeric: tabular-nums;
 }
 
 .copy-help {
