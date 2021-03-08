@@ -105,8 +105,8 @@ fn report_to_sentry(req: &dyn RequestExt, res: &AfterResult, response_time: u64)
                 .collect();
 
             let sentry_req = sentry::protocol::Request {
-                method,
                 url,
+                method,
                 headers,
                 ..Default::default()
             };
