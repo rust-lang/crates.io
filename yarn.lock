@@ -1145,18 +1145,18 @@
     ember-cli-version-checker "^5.1.2"
     semver "^7.3.2"
 
-"@embroider/babel-loader-7@0.36.0":
-  version "0.36.0"
-  resolved "https://registry.yarnpkg.com/@embroider/babel-loader-7/-/babel-loader-7-0.36.0.tgz#7f9d3a789fa9965363778e231ad43f4793e3616c"
-  integrity sha512-G7jGfawIZbgUIY5zd5GHxmI23rj3Ks8PPN4o3R/71ppLwY/2Tm5ETmxMM7C8SuV3jTV/tsQZDddkssZ1VLPK2w==
+"@embroider/babel-loader-7@0.37.0":
+  version "0.37.0"
+  resolved "https://registry.yarnpkg.com/@embroider/babel-loader-7/-/babel-loader-7-0.37.0.tgz#4490858e02c969f741be5eb1be6308e1e8d66939"
+  integrity sha512-wfcRlRvdeqL4mDhY0pAcQfw4YH2FAWQhCQ6WzspoLFj/dBPpa5VylUYwP8KYVLfnxHj32A8KY+6ajmandgC9kw==
   dependencies:
     babel-core "^6.26.3"
     babel-loader "7"
 
-"@embroider/compat@0.36.0":
-  version "0.36.0"
-  resolved "https://registry.yarnpkg.com/@embroider/compat/-/compat-0.36.0.tgz#e6942fee900a8b508d4686ea9732c74429577057"
-  integrity sha512-7IMGfbbCnbsyVXcTHIl4KfDDzk4f1iFx78TZTibdUDJO2yT5rb0x21cYRi0vaERFCx5wN3NdRjJn3SjjLQo0zQ==
+"@embroider/compat@0.37.0":
+  version "0.37.0"
+  resolved "https://registry.yarnpkg.com/@embroider/compat/-/compat-0.37.0.tgz#c59d93d22a009d7d9831617c085755e4058802bf"
+  integrity sha512-R7pBgQ6JNM5tNX8qAIyCVoiOIOSl8/sD6pL3noPxoA6JT/1sOPttioV1DBhOdd88SyoLOY49v9R6OowkmuNPpg==
   dependencies:
     "@babel/code-frame" "^7.10.4"
     "@babel/core" "^7.12.3"
@@ -1164,7 +1164,7 @@
     "@babel/preset-env" "^7.12.1"
     "@babel/traverse" "^7.12.1"
     "@babel/types" "^7.12.1"
-    "@embroider/macros" "0.36.0"
+    "@embroider/macros" "0.37.0"
     "@types/babel__code-frame" "^7.0.2"
     "@types/yargs" "^15.0.9"
     assert-never "^1.1.0"
@@ -1181,8 +1181,6 @@
     broccoli-source "^3.0.0"
     chalk "^4.1.0"
     debug "^3.1.0"
-    ember-cli-htmlbars "^4.0.9"
-    ember-cli-htmlbars-3 "npm:ember-cli-htmlbars@3"
     fs-extra "^7.0.0"
     fs-tree-diff "^2.0.0"
     jsdom "^16.4.0"
@@ -1275,10 +1273,49 @@
     walk-sync "^1.1.3"
     wrap-legacy-hbs-plugin-if-needed "^1.0.1"
 
-"@embroider/hbs-loader@0.36.0":
-  version "0.36.0"
-  resolved "https://registry.yarnpkg.com/@embroider/hbs-loader/-/hbs-loader-0.36.0.tgz#0d5daae298b247763d518d3d2e480a5d97f8c5ed"
-  integrity sha512-B1z6+wo1k/t9q/rj05p3i79jXfMd5dadf365rnVaWSz1NyuTNhuFDU+j2zOKrQmLpccMyGauA3DHGsHvt3tYcg==
+"@embroider/core@0.37.0":
+  version "0.37.0"
+  resolved "https://registry.yarnpkg.com/@embroider/core/-/core-0.37.0.tgz#bd7a7d63795794ffcd53d90a65b81e939ccf6cff"
+  integrity sha512-tkXD7qV9GJYb7cGlxLT4PTbPZ+B4vNDXp5oHyEz8EQSuZExN/40Hm90S5KrEC++TpqeVewSIXOz/fA53lkK6RQ==
+  dependencies:
+    "@babel/core" "^7.12.3"
+    "@babel/parser" "^7.12.3"
+    "@babel/plugin-syntax-dynamic-import" "^7.8.3"
+    "@babel/plugin-transform-runtime" "^7.12.1"
+    "@babel/runtime" "^7.12.5"
+    "@babel/traverse" "^7.12.1"
+    "@babel/types" "^7.12.1"
+    "@embroider/macros" "0.37.0"
+    assert-never "^1.1.0"
+    babel-plugin-syntax-dynamic-import "^6.18.0"
+    broccoli-node-api "^1.7.0"
+    broccoli-persistent-filter "^3.1.2"
+    broccoli-plugin "^4.0.1"
+    broccoli-source "^3.0.0"
+    debug "^3.1.0"
+    escape-string-regexp "^4.0.0"
+    fast-sourcemap-concat "^1.4.0"
+    filesize "^4.1.2"
+    fs-extra "^7.0.1"
+    fs-tree-diff "^2.0.0"
+    handlebars "^4.4.2"
+    js-string-escape "^1.0.1"
+    jsdom "^16.4.0"
+    json-stable-stringify "^1.0.1"
+    lodash "^4.17.10"
+    pkg-up "^3.1.0"
+    resolve "^1.8.1"
+    resolve-package-path "^1.2.2"
+    semver "^7.3.2"
+    strip-bom "^3.0.0"
+    typescript-memoize "^1.0.0-alpha.3"
+    walk-sync "^1.1.3"
+    wrap-legacy-hbs-plugin-if-needed "^1.0.1"
+
+"@embroider/hbs-loader@0.37.0":
+  version "0.37.0"
+  resolved "https://registry.yarnpkg.com/@embroider/hbs-loader/-/hbs-loader-0.37.0.tgz#cb0d38dfa4403ade010decf5bc94c2981ceed5a9"
+  integrity sha512-Gobt6L+N2tw316MHBlwSFBo9EyUAr2WLuVQJuBLGQdURkBVLlBTQCa4mpiEW+TCxQMFy0lVzX3HfJMb+11LRAQ==
   dependencies:
     loader-utils "^1.1.0"
 
@@ -1312,16 +1349,31 @@
     resolve "^1.8.1"
     semver "^7.3.2"
 
-"@embroider/webpack@0.36.0":
-  version "0.36.0"
-  resolved "https://registry.yarnpkg.com/@embroider/webpack/-/webpack-0.36.0.tgz#5c5e7475d5ec1a6f3f08ca76fe14d1e1a6b95adb"
-  integrity sha512-xcbVDQGgZDfVS+c1nRSJO5HgcCQ0PEvXrY0KxGWtYD8MqwbobEj+tL8DCRSZLaXuDG2ajup9bNMcfLTIRrZAuw==
+"@embroider/macros@0.37.0":
+  version "0.37.0"
+  resolved "https://registry.yarnpkg.com/@embroider/macros/-/macros-0.37.0.tgz#221013fc5bc0eaa78f1de98802fc03e588bfe1b1"
+  integrity sha512-VItxn4NzGR5prryXGbPGTuLMd+QPPKvAYZv2357iS+wmz6mTzC5nqXljwDQIOJbAji9giDO+FW2HzXYOcY3teQ==
+  dependencies:
+    "@babel/core" "^7.12.3"
+    "@babel/traverse" "^7.12.1"
+    "@babel/types" "^7.12.1"
+    "@embroider/core" "0.37.0"
+    assert-never "^1.1.0"
+    ember-cli-babel "^7.23.0"
+    lodash "^4.17.10"
+    resolve "^1.8.1"
+    semver "^7.3.2"
+
+"@embroider/webpack@0.37.0":
+  version "0.37.0"
+  resolved "https://registry.yarnpkg.com/@embroider/webpack/-/webpack-0.37.0.tgz#47568879fa5413e6b4ccd2f93a70661de580af32"
+  integrity sha512-pLO7gtDdt4E8v83pf/M/CXasrOpOQoFVIjbeRQkmDFvQCvOkPm/lHovJLp8Cm/nMy55P8X2xuooldbLCjK1HNA==
   dependencies:
     "@babel/core" "^7.12.3"
     "@babel/plugin-proposal-nullish-coalescing-operator" "^7.12.1"
     "@babel/plugin-proposal-optional-chaining" "^7.12.1"
-    "@embroider/babel-loader-7" "0.36.0"
-    "@embroider/hbs-loader" "0.36.0"
+    "@embroider/babel-loader-7" "0.37.0"
+    "@embroider/hbs-loader" "0.37.0"
     "@types/source-map" "^0.5.7"
     babel-core "^6.26.3"
     babel-loader "8"
@@ -6301,17 +6353,6 @@ ember-cli-head@^1.0.0:
     ember-cli-htmlbars "^4.3.1"
     ember-in-element-polyfill "^1.0.0"
 
-"ember-cli-htmlbars-3@npm:ember-cli-htmlbars@3", ember-cli-htmlbars@^3.0.0:
-  name ember-cli-htmlbars-3
-  version "3.1.0"
-  resolved "https://registry.yarnpkg.com/ember-cli-htmlbars/-/ember-cli-htmlbars-3.1.0.tgz#87806c2a0bca2ab52d4fb8af8e2215c1ca718a99"
-  integrity sha512-cgvRJM73IT0aePUG7oQ/afB7vSRBV3N0wu9BrWhHX2zkR7A7cUBI7KC9VPk6tbctCXoM7BRGsCC4aIjF7yrfXA==
-  dependencies:
-    broccoli-persistent-filter "^2.3.1"
-    hash-for-dep "^1.5.1"
-    json-stable-stringify "^1.0.1"
-    strip-bom "^3.0.0"
-
 ember-cli-htmlbars@5.6.4, ember-cli-htmlbars@^5.2.0, ember-cli-htmlbars@^5.3.1:
   version "5.6.4"
   resolved "https://registry.yarnpkg.com/ember-cli-htmlbars/-/ember-cli-htmlbars-5.6.4.tgz#97c1ce813dfe79961c575b4516fbb30cbb782b43"
@@ -6333,7 +6374,18 @@ ember-cli-htmlbars@5.6.4, ember-cli-htmlbars@^5.2.0, ember-cli-htmlbars@^5.3.1:
     strip-bom "^4.0.0"
     walk-sync "^2.2.0"
 
-ember-cli-htmlbars@^4.0.9, ember-cli-htmlbars@^4.2.0, ember-cli-htmlbars@^4.2.2, ember-cli-htmlbars@^4.2.3, ember-cli-htmlbars@^4.3.1:
+ember-cli-htmlbars@^3.0.0:
+  name ember-cli-htmlbars-3
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/ember-cli-htmlbars/-/ember-cli-htmlbars-3.1.0.tgz#87806c2a0bca2ab52d4fb8af8e2215c1ca718a99"
+  integrity sha512-cgvRJM73IT0aePUG7oQ/afB7vSRBV3N0wu9BrWhHX2zkR7A7cUBI7KC9VPk6tbctCXoM7BRGsCC4aIjF7yrfXA==
+  dependencies:
+    broccoli-persistent-filter "^2.3.1"
+    hash-for-dep "^1.5.1"
+    json-stable-stringify "^1.0.1"
+    strip-bom "^3.0.0"
+
+ember-cli-htmlbars@^4.2.0, ember-cli-htmlbars@^4.2.2, ember-cli-htmlbars@^4.2.3, ember-cli-htmlbars@^4.3.1:
   version "4.5.0"
   resolved "https://registry.yarnpkg.com/ember-cli-htmlbars/-/ember-cli-htmlbars-4.5.0.tgz#d299e4f7eba6f30dc723ee086906cc550beb252e"
   integrity sha512-bYJpK1pqFu9AadDAGTw05g2LMNzY8xTCIqQm7dMJmKEoUpLRFbPf4SfHXrktzDh7Q5iggl6Skzf1M0bPlIxARw==
