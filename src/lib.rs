@@ -160,13 +160,9 @@ pub trait RequestParams<'a> {
     fn params(self) -> &'a Params;
 }
 
-pub fn params(req: &dyn RequestExt) -> &Params {
-    req.extensions().find::<Params>().expect("Missing params")
-}
-
 impl<'a> RequestParams<'a> for &'a (dyn RequestExt + 'a) {
     fn params(self) -> &'a Params {
-        params(self)
+        self.extensions().find::<Params>().expect("Missing params")
     }
 }
 
