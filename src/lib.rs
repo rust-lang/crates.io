@@ -27,7 +27,7 @@ impl RoutePattern {
     }
 }
 
-pub struct WrappedHandler {
+struct WrappedHandler {
     pattern: RoutePattern,
     handler: Box<dyn Handler>,
 }
@@ -52,7 +52,7 @@ impl RouteBuilder {
     }
 
     #[instrument(level = "trace", skip(self))]
-    pub fn recognize<'a>(
+    fn recognize<'a>(
         &'a self,
         method: &Method,
         path: &str,
