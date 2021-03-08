@@ -45,8 +45,8 @@ pub enum RouterError {
 }
 
 impl RouteBuilder {
-    pub fn new() -> RouteBuilder {
-        RouteBuilder {
+    pub fn new() -> Self {
+        Self {
             routers: HashMap::new(),
         }
     }
@@ -69,7 +69,7 @@ impl RouteBuilder {
         method: Method,
         pattern: &'static str,
         handler: H,
-    ) -> &mut RouteBuilder {
+    ) -> &mut Self {
         {
             let router = match self.routers.entry(method) {
                 Entry::Occupied(e) => e.into_mut(),
@@ -84,23 +84,23 @@ impl RouteBuilder {
         self
     }
 
-    pub fn get<H: Handler>(&mut self, pattern: &'static str, handler: H) -> &mut RouteBuilder {
+    pub fn get<H: Handler>(&mut self, pattern: &'static str, handler: H) -> &mut Self {
         self.map(Method::GET, pattern, handler)
     }
 
-    pub fn post<H: Handler>(&mut self, pattern: &'static str, handler: H) -> &mut RouteBuilder {
+    pub fn post<H: Handler>(&mut self, pattern: &'static str, handler: H) -> &mut Self {
         self.map(Method::POST, pattern, handler)
     }
 
-    pub fn put<H: Handler>(&mut self, pattern: &'static str, handler: H) -> &mut RouteBuilder {
+    pub fn put<H: Handler>(&mut self, pattern: &'static str, handler: H) -> &mut Self {
         self.map(Method::PUT, pattern, handler)
     }
 
-    pub fn delete<H: Handler>(&mut self, pattern: &'static str, handler: H) -> &mut RouteBuilder {
+    pub fn delete<H: Handler>(&mut self, pattern: &'static str, handler: H) -> &mut Self {
         self.map(Method::DELETE, pattern, handler)
     }
 
-    pub fn head<H: Handler>(&mut self, pattern: &'static str, handler: H) -> &mut RouteBuilder {
+    pub fn head<H: Handler>(&mut self, pattern: &'static str, handler: H) -> &mut Self {
         self.map(Method::HEAD, pattern, handler)
     }
 }
