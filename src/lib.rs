@@ -172,15 +172,10 @@ impl<'a> RequestParams<'a> for &'a (dyn RequestExt + 'a) {
 
 #[cfg(test)]
 mod tests {
-    use std::io;
-    use std::net::SocketAddr;
-
     use super::{RequestParams, RouteBuilder, RoutePattern};
 
-    use conduit::{
-        Body, Extensions, Handler, HeaderMap, Host, Method, Response, Scheme, StatusCode, Version,
-    };
-    use conduit_test::ResponseExt;
+    use conduit::{Body, Handler, Method, Response, StatusCode};
+    use conduit_test::{MockRequest, ResponseExt};
 
     lazy_static::lazy_static! {
         static ref TRACING: () = {
@@ -192,73 +187,12 @@ mod tests {
         };
     }
 
-    struct RequestSentinel {
-        method: Method,
-        path: String,
-        extensions: conduit::Extensions,
-    }
-
-    impl RequestSentinel {
-        fn new(method: Method, path: &'static str) -> RequestSentinel {
-            RequestSentinel {
-                path: path.to_string(),
-                extensions: Extensions::new(),
-                method,
-            }
-        }
-    }
-
-    impl conduit::RequestExt for RequestSentinel {
-        fn http_version(&self) -> Version {
-            unimplemented!()
-        }
-        fn method(&self) -> &Method {
-            &self.method
-        }
-        fn scheme(&self) -> Scheme {
-            unimplemented!()
-        }
-        fn host(&self) -> Host<'_> {
-            unimplemented!()
-        }
-        fn virtual_root(&self) -> Option<&str> {
-            unimplemented!()
-        }
-        fn path(&self) -> &str {
-            &self.path
-        }
-        fn path_mut(&mut self) -> &mut String {
-            &mut self.path
-        }
-        fn query_string(&self) -> Option<&str> {
-            unimplemented!()
-        }
-        fn remote_addr(&self) -> SocketAddr {
-            unimplemented!()
-        }
-        fn content_length(&self) -> Option<u64> {
-            unimplemented!()
-        }
-        fn headers(&self) -> &HeaderMap {
-            unimplemented!()
-        }
-        fn body(&mut self) -> &mut dyn io::Read {
-            unimplemented!()
-        }
-        fn extensions(&self) -> &Extensions {
-            &self.extensions
-        }
-        fn mut_extensions(&mut self) -> &mut Extensions {
-            &mut self.extensions
-        }
-    }
-
     #[test]
     fn basic_get() {
         lazy_static::initialize(&TRACING);
 
         let router = test_router();
-        let mut req = RequestSentinel::new(Method::GET, "/posts/1");
+        let mut req = MockRequest::new(Method::GET, "/posts/1");
         let res = router.call(&mut req).expect("No response");
 
         assert_eq!(res.status(), StatusCode::OK);
@@ -270,7 +204,7 @@ mod tests {
         lazy_static::initialize(&TRACING);
 
         let router = test_router();
-        let mut req = RequestSentinel::new(Method::POST, "/posts/10");
+        let mut req = MockRequest::new(Method::POST, "/posts/10");
         let res = router.call(&mut req).expect("No response");
 
         assert_eq!(res.status(), StatusCode::OK);
@@ -282,7 +216,7 @@ mod tests {
         lazy_static::initialize(&TRACING);
 
         let router = test_router();
-        let mut req = RequestSentinel::new(Method::POST, "/nonexistent");
+        let mut req = MockRequest::new(Method::POST, "/nonexistent");
         let err = router.call(&mut req).err().unwrap();
 
         assert_eq!(err.to_string(), super::NOT_FOUND);
@@ -293,7 +227,7 @@ mod tests {
         lazy_static::initialize(&TRACING);
 
         let router = test_router();
-        let mut req = RequestSentinel::new(Method::DELETE, "/posts/1");
+        let mut req = MockRequest::new(Method::DELETE, "/posts/1");
         let err = router.call(&mut req).err().unwrap();
 
         assert_eq!(err.to_string(), super::UNKNOWN_METHOD);
@@ -306,7 +240,7 @@ mod tests {
         let mut router = RouteBuilder::new();
         router.get("/*", test_handler);
 
-        let mut req = RequestSentinel::new(Method::GET, "/foo");
+        let mut req = MockRequest::new(Method::GET, "/foo");
         let res = router.call(&mut req).expect("No response");
         assert_eq!(res.status(), StatusCode::OK);
         assert_eq!(*res.into_cow(), b", GET, /*"[..]);
