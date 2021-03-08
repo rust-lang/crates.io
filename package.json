@@ -77,7 +77,7 @@
     "ember-cli-inject-live-reload": "2.0.2",
     "ember-cli-meta-tags": "6.1.2",
     "ember-cli-mirage": "2.0.1",
-    "ember-cli-notifications": "6.3.2",
+    "ember-cli-notifications": "6.3.3",
     "ember-cli-sri": "2.1.1",
     "ember-cli-terser": "4.0.1",
     "ember-click-outside": "2.0.0",

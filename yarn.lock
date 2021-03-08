@@ -6416,10 +6416,10 @@ ember-cli-normalize-entity-name@^1.0.0:
   dependencies:
     silent-error "^1.0.0"
 
-ember-cli-notifications@6.3.2:
-  version "6.3.2"
-  resolved "https://registry.yarnpkg.com/ember-cli-notifications/-/ember-cli-notifications-6.3.2.tgz#549206251abb11f11ad114d412b7d07f8f1be393"
-  integrity sha512-59NZSMaadxyHHqxe57hyLBzRJt08VjGFNtqp/6sPXZB9dbjrkWbPrMLCxTNgL2+fxwr8M1Bq9hnewYgFhOvHlA==
+ember-cli-notifications@6.3.3:
+  version "6.3.3"
+  resolved "https://registry.yarnpkg.com/ember-cli-notifications/-/ember-cli-notifications-6.3.3.tgz#d3423efd80a800301af642fc4c0b82e8836cddb0"
+  integrity sha512-AufURir2vJkfewDA4l7c8GGkHieeyPTmV91X79QLSELyJNl2Uzb3KCLaBv43FDkHT/Dt917XuUHTN4KTHn7viw==
   dependencies:
     broccoli-funnel "^3.0.2"
     broccoli-merge-trees "^4.1.0"
