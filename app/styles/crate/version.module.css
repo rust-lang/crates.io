@@ -17,6 +17,12 @@
     border-radius: 5px;
     box-shadow: var(--shadow);
 
+    @media only screen and (max-width: 550px) {
+        margin-left: -15px;
+        margin-right: -15px;
+        border-radius: 0;
+    }
+
     @media only screen and (min-width: 890px) {
         flex: 7;
         max-width: 640px;
