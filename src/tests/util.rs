@@ -36,7 +36,7 @@ use serde_json::Value;
 use std::{marker::PhantomData, rc::Rc, sync::Arc, time::Duration};
 use swirl::Runner;
 
-use conduit::{Handler, HandlerResult, Method};
+use conduit::{BoxError, Handler, HandlerResult, Method};
 use conduit_cookie::SessionMiddleware;
 use conduit_test::MockRequest;
 
@@ -353,10 +353,16 @@ pub trait RequestHelper {
     fn request_builder(&self, method: Method, path: &str) -> MockRequest;
     fn app(&self) -> &TestApp;
 
-    /// Run a request
+    /// Run a request that is expected to succeed
     #[track_caller]
     fn run<T>(&self, mut request: MockRequest) -> Response<T> {
         Response::new(self.app().as_middleware().call(&mut request))
+    }
+
+    /// Run a request that is expected to error
+    #[track_caller]
+    fn run_err(&self, mut request: MockRequest) -> BoxError {
+        self.app().as_middleware().call(&mut request).err().unwrap()
     }
 
     /// Create a get request
@@ -623,8 +629,17 @@ impl<T> Response<T> {
         }
     }
 
+    /// Consume the response body and convert it to a JSON value
     #[track_caller]
+    // TODO: Rename to into_json()
     pub fn json(mut self) -> Value {
+        assert_eq!(
+            self.response
+                .headers()
+                .get(header::CONTENT_TYPE)
+                .expect("Missing content-type header"),
+            "application/json; charset=utf-8"
+        );
         crate::json(&mut self.response)
     }
 
