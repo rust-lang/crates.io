@@ -17,7 +17,6 @@ use crate::util::{RequestHelper, TestApp};
 use cargo_registry::{
     models::{Crate, CrateOwner, Dependency, NewCategory, NewTeam, NewUser, Team, User, Version},
     schema::crate_owners,
-    util::AppResponse,
     views::{
         EncodableCategory, EncodableCategoryWithSubcategories, EncodableCrate, EncodableKeyword,
         EncodableOwner, EncodableVersion, GoodCrate,
@@ -32,7 +31,6 @@ use std::{
     },
 };
 
-use conduit::Body;
 use diesel::prelude::*;
 use reqwest::{blocking::Client, Proxy};
 
@@ -171,27 +169,6 @@ fn env(var: &str) -> String {
             "environment variable `{}` must be defined and valid unicode",
             var
         ),
-    }
-}
-
-fn json<T>(r: &mut AppResponse) -> T
-where
-    for<'de> T: serde::Deserialize<'de>,
-{
-    use conduit::Body::*;
-
-    let mut body = Body::empty();
-    std::mem::swap(r.body_mut(), &mut body);
-    let body: std::borrow::Cow<'static, [u8]> = match body {
-        Static(slice) => slice.into(),
-        Owned(vec) => vec.into(),
-        File(_) => unimplemented!(),
-    };
-
-    let s = std::str::from_utf8(&body).unwrap();
-    match serde_json::from_str(s) {
-        Ok(t) => t,
-        Err(e) => panic!("failed to decode: {:?}\n{}", e, s),
     }
 }
 

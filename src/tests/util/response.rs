@@ -2,7 +2,7 @@ use cargo_registry::util::AppResponse;
 use serde_json::Value;
 use std::marker::PhantomData;
 
-use conduit::HandlerResult;
+use conduit::{Body, HandlerResult};
 
 use conduit::{header, StatusCode};
 
@@ -23,7 +23,7 @@ where
         if !self.status().is_success() {
             panic!("bad response: {:?}", self.status());
         }
-        crate::json(&mut self.response)
+        json(&mut self.response)
     }
 }
 
@@ -47,7 +47,7 @@ impl<T> Response<T> {
                 .expect("Missing content-type header"),
             "application/json; charset=utf-8"
         );
-        crate::json(&mut self.response)
+        json(&mut self.response)
     }
 
     pub fn status(&self) -> StatusCode {
@@ -79,5 +79,26 @@ impl Response<()> {
     #[track_caller]
     pub fn assert_forbidden(&self) {
         assert_eq!(StatusCode::FORBIDDEN, self.status());
+    }
+}
+
+fn json<T>(r: &mut AppResponse) -> T
+where
+    for<'de> T: serde::Deserialize<'de>,
+{
+    use conduit::Body::*;
+
+    let mut body = Body::empty();
+    std::mem::swap(r.body_mut(), &mut body);
+    let body: std::borrow::Cow<'static, [u8]> = match body {
+        Static(slice) => slice.into(),
+        Owned(vec) => vec.into(),
+        File(_) => unimplemented!(),
+    };
+
+    let s = std::str::from_utf8(&body).unwrap();
+    match serde_json::from_str(s) {
+        Ok(t) => t,
+        Err(e) => panic!("failed to decode: {:?}\n{}", e, s),
     }
 }
