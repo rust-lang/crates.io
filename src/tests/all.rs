@@ -15,7 +15,7 @@ extern crate tracing;
 
 use crate::util::{RequestHelper, TestApp};
 use cargo_registry::{
-    models::{Crate, CrateOwner, Dependency, NewCategory, NewTeam, NewUser, Team, User, Version},
+    models::{Crate, CrateOwner, NewCategory, NewTeam, NewUser, Team, User},
     schema::crate_owners,
     views::{
         EncodableCategory, EncodableCategoryWithSubcategories, EncodableCrate, EncodableKeyword,
@@ -150,23 +150,6 @@ fn add_team_to_crate(t: &Team, krate: &Crate, u: &User, conn: &PgConnection) -> 
         .execute(conn)?;
 
     Ok(())
-}
-
-fn new_dependency(conn: &PgConnection, version: &Version, krate: &Crate) -> Dependency {
-    use cargo_registry::schema::dependencies::dsl::*;
-    use diesel::insert_into;
-
-    insert_into(dependencies)
-        .values((
-            version_id.eq(version.id),
-            crate_id.eq(krate.id),
-            req.eq(">= 0"),
-            optional.eq(false),
-            default_features.eq(false),
-            features.eq(Vec::<String>::new()),
-        ))
-        .get_result(conn)
-        .unwrap()
 }
 
 fn new_category<'a>(category: &'a str, slug: &'a str, description: &'a str) -> NewCategory<'a> {
