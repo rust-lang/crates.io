@@ -105,10 +105,6 @@ pub struct OkBool {
     ok: bool,
 }
 
-fn app() -> (Arc<App>, conduit_middleware::MiddlewareBuilder) {
-    build_app(simple_config(), None)
-}
-
 fn simple_config() -> Config {
     let uploader = Uploader::S3 {
         bucket: s3::Bucket::new(
@@ -265,11 +261,15 @@ fn new_category<'a>(category: &'a str, slug: &'a str, description: &'a str) -> N
     }
 }
 
+// This reflects the configuration of our test environment. In the production application, this
+// does not hold true.
 #[test]
 fn multiple_live_references_to_the_same_connection_can_be_checked_out() {
     use std::ptr;
 
-    let (app, _) = app();
+    let (app, _) = TestApp::init().empty();
+    let app = app.as_inner();
+
     let conn1 = app.primary_database.get().unwrap();
     let conn2 = app.primary_database.get().unwrap();
     let conn1_ref: &PgConnection = &conn1;
