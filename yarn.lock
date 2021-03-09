@@ -6964,10 +6964,10 @@ ember-page-title@6.2.1:
   dependencies:
     ember-cli-babel "^7.22.1"
 
-ember-prism@0.9.0:
-  version "0.9.0"
-  resolved "https://registry.yarnpkg.com/ember-prism/-/ember-prism-0.9.0.tgz#8b8831e469afe2be755c1f4d375490c044346b0a"
-  integrity sha512-ZhTuK1+SWc4y0u3HlJDdMjQRAK/gy9wz73rhZbT4NbWJBsZ848m+hMr6d8Oka1X7l4RLdHPFczbaCUN5DxaMDw==
+ember-prism@0.9.1:
+  version "0.9.1"
+  resolved "https://registry.yarnpkg.com/ember-prism/-/ember-prism-0.9.1.tgz#0d8a993cfe86dc446212cd40fcaaef247c9ba0d6"
+  integrity sha512-zeCjlQVlaIiO2EAkS8JLHTXMPCopNEvZsFNuA8BiemXjGJs5rKcSv+UYr4jm4oS4ISTwyUORmP4oLPkA3ZY+YA==
   dependencies:
     "@ember/render-modifiers" "^1.0.2"
     ember-cli-babel "^7.22.1"
