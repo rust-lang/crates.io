@@ -10,7 +10,8 @@
     --header-bg-color: var(--green800);
     --footer-bg-color: var(--green800);
 
-    --font-family: "Fira Sans", sans-serif;
+    --font-sans: "Fira Sans", sans-serif;
+    --font-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
     --main-color: #383838;
     --main-color-light: #858585;
@@ -38,7 +39,7 @@ html, body {
 
 body {
     background-color: var(--header-bg-color);
-    font-family: var(--font-family);
+    font-family: var(--font-sans);
     font-size: 16px;
     display: flex;
     flex-direction: column;
@@ -65,8 +66,7 @@ pre {
     background: var(--main-color);
     color: white;
     padding: 20px;
-    /* Use the modern font stack inspired by Bootstrap 4 */
-    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-family: var(--font-monospace);
 }
 
 abbr[title] {
