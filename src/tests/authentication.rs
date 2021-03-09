@@ -5,8 +5,7 @@ use conduit::{header, Handler, HandlerResult, Method, StatusCode};
 use conduit_test::MockRequest;
 
 static URL: &str = "/api/v1/me/updates";
-static MUST_LOGIN: &[u8] =
-    b"{\"errors\":[{\"detail\":\"must be logged in to perform that action\"}]}";
+static MUST_LOGIN: &[u8] = br#"{"errors":[{"detail":"must be logged in to perform that action"}]}"#;
 static INTERNAL_ERROR_NO_USER: &str =
     "user_id from cookie not found in database caused by NotFound";
 
