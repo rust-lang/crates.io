@@ -7,6 +7,7 @@ use self::app::AppMiddleware;
 use self::debug::*;
 use self::ember_html::EmberHtml;
 use self::head::Head;
+use self::known_error_to_json::KnownErrorToJson;
 use self::log_connection_pool_status::LogConnectionPoolStatus;
 use self::static_or_continue::StaticOrContinue;
 
@@ -17,6 +18,7 @@ mod debug;
 mod ember_html;
 mod ensure_well_formed_500;
 mod head;
+mod known_error_to_json;
 mod log_connection_pool_status;
 pub mod log_request;
 mod normalize_path;
@@ -26,14 +28,14 @@ mod static_or_continue;
 use conduit_conditional_get::ConditionalGet;
 use conduit_cookie::{Middleware as Cookie, SessionMiddleware};
 use conduit_middleware::MiddlewareBuilder;
+use conduit_router::RouteBuilder;
 
 use std::env;
 use std::sync::Arc;
 
-use crate::router::R404;
 use crate::{App, Env};
 
-pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
+pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBuilder {
     let mut m = MiddlewareBuilder::new(endpoints);
     let config = app.config.clone();
     let env = config.env;
@@ -67,6 +69,7 @@ pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
     ));
 
     m.add(AppMiddleware::new(app));
+    m.add(KnownErrorToJson);
 
     // Note: The following `m.around()` middleware is run from bottom to top
 

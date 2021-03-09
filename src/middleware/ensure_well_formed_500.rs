@@ -2,8 +2,6 @@
 
 use super::prelude::*;
 
-// Can't derive debug because of Handler.
-#[allow(missing_debug_implementations)]
 #[derive(Default)]
 pub struct EnsureWellFormed500;
 

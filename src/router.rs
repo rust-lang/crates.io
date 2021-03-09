@@ -4,11 +4,11 @@ use conduit::{Handler, HandlerResult, RequestExt};
 use conduit_router::{RequestParams, RouteBuilder};
 
 use crate::controllers::*;
-use crate::util::errors::{std_error, AppError, NotFound};
+use crate::util::errors::{std_error, AppError};
 use crate::util::EndpointResult;
 use crate::{App, Env};
 
-pub fn build_router(app: &App) -> R404 {
+pub fn build_router(app: &App) -> RouteBuilder {
     let mut api_router = RouteBuilder::new();
 
     // Route used by both `cargo search` and the frontend
@@ -103,7 +103,7 @@ pub fn build_router(app: &App) -> R404 {
         C(user::me::regenerate_token_and_send),
     );
     api_router.get("/site_metadata", C(site_metadata::show_deployed_sha));
-    let api_router = Arc::new(R404(api_router));
+    let api_router = Arc::new(api_router);
 
     let mut router = RouteBuilder::new();
 
@@ -133,7 +133,7 @@ pub fn build_router(app: &App) -> R404 {
         router.post("/git/index/*path", R(s));
     }
 
-    R404(router)
+    router
 }
 
 struct C(pub fn(&mut dyn RequestExt) -> EndpointResult);
@@ -163,23 +163,6 @@ impl<H: Handler> Handler for R<H> {
         *req.path_mut() = req.params()["path"].to_string();
         let R(ref sub_router) = *self;
         sub_router.call(req)
-    }
-}
-
-// Can't derive Debug because of RouteBuilder.
-#[allow(missing_debug_implementations)]
-pub struct R404(pub RouteBuilder);
-
-impl Handler for R404 {
-    fn call(&self, req: &mut dyn RequestExt) -> HandlerResult {
-        let R404(ref router) = *self;
-        match router.recognize(&req.method(), req.path()) {
-            Ok(m) => {
-                req.mut_extensions().insert(m.params().clone());
-                m.handler().call(req)
-            }
-            Err(..) => Ok(NotFound.into()),
-        }
     }
 }
 
