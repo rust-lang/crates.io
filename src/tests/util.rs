@@ -354,10 +354,8 @@ pub trait RequestHelper {
     fn app(&self) -> &TestApp;
 
     /// Run a request
-    fn run<T>(&self, mut request: MockRequest) -> Response<T>
-    where
-        T: serde::de::DeserializeOwned,
-    {
+    #[track_caller]
+    fn run<T>(&self, mut request: MockRequest) -> Response<T> {
         Response::new(self.app().as_middleware().call(&mut request))
     }
 
@@ -367,47 +365,37 @@ pub trait RequestHelper {
     }
 
     /// Issue a GET request
-    fn get<T>(&self, path: &str) -> Response<T>
-    where
-        for<'de> T: serde::Deserialize<'de>,
-    {
+    #[track_caller]
+    fn get<T>(&self, path: &str) -> Response<T> {
         self.run(self.get_request(path))
     }
 
     /// Issue a GET request that includes query parameters
-    fn get_with_query<T>(&self, path: &str, query: &str) -> Response<T>
-    where
-        for<'de> T: serde::Deserialize<'de>,
-    {
+    #[track_caller]
+    fn get_with_query<T>(&self, path: &str, query: &str) -> Response<T> {
         let mut request = self.request_builder(Method::GET, path);
         request.with_query(query);
         self.run(request)
     }
 
     /// Issue a PUT request
-    fn put<T>(&self, path: &str, body: &[u8]) -> Response<T>
-    where
-        for<'de> T: serde::Deserialize<'de>,
-    {
+    #[track_caller]
+    fn put<T>(&self, path: &str, body: &[u8]) -> Response<T> {
         let mut request = self.request_builder(Method::PUT, path);
         request.with_body(body);
         self.run(request)
     }
 
     /// Issue a DELETE request
-    fn delete<T>(&self, path: &str) -> Response<T>
-    where
-        for<'de> T: serde::Deserialize<'de>,
-    {
+    #[track_caller]
+    fn delete<T>(&self, path: &str) -> Response<T> {
         let request = self.request_builder(Method::DELETE, path);
         self.run(request)
     }
 
     /// Issue a DELETE request with a body... yes we do it, for crate owner removal
-    fn delete_with_body<T>(&self, path: &str, body: &[u8]) -> Response<T>
-    where
-        for<'de> T: serde::Deserialize<'de>,
-    {
+    #[track_caller]
+    fn delete_with_body<T>(&self, path: &str, body: &[u8]) -> Response<T> {
         let mut request = self.request_builder(Method::DELETE, path);
         request.with_body(body);
         self.run(request)
@@ -430,6 +418,7 @@ pub trait RequestHelper {
     ///
     /// Any pending jobs are run when the `TestApp` is dropped to ensure that the test fails unless
     /// all background tasks complete successfully.
+    #[track_caller]
     fn enqueue_publish(&self, publish_builder: PublishBuilder) -> Response<GoodCrate> {
         self.put("/api/v1/crates/new", &publish_builder.body())
     }
@@ -615,6 +604,18 @@ impl<T> Response<T>
 where
     for<'de> T: serde::Deserialize<'de>,
 {
+    /// Assert that the response is good and deserialize the message
+    #[track_caller]
+    pub fn good(mut self) -> T {
+        if !self.status().is_success() {
+            panic!("bad response: {:?}", self.status());
+        }
+        crate::json(&mut self.response)
+    }
+}
+
+impl<T> Response<T> {
+    #[track_caller]
     fn new(response: HandlerResult) -> Self {
         Self {
             response: assert_ok!(response),
@@ -624,15 +625,6 @@ where
 
     #[track_caller]
     pub fn json(mut self) -> Value {
-        crate::json(&mut self.response)
-    }
-
-    /// Assert that the response is good and deserialize the message
-    #[track_caller]
-    pub fn good(mut self) -> T {
-        if !self.status().is_success() {
-            panic!("bad response: {:?}", self.status());
-        }
         crate::json(&mut self.response)
     }
 
