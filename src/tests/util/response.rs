@@ -40,13 +40,6 @@ impl<T> Response<T> {
     #[track_caller]
     // TODO: Rename to into_json()
     pub fn json(mut self) -> Value {
-        assert_eq!(
-            self.response
-                .headers()
-                .get(header::CONTENT_TYPE)
-                .expect("Missing content-type header"),
-            "application/json; charset=utf-8"
-        );
         json(&mut self.response)
     }
 
@@ -95,6 +88,23 @@ where
         Owned(vec) => vec.into(),
         File(_) => unimplemented!(),
     };
+
+    assert_eq!(
+        r.headers()
+            .get(header::CONTENT_TYPE)
+            .expect("Missing content-type header"),
+        "application/json; charset=utf-8"
+    );
+
+    assert_eq!(
+        r.headers()
+            .get(header::CONTENT_LENGTH)
+            .expect("Missing content-length header")
+            .to_str()
+            .unwrap()
+            .parse(),
+        Ok(body.len())
+    );
 
     let s = std::str::from_utf8(&body).unwrap();
     match serde_json::from_str(s) {
