@@ -1,7 +1,7 @@
 use crate::{
     builders::{CrateBuilder, VersionBuilder},
     new_user,
-    util::{MockCookieUser, RequestHelper, Response, StatusCode},
+    util::{MockCookieUser, RequestHelper, Response},
     OkBool, TestApp,
 };
 use cargo_registry::{
@@ -10,6 +10,7 @@ use cargo_registry::{
     views::{EncodablePrivateUser, EncodablePublicUser, EncodableVersion, OwnedCrate},
 };
 
+use conduit::StatusCode;
 use diesel::prelude::*;
 
 #[derive(Deserialize)]

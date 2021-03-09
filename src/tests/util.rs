@@ -34,7 +34,7 @@ use conduit::{BoxError, Handler, HandlerResult, Method};
 use conduit_cookie::SessionMiddleware;
 use conduit_test::MockRequest;
 
-pub use conduit::{header, StatusCode};
+use conduit::{header, StatusCode};
 use cookie::Cookie;
 use std::collections::HashMap;
 

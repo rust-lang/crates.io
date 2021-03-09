@@ -1,8 +1,4 @@
-use crate::{
-    user::UserShowPrivateResponse,
-    util::{header, StatusCode},
-    RequestHelper, TestApp,
-};
+use crate::{user::UserShowPrivateResponse, RequestHelper, TestApp};
 use cargo_registry::{
     models::ApiToken,
     schema::api_tokens,
@@ -11,6 +7,7 @@ use cargo_registry::{
 };
 use std::collections::HashSet;
 
+use conduit::{header, StatusCode};
 use diesel::prelude::*;
 
 #[derive(Deserialize)]
