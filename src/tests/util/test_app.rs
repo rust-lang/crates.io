@@ -1,18 +1,18 @@
 use super::{MockAnonymousUser, MockCookieUser, MockTokenUser};
-use crate::record;
+use crate::{env, record};
 use cargo_registry::{
     background_jobs::Environment,
     db::DieselPool,
     git::{Credentials, RepositoryConfig},
-    App, Config,
+    App, Config, Env, Replica, Uploader,
 };
-use diesel::PgConnection;
 use std::{rc::Rc, sync::Arc, time::Duration};
-use swirl::Runner;
 
 use cargo_registry::git::Repository as WorkerRepository;
+use diesel::{Connection, PgConnection};
 use git2::Repository as UpstreamRepository;
-
+use reqwest::{blocking::Client, Proxy};
+use swirl::Runner;
 use url::Url;
 
 struct TestAppInner {
@@ -63,7 +63,7 @@ impl TestApp {
         init_logger();
 
         TestAppBuilder {
-            config: crate::simple_config(),
+            config: simple_config(),
             proxy: None,
             bomb: None,
             index: None,
@@ -182,7 +182,7 @@ impl TestAppBuilder {
     pub fn empty(self) -> (TestApp, MockAnonymousUser) {
         use crate::git;
 
-        let (app, middle) = crate::build_app(self.config, self.proxy);
+        let (app, middle) = build_app(self.config, self.proxy);
 
         let runner = if self.build_job_runner {
             let repository_config = RepositoryConfig {
@@ -280,4 +280,60 @@ pub fn init_logger() {
         .without_time()
         .with_test_writer()
         .try_init();
+}
+
+fn simple_config() -> Config {
+    let uploader = Uploader::S3 {
+        bucket: s3::Bucket::new(
+            String::from("alexcrichton-test"),
+            None,
+            dotenv::var("S3_ACCESS_KEY").unwrap_or_default(),
+            dotenv::var("S3_SECRET_KEY").unwrap_or_default(),
+            // When testing we route all API traffic over HTTP so we can
+            // sniff/record it, but everywhere else we use https
+            "http",
+        ),
+        cdn: None,
+    };
+
+    Config {
+        uploader,
+        session_key: "test this has to be over 32 bytes long".to_string(),
+        gh_client_id: dotenv::var("GH_CLIENT_ID").unwrap_or_default(),
+        gh_client_secret: dotenv::var("GH_CLIENT_SECRET").unwrap_or_default(),
+        gh_base_url: "http://api.github.com".to_string(),
+        db_url: env("TEST_DATABASE_URL"),
+        replica_db_url: None,
+        env: Env::Test,
+        max_upload_size: 3000,
+        max_unpack_size: 2000,
+        mirror: Replica::Primary,
+        // When testing we route all API traffic over HTTP so we can
+        // sniff/record it, but everywhere else we use https
+        api_protocol: String::from("http"),
+        publish_rate_limit: Default::default(),
+        blocked_traffic: Default::default(),
+        domain_name: "crates.io".into(),
+        allowed_origins: Vec::new(),
+    }
+}
+
+fn build_app(
+    config: Config,
+    proxy: Option<String>,
+) -> (Arc<App>, conduit_middleware::MiddlewareBuilder) {
+    let client = if let Some(proxy) = proxy {
+        let mut builder = Client::builder();
+        builder = builder
+            .proxy(Proxy::all(&proxy).expect("Unable to configure proxy with the provided URL"));
+        Some(builder.build().expect("TLS backend cannot be initialized"))
+    } else {
+        None
+    };
+
+    let app = App::new(config, client);
+    assert_ok!(assert_ok!(app.primary_database.get()).begin_test_transaction());
+    let app = Arc::new(app);
+    let handler = cargo_registry::build_handler(Arc::clone(&app));
+    (app, handler)
 }
