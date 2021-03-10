@@ -67,81 +67,84 @@ export default class DownloadGraph extends Component {
   }
 
   get data() {
-    let downloads = this.args.data;
-    if (!downloads) {
-      return { datasets: [] };
-    }
-
-    let extra = downloads.content?.meta?.extra_downloads ?? [];
-
-    let dates = {};
-    let versions = new Set([]);
-
-    let now = new Date();
-    for (let i = 0; i < 90; i++) {
-      let date = subDays(now, i);
-      dates[date.toISOString().slice(0, 10)] = { date, cnt: {} };
-    }
-
-    downloads.forEach(d => {
-      let version = d.version;
-      if (!version) return;
-
-      let version_num = version.num;
-
-      versions.add(version_num);
-
-      let key = d.date;
-      if (dates[key]) {
-        let prev = dates[key].cnt[version_num] || 0;
-        dates[key].cnt[version_num] = prev + d.downloads;
-      }
-    });
-
-    extra.forEach(d => {
-      let key = d.date;
-      if (dates[key]) {
-        let prev = dates[key].cnt['Other'] || 0;
-        dates[key].cnt['Other'] = prev + d.downloads;
-      }
-    });
-
-    let versionsList = [...versions];
-    try {
-      semverSort(versionsList, { loose: true });
-    } catch {
-      // Catches exceptions thrown when a version number is invalid
-      // see issue #3295
-    }
-
-    if (extra.length !== 0) {
-      versionsList.unshift('Other');
-    }
-
-    let rows = Object.keys(dates).map(date => [
-      dates[date].date,
-      ...versionsList.map(version => dates[date].cnt[version] || 0),
-    ]);
-
-    let datasets = versionsList
-      .map((label, index) => ({
-        data: rows.map(row => ({ x: row[0], y: row[index + 1] })),
-        label: label,
-      }))
-      .reverse()
-      .map(({ label, data }, index) => {
-        return {
-          backgroundColor: BG_COLORS[index],
-          borderColor: COLORS[index],
-          borderWidth: 2,
-          cubicInterpolationMode: 'monotone',
-          data: data,
-          label: label,
-          pointHoverBorderWidth: 2,
-          pointHoverRadius: 5,
-        };
-      });
-
-    return { datasets };
+    return toChartData(this.args.data);
   }
+}
+
+export function toChartData(data) {
+  if (!data) {
+    return { datasets: [] };
+  }
+
+  let extra = data.content?.meta?.extra_downloads ?? [];
+
+  let dates = {};
+  let versions = new Set([]);
+
+  let now = new Date();
+  for (let i = 0; i < 90; i++) {
+    let date = subDays(now, i);
+    dates[date.toISOString().slice(0, 10)] = { date, cnt: {} };
+  }
+
+  data.forEach(d => {
+    let version = d.version;
+    if (!version) return;
+
+    let version_num = version.num;
+
+    versions.add(version_num);
+
+    let key = d.date;
+    if (dates[key]) {
+      let prev = dates[key].cnt[version_num] || 0;
+      dates[key].cnt[version_num] = prev + d.downloads;
+    }
+  });
+
+  extra.forEach(d => {
+    let key = d.date;
+    if (dates[key]) {
+      let prev = dates[key].cnt['Other'] || 0;
+      dates[key].cnt['Other'] = prev + d.downloads;
+    }
+  });
+
+  let versionsList = [...versions];
+  try {
+    semverSort(versionsList, { loose: true });
+  } catch {
+    // Catches exceptions thrown when a version number is invalid
+    // see issue #3295
+  }
+
+  if (extra.length !== 0) {
+    versionsList.unshift('Other');
+  }
+
+  let rows = Object.keys(dates).map(date => [
+    dates[date].date,
+    ...versionsList.map(version => dates[date].cnt[version] || 0),
+  ]);
+
+  let datasets = versionsList
+    .map((label, index) => ({
+      data: rows.map(row => ({ x: row[0], y: row[index + 1] })),
+      label: label,
+    }))
+    .reverse()
+    .map(({ label, data }, index) => {
+      return {
+        backgroundColor: BG_COLORS[index],
+        borderColor: COLORS[index],
+        borderWidth: 2,
+        cubicInterpolationMode: 'monotone',
+        data: data,
+        label: label,
+        pointHoverBorderWidth: 2,
+        pointHoverRadius: 5,
+      };
+    });
+
+  return { datasets };
 }
