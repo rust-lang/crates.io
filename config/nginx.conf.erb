@@ -33,9 +33,11 @@ http {
 	real_ip_recursive on;
 
 	# CloudFront IP addresses from http://d7uri8nf7uskq.cloudfront.net/tools/list-cloudfront-ips
-	# Last updated: 2020-09-12
+	# Last updated: 2021-03-08
 	set_real_ip_from 3.10.17.128/25;
 	set_real_ip_from 3.11.53.0/24;
+	set_real_ip_from 3.35.130.128/25;
+	set_real_ip_from 3.101.158.0/23;
 	set_real_ip_from 3.128.93.0/24;
 	set_real_ip_from 3.134.215.0/24;
 	set_real_ip_from 3.231.2.0/25;
@@ -58,6 +60,7 @@ http {
 	set_real_ip_from 15.188.184.0/24;
 	set_real_ip_from 15.207.13.128/25;
 	set_real_ip_from 15.207.213.128/25;
+	set_real_ip_from 18.64.0.0/14;
 	set_real_ip_from 18.192.142.0/23;
 	set_real_ip_from 18.200.212.0/23;
 	set_real_ip_from 18.216.170.128/25;
@@ -92,7 +95,11 @@ http {
 	set_real_ip_from 52.222.128.0/17;
 	set_real_ip_from 54.182.0.0/16;
 	set_real_ip_from 54.192.0.0/16;
-	set_real_ip_from 54.230.0.0/16;
+	set_real_ip_from 54.230.0.0/17;
+	set_real_ip_from 54.230.128.0/18;
+	set_real_ip_from 54.230.200.0/21;
+	set_real_ip_from 54.230.208.0/20;
+	set_real_ip_from 54.230.224.0/19;
 	set_real_ip_from 54.233.255.128/26;
 	set_real_ip_from 54.239.128.0/18;
 	set_real_ip_from 54.239.192.0/19;
@@ -109,7 +116,6 @@ http {
 	set_real_ip_from 99.79.169.0/24;
 	set_real_ip_from 99.84.0.0/16;
 	set_real_ip_from 99.86.0.0/16;
-	set_real_ip_from 111.51.66.0/24;
 	set_real_ip_from 116.129.226.0/25;
 	set_real_ip_from 116.129.226.128/26;
 	set_real_ip_from 118.193.97.64/26;
@@ -126,7 +132,10 @@ http {
 	set_real_ip_from 120.253.241.160/27;
 	set_real_ip_from 120.253.245.128/26;
 	set_real_ip_from 120.253.245.192/27;
-	set_real_ip_from 130.176.0.0/16;
+	set_real_ip_from 130.176.0.0/17;
+	set_real_ip_from 130.176.128.0/18;
+	set_real_ip_from 130.176.192.0/19;
+	set_real_ip_from 130.176.224.0/20;
 	set_real_ip_from 143.204.0.0/16;
 	set_real_ip_from 144.220.0.0/16;
 	set_real_ip_from 180.163.57.0/25;
@@ -143,7 +152,6 @@ http {
 	set_real_ip_from 205.251.250.0/23;
 	set_real_ip_from 205.251.252.0/23;
 	set_real_ip_from 205.251.254.0/24;
-	set_real_ip_from 210.51.40.0/24;
 	set_real_ip_from 216.137.32.0/19;
 	set_real_ip_from 223.71.11.0/27;
 	set_real_ip_from 223.71.71.96/27;
