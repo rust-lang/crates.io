@@ -106,9 +106,8 @@ where
         Ok(body.len())
     );
 
-    let s = std::str::from_utf8(&body).unwrap();
-    match serde_json::from_str(s) {
+    match serde_json::from_slice(&*body) {
         Ok(t) => t,
-        Err(e) => panic!("failed to decode: {:?}\n{}", e, s),
+        Err(e) => panic!("failed to decode: {:?}", e),
     }
 }
