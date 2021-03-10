@@ -34,7 +34,13 @@ export default class DownloadGraph extends Component {
           padding: 10,
         },
         scales: {
-          xAxes: [{ type: 'time', time: { stepSize: 7, tooltipFormat: 'MMM d', unit: 'day' } }],
+          xAxes: [
+            {
+              type: 'time',
+              time: { tooltipFormat: 'MMM d', unit: 'day' },
+              ticks: { maxTicksLimit: 13 },
+            },
+          ],
           yAxes: [{ stacked: true, ticks: { min: 0, precision: 0 } }],
         },
         tooltips: {
@@ -82,6 +88,7 @@ export function toChartData(data) {
 
   let dates = {};
   let versions = new Map();
+  let crate = null;
 
   let now = new Date();
   for (let i = 0; i < 90; i++) {
@@ -96,6 +103,10 @@ export function toChartData(data) {
     let version_num = version.num;
 
     versions.set(version_num, version);
+
+    if (version.crate) {
+      crate = version.crate;
+    }
 
     let key = d.date;
     if (dates[key]) {
@@ -138,6 +149,13 @@ export function toChartData(data) {
       if (version?.created_at) {
         // only show downloads from the day before the release until today
         let threshold = midnightForDate(version.created_at) - ONE_DAY;
+        data = data.filter(it => midnightForDate(it.x) >= threshold);
+      }
+
+      // if we find a corresponding crate
+      if (crate?.created_at) {
+        // only show downloads from the day before the first release until today
+        let threshold = midnightForDate(crate.created_at) - ONE_DAY;
         data = data.filter(it => midnightForDate(it.x) >= threshold);
       }
 
