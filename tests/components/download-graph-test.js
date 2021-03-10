@@ -708,27 +708,31 @@ module('Component | DownloadGraph', function (hooks) {
 });
 
 function exampleData() {
+  let FIVE_2 = { num: '1.0.52' };
+  let FIVE_3 = { num: '1.0.53' };
+  let FIVE_4 = { num: '1.0.54' };
+  let FIVE_5 = { num: '1.0.55' };
+  let FIVE_6 = { num: '1.0.56' };
+
   let downloads = [
-    { version: { num: '1.0.52' }, date: '2020-12-30', downloads: 201 },
-    { version: { num: '1.0.53' }, date: '2020-12-30', downloads: 2228 },
-    { version: { num: '1.0.54' }, date: '2020-12-30', downloads: 4298 },
-    { version: { num: '1.0.55' }, date: '2020-12-30', downloads: 3702 },
-    { version: { num: '1.0.56' }, date: '2020-12-30', downloads: 30520 },
-    { version: { num: '1.0.52' }, date: '2020-12-29', downloads: 261 },
-    { version: { num: '1.0.53' }, date: '2020-12-29', downloads: 1650 },
-    { version: { num: '1.0.54' }, date: '2020-12-29', downloads: 4277 },
-    { version: { num: '1.0.55' }, date: '2020-12-29', downloads: 4157 },
-    { version: { num: '1.0.56' }, date: '2020-12-29', downloads: 31631 },
-    { version: { num: '1.0.52' }, date: '2020-12-28', downloads: 181 },
-    { version: { num: '1.0.53' }, date: '2020-12-28', downloads: 968 },
-    { version: { num: '1.0.54' }, date: '2020-12-28', downloads: 2786 },
-    { version: { num: '1.0.55' }, date: '2020-12-28', downloads: 2414 },
-    { version: { num: '1.0.56' }, date: '2020-12-28', downloads: 23616 },
-    { version: { num: '1.0.52' }, date: '2020-12-27', downloads: 186 },
-    { version: { num: '1.0.53' }, date: '2020-12-27', downloads: 873 },
-    { version: { num: '1.0.54' }, date: '2020-12-27', downloads: 2477 },
-    { version: { num: '1.0.55' }, date: '2020-12-27', downloads: 15713 },
-    { version: { num: '1.0.56' }, date: '2020-12-27', downloads: 3815 },
+    { version: FIVE_2, date: '2020-12-30', downloads: 201 },
+    { version: FIVE_3, date: '2020-12-30', downloads: 2228 },
+    { version: FIVE_4, date: '2020-12-30', downloads: 4298 },
+    { version: FIVE_5, date: '2020-12-30', downloads: 3702 },
+    { version: FIVE_6, date: '2020-12-30', downloads: 30520 },
+    { version: FIVE_2, date: '2020-12-29', downloads: 261 },
+    { version: FIVE_3, date: '2020-12-29', downloads: 1650 },
+    { version: FIVE_4, date: '2020-12-29', downloads: 4277 },
+    { version: FIVE_5, date: '2020-12-29', downloads: 4157 },
+    { version: FIVE_6, date: '2020-12-29', downloads: 31631 },
+    { version: FIVE_2, date: '2020-12-28', downloads: 181 },
+    { version: FIVE_3, date: '2020-12-28', downloads: 968 },
+    { version: FIVE_4, date: '2020-12-28', downloads: 2786 },
+    { version: FIVE_5, date: '2020-12-28', downloads: 2414 },
+    { version: FIVE_2, date: '2020-12-27', downloads: 186 },
+    { version: FIVE_3, date: '2020-12-27', downloads: 873 },
+    { version: FIVE_4, date: '2020-12-27', downloads: 2477 },
+    { version: FIVE_5, date: '2020-12-27', downloads: 15713 },
   ];
 
   downloads.content = {
