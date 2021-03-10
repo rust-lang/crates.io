@@ -222,7 +222,7 @@ fn new_krate_with_broken_dependency_requirement() {
 
     // create a request body with `version_req: "broken"`
     let (json, tarball) = crate_to_publish.build();
-    let new_json = json.replace("\"version_req\":\"1.2.3\"", "\"version_req\":\"broken\"");
+    let new_json = json.replace(r#""version_req":"1.2.3""#, r#""version_req":"broken""#);
     assert_ne!(json, new_json);
     let body = PublishBuilder::create_publish_body(&new_json, &tarball);
 

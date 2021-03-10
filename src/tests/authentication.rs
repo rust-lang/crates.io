@@ -1,45 +1,32 @@
-use crate::{util::RequestHelper, TestApp};
+use crate::util::{RequestHelper, Response};
+use crate::TestApp;
 
 use crate::util::encode_session_header;
-use conduit::{header, Handler, HandlerResult, Method, StatusCode};
-use conduit_test::MockRequest;
+use conduit::{header, Body, Method, StatusCode};
 
 static URL: &str = "/api/v1/me/updates";
-static MUST_LOGIN: &[u8] =
-    b"{\"errors\":[{\"detail\":\"must be logged in to perform that action\"}]}";
+static MUST_LOGIN: &[u8] = br#"{"errors":[{"detail":"must be logged in to perform that action"}]}"#;
 static INTERNAL_ERROR_NO_USER: &str =
     "user_id from cookie not found in database caused by NotFound";
 
-fn call(app: &TestApp, mut request: MockRequest) -> HandlerResult {
-    app.as_middleware().call(&mut request)
-}
-
-fn into_parts(response: HandlerResult) -> (StatusCode, std::borrow::Cow<'static, [u8]>) {
-    use conduit_test::ResponseExt;
-
-    let response = response.unwrap();
-    (response.status(), response.into_cow())
-}
-
 #[test]
 fn anonymous_user_unauthorized() {
-    let (app, anon) = TestApp::init().empty();
-    let request = anon.request_builder(Method::GET, URL);
+    let (_, anon) = TestApp::init().empty();
+    let response: Response<Body> = anon.get(URL);
 
-    let (status, body) = into_parts(call(&app, request));
-    assert_eq!(status, StatusCode::FORBIDDEN);
-    assert_eq!(body, MUST_LOGIN);
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_eq!(response.json().to_string().as_bytes(), MUST_LOGIN);
 }
 
 #[test]
 fn token_auth_cannot_find_token() {
-    let (app, anon) = TestApp::init().empty();
+    let (_, anon) = TestApp::init().empty();
     let mut request = anon.request_builder(Method::GET, URL);
     request.header(header::AUTHORIZATION, "cio1tkfake-token");
+    let response: Response<Body> = anon.run(request);
 
-    let (status, body) = into_parts(call(&app, request));
-    assert_eq!(status, StatusCode::FORBIDDEN);
-    assert_eq!(body, MUST_LOGIN);
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_eq!(response.json().to_string().as_bytes(), MUST_LOGIN);
 }
 
 // Ensure that an unexpected authentication error is available for logging.  The user would see
@@ -55,7 +42,6 @@ fn cookie_auth_cannot_find_user() {
     let mut request = anon.request_builder(Method::GET, URL);
     request.header(header::COOKIE, &cookie);
 
-    let response = call(&app, request);
-    let log_message = response.map(|_| ()).unwrap_err().to_string();
-    assert_eq!(log_message, INTERNAL_ERROR_NO_USER);
+    let error = anon.run_err(request);
+    assert_eq!(error.to_string(), INTERNAL_ERROR_NO_USER);
 }

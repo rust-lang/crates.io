@@ -357,7 +357,7 @@ mod tests {
     // in comrak 0.1.8 but was fixed in 0.1.9.
     #[test]
     fn text_with_fancy_single_quotes() {
-        let text = r#"wb’"#;
+        let text = "wb’";
         let result = markdown_to_html(text, None);
         assert_eq!(result, "<p>wb’</p>\n");
     }
