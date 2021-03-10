@@ -11,6 +11,8 @@ import semverSort from 'semver/functions/sort';
 const COLORS = ['#67001f', '#b2182b', '#d6604d', '#f4a582', '#92c5de', '#4393c3', '#2166ac', '#053061'];
 const BG_COLORS = ['#d3b5bc', '#eabdc0', '#f3d0ca', '#fce4d9', '#deedf5', '#c9deed', '#2166ac', '#053061'];
 
+const ONE_DAY = 24 * 60 * 60 * 1000;
+
 export default class DownloadGraph extends Component {
   @service chartjs;
 
@@ -67,7 +69,7 @@ export default class DownloadGraph extends Component {
   }
 
   get data() {
-    return toChartData(this.args.data);
+    return toChartData(this.args.data, this.args.versions);
   }
 }
 
@@ -79,7 +81,7 @@ export function toChartData(data) {
   let extra = data.content?.meta?.extra_downloads ?? [];
 
   let dates = {};
-  let versions = new Set([]);
+  let versions = new Map();
 
   let now = new Date();
   for (let i = 0; i < 90; i++) {
@@ -93,7 +95,7 @@ export function toChartData(data) {
 
     let version_num = version.num;
 
-    versions.add(version_num);
+    versions.set(version_num, version);
 
     let key = d.date;
     if (dates[key]) {
@@ -110,7 +112,7 @@ export function toChartData(data) {
     }
   });
 
-  let versionsList = [...versions];
+  let versionsList = [...versions.keys()];
   try {
     semverSort(versionsList, { loose: true });
   } catch {
@@ -128,10 +130,19 @@ export function toChartData(data) {
   ]);
 
   let datasets = versionsList
-    .map((label, index) => ({
-      data: rows.map(row => ({ x: row[0], y: row[index + 1] })),
-      label: label,
-    }))
+    .map((label, index) => {
+      let data = rows.map(row => ({ x: row[0], y: row[index + 1] }));
+
+      // if we find a corresponding version
+      let version = versions.get(label);
+      if (version?.created_at) {
+        // only show downloads from the day before the release until today
+        let threshold = midnightForDate(version.created_at) - ONE_DAY;
+        data = data.filter(it => midnightForDate(it.x) >= threshold);
+      }
+
+      return { data, label };
+    })
     .reverse()
     .map(({ label, data }, index) => {
       return {
@@ -147,4 +158,8 @@ export function toChartData(data) {
     });
 
   return { datasets };
+}
+
+function midnightForDate(date) {
+  return Date.parse(date.toISOString().slice(0, 10));
 }
