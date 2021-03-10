@@ -142,7 +142,7 @@ export default class Version extends Model {
   @computed('loadDocsBuildsTask.lastSuccessful.value')
   get hasDocsRsLink() {
     let docsBuilds = this.loadDocsBuildsTask.lastSuccessful?.value;
-    return docsBuilds && docsBuilds.length !== 0 && docsBuilds[0].build_status === true;
+    return docsBuilds?.[0]?.build_status === true;
   }
 
   get docsRsLink() {

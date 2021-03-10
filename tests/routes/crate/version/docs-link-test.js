@@ -81,4 +81,24 @@ module('Route | crate.version | docs link', function (hooks) {
     await visit('/crates/foo');
     assert.dom('[data-test-docs-link] a').hasAttribute('href', 'https://docs.rs/foo/0.6.2');
   });
+
+  test('null builds in docs.rs responses are ignored', async function (assert) {
+    this.server.create('crate', { name: 'foo', documentation: 'https://docs.rs/foo/0.6.2' });
+    this.server.create('version', { crateId: 'foo', num: '0.6.2' });
+
+    this.server.get('https://docs.rs/crate/:crate/:version/builds.json', [null]);
+
+    await visit('/crates/foo');
+    assert.dom('[data-test-docs-link] a').hasAttribute('href', 'https://docs.rs/foo/0.6.2');
+  });
+
+  test('empty arrays in docs.rs responses are ignored', async function (assert) {
+    this.server.create('crate', { name: 'foo', documentation: 'https://docs.rs/foo/0.6.2' });
+    this.server.create('version', { crateId: 'foo', num: '0.6.2' });
+
+    this.server.get('https://docs.rs/crate/:crate/:version/builds.json', []);
+
+    await visit('/crates/foo');
+    assert.dom('[data-test-docs-link] a').hasAttribute('href', 'https://docs.rs/foo/0.6.2');
+  });
 });
