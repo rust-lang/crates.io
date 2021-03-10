@@ -44,4 +44,45 @@ module('Component | VersionList::Row', function (hooks) {
     assert.dom('[data-test-release-track]').hasText('?');
     assert.dom('[data-test-release-track-link]').hasText(version);
   });
+
+  test('pluralize "feature" only when appropriate', async function (assert) {
+    let crate = this.server.create('crate', { name: 'foo' });
+    this.server.create('version', {
+      crate,
+      num: '0.1.0',
+      features: {},
+      created_at: Date.now(),
+      updated_at: Date.now(),
+    });
+    this.server.create('version', {
+      crate,
+      num: '0.2.0',
+      features: { one: [] },
+      created_at: Date.now(),
+      updated_at: Date.now(),
+    });
+    this.server.create('version', {
+      crate,
+      num: '0.3.0',
+      features: { one: [], two: [] },
+      created_at: Date.now(),
+      updated_at: Date.now(),
+    });
+
+    let store = this.owner.lookup('service:store');
+    let crateRecord = await store.findRecord('crate', crate.name);
+    let versions = (await crateRecord.versions).toArray();
+    this.firstVersion = versions[0];
+    this.secondVersion = versions[1];
+    this.thirdVersion = versions[2];
+
+    await render(hbs`<VersionList::Row @version={{this.firstVersion}} />`);
+    assert.dom('[data-test-feature-list]').doesNotExist();
+
+    await render(hbs`<VersionList::Row @version={{this.secondVersion}} />`);
+    assert.dom('[data-test-feature-list]').hasText('1 Feature');
+
+    await render(hbs`<VersionList::Row @version={{this.thirdVersion}} />`);
+    assert.dom('[data-test-feature-list]').hasText('2 Features');
+  });
 });

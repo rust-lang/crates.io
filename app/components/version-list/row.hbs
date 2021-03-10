@@ -72,9 +72,9 @@
       </span>
 
       {{#if @version.featureList}}
-        <span local-class="num-features">
+        <span local-class="num-features" data-test-feature-list>
           {{svg-jar "checkbox"}}
-          {{@version.featureList.length}} Features
+          {{@version.featureList.length}} {{if (eq @version.featureList.length 1) "Feature" "Features"}}
 
           <EmberTooltip>
             <ul local-class="feature-list">
