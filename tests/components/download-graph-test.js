@@ -13,6 +13,7 @@ import timekeeper from 'timekeeper';
 import { setupRenderingTest } from 'cargo/tests/helpers';
 
 import { toChartData } from '../../components/download-graph';
+import ChartJsLoader from '../../services/chartjs';
 
 module('Component | DownloadGraph', function (hooks) {
   setupRenderingTest(hooks);
@@ -33,12 +34,18 @@ module('Component | DownloadGraph', function (hooks) {
 
     let deferred = defer();
 
-    class MockService extends Service {
+    class MockService extends ChartJsLoader {
+      constructor() {
+        super(...arguments);
+        this.originalLoadTask = this.loadTask;
+        this.loadTask = this.mockLoadTask;
+      }
+
       @(task(function* () {
         yield deferred.promise;
-        return yield import('chart.js').then(module => module.default);
+        return yield this.originalLoadTask.perform();
       }).drop())
-      loadTask;
+      mockLoadTask;
     }
 
     this.owner.register('service:chartjs', MockService);
