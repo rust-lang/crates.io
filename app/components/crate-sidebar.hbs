@@ -4,19 +4,37 @@
   ...attributes
 >
   <div local-class='top'>
-    <div>
-      <div local-class='last-update'>Last Updated</div>
-      <div local-class='{{if @version.crate_size 'date-with-small-margin-bot' 'date'}}'>
-        {{date-format-distance-to-now @crate.updated_at addSuffix=true}}
-      </div>
-    </div>
 
-    {{#if @version.crate_size}}
-      <div>
-        <div local-class='crate-size'>Crate Size</div>
-        <div local-class='size'>{{pretty-bytes @version.crate_size}}</div>
-      </div>
-    {{/if}}
+    <div local-class="metadata">
+      <h3>Metadata</h3>
+
+      <time
+        datetime={{date-format-iso @version.updated_at}}
+        local-class="date"
+      >
+        {{svg-jar "calendar"}}
+        <span>
+          {{date-format-distance-to-now @version.created_at addSuffix=true}}
+          <EmberTooltip @text={{date-format @version.created_at 'PPP'}} />
+        </span>
+      </time>
+
+      {{#if @version.license}}
+        <div local-class="license" data-test-license>
+          {{svg-jar "license"}}
+          <span>
+            <LicenseExpression @license={{@version.license}} />
+          </span>
+        </div>
+      {{/if}}
+
+      {{#if @version.crate_size}}
+        <div local-class="bytes">
+          {{svg-jar "weight"}}
+          {{pretty-bytes @version.crate_size}}
+        </div>
+      {{/if}}
+    </div>
 
     <div>
       <h3>Install</h3>
@@ -97,15 +115,6 @@
   </div>
 
   <div local-class='bottom'>
-    {{#if @version.license}}
-      <div>
-        <h3>License</h3>
-        <p data-test-license>
-          <LicenseExpression @license={{@version.license }} />
-        </p>
-      </div>
-    {{/if}}
-
     {{#unless @crate.categories.isPending}}
       {{#if @crate.categories}}
         <div>
