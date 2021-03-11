@@ -1,9 +1,7 @@
 .crate-info {
     display: flex;
     flex-direction: column;
-    padding-bottom: 20px;
-    border-bottom: 5px solid var(--gray-border);
-    margin-bottom: 20px;
+    align-items: flex-start;
 
     @media only screen and (min-width: 890px) {
         flex-direction: row;
@@ -11,10 +9,24 @@
 }
 
 .docs {
+    --shadow: 0 2px 3px hsla(51, 50%, 44%, .35);
+
+    margin-bottom: 25px;
+    padding: 25px;
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: var(--shadow);
+
+    @media only screen and (max-width: 550px) {
+        margin-left: -15px;
+        margin-right: -15px;
+        border-radius: 0;
+    }
+
     @media only screen and (min-width: 890px) {
         flex: 7;
-        padding-right: 20px;
         max-width: 640px;
+        margin-bottom: 0;
     }
 }
 
@@ -25,10 +37,6 @@
     > h3 {
         margin-top: 0;
     }
-}
-
-.readme {
-    margin-bottom: 20px;
 }
 
 .readme-spinner,
@@ -48,9 +56,19 @@
     --spinner-size: 35px;
 }
 
+.sidebar {
+    @media only screen and (min-width: 890px) {
+        flex: 3;
+        margin-top: 20px;
+        margin-left: 20px;
+    }
+}
+
 .crate-downloads {
     display: flex;
     flex-wrap: wrap;
+    margin-top: 25px;
+    border-top: 5px solid var(--gray-border);
 
     h3 { width: 100%; }
 }

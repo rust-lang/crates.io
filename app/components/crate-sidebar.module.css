@@ -1,18 +1,12 @@
-.authorship {
+.sidebar {
     .top, .bottom {
         display: flex;
         flex-wrap: wrap;
-
-        > * { margin-right: 1em; }
     }
 
     .top > * { flex: 1 }
 
     @media only screen and (min-width: 890px) {
-        flex: 3;
-        border-left: 2px solid var(--gray-border);
-        padding-left: 20px;
-
         .top, .bottom {
             flex-direction: column;
         }
