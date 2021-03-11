@@ -16,5 +16,5 @@ filetime = "0.2"
 
 [dev-dependencies]
 civet = "0.12.0-alpha.5"
-conduit-test = "0.9.0-alpha.4"
+conduit-test = "0.9.0-alpha.5"
 tempdir = "0.3"
