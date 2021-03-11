@@ -1,17 +1,23 @@
 import Component from '@glimmer/component';
 
 export default class CrateSidebarLink extends Component {
-  get text() {
+  get simplifiedUrl() {
     let { url } = this.args;
     return simplifyUrl(url);
   }
 
+  get text() {
+    // Add zero-width space characters around `/` and `.` characters
+    // to allow more line breaks in the middle of long URLs
+    return this.simplifiedUrl.replace(/([./])/g, '\u200B$1\u200B');
+  }
+
   get isDocsRs() {
-    return this.text.startsWith('docs.rs/');
+    return this.simplifiedUrl.startsWith('docs.rs/');
   }
 
   get isGitHub() {
-    return this.text.startsWith('github.com/');
+    return this.simplifiedUrl.startsWith('github.com/');
   }
 }
 
