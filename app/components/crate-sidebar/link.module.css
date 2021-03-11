@@ -9,3 +9,8 @@
     width: auto;
     margin-right: 7px;
 }
+
+.link {
+    word-break: break-word;
+    hyphens: auto;
+}
