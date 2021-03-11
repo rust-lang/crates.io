@@ -16,4 +16,4 @@ conduit-middleware = "0.9.0-alpha.4"
 time = { version = "0.2", default-features = false, features = ["std"] }
 
 [dev-dependencies]
-conduit-test = "0.9.0-alpha.4"
+conduit-test = "0.9.0-alpha.5"
