@@ -21,6 +21,9 @@
     --link-color: rgb(0, 172, 91);
     --link-hover-color: #007940;
     --separator-color: #284725;
+
+    --placeholder-bg: hsl(212, 7%, 57%);
+    --placeholder-bg2: hsl(213, 16%, 75%);
 }
 
 :global(.new-design) {

@@ -1,0 +1,22 @@
+.placeholder {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    background: linear-gradient(to right, var(--placeholder-bg) 8%, var(--placeholder-bg2) 16%, var(--placeholder-bg) 29%);
+    background-size: 1200px 100%;
+    animation-name: backgroundAnimation;
+    animation-duration: 1.5s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-fill-mode: forwards;
+}
+
+@keyframes backgroundAnimation {
+    0% {
+        background-position: -500px;
+    }
+
+    100% {
+        background-position: 500px;
+    }
+}

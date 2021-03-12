@@ -22,7 +22,16 @@
     <div local-class="docs">
       {{#if this.loadReadmeTask.isRunning}}
         <div local-class="readme-spinner">
-          <LoadingSpinner/>
+          <Placeholder local-class="placeholder-title" />
+          <Placeholder local-class="placeholder-text" />
+          <Placeholder local-class="placeholder-text" />
+          <Placeholder local-class="placeholder-text" />
+          <Placeholder local-class="placeholder-text" />
+          <Placeholder local-class="placeholder-text" />
+          <Placeholder local-class="placeholder-subtitle" />
+          <Placeholder local-class="placeholder-text" />
+          <Placeholder local-class="placeholder-text" />
+          <Placeholder local-class="placeholder-text" />
         </div>
       {{else if this.readme}}
         <article aria-label="Readme">
