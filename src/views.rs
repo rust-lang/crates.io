@@ -85,7 +85,7 @@ pub struct EncodableCrateOwnerInvitation {
 }
 
 impl EncodableCrateOwnerInvitation {
-    pub fn from_basic(
+    pub fn from(
         invitation: CrateOwnerInvitation,
         inviter_name: String,
         crate_name: String,

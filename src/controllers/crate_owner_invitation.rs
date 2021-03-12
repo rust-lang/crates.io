@@ -41,7 +41,7 @@ pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
                 .unwrap_or_default();
 
             let crate_name = invitation.crate_name(conn);
-            EncodableCrateOwnerInvitation::from_basic(invitation, inviter_name, crate_name)
+            EncodableCrateOwnerInvitation::from(invitation, inviter_name, crate_name)
         })
         .collect();
 
