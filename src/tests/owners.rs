@@ -330,14 +330,22 @@ fn invitations_list() {
     let user = app.db_new_user("invited_user");
     token.add_user_owner("invited_crate", "invited_user");
 
-    let json = user.list_invitations();
-    assert_eq!(json.crate_owner_invitations.len(), 1);
+    let response = user.get::<()>("/api/v1/me/crate_owner_invitations");
+    assert_eq!(response.status(), StatusCode::OK);
+
+    let json = response.json();
     assert_eq!(
-        json.crate_owner_invitations[0].invited_by_username,
-        owner.gh_login
+        json,
+        json!({
+            "crate_owner_invitations": [{
+                "crate_id": krate.id,
+                "crate_name": "invited_crate",
+                // this value changes with each test run so we can't use a fixed value here
+                "created_at": &json["crate_owner_invitations"][0]["created_at"],
+                "invited_by_username": owner.gh_login,
+            }]
+        })
     );
-    assert_eq!(json.crate_owner_invitations[0].crate_name, "invited_crate");
-    assert_eq!(json.crate_owner_invitations[0].crate_id, krate.id);
 }
 
 /*  Given a user inviting a different user to be a crate
