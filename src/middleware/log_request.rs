@@ -39,9 +39,8 @@ impl Middleware for LogRequests {
                     .as_millis();
 
                 if current_ms > start_ms {
-                    // The result will not be negative, and will only be truncated for requests
-                    // lasting billions of years.
-                    (current_ms - start_ms) as u64
+                    // The result cannot be negative
+                    current_ms - start_ms
                 } else {
                     // Because our nginx proxy and app run on the same dyno in production, we
                     // shouldn't have to worry about clock drift. But if something goes wrong,
@@ -53,6 +52,9 @@ impl Middleware for LogRequests {
                 // We are probably running locally and not behind nginx.
                 fallback_response_time(req)
             };
+
+        // This will only trucate for requests lasting > 500 million years
+        let response_time = response_time as u64;
 
         println!(
             "{}",
@@ -72,9 +74,8 @@ impl Middleware for LogRequests {
 /// Calculate the response time based on when the request reached the in-app web server.
 ///
 /// This serves as a fallback in case the `X-Request-Start` header is missing or invalid.
-fn fallback_response_time(req: &mut dyn RequestExt) -> u64 {
-    let elapsed = req.elapsed();
-    elapsed.as_secs() * 1000 + u64::from(elapsed.subsec_nanos()) / 1_000_000
+fn fallback_response_time(req: &mut dyn RequestExt) -> u128 {
+    req.elapsed().as_millis()
 }
 
 struct CustomMetadata {
