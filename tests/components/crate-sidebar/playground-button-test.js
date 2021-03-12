@@ -37,7 +37,6 @@ module('Component | CrateSidebar | Playground Button', function (hooks) {
 
     await render(hbs`<CrateSidebar @crate={{this.crate}} @version={{this.version}} />`);
     assert.dom('[data-test-playground-button]').doesNotExist();
-    assert.dom('[data-test-playground-help]').doesNotExist();
   });
 
   test('button is visible for available crates', async function (assert) {
@@ -53,7 +52,6 @@ module('Component | CrateSidebar | Playground Button', function (hooks) {
 
     await render(hbs`<CrateSidebar @crate={{this.crate}} @version={{this.version}} />`);
     assert.dom('[data-test-playground-button]').hasAttribute('href', expectedHref);
-    assert.dom('[data-test-playground-help]').exists();
   });
 
   test('button is hidden while Playground request is pending', async function (assert) {
@@ -70,7 +68,6 @@ module('Component | CrateSidebar | Playground Button', function (hooks) {
     render(hbs`<CrateSidebar @crate={{this.crate}} @version={{this.version}} />`);
     await waitFor('[data-test-owners]');
     assert.dom('[data-test-playground-button]').doesNotExist();
-    assert.dom('[data-test-playground-help]').doesNotExist();
 
     deferred.resolve({ crates: [] });
     await settled();
@@ -88,6 +85,5 @@ module('Component | CrateSidebar | Playground Button', function (hooks) {
 
     await render(hbs`<CrateSidebar @crate={{this.crate}} @version={{this.version}} />`);
     assert.dom('[data-test-playground-button]').doesNotExist();
-    assert.dom('[data-test-playground-help]').doesNotExist();
   });
 });
