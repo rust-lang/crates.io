@@ -345,7 +345,14 @@ fn invitations_list() {
                 "invited_by_username": owner.gh_login,
                 "invitee_id": user.as_model().id,
                 "inviter_id": owner.id,
-            }]
+            }],
+            "users": [{
+                "avatar": null,
+                "id": owner.id,
+                "login": "foo",
+                "name": null,
+                "url": "https://github.com/foo",
+            }],
         })
     );
 }
