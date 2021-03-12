@@ -1,7 +1,7 @@
 <div local-class="link" ...attributes>
   <div local-class="left">
-    <div local-class="title"></div>
-    {{#if @withSubtitle}}<div local-class="subtitle"></div>{{/if}}
+    <Placeholder local-class="title" />
+    {{#if @withSubtitle}}<Placeholder local-class="subtitle" />{{/if}}
   </div>
   {{svg-jar "chevron-right" local-class="right"}}
 </div>

@@ -19,35 +19,7 @@
     width: 0;
 }
 
-
-.placeholder {
-    --placeholder-bg: hsla(59, 19%, 50%, 1.0);
-    --placeholder-bg2: hsla(59, 19%, 50%, 0.7);
-
-    position: relative;
-    display: block;
-    overflow: hidden;
-    background: linear-gradient(to right, var(--placeholder-bg) 8%, var(--placeholder-bg2) 18%, var(--placeholder-bg) 33%);
-    background-size: 800px 104px;
-    animation-name: backgroundAnimation;
-    animation-duration: 1.5s;
-    animation-timing-function: linear;
-    animation-iteration-count: infinite;
-    animation-fill-mode: forwards;
-}
-
-@keyframes backgroundAnimation {
-    0% {
-        background-position: -500px;
-    }
-
-    100% {
-        background-position: 500px;
-    }
-}
-
 .title {
-    composes: placeholder;
     height: 16px;
     width: 150px;
     border-radius: 8px;
@@ -55,7 +27,6 @@
 }
 
 .subtitle {
-    composes: placeholder;
     height: 13px;
     width: 90px;
     margin-top: 4px;
