@@ -15,10 +15,12 @@ use super::{extract_crate_name_and_semver, version_and_crate};
 /// Handles the `GET /crates/:crate_id/:version/download` route.
 /// This returns a URL to the location where the crate is stored.
 pub fn download(req: &mut dyn RequestExt) -> EndpointResult {
+    let recorder = req.timing_recorder();
+
     let crate_name = &req.params()["crate_id"];
     let version = &req.params()["version"];
 
-    let (crate_name, was_counted) = increment_download_counts(req, crate_name, version)?;
+    let (crate_name, was_counted) = increment_download_counts(req, recorder, crate_name, version)?;
 
     let redirect_url = req
         .app()
@@ -54,22 +56,28 @@ pub fn download(req: &mut dyn RequestExt) -> EndpointResult {
 /// build` succeed and not count the download than break people's builds.
 fn increment_download_counts(
     req: &dyn RequestExt,
+    recorder: TimingRecorder,
     crate_name: &str,
     version: &str,
 ) -> AppResult<(String, bool)> {
     use self::versions::dsl::*;
 
-    let conn = req.db_conn()?;
-    let (version_id, crate_name) = versions
-        .inner_join(crates::table)
-        .select((id, crates::name))
-        .filter(Crate::with_name(crate_name))
-        .filter(num.eq(version))
-        .first(&*conn)?;
+    let conn = recorder.record("get_conn", || req.db_conn())?;
+
+    let (version_id, crate_name) = recorder.record("get_version", || {
+        versions
+            .inner_join(crates::table)
+            .select((id, crates::name))
+            .filter(Crate::with_name(crate_name))
+            .filter(num.eq(version))
+            .first(&*conn)
+    })?;
 
     // Wrap in a transaction so we don't poison the outer transaction if this
     // fails
-    let res = conn.transaction(|| VersionDownload::create_or_increment(version_id, &conn));
+    let res = recorder.record("update_count", || {
+        conn.transaction(|| VersionDownload::create_or_increment(version_id, &conn))
+    });
     Ok((crate_name, res.is_ok()))
 }
 
