@@ -1,5 +1,4 @@
 use chrono::NaiveDateTime;
-use diesel::PgConnection;
 use std::collections::HashMap;
 use url::Url;
 
@@ -99,12 +98,6 @@ impl EncodableCrateOwnerInvitation {
             crate_id: invitation.crate_id,
             created_at: invitation.created_at,
         }
-    }
-
-    pub fn from(invitation: CrateOwnerInvitation, conn: &PgConnection) -> Self {
-        let inviter_name = invitation.invited_by_username(conn);
-        let crate_name = invitation.crate_name(conn);
-        Self::from_basic(invitation, inviter_name, crate_name)
     }
 }
 
