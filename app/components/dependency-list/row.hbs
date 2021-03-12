@@ -6,26 +6,42 @@
   "
   ...attributes
 >
-  <span local-class="range" data-test-range>
+  <span local-class="range-lg" data-test-range>
     {{format-req @dependency.req}}
   </span>
 
-  <span>
-    <LinkTo
-      @route="crate.range"
-      @models={{array @dependency.crate_id @dependency.req}}
-      local-class="link"
-      {{on "focusin" (fn this.setFocused true)}}
-      {{on "focusout" (fn this.setFocused false)}}
-      data-test-release-track-link
-    >
-      {{@dependency.crate_id}}
-    </LinkTo>
+  <div local-class="right">
+    <div local-class="name-and-metadata">
+      <span local-class="range-sm" data-test-range>
+        {{format-req @dependency.req}}
+      </span>
 
-    <span local-class="metadata">
-      {{#if @dependency.optional}}
-        optional
-      {{/if}}
-    </span>
-  </span>
+      <LinkTo
+        @route="crate.range"
+        @models={{array @dependency.crate_id @dependency.req}}
+        local-class="link"
+        {{on "focusin" (fn this.setFocused true)}}
+        {{on "focusout" (fn this.setFocused false)}}
+        data-test-release-track-link
+      >
+        {{@dependency.crate_id}}
+      </LinkTo>
+
+      <span local-class="metadata">
+        {{#if @dependency.optional}}
+          optional
+        {{/if}}
+      </span>
+    </div>
+
+    {{#if (or @dependency.crate.description @dependency.crate.isPending)}}
+      <div local-class="description">
+        {{#if @dependency.crate.isPending}}
+          <Placeholder local-class="description-placeholder" />
+        {{else}}
+          {{@dependency.crate.description}}
+        {{/if}}
+      </div>
+    {{/if}}
+  </div>
 </div>
