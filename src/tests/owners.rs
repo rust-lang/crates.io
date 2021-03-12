@@ -343,6 +343,8 @@ fn invitations_list() {
                 // this value changes with each test run so we can't use a fixed value here
                 "created_at": &json["crate_owner_invitations"][0]["created_at"],
                 "invited_by_username": owner.gh_login,
+                "invitee_id": user.as_model().id,
+                "inviter_id": owner.id,
             }]
         })
     );
