@@ -1,29 +1,35 @@
 <CrateHeader @crate={{this.crate}} />
 
-<div local-class="results-meta">
-  <ResultsCount
-    @start={{this.pagination.currentPageStart}}
-    @end={{this.pagination.currentPageEnd}}
-    @total={{this.totalItems}}
-    @name="reverse dependencies of {{this.crate.name}}"
-  />
-</div>
+{{#if this.model}}
+  <div local-class="results-meta">
+    <ResultsCount
+      @start={{this.pagination.currentPageStart}}
+      @end={{this.pagination.currentPageEnd}}
+      @total={{this.totalItems}}
+      @name="reverse dependencies of {{this.crate.name}}"
+    />
+  </div>
 
-<div local-class="list" data-test-list>
-  {{#each this.model as |dependency index|}}
-    <div local-class="row" data-test-row={{index}}>
-      <div>
-        <LinkTo @route="crate" @model={{dependency.version.crateName}} data-test-crate-name>
-          {{dependency.version.crateName}}
-        </LinkTo>
-        requires {{dependency.req}}
+  <div local-class="list" data-test-list>
+    {{#each this.model as |dependency index|}}
+      <div local-class="row" data-test-row={{index}}>
+        <div>
+          <LinkTo @route="crate" @model={{dependency.version.crateName}} data-test-crate-name>
+            {{dependency.version.crateName}}
+          </LinkTo>
+          requires {{dependency.req}}
+        </div>
+        <div local-class="stats downloads">
+          {{svg-jar "download-arrow" local-class="download-icon"}}
+          <span local-class="rev-dep-downloads">{{ format-num dependency.downloads }}</span>
+        </div>
       </div>
-      <div local-class="stats downloads">
-        {{svg-jar "download-arrow" local-class="download-icon"}}
-        <span local-class="rev-dep-downloads">{{ format-num dependency.downloads }}</span>
-      </div>
-    </div>
-  {{/each}}
-</div>
+    {{/each}}
+  </div>
 
-<Pagination @pagination={{this.pagination}} />
+  <Pagination @pagination={{this.pagination}} />
+{{else}}
+  <div local-class="no-results">
+    This crate is not used as a dependency in any other crate on crates.io.
+  </div>
+{{/if}}

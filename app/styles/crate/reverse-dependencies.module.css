@@ -42,3 +42,8 @@
 .rev-dep-downloads {
     padding-left: 7px
 }
+
+.no-results {
+    text-align: center;
+    margin: 20px;
+}
