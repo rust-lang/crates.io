@@ -73,7 +73,7 @@
     "ember-cli-dependency-checker": "3.2.0",
     "ember-cli-dependency-lint": "2.0.0",
     "ember-cli-fastboot": "2.2.3",
-    "ember-cli-htmlbars": "5.6.4",
+    "ember-cli-htmlbars": "5.6.5",
     "ember-cli-inject-live-reload": "2.0.2",
     "ember-cli-meta-tags": "6.1.2",
     "ember-cli-mirage": "2.0.1",
