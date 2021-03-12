@@ -1,5 +1,7 @@
 .link {
     --shadow: 0 2px 3px hsla(51, 50%, 44%, .35);
+    --placeholder-bg: hsla(59, 19%, 50%, 1.0);
+    --placeholder-bg2: hsla(59, 19%, 50%, 0.7);
 
     display: flex;
     align-items: center;

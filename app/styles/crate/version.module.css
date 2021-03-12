@@ -34,7 +34,6 @@
     }
 }
 
-.readme-spinner,
 .no-readme {
     padding: 40px 15px;
     text-align: center;
@@ -47,8 +46,28 @@
     }
 }
 
-.readme-spinner > div {
-    --spinner-size: 35px;
+.placeholder-title {
+    width: 30%;
+    height: 25px;
+    margin: 15px 0 25px;
+    border-radius: 5px;
+    opacity: 0.6;
+}
+
+.placeholder-subtitle {
+    width: 50%;
+    height: 20px;
+    margin: 35px 0 25px;
+    border-radius: 5px;
+    opacity: 0.6;
+}
+
+.placeholder-text {
+    width: 100%;
+    height: 16px;
+    margin-top: 15px;
+    border-radius: 5px;
+    opacity: 0.3;
 }
 
 .sidebar {

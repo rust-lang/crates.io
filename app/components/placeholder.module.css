@@ -1,12 +1,9 @@
 .placeholder {
-    --placeholder-bg: hsla(59, 19%, 50%, 1.0);
-    --placeholder-bg2: hsla(59, 19%, 50%, 0.7);
-
     position: relative;
     display: block;
     overflow: hidden;
-    background: linear-gradient(to right, var(--placeholder-bg) 8%, var(--placeholder-bg2) 18%, var(--placeholder-bg) 33%);
-    background-size: 800px 104px;
+    background: linear-gradient(to right, var(--placeholder-bg) 8%, var(--placeholder-bg2) 16%, var(--placeholder-bg) 29%);
+    background-size: 1200px 100%;
     animation-name: backgroundAnimation;
     animation-duration: 1.5s;
     animation-timing-function: linear;
