@@ -1,10 +1,7 @@
 .crate-info {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-
     @media only screen and (min-width: 890px) {
-        flex-direction: row;
+        display: grid;
+        grid-template-columns: minmax(0, 7fr) minmax(0, 3fr);
     }
 }
 
@@ -24,8 +21,6 @@
     }
 
     @media only screen and (min-width: 890px) {
-        flex: 7;
-        max-width: 640px;
         margin-bottom: 0;
     }
 }
@@ -58,7 +53,6 @@
 
 .sidebar {
     @media only screen and (min-width: 890px) {
-        flex: 3;
         margin-top: 20px;
         margin-left: 20px;
     }

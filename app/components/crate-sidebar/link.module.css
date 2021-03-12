@@ -9,3 +9,9 @@
     width: auto;
     margin-right: 7px;
 }
+
+.link {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
