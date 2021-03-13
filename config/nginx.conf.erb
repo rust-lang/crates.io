@@ -224,8 +224,10 @@ http {
 
 		add_header Strict-Transport-Security "max-age=31536000" always;
 		add_header Vary 'Accept, Accept-Encoding, Cookie';
+
 		proxy_set_header Host $http_host;
 		proxy_set_header X-Real-Ip $remote_addr;
+		proxy_set_header X-Request-Start $msec;
 		proxy_redirect off;
 		if ($http_x_forwarded_proto != 'https') {
 			rewrite ^ https://$host$request_uri? permanent;

@@ -12,7 +12,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt::{self, Display, Formatter};
 use std::rc::Rc;
-use std::time::{Duration, Instant};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 const SLOW_REQUEST_THRESHOLD_MS: u64 = 1000;
 
@@ -31,9 +31,30 @@ impl Middleware for LogRequests {
     }
 
     fn after(&self, req: &mut dyn RequestExt, res: AfterResult) -> AfterResult {
-        let response_time = req.elapsed();
         let response_time =
-            response_time.as_secs() * 1000 + u64::from(response_time.subsec_nanos()) / 1_000_000;
+            if let Ok(start_ms) = request_header(req, "x-request-start").parse::<u128>() {
+                let current_ms = SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .expect("Time went way backwards")
+                    .as_millis();
+
+                if current_ms > start_ms {
+                    // The result cannot be negative
+                    current_ms - start_ms
+                } else {
+                    // Because our nginx proxy and app run on the same dyno in production, we
+                    // shouldn't have to worry about clock drift. But if something goes wrong,
+                    // calculate the response time based on when the request reached this app.
+                    fallback_response_time(req)
+                }
+            } else {
+                // X-Request-Start header couldn't be parsed.
+                // We are probably running locally and not behind nginx.
+                fallback_response_time(req)
+            };
+
+        // This will only trucate for requests lasting > 500 million years
+        let response_time = response_time as u64;
 
         println!(
             "{}",
@@ -48,6 +69,13 @@ impl Middleware for LogRequests {
 
         res
     }
+}
+
+/// Calculate the response time based on when the request reached the in-app web server.
+///
+/// This serves as a fallback in case the `X-Request-Start` header is missing or invalid.
+fn fallback_response_time(req: &mut dyn RequestExt) -> u128 {
+    req.elapsed().as_millis()
 }
 
 struct CustomMetadata {
