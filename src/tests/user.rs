@@ -41,19 +41,10 @@ struct EmailNotificationsUpdate {
     email_notifications: bool,
 }
 
-impl crate::util::MockCookieUser {
-    fn show_me(&self) -> UserShowPrivateResponse {
-        let url = "/api/v1/me";
-        self.get(url).good()
-    }
-
-    fn update_email(&self, email: &str) -> OkBool {
-        let model = self.as_model();
-        self.update_email_more_control(model.id, Some(email)).good()
-    }
-
-    // TODO: I don't like the name of this method or the one above; this is starting to look like
-    // a builder might help? I want to explore alternative abstractions in any case
+trait MockEmailHelper: RequestHelper {
+    // TODO: I don't like the name of this method or `update_email` on the `MockCookieUser` impl;
+    // this is starting to look like a builder might help?
+    // I want to explore alternative abstractions in any case.
     fn update_email_more_control(&self, user_id: i32, email: Option<&str>) -> Response<OkBool> {
         // When updating your email in crates.io, the request goes to the user route with PUT.
         // Ember sends all the user attributes. We check to make sure the ID in the URL matches
@@ -68,6 +59,18 @@ impl crate::util::MockCookieUser {
         }});
         let url = format!("/api/v1/users/{}", user_id);
         self.put(&url, body.to_string().as_bytes())
+    }
+}
+
+impl crate::util::MockCookieUser {
+    fn show_me(&self) -> UserShowPrivateResponse {
+        let url = "/api/v1/me";
+        self.get(url).good()
+    }
+
+    fn update_email(&self, email: &str) -> OkBool {
+        let model = self.as_model();
+        self.update_email_more_control(model.id, Some(email)).good()
     }
 
     fn confirm_email(&self, email_token: &str) -> OkBool {
@@ -84,25 +87,8 @@ impl crate::util::MockCookieUser {
     }
 }
 
-impl crate::util::MockAnonymousUser {
-    // TODO: Refactor to get rid of this duplication with the same method implemented on
-    // MockCookieUser
-    fn update_email_more_control(&self, user_id: i32, email: Option<&str>) -> Response<OkBool> {
-        // When updating your email in crates.io, the request goes to the user route with PUT.
-        // Ember sends all the user attributes. We check to make sure the ID in the URL matches
-        // the ID of the currently logged in user, then we ignore everything but the email address.
-        let body = json!({"user": {
-            "email": email,
-            "name": "Arbitrary Name",
-            "login": "arbitrary_login",
-            "avatar": "https://arbitrary.com/img.jpg",
-            "url": "https://arbitrary.com",
-            "kind": null
-        }});
-        let url = format!("/api/v1/users/{}", user_id);
-        self.put(&url, body.to_string().as_bytes())
-    }
-}
+impl MockEmailHelper for crate::util::MockCookieUser {}
+impl MockEmailHelper for crate::util::MockAnonymousUser {}
 
 #[test]
 fn auth_gives_a_token() {

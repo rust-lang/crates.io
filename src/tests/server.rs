@@ -60,12 +60,7 @@ fn block_traffic_via_arbitrary_header_and_value() {
     let mut req = anon.request_builder(Method::GET, "/api/v1/crates/dl_no_ua/0.99.0/download");
     // A request with a header value we want to block isn't allowed
     req.header(header::USER_AGENT, "1");
-    req.header(
-        // Needed for the error message we generate
-        // FIXME: Simplify once we hit `conduit-test 0.9.0-alpha.2`
-        header::HeaderName::from_lowercase(b"x-request-id").unwrap(),
-        "abcd",
-    );
+    req.header("x-request-id", "abcd");
     let resp = anon.run::<()>(req);
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);
 
