@@ -1,41 +1,13 @@
-use std::{
-    collections::{BTreeMap, VecDeque},
-    fs::File,
-    path::Path,
-};
+use std::{collections::BTreeMap, fs::File, path::Path};
 
+use crate::tasks::dump_db::configuration::{ColumnVisibility, TableConfig, VisibilityConfig};
 use swirl::PerformError;
 
 pub fn gen_scripts(export_script: &Path, import_script: &Path) -> Result<(), PerformError> {
-    let config: VisibilityConfig = toml::from_str(include_str!("dump-db.toml")).unwrap();
+    let config = VisibilityConfig::get();
     let export_sql = File::create(export_script)?;
     let import_sql = File::create(import_script)?;
     config.gen_psql_scripts(export_sql, import_sql)
-}
-
-/// An enum indicating whether a column is included in the database dumps.
-/// Public columns are included, private are not.
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq)]
-#[serde(rename_all = "lowercase")]
-enum ColumnVisibility {
-    Private,
-    Public,
-}
-
-/// Filtering information for a single table. The `dependencies` field is only
-/// used to determine the order of the tables in the generated import script,
-/// and should list all tables the current tables refers to with foreign key
-/// constraints on public columns. The `filter` field is a valid SQL expression
-/// used in a `WHERE` clause to filter the rows of the table. The `columns`
-/// field maps column names to their respective visibilities.
-#[derive(Clone, Debug, Default, Deserialize)]
-struct TableConfig {
-    #[serde(default)]
-    dependencies: Vec<String>,
-    filter: Option<String>,
-    columns: BTreeMap<String, ColumnVisibility>,
-    #[serde(default)]
-    column_defaults: BTreeMap<String, String>,
 }
 
 /// Subset of the configuration data to be passed on to the Handlbars template.
@@ -75,11 +47,6 @@ impl TableConfig {
     }
 }
 
-/// Maps table names to the respective configurations. Used to load `dump_db.toml`.
-#[derive(Clone, Debug, Default, Deserialize)]
-#[serde(transparent)]
-struct VisibilityConfig(BTreeMap<String, TableConfig>);
-
 /// Subset of the configuration data to be passed on to the Handlbars template.
 #[derive(Debug, Serialize)]
 struct HandlebarsContext<'a> {
@@ -87,44 +54,6 @@ struct HandlebarsContext<'a> {
 }
 
 impl VisibilityConfig {
-    /// Sort the tables in a way that dependencies come before dependent tables.
-    ///
-    /// Returns a vector of table names.
-    fn topological_sort(&self) -> Vec<&str> {
-        let mut num_deps = BTreeMap::new();
-        let mut rev_deps: BTreeMap<_, Vec<_>> = BTreeMap::new();
-        for (table, config) in self.0.iter() {
-            num_deps.insert(table.as_str(), config.dependencies.len());
-            for dep in &config.dependencies {
-                rev_deps
-                    .entry(dep.as_str())
-                    .or_default()
-                    .push(table.as_str());
-            }
-        }
-        let mut ready: VecDeque<&str> = num_deps
-            .iter()
-            .filter(|(_, &count)| count == 0)
-            .map(|(&table, _)| table)
-            .collect();
-        let mut result = Vec::with_capacity(ready.len());
-        while let Some(table) = ready.pop_front() {
-            result.push(table);
-            for dep in rev_deps.get(table).iter().cloned().flatten() {
-                *num_deps.get_mut(dep).unwrap() -= 1;
-                if num_deps[dep] == 0 {
-                    ready.push_back(dep);
-                }
-            }
-        }
-        assert_eq!(
-            self.0.len(),
-            result.len(),
-            "circular dependencies in database dump configuration detected",
-        );
-        result
-    }
-
     fn handlebars_context(&self) -> HandlebarsContext<'_> {
         let tables = self
             .topological_sort()
@@ -169,8 +98,7 @@ mod tests {
     fn check_visibility_config() {
         let conn = pg_connection();
         let db_columns = HashSet::<Column>::from_iter(get_db_columns(&conn));
-        let vis_columns = toml::from_str::<VisibilityConfig>(include_str!("dump-db.toml"))
-            .unwrap()
+        let vis_columns = VisibilityConfig::get()
             .0
             .iter()
             .flat_map(|(table, config)| {
@@ -233,33 +161,5 @@ mod tests {
             .order_by((table_name, ordinal_position))
             .load(conn)
             .unwrap()
-    }
-
-    fn table_config_with_deps(deps: &[&str]) -> TableConfig {
-        TableConfig {
-            dependencies: deps.iter().cloned().map(ToOwned::to_owned).collect(),
-            ..Default::default()
-        }
-    }
-
-    #[test]
-    fn test_topological_sort() {
-        let mut config = VisibilityConfig::default();
-        let tables = &mut config.0;
-        tables.insert("a".to_owned(), table_config_with_deps(&["b", "c"]));
-        tables.insert("b".to_owned(), table_config_with_deps(&["c", "d"]));
-        tables.insert("c".to_owned(), table_config_with_deps(&["d"]));
-        config.0.insert("d".to_owned(), table_config_with_deps(&[]));
-        assert_eq!(config.topological_sort(), ["d", "c", "b", "a"]);
-    }
-
-    #[test]
-    #[should_panic]
-    fn topological_sort_panics_for_cyclic_dependency() {
-        let mut config = VisibilityConfig::default();
-        let tables = &mut config.0;
-        tables.insert("a".to_owned(), table_config_with_deps(&["b"]));
-        tables.insert("b".to_owned(), table_config_with_deps(&["a"]));
-        config.topological_sort();
     }
 }
