@@ -37,7 +37,11 @@
         <UserAvatar @user={{user}} @size="medium-small" />
       </LinkTo>
       <LinkTo @route={{user.kind}} @model={{user.login}}>
-        {{ user.name }}
+        {{#if user.name}}
+          {{user.name}}
+        {{else}}
+          {{user.login}}
+        {{/if}}
       </LinkTo>
       <div local-class="email-column">
         {{user.email}}
