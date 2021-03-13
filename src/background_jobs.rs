@@ -28,8 +28,6 @@ pub struct Environment {
     http_client: AssertUnwindSafe<Client>,
 }
 
-// FIXME: AssertUnwindSafe should be `Clone`, this can be replaced with
-// `#[derive(Clone)]` if that is fixed in the standard lib
 impl Clone for Environment {
     fn clone(&self) -> Self {
         Self {
