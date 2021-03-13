@@ -174,4 +174,5 @@ impl Drop for DumpTarball {
     }
 }
 
+mod configuration;
 mod gen_scripts;
