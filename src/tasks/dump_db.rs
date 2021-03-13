@@ -1,8 +1,9 @@
 use std::{
-    fs::File,
+    fs::{self, File},
     path::{Path, PathBuf},
 };
 
+use self::configuration::VisibilityConfig;
 use crate::{background_jobs::Environment, uploaders::Uploader};
 use reqwest::header;
 use swirl::PerformError;
@@ -146,8 +147,32 @@ impl DumpTarball {
         let tarfile = File::create(&tarball_path)?;
         let result = Self { tarball_path };
         let encoder = flate2::write::GzEncoder::new(tarfile, flate2::Compression::default());
+
         let mut archive = tar::Builder::new(encoder);
-        archive.append_dir_all(export_dir.file_name().unwrap(), &export_dir)?;
+        let tar_top_dir = PathBuf::from(export_dir.file_name().unwrap());
+        archive.append_dir(&tar_top_dir, export_dir)?;
+
+        // Append readme, metadata, schemas.
+        for entry in fs::read_dir(export_dir)? {
+            let entry = entry?;
+            let file_type = entry.file_type()?;
+            if file_type.is_file() {
+                let name_in_tar = tar_top_dir.join(entry.file_name());
+                archive.append_path_with_name(entry.path(), name_in_tar)?;
+            }
+        }
+
+        // Append topologically sorted tables to make it possible to pipeline
+        // importing with gz extraction.
+        archive.append_dir(tar_top_dir.join("data"), export_dir.join("data"))?;
+        for table in VisibilityConfig::get().topological_sort() {
+            let csv_path = export_dir.join("data").join(table).with_extension("csv");
+            if csv_path.exists() {
+                let name_in_tar = tar_top_dir.join("data").join(table).with_extension("csv");
+                archive.append_path_with_name(csv_path, name_in_tar)?;
+            }
+        }
+
         Ok(result)
     }
 
