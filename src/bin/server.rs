@@ -54,7 +54,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Start the background thread periodically persisting download counts to the database.
     downloads_counter_thread(app.clone());
 
-    let handler = cargo_registry::build_handler(app);
+    let handler = cargo_registry::build_handler(app.clone());
 
     // On every server restart, ensure the categories available in the database match
     // the information in *src/categories.toml*.
@@ -165,6 +165,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             rx.recv().unwrap();
             drop(server);
         }
+    }
+
+    println!("Persisting remaining downloads counters");
+    if let Err(err) = app.downloads_counter.persist_all_shards(&app) {
+        println!("downloads_counter error: {}", err);
     }
 
     println!("Server has gracefully shutdown!");

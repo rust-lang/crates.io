@@ -64,6 +64,31 @@ impl DownloadsCounter {
         }
     }
 
+    pub fn persist_all_shards(&self, app: &App) -> Result<(), Error> {
+        let conn = app.primary_database.get()?;
+
+        let mut counted_downloads = 0;
+        let mut counted_versions = 0;
+        let mut pending_downloads = 0;
+        for shard in self.inner.shards() {
+            let shard = std::mem::take(&mut *shard.write());
+            let stats = self.persist_shard(&conn, shard)?;
+
+            counted_downloads += stats.counted_downloads;
+            counted_versions += stats.counted_versions;
+            pending_downloads = stats.pending_downloads;
+        }
+
+        println!(
+            "download_counter all_shards counted_versions={} counted_downloads={} pending_downloads={}",
+            counted_versions,
+            counted_downloads,
+            pending_downloads,
+        );
+
+        Ok(())
+    }
+
     pub fn persist_next_shard(&self, app: &App) -> Result<(), Error> {
         let conn = app.primary_database.get()?;
 
