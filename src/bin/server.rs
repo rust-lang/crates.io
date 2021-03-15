@@ -54,7 +54,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Start the background thread periodically persisting download counts to the database.
     downloads_counter_thread(app.clone());
 
-    let app = cargo_registry::build_handler(app);
+    let handler = cargo_registry::build_handler(app);
 
     // On every server restart, ensure the categories available in the database match
     // the information in *src/categories.toml*.
@@ -103,7 +103,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .build()
             .unwrap();
 
-        let handler = Arc::new(conduit_hyper::BlockingHandler::new(app));
+        let handler = Arc::new(conduit_hyper::BlockingHandler::new(handler));
         let make_service =
             hyper::service::make_service_fn(move |socket: &hyper::server::conn::AddrStream| {
                 let addr = socket.remote_addr();
@@ -134,7 +134,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("Booting with a civet based server");
         let mut cfg = civet::Config::new();
         cfg.port(port).threads(threads).keep_alive(true);
-        Civet(CivetServer::start(cfg, app).unwrap())
+        Civet(CivetServer::start(cfg, handler).unwrap())
     };
 
     println!("listening on port {}", port);
