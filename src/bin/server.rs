@@ -49,9 +49,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let config = cargo_registry::Config::default();
     let client = Client::new();
+    let app = Arc::new(App::new(config.clone(), Some(client)));
 
-    let app = App::new(config.clone(), Some(client));
-    let app = cargo_registry::build_handler(Arc::new(app));
+    // Start the background thread periodically persisting download counts to the database.
+    downloads_counter_thread(app.clone());
+
+    let app = cargo_registry::build_handler(app);
 
     // On every server restart, ensure the categories available in the database match
     // the information in *src/categories.toml*.
@@ -183,4 +186,18 @@ where
         }
     })
     .unwrap();
+}
+
+fn downloads_counter_thread(app: Arc<App>) {
+    let interval = Duration::from_millis(
+        (app.config.downloads_persist_interval_ms / app.downloads_counter.shards_count()) as u64,
+    );
+
+    std::thread::spawn(move || loop {
+        std::thread::sleep(interval);
+
+        if let Err(err) = app.downloads_counter.persist_next_shard(&app) {
+            println!("downloads_counter error: {}", err);
+        }
+    });
 }

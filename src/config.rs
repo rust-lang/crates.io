@@ -19,6 +19,7 @@ pub struct Config {
     pub blocked_traffic: Vec<(String, Vec<String>)>,
     pub domain_name: String,
     pub allowed_origins: Vec<String>,
+    pub downloads_persist_interval_ms: usize,
 }
 
 impl Default for Config {
@@ -45,6 +46,7 @@ impl Default for Config {
     /// - `READ_ONLY_REPLICA_URL`: The URL of an optional postgres read-only replica database.
     /// - `BLOCKED_TRAFFIC`: A list of headers and environment variables to use for blocking
     ///.  traffic. See the `block_traffic` module for more documentation.
+    /// - `DOWNLOADS_PERSIST_INTERVAL_MS`: how frequent to persist download counts (in ms).
     fn default() -> Config {
         let api_protocol = String::from("https");
         let mirror = if dotenv::var("MIRROR").is_ok() {
@@ -144,6 +146,13 @@ impl Default for Config {
             blocked_traffic: blocked_traffic(),
             domain_name: domain_name(),
             allowed_origins,
+            downloads_persist_interval_ms: dotenv::var("DOWNLOADS_PERSIST_INTERVAL_MS")
+                .map(|interval| {
+                    interval
+                        .parse()
+                        .expect("invalid DOWNLOADS_PERSIST_INTERVAL_MS")
+                })
+                .unwrap_or(60_000), // 1 minute
         }
     }
 }
