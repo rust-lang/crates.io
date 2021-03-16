@@ -5,8 +5,8 @@ use cargo_registry::{boot, App, Env};
 use std::{
     borrow::Cow,
     fs::File,
+    process::Command,
     sync::{mpsc::channel, Arc, Mutex},
-    thread,
     time::Duration,
 };
 
@@ -139,9 +139,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("listening on port {}", port);
 
-    // Give tokio a chance to spawn the first worker thread
-    thread::sleep(Duration::from_millis(10));
-
     // Creating this file tells heroku to tell nginx that the application is ready
     // to receive traffic.
     if heroku {
@@ -152,6 +149,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         };
         println!("Writing to {}", path);
         File::create(path).unwrap();
+
+        // Launch nginx via the Heroku nginx buildpack
+        // `wait()` is never called on the child process, but it should be okay to leave a zombie
+        // process around on shutdown when Heroku is tearing down the entire container anyway.
+        Command::new("./script/start-web.sh")
+            .spawn()
+            .expect("Couldn't spawn nginx");
     }
 
     // Block the main thread until the server has shutdown
