@@ -2392,13 +2392,13 @@
   resolved "https://registry.yarnpkg.com/@xtuc/long/-/long-4.2.2.tgz#d291c6a4e97989b5c61d9acf396ae4fe133a718d"
   integrity sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==
 
-"@zestia/ember-auto-focus@4.1.6":
-  version "4.1.6"
-  resolved "https://registry.yarnpkg.com/@zestia/ember-auto-focus/-/ember-auto-focus-4.1.6.tgz#fc64e1a506abee6fae75685ac646a7cc9d57a1c1"
-  integrity sha512-IeqKlHv39xFwiRj0OuoZU/LS3HbQG+sL/EVZsmwEVThbo4ig1HQ9a6IsXRHB7ZDjnaaRE66ugA6LXqiO31SBVQ==
+"@zestia/ember-auto-focus@4.1.7":
+  version "4.1.7"
+  resolved "https://registry.yarnpkg.com/@zestia/ember-auto-focus/-/ember-auto-focus-4.1.7.tgz#aca09451962b5efb12701e7301302c95e6321e40"
+  integrity sha512-a28qNSYn4qJDbqid/Y9aekoSWlkwQjYb3bD04deyqw8eOSa2IGP1Hr5gfmATzPCGDmqLNIrp/ZS3bOLWma59iQ==
   dependencies:
-    ember-cli-babel "^7.23.0"
-    ember-cli-htmlbars "^5.3.1"
+    ember-cli-babel "^7.23.1"
+    ember-cli-htmlbars "^5.6.5"
     ember-modifier "^2.1.1"
 
 abab@^2.0.3, abab@^2.0.5:
@@ -6358,7 +6358,7 @@ ember-cli-head@^1.0.0:
     ember-cli-htmlbars "^4.3.1"
     ember-in-element-polyfill "^1.0.0"
 
-ember-cli-htmlbars@5.6.5, ember-cli-htmlbars@^5.2.0, ember-cli-htmlbars@^5.3.1:
+ember-cli-htmlbars@5.6.5, ember-cli-htmlbars@^5.2.0, ember-cli-htmlbars@^5.3.1, ember-cli-htmlbars@^5.6.5:
   version "5.6.5"
   resolved "https://registry.yarnpkg.com/ember-cli-htmlbars/-/ember-cli-htmlbars-5.6.5.tgz#15a55e4e4f47869a5e95a1e49813f77fd22fb76e"
   integrity sha512-Wl3AntESMmQoG//yKuu+/7qAOznYAwRgWU8ZOCOPaGdPFaFXD6SPd2SKpRW4BEox5KLBJZFH0e7b9m78IAzcUw==
