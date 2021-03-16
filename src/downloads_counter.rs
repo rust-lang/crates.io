@@ -126,10 +126,31 @@ impl DownloadsCounter {
             counted_downloads += count;
             counted_versions += 1;
 
-            to_insert.push((version_id.eq(*key), downloads.eq(count as i32)));
+            to_insert.push((*key, count));
         }
 
         if !to_insert.is_empty() {
+            // The rows we're about to insert need to be sorted to avoid deadlocks when multiple
+            // instances of crates.io are running at the same time.
+            //
+            // In PostgreSQL a transaction modifying a row locks that row until the transaction is
+            // committed. Multiple transactions inserting rows into a table could end up
+            // deadlocking each other though: PostgreSQL will detect that deadlock, abort one of
+            // the transactions and allow the other one to continue. We don't want that to happen,
+            // as we'd lose the downloads from the aborted transaction.
+            //
+            // Ensuring the rows are inserted in a consistent order (in our case by sorting them by
+            // the version ID) will prevent deadlocks from occuring. For more information:
+            //
+            //     https://www.postgresql.org/docs/11/explicit-locking.html#LOCKING-DEADLOCKS
+            //
+            to_insert.sort_by_key(|(key, _)| *key);
+
+            let to_insert = to_insert
+                .into_iter()
+                .map(|(key, count)| (version_id.eq(key), downloads.eq(count as i32)))
+                .collect::<Vec<_>>();
+
             diesel::insert_into(version_downloads)
                 .values(&to_insert)
                 .on_conflict((version_id, date))
