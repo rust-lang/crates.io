@@ -3,6 +3,7 @@
 use crate::{db, Config, Env};
 use std::{sync::Arc, time::Duration};
 
+use crate::downloads_counter::DownloadsCounter;
 use crate::github::GitHubClient;
 use diesel::r2d2;
 use oauth2::basic::BasicClient;
@@ -31,6 +32,9 @@ pub struct App {
 
     /// The server configuration
     pub config: Config,
+
+    /// Count downloads and periodically persist them in the database
+    pub downloads_counter: DownloadsCounter,
 
     /// A configured client for outgoing HTTP requests
     ///
@@ -131,6 +135,7 @@ impl App {
             github_oauth,
             session_key: config.session_key.clone(),
             config,
+            downloads_counter: DownloadsCounter::new(),
             http_client,
         }
     }

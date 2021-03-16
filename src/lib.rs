@@ -36,6 +36,7 @@ pub mod background_jobs;
 pub mod boot;
 mod config;
 pub mod db;
+mod downloads_counter;
 pub mod email;
 pub mod git;
 pub mod github;

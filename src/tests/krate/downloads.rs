@@ -42,11 +42,24 @@ fn download() {
         // TODO: test the with_json code path
     };
 
+    let persist_downloads_count = || {
+        app.as_inner()
+            .downloads_counter
+            .persist_all_shards(app.as_inner())
+            .expect("failed to persist downloads count");
+    };
+
     download("foo_download/1.0.0");
+    // No downloads are counted until the counters are persisted
+    assert_dl_count("foo_download/1.0.0", None, 0);
+    assert_dl_count("foo_download", None, 0);
+    persist_downloads_count();
+    // Now that the counters are persisted the download counts show up.
     assert_dl_count("foo_download/1.0.0", None, 1);
     assert_dl_count("foo_download", None, 1);
 
     download("FOO_DOWNLOAD/1.0.0");
+    persist_downloads_count();
     assert_dl_count("FOO_DOWNLOAD/1.0.0", None, 2);
     assert_dl_count("FOO_DOWNLOAD", None, 2);
 

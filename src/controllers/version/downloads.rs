@@ -20,19 +20,32 @@ pub fn download(req: &mut dyn RequestExt) -> EndpointResult {
     let crate_name = &req.params()["crate_id"];
     let version = &req.params()["version"];
 
-    let (crate_name, was_counted) = increment_download_counts(req, recorder, crate_name, version)?;
+    let (version_id, crate_name): (_, String) = {
+        use self::versions::dsl::*;
+
+        let conn = recorder.record("get_conn", || req.db_conn())?;
+
+        // Returns the crate name as stored in the database, or an error if we could
+        // not load the version ID from the database.
+        recorder.record("get_version", || {
+            versions
+                .inner_join(crates::table)
+                .select((id, crates::name))
+                .filter(Crate::with_name(crate_name))
+                .filter(num.eq(version))
+                .first(&*conn)
+        })?
+    };
+
+    // The increment does not happen instantly, but it's deferred to be executed in a batch
+    // along with other downloads. See crate::downloads_counter for the implementation.
+    req.app().downloads_counter.increment(version_id);
 
     let redirect_url = req
         .app()
         .config
         .uploader
         .crate_location(&crate_name, version);
-
-    // Adding log metadata requires &mut access, so we have to defer this step until
-    // after the (immutable) query parameters are no longer used.
-    if !was_counted {
-        req.log_metadata("uncounted_dl", "true");
-    }
 
     if req.wants_json() {
         #[derive(Serialize)]
@@ -43,42 +56,6 @@ pub fn download(req: &mut dyn RequestExt) -> EndpointResult {
     } else {
         Ok(req.redirect(redirect_url))
     }
-}
-
-/// Increment the download counts for a given crate version.
-///
-/// Returns the crate name as stored in the database, or an error if we could
-/// not load the version ID from the database.
-///
-/// This ignores any errors that occur updating the download count. Failure is
-/// expected if the application is in read only mode, or for API-only mirrors.
-/// Even if failure occurs for unexpected reasons, we would rather have `cargo
-/// build` succeed and not count the download than break people's builds.
-fn increment_download_counts(
-    req: &dyn RequestExt,
-    recorder: TimingRecorder,
-    crate_name: &str,
-    version: &str,
-) -> AppResult<(String, bool)> {
-    use self::versions::dsl::*;
-
-    let conn = recorder.record("get_conn", || req.db_conn())?;
-
-    let (version_id, crate_name) = recorder.record("get_version", || {
-        versions
-            .inner_join(crates::table)
-            .select((id, crates::name))
-            .filter(Crate::with_name(crate_name))
-            .filter(num.eq(version))
-            .first(&*conn)
-    })?;
-
-    // Wrap in a transaction so we don't poison the outer transaction if this
-    // fails
-    let res = recorder.record("update_count", || {
-        conn.transaction(|| VersionDownload::create_or_increment(version_id, &conn))
-    });
-    Ok((crate_name, res.is_ok()))
 }
 
 /// Handles the `GET /crates/:crate_id/:version/downloads` route.
