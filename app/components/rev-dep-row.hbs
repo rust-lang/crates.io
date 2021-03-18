@@ -1,0 +1,12 @@
+<div local-class="row" ...attributes>
+  <div>
+    <LinkTo @route="crate" @model={{@dependency.version.crateName}} data-test-crate-name>
+      {{@dependency.version.crateName}}
+    </LinkTo>
+    requires {{@dependency.req}}
+  </div>
+  <div local-class="stats downloads">
+    {{svg-jar "download-arrow" local-class="download-icon"}}
+    <span local-class="rev-dep-downloads">{{ format-num @dependency.downloads }}</span>
+  </div>
+</div>

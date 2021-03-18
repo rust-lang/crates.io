@@ -1,0 +1,25 @@
+.row {
+    padding: 20px 0;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+.stats {
+    width: 25%;
+    color: var(--main-color-light);
+}
+
+.downloads {
+    display: flex;
+    align-items: center;
+    padding-bottom: 5px;
+}
+
+.download-icon {
+    color: #b13b89;
+}
+
+.rev-dep-downloads {
+    padding-left: 7px
+}

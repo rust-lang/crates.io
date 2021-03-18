@@ -12,17 +12,8 @@
 
   <ul local-class="list" data-test-list>
     {{#each this.model as |dependency index|}}
-      <li local-class="row" data-test-row={{index}}>
-        <div>
-          <LinkTo @route="crate" @model={{dependency.version.crateName}} data-test-crate-name>
-            {{dependency.version.crateName}}
-          </LinkTo>
-          requires {{dependency.req}}
-        </div>
-        <div local-class="stats downloads">
-          {{svg-jar "download-arrow" local-class="download-icon"}}
-          <span local-class="rev-dep-downloads">{{ format-num dependency.downloads }}</span>
-        </div>
+      <li local-class="row">
+        <RevDepRow @dependency={{dependency}} data-test-row={{index}} />
       </li>
     {{/each}}
   </ul>
