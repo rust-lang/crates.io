@@ -17,15 +17,12 @@
     }
 }
 
-.stats {
-    width: 25%;
-    color: var(--main-color-light);
-}
-
 .downloads {
     display: flex;
     align-items: center;
+    width: 25%;
     padding-bottom: 5px;
+    color: var(--main-color-light);
 }
 
 .download-icon {
