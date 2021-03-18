@@ -7,40 +7,15 @@
 }
 
 .list {
-    background-color: white;
-    padding: 0 20px;
-    margin-bottom: 20px;
-}
+    list-style: none;
+    margin: 0 0 20px;
+    padding: 0;
 
-.row {
-    border-bottom: 2px solid var(--gray-border);
-    padding: 20px 0;
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-
-    &:last-of-type {
-        border: none;
+    li {
+        &:not(:first-child) {
+            margin-top: 10px;
+        }
     }
-}
-
-.stats {
-    width: 25%;
-    color: var(--main-color-light);
-}
-
-.downloads {
-    display: flex;
-    align-items: center;
-    padding-bottom: 5px;
-}
-
-.download-icon {
-    color: #b13b89;
-}
-
-.rev-dep-downloads {
-    padding-left: 7px
 }
 
 .no-results {
