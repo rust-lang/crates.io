@@ -1,4 +1,6 @@
 .row {
+    --hover-bg-color: hsl(217, 37%, 98%);
+    --crate-color: var(--grey700);
     --shadow: 0 1px 3px hsla(51, 90%, 42%, .35);
 
     display: flex;
@@ -12,8 +14,37 @@
     box-shadow: var(--shadow);
     transition: all 300ms;
 
+    &:hover, &.focused {
+        background-color: var(--hover-bg-color);
+        transition: all 0ms;
+    }
+
+    &.focused {
+        box-shadow: 0 0 0 3px var(--yellow500), var(--shadow);
+    }
+
     @media only screen and (max-width: 550px) {
         display: block
+    }
+}
+
+.link {
+    color: var(--crate-color);
+    font-weight: 500;
+    margin-right: 15px;
+    outline: none;
+
+    &:hover {
+        color: var(--crate-color);
+    }
+
+    &::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
     }
 }
 
@@ -32,5 +63,5 @@
 }
 
 .rev-dep-downloads {
-    padding-left: 7px
+    padding-left: 7px;
 }

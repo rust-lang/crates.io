@@ -1,6 +1,13 @@
-<div local-class="row" ...attributes>
+<div local-class="row {{if this.focused "focused"}}" ...attributes>
   <div>
-    <LinkTo @route="crate" @model={{@dependency.version.crateName}} data-test-crate-name>
+    <LinkTo
+      @route="crate"
+      @model={{@dependency.version.crateName}}
+      local-class="link"
+      data-test-crate-name
+      {{on "focusin" (fn this.setFocused true)}}
+      {{on "focusout" (fn this.setFocused false)}}
+    >
       {{@dependency.version.crateName}}
     </LinkTo>
     requires {{@dependency.req}}
