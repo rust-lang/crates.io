@@ -168,6 +168,14 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
                     .filter(follows::user_id.eq(user_id)),
             ),
         );
+    } else if params.get("ids[]").is_some() {
+        let query_bytes = req.query_string().unwrap_or("").as_bytes();
+        let ids: Vec<_> = url::form_urlencoded::parse(query_bytes)
+            .filter(|(key, _)| key == "ids[]")
+            .map(|(_, value)| value.to_string())
+            .collect();
+
+        query = query.filter(crates::name.eq(any(ids)));
     }
 
     if !include_yanked {
