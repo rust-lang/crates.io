@@ -10,7 +10,9 @@
     >
       {{@dependency.version.crateName}}
     </LinkTo>
-    requires {{@dependency.req}}
+    <span local-class="range">
+      depends on {{@dependency.req}}
+    </span>
   </div>
   <div local-class="downloads">
     {{svg-jar "download-arrow" local-class="download-icon"}}

@@ -48,6 +48,13 @@
     }
 }
 
+.range {
+    color: var(--grey600);
+    text-transform: uppercase;
+    letter-spacing: .7px;
+    font-size: 13px;
+}
+
 .downloads {
     display: flex;
     align-items: center;
