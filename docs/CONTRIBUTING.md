@@ -555,7 +555,7 @@ Unlike a local setup, the Git index is not stored in the `./tmp` folder, so in
 order to publish to the Dockerized crates.io, run
 
 ```
-cargo publish --index http://localhost:4200/git/index
+cargo publish --index http://localhost:4200/git/index --token $YOUR_TOKEN
 ```
 
 #### Changing code
