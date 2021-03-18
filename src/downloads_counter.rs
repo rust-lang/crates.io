@@ -2,7 +2,7 @@ use crate::App;
 use anyhow::Error;
 use dashmap::{DashMap, SharedValue};
 use diesel::{pg::upsert::excluded, prelude::*};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::atomic::{AtomicI64, AtomicUsize, Ordering};
 
 /// crates.io receives a lot of download requests, and we can't execute a write query to the
@@ -102,18 +102,16 @@ impl DownloadsCounter {
         conn: &PgConnection,
         shard: HashMap<i32, SharedValue<AtomicUsize>>,
     ) -> Result<PersistStats, Error> {
-        use crate::schema::version_downloads::dsl::*;
+        use crate::schema::{version_downloads, versions};
 
+        let mut discarded_downloads = 0;
         let mut counted_downloads = 0;
         let mut counted_versions = 0;
-        let mut to_insert = Vec::new();
-        for (key, atomic) in shard.iter() {
-            let count = atomic.get().load(Ordering::SeqCst);
-            counted_downloads += count;
-            counted_versions += 1;
 
-            to_insert.push((*key, count));
-        }
+        let mut to_insert = shard
+            .iter()
+            .map(|(id, atomic)| (*id, atomic.get().load(Ordering::SeqCst)))
+            .collect::<Vec<_>>();
 
         if !to_insert.is_empty() {
             // The rows we're about to insert need to be sorted to avoid deadlocks when multiple
@@ -132,22 +130,63 @@ impl DownloadsCounter {
             //
             to_insert.sort_by_key(|(key, _)| *key);
 
-            let to_insert = to_insert
+            // Our database schema enforces that every row in the `version_downloads` table points
+            // to a valid version in the `versions` table with a foreign key. This doesn't cause
+            // problems most of the times, as the rest of the application checks whether the
+            // version exists before calling the `increment` method.
+            //
+            // On rare occasions crates are deleted from crates.io though, and that would break the
+            // invariant if the crate is deleted after the `increment` method is called but before
+            // the downloads are persisted in the database.
+            //
+            // That happening would cause the whole `INSERT` to fail, also losing the downloads in
+            // the shard we were about to persist. To avoid that from happening this snippet does a
+            // `SELECT` query on the version table before persisting to check whether every version
+            // still exists in the database. Missing versions are removed from the following query.
+            let version_ids = to_insert.iter().map(|(id, _)| *id).collect::<Vec<_>>();
+            let existing_version_ids: HashSet<i32> = versions::table
+                .select(versions::id)
+                // `FOR SHARE` prevents updates or deletions on the selected rows in the `versions`
+                // table until this transaction commits. That prevents a version from being deleted
+                // between this query and the next one.
+                //
+                // `FOR SHARE` is used instead of `FOR UPDATE` to allow rows to be locked by
+                // multiple `SELECT` transactions, to allow for concurrent downloads persisting.
+                .for_share()
+                .filter(versions::id.eq_any(version_ids))
+                .load(conn)?
                 .into_iter()
-                .map(|(key, count)| (version_id.eq(key), downloads.eq(count as i32)))
-                .collect::<Vec<_>>();
+                .collect();
 
-            diesel::insert_into(version_downloads)
-                .values(&to_insert)
-                .on_conflict((version_id, date))
+            let mut values = Vec::new();
+            for (id, count) in &to_insert {
+                if !existing_version_ids.contains(id) {
+                    discarded_downloads += *count;
+                    continue;
+                }
+                counted_versions += 1;
+                counted_downloads += *count;
+                values.push((
+                    version_downloads::version_id.eq(*id),
+                    version_downloads::downloads.eq(*count as i32),
+                ));
+            }
+
+            diesel::insert_into(version_downloads::table)
+                .values(&values)
+                .on_conflict((version_downloads::version_id, version_downloads::date))
                 .do_update()
-                .set(downloads.eq(downloads + excluded(downloads)))
+                .set(
+                    version_downloads::downloads
+                        .eq(version_downloads::downloads + excluded(version_downloads::downloads)),
+                )
                 .execute(conn)?;
         }
 
-        let old_pending = self
-            .pending_count
-            .fetch_sub(counted_downloads as i64, Ordering::SeqCst);
+        let old_pending = self.pending_count.fetch_sub(
+            (counted_downloads + discarded_downloads) as i64,
+            Ordering::SeqCst,
+        );
 
         Ok(PersistStats {
             shard: None,
@@ -316,6 +355,38 @@ mod tests {
         // Finally ensure that the download counts in the database are what we expect.
         state.assert_downloads_count(&conn, v1, 10);
         state.assert_downloads_count(&conn, v2, 5);
+    }
+
+    #[test]
+    fn test_increment_missing_version() {
+        let counter = DownloadsCounter::new();
+        let conn = crate::db::test_conn();
+        let mut state = State::new(&conn);
+
+        let v1 = state.new_version(&conn);
+        let v2 = v1 + 1; // Should not exist in the database!
+
+        // No error should happen when calling the increment method on a missing version.
+        counter.increment(v1);
+        counter.increment(v2);
+
+        // No error should happen when persisting. The missing versions should be ignored.
+        let stats = counter
+            .persist_all_shards_with_conn(&conn)
+            .expect("failed to persist download counts");
+
+        // The download should not be counted for version 2.
+        assert_eq!(
+            stats,
+            PersistStats {
+                shard: None,
+                counted_downloads: 1,
+                counted_versions: 1,
+                pending_downloads: 0,
+            }
+        );
+        state.assert_downloads_count(&conn, v1, 1);
+        state.assert_downloads_count(&conn, v2, 0);
     }
 
     struct State {
