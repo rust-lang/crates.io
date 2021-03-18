@@ -1,8 +1,20 @@
 .row {
-    padding: 20px 0;
+    --shadow: 0 1px 3px hsla(51, 90%, 42%, .35);
+
     display: flex;
+    align-items: center;
     justify-content: space-between;
-    flex-wrap: wrap;
+    position: relative;
+    font-size: 18px;
+    padding: 15px 25px;
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: var(--shadow);
+    transition: all 300ms;
+
+    @media only screen and (max-width: 550px) {
+        display: block
+    }
 }
 
 .stats {
@@ -17,6 +29,7 @@
 }
 
 .download-icon {
+    flex-shrink: 0;
     color: #b13b89;
 }
 
