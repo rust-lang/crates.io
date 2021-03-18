@@ -1,12 +1,9 @@
 .row {
     --hover-bg-color: hsl(217, 37%, 98%);
     --crate-color: var(--grey700);
+    --placeholder-opacity: 0.35;
     --shadow: 0 1px 3px hsla(51, 90%, 42%, .35);
 
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
     position: relative;
     font-size: 18px;
     padding: 15px 25px;
@@ -23,6 +20,13 @@
     &.focused {
         box-shadow: 0 0 0 3px var(--yellow500), var(--shadow);
     }
+}
+
+.top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
 
     @media only screen and (max-width: 550px) {
         display: block
@@ -70,7 +74,7 @@
     font-variant: tabular-nums;
 
     @media only screen and (max-width: 550px) {
-        margin-top: 5px;
+        margin-top: 10px;
     }
 }
 
@@ -79,4 +83,17 @@
     height: 16px;
     flex-shrink: 0;
     margin-right: 7px;
+}
+
+.description {
+    margin-top: 10px;
+    color: var(--crate-color);
+    font-size: 90%;
+}
+
+.description-placeholder {
+    height: 1em;
+    width: 70%;
+    border-radius: 5px;
+    opacity: var(--placeholder-opacity);
 }
