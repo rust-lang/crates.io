@@ -66,7 +66,15 @@ impl DownloadsCounter {
 
     pub fn persist_all_shards(&self, app: &App) -> Result<PersistStats, Error> {
         let conn = app.primary_database.get()?;
+        self.persist_all_shards_with_conn(&conn)
+    }
 
+    pub fn persist_next_shard(&self, app: &App) -> Result<PersistStats, Error> {
+        let conn = app.primary_database.get()?;
+        self.persist_next_shard_with_conn(&conn)
+    }
+
+    fn persist_all_shards_with_conn(&self, conn: &PgConnection) -> Result<PersistStats, Error> {
         let mut stats = PersistStats::default();
         for shard in self.inner.shards() {
             let shard = std::mem::take(&mut *shard.write());
@@ -76,9 +84,7 @@ impl DownloadsCounter {
         Ok(stats)
     }
 
-    pub fn persist_next_shard(&self, app: &App) -> Result<PersistStats, Error> {
-        let conn = app.primary_database.get()?;
-
+    fn persist_next_shard_with_conn(&self, conn: &PgConnection) -> Result<PersistStats, Error> {
         // Replace the next shard in the ring with an empty HashMap (clearing it), and return the
         // previous contents for processing. The fetch_add method wraps around on overflow, so it's
         // fine to keep incrementing it without resetting.
