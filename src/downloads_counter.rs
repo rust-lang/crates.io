@@ -80,7 +80,7 @@ impl DownloadsCounter {
         }
 
         println!(
-            "download_counter all_shards counted_versions={} counted_downloads={} pending_downloads={}",
+            "downloads_counter all_shards counted_versions={} counted_downloads={} pending_downloads={}",
             counted_versions,
             counted_downloads,
             pending_downloads,
@@ -101,7 +101,7 @@ impl DownloadsCounter {
 
         let stats = self.persist_shard(&conn, shard)?;
         println!(
-            "download_counter shard={} counted_versions={} counted_downloads={} pending_downloads={}",
+            "downloads_counter shard={} counted_versions={} counted_downloads={} pending_downloads={}",
             idx,
             stats.counted_versions,
             stats.counted_downloads,
