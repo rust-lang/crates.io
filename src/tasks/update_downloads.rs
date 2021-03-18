@@ -83,17 +83,8 @@ fn collect(conn: &PgConnection, rows: &[VersionDownload]) -> QueryResult<()> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{
-        env,
-        models::{Crate, NewCrate, NewUser, NewVersion, User, Version},
-    };
+    use crate::models::{Crate, NewCrate, NewUser, NewVersion, User, Version};
     use std::collections::HashMap;
-
-    fn conn() -> PgConnection {
-        let conn = PgConnection::establish(&env("TEST_DATABASE_URL")).unwrap();
-        conn.begin_test_transaction().unwrap();
-        conn
-    }
 
     fn user(conn: &PgConnection) -> User {
         NewUser::new(2, "login", None, None, "access_token")
@@ -126,7 +117,7 @@ mod test {
     fn increment() {
         use diesel::dsl::*;
 
-        let conn = conn();
+        let conn = crate::db::test_conn();
         let user = user(&conn);
         let (krate, version) = crate_and_version(&conn, user.id);
         insert_into(version_downloads::table)
@@ -165,7 +156,7 @@ mod test {
     fn set_processed_true() {
         use diesel::dsl::*;
 
-        let conn = conn();
+        let conn = crate::db::test_conn();
         let user = user(&conn);
         let (_, version) = crate_and_version(&conn, user.id);
         insert_into(version_downloads::table)
@@ -189,7 +180,7 @@ mod test {
     #[test]
     fn dont_process_recent_row() {
         use diesel::dsl::*;
-        let conn = conn();
+        let conn = crate::db::test_conn();
         let user = user(&conn);
         let (_, version) = crate_and_version(&conn, user.id);
         insert_into(version_downloads::table)
@@ -215,7 +206,7 @@ mod test {
         use diesel::dsl::*;
         use diesel::update;
 
-        let conn = conn();
+        let conn = crate::db::test_conn();
         let user = user(&conn);
         let (krate, version) = crate_and_version(&conn, user.id);
         update(versions::table)
@@ -269,7 +260,7 @@ mod test {
         use diesel::dsl::*;
         use diesel::update;
 
-        let conn = conn();
+        let conn = crate::db::test_conn();
         let user = user(&conn);
         let (_, version) = crate_and_version(&conn, user.id);
         update(versions::table)
