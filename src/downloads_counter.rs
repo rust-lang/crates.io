@@ -64,32 +64,19 @@ impl DownloadsCounter {
         }
     }
 
-    pub fn persist_all_shards(&self, app: &App) -> Result<(), Error> {
+    pub fn persist_all_shards(&self, app: &App) -> Result<PersistStats, Error> {
         let conn = app.primary_database.get()?;
 
-        let mut counted_downloads = 0;
-        let mut counted_versions = 0;
-        let mut pending_downloads = 0;
+        let mut stats = PersistStats::default();
         for shard in self.inner.shards() {
             let shard = std::mem::take(&mut *shard.write());
-            let stats = self.persist_shard(&conn, shard)?;
-
-            counted_downloads += stats.counted_downloads;
-            counted_versions += stats.counted_versions;
-            pending_downloads = stats.pending_downloads;
+            stats = stats.merge(self.persist_shard(&conn, shard)?);
         }
 
-        println!(
-            "downloads_counter all_shards counted_versions={} counted_downloads={} pending_downloads={}",
-            counted_versions,
-            counted_downloads,
-            pending_downloads,
-        );
-
-        Ok(())
+        Ok(stats)
     }
 
-    pub fn persist_next_shard(&self, app: &App) -> Result<(), Error> {
+    pub fn persist_next_shard(&self, app: &App) -> Result<PersistStats, Error> {
         let conn = app.primary_database.get()?;
 
         // Replace the next shard in the ring with an empty HashMap (clearing it), and return the
@@ -99,16 +86,9 @@ impl DownloadsCounter {
         let idx = self.shard_idx.fetch_add(1, Ordering::SeqCst) % shards.len();
         let shard = std::mem::take(&mut *shards[idx].write());
 
-        let stats = self.persist_shard(&conn, shard)?;
-        println!(
-            "downloads_counter shard={} counted_versions={} counted_downloads={} pending_downloads={}",
-            idx,
-            stats.counted_versions,
-            stats.counted_downloads,
-            stats.pending_downloads,
-        );
-
-        Ok(())
+        let mut stats = self.persist_shard(&conn, shard)?;
+        stats.shard = Some(idx);
+        Ok(stats)
     }
 
     fn persist_shard(
@@ -164,6 +144,7 @@ impl DownloadsCounter {
             .fetch_sub(counted_downloads as i64, Ordering::SeqCst);
 
         Ok(PersistStats {
+            shard: None,
             counted_downloads,
             counted_versions,
             pending_downloads: old_pending - counted_downloads as i64,
@@ -175,8 +156,35 @@ impl DownloadsCounter {
     }
 }
 
-struct PersistStats {
+#[derive(Debug, Default, Copy, Clone)]
+pub struct PersistStats {
+    shard: Option<usize>,
     counted_downloads: usize,
     counted_versions: usize,
     pending_downloads: i64,
+}
+
+impl PersistStats {
+    fn merge(self, other: PersistStats) -> Self {
+        Self {
+            shard: if self.shard == other.shard {
+                other.shard
+            } else {
+                None
+            },
+            counted_downloads: self.counted_downloads + other.counted_downloads,
+            counted_versions: self.counted_versions + other.counted_versions,
+            pending_downloads: other.pending_downloads,
+        }
+    }
+
+    pub fn log(&self) {
+        println!(
+            "downloads_counter shard={} counted_versions={} counted_downloads={} pending_downloads={}",
+            self.shard.map(|s| s.to_string()).unwrap_or_else(|| "all".into()),
+            self.counted_versions,
+            self.counted_downloads,
+            self.pending_downloads,
+        );
+    }
 }
