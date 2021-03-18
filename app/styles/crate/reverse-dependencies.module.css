@@ -7,9 +7,10 @@
 }
 
 .list {
+    list-style: none;
     background-color: white;
     padding: 0 20px;
-    margin-bottom: 20px;
+    margin: 0 0 20px;
 }
 
 .row {

@@ -10,9 +10,9 @@
     />
   </div>
 
-  <div local-class="list" data-test-list>
+  <ul local-class="list" data-test-list>
     {{#each this.model as |dependency index|}}
-      <div local-class="row" data-test-row={{index}}>
+      <li local-class="row" data-test-row={{index}}>
         <div>
           <LinkTo @route="crate" @model={{dependency.version.crateName}} data-test-crate-name>
             {{dependency.version.crateName}}
@@ -23,9 +23,9 @@
           {{svg-jar "download-arrow" local-class="download-icon"}}
           <span local-class="rev-dep-downloads">{{ format-num dependency.downloads }}</span>
         </div>
-      </div>
+      </li>
     {{/each}}
-  </div>
+  </ul>
 
   <Pagination @pagination={{this.pagination}} />
 {{else}}
