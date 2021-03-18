@@ -23,6 +23,7 @@
     width: 25%;
     padding-bottom: 5px;
     color: var(--main-color-light);
+    font-variant: tabular-nums;
 }
 
 .download-icon {
