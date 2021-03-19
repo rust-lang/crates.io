@@ -265,9 +265,6 @@ fn parse_new_headers(req: &mut dyn RequestExt) -> AppResult<EncodableCrateUpload
     if empty(new.license.as_ref()) && empty(new.license_file.as_ref()) {
         missing.push("license");
     }
-    if new.authors.iter().all(String::is_empty) {
-        missing.push("authors");
-    }
     if !missing.is_empty() {
         let message = missing_metadata_error_message(&missing);
         return Err(cargo_err(&message));

@@ -818,7 +818,7 @@ fn ignored_badges() {
 }
 
 #[test]
-fn author_license_and_description_required() {
+fn license_and_description_required() {
     let (_, _, _, token) = TestApp::init().with_token();
 
     let crate_to_publish = PublishBuilder::new("foo_metadata")
@@ -831,7 +831,7 @@ fn author_license_and_description_required() {
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
-        json!({ "errors": [{ "detail": missing_metadata_error_message(&["description", "license", "authors"]) }] })
+        json!({ "errors": [{ "detail": missing_metadata_error_message(&["description", "license"]) }] })
     );
 
     let crate_to_publish = PublishBuilder::new("foo_metadata")
@@ -844,7 +844,7 @@ fn author_license_and_description_required() {
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
-        json!({ "errors": [{ "detail": missing_metadata_error_message(&["description", "authors"]) }] })
+        json!({ "errors": [{ "detail": missing_metadata_error_message(&["description"]) }] })
     );
 
     let crate_to_publish = PublishBuilder::new("foo_metadata")
