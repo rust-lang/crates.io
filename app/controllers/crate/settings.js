@@ -3,7 +3,7 @@ import { inject as service } from '@ember/service';
 
 import { task } from 'ember-concurrency';
 
-export default class CrateOwnersController extends Controller {
+export default class CrateSettingsController extends Controller {
   @service notifications;
 
   crate = null;

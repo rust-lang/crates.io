@@ -1,4 +1,4 @@
-import { click, fillIn, visit } from '@ember/test-helpers';
+import { click, currentURL, fillIn, visit } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
 import percySnapshot from '@percy/ember';
@@ -8,13 +8,14 @@ import { setupApplicationTest } from 'cargo/tests/helpers';
 
 import axeConfig from '../axe-config';
 
-module('Acceptance | /crates/:name/owners', function (hooks) {
+module('Acceptance | /crates/:name/settings', function (hooks) {
   setupApplicationTest(hooks);
 
   test('listing crate owners', async function (assert) {
     this.server.loadFixtures();
 
-    await visit('/crates/nanomsg/owners');
+    await visit('/crates/nanomsg/settings');
+    assert.equal(currentURL(), '/crates/nanomsg/settings');
 
     assert.dom('[data-test-owners] [data-test-owner-team]').exists({ count: 2 });
     assert.dom('[data-test-owners] [data-test-owner-user]').exists({ count: 2 });
@@ -27,10 +28,17 @@ module('Acceptance | /crates/:name/owners', function (hooks) {
     await a11yAudit(axeConfig);
   });
 
-  test('attempting to add owner without username', async function (assert) {
+  test('/crates/:name/owners redirects to /crates/:name/settings', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/crates/nanomsg/owners');
+    assert.equal(currentURL(), '/crates/nanomsg/settings');
+  });
+
+  test('attempting to add owner without username', async function (assert) {
+    this.server.loadFixtures();
+
+    await visit('/crates/nanomsg/settings');
     await fillIn('input[name="username"]', '');
     assert.dom('[data-test-save-button]').isDisabled();
   });
@@ -38,7 +46,7 @@ module('Acceptance | /crates/:name/owners', function (hooks) {
   test('attempting to add non-existent owner', async function (assert) {
     this.server.loadFixtures();
 
-    await visit('/crates/nanomsg/owners');
+    await visit('/crates/nanomsg/settings');
     await fillIn('input[name="username"]', 'spookyghostboo');
     await click('[data-test-save-button]');
 
@@ -52,7 +60,7 @@ module('Acceptance | /crates/:name/owners', function (hooks) {
   test('add a new owner', async function (assert) {
     this.server.loadFixtures();
 
-    await visit('/crates/nanomsg/owners');
+    await visit('/crates/nanomsg/settings');
     await fillIn('input[name="username"]', 'iain8');
     await click('[data-test-save-button]');
 
@@ -64,7 +72,7 @@ module('Acceptance | /crates/:name/owners', function (hooks) {
   test('remove a crate owner when owner is a user', async function (assert) {
     this.server.loadFixtures();
 
-    await visit('/crates/nanomsg/owners');
+    await visit('/crates/nanomsg/settings');
     await click('[data-test-owner-user="thehydroimpulse"] [data-test-remove-owner-button]');
 
     assert.dom('[data-test-notification-message="success"]').hasText('User thehydroimpulse removed as crate owner');
@@ -86,7 +94,7 @@ module('Acceptance | /crates/:name/owners', function (hooks) {
 
     this.authenticateAs(user);
 
-    await visit(`/crates/${crate.name}/owners`);
+    await visit(`/crates/${crate.name}/settings`);
     await click(`[data-test-owner-user="${user2.login}"] [data-test-remove-owner-button]`);
 
     assert
@@ -98,7 +106,7 @@ module('Acceptance | /crates/:name/owners', function (hooks) {
   test('remove a crate owner when owner is a team', async function (assert) {
     this.server.loadFixtures();
 
-    await visit('/crates/nanomsg/owners');
+    await visit('/crates/nanomsg/settings');
     await click('[data-test-owner-team="github:org:thehydroimpulse"] [data-test-remove-owner-button]');
 
     assert
@@ -122,7 +130,7 @@ module('Acceptance | /crates/:name/owners', function (hooks) {
 
     this.authenticateAs(user);
 
-    await visit(`/crates/${crate.name}/owners`);
+    await visit(`/crates/${crate.name}/settings`);
     await click(`[data-test-owner-team="${team.login}"] [data-test-remove-owner-button]`);
 
     assert

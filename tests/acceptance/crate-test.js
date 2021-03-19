@@ -201,7 +201,7 @@ module('Acceptance | crate page', function (hooks) {
     assert.dom('[data-test-settings-tab]').doesNotExist();
   });
 
-  test('navigating to the owners page', async function (assert) {
+  test('navigating to the settings page', async function (assert) {
     this.server.loadFixtures();
 
     let user = this.server.schema.users.findBy({ login: 'thehydroimpulse' });
@@ -210,6 +210,6 @@ module('Acceptance | crate page', function (hooks) {
     await visit('/crates/nanomsg');
     await click('[data-test-settings-tab] a');
 
-    assert.equal(currentURL(), '/crates/nanomsg/owners');
+    assert.equal(currentURL(), '/crates/nanomsg/settings');
   });
 });
