@@ -1,4 +1,4 @@
-import { click, fillIn, visit } from '@ember/test-helpers';
+import { click, currentURL, fillIn, visit } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
 import percySnapshot from '@percy/ember';
@@ -15,6 +15,7 @@ module('Acceptance | /crates/:name/settings', function (hooks) {
     this.server.loadFixtures();
 
     await visit('/crates/nanomsg/settings');
+    assert.equal(currentURL(), '/crates/nanomsg/settings');
 
     assert.dom('[data-test-owners] [data-test-owner-team]').exists({ count: 2 });
     assert.dom('[data-test-owners] [data-test-owner-user]').exists({ count: 2 });
@@ -27,20 +28,11 @@ module('Acceptance | /crates/:name/settings', function (hooks) {
     await a11yAudit(axeConfig);
   });
 
-  test('redirecting and listing crate owners', async function (assert) {
+  test('/crates/:name/owners redirects to /crates/:name/settings', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/crates/nanomsg/owners');
-
-    assert.dom('[data-test-owners] [data-test-owner-team]').exists({ count: 2 });
-    assert.dom('[data-test-owners] [data-test-owner-user]').exists({ count: 2 });
-    assert.dom('a[href="/teams/github:org:thehydroimpulse"]').exists();
-    assert.dom('a[href="/teams/github:org:blabaere"]').exists();
-    assert.dom('a[href="/users/thehydroimpulse"]').exists();
-    assert.dom('a[href="/users/blabaere"]').exists();
-
-    await percySnapshot(assert);
-    await a11yAudit(axeConfig);
+    assert.equal(currentURL(), '/crates/nanomsg/settings');
   });
 
   test('attempting to add owner without username', async function (assert) {
