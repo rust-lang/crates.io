@@ -20,6 +20,7 @@ Router.map(function () {
     this.route('reverse-dependencies', { path: 'reverse_dependencies' });
 
     this.route('owners');
+    this.route('settings');
 
     // Well-known routes
     this.route('docs');
