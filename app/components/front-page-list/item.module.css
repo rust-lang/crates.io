@@ -10,7 +10,7 @@
     background-color: white;
     color: #525252;
     text-decoration: none;
-    border-radius: 7px;
+    border-radius: 5px;
     box-shadow: var(--shadow);
     transition: background-color 300ms;
 
