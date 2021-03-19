@@ -11,12 +11,13 @@
   {{#if this.isEditing }}
     <div local-class="row">
       <div local-class="label">
-        <dt>Email</dt>
+        <label for="email-input">Email</label>
       </div>
       <form local-class="email-form" {{on "submit" (prevent-default (perform this.saveEmailTask))}}>
         <Input
           @type="email"
           @value={{this.value}}
+          id="email-input"
           placeholder="Email"
           local-class="input"
           data-test-input
