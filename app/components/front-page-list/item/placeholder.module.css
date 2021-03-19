@@ -11,7 +11,7 @@
     padding: 0 15px;
     background-color: white;
     color: #525252;
-    border-radius: 7px;
+    border-radius: 5px;
     box-shadow: var(--shadow);
     cursor: wait;
 }
