@@ -2,29 +2,16 @@
 #![allow(unknown_lints)]
 
 use cargo_registry::{boot, App, Env};
-use std::{
-    borrow::Cow,
-    fs::File,
-    process::Command,
-    sync::{mpsc::channel, Arc, Mutex},
-    time::Duration,
-};
+use std::{borrow::Cow, fs::File, process::Command, sync::Arc, time::Duration};
 
-use civet::Server as CivetServer;
 use conduit_hyper::Service;
 use futures_util::future::FutureExt;
 use reqwest::blocking::Client;
 use sentry::{ClientOptions, IntoDsn};
+use tokio::io::AsyncWriteExt;
+use tokio::signal::unix::{signal, SignalKind};
 
 const CORE_THREADS: usize = 4;
-
-#[allow(clippy::large_enum_variant)]
-enum Server {
-    Civet(CivetServer),
-    Hyper(tokio::runtime::Runtime, tokio::task::JoinHandle<()>),
-}
-
-use Server::*;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let _sentry = dotenv::var("SENTRY_DSN_API")
@@ -90,52 +77,41 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         });
 
-    let server = if dotenv::var("WEB_USE_CIVET").is_err() {
-        use tokio::io::AsyncWriteExt;
-        use tokio::signal::unix::{signal, SignalKind};
+    println!("Booting with a hyper based server");
 
-        println!("Booting with a hyper based server");
+    let rt = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .worker_threads(CORE_THREADS)
+        .max_blocking_threads(threads as usize)
+        .build()
+        .unwrap();
 
-        let rt = tokio::runtime::Builder::new_multi_thread()
-            .enable_all()
-            .worker_threads(CORE_THREADS)
-            .max_blocking_threads(threads as usize)
-            .build()
-            .unwrap();
-
-        let handler = Arc::new(conduit_hyper::BlockingHandler::new(handler));
-        let make_service =
-            hyper::service::make_service_fn(move |socket: &hyper::server::conn::AddrStream| {
-                let addr = socket.remote_addr();
-                let handler = handler.clone();
-                async move { Service::from_blocking(handler, addr) }
-            });
-
-        let addr = (ip, port).into();
-        #[allow(clippy::async_yields_async)]
-        let server = rt.block_on(async { hyper::Server::bind(&addr).serve(make_service) });
-
-        let mut sig_int = rt.block_on(async { signal(SignalKind::interrupt()) })?;
-        let mut sig_term = rt.block_on(async { signal(SignalKind::terminate()) })?;
-
-        let server = server.with_graceful_shutdown(async move {
-            // Wait for either signal
-            futures_util::select! {
-                _ = sig_int.recv().fuse() => {},
-                _ = sig_term.recv().fuse() => {},
-            };
-            let mut stdout = tokio::io::stdout();
-            stdout.write_all(b"Starting graceful shutdown\n").await.ok();
+    let handler = Arc::new(conduit_hyper::BlockingHandler::new(handler));
+    let make_service =
+        hyper::service::make_service_fn(move |socket: &hyper::server::conn::AddrStream| {
+            let addr = socket.remote_addr();
+            let handler = handler.clone();
+            async move { Service::from_blocking(handler, addr) }
         });
 
-        let server = rt.spawn(async { server.await.unwrap() });
-        Hyper(rt, server)
-    } else {
-        println!("Booting with a civet based server");
-        let mut cfg = civet::Config::new();
-        cfg.port(port).threads(threads).keep_alive(true);
-        Civet(CivetServer::start(cfg, handler).unwrap())
-    };
+    let addr = (ip, port).into();
+    #[allow(clippy::async_yields_async)]
+    let server = rt.block_on(async { hyper::Server::bind(&addr).serve(make_service) });
+
+    let mut sig_int = rt.block_on(async { signal(SignalKind::interrupt()) })?;
+    let mut sig_term = rt.block_on(async { signal(SignalKind::terminate()) })?;
+
+    let server = server.with_graceful_shutdown(async move {
+        // Wait for either signal
+        futures_util::select! {
+            _ = sig_int.recv().fuse() => {},
+            _ = sig_term.recv().fuse() => {},
+        };
+        let mut stdout = tokio::io::stdout();
+        stdout.write_all(b"Starting graceful shutdown\n").await.ok();
+    });
+
+    let server = rt.spawn(async { server.await.unwrap() });
 
     println!("listening on port {}", port);
 
@@ -159,17 +135,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Block the main thread until the server has shutdown
-    match server {
-        Hyper(rt, server) => {
-            rt.block_on(async { server.await.unwrap() });
-        }
-        Civet(server) => {
-            let (tx, rx) = channel::<()>();
-            ctrlc_handler(move || tx.send(()).unwrap_or(()));
-            rx.recv().unwrap();
-            drop(server);
-        }
-    }
+    rt.block_on(async { server.await.unwrap() });
 
     println!("Persisting remaining downloads counters");
     if let Err(err) = app.downloads_counter.persist_all_shards(&app) {
@@ -178,23 +144,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Server has gracefully shutdown!");
     Ok(())
-}
-
-fn ctrlc_handler<F>(f: F)
-where
-    F: FnOnce() + Send + 'static,
-{
-    let call_once = Mutex::new(Some(f));
-
-    ctrlc::set_handler(move || {
-        if let Some(f) = call_once.lock().unwrap().take() {
-            println!("Starting graceful shutdown");
-            f();
-        } else {
-            println!("Already sent signal to start graceful shutdown");
-        }
-    })
-    .unwrap();
 }
 
 fn downloads_counter_thread(app: Arc<App>) {

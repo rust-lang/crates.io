@@ -253,7 +253,6 @@ dependencies = [
  "base64 0.13.0",
  "cargo-registry-s3",
  "chrono",
- "civet",
  "claim",
  "clap",
  "comrak",
@@ -365,23 +364,6 @@ checksum = "12f8e7987cbd042a63249497f41aed09f8e65add917ea6566effbc56578d6801"
 dependencies = [
  "generic-array 0.14.4",
 ]
-
-[[package]]
-name = "civet"
-version = "0.12.0-alpha.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7b38e18226401dff3e26aa36d5128707af657649a56f134fb29b465daa3bd6d1"
-dependencies = [
- "civet-sys",
- "conduit",
- "libc",
-]
-
-[[package]]
-name = "civet-sys"
-version = "0.1.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "958d15372bf28b7983cb35e1d4bf36dd843b0d42e507c1c73aad7150372c5936"
 
 [[package]]
 name = "claim"
