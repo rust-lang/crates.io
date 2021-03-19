@@ -1,6 +1,7 @@
 /target
 .cargo
 .vscode/
+.idea/
 
 # compiled output
 /dist
