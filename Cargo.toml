@@ -34,7 +34,6 @@ anyhow = "1.0"
 base64 = "0.13"
 cargo-registry-s3 = { path = "src/s3", version = "0.2.0" }
 chrono = { version = "0.4.0", features = ["serde"] }
-civet = "0.12.0-alpha.5"
 clap = "=3.0.0-beta.2"
 comrak = { version = "0.9", default-features = false }
 
@@ -48,7 +47,6 @@ conduit-router = "0.9.0-alpha.6"
 conduit-static = "0.9.0-alpha.3"
 
 cookie = { version = "0.15", features = ["secure"] }
-ctrlc = { version = "3.0", features = ["termination"] }
 dashmap = { version = "4.0.2", features = ["raw-api"] }
 derive_deref = "1.1.1"
 dialoguer = "0.7.1"
