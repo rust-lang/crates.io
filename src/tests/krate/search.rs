@@ -404,6 +404,26 @@ fn exact_match_on_queries_with_sort() {
 }
 
 #[test]
+fn multiple_ids() {
+    let (app, anon, user) = TestApp::init().with_user();
+    let user = user.as_model();
+
+    app.db(|conn| {
+        CrateBuilder::new("foo", user.id).expect_build(conn);
+        CrateBuilder::new("bar", user.id).expect_build(conn);
+        CrateBuilder::new("baz", user.id).expect_build(conn);
+        CrateBuilder::new("other", user.id).expect_build(conn);
+    });
+
+    let json =
+        anon.search("ids%5B%5D=foo&ids%5B%5D=bar&ids%5B%5D=baz&ids%5B%5D=baz&ids%5B%5D=unknown");
+    assert_eq!(json.meta.total, 3);
+    assert_eq!(json.crates[0].name, "bar");
+    assert_eq!(json.crates[1].name, "baz");
+    assert_eq!(json.crates[2].name, "foo");
+}
+
+#[test]
 fn loose_search_order() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
