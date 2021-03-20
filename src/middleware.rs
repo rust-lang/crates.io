@@ -46,7 +46,8 @@ pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBui
     }
 
     if env == Env::Development {
-        // Print a log for each request.
+        // Optionally print debug information for each request
+        // To enable, set the environment variable: `RUST_LOG=cargo_registry::middleware=debug`
         m.add(Debug);
     }
 
