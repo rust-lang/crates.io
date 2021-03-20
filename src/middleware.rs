@@ -50,10 +50,6 @@ pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBui
         m.add(Debug);
     }
 
-    if env::var_os("DEBUG_REQUESTS").is_some() {
-        m.add(DebugRequest);
-    }
-
     if env::var_os("LOG_CONNECTION_POOL_STATUS").is_some() {
         m.add(LogConnectionPoolStatus::new(&app));
     }

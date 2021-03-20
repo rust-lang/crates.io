@@ -22,7 +22,7 @@ impl Middleware for Debug {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub struct DebugRequest;
+struct DebugRequest;
 
 impl Middleware for DebugRequest {
     fn before(&self, req: &mut dyn RequestExt) -> BeforeResult {
