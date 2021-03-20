@@ -1335,9 +1335,9 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
 name = "lettre"
-version = "0.10.0-beta.1"
+version = "0.10.0-beta.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0f060515ec950723c5482163457b3faad8c088810c4a01a42523bc98e15bcb3e"
+checksum = "897171ed0e63da84c988b157106ad8b6532d7499aeeec906ce46b05415cc79d3"
 dependencies = [
  "base64 0.13.0",
  "hostname",
