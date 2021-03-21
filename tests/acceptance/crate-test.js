@@ -110,6 +110,21 @@ module('Acceptance | crate page', function (hooks) {
     assert.dom('[data-test-notification-message]').hasText("Version '0.7.0' of crate 'nanomsg' does not exist");
   });
 
+  test('other versions loading error shows an error message', async function (assert) {
+    this.server.create('crate', { name: 'nanomsg' });
+    this.server.create('version', { crateId: 'nanomsg', num: '0.6.0' });
+    this.server.create('version', { crateId: 'nanomsg', num: '0.6.1' });
+
+    this.server.get('/api/v1/crates/:crate_name/versions', {}, 500);
+
+    await visit('/');
+    await click('[data-test-just-updated] [data-test-crate-link="0"]');
+    assert.equal(currentURL(), '/');
+    assert
+      .dom('[data-test-notification-message]')
+      .hasText("Loading data for the 'nanomsg' crate failed. Please try again later!");
+  });
+
   test('navigating to the all versions page', async function (assert) {
     this.server.loadFixtures();
 
