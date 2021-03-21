@@ -208,6 +208,27 @@ module('Mirage | Crates', function (hooks) {
       assert.equal(responsePayload.crates[0].id, 'bar');
       assert.equal(responsePayload.meta.total, 1);
     });
+
+    test('supports multiple `ids[]` parameters', async function (assert) {
+      this.server.create('crate', { name: 'foo' });
+      this.server.create('version', { crateId: 'foo' });
+      this.server.create('crate', { name: 'bar' });
+      this.server.create('version', { crateId: 'bar' });
+      this.server.create('crate', { name: 'baz' });
+      this.server.create('version', { crateId: 'baz' });
+      this.server.create('crate', { name: 'other' });
+      this.server.create('version', { crateId: 'other' });
+
+      let response = await fetch(`/api/v1/crates?ids[]=foo&ids[]=bar&ids[]=baz&ids[]=baz&ids[]=unknown`);
+      assert.equal(response.status, 200);
+
+      let responsePayload = await response.json();
+      assert.equal(responsePayload.crates.length, 3);
+      assert.equal(responsePayload.crates[0].id, 'foo');
+      assert.equal(responsePayload.crates[1].id, 'bar');
+      assert.equal(responsePayload.crates[2].id, 'baz');
+      assert.equal(responsePayload.meta.total, 3);
+    });
   });
 
   module('GET /api/v1/crates/:id', function () {

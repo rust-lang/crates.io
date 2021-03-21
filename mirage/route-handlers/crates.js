@@ -37,6 +37,11 @@ export function list(schema, request) {
     crates = crates.filter(crate => schema.crateOwnerships.findBy({ crateId: crate.id, teamId }));
   }
 
+  let { ids } = request.queryParams;
+  if (ids) {
+    crates = crates.filter(crate => ids.includes(crate.id));
+  }
+
   if (request.queryParams.sort === 'alpha') {
     crates = crates.sort((a, b) => compareStrings(a.id.toLowerCase(), b.id.toLowerCase()));
   }
