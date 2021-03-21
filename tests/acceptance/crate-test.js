@@ -87,6 +87,16 @@ module('Acceptance | crate page', function (hooks) {
     assert.dom('[data-test-notification-message]').hasText("Crate 'nanomsg' does not exist");
   });
 
+  test('other crate loading error shows an error message', async function (assert) {
+    this.server.get('/api/v1/crates/:crate_name', {}, 500);
+
+    await visit('/crates/nanomsg');
+    assert.equal(currentURL(), '/');
+    assert
+      .dom('[data-test-notification-message]')
+      .hasText("Loading data for the 'nanomsg' crate failed. Please try again later!");
+  });
+
   test('unknown versions fall back to latest version and show an error message', async function (assert) {
     this.server.create('crate', { name: 'nanomsg' });
     this.server.create('version', { crateId: 'nanomsg', num: '0.6.0' });

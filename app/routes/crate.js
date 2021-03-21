@@ -10,10 +10,11 @@ export default class CrateRoute extends Route {
     } catch (error) {
       if (error.errors?.some(e => e.detail === 'Not Found')) {
         this.notifications.error(`Crate '${params.crate_id}' does not exist`);
-        this.replaceWith('index');
       } else {
-        throw error;
+        this.notifications.error(`Loading data for the '${params.crate_id}' crate failed. Please try again later!`);
       }
+
+      this.replaceWith('index');
     }
   }
 
