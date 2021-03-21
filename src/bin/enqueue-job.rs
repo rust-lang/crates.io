@@ -35,6 +35,7 @@ fn main() -> Result<()> {
                 .unwrap_or_else(|| String::from("db-dump.tar.gz"));
             Ok(tasks::dump_db(database_url, target_name).enqueue(&conn)?)
         }
+        "daily_db_maintenance" => Ok(tasks::daily_db_maintenance().enqueue(&conn)?),
         other => Err(anyhow!("Unrecognized job type `{}`", other)),
     }
 }
