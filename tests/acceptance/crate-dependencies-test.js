@@ -51,4 +51,32 @@ module('Acceptance | crate dependencies page', function (hooks) {
       .dom('[data-test-notification-message="error"]')
       .hasText("Failed to load the list of dependencies for the 'nanomsg' crate. Please try again later!");
   });
+
+  test('hides description if loading of dependency details fails', async function (assert) {
+    this.server.create('crate', { name: 'nanomsg' });
+    let version = this.server.create('version', { crateId: 'nanomsg', num: '0.6.1' });
+
+    this.server.create('crate', { name: 'foo', description: 'This is the foo crate' });
+    this.server.create('version', { crateId: 'foo', num: '1.0.0' });
+    this.server.create('dependency', { crateId: 'foo', version, req: '^1.0.0', kind: 'normal' });
+
+    this.server.create('crate', { name: 'bar', description: 'This is the bar crate' });
+    this.server.create('version', { crateId: 'bar', num: '2.3.4' });
+    this.server.create('dependency', { crateId: 'bar', version, req: '^2.0.0', kind: 'normal' });
+
+    this.server.get('/api/v1/crates', {}, 500);
+
+    await visit('/crates/nanomsg/dependencies');
+    assert.equal(currentURL(), '/crates/nanomsg/0.6.1/dependencies');
+
+    assert.dom('[data-test-dependencies] li').exists({ count: 2 });
+
+    assert.dom('[data-test-dependency="foo"]').exists();
+    assert.dom('[data-test-dependency="foo"] [data-test-crate-name]').hasText('foo');
+    assert.dom('[data-test-dependency="bar"] [data-test-description]').doesNotExist();
+
+    assert.dom('[data-test-dependency="bar"]').exists();
+    assert.dom('[data-test-dependency="bar"] [data-test-crate-name]').hasText('bar');
+    assert.dom('[data-test-dependency="bar"] [data-test-description]').doesNotExist();
+  });
 });
