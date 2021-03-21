@@ -2,7 +2,6 @@ import { action } from '@ember/object';
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
-import * as Sentry from '@sentry/browser';
 import { rawTimeout, task } from 'ember-concurrency';
 
 export default class ApplicationRoute extends Route {
@@ -10,10 +9,11 @@ export default class ApplicationRoute extends Route {
   @service router;
   @service session;
   @service playground;
+  @service sentry;
 
   beforeModel() {
     this.router.on('routeDidChange', () => {
-      Sentry.configureScope(scope => {
+      this.sentry.configureScope(scope => {
         scope.setTag('routeName', this.router.currentRouteName);
       });
     });

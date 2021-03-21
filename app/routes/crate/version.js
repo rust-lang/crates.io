@@ -1,13 +1,13 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
-import * as Sentry from '@sentry/browser';
 import { didCancel } from 'ember-concurrency';
 
 import { AjaxError } from '../../utils/ajax';
 
 export default class VersionRoute extends Route {
   @service notifications;
+  @service sentry;
 
   async model(params) {
     let crate = this.modelFor('crate');
@@ -41,7 +41,7 @@ export default class VersionRoute extends Route {
       version.loadDocsBuildsTask.perform().catch(error => {
         // report unexpected errors to Sentry and ignore `ajax()` errors
         if (!didCancel(error) && !(error instanceof AjaxError)) {
-          Sentry.captureException(error);
+          this.sentry.captureException(error);
         }
       });
     }
