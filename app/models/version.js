@@ -25,7 +25,6 @@ export default class Version extends Model {
   @belongsTo('crate', { async: false }) crate;
 
   @belongsTo('user', { async: false }) published_by;
-  @hasMany('users', { async: true }) authors;
   @hasMany('dependency', { async: true }) dependencies;
   @hasMany('version-download', { async: true }) version_downloads;
 
@@ -96,15 +95,6 @@ export default class Version extends Model {
       .sort()
       .map(name => ({ name, isDefault: defaultFeatures.includes(name), dependencies: features[name] }));
   }
-
-  @alias('loadAuthorsTask.last.value') authorNames;
-
-  @(task(function* () {
-    // trigger the async relationship to load the content
-    let authors = yield this.authors;
-    return authors.meta.names;
-  }).keepLatest())
-  loadAuthorsTask;
 
   @alias('loadDepsTask.last.value.normal') normalDependencies;
   @alias('loadDepsTask.last.value.build') buildDependencies;

@@ -32,10 +32,6 @@ export default class VersionRoute extends Route {
   setupController(controller, model) {
     super.setupController(...arguments);
 
-    if (!model.version.authorNames) {
-      model.version.loadAuthorsTask.perform();
-    }
-
     controller.loadReadmeTask.perform().catch(() => {
       // ignored
     });
