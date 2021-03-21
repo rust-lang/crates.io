@@ -3,7 +3,6 @@ import { gt, readOnly } from '@ember/object/computed';
 import { inject as service } from '@ember/service';
 import Component from '@glimmer/component';
 
-import * as Sentry from '@sentry/browser';
 import { didCancel } from 'ember-concurrency';
 
 import { simplifyUrl } from './crate-sidebar/link';
@@ -12,6 +11,7 @@ const NUM_VERSIONS = 5;
 
 export default class DownloadGraph extends Component {
   @service playground;
+  @service sentry;
 
   @readOnly('args.crate.versions') sortedVersions;
 
@@ -53,7 +53,7 @@ export default class DownloadGraph extends Component {
       this.playground.loadCratesTask.perform().catch(error => {
         if (!(didCancel(error) || error.isServerError || error.isNetworkError)) {
           // report unexpected errors to Sentry
-          Sentry.captureException(error);
+          this.sentry.captureException(error);
         }
       });
     }

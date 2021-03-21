@@ -1,7 +1,6 @@
 import { alias } from '@ember/object/computed';
 import Service, { inject as service } from '@ember/service';
 
-import * as Sentry from '@sentry/browser';
 import { race, rawTimeout, task, waitForEvent } from 'ember-concurrency';
 import window from 'ember-window-mock';
 
@@ -12,6 +11,7 @@ export default class SessionService extends Service {
   @service store;
   @service notifications;
   @service router;
+  @service sentry;
 
   savedTransition = null;
 
@@ -129,7 +129,7 @@ export default class SessionService extends Service {
     this.isLoggedIn = false;
 
     yield this.loadUserTask.cancelAll({ resetState: true });
-    Sentry.setUser(null);
+    this.sentry.setUser(null);
 
     this.router.transitionTo('index');
   })
@@ -149,7 +149,7 @@ export default class SessionService extends Service {
     let ownedCrates = response.owned_crates.map(c => this.store.push(this.store.normalize('owned-crate', c)));
 
     let { id } = currentUser;
-    Sentry.setUser({ id });
+    this.sentry.setUser({ id });
 
     return { currentUser, ownedCrates };
   }).drop())

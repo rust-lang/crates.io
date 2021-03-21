@@ -3,13 +3,13 @@ import { htmlSafe } from '@ember/template';
 import { tracked } from '@glimmer/tracking';
 import Ember from 'ember';
 
-import * as Sentry from '@sentry/browser';
 import { didCancel, rawTimeout, task } from 'ember-concurrency';
 
 const SPEED = 200;
 
 export default class ProgressService extends Service {
   @service router;
+  @service sentry;
 
   @tracked _style = '';
 
@@ -28,7 +28,7 @@ export default class ProgressService extends Service {
     this.updateTask.perform().catch(error => {
       if (!didCancel(error)) {
         // this task shouldn't be able to fail, but if it does we'll let Sentry know
-        Sentry.captureException(error);
+        this.sentry.captureException(error);
       }
     });
 
