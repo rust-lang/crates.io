@@ -11,7 +11,15 @@ export default class VersionRoute extends Route {
 
   async model(params) {
     let crate = this.modelFor('crate');
-    let versions = await crate.get('versions');
+
+    let versions;
+    try {
+      versions = await crate.get('versions');
+    } catch {
+      this.notifications.error(`Loading data for the '${crate.name}' crate failed. Please try again later!`);
+      this.replaceWith('index');
+      return;
+    }
 
     let version;
     let requestedVersion = params.version_num;

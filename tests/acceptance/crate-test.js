@@ -1,4 +1,4 @@
-import { click, currentRouteName, currentURL, visit, waitFor } from '@ember/test-helpers';
+import { click, currentRouteName, currentURL, waitFor } from '@ember/test-helpers';
 import { module, skip, test } from 'qunit';
 
 import percySnapshot from '@percy/ember';
@@ -8,6 +8,7 @@ import { getPageTitle } from 'ember-page-title/test-support';
 import { setupApplicationTest } from 'cargo/tests/helpers';
 
 import axeConfig from '../axe-config';
+import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Acceptance | crate page', function (hooks) {
   setupApplicationTest(hooks);
@@ -80,6 +81,22 @@ module('Acceptance | crate page', function (hooks) {
     await a11yAudit(axeConfig);
   });
 
+  test('unknown crate shows an error message', async function (assert) {
+    await visit('/crates/nanomsg');
+    assert.equal(currentURL(), '/');
+    assert.dom('[data-test-notification-message]').hasText("Crate 'nanomsg' does not exist");
+  });
+
+  test('other crate loading error shows an error message', async function (assert) {
+    this.server.get('/api/v1/crates/:crate_name', {}, 500);
+
+    await visit('/crates/nanomsg');
+    assert.equal(currentURL(), '/');
+    assert
+      .dom('[data-test-notification-message]')
+      .hasText("Loading data for the 'nanomsg' crate failed. Please try again later!");
+  });
+
   test('unknown versions fall back to latest version and show an error message', async function (assert) {
     this.server.create('crate', { name: 'nanomsg' });
     this.server.create('version', { crateId: 'nanomsg', num: '0.6.0' });
@@ -91,6 +108,21 @@ module('Acceptance | crate page', function (hooks) {
     assert.dom('[data-test-heading] [data-test-crate-name]').hasText('nanomsg');
     assert.dom('[data-test-heading] [data-test-crate-version]').hasText('0.6.1');
     assert.dom('[data-test-notification-message]').hasText("Version '0.7.0' of crate 'nanomsg' does not exist");
+  });
+
+  test('other versions loading error shows an error message', async function (assert) {
+    this.server.create('crate', { name: 'nanomsg' });
+    this.server.create('version', { crateId: 'nanomsg', num: '0.6.0' });
+    this.server.create('version', { crateId: 'nanomsg', num: '0.6.1' });
+
+    this.server.get('/api/v1/crates/:crate_name/versions', {}, 500);
+
+    await visit('/');
+    await click('[data-test-just-updated] [data-test-crate-link="0"]');
+    assert.equal(currentURL(), '/');
+    assert
+      .dom('[data-test-notification-message]')
+      .hasText("Loading data for the 'nanomsg' crate failed. Please try again later!");
   });
 
   test('navigating to the all versions page', async function (assert) {
