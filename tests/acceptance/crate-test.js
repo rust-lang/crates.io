@@ -1,4 +1,4 @@
-import { click, currentRouteName, currentURL, visit, waitFor } from '@ember/test-helpers';
+import { click, currentRouteName, currentURL, waitFor } from '@ember/test-helpers';
 import { module, skip, test } from 'qunit';
 
 import percySnapshot from '@percy/ember';
@@ -8,6 +8,7 @@ import { getPageTitle } from 'ember-page-title/test-support';
 import { setupApplicationTest } from 'cargo/tests/helpers';
 
 import axeConfig from '../axe-config';
+import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Acceptance | crate page', function (hooks) {
   setupApplicationTest(hooks);
@@ -78,6 +79,12 @@ module('Acceptance | crate page', function (hooks) {
 
     await percySnapshot(assert);
     await a11yAudit(axeConfig);
+  });
+
+  test('unknown crate shows an error message', async function (assert) {
+    await visit('/crates/nanomsg');
+    assert.equal(currentURL(), '/');
+    assert.dom('[data-test-notification-message]').hasText("Crate 'nanomsg' does not exist");
   });
 
   test('unknown versions fall back to latest version and show an error message', async function (assert) {
