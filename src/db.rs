@@ -130,3 +130,10 @@ impl CustomizeConnection<PgConnection, r2d2::Error> for ConnectionConfig {
         Ok(())
     }
 }
+
+#[cfg(test)]
+pub(crate) fn test_conn() -> PgConnection {
+    let conn = PgConnection::establish(&crate::env("TEST_DATABASE_URL")).unwrap();
+    conn.begin_test_transaction().unwrap();
+    conn
+}

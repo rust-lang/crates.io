@@ -46,7 +46,8 @@ fn download() {
         app.as_inner()
             .downloads_counter
             .persist_all_shards(app.as_inner())
-            .expect("failed to persist downloads count");
+            .expect("failed to persist downloads count")
+            .log();
     };
 
     download("foo_download/1.0.0");

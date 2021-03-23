@@ -138,8 +138,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     rt.block_on(async { server.await.unwrap() });
 
     println!("Persisting remaining downloads counters");
-    if let Err(err) = app.downloads_counter.persist_all_shards(&app) {
-        println!("downloads_counter error: {}", err);
+    match app.downloads_counter.persist_all_shards(&app) {
+        Ok(stats) => stats.log(),
+        Err(err) => println!("downloads_counter error: {}", err),
     }
 
     println!("Server has gracefully shutdown!");
@@ -154,8 +155,9 @@ fn downloads_counter_thread(app: Arc<App>) {
     std::thread::spawn(move || loop {
         std::thread::sleep(interval);
 
-        if let Err(err) = app.downloads_counter.persist_next_shard(&app) {
-            println!("downloads_counter error: {}", err);
+        match app.downloads_counter.persist_next_shard(&app) {
+            Ok(stats) => stats.log(),
+            Err(err) => println!("downloads_counter error: {}", err),
         }
     });
 }
