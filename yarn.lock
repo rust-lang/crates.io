@@ -6480,10 +6480,10 @@ ember-cli-normalize-entity-name@^1.0.0:
   dependencies:
     silent-error "^1.0.0"
 
-ember-cli-notifications@6.3.3:
-  version "6.3.3"
-  resolved "https://registry.yarnpkg.com/ember-cli-notifications/-/ember-cli-notifications-6.3.3.tgz#d3423efd80a800301af642fc4c0b82e8836cddb0"
-  integrity sha512-AufURir2vJkfewDA4l7c8GGkHieeyPTmV91X79QLSELyJNl2Uzb3KCLaBv43FDkHT/Dt917XuUHTN4KTHn7viw==
+ember-cli-notifications@6.3.4:
+  version "6.3.4"
+  resolved "https://registry.yarnpkg.com/ember-cli-notifications/-/ember-cli-notifications-6.3.4.tgz#2b14c5db156a11533628ec9adac28eae4238d2a7"
+  integrity sha512-bfNIGrn7A5MoTBLaOyhcDPbjbYv+QpAqBxlLf4SUEUS+lkkFSdD7mCr8S62diaMREEi6Gqd2YMnS/C6L5MA1tw==
   dependencies:
     broccoli-funnel "^3.0.2"
     broccoli-merge-trees "^4.1.0"
@@ -6491,6 +6491,7 @@ ember-cli-notifications@6.3.3:
     ember-cli-babel "^7.13.0"
     ember-cli-htmlbars "^4.2.0"
     ember-get-config "^0.2.4"
+    ember-on-modifier "^1.0.0"
     lodash.get "^4.4.2"
     postcss-import "^12.0.1"
     postcss-preset-env "^6.7.0"
@@ -6967,6 +6968,16 @@ ember-modifier@2.1.1, ember-modifier@^2.1.0, ember-modifier@^2.1.1:
     ember-cli-string-utils "^1.1.0"
     ember-cli-typescript "^3.1.3"
     ember-destroyable-polyfill "^2.0.2"
+    ember-modifier-manager-polyfill "^1.2.0"
+
+ember-on-modifier@^1.0.0:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/ember-on-modifier/-/ember-on-modifier-1.0.1.tgz#b99e9c9d7919a9f536bfc9d4a68704462eceb0fe"
+  integrity sha512-4JKUb/DBmdZkLfljN2Dj6gKmqq2vZ0/3TOwRs1+jUIXTUg1MaBMUVD1XYwzUm+a7abW9/JkQNUEVZZu13SwFMg==
+  dependencies:
+    broccoli-funnel "^2.0.2"
+    ember-cli-babel "^7.19.0"
+    ember-cli-version-checker "^4.1.0"
     ember-modifier-manager-polyfill "^1.2.0"
 
 ember-page-title@6.2.1:
