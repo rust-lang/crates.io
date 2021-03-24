@@ -34,6 +34,20 @@ module('Route | crate.range', function (hooks) {
     assert.dom('[data-test-notification-message]').doesNotExist();
   });
 
+  test('happy path with cargo style and', async function (assert) {
+    let crate = this.server.create('crate', { name: 'foo' });
+    this.server.create('version', { crate, num: '1.4.2' });
+    this.server.create('version', { crate, num: '1.3.4' });
+    this.server.create('version', { crate, num: '1.3.3' });
+    this.server.create('version', { crate, num: '1.2.6' });
+
+    await visit('/crates/foo/range/>=1.3.0, <1.4.0');
+    assert.equal(currentURL(), `/crates/foo/1.3.4`);
+    assert.dom('[data-test-crate-name]').hasText('foo');
+    assert.dom('[data-test-crate-version]').hasText('1.3.4');
+    assert.dom('[data-test-notification-message]').doesNotExist();
+  });
+
   test('ignores yanked versions if possible', async function (assert) {
     let crate = this.server.create('crate', { name: 'foo' });
     this.server.create('version', { crate, num: '1.0.0' });
