@@ -1319,7 +1319,7 @@
   dependencies:
     loader-utils "^1.1.0"
 
-"@embroider/macros@0.33.0", "@embroider/macros@^0.33.0":
+"@embroider/macros@0.33.0":
   version "0.33.0"
   resolved "https://registry.yarnpkg.com/@embroider/macros/-/macros-0.33.0.tgz#d5826ea7565bb69b57ba81ed528315fe77acbf9d"
   integrity sha512-nl/1zRn+Wd3MO8Bb+YPqHmFl/2vwQLTsEB6Zt+K9bWXsM/kA+dPCeeCReLN6PbkMP16xxqtNSIrQ8Y49hnWjpg==
@@ -1349,7 +1349,7 @@
     resolve "^1.8.1"
     semver "^7.3.2"
 
-"@embroider/macros@0.37.0":
+"@embroider/macros@0.37.0", "@embroider/macros@^0.37.0":
   version "0.37.0"
   resolved "https://registry.yarnpkg.com/@embroider/macros/-/macros-0.37.0.tgz#221013fc5bc0eaa78f1de98802fc03e588bfe1b1"
   integrity sha512-VItxn4NzGR5prryXGbPGTuLMd+QPPKvAYZv2357iS+wmz6mTzC5nqXljwDQIOJbAji9giDO+FW2HzXYOcY3teQ==
@@ -6445,19 +6445,19 @@ ember-cli-meta-tags@6.1.2:
     ember-cli-htmlbars "^4.2.2"
     ember-compatibility-helpers "^1.1.2"
 
-ember-cli-mirage@2.0.1:
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/ember-cli-mirage/-/ember-cli-mirage-2.0.1.tgz#3851c3691f66769ab55c13a2557e69c85ad66b23"
-  integrity sha512-zOepXLwuV4G+DZHQE3h62QQGARtwvgG+Glry+fySQ8VbCo3v/jh8l1JJIluUpPkEVyEyuGHIbjKqi/yQsSjm4Q==
+ember-cli-mirage@2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/ember-cli-mirage/-/ember-cli-mirage-2.1.0.tgz#5709f2b25bb4c9bc9c246178cd6405271229b18c"
+  integrity sha512-Qn8KOySYVntl1q5Tk0zTYb4vZYHRpNBmTL0M+scIw+PVKYr/UZYFyTfDkGEs3f85EliY58po3o2oY4OEXsHiaw==
   dependencies:
-    "@embroider/macros" "^0.33.0"
+    "@embroider/macros" "^0.37.0"
     broccoli-file-creator "^2.1.1"
     broccoli-funnel "^3.0.3"
     broccoli-merge-trees "^4.2.0"
     ember-auto-import "^1.2.19"
     ember-cli-babel "^7.5.0"
     ember-get-config "^0.2.4 || ^0.3.0"
-    ember-inflector "^2.0.0 || ^3.0.0"
+    ember-inflector "^2.0.0 || ^3.0.0 || ^4.0.0"
     lodash-es "^4.17.11"
     miragejs "^0.1.31"
 
@@ -6902,7 +6902,7 @@ ember-in-element-polyfill@^1.0.0, ember-in-element-polyfill@^1.0.1:
     ember-cli-htmlbars "^5.3.1"
     ember-cli-version-checker "^5.1.2"
 
-ember-inflector@4.0.1, "ember-inflector@^2.0.0 || ^3.0.0", ember-inflector@^4.0.1:
+ember-inflector@4.0.1, "ember-inflector@^2.0.0 || ^3.0.0 || ^4.0.0", ember-inflector@^4.0.1:
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/ember-inflector/-/ember-inflector-4.0.1.tgz#e0aa9e39119156a278c80bb8cdec8462ecb8e6ab"
   integrity sha512-D14nH2wVMp13ciOONcHMXwdL/IoMBSDXsGObF2rsQX7F8vGjwp+jnSNzZuGjjIvlBFQydOJ+R2n86J2e8HRTQA==
