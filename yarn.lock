@@ -6133,10 +6133,10 @@ ember-app-scheduler@^5.1.2:
     ember-compatibility-helpers "^1.1.2"
     ember-destroyable-polyfill "^2.0.2"
 
-ember-auto-import@1.10.1, ember-auto-import@^1.10.1, ember-auto-import@^1.2.19:
-  version "1.10.1"
-  resolved "https://registry.yarnpkg.com/ember-auto-import/-/ember-auto-import-1.10.1.tgz#6c93a875e494aa0a58b759867d3f20adfd514ae3"
-  integrity sha512-7bOWzPELlVwdWDOkB+phDIjg8BNW+/2RiLLQ+Xa/eIvCLT4ABYhHV5wqW5gs5BnXTDVLfE4ddKZdllnGuPGGDQ==
+ember-auto-import@1.11.2, ember-auto-import@^1.10.1, ember-auto-import@^1.2.19:
+  version "1.11.2"
+  resolved "https://registry.yarnpkg.com/ember-auto-import/-/ember-auto-import-1.11.2.tgz#b6e9a0dddd88a10692830ffa4f5dfd8c137c8919"
+  integrity sha512-Sm0x9qgAQEx+XSYeh5zeKj89Uo0c7XzULZxuziFPxbhtKy/G4pywhBuQ7EgDznTj8IZVxOdfe4ufcUxnJtbSgg==
   dependencies:
     "@babel/core" "^7.1.6"
     "@babel/preset-env" "^7.10.2"
@@ -6150,6 +6150,7 @@ ember-auto-import@1.10.1, ember-auto-import@^1.10.1, ember-auto-import@^1.2.19:
     broccoli-debug "^0.6.4"
     broccoli-node-api "^1.7.0"
     broccoli-plugin "^4.0.0"
+    broccoli-source "^3.0.0"
     debug "^3.1.0"
     ember-cli-babel "^7.0.0"
     enhanced-resolve "^4.0.0"
