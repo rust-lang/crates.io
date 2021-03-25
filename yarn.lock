@@ -14251,14 +14251,14 @@ tracked-maps-and-sets@^2.0.0:
     "@glimmer/tracking" "^1.0.0"
     ember-cli-babel "^7.17.2"
 
-tracked-toolbox@1.2.1:
-  version "1.2.1"
-  resolved "https://registry.yarnpkg.com/tracked-toolbox/-/tracked-toolbox-1.2.1.tgz#0750fbf76c80ff6ba7c583a7fd8cce4c60d9b846"
-  integrity sha512-SEAzpVDJNOf79IhztkUoYfwMA78pGs47k/35Dg23RCINdrnWNnXcCQAx6KOATsvyinqUJkzmTdNpwTgAbtSStg==
+tracked-toolbox@1.2.2:
+  version "1.2.2"
+  resolved "https://registry.yarnpkg.com/tracked-toolbox/-/tracked-toolbox-1.2.2.tgz#1669225a13371b66da8e98521258b51ce0c18909"
+  integrity sha512-lI7O4nyISRAznMloK/MalPXCANIGabfqFcnUxNuRctPfRT/G//RPQcjoSKQMkbiBjdrStfIssik23hyd/EtAWQ==
   dependencies:
     ember-cache-primitive-polyfill "^1.0.0"
     ember-cli-babel "^7.21.0"
-    ember-cli-htmlbars "^4.2.0"
+    ember-cli-htmlbars "^5.3.1"
     tracked-maps-and-sets "^2.0.0"
 
 tree-sync@^1.2.2:
