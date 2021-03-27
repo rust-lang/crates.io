@@ -54,7 +54,7 @@ pub fn me(req: &mut dyn RequestExt) -> EndpointResult {
 pub fn updates(req: &mut dyn RequestExt) -> EndpointResult {
     use diesel::dsl::any;
 
-    let authenticated_user = req.authenticate()?;
+    let authenticated_user = req.authenticate()?.forbid_api_token_auth()?;
     let user = authenticated_user.user();
 
     let followed_crates = Follow::belonging_to(&user).select(follows::crate_id);

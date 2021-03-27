@@ -37,6 +37,12 @@ fn list_logged_out() {
 }
 
 #[test]
+fn list_with_api_token_is_forbidden() {
+    let (_, _, _, token) = TestApp::init().with_token();
+    token.get(URL).assert_forbidden();
+}
+
+#[test]
 fn list_empty() {
     let (_, _, user) = TestApp::init().with_user();
     let json: ListResponse = user.get(URL).good();

@@ -9,7 +9,7 @@ use std::collections::HashMap;
 /// Handles the `GET /me/crate_owner_invitations` route.
 pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
     // Ensure that the user is authenticated
-    let user = req.authenticate()?.user();
+    let user = req.authenticate()?.forbid_api_token_auth()?.user();
 
     // Load all pending invitations for the user
     let conn = &*req.db_read_only()?;

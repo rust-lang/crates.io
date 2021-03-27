@@ -321,6 +321,15 @@ fn invitations_are_empty_by_default() {
 }
 
 #[test]
+fn api_token_cannot_list_invitations() {
+    let (_, _, _, token) = TestApp::init().with_token();
+
+    token
+        .get("/api/v1/me/crate_owner_invitations")
+        .assert_forbidden();
+}
+
+#[test]
 fn invitations_list() {
     let (app, _, owner, token) = TestApp::init().with_token();
     let owner = owner.as_model();

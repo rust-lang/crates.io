@@ -28,6 +28,18 @@ impl AuthenticatedUser {
     pub fn user(self) -> User {
         self.user
     }
+
+    /// Disallows token authenticated users
+    pub fn forbid_api_token_auth(self) -> AppResult<Self> {
+        if self.token_id.is_none() {
+            Ok(self)
+        } else {
+            Err(
+                internal("API Token authentication was explicitly disallowed for this API")
+                    .chain(forbidden()),
+            )
+        }
+    }
 }
 
 /// The Origin header (https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Origin)
