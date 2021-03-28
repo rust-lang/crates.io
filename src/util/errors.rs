@@ -202,7 +202,7 @@ impl<E: Error + Send + 'static> AppError for E {
 
 impl<E: Error + Send + 'static> From<E> for Box<dyn AppError> {
     fn from(err: E) -> Box<dyn AppError> {
-        AppError::try_convert(&err).unwrap_or_else(|| Box::new(err))
+        <dyn AppError>::try_convert(&err).unwrap_or_else(|| Box::new(err))
     }
 }
 // =============================================================================
