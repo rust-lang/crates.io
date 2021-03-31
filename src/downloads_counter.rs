@@ -192,7 +192,7 @@ impl DownloadsCounter {
             shard: None,
             counted_downloads,
             counted_versions,
-            pending_downloads: old_pending - counted_downloads as i64,
+            pending_downloads: old_pending - counted_downloads as i64 - discarded_downloads as i64,
         })
     }
 
