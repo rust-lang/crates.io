@@ -357,16 +357,35 @@ mod tests {
         state.assert_downloads_count(&conn, v2, 5);
     }
 
-    // TODO: temporarily ignored due to https://github.com/rust-lang/crates.io/issues/3462
     #[test]
-    #[ignore]
-    fn test_increment_missing_version() {
+    fn test_increment_existing_and_missing_version_same_shard() {
+        test_increment_existing_and_missing_version(|map, v1, v2| {
+            map.determine_map(&v1) == map.determine_map(&v2)
+        })
+    }
+
+    #[test]
+    fn test_increment_existing_and_missing_version_different_shard() {
+        test_increment_existing_and_missing_version(|map, v1, v2| {
+            map.determine_map(&v1) != map.determine_map(&v2)
+        })
+    }
+
+    fn test_increment_existing_and_missing_version<F>(shard_condition: F)
+    where
+        F: Fn(&DashMap<i32, AtomicUsize>, i32, i32) -> bool,
+    {
         let counter = DownloadsCounter::new();
         let conn = crate::db::test_conn();
         let mut state = State::new(&conn);
 
         let v1 = state.new_version(&conn);
-        let v2 = v1 + 1; // Should not exist in the database!
+
+        // Generate the second version. It should **not** already be in the database.
+        let mut v2 = v1 + 1;
+        while !shard_condition(&counter.inner, v1, v2) {
+            v2 += 1;
+        }
 
         // No error should happen when calling the increment method on a missing version.
         counter.increment(v1);
