@@ -1,6 +1,7 @@
 //! Application-wide components in a struct accessible from each request
 
-use crate::{db, Config, Env};
+use crate::db::{ConnectionConfig, DieselPool};
+use crate::{Config, Env};
 use std::{sync::Arc, time::Duration};
 
 use crate::downloads_counter::DownloadsCounter;
@@ -18,10 +19,10 @@ use scheduled_thread_pool::ScheduledThreadPool;
 #[allow(missing_debug_implementations)]
 pub struct App {
     /// The primary database connection pool
-    pub primary_database: db::DieselPool,
+    pub primary_database: DieselPool,
 
     /// The read-only replica database connection pool
-    pub read_only_replica_database: Option<db::DieselPool>,
+    pub read_only_replica_database: Option<DieselPool>,
 
     /// GitHub API client
     pub github: GitHubClient,
@@ -103,7 +104,7 @@ impl App {
             _ => 30,
         };
 
-        let primary_db_connection_config = db::ConnectionConfig {
+        let primary_db_connection_config = ConnectionConfig {
             statement_timeout: db_connection_timeout,
             read_only: config.db_primary_config.read_only_mode,
         };
@@ -118,11 +119,11 @@ impl App {
             .thread_pool(thread_pool.clone());
 
         let primary_database =
-            db::diesel_pool(&config.db_primary_config.url, config.env, primary_db_config);
+            DieselPool::new(&config.db_primary_config.url, config.env, primary_db_config);
 
         let replica_database = if let Some(url) = config.db_replica_config.as_ref().map(|c| &c.url)
         {
-            let replica_db_connection_config = db::ConnectionConfig {
+            let replica_db_connection_config = ConnectionConfig {
                 statement_timeout: db_connection_timeout,
                 read_only: true,
             };
@@ -134,7 +135,7 @@ impl App {
                 .connection_customizer(Box::new(replica_db_connection_config))
                 .thread_pool(thread_pool);
 
-            Some(db::diesel_pool(&url, config.env, replica_db_config))
+            Some(DieselPool::new(&url, config.env, replica_db_config))
         } else {
             None
         };

@@ -17,6 +17,22 @@ pub enum DieselPool {
 }
 
 impl DieselPool {
+    pub(crate) fn new(
+        url: &str,
+        env: Env,
+        config: r2d2::Builder<ConnectionManager<PgConnection>>,
+    ) -> DieselPool {
+        let url = connection_url(url);
+
+        if env == Env::Test {
+            let conn = PgConnection::establish(&url).expect("failed to establish connection");
+            return DieselPool::Test(Arc::new(ReentrantMutex::new(conn)));
+        }
+
+        let manager = ConnectionManager::new(url);
+        DieselPool::Pool(config.build(manager).unwrap())
+    }
+
     pub fn get(&self) -> Result<DieselPooledConn<'_>, r2d2::PoolError> {
         match self {
             DieselPool::Pool(pool) => Ok(DieselPooledConn::Pool(pool.get()?)),
@@ -38,10 +54,6 @@ impl DieselPool {
                 idle_connections: 0,
             },
         }
-    }
-
-    fn test_conn(conn: PgConnection) -> Self {
-        DieselPool::Test(Arc::new(ReentrantMutex::new(conn)))
     }
 }
 
@@ -81,21 +93,6 @@ pub fn connection_url(url: &str) -> String {
         url.query_pairs_mut().append_pair("sslmode", "require");
     }
     url.into_string()
-}
-
-pub fn diesel_pool(
-    url: &str,
-    env: Env,
-    config: r2d2::Builder<ConnectionManager<PgConnection>>,
-) -> DieselPool {
-    let url = connection_url(url);
-    if env == Env::Test {
-        let conn = PgConnection::establish(&url).expect("failed to establish connection");
-        DieselPool::test_conn(conn)
-    } else {
-        let manager = ConnectionManager::new(url);
-        DieselPool::Pool(config.build(manager).unwrap())
-    }
 }
 
 pub trait RequestTransaction {
