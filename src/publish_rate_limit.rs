@@ -104,6 +104,7 @@ impl PublishRateLimit {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::email::Emails;
     use crate::test_util::*;
 
     #[test]
@@ -325,7 +326,7 @@ mod tests {
             gh_login,
             ..NewUser::default()
         }
-        .create_or_update(None, conn)?;
+        .create_or_update(None, &Emails::new_in_memory(), conn)?;
         Ok(user.id)
     }
 

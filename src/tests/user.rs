@@ -160,7 +160,7 @@ fn show_latest_user_case_insensitively() {
             None,
             "bar"
         )
-        .create_or_update(None, conn));
+        .create_or_update(None, &app.as_inner().emails, conn));
         assert_ok!(NewUser::new(
             2,
             "FOOBAR",
@@ -168,7 +168,7 @@ fn show_latest_user_case_insensitively() {
             None,
             "bar"
         )
-        .create_or_update(None, conn));
+        .create_or_update(None, &app.as_inner().emails, conn));
     });
 
     let json: UserShowPublicResponse = anon.get("api/v1/users/fOObAr").good();
@@ -350,16 +350,19 @@ fn updating_existing_user_doesnt_change_api_token() {
     let gh_id = user.as_model().gh_id;
     let token = token.plaintext();
 
-    let user =
-        app.db(|conn| {
-            // Reuse gh_id but use new gh_login and gh_access_token
-            assert_ok!(
-                NewUser::new(gh_id, "bar", None, None, "bar_token").create_or_update(None, conn)
-            );
+    let user = app.db(|conn| {
+        // Reuse gh_id but use new gh_login and gh_access_token
+        assert_ok!(
+            NewUser::new(gh_id, "bar", None, None, "bar_token").create_or_update(
+                None,
+                &app.as_inner().emails,
+                conn
+            )
+        );
 
-            // Use the original API token to find the now updated user
-            assert_ok!(User::find_by_api_token(conn, token))
-        });
+        // Use the original API token to find the now updated user
+        assert_ok!(User::find_by_api_token(conn, token))
+    });
 
     assert_eq!("bar", user.gh_login);
     assert_eq!("bar_token", user.gh_access_token);
@@ -384,7 +387,9 @@ fn github_without_email_does_not_overwrite_email() {
     // Don't use app.db_new_user because it adds a verified email.
     let user_without_github_email = app.db(|conn| {
         let u = new_user("arbitrary_username");
-        let u = u.create_or_update(None, conn).unwrap();
+        let u = u
+            .create_or_update(None, &app.as_inner().emails, conn)
+            .unwrap();
         MockCookieUser::new(&app, u)
     });
     let user_without_github_email_model = user_without_github_email.as_model();
@@ -404,7 +409,9 @@ fn github_without_email_does_not_overwrite_email() {
             // new_user uses a None email; the rest of the fields are arbitrary
             ..new_user("arbitrary_username")
         };
-        let u = u.create_or_update(None, conn).unwrap();
+        let u = u
+            .create_or_update(None, &app.as_inner().emails, conn)
+            .unwrap();
         MockCookieUser::new(&app, u)
     });
 
@@ -438,7 +445,9 @@ fn github_with_email_does_not_overwrite_email() {
             // the rest of the fields are arbitrary
             ..new_user("arbitrary_username")
         };
-        let u = u.create_or_update(Some(new_github_email), conn).unwrap();
+        let u = u
+            .create_or_update(Some(new_github_email), &app.as_inner().emails, conn)
+            .unwrap();
         MockCookieUser::new(&app, u)
     });
 
@@ -548,7 +557,9 @@ fn test_confirm_user_email() {
         let u = NewUser {
             ..new_user("arbitrary_username")
         };
-        let u = u.create_or_update(Some(email), conn).unwrap();
+        let u = u
+            .create_or_update(Some(email), &app.as_inner().emails, conn)
+            .unwrap();
         MockCookieUser::new(&app, u)
     });
     let user_model = user.as_model();
@@ -587,7 +598,9 @@ fn test_existing_user_email() {
         let u = NewUser {
             ..new_user("arbitrary_username")
         };
-        let u = u.create_or_update(Some(email), conn).unwrap();
+        let u = u
+            .create_or_update(Some(email), &app.as_inner().emails, conn)
+            .unwrap();
         update(Email::belonging_to(&u))
             // Users created before we added verification will have
             // `NULL` in the `token_generated_at` column.
@@ -714,7 +727,7 @@ fn test_update_email_notifications_not_owned() {
 
     let not_my_crate = app.db(|conn| {
         let u = new_user("arbitrary_username")
-            .create_or_update(None, &conn)
+            .create_or_update(None, &app.as_inner().emails, &conn)
             .unwrap();
         CrateBuilder::new("test_package", u.id).expect_build(&conn)
     });

@@ -3,6 +3,7 @@ use diesel::prelude::*;
 use std::borrow::Cow;
 
 use crate::app::App;
+use crate::email::Emails;
 use crate::util::errors::AppResult;
 
 use crate::models::{ApiToken, Crate, CrateOwner, Email, NewEmail, Owner, OwnerKind, Rights};
@@ -53,6 +54,7 @@ impl<'a> NewUser<'a> {
     pub fn create_or_update(
         &self,
         email: Option<&'a str>,
+        emails: &Emails,
         conn: &PgConnection,
     ) -> QueryResult<User> {
         use crate::schema::users::dsl::*;
@@ -97,7 +99,8 @@ impl<'a> NewUser<'a> {
                     .optional()?;
 
                 if let Some(token) = token {
-                    crate::email::send_user_confirm_email(user_email, &user.gh_login, &token);
+                    // Swallows any error. Some users might insert an invalid email address here.
+                    let _ = emails.send_user_confirm(user_email, &user.gh_login, &token);
                 }
             }
 

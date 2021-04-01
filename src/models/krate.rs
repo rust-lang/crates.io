@@ -7,7 +7,6 @@ use url::Url;
 
 use crate::app::App;
 use crate::controllers::helpers::pagination::*;
-use crate::email;
 use crate::models::version::TopVersions;
 use crate::models::{
     Badge, CrateOwner, CrateOwnerInvitation, NewCrateOwnerInvitation, Owner, OwnerKind,
@@ -347,11 +346,14 @@ impl Crate {
 
                 if let Some(ownership_invitation) = maybe_inserted {
                     if let Ok(Some(email)) = user.verified_email(&conn) {
-                        email::send_owner_invite_email(
-                            &email.as_str(),
-                            &req_user.gh_login.as_str(),
-                            &self.name.as_str(),
-                            &ownership_invitation.token.as_str(),
+                        // Swallow any error. Whether or not the email is sent, the invitation
+                        // entry will be created in the database and the user will see the
+                        // invitation when they visit https://crates.io/me/pending-invites/.
+                        let _ = app.emails.send_owner_invite(
+                            &email,
+                            &req_user.gh_login,
+                            &self.name,
+                            &ownership_invitation.token,
                         );
                     }
                 }

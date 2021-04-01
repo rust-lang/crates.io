@@ -4,6 +4,7 @@ use crate::{db, Config, Env};
 use std::{sync::Arc, time::Duration};
 
 use crate::downloads_counter::DownloadsCounter;
+use crate::email::Emails;
 use crate::github::GitHubClient;
 use diesel::r2d2;
 use oauth2::basic::BasicClient;
@@ -35,6 +36,9 @@ pub struct App {
 
     /// Count downloads and periodically persist them in the database
     pub downloads_counter: DownloadsCounter,
+
+    /// Backend used to send emails
+    pub emails: Emails,
 
     /// A configured client for outgoing HTTP requests
     ///
@@ -136,6 +140,7 @@ impl App {
             session_key: config.session_key.clone(),
             config,
             downloads_counter: DownloadsCounter::new(),
+            emails: Emails::from_environment(),
             http_client,
         }
     }

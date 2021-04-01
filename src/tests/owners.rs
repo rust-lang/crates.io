@@ -401,7 +401,7 @@ fn inactive_users_dont_get_invitations() {
             gh_avatar: None,
             gh_access_token: Cow::Borrowed("some random token"),
         }
-        .create_or_update(None, conn)
+        .create_or_update(None, &app.as_inner().emails, conn)
         .unwrap();
         CrateBuilder::new(krate_name, owner.id).expect_build(conn);
     });
