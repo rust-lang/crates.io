@@ -2,6 +2,7 @@ use chrono::NaiveDateTime;
 use std::collections::HashMap;
 use url::Url;
 
+use crate::config::Config;
 use crate::github;
 use crate::models::{
     Badge, Category, Crate, CrateOwnerInvitation, CreatedApiToken, Dependency, DependencyKind,

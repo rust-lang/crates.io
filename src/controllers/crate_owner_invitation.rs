@@ -45,8 +45,10 @@ pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
     let crates: HashMap<i32, String> = crates.into_iter().collect();
 
     // Turn `CrateOwnerInvitation` list into `EncodableCrateOwnerInvitation` list
+    let config = &req.app().config;
     let crate_owner_invitations = crate_owner_invitations
         .into_iter()
+        .filter(|i| !i.is_expired(config))
         .map(|invitation| {
             let inviter_id = invitation.invited_by_user_id;
             let inviter_name = users

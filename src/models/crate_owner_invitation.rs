@@ -107,7 +107,7 @@ impl CrateOwnerInvitation {
         Ok(())
     }
 
-    fn is_expired(&self, config: &Config) -> bool {
+    pub fn is_expired(&self, config: &Config) -> bool {
         self.expires_at(config) <= Utc::now().naive_utc()
     }
 

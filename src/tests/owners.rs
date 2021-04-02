@@ -410,6 +410,39 @@ fn invitations_list() {
     );
 }
 
+#[test]
+fn invitations_list_does_not_include_expired_invites() {
+    let (app, _, owner, token) = TestApp::init().with_token();
+    let owner = owner.as_model();
+
+    let user = app.db_new_user("invited_user");
+
+    let krate1 = app.db(|conn| CrateBuilder::new("invited_crate_1", owner.id).expect_build(conn));
+    let krate2 = app.db(|conn| CrateBuilder::new("invited_crate_2", owner.id).expect_build(conn));
+    token.add_user_owner("invited_crate_1", "invited_user");
+    token.add_user_owner("invited_crate_2", "invited_user");
+
+    // Simulate one of the invitations expiring
+    expire_invitation(&app, krate1.id);
+
+    let invitations = user.list_invitations();
+    assert_eq!(
+        invitations,
+        InvitationListResponse {
+            crate_owner_invitations: vec![EncodableCrateOwnerInvitation {
+                crate_id: krate2.id,
+                crate_name: krate2.name.clone(),
+                invited_by_username: owner.gh_login.clone(),
+                invitee_id: user.as_model().id,
+                inviter_id: owner.id,
+                // This value changes with each test run so we can't use a fixed value here
+                created_at: invitations.crate_owner_invitations[0].created_at,
+            }],
+            users: vec![owner.clone().into()],
+        }
+    );
+}
+
 /*  Given a user inviting a different user to be a crate
     owner, check that the user invited can accept their
     invitation, the invitation will be deleted from
