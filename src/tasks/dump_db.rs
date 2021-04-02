@@ -1,8 +1,9 @@
 use std::{
-    fs::File,
+    fs::{self, File},
     path::{Path, PathBuf},
 };
 
+use self::configuration::VisibilityConfig;
 use crate::{background_jobs::Environment, uploaders::Uploader};
 use reqwest::header;
 use swirl::PerformError;
@@ -146,8 +147,32 @@ impl DumpTarball {
         let tarfile = File::create(&tarball_path)?;
         let result = Self { tarball_path };
         let encoder = flate2::write::GzEncoder::new(tarfile, flate2::Compression::default());
+
         let mut archive = tar::Builder::new(encoder);
-        archive.append_dir_all(export_dir.file_name().unwrap(), &export_dir)?;
+        let tar_top_dir = PathBuf::from(export_dir.file_name().unwrap());
+        archive.append_dir(&tar_top_dir, export_dir)?;
+
+        // Append readme, metadata, schemas.
+        for entry in fs::read_dir(export_dir)? {
+            let entry = entry?;
+            let file_type = entry.file_type()?;
+            if file_type.is_file() {
+                let name_in_tar = tar_top_dir.join(entry.file_name());
+                archive.append_path_with_name(entry.path(), name_in_tar)?;
+            }
+        }
+
+        // Append topologically sorted tables to make it possible to pipeline
+        // importing with gz extraction.
+        archive.append_dir(tar_top_dir.join("data"), export_dir.join("data"))?;
+        for table in VisibilityConfig::get().topological_sort() {
+            let csv_path = export_dir.join("data").join(table).with_extension("csv");
+            if csv_path.exists() {
+                let name_in_tar = tar_top_dir.join("data").join(table).with_extension("csv");
+                archive.append_path_with_name(csv_path, name_in_tar)?;
+            }
+        }
+
         Ok(result)
     }
 
@@ -176,3 +201,44 @@ impl Drop for DumpTarball {
 
 mod configuration;
 mod gen_scripts;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use flate2::read::GzDecoder;
+    use tar::Archive;
+
+    #[test]
+    fn test_dump_tarball() {
+        let tempdir = tempfile::Builder::new()
+            .prefix("DumpTarball")
+            .tempdir()
+            .unwrap();
+        let p = tempdir.path().join("0000-00-00");
+
+        fs::create_dir(&p).unwrap();
+        fs::write(p.join("README.md"), "# crates.io Database Dump\n").unwrap();
+        fs::create_dir(p.join("data")).unwrap();
+        fs::write(p.join("data").join("crates.csv"), "").unwrap();
+        fs::write(p.join("data").join("crate_owners.csv"), "").unwrap();
+        fs::write(p.join("data").join("users.csv"), "").unwrap();
+
+        let tarball = DumpTarball::create(&p).unwrap();
+        let gz = GzDecoder::new(File::open(&tarball.tarball_path).unwrap());
+        let mut tar = Archive::new(gz);
+
+        for (i, entry) in tar.entries().unwrap().enumerate() {
+            let entry = entry.unwrap();
+            let expected_path = Path::new(match i {
+                0 => "0000-00-00",
+                1 => "0000-00-00/README.md",
+                2 => "0000-00-00/data",
+                3 => "0000-00-00/data/crates.csv",
+                4 => "0000-00-00/data/users.csv", // alphabetically after crates.csv
+                5 => "0000-00-00/data/crate_owners.csv", // depends on crates.csv and users.csv
+                _ => panic!("unexpected extra tar entry: {:?}", entry.path()),
+            });
+            assert_eq!(entry.path().unwrap(), expected_path, "entry {}", i);
+        }
+    }
+}
