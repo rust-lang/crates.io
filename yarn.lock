@@ -4928,10 +4928,10 @@ charm@^1.0.0:
   dependencies:
     inherits "^2.0.1"
 
-chart.js@3.0.1:
-  version "3.0.1"
-  resolved "https://registry.yarnpkg.com/chart.js/-/chart.js-3.0.1.tgz#5b2a405ba47b30782bc59289f96d206865be2f6a"
-  integrity sha512-GR62zMZX8lRCr4Nq60aQ84QpsUYrpm9NWECR+Qu2pouzXqPI4zWHUF2MG/azXnBGn85cHR6tkv7cgY3lX5u9SA==
+chart.js@3.0.2:
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/chart.js/-/chart.js-3.0.2.tgz#5893b0548714445b5190cbda9ac307357a56a0c7"
+  integrity sha512-DR0GmFSlxcFJp/w//ZmbxSduAkH/AqwxoiZxK97KHnWZf6gvsKWS3160WvNMMHYvzW9OXqGWjPjVh1Qu+xDabg==
 
 cheerio@^0.22.0:
   version "0.22.0"
