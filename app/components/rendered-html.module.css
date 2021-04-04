@@ -25,6 +25,10 @@
         }
     }
 
+    code {
+        font-family: var(--font-monospace);
+    }
+
     table {
         border-collapse: collapse;
         display: block;
