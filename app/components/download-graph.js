@@ -34,16 +34,14 @@ export default class DownloadGraph extends Component {
           padding: 10,
         },
         scales: {
-          xAxes: [
-            {
-              type: 'time',
-              time: { tooltipFormat: 'MMM d', unit: 'day' },
-              ticks: { maxTicksLimit: 13 },
-            },
-          ],
-          yAxes: [{ stacked: true, ticks: { min: 0, precision: 0 } }],
+          x: {
+            type: 'time',
+            time: { tooltipFormat: 'MMM d', unit: 'day' },
+            ticks: { maxTicksLimit: 13 },
+          },
+          y: { stacked: true, ticks: { min: 0, precision: 0 } },
         },
-        tooltips: {
+        interaction: {
           mode: 'index',
           intersect: false,
           position: 'nearest',
@@ -53,16 +51,11 @@ export default class DownloadGraph extends Component {
   }
 
   @action updateChart() {
-    let { chart, animate } = this.chart;
+    let { chart } = this;
 
     if (chart) {
       chart.data = this.data;
-
-      if (animate) {
-        chart.update();
-      } else {
-        chart.update(0);
-      }
+      chart.update();
     }
   }
 
@@ -169,6 +162,8 @@ export function toChartData(data) {
         borderWidth: 2,
         cubicInterpolationMode: 'monotone',
         data: data,
+        // TODO figure out why this doesn't work. is it a chart.js bug?
+        fill: 'origin',
         label: label,
         pointHoverBorderWidth: 2,
         pointHoverRadius: 5,
