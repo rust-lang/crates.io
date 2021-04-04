@@ -4,8 +4,7 @@ use crate::models::{CrateOwner, CrateOwnerInvitation, OwnerKind, User};
 use crate::schema::{crate_owner_invitations, crate_owners, users};
 use crate::views::{EncodableCrateOwnerInvitation, EncodablePublicUser, InvitationResponse};
 use diesel::dsl::any;
-use std::collections::{HashMap, HashSet};
-use std::iter::FromIterator;
+use std::collections::HashMap;
 
 /// Handles the `GET /me/crate_owner_invitations` route.
 pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
@@ -18,15 +17,15 @@ pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
         .filter(crate_owner_invitations::invited_user_id.eq(user.id))
         .load(&*conn)?;
 
-    // Make a list of all related users and deduplicate it by using a `HashSet`
-    let mut user_ids = HashSet::new();
-    for invitation in &crate_owner_invitations {
-        user_ids.insert(invitation.invited_by_user_id);
-    }
+    // Make a list of all related users
+    let user_ids: Vec<_> = crate_owner_invitations
+        .iter()
+        .map(|invitation| invitation.invited_by_user_id)
+        .collect();
 
     // Load all related users
     let users: Vec<User> = users::table
-        .filter(users::id.eq(any(Vec::from_iter(user_ids))))
+        .filter(users::id.eq(any(user_ids)))
         .load(conn)?;
 
     let users: HashMap<i32, User> = users.into_iter().map(|user| (user.id, user)).collect();
