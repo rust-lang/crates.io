@@ -10,9 +10,22 @@ import { task } from 'ember-concurrency';
 
 export default class ChartJsLoader extends Service {
   @(task(function* () {
-    let Chart = yield import('chart.js').then(module => module.default);
+    let {
+      Chart,
+      LineController,
+      LineElement,
+      PointElement,
+      TimeScale,
+      LinearScale,
+      Filler,
+      Legend,
+      Tooltip,
+      _adapters,
+    } = yield import('chart.js');
 
-    Chart._adapters._date.override({
+    Chart.register(LineController, LineElement, PointElement, LinearScale, TimeScale, Filler, Legend, Tooltip);
+
+    _adapters._date.override({
       _id: 'date-fns', // DEBUG
 
       formats() {
@@ -52,7 +65,6 @@ export default class ChartJsLoader extends Service {
       },
     });
 
-    Chart.platform.disableCSSInjection = true;
     return Chart;
   }).drop())
   loadTask;
