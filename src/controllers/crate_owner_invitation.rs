@@ -4,7 +4,7 @@ use crate::models::{CrateOwner, CrateOwnerInvitation, OwnerKind, User};
 use crate::schema::{crate_owner_invitations, crate_owners, users};
 use crate::views::{EncodableCrateOwnerInvitation, EncodablePublicUser, InvitationResponse};
 use diesel::dsl::any;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::iter::FromIterator;
 
 /// Handles the `GET /me/crate_owner_invitations` route.
@@ -29,14 +29,15 @@ pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
         .filter(users::id.eq(any(Vec::from_iter(user_ids))))
         .load(conn)?;
 
+    let users: HashMap<i32, User> = users.into_iter().map(|user| (user.id, user)).collect();
+
     // Turn `CrateOwnerInvitation` list into `EncodableCrateOwnerInvitation` list
     let crate_owner_invitations = crate_owner_invitations
         .into_iter()
         .map(|invitation| {
             let inviter_id = invitation.invited_by_user_id;
             let inviter_name = users
-                .iter()
-                .find(|user| user.id == inviter_id)
+                .get(&inviter_id)
                 .map(|user| user.gh_login.clone())
                 .unwrap_or_default();
 
@@ -48,7 +49,7 @@ pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
     // Turn `User` list into `EncodablePublicUser` list
     let users = users
         .into_iter()
-        .map(|user| EncodablePublicUser::from(user))
+        .map(|(_, user)| EncodablePublicUser::from(user))
         .collect();
 
     #[derive(Serialize)]
