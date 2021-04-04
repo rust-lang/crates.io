@@ -1,7 +1,7 @@
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 
-use crate::schema::{crate_owner_invitations, crates, users};
+use crate::schema::{crate_owner_invitations, crates};
 
 /// The model representing a row in the `crate_owner_invitations` database table.
 #[derive(Clone, Debug, PartialEq, Eq, Identifiable, Queryable)]
@@ -24,14 +24,6 @@ pub struct NewCrateOwnerInvitation {
 }
 
 impl CrateOwnerInvitation {
-    pub fn invited_by_username(&self, conn: &PgConnection) -> String {
-        users::table
-            .find(self.invited_by_user_id)
-            .select(users::gh_login)
-            .first(&*conn)
-            .unwrap_or_else(|_| String::from("(unknown username)"))
-    }
-
     pub fn crate_name(&self, conn: &PgConnection) -> String {
         crates::table
             .find(self.crate_id)
