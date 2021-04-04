@@ -4,6 +4,7 @@ use conduit_cookie::RequestSession;
 use oauth2::reqwest::http_client;
 use oauth2::{AuthorizationCode, Scope, TokenResponse};
 
+use crate::email::Emails;
 use crate::github::GithubUser;
 use crate::models::{NewUser, User};
 use crate::schema::users;
@@ -102,7 +103,12 @@ pub fn authorize(req: &mut dyn RequestExt) -> EndpointResult {
 
     // Fetch the user info from GitHub using the access token we just got and create a user record
     let ghuser = req.app().github.current_user(token)?;
-    let user = save_user_to_database(&ghuser, &token.secret(), &*req.db_conn()?)?;
+    let user = save_user_to_database(
+        &ghuser,
+        &token.secret(),
+        &req.app().emails,
+        &*req.db_conn()?,
+    )?;
 
     // Log in by setting a cookie and the middleware authentication
     req.session_mut()
@@ -114,6 +120,7 @@ pub fn authorize(req: &mut dyn RequestExt) -> EndpointResult {
 fn save_user_to_database(
     user: &GithubUser,
     access_token: &str,
+    emails: &Emails,
     conn: &PgConnection,
 ) -> AppResult<User> {
     NewUser::new(
@@ -123,7 +130,7 @@ fn save_user_to_database(
         user.avatar_url.as_deref(),
         access_token,
     )
-    .create_or_update(user.email.as_deref(), conn)
+    .create_or_update(user.email.as_deref(), emails, conn)
     .map_err(Into::into)
     .or_else(|e: Box<dyn AppError>| {
         // If we're in read only mode, we can't update their details
@@ -158,6 +165,7 @@ mod tests {
 
     #[test]
     fn gh_user_with_invalid_email_doesnt_fail() {
+        let emails = Emails::new_in_memory();
         let conn = pg_connection();
         let gh_user = GithubUser {
             email: Some("String.Format(\"{0}.{1}@live.com\", FirstName, LastName)".into()),
@@ -166,7 +174,7 @@ mod tests {
             id: -1,
             avatar_url: None,
         };
-        let result = save_user_to_database(&gh_user, "arbitrary_token", &conn);
+        let result = save_user_to_database(&gh_user, "arbitrary_token", &emails, &conn);
 
         assert!(
             result.is_ok(),

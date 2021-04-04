@@ -2,12 +2,13 @@ use crate::{
     add_team_to_crate,
     builders::{CrateBuilder, PublishBuilder},
     new_team,
-    util::{MockCookieUser, MockTokenUser, RequestHelper},
+    util::{MockAnonymousUser, MockCookieUser, MockTokenUser, RequestHelper},
     TestApp,
 };
 use cargo_registry::{
     models::Crate,
     views::{EncodableCrateOwnerInvitation, EncodableOwner, InvitationResponse},
+    Emails,
 };
 
 use conduit::StatusCode;
@@ -81,6 +82,19 @@ impl MockCookieUser {
     /// As the currently logged in user, list my pending invitations.
     fn list_invitations(&self) -> InvitationListResponse {
         self.get("/api/v1/me/crate_owner_invitations").good()
+    }
+}
+
+impl MockAnonymousUser {
+    fn accept_ownership_invitation_by_token(&self, token: &str) {
+        #[derive(Deserialize)]
+        struct Response {
+            crate_owner_invitation: InvitationResponse,
+        }
+
+        let url = format!("/api/v1/me/crate_owner_invitations/accept/{}", token);
+        let response: Response = self.put(&url, &[]).good();
+        assert!(response.crate_owner_invitation.accepted);
     }
 }
 
@@ -382,6 +396,31 @@ fn test_decline_invitation() {
 }
 
 #[test]
+fn test_accept_invitation_by_mail() {
+    let (app, anon, owner, owner_token) = TestApp::init().with_token();
+    let owner = owner.as_model();
+    let invited_user = app.db_new_user("user_bar");
+    let _krate = app.db(|conn| CrateBuilder::new("accept_invitation", owner.id).expect_build(conn));
+
+    // Invite a new owner
+    owner_token.add_user_owner("accept_invitation", "user_bar");
+
+    // Retrieve the ownership invitation
+    let invite_token = extract_token_from_invite_email(&app.as_inner().emails);
+
+    // Accept the invitation anonymously with a token
+    anon.accept_ownership_invitation_by_token(&invite_token);
+
+    // New owner's invitation list should now be empty
+    let json = invited_user.list_invitations();
+    assert_eq!(json.crate_owner_invitations.len(), 0);
+
+    // New owner is now listed as an owner, so the crate has two owners
+    let json = anon.show_crate_owners("accept_invitation");
+    assert_eq!(json.users.len(), 2);
+}
+
+#[test]
 fn inactive_users_dont_get_invitations() {
     use cargo_registry::models::NewUser;
     use std::borrow::Cow;
@@ -401,7 +440,7 @@ fn inactive_users_dont_get_invitations() {
             gh_avatar: None,
             gh_access_token: Cow::Borrowed("some random token"),
         }
-        .create_or_update(None, conn)
+        .create_or_update(None, &app.as_inner().emails, conn)
         .unwrap();
         CrateBuilder::new(krate_name, owner.id).expect_build(conn);
     });
@@ -436,4 +475,21 @@ fn highest_gh_id_is_most_recent_account_we_know_of() {
 
     let json = invited_user.list_invitations();
     assert_eq!(json.crate_owner_invitations.len(), 1);
+}
+
+fn extract_token_from_invite_email(emails: &Emails) -> String {
+    let message = emails
+        .mails_in_memory()
+        .unwrap()
+        .into_iter()
+        .find(|m| m.subject.contains("invitation"))
+        .expect("missing email");
+
+    // Simple (but kinda fragile) parser to extract the token.
+    let before_token = "/accept-invite/";
+    let after_token = " ";
+    let body = message.body.as_str();
+    let before_pos = body.find(before_token).unwrap() + before_token.len();
+    let after_pos = before_pos + (&body[before_pos..]).find(after_token).unwrap();
+    body[before_pos..after_pos].to_string()
 }

@@ -83,12 +83,13 @@ fn collect(conn: &PgConnection, rows: &[VersionDownload]) -> QueryResult<()> {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::email::Emails;
     use crate::models::{Crate, NewCrate, NewUser, NewVersion, User, Version};
     use std::collections::HashMap;
 
     fn user(conn: &PgConnection) -> User {
         NewUser::new(2, "login", None, None, "access_token")
-            .create_or_update(None, conn)
+            .create_or_update(None, &Emails::new_in_memory(), conn)
             .unwrap()
     }
 

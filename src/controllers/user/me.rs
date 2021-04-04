@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use crate::controllers::frontend_prelude::*;
 
 use crate::controllers::helpers::*;
-use crate::email;
 
 use crate::controllers::helpers::pagination::Paginated;
 use crate::models::{
@@ -158,7 +157,14 @@ pub fn update_user(req: &mut dyn RequestExt) -> EndpointResult {
             .get_result(&*conn)
             .map_err(|_| server_error("Error in creating token"))?;
 
-        crate::email::send_user_confirm_email(user_email, &user.gh_login, &token);
+        // This swallows any errors that occur while attempting to send the email. Some users have
+        // an invalid email set in their GitHub profile, and we should let them sign in even though
+        // we're trying to silently use their invalid address during signup and can't send them an
+        // email. They'll then have to provide a valid email address.
+        let _ = req
+            .app()
+            .emails
+            .send_user_confirm(user_email, &user.gh_login, &token);
 
         Ok(())
     })?;
@@ -207,8 +213,9 @@ pub fn regenerate_token_and_send(req: &mut dyn RequestExt) -> EndpointResult {
             .get_result(&*conn)
             .map_err(|_| bad_request("Email could not be found"))?;
 
-        email::try_send_user_confirm_email(&email.email, &user.gh_login, &email.token)
-            .map_err(|_| server_error("Error in sending email"))
+        req.app()
+            .emails
+            .send_user_confirm(&email.email, &user.gh_login, &email.token)
     })?;
 
     ok_true()

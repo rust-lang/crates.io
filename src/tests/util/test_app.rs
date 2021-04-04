@@ -4,7 +4,7 @@ use cargo_registry::{
     background_jobs::Environment,
     db::DieselPool,
     git::{Credentials, RepositoryConfig},
-    App, Config, Env, Replica, Uploader,
+    App, Config, Emails, Env, Replica, Uploader,
 };
 use std::{rc::Rc, sync::Arc, time::Duration};
 
@@ -103,7 +103,7 @@ impl TestApp {
             let email = "something@example.com";
 
             let user = crate::new_user(username)
-                .create_or_update(None, conn)
+                .create_or_update(None, &self.0.app.emails, conn)
                 .unwrap();
             diesel::insert_into(emails::table)
                 .values((
@@ -332,7 +332,12 @@ fn build_app(
         None
     };
 
-    let app = App::new(config, client);
+    let mut app = App::new(config, client);
+
+    // Use the in-memory email backend for all tests, allowing tests to analyze the emails sent by
+    // the application. This will also prevent cluttering the filesystem.
+    app.emails = Emails::new_in_memory();
+
     assert_ok!(assert_ok!(app.primary_database.get()).begin_test_transaction());
     let app = Arc::new(app);
     let handler = cargo_registry::build_handler(Arc::clone(&app));

@@ -237,6 +237,7 @@ impl PersistStats {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::email::Emails;
     use crate::models::{Crate, NewCrate, NewUser, NewVersion, User};
     use diesel::PgConnection;
     use semver::Version;
@@ -423,7 +424,7 @@ mod tests {
                 gh_login: "ghost",
                 ..NewUser::default()
             }
-            .create_or_update(None, conn)
+            .create_or_update(None, &Emails::new_in_memory(), conn)
             .expect("failed to create user");
 
             let krate = NewCrate {
