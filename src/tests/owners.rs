@@ -234,6 +234,44 @@ fn modify_multiple_owners() {
     assert_eq!(app.db(|conn| krate.owners(&conn).unwrap()).len(), 3);
 }
 
+#[test]
+fn invite_already_invited_user() {
+    let (app, _, _, owner) = TestApp::init().with_token();
+    app.db_new_user("invited_user");
+    app.db(|conn| CrateBuilder::new("crate_name", owner.as_model().user_id).expect_build(conn));
+
+    // Ensure no emails were sent up to this point
+    assert_eq!(0, app.as_inner().emails.mails_in_memory().unwrap().len());
+
+    // Invite the user the first time
+    let response = owner.add_named_owner("crate_name", "invited_user");
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response.json(),
+        json!({
+            "msg": "user invited_user has been invited to be an owner of crate crate_name",
+            "ok": true,
+        })
+    );
+
+    // Check one email was sent, this will be the ownership invite email
+    assert_eq!(1, app.as_inner().emails.mails_in_memory().unwrap().len());
+
+    // Then invite the user a second time, the message should point out the user is already invited
+    let response = owner.add_named_owner("crate_name", "invited_user");
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response.json(),
+        json!({
+            "msg": "user invited_user already has a pending invitation to be an owner of crate crate_name",
+            "ok": true,
+        })
+    );
+
+    // Check that no new email is sent after the second invitation
+    assert_eq!(1, app.as_inner().emails.mails_in_memory().unwrap().len());
+}
+
 /*  Testing the crate ownership between two crates and one team.
     Given two crates, one crate owned by both a team and a user,
     one only owned by a user, check that the CrateList returned

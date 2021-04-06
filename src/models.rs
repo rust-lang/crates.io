@@ -1,7 +1,7 @@
 pub use self::action::{insert_version_owner_action, VersionAction, VersionOwnerAction};
 pub use self::badge::{Badge, CrateBadge, MaintenanceStatus};
 pub use self::category::{Category, CrateCategory, NewCategory};
-pub use self::crate_owner_invitation::{CrateOwnerInvitation, NewCrateOwnerInvitation};
+pub use self::crate_owner_invitation::{CrateOwnerInvitation, NewCrateOwnerInvitationOutcome};
 pub use self::dependency::{Dependency, DependencyKind, ReverseDependency};
 pub use self::download::VersionDownload;
 pub use self::email::{Email, NewEmail};
