@@ -194,6 +194,7 @@ impl TestAppBuilder {
                 index,
                 app.config.uploader.clone(),
                 app.http_client().clone(),
+                Emails::new_in_memory(),
             );
 
             Some(

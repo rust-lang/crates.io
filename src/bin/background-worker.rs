@@ -12,6 +12,7 @@
 
 #![warn(clippy::all, rust_2018_idioms)]
 
+use cargo_registry::email::Emails;
 use cargo_registry::git::{Repository, RepositoryConfig};
 use cargo_registry::{background_jobs::*, db};
 use diesel::r2d2;
@@ -39,9 +40,16 @@ fn main() {
     ));
     println!("Index cloned");
 
+    let emails = Emails::from_environment();
+    let emails = Arc::new(emails);
+
     let build_runner = || {
-        let environment =
-            Environment::new_shared(repository.clone(), config.uploader.clone(), Client::new());
+        let environment = Environment::new_shared(
+            repository.clone(),
+            config.uploader.clone(),
+            Client::new(),
+            emails.clone(),
+        );
         let db_config = r2d2::Pool::builder().min_idle(Some(0));
         swirl::Runner::builder(environment)
             .connection_pool_builder(&db_url, db_config)
