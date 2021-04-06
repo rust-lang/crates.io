@@ -61,7 +61,8 @@ pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
                 .map(|name| name.clone())
                 .unwrap_or_else(|| String::from("(unknown crate name)"));
 
-            EncodableCrateOwnerInvitation::from(invitation, inviter_name, crate_name)
+            let expires_at = invitation.expires_at(&config);
+            EncodableCrateOwnerInvitation::from(invitation, inviter_name, crate_name, expires_at)
         })
         .collect();
 

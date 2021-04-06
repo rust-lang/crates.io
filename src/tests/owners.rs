@@ -404,6 +404,8 @@ fn invitations_list() {
                 inviter_id: owner.id,
                 // This value changes with each test run so we can't use a fixed value here
                 created_at: invitations.crate_owner_invitations[0].created_at,
+                // This value changes with each test run so we can't use a fixed value here
+                expires_at: invitations.crate_owner_invitations[0].expires_at,
             }],
             users: vec![owner.clone().into()],
         }
@@ -437,6 +439,8 @@ fn invitations_list_does_not_include_expired_invites() {
                 inviter_id: owner.id,
                 // This value changes with each test run so we can't use a fixed value here
                 created_at: invitations.crate_owner_invitations[0].created_at,
+                // This value changes with each test run so we can't use a fixed value here
+                expires_at: invitations.crate_owner_invitations[0].expires_at,
             }],
             users: vec![owner.clone().into()],
         }
