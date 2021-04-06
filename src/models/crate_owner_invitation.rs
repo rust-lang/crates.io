@@ -30,6 +30,7 @@ impl CrateOwnerInvitation {
         invited_by_user_id: i32,
         crate_id: i32,
         conn: &PgConnection,
+        config: &Config,
     ) -> AppResult<NewCrateOwnerInvitationOutcome> {
         #[derive(Insertable, Clone, Copy, Debug)]
         #[table_name = "crate_owner_invitations"]
@@ -39,12 +40,35 @@ impl CrateOwnerInvitation {
             crate_id: i32,
         }
 
+        // Before actually creating the invite, check if an expired invitation already exists
+        // and delete it from the database. This allows obtaining a new invite if the old one
+        // expired, instead of returning "already exists".
+        conn.transaction(|| -> AppResult<()> {
+            // This does a SELECT FOR UPDATE + DELETE instead of a DELETE with a WHERE clause to
+            // use the model's `is_expired` method, centralizing our expiration checking logic.
+            let existing: Option<CrateOwnerInvitation> = crate_owner_invitations::table
+                .find((invited_user_id, crate_id))
+                .for_update()
+                .first(conn)
+                .optional()?;
+
+            if let Some(existing) = existing {
+                if existing.is_expired(config) {
+                    diesel::delete(&existing).execute(conn)?;
+                }
+            }
+            Ok(())
+        })?;
+
         let res: Option<CrateOwnerInvitation> = diesel::insert_into(crate_owner_invitations::table)
             .values(&NewRecord {
                 invited_user_id,
                 invited_by_user_id,
                 crate_id,
             })
+            // The ON CONFLICT DO NOTHING clause results in not creating the invite if another one
+            // already exists. This does not cause problems with expired invitation as those are
+            // deleted before doing this INSERT.
             .on_conflict_do_nothing()
             .get_result(conn)
             .optional()?;

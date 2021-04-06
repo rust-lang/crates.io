@@ -333,7 +333,8 @@ impl Crate {
         match owner {
             // Users are invited and must accept before being added
             Owner::User(user) => {
-                match CrateOwnerInvitation::create(user.id, req_user.id, self.id, conn)? {
+                let config = &app.config;
+                match CrateOwnerInvitation::create(user.id, req_user.id, self.id, conn, config)? {
                     NewCrateOwnerInvitationOutcome::InviteCreated { plaintext_token } => {
                         if let Ok(Some(email)) = user.verified_email(&conn) {
                             // Swallow any error. Whether or not the email is sent, the invitation
