@@ -165,7 +165,24 @@ module('Acceptance | /me/pending-invites', function (hooks) {
     assert.equal(currentURL(), '/me/pending-invites');
 
     await click('[data-test-invite="nanomsg"] [data-test-accept-button]');
-    assert.dom('[data-test-notification-message="error"]').containsText('Error in accepting invite');
+    assert.dom('[data-test-notification-message="error"]').hasText('Error in accepting invite');
+    assert.dom('[data-test-accepted-message]').doesNotExist();
+    assert.dom('[data-test-declined-message]').doesNotExist();
+  });
+
+  test('specific error message is shown if accept request fails', async function (assert) {
+    prepare(this);
+
+    let errorMessage =
+      'The invitation to become an owner of the demo_crate crate expired. Please reach out to an owner of the crate to request a new invitation.';
+    let payload = { errors: [{ detail: errorMessage }] };
+    this.server.put('/api/v1/me/crate_owner_invitations/:crate', payload, 410);
+
+    await visit('/me/pending-invites');
+    assert.equal(currentURL(), '/me/pending-invites');
+
+    await click('[data-test-invite="nanomsg"] [data-test-accept-button]');
+    assert.dom('[data-test-notification-message="error"]').hasText('Error in accepting invite: ' + errorMessage);
     assert.dom('[data-test-accepted-message]').doesNotExist();
     assert.dom('[data-test-declined-message]').doesNotExist();
   });
