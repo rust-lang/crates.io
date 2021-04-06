@@ -1,5 +1,4 @@
 use chrono::NaiveDateTime;
-use diesel::PgConnection;
 use std::collections::HashMap;
 use url::Url;
 
@@ -76,6 +75,8 @@ pub struct EncodableCategoryWithSubcategories {
 /// The serialization format for the `CrateOwnerInvitation` model.
 #[derive(Deserialize, Serialize, Debug)]
 pub struct EncodableCrateOwnerInvitation {
+    pub invitee_id: i32,
+    pub inviter_id: i32,
     pub invited_by_username: String,
     pub crate_name: String,
     pub crate_id: i32,
@@ -84,10 +85,16 @@ pub struct EncodableCrateOwnerInvitation {
 }
 
 impl EncodableCrateOwnerInvitation {
-    pub fn from(invitation: CrateOwnerInvitation, conn: &PgConnection) -> Self {
+    pub fn from(
+        invitation: CrateOwnerInvitation,
+        inviter_name: String,
+        crate_name: String,
+    ) -> Self {
         Self {
-            invited_by_username: invitation.invited_by_username(conn),
-            crate_name: invitation.crate_name(conn),
+            invitee_id: invitation.invited_user_id,
+            inviter_id: invitation.invited_by_user_id,
+            invited_by_username: inviter_name,
+            crate_name,
             crate_id: invitation.crate_id,
             created_at: invitation.created_at,
         }
@@ -791,6 +798,8 @@ mod tests {
     #[test]
     fn crate_owner_invitation_serializes_to_rfc3339() {
         let inv = EncodableCrateOwnerInvitation {
+            invitee_id: 1,
+            inviter_id: 2,
             invited_by_username: "".to_string(),
             crate_name: "".to_string(),
             crate_id: 123,
