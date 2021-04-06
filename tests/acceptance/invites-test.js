@@ -15,21 +15,32 @@ module('Acceptance | /me/pending-invites', function (hooks) {
     let user = context.server.create('user');
     context.authenticateAs(user);
 
-    context.server.get('/api/v1/me/crate_owner_invitations', {
-      crate_owner_invitations: [
-        {
-          invited_by_username: 'janed',
-          crate_name: 'nanomsg',
-          crate_id: 42,
-          created_at: '2016-12-24T12:34:56Z',
-        },
-        {
-          invited_by_username: 'wycats',
-          crate_name: 'ember-rs',
-          crate_id: 1,
-          created_at: '2020-12-31T12:34:56Z',
-        },
-      ],
+    let inviter = context.server.create('user', { name: 'janed' });
+    let inviter2 = context.server.create('user', { name: 'wycats' });
+    context.server.get('/api/v1/me/crate_owner_invitations', function () {
+      let users = [this.serialize(inviter, 'user').user, this.serialize(inviter2, 'user').user];
+
+      return {
+        crate_owner_invitations: [
+          {
+            invited_by_username: 'janed',
+            crate_name: 'nanomsg',
+            crate_id: 42,
+            created_at: '2016-12-24T12:34:56Z',
+            invitee_id: parseInt(user.id, 10),
+            inviter_id: parseInt(inviter.id, 10),
+          },
+          {
+            invited_by_username: 'wycats',
+            crate_name: 'ember-rs',
+            crate_id: 1,
+            created_at: '2020-12-31T12:34:56Z',
+            invitee_id: parseInt(user.id, 10),
+            inviter_id: parseInt(inviter2.id, 10),
+          },
+        ],
+        users,
+      };
     });
   }
 
