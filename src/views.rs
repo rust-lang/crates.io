@@ -73,7 +73,7 @@ pub struct EncodableCategoryWithSubcategories {
 }
 
 /// The serialization format for the `CrateOwnerInvitation` model.
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq)]
 pub struct EncodableCrateOwnerInvitation {
     pub invitee_id: i32,
     pub inviter_id: i32,
@@ -521,7 +521,7 @@ impl EncodablePrivateUser {
 
 /// The serialization format for the `User` model.
 /// Same as private user, except no email field
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq)]
 pub struct EncodablePublicUser {
     pub id: i32,
     pub login: String,

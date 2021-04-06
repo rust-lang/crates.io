@@ -7,7 +7,9 @@ use crate::{
 };
 use cargo_registry::{
     models::Crate,
-    views::{EncodableCrateOwnerInvitation, EncodableOwner, InvitationResponse},
+    views::{
+        EncodableCrateOwnerInvitation, EncodableOwner, EncodablePublicUser, InvitationResponse,
+    },
     Emails,
 };
 
@@ -22,9 +24,10 @@ struct TeamResponse {
 struct UserResponse {
     users: Vec<EncodableOwner>,
 }
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 struct InvitationListResponse {
     crate_owner_invitations: Vec<EncodableCrateOwnerInvitation>,
+    users: Vec<EncodablePublicUser>,
 }
 
 // Implementing locally for now, unless these are needed elsewhere
@@ -333,27 +336,21 @@ fn invitations_list() {
     let response = user.get::<()>("/api/v1/me/crate_owner_invitations");
     assert_eq!(response.status(), StatusCode::OK);
 
-    let json = response.json();
+    let invitations = user.list_invitations();
     assert_eq!(
-        json,
-        json!({
-            "crate_owner_invitations": [{
-                "crate_id": krate.id,
-                "crate_name": "invited_crate",
-                // this value changes with each test run so we can't use a fixed value here
-                "created_at": &json["crate_owner_invitations"][0]["created_at"],
-                "invited_by_username": owner.gh_login,
-                "invitee_id": user.as_model().id,
-                "inviter_id": owner.id,
+        invitations,
+        InvitationListResponse {
+            crate_owner_invitations: vec![EncodableCrateOwnerInvitation {
+                crate_id: krate.id,
+                crate_name: krate.name.clone(),
+                invited_by_username: owner.gh_login.clone(),
+                invitee_id: user.as_model().id,
+                inviter_id: owner.id,
+                // This value changes with each test run so we can't use a fixed value here
+                created_at: invitations.crate_owner_invitations[0].created_at,
             }],
-            "users": [{
-                "avatar": null,
-                "id": owner.id,
-                "login": "foo",
-                "name": null,
-                "url": "https://github.com/foo",
-            }],
-        })
+            users: vec![owner.clone().into()],
+        }
     );
 }
 
