@@ -334,7 +334,7 @@ export default [
     name: 'unicorn-rpc',
     repository: 'https://github.com/nicolas-cherel/rustlex',
     updated_at: '2015-08-25T19:15:35Z',
-    versionIds: [],
+    versionIds: [28674],
   },
   {
     created_at: '2015-01-17T17:47:52Z',

@@ -31,7 +31,9 @@ module('Acceptance | /crates/:crate_id/reverse_dependencies', function (hooks) {
     assert.equal(currentURL(), `/crates/${foo.name}/reverse_dependencies`);
     assert.dom('[data-test-row]').exists({ count: 2 });
     assert.dom('[data-test-row="0"] [data-test-crate-name]').hasText(bar.name);
+    assert.dom('[data-test-row="0"] [data-test-description]').hasText(bar.description);
     assert.dom('[data-test-row="1"] [data-test-crate-name]').hasText(baz.name);
+    assert.dom('[data-test-row="1"] [data-test-description]').hasText(baz.description);
   });
 
   test('supports pagination', async function (assert) {

@@ -4,28 +4,45 @@
     {{if @dependency.optional "optional"}}
     {{if this.focused "focused"}}
   "
+  data-test-dependency={{@dependency.crate_id}}
   ...attributes
 >
-  <span local-class="range" data-test-range>
+  <span local-class="range-lg" data-test-range>
     {{format-req @dependency.req}}
   </span>
 
-  <span>
-    <LinkTo
-      @route="crate.range"
-      @models={{array @dependency.crate_id @dependency.req}}
-      local-class="link"
-      {{on "focusin" (fn this.setFocused true)}}
-      {{on "focusout" (fn this.setFocused false)}}
-      data-test-release-track-link
-    >
-      {{@dependency.crate_id}}
-    </LinkTo>
+  <div local-class="right">
+    <div local-class="name-and-metadata">
+      <span local-class="range-sm">
+        {{format-req @dependency.req}}
+      </span>
 
-    <span local-class="metadata">
-      {{#if @dependency.optional}}
-        optional
-      {{/if}}
-    </span>
-  </span>
+      <LinkTo
+        @route="crate.range"
+        @models={{array @dependency.crate_id @dependency.req}}
+        local-class="link"
+        {{on "focusin" (fn this.setFocused true)}}
+        {{on "focusout" (fn this.setFocused false)}}
+        data-test-crate-name
+      >
+        {{@dependency.crate_id}}
+      </LinkTo>
+
+      <span local-class="metadata" data-test-metadata>
+        {{#if @dependency.optional}}
+          optional
+        {{/if}}
+      </span>
+    </div>
+
+    {{#if (or this.description this.loadCrateTask.isRunning)}}
+      <div local-class="description" data-test-description>
+        {{#if this.loadCrateTask.isRunning}}
+          <Placeholder local-class="description-placeholder" data-test-placeholder />
+        {{else}}
+          {{this.description}}
+        {{/if}}
+      </div>
+    {{/if}}
+  </div>
 </div>

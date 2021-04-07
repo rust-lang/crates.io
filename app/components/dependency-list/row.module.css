@@ -3,6 +3,7 @@
     --hover-bg-color: hsl(217, 37%, 98%);
     --range-color: var(--grey900);
     --crate-color: var(--grey700);
+    --placeholder-opacity: 0.35;
     --shadow: 0 1px 3px hsla(51, 90%, 42%, .35);
 
     display: flex;
@@ -27,6 +28,7 @@
     &.optional {
         --range-color: var(--grey600);
         --crate-color: var(--grey600);
+        --placeholder-opacity: 0.15;
     }
 
     [title], :global(.ember-tooltip-target) {
@@ -44,11 +46,27 @@
     }
 }
 
-.range {
+.range-lg, .range-sm {
     margin-right: 15px;
     min-width: 100px;
     color: var(--range-color);
     font-variant: tabular-nums;
+}
+
+.range-lg {
+    @media only screen and (max-width: 550px) {
+        display: none;
+    }
+}
+
+.range-sm {
+    @media only screen and (min-width: 551px) {
+        display: none;
+    }
+}
+
+.right {
+    flex-grow: 1;
 }
 
 .link {
@@ -97,4 +115,17 @@
         text-transform: none;
         letter-spacing: normal;
     }
+}
+
+.description {
+    margin-top: 10px;
+    color: var(--crate-color);
+    font-size: 90%;
+}
+
+.description-placeholder {
+    height: 1em;
+    width: 70%;
+    border-radius: 5px;
+    opacity: var(--placeholder-opacity);
 }
