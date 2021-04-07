@@ -7,6 +7,7 @@ use reqwest::{
     header,
 };
 use sha1::Sha1;
+use std::time::Duration;
 
 pub use reqwest::Error;
 
@@ -58,6 +59,7 @@ impl Bucket {
             .header(header::USER_AGENT, "crates.io (https://crates.io)")
             .headers(extra_headers)
             .body(Body::sized(content, content_length))
+            .timeout(Duration::from_secs(60))
             .send()?
             .error_for_status()
             .map_err(Into::into)
