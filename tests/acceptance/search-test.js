@@ -89,6 +89,10 @@ module('Acceptance | search', function (hooks) {
     assert.dom('[data-test-search-input]').isFocused();
 
     await blur('[data-test-search-input]');
+    await keyDown('S');
+    assert.dom('[data-test-search-input]').isFocused();
+
+    await blur('[data-test-search-input]');
     await keyDown('shift+s');
     assert.dom('[data-test-search-input]').isFocused();
   });
