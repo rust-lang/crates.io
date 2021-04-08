@@ -56,7 +56,7 @@ pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
 
             let crate_name = crates
                 .get(&invitation.crate_id)
-                .map(|name| name.clone())
+                .cloned()
                 .unwrap_or_else(|| String::from("(unknown crate name)"));
 
             EncodableCrateOwnerInvitation::from(invitation, inviter_name, crate_name)

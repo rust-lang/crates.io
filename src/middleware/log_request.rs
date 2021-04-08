@@ -116,6 +116,12 @@ impl TimingRecorder {
     }
 }
 
+impl Default for TimingRecorder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 fn report_to_sentry(req: &dyn RequestExt, res: &AfterResult, response_time: u64) {
     let (message, level) = match res {
         Err(e) => (e.to_string(), Level::Error),

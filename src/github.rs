@@ -18,7 +18,7 @@ pub struct GitHubClient {
 
 impl GitHubClient {
     pub fn new(client: Option<Client>, base_url: String) -> Self {
-        Self { client, base_url }
+        Self { base_url, client }
     }
 
     pub fn current_user(&self, auth: &AccessToken) -> AppResult<GithubUser> {

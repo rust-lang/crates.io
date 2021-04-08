@@ -71,9 +71,9 @@ impl TopVersions {
             .max();
 
         Self {
-            newest,
             highest,
             highest_stable,
+            newest,
         }
     }
 }
