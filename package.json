@@ -57,7 +57,7 @@
     "@embroider/webpack": "0.39.1",
     "@glimmer/component": "1.0.4",
     "@glimmer/tracking": "1.0.4",
-    "@percy/ember": "2.1.4",
+    "@percy/ember": "3.0.0",
     "@zestia/ember-auto-focus": "4.1.7",
     "babel-eslint": "10.1.0",
     "babel-plugin-transform-object-rest-spread": "6.26.0",
