@@ -48,7 +48,7 @@ module('Component | CrateSidebar | Playground Button', function (hooks) {
     this.version = (await this.crate.versions).firstObject;
 
     let expectedHref =
-      'https://play.rust-lang.org/?code=use%20aho_corasick%3B%0A%0Afn%20main()%20%7B%0A%20%20%20%20%2F%2F%20try%20using%20the%20%60aho_corasick%60%20crate%20here%0A%7D';
+      'https://play.rust-lang.org/?edition=2018&code=use%20aho_corasick%3B%0A%0Afn%20main()%20%7B%0A%20%20%20%20%2F%2F%20try%20using%20the%20%60aho_corasick%60%20crate%20here%0A%7D';
 
     await render(hbs`<CrateSidebar @crate={{this.crate}} @version={{this.version}} />`);
     assert.dom('[data-test-playground-button]').hasAttribute('href', expectedHref);
