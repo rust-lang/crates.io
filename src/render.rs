@@ -171,7 +171,7 @@ fn is_media_url(url: &str) -> MediaUrl {
                     is_media: true,
                     add_sanitize_query: true,
                 },
-                "png" | "jpg" | "jpeg" | "gif" | "mp4" | "webm" | "ogg" => MediaUrl {
+                "png" | "jpg" | "jpeg" | "gif" | "mp4" | "webm" | "ogg" | "webp" => MediaUrl {
                     is_media: true,
                     add_sanitize_query: false,
                 },
