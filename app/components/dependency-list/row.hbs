@@ -35,6 +35,17 @@
       </span>
     </div>
 
+    {{#if (or (not @dependency.default_features) @dependency.features)}}
+      <div local-class="features" data-test-features>
+        {{#if (not @dependency.default_features)}}
+        default-features=false
+        {{/if}}
+        {{#if @dependency.features}}
+        features={{@dependency.features}}
+        {{/if}}
+      </div>
+    {{/if}}
+
     {{#if (or this.description this.loadCrateTask.isRunning)}}
       <div local-class="description" data-test-description>
         {{#if this.loadCrateTask.isRunning}}

@@ -117,6 +117,12 @@
     }
 }
 
+.features {
+    margin-top: 10px;
+    color: var(--crate-color);
+    font-size: 80%;
+}
+
 .description {
     margin-top: 10px;
     color: var(--crate-color);
