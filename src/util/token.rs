@@ -1,9 +1,13 @@
+use diesel::{backend::Backend, deserialize::FromSql, pg::Pg, serialize::ToSql, sql_types::Bytea};
 use rand::{distributions::Uniform, rngs::OsRng, Rng};
 use sha2::{Digest, Sha256};
+use std::io::Write;
 
 const TOKEN_LENGTH: usize = 32;
 
-pub(crate) struct SecureToken {
+#[derive(FromSqlRow, AsExpression, Clone, PartialEq, Eq)]
+#[sql_type = "Bytea"]
+pub struct SecureToken {
     sha256: Vec<u8>,
 }
 
@@ -31,9 +35,28 @@ impl SecureToken {
         let sha256 = Sha256::digest(plaintext.as_bytes()).as_slice().to_vec();
         Some(Self { sha256 })
     }
+}
 
-    pub(crate) fn sha256(&self) -> &[u8] {
-        &self.sha256
+impl std::fmt::Debug for SecureToken {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("SecureToken")
+    }
+}
+
+impl ToSql<Bytea, Pg> for SecureToken {
+    fn to_sql<W: Write>(
+        &self,
+        out: &mut diesel::serialize::Output<'_, W, Pg>,
+    ) -> diesel::serialize::Result {
+        ToSql::<Bytea, Pg>::to_sql(&self.sha256, out)
+    }
+}
+
+impl FromSql<Bytea, Pg> for SecureToken {
+    fn from_sql(bytes: Option<&<Pg as Backend>::RawValue>) -> diesel::deserialize::Result<Self> {
+        Ok(Self {
+            sha256: FromSql::<Bytea, Pg>::from_sql(bytes)?,
+        })
     }
 }
 
@@ -45,6 +68,11 @@ pub(crate) struct NewSecureToken {
 impl NewSecureToken {
     pub(crate) fn plaintext(&self) -> &str {
         &self.plaintext
+    }
+
+    #[cfg(test)]
+    pub(crate) fn into_inner(self) -> SecureToken {
+        self.inner
     }
 }
 
@@ -118,13 +146,13 @@ mod tests {
         let token = SecureToken::generate(KIND);
         assert!(token.plaintext().starts_with(KIND.prefix()));
         assert_eq!(
-            token.sha256(),
+            token.sha256,
             Sha256::digest(token.plaintext().as_bytes()).as_slice()
         );
 
         let parsed =
             SecureToken::parse(KIND, &token.plaintext()).expect("failed to parse back the token");
-        assert_eq!(parsed.sha256(), token.sha256());
+        assert_eq!(parsed.sha256, token.sha256);
     }
 
     #[test]

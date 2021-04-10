@@ -14,9 +14,8 @@ pub struct ApiToken {
     pub id: i32,
     #[serde(skip)]
     pub user_id: i32,
-    // Nothing should ever access the plaintext token.
     #[serde(skip)]
-    token: Vec<u8>,
+    token: SecureToken,
     pub name: String,
     #[serde(with = "rfc3339")]
     pub created_at: NaiveDateTime,
@@ -35,7 +34,7 @@ impl ApiToken {
             .values((
                 api_tokens::user_id.eq(user_id),
                 api_tokens::name.eq(name),
-                api_tokens::token.eq(token.sha256()),
+                api_tokens::token.eq(&*token),
             ))
             .get_result(conn)?;
 
@@ -54,7 +53,7 @@ impl ApiToken {
 
         let tokens = api_tokens
             .filter(revoked.eq(false))
-            .filter(token.eq(token_.sha256()));
+            .filter(token.eq(&token_));
 
         // If the database is in read only mode, we can't update last_used_at.
         // Try updating in a new transaction, if that fails, fall back to reading
@@ -94,7 +93,7 @@ mod tests {
         let tok = ApiToken {
             id: 12345,
             user_id: 23456,
-            token: Vec::new(),
+            token: SecureToken::generate(SecureTokenKind::Api).into_inner(),
             revoked: false,
             name: "".to_string(),
             created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
