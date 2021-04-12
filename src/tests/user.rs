@@ -207,6 +207,12 @@ fn crates_by_user_id_not_including_deleted_owners() {
 }
 
 #[test]
+fn api_token_cannot_get_user_updates() {
+    let (_, _, _, token) = TestApp::init().with_token();
+    token.get("/api/v1/me/updates").assert_forbidden();
+}
+
+#[test]
 fn following() {
     use cargo_registry::schema::versions;
     use diesel::update;

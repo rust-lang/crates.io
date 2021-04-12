@@ -9,7 +9,7 @@ use serde_json as json;
 
 /// Handles the `GET /me/tokens` route.
 pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
-    let authenticated_user = req.authenticate()?;
+    let authenticated_user = req.authenticate()?.forbid_api_token_auth()?;
     let conn = req.db_conn()?;
     let user = authenticated_user.user();
 
