@@ -13,7 +13,7 @@ use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCra
 
 /// Handles the `GET /me` route.
 pub fn me(req: &mut dyn RequestExt) -> EndpointResult {
-    let user_id = req.authenticate()?.user_id();
+    let user_id = req.authenticate()?.forbid_api_token_auth()?.user_id();
     let conn = req.db_conn()?;
 
     let (user, verified, email, verification_sent): (User, Option<bool>, Option<String>, bool) =
