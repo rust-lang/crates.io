@@ -6,7 +6,7 @@ use crate::views::{EncodableCrateOwnerInvitation, EncodablePublicUser, Invitatio
 use diesel::dsl::any;
 use std::collections::HashMap;
 
-/// Handles the `GET /me/crate_owner_invitations` route.
+/// Handles the `GET /api/v1/me/crate_owner_invitations` route.
 pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
     // Ensure that the user is authenticated
     let user = req.authenticate()?.forbid_api_token_auth()?.user();
@@ -88,7 +88,7 @@ struct OwnerInvitation {
     crate_owner_invite: InvitationResponse,
 }
 
-/// Handles the `PUT /me/crate_owner_invitations/:crate_id` route.
+/// Handles the `PUT /api/v1/me/crate_owner_invitations/:crate_id` route.
 pub fn handle_invite(req: &mut dyn RequestExt) -> EndpointResult {
     let mut body = String::new();
     req.body().read_to_string(&mut body)?;
@@ -117,7 +117,7 @@ pub fn handle_invite(req: &mut dyn RequestExt) -> EndpointResult {
     }))
 }
 
-/// Handles the `PUT /me/crate_owner_invitations/accept/:token` route.
+/// Handles the `PUT /api/v1/me/crate_owner_invitations/accept/:token` route.
 pub fn handle_invite_with_token(req: &mut dyn RequestExt) -> EndpointResult {
     let config = &req.app().config;
     let conn = req.db_conn()?;
