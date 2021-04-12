@@ -20,7 +20,7 @@ pub fn download(req: &mut dyn RequestExt) -> EndpointResult {
     let crate_name = &req.params()["crate_id"];
     let version = &req.params()["version"];
 
-    let (version_id, crate_name): (_, String) = {
+    let (version_id, canonical_crate_name): (_, String) = {
         use self::versions::dsl::*;
 
         let conn = recorder.record("get_conn", || req.db_conn())?;
@@ -45,7 +45,11 @@ pub fn download(req: &mut dyn RequestExt) -> EndpointResult {
         .app()
         .config
         .uploader
-        .crate_location(&crate_name, version);
+        .crate_location(&canonical_crate_name, version);
+
+    if &canonical_crate_name != crate_name {
+        req.log_metadata("bot", "dl");
+    }
 
     if req.wants_json() {
         #[derive(Serialize)]
