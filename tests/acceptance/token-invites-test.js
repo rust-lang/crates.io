@@ -36,6 +36,17 @@ module('Acceptance | /accept-invite/:token', function (hooks) {
     assert.dom('[data-test-error-message]').hasText('You may want to visit crates.io/me/pending-invites to try again.');
   });
 
+  test('shows error for expired token', async function (assert) {
+    let errorMessage =
+      'The invitation to become an owner of the demo_crate crate expired. Please reach out to an owner of the crate to request a new invitation.';
+    let payload = { errors: [{ detail: errorMessage }] };
+    this.server.put('/api/v1/me/crate_owner_invitations/accept/:token', payload, 410);
+
+    await visit('/accept-invite/secret123');
+    assert.equal(currentURL(), '/accept-invite/secret123');
+    assert.dom('[data-test-error-message]').hasText(errorMessage);
+  });
+
   test('shows success for known token', async function (assert) {
     assert.expect(3);
 

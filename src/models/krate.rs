@@ -9,7 +9,7 @@ use crate::app::App;
 use crate::controllers::helpers::pagination::*;
 use crate::models::version::TopVersions;
 use crate::models::{
-    Badge, CrateOwner, CrateOwnerInvitation, NewCrateOwnerInvitation, Owner, OwnerKind,
+    Badge, CrateOwner, CrateOwnerInvitation, NewCrateOwnerInvitationOutcome, Owner, OwnerKind,
     ReverseDependency, User, Version,
 };
 use crate::util::errors::{cargo_err, AppResult};
@@ -333,35 +333,31 @@ impl Crate {
         match owner {
             // Users are invited and must accept before being added
             Owner::User(user) => {
-                let maybe_inserted: Option<CrateOwnerInvitation> =
-                    insert_into(crate_owner_invitations::table)
-                        .values(&NewCrateOwnerInvitation {
-                            invited_user_id: user.id,
-                            invited_by_user_id: req_user.id,
-                            crate_id: self.id,
-                        })
-                        .on_conflict_do_nothing()
-                        .get_result(conn)
-                        .optional()?;
+                let config = &app.config;
+                match CrateOwnerInvitation::create(user.id, req_user.id, self.id, conn, config)? {
+                    NewCrateOwnerInvitationOutcome::InviteCreated { plaintext_token } => {
+                        if let Ok(Some(email)) = user.verified_email(&conn) {
+                            // Swallow any error. Whether or not the email is sent, the invitation
+                            // entry will be created in the database and the user will see the
+                            // invitation when they visit https://crates.io/me/pending-invites/.
+                            let _ = app.emails.send_owner_invite(
+                                &email,
+                                &req_user.gh_login,
+                                &self.name,
+                                &plaintext_token,
+                            );
+                        }
 
-                if let Some(ownership_invitation) = maybe_inserted {
-                    if let Ok(Some(email)) = user.verified_email(&conn) {
-                        // Swallow any error. Whether or not the email is sent, the invitation
-                        // entry will be created in the database and the user will see the
-                        // invitation when they visit https://crates.io/me/pending-invites/.
-                        let _ = app.emails.send_owner_invite(
-                            &email,
-                            &req_user.gh_login,
-                            &self.name,
-                            &ownership_invitation.token,
-                        );
+                        Ok(format!(
+                            "user {} has been invited to be an owner of crate {}",
+                            user.gh_login, self.name
+                        ))
                     }
+                    NewCrateOwnerInvitationOutcome::AlreadyExists => Ok(format!(
+                        "user {} already has a pending invitation to be an owner of crate {}",
+                        user.gh_login, self.name
+                    )),
                 }
-
-                Ok(format!(
-                    "user {} has been invited to be an owner of crate {}",
-                    user.gh_login, self.name
-                ))
             }
             // Teams are added as owners immediately
             owner @ Owner::Team(_) => {

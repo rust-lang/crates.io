@@ -1,7 +1,7 @@
 use super::frontend_prelude::*;
 
-use crate::models::{CrateOwner, CrateOwnerInvitation, OwnerKind, User};
-use crate::schema::{crate_owner_invitations, crate_owners, crates, users};
+use crate::models::{CrateOwnerInvitation, User};
+use crate::schema::{crate_owner_invitations, crates, users};
 use crate::views::{EncodableCrateOwnerInvitation, EncodablePublicUser, InvitationResponse};
 use diesel::dsl::any;
 use std::collections::HashMap;
@@ -45,8 +45,10 @@ pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
     let crates: HashMap<i32, String> = crates.into_iter().collect();
 
     // Turn `CrateOwnerInvitation` list into `EncodableCrateOwnerInvitation` list
+    let config = &req.app().config;
     let crate_owner_invitations = crate_owner_invitations
         .into_iter()
+        .filter(|i| !i.is_expired(config))
         .map(|invitation| {
             let inviter_id = invitation.invited_by_user_id;
             let inviter_name = users
@@ -59,7 +61,8 @@ pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
                 .cloned()
                 .unwrap_or_else(|| String::from("(unknown crate name)"));
 
-            EncodableCrateOwnerInvitation::from(invitation, inviter_name, crate_name)
+            let expires_at = invitation.expires_at(&config);
+            EncodableCrateOwnerInvitation::from(invitation, inviter_name, crate_name, expires_at)
         })
         .collect();
 
@@ -96,89 +99,42 @@ pub fn handle_invite(req: &mut dyn RequestExt) -> EndpointResult {
     let crate_invite = crate_invite.crate_owner_invite;
     let user_id = req.authenticate()?.user_id();
     let conn = &*req.db_conn()?;
+    let config = &req.app().config;
 
+    let invitation = CrateOwnerInvitation::find_by_id(user_id, crate_invite.crate_id, &conn)?;
     if crate_invite.accepted {
-        accept_invite(req, conn, crate_invite, user_id)
+        invitation.accept(&conn, config)?;
     } else {
-        decline_invite(req, conn, crate_invite, user_id)
+        invitation.decline(&conn)?;
     }
-}
-
-/// Handles the `PUT /me/crate_owner_invitations/accept/:token` route.
-pub fn handle_invite_with_token(req: &mut dyn RequestExt) -> EndpointResult {
-    let conn = req.db_conn()?;
-    let req_token = &req.params()["token"];
-
-    let crate_owner_invite: CrateOwnerInvitation = crate_owner_invitations::table
-        .filter(crate_owner_invitations::token.eq(req_token))
-        .first(&*conn)?;
-
-    let invite_reponse = InvitationResponse {
-        crate_id: crate_owner_invite.crate_id,
-        accepted: true,
-    };
-    accept_invite(
-        req,
-        &conn,
-        invite_reponse,
-        crate_owner_invite.invited_user_id,
-    )
-}
-
-fn accept_invite(
-    req: &dyn RequestExt,
-    conn: &PgConnection,
-    crate_invite: InvitationResponse,
-    user_id: i32,
-) -> EndpointResult {
-    use diesel::{delete, insert_into};
-
-    conn.transaction(|| {
-        let pending_crate_owner: CrateOwnerInvitation = crate_owner_invitations::table
-            .find((user_id, crate_invite.crate_id))
-            .first(&*conn)?;
-
-        insert_into(crate_owners::table)
-            .values(&CrateOwner {
-                crate_id: crate_invite.crate_id,
-                owner_id: user_id,
-                created_by: pending_crate_owner.invited_by_user_id,
-                owner_kind: OwnerKind::User as i32,
-                email_notifications: true,
-            })
-            .on_conflict(crate_owners::table.primary_key())
-            .do_update()
-            .set(crate_owners::deleted.eq(false))
-            .execute(conn)?;
-        delete(crate_owner_invitations::table.find((user_id, crate_invite.crate_id)))
-            .execute(conn)?;
-
-        #[derive(Serialize)]
-        struct R {
-            crate_owner_invitation: InvitationResponse,
-        }
-        Ok(req.json(&R {
-            crate_owner_invitation: crate_invite,
-        }))
-    })
-}
-
-fn decline_invite(
-    req: &dyn RequestExt,
-    conn: &PgConnection,
-    crate_invite: InvitationResponse,
-    user_id: i32,
-) -> EndpointResult {
-    use diesel::delete;
-
-    delete(crate_owner_invitations::table.find((user_id, crate_invite.crate_id))).execute(conn)?;
 
     #[derive(Serialize)]
     struct R {
         crate_owner_invitation: InvitationResponse,
     }
-
     Ok(req.json(&R {
         crate_owner_invitation: crate_invite,
+    }))
+}
+
+/// Handles the `PUT /me/crate_owner_invitations/accept/:token` route.
+pub fn handle_invite_with_token(req: &mut dyn RequestExt) -> EndpointResult {
+    let config = &req.app().config;
+    let conn = req.db_conn()?;
+    let req_token = &req.params()["token"];
+
+    let invitation = CrateOwnerInvitation::find_by_token(req_token, &conn)?;
+    let crate_id = invitation.crate_id;
+    invitation.accept(&conn, config)?;
+
+    #[derive(Serialize)]
+    struct R {
+        crate_owner_invitation: InvitationResponse,
+    }
+    Ok(req.json(&R {
+        crate_owner_invitation: InvitationResponse {
+            crate_id,
+            accepted: true,
+        },
     }))
 }

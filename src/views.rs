@@ -73,7 +73,7 @@ pub struct EncodableCategoryWithSubcategories {
 }
 
 /// The serialization format for the `CrateOwnerInvitation` model.
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq)]
 pub struct EncodableCrateOwnerInvitation {
     pub invitee_id: i32,
     pub inviter_id: i32,
@@ -82,6 +82,8 @@ pub struct EncodableCrateOwnerInvitation {
     pub crate_id: i32,
     #[serde(with = "rfc3339")]
     pub created_at: NaiveDateTime,
+    #[serde(with = "rfc3339")]
+    pub expires_at: NaiveDateTime,
 }
 
 impl EncodableCrateOwnerInvitation {
@@ -89,6 +91,7 @@ impl EncodableCrateOwnerInvitation {
         invitation: CrateOwnerInvitation,
         inviter_name: String,
         crate_name: String,
+        expires_at: NaiveDateTime,
     ) -> Self {
         Self {
             invitee_id: invitation.invited_user_id,
@@ -97,6 +100,7 @@ impl EncodableCrateOwnerInvitation {
             crate_name,
             crate_id: invitation.crate_id,
             created_at: invitation.created_at,
+            expires_at,
         }
     }
 }
@@ -521,7 +525,7 @@ impl EncodablePrivateUser {
 
 /// The serialization format for the `User` model.
 /// Same as private user, except no email field
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq)]
 pub struct EncodablePublicUser {
     pub id: i32,
     pub login: String,
@@ -804,11 +808,15 @@ mod tests {
             crate_name: "".to_string(),
             crate_id: 123,
             created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
+            expires_at: NaiveDate::from_ymd(2020, 10, 24).and_hms(16, 30, 00),
         };
         let json = serde_json::to_string(&inv).unwrap();
         assert_some!(json
             .as_str()
             .find(r#""created_at":"2017-01-06T14:23:11+00:00""#));
+        assert_some!(json
+            .as_str()
+            .find(r#""expires_at":"2020-10-24T16:30:00+00:00""#));
     }
 
     #[test]
