@@ -282,7 +282,7 @@ fn using_token_updates_last_used_at() {
     assert_none!(token.as_model().last_used_at);
 
     // Use the token once
-    token.search("");
+    token.search("following=1");
 
     let token: ApiToken =
         app.db(|conn| assert_ok!(ApiToken::belonging_to(user.as_model()).first(conn)));
