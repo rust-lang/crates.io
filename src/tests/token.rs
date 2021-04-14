@@ -1,4 +1,4 @@
-use crate::{user::UserShowPrivateResponse, RequestHelper, TestApp};
+use crate::{RequestHelper, TestApp};
 use cargo_registry::{
     models::ApiToken,
     schema::api_tokens,
@@ -273,17 +273,6 @@ fn revoke_token_success() {
 }
 
 #[test]
-fn token_gives_access_to_me() {
-    let url = "/api/v1/me";
-    let (_, anon, user, token) = TestApp::init().with_token();
-
-    anon.get(url).assert_forbidden();
-
-    let json: UserShowPrivateResponse = token.get(url).good();
-    assert_eq!(json.user.name, user.as_model().name);
-}
-
-#[test]
 fn using_token_updates_last_used_at() {
     let url = "/api/v1/me";
     let (app, anon, user, token) = TestApp::init().with_token();
@@ -293,7 +282,7 @@ fn using_token_updates_last_used_at() {
     assert_none!(token.as_model().last_used_at);
 
     // Use the token once
-    token.get::<EncodableMe>("/api/v1/me").good();
+    token.search("following=1");
 
     let token: ApiToken =
         app.db(|conn| assert_ok!(ApiToken::belonging_to(user.as_model()).first(conn)));
