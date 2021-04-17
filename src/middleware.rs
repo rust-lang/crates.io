@@ -10,6 +10,7 @@ use self::head::Head;
 use self::known_error_to_json::KnownErrorToJson;
 use self::log_connection_pool_status::LogConnectionPoolStatus;
 use self::static_or_continue::StaticOrContinue;
+use self::update_metrics::UpdateMetrics;
 
 pub mod app;
 mod balance_capacity;
@@ -24,6 +25,7 @@ pub mod log_request;
 mod normalize_path;
 mod require_user_agent;
 mod static_or_continue;
+mod update_metrics;
 
 use conduit_conditional_get::ConditionalGet;
 use conduit_cookie::{Middleware as Cookie, SessionMiddleware};
@@ -67,6 +69,9 @@ pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBui
 
     m.add(AppMiddleware::new(app));
     m.add(KnownErrorToJson);
+
+    // This is added *after* AppMiddleware to make sure the app is available.
+    m.add(UpdateMetrics);
 
     // Note: The following `m.around()` middleware is run from bottom to top
 

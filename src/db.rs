@@ -24,16 +24,31 @@ impl DieselPool {
         }
     }
 
-    pub fn state(&self) -> r2d2::State {
+    pub fn state(&self) -> PoolState {
         match self {
-            DieselPool::Pool(pool) => pool.state(),
-            DieselPool::Test(_) => panic!("Cannot get the state of a test pool"),
+            DieselPool::Pool(pool) => {
+                let state = pool.state();
+                PoolState {
+                    connections: state.connections,
+                    idle_connections: state.idle_connections,
+                }
+            }
+            DieselPool::Test(_) => PoolState {
+                connections: 0,
+                idle_connections: 0,
+            },
         }
     }
 
     fn test_conn(conn: PgConnection) -> Self {
         DieselPool::Test(Arc::new(ReentrantMutex::new(conn)))
     }
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct PoolState {
+    pub connections: u32,
+    pub idle_connections: u32,
 }
 
 #[allow(missing_debug_implementations)]

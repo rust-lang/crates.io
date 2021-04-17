@@ -101,6 +101,7 @@ pub mod category;
 pub mod crate_owner_invitation;
 pub mod keyword;
 pub mod krate;
+pub mod metrics;
 pub mod site_metadata;
 pub mod team;
 pub mod token;

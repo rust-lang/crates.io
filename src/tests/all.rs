@@ -39,6 +39,7 @@ mod dump_db;
 mod git;
 mod keyword;
 mod krate;
+mod metrics;
 mod owners;
 mod read_only_mode;
 mod record;
