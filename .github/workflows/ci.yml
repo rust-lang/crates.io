@@ -12,7 +12,7 @@ on:
 jobs:
   frontend:
     name: Frontend
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     env:
       JOBS: 1 # See https://git.io/vdao3 for details.
 
@@ -47,7 +47,7 @@ jobs:
 
   embroider:
     name: Frontend (embroider)
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     env:
       USE_EMBROIDER: 'true'
 
@@ -66,7 +66,7 @@ jobs:
 
   backend-lint:
     name: Backend (linting)
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
 
     steps:
       - uses: actions/checkout@v2
@@ -109,7 +109,7 @@ jobs:
 
   backend:
     name: Backend
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     strategy:
       # TODO: [ci] should be true if GitHub Actions supports ""allow failures" on matrix
       fail-fast: false
