@@ -1,11 +1,27 @@
 use crate::controllers::frontend_prelude::*;
-use crate::util::errors::not_found;
+use crate::util::errors::{forbidden, not_found, MetricsDisabled};
 use conduit::{Body, Response};
 use prometheus::{Encoder, TextEncoder};
 
 /// Handles the `GET /api/private/metrics/:kind` endpoint.
 pub fn prometheus(req: &mut dyn RequestExt) -> EndpointResult {
     let app = req.app();
+
+    if let Some(expected_token) = &app.config.metrics_authorization_token {
+        let provided_token = req
+            .headers()
+            .get(header::AUTHORIZATION)
+            .and_then(|value| value.to_str().ok())
+            .and_then(|value| value.strip_prefix("Bearer "));
+
+        if provided_token != Some(expected_token.as_str()) {
+            return Err(forbidden());
+        }
+    } else {
+        // To avoid accidentally leaking metrics if the environment variable is not set, prevent
+        // access to any metrics endpoint if the authorization token is not configured.
+        return Err(Box::new(MetricsDisabled));
+    }
 
     let metrics = match req.params()["kind"].as_str() {
         "service" => app.service_metrics.gather(&*req.db_read_only()?)?,

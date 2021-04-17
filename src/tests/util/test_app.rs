@@ -317,6 +317,7 @@ fn simple_config() -> Config {
         allowed_origins: Vec::new(),
         downloads_persist_interval_ms: 1000,
         ownership_invitations_expiration_days: 30,
+        metrics_authorization_token: None,
     }
 }
 
