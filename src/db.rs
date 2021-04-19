@@ -7,7 +7,6 @@ use std::sync::Arc;
 use url::Url;
 
 use crate::middleware::app::RequestApp;
-use crate::Env;
 
 #[allow(missing_debug_implementations)]
 #[derive(Clone)]
@@ -19,18 +18,18 @@ pub enum DieselPool {
 impl DieselPool {
     pub(crate) fn new(
         url: &str,
-        env: Env,
         config: r2d2::Builder<ConnectionManager<PgConnection>>,
     ) -> DieselPool {
-        let url = connection_url(url);
-
-        if env == Env::Test {
-            let conn = PgConnection::establish(&url).expect("failed to establish connection");
-            return DieselPool::Test(Arc::new(ReentrantMutex::new(conn)));
-        }
-
-        let manager = ConnectionManager::new(url);
+        let manager = ConnectionManager::new(connection_url(url));
         DieselPool::Pool(config.build(manager).unwrap())
+    }
+
+    pub(crate) fn new_test(url: &str) -> DieselPool {
+        let conn =
+            PgConnection::establish(&connection_url(url)).expect("failed to establish connection");
+        conn.begin_test_transaction()
+            .expect("failed to begin test transaction");
+        DieselPool::Test(Arc::new(ReentrantMutex::new(conn)))
     }
 
     pub fn get(&self) -> Result<DieselPooledConn<'_>, r2d2::PoolError> {

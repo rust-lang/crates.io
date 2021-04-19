@@ -9,7 +9,7 @@ use cargo_registry::{
 use std::{rc::Rc, sync::Arc, time::Duration};
 
 use cargo_registry::git::Repository as WorkerRepository;
-use diesel::{Connection, PgConnection};
+use diesel::PgConnection;
 use git2::Repository as UpstreamRepository;
 use reqwest::{blocking::Client, Proxy};
 use swirl::Runner;
@@ -321,6 +321,7 @@ fn simple_config() -> Config {
         downloads_persist_interval_ms: 1000,
         ownership_invitations_expiration_days: 30,
         metrics_authorization_token: None,
+        use_test_database_pool: true,
     }
 }
 
@@ -343,7 +344,6 @@ fn build_app(
     // the application. This will also prevent cluttering the filesystem.
     app.emails = Emails::new_in_memory();
 
-    assert_ok!(assert_ok!(app.primary_database.get()).begin_test_transaction());
     let app = Arc::new(app);
     let handler = cargo_registry::build_handler(Arc::clone(&app));
     (app, handler)

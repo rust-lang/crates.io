@@ -104,38 +104,45 @@ impl App {
             _ => 30,
         };
 
-        let primary_db_connection_config = ConnectionConfig {
-            statement_timeout: db_connection_timeout,
-            read_only: config.db_primary_config.read_only_mode,
-        };
-
         let thread_pool = Arc::new(ScheduledThreadPool::new(db_helper_threads));
 
-        let primary_db_config = r2d2::Pool::builder()
-            .max_size(db_pool_size)
-            .min_idle(db_min_idle)
-            .connection_timeout(Duration::from_secs(db_connection_timeout))
-            .connection_customizer(Box::new(primary_db_connection_config))
-            .thread_pool(thread_pool.clone());
-
-        let primary_database =
-            DieselPool::new(&config.db_primary_config.url, config.env, primary_db_config);
-
-        let replica_database = if let Some(url) = config.db_replica_config.as_ref().map(|c| &c.url)
-        {
-            let replica_db_connection_config = ConnectionConfig {
+        let primary_database = if config.use_test_database_pool {
+            DieselPool::new_test(&config.db_primary_config.url)
+        } else {
+            let primary_db_connection_config = ConnectionConfig {
                 statement_timeout: db_connection_timeout,
-                read_only: true,
+                read_only: config.db_primary_config.read_only_mode,
             };
 
-            let replica_db_config = r2d2::Pool::builder()
+            let primary_db_config = r2d2::Pool::builder()
                 .max_size(db_pool_size)
                 .min_idle(db_min_idle)
                 .connection_timeout(Duration::from_secs(db_connection_timeout))
-                .connection_customizer(Box::new(replica_db_connection_config))
-                .thread_pool(thread_pool);
+                .connection_customizer(Box::new(primary_db_connection_config))
+                .thread_pool(thread_pool.clone());
 
-            Some(DieselPool::new(&url, config.env, replica_db_config))
+            DieselPool::new(&config.db_primary_config.url, primary_db_config)
+        };
+
+        let replica_database = if let Some(url) = config.db_replica_config.as_ref().map(|c| &c.url)
+        {
+            if config.use_test_database_pool {
+                Some(DieselPool::new_test(url))
+            } else {
+                let replica_db_connection_config = ConnectionConfig {
+                    statement_timeout: db_connection_timeout,
+                    read_only: true,
+                };
+
+                let replica_db_config = r2d2::Pool::builder()
+                    .max_size(db_pool_size)
+                    .min_idle(db_min_idle)
+                    .connection_timeout(Duration::from_secs(db_connection_timeout))
+                    .connection_customizer(Box::new(replica_db_connection_config))
+                    .thread_pool(thread_pool);
+
+                Some(DieselPool::new(&url, replica_db_config))
+            }
         } else {
             None
         };
