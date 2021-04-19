@@ -1,4 +1,5 @@
 use super::{MockAnonymousUser, MockCookieUser, MockTokenUser};
+use crate::util::fresh_schema::FreshSchema;
 use crate::{env, record};
 use cargo_registry::{
     background_jobs::Environment,
@@ -22,6 +23,9 @@ struct TestAppInner {
     middle: conduit_middleware::MiddlewareBuilder,
     index: Option<UpstreamRepository>,
     runner: Option<Runner<Environment, DieselPool>>,
+
+    // Must be the last field of the struct!
+    _fresh_schema: Option<FreshSchema>,
 }
 
 impl Drop for TestAppInner {
@@ -179,8 +183,18 @@ pub struct TestAppBuilder {
 
 impl TestAppBuilder {
     /// Create a `TestApp` with an empty database
-    pub fn empty(self) -> (TestApp, MockAnonymousUser) {
+    pub fn empty(mut self) -> (TestApp, MockAnonymousUser) {
         use crate::git;
+
+        // Run each test inside a fresh database schema, deleted at the end of the test,
+        // The schema will be cleared up once the app is dropped.
+        let fresh_schema = if !self.config.use_test_database_pool {
+            let fresh_schema = FreshSchema::new(&self.config.db_primary_config.url);
+            self.config.db_primary_config.url = fresh_schema.database_url().into();
+            Some(fresh_schema)
+        } else {
+            None
+        };
 
         let (app, middle) = build_app(self.config, self.proxy);
 
@@ -211,6 +225,7 @@ impl TestAppBuilder {
 
         let test_app_inner = TestAppInner {
             app,
+            _fresh_schema: fresh_schema,
             _bomb: self.bomb,
             middle,
             index: self.index,
@@ -270,6 +285,11 @@ impl TestAppBuilder {
 
     pub fn with_job_runner(mut self) -> Self {
         self.build_job_runner = true;
+        self
+    }
+
+    pub fn with_slow_real_db_pool(mut self) -> Self {
+        self.config.use_test_database_pool = false;
         self
     }
 }
