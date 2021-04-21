@@ -33,6 +33,7 @@ use conduit::header;
 use cookie::Cookie;
 use std::collections::HashMap;
 
+mod chaosproxy;
 mod fresh_schema;
 mod response;
 mod test_app;

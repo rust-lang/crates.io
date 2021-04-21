@@ -47,6 +47,7 @@ mod schema_details;
 mod server;
 mod team;
 mod token;
+mod unhealthy_database;
 mod user;
 mod util;
 mod version;

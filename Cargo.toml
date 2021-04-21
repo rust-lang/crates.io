@@ -81,7 +81,7 @@ sha2 = "0.9"
 swirl = { git = "https://github.com/sgrif/swirl.git", rev = "e87cf37" }
 tar = "0.4.16"
 tempfile = "3"
-tokio = { version = "1", features = ["net", "signal", "io-std", "io-util", "rt-multi-thread"]}
+tokio = { version = "1.5.0", features = ["net", "signal", "io-std", "io-util", "rt-multi-thread", "macros"]}
 toml = "0.5"
 tracing = "0.1"
 tracing-subscriber = "0.2"
@@ -92,7 +92,7 @@ claim = "0.5"
 conduit-test = "0.9.0-alpha.4"
 hyper-tls = "0.5"
 lazy_static = "1.0"
-tokio = "1"
+tokio = "1.5.0"
 tower-service = "0.3.0"
 
 [build-dependencies]

@@ -2,8 +2,8 @@ use conduit::RequestExt;
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager, CustomizeConnection};
 use parking_lot::{ReentrantMutex, ReentrantMutexGuard};
-use std::ops::Deref;
 use std::sync::Arc;
+use std::{ops::Deref, time::Duration};
 use url::Url;
 
 use crate::middleware::app::RequestApp;
@@ -32,9 +32,17 @@ impl DieselPool {
         DieselPool::Test(Arc::new(ReentrantMutex::new(conn)))
     }
 
-    pub fn get(&self) -> Result<DieselPooledConn<'_>, r2d2::PoolError> {
+    pub fn get(&self) -> Result<DieselPooledConn<'_>, PoolError> {
         match self {
-            DieselPool::Pool(pool) => Ok(DieselPooledConn::Pool(pool.get()?)),
+            DieselPool::Pool(pool) => {
+                if let Some(conn) = pool.try_get() {
+                    Ok(DieselPooledConn::Pool(conn))
+                } else if !self.is_healthy() {
+                    Err(PoolError::UnhealthyPool)
+                } else {
+                    Ok(DieselPooledConn::Pool(pool.get().map_err(PoolError::R2D2)?))
+                }
+            }
             DieselPool::Test(conn) => Ok(DieselPooledConn::Test(conn.lock())),
         }
     }
@@ -53,6 +61,21 @@ impl DieselPool {
                 idle_connections: 0,
             },
         }
+    }
+
+    pub fn wait_until_healthy(&self, timeout: Duration) -> Result<(), PoolError> {
+        match self {
+            DieselPool::Pool(pool) => match pool.get_timeout(timeout) {
+                Ok(_) => Ok(()),
+                Err(_) if !self.is_healthy() => Err(PoolError::UnhealthyPool),
+                Err(err) => Err(PoolError::R2D2(err)),
+            },
+            DieselPool::Test(_) => Ok(()),
+        }
+    }
+
+    fn is_healthy(&self) -> bool {
+        self.state().connections > 0
     }
 }
 
@@ -96,23 +119,23 @@ pub fn connection_url(url: &str) -> String {
 
 pub trait RequestTransaction {
     /// Obtain a read/write database connection from the primary pool
-    fn db_conn(&self) -> Result<DieselPooledConn<'_>, r2d2::PoolError>;
+    fn db_conn(&self) -> Result<DieselPooledConn<'_>, PoolError>;
 
     /// Obtain a readonly database connection from the replica pool
     ///
     /// If there is no replica pool, the primary pool is used instead.
-    fn db_read_only(&self) -> Result<DieselPooledConn<'_>, r2d2::PoolError>;
+    fn db_read_only(&self) -> Result<DieselPooledConn<'_>, PoolError>;
 }
 
 impl<T: RequestExt + ?Sized> RequestTransaction for T {
-    fn db_conn(&self) -> Result<DieselPooledConn<'_>, r2d2::PoolError> {
-        self.app().primary_database.get().map_err(Into::into)
+    fn db_conn(&self) -> Result<DieselPooledConn<'_>, PoolError> {
+        self.app().primary_database.get()
     }
 
-    fn db_read_only(&self) -> Result<DieselPooledConn<'_>, r2d2::PoolError> {
+    fn db_read_only(&self) -> Result<DieselPooledConn<'_>, PoolError> {
         match &self.app().read_only_replica_database {
-            Some(pool) => pool.get().map_err(Into::into),
-            None => self.app().primary_database.get().map_err(Into::into),
+            Some(pool) => pool.get(),
+            None => self.app().primary_database.get(),
         }
     }
 }
@@ -147,4 +170,21 @@ pub(crate) fn test_conn() -> PgConnection {
     let conn = PgConnection::establish(&crate::env("TEST_DATABASE_URL")).unwrap();
     conn.begin_test_transaction().unwrap();
     conn
+}
+
+#[derive(Debug)]
+pub enum PoolError {
+    R2D2(r2d2::PoolError),
+    UnhealthyPool,
+}
+
+impl std::error::Error for PoolError {}
+
+impl std::fmt::Display for PoolError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            PoolError::R2D2(err) => write!(f, "{}", err),
+            PoolError::UnhealthyPool => write!(f, "unhealthy database pool"),
+        }
+    }
 }
