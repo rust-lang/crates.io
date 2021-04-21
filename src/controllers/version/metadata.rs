@@ -7,7 +7,6 @@
 use crate::controllers::frontend_prelude::*;
 
 use crate::models::VersionOwnerAction;
-use crate::schema::*;
 use crate::views::{EncodableDependency, EncodablePublicUser, EncodableVersion};
 
 use super::{extract_crate_name_and_semver, version_and_crate};
@@ -38,18 +37,8 @@ pub fn dependencies(req: &mut dyn RequestExt) -> EndpointResult {
 
 /// Handles the `GET /crates/:crate_id/:version/authors` route.
 pub fn authors(req: &mut dyn RequestExt) -> EndpointResult {
-    let (crate_name, semver) = extract_crate_name_and_semver(req)?;
-    let conn = req.db_read_only()?;
-    let (version, _) = version_and_crate(&conn, crate_name, semver)?;
-    let names = version_authors::table
-        .filter(version_authors::version_id.eq(version.id))
-        .select(version_authors::name)
-        .order(version_authors::name)
-        .load(&*conn)?;
-
-    // It was imagined that we wold associate authors with users.
-    // This was never implemented. This complicated return struct
-    // is all that is left, hear for backwards compatibility.
+    // Currently we return the empty list.
+    // Because the API is not used anymore after RFC https://github.com/rust-lang/rfcs/pull/3052.
     #[derive(Serialize)]
     struct R {
         users: Vec<EncodablePublicUser>,
@@ -61,7 +50,7 @@ pub fn authors(req: &mut dyn RequestExt) -> EndpointResult {
     }
     Ok(req.json(&R {
         users: vec![],
-        meta: Meta { names },
+        meta: Meta { names: vec![] },
     }))
 }
 
