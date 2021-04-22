@@ -5739,10 +5739,10 @@ data-urls@^2.0.0:
     whatwg-mimetype "^2.3.0"
     whatwg-url "^8.0.0"
 
-date-and-time@^0.14.1:
-  version "0.14.2"
-  resolved "https://registry.yarnpkg.com/date-and-time/-/date-and-time-0.14.2.tgz#a4266c3dead460f6c231fe9674e585908dac354e"
-  integrity sha512-EFTCh9zRSEpGPmJaexg7HTuzZHh6cnJj1ui7IGCFNXzd2QdpsNh05Db5TF3xzJm30YN+A8/6xHSuRcQqoc3kFA==
+date-and-time@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/date-and-time/-/date-and-time-1.0.0.tgz#0062394bdf6f44e961f0db00511cb19cdf3cc0a5"
+  integrity sha512-477D7ypIiqlXBkxhU7YtG9wWZJEQ+RUpujt2quTfgf4+E8g5fNUkB0QIL0bVyP5/TKBg8y55Hfa1R/c4bt3dEw==
 
 date-fns@2.21.1, date-fns@^2.19.0:
   version "2.21.1"
@@ -6101,14 +6101,14 @@ elliptic@^6.5.3:
     minimalistic-assert "^1.0.1"
     minimalistic-crypto-utils "^1.0.1"
 
-ember-a11y-testing@4.0.3:
-  version "4.0.3"
-  resolved "https://registry.yarnpkg.com/ember-a11y-testing/-/ember-a11y-testing-4.0.3.tgz#1f5c91266d39ea5b20614b0d294a562079887ac7"
-  integrity sha512-Q7nq2crC9+bT+sZi/BORAM4FUhI080edEhnpsvB6vdkD9Ro2Rg4DksQs5Be65/DM108VNDMtbHZtrPS060Mzcw==
+ember-a11y-testing@4.0.4:
+  version "4.0.4"
+  resolved "https://registry.yarnpkg.com/ember-a11y-testing/-/ember-a11y-testing-4.0.4.tgz#3a9c4958e057e510a7f0667dcc78ddd861797023"
+  integrity sha512-2XsyktfFBqZGcTFmk39bfw0Z+1hB4idObjkonFPW/PHDxHBoa7Wk0zRaWOKFkXv6SapJRBUHBuBSrTMV61rgXw==
   dependencies:
     axe-core "^4.1.4"
     body-parser "^1.19.0"
-    date-and-time "^0.14.1"
+    date-and-time "^1.0.0"
     ember-auto-import "^1.11.2"
     ember-cli-babel "^7.26.3"
     ember-cli-typescript "^3.0.0"
