@@ -290,6 +290,7 @@ dependencies = [
  "license-exprs",
  "oauth2",
  "parking_lot",
+ "prometheus",
  "rand 0.8.3",
  "reqwest",
  "scheduled-thread-pool",
@@ -1914,6 +1915,27 @@ checksum = "a152013215dca273577e18d2bf00fa862b89b24169fb78c4c95aeb07992c9cec"
 dependencies = [
  "unicode-xid",
 ]
+
+[[package]]
+name = "prometheus"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5986aa8d62380092d2f50f8b1cdba9cb9b6731ffd4b25b51fd126b6c3e05b99c"
+dependencies = [
+ "cfg-if",
+ "fnv",
+ "lazy_static",
+ "memchr",
+ "parking_lot",
+ "protobuf",
+ "thiserror",
+]
+
+[[package]]
+name = "protobuf"
+version = "2.22.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1b7f4a129bb3754c25a4e04032a90173c68f85168f77118ac4cb4936e7f06f92"
 
 [[package]]
 name = "quick-error"

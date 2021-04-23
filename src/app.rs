@@ -6,6 +6,7 @@ use std::{sync::Arc, time::Duration};
 use crate::downloads_counter::DownloadsCounter;
 use crate::email::Emails;
 use crate::github::GitHubClient;
+use crate::metrics::{InstanceMetrics, ServiceMetrics};
 use diesel::r2d2;
 use oauth2::basic::BasicClient;
 use reqwest::blocking::Client;
@@ -39,6 +40,12 @@ pub struct App {
 
     /// Backend used to send emails
     pub emails: Emails,
+
+    /// Metrics related to the service as a whole
+    pub service_metrics: ServiceMetrics,
+
+    /// Metrics related to this specific instance of the service
+    pub instance_metrics: InstanceMetrics,
 
     /// A configured client for outgoing HTTP requests
     ///
@@ -141,6 +148,9 @@ impl App {
             config,
             downloads_counter: DownloadsCounter::new(),
             emails: Emails::from_environment(),
+            service_metrics: ServiceMetrics::new().expect("could not initialize service metrics"),
+            instance_metrics: InstanceMetrics::new()
+                .expect("could not initialize instance metrics"),
             http_client,
         }
     }

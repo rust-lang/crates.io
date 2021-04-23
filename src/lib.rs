@@ -40,6 +40,7 @@ mod downloads_counter;
 pub mod email;
 pub mod git;
 pub mod github;
+mod metrics;
 pub mod middleware;
 mod publish_rate_limit;
 pub mod render;

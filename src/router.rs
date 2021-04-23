@@ -123,6 +123,9 @@ pub fn build_router(app: &App) -> RouteBuilder {
     );
     router.delete("/api/private/session", C(user::session::logout));
 
+    // Metrics
+    router.get("/api/private/metrics/:kind", C(metrics::prometheus));
+
     // Only serve the local checkout of the git index in development mode.
     // In production, for crates.io, cargo gets the index from
     // https://github.com/rust-lang/crates.io-index directly.
