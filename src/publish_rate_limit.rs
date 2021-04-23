@@ -14,9 +14,19 @@ pub struct PublishRateLimit {
 
 impl Default for PublishRateLimit {
     fn default() -> Self {
+        let minutes = dotenv::var("WEB_NEW_PKG_RATE_LIMIT_RATE_MINUTES")
+            .unwrap_or_default()
+            .parse()
+            .ok()
+            .unwrap_or(10);
+        let burst = dotenv::var("WEB_NEW_PKG_RATE_LIMIT_BURST")
+            .unwrap_or_default()
+            .parse()
+            .ok()
+            .unwrap_or(5);
         Self {
-            rate: Duration::from_secs(60) * 10,
-            burst: 30,
+            rate: Duration::from_secs(60) * minutes,
+            burst,
         }
     }
 }
