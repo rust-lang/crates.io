@@ -14,7 +14,6 @@ export default Factory.extend({
   downloads: i => (((i + 13) * 42) % 13) * 1234,
 
   features: () => {},
-  _authors: () => [],
 
   crate_size: i => (((i + 13) * 42) % 13) * 54321,
 

@@ -18,7 +18,6 @@ pub struct EncodableCrateUpload {
     pub vers: EncodableCrateVersion,
     pub deps: Vec<EncodableCrateDependency>,
     pub features: HashMap<EncodableFeatureName, Vec<EncodableFeature>>,
-    pub authors: Vec<String>,
     pub description: Option<String>,
     pub homepage: Option<String>,
     pub documentation: Option<String>,

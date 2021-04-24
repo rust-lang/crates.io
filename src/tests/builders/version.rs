@@ -92,7 +92,7 @@ impl<'a> VersionBuilder<'a> {
             self.size,
             published_by,
         )?
-        .save(connection, &[], "someone@example.com")?;
+        .save(connection, "someone@example.com")?;
 
         if self.yanked {
             vers = update(&vers)

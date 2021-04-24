@@ -24,7 +24,6 @@ lazy_static! {
 /// a crate to exist and don't need to test behavior caused by the publish request, inserting
 /// a crate into the database directly by using CrateBuilder will be faster.
 pub struct PublishBuilder {
-    authors: Vec<String>,
     badges: HashMap<String, HashMap<String, String>>,
     categories: Vec<String>,
     deps: Vec<u::EncodableCrateDependency>,
@@ -44,7 +43,6 @@ impl PublishBuilder {
     /// in its tarball.
     pub fn new(krate_name: &str) -> Self {
         PublishBuilder {
-            authors: vec!["foo".to_string()],
             badges: HashMap::new(),
             categories: vec![],
             deps: vec![],
@@ -168,25 +166,12 @@ impl PublishBuilder {
         self
     }
 
-    /// Add an author to this crate
-    pub fn author(mut self, author: &str) -> Self {
-        self.authors.push(author.into());
-        self
-    }
-
-    /// Remove the authors from this crate. Publish will fail unless authors are reset.
-    pub fn unset_authors(mut self) -> Self {
-        self.authors = vec![];
-        self
-    }
-
     pub fn build(self) -> (String, Vec<u8>) {
         let new_crate = u::EncodableCrateUpload {
             name: u::EncodableCrateName(self.krate_name.clone()),
             vers: u::EncodableCrateVersion(self.version),
             features: HashMap::new(),
             deps: self.deps,
-            authors: self.authors,
             description: self.desc,
             homepage: None,
             documentation: self.doc_url,

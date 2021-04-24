@@ -179,13 +179,6 @@ account_lock_until = "private"
 [users.column_defaults]
 gh_access_token = "''"
 
-[version_authors]
-dependencies = ["versions"]
-[version_authors.columns]
-id = "public"
-version_id = "public"
-name = "public"
-
 [version_downloads]
 dependencies = ["versions"]
 [version_downloads.columns]

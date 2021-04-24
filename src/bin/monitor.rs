@@ -110,7 +110,6 @@ fn check_stalled_update_downloads(conn: &PgConnection) -> Result<()> {
 fn check_spam_attack(conn: &PgConnection) -> Result<()> {
     use cargo_registry::models::krate::canon_crate_name;
     use diesel::dsl::*;
-    use diesel::sql_types::Bool;
 
     const EVENT_KEY: &str = "spam_attack";
 
@@ -118,11 +117,6 @@ fn check_spam_attack(conn: &PgConnection) -> Result<()> {
 
     let bad_crate_names = dotenv::var("SPAM_CRATE_NAMES");
     let bad_crate_names: Vec<_> = bad_crate_names
-        .as_ref()
-        .map(|s| s.split(',').collect())
-        .unwrap_or_default();
-    let bad_author_patterns = dotenv::var("SPAM_AUTHOR_PATTERNS");
-    let bad_author_patterns: Vec<_> = bad_author_patterns
         .as_ref()
         .map(|s| s.split(',').collect())
         .unwrap_or_default();
@@ -137,19 +131,6 @@ fn check_spam_attack(conn: &PgConnection) -> Result<()> {
 
     if let Some(bad_crate) = bad_crate {
         event_description = Some(format!("Crate named {} published", bad_crate));
-    }
-
-    let mut query = version_authors::table
-        .select(version_authors::name)
-        .filter(false.into_sql::<Bool>()) // Never return anything if we have no patterns
-        .into_boxed();
-    for author_pattern in bad_author_patterns {
-        query = query.or_filter(version_authors::name.like(author_pattern));
-    }
-    let bad_author: Option<String> = query.first(conn).optional()?;
-
-    if let Some(bad_author) = bad_author {
-        event_description = Some(format!("Crate with author {} published", bad_author));
     }
 
     let event = if let Some(event_description) = event_description {

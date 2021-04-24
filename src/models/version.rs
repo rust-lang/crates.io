@@ -136,13 +136,7 @@ impl NewVersion {
         Ok(new_version)
     }
 
-    pub fn save(
-        &self,
-        conn: &PgConnection,
-        authors: &[String],
-        published_by_email: &str,
-    ) -> AppResult<Version> {
-        use crate::schema::version_authors::{name, version_id};
+    pub fn save(&self, conn: &PgConnection, published_by_email: &str) -> AppResult<Version> {
         use crate::schema::versions::dsl::*;
         use diesel::dsl::exists;
         use diesel::{insert_into, select};
@@ -166,15 +160,6 @@ impl NewVersion {
                     versions_published_by::version_id.eq(version.id),
                     versions_published_by::email.eq(published_by_email),
                 ))
-                .execute(conn)?;
-
-            let new_authors = authors
-                .iter()
-                .map(|s| (version_id.eq(version.id), name.eq(s)))
-                .collect::<Vec<_>>();
-
-            insert_into(version_authors::table)
-                .values(&new_authors)
                 .execute(conn)?;
             Ok(version)
         })

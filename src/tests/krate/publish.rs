@@ -703,7 +703,7 @@ fn bad_keywords() {
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
-        json!({ "errors": [{ "detail": "invalid upload request: invalid length 29, expected a keyword with less than 20 characters at line 1 column 221" }] })
+        json!({ "errors": [{ "detail": "invalid upload request: invalid length 29, expected a keyword with less than 20 characters at line 1 column 203" }] })
     );
 
     let crate_to_publish = PublishBuilder::new("foo_bad_key").keyword("?@?%");
@@ -711,7 +711,7 @@ fn bad_keywords() {
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
-        json!({ "errors": [{ "detail": "invalid upload request: invalid value: string \"?@?%\", expected a valid keyword specifier at line 1 column 196" }] })
+        json!({ "errors": [{ "detail": "invalid upload request: invalid value: string \"?@?%\", expected a valid keyword specifier at line 1 column 178" }] })
     );
 
     let crate_to_publish = PublishBuilder::new("foo_bad_key").keyword("áccênts");
@@ -719,7 +719,7 @@ fn bad_keywords() {
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
-        json!({ "errors": [{ "detail": "invalid upload request: invalid value: string \"áccênts\", expected a valid keyword specifier at line 1 column 201" }] })
+        json!({ "errors": [{ "detail": "invalid upload request: invalid value: string \"áccênts\", expected a valid keyword specifier at line 1 column 183" }] })
     );
 }
 
@@ -824,8 +824,7 @@ fn license_and_description_required() {
     let crate_to_publish = PublishBuilder::new("foo_metadata")
         .version("1.1.0")
         .unset_license()
-        .unset_description()
-        .unset_authors();
+        .unset_description();
 
     let response = token.enqueue_publish(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
@@ -836,9 +835,7 @@ fn license_and_description_required() {
 
     let crate_to_publish = PublishBuilder::new("foo_metadata")
         .version("1.1.0")
-        .unset_description()
-        .unset_authors()
-        .author("");
+        .unset_description();
 
     let response = token.enqueue_publish(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);

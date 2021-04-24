@@ -691,7 +691,7 @@ module('Mirage | Crates', function (hooks) {
       let responsePayload = await response.json();
       assert.deepEqual(responsePayload, {
         meta: {
-          names: authors,
+          names: [],
         },
         users: [],
       });

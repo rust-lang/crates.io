@@ -135,7 +135,7 @@ export function register(server) {
     let version = schema.versions.findBy({ crateId, num });
     if (!version) return { errors: [{ detail: `crate \`${crateId}\` does not have a version \`${num}\`` }] };
 
-    return { meta: { names: version._authors }, users: [] };
+    return { meta: { names: [] }, users: [] };
   });
 
   server.get('/api/v1/crates/:crate_id/:version_num/dependencies', (schema, request) => {

@@ -20,10 +20,10 @@ index df884e4..18e08cd 100644
 -        path -> Ltree,
      }
  }
- 
+
 @@ -678,6 +674,24 @@
  }
- 
+
  table! {
 +    /// Representation of the `recent_crate_downloads` view.
 +    ///
@@ -45,7 +45,7 @@ index df884e4..18e08cd 100644
 +table! {
      use diesel::sql_types::*;
      use diesel_full_text_search::{TsVector as Tsvector};
- 
+
 @@ -1003,7 +1017,8 @@
  joinable!(badges -> crates (crate_id));
  joinable!(crate_owner_invitations -> crates (crate_id));
