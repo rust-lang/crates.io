@@ -286,7 +286,6 @@ module('Mirage | Crates', function (hooks) {
             downloads: 0,
             license: 'MIT/Apache-2.0',
             links: {
-              authors: '/api/v1/crates/rand/1.0.0-beta.1/authors',
               dependencies: '/api/v1/crates/rand/1.0.0-beta.1/dependencies',
               version_downloads: '/api/v1/crates/rand/1.0.0-beta.1/downloads',
             },
@@ -320,7 +319,6 @@ module('Mirage | Crates', function (hooks) {
           downloads: 0,
           license: 'MIT/Apache-2.0',
           links: {
-            authors: '/api/v1/crates/rand/1.0.0/authors',
             dependencies: '/api/v1/crates/rand/1.0.0/dependencies',
             version_downloads: '/api/v1/crates/rand/1.0.0/downloads',
           },
@@ -338,7 +336,6 @@ module('Mirage | Crates', function (hooks) {
           downloads: 3702,
           license: 'MIT',
           links: {
-            authors: '/api/v1/crates/rand/1.1.0/authors',
             dependencies: '/api/v1/crates/rand/1.1.0/dependencies',
             version_downloads: '/api/v1/crates/rand/1.1.0/downloads',
           },
@@ -356,7 +353,6 @@ module('Mirage | Crates', function (hooks) {
           downloads: 7404,
           license: 'Apache-2.0',
           links: {
-            authors: '/api/v1/crates/rand/1.2.0/authors',
             dependencies: '/api/v1/crates/rand/1.2.0/dependencies',
             version_downloads: '/api/v1/crates/rand/1.2.0/downloads',
           },
@@ -586,7 +582,6 @@ module('Mirage | Crates', function (hooks) {
             downloads: 0,
             license: 'MIT/Apache-2.0',
             links: {
-              authors: '/api/v1/crates/rand/1.0.0/authors',
               dependencies: '/api/v1/crates/rand/1.0.0/dependencies',
               version_downloads: '/api/v1/crates/rand/1.0.0/downloads',
             },
@@ -604,7 +599,6 @@ module('Mirage | Crates', function (hooks) {
             downloads: 3702,
             license: 'MIT',
             links: {
-              authors: '/api/v1/crates/rand/1.1.0/authors',
               dependencies: '/api/v1/crates/rand/1.1.0/dependencies',
               version_downloads: '/api/v1/crates/rand/1.1.0/downloads',
             },
@@ -628,7 +622,6 @@ module('Mirage | Crates', function (hooks) {
             downloads: 7404,
             license: 'Apache-2.0',
             links: {
-              authors: '/api/v1/crates/rand/1.2.0/authors',
               dependencies: '/api/v1/crates/rand/1.2.0/dependencies',
               version_downloads: '/api/v1/crates/rand/1.2.0/downloads',
             },
@@ -680,10 +673,8 @@ module('Mirage | Crates', function (hooks) {
     });
 
     test('returns a list of authors belonging to the specified crate version', async function (assert) {
-      let authors = ['John Doe <johnnydee@gmail.com>', 'The Rust Project Developers'];
-
       this.server.create('crate', { name: 'rand' });
-      this.server.create('version', { crateId: 'rand', num: '1.0.0', _authors: authors });
+      this.server.create('version', { crateId: 'rand', num: '1.0.0' });
 
       let response = await fetch('/api/v1/crates/rand/1.0.0/authors');
       assert.equal(response.status, 200);
@@ -1025,7 +1016,6 @@ module('Mirage | Crates', function (hooks) {
             downloads: 0,
             license: 'MIT/Apache-2.0',
             links: {
-              authors: '/api/v1/crates/bar/1.0.0/authors',
               dependencies: '/api/v1/crates/bar/1.0.0/dependencies',
               version_downloads: '/api/v1/crates/bar/1.0.0/downloads',
             },
@@ -1043,7 +1033,6 @@ module('Mirage | Crates', function (hooks) {
             downloads: 3702,
             license: 'MIT',
             links: {
-              authors: '/api/v1/crates/baz/1.0.1/authors',
               dependencies: '/api/v1/crates/baz/1.0.1/dependencies',
               version_downloads: '/api/v1/crates/baz/1.0.1/downloads',
             },
