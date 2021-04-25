@@ -21,7 +21,8 @@ extern crate serde_json;
 #[macro_use]
 extern crate tracing;
 
-pub use crate::{app::App, config::Config, email::Emails, uploaders::Uploader};
+pub use crate::config::{Config, DbPoolConfig};
+pub use crate::{app::App, email::Emails, uploaders::Uploader};
 use std::sync::Arc;
 
 use conduit_middleware::MiddlewareBuilder;

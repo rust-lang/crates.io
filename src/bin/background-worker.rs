@@ -24,7 +24,18 @@ fn main() {
     println!("Booting runner");
 
     let config = cargo_registry::Config::default();
-    let db_url = db::connection_url(&config.db_url);
+
+    if config.db_primary_config.read_only_mode {
+        loop {
+            println!(
+                "Cannot run background jobs with a read-only pool. Please scale background_worker \
+                to 0 processes until the leader database is available."
+            );
+            sleep(Duration::from_secs(60));
+        }
+    }
+
+    let db_url = db::connection_url(&config.db_primary_config.url);
 
     let job_start_timeout = dotenv::var("BACKGROUND_JOB_TIMEOUT")
         .unwrap_or_else(|_| "30".into())
