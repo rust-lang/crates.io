@@ -26,17 +26,17 @@ enum SubCommand {
     Migrate(migrate::Opts),
 }
 
-fn main() {
+fn main() -> anyhow::Result<()> {
     let opts: Opts = Opts::parse();
 
-    match opts.command {
+    Ok(match opts.command {
         SubCommand::DeleteCrate(opts) => delete_crate::run(opts),
         SubCommand::DeleteVersion(opts) => delete_version::run(opts),
         SubCommand::Populate(opts) => populate::run(opts),
         SubCommand::RenderReadmes(opts) => render_readmes::run(opts),
-        SubCommand::TestPagerduty(opts) => test_pagerduty::run(opts).unwrap(),
+        SubCommand::TestPagerduty(opts) => test_pagerduty::run(opts)?,
         SubCommand::TransferCrates(opts) => transfer_crates::run(opts),
         SubCommand::VerifyToken(opts) => verify_token::run(opts).unwrap(),
-        SubCommand::Migrate(opts) => migrate::run(opts).unwrap(),
-    }
+        SubCommand::Migrate(opts) => migrate::run(opts)?,
+    })
 }
