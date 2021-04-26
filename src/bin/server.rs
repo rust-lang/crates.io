@@ -35,8 +35,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::fmt::init();
 
     let config = cargo_registry::Config::default();
+    let env = config.env;
     let client = Client::new();
-    let app = Arc::new(App::new(config.clone(), Some(client)));
+    let app = Arc::new(App::new(config, Some(client)));
 
     // Start the background thread periodically persisting download counts to the database.
     downloads_counter_thread(app.clone());
@@ -63,7 +64,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let threads = dotenv::var("SERVER_THREADS")
         .map(|s| s.parse().expect("SERVER_THREADS was not a valid number"))
         .unwrap_or_else(|_| {
-            if config.env == Env::Development {
+            if env == Env::Development {
                 5
             } else {
                 // A large default because this can be easily changed via env and in production we

@@ -5,7 +5,7 @@ use crate::{
     schema::{crates, readme_renderings, versions},
     Config,
 };
-use std::{io::Read, path::Path, thread};
+use std::{io::Read, path::Path, sync::Arc, thread};
 
 use chrono::{TimeZone, Utc};
 use clap::Clap;
@@ -38,7 +38,7 @@ pub struct Opts {
 }
 
 pub fn run(opts: Opts) {
-    let config = Config::default();
+    let config = Arc::new(Config::default());
     let conn = db::connect_now().unwrap();
 
     let start_time = Utc::now();

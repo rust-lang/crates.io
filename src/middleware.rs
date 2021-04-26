@@ -40,8 +40,8 @@ use crate::{App, Env};
 
 pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBuilder {
     let mut m = MiddlewareBuilder::new(endpoints);
-    let config = app.config.clone();
-    let env = config.env;
+    let env = app.config.env;
+    let blocked_traffic = app.config.blocked_traffic.clone();
 
     if env != Env::Test {
         m.add(ensure_well_formed_500::EnsureWellFormed500);
@@ -111,7 +111,7 @@ pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBui
 
     m.around(Head::default());
 
-    for (header, blocked_values) in config.blocked_traffic {
+    for (header, blocked_values) in blocked_traffic {
         m.around(block_traffic::BlockTraffic::new(header, blocked_values));
     }
 
