@@ -1,7 +1,7 @@
 #![warn(clippy::all, rust_2018_idioms)]
 #![allow(unknown_lints)]
 
-use cargo_registry::{boot, App, Env};
+use cargo_registry::{App, Env};
 use std::{borrow::Cow, fs::File, process::Command, sync::Arc, time::Duration};
 
 use conduit_hyper::Service;
@@ -42,11 +42,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     downloads_counter_thread(app.clone());
 
     let handler = cargo_registry::build_handler(app.clone());
-
-    // On every server restart, ensure the categories available in the database match
-    // the information in *src/categories.toml*.
-    let categories_toml = include_str!("../boot/categories.toml");
-    boot::categories::sync(categories_toml).unwrap();
 
     let heroku = dotenv::var("HEROKU").is_ok();
     let fastboot = dotenv::var("USE_FASTBOOT").is_ok();
