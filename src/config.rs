@@ -1,7 +1,7 @@
 use crate::publish_rate_limit::PublishRateLimit;
 use crate::{env, uploaders::Uploader, Env, Replica};
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct Config {
     pub uploader: Uploader,
     pub session_key: String,
@@ -24,7 +24,7 @@ pub struct Config {
     pub metrics_authorization_token: Option<String>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct DbPoolConfig {
     pub url: String,
     pub read_only_mode: bool,
