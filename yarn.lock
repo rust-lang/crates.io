@@ -6353,10 +6353,10 @@ ember-cli-bundle-analyzer@0.2.2:
     tmp "^0.2.1"
     touch "^3.1.0"
 
-ember-cli-code-coverage@1.0.2:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/ember-cli-code-coverage/-/ember-cli-code-coverage-1.0.2.tgz#615fc7af8bc7d9388a28371c2825c224a936d73f"
-  integrity sha512-uD0RA6A4p/AOpPGq8JXIiZeDFWjzEm5fyWZLU5W8nCF//t3wbkly8tZukiYchJNNYEeESzd6gqdwgDkLMRzZYA==
+ember-cli-code-coverage@1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/ember-cli-code-coverage/-/ember-cli-code-coverage-1.0.3.tgz#9a6e5e6350d70761eba749d68ebe2e0d9aa3492f"
+  integrity sha512-tyWeQ22vxpDmfhIrRCMqZPq9Coppefg19hBgME4yb9Na2qslxCNK0USThigZhesb7hfw2ZgdrKJCrmCVNwkq7g==
   dependencies:
     babel-plugin-istanbul "^6.0.0"
     body-parser "^1.19.0"
