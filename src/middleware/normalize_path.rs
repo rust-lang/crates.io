@@ -39,7 +39,7 @@ impl Middleware for NormalizePath {
             .to_string_lossy()
             .to_string(); // non-Unicode is replaced with U+FFFD REPLACEMENT CHARACTER
 
-        super::log_request::add_custom_metadata(req, "normalized_path", path.clone());
+        add_custom_metadata(req, "normalized_path", path.clone());
         *req.path_mut() = path;
         Ok(())
     }

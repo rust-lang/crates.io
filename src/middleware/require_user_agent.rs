@@ -34,7 +34,7 @@ impl Handler for RequireUserAgent {
         let has_user_agent = !agent.is_empty() && agent != self.cdn_user_agent;
         let is_download = req.path().ends_with("download");
         if !has_user_agent && !is_download {
-            super::log_request::add_custom_metadata(req, "cause", "no user agent");
+            add_custom_metadata(req, "cause", "no user agent");
             let body = format!(
                 include_str!("no_user_agent_message.txt"),
                 request_header(req, "x-request-id"),

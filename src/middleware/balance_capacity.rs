@@ -56,11 +56,11 @@ impl BalanceCapacity {
     fn handle_high_load(&self, request: &mut dyn RequestExt, note: &str) -> AfterResult {
         if self.report_only {
             // In report-only mode we serve all requests but add log metadata
-            super::log_request::add_custom_metadata(request, "would_reject", note);
+            add_custom_metadata(request, "would_reject", note);
             self.handle(request)
         } else {
             // Reject the request
-            super::log_request::add_custom_metadata(request, "cause", note);
+            add_custom_metadata(request, "cause", note);
             let body = "Service temporarily unavailable";
             Response::builder()
                 .status(StatusCode::SERVICE_UNAVAILABLE)
@@ -84,7 +84,7 @@ impl Handler for BalanceCapacity {
 
         // Begin logging total request count so early stages of load increase can be located
         if in_flight_total >= self.log_total_at_count {
-            super::log_request::add_custom_metadata(request, "in_flight_total", in_flight_total);
+            add_custom_metadata(request, "in_flight_total", in_flight_total);
         }
 
         // Download requests are always accepted and do not affect the capacity tracking
@@ -98,7 +98,7 @@ impl Handler for BalanceCapacity {
 
         // Begin logging non-download request count so early stages of non-download load increase can be located
         if load >= self.log_at_percentage {
-            super::log_request::add_custom_metadata(request, "in_flight_non_dl_requests", count);
+            add_custom_metadata(request, "in_flight_non_dl_requests", count);
         }
 
         // Reject read-only requests as load nears capacity. Bots are likely to send only safe

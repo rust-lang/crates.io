@@ -1,4 +1,5 @@
 mod prelude {
+    pub use super::log_request::add_custom_metadata;
     pub use conduit::{box_error, header, Body, Handler, RequestExt, Response, StatusCode};
     pub use conduit_middleware::{AfterResult, AroundMiddleware, BeforeResult, Middleware};
 }
