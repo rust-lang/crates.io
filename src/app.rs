@@ -103,11 +103,9 @@ impl App {
             _ => 30,
         };
 
-        // Determine if the primary pool is also read-only
-        let read_only_mode = dotenv::var("READ_ONLY_MODE").is_ok();
         let primary_db_connection_config = db::ConnectionConfig {
             statement_timeout: db_connection_timeout,
-            read_only: read_only_mode,
+            read_only: config.db_primary_config.read_only_mode,
         };
 
         let thread_pool = Arc::new(ScheduledThreadPool::new(db_helper_threads));
@@ -119,9 +117,11 @@ impl App {
             .connection_customizer(Box::new(primary_db_connection_config))
             .thread_pool(thread_pool.clone());
 
-        let primary_database = db::diesel_pool(&config.db_url, config.env, primary_db_config);
+        let primary_database =
+            db::diesel_pool(&config.db_primary_config.url, config.env, primary_db_config);
 
-        let read_only_replica_database = if let Some(url) = &config.replica_db_url {
+        let replica_database = if let Some(url) = config.db_replica_config.as_ref().map(|c| &c.url)
+        {
             let replica_db_connection_config = db::ConnectionConfig {
                 statement_timeout: db_connection_timeout,
                 read_only: true,
@@ -141,7 +141,7 @@ impl App {
 
         App {
             primary_database,
-            read_only_replica_database,
+            read_only_replica_database: replica_database,
             github,
             github_oauth,
             session_key: config.session_key.clone(),

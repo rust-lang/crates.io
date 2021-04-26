@@ -4,7 +4,7 @@ use cargo_registry::{
     background_jobs::Environment,
     db::DieselPool,
     git::{Credentials, RepositoryConfig},
-    App, Config, Emails, Env, Replica, Uploader,
+    App, Config, DbPoolConfig, Emails, Env, Replica, Uploader,
 };
 use std::{rc::Rc, sync::Arc, time::Duration};
 
@@ -302,8 +302,11 @@ fn simple_config() -> Config {
         gh_client_id: dotenv::var("GH_CLIENT_ID").unwrap_or_default(),
         gh_client_secret: dotenv::var("GH_CLIENT_SECRET").unwrap_or_default(),
         gh_base_url: "http://api.github.com".to_string(),
-        db_url: env("TEST_DATABASE_URL"),
-        replica_db_url: None,
+        db_primary_config: DbPoolConfig {
+            url: env("TEST_DATABASE_URL"),
+            read_only_mode: false,
+        },
+        db_replica_config: None,
         env: Env::Test,
         max_upload_size: 3000,
         max_unpack_size: 2000,

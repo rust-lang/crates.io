@@ -8,8 +8,8 @@ pub struct Config {
     pub gh_client_id: String,
     pub gh_client_secret: String,
     pub gh_base_url: String,
-    pub db_url: String,
-    pub replica_db_url: Option<String>,
+    pub db_primary_config: DbPoolConfig,
+    pub db_replica_config: Option<DbPoolConfig>,
     pub env: Env,
     pub max_upload_size: u64,
     pub max_unpack_size: u64,
@@ -22,6 +22,12 @@ pub struct Config {
     pub downloads_persist_interval_ms: usize,
     pub ownership_invitations_expiration_days: u64,
     pub metrics_authorization_token: Option<String>,
+}
+
+#[derive(Clone, Debug)]
+pub struct DbPoolConfig {
+    pub url: String,
+    pub read_only_mode: bool,
 }
 
 impl Default for Config {
@@ -52,6 +58,13 @@ impl Default for Config {
     /// - `DOWNLOADS_PERSIST_INTERVAL_MS`: how frequent to persist download counts (in ms).
     /// - `METRICS_AUTHORIZATION_TOKEN`: authorization token needed to query metrics. If missing,
     ///   querying metrics will be completely disabled.
+    /// - `DB_OFFLINE`: If set to `leader` then use the read-only follower as if it was the leader.
+    ///   If set to `follower` then act as if `READ_ONLY_REPLICA_URL` was unset.
+    /// - `READ_ONLY_MODE`: If defined (even as empty) then force all connections to be read-only.
+    ///
+    /// # Panics
+    ///
+    /// This function panics if `DB_OFFLINE=leader` but `READ_ONLY_REPLICA_URL` is unset.
     fn default() -> Config {
         let api_protocol = String::from("https");
         let mirror = if dotenv::var("MIRROR").is_ok() {
@@ -65,6 +78,44 @@ impl Default for Config {
         } else {
             Env::Development
         };
+
+        let leader_url = env("DATABASE_URL");
+        let follower_url = dotenv::var("READ_ONLY_REPLICA_URL").ok();
+        let read_only_mode = dotenv::var("READ_ONLY_MODE").is_ok();
+        let (db_primary_config, db_replica_config) = match dotenv::var("DB_OFFLINE").as_deref() {
+            // The actual leader is down, use the follower in read-only mode as the primary and
+            // don't configure a replica.
+            Ok("leader") => (
+                DbPoolConfig {
+                    url: follower_url
+                        .expect("Must set `READ_ONLY_REPLICA_URL` when using `DB_OFFLINE=leader`."),
+                    read_only_mode: true,
+                },
+                None,
+            ),
+            // The follower is down, don't configure the replica.
+            Ok("follower") => (
+                DbPoolConfig {
+                    url: leader_url,
+                    read_only_mode,
+                },
+                None,
+            ),
+            _ => (
+                DbPoolConfig {
+                    url: leader_url,
+                    read_only_mode,
+                },
+                follower_url.map(|url| DbPoolConfig {
+                    url,
+                    // Always enable read-only mode for the follower. In staging, we attach the
+                    // same leader database to both environment variables and this ensures the
+                    // connection is opened read-only even when attached to a writeable database.
+                    read_only_mode: true,
+                }),
+            ),
+        };
+
         let uploader = match (cargo_env, mirror) {
             (Env::Production, Replica::Primary) => {
                 // `env` panics if these vars are not set, and in production for a primary instance,
@@ -140,8 +191,8 @@ impl Default for Config {
             gh_client_id: env("GH_CLIENT_ID"),
             gh_client_secret: env("GH_CLIENT_SECRET"),
             gh_base_url: "https://api.github.com".to_string(),
-            db_url: env("DATABASE_URL"),
-            replica_db_url: dotenv::var("READ_ONLY_REPLICA_URL").ok(),
+            db_primary_config,
+            db_replica_config,
             env: cargo_env,
             max_upload_size: 10 * 1024 * 1024, // 10 MB default file upload size limit
             max_unpack_size: 512 * 1024 * 1024, // 512 MB max when decompressed
