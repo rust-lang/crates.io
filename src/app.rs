@@ -79,7 +79,7 @@ impl App {
 
         let db_pool_size = match (dotenv::var("DB_POOL_SIZE"), config.env) {
             (Ok(num), _) => num.parse().expect("couldn't parse DB_POOL_SIZE"),
-            (_, Env::Production) => 10,
+            (_, Env::Production) => 20,
             _ => 3,
         };
 

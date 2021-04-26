@@ -38,7 +38,7 @@ fn main() {
     let db_url = db::connection_url(&config.db_primary_config.url);
 
     let job_start_timeout = dotenv::var("BACKGROUND_JOB_TIMEOUT")
-        .unwrap_or_else(|_| "30".into())
+        .unwrap_or_else(|_| "300".into())
         .parse()
         .expect("Invalid value for `BACKGROUND_JOB_TIMEOUT`");
 

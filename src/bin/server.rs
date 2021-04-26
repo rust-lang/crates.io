@@ -66,9 +66,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             if config.env == Env::Development {
                 5
             } else {
-                // A large default because this can be easily changed via env and in production we
-                // want the logging middleware to accurately record the start time.
-                500
+                100
             }
         });
 

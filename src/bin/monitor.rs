@@ -39,7 +39,7 @@ fn check_failing_background_jobs(conn: &PgConnection) -> Result<()> {
     // Max job execution time in minutes
     let max_job_time = dotenv::var("MAX_JOB_TIME")
         .map(|s| s.parse::<i32>().unwrap())
-        .unwrap_or(15);
+        .unwrap_or(60);
 
     let stalled_jobs: Vec<i32> = background_jobs
         .select(1.into_sql::<Integer>())
