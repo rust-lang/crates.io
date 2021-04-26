@@ -224,13 +224,16 @@ impl PersistStats {
     }
 
     pub fn log(&self) {
-        println!(
-            "downloads_counter shard={} counted_versions={} counted_downloads={} pending_downloads={}",
-            self.shard.map(|s| s.to_string()).unwrap_or_else(|| "all".into()),
-            self.counted_versions,
-            self.counted_downloads,
-            self.pending_downloads,
-        );
+        if self.counted_downloads != 0 && self.counted_versions != 0 && self.pending_downloads != 0
+        {
+            println!(
+                "downloads_counter shard={} counted_versions={} counted_downloads={} pending_downloads={}",
+                self.shard.map(|s| s.to_string()).unwrap_or_else(|| "all".into()),
+                self.counted_versions,
+                self.counted_downloads,
+                self.pending_downloads,
+            );
+        }
     }
 }
 
