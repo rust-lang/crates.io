@@ -6157,11 +6157,12 @@ elliptic@^6.5.3:
     minimalistic-assert "^1.0.1"
     minimalistic-crypto-utils "^1.0.1"
 
-ember-a11y-testing@4.0.4:
-  version "4.0.4"
-  resolved "https://registry.yarnpkg.com/ember-a11y-testing/-/ember-a11y-testing-4.0.4.tgz#3a9c4958e057e510a7f0667dcc78ddd861797023"
-  integrity sha512-2XsyktfFBqZGcTFmk39bfw0Z+1hB4idObjkonFPW/PHDxHBoa7Wk0zRaWOKFkXv6SapJRBUHBuBSrTMV61rgXw==
+ember-a11y-testing@4.0.5:
+  version "4.0.5"
+  resolved "https://registry.yarnpkg.com/ember-a11y-testing/-/ember-a11y-testing-4.0.5.tgz#2d0be4b020bf75637a0f14b18c60af4f37643672"
+  integrity sha512-2gXpU1Iea52bvlVeXkjBqMbAb9ce9N7z0D5LtIKvcH0tNeiP3nmiyBr0+bGMguCh9OeFXPVSAMUP/X+AgNbpPQ==
   dependencies:
+    "@ember/test-waiters" "^2.4.3"
     axe-core "^4.1.4"
     body-parser "^1.19.0"
     date-and-time "^1.0.0"
