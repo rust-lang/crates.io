@@ -22,6 +22,7 @@ pub struct Config {
     pub downloads_persist_interval_ms: usize,
     pub ownership_invitations_expiration_days: u64,
     pub metrics_authorization_token: Option<String>,
+    pub use_test_database_pool: bool,
 }
 
 #[derive(Debug)]
@@ -211,6 +212,7 @@ impl Default for Config {
                 .unwrap_or(60_000), // 1 minute
             ownership_invitations_expiration_days: 30,
             metrics_authorization_token: dotenv::var("METRICS_AUTHORIZATION_TOKEN").ok(),
+            use_test_database_pool: false,
         }
     }
 }

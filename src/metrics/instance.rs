@@ -32,6 +32,11 @@ metrics! {
         pub requests_total: IntCounter,
         /// Number of requests currently being processed
         pub requests_in_flight: IntGauge,
+
+        /// Number of download requests that were served with an unconditional redirect.
+        pub downloads_unconditional_redirects_total: IntCounter,
+        /// Number of download requests with a non-canonical crate name.
+        pub downloads_non_canonical_crate_name_total: IntCounter,
     }
 
     // All instance metrics will be prefixed with this namespace.

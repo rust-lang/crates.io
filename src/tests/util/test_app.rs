@@ -1,4 +1,5 @@
 use super::{MockAnonymousUser, MockCookieUser, MockTokenUser};
+use crate::util::{chaosproxy::ChaosProxy, fresh_schema::FreshSchema};
 use crate::{env, record};
 use cargo_registry::{
     background_jobs::Environment,
@@ -9,7 +10,7 @@ use cargo_registry::{
 use std::{rc::Rc, sync::Arc, time::Duration};
 
 use cargo_registry::git::Repository as WorkerRepository;
-use diesel::{Connection, PgConnection};
+use diesel::PgConnection;
 use git2::Repository as UpstreamRepository;
 use reqwest::{blocking::Client, Proxy};
 use swirl::Runner;
@@ -22,6 +23,10 @@ struct TestAppInner {
     middle: conduit_middleware::MiddlewareBuilder,
     index: Option<UpstreamRepository>,
     runner: Option<Runner<Environment, DieselPool>>,
+    db_chaosproxy: Option<Arc<ChaosProxy>>,
+
+    // Must be the last field of the struct!
+    _fresh_schema: Option<FreshSchema>,
 }
 
 impl Drop for TestAppInner {
@@ -167,6 +172,12 @@ impl TestApp {
     pub fn as_middleware(&self) -> &conduit_middleware::MiddlewareBuilder {
         &self.0.middle
     }
+
+    pub(crate) fn db_chaosproxy(&self) -> Arc<ChaosProxy> {
+        self.0.db_chaosproxy.clone().expect(
+            "ChaosProxy is not enabled on this test, call with_slow_real_pool during app init",
+        )
+    }
 }
 
 pub struct TestAppBuilder {
@@ -179,8 +190,35 @@ pub struct TestAppBuilder {
 
 impl TestAppBuilder {
     /// Create a `TestApp` with an empty database
-    pub fn empty(self) -> (TestApp, MockAnonymousUser) {
+    pub fn empty(mut self) -> (TestApp, MockAnonymousUser) {
         use crate::git;
+
+        // Run each test inside a fresh database schema, deleted at the end of the test,
+        // The schema will be cleared up once the app is dropped.
+        let (db_chaosproxy, fresh_schema) = if !self.config.use_test_database_pool {
+            let fresh_schema = FreshSchema::new(&self.config.db_primary_config.url);
+            self.config.db_primary_config.url = fresh_schema.database_url().into();
+
+            let mut db_url =
+                Url::parse(&self.config.db_primary_config.url).expect("invalid db url");
+            let backend_addr = db_url
+                .socket_addrs(|| Some(5432))
+                .expect("could not resolve database url")
+                .get(0)
+                .copied()
+                .expect("the database url does not point to any IP");
+
+            let db_chaosproxy = ChaosProxy::new(backend_addr).unwrap();
+            db_url.set_ip_host(db_chaosproxy.address().ip()).unwrap();
+            db_url
+                .set_port(Some(db_chaosproxy.address().port()))
+                .unwrap();
+            self.config.db_primary_config.url = db_url.into_string();
+
+            (Some(db_chaosproxy), Some(fresh_schema))
+        } else {
+            (None, None)
+        };
 
         let (app, middle) = build_app(self.config, self.proxy);
 
@@ -211,10 +249,12 @@ impl TestAppBuilder {
 
         let test_app_inner = TestAppInner {
             app,
+            _fresh_schema: fresh_schema,
             _bomb: self.bomb,
             middle,
             index: self.index,
             runner,
+            db_chaosproxy,
         };
         let test_app = TestApp(Rc::new(test_app_inner));
         let anon = MockAnonymousUser {
@@ -272,6 +312,11 @@ impl TestAppBuilder {
         self.build_job_runner = true;
         self
     }
+
+    pub fn with_slow_real_db_pool(mut self) -> Self {
+        self.config.use_test_database_pool = false;
+        self
+    }
 }
 
 pub fn init_logger() {
@@ -321,6 +366,7 @@ fn simple_config() -> Config {
         downloads_persist_interval_ms: 1000,
         ownership_invitations_expiration_days: 30,
         metrics_authorization_token: None,
+        use_test_database_pool: true,
     }
 }
 
@@ -343,7 +389,6 @@ fn build_app(
     // the application. This will also prevent cluttering the filesystem.
     app.emails = Emails::new_in_memory();
 
-    assert_ok!(assert_ok!(app.primary_database.get()).begin_test_transaction());
     let app = Arc::new(app);
     let handler = cargo_registry::build_handler(Arc::clone(&app));
     (app, handler)

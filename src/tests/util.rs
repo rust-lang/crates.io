@@ -33,9 +33,12 @@ use conduit::header;
 use cookie::Cookie;
 use std::collections::HashMap;
 
+mod chaosproxy;
+mod fresh_schema;
 mod response;
 mod test_app;
 
+pub(crate) use fresh_schema::FreshSchema;
 pub use response::Response;
 pub use test_app::TestApp;
 
