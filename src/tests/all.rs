@@ -45,6 +45,7 @@ mod read_only_mode;
 mod record;
 mod schema_details;
 mod server;
+mod server_binary;
 mod team;
 mod token;
 mod unhealthy_database;

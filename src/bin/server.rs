@@ -97,6 +97,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut sig_int = rt.block_on(async { signal(SignalKind::interrupt()) })?;
     let mut sig_term = rt.block_on(async { signal(SignalKind::terminate()) })?;
 
+    // When the user configures PORT=0 the operative system will allocate a random unused port.
+    // This fetches that random port and uses it to display the "listening on port" message later.
+    let actual_port = server.local_addr().port();
+
     let server = server.with_graceful_shutdown(async move {
         // Wait for either signal
         futures_util::select! {
@@ -109,7 +113,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let server = rt.spawn(async { server.await.unwrap() });
 
-    println!("listening on port {}", port);
+    // Do not change this line! Removing the line or changing its contents in any way will break
+    // the test suite :)
+    println!("listening on port {}", actual_port);
 
     // Creating this file tells heroku to tell nginx that the application is ready
     // to receive traffic.
