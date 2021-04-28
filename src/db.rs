@@ -19,9 +19,28 @@ impl DieselPool {
     pub(crate) fn new(
         url: &str,
         config: r2d2::Builder<ConnectionManager<PgConnection>>,
-    ) -> DieselPool {
+    ) -> Result<DieselPool, PoolError> {
         let manager = ConnectionManager::new(connection_url(url));
-        DieselPool::Pool(config.build(manager).unwrap())
+
+        // For crates.io we want the behavior of creating a database pool to be slightly different
+        // than the defaults of R2D2: the library's build() method assumes its consumers always
+        // need a database connection to operate, so it blocks creating a pool until a minimum
+        // number of connections is available.
+        //
+        // crates.io can actually operate in a limited capacity without a database connections,
+        // especially by serving download requests to our users. Because of that we don't want to
+        // block indefinitely waiting for a connection: we instead need to wait for a bit (to avoid
+        // serving errors for the first connections until the pool is initialized) and if we can't
+        // establish any connection continue booting up the application. The database pool will
+        // automatically be marked as unhealthy and the rest of the application will adapt.
+        let pool = DieselPool::Pool(config.build_unchecked(manager));
+        match pool.wait_until_healthy(Duration::from_secs(5)) {
+            Ok(()) => {}
+            Err(PoolError::UnhealthyPool) => {}
+            Err(err) => return Err(err),
+        }
+
+        Ok(pool)
     }
 
     pub(crate) fn new_test(url: &str) -> DieselPool {

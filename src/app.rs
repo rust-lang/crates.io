@@ -121,7 +121,7 @@ impl App {
                 .connection_customizer(Box::new(primary_db_connection_config))
                 .thread_pool(thread_pool.clone());
 
-            DieselPool::new(&config.db_primary_config.url, primary_db_config)
+            DieselPool::new(&config.db_primary_config.url, primary_db_config).unwrap()
         };
 
         let replica_database = if let Some(url) = config.db_replica_config.as_ref().map(|c| &c.url)
@@ -141,7 +141,7 @@ impl App {
                     .connection_customizer(Box::new(replica_db_connection_config))
                     .thread_pool(thread_pool);
 
-                Some(DieselPool::new(&url, replica_db_config))
+                Some(DieselPool::new(&url, replica_db_config).unwrap())
             }
         } else {
             None
