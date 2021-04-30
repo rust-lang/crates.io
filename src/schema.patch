@@ -20,10 +20,10 @@ index df884e4..18e08cd 100644
 -        path -> Ltree,
      }
  }
-
+ 
 @@ -678,6 +674,24 @@
  }
-
+ 
  table! {
 +    /// Representation of the `recent_crate_downloads` view.
 +    ///
@@ -45,7 +45,7 @@ index df884e4..18e08cd 100644
 +table! {
      use diesel::sql_types::*;
      use diesel_full_text_search::{TsVector as Tsvector};
-
+ 
 @@ -1003,7 +1017,8 @@
  joinable!(badges -> crates (crate_id));
  joinable!(crate_owner_invitations -> crates (crate_id));
@@ -61,9 +61,9 @@ index df884e4..18e08cd 100644
  joinable!(publish_rate_overrides -> users (user_id));
  joinable!(readme_renderings -> versions (version_id));
 +joinable!(recent_crate_downloads -> crates (crate_id));
- joinable!(version_authors -> versions (version_id));
  joinable!(version_downloads -> versions (version_id));
  joinable!(version_owner_actions -> api_tokens (api_token_id));
+ joinable!(version_owner_actions -> users (user_id));
 @@ -1043,6 +1059,7 @@
      publish_limit_buckets,
      publish_rate_overrides,
