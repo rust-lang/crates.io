@@ -3,10 +3,8 @@
     <li local-class="row">
       <LinkTo @route="crate" @model={{crate.id}} local-class="link">
         {{ crate.name }} ({{ crate.max_version }})
-        <div>
-          {{svg-jar "download-arrow" local-class="download-icon"}}
-          {{ format-num crate.downloads }}
-        </div>
+        {{svg-jar "download-arrow" local-class="download-icon"}}
+        {{ format-num crate.downloads }}
       </LinkTo>
     </li>
   {{/each}}
