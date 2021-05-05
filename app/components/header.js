@@ -1,6 +1,7 @@
 import { action } from '@ember/object';
 import { inject as service } from '@ember/service';
 import Component from '@glimmer/component';
+
 import { theme } from '../utils/theme';
 
 export default class Header extends Component {

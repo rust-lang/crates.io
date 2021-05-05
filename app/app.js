@@ -5,7 +5,6 @@ import Resolver from 'ember-resolver';
 
 import config from './config/environment';
 import * as Sentry from './sentry';
-
 import { theme } from './utils/theme';
 
 theme.loadSettingTheme();

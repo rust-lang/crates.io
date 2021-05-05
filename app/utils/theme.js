@@ -20,15 +20,15 @@ export const theme = {
     }
   },
   useSystemTheme() {
-    document.querySelector('html').setAttribute('data-color-mode', 'auto');
+    document.querySelector('html').dataset.colorMode = 'auto';
     setItem(THEME_KEY, 'auto');
   },
   useLightTheme() {
-    document.querySelector('html').setAttribute('data-color-mode', 'light');
+    document.querySelector('html').dataset.colorMode = 'light';
     setItem(THEME_KEY, 'light');
   },
   useDarkTheme() {
-    document.querySelector('html').setAttribute('data-color-mode', 'dark');
+    document.querySelector('html').dataset.colorMode = 'dark';
     setItem(THEME_KEY, 'dark');
   },
 };
