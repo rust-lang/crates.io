@@ -4,7 +4,7 @@
     justify-content: space-between;
     padding: 20px;
     border-radius: 5px;
-    background-color: white;
+    background-color: var(--item-background);
     margin-bottom: 40px;
 
     a {

@@ -1,15 +1,16 @@
 .item {
-    > a, button {
+    > a, span, button {
         font-size: 90%;
         width: 100%;
         display: inline-flex;
         text-align: start;
         padding: 8px 10px;
         text-decoration: none;
+        cursor: pointer;
         color: var(--main-color) !important;
 
         &:hover {
-            background: #5e5e5e;
+            background: var(--menu-hover);
             color: white !important;
         }
     }

@@ -25,3 +25,4 @@ docker-compose.override.yml
 *~
 src/schema.rs.orig
 
+.DS_Store

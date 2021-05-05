@@ -1,29 +1,25 @@
+@import url(./theme.module.css);
+
 :root {
     --violet800: hsl(252, 44%, 24%);
     --grey900: hsl(200, 15%, 19%);
     --grey700: hsl(200, 11%, 43%);
     --grey600: hsl(200, 13%, 60%);
     --grey200: hsl(200, 17%, 96%);
-    --green800: hsl(115, 31%, 31%);
     --yellow500: hsl(44, 100%, 60%);
-
-    --header-bg-color: var(--green800);
-    --footer-bg-color: var(--green800);
 
     --font-sans: "Fira Sans", sans-serif;
     --font-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-
-    --main-color: #383838;
     --main-color-light: #858585;
-    --main-bg: #f9f7ec;
-    --main-bg-dark: #edebdd;
-    --gray-border: #d5d3cb;
-    --link-color: rgb(0, 172, 91);
-    --link-hover-color: #007940;
-    --separator-color: #284725;
 
+    --download-list-link: #525252;
+    --owned-crate-checked: #cfc487;
+    --rendered-html-table: #dfe2e5;
     --placeholder-bg: hsl(212, 7%, 57%);
     --placeholder-bg2: hsl(213, 16%, 75%);
+    --separator-color: #284725;
+    --link-hover-color: #007940;
+    --link-color: rgb(0, 172, 91);
 }
 
 :global(.new-design) {
