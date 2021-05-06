@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 use std::fs::{self, OpenOptions};
 use std::path::{Path, PathBuf};
+
+use chrono::Utc;
 use swirl::PerformError;
 use tempfile::{Builder, TempDir};
 use url::Url;
@@ -203,12 +205,11 @@ impl Repository {
         self.repository
             .commit(Some("HEAD"), &sig, &sig, msg, &tree, &[&parent])?;
 
-        self.push()
+        self.push("refs/heads/master")
     }
 
-    /// Push the current branch to "refs/heads/master"
-    fn push(&self) -> Result<(), PerformError> {
-        let refname = "refs/heads/master";
+    /// Push the current branch to the provided refname
+    fn push(&self, refspec: &str) -> Result<(), PerformError> {
         let mut ref_status = Ok(());
         let mut callback_called = false;
         {
@@ -217,8 +218,7 @@ impl Repository {
             callbacks.credentials(|_, user_from_url, cred_type| {
                 self.credentials.git2_callback(user_from_url, cred_type)
             });
-            callbacks.push_update_reference(|cb_refname, status| {
-                assert_eq!(refname, cb_refname);
+            callbacks.push_update_reference(|_, status| {
                 if let Some(s) = status {
                     ref_status = Err(format!("failed to push a ref: {}", s).into())
                 }
@@ -227,7 +227,7 @@ impl Repository {
             });
             let mut opts = git2::PushOptions::new();
             opts.remote_callbacks(callbacks);
-            origin.push(&[refname], Some(&mut opts))?;
+            origin.push(&[refspec], Some(&mut opts))?;
         }
 
         if !callback_called {
@@ -275,6 +275,24 @@ impl Repository {
         let mut opts = git2::FetchOptions::new();
         opts.remote_callbacks(callbacks);
         opts
+    }
+
+    /// Reset `HEAD` to a single commit with all the index contents, but no parent
+    fn squash_to_single_commit(&self, msg: &str) -> Result<(), PerformError> {
+        let tree = self.repository.find_commit(self.head_oid()?)?.tree()?;
+        let sig = self.repository.signature()?;
+
+        // We cannot update an existing `update_ref`, because that requires the
+        // first parent of this commit to match the ref's current value.
+        // Instead, create the commit and then do a hard reset.
+        let commit = self.repository.commit(None, &sig, &sig, msg, &tree, &[])?;
+        let commit = self
+            .repository
+            .find_object(commit, Some(git2::ObjectType::Commit))?;
+        self.repository
+            .reset(&commit, git2::ResetType::Hard, None)?;
+
+        Ok(())
     }
 }
 
@@ -356,4 +374,35 @@ pub fn yank(
 
         Ok(())
     })
+}
+
+/// Collapse the index into a single commit, archiving the current history in a snapshot branch.
+#[swirl::background_job]
+pub fn squash_index(env: &Environment) -> Result<(), PerformError> {
+    let repo = env.lock_index()?;
+    println!("Squashing the index into a single commit.");
+
+    let now = Utc::now().format("%Y-%m-%d");
+    let head = repo.head_oid()?;
+    let msg = format!("Collapse index into one commit\n\n\
+
+        Previous HEAD was {}, now on the `snapshot-{}` branch\n\n\
+
+        More information about this change can be found [online] and on [this issue].\n\n\
+
+        [online]: https://internals.rust-lang.org/t/cargos-crate-index-upcoming-squash-into-one-commit/8440\n\
+        [this issue]: https://github.com/rust-lang/crates-io-cargo-teams/issues/47", head, now);
+
+    // Create a snapshot branch of current `HEAD`.
+    repo.push(&format!("HEAD:refs/heads/snapshot-{}", now))?;
+
+    repo.squash_to_single_commit(&msg)?;
+
+    // Because this will not be a fast-forward push, `+` is added to the
+    // beginning of the refspec to force the push.
+    repo.push("+HEAD:refs/heads/master")?;
+
+    println!("The index has been successfully squashed.");
+
+    Ok(())
 }
