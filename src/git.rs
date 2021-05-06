@@ -252,12 +252,18 @@ impl Repository {
 
     pub fn reset_head(&self) -> Result<(), PerformError> {
         let mut origin = self.repository.find_remote("origin")?;
+        let original_head = self.head_oid()?;
         origin.fetch(
             &["refs/heads/*:refs/heads/*"],
             Some(&mut Self::fetch_options(&self.credentials)),
             None,
         )?;
         let head = self.head_oid()?;
+
+        if head != original_head {
+            println!("Resetting index from {} to {}", original_head, head);
+        }
+
         let obj = self.repository.find_object(head, None)?;
         self.repository.reset(&obj, git2::ResetType::Hard, None)?;
         Ok(())
