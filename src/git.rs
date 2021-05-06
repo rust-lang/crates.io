@@ -186,6 +186,10 @@ impl Repository {
         }
     }
 
+    fn head_oid(&self) -> Result<git2::Oid, PerformError> {
+        Ok(self.repository.head()?.target().unwrap())
+    }
+
     fn perform_commit_and_push(&self, msg: &str, modified_file: &Path) -> Result<(), PerformError> {
         // git add $file
         let mut index = self.repository.index()?;
@@ -195,13 +199,18 @@ impl Repository {
         let tree = self.repository.find_tree(tree_id)?;
 
         // git commit -m "..."
-        let head = self.repository.head()?;
-        let parent = self.repository.find_commit(head.target().unwrap())?;
+        let head = self.head_oid()?;
+        let parent = self.repository.find_commit(head)?;
         let sig = self.repository.signature()?;
         self.repository
             .commit(Some("HEAD"), &sig, &sig, &msg, &tree, &[&parent])?;
 
-        // git push
+        self.push()
+    }
+
+    /// Push the current branch to "refs/heads/master"
+    fn push(&self) -> Result<(), PerformError> {
+        let refname = "refs/heads/master";
         let mut ref_status = Ok(());
         let mut callback_called = false;
         {
@@ -210,8 +219,8 @@ impl Repository {
             callbacks.credentials(|_, user_from_url, cred_type| {
                 self.credentials.git2_callback(user_from_url, cred_type)
             });
-            callbacks.push_update_reference(|refname, status| {
-                assert_eq!(refname, "refs/heads/master");
+            callbacks.push_update_reference(|cb_refname, status| {
+                assert_eq!(refname, cb_refname);
                 if let Some(s) = status {
                     ref_status = Err(format!("failed to push a ref: {}", s).into())
                 }
@@ -220,7 +229,7 @@ impl Repository {
             });
             let mut opts = git2::PushOptions::new();
             opts.remote_callbacks(callbacks);
-            origin.push(&["refs/heads/master"], Some(&mut opts))?;
+            origin.push(&[refname], Some(&mut opts))?;
         }
 
         if !callback_called {
@@ -230,7 +239,7 @@ impl Repository {
         ref_status
     }
 
-    pub fn commit_and_push(&self, message: &str, modified_file: &Path) -> Result<(), PerformError> {
+    fn commit_and_push(&self, message: &str, modified_file: &Path) -> Result<(), PerformError> {
         println!("Committing and pushing \"{}\"", message);
 
         self.perform_commit_and_push(message, modified_file)
@@ -248,7 +257,7 @@ impl Repository {
             Some(&mut Self::fetch_options(&self.credentials)),
             None,
         )?;
-        let head = self.repository.head()?.target().unwrap();
+        let head = self.head_oid()?;
         let obj = self.repository.find_object(head, None)?;
         self.repository.reset(&obj, git2::ResetType::Hard, None)?;
         Ok(())
