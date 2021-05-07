@@ -114,7 +114,7 @@ pub fn connection_url(url: &str) -> String {
     if dotenv::var("HEROKU").is_ok() && !url.query_pairs().any(|(k, _)| k == "sslmode") {
         url.query_pairs_mut().append_pair("sslmode", "require");
     }
-    url.into_string()
+    url.into()
 }
 
 pub trait RequestTransaction {

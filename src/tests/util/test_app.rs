@@ -213,7 +213,7 @@ impl TestAppBuilder {
             db_url
                 .set_port(Some(db_chaosproxy.address().port()))
                 .unwrap();
-            self.config.db_primary_config.url = db_url.into_string();
+            self.config.db_primary_config.url = db_url.into();
 
             (Some(db_chaosproxy), Some(fresh_schema))
         } else {
