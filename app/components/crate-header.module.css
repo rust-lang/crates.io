@@ -17,6 +17,10 @@
         padding: 0;
     }
 
+    h1 {
+        word-break: break-word;
+    }
+
     h2 {
         color: var(--main-color-light);
         margin-left: 10px;

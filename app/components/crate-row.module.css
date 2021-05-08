@@ -22,6 +22,7 @@
     font-weight: bold;
     text-decoration: none;
     font-size: 120%;
+    overflow-wrap: break-word;
 }
 
 .version {

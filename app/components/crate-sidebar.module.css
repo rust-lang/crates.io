@@ -71,6 +71,12 @@
     background: transparent;
     border-radius: 5px;
     border: solid 2px var(--gray-border);
+
+    span {
+        flex: auto;
+        display: block;
+        word-break: break-word;
+    }
 }
 
 .copy-button {
