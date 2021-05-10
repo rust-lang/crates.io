@@ -140,7 +140,7 @@ impl SanitizeUrl {
             .and_then(|base_url| Url::parse(base_url).ok())
             .and_then(|url| match url.host_str() {
                 Some("github.com") | Some("gitlab.com") | Some("bitbucket.org") => {
-                    Some(canon_base_url(url.into_string()))
+                    Some(canon_base_url(url.into()))
                 }
                 _ => None,
             });
@@ -205,7 +205,7 @@ impl UrlRelativeEvaluate for SanitizeUrl {
             if add_sanitize_query {
                 if let Ok(mut parsed_url) = Url::parse(&new_url) {
                     parsed_url.query_pairs_mut().append_pair("sanitize", "true");
-                    new_url = parsed_url.into_string();
+                    new_url = parsed_url.into();
                 }
             }
             Cow::Owned(new_url)
