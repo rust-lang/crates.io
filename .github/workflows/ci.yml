@@ -165,7 +165,7 @@ jobs:
         uses: actions/cache@v2.1.4
         with:
           path: ~/.cargo/bin
-          key: ${{ runner.os }}-cargo-bin-${{ matrix.rust }}-${{ hashFiles('.diesel_version') }}-v2
+          key: ${{ runner.os }}-cargo-bin-${{ matrix.rust }}-${{ hashFiles('.diesel_version') }}-v3
 
       # Current size as of 2021-02-15: ~105 MB
       - name: Cache cargo registry and git deps
@@ -209,11 +209,11 @@ jobs:
 
       - name: Install cargo-tarpaulin
         if: matrix.rust == 'stable'
-        run: which cargo-tarpaulin || cargo install cargo-tarpaulin
+        run: which cargo-tarpaulin || cargo install cargo-tarpaulin --version ~0.18.0-alpha.3
 
       - name: Run tests (with coverage report)
         if: matrix.rust == 'stable'
-        run: cargo tarpaulin
+        run: cargo tarpaulin --avoid-cfg-tarpaulin
 
       - name: Run tests
         if: matrix.rust != 'stable'
