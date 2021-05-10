@@ -1063,12 +1063,12 @@
     ember-cli-typescript "^4.0.0"
     heimdalljs "^0.3.0"
 
-"@ember-template-lint/todo-utils@^8.0.0":
-  version "8.0.0"
-  resolved "https://registry.yarnpkg.com/@ember-template-lint/todo-utils/-/todo-utils-8.0.0.tgz#db18b2bbc26fb372062d827138b7e1bb659a30ae"
-  integrity sha512-bqULTNLWr93SRfM+MkPFN4qdYvdzmvwiPBaHpxQM67qnZ1BCs4Mr7zV8GF8OSmSKbyPNMAN2ZyxsPbNRbN6o3g==
+"@ember-template-lint/todo-utils@^8.1.0":
+  version "8.1.0"
+  resolved "https://registry.yarnpkg.com/@ember-template-lint/todo-utils/-/todo-utils-8.1.0.tgz#0fe8ef9ebd1948dea34d27d89a2e245687bb57d9"
+  integrity sha512-fnxDli4RfYGVBXc64D0fg7ifkSrNE8J/ee4eqQLzTrsUJbisWMlmU2NTHm990XcZkulYkCnkiLKERU/k1tx5IQ==
   dependencies:
-    "@types/eslint" "^7.2.7"
+    "@types/eslint" "^7.2.10"
     fs-extra "^9.1.0"
     slash "^3.0.0"
     tslib "^2.1.0"
@@ -2135,10 +2135,10 @@
   resolved "https://registry.yarnpkg.com/@types/ember__utils/-/ember__utils-3.16.2.tgz#3fa9a0666a3e8204262e2a2960289aaf01f29467"
   integrity sha512-tBbqewgegiKSpGZvGh3pbcoXwLCMvKVdLRE97vys75nAEz/vBzkGJm+PDz1HVaTkRukWbRhlDiTm2qFH8qRnSw==
 
-"@types/eslint@^7.2.7":
-  version "7.2.7"
-  resolved "https://registry.yarnpkg.com/@types/eslint/-/eslint-7.2.7.tgz#f7ef1cf0dceab0ae6f9a976a0a9af14ab1baca26"
-  integrity sha512-EHXbc1z2GoQRqHaAT7+grxlTJ3WE2YNeD6jlpPoRc83cCoThRY+NUWjCUZaYmk51OICkPXn2hhphcWcWXgNW0Q==
+"@types/eslint@^7.2.10":
+  version "7.2.10"
+  resolved "https://registry.yarnpkg.com/@types/eslint/-/eslint-7.2.10.tgz#4b7a9368d46c0f8cd5408c23288a59aa2394d917"
+  integrity sha512-kUEPnMKrqbtpCq/KTaGFFKAcz6Ethm2EjCoKIDaCmfRBWLbFuTcOJfTlorwbnboXBzahqWLgUp1BQeKHiJzPUQ==
   dependencies:
     "@types/estree" "*"
     "@types/json-schema" "*"
@@ -7130,12 +7130,12 @@ ember-svg-jar@2.3.3:
     mkdirp "^0.5.1"
     path-posix "^1.0.0"
 
-ember-template-lint@3.3.1:
-  version "3.3.1"
-  resolved "https://registry.yarnpkg.com/ember-template-lint/-/ember-template-lint-3.3.1.tgz#09825ec320f1491e9f17d40ad12f10340179f844"
-  integrity sha512-YONgtnXXhaeNu2kwrHmnqWh2a6aZlVO3aRCLqjGpt0sGwtiXteeT7L7slJdJRtTTxEG/2QdNVFLr4Uef4rIUbw==
+ember-template-lint@3.4.0:
+  version "3.4.0"
+  resolved "https://registry.yarnpkg.com/ember-template-lint/-/ember-template-lint-3.4.0.tgz#2d5dde8b0756342b0214d245301c790919f012b5"
+  integrity sha512-hye0VU+C2IPoAp3n2Bst2pQ78Lkxk0YvS2uVWtiVqxPiy7xzmOxqeETCo7JzbkY2A5gBw6RX0TvIEDvNIdkKUg==
   dependencies:
-    "@ember-template-lint/todo-utils" "^8.0.0"
+    "@ember-template-lint/todo-utils" "^8.1.0"
     chalk "^4.1.1"
     date-fns "^2.21.1"
     ember-template-recast "^5.0.1"
