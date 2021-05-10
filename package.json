@@ -37,8 +37,8 @@
     "trailingComma": "all"
   },
   "dependencies": {
-    "@sentry/browser": "6.3.5",
-    "@sentry/integrations": "6.3.5",
+    "@sentry/browser": "6.3.6",
+    "@sentry/integrations": "6.3.6",
     "chart.js": "3.2.1",
     "copy-text-to-clipboard": "3.0.1",
     "date-fns": "2.21.3",
