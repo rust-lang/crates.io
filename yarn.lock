@@ -6103,10 +6103,10 @@ elliptic@^6.5.3:
     minimalistic-assert "^1.0.1"
     minimalistic-crypto-utils "^1.0.1"
 
-ember-a11y-testing@4.0.6:
-  version "4.0.6"
-  resolved "https://registry.yarnpkg.com/ember-a11y-testing/-/ember-a11y-testing-4.0.6.tgz#3e5aaa0239655122a3a4e1c097b4e07eb5fd3d74"
-  integrity sha512-Mas9vLuzeiccc9vpNWEaSqW0YK/hq7su9iglvMHya2pkGOxLETkq6jPUPlqxuE+CLItJQQJDZ4h6wpBVUDnvLw==
+ember-a11y-testing@4.0.7:
+  version "4.0.7"
+  resolved "https://registry.yarnpkg.com/ember-a11y-testing/-/ember-a11y-testing-4.0.7.tgz#1e6f23831a7926c1c35f7449e2bb9e3d8db56982"
+  integrity sha512-RbV4fKDnKHuIpJOnjVWs+ePlivXbv+B7JWPLsCM4bU9nGR+tbJGv49y5SaN1+hTcHg0bD0mnD5YUehpHf453Fw==
   dependencies:
     "@ember/test-waiters" "^2.4.3"
     axe-core "^4.1.4"
