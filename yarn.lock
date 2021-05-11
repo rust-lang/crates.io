@@ -5746,7 +5746,7 @@ date-and-time@^1.0.0:
   resolved "https://registry.yarnpkg.com/date-and-time/-/date-and-time-1.0.0.tgz#0062394bdf6f44e961f0db00511cb19cdf3cc0a5"
   integrity sha512-477D7ypIiqlXBkxhU7YtG9wWZJEQ+RUpujt2quTfgf4+E8g5fNUkB0QIL0bVyP5/TKBg8y55Hfa1R/c4bt3dEw==
 
-date-fns@2.21.3, date-fns@^2.21.1:
+date-fns@2.21.3, date-fns@^2.21.3:
   version "2.21.3"
   resolved "https://registry.yarnpkg.com/date-fns/-/date-fns-2.21.3.tgz#8f5f6889d7a96bbcc1f0ea50239b397a83357f9b"
   integrity sha512-HeYdzCaFflc1i4tGbj7JKMjM4cKGYoyxwcIIkHzNgCkX8xXDNJDZXgDDVchIWpN4eQc3lH37WarduXFZJOtxfw==
@@ -7130,14 +7130,14 @@ ember-svg-jar@2.3.3:
     mkdirp "^0.5.1"
     path-posix "^1.0.0"
 
-ember-template-lint@3.4.0:
-  version "3.4.0"
-  resolved "https://registry.yarnpkg.com/ember-template-lint/-/ember-template-lint-3.4.0.tgz#2d5dde8b0756342b0214d245301c790919f012b5"
-  integrity sha512-hye0VU+C2IPoAp3n2Bst2pQ78Lkxk0YvS2uVWtiVqxPiy7xzmOxqeETCo7JzbkY2A5gBw6RX0TvIEDvNIdkKUg==
+ember-template-lint@3.4.1:
+  version "3.4.1"
+  resolved "https://registry.yarnpkg.com/ember-template-lint/-/ember-template-lint-3.4.1.tgz#93468fe73b2eb353585cd10f8fb134848ca15eed"
+  integrity sha512-PqD8TZBeuUvX9sRRYUsfGJniaiGEEIqWUEjvRCtMcunC7PgBWs3fSFhU194buOdC6IGCRUiTM0w5OZ5BM3MKlA==
   dependencies:
     "@ember-template-lint/todo-utils" "^8.1.0"
     chalk "^4.1.1"
-    date-fns "^2.21.1"
+    date-fns "^2.21.3"
     ember-template-recast "^5.0.1"
     find-up "^5.0.0"
     fuse.js "^6.4.6"
