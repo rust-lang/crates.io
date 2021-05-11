@@ -16,6 +16,9 @@ BEGIN;
     TRUNCATE "{{this.name}}" RESTART IDENTITY CASCADE;
 {{~/each}}
 
+    -- Enable this trigger so that `crates.textsearchable_index_col` can be excluded from the export
+    ALTER TABLE "crates" ENABLE TRIGGER "trigger_crates_tsvector_update";
+
     -- Import the CSV data.
 {{~#each tables}}
     \copy "{{this.name}}" ({{this.columns}}) FROM 'data/{{this.name}}.csv' WITH CSV HEADER
