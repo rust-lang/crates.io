@@ -1,5 +1,5 @@
 use crate::publish_rate_limit::PublishRateLimit;
-use crate::{env, uploaders::Uploader, Env, Replica};
+use crate::{env, env_optional, uploaders::Uploader, Env, Replica};
 
 #[derive(Debug)]
 pub struct Config {
@@ -17,6 +17,8 @@ pub struct Config {
     pub api_protocol: String,
     pub publish_rate_limit: PublishRateLimit,
     pub blocked_traffic: Vec<(String, Vec<String>)>,
+    pub max_allowed_page_offset: u32,
+    pub page_offset_ua_blocklist: Vec<String>,
     pub domain_name: String,
     pub allowed_origins: Vec<String>,
     pub downloads_persist_interval_ms: usize,
@@ -62,6 +64,10 @@ impl Default for Config {
     /// - `DB_OFFLINE`: If set to `leader` then use the read-only follower as if it was the leader.
     ///   If set to `follower` then act as if `READ_ONLY_REPLICA_URL` was unset.
     /// - `READ_ONLY_MODE`: If defined (even as empty) then force all connections to be read-only.
+    /// - `WEB_MAX_ALLOWED_PAGE_OFFSET`: Page offsets larger than this value are rejected. Defaults
+    ///   to 200.
+    /// - `WEB_PAGE_OFFSET_UA_BLOCKLIST`: A comma seperated list of user-agents that will be
+    ///   blocked if `WEB_MAX_ALLOWED_PAGE_OFFSET` is exceeded.
     ///
     /// # Panics
     ///
@@ -201,6 +207,12 @@ impl Default for Config {
             api_protocol,
             publish_rate_limit: Default::default(),
             blocked_traffic: blocked_traffic(),
+            max_allowed_page_offset: env_optional("WEB_MAX_ALLOWED_PAGE_OFFSET").unwrap_or(200),
+            page_offset_ua_blocklist: env_optional::<String>("WEB_MAX_ALLOWED_PAGE_OFFSET")
+                .unwrap_or_default()
+                .split(',')
+                .map(String::from)
+                .collect(),
             domain_name: domain_name(),
             allowed_origins,
             downloads_persist_interval_ms: dotenv::var("DOWNLOADS_PERSIST_INTERVAL_MS")
