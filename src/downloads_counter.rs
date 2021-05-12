@@ -455,7 +455,7 @@ mod tests {
                 self.user.id,
             )
             .expect("failed to create version")
-            .save(conn, &[], "ghost@example.com")
+            .save(conn, "ghost@example.com")
             .expect("failed to save version");
 
             self.next_version += 1;

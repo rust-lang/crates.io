@@ -236,7 +236,6 @@ module('Mirage | /me', function (hooks) {
             downloads: 0,
             license: 'MIT/Apache-2.0',
             links: {
-              authors: '/api/v1/crates/foo/1.2.3/authors',
               dependencies: '/api/v1/crates/foo/1.2.3/dependencies',
               version_downloads: '/api/v1/crates/foo/1.2.3/downloads',
             },

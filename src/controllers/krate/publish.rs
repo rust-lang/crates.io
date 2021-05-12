@@ -160,7 +160,7 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
             file_length as i32,
             user.id,
         )?
-        .save(&conn, &new_crate.authors, &verified_email_address)?;
+        .save(&conn, &verified_email_address)?;
 
         insert_version_owner_action(
             &conn,

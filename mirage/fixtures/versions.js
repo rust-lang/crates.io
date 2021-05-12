@@ -12,16 +12,6 @@ export default [
     yanked: false,
     license: 'MIT',
     crate_size: 912355,
-    _authors: [
-      'Daniel Fagnan <someone@example.com>',
-      'Jason E. Aten',
-      'David C. Bishop',
-      'Dennis Lawler',
-      'Zachary Tong',
-      'Dan Burkert',
-      'Benoît Labaere <someoneelse@example.com>',
-      'Chip Collier',
-    ],
   },
   {
     crateId: 'nanomsg',
@@ -36,16 +26,6 @@ export default [
     updated_at: '2016-12-27T08:40:00Z',
     yanked: false,
     license: 'Apache-2.0',
-    _authors: [
-      'Daniel Fagnan <someone@example.com>',
-      'Jason E. Aten',
-      'David C. Bishop',
-      'Dennis Lawler',
-      'Zachary Tong',
-      'Dan Burkert',
-      'Benoît Labaere <someoneelse@example.com>',
-      'Chip Collier',
-    ],
   },
   {
     crateId: 'nanomsg',
@@ -57,16 +37,6 @@ export default [
     updated_at: '2016-06-10T20:03:55Z',
     yanked: false,
     license: 'Apache-2.0',
-    _authors: [
-      'Daniel Fagnan <someone@example.com>',
-      'Jason E. Aten',
-      'David C. Bishop',
-      'Dennis Lawler',
-      'Zachary Tong',
-      'Dan Burkert',
-      'Benoît Labaere <someoneelse@example.com>',
-      'Chip Collier',
-    ],
   },
   {
     crateId: 'nanomsg',
@@ -78,16 +48,6 @@ export default [
     updated_at: '2016-01-24T22:07:58Z',
     yanked: false,
     license: 'MIT/Apache-2.0',
-    _authors: [
-      'Daniel Fagnan <someone@example.com>',
-      'Jason E. Aten',
-      'David C. Bishop',
-      'Dennis Lawler',
-      'Zachary Tong',
-      'Dan Burkert',
-      'Benoît Labaere <someoneelse@example.com>',
-      'Chip Collier',
-    ],
   },
   {
     crateId: 'nanomsg',
@@ -99,16 +59,6 @@ export default [
     updated_at: '2015-12-16T00:01:56Z',
     yanked: false,
     license: 'MIT',
-    _authors: [
-      'Daniel Fagnan <someone@example.com>',
-      'Jason E. Aten',
-      'David C. Bishop',
-      'Dennis Lawler',
-      'Zachary Tong',
-      'Dan Burkert',
-      'Benoît Labaere <someoneelse@example.com>',
-      'Chip Collier',
-    ],
   },
   {
     crateId: 'nanomsg',
@@ -120,16 +70,6 @@ export default [
     updated_at: '2015-12-11T23:54:29Z',
     yanked: false,
     license: 'MIT',
-    _authors: [
-      'Daniel Fagnan <someone@example.com>',
-      'Jason E. Aten',
-      'David C. Bishop',
-      'Dennis Lawler',
-      'Zachary Tong',
-      'Dan Burkert',
-      'Benoît Labaere <someoneelse@example.com>',
-      'Chip Collier',
-    ],
   },
   {
     crateId: 'nanomsg',
@@ -141,16 +81,6 @@ export default [
     updated_at: '2015-12-11T23:54:29Z',
     yanked: false,
     license: 'MIT',
-    _authors: [
-      'Daniel Fagnan <someone@example.com>',
-      'Jason E. Aten',
-      'David C. Bishop',
-      'Dennis Lawler',
-      'Zachary Tong',
-      'Dan Burkert',
-      'Benoît Labaere <someoneelse@example.com>',
-      'Chip Collier',
-    ],
   },
   {
     crateId: 'nanomsg',
@@ -162,16 +92,6 @@ export default [
     updated_at: '2015-12-15T00:03:39Z',
     yanked: false,
     license: 'MIT',
-    _authors: [
-      'Daniel Fagnan <someone@example.com>',
-      'Jason E. Aten',
-      'David C. Bishop',
-      'Dennis Lawler',
-      'Zachary Tong',
-      'Dan Burkert',
-      'Benoît Labaere <someoneelse@example.com>',
-      'Chip Collier',
-    ],
   },
   {
     crateId: 'nanomsg',
@@ -183,16 +103,6 @@ export default [
     updated_at: '2015-12-11T23:54:29Z',
     yanked: false,
     license: 'MIT',
-    _authors: [
-      'Daniel Fagnan <someone@example.com>',
-      'Jason E. Aten',
-      'David C. Bishop',
-      'Dennis Lawler',
-      'Zachary Tong',
-      'Dan Burkert',
-      'Benoît Labaere <someoneelse@example.com>',
-      'Chip Collier',
-    ],
   },
   {
     crateId: 'nanomsg',
@@ -204,16 +114,6 @@ export default [
     updated_at: '2015-12-11T23:54:29Z',
     yanked: false,
     license: 'Apache-2.0',
-    _authors: [
-      'Daniel Fagnan <someone@example.com>',
-      'Jason E. Aten',
-      'David C. Bishop',
-      'Dennis Lawler',
-      'Zachary Tong',
-      'Dan Burkert',
-      'Benoît Labaere <someoneelse@example.com>',
-      'Chip Collier',
-    ],
   },
   {
     crateId: 'nanomsg',
@@ -225,16 +125,6 @@ export default [
     updated_at: '2015-12-11T23:54:29Z',
     yanked: false,
     license: 'MIT/Apache-2.0',
-    _authors: [
-      'Daniel Fagnan <someone@example.com>',
-      'Jason E. Aten',
-      'David C. Bishop',
-      'Dennis Lawler',
-      'Zachary Tong',
-      'Dan Burkert',
-      'Benoît Labaere <someoneelse@example.com>',
-      'Chip Collier',
-    ],
   },
   {
     crateId: 'nanomsg',
@@ -246,16 +136,6 @@ export default [
     updated_at: '2015-12-11T23:54:29Z',
     yanked: false,
     license: 'MIT',
-    _authors: [
-      'Daniel Fagnan <someone@example.com>',
-      'Jason E. Aten',
-      'David C. Bishop',
-      'Dennis Lawler',
-      'Zachary Tong',
-      'Dan Burkert',
-      'Benoît Labaere <someoneelse@example.com>',
-      'Chip Collier',
-    ],
   },
   {
     crateId: 'nanomsg',
@@ -267,16 +147,6 @@ export default [
     updated_at: '2015-12-11T23:54:29Z',
     yanked: false,
     license: 'MIT',
-    _authors: [
-      'Daniel Fagnan <someone@example.com>',
-      'Jason E. Aten',
-      'David C. Bishop',
-      'Dennis Lawler',
-      'Zachary Tong',
-      'Dan Burkert',
-      'Benoît Labaere <someoneelse@example.com>',
-      'Chip Collier',
-    ],
   },
   {
     crateId: 'unicorn-rpc',
@@ -288,7 +158,6 @@ export default [
     updated_at: '2015-12-11T23:54:29Z',
     yanked: false,
     license: 'MIT',
-    _authors: ['David C. Bishop'],
   },
   {
     crateId: 'external_mixin',
@@ -299,7 +168,6 @@ export default [
     updated_at: '2015-12-11T23:54:29Z',
     yanked: false,
     license: 'MIT',
-    _authors: [],
   },
   {
     crateId: 'external_mixin_umbrella',
@@ -310,7 +178,6 @@ export default [
     updated_at: '2015-12-11T23:54:29Z',
     yanked: false,
     license: 'MIT',
-    _authors: [],
   },
   {
     crateId: 'Inflector',
@@ -321,7 +188,6 @@ export default [
     updated_at: '2015-12-11T23:54:29Z',
     yanked: false,
     license: 'MIT',
-    _authors: [],
   },
   {
     crateId: 'kinetic-rust',
@@ -332,7 +198,6 @@ export default [
     updated_at: '2015-12-11T23:54:29Z',
     yanked: false,
     license: 'MIT',
-    _authors: [],
   },
   {
     crateId: 'libc',
@@ -343,7 +208,6 @@ export default [
     updated_at: '2015-12-11T23:54:29Z',
     yanked: false,
     license: 'MIT',
-    _authors: [],
   },
   {
     crateId: 'mock-build-deps',
@@ -354,7 +218,6 @@ export default [
     updated_at: '2015-12-11T23:54:29Z',
     yanked: false,
     license: 'MIT',
-    _authors: [],
   },
   {
     crateId: 'mock-dev-deps',
@@ -365,7 +228,6 @@ export default [
     updated_at: '2015-12-11T23:54:29Z',
     yanked: false,
     license: 'MIT',
-    _authors: [],
   },
   {
     crateId: 'nanomsg-sys',
@@ -376,7 +238,6 @@ export default [
     updated_at: '2015-12-11T23:54:29Z',
     yanked: false,
     license: 'MIT',
-    _authors: [],
   },
   {
     crateId: 'nom',
@@ -387,7 +248,6 @@ export default [
     updated_at: '2015-12-11T23:54:29Z',
     yanked: false,
     license: 'MIT',
-    _authors: [],
   },
   {
     crateId: 'postgres',
@@ -398,7 +258,6 @@ export default [
     updated_at: '2015-12-11T23:54:29Z',
     yanked: false,
     license: 'MIT',
-    _authors: [],
   },
   {
     crateId: 'quickcheck',
@@ -409,7 +268,6 @@ export default [
     updated_at: '2015-12-11T23:54:29Z',
     yanked: false,
     license: 'MIT',
-    _authors: [],
   },
   {
     crateId: 'quickcheck_macros',
@@ -420,7 +278,6 @@ export default [
     updated_at: '2015-12-11T23:54:29Z',
     yanked: false,
     license: 'MIT',
-    _authors: [],
   },
   {
     crateId: 'rs-es',
@@ -431,7 +288,6 @@ export default [
     updated_at: '2015-12-11T23:54:29Z',
     yanked: false,
     license: 'MIT',
-    _authors: [],
   },
   {
     crateId: 'rust-crypto',
@@ -442,7 +298,6 @@ export default [
     updated_at: '2015-12-11T23:54:29Z',
     yanked: false,
     license: 'MIT',
-    _authors: [],
   },
   {
     crateId: 'rust-htslib',
@@ -453,7 +308,6 @@ export default [
     updated_at: '2015-12-11T23:54:29Z',
     yanked: false,
     license: 'MIT',
-    _authors: [],
   },
   {
     crateId: 'rust_mixin',
@@ -464,7 +318,6 @@ export default [
     updated_at: '2015-12-11T23:54:29Z',
     yanked: false,
     license: 'MIT',
-    _authors: [],
   },
   {
     crateId: 'rusted_cypher',
@@ -475,7 +328,6 @@ export default [
     updated_at: '2015-12-11T23:54:29Z',
     yanked: false,
     license: 'MIT',
-    _authors: [],
   },
   {
     crateId: 'rustful',
@@ -486,7 +338,6 @@ export default [
     updated_at: '2015-12-11T23:54:29Z',
     yanked: false,
     license: 'MIT',
-    _authors: [],
   },
   {
     crateId: 'rustless',
@@ -497,7 +348,6 @@ export default [
     updated_at: '2015-12-11T23:54:29Z',
     yanked: false,
     license: 'MIT',
-    _authors: [],
   },
   {
     crateId: 'serde',
@@ -508,7 +358,6 @@ export default [
     updated_at: '2015-12-11T23:54:29Z',
     yanked: false,
     license: 'MIT',
-    _authors: [],
   },
   {
     crateId: 'zlib',
@@ -519,7 +368,6 @@ export default [
     updated_at: '2015-12-11T23:54:29Z',
     yanked: false,
     license: 'MIT',
-    _authors: [],
   },
   {
     crateId: 'rustful',
@@ -530,7 +378,6 @@ export default [
     updated_at: '2015-12-11T23:54:29Z',
     yanked: false,
     license: 'MIT',
-    _authors: [],
   },
   {
     crateId: 'rustful',
@@ -541,7 +388,6 @@ export default [
     updated_at: '2015-12-11T23:54:29Z',
     yanked: false,
     license: 'MIT',
-    _authors: [],
   },
   {
     crateId: 'rustful',
@@ -552,7 +398,6 @@ export default [
     updated_at: '2015-12-11T23:54:29Z',
     yanked: false,
     license: 'MIT',
-    _authors: [],
   },
   {
     crateId: 'rustful',
@@ -563,6 +408,5 @@ export default [
     updated_at: '2015-12-11T23:54:29Z',
     yanked: false,
     license: 'MIT',
-    _authors: [],
   },
 ];

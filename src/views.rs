@@ -624,7 +624,6 @@ impl EncodableVersion {
             links: EncodableVersionLinks {
                 dependencies: format!("/api/v1/crates/{}/{}/dependencies", crate_name, num),
                 version_downloads: format!("/api/v1/crates/{}/{}/downloads", crate_name, num),
-                authors: format!("/api/v1/crates/{}/{}/authors", crate_name, num),
             },
             crate_size,
             published_by: published_by.map(User::into),
@@ -644,7 +643,6 @@ impl EncodableVersion {
 pub struct EncodableVersionLinks {
     pub dependencies: String,
     pub version_downloads: String,
-    pub authors: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -734,7 +732,6 @@ mod tests {
             links: EncodableVersionLinks {
                 dependencies: "".to_string(),
                 version_downloads: "".to_string(),
-                authors: "".to_string(),
             },
             crate_size: Some(1234),
             published_by: None,
