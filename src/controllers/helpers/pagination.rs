@@ -10,6 +10,7 @@ use diesel::query_builder::*;
 use diesel::query_dsl::LoadQuery;
 use diesel::sql_types::BigInt;
 use indexmap::IndexMap;
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
 const MAX_PAGE_BEFORE_SUSPECTED_BOT: u32 = 10;
@@ -19,6 +20,7 @@ const MAX_PER_PAGE: u32 = 100;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum Page {
     Numeric(u32),
+    Seek(RawSeekPayload),
     Unspecified,
 }
 
@@ -32,6 +34,7 @@ impl PaginationOptions {
     pub(crate) fn builder() -> PaginationOptionsBuilder {
         PaginationOptionsBuilder {
             limit_page_numbers: None,
+            enable_seek: false,
         }
     }
 
@@ -46,6 +49,7 @@ impl PaginationOptions {
 
 pub(crate) struct PaginationOptionsBuilder {
     limit_page_numbers: Option<Arc<App>>,
+    enable_seek: bool,
 }
 
 impl PaginationOptionsBuilder {
@@ -54,9 +58,21 @@ impl PaginationOptionsBuilder {
         self
     }
 
+    pub(crate) fn enable_seek(mut self, enable: bool) -> Self {
+        self.enable_seek = enable;
+        self
+    }
+
     pub(crate) fn gather(self, req: &mut dyn RequestExt) -> AppResult<PaginationOptions> {
         let params = req.query();
         let page_param = params.get("page");
+        let seek_param = params.get("seek");
+
+        if seek_param.is_some() && page_param.is_some() {
+            return Err(bad_request(
+                "providing both ?page= and ?seek= is unsupported",
+            ));
+        }
 
         let page = if let Some(s) = page_param {
             let numeric_page = s.parse().map_err(|e| bad_request(&e))?;
@@ -87,6 +103,12 @@ impl PaginationOptionsBuilder {
             }
 
             Page::Numeric(numeric_page)
+        } else if let Some(s) = seek_param {
+            if self.enable_seek {
+                Page::Seek(RawSeekPayload(s.clone()))
+            } else {
+                return Err(bad_request("?seek= is not supported for this request"));
+            }
         } else {
             Page::Unspecified
         };
@@ -139,6 +161,7 @@ impl<T> Paginated<T> {
         match self.options.page {
             Page::Numeric(n) => opts.insert("page".into(), (n + 1).to_string()),
             Page::Unspecified => opts.insert("page".into(), 2.to_string()),
+            Page::Seek(_) => return None,
         };
         Some(opts)
     }
@@ -146,7 +169,7 @@ impl<T> Paginated<T> {
     pub(crate) fn prev_page_params(&self) -> Option<IndexMap<String, String>> {
         let mut opts = IndexMap::new();
         match self.options.page {
-            Page::Numeric(1) | Page::Unspecified => return None,
+            Page::Numeric(1) | Page::Unspecified | Page::Seek(_) => return None,
             Page::Numeric(n) => opts.insert("page".into(), (n - 1).to_string()),
         };
         Some(opts)
@@ -214,6 +237,35 @@ where
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct RawSeekPayload(String);
+
+impl RawSeekPayload {
+    pub(crate) fn decode<D: for<'a> Deserialize<'a>>(&self) -> AppResult<D> {
+        decode_seek(&self.0)
+    }
+}
+
+/// Encode a payload to be used as a seek key.
+///
+/// The payload is base64-encoded to hint that it shouldn't be manually constructed. There is no
+/// technical measure to prevent API consumers for manually creating or modifying them, but
+/// hopefully the base64 will be enough to convey that doing it is unsupported.
+pub(crate) fn encode_seek<S: Serialize>(params: S) -> AppResult<String> {
+    Ok(base64::encode_config(
+        &serde_json::to_vec(&params)?,
+        base64::URL_SAFE_NO_PAD,
+    ))
+}
+
+/// Decode a list of params previously encoded with [`encode_seek`].
+pub(crate) fn decode_seek<D: for<'a> Deserialize<'a>>(seek: &str) -> AppResult<D> {
+    Ok(serde_json::from_slice(&base64::decode_config(
+        seek,
+        base64::URL_SAFE_NO_PAD,
+    )?)?)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -257,6 +309,57 @@ mod tests {
             .gather(&mut mock("per_page=5"))
             .unwrap();
         assert_eq!(5, pagination.per_page);
+    }
+
+    #[test]
+    fn seek_param_parsing() {
+        assert_pagination_error(
+            PaginationOptions::builder(),
+            "seek=OTg",
+            "?seek= is not supported for this request",
+        );
+
+        let pagination = PaginationOptions::builder()
+            .enable_seek(true)
+            .gather(&mut mock("seek=OTg"))
+            .unwrap();
+
+        if let Page::Seek(raw) = pagination.page {
+            assert_eq!(98, raw.decode::<i32>().unwrap());
+        } else {
+            panic!(
+                "did not parse a seek page, parsed {:?} instead",
+                pagination.page
+            );
+        }
+    }
+
+    #[test]
+    fn both_page_and_seek() {
+        assert_pagination_error(
+            PaginationOptions::builder(),
+            "page=1&seek=OTg",
+            "providing both ?page= and ?seek= is unsupported",
+        );
+        assert_pagination_error(
+            PaginationOptions::builder().enable_seek(true),
+            "page=1&seek=OTg",
+            "providing both ?page= and ?seek= is unsupported",
+        );
+    }
+
+    #[test]
+    fn test_seek_encode_and_decode() {
+        // Encoding produces the results we expect
+        assert_eq!("OTg", encode_seek(98).unwrap());
+        assert_eq!("WyJmb28iLDQyXQ", encode_seek(("foo", 42)).unwrap());
+
+        // Encoded values can be then decoded.
+        assert_eq!(98, decode_seek::<i32>(&encode_seek(98).unwrap()).unwrap(),);
+        assert_eq!(
+            ("foo".into(), 42),
+            decode_seek::<(String, i32)>(&encode_seek(("foo", 42)).unwrap()).unwrap(),
+        );
     }
 
     fn mock(query: &str) -> MockRequest {

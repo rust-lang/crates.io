@@ -2,6 +2,7 @@
 
 use diesel::dsl::*;
 use diesel_full_text_search::*;
+use indexmap::IndexMap;
 
 use crate::controllers::cargo_prelude::*;
 use crate::controllers::helpers::Paginate;
@@ -12,7 +13,7 @@ use crate::schema::*;
 use crate::util::errors::{bad_request, ChainError};
 use crate::views::EncodableCrate;
 
-use crate::controllers::helpers::pagination::{Paginated, PaginationOptions};
+use crate::controllers::helpers::pagination::{Page, Paginated, PaginationOptions};
 use crate::models::krate::{canon_crate_name, ALL_COLUMNS};
 
 /// Handles the `GET /crates` route.
@@ -56,7 +57,13 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
         .select(selection)
         .into_boxed();
 
+    let mut supports_seek = true;
+
     if let Some(q_string) = params.get("q") {
+        // Searching with a query string always puts the exact match at the start of the results,
+        // so we can't support seek-based pagination with it.
+        supports_seek = false;
+
         if !q_string.is_empty() {
             let sort = params.get("sort").map(|s| &**s).unwrap_or("relevance");
 
@@ -84,6 +91,9 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
     }
 
     if let Some(cat) = params.get("category") {
+        // Calculating the total number of results with filters is not supported yet.
+        supports_seek = false;
+
         query = query.filter(
             crates::id.eq_any(
                 crates_categories::table
@@ -101,6 +111,9 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
     if let Some(kws) = params.get("all_keywords") {
         use diesel::sql_types::Array;
         sql_function!(#[aggregate] fn array_agg<T>(x: T) -> Array<T>);
+
+        // Calculating the total number of results with filters is not supported yet.
+        supports_seek = false;
 
         let names: Vec<_> = kws
             .split_whitespace()
@@ -120,6 +133,9 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
             ),
         );
     } else if let Some(kw) = params.get("keyword") {
+        // Calculating the total number of results with filters is not supported yet.
+        supports_seek = false;
+
         query = query.filter(
             crates::id.eq_any(
                 crates_keywords::table
@@ -129,6 +145,9 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
             ),
         );
     } else if let Some(letter) = params.get("letter") {
+        // Calculating the total number of results with filters is not supported yet.
+        supports_seek = false;
+
         let pattern = format!(
             "{}%",
             letter
@@ -140,6 +159,9 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
         );
         query = query.filter(canon_crate_name(crates::name).like(pattern));
     } else if let Some(user_id) = params.get("user_id").and_then(|s| s.parse::<i32>().ok()) {
+        // Calculating the total number of results with filters is not supported yet.
+        supports_seek = false;
+
         query = query.filter(
             crates::id.eq_any(
                 CrateOwner::by_owner_kind(OwnerKind::User)
@@ -148,6 +170,9 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
             ),
         );
     } else if let Some(team_id) = params.get("team_id").and_then(|s| s.parse::<i32>().ok()) {
+        // Calculating the total number of results with filters is not supported yet.
+        supports_seek = false;
+
         query = query.filter(
             crates::id.eq_any(
                 CrateOwner::by_owner_kind(OwnerKind::Team)
@@ -156,6 +181,9 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
             ),
         );
     } else if params.get("following").is_some() {
+        // Calculating the total number of results with filters is not supported yet.
+        supports_seek = false;
+
         let user_id = req.authenticate()?.user_id();
         query = query.filter(
             crates::id.eq_any(
@@ -165,6 +193,9 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
             ),
         );
     } else if params.get("ids[]").is_some() {
+        // Calculating the total number of results with filters is not supported yet.
+        supports_seek = false;
+
         let query_bytes = req.query_string().unwrap_or("").as_bytes();
         let ids: Vec<_> = url::form_urlencoded::parse(query_bytes)
             .filter(|(key, _)| key == "ids[]")
@@ -175,6 +206,9 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
     }
 
     if !include_yanked {
+        // Calculating the total number of results with filters is not supported yet.
+        supports_seek = false;
+
         query = query.filter(exists(
             versions::table
                 .filter(versions::crate_id.eq(crates::id))
@@ -183,28 +217,89 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
     }
 
     if sort == Some("downloads") {
+        // Custom sorting is not supported yet with seek.
+        supports_seek = false;
+
         query = query.then_order_by(crates::downloads.desc())
     } else if sort == Some("recent-downloads") {
+        // Custom sorting is not supported yet with seek.
+        supports_seek = false;
+
         query = query.then_order_by(recent_crate_downloads::downloads.desc().nulls_last())
     } else if sort == Some("recent-updates") {
+        // Custom sorting is not supported yet with seek.
+        supports_seek = false;
+
         query = query.order(crates::updated_at.desc());
     } else if sort == Some("new") {
+        // Custom sorting is not supported yet with seek.
+        supports_seek = false;
+
         query = query.order(crates::created_at.desc());
     } else {
         query = query.then_order_by(crates::name.asc())
     }
 
-    let query = query.pages_pagination(
-        PaginationOptions::builder()
-            .limit_page_numbers(req.app().clone())
-            .gather(req)?,
-    );
+    let pagination: PaginationOptions = PaginationOptions::builder()
+        .limit_page_numbers(req.app().clone())
+        .enable_seek(supports_seek)
+        .gather(req)?;
     let conn = req.db_read_only()?;
-    let data: Paginated<(Crate, bool, Option<i64>)> = query.load(&*conn)?;
-    let total = data.total();
 
-    let next_page = data.next_page_params().map(|p| req.query_with_params(p));
-    let prev_page = data.prev_page_params().map(|p| req.query_with_params(p));
+    let (explicit_page, seek) = match pagination.page.clone() {
+        Page::Numeric(_) => (true, None),
+        Page::Seek(s) => (false, Some(s.decode::<i32>()?)),
+        Page::Unspecified => (false, None),
+    };
+
+    // To avoid breaking existing users, seek-based pagination is only used if an explicit page has
+    // not been provided. This way clients relying on meta.next_page will use the faster seek-based
+    // paginations, while client hardcoding pages handling will use the slower offset-based code.
+    let (total, next_page, prev_page, data, conn) = if supports_seek && !explicit_page {
+        // Equivalent of:
+        // `WHERE name > (SELECT name FROM crates WHERE id = $1) LIMIT $2`
+        query = query.limit(pagination.per_page as i64);
+        if let Some(seek) = seek {
+            let crate_name: String = crates::table
+                .find(seek)
+                .select(crates::name)
+                .get_result(&*conn)?;
+            query = query.filter(crates::name.gt(crate_name));
+        }
+
+        // This does a full index-only scan over the crates table to gather how many crates were
+        // published. Unfortunately on PostgreSQL counting the rows in a table requires scanning
+        // the table, and the `total` field is part of the stable registries API.
+        //
+        // If this becomes a problem in the future the crates count could be denormalized, at least
+        // for the filterless happy path.
+        let total: i64 = crates::table.count().get_result(&*conn)?;
+
+        let results: Vec<(Crate, bool, Option<i64>)> = query.load(&*conn)?;
+
+        let next_page = if let Some(last) = results.last() {
+            let mut params = IndexMap::new();
+            params.insert(
+                "seek".into(),
+                crate::controllers::helpers::pagination::encode_seek(last.0.id)?,
+            );
+            Some(req.query_with_params(params))
+        } else {
+            None
+        };
+
+        (total, next_page, None, results, conn)
+    } else {
+        let query = query.pages_pagination(pagination);
+        let data: Paginated<(Crate, bool, Option<i64>)> = query.load(&*conn)?;
+        (
+            data.total(),
+            data.next_page_params().map(|p| req.query_with_params(p)),
+            data.prev_page_params().map(|p| req.query_with_params(p)),
+            data.into_iter().collect::<Vec<_>>(),
+            conn,
+        )
+    };
 
     let perfect_matches = data.iter().map(|&(_, b, _)| b).collect::<Vec<_>>();
     let recent_downloads = data

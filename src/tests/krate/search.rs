@@ -695,17 +695,101 @@ fn pagination_links_included_if_applicable() {
         CrateBuilder::new("pagination_links_3", user.id).expect_build(conn);
     });
 
-    let page1 = anon.search("per_page=1");
-    let page2 = anon.search("page=2&per_page=1");
-    let page3 = anon.search("page=3&per_page=1");
-    let page4 = anon.search("page=4&per_page=1");
+    // This uses a filter (`letter=p`) to disable seek-based pagination, as seek-based pagination
+    // does not return page numbers. If the test fails after expanding the scope of seek-based
+    // pagination replace the filter with something else still using pages.
 
-    assert_eq!(Some("?per_page=1&page=2".to_string()), page1.meta.next_page);
+    let page1 = anon.search("letter=p&per_page=1");
+    let page2 = anon.search("letter=p&page=2&per_page=1");
+    let page3 = anon.search("letter=p&page=3&per_page=1");
+    let page4 = anon.search("letter=p&page=4&per_page=1");
+
+    assert_eq!(
+        Some("?letter=p&per_page=1&page=2".to_string()),
+        page1.meta.next_page
+    );
     assert_eq!(None, page1.meta.prev_page);
-    assert_eq!(Some("?page=3&per_page=1".to_string()), page2.meta.next_page);
-    assert_eq!(Some("?page=1&per_page=1".to_string()), page2.meta.prev_page);
+    assert_eq!(
+        Some("?letter=p&page=3&per_page=1".to_string()),
+        page2.meta.next_page
+    );
+    assert_eq!(
+        Some("?letter=p&page=1&per_page=1".to_string()),
+        page2.meta.prev_page
+    );
     assert_eq!(None, page4.meta.next_page);
-    assert_eq!(Some("?page=2&per_page=1".to_string()), page3.meta.prev_page);
+    assert_eq!(
+        Some("?letter=p&page=2&per_page=1".to_string()),
+        page3.meta.prev_page
+    );
+}
+
+#[test]
+fn seek_based_pagination() {
+    let (app, anon, user) = TestApp::init().with_user();
+    let user = user.as_model();
+
+    app.db(|conn| {
+        CrateBuilder::new("pagination_links_1", user.id).expect_build(conn);
+        CrateBuilder::new("pagination_links_2", user.id).expect_build(conn);
+        CrateBuilder::new("pagination_links_3", user.id).expect_build(conn);
+    });
+
+    let mut url = Some("?per_page=1".to_string());
+    let mut results = Vec::new();
+    let mut calls = 0;
+    while let Some(current_url) = url.take() {
+        let resp = anon.search(current_url.trim_start_matches('?'));
+        calls += 1;
+
+        results.append(
+            &mut resp
+                .crates
+                .iter()
+                .map(|res| res.name.clone())
+                .collect::<Vec<_>>(),
+        );
+
+        if let Some(new_url) = resp.meta.next_page {
+            assert_eq!(1, resp.crates.len());
+            url = Some(new_url);
+        } else {
+            assert!(resp.crates.is_empty());
+        }
+
+        assert_eq!(None, resp.meta.prev_page);
+        assert_eq!(3, resp.meta.total);
+    }
+
+    assert_eq!(4, calls);
+    assert_eq!(
+        vec![
+            "pagination_links_1",
+            "pagination_links_2",
+            "pagination_links_3"
+        ],
+        results
+    );
+}
+
+#[test]
+fn test_pages_work_even_with_seek_based_pagination() {
+    let (app, anon, user) = TestApp::init().with_user();
+    let user = user.as_model();
+
+    app.db(|conn| {
+        CrateBuilder::new("pagination_links_1", user.id).expect_build(conn);
+        CrateBuilder::new("pagination_links_2", user.id).expect_build(conn);
+        CrateBuilder::new("pagination_links_3", user.id).expect_build(conn);
+    });
+
+    // The next_page returned by the request is seek-based
+    let first = anon.search("per_page=1");
+    assert!(first.meta.next_page.unwrap().contains("seek="));
+
+    // Calling with page=2 will revert to offset-based pagination
+    let second = anon.search("page=2&per_page=1");
+    assert!(second.meta.next_page.unwrap().contains("page=3"));
 }
 
 #[test]
