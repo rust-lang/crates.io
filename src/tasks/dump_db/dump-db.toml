@@ -82,7 +82,7 @@ description = "public"
 homepage = "public"
 documentation = "public"
 readme = "public"
-textsearchable_index_col = "public"
+textsearchable_index_col = "private" # This Postgres specific and can be derived from exported data
 repository = "public"
 max_upload_size = "public"
 
