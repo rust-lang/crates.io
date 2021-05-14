@@ -1,4 +1,4 @@
-use anyhow::Error;
+use anyhow::{Context, Error};
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::{
@@ -10,6 +10,7 @@ use tokio::{
     runtime::Runtime,
     sync::broadcast::Sender,
 };
+use url::Url;
 
 pub(crate) struct ChaosProxy {
     address: SocketAddr,
@@ -51,8 +52,19 @@ impl ChaosProxy {
         Ok(instance)
     }
 
-    pub(crate) fn address(&self) -> SocketAddr {
-        self.address
+    pub(crate) fn proxy_database_url(url: &str) -> Result<(Arc<Self>, String), Error> {
+        let mut db_url = Url::parse(url).context("failed to parse database url")?;
+        let backend_addr = db_url
+            .socket_addrs(|| Some(5432))
+            .context("could not resolve database url")?
+            .get(0)
+            .copied()
+            .ok_or_else(|| anyhow::anyhow!("the database url does not point to any IP"))?;
+
+        let instance = ChaosProxy::new(backend_addr).unwrap();
+        db_url.set_ip_host(instance.address.ip()).unwrap();
+        db_url.set_port(Some(instance.address.port())).unwrap();
+        Ok((instance, db_url.into()))
     }
 
     pub(crate) fn break_networking(&self) {

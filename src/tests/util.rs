@@ -38,6 +38,7 @@ mod fresh_schema;
 mod response;
 mod test_app;
 
+pub(crate) use chaosproxy::ChaosProxy;
 pub(crate) use fresh_schema::FreshSchema;
 pub use response::Response;
 pub use test_app::TestApp;

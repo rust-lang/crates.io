@@ -197,25 +197,10 @@ impl TestAppBuilder {
         // The schema will be cleared up once the app is dropped.
         let (db_chaosproxy, fresh_schema) = if !self.config.use_test_database_pool {
             let fresh_schema = FreshSchema::new(&self.config.db_primary_config.url);
-            self.config.db_primary_config.url = fresh_schema.database_url().into();
+            let (proxy, url) = ChaosProxy::proxy_database_url(fresh_schema.database_url()).unwrap();
+            self.config.db_primary_config.url = url;
 
-            let mut db_url =
-                Url::parse(&self.config.db_primary_config.url).expect("invalid db url");
-            let backend_addr = db_url
-                .socket_addrs(|| Some(5432))
-                .expect("could not resolve database url")
-                .get(0)
-                .copied()
-                .expect("the database url does not point to any IP");
-
-            let db_chaosproxy = ChaosProxy::new(backend_addr).unwrap();
-            db_url.set_ip_host(db_chaosproxy.address().ip()).unwrap();
-            db_url
-                .set_port(Some(db_chaosproxy.address().port()))
-                .unwrap();
-            self.config.db_primary_config.url = db_url.into();
-
-            (Some(db_chaosproxy), Some(fresh_schema))
+            (Some(proxy), Some(fresh_schema))
         } else {
             (None, None)
         };
