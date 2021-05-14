@@ -181,6 +181,7 @@ gh_access_token = "''"
 
 [version_downloads]
 dependencies = ["versions"]
+filter = "date > current_date - interval '90 day'"
 [version_downloads.columns]
 version_id = "public"
 downloads = "public"
