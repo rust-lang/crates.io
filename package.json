@@ -83,7 +83,7 @@
     "ember-cli-terser": "4.0.2",
     "ember-click-outside": "2.0.0",
     "ember-concurrency": "2.0.3",
-    "ember-css-modules": "1.3.4",
+    "ember-css-modules": "1.4.0",
     "ember-data": "3.27.0",
     "ember-disable-prototype-extensions": "1.1.3",
     "ember-event-helpers": "0.1.1",
