@@ -74,7 +74,7 @@ module('Mirage | Summary', function (hooks) {
         created_at: '2010-06-16T21:30:45Z',
         description: 'This is the description for the crate called "crate-4"',
         documentation: null,
-        downloads: 148140,
+        downloads: 148_140,
         homepage: null,
         keywords: [],
         links: {
@@ -148,7 +148,7 @@ module('Mirage | Summary', function (hooks) {
       });
 
       assert.equal(responsePayload.num_crates, 20);
-      assert.equal(responsePayload.num_downloads, 1419675);
+      assert.equal(responsePayload.num_downloads, 1_419_675);
 
       assert.equal(responsePayload.popular_categories.length, 10);
       assert.deepEqual(responsePayload.popular_categories[0], {

@@ -11,7 +11,7 @@ export default Factory.extend({
     return `This is the description for the crate called "${this.name}"`;
   },
 
-  downloads: i => (((i + 13) * 42) % 13) * 12345,
+  downloads: i => (((i + 13) * 42) % 13) * 12_345,
 
   documentation: null,
   homepage: null,

@@ -32,7 +32,7 @@ module.exports = function (environment) {
     },
     'ember-cli-notifications': {
       autoClear: true,
-      clearDuration: 10000,
+      clearDuration: 10_000,
     },
     emberKeyboard: {
       disableInputsInitializer: true,
