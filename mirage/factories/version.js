@@ -15,7 +15,7 @@ export default Factory.extend({
 
   features: () => {},
 
-  crate_size: i => (((i + 13) * 42) % 13) * 54321,
+  crate_size: i => (((i + 13) * 42) % 13) * 54_321,
 
   afterCreate(version) {
     if (!version.crateId) {

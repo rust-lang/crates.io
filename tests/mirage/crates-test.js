@@ -330,7 +330,7 @@ module('Mirage | Crates', function (hooks) {
         {
           id: '2',
           crate: 'rand',
-          crate_size: 162963,
+          crate_size: 162_963,
           created_at: '2010-06-16T21:30:45Z',
           dl_path: '/api/v1/crates/rand/1.1.0/download',
           downloads: 3702,
@@ -347,7 +347,7 @@ module('Mirage | Crates', function (hooks) {
         {
           id: '3',
           crate: 'rand',
-          crate_size: 325926,
+          crate_size: 325_926,
           created_at: '2010-06-16T21:30:45Z',
           dl_path: '/api/v1/crates/rand/1.2.0/download',
           downloads: 7404,
@@ -593,7 +593,7 @@ module('Mirage | Crates', function (hooks) {
           {
             id: '2',
             crate: 'rand',
-            crate_size: 162963,
+            crate_size: 162_963,
             created_at: '2010-06-16T21:30:45Z',
             dl_path: '/api/v1/crates/rand/1.1.0/download',
             downloads: 3702,
@@ -616,7 +616,7 @@ module('Mirage | Crates', function (hooks) {
           {
             id: '3',
             crate: 'rand',
-            crate_size: 325926,
+            crate_size: 325_926,
             created_at: '2010-06-16T21:30:45Z',
             dl_path: '/api/v1/crates/rand/1.2.0/download',
             downloads: 7404,
@@ -832,12 +832,12 @@ module('Mirage | Crates', function (hooks) {
           },
           {
             date: '2020-01-14',
-            downloads: 16415,
+            downloads: 16_415,
             version: '1',
           },
           {
             date: '2020-01-15',
-            downloads: 23450,
+            downloads: 23_450,
             version: '1',
           },
         ],
@@ -1027,7 +1027,7 @@ module('Mirage | Crates', function (hooks) {
           {
             id: '2',
             crate: 'baz',
-            crate_size: 162963,
+            crate_size: 162_963,
             created_at: '2010-06-16T21:30:45Z',
             dl_path: '/api/v1/crates/baz/1.0.1/download',
             downloads: 3702,
@@ -1140,12 +1140,12 @@ module('Mirage | Crates', function (hooks) {
           },
           {
             date: '2020-01-14',
-            downloads: 16415,
+            downloads: 16_415,
             version: '2',
           },
           {
             date: '2020-01-15',
-            downloads: 23450,
+            downloads: 23_450,
             version: '2',
           },
         ],
