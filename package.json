@@ -126,7 +126,7 @@
     "qunit-console-grouper": "0.3.0",
     "qunit-dom": "1.6.0",
     "timekeeper": "2.2.0",
-    "webpack": "5.37.0"
+    "webpack": "5.37.1"
   },
   "resolutions": {
     "ember-css-modules/postcss": "8.2.15",
