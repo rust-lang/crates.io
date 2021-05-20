@@ -61,7 +61,23 @@ pub(crate) struct PaginationOptions {
 }
 
 impl PaginationOptions {
-    pub(crate) fn new(req: &mut dyn RequestExt) -> AppResult<Self> {
+    pub(crate) fn builder() -> PaginationOptionsBuilder {
+        PaginationOptionsBuilder
+    }
+
+    pub(crate) fn offset(&self) -> Option<u32> {
+        if let Page::Numeric(p) = self.page {
+            Some((p - 1) * self.per_page)
+        } else {
+            None
+        }
+    }
+}
+
+pub(crate) struct PaginationOptionsBuilder;
+
+impl PaginationOptionsBuilder {
+    pub(crate) fn gather(self, req: &mut dyn RequestExt) -> AppResult<PaginationOptions> {
         const DEFAULT_PER_PAGE: u32 = 10;
         const MAX_PER_PAGE: u32 = 100;
 
@@ -78,27 +94,19 @@ impl PaginationOptions {
             )));
         }
 
-        Ok(Self {
+        Ok(PaginationOptions {
             page: Page::new(req)?,
             per_page,
         })
     }
-
-    pub(crate) fn offset(&self) -> Option<u32> {
-        if let Page::Numeric(p) = self.page {
-            Some((p - 1) * self.per_page)
-        } else {
-            None
-        }
-    }
 }
 
 pub(crate) trait Paginate: Sized {
-    fn paginate(self, req: &mut dyn RequestExt) -> AppResult<PaginatedQuery<Self>> {
-        Ok(PaginatedQuery {
+    fn pages_pagination(self, options: PaginationOptions) -> PaginatedQuery<Self> {
+        PaginatedQuery {
             query: self,
-            options: PaginationOptions::new(req)?,
-        })
+            options,
+        }
     }
 }
 
@@ -247,14 +255,16 @@ mod tests {
     #[test]
     fn per_page_must_be_a_number() {
         let mut req = mock("per_page=");
-        let per_page_error = PaginationOptions::new(&mut req)
+        let per_page_error = PaginationOptions::builder()
+            .gather(&mut req)
             .unwrap_err()
             .response()
             .unwrap();
         assert_eq!(per_page_error.status(), StatusCode::BAD_REQUEST);
 
         let mut req = mock("per_page=not_a_number");
-        let per_page_error = PaginationOptions::new(&mut req)
+        let per_page_error = PaginationOptions::builder()
+            .gather(&mut req)
             .unwrap_err()
             .response()
             .unwrap();

@@ -247,7 +247,7 @@ pub fn versions(req: &mut dyn RequestExt) -> EndpointResult {
 pub fn reverse_dependencies(req: &mut dyn RequestExt) -> EndpointResult {
     use diesel::dsl::any;
 
-    let pagination_options = PaginationOptions::new(req)?;
+    let pagination_options = PaginationOptions::builder().gather(req)?;
     let name = &req.params()["crate_id"];
     let conn = req.db_read_only()?;
     let krate: Crate = Crate::by_name(name).first(&*conn)?;

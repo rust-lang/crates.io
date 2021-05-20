@@ -12,7 +12,7 @@ use crate::schema::*;
 use crate::util::errors::{bad_request, ChainError};
 use crate::views::EncodableCrate;
 
-use crate::controllers::helpers::pagination::Paginated;
+use crate::controllers::helpers::pagination::{Paginated, PaginationOptions};
 use crate::models::krate::{canon_crate_name, ALL_COLUMNS};
 
 /// Handles the `GET /crates` route.
@@ -194,7 +194,7 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
         query = query.then_order_by(crates::name.asc())
     }
 
-    let query = query.paginate(req)?;
+    let query = query.pages_pagination(PaginationOptions::builder().gather(req)?);
     let conn = req.db_read_only()?;
     let data: Paginated<(Crate, bool, Option<i64>)> = query.load(&*conn)?;
     let total = data.total();

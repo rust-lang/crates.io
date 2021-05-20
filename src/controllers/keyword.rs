@@ -1,5 +1,6 @@
 use super::prelude::*;
 
+use crate::controllers::helpers::pagination::PaginationOptions;
 use crate::controllers::helpers::{pagination::Paginated, Paginate};
 use crate::models::Keyword;
 use crate::views::EncodableKeyword;
@@ -19,7 +20,7 @@ pub fn index(req: &mut dyn RequestExt) -> EndpointResult {
         query = query.order(keywords::keyword.asc());
     }
 
-    let query = query.paginate(req)?;
+    let query = query.pages_pagination(PaginationOptions::builder().gather(req)?);
     let conn = req.db_read_only()?;
     let data: Paginated<Keyword> = query.load(&*conn)?;
     let total = data.total();

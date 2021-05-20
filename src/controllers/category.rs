@@ -11,7 +11,7 @@ pub fn index(req: &mut dyn RequestExt) -> EndpointResult {
     // FIXME: There are 69 categories, 47 top level. This isn't going to
     // grow by an OoM. We need a limit for /summary, but we don't need
     // to paginate this.
-    let options = PaginationOptions::new(req)?;
+    let options = PaginationOptions::builder().gather(req)?;
     let offset = options.offset().unwrap_or_default();
     let sort = query.get("sort").map_or("alpha", String::as_str);
 
