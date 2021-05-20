@@ -60,8 +60,6 @@ module.exports = function (defaults) {
   });
 
   app.import('node_modules/normalize.css/normalize.css', { prepend: true });
-  app.import('node_modules/chart.js/dist/Chart.min.css');
-
   app.import('vendor/qunit.css', { type: 'test' });
 
   if (USE_EMBROIDER) {
