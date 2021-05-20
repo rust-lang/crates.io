@@ -41,7 +41,7 @@ impl Page {
                 && config
                     .page_offset_ua_blocklist
                     .iter()
-                    .any(|blocked| user_agent == blocked)
+                    .any(|blocked| user_agent.contains(blocked))
             {
                 add_custom_metadata(req, "cause", "large page offset");
                 return Err(bad_request("requested page offset is too large"));
