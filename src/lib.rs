@@ -25,6 +25,7 @@ extern crate tracing;
 
 pub use crate::config::{Config, DbPoolConfig};
 pub use crate::{app::App, email::Emails, uploaders::Uploader};
+use std::str::FromStr;
 use std::sync::Arc;
 
 use conduit_middleware::MiddlewareBuilder;
@@ -108,6 +109,23 @@ pub fn build_handler(app: Arc<App>) -> MiddlewareBuilder {
 #[track_caller]
 pub fn env(s: &str) -> String {
     dotenv::var(s).unwrap_or_else(|_| panic!("must have `{}` defined", s))
+}
+
+/// Parse an optional environment variable
+///
+/// Ensures that we've initialized the dotenv crate in order to read environment variables
+/// from a *.env* file if present. A variable that is set to invalid unicode will be handled
+/// as if it was unset.
+///
+/// # Panics
+///
+/// Panics if the environment variable is set but cannot be parsed as the requested type.
+#[track_caller]
+pub fn env_optional<T: FromStr>(s: &str) -> Option<T> {
+    dotenv::var(s).ok().map(|s| {
+        s.parse()
+            .unwrap_or_else(|_| panic!("`{}` was defined but could not be parsed", s))
+    })
 }
 
 sql_function!(fn lower(x: ::diesel::sql_types::Text) -> ::diesel::sql_types::Text);

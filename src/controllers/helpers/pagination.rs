@@ -1,6 +1,8 @@
 use crate::controllers::prelude::*;
+use crate::middleware::log_request::add_custom_metadata;
 use crate::models::helpers::with_count::*;
 use crate::util::errors::{bad_request, AppResult};
+use crate::util::request_header;
 
 use diesel::pg::Pg;
 use diesel::query_builder::*;
@@ -30,6 +32,19 @@ impl Page {
 
             if numeric_page > MAX_PAGE_BEFORE_SUSPECTED_BOT {
                 req.log_metadata("bot", "suspected");
+            }
+
+            // Block large offsets for known violators of the crawler policy
+            let config = &req.app().config;
+            let user_agent = request_header(req, header::USER_AGENT);
+            if numeric_page > config.max_allowed_page_offset
+                && config
+                    .page_offset_ua_blocklist
+                    .iter()
+                    .any(|blocked| user_agent == blocked)
+            {
+                add_custom_metadata(req, "cause", "large page offset");
+                return Err(bad_request("requested page offset is too large"));
             }
 
             Ok(Page::Numeric(numeric_page))
