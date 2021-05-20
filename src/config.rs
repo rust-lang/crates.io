@@ -208,7 +208,7 @@ impl Default for Config {
             publish_rate_limit: Default::default(),
             blocked_traffic: blocked_traffic(),
             max_allowed_page_offset: env_optional("WEB_MAX_ALLOWED_PAGE_OFFSET").unwrap_or(200),
-            page_offset_ua_blocklist: env_optional::<String>("WEB_MAX_ALLOWED_PAGE_OFFSET")
+            page_offset_ua_blocklist: env_optional::<String>("WEB_PAGE_OFFSET_UA_BLOCKLIST")
                 .unwrap_or_default()
                 .split(',')
                 .map(String::from)
