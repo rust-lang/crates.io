@@ -66,8 +66,8 @@ impl Default for Config {
     /// - `READ_ONLY_MODE`: If defined (even as empty) then force all connections to be read-only.
     /// - `WEB_MAX_ALLOWED_PAGE_OFFSET`: Page offsets larger than this value are rejected. Defaults
     ///   to 200.
-    /// - `WEB_PAGE_OFFSET_UA_BLOCKLIST`: A comma seperated list of user-agents that will be
-    ///   blocked if `WEB_MAX_ALLOWED_PAGE_OFFSET` is exceeded.
+    /// - `WEB_PAGE_OFFSET_UA_BLOCKLIST`: A comma seperated list of user-agent substrings that will
+    ///   be blocked if `WEB_MAX_ALLOWED_PAGE_OFFSET` is exceeded.
     ///
     /// # Panics
     ///
