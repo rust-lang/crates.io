@@ -129,7 +129,7 @@
     "webpack": "5.37.1"
   },
   "resolutions": {
-    "ember-css-modules/postcss": "8.2.15",
+    "ember-css-modules/postcss": "8.3.0",
     "ember-inflector": "4.0.1"
   },
   "engines": {
