@@ -194,7 +194,11 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
         query = query.then_order_by(crates::name.asc())
     }
 
-    let query = query.pages_pagination(PaginationOptions::builder().gather(req)?);
+    let query = query.pages_pagination(
+        PaginationOptions::builder()
+            .limit_page_numbers(req.app().clone())
+            .gather(req)?,
+    );
     let conn = req.db_read_only()?;
     let data: Paginated<(Crate, bool, Option<i64>)> = query.load(&*conn)?;
     let total = data.total();
