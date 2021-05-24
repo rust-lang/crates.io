@@ -6293,10 +6293,10 @@ ember-app-scheduler@^5.1.2:
     ember-compatibility-helpers "^1.1.2"
     ember-destroyable-polyfill "^2.0.2"
 
-ember-auto-import@2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/ember-auto-import/-/ember-auto-import-2.0.0.tgz#520ce7f9cd904943ed48b1e9bd353bc22829db28"
-  integrity sha512-14rtzJ057BUJUz2ycJgtCp5YMk1kQZRVyH4TqG8U1aQd5b3bbbSBU56o+pi0pqN0BWhxcGMwTRcUp9+lfNsIBg==
+ember-auto-import@2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/ember-auto-import/-/ember-auto-import-2.0.1.tgz#3c993f2cee3a93758029bbc903302a951bd9e3f8"
+  integrity sha512-quJbesruo7Z1tZ8faKSuSBMcNHgQYwVsod3mw3qZY2rHeQz/D1gmOm61HBvPBo4kM43FpKIL+lrzkQS8WIihZQ==
   dependencies:
     "@babel/core" "^7.1.6"
     "@babel/plugin-proposal-class-properties" "^7.13.0"
