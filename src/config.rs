@@ -67,7 +67,9 @@ impl Default for Config {
     /// - `WEB_MAX_ALLOWED_PAGE_OFFSET`: Page offsets larger than this value are rejected. Defaults
     ///   to 200.
     /// - `WEB_PAGE_OFFSET_UA_BLOCKLIST`: A comma seperated list of user-agent substrings that will
-    ///   be blocked if `WEB_MAX_ALLOWED_PAGE_OFFSET` is exceeded.
+    ///   be blocked if `WEB_MAX_ALLOWED_PAGE_OFFSET` is exceeded. Including an empty string in the
+    ///   list will block *all* user-agents exceeding the offset. If not set or empty, no blocking
+    ///   will occur.
     ///
     /// # Panics
     ///
@@ -192,6 +194,12 @@ impl Default for Config {
             .split(',')
             .map(ToString::to_string)
             .collect();
+        let page_offset_ua_blocklist = match env_optional::<String>("WEB_PAGE_OFFSET_UA_BLOCKLIST")
+        {
+            None => vec![],
+            Some(s) if s.is_empty() => vec![],
+            Some(s) => s.split(',').map(String::from).collect(),
+        };
         Config {
             uploader,
             session_key: env("SESSION_KEY"),
@@ -208,11 +216,7 @@ impl Default for Config {
             publish_rate_limit: Default::default(),
             blocked_traffic: blocked_traffic(),
             max_allowed_page_offset: env_optional("WEB_MAX_ALLOWED_PAGE_OFFSET").unwrap_or(200),
-            page_offset_ua_blocklist: env_optional::<String>("WEB_PAGE_OFFSET_UA_BLOCKLIST")
-                .unwrap_or_default()
-                .split(',')
-                .map(String::from)
-                .collect(),
+            page_offset_ua_blocklist,
             domain_name: domain_name(),
             allowed_origins,
             downloads_persist_interval_ms: dotenv::var("DOWNLOADS_PERSIST_INTERVAL_MS")
