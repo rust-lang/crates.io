@@ -607,12 +607,15 @@ impl EncodableVersion {
             ..
         } = version;
 
-        let num = num.to_string();
+        let links = EncodableVersionLinks {
+            dependencies: format!("/api/v1/crates/{}/{}/dependencies", crate_name, num),
+            version_downloads: format!("/api/v1/crates/{}/{}/downloads", crate_name, num),
+        };
 
         Self {
             dl_path: format!("/api/v1/crates/{}/{}/download", crate_name, num),
             readme_path: format!("/api/v1/crates/{}/{}/readme", crate_name, num),
-            num: num.clone(),
+            num,
             id,
             krate: crate_name.to_string(),
             updated_at,
@@ -621,10 +624,7 @@ impl EncodableVersion {
             features,
             yanked,
             license,
-            links: EncodableVersionLinks {
-                dependencies: format!("/api/v1/crates/{}/{}/dependencies", crate_name, num),
-                version_downloads: format!("/api/v1/crates/{}/{}/downloads", crate_name, num),
-            },
+            links,
             crate_size,
             published_by: published_by.map(User::into),
             audit_actions: audit_actions

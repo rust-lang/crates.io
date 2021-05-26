@@ -4,6 +4,8 @@
 //! index or cached metadata which was extracted (client side) from the
 //! `Cargo.toml` file.
 
+use std::cmp::Reverse;
+
 use crate::controllers::frontend_prelude::*;
 use crate::controllers::helpers::pagination::PaginationOptions;
 
@@ -128,7 +130,10 @@ pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
         .left_outer_join(users::table)
         .select((versions::all_columns, users::all_columns.nullable()))
         .load(&*conn)?;
-    versions_and_publishers.sort_by(|a, b| b.0.num.cmp(&a.0.num));
+
+    versions_and_publishers
+        .sort_by_cached_key(|(version, _)| Reverse(semver::Version::parse(&version.num).ok()));
+
     let versions = versions_and_publishers
         .iter()
         .map(|(v, _)| v)
@@ -224,7 +229,10 @@ pub fn versions(req: &mut dyn RequestExt) -> EndpointResult {
         .left_outer_join(users::table)
         .select((versions::all_columns, users::all_columns.nullable()))
         .load(&*conn)?;
-    versions_and_publishers.sort_by(|a, b| b.0.num.cmp(&a.0.num));
+
+    versions_and_publishers
+        .sort_by_cached_key(|(version, _)| Reverse(semver::Version::parse(&version.num).ok()));
+
     let versions = versions_and_publishers
         .iter()
         .map(|(v, _)| v)
