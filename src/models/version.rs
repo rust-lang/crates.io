@@ -14,7 +14,7 @@ use crate::schema::*;
 pub struct Version {
     pub id: i32,
     pub crate_id: i32,
-    pub num: semver::Version,
+    pub num: String,
     pub updated_at: NaiveDateTime,
     pub created_at: NaiveDateTime,
     pub downloads: i32,
@@ -59,16 +59,26 @@ impl TopVersions {
     /// highest version (in semver order) for a collection of date/version pairs.
     pub fn from_date_version_pairs<T>(pairs: T) -> Self
     where
-        T: Clone + IntoIterator<Item = (NaiveDateTime, semver::Version)>,
+        T: Clone + IntoIterator<Item = (NaiveDateTime, String)>,
     {
-        let newest = pairs.clone().into_iter().max().map(|(_, v)| v);
-        let highest = pairs.clone().into_iter().map(|(_, v)| v).max();
-
-        let highest_stable = pairs
+        // filter out versions that we can't parse
+        let pairs: Vec<(NaiveDateTime, semver::Version)> = pairs
             .into_iter()
+            .filter_map(|(date, version)| {
+                semver::Version::parse(&version)
+                    .ok()
+                    .map(|version| (date, version))
+            })
+            .collect();
+
+        let newest = pairs.iter().max().map(|(_, v)| v.clone());
+        let highest = pairs.iter().map(|(_, v)| v).max().map(|v| v.clone());
+        let highest_stable = pairs
+            .iter()
             .map(|(_, v)| v)
             .filter(|v| !v.is_prerelease())
-            .max();
+            .max()
+            .map(|v| v.clone());
 
         Self {
             highest,
@@ -217,7 +227,7 @@ mod tests {
 
     #[test]
     fn top_versions_single() {
-        let versions = vec![(date("2020-12-03T12:34:56"), version("1.0.0"))];
+        let versions = vec![(date("2020-12-03T12:34:56"), "1.0.0".into())];
         assert_eq!(
             TopVersions::from_date_version_pairs(versions),
             TopVersions {
@@ -230,7 +240,7 @@ mod tests {
 
     #[test]
     fn top_versions_prerelease() {
-        let versions = vec![(date("2020-12-03T12:34:56"), version("1.0.0-beta.5"))];
+        let versions = vec![(date("2020-12-03T12:34:56"), "1.0.0-beta.5".into())];
         assert_eq!(
             TopVersions::from_date_version_pairs(versions),
             TopVersions {
@@ -244,10 +254,11 @@ mod tests {
     #[test]
     fn top_versions_multiple() {
         let versions = vec![
-            (date("2018-12-03T12:34:56"), version("1.0.0")),
-            (date("2019-12-03T12:34:56"), version("2.0.0-alpha.1")),
-            (date("2020-12-03T12:34:56"), version("1.1.0")),
-            (date("2020-12-31T12:34:56"), version("1.0.4")),
+            (date("2018-12-03T12:34:56"), "1.0.0".into()),
+            (date("2019-12-03T12:34:56"), "2.0.0-alpha.1".into()),
+            (date("2020-12-01T12:34:56"), "everything is broken".into()),
+            (date("2020-12-03T12:34:56"), "1.1.0".into()),
+            (date("2020-12-31T12:34:56"), "1.0.4".into()),
         ];
         assert_eq!(
             TopVersions::from_date_version_pairs(versions),

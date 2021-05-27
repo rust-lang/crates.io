@@ -328,13 +328,12 @@ pub fn yank(
         }
 
         let prev = fs::read_to_string(&dst)?;
-        let version_num = version.num.to_string();
         let new = prev
             .lines()
             .map(|line| {
                 let mut git_crate = serde_json::from_str::<Crate>(line)
                     .map_err(|_| format!("couldn't decode: `{}`", line))?;
-                if git_crate.name != krate || git_crate.vers != version_num {
+                if git_crate.name != krate || git_crate.vers != version.num {
                     return Ok(line.to_string());
                 }
                 git_crate.yanked = Some(yanked);
