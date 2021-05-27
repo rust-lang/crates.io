@@ -43,6 +43,11 @@ module.exports = function (defaults) {
       theme: 'twilight',
       components: highlightedLanguages,
     },
+
+    'ember-test-selectors': {
+      patchClassicComponent: false,
+    },
+
     cssModules: {
       extension: 'module.css',
       plugins: {
