@@ -4,7 +4,7 @@ use crate::controllers::frontend_prelude::*;
 
 use crate::controllers::helpers::*;
 
-use crate::controllers::helpers::pagination::Paginated;
+use crate::controllers::helpers::pagination::{Paginated, PaginationOptions};
 use crate::models::{
     CrateOwner, Email, Follow, NewEmail, OwnerKind, User, Version, VersionOwnerAction,
 };
@@ -68,7 +68,7 @@ pub fn updates(req: &mut dyn RequestExt) -> EndpointResult {
             crates::name,
             users::all_columns.nullable(),
         ))
-        .paginate(req)?;
+        .pages_pagination(PaginationOptions::builder().gather(req)?);
     let conn = req.db_conn()?;
     let data: Paginated<(Version, String, Option<User>)> = query.load(&*conn)?;
     let more = data.next_page_params().is_some();
