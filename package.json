@@ -41,7 +41,7 @@
     "@sentry/integrations": "6.4.1",
     "chart.js": "3.3.0",
     "copy-text-to-clipboard": "3.0.1",
-    "date-fns": "2.21.3",
+    "date-fns": "2.22.0",
     "fastboot-app-server": "3.0.0",
     "morgan": "1.10.0",
     "pretty-bytes": "5.6.0",
