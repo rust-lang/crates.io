@@ -6942,10 +6942,10 @@ ember-compatibility-helpers@^1.1.1, ember-compatibility-helpers@^1.1.2, ember-co
     fs-extra "^9.1.0"
     semver "^5.4.1"
 
-ember-concurrency@2.0.3:
-  version "2.0.3"
-  resolved "https://registry.yarnpkg.com/ember-concurrency/-/ember-concurrency-2.0.3.tgz#d8ac917fdf013a277bfc7b26e417937ee0638455"
-  integrity sha512-+fOOFt32odnunDL3Du0LqMgnRzDDNKnzo1ry9ppICpvLXekJzYFwU1RniVivfJ+9nbpHMJZQUlZJAm1ZAnTExw==
+ember-concurrency@2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/ember-concurrency/-/ember-concurrency-2.1.0.tgz#5e55c19f43fb245c4fbe0628cbf26cc6561af40c"
+  integrity sha512-NIJfphS9NvO3Fin+QPQkTvhD8rFDc9ydpy+my+VFLcCfC5F+yI6sr5tHVSgSVBh8UutloHvIbGvdfKuoY6Abyg==
   dependencies:
     "@glimmer/tracking" "^1.0.2"
     ember-cli-babel "^7.22.1"
