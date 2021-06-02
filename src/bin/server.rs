@@ -1,13 +1,15 @@
 #![warn(clippy::all, rust_2018_idioms)]
 #![allow(unknown_lints)]
 
-use cargo_registry::{App, Env};
+use cargo_registry::{metrics::LogEncoder, util::errors::AppResult, App, Env};
 use std::{borrow::Cow, fs::File, process::Command, sync::Arc, time::Duration};
 
 use conduit_hyper::Service;
 use futures_util::future::FutureExt;
+use prometheus::Encoder;
 use reqwest::blocking::Client;
 use sentry::{ClientOptions, IntoDsn};
+use std::io::Write;
 use tokio::io::AsyncWriteExt;
 use tokio::signal::unix::{signal, SignalKind};
 
@@ -41,6 +43,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Start the background thread periodically persisting download counts to the database.
     downloads_counter_thread(app.clone());
+
+    // Start the background thread periodically logging instance metrics.
+    log_instance_metrics_thread(app.clone());
 
     let handler = cargo_registry::build_handler(app.clone());
 
@@ -162,4 +167,30 @@ fn downloads_counter_thread(app: Arc<App>) {
             Err(err) => println!("downloads_counter error: {}", err),
         }
     });
+}
+
+fn log_instance_metrics_thread(app: Arc<App>) {
+    // Only run the thread if the configuration is provided
+    let interval = if let Some(secs) = app.config.instance_metrics_log_every_seconds {
+        Duration::from_secs(secs)
+    } else {
+        return;
+    };
+
+    std::thread::spawn(move || loop {
+        if let Err(err) = log_instance_metrics_inner(&app) {
+            eprintln!("log_instance_metrics error: {}", err);
+        }
+        std::thread::sleep(interval);
+    });
+}
+
+fn log_instance_metrics_inner(app: &App) -> AppResult<()> {
+    let families = app.instance_metrics.gather(app)?;
+
+    let mut stdout = std::io::stdout();
+    LogEncoder::new().encode(&families, &mut stdout)?;
+    stdout.flush()?;
+
+    Ok(())
 }

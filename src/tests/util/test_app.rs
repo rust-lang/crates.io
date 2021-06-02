@@ -354,6 +354,7 @@ fn simple_config() -> Config {
         ownership_invitations_expiration_days: 30,
         metrics_authorization_token: None,
         use_test_database_pool: true,
+        instance_metrics_log_every_seconds: None,
     }
 }
 

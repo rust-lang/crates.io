@@ -25,6 +25,7 @@ pub struct Config {
     pub ownership_invitations_expiration_days: u64,
     pub metrics_authorization_token: Option<String>,
     pub use_test_database_pool: bool,
+    pub instance_metrics_log_every_seconds: Option<u64>,
 }
 
 #[derive(Debug)]
@@ -70,6 +71,8 @@ impl Default for Config {
     ///   be blocked if `WEB_MAX_ALLOWED_PAGE_OFFSET` is exceeded. Including an empty string in the
     ///   list will block *all* user-agents exceeding the offset. If not set or empty, no blocking
     ///   will occur.
+    /// - `INSTANCE_METRICS_LOG_EVERY_SECONDS`: How frequently should instance metrics be logged.
+    ///   If the environment variable is not present instance metrics are not logged.
     ///
     /// # Panics
     ///
@@ -229,6 +232,7 @@ impl Default for Config {
             ownership_invitations_expiration_days: 30,
             metrics_authorization_token: dotenv::var("METRICS_AUTHORIZATION_TOKEN").ok(),
             use_test_database_pool: false,
+            instance_metrics_log_every_seconds: env_optional("INSTANCE_METRICS_LOG_EVERY_SECONDS"),
         }
     }
 }
