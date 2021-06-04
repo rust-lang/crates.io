@@ -128,7 +128,7 @@
   },
   {
     "request": {
-      "uri": "http://api.github.com/organizations/13804222/team/1699377/memberships/crates-tester-2",
+      "uri": "http://api.github.com/organizations/13804222/team/1699377/memberships/foo",
       "method": "GET",
       "headers": [
         [
@@ -183,7 +183,7 @@
         ],
         [
           "content-length",
-          "111"
+          "99"
         ],
         [
           "X-OAuth-Client-Id",
@@ -250,7 +250,7 @@
           "admin:org, read:org, repo, write:org"
         ]
       ],
-      "body": "eyJzdGF0ZSI6ImFjdGl2ZSIsInJvbGUiOiJtYWludGFpbmVyIiwidXJsIjoiaHR0cHM6Ly9hcGkuZ2l0aHViLmNvbS90ZWFtcy8xNjk5Mzc3L21lbWJlcnNoaXBzL2NyYXRlcy10ZXN0ZXItMiJ9"
+      "body": "eyJzdGF0ZSI6ImFjdGl2ZSIsInJvbGUiOiJtYWludGFpbmVyIiwidXJsIjoiaHR0cHM6Ly9hcGkuZ2l0aHViLmNvbS90ZWFtcy8xNjk5Mzc3L21lbWJlcnNoaXBzL2ZvbyJ9"
     }
   },
   {

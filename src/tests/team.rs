@@ -112,14 +112,13 @@ fn nonexistent_team() {
 // Test adding a renamed team
 #[test]
 fn add_renamed_team() {
-    let (app, anon) = TestApp::with_proxy().empty();
-    let user = app.db_new_user(mock_user_on_both_teams().gh_login);
-    let token = user.db_new_token("arbitrary token name");
+    let (app, anon, user, token) = TestApp::with_proxy().with_token();
+    let owner_id = user.as_model().id;
 
     app.db(|conn| {
         use cargo_registry::schema::teams::dsl::*;
 
-        CrateBuilder::new("foo_renamed_team", user.as_model().id).expect_build(conn);
+        CrateBuilder::new("foo_renamed_team", owner_id).expect_build(conn);
 
         // create team with same ID and different name compared to http mock
         // used for `add_named_owner`
