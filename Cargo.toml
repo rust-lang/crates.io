@@ -63,7 +63,7 @@ hex = "0.4"
 htmlescape = "0.3.1"
 http = "0.2"
 hyper = { version = "0.14", features = ["client", "http1"] }
-indexmap = "1.0.2"
+indexmap = { version = "1.0.2", features = ["serde-1"] }
 jemallocator = { version = "0.3", features = ['unprefixed_malloc_on_supported_platforms', 'profiling'] }
 lettre = { version = "0.10.0-beta.3", default-features = false, features = ["file-transport", "smtp-transport", "native-tls", "hostname", "builder"] }
 license-exprs = "1.6"

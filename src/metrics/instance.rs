@@ -44,7 +44,7 @@ metrics! {
 }
 
 impl InstanceMetrics {
-    pub(crate) fn gather(&self, app: &App) -> AppResult<Vec<MetricFamily>> {
+    pub fn gather(&self, app: &App) -> AppResult<Vec<MetricFamily>> {
         // Database pool stats
         self.refresh_pool_stats("primary", &app.primary_database)?;
         if let Some(follower) = &app.read_only_replica_database {
