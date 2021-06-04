@@ -62,7 +62,7 @@ impl<'a> NewTeam<'a> {
 
         insert_into(teams)
             .values(self)
-            .on_conflict(login)
+            .on_conflict(github_id)
             .do_update()
             .set(self)
             .get_result(conn)

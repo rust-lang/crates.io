@@ -5,7 +5,7 @@ use crate::{
     record::GhUser,
     OwnerTeamsResponse, RequestHelper, TestApp,
 };
-use cargo_registry::models::{Crate, NewUser};
+use cargo_registry::models::{Crate, NewTeam, NewUser};
 use std::sync::Once;
 
 use conduit::StatusCode;
@@ -107,6 +107,41 @@ fn nonexistent_team() {
         response.json(),
         json!({ "errors": [{ "detail": "could not find the github team crates-test-org/this-does-not-exist" }] })
     );
+}
+
+// Test adding a renamed team
+#[test]
+fn add_renamed_team() {
+    let (app, anon, user, token) = TestApp::with_proxy().with_token();
+    let owner_id = user.as_model().id;
+
+    app.db(|conn| {
+        use cargo_registry::schema::teams::dsl::*;
+
+        CrateBuilder::new("foo_renamed_team", owner_id).expect_build(conn);
+
+        // create team with same ID and different name compared to http mock
+        // used for `add_named_owner`
+        NewTeam::new(
+            "github:crates-test-org:not_core", // different team name
+            13804222,                          // same org ID
+            1699377,                           // same team id as `core` team
+            None,
+            None,
+        )
+        .create_or_update(conn)
+        .unwrap();
+
+        assert_eq!(teams.count().get_result::<i64>(conn).unwrap(), 1);
+    });
+
+    token
+        .add_named_owner("foo_renamed_team", "github:crates-test-org:core")
+        .good();
+
+    let json = anon.crate_owner_teams("foo_renamed_team").good();
+    assert_eq!(json.teams.len(), 1);
+    assert_eq!(json.teams[0].login, "github:crates-test-org:core");
 }
 
 // Test adding team names with mixed case, when on the team
@@ -324,9 +359,10 @@ fn crates_by_team_id_not_including_deleted_owners() {
     let user = user.as_model();
 
     let team = app.db(|conn| {
-        let t = new_team("github:crates-test-org:core")
+        let t = NewTeam::new("github:crates-test-org:core", 13804222, 1699377, None, None)
             .create_or_update(conn)
             .unwrap();
+
         let krate = CrateBuilder::new("foo", user.id).expect_build(conn);
         add_team_to_crate(&t, &krate, user, conn).unwrap();
         krate
