@@ -5,6 +5,9 @@ const EmberApp = require('ember-cli/lib/broccoli/ember-app');
 const { USE_EMBROIDER } = process.env;
 
 module.exports = function (defaults) {
+  let env = EmberApp.env();
+  let isProd = env === 'production';
+
   const highlightedLanguages = [
     'bash',
     'c',
@@ -27,6 +30,7 @@ module.exports = function (defaults) {
   let app = new EmberApp(defaults, {
     autoImport: {
       webpack: {
+        devtool: isProd ? 'source-map' : 'eval-source-map',
         externals: {
           // prevent Chart.js from bundling Moment.js
           moment: 'moment',
