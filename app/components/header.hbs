@@ -52,7 +52,9 @@
         <menu.Item><LinkTo @route="category-slugs">List of category slugs</LinkTo></menu.Item>
       </dd.Menu>
     </Dropdown>
-    <span local-class="sep">|</span>
+  </nav>
+
+  <div local-class="login">
     {{#if this.session.currentUser}}
       <Dropdown data-test-user-menu as |dd|>
         <dd.Trigger local-class="dropdown-button" data-test-toggle>
@@ -96,7 +98,7 @@
         Log in with GitHub
       </button>
     {{/if}}
-  </nav>
+  </div>
 
   <div local-class='menu'>
     <Dropdown as |dd|>
