@@ -1,161 +1,143 @@
 <header local-class="header">
-  <div local-class="header-inner">
-    <LinkTo @route="index" local-class="index-link">
-      <img src="/assets/Cargo-Logo-Small.png" role="presentation" alt="" local-class="logo">
-      <h1>crates.io</h1>
+  <LinkTo @route="index" local-class="index-link">
+    <img src="/assets/Cargo-Logo-Small.png" role="presentation" alt="" local-class="logo">
+    <h1>crates.io</h1>
+  </LinkTo>
+
+  <form local-class="search-form" action='/search' {{on "submit" (prevent-default this.search)}} data-test-search-form>
+    <input
+      type="text"
+      local-class="search"
+      name="q"
+      id="cargo-desktop-search"
+      placeholder="Click or press 'S' to search..."
+      value={{this.header.searchValue}}
+      oninput={{this.updateSearchValue}}
+      autocorrect="off"
+      autocapitalize="off"
+      spellcheck="false"
+      required
+      data-test-search-input
+    >
+    <label for="cargo-desktop-search" local-class="search-label">Search</label>
+    {{on-key 's' (focus '#cargo-desktop-search')}}
+    {{on-key 'S' (focus '#cargo-desktop-search')}}
+    {{on-key 'shift+s' (focus '#cargo-desktop-search')}}
+  </form>
+
+  <nav local-class='nav'>
+    <LinkTo @route="crates" @query={{hash letter=null page=1}} data-test-all-crates-link>
+      Browse All Crates
     </LinkTo>
+    <span local-class="sep">|</span>
+    <Dropdown as |dd|>
+      <dd.Trigger local-class="dropdown-button">
+        Docs
+      </dd.Trigger>
 
-    <form local-class="desktop-search-form" action='/search' {{on "submit" (prevent-default this.search)}} data-test-search-form>
-      <input
-        type="text"
-        local-class="search"
-        name="q"
-        id="cargo-desktop-search"
-        placeholder="Click or press 'S' to search..."
-        value={{this.header.searchValue}}
-        oninput={{this.updateSearchValue}}
-        autocorrect="off"
-        autocapitalize="off"
-        autofocus="autofocus"
-        spellcheck="false"
-        required
-        data-test-search-input
-      >
-      <label for="cargo-desktop-search" local-class="search-label">Search</label>
-      {{on-key 's' (focus '#cargo-desktop-search')}}
-      {{on-key 'S' (focus '#cargo-desktop-search')}}
-      {{on-key 'shift+s' (focus '#cargo-desktop-search')}}
-    </form>
-
-    <nav local-class='nav'>
-      <LinkTo @route="crates" @query={{hash letter=null page=1}} data-test-all-crates-link>
-        Browse All Crates
-      </LinkTo>
-      <span local-class="sep">|</span>
-      <Dropdown as |dd|>
-        <dd.Trigger local-class="dropdown-button">
-          Docs
+      <dd.Menu local-class="doc-links" as |menu|>
+        <menu.Item><a href='https://doc.rust-lang.org/cargo/getting-started/'>Getting Started</a></menu.Item>
+        <menu.Item><a href='https://doc.rust-lang.org/cargo/guide/'>Guide</a></menu.Item>
+        <menu.Item><a href='https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html'>Specifying Dependencies</a></menu.Item>
+        <menu.Item><a href='https://doc.rust-lang.org/cargo/reference/publishing.html'>Publishing on crates.io</a></menu.Item>
+        <menu.Item><a href='https://doc.rust-lang.org/cargo/faq.html'>FAQ</a></menu.Item>
+        <menu.Item><a href='https://doc.rust-lang.org/cargo/reference/manifest.html'>Cargo.toml Format</a></menu.Item>
+        <menu.Item><a href='https://doc.rust-lang.org/cargo/reference/build-scripts.html'>Build Scripts</a></menu.Item>
+        <menu.Item><a href='https://doc.rust-lang.org/cargo/reference/config.html'>Configuration</a></menu.Item>
+        <menu.Item><a href='https://doc.rust-lang.org/cargo/reference/pkgid-spec.html'>Package ID specs</a></menu.Item>
+        <menu.Item><a href='https://doc.rust-lang.org/cargo/reference/environment-variables.html'>Environment Variables</a></menu.Item>
+        <menu.Item><a href='https://doc.rust-lang.org/cargo/reference/source-replacement.html'>Source Replacement</a></menu.Item>
+        <menu.Item><a href='https://doc.rust-lang.org/cargo/reference/external-tools.html'>External Tools</a></menu.Item>
+        <menu.Item><LinkTo @route="policies">Policies</LinkTo></menu.Item>
+        <menu.Item><LinkTo @route="category-slugs">List of category slugs</LinkTo></menu.Item>
+      </dd.Menu>
+    </Dropdown>
+    <span local-class="sep">|</span>
+    {{#if this.session.currentUser}}
+      <Dropdown data-test-user-menu as |dd|>
+        <dd.Trigger local-class="dropdown-button" data-test-toggle>
+          <UserAvatar @user={{this.session.currentUser}} @size="small" local-class="avatar" data-test-avatar />
+          {{ this.session.currentUser.name }}
         </dd.Trigger>
 
-        <dd.Menu local-class="doc-links" as |menu|>
-          <menu.Item><a href='https://doc.rust-lang.org/cargo/getting-started/'>Getting Started</a></menu.Item>
-          <menu.Item><a href='https://doc.rust-lang.org/cargo/guide/'>Guide</a></menu.Item>
-          <menu.Item><a href='https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html'>Specifying Dependencies</a></menu.Item>
-          <menu.Item><a href='https://doc.rust-lang.org/cargo/reference/publishing.html'>Publishing on crates.io</a></menu.Item>
-          <menu.Item><a href='https://doc.rust-lang.org/cargo/faq.html'>FAQ</a></menu.Item>
-          <menu.Item><a href='https://doc.rust-lang.org/cargo/reference/manifest.html'>Cargo.toml Format</a></menu.Item>
-          <menu.Item><a href='https://doc.rust-lang.org/cargo/reference/build-scripts.html'>Build Scripts</a></menu.Item>
-          <menu.Item><a href='https://doc.rust-lang.org/cargo/reference/config.html'>Configuration</a></menu.Item>
-          <menu.Item><a href='https://doc.rust-lang.org/cargo/reference/pkgid-spec.html'>Package ID specs</a></menu.Item>
-          <menu.Item><a href='https://doc.rust-lang.org/cargo/reference/environment-variables.html'>Environment Variables</a></menu.Item>
-          <menu.Item><a href='https://doc.rust-lang.org/cargo/reference/source-replacement.html'>Source Replacement</a></menu.Item>
-          <menu.Item><a href='https://doc.rust-lang.org/cargo/reference/external-tools.html'>External Tools</a></menu.Item>
-          <menu.Item><LinkTo @route="policies">Policies</LinkTo></menu.Item>
-          <menu.Item><LinkTo @route="category-slugs">List of category slugs</LinkTo></menu.Item>
-        </dd.Menu>
-      </Dropdown>
-      <span local-class="sep">|</span>
-      {{#if this.session.currentUser}}
-        <Dropdown data-test-user-menu as |dd|>
-          <dd.Trigger local-class="dropdown-button" data-test-toggle>
-            <UserAvatar @user={{this.session.currentUser}} @size="small" local-class="avatar" data-test-avatar />
-            {{ this.session.currentUser.name }}
-          </dd.Trigger>
-
-          <dd.Menu local-class="current-user-links" as |menu|>
-            <menu.Item><LinkTo @route="dashboard">Dashboard</LinkTo></menu.Item>
-            <menu.Item><LinkTo @route="me">Account Settings</LinkTo></menu.Item>
-            <menu.Item><LinkTo @route="me.pending-invites">Owner Invites</LinkTo></menu.Item>
-            <menu.Item local-class="menu-item-with-separator">
-              <button
-                type="button"
-                disabled={{this.session.logoutTask.isRunning}}
-                local-class="logout-menu-item"
-                data-test-logout-button
-                {{on "click" (perform this.session.logoutTask)}}
-              >
-                {{#if this.session.logoutTask.isRunning}}
-                  <LoadingSpinner local-class="spinner"/>
-                {{/if}}
-                Sign Out
-              </button>
-            </menu.Item>
-          </dd.Menu>
-        </Dropdown>
-      {{else}}
-        <button
-          type="button"
-          disabled={{this.session.loginTask.isRunning}}
-          local-class="login-button"
-          data-test-login-button
-          {{on "click" (perform this.session.loginTask)}}
-        >
-          {{#if this.session.loginTask.isRunning}}
-            <LoadingSpinner local-class="spinner"/>
-          {{else}}
-            {{svg-jar "lock" local-class="login-icon"}}
-          {{/if}}
-          Log in with GitHub
-        </button>
-      {{/if}}
-    </nav>
-
-    <div local-class='menu'>
-      <Dropdown as |dd|>
-        <dd.Trigger local-class="dropdown-button">
-          Menu
-        </dd.Trigger>
         <dd.Menu local-class="current-user-links" as |menu|>
-          <menu.Item><LinkTo @route="crates">Browse All Crates</LinkTo></menu.Item>
-          {{#if this.session.currentUser}}
-            <menu.Item><LinkTo @route="dashboard">Dashboard</LinkTo></menu.Item>
-            <menu.Item><LinkTo @route="me" data-test-me-link>Account Settings</LinkTo></menu.Item>
-            <menu.Item><LinkTo @route="me.pending-invites">Owner Invites</LinkTo></menu.Item>
-            <menu.Item local-class="menu-item-with-separator">
-              <button
-                type="button"
-                disabled={{this.session.logoutTask.isRunning}}
-                local-class="logout-menu-item"
-                {{on "click" (perform this.session.logoutTask)}}
-              >
-                {{#if this.session.logoutTask.isRunning}}
-                  <LoadingSpinner local-class="spinner"/>
-                {{/if}}
-                Sign Out
-              </button>
-            </menu.Item>
-          {{else}}
-            <menu.Item>
-              <button
-                type="button"
-                disabled={{this.session.loginTask.isRunning}}
-                local-class="login-menu-item"
-                {{on "click" (perform this.session.loginTask)}}
-              >
-                {{#if this.session.loginTask.isRunning}}
-                  <LoadingSpinner local-class="spinner"/>
-                {{/if}}
-                Log in with GitHub
-              </button>
-            </menu.Item>
-          {{/if}}
+          <menu.Item><LinkTo @route="dashboard">Dashboard</LinkTo></menu.Item>
+          <menu.Item><LinkTo @route="me">Account Settings</LinkTo></menu.Item>
+          <menu.Item><LinkTo @route="me.pending-invites">Owner Invites</LinkTo></menu.Item>
+          <menu.Item local-class="menu-item-with-separator">
+            <button
+              type="button"
+              disabled={{this.session.logoutTask.isRunning}}
+              local-class="logout-menu-item"
+              data-test-logout-button
+              {{on "click" (perform this.session.logoutTask)}}
+            >
+              {{#if this.session.logoutTask.isRunning}}
+                <LoadingSpinner local-class="spinner"/>
+              {{/if}}
+              Sign Out
+            </button>
+          </menu.Item>
         </dd.Menu>
       </Dropdown>
-    </div>
-
-    <form local-class='mobile-search' action='/search' {{on "submit" (prevent-default this.search)}}>
-      <input
-        type="text"
-        local-class="search"
-        name="q"
-        id="cargo-mobile-search"
-        placeholder="Search"
-        value={{this.header.searchValue}}
-        oninput={{this.updateSearchValue}}
-        autocorrect="off"
-        required
+    {{else}}
+      <button
+        type="button"
+        disabled={{this.session.loginTask.isRunning}}
+        local-class="login-button"
+        data-test-login-button
+        {{on "click" (perform this.session.loginTask)}}
       >
-      <label for="cargo-mobile-search" local-class="search-label">Search</label>
-    </form>
+        {{#if this.session.loginTask.isRunning}}
+          <LoadingSpinner local-class="spinner"/>
+        {{else}}
+          {{svg-jar "lock" local-class="login-icon"}}
+        {{/if}}
+        Log in with GitHub
+      </button>
+    {{/if}}
+  </nav>
+
+  <div local-class='menu'>
+    <Dropdown as |dd|>
+      <dd.Trigger local-class="dropdown-button">
+        Menu
+      </dd.Trigger>
+      <dd.Menu local-class="current-user-links" as |menu|>
+        <menu.Item><LinkTo @route="crates">Browse All Crates</LinkTo></menu.Item>
+        {{#if this.session.currentUser}}
+          <menu.Item><LinkTo @route="dashboard">Dashboard</LinkTo></menu.Item>
+          <menu.Item><LinkTo @route="me" data-test-me-link>Account Settings</LinkTo></menu.Item>
+          <menu.Item><LinkTo @route="me.pending-invites">Owner Invites</LinkTo></menu.Item>
+          <menu.Item local-class="menu-item-with-separator">
+            <button
+              type="button"
+              disabled={{this.session.logoutTask.isRunning}}
+              local-class="logout-menu-item"
+              {{on "click" (perform this.session.logoutTask)}}
+            >
+              {{#if this.session.logoutTask.isRunning}}
+                <LoadingSpinner local-class="spinner"/>
+              {{/if}}
+              Sign Out
+            </button>
+          </menu.Item>
+        {{else}}
+          <menu.Item>
+            <button
+              type="button"
+              disabled={{this.session.loginTask.isRunning}}
+              local-class="login-menu-item"
+              {{on "click" (perform this.session.loginTask)}}
+            >
+              {{#if this.session.loginTask.isRunning}}
+                <LoadingSpinner local-class="spinner"/>
+              {{/if}}
+              Log in with GitHub
+            </button>
+          </menu.Item>
+        {{/if}}
+      </dd.Menu>
+    </Dropdown>
   </div>
 </header>
