@@ -12,17 +12,18 @@ class LoggerWithoutTimestamp {
   constructor() {
     this.prefix = cluster.isMaster ? 'master' : 'worker';
   }
-  writeLine() {
-    this._write('info', Array.prototype.slice.apply(arguments));
+
+  writeLine(...args) {
+    this._write('info', args);
   }
 
-  writeError() {
-    this._write('error', Array.prototype.slice.apply(arguments));
+  writeError(...args) {
+    this._write('error', args);
   }
 
   _write(level, args) {
     args[0] = `[${level}][${this.prefix}] ${args[0]}`;
-    console.log.apply(console, args);
+    console.log(...args);
   }
 }
 
