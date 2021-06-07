@@ -19,7 +19,9 @@
 
 use crate::util::errors::AppResult;
 use crate::{app::App, db::DieselPool};
-use prometheus::{proto::MetricFamily, IntCounter, IntGauge, IntGaugeVec, HistogramVec};
+use prometheus::{
+    proto::MetricFamily, HistogramVec, IntCounter, IntCounterVec, IntGauge, IntGaugeVec,
+};
 
 metrics! {
     pub struct InstanceMetrics {
@@ -35,6 +37,8 @@ metrics! {
 
         /// Response times of our endpoints
         pub response_times: HistogramVec["endpoint"],
+        /// Nmber of responses per status code
+        pub responses_by_status_code_total: IntCounterVec["status"],
 
         /// Number of download requests that were served with an unconditional redirect.
         pub downloads_unconditional_redirects_total: IntCounter,
