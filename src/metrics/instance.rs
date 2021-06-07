@@ -44,6 +44,8 @@ metrics! {
         pub downloads_unconditional_redirects_total: IntCounter,
         /// Number of download requests with a non-canonical crate name.
         pub downloads_non_canonical_crate_name_total: IntCounter,
+        /// Number of download requests that are not counted yet.
+        downloads_not_counted_total: IntGauge,
     }
 
     // All instance metrics will be prefixed with this namespace.
@@ -57,6 +59,9 @@ impl InstanceMetrics {
         if let Some(follower) = &app.read_only_replica_database {
             self.refresh_pool_stats("follower", follower)?;
         }
+
+        self.downloads_not_counted_total
+            .set(app.downloads_counter.pending_count());
 
         Ok(self.registry.gather())
     }

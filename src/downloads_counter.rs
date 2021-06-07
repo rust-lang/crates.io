@@ -199,6 +199,10 @@ impl DownloadsCounter {
     pub fn shards_count(&self) -> usize {
         self.inner.shards().len()
     }
+
+    pub(crate) fn pending_count(&self) -> i64 {
+        self.pending_count.load(Ordering::SeqCst)
+    }
 }
 
 #[derive(Debug, Default, Copy, Clone, Eq, PartialEq)]
