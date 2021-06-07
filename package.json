@@ -122,7 +122,7 @@
     "nyc": "15.1.0",
     "postcss-nested": "5.0.5",
     "prettier": "2.3.1",
-    "qunit": "2.15.0",
+    "qunit": "2.16.0",
     "qunit-console-grouper": "0.3.0",
     "qunit-dom": "1.6.0",
     "timekeeper": "2.2.0",
