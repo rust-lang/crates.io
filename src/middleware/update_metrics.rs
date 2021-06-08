@@ -1,5 +1,6 @@
 use super::app::RequestApp;
 use super::prelude::*;
+use conduit_router::RoutePattern;
 
 #[derive(Debug, Default)]
 pub(super) struct UpdateMetrics;
@@ -18,6 +19,25 @@ impl Middleware for UpdateMetrics {
 
         metrics.requests_in_flight.dec();
         metrics.requests_total.inc();
+
+        let endpoint = req
+            .extensions()
+            .find::<RoutePattern>()
+            .map(|p| p.pattern())
+            .unwrap_or("<unknown>");
+        metrics
+            .response_times
+            .with_label_values(&[endpoint])
+            .observe(req.elapsed().as_millis() as f64 / 1000.0);
+
+        let status = match &res {
+            Ok(res) => res.status().as_u16(),
+            Err(_) => 500,
+        };
+        metrics
+            .responses_by_status_code_total
+            .with_label_values(&[&status.to_string()])
+            .inc();
 
         res
     }

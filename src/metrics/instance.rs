@@ -19,7 +19,9 @@
 
 use crate::util::errors::AppResult;
 use crate::{app::App, db::DieselPool};
-use prometheus::{proto::MetricFamily, IntCounter, IntGauge, IntGaugeVec};
+use prometheus::{
+    proto::MetricFamily, HistogramVec, IntCounter, IntCounterVec, IntGauge, IntGaugeVec,
+};
 
 metrics! {
     pub struct InstanceMetrics {
@@ -33,10 +35,17 @@ metrics! {
         /// Number of requests currently being processed
         pub requests_in_flight: IntGauge,
 
+        /// Response times of our endpoints
+        pub response_times: HistogramVec["endpoint"],
+        /// Nmber of responses per status code
+        pub responses_by_status_code_total: IntCounterVec["status"],
+
         /// Number of download requests that were served with an unconditional redirect.
         pub downloads_unconditional_redirects_total: IntCounter,
         /// Number of download requests with a non-canonical crate name.
         pub downloads_non_canonical_crate_name_total: IntCounter,
+        /// Number of download requests that are not counted yet.
+        downloads_not_counted_total: IntGauge,
     }
 
     // All instance metrics will be prefixed with this namespace.
@@ -50,6 +59,9 @@ impl InstanceMetrics {
         if let Some(follower) = &app.read_only_replica_database {
             self.refresh_pool_stats("follower", follower)?;
         }
+
+        self.downloads_not_counted_total
+            .set(app.downloads_counter.pending_count());
 
         Ok(self.registry.gather())
     }

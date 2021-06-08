@@ -58,6 +58,27 @@ fn families_to_json_events(families: &[MetricFamily]) -> Vec<VectorEvent<'_>> {
                 MetricType::GAUGE => VectorMetricData::Gauge {
                     value: metric.get_gauge().get_value(),
                 },
+                MetricType::HISTOGRAM => {
+                    let histogram = metric.get_histogram();
+
+                    // We need to convert from cumulative counts (used by the Prometheus library)
+                    // to plain counts (used by Vector).
+                    let mut buckets = Vec::new();
+                    let mut last_cumulative_count = 0;
+                    for bucket in histogram.get_bucket() {
+                        buckets.push(VectorHistogramBucket {
+                            upper_limit: bucket.get_upper_bound(),
+                            count: bucket.get_cumulative_count() - last_cumulative_count,
+                        });
+                        last_cumulative_count = bucket.get_cumulative_count();
+                    }
+
+                    VectorMetricData::AggregatedHistogram {
+                        count: histogram.get_sample_count(),
+                        sum: histogram.get_sample_sum(),
+                        buckets,
+                    }
+                }
                 other => {
                     panic!("unsupported metric type: {:?}", other)
                 }
@@ -96,15 +117,30 @@ struct VectorMetric<'a> {
 #[derive(Serialize, Debug, PartialEq)]
 #[serde(rename_all = "snake_case")]
 enum VectorMetricData {
-    Counter { value: f64 },
-    Gauge { value: f64 },
+    AggregatedHistogram {
+        buckets: Vec<VectorHistogramBucket>,
+        count: u64,
+        sum: f64,
+    },
+    Counter {
+        value: f64,
+    },
+    Gauge {
+        value: f64,
+    },
+}
+
+#[derive(Serialize, Debug, PartialEq)]
+struct VectorHistogramBucket {
+    upper_limit: f64,
+    count: u64,
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use anyhow::Error;
-    use prometheus::{IntCounter, IntGauge, IntGaugeVec, Opts, Registry};
+    use prometheus::{Histogram, HistogramOpts, IntCounter, IntGauge, IntGaugeVec, Opts, Registry};
 
     #[test]
     fn test_counter_to_json() -> Result<(), Error> {
@@ -166,6 +202,85 @@ mod tests {
                     data: VectorMetricData::Gauge { value: 42.0 },
                     kind: "absolute",
                     name: "sample_gauge",
+                    tags: IndexMap::new(),
+                }
+            }],
+            families_to_json_events(&registry.gather())
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_histogram_to_json() -> Result<(), Error> {
+        let histogram = Histogram::with_opts(HistogramOpts::new(
+            "sample_histogram",
+            "sample_histogram help message",
+        ))?;
+        let registry = Registry::new();
+        registry.register(Box::new(histogram.clone()))?;
+
+        let mut value = 0.0;
+        while value < 11.0 {
+            histogram.observe(value);
+            value += 0.001;
+        }
+
+        assert_eq!(
+            vec![VectorEvent {
+                metric: VectorMetric {
+                    data: VectorMetricData::AggregatedHistogram {
+                        buckets: vec![
+                            VectorHistogramBucket {
+                                upper_limit: 0.005,
+                                count: 6,
+                            },
+                            VectorHistogramBucket {
+                                upper_limit: 0.01,
+                                count: 4,
+                            },
+                            VectorHistogramBucket {
+                                upper_limit: 0.025,
+                                count: 15,
+                            },
+                            VectorHistogramBucket {
+                                upper_limit: 0.05,
+                                count: 25,
+                            },
+                            VectorHistogramBucket {
+                                upper_limit: 0.1,
+                                count: 50,
+                            },
+                            VectorHistogramBucket {
+                                upper_limit: 0.25,
+                                count: 150,
+                            },
+                            VectorHistogramBucket {
+                                upper_limit: 0.5,
+                                count: 250,
+                            },
+                            VectorHistogramBucket {
+                                upper_limit: 1.0,
+                                count: 500,
+                            },
+                            VectorHistogramBucket {
+                                upper_limit: 2.5,
+                                count: 1501,
+                            },
+                            VectorHistogramBucket {
+                                upper_limit: 5.0,
+                                count: 2499,
+                            },
+                            VectorHistogramBucket {
+                                upper_limit: 10.0,
+                                count: 5001,
+                            },
+                        ],
+                        count: 11001,
+                        sum: 60505.50000000138,
+                    },
+                    kind: "absolute",
+                    name: "sample_histogram",
                     tags: IndexMap::new(),
                 }
             }],

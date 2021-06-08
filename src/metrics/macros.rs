@@ -59,7 +59,7 @@ macro_rules! load_metric_type {
         use prometheus::$name;
         impl crate::metrics::macros::MetricFromOpts for $name {
             fn from_opts(opts: prometheus::Opts) -> Result<Self, prometheus::Error> {
-                $name::with_opts(opts)
+                $name::with_opts(opts.into())
             }
         }
     };
