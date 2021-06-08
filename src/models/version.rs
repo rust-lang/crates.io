@@ -76,7 +76,7 @@ impl TopVersions {
         let highest_stable = pairs
             .iter()
             .map(|(_, v)| v)
-            .filter(|v| !v.is_prerelease())
+            .filter(|v| v.pre.is_empty())
             .max()
             .map(|v| v.clone());
 
