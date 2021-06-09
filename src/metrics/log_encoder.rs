@@ -71,12 +71,11 @@ fn families_to_json_events(families: &[MetricFamily]) -> Vec<VectorEvent<'_>> {
                     // We need to convert from cumulative counts (used by the Prometheus library)
                     // to plain counts (used by Vector).
                     let mut buckets = Vec::new();
+                    let mut counts = Vec::new();
                     let mut last_cumulative_count = 0;
                     for bucket in histogram.get_bucket() {
-                        buckets.push(VectorHistogramBucket {
-                            upper_limit: bucket.get_upper_bound(),
-                            count: bucket.get_cumulative_count() - last_cumulative_count,
-                        });
+                        buckets.push(bucket.get_upper_bound());
+                        counts.push(bucket.get_cumulative_count() - last_cumulative_count);
                         last_cumulative_count = bucket.get_cumulative_count();
                     }
 
@@ -84,6 +83,7 @@ fn families_to_json_events(families: &[MetricFamily]) -> Vec<VectorEvent<'_>> {
                         count: histogram.get_sample_count(),
                         sum: histogram.get_sample_sum(),
                         buckets,
+                        counts,
                     }
                 }
                 other => {
@@ -191,7 +191,8 @@ struct VectorMetric<'a> {
 #[serde(rename_all = "snake_case")]
 enum VectorMetricData {
     AggregatedHistogram {
-        buckets: Vec<VectorHistogramBucket>,
+        buckets: Vec<f64>,
+        counts: Vec<u64>,
         count: u64,
         sum: f64,
     },
@@ -201,12 +202,6 @@ enum VectorMetricData {
     Gauge {
         value: f64,
     },
-}
-
-#[derive(Serialize, Debug, PartialEq)]
-struct VectorHistogramBucket {
-    upper_limit: f64,
-    count: u64,
 }
 
 #[cfg(test)]
@@ -304,51 +299,9 @@ mod tests {
                 metric: VectorMetric {
                     data: VectorMetricData::AggregatedHistogram {
                         buckets: vec![
-                            VectorHistogramBucket {
-                                upper_limit: 0.005,
-                                count: 6,
-                            },
-                            VectorHistogramBucket {
-                                upper_limit: 0.01,
-                                count: 4,
-                            },
-                            VectorHistogramBucket {
-                                upper_limit: 0.025,
-                                count: 15,
-                            },
-                            VectorHistogramBucket {
-                                upper_limit: 0.05,
-                                count: 25,
-                            },
-                            VectorHistogramBucket {
-                                upper_limit: 0.1,
-                                count: 50,
-                            },
-                            VectorHistogramBucket {
-                                upper_limit: 0.25,
-                                count: 150,
-                            },
-                            VectorHistogramBucket {
-                                upper_limit: 0.5,
-                                count: 250,
-                            },
-                            VectorHistogramBucket {
-                                upper_limit: 1.0,
-                                count: 500,
-                            },
-                            VectorHistogramBucket {
-                                upper_limit: 2.5,
-                                count: 1501,
-                            },
-                            VectorHistogramBucket {
-                                upper_limit: 5.0,
-                                count: 2499,
-                            },
-                            VectorHistogramBucket {
-                                upper_limit: 10.0,
-                                count: 5001,
-                            },
+                            0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0,
                         ],
+                        counts: vec![6, 4, 15, 25, 50, 150, 250, 500, 1501, 2499, 5001,],
                         count: 11001,
                         sum: 60505.50000000138,
                     },
