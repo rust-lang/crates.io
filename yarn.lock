@@ -6232,10 +6232,10 @@ elliptic@^6.5.3:
     minimalistic-assert "^1.0.1"
     minimalistic-crypto-utils "^1.0.1"
 
-ember-a11y-testing@4.0.7:
-  version "4.0.7"
-  resolved "https://registry.yarnpkg.com/ember-a11y-testing/-/ember-a11y-testing-4.0.7.tgz#1e6f23831a7926c1c35f7449e2bb9e3d8db56982"
-  integrity sha512-RbV4fKDnKHuIpJOnjVWs+ePlivXbv+B7JWPLsCM4bU9nGR+tbJGv49y5SaN1+hTcHg0bD0mnD5YUehpHf453Fw==
+ember-a11y-testing@4.0.8:
+  version "4.0.8"
+  resolved "https://registry.yarnpkg.com/ember-a11y-testing/-/ember-a11y-testing-4.0.8.tgz#334c110b14e2c2db62596479772bc4b4f9002fdb"
+  integrity sha512-dh5C1JJKAocYkKY9Kq6TwZfhJ/f73g9F5tDodZk2anGtRXzbuIOqrdVg9hn6DZ3qEKEb6moe2JN6RVqiLYj3cg==
   dependencies:
     "@ember/test-waiters" "^2.4.3"
     axe-core "^4.1.4"
@@ -6246,8 +6246,8 @@ ember-a11y-testing@4.0.7:
     ember-cli-typescript "^3.0.0"
     ember-cli-version-checker "^5.1.2"
     ember-destroyable-polyfill "^2.0.1"
-    fs-extra "^9.0.1"
-    validate-peer-dependencies "^1.1.0"
+    fs-extra "^10.0.0"
+    validate-peer-dependencies "^2.0.0"
 
 ember-api-actions@0.2.9:
   version "0.2.9"
@@ -8511,6 +8511,15 @@ fs-extra@^0.24.0:
     jsonfile "^2.1.0"
     path-is-absolute "^1.0.0"
     rimraf "^2.2.8"
+
+fs-extra@^10.0.0:
+  version "10.0.0"
+  resolved "https://registry.yarnpkg.com/fs-extra/-/fs-extra-10.0.0.tgz#9ff61b655dde53fb34a82df84bb214ce802e17c1"
+  integrity sha512-C5owb14u9eJwizKGdchcDUQeFtlSHHthBk8pbX9Vc1PFZrLombudjDnNns88aYslCyF6IY5SUw3Roz6xShcEIQ==
+  dependencies:
+    graceful-fs "^4.2.0"
+    jsonfile "^6.0.1"
+    universalify "^2.0.0"
 
 fs-extra@^4.0.2, fs-extra@^4.0.3:
   version "4.0.3"
@@ -12928,6 +12937,13 @@ resolve-package-path@^3.1.0:
     path-root "^0.1.1"
     resolve "^1.17.0"
 
+resolve-package-path@^4.0.0:
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/resolve-package-path/-/resolve-package-path-4.0.1.tgz#0e77271e06c8cc41740d28ef974806a77fdc8880"
+  integrity sha512-2gb/yU2fSfX22pjDYyevzyOKK9q72XKUFqlAsrfPzZArM4JkIH/Qcme4n3EbaZttObWm/fIFLbPxrXIyiL8wdQ==
+  dependencies:
+    path-root "^0.1.1"
+
 resolve-path@^1.4.0:
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/resolve-path/-/resolve-path-1.4.0.tgz#c4bda9f5efb2fce65247873ab36bb4d834fe16f7"
@@ -14617,6 +14633,14 @@ validate-peer-dependencies@^1.1.0:
   integrity sha512-nd2HUpKc6RWblPZQ2GDuI65sxJ2n/UqZwSBVtj64xlWjMx0m7ZB2m9b2JS3v1f+n9VWH/dd1CMhkHfP6pIdckA==
   dependencies:
     resolve-package-path "^3.1.0"
+    semver "^7.3.2"
+
+validate-peer-dependencies@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/validate-peer-dependencies/-/validate-peer-dependencies-2.0.0.tgz#a1bd33472517932d7c859e6c03eb849849207794"
+  integrity sha512-i2I3vl+9yk+gI0YCruDa29mzaNykLbSbUVVNQY/mBTLLYjQxVbklqBdTdH2iTpxV9AHH1u0dKlk/zl1sjHTfug==
+  dependencies:
+    resolve-package-path "^4.0.0"
     semver "^7.3.2"
 
 validator@^10.0.0:
