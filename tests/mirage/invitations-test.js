@@ -26,6 +26,12 @@ module('Mirage | Crate Owner Invitations', function (hooks) {
     test('returns a paginated crates list', async function (assert) {
       timekeeper.freeze(new Date('2016-12-24T12:34:56Z'));
 
+      let nanomsg = this.server.create('crate', { name: 'nanomsg' });
+      this.server.create('version', { crate: nanomsg });
+
+      let ember = this.server.create('crate', { name: 'ember-rs' });
+      this.server.create('version', { crate: ember });
+
       let user = this.server.create('user');
       this.server.create('mirage-session', { user });
 
@@ -38,16 +44,16 @@ module('Mirage | Crate Owner Invitations', function (hooks) {
           crate_owner_invitations: [
             {
               invited_by_username: 'janed',
-              crate_name: 'nanomsg',
-              crate_id: 42,
+              crate_name: nanomsg.name,
+              crate_id: nanomsg.id,
               created_at: '2016-12-24T12:34:56Z',
               invitee_id: parseInt(user.id, 10),
               inviter_id: parseInt(inviter.id, 10),
             },
             {
               invited_by_username: 'wycats',
-              crate_name: 'ember-rs',
-              crate_id: 1,
+              crate_name: ember.name,
+              crate_id: ember.id,
               created_at: '2020-12-31T12:34:56Z',
               invitee_id: parseInt(user.id, 10),
               inviter_id: parseInt(inviter2.id, 10),
@@ -64,7 +70,7 @@ module('Mirage | Crate Owner Invitations', function (hooks) {
       assert.deepEqual(responsePayload, {
         crate_owner_invitations: [
           {
-            crate_id: 42,
+            crate_id: nanomsg.id,
             crate_name: 'nanomsg',
             created_at: '2016-12-24T12:34:56Z',
             invited_by_username: 'janed',
@@ -72,7 +78,7 @@ module('Mirage | Crate Owner Invitations', function (hooks) {
             inviter_id: Number(inviter.id),
           },
           {
-            crate_id: 1,
+            crate_id: ember.id,
             crate_name: 'ember-rs',
             created_at: '2020-12-31T12:34:56Z',
             invited_by_username: 'wycats',
