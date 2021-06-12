@@ -99,5 +99,12 @@ export function register(server) {
     return { ok: true };
   });
 
-  server.get('/api/v1/me/crate_owner_invitations', { crate_owner_invitations: [] });
+  server.get('/api/v1/me/crate_owner_invitations', function (schema) {
+    let { user } = getSession(schema);
+    if (!user) {
+      return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
+    }
+
+    return { crate_owner_invitations: [] };
+  });
 }

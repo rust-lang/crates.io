@@ -13,6 +13,9 @@ module('Mirage | Crate Owner Invitations', function (hooks) {
 
   module('GET /api/v1/me/crate_owner_invitations', function () {
     test('empty case', async function (assert) {
+      let user = this.server.create('user');
+      this.server.create('mirage-session', { user });
+
       let response = await fetch('/api/v1/me/crate_owner_invitations');
       assert.equal(response.status, 200);
 
@@ -93,6 +96,16 @@ module('Mirage | Crate Owner Invitations', function (hooks) {
             url: 'https://github.com/wycats',
           },
         ],
+      });
+    });
+
+    test('returns an error if unauthenticated', async function (assert) {
+      let response = await fetch('/api/v1/me/crate_owner_invitations');
+      assert.equal(response.status, 403);
+
+      let responsePayload = await response.json();
+      assert.deepEqual(responsePayload, {
+        errors: [{ detail: 'must be logged in to perform that action' }],
       });
     });
   });
