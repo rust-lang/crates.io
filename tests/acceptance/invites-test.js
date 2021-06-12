@@ -37,7 +37,7 @@ module('Acceptance | /me/pending-invites', function (hooks) {
 
     context.authenticateAs(user);
 
-    return { nanomsg };
+    return { nanomsg, user };
   }
 
   test('redirects to / when not logged in', async function (assert) {
@@ -81,19 +81,11 @@ module('Acceptance | /me/pending-invites', function (hooks) {
   });
 
   test('invites can be declined', async function (assert) {
-    assert.expect(9);
+    let { nanomsg, user } = prepare(this);
 
-    let { nanomsg } = prepare(this);
-
-    this.server.put('/api/v1/me/crate_owner_invitations/:crate_id', (schema, request) => {
-      assert.deepEqual(request.params, { crate_id: nanomsg.id });
-
-      let body = JSON.parse(request.requestBody);
-      assert.strictEqual(body.crate_owner_invite.accepted, false);
-      assert.strictEqual(body.crate_owner_invite.crate_id, nanomsg.id);
-
-      return { crate_owner_invitation: { crate_id: 42, accepted: false } };
-    });
+    let { crateOwnerInvitations, crateOwnerships } = this.server.schema;
+    assert.equal(crateOwnerInvitations.where({ crateId: nanomsg.id, inviteeId: user.id }).length, 1);
+    assert.equal(crateOwnerships.where({ crateId: nanomsg.id, userId: user.id }).length, 0);
 
     await visit('/me/pending-invites');
     assert.equal(currentURL(), '/me/pending-invites');
@@ -106,6 +98,9 @@ module('Acceptance | /me/pending-invites', function (hooks) {
       .hasText('Declined. You have not been added as an owner of crate nanomsg.');
     assert.dom('[data-test-invite="nanomsg"] [data-test-crate-link]').doesNotExist();
     assert.dom('[data-test-invite="nanomsg"] [data-test-inviter-link]').doesNotExist();
+
+    assert.equal(crateOwnerInvitations.where({ crateId: nanomsg.id, inviteeId: user.id }).length, 0);
+    assert.equal(crateOwnerships.where({ crateId: nanomsg.id, userId: user.id }).length, 0);
   });
 
   test('error message is shown if decline request fails', async function (assert) {
@@ -123,19 +118,11 @@ module('Acceptance | /me/pending-invites', function (hooks) {
   });
 
   test('invites can be accepted', async function (assert) {
-    assert.expect(9);
+    let { nanomsg, user } = prepare(this);
 
-    let { nanomsg } = prepare(this);
-
-    this.server.put('/api/v1/me/crate_owner_invitations/:crate_id', (schema, request) => {
-      assert.deepEqual(request.params, { crate_id: nanomsg.id });
-
-      let body = JSON.parse(request.requestBody);
-      assert.strictEqual(body.crate_owner_invite.accepted, true);
-      assert.strictEqual(body.crate_owner_invite.crate_id, nanomsg.id);
-
-      return { crate_owner_invitation: { crate_id: 42, accepted: true } };
-    });
+    let { crateOwnerInvitations, crateOwnerships } = this.server.schema;
+    assert.equal(crateOwnerInvitations.where({ crateId: nanomsg.id, inviteeId: user.id }).length, 1);
+    assert.equal(crateOwnerships.where({ crateId: nanomsg.id, userId: user.id }).length, 0);
 
     await visit('/me/pending-invites');
     assert.equal(currentURL(), '/me/pending-invites');
@@ -150,6 +137,9 @@ module('Acceptance | /me/pending-invites', function (hooks) {
     assert.dom('[data-test-invite="nanomsg"] [data-test-inviter-link]').doesNotExist();
 
     await percySnapshot(assert);
+
+    assert.equal(crateOwnerInvitations.where({ crateId: nanomsg.id, inviteeId: user.id }).length, 0);
+    assert.equal(crateOwnerships.where({ crateId: nanomsg.id, userId: user.id }).length, 1);
   });
 
   test('error message is shown if accept request fails', async function (assert) {
