@@ -130,4 +130,18 @@ export function register(server) {
 
     return { crate_owner_invitation: { crate_id: crateId, accepted } };
   });
+
+  server.put('/api/v1/me/crate_owner_invitations/accept/:token', (schema, request) => {
+    let { token } = request.params;
+
+    let invite = schema.crateOwnerInvitations.findBy({ token });
+    if (!invite) {
+      return new Response(404);
+    }
+
+    server.create('crate-ownership', { crate: invite.crate, user: invite.invitee });
+    invite.destroy();
+
+    return { crate_owner_invitation: { crate_id: invite.crateId, accepted: true } };
+  });
 }

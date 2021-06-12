@@ -20,6 +20,7 @@ export default BaseSerializer.extend({
 
   _adjust(hash) {
     delete hash.id;
+    delete hash.token;
 
     let crate = this.schema.crates.find(hash.crate_id);
     hash.crate_name = crate.name;
