@@ -13,8 +13,6 @@ module('Mirage | Crate Owner Invitations', function (hooks) {
 
   module('GET /api/v1/me/crate_owner_invitations', function () {
     test('empty case', async function (assert) {
-      this.server.get('/api/v1/me/crate_owner_invitations', { crate_owner_invitations: [] });
-
       let response = await fetch('/api/v1/me/crate_owner_invitations');
       assert.equal(response.status, 200);
 

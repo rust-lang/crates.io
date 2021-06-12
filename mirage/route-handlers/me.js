@@ -98,4 +98,6 @@ export function register(server) {
 
     return { ok: true };
   });
+
+  server.get('/api/v1/me/crate_owner_invitations', { crate_owner_invitations: [] });
 }
