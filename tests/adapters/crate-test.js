@@ -9,10 +9,10 @@ module('Adapter | crate', function (hooks) {
   setupMirage(hooks);
 
   test('findRecord requests are coalesced', async function (assert) {
-    this.server.create('crate', { name: 'foo' });
-    this.server.create('version', { crateId: 'foo' });
-    this.server.create('crate', { name: 'bar' });
-    this.server.create('version', { crateId: 'bar' });
+    let _foo = this.server.create('crate', { name: 'foo' });
+    this.server.create('version', { crate: _foo });
+    let _bar = this.server.create('crate', { name: 'bar' });
+    this.server.create('version', { crate: _bar });
 
     // if request coalescing works correctly, then this regular API endpoint
     // should not be hit in this case

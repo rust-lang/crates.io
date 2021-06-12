@@ -7,16 +7,16 @@ module('Route | crate.version | docs link', function (hooks) {
   setupApplicationTest(hooks);
 
   test('shows regular documentation link', async function (assert) {
-    this.server.create('crate', { name: 'foo', documentation: 'https://foo.io/docs' });
-    this.server.create('version', { crateId: 'foo', num: '1.0.0' });
+    let crate = this.server.create('crate', { name: 'foo', documentation: 'https://foo.io/docs' });
+    this.server.create('version', { crate, num: '1.0.0' });
 
     await visit('/crates/foo');
     assert.dom('[data-test-docs-link] a').hasAttribute('href', 'https://foo.io/docs');
   });
 
   test('show no docs link if `documentation` is unspecified and there are no related docs.rs builds', async function (assert) {
-    this.server.create('crate', { name: 'foo' });
-    this.server.create('version', { crateId: 'foo', num: '1.0.0' });
+    let crate = this.server.create('crate', { name: 'foo' });
+    this.server.create('version', { crate, num: '1.0.0' });
 
     this.server.get('https://docs.rs/crate/:crate/:version/builds.json', []);
 
@@ -25,8 +25,8 @@ module('Route | crate.version | docs link', function (hooks) {
   });
 
   test('show docs link if `documentation` is unspecified and there are related docs.rs builds', async function (assert) {
-    this.server.create('crate', { name: 'foo' });
-    this.server.create('version', { crateId: 'foo', num: '1.0.0' });
+    let crate = this.server.create('crate', { name: 'foo' });
+    this.server.create('version', { crate, num: '1.0.0' });
 
     this.server.get('https://docs.rs/crate/:crate/:version/builds.json', [
       {
@@ -44,8 +44,8 @@ module('Route | crate.version | docs link', function (hooks) {
   });
 
   test('show original docs link if `documentation` points to docs.rs and there are no related docs.rs builds', async function (assert) {
-    this.server.create('crate', { name: 'foo', documentation: 'https://docs.rs/foo/0.6.2' });
-    this.server.create('version', { crateId: 'foo', num: '1.0.0' });
+    let crate = this.server.create('crate', { name: 'foo', documentation: 'https://docs.rs/foo/0.6.2' });
+    this.server.create('version', { crate, num: '1.0.0' });
 
     this.server.get('https://docs.rs/crate/:crate/:version/builds.json', []);
 
@@ -54,8 +54,8 @@ module('Route | crate.version | docs link', function (hooks) {
   });
 
   test('show updated docs link if `documentation` points to docs.rs and there are related docs.rs builds', async function (assert) {
-    this.server.create('crate', { name: 'foo', documentation: 'https://docs.rs/foo/0.6.2' });
-    this.server.create('version', { crateId: 'foo', num: '1.0.0' });
+    let crate = this.server.create('crate', { name: 'foo', documentation: 'https://docs.rs/foo/0.6.2' });
+    this.server.create('version', { crate, num: '1.0.0' });
 
     this.server.get('https://docs.rs/crate/:crate/:version/builds.json', [
       {
@@ -73,8 +73,8 @@ module('Route | crate.version | docs link', function (hooks) {
   });
 
   test('ajax errors are ignored', async function (assert) {
-    this.server.create('crate', { name: 'foo', documentation: 'https://docs.rs/foo/0.6.2' });
-    this.server.create('version', { crateId: 'foo', num: '1.0.0' });
+    let crate = this.server.create('crate', { name: 'foo', documentation: 'https://docs.rs/foo/0.6.2' });
+    this.server.create('version', { crate, num: '1.0.0' });
 
     this.server.get('https://docs.rs/crate/:crate/:version/builds.json', {}, 500);
 
@@ -83,8 +83,8 @@ module('Route | crate.version | docs link', function (hooks) {
   });
 
   test('null builds in docs.rs responses are ignored', async function (assert) {
-    this.server.create('crate', { name: 'foo', documentation: 'https://docs.rs/foo/0.6.2' });
-    this.server.create('version', { crateId: 'foo', num: '0.6.2' });
+    let crate = this.server.create('crate', { name: 'foo', documentation: 'https://docs.rs/foo/0.6.2' });
+    this.server.create('version', { crate, num: '0.6.2' });
 
     this.server.get('https://docs.rs/crate/:crate/:version/builds.json', [null]);
 
@@ -93,8 +93,8 @@ module('Route | crate.version | docs link', function (hooks) {
   });
 
   test('empty arrays in docs.rs responses are ignored', async function (assert) {
-    this.server.create('crate', { name: 'foo', documentation: 'https://docs.rs/foo/0.6.2' });
-    this.server.create('version', { crateId: 'foo', num: '0.6.2' });
+    let crate = this.server.create('crate', { name: 'foo', documentation: 'https://docs.rs/foo/0.6.2' });
+    this.server.create('version', { crate, num: '0.6.2' });
 
     this.server.get('https://docs.rs/crate/:crate/:version/builds.json', []);
 

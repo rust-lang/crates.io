@@ -14,8 +14,8 @@ module('Acceptance | crate page', function (hooks) {
   setupApplicationTest(hooks);
 
   test('visiting a crate page from the front page', async function (assert) {
-    this.server.create('crate', { name: 'nanomsg', newest_version: '0.6.1' });
-    this.server.create('version', { crateId: 'nanomsg', num: '0.6.1' });
+    let crate = this.server.create('crate', { name: 'nanomsg', newest_version: '0.6.1' });
+    this.server.create('version', { crate, num: '0.6.1' });
 
     await visit('/');
     await click('[data-test-just-updated] [data-test-crate-link="0"]');
@@ -28,9 +28,9 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('visiting /crates/nanomsg', async function (assert) {
-    this.server.create('crate', { name: 'nanomsg' });
-    this.server.create('version', { crateId: 'nanomsg', num: '0.6.0' });
-    this.server.create('version', { crateId: 'nanomsg', num: '0.6.1' });
+    let crate = this.server.create('crate', { name: 'nanomsg' });
+    this.server.create('version', { crate, num: '0.6.0' });
+    this.server.create('version', { crate, num: '0.6.1' });
 
     await visit('/crates/nanomsg');
 
@@ -47,9 +47,9 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('visiting /crates/nanomsg/', async function (assert) {
-    this.server.create('crate', { name: 'nanomsg' });
-    this.server.create('version', { crateId: 'nanomsg', num: '0.6.0' });
-    this.server.create('version', { crateId: 'nanomsg', num: '0.6.1' });
+    let crate = this.server.create('crate', { name: 'nanomsg' });
+    this.server.create('version', { crate, num: '0.6.0' });
+    this.server.create('version', { crate, num: '0.6.1' });
 
     await visit('/crates/nanomsg/');
 
@@ -63,9 +63,9 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('visiting /crates/nanomsg/0.6.0', async function (assert) {
-    this.server.create('crate', { name: 'nanomsg' });
-    this.server.create('version', { crateId: 'nanomsg', num: '0.6.0' });
-    this.server.create('version', { crateId: 'nanomsg', num: '0.6.1' });
+    let crate = this.server.create('crate', { name: 'nanomsg' });
+    this.server.create('version', { crate, num: '0.6.0' });
+    this.server.create('version', { crate, num: '0.6.1' });
 
     await visit('/crates/nanomsg/0.6.0');
 
@@ -98,9 +98,9 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('unknown versions fall back to latest version and show an error message', async function (assert) {
-    this.server.create('crate', { name: 'nanomsg' });
-    this.server.create('version', { crateId: 'nanomsg', num: '0.6.0' });
-    this.server.create('version', { crateId: 'nanomsg', num: '0.6.1' });
+    let crate = this.server.create('crate', { name: 'nanomsg' });
+    this.server.create('version', { crate, num: '0.6.0' });
+    this.server.create('version', { crate, num: '0.6.1' });
 
     await visit('/crates/nanomsg/0.7.0');
 
@@ -111,9 +111,9 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('other versions loading error shows an error message', async function (assert) {
-    this.server.create('crate', { name: 'nanomsg' });
-    this.server.create('version', { crateId: 'nanomsg', num: '0.6.0' });
-    this.server.create('version', { crateId: 'nanomsg', num: '0.6.1' });
+    let crate = this.server.create('crate', { name: 'nanomsg' });
+    this.server.create('version', { crate, num: '0.6.0' });
+    this.server.create('version', { crate, num: '0.6.1' });
 
     this.server.get('/api/v1/crates/:crate_name/versions', {}, 500);
 
