@@ -1,7 +1,6 @@
 import { module, test } from 'qunit';
 
 import fetch from 'fetch';
-import timekeeper from 'timekeeper';
 
 import { setupTest } from 'cargo/tests/helpers';
 
@@ -23,9 +22,7 @@ module('Mirage | Crate Owner Invitations', function (hooks) {
       assert.deepEqual(responsePayload, { crate_owner_invitations: [] });
     });
 
-    test('returns a paginated crates list', async function (assert) {
-      timekeeper.freeze(new Date('2016-12-24T12:34:56Z'));
-
+    test('returns the list of invitations for the authenticated user', async function (assert) {
       let nanomsg = this.server.create('crate', { name: 'nanomsg' });
       this.server.create('version', { crate: nanomsg });
 
@@ -36,31 +33,19 @@ module('Mirage | Crate Owner Invitations', function (hooks) {
       this.server.create('mirage-session', { user });
 
       let inviter = this.server.create('user', { name: 'janed' });
-      let inviter2 = this.server.create('user', { name: 'wycats' });
-      this.server.get('/api/v1/me/crate_owner_invitations', function () {
-        let users = [this.serialize(inviter, 'user').user, this.serialize(inviter2, 'user').user];
+      this.server.create('crate-owner-invitation', {
+        crate: nanomsg,
+        createdAt: '2016-12-24T12:34:56Z',
+        invitee: user,
+        inviter,
+      });
 
-        return {
-          crate_owner_invitations: [
-            {
-              invited_by_username: 'janed',
-              crate_name: nanomsg.name,
-              crate_id: nanomsg.id,
-              created_at: '2016-12-24T12:34:56Z',
-              invitee_id: parseInt(user.id, 10),
-              inviter_id: parseInt(inviter.id, 10),
-            },
-            {
-              invited_by_username: 'wycats',
-              crate_name: ember.name,
-              crate_id: ember.id,
-              created_at: '2020-12-31T12:34:56Z',
-              invitee_id: parseInt(user.id, 10),
-              inviter_id: parseInt(inviter2.id, 10),
-            },
-          ],
-          users,
-        };
+      let inviter2 = this.server.create('user', { name: 'wycats' });
+      this.server.create('crate-owner-invitation', {
+        crate: ember,
+        createdAt: '2020-12-31T12:34:56Z',
+        invitee: user,
+        inviter: inviter2,
       });
 
       let response = await fetch('/api/v1/me/crate_owner_invitations');

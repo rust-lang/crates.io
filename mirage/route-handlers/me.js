@@ -105,6 +105,6 @@ export function register(server) {
       return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
     }
 
-    return { crate_owner_invitations: [] };
+    return schema.crateOwnerInvitations.where({ inviteeId: user.id });
   });
 }
