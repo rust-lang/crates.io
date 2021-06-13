@@ -1,6 +1,7 @@
 import { action } from '@ember/object';
 import Service, { inject as service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
+import { lastValue } from 'ember-concurrency';
 
 import window from 'ember-window-mock';
 
@@ -22,5 +23,14 @@ export default class DesignService extends Service {
   toggle() {
     this.useNewDesign = !this.useNewDesign;
     localStorage.setItem('use-new-design', String(this.useNewDesign));
+
+    document.querySelector('meta[name="theme-color"]').setAttribute(
+      "content",
+      getComputedStyle(
+        document.documentElement
+      ).getPropertyValue(
+        this.useNewDesign ? '--violet800' : '--green800'
+      )
+    );
   }
 }
