@@ -12,6 +12,8 @@
 .page-description {
     composes: small from '../shared/typography.module.css';
 
+    word-break: break-all;
+
     @media only screen and (max-width: 550px) {
         display: block;
         margin-bottom: 15px;
