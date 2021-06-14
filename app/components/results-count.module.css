@@ -2,6 +2,7 @@
     composes: small from '../styles/shared/typography.module.css';
 
     word-break: break-all;
+    padding-right: 20px;
 }
 
 .highlight {
