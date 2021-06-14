@@ -29,7 +29,7 @@
     data-test-crates-nav
   />
 
-  <div data-test-crates-sort>
+  <div local-class="crates-sort" data-test-crates-sort>
     <span local-class="sort-by-label">Sort by</span>
     <SortDropdown @current={{this.currentSortBy}} as |sd|>
       <sd.Option @query={{hash page=1 sort="alpha"}}>Alphabetical</sd.Option>
