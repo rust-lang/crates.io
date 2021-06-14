@@ -49,8 +49,8 @@ module('Mirage | /me', function (hooks) {
 
       let responsePayload = await response.json();
       assert.deepEqual(responsePayload.owned_crates, [
-        { id: 'crate-0', name: 'crate-0', email_notifications: true },
-        { id: 'crate-2', name: 'crate-2', email_notifications: true },
+        { id: crate1.id, name: 'crate-0', email_notifications: true },
+        { id: crate3.id, name: 'crate-2', email_notifications: true },
       ]);
     });
 
@@ -208,17 +208,13 @@ module('Mirage | /me', function (hooks) {
     });
 
     test('returns latest versions of followed crates', async function (assert) {
-      {
-        let crate = this.server.create('crate', { name: 'foo' });
-        this.server.create('version', { crate, num: '1.2.3' });
-      }
+      let foo = this.server.create('crate', { name: 'foo' });
+      this.server.create('version', { crate: foo, num: '1.2.3' });
 
-      {
-        let crate = this.server.create('crate', { name: 'bar' });
-        this.server.create('version', { crate, num: '0.8.6' });
-      }
+      let bar = this.server.create('crate', { name: 'bar' });
+      this.server.create('version', { crate: bar, num: '0.8.6' });
 
-      let user = this.server.create('user', { followedCrateIds: ['foo'] });
+      let user = this.server.create('user', { followedCrates: [foo] });
       this.authenticateAs(user);
 
       let response = await fetch('/api/v1/me/updates');

@@ -18,7 +18,7 @@ module('Model | Version', function (hooks) {
     let crate = server.create('crate');
     server.create('version', { crate, created_at: '2010-06-16T21:30:45Z' });
 
-    let crateRecord = await store.findRecord('crate', crate.id);
+    let crateRecord = await store.findRecord('crate', crate.name);
     let versions = (await crateRecord.versions).toArray();
 
     timekeeper.travel(new Date('2010-06-16T21:40:45Z'));
@@ -41,7 +41,7 @@ module('Model | Version', function (hooks) {
       let crate = server.create('crate');
       server.create('version', { crate, num });
 
-      let crateRecord = await store.findRecord('crate', crate.id);
+      let crateRecord = await store.findRecord('crate', crate.name);
       let versions = (await crateRecord.versions).toArray();
       return versions[0];
     }
@@ -133,7 +133,7 @@ module('Model | Version', function (hooks) {
         this.server.create('version', { crate, num });
       }
 
-      let crateRecord = await this.store.findRecord('crate', crate.id);
+      let crateRecord = await this.store.findRecord('crate', crate.name);
       let versions = (await crateRecord.versions).toArray();
 
       assert.deepEqual(
@@ -164,7 +164,7 @@ module('Model | Version', function (hooks) {
       this.server.create('version', { crate, num: '0.4.1' });
       this.server.create('version', { crate, num: '0.4.2', yanked: true });
 
-      let crateRecord = await this.store.findRecord('crate', crate.id);
+      let crateRecord = await this.store.findRecord('crate', crate.name);
       let versions = (await crateRecord.versions).toArray();
 
       assert.deepEqual(
@@ -185,7 +185,7 @@ module('Model | Version', function (hooks) {
       let crate = server.create('crate');
       server.create('version', { crate, features });
 
-      let crateRecord = await store.findRecord('crate', crate.id);
+      let crateRecord = await store.findRecord('crate', crate.name);
       let versions = (await crateRecord.versions).toArray();
       return versions[0];
     }
@@ -265,7 +265,7 @@ module('Model | Version', function (hooks) {
     let crate = this.server.create('crate');
     this.server.create('version', { crate, publishedBy: user });
 
-    let crateRecord = await this.store.findRecord('crate', crate.id);
+    let crateRecord = await this.store.findRecord('crate', crate.name);
     assert.ok(crateRecord);
     let versions = (await crateRecord.versions).toArray();
     assert.equal(versions.length, 1);

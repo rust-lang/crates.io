@@ -108,8 +108,8 @@ module('Acceptance | search', function (hooks) {
   });
 
   test('error handling when searching from the frontpage', async function (assert) {
-    this.server.create('crate', { name: 'rust' });
-    this.server.create('version', { crateId: 'rust', num: '1.0.0' });
+    let crate = this.server.create('crate', { name: 'rust' });
+    this.server.create('version', { crate, num: '1.0.0' });
 
     this.server.get('/api/v1/crates', {}, 500);
 
@@ -140,8 +140,8 @@ module('Acceptance | search', function (hooks) {
   });
 
   test('error handling when searching from the search page', async function (assert) {
-    this.server.create('crate', { name: 'rust' });
-    this.server.create('version', { crateId: 'rust', num: '1.0.0' });
+    let crate = this.server.create('crate', { name: 'rust' });
+    this.server.create('version', { crate, num: '1.0.0' });
 
     await visit('/search?q=rust');
     assert.dom('[data-test-crate-row]').exists({ count: 1 });

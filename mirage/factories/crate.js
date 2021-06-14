@@ -3,10 +3,6 @@ import { Factory } from 'ember-cli-mirage';
 export default Factory.extend({
   name: i => `crate-${i}`,
 
-  id() {
-    return this.name;
-  },
-
   description() {
     return `This is the description for the crate called "${this.name}"`;
   },

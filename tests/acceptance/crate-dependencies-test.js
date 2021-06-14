@@ -28,8 +28,8 @@ module('Acceptance | crate dependencies page', function (hooks) {
   });
 
   test('empty list case', async function (assert) {
-    this.server.create('crate', { name: 'nanomsg' });
-    this.server.create('version', { crateId: 'nanomsg', num: '0.6.1' });
+    let crate = this.server.create('crate', { name: 'nanomsg' });
+    this.server.create('version', { crate, num: '0.6.1' });
 
     await visit('/crates/nanomsg/dependencies');
 
@@ -53,16 +53,16 @@ module('Acceptance | crate dependencies page', function (hooks) {
   });
 
   test('hides description if loading of dependency details fails', async function (assert) {
-    this.server.create('crate', { name: 'nanomsg' });
-    let version = this.server.create('version', { crateId: 'nanomsg', num: '0.6.1' });
+    let crate = this.server.create('crate', { name: 'nanomsg' });
+    let version = this.server.create('version', { crate, num: '0.6.1' });
 
-    this.server.create('crate', { name: 'foo', description: 'This is the foo crate' });
-    this.server.create('version', { crateId: 'foo', num: '1.0.0' });
-    this.server.create('dependency', { crateId: 'foo', version, req: '^1.0.0', kind: 'normal' });
+    let foo = this.server.create('crate', { name: 'foo', description: 'This is the foo crate' });
+    this.server.create('version', { crate: foo, num: '1.0.0' });
+    this.server.create('dependency', { crate: foo, version, req: '^1.0.0', kind: 'normal' });
 
-    this.server.create('crate', { name: 'bar', description: 'This is the bar crate' });
-    this.server.create('version', { crateId: 'bar', num: '2.3.4' });
-    this.server.create('dependency', { crateId: 'bar', version, req: '^2.0.0', kind: 'normal' });
+    let bar = this.server.create('crate', { name: 'bar', description: 'This is the bar crate' });
+    this.server.create('version', { crate: bar, num: '2.3.4' });
+    this.server.create('dependency', { crate: bar, version, req: '^2.0.0', kind: 'normal' });
 
     this.server.get('/api/v1/crates', {}, 500);
 

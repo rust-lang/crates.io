@@ -7,13 +7,13 @@ module('Route | crate.version | crate links', function (hooks) {
   setupApplicationTest(hooks);
 
   test('shows all external crate links', async function (assert) {
-    this.server.create('crate', {
+    let crate = this.server.create('crate', {
       name: 'foo',
       homepage: 'https://crates.io/',
       documentation: 'https://doc.rust-lang.org/cargo/getting-started/',
       repository: 'https://github.com/rust-lang/crates.io.git',
     });
-    this.server.create('version', { crateId: 'foo', num: '1.0.0' });
+    this.server.create('version', { crate, num: '1.0.0' });
 
     await visit('/crates/foo');
 
@@ -31,8 +31,8 @@ module('Route | crate.version | crate links', function (hooks) {
   });
 
   test('shows no external crate links if none are set', async function (assert) {
-    this.server.create('crate', { name: 'foo' });
-    this.server.create('version', { crateId: 'foo', num: '1.0.0' });
+    let crate = this.server.create('crate', { name: 'foo' });
+    this.server.create('version', { crate, num: '1.0.0' });
 
     await visit('/crates/foo');
 
@@ -42,12 +42,12 @@ module('Route | crate.version | crate links', function (hooks) {
   });
 
   test('hide the homepage link if it is the same as the repository', async function (assert) {
-    this.server.create('crate', {
+    let crate = this.server.create('crate', {
       name: 'foo',
       homepage: 'https://github.com/rust-lang/crates.io',
       repository: 'https://github.com/rust-lang/crates.io',
     });
-    this.server.create('version', { crateId: 'foo', num: '1.0.0' });
+    this.server.create('version', { crate, num: '1.0.0' });
 
     await visit('/crates/foo');
 
@@ -61,12 +61,12 @@ module('Route | crate.version | crate links', function (hooks) {
   });
 
   test('hide the homepage link if it is the same as the repository plus `.git`', async function (assert) {
-    this.server.create('crate', {
+    let crate = this.server.create('crate', {
       name: 'foo',
       homepage: 'https://github.com/rust-lang/crates.io/',
       repository: 'https://github.com/rust-lang/crates.io.git',
     });
-    this.server.create('version', { crateId: 'foo', num: '1.0.0' });
+    this.server.create('version', { crate, num: '1.0.0' });
 
     await visit('/crates/foo');
 

@@ -21,8 +21,8 @@ export default BaseSerializer.extend({
 
   links(version) {
     return {
-      dependencies: `/api/v1/crates/${version.crateId}/${version.num}/dependencies`,
-      version_downloads: `/api/v1/crates/${version.crateId}/${version.num}/downloads`,
+      dependencies: `/api/v1/crates/${version.crate.name}/${version.num}/dependencies`,
+      version_downloads: `/api/v1/crates/${version.crate.name}/${version.num}/downloads`,
     };
   },
 
@@ -43,8 +43,10 @@ export default BaseSerializer.extend({
   },
 
   _adjust(hash, includes) {
-    hash.dl_path = `/api/v1/crates/${hash.crate_id}/${hash.num}/download`;
-    hash.crate = hash.crate_id;
+    let crate = this.schema.crates.find(hash.crate_id);
+
+    hash.dl_path = `/api/v1/crates/${crate.name}/${hash.num}/download`;
+    hash.crate = crate.name;
 
     if (hash.published_by_id) {
       let user = includes.find(it => it.modelName === 'user' && it.id === hash.published_by_id);

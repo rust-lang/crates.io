@@ -28,11 +28,11 @@ export default BaseSerializer.extend({
 
   links(crate) {
     return {
-      owner_user: `/api/v1/crates/${crate.id}/owner_user`,
-      owner_team: `/api/v1/crates/${crate.id}/owner_team`,
-      reverse_dependencies: `/api/v1/crates/${crate.id}/reverse_dependencies`,
-      version_downloads: `/api/v1/crates/${crate.id}/downloads`,
-      versions: `/api/v1/crates/${crate.id}/versions`,
+      owner_user: `/api/v1/crates/${crate.name}/owner_user`,
+      owner_team: `/api/v1/crates/${crate.name}/owner_team`,
+      reverse_dependencies: `/api/v1/crates/${crate.name}/reverse_dependencies`,
+      version_downloads: `/api/v1/crates/${crate.name}/downloads`,
+      versions: `/api/v1/crates/${crate.name}/versions`,
     };
   },
 
@@ -52,7 +52,7 @@ export default BaseSerializer.extend({
 
   _adjust(hash) {
     let versions = this.schema.versions.where({ crateId: hash.id });
-    assert(`crate \`${hash.id}\` has no associated versions`, versions.length !== 0);
+    assert(`crate \`${hash.name}\` has no associated versions`, versions.length !== 0);
     versions = versions.filter(it => !it.yanked);
 
     let versionNums = versions.models.map(it => it.num);
@@ -62,6 +62,8 @@ export default BaseSerializer.extend({
 
     let newestVersions = versions.models.sort((a, b) => compareIsoDates(b.updated_at, a.updated_at));
     hash.newest_version = newestVersions[0]?.num ?? '0.0.0';
+
+    hash.id = hash.name;
 
     hash.categories = hash.category_ids;
     delete hash.category_ids;

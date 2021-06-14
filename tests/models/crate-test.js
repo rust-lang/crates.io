@@ -21,7 +21,7 @@ module('Model | Crate', function (hooks) {
       let crate = this.server.create('crate');
       this.server.create('version', { crate });
 
-      let crateRecord = await this.store.findRecord('crate', crate.id);
+      let crateRecord = await this.store.findRecord('crate', crate.name);
 
       let result = await crateRecord.inviteOwner(user.login);
       assert.deepEqual(result, { ok: true });
@@ -31,7 +31,7 @@ module('Model | Crate', function (hooks) {
       let crate = this.server.create('crate');
       this.server.create('version', { crate });
 
-      let crateRecord = await this.store.findRecord('crate', crate.id);
+      let crateRecord = await this.store.findRecord('crate', crate.name);
 
       await assert.rejects(crateRecord.inviteOwner('unknown'), function (error) {
         assert.deepEqual(error.errors, [{ detail: 'could not find user with login `unknown`' }]);
@@ -47,7 +47,7 @@ module('Model | Crate', function (hooks) {
       let crate = this.server.create('crate');
       this.server.create('version', { crate });
 
-      let crateRecord = await this.store.findRecord('crate', crate.id);
+      let crateRecord = await this.store.findRecord('crate', crate.name);
 
       let result = await crateRecord.removeOwner(user.login);
       assert.deepEqual(result, { ok: true, msg: 'owners successfully removed' });
@@ -57,7 +57,7 @@ module('Model | Crate', function (hooks) {
       let crate = this.server.create('crate');
       this.server.create('version', { crate });
 
-      let crateRecord = await this.store.findRecord('crate', crate.id);
+      let crateRecord = await this.store.findRecord('crate', crate.name);
 
       await assert.rejects(crateRecord.removeOwner('unknown'), function (error) {
         assert.deepEqual(error.errors, [{ detail: 'Not Found' }]);
