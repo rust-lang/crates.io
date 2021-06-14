@@ -7,7 +7,7 @@
     {{date-format this.model.created_at 'PPP'}}
   </span>
 
-  <div data-test-search-sort>
+  <div local-class="search-sort" data-test-search-sort>
     <span local-class="sort-by-label">Sort by </span>
     <SortDropdown @current={{this.currentSortBy}} as |sd|>
       <sd.Option @query={{hash sort="date"}} data-test-date-sort>Date</sd.Option>
