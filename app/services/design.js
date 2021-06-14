@@ -23,9 +23,9 @@ export default class DesignService extends Service {
     this.useNewDesign = !this.useNewDesign;
     localStorage.setItem('use-new-design', String(this.useNewDesign));
 
-    var newDesignBaseColor = document.documentElement.getPropertyValue(
+    var newDesignHeaderColor = getComputedStyle(window?.document.documentElement).getPropertyValue(
       this.useNewDesign ? '--violet800' : '--green800',
     );
-    document.querySelector('meta[name="theme-color"]').setAttribute('content', getComputedStyle(newDesignBaseColor));
+    document.querySelector('meta[name="theme-color"]').setAttribute('content', newDesignHeaderColor);
   }
 }
