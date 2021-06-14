@@ -22,7 +22,7 @@
     @total={{this.totalItems}}
   />
 
-  <div>
+  <div local-class="crates-sort">
     <span local-class="sort-by-label">Sort by</span>
     <SortDropdown @current={{this.currentSortBy}} as |sd|>
       <sd.Option @query={{hash sort="alpha"}}>Alphabetical</sd.Option>
