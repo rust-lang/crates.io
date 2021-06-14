@@ -3,6 +3,16 @@
     align-items: center;
     justify-content: space-between;
     margin-bottom: 25px;
+
+    .search-sort {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+
+        span {
+            padding-inline-end: 6px;
+        }
+    }
 }
 
 .sort-by-label {
