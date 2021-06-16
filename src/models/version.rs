@@ -72,13 +72,13 @@ impl TopVersions {
             .collect();
 
         let newest = pairs.iter().max().map(|(_, v)| v.clone());
-        let highest = pairs.iter().map(|(_, v)| v).max().map(|v| v.clone());
+        let highest = pairs.iter().map(|(_, v)| v).max().cloned();
         let highest_stable = pairs
             .iter()
             .map(|(_, v)| v)
             .filter(|v| v.pre.is_empty())
             .max()
-            .map(|v| v.clone());
+            .cloned();
 
         Self {
             highest,

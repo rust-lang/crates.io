@@ -27,6 +27,12 @@ const CHUNKS_MAX_SIZE_BYTES: usize = 5000;
 #[derive(Debug, Clone, Copy)]
 pub struct LogEncoder(());
 
+impl Default for LogEncoder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl LogEncoder {
     pub fn new() -> Self {
         Self(())
@@ -132,6 +138,7 @@ fn serialize_and_split_list<'a, S: Serialize + 'a>(
         let mut serializer = Serializer::new(EncoderWriter::new(&mut writer, base64::STANDARD));
 
         let mut seq = serializer.serialize_seq(None)?;
+        #[allow(clippy::while_let_on_iterator)]
         while let Some(next) = items.next() {
             seq.serialize_element(next)?;
             if written_count.get() >= max_size_hint {
@@ -363,7 +370,7 @@ mod tests {
     fn test_encoding() -> Result<(), Error> {
         let gauge = IntGauge::with_opts(Opts::new("sample_gauge", "sample_gauge help message"))?;
         let registry = Registry::new();
-        registry.register(Box::new(gauge.clone()))?;
+        registry.register(Box::new(gauge))?;
 
         let mut output = Vec::new();
         LogEncoder::new().encode(&registry.gather(), &mut output)?;
