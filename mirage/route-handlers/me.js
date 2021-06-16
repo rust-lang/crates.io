@@ -98,4 +98,50 @@ export function register(server) {
 
     return { ok: true };
   });
+
+  server.get('/api/v1/me/crate_owner_invitations', function (schema) {
+    let { user } = getSession(schema);
+    if (!user) {
+      return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
+    }
+
+    return schema.crateOwnerInvitations.where({ inviteeId: user.id });
+  });
+
+  server.put('/api/v1/me/crate_owner_invitations/:crate_id', (schema, request) => {
+    let { user } = getSession(schema);
+    if (!user) {
+      return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
+    }
+
+    let body = JSON.parse(request.requestBody);
+    let { accepted, crate_id: crateId } = body.crate_owner_invite;
+
+    let invite = schema.crateOwnerInvitations.findBy({ crateId, inviteeId: user.id });
+    if (!invite) {
+      return new Response(404);
+    }
+
+    if (accepted) {
+      server.create('crate-ownership', { crate: invite.crate, user });
+    }
+
+    invite.destroy();
+
+    return { crate_owner_invitation: { crate_id: crateId, accepted } };
+  });
+
+  server.put('/api/v1/me/crate_owner_invitations/accept/:token', (schema, request) => {
+    let { token } = request.params;
+
+    let invite = schema.crateOwnerInvitations.findBy({ token });
+    if (!invite) {
+      return new Response(404);
+    }
+
+    server.create('crate-ownership', { crate: invite.crate, user: invite.invitee });
+    invite.destroy();
+
+    return { crate_owner_invitation: { crate_id: invite.crateId, accepted: true } };
+  });
 }

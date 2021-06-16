@@ -12,36 +12,32 @@ module('Acceptance | /me/pending-invites', function (hooks) {
   setupApplicationTest(hooks);
 
   function prepare(context) {
-    let user = context.server.create('user');
-    context.authenticateAs(user);
-
     let inviter = context.server.create('user', { name: 'janed' });
     let inviter2 = context.server.create('user', { name: 'wycats' });
-    context.server.get('/api/v1/me/crate_owner_invitations', function () {
-      let users = [this.serialize(inviter, 'user').user, this.serialize(inviter2, 'user').user];
 
-      return {
-        crate_owner_invitations: [
-          {
-            invited_by_username: 'janed',
-            crate_name: 'nanomsg',
-            crate_id: 42,
-            created_at: '2016-12-24T12:34:56Z',
-            invitee_id: parseInt(user.id, 10),
-            inviter_id: parseInt(inviter.id, 10),
-          },
-          {
-            invited_by_username: 'wycats',
-            crate_name: 'ember-rs',
-            crate_id: 1,
-            created_at: '2020-12-31T12:34:56Z',
-            invitee_id: parseInt(user.id, 10),
-            inviter_id: parseInt(inviter2.id, 10),
-          },
-        ],
-        users,
-      };
+    let user = context.server.create('user');
+
+    let nanomsg = context.server.create('crate', { name: 'nanomsg' });
+    context.server.create('version', { crate: nanomsg });
+    context.server.create('crate-owner-invitation', {
+      crate: nanomsg,
+      createdAt: '2016-12-24T12:34:56Z',
+      invitee: user,
+      inviter,
     });
+
+    let ember = context.server.create('crate', { name: 'ember-rs' });
+    context.server.create('version', { crate: ember });
+    context.server.create('crate-owner-invitation', {
+      crate: ember,
+      createdAt: '2020-12-31T12:34:56Z',
+      invitee: user,
+      inviter: inviter2,
+    });
+
+    context.authenticateAs(user);
+
+    return { nanomsg, user };
   }
 
   test('redirects to / when not logged in', async function (assert) {
@@ -76,7 +72,7 @@ module('Acceptance | /me/pending-invites', function (hooks) {
   test('shows empty list message', async function (assert) {
     prepare(this);
 
-    this.server.get('/api/v1/me/crate_owner_invitations', { crate_owner_invitations: [] });
+    this.server.schema.crateOwnerInvitations.all().destroy();
 
     await visit('/me/pending-invites');
     assert.equal(currentURL(), '/me/pending-invites');
@@ -85,19 +81,11 @@ module('Acceptance | /me/pending-invites', function (hooks) {
   });
 
   test('invites can be declined', async function (assert) {
-    assert.expect(9);
+    let { nanomsg, user } = prepare(this);
 
-    prepare(this);
-
-    this.server.put('/api/v1/me/crate_owner_invitations/:crate', (schema, request) => {
-      assert.deepEqual(request.params, { crate: '42' });
-
-      let body = JSON.parse(request.requestBody);
-      assert.strictEqual(body.crate_owner_invite.accepted, false);
-      assert.strictEqual(body.crate_owner_invite.crate_id, 42);
-
-      return { crate_owner_invitation: { crate_id: 42, accepted: false } };
-    });
+    let { crateOwnerInvitations, crateOwnerships } = this.server.schema;
+    assert.equal(crateOwnerInvitations.where({ crateId: nanomsg.id, inviteeId: user.id }).length, 1);
+    assert.equal(crateOwnerships.where({ crateId: nanomsg.id, userId: user.id }).length, 0);
 
     await visit('/me/pending-invites');
     assert.equal(currentURL(), '/me/pending-invites');
@@ -110,12 +98,15 @@ module('Acceptance | /me/pending-invites', function (hooks) {
       .hasText('Declined. You have not been added as an owner of crate nanomsg.');
     assert.dom('[data-test-invite="nanomsg"] [data-test-crate-link]').doesNotExist();
     assert.dom('[data-test-invite="nanomsg"] [data-test-inviter-link]').doesNotExist();
+
+    assert.equal(crateOwnerInvitations.where({ crateId: nanomsg.id, inviteeId: user.id }).length, 0);
+    assert.equal(crateOwnerships.where({ crateId: nanomsg.id, userId: user.id }).length, 0);
   });
 
   test('error message is shown if decline request fails', async function (assert) {
     prepare(this);
 
-    this.server.put('/api/v1/me/crate_owner_invitations/:crate', () => new Response(500));
+    this.server.put('/api/v1/me/crate_owner_invitations/:crate_id', () => new Response(500));
 
     await visit('/me/pending-invites');
     assert.equal(currentURL(), '/me/pending-invites');
@@ -127,19 +118,11 @@ module('Acceptance | /me/pending-invites', function (hooks) {
   });
 
   test('invites can be accepted', async function (assert) {
-    assert.expect(9);
+    let { nanomsg, user } = prepare(this);
 
-    prepare(this);
-
-    this.server.put('/api/v1/me/crate_owner_invitations/:crate', (schema, request) => {
-      assert.deepEqual(request.params, { crate: '42' });
-
-      let body = JSON.parse(request.requestBody);
-      assert.strictEqual(body.crate_owner_invite.accepted, true);
-      assert.strictEqual(body.crate_owner_invite.crate_id, 42);
-
-      return { crate_owner_invitation: { crate_id: 42, accepted: true } };
-    });
+    let { crateOwnerInvitations, crateOwnerships } = this.server.schema;
+    assert.equal(crateOwnerInvitations.where({ crateId: nanomsg.id, inviteeId: user.id }).length, 1);
+    assert.equal(crateOwnerships.where({ crateId: nanomsg.id, userId: user.id }).length, 0);
 
     await visit('/me/pending-invites');
     assert.equal(currentURL(), '/me/pending-invites');
@@ -154,12 +137,15 @@ module('Acceptance | /me/pending-invites', function (hooks) {
     assert.dom('[data-test-invite="nanomsg"] [data-test-inviter-link]').doesNotExist();
 
     await percySnapshot(assert);
+
+    assert.equal(crateOwnerInvitations.where({ crateId: nanomsg.id, inviteeId: user.id }).length, 0);
+    assert.equal(crateOwnerships.where({ crateId: nanomsg.id, userId: user.id }).length, 1);
   });
 
   test('error message is shown if accept request fails', async function (assert) {
     prepare(this);
 
-    this.server.put('/api/v1/me/crate_owner_invitations/:crate', () => new Response(500));
+    this.server.put('/api/v1/me/crate_owner_invitations/:crate_id', () => new Response(500));
 
     await visit('/me/pending-invites');
     assert.equal(currentURL(), '/me/pending-invites');
@@ -176,7 +162,7 @@ module('Acceptance | /me/pending-invites', function (hooks) {
     let errorMessage =
       'The invitation to become an owner of the demo_crate crate expired. Please reach out to an owner of the crate to request a new invitation.';
     let payload = { errors: [{ detail: errorMessage }] };
-    this.server.put('/api/v1/me/crate_owner_invitations/:crate', payload, 410);
+    this.server.put('/api/v1/me/crate_owner_invitations/:crate_id', payload, 410);
 
     await visit('/me/pending-invites');
     assert.equal(currentURL(), '/me/pending-invites');

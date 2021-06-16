@@ -2,7 +2,6 @@ import { currentURL } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
 import percySnapshot from '@percy/ember';
-import Response from 'ember-cli-mirage/response';
 
 import { setupApplicationTest } from 'cargo/tests/helpers';
 
@@ -24,13 +23,6 @@ module('Acceptance | /accept-invite/:token', function (hooks) {
   });
 
   test('shows error for unknown token', async function (assert) {
-    assert.expect(3);
-
-    this.server.put('/api/v1/me/crate_owner_invitations/accept/:token', (schema, request) => {
-      assert.deepEqual(request.params, { token: 'unknown' });
-      return new Response(404);
-    });
-
     await visit('/accept-invite/unknown');
     assert.equal(currentURL(), '/accept-invite/unknown');
     assert.dom('[data-test-error-message]').hasText('You may want to visit crates.io/me/pending-invites to try again.');
@@ -48,15 +40,15 @@ module('Acceptance | /accept-invite/:token', function (hooks) {
   });
 
   test('shows success for known token', async function (assert) {
-    assert.expect(3);
+    let inviter = this.server.create('user');
+    let invitee = this.server.create('user');
 
-    this.server.put('/api/v1/me/crate_owner_invitations/accept/:token', (schema, request) => {
-      assert.deepEqual(request.params, { token: 'ember-rs' });
-      return { crate_owner_invitation: { crate_id: 42, accepted: true } };
-    });
+    let crate = this.server.create('crate', { name: 'nanomsg' });
+    this.server.create('version', { crate });
+    let invite = this.server.create('crate-owner-invitation', { crate, invitee, inviter });
 
-    await visit('/accept-invite/ember-rs');
-    assert.equal(currentURL(), '/accept-invite/ember-rs');
+    await visit(`/accept-invite/${invite.token}`);
+    assert.equal(currentURL(), `/accept-invite/${invite.token}`);
     assert
       .dom('[data-test-success-message]')
       .hasText(
