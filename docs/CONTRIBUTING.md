@@ -20,7 +20,7 @@ Please don't hesitate to ask any questions on these issues, we're paying special
 attention to them and someone will get back to you with help as soon as
 possible.
 
-We'd also love contributions for issues not tagged E-has-mentor, they just might
+We'd also love contributions for issues not tagged `E-has-mentor`, they just might
 not be as well specified. You may want to browse through the labels that start
 with A-, which stands for "area", to find issues that match with your interests.
 
