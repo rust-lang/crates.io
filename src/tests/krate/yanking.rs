@@ -40,7 +40,7 @@ impl crate::util::MockCookieUser {
 }
 
 #[test]
-#[allow(clippy::bool_assert_comparison)] // for claim::assert_some_eq! with bool
+#[allow(unknown_lints, clippy::bool_assert_comparison)] // for claim::assert_some_eq! with bool
 fn yank_works_as_intended() {
     let (app, anon, cookie, token) = TestApp::full().with_token();
 
