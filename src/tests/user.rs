@@ -250,7 +250,7 @@ fn following() {
 
     let r: R = user.get("/api/v1/me/updates").good();
     assert_eq!(r.versions.len(), 0);
-    assert_eq!(r.meta.more, false);
+    assert!(!r.meta.more);
 
     user.put::<OkBool>("/api/v1/crates/foo_fighters/follow", b"")
         .good();
@@ -259,7 +259,7 @@ fn following() {
 
     let r: R = user.get("/api/v1/me/updates").good();
     assert_eq!(r.versions.len(), 2);
-    assert_eq!(r.meta.more, false);
+    assert!(!r.meta.more);
     let foo_version = r
         .versions
         .iter()
@@ -280,7 +280,7 @@ fn following() {
         .get_with_query("/api/v1/me/updates", "per_page=1")
         .good();
     assert_eq!(r.versions.len(), 1);
-    assert_eq!(r.meta.more, true);
+    assert!(r.meta.more);
 
     user.delete::<OkBool>("/api/v1/crates/bar_fighters/follow")
         .good();
@@ -288,7 +288,7 @@ fn following() {
         .get_with_query("/api/v1/me/updates", "page=2&per_page=1")
         .good();
     assert_eq!(r.versions.len(), 0);
-    assert_eq!(r.meta.more, false);
+    assert!(!r.meta.more);
 
     let response = user.get_with_query::<()>("/api/v1/me/updates", "page=0");
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
@@ -663,21 +663,20 @@ fn test_update_email_notifications() {
     }]);
     let json = user.show_me();
 
-    assert_eq!(
-        json.owned_crates
+    assert!(
+        !json
+            .owned_crates
             .iter()
             .find(|c| c.id == a_id)
             .unwrap()
-            .email_notifications,
-        false
+            .email_notifications
     );
-    assert_eq!(
+    assert!(
         json.owned_crates
             .iter()
             .find(|c| c.id == b_id)
             .unwrap()
-            .email_notifications,
-        true
+            .email_notifications
     );
 
     // Update crate_b: email_notifications = false
@@ -688,21 +687,21 @@ fn test_update_email_notifications() {
     }]);
     let json = user.show_me();
 
-    assert_eq!(
-        json.owned_crates
+    assert!(
+        !json
+            .owned_crates
             .iter()
             .find(|c| c.id == a_id)
             .unwrap()
-            .email_notifications,
-        false
+            .email_notifications
     );
-    assert_eq!(
-        json.owned_crates
+    assert!(
+        !json
+            .owned_crates
             .iter()
             .find(|c| c.id == b_id)
             .unwrap()
-            .email_notifications,
-        false
+            .email_notifications
     );
 
     // Update crate_a and crate_b: email_notifications = true
