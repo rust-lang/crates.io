@@ -29,7 +29,7 @@ enum SubCommand {
 fn main() -> anyhow::Result<()> {
     let opts: Opts = Opts::parse();
 
-    Ok(match opts.command {
+    match opts.command {
         SubCommand::DeleteCrate(opts) => delete_crate::run(opts),
         SubCommand::DeleteVersion(opts) => delete_version::run(opts),
         SubCommand::Populate(opts) => populate::run(opts),
@@ -38,5 +38,7 @@ fn main() -> anyhow::Result<()> {
         SubCommand::TransferCrates(opts) => transfer_crates::run(opts),
         SubCommand::VerifyToken(opts) => verify_token::run(opts).unwrap(),
         SubCommand::Migrate(opts) => migrate::run(opts)?,
-    })
+    }
+
+    Ok(())
 }
