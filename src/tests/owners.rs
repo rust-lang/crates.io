@@ -449,7 +449,7 @@ fn invitations_list() {
         InvitationListResponse {
             crate_owner_invitations: vec![EncodableCrateOwnerInvitation {
                 crate_id: krate.id,
-                crate_name: krate.name.clone(),
+                crate_name: krate.name,
                 invited_by_username: owner.gh_login.clone(),
                 invitee_id: user.as_model().id,
                 inviter_id: owner.id,
@@ -484,7 +484,7 @@ fn invitations_list_does_not_include_expired_invites() {
         InvitationListResponse {
             crate_owner_invitations: vec![EncodableCrateOwnerInvitation {
                 crate_id: krate2.id,
-                crate_name: krate2.name.clone(),
+                crate_name: krate2.name,
                 invited_by_username: owner.gh_login.clone(),
                 invitee_id: user.as_model().id,
                 inviter_id: owner.id,
