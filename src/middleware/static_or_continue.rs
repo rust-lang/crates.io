@@ -4,8 +4,6 @@ use super::prelude::*;
 
 use conduit_static::Static;
 
-// Can't derive debug because of Handler and Static.
-#[allow(missing_debug_implementations)]
 pub struct StaticOrContinue {
     fallback_handler: Option<Box<dyn Handler>>,
     static_handler: Static,

@@ -5,7 +5,6 @@
 //! [krate](krate/index.html), [user](user/index.html) and [version](version/index.html) modules.
 
 #![warn(clippy::all, rust_2018_idioms)]
-#![warn(missing_debug_implementations, missing_copy_implementations)]
 
 #[cfg(test)]
 #[macro_use]

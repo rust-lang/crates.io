@@ -8,7 +8,6 @@ use url::Url;
 
 use crate::middleware::app::RequestApp;
 
-#[allow(missing_debug_implementations)]
 #[derive(Clone)]
 pub enum DieselPool {
     Pool(r2d2::Pool<ConnectionManager<PgConnection>>),
@@ -104,7 +103,6 @@ pub struct PoolState {
     pub idle_connections: u32,
 }
 
-#[allow(missing_debug_implementations)]
 pub enum DieselPooledConn<'a> {
     Pool(r2d2::PooledConnection<ConnectionManager<PgConnection>>),
     Test(ReentrantMutexGuard<'a, PgConnection>),

@@ -20,7 +20,6 @@ impl swirl::db::DieselPool for DieselPool {
     }
 }
 
-#[allow(missing_debug_implementations)]
 pub struct Environment {
     index: Arc<Mutex<Repository>>,
     pub uploader: Uploader,

@@ -12,8 +12,6 @@ use super::prelude::*;
 use crate::App;
 use std::sync::Arc;
 
-// Can't derive debug because of Handler.
-#[allow(missing_debug_implementations)]
 #[derive(Default)]
 pub struct BlockTraffic {
     header_name: String,

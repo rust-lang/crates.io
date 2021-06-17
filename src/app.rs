@@ -15,8 +15,6 @@ use scheduled_thread_pool::ScheduledThreadPool;
 
 /// The `App` struct holds the main components of the application like
 /// the database connection pool and configurations
-// The db, oauth, and git2 types don't implement debug.
-#[allow(missing_debug_implementations)]
 pub struct App {
     /// The primary database connection pool
     pub primary_database: DieselPool,

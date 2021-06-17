@@ -12,8 +12,6 @@ use std::env;
 
 use crate::util::request_header;
 
-// Can't derive debug because of Handler.
-#[allow(missing_debug_implementations)]
 #[derive(Default)]
 pub struct RequireUserAgent {
     cdn_user_agent: String,

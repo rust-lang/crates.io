@@ -12,7 +12,6 @@ use crate::background_jobs::Environment;
 use crate::models::Version;
 
 /// Context for markdown to HTML rendering.
-#[allow(missing_debug_implementations)]
 struct MarkdownRenderer<'a> {
     html_sanitizer: Builder<'a>,
 }
