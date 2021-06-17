@@ -46,7 +46,7 @@ impl Bucket {
         content_type: &str,
         extra_headers: header::HeaderMap,
     ) -> Result<Response, Error> {
-        let path = path.strip_prefix("/").unwrap_or(path);
+        let path = path.strip_prefix('/').unwrap_or(path);
         let date = Utc::now().to_rfc2822();
         let auth = self.auth("PUT", &date, path, "", content_type);
         let url = self.url(path);
@@ -66,7 +66,7 @@ impl Bucket {
     }
 
     pub fn delete(&self, client: &Client, path: &str) -> Result<Response, Error> {
-        let path = path.strip_prefix("/").unwrap_or(path);
+        let path = path.strip_prefix('/').unwrap_or(path);
         let date = Utc::now().to_rfc2822();
         let auth = self.auth("DELETE", &date, path, "", "");
         let url = self.url(path);
