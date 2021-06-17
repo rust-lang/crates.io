@@ -336,7 +336,7 @@ impl Crate {
                 let config = &app.config;
                 match CrateOwnerInvitation::create(user.id, req_user.id, self.id, conn, config)? {
                     NewCrateOwnerInvitationOutcome::InviteCreated { plaintext_token } => {
-                        if let Ok(Some(email)) = user.verified_email(&conn) {
+                        if let Ok(Some(email)) = user.verified_email(conn) {
                             // Swallow any error. Whether or not the email is sent, the invitation
                             // entry will be created in the database and the user will see the
                             // invitation when they visit https://crates.io/me/pending-invites/.

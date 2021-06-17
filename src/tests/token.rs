@@ -97,11 +97,10 @@ fn list_tokens_exclude_revoked() {
     // Check that we now have one less token being listed.
     let json: ListResponse = user.get(URL).good();
     assert_eq!(json.api_tokens.len(), tokens.len() - 1);
-    assert!(json
+    assert!(!json
         .api_tokens
         .iter()
-        .find(|token| token.name == tokens[0].model.name)
-        .is_none());
+        .any(|token| token.name == tokens[0].model.name));
 }
 
 #[test]
@@ -175,7 +174,7 @@ fn create_token_success() {
         app.db(|conn| assert_ok!(ApiToken::belonging_to(user.as_model()).load(conn)));
     assert_eq!(tokens.len(), 1);
     assert_eq!(tokens[0].name, "bar");
-    assert_eq!(tokens[0].revoked, false);
+    assert!(!tokens[0].revoked);
     assert_eq!(tokens[0].last_used_at, None);
 }
 

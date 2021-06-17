@@ -203,7 +203,7 @@ impl Repository {
         let parent = self.repository.find_commit(head)?;
         let sig = self.repository.signature()?;
         self.repository
-            .commit(Some("HEAD"), &sig, &sig, &msg, &tree, &[&parent])?;
+            .commit(Some("HEAD"), &sig, &sig, msg, &tree, &[&parent])?;
 
         self.push()
     }

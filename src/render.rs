@@ -276,7 +276,7 @@ pub fn render_and_upload_readme(
     let rendered = readme_to_html(&text, &file_name, base_url.as_deref());
 
     conn.transaction(|| {
-        Version::record_readme_rendering(version_id, &conn)?;
+        Version::record_readme_rendering(version_id, conn)?;
         let (crate_name, vers): (String, String) = versions::table
             .find(version_id)
             .inner_join(crates::table)

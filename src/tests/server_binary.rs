@@ -92,10 +92,7 @@ impl ServerBin {
         env.remove("DB_MIN_SIZE");
         // Other configuration variables needed for the application to boot.
         env.insert("WEB_ALLOWED_ORIGINS".into(), "http://localhost:8888".into());
-        env.insert(
-            "SESSION_KEY".into(),
-            std::iter::repeat('a').take(32).collect(),
-        );
+        env.insert("SESSION_KEY".into(), "a".repeat(32));
         env.insert("GH_CLIENT_ID".into(), String::new());
         env.insert("GH_CLIENT_SECRET".into(), String::new());
 

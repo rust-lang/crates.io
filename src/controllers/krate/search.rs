@@ -73,7 +73,7 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
             query = query.filter(
                 q.clone()
                     .matches(crates::textsearchable_index_col)
-                    .or(Crate::loosly_matches_name(&q_string)),
+                    .or(Crate::loosly_matches_name(q_string)),
             );
 
             query = query.select((

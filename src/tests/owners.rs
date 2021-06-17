@@ -215,7 +215,7 @@ fn modify_multiple_owners() {
         response.json(),
         json!({ "errors": [{ "detail": "cannot remove all individual owners of a crate. Team member don't have permission to modify owners, so at least one individual owner is required." }] })
     );
-    assert_eq!(app.db(|conn| krate.owners(&conn).unwrap()).len(), 3);
+    assert_eq!(app.db(|conn| krate.owners(conn).unwrap()).len(), 3);
 
     // Deleting two owners at once is allowed.
     let response = token.remove_named_owners("owners_multiple", &["user2", "user3"]);
@@ -224,7 +224,7 @@ fn modify_multiple_owners() {
         response.json(),
         json!({ "msg": "owners successfully removed", "ok": true })
     );
-    assert_eq!(app.db(|conn| krate.owners(&conn).unwrap()).len(), 1);
+    assert_eq!(app.db(|conn| krate.owners(conn).unwrap()).len(), 1);
 
     // Adding multiple users fails if one of them already is an owner.
     let response = token.add_named_owners("owners_multiple", &["user2", username]);
@@ -233,7 +233,7 @@ fn modify_multiple_owners() {
         response.json(),
         json!({ "errors": [{ "detail": "`foo` is already an owner" }] })
     );
-    assert_eq!(app.db(|conn| krate.owners(&conn).unwrap()).len(), 1);
+    assert_eq!(app.db(|conn| krate.owners(conn).unwrap()).len(), 1);
 
     // Adding multiple users at once succeeds.
     let response = token.add_named_owners("owners_multiple", &["user2", "user3"]);
@@ -249,7 +249,7 @@ fn modify_multiple_owners() {
     user2.accept_ownership_invitation(&krate.name, krate.id);
     user3.accept_ownership_invitation(&krate.name, krate.id);
 
-    assert_eq!(app.db(|conn| krate.owners(&conn).unwrap()).len(), 3);
+    assert_eq!(app.db(|conn| krate.owners(conn).unwrap()).len(), 3);
 }
 
 #[test]
@@ -449,7 +449,7 @@ fn invitations_list() {
         InvitationListResponse {
             crate_owner_invitations: vec![EncodableCrateOwnerInvitation {
                 crate_id: krate.id,
-                crate_name: krate.name.clone(),
+                crate_name: krate.name,
                 invited_by_username: owner.gh_login.clone(),
                 invitee_id: user.as_model().id,
                 inviter_id: owner.id,
@@ -484,7 +484,7 @@ fn invitations_list_does_not_include_expired_invites() {
         InvitationListResponse {
             crate_owner_invitations: vec![EncodableCrateOwnerInvitation {
                 crate_id: krate2.id,
-                crate_name: krate2.name.clone(),
+                crate_name: krate2.name,
                 invited_by_username: owner.gh_login.clone(),
                 invitee_id: user.as_model().id,
                 inviter_id: owner.id,

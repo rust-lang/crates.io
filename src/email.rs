@@ -109,7 +109,7 @@ or go to https://{domain}/me/pending-invites to manage all of your crate ownersh
                 login,
                 password,
             } => {
-                SmtpTransport::relay(&server)?
+                SmtpTransport::relay(server)?
                     .credentials(Credentials::new(login.clone(), password.clone()))
                     .authentication(vec![Mechanism::Plain])
                     .build()

@@ -75,7 +75,7 @@ fn update_crate() {
         assert_ok!(
             new_category("Category 2", "category-2", "Category 2 crates").create_or_update(conn)
         );
-        let krate = CrateBuilder::new("foo_crate", user.id).expect_build(&conn);
+        let krate = CrateBuilder::new("foo_crate", user.id).expect_build(conn);
 
         // Updating with no categories has no effect
         Category::update_crate(conn, &krate, &[]).unwrap();
@@ -127,7 +127,7 @@ fn update_crate() {
 
         // Add a category and its subcategory
         assert_ok!(new_category("cat1::bar", "cat1::bar", "bar crates").create_or_update(conn));
-        Category::update_crate(&conn, &krate, &["cat1", "cat1::bar"]).unwrap();
+        Category::update_crate(conn, &krate, &["cat1", "cat1::bar"]).unwrap();
 
         assert_eq!(count(&anon, "cat1"), 1);
         assert_eq!(count(&anon, "cat1::bar"), 1);

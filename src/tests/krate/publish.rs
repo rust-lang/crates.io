@@ -640,7 +640,7 @@ fn publish_records_an_audit_action() {
 
     let (app, anon, _, token) = TestApp::full().with_token();
 
-    app.db(|conn| assert!(VersionOwnerAction::all(&conn).unwrap().is_empty()));
+    app.db(|conn| assert!(VersionOwnerAction::all(conn).unwrap().is_empty()));
 
     // Upload a new crate, putting it in the git index
     let crate_to_publish = PublishBuilder::new("fyk");

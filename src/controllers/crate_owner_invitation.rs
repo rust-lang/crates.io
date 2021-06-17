@@ -61,7 +61,7 @@ pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
                 .cloned()
                 .unwrap_or_else(|| String::from("(unknown crate name)"));
 
-            let expires_at = invitation.expires_at(&config);
+            let expires_at = invitation.expires_at(config);
             EncodableCrateOwnerInvitation::from(invitation, inviter_name, crate_name, expires_at)
         })
         .collect();
@@ -101,11 +101,11 @@ pub fn handle_invite(req: &mut dyn RequestExt) -> EndpointResult {
     let conn = &*req.db_conn()?;
     let config = &req.app().config;
 
-    let invitation = CrateOwnerInvitation::find_by_id(user_id, crate_invite.crate_id, &conn)?;
+    let invitation = CrateOwnerInvitation::find_by_id(user_id, crate_invite.crate_id, conn)?;
     if crate_invite.accepted {
-        invitation.accept(&conn, config)?;
+        invitation.accept(conn, config)?;
     } else {
-        invitation.decline(&conn)?;
+        invitation.decline(conn)?;
     }
 
     #[derive(Serialize)]

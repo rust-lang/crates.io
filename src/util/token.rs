@@ -151,7 +151,7 @@ mod tests {
         );
 
         let parsed =
-            SecureToken::parse(KIND, &token.plaintext()).expect("failed to parse back the token");
+            SecureToken::parse(KIND, token.plaintext()).expect("failed to parse back the token");
         assert_eq!(parsed.sha256, token.sha256);
     }
 

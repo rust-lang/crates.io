@@ -13,7 +13,7 @@ fn version_and_crate(
     semver: &str,
 ) -> AppResult<(Version, Crate)> {
     let krate: Crate = Crate::by_name(crate_name).first(conn)?;
-    let version = krate.find_version(&conn, semver)?;
+    let version = krate.find_version(conn, semver)?;
 
     Ok((version, krate))
 }

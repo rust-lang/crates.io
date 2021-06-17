@@ -127,7 +127,7 @@ impl<'a> UserAuthenticationExt for dyn RequestExt + 'a {
             };
             if still_locked {
                 return Err(account_locked(
-                    &reason,
+                    reason,
                     authenticated_user.user.account_lock_until,
                 ));
             }

@@ -78,7 +78,7 @@ impl DownloadsCounter {
         let mut stats = PersistStats::default();
         for shard in self.inner.shards() {
             let shard = std::mem::take(&mut *shard.write());
-            stats = stats.merge(self.persist_shard(&conn, shard)?);
+            stats = stats.merge(self.persist_shard(conn, shard)?);
         }
 
         Ok(stats)
@@ -92,7 +92,7 @@ impl DownloadsCounter {
         let idx = self.shard_idx.fetch_add(1, Ordering::SeqCst) % shards.len();
         let shard = std::mem::take(&mut *shards[idx].write());
 
-        let mut stats = self.persist_shard(&conn, shard)?;
+        let mut stats = self.persist_shard(conn, shard)?;
         stats.shard = Some(idx);
         Ok(stats)
     }

@@ -1,6 +1,6 @@
 use anyhow::Error;
 
-static CATEGORIES_TOML: &'static str = include_str!("../boot/categories.toml");
+static CATEGORIES_TOML: &str = include_str!("../boot/categories.toml");
 diesel_migrations::embed_migrations!("./migrations");
 
 #[derive(clap::Clap, Debug, Copy, Clone)]
