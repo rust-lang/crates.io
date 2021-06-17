@@ -1,5 +1,4 @@
 #![warn(clippy::all, rust_2018_idioms)]
-#![allow(unknown_lints)]
 
 use cargo_registry::{metrics::LogEncoder, util::errors::AppResult, App, Env};
 use std::{borrow::Cow, fs::File, process::Command, sync::Arc, time::Duration};
