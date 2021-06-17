@@ -647,8 +647,8 @@ fn test_update_email_notifications() {
 
     let my_crates = app.db(|conn| {
         vec![
-            CrateBuilder::new("test_package", user.as_model().id).expect_build(&conn),
-            CrateBuilder::new("another_package", user.as_model().id).expect_build(&conn),
+            CrateBuilder::new("test_package", user.as_model().id).expect_build(conn),
+            CrateBuilder::new("another_package", user.as_model().id).expect_build(conn),
         ]
     });
 
@@ -733,9 +733,9 @@ fn test_update_email_notifications_not_owned() {
 
     let not_my_crate = app.db(|conn| {
         let u = new_user("arbitrary_username")
-            .create_or_update(None, &app.as_inner().emails, &conn)
+            .create_or_update(None, &app.as_inner().emails, conn)
             .unwrap();
-        CrateBuilder::new("test_package", u.id).expect_build(&conn)
+        CrateBuilder::new("test_package", u.id).expect_build(conn)
     });
 
     user.update_email_notifications(vec![EmailNotificationsUpdate {

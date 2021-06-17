@@ -141,7 +141,7 @@ impl App {
                     .connection_customizer(Box::new(replica_db_connection_config))
                     .thread_pool(thread_pool);
 
-                Some(DieselPool::new(&url, replica_db_config).unwrap())
+                Some(DieselPool::new(url, replica_db_config).unwrap())
             }
         } else {
             None

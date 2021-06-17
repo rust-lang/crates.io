@@ -103,12 +103,7 @@ pub fn authorize(req: &mut dyn RequestExt) -> EndpointResult {
 
     // Fetch the user info from GitHub using the access token we just got and create a user record
     let ghuser = req.app().github.current_user(token)?;
-    let user = save_user_to_database(
-        &ghuser,
-        &token.secret(),
-        &req.app().emails,
-        &*req.db_conn()?,
-    )?;
+    let user = save_user_to_database(&ghuser, token.secret(), &req.app().emails, &*req.db_conn()?)?;
 
     // Log in by setting a cookie and the middleware authentication
     req.session_mut()

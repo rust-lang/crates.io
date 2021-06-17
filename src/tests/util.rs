@@ -70,7 +70,7 @@ pub fn encode_session_header(session_key: &str, user_id: i32) -> String {
     jar.signed_mut(&cookie_key).add(cookie);
 
     // read the raw cookie from the cookie jar
-    jar.get(&cookie_name).unwrap().to_string()
+    jar.get(cookie_name).unwrap().to_string()
 }
 
 /// A collection of helper methods for the 3 authentication types
@@ -312,7 +312,7 @@ impl MockTokenUser {
     {
         let url = format!("/api/v1/crates/{}/owners", krate_name);
         let body = json!({ "owners": owners }).to_string();
-        method(&self, &url, body.as_bytes())
+        method(self, &url, body.as_bytes())
     }
 
     /// Add a user as an owner for a crate.

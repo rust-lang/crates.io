@@ -13,7 +13,7 @@ impl FreshSchema {
     pub(crate) fn new(database_url: &str) -> Self {
         let schema_name = generate_schema_name();
 
-        let conn = PgConnection::establish(&database_url).expect("can't connect to the test db");
+        let conn = PgConnection::establish(database_url).expect("can't connect to the test db");
         conn.batch_execute(&format!(
             "
                 DROP SCHEMA IF EXISTS {schema_name} CASCADE;

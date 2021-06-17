@@ -139,7 +139,7 @@ impl TestApp {
         let blob = tree
             .get_path(path)
             .unwrap()
-            .to_object(&index)
+            .to_object(index)
             .unwrap()
             .peel_to_blob()
             .unwrap();

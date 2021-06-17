@@ -8,7 +8,7 @@ use swirl::PerformError;
 
 #[swirl::background_job]
 pub fn update_downloads(conn: &PgConnection) -> Result<(), PerformError> {
-    update(&conn)?;
+    update(conn)?;
     Ok(())
 }
 
