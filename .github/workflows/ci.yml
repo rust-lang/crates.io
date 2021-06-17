@@ -102,8 +102,9 @@ jobs:
       - name: Install Rust
         run: |
           rustup set profile minimal
-          rustup update stable
-          rustup default stable
+          # Pin to older version until a clippy regression is fixed
+          rustup update 1.52.1
+          rustup default 1.52.1
 
       - run: rustup component add rustfmt
       - run: rustup component add clippy
