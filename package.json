@@ -99,7 +99,7 @@
     "ember-promise-helpers": "1.0.9",
     "ember-qunit": "5.1.4",
     "ember-resolver": "8.0.2",
-    "ember-router-scroll": "4.0.3",
+    "ember-router-scroll": "4.1.1",
     "ember-set-body-class": "1.0.2",
     "ember-source": "3.27.5",
     "ember-svg-jar": "2.3.3",
