@@ -36,7 +36,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::fmt::init();
 
     let config = cargo_registry::config::Server::default();
-    let env = config.env;
+    let env = config.env();
     let client = Client::new();
     let app = Arc::new(App::new(config, Some(client)));
 

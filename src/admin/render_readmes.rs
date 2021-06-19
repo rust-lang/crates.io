@@ -124,7 +124,7 @@ pub fn run(opts: Opts) {
                 let mut extra_headers = header::HeaderMap::new();
                 extra_headers.insert(header::CACHE_CONTROL, CACHE_CONTROL_README.parse().unwrap());
                 config
-                    .uploader
+                    .uploader()
                     .upload(
                         &client,
                         &readme_path,
@@ -158,10 +158,10 @@ fn get_readme(
     krate_name: &str,
 ) -> Option<String> {
     let location = config
-        .uploader
+        .uploader()
         .crate_location(krate_name, &version.num.to_string());
 
-    let location = match config.uploader {
+    let location = match config.uploader() {
         Uploader::S3 { .. } => location,
         Uploader::Local => format!("http://localhost:8888/{}", location),
     };

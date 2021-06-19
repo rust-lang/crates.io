@@ -40,7 +40,7 @@ use crate::{App, Env};
 
 pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBuilder {
     let mut m = MiddlewareBuilder::new(endpoints);
-    let env = app.config.env;
+    let env = app.config.env();
     let blocked_traffic = app.config.blocked_traffic.clone();
 
     if env != Env::Test {

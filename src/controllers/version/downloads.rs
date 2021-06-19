@@ -75,7 +75,7 @@ pub fn download(req: &mut dyn RequestExt) -> EndpointResult {
     let redirect_url = req
         .app()
         .config
-        .uploader
+        .uploader()
         .crate_location(&crate_name, &*version);
 
     if let Some((key, value)) = log_metadata {

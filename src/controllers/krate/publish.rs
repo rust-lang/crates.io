@@ -199,7 +199,7 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
 
         let cksum = app
             .config
-            .uploader
+            .uploader()
             .upload_crate(req, &krate, maximums, vers)?;
 
         let hex_cksum = cksum.encode_hex::<String>();

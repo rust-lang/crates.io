@@ -6,7 +6,7 @@ use cargo_registry::{
     background_jobs::Environment,
     db::DieselPool,
     git::{Credentials, RepositoryConfig},
-    App, Emails, Env, Replica, Uploader,
+    App, Emails,
 };
 use std::{rc::Rc, sync::Arc, time::Duration};
 
@@ -216,7 +216,7 @@ impl TestAppBuilder {
             let index = WorkerRepository::open(&repository_config).expect("Could not clone index");
             let environment = Environment::new(
                 index,
-                app.config.uploader.clone(),
+                app.config.uploader().clone(),
                 app.http_client().clone(),
             );
 
@@ -314,30 +314,15 @@ pub fn init_logger() {
 }
 
 fn simple_config() -> config::Server {
-    let uploader = Uploader::S3 {
-        bucket: s3::Bucket::new(
-            String::from("alexcrichton-test"),
-            None,
-            dotenv::var("S3_ACCESS_KEY").unwrap_or_default(),
-            dotenv::var("S3_SECRET_KEY").unwrap_or_default(),
-            // When testing we route all API traffic over HTTP so we can
-            // sniff/record it, but everywhere else we use https
-            "http",
-        ),
-        cdn: None,
-    };
-
     config::Server {
+        base: config::Base::test(),
         db: config::DatabasePools::test_from_environment(),
-        uploader,
         session_key: "test this has to be over 32 bytes long".to_string(),
         gh_client_id: dotenv::var("GH_CLIENT_ID").unwrap_or_default(),
         gh_client_secret: dotenv::var("GH_CLIENT_SECRET").unwrap_or_default(),
         gh_base_url: "http://api.github.com".to_string(),
-        env: Env::Test,
         max_upload_size: 3000,
         max_unpack_size: 2000,
-        mirror: Replica::Primary,
         // When testing we route all API traffic over HTTP so we can
         // sniff/record it, but everywhere else we use https
         api_protocol: String::from("http"),

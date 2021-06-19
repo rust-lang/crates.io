@@ -24,15 +24,9 @@ use std::time::Duration;
 fn main() {
     println!("Booting runner");
 
-    // FIXME: Break off uploader config
-    // let db_config = cargo_registry::config::Databases::from_environment();
-    // let uploader = ...;
-    let full_app = config::Server::default();
-    let config::Server {
-        db: db_config,
-        uploader,
-        ..
-    } = full_app;
+    let db_config = config::DatabasePools::full_from_environment();
+    let base_config = config::Base::from_environment();
+    let uploader = base_config.uploader();
 
     if db_config.are_all_read_only() {
         loop {
