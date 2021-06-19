@@ -6246,14 +6246,15 @@ elliptic@^6.5.3:
     minimalistic-assert "^1.0.1"
     minimalistic-crypto-utils "^1.0.1"
 
-ember-a11y-testing@4.0.8:
-  version "4.0.8"
-  resolved "https://registry.yarnpkg.com/ember-a11y-testing/-/ember-a11y-testing-4.0.8.tgz#334c110b14e2c2db62596479772bc4b4f9002fdb"
-  integrity sha512-dh5C1JJKAocYkKY9Kq6TwZfhJ/f73g9F5tDodZk2anGtRXzbuIOqrdVg9hn6DZ3qEKEb6moe2JN6RVqiLYj3cg==
+ember-a11y-testing@4.1.0:
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/ember-a11y-testing/-/ember-a11y-testing-4.1.0.tgz#37c4f5f66c09b3f909963c8b20bfe64a37f27db1"
+  integrity sha512-C2bpsmFEt9jQZFVqAQrwWgcGKizQcyefQ3Ax5JJmVCjIN8kSbZg+70MJbclvYsVAq2Tl6n7eHHvLw4RrQLPJKw==
   dependencies:
     "@ember/test-waiters" "^2.4.3"
     axe-core "^4.1.4"
     body-parser "^1.19.0"
+    broccoli-persistent-filter "^3.1.2"
     date-and-time "^1.0.0"
     ember-auto-import "^1.11.2"
     ember-cli-babel "^7.26.3"
