@@ -1,4 +1,5 @@
 //! Base configuration options
+//!
 //! - `HEROKU`: Is this instance of cargo_registry currently running on Heroku.
 //! - `MIRROR`: (deprecated) Is this instance of cargo_registry a mirror of crates.io.
 //! - `S3_BUCKET`: The S3 bucket used to store crate files. If not present during development,
@@ -23,27 +24,18 @@ impl Base {
             Replica::Primary
         };
         let heroku = dotenv::var("HEROKU").is_ok();
-        let cargo_env = if heroku {
+        let env = if heroku {
             Env::Production
         } else {
             Env::Development
         };
 
-        let uploader = match (cargo_env, mirror) {
+        let uploader = match (env, mirror) {
             (Env::Production, Replica::Primary) => {
                 // `env` panics if these vars are not set, and in production for a primary instance,
                 // that's what we want since we don't want to be able to start the server if the
                 // server doesn't know where to upload crates.
-                Uploader::S3 {
-                    bucket: s3::Bucket::new(
-                        env("S3_BUCKET"),
-                        dotenv::var("S3_REGION").ok(),
-                        env("S3_ACCESS_KEY"),
-                        env("S3_SECRET_KEY"),
-                        "https",
-                    ),
-                    cdn: dotenv::var("S3_CDN").ok(),
-                }
+                Self::s3_panic_if_missing_keys()
             }
             (Env::Production, Replica::ReadOnlyMirror) => {
                 // Read-only mirrors don't need access key or secret key since by definition,
@@ -54,16 +46,7 @@ impl Base {
                 //
                 // Read-only mirrors definitely need bucket though, so that they know where
                 // to serve crate files from.
-                Uploader::S3 {
-                    bucket: s3::Bucket::new(
-                        env("S3_BUCKET"),
-                        dotenv::var("S3_REGION").ok(),
-                        dotenv::var("S3_ACCESS_KEY").unwrap_or_default(),
-                        dotenv::var("S3_SECRET_KEY").unwrap_or_default(),
-                        "https",
-                    ),
-                    cdn: dotenv::var("S3_CDN").ok(),
-                }
+                Self::s3_maybe_read_only()
             }
             // In Development mode, either running as a primary instance or a read-only mirror
             _ => {
@@ -73,16 +56,7 @@ impl Base {
                     // and read from S3 like production does. All values except for bucket are
                     // optional, like production read-only mirrors.
                     println!("Using S3 uploader");
-                    Uploader::S3 {
-                        bucket: s3::Bucket::new(
-                            env("S3_BUCKET"),
-                            dotenv::var("S3_REGION").ok(),
-                            dotenv::var("S3_ACCESS_KEY").unwrap_or_default(),
-                            dotenv::var("S3_SECRET_KEY").unwrap_or_default(),
-                            "https",
-                        ),
-                        cdn: dotenv::var("S3_CDN").ok(),
-                    }
+                    Self::s3_maybe_read_only()
                 } else {
                     // If we don't set the `S3_BUCKET` variable, we'll use a development-only
                     // uploader that makes it possible to run and publish to a locally-running
@@ -95,10 +69,7 @@ impl Base {
             }
         };
 
-        Self {
-            env: cargo_env,
-            uploader,
-        }
+        Self { env, uploader }
     }
 
     pub fn test() -> Self {
@@ -122,5 +93,31 @@ impl Base {
 
     pub fn uploader(&self) -> &Uploader {
         &self.uploader
+    }
+
+    fn s3_panic_if_missing_keys() -> Uploader {
+        Uploader::S3 {
+            bucket: s3::Bucket::new(
+                env("S3_BUCKET"),
+                dotenv::var("S3_REGION").ok(),
+                env("S3_ACCESS_KEY"),
+                env("S3_SECRET_KEY"),
+                "https",
+            ),
+            cdn: dotenv::var("S3_CDN").ok(),
+        }
+    }
+
+    fn s3_maybe_read_only() -> Uploader {
+        Uploader::S3 {
+            bucket: s3::Bucket::new(
+                env("S3_BUCKET"),
+                dotenv::var("S3_REGION").ok(),
+                dotenv::var("S3_ACCESS_KEY").unwrap_or_default(),
+                dotenv::var("S3_SECRET_KEY").unwrap_or_default(),
+                "https",
+            ),
+            cdn: dotenv::var("S3_CDN").ok(),
+        }
     }
 }

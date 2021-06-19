@@ -16,7 +16,6 @@ pub struct Server {
     pub gh_base_url: String,
     pub max_upload_size: u64,
     pub max_unpack_size: u64,
-    pub api_protocol: String,
     pub publish_rate_limit: PublishRateLimit,
     pub blocked_traffic: Vec<(String, Vec<String>)>,
     pub max_allowed_page_offset: u32,
@@ -36,7 +35,6 @@ impl Default for Server {
     /// Sets the following default values:
     ///
     /// - `Config::max_upload_size`: 10MiB
-    /// - `Config::api_protocol`: `https`
     /// - `Config::ownership_invitations_expiration_days`: 30
     ///
     /// Pulls values from the following environment variables:
@@ -62,8 +60,6 @@ impl Default for Server {
     ///
     /// This function panics if the Server configuration is invalid.
     fn default() -> Self {
-        let api_protocol = String::from("https");
-
         let allowed_origins = env("WEB_ALLOWED_ORIGINS")
             .split(',')
             .map(ToString::to_string)
@@ -83,7 +79,6 @@ impl Default for Server {
             gh_base_url: "https://api.github.com".to_string(),
             max_upload_size: 10 * 1024 * 1024, // 10 MB default file upload size limit
             max_unpack_size: 512 * 1024 * 1024, // 512 MB max when decompressed
-            api_protocol,
             publish_rate_limit: Default::default(),
             blocked_traffic: blocked_traffic(),
             max_allowed_page_offset: env_optional("WEB_MAX_ALLOWED_PAGE_OFFSET").unwrap_or(200),

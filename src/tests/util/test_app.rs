@@ -323,9 +323,6 @@ fn simple_config() -> config::Server {
         gh_base_url: "http://api.github.com".to_string(),
         max_upload_size: 3000,
         max_unpack_size: 2000,
-        // When testing we route all API traffic over HTTP so we can
-        // sniff/record it, but everywhere else we use https
-        api_protocol: String::from("http"),
         publish_rate_limit: Default::default(),
         blocked_traffic: Default::default(),
         max_allowed_page_offset: 200,
