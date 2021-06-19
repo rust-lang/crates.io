@@ -39,7 +39,7 @@ pub struct Opts {
 }
 
 pub fn run(opts: Opts) {
-    let config = Arc::new(config::Server::default());
+    let base_config = Arc::new(config::Base::from_environment());
     let conn = db::connect_now().unwrap();
 
     let start_time = Utc::now();
@@ -103,7 +103,6 @@ pub fn run(opts: Opts) {
 
         let mut tasks = Vec::with_capacity(page_size as usize);
         for (version, krate_name) in versions {
-            let config = config.clone();
             Version::record_readme_rendering(version.id, &conn).unwrap_or_else(|_| {
                 panic!(
                     "[{}-{}] Couldn't record rendering time",
@@ -111,9 +110,10 @@ pub fn run(opts: Opts) {
                 )
             });
             let client = client.clone();
+            let base_config = base_config.clone();
             let handle = thread::spawn(move || {
                 println!("[{}-{}] Rendering README...", krate_name, version.num);
-                let readme = get_readme(&config, &client, &version, &krate_name);
+                let readme = get_readme(base_config.uploader(), &client, &version, &krate_name);
                 if readme.is_none() {
                     return;
                 }
@@ -123,7 +123,7 @@ pub fn run(opts: Opts) {
                 let readme_path = format!("readmes/{0}/{0}-{1}.html", krate_name, version.num);
                 let mut extra_headers = header::HeaderMap::new();
                 extra_headers.insert(header::CACHE_CONTROL, CACHE_CONTROL_README.parse().unwrap());
-                config
+                base_config
                     .uploader()
                     .upload(
                         &client,
@@ -152,16 +152,14 @@ pub fn run(opts: Opts) {
 
 /// Renders the readme of an uploaded crate version.
 fn get_readme(
-    config: &config::Server,
+    uploader: &Uploader,
     client: &Client,
     version: &Version,
     krate_name: &str,
 ) -> Option<String> {
-    let location = config
-        .uploader()
-        .crate_location(krate_name, &version.num.to_string());
+    let location = uploader.crate_location(krate_name, &version.num.to_string());
 
-    let location = match config.uploader() {
+    let location = match uploader {
         Uploader::S3 { .. } => location,
         Uploader::Local => format!("http://localhost:8888/{}", location),
     };
