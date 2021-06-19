@@ -259,7 +259,7 @@ impl Crate {
             && name
                 .chars()
                 .next()
-                .map(char::is_alphabetic)
+                .map(|n| n.is_alphabetic() || n == '_')
                 .unwrap_or(false)
     }
 
@@ -457,6 +457,8 @@ mod tests {
         assert!(Crate::valid_name("foo_underscore"));
         assert!(Crate::valid_name("foo-dash"));
         assert!(!Crate::valid_name("foo+plus"));
+        assert!(Crate::valid_name("_foo"));
+        assert!(!Crate::valid_name("-foo"));
     }
 
     #[test]
