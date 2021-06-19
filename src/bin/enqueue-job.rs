@@ -1,4 +1,4 @@
-#![deny(clippy::all)]
+#![warn(clippy::all, rust_2018_idioms)]
 
 use anyhow::{anyhow, Result};
 use cargo_registry::{db, env, tasks};

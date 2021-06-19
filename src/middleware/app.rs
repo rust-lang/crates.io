@@ -4,8 +4,6 @@ use crate::App;
 use std::sync::Arc;
 
 /// Middleware that injects the `App` instance into the `Request` extensions
-// Can't derive Debug because `App` can't.
-#[allow(missing_debug_implementations)]
 pub struct AppMiddleware {
     app: Arc<App>,
 }

@@ -5,8 +5,6 @@ use super::prelude::*;
 use crate::util::RequestProxy;
 use conduit::Method;
 
-// Can't derive debug because of Handler.
-#[allow(missing_debug_implementations)]
 #[derive(Default)]
 pub struct Head {
     handler: Option<Box<dyn Handler>>,

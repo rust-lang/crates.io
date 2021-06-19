@@ -6,8 +6,6 @@ use conduit::{Method, RequestExt};
 
 type RequestMutRef<'a> = &'a mut (dyn RequestExt + 'a);
 
-// Can't derive Debug because of Request.
-#[allow(missing_debug_implementations)]
 pub struct RequestProxy<'a> {
     other: RequestMutRef<'a>,
     method: conduit::Method,

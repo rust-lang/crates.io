@@ -1,5 +1,3 @@
-#![allow(missing_debug_implementations)]
-
 use std::collections::HashMap;
 use std::fs::{self, OpenOptions};
 use std::path::{Path, PathBuf};
