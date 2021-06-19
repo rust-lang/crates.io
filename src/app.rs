@@ -28,9 +28,6 @@ pub struct App {
     /// The GitHub OAuth2 configuration
     pub github_oauth: BasicClient,
 
-    /// A unique key used with conduit_cookie to generate cookies
-    pub session_key: String,
-
     /// The server configuration
     pub config: config::Server,
 
@@ -149,7 +146,6 @@ impl App {
             read_only_replica_database: replica_database,
             github,
             github_oauth,
-            session_key: config.session_key.clone(),
             config,
             downloads_counter: DownloadsCounter::new(),
             emails: Emails::from_environment(),
@@ -173,5 +169,10 @@ impl App {
         self.http_client
             .as_ref()
             .expect("No HTTP client is configured.  In tests, use `TestApp::with_proxy()`.")
+    }
+
+    /// A unique key used with conduit_cookie to generate signed/encrypted cookies
+    pub fn session_key(&self) -> &str {
+        &self.config.session_key
     }
 }
