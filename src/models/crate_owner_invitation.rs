@@ -1,7 +1,7 @@
 use chrono::{NaiveDateTime, Utc};
 use diesel::prelude::*;
 
-use crate::config::Config;
+use crate::config;
 use crate::models::{CrateOwner, OwnerKind};
 use crate::schema::{crate_owner_invitations, crate_owners, crates};
 use crate::util::errors::{AppResult, OwnershipInvitationExpired};
@@ -30,7 +30,7 @@ impl CrateOwnerInvitation {
         invited_by_user_id: i32,
         crate_id: i32,
         conn: &PgConnection,
-        config: &Config,
+        config: &config::Server,
     ) -> AppResult<NewCrateOwnerInvitationOutcome> {
         #[derive(Insertable, Clone, Copy, Debug)]
         #[table_name = "crate_owner_invitations"]
@@ -93,7 +93,7 @@ impl CrateOwnerInvitation {
             .first::<Self>(&*conn)?)
     }
 
-    pub fn accept(self, conn: &PgConnection, config: &Config) -> AppResult<()> {
+    pub fn accept(self, conn: &PgConnection, config: &config::Server) -> AppResult<()> {
         if self.is_expired(config) {
             let crate_name = crates::table
                 .find(self.crate_id)
@@ -131,11 +131,11 @@ impl CrateOwnerInvitation {
         Ok(())
     }
 
-    pub fn is_expired(&self, config: &Config) -> bool {
+    pub fn is_expired(&self, config: &config::Server) -> bool {
         self.expires_at(config) <= Utc::now().naive_utc()
     }
 
-    pub fn expires_at(&self, config: &Config) -> NaiveDateTime {
+    pub fn expires_at(&self, config: &config::Server) -> NaiveDateTime {
         let days = chrono::Duration::days(config.ownership_invitations_expiration_days as i64);
         self.created_at + days
     }

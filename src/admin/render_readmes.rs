@@ -1,10 +1,9 @@
 use crate::{
-    db,
+    config, db,
     models::Version,
     render::readme_to_html,
     schema::{crates, readme_renderings, versions},
     uploaders::Uploader,
-    Config,
 };
 use std::{io::Read, path::Path, sync::Arc, thread};
 
@@ -40,7 +39,7 @@ pub struct Opts {
 }
 
 pub fn run(opts: Opts) {
-    let config = Arc::new(Config::default());
+    let config = Arc::new(config::Server::default());
     let conn = db::connect_now().unwrap();
 
     let start_time = Utc::now();
@@ -153,7 +152,7 @@ pub fn run(opts: Opts) {
 
 /// Renders the readme of an uploaded crate version.
 fn get_readme(
-    config: &Config,
+    config: &config::Server,
     client: &Client,
     version: &Version,
     krate_name: &str,

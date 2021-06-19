@@ -1,7 +1,7 @@
 //! Application-wide components in a struct accessible from each request
 
 use crate::db::{ConnectionConfig, DieselPool};
-use crate::{Config, Env};
+use crate::{config, Env};
 use std::{sync::Arc, time::Duration};
 
 use crate::downloads_counter::DownloadsCounter;
@@ -32,7 +32,7 @@ pub struct App {
     pub session_key: String,
 
     /// The server configuration
-    pub config: Config,
+    pub config: config::Server,
 
     /// Count downloads and periodically persist them in the database
     pub downloads_counter: DownloadsCounter,
@@ -62,7 +62,7 @@ impl App {
     /// - GitHub OAuth
     /// - Database connection pools
     /// - A `git2::Repository` instance from the index repo checkout (that server.rs ensures exists)
-    pub fn new(config: Config, http_client: Option<Client>) -> App {
+    pub fn new(config: config::Server, http_client: Option<Client>) -> App {
         use oauth2::{AuthUrl, ClientId, ClientSecret, TokenUrl};
 
         let github = GitHubClient::new(http_client.clone(), config.gh_base_url.clone());
@@ -105,11 +105,11 @@ impl App {
         let thread_pool = Arc::new(ScheduledThreadPool::new(db_helper_threads));
 
         let primary_database = if config.use_test_database_pool {
-            DieselPool::new_test(&config.db_primary_config.url)
+            DieselPool::new_test(&config.db.primary.url)
         } else {
             let primary_db_connection_config = ConnectionConfig {
                 statement_timeout: db_connection_timeout,
-                read_only: config.db_primary_config.read_only_mode,
+                read_only: config.db.primary.read_only_mode,
             };
 
             let primary_db_config = r2d2::Pool::builder()
@@ -119,11 +119,10 @@ impl App {
                 .connection_customizer(Box::new(primary_db_connection_config))
                 .thread_pool(thread_pool.clone());
 
-            DieselPool::new(&config.db_primary_config.url, primary_db_config).unwrap()
+            DieselPool::new(&config.db.primary.url, primary_db_config).unwrap()
         };
 
-        let replica_database = if let Some(url) = config.db_replica_config.as_ref().map(|c| &c.url)
-        {
+        let replica_database = if let Some(url) = config.db.replica.as_ref().map(|c| &c.url) {
             if config.use_test_database_pool {
                 Some(DieselPool::new_test(url))
             } else {

@@ -1,15 +1,17 @@
 use crate::publish_rate_limit::PublishRateLimit;
 use crate::{env, env_optional, uploaders::Uploader, Env, Replica};
 
-#[derive(Debug)]
-pub struct Config {
+mod database_pools;
+
+pub use self::database_pools::DatabasePools;
+
+pub struct Server {
+    pub db: DatabasePools,
     pub uploader: Uploader,
     pub session_key: String,
     pub gh_client_id: String,
     pub gh_client_secret: String,
     pub gh_base_url: String,
-    pub db_primary_config: DbPoolConfig,
-    pub db_replica_config: Option<DbPoolConfig>,
     pub env: Env,
     pub max_upload_size: u64,
     pub max_unpack_size: u64,
@@ -28,13 +30,7 @@ pub struct Config {
     pub instance_metrics_log_every_seconds: Option<u64>,
 }
 
-#[derive(Debug)]
-pub struct DbPoolConfig {
-    pub url: String,
-    pub read_only_mode: bool,
-}
-
-impl Default for Config {
+impl Default for Server {
     /// Returns a default value for the application's config
     ///
     /// Sets the following default values:
@@ -55,16 +51,11 @@ impl Default for Config {
     /// - `SESSION_KEY`: The key used to sign and encrypt session cookies.
     /// - `GH_CLIENT_ID`: The client ID of the associated GitHub application.
     /// - `GH_CLIENT_SECRET`: The client secret of the associated GitHub application.
-    /// - `DATABASE_URL`: The URL of the postgres database to use.
-    /// - `READ_ONLY_REPLICA_URL`: The URL of an optional postgres read-only replica database.
     /// - `BLOCKED_TRAFFIC`: A list of headers and environment variables to use for blocking
     ///   traffic. See the `block_traffic` module for more documentation.
     /// - `DOWNLOADS_PERSIST_INTERVAL_MS`: how frequent to persist download counts (in ms).
     /// - `METRICS_AUTHORIZATION_TOKEN`: authorization token needed to query metrics. If missing,
     ///   querying metrics will be completely disabled.
-    /// - `DB_OFFLINE`: If set to `leader` then use the read-only follower as if it was the leader.
-    ///   If set to `follower` then act as if `READ_ONLY_REPLICA_URL` was unset.
-    /// - `READ_ONLY_MODE`: If defined (even as empty) then force all connections to be read-only.
     /// - `WEB_MAX_ALLOWED_PAGE_OFFSET`: Page offsets larger than this value are rejected. Defaults
     ///   to 200.
     /// - `WEB_PAGE_OFFSET_UA_BLOCKLIST`: A comma seperated list of user-agent substrings that will
@@ -76,8 +67,8 @@ impl Default for Config {
     ///
     /// # Panics
     ///
-    /// This function panics if `DB_OFFLINE=leader` but `READ_ONLY_REPLICA_URL` is unset.
-    fn default() -> Config {
+    /// This function panics if the Server configuration is invalid.
+    fn default() -> Self {
         let api_protocol = String::from("https");
         let mirror = if dotenv::var("MIRROR").is_ok() {
             Replica::ReadOnlyMirror
@@ -89,43 +80,6 @@ impl Default for Config {
             Env::Production
         } else {
             Env::Development
-        };
-
-        let leader_url = env("DATABASE_URL");
-        let follower_url = dotenv::var("READ_ONLY_REPLICA_URL").ok();
-        let read_only_mode = dotenv::var("READ_ONLY_MODE").is_ok();
-        let (db_primary_config, db_replica_config) = match dotenv::var("DB_OFFLINE").as_deref() {
-            // The actual leader is down, use the follower in read-only mode as the primary and
-            // don't configure a replica.
-            Ok("leader") => (
-                DbPoolConfig {
-                    url: follower_url
-                        .expect("Must set `READ_ONLY_REPLICA_URL` when using `DB_OFFLINE=leader`."),
-                    read_only_mode: true,
-                },
-                None,
-            ),
-            // The follower is down, don't configure the replica.
-            Ok("follower") => (
-                DbPoolConfig {
-                    url: leader_url,
-                    read_only_mode,
-                },
-                None,
-            ),
-            _ => (
-                DbPoolConfig {
-                    url: leader_url,
-                    read_only_mode,
-                },
-                follower_url.map(|url| DbPoolConfig {
-                    url,
-                    // Always enable read-only mode for the follower. In staging, we attach the
-                    // same leader database to both environment variables and this ensures the
-                    // connection is opened read-only even when attached to a writeable database.
-                    read_only_mode: true,
-                }),
-            ),
         };
 
         let uploader = match (cargo_env, mirror) {
@@ -203,14 +157,13 @@ impl Default for Config {
             Some(s) if s.is_empty() => vec![],
             Some(s) => s.split(',').map(String::from).collect(),
         };
-        Config {
+        Server {
+            db: DatabasePools::full_from_environment(),
             uploader,
             session_key: env("SESSION_KEY"),
             gh_client_id: env("GH_CLIENT_ID"),
             gh_client_secret: env("GH_CLIENT_SECRET"),
             gh_base_url: "https://api.github.com".to_string(),
-            db_primary_config,
-            db_replica_config,
             env: cargo_env,
             max_upload_size: 10 * 1024 * 1024, // 10 MB default file upload size limit
             max_unpack_size: 512 * 1024 * 1024, // 512 MB max when decompressed
