@@ -3,6 +3,7 @@ use crate::{
     models::Version,
     render::readme_to_html,
     schema::{crates, readme_renderings, versions},
+    uploaders::Uploader,
     Config,
 };
 use std::{io::Read, path::Path, sync::Arc, thread};
@@ -15,6 +16,7 @@ use reqwest::{blocking::Client, header};
 use tar::{self, Archive};
 
 const CACHE_CONTROL_README: &str = "public,max-age=604800";
+const USER_AGENT: &str = "crates-admin";
 
 #[derive(Clap, Debug)]
 #[clap(
@@ -160,7 +162,14 @@ fn get_readme(
         .uploader
         .crate_location(krate_name, &version.num.to_string());
 
-    let response = match client.get(&location).send() {
+    let location = match config.uploader {
+        Uploader::S3 { .. } => location,
+        Uploader::Local => format!("http://localhost:8888/{}", location),
+    };
+
+    let mut extra_headers = header::HeaderMap::new();
+    extra_headers.insert(header::USER_AGENT, USER_AGENT.parse().unwrap());
+    let response = match client.get(&location).headers(extra_headers).send() {
         Ok(r) => r,
         Err(err) => {
             println!(
