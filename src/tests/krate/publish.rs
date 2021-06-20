@@ -171,6 +171,32 @@ fn new_with_renamed_dependency() {
 }
 
 #[test]
+fn new_with_underscore_renamed_dependency() {
+    let (app, _, user, token) = TestApp::full().with_token();
+
+    app.db(|conn| {
+        // Insert a crate directly into the database so that new-krate can depend on it
+        CrateBuilder::new("package-name", user.as_model().id).expect_build(conn);
+    });
+
+    let dependency = DependencyBuilder::new("package-name").rename("_my-name");
+
+    let crate_to_publish = PublishBuilder::new("new-krate")
+        .version("1.0.0")
+        .dependency(dependency);
+    token.enqueue_publish(crate_to_publish).good();
+    app.run_pending_background_jobs();
+
+    let crates = app.crates_from_index_head("ne/w-/new-krate");
+    assert_eq!(crates.len(), 1);
+    assert_eq!(crates[0].name, "new-krate");
+    assert_eq!(crates[0].vers, "1.0.0");
+    assert_eq!(crates[0].deps.len(), 1);
+    assert_eq!(crates[0].deps[0].name, "_my-name");
+    assert_eq!(crates[0].deps[0].package.as_ref().unwrap(), "package-name");
+}
+
+#[test]
 fn new_krate_with_dependency() {
     use super::dependencies::Deps;
 
@@ -199,6 +225,34 @@ fn new_krate_with_dependency() {
 
     assert_eq!(dependencies.len(), 1);
     assert_eq!(dependencies[0].crate_id, "foo-dep");
+    assert_eq!(dependencies[0].req, "1.0.0");
+}
+
+#[test]
+fn new_krate_with_underscore_name_dependency() {
+    use super::dependencies::Deps;
+
+    let (app, anon, user, token) = TestApp::full().with_token();
+
+    app.db(|conn| {
+        CrateBuilder::new("_foo-dep", user.as_model().id).expect_build(conn);
+    });
+
+    let dependency = DependencyBuilder::new("_foo-dep").version_req("1.0.0");
+
+    let crate_to_publish = PublishBuilder::new("new_dep")
+        .version("1.0.0")
+        .dependency(dependency);
+
+    token.enqueue_publish(crate_to_publish).good();
+
+    let dependencies = anon
+        .get::<Deps>("/api/v1/crates/new_dep/1.0.0/dependencies")
+        .good()
+        .dependencies;
+
+    assert_eq!(dependencies.len(), 1);
+    assert_eq!(dependencies[0].crate_id, "_foo-dep");
     assert_eq!(dependencies[0].req, "1.0.0");
 }
 
