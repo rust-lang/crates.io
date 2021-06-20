@@ -37,6 +37,8 @@ pub struct EncodableCrateUpload {
 
 #[derive(PartialEq, Eq, Hash, Serialize, Debug, Deref)]
 pub struct EncodableCrateName(pub String);
+#[derive(Serialize, Debug, Deref)]
+pub struct EncodableExplicitName(pub String);
 #[derive(Debug, Deref)]
 pub struct EncodableCrateVersion(pub semver::Version);
 #[derive(Debug, Deref)]
@@ -63,14 +65,14 @@ pub struct EncodableCrateDependency {
     pub version_req: EncodableCrateVersionReq,
     pub target: Option<String>,
     pub kind: Option<DependencyKind>,
-    pub explicit_name_in_toml: Option<EncodableCrateName>,
+    pub explicit_name_in_toml: Option<EncodableExplicitName>,
     pub registry: Option<String>,
 }
 
 impl<'de> Deserialize<'de> for EncodableCrateName {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<EncodableCrateName, D::Error> {
         let s = String::deserialize(d)?;
-        if !Crate::valid_name(&s) {
+        if !Crate::valid_name(&s, false) {
             let value = de::Unexpected::Str(&s);
             let expected = format!(
                 "a valid crate name to start with a letter, contain only letters, \
@@ -90,6 +92,23 @@ where
 {
     fn eq(&self, rhs: &T) -> bool {
         self.0 == *rhs
+    }
+}
+
+impl<'de> Deserialize<'de> for EncodableExplicitName {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<EncodableExplicitName, D::Error> {
+        let s = String::deserialize(d)?;
+        if !Crate::valid_name(&s, true) {
+            let value = de::Unexpected::Str(&s);
+            let expected = format!(
+                "a valid explicit name to start with a letter or underscore, contain only letters, \
+                 numbers, hyphens, or underscores and have at most {} characters",
+                MAX_NAME_LENGTH
+            );
+            Err(de::Error::invalid_value(value, &expected.as_ref()))
+        } else {
+            Ok(EncodableExplicitName(s))
+        }
     }
 }
 

@@ -229,34 +229,6 @@ fn new_krate_with_dependency() {
 }
 
 #[test]
-fn new_krate_with_underscore_name_dependency() {
-    use super::dependencies::Deps;
-
-    let (app, anon, user, token) = TestApp::full().with_token();
-
-    app.db(|conn| {
-        CrateBuilder::new("_foo-dep", user.as_model().id).expect_build(conn);
-    });
-
-    let dependency = DependencyBuilder::new("_foo-dep").version_req("1.0.0");
-
-    let crate_to_publish = PublishBuilder::new("new_dep")
-        .version("1.0.0")
-        .dependency(dependency);
-
-    token.enqueue_publish(crate_to_publish).good();
-
-    let dependencies = anon
-        .get::<Deps>("/api/v1/crates/new_dep/1.0.0/dependencies")
-        .good()
-        .dependencies;
-
-    assert_eq!(dependencies.len(), 1);
-    assert_eq!(dependencies[0].crate_id, "_foo-dep");
-    assert_eq!(dependencies[0].req, "1.0.0");
-}
-
-#[test]
 fn new_krate_with_broken_dependency_requirement() {
     let (app, _, user, token) = TestApp::full().with_token();
 
