@@ -6,8 +6,11 @@ import { task } from 'ember-concurrency';
 export default class CrateSettingsController extends Controller {
   @service notifications;
 
-  crate = null;
   username = '';
+
+  get crate() {
+    return this.model;
+  }
 
   @task(function* () {
     const username = this.username;
