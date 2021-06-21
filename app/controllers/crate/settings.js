@@ -8,15 +8,11 @@ export default class CrateSettingsController extends Controller {
 
   username = '';
 
-  get crate() {
-    return this.model;
-  }
-
   @task(function* () {
     const username = this.username;
 
     try {
-      yield this.crate.inviteOwner(username);
+      yield this.model.crate.inviteOwner(username);
       this.notifications.success(`An invite has been sent to ${username}`);
     } catch (error) {
       if (error.errors) {
@@ -30,14 +26,14 @@ export default class CrateSettingsController extends Controller {
 
   @task(function* (owner) {
     try {
-      yield this.crate.removeOwner(owner.get('login'));
+      yield this.model.crate.removeOwner(owner.get('login'));
 
       if (owner.kind === 'team') {
         this.notifications.success(`Team ${owner.get('display_name')} removed as crate owner`);
-        this.crate.owner_team.removeObject(owner);
+        this.model.crate.owner_team.removeObject(owner);
       } else {
         this.notifications.success(`User ${owner.get('login')} removed as crate owner`);
-        this.crate.owner_user.removeObject(owner);
+        this.model.crate.owner_user.removeObject(owner);
       }
     } catch (error) {
       let subject = owner.kind === 'team' ? `team ${owner.get('display_name')}` : `user ${owner.get('login')}`;

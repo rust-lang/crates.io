@@ -1,6 +1,6 @@
 {{page-title 'Manage Crate Settings'}}
 
-<CrateHeader @crate={{this.crate}} />
+<CrateHeader @crate={{@model.crate}} />
 
 <div local-class="me-email">
   <h2>Add Owner</h2>
@@ -17,7 +17,7 @@
 <h2>Owners</h2>
 
 <div local-class='list' data-test-owners>
-  {{#each this.crate.owner_team as |team|}}
+  {{#each @model.teams as |team|}}
     <div local-class='row' data-test-owner-team={{team.login}}>
       <LinkTo @route={{team.kind}} @model={{team.login}}>
         <UserAvatar @user={{team}} @size="medium-small" />
@@ -31,7 +31,7 @@
       <button type="button" local-class="remove-button" data-test-remove-owner-button {{on "click" (perform this.removeOwnerTask team)}}>Remove</button>
     </div>
   {{/each}}
-  {{#each this.crate.owner_user as |user|}}
+  {{#each @model.users as |user|}}
     <div local-class='row' data-test-owner-user={{user.login}}>
       <LinkTo @route={{user.kind}} @model={{user.login}}>
         <UserAvatar @user={{user}} @size="medium-small" />
