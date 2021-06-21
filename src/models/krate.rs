@@ -249,26 +249,31 @@ impl Crate {
             })
     }
 
-    pub fn valid_name(name: &str, is_explicit: bool) -> bool {
+    pub fn valid_name(name: &str) -> bool {
         let under_max_length = name.chars().take(MAX_NAME_LENGTH + 1).count() <= MAX_NAME_LENGTH;
-        Crate::valid_ident(name, is_explicit) && under_max_length
+        Crate::valid_ident(name) && under_max_length
     }
 
-    fn valid_ident(name: &str, is_explicit: bool) -> bool {
+    fn valid_ident(name: &str) -> bool {
         Self::valid_feature_prefix(name)
             && name
                 .chars()
                 .next()
-                .map(|n| {
-                    // If it is an explicit name in `Cargo.toml` (e.g. renaming),
-                    // then it can start with _,
-                    // but if it is a crate name it cannot start with _.
-                    if is_explicit {
-                        n.is_alphabetic() || n == '_'
-                    } else {
-                        n.is_alphabetic()
-                    }
-                })
+                .map(char::is_alphabetic)
+                .unwrap_or(false)
+    }
+
+    pub fn valid_dependency_name(name: &str) -> bool {
+        let under_max_length = name.chars().take(MAX_NAME_LENGTH + 1).count() <= MAX_NAME_LENGTH;
+        Crate::valid_dependency_ident(name) && under_max_length
+    }
+
+    fn valid_dependency_ident(name: &str) -> bool {
+        Self::valid_feature_prefix(name)
+            && name
+                .chars()
+                .next()
+                .map(|n| n.is_alphabetic() || n == '_')
                 .unwrap_or(false)
     }
 
@@ -459,30 +464,30 @@ mod tests {
 
     #[test]
     fn valid_name() {
-        assert!(Crate::valid_name("foo", false));
-        assert!(!Crate::valid_name("京", false));
-        assert!(!Crate::valid_name("", false));
-        assert!(!Crate::valid_name("💝", false));
-        assert!(Crate::valid_name("foo_underscore", false));
-        assert!(Crate::valid_name("foo-dash", false));
-        assert!(!Crate::valid_name("foo+plus", false));
+        assert!(Crate::valid_name("foo"));
+        assert!(!Crate::valid_name("京"));
+        assert!(!Crate::valid_name(""));
+        assert!(!Crate::valid_name("💝"));
+        assert!(Crate::valid_name("foo_underscore"));
+        assert!(Crate::valid_name("foo-dash"));
+        assert!(!Crate::valid_name("foo+plus"));
         // Starting with an underscore is an invalid crate name.
-        assert!(!Crate::valid_name("_foo", false));
-        assert!(!Crate::valid_name("-foo", false));
+        assert!(!Crate::valid_name("_foo"));
+        assert!(!Crate::valid_name("-foo"));
     }
 
     #[test]
-    fn valid_explicit_name() {
-        assert!(Crate::valid_name("foo", true));
-        assert!(!Crate::valid_name("京", true));
-        assert!(!Crate::valid_name("", true));
-        assert!(!Crate::valid_name("💝", true));
-        assert!(Crate::valid_name("foo_underscore", true));
-        assert!(Crate::valid_name("foo-dash", true));
-        assert!(!Crate::valid_name("foo+plus", true));
-        // Starting with an underscore is a valid explicit name.
-        assert!(Crate::valid_name("_foo", true));
-        assert!(!Crate::valid_name("-foo", true));
+    fn valid_dependency_name() {
+        assert!(Crate::valid_dependency_name("foo"));
+        assert!(!Crate::valid_dependency_name("京"));
+        assert!(!Crate::valid_dependency_name(""));
+        assert!(!Crate::valid_dependency_name("💝"));
+        assert!(Crate::valid_dependency_name("foo_underscore"));
+        assert!(Crate::valid_dependency_name("foo-dash"));
+        assert!(!Crate::valid_dependency_name("foo+plus"));
+        // Starting with an underscore is a valid dependency name.
+        assert!(Crate::valid_dependency_name("_foo"));
+        assert!(!Crate::valid_dependency_name("-foo"));
     }
 
     #[test]
