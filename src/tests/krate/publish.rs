@@ -171,6 +171,32 @@ fn new_with_renamed_dependency() {
 }
 
 #[test]
+fn new_with_underscore_renamed_dependency() {
+    let (app, _, user, token) = TestApp::full().with_token();
+
+    app.db(|conn| {
+        // Insert a crate directly into the database so that new-krate can depend on it
+        CrateBuilder::new("package-name", user.as_model().id).expect_build(conn);
+    });
+
+    let dependency = DependencyBuilder::new("package-name").rename("_my-name");
+
+    let crate_to_publish = PublishBuilder::new("new-krate")
+        .version("1.0.0")
+        .dependency(dependency);
+    token.enqueue_publish(crate_to_publish).good();
+    app.run_pending_background_jobs();
+
+    let crates = app.crates_from_index_head("ne/w-/new-krate");
+    assert_eq!(crates.len(), 1);
+    assert_eq!(crates[0].name, "new-krate");
+    assert_eq!(crates[0].vers, "1.0.0");
+    assert_eq!(crates[0].deps.len(), 1);
+    assert_eq!(crates[0].deps[0].name, "_my-name");
+    assert_eq!(crates[0].deps[0].package.as_ref().unwrap(), "package-name");
+}
+
+#[test]
 fn new_krate_with_dependency() {
     use super::dependencies::Deps;
 

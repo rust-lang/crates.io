@@ -263,6 +263,20 @@ impl Crate {
                 .unwrap_or(false)
     }
 
+    pub fn valid_dependency_name(name: &str) -> bool {
+        let under_max_length = name.chars().take(MAX_NAME_LENGTH + 1).count() <= MAX_NAME_LENGTH;
+        Crate::valid_dependency_ident(name) && under_max_length
+    }
+
+    fn valid_dependency_ident(name: &str) -> bool {
+        Self::valid_feature_prefix(name)
+            && name
+                .chars()
+                .next()
+                .map(|n| n.is_alphabetic() || n == '_')
+                .unwrap_or(false)
+    }
+
     /// Validates the THIS parts of `features = ["THIS", "and/THIS"]`.
     pub fn valid_feature_name(name: &str) -> bool {
         !name.is_empty()
@@ -457,6 +471,23 @@ mod tests {
         assert!(Crate::valid_name("foo_underscore"));
         assert!(Crate::valid_name("foo-dash"));
         assert!(!Crate::valid_name("foo+plus"));
+        // Starting with an underscore is an invalid crate name.
+        assert!(!Crate::valid_name("_foo"));
+        assert!(!Crate::valid_name("-foo"));
+    }
+
+    #[test]
+    fn valid_dependency_name() {
+        assert!(Crate::valid_dependency_name("foo"));
+        assert!(!Crate::valid_dependency_name("京"));
+        assert!(!Crate::valid_dependency_name(""));
+        assert!(!Crate::valid_dependency_name("💝"));
+        assert!(Crate::valid_dependency_name("foo_underscore"));
+        assert!(Crate::valid_dependency_name("foo-dash"));
+        assert!(!Crate::valid_dependency_name("foo+plus"));
+        // Starting with an underscore is a valid dependency name.
+        assert!(Crate::valid_dependency_name("_foo"));
+        assert!(!Crate::valid_dependency_name("-foo"));
     }
 
     #[test]
