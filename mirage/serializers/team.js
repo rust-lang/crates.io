@@ -17,5 +17,6 @@ export default BaseSerializer.extend({
 
   _adjust(hash) {
     hash.id = Number(hash.id);
+    delete hash.org;
   },
 });
