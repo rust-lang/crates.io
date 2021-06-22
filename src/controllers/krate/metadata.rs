@@ -203,7 +203,7 @@ pub fn readme(req: &mut dyn RequestExt) -> EndpointResult {
     let redirect_url = req
         .app()
         .config
-        .uploader
+        .uploader()
         .readme_location(crate_name, version);
 
     if req.wants_json() {

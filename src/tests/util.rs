@@ -217,7 +217,7 @@ pub struct MockCookieUser {
 
 impl RequestHelper for MockCookieUser {
     fn request_builder(&self, method: Method, path: &str) -> MockRequest {
-        let session_key = &self.app.as_inner().session_key;
+        let session_key = &self.app.as_inner().session_key();
         let cookie = encode_session_header(session_key, self.user.id);
 
         let mut request = req(method, path);

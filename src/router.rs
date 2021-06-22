@@ -129,7 +129,7 @@ pub fn build_router(app: &App) -> RouteBuilder {
     // Only serve the local checkout of the git index in development mode.
     // In production, for crates.io, cargo gets the index from
     // https://github.com/rust-lang/crates.io-index directly.
-    if app.config.env == Env::Development {
+    if app.config.env() == Env::Development {
         let s = conduit_git_http_backend::Serve("./tmp/index-bare".into());
         let s = Arc::new(s);
         router.get("/git/index/*path", R(Arc::clone(&s)));

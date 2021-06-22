@@ -36,7 +36,7 @@ fn token_auth_cannot_find_token() {
 fn cookie_auth_cannot_find_user() {
     let (app, anon) = TestApp::init().empty();
 
-    let session_key = &app.as_inner().session_key;
+    let session_key = &app.as_inner().session_key();
     let cookie = encode_session_header(session_key, -1);
 
     let mut request = anon.request_builder(Method::GET, URL);

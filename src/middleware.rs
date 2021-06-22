@@ -40,7 +40,7 @@ use crate::{App, Env};
 
 pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBuilder {
     let mut m = MiddlewareBuilder::new(endpoints);
-    let env = app.config.env;
+    let env = app.config.env();
     let blocked_traffic = app.config.blocked_traffic.clone();
 
     if env != Env::Test {
@@ -64,7 +64,7 @@ pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBui
     m.add(Cookie::new());
     m.add(SessionMiddleware::new(
         "cargo_session",
-        cookie::Key::derive_from(app.session_key.as_bytes()),
+        cookie::Key::derive_from(app.session_key().as_bytes()),
         env == Env::Production,
     ));
 

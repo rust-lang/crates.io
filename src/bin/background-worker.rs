@@ -12,6 +12,7 @@
 
 #![warn(clippy::all, rust_2018_idioms)]
 
+use cargo_registry::config;
 use cargo_registry::git::{Repository, RepositoryConfig};
 use cargo_registry::{background_jobs::*, db};
 use diesel::r2d2;
@@ -23,9 +24,11 @@ use std::time::Duration;
 fn main() {
     println!("Booting runner");
 
-    let config = cargo_registry::Config::default();
+    let db_config = config::DatabasePools::full_from_environment();
+    let base_config = config::Base::from_environment();
+    let uploader = base_config.uploader();
 
-    if config.db_primary_config.read_only_mode {
+    if db_config.are_all_read_only() {
         loop {
             println!(
                 "Cannot run background jobs with a read-only pool. Please scale background_worker \
@@ -35,7 +38,7 @@ fn main() {
         }
     }
 
-    let db_url = db::connection_url(&config.db_primary_config.url);
+    let db_url = db::connection_url(&db_config.primary.url);
 
     let job_start_timeout = dotenv::var("BACKGROUND_JOB_TIMEOUT")
         .unwrap_or_else(|_| "30".into())
@@ -55,8 +58,7 @@ fn main() {
             .timeout(Duration::from_secs(45))
             .build()
             .expect("Couldn't build client");
-        let environment =
-            Environment::new_shared(repository.clone(), config.uploader.clone(), client);
+        let environment = Environment::new_shared(repository.clone(), uploader.clone(), client);
         let db_config = r2d2::Pool::builder().min_idle(Some(0));
         swirl::Runner::builder(environment)
             .connection_pool_builder(&db_url, db_config)

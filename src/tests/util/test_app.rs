@@ -1,11 +1,12 @@
 use super::{MockAnonymousUser, MockCookieUser, MockTokenUser};
+use crate::record;
 use crate::util::{chaosproxy::ChaosProxy, fresh_schema::FreshSchema};
-use crate::{env, record};
+use cargo_registry::config;
 use cargo_registry::{
     background_jobs::Environment,
     db::DieselPool,
     git::{Credentials, RepositoryConfig},
-    App, Config, DbPoolConfig, Emails, Env, Replica, Uploader,
+    App, Emails,
 };
 use std::{rc::Rc, sync::Arc, time::Duration};
 
@@ -181,7 +182,7 @@ impl TestApp {
 }
 
 pub struct TestAppBuilder {
-    config: Config,
+    config: config::Server,
     proxy: Option<String>,
     bomb: Option<record::Bomb>,
     index: Option<UpstreamRepository>,
@@ -196,9 +197,9 @@ impl TestAppBuilder {
         // Run each test inside a fresh database schema, deleted at the end of the test,
         // The schema will be cleared up once the app is dropped.
         let (db_chaosproxy, fresh_schema) = if !self.config.use_test_database_pool {
-            let fresh_schema = FreshSchema::new(&self.config.db_primary_config.url);
+            let fresh_schema = FreshSchema::new(&self.config.db.primary.url);
             let (proxy, url) = ChaosProxy::proxy_database_url(fresh_schema.database_url()).unwrap();
-            self.config.db_primary_config.url = url;
+            self.config.db.primary.url = url;
 
             (Some(proxy), Some(fresh_schema))
         } else {
@@ -215,7 +216,7 @@ impl TestAppBuilder {
             let index = WorkerRepository::open(&repository_config).expect("Could not clone index");
             let environment = Environment::new(
                 index,
-                app.config.uploader.clone(),
+                app.config.uploader().clone(),
                 app.http_client().clone(),
             );
 
@@ -271,7 +272,7 @@ impl TestAppBuilder {
         (app, anon, user, token)
     }
 
-    pub fn with_config(mut self, f: impl FnOnce(&mut Config)) -> Self {
+    pub fn with_config(mut self, f: impl FnOnce(&mut config::Server)) -> Self {
         f(&mut self.config);
         self
     }
@@ -312,38 +313,16 @@ pub fn init_logger() {
         .try_init();
 }
 
-fn simple_config() -> Config {
-    let uploader = Uploader::S3 {
-        bucket: s3::Bucket::new(
-            String::from("alexcrichton-test"),
-            None,
-            dotenv::var("S3_ACCESS_KEY").unwrap_or_default(),
-            dotenv::var("S3_SECRET_KEY").unwrap_or_default(),
-            // When testing we route all API traffic over HTTP so we can
-            // sniff/record it, but everywhere else we use https
-            "http",
-        ),
-        cdn: None,
-    };
-
-    Config {
-        uploader,
+fn simple_config() -> config::Server {
+    config::Server {
+        base: config::Base::test(),
+        db: config::DatabasePools::test_from_environment(),
         session_key: "test this has to be over 32 bytes long".to_string(),
         gh_client_id: dotenv::var("GH_CLIENT_ID").unwrap_or_default(),
         gh_client_secret: dotenv::var("GH_CLIENT_SECRET").unwrap_or_default(),
         gh_base_url: "http://api.github.com".to_string(),
-        db_primary_config: DbPoolConfig {
-            url: env("TEST_DATABASE_URL"),
-            read_only_mode: false,
-        },
-        db_replica_config: None,
-        env: Env::Test,
         max_upload_size: 3000,
         max_unpack_size: 2000,
-        mirror: Replica::Primary,
-        // When testing we route all API traffic over HTTP so we can
-        // sniff/record it, but everywhere else we use https
-        api_protocol: String::from("http"),
         publish_rate_limit: Default::default(),
         blocked_traffic: Default::default(),
         max_allowed_page_offset: 200,
@@ -359,7 +338,7 @@ fn simple_config() -> Config {
 }
 
 fn build_app(
-    config: Config,
+    config: config::Server,
     proxy: Option<String>,
 ) -> (Arc<App>, conduit_middleware::MiddlewareBuilder) {
     let client = if let Some(proxy) = proxy {

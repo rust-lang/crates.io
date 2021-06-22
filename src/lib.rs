@@ -22,7 +22,6 @@ extern crate serde_json;
 #[macro_use]
 extern crate tracing;
 
-pub use crate::config::{Config, DbPoolConfig};
 pub use crate::{app::App, email::Emails, uploaders::Uploader};
 use std::str::FromStr;
 use std::sync::Arc;
@@ -37,7 +36,7 @@ pub mod admin;
 mod app;
 pub mod background_jobs;
 pub mod boot;
-mod config;
+pub mod config;
 pub mod db;
 mod downloads_counter;
 pub mod email;
