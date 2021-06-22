@@ -1,10 +1,11 @@
 use std::collections::HashMap;
-use std::fs::{self, OpenOptions};
+use std::fs::{self, File, OpenOptions};
+use std::io::prelude::*;
 use std::path::{Path, PathBuf};
 
 use chrono::Utc;
 use swirl::PerformError;
-use tempfile::{Builder, TempDir};
+use tempfile::TempDir;
 use url::Url;
 
 use crate::background_jobs::Environment;
@@ -148,7 +149,7 @@ pub struct Repository {
 
 impl Repository {
     pub fn open(repository_config: &RepositoryConfig) -> Result<Self, PerformError> {
-        let checkout_path = Builder::new().prefix("git").tempdir()?;
+        let checkout_path = tempfile::Builder::new().prefix("git").tempdir()?;
 
         let repository = git2::build::RepoBuilder::new()
             .fetch_options(Self::fetch_options(&repository_config.credentials))
@@ -383,7 +384,7 @@ pub fn squash_index(env: &Environment) -> Result<(), PerformError> {
     println!("Squashing the index into a single commit.");
 
     let now = Utc::now().format("%Y-%m-%d");
-    let head = repo.head_oid()?;
+    let original_head = repo.head_oid()?;
     let msg = format!("Collapse index into one commit\n\n\
 
         Previous HEAD was {}, now on the `snapshot-{}` branch\n\n\
@@ -391,16 +392,51 @@ pub fn squash_index(env: &Environment) -> Result<(), PerformError> {
         More information about this change can be found [online] and on [this issue].\n\n\
 
         [online]: https://internals.rust-lang.org/t/cargos-crate-index-upcoming-squash-into-one-commit/8440\n\
-        [this issue]: https://github.com/rust-lang/crates-io-cargo-teams/issues/47", head, now);
+        [this issue]: https://github.com/rust-lang/crates-io-cargo-teams/issues/47", original_head, now);
 
     // Create a snapshot branch of current `HEAD`.
     repo.push(&format!("HEAD:refs/heads/snapshot-{}", now))?;
 
     repo.squash_to_single_commit(&msg)?;
 
-    // Because this will not be a fast-forward push, `+` is added to the
-    // beginning of the refspec to force the push.
-    repo.push("+HEAD:refs/heads/master")?;
+    // Shell out to git because libgit2 does not currently support push leases
+
+    let key = match &repo.credentials {
+        Credentials::Ssh { key } => key,
+        Credentials::Http { .. } => {
+            return Err(String::from("squash_index: Password auth not supported").into())
+        }
+        _ => return Err(String::from("squash_index: Could not determine credentials").into()),
+    };
+
+    let temp_key_file = tempfile::Builder::new().tempfile()?;
+    let mut file = File::create(&temp_key_file)?;
+    file.write_all(key.as_bytes())?;
+    drop(file);
+
+    let checkout_path = repo.checkout_path.path();
+    let output = std::process::Command::new("git")
+        .current_dir(checkout_path)
+        .env(
+            "GIT_SSH_COMMAND",
+            format!(
+                "ssh -o StrictHostKeyChecking=accept-new -i {}",
+                temp_key_file.path().display()
+            ),
+        )
+        .args(&[
+            "push",
+            "origin",
+            "HEAD:refs/heads/master",
+            &format!("--force-with-lease=refs/heads/master:{}", original_head),
+        ])
+        .output()?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        let message = format!("Running git command failed with: {}", stderr);
+        return Err(message.into());
+    }
 
     println!("The index has been successfully squashed.");
 
