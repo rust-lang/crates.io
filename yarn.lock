@@ -6672,17 +6672,17 @@ ember-cli-normalize-entity-name@^1.0.0:
   dependencies:
     silent-error "^1.0.0"
 
-ember-cli-notifications@6.3.4:
-  version "6.3.4"
-  resolved "https://registry.yarnpkg.com/ember-cli-notifications/-/ember-cli-notifications-6.3.4.tgz#2b14c5db156a11533628ec9adac28eae4238d2a7"
-  integrity sha512-bfNIGrn7A5MoTBLaOyhcDPbjbYv+QpAqBxlLf4SUEUS+lkkFSdD7mCr8S62diaMREEi6Gqd2YMnS/C6L5MA1tw==
+ember-cli-notifications@7.0.0:
+  version "7.0.0"
+  resolved "https://registry.yarnpkg.com/ember-cli-notifications/-/ember-cli-notifications-7.0.0.tgz#95b805678b8caf012ba77f49bdf4d058fe3554e4"
+  integrity sha512-PBliLRRMVrf+SZcN335oK/yQgxK3HTW9ZLMr9eXYE9ASRlZmXt/VTdvBl+oM35j3VoTjXieervLAGR0pUNx4QA==
   dependencies:
     broccoli-funnel "^3.0.2"
     broccoli-merge-trees "^4.1.0"
     broccoli-postcss "^5.0.0"
-    ember-cli-babel "^7.13.0"
-    ember-cli-htmlbars "^4.2.0"
-    ember-get-config "^0.2.4"
+    ember-cli-babel "^7.26.3"
+    ember-cli-htmlbars "^5.7.1"
+    ember-get-config "^0.2.4 || ^0.3.0"
     ember-on-modifier "^1.0.0"
     lodash.get "^4.4.2"
     postcss-import "^12.0.1"
@@ -7078,7 +7078,7 @@ ember-fetch@8.1.0:
     node-fetch "^2.6.1"
     whatwg-fetch "^3.6.2"
 
-ember-get-config@^0.2.4, "ember-get-config@^0.2.4 || ^0.3.0":
+"ember-get-config@^0.2.4 || ^0.3.0":
   version "0.2.4"
   resolved "https://registry.yarnpkg.com/ember-get-config/-/ember-get-config-0.2.4.tgz#118492a2a03d73e46004ed777928942021fe1ecd"
   integrity sha1-EYSSoqA9c+RgBO13eSiUICH+Hs0=
