@@ -80,6 +80,11 @@ impl PublishRateLimit {
 
         let burst: i32 = publish_rate_overrides::table
             .find(uploader)
+            .filter(
+                publish_rate_overrides::expires_at
+                    .is_null()
+                    .or(publish_rate_overrides::expires_at.gt(now)),
+            )
             .select(publish_rate_overrides::burst)
             .first(conn)
             .optional()?
@@ -326,6 +331,50 @@ mod tests {
 
         assert_eq!(20, bucket.tokens);
         assert_eq!(10, other_bucket.tokens);
+        Ok(())
+    }
+
+    #[test]
+    fn overrides_can_expire() -> QueryResult<()> {
+        let conn = pg_connection();
+        let now = now();
+
+        let rate = PublishRateLimit {
+            rate: Duration::from_secs(1),
+            burst: 10,
+        };
+        let user_id = new_user(&conn, "user1")?;
+        let other_user_id = new_user(&conn, "user2")?;
+
+        diesel::insert_into(publish_rate_overrides::table)
+            .values((
+                publish_rate_overrides::user_id.eq(user_id),
+                publish_rate_overrides::burst.eq(20),
+                publish_rate_overrides::expires_at.eq(now + chrono::Duration::days(30)),
+            ))
+            .execute(&conn)?;
+
+        let bucket = rate.take_token(user_id, now, &conn)?;
+        let other_bucket = rate.take_token(other_user_id, now, &conn)?;
+
+        assert_eq!(20, bucket.tokens);
+        assert_eq!(10, other_bucket.tokens);
+
+        // Manually expire the rate limit
+        diesel::update(publish_rate_overrides::table)
+            .set(publish_rate_overrides::expires_at.eq(now - chrono::Duration::days(30)))
+            .filter(publish_rate_overrides::user_id.eq(user_id))
+            .execute(&conn)?;
+
+        let bucket = rate.take_token(user_id, now, &conn)?;
+        let other_bucket = rate.take_token(other_user_id, now, &conn)?;
+
+        // The number of tokens of user_id is 10 and not 9 because when the new burst limit is
+        // lower than the amount of available tokens, the number of available tokens is reset to
+        // the new burst limit.
+        assert_eq!(10, bucket.tokens);
+        assert_eq!(9, other_bucket.tokens);
+
         Ok(())
     }
 
