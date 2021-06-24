@@ -144,6 +144,7 @@ last_refill = "private"
 [publish_rate_overrides.columns]
 user_id = "private"
 burst = "private"
+expires_at = "private"
 
 [readme_renderings.columns]
 version_id = "private"
