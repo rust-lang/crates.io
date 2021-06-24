@@ -380,8 +380,26 @@ And then you should be able to visit http://localhost:4200!
 
 We currently have email functionality enabled for confirming a user's email
 address. In development, the sending of emails is simulated by a file
-representing the email being created in your local `/tmp/` directory. If
-you want to test sending real emails, you will have to either set the
+representing the email being created in your local `/tmp/` directory
+(If you are using docker, it is in the `/tmp/` directory of the backend container).
+The file looks like:
+
+```eml
+To: rustin.liu@gmail.com
+From: test@localhost
+Subject: Please confirm your email address
+Content-Transfer-Encoding: 7bit
+Date: Thu, 24 Jun 2021 08:02:23 -0000
+
+Hello hi-rustin! Welcome to Crates.io. Please click the
+link below to verify your email address. Thank you!
+
+https://crates.io/confirm/RiphVyFo31wuKQhpyTw7RF2LIf
+```
+When verifying the email, you need to change the prefix to your frontend host.
+For example, change the above link to `http://localhost:4200/confirm/RiphVyFo31wuKQhpyTw7RF2LIf`.
+
+If you want to test sending real emails, you will have to either set the
 Mailgun environment variables in `.env` manually or run your app instance
 on Heroku and add the Mailgun app.
 
