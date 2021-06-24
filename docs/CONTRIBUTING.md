@@ -397,7 +397,7 @@ link below to verify your email address. Thank you!
 https://crates.io/confirm/RiphVyFo31wuKQhpyTw7RF2LIf
 ```
 When verifying the email, you need to change the prefix to your frontend host.
-For example, change the above link to `localhost:4200/confirm/RiphVyFo31wuKQhpyTw7RF2LIf`.
+For example, change the above link to `http://localhost:4200/confirm/RiphVyFo31wuKQhpyTw7RF2LIf`.
 
 If you want to test sending real emails, you will have to either set the
 Mailgun environment variables in `.env` manually or run your app instance
