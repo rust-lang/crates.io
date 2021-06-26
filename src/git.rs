@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::fs::{self, File, OpenOptions};
+use std::fs::{self, OpenOptions};
 use std::io::prelude::*;
 use std::path::{Path, PathBuf};
 
@@ -409,10 +409,15 @@ pub fn squash_index(env: &Environment) -> Result<(), PerformError> {
         _ => return Err(String::from("squash_index: Could not determine credentials").into()),
     };
 
-    let temp_key_file = tempfile::Builder::new().tempfile()?;
-    let mut file = File::create(&temp_key_file)?;
-    file.write_all(key.as_bytes())?;
-    drop(file);
+    // When running on production, ensure the file is created in tmpfs and not persisted to disk
+    #[cfg(target_os = "linux")]
+    let mut temp_key_file = tempfile::Builder::new().tempfile_in("/dev/shm")?;
+
+    // For other platforms, default to std::env::tempdir()
+    #[cfg(not(target_os = "linux"))]
+    let mut temp_key_file = tempfile::Builder::new().tempfile()?;
+
+    temp_key_file.write_all(key.as_bytes())?;
 
     let checkout_path = repo.checkout_path.path();
     let output = std::process::Command::new("git")
