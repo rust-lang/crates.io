@@ -103,8 +103,8 @@ jobs:
         run: |
           rustup set profile minimal
           # Pin to older version until a clippy regression is fixed
-          rustup update 1.52.1
-          rustup default 1.52.1
+          rustup update 1.53.0
+          rustup default 1.53.0
 
       - run: rustup component add rustfmt
       - run: rustup component add clippy
