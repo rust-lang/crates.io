@@ -1,8 +1,11 @@
 use std::collections::HashMap;
 use std::fs::{self, OpenOptions};
+use std::io::prelude::*;
 use std::path::{Path, PathBuf};
+
+use chrono::Utc;
 use swirl::PerformError;
-use tempfile::{Builder, TempDir};
+use tempfile::TempDir;
 use url::Url;
 
 use crate::background_jobs::Environment;
@@ -146,7 +149,7 @@ pub struct Repository {
 
 impl Repository {
     pub fn open(repository_config: &RepositoryConfig) -> Result<Self, PerformError> {
-        let checkout_path = Builder::new().prefix("git").tempdir()?;
+        let checkout_path = tempfile::Builder::new().prefix("git").tempdir()?;
 
         let repository = git2::build::RepoBuilder::new()
             .fetch_options(Self::fetch_options(&repository_config.credentials))
@@ -203,12 +206,11 @@ impl Repository {
         self.repository
             .commit(Some("HEAD"), &sig, &sig, msg, &tree, &[&parent])?;
 
-        self.push()
+        self.push("refs/heads/master")
     }
 
-    /// Push the current branch to "refs/heads/master"
-    fn push(&self) -> Result<(), PerformError> {
-        let refname = "refs/heads/master";
+    /// Push the current branch to the provided refname
+    fn push(&self, refspec: &str) -> Result<(), PerformError> {
         let mut ref_status = Ok(());
         let mut callback_called = false;
         {
@@ -217,8 +219,7 @@ impl Repository {
             callbacks.credentials(|_, user_from_url, cred_type| {
                 self.credentials.git2_callback(user_from_url, cred_type)
             });
-            callbacks.push_update_reference(|cb_refname, status| {
-                assert_eq!(refname, cb_refname);
+            callbacks.push_update_reference(|_, status| {
                 if let Some(s) = status {
                     ref_status = Err(format!("failed to push a ref: {}", s).into())
                 }
@@ -227,7 +228,7 @@ impl Repository {
             });
             let mut opts = git2::PushOptions::new();
             opts.remote_callbacks(callbacks);
-            origin.push(&[refname], Some(&mut opts))?;
+            origin.push(&[refspec], Some(&mut opts))?;
         }
 
         if !callback_called {
@@ -275,6 +276,24 @@ impl Repository {
         let mut opts = git2::FetchOptions::new();
         opts.remote_callbacks(callbacks);
         opts
+    }
+
+    /// Reset `HEAD` to a single commit with all the index contents, but no parent
+    fn squash_to_single_commit(&self, msg: &str) -> Result<(), PerformError> {
+        let tree = self.repository.find_commit(self.head_oid()?)?.tree()?;
+        let sig = self.repository.signature()?;
+
+        // We cannot update an existing `update_ref`, because that requires the
+        // first parent of this commit to match the ref's current value.
+        // Instead, create the commit and then do a hard reset.
+        let commit = self.repository.commit(None, &sig, &sig, msg, &tree, &[])?;
+        let commit = self
+            .repository
+            .find_object(commit, Some(git2::ObjectType::Commit))?;
+        self.repository
+            .reset(&commit, git2::ResetType::Hard, None)?;
+
+        Ok(())
     }
 }
 
@@ -356,4 +375,78 @@ pub fn yank(
 
         Ok(())
     })
+}
+
+/// Collapse the index into a single commit, archiving the current history in a snapshot branch.
+#[swirl::background_job]
+pub fn squash_index(env: &Environment) -> Result<(), PerformError> {
+    let repo = env.lock_index()?;
+    println!("Squashing the index into a single commit.");
+
+    let now = Utc::now().format("%Y-%m-%d");
+    let original_head = repo.head_oid()?.to_string();
+    let msg = format!("Collapse index into one commit\n\n\
+
+        Previous HEAD was {}, now on the `snapshot-{}` branch\n\n\
+
+        More information about this change can be found [online] and on [this issue].\n\n\
+
+        [online]: https://internals.rust-lang.org/t/cargos-crate-index-upcoming-squash-into-one-commit/8440\n\
+        [this issue]: https://github.com/rust-lang/crates-io-cargo-teams/issues/47", original_head, now);
+
+    repo.squash_to_single_commit(&msg)?;
+
+    // Shell out to git because libgit2 does not currently support push leases
+
+    let key = match &repo.credentials {
+        Credentials::Ssh { key } => key,
+        Credentials::Http { .. } => {
+            return Err(String::from("squash_index: Password auth not supported").into())
+        }
+        _ => return Err(String::from("squash_index: Could not determine credentials").into()),
+    };
+
+    // When running on production, ensure the file is created in tmpfs and not persisted to disk
+    #[cfg(target_os = "linux")]
+    let mut temp_key_file = tempfile::Builder::new().tempfile_in("/dev/shm")?;
+
+    // For other platforms, default to std::env::tempdir()
+    #[cfg(not(target_os = "linux"))]
+    let mut temp_key_file = tempfile::Builder::new().tempfile()?;
+
+    temp_key_file.write_all(key.as_bytes())?;
+
+    let checkout_path = repo.checkout_path.path();
+    let output = std::process::Command::new("git")
+        .current_dir(checkout_path)
+        .env(
+            "GIT_SSH_COMMAND",
+            format!(
+                "ssh -o StrictHostKeyChecking=accept-new -i {}",
+                temp_key_file.path().display()
+            ),
+        )
+        .args(&[
+            "push",
+            // Both updates should succeed or fail together
+            "--atomic",
+            "origin",
+            // Overwrite master, but only if it server matches the expected value
+            &format!("--force-with-lease=refs/heads/master:{}", original_head),
+            // The new squashed commit is pushed to master
+            "HEAD:refs/heads/master",
+            // The previous value of HEAD is pushed to a snapshot branch
+            &format!("{}:refs/heads/snapshot-{}", original_head, now),
+        ])
+        .output()?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        let message = format!("Running git command failed with: {}", stderr);
+        return Err(message.into());
+    }
+
+    println!("The index has been successfully squashed.");
+
+    Ok(())
 }
