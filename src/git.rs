@@ -153,6 +153,14 @@ impl Repository {
 
         let repository = git2::build::RepoBuilder::new()
             .fetch_options(Self::fetch_options(&repository_config.credentials))
+            .remote_create(|repo, name, url| {
+                // Manually create the remote with a fetchspec, to avoid cloning old snaphots
+                repo.remote_with_fetch(
+                    name,
+                    url,
+                    &format!("refs/heads/master:refs/remotes/{}/master", name),
+                )
+            })
             .clone(
                 repository_config.index_location.as_str(),
                 checkout_path.path(),
