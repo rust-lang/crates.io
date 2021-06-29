@@ -105,6 +105,18 @@ impl EncodableCrateOwnerInvitationV1 {
     }
 }
 
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq)]
+pub struct EncodableCrateOwnerInvitation {
+    pub invitee_id: i32,
+    pub inviter_id: i32,
+    pub crate_id: i32,
+    pub crate_name: String,
+    #[serde(with = "rfc3339")]
+    pub created_at: NaiveDateTime,
+    #[serde(with = "rfc3339")]
+    pub expires_at: NaiveDateTime,
+}
+
 #[derive(Deserialize, Serialize, Debug, Copy, Clone)]
 pub struct InvitationResponse {
     pub crate_id: i32,

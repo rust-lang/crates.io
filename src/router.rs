@@ -127,6 +127,12 @@ pub fn build_router(app: &App) -> RouteBuilder {
     // Metrics
     router.get("/api/private/metrics/:kind", C(metrics::prometheus));
 
+    // Crate ownership invitations management in the frontend
+    router.get(
+        "/api/private/crate-owner-invitations",
+        C(crate_owner_invitation::private_list),
+    );
+
     // Only serve the local checkout of the git index in development mode.
     // In production, for crates.io, cargo gets the index from
     // https://github.com/rust-lang/crates.io-index directly.
