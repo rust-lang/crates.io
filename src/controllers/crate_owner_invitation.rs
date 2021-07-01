@@ -2,7 +2,7 @@ use super::frontend_prelude::*;
 
 use crate::models::{CrateOwnerInvitation, User};
 use crate::schema::{crate_owner_invitations, crates, users};
-use crate::views::{EncodableCrateOwnerInvitation, EncodablePublicUser, InvitationResponse};
+use crate::views::{EncodableCrateOwnerInvitationV1, EncodablePublicUser, InvitationResponse};
 use diesel::dsl::any;
 use std::collections::HashMap;
 
@@ -62,7 +62,7 @@ pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
                 .unwrap_or_else(|| String::from("(unknown crate name)"));
 
             let expires_at = invitation.expires_at(config);
-            EncodableCrateOwnerInvitation::from(invitation, inviter_name, crate_name, expires_at)
+            EncodableCrateOwnerInvitationV1::from(invitation, inviter_name, crate_name, expires_at)
         })
         .collect();
 
@@ -74,7 +74,7 @@ pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
 
     #[derive(Serialize)]
     struct R {
-        crate_owner_invitations: Vec<EncodableCrateOwnerInvitation>,
+        crate_owner_invitations: Vec<EncodableCrateOwnerInvitationV1>,
         users: Vec<EncodablePublicUser>,
     }
     Ok(req.json(&R {

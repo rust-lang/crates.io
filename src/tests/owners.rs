@@ -8,7 +8,7 @@ use crate::{
 use cargo_registry::{
     models::Crate,
     views::{
-        EncodableCrateOwnerInvitation, EncodableOwner, EncodablePublicUser, InvitationResponse,
+        EncodableCrateOwnerInvitationV1, EncodableOwner, EncodablePublicUser, InvitationResponse,
     },
     Emails,
 };
@@ -27,7 +27,7 @@ struct UserResponse {
 }
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 struct InvitationListResponse {
-    crate_owner_invitations: Vec<EncodableCrateOwnerInvitation>,
+    crate_owner_invitations: Vec<EncodableCrateOwnerInvitationV1>,
     users: Vec<EncodablePublicUser>,
 }
 
@@ -447,7 +447,7 @@ fn invitations_list() {
     assert_eq!(
         invitations,
         InvitationListResponse {
-            crate_owner_invitations: vec![EncodableCrateOwnerInvitation {
+            crate_owner_invitations: vec![EncodableCrateOwnerInvitationV1 {
                 crate_id: krate.id,
                 crate_name: krate.name,
                 invited_by_username: owner.gh_login.clone(),
@@ -482,7 +482,7 @@ fn invitations_list_does_not_include_expired_invites() {
     assert_eq!(
         invitations,
         InvitationListResponse {
-            crate_owner_invitations: vec![EncodableCrateOwnerInvitation {
+            crate_owner_invitations: vec![EncodableCrateOwnerInvitationV1 {
                 crate_id: krate2.id,
                 crate_name: krate2.name,
                 invited_by_username: owner.gh_login.clone(),
