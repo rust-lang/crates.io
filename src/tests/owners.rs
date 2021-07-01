@@ -414,7 +414,7 @@ fn deleted_ownership_isnt_in_owner_user() {
 }
 
 #[test]
-fn invitations_are_empty_by_default() {
+fn invitations_are_empty_by_default_v1() {
     let (_, _, user) = TestApp::init().with_user();
 
     let json = user.list_invitations();
@@ -422,7 +422,7 @@ fn invitations_are_empty_by_default() {
 }
 
 #[test]
-fn api_token_cannot_list_invitations() {
+fn api_token_cannot_list_invitations_v1() {
     let (_, _, _, token) = TestApp::init().with_token();
 
     token
@@ -431,7 +431,7 @@ fn api_token_cannot_list_invitations() {
 }
 
 #[test]
-fn invitations_list() {
+fn invitations_list_v1() {
     let (app, _, owner, token) = TestApp::init().with_token();
     let owner = owner.as_model();
 
@@ -464,7 +464,7 @@ fn invitations_list() {
 }
 
 #[test]
-fn invitations_list_does_not_include_expired_invites() {
+fn invitations_list_does_not_include_expired_invites_v1() {
     let (app, _, owner, token) = TestApp::init().with_token();
     let owner = owner.as_model();
 
