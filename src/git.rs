@@ -153,6 +153,14 @@ impl Repository {
 
         let repository = git2::build::RepoBuilder::new()
             .fetch_options(Self::fetch_options(&repository_config.credentials))
+            .remote_create(|repo, name, url| {
+                // Manually create the remote with a fetchspec, to avoid cloning old snaphots
+                repo.remote_with_fetch(
+                    name,
+                    url,
+                    &format!("+refs/heads/master:refs/remotes/{}/master", name),
+                )
+            })
             .clone(
                 repository_config.index_location.as_str(),
                 checkout_path.path(),
@@ -253,7 +261,11 @@ impl Repository {
         let mut origin = self.repository.find_remote("origin")?;
         let original_head = self.head_oid()?;
         origin.fetch(
-            &["refs/heads/*:refs/heads/*"],
+            // Force overwrite (`+` prefix) local master branch with the server's master branch.
+            // The git CLI will refuse to fetch into the current branch of a non-bare repo
+            // but libgit2 doesn't seem to prevent this potential footgun.
+            // The entire point is to do a hard reset, so this footgun is not a concern.
+            &["+refs/heads/master:refs/heads/master"],
             Some(&mut Self::fetch_options(&self.credentials)),
             None,
         )?;
