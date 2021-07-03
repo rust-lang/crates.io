@@ -1,5 +1,7 @@
+use prometheus::Opts;
+
 pub(super) trait MetricFromOpts: Sized {
-    fn from_opts(opts: prometheus::Opts) -> Result<Self, prometheus::Error>;
+    fn from_opts(opts: Opts) -> Result<Self, prometheus::Error>;
 }
 
 #[macro_export]
@@ -53,20 +55,19 @@ macro_rules! metrics {
     };
 }
 
-#[macro_export]
 macro_rules! load_metric_type {
     ($name:ident as single) => {
         use prometheus::$name;
-        impl crate::metrics::macros::MetricFromOpts for $name {
-            fn from_opts(opts: prometheus::Opts) -> Result<Self, prometheus::Error> {
+        impl MetricFromOpts for $name {
+            fn from_opts(opts: Opts) -> Result<Self, prometheus::Error> {
                 $name::with_opts(opts.into())
             }
         }
     };
     ($name:ident as vec) => {
         use prometheus::$name;
-        impl crate::metrics::macros::MetricFromOpts for $name {
-            fn from_opts(opts: prometheus::Opts) -> Result<Self, prometheus::Error> {
+        impl MetricFromOpts for $name {
+            fn from_opts(opts: Opts) -> Result<Self, prometheus::Error> {
                 $name::new(
                     opts.clone().into(),
                     opts.variable_labels
@@ -79,3 +80,14 @@ macro_rules! load_metric_type {
         }
     };
 }
+
+load_metric_type!(Counter as single);
+load_metric_type!(CounterVec as vec);
+load_metric_type!(IntCounter as single);
+load_metric_type!(IntCounterVec as vec);
+load_metric_type!(Gauge as single);
+load_metric_type!(GaugeVec as vec);
+load_metric_type!(IntGauge as single);
+load_metric_type!(IntGaugeVec as vec);
+load_metric_type!(Histogram as single);
+load_metric_type!(HistogramVec as vec);

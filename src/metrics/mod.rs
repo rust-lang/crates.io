@@ -8,9 +8,3 @@ mod macros;
 mod instance;
 mod log_encoder;
 mod service;
-
-load_metric_type!(IntGauge as single);
-load_metric_type!(IntCounter as single);
-load_metric_type!(IntCounterVec as vec);
-load_metric_type!(IntGaugeVec as vec);
-load_metric_type!(HistogramVec as vec);
