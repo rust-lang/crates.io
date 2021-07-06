@@ -5,6 +5,7 @@ use crate::schema::api_tokens;
 use crate::util::read_fill;
 use crate::views::EncodableApiTokenWithToken;
 
+use conduit::{Body, Response};
 use serde_json as json;
 
 /// Handles the `GET /me/tokens` route.
@@ -107,4 +108,19 @@ pub fn revoke(req: &mut dyn RequestExt) -> EndpointResult {
     #[derive(Serialize)]
     struct R {}
     Ok(req.json(&R {}))
+}
+
+/// Handles the `DELETE /tokens/current` route.
+pub fn revoke_current(req: &mut dyn RequestExt) -> EndpointResult {
+    let authenticated_user = req.authenticate()?;
+    let api_token_id = authenticated_user
+        .api_token_id()
+        .ok_or_else(|| bad_request("token not provided"))?;
+
+    let conn = req.db_conn()?;
+    diesel::update(api_tokens::table.filter(api_tokens::id.eq(api_token_id)))
+        .set(api_tokens::revoked.eq(true))
+        .execute(&*conn)?;
+
+    Ok(Response::builder().status(204).body(Body::empty()).unwrap())
 }

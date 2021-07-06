@@ -80,6 +80,7 @@ pub fn build_router(app: &App) -> RouteBuilder {
     api_router.get("/me/tokens", C(token::list));
     api_router.put("/me/tokens", C(token::new));
     api_router.delete("/me/tokens/:id", C(token::revoke));
+    api_router.delete("/tokens/current", C(token::revoke_current));
     api_router.get(
         "/me/crate_owner_invitations",
         C(crate_owner_invitation::list),
