@@ -8,11 +8,8 @@ use conduit::{header, Host, RequestExt, Scheme, StatusCode};
 use conduit_cookie::RequestSession;
 use sentry::Level;
 
-use std::cell::RefCell;
-use std::collections::HashMap;
 use std::fmt::{self, Display, Formatter};
-use std::rc::Rc;
-use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 const SLOW_REQUEST_THRESHOLD_MS: u64 = 1000;
 
@@ -91,34 +88,6 @@ pub fn add_custom_metadata<V: Display>(req: &mut dyn RequestExt, key: &'static s
         };
         metadata.entries.push((key, value.to_string()));
         req.mut_extensions().insert(metadata);
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct TimingRecorder {
-    sections: Rc<RefCell<HashMap<&'static str, Duration>>>,
-}
-
-impl TimingRecorder {
-    pub fn new() -> Self {
-        Self {
-            sections: Rc::new(RefCell::new(HashMap::new())),
-        }
-    }
-
-    pub fn record<R>(&self, name: &'static str, f: impl FnOnce() -> R) -> R {
-        let start = Instant::now();
-        let res = f();
-        self.sections
-            .borrow_mut()
-            .insert(name, Instant::now() - start);
-        res
-    }
-}
-
-impl Default for TimingRecorder {
-    fn default() -> Self {
-        Self::new()
     }
 }
 
@@ -255,17 +224,6 @@ impl Display for RequestLine<'_> {
 
         if self.response_time > SLOW_REQUEST_THRESHOLD_MS {
             line.add_marker("SLOW REQUEST")?;
-
-            if let Some(timings) = self.req.extensions().find::<TimingRecorder>() {
-                for (section, duration) in timings.sections.borrow().iter() {
-                    line.add_quoted_field(
-                        format!("timing_{}", section),
-                        // Debug formatting rounds the duration to the most useful unit and adds
-                        // the unit suffix. For example: 1.20s, 10.00ms, 8.35ns
-                        format!("{:.2?}", duration),
-                    )?;
-                }
-            }
         }
 
         Ok(())

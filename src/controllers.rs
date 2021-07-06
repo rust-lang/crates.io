@@ -19,7 +19,6 @@ mod prelude {
 
     pub use crate::db::RequestTransaction;
     pub use crate::middleware::app::RequestApp;
-    pub use crate::middleware::log_request::TimingRecorder;
     pub use crate::util::errors::{cargo_err, AppError, AppResult, ChainError}; // TODO: Remove cargo_err from here
     pub use crate::util::{AppResponse, EndpointResult};
 
@@ -39,7 +38,6 @@ mod prelude {
         fn query_with_params(&self, params: IndexMap<String, String>) -> String;
 
         fn log_metadata<V: std::fmt::Display>(&mut self, key: &'static str, value: V);
-        fn timing_recorder(&mut self) -> TimingRecorder;
     }
 
     impl<'a> RequestUtils for dyn RequestExt + 'a {
@@ -79,17 +77,6 @@ mod prelude {
 
         fn log_metadata<V: std::fmt::Display>(&mut self, key: &'static str, value: V) {
             crate::middleware::log_request::add_custom_metadata(self, key, value);
-        }
-
-        fn timing_recorder(&mut self) -> TimingRecorder {
-            if let Some(recorder) = self.extensions().find::<TimingRecorder>() {
-                recorder.clone()
-            } else {
-                let recorder = TimingRecorder::new();
-                self.mut_extensions()
-                    .insert::<TimingRecorder>(recorder.clone());
-                recorder
-            }
         }
     }
 }
