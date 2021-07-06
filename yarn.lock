@@ -6931,10 +6931,10 @@ ember-concurrency@2.1.0:
     ember-compatibility-helpers "^1.2.0"
     ember-destroyable-polyfill "^2.0.2"
 
-ember-css-modules@1.4.0:
-  version "1.4.0"
-  resolved "https://registry.yarnpkg.com/ember-css-modules/-/ember-css-modules-1.4.0.tgz#aec842ce6c7343994957253d4e5f4cf949c89e59"
-  integrity sha512-VNz2cZCw5FvrSh1r5Ye60+XQRZe5ZipzS/D4fAR92F/8/AUTNd+DzTtgLend6Iui4YLrEmUAEgTwLhMIZbxbdg==
+ember-css-modules@1.5.0:
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/ember-css-modules/-/ember-css-modules-1.5.0.tgz#3eba9378440f84edd9f87e76088d23867571c795"
+  integrity sha512-O2d3o1oZw3LZE8K123W9in764bg4VcBj4UxspIWpsz6dAIYbpAQOb8zo/wuMIwaocd8mgjfFkS4nHpxIEvcjVw==
   dependencies:
     broccoli-bridge "^1.0.0"
     broccoli-concat "^3.2.2"
