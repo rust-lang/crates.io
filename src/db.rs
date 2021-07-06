@@ -2,6 +2,7 @@ use conduit::RequestExt;
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager, CustomizeConnection};
 use parking_lot::{ReentrantMutex, ReentrantMutexGuard};
+use prometheus::Histogram;
 use std::sync::Arc;
 use std::{ops::Deref, time::Duration};
 use url::Url;
@@ -10,7 +11,10 @@ use crate::middleware::app::RequestApp;
 
 #[derive(Clone)]
 pub enum DieselPool {
-    Pool(r2d2::Pool<ConnectionManager<PgConnection>>),
+    Pool {
+        pool: r2d2::Pool<ConnectionManager<PgConnection>>,
+        time_to_obtain_connection_metric: Histogram,
+    },
     Test(Arc<ReentrantMutex<PgConnection>>),
 }
 
@@ -18,6 +22,7 @@ impl DieselPool {
     pub(crate) fn new(
         url: &str,
         config: r2d2::Builder<ConnectionManager<PgConnection>>,
+        time_to_obtain_connection_metric: Histogram,
     ) -> Result<DieselPool, PoolError> {
         let manager = ConnectionManager::new(connection_url(url));
 
@@ -32,7 +37,10 @@ impl DieselPool {
         // serving errors for the first connections until the pool is initialized) and if we can't
         // establish any connection continue booting up the application. The database pool will
         // automatically be marked as unhealthy and the rest of the application will adapt.
-        let pool = DieselPool::Pool(config.build_unchecked(manager));
+        let pool = DieselPool::Pool {
+            pool: config.build_unchecked(manager),
+            time_to_obtain_connection_metric,
+        };
         match pool.wait_until_healthy(Duration::from_secs(5)) {
             Ok(()) => {}
             Err(PoolError::UnhealthyPool) => {}
@@ -52,7 +60,10 @@ impl DieselPool {
 
     pub fn get(&self) -> Result<DieselPooledConn<'_>, PoolError> {
         match self {
-            DieselPool::Pool(pool) => {
+            DieselPool::Pool {
+                pool,
+                time_to_obtain_connection_metric,
+            } => time_to_obtain_connection_metric.observe_closure_duration(|| {
                 if let Some(conn) = pool.try_get() {
                     Ok(DieselPooledConn::Pool(conn))
                 } else if !self.is_healthy() {
@@ -60,14 +71,14 @@ impl DieselPool {
                 } else {
                     Ok(DieselPooledConn::Pool(pool.get().map_err(PoolError::R2D2)?))
                 }
-            }
+            }),
             DieselPool::Test(conn) => Ok(DieselPooledConn::Test(conn.lock())),
         }
     }
 
     pub fn state(&self) -> PoolState {
         match self {
-            DieselPool::Pool(pool) => {
+            DieselPool::Pool { pool, .. } => {
                 let state = pool.state();
                 PoolState {
                     connections: state.connections,
@@ -83,7 +94,7 @@ impl DieselPool {
 
     pub fn wait_until_healthy(&self, timeout: Duration) -> Result<(), PoolError> {
         match self {
-            DieselPool::Pool(pool) => match pool.get_timeout(timeout) {
+            DieselPool::Pool { pool, .. } => match pool.get_timeout(timeout) {
                 Ok(_) => Ok(()),
                 Err(_) if !self.is_healthy() => Err(PoolError::UnhealthyPool),
                 Err(err) => Err(PoolError::R2D2(err)),

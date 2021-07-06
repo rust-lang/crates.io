@@ -62,6 +62,9 @@ impl App {
     pub fn new(config: config::Server, http_client: Option<Client>) -> App {
         use oauth2::{AuthUrl, ClientId, ClientSecret, TokenUrl};
 
+        let instance_metrics =
+            InstanceMetrics::new().expect("could not initialize instance metrics");
+
         let github = GitHubClient::new(http_client.clone(), config.gh_base_url.clone());
 
         let github_oauth = BasicClient::new(
@@ -116,7 +119,14 @@ impl App {
                 .connection_customizer(Box::new(primary_db_connection_config))
                 .thread_pool(thread_pool.clone());
 
-            DieselPool::new(&config.db.primary.url, primary_db_config).unwrap()
+            DieselPool::new(
+                &config.db.primary.url,
+                primary_db_config,
+                instance_metrics
+                    .database_time_to_obtain_connection
+                    .with_label_values(&["primary"]),
+            )
+            .unwrap()
         };
 
         let replica_database = if let Some(url) = config.db.replica.as_ref().map(|c| &c.url) {
@@ -135,7 +145,16 @@ impl App {
                     .connection_customizer(Box::new(replica_db_connection_config))
                     .thread_pool(thread_pool);
 
-                Some(DieselPool::new(url, replica_db_config).unwrap())
+                Some(
+                    DieselPool::new(
+                        url,
+                        replica_db_config,
+                        instance_metrics
+                            .database_time_to_obtain_connection
+                            .with_label_values(&["follower"]),
+                    )
+                    .unwrap(),
+                )
             }
         } else {
             None
@@ -150,8 +169,7 @@ impl App {
             downloads_counter: DownloadsCounter::new(),
             emails: Emails::from_environment(),
             service_metrics: ServiceMetrics::new().expect("could not initialize service metrics"),
-            instance_metrics: InstanceMetrics::new()
-                .expect("could not initialize instance metrics"),
+            instance_metrics,
             http_client,
         }
     }

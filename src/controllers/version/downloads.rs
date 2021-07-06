@@ -14,26 +14,28 @@ use chrono::{Duration, NaiveDate, Utc};
 /// This returns a URL to the location where the crate is stored.
 pub fn download(req: &mut dyn RequestExt) -> EndpointResult {
     let app = req.app().clone();
-    let recorder = req.timing_recorder();
 
     let mut crate_name = req.params()["crate_id"].clone();
     let version = req.params()["version"].as_str();
 
     let mut log_metadata = None;
-    match recorder.record("get_conn", || req.db_conn()) {
+    match req.db_conn() {
         Ok(conn) => {
             use self::versions::dsl::*;
 
             // Returns the crate name as stored in the database, or an error if we could
             // not load the version ID from the database.
-            let (version_id, canonical_crate_name) = recorder.record("get_version", || {
-                versions
-                    .inner_join(crates::table)
-                    .select((id, crates::name))
-                    .filter(Crate::with_name(&crate_name))
-                    .filter(num.eq(version))
-                    .first::<(i32, String)>(&*conn)
-            })?;
+            let (version_id, canonical_crate_name) = app
+                .instance_metrics
+                .downloads_select_query_execution_time
+                .observe_closure_duration(|| {
+                    versions
+                        .inner_join(crates::table)
+                        .select((id, crates::name))
+                        .filter(Crate::with_name(&crate_name))
+                        .filter(num.eq(version))
+                        .first::<(i32, String)>(&*conn)
+                })?;
 
             if canonical_crate_name != crate_name {
                 app.instance_metrics
