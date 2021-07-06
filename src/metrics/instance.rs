@@ -20,7 +20,7 @@
 use crate::util::errors::AppResult;
 use crate::{app::App, db::DieselPool};
 use prometheus::{
-    proto::MetricFamily, HistogramVec, IntCounter, IntCounterVec, IntGauge, IntGaugeVec,
+    proto::MetricFamily, Histogram, HistogramVec, IntCounter, IntCounterVec, IntGauge, IntGaugeVec,
 };
 
 metrics! {
@@ -46,6 +46,8 @@ metrics! {
         pub downloads_unconditional_redirects_total: IntCounter,
         /// Number of download requests with a non-canonical crate name.
         pub downloads_non_canonical_crate_name_total: IntCounter,
+        /// How long it takes to execute the SELECT query in the download endpoint.
+        pub downloads_select_query_execution_time: Histogram,
         /// Number of download requests that are not counted yet.
         downloads_not_counted_total: IntGauge,
     }
