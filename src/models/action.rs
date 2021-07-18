@@ -1,23 +1,14 @@
-use chrono::NaiveDateTime;
-use diesel::prelude::*;
-use diesel::{
-    deserialize::{self, FromSql},
-    pg::Pg,
-    serialize::{self, Output, ToSql},
-    sql_types::Integer,
-};
-use std::io::Write;
-
 use crate::models::{ApiToken, User, Version};
 use crate::schema::*;
+use chrono::NaiveDateTime;
+use diesel::prelude::*;
 
-#[derive(Debug, Clone, Copy, PartialEq, FromSqlRow, AsExpression)]
-#[repr(i32)]
-#[sql_type = "Integer"]
-pub enum VersionAction {
-    Publish = 0,
-    Yank = 1,
-    Unyank = 2,
+pg_enum! {
+    pub enum VersionAction {
+        Publish = 0,
+        Yank = 1,
+        Unyank = 2,
+    }
 }
 
 impl From<VersionAction> for &'static str {
@@ -35,23 +26,6 @@ impl From<VersionAction> for String {
         let string: &'static str = action.into();
 
         string.into()
-    }
-}
-
-impl FromSql<Integer, Pg> for VersionAction {
-    fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
-        match <i32 as FromSql<Integer, Pg>>::from_sql(bytes)? {
-            0 => Ok(VersionAction::Publish),
-            1 => Ok(VersionAction::Yank),
-            2 => Ok(VersionAction::Unyank),
-            n => Err(format!("unknown version action: {}", n).into()),
-        }
-    }
-}
-
-impl ToSql<Integer, Pg> for VersionAction {
-    fn to_sql<W: Write>(&self, out: &mut Output<'_, W, Pg>) -> serialize::Result {
-        ToSql::<Integer, Pg>::to_sql(&(*self as i32), out)
     }
 }
 

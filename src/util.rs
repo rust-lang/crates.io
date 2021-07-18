@@ -53,3 +53,38 @@ impl Maximums {
         }
     }
 }
+
+#[macro_export]
+macro_rules! pg_enum {
+    (
+        $vis:vis enum $name:ident {
+            $($item:ident = $int:expr,)*
+        }
+    ) => {
+        #[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize, FromSqlRow, AsExpression)]
+        #[sql_type = "diesel::sql_types::Integer"]
+        #[serde(rename_all = "snake_case")]
+        #[repr(i32)]
+        $vis enum $name {
+            $($item = $int,)*
+        }
+
+        impl diesel::deserialize::FromSql<diesel::sql_types::Integer, diesel::pg::Pg> for $name {
+            fn from_sql(bytes: Option<&[u8]>) -> diesel::deserialize::Result<Self> {
+                match <i32 as diesel::deserialize::FromSql<diesel::sql_types::Integer, diesel::pg::Pg>>::from_sql(bytes)? {
+                    $($int => Ok(Self::$item),)*
+                    n => Err(format!("unknown value: {}", n).into()),
+                }
+            }
+        }
+
+        impl diesel::serialize::ToSql<diesel::sql_types::Integer, diesel::pg::Pg> for $name {
+            fn to_sql<W: std::io::Write>(
+                &self,
+                out: &mut diesel::serialize::Output<'_, W, diesel::pg::Pg>,
+            ) -> diesel::serialize::Result {
+                diesel::serialize::ToSql::<diesel::sql_types::Integer, diesel::pg::Pg>::to_sql(&(*self as i32), out)
+            }
+        }
+    }
+}

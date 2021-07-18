@@ -50,6 +50,7 @@ pub mod schema;
 pub mod tasks;
 mod test_util;
 pub mod uploaders;
+#[macro_use]
 pub mod util;
 
 pub mod controllers;
