@@ -1,4 +1,4 @@
-use crate::publish_rate_limit::PublishRateLimit;
+use crate::rate_limiter::RateLimiter;
 use crate::{env, env_optional, uploaders::Uploader, Env};
 
 mod base;
@@ -16,7 +16,7 @@ pub struct Server {
     pub gh_base_url: String,
     pub max_upload_size: u64,
     pub max_unpack_size: u64,
-    pub publish_rate_limit: PublishRateLimit,
+    pub publish_rate_limit: RateLimiter,
     pub blocked_traffic: Vec<(String, Vec<String>)>,
     pub max_allowed_page_offset: u32,
     pub page_offset_ua_blocklist: Vec<String>,

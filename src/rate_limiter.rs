@@ -13,12 +13,12 @@ crate::pg_enum! {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct PublishRateLimit {
+pub struct RateLimiter {
     pub rate: Duration,
     pub burst: i32,
 }
 
-impl Default for PublishRateLimit {
+impl Default for RateLimiter {
     fn default() -> Self {
         let minutes = dotenv::var("WEB_NEW_PKG_RATE_LIMIT_RATE_MINUTES")
             .unwrap_or_default()
@@ -37,9 +37,9 @@ impl Default for PublishRateLimit {
     }
 }
 
-impl PublishRateLimit {
-    pub fn check_rate_limit(&self, uploader: i32, conn: &PgConnection) -> AppResult<()> {
-        let bucket = self.take_token(uploader, Utc::now().naive_utc(), conn)?;
+impl RateLimiter {
+    pub fn check_rate_limit(&self, user_id: i32, conn: &PgConnection) -> AppResult<()> {
+        let bucket = self.take_token(user_id, Utc::now().naive_utc(), conn)?;
         if bucket.tokens >= 1 {
             Ok(())
         } else {
@@ -59,11 +59,10 @@ impl PublishRateLimit {
     /// since we only refill buckets when trying to take a token from it.
     fn take_token(
         &self,
-        uploader: i32,
+        user_id: i32,
         now: NaiveDateTime,
         conn: &PgConnection,
     ) -> QueryResult<Bucket> {
-        use self::publish_limit_buckets::dsl::*;
         use diesel::sql_types::{Double, Interval, Text, Timestamp};
 
         sql_function!(fn date_part(x: Text, y: Timestamp) -> Double);
@@ -76,7 +75,7 @@ impl PublishRateLimit {
         sql_function!(fn least<T>(x: T, y: T) -> T);
 
         let burst: i32 = publish_rate_overrides::table
-            .find((uploader, LimitedAction::PublishNew))
+            .find((user_id, LimitedAction::PublishNew))
             .filter(
                 publish_rate_overrides::expires_at
                     .is_null()
@@ -91,18 +90,25 @@ impl PublishRateLimit {
         // However, for the intervals we're dealing with, it is always well
         // defined, so we convert to an f64 of seconds to represent this.
         let tokens_to_add = floor(
-            (date_part("epoch", now) - date_part("epoch", last_refill))
+            (date_part("epoch", now) - date_part("epoch", publish_limit_buckets::last_refill))
                 / interval_part("epoch", self.refill_rate()),
         );
 
-        diesel::insert_into(publish_limit_buckets)
-            .values((user_id.eq(uploader), tokens.eq(burst), last_refill.eq(now)))
-            .on_conflict(user_id)
+        diesel::insert_into(publish_limit_buckets::table)
+            .values((
+                publish_limit_buckets::user_id.eq(user_id),
+                publish_limit_buckets::tokens.eq(burst),
+                publish_limit_buckets::last_refill.eq(now),
+            ))
+            .on_conflict(publish_limit_buckets::user_id)
             .do_update()
             .set((
-                tokens.eq(least(burst, greatest(0, tokens - 1) + tokens_to_add)),
-                last_refill
-                    .eq(last_refill + self.refill_rate().into_sql::<Interval>() * tokens_to_add),
+                publish_limit_buckets::tokens.eq(least(
+                    burst,
+                    greatest(0, publish_limit_buckets::tokens - 1) + tokens_to_add,
+                )),
+                publish_limit_buckets::last_refill.eq(publish_limit_buckets::last_refill
+                    + self.refill_rate().into_sql::<Interval>() * tokens_to_add),
             ))
             .get_result(conn)
     }
@@ -134,7 +140,7 @@ mod tests {
         let conn = pg_connection();
         let now = now();
 
-        let rate = PublishRateLimit {
+        let rate = RateLimiter {
             rate: Duration::from_secs(1),
             burst: 10,
         };
@@ -147,7 +153,7 @@ mod tests {
         };
         assert_eq!(expected, bucket);
 
-        let rate = PublishRateLimit {
+        let rate = RateLimiter {
             rate: Duration::from_millis(50),
             burst: 20,
         };
@@ -167,7 +173,7 @@ mod tests {
         let conn = pg_connection();
         let now = now();
 
-        let rate = PublishRateLimit {
+        let rate = RateLimiter {
             rate: Duration::from_secs(1),
             burst: 10,
         };
@@ -188,7 +194,7 @@ mod tests {
         let conn = pg_connection();
         let now = now();
 
-        let rate = PublishRateLimit {
+        let rate = RateLimiter {
             rate: Duration::from_secs(1),
             burst: 10,
         };
@@ -214,7 +220,7 @@ mod tests {
             NaiveDateTime::parse_from_str("2019-03-19T21:11:24.620401", "%Y-%m-%dT%H:%M:%S%.f")
                 .unwrap();
 
-        let rate = PublishRateLimit {
+        let rate = RateLimiter {
             rate: Duration::from_millis(100),
             burst: 10,
         };
@@ -236,7 +242,7 @@ mod tests {
         let conn = pg_connection();
         let now = now();
 
-        let rate = PublishRateLimit {
+        let rate = RateLimiter {
             rate: Duration::from_millis(100),
             burst: 10,
         };
@@ -258,7 +264,7 @@ mod tests {
         let conn = pg_connection();
         let now = now();
 
-        let rate = PublishRateLimit {
+        let rate = RateLimiter {
             rate: Duration::from_secs(1),
             burst: 10,
         };
@@ -282,7 +288,7 @@ mod tests {
         let conn = pg_connection();
         let now = now();
 
-        let rate = PublishRateLimit {
+        let rate = RateLimiter {
             rate: Duration::from_secs(1),
             burst: 10,
         };
@@ -305,7 +311,7 @@ mod tests {
         let conn = pg_connection();
         let now = now();
 
-        let rate = PublishRateLimit {
+        let rate = RateLimiter {
             rate: Duration::from_secs(1),
             burst: 10,
         };
@@ -328,7 +334,7 @@ mod tests {
         let conn = pg_connection();
         let now = now();
 
-        let rate = PublishRateLimit {
+        let rate = RateLimiter {
             rate: Duration::from_secs(1),
             burst: 10,
         };
@@ -355,7 +361,7 @@ mod tests {
         let conn = pg_connection();
         let now = now();
 
-        let rate = PublishRateLimit {
+        let rate = RateLimiter {
             rate: Duration::from_secs(1),
             burst: 10,
         };

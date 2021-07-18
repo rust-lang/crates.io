@@ -15,7 +15,7 @@ use crate::models::{
 use crate::util::errors::{cargo_err, AppResult};
 
 use crate::models::helpers::with_count::*;
-use crate::publish_rate_limit::PublishRateLimit;
+use crate::rate_limiter::RateLimiter;
 use crate::schema::*;
 
 #[derive(Debug, Queryable, Identifiable, Associations, Clone, Copy)]
@@ -97,7 +97,7 @@ impl<'a> NewCrate<'a> {
         self,
         conn: &PgConnection,
         uploader: i32,
-        rate_limit: Option<&PublishRateLimit>,
+        rate_limit: Option<&RateLimiter>,
     ) -> AppResult<Crate> {
         use diesel::update;
 
