@@ -52,6 +52,7 @@ pub mod sql;
 pub mod ssh;
 pub mod swirl;
 mod test_util;
+#[macro_use]
 pub mod util;
 pub mod worker;
 
