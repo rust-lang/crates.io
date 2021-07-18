@@ -8,6 +8,12 @@ use crate::schema::{publish_limit_buckets, publish_rate_overrides};
 use crate::sql::{date_part, floor, greatest, interval_part, least};
 use crate::util::errors::{AppResult, TooManyRequests};
 
+crate::pg_enum! {
+    pub enum LimitedAction {
+        PublishNew = 0,
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct PublishRateLimit {
     pub rate: Duration,
@@ -40,6 +46,7 @@ struct Bucket {
     user_id: i32,
     tokens: i32,
     last_refill: NaiveDateTime,
+    action: LimitedAction,
 }
 
 impl PublishRateLimit {
@@ -71,7 +78,7 @@ impl PublishRateLimit {
         use self::publish_limit_buckets::dsl::*;
 
         let burst: i32 = publish_rate_overrides::table
-            .find(uploader)
+            .find((uploader, LimitedAction::PublishNew))
             .filter(
                 publish_rate_overrides::expires_at
                     .is_null()
@@ -128,6 +135,7 @@ mod tests {
             user_id: bucket.user_id,
             tokens: 10,
             last_refill: now,
+            action: LimitedAction::PublishNew,
         };
         assert_eq!(expected, bucket);
 
@@ -140,6 +148,7 @@ mod tests {
             user_id: bucket.user_id,
             tokens: 20,
             last_refill: now,
+            action: LimitedAction::PublishNew,
         };
         assert_eq!(expected, bucket);
         Ok(())
@@ -160,6 +169,7 @@ mod tests {
             user_id,
             tokens: 4,
             last_refill: now,
+            action: LimitedAction::PublishNew,
         };
         assert_eq!(expected, bucket);
         Ok(())
@@ -181,6 +191,7 @@ mod tests {
             user_id,
             tokens: 6,
             last_refill: refill_time,
+            action: LimitedAction::PublishNew,
         };
         assert_eq!(expected, bucket);
         Ok(())
@@ -206,6 +217,7 @@ mod tests {
             user_id,
             tokens: 7,
             last_refill: refill_time,
+            action: LimitedAction::PublishNew,
         };
         assert_eq!(expected, bucket);
         Ok(())
@@ -227,6 +239,7 @@ mod tests {
             user_id,
             tokens: 6,
             last_refill: expected_refill_time,
+            action: LimitedAction::PublishNew,
         };
         assert_eq!(expected, bucket);
         Ok(())
@@ -247,6 +260,7 @@ mod tests {
             user_id,
             tokens: 0,
             last_refill: now,
+            action: LimitedAction::PublishNew,
         };
         assert_eq!(expected, bucket);
 
@@ -271,6 +285,7 @@ mod tests {
             user_id,
             tokens: 1,
             last_refill: refill_time,
+            action: LimitedAction::PublishNew,
         };
         assert_eq!(expected, bucket);
 
@@ -293,6 +308,7 @@ mod tests {
             user_id,
             tokens: 10,
             last_refill: refill_time,
+            action: LimitedAction::PublishNew,
         };
         assert_eq!(expected, bucket);
 
@@ -391,6 +407,7 @@ mod tests {
                 user_id: new_user(conn, "new_user")?,
                 tokens,
                 last_refill: now,
+                action: LimitedAction::PublishNew,
             })
             .get_result(conn)
     }
