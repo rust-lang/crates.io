@@ -39,16 +39,6 @@ impl Default for PublishRateLimit {
     }
 }
 
-#[derive(Queryable, Insertable, Debug, PartialEq, Clone, Copy)]
-#[diesel(table_name = publish_limit_buckets, check_for_backend(diesel::pg::Pg))]
-#[allow(dead_code)] // Most fields only read in tests
-struct Bucket {
-    user_id: i32,
-    tokens: i32,
-    last_refill: NaiveDateTime,
-    action: LimitedAction,
-}
-
 impl PublishRateLimit {
     pub fn check_rate_limit(&self, uploader: i32, conn: &mut PgConnection) -> AppResult<()> {
         let bucket = self.take_token(uploader, Utc::now().naive_utc(), conn)?;
@@ -113,6 +103,16 @@ impl PublishRateLimit {
         use diesel::dsl::*;
         (self.rate.as_millis() as i64).milliseconds()
     }
+}
+
+#[derive(Queryable, Insertable, Debug, PartialEq, Clone, Copy)]
+#[diesel(table_name = publish_limit_buckets, check_for_backend(diesel::pg::Pg))]
+#[allow(dead_code)] // Most fields only read in tests
+struct Bucket {
+    user_id: i32,
+    tokens: i32,
+    last_refill: NaiveDateTime,
+    action: LimitedAction,
 }
 
 #[cfg(test)]
