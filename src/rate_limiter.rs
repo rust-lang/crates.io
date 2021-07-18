@@ -27,6 +27,14 @@ impl LimitedAction {
         }
     }
 
+    pub fn error_message(&self) -> &'static str {
+        match self {
+            LimitedAction::PublishNew => {
+                "You have published too many new crates in a short period of time."
+            }
+        }
+    }
+
     /// Key used to identify this action in environment variables. See `src/config.rs`.
     pub fn env_var_key(&self) -> &'static str {
         match self {
@@ -62,6 +70,7 @@ impl RateLimiter {
             Ok(())
         } else {
             Err(Box::new(TooManyRequests {
+                action,
                 retry_after: bucket.last_refill
                     + chrono::Duration::from_std(self.config[&action].rate).unwrap(),
             }))
