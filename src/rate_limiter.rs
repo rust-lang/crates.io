@@ -9,6 +9,7 @@ use std::time::Duration;
 crate::pg_enum! {
     pub enum LimitedAction {
         PublishNew = 0,
+        PublishExisting = 1,
     }
 }
 
@@ -17,6 +18,7 @@ impl LimitedAction {
     pub fn default_rate_seconds(&self) -> u64 {
         match self {
             LimitedAction::PublishNew => 60 * 10,
+            LimitedAction::PublishExisting => 60,
         }
     }
 
@@ -24,6 +26,7 @@ impl LimitedAction {
     pub fn default_burst(&self) -> i32 {
         match self {
             LimitedAction::PublishNew => 5,
+            LimitedAction::PublishExisting => 30,
         }
     }
 
@@ -32,6 +35,9 @@ impl LimitedAction {
             LimitedAction::PublishNew => {
                 "You have published too many new crates in a short period of time."
             }
+            LimitedAction::PublishExisting => {
+                "You have published too many versions of existing crates in a short period of time."
+            }
         }
     }
 
@@ -39,6 +45,7 @@ impl LimitedAction {
     pub fn env_var_key(&self) -> &'static str {
         match self {
             LimitedAction::PublishNew => "PUBLISH_NEW",
+            LimitedAction::PublishExisting => "PUBLISH_EXISTING",
         }
     }
 }
@@ -351,6 +358,49 @@ mod tests {
     }
 
     #[test]
+    fn two_actions_dont_interfere_with_each_other() -> QueryResult<()> {
+        let conn = pg_connection();
+        let now = now();
+        let user_id = new_user(&conn, "user")?;
+
+        let mut config = HashMap::new();
+        config.insert(
+            LimitedAction::PublishNew,
+            RateLimiterConfig {
+                rate: Duration::from_secs(1),
+                burst: 10,
+            },
+        );
+        config.insert(
+            LimitedAction::PublishExisting,
+            RateLimiterConfig {
+                rate: Duration::from_secs(1),
+                burst: 20,
+            },
+        );
+        let rate = RateLimiter::new(config);
+
+        let refill_time = now + chrono::Duration::seconds(4);
+        assert_eq!(
+            10,
+            rate.take_token(user_id, LimitedAction::PublishNew, refill_time, &conn)?
+                .tokens,
+        );
+        assert_eq!(
+            9,
+            rate.take_token(user_id, LimitedAction::PublishNew, refill_time, &conn)?
+                .tokens,
+        );
+        assert_eq!(
+            20,
+            rate.take_token(user_id, LimitedAction::PublishExisting, refill_time, &conn)?
+                .tokens,
+        );
+
+        Ok(())
+    }
+
+    #[test]
     fn override_is_used_instead_of_global_burst_if_present() -> QueryResult<()> {
         let conn = pg_connection();
         let now = now();
@@ -372,6 +422,47 @@ mod tests {
 
         assert_eq!(20, bucket.tokens);
         assert_eq!(10, other_bucket.tokens);
+        Ok(())
+    }
+
+    #[test]
+    fn override_is_different_for_each_action() -> QueryResult<()> {
+        let conn = pg_connection();
+        let now = now();
+        let user_id = new_user(&conn, "user")?;
+
+        let mut config = HashMap::new();
+        for action in &[LimitedAction::PublishNew, LimitedAction::PublishExisting] {
+            config.insert(
+                *action,
+                RateLimiterConfig {
+                    rate: Duration::from_secs(1),
+                    burst: 10,
+                },
+            );
+        }
+        let rate = RateLimiter::new(config);
+
+        diesel::insert_into(publish_rate_overrides::table)
+            .values((
+                publish_rate_overrides::user_id.eq(user_id),
+                publish_rate_overrides::action.eq(LimitedAction::PublishNew),
+                publish_rate_overrides::burst.eq(20),
+            ))
+            .execute(&conn)?;
+
+        let refill_time = now + chrono::Duration::seconds(4);
+        assert_eq!(
+            20,
+            rate.take_token(user_id, LimitedAction::PublishNew, refill_time, &conn)?
+                .tokens,
+        );
+        assert_eq!(
+            10,
+            rate.take_token(user_id, LimitedAction::PublishExisting, refill_time, &conn)?
+                .tokens,
+        );
+
         Ok(())
     }
 

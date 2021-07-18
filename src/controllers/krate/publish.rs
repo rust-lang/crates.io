@@ -11,6 +11,7 @@ use crate::models::{
     NewVersion, Rights, VersionAction,
 };
 
+use crate::rate_limiter::LimitedAction;
 use crate::render;
 use crate::schema::*;
 use crate::util::errors::{cargo_err, AppResult};
@@ -72,6 +73,16 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
         ))
     })?;
 
+    // Check the rate limits on the endpoint. Publishing a new crate uses a different (stricter)
+    // limiting pool than publishing a new version of an existing crate to prevent mass squatting.
+    let limited_action = if Crate::by_name(&new_crate.name).execute(&*conn)? == 0 {
+        LimitedAction::PublishNew
+    } else {
+        LimitedAction::PublishExisting
+    };
+    app.rate_limiter
+        .check_rate_limit(user.id, limited_action, &conn)?;
+
     // Create a transaction on the database, if there are no errors,
     // commit the transactions to record a new or updated crate.
     conn.transaction(|| {
@@ -107,7 +118,7 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
         };
 
         let license_file = new_crate.license_file.as_deref();
-        let krate = persist.create_or_update(&conn, user.id, Some(&app.rate_limiter))?;
+        let krate = persist.create_or_update(&conn, user.id)?;
 
         let owners = krate.owners(&conn)?;
         if user.rights(req.app(), &owners)? < Rights::Publish {
