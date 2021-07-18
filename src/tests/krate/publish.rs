@@ -5,6 +5,7 @@ use cargo_registry::controllers::krate::publish::{
     missing_metadata_error_message, MISSING_RIGHTS_ERROR_MESSAGE, WILDCARD_ERROR_MESSAGE,
 };
 use cargo_registry::models::krate::MAX_NAME_LENGTH;
+use cargo_registry::rate_limiter::LimitedAction;
 use cargo_registry::schema::{api_tokens, emails, versions_published_by};
 use cargo_registry::views::GoodCrate;
 use diesel::{delete, update, ExpressionMethods, QueryDsl, RunQueryDsl};
@@ -914,7 +915,7 @@ fn new_krate_tarball_with_hard_links() {
 #[test]
 fn publish_new_crate_rate_limited() {
     let (app, anon, _, token) = TestApp::full()
-        .with_publish_rate_limit(Duration::from_millis(500), 1)
+        .with_rate_limit(LimitedAction::PublishNew, Duration::from_millis(500), 1)
         .with_token();
 
     // Upload a new crate
@@ -943,7 +944,7 @@ fn publish_new_crate_rate_limited() {
 #[test]
 fn publish_rate_limit_doesnt_affect_existing_crates() {
     let (app, _, _, token) = TestApp::full()
-        .with_publish_rate_limit(Duration::from_millis(500), 1)
+        .with_rate_limit(LimitedAction::PublishNew, Duration::from_millis(500), 1)
         .with_token();
 
     // Upload a new crate

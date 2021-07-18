@@ -107,8 +107,7 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
         };
 
         let license_file = new_crate.license_file.as_deref();
-        let krate =
-            persist.create_or_update(&conn, user.id, Some(&app.config.publish_rate_limit))?;
+        let krate = persist.create_or_update(&conn, user.id, Some(&app.rate_limiter))?;
 
         let owners = krate.owners(&conn)?;
         if user.rights(req.app(), &owners)? < Rights::Publish {

@@ -61,7 +61,7 @@ macro_rules! pg_enum {
             $($item:ident = $int:expr,)*
         }
     ) => {
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize, FromSqlRow, AsExpression)]
+        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, FromSqlRow, AsExpression)]
         #[sql_type = "diesel::sql_types::Integer"]
         #[serde(rename_all = "snake_case")]
         #[repr(i32)]
@@ -85,6 +85,11 @@ macro_rules! pg_enum {
             ) -> diesel::serialize::Result {
                 diesel::serialize::ToSql::<diesel::sql_types::Integer, diesel::pg::Pg>::to_sql(&(*self as i32), out)
             }
+        }
+
+        impl $name {
+            #[allow(unused)]
+            $vis const VARIANTS: &'static [Self] = &[$($name::$item),*];
         }
     }
 }
