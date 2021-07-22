@@ -34,6 +34,17 @@
       <span local-class="sep">|</span>
       <Dropdown as |dd|>
         <dd.Trigger local-class="dropdown-button">
+          Theme
+        </dd.Trigger>
+        <dd.Menu local-class="doc-links" as |menu|>
+          <menu.Item onclick={{this.useSystemTheme}}><span>Sync with system</span></menu.Item>
+          <menu.Item onclick={{this.useLightTheme}}><span>Light theme</span></menu.Item>
+          <menu.Item onclick={{this.useDarkTheme}}><span>Dark theme</span></menu.Item>
+        </dd.Menu>
+      </Dropdown>
+      <span local-class="sep">|</span>
+      <Dropdown as |dd|>
+        <dd.Trigger local-class="dropdown-button">
           Docs
         </dd.Trigger>
 

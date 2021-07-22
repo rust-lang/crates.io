@@ -4,20 +4,19 @@
     --range-color: var(--grey900);
     --crate-color: var(--grey700);
     --placeholder-opacity: 0.35;
-    --shadow: 0 1px 3px hsla(51, 90%, 42%, .35);
-
+  
     display: flex;
     align-items: center;
     position: relative;
     font-size: 18px;
     padding: 15px 25px;
-    background-color: white;
+    background-color: var(--item-background);
     border-radius: 5px;
     box-shadow: var(--shadow);
     transition: all 300ms;
 
     &:hover, &.focused {
-        background-color: var(--hover-bg-color);
+        background-color: var(--item-hover);
         transition: all 0ms;
     }
 

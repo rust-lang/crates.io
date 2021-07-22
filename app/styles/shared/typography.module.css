@@ -13,6 +13,6 @@
     font-weight: normal;
 
     &:hover {
-        color: #6b6b6b;
+        color: var(--color4);
     }
 }

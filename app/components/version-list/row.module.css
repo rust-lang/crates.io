@@ -2,20 +2,19 @@
     --bg-color: var(--grey200);
     --hover-bg-color: hsl(217, 37%, 98%);
     --fg-color: var(--grey700);
-    --shadow: 0 1px 3px hsla(51, 90%, 42%, .35);
 
     display: flex;
     align-items: center;
     position: relative;
     font-size: 18px;
     padding: 15px 25px;
-    background-color: white;
+    background-color: var(--item-background);
     border-radius: 5px;
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow2);
     transition: all 300ms;
 
     &:hover, &.focused {
-        background-color: var(--hover-bg-color);
+        background-color: var(--item-hover);
         transition: all 0ms;
     }
 

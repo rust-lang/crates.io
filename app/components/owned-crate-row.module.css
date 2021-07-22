@@ -2,7 +2,7 @@
     display: flex;
     align-items: center;
     background-color: #fff;
-    border: 1px solid #d5d3cb;
+    border: 1px solid var(--gray-border);
     padding: 20px 30px;
     font-weight: bold;
     cursor: pointer;
@@ -24,12 +24,12 @@
     width: 36px;
     height: 36px;
     margin-left: 10px;
-    border: 2px solid #d5d3cb;
+    border: 2px solid var(--gray-border);
     border-radius: 50%;
 
     .checked & {
-        background-color: #cfc487;
-        border-color: #cfc487;
+        background-color: var(--owned-crate-checked);
+        border-color: var(--owned-crate-checked);
     }
 }
 

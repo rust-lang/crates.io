@@ -1,5 +1,4 @@
 .link {
-    --shadow: 0 2px 3px hsla(51, 50%, 44%, .35);
     --placeholder-bg: hsla(59, 19%, 50%, 1.0);
     --placeholder-bg2: hsla(59, 19%, 50%, 0.7);
 
@@ -9,10 +8,10 @@
     height: 60px;
     margin: 8px 0;
     padding: 0 15px;
-    background-color: white;
-    color: #525252;
+    background-color: var(--item-background);
+    color: var(--download-list-link);
     border-radius: 5px;
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow2);
     cursor: wait;
 }
 

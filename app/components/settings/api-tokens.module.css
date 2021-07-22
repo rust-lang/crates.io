@@ -21,7 +21,7 @@
 
 .row {
     width: 100%;
-    border: 1px solid #d5d3cb;
+    border: 1px solid var(--gray-border);
     border-bottom-width: 0;
     padding: 10px 20px;
     display: flex;

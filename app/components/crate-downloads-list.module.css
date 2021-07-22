@@ -8,8 +8,8 @@
 }
 
 .link {
-    color: #525252;
-    background-color: #edebdd;
+    color: var(--download-list-link);
+    background-color: var(--main-bg-dark);
     font-size: 90%;
     padding: 20px 10px;
     display: flex;

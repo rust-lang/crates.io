@@ -2,7 +2,7 @@
     margin: 0;
     text-align: left;
     padding: 0;
-    background: white;
+    background: var(--item-background);
     border: 1px solid var(--gray-border);
     list-style: none;
     overflow: hidden;

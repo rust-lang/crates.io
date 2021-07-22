@@ -6,13 +6,11 @@
 }
 
 .docs {
-    --shadow: 0 2px 3px hsla(51, 50%, 44%, .35);
-
     margin-bottom: 25px;
     padding: 25px;
-    background-color: white;
+    background-color: var(--item-background);
     border-radius: 5px;
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow2);
 
     @media only screen and (max-width: 550px) {
         margin-left: -15px;
@@ -105,6 +103,9 @@
         font-size: 160%;
         font-weight: bold;
         margin-bottom: 4px;
+        circle {
+            fill: #fff;
+        }
     }
 
     .num__align {
