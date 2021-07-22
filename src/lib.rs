@@ -44,12 +44,13 @@ pub mod git;
 pub mod github;
 pub mod metrics;
 pub mod middleware;
-mod publish_rate_limit;
+pub mod rate_limiter;
 pub mod render;
 pub mod schema;
 pub mod tasks;
 mod test_util;
 pub mod uploaders;
+#[macro_use]
 pub mod util;
 
 pub mod controllers;

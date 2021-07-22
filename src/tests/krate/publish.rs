@@ -5,6 +5,7 @@ use cargo_registry::controllers::krate::publish::{
     missing_metadata_error_message, MISSING_RIGHTS_ERROR_MESSAGE, WILDCARD_ERROR_MESSAGE,
 };
 use cargo_registry::models::krate::MAX_NAME_LENGTH;
+use cargo_registry::rate_limiter::LimitedAction;
 use cargo_registry::schema::{api_tokens, emails, versions_published_by};
 use cargo_registry::views::GoodCrate;
 use diesel::{delete, update, ExpressionMethods, QueryDsl, RunQueryDsl};
@@ -912,9 +913,9 @@ fn new_krate_tarball_with_hard_links() {
 }
 
 #[test]
-fn publish_new_crate_rate_limited() {
+fn publish_new_crates_rate_limit() {
     let (app, anon, _, token) = TestApp::full()
-        .with_publish_rate_limit(Duration::from_millis(500), 1)
+        .with_rate_limit(LimitedAction::PublishNew, Duration::from_millis(500), 1)
         .with_token();
 
     // Upload a new crate
@@ -941,9 +942,9 @@ fn publish_new_crate_rate_limited() {
 }
 
 #[test]
-fn publish_rate_limit_doesnt_affect_existing_crates() {
+fn publish_new_crates_rate_limit_doesnt_affect_existing_crates() {
     let (app, _, _, token) = TestApp::full()
-        .with_publish_rate_limit(Duration::from_millis(500), 1)
+        .with_rate_limit(LimitedAction::PublishNew, Duration::from_millis(500), 1)
         .with_token();
 
     // Upload a new crate
@@ -952,5 +953,72 @@ fn publish_rate_limit_doesnt_affect_existing_crates() {
 
     let new_version = PublishBuilder::new("rate_limited1").version("1.0.1");
     token.enqueue_publish(new_version).good();
+    app.run_pending_background_jobs();
+}
+
+#[test]
+fn publish_existing_crates_rate_limit() {
+    let (app, anon, _, token) = TestApp::full()
+        .with_rate_limit(
+            LimitedAction::PublishExisting,
+            Duration::from_millis(500),
+            1,
+        )
+        .with_token();
+
+    // Upload a new crate (uses a different rate limit not tested here)
+    let crate_to_publish = PublishBuilder::new("rate_limited").version("1.0.0");
+    token.enqueue_publish(crate_to_publish).good();
+
+    // Upload a new version of the crate
+    let crate_to_publish = PublishBuilder::new("rate_limited").version("1.0.1");
+    token.enqueue_publish(crate_to_publish).good();
+
+    // Uploading a second version of the crate is limited
+    let crate_to_publish = PublishBuilder::new("rate_limited").version("1.0.2");
+    let response = token.enqueue_publish(crate_to_publish);
+    assert_eq!(response.status(), StatusCode::TOO_MANY_REQUESTS);
+    app.run_pending_background_jobs();
+
+    let json = anon.show_crate("rate_limited");
+    assert_eq!(json.krate.max_version, "1.0.1");
+
+    // Wait for the limit to be up
+    thread::sleep(Duration::from_millis(500));
+
+    let crate_to_publish = PublishBuilder::new("rate_limited").version("1.0.3");
+    token.enqueue_publish(crate_to_publish).good();
+
+    let json = anon.show_crate("rate_limited");
+    assert_eq!(json.krate.max_version, "1.0.3");
+}
+
+#[test]
+fn publish_existing_crates_rate_limit_doesnt_affect_new_crates() {
+    let (app, _, _, token) = TestApp::full()
+        .with_rate_limit(
+            LimitedAction::PublishExisting,
+            Duration::from_millis(500),
+            1,
+        )
+        .with_token();
+
+    // Upload a new crate (uses a different rate limit not tested here)
+    let crate_to_publish = PublishBuilder::new("rate_limited1").version("1.0.0");
+    token.enqueue_publish(crate_to_publish).good();
+
+    // Upload a new version of the crate
+    let crate_to_publish = PublishBuilder::new("rate_limited1").version("1.0.1");
+    token.enqueue_publish(crate_to_publish).good();
+
+    // Uploading a second version of the crate is limited
+    let crate_to_publish = PublishBuilder::new("rate_limited1").version("1.0.2");
+    let response = token.enqueue_publish(crate_to_publish);
+    assert_eq!(response.status(), StatusCode::TOO_MANY_REQUESTS);
+    app.run_pending_background_jobs();
+
+    // Uploading another crate should still work, as the rate limit is separate
+    let crate_to_publish = PublishBuilder::new("rate_limited2");
+    token.enqueue_publish(crate_to_publish).good();
     app.run_pending_background_jobs();
 }
