@@ -206,7 +206,19 @@ impl Display for RequestLine<'_> {
         line.add_field("at", at)?;
         line.add_field("method", self.req.method())?;
         line.add_quoted_field("path", FullPath(self.req))?;
-        line.add_field("request_id", request_header(self.req, "x-request-id"))?;
+
+        // The request_id is not logged for successful download requests
+        if !(self.req.path().ends_with("/download")
+            && self
+                .res
+                .as_ref()
+                .ok()
+                .map(|ok| ok.status().is_redirection())
+                == Some(true))
+        {
+            line.add_field("request_id", request_header(self.req, "x-request-id"))?;
+        }
+
         line.add_quoted_field("fwd", request_header(self.req, "x-real-ip"))?;
         line.add_field("service", TimeMs(self.response_time))?;
         line.add_field("status", status.as_str())?;
