@@ -35,7 +35,7 @@
       data-test-search-nav
     />
 
-    <div data-test-search-sort>
+    <div local-class="search-sort" data-test-search-sort>
       <span local-class="sort-by-label">Sort by </span>
       <SortDropdown @current={{this.currentSortBy}} as |sd|>
         <sd.Option @query={{hash page=1 sort="relevance"}}>Relevance</sd.Option>

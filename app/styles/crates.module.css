@@ -40,9 +40,24 @@
 
 .results-meta {
     display: flex;
+    flex-direction: row;
     align-items: center;
     justify-content: space-between;
     margin-bottom: 25px;
+
+    .crates-sort {
+        display: flex;
+        align-items: center;
+
+        @media only screen and (max-width: 450px) {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        span {
+            padding-inline-end: 6px;
+        }
+    }
 }
 
 .sort-by-label {

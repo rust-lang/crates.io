@@ -1,5 +1,7 @@
 .results-count {
     composes: small from '../styles/shared/typography.module.css';
+    word-break: break-word;
+    padding-right: 20px;
 }
 
 .highlight {

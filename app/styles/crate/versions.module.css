@@ -11,10 +11,22 @@
 
 .page-description {
     composes: small from '../shared/typography.module.css';
+    word-break: break-word;
+    padding-right: 20px;
 
     @media only screen and (max-width: 550px) {
         display: block;
         margin-bottom: 15px;
+    }
+}
+
+.search-sort {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    span {
+        padding-inline-end: 6px;
     }
 }
 
