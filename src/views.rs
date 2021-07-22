@@ -74,7 +74,7 @@ pub struct EncodableCategoryWithSubcategories {
 
 /// The serialization format for the `CrateOwnerInvitation` model.
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq)]
-pub struct EncodableCrateOwnerInvitation {
+pub struct EncodableCrateOwnerInvitationV1 {
     pub invitee_id: i32,
     pub inviter_id: i32,
     pub invited_by_username: String,
@@ -86,7 +86,7 @@ pub struct EncodableCrateOwnerInvitation {
     pub expires_at: NaiveDateTime,
 }
 
-impl EncodableCrateOwnerInvitation {
+impl EncodableCrateOwnerInvitationV1 {
     pub fn from(
         invitation: CrateOwnerInvitation,
         inviter_name: String,
@@ -103,6 +103,18 @@ impl EncodableCrateOwnerInvitation {
             expires_at,
         }
     }
+}
+
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq)]
+pub struct EncodableCrateOwnerInvitation {
+    pub invitee_id: i32,
+    pub inviter_id: i32,
+    pub crate_id: i32,
+    pub crate_name: String,
+    #[serde(with = "rfc3339")]
+    pub created_at: NaiveDateTime,
+    #[serde(with = "rfc3339")]
+    pub expires_at: NaiveDateTime,
 }
 
 #[derive(Deserialize, Serialize, Debug, Copy, Clone)]
@@ -801,7 +813,7 @@ mod tests {
 
     #[test]
     fn crate_owner_invitation_serializes_to_rfc3339() {
-        let inv = EncodableCrateOwnerInvitation {
+        let inv = EncodableCrateOwnerInvitationV1 {
             invitee_id: 1,
             inviter_id: 2,
             invited_by_username: "".to_string(),
