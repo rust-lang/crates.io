@@ -54,7 +54,7 @@ input.search {
     background-color: white;
     background-image: url('/assets/search.png');
     background-repeat: no-repeat;
-    background-position: 6px 6px;
+    background-position: 8px center;
     background-size: 14px 15px;
     border-radius: 15px;
     box-shadow: none;
