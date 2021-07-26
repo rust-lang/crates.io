@@ -39,7 +39,7 @@
   "dependencies": {
     "@sentry/browser": "6.10.0",
     "@sentry/integrations": "6.10.0",
-    "chart.js": "3.4.1",
+    "chart.js": "3.5.0",
     "copy-text-to-clipboard": "3.0.1",
     "date-fns": "2.23.0",
     "fastboot-app-server": "3.0.0",
