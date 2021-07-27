@@ -51,7 +51,7 @@
   "devDependencies": {
     "@ember/optional-features": "2.0.0",
     "@ember/render-modifiers": "1.0.2",
-    "@ember/test-helpers": "2.2.8",
+    "@ember/test-helpers": "2.2.9",
     "@embroider/compat": "0.43.0",
     "@embroider/core": "0.43.0",
     "@embroider/webpack": "0.43.0",
