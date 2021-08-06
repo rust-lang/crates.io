@@ -2246,6 +2246,7 @@ dependencies = [
  "sentry-contexts",
  "sentry-core",
  "sentry-panic",
+ "sentry-tracing",
  "tokio",
 ]
 
@@ -2298,6 +2299,17 @@ checksum = "692bf989f0c99f025e33d7f58e62822c3771f56d189698c66dcc863122255d95"
 dependencies = [
  "sentry-backtrace",
  "sentry-core",
+]
+
+[[package]]
+name = "sentry-tracing"
+version = "0.23.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d291df287241b0ef97f5bf9e9a595691ef8dfb49bc6acfd55b9dc2ade681f1c9"
+dependencies = [
+ "sentry-core",
+ "tracing-core",
+ "tracing-subscriber",
 ]
 
 [[package]]
