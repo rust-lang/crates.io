@@ -138,11 +138,13 @@ total_downloads = "public"
 
 [publish_limit_buckets.columns]
 user_id = "private"
+action = "private"
 tokens = "private"
 last_refill = "private"
 
 [publish_rate_overrides.columns]
 user_id = "private"
+action = "private"
 burst = "private"
 expires_at = "private"
 

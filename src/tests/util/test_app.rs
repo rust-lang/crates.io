@@ -6,8 +6,10 @@ use cargo_registry::{
     background_jobs::Environment,
     db::DieselPool,
     git::{Credentials, RepositoryConfig},
+    rate_limiter::{LimitedAction, RateLimiterConfig},
     App, Emails,
 };
+use std::collections::HashMap;
 use std::{rc::Rc, sync::Arc, time::Duration};
 
 use cargo_registry::git::Repository as WorkerRepository;
@@ -277,10 +279,11 @@ impl TestAppBuilder {
         self
     }
 
-    pub fn with_publish_rate_limit(self, rate: Duration, burst: i32) -> Self {
+    pub fn with_rate_limit(self, action: LimitedAction, rate: Duration, burst: i32) -> Self {
         self.with_config(|config| {
-            config.publish_rate_limit.rate = rate;
-            config.publish_rate_limit.burst = burst;
+            config
+                .rate_limiter
+                .insert(action, RateLimiterConfig { rate, burst });
         })
     }
 
@@ -314,6 +317,17 @@ pub fn init_logger() {
 }
 
 fn simple_config() -> config::Server {
+    let mut rate_limiter = HashMap::new();
+    for action in LimitedAction::VARIANTS {
+        rate_limiter.insert(
+            *action,
+            RateLimiterConfig {
+                rate: Duration::from_secs(1),
+                burst: 1024,
+            },
+        );
+    }
+
     config::Server {
         base: config::Base::test(),
         db: config::DatabasePools::test_from_environment(),
@@ -323,7 +337,6 @@ fn simple_config() -> config::Server {
         gh_base_url: "http://api.github.com".to_string(),
         max_upload_size: 3000,
         max_unpack_size: 2000,
-        publish_rate_limit: Default::default(),
         blocked_traffic: Default::default(),
         max_allowed_page_offset: 200,
         page_offset_ua_blocklist: vec![],
@@ -334,6 +347,7 @@ fn simple_config() -> config::Server {
         metrics_authorization_token: None,
         use_test_database_pool: true,
         instance_metrics_log_every_seconds: None,
+        rate_limiter,
     }
 }
 

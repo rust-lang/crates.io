@@ -1,5 +1,7 @@
-use crate::publish_rate_limit::PublishRateLimit;
+use crate::rate_limiter::{LimitedAction, RateLimiterConfig};
 use crate::{env, env_optional, uploaders::Uploader, Env};
+use std::collections::HashMap;
+use std::time::Duration;
 
 mod base;
 mod database_pools;
@@ -16,7 +18,6 @@ pub struct Server {
     pub gh_base_url: String,
     pub max_upload_size: u64,
     pub max_unpack_size: u64,
-    pub publish_rate_limit: PublishRateLimit,
     pub blocked_traffic: Vec<(String, Vec<String>)>,
     pub max_allowed_page_offset: u32,
     pub page_offset_ua_blocklist: Vec<String>,
@@ -27,6 +28,7 @@ pub struct Server {
     pub metrics_authorization_token: Option<String>,
     pub use_test_database_pool: bool,
     pub instance_metrics_log_every_seconds: Option<u64>,
+    pub rate_limiter: HashMap<LimitedAction, RateLimiterConfig>,
 }
 
 impl Default for Server {
@@ -64,12 +66,34 @@ impl Default for Server {
             .split(',')
             .map(ToString::to_string)
             .collect();
+
         let page_offset_ua_blocklist = match env_optional::<String>("WEB_PAGE_OFFSET_UA_BLOCKLIST")
         {
             None => vec![],
             Some(s) if s.is_empty() => vec![],
             Some(s) => s.split(',').map(String::from).collect(),
         };
+
+        // Dynamically load the configuration for all the rate limiting actions. See
+        // `src/rate_limiter.rs` for their definition.
+        let mut rate_limiter = HashMap::new();
+        for action in LimitedAction::VARIANTS {
+            rate_limiter.insert(
+                *action,
+                RateLimiterConfig {
+                    rate: Duration::from_secs(
+                        env_optional(&format!(
+                            "RATE_LIMITER_{}_RATE_SECONDS",
+                            action.env_var_key()
+                        ))
+                        .unwrap_or_else(|| action.default_rate_seconds()),
+                    ),
+                    burst: env_optional(&format!("RATE_LIMITER_{}_BURST", action.env_var_key()))
+                        .unwrap_or_else(|| action.default_burst()),
+                },
+            );
+        }
+
         Server {
             db: DatabasePools::full_from_environment(),
             base: Base::from_environment(),
@@ -79,7 +103,6 @@ impl Default for Server {
             gh_base_url: "https://api.github.com".to_string(),
             max_upload_size: 10 * 1024 * 1024, // 10 MB default file upload size limit
             max_unpack_size: 512 * 1024 * 1024, // 512 MB max when decompressed
-            publish_rate_limit: Default::default(),
             blocked_traffic: blocked_traffic(),
             max_allowed_page_offset: env_optional("WEB_MAX_ALLOWED_PAGE_OFFSET").unwrap_or(200),
             page_offset_ua_blocklist,
@@ -96,6 +119,7 @@ impl Default for Server {
             metrics_authorization_token: dotenv::var("METRICS_AUTHORIZATION_TOKEN").ok(),
             use_test_database_pool: false,
             instance_metrics_log_every_seconds: env_optional("INSTANCE_METRICS_LOG_EVERY_SECONDS"),
+            rate_limiter,
         }
     }
 }

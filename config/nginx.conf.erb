@@ -176,8 +176,6 @@ http {
 	client_body_timeout 30;
 	client_max_body_size 50m;
 
-	limit_req_zone $remote_addr zone=publish:10m rate=1r/m;
-
 	upstream app_server {
 		server localhost:8888 fail_timeout=0;
 	}
@@ -261,12 +259,5 @@ http {
 				proxy_pass http://app_server;
 			}
 		<% end %>
-
-		location ~ ^/api/v./crates/new$ {
-			proxy_pass http://app_server;
-
-			limit_req zone=publish burst=30 nodelay;
-			limit_req_status 429;
-		}
 	}
 }
