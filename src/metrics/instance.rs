@@ -17,11 +17,10 @@
 //! As a rule of thumb, if the metric requires a database query to be updated it's probably a
 //! service-level metric, and you should add it to `src/metrics/service.rs` instead.
 
+use crate::metrics::histogram::{Histogram, HistogramVec, TimingBuckets};
 use crate::util::errors::AppResult;
 use crate::{app::App, db::DieselPool};
-use prometheus::{
-    proto::MetricFamily, Histogram, HistogramVec, IntCounter, IntCounterVec, IntGauge, IntGaugeVec,
-};
+use prometheus::{proto::MetricFamily, IntCounter, IntCounterVec, IntGauge, IntGaugeVec};
 
 metrics! {
     pub struct InstanceMetrics {
@@ -30,7 +29,7 @@ metrics! {
         /// Number of used database connections in the pool
         database_used_conns: IntGaugeVec["pool"],
         /// Amount of time required to obtain a database connection
-        pub database_time_to_obtain_connection: HistogramVec["pool"],
+        pub database_time_to_obtain_connection: HistogramVec<TimingBuckets>["pool"],
 
         /// Number of requests processed by this instance
         pub requests_total: IntCounter,
@@ -38,7 +37,7 @@ metrics! {
         pub requests_in_flight: IntGauge,
 
         /// Response times of our endpoints
-        pub response_times: HistogramVec["endpoint"],
+        pub response_times: HistogramVec<TimingBuckets>["endpoint"],
         /// Nmber of responses per status code
         pub responses_by_status_code_total: IntCounterVec["status"],
 
@@ -47,7 +46,7 @@ metrics! {
         /// Number of download requests with a non-canonical crate name.
         pub downloads_non_canonical_crate_name_total: IntCounter,
         /// How long it takes to execute the SELECT query in the download endpoint.
-        pub downloads_select_query_execution_time: Histogram,
+        pub downloads_select_query_execution_time: Histogram<TimingBuckets>,
         /// Number of download requests that are not counted yet.
         downloads_not_counted_total: IntGauge,
     }
