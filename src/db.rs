@@ -13,6 +13,7 @@ use crate::middleware::app::RequestApp;
 pub enum DieselPool {
     Pool {
         pool: r2d2::Pool<ConnectionManager<PgConnection>>,
+        used_conns_metric: Histogram,
         time_to_obtain_connection_metric: Histogram,
     },
     Test(Arc<ReentrantMutex<PgConnection>>),
@@ -22,6 +23,7 @@ impl DieselPool {
     pub(crate) fn new(
         url: &str,
         config: r2d2::Builder<ConnectionManager<PgConnection>>,
+        used_conns_metric: Histogram,
         time_to_obtain_connection_metric: Histogram,
     ) -> Result<DieselPool, PoolError> {
         let manager = ConnectionManager::new(connection_url(url));
@@ -39,6 +41,7 @@ impl DieselPool {
         // automatically be marked as unhealthy and the rest of the application will adapt.
         let pool = DieselPool::Pool {
             pool: config.build_unchecked(manager),
+            used_conns_metric,
             time_to_obtain_connection_metric,
         };
         match pool.wait_until_healthy(Duration::from_secs(5)) {
@@ -62,8 +65,13 @@ impl DieselPool {
         match self {
             DieselPool::Pool {
                 pool,
+                used_conns_metric,
                 time_to_obtain_connection_metric,
             } => time_to_obtain_connection_metric.observe_closure_duration(|| {
+                // Record the number of used connections before obtaining the current one.
+                let state = pool.state();
+                used_conns_metric.observe((state.connections - state.idle_connections) as f64);
+
                 if let Some(conn) = pool.try_get() {
                     Ok(DieselPooledConn::Pool(conn))
                 } else if !self.is_healthy() {

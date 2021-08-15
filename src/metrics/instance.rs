@@ -17,7 +17,7 @@
 //! As a rule of thumb, if the metric requires a database query to be updated it's probably a
 //! service-level metric, and you should add it to `src/metrics/service.rs` instead.
 
-use crate::metrics::histogram::{Histogram, HistogramVec, TimingBuckets};
+use crate::metrics::histogram::{DatabasePoolBuckets, Histogram, HistogramVec, TimingBuckets};
 use crate::util::errors::AppResult;
 use crate::{app::App, db::DieselPool};
 use prometheus::{proto::MetricFamily, IntCounter, IntCounterVec, IntGauge, IntGaugeVec};
@@ -30,6 +30,8 @@ metrics! {
         database_used_conns: IntGaugeVec["pool"],
         /// Amount of time required to obtain a database connection
         pub database_time_to_obtain_connection: HistogramVec<TimingBuckets>["pool"],
+        /// Number of used database connections in the pool, as histogram
+        pub database_used_conns_histogram: HistogramVec<DatabasePoolBuckets>["pool"],
 
         /// Number of requests processed by this instance
         pub requests_total: IntCounter,
