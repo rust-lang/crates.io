@@ -24,6 +24,13 @@ impl HistogramBuckets for TimingBuckets {
     ];
 }
 
+/// Buckets geared towards measuring how many database connections are used in the database pool.
+pub struct DatabasePoolBuckets;
+
+impl HistogramBuckets for DatabasePoolBuckets {
+    const BUCKETS: &'static [f64] = &[0.0, 1.0, 2.0, 5.0, 10.0, 15.0, 20.0, 30.0, 50.0, 100.0];
+}
+
 /// Wrapper type over [`prometheus::Histogram`] to support defining buckets.
 pub struct Histogram<B: HistogramBuckets> {
     inner: prometheus::Histogram,
