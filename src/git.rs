@@ -398,11 +398,8 @@ pub fn squash_index(env: &Environment) -> Result<(), PerformError> {
     let now = Utc::now().format("%Y-%m-%d");
     let original_head = repo.head_oid()?.to_string();
     let msg = format!("Collapse index into one commit\n\n\
-
         Previous HEAD was {}, now on the `snapshot-{}` branch\n\n\
-
         More information about this change can be found [online] and on [this issue].\n\n\
-
         [online]: https://internals.rust-lang.org/t/cargos-crate-index-upcoming-squash-into-one-commit/8440\n\
         [this issue]: https://github.com/rust-lang/crates-io-cargo-teams/issues/47", original_head, now);
 
