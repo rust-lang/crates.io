@@ -59,7 +59,7 @@ fn new_wrong_token() {
     let response = anon.enqueue_publish(crate_to_publish);
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
     );
 
@@ -75,7 +75,7 @@ fn new_wrong_token() {
     let response = token.enqueue_publish(crate_to_publish);
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
     );
 }
@@ -89,7 +89,7 @@ fn invalid_names() {
         let response = token.enqueue_publish(crate_to_publish);
         assert_eq!(response.status(), StatusCode::OK);
 
-        let json = response.json();
+        let json = response.into_json();
         let json = json.as_object().unwrap();
         let errors = json.get("errors").unwrap().as_array().unwrap();
         let first_error = errors.first().unwrap().as_object().unwrap();
@@ -281,7 +281,7 @@ fn reject_new_krate_with_non_exact_dependency() {
     let response = token.enqueue_publish(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "no known crate named `foo_dep`" }] })
     );
 }
@@ -310,7 +310,7 @@ fn reject_new_crate_with_alternative_registry_dependency() {
     let response = token.enqueue_publish(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "Dependency `dep` is hosted on another registry. Cross-registry dependencies are not permitted on crates.io." }] })
     );
 }
@@ -333,7 +333,7 @@ fn new_krate_with_wildcard_dependency() {
     let response = token.enqueue_publish(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": WILDCARD_ERROR_MESSAGE }] })
     );
 }
@@ -372,7 +372,7 @@ fn new_krate_wrong_user() {
     let response = another_user.enqueue_publish(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": MISSING_RIGHTS_ERROR_MESSAGE }] })
     );
 }
@@ -387,7 +387,7 @@ fn new_krate_too_big() {
     let response = user.enqueue_publish(builder);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "uploaded tarball is malformed or too large when decompressed" }] })
     );
 }
@@ -420,7 +420,7 @@ fn new_krate_wrong_files() {
     let response = user.enqueue_publish(builder);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "invalid tarball uploaded" }] })
     );
 }
@@ -439,7 +439,7 @@ fn new_krate_gzip_bomb() {
     let response = token.enqueue_publish(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "uploaded tarball is malformed or too large when decompressed" }] })
     );
 }
@@ -459,7 +459,7 @@ fn new_krate_duplicate_version() {
     let response = token.enqueue_publish(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "crate version `1.0.0` is already uploaded" }] })
     );
 }
@@ -478,7 +478,7 @@ fn new_crate_similar_name() {
     let response = token.enqueue_publish(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "crate was previously named `Foo_similar`" }] })
     );
 }
@@ -497,7 +497,7 @@ fn new_crate_similar_name_hyphen() {
     let response = token.enqueue_publish(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "crate was previously named `foo_bar_hyphen`" }] })
     );
 }
@@ -516,7 +516,7 @@ fn new_crate_similar_name_underscore() {
     let response = token.enqueue_publish(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "crate was previously named `foo-bar-underscore`" }] })
     );
 }
@@ -589,7 +589,7 @@ fn new_krate_dependency_missing() {
     let response = token.enqueue_publish(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "no known crate named `bar_missing`" }] })
     );
 }
@@ -618,7 +618,7 @@ fn new_krate_without_any_email_fails() {
     let response = token.enqueue_publish(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "A verified email address is required to publish crates to crates.io. Visit https://crates.io/me to set and verify your email address." }] })
     );
 }
@@ -639,7 +639,7 @@ fn new_krate_with_unverified_email_fails() {
     let response = token.enqueue_publish(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "A verified email address is required to publish crates to crates.io. Visit https://crates.io/me to set and verify your email address." }] })
     );
 }
@@ -729,7 +729,7 @@ fn bad_keywords() {
     let response = token.enqueue_publish(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "invalid upload request: invalid length 29, expected a keyword with less than 20 characters at line 1 column 203" }] })
     );
 
@@ -737,7 +737,7 @@ fn bad_keywords() {
     let response = token.enqueue_publish(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "invalid upload request: invalid value: string \"?@?%\", expected a valid keyword specifier at line 1 column 178" }] })
     );
 
@@ -745,7 +745,7 @@ fn bad_keywords() {
     let response = token.enqueue_publish(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "invalid upload request: invalid value: string \"áccênts\", expected a valid keyword specifier at line 1 column 183" }] })
     );
 }
@@ -856,7 +856,7 @@ fn license_and_description_required() {
     let response = token.enqueue_publish(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": missing_metadata_error_message(&["description", "license"]) }] })
     );
 
@@ -867,7 +867,7 @@ fn license_and_description_required() {
     let response = token.enqueue_publish(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": missing_metadata_error_message(&["description"]) }] })
     );
 
@@ -880,7 +880,7 @@ fn license_and_description_required() {
     let response = token.enqueue_publish(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": missing_metadata_error_message(&["description"]) }] })
     );
 }
@@ -907,7 +907,7 @@ fn new_krate_tarball_with_hard_links() {
     let response = token.enqueue_publish(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "invalid tarball uploaded" }] })
     );
 }

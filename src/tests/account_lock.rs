@@ -34,7 +34,7 @@ fn account_locked_indefinitely() {
         LOCK_REASON
     );
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": error_message }] })
     );
 }
@@ -55,7 +55,7 @@ fn account_locked_with_future_expiry() {
         until, LOCK_REASON,
     );
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": error_message }] })
     );
 }

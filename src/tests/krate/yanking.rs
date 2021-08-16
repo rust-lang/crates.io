@@ -113,7 +113,7 @@ fn yank_by_a_non_owner_fails() {
     let response = token.yank("foo_not", "1.0.0");
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "must already be an owner to yank or unyank" }] })
     );
 }

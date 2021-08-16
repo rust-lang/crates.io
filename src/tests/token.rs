@@ -116,7 +116,7 @@ fn create_token_invalid_request() {
     let response = user.put::<()>(URL, invalid);
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "invalid new token request: Error(\"missing field `api_token`\", line: 1, column: 14)" }] })
     );
 }
@@ -128,7 +128,7 @@ fn create_token_no_name() {
     let response = user.put::<()>(URL, empty_name);
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "name must have a value" }] })
     );
 }
@@ -140,7 +140,7 @@ fn create_token_long_body() {
     let response = user.put::<()>(URL, too_big);
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "max content length is: 2000" }] })
     );
 }
@@ -157,7 +157,7 @@ fn create_token_exceeded_tokens_per_user() {
     let response = user.put::<()>(URL, NEW_BAR);
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "maximum tokens per user is: 500" }] })
     );
 }
@@ -207,7 +207,7 @@ fn cannot_create_token_with_token() {
     );
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "cannot use an API token to create a new API token" }] })
     );
 }
@@ -304,7 +304,7 @@ fn revoke_current_token_without_auth() {
     let response = anon.delete::<()>("/api/v1/tokens/current");
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
     );
 }
@@ -326,7 +326,7 @@ fn revoke_current_token_with_cookie_user() {
     let response = user.delete::<()>("/api/v1/tokens/current");
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "token not provided" }] })
     );
 
@@ -370,7 +370,7 @@ fn old_tokens_give_specific_error_message() {
     let response = anon.run::<()>(request);
     assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": TOKEN_FORMAT_ERROR }] })
     );
 }

@@ -173,7 +173,7 @@ fn owners_can_remove_self() {
     let response = token.remove_named_owner("owners_selfremove", username);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "cannot remove all individual owners of a crate. Team member don't have permission to modify owners, so at least one individual owner is required." }] })
     );
 
@@ -183,7 +183,7 @@ fn owners_can_remove_self() {
     let response = token.remove_named_owner("owners_selfremove", username);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "msg": "owners successfully removed", "ok": true })
     );
 
@@ -191,7 +191,7 @@ fn owners_can_remove_self() {
     let response = token.remove_named_owner("owners_selfremove", username);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "only owners have permission to modify owners" }] })
     );
 }
@@ -212,7 +212,7 @@ fn modify_multiple_owners() {
     let response = token.remove_named_owners("owners_multiple", &[username, "user2", "user3"]);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "cannot remove all individual owners of a crate. Team member don't have permission to modify owners, so at least one individual owner is required." }] })
     );
     assert_eq!(app.db(|conn| krate.owners(conn).unwrap()).len(), 3);
@@ -221,7 +221,7 @@ fn modify_multiple_owners() {
     let response = token.remove_named_owners("owners_multiple", &["user2", "user3"]);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "msg": "owners successfully removed", "ok": true })
     );
     assert_eq!(app.db(|conn| krate.owners(conn).unwrap()).len(), 1);
@@ -230,7 +230,7 @@ fn modify_multiple_owners() {
     let response = token.add_named_owners("owners_multiple", &["user2", username]);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "`foo` is already an owner" }] })
     );
     assert_eq!(app.db(|conn| krate.owners(conn).unwrap()).len(), 1);
@@ -239,7 +239,7 @@ fn modify_multiple_owners() {
     let response = token.add_named_owners("owners_multiple", &["user2", "user3"]);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({
             "msg": "user user2 has been invited to be an owner of crate owners_multiple,user user3 has been invited to be an owner of crate owners_multiple",
             "ok": true,
@@ -265,7 +265,7 @@ fn invite_already_invited_user() {
     let response = owner.add_named_owner("crate_name", "invited_user");
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({
             "msg": "user invited_user has been invited to be an owner of crate crate_name",
             "ok": true,
@@ -279,7 +279,7 @@ fn invite_already_invited_user() {
     let response = owner.add_named_owner("crate_name", "invited_user");
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({
             "msg": "user invited_user already has a pending invitation to be an owner of crate crate_name",
             "ok": true,
@@ -304,7 +304,7 @@ fn invite_with_existing_expired_invite() {
     let response = owner.add_named_owner("crate_name", "invited_user");
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({
             "msg": "user invited_user has been invited to be an owner of crate crate_name",
             "ok": true,
@@ -321,7 +321,7 @@ fn invite_with_existing_expired_invite() {
     let response = owner.add_named_owner("crate_name", "invited_user");
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({
             "msg": "user invited_user has been invited to be an owner of crate crate_name",
             "ok": true,
@@ -620,7 +620,7 @@ fn test_accept_expired_invitation() {
                 }
             ]
         }),
-        resp.json()
+        resp.into_json()
     );
 
     // Invited user is NOT listed as an owner, so the crate still only has one owner
@@ -677,7 +677,7 @@ fn test_accept_expired_invitation_by_mail() {
                 }
             ]
         }),
-        resp.json()
+        resp.into_json()
     );
 
     // Invited user is NOT listed as an owner, so the crate still only has one owner
