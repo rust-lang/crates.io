@@ -57,7 +57,7 @@
     "@embroider/webpack": "0.43.5",
     "@glimmer/component": "1.0.4",
     "@glimmer/tracking": "1.0.4",
-    "@percy/cli": "1.0.0-beta.62",
+    "@percy/cli": "1.0.0-beta.65",
     "@percy/ember": "3.0.0",
     "@zestia/ember-auto-focus": "4.1.7",
     "babel-eslint": "10.1.0",
