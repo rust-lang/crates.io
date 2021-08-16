@@ -103,7 +103,7 @@ fn access_token_needs_data() {
     let response = anon.get::<()>("/api/private/session/authorize");
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "invalid state parameter" }] })
     );
 }
@@ -293,7 +293,7 @@ fn following() {
     let response = user.get_with_query::<()>("/api/v1/me/updates", "page=0");
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "page indexing starts from 1, page 0 is invalid" }] })
     );
 }
@@ -498,14 +498,14 @@ fn test_empty_email_not_added() {
     let response = user.update_email_more_control(model.id, Some(""));
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "empty email rejected" }] })
     );
 
     let response = user.update_email_more_control(model.id, None);
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "empty email rejected" }] })
     );
 }
@@ -528,7 +528,7 @@ fn test_other_users_cannot_change_my_email() {
     );
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "current user does not match requested user" }] })
     );
 
@@ -538,7 +538,7 @@ fn test_other_users_cannot_change_my_email() {
     );
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
     );
 }

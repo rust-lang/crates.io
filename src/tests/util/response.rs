@@ -38,8 +38,7 @@ impl<T> Response<T> {
 
     /// Consume the response body and convert it to a JSON value
     #[track_caller]
-    // TODO: Rename to into_json()
-    pub fn json(mut self) -> Value {
+    pub fn into_json(mut self) -> Value {
         json(&mut self.response)
     }
 

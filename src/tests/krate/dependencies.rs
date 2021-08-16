@@ -29,7 +29,7 @@ fn dependencies() {
     let response = anon.get::<()>("/api/v1/crates/foo_deps/1.0.2/dependencies");
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.json(),
+        response.into_json(),
         json!({ "errors": [{ "detail": "crate `foo_deps` does not have a version `1.0.2`" }] })
     );
 }
