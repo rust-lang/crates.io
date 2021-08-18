@@ -35,6 +35,7 @@ impl PaginationOptions {
         PaginationOptionsBuilder {
             limit_page_numbers: None,
             enable_seek: false,
+            enable_pages: true,
         }
     }
 
@@ -49,12 +50,18 @@ impl PaginationOptions {
 
 pub(crate) struct PaginationOptionsBuilder {
     limit_page_numbers: Option<Arc<App>>,
+    enable_pages: bool,
     enable_seek: bool,
 }
 
 impl PaginationOptionsBuilder {
     pub(crate) fn limit_page_numbers(mut self, app: Arc<App>) -> Self {
         self.limit_page_numbers = Some(app);
+        self
+    }
+
+    pub(crate) fn enable_pages(mut self, enable: bool) -> Self {
+        self.enable_pages = enable;
         self
     }
 
@@ -75,34 +82,38 @@ impl PaginationOptionsBuilder {
         }
 
         let page = if let Some(s) = page_param {
-            let numeric_page = s.parse().map_err(|e| bad_request(&e))?;
-            if numeric_page < 1 {
-                return Err(bad_request(&format_args!(
-                    "page indexing starts from 1, page {} is invalid",
-                    numeric_page,
-                )));
-            }
-
-            if numeric_page > MAX_PAGE_BEFORE_SUSPECTED_BOT {
-                req.log_metadata("bot", "suspected");
-            }
-
-            // Block large offsets for known violators of the crawler policy
-            if let Some(app) = self.limit_page_numbers {
-                let config = &app.config;
-                let user_agent = request_header(req, header::USER_AGENT);
-                if numeric_page > config.max_allowed_page_offset
-                    && config
-                        .page_offset_ua_blocklist
-                        .iter()
-                        .any(|blocked| user_agent.contains(blocked))
-                {
-                    add_custom_metadata(req, "cause", "large page offset");
-                    return Err(bad_request("requested page offset is too large"));
+            if self.enable_pages {
+                let numeric_page = s.parse().map_err(|e| bad_request(&e))?;
+                if numeric_page < 1 {
+                    return Err(bad_request(&format_args!(
+                        "page indexing starts from 1, page {} is invalid",
+                        numeric_page,
+                    )));
                 }
-            }
 
-            Page::Numeric(numeric_page)
+                if numeric_page > MAX_PAGE_BEFORE_SUSPECTED_BOT {
+                    req.log_metadata("bot", "suspected");
+                }
+
+                // Block large offsets for known violators of the crawler policy
+                if let Some(app) = self.limit_page_numbers {
+                    let config = &app.config;
+                    let user_agent = request_header(req, header::USER_AGENT);
+                    if numeric_page > config.max_allowed_page_offset
+                        && config
+                            .page_offset_ua_blocklist
+                            .iter()
+                            .any(|blocked| user_agent.contains(blocked))
+                    {
+                        add_custom_metadata(req, "cause", "large page offset");
+                        return Err(bad_request("requested page offset is too large"));
+                    }
+                }
+
+                Page::Numeric(numeric_page)
+            } else {
+                return Err(bad_request("?page= is not supported for this request"));
+            }
         } else if let Some(s) = seek_param {
             if self.enable_seek {
                 Page::Seek(RawSeekPayload(s.clone()))
@@ -345,6 +356,15 @@ mod tests {
             PaginationOptions::builder().enable_seek(true),
             "page=1&seek=OTg",
             "providing both ?page= and ?seek= is unsupported",
+        );
+    }
+
+    #[test]
+    fn disabled_pages() {
+        assert_pagination_error(
+            PaginationOptions::builder().enable_pages(false),
+            "page=1",
+            "?page= is not supported for this request",
         );
     }
 
