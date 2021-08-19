@@ -21,7 +21,7 @@
     },
     "postUpdateOptions": ["yarnDedupeFewer"],
     "packageRules": [{
-        "packageNames": ["ember-cli", "ember-data", "ember-source"],
+        "matchPackageNames": ["ember-cli", "ember-data", "ember-source"],
         "separateMinorPatch": true
     }]
 }
