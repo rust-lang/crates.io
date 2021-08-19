@@ -87,6 +87,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
+      - name: Install Rust
+        run: |
+          rustup set profile minimal
+          # Pin to older version until a clippy regression is fixed
+          rustup update 1.53.0
+          rustup default 1.53.0
+
       - id: rustc
         run:
           echo "::set-output name=version::$(rustc -V)"
@@ -98,13 +105,6 @@ jobs:
           key: v2-${{ runner.os }}-cargo-clippy-${{ steps.rustc.outputs.version }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             v2-${{ runner.os }}-cargo-clippy-${{ steps.rustc.outputs.version }}-
-
-      - name: Install Rust
-        run: |
-          rustup set profile minimal
-          # Pin to older version until a clippy regression is fixed
-          rustup update 1.53.0
-          rustup default 1.53.0
 
       - run: rustup component add rustfmt
       - run: rustup component add clippy
