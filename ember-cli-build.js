@@ -48,10 +48,6 @@ module.exports = function (defaults) {
       components: highlightedLanguages,
     },
 
-    'ember-test-selectors': {
-      patchClassicComponent: false,
-    },
-
     cssModules: {
       extension: 'module.css',
       plugins: {
