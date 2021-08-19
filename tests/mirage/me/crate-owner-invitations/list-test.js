@@ -67,6 +67,13 @@ module('Mirage | GET /api/v1/me/crate_owner_invitations', function (hooks) {
       ],
       users: [
         {
+          avatar: user.avatar,
+          id: Number(user.id),
+          login: user.login,
+          name: user.name,
+          url: user.url,
+        },
+        {
           avatar: 'https://avatars1.githubusercontent.com/u/14631425?v=4',
           id: Number(inviter.id),
           login: 'janed',
@@ -79,13 +86,6 @@ module('Mirage | GET /api/v1/me/crate_owner_invitations', function (hooks) {
           login: 'wycats',
           name: 'wycats',
           url: 'https://github.com/wycats',
-        },
-        {
-          avatar: user.avatar,
-          id: Number(user.id),
-          login: user.login,
-          name: user.name,
-          url: user.url,
         },
       ],
     });

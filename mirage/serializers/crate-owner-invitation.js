@@ -15,6 +15,8 @@ export default BaseSerializer.extend({
       this._adjust(hash);
     }
 
+    addToIncludes.sort((a, b) => a.id - b.id);
+
     return [hash, addToIncludes];
   },
 
