@@ -12,9 +12,7 @@ module('Mirage | GET /api/v1/crates', function (hooks) {
   test('empty case', async function (assert) {
     let response = await fetch('/api/v1/crates');
     assert.equal(response.status, 200);
-
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, {
+    assert.deepEqual(await response.json(), {
       crates: [],
       meta: {
         total: 0,
@@ -39,9 +37,7 @@ module('Mirage | GET /api/v1/crates', function (hooks) {
 
     let response = await fetch('/api/v1/crates');
     assert.equal(response.status, 200);
-
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, {
+    assert.deepEqual(await response.json(), {
       crates: [
         {
           id: 'rand',

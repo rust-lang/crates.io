@@ -15,9 +15,7 @@ module('Mirage | GET /api/v1/me/crate_owner_invitations', function (hooks) {
 
     let response = await fetch('/api/v1/me/crate_owner_invitations');
     assert.equal(response.status, 200);
-
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, { crate_owner_invitations: [] });
+    assert.deepEqual(await response.json(), { crate_owner_invitations: [] });
   });
 
   test('returns the list of invitations for the authenticated user', async function (assert) {
@@ -48,9 +46,7 @@ module('Mirage | GET /api/v1/me/crate_owner_invitations', function (hooks) {
 
     let response = await fetch('/api/v1/me/crate_owner_invitations');
     assert.equal(response.status, 200);
-
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, {
+    assert.deepEqual(await response.json(), {
       crate_owner_invitations: [
         {
           crate_id: nanomsg.id,
@@ -91,9 +87,7 @@ module('Mirage | GET /api/v1/me/crate_owner_invitations', function (hooks) {
   test('returns an error if unauthenticated', async function (assert) {
     let response = await fetch('/api/v1/me/crate_owner_invitations');
     assert.equal(response.status, 403);
-
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, {
+    assert.deepEqual(await response.json(), {
       errors: [{ detail: 'must be logged in to perform that action' }],
     });
   });

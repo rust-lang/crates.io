@@ -19,9 +19,7 @@ module('Mirage | GET /api/v1/me/tokens', function (hooks) {
 
     let response = await fetch('/api/v1/me/tokens');
     assert.equal(response.status, 200);
-
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, {
+    assert.deepEqual(await response.json(), {
       api_tokens: [
         {
           id: 3,
@@ -51,17 +49,13 @@ module('Mirage | GET /api/v1/me/tokens', function (hooks) {
 
     let response = await fetch('/api/v1/me/tokens');
     assert.equal(response.status, 200);
-
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, { api_tokens: [] });
+    assert.deepEqual(await response.json(), { api_tokens: [] });
   });
 
   test('returns an error if unauthenticated', async function (assert) {
     let response = await fetch('/api/v1/me/tokens');
     assert.equal(response.status, 403);
-
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, {
+    assert.deepEqual(await response.json(), {
       errors: [{ detail: 'must be logged in to perform that action' }],
     });
   });

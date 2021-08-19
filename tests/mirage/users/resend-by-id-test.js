@@ -15,9 +15,7 @@ module('Mirage | PUT /api/v1/users/:id/resend', function (hooks) {
 
     let response = await fetch(`/api/v1/users/${user.id}/resend`, { method: 'PUT' });
     assert.equal(response.status, 200);
-
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, { ok: true });
+    assert.deepEqual(await response.json(), { ok: true });
   });
 
   test('returns 403 when not logged in', async function (assert) {
@@ -25,9 +23,7 @@ module('Mirage | PUT /api/v1/users/:id/resend', function (hooks) {
 
     let response = await fetch(`/api/v1/users/${user.id}/resend`, { method: 'PUT' });
     assert.equal(response.status, 403);
-
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, { errors: [{ detail: 'must be logged in to perform that action' }] });
+    assert.deepEqual(await response.json(), { errors: [{ detail: 'must be logged in to perform that action' }] });
   });
 
   test('returns 400 when requesting the wrong user id', async function (assert) {
@@ -36,8 +32,6 @@ module('Mirage | PUT /api/v1/users/:id/resend', function (hooks) {
 
     let response = await fetch(`/api/v1/users/wrong-id/resend`, { method: 'PUT' });
     assert.equal(response.status, 400);
-
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, { errors: [{ detail: 'current user does not match requested user' }] });
+    assert.deepEqual(await response.json(), { errors: [{ detail: 'current user does not match requested user' }] });
   });
 });

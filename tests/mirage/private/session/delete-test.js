@@ -15,9 +15,7 @@ module('Mirage | DELETE /api/private/session', function (hooks) {
 
     let response = await fetch('/api/private/session', { method: 'DELETE' });
     assert.equal(response.status, 200);
-
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, { ok: true });
+    assert.deepEqual(await response.json(), { ok: true });
 
     assert.notOk(this.server.schema.mirageSessions.first());
   });
@@ -25,9 +23,7 @@ module('Mirage | DELETE /api/private/session', function (hooks) {
   test('returns 200 when unauthenticated', async function (assert) {
     let response = await fetch('/api/private/session', { method: 'DELETE' });
     assert.equal(response.status, 200);
-
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, { ok: true });
+    assert.deepEqual(await response.json(), { ok: true });
 
     assert.notOk(this.server.schema.mirageSessions.first());
   });

@@ -12,9 +12,7 @@ module('Mirage | DELETE /api/v1/crates/:crateId/follow', function (hooks) {
   test('returns 403 if unauthenticated', async function (assert) {
     let response = await fetch('/api/v1/crates/foo/follow', { method: 'DELETE' });
     assert.equal(response.status, 403);
-
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, {
+    assert.deepEqual(await response.json(), {
       errors: [{ detail: 'must be logged in to perform that action' }],
     });
   });
@@ -25,9 +23,7 @@ module('Mirage | DELETE /api/v1/crates/:crateId/follow', function (hooks) {
 
     let response = await fetch('/api/v1/crates/foo/follow', { method: 'DELETE' });
     assert.equal(response.status, 404);
-
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, { errors: [{ detail: 'Not Found' }] });
+    assert.deepEqual(await response.json(), { errors: [{ detail: 'Not Found' }] });
   });
 
   test('makes the authenticated user unfollow the crate', async function (assert) {
@@ -40,9 +36,7 @@ module('Mirage | DELETE /api/v1/crates/:crateId/follow', function (hooks) {
 
     let response = await fetch('/api/v1/crates/rand/follow', { method: 'DELETE' });
     assert.equal(response.status, 200);
-
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, { ok: true });
+    assert.deepEqual(await response.json(), { ok: true });
 
     user.reload();
     assert.deepEqual(user.followedCrateIds, []);

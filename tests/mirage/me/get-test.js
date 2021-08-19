@@ -15,9 +15,7 @@ module('Mirage | GET /api/v1/me', function (hooks) {
 
     let response = await fetch('/api/v1/me');
     assert.equal(response.status, 200);
-
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, {
+    assert.deepEqual(await response.json(), {
       user: {
         id: 1,
         avatar: 'https://avatars1.githubusercontent.com/u/14631425?v=4',
@@ -56,9 +54,7 @@ module('Mirage | GET /api/v1/me', function (hooks) {
 
     let response = await fetch('/api/v1/me');
     assert.equal(response.status, 403);
-
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, {
+    assert.deepEqual(await response.json(), {
       errors: [{ detail: 'must be logged in to perform that action' }],
     });
   });

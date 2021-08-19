@@ -16,9 +16,7 @@ module('Mirage | PUT /api/v1/users/:id', function (hooks) {
     let body = JSON.stringify({ user: { email: 'new@email.com' } });
     let response = await fetch(`/api/v1/users/${user.id}`, { method: 'PUT', body });
     assert.equal(response.status, 200);
-
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, { ok: true });
+    assert.deepEqual(await response.json(), { ok: true });
 
     user.reload();
     assert.strictEqual(user.email, 'new@email.com');
@@ -32,9 +30,7 @@ module('Mirage | PUT /api/v1/users/:id', function (hooks) {
     let body = JSON.stringify({ user: { email: 'new@email.com' } });
     let response = await fetch(`/api/v1/users/${user.id}`, { method: 'PUT', body });
     assert.equal(response.status, 403);
-
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, { errors: [{ detail: 'must be logged in to perform that action' }] });
+    assert.deepEqual(await response.json(), { errors: [{ detail: 'must be logged in to perform that action' }] });
 
     user.reload();
     assert.strictEqual(user.email, 'old@email.com');
@@ -47,9 +43,7 @@ module('Mirage | PUT /api/v1/users/:id', function (hooks) {
     let body = JSON.stringify({ user: { email: 'new@email.com' } });
     let response = await fetch(`/api/v1/users/wrong-id`, { method: 'PUT', body });
     assert.equal(response.status, 400);
-
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, { errors: [{ detail: 'current user does not match requested user' }] });
+    assert.deepEqual(await response.json(), { errors: [{ detail: 'current user does not match requested user' }] });
 
     user.reload();
     assert.strictEqual(user.email, 'old@email.com');
@@ -62,9 +56,7 @@ module('Mirage | PUT /api/v1/users/:id', function (hooks) {
     let body = JSON.stringify({});
     let response = await fetch(`/api/v1/users/${user.id}`, { method: 'PUT', body });
     assert.equal(response.status, 400);
-
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, { errors: [{ detail: 'invalid json request' }] });
+    assert.deepEqual(await response.json(), { errors: [{ detail: 'invalid json request' }] });
 
     user.reload();
     assert.strictEqual(user.email, 'old@email.com');
@@ -77,9 +69,7 @@ module('Mirage | PUT /api/v1/users/:id', function (hooks) {
     let body = JSON.stringify({ user: { email: '' } });
     let response = await fetch(`/api/v1/users/${user.id}`, { method: 'PUT', body });
     assert.equal(response.status, 400);
-
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, { errors: [{ detail: 'empty email rejected' }] });
+    assert.deepEqual(await response.json(), { errors: [{ detail: 'empty email rejected' }] });
 
     user.reload();
     assert.strictEqual(user.email, 'old@email.com');

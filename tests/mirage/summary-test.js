@@ -13,9 +13,7 @@ module('Mirage | GET /api/v1/summary', function (hooks) {
   test('empty case', async function (assert) {
     let response = await fetch('/api/v1/summary');
     assert.equal(response.status, 200);
-
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, {
+    assert.deepEqual(await response.json(), {
       just_updated: [],
       most_downloaded: [],
       most_recently_downloaded: [],

@@ -23,8 +23,7 @@ module('Mirage | PUT /api/v1/me/tokens', function (hooks) {
     let token = this.server.schema.apiTokens.all().models[0];
     assert.ok(token);
 
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, {
+    assert.deepEqual(await response.json(), {
       api_token: {
         id: 1,
         created_at: '2017-11-20T11:23:45.000Z',
@@ -40,9 +39,7 @@ module('Mirage | PUT /api/v1/me/tokens', function (hooks) {
     let body = JSON.stringify({ api_token: {} });
     let response = await fetch('/api/v1/me/tokens', { method: 'PUT', body });
     assert.equal(response.status, 403);
-
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, {
+    assert.deepEqual(await response.json(), {
       errors: [{ detail: 'must be logged in to perform that action' }],
     });
   });

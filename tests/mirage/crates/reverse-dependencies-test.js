@@ -12,9 +12,7 @@ module('Mirage | GET /api/v1/crates/:id/reverse_dependencies', function (hooks) 
   test('returns 404 for unknown crates', async function (assert) {
     let response = await fetch('/api/v1/crates/foo/reverse_dependencies');
     assert.equal(response.status, 404);
-
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, { errors: [{ detail: 'Not Found' }] });
+    assert.deepEqual(await response.json(), { errors: [{ detail: 'Not Found' }] });
   });
 
   test('empty case', async function (assert) {
@@ -22,9 +20,7 @@ module('Mirage | GET /api/v1/crates/:id/reverse_dependencies', function (hooks) 
 
     let response = await fetch('/api/v1/crates/rand/reverse_dependencies');
     assert.equal(response.status, 200);
-
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, {
+    assert.deepEqual(await response.json(), {
       dependencies: [],
       versions: [],
       meta: {
@@ -52,9 +48,7 @@ module('Mirage | GET /api/v1/crates/:id/reverse_dependencies', function (hooks) 
 
     let response = await fetch('/api/v1/crates/foo/reverse_dependencies');
     assert.equal(response.status, 200);
-
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, {
+    assert.deepEqual(await response.json(), {
       dependencies: [
         {
           id: '1',

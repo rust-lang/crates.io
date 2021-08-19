@@ -12,9 +12,7 @@ module('Mirage | GET /api/v1/category_slugs', function (hooks) {
   test('empty case', async function (assert) {
     let response = await fetch('/api/v1/category_slugs');
     assert.equal(response.status, 200);
-
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, {
+    assert.deepEqual(await response.json(), {
       category_slugs: [],
     });
   });
@@ -28,9 +26,7 @@ module('Mirage | GET /api/v1/category_slugs', function (hooks) {
 
     let response = await fetch('/api/v1/category_slugs');
     assert.equal(response.status, 200);
-
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, {
+    assert.deepEqual(await response.json(), {
       category_slugs: [
         {
           description: 'This is the description for the category called "Category 1"',
@@ -56,8 +52,6 @@ module('Mirage | GET /api/v1/category_slugs', function (hooks) {
 
     let response = await fetch('/api/v1/category_slugs');
     assert.equal(response.status, 200);
-
-    let responsePayload = await response.json();
-    assert.equal(responsePayload.category_slugs.length, 25);
+    assert.equal((await response.json()).category_slugs.length, 25);
   });
 });

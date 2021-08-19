@@ -12,9 +12,7 @@ module('Mirage | GET /api/v1/crates/:crateId/following', function (hooks) {
   test('returns 403 if unauthenticated', async function (assert) {
     let response = await fetch('/api/v1/crates/foo/following');
     assert.equal(response.status, 403);
-
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, {
+    assert.deepEqual(await response.json(), {
       errors: [{ detail: 'must be logged in to perform that action' }],
     });
   });
@@ -25,9 +23,7 @@ module('Mirage | GET /api/v1/crates/:crateId/following', function (hooks) {
 
     let response = await fetch('/api/v1/crates/foo/following');
     assert.equal(response.status, 404);
-
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, { errors: [{ detail: 'Not Found' }] });
+    assert.deepEqual(await response.json(), { errors: [{ detail: 'Not Found' }] });
   });
 
   test('returns true if the authenticated user follows the crate', async function (assert) {
@@ -38,9 +34,7 @@ module('Mirage | GET /api/v1/crates/:crateId/following', function (hooks) {
 
     let response = await fetch('/api/v1/crates/rand/following');
     assert.equal(response.status, 200);
-
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, { following: true });
+    assert.deepEqual(await response.json(), { following: true });
   });
 
   test('returns false if the authenticated user is not following the crate', async function (assert) {
@@ -51,8 +45,6 @@ module('Mirage | GET /api/v1/crates/:crateId/following', function (hooks) {
 
     let response = await fetch('/api/v1/crates/rand/following');
     assert.equal(response.status, 200);
-
-    let responsePayload = await response.json();
-    assert.deepEqual(responsePayload, { following: false });
+    assert.deepEqual(await response.json(), { following: false });
   });
 });
