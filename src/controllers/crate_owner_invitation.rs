@@ -229,10 +229,7 @@ fn prepare_list(
 
     Ok(PrivateListResponse {
         invitations,
-        users: users
-            .into_iter()
-            .map(|(_, user)| EncodablePublicUser::from(user))
-            .collect(),
+        users: users.into_iter().map(|(_, user)| user.into()).collect(),
         meta: ResponseMeta { next_page },
     })
 }
