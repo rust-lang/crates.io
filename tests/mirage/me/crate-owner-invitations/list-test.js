@@ -2,9 +2,8 @@ import { module, test } from 'qunit';
 
 import fetch from 'fetch';
 
-import { setupTest } from 'cargo/tests/helpers';
-
-import setupMirage from '../helpers/setup-mirage';
+import { setupTest } from '../../../helpers';
+import setupMirage from '../../../helpers/setup-mirage';
 
 module('Mirage | Crate Owner Invitations', function (hooks) {
   setupTest(hooks);
