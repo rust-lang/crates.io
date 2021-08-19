@@ -2,7 +2,7 @@ import BaseSerializer from './application';
 
 export default BaseSerializer.extend({
   // eslint-disable-next-line ember/avoid-leaking-state-in-ember-objects
-  include: ['inviter'],
+  include: ['inviter', 'invitee'],
 
   getHashForResource() {
     let [hash, addToIncludes] = BaseSerializer.prototype.getHashForResource.apply(this, arguments);
