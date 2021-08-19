@@ -49,7 +49,7 @@ module('Mirage | GET /api/v1/me/crate_owner_invitations', function (hooks) {
     assert.deepEqual(await response.json(), {
       crate_owner_invitations: [
         {
-          crate_id: nanomsg.id,
+          crate_id: Number(nanomsg.id),
           crate_name: 'nanomsg',
           created_at: '2016-12-24T12:34:56Z',
           invited_by_username: 'janed',
@@ -57,7 +57,7 @@ module('Mirage | GET /api/v1/me/crate_owner_invitations', function (hooks) {
           inviter_id: Number(inviter.id),
         },
         {
-          crate_id: ember.id,
+          crate_id: Number(ember.id),
           crate_name: 'ember-rs',
           created_at: '2020-12-31T12:34:56Z',
           invited_by_username: 'wycats',
