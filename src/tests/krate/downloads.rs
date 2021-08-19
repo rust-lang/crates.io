@@ -142,3 +142,38 @@ fn force_unconditional_redirect() {
     anon.get::<()>("/api/v1/crates/bar-download/1.0.0/download")
         .assert_redirect_ends_with("/crates/bar-download/bar-download-1.0.0.crate");
 }
+
+#[test]
+fn download_caches_version_id() {
+    use cargo_registry::schema::crates::dsl::*;
+    use diesel::prelude::*;
+
+    let (app, anon, user) = TestApp::init().with_user();
+    let user = user.as_model();
+
+    app.db(|conn| {
+        CrateBuilder::new("foo_download", user.id)
+            .version(VersionBuilder::new("1.0.0"))
+            .expect_build(conn);
+    });
+
+    anon.get::<()>("/api/v1/crates/foo_download/1.0.0/download")
+        .assert_redirect_ends_with("/crates/foo_download/foo_download-1.0.0.crate");
+
+    // Rename the crate, so that `foo_download` will not be found if its version_id was not cached
+    app.db(|conn| {
+        diesel::update(crates.filter(name.eq("foo_download")))
+            .set(name.eq("other"))
+            .execute(conn)
+            .unwrap();
+    });
+
+    // This would result in a 404 if the endpoint tried to read from the database
+    anon.get::<()>("/api/v1/crates/foo_download/1.0.0/download")
+        .assert_redirect_ends_with("/crates/foo_download/foo_download-1.0.0.crate");
+
+    // Downloads are persisted by version_id, so the rename doesn't matter
+    persist_downloads_count(&app);
+    // Check download count against the new name, rather than rename it back to the original value
+    assert_dl_count(&anon, "other/1.0.0", None, 2);
+}

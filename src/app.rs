@@ -8,6 +8,7 @@ use crate::downloads_counter::DownloadsCounter;
 use crate::email::Emails;
 use crate::github::GitHubClient;
 use crate::metrics::{InstanceMetrics, ServiceMetrics};
+use dashmap::DashMap;
 use diesel::r2d2;
 use oauth2::basic::BasicClient;
 use reqwest::blocking::Client;
@@ -30,6 +31,12 @@ pub struct App {
 
     /// The server configuration
     pub config: config::Server,
+
+    /// Cache the `version_id` of a `canonical_crate_name:semver` pair
+    ///
+    /// This is used by the download endpoint to reduce the number of database queries. The
+    /// `version_id` is only cached under the canonical spelling of the crate name.
+    pub(crate) version_id_cacher: DashMap<String, i32>,
 
     /// Count downloads and periodically persist them in the database
     pub downloads_counter: DownloadsCounter,
@@ -154,6 +161,7 @@ impl App {
             github,
             github_oauth,
             config,
+            version_id_cacher: DashMap::new(),
             downloads_counter: DownloadsCounter::new(),
             emails: Emails::from_environment(),
             service_metrics: ServiceMetrics::new().expect("could not initialize service metrics"),
