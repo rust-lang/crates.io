@@ -10,6 +10,12 @@
     "docker": {
         "enabled": false
     },
+    "js": {
+        "assignees": ["locks", "pichfl", "Turbo87"],
+        "assigneesSampleSize": 1,
+        "reviewers": ["locks", "pichfl", "Turbo87"],
+        "reviewersSampleSize": 1
+    },
     "rust": {
         "enabled": false
     },
