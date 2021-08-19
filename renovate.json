@@ -23,5 +23,8 @@
     "packageRules": [{
         "matchPackageNames": ["ember-cli", "ember-data", "ember-source"],
         "separateMinorPatch": true
+    }, {
+        "matchPackageNames": ["@percy/cli", "webpack"],
+        "extends": ["schedule:weekly"]
     }]
 }
