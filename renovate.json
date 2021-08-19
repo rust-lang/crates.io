@@ -10,12 +10,22 @@
     "docker": {
         "enabled": false
     },
+    "js": {
+        "assignees": ["locks", "pichfl", "Turbo87"],
+        "assigneesSampleSize": 1,
+        "labels": ["A-frontend"],
+        "reviewers": ["locks", "pichfl", "Turbo87"],
+        "reviewersSampleSize": 1
+    },
     "rust": {
         "enabled": false
     },
     "postUpdateOptions": ["yarnDedupeFewer"],
     "packageRules": [{
-        "packageNames": ["ember-cli", "ember-data", "ember-source"],
+        "matchPackageNames": ["ember-cli", "ember-data", "ember-source"],
         "separateMinorPatch": true
+    }, {
+        "matchPackageNames": ["@percy/cli", "webpack"],
+        "extends": ["schedule:weekly"]
     }]
 }
