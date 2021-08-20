@@ -129,7 +129,7 @@ pub fn build_router(app: &App) -> RouteBuilder {
 
     // Crate ownership invitations management in the frontend
     router.get(
-        "/api/private/crate-owner-invitations",
+        "/api/private/crate_owner_invitations",
         C(crate_owner_invitation::private_list),
     );
 

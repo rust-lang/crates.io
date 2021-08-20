@@ -777,7 +777,7 @@ fn extract_token_from_invite_email(emails: &Emails) -> String {
 #[track_caller]
 fn get_invitations(user: &MockCookieUser, query: &str) -> CrateOwnerInvitationsResponse {
     user.get_with_query::<CrateOwnerInvitationsResponse>(
-        "/api/private/crate-owner-invitations",
+        "/api/private/crate_owner_invitations",
         query,
     )
     .good()
@@ -1034,7 +1034,7 @@ fn invitations_list_paginated() {
 fn invitation_list_with_no_filter() {
     let (_, _, owner, _) = TestApp::init().with_token();
 
-    let resp = owner.get::<()>("/api/private/crate-owner-invitations");
+    let resp = owner.get::<()>("/api/private/crate_owner_invitations");
     assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         resp.into_json(),
@@ -1053,14 +1053,14 @@ fn invitation_list_other_users() {
 
     // Retrieving our own invitations work.
     let resp = owner.get_with_query::<()>(
-        "/api/private/crate-owner-invitations",
+        "/api/private/crate_owner_invitations",
         &format!("invitee_id={}", owner.as_model().id),
     );
     assert_eq!(resp.status(), StatusCode::OK);
 
     // Retrieving other users' invitations doesn't work.
     let resp = owner.get_with_query::<()>(
-        "/api/private/crate-owner-invitations",
+        "/api/private/crate_owner_invitations",
         &format!("invitee_id={}", other_user.as_model().id),
     );
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);
@@ -1077,11 +1077,11 @@ fn invitation_list_other_crates() {
 
     // Retrieving our own invitations work.
     let resp =
-        owner.get_with_query::<()>("/api/private/crate-owner-invitations", "crate_name=crate_1");
+        owner.get_with_query::<()>("/api/private/crate_owner_invitations", "crate_name=crate_1");
     assert_eq!(resp.status(), StatusCode::OK);
 
     // Retrieving other users' invitations doesn't work.
     let resp =
-        owner.get_with_query::<()>("/api/private/crate-owner-invitations", "crate_name=crate_2");
+        owner.get_with_query::<()>("/api/private/crate_owner_invitations", "crate_name=crate_2");
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);
 }
