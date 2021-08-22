@@ -438,7 +438,7 @@ mod tests {
                 name: "foo",
                 ..NewCrate::default()
             }
-            .create_or_update(conn, user.id)
+            .create_or_update(conn, user.id, None)
             .expect("failed to create crate");
 
             Self {

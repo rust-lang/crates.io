@@ -8,7 +8,6 @@ use crate::downloads_counter::DownloadsCounter;
 use crate::email::Emails;
 use crate::github::GitHubClient;
 use crate::metrics::{InstanceMetrics, ServiceMetrics};
-use crate::rate_limiter::RateLimiter;
 use diesel::r2d2;
 use oauth2::basic::BasicClient;
 use reqwest::blocking::Client;
@@ -43,8 +42,6 @@ pub struct App {
 
     /// Metrics related to this specific instance of the service
     pub instance_metrics: InstanceMetrics,
-
-    pub rate_limiter: RateLimiter,
 
     /// A configured client for outgoing HTTP requests
     ///
@@ -168,7 +165,6 @@ impl App {
             read_only_replica_database: replica_database,
             github,
             github_oauth,
-            rate_limiter: RateLimiter::new(config.rate_limiter.clone()),
             config,
             downloads_counter: DownloadsCounter::new(),
             emails: Emails::from_environment(),
