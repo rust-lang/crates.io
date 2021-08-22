@@ -87,7 +87,7 @@ These files are mostly only relevant when running crates.io's code in developmen
 
 * `.editorconfig` - Coding style definitions supported by some IDEs
   * [EditorConfig for VS Code]
-  * [EditorConfig for IntelliJ IDEA]
+  * [EditorConfig for JetBrains IDEs]
   * More plugins are available at: https://editorconfig.org/#download
 * `.env` - Environment variables loaded by the backend - (ignored in `.gitignore`)
 * `.env.sample` - Example environment file checked into the repository
@@ -104,4 +104,4 @@ local development environment
 
 [GitHub Actions]: https://github.com/rust-lang/crates.io/actions
 [EditorConfig for VS Code]: https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig
-[EditorConfig for IntelliJ IDEA]: https://plugins.jetbrains.com/plugin/7294-editorconfig
+[EditorConfig for JetBrains IDEs]: https://plugins.jetbrains.com/plugin/7294-editorconfig
