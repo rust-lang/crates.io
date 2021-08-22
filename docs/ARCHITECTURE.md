@@ -85,8 +85,10 @@ for another platform.
 
 These files are mostly only relevant when running crates.io's code in development mode.
 
-* `.editorconfig` - Coding style definitions supported by some IDEs // TODO: Reference extensions
-  for common editors
+* `.editorconfig` - Coding style definitions supported by some IDEs
+  * [EditorConfig for VS Code]
+  * [EditorConfig for JetBrains IDEs]
+  * More plugins are available at: https://editorconfig.org/#download
 * `.env` - Environment variables loaded by the backend - (ignored in `.gitignore`)
 * `.env.sample` - Example environment file checked into the repository
 * `.git/` - The git repository; not available in all deployments (e.g. Heroku)
@@ -101,3 +103,5 @@ local development environment
 * `.watchmanconfig` - Use by Ember CLI to efficiently watch for file changes if you install watchman
 
 [GitHub Actions]: https://github.com/rust-lang/crates.io/actions
+[EditorConfig for VS Code]: https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig
+[EditorConfig for JetBrains IDEs]: https://plugins.jetbrains.com/plugin/7294-editorconfig
