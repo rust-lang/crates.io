@@ -55,7 +55,7 @@ pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
     }))
 }
 
-/// Handles the `GET /api/private/crate-owner-invitations` route.
+/// Handles the `GET /api/private/crate_owner_invitations` route.
 pub fn private_list(req: &mut dyn RequestExt) -> EndpointResult {
     let auth = req.authenticate()?.forbid_api_token_auth()?;
 
