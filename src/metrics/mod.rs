@@ -5,7 +5,6 @@ pub use self::service::ServiceMetrics;
 #[macro_use]
 mod macros;
 
-mod histogram;
 mod instance;
 mod log_encoder;
 mod service;
