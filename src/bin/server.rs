@@ -11,7 +11,6 @@ use sentry::{ClientOptions, IntoDsn};
 use std::io::Write;
 use tokio::io::AsyncWriteExt;
 use tokio::signal::unix::{signal, SignalKind};
-use tracing_subscriber::prelude::*;
 
 const CORE_THREADS: usize = 4;
 
@@ -34,10 +33,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         });
 
     // Initialize logging
-    tracing_subscriber::registry()
-        .with(tracing_subscriber::fmt::layer())
-        .with(sentry::integrations::tracing::layer())
-        .init();
+    tracing_subscriber::fmt::init();
 
     let config = cargo_registry::config::Server::default();
     let env = config.env();
