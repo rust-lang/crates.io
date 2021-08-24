@@ -76,8 +76,7 @@ pub fn updates(req: &mut dyn RequestExt) -> EndpointResult {
     let data = data
         .into_iter()
         .zip(VersionOwnerAction::for_versions(&conn, &versions)?.into_iter())
-        .map(|((v, cn, pb), voas)| (v, cn, pb, voas))
-        .collect::<Vec<_>>();
+        .map(|((v, cn, pb), voas)| (v, cn, pb, voas));
 
     let versions = data
         .into_iter()
