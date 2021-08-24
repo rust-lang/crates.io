@@ -391,6 +391,7 @@ mod tests {
         let absolute = "[hi](/hi)";
         let relative = "[there](there)";
         let image = "![alt](img.png)";
+        let html_image = "<img src=\"img.png\" alt=\"alt\">";
         let svg = "![alt](sanitize.svg)";
 
         for host in &["github.com", "gitlab.com", "bitbucket.org"] {
@@ -425,6 +426,15 @@ mod tests {
                     result,
                     format!(
                         "<p><img src=\"https://{}/rust-lang/test/raw/HEAD/img.png\" alt=\"alt\"></p>\n",
+                        host
+                    )
+                );
+
+                let result = markdown_to_html(html_image, Some(&url));
+                assert_eq!(
+                    result,
+                    format!(
+                        "<img src=\"https://{}/rust-lang/test/raw/HEAD/img.png\" alt=\"alt\">\n",
                         host
                     )
                 );
@@ -518,6 +528,17 @@ mod tests {
         assert_eq!(
             result,
             "<h1 align=\"center\">foo-bar</h1>\n<h5 align=\"center\">Hello World!</h5>\n"
+        );
+    }
+
+    #[test]
+    fn image_alignment() {
+        let text =
+            "<img src=\"https://img.shields.io/crates/v/clap.svg\" alt=\"\" align=\"center\">\n";
+        let result = markdown_to_html(text, None);
+        assert_eq!(
+            result,
+            "<img src=\"https://img.shields.io/crates/v/clap.svg\" alt=\"\" align=\"center\">\n"
         );
     }
 }
