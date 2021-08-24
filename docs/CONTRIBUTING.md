@@ -292,7 +292,7 @@ This will install a binary named `diesel`, so you should be able to run `diesel
 
 Copy the `.env.sample` file to `.env`. Modify the settings as appropriate;
 minimally you'll need to specify or modify the value of the `DATABASE_URL` var.
-Try using `postgres://postgres@localhost/cargo_registry` first.
+Try using `postgres://[username]@localhost/cargo_registry` first.
 
 > If that doesn't work, change this by filling in this template with the
 > appropriate values where there are `[]`s:
