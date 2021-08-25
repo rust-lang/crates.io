@@ -98,9 +98,13 @@ pub struct Crate {
     pub deps: Vec<Dependency>,
     pub cksum: String,
     pub features: HashMap<String, Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub features2: Option<HashMap<String, Vec<String>>>,
     pub yanked: Option<bool>,
     #[serde(default)]
     pub links: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub v: Option<u32>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

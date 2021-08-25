@@ -13,6 +13,7 @@ use flate2::Compression;
 use http::StatusCode;
 use std::collections::HashMap;
 use std::io::Read;
+use std::iter::FromIterator;
 use std::time::Duration;
 use std::{io, thread};
 
@@ -953,4 +954,37 @@ fn publish_rate_limit_doesnt_affect_existing_crates() {
     let new_version = PublishBuilder::new("rate_limited1").version("1.0.1");
     token.enqueue_publish(new_version).good();
     app.run_pending_background_jobs();
+}
+
+#[test]
+fn features_version_2() {
+    let (app, _, user, token) = TestApp::full().with_token();
+
+    app.db(|conn| {
+        // Insert a crate directly into the database so that foo_new can depend on it
+        CrateBuilder::new("bar", user.as_model().id).expect_build(conn);
+    });
+
+    let dependency = DependencyBuilder::new("bar");
+
+    let crate_to_publish = PublishBuilder::new("foo")
+        .version("1.0.0")
+        .dependency(dependency)
+        .feature("new_feat", &["dep:bar", "bar?/feat"])
+        .feature("old_feat", &[]);
+    token.enqueue_publish(crate_to_publish).good();
+    app.run_pending_background_jobs();
+
+    let crates = app.crates_from_index_head("foo");
+    assert_eq!(crates.len(), 1);
+    assert_eq!(crates[0].name, "foo");
+    assert_eq!(crates[0].deps.len(), 1);
+    assert_eq!(crates[0].v, Some(2));
+    let features = HashMap::from_iter([("old_feat".to_string(), vec![])]);
+    assert_eq!(crates[0].features, features);
+    let features2 = HashMap::from_iter([(
+        "new_feat".to_string(),
+        vec!["dep:bar".to_string(), "bar?/feat".to_string()],
+    )]);
+    assert_eq!(crates[0].features2, Some(features2));
 }

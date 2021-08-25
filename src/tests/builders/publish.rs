@@ -36,6 +36,7 @@ pub struct PublishBuilder {
     readme: Option<String>,
     tarball: Vec<u8>,
     version: semver::Version,
+    features: HashMap<u::EncodableFeatureName, Vec<u::EncodableFeature>>,
 }
 
 impl PublishBuilder {
@@ -55,6 +56,7 @@ impl PublishBuilder {
             readme: None,
             tarball: EMPTY_TARBALL_BYTES.to_vec(),
             version: semver::Version::parse("1.0.0").unwrap(),
+            features: HashMap::new(),
         }
     }
 
@@ -166,11 +168,22 @@ impl PublishBuilder {
         self
     }
 
+    // Adds a feature.
+    pub fn feature(mut self, name: &str, values: &[&str]) -> Self {
+        let values = values
+            .iter()
+            .map(|s| u::EncodableFeature(s.to_string()))
+            .collect();
+        self.features
+            .insert(u::EncodableFeatureName(name.to_string()), values);
+        self
+    }
+
     pub fn build(self) -> (String, Vec<u8>) {
         let new_crate = u::EncodableCrateUpload {
             name: u::EncodableCrateName(self.krate_name.clone()),
             vers: u::EncodableCrateVersion(self.version),
-            features: HashMap::new(),
+            features: self.features,
             deps: self.deps,
             description: self.desc,
             homepage: None,
