@@ -1940,11 +1940,6 @@
   resolved "https://registry.yarnpkg.com/@percy/env/-/env-1.0.0-beta.67.tgz#c4f76ec8131dc53ed3d1aeb5b25a8b79c789d4da"
   integrity sha512-DrXYFIJM38CriYPMuPEC6FxAtwUGUCea2Utv2PbZjABXzZe/oNEm66rcFoIGxNGiVZVUk6ZtSGe36cCAQbPM1g==
 
-"@percy/logger@1.0.0-beta.65":
-  version "1.0.0-beta.65"
-  resolved "https://registry.yarnpkg.com/@percy/logger/-/logger-1.0.0-beta.65.tgz#30a34797c935003334124e970f62914b0d124968"
-  integrity sha512-BJV0pjNlvcj4Y3nuMUGdb5RhjMduK40fRJJ9Lh/2qNk3pmnkGb9rH+GY+/0WY7quupNKxQjjyXcIP7I46/azNg==
-
 "@percy/logger@1.0.0-beta.67":
   version "1.0.0-beta.67"
   resolved "https://registry.yarnpkg.com/@percy/logger/-/logger-1.0.0-beta.67.tgz#77479c51c81ff74b37d641f9dce39789f8b17fa8"
@@ -7177,10 +7172,10 @@ ember-source-channel-url@^3.0.0:
   dependencies:
     node-fetch "^2.6.0"
 
-ember-source@3.28.0:
-  version "3.28.0"
-  resolved "https://registry.yarnpkg.com/ember-source/-/ember-source-3.28.0.tgz#aee9e712d80d7c39d2cc34b958d6e6e00c5dd40e"
-  integrity sha512-7cjzZlJE1Fun3+ygM5f7ubJviyHUU1LGHWyodQfbua6wkvieU2GYV0QNTUJQHe0JEAUr+Jm7x4/FuNIYB/dvpA==
+ember-source@3.28.1:
+  version "3.28.1"
+  resolved "https://registry.yarnpkg.com/ember-source/-/ember-source-3.28.1.tgz#dbd00dde4e5660231c72574589e7705ed8c76b1d"
+  integrity sha512-dPedE1KBNiFllxzS8uiTWCf5Kofd6hrbJCt162UrTfEMZy6Pt4dZrX2kz0Dq/Fi57FrFAYkMM2cuhYCz2dbENw==
   dependencies:
     "@babel/helper-module-imports" "^7.8.3"
     "@babel/plugin-transform-block-scoping" "^7.8.3"
