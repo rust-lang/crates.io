@@ -94,7 +94,7 @@
     "ember-load-initializers": "2.1.2",
     "ember-modifier": "2.1.2",
     "ember-page-title": "6.2.2",
-    "ember-prism": "0.9.1",
+    "ember-prism": "0.11.0",
     "ember-qunit": "5.1.4",
     "ember-resolver": "8.0.2",
     "ember-router-scroll": "4.1.1",
