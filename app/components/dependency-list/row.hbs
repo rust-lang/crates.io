@@ -28,23 +28,34 @@
         {{@dependency.crate_id}}
       </LinkTo>
 
-      <span local-class="metadata" data-test-metadata>
-        {{#if @dependency.optional}}
+      {{#if @dependency.optional}}
+        <span local-class="optional-label" data-test-optional>
           optional
-        {{/if}}
-      </span>
-    </div>
+        </span>
+      {{/if}}
 
-    {{#if (or (not @dependency.default_features) @dependency.features)}}
-      <div local-class="features" data-test-features>
-        {{#if (not @dependency.default_features)}}
-        default-features=false
-        {{/if}}
-        {{#if @dependency.features}}
-        features={{@dependency.features}}
-        {{/if}}
-      </div>
-    {{/if}}
+      {{#if this.featuresDescription}}
+        <span local-class="features-label" data-test-features>
+          {{! extra <span> for better tooltip alignment }}
+          <span>
+            {{this.featuresDescription}}
+
+            <EmberTooltip>
+              <ul local-class="feature-list">
+                <li>
+                  {{svg-jar (if @dependency.default_features "checkbox" "checkbox-empty")}} default features
+                </li>
+                {{#each @dependency.features as |feature|}}
+                  <li>
+                    {{svg-jar "checkbox"}} {{feature}}
+                  </li>
+                {{/each}}
+              </ul>
+            </EmberTooltip>
+          </span>
+        </span>
+      {{/if}}
+    </div>
 
     {{#if (or this.description this.loadCrateTask.isRunning)}}
       <div local-class="description" data-test-description>
