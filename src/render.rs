@@ -534,11 +534,11 @@ mod tests {
     #[test]
     fn image_alignment() {
         let text =
-            "<img src=\"https://img.shields.io/crates/v/clap.svg\" alt=\"\" align=\"center\">\n";
+            "<p align=\"center\"><img src=\"https://img.shields.io/crates/v/clap.svg\" alt=\"\"></p>\n";
         let result = markdown_to_html(text, None);
         assert_eq!(
             result,
-            "<img src=\"https://img.shields.io/crates/v/clap.svg\" alt=\"\" align=\"center\">\n"
+            "<p align=\"center\"><img src=\"https://img.shields.io/crates/v/clap.svg\" alt=\"\"></p>\n"
         );
     }
 }
