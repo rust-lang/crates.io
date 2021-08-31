@@ -6229,25 +6229,24 @@ ember-api-actions@0.2.9:
     ember-compatibility-helpers "^1.1.2"
     ember-destroyable-polyfill "^2.0.2"
 
-ember-auto-import@2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/ember-auto-import/-/ember-auto-import-2.1.0.tgz#bed04d6551bc1b5e9b072a193e8a26e2c63b96c0"
-  integrity sha512-82iTXahaiswdOpMrosUzIvblpxCVd6jC1tvqKVd/wrUVVMj9tP3s5jqsVF7wKvf4im8ZjGkkuR8rMFU0CiqJNQ==
+ember-auto-import@2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/ember-auto-import/-/ember-auto-import-2.2.0.tgz#6206be37e676fb490f03dd20afab973d5abe9da9"
+  integrity sha512-ngluzmtV31mTY+1ceOnWfGUIgGyZt850xFncMX/14Dfx0OhXaUKBpFjKjIor/Cen4WEF+OrdgNJAjH3sM07o6w==
   dependencies:
     "@babel/core" "^7.1.6"
     "@babel/plugin-proposal-class-properties" "^7.13.0"
     "@babel/plugin-proposal-decorators" "^7.13.5"
     "@babel/preset-env" "^7.10.2"
     "@babel/traverse" "^7.1.6"
-    "@babel/types" "^7.1.6"
     "@embroider/shared-internals" "^0.40.0"
     babel-loader "^8.0.6"
     babel-plugin-ember-modules-api-polyfill "^3.5.0"
     babel-plugin-htmlbars-inline-precompile "^5.2.1"
     babel-plugin-syntax-dynamic-import "^6.18.0"
     broccoli-debug "^0.6.4"
+    broccoli-funnel "^3.0.8"
     broccoli-merge-trees "^4.2.0"
-    broccoli-node-api "^1.7.0"
     broccoli-plugin "^4.0.0"
     broccoli-source "^3.0.0"
     css-loader "^5.2.0"
@@ -6265,7 +6264,6 @@ ember-auto-import@2.1.0:
     rimraf "^2.6.2"
     semver "^7.3.4"
     style-loader "^2.0.0"
-    symlink-or-copy "^1.2.0"
     typescript-memoize "^1.0.0-alpha.3"
     walk-sync "^0.3.3"
 
