@@ -32,4 +32,7 @@ fn to_semver_no_prerelease_works() {
     test(&conn, "1.2.4", Some((1, 2, 4)));
     test(&conn, "1.2.4+metadata", Some((1, 2, 4)));
     test(&conn, "1.2.4-beta.3", None);
+
+    // see https://github.com/rust-lang/crates.io/issues/3882
+    test(&conn, "0.4.45+curl-7.78.0", Some((0, 4, 45)));
 }
