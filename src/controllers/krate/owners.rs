@@ -9,13 +9,13 @@ pub fn owners(req: &mut dyn RequestExt) -> EndpointResult {
     let crate_name = &req.params()["crate_id"];
     let conn = req.db_read_only()?;
     let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
-    let owners = krate.owners(&conn)?.into_iter().map(Owner::into).collect();
+    let owners = krate
+        .owners(&conn)?
+        .into_iter()
+        .map(Owner::into)
+        .collect::<Vec<EncodableOwner>>();
 
-    #[derive(Serialize)]
-    struct R {
-        users: Vec<EncodableOwner>,
-    }
-    Ok(req.json(&R { users: owners }))
+    Ok(req.json(&json!({ "users": owners })))
 }
 
 /// Handles the `GET /crates/:crate_id/owner_team` route.
@@ -26,13 +26,9 @@ pub fn owner_team(req: &mut dyn RequestExt) -> EndpointResult {
     let owners = Team::owning(&krate, &conn)?
         .into_iter()
         .map(Owner::into)
-        .collect();
+        .collect::<Vec<EncodableOwner>>();
 
-    #[derive(Serialize)]
-    struct R {
-        teams: Vec<EncodableOwner>,
-    }
-    Ok(req.json(&R { teams: owners }))
+    Ok(req.json(&json!({ "teams": owners })))
 }
 
 /// Handles the `GET /crates/:crate_id/owner_user` route.
@@ -43,13 +39,9 @@ pub fn owner_user(req: &mut dyn RequestExt) -> EndpointResult {
     let owners = User::owning(&krate, &conn)?
         .into_iter()
         .map(Owner::into)
-        .collect();
+        .collect::<Vec<EncodableOwner>>();
 
-    #[derive(Serialize)]
-    struct R {
-        users: Vec<EncodableOwner>,
-    }
-    Ok(req.json(&R { users: owners }))
+    Ok(req.json(&json!({ "users": owners })))
 }
 
 /// Handles the `PUT /crates/:crate_id/owners` route.
@@ -135,14 +127,6 @@ fn modify_owners(req: &mut dyn RequestExt, add: bool) -> EndpointResult {
             "owners successfully removed".to_owned()
         };
 
-        #[derive(Serialize)]
-        struct R {
-            ok: bool,
-            msg: String,
-        }
-        Ok(req.json(&R {
-            ok: true,
-            msg: comma_sep_msg,
-        }))
+        Ok(req.json(&json!({ "ok": true, "msg": comma_sep_msg })))
     })
 }
