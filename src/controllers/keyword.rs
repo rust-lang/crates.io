@@ -24,22 +24,15 @@ pub fn index(req: &mut dyn RequestExt) -> EndpointResult {
     let conn = req.db_read_only()?;
     let data: Paginated<Keyword> = query.load(&*conn)?;
     let total = data.total();
-    let kws = data.into_iter().map(Keyword::into).collect::<Vec<_>>();
+    let kws = data
+        .into_iter()
+        .map(Keyword::into)
+        .collect::<Vec<EncodableKeyword>>();
 
-    #[derive(Serialize)]
-    struct R {
-        keywords: Vec<EncodableKeyword>,
-        meta: Meta,
-    }
-    #[derive(Serialize)]
-    struct Meta {
-        total: Option<i64>,
-    }
-
-    Ok(req.json(&R {
-        keywords: kws,
-        meta: Meta { total: Some(total) },
-    }))
+    Ok(req.json(&json!({
+        "keywords": kws,
+        "meta": { "total": total },
+    })))
 }
 
 /// Handles the `GET /keywords/:keyword_id` route.
@@ -49,9 +42,5 @@ pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
 
     let kw = Keyword::find_by_keyword(&conn, name)?;
 
-    #[derive(Serialize)]
-    struct R {
-        keyword: EncodableKeyword,
-    }
-    Ok(req.json(&R { keyword: kw.into() }))
+    Ok(req.json(&json!({ "keyword": EncodableKeyword::from(kw) })))
 }
