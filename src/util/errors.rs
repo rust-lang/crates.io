@@ -20,6 +20,7 @@ use std::fmt;
 use chrono::NaiveDateTime;
 use diesel::result::Error as DieselError;
 
+use crate::db::PoolError;
 use crate::util::AppResponse;
 
 mod json;
@@ -69,6 +70,11 @@ pub fn server_error<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
     Box::new(json::ServerError(error.to_string()))
 }
 
+/// Returns an error with status 503 and the provided description as JSON
+pub fn service_unavailable<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
+    Box::new(json::ServiceUnavailable(error.to_string()))
+}
+
 // =============================================================================
 // AppError trait
 
@@ -111,6 +117,10 @@ impl dyn AppError {
     }
 
     fn try_convert(err: &(dyn Error + Send + 'static)) -> Option<Box<Self>> {
+        if matches!(err.downcast_ref(), Some(PoolError::UnhealthyPool)) {
+            return Some(service_unavailable("Service unavailable"));
+        }
+
         match err.downcast_ref() {
             Some(DieselError::NotFound) => Some(not_found()),
             Some(DieselError::DatabaseError(_, info))
