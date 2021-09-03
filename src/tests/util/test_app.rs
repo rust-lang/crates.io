@@ -334,6 +334,7 @@ fn simple_config() -> config::Server {
         metrics_authorization_token: None,
         use_test_database_pool: true,
         instance_metrics_log_every_seconds: None,
+        force_unconditional_redirects: false,
     }
 }
 

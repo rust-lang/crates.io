@@ -27,6 +27,7 @@ pub struct Server {
     pub metrics_authorization_token: Option<String>,
     pub use_test_database_pool: bool,
     pub instance_metrics_log_every_seconds: Option<u64>,
+    pub force_unconditional_redirects: bool,
 }
 
 impl Default for Server {
@@ -55,6 +56,8 @@ impl Default for Server {
     ///   will occur.
     /// - `INSTANCE_METRICS_LOG_EVERY_SECONDS`: How frequently should instance metrics be logged.
     ///   If the environment variable is not present instance metrics are not logged.
+    /// - `FORCE_UNCONDITIONAL_REDIRECTS`: Whether to force unconditional redirects in the download
+    ///   endpoint even with a healthy database pool.
     ///
     /// # Panics
     ///
@@ -96,6 +99,7 @@ impl Default for Server {
             metrics_authorization_token: dotenv::var("METRICS_AUTHORIZATION_TOKEN").ok(),
             use_test_database_pool: false,
             instance_metrics_log_every_seconds: env_optional("INSTANCE_METRICS_LOG_EVERY_SECONDS"),
+            force_unconditional_redirects: dotenv::var("FORCE_UNCONDITIONAL_REDIRECTS").is_ok(),
         }
     }
 }
