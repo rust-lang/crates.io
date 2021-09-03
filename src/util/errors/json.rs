@@ -8,18 +8,9 @@ use conduit::{header, StatusCode};
 
 /// Generates a response with the provided status and description as JSON
 fn json_error(detail: &str, status: StatusCode) -> AppResponse {
-    #[derive(Serialize)]
-    struct StringError<'a> {
-        detail: &'a str,
-    }
-    #[derive(Serialize)]
-    struct Bad<'a> {
-        errors: [StringError<'a>; 1],
-    }
+    let json = json!({ "errors": [{ "detail": detail }] });
 
-    let mut response = json_response(&Bad {
-        errors: [StringError { detail }],
-    });
+    let mut response = json_response(&json);
     *response.status_mut() = status;
     response
 }
