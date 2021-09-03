@@ -25,8 +25,8 @@ pub fn summary(req: &mut dyn RequestExt) -> EndpointResult {
     use crate::schema::crates::dsl::*;
 
     let conn = req.db_read_only()?;
-    let num_crates = crates.count().get_result(&*conn)?;
-    let num_downloads = metadata::table
+    let num_crates: i64 = crates.count().get_result(&*conn)?;
+    let num_downloads: i64 = metadata::table
         .select(metadata::total_downloads)
         .get_result(&*conn)?;
 
@@ -89,34 +89,23 @@ pub fn summary(req: &mut dyn RequestExt) -> EndpointResult {
         .load(&*conn)?
         .into_iter()
         .map(Keyword::into)
-        .collect();
+        .collect::<Vec<EncodableKeyword>>();
 
     let popular_categories = Category::toplevel(&conn, "crates", 10, 0)?
         .into_iter()
         .map(Category::into)
-        .collect();
+        .collect::<Vec<EncodableCategory>>();
 
-    #[derive(Serialize)]
-    struct R {
-        num_downloads: i64,
-        num_crates: i64,
-        new_crates: Vec<EncodableCrate>,
-        most_downloaded: Vec<EncodableCrate>,
-        most_recently_downloaded: Vec<EncodableCrate>,
-        just_updated: Vec<EncodableCrate>,
-        popular_keywords: Vec<EncodableKeyword>,
-        popular_categories: Vec<EncodableCategory>,
-    }
-    Ok(req.json(&R {
-        num_downloads,
-        num_crates,
-        new_crates: encode_crates(new_crates)?,
-        most_downloaded: encode_crates(most_downloaded)?,
-        most_recently_downloaded: encode_crates(most_recently_downloaded)?,
-        just_updated: encode_crates(just_updated)?,
-        popular_keywords,
-        popular_categories,
-    }))
+    Ok(req.json(&json!({
+        "num_downloads": num_downloads,
+        "num_crates": num_crates,
+        "new_crates": encode_crates(new_crates)?,
+        "most_downloaded": encode_crates(most_downloaded)?,
+        "most_recently_downloaded": encode_crates(most_recently_downloaded)?,
+        "just_updated": encode_crates(just_updated)?,
+        "popular_keywords": popular_keywords,
+        "popular_categories": popular_categories,
+    })))
 }
 
 /// Handles the `GET /crates/:crate_id` route.
@@ -167,16 +156,8 @@ pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
         .load(&*conn)?;
     let top_versions = krate.top_versions(&conn)?;
 
-    #[derive(Serialize)]
-    struct R {
-        #[serde(rename = "crate")]
-        krate: EncodableCrate,
-        versions: Vec<EncodableVersion>,
-        keywords: Vec<EncodableKeyword>,
-        categories: Vec<EncodableCategory>,
-    }
-    Ok(req.json(&R {
-        krate: EncodableCrate::from(
+    Ok(req.json(&json!({
+        "crate": EncodableCrate::from(
             krate.clone(),
             &top_versions,
             Some(ids),
@@ -186,13 +167,13 @@ pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
             false,
             recent_downloads,
         ),
-        versions: versions_publishers_and_audit_actions
+        "versions": versions_publishers_and_audit_actions
             .into_iter()
             .map(|(v, pb, aas)| EncodableVersion::from(v, &krate.name, pb, aas))
-            .collect(),
-        keywords: kws.into_iter().map(Keyword::into).collect(),
-        categories: cats.into_iter().map(Category::into).collect(),
-    }))
+            .collect::<Vec<_>>(),
+        "keywords": kws.into_iter().map(Keyword::into).collect::<Vec<EncodableKeyword>>(),
+        "categories": cats.into_iter().map(Category::into).collect::<Vec<EncodableCategory>>(),
+    })))
 }
 
 /// Handles the `GET /crates/:crate_id/:version/readme` route.
@@ -207,11 +188,7 @@ pub fn readme(req: &mut dyn RequestExt) -> EndpointResult {
         .readme_location(crate_name, version);
 
     if req.wants_json() {
-        #[derive(Serialize)]
-        struct R {
-            url: String,
-        }
-        Ok(req.json(&R { url: redirect_url }))
+        Ok(req.json(&json!({ "url": redirect_url })))
     } else {
         Ok(req.redirect(redirect_url))
     }
@@ -242,13 +219,9 @@ pub fn versions(req: &mut dyn RequestExt) -> EndpointResult {
         .into_iter()
         .zip(VersionOwnerAction::for_versions(&conn, &versions)?.into_iter())
         .map(|((v, pb), aas)| EncodableVersion::from(v, crate_name, pb, aas))
-        .collect();
+        .collect::<Vec<_>>();
 
-    #[derive(Serialize)]
-    struct R {
-        versions: Vec<EncodableVersion>,
-    }
-    Ok(req.json(&R { versions }))
+    Ok(req.json(&json!({ "versions": versions })))
 }
 
 /// Handles the `GET /crates/:crate_id/reverse_dependencies` route.
@@ -288,21 +261,11 @@ pub fn reverse_dependencies(req: &mut dyn RequestExt) -> EndpointResult {
         .map(|((version, krate_name, published_by), actions)| {
             EncodableVersion::from(version, &krate_name, published_by, actions)
         })
-        .collect();
+        .collect::<Vec<_>>();
 
-    #[derive(Serialize)]
-    struct R {
-        dependencies: Vec<EncodableDependency>,
-        versions: Vec<EncodableVersion>,
-        meta: Meta,
-    }
-    #[derive(Serialize)]
-    struct Meta {
-        total: i64,
-    }
-    Ok(req.json(&R {
-        dependencies: rev_deps,
-        versions,
-        meta: Meta { total },
-    }))
+    Ok(req.json(&json!({
+        "dependencies": rev_deps,
+        "versions": versions,
+        "meta": { "total": total },
+    })))
 }
