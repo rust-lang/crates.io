@@ -83,21 +83,12 @@ pub fn updates(req: &mut dyn RequestExt) -> EndpointResult {
         .map(|(version, crate_name, published_by, actions)| {
             EncodableVersion::from(version, &crate_name, published_by, actions)
         })
-        .collect();
+        .collect::<Vec<_>>();
 
-    #[derive(Serialize)]
-    struct R {
-        versions: Vec<EncodableVersion>,
-        meta: Meta,
-    }
-    #[derive(Serialize)]
-    struct Meta {
-        more: bool,
-    }
-    Ok(req.json(&R {
-        versions,
-        meta: Meta { more },
-    }))
+    Ok(req.json(&json!({
+        "versions": versions,
+        "meta": { "more": more },
+    })))
 }
 
 /// Handles the `PUT /users/:user_id` route.
