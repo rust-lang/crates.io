@@ -5,6 +5,7 @@ use parking_lot::{ReentrantMutex, ReentrantMutexGuard};
 use prometheus::Histogram;
 use std::sync::Arc;
 use std::{ops::Deref, time::Duration};
+use thiserror::Error;
 use url::Url;
 
 use crate::middleware::app::RequestApp;
@@ -69,7 +70,7 @@ impl DieselPool {
                 } else if !self.is_healthy() {
                     Err(PoolError::UnhealthyPool)
                 } else {
-                    Ok(DieselPooledConn::Pool(pool.get().map_err(PoolError::R2D2)?))
+                    Ok(DieselPooledConn::Pool(pool.get()?))
                 }
             }),
             DieselPool::Test(conn) => Ok(DieselPooledConn::Test(conn.lock())),
@@ -200,19 +201,10 @@ pub(crate) fn test_conn() -> PgConnection {
     conn
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum PoolError {
-    R2D2(r2d2::PoolError),
+    #[error(transparent)]
+    R2D2(#[from] r2d2::PoolError),
+    #[error("unhealthy database pool")]
     UnhealthyPool,
-}
-
-impl std::error::Error for PoolError {}
-
-impl std::fmt::Display for PoolError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            PoolError::R2D2(err) => write!(f, "{}", err),
-            PoolError::UnhealthyPool => write!(f, "unhealthy database pool"),
-        }
-    }
 }

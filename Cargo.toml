@@ -81,6 +81,7 @@ sha2 = "0.9"
 swirl = { git = "https://github.com/sgrif/swirl.git", rev = "e87cf37" }
 tar = "0.4.16"
 tempfile = "3"
+thiserror = "1.0.28"
 tokio = { version = "1.5.0", features = ["net", "signal", "io-std", "io-util", "rt-multi-thread", "macros"]}
 toml = "0.5"
 tracing = "0.1"

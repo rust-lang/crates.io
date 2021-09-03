@@ -297,6 +297,7 @@ dependencies = [
  "swirl",
  "tar",
  "tempfile",
+ "thiserror",
  "tokio",
  "toml",
  "tower-service",
