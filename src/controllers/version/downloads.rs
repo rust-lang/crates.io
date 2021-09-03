@@ -99,11 +99,7 @@ pub fn download(req: &mut dyn RequestExt) -> EndpointResult {
     }
 
     if req.wants_json() {
-        #[derive(Serialize)]
-        struct R {
-            url: String,
-        }
-        Ok(req.json(&R { url: redirect_url }))
+        Ok(req.json(&json!({ "url": redirect_url })))
     } else {
         Ok(req.redirect(redirect_url))
     }
@@ -129,13 +125,7 @@ pub fn downloads(req: &mut dyn RequestExt) -> EndpointResult {
         .load(&*conn)?
         .into_iter()
         .map(VersionDownload::into)
-        .collect();
+        .collect::<Vec<EncodableVersionDownload>>();
 
-    #[derive(Serialize)]
-    struct R {
-        version_downloads: Vec<EncodableVersionDownload>,
-    }
-    Ok(req.json(&R {
-        version_downloads: downloads,
-    }))
+    Ok(req.json(&json!({ "version_downloads": downloads })))
 }
