@@ -338,28 +338,16 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
                 )
             },
         )
-        .collect();
+        .collect::<Vec<_>>();
 
-    #[derive(Serialize)]
-    struct R {
-        crates: Vec<EncodableCrate>,
-        meta: Meta,
-    }
-    #[derive(Serialize)]
-    struct Meta {
-        total: Option<i64>,
-        next_page: Option<String>,
-        prev_page: Option<String>,
-    }
-
-    Ok(req.json(&R {
-        crates,
-        meta: Meta {
-            total: Some(total),
-            next_page,
-            prev_page,
+    Ok(req.json(&json!({
+        "crates": crates,
+        "meta": {
+            "total": total,
+            "next_page": next_page,
+            "prev_page": prev_page,
         },
-    }))
+    })))
 }
 
 diesel_infix_operator!(Contains, "@>");
