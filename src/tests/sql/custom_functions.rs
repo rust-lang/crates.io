@@ -35,4 +35,5 @@ fn to_semver_no_prerelease_works() {
 
     // see https://github.com/rust-lang/crates.io/issues/3882
     test(&conn, "0.4.45+curl-7.78.0", Some((0, 4, 45)));
+    test(&conn, "0.1.4-preview+4.3.2", None);
 }
