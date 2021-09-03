@@ -80,6 +80,8 @@ pub(super) struct BadRequest(pub(super) String);
 #[derive(Debug)]
 pub(super) struct ServerError(pub(super) String);
 #[derive(Debug)]
+pub(crate) struct ServiceUnavailable(pub(super) String);
+#[derive(Debug)]
 pub(crate) struct TooManyRequests {
     pub retry_after: NaiveDateTime,
 }
@@ -115,6 +117,18 @@ impl AppError for ServerError {
 }
 
 impl fmt::Display for ServerError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl AppError for ServiceUnavailable {
+    fn response(&self) -> Option<AppResponse> {
+        Some(json_error(&self.0, StatusCode::SERVICE_UNAVAILABLE))
+    }
+}
+
+impl fmt::Display for ServiceUnavailable {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0.fmt(f)
     }
