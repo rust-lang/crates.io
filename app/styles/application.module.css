@@ -65,7 +65,7 @@ a {
     }
 }
 
-pre {
+pre:global(.terminal) {
     background: var(--main-color);
     color: white;
     padding: 20px;

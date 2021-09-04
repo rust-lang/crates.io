@@ -15,8 +15,9 @@ module('Modifier | highlight-syntax', function (hooks) {
 extern crate bitflags;
       </pre>
     `);
-    assert.dom('.token').exists();
-    assert.dom('.keyword').exists({ count: 2 });
+
+    assert.dom('.hljs-meta').exists();
+    assert.dom('.hljs-keyword').exists({ count: 2 });
   });
 
   test('accepts a `selector` argument', async function (assert) {
@@ -32,8 +33,8 @@ extern crate bitflags;
         </pre>
       </div>
     `);
-    assert.dom('.a .token').doesNotExist();
-    assert.dom('.b .token').exists();
-    assert.dom('.b .keyword').exists({ count: 2 });
+    assert.dom('.a .hljs-meta').doesNotExist();
+    assert.dom('.b .hljs-meta').exists();
+    assert.dom('.b .hljs-keyword').exists({ count: 2 });
   });
 });

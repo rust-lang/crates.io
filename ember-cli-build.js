@@ -8,25 +8,6 @@ module.exports = function (defaults) {
   let env = EmberApp.env();
   let isProd = env === 'production';
 
-  const highlightedLanguages = [
-    'bash',
-    'c',
-    'clike',
-    'glsl',
-    'go',
-    'ini',
-    'javascript',
-    'json',
-    'markup',
-    'protobuf',
-    'ruby',
-    'rust',
-    'scss',
-    'sql',
-    'toml',
-    'yaml',
-  ];
-
   let app = new EmberApp(defaults, {
     autoImport: {
       webpack: {
@@ -42,10 +23,6 @@ module.exports = function (defaults) {
     },
     'ember-fetch': {
       preferNative: true,
-    },
-    'ember-prism': {
-      theme: 'twilight',
-      components: highlightedLanguages,
     },
 
     cssModules: {
