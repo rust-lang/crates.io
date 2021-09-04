@@ -16,11 +16,7 @@ pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
         .order(id.desc())
         .first(&*conn)?;
 
-    #[derive(Serialize)]
-    struct R {
-        user: EncodablePublicUser,
-    }
-    Ok(req.json(&R { user: user.into() }))
+    Ok(req.json(&json!({ "user": EncodablePublicUser::from(user) })))
 }
 
 /// Handles the `GET /users/:user_id/stats` route.
@@ -39,11 +35,5 @@ pub fn stats(req: &mut dyn RequestExt) -> EndpointResult {
         .first::<Option<i64>>(&*conn)?
         .unwrap_or(0);
 
-    #[derive(Serialize)]
-    struct R {
-        total_downloads: i64,
-    }
-    Ok(req.json(&R {
-        total_downloads: data,
-    }))
+    Ok(req.json(&json!({ "total_downloads": data })))
 }

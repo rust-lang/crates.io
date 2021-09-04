@@ -32,7 +32,7 @@ pub fn downloads(req: &mut dyn RequestExt) -> EndpointResult {
         .load(&*conn)?
         .into_iter()
         .map(VersionDownload::into)
-        .collect::<Vec<_>>();
+        .collect::<Vec<EncodableVersionDownload>>();
 
     let sum_downloads = sql::<BigInt>("SUM(version_downloads.downloads)");
     let extra: Vec<ExtraDownload> = VersionDownload::belonging_to(rest)
@@ -50,20 +50,11 @@ pub fn downloads(req: &mut dyn RequestExt) -> EndpointResult {
         date: String,
         downloads: i64,
     }
-    #[derive(Serialize)]
-    struct R {
-        version_downloads: Vec<EncodableVersionDownload>,
-        meta: Meta,
-    }
-    #[derive(Serialize)]
-    struct Meta {
-        extra_downloads: Vec<ExtraDownload>,
-    }
-    let meta = Meta {
-        extra_downloads: extra,
-    };
-    Ok(req.json(&R {
-        version_downloads: downloads,
-        meta,
-    }))
+
+    Ok(req.json(&json!({
+        "version_downloads": downloads,
+        "meta": {
+            "extra_downloads": extra,
+        },
+    })))
 }

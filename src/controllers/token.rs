@@ -14,15 +14,12 @@ pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
     let conn = req.db_conn()?;
     let user = authenticated_user.user();
 
-    let tokens = ApiToken::belonging_to(&user)
+    let tokens: Vec<ApiToken> = ApiToken::belonging_to(&user)
         .filter(api_tokens::revoked.eq(false))
         .order(api_tokens::created_at.desc())
         .load(&*conn)?;
-    #[derive(Serialize)]
-    struct R {
-        api_tokens: Vec<ApiToken>,
-    }
-    Ok(req.json(&R { api_tokens: tokens }))
+
+    Ok(req.json(&json!({ "api_tokens": tokens })))
 }
 
 /// Handles the `PUT /me/tokens` route.
@@ -82,14 +79,9 @@ pub fn new(req: &mut dyn RequestExt) -> EndpointResult {
     }
 
     let api_token = ApiToken::insert(&*conn, user.id, name)?;
+    let api_token = EncodableApiTokenWithToken::from(api_token);
 
-    #[derive(Serialize)]
-    struct R {
-        api_token: EncodableApiTokenWithToken,
-    }
-    Ok(req.json(&R {
-        api_token: api_token.into(),
-    }))
+    Ok(req.json(&json!({ "api_token": api_token })))
 }
 
 /// Handles the `DELETE /me/tokens/:id` route.
@@ -105,9 +97,7 @@ pub fn revoke(req: &mut dyn RequestExt) -> EndpointResult {
         .set(api_tokens::revoked.eq(true))
         .execute(&*conn)?;
 
-    #[derive(Serialize)]
-    struct R {}
-    Ok(req.json(&R {}))
+    Ok(req.json(&json!({})))
 }
 
 /// Handles the `DELETE /tokens/current` route.

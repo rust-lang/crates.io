@@ -12,9 +12,5 @@ pub fn show_team(req: &mut dyn RequestExt) -> EndpointResult {
     let conn = req.db_read_only()?;
     let team: Team = teams.filter(login.eq(name)).first(&*conn)?;
 
-    #[derive(Serialize)]
-    struct R {
-        team: EncodableTeam,
-    }
-    Ok(req.json(&R { team: team.into() }))
+    Ok(req.json(&json!({ "team": EncodableTeam::from(team) })))
 }

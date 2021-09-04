@@ -36,15 +36,7 @@ pub fn begin(req: &mut dyn RequestExt) -> EndpointResult {
     req.session_mut()
         .insert("github_oauth_state".to_string(), state.clone());
 
-    #[derive(Serialize)]
-    struct R {
-        url: String,
-        state: String,
-    }
-    Ok(req.json(&R {
-        url: url.to_string(),
-        state,
-    }))
+    Ok(req.json(&json!({ "url": url.to_string(), "state": state })))
 }
 
 /// Handles the `GET /api/private/session/authorize` route.

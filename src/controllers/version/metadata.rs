@@ -7,7 +7,7 @@
 use crate::controllers::frontend_prelude::*;
 
 use crate::models::VersionOwnerAction;
-use crate::views::{EncodableDependency, EncodablePublicUser, EncodableVersion};
+use crate::views::{EncodableDependency, EncodableVersion};
 
 use super::{extract_crate_name_and_semver, version_and_crate};
 
@@ -26,32 +26,20 @@ pub fn dependencies(req: &mut dyn RequestExt) -> EndpointResult {
     let deps = deps
         .into_iter()
         .map(|(dep, crate_name)| EncodableDependency::from_dep(dep, &crate_name))
-        .collect();
+        .collect::<Vec<_>>();
 
-    #[derive(Serialize)]
-    struct R {
-        dependencies: Vec<EncodableDependency>,
-    }
-    Ok(req.json(&R { dependencies: deps }))
+    Ok(req.json(&json!({ "dependencies": deps })))
 }
 
 /// Handles the `GET /crates/:crate_id/:version/authors` route.
 pub fn authors(req: &mut dyn RequestExt) -> EndpointResult {
     // Currently we return the empty list.
     // Because the API is not used anymore after RFC https://github.com/rust-lang/rfcs/pull/3052.
-    #[derive(Serialize)]
-    struct R {
-        users: Vec<EncodablePublicUser>,
-        meta: Meta,
-    }
-    #[derive(Serialize)]
-    struct Meta {
-        names: Vec<String>,
-    }
-    Ok(req.json(&R {
-        users: vec![],
-        meta: Meta { names: vec![] },
-    }))
+
+    Ok(req.json(&json!({
+        "users": [],
+        "meta": { "names": [] },
+    })))
 }
 
 /// Handles the `GET /crates/:crate/:version` route.
@@ -65,11 +53,6 @@ pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
     let published_by = version.published_by(&conn);
     let actions = VersionOwnerAction::by_version(&conn, &version)?;
 
-    #[derive(Serialize)]
-    struct R {
-        version: EncodableVersion,
-    }
-    Ok(req.json(&R {
-        version: EncodableVersion::from(version, &krate.name, published_by, actions),
-    }))
+    let version = EncodableVersion::from(version, &krate.name, published_by, actions);
+    Ok(req.json(&json!({ "version": version })))
 }

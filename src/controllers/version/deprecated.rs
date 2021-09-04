@@ -43,13 +43,9 @@ pub fn index(req: &mut dyn RequestExt) -> EndpointResult {
         .map(|((version, crate_name, published_by), actions)| {
             EncodableVersion::from(version, &crate_name, published_by, actions)
         })
-        .collect();
+        .collect::<Vec<_>>();
 
-    #[derive(Serialize)]
-    struct R {
-        versions: Vec<EncodableVersion>,
-    }
-    Ok(req.json(&R { versions }))
+    Ok(req.json(&json!({ "versions": versions })))
 }
 
 /// Handles the `GET /versions/:version_id` route.
@@ -71,11 +67,6 @@ pub fn show_by_id(req: &mut dyn RequestExt) -> EndpointResult {
         .first(&*conn)?;
     let audit_actions = VersionOwnerAction::by_version(&conn, &version)?;
 
-    #[derive(Serialize)]
-    struct R {
-        version: EncodableVersion,
-    }
-    Ok(req.json(&R {
-        version: EncodableVersion::from(version, &krate.name, published_by, audit_actions),
-    }))
+    let version = EncodableVersion::from(version, &krate.name, published_by, audit_actions);
+    Ok(req.json(&json!({ "version": version })))
 }

@@ -49,11 +49,8 @@ pub fn following(req: &mut dyn RequestExt) -> EndpointResult {
     let user_id = req.authenticate()?.forbid_api_token_auth()?.user_id();
     let conn = req.db_read_only()?;
     let follow = follow_target(req, &conn, user_id)?;
-    let following = diesel::select(exists(follows::table.find(follow.id()))).get_result(&*conn)?;
+    let following =
+        diesel::select(exists(follows::table.find(follow.id()))).get_result::<bool>(&*conn)?;
 
-    #[derive(Serialize)]
-    struct R {
-        following: bool,
-    }
-    Ok(req.json(&R { following }))
+    Ok(req.json(&json!({ "following": following })))
 }

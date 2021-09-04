@@ -44,15 +44,10 @@ pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
         })
         .collect::<AppResult<Vec<EncodableCrateOwnerInvitationV1>>>()?;
 
-    #[derive(Serialize)]
-    struct R {
-        crate_owner_invitations: Vec<EncodableCrateOwnerInvitationV1>,
-        users: Vec<EncodablePublicUser>,
-    }
-    Ok(req.json(&R {
-        crate_owner_invitations,
-        users,
-    }))
+    Ok(req.json(&json!({
+        "crate_owner_invitations": crate_owner_invitations,
+        "users": users,
+    })))
 }
 
 /// Handles the `GET /api/private/crate_owner_invitations` route.
@@ -271,13 +266,7 @@ pub fn handle_invite(req: &mut dyn RequestExt) -> EndpointResult {
         invitation.decline(conn)?;
     }
 
-    #[derive(Serialize)]
-    struct R {
-        crate_owner_invitation: InvitationResponse,
-    }
-    Ok(req.json(&R {
-        crate_owner_invitation: crate_invite,
-    }))
+    Ok(req.json(&json!({ "crate_owner_invitation": crate_invite })))
 }
 
 /// Handles the `PUT /api/v1/me/crate_owner_invitations/accept/:token` route.
@@ -290,14 +279,10 @@ pub fn handle_invite_with_token(req: &mut dyn RequestExt) -> EndpointResult {
     let crate_id = invitation.crate_id;
     invitation.accept(&conn, config)?;
 
-    #[derive(Serialize)]
-    struct R {
-        crate_owner_invitation: InvitationResponse,
-    }
-    Ok(req.json(&R {
-        crate_owner_invitation: InvitationResponse {
-            crate_id,
-            accepted: true,
+    Ok(req.json(&json!({
+        "crate_owner_invitation": {
+            "crate_id": crate_id,
+            "accepted": true,
         },
-    }))
+    })))
 }
