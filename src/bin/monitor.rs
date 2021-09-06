@@ -76,7 +76,7 @@ fn check_stalled_update_downloads(conn: &PgConnection) -> Result<()> {
 
     const EVENT_KEY: &str = "update_downloads_stalled";
 
-    println!("Checking for stalled background jobs");
+    println!("Checking for stalled update_downloads job");
 
     // Max job execution time in minutes
     let max_job_time = dotenv::var("MONITOR_MAX_UPDATE_DOWNLOADS_TIME")
@@ -153,7 +153,10 @@ fn log_and_trigger_event(event: on_call::Event) -> Result<()> {
     match event {
         on_call::Event::Trigger {
             ref description, ..
-        } => println!("Paging on-call: {}", description),
+        } => eprintln!(
+            "at=error mod=on_call_monitor error=\"Paging on-call: {}\"",
+            description
+        ),
         on_call::Event::Resolve {
             description: Some(ref description),
             ..

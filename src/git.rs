@@ -252,7 +252,10 @@ impl Repository {
         self.perform_commit_and_push(message, modified_file)
             .map(|_| println!("Commit and push finished for \"{}\"", message))
             .map_err(|err| {
-                eprintln!("Commit and push for \"{}\" errored: {}", message, err);
+                eprintln!(
+                    "at=error mod=git error=\"Commit and push for \"{}\" errored: {}\"",
+                    message, err
+                );
                 err
             })
     }
@@ -272,7 +275,12 @@ impl Repository {
         let head = self.head_oid()?;
 
         if head != original_head {
-            println!("Resetting index from {} to {}", original_head, head);
+            // This isn't strictly an error, but treating it as one for monitoring as it indicates
+            // that an error has occurred while processing the previous index operation.
+            eprintln!(
+                "at=error mod=git error=\"Resetting index from {} to {}\"",
+                original_head, head
+            );
         }
 
         let obj = self.repository.find_object(head, None)?;

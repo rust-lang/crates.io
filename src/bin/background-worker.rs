@@ -24,6 +24,13 @@ use std::time::Duration;
 fn main() {
     println!("Booting runner");
 
+    if let Err(message) = main_impl() {
+        eprintln!("at=error mod=background_worker error=\"{}\"", message);
+        std::process::exit(1);
+    }
+}
+
+fn main_impl() -> Result<(), &'static str> {
     let db_config = config::DatabasePools::full_from_environment();
     let base_config = config::Base::from_environment();
     let uploader = base_config.uploader();
@@ -43,13 +50,13 @@ fn main() {
     let job_start_timeout = dotenv::var("BACKGROUND_JOB_TIMEOUT")
         .unwrap_or_else(|_| "30".into())
         .parse()
-        .expect("Invalid value for `BACKGROUND_JOB_TIMEOUT`");
+        .map_err(|_| "Invalid value for `BACKGROUND_JOB_TIMEOUT`")?;
 
     println!("Cloning index");
 
     let repository_config = RepositoryConfig::from_environment();
     let repository = Arc::new(Mutex::new(
-        Repository::open(&repository_config).expect("Failed to clone index"),
+        Repository::open(&repository_config).map_err(|_| "Failed to clone index")?,
     ));
     println!("Index cloned");
 
@@ -76,12 +83,12 @@ fn main() {
             failure_count += 1;
             if failure_count < 5 {
                 eprintln!(
-                    "Error running jobs (n = {}) -- retrying: {:?}",
+                    "at=error mod=background_worker error=\"Error running jobs (n = {}) -- retrying: {:?}\"",
                     failure_count, e,
                 );
                 runner = build_runner();
             } else {
-                panic!("Failed to begin running jobs 5 times. Restarting the process");
+                return Err("Failed to begin running jobs 5 times. Restarting the process");
             }
         }
         sleep(Duration::from_secs(1));
