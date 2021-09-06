@@ -6,6 +6,7 @@ mod database_pools;
 
 pub use self::base::Base;
 pub use self::database_pools::DatabasePools;
+use std::collections::HashSet;
 
 pub struct Server {
     pub base: Base,
@@ -28,6 +29,7 @@ pub struct Server {
     pub use_test_database_pool: bool,
     pub instance_metrics_log_every_seconds: Option<u64>,
     pub force_unconditional_redirects: bool,
+    pub blocked_routes: HashSet<String>,
 }
 
 impl Default for Server {
@@ -58,6 +60,8 @@ impl Default for Server {
     ///   If the environment variable is not present instance metrics are not logged.
     /// - `FORCE_UNCONDITIONAL_REDIRECTS`: Whether to force unconditional redirects in the download
     ///   endpoint even with a healthy database pool.
+    /// - `BLOCKED_ROUTES`: A comma separated list of HTTP routes that are manually blocked by an
+    ///   operator.
     ///
     /// # Panics
     ///
@@ -100,6 +104,9 @@ impl Default for Server {
             use_test_database_pool: false,
             instance_metrics_log_every_seconds: env_optional("INSTANCE_METRICS_LOG_EVERY_SECONDS"),
             force_unconditional_redirects: dotenv::var("FORCE_UNCONDITIONAL_REDIRECTS").is_ok(),
+            blocked_routes: env_optional("BLOCKED_ROUTES")
+                .map(|routes: String| routes.split(',').map(|s| s.into()).collect())
+                .unwrap_or_else(HashSet::new),
         }
     }
 }

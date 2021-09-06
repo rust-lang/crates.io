@@ -14,6 +14,7 @@ use cargo_registry::git::Repository as WorkerRepository;
 use diesel::PgConnection;
 use git2::Repository as UpstreamRepository;
 use reqwest::{blocking::Client, Proxy};
+use std::collections::HashSet;
 use swirl::Runner;
 use url::Url;
 
@@ -335,6 +336,7 @@ fn simple_config() -> config::Server {
         use_test_database_pool: true,
         instance_metrics_log_every_seconds: None,
         force_unconditional_redirects: false,
+        blocked_routes: HashSet::new(),
     }
 }
 
