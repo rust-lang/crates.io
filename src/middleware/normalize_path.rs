@@ -4,12 +4,18 @@ use super::prelude::*;
 
 use std::path::{Component, Path, PathBuf};
 
+pub struct OriginalPath(pub String);
+
 pub struct NormalizePath;
 
 impl Middleware for NormalizePath {
     fn before(&self, req: &mut dyn RequestExt) -> BeforeResult {
         let path = req.path();
+        let original_path = OriginalPath(path.to_string());
+
         if !(path.contains("//") || path.contains("/.")) {
+            req.mut_extensions().insert(original_path);
+
             // Avoid allocations if rewriting is unnecessary
             return Ok(());
         }
@@ -40,6 +46,7 @@ impl Middleware for NormalizePath {
             .to_string(); // non-Unicode is replaced with U+FFFD REPLACEMENT CHARACTER
 
         add_custom_metadata(req, "normalized_path", path.clone());
+        req.mut_extensions().insert(original_path);
         *req.path_mut() = path;
         Ok(())
     }
