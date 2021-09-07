@@ -60,8 +60,8 @@ impl Default for Server {
     ///   If the environment variable is not present instance metrics are not logged.
     /// - `FORCE_UNCONDITIONAL_REDIRECTS`: Whether to force unconditional redirects in the download
     ///   endpoint even with a healthy database pool.
-    /// - `BLOCKED_ROUTES`: A comma separated list of HTTP routes that are manually blocked by an
-    ///   operator.
+    /// - `BLOCKED_ROUTES`: A comma separated list of HTTP route patterns that are manually blocked
+    ///   by an operator (e.g. `/crates/:crate_id/:version/download`).
     ///
     /// # Panics
     ///
