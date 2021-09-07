@@ -7,6 +7,7 @@ use crate::util::request_header;
 use conduit::{header, RequestExt, StatusCode};
 use conduit_cookie::RequestSession;
 
+use crate::middleware::normalize_path::OriginalPath;
 use crate::middleware::response_timing::ResponseTime;
 use std::fmt::{self, Display, Formatter};
 
@@ -15,13 +16,8 @@ const SLOW_REQUEST_THRESHOLD_MS: u64 = 1000;
 #[derive(Default)]
 pub(super) struct LogRequests();
 
-struct OriginalPath(String);
-
 impl Middleware for LogRequests {
     fn before(&self, req: &mut dyn RequestExt) -> BeforeResult {
-        let path = OriginalPath(req.path().to_string());
-        req.mut_extensions().insert(path);
-
         if let Some(request_id) = req
             .headers()
             .get("x-request-id")

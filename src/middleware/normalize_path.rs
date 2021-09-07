@@ -4,6 +4,8 @@ use super::prelude::*;
 
 use std::path::{Component, Path, PathBuf};
 
+pub struct OriginalPath(pub String);
+
 pub struct NormalizePath;
 
 impl Middleware for NormalizePath {
@@ -13,6 +15,8 @@ impl Middleware for NormalizePath {
             // Avoid allocations if rewriting is unnecessary
             return Ok(());
         }
+
+        let original_path = OriginalPath(path.to_string());
 
         let path = Path::new(path)
             .components()
@@ -40,7 +44,10 @@ impl Middleware for NormalizePath {
             .to_string(); // non-Unicode is replaced with U+FFFD REPLACEMENT CHARACTER
 
         add_custom_metadata(req, "normalized_path", path.clone());
+
         *req.path_mut() = path;
+        req.mut_extensions().insert(original_path);
+
         Ok(())
     }
 }
