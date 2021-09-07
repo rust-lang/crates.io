@@ -253,16 +253,9 @@ pub fn internal<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
     })
 }
 
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
+#[error("{0}")]
 struct AppErrToStdErr(pub Box<dyn AppError>);
-
-impl Error for AppErrToStdErr {}
-
-impl fmt::Display for AppErrToStdErr {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
 
 pub(crate) fn std_error(e: Box<dyn AppError>) -> Box<dyn Error + Send> {
     Box::new(AppErrToStdErr(e))
