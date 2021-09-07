@@ -17,16 +17,7 @@ pub(super) struct LogRequests();
 
 impl Middleware for LogRequests {
     fn after(&self, req: &mut dyn RequestExt, res: AfterResult) -> AfterResult {
-        let response_time = req.extensions().find::<ResponseTime>().unwrap();
-
-        println!(
-            "{}",
-            RequestLine {
-                req,
-                res: &res,
-                response_time,
-            }
-        );
+        println!("{}", RequestLine { req, res: &res });
 
         res
     }
@@ -62,12 +53,13 @@ pub(crate) fn get_log_message(req: &dyn RequestExt, key: &'static str) -> String
 struct RequestLine<'r> {
     req: &'r dyn RequestExt,
     res: &'r AfterResult,
-    response_time: &'r ResponseTime,
 }
 
 impl Display for RequestLine<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let mut line = LogLine::new(f);
+
+        let response_time = self.req.extensions().find::<ResponseTime>().unwrap();
 
         let status = self.res.as_ref().map(|res| res.status());
         let status = status.unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
@@ -95,7 +87,7 @@ impl Display for RequestLine<'_> {
         }
 
         line.add_quoted_field("fwd", request_header(self.req, "x-real-ip"))?;
-        line.add_field("service", self.response_time)?;
+        line.add_field("service", response_time)?;
         line.add_field("status", status.as_str())?;
         line.add_quoted_field("user_agent", request_header(self.req, header::USER_AGENT))?;
 
@@ -109,7 +101,7 @@ impl Display for RequestLine<'_> {
             line.add_quoted_field("error", err)?;
         }
 
-        if self.response_time.as_millis() > SLOW_REQUEST_THRESHOLD_MS {
+        if response_time.as_millis() > SLOW_REQUEST_THRESHOLD_MS {
             line.add_marker("SLOW REQUEST")?;
         }
 
