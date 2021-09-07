@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
-use conduit::{box_error, header, Body, Handler, HandlerResult, RequestExt, Response, StatusCode};
+use conduit::{Handler, HandlerResult, RequestExt};
 use conduit_router::{RequestParams, RouteBuilder, RoutePattern};
 
 use crate::controllers::*;
 use crate::middleware::app::RequestApp;
-use crate::util::errors::{std_error, AppError};
+use crate::util::errors::{std_error, AppError, RouteBlocked};
 use crate::util::EndpointResult;
 use crate::{App, Env};
 
@@ -156,13 +156,7 @@ impl Handler for C {
         // `RoutePattern` before executing the response handler.
         if let Some(pattern) = req.extensions().find::<RoutePattern>() {
             if req.app().config.blocked_routes.contains(pattern.pattern()) {
-                let body = "This route is temporarily blocked. See https://status.crates.io";
-
-                return Response::builder()
-                    .status(StatusCode::SERVICE_UNAVAILABLE)
-                    .header(header::CONTENT_LENGTH, body.len())
-                    .body(Body::from_vec(body.as_bytes().to_vec()))
-                    .map_err(box_error);
+                return Ok(RouteBlocked.response().unwrap());
             }
         }
 

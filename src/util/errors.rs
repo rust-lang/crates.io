@@ -27,7 +27,7 @@ mod json;
 pub use json::TOKEN_FORMAT_ERROR;
 pub(crate) use json::{
     InsecurelyGeneratedTokenRevoked, MetricsDisabled, NotFound, OwnershipInvitationExpired,
-    ReadOnlyMode, TooManyRequests,
+    ReadOnlyMode, RouteBlocked, TooManyRequests,
 };
 
 /// Returns an error with status 200 and the provided description as JSON
