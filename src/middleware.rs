@@ -11,6 +11,7 @@ use self::head::Head;
 use self::known_error_to_json::KnownErrorToJson;
 use self::log_connection_pool_status::LogConnectionPoolStatus;
 use self::request_timing::RequestTiming;
+use self::sentry::SentryMiddleware as CustomSentryMiddleware;
 use self::static_or_continue::StaticOrContinue;
 use self::update_metrics::UpdateMetrics;
 
@@ -26,6 +27,7 @@ pub mod log_request;
 mod normalize_path;
 mod request_timing;
 mod require_user_agent;
+mod sentry;
 mod static_or_continue;
 mod update_metrics;
 
@@ -47,6 +49,7 @@ pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBui
 
     if env != Env::Test {
         m.add(log_request::LogRequests::default());
+        m.add(CustomSentryMiddleware::default());
         m.around(SentryMiddleware::default());
     }
 

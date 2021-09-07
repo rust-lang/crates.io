@@ -5,7 +5,6 @@ use super::prelude::*;
 use crate::util::request_header;
 
 use conduit::{header, RequestExt, StatusCode};
-use conduit_cookie::RequestSession;
 
 use crate::middleware::normalize_path::OriginalPath;
 use crate::middleware::request_timing::ResponseTime;
@@ -29,14 +28,12 @@ impl Middleware for LogRequests {
             }
         );
 
-        report_to_sentry(req, &res, response_time.as_millis());
-
         res
     }
 }
 
-struct CustomMetadata {
-    entries: Vec<(&'static str, String)>,
+pub struct CustomMetadata {
+    pub entries: Vec<(&'static str, String)>,
 }
 
 pub fn add_custom_metadata<V: Display>(req: &mut dyn RequestExt, key: &'static str, value: V) {
@@ -49,46 +46,6 @@ pub fn add_custom_metadata<V: Display>(req: &mut dyn RequestExt, key: &'static s
         metadata.entries.push((key, value.to_string()));
         req.mut_extensions().insert(metadata);
     }
-}
-
-fn report_to_sentry(req: &dyn RequestExt, res: &AfterResult, response_time: u64) {
-    sentry::configure_scope(|scope| {
-        {
-            let id = req.session().get("user_id").map(|str| str.to_string());
-
-            let user = sentry::User {
-                id,
-                ..Default::default()
-            };
-
-            scope.set_user(Some(user));
-        }
-
-        if let Some(request_id) = req
-            .headers()
-            .get("x-request-id")
-            .and_then(|value| value.to_str().ok())
-        {
-            scope.set_tag("request.id", request_id);
-        }
-
-        {
-            let status = res
-                .as_ref()
-                .map(|resp| resp.status())
-                .unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
-
-            scope.set_tag("response.status", status.as_str());
-        }
-
-        scope.set_extra("Response time [ms]", response_time.into());
-
-        if let Some(metadata) = req.extensions().find::<CustomMetadata>() {
-            for (key, value) in &metadata.entries {
-                scope.set_extra(key, value.to_string().into());
-            }
-        }
-    });
 }
 
 #[cfg(test)]
