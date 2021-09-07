@@ -10,6 +10,7 @@ use self::ember_html::EmberHtml;
 use self::head::Head;
 use self::known_error_to_json::KnownErrorToJson;
 use self::log_connection_pool_status::LogConnectionPoolStatus;
+use self::request_timing::RequestTiming;
 use self::static_or_continue::StaticOrContinue;
 use self::update_metrics::UpdateMetrics;
 
@@ -23,6 +24,7 @@ mod known_error_to_json;
 mod log_connection_pool_status;
 pub mod log_request;
 mod normalize_path;
+mod request_timing;
 mod require_user_agent;
 mod static_or_continue;
 mod update_metrics;
@@ -47,6 +49,8 @@ pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBui
         m.add(log_request::LogRequests::default());
         m.around(SentryMiddleware::default());
     }
+
+    m.add(RequestTiming::default());
 
     if env == Env::Development {
         // Optionally print debug information for each request

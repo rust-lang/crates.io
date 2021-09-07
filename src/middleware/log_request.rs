@@ -7,8 +7,8 @@ use crate::util::request_header;
 use conduit::{header, RequestExt, StatusCode};
 use conduit_cookie::RequestSession;
 
+use crate::middleware::request_timing::ResponseTime;
 use std::fmt::{self, Display, Formatter};
-use std::time::{SystemTime, UNIX_EPOCH};
 
 const SLOW_REQUEST_THRESHOLD_MS: u64 = 1000;
 
@@ -25,30 +25,7 @@ impl Middleware for LogRequests {
     }
 
     fn after(&self, req: &mut dyn RequestExt, res: AfterResult) -> AfterResult {
-        let response_time =
-            if let Ok(start_ms) = request_header(req, "x-request-start").parse::<u128>() {
-                let current_ms = SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .expect("Time went way backwards")
-                    .as_millis();
-
-                if current_ms > start_ms {
-                    // The result cannot be negative
-                    current_ms - start_ms
-                } else {
-                    // Because our nginx proxy and app run on the same dyno in production, we
-                    // shouldn't have to worry about clock drift. But if something goes wrong,
-                    // calculate the response time based on when the request reached this app.
-                    fallback_response_time(req)
-                }
-            } else {
-                // X-Request-Start header couldn't be parsed.
-                // We are probably running locally and not behind nginx.
-                fallback_response_time(req)
-            };
-
-        // This will only trucate for requests lasting > 500 million years
-        let response_time = response_time as u64;
+        let response_time = req.extensions().find::<ResponseTime>().unwrap();
 
         println!(
             "{}",
@@ -59,17 +36,10 @@ impl Middleware for LogRequests {
             }
         );
 
-        report_to_sentry(req, &res, response_time);
+        report_to_sentry(req, &res, response_time.as_millis());
 
         res
     }
-}
-
-/// Calculate the response time based on when the request reached the in-app web server.
-///
-/// This serves as a fallback in case the `X-Request-Start` header is missing or invalid.
-fn fallback_response_time(req: &mut dyn RequestExt) -> u128 {
-    req.elapsed().as_millis()
 }
 
 struct CustomMetadata {
@@ -142,7 +112,7 @@ pub(crate) fn get_log_message(req: &dyn RequestExt, key: &'static str) -> String
 struct RequestLine<'r> {
     req: &'r dyn RequestExt,
     res: &'r AfterResult,
-    response_time: u64,
+    response_time: &'r ResponseTime,
 }
 
 impl Display for RequestLine<'_> {
@@ -175,7 +145,7 @@ impl Display for RequestLine<'_> {
         }
 
         line.add_quoted_field("fwd", request_header(self.req, "x-real-ip"))?;
-        line.add_field("service", TimeMs(self.response_time))?;
+        line.add_field("service", self.response_time)?;
         line.add_field("status", status.as_str())?;
         line.add_quoted_field("user_agent", request_header(self.req, header::USER_AGENT))?;
 
@@ -189,7 +159,7 @@ impl Display for RequestLine<'_> {
             line.add_quoted_field("error", err)?;
         }
 
-        if self.response_time > SLOW_REQUEST_THRESHOLD_MS {
+        if self.response_time.as_millis() > SLOW_REQUEST_THRESHOLD_MS {
             line.add_marker("SLOW REQUEST")?;
         }
 
@@ -210,16 +180,6 @@ impl<'a> Display for FullPath<'a> {
         if let Some(q_string) = self.0.query_string() {
             write!(f, "?{}", q_string)?;
         }
-        Ok(())
-    }
-}
-
-struct TimeMs(u64);
-
-impl Display for TimeMs {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        self.0.fmt(f)?;
-        f.write_str("ms")?;
         Ok(())
     }
 }
