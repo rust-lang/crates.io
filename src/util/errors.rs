@@ -175,19 +175,6 @@ impl<T, E: AppError> ChainError<T> for Result<T, E> {
     }
 }
 
-impl<T> ChainError<T> for Option<T> {
-    fn chain_error<E, C>(self, callback: C) -> AppResult<T>
-    where
-        E: AppError,
-        C: FnOnce() -> E,
-    {
-        match self {
-            Some(t) => Ok(t),
-            None => Err(Box::new(callback())),
-        }
-    }
-}
-
 impl<E: AppError> AppError for ChainedError<E> {
     fn response(&self) -> Option<AppResponse> {
         self.error.response()
@@ -274,8 +261,7 @@ pub(crate) fn std_error(e: Box<dyn AppError>) -> Box<dyn Error + Send> {
 #[test]
 fn chain_error_internal() {
     assert_eq!(
-        None::<()>
-            .chain_error(|| internal("inner"))
+        Err::<(), _>(internal("inner"))
             .chain_error(|| internal("middle"))
             .chain_error(|| internal("outer"))
             .unwrap_err()
