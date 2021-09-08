@@ -45,6 +45,7 @@ module('Mirage | GET /api/v1/me/updates', function (hooks) {
           },
           num: '1.2.3',
           published_by: null,
+          readme_path: '/api/v1/crates/foo/1.2.3/readme',
           updated_at: '2017-02-24T12:34:56Z',
           yanked: false,
         },

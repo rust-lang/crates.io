@@ -46,6 +46,7 @@ export default BaseSerializer.extend({
     let crate = this.schema.crates.find(hash.crate_id);
 
     hash.dl_path = `/api/v1/crates/${crate.name}/${hash.num}/download`;
+    hash.readme_path = `/api/v1/crates/${crate.name}/${hash.num}/readme`;
     hash.crate = crate.name;
 
     if (hash.published_by_id) {
