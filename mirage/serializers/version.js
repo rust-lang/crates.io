@@ -58,5 +58,6 @@ export default BaseSerializer.extend({
 
     delete hash.crate_id;
     delete hash.published_by_id;
+    delete hash.readme;
   },
 });
