@@ -18,7 +18,6 @@ mod balance_capacity;
 mod block_traffic;
 mod debug;
 mod ember_html;
-mod ensure_well_formed_500;
 mod head;
 mod known_error_to_json;
 mod log_connection_pool_status;
@@ -45,7 +44,6 @@ pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBui
     let blocked_traffic = app.config.blocked_traffic.clone();
 
     if env != Env::Test {
-        m.add(ensure_well_formed_500::EnsureWellFormed500);
         m.add(log_request::LogRequests::default());
         m.around(SentryMiddleware::default());
     }
