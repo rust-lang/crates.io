@@ -152,27 +152,10 @@ pub type AppResult<T> = Result<T, Box<dyn AppError>>;
 // =============================================================================
 // Chaining errors
 
-pub trait ChainError<T> {
-    fn chain_error<E, F>(self, callback: F) -> AppResult<T>
-    where
-        E: AppError,
-        F: FnOnce() -> E;
-}
-
 #[derive(Debug)]
 struct ChainedError<E> {
     error: E,
     cause: Box<dyn AppError>,
-}
-
-impl<T, E: AppError> ChainError<T> for Result<T, E> {
-    fn chain_error<E2, C>(self, callback: C) -> AppResult<T>
-    where
-        E2: AppError,
-        C: FnOnce() -> E2,
-    {
-        self.map_err(move |err| err.chain(callback()))
-    }
 }
 
 impl<E: AppError> AppError for ChainedError<E> {
@@ -262,15 +245,15 @@ pub(crate) fn std_error(e: Box<dyn AppError>) -> Box<dyn Error + Send> {
 fn chain_error_internal() {
     assert_eq!(
         Err::<(), _>(internal("inner"))
-            .chain_error(|| internal("middle"))
-            .chain_error(|| internal("outer"))
+            .map_err(|err| err.chain(internal("middle")))
+            .map_err(|err| err.chain(internal("outer")))
             .unwrap_err()
             .to_string(),
         "outer caused by middle caused by inner"
     );
     assert_eq!(
         Err::<(), _>(internal("inner"))
-            .chain_error(|| internal("outer"))
+            .map_err(|err| err.chain(internal("outer")))
             .unwrap_err()
             .to_string(),
         "outer caused by inner"
@@ -279,14 +262,14 @@ fn chain_error_internal() {
     // Don't do this, the user will see a generic 500 error instead of the intended message
     assert_eq!(
         Err::<(), _>(cargo_err("inner"))
-            .chain_error(|| internal("outer"))
+            .map_err(|err| err.chain(internal("outer")))
             .unwrap_err()
             .to_string(),
         "outer caused by inner"
     );
     assert_eq!(
         Err::<(), _>(forbidden())
-            .chain_error(|| internal("outer"))
+            .map_err(|err| err.chain(internal("outer")))
             .unwrap_err()
             .to_string(),
         "outer caused by must be logged in to perform that action"
@@ -298,7 +281,7 @@ fn chain_error_user_facing() {
     // Do this rarely, the user will only see the outer error
     assert_eq!(
         Err::<(), _>(cargo_err("inner"))
-            .chain_error(|| cargo_err("outer"))
+            .map_err(|err| err.chain(cargo_err("outer")))
             .unwrap_err()
             .to_string(),
         "outer caused by inner" // never logged
@@ -308,7 +291,7 @@ fn chain_error_user_facing() {
     // The inner error never bubbles up to the logging middleware
     assert_eq!(
         Err::<(), _>(std::io::Error::from(std::io::ErrorKind::PermissionDenied))
-            .chain_error(|| cargo_err("outer"))
+            .map_err(|err| err.chain(cargo_err("outer")))
             .unwrap_err()
             .to_string(),
         "outer caused by permission denied" // never logged

@@ -187,7 +187,7 @@ pub fn regenerate_token_and_send(req: &mut dyn RequestExt) -> EndpointResult {
 
     let param_user_id = req.params()["user_id"]
         .parse::<i32>()
-        .chain_error(|| bad_request("invalid user_id"))?;
+        .map_err(|err| err.chain(bad_request("invalid user_id")))?;
     let authenticated_user = req.authenticate()?;
     let conn = req.db_conn()?;
     let user = authenticated_user.user();

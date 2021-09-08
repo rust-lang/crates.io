@@ -6,8 +6,7 @@ use super::prelude::*;
 use crate::middleware::log_request;
 use crate::models::{ApiToken, User};
 use crate::util::errors::{
-    account_locked, forbidden, internal, AppError, AppResult, ChainError,
-    InsecurelyGeneratedTokenRevoked,
+    account_locked, forbidden, internal, AppError, AppResult, InsecurelyGeneratedTokenRevoked,
 };
 
 #[derive(Debug)]
@@ -62,8 +61,7 @@ fn verify_origin(req: &dyn RequestExt) -> AppResult<()> {
             "only same-origin requests can be authenticated. got {:?}",
             bad_origin
         );
-        return Err(internal(&error_message))
-            .chain_error(|| Box::new(forbidden()) as Box<dyn AppError>);
+        return Err(internal(&error_message).chain(forbidden()));
     }
     Ok(())
 }
@@ -76,7 +74,7 @@ fn authenticate_user(req: &dyn RequestExt) -> AppResult<AuthenticatedUser> {
 
     if let Some(id) = user_id_from_session {
         let user = User::find(&conn, id)
-            .chain_error(|| internal("user_id from cookie not found in database"))?;
+            .map_err(|err| err.chain(internal("user_id from cookie not found in database")))?;
 
         return Ok(AuthenticatedUser {
             user,
@@ -100,7 +98,7 @@ fn authenticate_user(req: &dyn RequestExt) -> AppResult<AuthenticatedUser> {
         })?;
 
         let user = User::find(&conn, token.user_id)
-            .chain_error(|| internal("user_id from token not found in database"))?;
+            .map_err(|err| err.chain(internal("user_id from token not found in database")))?;
 
         return Ok(AuthenticatedUser {
             user,
@@ -109,7 +107,7 @@ fn authenticate_user(req: &dyn RequestExt) -> AppResult<AuthenticatedUser> {
     }
 
     // Unable to authenticate the user
-    return Err(internal("no cookie session or auth header found")).chain_error(forbidden);
+    return Err(internal("no cookie session or auth header found").chain(forbidden()));
 }
 
 impl<'a> UserAuthenticationExt for dyn RequestExt + 'a {
