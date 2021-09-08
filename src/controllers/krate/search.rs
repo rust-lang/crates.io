@@ -10,7 +10,7 @@ use crate::models::{
     Crate, CrateBadge, CrateOwner, CrateVersions, OwnerKind, TopVersions, Version,
 };
 use crate::schema::*;
-use crate::util::errors::{bad_request, ChainError};
+use crate::util::errors::bad_request;
 use crate::views::EncodableCrate;
 
 use crate::controllers::helpers::pagination::{Page, Paginated, PaginationOptions};
@@ -153,7 +153,7 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
             letter
                 .chars()
                 .next()
-                .chain_error(|| bad_request("letter value must contain 1 character"))?
+                .ok_or_else(|| bad_request("letter value must contain 1 character"))?
                 .to_lowercase()
                 .collect::<String>()
         );

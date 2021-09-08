@@ -130,7 +130,7 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
 
         let content_length = req
             .content_length()
-            .chain_error(|| cargo_err("missing header: Content-Length"))?;
+            .ok_or_else(|| cargo_err("missing header: Content-Length"))?;
 
         let maximums = Maximums::new(
             krate.max_upload_size,
