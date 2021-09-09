@@ -198,9 +198,13 @@ impl Display for RequestLine<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let mut line = LogLine::new(f);
 
-        let (at, status) = match self.res {
-            Ok(resp) => ("info", resp.status()),
-            Err(_) => ("error", StatusCode::INTERNAL_SERVER_ERROR),
+        let status = self.res.as_ref().map(|res| res.status());
+        let status = status.unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
+
+        let at = if status.is_server_error() {
+            "error"
+        } else {
+            "info"
         };
 
         line.add_field("at", at)?;
