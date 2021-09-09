@@ -11,7 +11,8 @@
     --footer-bg-color: var(--green800);
 
     --font-sans: "Fira Sans", sans-serif;
-    --font-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    --font-monospace: "Fira Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+        "Courier New", monospace;
 
     --main-color: #383838;
     --main-color-light: #858585;
