@@ -34,11 +34,11 @@
           <Placeholder local-class="placeholder-text" />
         </div>
       {{else if this.readme}}
-        <article aria-label="Readme">
+        <article aria-label="Readme" data-test-readme>
           <RenderedHtml @html={{this.readme}} local-class="readme" />
         </article>
       {{else}}
-        <div local-class="no-readme">
+        <div local-class="no-readme" data-test-no-readme>
           {{this.crate.name}} v{{this.currentVersion.num}} appears to have no <code>README.md</code> file
         </div>
       {{/if}}
