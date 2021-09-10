@@ -76,12 +76,6 @@ impl App {
             ),
         );
 
-        let db_pool_size = match (dotenv::var("DB_POOL_SIZE"), config.env()) {
-            (Ok(num), _) => num.parse().expect("couldn't parse DB_POOL_SIZE"),
-            (_, Env::Production) => 10,
-            _ => 3,
-        };
-
         let db_min_idle = match (dotenv::var("DB_MIN_IDLE"), config.env()) {
             (Ok(num), _) => Some(num.parse().expect("couldn't parse DB_MIN_IDLE")),
             (_, Env::Production) => Some(5),
@@ -113,7 +107,7 @@ impl App {
             };
 
             let primary_db_config = r2d2::Pool::builder()
-                .max_size(db_pool_size)
+                .max_size(config.db.primary_max_pool_size())
                 .min_idle(db_min_idle)
                 .connection_timeout(Duration::from_secs(db_connection_timeout))
                 .connection_customizer(Box::new(primary_db_connection_config))
@@ -139,7 +133,7 @@ impl App {
                 };
 
                 let replica_db_config = r2d2::Pool::builder()
-                    .max_size(db_pool_size)
+                    .max_size(config.db.replica_max_pool_size())
                     .min_idle(db_min_idle)
                     .connection_timeout(Duration::from_secs(db_connection_timeout))
                     .connection_customizer(Box::new(replica_db_connection_config))

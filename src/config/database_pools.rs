@@ -20,11 +20,20 @@ pub struct DatabasePools {
 pub struct DbPoolConfig {
     pub url: String,
     pub read_only_mode: bool,
+    pub pool_size: u32,
 }
 
 impl DatabasePools {
     pub fn are_all_read_only(&self) -> bool {
         self.primary.read_only_mode
+    }
+
+    pub fn primary_max_pool_size(&self) -> u32 {
+        self.primary.pool_size
+    }
+
+    pub fn replica_max_pool_size(&self) -> u32 {
+        self.replica.as_ref().map(|config| config.pool_size).unwrap_or(3)
     }
 }
 
@@ -38,6 +47,12 @@ impl DatabasePools {
         let leader_url = env("DATABASE_URL");
         let follower_url = dotenv::var("READ_ONLY_REPLICA_URL").ok();
         let read_only_mode = dotenv::var("READ_ONLY_MODE").is_ok();
+
+        let pool_size = match dotenv::var("DB_POOL_SIZE") {
+            Ok(num) => num.parse().expect("couldn't parse DB_POOL_SIZE"),
+            _ => 3,
+        };
+
         match dotenv::var("DB_OFFLINE").as_deref() {
             // The actual leader is down, use the follower in read-only mode as the primary and
             // don't configure a replica.
@@ -46,6 +61,7 @@ impl DatabasePools {
                     url: follower_url
                         .expect("Must set `READ_ONLY_REPLICA_URL` when using `DB_OFFLINE=leader`."),
                     read_only_mode: true,
+                    pool_size,
                 },
                 replica: None,
             },
@@ -54,6 +70,7 @@ impl DatabasePools {
                 primary: DbPoolConfig {
                     url: leader_url,
                     read_only_mode,
+                    pool_size,
                 },
                 replica: None,
             },
@@ -61,6 +78,7 @@ impl DatabasePools {
                 primary: DbPoolConfig {
                     url: leader_url,
                     read_only_mode,
+                    pool_size,
                 },
                 replica: follower_url.map(|url| DbPoolConfig {
                     url,
@@ -68,6 +86,7 @@ impl DatabasePools {
                     // same leader database to both environment variables and this ensures the
                     // connection is opened read-only even when attached to a writeable database.
                     read_only_mode: true,
+                    pool_size,
                 }),
             },
         }
@@ -78,6 +97,7 @@ impl DatabasePools {
             primary: DbPoolConfig {
                 url: env("TEST_DATABASE_URL"),
                 read_only_mode: false,
+                pool_size: 1,
             },
             replica: None,
         }
