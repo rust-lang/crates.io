@@ -76,12 +76,6 @@ impl App {
             ),
         );
 
-        let db_min_idle = match (dotenv::var("DB_MIN_IDLE"), config.env()) {
-            (Ok(num), _) => Some(num.parse().expect("couldn't parse DB_MIN_IDLE")),
-            (_, Env::Production) => Some(5),
-            _ => None,
-        };
-
         let db_helper_threads = match (dotenv::var("DB_HELPER_THREADS"), config.env()) {
             (Ok(num), _) => num.parse().expect("couldn't parse DB_HELPER_THREADS"),
             (_, Env::Production) => 3,
@@ -108,7 +102,7 @@ impl App {
 
             let primary_db_config = r2d2::Pool::builder()
                 .max_size(config.db.primary_max_pool_size())
-                .min_idle(db_min_idle)
+                .min_idle(config.db.primary.min_idle)
                 .connection_timeout(Duration::from_secs(db_connection_timeout))
                 .connection_customizer(Box::new(primary_db_connection_config))
                 .thread_pool(thread_pool.clone());
@@ -134,7 +128,7 @@ impl App {
 
                 let replica_db_config = r2d2::Pool::builder()
                     .max_size(pool_config.pool_size)
-                    .min_idle(db_min_idle)
+                    .min_idle(pool_config.min_idle)
                     .connection_timeout(Duration::from_secs(db_connection_timeout))
                     .connection_customizer(Box::new(replica_db_connection_config))
                     .thread_pool(thread_pool);

@@ -23,6 +23,7 @@ pub struct DbPoolConfig {
     pub url: String,
     pub read_only_mode: bool,
     pub pool_size: u32,
+    pub min_idle: Option<u32>,
 }
 
 impl DatabasePools {
@@ -65,6 +66,11 @@ impl DatabasePools {
             _ => Self::DEFAULT_POOL_SIZE,
         };
 
+        let min_idle = match dotenv::var("DB_MIN_IDLE") {
+            Ok(num) => Some(num.parse().expect("couldn't parse DB_MIN_IDLE")),
+            _ => None,
+        };
+
         match dotenv::var("DB_OFFLINE").as_deref() {
             // The actual leader is down, use the follower in read-only mode as the primary and
             // don't configure a replica.
@@ -74,6 +80,7 @@ impl DatabasePools {
                         .expect("Must set `READ_ONLY_REPLICA_URL` when using `DB_OFFLINE=leader`."),
                     read_only_mode: true,
                     pool_size: primary_pool_size,
+                    min_idle,
                 },
                 replica: None,
             },
@@ -83,6 +90,7 @@ impl DatabasePools {
                     url: leader_url,
                     read_only_mode,
                     pool_size: primary_pool_size,
+                    min_idle,
                 },
                 replica: None,
             },
@@ -91,6 +99,7 @@ impl DatabasePools {
                     url: leader_url,
                     read_only_mode,
                     pool_size: primary_pool_size,
+                    min_idle,
                 },
                 replica: follower_url.map(|url| DbPoolConfig {
                     url,
@@ -99,6 +108,7 @@ impl DatabasePools {
                     // connection is opened read-only even when attached to a writeable database.
                     read_only_mode: true,
                     pool_size: replica_pool_size,
+                    min_idle,
                 }),
             },
         }
@@ -110,6 +120,7 @@ impl DatabasePools {
                 url: env("TEST_DATABASE_URL"),
                 read_only_mode: false,
                 pool_size: 1,
+                min_idle: None,
             },
             replica: None,
         }
