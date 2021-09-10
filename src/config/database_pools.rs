@@ -66,8 +66,13 @@ impl DatabasePools {
             _ => Self::DEFAULT_POOL_SIZE,
         };
 
-        let min_idle = match dotenv::var("DB_MIN_IDLE") {
-            Ok(num) => Some(num.parse().expect("couldn't parse DB_MIN_IDLE")),
+        let primary_min_idle = match dotenv::var("DB_PRIMARY_MIN_IDLE") {
+            Ok(num) => Some(num.parse().expect("couldn't parse DB_PRIMARY_MIN_IDLE")),
+            _ => None,
+        };
+
+        let replica_min_idle = match dotenv::var("DB_REPLICA_MIN_IDLE") {
+            Ok(num) => Some(num.parse().expect("couldn't parse DB_REPLICA_MIN_IDLE")),
             _ => None,
         };
 
@@ -80,7 +85,7 @@ impl DatabasePools {
                         .expect("Must set `READ_ONLY_REPLICA_URL` when using `DB_OFFLINE=leader`."),
                     read_only_mode: true,
                     pool_size: primary_pool_size,
-                    min_idle,
+                    min_idle: primary_min_idle,
                 },
                 replica: None,
             },
@@ -90,7 +95,7 @@ impl DatabasePools {
                     url: leader_url,
                     read_only_mode,
                     pool_size: primary_pool_size,
-                    min_idle,
+                    min_idle: primary_min_idle,
                 },
                 replica: None,
             },
@@ -99,7 +104,7 @@ impl DatabasePools {
                     url: leader_url,
                     read_only_mode,
                     pool_size: primary_pool_size,
-                    min_idle,
+                    min_idle: primary_min_idle,
                 },
                 replica: follower_url.map(|url| DbPoolConfig {
                     url,
@@ -108,7 +113,7 @@ impl DatabasePools {
                     // connection is opened read-only even when attached to a writeable database.
                     read_only_mode: true,
                     pool_size: replica_pool_size,
-                    min_idle,
+                    min_idle: replica_min_idle,
                 }),
             },
         }
