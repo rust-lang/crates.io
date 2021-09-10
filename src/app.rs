@@ -123,9 +123,9 @@ impl App {
             .unwrap()
         };
 
-        let replica_database = if let Some(url) = config.db.replica.as_ref().map(|c| &c.url) {
+        let replica_database = if let Some(pool_config) = config.db.replica.as_ref() {
             if config.use_test_database_pool {
-                Some(DieselPool::new_test(url))
+                Some(DieselPool::new_test(&pool_config.url))
             } else {
                 let replica_db_connection_config = ConnectionConfig {
                     statement_timeout: db_connection_timeout,
@@ -133,7 +133,7 @@ impl App {
                 };
 
                 let replica_db_config = r2d2::Pool::builder()
-                    .max_size(config.db.replica_max_pool_size())
+                    .max_size(pool_config.pool_size)
                     .min_idle(db_min_idle)
                     .connection_timeout(Duration::from_secs(db_connection_timeout))
                     .connection_customizer(Box::new(replica_db_connection_config))
@@ -141,7 +141,7 @@ impl App {
 
                 Some(
                     DieselPool::new(
-                        url,
+                        &pool_config.url,
                         replica_db_config,
                         instance_metrics
                             .database_time_to_obtain_connection

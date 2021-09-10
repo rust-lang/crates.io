@@ -23,10 +23,15 @@
           "value": "",
           "required": false
       },
-      "DB_POOL_SIZE": {
+      "DB_PRIMARY_POOL_SIZE": {
           "value": "10",
           "required": false,
-          "description": "The maximum number of database connections managed by the pool. Set so that this value times the number of dynos is less than your connection limit."
+          "description": "The maximum number of primary database connections managed by the pool. Set so that this value times the number of dynos is less than your connection limit."
+      },
+      "DB_REPLICA_POOL_SIZE": {
+          "value": "3",
+          "required": false,
+          "description": "The maximum number of replica database connections managed by the pool. Set so that this value times the number of dynos is less than your connection limit."
       },
       "DB_MIN_IDLE": {
           "value": "5",
