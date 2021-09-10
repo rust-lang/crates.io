@@ -27,5 +27,9 @@
     }, {
         "matchPackageNames": ["@percy/cli", "webpack"],
         "extends": ["schedule:weekly"]
+    }, {
+        "matchLanguages": ["rust"],
+        "matchUpdateTypes": ["lockFileMaintenance"],
+        "groupName": " Lock file maintenance (Rust)"
     }]
 }
