@@ -45,6 +45,7 @@ impl DumpDirectory {
         let timestamp = chrono::Utc::now();
         let timestamp_str = timestamp.format("%Y-%m-%d-%H%M%S").to_string();
         let export_dir = std::env::temp_dir().join("dump-db").join(timestamp_str);
+        debug!(?export_dir, "Creating database dump folder…");
         std::fs::create_dir_all(&export_dir)?;
         Ok(Self {
             timestamp,
@@ -62,7 +63,9 @@ impl DumpDirectory {
     fn add_readme(&self) -> Result<(), PerformError> {
         use std::io::Write;
 
-        let mut readme = File::create(self.export_dir.join("README.md"))?;
+        let path = self.export_dir.join("README.md");
+        debug!(?path, "Writing README.md file…");
+        let mut readme = File::create(path)?;
         readme.write_all(include_bytes!("dump_db/readme_for_tarball.md"))?;
         Ok(())
     }
@@ -78,13 +81,18 @@ impl DumpDirectory {
             crates_io_commit: dotenv::var("HEROKU_SLUG_COMMIT")
                 .unwrap_or_else(|_| "unknown".to_owned()),
         };
-        let file = File::create(self.export_dir.join("metadata.json"))?;
+        let path = self.export_dir.join("metadata.json");
+        debug!(?path, "Writing metadata.json file…");
+        let file = File::create(path)?;
         serde_json::to_writer_pretty(file, &metadata)?;
         Ok(())
     }
 
     pub fn dump_schema(&self, database_url: &str) -> Result<(), PerformError> {
-        let schema_sql = File::create(self.export_dir.join("schema.sql"))?;
+        let path = self.export_dir.join("schema.sql");
+        debug!(?path, "Writing schema.sql file…");
+        let schema_sql = File::create(path)?;
+
         let status = std::process::Command::new("pg_dump")
             .arg("--schema-only")
             .arg("--no-owner")
@@ -100,9 +108,12 @@ impl DumpDirectory {
     }
 
     pub fn dump_db(&self, database_url: &str) -> Result<(), PerformError> {
+        debug!("Generating export.sql and import.sql files…");
         let export_script = self.export_dir.join("export.sql");
         let import_script = self.export_dir.join("import.sql");
         gen_scripts::gen_scripts(&export_script, &import_script)?;
+
+        debug!("Filling data folder…");
         std::fs::create_dir(self.export_dir.join("data"))?;
         run_psql(&export_script, database_url)
     }
@@ -115,6 +126,7 @@ impl Drop for DumpDirectory {
 }
 
 pub fn run_psql(script: &Path, database_url: &str) -> Result<(), PerformError> {
+    debug!(?script, "Running psql script…");
     let psql_script = File::open(&script)?;
     let psql = std::process::Command::new("psql")
         .arg(database_url)
