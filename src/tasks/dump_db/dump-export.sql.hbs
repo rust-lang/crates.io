@@ -1,9 +1,9 @@
 BEGIN ISOLATION LEVEL REPEATABLE READ, READ ONLY;
-{{~#each tables}}
-{{~#if this.filter}}
+{{#each tables}}
+{{#if this.filter}}
     \copy (SELECT {{this.columns}} FROM "{{this.name}}" WHERE {{this.filter}}) TO 'data/{{this.name}}.csv' WITH CSV HEADER
-{{~else}}
+{{else}}
     \copy "{{this.name}}" ({{this.columns}}) TO 'data/{{this.name}}.csv' WITH CSV HEADER
-{{~/if}}
-{{~/each}}
+{{/if}}
+{{/each}}
 COMMIT;
