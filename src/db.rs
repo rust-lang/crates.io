@@ -2,7 +2,7 @@ use conduit::RequestExt;
 use diesel::prelude::*;
 use diesel::r2d2::{self, event::HandleEvent, ConnectionManager, CustomizeConnection};
 use parking_lot::{ReentrantMutex, ReentrantMutexGuard};
-use prometheus::Histogram;
+use prometheus::{Histogram, IntCounter};
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
 use std::{ops::Deref, time::Duration};
@@ -28,11 +28,12 @@ impl DieselPool {
         mut config: r2d2::Builder<ConnectionManager<PgConnection>>,
         used_conns_metric: Histogram,
         time_to_obtain_connection_metric: Histogram,
+        timeouts_when_obtaining_connections: IntCounter,
     ) -> Result<DieselPool, PoolError> {
         let manager = ConnectionManager::new(connection_url(url));
 
         // Track the pool state using r2d2's event handler.
-        let state = Arc::new(StateTracker::new());
+        let state = Arc::new(StateTracker::new(timeouts_when_obtaining_connections));
         config = config.event_handler(Box::new(StateEventHandler(state.clone())));
 
         // For crates.io we want the behavior of creating a database pool to be slightly different
@@ -228,13 +229,15 @@ pub enum PoolError {
 pub struct StateTracker {
     open_connections: AtomicU32,
     used_connections: AtomicU32,
+    timeouts_metric: IntCounter,
 }
 
 impl StateTracker {
-    fn new() -> Self {
+    fn new(timeouts_metric: IntCounter) -> Self {
         StateTracker {
             open_connections: AtomicU32::new(0),
             used_connections: AtomicU32::new(0),
+            timeouts_metric,
         }
     }
 
@@ -266,5 +269,9 @@ impl HandleEvent for StateEventHandler {
 
     fn handle_checkin(&self, _: r2d2::event::CheckinEvent) {
         self.0.used_connections.fetch_sub(1, Ordering::SeqCst);
+    }
+
+    fn handle_timeout(&self, _: r2d2::event::TimeoutEvent) {
+        self.0.timeouts_metric.inc();
     }
 }

@@ -128,6 +128,9 @@ impl App {
                 instance_metrics
                     .database_used_conns_histogram
                     .with_label_values(&["primary"]),
+                instance_metrics
+                    .database_timeouts_when_obtaining_connections
+                    .with_label_values(&["primary"]),
             )
             .unwrap()
         };
@@ -157,6 +160,9 @@ impl App {
                             .with_label_values(&["follower"]),
                         instance_metrics
                             .database_used_conns_histogram
+                            .with_label_values(&["follower"]),
+                        instance_metrics
+                            .database_timeouts_when_obtaining_connections
                             .with_label_values(&["follower"]),
                     )
                     .unwrap(),

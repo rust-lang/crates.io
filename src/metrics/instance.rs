@@ -32,6 +32,8 @@ metrics! {
         pub database_time_to_obtain_connection: HistogramVec<TimingBuckets>["pool"],
         /// Number of used database connections in the pool, as histogram
         pub database_used_conns_histogram: HistogramVec<DatabasePoolBuckets>["pool"],
+        /// Number of times a timeout happened when obtaining a database connection
+        pub database_timeouts_when_obtaining_connections: IntCounterVec["pool"],
 
         /// Number of requests processed by this instance
         pub requests_total: IntCounter,
