@@ -24,28 +24,3 @@ impl Middleware for KnownErrorToJson {
         })
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::KnownErrorToJson;
-
-    use conduit::{Body, Handler, Method, StatusCode};
-    use conduit_middleware::MiddlewareBuilder;
-    use conduit_router::RouteBuilder;
-    use conduit_test::MockRequest;
-
-    #[test]
-    fn router_errors_become_not_found_response() {
-        let route_builder = RouteBuilder::new();
-        let mut middleware = MiddlewareBuilder::new(route_builder);
-        middleware.add(KnownErrorToJson);
-
-        let mut req = MockRequest::new(Method::GET, "/");
-        let (parts, body) = middleware.call(&mut req).unwrap().into_parts();
-        assert_eq!(parts.status, StatusCode::NOT_FOUND);
-        assert!(matches!(
-            body,
-            Body::Owned(vec) if vec == br#"{"errors":[{"detail":"Not Found"}]}"#
-        ));
-    }
-}
