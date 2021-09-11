@@ -2,6 +2,7 @@ use crate::{
     builders::CrateBuilder,
     util::{MockAnonymousUser, RequestHelper, TestApp},
 };
+use http::StatusCode;
 use std::time::Duration;
 
 #[test]
@@ -63,4 +64,26 @@ fn assert_unconditional_redirects(anon: &MockAnonymousUser) {
 
     anon.get::<()>("/api/v1/crates/awesome-project/1.0.0/download")
         .assert_redirect_ends_with("/awesome-project/awesome-project-1.0.0.crate");
+}
+
+#[test]
+fn http_error_with_unhealthy_database() {
+    let (app, anon) = TestApp::init().with_slow_real_db_pool().empty();
+
+    let response = anon.get::<()>("/api/v1/summary");
+    assert_eq!(response.status(), StatusCode::OK);
+
+    app.db_chaosproxy().break_networking();
+
+    let response = anon.get::<()>("/api/v1/summary");
+    assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+    app.db_chaosproxy().restore_networking();
+    app.as_inner()
+        .primary_database
+        .wait_until_healthy(Duration::from_millis(500))
+        .expect("the database did not return healthy");
+
+    let response = anon.get::<()>("/api/v1/summary");
+    assert_eq!(response.status(), StatusCode::OK);
 }
