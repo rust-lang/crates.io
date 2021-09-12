@@ -25,8 +25,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .parse::<filter::Targets>()
         .expect("Invalid RUST_LOG value");
 
+    let sentry_filter = filter::Targets::new().with_default(Level::INFO);
+
     tracing_subscriber::registry()
         .with(tracing_subscriber::fmt::layer().with_filter(log_filter))
+        .with(sentry::integrations::tracing::layer().with_filter(sentry_filter))
         .init();
 
     let config = cargo_registry::config::Server::default();
