@@ -21,7 +21,7 @@ impl<'a> MarkdownRenderer<'a> {
     ///
     /// Per `readme_to_html`, `base_url` is the base URL prepended to any
     /// relative links in the input document.  See that function for more detail.
-    fn new(base_url: Option<&'a str>) -> MarkdownRenderer<'a> {
+    fn new(base_url: Option<&'a str>, base_dir: &'a str) -> MarkdownRenderer<'a> {
         let allowed_classes = hashmap(&[(
             "code",
             hashset(&[
@@ -42,7 +42,7 @@ impl<'a> MarkdownRenderer<'a> {
                 "language-yaml",
             ]),
         )]);
-        let sanitize_url = UrlRelative::Custom(Box::new(SanitizeUrl::new(base_url)));
+        let sanitize_url = UrlRelative::Custom(Box::new(SanitizeUrl::new(base_url, base_dir)));
 
         let mut html_sanitizer = Builder::default();
         html_sanitizer
@@ -131,10 +131,11 @@ fn canon_base_url(mut base_url: String) -> String {
 /// Sanitize relative URLs in README files.
 struct SanitizeUrl {
     base_url: Option<String>,
+    base_dir: String,
 }
 
 impl SanitizeUrl {
-    fn new(base_url: Option<&str>) -> Self {
+    fn new(base_url: Option<&str>, base_dir: &str) -> Self {
         let base_url = base_url
             .and_then(|base_url| Url::parse(base_url).ok())
             .and_then(|url| match url.host_str() {
@@ -143,7 +144,10 @@ impl SanitizeUrl {
                 }
                 _ => None,
             });
-        Self { base_url }
+        Self {
+            base_url,
+            base_dir: base_dir.to_owned(),
+        }
     }
 }
 
@@ -197,6 +201,10 @@ impl UrlRelativeEvaluate for SanitizeUrl {
                 add_sanitize_query,
             } = is_media_url(url);
             new_url += if is_media { "raw/HEAD" } else { "blob/HEAD" };
+            if !self.base_dir.is_empty() {
+                new_url += "/";
+                new_url += &self.base_dir;
+            }
             if !url.starts_with('/') {
                 new_url.push('/');
             }
@@ -214,22 +222,15 @@ impl UrlRelativeEvaluate for SanitizeUrl {
 
 /// Renders Markdown text to sanitized HTML with a given `base_url`.
 /// See `readme_to_html` for the interpretation of `base_url`.
-fn markdown_to_html(text: &str, base_url: Option<&str>) -> String {
-    let renderer = MarkdownRenderer::new(base_url);
+fn markdown_to_html(text: &str, base_url: Option<&str>, base_dir: &str) -> String {
+    let renderer = MarkdownRenderer::new(base_url, base_dir);
     renderer.to_html(text)
 }
 
 /// Any readme with a filename ending in one of these extensions will be rendered as Markdown.
 /// Note we also render a readme as Markdown if _no_ extension is on the filename.
-static MARKDOWN_EXTENSIONS: [&str; 7] = [
-    ".md",
-    ".markdown",
-    ".mdown",
-    ".mdwn",
-    ".mkd",
-    ".mkdn",
-    ".mkdown",
-];
+static MARKDOWN_EXTENSIONS: [&str; 7] =
+    ["md", "markdown", "mdown", "mdwn", "mkd", "mkdn", "mkdown"];
 
 /// Renders a readme to sanitized HTML.  An appropriate rendering method is chosen depending
 /// on the extension of the supplied `filename`.
@@ -250,11 +251,18 @@ static MARKDOWN_EXTENSIONS: [&str; 7] = [
 /// let text = "[Rust](https://rust-lang.org/) is an awesome *systems programming* language!";
 /// let rendered = readme_to_html(text, "README.md", None)?;
 /// ```
-pub fn readme_to_html(text: &str, filename: &str, base_url: Option<&str>) -> String {
-    let filename = filename.to_lowercase();
+pub fn readme_to_html(text: &str, readme_path: &str, base_url: Option<&str>) -> String {
+    let readme_path = Path::new(readme_path);
+    let readme_dir = readme_path.parent().and_then(|p| p.to_str()).unwrap_or("");
 
-    if !filename.contains('.') || MARKDOWN_EXTENSIONS.iter().any(|e| filename.ends_with(e)) {
-        return markdown_to_html(text, base_url);
+    if readme_path.extension().is_none() {
+        return markdown_to_html(text, base_url, readme_dir);
+    }
+
+    if let Some(ext) = readme_path.extension().and_then(|ext| ext.to_str()) {
+        if MARKDOWN_EXTENSIONS.contains(&ext.to_lowercase().as_str()) {
+            return markdown_to_html(text, base_url, readme_dir);
+        }
     }
 
     encode_minimal(text).replace("\n", "<br>\n")
@@ -266,13 +274,13 @@ pub fn render_and_upload_readme(
     env: &Environment,
     version_id: i32,
     text: String,
-    file_name: String,
+    readme_path: String,
     base_url: Option<String>,
 ) -> Result<(), PerformError> {
     use crate::schema::*;
     use diesel::prelude::*;
 
-    let rendered = readme_to_html(&text, &file_name, base_url.as_deref());
+    let rendered = readme_to_html(&text, &readme_path, base_url.as_deref());
 
     conn.transaction(|| {
         Version::record_readme_rendering(version_id, conn)?;
@@ -311,14 +319,14 @@ mod tests {
     #[test]
     fn empty_text() {
         let text = "";
-        let result = markdown_to_html(text, None);
+        let result = markdown_to_html(text, None, "");
         assert_eq!(result, "");
     }
 
     #[test]
     fn text_with_script_tag() {
         let text = "foo_readme\n\n<script>alert('Hello World')</script>";
-        let result = markdown_to_html(text, None);
+        let result = markdown_to_html(text, None, "");
         assert_eq!(
             result,
             "<p>foo_readme</p>\n&lt;script&gt;alert(\'Hello World\')&lt;/script&gt;\n"
@@ -328,7 +336,7 @@ mod tests {
     #[test]
     fn text_with_iframe_tag() {
         let text = "foo_readme\n\n<iframe>alert('Hello World')</iframe>";
-        let result = markdown_to_html(text, None);
+        let result = markdown_to_html(text, None, "");
         assert_eq!(
             result,
             "<p>foo_readme</p>\n&lt;iframe&gt;alert(\'Hello World\')&lt;/iframe&gt;\n"
@@ -338,14 +346,14 @@ mod tests {
     #[test]
     fn text_with_unknown_tag() {
         let text = "foo_readme\n\n<unknown>alert('Hello World')</unknown>";
-        let result = markdown_to_html(text, None);
+        let result = markdown_to_html(text, None, "");
         assert_eq!(result, "<p>foo_readme</p>\n<p>alert(\'Hello World\')</p>\n");
     }
 
     #[test]
     fn text_with_inline_javascript() {
         let text = r#"foo_readme\n\n<a href="https://crates.io/crates/cargo-registry" onclick="window.alert('Got you')">Crate page</a>"#;
-        let result = markdown_to_html(text, None);
+        let result = markdown_to_html(text, None, "");
         assert_eq!(
             result,
             "<p>foo_readme\\n\\n<a href=\"https://crates.io/crates/cargo-registry\" rel=\"nofollow noopener noreferrer\">Crate page</a></p>\n"
@@ -357,7 +365,7 @@ mod tests {
     #[test]
     fn text_with_fancy_single_quotes() {
         let text = "wb’";
-        let result = markdown_to_html(text, None);
+        let result = markdown_to_html(text, None, "");
         assert_eq!(result, "<p>wb’</p>\n");
     }
 
@@ -366,7 +374,7 @@ mod tests {
         let code_block = r#"```rust \
                             println!("Hello World"); \
                            ```"#;
-        let result = markdown_to_html(code_block, None);
+        let result = markdown_to_html(code_block, None, "");
         assert!(result.contains("<code class=\"language-rust\">"));
     }
 
@@ -375,14 +383,14 @@ mod tests {
         let code_block = r#"```rust  ,  no_run \
                             println!("Hello World"); \
                            ```"#;
-        let result = markdown_to_html(code_block, None);
+        let result = markdown_to_html(code_block, None, "");
         assert!(result.contains("<code class=\"language-rust\">"));
     }
 
     #[test]
     fn text_with_forbidden_class_attribute() {
         let text = "<p class='bad-class'>Hello World!</p>";
-        let result = markdown_to_html(text, None);
+        let result = markdown_to_html(text, None, "");
         assert_eq!(result, "<p>Hello World!</p>\n");
     }
 
@@ -403,7 +411,7 @@ mod tests {
                     if extra_slash { "/" } else { "" },
                 );
 
-                let result = markdown_to_html(absolute, Some(&url));
+                let result = markdown_to_html(absolute, Some(&url), "");
                 assert_eq!(
                     result,
                     format!(
@@ -412,7 +420,7 @@ mod tests {
                     )
                 );
 
-                let result = markdown_to_html(relative, Some(&url));
+                let result = markdown_to_html(relative, Some(&url), "");
                 assert_eq!(
                     result,
                     format!(
@@ -421,7 +429,7 @@ mod tests {
                     )
                 );
 
-                let result = markdown_to_html(image, Some(&url));
+                let result = markdown_to_html(image, Some(&url), "");
                 assert_eq!(
                     result,
                     format!(
@@ -430,7 +438,7 @@ mod tests {
                     )
                 );
 
-                let result = markdown_to_html(html_image, Some(&url));
+                let result = markdown_to_html(html_image, Some(&url), "");
                 assert_eq!(
                     result,
                     format!(
@@ -439,7 +447,7 @@ mod tests {
                     )
                 );
 
-                let result = markdown_to_html(svg, Some(&url));
+                let result = markdown_to_html(svg, Some(&url), "");
                 assert_eq!(
                     result,
                     format!(
@@ -447,10 +455,28 @@ mod tests {
                         host
                     )
                 );
+
+                let result = markdown_to_html(svg, Some(&url), "subdir");
+                assert_eq!(
+                    result,
+                    format!(
+                        "<p><img src=\"https://{}/rust-lang/test/raw/HEAD/subdir/sanitize.svg?sanitize=true\" alt=\"alt\"></p>\n",
+                        host
+                    )
+                );
+
+                let result = markdown_to_html(svg, Some(&url), "subdir1/subdir2");
+                assert_eq!(
+                    result,
+                    format!(
+                        "<p><img src=\"https://{}/rust-lang/test/raw/HEAD/subdir1/subdir2/sanitize.svg?sanitize=true\" alt=\"alt\"></p>\n",
+                        host
+                    )
+                );
             }
         }
 
-        let result = markdown_to_html(absolute, Some("https://google.com/"));
+        let result = markdown_to_html(absolute, Some("https://google.com/"), "");
         assert_eq!(
             result,
             "<p><a rel=\"nofollow noopener noreferrer\">hi</a></p>\n"
@@ -462,7 +488,7 @@ mod tests {
         let readme_text =
             "[![Crates.io](https://img.shields.io/crates/v/clap.svg)](https://crates.io/crates/clap)";
         let repository = "https://github.com/kbknapp/clap-rs/";
-        let result = markdown_to_html(readme_text, Some(repository));
+        let result = markdown_to_html(readme_text, Some(repository), "");
 
         assert_eq!(
             result,
@@ -472,12 +498,32 @@ mod tests {
 
     #[test]
     fn readme_to_html_renders_markdown() {
-        for f in &["README", "readme.md", "README.MARKDOWN", "whatever.mkd"] {
+        for f in &[
+            "README",
+            "readme.md",
+            "README.MARKDOWN",
+            "whatever.mkd",
+            "s/readme.md",
+            "s1/s2/readme.md",
+        ] {
             assert_eq!(
                 readme_to_html("*lobster*", f, None),
                 "<p><em>lobster</em></p>\n"
             );
         }
+
+        assert_eq!(
+            readme_to_html("*[lobster](docs/lobster)*", "readme.md", Some("https://github.com/rust-lang/test")),
+            "<p><em><a href=\"https://github.com/rust-lang/test/blob/HEAD/docs/lobster\" rel=\"nofollow noopener noreferrer\">lobster</a></em></p>\n"
+        );
+        assert_eq!(
+            readme_to_html("*[lobster](docs/lobster)*", "s/readme.md", Some("https://github.com/rust-lang/test")),
+            "<p><em><a href=\"https://github.com/rust-lang/test/blob/HEAD/s/docs/lobster\" rel=\"nofollow noopener noreferrer\">lobster</a></em></p>\n"
+        );
+        assert_eq!(
+            readme_to_html("*[lobster](docs/lobster)*", "s1/s2/readme.md", Some("https://github.com/rust-lang/test")),
+            "<p><em><a href=\"https://github.com/rust-lang/test/blob/HEAD/s1/s2/docs/lobster\" rel=\"nofollow noopener noreferrer\">lobster</a></em></p>\n"
+        );
     }
 
     #[test]
@@ -493,7 +539,7 @@ mod tests {
     #[test]
     fn header_has_tags() {
         let text = "# My crate\n\nHello, world!\n";
-        let result = markdown_to_html(text, None);
+        let result = markdown_to_html(text, None, "");
         assert_eq!(
             result,
             "<h1><a href=\"#my-crate\" id=\"user-content-my-crate\" rel=\"nofollow noopener noreferrer\"></a>My crate</h1>\n<p>Hello, world!</p>\n"
@@ -504,7 +550,7 @@ mod tests {
     fn manual_anchor_is_sanitized() {
         let text =
             "<h1><a href=\"#my-crate\" id=\"my-crate\"></a>My crate</h1>\n<p>Hello, world!</p>\n";
-        let result = markdown_to_html(text, None);
+        let result = markdown_to_html(text, None, "");
         assert_eq!(
             result,
             "<h1><a href=\"#my-crate\" id=\"user-content-my-crate\" rel=\"nofollow noopener noreferrer\"></a>My crate</h1>\n<p>Hello, world!</p>\n"
@@ -514,7 +560,7 @@ mod tests {
     #[test]
     fn tables_with_rowspan_and_colspan() {
         let text = "<table><tr><th rowspan=\"1\" colspan=\"2\">Target</th></tr></table>\n";
-        let result = markdown_to_html(text, None);
+        let result = markdown_to_html(text, None, "");
         assert_eq!(
             result,
             "<table><tbody><tr><th rowspan=\"1\" colspan=\"2\">Target</th></tr></tbody></table>\n"
@@ -524,7 +570,7 @@ mod tests {
     #[test]
     fn text_alignment() {
         let text = "<h1 align=\"center\">foo-bar</h1>\n<h5 align=\"center\">Hello World!</h5>\n";
-        let result = markdown_to_html(text, None);
+        let result = markdown_to_html(text, None, "");
         assert_eq!(
             result,
             "<h1 align=\"center\">foo-bar</h1>\n<h5 align=\"center\">Hello World!</h5>\n"
@@ -535,7 +581,7 @@ mod tests {
     fn image_alignment() {
         let text =
             "<p align=\"center\"><img src=\"https://img.shields.io/crates/v/clap.svg\" alt=\"\"></p>\n";
-        let result = markdown_to_html(text, None);
+        let result = markdown_to_html(text, None, "");
         assert_eq!(
             result,
             "<p align=\"center\"><img src=\"https://img.shields.io/crates/v/clap.svg\" alt=\"\"></p>\n"
