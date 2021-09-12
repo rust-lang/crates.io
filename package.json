@@ -113,7 +113,7 @@
     "eslint-plugin-ember-concurrency": "0.4.0",
     "eslint-plugin-import-helpers": "1.1.0",
     "eslint-plugin-prettier": "4.0.0",
-    "eslint-plugin-unicorn": "35.0.0",
+    "eslint-plugin-unicorn": "36.0.0",
     "loader.js": "4.7.0",
     "match-json": "1.3.3",
     "normalize.css": "8.0.1",
