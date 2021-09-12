@@ -10,7 +10,7 @@ export default class CratesController extends Controller {
   page = '1';
   per_page = 50;
   sort = 'alpha';
-  alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  alphabet = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'];
 
   @readOnly('model.meta.total') totalItems;
   @pagination() pagination;
