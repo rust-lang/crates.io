@@ -4,6 +4,8 @@
 //! - `READ_ONLY_REPLICA_URL`: The URL of an optional postgres read-only replica database.
 //! - `DB_PRIMARY_POOL_SIZE`: The number of connections of the primary database.
 //! - `DB_REPLICA_POOL_SIZE`: The number of connections of the read-only / replica database.
+//! - `DB_PRIMARY_MIN_IDLE`: The primary pool will maintain at least this number of connections.
+//! - `DB_REPLICA_MIN_IDLE`: The replica pool will maintain at least this number of connections.
 //! - `DB_OFFLINE`: If set to `leader` then use the read-only follower as if it was the leader.
 //!   If set to `follower` then act as if `READ_ONLY_REPLICA_URL` was unset.
 //! - `READ_ONLY_MODE`: If defined (even as empty) then force all connections to be read-only.
