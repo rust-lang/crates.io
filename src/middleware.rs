@@ -92,7 +92,9 @@ pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBui
                 );
                 m.around(balance_capacity::BalanceCapacity::new(capacity))
             } else {
-                println!("BalanceCapacity middleware not enabled. DB_PRIMARY_POOL_SIZE is too low.");
+                println!(
+                    "BalanceCapacity middleware not enabled. DB_PRIMARY_POOL_SIZE is too low."
+                );
             }
         }
     }
