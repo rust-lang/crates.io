@@ -11,8 +11,6 @@
         "enabled": false
     },
     "js": {
-        "assignees": ["locks", "pichfl", "Turbo87"],
-        "assigneesSampleSize": 1,
         "labels": ["A-frontend"],
         "reviewers": ["locks", "pichfl", "Turbo87"],
         "reviewersSampleSize": 1
