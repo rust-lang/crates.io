@@ -88,7 +88,8 @@ impl ServerBin {
         // Bind a random port every time the server is started.
         env.insert("PORT".into(), "0".into());
         // Avoid creating too many database connections.
-        env.insert("DB_POOL_SIZE".into(), "2".into());
+        env.insert("DB_PRIMARY_POOL_SIZE".into(), "2".into());
+        env.insert("DB_REPLICA_POOL_SIZE".into(), "1".into());
         env.remove("DB_MIN_SIZE");
         // Other configuration variables needed for the application to boot.
         env.insert("WEB_ALLOWED_ORIGINS".into(), "http://localhost:8888".into());

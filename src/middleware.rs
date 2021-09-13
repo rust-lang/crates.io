@@ -83,7 +83,7 @@ pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBui
     // In production we currently have 2 equally sized pools (primary and a read-only replica).
     // Because such a large portion of production traffic is for download requests (which update
     // download counts), we consider only the primary pool here.
-    if let Ok(capacity) = env::var("DB_POOL_SIZE") {
+    if let Ok(capacity) = env::var("DB_PRIMARY_POOL_SIZE") {
         if let Ok(capacity) = capacity.parse() {
             if capacity >= 10 {
                 println!(
@@ -92,7 +92,7 @@ pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBui
                 );
                 m.around(balance_capacity::BalanceCapacity::new(capacity))
             } else {
-                println!("BalanceCapacity middleware not enabled. DB_POOL_SIZE is too low.");
+                println!("BalanceCapacity middleware not enabled. DB_PRIMARY_POOL_SIZE is too low.");
             }
         }
     }
