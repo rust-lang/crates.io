@@ -76,18 +76,6 @@ impl App {
             ),
         );
 
-        let db_pool_size = match (dotenv::var("DB_POOL_SIZE"), config.env()) {
-            (Ok(num), _) => num.parse().expect("couldn't parse DB_POOL_SIZE"),
-            (_, Env::Production) => 10,
-            _ => 3,
-        };
-
-        let db_min_idle = match (dotenv::var("DB_MIN_IDLE"), config.env()) {
-            (Ok(num), _) => Some(num.parse().expect("couldn't parse DB_MIN_IDLE")),
-            (_, Env::Production) => Some(5),
-            _ => None,
-        };
-
         let db_helper_threads = match (dotenv::var("DB_HELPER_THREADS"), config.env()) {
             (Ok(num), _) => num.parse().expect("couldn't parse DB_HELPER_THREADS"),
             (_, Env::Production) => 3,
@@ -113,8 +101,8 @@ impl App {
             };
 
             let primary_db_config = r2d2::Pool::builder()
-                .max_size(db_pool_size)
-                .min_idle(db_min_idle)
+                .max_size(config.db.primary.pool_size)
+                .min_idle(config.db.primary.min_idle)
                 .connection_timeout(Duration::from_secs(db_connection_timeout))
                 .connection_customizer(Box::new(primary_db_connection_config))
                 .thread_pool(thread_pool.clone());
@@ -129,9 +117,9 @@ impl App {
             .unwrap()
         };
 
-        let replica_database = if let Some(url) = config.db.replica.as_ref().map(|c| &c.url) {
+        let replica_database = if let Some(pool_config) = config.db.replica.as_ref() {
             if config.use_test_database_pool {
-                Some(DieselPool::new_test(url))
+                Some(DieselPool::new_test(&pool_config.url))
             } else {
                 let replica_db_connection_config = ConnectionConfig {
                     statement_timeout: db_connection_timeout,
@@ -139,15 +127,15 @@ impl App {
                 };
 
                 let replica_db_config = r2d2::Pool::builder()
-                    .max_size(db_pool_size)
-                    .min_idle(db_min_idle)
+                    .max_size(pool_config.pool_size)
+                    .min_idle(pool_config.min_idle)
                     .connection_timeout(Duration::from_secs(db_connection_timeout))
                     .connection_customizer(Box::new(replica_db_connection_config))
                     .thread_pool(thread_pool);
 
                 Some(
                     DieselPool::new(
-                        url,
+                        &pool_config.url,
                         replica_db_config,
                         instance_metrics
                             .database_time_to_obtain_connection

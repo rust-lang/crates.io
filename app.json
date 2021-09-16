@@ -23,15 +23,25 @@
           "value": "",
           "required": false
       },
-      "DB_POOL_SIZE": {
+      "DB_PRIMARY_POOL_SIZE": {
           "value": "10",
           "required": false,
-          "description": "The maximum number of database connections managed by the pool. Set so that this value times the number of dynos is less than your connection limit."
+          "description": "The maximum number of primary database connections managed by the pool. Set so that this value times the number of dynos is less than your connection limit."
       },
-      "DB_MIN_IDLE": {
+      "DB_REPLICA_POOL_SIZE": {
+          "value": "3",
+          "required": false,
+          "description": "The maximum number of replica database connections managed by the pool. Set so that this value times the number of dynos is less than your connection limit."
+      },
+      "DB_PRIMARY_MIN_IDLE": {
           "value": "5",
           "required": false,
-          "description": "The pool will try to maintain at least this many idle connections at all times, while respecting the maximum size of the pool."
+          "description": "The pool will try to maintain at least this many idle connections on the primary database at all times, while respecting the maximum size of the pool."
+      },
+      "DB_REPLICA_MIN_IDLE": {
+          "value": "1",
+          "required": false,
+          "description": "The pool will try to maintain at least this many idle connections on the replica database at all times, while respecting the maximum size of the pool."
       },
       "DB_HELPER_THREADS": {
           "value": "3",
