@@ -1,0 +1,18 @@
+[package]
+
+name = "cio_markdown"
+version = "0.0.0"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/rust-lang/crates.io"
+description = "crates.io markdown renderer"
+edition = "2018"
+resolver = "2"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+ammonia = "3.1.2"
+comrak = { version = "0.10.1", default-features = false }
+htmlescape = "0.3.1"
+url = "2.2.2"

@@ -30,13 +30,12 @@ rustdoc-args = [
 ]
 
 [dependencies]
-ammonia = "3.0.0"
 anyhow = "1.0"
 base64 = "0.13"
 cargo-registry-s3 = { path = "src/s3", version = "0.2.0" }
 chrono = { version = "0.4.0", features = ["serde"] }
+cio_markdown = { path = "src/markdown" }
 clap = "=3.0.0-beta.4"
-comrak = { version = "0.10.1", default-features = false }
 
 conduit = "0.9.0-alpha.5"
 conduit-conditional-get = "0.9.0-alpha.3"
@@ -61,7 +60,6 @@ futures-util = "0.3"
 git2 = "0.13.0"
 handlebars = "4.1.3"
 hex = "0.4"
-htmlescape = "0.3.1"
 http = "0.2"
 hyper = { version = "0.14", features = ["client", "http1"] }
 indexmap = { version = "1.0.2", features = ["serde-1"] }

@@ -243,14 +243,13 @@ checksum = "c4872d67bab6358e59559027aa3b9157c53d9358c51423c17554809a8858e0f8"
 name = "cargo-registry"
 version = "0.2.2"
 dependencies = [
- "ammonia",
  "anyhow",
  "base64",
  "cargo-registry-s3",
  "chrono",
+ "cio_markdown",
  "claim",
  "clap",
- "comrak",
  "conduit",
  "conduit-conditional-get",
  "conduit-cookie",
@@ -274,7 +273,6 @@ dependencies = [
  "git2",
  "handlebars",
  "hex",
- "htmlescape",
  "http",
  "hyper",
  "hyper-tls",
@@ -344,6 +342,16 @@ dependencies = [
  "serde",
  "time 0.1.43",
  "winapi",
+]
+
+[[package]]
+name = "cio_markdown"
+version = "0.0.0"
+dependencies = [
+ "ammonia",
+ "comrak",
+ "htmlescape",
+ "url",
 ]
 
 [[package]]

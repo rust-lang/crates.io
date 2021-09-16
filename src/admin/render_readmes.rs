@@ -1,13 +1,13 @@
 use crate::{
     config, db,
     models::Version,
-    render::readme_to_html,
     schema::{crates, readme_renderings, versions},
     uploaders::Uploader,
 };
 use std::{io::Read, path::Path, sync::Arc, thread};
 
 use chrono::{TimeZone, Utc};
+use cio_markdown::readme_to_html;
 use clap::Clap;
 use diesel::{dsl::any, prelude::*};
 use flate2::read::GzDecoder;
