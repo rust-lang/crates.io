@@ -246,6 +246,7 @@ static MARKDOWN_EXTENSIONS: [&str; 7] =
 ///
 /// let text = "[Rust](https://rust-lang.org/) is an awesome *systems programming* language!";
 /// let rendered = text_to_html(text, "README.md", None);
+/// assert_eq!(rendered, "<p><a href=\"https://rust-lang.org/\" rel=\"nofollow noopener noreferrer\">Rust</a> is an awesome <em>systems programming</em> language!</p>\n");
 /// ```
 pub fn text_to_html(text: &str, path: &str, base_url: Option<&str>) -> String {
     let path = Path::new(path);
