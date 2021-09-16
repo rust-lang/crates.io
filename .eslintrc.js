@@ -12,6 +12,7 @@ module.exports = {
   extends: [
     'eslint:recommended',
     'plugin:ember/recommended',
+    'plugin:qunit-dom/recommended',
     'plugin:unicorn/recommended',
     'plugin:prettier/recommended',
   ],
