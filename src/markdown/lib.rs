@@ -1,4 +1,4 @@
-//! Render README files to HTML.
+//! Render Markdown files to HTML.
 
 use ammonia::{Builder, UrlRelative, UrlRelativeEvaluate};
 use comrak::nodes::{AstNode, NodeValue};
@@ -15,7 +15,7 @@ struct MarkdownRenderer<'a> {
 impl<'a> MarkdownRenderer<'a> {
     /// Creates a new renderer instance.
     ///
-    /// Per `readme_to_html`, `base_url` is the base URL prepended to any
+    /// Per `text_to_html`, `base_url` is the base URL prepended to any
     /// relative links in the input document.  See that function for more detail.
     fn new(base_url: Option<&'a str>, base_dir: &'a str) -> MarkdownRenderer<'a> {
         let allowed_classes = hashmap(&[(
@@ -124,7 +124,7 @@ fn canon_base_url(mut base_url: String) -> String {
     base_url
 }
 
-/// Sanitize relative URLs in README files.
+/// Sanitize relative URLs in Markdown files.
 struct SanitizeUrl {
     base_url: Option<String>,
     base_dir: String,
@@ -217,18 +217,18 @@ impl UrlRelativeEvaluate for SanitizeUrl {
 }
 
 /// Renders Markdown text to sanitized HTML with a given `base_url`.
-/// See `readme_to_html` for the interpretation of `base_url`.
+/// See `text_to_html` for the interpretation of `base_url`.
 fn markdown_to_html(text: &str, base_url: Option<&str>, base_dir: &str) -> String {
     let renderer = MarkdownRenderer::new(base_url, base_dir);
     renderer.to_html(text)
 }
 
-/// Any readme with a filename ending in one of these extensions will be rendered as Markdown.
-/// Note we also render a readme as Markdown if _no_ extension is on the filename.
+/// Any file with a filename ending in one of these extensions will be rendered as Markdown.
+/// Note we also render a file as Markdown if _no_ extension is on the filename.
 static MARKDOWN_EXTENSIONS: [&str; 7] =
     ["md", "markdown", "mdown", "mdwn", "mkd", "mkdn", "mkdown"];
 
-/// Renders a readme to sanitized HTML.  An appropriate rendering method is chosen depending
+/// Renders a text file to sanitized HTML.  An appropriate rendering method is chosen depending
 /// on the extension of the supplied `filename`.
 ///
 /// The returned text will not contain any harmful HTML tag or attribute (such as iframe,
@@ -242,22 +242,22 @@ static MARKDOWN_EXTENSIONS: [&str; 7] =
 /// # Examples
 ///
 /// ```
-/// use cio_markdown::readme_to_html;
+/// use cio_markdown::text_to_html;
 ///
 /// let text = "[Rust](https://rust-lang.org/) is an awesome *systems programming* language!";
-/// let rendered = readme_to_html(text, "README.md", None);
+/// let rendered = text_to_html(text, "README.md", None);
 /// ```
-pub fn readme_to_html(text: &str, readme_path: &str, base_url: Option<&str>) -> String {
-    let readme_path = Path::new(readme_path);
-    let readme_dir = readme_path.parent().and_then(|p| p.to_str()).unwrap_or("");
+pub fn text_to_html(text: &str, path: &str, base_url: Option<&str>) -> String {
+    let path = Path::new(path);
+    let base_dir = path.parent().and_then(|p| p.to_str()).unwrap_or("");
 
-    if readme_path.extension().is_none() {
-        return markdown_to_html(text, base_url, readme_dir);
+    if path.extension().is_none() {
+        return markdown_to_html(text, base_url, base_dir);
     }
 
-    if let Some(ext) = readme_path.extension().and_then(|ext| ext.to_str()) {
+    if let Some(ext) = path.extension().and_then(|ext| ext.to_str()) {
         if MARKDOWN_EXTENSIONS.contains(&ext.to_lowercase().as_str()) {
-            return markdown_to_html(text, base_url, readme_dir);
+            return markdown_to_html(text, base_url, base_dir);
         }
     }
 
@@ -454,10 +454,10 @@ mod tests {
 
     #[test]
     fn absolute_links_dont_get_resolved() {
-        let readme_text =
+        let text =
             "[![Crates.io](https://img.shields.io/crates/v/clap.svg)](https://crates.io/crates/clap)";
         let repository = "https://github.com/kbknapp/clap-rs/";
-        let result = markdown_to_html(readme_text, Some(repository), "");
+        let result = markdown_to_html(text, Some(repository), "");
 
         assert_eq!(
             result,
@@ -466,7 +466,7 @@ mod tests {
     }
 
     #[test]
-    fn readme_to_html_renders_markdown() {
+    fn text_to_html_renders_markdown() {
         for f in &[
             "README",
             "readme.md",
@@ -476,30 +476,30 @@ mod tests {
             "s1/s2/readme.md",
         ] {
             assert_eq!(
-                readme_to_html("*lobster*", f, None),
+                text_to_html("*lobster*", f, None),
                 "<p><em>lobster</em></p>\n"
             );
         }
 
         assert_eq!(
-            readme_to_html("*[lobster](docs/lobster)*", "readme.md", Some("https://github.com/rust-lang/test")),
+            text_to_html("*[lobster](docs/lobster)*", "readme.md", Some("https://github.com/rust-lang/test")),
             "<p><em><a href=\"https://github.com/rust-lang/test/blob/HEAD/docs/lobster\" rel=\"nofollow noopener noreferrer\">lobster</a></em></p>\n"
         );
         assert_eq!(
-            readme_to_html("*[lobster](docs/lobster)*", "s/readme.md", Some("https://github.com/rust-lang/test")),
+            text_to_html("*[lobster](docs/lobster)*", "s/readme.md", Some("https://github.com/rust-lang/test")),
             "<p><em><a href=\"https://github.com/rust-lang/test/blob/HEAD/s/docs/lobster\" rel=\"nofollow noopener noreferrer\">lobster</a></em></p>\n"
         );
         assert_eq!(
-            readme_to_html("*[lobster](docs/lobster)*", "s1/s2/readme.md", Some("https://github.com/rust-lang/test")),
+            text_to_html("*[lobster](docs/lobster)*", "s1/s2/readme.md", Some("https://github.com/rust-lang/test")),
             "<p><em><a href=\"https://github.com/rust-lang/test/blob/HEAD/s1/s2/docs/lobster\" rel=\"nofollow noopener noreferrer\">lobster</a></em></p>\n"
         );
     }
 
     #[test]
-    fn readme_to_html_renders_other_things() {
+    fn text_to_html_renders_other_things() {
         for f in &["readme.exe", "readem.org", "blah.adoc"] {
             assert_eq!(
-                readme_to_html("<script>lobster</script>\n\nis my friend\n", f, None),
+                text_to_html("<script>lobster</script>\n\nis my friend\n", f, None),
                 "&lt;script&gt;lobster&lt;/script&gt;<br>\n<br>\nis my friend<br>\n"
             );
         }
