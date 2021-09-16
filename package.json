@@ -119,7 +119,7 @@
     "normalize.css": "8.0.1",
     "nyc": "15.1.0",
     "postcss-nested": "5.0.6",
-    "prettier": "2.4.0",
+    "prettier": "2.4.1",
     "qunit": "2.17.1",
     "qunit-console-grouper": "0.3.0",
     "qunit-dom": "2.0.0",
