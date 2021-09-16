@@ -7483,6 +7483,11 @@ eslint-plugin-prettier@4.0.0:
   dependencies:
     prettier-linter-helpers "^1.0.0"
 
+eslint-plugin-qunit-dom@0.1.1:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-qunit-dom/-/eslint-plugin-qunit-dom-0.1.1.tgz#2bc12d515df86c6a887fb0c462863fdac4895ea0"
+  integrity sha512-SjrHCQ3MAWF0Ulsb4glgLWL5dQVrA10widluxd602Yh9Al7PCBKNTFCOSV3vIFQGgL+CW/JJShdp3fYIDf5HtA==
+
 eslint-plugin-unicorn@36.0.0:
   version "36.0.0"
   resolved "https://registry.yarnpkg.com/eslint-plugin-unicorn/-/eslint-plugin-unicorn-36.0.0.tgz#db50e1426839e401d33c5a279f49d4a5bbb640d8"
