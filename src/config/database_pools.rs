@@ -32,17 +32,6 @@ impl DatabasePools {
     pub fn are_all_read_only(&self) -> bool {
         self.primary.read_only_mode
     }
-
-    pub fn primary_max_pool_size(&self) -> u32 {
-        self.primary.pool_size
-    }
-
-    pub fn replica_max_pool_size(&self) -> u32 {
-        self.replica
-            .as_ref()
-            .map(|config| config.pool_size)
-            .unwrap_or(Self::DEFAULT_POOL_SIZE)
-    }
 }
 
 impl DatabasePools {

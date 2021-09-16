@@ -101,7 +101,7 @@ impl App {
             };
 
             let primary_db_config = r2d2::Pool::builder()
-                .max_size(config.db.primary_max_pool_size())
+                .max_size(config.db.primary.pool_size)
                 .min_idle(config.db.primary.min_idle)
                 .connection_timeout(Duration::from_secs(db_connection_timeout))
                 .connection_customizer(Box::new(primary_db_connection_config))
