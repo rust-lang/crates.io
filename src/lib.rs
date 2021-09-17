@@ -47,6 +47,7 @@ pub mod middleware;
 mod publish_rate_limit;
 pub mod render;
 pub mod schema;
+pub mod sql;
 pub mod tasks;
 mod test_util;
 pub mod uploaders;
@@ -126,5 +127,3 @@ pub fn env_optional<T: FromStr>(s: &str) -> Option<T> {
             .unwrap_or_else(|_| panic!("`{}` was defined but could not be parsed", s))
     })
 }
-
-sql_function!(fn lower(x: ::diesel::sql_types::Text) -> ::diesel::sql_types::Text);
