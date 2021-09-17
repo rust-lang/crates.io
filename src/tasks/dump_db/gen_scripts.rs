@@ -70,16 +70,21 @@ impl VisibilityConfig {
         let context = self.handlebars_context();
         let mut handlebars = handlebars::Handlebars::new();
         handlebars.register_escape_fn(handlebars::no_escape);
+
+        debug!("Writing dump-export.sql file…");
         handlebars.render_template_to_write(
             include_str!("dump-export.sql.hbs"),
             &context,
             export_sql,
         )?;
+
+        debug!("Writing dump-import.sql file…");
         handlebars.render_template_to_write(
             include_str!("dump-import.sql.hbs"),
             &context,
             import_sql,
         )?;
+
         Ok(())
     }
 }
