@@ -218,11 +218,11 @@ jobs:
 
       - name: Run tests (with coverage report)
         if: matrix.rust == 'stable'
-        run: cargo tarpaulin --avoid-cfg-tarpaulin
+        run: cargo tarpaulin --avoid-cfg-tarpaulin --workspace
 
       - name: Run tests
         if: matrix.rust != 'stable'
-        run: cargo test
+        run: cargo test --workspace
 
       - name: Prune unnecessary cache
         run: script/ci/prune-cache.sh
