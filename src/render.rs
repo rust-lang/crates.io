@@ -1,6 +1,6 @@
 //! Render README files to HTML.
 
-use cio_markdown::readme_to_html;
+use cio_markdown::text_to_html;
 use swirl::PerformError;
 
 use crate::background_jobs::Environment;
@@ -18,7 +18,7 @@ pub fn render_and_upload_readme(
     use crate::schema::*;
     use diesel::prelude::*;
 
-    let rendered = readme_to_html(&text, &readme_path, base_url.as_deref());
+    let rendered = text_to_html(&text, &readme_path, base_url.as_deref());
 
     conn.transaction(|| {
         Version::record_readme_rendering(version_id, conn)?;

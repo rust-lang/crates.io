@@ -7,7 +7,7 @@ use crate::{
 use std::{io::Read, path::Path, sync::Arc, thread};
 
 use chrono::{TimeZone, Utc};
-use cio_markdown::readme_to_html;
+use cio_markdown::text_to_html;
 use clap::Clap;
 use diesel::{dsl::any, prelude::*};
 use flate2::read::GzDecoder;
@@ -212,7 +212,7 @@ fn get_readme(
             krate_name, version.num, manifest.package.readme?
         );
         let contents = find_file_by_path(&mut entries, Path::new(&path), version, krate_name);
-        readme_to_html(
+        text_to_html(
             &contents,
             manifest
                 .package
