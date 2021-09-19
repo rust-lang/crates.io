@@ -1,13 +1,12 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
 use cargo_registry::{metrics::LogEncoder, util::errors::AppResult, App, Env};
-use std::{borrow::Cow, fs::File, process::Command, sync::Arc, time::Duration};
+use std::{fs::File, process::Command, sync::Arc, time::Duration};
 
 use conduit_hyper::Service;
 use futures_util::future::FutureExt;
 use prometheus::Encoder;
 use reqwest::blocking::Client;
-use sentry::{ClientOptions, IntoDsn};
 use std::io::Write;
 use tokio::io::AsyncWriteExt;
 use tokio::signal::unix::{signal, SignalKind};
@@ -15,22 +14,7 @@ use tokio::signal::unix::{signal, SignalKind};
 const CORE_THREADS: usize = 4;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let _sentry = dotenv::var("SENTRY_DSN_API")
-        .ok()
-        .into_dsn()
-        .expect("SENTRY_DSN_API is not a valid Sentry DSN value")
-        .map(|dsn| {
-            let mut opts = ClientOptions::from(dsn);
-            opts.environment = Some(
-                dotenv::var("SENTRY_ENV_API")
-                    .map(Cow::Owned)
-                    .expect("SENTRY_ENV_API must be set when using SENTRY_DSN_API"),
-            );
-
-            opts.release = dotenv::var("HEROKU_SLUG_COMMIT").ok().map(Into::into);
-
-            sentry::init(opts)
-        });
+    let _sentry = cargo_registry::sentry::init();
 
     // Initialize logging
     tracing_subscriber::fmt::init();
