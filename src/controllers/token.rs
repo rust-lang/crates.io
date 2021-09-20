@@ -39,7 +39,7 @@ pub fn new(req: &mut dyn RequestExt) -> EndpointResult {
     let max_size = 2000;
     let length = req
         .content_length()
-        .chain_error(|| bad_request("missing header: Content-Length"))?;
+        .ok_or_else(|| bad_request("missing header: Content-Length"))?;
 
     if length > max_size {
         return Err(bad_request(&format!("max content length is: {}", max_size)));

@@ -179,9 +179,7 @@ impl<H: Handler> Handler for R<H> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::util::errors::{
-        bad_request, cargo_err, forbidden, internal, not_found, AppError, ChainError,
-    };
+    use crate::util::errors::{bad_request, cargo_err, forbidden, internal, not_found, AppError};
     use crate::util::EndpointResult;
 
     use conduit::StatusCode;
@@ -227,8 +225,8 @@ mod tests {
         let response = C(|_| {
             Err("-1"
                 .parse::<u8>()
-                .chain_error(|| internal("middle error"))
-                .chain_error(|| bad_request("outer user facing error"))
+                .map_err(|err| err.chain(internal("middle error")))
+                .map_err(|err| err.chain(bad_request("outer user facing error")))
                 .unwrap_err())
         })
         .call(&mut req)

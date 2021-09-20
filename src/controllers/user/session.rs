@@ -90,7 +90,7 @@ pub fn authorize(req: &mut dyn RequestExt) -> EndpointResult {
         .github_oauth
         .exchange_code(code)
         .request(http_client)
-        .chain_error(|| server_error("Error obtaining token"))?;
+        .map_err(|err| err.chain(server_error("Error obtaining token")))?;
     let token = token.access_token();
 
     // Fetch the user info from GitHub using the access token we just got and create a user record

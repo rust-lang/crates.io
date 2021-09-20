@@ -2,7 +2,6 @@ use crate::controllers::frontend_prelude::*;
 
 use crate::models::{CrateOwner, OwnerKind, User};
 use crate::schema::{crate_owners, crates, users};
-use crate::util::errors::ChainError;
 use crate::views::EncodablePublicUser;
 
 /// Handles the `GET /users/:user_id` route.
@@ -25,7 +24,7 @@ pub fn stats(req: &mut dyn RequestExt) -> EndpointResult {
 
     let user_id = &req.params()["user_id"]
         .parse::<i32>()
-        .chain_error(|| bad_request("invalid user_id"))?;
+        .map_err(|err| err.chain(bad_request("invalid user_id")))?;
     let conn = req.db_conn()?;
 
     let data: i64 = CrateOwner::by_owner_kind(OwnerKind::User)

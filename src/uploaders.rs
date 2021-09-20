@@ -4,7 +4,7 @@ use flate2::read::GzDecoder;
 use reqwest::{blocking::Client, header};
 use sha2::{Digest, Sha256};
 
-use crate::util::errors::{cargo_err, internal, AppResult, ChainError};
+use crate::util::errors::{cargo_err, internal, AppError, AppResult};
 use crate::util::{LimitErrorReader, Maximums};
 
 use std::env;
@@ -200,8 +200,10 @@ fn verify_tarball(
     let mut archive = tar::Archive::new(decoder);
     let prefix = format!("{}-{}", krate.name, vers);
     for entry in archive.entries()? {
-        let entry = entry.chain_error(|| {
-            cargo_err("uploaded tarball is malformed or too large when decompressed")
+        let entry = entry.map_err(|err| {
+            err.chain(cargo_err(
+                "uploaded tarball is malformed or too large when decompressed",
+            ))
         })?;
 
         // Verify that all entries actually start with `$name-$vers/`.
