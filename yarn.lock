@@ -7458,10 +7458,10 @@ eslint-plugin-ember-concurrency@0.4.0:
   resolved "https://registry.yarnpkg.com/eslint-plugin-ember-concurrency/-/eslint-plugin-ember-concurrency-0.4.0.tgz#4ac067230540332af67367e1e75138ef5eb37e36"
   integrity sha512-NWaeIi4Hgj/PGxOOudTCD+gUzs/DTCedA3pCn/cHUewyZd0+bvYv9A7Eazjfre1t4ONurpj3bWakubh5+/ONiQ==
 
-eslint-plugin-ember@10.5.4:
-  version "10.5.4"
-  resolved "https://registry.yarnpkg.com/eslint-plugin-ember/-/eslint-plugin-ember-10.5.4.tgz#263a104b297b60d854640612fec9f2d071302e78"
-  integrity sha512-7Z6H47tD4MNFGN51j00YMKjsHjN1z4u8vA1uImSYrgYHLh5nZKyP8pFBFI8pXBicw96N/njH48iz4zjZqMcPlQ==
+eslint-plugin-ember@10.5.5:
+  version "10.5.5"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-ember/-/eslint-plugin-ember-10.5.5.tgz#fbd292f24ea9ea4d32979d42039dbb878b6cf545"
+  integrity sha512-yuNiGyOT2pRaGcifJo9H5RU5XlHiVUXvNuAlLBXrTQyZtsOYFBsXgEhMCCq4BVV/0Q79SqXG+03ceB1YtoJHEQ==
   dependencies:
     "@ember-data/rfc395-data" "^0.0.4"
     css-tree "^1.0.0-alpha.39"
