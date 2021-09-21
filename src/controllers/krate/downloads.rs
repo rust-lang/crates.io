@@ -9,9 +9,8 @@ use crate::controllers::frontend_prelude::*;
 
 use crate::models::{Crate, CrateVersions, Version, VersionDownload};
 use crate::schema::version_downloads;
+use crate::sql::to_char;
 use crate::views::EncodableVersionDownload;
-
-use crate::models::krate::to_char;
 
 /// Handles the `GET /crates/:crate_id/downloads` route.
 pub fn downloads(req: &mut dyn RequestExt) -> EndpointResult {

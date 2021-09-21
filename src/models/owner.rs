@@ -6,6 +6,7 @@ use crate::util::errors::{cargo_err, AppResult};
 
 use crate::models::{Crate, Team, User};
 use crate::schema::{crate_owners, users};
+use crate::sql::lower;
 
 #[derive(Insertable, Associations, Identifiable, Debug, Clone, Copy)]
 #[belongs_to(Crate)]
@@ -69,7 +70,7 @@ impl Owner {
             )?))
         } else {
             users::table
-                .filter(crate::lower(users::gh_login).eq(name.to_lowercase()))
+                .filter(lower(users::gh_login).eq(name.to_lowercase()))
                 .filter(users::gh_id.ne(-1))
                 .order(users::gh_id.desc())
                 .first(conn)

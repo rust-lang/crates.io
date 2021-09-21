@@ -1,6 +1,7 @@
 //! Endpoint for searching and discovery functionality
 
 use diesel::dsl::*;
+use diesel::sql_types::Array;
 use diesel_full_text_search::*;
 use indexmap::IndexMap;
 
@@ -14,7 +15,8 @@ use crate::util::errors::bad_request;
 use crate::views::EncodableCrate;
 
 use crate::controllers::helpers::pagination::{Page, Paginated, PaginationOptions};
-use crate::models::krate::{canon_crate_name, ALL_COLUMNS};
+use crate::models::krate::ALL_COLUMNS;
+use crate::sql::{array_agg, canon_crate_name, lower};
 
 /// Handles the `GET /crates` route.
 /// Returns a list of crates. Called in a variety of scenarios in the
@@ -109,9 +111,6 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
     }
 
     if let Some(kws) = params.get("all_keywords") {
-        use diesel::sql_types::Array;
-        sql_function!(#[aggregate] fn array_agg<T>(x: T) -> Array<T>);
-
         // Calculating the total number of results with filters is not supported yet.
         supports_seek = false;
 
@@ -141,7 +140,7 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
                 crates_keywords::table
                     .select(crates_keywords::crate_id)
                     .inner_join(keywords::table)
-                    .filter(crate::lower(keywords::keyword).eq(crate::lower(kw))),
+                    .filter(lower(keywords::keyword).eq(lower(kw))),
             ),
         );
     } else if let Some(letter) = params.get("letter") {

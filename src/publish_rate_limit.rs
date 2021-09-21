@@ -1,9 +1,11 @@
 use chrono::{NaiveDateTime, Utc};
 use diesel::data_types::PgInterval;
 use diesel::prelude::*;
+use diesel::sql_types::Interval;
 use std::time::Duration;
 
 use crate::schema::{publish_limit_buckets, publish_rate_overrides};
+use crate::sql::{date_part, floor, greatest, interval_part, least};
 use crate::util::errors::{AppResult, TooManyRequests};
 
 #[derive(Debug, Clone, Copy)]
@@ -67,16 +69,6 @@ impl PublishRateLimit {
         conn: &PgConnection,
     ) -> QueryResult<Bucket> {
         use self::publish_limit_buckets::dsl::*;
-        use diesel::sql_types::{Double, Interval, Text, Timestamp};
-
-        sql_function!(fn date_part(x: Text, y: Timestamp) -> Double);
-        sql_function! {
-            #[sql_name = "date_part"]
-            fn interval_part(x: Text, y: Interval) -> Double;
-        }
-        sql_function!(fn floor(x: Double) -> Integer);
-        sql_function!(fn greatest<T>(x: T, y: T) -> T);
-        sql_function!(fn least<T>(x: T, y: T) -> T);
 
         let burst: i32 = publish_rate_overrides::table
             .find(uploader)

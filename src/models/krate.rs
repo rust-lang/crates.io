@@ -2,7 +2,7 @@ use chrono::NaiveDateTime;
 use diesel::associations::Identifiable;
 use diesel::pg::Pg;
 use diesel::prelude::*;
-use diesel::sql_types::Bool;
+use diesel::sql_types::{Bool, Text};
 use url::Url;
 
 use crate::app::App;
@@ -17,6 +17,7 @@ use crate::util::errors::{cargo_err, AppResult};
 use crate::models::helpers::with_count::*;
 use crate::publish_rate_limit::PublishRateLimit;
 use crate::schema::*;
+use crate::sql::canon_crate_name;
 
 #[derive(Debug, Queryable, Identifiable, Associations, Clone, Copy)]
 #[belongs_to(Crate)]
@@ -72,7 +73,7 @@ pub const ALL_COLUMNS: AllColumns = (
 
 pub const MAX_NAME_LENGTH: usize = 64;
 
-type CanonCrateName<T> = self::canon_crate_name::HelperType<T>;
+type CanonCrateName<T> = canon_crate_name::HelperType<T>;
 type All = diesel::dsl::Select<crates::table, AllColumns>;
 type WithName<'a> = diesel::dsl::Eq<CanonCrateName<crates::name>, CanonCrateName<&'a str>>;
 type ByName<'a> = diesel::dsl::Filter<All, WithName<'a>>;
@@ -439,10 +440,6 @@ impl Crate {
         Ok(rows.records_and_total())
     }
 }
-
-use diesel::sql_types::{Date, Text};
-sql_function!(fn canon_crate_name(x: Text) -> Text);
-sql_function!(fn to_char(a: Date, b: Text) -> Text);
 
 #[cfg(test)]
 mod tests {

@@ -3,6 +3,7 @@ use diesel::prelude::*;
 
 use crate::models::Crate;
 use crate::schema::*;
+use crate::sql::lower;
 
 #[derive(Clone, Identifiable, Queryable, Debug)]
 pub struct Keyword {
@@ -25,7 +26,7 @@ pub struct CrateKeyword {
 impl Keyword {
     pub fn find_by_keyword(conn: &PgConnection, name: &str) -> QueryResult<Keyword> {
         keywords::table
-            .filter(keywords::keyword.eq(crate::lower(name)))
+            .filter(keywords::keyword.eq(lower(name)))
             .first(&*conn)
     }
 

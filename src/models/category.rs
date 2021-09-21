@@ -15,7 +15,7 @@ pub struct Category {
     pub created_at: NaiveDateTime,
 }
 
-type WithSlug<'a> = diesel::dsl::Eq<categories::slug, crate::lower::HelperType<&'a str>>;
+type WithSlug<'a> = diesel::dsl::Eq<categories::slug, crate::sql::lower::HelperType<&'a str>>;
 type BySlug<'a> = diesel::dsl::Filter<categories::table, WithSlug<'a>>;
 type WithSlugsCaseSensitive<'a> = diesel::dsl::Eq<
     categories::slug,
@@ -40,7 +40,7 @@ pub struct CrateCategory {
 
 impl Category {
     pub fn with_slug(slug: &str) -> WithSlug<'_> {
-        categories::slug.eq(crate::lower(slug))
+        categories::slug.eq(crate::sql::lower(slug))
     }
 
     pub fn by_slug(slug: &str) -> BySlug<'_> {

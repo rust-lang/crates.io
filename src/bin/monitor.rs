@@ -108,7 +108,7 @@ fn check_stalled_update_downloads(conn: &PgConnection) -> Result<()> {
 
 /// Check for known spam patterns
 fn check_spam_attack(conn: &PgConnection) -> Result<()> {
-    use cargo_registry::models::krate::canon_crate_name;
+    use cargo_registry::sql::canon_crate_name;
     use diesel::dsl::*;
 
     const EVENT_KEY: &str = "spam_attack";

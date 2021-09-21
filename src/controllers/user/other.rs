@@ -2,16 +2,17 @@ use crate::controllers::frontend_prelude::*;
 
 use crate::models::{CrateOwner, OwnerKind, User};
 use crate::schema::{crate_owners, crates, users};
+use crate::sql::lower;
 use crate::views::EncodablePublicUser;
 
 /// Handles the `GET /users/:user_id` route.
 pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
     use self::users::dsl::{gh_login, id, users};
 
-    let name = crate::lower(&req.params()["user_id"]);
+    let name = lower(&req.params()["user_id"]);
     let conn = req.db_conn()?;
     let user: User = users
-        .filter(crate::lower(gh_login).eq(name))
+        .filter(lower(gh_login).eq(name))
         .order(id.desc())
         .first(&*conn)?;
 
