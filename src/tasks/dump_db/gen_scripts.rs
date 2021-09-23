@@ -26,7 +26,7 @@ struct ColumnDefault<'a> {
 }
 
 impl TableConfig {
-    fn handlebars_context<'a>(&'a self, name: &'a str) -> Option<HandlebarsTableContext<'a>> {
+    fn template_context<'a>(&'a self, name: &'a str) -> Option<HandlebarsTableContext<'a>> {
         let columns = self
             .columns
             .iter()
@@ -58,41 +58,53 @@ impl TableConfig {
 
 /// Subset of the configuration data to be passed on to the Handlbars template.
 #[derive(Debug, Serialize)]
-struct HandlebarsContext<'a> {
+struct TemplateContext<'a> {
     tables: Vec<HandlebarsTableContext<'a>>,
 }
 
 impl VisibilityConfig {
-    fn handlebars_context(&self) -> HandlebarsContext<'_> {
+    fn template_context(&self) -> TemplateContext<'_> {
         let tables = self
             .topological_sort()
             .into_iter()
-            .filter_map(|table| self.0[table].handlebars_context(table))
+            .filter_map(|table| self.0[table].template_context(table))
             .collect();
-        HandlebarsContext { tables }
+        TemplateContext { tables }
     }
 
-    fn gen_psql_scripts<W>(&self, export_sql: W, import_sql: W) -> Result<(), PerformError>
+    fn gen_psql_scripts<W>(
+        &self,
+        mut export_writer: W,
+        mut import_writer: W,
+    ) -> Result<(), PerformError>
     where
         W: std::io::Write,
     {
-        let context = self.handlebars_context();
-        let mut handlebars = handlebars::Handlebars::new();
-        handlebars.register_escape_fn(handlebars::no_escape);
+        use minijinja::Environment;
+
+        let mut env = Environment::new();
+        env.add_template("dump-export.sql", include_str!("dump-export.sql.j2"))?;
+        env.add_template("dump-import.sql", include_str!("dump-import.sql.j2"))?;
+
+        let context = self.template_context();
+
+        debug!("Rendering dump-export.sql file…");
+        let export_sql = env
+            .get_template("dump-export.sql")
+            .unwrap()
+            .render(&context)?;
+
+        debug!("Rendering dump-import.sql file…");
+        let import_sql = env
+            .get_template("dump-import.sql")
+            .unwrap()
+            .render(&context)?;
 
         debug!("Writing dump-export.sql file…");
-        handlebars.render_template_to_write(
-            include_str!("dump-export.sql.hbs"),
-            &context,
-            export_sql,
-        )?;
+        export_writer.write_all(export_sql.as_bytes())?;
 
         debug!("Writing dump-import.sql file…");
-        handlebars.render_template_to_write(
-            include_str!("dump-import.sql.hbs"),
-            &context,
-            import_sql,
-        )?;
+        import_writer.write_all(import_sql.as_bytes())?;
 
         Ok(())
     }

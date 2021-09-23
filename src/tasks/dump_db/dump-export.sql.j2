@@ -1,0 +1,9 @@
+BEGIN ISOLATION LEVEL REPEATABLE READ, READ ONLY;
+{% for table in tables %}
+{% if table.filter %}
+    \copy (SELECT {{table.columns}} FROM "{{table.name}}" WHERE {{table.filter}}) TO 'data/{{table.name}}.csv' WITH CSV HEADER
+{% else %}
+    \copy "{{table.name}}" ({{table.columns}}) TO 'data/{{table.name}}.csv' WITH CSV HEADER
+{% endif %}
+{% endfor %}
+COMMIT;

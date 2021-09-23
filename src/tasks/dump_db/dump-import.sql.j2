@@ -1,0 +1,38 @@
+BEGIN;
+    -- Disable triggers on each table.
+{% for table in tables %}
+    ALTER TABLE "{{table.name}}" DISABLE TRIGGER ALL;
+{% endfor %}
+
+    -- Set defaults for non-nullable columns not included in the dump.
+{% for table in tables %}
+{% for cd in table.column_defaults %}
+    ALTER TABLE "{{table.name}}" ALTER COLUMN "{{cd.column}}" SET DEFAULT {{cd.value}};
+{% endfor %}
+{% endfor %}
+
+    -- Truncate all tables.
+{% for table in tables %}
+    TRUNCATE "{{table.name}}" RESTART IDENTITY CASCADE;
+{% endfor %}
+
+    -- Enable this trigger so that `crates.textsearchable_index_col` can be excluded from the export
+    ALTER TABLE "crates" ENABLE TRIGGER "trigger_crates_tsvector_update";
+
+    -- Import the CSV data.
+{% for table in tables %}
+    \copy "{{table.name}}" ({{table.columns}}) FROM 'data/{{table.name}}.csv' WITH CSV HEADER
+{% endfor %}
+
+    -- Drop the defaults again.
+{% for table in tables %}
+{% for cd in table.column_defaults %}
+    ALTER TABLE "{{table.name}}" ALTER COLUMN "{{cd.column}}" DROP DEFAULT;
+{% endfor %}
+{% endfor %}
+
+    -- Reenable triggers on each table.
+{% for table in tables %}
+    ALTER TABLE "{{table.name}}" ENABLE TRIGGER ALL;
+{% endfor %}
+COMMIT;
