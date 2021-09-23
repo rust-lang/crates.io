@@ -12,7 +12,7 @@
     },
     "js": {
         "labels": ["A-frontend"],
-        "reviewers": ["locks", "pichfl", "Turbo87"],
+        "reviewers": ["locks", "pichfl", "Turbo87", "hi-rustin"],
         "reviewersSampleSize": 1
     },
     "rust": {
