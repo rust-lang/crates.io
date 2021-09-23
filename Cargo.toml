@@ -2,5 +2,6 @@
 members = [
     "conduit",
     "conduit-router",
+    "conduit-test",
     "example",
 ]
