@@ -30,6 +30,15 @@ jobs:
       - run: rustup override set ${{env.MSRV}}
       - run: cargo test --workspace
 
+  fmt:
+    name: Rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: rustup override set ${{env.MSRV}}
+      - run: rustup component add rustfmt
+      - run: cargo fmt --all -- --check
+
   clippy:
     name: Clippy
     runs-on: ubuntu-latest
