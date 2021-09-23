@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, fs::File, path::Path};
+use std::{fs::File, path::Path};
 
 use crate::tasks::dump_db::configuration::{ColumnVisibility, TableConfig, VisibilityConfig};
 use swirl::PerformError;
@@ -16,7 +16,13 @@ struct HandlebarsTableContext<'a> {
     name: &'a str,
     filter: Option<String>,
     columns: String,
-    column_defaults: BTreeMap<&'a str, &'a str>,
+    column_defaults: Vec<ColumnDefault<'a>>,
+}
+
+#[derive(Debug, Serialize)]
+struct ColumnDefault<'a> {
+    column: &'a str,
+    value: &'a str,
 }
 
 impl TableConfig {
@@ -35,7 +41,10 @@ impl TableConfig {
             let column_defaults = self
                 .column_defaults
                 .iter()
-                .map(|(k, v)| (k.as_str(), v.as_str()))
+                .map(|(k, v)| ColumnDefault {
+                    column: k.as_str(),
+                    value: v.as_str(),
+                })
                 .collect();
             Some(HandlebarsTableContext {
                 name,

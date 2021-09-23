@@ -7,7 +7,7 @@ BEGIN;
     -- Set defaults for non-nullable columns not included in the dump.
 {{#each tables as |table|}}
 {{#each column_defaults}}
-    ALTER TABLE "{{table.name}}" ALTER COLUMN "{{@key}}" SET DEFAULT {{this}};
+    ALTER TABLE "{{table.name}}" ALTER COLUMN "{{column}}" SET DEFAULT {{value}};
 {{/each}}
 {{/each}}
 
@@ -27,7 +27,7 @@ BEGIN;
     -- Drop the defaults again.
 {{#each tables as |table|}}
 {{#each column_defaults}}
-    ALTER TABLE "{{table.name}}" ALTER COLUMN "{{@key}}" DROP DEFAULT;
+    ALTER TABLE "{{table.name}}" ALTER COLUMN "{{column}}" DROP DEFAULT;
 {{/each}}
 {{/each}}
 
