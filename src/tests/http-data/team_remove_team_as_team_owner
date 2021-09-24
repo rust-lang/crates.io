@@ -649,7 +649,7 @@
         ],
         [
           "content-type",
-          "application/x-tar"
+          "application/gzip"
         ],
         [
           "date",

@@ -30,7 +30,7 @@
         ],
         [
           "content-type",
-          "application/x-tar"
+          "application/gzip"
         ]
       ],
       "body": "H4sIAAAAAAAA/+3AAQEAAACCIP+vbkhQwKsBLq+17wAEAAA="

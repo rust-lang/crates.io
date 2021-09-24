@@ -26,7 +26,7 @@
         ],
         [
           "content-type",
-          "application/x-tar"
+          "application/gzip"
         ],
         [
           "accept-encoding",

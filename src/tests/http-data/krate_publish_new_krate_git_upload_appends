@@ -6,7 +6,7 @@
       "headers": [
         [
           "content-type",
-          "application/x-tar"
+          "application/gzip"
         ],
         [
           "accept-encoding",
@@ -73,7 +73,7 @@
       "headers": [
         [
           "content-type",
-          "application/x-tar"
+          "application/gzip"
         ],
         [
           "accept-encoding",
