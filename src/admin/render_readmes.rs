@@ -122,7 +122,10 @@ pub fn run(opts: Opts) {
                 let content = std::io::Cursor::new(readme);
                 let readme_path = format!("readmes/{0}/{0}-{1}.html", krate_name, version.num);
                 let mut extra_headers = header::HeaderMap::new();
-                extra_headers.insert(header::CACHE_CONTROL, CACHE_CONTROL_README.parse().unwrap());
+                extra_headers.insert(
+                    header::CACHE_CONTROL,
+                    header::HeaderValue::from_static(CACHE_CONTROL_README),
+                );
                 base_config
                     .uploader()
                     .upload(
@@ -165,7 +168,10 @@ fn get_readme(
     };
 
     let mut extra_headers = header::HeaderMap::new();
-    extra_headers.insert(header::USER_AGENT, USER_AGENT.parse().unwrap());
+    extra_headers.insert(
+        header::USER_AGENT,
+        header::HeaderValue::from_static(USER_AGENT),
+    );
     let response = match client.get(&location).headers(extra_headers).send() {
         Ok(r) => r,
         Err(err) => {

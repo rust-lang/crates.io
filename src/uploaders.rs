@@ -145,7 +145,7 @@ impl Uploader {
         let mut extra_headers = header::HeaderMap::new();
         extra_headers.insert(
             header::CACHE_CONTROL,
-            CACHE_CONTROL_IMMUTABLE.parse().unwrap(),
+            header::HeaderValue::from_static(CACHE_CONTROL_IMMUTABLE),
         );
         self.upload(
             app.http_client(),
@@ -170,7 +170,10 @@ impl Uploader {
         let content_length = readme.len() as u64;
         let content = Cursor::new(readme);
         let mut extra_headers = header::HeaderMap::new();
-        extra_headers.insert(header::CACHE_CONTROL, CACHE_CONTROL_README.parse().unwrap());
+        extra_headers.insert(
+            header::CACHE_CONTROL,
+            header::HeaderValue::from_static(CACHE_CONTROL_README),
+        );
         self.upload(
             http_client,
             &path,
