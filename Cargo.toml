@@ -32,9 +32,9 @@ rustdoc-args = [
 [dependencies]
 anyhow = "1.0"
 base64 = "0.13"
+cargo-registry-markdown = { path = "cargo-registry-markdown" }
 cargo-registry-s3 = { path = "cargo-registry-s3" }
 chrono = { version = "0.4.0", features = ["serde"] }
-cio-markdown = { path = "cio-markdown" }
 clap = "=3.0.0-beta.4"
 
 conduit = "0.9.0-alpha.5"

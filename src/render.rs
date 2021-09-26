@@ -1,6 +1,6 @@
 //! Render README files to HTML.
 
-use cio_markdown::text_to_html;
+use cargo_registry_markdown::text_to_html;
 use swirl::PerformError;
 
 use crate::background_jobs::Environment;
