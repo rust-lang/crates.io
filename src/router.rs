@@ -1,10 +1,11 @@
 use std::sync::Arc;
 
 use conduit::{Handler, HandlerResult, RequestExt};
-use conduit_router::{RequestParams, RouteBuilder};
+use conduit_router::{RequestParams, RouteBuilder, RoutePattern};
 
 use crate::controllers::*;
-use crate::util::errors::{std_error, AppError};
+use crate::middleware::app::RequestApp;
+use crate::util::errors::{std_error, AppError, RouteBlocked};
 use crate::util::EndpointResult;
 use crate::{App, Env};
 
@@ -150,6 +151,15 @@ struct C(pub fn(&mut dyn RequestExt) -> EndpointResult);
 
 impl Handler for C {
     fn call(&self, req: &mut dyn RequestExt) -> HandlerResult {
+        // Allow blocking individual routes by their pattern through the `BLOCKED_ROUTES`
+        // environment variable. This is not in a middleware because we need access to
+        // `RoutePattern` before executing the response handler.
+        if let Some(pattern) = req.extensions().find::<RoutePattern>() {
+            if req.app().config.blocked_routes.contains(pattern.pattern()) {
+                return Ok(RouteBlocked.response().unwrap());
+            }
+        }
+
         let C(f) = *self;
         match f(req) {
             Ok(resp) => Ok(resp),
