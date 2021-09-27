@@ -1,6 +1,9 @@
 //! Functionality related to publishing a new crate or version of a crate.
 
+use flate2::read::GzDecoder;
 use hex::ToHex;
+use sha2::{Digest, Sha256};
+use std::io::Read;
 use std::sync::Arc;
 use swirl::Job;
 
@@ -14,7 +17,7 @@ use crate::models::{
 use crate::render;
 use crate::schema::*;
 use crate::util::errors::{cargo_err, AppResult};
-use crate::util::{read_fill, read_le_u32, Maximums};
+use crate::util::{read_fill, read_le_u32, LimitErrorReader, Maximums};
 use crate::views::{
     EncodableCrate, EncodableCrateDependency, EncodableCrateUpload, GoodCrate, PublishWarnings,
 };
@@ -186,6 +189,12 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
         let ignored_invalid_badges = Badge::update_crate(&conn, &krate, new_crate.badges.as_ref())?;
         let top_versions = krate.top_versions(&conn)?;
 
+        // Read tarball from request
+        let mut tarball = Vec::new();
+        LimitErrorReader::new(req.body(), maximums.max_upload_size).read_to_end(&mut tarball)?;
+        let hex_cksum: String = Sha256::digest(&tarball).encode_hex();
+        verify_tarball(&krate, vers, &tarball, maximums.max_unpack_size)?;
+
         if let Some(readme) = new_crate.readme {
             render::render_and_upload_readme(
                 version.id,
@@ -198,12 +207,10 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
             .enqueue(&conn)?;
         }
 
-        let cksum = app
-            .config
+        // Upload crate tarball
+        app.config
             .uploader()
-            .upload_crate(req, &krate, maximums, vers)?;
-
-        let hex_cksum = cksum.encode_hex::<String>();
+            .upload_crate(&app, tarball, &krate, vers)?;
 
         // Register this crate in our local git repo.
         let git_crate = git::Crate {
@@ -354,6 +361,51 @@ pub fn add_dependencies(
         .execute(conn)?;
 
     Ok(git_deps)
+}
+
+fn verify_tarball(
+    krate: &Crate,
+    vers: &semver::Version,
+    tarball: &[u8],
+    max_unpack: u64,
+) -> AppResult<()> {
+    // All our data is currently encoded with gzip
+    let decoder = GzDecoder::new(tarball);
+
+    // Don't let gzip decompression go into the weeeds, apply a fixed cap after
+    // which point we say the decompressed source is "too large".
+    let decoder = LimitErrorReader::new(decoder, max_unpack);
+
+    // Use this I/O object now to take a peek inside
+    let mut archive = tar::Archive::new(decoder);
+    let prefix = format!("{}-{}", krate.name, vers);
+    for entry in archive.entries()? {
+        let entry = entry.map_err(|err| {
+            err.chain(cargo_err(
+                "uploaded tarball is malformed or too large when decompressed",
+            ))
+        })?;
+
+        // Verify that all entries actually start with `$name-$vers/`.
+        // Historically Cargo didn't verify this on extraction so you could
+        // upload a tarball that contains both `foo-0.1.0/` source code as well
+        // as `bar-0.1.0/` source code, and this could overwrite other crates in
+        // the registry!
+        if !entry.path()?.starts_with(&prefix) {
+            return Err(cargo_err("invalid tarball uploaded"));
+        }
+
+        // Historical versions of the `tar` crate which Cargo uses internally
+        // don't properly prevent hard links and symlinks from overwriting
+        // arbitrary files on the filesystem. As a bit of a hammer we reject any
+        // tarball with these sorts of links. Cargo doesn't currently ever
+        // generate a tarball with these file types so this should work for now.
+        let entry_type = entry.header().entry_type();
+        if entry_type.is_hard_link() || entry_type.is_symlink() {
+            return Err(cargo_err("invalid tarball uploaded"));
+        }
+    }
+    Ok(())
 }
 
 #[cfg(test)]
