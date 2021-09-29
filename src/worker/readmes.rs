@@ -14,11 +14,17 @@ pub fn render_and_upload_readme(
     text: String,
     readme_path: String,
     base_url: Option<String>,
+    pkg_path_in_vcs: Option<String>,
 ) -> Result<(), PerformError> {
     use crate::schema::*;
     use diesel::prelude::*;
 
-    let rendered = text_to_html(&text, &readme_path, base_url.as_deref());
+    let rendered = text_to_html(
+        &text,
+        &readme_path,
+        base_url.as_deref(),
+        pkg_path_in_vcs.as_deref(),
+    );
 
     conn.transaction(|| {
         Version::record_readme_rendering(version_id, conn)?;

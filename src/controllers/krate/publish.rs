@@ -197,6 +197,8 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
         let pkg_name = format!("{}-{}", krate.name, vers);
         verify_tarball(&pkg_name, &tarball, maximums.max_unpack_size)?;
 
+        let pkg_path_in_vcs = None;
+
         if let Some(readme) = new_crate.readme {
             worker::render_and_upload_readme(
                 version.id,
@@ -205,6 +207,7 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
                     .readme_file
                     .unwrap_or_else(|| String::from("README.md")),
                 repo,
+                pkg_path_in_vcs,
             )
             .enqueue(&conn)?;
         }
