@@ -242,7 +242,7 @@ static MARKDOWN_EXTENSIONS: [&str; 7] =
 /// # Examples
 ///
 /// ```
-/// use cio_markdown::text_to_html;
+/// use cargo_registry_markdown::text_to_html;
 ///
 /// let text = "[Rust](https://rust-lang.org/) is an awesome *systems programming* language!";
 /// let rendered = text_to_html(text, "README.md", None);

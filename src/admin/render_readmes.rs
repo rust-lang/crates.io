@@ -6,8 +6,8 @@ use crate::{
 };
 use std::{io::Read, path::Path, sync::Arc, thread};
 
+use cargo_registry_markdown::text_to_html;
 use chrono::{TimeZone, Utc};
-use cio_markdown::text_to_html;
 use clap::Clap;
 use diesel::{dsl::any, prelude::*};
 use flate2::read::GzDecoder;

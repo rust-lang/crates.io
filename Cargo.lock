@@ -245,9 +245,9 @@ version = "0.2.2"
 dependencies = [
  "anyhow",
  "base64",
+ "cargo-registry-markdown",
  "cargo-registry-s3",
  "chrono",
- "cio-markdown",
  "claim",
  "clap",
  "conduit",
@@ -305,6 +305,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "cargo-registry-markdown"
+version = "0.0.0"
+dependencies = [
+ "ammonia",
+ "comrak",
+ "htmlescape",
+ "url",
+]
+
+[[package]]
 name = "cargo-registry-s3"
 version = "0.2.0"
 dependencies = [
@@ -342,16 +352,6 @@ dependencies = [
  "serde",
  "time 0.1.43",
  "winapi",
-]
-
-[[package]]
-name = "cio-markdown"
-version = "0.0.0"
-dependencies = [
- "ammonia",
- "comrak",
- "htmlescape",
- "url",
 ]
 
 [[package]]
