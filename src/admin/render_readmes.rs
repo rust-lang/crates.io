@@ -212,8 +212,7 @@ fn render_pkg_readme<R: Read>(mut archive: Archive<R>, pkg_name: &str) -> Option
     let rendered = {
         let readme_path = manifest.package.readme.as_ref()?;
         let path = format!("{}/{}", pkg_name, readme_path);
-        let contents = find_file_by_path(&mut entries, Path::new(&path), pkg_name)
-            .unwrap_or_else(|| panic!("[{}] couldn't open file: {}", pkg_name, readme_path));
+        let contents = find_file_by_path(&mut entries, Path::new(&path), pkg_name)?;
         text_to_html(
             &contents,
             readme_path,
@@ -289,6 +288,20 @@ readme = "README.md"
         let result =
             render_pkg_readme(tar::Archive::new(&*serialized_archive), "foo-0.0.1").unwrap();
         assert!(result.contains("readme"))
+    }
+
+    #[test]
+    fn test_render_pkg_no_readme() {
+        let mut pkg = tar::Builder::new(vec![]);
+        add_file(
+            &mut pkg,
+            "foo-0.0.1/Cargo.toml",
+            br#"
+[package]
+"#,
+        );
+        let serialized_archive = pkg.into_inner().unwrap();
+        assert!(render_pkg_readme(tar::Archive::new(&*serialized_archive), "foo-0.0.1").is_none());
     }
 
     #[test]
