@@ -4,7 +4,7 @@ use crate::{
     schema::{crates, readme_renderings, versions},
     uploaders::Uploader,
 };
-use std::{io::Read, path::Path, sync::Arc, thread};
+use std::{collections::HashMap, ffi::OsString, io::Read, sync::Arc, thread};
 
 use cargo_registry_markdown::text_to_html;
 use chrono::{TimeZone, Utc};
@@ -196,16 +196,28 @@ fn get_readme(
     render_pkg_readme(archive, &pkg_name)
 }
 
-fn render_pkg_readme<R: Read>(mut archive: Archive<R>, pkg_name: &str) -> Option<String> {
-    let mut entries = archive
+fn render_pkg_readme<R: Read>(mut pkg: Archive<R>, pkg_name: &str) -> Option<String> {
+    // Pulls the entire archive into memory - since we need to access files
+    // within the archive potentially out of order (first Cargo.toml, then README)
+    let entries: HashMap<_, _> = pkg
         .entries()
-        .unwrap_or_else(|_| panic!("[{}] Invalid tar archive entries", pkg_name));
+        .unwrap_or_else(|_| panic!("[{}] Invalid tar archive entries", pkg_name))
+        .filter_map(|e| {
+            let mut file = e.ok()?;
+            let path = file.path().ok()?.as_os_str().to_owned();
+            let mut contents = String::new();
+            file.read_to_string(&mut contents)
+                .unwrap_or_else(|_| panic!("[{}] Couldn't read file contents", pkg_name));
+            Some((path, contents))
+        })
+        .collect();
 
     let manifest: Manifest = {
         let path = format!("{}/Cargo.toml", pkg_name);
-        let contents = find_file_by_path(&mut entries, Path::new(&path), pkg_name)
+        let contents = entries
+            .get(&OsString::from(path))
             .unwrap_or_else(|| panic!("[{}] couldn't open file: Cargo.toml", pkg_name));
-        toml::from_str(&contents)
+        toml::from_str(contents)
             .unwrap_or_else(|_| panic!("[{}] Syntax error in manifest file", pkg_name))
     };
 
@@ -216,9 +228,9 @@ fn render_pkg_readme<R: Read>(mut archive: Archive<R>, pkg_name: &str) -> Option
             .clone()
             .unwrap_or_else(|| "README.md".into());
         let path = format!("{}/{}", pkg_name, readme_path);
-        let contents = find_file_by_path(&mut entries, Path::new(&path), pkg_name)?;
+        let contents = entries.get(&OsString::from(path))?;
         text_to_html(
-            &contents,
+            contents,
             &readme_path,
             manifest.package.repository.as_deref(),
         )
@@ -235,31 +247,6 @@ fn render_pkg_readme<R: Read>(mut archive: Archive<R>, pkg_name: &str) -> Option
     struct Manifest {
         package: Package,
     }
-}
-
-/// Search an entry by its path in a Tar archive.
-fn find_file_by_path<R: Read>(
-    entries: &mut tar::Entries<'_, R>,
-    path: &Path,
-    pkg_name: &str,
-) -> Option<String> {
-    let mut file = entries
-        .find(|entry| match *entry {
-            Err(_) => false,
-            Ok(ref file) => {
-                let filepath = match file.path() {
-                    Ok(p) => p,
-                    Err(_) => return false,
-                };
-                filepath == path
-            }
-        })?
-        .unwrap_or_else(|_| panic!("[{}] file is not present: {}", pkg_name, path.display()));
-
-    let mut contents = String::new();
-    file.read_to_string(&mut contents)
-        .unwrap_or_else(|_| panic!("[{}] Couldn't read file contents", pkg_name));
-    Some(contents)
 }
 
 #[cfg(test)]
@@ -319,6 +306,24 @@ readme = "README.md"
 "#,
         );
         add_file(&mut pkg, "foo-0.0.1/README.md", b"readme");
+        let serialized_archive = pkg.into_inner().unwrap();
+        let result =
+            render_pkg_readme(tar::Archive::new(&*serialized_archive), "foo-0.0.1").unwrap();
+        assert!(result.contains("readme"))
+    }
+
+    #[test]
+    fn test_render_pkg_readme_tar_order_backward() {
+        let mut pkg = tar::Builder::new(vec![]);
+        add_file(&mut pkg, "foo-0.0.1/README.md", b"readme");
+        add_file(
+            &mut pkg,
+            "foo-0.0.1/Cargo.toml",
+            br#"
+[package]
+readme = "README.md"
+"#,
+        );
         let serialized_archive = pkg.into_inner().unwrap();
         let result =
             render_pkg_readme(tar::Archive::new(&*serialized_archive), "foo-0.0.1").unwrap();
