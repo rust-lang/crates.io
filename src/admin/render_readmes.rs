@@ -160,6 +160,8 @@ fn get_readme(
     version: &Version,
     krate_name: &str,
 ) -> Option<String> {
+    let pkg_name = format!("{}-{}", krate_name, version.num);
+
     let location = uploader.crate_location(krate_name, &version.num.to_string());
 
     let location = match uploader {
@@ -175,19 +177,15 @@ fn get_readme(
     let response = match client.get(&location).headers(extra_headers).send() {
         Ok(r) => r,
         Err(err) => {
-            println!(
-                "[{}-{}] Unable to fetch crate: {}",
-                krate_name, version.num, err
-            );
+            println!("[{}] Unable to fetch crate: {}", pkg_name, err);
             return None;
         }
     };
 
     if !response.status().is_success() {
         println!(
-            "[{}-{}] Failed to get a 200 response: {}",
-            krate_name,
-            version.num,
+            "[{}] Failed to get a 200 response: {}",
+            pkg_name,
             response.text().unwrap()
         );
         return None;
@@ -195,26 +193,20 @@ fn get_readme(
 
     let reader = GzDecoder::new(response);
     let mut archive = Archive::new(reader);
-    let mut entries = archive.entries().unwrap_or_else(|_| {
-        panic!(
-            "[{}-{}] Invalid tar archive entries",
-            krate_name, version.num
-        )
-    });
+    let mut entries = archive
+        .entries()
+        .unwrap_or_else(|_| panic!("[{}] Invalid tar archive entries", pkg_name));
+
     let manifest: Manifest = {
-        let path = format!("{}-{}/Cargo.toml", krate_name, version.num);
+        let path = format!("{}/Cargo.toml", pkg_name);
         let contents = find_file_by_path(&mut entries, Path::new(&path), version, krate_name);
-        toml::from_str(&contents).unwrap_or_else(|_| {
-            panic!(
-                "[{}-{}] Syntax error in manifest file",
-                krate_name, version.num
-            )
-        })
+        toml::from_str(&contents)
+            .unwrap_or_else(|_| panic!("[{}] Syntax error in manifest file", pkg_name))
     };
 
     let rendered = {
         let readme_path = manifest.package.readme.as_ref()?;
-        let path = format!("{}-{}/{}", krate_name, version.num, readme_path);
+        let path = format!("{}/{}", pkg_name, readme_path);
         let contents = find_file_by_path(&mut entries, Path::new(&path), version, krate_name);
         text_to_html(
             &contents,
