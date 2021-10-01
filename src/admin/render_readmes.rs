@@ -192,14 +192,18 @@ fn get_readme(
     }
 
     let reader = GzDecoder::new(response);
-    let mut archive = Archive::new(reader);
+    let archive = Archive::new(reader);
+    render_pkg_readme(archive, &pkg_name)
+}
+
+fn render_pkg_readme<R: Read>(mut archive: Archive<R>, pkg_name: &str) -> Option<String> {
     let mut entries = archive
         .entries()
         .unwrap_or_else(|_| panic!("[{}] Invalid tar archive entries", pkg_name));
 
     let manifest: Manifest = {
         let path = format!("{}/Cargo.toml", pkg_name);
-        let contents = find_file_by_path(&mut entries, Path::new(&path), &pkg_name);
+        let contents = find_file_by_path(&mut entries, Path::new(&path), pkg_name);
         toml::from_str(&contents)
             .unwrap_or_else(|_| panic!("[{}] Syntax error in manifest file", pkg_name))
     };
@@ -207,7 +211,7 @@ fn get_readme(
     let rendered = {
         let readme_path = manifest.package.readme.as_ref()?;
         let path = format!("{}/{}", pkg_name, readme_path);
-        let contents = find_file_by_path(&mut entries, Path::new(&path), &pkg_name);
+        let contents = find_file_by_path(&mut entries, Path::new(&path), pkg_name);
         text_to_html(
             &contents,
             readme_path,
