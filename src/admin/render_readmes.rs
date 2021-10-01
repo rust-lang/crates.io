@@ -218,20 +218,32 @@ fn render_pkg_readme<R: Read>(mut pkg: Archive<R>, pkg_name: &str) -> Option<Str
             .get(&OsString::from(path))
             .unwrap_or_else(|| panic!("[{}] couldn't open file: Cargo.toml", pkg_name));
         toml::from_str(contents)
-            .unwrap_or_else(|_| panic!("[{}] Syntax error in manifest file", pkg_name))
+            .unwrap_or_else(|e| panic!("[{}] Syntax error in manifest file {}", pkg_name, e))
     };
 
     let rendered = {
-        let readme_path = manifest
-            .package
-            .readme
-            .clone()
-            .unwrap_or_else(|| "README.md".into());
+        let readme_path = match manifest.package.readme.as_ref() {
+            Some(toml::Value::String(readme_path)) => readme_path,
+            Some(toml::Value::Boolean(true)) | None => {
+                if entries.contains_key(&OsString::from(format!("{}/README.md", pkg_name))) {
+                    "README.md"
+                } else if entries.contains_key(&OsString::from(format!("{}/README.txt", pkg_name)))
+                {
+                    "README.txt"
+                } else if entries.contains_key(&OsString::from(format!("{}/README", pkg_name))) {
+                    "README"
+                } else {
+                    return None;
+                }
+            }
+            _ => return None,
+        };
+
         let path = format!("{}/{}", pkg_name, readme_path);
         let contents = entries.get(&OsString::from(path))?;
         text_to_html(
             contents,
-            &readme_path,
+            readme_path,
             manifest.package.repository.as_deref(),
         )
     };
@@ -239,7 +251,7 @@ fn render_pkg_readme<R: Read>(mut pkg: Archive<R>, pkg_name: &str) -> Option<Str
 
     #[derive(Debug, Deserialize)]
     struct Package {
-        readme: Option<String>,
+        readme: Option<toml::Value>,
         repository: Option<String>,
     }
 
@@ -296,7 +308,23 @@ readme = "README.md"
     }
 
     #[test]
-    fn test_render_pkg_implicit_readme() {
+    fn test_render_pkg_readme_false() {
+        let mut pkg = tar::Builder::new(vec![]);
+        add_file(
+            &mut pkg,
+            "foo-0.0.1/Cargo.toml",
+            br#"
+[package]
+readme = false
+"#,
+        );
+        add_file(&mut pkg, "foo-0.0.1/README.md", b"readme");
+        let serialized_archive = pkg.into_inner().unwrap();
+        assert!(render_pkg_readme(tar::Archive::new(&*serialized_archive), "foo-0.0.1").is_none());
+    }
+
+    #[test]
+    fn test_render_pkg_implicit_readme_md() {
         let mut pkg = tar::Builder::new(vec![]);
         add_file(
             &mut pkg,
@@ -306,6 +334,40 @@ readme = "README.md"
 "#,
         );
         add_file(&mut pkg, "foo-0.0.1/README.md", b"readme");
+        let serialized_archive = pkg.into_inner().unwrap();
+        let result =
+            render_pkg_readme(tar::Archive::new(&*serialized_archive), "foo-0.0.1").unwrap();
+        assert!(result.contains("readme"))
+    }
+
+    #[test]
+    fn test_render_pkg_implicit_readme_txt() {
+        let mut pkg = tar::Builder::new(vec![]);
+        add_file(
+            &mut pkg,
+            "foo-0.0.1/Cargo.toml",
+            br#"
+[package]
+"#,
+        );
+        add_file(&mut pkg, "foo-0.0.1/README.txt", b"readme");
+        let serialized_archive = pkg.into_inner().unwrap();
+        let result =
+            render_pkg_readme(tar::Archive::new(&*serialized_archive), "foo-0.0.1").unwrap();
+        assert!(result.contains("readme"))
+    }
+
+    #[test]
+    fn test_render_pkg_implicit_readme() {
+        let mut pkg = tar::Builder::new(vec![]);
+        add_file(
+            &mut pkg,
+            "foo-0.0.1/Cargo.toml",
+            br#"
+[package]
+"#,
+        );
+        add_file(&mut pkg, "foo-0.0.1/README", b"readme");
         let serialized_archive = pkg.into_inner().unwrap();
         let result =
             render_pkg_readme(tar::Archive::new(&*serialized_archive), "foo-0.0.1").unwrap();
