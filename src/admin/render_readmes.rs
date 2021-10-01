@@ -160,6 +160,8 @@ fn get_readme(
     version: &Version,
     krate_name: &str,
 ) -> Option<String> {
+    let pkg_name = format!("{}-{}", krate_name, version.num);
+
     let location = uploader.crate_location(krate_name, &version.num.to_string());
 
     let location = match uploader {
@@ -175,47 +177,41 @@ fn get_readme(
     let response = match client.get(&location).headers(extra_headers).send() {
         Ok(r) => r,
         Err(err) => {
-            println!(
-                "[{}-{}] Unable to fetch crate: {}",
-                krate_name, version.num, err
-            );
+            println!("[{}] Unable to fetch crate: {}", pkg_name, err);
             return None;
         }
     };
 
     if !response.status().is_success() {
         println!(
-            "[{}-{}] Failed to get a 200 response: {}",
-            krate_name,
-            version.num,
+            "[{}] Failed to get a 200 response: {}",
+            pkg_name,
             response.text().unwrap()
         );
         return None;
     }
 
     let reader = GzDecoder::new(response);
-    let mut archive = Archive::new(reader);
-    let mut entries = archive.entries().unwrap_or_else(|_| {
-        panic!(
-            "[{}-{}] Invalid tar archive entries",
-            krate_name, version.num
-        )
-    });
+    let archive = Archive::new(reader);
+    render_pkg_readme(archive, &pkg_name)
+}
+
+fn render_pkg_readme<R: Read>(mut archive: Archive<R>, pkg_name: &str) -> Option<String> {
+    let mut entries = archive
+        .entries()
+        .unwrap_or_else(|_| panic!("[{}] Invalid tar archive entries", pkg_name));
+
     let manifest: Manifest = {
-        let path = format!("{}-{}/Cargo.toml", krate_name, version.num);
-        let contents = find_file_by_path(&mut entries, Path::new(&path), version, krate_name);
-        toml::from_str(&contents).unwrap_or_else(|_| {
-            panic!(
-                "[{}-{}] Syntax error in manifest file",
-                krate_name, version.num
-            )
-        })
+        let path = format!("{}/Cargo.toml", pkg_name);
+        let contents = find_file_by_path(&mut entries, Path::new(&path), pkg_name);
+        toml::from_str(&contents)
+            .unwrap_or_else(|_| panic!("[{}] Syntax error in manifest file", pkg_name))
     };
 
     let rendered = {
         let readme_path = manifest.package.readme.as_ref()?;
-        let path = format!("{}-{}/{}", krate_name, version.num, readme_path);
-        let contents = find_file_by_path(&mut entries, Path::new(&path), version, krate_name);
+        let path = format!("{}/{}", pkg_name, readme_path);
+        let contents = find_file_by_path(&mut entries, Path::new(&path), pkg_name);
         text_to_html(
             &contents,
             readme_path,
@@ -240,8 +236,7 @@ fn get_readme(
 fn find_file_by_path<R: Read>(
     entries: &mut tar::Entries<'_, R>,
     path: &Path,
-    version: &Version,
-    krate_name: &str,
+    pkg_name: &str,
 ) -> String {
     let mut file = entries
         .find(|entry| match *entry {
@@ -254,28 +249,91 @@ fn find_file_by_path<R: Read>(
                 filepath == path
             }
         })
-        .unwrap_or_else(|| {
-            panic!(
-                "[{}-{}] couldn't open file: {}",
-                krate_name,
-                version.num,
-                path.display()
-            )
-        })
-        .unwrap_or_else(|_| {
-            panic!(
-                "[{}-{}] file is not present: {}",
-                krate_name,
-                version.num,
-                path.display()
-            )
-        });
+        .unwrap_or_else(|| panic!("[{}] couldn't open file: {}", pkg_name, path.display()))
+        .unwrap_or_else(|_| panic!("[{}] file is not present: {}", pkg_name, path.display()));
+
     let mut contents = String::new();
-    file.read_to_string(&mut contents).unwrap_or_else(|_| {
-        panic!(
-            "[{}-{}] Couldn't read file contents",
-            krate_name, version.num
-        )
-    });
+    file.read_to_string(&mut contents)
+        .unwrap_or_else(|_| panic!("[{}] Couldn't read file contents", pkg_name));
     contents
+}
+
+#[cfg(test)]
+mod tests {
+    use std::io::Write;
+    use tar;
+
+    use super::render_pkg_readme;
+
+    fn add_file<W: Write>(pkg: &mut tar::Builder<W>, path: &str, content: &[u8]) {
+        let mut header = tar::Header::new_gnu();
+        header.set_size(content.len() as u64);
+        header.set_cksum();
+        pkg.append_data(&mut header, path, content).unwrap();
+    }
+
+    #[test]
+    fn test_render_pkg_readme() {
+        let mut pkg = tar::Builder::new(vec![]);
+        add_file(
+            &mut pkg,
+            "foo-0.0.1/Cargo.toml",
+            br#"
+[package]
+readme = "README.md"
+"#,
+        );
+        add_file(&mut pkg, "foo-0.0.1/README.md", b"readme");
+        let serialized_archive = pkg.into_inner().unwrap();
+        let result =
+            render_pkg_readme(tar::Archive::new(&*serialized_archive), "foo-0.0.1").unwrap();
+        assert!(result.contains("readme"))
+    }
+
+    #[test]
+    fn test_render_pkg_readme_w_link() {
+        let mut pkg = tar::Builder::new(vec![]);
+        add_file(
+            &mut pkg,
+            "foo-0.0.1/Cargo.toml",
+            br#"
+[package]
+readme = "README.md"
+repository = "https://github.com/foo/foo"
+"#,
+        );
+        add_file(
+            &mut pkg,
+            "foo-0.0.1/README.md",
+            b"readme [link](./Other.md)",
+        );
+        let serialized_archive = pkg.into_inner().unwrap();
+        let result =
+            render_pkg_readme(tar::Archive::new(&*serialized_archive), "foo-0.0.1").unwrap();
+        assert!(result.contains("\"https://github.com/foo/foo/blob/HEAD/./Other.md\""))
+    }
+
+    #[test]
+    fn test_render_pkg_readme_not_at_root() {
+        let mut pkg = tar::Builder::new(vec![]);
+        add_file(
+            &mut pkg,
+            "foo-0.0.1/Cargo.toml",
+            br#"
+[package]
+readme = "docs/README.md"
+repository = "https://github.com/foo/foo"
+"#,
+        );
+        add_file(
+            &mut pkg,
+            "foo-0.0.1/docs/README.md",
+            b"docs/readme [link](./Other.md)",
+        );
+        let serialized_archive = pkg.into_inner().unwrap();
+        let result =
+            render_pkg_readme(tar::Archive::new(&*serialized_archive), "foo-0.0.1").unwrap();
+        assert!(result.contains("docs/readme"));
+        assert!(result.contains("\"https://github.com/foo/foo/blob/HEAD/docs/./Other.md\""))
+    }
 }
