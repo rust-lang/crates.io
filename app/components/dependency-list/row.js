@@ -26,6 +26,19 @@ export default class VersionRow extends Component {
     return this.loadCrateTask.lastSuccessful?.value?.description;
   }
 
+  get featuresDescription() {
+    let { default_features: defaultFeatures, features } = this.args.dependency;
+    let numFeatures = features.length;
+
+    if (numFeatures !== 0) {
+      return defaultFeatures
+        ? `${numFeatures} extra feature${numFeatures > 1 ? 's' : ''}`
+        : `only ${numFeatures} feature${numFeatures > 1 ? 's' : ''}`;
+    } else if (!defaultFeatures) {
+      return 'no default features';
+    }
+  }
+
   @task *loadCrateTask() {
     let { dependency } = this.args;
     return yield this.store.findRecord('crate', dependency.crate_id);

@@ -94,6 +94,7 @@
     text-transform: uppercase;
     letter-spacing: .7px;
     font-size: 13px;
+    margin-right: 15px;
 
     a {
         position: relative;
@@ -114,6 +115,32 @@
     :global(.ember-tooltip) {
         text-transform: none;
         letter-spacing: normal;
+    }
+
+    @media only screen and (max-width: 550px) {
+        display: block;
+        margin-top: 10px;
+    }
+}
+
+.optional-label {
+    composes: metadata;
+}
+
+.features-label {
+    composes: metadata;
+}
+
+.feature-list {
+    padding: 0;
+    margin: 10px 5px;
+    list-style: none;
+
+    svg {
+        height: 1em;
+        width: auto;
+        margin-right: 2px;
+        margin-bottom: -.1em;
     }
 }
 
