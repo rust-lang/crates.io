@@ -213,31 +213,24 @@ fn get_readme(
     };
 
     let rendered = {
-        let path = format!(
-            "{}-{}/{}",
-            krate_name, version.num, manifest.package.readme?
-        );
+        let readme_path = manifest.package.readme.as_ref()?;
+        let path = format!("{}-{}/{}", krate_name, version.num, readme_path);
         let contents = find_file_by_path(&mut entries, Path::new(&path), version, krate_name);
         text_to_html(
             &contents,
-            manifest
-                .package
-                .readme_file
-                .as_ref()
-                .map_or("README.md", |e| &**e),
+            readme_path,
             manifest.package.repository.as_deref(),
         )
     };
     return Some(rendered);
 
-    #[derive(Deserialize)]
+    #[derive(Debug, Deserialize)]
     struct Package {
         readme: Option<String>,
-        readme_file: Option<String>,
         repository: Option<String>,
     }
 
-    #[derive(Deserialize)]
+    #[derive(Debug, Deserialize)]
     struct Manifest {
         package: Package,
     }
