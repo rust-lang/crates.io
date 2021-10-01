@@ -199,7 +199,7 @@ fn get_readme(
 
     let manifest: Manifest = {
         let path = format!("{}/Cargo.toml", pkg_name);
-        let contents = find_file_by_path(&mut entries, Path::new(&path), version, krate_name);
+        let contents = find_file_by_path(&mut entries, Path::new(&path), &pkg_name);
         toml::from_str(&contents)
             .unwrap_or_else(|_| panic!("[{}] Syntax error in manifest file", pkg_name))
     };
@@ -207,7 +207,7 @@ fn get_readme(
     let rendered = {
         let readme_path = manifest.package.readme.as_ref()?;
         let path = format!("{}/{}", pkg_name, readme_path);
-        let contents = find_file_by_path(&mut entries, Path::new(&path), version, krate_name);
+        let contents = find_file_by_path(&mut entries, Path::new(&path), &pkg_name);
         text_to_html(
             &contents,
             readme_path,
@@ -232,8 +232,7 @@ fn get_readme(
 fn find_file_by_path<R: Read>(
     entries: &mut tar::Entries<'_, R>,
     path: &Path,
-    version: &Version,
-    krate_name: &str,
+    pkg_name: &str,
 ) -> String {
     let mut file = entries
         .find(|entry| match *entry {
@@ -246,28 +245,11 @@ fn find_file_by_path<R: Read>(
                 filepath == path
             }
         })
-        .unwrap_or_else(|| {
-            panic!(
-                "[{}-{}] couldn't open file: {}",
-                krate_name,
-                version.num,
-                path.display()
-            )
-        })
-        .unwrap_or_else(|_| {
-            panic!(
-                "[{}-{}] file is not present: {}",
-                krate_name,
-                version.num,
-                path.display()
-            )
-        });
+        .unwrap_or_else(|| panic!("[{}] couldn't open file: {}", pkg_name, path.display()))
+        .unwrap_or_else(|_| panic!("[{}] file is not present: {}", pkg_name, path.display()));
+
     let mut contents = String::new();
-    file.read_to_string(&mut contents).unwrap_or_else(|_| {
-        panic!(
-            "[{}-{}] Couldn't read file contents",
-            krate_name, version.num
-        )
-    });
+    file.read_to_string(&mut contents)
+        .unwrap_or_else(|_| panic!("[{}] Couldn't read file contents", pkg_name));
     contents
 }
