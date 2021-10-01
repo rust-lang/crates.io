@@ -405,12 +405,27 @@ fn verify_tarball(pkg_name: &str, tarball: &[u8], max_unpack: u64) -> AppResult<
 
 #[cfg(test)]
 mod tests {
-    use super::missing_metadata_error_message;
+    use super::{missing_metadata_error_message, verify_tarball};
+    use crate::admin::render_readmes::tests::add_file;
+    use flate2::read::GzEncoder;
+    use std::io::Read;
 
     #[test]
     fn missing_metadata_error_message_test() {
         assert_eq!(missing_metadata_error_message(&["a"]), "missing or empty metadata fields: a. Please see https://doc.rust-lang.org/cargo/reference/manifest.html for how to upload metadata");
         assert_eq!(missing_metadata_error_message(&["a", "b"]), "missing or empty metadata fields: a, b. Please see https://doc.rust-lang.org/cargo/reference/manifest.html for how to upload metadata");
         assert_eq!(missing_metadata_error_message(&["a", "b", "c"]), "missing or empty metadata fields: a, b, c. Please see https://doc.rust-lang.org/cargo/reference/manifest.html for how to upload metadata");
+    }
+
+    #[test]
+    fn verify_tarball_test() {
+        let mut pkg = tar::Builder::new(vec![]);
+        add_file(&mut pkg, "foo-0.0.1/.cargo_vcs_info.json", br#"{}"#);
+        let mut serialized_archive = vec![];
+        GzEncoder::new(pkg.into_inner().unwrap().as_slice(), Default::default())
+            .read_to_end(&mut serialized_archive)
+            .unwrap();
+        verify_tarball("foo-0.0.1", &serialized_archive, 512 * 1024 * 1024).unwrap();
+        verify_tarball("bar-0.0.1", &serialized_archive, 512 * 1024 * 1024).unwrap_err();
     }
 }
