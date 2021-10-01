@@ -193,7 +193,8 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
         let mut tarball = Vec::new();
         LimitErrorReader::new(req.body(), maximums.max_upload_size).read_to_end(&mut tarball)?;
         let hex_cksum: String = Sha256::digest(&tarball).encode_hex();
-        verify_tarball(&krate, vers, &tarball, maximums.max_unpack_size)?;
+        let pkg_name = format!("{}-{}", krate.name, vers);
+        verify_tarball(&pkg_name, &tarball, maximums.max_unpack_size)?;
 
         if let Some(readme) = new_crate.readme {
             render::render_and_upload_readme(
@@ -363,12 +364,7 @@ pub fn add_dependencies(
     Ok(git_deps)
 }
 
-fn verify_tarball(
-    krate: &Crate,
-    vers: &semver::Version,
-    tarball: &[u8],
-    max_unpack: u64,
-) -> AppResult<()> {
+fn verify_tarball(pkg_name: &str, tarball: &[u8], max_unpack: u64) -> AppResult<()> {
     // All our data is currently encoded with gzip
     let decoder = GzDecoder::new(tarball);
 
@@ -378,7 +374,6 @@ fn verify_tarball(
 
     // Use this I/O object now to take a peek inside
     let mut archive = tar::Archive::new(decoder);
-    let prefix = format!("{}-{}", krate.name, vers);
     for entry in archive.entries()? {
         let entry = entry.map_err(|err| {
             err.chain(cargo_err(
@@ -391,7 +386,7 @@ fn verify_tarball(
         // upload a tarball that contains both `foo-0.1.0/` source code as well
         // as `bar-0.1.0/` source code, and this could overwrite other crates in
         // the registry!
-        if !entry.path()?.starts_with(&prefix) {
+        if !entry.path()?.starts_with(&pkg_name) {
             return Err(cargo_err("invalid tarball uploaded"));
         }
 
