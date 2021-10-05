@@ -1,7 +1,7 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
 use cargo_registry::{metrics::LogEncoder, util::errors::AppResult, App, Env};
-use std::{fs::File, process::Command, sync::Arc, time::Duration};
+use std::{env, fs::File, process::Command, sync::Arc, time::Duration};
 
 use conduit_hyper::Service;
 use futures_util::future::FutureExt;
@@ -10,6 +10,8 @@ use reqwest::blocking::Client;
 use std::io::Write;
 use tokio::io::AsyncWriteExt;
 use tokio::signal::unix::{signal, SignalKind};
+use tracing::Level;
+use tracing_subscriber::{filter, prelude::*};
 
 const CORE_THREADS: usize = 4;
 
@@ -17,7 +19,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let _sentry = cargo_registry::sentry::init();
 
     // Initialize logging
-    tracing_subscriber::fmt::init();
+
+    let log_filter = env::var("RUST_LOG")
+        .unwrap_or_default()
+        .parse::<filter::Targets>()
+        .expect("Invalid RUST_LOG value");
+
+    let sentry_filter = filter::Targets::new().with_default(Level::INFO);
+
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::fmt::layer().with_filter(log_filter))
+        .with(sentry::integrations::tracing::layer().with_filter(sentry_filter))
+        .init();
 
     let config = cargo_registry::config::Server::default();
     let env = config.env();
