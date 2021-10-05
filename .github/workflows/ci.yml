@@ -18,6 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: rustup override set ${{env.MSRV}}
+      - uses: Swatinem/rust-cache@v1.3.0
       - run: cargo check --workspace --all-targets
         env:
           RUSTFLAGS: "-D warnings"
@@ -28,6 +29,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: rustup override set ${{env.MSRV}}
+      - uses: Swatinem/rust-cache@v1.3.0
       - run: cargo test --workspace
 
   fmt:
@@ -37,6 +39,7 @@ jobs:
       - uses: actions/checkout@v2
       - run: rustup override set ${{env.MSRV}}
       - run: rustup component add rustfmt
+      - uses: Swatinem/rust-cache@v1.3.0
       - run: cargo fmt --all -- --check
 
   clippy:
@@ -46,4 +49,5 @@ jobs:
       - uses: actions/checkout@v2
       - run: rustup override set ${{env.MSRV}}
       - run: rustup component add clippy
+      - uses: Swatinem/rust-cache@v1.3.0
       - run: cargo clippy --workspace -- --deny warnings
