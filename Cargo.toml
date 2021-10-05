@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "conduit",
+    "conduit-middleware",
     "conduit-router",
     "conduit-test",
     "example",
