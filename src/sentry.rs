@@ -16,14 +16,20 @@ pub fn init() -> Option<ClientInitGuard> {
         .into_dsn()
         .expect("SENTRY_DSN_API is not a valid Sentry DSN value")
         .map(|dsn| {
-            let mut opts = ClientOptions::from(dsn);
-            opts.environment = Some(
+            let environment = Some(
                 dotenv::var("SENTRY_ENV_API")
                     .map(Cow::Owned)
                     .expect("SENTRY_ENV_API must be set when using SENTRY_DSN_API"),
             );
 
-            opts.release = dotenv::var("HEROKU_SLUG_COMMIT").ok().map(Into::into);
+            let release = dotenv::var("HEROKU_SLUG_COMMIT").ok().map(Into::into);
+
+            let opts = ClientOptions {
+                dsn: Some(dsn),
+                environment,
+                release,
+                ..Default::default()
+            };
 
             sentry::init(opts)
         })
