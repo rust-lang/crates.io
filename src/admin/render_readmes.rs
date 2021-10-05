@@ -203,18 +203,23 @@ fn render_pkg_readme<R: Read>(mut archive: Archive<R>, pkg_name: &str) -> Option
 
     let manifest: Manifest = {
         let path = format!("{}/Cargo.toml", pkg_name);
-        let contents = find_file_by_path(&mut entries, Path::new(&path), pkg_name);
+        let contents = find_file_by_path(&mut entries, Path::new(&path), pkg_name)
+            .unwrap_or_else(|| panic!("[{}] couldn't open file: Cargo.toml", pkg_name));
         toml::from_str(&contents)
             .unwrap_or_else(|_| panic!("[{}] Syntax error in manifest file", pkg_name))
     };
 
     let rendered = {
-        let readme_path = manifest.package.readme.as_ref()?;
+        let readme_path = manifest
+            .package
+            .readme
+            .clone()
+            .unwrap_or_else(|| "README.md".into());
         let path = format!("{}/{}", pkg_name, readme_path);
-        let contents = find_file_by_path(&mut entries, Path::new(&path), pkg_name);
+        let contents = find_file_by_path(&mut entries, Path::new(&path), pkg_name)?;
         text_to_html(
             &contents,
-            readme_path,
+            &readme_path,
             manifest.package.repository.as_deref(),
         )
     };
@@ -237,7 +242,7 @@ fn find_file_by_path<R: Read>(
     entries: &mut tar::Entries<'_, R>,
     path: &Path,
     pkg_name: &str,
-) -> String {
+) -> Option<String> {
     let mut file = entries
         .find(|entry| match *entry {
             Err(_) => false,
@@ -248,14 +253,13 @@ fn find_file_by_path<R: Read>(
                 };
                 filepath == path
             }
-        })
-        .unwrap_or_else(|| panic!("[{}] couldn't open file: {}", pkg_name, path.display()))
+        })?
         .unwrap_or_else(|_| panic!("[{}] file is not present: {}", pkg_name, path.display()));
 
     let mut contents = String::new();
     file.read_to_string(&mut contents)
         .unwrap_or_else(|_| panic!("[{}] Couldn't read file contents", pkg_name));
-    contents
+    Some(contents)
 }
 
 #[cfg(test)]
@@ -281,6 +285,37 @@ mod tests {
             br#"
 [package]
 readme = "README.md"
+"#,
+        );
+        add_file(&mut pkg, "foo-0.0.1/README.md", b"readme");
+        let serialized_archive = pkg.into_inner().unwrap();
+        let result =
+            render_pkg_readme(tar::Archive::new(&*serialized_archive), "foo-0.0.1").unwrap();
+        assert!(result.contains("readme"))
+    }
+
+    #[test]
+    fn test_render_pkg_no_readme() {
+        let mut pkg = tar::Builder::new(vec![]);
+        add_file(
+            &mut pkg,
+            "foo-0.0.1/Cargo.toml",
+            br#"
+[package]
+"#,
+        );
+        let serialized_archive = pkg.into_inner().unwrap();
+        assert!(render_pkg_readme(tar::Archive::new(&*serialized_archive), "foo-0.0.1").is_none());
+    }
+
+    #[test]
+    fn test_render_pkg_implicit_readme() {
+        let mut pkg = tar::Builder::new(vec![]);
+        add_file(
+            &mut pkg,
+            "foo-0.0.1/Cargo.toml",
+            br#"
+[package]
 "#,
         );
         add_file(&mut pkg, "foo-0.0.1/README.md", b"readme");
