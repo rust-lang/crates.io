@@ -87,13 +87,17 @@ pub type Extensions = typemap::TypeMap;
 
 pub trait RequestExt {
     /// The elapsed time since the start of the request (headers received)
-    /// 
+    ///
     /// # Panics
-    /// 
+    ///
     /// This method may panic if the server does not add `StartInstant` to the
     /// request extensions, or if it has been removed by the application.
     fn elapsed(&self) -> Duration {
-        self.extensions().find::<StartInstant>().unwrap().0.elapsed()
+        self.extensions()
+            .find::<StartInstant>()
+            .unwrap()
+            .0
+            .elapsed()
     }
 
     /// The version of HTTP being used

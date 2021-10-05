@@ -9,5 +9,8 @@ license = "MIT"
 repository = "https://github.com/conduit-rust/conduit"
 edition = "2018"
 
+[workspace]
+members = ["example"]
+
 [dependencies]
 http = "0.2"
