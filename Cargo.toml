@@ -1,16 +1,7 @@
-[package]
-
-name = "conduit"
-version = "0.9.0-alpha.5"
-authors = ["wycats@gmail.com",
-           "Alex Crichton <alex@alexcrichton.com>"]
-description = "Common HTTP server interface"
-license = "MIT"
-repository = "https://github.com/conduit-rust/conduit"
-edition = "2018"
-
 [workspace]
-members = ["example"]
-
-[dependencies]
-http = "0.2"
+members = [
+    "conduit",
+    "conduit-router",
+    "conduit-test",
+    "example",
+]
