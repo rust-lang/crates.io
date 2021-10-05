@@ -69,23 +69,10 @@ jobs:
     runs-on: ubuntu-20.04
 
     env:
-      CARGO_INCREMENTAL: 0
       RUSTFLAGS: "-D warnings"
 
     steps:
       - uses: actions/checkout@v2
-
-      # Current size as of 2021-02-15: ~105 MB
-      - name: Cache cargo registry and git deps
-        uses: actions/cache@v2.1.6
-        with:
-          path: |
-            ~/.cargo/registry/cache
-            ~/.cargo/registry/index
-            ~/.cargo/git/db
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-
 
       - name: Install Rust
         run: |
@@ -94,20 +81,10 @@ jobs:
           rustup update 1.54.0
           rustup default 1.54.0
 
-      - id: rustc
-        run:
-          echo "::set-output name=version::$(rustc -V)"
-
-      - name: Cache cargo build
-        uses: actions/cache@v2.1.6
-        with:
-          path: target
-          key: v2-${{ runner.os }}-cargo-clippy-${{ steps.rustc.outputs.version }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            v2-${{ runner.os }}-cargo-clippy-${{ steps.rustc.outputs.version }}-
-
       - run: rustup component add rustfmt
       - run: rustup component add clippy
+
+      - uses: Swatinem/rust-cache@v1.3.0
 
       - run: cargo fmt -- --check
       - run: cargo clippy --all-targets --all-features --all
@@ -127,7 +104,6 @@ jobs:
       RUST_BACKTRACE: 1
       DATABASE_URL: postgres://postgres:postgres@localhost/cargo_registry_test
       TEST_DATABASE_URL: postgres://postgres:postgres@localhost/cargo_registry_test
-      CARGO_INCREMENTAL: 0
       RUSTFLAGS: "-D warnings"
       MALLOC_CONF: "background_thread:true,abort_conf:true,abort:true,junk:true"
 
@@ -161,29 +137,6 @@ jobs:
           fi
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-      # Cache `diesel` binary
-      #
-      # The other binaries (like `rustc`) will be overwritten by rustup.
-      #
-      # Current size as of 2021-02-15: ~15 MB
-      - name: Cache cargo binaries
-        uses: actions/cache@v2.1.6
-        with:
-          path: ~/.cargo/bin
-          key: ${{ runner.os }}-cargo-bin-${{ matrix.rust }}-${{ hashFiles('.diesel_version') }}-v3
-
-      # Current size as of 2021-02-15: ~105 MB
-      - name: Cache cargo registry and git deps
-        uses: actions/cache@v2.1.6
-        with:
-          path: |
-            ~/.cargo/registry/cache
-            ~/.cargo/registry/index
-            ~/.cargo/git/db
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-
-
       - name: Install ${{ matrix.rust }} Rust
         run: |
           if [[ ! -d "$HOME/.cargo" || ! -d "$HOME/.rustup" ]]; then
@@ -194,27 +147,16 @@ jobs:
           rustup update ${{ matrix.rust }}
           rustup default ${{ matrix.rust }}
 
-      - id: rustc
-        run:
-          echo "::set-output name=version::$(rustc -V)"
-
-      # Current size as of 2021-02-12: ~325 MB
-      - name: Cache cargo build
-        uses: actions/cache@v2.1.6
-        with:
-          path: target
-          key: v2-${{ runner.os }}-cargo-build-target-${{ steps.rustc.outputs.version }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            v2-${{ runner.os }}-cargo-build-target-${{ steps.rustc.outputs.version }}-
+      - uses: Swatinem/rust-cache@v1.3.0
 
       - name: Setup database
         run: |
-          which diesel || cargo install diesel_cli --vers $(cat .diesel_version) --no-default-features --features postgres --debug
+          cargo install diesel_cli --vers $(cat .diesel_version) --no-default-features --features postgres --debug
           diesel database setup --locked-schema
 
       - name: Install cargo-tarpaulin
         if: matrix.rust == 'stable'
-        run: which cargo-tarpaulin || cargo install cargo-tarpaulin --version ~0.18.0-alpha.3
+        run: cargo install cargo-tarpaulin --version ~0.18.0-alpha.3
 
       - name: Run tests (with coverage report)
         if: matrix.rust == 'stable'
@@ -223,9 +165,6 @@ jobs:
       - name: Run tests
         if: matrix.rust != 'stable'
         run: cargo test --workspace
-
-      - name: Prune unnecessary cache
-        run: script/ci/prune-cache.sh
 
 
   # These jobs doesn't actually test anything, but they're only used to tell
