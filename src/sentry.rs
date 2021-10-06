@@ -1,5 +1,4 @@
 use sentry::{ClientInitGuard, ClientOptions, IntoDsn};
-use std::borrow::Cow;
 
 /// Initializes the Sentry SDK from the environment variables.
 ///
@@ -9,22 +8,26 @@ use std::borrow::Cow;
 ///
 /// `HEROKU_SLUG_COMMIT`, if present, will be used as the `release` property
 /// on all events.
-#[must_use]
-pub fn init() -> Option<ClientInitGuard> {
-    dotenv::var("SENTRY_DSN_API")
+pub fn init() -> ClientInitGuard {
+    let dsn = dotenv::var("SENTRY_DSN_API")
         .ok()
         .into_dsn()
-        .expect("SENTRY_DSN_API is not a valid Sentry DSN value")
-        .map(|dsn| {
-            let mut opts = ClientOptions::from(dsn);
-            opts.environment = Some(
-                dotenv::var("SENTRY_ENV_API")
-                    .map(Cow::Owned)
-                    .expect("SENTRY_ENV_API must be set when using SENTRY_DSN_API"),
-            );
+        .expect("SENTRY_DSN_API is not a valid Sentry DSN value");
 
-            opts.release = dotenv::var("HEROKU_SLUG_COMMIT").ok().map(Into::into);
+    let environment = dsn.as_ref().map(|_| {
+        dotenv::var("SENTRY_ENV_API")
+            .expect("SENTRY_ENV_API must be set when using SENTRY_DSN_API")
+            .into()
+    });
 
-            sentry::init(opts)
-        })
+    let release = dotenv::var("HEROKU_SLUG_COMMIT").ok().map(Into::into);
+
+    let opts = ClientOptions {
+        dsn,
+        environment,
+        release,
+        ..Default::default()
+    };
+
+    sentry::init(opts)
 }
