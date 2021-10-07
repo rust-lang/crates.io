@@ -212,6 +212,7 @@ yanked = "public"
 license = "public"
 crate_size = "public"
 published_by = "public"
+version_no_prerelease = "private"
 
 [versions_published_by.columns]
 version_id = "private"
