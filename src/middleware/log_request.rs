@@ -4,16 +4,13 @@
 use super::prelude::*;
 use crate::util::request_header;
 
-use conduit::{header, Host, RequestExt, Scheme, StatusCode};
+use conduit::{header, RequestExt, StatusCode};
 use conduit_cookie::RequestSession;
-use sentry::Level;
 
 use std::fmt::{self, Display, Formatter};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 const SLOW_REQUEST_THRESHOLD_MS: u64 = 1000;
-
-const FILTERED_HEADERS: &[&str] = &["Authorization", "Cookie", "X-Real-Ip", "X-Forwarded-For"];
 
 #[derive(Default)]
 pub(super) struct LogRequests();
@@ -92,28 +89,7 @@ pub fn add_custom_metadata<V: Display>(req: &mut dyn RequestExt, key: &'static s
 }
 
 fn report_to_sentry(req: &dyn RequestExt, res: &AfterResult, response_time: u64) {
-    let (message, level) = match res {
-        Err(e) => (e.to_string(), Level::Error),
-        Ok(_) => return,
-    };
-
-    let config = |scope: &mut sentry::Scope| {
-        let method = Some(req.method().as_str().to_owned());
-
-        let scheme = match req.scheme() {
-            Scheme::Http => "http",
-            Scheme::Https => "https",
-        };
-
-        let host = match req.host() {
-            Host::Name(name) => name.to_owned(),
-            Host::Socket(addr) => addr.to_string(),
-        };
-
-        let path = &req.extensions().find::<OriginalPath>().unwrap().0;
-
-        let url = format!("{}://{}{}", scheme, host, path).parse().ok();
-
+    sentry::configure_scope(|scope| {
         {
             let id = req.session().get("user_id").map(|str| str.to_string());
 
@@ -123,29 +99,6 @@ fn report_to_sentry(req: &dyn RequestExt, res: &AfterResult, response_time: u64)
             };
 
             scope.set_user(Some(user));
-        }
-
-        {
-            let headers = req
-                .headers()
-                .iter()
-                .filter(|(k, _v)| !FILTERED_HEADERS.iter().any(|name| k == name))
-                .map(|(k, v)| (k.to_string(), v.to_str().unwrap_or_default().to_string()))
-                .collect();
-
-            let sentry_req = sentry::protocol::Request {
-                url,
-                method,
-                headers,
-                ..Default::default()
-            };
-
-            scope.add_event_processor(Box::new(move |mut event| {
-                if event.request.is_none() {
-                    event.request = Some(sentry_req.clone());
-                }
-                Some(event)
-            }));
         }
 
         if let Some(request_id) = req
@@ -172,9 +125,7 @@ fn report_to_sentry(req: &dyn RequestExt, res: &AfterResult, response_time: u64)
                 scope.set_extra(key, value.to_string().into());
             }
         }
-    };
-
-    sentry::with_scope(config, || sentry::capture_message(&message, level));
+    });
 }
 
 #[cfg(test)]
