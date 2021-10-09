@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 
@@ -23,6 +24,7 @@ pub struct Version {
     pub license: Option<String>,
     pub crate_size: Option<i32>,
     pub published_by: Option<i32>,
+    pub semver_no_prerelease: Option<Vec<BigDecimal>>,
 }
 
 #[derive(Insertable, Debug)]
@@ -34,6 +36,7 @@ pub struct NewVersion {
     license: Option<String>,
     crate_size: Option<i32>,
     published_by: i32,
+    semver_no_prerelease: Option<Vec<BigDecimal>>,
 }
 
 /// The highest version (semver order) and the most recently updated version.
@@ -132,9 +135,17 @@ impl NewVersion {
     ) -> AppResult<Self> {
         let features = serde_json::to_value(features)?;
 
+        let semver_no_prerelease = match num {
+            num if num.pre.is_empty() => {
+                Some(vec![num.major.into(), num.minor.into(), num.patch.into()])
+            }
+            _ => None,
+        };
+
         let mut new_version = NewVersion {
             crate_id,
             num: num.to_string(),
+            semver_no_prerelease,
             features,
             license,
             crate_size: Some(crate_size),
