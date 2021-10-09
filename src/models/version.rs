@@ -7,6 +7,7 @@ use crate::util::errors::{cargo_err, AppResult};
 
 use crate::models::{Crate, Dependency, User};
 use crate::schema::*;
+use crate::sql::SemverTriple;
 
 // Queryable has a custom implementation below
 #[derive(Clone, Identifiable, Associations, Debug, Queryable, Deserialize, Serialize)]
@@ -23,6 +24,7 @@ pub struct Version {
     pub license: Option<String>,
     pub crate_size: Option<i32>,
     pub published_by: Option<i32>,
+    pub semver_no_prerelease: Option<SemverTriple>,
 }
 
 #[derive(Insertable, Debug)]
@@ -34,6 +36,7 @@ pub struct NewVersion {
     license: Option<String>,
     crate_size: Option<i32>,
     published_by: i32,
+    semver_no_prerelease: Option<SemverTriple>,
 }
 
 /// The highest version (semver order) and the most recently updated version.
@@ -135,6 +138,7 @@ impl NewVersion {
         let mut new_version = NewVersion {
             crate_id,
             num: num.to_string(),
+            semver_no_prerelease: SemverTriple::from_semver_no_prerelease(num),
             features,
             license,
             crate_size: Some(crate_size),
