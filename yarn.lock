@@ -6150,10 +6150,10 @@ ember-api-actions@0.2.9:
     ember-compatibility-helpers "^1.1.2"
     ember-destroyable-polyfill "^2.0.2"
 
-ember-auto-import@2.2.0:
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/ember-auto-import/-/ember-auto-import-2.2.0.tgz#6206be37e676fb490f03dd20afab973d5abe9da9"
-  integrity sha512-ngluzmtV31mTY+1ceOnWfGUIgGyZt850xFncMX/14Dfx0OhXaUKBpFjKjIor/Cen4WEF+OrdgNJAjH3sM07o6w==
+ember-auto-import@2.2.1:
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/ember-auto-import/-/ember-auto-import-2.2.1.tgz#5ed5477a86583770d53afc18e9aae997b22315c6"
+  integrity sha512-dmRs7gZcxTjQ9cRLPH5MBB14UO5yMD4ZSnZyzaNv+MZzxmkO3RyuHslraLpOnJ660NjSyWukg2AD5RZhk84x2w==
   dependencies:
     "@babel/core" "^7.1.6"
     "@babel/plugin-proposal-class-properties" "^7.13.0"
