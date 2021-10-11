@@ -337,6 +337,8 @@ fn simple_config() -> config::Server {
         instance_metrics_log_every_seconds: None,
         force_unconditional_redirects: false,
         blocked_routes: HashSet::new(),
+        version_id_cache_size: 10000,
+        version_id_cache_ttl: Duration::from_secs(5 * 60),
     }
 }
 
