@@ -4,7 +4,7 @@ version = "0.9.0-alpha.7"
 authors = ["wycats@gmail.com"]
 license = "MIT"
 description = "Router middleware for conduit based on route-recognizer"
-repository = "https://github.com/conduit-rust/conduit-router"
+repository = "https://github.com/conduit-rust/conduit"
 edition = "2018"
 
 [dependencies]
