@@ -21,10 +21,8 @@ pub fn download(req: &mut dyn RequestExt) -> EndpointResult {
 
     let mut log_metadata = None;
 
-    match app
-        .version_id_cacher
-        .entry(format!("{}:{}", crate_name, version))
-    {
+    let key = (crate_name.to_string(), version.to_string());
+    match app.version_id_cacher.entry(key) {
         // The version_id is cached. This also means that the provided crate_name is canonical
         // and that no fixup is necessary before redirecting.
         Entry::Occupied(entry) => {

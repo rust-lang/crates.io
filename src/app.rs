@@ -36,7 +36,7 @@ pub struct App {
     ///
     /// This is used by the download endpoint to reduce the number of database queries. The
     /// `version_id` is only cached under the canonical spelling of the crate name.
-    pub(crate) version_id_cacher: DashMap<String, i32>,
+    pub(crate) version_id_cacher: DashMap<(String, String), i32>,
 
     /// Count downloads and periodically persist them in the database
     pub downloads_counter: DownloadsCounter,
