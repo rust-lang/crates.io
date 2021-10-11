@@ -16,7 +16,8 @@
         "reviewersSampleSize": 1
     },
     "rust": {
-        "dependencyDashboardApproval": true
+        "dependencyDashboardApproval": true,
+        "rangeStrategy": "bump"
     },
     "postUpdateOptions": ["yarnDedupeFewer"],
     "packageRules": [{
