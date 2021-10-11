@@ -1,6 +1,6 @@
 [package]
 name = "conduit-router"
-version = "0.9.0-alpha.6"
+version = "0.9.0-alpha.7"
 authors = ["wycats@gmail.com"]
 license = "MIT"
 description = "Router middleware for conduit based on route-recognizer"
