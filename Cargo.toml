@@ -4,7 +4,7 @@ members = [
     "conduit-middleware",
     "conduit-router",
     "conduit-test",
-    "example",
+    "examples/*",
 ]
 
 [patch.crates-io]
