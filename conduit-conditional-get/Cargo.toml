@@ -8,6 +8,7 @@ description = """
 Middleware to transform GET into a conditional response if headers indicate that
 the response is fresh.
 """
+edition = "2018"
 
 [dependencies]
 conduit = { version = "0.9.0-alpha.5", path = "../conduit" }

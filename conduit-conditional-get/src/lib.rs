@@ -1,10 +1,3 @@
-#![cfg_attr(test, deny(warnings))]
-#![warn(rust_2018_idioms)]
-
-extern crate conduit;
-extern crate conduit_middleware;
-extern crate time;
-
 use conduit::{header, Body, HeaderMap, Method, RequestExt, Response, StatusCode};
 use conduit_middleware::{AfterResult, Middleware};
 use std::borrow::Cow;
@@ -112,14 +105,12 @@ fn parse_asctime(string: &str) -> Result<OffsetDateTime, ParseError> {
 
 #[cfg(test)]
 mod tests {
-    extern crate conduit_test;
-
-    use self::conduit_test::{MockRequest, ResponseExt};
     use conduit::{
         box_error, header, Body, Handler, HandlerResult, HeaderMap, Method, RequestExt, Response,
         StatusCode,
     };
     use conduit_middleware::MiddlewareBuilder;
+    use conduit_test::{MockRequest, ResponseExt};
     use time::{Duration, OffsetDateTime};
 
     use super::ConditionalGet;
