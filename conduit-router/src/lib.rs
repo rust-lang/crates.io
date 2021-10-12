@@ -4,14 +4,9 @@
 extern crate tracing;
 
 use std::collections::hash_map::{Entry, HashMap};
-use std::error::Error;
-use std::fmt;
 
 use conduit::{box_error, Handler, HandlerResult, Method, RequestExt};
 use route_recognizer::{Match, Params, Router};
-
-static UNKNOWN_METHOD: &str = "Invalid method";
-static NOT_FOUND: &str = "Path not found";
 
 #[derive(Default)]
 pub struct RouteBuilder {
@@ -38,9 +33,11 @@ impl conduit::Handler for WrappedHandler {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum RouterError {
+    #[error("Invalid method")]
     UnknownMethod,
+    #[error("Path not found")]
     PathNotFound,
 }
 
@@ -140,22 +137,6 @@ impl conduit::Handler for RouteBuilder {
     }
 }
 
-impl Error for RouterError {
-    fn description(&self) -> &str {
-        match self {
-            Self::UnknownMethod => UNKNOWN_METHOD,
-            Self::PathNotFound => NOT_FOUND,
-        }
-    }
-}
-
-impl fmt::Display for RouterError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        #[allow(deprecated)]
-        self.description().fmt(f)
-    }
-}
-
 pub trait RequestParams<'a> {
     fn params(self) -> &'a Params;
 }
@@ -215,7 +196,7 @@ mod tests {
         let mut req = MockRequest::new(Method::POST, "/nonexistent");
         let err = router.call(&mut req).err().unwrap();
 
-        assert_eq!(err.to_string(), super::NOT_FOUND);
+        assert_eq!(err.to_string(), "Path not found");
     }
 
     #[test]
@@ -226,7 +207,7 @@ mod tests {
         let mut req = MockRequest::new(Method::DELETE, "/posts/1");
         let err = router.call(&mut req).err().unwrap();
 
-        assert_eq!(err.to_string(), super::UNKNOWN_METHOD);
+        assert_eq!(err.to_string(), "Invalid method");
     }
 
     #[test]
