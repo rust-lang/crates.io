@@ -1,6 +1,3 @@
-#![warn(rust_2018_idioms)]
-extern crate conduit;
-
 use std::borrow::Cow;
 use std::io::{Cursor, Read};
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
