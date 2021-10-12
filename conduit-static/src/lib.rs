@@ -20,7 +20,6 @@ impl Static {
 }
 
 impl Handler for Static {
-    #[allow(deprecated)]
     fn call(&self, request: &mut dyn RequestExt) -> HandlerResult {
         let request_path = &request.path()[1..];
         if request_path.contains("..") {
