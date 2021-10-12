@@ -4,5 +4,11 @@ members = [
     "conduit-middleware",
     "conduit-router",
     "conduit-test",
-    "example",
+    "examples/*",
 ]
+
+[patch.crates-io]
+# we override the `conduit` package path here until we have imported the
+# `civet` crate into this repository. `civet` is needed by the examples, but
+# has a dependency on `conduit`.
+conduit = { path = "conduit" }
