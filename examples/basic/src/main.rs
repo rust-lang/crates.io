@@ -1,12 +1,7 @@
-extern crate civet;
-extern crate conduit;
-extern crate conduit_router;
-
-use std::sync::mpsc::channel;
-
 use civet::{Config, Server};
 use conduit::{Body, HttpResult, RequestExt, Response};
 use conduit_router::{RequestParams, RouteBuilder};
+use std::sync::mpsc::channel;
 
 fn name(req: &mut dyn RequestExt) -> HttpResult {
     let name = req.params().find("name").unwrap();
