@@ -3,6 +3,7 @@ members = [
     "conduit",
     "conduit-middleware",
     "conduit-router",
+    "conduit-static",
     "conduit-test",
     "examples/*",
 ]
