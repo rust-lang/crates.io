@@ -6,6 +6,7 @@ authors = ["wycats@gmail.com",
 description = "Middleware for serving static files for conduit"
 repository = "https://github.com/conduit-rust/conduit-static"
 license = "MIT"
+edition = "2018"
 
 [dependencies]
 conduit = { version = "0.9.0-alpha.5", path = "../conduit" }

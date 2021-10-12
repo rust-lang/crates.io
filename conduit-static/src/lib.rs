@@ -1,15 +1,5 @@
-#![allow(trivial_casts)]
-#![warn(rust_2018_idioms)]
-#![cfg_attr(test, deny(warnings))]
-
-extern crate conduit;
-extern crate conduit_mime_types as mime;
-extern crate filetime;
-#[cfg(test)]
-extern crate tempdir;
-extern crate time;
-
 use conduit::{box_error, header, Body, Handler, HandlerResult, RequestExt, Response, StatusCode};
+use conduit_mime_types as mime;
 use filetime::FileTime;
 use std::fs::File;
 use std::path::{Path, PathBuf};
@@ -70,15 +60,13 @@ fn not_found() -> Response<Body> {
 
 #[cfg(test)]
 mod tests {
-    extern crate conduit_test;
-
     use std::fs::{self, File};
     use std::io::prelude::*;
     use tempdir::TempDir;
 
-    use self::conduit_test::{MockRequest, ResponseExt};
+    use crate::Static;
     use conduit::{header, Handler, Method, StatusCode};
-    use Static;
+    use conduit_test::{MockRequest, ResponseExt};
 
     #[test]
     fn test_static() {
