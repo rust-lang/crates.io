@@ -82,6 +82,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "conduit-conditional-get"
+version = "0.9.0-alpha.3"
+dependencies = [
+ "conduit",
+ "conduit-middleware",
+ "conduit-test",
+ "time",
+]
+
+[[package]]
 name = "conduit-middleware"
 version = "0.9.0-alpha.4"
 dependencies = [

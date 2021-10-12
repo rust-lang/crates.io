@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "conduit",
+    "conduit-conditional-get",
     "conduit-middleware",
     "conduit-router",
     "conduit-static",
