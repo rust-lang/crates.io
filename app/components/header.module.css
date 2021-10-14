@@ -12,7 +12,7 @@
         "logo search nav" auto /
         auto 1fr auto;
     align-items: center;
-    padding: 10px;
+    padding: 10px 20px;
     color: white;
 
     a {
@@ -47,6 +47,8 @@
 .logo {
     width: 60px;
     height: auto;
+    /* negative margin to account for blank space in the image */
+    margin-left: -10px;
     margin-right: 10px;
 }
 
@@ -60,8 +62,6 @@
     border: none;
     color: black;
     width: 100%;
-    margin-left: 16px;
-    margin-right: 16px;
     padding: 5px 5px 5px 25px;
     background-color: white;
     background-image: url('/assets/search.png');
@@ -80,6 +80,8 @@
 
 .search-input-lg {
     composes: search-input;
+    margin-left: 16px;
+    margin-right: 16px;
 
     @media only screen and (max-width: 820px) {
         display: none;
@@ -89,7 +91,7 @@
 .search-input-sm {
     composes: search-input;
     display: none;
-    margin: 0 10px 10px;
+    margin: 10px 0;
 
     @media only screen and (max-width: 820px) {
         display: unset;
@@ -115,7 +117,6 @@
     display: flex;
     align-items: center;
     text-align: right;
-    margin-right: 5px;
 
     @media only screen and (max-width: 900px) {
         display: none;
@@ -125,7 +126,6 @@
 .menu {
     grid-area: menu;
     text-align: right;
-    margin-right: 5px;
     display: none;
 
     @media only screen and (max-width: 900px) {
