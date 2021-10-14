@@ -2259,7 +2259,6 @@ checksum = "34cdf658088ed85c94dd900f30bef0ab53d6f12c93723f1e596453fe4d9c1b3a"
 dependencies = [
  "conduit",
  "conduit-middleware",
- "conduit-router",
  "sentry-core",
 ]
 
