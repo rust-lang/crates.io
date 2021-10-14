@@ -37,6 +37,7 @@
     "trailingComma": "all"
   },
   "dependencies": {
+    "@juggle/resize-observer": "3.3.1",
     "@sentry/browser": "6.13.3",
     "@sentry/integrations": "6.13.3",
     "chart.js": "3.5.1",
