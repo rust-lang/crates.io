@@ -11,7 +11,7 @@ export default class ApplicationRoute extends Route {
   @service playground;
   @service sentry;
 
-  beforeModel() {
+  async beforeModel() {
     this.router.on('routeDidChange', () => {
       this.sentry.configureScope(scope => {
         scope.setTag('routeName', this.router.currentRouteName);
@@ -31,6 +31,13 @@ export default class ApplicationRoute extends Route {
     this.preloadPlaygroundCratesTask.perform().catch(() => {
       // ignore all errors since we're only preloading here
     });
+
+    // load ResizeObserver polyfill, only if required.
+    if (!('ResizeObserver' in window)) {
+      console.debug('Loading ResizeObserver polyfill…');
+      let module = await import('@juggle/resize-observer');
+      window.ResizeObserver = module.ResizeObserver;
+    }
   }
 
   @action loading(transition) {
