@@ -151,11 +151,17 @@ struct C(pub fn(&mut dyn RequestExt) -> EndpointResult);
 
 impl Handler for C {
     fn call(&self, req: &mut dyn RequestExt) -> HandlerResult {
-        // Allow blocking individual routes by their pattern through the `BLOCKED_ROUTES`
-        // environment variable. This is not in a middleware because we need access to
-        // `RoutePattern` before executing the response handler.
         if let Some(pattern) = req.extensions().find::<RoutePattern>() {
-            if req.app().config.blocked_routes.contains(pattern.pattern()) {
+            let pattern = pattern.pattern();
+
+            // Configure the Sentry `transaction` field *before* we handle the request,
+            // but *after* the conduit-router has figured out which handler to use.
+            sentry::configure_scope(|scope| scope.set_transaction(Some(pattern)));
+
+            // Allow blocking individual routes by their pattern through the `BLOCKED_ROUTES`
+            // environment variable. This is not in a middleware because we need access to
+            // `RoutePattern` before executing the response handler.
+            if req.app().config.blocked_routes.contains(pattern) {
                 return Ok(RouteBlocked.response().unwrap());
             }
         }
