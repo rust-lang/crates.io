@@ -6,6 +6,8 @@
     </LinkTo>
 
     <form local-class="desktop-search-form" action='/search' {{on "submit" (prevent-default this.search)}} data-test-search-form>
+      {{! template-lint-disable require-input-label}}
+      {{! disabled due to https://github.com/ember-template-lint/ember-template-lint/issues/2141 }}
       <input
         type="text"
         local-class="search"
@@ -19,9 +21,9 @@
         autofocus="autofocus"
         spellcheck="false"
         required
+        aria-label="Search"
         data-test-search-input
       >
-      <label for="cargo-desktop-search" local-class="search-label">Search</label>
       {{on-key 's' (focus '#cargo-desktop-search')}}
       {{on-key 'S' (focus '#cargo-desktop-search')}}
       {{on-key 'shift+s' (focus '#cargo-desktop-search')}}
@@ -148,14 +150,13 @@
         type="text"
         local-class="search"
         name="q"
-        id="cargo-mobile-search"
         placeholder="Search"
         value={{this.header.searchValue}}
         oninput={{this.updateSearchValue}}
         autocorrect="off"
         required
+        aria-label="Search"
       >
-      <label for="cargo-mobile-search" local-class="search-label">Search</label>
     </form>
   </div>
 </header>
