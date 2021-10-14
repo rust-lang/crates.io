@@ -23,9 +23,11 @@ pub fn init() -> ClientInitGuard {
     let release = dotenv::var("HEROKU_SLUG_COMMIT").ok().map(Into::into);
 
     let opts = ClientOptions {
+        auto_session_tracking: true,
         dsn,
         environment,
         release,
+        session_mode: sentry::SessionMode::Request,
         ..Default::default()
     };
 

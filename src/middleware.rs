@@ -32,6 +32,7 @@ use conduit_conditional_get::ConditionalGet;
 use conduit_cookie::{Middleware as Cookie, SessionMiddleware};
 use conduit_middleware::MiddlewareBuilder;
 use conduit_router::RouteBuilder;
+use sentry_conduit::SentryMiddleware;
 
 use std::env;
 use std::sync::Arc;
@@ -46,6 +47,7 @@ pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBui
     if env != Env::Test {
         m.add(ensure_well_formed_500::EnsureWellFormed500);
         m.add(log_request::LogRequests::default());
+        m.around(SentryMiddleware::default());
     }
 
     if env == Env::Development {
