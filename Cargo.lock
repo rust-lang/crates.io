@@ -128,7 +128,7 @@ dependencies = [
 
 [[package]]
 name = "conduit-static"
-version = "0.9.0-alpha.3"
+version = "0.9.0-alpha.4"
 dependencies = [
  "conduit",
  "conduit-mime-types",
