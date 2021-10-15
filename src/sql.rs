@@ -1,4 +1,8 @@
+mod semver_triple;
+
 use diesel::sql_types::{Array, Date, Double, Interval, Text, Timestamp};
+
+pub use semver_triple::SemverTriple;
 
 sql_function!(#[aggregate] fn array_agg<T>(x: T) -> Array<T>);
 sql_function!(fn canon_crate_name(x: Text) -> Text);
