@@ -7,14 +7,12 @@ use time::OffsetDateTime;
 
 pub struct Static {
     path: PathBuf,
-    types: mime::Types,
 }
 
 impl Static {
     pub fn new<P: AsRef<Path>>(path: P) -> Static {
         Static {
             path: path.as_ref().to_path_buf(),
-            types: mime::Types::new().expect("Couldn't load mime-types"),
         }
     }
 }
@@ -27,7 +25,7 @@ impl Handler for Static {
         }
 
         let path = self.path.join(request_path);
-        let mime = self.types.mime_for_path(&path);
+        let mime = mime::mime_for_path(&path).unwrap_or("application/octet-stream");
         let file = match File::open(&path) {
             Ok(f) => f,
             Err(..) => return Ok(not_found()),
@@ -80,7 +78,7 @@ mod tests {
         let res = handler.call(&mut req).expect("No response");
         assert_eq!(
             res.headers().get(header::CONTENT_TYPE).unwrap(),
-            "text/plain"
+            "application/toml"
         );
         assert_eq!(res.headers().get(header::CONTENT_LENGTH).unwrap(), "9");
         assert_eq!(*res.into_cow(), b"[package]"[..]);

@@ -10,7 +10,7 @@ edition = "2018"
 
 [dependencies]
 conduit = { version = "0.9.0-alpha.5", path = "../conduit" }
-conduit-mime-types = "0.7"
+conduit-mime-types = "0.8"
 time = { version = "0.2", default-features = false, features = ["std"] }
 filetime = "0.2"
 
