@@ -24,7 +24,13 @@ pub fn init() {
         fs::create_dir_all(root().parent().unwrap()).unwrap();
     });
 
-    let bare = git2::Repository::init_bare(&bare()).unwrap();
+    let bare = git2::Repository::init_opts(
+        &bare(),
+        git2::RepositoryInitOptions::new()
+            .bare(true)
+            .initial_head("master"),
+    )
+    .unwrap();
     let mut config = bare.config().unwrap();
     config.set_str("user.name", "name").unwrap();
     config.set_str("user.email", "email").unwrap();
