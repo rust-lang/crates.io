@@ -31,6 +31,7 @@ rustdoc-args = [
 [dependencies]
 anyhow = "1.0"
 base64 = "0.13"
+bigdecimal = { version = ">= 0.0.10, < 0.2.0", features = ["serde"] }
 cargo-registry-markdown = { path = "cargo-registry-markdown" }
 cargo-registry-s3 = { path = "cargo-registry-s3" }
 chrono = { version = "0.4.19", features = ["serde"] }
@@ -49,7 +50,7 @@ cookie = { version = "0.15", features = ["secure"] }
 dashmap = { version = "4.0.2", features = ["raw-api"] }
 derive_deref = "1.1.1"
 dialoguer = "0.9"
-diesel = { version = "1.4.8", features = ["postgres", "serde_json", "chrono", "r2d2"] }
+diesel = { version = "1.4.8", features = ["postgres", "serde_json", "chrono", "numeric", "r2d2"] }
 diesel_full_text_search = "1.0.1"
 diesel_migrations = { version = "1.4.0", features = ["postgres"] }
 dotenv = "0.15"
