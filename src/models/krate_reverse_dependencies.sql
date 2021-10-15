@@ -12,7 +12,7 @@ SELECT *, COUNT(*) OVER () as total FROM (
         SELECT versions.*,
         row_number() OVER (
             PARTITION BY crate_id
-            ORDER BY to_semver_no_prerelease(num) DESC NULLS LAST
+            ORDER BY semver_no_prerelease DESC NULLS LAST
         ) rn
         FROM versions
         WHERE NOT yanked
