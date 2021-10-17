@@ -1,6 +1,7 @@
 {
     "extends": [
-        "config:js-app",
+        "config:base",
+        ":pinAllExceptPeerDependencies",
         ":dependencyDashboard",
         ":maintainLockFilesWeekly",
         ":prConcurrentLimitNone",
