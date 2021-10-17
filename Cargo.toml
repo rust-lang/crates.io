@@ -14,13 +14,13 @@ conduit = "0.9.0-alpha.4"
 hyper = { version = "0.14", features = ["server", "http1", "stream", "tcp"] }
 http = "0.2"
 percent-encoding = "2"
-tracing = { version = "0.1", features = ["log"] }
+tracing = "0.1"
 tokio = { version = "1", features = ["fs"] }
 tokio-stream = "0.1"
 tower-service = "0.3"
 
 [dev-dependencies]
 conduit-router = "0.9.0-alpha.3"
-env_logger = "0.8"
 futures-util = "0.3"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+tracing-subscriber = "0.2.22"

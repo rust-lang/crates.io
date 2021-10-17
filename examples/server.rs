@@ -9,7 +9,7 @@ use std::thread::sleep;
 
 #[tokio::main]
 async fn main() {
-    env_logger::init();
+    tracing_subscriber::fmt::init();
 
     let app = build_conduit_handler();
     let addr = ([127, 0, 0, 1], 12345).into();
