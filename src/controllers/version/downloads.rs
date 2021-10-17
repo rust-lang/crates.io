@@ -22,10 +22,14 @@ pub fn download(req: &mut dyn RequestExt) -> EndpointResult {
 
     let cache_key = (crate_name.to_string(), version.to_string());
     if let Some(version_id) = app.version_id_cacher.get(&cache_key) {
+        app.instance_metrics.version_id_cache_hits.inc();
+
         // The increment does not happen instantly, but it's deferred to be executed in a batch
         // along with other downloads. See crate::downloads_counter for the implementation.
         app.downloads_counter.increment(version_id);
     } else {
+        app.instance_metrics.version_id_cache_misses.inc();
+
         // When no database connection is ready unconditional redirects will be performed. This could
         // happen if the pool is not healthy or if an operator manually configured the application to
         // always perform unconditional redirects (for example as part of the mitigations for an

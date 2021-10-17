@@ -50,6 +50,11 @@ metrics! {
         pub downloads_select_query_execution_time: Histogram,
         /// Number of download requests that are not counted yet.
         downloads_not_counted_total: IntGauge,
+
+        /// Number of version ID cache hits on the download endpoint.
+        pub version_id_cache_hits: IntCounter,
+        /// Number of version ID cache misses on the download endpoint.
+        pub version_id_cache_misses: IntCounter,
     }
 
     // All instance metrics will be prefixed with this namespace.
