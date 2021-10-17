@@ -58,37 +58,41 @@
       </time>
     </div>
 
-    <div local-class="metadata-row">
-      {{#if @version.crate_size}}
-        <span local-class="bytes">
-          {{svg-jar "weight"}}
-          {{pretty-bytes @version.crate_size}}
-        </span>
-      {{/if}}
+    {{#if (or @version.crate_size @version.license @version.featureList)}}
+      <div local-class="metadata-row">
+        {{#if @version.crate_size}}
+          <span local-class="bytes">
+            {{svg-jar "weight"}}
+            {{pretty-bytes @version.crate_size}}
+          </span>
+        {{/if}}
 
-      <span local-class="license">
-        {{svg-jar "license"}}
-        <LicenseExpression @license={{@version.license}} />
-      </span>
+        {{#if @version.license}}
+          <span local-class="license">
+            {{svg-jar "license"}}
+            <LicenseExpression @license={{@version.license}} />
+          </span>
+        {{/if}}
 
-      {{#if @version.featureList}}
-        <span local-class="num-features" data-test-feature-list>
-          {{svg-jar "checkbox"}}
-          {{@version.featureList.length}} {{if (eq @version.featureList.length 1) "Feature" "Features"}}
+        {{#if @version.featureList}}
+          <span local-class="num-features" data-test-feature-list>
+            {{svg-jar "checkbox"}}
+            {{@version.featureList.length}} {{if (eq @version.featureList.length 1) "Feature" "Features"}}
 
-          <EmberTooltip>
-            <ul local-class="feature-list">
-              {{#each @version.featureList as |feature|}}
-                <li>
-                  {{svg-jar (if feature.isDefault "checkbox" "checkbox-empty")}}
-                  {{feature.name}}
-                </li>
-              {{/each}}
-            </ul>
-          </EmberTooltip>
-        </span>
-      {{/if}}
-    </div>
+            <EmberTooltip>
+              <ul local-class="feature-list">
+                {{#each @version.featureList as |feature|}}
+                  <li>
+                    {{svg-jar (if feature.isDefault "checkbox" "checkbox-empty")}}
+                    {{feature.name}}
+                  </li>
+                {{/each}}
+              </ul>
+            </EmberTooltip>
+          </span>
+        {{/if}}
+      </div>
+    {{/if}}
   </div>
 
   {{#if this.isOwner}}
