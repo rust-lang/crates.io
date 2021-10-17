@@ -14,8 +14,7 @@
         "reviewersSampleSize": 1
     },
     "rust": {
-        "dependencyDashboardApproval": true,
-        "rangeStrategy": "bump"
+        "dependencyDashboardApproval": true
     },
     "postUpdateOptions": ["yarnDedupeFewer"],
     "packageRules": [{
@@ -24,6 +23,9 @@
     }, {
         "matchPackageNames": ["@percy/cli", "webpack"],
         "extends": ["schedule:weekly"]
+    }, {
+        "matchLanguages": ["rust"],
+        "rangeStrategy": "bump"
     }, {
         "matchLanguages": ["rust"],
         "matchUpdateTypes": ["lockFileMaintenance"],
