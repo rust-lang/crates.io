@@ -8,9 +8,6 @@
         ":prHourlyLimitNone",
         ":semanticCommitsDisabled"
     ],
-    "docker": {
-        "enabled": false
-    },
     "js": {
         "labels": ["A-frontend"],
         "reviewers": ["locks", "pichfl", "Turbo87"],
