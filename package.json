@@ -51,6 +51,7 @@
     "tracked-toolbox": "1.2.3"
   },
   "devDependencies": {
+    "@babel/eslint-parser": "7.15.8",
     "@ember/optional-features": "2.0.0",
     "@ember/render-modifiers": "2.0.0",
     "@ember/test-helpers": "2.5.0",
@@ -62,7 +63,6 @@
     "@percy/cli": "1.0.0-beta.68",
     "@percy/ember": "3.0.0",
     "@zestia/ember-auto-focus": "4.1.7",
-    "babel-eslint": "10.1.0",
     "broccoli-asset-rev": "3.0.0",
     "ember-a11y-testing": "4.2.0",
     "ember-api-actions": "0.2.9",
