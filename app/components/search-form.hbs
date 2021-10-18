@@ -1,0 +1,47 @@
+<form
+  local-class="form"
+  action="/search"
+  role="search"
+  data-test-search-form
+  ...attributes
+  {{on "submit" (prevent-default this.search)}}
+>
+  {{! template-lint-disable require-input-label}}
+  {{! disabled due to https://github.com/ember-template-lint/ember-template-lint/issues/2141 }}
+  <input
+    type="text"
+    local-class="input-lg"
+    name="q"
+    id="cargo-desktop-search"
+    placeholder="Click or press 'S' to search..."
+    value={{this.header.searchValue}}
+    oninput={{this.updateSearchValue}}
+    autocorrect="off"
+    autocapitalize="off"
+    autofocus="autofocus"
+    spellcheck="false"
+    required
+    aria-label="Search"
+    data-test-search-input
+  >
+
+  {{! Second input fields for narrow screens because CSS does not allow us to change the placeholder }}
+  <input
+    type="text"
+    local-class="input-sm"
+    name="q"
+    placeholder="Search"
+    value={{this.header.searchValue}}
+    oninput={{this.updateSearchValue}}
+    autocorrect="off"
+    required
+    aria-label="Search"
+  >
+
+  {{! Hidden submit button to enable enter-to-submit behavior for form with multiple inputs }}
+  <button type="submit" local-class="submit-button">Submit</button>
+
+  {{on-key 's' (focus '#cargo-desktop-search')}}
+  {{on-key 'S' (focus '#cargo-desktop-search')}}
+  {{on-key 'shift+s' (focus '#cargo-desktop-search')}}
+</form>

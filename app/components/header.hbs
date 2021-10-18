@@ -5,46 +5,7 @@
       <h1>crates.io</h1>
     </LinkTo>
 
-    <form local-class="search-form" action='/search' role="search" {{on "submit" (prevent-default this.search)}} data-test-search-form>
-      {{! template-lint-disable require-input-label}}
-      {{! disabled due to https://github.com/ember-template-lint/ember-template-lint/issues/2141 }}
-      <input
-        type="text"
-        local-class="search-input-lg"
-        name="q"
-        id="cargo-desktop-search"
-        placeholder="Click or press 'S' to search..."
-        value={{this.header.searchValue}}
-        oninput={{this.updateSearchValue}}
-        autocorrect="off"
-        autocapitalize="off"
-        autofocus="autofocus"
-        spellcheck="false"
-        required
-        aria-label="Search"
-        data-test-search-input
-      >
-
-      {{! Second input fields for narrow screens because CSS does not allow us to change the placeholder }}
-      <input
-        type="text"
-        local-class="search-input-sm"
-        name="q"
-        placeholder="Search"
-        value={{this.header.searchValue}}
-        oninput={{this.updateSearchValue}}
-        autocorrect="off"
-        required
-        aria-label="Search"
-      >
-
-      {{! Hidden submit button to enable enter-to-submit behavior for form with multiple inputs }}
-      <button type="submit" local-class="submit-button">Submit</button>
-
-      {{on-key 's' (focus '#cargo-desktop-search')}}
-      {{on-key 'S' (focus '#cargo-desktop-search')}}
-      {{on-key 'shift+s' (focus '#cargo-desktop-search')}}
-    </form>
+    <SearchForm local-class="search-form" />
 
     <nav local-class='nav'>
       <LinkTo @route="crates" @query={{hash letter=null page=1}} data-test-all-crates-link>
