@@ -54,6 +54,11 @@
 
 .search-form {
     grid-area: search;
+    padding: 0 16px;
+
+    @media only screen and (max-width: 820px) {
+        padding: 10px 0;
+    }
 }
 
 .sep {
