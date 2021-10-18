@@ -8,6 +8,7 @@
     color: black;
     width: 100%;
     padding: 5px 5px 5px 25px;
+    margin: 0 16px;
     background-color: white;
     background-image: url('/assets/search.png');
     background-repeat: no-repeat;
@@ -21,12 +22,14 @@
         outline: none;
         box-shadow: 0 0 0 4px var(--yellow500);
     }
+
+    @media only screen and (max-width: 820px) {
+        margin: 10px 0;
+    }
 }
 
 .input-lg {
     composes: input;
-    margin-left: 16px;
-    margin-right: 16px;
 
     @media only screen and (max-width: 820px) {
         display: none;
@@ -36,7 +39,6 @@
 .input-sm {
     composes: input;
     display: none;
-    margin: 10px 0;
 
     @media only screen and (max-width: 820px) {
         display: unset;
