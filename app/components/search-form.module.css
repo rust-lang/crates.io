@@ -17,6 +17,13 @@
     box-shadow: none;
     transition: box-shadow 150ms;
 
+    .size-big & {
+        font-size: 125%;
+        padding: 5px 5px 5px 35px;
+        background-position: 10px 7px;
+        background-size: 20px 21px;
+    }
+
     &:focus {
         outline: none;
         box-shadow: 0 0 0 4px var(--yellow500);

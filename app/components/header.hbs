@@ -1,11 +1,17 @@
-<header local-class="header">
+<header local-class="header {{if @hero "hero"}}">
   <div local-class="header-inner">
     <LinkTo @route="index" local-class="index-link">
       <img src="/assets/Cargo-Logo-Small.png" role="presentation" alt="" local-class="logo">
       <h1>crates.io</h1>
     </LinkTo>
 
-    <SearchForm local-class="search-form" />
+    <div local-class="search-form">
+      <h1 local-class="hero-title">
+        The Rust community&rsquo;s crate registry
+      </h1>
+
+      <SearchForm @size={{if @hero "big"}} />
+    </div>
 
     <nav local-class='nav'>
       <LinkTo @route="crates" @query={{hash letter=null page=1}} data-test-all-crates-link>
