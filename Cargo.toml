@@ -43,7 +43,7 @@ conduit-cookie = "0.9.0-alpha.5"
 conduit-git-http-backend = "0.9.0-alpha.2"
 conduit-hyper = "0.3.0-alpha.7"
 conduit-middleware = "0.9.0-alpha.4"
-conduit-router = "0.9.0-alpha.6"
+conduit-router = "0.9.0-alpha.7"
 conduit-static = "0.9.0-alpha.3"
 
 cookie = { version = "0.15", features = ["secure"] }
