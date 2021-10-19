@@ -5,10 +5,9 @@ use crate::{
     schema::versions,
 };
 
-use clap::Clap;
 use diesel::prelude::*;
 
-#[derive(Clap, Debug)]
+#[derive(clap::Parser, Debug)]
 #[clap(
     name = "delete-version",
     about = "Purge all references to a crate's version from the database.",

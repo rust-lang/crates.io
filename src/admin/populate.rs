@@ -1,10 +1,9 @@
 use crate::{db, schema::version_downloads};
 
-use clap::Clap;
 use diesel::prelude::*;
 use rand::{thread_rng, Rng};
 
-#[derive(Clap, Debug)]
+#[derive(clap::Parser, Debug)]
 #[clap(
     name = "populate",
     about = "Populate a set of dummy download statistics for a specific version in the database."

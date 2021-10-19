@@ -8,7 +8,6 @@ use std::{io::Read, path::Path, sync::Arc, thread};
 
 use cargo_registry_markdown::text_to_html;
 use chrono::{TimeZone, Utc};
-use clap::Clap;
 use diesel::{dsl::any, prelude::*};
 use flate2::read::GzDecoder;
 use reqwest::{blocking::Client, header};
@@ -17,7 +16,7 @@ use tar::{self, Archive};
 const CACHE_CONTROL_README: &str = "public,max-age=604800";
 const USER_AGENT: &str = "crates-admin";
 
-#[derive(Clap, Debug)]
+#[derive(clap::Parser, Debug)]
 #[clap(
     name = "render-readmes",
     about = "Iterates over every crate versions ever uploaded and (re-)renders their \

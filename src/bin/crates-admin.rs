@@ -5,16 +5,14 @@ use cargo_registry::admin::{
     transfer_crates, verify_token,
 };
 
-use clap::Clap;
-
-#[derive(Clap, Debug)]
+#[derive(clap::Parser, Debug)]
 #[clap(name = "crates-admin")]
 struct Opts {
     #[clap(subcommand)]
     command: SubCommand,
 }
 
-#[derive(Clap, Debug)]
+#[derive(clap::Parser, Debug)]
 enum SubCommand {
     DeleteCrate(delete_crate::Opts),
     DeleteVersion(delete_version::Opts),
@@ -27,6 +25,8 @@ enum SubCommand {
 }
 
 fn main() -> anyhow::Result<()> {
+    use clap::Parser;
+
     let opts: Opts = Opts::parse();
 
     match opts.command {

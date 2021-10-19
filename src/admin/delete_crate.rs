@@ -1,9 +1,8 @@
 use crate::{admin::dialoguer, db, models::Crate, schema::crates};
 
-use clap::Clap;
 use diesel::prelude::*;
 
-#[derive(Clap, Debug)]
+#[derive(clap::Parser, Debug)]
 #[clap(
     name = "delete-crate",
     about = "Purge all references to a crate from the database.",

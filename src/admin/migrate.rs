@@ -3,7 +3,7 @@ use anyhow::Error;
 static CATEGORIES_TOML: &str = include_str!("../boot/categories.toml");
 diesel_migrations::embed_migrations!("./migrations");
 
-#[derive(clap::Clap, Debug, Copy, Clone)]
+#[derive(clap::Parser, Debug, Copy, Clone)]
 #[clap(
     name = "migrate",
     about = "Verify config, migrate the database, and other release tasks."
