@@ -1,5 +1,4 @@
 use anyhow::Result;
-use clap::Clap;
 use std::str::FromStr;
 
 use crate::admin::on_call;
@@ -24,7 +23,7 @@ impl FromStr for EventType {
     }
 }
 
-#[derive(Clap, Debug)]
+#[derive(clap::Parser, Debug)]
 #[clap(name = "test-pagerduty", about = "Send a test event to pagerduty")]
 pub struct Opts {
     #[clap(possible_values = &["trigger", "acknowledge", "resolve"])]

@@ -6,10 +6,9 @@ use crate::{
 };
 use std::process::exit;
 
-use clap::Clap;
 use diesel::prelude::*;
 
-#[derive(Clap, Debug)]
+#[derive(clap::Parser, Debug)]
 #[clap(
     name = "transfer-crates",
     about = "Transfer all crates from one user to another."
