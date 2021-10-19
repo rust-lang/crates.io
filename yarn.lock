@@ -1171,7 +1171,7 @@
     ember-cli-htmlbars "^5.7.1"
     ember-destroyable-polyfill "^2.0.3"
 
-"@ember/test-waiters@^2.3.0", "@ember/test-waiters@^2.4.3":
+"@ember/test-waiters@^2.3.0":
   version "2.4.5"
   resolved "https://registry.yarnpkg.com/@ember/test-waiters/-/test-waiters-2.4.5.tgz#6e8e34d1bc46a9b0cc22cb11cc5936046e926031"
   integrity sha512-833JvHtHdEfBfKXgvmw+6oziFOpVfD4NQrc04Ztj59A11K9FPNfZ3P8YydL7LFTtdd7UfJ/cYCLAm+OwUxbotQ==
@@ -1182,7 +1182,7 @@
     ember-cli-version-checker "^5.1.2"
     semver "^7.3.5"
 
-"@ember/test-waiters@^3.0.0":
+"@ember/test-waiters@^2.4.3 || ^3.0.0", "@ember/test-waiters@^3.0.0":
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/@ember/test-waiters/-/test-waiters-3.0.0.tgz#b66a35cd5b78ec3c296a6f5f5fb3852780a5d3c8"
   integrity sha512-z6+gIlq/rXLKroWv2wxAoiiLtgSOGQFCw6nUufERausV+jLnA7CYbWwzEo5R7XaOejSDpgA5d6haXIBsD5j0oQ==
@@ -6107,12 +6107,12 @@ elliptic@^6.5.3:
     minimalistic-assert "^1.0.1"
     minimalistic-crypto-utils "^1.0.1"
 
-ember-a11y-testing@4.2.0:
-  version "4.2.0"
-  resolved "https://registry.yarnpkg.com/ember-a11y-testing/-/ember-a11y-testing-4.2.0.tgz#3220dd7ef32bc325e5e5c21618ab0907ee2577d3"
-  integrity sha512-ckKTPO9cdKLh2VqWzuGtLq5KLOw4TjOcumBD9V5zmF9WiALl7aUy/nplbcPjWNPXzfxg/X1yqNxX/YNoGVn6pw==
+ember-a11y-testing@4.2.1:
+  version "4.2.1"
+  resolved "https://registry.yarnpkg.com/ember-a11y-testing/-/ember-a11y-testing-4.2.1.tgz#7e4280166d67d22145257fcf4f730446f0c3194d"
+  integrity sha512-coGXx8isrzbtS0W3OxS2bI4af1FzFZNtYHq+KrMaUW7hJdrbq1s0CGl6XpH8NaVZ0oTO0t9P0+pwu42c/Ozzzg==
   dependencies:
-    "@ember/test-waiters" "^2.4.3"
+    "@ember/test-waiters" "^2.4.3 || ^3.0.0"
     "@scalvert/ember-setup-middleware-reporter" "^0.1.1"
     axe-core "^4.1.4"
     body-parser "^1.19.0"
@@ -6120,7 +6120,7 @@ ember-a11y-testing@4.2.0:
     date-and-time "^1.0.0"
     ember-auto-import "^1.11.2"
     ember-cli-babel "^7.26.3"
-    ember-cli-typescript "^3.0.0"
+    ember-cli-typescript "^4.2.1"
     ember-cli-version-checker "^5.1.2"
     ember-destroyable-polyfill "^2.0.1"
     fs-extra "^10.0.0"
@@ -6634,7 +6634,7 @@ ember-cli-typescript@^3.0.0, ember-cli-typescript@^3.1.3, ember-cli-typescript@^
     stagehand "^1.0.0"
     walk-sync "^2.0.0"
 
-ember-cli-typescript@^4.0.0, ember-cli-typescript@^4.1.0:
+ember-cli-typescript@^4.0.0, ember-cli-typescript@^4.1.0, ember-cli-typescript@^4.2.1:
   version "4.2.1"
   resolved "https://registry.yarnpkg.com/ember-cli-typescript/-/ember-cli-typescript-4.2.1.tgz#54d08fc90318cc986f3ea562f93ce58a6cc4c24d"
   integrity sha512-0iKTZ+/wH6UB/VTWKvGuXlmwiE8HSIGcxHamwNhEC5x1mN3z8RfvsFZdQWYUzIWFN2Tek0gmepGRPTwWdBYl/A==
