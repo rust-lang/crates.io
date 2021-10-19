@@ -92,7 +92,7 @@ url = "2.1"
 claim = "0.5"
 conduit-test = "0.9.0-alpha.5"
 hyper-tls = "0.5"
-lazy_static = "1.0"
+lazy_static = "1.4"
 tokio = "1.5.0"
 tower-service = "0.3.0"
 
