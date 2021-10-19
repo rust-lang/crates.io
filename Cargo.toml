@@ -51,7 +51,7 @@ dashmap = { version = "4.0.2", features = ["raw-api"] }
 derive_deref = "1.1.1"
 dialoguer = "0.9"
 diesel = { version = "1.4.8", features = ["postgres", "serde_json", "chrono", "r2d2"] }
-diesel_full_text_search = "1.0.0"
+diesel_full_text_search = "1.0.1"
 diesel_migrations = { version = "1.4.0", features = ["postgres"] }
 dotenv = "0.15"
 flate2 = "1.0"
