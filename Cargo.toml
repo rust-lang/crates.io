@@ -94,7 +94,7 @@ conduit-test = "0.9.0-alpha.5"
 hyper-tls = "0.5"
 lazy_static = "1.4"
 tokio = "1.5.0"
-tower-service = "0.3.0"
+tower-service = "0.3.1"
 
 [build-dependencies]
 diesel = { version = "1.4.8", features = ["postgres"] }
