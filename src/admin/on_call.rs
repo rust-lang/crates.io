@@ -62,6 +62,7 @@ struct FullEvent {
 }
 
 #[derive(serde::Deserialize, Debug)]
+#[allow(dead_code)] // workaround for a potential bug in Rust v1.57.0-beta.1
 struct InvalidEvent {
     message: String,
     errors: Vec<String>,
