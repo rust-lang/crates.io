@@ -2253,13 +2253,12 @@ dependencies = [
 
 [[package]]
 name = "sentry-conduit"
-version = "0.2.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b5986c05b82a52b92c26ddd2da6ac06aad59f43ba6db81786307e0bbe63e74b2"
+checksum = "34cdf658088ed85c94dd900f30bef0ab53d6f12c93723f1e596453fe4d9c1b3a"
 dependencies = [
  "conduit",
  "conduit-middleware",
- "conduit-router",
  "sentry-core",
 ]
 
