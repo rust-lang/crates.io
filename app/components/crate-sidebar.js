@@ -1,5 +1,3 @@
-import { computed } from '@ember/object';
-import { gt, readOnly } from '@ember/object/computed';
 import { inject as service } from '@ember/service';
 import Component from '@glimmer/component';
 
@@ -7,20 +5,9 @@ import { didCancel } from 'ember-concurrency';
 
 import { simplifyUrl } from './crate-sidebar/link';
 
-const NUM_VERSIONS = 5;
-
 export default class DownloadGraph extends Component {
   @service playground;
   @service sentry;
-
-  @readOnly('args.crate.versions') sortedVersions;
-
-  @computed('sortedVersions')
-  get smallSortedVersions() {
-    return this.sortedVersions.slice(0, NUM_VERSIONS);
-  }
-
-  @gt('sortedVersions.length', NUM_VERSIONS) hasMoreVersions;
 
   get showHomepage() {
     let { repository, homepage } = this.args.crate;
