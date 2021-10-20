@@ -1,9 +1,9 @@
 import { A } from '@ember/array';
 import Controller from '@ember/controller';
 import { computed } from '@ember/object';
-import { alias } from '@ember/object/computed';
 
 import { task } from 'ember-concurrency';
+import { alias } from 'macro-decorators';
 
 import ajax from '../utils/ajax';
 
