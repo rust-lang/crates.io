@@ -33,6 +33,6 @@ module('Service | Playground', function (hooks) {
     this.server.get('https://play.rust-lang.org/meta/crates', {}, 500);
 
     await assert.rejects(this.playground.loadCratesTask.perform());
-    assert.strictEqual(this.playground.crates, undefined);
+    assert.notOk(this.playground.crates);
   });
 });

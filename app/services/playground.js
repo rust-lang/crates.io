@@ -1,7 +1,7 @@
-import { alias } from '@ember/object/computed';
 import Service from '@ember/service';
 
 import { task } from 'ember-concurrency';
+import { alias } from 'macro-decorators';
 
 import ajax from '../utils/ajax';
 
