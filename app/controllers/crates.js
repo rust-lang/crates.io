@@ -1,21 +1,22 @@
 import Controller from '@ember/controller';
-import { action, computed } from '@ember/object';
-import { readOnly } from '@ember/object/computed';
+import { action } from '@ember/object';
+import { tracked } from '@glimmer/tracking';
+
+import { reads } from 'macro-decorators';
 
 import { pagination } from '../utils/pagination';
 
 export default class CratesController extends Controller {
   queryParams = ['letter', 'page', 'per_page', 'sort'];
-  letter = null;
-  page = '1';
-  per_page = 50;
-  sort = 'alpha';
+  @tracked letter = null;
+  @tracked page = '1';
+  @tracked per_page = 50;
+  @tracked sort = 'alpha';
   alphabet = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'];
 
-  @readOnly('model.meta.total') totalItems;
+  @reads('model.meta.total') totalItems;
   @pagination() pagination;
 
-  @computed('sort')
   get currentSortBy() {
     if (this.sort === 'downloads') {
       return 'All-Time Downloads';
