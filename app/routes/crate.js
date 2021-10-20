@@ -3,6 +3,7 @@ import { inject as service } from '@ember/service';
 
 export default class CrateRoute extends Route {
   @service notifications;
+  @service store;
 
   async model(params) {
     try {

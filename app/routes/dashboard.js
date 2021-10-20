@@ -1,9 +1,12 @@
 import { A } from '@ember/array';
+import { inject as service } from '@ember/service';
 import RSVP from 'rsvp';
 
 import AuthenticatedRoute from './-authenticated-route';
 
 export default class DashboardRoute extends AuthenticatedRoute {
+  @service store;
+
   async model() {
     let user = this.session.currentUser;
 

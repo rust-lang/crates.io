@@ -4,6 +4,7 @@ import { inject as service } from '@ember/service';
 
 export default class KeywordRoute extends Route {
   @service notifications;
+  @service store;
 
   async model({ keyword_id }) {
     try {

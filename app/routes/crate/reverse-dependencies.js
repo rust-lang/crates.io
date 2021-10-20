@@ -3,6 +3,7 @@ import { inject as service } from '@ember/service';
 
 export default class ReverseDependenciesRoute extends Route {
   @service notifications;
+  @service store;
 
   queryParams = {
     page: { refreshModel: true },

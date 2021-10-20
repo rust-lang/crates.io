@@ -1,8 +1,11 @@
 import Model, { attr } from '@ember-data/model';
+import { inject as service } from '@ember/service';
 
 import { memberAction } from 'ember-api-actions';
 
 export default class User extends Model {
+  @service store;
+
   @attr email;
   @attr email_verified;
   @attr email_verification_sent;

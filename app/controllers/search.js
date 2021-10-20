@@ -1,5 +1,6 @@
 import Controller from '@ember/controller';
 import { action } from '@ember/object';
+import { inject as service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 
 import { task } from 'ember-concurrency';
@@ -8,6 +9,8 @@ import { bool, reads } from 'macro-decorators';
 import { pagination } from '../utils/pagination';
 
 export default class SearchController extends Controller {
+  @service store;
+
   queryParams = ['all_keywords', 'page', 'per_page', 'q', 'sort'];
   @tracked all_keywords;
   @tracked q = null;

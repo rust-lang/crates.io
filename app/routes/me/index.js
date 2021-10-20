@@ -1,6 +1,10 @@
+import { inject as service } from '@ember/service';
+
 import AuthenticatedRoute from '../-authenticated-route';
 
 export default class MeIndexRoute extends AuthenticatedRoute {
+  @service store;
+
   async model() {
     let { ownedCrates, currentUser: user } = this.session;
 
