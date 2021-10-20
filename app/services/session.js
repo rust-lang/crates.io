@@ -1,7 +1,7 @@
 import { alias } from '@ember/object/computed';
 import Service, { inject as service } from '@ember/service';
 
-import { race, rawTimeout, task, waitForEvent } from 'ember-concurrency';
+import { dropTask, race, rawTimeout, task, waitForEvent } from 'ember-concurrency';
 import window from 'ember-window-mock';
 
 import ajax from '../utils/ajax';
@@ -46,7 +46,7 @@ export default class SessionService extends Service {
    * @see https://developer.github.com/v3/oauth/#redirect-users-to-request-github-access
    * @see `github-authorize` route
    */
-  @task(function* () {
+  @task *loginTask() {
     let windowDimensions = [
       'width=1000',
       'height=450',
@@ -109,20 +109,18 @@ export default class SessionService extends Service {
     if (transition) {
       transition.retry();
     }
-  })
-  loginTask;
+  }
 
-  @task(function* (window) {
+  @task *windowCloseWatcherTask(window) {
     while (true) {
       if (window.closed) {
         return { closed: true };
       }
       yield rawTimeout(10);
     }
-  })
-  windowCloseWatcherTask;
+  }
 
-  @task(function* () {
+  @task *logoutTask() {
     yield ajax(`/api/private/session`, { method: 'DELETE' });
 
     this.savedTransition = null;
@@ -132,10 +130,9 @@ export default class SessionService extends Service {
     this.sentry.setUser(null);
 
     this.router.transitionTo('index');
-  })
-  logoutTask;
+  }
 
-  @(task(function* () {
+  @dropTask *loadUserTask() {
     if (!this.isLoggedIn) return {};
 
     let response;
@@ -152,6 +149,5 @@ export default class SessionService extends Service {
     this.sentry.setUser({ id });
 
     return { currentUser, ownedCrates };
-  }).drop())
-  loadUserTask;
+  }
 }

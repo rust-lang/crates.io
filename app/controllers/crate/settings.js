@@ -9,7 +9,7 @@ export default class CrateSettingsController extends Controller {
   crate = null;
   username = '';
 
-  @task(function* () {
+  @task *addOwnerTask() {
     const username = this.username;
 
     try {
@@ -22,10 +22,8 @@ export default class CrateSettingsController extends Controller {
         this.notifications.error('Error sending invite');
       }
     }
-  })
-  addOwnerTask;
-
-  @task(function* (owner) {
+  }
+  @task *removeOwnerTask(owner) {
     try {
       yield this.crate.removeOwner(owner.get('login'));
 
@@ -45,6 +43,5 @@ export default class CrateSettingsController extends Controller {
 
       this.notifications.error(message);
     }
-  })
-  removeOwnerTask;
+  }
 }

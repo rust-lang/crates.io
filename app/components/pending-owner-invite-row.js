@@ -10,7 +10,7 @@ export default class PendingOwnerInviteRow extends Component {
   @tracked isAccepted = false;
   @tracked isDeclined = false;
 
-  @task(function* () {
+  @task *acceptInvitationTask() {
     this.args.invite.set('accepted', true);
 
     try {
@@ -23,10 +23,9 @@ export default class PendingOwnerInviteRow extends Component {
         this.notifications.error('Error in accepting invite');
       }
     }
-  })
-  acceptInvitationTask;
+  }
 
-  @task(function* () {
+  @task *declineInvitationTask() {
     this.args.invite.set('accepted', false);
 
     try {
@@ -39,6 +38,5 @@ export default class PendingOwnerInviteRow extends Component {
         this.notifications.error('Error in declining invite');
       }
     }
-  })
-  declineInvitationTask;
+  }
 }

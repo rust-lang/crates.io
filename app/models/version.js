@@ -124,10 +124,9 @@ export default class Version extends Model {
   }).keepLatest())
   loadReadmeTask;
 
-  @task(function* () {
+  @task *loadDocsBuildsTask() {
     return yield ajax(`https://docs.rs/crate/${this.crateName}/${this.num}/builds.json`);
-  })
-  loadDocsBuildsTask;
+  }
 
   @computed('loadDocsBuildsTask.lastSuccessful.value')
   get hasDocsRsLink() {

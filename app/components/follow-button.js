@@ -29,7 +29,7 @@ export default class extends Component {
   }).drop())
   followStateTask;
 
-  @task(function* () {
+  @task *toggleFollowTask() {
     let crate = this.args.crate;
 
     try {
@@ -42,6 +42,5 @@ export default class extends Component {
         } crate. Please try again later!`,
       );
     }
-  })
-  toggleFollowTask;
+  }
 }

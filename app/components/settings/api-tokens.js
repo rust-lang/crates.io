@@ -19,7 +19,7 @@ export default class ApiTokens extends Component {
     this.newToken = this.store.createRecord('api-token');
   }
 
-  @task(function* () {
+  @task *saveTokenTask() {
     let token = this.newToken;
 
     try {
@@ -34,10 +34,9 @@ export default class ApiTokens extends Component {
 
       this.notifications.error(msg);
     }
-  })
-  saveTokenTask;
+  }
 
-  @task(function* (token) {
+  @task *revokeTokenTask(token) {
     try {
       yield token.destroyRecord();
       this.args.tokens.removeObject(token);
@@ -49,6 +48,5 @@ export default class ApiTokens extends Component {
 
       this.notifications.error(msg);
     }
-  })
-  revokeTokenTask;
+  }
 }
