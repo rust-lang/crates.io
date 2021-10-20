@@ -2,6 +2,7 @@ import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
 export default class CrateRoute extends Route {
+  @service headData;
   @service notifications;
   @service store;
 
@@ -19,24 +20,13 @@ export default class CrateRoute extends Route {
     }
   }
 
-  afterModel(model) {
-    if (model && typeof model.get === 'function') {
-      this.setHeadTags(model);
-    }
+  setupController(controller, model) {
+    super.setupController(...arguments);
+    this.headData.crate = model;
   }
 
-  setHeadTags(model) {
-    let headTags = [
-      {
-        type: 'meta',
-        tagId: 'meta-description-tag',
-        attrs: {
-          name: 'description',
-          content: model.get('description') || 'A package for Rust.',
-        },
-      },
-    ];
-
-    this.set('headTags', headTags);
+  resetController() {
+    super.resetController(...arguments);
+    this.headData.crate = null;
   }
 }
