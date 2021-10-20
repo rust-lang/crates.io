@@ -1,7 +1,8 @@
 import Controller from '@ember/controller';
-import { action, computed } from '@ember/object';
-import { alias } from '@ember/object/computed';
+import { action } from '@ember/object';
 import Ember from 'ember';
+
+import { alias } from 'macro-decorators';
 
 import ajax from '../../utils/ajax';
 
@@ -13,7 +14,6 @@ export default class MeIndexController extends Controller {
   emailNotificationsError = false;
   emailNotificationsSuccess = false;
 
-  @computed
   get hasEmailNotificationFeature() {
     return Ember.testing;
   }
