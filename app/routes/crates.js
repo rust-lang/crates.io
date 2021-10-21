@@ -1,6 +1,9 @@
 import Route from '@ember/routing/route';
+import { inject as service } from '@ember/service';
 
 export default class CratesRoute extends Route {
+  @service store;
+
   queryParams = {
     letter: { refreshModel: true },
     page: { refreshModel: true },

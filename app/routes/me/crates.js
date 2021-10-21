@@ -1,6 +1,10 @@
+import { inject as service } from '@ember/service';
+
 import AuthenticatedRoute from '../-authenticated-route';
 
 export default class MeCratesRoute extends AuthenticatedRoute {
+  @service store;
+
   queryParams = {
     page: { refreshModel: true },
     sort: { refreshModel: true },

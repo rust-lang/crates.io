@@ -7,6 +7,7 @@ import { reads } from 'macro-decorators';
 
 export default class IndexController extends Controller {
   @service fetcher;
+  @service store;
 
   @reads('dataTask.lastSuccessful.value') model;
 
