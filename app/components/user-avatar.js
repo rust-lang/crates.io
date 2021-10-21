@@ -1,8 +1,7 @@
-import { readOnly } from '@ember/object/computed';
 import Component from '@glimmer/component';
 
 export default class UserAvatar extends Component {
-  get width() {
+  get size() {
     if (this.args.size === 'medium') {
       return 85;
     } else if (this.args.size === 'medium-small') {
@@ -11,8 +10,6 @@ export default class UserAvatar extends Component {
       return 22; // small
     }
   }
-
-  @readOnly('width') height;
 
   get alt() {
     return this.args.user.name !== null
@@ -34,6 +31,6 @@ export default class UserAvatar extends Component {
   }
 
   get src() {
-    return `${this.args.user.avatar}&s=${this.width * 2}`;
+    return `${this.args.user.avatar}&s=${this.size * 2}`;
   }
 }
