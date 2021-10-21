@@ -1,8 +1,7 @@
 import Model, { attr, belongsTo, hasMany } from '@ember-data/model';
-import { computed } from '@ember/object';
-import { alias } from '@ember/object/computed';
 
 import { task } from 'ember-concurrency';
+import { alias } from 'macro-decorators';
 import semverParse from 'semver/functions/parse';
 import { cached } from 'tracked-toolbox';
 
@@ -28,10 +27,9 @@ export default class Version extends Model {
   @hasMany('dependency', { async: true }) dependencies;
   @hasMany('version-download', { async: true }) version_downloads;
 
-  @computed('crate', function () {
+  get crateName() {
     return this.belongsTo('crate').id();
-  })
-  crateName;
+  }
 
   get isNew() {
     return Date.now() - this.created_at.getTime() < EIGHT_DAYS;
@@ -128,7 +126,6 @@ export default class Version extends Model {
     return yield ajax(`https://docs.rs/crate/${this.crateName}/${this.num}/builds.json`);
   }
 
-  @computed('loadDocsBuildsTask.lastSuccessful.value')
   get hasDocsRsLink() {
     let docsBuilds = this.loadDocsBuildsTask.lastSuccessful?.value;
     return docsBuilds?.[0]?.build_status === true;

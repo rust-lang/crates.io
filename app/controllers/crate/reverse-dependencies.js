@@ -1,15 +1,17 @@
 import Controller from '@ember/controller';
-import { readOnly } from '@ember/object/computed';
+import { tracked } from '@glimmer/tracking';
+
+import { reads } from 'macro-decorators';
 
 import { pagination } from '../../utils/pagination';
 
 export default class ReverseDependenciesController extends Controller {
   queryParams = ['page', 'per_page'];
-  page = '1';
-  per_page = 10;
-  crate = null;
+  @tracked page = '1';
+  @tracked per_page = 10;
+  @tracked crate = null;
 
-  @readOnly('model.meta.total') totalItems;
+  @reads('model.meta.total') totalItems;
 
   @pagination() pagination;
 }

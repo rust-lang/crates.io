@@ -1,9 +1,9 @@
-import { computed } from '@ember/object';
+import macro from 'macro-decorators';
 
 const VIEWABLE_PAGES = 9;
 
 export function pagination() {
-  return computed('page', 'per_page', 'totalItems', function () {
+  return macro(function () {
     let { page, per_page: perPage, totalItems } = this;
     return _pagination(page, perPage, totalItems);
   });

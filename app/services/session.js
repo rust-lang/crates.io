@@ -1,8 +1,8 @@
-import { alias } from '@ember/object/computed';
 import Service, { inject as service } from '@ember/service';
 
 import { dropTask, race, rawTimeout, task, waitForEvent } from 'ember-concurrency';
 import window from 'ember-window-mock';
+import { alias } from 'macro-decorators';
 
 import ajax from '../utils/ajax';
 import * as localStorage from '../utils/local-storage';

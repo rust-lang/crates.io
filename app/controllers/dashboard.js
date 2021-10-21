@@ -1,9 +1,8 @@
 import { A } from '@ember/array';
 import Controller from '@ember/controller';
-import { computed } from '@ember/object';
-import { alias } from '@ember/object/computed';
 
 import { task } from 'ember-concurrency';
+import { alias } from 'macro-decorators';
 
 import ajax from '../utils/ajax';
 
@@ -17,22 +16,18 @@ export default class DashboardController extends Controller {
   @alias('model.myFollowing') myFollowing;
   @alias('model.myStats') myStats;
 
-  @computed('myCrates.[]')
   get visibleCrates() {
     return this.myCrates.slice(0, TO_SHOW);
   }
 
-  @computed('myFollowing.[]')
   get visibleFollowing() {
     return this.myFollowing.slice(0, TO_SHOW);
   }
 
-  @computed('myCrates.[]')
   get hasMoreCrates() {
     return this.myCrates.length > TO_SHOW;
   }
 
-  @computed('myFollowing.[]')
   get hasMoreFollowing() {
     return this.myFollowing.length > TO_SHOW;
   }

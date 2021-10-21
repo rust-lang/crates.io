@@ -1,16 +1,15 @@
 import Controller from '@ember/controller';
-import { action, computed } from '@ember/object';
-import { readOnly } from '@ember/object/computed';
+import { action } from '@ember/object';
 import { inject as service } from '@ember/service';
 
 import { task } from 'ember-concurrency';
+import { reads } from 'macro-decorators';
 
 export default class IndexController extends Controller {
   @service fetcher;
 
-  @readOnly('dataTask.lastSuccessful.value') model;
+  @reads('dataTask.lastSuccessful.value') model;
 
-  @computed('dataTask.{lastSuccessful,isRunning}')
   get hasData() {
     return this.dataTask.lastSuccessful && !this.dataTask.isRunning;
   }
