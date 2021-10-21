@@ -3,7 +3,7 @@ import { htmlSafe } from '@ember/template';
 import { tracked } from '@glimmer/tracking';
 import Ember from 'ember';
 
-import { didCancel, rawTimeout, task } from 'ember-concurrency';
+import { didCancel, dropTask, rawTimeout, task } from 'ember-concurrency';
 
 const SPEED = 200;
 
@@ -24,7 +24,7 @@ export default class ProgressService extends Service {
     });
   }
 
-  @task(function* (promise) {
+  @task *counterTask(promise) {
     this.updateTask.perform().catch(error => {
       if (!didCancel(error)) {
         // this task shouldn't be able to fail, but if it does we'll let Sentry know
@@ -33,10 +33,9 @@ export default class ProgressService extends Service {
     });
 
     yield promise;
-  })
-  counterTask;
+  }
 
-  @(task(function* () {
+  @dropTask *updateTask() {
     if (Ember.testing) return;
 
     let progress = 0;
@@ -69,6 +68,5 @@ export default class ProgressService extends Service {
     this._style = `transition: width ${SPEED}ms linear; width: 100%`;
     yield rawTimeout(SPEED);
     this._style = `transition: opacity ${SPEED * 2}ms linear; width: 100%; opacity: 0`;
-  }).drop())
-  updateTask;
+  }
 }

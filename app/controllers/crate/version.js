@@ -25,7 +25,7 @@ export default class CrateVersionController extends Controller {
 
   @alias('loadReadmeTask.last.value') readme;
 
-  @task(function* () {
+  @task *loadReadmeTask() {
     let version = this.currentVersion;
 
     let readme = version.loadReadmeTask.lastSuccessful
@@ -41,6 +41,5 @@ export default class CrateVersionController extends Controller {
     }
 
     return readme;
-  })
-  loadReadmeTask;
+  }
 }

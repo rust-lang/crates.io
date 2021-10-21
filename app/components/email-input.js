@@ -12,7 +12,7 @@ export default class EmailInput extends Component {
   @tracked isEditing = false;
   @tracked disableResend = false;
 
-  @task(function* () {
+  @task *resendEmailTask() {
     try {
       yield this.args.user.resendVerificationEmail();
       this.disableResend = true;
@@ -23,8 +23,7 @@ export default class EmailInput extends Component {
         this.notifications.error('Unknown error in resending message');
       }
     }
-  })
-  resendEmailTask;
+  }
 
   @action
   editEmail() {
@@ -32,7 +31,7 @@ export default class EmailInput extends Component {
     this.isEditing = true;
   }
 
-  @task(function* () {
+  @task *saveEmailTask() {
     let userEmail = this.value;
     let user = this.args.user;
 
@@ -49,6 +48,5 @@ export default class EmailInput extends Component {
 
       this.notifications.error(`Error in saving email: ${msg}`);
     }
-  })
-  saveEmailTask;
+  }
 }

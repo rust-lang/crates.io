@@ -37,7 +37,7 @@ export default class DashboardController extends Controller {
     return this.myFollowing.length > TO_SHOW;
   }
 
-  @task(function* () {
+  @task *loadMoreTask() {
     let page = this.myFeed.length / 10 + 1;
 
     let data = yield ajax(`/api/v1/me/updates?page=${page}`);
@@ -45,6 +45,5 @@ export default class DashboardController extends Controller {
 
     this.myFeed.pushObjects(versions);
     this.set('hasMore', data.meta.more);
-  })
-  loadMoreTask;
+  }
 }
