@@ -136,8 +136,6 @@ impl fmt::Display for ServiceUnavailable {
 
 impl AppError for TooManyRequests {
     fn response(&self) -> Option<AppResponse> {
-        use std::convert::TryInto;
-
         const HTTP_DATE_FORMAT: &str = "%a, %d %b %Y %H:%M:%S GMT";
         let retry_after = self.retry_after.format(HTTP_DATE_FORMAT);
 

@@ -326,6 +326,7 @@ fn replay_http(
     }
 
     async {
+        let _ = &exchange;
         assert_eq!(
             to_bytes(req.into_body()).await.unwrap(),
             base64::decode(&exchange.request.body).unwrap()
