@@ -75,6 +75,7 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
     // Create a transaction on the database, if there are no errors,
     // commit the transactions to record a new or updated crate.
     conn.transaction(|| {
+        let _ = &new_crate;
         let name = new_crate.name;
         let vers = &*new_crate.vers;
         let links = new_crate.links;
