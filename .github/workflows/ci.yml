@@ -118,26 +118,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Cleanup pre-installed Rust toolchains
-        # The pre-installed toolchain is under root permission, and this would
-        # make tarball fail to extract. Here we remove the symlink and install
-        # our own Rust toolchain if necessary.
-        run: |
-          which rustup
-          which cargo
-          if [[ -L "$HOME/.cargo" && -L "$HOME/.rustup" ]]; then
-              rm -v "$HOME/.rustup"
-              rm -v "$HOME/.cargo"
-          fi
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-
       - name: Install ${{ matrix.rust }} Rust
         run: |
-          if [[ ! -d "$HOME/.cargo" || ! -d "$HOME/.rustup" ]]; then
-              curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup-init.sh
-              sh rustup-init.sh -y --default-toolchain none
-          fi
-          rustup set profile minimal
           rustup update ${{ matrix.rust }}
           rustup default ${{ matrix.rust }}
 
