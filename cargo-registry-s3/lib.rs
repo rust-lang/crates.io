@@ -104,7 +104,7 @@ impl Bucket {
         );
         let signature = {
             let key = self.secret_key.as_bytes();
-            let mut h = Hmac::<Sha1>::new_varkey(key).expect("HMAC can take key of any size");
+            let mut h = Hmac::<Sha1>::new_from_slice(key).expect("HMAC can take key of any size");
             h.update(string.as_bytes());
             let res = h.finalize().into_bytes();
             base64::encode(&res)
