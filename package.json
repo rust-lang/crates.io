@@ -58,7 +58,7 @@
     "@ember/test-helpers": "2.5.0",
     "@embroider/compat": "0.47.1",
     "@embroider/core": "0.47.1",
-    "@embroider/webpack": "0.47.0",
+    "@embroider/webpack": "0.47.1",
     "@glimmer/component": "1.0.4",
     "@glimmer/tracking": "1.0.4",
     "@percy/cli": "1.0.0-beta.70",
