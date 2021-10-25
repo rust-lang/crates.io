@@ -6296,13 +6296,13 @@ ember-cli-get-component-path-option@^1.0.0:
   resolved "https://registry.yarnpkg.com/ember-cli-get-component-path-option/-/ember-cli-get-component-path-option-1.0.0.tgz#0d7b595559e2f9050abed804f1d8eff1b08bc771"
   integrity sha1-DXtZVVni+QUKvtgE8djv8bCLx3E=
 
-ember-cli-head@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/ember-cli-head/-/ember-cli-head-1.0.0.tgz#72a71b3db2039b66585c754fd33bc3c36ff86fc1"
-  integrity sha512-7gj8H/KSF+e4pxSKxj9F8hq9PUt2vOjCaOvRdxdmyoHnko4QbiUnv8ASpXuop+m15eNIUGOlaLrJJ3jM8oQEUw==
+ember-cli-head@2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/ember-cli-head/-/ember-cli-head-2.0.0.tgz#ce294341026fd643067712a438008d6139f5208d"
+  integrity sha512-i9qwljBlpzU/ei0xN+FiCHUvU1ZdjVXk0OzRKoeMZJK3m4p29CvB095klT0q+PigvYFYHIyTaeSWmbgjP8CZiw==
   dependencies:
-    ember-cli-babel "^7.19.0"
-    ember-cli-htmlbars "^4.3.1"
+    ember-cli-babel "^7.26.3"
+    ember-cli-htmlbars "^5.7.1"
     ember-in-element-polyfill "^1.0.0"
 
 ember-cli-htmlbars@6.0.0:
@@ -6336,7 +6336,7 @@ ember-cli-htmlbars@^3.0.0:
     json-stable-stringify "^1.0.1"
     strip-bom "^3.0.0"
 
-ember-cli-htmlbars@^4.2.0, ember-cli-htmlbars@^4.2.2, ember-cli-htmlbars@^4.2.3, ember-cli-htmlbars@^4.3.1:
+ember-cli-htmlbars@^4.2.0, ember-cli-htmlbars@^4.2.3:
   version "4.5.0"
   resolved "https://registry.yarnpkg.com/ember-cli-htmlbars/-/ember-cli-htmlbars-4.5.0.tgz#d299e4f7eba6f30dc723ee086906cc550beb252e"
   integrity sha512-bYJpK1pqFu9AadDAGTw05g2LMNzY8xTCIqQm7dMJmKEoUpLRFbPf4SfHXrktzDh7Q5iggl6Skzf1M0bPlIxARw==
@@ -6395,16 +6395,6 @@ ember-cli-lodash-subset@2.0.1, ember-cli-lodash-subset@^2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/ember-cli-lodash-subset/-/ember-cli-lodash-subset-2.0.1.tgz#20cb68a790fe0fde2488ddfd8efbb7df6fe766f2"
   integrity sha1-IMtop5D+D94kiN39jvu332/nZvI=
-
-ember-cli-meta-tags@6.2.0:
-  version "6.2.0"
-  resolved "https://registry.yarnpkg.com/ember-cli-meta-tags/-/ember-cli-meta-tags-6.2.0.tgz#e7a56326a2ad0ffc6f1174c8bb15394d2b98f6ec"
-  integrity sha512-bWznJttpkyscpM1MolVBdxvBsKSNOAYO4t6rN4huBl4WWup74spOpO+O/3T+qdgWTQ4UEyNaQMZK5EeFT+hScg==
-  dependencies:
-    ember-cli-babel "^7.26.6"
-    ember-cli-head "^1.0.0"
-    ember-cli-htmlbars "^4.2.2"
-    ember-compatibility-helpers "^1.1.2"
 
 ember-cli-mirage@2.2.0:
   version "2.2.0"
