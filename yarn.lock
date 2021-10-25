@@ -1171,6 +1171,16 @@
     ember-cli-htmlbars "^5.7.1"
     ember-destroyable-polyfill "^2.0.3"
 
+"@ember/test-waiters@3.0.0", "@ember/test-waiters@^2.4.3 || ^3.0.0", "@ember/test-waiters@^3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@ember/test-waiters/-/test-waiters-3.0.0.tgz#b66a35cd5b78ec3c296a6f5f5fb3852780a5d3c8"
+  integrity sha512-z6+gIlq/rXLKroWv2wxAoiiLtgSOGQFCw6nUufERausV+jLnA7CYbWwzEo5R7XaOejSDpgA5d6haXIBsD5j0oQ==
+  dependencies:
+    calculate-cache-key-for-tree "^2.0.0"
+    ember-cli-babel "^7.26.6"
+    ember-cli-version-checker "^5.1.2"
+    semver "^7.3.5"
+
 "@ember/test-waiters@^2.3.0":
   version "2.4.5"
   resolved "https://registry.yarnpkg.com/@ember/test-waiters/-/test-waiters-2.4.5.tgz#6e8e34d1bc46a9b0cc22cb11cc5936046e926031"
@@ -1179,16 +1189,6 @@
     calculate-cache-key-for-tree "^2.0.0"
     ember-cli-babel "^7.26.6"
     ember-cli-typescript "^4.1.0"
-    ember-cli-version-checker "^5.1.2"
-    semver "^7.3.5"
-
-"@ember/test-waiters@^2.4.3 || ^3.0.0", "@ember/test-waiters@^3.0.0":
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/@ember/test-waiters/-/test-waiters-3.0.0.tgz#b66a35cd5b78ec3c296a6f5f5fb3852780a5d3c8"
-  integrity sha512-z6+gIlq/rXLKroWv2wxAoiiLtgSOGQFCw6nUufERausV+jLnA7CYbWwzEo5R7XaOejSDpgA5d6haXIBsD5j0oQ==
-  dependencies:
-    calculate-cache-key-for-tree "^2.0.0"
-    ember-cli-babel "^7.26.6"
     ember-cli-version-checker "^5.1.2"
     semver "^7.3.5"
 
