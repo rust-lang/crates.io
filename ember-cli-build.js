@@ -46,7 +46,10 @@ module.exports = function (defaults) {
 
   if (USE_EMBROIDER) {
     const { Webpack } = require('@embroider/webpack');
-    return require('@embroider/compat').compatBuild(app, Webpack);
+    return require('@embroider/compat').compatBuild(app, Webpack, {
+      // see https://github.com/embroider-build/embroider/issues/823
+      compatAdapters: new Map([['ember-get-config', null]]),
+    });
   }
 
   return app.toTree();
