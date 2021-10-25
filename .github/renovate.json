@@ -14,7 +14,8 @@
         "reviewersSampleSize": 1
     },
     "rust": {
-        "dependencyDashboardApproval": true
+        "dependencyDashboardApproval": true,
+        "labels": ["A-backend"]
     },
     "postUpdateOptions": ["yarnDedupeFewer"],
     "packageRules": [{
