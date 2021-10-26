@@ -64,7 +64,7 @@ indexmap = { version = "1.7.0", features = ["serde-1"] }
 jemallocator = { version = "0.3", features = ['unprefixed_malloc_on_supported_platforms', 'profiling'] }
 lettre = { version = "0.10.0-rc.3", default-features = false, features = ["file-transport", "smtp-transport", "native-tls", "hostname", "builder"] }
 license-exprs = "1.6"
-minijinja = "0.6.0"
+minijinja = "0.7.0"
 oauth2 = { version = "4.1.0", default-features = false, features = ["reqwest"] }
 parking_lot = "0.11"
 prometheus = { version = "0.13.0", default-features = false }
