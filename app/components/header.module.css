@@ -32,6 +32,20 @@
             "search search" auto /
             auto 1fr;
     }
+
+    .hero & {
+        grid-template:
+            "logo nav" auto
+            "search search" auto /
+            auto 1fr;
+
+        @media only screen and (max-width: 900px) {
+            grid-template:
+                "logo menu" auto
+                "search search" auto /
+                auto 1fr;
+        }
+    }
 }
 
 .index-link {
@@ -54,55 +68,40 @@
 
 .search-form {
     grid-area: search;
-    display: flex;
-}
-
-.search-input {
-    font-size: 90%;
-    border: none;
-    color: black;
-    width: 100%;
-    padding: 5px 5px 5px 25px;
-    background-color: white;
-    background-image: url('/assets/search.png');
-    background-repeat: no-repeat;
-    background-position: 6px 6px;
-    background-size: 14px 15px;
-    border-radius: 15px;
-    box-shadow: none;
-    transition: box-shadow 150ms;
-
-    &:focus {
-        outline: none;
-        box-shadow: 0 0 0 4px var(--yellow500);
-    }
-}
-
-.search-input-lg {
-    composes: search-input;
-    margin-left: 16px;
-    margin-right: 16px;
+    padding: 0 16px;
 
     @media only screen and (max-width: 820px) {
-        display: none;
+        padding: 10px 0;
+    }
+
+    .hero & {
+        justify-self: center;
+        padding: 40px 0 60px;
+
+        @media only screen and (max-width: 450px) {
+            padding: 40px 0 30px;
+        }
     }
 }
 
-.search-input-sm {
-    composes: search-input;
+.hero-title {
     display: none;
-    margin: 10px 0;
+    margin: 0 0 20px;
+    font-size: 45px;
+    color: #dfffdb;
+    text-align: center;
+
+    .hero & {
+        display: block;
+    }
 
     @media only screen and (max-width: 820px) {
-        display: unset;
+        font-size: 30px;
     }
-}
 
-.submit-button {
-    position: absolute;
-    visibility: hidden;
-    width: 0;
-    height: 0;
+    @media only screen and (max-width: 550px) {
+        font-size: 24px;
+    }
 }
 
 .sep {
@@ -119,7 +118,7 @@
     grid-area: nav;
     display: flex;
     align-items: center;
-    text-align: right;
+    justify-self: end;
 
     @media only screen and (max-width: 900px) {
         display: none;
@@ -128,7 +127,7 @@
 
 .menu {
     grid-area: menu;
-    text-align: right;
+    justify-self: end;
     display: none;
 
     @media only screen and (max-width: 900px) {

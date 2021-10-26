@@ -1,7 +1,12 @@
 .title-header {
     text-align: center;
     border-bottom: 5px solid var(--gray-border);
+    margin-top: 25px;
     padding-bottom: 40px;
+
+    @media only screen and (max-width: 570px) {
+        margin-top: 0;
+    }
 
     h1 {
         font-size: 50px;
