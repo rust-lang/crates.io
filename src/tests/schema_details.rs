@@ -33,6 +33,12 @@ fn all_columns_called_version_id_have_a_cascading_foreign_key() {
                 row.table_name
             ),
         };
+
+        if row.table_name == "default_versions" {
+            // We explicitly don't want to enforce this on the default_versions table.
+            continue;
+        }
+
         if !constraint.definition.contains("ON DELETE CASCADE") {
             panic!(
                 "Foreign key {} on table {} should have `ON DELETE CASCADE` \

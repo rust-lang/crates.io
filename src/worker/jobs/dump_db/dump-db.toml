@@ -99,6 +99,12 @@ dependencies = ["crates", "keywords"]
 crate_id = "public"
 keyword_id = "public"
 
+[default_versions]
+dependencies = ["crates", "versions"]
+[default_versions.columns]
+crate_id = "public"
+version_id = "public"
+
 [dependencies]
 dependencies = ["crates", "versions"]
 [dependencies.columns]
