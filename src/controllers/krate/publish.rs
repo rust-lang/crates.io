@@ -425,7 +425,9 @@ mod tests {
         GzEncoder::new(pkg.into_inner().unwrap().as_slice(), Default::default())
             .read_to_end(&mut serialized_archive)
             .unwrap();
-        verify_tarball("foo-0.0.1", &serialized_archive, 512 * 1024 * 1024).unwrap();
-        verify_tarball("bar-0.0.1", &serialized_archive, 512 * 1024 * 1024).unwrap_err();
+
+        let limit = 512 * 1024 * 1024;
+        assert_ok!(verify_tarball("foo-0.0.1", &serialized_archive, limit));
+        assert_err!(verify_tarball("bar-0.0.1", &serialized_archive, limit));
     }
 }
