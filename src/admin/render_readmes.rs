@@ -262,13 +262,13 @@ fn find_file_by_path<R: Read>(
 }
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use std::io::Write;
     use tar;
 
     use super::render_pkg_readme;
 
-    fn add_file<W: Write>(pkg: &mut tar::Builder<W>, path: &str, content: &[u8]) {
+    pub fn add_file<W: Write>(pkg: &mut tar::Builder<W>, path: &str, content: &[u8]) {
         let mut header = tar::Header::new_gnu();
         header.set_size(content.len() as u64);
         header.set_cksum();
