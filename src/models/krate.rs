@@ -311,7 +311,7 @@ impl Crate {
         use crate::schema::versions::dsl::*;
 
         Ok(TopVersions::from_date_version_pairs(
-            self.versions().select((updated_at, num)).load(conn)?,
+            self.versions().select((created_at, num)).load(conn)?,
         ))
     }
 
