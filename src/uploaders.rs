@@ -1,18 +1,14 @@
 use anyhow::Result;
-use conduit::RequestExt;
-use flate2::read::GzDecoder;
 use reqwest::{blocking::Client, header};
-use sha2::{Digest, Sha256};
 
-use crate::util::errors::{cargo_err, internal, AppError, AppResult};
-use crate::util::{LimitErrorReader, Maximums};
+use crate::app::App;
+use crate::util::errors::{internal, AppResult};
 
 use std::env;
 use std::fs::{self, File};
-use std::io::{Cursor, Read};
+use std::io::Cursor;
 use std::sync::Arc;
 
-use crate::middleware::app::RequestApp;
 use crate::models::Crate;
 
 const CACHE_CONTROL_IMMUTABLE: &str = "public,max-age=31536000,immutable";
@@ -129,17 +125,12 @@ impl Uploader {
     /// Uploads a crate and returns the checksum of the uploaded crate file.
     pub fn upload_crate(
         &self,
-        req: &mut dyn RequestExt,
+        app: &Arc<App>,
+        body: Vec<u8>,
         krate: &Crate,
-        maximums: Maximums,
         vers: &semver::Version,
-    ) -> AppResult<[u8; 32]> {
-        let app = Arc::clone(req.app());
+    ) -> AppResult<()> {
         let path = Uploader::crate_path(&krate.name, &vers.to_string());
-        let mut body = Vec::new();
-        LimitErrorReader::new(req.body(), maximums.max_upload_size).read_to_end(&mut body)?;
-        verify_tarball(krate, vers, &body, maximums.max_unpack_size)?;
-        let checksum = Sha256::digest(&body);
         let content_length = body.len() as u64;
         let content = Cursor::new(body);
         let mut extra_headers = header::HeaderMap::new();
@@ -156,7 +147,7 @@ impl Uploader {
             extra_headers,
         )
         .map_err(|e| internal(&format_args!("failed to upload crate: {}", e)))?;
-        Ok(checksum.into())
+        Ok(())
     }
 
     pub(crate) fn upload_readme(
@@ -184,49 +175,4 @@ impl Uploader {
         )?;
         Ok(())
     }
-}
-
-fn verify_tarball(
-    krate: &Crate,
-    vers: &semver::Version,
-    tarball: &[u8],
-    max_unpack: u64,
-) -> AppResult<()> {
-    // All our data is currently encoded with gzip
-    let decoder = GzDecoder::new(tarball);
-
-    // Don't let gzip decompression go into the weeeds, apply a fixed cap after
-    // which point we say the decompressed source is "too large".
-    let decoder = LimitErrorReader::new(decoder, max_unpack);
-
-    // Use this I/O object now to take a peek inside
-    let mut archive = tar::Archive::new(decoder);
-    let prefix = format!("{}-{}", krate.name, vers);
-    for entry in archive.entries()? {
-        let entry = entry.map_err(|err| {
-            err.chain(cargo_err(
-                "uploaded tarball is malformed or too large when decompressed",
-            ))
-        })?;
-
-        // Verify that all entries actually start with `$name-$vers/`.
-        // Historically Cargo didn't verify this on extraction so you could
-        // upload a tarball that contains both `foo-0.1.0/` source code as well
-        // as `bar-0.1.0/` source code, and this could overwrite other crates in
-        // the registry!
-        if !entry.path()?.starts_with(&prefix) {
-            return Err(cargo_err("invalid tarball uploaded"));
-        }
-
-        // Historical versions of the `tar` crate which Cargo uses internally
-        // don't properly prevent hard links and symlinks from overwriting
-        // arbitrary files on the filesystem. As a bit of a hammer we reject any
-        // tarball with these sorts of links. Cargo doesn't currently ever
-        // generate a tarball with these file types so this should work for now.
-        let entry_type = entry.header().entry_type();
-        if entry_type.is_hard_link() || entry_type.is_symlink() {
-            return Err(cargo_err("invalid tarball uploaded"));
-        }
-    }
-    Ok(())
 }
