@@ -1,8 +1,8 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
 use cargo_registry::admin::{
-    delete_crate, delete_version, migrate, populate, render_readmes, test_pagerduty,
-    transfer_crates, verify_token,
+    delete_crate, delete_version, fill_top_versions, migrate, populate, render_readmes,
+    test_pagerduty, transfer_crates, verify_token,
 };
 
 #[derive(clap::Parser, Debug)]
@@ -22,6 +22,7 @@ enum SubCommand {
     TransferCrates(transfer_crates::Opts),
     VerifyToken(verify_token::Opts),
     Migrate(migrate::Opts),
+    FillTopVersions(fill_top_versions::Opts),
 }
 
 fn main() -> anyhow::Result<()> {
@@ -38,6 +39,7 @@ fn main() -> anyhow::Result<()> {
         SubCommand::TransferCrates(opts) => transfer_crates::run(opts),
         SubCommand::VerifyToken(opts) => verify_token::run(opts).unwrap(),
         SubCommand::Migrate(opts) => migrate::run(opts)?,
+        SubCommand::FillTopVersions(opts) => fill_top_versions::run(opts)?,
     }
 
     Ok(())
