@@ -6,9 +6,11 @@
 mod daily_db_maintenance;
 pub mod dump_db;
 mod git;
+mod readmes;
 mod update_downloads;
 
 pub use daily_db_maintenance::daily_db_maintenance;
 pub use dump_db::dump_db;
 pub use git::{add_crate, squash_index, yank};
+pub use readmes::render_and_upload_readme;
 pub use update_downloads::update_downloads;

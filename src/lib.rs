@@ -45,7 +45,6 @@ pub mod github;
 pub mod metrics;
 pub mod middleware;
 mod publish_rate_limit;
-pub mod render;
 pub mod schema;
 pub mod sql;
 mod test_util;
