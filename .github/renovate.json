@@ -28,8 +28,14 @@
         "matchLanguages": ["rust"],
         "rangeStrategy": "bump"
     }, {
+        "matchLanguages": ["js"],
+        "matchUpdateTypes": ["lockFileMaintenance"],
+        "additionalBranchPrefix": "js-",
+        "commitMessageSuffix": "(JS)"
+    }, {
         "matchLanguages": ["rust"],
         "matchUpdateTypes": ["lockFileMaintenance"],
-        "groupName": " Lock file maintenance (Rust)"
+        "additionalBranchPrefix": "rust-",
+        "commitMessageSuffix": "(Rust)"
     }]
 }
