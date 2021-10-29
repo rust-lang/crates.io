@@ -89,9 +89,9 @@ jobs:
   backend:
     name: Backend
     runs-on: ubuntu-20.04
+
+    continue-on-error: ${{ matrix.rust != 'stable' }}
     strategy:
-      # TODO: [ci] should be true if GitHub Actions supports ""allow failures" on matrix
-      fail-fast: false
       matrix:
         rust:
           - stable
