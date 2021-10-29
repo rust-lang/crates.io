@@ -1,6 +1,6 @@
 use std::{fs::File, path::Path};
 
-use crate::tasks::dump_db::configuration::{ColumnVisibility, TableConfig, VisibilityConfig};
+use crate::worker::dump_db::configuration::{ColumnVisibility, TableConfig, VisibilityConfig};
 use swirl::PerformError;
 
 pub fn gen_scripts(export_script: &Path, import_script: &Path) -> Result<(), PerformError> {
