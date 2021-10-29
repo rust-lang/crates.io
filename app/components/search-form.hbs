@@ -2,6 +2,7 @@
   local-class="form {{if (eq @size "big") "size-big"}}"
   action="/search"
   role="search"
+  autocomplete="off"
   data-test-search-form
   ...attributes
   {{on "submit" (prevent-default this.search)}}
