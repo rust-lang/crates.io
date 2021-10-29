@@ -13,6 +13,7 @@ use crate::models::{
     insert_version_owner_action, Badge, Category, Crate, DependencyKind, Keyword, NewCrate,
     NewVersion, Rights, VersionAction,
 };
+use crate::worker;
 
 use crate::render;
 use crate::schema::*;
@@ -223,7 +224,7 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
             yanked: Some(false),
             links,
         };
-        git::add_crate(git_crate).enqueue(&conn)?;
+        worker::add_crate(git_crate).enqueue(&conn)?;
 
         // The `other` field on `PublishWarnings` was introduced to handle a temporary warning
         // that is no longer needed. As such, crates.io currently does not return any `other`

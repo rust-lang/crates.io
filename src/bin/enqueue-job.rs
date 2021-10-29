@@ -1,7 +1,7 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
 use anyhow::{anyhow, Result};
-use cargo_registry::{db, env, git, worker};
+use cargo_registry::{db, env, worker};
 use diesel::prelude::*;
 use swirl::schema::background_jobs::dsl::*;
 use swirl::Job;
@@ -36,7 +36,7 @@ fn main() -> Result<()> {
             Ok(worker::dump_db(database_url, target_name).enqueue(&conn)?)
         }
         "daily_db_maintenance" => Ok(worker::daily_db_maintenance().enqueue(&conn)?),
-        "squash_index" => Ok(git::squash_index().enqueue(&conn)?),
+        "squash_index" => Ok(worker::squash_index().enqueue(&conn)?),
         other => Err(anyhow!("Unrecognized job type `{}`", other)),
     }
 }
