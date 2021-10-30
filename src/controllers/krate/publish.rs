@@ -13,8 +13,8 @@ use crate::models::{
     insert_version_owner_action, Badge, Category, Crate, DependencyKind, Keyword, NewCrate,
     NewVersion, Rights, VersionAction,
 };
+use crate::worker;
 
-use crate::render;
 use crate::schema::*;
 use crate::util::errors::{cargo_err, AppResult};
 use crate::util::{read_fill, read_le_u32, LimitErrorReader, Maximums};
@@ -197,7 +197,7 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
         verify_tarball(&pkg_name, &tarball, maximums.max_unpack_size)?;
 
         if let Some(readme) = new_crate.readme {
-            render::render_and_upload_readme(
+            worker::render_and_upload_readme(
                 version.id,
                 readme,
                 new_crate
@@ -223,7 +223,7 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
             yanked: Some(false),
             links,
         };
-        git::add_crate(git_crate).enqueue(&conn)?;
+        worker::add_crate(git_crate).enqueue(&conn)?;
 
         // The `other` field on `PublishWarnings` was introduced to handle a temporary warning
         // that is no longer needed. As such, crates.io currently does not return any `other`

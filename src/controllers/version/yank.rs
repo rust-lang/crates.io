@@ -4,9 +4,9 @@ use swirl::Job;
 
 use super::{extract_crate_name_and_semver, version_and_crate};
 use crate::controllers::cargo_prelude::*;
-use crate::git;
 use crate::models::Rights;
 use crate::models::{insert_version_owner_action, VersionAction};
+use crate::worker;
 
 /// Handles the `DELETE /crates/:crate_id/:version/yank` route.
 /// This does not delete a crate version, it makes the crate
@@ -50,7 +50,7 @@ fn modify_yank(req: &mut dyn RequestExt, yanked: bool) -> EndpointResult {
 
     insert_version_owner_action(&conn, version.id, user.id, api_token_id, action)?;
 
-    git::yank(krate.name, version, yanked).enqueue(&conn)?;
+    worker::yank(krate.name, version, yanked).enqueue(&conn)?;
 
     ok_true()
 }

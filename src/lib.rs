@@ -45,13 +45,12 @@ pub mod github;
 pub mod metrics;
 pub mod middleware;
 mod publish_rate_limit;
-pub mod render;
 pub mod schema;
 pub mod sql;
-pub mod tasks;
 mod test_util;
 pub mod uploaders;
 pub mod util;
+pub mod worker;
 
 pub mod controllers;
 pub mod models;

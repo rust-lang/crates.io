@@ -1,7 +1,7 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
 use anyhow::{anyhow, Result};
-use cargo_registry::{db, env, git, tasks};
+use cargo_registry::{db, env, worker};
 use diesel::prelude::*;
 use swirl::schema::background_jobs::dsl::*;
 use swirl::Job;
@@ -25,7 +25,7 @@ fn main() -> Result<()> {
                 println!("Did not enqueue update_downloads, existing job already in progress");
                 Ok(())
             } else {
-                Ok(tasks::update_downloads().enqueue(&conn)?)
+                Ok(worker::update_downloads().enqueue(&conn)?)
             }
         }
         "dump_db" => {
@@ -33,10 +33,10 @@ fn main() -> Result<()> {
             let target_name = args
                 .next()
                 .unwrap_or_else(|| String::from("db-dump.tar.gz"));
-            Ok(tasks::dump_db(database_url, target_name).enqueue(&conn)?)
+            Ok(worker::dump_db(database_url, target_name).enqueue(&conn)?)
         }
-        "daily_db_maintenance" => Ok(tasks::daily_db_maintenance().enqueue(&conn)?),
-        "squash_index" => Ok(git::squash_index().enqueue(&conn)?),
+        "daily_db_maintenance" => Ok(worker::daily_db_maintenance().enqueue(&conn)?),
+        "squash_index" => Ok(worker::squash_index().enqueue(&conn)?),
         other => Err(anyhow!("Unrecognized job type `{}`", other)),
     }
 }

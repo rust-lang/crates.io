@@ -1,5 +1,5 @@
 use crate::util::FreshSchema;
-use cargo_registry::tasks::dump_db;
+use cargo_registry::worker::dump_db;
 
 #[test]
 fn dump_db_and_reimport_dump() {
