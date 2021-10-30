@@ -97,7 +97,7 @@ impl RequestExt for ConduitRequest {
     }
 
     fn headers(&self) -> &HeaderMap {
-        &self.parts.headers()
+        self.parts.headers()
     }
 
     /// Returns the length of the buffered body

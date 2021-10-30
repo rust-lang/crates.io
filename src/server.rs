@@ -27,6 +27,6 @@ impl Server {
             async move { Service::from_blocking(handler, remote_addr) }
         });
 
-        hyper::Server::bind(&addr).serve(make_service)
+        hyper::Server::bind(addr).serve(make_service)
     }
 }
