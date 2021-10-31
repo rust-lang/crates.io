@@ -1,7 +1,5 @@
 # conduit-hyper
 
-[![Build Status](https://travis-ci.org/jtgeibel/conduit-hyper.svg?branch=master)](https://travis-ci.org/jtgeibel/conduit-hyper)
-
 This crate integrates a `hyper 0.13` server with a `conduit 0.8` application
 stack.
 
