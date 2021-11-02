@@ -111,13 +111,9 @@ pub fn run(opts: Opts) {
             });
             let client = client.clone();
             let base_config = base_config.clone();
-            let handle = thread::spawn(move || {
+            let handle = thread::spawn::<_, anyhow::Result<()>>(move || {
                 println!("[{}-{}] Rendering README...", krate_name, version.num);
-                let readme = get_readme(base_config.uploader(), &client, &version, &krate_name);
-                if readme.is_err() {
-                    return;
-                }
-                let readme = readme.unwrap();
+                let readme = get_readme(base_config.uploader(), &client, &version, &krate_name)?;
                 let content_length = readme.len() as u64;
                 let content = std::io::Cursor::new(readme);
                 let readme_path = format!("readmes/{0}/{0}-{1}.html", krate_name, version.num);
@@ -126,6 +122,7 @@ pub fn run(opts: Opts) {
                     header::CACHE_CONTROL,
                     header::HeaderValue::from_static(CACHE_CONTROL_README),
                 );
+
                 base_config
                     .uploader()
                     .upload(
@@ -136,18 +133,17 @@ pub fn run(opts: Opts) {
                         "text/html",
                         extra_headers,
                     )
-                    .unwrap_or_else(|_| {
-                        panic!(
-                            "[{}-{}] Couldn't upload file to S3",
-                            krate_name, version.num
-                        )
-                    });
+                    .context("Failed to upload rendered README file to S3")?;
+
+                Ok(())
             });
             tasks.push(handle);
         }
         for handle in tasks {
-            if let Err(err) = handle.join() {
-                println!("Thread panicked: {:?}", err);
+            match handle.join() {
+                Err(err) => println!("Thread panicked: {:?}", err),
+                Ok(Err(err)) => println!("Thread failed: {:?}", err),
+                _ => {}
             }
         }
     }
