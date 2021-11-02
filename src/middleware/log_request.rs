@@ -86,6 +86,8 @@ pub fn add_custom_metadata<V: Display>(req: &mut dyn RequestExt, key: &'static s
         metadata.entries.push((key, value.to_string()));
         req.mut_extensions().insert(metadata);
     }
+
+    sentry::configure_scope(|scope| scope.set_extra(key, value.to_string().into()));
 }
 
 fn report_to_sentry(req: &dyn RequestExt, res: &AfterResult, response_time: u64) {
@@ -119,12 +121,6 @@ fn report_to_sentry(req: &dyn RequestExt, res: &AfterResult, response_time: u64)
         }
 
         scope.set_extra("Response time [ms]", response_time.into());
-
-        if let Some(metadata) = req.extensions().find::<CustomMetadata>() {
-            for (key, value) in &metadata.entries {
-                scope.set_extra(key, value.to_string().into());
-            }
-        }
     });
 }
 
