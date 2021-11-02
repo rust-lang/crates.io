@@ -31,44 +31,6 @@ jobs:
           profile: minimal
           override: true
 
-      - name: Cache cargo registry cache
-        uses: actions/cache@v1
-        with:
-          path: ~/.cargo/registry/cache
-          key: ${{ runner.os }}-cargo-registry-cache-${{ matrix.rust }}-${{ hashFiles('**/Cargo.toml') }}
-          restore-key: |
-            ${{ runner.os }}-cargo-registry-cache-${{ matrix.rust }}-
-            ${{ runner.os }}-cargo-registry-cache-
-
-      - name: Cache cargo registry index
-        uses: actions/cache@v1
-        with:
-          path: ~/.cargo/registry/index
-          key: ${{ runner.os }}-cargo-registry-index-${{ github.ref }}-${{ github.sha }}
-          restore-key: |
-            ${{ runner.os }}-cargo-registry-index-${{ github.ref }}-
-            ${{ runner.os }}-cargo-registry-index-refs/heads/master-
-
-      # Uncomment the following if a git dependency is added to `Cargo.toml`
-      #- name: Cache cargo git db
-      #  uses: actions/cache@v1
-      #  with:
-      #    path: ~/.cargo/git/db
-      #    key: ${{ runner.os }}-cargo-git-db-${{ github.ref }}-${{ hashFiles('**/Cargo.toml') }}
-      #    restore-key: |
-      #      ${{ runner.os }}-cargo-git-db-${{ github.ref }}-
-      #      ${{ runner.os }}-cargo-git-db-refs/heads/master-${{ hashFiles('**/Cargo.toml') }}
-      #      ${{ runner.os }}-cargo-git-db-refs/heads/master-
-
-      - name: Cache cargo build
-        uses: actions/cache@v1
-        with:
-          path: target
-          key: ${{ runner.os }}-cargo-build-target-${{ matrix.rust }}-${{ github.ref }}-${{ hashFiles('**/Cargo.toml') }}
-          restore-key: |
-            ${{ runner.os }}-cargo-build-target-${{ matrix.rust }}-${{ github.ref }}-
-            ${{ runner.os }}-cargo-build-target-${{ matrix.rust }}-refs/heads/master-
-
       - name: Install ${{ matrix.rust }} Rust
         run: |
           if [[ ! -d "$HOME/.cargo" || ! -d "$HOME/.rustup" ]]; then
@@ -85,8 +47,7 @@ jobs:
           rustup component add rustfmt
           rustup component add clippy
 
-      - name: Cargo clean on new rustc version
-        run: script/ci/cargo-clean-on-new-rustc-version.sh
+      - uses: Swatinem/rust-cache@v1.3.0
 
       - name: Lint
         if: matrix.rust == 'stable'
