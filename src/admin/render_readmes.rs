@@ -242,13 +242,12 @@ fn find_file_by_path<R: Read>(
     path: &Path,
     pkg_name: &str,
 ) -> Option<String> {
-    let mut file = entries.filter_map(|entry| entry.ok()).find(|file| {
-        let filepath = match file.path() {
-            Ok(p) => p,
-            Err(_) => return false,
-        };
-        filepath == path
-    })?;
+    let mut file = entries
+        .filter_map(|entry| entry.ok())
+        .find(|file| match file.path() {
+            Ok(p) => p == path,
+            Err(_) => false,
+        })?;
 
     let mut contents = String::new();
     file.read_to_string(&mut contents)
