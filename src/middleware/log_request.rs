@@ -21,6 +21,15 @@ impl Middleware for LogRequests {
     fn before(&self, req: &mut dyn RequestExt) -> BeforeResult {
         let path = OriginalPath(req.path().to_string());
         req.mut_extensions().insert(path);
+
+        if let Some(request_id) = req
+            .headers()
+            .get("x-request-id")
+            .and_then(|value| value.to_str().ok())
+        {
+            sentry::configure_scope(|scope| scope.set_tag("request.id", request_id));
+        }
+
         Ok(())
     }
 
@@ -101,14 +110,6 @@ fn report_to_sentry(req: &dyn RequestExt, res: &AfterResult, response_time: u64)
             };
 
             scope.set_user(Some(user));
-        }
-
-        if let Some(request_id) = req
-            .headers()
-            .get("x-request-id")
-            .and_then(|value| value.to_str().ok())
-        {
-            scope.set_tag("request.id", request_id);
         }
 
         {
