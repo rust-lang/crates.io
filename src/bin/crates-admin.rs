@@ -33,7 +33,7 @@ fn main() -> anyhow::Result<()> {
         SubCommand::DeleteCrate(opts) => delete_crate::run(opts),
         SubCommand::DeleteVersion(opts) => delete_version::run(opts),
         SubCommand::Populate(opts) => populate::run(opts),
-        SubCommand::RenderReadmes(opts) => render_readmes::run(opts),
+        SubCommand::RenderReadmes(opts) => render_readmes::run(opts)?,
         SubCommand::TestPagerduty(opts) => test_pagerduty::run(opts)?,
         SubCommand::TransferCrates(opts) => transfer_crates::run(opts),
         SubCommand::VerifyToken(opts) => verify_token::run(opts).unwrap(),

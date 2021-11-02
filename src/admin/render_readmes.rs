@@ -38,7 +38,7 @@ pub struct Opts {
     crate_name: Option<String>,
 }
 
-pub fn run(opts: Opts) {
+pub fn run(opts: Opts) -> anyhow::Result<()> {
     let base_config = Arc::new(config::Base::from_environment());
     let conn = db::connect_now().unwrap();
 
@@ -103,12 +103,9 @@ pub fn run(opts: Opts) {
 
         let mut tasks = Vec::with_capacity(page_size as usize);
         for (version, krate_name) in versions {
-            Version::record_readme_rendering(version.id, &conn).unwrap_or_else(|_| {
-                panic!(
-                    "[{}-{}] Couldn't record rendering time",
-                    krate_name, version.num
-                )
-            });
+            Version::record_readme_rendering(version.id, &conn)
+                .context("Couldn't record rendering time")?;
+
             let client = client.clone();
             let base_config = base_config.clone();
             let handle = thread::spawn::<_, anyhow::Result<()>>(move || {
@@ -147,6 +144,8 @@ pub fn run(opts: Opts) {
             }
         }
     }
+
+    Ok(())
 }
 
 /// Renders the readme of an uploaded crate version.
