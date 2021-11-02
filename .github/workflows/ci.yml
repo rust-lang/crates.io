@@ -10,7 +10,7 @@ on:
   pull_request:
 
 env:
-  RUST_VERSION: 1.56.0
+  RUST_VERSION: 1.56.1
 
 jobs:
   frontend:
