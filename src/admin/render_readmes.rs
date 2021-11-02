@@ -193,20 +193,18 @@ fn get_readme(
 
     let reader = GzDecoder::new(response);
     let archive = Archive::new(reader);
-    render_pkg_readme(archive, &pkg_name)
+    render_pkg_readme(archive, &pkg_name).ok()
 }
 
-fn render_pkg_readme<R: Read>(mut archive: Archive<R>, pkg_name: &str) -> Option<String> {
-    let mut entries = archive
-        .entries()
-        .unwrap_or_else(|_| panic!("[{}] Invalid tar archive entries", pkg_name));
+fn render_pkg_readme<R: Read>(mut archive: Archive<R>, pkg_name: &str) -> anyhow::Result<String> {
+    let mut entries = archive.entries().context("Invalid tar archive entries")?;
 
     let manifest: Manifest = {
         let path = format!("{}/Cargo.toml", pkg_name);
         let contents = find_file_by_path(&mut entries, Path::new(&path))
-            .unwrap_or_else(|_| panic!("[{}] couldn't open file: Cargo.toml", pkg_name));
-        toml::from_str(&contents)
-            .unwrap_or_else(|_| panic!("[{}] Syntax error in manifest file", pkg_name))
+            .context("Failed to read Cargo.toml file")?;
+
+        toml::from_str(&contents).context("Failed to parse manifest file")?
     };
 
     let rendered = {
@@ -216,14 +214,16 @@ fn render_pkg_readme<R: Read>(mut archive: Archive<R>, pkg_name: &str) -> Option
             .clone()
             .unwrap_or_else(|| "README.md".into());
         let path = format!("{}/{}", pkg_name, readme_path);
-        let contents = find_file_by_path(&mut entries, Path::new(&path)).ok()?;
+        let contents = find_file_by_path(&mut entries, Path::new(&path))
+            .with_context(|| format!("Failed to read {} file", readme_path))?;
+
         text_to_html(
             &contents,
             &readme_path,
             manifest.package.repository.as_deref(),
         )
     };
-    return Some(rendered);
+    return Ok(rendered);
 
     #[derive(Debug, Deserialize)]
     struct Package {
@@ -300,7 +300,10 @@ readme = "README.md"
 "#,
         );
         let serialized_archive = pkg.into_inner().unwrap();
-        assert!(render_pkg_readme(tar::Archive::new(&*serialized_archive), "foo-0.0.1").is_none());
+        assert_err!(render_pkg_readme(
+            tar::Archive::new(&*serialized_archive),
+            "foo-0.0.1"
+        ));
     }
 
     #[test]
