@@ -114,7 +114,7 @@ pub fn run(opts: Opts) {
             let handle = thread::spawn(move || {
                 println!("[{}-{}] Rendering README...", krate_name, version.num);
                 let readme = get_readme(base_config.uploader(), &client, &version, &krate_name);
-                if readme.is_none() {
+                if readme.is_err() {
                     return;
                 }
                 let readme = readme.unwrap();
@@ -159,7 +159,7 @@ fn get_readme(
     client: &Client,
     version: &Version,
     krate_name: &str,
-) -> Option<String> {
+) -> anyhow::Result<String> {
     let pkg_name = format!("{}-{}", krate_name, version.num);
 
     let location = uploader.crate_location(krate_name, &version.num.to_string());
@@ -174,26 +174,19 @@ fn get_readme(
         header::USER_AGENT,
         header::HeaderValue::from_static(USER_AGENT),
     );
-    let response = match client.get(&location).headers(extra_headers).send() {
-        Ok(r) => r,
-        Err(err) => {
-            println!("[{}] Unable to fetch crate: {}", pkg_name, err);
-            return None;
-        }
-    };
+    let request = client.get(&location).headers(extra_headers);
+    let response = request.send().context("Failed to fetch crate")?;
 
     if !response.status().is_success() {
-        println!(
-            "[{}] Failed to get a 200 response: {}",
-            pkg_name,
+        return Err(anyhow!(
+            "Failed to get a 200 response: {}",
             response.text().unwrap()
-        );
-        return None;
+        ));
     }
 
     let reader = GzDecoder::new(response);
     let archive = Archive::new(reader);
-    render_pkg_readme(archive, &pkg_name).ok()
+    render_pkg_readme(archive, &pkg_name)
 }
 
 fn render_pkg_readme<R: Read>(mut archive: Archive<R>, pkg_name: &str) -> anyhow::Result<String> {
