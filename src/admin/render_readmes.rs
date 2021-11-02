@@ -242,18 +242,13 @@ fn find_file_by_path<R: Read>(
     path: &Path,
     pkg_name: &str,
 ) -> Option<String> {
-    let mut file = entries
-        .find(|entry| match *entry {
-            Err(_) => false,
-            Ok(ref file) => {
-                let filepath = match file.path() {
-                    Ok(p) => p,
-                    Err(_) => return false,
-                };
-                filepath == path
-            }
-        })?
-        .unwrap_or_else(|_| panic!("[{}] file is not present: {}", pkg_name, path.display()));
+    let mut file = entries.filter_map(|entry| entry.ok()).find(|file| {
+        let filepath = match file.path() {
+            Ok(p) => p,
+            Err(_) => return false,
+        };
+        filepath == path
+    })?;
 
     let mut contents = String::new();
     file.read_to_string(&mut contents)
