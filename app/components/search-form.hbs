@@ -2,6 +2,10 @@
   local-class="form {{if (eq @size "big") "size-big"}}"
   action="/search"
   role="search"
+  autocapitalize="off"
+  autocomplete="off"
+  autocorrect="off"
+  spellcheck="false"
   data-test-search-form
   ...attributes
   {{on "submit" (prevent-default this.search)}}
@@ -16,10 +20,7 @@
     placeholder="Click or press 'S' to search..."
     value={{this.header.searchValue}}
     oninput={{this.updateSearchValue}}
-    autocorrect="off"
-    autocapitalize="off"
     autofocus="autofocus"
-    spellcheck="false"
     required
     aria-label="Search"
     data-test-search-input
@@ -33,7 +34,6 @@
     placeholder="Search"
     value={{this.header.searchValue}}
     oninput={{this.updateSearchValue}}
-    autocorrect="off"
     required
     aria-label="Search"
   >
