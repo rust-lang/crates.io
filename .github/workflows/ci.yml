@@ -2,6 +2,9 @@ name: CI
 
 on:
   push:
+    branches:
+      - master
+      - main
   pull_request:
 
 env:
@@ -9,32 +12,42 @@ env:
   MSRV: 1.46.0
 
 jobs:
-  backend:
-    name: Backend
-    runs-on: ubuntu-18.04
-
-    env:
-      CARGO_INCREMENTAL: 0
-      RUSTFLAGS: "-C debuginfo=0 -D warnings"
-
+  check:
+    name: Check
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-
-      - name: Install Rust v${{ env.MSRV }}
-        run: |
-          rustup default ${{ env.MSRV }}
-
-      - name: Install lint tools
-        run: |
-          rustup component add rustfmt
-          rustup component add clippy
-
+      - run: rustup override set ${{env.MSRV}}
       - uses: Swatinem/rust-cache@v1.3.0
+      - run: cargo check --workspace --all-targets
+        env:
+          RUSTFLAGS: "-D warnings"
 
-      - name: Lint
-        run: |
-          cargo fmt -- --check
-          cargo clippy --all-targets --all-features --all
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: rustup override set ${{env.MSRV}}
+      - uses: Swatinem/rust-cache@v1.3.0
+      - run: cargo test --workspace
 
-      - name: Test
-        run: cargo test
+  fmt:
+    name: Rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: rustup override set ${{env.MSRV}}
+      - run: rustup component add rustfmt
+      - uses: Swatinem/rust-cache@v1.3.0
+      - run: cargo fmt --all -- --check
+
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: rustup override set ${{env.MSRV}}
+      - run: rustup component add clippy
+      - uses: Swatinem/rust-cache@v1.3.0
+      - run: cargo clippy --workspace -- --deny warnings
