@@ -4,18 +4,14 @@ on:
   push:
   pull_request:
 
+env:
+  # minimum supported rust version
+  MSRV: 1.46.0
+
 jobs:
   backend:
     name: Backend
     runs-on: ubuntu-18.04
-    strategy:
-      # TODO: [ci] should be true if GitHub Actions supports ""allow failures" on matrix
-      fail-fast: false
-      matrix:
-        rust:
-          - stable
-          - beta
-          - nightly
 
     env:
       CARGO_INCREMENTAL: 0
@@ -24,13 +20,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Install ${{ matrix.rust }} Rust
+      - name: Install Rust v${{ env.MSRV }}
         run: |
-          rustup update ${{ matrix.rust }}
-          rustup default ${{ matrix.rust }}
+          rustup default ${{ env.MSRV }}
 
       - name: Install lint tools
-        if: matrix.rust == 'stable'
         run: |
           rustup component add rustfmt
           rustup component add clippy
@@ -38,7 +32,6 @@ jobs:
       - uses: Swatinem/rust-cache@v1.3.0
 
       - name: Lint
-        if: matrix.rust == 'stable'
         run: |
           cargo fmt -- --check
           cargo clippy --all-targets --all-features --all
