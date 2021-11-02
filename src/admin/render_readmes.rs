@@ -4,6 +4,7 @@ use crate::{
     schema::{crates, readme_renderings, versions},
     uploaders::Uploader,
 };
+use anyhow::{anyhow, Context};
 use std::{io::Read, path::Path, sync::Arc, thread};
 
 use cargo_registry_markdown::text_to_html;
@@ -202,8 +203,8 @@ fn render_pkg_readme<R: Read>(mut archive: Archive<R>, pkg_name: &str) -> Option
 
     let manifest: Manifest = {
         let path = format!("{}/Cargo.toml", pkg_name);
-        let contents = find_file_by_path(&mut entries, Path::new(&path), pkg_name)
-            .unwrap_or_else(|| panic!("[{}] couldn't open file: Cargo.toml", pkg_name));
+        let contents = find_file_by_path(&mut entries, Path::new(&path))
+            .unwrap_or_else(|_| panic!("[{}] couldn't open file: Cargo.toml", pkg_name));
         toml::from_str(&contents)
             .unwrap_or_else(|_| panic!("[{}] Syntax error in manifest file", pkg_name))
     };
@@ -215,7 +216,7 @@ fn render_pkg_readme<R: Read>(mut archive: Archive<R>, pkg_name: &str) -> Option
             .clone()
             .unwrap_or_else(|| "README.md".into());
         let path = format!("{}/{}", pkg_name, readme_path);
-        let contents = find_file_by_path(&mut entries, Path::new(&path), pkg_name)?;
+        let contents = find_file_by_path(&mut entries, Path::new(&path)).ok()?;
         text_to_html(
             &contents,
             &readme_path,
@@ -240,19 +241,20 @@ fn render_pkg_readme<R: Read>(mut archive: Archive<R>, pkg_name: &str) -> Option
 fn find_file_by_path<R: Read>(
     entries: &mut tar::Entries<'_, R>,
     path: &Path,
-    pkg_name: &str,
-) -> Option<String> {
+) -> anyhow::Result<String> {
     let mut file = entries
         .filter_map(|entry| entry.ok())
         .find(|file| match file.path() {
             Ok(p) => p == path,
             Err(_) => false,
-        })?;
+        })
+        .ok_or_else(|| anyhow!("Failed to find tarball entry: {}", path.display()))?;
 
     let mut contents = String::new();
     file.read_to_string(&mut contents)
-        .unwrap_or_else(|_| panic!("[{}] Couldn't read file contents", pkg_name));
-    Some(contents)
+        .context("Failed to read file contents")?;
+
+    Ok(contents)
 }
 
 #[cfg(test)]
