@@ -10,7 +10,7 @@ edition = "2018"
 
 [dependencies]
 bytes = "1"
-conduit = "0.9.0-alpha.4"
+conduit = "0.9.0-alpha.5"
 hyper = { version = "0.14", features = ["server", "http1", "stream", "tcp"] }
 http = "0.2"
 percent-encoding = "2"
