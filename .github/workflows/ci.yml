@@ -24,20 +24,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: ${{ matrix.rust }}
-          profile: minimal
-          override: true
-
       - name: Install ${{ matrix.rust }} Rust
         run: |
-          if [[ ! -d "$HOME/.cargo" || ! -d "$HOME/.rustup" ]]; then
-              curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup-init.sh
-              sh rustup-init.sh -y --default-toolchain none
-          fi
-          rustup set profile minimal
           rustup update ${{ matrix.rust }}
           rustup default ${{ matrix.rust }}
 
