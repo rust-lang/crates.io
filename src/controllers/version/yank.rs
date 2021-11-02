@@ -6,6 +6,7 @@ use super::{extract_crate_name_and_semver, version_and_crate};
 use crate::controllers::cargo_prelude::*;
 use crate::models::Rights;
 use crate::models::{insert_version_owner_action, VersionAction};
+use crate::schema::versions;
 use crate::worker;
 
 /// Handles the `DELETE /crates/:crate_id/:version/yank` route.
@@ -47,6 +48,10 @@ fn modify_yank(req: &mut dyn RequestExt, yanked: bool) -> EndpointResult {
         // The crate is alread in the state requested, nothing to do
         return ok_true();
     }
+
+    diesel::update(&version)
+        .set(versions::yanked.eq(yanked))
+        .execute(&*conn)?;
 
     let action = if yanked {
         VersionAction::Yank
