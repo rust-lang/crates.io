@@ -42,6 +42,12 @@ fn modify_yank(req: &mut dyn RequestExt, yanked: bool) -> EndpointResult {
     if user.rights(req.app(), &owners)? < Rights::Publish {
         return Err(cargo_err("must already be an owner to yank or unyank"));
     }
+
+    if version.yanked == yanked {
+        // The crate is alread in the state requested, nothing to do
+        return ok_true();
+    }
+
     let action = if yanked {
         VersionAction::Yank
     } else {
