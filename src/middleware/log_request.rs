@@ -166,13 +166,15 @@ struct FullPath<'a>(&'a dyn RequestExt);
 
 impl<'a> Display for FullPath<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let request = self.0;
+
+        let original_path = request.extensions().find::<OriginalPath>();
         // Unwrap shouldn't panic as no other code has access to the private struct to remove it
-        write!(
-            f,
-            "{}",
-            self.0.extensions().find::<OriginalPath>().unwrap().0
-        )?;
-        if let Some(q_string) = self.0.query_string() {
+        let path = original_path.map(|p| p.0.as_str()).unwrap();
+
+        write!(f, "{}", path)?;
+
+        if let Some(q_string) = request.query_string() {
             write!(f, "?{}", q_string)?;
         }
         Ok(())
