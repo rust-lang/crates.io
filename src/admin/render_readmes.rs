@@ -4,6 +4,7 @@ use crate::{
     schema::{crates, readme_renderings, versions},
     uploaders::Uploader,
 };
+use anyhow::{anyhow, Context};
 use std::{io::Read, path::Path, sync::Arc, thread};
 
 use cargo_registry_markdown::text_to_html;
@@ -37,7 +38,7 @@ pub struct Opts {
     crate_name: Option<String>,
 }
 
-pub fn run(opts: Opts) {
+pub fn run(opts: Opts) -> anyhow::Result<()> {
     let base_config = Arc::new(config::Base::from_environment());
     let conn = db::connect_now().unwrap();
 
@@ -102,21 +103,14 @@ pub fn run(opts: Opts) {
 
         let mut tasks = Vec::with_capacity(page_size as usize);
         for (version, krate_name) in versions {
-            Version::record_readme_rendering(version.id, &conn).unwrap_or_else(|_| {
-                panic!(
-                    "[{}-{}] Couldn't record rendering time",
-                    krate_name, version.num
-                )
-            });
+            Version::record_readme_rendering(version.id, &conn)
+                .context("Couldn't record rendering time")?;
+
             let client = client.clone();
             let base_config = base_config.clone();
-            let handle = thread::spawn(move || {
+            let handle = thread::spawn::<_, anyhow::Result<()>>(move || {
                 println!("[{}-{}] Rendering README...", krate_name, version.num);
-                let readme = get_readme(base_config.uploader(), &client, &version, &krate_name);
-                if readme.is_none() {
-                    return;
-                }
-                let readme = readme.unwrap();
+                let readme = get_readme(base_config.uploader(), &client, &version, &krate_name)?;
                 let content_length = readme.len() as u64;
                 let content = std::io::Cursor::new(readme);
                 let readme_path = format!("readmes/{0}/{0}-{1}.html", krate_name, version.num);
@@ -125,6 +119,7 @@ pub fn run(opts: Opts) {
                     header::CACHE_CONTROL,
                     header::HeaderValue::from_static(CACHE_CONTROL_README),
                 );
+
                 base_config
                     .uploader()
                     .upload(
@@ -135,21 +130,22 @@ pub fn run(opts: Opts) {
                         "text/html",
                         extra_headers,
                     )
-                    .unwrap_or_else(|_| {
-                        panic!(
-                            "[{}-{}] Couldn't upload file to S3",
-                            krate_name, version.num
-                        )
-                    });
+                    .context("Failed to upload rendered README file to S3")?;
+
+                Ok(())
             });
             tasks.push(handle);
         }
         for handle in tasks {
-            if let Err(err) = handle.join() {
-                println!("Thread panicked: {:?}", err);
+            match handle.join() {
+                Err(err) => println!("Thread panicked: {:?}", err),
+                Ok(Err(err)) => println!("Thread failed: {:?}", err),
+                _ => {}
             }
         }
     }
+
+    Ok(())
 }
 
 /// Renders the readme of an uploaded crate version.
@@ -158,7 +154,7 @@ fn get_readme(
     client: &Client,
     version: &Version,
     krate_name: &str,
-) -> Option<String> {
+) -> anyhow::Result<String> {
     let pkg_name = format!("{}-{}", krate_name, version.num);
 
     let location = uploader.crate_location(krate_name, &version.num.to_string());
@@ -173,21 +169,14 @@ fn get_readme(
         header::USER_AGENT,
         header::HeaderValue::from_static(USER_AGENT),
     );
-    let response = match client.get(&location).headers(extra_headers).send() {
-        Ok(r) => r,
-        Err(err) => {
-            println!("[{}] Unable to fetch crate: {}", pkg_name, err);
-            return None;
-        }
-    };
+    let request = client.get(&location).headers(extra_headers);
+    let response = request.send().context("Failed to fetch crate")?;
 
     if !response.status().is_success() {
-        println!(
-            "[{}] Failed to get a 200 response: {}",
-            pkg_name,
+        return Err(anyhow!(
+            "Failed to get a 200 response: {}",
             response.text().unwrap()
-        );
-        return None;
+        ));
     }
 
     let reader = GzDecoder::new(response);
@@ -195,17 +184,15 @@ fn get_readme(
     render_pkg_readme(archive, &pkg_name)
 }
 
-fn render_pkg_readme<R: Read>(mut archive: Archive<R>, pkg_name: &str) -> Option<String> {
-    let mut entries = archive
-        .entries()
-        .unwrap_or_else(|_| panic!("[{}] Invalid tar archive entries", pkg_name));
+fn render_pkg_readme<R: Read>(mut archive: Archive<R>, pkg_name: &str) -> anyhow::Result<String> {
+    let mut entries = archive.entries().context("Invalid tar archive entries")?;
 
     let manifest: Manifest = {
         let path = format!("{}/Cargo.toml", pkg_name);
-        let contents = find_file_by_path(&mut entries, Path::new(&path), pkg_name)
-            .unwrap_or_else(|| panic!("[{}] couldn't open file: Cargo.toml", pkg_name));
-        toml::from_str(&contents)
-            .unwrap_or_else(|_| panic!("[{}] Syntax error in manifest file", pkg_name))
+        let contents = find_file_by_path(&mut entries, Path::new(&path))
+            .context("Failed to read Cargo.toml file")?;
+
+        toml::from_str(&contents).context("Failed to parse manifest file")?
     };
 
     let rendered = {
@@ -215,14 +202,16 @@ fn render_pkg_readme<R: Read>(mut archive: Archive<R>, pkg_name: &str) -> Option
             .clone()
             .unwrap_or_else(|| "README.md".into());
         let path = format!("{}/{}", pkg_name, readme_path);
-        let contents = find_file_by_path(&mut entries, Path::new(&path), pkg_name)?;
+        let contents = find_file_by_path(&mut entries, Path::new(&path))
+            .with_context(|| format!("Failed to read {} file", readme_path))?;
+
         text_to_html(
             &contents,
             &readme_path,
             manifest.package.repository.as_deref(),
         )
     };
-    return Some(rendered);
+    return Ok(rendered);
 
     #[derive(Debug, Deserialize)]
     struct Package {
@@ -240,25 +229,20 @@ fn render_pkg_readme<R: Read>(mut archive: Archive<R>, pkg_name: &str) -> Option
 fn find_file_by_path<R: Read>(
     entries: &mut tar::Entries<'_, R>,
     path: &Path,
-    pkg_name: &str,
-) -> Option<String> {
+) -> anyhow::Result<String> {
     let mut file = entries
-        .find(|entry| match *entry {
+        .filter_map(|entry| entry.ok())
+        .find(|file| match file.path() {
+            Ok(p) => p == path,
             Err(_) => false,
-            Ok(ref file) => {
-                let filepath = match file.path() {
-                    Ok(p) => p,
-                    Err(_) => return false,
-                };
-                filepath == path
-            }
-        })?
-        .unwrap_or_else(|_| panic!("[{}] file is not present: {}", pkg_name, path.display()));
+        })
+        .ok_or_else(|| anyhow!("Failed to find tarball entry: {}", path.display()))?;
 
     let mut contents = String::new();
     file.read_to_string(&mut contents)
-        .unwrap_or_else(|_| panic!("[{}] Couldn't read file contents", pkg_name));
-    Some(contents)
+        .context("Failed to read file contents")?;
+
+    Ok(contents)
 }
 
 #[cfg(test)]
@@ -304,7 +288,10 @@ readme = "README.md"
 "#,
         );
         let serialized_archive = pkg.into_inner().unwrap();
-        assert!(render_pkg_readme(tar::Archive::new(&*serialized_archive), "foo-0.0.1").is_none());
+        assert_err!(render_pkg_readme(
+            tar::Archive::new(&*serialized_archive),
+            "foo-0.0.1"
+        ));
     }
 
     #[test]
