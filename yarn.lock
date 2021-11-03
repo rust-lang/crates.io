@@ -6776,10 +6776,10 @@ ember-event-helpers@0.1.1:
   dependencies:
     ember-cli-babel "^7.19.0"
 
-ember-exam@7.0.0:
-  version "7.0.0"
-  resolved "https://registry.yarnpkg.com/ember-exam/-/ember-exam-7.0.0.tgz#e83787b86f5aefd8cc24b4e09c3a221c8cd02909"
-  integrity sha512-fvtR//blpaTo2oKdoEa3ll3uwLnFFELstH61te/IF9/7bQr/Ab1DFSxqKMeZog8dbGPqSgaRR9auorkZl8Ff+g==
+ember-exam@7.0.1:
+  version "7.0.1"
+  resolved "https://registry.yarnpkg.com/ember-exam/-/ember-exam-7.0.1.tgz#3735a0e3599e37f8cf5c758f4c7069da3c369a2d"
+  integrity sha512-m3EskoFrJ1KThlzdS0pjXImXQWgPWqqOJjAnCpz/XmUHUA+EVmvsu/A0F0jRpqXeQpTSFXRl8/TPVduN6+t17A==
   dependencies:
     "@embroider/macros" "^0.47.0"
     chalk "^4.1.1"
