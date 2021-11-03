@@ -169,8 +169,9 @@ impl<'a> Display for FullPath<'a> {
         let request = self.0;
 
         let original_path = request.extensions().find::<OriginalPath>();
-        // Unwrap shouldn't panic as no other code has access to the private struct to remove it
-        let path = original_path.map(|p| p.0.as_str()).unwrap();
+        let path = original_path
+            .map(|p| p.0.as_str())
+            .unwrap_or_else(|| request.path());
 
         write!(f, "{}", path)?;
 
