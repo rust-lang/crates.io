@@ -27,7 +27,7 @@ use std::str::FromStr;
 use std::sync::Arc;
 
 use conduit_middleware::MiddlewareBuilder;
-use jemallocator::Jemalloc;
+use tikv_jemallocator::Jemalloc;
 
 #[global_allocator]
 static ALLOC: Jemalloc = Jemalloc;
