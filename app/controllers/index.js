@@ -2,7 +2,7 @@ import Controller from '@ember/controller';
 import { action } from '@ember/object';
 import { inject as service } from '@ember/service';
 
-import { task } from 'ember-concurrency';
+import { dropTask } from 'ember-concurrency';
 import { reads } from 'macro-decorators';
 
 export default class IndexController extends Controller {
@@ -21,7 +21,7 @@ export default class IndexController extends Controller {
     });
   }
 
-  @(task(function* () {
+  @dropTask *dataTask() {
     let data = yield this.fetcher.ajax('/api/v1/summary');
 
     addCrates(this.store, data.new_crates);
@@ -30,8 +30,7 @@ export default class IndexController extends Controller {
     addCrates(this.store, data.most_recently_downloaded);
 
     return data;
-  }).drop())
-  dataTask;
+  }
 }
 
 function addCrates(store, crates) {
