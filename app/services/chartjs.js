@@ -6,10 +6,10 @@ import differenceInDays from 'date-fns/differenceInDays';
 import endOfDay from 'date-fns/endOfDay';
 import format from 'date-fns/format';
 import startOfDay from 'date-fns/startOfDay';
-import { task } from 'ember-concurrency';
+import { dropTask } from 'ember-concurrency';
 
 export default class ChartJsLoader extends Service {
-  @(task(function* () {
+  @dropTask *loadTask() {
     let {
       Chart,
       LineController,
@@ -66,6 +66,5 @@ export default class ChartJsLoader extends Service {
     });
 
     return Chart;
-  }).drop())
-  loadTask;
+  }
 }

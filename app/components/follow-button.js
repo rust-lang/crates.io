@@ -2,7 +2,7 @@ import { inject as service } from '@ember/service';
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 
-import { didCancel, task } from 'ember-concurrency';
+import { didCancel, dropTask, task } from 'ember-concurrency';
 
 import ajax from '../utils/ajax';
 
@@ -23,11 +23,10 @@ export default class extends Component {
     });
   }
 
-  @(task(function* () {
+  @dropTask *followStateTask() {
     let d = yield ajax(`/api/v1/crates/${this.args.crate.name}/following`);
     this.following = d.following;
-  }).drop())
-  followStateTask;
+  }
 
   @task *toggleFollowTask() {
     let crate = this.args.crate;

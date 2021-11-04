@@ -1,6 +1,6 @@
 import Model, { attr, belongsTo, hasMany } from '@ember-data/model';
 
-import { task } from 'ember-concurrency';
+import { keepLatestTask, task } from 'ember-concurrency';
 import { alias } from 'macro-decorators';
 import semverParse from 'semver/functions/parse';
 import { cached } from 'tracked-toolbox';
@@ -98,7 +98,7 @@ export default class Version extends Model {
   @alias('loadDepsTask.last.value.build') buildDependencies;
   @alias('loadDepsTask.last.value.dev') devDependencies;
 
-  @(task(function* () {
+  @keepLatestTask *loadDepsTask() {
     // trigger the async relationship to load the content
     let dependencies = yield this.dependencies;
 
@@ -107,10 +107,9 @@ export default class Version extends Model {
     let dev = dependencies.filterBy('kind', 'dev').uniqBy('crate_id');
 
     return { normal, build, dev };
-  }).keepLatest())
-  loadDepsTask;
+  }
 
-  @(task(function* () {
+  @keepLatestTask *loadReadmeTask() {
     if (this.readme_path) {
       let response = yield fetch(this.readme_path);
       if (!response.ok) {
@@ -119,8 +118,7 @@ export default class Version extends Model {
 
       return yield response.text();
     }
-  }).keepLatest())
-  loadReadmeTask;
+  }
 
   @task *loadDocsBuildsTask() {
     return yield ajax(`https://docs.rs/crate/${this.crateName}/${this.num}/builds.json`);
@@ -159,7 +157,7 @@ export default class Version extends Model {
     return null;
   }
 
-  @(task(function* () {
+  @keepLatestTask *yankTask() {
     let response = yield fetch(`/api/v1/crates/${this.crate.id}/${this.num}/yank`, { method: 'DELETE' });
     if (!response.ok) {
       throw new Error(`Yank request for ${this.crateName} v${this.num} failed`);
@@ -167,10 +165,9 @@ export default class Version extends Model {
     this.set('yanked', true);
 
     return yield response.text();
-  }).keepLatest())
-  yankTask;
+  }
 
-  @(task(function* () {
+  @keepLatestTask *unyankTask() {
     let response = yield fetch(`/api/v1/crates/${this.crate.id}/${this.num}/unyank`, { method: 'PUT' });
     if (!response.ok) {
       throw new Error(`Unyank request for ${this.crateName} v${this.num} failed`);
@@ -178,6 +175,5 @@ export default class Version extends Model {
     this.set('yanked', false);
 
     return yield response.text();
-  }).keepLatest())
-  unyankTask;
+  }
 }

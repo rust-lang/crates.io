@@ -5,7 +5,7 @@ import Service from '@ember/service';
 import { defer } from 'rsvp';
 
 import { hbs } from 'ember-cli-htmlbars';
-import { task } from 'ember-concurrency';
+import { dropTask } from 'ember-concurrency';
 import window from 'ember-window-mock';
 import { setupWindowMock } from 'ember-window-mock/test-support';
 import timekeeper from 'timekeeper';
@@ -35,17 +35,10 @@ module('Component | DownloadGraph', function (hooks) {
     let deferred = defer();
 
     class MockService extends ChartJsLoader {
-      constructor() {
-        super(...arguments);
-        this.originalLoadTask = this.loadTask;
-        this.loadTask = this.mockLoadTask;
-      }
-
-      @(task(function* () {
+      @dropTask *loadTask() {
         yield deferred.promise;
-        return yield this.originalLoadTask.perform();
-      }).drop())
-      mockLoadTask;
+        return yield super.loadTask.perform();
+      }
     }
 
     this.owner.register('service:chartjs', MockService);
@@ -68,10 +61,9 @@ module('Component | DownloadGraph', function (hooks) {
   test('error behavior', async function (assert) {
     class MockService extends Service {
       // eslint-disable-next-line require-yield
-      @(task(function* () {
+      @dropTask *loadTask() {
         throw new Error('nope');
-      }).drop())
-      loadTask;
+      }
     }
 
     this.owner.register('service:chartjs', MockService);
