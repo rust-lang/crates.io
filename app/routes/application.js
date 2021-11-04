@@ -47,6 +47,6 @@ export default class ApplicationRoute extends Route {
 
   @task *preloadPlaygroundCratesTask() {
     yield rawTimeout(1000);
-    yield this.playground.loadCratesTask.perform();
+    yield this.playground.loadCrates();
   }
 }

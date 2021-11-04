@@ -36,13 +36,11 @@ export default class DownloadGraph extends Component {
     super(...arguments);
 
     // load Rust Playground crates list, if necessary
-    if (!this.playground.crates) {
-      this.playground.loadCratesTask.perform().catch(error => {
-        if (!(didCancel(error) || error.isServerError || error.isNetworkError)) {
-          // report unexpected errors to Sentry
-          this.sentry.captureException(error);
-        }
-      });
-    }
+    this.playground.loadCrates().catch(error => {
+      if (!(didCancel(error) || error.isServerError || error.isNetworkError)) {
+        // report unexpected errors to Sentry
+        this.sentry.captureException(error);
+      }
+    });
   }
 }
