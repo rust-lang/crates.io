@@ -31,9 +31,9 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "conduit"
-version = "0.9.0-alpha.5"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ce8954d399f2fcb0900b06973b4624538b8d8e46d38c12be237dd3cc8e95cfc"
+checksum = "f1267b8037a4f4a80783e7bcf912af06fc9b5f703a0d8e3a5ae54fbcbc2ae6ab"
 dependencies = [
  "http",
 ]
@@ -59,12 +59,13 @@ dependencies = [
 
 [[package]]
 name = "conduit-router"
-version = "0.9.0-alpha.7"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f7dbfd959e6ead26d8e27e28810adb1f2a2ce9ada7f4bd030480f2d51a18d044"
+checksum = "615b0d3524ce76aa16a95001f3cafcbc5dee8d69a5dd1b7e1ec1775d7147fd06"
 dependencies = [
  "conduit",
  "route-recognizer",
+ "thiserror",
  "tracing",
 ]
 
