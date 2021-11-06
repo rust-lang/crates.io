@@ -21,7 +21,7 @@ impl Middleware for AppMiddleware {
     }
 
     fn after(&self, req: &mut dyn RequestExt, res: AfterResult) -> AfterResult {
-        req.mut_extensions().pop::<Arc<App>>().unwrap();
+        req.mut_extensions().remove::<Arc<App>>().unwrap();
         res
     }
 }
@@ -33,6 +33,6 @@ pub trait RequestApp {
 
 impl<T: RequestExt + ?Sized> RequestApp for T {
     fn app(&self) -> &Arc<App> {
-        self.extensions().find::<Arc<App>>().expect("Missing app")
+        self.extensions().get::<Arc<App>>().expect("Missing app")
     }
 }

@@ -22,7 +22,7 @@ impl Middleware for UpdateMetrics {
 
         let endpoint = req
             .extensions()
-            .find::<RoutePattern>()
+            .get::<RoutePattern>()
             .map(|p| p.pattern())
             .unwrap_or("<unknown>");
         metrics
