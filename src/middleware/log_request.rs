@@ -5,7 +5,6 @@ use super::prelude::*;
 use crate::util::request_header;
 
 use conduit::{header, RequestExt, StatusCode};
-use conduit_cookie::RequestSession;
 
 use crate::middleware::normalize_path::OriginalPath;
 use crate::middleware::response_timing::ResponseTime;
@@ -17,22 +16,8 @@ const SLOW_REQUEST_THRESHOLD_MS: u64 = 1000;
 pub(super) struct LogRequests();
 
 impl Middleware for LogRequests {
-    fn before(&self, req: &mut dyn RequestExt) -> BeforeResult {
-        if let Some(request_id) = req
-            .headers()
-            .get("x-request-id")
-            .and_then(|value| value.to_str().ok())
-        {
-            sentry::configure_scope(|scope| scope.set_tag("request.id", request_id));
-        }
-
-        Ok(())
-    }
-
     fn after(&self, req: &mut dyn RequestExt, res: AfterResult) -> AfterResult {
         println!("{}", RequestLine { req, res: &res });
-
-        report_to_sentry(req, &res);
 
         res
     }
@@ -54,34 +39,6 @@ pub fn add_custom_metadata<V: Display>(req: &mut dyn RequestExt, key: &'static s
     }
 
     sentry::configure_scope(|scope| scope.set_extra(key, value.to_string().into()));
-}
-
-fn report_to_sentry(req: &dyn RequestExt, res: &AfterResult) {
-    sentry::configure_scope(|scope| {
-        {
-            let id = req.session().get("user_id").map(|str| str.to_string());
-
-            let user = sentry::User {
-                id,
-                ..Default::default()
-            };
-
-            scope.set_user(Some(user));
-        }
-
-        {
-            let status = res
-                .as_ref()
-                .map(|resp| resp.status())
-                .unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
-
-            scope.set_tag("response.status", status.as_str());
-        }
-
-        if let Some(response_time) = req.extensions().get::<ResponseTime>() {
-            scope.set_extra("Response time [ms]", response_time.as_millis().into());
-        }
-    });
 }
 
 #[cfg(test)]
