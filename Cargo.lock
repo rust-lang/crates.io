@@ -412,18 +412,18 @@ dependencies = [
 
 [[package]]
 name = "conduit"
-version = "0.9.0-alpha.5"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ce8954d399f2fcb0900b06973b4624538b8d8e46d38c12be237dd3cc8e95cfc"
+checksum = "f1267b8037a4f4a80783e7bcf912af06fc9b5f703a0d8e3a5ae54fbcbc2ae6ab"
 dependencies = [
  "http",
 ]
 
 [[package]]
 name = "conduit-conditional-get"
-version = "0.9.0-alpha.3"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9674cc09c0832fe181ea1db5f5f7a3d1741d756cc142e4640d8cf7a1b39b6dfa"
+checksum = "8069c737c7ad008930f525011993c5ac0c5dc794e3d460114cdda8ba2de962a6"
 dependencies = [
  "conduit",
  "conduit-middleware",
@@ -455,15 +455,16 @@ dependencies = [
 
 [[package]]
 name = "conduit-hyper"
-version = "0.3.0-alpha.7"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b607a5f4d4ede64ce36dd062eb22ce8998476e272f4f7f8d4e87c1bb34e7ebc"
+checksum = "8d153bee46b1950c92754cbde9bb8fb616eafd130a00e4bd96f3ee815e3f3147"
 dependencies = [
  "bytes",
  "conduit",
  "http",
  "hyper",
  "percent-encoding",
+ "thiserror",
  "tokio",
  "tokio-stream",
  "tower-service",
@@ -472,9 +473,9 @@ dependencies = [
 
 [[package]]
 name = "conduit-middleware"
-version = "0.9.0-alpha.4"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ddc5fb08579847c817024b06fb144f6ef39f66588f2cd4df1e300c1fd4769d1b"
+checksum = "9245e5d2c53dc1ac0cc72faa028e08f42edbc110571200edf940bd22c0bf3eee"
 dependencies = [
  "conduit",
 ]
@@ -493,20 +494,21 @@ dependencies = [
 
 [[package]]
 name = "conduit-router"
-version = "0.9.0-alpha.7"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f7dbfd959e6ead26d8e27e28810adb1f2a2ce9ada7f4bd030480f2d51a18d044"
+checksum = "615b0d3524ce76aa16a95001f3cafcbc5dee8d69a5dd1b7e1ec1775d7147fd06"
 dependencies = [
  "conduit",
  "route-recognizer",
+ "thiserror",
  "tracing",
 ]
 
 [[package]]
 name = "conduit-static"
-version = "0.9.0-alpha.4"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5ff3a02509bc99ed29d4845ca4b122949b61e4a58b3bebecd52a98d18eb69212"
+checksum = "6295d6a68380f7ff579d66fa35d6fa5921d62e0eb3dae5fc1855f000b6e414f6"
 dependencies = [
  "conduit",
  "conduit-mime-types",
@@ -516,9 +518,9 @@ dependencies = [
 
 [[package]]
 name = "conduit-test"
-version = "0.9.0-alpha.5"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "32e51090d043eed4c2477ea07fa84459bf81f2c77f88e32b4c7d882598ab9b14"
+checksum = "eb2ceaca4b60dd8f43709efe39ff79367adb5d1555c917abea9e51b8c167cc62"
 dependencies = [
  "conduit",
 ]
@@ -2928,7 +2930,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "375a639232caf30edfc78e8d89b2d4c375515393e7af7e16f01cd96917fb2105"
 dependencies = [
  "cfg-if",
- "log",
  "pin-project-lite",
  "tracing-attributes",
  "tracing-core",

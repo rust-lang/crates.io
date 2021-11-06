@@ -36,14 +36,14 @@ cargo-registry-s3 = { path = "cargo-registry-s3" }
 chrono = { version = "0.4.19", features = ["serde"] }
 clap = "=3.0.0-beta.5"
 
-conduit = "0.9.0-alpha.5"
-conduit-conditional-get = "0.9.0-alpha.3"
+conduit = "0.9.0"
+conduit-conditional-get = "0.9.0"
 conduit-cookie = "0.9.0-alpha.5"
 conduit-git-http-backend = "0.9.0-alpha.2"
-conduit-hyper = "0.3.0-alpha.7"
-conduit-middleware = "0.9.0-alpha.4"
-conduit-router = "0.9.0-alpha.7"
-conduit-static = "0.9.0-alpha.4"
+conduit-hyper = "0.3.0"
+conduit-middleware = "0.9.0"
+conduit-router = "0.9.0"
+conduit-static = "0.9.0"
 
 cookie = { version = "0.15", features = ["secure"] }
 dashmap = { version = "4.0.2", features = ["raw-api"] }
@@ -89,7 +89,7 @@ url = "2.2"
 
 [dev-dependencies]
 claim = "0.5"
-conduit-test = "0.9.0-alpha.5"
+conduit-test = "0.9.0"
 hyper-tls = "0.5"
 lazy_static = "1.4"
 tokio = "1.13.0"
