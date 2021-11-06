@@ -40,32 +40,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
-name = "civet"
-version = "0.12.0-alpha.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7b38e18226401dff3e26aa36d5128707af657649a56f134fb29b465daa3bd6d1"
-dependencies = [
- "civet-sys",
- "conduit",
- "libc",
-]
-
-[[package]]
-name = "civet-sys"
-version = "0.1.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "958d15372bf28b7983cb35e1d4bf36dd843b0d42e507c1c73aad7150372c5936"
-
-[[package]]
 name = "conduit"
-version = "0.9.0"
+version = "0.10.0"
 dependencies = [
  "http",
 ]
 
 [[package]]
 name = "conduit-conditional-get"
-version = "0.9.0"
+version = "0.10.0"
 dependencies = [
  "conduit",
  "conduit-middleware",
@@ -75,7 +58,7 @@ dependencies = [
 
 [[package]]
 name = "conduit-middleware"
-version = "0.9.0"
+version = "0.10.0"
 dependencies = [
  "conduit",
  "conduit-test",
@@ -95,7 +78,7 @@ dependencies = [
 
 [[package]]
 name = "conduit-router"
-version = "0.9.0"
+version = "0.10.0"
 dependencies = [
  "conduit",
  "conduit-test",
@@ -108,7 +91,7 @@ dependencies = [
 
 [[package]]
 name = "conduit-static"
-version = "0.9.0"
+version = "0.10.0"
 dependencies = [
  "conduit",
  "conduit-mime-types",
@@ -120,7 +103,7 @@ dependencies = [
 
 [[package]]
 name = "conduit-test"
-version = "0.9.0"
+version = "0.10.0"
 dependencies = [
  "conduit",
 ]
@@ -136,15 +119,6 @@ name = "discard"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "212d0f5754cb6769937f4501cc0e67f4f4483c8d2c3e1e922ee9edbe4ab4c7c0"
-
-[[package]]
-name = "example"
-version = "0.0.1"
-dependencies = [
- "civet",
- "conduit",
- "conduit-router",
-]
 
 [[package]]
 name = "filetime"
@@ -528,15 +502,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e113fb6f3de07a243d434a56ec6f186dfd51cb08448239fe7bcae73f87ff28ff"
 dependencies = [
  "version_check",
-]
-
-[[package]]
-name = "static-file-server"
-version = "0.0.0"
-dependencies = [
- "civet",
- "conduit",
- "conduit-static",
 ]
 
 [[package]]

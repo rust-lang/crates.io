@@ -1,6 +1,6 @@
 [package]
 name = "conduit-conditional-get"
-version = "0.9.0"
+version = "0.10.0"
 authors = ["wycats@gmail.com",
            "Alex Crichton <alex@alexcrichton.com>"]
 license = "MIT"
@@ -11,9 +11,9 @@ the response is fresh.
 edition = "2018"
 
 [dependencies]
-conduit = { version = "0.9.0", path = "../conduit" }
-conduit-middleware = { version = "0.9.0", path = "../conduit-middleware" }
+conduit = { version ="0.10.0", path = "../conduit" }
+conduit-middleware = { version ="0.10.0", path = "../conduit-middleware" }
 time = { version = "0.2", default-features = false, features = ["std"] }
 
 [dev-dependencies]
-conduit-test = { version = "0.9.0", path = "../conduit-test" }
+conduit-test = { version ="0.10.0", path = "../conduit-test" }

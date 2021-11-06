@@ -6,7 +6,8 @@ members = [
     "conduit-router",
     "conduit-static",
     "conduit-test",
-    "examples/*",
+    # disabled until `civet` is updated to v0.10.x
+    # "examples/*",
 ]
 
 [patch.crates-io]
