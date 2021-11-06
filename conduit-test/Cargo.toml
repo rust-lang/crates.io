@@ -1,6 +1,6 @@
 [package]
 name = "conduit-test"
-version = "0.9.0-alpha.5"
+version = "0.9.0"
 authors = ["wycats@gmail.com",
            "Alex Crichton <alex@alexcrichton.com>"]
 description = "Testing utilities for conduit-based stacks"
@@ -9,4 +9,4 @@ license = "MIT"
 edition = "2018"
 
 [dependencies]
-conduit = { version = "0.9.0-alpha.5", path = "../conduit" }
+conduit = { version = "0.9.0", path = "../conduit" }

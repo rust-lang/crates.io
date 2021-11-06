@@ -11,9 +11,9 @@ the response is fresh.
 edition = "2018"
 
 [dependencies]
-conduit = { version = "0.9.0-alpha.5", path = "../conduit" }
-conduit-middleware = { version = "0.9.0-alpha.4", path = "../conduit-middleware" }
+conduit = { version = "0.9.0", path = "../conduit" }
+conduit-middleware = { version = "0.9.0", path = "../conduit-middleware" }
 time = { version = "0.2", default-features = false, features = ["std"] }
 
 [dev-dependencies]
-conduit-test = { version = "0.9.0-alpha.5", path = "../conduit-test" }
+conduit-test = { version = "0.9.0", path = "../conduit-test" }
