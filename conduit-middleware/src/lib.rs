@@ -224,8 +224,8 @@ mod tests {
         }
     }
 
-    fn get_extension<T: Any>(req: &dyn RequestExt) -> &T {
-        req.extensions().find::<T>().unwrap()
+    fn get_extension<T: Any + Send + Sync>(req: &dyn RequestExt) -> &T {
+        req.extensions().get::<T>().unwrap()
     }
 
     fn response(string: String) -> Response<Body> {

@@ -8,8 +8,6 @@ use std::time::{Duration, Instant};
 
 pub use http::{header, HeaderMap, Method, Request, Response, StatusCode, Version};
 
-mod typemap;
-
 pub type ResponseResult<Error> = Result<Response<Body>, Error>;
 pub type HttpResult = ResponseResult<http::Error>;
 
@@ -83,7 +81,7 @@ pub enum Host<'a> {
 }
 
 /// A Dictionary for extensions provided by the server or middleware
-pub type Extensions = typemap::TypeMap;
+pub type Extensions = http::Extensions;
 
 pub trait RequestExt {
     /// The elapsed time since the start of the request (headers received)
@@ -93,11 +91,7 @@ pub trait RequestExt {
     /// This method may panic if the server does not add `StartInstant` to the
     /// request extensions, or if it has been removed by the application.
     fn elapsed(&self) -> Duration {
-        self.extensions()
-            .find::<StartInstant>()
-            .unwrap()
-            .0
-            .elapsed()
+        self.extensions().get::<StartInstant>().unwrap().0.elapsed()
     }
 
     /// The version of HTTP being used

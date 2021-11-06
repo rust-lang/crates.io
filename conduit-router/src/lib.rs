@@ -143,7 +143,7 @@ pub trait RequestParams<'a> {
 
 impl<'a> RequestParams<'a> for &'a (dyn RequestExt + 'a) {
     fn params(self) -> &'a Params {
-        self.extensions().find::<Params>().expect("Missing params")
+        self.extensions().get::<Params>().expect("Missing params")
     }
 }
 
@@ -235,7 +235,7 @@ mod tests {
             req.params().find("id").unwrap_or("").to_string(),
             format!("{:?}", req.method()),
             req.extensions()
-                .find::<RoutePattern>()
+                .get::<RoutePattern>()
                 .unwrap()
                 .pattern()
                 .to_string(),
