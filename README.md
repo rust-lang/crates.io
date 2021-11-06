@@ -1,12 +1,12 @@
 # conduit-hyper
 
-This crate integrates a `hyper 0.13` server with a `conduit 0.8` application
+This crate integrates a `hyper 0.14` server with a `conduit 0.10` application
 stack.
 
 ## Error and Panic Handling
 
 If the application handler returns an `Err(_)` the server will log the
-description via the `log` crate and then return a generic 500 status response.
+description via the `tracing` crate and then return a generic 500 status response.
 
 If the handler panics, the default panic handler prints a message to stderr and the
 connnection is closed without sending a response.  In the future, these panics
