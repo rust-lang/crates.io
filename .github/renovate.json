@@ -58,5 +58,13 @@
         "matchPackageNames": ["rust"],
         "commitMessageTopic": "Rust",
         "labels": ["A-backend"]
+    }, {
+        "matchDatasources": ["crates"],
+        "matchPackagePatterns": [
+            "^conduit$",
+            "^conduit-",
+            "^sentry-conduit$"
+        ],
+        "groupName": "conduit packages"
     }]
 }
