@@ -55,25 +55,23 @@ pub(crate) struct ConduitRequest {
     path: String,
     remote_addr: SocketAddr,
     body: Cursor<Bytes>,
-    extensions: Extensions, // makes struct non-Send
 }
 
 impl ConduitRequest {
     pub(crate) fn new(info: &mut RequestInfo, remote_addr: SocketAddr, now: StartInstant) -> Self {
-        let (parts, body) = info.take();
+        let (mut parts, body) = info.take();
         let path = parts.0.uri.path().as_bytes();
         let path = percent_encoding::percent_decode(path)
             .decode_utf8_lossy()
             .into_owned();
-        let mut extensions = Extensions::new();
-        extensions.insert(now);
+
+        parts.0.extensions.insert(now);
 
         Self {
             parts,
             path,
             remote_addr,
             body: Cursor::new(body),
-            extensions,
         }
     }
 
@@ -123,11 +121,11 @@ impl RequestExt for ConduitRequest {
     }
 
     fn extensions(&self) -> &Extensions {
-        &self.extensions
+        &self.parts.0.extensions
     }
 
     fn mut_extensions(&mut self) -> &mut Extensions {
-        &mut self.extensions
+        &mut self.parts.0.extensions
     }
 
     /// Returns the value of the `Host` header
