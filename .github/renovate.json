@@ -59,7 +59,6 @@
         "commitMessageTopic": "Rust",
         "labels": ["A-backend"]
     }, {
-        "matchDatasources": ["crates"],
         "matchPackagePatterns": [
             "^conduit$",
             "^conduit-",
