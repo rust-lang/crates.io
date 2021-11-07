@@ -9,6 +9,7 @@ use crate::email::Emails;
 use crate::github::GitHubClient;
 use crate::metrics::{InstanceMetrics, ServiceMetrics};
 use diesel::r2d2;
+use moka::sync::{Cache, CacheBuilder};
 use oauth2::basic::BasicClient;
 use reqwest::blocking::Client;
 use scheduled_thread_pool::ScheduledThreadPool;
@@ -30,6 +31,12 @@ pub struct App {
 
     /// The server configuration
     pub config: config::Server,
+
+    /// Cache the `version_id` of a `canonical_crate_name:semver` pair
+    ///
+    /// This is used by the download endpoint to reduce the number of database queries. The
+    /// `version_id` is only cached under the canonical spelling of the crate name.
+    pub(crate) version_id_cacher: Cache<(String, String), i32>,
 
     /// Count downloads and periodically persist them in the database
     pub downloads_counter: DownloadsCounter,
@@ -148,12 +155,17 @@ impl App {
             None
         };
 
+        let version_id_cacher = CacheBuilder::new(config.version_id_cache_size)
+            .time_to_live(config.version_id_cache_ttl)
+            .build();
+
         App {
             primary_database,
             read_only_replica_database: replica_database,
             github,
             github_oauth,
             config,
+            version_id_cacher,
             downloads_counter: DownloadsCounter::new(),
             emails: Emails::from_environment(),
             service_metrics: ServiceMetrics::new().expect("could not initialize service metrics"),
