@@ -19,29 +19,30 @@ checksum = "f26201604c87b1e01bd3d98f8d5d9a8fcbb815e8cedb41ffccbeb4bf593a35fe"
 
 [[package]]
 name = "aead"
-version = "0.3.2"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7fc95d1bdb8e6666b2b217308eeeb09f2d6728d104be3e31916cc74d15420331"
+checksum = "0b613b8e1e3cf911a086f53f03bf286f52fd7a7258e4fa606f0ef220d39d8877"
 dependencies = [
  "generic-array 0.14.4",
 ]
 
 [[package]]
 name = "aes"
-version = "0.6.0"
+version = "0.7.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "884391ef1066acaa41e766ba8f596341b96e93ce34f9a43e7d24bf0a0eaf0561"
+checksum = "9e8b47f52ea9bae42228d07ec09eb676433d7c4ed1ebdf0f1d1c29ed446f1ab8"
 dependencies = [
- "aes-soft",
- "aesni",
+ "cfg-if",
  "cipher",
+ "cpufeatures",
+ "opaque-debug 0.3.0",
 ]
 
 [[package]]
 name = "aes-gcm"
-version = "0.8.0"
+version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5278b5fabbb9bd46e24aa69b2fdea62c99088e0a950a9be40e3e0101298f88da"
+checksum = "df5f85a83a7d8b0442b6aa7b504b8212c1733da07b98aae43d4bc21b2cb3cdf6"
 dependencies = [
  "aead",
  "aes",
@@ -49,26 +50,6 @@ dependencies = [
  "ctr",
  "ghash",
  "subtle",
-]
-
-[[package]]
-name = "aes-soft"
-version = "0.6.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "be14c7498ea50828a38d0e24a765ed2effe92a705885b57d029cd67d45744072"
-dependencies = [
- "cipher",
- "opaque-debug 0.3.0",
-]
-
-[[package]]
-name = "aesni"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea2e11f5e94c2f7d386164cc2aa1f97823fed6f259e486940a71c174dd01b0ce"
-dependencies = [
- "cipher",
- "opaque-debug 0.3.0",
 ]
 
 [[package]]
@@ -309,7 +290,7 @@ version = "0.2.0"
 dependencies = [
  "base64",
  "chrono",
- "hmac 0.11.0",
+ "hmac",
  "reqwest",
  "sha-1 0.9.8",
 ]
@@ -345,9 +326,9 @@ dependencies = [
 
 [[package]]
 name = "cipher"
-version = "0.2.5"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "12f8e7987cbd042a63249497f41aed09f8e65add917ea6566effbc56578d6801"
+checksum = "7ee52072ec15386f770805afd189a01c8841be8696bed250fa2f13c4c0d6dfb7"
 dependencies = [
  "generic-array 0.14.4",
 ]
@@ -412,18 +393,18 @@ dependencies = [
 
 [[package]]
 name = "conduit"
-version = "0.9.0"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f1267b8037a4f4a80783e7bcf912af06fc9b5f703a0d8e3a5ae54fbcbc2ae6ab"
+checksum = "b4e5a80747296346305a040817f5b717b968e1c44b0a1158083e42c923a8a96f"
 dependencies = [
  "http",
 ]
 
 [[package]]
 name = "conduit-conditional-get"
-version = "0.9.0"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8069c737c7ad008930f525011993c5ac0c5dc794e3d460114cdda8ba2de962a6"
+checksum = "03a3bf59476c2bf4c1f4f06517fc106bb59182a2acb64c3aca1c6e73b62615ad"
 dependencies = [
  "conduit",
  "conduit-middleware",
@@ -432,22 +413,21 @@ dependencies = [
 
 [[package]]
 name = "conduit-cookie"
-version = "0.9.0-alpha.5"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6df0d72704718f2206dc4d50d65fffedc461bc946d39239643086b8429727f4b"
+checksum = "2f88a8f6cc0c410bea02244bfec3ad16b290be77c9d222048be44cb2d1f457f1"
 dependencies = [
  "base64",
  "conduit",
  "conduit-middleware",
  "cookie",
- "time 0.2.27",
 ]
 
 [[package]]
 name = "conduit-git-http-backend"
-version = "0.9.0-alpha.2"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2a41aef2b54111fa1703d7b033b518d279e5938b83e7fe94aa51bd9f3671c383"
+checksum = "1abf8373148fdbfdcae9ba820382c44e07c661fa6e94d2ec6fdc3cecadc1c8bd"
 dependencies = [
  "conduit",
  "flate2",
@@ -455,9 +435,9 @@ dependencies = [
 
 [[package]]
 name = "conduit-hyper"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8d153bee46b1950c92754cbde9bb8fb616eafd130a00e4bd96f3ee815e3f3147"
+checksum = "a093556103d7ebe4e41c26e385ea59c2e7bd3d26ce768c58ab2a63d4191443f3"
 dependencies = [
  "bytes",
  "conduit",
@@ -473,9 +453,9 @@ dependencies = [
 
 [[package]]
 name = "conduit-middleware"
-version = "0.9.0"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9245e5d2c53dc1ac0cc72faa028e08f42edbc110571200edf940bd22c0bf3eee"
+checksum = "cdf9cfb6facb9f26ba69ba15b34388cd6564df1709609a93982bc5ac8e7f3a95"
 dependencies = [
  "conduit",
 ]
@@ -494,9 +474,9 @@ dependencies = [
 
 [[package]]
 name = "conduit-router"
-version = "0.9.0"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "615b0d3524ce76aa16a95001f3cafcbc5dee8d69a5dd1b7e1ec1775d7147fd06"
+checksum = "13cf1394b153c7ec3f8d659315b963791b831e40a3f89ca096b42c0f41fef535"
 dependencies = [
  "conduit",
  "route-recognizer",
@@ -506,9 +486,9 @@ dependencies = [
 
 [[package]]
 name = "conduit-static"
-version = "0.9.0"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6295d6a68380f7ff579d66fa35d6fa5921d62e0eb3dae5fc1855f000b6e414f6"
+checksum = "5d62df0c659106efe0ecef9ce6b92a4999c602dc85a569f496cdb32482ab79a1"
 dependencies = [
  "conduit",
  "conduit-mime-types",
@@ -518,9 +498,9 @@ dependencies = [
 
 [[package]]
 name = "conduit-test"
-version = "0.9.0"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eb2ceaca4b60dd8f43709efe39ff79367adb5d1555c917abea9e51b8c167cc62"
+checksum = "f1db57af62805ce0593e8bfa5c587d6e46b4c0694e7ebd2963bd7159ed0974a4"
 dependencies = [
  "conduit",
 ]
@@ -548,18 +528,18 @@ checksum = "f92cfa0fd5690b3cf8c1ef2cabbd9b7ef22fa53cf5e1f92b05103f6d5d1cf6e7"
 
 [[package]]
 name = "cookie"
-version = "0.15.1"
+version = "0.16.0-rc.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d5f1c7727e460397e56abc4bddc1d49e07a1ad78fc98eb2e1c8f032a58a2f80d"
+checksum = "188a7c2ae2a1026b9831889fd6461db5d33c4f6d54d6f862bd8b81a2fcefbdba"
 dependencies = [
  "aes-gcm",
  "base64",
  "hkdf",
- "hmac 0.10.1",
+ "hmac",
  "rand 0.8.4",
  "sha2",
  "subtle",
- "time 0.2.27",
+ "time 0.3.4",
  "version_check",
 ]
 
@@ -589,28 +569,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "cpuid-bool"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dcb25d077389e53838a8158c8e99174c5a9d902dee4904320db714f3c653ffba"
-
-[[package]]
 name = "crc32fast"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "81156fece84ab6a9f2afdb109ce3ae577e42b1228441eded99bd77f627953b1a"
 dependencies = [
  "cfg-if",
-]
-
-[[package]]
-name = "crypto-mac"
-version = "0.10.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bff07008ec701e8028e2ceb8f83f0e4274ee62bd2dbdc4fefff2e9a91824081a"
-dependencies = [
- "generic-array 0.14.4",
- "subtle",
 ]
 
 [[package]]
@@ -635,9 +599,9 @@ dependencies = [
 
 [[package]]
 name = "ctr"
-version = "0.6.0"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fb4a30d54f7443bf3d6191dcd486aca19e67cb3c49fa7a06a319966346707e7f"
+checksum = "049bb91fb4aaf0e3c7efa6cd5ef877dbbbd15b39dad06d9948de4ec8a75761ea"
 dependencies = [
  "cipher",
 ]
@@ -997,9 +961,9 @@ dependencies = [
 
 [[package]]
 name = "ghash"
-version = "0.3.1"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "97304e4cd182c3846f7575ced3890c53012ce534ad9114046b0a9e00bb30a375"
+checksum = "1583cc1656d7839fd3732b80cf4f38850336cdb9b8ded1cd399ca62958de3c99"
 dependencies = [
  "opaque-debug 0.3.0",
  "polyval",
@@ -1088,22 +1052,12 @@ checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
 name = "hkdf"
-version = "0.10.0"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "51ab2f639c231793c5f6114bdb9bbe50a7dbbfcd7c7c6bd8475dec2d991e964f"
+checksum = "01706d578d5c281058480e673ae4086a9f4710d8df1ad80a5b03e39ece5f886b"
 dependencies = [
  "digest 0.9.0",
- "hmac 0.10.1",
-]
-
-[[package]]
-name = "hmac"
-version = "0.10.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c1441c6b1e930e2817404b5046f1f989899143a12bf92de603b69f4e0aee1e15"
-dependencies = [
- "crypto-mac 0.10.1",
- "digest 0.9.0",
+ "hmac",
 ]
 
 [[package]]
@@ -1112,7 +1066,7 @@ version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2a2a2320eb7ec0ebe8da8f744d7812d9fc4cb4d09344ac01898dbcb6a20ae69b"
 dependencies = [
- "crypto-mac 0.11.1",
+ "crypto-mac",
  "digest 0.9.0",
 ]
 
@@ -1868,11 +1822,12 @@ checksum = "12295df4f294471248581bc09bef3c38a5e46f1e36d6a37353621a0c6c357e1f"
 
 [[package]]
 name = "polyval"
-version = "0.4.5"
+version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eebcc4aa140b9abd2bc40d9c3f7ccec842679cd79045ac3a7ac698c1a064b7cd"
+checksum = "8419d2b623c7c0896ff2d5d96e2cb4ede590fed28fcc34934f4c33c036e620a1"
 dependencies = [
- "cpuid-bool",
+ "cfg-if",
+ "cpufeatures",
  "opaque-debug 0.3.0",
  "universal-hash",
 ]
@@ -2303,9 +2258,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-conduit"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "34cdf658088ed85c94dd900f30bef0ab53d6f12c93723f1e596453fe4d9c1b3a"
+checksum = "bb9e8d48e1b7bb630a01f4909feaa74828511b1e8ef4ee63ac196919c6f9ac21"
 dependencies = [
  "conduit",
  "conduit-middleware",
@@ -2800,9 +2755,20 @@ dependencies = [
  "libc",
  "standback",
  "stdweb",
- "time-macros",
+ "time-macros 0.1.1",
  "version_check",
  "winapi",
+]
+
+[[package]]
+name = "time"
+version = "0.3.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "99beeb0daeac2bd1e86ac2c21caddecb244b39a093594da1a661ec2060c7aedd"
+dependencies = [
+ "itoa",
+ "libc",
+ "time-macros 0.2.3",
 ]
 
 [[package]]
@@ -2814,6 +2780,12 @@ dependencies = [
  "proc-macro-hack",
  "time-macros-impl",
 ]
+
+[[package]]
+name = "time-macros"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "25eb0ca3468fc0acc11828786797f6ef9aa1555e4a211a60d64cc8e4d1be47d6"
 
 [[package]]
 name = "time-macros-impl"

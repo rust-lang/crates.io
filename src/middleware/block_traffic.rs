@@ -37,7 +37,7 @@ impl AroundMiddleware for BlockTraffic {
 
 impl Handler for BlockTraffic {
     fn call(&self, req: &mut dyn RequestExt) -> AfterResult {
-        let app = req.extensions().find::<Arc<App>>().expect("Missing app");
+        let app = req.extensions().get::<Arc<App>>().expect("Missing app");
         let domain_name = app.config.domain_name.clone();
 
         let has_blocked_value = req

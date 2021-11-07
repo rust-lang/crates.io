@@ -43,7 +43,7 @@ struct CustomMetadata {
 }
 
 pub fn add_custom_metadata<V: Display>(req: &mut dyn RequestExt, key: &'static str, value: V) {
-    if let Some(metadata) = req.mut_extensions().find_mut::<CustomMetadata>() {
+    if let Some(metadata) = req.mut_extensions().get_mut::<CustomMetadata>() {
         metadata.entries.push((key, value.to_string()));
     } else {
         let mut metadata = CustomMetadata {
@@ -78,7 +78,7 @@ fn report_to_sentry(req: &dyn RequestExt, res: &AfterResult) {
             scope.set_tag("response.status", status.as_str());
         }
 
-        if let Some(response_time) = req.extensions().find::<ResponseTime>() {
+        if let Some(response_time) = req.extensions().get::<ResponseTime>() {
             scope.set_extra("Response time [ms]", response_time.as_millis().into());
         }
     });
@@ -87,7 +87,7 @@ fn report_to_sentry(req: &dyn RequestExt, res: &AfterResult) {
 #[cfg(test)]
 pub(crate) fn get_log_message(req: &dyn RequestExt, key: &'static str) -> String {
     // Unwrap shouldn't panic as no other code has access to the private struct to remove it
-    for (k, v) in &req.extensions().find::<CustomMetadata>().unwrap().entries {
+    for (k, v) in &req.extensions().get::<CustomMetadata>().unwrap().entries {
         if key == *k {
             return v.clone();
         }
@@ -131,14 +131,14 @@ impl Display for RequestLine<'_> {
 
         line.add_quoted_field("fwd", request_header(self.req, "x-real-ip"))?;
 
-        let response_time = self.req.extensions().find::<ResponseTime>();
+        let response_time = self.req.extensions().get::<ResponseTime>();
         if let Some(response_time) = response_time {
             line.add_field("service", response_time)?;
         }
         line.add_field("status", status.as_str())?;
         line.add_quoted_field("user_agent", request_header(self.req, header::USER_AGENT))?;
 
-        if let Some(metadata) = self.req.extensions().find::<CustomMetadata>() {
+        if let Some(metadata) = self.req.extensions().get::<CustomMetadata>() {
             for (key, value) in &metadata.entries {
                 line.add_quoted_field(key, value)?;
             }
@@ -164,7 +164,7 @@ impl<'a> Display for FullPath<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let request = self.0;
 
-        let original_path = request.extensions().find::<OriginalPath>();
+        let original_path = request.extensions().get::<OriginalPath>();
         let path = original_path
             .map(|p| p.0.as_str())
             .unwrap_or_else(|| request.path());

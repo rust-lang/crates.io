@@ -151,7 +151,7 @@ struct C(pub fn(&mut dyn RequestExt) -> EndpointResult);
 
 impl Handler for C {
     fn call(&self, req: &mut dyn RequestExt) -> HandlerResult {
-        if let Some(pattern) = req.extensions().find::<RoutePattern>() {
+        if let Some(pattern) = req.extensions().get::<RoutePattern>() {
             let pattern = pattern.pattern();
 
             // Configure the Sentry `transaction` field *before* we handle the request,
