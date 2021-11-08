@@ -1,6 +1,7 @@
 import * as Categories from './route-handlers/categories';
 import * as Crates from './route-handlers/crates';
 import * as DocsRS from './route-handlers/docs-rs';
+import * as Invites from './route-handlers/invites';
 import * as Keywords from './route-handlers/keywords';
 import * as Me from './route-handlers/me';
 import * as Session from './route-handlers/session';
@@ -12,6 +13,7 @@ export default function () {
   Categories.register(this);
   Crates.register(this);
   DocsRS.register(this);
+  Invites.register(this);
   Keywords.register(this);
   Me.register(this);
   Session.register(this);
