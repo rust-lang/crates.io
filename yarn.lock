@@ -7359,10 +7359,10 @@ eslint-plugin-qunit-dom@0.2.0:
   resolved "https://registry.yarnpkg.com/eslint-plugin-qunit-dom/-/eslint-plugin-qunit-dom-0.2.0.tgz#681ea7fbce81d8548b6cc68dc17448e1a4d38d87"
   integrity sha512-uqqkzj3k5ee36XOkr6Y9DfTC/6uXq/aWuuo14o79Bky+SmQy3NzK+Vee7UBICDEHhi7SDsFPxdsBFm9cjNAuvg==
 
-eslint-plugin-unicorn@37.0.1:
-  version "37.0.1"
-  resolved "https://registry.yarnpkg.com/eslint-plugin-unicorn/-/eslint-plugin-unicorn-37.0.1.tgz#a2292dc302ffc0be1791e6ebbb4ae93242833f11"
-  integrity sha512-E1jq5u9ojnadisJcPi+hMXTGSiIzkIUMDvWsBudsCGXvKUB2aNSU2TcfyW2/jAS5A4ryBXfzxLykMxX1EdluSQ==
+eslint-plugin-unicorn@38.0.1:
+  version "38.0.1"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-unicorn/-/eslint-plugin-unicorn-38.0.1.tgz#f95a7fa6e8c92617cdcb4b1ddbc15d877477e73d"
+  integrity sha512-eu4HCg7Bv43nk/hYZoWpLzRo668Nb7swQySn94aohn0heh9KLJ1GOFgVxJndLS8BploMGaClxgsyTNGJrP69yw==
   dependencies:
     "@babel/helper-validator-identifier" "^7.14.9"
     ci-info "^3.2.0"
