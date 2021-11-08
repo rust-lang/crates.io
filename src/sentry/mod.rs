@@ -1,3 +1,6 @@
+mod middleware;
+
+pub use middleware::CustomSentryMiddleware as SentryMiddleware;
 use sentry::{ClientInitGuard, ClientOptions, IntoDsn};
 
 /// Initializes the Sentry SDK from the environment variables.

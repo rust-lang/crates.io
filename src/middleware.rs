@@ -25,7 +25,7 @@ mod log_connection_pool_status;
 pub mod log_request;
 mod normalize_path;
 mod require_user_agent;
-mod response_timing;
+pub mod response_timing;
 mod static_or_continue;
 mod update_metrics;
 
@@ -33,11 +33,11 @@ use conduit_conditional_get::ConditionalGet;
 use conduit_cookie::{Middleware as Cookie, SessionMiddleware};
 use conduit_middleware::MiddlewareBuilder;
 use conduit_router::RouteBuilder;
-use sentry_conduit::SentryMiddleware;
 
 use std::env;
 use std::sync::Arc;
 
+use crate::sentry::SentryMiddleware;
 use crate::{App, Env};
 
 pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBuilder {
