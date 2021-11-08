@@ -20,6 +20,13 @@
     "regexManagers": [
         {
             "fileMatch": ["^.github/workflows/[^\\.]+\\.ya?ml$"],
+            "matchStrings": ["NODE_VERSION:\\s*(?<currentValue>.*?)\n"],
+            "depNameTemplate": "node",
+            "datasourceTemplate": "github-releases",
+            "lookupNameTemplate": "nodejs/node"
+        },
+        {
+            "fileMatch": ["^.github/workflows/[^\\.]+\\.ya?ml$"],
             "matchStrings": ["RUST_VERSION:\\s*(?<currentValue>.*?)\n"],
             "depNameTemplate": "rust",
             "datasourceTemplate": "github-releases",
