@@ -135,7 +135,7 @@
     "ember-modifier": "3.0.0"
   },
   "engines": {
-    "node": "^14.9.0",
+    "node": "14.18.1",
     "npm": "^8.0.0"
   },
   "ember": {

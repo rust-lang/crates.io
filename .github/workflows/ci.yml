@@ -10,6 +10,7 @@ on:
   pull_request:
 
 env:
+  NODE_VERSION: 14.18.1
   RUST_VERSION: 1.56.1
 
 jobs:
@@ -29,7 +30,7 @@ jobs:
 
       - uses: actions/setup-node@v2
         with:
-          node-version: '14.x'
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Install node modules
         run: yarn install
@@ -59,7 +60,7 @@ jobs:
 
       - uses: actions/setup-node@v2
         with:
-          node-version: '14.x'
+          node-version: ${{ env.NODE_VERSION }}
 
       - run: yarn install
 
