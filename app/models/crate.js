@@ -42,6 +42,12 @@ export default class Crate extends Model {
     }
   }
 
+  get owners() {
+    let teams = this.owner_team.toArray() ?? [];
+    let users = this.owner_user.toArray() ?? [];
+    return [...teams, ...users];
+  }
+
   follow = memberAction({ type: 'PUT', path: 'follow' });
   unfollow = memberAction({ type: 'DELETE', path: 'follow' });
 

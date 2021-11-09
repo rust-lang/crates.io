@@ -148,7 +148,7 @@ module('Acceptance | crate page', function (hooks) {
     this.server.loadFixtures();
 
     await visit('/crates/nanomsg');
-    await click('[data-test-owners] [data-test-user-link="blabaere"]');
+    await click('[data-test-owners] [data-test-owner-link="blabaere"]');
 
     assert.equal(currentURL(), '/users/blabaere');
     assert.dom('[data-test-heading] [data-test-username]').hasText('blabaere');
@@ -158,7 +158,7 @@ module('Acceptance | crate page', function (hooks) {
     this.server.loadFixtures();
 
     await visit('/crates/nanomsg');
-    await click('[data-test-owners] [data-test-team-link="github:org:thehydroimpulse"]');
+    await click('[data-test-owners] [data-test-owner-link="github:org:thehydroimpulse"]');
 
     assert.equal(currentURL(), '/teams/github:org:thehydroimpulse');
     assert.dom('[data-test-heading] [data-test-team-name]').hasText('thehydroimpulseteam');
@@ -170,7 +170,7 @@ module('Acceptance | crate page', function (hooks) {
     await visit('/crates/nanomsg');
 
     assert
-      .dom('[data-test-owners] [data-test-team-link="github:org:thehydroimpulse"] img')
+      .dom('[data-test-owners] [data-test-owner-link="github:org:thehydroimpulse"] img')
       .hasAttribute('src', 'https://avatars.githubusercontent.com/u/565790?v=3&s=64');
 
     assert.dom('[data-test-owners] li').exists({ count: 4 });
@@ -181,7 +181,7 @@ module('Acceptance | crate page', function (hooks) {
 
     await visit('/crates/nanomsg');
 
-    assert.dom('[data-test-owners] [data-test-team-link="github:org:thehydroimpulse"]').exists();
+    assert.dom('[data-test-owners] [data-test-owner-link="github:org:thehydroimpulse"]').exists();
     assert.dom('[data-test-owners] li').exists({ count: 4 });
   });
 
