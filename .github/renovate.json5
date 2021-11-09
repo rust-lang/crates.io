@@ -6,16 +6,16 @@
         ":maintainLockFilesWeekly",
         ":prConcurrentLimitNone",
         ":prHourlyLimitNone",
-        ":semanticCommitsDisabled"
+        ":semanticCommitsDisabled",
     ],
     "js": {
         "labels": ["A-frontend"],
         "reviewers": ["locks", "pichfl", "Turbo87"],
-        "reviewersSampleSize": 1
+        "reviewersSampleSize": 1,
     },
     "rust": {
         "dependencyDashboardApproval": true,
-        "labels": ["A-backend"]
+        "labels": ["A-backend"],
     },
     "regexManagers": [
         {
@@ -23,54 +23,54 @@
             "matchStrings": ["NODE_VERSION:\\s*(?<currentValue>.*?)\n"],
             "depNameTemplate": "node",
             "datasourceTemplate": "github-releases",
-            "lookupNameTemplate": "nodejs/node"
+            "lookupNameTemplate": "nodejs/node",
         },
         {
             "fileMatch": ["^.github/workflows/[^\\.]+\\.ya?ml$"],
             "matchStrings": ["RUST_VERSION:\\s*(?<currentValue>.*?)\n"],
             "depNameTemplate": "rust",
             "datasourceTemplate": "github-releases",
-            "lookupNameTemplate": "rust-lang/rust"
+            "lookupNameTemplate": "rust-lang/rust",
         },
         {
             "fileMatch": ["^RustConfig$"],
             "matchStrings": ["VERSION=(?<currentValue>.*?)\n"],
             "depNameTemplate": "rust",
             "datasourceTemplate": "github-releases",
-            "lookupNameTemplate": "rust-lang/rust"
+            "lookupNameTemplate": "rust-lang/rust",
         }
     ],
     "postUpdateOptions": ["yarnDedupeFewer"],
     "packageRules": [{
         "matchPackageNames": ["ember-cli", "ember-data", "ember-source"],
-        "separateMinorPatch": true
+        "separateMinorPatch": true,
     }, {
         "matchPackageNames": ["@percy/cli", "webpack"],
-        "extends": ["schedule:weekly"]
+        "extends": ["schedule:weekly"],
     }, {
         "matchLanguages": ["rust"],
-        "rangeStrategy": "bump"
+        "rangeStrategy": "bump",
     }, {
         "matchLanguages": ["js"],
         "matchUpdateTypes": ["lockFileMaintenance"],
         "additionalBranchPrefix": "js-",
-        "commitMessageSuffix": "(JS)"
+        "commitMessageSuffix": "(JS)",
     }, {
         "matchLanguages": ["rust"],
         "matchUpdateTypes": ["lockFileMaintenance"],
         "additionalBranchPrefix": "rust-",
-        "commitMessageSuffix": "(Rust)"
+        "commitMessageSuffix": "(Rust)",
     }, {
         "matchManagers": ["regex"],
         "matchPackageNames": ["rust"],
         "commitMessageTopic": "Rust",
-        "labels": ["A-backend"]
+        "labels": ["A-backend"],
     }, {
         "matchPackagePatterns": [
             "^conduit$",
             "^conduit-",
-            "^sentry-conduit$"
+            "^sentry-conduit$",
         ],
-        "groupName": "conduit packages"
-    }]
+        "groupName": "conduit packages",
+    }],
 }
