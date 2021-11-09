@@ -1,0 +1,11 @@
+.owners {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    li {
+        margin: 0 7px 7px 0;
+    }
+}
