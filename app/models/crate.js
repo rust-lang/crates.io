@@ -20,7 +20,6 @@ export default class Crate extends Model {
 
   @hasMany('versions', { async: true }) versions;
 
-  @hasMany('users', { async: true }) owners;
   @hasMany('teams', { async: true }) owner_team;
   @hasMany('users', { async: true }) owner_user;
   @hasMany('version-download', { async: true }) version_downloads;
