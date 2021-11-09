@@ -1,4 +1,8 @@
-<ul local-class="list {{if this.showDetailedList "detailed"}}" data-test-owners>
+<ul
+  role="list"
+  local-class="list {{if this.showDetailedList "detailed"}}"
+  data-test-owners
+>
   {{#each @owners as |owner|}}
     <li>
       <LinkTo
