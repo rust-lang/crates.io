@@ -20,7 +20,6 @@ export default class Crate extends Model {
 
   @hasMany('versions', { async: true }) versions;
 
-  @hasMany('users', { async: true }) owners;
   @hasMany('teams', { async: true }) owner_team;
   @hasMany('users', { async: true }) owner_user;
   @hasMany('version-download', { async: true }) version_downloads;
@@ -41,6 +40,12 @@ export default class Crate extends Model {
     if (this.max_version && this.max_version !== '0.0.0') {
       return this.max_version;
     }
+  }
+
+  get owners() {
+    let teams = this.owner_team.toArray() ?? [];
+    let users = this.owner_user.toArray() ?? [];
+    return [...teams, ...users];
   }
 
   follow = memberAction({ type: 'PUT', path: 'follow' });

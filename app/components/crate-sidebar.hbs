@@ -84,24 +84,7 @@
 
     <div>
       <h3>Owners</h3>
-
-      <ul local-class='owners' data-test-owners>
-        {{#each @crate.owner_team as |team|}}
-          <li>
-            <LinkTo @route={{team.kind}} @model={{team.login}} data-test-team-link={{team.login}}>
-              <UserAvatar @user={{team}} @size="medium-small" />
-            </LinkTo>
-          </li>
-        {{/each}}
-
-        {{#each @crate.owner_user as |user|}}
-          <li>
-            <LinkTo @route={{user.kind}} @model={{user.login}} data-test-user-link={{user.login}}>
-              <UserAvatar @user={{user}} @size="medium-small" />
-            </LinkTo>
-          </li>
-        {{/each}}
-      </ul>
+      <OwnersList @owners={{@crate.owners}} />
     </div>
   </div>
 
@@ -110,7 +93,7 @@
       {{#if @crate.categories}}
         <div>
           <h3>Categories</h3>
-          <ul>
+          <ul local-class="categories">
             {{#each @crate.categories as |category|}}
               <li><LinkTo @route="category" @model={{category.slug}}>{{category.category}}</LinkTo></li>
             {{/each}}
