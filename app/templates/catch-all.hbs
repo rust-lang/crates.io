@@ -2,10 +2,12 @@
   <div local-class="content">
     {{svg-jar "cuddlyferris" local-class="logo"}}
 
-    <h1 local-class="title" data-test-title>Page not found</h1>
+    <h1 local-class="title" data-test-title>{{or @model.title "Page not found"}}</h1>
 
-    <a href="javascript:history.back()" local-class="link">
-      Go Back
-    </a>
+    {{#if @model.tryAgain}}
+      <a href="javascript:location.reload()" local-class="link" data-test-try-again {{on "click" this.reload}}>Try Again</a>
+    {{else}}
+      <a href="javascript:history.back()" local-class="link" data-test-go-back>Go Back</a>
+    {{/if}}
   </div>
 </div>
