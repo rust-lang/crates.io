@@ -13,13 +13,15 @@ module('Acceptance | /accept-invite/:token', function (hooks) {
   test('visiting to /accept-invite shows 404 page', async function (assert) {
     await visit('/accept-invite');
     assert.equal(currentURL(), '/accept-invite');
-    assert.dom('main').containsText("Oops, that route doesn't exist!");
+    assert.dom('[data-test-404-page]').exists();
+    assert.dom('[data-test-title]').hasText('Page not found');
   });
 
   test('visiting to /accept-invite/ shows 404 page', async function (assert) {
     await visit('/accept-invite/');
     assert.equal(currentURL(), '/accept-invite/');
-    assert.dom('main').containsText("Oops, that route doesn't exist!");
+    assert.dom('[data-test-404-page]').exists();
+    assert.dom('[data-test-title]').hasText('Page not found');
   });
 
   test('shows error for unknown token', async function (assert) {

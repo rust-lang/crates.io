@@ -1,9 +1,19 @@
-.p404 {
-    font-size: 120%;
-    line-height: 3em;
+.wrapper {
+    height: 100%;
+    display: grid;
+    place-items: center;
 }
 
-.search-field {
-    width: 100%;
-    padding: 5px;
+.content {
+    display: grid;
+    place-items: center;
+    margin: 25px 0;
+}
+
+.logo {
+    max-width: 200px;
+}
+
+.link {
+    font-weight: 500;
 }
