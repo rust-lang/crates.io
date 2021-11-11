@@ -1,43 +1,83 @@
+:root {
+    --footer-bg-color: var(--green800);
+    --footer-header-color: var(--yellow500);
+    --footer-header-shadow-color: var(--green900);
+    --footer-link-color: #fff;
+    --footer-link-hover-color: var(--yellow500);
+    --footer-link-hover-shadow-color: var(--green900);
+}
+
 .footer {
-    display: flex;
-    justify-content: center;
-    width: 100%;
+    display: grid;
+    justify-items: center;
     background: var(--footer-bg-color);
 }
 
-.sep {
-    margin: 0 5px;
-    color: var(--separator-color);
-}
-
-.after-main-links {
+.content {
     composes: width-limit from '../styles/application.module.css';
+    display: grid;
+    gap: 40px 20px;
+    padding: 30px;
 
-    margin: 20px;
+    @media only screen and (min-width: 551px) {
+        grid-template-columns: repeat(2, 1fr);
+        justify-content: center;
+        padding: 50px 30px;
+    }
 
-    div {
-        margin: 10px 0;
-        text-align: center;
+    @media only screen and (min-width: 751px) {
+        grid-template-columns: repeat(4, 1fr);
+    }
 
-        a { color: white; }
-        a:hover { color: darken(white, 10%); }
+    h1 {
+        margin: 0 0 20px;
+        font-size: 20px;
+        font-weight: 500;
+        color: var(--footer-header-color);
+        text-shadow: 1px 1px 1px var(--footer-header-shadow-color);
+    }
 
-        @media only screen and (max-width: 450px) {
-            margin: 20px;
-            .sep { display: none; }
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+    ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
 
-            a {
-                width: 50%;
-                font-size: 110%;
-                padding: 5px;
+        > * + * {
+            margin-top: 15px;
+        }
+    }
 
-                &:not(:first-child) {
-                    border-top: 1px solid var(--separator-color);
-                }
+    li {
+        height: 16px;
+    }
+
+    a {
+        display: inline-flex;
+        /* slightly increased click targets */
+        margin: -5px;
+        padding: 5px;
+        color: #fff;
+        font-size: 16px;
+        line-height: 16px;
+        white-space: nowrap;
+        transition: 300ms;
+
+        &:hover {
+            color: var(--footer-link-hover-color);
+            text-shadow: 1px 1px 1px var(--footer-link-hover-shadow-color);
+            /* apply color fade only on mouse-out */
+            transition: 0s;
+
+            svg {
+                filter: drop-shadow(1px 1px 1px var(--footer-link-hover-shadow-color));
             }
         }
+    }
+
+    svg {
+        height: 20px;
+        width: 20px;
+        margin: -2px 10px -2px 0;
+        flex-shrink: 0;
     }
 }
