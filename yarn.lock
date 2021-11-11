@@ -3148,7 +3148,7 @@ aws4@^1.8.0:
   resolved "https://registry.yarnpkg.com/aws4/-/aws4-1.11.0.tgz#d61f46d83b2519250e2784daf5b09479a8b41c59"
   integrity sha512-xh1Rl34h6Fi1DC2WWKfxUTVqRsNnr6LsKz2+hfwDxQJWmrx8+c7ylaqBMcHfl1U1r2dsifOvKX3LQuLNZ+XSvA==
 
-axe-core@^4.1.4:
+axe-core@^4.3.5:
   version "4.3.5"
   resolved "https://registry.yarnpkg.com/axe-core/-/axe-core-4.3.5.tgz#78d6911ba317a8262bfee292aeafcc1e04b49cc5"
   integrity sha512-WKTW1+xAzhMS5dJsxWkliixlO/PqC4VhmO9T4juNYcaTg9jzWiJsou6m5pxWYGfigWbwzJWeFY6z47a+4neRXA==
@@ -6049,14 +6049,14 @@ elliptic@^6.5.3:
     minimalistic-assert "^1.0.1"
     minimalistic-crypto-utils "^1.0.1"
 
-ember-a11y-testing@4.2.1:
-  version "4.2.1"
-  resolved "https://registry.yarnpkg.com/ember-a11y-testing/-/ember-a11y-testing-4.2.1.tgz#7e4280166d67d22145257fcf4f730446f0c3194d"
-  integrity sha512-coGXx8isrzbtS0W3OxS2bI4af1FzFZNtYHq+KrMaUW7hJdrbq1s0CGl6XpH8NaVZ0oTO0t9P0+pwu42c/Ozzzg==
+ember-a11y-testing@4.3.0:
+  version "4.3.0"
+  resolved "https://registry.yarnpkg.com/ember-a11y-testing/-/ember-a11y-testing-4.3.0.tgz#30bd1f206998335d621b5138a5cdc12c729a50e9"
+  integrity sha512-w+2BEZv4gLjehYd+QP+BeAzOOdhx5jByjfrU496H8MnNBGjoNUCt7ovvdW5tuDdtQLR06ZaYkxrUrFg1zl7J4A==
   dependencies:
     "@ember/test-waiters" "^2.4.3 || ^3.0.0"
     "@scalvert/ember-setup-middleware-reporter" "^0.1.1"
-    axe-core "^4.1.4"
+    axe-core "^4.3.5"
     body-parser "^1.19.0"
     broccoli-persistent-filter "^3.1.2"
     date-and-time "^1.0.0"
