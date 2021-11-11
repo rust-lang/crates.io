@@ -64,14 +64,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     let threads = dotenv::var("SERVER_THREADS")
         .map(|s| s.parse().expect("SERVER_THREADS was not a valid number"))
-        .unwrap_or_else(|_| {
-            if env == Env::Development {
-                5
-            } else {
-                // A large default because this can be easily changed via env and in production we
-                // want the logging middleware to accurately record the start time.
-                500
-            }
+        .unwrap_or_else(|_| match env {
+            Env::Development => 5,
+            // A large default because this can be easily changed via env and in production we
+            // want the logging middleware to accurately record the start time.
+            _ => 500,
         });
 
     println!("Booting with a hyper based server");
