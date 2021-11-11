@@ -41,19 +41,15 @@ impl ConduitRequest {
             body: Cursor::new(body),
         }
     }
-
-    fn parts(&self) -> &HttpParts {
-        &self.parts
-    }
 }
 
 impl RequestExt for ConduitRequest {
     fn http_version(&self) -> Version {
-        self.parts().version
+        self.parts.version
     }
 
     fn method(&self) -> &Method {
-        &self.parts().method
+        &self.parts.method
     }
 
     /// Always returns Http
@@ -108,7 +104,7 @@ impl RequestExt for ConduitRequest {
     }
 
     fn query_string(&self) -> Option<&str> {
-        self.parts().uri.query()
+        self.parts.uri.query()
     }
 
     fn body(&mut self) -> &mut dyn Read {
