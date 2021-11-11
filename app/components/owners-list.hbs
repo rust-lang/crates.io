@@ -12,7 +12,7 @@
         data-test-owner-link={{owner.login}}
       >
         <UserAvatar @user={{owner}} @size="medium-small" local-class="avatar" aria-hidden="true" />
-        <span local-class="name {{unless this.showDetailedList "hidden-name"}}">{{or owner.display_name owner.name}}</span>
+        <span local-class="name {{unless this.showDetailedList "hidden-name"}}">{{or owner.display_name owner.name owner.login}}</span>
       </LinkTo>
     </li>
   {{/each}}

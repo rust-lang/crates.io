@@ -35,6 +35,30 @@ module('Component | OwnersList', function (hooks) {
     assert.dom('[data-test-owner-link="user-1"]').hasAttribute('href', '/users/user-1');
   });
 
+  test('user without `name`', async function (assert) {
+    let crate = this.server.create('crate');
+    this.server.create('version', { crate });
+
+    let user = this.server.create('user', { name: null, login: 'anonymous' });
+    this.server.create('crate-ownership', { crate, user });
+
+    let store = this.owner.lookup('service:store');
+    this.crate = await store.findRecord('crate', crate.name);
+    await this.crate.hasMany('owner_team').load();
+    await this.crate.hasMany('owner_user').load();
+
+    await render(hbs`<OwnersList @owners={{this.crate.owners}} />`);
+    assert.dom('[data-test-owners="detailed"]').exists();
+    assert.dom('ul > li').exists({ count: 1 });
+    assert.dom('[data-test-owner-link]').exists({ count: 1 });
+
+    let logins = [...this.element.querySelectorAll('[data-test-owner-link]')].map(it => it.dataset.testOwnerLink);
+    assert.deepEqual(logins, ['anonymous']);
+
+    assert.dom('[data-test-owner-link="anonymous"]').hasText('anonymous');
+    assert.dom('[data-test-owner-link="anonymous"]').hasAttribute('href', '/users/anonymous');
+  });
+
   test('five users', async function (assert) {
     let crate = this.server.create('crate');
     this.server.create('version', { crate });
