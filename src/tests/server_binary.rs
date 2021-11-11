@@ -9,6 +9,7 @@ use std::io::{BufRead, BufReader, Read};
 use std::process::{Child, Command, Stdio};
 use std::sync::{mpsc::Sender, Arc};
 use std::time::Duration;
+use url::Url;
 
 const SERVER_BOOT_TIMEOUT_SECONDS: u64 = 30;
 
@@ -195,9 +196,12 @@ where
 
             // If we expect the port number to be logged into this stream, look for it and send it
             // over the channel as soon as it's found.
-            if let Some(port) = &port_send {
-                if let Some(port_str) = line.strip_prefix("listening on port ") {
-                    port.send(port_str.into())
+            if let Some(port_send) = &port_send {
+                if let Some(url) = line.strip_prefix("Listening at ") {
+                    let url = Url::parse(url).unwrap();
+                    let port = url.port().unwrap();
+                    port_send
+                        .send(port.to_string())
                         .expect("failed to send the port to the test thread")
                 }
             }
