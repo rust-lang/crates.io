@@ -14,58 +14,25 @@ use std::net::SocketAddr;
 
 use conduit::{Extensions, HeaderMap, Host, Method, RequestExt, Scheme, StartInstant, Version};
 use http::request::Parts as HttpParts;
+use http::Request;
 use hyper::body::Bytes;
 
-/// Owned data consumed by the background thread
-///
-/// `ConduitRequest` cannot be sent between threads, so the needed request data
-/// is extracted from hyper on a core thread and taken by the background thread.
-pub(crate) struct RequestInfo(Option<(Parts, Bytes)>);
-
-impl RequestInfo {
-    /// Save the request info that can be sent between threads
-    pub(crate) fn new(parts: HttpParts, body: Bytes) -> Self {
-        let tuple = (Parts(parts), body);
-        Self(Some(tuple))
-    }
-
-    /// Take back the request info
-    ///
-    /// Call this from the background thread to obtain ownership of the `Send` data.
-    ///
-    /// # Panics
-    ///
-    /// Panics if called more than once on a value.
-    fn take(&mut self) -> (Parts, Bytes) {
-        self.0.take().expect("called take multiple times")
-    }
-}
-
-#[derive(Debug)]
-pub(crate) struct Parts(HttpParts);
-
-impl Parts {
-    fn headers(&self) -> &HeaderMap {
-        &self.0.headers
-    }
-}
-
 pub(crate) struct ConduitRequest {
-    parts: Parts,
+    parts: HttpParts,
     path: String,
     remote_addr: SocketAddr,
     body: Cursor<Bytes>,
 }
 
 impl ConduitRequest {
-    pub(crate) fn new(info: &mut RequestInfo, remote_addr: SocketAddr, now: StartInstant) -> Self {
-        let (mut parts, body) = info.take();
-        let path = parts.0.uri.path().as_bytes();
+    pub(crate) fn new(request: Request<Bytes>, remote_addr: SocketAddr, now: StartInstant) -> Self {
+        let (mut parts, body) = request.into_parts();
+        let path = parts.uri.path().as_bytes();
         let path = percent_encoding::percent_decode(path)
             .decode_utf8_lossy()
             .into_owned();
 
-        parts.0.extensions.insert(now);
+        parts.extensions.insert(now);
 
         Self {
             parts,
@@ -76,7 +43,7 @@ impl ConduitRequest {
     }
 
     fn parts(&self) -> &HttpParts {
-        &self.parts.0
+        &self.parts
     }
 }
 
@@ -95,7 +62,7 @@ impl RequestExt for ConduitRequest {
     }
 
     fn headers(&self) -> &HeaderMap {
-        self.parts.headers()
+        &self.parts.headers
     }
 
     /// Returns the length of the buffered body
@@ -121,11 +88,11 @@ impl RequestExt for ConduitRequest {
     }
 
     fn extensions(&self) -> &Extensions {
-        &self.parts.0.extensions
+        &self.parts.extensions
     }
 
     fn mut_extensions(&mut self) -> &mut Extensions {
-        &mut self.parts.0.extensions
+        &mut self.parts.extensions
     }
 
     /// Returns the value of the `Host` header
@@ -133,7 +100,6 @@ impl RequestExt for ConduitRequest {
     /// If the header is not present or is invalid UTF-8, then the empty string is returned
     fn host(&self) -> Host<'_> {
         let host = self
-            .parts
             .headers()
             .get(http::header::HOST)
             .map(|h| h.to_str().unwrap_or(""))

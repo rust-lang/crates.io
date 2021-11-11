@@ -1,4 +1,4 @@
-use crate::adaptor::{ConduitRequest, RequestInfo};
+use crate::adaptor::ConduitRequest;
 use crate::file_stream::FileStream;
 use crate::service::ServiceError;
 use crate::{ConduitResponse, HyperResponse};
@@ -32,11 +32,11 @@ impl<H: Handler> BlockingHandler<H> {
         let now = StartInstant::now();
 
         let full_body = hyper::body::to_bytes(body).await?;
-        let mut request_info = RequestInfo::new(parts, full_body);
+        let request = Request::from_parts(parts, full_body);
 
         let handler = self.handler.clone();
         tokio::task::spawn_blocking(move || {
-            let mut request = ConduitRequest::new(&mut request_info, remote_addr, now);
+            let mut request = ConduitRequest::new(request, remote_addr, now);
             handler
                 .call(&mut request)
                 .map(conduit_into_hyper)
