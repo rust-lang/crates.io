@@ -4,7 +4,7 @@
   data-test-owners
 >
   {{#each @owners as |owner|}}
-    <li>
+    <li local-class="{{if (eq owner.kind "team") "team"}}">
       <LinkTo
         @route={{owner.kind}}
         @model={{owner.login}}
