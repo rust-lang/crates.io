@@ -154,6 +154,8 @@
     margin-left: 3px;
     margin-bottom: -.4em;
     border-radius: 50%;
+    box-shadow: 0 1px 1px 0 var(--grey600);
+    padding: 1px;
 }
 
 .metadata-row {
