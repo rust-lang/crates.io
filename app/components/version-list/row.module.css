@@ -153,7 +153,7 @@
     width: auto;
     margin-left: 3px;
     margin-bottom: -.4em;
-    border-radius: 3px;
+    border-radius: 50%;
 }
 
 .metadata-row {
