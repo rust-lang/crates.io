@@ -1,7 +1,7 @@
 use crate::background_jobs::Environment;
 use crate::git::{Crate, Credentials};
-use crate::models::Version;
-use crate::schema::versions;
+use crate::models::{self, Version};
+use crate::schema::{crates, versions};
 use chrono::Utc;
 use std::fs::{self, OpenOptions};
 use std::io::prelude::*;
@@ -82,6 +82,13 @@ pub fn yank(
         diesel::update(&version)
             .set(versions::yanked.eq(yanked))
             .execute(&*conn)?;
+
+        let krate: models::Crate = models::Crate::all()
+            .filter(crates::id.eq(version.crate_id))
+            .get_result(conn)?;
+
+        let top_versions = krate.top_versions(conn)?;
+        krate.update_top_versions(conn, &top_versions)?;
 
         Ok(())
     })

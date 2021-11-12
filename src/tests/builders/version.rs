@@ -1,6 +1,6 @@
 use cargo_registry::{
     models::{Crate, NewVersion, Version},
-    schema::{dependencies, versions},
+    schema::{crates, dependencies, versions},
     util::errors::AppResult,
 };
 use std::collections::HashMap;
@@ -124,6 +124,13 @@ impl<'a> VersionBuilder<'a> {
         insert_into(dependencies::table)
             .values(&new_deps)
             .execute(connection)?;
+
+        let krate: Crate = Crate::all()
+            .filter(crates::id.eq(vers.crate_id))
+            .get_result(connection)?;
+
+        let top_versions = krate.top_versions(connection)?;
+        krate.update_top_versions(connection, &top_versions)?;
 
         Ok(vers)
     }

@@ -315,6 +315,34 @@ impl Crate {
         ))
     }
 
+    pub fn update_top_versions(
+        &self,
+        conn: &PgConnection,
+        top_versions: &TopVersions,
+    ) -> QueryResult<()> {
+        use crate::schema::crates::dsl::*;
+        use diesel::update;
+
+        let highest = top_versions.highest.as_ref();
+        let highest = highest.map(|it| it.to_string());
+
+        let highest_stable = top_versions.highest_stable.as_ref();
+        let highest_stable = highest_stable.map(|it| it.to_string());
+
+        let newest = top_versions.newest.as_ref();
+        let newest = newest.map(|it| it.to_string());
+
+        update(self)
+            .set((
+                highest_version.eq(highest),
+                highest_stable_version.eq(highest_stable),
+                newest_version.eq(newest),
+            ))
+            .execute(conn)?;
+
+        Ok(())
+    }
+
     pub fn owners(&self, conn: &PgConnection) -> QueryResult<Vec<Owner>> {
         let users = CrateOwner::by_owner_kind(OwnerKind::User)
             .filter(crate_owners::crate_id.eq(self.id))

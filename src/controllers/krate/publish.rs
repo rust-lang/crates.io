@@ -187,7 +187,9 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
         // Update all badges for this crate, collecting any invalid badges in
         // order to be able to warn about them
         let ignored_invalid_badges = Badge::update_crate(&conn, &krate, new_crate.badges.as_ref())?;
+
         let top_versions = krate.top_versions(&conn)?;
+        krate.update_top_versions(&conn, &top_versions)?;
 
         // Read tarball from request
         let mut tarball = Vec::new();
