@@ -3,6 +3,8 @@
 }
 
 .input {
+    --search-form-focus-shadow: 0 0 0 4px var(--yellow500);
+
     font-size: 90%;
     border: none;
     color: black;
@@ -14,7 +16,7 @@
     background-position: 6px 6px;
     background-size: 14px 15px;
     border-radius: 15px;
-    box-shadow: none;
+    box-shadow: 1px 2px 4px 0 var(--green900);
     transition: box-shadow 150ms;
 
     .size-big & {
@@ -26,7 +28,8 @@
 
     &:focus {
         outline: none;
-        box-shadow: 0 0 0 4px var(--yellow500);
+        box-shadow: var(--search-form-focus-shadow),
+            1px 2px 3px 4px var(--green900);
     }
 }
 
