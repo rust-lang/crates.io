@@ -42,4 +42,7 @@
 
 .avatar {
     border-radius: 4px;
+    background: white;
+    box-shadow: 1px 2px 2px 0 hsla(51, 50%, 44%, .35);
+    padding: 1px;
 }
