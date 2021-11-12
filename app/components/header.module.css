@@ -88,8 +88,9 @@
     display: none;
     margin: 0 0 20px;
     font-size: 45px;
-    color: #dfffdb;
     text-align: center;
+    color: white;
+    text-shadow: 1px 3px 2px var(--green900);
 
     .hero & {
         display: block;

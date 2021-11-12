@@ -16,6 +16,7 @@
 
     --main-color: #383838;
     --main-color-light: #858585;
+    --main-shadow-color: var(--green900);
     --main-bg: #f9f7ec;
     --main-bg-dark: #edebdd;
     --gray-border: #d5d3cb;
@@ -106,8 +107,10 @@ noscript {
     display: flex;
     justify-content: center;
     width: 100%;
+    position: relative;
     background-color: var(--main-bg);
     color: var(--main-color);
+    box-shadow: 0 0 6px 0 var(--main-shadow-color);
 }
 
 .inner-main {
