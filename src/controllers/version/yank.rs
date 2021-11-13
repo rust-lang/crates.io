@@ -45,7 +45,7 @@ fn modify_yank(req: &mut dyn RequestExt, yanked: bool) -> EndpointResult {
     }
 
     if version.yanked == yanked {
-        // The crate is alread in the state requested, nothing to do
+        // The crate is already in the state requested, nothing to do
         return ok_true();
     }
 
