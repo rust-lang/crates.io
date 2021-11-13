@@ -34,10 +34,6 @@
     > * {
         margin: 0 10px 10px 0;
     }
-
-    .name {
-        display: none;
-    }
 }
 
 .avatar {
@@ -49,4 +45,8 @@
     .team & {
         border-radius: 4px;
     }
+}
+
+.hidden-name {
+    composes: sr-only from '../styles/shared/a11y.module.css';
 }
