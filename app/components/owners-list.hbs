@@ -1,7 +1,7 @@
 <ul
   role="list"
   local-class="list {{if this.showDetailedList "detailed"}}"
-  data-test-owners
+  data-test-owners="{{if this.showDetailedList "detailed" "basic"}}"
 >
   {{#each @owners as |owner|}}
     <li local-class="{{if (eq owner.kind "team") "team"}}">
