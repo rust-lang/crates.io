@@ -1,5 +1,5 @@
 use crate::background_jobs::Environment;
-use crate::git::{Crate, Credentials};
+use crate::git::{Crate, Credentials, Repository};
 use crate::models::Version;
 use chrono::Utc;
 use std::fs::{self, OpenOptions};
@@ -21,7 +21,7 @@ pub fn add_crate(env: &Environment, krate: Crate) -> Result<(), PerformError> {
 
     let message: String = format!("Updating crate `{}#{}`", krate.name, krate.vers);
 
-    repo.commit_and_push(&message, &repo.relative_index_file(&krate.name))
+    repo.commit_and_push(&message, &Repository::relative_index_file(&krate.name))
 }
 
 /// Yanks or unyanks a crate version. This requires finding the index
@@ -61,7 +61,7 @@ pub fn yank(
         version.num
     );
 
-    repo.commit_and_push(&message, &repo.relative_index_file(&krate))?;
+    repo.commit_and_push(&message, &Repository::relative_index_file(&krate))?;
 
     Ok(())
 }

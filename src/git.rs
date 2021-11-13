@@ -177,10 +177,10 @@ impl Repository {
     pub fn index_file(&self, name: &str) -> PathBuf {
         self.checkout_path
             .path()
-            .join(self.relative_index_file(name))
+            .join(Self::relative_index_file(name))
     }
 
-    pub fn relative_index_file(&self, name: &str) -> PathBuf {
+    pub fn relative_index_file(name: &str) -> PathBuf {
         let name = name.to_lowercase();
         match name.len() {
             1 => Path::new("1").join(&name),
