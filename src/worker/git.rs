@@ -1,7 +1,6 @@
 use crate::background_jobs::Environment;
 use crate::git::{Crate, Credentials};
 use crate::models::Version;
-use crate::schema::versions;
 use chrono::Utc;
 use std::fs::{self, OpenOptions};
 use std::io::prelude::*;
@@ -31,60 +30,40 @@ pub fn add_crate(env: &Environment, krate: Crate) -> Result<(), PerformError> {
 /// push the changes.
 #[swirl::background_job]
 pub fn yank(
-    conn: &PgConnection,
     env: &Environment,
     krate: String,
     version: Version,
     yanked: bool,
 ) -> Result<(), PerformError> {
-    use diesel::prelude::*;
-
     let repo = env.lock_index()?;
     let dst = repo.index_file(&krate);
 
-    conn.transaction(|| {
-        let yanked_in_db: bool = versions::table
-            .find(version.id)
-            .select(versions::yanked)
-            .for_update()
-            .first(&*conn)?;
+    let prev = fs::read_to_string(&dst)?;
+    let new = prev
+        .lines()
+        .map(|line| {
+            let mut git_crate = serde_json::from_str::<Crate>(line)
+                .map_err(|_| format!("couldn't decode: `{}`", line))?;
+            if git_crate.name != krate || git_crate.vers != version.num {
+                return Ok(line.to_string());
+            }
+            git_crate.yanked = Some(yanked);
+            Ok(serde_json::to_string(&git_crate)?)
+        })
+        .collect::<Result<Vec<_>, PerformError>>();
+    let new = new?.join("\n") + "\n";
+    fs::write(&dst, new.as_bytes())?;
 
-        if yanked_in_db == yanked {
-            // The crate is alread in the state requested, nothing to do
-            return Ok(());
-        }
+    let message: String = format!(
+        "{} crate `{}#{}`",
+        if yanked { "Yanking" } else { "Unyanking" },
+        krate,
+        version.num
+    );
 
-        let prev = fs::read_to_string(&dst)?;
-        let new = prev
-            .lines()
-            .map(|line| {
-                let mut git_crate = serde_json::from_str::<Crate>(line)
-                    .map_err(|_| format!("couldn't decode: `{}`", line))?;
-                if git_crate.name != krate || git_crate.vers != version.num {
-                    return Ok(line.to_string());
-                }
-                git_crate.yanked = Some(yanked);
-                Ok(serde_json::to_string(&git_crate)?)
-            })
-            .collect::<Result<Vec<_>, PerformError>>();
-        let new = new?.join("\n") + "\n";
-        fs::write(&dst, new.as_bytes())?;
+    repo.commit_and_push(&message, &repo.relative_index_file(&krate))?;
 
-        let message: String = format!(
-            "{} crate `{}#{}`",
-            if yanked { "Yanking" } else { "Unyanking" },
-            krate,
-            version.num
-        );
-
-        repo.commit_and_push(&message, &repo.relative_index_file(&krate))?;
-
-        diesel::update(&version)
-            .set(versions::yanked.eq(yanked))
-            .execute(&*conn)?;
-
-        Ok(())
-    })
+    Ok(())
 }
 
 /// Collapse the index into a single commit, archiving the current history in a snapshot branch.
