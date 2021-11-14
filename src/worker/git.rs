@@ -1,6 +1,9 @@
 use crate::background_jobs::Environment;
 use crate::git::{Crate, Credentials};
+use crate::schema;
+use anyhow::Context;
 use chrono::Utc;
+use diesel::prelude::*;
 use std::fs::{self, OpenOptions};
 use std::io::prelude::*;
 use swirl::PerformError;
@@ -28,12 +31,24 @@ pub fn add_crate(env: &Environment, krate: Crate) -> Result<(), PerformError> {
 /// `true` or `false`, write all the lines back out, and commit and
 /// push the changes.
 #[swirl::background_job]
-pub fn yank(
+pub fn sync_yanked(
     env: &Environment,
+    conn: &PgConnection,
     krate: String,
     version_num: String,
-    yanked: bool,
 ) -> Result<(), PerformError> {
+    trace!(?krate, ?version_num, "Load yanked status from database");
+
+    let yanked: bool = schema::versions::table
+        .inner_join(schema::crates::table)
+        .filter(schema::crates::name.eq(&krate))
+        .filter(schema::versions::num.eq(&version_num))
+        .select(schema::versions::yanked)
+        .get_result(conn)
+        .context("Failed to load yanked status from database")?;
+
+    trace!(?krate, ?version_num, yanked);
+
     let repo = env.lock_index()?;
     let dst = repo.index_file(&krate);
 

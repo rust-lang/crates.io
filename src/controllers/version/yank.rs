@@ -61,7 +61,7 @@ fn modify_yank(req: &mut dyn RequestExt, yanked: bool) -> EndpointResult {
 
     insert_version_owner_action(&conn, version.id, user.id, api_token_id, action)?;
 
-    worker::yank(krate.name, version.num, yanked).enqueue(&conn)?;
+    worker::sync_yanked(krate.name, version.num).enqueue(&conn)?;
 
     ok_true()
 }
