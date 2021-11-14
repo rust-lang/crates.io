@@ -70,12 +70,8 @@ pub fn sync_yanked(
     if new != prev {
         fs::write(&dst, new.as_bytes())?;
 
-        let message: String = format!(
-            "{} crate `{}#{}`",
-            if yanked { "Yanking" } else { "Unyanking" },
-            krate,
-            version_num
-        );
+        let action = if yanked { "Yanking" } else { "Unyanking" };
+        let message = format!("{} crate `{}#{}`", action, krate, version_num);
 
         repo.commit_and_push(&message, &dst)?;
     } else {
