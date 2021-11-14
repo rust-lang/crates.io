@@ -66,16 +66,21 @@ pub fn sync_yanked(
         })
         .collect::<Result<Vec<_>, PerformError>>();
     let new = new?.join("\n") + "\n";
-    fs::write(&dst, new.as_bytes())?;
 
-    let message: String = format!(
-        "{} crate `{}#{}`",
-        if yanked { "Yanking" } else { "Unyanking" },
-        krate,
-        version_num
-    );
+    if new != prev {
+        fs::write(&dst, new.as_bytes())?;
 
-    repo.commit_and_push(&message, &dst)?;
+        let message: String = format!(
+            "{} crate `{}#{}`",
+            if yanked { "Yanking" } else { "Unyanking" },
+            krate,
+            version_num
+        );
+
+        repo.commit_and_push(&message, &dst)?;
+    } else {
+        debug!("Skipping `yanked` update because index is up-to-date");
+    }
 
     Ok(())
 }
