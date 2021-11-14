@@ -1,6 +1,5 @@
 use crate::background_jobs::Environment;
 use crate::git::{Crate, Credentials};
-use crate::models::Version;
 use chrono::Utc;
 use std::fs::{self, OpenOptions};
 use std::io::prelude::*;
@@ -32,7 +31,7 @@ pub fn add_crate(env: &Environment, krate: Crate) -> Result<(), PerformError> {
 pub fn yank(
     env: &Environment,
     krate: String,
-    version: Version,
+    version_num: String,
     yanked: bool,
 ) -> Result<(), PerformError> {
     let repo = env.lock_index()?;
@@ -44,7 +43,7 @@ pub fn yank(
         .map(|line| {
             let mut git_crate = serde_json::from_str::<Crate>(line)
                 .map_err(|_| format!("couldn't decode: `{}`", line))?;
-            if git_crate.name != krate || git_crate.vers != version.num {
+            if git_crate.name != krate || git_crate.vers != version_num {
                 return Ok(line.to_string());
             }
             git_crate.yanked = Some(yanked);
@@ -58,7 +57,7 @@ pub fn yank(
         "{} crate `{}#{}`",
         if yanked { "Yanking" } else { "Unyanking" },
         krate,
-        version.num
+        version_num
     );
 
     repo.commit_and_push(&message, &dst)?;
