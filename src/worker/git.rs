@@ -1,7 +1,9 @@
 use crate::background_jobs::Environment;
 use crate::git::{Crate, Credentials};
-use crate::models::Version;
+use crate::schema;
+use anyhow::Context;
 use chrono::Utc;
+use diesel::prelude::*;
 use std::fs::{self, OpenOptions};
 use std::io::prelude::*;
 use swirl::PerformError;
@@ -29,12 +31,24 @@ pub fn add_crate(env: &Environment, krate: Crate) -> Result<(), PerformError> {
 /// `true` or `false`, write all the lines back out, and commit and
 /// push the changes.
 #[swirl::background_job]
-pub fn yank(
+pub fn sync_yanked(
     env: &Environment,
+    conn: &PgConnection,
     krate: String,
-    version: Version,
-    yanked: bool,
+    version_num: String,
 ) -> Result<(), PerformError> {
+    trace!(?krate, ?version_num, "Load yanked status from database");
+
+    let yanked: bool = schema::versions::table
+        .inner_join(schema::crates::table)
+        .filter(schema::crates::name.eq(&krate))
+        .filter(schema::versions::num.eq(&version_num))
+        .select(schema::versions::yanked)
+        .get_result(conn)
+        .context("Failed to load yanked status from database")?;
+
+    trace!(?krate, ?version_num, yanked);
+
     let repo = env.lock_index()?;
     let dst = repo.index_file(&krate);
 
@@ -44,7 +58,7 @@ pub fn yank(
         .map(|line| {
             let mut git_crate = serde_json::from_str::<Crate>(line)
                 .map_err(|_| format!("couldn't decode: `{}`", line))?;
-            if git_crate.name != krate || git_crate.vers != version.num {
+            if git_crate.name != krate || git_crate.vers != version_num {
                 return Ok(line.to_string());
             }
             git_crate.yanked = Some(yanked);
@@ -52,16 +66,17 @@ pub fn yank(
         })
         .collect::<Result<Vec<_>, PerformError>>();
     let new = new?.join("\n") + "\n";
-    fs::write(&dst, new.as_bytes())?;
 
-    let message: String = format!(
-        "{} crate `{}#{}`",
-        if yanked { "Yanking" } else { "Unyanking" },
-        krate,
-        version.num
-    );
+    if new != prev {
+        fs::write(&dst, new.as_bytes())?;
 
-    repo.commit_and_push(&message, &dst)?;
+        let action = if yanked { "Yanking" } else { "Unyanking" };
+        let message = format!("{} crate `{}#{}`", action, krate, version_num);
+
+        repo.commit_and_push(&message, &dst)?;
+    } else {
+        debug!("Skipping `yanked` update because index is up-to-date");
+    }
 
     Ok(())
 }
