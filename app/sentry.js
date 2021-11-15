@@ -18,6 +18,8 @@ export function init() {
     ...config.sentry,
     integrations,
 
+    allowUrls: ['crates.io', 'crates-io.herokuapp.com', 'staging.crates-io', 'staging-crates-io.herokuapp.com'],
+
     beforeSend(event, hint) {
       let error = hint?.originalException;
 
