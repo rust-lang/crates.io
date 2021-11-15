@@ -1,7 +1,7 @@
 <ul
   role="list"
   local-class="list {{if this.showDetailedList "detailed"}}"
-  data-test-owners
+  data-test-owners="{{if this.showDetailedList "detailed" "basic"}}"
 >
   {{#each @owners as |owner|}}
     <li local-class="{{if (eq owner.kind "team") "team"}}">
@@ -11,8 +11,8 @@
         local-class="link"
         data-test-owner-link={{owner.login}}
       >
-        <UserAvatar @user={{owner}} @size="medium-small" local-class="avatar" />
-        <span local-class="name">{{or owner.display_name owner.name}}</span>
+        <UserAvatar @user={{owner}} @size="medium-small" local-class="avatar" aria-hidden="true" />
+        <span local-class="name {{unless this.showDetailedList "hidden-name"}}">{{or owner.display_name owner.name owner.login}}</span>
       </LinkTo>
     </li>
   {{/each}}
