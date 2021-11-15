@@ -49,7 +49,7 @@ fn yank_works_as_intended() {
     token.enqueue_publish(crate_to_publish).good();
     app.run_pending_background_jobs();
 
-    let crates = app.crates_from_index_head("3/f/fyk");
+    let crates = app.crates_from_index_head("fyk");
     assert_eq!(crates.len(), 1);
     assert_some_eq!(crates[0].yanked, false);
 
@@ -60,7 +60,7 @@ fn yank_works_as_intended() {
     // yank it
     token.yank("fyk", "1.0.0").good();
 
-    let crates = app.crates_from_index_head("3/f/fyk");
+    let crates = app.crates_from_index_head("fyk");
     assert_eq!(crates.len(), 1);
     assert_some_eq!(crates[0].yanked, true);
 
@@ -70,7 +70,7 @@ fn yank_works_as_intended() {
     // un-yank it
     token.unyank("fyk", "1.0.0").good();
 
-    let crates = app.crates_from_index_head("3/f/fyk");
+    let crates = app.crates_from_index_head("fyk");
     assert_eq!(crates.len(), 1);
     assert_some_eq!(crates[0].yanked, false);
 
@@ -80,7 +80,7 @@ fn yank_works_as_intended() {
     // yank it
     cookie.yank("fyk", "1.0.0").good();
 
-    let crates = app.crates_from_index_head("3/f/fyk");
+    let crates = app.crates_from_index_head("fyk");
     assert_eq!(crates.len(), 1);
     assert_some_eq!(crates[0].yanked, true);
 
@@ -90,7 +90,7 @@ fn yank_works_as_intended() {
     // un-yank it
     cookie.unyank("fyk", "1.0.0").good();
 
-    let crates = app.crates_from_index_head("3/f/fyk");
+    let crates = app.crates_from_index_head("fyk");
     assert_eq!(crates.len(), 1);
     assert_some_eq!(crates[0].yanked, false);
 

@@ -161,7 +161,7 @@ fn new_with_renamed_dependency() {
     token.enqueue_publish(crate_to_publish).good();
     app.run_pending_background_jobs();
 
-    let crates = app.crates_from_index_head("ne/w-/new-krate");
+    let crates = app.crates_from_index_head("new-krate");
     assert_eq!(crates.len(), 1);
     assert_eq!(crates[0].name, "new-krate");
     assert_eq!(crates[0].vers, "1.0.0");
@@ -187,7 +187,7 @@ fn new_with_underscore_renamed_dependency() {
     token.enqueue_publish(crate_to_publish).good();
     app.run_pending_background_jobs();
 
-    let crates = app.crates_from_index_head("ne/w-/new-krate");
+    let crates = app.crates_from_index_head("new-krate");
     assert_eq!(crates.len(), 1);
     assert_eq!(crates[0].name, "new-krate");
     assert_eq!(crates[0].vers, "1.0.0");
@@ -528,7 +528,7 @@ fn new_krate_git_upload() {
     token.enqueue_publish(crate_to_publish).good();
     app.run_pending_background_jobs();
 
-    let crates = app.crates_from_index_head("3/f/fgt");
+    let crates = app.crates_from_index_head("fgt");
     assert_eq!(crates.len(), 1);
     assert_eq!(crates[0].name, "fgt");
     assert_eq!(crates[0].vers, "1.0.0");
@@ -549,7 +549,7 @@ fn new_krate_git_upload_appends() {
     token.enqueue_publish(crate_to_publish).good();
     app.run_pending_background_jobs();
 
-    let crates = app.crates_from_index_head("3/f/fpp");
+    let crates = app.crates_from_index_head("fpp");
     assert!(crates.len() == 2);
     assert_eq!(crates[0].name, "FPP");
     assert_eq!(crates[0].vers, "0.0.1");

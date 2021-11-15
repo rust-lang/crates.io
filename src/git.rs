@@ -177,10 +177,10 @@ impl Repository {
     pub fn index_file(&self, name: &str) -> PathBuf {
         self.checkout_path
             .path()
-            .join(self.relative_index_file(name))
+            .join(Self::relative_index_file(name))
     }
 
-    pub fn relative_index_file(&self, name: &str) -> PathBuf {
+    pub fn relative_index_file(name: &str) -> PathBuf {
         let name = name.to_lowercase();
         match name.len() {
             1 => Path::new("1").join(&name),
@@ -244,7 +244,8 @@ impl Repository {
     pub fn commit_and_push(&self, message: &str, modified_file: &Path) -> Result<(), PerformError> {
         println!("Committing and pushing \"{}\"", message);
 
-        self.perform_commit_and_push(message, modified_file)
+        let relative_path = modified_file.strip_prefix(self.checkout_path.path())?;
+        self.perform_commit_and_push(message, relative_path)
             .map(|_| println!("Commit and push finished for \"{}\"", message))
             .map_err(|err| {
                 eprintln!("Commit and push for \"{}\" errored: {}", message, err);
