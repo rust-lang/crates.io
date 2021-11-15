@@ -1,6 +1,6 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
-use cargo_registry::{metrics::LogEncoder, util::errors::AppResult, App, Env};
+use cargo_registry::{env_optional, metrics::LogEncoder, util::errors::AppResult, App, Env};
 use std::{env, fs::File, process::Command, sync::Arc, time::Duration};
 
 use conduit_hyper::Service;
@@ -54,24 +54,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     } else {
         [127, 0, 0, 1]
     };
-    let port = if heroku {
-        8888
-    } else {
-        dotenv::var("PORT")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(8888)
+    let port = match (heroku, env_optional("PORT")) {
+        (false, Some(port)) => port,
+        _ => 8888,
     };
+
     let threads = dotenv::var("SERVER_THREADS")
         .map(|s| s.parse().expect("SERVER_THREADS was not a valid number"))
-        .unwrap_or_else(|_| {
-            if env == Env::Development {
-                5
-            } else {
-                // A large default because this can be easily changed via env and in production we
-                // want the logging middleware to accurately record the start time.
-                500
-            }
+        .unwrap_or_else(|_| match env {
+            Env::Development => 5,
+            // A large default because this can be easily changed via env and in production we
+            // want the logging middleware to accurately record the start time.
+            _ => 500,
         });
 
     println!("Booting with a hyper based server");
