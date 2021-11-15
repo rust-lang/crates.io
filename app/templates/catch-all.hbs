@@ -1,19 +1,11 @@
-<h1 data-test-404-header>Oops, that route doesn't exist!</h1>
+<div local-class="wrapper" data-test-404-page>
+  <div local-class="content">
+    {{svg-jar "cuddlyferris" local-class="logo"}}
 
-<form
-  local-class='p404'
-  data-test-404-search-form
-  {{on "submit" (prevent-default this.search)}}
->
-  Perhaps a search of the site may help?
+    <h1 local-class="title" data-test-title>Page not found</h1>
 
-  <Input
-    @type="text"
-    local-class="search-field"
-    placeholder="Search"
-    aria-label="Search"
-    @value={{this.header.searchValue}}
-    required={{true}}
-    data-test-404-search-input
-  />
-</form>
+    <a href="javascript:history.back()" local-class="link">
+      Go Back
+    </a>
+  </div>
+</div>
