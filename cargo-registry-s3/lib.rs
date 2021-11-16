@@ -94,13 +94,14 @@ impl Bucket {
 
     fn auth(&self, verb: &str, date: &str, path: &str, md5: &str, content_type: &str) -> String {
         let string = format!(
-            "{verb}\n{md5}\n{ty}\n{date}\n{headers}{resource}",
+            "{verb}\n{md5}\n{ty}\n{date}\n{headers}/{name}/{path}",
             verb = verb,
             md5 = md5,
             ty = content_type,
             date = date,
             headers = "",
-            resource = format!("/{}/{}", self.name, path)
+            name = self.name,
+            path = path
         );
         let signature = {
             let key = self.secret_key.as_bytes();

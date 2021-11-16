@@ -44,7 +44,7 @@ pub fn read_fill<R: Read + ?Sized>(r: &mut R, mut slice: &mut [u8]) -> io::Resul
         if n == 0 {
             return Err(io::Error::new(io::ErrorKind::Other, "end of file reached"));
         }
-        slice = &mut mem::replace(&mut slice, &mut [])[n..];
+        slice = &mut mem::take(&mut slice)[n..];
     }
     Ok(())
 }
