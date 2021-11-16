@@ -13,6 +13,8 @@ module('Acceptance | 404', function (hooks) {
     assert.equal(currentURL(), '/unknown-route');
     assert.dom('[data-test-404-page]').exists();
     assert.dom('[data-test-title]').hasText('Page not found');
+    assert.dom('[data-test-go-back]').exists();
+    assert.dom('[data-test-try-again]').doesNotExist();
 
     await percySnapshot(assert);
   });

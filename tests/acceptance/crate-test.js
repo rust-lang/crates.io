@@ -83,18 +83,22 @@ module('Acceptance | crate page', function (hooks) {
 
   test('unknown crate shows an error message', async function (assert) {
     await visit('/crates/nanomsg');
-    assert.equal(currentURL(), '/');
-    assert.dom('[data-test-notification-message]').hasText("Crate 'nanomsg' does not exist");
+    assert.equal(currentURL(), '/crates/nanomsg');
+    assert.dom('[data-test-404-page]').exists();
+    assert.dom('[data-test-title]').hasText('Crate not found');
+    assert.dom('[data-test-go-back]').exists();
+    assert.dom('[data-test-try-again]').doesNotExist();
   });
 
   test('other crate loading error shows an error message', async function (assert) {
     this.server.get('/api/v1/crates/:crate_name', {}, 500);
 
     await visit('/crates/nanomsg');
-    assert.equal(currentURL(), '/');
-    assert
-      .dom('[data-test-notification-message]')
-      .hasText("Loading data for the 'nanomsg' crate failed. Please try again later!");
+    assert.equal(currentURL(), '/crates/nanomsg');
+    assert.dom('[data-test-404-page]').exists();
+    assert.dom('[data-test-title]').hasText('Crate failed to load');
+    assert.dom('[data-test-go-back]').doesNotExist();
+    assert.dom('[data-test-try-again]').exists();
   });
 
   test('unknown versions fall back to latest version and show an error message', async function (assert) {
@@ -104,10 +108,11 @@ module('Acceptance | crate page', function (hooks) {
 
     await visit('/crates/nanomsg/0.7.0');
 
-    assert.equal(currentURL(), '/crates/nanomsg');
-    assert.dom('[data-test-heading] [data-test-crate-name]').hasText('nanomsg');
-    assert.dom('[data-test-heading] [data-test-crate-version]').hasText('0.6.1');
-    assert.dom('[data-test-notification-message]').hasText("Version '0.7.0' of crate 'nanomsg' does not exist");
+    assert.equal(currentURL(), '/crates/nanomsg/0.7.0');
+    assert.dom('[data-test-404-page]').exists();
+    assert.dom('[data-test-title]').hasText('Version not found');
+    assert.dom('[data-test-go-back]').exists();
+    assert.dom('[data-test-try-again]').doesNotExist();
   });
 
   test('other versions loading error shows an error message', async function (assert) {
@@ -119,10 +124,11 @@ module('Acceptance | crate page', function (hooks) {
 
     await visit('/');
     await click('[data-test-just-updated] [data-test-crate-link="0"]');
-    assert.equal(currentURL(), '/');
-    assert
-      .dom('[data-test-notification-message]')
-      .hasText("Loading data for the 'nanomsg' crate failed. Please try again later!");
+    assert.equal(currentURL(), '/crates/nanomsg');
+    assert.dom('[data-test-404-page]').exists();
+    assert.dom('[data-test-title]').hasText('Crate failed to load');
+    assert.dom('[data-test-go-back]').doesNotExist();
+    assert.dom('[data-test-try-again]').exists();
   });
 
   test('navigating to the all versions page', async function (assert) {

@@ -3,20 +3,18 @@ import { inject as service } from '@ember/service';
 
 export default class CrateRoute extends Route {
   @service headData;
-  @service notifications;
+  @service router;
   @service store;
 
-  async model(params) {
+  async model(params, transition) {
     try {
       return await this.store.find('crate', params.crate_id);
     } catch (error) {
       if (error.errors?.some(e => e.detail === 'Not Found')) {
-        this.notifications.error(`Crate '${params.crate_id}' does not exist`);
+        this.router.replaceWith('catch-all', { transition, error, title: 'Crate not found' });
       } else {
-        this.notifications.error(`Loading data for the '${params.crate_id}' crate failed. Please try again later!`);
+        this.router.replaceWith('catch-all', { transition, error, title: 'Crate failed to load', tryAgain: true });
       }
-
-      this.replaceWith('index');
     }
   }
 

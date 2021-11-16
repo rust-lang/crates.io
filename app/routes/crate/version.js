@@ -6,19 +6,17 @@ import { didCancel } from 'ember-concurrency';
 import { AjaxError } from '../../utils/ajax';
 
 export default class VersionRoute extends Route {
-  @service notifications;
+  @service router;
   @service sentry;
 
-  async model(params) {
+  async model(params, transition) {
     let crate = this.modelFor('crate');
 
     let versions;
     try {
       versions = await crate.get('versions');
-    } catch {
-      this.notifications.error(`Loading data for the '${crate.name}' crate failed. Please try again later!`);
-      this.replaceWith('index');
-      return;
+    } catch (error) {
+      return this.router.replaceWith('catch-all', { transition, error, title: 'Crate failed to load', tryAgain: true });
     }
 
     let version;
@@ -26,8 +24,7 @@ export default class VersionRoute extends Route {
     if (requestedVersion) {
       version = versions.find(version => version.num === requestedVersion);
       if (!version) {
-        this.notifications.error(`Version '${requestedVersion}' of crate '${crate.name}' does not exist`);
-        this.replaceWith('crate.index');
+        return this.router.replaceWith('catch-all', { transition, title: 'Version not found' });
       }
     } else {
       let { defaultVersion } = crate;
