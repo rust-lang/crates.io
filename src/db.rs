@@ -120,8 +120,6 @@ pub enum DieselPooledConn<'a> {
     Test(ReentrantMutexGuard<'a, PgConnection>),
 }
 
-unsafe impl<'a> Send for DieselPooledConn<'a> {}
-
 impl Deref for DieselPooledConn<'_> {
     type Target = PgConnection;
 
