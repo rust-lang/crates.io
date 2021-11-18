@@ -1189,17 +1189,6 @@
     ember-cli-version-checker "^5.1.2"
     semver "^7.3.5"
 
-"@ember/test-waiters@^2.3.0":
-  version "2.4.5"
-  resolved "https://registry.yarnpkg.com/@ember/test-waiters/-/test-waiters-2.4.5.tgz#6e8e34d1bc46a9b0cc22cb11cc5936046e926031"
-  integrity sha512-833JvHtHdEfBfKXgvmw+6oziFOpVfD4NQrc04Ztj59A11K9FPNfZ3P8YydL7LFTtdd7UfJ/cYCLAm+OwUxbotQ==
-  dependencies:
-    calculate-cache-key-for-tree "^2.0.0"
-    ember-cli-babel "^7.26.6"
-    ember-cli-typescript "^4.1.0"
-    ember-cli-version-checker "^5.1.2"
-    semver "^7.3.5"
-
 "@embroider/babel-loader-8@0.47.2":
   version "0.47.2"
   resolved "https://registry.yarnpkg.com/@embroider/babel-loader-8/-/babel-loader-8-0.47.2.tgz#e8070224a986576d05f62ea2aa0714eb45cba5f6"
@@ -6076,12 +6065,12 @@ ember-api-actions@0.2.9:
     ember-cli-babel "^7.1.3"
     ember-cli-typescript "^3.0.0"
 
-"ember-app-scheduler@^5.1.2 || ^6.0.0":
-  version "6.0.0"
-  resolved "https://registry.yarnpkg.com/ember-app-scheduler/-/ember-app-scheduler-6.0.0.tgz#aa99f5a72e5ba4830cd91f09c1efe457ef77bdc7"
-  integrity sha512-P2xP6ww4hwaqoDAkiib52x71LApAIin5PvovpW4yFUCFUWhEh/nbc1fVqo1jP4pI1/me3GZm2+xh4YdMJlr1+w==
+"ember-app-scheduler@^5.1.2 || ^6.0.0 || ^7.0.0":
+  version "7.0.0"
+  resolved "https://registry.yarnpkg.com/ember-app-scheduler/-/ember-app-scheduler-7.0.0.tgz#029fe204ccfc86ccc3ff0447307fad4d1d40e2ab"
+  integrity sha512-5Wy/fWhsnSKT0xtL6EkFOuYMOc8T2lREmi7aRjXMeZCm5nDO7/mukezQ0ViVp9DQVlcbHyJz/qbBylnKq+CILw==
   dependencies:
-    "@ember/test-waiters" "^2.3.0"
+    "@ember/test-waiters" "^3.0.0"
     "@types/ember" "^3.1.0"
     "@types/rsvp" "^4.0.2"
     ember-cli-babel "^7.23.0"
@@ -6185,7 +6174,7 @@ ember-cli-babel-plugin-helpers@^1.0.0, ember-cli-babel-plugin-helpers@^1.1.0, em
   resolved "https://registry.yarnpkg.com/ember-cli-babel-plugin-helpers/-/ember-cli-babel-plugin-helpers-1.1.1.tgz#5016b80cdef37036c4282eef2d863e1d73576879"
   integrity sha512-sKvOiPNHr5F/60NLd7SFzMpYPte/nnGkq/tMIfXejfKHIhaiIkYFqX8Z9UFTKWLLn+V7NOaby6niNPZUdvKCRw==
 
-ember-cli-babel@7.26.6, ember-cli-babel@^7.0.0, ember-cli-babel@^7.1.0, ember-cli-babel@^7.1.3, ember-cli-babel@^7.10.0, ember-cli-babel@^7.11.1, ember-cli-babel@^7.13.0, ember-cli-babel@^7.13.2, ember-cli-babel@^7.17.2, ember-cli-babel@^7.18.0, ember-cli-babel@^7.19.0, ember-cli-babel@^7.21.0, ember-cli-babel@^7.22.1, ember-cli-babel@^7.23.0, ember-cli-babel@^7.23.1, ember-cli-babel@^7.26.3, ember-cli-babel@^7.26.4, ember-cli-babel@^7.26.5, ember-cli-babel@^7.26.6, ember-cli-babel@^7.4.0, ember-cli-babel@^7.5.0, ember-cli-babel@^7.7.3:
+ember-cli-babel@7.26.6, ember-cli-babel@^7.0.0, ember-cli-babel@^7.1.0, ember-cli-babel@^7.1.3, ember-cli-babel@^7.10.0, ember-cli-babel@^7.13.0, ember-cli-babel@^7.13.2, ember-cli-babel@^7.17.2, ember-cli-babel@^7.18.0, ember-cli-babel@^7.19.0, ember-cli-babel@^7.21.0, ember-cli-babel@^7.22.1, ember-cli-babel@^7.23.0, ember-cli-babel@^7.23.1, ember-cli-babel@^7.26.3, ember-cli-babel@^7.26.4, ember-cli-babel@^7.26.5, ember-cli-babel@^7.26.6, ember-cli-babel@^7.4.0, ember-cli-babel@^7.5.0, ember-cli-babel@^7.7.3:
   version "7.26.6"
   resolved "https://registry.yarnpkg.com/ember-cli-babel/-/ember-cli-babel-7.26.6.tgz#322fbbd3baad9dd99e3276ff05bc6faef5e54b39"
   integrity sha512-040svtfj2RC35j/WMwdWJFusZaXmNoytLAMyBDGLMSlRvznudTxZjGlPV6UupmtTBApy58cEF8Fq4a+COWoEmQ==
@@ -6954,14 +6943,14 @@ ember-router-generator@^2.0.0:
     "@babel/traverse" "^7.4.5"
     recast "^0.18.1"
 
-ember-router-scroll@4.1.1:
-  version "4.1.1"
-  resolved "https://registry.yarnpkg.com/ember-router-scroll/-/ember-router-scroll-4.1.1.tgz#3976503d416f04b889def3712cb2d47d6f23063b"
-  integrity sha512-yMM1O4CuZ70T9xCUUkdm88vI9b1V+j2Z8eXQnn3ndFBpkw2pszeV46N8MVDUznRm2Mq2uW0G9knSCuiNGCUhLA==
+ember-router-scroll@4.1.2:
+  version "4.1.2"
+  resolved "https://registry.yarnpkg.com/ember-router-scroll/-/ember-router-scroll-4.1.2.tgz#8af1c29b7a596738bbbd71a8a04af7c5c0d19403"
+  integrity sha512-5AGRmbfhSx7kOu2U8caQkG8qOxlLnvJIoQgKRE9mc1isuYPdime6Qn061NSnnQukMMsSPlV8GAImiEk05BmfGA==
   dependencies:
-    ember-app-scheduler "^5.1.2 || ^6.0.0"
-    ember-cli-babel "^7.11.1"
-    ember-compatibility-helpers "^1.1.2"
+    ember-app-scheduler "^5.1.2 || ^6.0.0 || ^7.0.0"
+    ember-cli-babel "^7.26.6"
+    ember-compatibility-helpers "^1.2.5"
 
 ember-set-body-class@1.0.2:
   version "1.0.2"
