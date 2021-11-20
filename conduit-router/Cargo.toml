@@ -16,4 +16,4 @@ tracing = "0.1.29"
 [dev-dependencies]
 conduit-test = { version ="0.10.0", path = "../conduit-test" }
 lazy_static = "1.4.0"
-tracing-subscriber = { version = "0.3.1", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3.2", features = ["env-filter"] }
