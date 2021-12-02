@@ -10,7 +10,7 @@ on:
   pull_request:
 
 env:
-  NODE_VERSION: 14.18.1
+  NODE_VERSION: v14.18.2
   RUST_VERSION: 1.57.0
 
 jobs:
