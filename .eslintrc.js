@@ -38,6 +38,8 @@ module.exports = {
     'unicorn/explicit-length-check': ['error', { 'non-zero': 'not-equal' }],
     // disabled because of false positives related to `EmberArray`
     'unicorn/no-array-for-each': 'off',
+    // disabled because it is annoying in some cases...
+    'unicorn/no-await-expression-member': 'off',
     // disabled because we need `null` since JSON has no `undefined`
     'unicorn/no-null': 'off',
     // disabled because this rule conflicts with prettier
