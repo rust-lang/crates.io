@@ -48,6 +48,7 @@ module.exports = function (defaults) {
     const { Webpack } = require('@embroider/webpack');
     return require('@embroider/compat').compatBuild(app, Webpack, {
       staticAddonTestSupportTrees: true,
+      staticModifiers: true,
 
       // see https://github.com/embroider-build/embroider/issues/823
       compatAdapters: new Map([['ember-get-config', null]]),
