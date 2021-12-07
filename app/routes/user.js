@@ -3,6 +3,7 @@ import { inject as service } from '@ember/service';
 
 export default class UserRoute extends Route {
   @service notifications;
+  @service router;
   @service store;
 
   queryParams = {
@@ -23,7 +24,7 @@ export default class UserRoute extends Route {
     } catch (error) {
       if (error.errors?.some(e => e.detail === 'Not Found')) {
         this.notifications.error(`User '${params.user_id}' does not exist`);
-        return this.replaceWith('index');
+        return this.router.replaceWith('index');
       }
 
       throw error;

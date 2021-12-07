@@ -4,6 +4,7 @@ import { inject as service } from '@ember/service';
 export default class CrateDocsRoute extends Route {
   @service notifications;
   @service redirector;
+  @service router;
 
   redirect() {
     let crate = this.modelFor('crate');
@@ -16,7 +17,7 @@ export default class CrateDocsRoute extends Route {
       // no documentation is found
       let message = 'Crate does not supply a documentation URL';
       this.notifications.error(message);
-      this.replaceWith('crate', crate);
+      this.router.replaceWith('crate', crate);
     }
   }
 }

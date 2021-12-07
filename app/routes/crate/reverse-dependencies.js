@@ -3,6 +3,7 @@ import { inject as service } from '@ember/service';
 
 export default class ReverseDependenciesRoute extends Route {
   @service notifications;
+  @service router;
   @service store;
 
   queryParams = {
@@ -25,7 +26,7 @@ export default class ReverseDependenciesRoute extends Route {
       }
 
       this.notifications.error(message);
-      this.replaceWith('index');
+      this.router.replaceWith('index');
     }
   }
 

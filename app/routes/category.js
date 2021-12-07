@@ -4,6 +4,7 @@ import { inject as service } from '@ember/service';
 
 export default class CategoryRoute extends Route {
   @service notifications;
+  @service router;
   @service store;
 
   async model(params) {
@@ -12,7 +13,7 @@ export default class CategoryRoute extends Route {
     } catch (error) {
       if (error instanceof NotFoundError) {
         this.notifications.error(`Category '${params.category_id}' does not exist`);
-        return this.replaceWith('index');
+        return this.router.replaceWith('index');
       }
 
       throw error;

@@ -4,6 +4,7 @@ import { inject as service } from '@ember/service';
 export default class RepoRoute extends Route {
   @service notifications;
   @service redirector;
+  @service router;
 
   redirect() {
     let crate = this.modelFor('crate');
@@ -16,7 +17,7 @@ export default class RepoRoute extends Route {
       // no repository is found
       let message = 'Crate does not supply a repository URL';
       this.notifications.error(message);
-      this.replaceWith('crate', crate);
+      this.router.replaceWith('crate', crate);
     }
   }
 }
