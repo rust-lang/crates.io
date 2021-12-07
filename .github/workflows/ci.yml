@@ -64,8 +64,7 @@ jobs:
 
       - run: yarn install
 
-      # `yarn test` currently does not work due to https://github.com/embroider-build/embroider/issues/677
-      - run: yarn build
+      - run: yarn test
         continue-on-error: true
 
   backend-lint:
