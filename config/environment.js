@@ -36,6 +36,9 @@ module.exports = function (environment) {
     },
     emberKeyboard: {
       disableInputsInitializer: true,
+
+      // see https://github.com/adopted-ember-addons/ember-keyboard/pull/499
+      propagation: true,
     },
   };
 
