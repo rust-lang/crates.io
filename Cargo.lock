@@ -315,7 +315,7 @@ version = "0.2.0"
 dependencies = [
  "base64",
  "chrono",
- "hmac",
+ "hmac 0.12.0",
  "reqwest",
  "sha-1 0.9.8",
 ]
@@ -579,7 +579,7 @@ dependencies = [
  "aes-gcm",
  "base64",
  "hkdf",
- "hmac",
+ "hmac 0.11.0",
  "rand 0.8.4",
  "sha2 0.9.8",
  "subtle",
@@ -820,6 +820,7 @@ dependencies = [
  "block-buffer 0.10.0",
  "crypto-common",
  "generic-array 0.14.4",
+ "subtle",
 ]
 
 [[package]]
@@ -1177,7 +1178,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "01706d578d5c281058480e673ae4086a9f4710d8df1ad80a5b03e39ece5f886b"
 dependencies = [
  "digest 0.9.0",
- "hmac",
+ "hmac 0.11.0",
 ]
 
 [[package]]
@@ -1188,6 +1189,15 @@ checksum = "2a2a2320eb7ec0ebe8da8f744d7812d9fc4cb4d09344ac01898dbcb6a20ae69b"
 dependencies = [
  "crypto-mac",
  "digest 0.9.0",
+]
+
+[[package]]
+name = "hmac"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ddca131f3e7f2ce2df364b57949a9d47915cfbd35e46cfee355ccebbf794d6a2"
+dependencies = [
+ "digest 0.10.0",
 ]
 
 [[package]]
