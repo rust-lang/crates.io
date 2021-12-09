@@ -5,6 +5,7 @@ import ajax from '../utils/ajax';
 
 export default class ConfirmRoute extends Route {
   @service notifications;
+  @service router;
   @service session;
   @service store;
 
@@ -29,6 +30,6 @@ export default class ConfirmRoute extends Route {
       }
     }
 
-    this.replaceWith('index');
+    this.router.replaceWith('index');
   }
 }

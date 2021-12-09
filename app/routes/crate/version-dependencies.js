@@ -3,6 +3,7 @@ import { inject as service } from '@ember/service';
 
 export default class VersionRoute extends Route {
   @service notifications;
+  @service router;
 
   async model(params) {
     let crate = this.modelFor('crate');
@@ -12,7 +13,7 @@ export default class VersionRoute extends Route {
     let version = versions.find(version => version.num === requestedVersion);
     if (!version) {
       this.notifications.error(`Version '${requestedVersion}' of crate '${crate.name}' does not exist`);
-      this.replaceWith('crate.index');
+      this.router.replaceWith('crate.index');
     }
 
     try {
@@ -21,7 +22,7 @@ export default class VersionRoute extends Route {
       this.notifications.error(
         `Failed to load the list of dependencies for the '${crate.name}' crate. Please try again later!`,
       );
-      this.replaceWith('crate.index');
+      this.router.replaceWith('crate.index');
     }
 
     return version;

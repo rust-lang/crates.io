@@ -23,7 +23,7 @@ export default class VersionRoute extends Route {
     let versionNum = maxSatisfying(unyankedVersionNums, npmRange) ?? maxSatisfying(allVersionNums, npmRange);
     if (!versionNum) {
       this.notifications.error(`No matching version of crate '${crate.name}' found for: ${range}`);
-      this.replaceWith('crate.index');
+      this.router.replaceWith('crate.index');
     }
 
     this.router.replaceWith('crate.version', versionNum);
