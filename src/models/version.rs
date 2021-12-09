@@ -177,16 +177,7 @@ impl NewVersion {
 
     fn validate_license(&mut self, license_file: Option<&str>) -> AppResult<()> {
         if let Some(ref license) = self.license {
-            for part in license.split('/') {
-                license_exprs::validate_license_expr(part).map_err(|e| {
-                    cargo_err(&format_args!(
-                        "{}; see http://opensource.org/licenses \
-                         for options, and http://spdx.org/licenses/ \
-                         for their identifiers",
-                        e
-                    ))
-                })?;
-            }
+            validate_license_expr(license)?;
         } else if license_file.is_some() {
             // If no license is given, but a license file is given, flag this
             // crate as having a nonstandard license. Note that we don't
@@ -195,6 +186,16 @@ impl NewVersion {
         }
         Ok(())
     }
+}
+
+fn validate_license_expr(s: &str) -> AppResult<()> {
+    for part in s.split('/') {
+        license_exprs::validate_license_expr(part).map_err(|e| {
+            cargo_err(&format_args!("{}; see http://opensource.org/licenses for options, and http://spdx.org/licenses/ for their identifiers", e))
+        })?;
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]
