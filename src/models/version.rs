@@ -200,7 +200,7 @@ fn validate_license_expr(s: &str) -> AppResult<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::TopVersions;
+    use super::{validate_license_expr, TopVersions};
     use chrono::NaiveDateTime;
 
     #[track_caller]
@@ -269,5 +269,21 @@ mod tests {
                 newest: Some(version("1.0.4")),
             }
         );
+    }
+
+    #[test]
+    fn licenses() {
+        assert_ok!(validate_license_expr("MIT"));
+        assert_ok!(validate_license_expr("MIT OR Apache-2.0"));
+        assert_ok!(validate_license_expr("MIT/Apache-2.0"));
+        assert_ok!(validate_license_expr("MIT AND Apache-2.0"));
+
+        let error = assert_err!(validate_license_expr("apache 2.0"));
+        let error = format!("{}", error);
+        assert!(error.starts_with("unknown license or other term: apache; see http"));
+
+        let error = assert_err!(validate_license_expr("MIT OR (Apache-2.0 AND MIT)"));
+        let error = format!("{}", error);
+        assert!(error.starts_with("unknown license or other term: (Apache-2.0; see http"));
     }
 }
