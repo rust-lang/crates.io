@@ -77,7 +77,7 @@ sentry = { version = "0.23.0", features = ["tracing"] }
 sentry-conduit = { version = "0.4.0", default-features = false }
 serde = { version = "1.0.130", features = ["derive"] }
 serde_json = "1.0.72"
-sha2 = "0.9"
+sha2 = "0.10"
 swirl = { git = "https://github.com/sgrif/swirl.git", rev = "e87cf37" }
 tar = "0.4.37"
 tempfile = "3"
