@@ -1,7 +1,7 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
 use chrono::prelude::Utc;
-use hmac::{Hmac, Mac, NewMac};
+use hmac::{Hmac, Mac};
 use reqwest::{
     blocking::{Body, Client, Response},
     header,
