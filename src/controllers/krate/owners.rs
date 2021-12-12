@@ -55,9 +55,12 @@ pub fn remove_owners(req: &mut dyn RequestExt) -> EndpointResult {
 }
 
 /// Parse the JSON request body of requests to modify the owners of a crate.
-/// The format is
 ///
-///     {"owners": ["username", "github:org:team", ...]}
+/// The format is:
+///
+/// ```json
+/// {"owners": ["username", "github:org:team", ...]}
+/// ```
 fn parse_owners_request(req: &mut dyn RequestExt) -> AppResult<Vec<String>> {
     let mut body = String::new();
     req.body().read_to_string(&mut body)?;

@@ -15,7 +15,7 @@ opt-level = 2
 
 [lib]
 name = "cargo_registry"
-doctest = false
+doctest = true
 
 [[test]]
 name = "all"
