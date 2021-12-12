@@ -41,14 +41,17 @@ const CAL_LICENSES = [
   'zlib',
 ];
 
-const LICENSE_KEYWORDS = new Set(['OR', 'AND', 'WITH']);
+const LICENSE_KEYWORDS = new Set(['OR', 'AND', 'WITH', '(', ')']);
 
 export function parseLicense(text) {
   return text
     .trim()
     .replace('/', ' OR ')
+    .replace(/(^\(| \()/, ' ( ')
+    .replace(/(\)$|\) )/, ' ) ')
     .replace(/ +/g, ' ')
     .split(' ')
+    .filter(Boolean)
     .map(text => {
       let lowerCaseText = text.toLowerCase();
 

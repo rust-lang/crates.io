@@ -55,6 +55,18 @@ module('parseLicense()', function () {
         { isKeyword: false, link: undefined, text: 'B' },
       ],
     ],
+    [
+      '(Apache-2.0 OR MIT) AND BSD-3-Clause',
+      [
+        { isKeyword: true, link: undefined, text: '(' },
+        { isKeyword: false, link: 'https://choosealicense.com/licenses/apache-2.0', text: 'Apache-2.0' },
+        { isKeyword: true, link: undefined, text: 'OR' },
+        { isKeyword: false, link: 'https://choosealicense.com/licenses/mit', text: 'MIT' },
+        { isKeyword: true, link: undefined, text: ')' },
+        { isKeyword: true, link: undefined, text: 'AND' },
+        { isKeyword: false, link: 'https://choosealicense.com/licenses/bsd-3-clause', text: 'BSD-3-Clause' },
+      ],
+    ],
   ];
 
   for (let [input, expectation] of TESTS) {
