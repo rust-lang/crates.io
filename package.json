@@ -130,7 +130,6 @@
     "webpack": "5.65.0"
   },
   "resolutions": {
-    "@ember/string": "3.0.0",
     "ember-css-modules/postcss": "8.4.5",
     "ember-inflector": "4.0.2",
     "ember-modifier": "3.0.0"
