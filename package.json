@@ -52,7 +52,7 @@
     "tracked-toolbox": "1.2.3"
   },
   "devDependencies": {
-    "@babel/eslint-parser": "7.16.3",
+    "@babel/eslint-parser": "7.16.5",
     "@ember/optional-features": "2.0.0",
     "@ember/render-modifiers": "2.0.0",
     "@ember/test-helpers": "2.6.0",
