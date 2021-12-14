@@ -16,7 +16,7 @@ export default class IndexController extends Controller {
   }
 
   @action fetchData() {
-    this.dataTask.perform().catch(() => {
+    return this.dataTask.perform().catch(() => {
       // we ignore errors here because they are handled in the template already
     });
   }
