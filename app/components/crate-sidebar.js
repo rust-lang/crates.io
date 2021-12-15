@@ -5,7 +5,7 @@ import { didCancel } from 'ember-concurrency';
 
 import { simplifyUrl } from './crate-sidebar/link';
 
-export default class DownloadGraph extends Component {
+export default class CrateSidebar extends Component {
   @service playground;
   @service sentry;
 
