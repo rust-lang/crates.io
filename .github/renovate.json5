@@ -24,6 +24,8 @@
             "depNameTemplate": "node",
             "datasourceTemplate": "github-releases",
             "lookupNameTemplate": "nodejs/node",
+            "extractVersionTemplate": "^v(?<version>.*)$",
+            "versioningTemplate": "node"
         },
         {
             "fileMatch": ["^.github/workflows/[^\\.]+\\.ya?ml$"],
@@ -72,14 +74,6 @@
         "matchPackageNames": ["node"],
         "commitMessageTopic": "Node.js",
         "labels": ["A-frontend"],
-    }, {
-        // Use `semver` versioning scheme, instead of `node`. Ideally we would
-        // use `node`, which differentiates between LTS and non-LTS releases,
-        // but that is not compatible with the `nodejs/node` Docker image
-        // updates.
-        "matchManagers": ["npm"],
-        "matchPackageNames": ["node"],
-        "versioning": "semver",
     }, {
         "matchPackagePatterns": [
             "^conduit$",
