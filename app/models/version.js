@@ -1,6 +1,7 @@
 import Model, { attr, belongsTo, hasMany } from '@ember-data/model';
 
 import { keepLatestTask, task } from 'ember-concurrency';
+import fetch from 'fetch';
 import { alias } from 'macro-decorators';
 import semverParse from 'semver/functions/parse';
 import { cached } from 'tracked-toolbox';
