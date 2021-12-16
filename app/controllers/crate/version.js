@@ -11,7 +11,7 @@ export default class CrateVersionController extends Controller {
     return this.requestedVersion ? this.currentVersion : this.crate;
   }
 
-  @alias('downloadsContext.version_downloads') downloads;
+  @alias('downloadsContext.version_downloads.content') downloads;
   @alias('model.crate') crate;
   @alias('model.requestedVersion') requestedVersion;
   @alias('model.version') currentVersion;
