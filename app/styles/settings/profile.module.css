@@ -1,0 +1,28 @@
+.me-profile {
+    margin-bottom: 24px;
+
+    .info { display: flex; }
+    dl {
+        margin: 0 0 0 30px;
+        line-height: 150%;
+        font-size: 110%;
+        dt {
+            font-weight: bold;
+            width: 150px;
+            text-align: right;
+            float: left;
+            clear: both;
+        }
+        dd { float: left; margin-left: 10px; }
+    }
+
+    @media only screen and (max-width: 550px) {
+        .info img { display: none; }
+    }
+}
+
+.me-email {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+}

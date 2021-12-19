@@ -6,7 +6,7 @@ import { alias } from 'macro-decorators';
 
 import ajax from '../../utils/ajax';
 
-export default class SettingsController extends Controller {
+export default class EmailNotificationsSettingsController extends Controller {
   isResetting = false;
 
   @alias('model.ownedCrates') ownedCrates;

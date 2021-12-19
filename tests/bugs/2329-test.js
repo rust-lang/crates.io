@@ -56,8 +56,8 @@ module('Bug #2329', function (hooks) {
     // 6. Use the menu to navigate to "Account Settings".
     await click('[data-test-user-menu]');
     await click('[data-test-me-link]');
-    await visit('/settings');
-    assert.equal(currentURL(), '/settings');
+    await visit('/settings/email-notifications');
+    assert.equal(currentURL(), '/settings/email-notifications');
 
     // 7. Observe that there are no crates listed under "Email Notification Preferences".
     // Observe that no request was sent to the /api/v1/me endpoint to obtain this data.

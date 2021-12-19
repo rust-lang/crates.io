@@ -1,0 +1,11 @@
+<div local-class="page" ...attributes>
+  <SideMenu as |menu|>
+    <menu.Item @link={{link "settings.profile"}}>Profile</menu.Item>
+    <menu.Item @link={{link "settings.email-notifications"}}>Email Notifications</menu.Item>
+    <menu.Item @link={{link "settings.tokens"}}>API Tokens</menu.Item>
+  </SideMenu>
+
+  <div local-class="content">
+    {{yield}}
+  </div>
+</div>
