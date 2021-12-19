@@ -1,0 +1,22 @@
+.link {
+    display: block;
+    padding: 10px 12px;
+    border-radius: 6px;
+    color: var(--main-color-light);
+    transition: all 300ms ease-in;
+
+    &:hover {
+        background-color: var(--main-bg-dark);
+        color: var(--main-color);
+        transition: none;
+    }
+}
+
+.active {
+    background-color: var(--main-bg-dark);
+    color: var(--main-color);
+
+    &:hover {
+        background-color: #e5e1cd;
+    }
+}
