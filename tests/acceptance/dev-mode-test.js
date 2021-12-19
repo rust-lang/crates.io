@@ -17,6 +17,11 @@ if (s.has('devmode')) {
       let user = this.server.create('user');
       this.authenticateAs(user);
 
+      let router = this.owner.lookup('service:router');
+      router.on('routeDidChange', () => {
+        console.log(`URL: ${router.currentURL}`);
+      });
+
       await visit('/');
       // eslint-disable-next-line ember/no-pause-test
       await this.pauseTest();
