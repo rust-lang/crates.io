@@ -59,7 +59,7 @@ impl TopVersions {
     /// highest version (in semver order) for a collection of date/version pairs.
     pub fn from_date_version_pairs<T>(pairs: T) -> Self
     where
-        T: Clone + IntoIterator<Item = (NaiveDateTime, String)>,
+        T: IntoIterator<Item = (NaiveDateTime, String)>,
     {
         // filter out versions that we can't parse
         let pairs: Vec<(NaiveDateTime, semver::Version)> = pairs
