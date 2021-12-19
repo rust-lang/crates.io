@@ -31,6 +31,7 @@ Router.map(function () {
     this.route('following');
     this.route('pending-invites');
   });
+  this.route('settings');
   this.route('user', { path: '/users/:user_id' });
   this.route('install');
   this.route('search');
