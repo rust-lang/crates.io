@@ -140,16 +140,7 @@ jobs:
           cargo install diesel_cli --vers $(cat .diesel_version) --no-default-features --features postgres --debug
           diesel database setup --locked-schema
 
-      - name: Install cargo-tarpaulin
-        if: matrix.rust == 'stable'
-        run: cargo install cargo-tarpaulin --version ~0.18.0-alpha.3
-
-      - name: Run tests (with coverage report)
-        if: matrix.rust == 'stable'
-        run: cargo tarpaulin --avoid-cfg-tarpaulin --workspace
-
       - name: Run tests
-        if: matrix.rust != 'stable'
         run: cargo test --workspace
 
 

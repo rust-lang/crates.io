@@ -1,0 +1,51 @@
+name: Coverage
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+env:
+  RUST_VERSION: 1.57.0
+
+jobs:
+  coverage:
+    name: Test Coverage
+    runs-on: ubuntu-20.04
+
+    env:
+      RUST_BACKTRACE: 1
+      DATABASE_URL: postgres://postgres:postgres@localhost/cargo_registry_test
+      TEST_DATABASE_URL: postgres://postgres:postgres@localhost/cargo_registry_test
+      RUSTFLAGS: "-D warnings"
+      MALLOC_CONF: "background_thread:true,abort_conf:true,abort:true,junk:true"
+
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v2
+
+      # Set up Rust
+      - run: rustup default ${{ env.RUST_VERSION }}
+      - uses: Swatinem/rust-cache@v1.3.0
+
+      # Set up database
+      - run: cargo install diesel_cli --vers $(cat .diesel_version) --no-default-features --features postgres --debug
+      - run: diesel database setup --locked-schema
+
+      # Set up cargo-tarpaulin and run the tests
+      - run: cargo install cargo-tarpaulin --version ~0.18.0-alpha.3
+      - run: cargo tarpaulin --avoid-cfg-tarpaulin --workspace
