@@ -65,7 +65,7 @@ tikv-jemallocator = { version = "0.4.1", features = ['unprefixed_malloc_on_suppo
 lettre = { version = "0.10.0-rc.4", default-features = false, features = ["file-transport", "smtp-transport", "native-tls", "hostname", "builder"] }
 license-exprs = "1.6"
 minijinja = "0.8.2"
-moka = "0.6.1"
+moka = "0.6.2"
 oauth2 = { version = "4.1.0", default-features = false, features = ["reqwest"] }
 parking_lot = "0.11"
 prometheus = { version = "0.13.0", default-features = false }
