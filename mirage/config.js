@@ -4,6 +4,7 @@ import * as DocsRS from './route-handlers/docs-rs';
 import * as Invites from './route-handlers/invites';
 import * as Keywords from './route-handlers/keywords';
 import * as Me from './route-handlers/me';
+import * as Metadata from './route-handlers/metadata';
 import * as Session from './route-handlers/session';
 import * as Summary from './route-handlers/summary';
 import * as Teams from './route-handlers/teams';
@@ -15,6 +16,7 @@ export default function () {
   DocsRS.register(this);
   Invites.register(this);
   Keywords.register(this);
+  Metadata.register(this);
   Me.register(this);
   Session.register(this);
   Summary.register(this);

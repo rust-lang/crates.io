@@ -1,10 +1,14 @@
 import { action } from '@ember/object';
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
+import Ember from 'ember';
 
-import { rawTimeout, task } from 'ember-concurrency';
+import { didCancel, dropTask, rawTimeout, task } from 'ember-concurrency';
+
+import ajax from '../utils/ajax';
 
 export default class ApplicationRoute extends Route {
+  @service notifications;
   @service progress;
   @service router;
   @service session;
@@ -32,6 +36,13 @@ export default class ApplicationRoute extends Route {
       // ignore all errors since we're only preloading here
     });
 
+    this.checkReadOnlyStatusTask.perform().catch(error => {
+      if (!didCancel(error) && !error.isServerError && !error.isNetworkError) {
+        // send unexpected errors to Sentry, but don't bother the user for this optional feature
+        this.sentry.captureException(error);
+      }
+    });
+
     // load ResizeObserver polyfill, only if required.
     if (!('ResizeObserver' in window)) {
       console.debug('Loading ResizeObserver polyfill…');
@@ -48,5 +59,20 @@ export default class ApplicationRoute extends Route {
   @task *preloadPlaygroundCratesTask() {
     yield rawTimeout(1000);
     yield this.playground.loadCrates();
+  }
+
+  @dropTask *checkReadOnlyStatusTask() {
+    // delay the status check to let the more relevant data load first
+    let timeout = Ember.testing ? 0 : 1000;
+    yield rawTimeout(timeout);
+
+    let { read_only: readOnly } = yield ajax('/api/v1/site_metadata');
+    if (readOnly) {
+      let message =
+        'crates.io is currently in read-only mode for maintenance reasons. ' +
+        'Some functionality will be temporarily unavailable.';
+
+      this.notifications.info(message, { autoClear: false });
+    }
   }
 }
