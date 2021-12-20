@@ -50,9 +50,6 @@
         "matchPackageNames": ["@percy/cli", "webpack"],
         "extends": ["schedule:weekly"],
     }, {
-        "matchLanguages": ["rust"],
-        "rangeStrategy": "bump",
-    }, {
         "matchLanguages": ["js"],
         "matchUpdateTypes": ["lockFileMaintenance"],
         "additionalBranchPrefix": "js-",
