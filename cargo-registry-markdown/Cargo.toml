@@ -11,7 +11,7 @@ resolver = "2"
 path = "lib.rs"
 
 [dependencies]
-ammonia = "3.1.2"
-comrak = { version = "0.12.1", default-features = false }
-htmlescape = "0.3.1"
-url = "2.2.2"
+ammonia = "=3.1.2"
+comrak = { version = "=0.12.1", default-features = false }
+htmlescape = "=0.3.1"
+url = "=2.2.2"
