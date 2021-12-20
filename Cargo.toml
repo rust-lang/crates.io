@@ -29,11 +29,11 @@ rustdoc-args = [
 ]
 
 [dependencies]
-anyhow = "1.0"
-base64 = "0.13"
+anyhow = "=1.0.51"
+base64 = "=0.13.0"
 cargo-registry-markdown = { path = "cargo-registry-markdown" }
 cargo-registry-s3 = { path = "cargo-registry-s3" }
-chrono = { version = "0.4.19", features = ["serde"] }
+chrono = { version = "=0.4.19", features = ["serde"] }
 clap = { version = "=3.0.0-rc.5", features = ["derive", "unicode"] }
 
 conduit = "0.10.0"
@@ -45,58 +45,58 @@ conduit-middleware = "0.10.0"
 conduit-router = "0.10.0"
 conduit-static = "0.10.0"
 
-cookie = { version = "0.16.0-rc.1", features = ["secure"] }
-dashmap = { version = "5.0.0", features = ["raw-api"] }
-derive_deref = "1.1.1"
-dialoguer = "0.9"
-diesel = { version = "1.4.8", features = ["postgres", "serde_json", "chrono", "r2d2"] }
-diesel_full_text_search = "1.0.1"
-diesel_migrations = { version = "1.4.0", features = ["postgres"] }
-dotenv = "0.15"
-flate2 = "1.0"
-futures-channel = { version = "0.3.18", default-features = false }
-futures-util = "0.3"
-git2 = "0.13.25"
-hex = "0.4"
-http = "0.2"
-hyper = { version = "0.14", features = ["client", "http1"] }
-indexmap = { version = "1.7.0", features = ["serde-1"] }
-tikv-jemallocator = { version = "0.4.1", features = ['unprefixed_malloc_on_supported_platforms', 'profiling'] }
-lettre = { version = "0.10.0-rc.4", default-features = false, features = ["file-transport", "smtp-transport", "native-tls", "hostname", "builder"] }
-license-exprs = "1.6"
-minijinja = "0.8.2"
-moka = "0.6.2"
-oauth2 = { version = "4.1.0", default-features = false, features = ["reqwest"] }
-parking_lot = "0.11"
-prometheus = { version = "0.13.0", default-features = false }
-rand = "0.8"
-reqwest = { version = "0.11", features = ["blocking", "gzip", "json"] }
-scheduled-thread-pool = "0.2.5"
-semver = { version = "1.0.4", features = ["serde"] }
-sentry = { version = "0.23.0", features = ["tracing"] }
+cookie = { version = "=0.16.0-rc.1", features = ["secure"] }
+dashmap = { version = "=5.0.0", features = ["raw-api"] }
+derive_deref = "=1.1.1"
+dialoguer = "=0.9.0"
+diesel = { version = "=1.4.8", features = ["postgres", "serde_json", "chrono", "r2d2"] }
+diesel_full_text_search = "=1.0.1"
+diesel_migrations = { version = "=1.4.0", features = ["postgres"] }
+dotenv = "=0.15.0"
+flate2 = "=1.0.22"
+futures-channel = { version = "=0.3.18", default-features = false }
+futures-util = "=0.3.19"
+git2 = "=0.13.25"
+hex = "=0.4.3"
+http = "=0.2.5"
+hyper = { version = "=0.14.16", features = ["client", "http1"] }
+indexmap = { version = "=1.7.0", features = ["serde-1"] }
+tikv-jemallocator = { version = "=0.4.1", features = ['unprefixed_malloc_on_supported_platforms', 'profiling'] }
+lettre = { version = "=0.10.0-rc.4", default-features = false, features = ["file-transport", "smtp-transport", "native-tls", "hostname", "builder"] }
+license-exprs = "=1.6.0"
+minijinja = "=0.8.2"
+moka = "=0.6.2"
+oauth2 = { version = "=4.1.0", default-features = false, features = ["reqwest"] }
+parking_lot = "=0.11.2"
+prometheus = { version = "=0.13.0", default-features = false }
+rand = "=0.8.4"
+reqwest = { version = "=0.11.8", features = ["blocking", "gzip", "json"] }
+scheduled-thread-pool = "=0.2.5"
+semver = { version = "=1.0.4", features = ["serde"] }
+sentry = { version = "=0.23.0", features = ["tracing"] }
 sentry-conduit = { version = "0.4.0", default-features = false }
-serde = { version = "1.0.131", features = ["derive"] }
-serde_json = "1.0.73"
-sha2 = "0.10"
+serde = { version = "=1.0.131", features = ["derive"] }
+serde_json = "=1.0.73"
+sha2 = "=0.10.0"
 swirl = { git = "https://github.com/sgrif/swirl.git", rev = "e87cf37" }
-tar = "0.4.38"
-tempfile = "3"
-thiserror = "1.0.30"
-tokio = { version = "1.15.0", features = ["net", "signal", "io-std", "io-util", "rt-multi-thread", "macros"]}
-toml = "0.5"
-tracing = "0.1"
-tracing-subscriber = "0.2"
-url = "2.2"
+tar = "=0.4.38"
+tempfile = "=3.2.0"
+thiserror = "=1.0.30"
+tokio = { version = "=1.15.0", features = ["net", "signal", "io-std", "io-util", "rt-multi-thread", "macros"]}
+toml = "=0.5.8"
+tracing = "=0.1.29"
+tracing-subscriber = "=0.2.25"
+url = "=2.2.2"
 
 [dev-dependencies]
-claim = "0.5"
+claim = "=0.5.0"
 conduit-test = "0.10.0"
-hyper-tls = "0.5"
-lazy_static = "1.4"
-tokio = "1.15.0"
-tower-service = "0.3.1"
+hyper-tls = "=0.5.0"
+lazy_static = "=1.4.0"
+tokio = "=1.15.0"
+tower-service = "=0.3.1"
 
 [build-dependencies]
-diesel = { version = "1.4.8", features = ["postgres"] }
-diesel_migrations = { version = "1.4.0", features = ["postgres"] }
-dotenv = "0.15"
+diesel = { version = "=1.4.8", features = ["postgres"] }
+diesel_migrations = { version = "=1.4.0", features = ["postgres"] }
+dotenv = "=0.15.0"
