@@ -20,6 +20,20 @@
     "regexManagers": [
         {
             "fileMatch": ["^.github/workflows/[^\\.]+\\.ya?ml$"],
+            "matchStrings": ["CARGO_TARPAULIN_VERSION:\\s*(?<currentValue>.*?)\n"],
+            "depNameTemplate": "cargo-tarpaulin",
+            "datasourceTemplate": "crate",
+            "versioningTemplate": "semver"
+        },
+        {
+            "fileMatch": ["^.github/workflows/[^\\.]+\\.ya?ml$"],
+            "matchStrings": ["DIESEL_CLI_VERSION:\\s*(?<currentValue>.*?)\n"],
+            "depNameTemplate": "diesel_cli",
+            "datasourceTemplate": "crate",
+            "versioningTemplate": "semver",
+        },
+        {
+            "fileMatch": ["^.github/workflows/[^\\.]+\\.ya?ml$"],
             "matchStrings": ["NODE_VERSION:\\s*(?<currentValue>.*?)\n"],
             "depNameTemplate": "node",
             "datasourceTemplate": "github-releases",
