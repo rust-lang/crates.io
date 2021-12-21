@@ -39,8 +39,8 @@ module('Acceptance | api-tokens', function (hooks) {
   test('/me is showing the list of active API tokens', async function (assert) {
     prepare(this);
 
-    await visit('/me');
-    assert.equal(currentURL(), '/me');
+    await visit('/settings/tokens');
+    assert.equal(currentURL(), '/settings/tokens');
     assert.dom('[data-test-api-token]').exists({ count: 2 });
 
     let [row1, row2] = findAll('[data-test-api-token]');
@@ -66,8 +66,8 @@ module('Acceptance | api-tokens', function (hooks) {
   test('API tokens can be revoked', async function (assert) {
     prepare(this);
 
-    await visit('/me');
-    assert.equal(currentURL(), '/me');
+    await visit('/settings/tokens');
+    assert.equal(currentURL(), '/settings/tokens');
     assert.dom('[data-test-api-token]').exists({ count: 2 });
 
     await click('[data-test-api-token="1"] [data-test-revoke-token-button]');
@@ -85,8 +85,8 @@ module('Acceptance | api-tokens', function (hooks) {
       return new Response(500, {}, {});
     });
 
-    await visit('/me');
-    assert.equal(currentURL(), '/me');
+    await visit('/settings/tokens');
+    assert.equal(currentURL(), '/settings/tokens');
     assert.dom('[data-test-api-token]').exists({ count: 2 });
 
     await click('[data-test-api-token="1"] [data-test-revoke-token-button]');
@@ -99,8 +99,8 @@ module('Acceptance | api-tokens', function (hooks) {
   test('new API tokens can be created', async function (assert) {
     prepare(this);
 
-    await visit('/me');
-    assert.equal(currentURL(), '/me');
+    await visit('/settings/tokens');
+    assert.equal(currentURL(), '/settings/tokens');
     assert.dom('[data-test-api-token]').exists({ count: 2 });
     assert.dom('[data-test-focused-input]').doesNotExist();
     assert.dom('[data-test-save-token-button]').doesNotExist();

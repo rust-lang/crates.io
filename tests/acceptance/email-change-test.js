@@ -13,8 +13,8 @@ module('Acceptance | Email Change', function (hooks) {
 
     this.authenticateAs(user);
 
-    await visit('/me');
-    assert.equal(currentURL(), '/me');
+    await visit('/settings/profile');
+    assert.equal(currentURL(), '/settings/profile');
     assert.dom('[data-test-email-input]').exists();
     assert.dom('[data-test-email-input] [data-test-no-email]').doesNotExist();
     assert.dom('[data-test-email-input] [data-test-email-address]').includesText('old@email.com');
@@ -54,8 +54,8 @@ module('Acceptance | Email Change', function (hooks) {
 
     this.authenticateAs(user);
 
-    await visit('/me');
-    assert.equal(currentURL(), '/me');
+    await visit('/settings/profile');
+    assert.equal(currentURL(), '/settings/profile');
     assert.dom('[data-test-email-input]').exists();
     assert.dom('[data-test-email-input] [data-test-no-email]').exists();
     assert.dom('[data-test-email-input] [data-test-email-address]').hasText('');
@@ -91,7 +91,7 @@ module('Acceptance | Email Change', function (hooks) {
 
     this.authenticateAs(user);
 
-    await visit('/me');
+    await visit('/settings/profile');
     await click('[data-test-email-input] [data-test-edit-button]');
     await fillIn('[data-test-email-input] [data-test-input]', 'new@email.com');
     assert.dom('[data-test-email-input] [data-test-invalid-email-warning]').doesNotExist();
@@ -115,7 +115,7 @@ module('Acceptance | Email Change', function (hooks) {
 
     this.server.put('/api/v1/users/:user_id', {}, 500);
 
-    await visit('/me');
+    await visit('/settings/profile');
     await click('[data-test-email-input] [data-test-edit-button]');
     await fillIn('[data-test-email-input] [data-test-input]', 'new@email.com');
 
@@ -138,8 +138,8 @@ module('Acceptance | Email Change', function (hooks) {
 
       this.authenticateAs(user);
 
-      await visit('/me');
-      assert.equal(currentURL(), '/me');
+      await visit('/settings/profile');
+      assert.equal(currentURL(), '/settings/profile');
       assert.dom('[data-test-email-input]').exists();
       assert.dom('[data-test-email-input] [data-test-email-address]').includesText('john@doe.com');
       assert.dom('[data-test-email-input] [data-test-verified]').doesNotExist();
@@ -158,8 +158,8 @@ module('Acceptance | Email Change', function (hooks) {
 
       this.server.put('/api/v1/users/:user_id/resend', {}, 500);
 
-      await visit('/me');
-      assert.equal(currentURL(), '/me');
+      await visit('/settings/profile');
+      assert.equal(currentURL(), '/settings/profile');
       assert.dom('[data-test-email-input]').exists();
       assert.dom('[data-test-email-input] [data-test-email-address]').includesText('john@doe.com');
       assert.dom('[data-test-email-input] [data-test-verified]').doesNotExist();

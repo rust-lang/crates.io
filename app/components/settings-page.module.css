@@ -1,0 +1,16 @@
+.page {
+    display: grid;
+    gap: 16px;
+
+    @media only screen and (min-width: 891px) {
+        grid-template:
+            "menu content" auto /
+            200px auto;
+    }
+}
+
+.content {
+    h2:first-child {
+        margin-top: 4px;
+    }
+}

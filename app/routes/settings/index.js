@@ -1,10 +1,10 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
-export default class MeIndexRoute extends Route {
+export default class SettingsRoute extends Route {
   @service router;
 
   redirect() {
-    this.router.replaceWith('settings');
+    this.router.replaceWith('settings.profile');
   }
 }

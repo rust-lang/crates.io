@@ -1,0 +1,52 @@
+{{page-title 'Settings'}}
+
+<PageHeader @title="Account Settings" @icon="gear"/>
+
+<SettingsPage>
+  <form local-class="me-email-notifications" {{on "submit" (prevent-default this.saveEmailNotifications)}} >
+    <h2>Email Notification Preferences</h2>
+
+    {{#if this.hasEmailNotificationFeature}}
+      <p>
+        To aid detection of unauthorized crate changes, we email you each time a new version of a crate you own is pushed.
+        By receiving and reading these emails, you help protect the Rust ecosystem. You may also choose to turn these
+        emails off for any of your crates listed below.
+      </p>
+
+      <div local-class="notifications-row">
+        <button type='button' local-class="select-all-button" {{on "click" this.emailNotificationsSelectAll}}>Select All</button>
+        <button type='button' local-class="deselect-all-button" {{on "click" this.emailNotificationsSelectNone}}>Deselect All</button>
+      </div>
+
+      <ul local-class="notifications-list">
+        {{#each this.ownedCrates as |ownedCrate|}}
+          <li>
+            <OwnedCrateRow @ownedCrate={{ownedCrate}} />
+          </li>
+        {{/each}}
+      </ul>
+
+      <div local-class="notifications-row">
+        {{#if this.emailNotificationsError}}
+          <div local-class="notifications-error">
+            An error occurred while saving your email preferences.
+          </div>
+        {{/if}}
+        {{#if this.emailNotificationsSuccess}}
+          <div local-class="notifications-success">
+            Your email notification preferences have been updated!
+          </div>
+        {{/if}}
+        <div local-class="right">
+          <button type='submit' local-class="update-notifications-button">Update</button>
+        </div>
+      </div>
+    {{else}}
+      <p>
+        To aid detection of unauthorized crate changes, we plan to email you each time a new version of a crate you own is
+        pushed. This feature is still work-in-progress, if you want to help out have a look at
+        <a href="https://github.com/rust-lang/crates.io/issues/1895">#1895</a>.
+      </p>
+    {{/if}}
+  </form>
+</SettingsPage>
