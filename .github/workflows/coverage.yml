@@ -7,6 +7,7 @@ on:
       - master
 
 env:
+  DIESEL_CLI_VERSION: 1.4.1
   RUST_VERSION: 1.57.0
 
 jobs:
@@ -43,7 +44,7 @@ jobs:
       - uses: Swatinem/rust-cache@v1.3.0
 
       # Set up database
-      - run: cargo install diesel_cli --vers $(cat .diesel_version) --no-default-features --features postgres --debug
+      - run: cargo install diesel_cli --vers ${{ env.DIESEL_CLI_VERSION }} --no-default-features --features postgres --debug
       - run: diesel database setup --locked-schema
 
       # Set up cargo-tarpaulin and run the tests

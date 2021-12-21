@@ -10,6 +10,7 @@ on:
   pull_request:
 
 env:
+  DIESEL_CLI_VERSION: 1.4.1
   NODE_VERSION: 16.13.1
   RUST_VERSION: 1.57.0
 
@@ -137,7 +138,7 @@ jobs:
 
       - name: Setup database
         run: |
-          cargo install diesel_cli --vers $(cat .diesel_version) --no-default-features --features postgres --debug
+          cargo install diesel_cli --vers ${{ env.DIESEL_CLI_VERSION }} --no-default-features --features postgres --debug
           diesel database setup --locked-schema
 
       - name: Run tests
