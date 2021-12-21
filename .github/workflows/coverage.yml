@@ -7,6 +7,7 @@ on:
       - master
 
 env:
+  CARGO_TARPAULIN_VERSION: 0.18.0-alpha.3
   DIESEL_CLI_VERSION: 1.4.1
   RUST_VERSION: 1.57.0
 
@@ -48,5 +49,5 @@ jobs:
       - run: diesel database setup --locked-schema
 
       # Set up cargo-tarpaulin and run the tests
-      - run: cargo install cargo-tarpaulin --version ~0.18.0-alpha.3
+      - run: cargo install cargo-tarpaulin --version ${{ env.CARGO_TARPAULIN_VERSION }}
       - run: cargo tarpaulin --avoid-cfg-tarpaulin --workspace
