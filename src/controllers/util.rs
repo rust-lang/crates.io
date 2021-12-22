@@ -67,7 +67,7 @@ fn verify_origin(req: &dyn RequestExt) -> AppResult<()> {
 }
 
 fn authenticate_user(req: &dyn RequestExt) -> AppResult<AuthenticatedUser> {
-    let conn = req.db_conn()?;
+    let conn = req.db_write()?;
 
     let session = req.session();
     let user_id_from_session = session.get("user_id").and_then(|s| s.parse::<i32>().ok());

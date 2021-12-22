@@ -146,7 +146,7 @@ pub fn connection_url(url: &str) -> String {
 
 pub trait RequestTransaction {
     /// Obtain a read/write database connection from the primary pool
-    fn db_conn(&self) -> Result<DieselPooledConn<'_>, PoolError>;
+    fn db_write(&self) -> Result<DieselPooledConn<'_>, PoolError>;
 
     /// Obtain a readonly database connection from the replica pool
     ///
@@ -155,7 +155,7 @@ pub trait RequestTransaction {
 }
 
 impl<T: RequestExt + ?Sized> RequestTransaction for T {
-    fn db_conn(&self) -> Result<DieselPooledConn<'_>, PoolError> {
+    fn db_write(&self) -> Result<DieselPooledConn<'_>, PoolError> {
         self.app().primary_database.get()
     }
 
