@@ -26,7 +26,7 @@ pub fn stats(req: &mut dyn RequestExt) -> EndpointResult {
     let user_id = &req.params()["user_id"]
         .parse::<i32>()
         .map_err(|err| err.chain(bad_request("invalid user_id")))?;
-    let conn = req.db_write()?;
+    let conn = req.db_read_prefer_primary()?;
 
     let data: i64 = CrateOwner::by_owner_kind(OwnerKind::User)
         .inner_join(crates::table)
