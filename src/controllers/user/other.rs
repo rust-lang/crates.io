@@ -10,7 +10,7 @@ pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
     use self::users::dsl::{gh_login, id, users};
 
     let name = lower(&req.params()["user_id"]);
-    let conn = req.db_write()?;
+    let conn = req.db_read_prefer_primary()?;
     let user: User = users
         .filter(lower(gh_login).eq(name))
         .order(id.desc())
