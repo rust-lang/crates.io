@@ -152,6 +152,11 @@ pub trait RequestTransaction {
     ///
     /// If the replica pool is disabled or unavailable, the primary pool is used instead.
     fn db_read(&self) -> Result<DieselPooledConn<'_>, PoolError>;
+
+    /// Obtain a readonly database connection from the primary pool
+    ///
+    /// If the primary pool is unavailable, the replica pool is used instead, if not disabled.
+    fn db_read_prefer_primary(&self) -> Result<DieselPooledConn<'_>, PoolError>;
 }
 
 impl<T: RequestExt + ?Sized> RequestTransaction for T {
@@ -173,6 +178,25 @@ impl<T: RequestExt + ?Sized> RequestTransaction for T {
 
             // Replica is disabled, but primary might be available
             None => self.app().primary_database.get(),
+        }
+    }
+
+    fn db_read_prefer_primary(&self) -> Result<DieselPooledConn<'_>, PoolError> {
+        match (
+            self.app().primary_database.get(),
+            &self.app().read_only_replica_database,
+        ) {
+            // Primary is available
+            (Ok(connection), _) => Ok(connection),
+
+            // Primary is not available, but replica might be available
+            (Err(PoolError::UnhealthyPool), Some(read_only_pool)) => read_only_pool.get(),
+
+            // Primary failed and replica is disabled
+            (Err(error), None) => Err(error),
+
+            // Primary failed
+            (Err(error), _) => Err(error),
         }
     }
 }
