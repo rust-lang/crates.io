@@ -10,10 +10,11 @@ import { visit } from '../helpers/visit-ignoring-abort';
 module('Acceptance | Dashboard', function (hooks) {
   setupApplicationTest(hooks);
 
-  test('redirects to / when not logged in', async function (assert) {
+  test('shows "page requires authentication" error when not logged in', async function (assert) {
     await visit('/dashboard');
-    assert.equal(currentURL(), '/');
-    assert.dom('[data-test-notification-message]').hasText('Please log in to proceed');
+    assert.equal(currentURL(), '/dashboard');
+    assert.dom('[data-test-title]').hasText('This page requires authentication');
+    assert.dom('[data-test-login]').exists();
   });
 
   test('shows the dashboard when logged in', async function (assert) {

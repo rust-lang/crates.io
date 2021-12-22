@@ -2,7 +2,6 @@ import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
 export default class AuthenticatedRoute extends Route {
-  @service notifications;
   @service router;
   @service session;
 
@@ -12,9 +11,12 @@ export default class AuthenticatedRoute extends Route {
     let result = await this.session.loadUserTask.last;
 
     if (!result.currentUser) {
-      this.notifications.error('Please log in to proceed');
       this.session.savedTransition = transition;
-      this.router.transitionTo('index');
+      this.router.replaceWith('catch-all', {
+        transition,
+        loginNeeded: true,
+        title: 'This page requires authentication',
+      });
     }
   }
 }
