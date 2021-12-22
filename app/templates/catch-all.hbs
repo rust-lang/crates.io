@@ -5,9 +5,9 @@
     <h1 local-class="title" data-test-title>{{or @model.title "Page not found"}}</h1>
 
     {{#if @model.tryAgain}}
-      <a href="javascript:location.reload()" local-class="link" data-test-try-again {{on "click" this.reload}}>Try Again</a>
+      <button type="button" local-class="link" data-test-try-again {{on "click" this.reload}}>Try Again</button>
     {{else}}
-      <a href="javascript:history.back()" local-class="link" data-test-go-back>Go Back</a>
+      <button type="button" local-class="link" data-test-go-back {{on "click" this.back}}>Go Back</button>
     {{/if}}
   </div>
 </div>

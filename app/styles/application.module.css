@@ -57,9 +57,10 @@ h1 {
     }
 }
 
-a {
+a, .link {
     color: var(--link-color);
     text-decoration: none;
+    cursor: pointer;
 
     &:hover {
         color: var(--link-hover-color);
