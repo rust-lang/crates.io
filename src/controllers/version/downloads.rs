@@ -123,7 +123,7 @@ pub fn download(req: &mut dyn RequestExt) -> EndpointResult {
 pub fn downloads(req: &mut dyn RequestExt) -> EndpointResult {
     let (crate_name, semver) = extract_crate_name_and_semver(req)?;
 
-    let conn = req.db_read_only()?;
+    let conn = req.db_read()?;
     let (version, _) = version_and_crate(&conn, crate_name, semver)?;
 
     let cutoff_end_date = req

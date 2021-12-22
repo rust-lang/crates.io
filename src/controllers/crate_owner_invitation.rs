@@ -82,7 +82,7 @@ fn prepare_list(
         .gather(req)?;
 
     let user = auth.user();
-    let conn = req.db_read_only()?;
+    let conn = req.db_read()?;
     let config = &req.app().config;
 
     let mut crate_names = HashMap::new();

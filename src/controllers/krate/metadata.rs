@@ -28,7 +28,7 @@ pub fn summary(req: &mut dyn RequestExt) -> EndpointResult {
 
     let config = &req.app().config;
 
-    let conn = req.db_read_only()?;
+    let conn = req.db_read()?;
     let num_crates: i64 = crates.count().get_result(&*conn)?;
     let num_downloads: i64 = metadata::table
         .select(metadata::total_downloads)
@@ -133,7 +133,7 @@ pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
         .transpose()?
         .unwrap_or_default();
 
-    let conn = req.db_read_only()?;
+    let conn = req.db_read()?;
     let krate: Crate = Crate::by_name(name).first(&*conn)?;
 
     let versions_publishers_and_audit_actions = if include.versions {
@@ -326,7 +326,7 @@ pub fn readme(req: &mut dyn RequestExt) -> EndpointResult {
 // this information already, but ember is definitely requesting it
 pub fn versions(req: &mut dyn RequestExt) -> EndpointResult {
     let crate_name = &req.params()["crate_id"];
-    let conn = req.db_read_only()?;
+    let conn = req.db_read()?;
     let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
     let mut versions_and_publishers: Vec<(Version, Option<User>)> = krate
         .all_versions()
@@ -357,7 +357,7 @@ pub fn reverse_dependencies(req: &mut dyn RequestExt) -> EndpointResult {
 
     let pagination_options = PaginationOptions::builder().gather(req)?;
     let name = &req.params()["crate_id"];
-    let conn = req.db_read_only()?;
+    let conn = req.db_read()?;
     let krate: Crate = Crate::by_name(name).first(&*conn)?;
     let (rev_deps, total) = krate.reverse_dependencies(&*conn, pagination_options)?;
     let rev_deps: Vec<_> = rev_deps
