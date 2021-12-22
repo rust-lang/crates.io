@@ -38,7 +38,7 @@ pub fn download(req: &mut dyn RequestExt) -> EndpointResult {
         let conn = if app.config.force_unconditional_redirects {
             None
         } else {
-            match req.db_write() {
+            match req.db_read_prefer_primary() {
                 Ok(conn) => Some(conn),
                 Err(PoolError::UnhealthyPool) => None,
                 Err(err) => return Err(err.into()),
