@@ -151,7 +151,7 @@ pub trait RequestTransaction {
     /// Obtain a readonly database connection from the replica pool
     ///
     /// If the replica pool is disabled or unavailable, the primary pool is used instead.
-    fn db_read_only(&self) -> Result<DieselPooledConn<'_>, PoolError>;
+    fn db_read(&self) -> Result<DieselPooledConn<'_>, PoolError>;
 }
 
 impl<T: RequestExt + ?Sized> RequestTransaction for T {
@@ -159,7 +159,7 @@ impl<T: RequestExt + ?Sized> RequestTransaction for T {
         self.app().primary_database.get()
     }
 
-    fn db_read_only(&self) -> Result<DieselPooledConn<'_>, PoolError> {
+    fn db_read(&self) -> Result<DieselPooledConn<'_>, PoolError> {
         let read_only_pool = self.app().read_only_replica_database.as_ref();
         match read_only_pool.map(|pool| pool.get()) {
             // Replica is available
