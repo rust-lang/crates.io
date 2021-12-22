@@ -14,7 +14,7 @@ use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCra
 /// Handles the `GET /me` route.
 pub fn me(req: &mut dyn RequestExt) -> EndpointResult {
     let user_id = req.authenticate()?.forbid_api_token_auth()?.user_id();
-    let conn = req.db_conn()?;
+    let conn = req.db_write()?;
 
     let (user, verified, email, verification_sent): (User, Option<bool>, Option<String>, bool) =
         users::table
@@ -69,7 +69,7 @@ pub fn updates(req: &mut dyn RequestExt) -> EndpointResult {
             users::all_columns.nullable(),
         ))
         .pages_pagination(PaginationOptions::builder().gather(req)?);
-    let conn = req.db_conn()?;
+    let conn = req.db_write()?;
     let data: Paginated<(Version, String, Option<User>)> = query.load(&*conn)?;
     let more = data.next_page_params().is_some();
     let versions = data.iter().map(|(v, _, _)| v).cloned().collect::<Vec<_>>();
@@ -102,7 +102,7 @@ pub fn update_user(req: &mut dyn RequestExt) -> EndpointResult {
     req.body().read_to_string(&mut body)?;
 
     let param_user_id = &req.params()["user_id"];
-    let conn = req.db_conn()?;
+    let conn = req.db_write()?;
     let user = authenticated_user.user();
 
     // need to check if current user matches user to be updated
@@ -166,7 +166,7 @@ pub fn update_user(req: &mut dyn RequestExt) -> EndpointResult {
 pub fn confirm_user_email(req: &mut dyn RequestExt) -> EndpointResult {
     use diesel::update;
 
-    let conn = req.db_conn()?;
+    let conn = req.db_write()?;
     let req_token = &req.params()["email_token"];
 
     let updated_rows = update(emails::table.filter(emails::token.eq(req_token)))
@@ -189,7 +189,7 @@ pub fn regenerate_token_and_send(req: &mut dyn RequestExt) -> EndpointResult {
         .parse::<i32>()
         .map_err(|err| err.chain(bad_request("invalid user_id")))?;
     let authenticated_user = req.authenticate()?;
-    let conn = req.db_conn()?;
+    let conn = req.db_write()?;
     let user = authenticated_user.user();
 
     // need to check if current user matches user to be updated
@@ -231,7 +231,7 @@ pub fn update_email_notifications(req: &mut dyn RequestExt) -> EndpointResult {
         .collect();
 
     let user_id = req.authenticate()?.user_id();
-    let conn = req.db_conn()?;
+    let conn = req.db_write()?;
 
     // Build inserts from existing crates belonging to the current user
     let to_insert = CrateOwner::by_owner_kind(OwnerKind::User)

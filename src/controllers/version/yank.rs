@@ -34,7 +34,7 @@ fn modify_yank(req: &mut dyn RequestExt, yanked: bool) -> EndpointResult {
     let authenticated_user = req.authenticate()?;
     let (crate_name, semver) = extract_crate_name_and_semver(req)?;
 
-    let conn = req.db_conn()?;
+    let conn = req.db_write()?;
     let (version, krate) = version_and_crate(&conn, crate_name, semver)?;
     let api_token_id = authenticated_user.api_token_id();
     let user = authenticated_user.user();

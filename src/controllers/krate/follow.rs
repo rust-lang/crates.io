@@ -22,7 +22,7 @@ fn follow_target(
 /// Handles the `PUT /crates/:crate_id/follow` route.
 pub fn follow(req: &mut dyn RequestExt) -> EndpointResult {
     let user_id = req.authenticate()?.user_id();
-    let conn = req.db_conn()?;
+    let conn = req.db_write()?;
     let follow = follow_target(req, &conn, user_id)?;
     diesel::insert_into(follows::table)
         .values(&follow)
@@ -35,7 +35,7 @@ pub fn follow(req: &mut dyn RequestExt) -> EndpointResult {
 /// Handles the `DELETE /crates/:crate_id/follow` route.
 pub fn unfollow(req: &mut dyn RequestExt) -> EndpointResult {
     let user_id = req.authenticate()?.user_id();
-    let conn = req.db_conn()?;
+    let conn = req.db_write()?;
     let follow = follow_target(req, &conn, user_id)?;
     diesel::delete(&follow).execute(&*conn)?;
 

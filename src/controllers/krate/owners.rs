@@ -84,7 +84,7 @@ fn modify_owners(req: &mut dyn RequestExt, add: bool) -> EndpointResult {
     let app = req.app();
     let crate_name = &req.params()["crate_id"];
 
-    let conn = req.db_conn()?;
+    let conn = req.db_write()?;
     let user = authenticated_user.user();
 
     conn.transaction(|| {
