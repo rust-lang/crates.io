@@ -297,10 +297,8 @@ impl Crate {
 
     /// Validates a whole feature string, `features = ["THIS", "ALL/THIS"]`.
     pub fn valid_feature(name: &str) -> bool {
-        match name.find('/') {
-            Some(pos) => {
-                let (dep, dep_feat) = name.split_at(pos);
-                let dep_feat = &dep_feat[1..];
+        match name.split_once('/') {
+            Some((dep, dep_feat)) => {
                 let dep = dep.strip_suffix('?').unwrap_or(dep);
                 Crate::valid_feature_prefix(dep) && Crate::valid_feature_name(dep_feat)
             }
