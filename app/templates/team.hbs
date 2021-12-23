@@ -6,7 +6,7 @@
         {{ this.model.team.org_name }}
       </h1>
       <UserLink @user={{this.model.team}} local-class="github-link" data-test-github-link>
-        <img alt="GitHub profile" title="GitHub profile" src="/assets/GitHub-Mark.svg">
+        {{svg-jar "github" alt="GitHub profile"}}
       </UserLink>
     </div>
     <h2 data-test-team-name>

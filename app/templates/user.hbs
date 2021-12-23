@@ -3,8 +3,8 @@
   <h1 data-test-username>
     {{ this.model.user.login }}
   </h1>
-  <UserLink @user={{this.model.user}} data-test-user-link>
-    <img alt="GitHub profile" title="GitHub profile" src="/assets/GitHub-Mark.svg">
+  <UserLink @user={{this.model.user}} local-class="github-link" data-test-user-link>
+    {{svg-jar "github" alt="GitHub profile"}}
   </UserLink>
 </PageHeader>
 
