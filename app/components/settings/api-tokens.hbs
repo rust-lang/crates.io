@@ -74,9 +74,9 @@
 
       {{#if token.token}}
         <div local-class="new-token">
-          Please record this token somewhere, you cannot retrieve
-          its value again. For use on the command line you can save it to <code>~/.cargo/credentials</code>
-          with:
+          <div local-class="new-token-explainer">
+            Make sure to copy your API token now. You won’t be able to see it again!
+          </div>
 
           <div local-class="token-display">
             <span local-class="token-value" data-test-token>{{token.token}}</span>

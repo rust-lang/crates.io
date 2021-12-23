@@ -85,6 +85,10 @@
     margin: 24px 0;
 }
 
+.new-token-explainer {
+    font-size: 20px;
+}
+
 .token-display {
     display: grid;
     grid-template-columns: 1fr auto;
