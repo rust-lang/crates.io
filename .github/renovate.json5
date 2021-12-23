@@ -14,7 +14,6 @@
         "reviewersSampleSize": 1,
     },
     "rust": {
-        "dependencyDashboardApproval": true,
         "labels": ["A-backend"],
     },
     "regexManagers": [
