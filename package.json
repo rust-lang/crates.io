@@ -40,7 +40,7 @@
     "@juggle/resize-observer": "3.3.1",
     "@sentry/browser": "6.16.1",
     "@sentry/integrations": "6.16.1",
-    "chart.js": "3.6.2",
+    "chart.js": "3.7.0",
     "copy-text-to-clipboard": "3.0.1",
     "date-fns": "2.27.0",
     "fastboot-app-server": "3.0.0",
