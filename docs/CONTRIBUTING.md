@@ -463,7 +463,7 @@ OAuth Applications](https://github.com/settings/developers) and click on the
 
 - Application name: name your application whatever you'd like.
 - Homepage URL: `http://localhost:4200/`
-- Authorization callback URL: `http://localhost:4200/authorize/github`
+- Authorization callback URL: `http://localhost:4200/github-redirect.html`
 
 Create the application, then take the Client ID ad Client Secret values and use
 them as the values of the `GH_CLIENT_ID` and `GH_CLIENT_SECRET` in your `.env`.
