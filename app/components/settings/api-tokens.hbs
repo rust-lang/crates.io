@@ -23,38 +23,38 @@
   token when prompted.
 </p>
 
+{{#if this.newToken}}
+  <form local-class="new-token-form" {{on "submit" (prevent-default (perform this.saveTokenTask))}}>
+    <div local-class="name">
+      <Input
+        @type="text"
+        placeholder="New token name"
+        aria-label="New token name"
+        disabled={{this.newToken.isSaving}}
+        @value={{this.newToken.name}}
+        data-test-focused-input
+        {{auto-focus}}
+      />
+    </div>
+
+    <div local-class="actions">
+      <button
+        type="submit"
+        local-class="save-button"
+        disabled={{or this.newToken.isSaving (not this.newToken.name)}}
+        title={{unless this.newToken.name "You must specify a name"}}
+        data-test-save-token-button
+      >
+        Create
+      </button>
+      {{#if this.newToken.isSaving}}
+        <LoadingSpinner local-class="spinner" data-test-saving-spinner />
+      {{/if}}
+    </div>
+  </form>
+{{/if}}
+
 <div local-class="token-list">
-  {{#if this.newToken}}
-    <form local-class="row create-token" {{on "submit" (prevent-default (perform this.saveTokenTask))}}>
-      <div local-class="name">
-        <Input
-          @type="text"
-          placeholder="New token name"
-          aria-label="New token name"
-          disabled={{this.newToken.isSaving}}
-          @value={{this.newToken.name}}
-          data-test-focused-input
-          {{auto-focus}}
-        />
-      </div>
-
-      <div local-class="actions">
-        <button
-          type="submit"
-          local-class="save-button"
-          disabled={{or this.newToken.isSaving (not this.newToken.name)}}
-          title={{unless this.newToken.name "You must specify a name"}}
-          data-test-save-token-button
-        >
-          Create
-        </button>
-        {{#if this.newToken.isSaving}}
-          <LoadingSpinner local-class="spinner" data-test-saving-spinner />
-        {{/if}}
-      </div>
-    </form>
-  {{/if}}
-
   {{#each this.sortedTokens as |token|}}
     <div local-class="row" data-test-api-token={{token.id}}>
       <div local-class="name" data-test-name>

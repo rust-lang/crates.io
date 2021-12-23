@@ -30,8 +30,13 @@
     &:last-child { border-bottom-width: 1px; }
 }
 
-.create-token {
+.new-token-form {
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    border: 1px solid #d5d3cb;
     background-color: var(--main-bg-dark);
+    margin-bottom: 24px;
 
     .name {
         padding-right: 20px;
