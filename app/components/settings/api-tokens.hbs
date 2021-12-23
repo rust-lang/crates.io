@@ -57,58 +57,76 @@
   </form>
 {{/if}}
 
-<ul role="list" local-class="token-list">
-  {{#each this.sortedTokens as |token|}}
-    <li local-class="row" data-test-api-token={{or token.id true}}>
-      <h3 local-class="name" data-test-name>
-        {{token.name}}
-      </h3>
+{{#if this.sortedTokens}}
+  <ul role="list" local-class="token-list">
+    {{#each this.sortedTokens as |token|}}
+      <li local-class="row" data-test-api-token={{or token.id true}}>
+        <h3 local-class="name" data-test-name>
+          {{token.name}}
+        </h3>
 
-      <div title={{token.last_used_at}} local-class="last-used-at" data-test-last-used-at>
-        {{#if token.last_used_at}}
-          Last used {{date-format-distance-to-now token.last_used_at addSuffix=true}}
-        {{else}}
-          Never used
-        {{/if}}
-      </div>
-
-      <div title={{token.created_at}} local-class="created-at" data-test-created-at>
-        Created {{date-format-distance-to-now token.created_at addSuffix=true}}
-      </div>
-
-      {{#if token.token}}
-        <div local-class="new-token">
-          <div local-class="new-token-explainer">
-            Make sure to copy your API token now. You won’t be able to see it again!
-          </div>
-
-          <div local-class="token-display">
-            <span local-class="token-value" data-test-token>{{token.token}}</span>
-
-            {{#if (is-clipboard-supported)}}
-              <CopyButton @copyText={{token.token}} local-class="copy-button">
-                <span local-class="copy-button-label">Copy</span>
-                {{svg-jar "copy" aria-hidden="true" local-class="copy-button-icon"}}
-              </CopyButton>
-            {{/if}}
-          </div>
+        <div title={{token.last_used_at}} local-class="last-used-at" data-test-last-used-at>
+          {{#if token.last_used_at}}
+            Last used {{date-format-distance-to-now token.last_used_at addSuffix=true}}
+          {{else}}
+            Never used
+          {{/if}}
         </div>
-      {{/if}}
 
-      <div local-class="actions">
-        <button
-          type="button"
-          local-class="revoke-button"
-          disabled={{token.isSaving}}
-          data-test-revoke-token-button
-          {{on "click" (perform this.revokeTokenTask token)}}
-        >
-          Revoke
-        </button>
-        {{#if token.isSaving}}
-          <LoadingSpinner local-class="spinner" data-test-saving-spinner />
+        <div title={{token.created_at}} local-class="created-at" data-test-created-at>
+          Created {{date-format-distance-to-now token.created_at addSuffix=true}}
+        </div>
+
+        {{#if token.token}}
+          <div local-class="new-token">
+            <div local-class="new-token-explainer">
+              Make sure to copy your API token now. You won’t be able to see it again!
+            </div>
+
+            <div local-class="token-display">
+              <span local-class="token-value" data-test-token>{{token.token}}</span>
+
+              {{#if (is-clipboard-supported)}}
+                <CopyButton @copyText={{token.token}} local-class="copy-button">
+                  <span local-class="copy-button-label">Copy</span>
+                  {{svg-jar "copy" aria-hidden="true" local-class="copy-button-icon"}}
+                </CopyButton>
+              {{/if}}
+            </div>
+          </div>
         {{/if}}
-      </div>
-    </li>
-  {{/each}}
-</ul>
+
+        <div local-class="actions">
+          <button
+            type="button"
+            local-class="revoke-button"
+            disabled={{token.isSaving}}
+            data-test-revoke-token-button
+            {{on "click" (perform this.revokeTokenTask token)}}
+          >
+            Revoke
+          </button>
+          {{#if token.isSaving}}
+            <LoadingSpinner local-class="spinner" data-test-saving-spinner />
+          {{/if}}
+        </div>
+      </li>
+    {{/each}}
+  </ul>
+{{else}}
+  <div local-class="empty-state">
+    <div local-class="empty-state-label">
+      You have not generated any API tokens yet.
+    </div>
+
+    <button
+      type="button"
+      local-class="empty-state-button"
+      disabled={{this.newToken}}
+      data-test-empty-state-button
+      {{on "click" this.startNewToken}}
+    >
+      New Token
+    </button>
+  </div>
+{{/if}}

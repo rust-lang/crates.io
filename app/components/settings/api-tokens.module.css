@@ -125,6 +125,28 @@
     height: 24px;
 }
 
+.empty-state {
+    display: grid;
+    place-items: center;
+    align-content: center;
+    margin: 0 0 24px;
+    padding: 64px;
+    border: 2px black dashed;
+    border-radius: 5px;
+    background-color: white;
+    box-shadow: 0 2px 3px hsla(51, 50%, 44%, .35);
+}
+
+.empty-state-label {
+    font-size: 20px;
+}
+
+.empty-state-button {
+    composes: yellow-button small from '../../styles/shared/buttons.module.css';
+    margin-top: 20px;
+    border-radius: 4px;
+}
+
 @media (min-width: 640px) {
     .new-token-form {
         display: grid;
