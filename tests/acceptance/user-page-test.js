@@ -30,14 +30,6 @@ module('Acceptance | user page', function (hooks) {
     assert.dom('[data-test-heading] [data-test-user-link]').hasAttribute('href', 'https://github.com/thehydroimpulse');
   });
 
-  test('github link has image in user header', async function (assert) {
-    this.server.loadFixtures();
-
-    await visit('/users/thehydroimpulse');
-
-    assert.dom('[data-test-heading] [data-test-user-link] img').hasAttribute('src', '/assets/GitHub-Mark.svg');
-  });
-
   test('user details has github profile icon', async function (assert) {
     this.server.loadFixtures();
 

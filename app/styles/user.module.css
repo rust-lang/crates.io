@@ -7,6 +7,17 @@
     }
 }
 
+.github-link {
+    &, &:hover {
+        color: var(--main-color);
+    }
+
+    svg {
+        width: 32px;
+        height: 32px;
+    }
+}
+
 .results-meta {
     display: flex;
     align-items: center;

@@ -24,6 +24,15 @@
 
 .github-link {
     margin-left: 16px;
+
+    &, &:hover {
+        color: var(--main-color);
+    }
+
+    svg {
+        width: 32px;
+        height: 32px;
+    }
 }
 
 .results-meta {
