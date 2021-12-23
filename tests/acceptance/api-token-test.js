@@ -128,4 +128,19 @@ module('Acceptance | api-tokens', function (hooks) {
     assert.dom('[data-test-api-token="3"] [data-test-error]').doesNotExist();
     assert.dom('[data-test-token]').includesText(`cargo login ${token.token}`);
   });
+
+  test('navigating away while creating a token does not keep it in the list', async function (assert) {
+    prepare(this);
+
+    await visit('/settings/tokens');
+    assert.dom('[data-test-api-token]').exists({ count: 2 });
+
+    await click('[data-test-new-token-button]');
+    await fillIn('[data-test-focused-input]', 'the new token');
+
+    await visit('/settings/profile');
+
+    await visit('/settings/tokens');
+    assert.dom('[data-test-api-token]').exists({ count: 2 });
+  });
 });
