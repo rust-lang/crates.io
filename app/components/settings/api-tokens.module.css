@@ -13,8 +13,12 @@
     composes: yellow-button from '../../styles/shared/buttons.module.css';
 }
 
+.explainer {
+    line-height: 1.5;
+}
+
 .token-list {
-    margin: 0 0 24px;
+    margin: 24px 0;
     padding: 0;
     list-style: none;
     border-radius: 5px;
@@ -22,7 +26,7 @@
     box-shadow: 0 2px 3px hsla(51, 50%, 44%, .35);
 
     > * {
-        padding: 16px;
+        padding: 24px;
     }
 
     > * + * {
@@ -45,11 +49,11 @@
 }
 
 .new-token-form {
-    padding: 16px;
+    padding: 24px;
     border-radius: 6px;
     background-color: white;
     box-shadow: 0 2px 3px hsla(51, 50%, 44%, .35);
-    margin-bottom: 24px;
+    margin: 24px 0;
 
     .input {
         padding: 8px;
@@ -129,7 +133,7 @@
     display: grid;
     place-items: center;
     align-content: center;
-    margin: 0 0 24px;
+    margin: 24px 0;
     padding: 64px;
     border: 2px black dashed;
     border-radius: 5px;
@@ -152,6 +156,7 @@
         display: grid;
         grid-template-columns: 1fr auto;
         align-items: center;
+        padding: 16px 24px;
 
         .input {
             padding: 8px;
