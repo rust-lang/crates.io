@@ -40,10 +40,11 @@ module('Acceptance | /me/pending-invites', function (hooks) {
     return { nanomsg, user };
   }
 
-  test('redirects to / when not logged in', async function (assert) {
+  test('shows "page requires authentication" error when not logged in', async function (assert) {
     await visit('/me/pending-invites');
-    assert.equal(currentURL(), '/');
-    assert.dom('[data-test-notification-message]').hasText('Please log in to proceed');
+    assert.equal(currentURL(), '/me/pending-invites');
+    assert.dom('[data-test-title]').hasText('This page requires authentication');
+    assert.dom('[data-test-login]').exists();
   });
 
   test('list all pending crate owner invites', async function (assert) {
