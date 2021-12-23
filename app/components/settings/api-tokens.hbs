@@ -14,13 +14,17 @@
 </div>
 
 <p>
-  If you want to use package commands from the command line, you will need to
-  login with <code>cargo login (token)</code> using one of the tokens listed below.
+  You can use the API tokens on this page to run <a href="https://doc.rust-lang.org/cargo/">cargo</a>
+  commands that need write access to crates.io. If you want to publish your own
+  crates then this is required.
 </p>
+
 <p>
-  When working in shared environments, supplying the token on the command line could
-  expose it to prying eyes. To avoid this, enter <code>cargo login</code> and supply your
-  token when prompted.
+  Run <a href="https://doc.rust-lang.org/cargo/commands/cargo-login.html"><code>cargo login</code></a>
+  on the command line to save the API token that you will use for local
+  development. For CI systems you can use the
+  <a href="https://doc.rust-lang.org/cargo/reference/config.html?highlight=CARGO_REGISTRY_TOKEN#credentials"><code>CARGO_REGISTRY_TOKEN</code></a>
+  environment variable, but make sure that the token stays secret!
 </p>
 
 {{#if this.newToken}}
