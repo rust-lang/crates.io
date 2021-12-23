@@ -73,12 +73,21 @@
       </div>
 
       {{#if token.token}}
-        <div local-class="new-token" data-test-token>
+        <div local-class="new-token">
           Please record this token somewhere, you cannot retrieve
           its value again. For use on the command line you can save it to <code>~/.cargo/credentials</code>
           with:
 
-          <pre class="terminal">cargo login {{token.token}}</pre>
+          <div local-class="token-display">
+            <span local-class="token-value" data-test-token>{{token.token}}</span>
+
+            {{#if (is-clipboard-supported)}}
+              <CopyButton @copyText={{token.token}} local-class="copy-button">
+                <span local-class="copy-button-label">Copy</span>
+                {{svg-jar "copy" aria-hidden="true" local-class="copy-button-icon"}}
+              </CopyButton>
+            {{/if}}
+          </div>
         </div>
       {{/if}}
 

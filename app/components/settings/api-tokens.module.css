@@ -83,12 +83,42 @@
 
 .new-token {
     margin: 24px 0;
+}
 
-    pre {
-        border-radius: 4px;
-        margin-bottom: 0;
-        user-select: all;
+.token-display {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    background: var(--main-color);
+    color: white;
+    font-family: var(--font-monospace);
+    border-radius: 4px;
+    margin-top: 16px;
+}
+
+.token-value {
+    padding: 20px;
+    user-select: all;
+}
+
+.copy-button {
+    composes: button-reset from '../../styles/shared/buttons.module.css';
+    align-self: stretch;
+    padding: 0 16px;
+    cursor: pointer;
+
+    &:hover {
+        color: #ddd8b2;
     }
+}
+
+.copy-button-label {
+    composes: sr-only from '../../styles/shared/a11y.module.css';
+}
+
+.copy-button-icon {
+    width: 24px;
+    height: 24px;
 }
 
 @media (min-width: 640px) {
