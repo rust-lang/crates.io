@@ -54,52 +54,52 @@
   </form>
 {{/if}}
 
-<div local-class="token-list">
+<ul role="list" local-class="token-list">
   {{#each this.sortedTokens as |token|}}
-    <div local-class="row" data-test-api-token={{token.id}}>
-      <div local-class="name" data-test-name>
-        {{token.name}}
-      </div>
+    <li>
+      <div local-class="row" data-test-api-token={{token.id}}>
+        <div local-class="name" data-test-name>
+          {{token.name}}
+        </div>
 
-      <div local-class="dates">
-        <span title={{token.created_at}} local-class="created-at" data-test-created-at>
-          Created {{date-format-distance-to-now token.created_at addSuffix=true}}
-        </span>
-        <span title={{token.last_used_at}} local-class="last-used-at" data-test-last-used-at>
-          {{#if token.last_used_at}}
-            Last used {{date-format-distance-to-now token.last_used_at addSuffix=true}}
-          {{else}}
-            Never used
+        <div local-class="dates">
+          <span title={{token.created_at}} local-class="created-at" data-test-created-at>
+            Created {{date-format-distance-to-now token.created_at addSuffix=true}}
+          </span>
+          <span title={{token.last_used_at}} local-class="last-used-at" data-test-last-used-at>
+            {{#if token.last_used_at}}
+              Last used {{date-format-distance-to-now token.last_used_at addSuffix=true}}
+            {{else}}
+              Never used
+            {{/if}}
+          </span>
+        </div>
+
+        <div local-class="actions">
+          <button
+            type="button"
+            local-class="revoke-button"
+            disabled={{token.isSaving}}
+            data-test-revoke-token-button
+            {{on "click" (perform this.revokeTokenTask token)}}
+          >
+            Revoke
+          </button>
+          {{#if token.isSaving}}
+            <LoadingSpinner local-class="spinner" data-test-saving-spinner />
           {{/if}}
-        </span>
+        </div>
       </div>
 
-      <div local-class="actions">
-        <button
-          type="button"
-          local-class="revoke-button"
-          disabled={{token.isSaving}}
-          data-test-revoke-token-button
-          {{on "click" (perform this.revokeTokenTask token)}}
-        >
-          Revoke
-        </button>
-        {{#if token.isSaving}}
-          <LoadingSpinner local-class="spinner" data-test-saving-spinner />
-        {{/if}}
-      </div>
-    </div>
-
-    {{#if token.token}}
-      <div local-class="row new-token" data-test-token>
-        <div>
+      {{#if token.token}}
+        <div local-class="new-token" data-test-token>
           Please record this token somewhere, you cannot retrieve
           its value again. For use on the command line you can save it to <code>~/.cargo/credentials</code>
           with:
 
           <pre class="terminal">cargo login {{token.token}}</pre>
         </div>
-      </div>
-    {{/if}}
+      {{/if}}
+    </li>
   {{/each}}
-</div>
+</ul>

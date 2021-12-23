@@ -14,20 +14,24 @@
 }
 
 .token-list {
-    background-color: var(--main-bg-dark);
-    display: flex;
-    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    > * {
+        border: 1px solid #d5d3cb;
+        background-color: var(--main-bg-dark);
+        padding: 10px 20px;
+    }
+
+    > * + * {
+        border-top: none;
+    }
 }
 
 .row {
-    width: 100%;
-    border: 1px solid #d5d3cb;
-    border-bottom-width: 0;
-    padding: 10px 20px;
     display: flex;
     align-items: center;
-
-    &:last-child { border-bottom-width: 1px; }
 }
 
 .new-token-form {
@@ -86,7 +90,5 @@
 }
 
 .new-token {
-    border-top-width: 0;
-    flex-direction: column;
-    justify-content: stretch;
+    margin-top: 20px;
 }
