@@ -25,17 +25,16 @@
 
 {{#if this.newToken}}
   <form local-class="new-token-form" {{on "submit" (prevent-default (perform this.saveTokenTask))}}>
-    <div local-class="name">
-      <Input
-        @type="text"
-        placeholder="New token name"
-        aria-label="New token name"
-        disabled={{this.newToken.isSaving}}
-        @value={{this.newToken.name}}
-        data-test-focused-input
-        {{auto-focus}}
-      />
-    </div>
+    <Input
+      @type="text"
+      placeholder="New token name"
+      aria-label="New token name"
+      disabled={{this.newToken.isSaving}}
+      @value={{this.newToken.name}}
+      local-class="input"
+      data-test-focused-input
+      {{auto-focus}}
+    />
 
     <div local-class="actions">
       <button
