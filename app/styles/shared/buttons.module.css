@@ -23,6 +23,7 @@
     padding: 15px 40px;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     color: var(--text-color);
     text-decoration: none;
     font-weight: bold;

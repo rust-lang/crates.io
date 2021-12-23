@@ -55,39 +55,21 @@
 
 <ul role="list" local-class="token-list">
   {{#each this.sortedTokens as |token|}}
-    <li>
-      <div local-class="row" data-test-api-token={{or token.id true}}>
-        <div local-class="name" data-test-name>
-          {{token.name}}
-        </div>
+    <li local-class="row" data-test-api-token={{or token.id true}}>
+      <h3 local-class="name" data-test-name>
+        {{token.name}}
+      </h3>
 
-        <div local-class="dates">
-          <span title={{token.created_at}} local-class="created-at" data-test-created-at>
-            Created {{date-format-distance-to-now token.created_at addSuffix=true}}
-          </span>
-          <span title={{token.last_used_at}} local-class="last-used-at" data-test-last-used-at>
-            {{#if token.last_used_at}}
-              Last used {{date-format-distance-to-now token.last_used_at addSuffix=true}}
-            {{else}}
-              Never used
-            {{/if}}
-          </span>
-        </div>
+      <div title={{token.last_used_at}} local-class="last-used-at" data-test-last-used-at>
+        {{#if token.last_used_at}}
+          Last used {{date-format-distance-to-now token.last_used_at addSuffix=true}}
+        {{else}}
+          Never used
+        {{/if}}
+      </div>
 
-        <div local-class="actions">
-          <button
-            type="button"
-            local-class="revoke-button"
-            disabled={{token.isSaving}}
-            data-test-revoke-token-button
-            {{on "click" (perform this.revokeTokenTask token)}}
-          >
-            Revoke
-          </button>
-          {{#if token.isSaving}}
-            <LoadingSpinner local-class="spinner" data-test-saving-spinner />
-          {{/if}}
-        </div>
+      <div title={{token.created_at}} local-class="created-at" data-test-created-at>
+        Created {{date-format-distance-to-now token.created_at addSuffix=true}}
       </div>
 
       {{#if token.token}}
@@ -99,6 +81,21 @@
           <pre class="terminal">cargo login {{token.token}}</pre>
         </div>
       {{/if}}
+
+      <div local-class="actions">
+        <button
+          type="button"
+          local-class="revoke-button"
+          disabled={{token.isSaving}}
+          data-test-revoke-token-button
+          {{on "click" (perform this.revokeTokenTask token)}}
+        >
+          Revoke
+        </button>
+        {{#if token.isSaving}}
+          <LoadingSpinner local-class="spinner" data-test-saving-spinner />
+        {{/if}}
+      </div>
     </li>
   {{/each}}
 </ul>
