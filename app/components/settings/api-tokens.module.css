@@ -13,57 +13,58 @@
     composes: yellow-button from '../../styles/shared/buttons.module.css';
 }
 
+.explainer {
+    line-height: 1.5;
+}
+
 .token-list {
-    background-color: var(--main-bg-dark);
-    display: flex;
-    flex-direction: column;
-}
+    margin: 24px 0;
+    padding: 0;
+    list-style: none;
+    border-radius: 5px;
+    background-color: white;
+    box-shadow: 0 2px 3px hsla(51, 50%, 44%, .35);
 
-.row {
-    width: 100%;
-    border: 1px solid #d5d3cb;
-    border-bottom-width: 0;
-    padding: 10px 20px;
-    display: flex;
-    align-items: center;
+    > * {
+        padding: 24px;
+    }
 
-    &:last-child { border-bottom-width: 1px; }
-}
-
-.create-token {
-    background-color: var(--main-bg-dark);
-
-    .name {
-        padding-right: 20px;
-        margin-right: 0;
-
-        input {
-            width: 100%;
-        }
+    > * + * {
+        border-top: 1px solid #f1f0ed;
     }
 }
 
 .name {
-    flex: 1;
-    margin-right: 0.4em;
-    font-weight: bold;
+    margin: 0 0 12px;
+    font-weight: 500;
 }
 
 .dates {
-    flex: content;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    margin-right: 0.4em;
 }
 
 .created-at,
 .last-used-at {
     composes: small from '../../styles/shared/typography.module.css';
-    line-height: 1.15rem;
+    margin-top: 4px;
+}
+
+.new-token-form {
+    padding: 24px;
+    border-radius: 6px;
+    background-color: white;
+    box-shadow: 0 2px 3px hsla(51, 50%, 44%, .35);
+    margin: 24px 0;
+
+    .input {
+        padding: 8px;
+        width: 100%;
+        border: 1px solid #ada796;
+        border-radius: 4px;
+    }
 }
 
 .actions {
+    margin-top: 12px;
     display: flex;
     align-items: center;
 }
@@ -74,14 +75,118 @@
 
 .save-button {
     composes: yellow-button small from '../../styles/shared/buttons.module.css';
+    flex-grow: 1;
+    border-radius: 4px;
 }
 
 .revoke-button {
     composes: tan-button small from '../../styles/shared/buttons.module.css';
+    flex-grow: 1;
+    border-radius: 4px;
 }
 
 .new-token {
-    border-top-width: 0;
-    flex-direction: column;
-    justify-content: stretch;
+    margin: 24px 0;
+}
+
+.new-token-explainer {
+    font-size: 20px;
+}
+
+.token-display {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    background: var(--main-color);
+    color: white;
+    font-family: var(--font-monospace);
+    border-radius: 4px;
+    margin-top: 16px;
+}
+
+.token-value {
+    padding: 20px;
+    user-select: all;
+}
+
+.copy-button {
+    composes: button-reset from '../../styles/shared/buttons.module.css';
+    align-self: stretch;
+    padding: 0 16px;
+    cursor: pointer;
+
+    &:hover {
+        color: #ddd8b2;
+    }
+}
+
+.copy-button-label {
+    composes: sr-only from '../../styles/shared/a11y.module.css';
+}
+
+.copy-button-icon {
+    width: 24px;
+    height: 24px;
+}
+
+.empty-state {
+    display: grid;
+    place-items: center;
+    align-content: center;
+    margin: 24px 0;
+    padding: 64px;
+    border: 2px black dashed;
+    border-radius: 5px;
+    background-color: white;
+    box-shadow: 0 2px 3px hsla(51, 50%, 44%, .35);
+}
+
+.empty-state-label {
+    font-size: 20px;
+}
+
+.empty-state-button {
+    composes: yellow-button small from '../../styles/shared/buttons.module.css';
+    margin-top: 20px;
+    border-radius: 4px;
+}
+
+@media (min-width: 640px) {
+    .new-token-form {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        padding: 16px 24px;
+
+        .input {
+            padding: 8px;
+            margin-right: 16px;
+        }
+
+        .actions {
+            margin: 0 0 0 16px;
+        }
+    }
+
+
+    .row {
+        display: grid;
+        grid-template:
+            "name actions" auto
+            "last-user actions" auto
+            "created-at actions" auto
+            "details details" auto
+            / 1fr auto;
+
+        .actions {
+            grid-area: actions;
+            align-self: start;
+            margin: 0 0 0 16px;
+        }
+
+        .new-token {
+            grid-area: details;
+            margin-bottom: 0;
+        }
+    }
 }

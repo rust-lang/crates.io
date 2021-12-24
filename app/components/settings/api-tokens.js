@@ -4,7 +4,7 @@ import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 
 import { task } from 'ember-concurrency';
-import { sortBy } from 'macro-decorators';
+import { filterBy, sortBy } from 'macro-decorators';
 
 export default class ApiTokens extends Component {
   @service store;
@@ -12,7 +12,8 @@ export default class ApiTokens extends Component {
 
   @tracked newToken;
 
-  @sortBy('args.tokens', 'created_at', false) sortedTokens;
+  @filterBy('args.tokens', 'isNew', false) filteredTokens;
+  @sortBy('filteredTokens', 'created_at', false) sortedTokens;
 
   @action startNewToken() {
     this.newToken = this.store.createRecord('api-token');

@@ -1,5 +1,5 @@
 <div local-class="me-subheading">
-  <h2>API Access</h2>
+  <h2>API Tokens</h2>
   <div local-class="right">
     <button
       type="button"
@@ -13,93 +13,120 @@
   </div>
 </div>
 
-<p>
-  If you want to use package commands from the command line, you will need to
-  login with <code>cargo login (token)</code> using one of the tokens listed below.
-</p>
-<p>
-  When working in shared environments, supplying the token on the command line could
-  expose it to prying eyes. To avoid this, enter <code>cargo login</code> and supply your
-  token when prompted.
+<p local-class="explainer">
+  You can use the API tokens on this page to run <a href="https://doc.rust-lang.org/cargo/">cargo</a>
+  commands that need write access to crates.io. If you want to publish your own
+  crates then this is required.
 </p>
 
-<div local-class="token-list">
-  {{#if this.newToken}}
-    <form local-class="row create-token" {{on "submit" (prevent-default (perform this.saveTokenTask))}}>
-      <div local-class="name">
-        <Input
-          @type="text"
-          placeholder="New token name"
-          aria-label="New token name"
-          disabled={{this.newToken.isSaving}}
-          @value={{this.newToken.name}}
-          data-test-focused-input
-          {{auto-focus}}
-        />
-      </div>
+<p local-class="explainer">
+  Run <a href="https://doc.rust-lang.org/cargo/commands/cargo-login.html"><code>cargo login</code></a>
+  on the command line to save the API token that you will use for local
+  development. For CI systems you can use the
+  <a href="https://doc.rust-lang.org/cargo/reference/config.html?highlight=CARGO_REGISTRY_TOKEN#credentials"><code>CARGO_REGISTRY_TOKEN</code></a>
+  environment variable, but make sure that the token stays secret!
+</p>
 
-      <div local-class="actions">
-        <button
-          type="submit"
-          local-class="save-button"
-          disabled={{or this.newToken.isSaving (not this.newToken.name)}}
-          title={{unless this.newToken.name "You must specify a name"}}
-          data-test-save-token-button
-        >
-          Create
-        </button>
-        {{#if this.newToken.isSaving}}
-          <LoadingSpinner local-class="spinner" data-test-saving-spinner />
-        {{/if}}
-      </div>
-    </form>
-  {{/if}}
+{{#if this.newToken}}
+  <form local-class="new-token-form" {{on "submit" (prevent-default (perform this.saveTokenTask))}}>
+    <Input
+      @type="text"
+      placeholder="New token name"
+      aria-label="New token name"
+      disabled={{this.newToken.isSaving}}
+      @value={{this.newToken.name}}
+      local-class="input"
+      data-test-focused-input
+      {{auto-focus}}
+    />
 
-  {{#each this.sortedTokens as |token|}}
-    <div local-class="row" data-test-api-token={{token.id}}>
-      <div local-class="name" data-test-name>
-        {{token.name}}
-      </div>
+    <div local-class="actions">
+      <button
+        type="submit"
+        local-class="save-button"
+        disabled={{or this.newToken.isSaving (not this.newToken.name)}}
+        title={{unless this.newToken.name "You must specify a name"}}
+        data-test-save-token-button
+      >
+        Create
+      </button>
+      {{#if this.newToken.isSaving}}
+        <LoadingSpinner local-class="spinner" data-test-saving-spinner />
+      {{/if}}
+    </div>
+  </form>
+{{/if}}
 
-      <div local-class="dates">
-        <span title={{token.created_at}} local-class="created-at" data-test-created-at>
-          Created {{date-format-distance-to-now token.created_at addSuffix=true}}
-        </span>
-        <span title={{token.last_used_at}} local-class="last-used-at" data-test-last-used-at>
+{{#if this.sortedTokens}}
+  <ul role="list" local-class="token-list">
+    {{#each this.sortedTokens as |token|}}
+      <li local-class="row" data-test-api-token={{or token.id true}}>
+        <h3 local-class="name" data-test-name>
+          {{token.name}}
+        </h3>
+
+        <div title={{token.last_used_at}} local-class="last-used-at" data-test-last-used-at>
           {{#if token.last_used_at}}
             Last used {{date-format-distance-to-now token.last_used_at addSuffix=true}}
           {{else}}
             Never used
           {{/if}}
-        </span>
-      </div>
+        </div>
 
-      <div local-class="actions">
-        <button
-          type="button"
-          local-class="revoke-button"
-          disabled={{token.isSaving}}
-          data-test-revoke-token-button
-          {{on "click" (perform this.revokeTokenTask token)}}
-        >
-          Revoke
-        </button>
-        {{#if token.isSaving}}
-          <LoadingSpinner local-class="spinner" data-test-saving-spinner />
+        <div title={{token.created_at}} local-class="created-at" data-test-created-at>
+          Created {{date-format-distance-to-now token.created_at addSuffix=true}}
+        </div>
+
+        {{#if token.token}}
+          <div local-class="new-token">
+            <div local-class="new-token-explainer">
+              Make sure to copy your API token now. You won’t be able to see it again!
+            </div>
+
+            <div local-class="token-display">
+              <span local-class="token-value" data-test-token>{{token.token}}</span>
+
+              {{#if (is-clipboard-supported)}}
+                <CopyButton @copyText={{token.token}} local-class="copy-button">
+                  <span local-class="copy-button-label">Copy</span>
+                  {{svg-jar "copy" aria-hidden="true" local-class="copy-button-icon"}}
+                </CopyButton>
+              {{/if}}
+            </div>
+          </div>
         {{/if}}
-      </div>
+
+        <div local-class="actions">
+          <button
+            type="button"
+            local-class="revoke-button"
+            disabled={{token.isSaving}}
+            data-test-revoke-token-button
+            {{on "click" (perform this.revokeTokenTask token)}}
+          >
+            Revoke
+          </button>
+          {{#if token.isSaving}}
+            <LoadingSpinner local-class="spinner" data-test-saving-spinner />
+          {{/if}}
+        </div>
+      </li>
+    {{/each}}
+  </ul>
+{{else}}
+  <div local-class="empty-state">
+    <div local-class="empty-state-label">
+      You have not generated any API tokens yet.
     </div>
 
-    {{#if token.token}}
-      <div local-class="row new-token" data-test-token>
-        <div>
-          Please record this token somewhere, you cannot retrieve
-          its value again. For use on the command line you can save it to <code>~/.cargo/credentials</code>
-          with:
-
-          <pre class="terminal">cargo login {{token.token}}</pre>
-        </div>
-      </div>
-    {{/if}}
-  {{/each}}
-</div>
+    <button
+      type="button"
+      local-class="empty-state-button"
+      disabled={{this.newToken}}
+      data-test-empty-state-button
+      {{on "click" this.startNewToken}}
+    >
+      New Token
+    </button>
+  </div>
+{{/if}}
