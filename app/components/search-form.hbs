@@ -43,8 +43,10 @@
     aria-label="Search"
   >
 
-  {{! Hidden submit button to enable enter-to-submit behavior for form with multiple inputs }}
-  <button type="submit" local-class="submit-button">Submit</button>
+  <button type="submit" local-class="submit-button">
+    <span local-class="submit-label">Submit</span>
+    {{svg-jar "search" local-class="submit-icon"}}
+  </button>
 
   {{on-key 's' (focus '#cargo-desktop-search')}}
   {{on-key 'S' (focus '#cargo-desktop-search')}}
