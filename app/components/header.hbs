@@ -18,29 +18,6 @@
         Browse All Crates
       </LinkTo>
       <span local-class="sep">|</span>
-      <Dropdown as |dd|>
-        <dd.Trigger local-class="dropdown-button">
-          Docs
-        </dd.Trigger>
-
-        <dd.Menu local-class="doc-links" as |menu|>
-          <menu.Item><a href='https://doc.rust-lang.org/cargo/getting-started/'>Getting Started</a></menu.Item>
-          <menu.Item><a href='https://doc.rust-lang.org/cargo/guide/'>Guide</a></menu.Item>
-          <menu.Item><a href='https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html'>Specifying Dependencies</a></menu.Item>
-          <menu.Item><a href='https://doc.rust-lang.org/cargo/reference/publishing.html'>Publishing on crates.io</a></menu.Item>
-          <menu.Item><a href='https://doc.rust-lang.org/cargo/faq.html'>FAQ</a></menu.Item>
-          <menu.Item><a href='https://doc.rust-lang.org/cargo/reference/manifest.html'>Cargo.toml Format</a></menu.Item>
-          <menu.Item><a href='https://doc.rust-lang.org/cargo/reference/build-scripts.html'>Build Scripts</a></menu.Item>
-          <menu.Item><a href='https://doc.rust-lang.org/cargo/reference/config.html'>Configuration</a></menu.Item>
-          <menu.Item><a href='https://doc.rust-lang.org/cargo/reference/pkgid-spec.html'>Package ID specs</a></menu.Item>
-          <menu.Item><a href='https://doc.rust-lang.org/cargo/reference/environment-variables.html'>Environment Variables</a></menu.Item>
-          <menu.Item><a href='https://doc.rust-lang.org/cargo/reference/source-replacement.html'>Source Replacement</a></menu.Item>
-          <menu.Item><a href='https://doc.rust-lang.org/cargo/reference/external-tools.html'>External Tools</a></menu.Item>
-          <menu.Item><LinkTo @route="policies">Policies</LinkTo></menu.Item>
-          <menu.Item><LinkTo @route="category-slugs">List of category slugs</LinkTo></menu.Item>
-        </dd.Menu>
-      </Dropdown>
-      <span local-class="sep">|</span>
       {{#if this.session.currentUser}}
         <Dropdown data-test-user-menu as |dd|>
           <dd.Trigger local-class="dropdown-button" data-test-toggle>
