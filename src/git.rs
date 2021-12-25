@@ -70,14 +70,15 @@ impl Credentials {
             _ => return Err("SSH key not available".into()),
         };
 
-        // When running on production, ensure the file is created in tmpfs and not persisted to disk
-        #[cfg(target_os = "linux")]
-        let mut temp_key_file = tempfile::Builder::new().tempfile_in("/dev/shm")?;
+        let dir = if cfg!(target_os = "linux") {
+            // When running on production, ensure the file is created in tmpfs and not persisted to disk
+            "/dev/shm".into()
+        } else {
+            // For other platforms, default to std::env::tempdir()
+            std::env::temp_dir()
+        };
 
-        // For other platforms, default to std::env::tempdir()
-        #[cfg(not(target_os = "linux"))]
-        let mut temp_key_file = tempfile::Builder::new().tempfile()?;
-
+        let mut temp_key_file = tempfile::Builder::new().tempfile_in(dir)?;
         temp_key_file.write_all(key.as_bytes())?;
 
         Ok(temp_key_file.into_temp_path())
