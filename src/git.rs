@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::io::Write;
 use std::path::{Path, PathBuf};
 
 use swirl::PerformError;
@@ -47,6 +48,25 @@ impl Credentials {
                 }
             }
         }
+    }
+
+    pub fn write_temporary_ssh_key(&self) -> Result<tempfile::TempPath, PerformError> {
+        let key = match self {
+            Credentials::Ssh { key } => key,
+            _ => return Err("SSH key not available".into()),
+        };
+
+        // When running on production, ensure the file is created in tmpfs and not persisted to disk
+        #[cfg(target_os = "linux")]
+        let mut temp_key_file = tempfile::Builder::new().tempfile_in("/dev/shm")?;
+
+        // For other platforms, default to std::env::tempdir()
+        #[cfg(not(target_os = "linux"))]
+        let mut temp_key_file = tempfile::Builder::new().tempfile()?;
+
+        temp_key_file.write_all(key.as_bytes())?;
+
+        Ok(temp_key_file.into_temp_path())
     }
 }
 
