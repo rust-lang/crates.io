@@ -7,8 +7,6 @@ use std::process::Command;
 use tempfile::TempDir;
 use url::Url;
 
-use crate::models::DependencyKind;
-
 static DEFAULT_GIT_SSH_USERNAME: &str = "git";
 
 #[derive(Clone)]
@@ -146,6 +144,14 @@ pub struct Dependency {
     pub kind: Option<DependencyKind>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub package: Option<String>,
+}
+
+#[derive(Copy, Clone, Serialize, Deserialize, Debug)]
+#[serde(rename_all = "lowercase")]
+pub enum DependencyKind {
+    Normal,
+    Build,
+    Dev,
 }
 
 pub struct RepositoryConfig {

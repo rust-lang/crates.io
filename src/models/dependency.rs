@@ -2,6 +2,7 @@ use diesel::deserialize::{self, FromSql};
 use diesel::pg::Pg;
 use diesel::sql_types::Integer;
 
+use crate::git::DependencyKind as IndexDependencyKind;
 use crate::models::{Crate, Version};
 use crate::schema::*;
 
@@ -40,6 +41,16 @@ pub enum DependencyKind {
     Build = 1,
     Dev = 2,
     // if you add a kind here, be sure to update `from_row` below.
+}
+
+impl From<DependencyKind> for IndexDependencyKind {
+    fn from(dk: DependencyKind) -> Self {
+        match dk {
+            DependencyKind::Normal => IndexDependencyKind::Normal,
+            DependencyKind::Build => IndexDependencyKind::Build,
+            DependencyKind::Dev => IndexDependencyKind::Dev,
+        }
+    }
 }
 
 impl FromSql<Integer, Pg> for DependencyKind {

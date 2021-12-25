@@ -355,7 +355,7 @@ pub fn add_dependencies(
                     optional: dep.optional,
                     default_features: dep.default_features,
                     target: dep.target.clone(),
-                    kind: dep.kind.or(Some(DependencyKind::Normal)),
+                    kind: dep.kind.or(Some(DependencyKind::Normal)).map(|dk| dk.into()),
                     package,
                 },
                 (
