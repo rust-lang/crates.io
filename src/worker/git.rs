@@ -1,11 +1,11 @@
 use crate::background_jobs::Environment;
-use crate::git::{Crate, Credentials};
+use crate::git::Crate;
 use crate::schema;
 use anyhow::Context;
 use chrono::Utc;
 use diesel::prelude::*;
 use std::fs::{self, OpenOptions};
-use std::io::prelude::*;
+use std::process::Command;
 use swirl::PerformError;
 
 #[swirl::background_job]
@@ -99,53 +99,18 @@ pub fn squash_index(env: &Environment) -> Result<(), PerformError> {
 
     // Shell out to git because libgit2 does not currently support push leases
 
-    let key = match &repo.credentials {
-        Credentials::Ssh { key } => key,
-        Credentials::Http { .. } => {
-            return Err(String::from("squash_index: Password auth not supported").into())
-        }
-        _ => return Err(String::from("squash_index: Could not determine credentials").into()),
-    };
-
-    // When running on production, ensure the file is created in tmpfs and not persisted to disk
-    #[cfg(target_os = "linux")]
-    let mut temp_key_file = tempfile::Builder::new().tempfile_in("/dev/shm")?;
-
-    // For other platforms, default to std::env::tempdir()
-    #[cfg(not(target_os = "linux"))]
-    let mut temp_key_file = tempfile::Builder::new().tempfile()?;
-
-    temp_key_file.write_all(key.as_bytes())?;
-
-    let checkout_path = repo.checkout_path.path();
-    let output = std::process::Command::new("git")
-        .current_dir(checkout_path)
-        .env(
-            "GIT_SSH_COMMAND",
-            format!(
-                "ssh -o StrictHostKeyChecking=accept-new -i {}",
-                temp_key_file.path().display()
-            ),
-        )
-        .args(&[
-            "push",
-            // Both updates should succeed or fail together
-            "--atomic",
-            "origin",
-            // Overwrite master, but only if it server matches the expected value
-            &format!("--force-with-lease=refs/heads/master:{}", original_head),
-            // The new squashed commit is pushed to master
-            "HEAD:refs/heads/master",
-            // The previous value of HEAD is pushed to a snapshot branch
-            &format!("{}:refs/heads/snapshot-{}", original_head, now),
-        ])
-        .output()?;
-
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        let message = format!("Running git command failed with: {}", stderr);
-        return Err(message.into());
-    }
+    repo.run_command(Command::new("git").args(&[
+        "push",
+        // Both updates should succeed or fail together
+        "--atomic",
+        "origin",
+        // Overwrite master, but only if it server matches the expected value
+        &format!("--force-with-lease=refs/heads/master:{}", original_head),
+        // The new squashed commit is pushed to master
+        "HEAD:refs/heads/master",
+        // The previous value of HEAD is pushed to a snapshot branch
+        &format!("{}:refs/heads/snapshot-{}", original_head, now),
+    ]))?;
 
     println!("The index has been successfully squashed.");
 

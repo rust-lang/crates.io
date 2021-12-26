@@ -1,5 +1,8 @@
+use anyhow::{anyhow, Context};
 use std::collections::HashMap;
+use std::io::Write;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 
 use swirl::PerformError;
 use tempfile::TempDir;
@@ -47,6 +50,45 @@ impl Credentials {
                 }
             }
         }
+    }
+
+    /// Write the SSH key to a temporary file and return the path. The file is
+    /// deleted once the returned path is dropped.
+    ///
+    /// This function can be used when running `git push` instead of using the
+    /// `git2` crate for pushing commits to remote git servers.
+    ///
+    /// Note: On Linux this function creates the temporary file in `/dev/shm` to
+    /// avoid writing it to disk.
+    ///
+    /// # Errors
+    ///
+    /// - If non-SSH credentials are use, `Err` is returned.
+    /// - If creation of the temporary file fails, `Err` is returned.
+    ///
+    fn write_temporary_ssh_key(&self) -> anyhow::Result<tempfile::TempPath> {
+        let key = match self {
+            Credentials::Ssh { key } => key,
+            _ => return Err(anyhow!("SSH key not available")),
+        };
+
+        let dir = if cfg!(target_os = "linux") {
+            // When running on production, ensure the file is created in tmpfs and not persisted to disk
+            "/dev/shm".into()
+        } else {
+            // For other platforms, default to std::env::tempdir()
+            std::env::temp_dir()
+        };
+
+        let mut temp_key_file = tempfile::Builder::new()
+            .tempfile_in(dir)
+            .context("Failed to create temporary file")?;
+
+        temp_key_file
+            .write_all(key.as_bytes())
+            .context("Failed to write SSH key to temporary file")?;
+
+        Ok(temp_key_file.into_temp_path())
     }
 }
 
@@ -137,10 +179,9 @@ impl RepositoryConfig {
 }
 
 pub struct Repository {
-    /// bla
-    pub checkout_path: TempDir,
+    checkout_path: TempDir,
     repository: git2::Repository,
-    pub credentials: Credentials,
+    credentials: Credentials,
 }
 
 impl Repository {
@@ -343,6 +384,34 @@ impl Repository {
             .find_object(commit, Some(git2::ObjectType::Commit))?;
         self.repository
             .reset(&commit, git2::ResetType::Hard, None)?;
+
+        Ok(())
+    }
+
+    /// Runs the specified `git` command in the working directory of the local
+    /// crate index repository.
+    ///
+    /// This function also temporarily sets the `GIT_SSH_COMMAND` environment
+    /// variable to ensure that `git push` commands are able to succeed.
+    pub fn run_command(&self, command: &mut Command) -> Result<(), PerformError> {
+        let checkout_path = self.checkout_path.path();
+        command.current_dir(checkout_path);
+
+        let temp_key_path = self.credentials.write_temporary_ssh_key()?;
+        command.env(
+            "GIT_SSH_COMMAND",
+            format!(
+                "ssh -o StrictHostKeyChecking=accept-new -i {}",
+                temp_key_path.display()
+            ),
+        );
+
+        let output = command.output()?;
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            let message = format!("Running git command failed with: {}", stderr);
+            return Err(message.into());
+        }
 
         Ok(())
     }
