@@ -1,5 +1,23 @@
 .form {
-    display: flex;
+    --border-radius: 15px;
+    --submit-icon-size: 16px;
+    --submit-button-padding-left: 8px;
+    --submit-button-padding-right: 10px;
+    --submit-button-width: calc(var(--submit-button-padding-left) + var(--submit-icon-size) + var(--submit-button-padding-right));
+    --input-padding: 5px;
+    --input-padding-left: 10px;
+    --input-padding-right: calc(var(--submit-button-width) + var(--input-padding));
+
+    position: relative;
+
+    &.size-big {
+        --border-radius: 30px;
+        --input-padding: 8px;
+        --input-padding-left: 16px;
+        --submit-icon-size: 20px;
+        --submit-button-padding-left: 12px;
+        --submit-button-padding-right: 16px;
+    }
 }
 
 .input {
@@ -9,21 +27,13 @@
     border: none;
     color: black;
     width: 100%;
-    padding: 5px 5px 5px 25px;
-    background-color: white;
-    background-image: url('/assets/search.png');
-    background-repeat: no-repeat;
-    background-position: 6px 6px;
-    background-size: 14px 15px;
-    border-radius: 15px;
+    padding: var(--input-padding) var(--input-padding-right) var(--input-padding) var(--input-padding-left);
+    border-radius: var(--border-radius);
     box-shadow: 1px 2px 4px 0 var(--green900);
     transition: box-shadow 150ms;
 
     .size-big & {
         font-size: 125%;
-        padding: 5px 5px 5px 35px;
-        background-position: 10px 7px;
-        background-size: 20px 21px;
     }
 
     &:focus {
@@ -51,8 +61,32 @@
 }
 
 .submit-button {
+    composes: button-reset from '../styles/shared/buttons.module.css';
+
     position: absolute;
-    visibility: hidden;
-    width: 0;
-    height: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    display: inline-grid;
+    place-items: center;
+    padding-left: var(--submit-button-padding-left);
+    padding-right: var(--submit-button-padding-right);
+    color: white;
+    background-color: var(--yellow500);
+    border-top-right-radius: var(--border-radius);
+    border-bottom-right-radius: var(--border-radius);
+    cursor: pointer;
+
+    &:hover {
+        background-color: var(--yellow700);
+    }
+}
+
+.submit-label {
+    composes: sr-only from '../styles/shared/a11y.module.css';
+}
+
+.submit-icon {
+    width: var(--submit-icon-size);
+    height: var(--submit-icon-size);
 }

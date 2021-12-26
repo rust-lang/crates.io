@@ -7,6 +7,7 @@
     --green800: hsl(115, 31%, 31%);
     --green900: hsl(115, 31%, 21%);
     --yellow500: hsl(44, 100%, 60%);
+    --yellow700: hsl(44, 67%, 50%);
 
     --header-bg-color: var(--green800);
 
