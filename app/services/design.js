@@ -20,7 +20,11 @@ export default class DesignService extends Service {
 
   @action
   toggle() {
-    this.useNewDesign = !this.useNewDesign;
+    this.setNewDesign(!this.useNewDesign);
+  }
+
+  setNewDesign(value) {
+    this.useNewDesign = value;
     localStorage.setItem('use-new-design', String(this.useNewDesign));
   }
 }
