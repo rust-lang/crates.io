@@ -137,6 +137,7 @@ impl RepositoryConfig {
 }
 
 pub struct Repository {
+    /// bla
     pub checkout_path: TempDir,
     repository: git2::Repository,
     pub credentials: Credentials,
@@ -186,6 +187,11 @@ impl Repository {
         })
     }
 
+    /// Returns the absolute path to the crate index file that corresponds to
+    /// the given crate name.
+    ///
+    /// This is similar to [Self::relative_index_file], but returns the absolute
+    /// path.
     pub fn index_file(&self, name: &str) -> PathBuf {
         self.checkout_path
             .path()
