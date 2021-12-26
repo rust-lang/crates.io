@@ -196,7 +196,16 @@ impl<T: RequestExt + ?Sized> RequestTransaction for T {
             Some(Ok(connection)) => Ok(connection),
 
             // Replica is not available, but primary might be available
-            Some(Err(PoolError::UnhealthyPool)) => self.app().primary_database.get(),
+            Some(Err(PoolError::UnhealthyPool)) => {
+                let _ = self
+                    .app()
+                    .instance_metrics
+                    .database_fallback_used
+                    .get_metric_with_label_values(&["follower"])
+                    .map(|metric| metric.inc());
+
+                self.app().primary_database.get()
+            }
 
             // Replica failed
             Some(Err(error)) => Err(error),
@@ -215,7 +224,16 @@ impl<T: RequestExt + ?Sized> RequestTransaction for T {
             (Ok(connection), _) => Ok(connection),
 
             // Primary is not available, but replica might be available
-            (Err(PoolError::UnhealthyPool), Some(read_only_pool)) => read_only_pool.get(),
+            (Err(PoolError::UnhealthyPool), Some(read_only_pool)) => {
+                let _ = self
+                    .app()
+                    .instance_metrics
+                    .database_fallback_used
+                    .get_metric_with_label_values(&["primary"])
+                    .map(|metric| metric.inc());
+
+                read_only_pool.get()
+            }
 
             // Primary failed and replica is disabled
             (Err(error), None) => Err(error),
