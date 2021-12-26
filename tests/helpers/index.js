@@ -10,18 +10,15 @@ export function setupApplicationTest(hooks, options) {
   upstreamSetupApplicationTest(hooks, options);
   setupMirage(hooks);
   setupSentryMock(hooks);
-  setupAppTestBodyClass(hooks);
+  setupAppTestDataAttr(hooks);
 }
 
-function setupAppTestBodyClass(hooks) {
-  const ID = 'app-test';
-
+function setupAppTestDataAttr(hooks) {
   hooks.beforeEach(function () {
-    this.bodyClass = this.owner.lookup('service:body-class');
-    this.bodyClass.register(ID, ['app-test']);
+    document.documentElement.dataset.appTest = '';
   });
 
   hooks.afterEach(function () {
-    this.bodyClass.deregister(ID);
+    delete document.documentElement.dataset.appTest;
   });
 }

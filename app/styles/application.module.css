@@ -29,7 +29,7 @@
     --placeholder-bg2: hsl(213, 16%, 75%);
 }
 
-:global(.new-design) {
+:root[data-theme="new-design"] {
     --header-bg-color: var(--violet800);
     --main-bg: white;
     --footer-bg-color: var(--grey900);
