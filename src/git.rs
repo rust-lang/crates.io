@@ -2,6 +2,7 @@ use anyhow::{anyhow, Context};
 use std::collections::HashMap;
 use std::io::Write;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 
 use swirl::PerformError;
 use tempfile::TempDir;
@@ -384,6 +385,34 @@ impl Repository {
             .find_object(commit, Some(git2::ObjectType::Commit))?;
         self.repository
             .reset(&commit, git2::ResetType::Hard, None)?;
+
+        Ok(())
+    }
+
+    /// Runs the specified `git` command in the working directory of the local
+    /// crate index repository.
+    ///
+    /// This function also temporarily sets the `GIT_SSH_COMMAND` environment
+    /// variable to ensure that `git push` commands are able to succeed.
+    pub fn run_command(&self, command: &mut Command) -> Result<(), PerformError> {
+        let checkout_path = self.checkout_path.path();
+        command.current_dir(checkout_path);
+
+        let temp_key_path = self.credentials.write_temporary_ssh_key()?;
+        command.env(
+            "GIT_SSH_COMMAND",
+            format!(
+                "ssh -o StrictHostKeyChecking=accept-new -i {}",
+                temp_key_path.display()
+            ),
+        );
+
+        let output = command.output()?;
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            let message = format!("Running git command failed with: {}", stderr);
+            return Err(message.into());
+        }
 
         Ok(())
     }

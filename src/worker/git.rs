@@ -5,6 +5,7 @@ use anyhow::Context;
 use chrono::Utc;
 use diesel::prelude::*;
 use std::fs::{self, OpenOptions};
+use std::process::Command;
 use swirl::PerformError;
 
 #[swirl::background_job]
@@ -98,37 +99,18 @@ pub fn squash_index(env: &Environment) -> Result<(), PerformError> {
 
     // Shell out to git because libgit2 does not currently support push leases
 
-    let temp_key_path = repo.credentials.write_temporary_ssh_key()?;
-
-    let checkout_path = repo.checkout_path.path();
-    let output = std::process::Command::new("git")
-        .current_dir(checkout_path)
-        .env(
-            "GIT_SSH_COMMAND",
-            format!(
-                "ssh -o StrictHostKeyChecking=accept-new -i {}",
-                temp_key_path.display()
-            ),
-        )
-        .args(&[
-            "push",
-            // Both updates should succeed or fail together
-            "--atomic",
-            "origin",
-            // Overwrite master, but only if it server matches the expected value
-            &format!("--force-with-lease=refs/heads/master:{}", original_head),
-            // The new squashed commit is pushed to master
-            "HEAD:refs/heads/master",
-            // The previous value of HEAD is pushed to a snapshot branch
-            &format!("{}:refs/heads/snapshot-{}", original_head, now),
-        ])
-        .output()?;
-
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        let message = format!("Running git command failed with: {}", stderr);
-        return Err(message.into());
-    }
+    repo.run_command(Command::new("git").args(&[
+        "push",
+        // Both updates should succeed or fail together
+        "--atomic",
+        "origin",
+        // Overwrite master, but only if it server matches the expected value
+        &format!("--force-with-lease=refs/heads/master:{}", original_head),
+        // The new squashed commit is pushed to master
+        "HEAD:refs/heads/master",
+        // The previous value of HEAD is pushed to a snapshot branch
+        &format!("{}:refs/heads/snapshot-{}", original_head, now),
+    ]))?;
 
     println!("The index has been successfully squashed.");
 
