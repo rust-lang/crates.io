@@ -197,7 +197,10 @@ impl Repository {
     /// - If reading the global git config fails.
     ///
     pub fn open(repository_config: &RepositoryConfig) -> anyhow::Result<Self> {
-        let checkout_path = tempfile::Builder::new().prefix("git").tempdir()?;
+        let checkout_path = tempfile::Builder::new()
+            .prefix("git")
+            .tempdir()
+            .context("Failed to create temporary directory")?;
 
         let repository = git2::build::RepoBuilder::new()
             .fetch_options(Self::fetch_options(&repository_config.credentials))
@@ -212,13 +215,21 @@ impl Repository {
             .clone(
                 repository_config.index_location.as_str(),
                 checkout_path.path(),
-            )?;
+            )
+            .context("Failed to clone index repository")?;
 
         // All commits to the index registry made through crates.io will be made by bors, the Rust
         // community's friendly GitHub bot.
-        let mut cfg = repository.config()?;
-        cfg.set_str("user.name", "bors")?;
-        cfg.set_str("user.email", "bors@rust-lang.org")?;
+
+        let mut cfg = repository
+            .config()
+            .context("Failed to read git configuration")?;
+
+        cfg.set_str("user.name", "bors")
+            .context("Failed to set user name")?;
+
+        cfg.set_str("user.email", "bors@rust-lang.org")
+            .context("Failed to set user email address")?;
 
         Ok(Self {
             checkout_path,
@@ -260,7 +271,9 @@ impl Repository {
     /// - If the `HEAD` pointer can't be retrieved.
     ///
     pub fn head_oid(&self) -> anyhow::Result<git2::Oid> {
-        Ok(self.repository.head()?.target().unwrap())
+        let repo = &self.repository;
+        let head = repo.head().context("Failed to read HEAD reference")?;
+        Ok(head.target().unwrap())
     }
 
     /// Commits the specified file with the specified commit message and pushes
