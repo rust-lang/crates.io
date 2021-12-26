@@ -1,0 +1,6 @@
+<input
+  type="radio"
+  checked={{eq @groupValue @value}}
+  ...attributes
+  {{on "change" (fn @onChange @value)}}
+/>
