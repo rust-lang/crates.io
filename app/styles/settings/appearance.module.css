@@ -1,0 +1,3 @@
+.toggle-button {
+    composes: yellow-button from '../shared/buttons.module.css';
+}

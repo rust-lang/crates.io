@@ -1,0 +1,11 @@
+{{page-title 'Settings'}}
+
+<PageHeader @title="Account Settings" @icon="gear"/>
+
+<SettingsPage>
+  <h2>Appearance</h2>
+
+  <button type="button" local-class="toggle-button" {{on "click" this.design.toggle}}>
+    Toggle Design
+  </button>
+</SettingsPage>
