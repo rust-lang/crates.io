@@ -294,6 +294,8 @@ impl Repository {
             })
     }
 
+    /// Fetches any changes from the `origin` remote and performs a hard reset
+    /// to the tip of the `origin/master` branch.
     pub fn reset_head(&self) -> Result<(), PerformError> {
         let mut origin = self.repository.find_remote("origin")?;
         let original_head = self.head_oid()?;
