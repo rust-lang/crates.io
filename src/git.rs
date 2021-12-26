@@ -212,6 +212,13 @@ impl Repository {
         }
     }
 
+    /// Returns the [Object ID](git2::Oid) of the currently checked out commit
+    /// in the local crate index repository.
+    ///
+    /// # Errors
+    ///
+    /// - If the `HEAD` pointer can't be retrieved.
+    ///
     pub fn head_oid(&self) -> Result<git2::Oid, PerformError> {
         Ok(self.repository.head()?.target().unwrap())
     }
