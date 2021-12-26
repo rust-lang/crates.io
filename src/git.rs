@@ -137,12 +137,25 @@ impl RepositoryConfig {
 }
 
 pub struct Repository {
+    /// bla
     pub checkout_path: TempDir,
     repository: git2::Repository,
     pub credentials: Credentials,
 }
 
 impl Repository {
+    /// Clones the crate index from a remote git server and returns a
+    /// `Repository` struct to interact with the local copy of the crate index.
+    ///
+    /// Note that the `user` configuration for the repository is automatically
+    /// set to `bors <bors@rust-lang.org>`.
+    ///
+    /// # Errors
+    ///
+    /// - If creation of a temporary folder for cloning the crate index fails.
+    /// - If cloning the crate index fails.
+    /// - If reading the global git config fails.
+    ///
     pub fn open(repository_config: &RepositoryConfig) -> Result<Self, PerformError> {
         let checkout_path = tempfile::Builder::new().prefix("git").tempdir()?;
 
@@ -174,12 +187,21 @@ impl Repository {
         })
     }
 
+    /// Returns the absolute path to the crate index file that corresponds to
+    /// the given crate name.
+    ///
+    /// This is similar to [Self::relative_index_file], but returns the absolute
+    /// path.
     pub fn index_file(&self, name: &str) -> PathBuf {
         self.checkout_path
             .path()
             .join(Self::relative_index_file(name))
     }
 
+    /// Returns the relative path to the crate index file that corresponds to
+    /// the given crate name.
+    ///
+    /// see <https://doc.rust-lang.org/cargo/reference/registries.html#index-format>
     pub fn relative_index_file(name: &str) -> PathBuf {
         let name = name.to_lowercase();
         match name.len() {
@@ -190,10 +212,22 @@ impl Repository {
         }
     }
 
+    /// Returns the [Object ID](git2::Oid) of the currently checked out commit
+    /// in the local crate index repository.
+    ///
+    /// # Errors
+    ///
+    /// - If the `HEAD` pointer can't be retrieved.
+    ///
     pub fn head_oid(&self) -> Result<git2::Oid, PerformError> {
         Ok(self.repository.head()?.target().unwrap())
     }
 
+    /// Commits the specified file with the specified commit message and pushes
+    /// the commit to the `master` branch on the `origin` remote.
+    ///
+    /// Note that `modified_file` expects a file path **relative** to the
+    /// repository working folder!
     fn perform_commit_and_push(&self, msg: &str, modified_file: &Path) -> Result<(), PerformError> {
         // git add $file
         let mut index = self.repository.index()?;
@@ -241,6 +275,13 @@ impl Repository {
         ref_status
     }
 
+    /// Commits the specified file with the specified commit message and pushes
+    /// the commit to the `master` branch on the `origin` remote.
+    ///
+    /// Note that `modified_file` expects an **absolute** file path!
+    ///
+    /// This function also prints the commit message and a success or failure
+    /// message to the console.
     pub fn commit_and_push(&self, message: &str, modified_file: &Path) -> Result<(), PerformError> {
         println!("Committing and pushing \"{}\"", message);
 
@@ -253,6 +294,8 @@ impl Repository {
             })
     }
 
+    /// Fetches any changes from the `origin` remote and performs a hard reset
+    /// to the tip of the `origin/master` branch.
     pub fn reset_head(&self) -> Result<(), PerformError> {
         let mut origin = self.repository.find_remote("origin")?;
         let original_head = self.head_oid()?;
