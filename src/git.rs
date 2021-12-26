@@ -50,6 +50,20 @@ impl Credentials {
         }
     }
 
+    /// Write the SSH key to a temporary file and return the path. The file is
+    /// deleted once the returned path is dropped.
+    ///
+    /// This function can be used when running `git push` instead of using the
+    /// `git2` crate for pushing commits to remote git servers.
+    ///
+    /// Note: On Linux this function creates the temporary file in `/dev/shm` to
+    /// avoid writing it to disk.
+    ///
+    /// # Errors
+    ///
+    /// - If non-SSH credentials are use, `Err` is returned.
+    /// - If creation of the temporary file fails, `Err` is returned.
+    ///
     pub fn write_temporary_ssh_key(&self) -> Result<tempfile::TempPath, PerformError> {
         let key = match self {
             Credentials::Ssh { key } => key,
