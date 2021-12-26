@@ -143,6 +143,18 @@ pub struct Repository {
 }
 
 impl Repository {
+    /// Clones the crate index from a remote git server and returns a
+    /// `Repository` struct to interact with the local copy of the crate index.
+    ///
+    /// Note that the `user` configuration for the repository is automatically
+    /// set to `bors <bors@rust-lang.org>`.
+    ///
+    /// # Errors
+    ///
+    /// - If creation of a temporary folder for cloning the crate index fails.
+    /// - If cloning the crate index fails.
+    /// - If reading the global git config fails.
+    ///
     pub fn open(repository_config: &RepositoryConfig) -> Result<Self, PerformError> {
         let checkout_path = tempfile::Builder::new().prefix("git").tempdir()?;
 
