@@ -6970,13 +6970,6 @@ ember-router-scroll@4.1.2:
     ember-cli-babel "^7.26.6"
     ember-compatibility-helpers "^1.2.5"
 
-ember-set-body-class@1.0.2:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/ember-set-body-class/-/ember-set-body-class-1.0.2.tgz#a970933f00e57ece6b6a88b96daf22f2374c3c34"
-  integrity sha512-SEsTwFp9SHTg4LgebhkUuLgYWg1VZD7I1QcrV2sTY583wu216OThoSs5szvS/KgSc1xD1Z22TFvOb848t2hGfw==
-  dependencies:
-    ember-cli-babel "^7.22.1"
-
 ember-source-channel-url@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/ember-source-channel-url/-/ember-source-channel-url-3.0.0.tgz#bcd5be72c63fa0b8c390b3121783b462063e2a1b"
