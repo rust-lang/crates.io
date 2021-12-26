@@ -66,7 +66,7 @@ impl Credentials {
     /// - If non-SSH credentials are use, `Err` is returned.
     /// - If creation of the temporary file fails, `Err` is returned.
     ///
-    pub fn write_temporary_ssh_key(&self) -> anyhow::Result<tempfile::TempPath> {
+    fn write_temporary_ssh_key(&self) -> anyhow::Result<tempfile::TempPath> {
         let key = match self {
             Credentials::Ssh { key } => key,
             _ => return Err(anyhow!("SSH key not available")),
@@ -179,10 +179,9 @@ impl RepositoryConfig {
 }
 
 pub struct Repository {
-    /// bla
-    pub checkout_path: TempDir,
+    checkout_path: TempDir,
     repository: git2::Repository,
-    pub credentials: Credentials,
+    credentials: Credentials,
 }
 
 impl Repository {
