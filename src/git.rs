@@ -1,3 +1,4 @@
+use anyhow::{anyhow, Context};
 use std::collections::HashMap;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -64,10 +65,10 @@ impl Credentials {
     /// - If non-SSH credentials are use, `Err` is returned.
     /// - If creation of the temporary file fails, `Err` is returned.
     ///
-    pub fn write_temporary_ssh_key(&self) -> Result<tempfile::TempPath, PerformError> {
+    pub fn write_temporary_ssh_key(&self) -> anyhow::Result<tempfile::TempPath> {
         let key = match self {
             Credentials::Ssh { key } => key,
-            _ => return Err("SSH key not available".into()),
+            _ => return Err(anyhow!("SSH key not available")),
         };
 
         let dir = if cfg!(target_os = "linux") {
@@ -78,8 +79,13 @@ impl Credentials {
             std::env::temp_dir()
         };
 
-        let mut temp_key_file = tempfile::Builder::new().tempfile_in(dir)?;
-        temp_key_file.write_all(key.as_bytes())?;
+        let mut temp_key_file = tempfile::Builder::new()
+            .tempfile_in(dir)
+            .context("Failed to create temporary file")?;
+
+        temp_key_file
+            .write_all(key.as_bytes())
+            .context("Failed to write SSH key to temporary file")?;
 
         Ok(temp_key_file.into_temp_path())
     }
