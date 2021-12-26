@@ -1,3 +1,13 @@
-.toggle-button {
-    composes: yellow-button from '../shared/buttons.module.css';
+.themes-form {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.theme-label {
+    display: inline-block;
+    padding: 10px;
+    background: white;
+    border-radius: 6px;
+    box-shadow: 0 2px 3px hsla(51, 50%, 44%, .35);
 }
