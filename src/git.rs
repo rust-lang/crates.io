@@ -223,6 +223,11 @@ impl Repository {
         Ok(self.repository.head()?.target().unwrap())
     }
 
+    /// Commits the specified file with the specified commit message and pushes
+    /// the commit to the `master` branch on the `origin` remote.
+    ///
+    /// Note that `modified_file` expects a file path **relative** to the
+    /// repository working folder!
     fn perform_commit_and_push(&self, msg: &str, modified_file: &Path) -> Result<(), PerformError> {
         // git add $file
         let mut index = self.repository.index()?;
