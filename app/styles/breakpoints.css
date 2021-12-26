@@ -1,0 +1,8 @@
+/* see https://github.com/postcss/postcss-custom-media */
+
+/* breakpoints inspired by https://tailwindcss.com/docs/responsive-design */
+@custom-media --min-s (min-width: 640px);
+@custom-media --min-m (min-width: 768px);
+@custom-media --min-l (min-width: 1024px);
+@custom-media --min-xl (min-width: 1280px);
+@custom-media --min-xxl (min-width: 1536px);

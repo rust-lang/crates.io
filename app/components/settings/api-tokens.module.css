@@ -151,7 +151,7 @@
     border-radius: 4px;
 }
 
-@media (min-width: 640px) {
+@media (--min-s) {
     .new-token-form {
         display: grid;
         grid-template-columns: 1fr auto;
