@@ -192,6 +192,10 @@ impl Repository {
             .join(Self::relative_index_file(name))
     }
 
+    /// Returns the relative path to the crate index file that corresponds to
+    /// the given crate name.
+    ///
+    /// see <https://doc.rust-lang.org/cargo/reference/registries.html#index-format>
     pub fn relative_index_file(name: &str) -> PathBuf {
         let name = name.to_lowercase();
         match name.len() {
