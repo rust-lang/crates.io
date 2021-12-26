@@ -4,22 +4,20 @@ import { tracked } from '@glimmer/tracking';
 import config from '../config/environment';
 import * as localStorage from '../utils/local-storage';
 
+const KNOWN_THEMES = new Set(['classic', 'new-design']);
+
 export default class DesignService extends Service {
   @service fastboot;
 
-  @tracked useNewDesign = !this.fastboot.isFastBoot && localStorage.getItem('use-new-design') === 'true';
+  @tracked _theme = localStorage.getItem('theme');
   @tracked showToggleButton = config.environment === 'development' || config.environment === 'test';
 
   get theme() {
-    return this.useNewDesign ? 'new-design' : 'classic';
+    return KNOWN_THEMES.has(this._theme) ? this._theme : 'classic';
   }
 
   set theme(theme) {
-    this.setNewDesign(theme === 'new-design');
-  }
-
-  setNewDesign(value) {
-    this.useNewDesign = value;
-    localStorage.setItem('use-new-design', String(this.useNewDesign));
+    this._theme = theme;
+    localStorage.setItem('theme', theme);
   }
 }
