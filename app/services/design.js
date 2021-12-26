@@ -11,7 +11,7 @@ export default class DesignService extends Service {
   @service fastboot;
 
   @tracked useNewDesign = !this.fastboot.isFastBoot && localStorage.getItem('use-new-design') === 'true';
-  @tracked showToggleButton = config.environment === 'development';
+  @tracked showToggleButton = config.environment === 'development' || config.environment === 'test';
 
   constructor() {
     super(...arguments);
