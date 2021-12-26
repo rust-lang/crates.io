@@ -1,4 +1,4 @@
-:root {
+:root, [data-theme="classic"] {
     --violet800: hsl(252, 44%, 24%);
     --grey900: hsl(200, 15%, 19%);
     --grey700: hsl(200, 11%, 43%);
@@ -29,10 +29,9 @@
     --placeholder-bg2: hsl(213, 16%, 75%);
 }
 
-:root[data-theme="new-design"] {
+[data-theme="new-design"] {
     --header-bg-color: var(--violet800);
     --main-bg: white;
-    --footer-bg-color: var(--grey900);
 }
 
 * {

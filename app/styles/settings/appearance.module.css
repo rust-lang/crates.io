@@ -6,8 +6,14 @@
 
 .theme-label {
     display: inline-block;
-    padding: 10px;
+    padding: 16px;
     background: white;
     border-radius: 6px;
     box-shadow: 0 2px 3px hsla(51, 50%, 44%, .35);
+}
+
+.theme-preview {
+    width: 200px;
+    height: 160px;
+    margin-bottom: 16px;
 }

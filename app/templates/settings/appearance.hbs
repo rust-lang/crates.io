@@ -7,6 +7,8 @@
 
   <form local-class="themes-form">
     <label local-class="theme-label">
+      <ThemePreview @theme="classic" local-class="theme-preview" />
+
       <RadioButton
         @groupValue={{this.theme}}
         @value="classic"
@@ -17,6 +19,8 @@
     </label>
 
     <label local-class="theme-label">
+      <ThemePreview @theme="new-design" local-class="theme-preview" />
+
       <RadioButton
         @groupValue={{this.theme}}
         @value="new-design"
