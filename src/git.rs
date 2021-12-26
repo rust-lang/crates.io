@@ -275,6 +275,13 @@ impl Repository {
         ref_status
     }
 
+    /// Commits the specified file with the specified commit message and pushes
+    /// the commit to the `master` branch on the `origin` remote.
+    ///
+    /// Note that `modified_file` expects an **absolute** file path!
+    ///
+    /// This function also prints the commit message and a success or failure
+    /// message to the console.
     pub fn commit_and_push(&self, message: &str, modified_file: &Path) -> Result<(), PerformError> {
         println!("Committing and pushing \"{}\"", message);
 
