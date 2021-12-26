@@ -10,6 +10,14 @@ export default class DesignService extends Service {
   @tracked useNewDesign = !this.fastboot.isFastBoot && localStorage.getItem('use-new-design') === 'true';
   @tracked showToggleButton = config.environment === 'development' || config.environment === 'test';
 
+  get theme() {
+    return this.useNewDesign ? 'new-design' : 'classic';
+  }
+
+  set theme(theme) {
+    this.setNewDesign(theme === 'new-design');
+  }
+
   setNewDesign(value) {
     this.useNewDesign = value;
     localStorage.setItem('use-new-design', String(this.useNewDesign));
