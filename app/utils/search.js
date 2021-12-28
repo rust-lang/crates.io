@@ -1,3 +1,4 @@
+const KEYWORD_PREFIX = 'keyword:';
 const KEYWORDS_PREFIX = 'keywords:';
 
 /**
@@ -12,7 +13,12 @@ export function processSearchQuery(query) {
   let queries = [];
   let keywords = [];
   for (let token of tokens) {
-    if (token.startsWith(KEYWORDS_PREFIX)) {
+    if (token.startsWith(KEYWORD_PREFIX)) {
+      let value = token.slice(KEYWORD_PREFIX.length).trim();
+      if (value) {
+        keywords.push(value);
+      }
+    } else if (token.startsWith(KEYWORDS_PREFIX)) {
       keywords = token
         .slice(KEYWORDS_PREFIX.length)
         .split(',')
