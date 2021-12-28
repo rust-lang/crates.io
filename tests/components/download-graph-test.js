@@ -516,15 +516,13 @@ function exampleData() {
     { version: FIVE_5, date: '2020-12-27', downloads: 15_713 },
   ];
 
-  downloads.content = {
-    meta: {
-      extra_downloads: [
-        { date: '2020-12-30', downloads: 36_745 },
-        { date: '2020-12-29', downloads: 33_242 },
-        { date: '2020-12-28', downloads: 19_981 },
-        { date: '2020-12-27', downloads: 19_064 },
-      ],
-    },
+  downloads.meta = {
+    extra_downloads: [
+      { date: '2020-12-30', downloads: 36_745 },
+      { date: '2020-12-29', downloads: 33_242 },
+      { date: '2020-12-28', downloads: 19_981 },
+      { date: '2020-12-27', downloads: 19_064 },
+    ],
   };
 
   return downloads;
