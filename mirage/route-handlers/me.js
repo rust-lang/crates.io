@@ -1,7 +1,6 @@
 import { Response } from 'ember-cli-mirage';
 
 import { getSession } from '../utils/session';
-import { withMeta } from './-utils';
 
 export function register(server) {
   server.get('/api/v1/me', function (schema) {
@@ -83,7 +82,7 @@ export function register(server) {
     let totalPages = Math.ceil(totalCount / perPage);
     let more = page < totalPages;
 
-    return withMeta(this.serialize(versions), { more });
+    return { ...this.serialize(versions), meta: { more } };
   });
 
   server.put('/api/v1/confirm/:token', (schema, request) => {
