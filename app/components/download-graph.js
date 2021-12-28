@@ -77,7 +77,7 @@ export function toChartData(data) {
     return { datasets: [] };
   }
 
-  let extra = data.content?.meta?.extra_downloads ?? [];
+  let extra = data.meta?.extra_downloads ?? [];
 
   let dates = {};
   let versions = new Map();
