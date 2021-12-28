@@ -42,7 +42,7 @@
     "@sentry/integrations": "6.16.1",
     "chart.js": "3.7.0",
     "copy-text-to-clipboard": "3.0.1",
-    "date-fns": "2.27.0",
+    "date-fns": "2.28.0",
     "fastboot-app-server": "3.0.0",
     "highlight.js": "11.3.1",
     "macro-decorators": "0.1.2",
