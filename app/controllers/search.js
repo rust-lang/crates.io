@@ -7,6 +7,7 @@ import { restartableTask } from 'ember-concurrency';
 import { bool, reads } from 'macro-decorators';
 
 import { pagination } from '../utils/pagination';
+import { processSearchQuery } from '../utils/search';
 
 export default class SearchController extends Controller {
   @service store;
@@ -61,6 +62,10 @@ export default class SearchController extends Controller {
       q = q.trim();
     }
 
-    return yield this.store.query('crate', { all_keywords, page, per_page, q, sort });
+    let searchOptions = all_keywords
+      ? { page, per_page, sort, q, all_keywords }
+      : { page, per_page, sort, ...processSearchQuery(q) };
+
+    return yield this.store.query('crate', searchOptions);
   }
 }
