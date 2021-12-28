@@ -172,4 +172,23 @@ module('Acceptance | search', function (hooks) {
     await settled();
     assert.dom('[data-test-crate-row]').exists({ count: 1 });
   });
+
+  test('passes query parameters to the backend', async function (assert) {
+    this.server.get('/api/v1/crates', function (schema, request) {
+      assert.step('/api/v1/crates');
+
+      assert.deepEqual(request.queryParams, {
+        all_keywords: 'fire ball',
+        page: '3',
+        per_page: '15',
+        q: 'rust',
+        sort: 'new',
+      });
+
+      return { crates: [], meta: { total: 0 } };
+    });
+
+    await visit('/search?q=rust&page=3&per_page=15&sort=new&all_keywords=fire ball');
+    assert.verifySteps(['/api/v1/crates']);
+  });
 });
