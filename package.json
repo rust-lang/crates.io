@@ -66,7 +66,7 @@
     "@percy/ember": "3.0.0",
     "@zestia/ember-auto-focus": "4.2.0",
     "broccoli-asset-rev": "3.0.0",
-    "ember-a11y-testing": "4.3.0",
+    "ember-a11y-testing": "5.0.0",
     "ember-api-actions": "0.2.9",
     "ember-auto-import": "2.2.4",
     "ember-cli": "4.0.1",
