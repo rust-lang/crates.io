@@ -1,4 +1,4 @@
-import { notFound, pageParams, withMeta } from './-utils';
+import { notFound, pageParams } from './-utils';
 
 export function register(server) {
   server.get('/api/v1/keywords', function (schema, request) {
@@ -8,7 +8,7 @@ export function register(server) {
     let keywords = allKeywords.slice(start, end);
     let total = allKeywords.length;
 
-    return withMeta(this.serialize(keywords), { total });
+    return { ...this.serialize(keywords), meta: { total } };
   });
 
   server.get('/api/v1/keywords/:keyword_id', (schema, request) => {

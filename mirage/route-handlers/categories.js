@@ -1,4 +1,4 @@
-import { compareStrings, notFound, pageParams, withMeta } from './-utils';
+import { compareStrings, notFound, pageParams } from './-utils';
 
 export function register(server) {
   server.get('/api/v1/categories', function (schema, request) {
@@ -8,7 +8,7 @@ export function register(server) {
     let categories = allCategories.slice(start, end);
     let total = allCategories.length;
 
-    return withMeta(this.serialize(categories), { total });
+    return { ...this.serialize(categories), meta: { total } };
   });
 
   server.get('/api/v1/categories/:category_id', function (schema, request) {

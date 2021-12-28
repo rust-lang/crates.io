@@ -22,11 +22,6 @@ export function pageParams(request) {
   return { page, perPage, start, end };
 }
 
-export function withMeta(response, meta) {
-  response.meta = meta;
-  return response;
-}
-
 export function compareStrings(a, b) {
   return a < b ? -1 : a > b ? 1 : 0;
 }

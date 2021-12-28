@@ -1,7 +1,7 @@
 import { Response } from 'ember-cli-mirage';
 
 import { getSession } from '../utils/session';
-import { compareIsoDates, compareStrings, notFound, pageParams, withMeta } from './-utils';
+import { compareIsoDates, compareStrings, notFound, pageParams } from './-utils';
 
 export function list(schema, request) {
   const { start, end } = pageParams(request);
@@ -46,7 +46,7 @@ export function list(schema, request) {
     crates = crates.sort((a, b) => compareStrings(a.id.toLowerCase(), b.id.toLowerCase()));
   }
 
-  return withMeta(this.serialize(crates.slice(start, end)), { total: crates.length });
+  return { ...this.serialize(crates.slice(start, end)), meta: { total: crates.length } };
 }
 
 export function register(server) {
@@ -221,7 +221,7 @@ export function register(server) {
 
     let versionDownloads = schema.versionDownloads.all().filter(it => it.version.crateId === crate.id);
 
-    return withMeta(this.serialize(versionDownloads), { extra_downloads: crate._extra_downloads });
+    return { ...this.serialize(versionDownloads), meta: { extra_downloads: crate._extra_downloads } };
   });
 
   server.put('/api/v1/crates/:name/owners', (schema, request) => {
