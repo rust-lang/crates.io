@@ -47,7 +47,7 @@
     </div>
   </div>
 
-  <CrateList @exactMatch={{this.exactMatch}} @crates={{this.otherCrates}} local-class="list" />
+  <CrateList @crates={{this.model}} local-class="list" />
 
   <Pagination @pagination={{this.pagination}} />
 {{else}}
