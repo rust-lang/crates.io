@@ -16,7 +16,6 @@ export default class Crate extends Model {
   @attr homepage;
   @attr documentation;
   @attr repository;
-  @attr exact_match;
 
   @hasMany('versions', { async: true }) versions;
 
