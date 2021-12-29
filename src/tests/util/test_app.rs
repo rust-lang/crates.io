@@ -11,7 +11,7 @@ use cargo_registry::{
 };
 use std::{rc::Rc, sync::Arc, time::Duration};
 
-use cargo_registry::git::{Repository as WorkerRepository, Repository};
+use cargo_registry::git::Repository as WorkerRepository;
 use diesel::PgConnection;
 use reqwest::{blocking::Client, Proxy};
 use std::collections::HashSet;
@@ -139,24 +139,7 @@ impl TestApp {
 
     /// Obtain a list of crates from the index HEAD
     pub fn crates_from_index_head(&self, crate_name: &str) -> Vec<cargo_registry::git::Crate> {
-        let path = Repository::relative_index_file(crate_name);
-        let index = self.upstream_repository();
-        let tree = index.head().unwrap().peel_to_tree().unwrap();
-        let blob = tree
-            .get_path(&path)
-            .unwrap()
-            .to_object(index)
-            .unwrap()
-            .peel_to_blob()
-            .unwrap();
-        let content = blob.content();
-
-        // The index format consists of one JSON object per line
-        // It is not a JSON array
-        let lines = std::str::from_utf8(content).unwrap().lines();
-        lines
-            .map(|line| serde_json::from_str(line).unwrap())
-            .collect()
+        self.upstream_index().crates_from_index_head(crate_name)
     }
 
     pub fn run_pending_background_jobs(&self) {
