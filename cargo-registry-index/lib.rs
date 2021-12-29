@@ -1,3 +1,9 @@
+#[macro_use]
+extern crate serde;
+
+#[cfg(feature = "testing")]
+pub mod testing;
+
 use anyhow::{anyhow, Context};
 use std::collections::HashMap;
 use std::io::Write;

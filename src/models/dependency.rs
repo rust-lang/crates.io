@@ -2,9 +2,9 @@ use diesel::deserialize::{self, FromSql};
 use diesel::pg::Pg;
 use diesel::sql_types::Integer;
 
-use crate::git::DependencyKind as IndexDependencyKind;
 use crate::models::{Crate, Version};
 use crate::schema::*;
+use cargo_registry_index::DependencyKind as IndexDependencyKind;
 
 #[derive(Identifiable, Associations, Debug, Queryable, QueryableByName)]
 #[belongs_to(Version)]

@@ -10,7 +10,6 @@ use std::sync::Arc;
 use swirl::Job;
 
 use crate::controllers::cargo_prelude::*;
-use crate::git;
 use crate::models::{
     insert_version_owner_action, Badge, Category, Crate, DependencyKind, Keyword, NewCrate,
     NewVersion, Rights, VersionAction,
@@ -230,7 +229,7 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
         };
 
         // Register this crate in our local git repo.
-        let git_crate = git::Crate {
+        let git_crate = cargo_registry_index::Crate {
             name: name.0,
             vers: vers.to_string(),
             cksum: hex_cksum,
@@ -313,7 +312,7 @@ pub fn add_dependencies(
     conn: &PgConnection,
     deps: &[EncodableCrateDependency],
     target_version_id: i32,
-) -> AppResult<Vec<git::Dependency>> {
+) -> AppResult<Vec<cargo_registry_index::Dependency>> {
     use self::dependencies::dsl::*;
     use diesel::insert_into;
 
@@ -348,7 +347,7 @@ pub fn add_dependencies(
             };
 
             Ok((
-                git::Dependency {
+                cargo_registry_index::Dependency {
                     name,
                     req: dep.version_req.to_string(),
                     features: dep.features.iter().map(|s| s.0.to_string()).collect(),
