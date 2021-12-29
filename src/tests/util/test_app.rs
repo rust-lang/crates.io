@@ -134,7 +134,9 @@ impl TestApp {
 
     /// Obtain a list of crates from the index HEAD
     pub fn crates_from_index_head(&self, crate_name: &str) -> Vec<cargo_registry::git::Crate> {
-        self.upstream_index().crates_from_index_head(crate_name)
+        self.upstream_index()
+            .crates_from_index_head(crate_name)
+            .unwrap()
     }
 
     pub fn run_pending_background_jobs(&self) {

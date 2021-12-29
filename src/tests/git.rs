@@ -25,26 +25,26 @@ impl UpstreamIndex {
     }
 
     /// Obtain a list of crates from the index HEAD
-    pub fn crates_from_index_head(&self, crate_name: &str) -> Vec<cargo_registry::git::Crate> {
+    pub fn crates_from_index_head(
+        &self,
+        crate_name: &str,
+    ) -> anyhow::Result<Vec<cargo_registry::git::Crate>> {
         let repo = &self.repository;
 
         let path = cargo_registry::git::Repository::relative_index_file(crate_name);
-        let tree = repo.head().unwrap().peel_to_tree().unwrap();
-        let blob = tree
-            .get_path(&path)
-            .unwrap()
-            .to_object(repo)
-            .unwrap()
-            .peel_to_blob()
-            .unwrap();
+
+        let head = repo.head()?;
+        let tree = head.peel_to_tree()?;
+        let blob = tree.get_path(&path)?.to_object(repo)?.peel_to_blob()?;
+
         let content = blob.content();
 
         // The index format consists of one JSON object per line
         // It is not a JSON array
-        let lines = std::str::from_utf8(content).unwrap().lines();
-        lines
-            .map(|line| serde_json::from_str(line).unwrap())
-            .collect()
+        let lines = std::str::from_utf8(content)?.lines();
+        let versions = lines.map(serde_json::from_str).collect::<Result<_, _>>()?;
+
+        Ok(versions)
     }
 
     pub fn create_empty_commit(&self) -> anyhow::Result<()> {
