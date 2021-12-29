@@ -45,7 +45,7 @@ conduit-middleware = "=0.10.0"
 conduit-router = "=0.10.0"
 conduit-static = "=0.10.0"
 
-cookie = { version = "=0.16.0-rc.1", features = ["secure"] }
+cookie = { version = "=0.16.0", features = ["secure"] }
 dashmap = { version = "=5.0.0", features = ["raw-api"] }
 derive_deref = "=1.1.1"
 dialoguer = "=0.9.0"
