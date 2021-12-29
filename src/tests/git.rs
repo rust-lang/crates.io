@@ -1,8 +1,28 @@
+use git2::Repository;
 use std::env;
 use std::fs;
 use std::path::PathBuf;
 use std::sync::Once;
 use std::thread;
+use url::Url;
+
+pub struct UpstreamIndex {
+    pub repository: Repository,
+}
+
+impl UpstreamIndex {
+    pub fn new() -> anyhow::Result<Self> {
+        init();
+
+        let thread_local_path = bare();
+        let repository = Repository::open_bare(thread_local_path)?;
+        Ok(Self { repository })
+    }
+
+    pub fn url() -> Url {
+        Url::from_file_path(&bare()).unwrap()
+    }
+}
 
 fn root() -> PathBuf {
     env::current_dir()
@@ -12,11 +32,11 @@ fn root() -> PathBuf {
         .join(thread::current().name().unwrap())
 }
 
-pub fn bare() -> PathBuf {
+fn bare() -> PathBuf {
     root().join("bare")
 }
 
-pub fn init() {
+fn init() {
     static INIT: Once = Once::new();
     let _ = fs::remove_dir_all(&bare());
 
