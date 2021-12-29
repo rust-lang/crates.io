@@ -4,7 +4,6 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use swirl::PerformError;
 use tempfile::TempDir;
 use url::Url;
 
@@ -197,8 +196,11 @@ impl Repository {
     /// - If cloning the crate index fails.
     /// - If reading the global git config fails.
     ///
-    pub fn open(repository_config: &RepositoryConfig) -> Result<Self, PerformError> {
-        let checkout_path = tempfile::Builder::new().prefix("git").tempdir()?;
+    pub fn open(repository_config: &RepositoryConfig) -> anyhow::Result<Self> {
+        let checkout_path = tempfile::Builder::new()
+            .prefix("git")
+            .tempdir()
+            .context("Failed to create temporary directory")?;
 
         let repository = git2::build::RepoBuilder::new()
             .fetch_options(Self::fetch_options(&repository_config.credentials))
@@ -213,13 +215,21 @@ impl Repository {
             .clone(
                 repository_config.index_location.as_str(),
                 checkout_path.path(),
-            )?;
+            )
+            .context("Failed to clone index repository")?;
 
         // All commits to the index registry made through crates.io will be made by bors, the Rust
         // community's friendly GitHub bot.
-        let mut cfg = repository.config()?;
-        cfg.set_str("user.name", "bors")?;
-        cfg.set_str("user.email", "bors@rust-lang.org")?;
+
+        let mut cfg = repository
+            .config()
+            .context("Failed to read git configuration")?;
+
+        cfg.set_str("user.name", "bors")
+            .context("Failed to set user name")?;
+
+        cfg.set_str("user.email", "bors@rust-lang.org")
+            .context("Failed to set user email address")?;
 
         Ok(Self {
             checkout_path,
@@ -260,8 +270,10 @@ impl Repository {
     ///
     /// - If the `HEAD` pointer can't be retrieved.
     ///
-    pub fn head_oid(&self) -> Result<git2::Oid, PerformError> {
-        Ok(self.repository.head()?.target().unwrap())
+    pub fn head_oid(&self) -> anyhow::Result<git2::Oid> {
+        let repo = &self.repository;
+        let head = repo.head().context("Failed to read HEAD reference")?;
+        Ok(head.target().unwrap())
     }
 
     /// Commits the specified file with the specified commit message and pushes
@@ -269,7 +281,7 @@ impl Repository {
     ///
     /// Note that `modified_file` expects a file path **relative** to the
     /// repository working folder!
-    fn perform_commit_and_push(&self, msg: &str, modified_file: &Path) -> Result<(), PerformError> {
+    fn perform_commit_and_push(&self, msg: &str, modified_file: &Path) -> anyhow::Result<()> {
         // git add $file
         let mut index = self.repository.index()?;
         index.add_path(modified_file)?;
@@ -288,7 +300,7 @@ impl Repository {
     }
 
     /// Push the current branch to the provided refname
-    fn push(&self, refspec: &str) -> Result<(), PerformError> {
+    fn push(&self, refspec: &str) -> anyhow::Result<()> {
         let mut ref_status = Ok(());
         let mut callback_called = false;
         {
@@ -299,7 +311,7 @@ impl Repository {
             });
             callbacks.push_update_reference(|_, status| {
                 if let Some(s) = status {
-                    ref_status = Err(format!("failed to push a ref: {}", s).into())
+                    ref_status = Err(anyhow!("failed to push a ref: {}", s))
                 }
                 callback_called = true;
                 Ok(())
@@ -310,7 +322,7 @@ impl Repository {
         }
 
         if !callback_called {
-            ref_status = Err("update_reference callback was not called".into());
+            ref_status = Err(anyhow!("update_reference callback was not called"));
         }
 
         ref_status
@@ -323,7 +335,7 @@ impl Repository {
     ///
     /// This function also prints the commit message and a success or failure
     /// message to the console.
-    pub fn commit_and_push(&self, message: &str, modified_file: &Path) -> Result<(), PerformError> {
+    pub fn commit_and_push(&self, message: &str, modified_file: &Path) -> anyhow::Result<()> {
         println!("Committing and pushing \"{}\"", message);
 
         let relative_path = modified_file.strip_prefix(self.checkout_path.path())?;
@@ -337,7 +349,7 @@ impl Repository {
 
     /// Fetches any changes from the `origin` remote and performs a hard reset
     /// to the tip of the `origin/master` branch.
-    pub fn reset_head(&self) -> Result<(), PerformError> {
+    pub fn reset_head(&self) -> anyhow::Result<()> {
         let mut origin = self.repository.find_remote("origin")?;
         let original_head = self.head_oid()?;
         origin.fetch(
@@ -371,7 +383,7 @@ impl Repository {
     }
 
     /// Reset `HEAD` to a single commit with all the index contents, but no parent
-    pub fn squash_to_single_commit(&self, msg: &str) -> Result<(), PerformError> {
+    pub fn squash_to_single_commit(&self, msg: &str) -> anyhow::Result<()> {
         let tree = self.repository.find_commit(self.head_oid()?)?.tree()?;
         let sig = self.repository.signature()?;
 
@@ -393,7 +405,7 @@ impl Repository {
     ///
     /// This function also temporarily sets the `GIT_SSH_COMMAND` environment
     /// variable to ensure that `git push` commands are able to succeed.
-    pub fn run_command(&self, command: &mut Command) -> Result<(), PerformError> {
+    pub fn run_command(&self, command: &mut Command) -> anyhow::Result<()> {
         let checkout_path = self.checkout_path.path();
         command.current_dir(checkout_path);
 
@@ -409,8 +421,7 @@ impl Repository {
         let output = command.output()?;
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            let message = format!("Running git command failed with: {}", stderr);
-            return Err(message.into());
+            return Err(anyhow!("Running git command failed with: {}", stderr));
         }
 
         Ok(())

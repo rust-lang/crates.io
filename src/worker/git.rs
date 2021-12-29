@@ -23,7 +23,9 @@ pub fn add_crate(env: &Environment, krate: Crate) -> Result<(), PerformError> {
 
     let message: String = format!("Updating crate `{}#{}`", krate.name, krate.vers);
 
-    repo.commit_and_push(&message, &dst)
+    repo.commit_and_push(&message, &dst)?;
+
+    Ok(())
 }
 
 /// Yanks or unyanks a crate version. This requires finding the index
