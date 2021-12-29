@@ -128,9 +128,13 @@ impl TestApp {
     }
 
     /// Obtain a reference to the upstream repository ("the index")
+    pub fn upstream_index(&self) -> &UpstreamIndex {
+        assert_some!(self.0.index.as_ref())
+    }
+
+    /// Obtain a reference to the upstream repository ("the index")
     pub fn upstream_repository(&self) -> &git2::Repository {
-        let index = self.0.index.as_ref().unwrap();
-        &index.repository
+        &self.upstream_index().repository
     }
 
     /// Obtain a list of crates from the index HEAD
