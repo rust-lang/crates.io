@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use git2::Repository;
 use std::env;
 use std::fs;
@@ -21,6 +22,23 @@ impl UpstreamIndex {
 
     pub fn url() -> Url {
         Url::from_file_path(&bare()).unwrap()
+    }
+
+    pub fn create_empty_commit(&self) -> anyhow::Result<()> {
+        let repo = &self.repository;
+
+        let head = repo.head()?;
+        let target = head
+            .target()
+            .ok_or_else(|| anyhow!("Missing target for HEAD"))?;
+
+        let sig = repo.signature()?;
+        let parent = repo.find_commit(target)?;
+        let tree = repo.find_tree(parent.tree_id())?;
+
+        repo.commit(Some("HEAD"), &sig, &sig, "empty commit", &tree, &[&parent])?;
+
+        Ok(())
     }
 }
 
