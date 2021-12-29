@@ -132,11 +132,6 @@ impl TestApp {
         assert_some!(self.0.index.as_ref())
     }
 
-    /// Obtain a reference to the upstream repository ("the index")
-    pub fn upstream_repository(&self) -> &git2::Repository {
-        &self.upstream_index().repository
-    }
-
     /// Obtain a list of crates from the index HEAD
     pub fn crates_from_index_head(&self, crate_name: &str) -> Vec<cargo_registry::git::Crate> {
         self.upstream_index().crates_from_index_head(crate_name)
