@@ -98,9 +98,41 @@ pub struct Crate {
     pub deps: Vec<Dependency>,
     pub cksum: String,
     pub features: HashMap<String, Vec<String>>,
+    /// This field contains features with new, extended syntax. Specifically,
+    /// namespaced features (`dep:`) and weak dependencies (`pkg?/feat`).
+    ///
+    /// It is only populated if a feature uses the new syntax. Cargo merges it
+    /// on top of the `features` field when reading the entries.
+    ///
+    /// This is separated from `features` because versions older than 1.19
+    /// will fail to load due to not being able to parse the new syntax, even
+    /// with a `Cargo.lock` file.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub features2: Option<HashMap<String, Vec<String>>>,
     pub yanked: Option<bool>,
     #[serde(default)]
     pub links: Option<String>,
+    /// The schema version for this entry.
+    ///
+    /// If this is None, it defaults to version 1. Entries with unknown
+    /// versions are ignored by cargo starting with 1.51.
+    ///
+    /// Version `2` format adds the `features2` field.
+    ///
+    /// This provides a method to safely introduce changes to index entries
+    /// and allow older versions of cargo to ignore newer entries it doesn't
+    /// understand. This is honored as of 1.51, so unfortunately older
+    /// versions will ignore it, and potentially misinterpret version 2 and
+    /// newer entries.
+    ///
+    /// The intent is that versions older than 1.51 will work with a
+    /// pre-existing `Cargo.lock`, but they may not correctly process `cargo
+    /// update` or build a lock from scratch. In that case, cargo may
+    /// incorrectly select a new package that uses a new index format. A
+    /// workaround is to downgrade any packages that are incompatible with the
+    /// `--precise` flag of `cargo update`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub v: Option<u32>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

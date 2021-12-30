@@ -3,6 +3,7 @@
 use flate2::read::GzDecoder;
 use hex::ToHex;
 use sha2::{Digest, Sha256};
+use std::collections::HashMap;
 use std::io::Read;
 use std::sync::Arc;
 use swirl::Job;
@@ -213,15 +214,29 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
             .uploader()
             .upload_crate(&app, tarball, &krate, vers)?;
 
+        let (features, features2): (HashMap<_, _>, HashMap<_, _>) =
+            features.into_iter().partition(|(_k, vals)| {
+                !vals
+                    .iter()
+                    .any(|v| v.starts_with("dep:") || v.contains("?/"))
+            });
+        let (features2, v) = if features2.is_empty() {
+            (None, None)
+        } else {
+            (Some(features2), Some(2))
+        };
+
         // Register this crate in our local git repo.
         let git_crate = git::Crate {
             name: name.0,
             vers: vers.to_string(),
             cksum: hex_cksum,
             features,
+            features2,
             deps: git_deps,
             yanked: Some(false),
             links,
+            v,
         };
         worker::add_crate(git_crate).enqueue(&conn)?;
 

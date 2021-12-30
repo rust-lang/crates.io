@@ -297,12 +297,13 @@ impl Crate {
 
     /// Validates a whole feature string, `features = ["THIS", "ALL/THIS"]`.
     pub fn valid_feature(name: &str) -> bool {
-        let mut parts = name.split('/');
-        let name_part = parts.next_back(); // required
-        let prefix_part = parts.next_back(); // optional
-        parts.next().is_none()
-            && name_part.map_or(false, Crate::valid_feature_name)
-            && prefix_part.map_or(true, Crate::valid_feature_prefix)
+        match name.split_once('/') {
+            Some((dep, dep_feat)) => {
+                let dep = dep.strip_suffix('?').unwrap_or(dep);
+                Crate::valid_feature_prefix(dep) && Crate::valid_feature_name(dep_feat)
+            }
+            None => Crate::valid_feature_name(name.strip_prefix("dep:").unwrap_or(name)),
+        }
     }
 
     /// Return both the newest (most recently updated) and
@@ -498,6 +499,11 @@ mod tests {
         assert!(Crate::valid_feature("c++20"));
         assert!(Crate::valid_feature("krate/c++20"));
         assert!(!Crate::valid_feature("c++20/wow"));
+        assert!(Crate::valid_feature("foo?/bar"));
+        assert!(Crate::valid_feature("dep:foo"));
+        assert!(!Crate::valid_feature("dep:foo?/bar"));
+        assert!(!Crate::valid_feature("foo/?bar"));
+        assert!(!Crate::valid_feature("foo?bar"));
     }
 }
 
