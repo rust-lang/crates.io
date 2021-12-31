@@ -1,5 +1,4 @@
 import Controller from '@ember/controller';
-import { action } from '@ember/object';
 import { tracked } from '@glimmer/tracking';
 
 import { reads } from 'macro-decorators';
@@ -7,12 +6,10 @@ import { reads } from 'macro-decorators';
 import { pagination } from '../utils/pagination';
 
 export default class CratesController extends Controller {
-  queryParams = ['letter', 'page', 'per_page', 'sort'];
-  @tracked letter = null;
+  queryParams = ['page', 'per_page', 'sort'];
   @tracked page = '1';
   @tracked per_page = 50;
   @tracked sort = 'alpha';
-  alphabet = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'];
 
   @reads('model.meta.total') totalItems;
   @pagination() pagination;
@@ -29,9 +26,5 @@ export default class CratesController extends Controller {
     } else {
       return 'Alphabetical';
     }
-  }
-
-  @action handleSelection(event) {
-    this.set('letter', event.target.value);
   }
 }
