@@ -58,7 +58,7 @@ futures-channel = { version = "=0.3.19", default-features = false }
 futures-util = "=0.3.19"
 git2 = "=0.13.25"
 hex = "=0.4.3"
-http = "=0.2.5"
+http = "=0.2.6"
 hyper = { version = "=0.14.16", features = ["client", "http1"] }
 indexmap = { version = "=1.7.0", features = ["serde-1"] }
 tikv-jemallocator = { version = "=0.4.1", features = ['unprefixed_malloc_on_supported_platforms', 'profiling'] }
