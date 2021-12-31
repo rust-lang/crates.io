@@ -1,4 +1,5 @@
 use super::{MockAnonymousUser, MockCookieUser, MockTokenUser};
+use crate::git::UpstreamIndex;
 use crate::record;
 use crate::util::{chaosproxy::ChaosProxy, fresh_schema::FreshSchema};
 use cargo_registry::config;
@@ -10,20 +11,18 @@ use cargo_registry::{
 };
 use std::{rc::Rc, sync::Arc, time::Duration};
 
-use cargo_registry::git::{Repository as WorkerRepository, Repository};
+use cargo_registry::git::Repository as WorkerRepository;
 use diesel::PgConnection;
-use git2::Repository as UpstreamRepository;
 use reqwest::{blocking::Client, Proxy};
 use std::collections::HashSet;
 use swirl::Runner;
-use url::Url;
 
 struct TestAppInner {
     app: Arc<App>,
     // The bomb (if created) needs to be held in scope until the end of the test.
     _bomb: Option<record::Bomb>,
     middle: conduit_middleware::MiddlewareBuilder,
-    index: Option<UpstreamRepository>,
+    index: Option<UpstreamIndex>,
     runner: Option<Runner<Environment, DieselPool>>,
     db_chaosproxy: Option<Arc<ChaosProxy>>,
 
@@ -129,30 +128,15 @@ impl TestApp {
     }
 
     /// Obtain a reference to the upstream repository ("the index")
-    pub fn upstream_repository(&self) -> &UpstreamRepository {
-        self.0.index.as_ref().unwrap()
+    pub fn upstream_index(&self) -> &UpstreamIndex {
+        assert_some!(self.0.index.as_ref())
     }
 
     /// Obtain a list of crates from the index HEAD
     pub fn crates_from_index_head(&self, crate_name: &str) -> Vec<cargo_registry::git::Crate> {
-        let path = Repository::relative_index_file(crate_name);
-        let index = self.upstream_repository();
-        let tree = index.head().unwrap().peel_to_tree().unwrap();
-        let blob = tree
-            .get_path(&path)
+        self.upstream_index()
+            .crates_from_index_head(crate_name)
             .unwrap()
-            .to_object(index)
-            .unwrap()
-            .peel_to_blob()
-            .unwrap();
-        let content = blob.content();
-
-        // The index format consists of one JSON object per line
-        // It is not a JSON array
-        let lines = std::str::from_utf8(content).unwrap().lines();
-        lines
-            .map(|line| serde_json::from_str(line).unwrap())
-            .collect()
     }
 
     pub fn run_pending_background_jobs(&self) {
@@ -186,15 +170,13 @@ pub struct TestAppBuilder {
     config: config::Server,
     proxy: Option<String>,
     bomb: Option<record::Bomb>,
-    index: Option<UpstreamRepository>,
+    index: Option<UpstreamIndex>,
     build_job_runner: bool,
 }
 
 impl TestAppBuilder {
     /// Create a `TestApp` with an empty database
     pub fn empty(mut self) -> (TestApp, MockAnonymousUser) {
-        use crate::git;
-
         // Run each test inside a fresh database schema, deleted at the end of the test,
         // The schema will be cleared up once the app is dropped.
         let (db_chaosproxy, fresh_schema) = if !self.config.use_test_database_pool {
@@ -211,7 +193,7 @@ impl TestAppBuilder {
 
         let runner = if self.build_job_runner {
             let repository_config = RepositoryConfig {
-                index_location: Url::from_file_path(&git::bare()).unwrap(),
+                index_location: UpstreamIndex::url(),
                 credentials: Credentials::Missing,
             };
             let index = WorkerRepository::open(&repository_config).expect("Could not clone index");
@@ -286,12 +268,7 @@ impl TestAppBuilder {
     }
 
     pub fn with_git_index(mut self) -> Self {
-        use crate::git;
-
-        git::init();
-
-        let thread_local_path = git::bare();
-        self.index = Some(UpstreamRepository::open_bare(thread_local_path).unwrap());
+        self.index = Some(UpstreamIndex::new().unwrap());
         self
     }
 

@@ -564,14 +564,7 @@ fn new_krate_git_upload_appends() {
 fn new_krate_git_upload_with_conflicts() {
     let (app, _, _, token) = TestApp::full().with_token();
 
-    let index = app.upstream_repository();
-    let target = index.head().unwrap().target().unwrap();
-    let sig = index.signature().unwrap();
-    let parent = index.find_commit(target).unwrap();
-    let tree = index.find_tree(parent.tree_id()).unwrap();
-    index
-        .commit(Some("HEAD"), &sig, &sig, "empty commit", &tree, &[&parent])
-        .unwrap();
+    app.upstream_index().create_empty_commit().unwrap();
 
     let crate_to_publish = PublishBuilder::new("foo_conflicts");
     token.enqueue_publish(crate_to_publish).good();
