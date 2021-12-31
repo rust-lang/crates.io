@@ -1,10 +1,14 @@
-:root {
+:root, [data-theme="classic"] {
     --footer-bg-color: var(--green800);
     --footer-header-color: var(--yellow500);
     --footer-header-shadow-color: var(--green900);
     --footer-link-color: #fff;
     --footer-link-hover-color: var(--yellow500);
     --footer-link-hover-shadow-color: var(--green900);
+}
+
+[data-theme="new-design"] {
+    --footer-bg-color: var(--grey900);
 }
 
 .footer {

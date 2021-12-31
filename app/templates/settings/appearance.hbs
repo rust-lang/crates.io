@@ -1,0 +1,33 @@
+{{page-title 'Settings'}}
+
+<PageHeader @title="Account Settings" @icon="gear"/>
+
+<SettingsPage>
+  <h2>Appearance</h2>
+
+  <form local-class="themes-form">
+    <label local-class="theme-label">
+      <ThemePreview @theme="classic" local-class="theme-preview" />
+
+      <RadioButton
+        @groupValue={{this.theme}}
+        @value="classic"
+        @onChange={{this.setTheme}}
+      />
+
+      Classic
+    </label>
+
+    <label local-class="theme-label">
+      <ThemePreview @theme="new-design" local-class="theme-preview" />
+
+      <RadioButton
+        @groupValue={{this.theme}}
+        @value="new-design"
+        @onChange={{this.setTheme}}
+      />
+
+      Purple
+    </label>
+  </form>
+</SettingsPage>

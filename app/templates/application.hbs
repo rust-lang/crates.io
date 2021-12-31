@@ -1,7 +1,7 @@
 <HeadLayout />
 
 {{page-title "crates.io: Rust Package Registry" separator=' - ' prepend=true}}
-{{set-theme (if this.design.useNewDesign "new-design")}}
+{{set-theme this.design.theme}}
 
 <ProgressBar/>
 <NotificationContainer @position="top-right"/>
@@ -15,9 +15,3 @@
 </main>
 
 <Footer/>
-
-{{#if this.design.showToggleButton}}
-  <button type="button" local-class="toggle-design-button" {{on "click" this.design.toggle}}>
-    Toggle Design
-  </button>
-{{/if}}
