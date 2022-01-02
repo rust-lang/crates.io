@@ -32,6 +32,47 @@ description = """
 Tools for making your creations usable by as many people as possible. \
 """
 
+[aerospace]
+name = "Aerospace"
+description = """
+Crates for aeronautics (within the atmosphere) and astronautics \
+(in outer space) implications.\
+"""
+
+[aerospace.categories.drones]
+name = "Drones"
+description = """
+Crates related to Multicopters, Fixed wing, VTOL (Vertical Takeoff and Landing) \
+and Airships/Balloons.\
+"""
+
+[aerospace.categories.protocols]
+name = "Aerospace protocols"
+description = """
+Crates of protocol implementations for aerospace implications.\
+"""
+
+[aerospace.categories.simulation]
+name = "Aerospace simulations"
+description = """
+Crates related to any kind of simulations used in aerospace - fluids, \
+aerodynamics, etc.\
+"""
+
+[aerospace.categories.space-protocols]
+name = "Space protocols"
+description = """
+Protocol implementations for implicatoins in space like CCSDS.\
+"""
+
+[aerospace.categories.unmanned-aerial-vehicles]
+name = "Unmanned aerial vehicles"
+description = """
+Crates related to Unmanned aerial vehicles like Multicopters, Fixed wing, \
+VTOL (Vertical Takeoff and Landing), Airships/Balloons, Rovers, Boats, \
+Submersibles.\
+"""
+
 [algorithms]
 name = "Algorithms"
 description = """
