@@ -84,6 +84,8 @@ module.exports = {
       rules: {
         // disabled because of our nested `prepare()` functions
         'unicorn/consistent-function-scoping': 'off',
+        // disabled because of false positives with `assert.dom(…).hasAttribute(…)`
+        'unicorn/prefer-dom-node-dataset': 'off',
       },
     },
 
