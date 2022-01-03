@@ -245,18 +245,23 @@ static MARKDOWN_EXTENSIONS: [&str; 7] =
 /// use cargo_registry_markdown::text_to_html;
 ///
 /// let text = "[Rust](https://rust-lang.org/) is an awesome *systems programming* language!";
-/// let rendered = text_to_html(text, "README.md", None);
+/// let rendered = text_to_html(text, "README.md", None, None);
 /// assert_eq!(rendered, "<p><a href=\"https://rust-lang.org/\" rel=\"nofollow noopener noreferrer\">Rust</a> is an awesome <em>systems programming</em> language!</p>\n");
 /// ```
-pub fn text_to_html(text: &str, path: &str, base_url: Option<&str>) -> String {
-    let path = Path::new(path);
-    let base_dir = path.parent().and_then(|p| p.to_str()).unwrap_or("");
+pub fn text_to_html(
+    text: &str,
+    readme_path_in_pkg: &str,
+    base_url: Option<&str>,
+    pkg_path_in_vcs: Option<&str>,
+) -> String {
+    let path_in_vcs = Path::new(pkg_path_in_vcs.unwrap_or("")).join(readme_path_in_pkg);
+    let base_dir = path_in_vcs.parent().and_then(|p| p.to_str()).unwrap_or("");
 
-    if path.extension().is_none() {
+    if path_in_vcs.extension().is_none() {
         return markdown_to_html(text, base_url, base_dir);
     }
 
-    if let Some(ext) = path.extension().and_then(|ext| ext.to_str()) {
+    if let Some(ext) = path_in_vcs.extension().and_then(|ext| ext.to_str()) {
         if MARKDOWN_EXTENSIONS.contains(&ext.to_lowercase().as_str()) {
             return markdown_to_html(text, base_url, base_dir);
         }
@@ -477,22 +482,30 @@ mod tests {
             "s1/s2/readme.md",
         ] {
             assert_eq!(
-                text_to_html("*lobster*", f, None),
+                text_to_html("*lobster*", f, None, None),
                 "<p><em>lobster</em></p>\n"
             );
         }
 
         assert_eq!(
-            text_to_html("*[lobster](docs/lobster)*", "readme.md", Some("https://github.com/rust-lang/test")),
+            text_to_html("*[lobster](docs/lobster)*", "readme.md", Some("https://github.com/rust-lang/test"), None),
             "<p><em><a href=\"https://github.com/rust-lang/test/blob/HEAD/docs/lobster\" rel=\"nofollow noopener noreferrer\">lobster</a></em></p>\n"
         );
         assert_eq!(
-            text_to_html("*[lobster](docs/lobster)*", "s/readme.md", Some("https://github.com/rust-lang/test")),
+            text_to_html("*[lobster](docs/lobster)*", "s/readme.md", Some("https://github.com/rust-lang/test"), None),
             "<p><em><a href=\"https://github.com/rust-lang/test/blob/HEAD/s/docs/lobster\" rel=\"nofollow noopener noreferrer\">lobster</a></em></p>\n"
         );
         assert_eq!(
-            text_to_html("*[lobster](docs/lobster)*", "s1/s2/readme.md", Some("https://github.com/rust-lang/test")),
+            text_to_html("*[lobster](docs/lobster)*", "s1/s2/readme.md", Some("https://github.com/rust-lang/test"), None),
             "<p><em><a href=\"https://github.com/rust-lang/test/blob/HEAD/s1/s2/docs/lobster\" rel=\"nofollow noopener noreferrer\">lobster</a></em></p>\n"
+        );
+        assert_eq!(
+            text_to_html("*[lobster](docs/lobster)*", "s1/s2/readme.md", Some("https://github.com/rust-lang/test"), Some("path/in/vcs/")),
+            "<p><em><a href=\"https://github.com/rust-lang/test/blob/HEAD/path/in/vcs/s1/s2/docs/lobster\" rel=\"nofollow noopener noreferrer\">lobster</a></em></p>\n"
+        );
+        assert_eq!(
+            text_to_html("*[lobster](docs/lobster)*", "s1/s2/readme.md", Some("https://github.com/rust-lang/test"), Some("path/in/vcs")),
+            "<p><em><a href=\"https://github.com/rust-lang/test/blob/HEAD/path/in/vcs/s1/s2/docs/lobster\" rel=\"nofollow noopener noreferrer\">lobster</a></em></p>\n"
         );
     }
 
@@ -500,7 +513,7 @@ mod tests {
     fn text_to_html_renders_other_things() {
         for f in &["readme.exe", "readem.org", "blah.adoc"] {
             assert_eq!(
-                text_to_html("<script>lobster</script>\n\nis my friend\n", f, None),
+                text_to_html("<script>lobster</script>\n\nis my friend\n", f, None, None),
                 "&lt;script&gt;lobster&lt;/script&gt;<br>\n<br>\nis my friend<br>\n"
             );
         }

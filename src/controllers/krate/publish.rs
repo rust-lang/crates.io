@@ -5,6 +5,7 @@ use hex::ToHex;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::io::Read;
+use std::path::Path;
 use std::sync::Arc;
 use swirl::Job;
 
@@ -18,7 +19,7 @@ use crate::worker;
 
 use crate::schema::*;
 use crate::util::errors::{cargo_err, AppResult};
-use crate::util::{read_fill, read_le_u32, LimitErrorReader, Maximums};
+use crate::util::{read_fill, read_le_u32, CargoVcsInfo, LimitErrorReader, Maximums};
 use crate::views::{
     EncodableCrate, EncodableCrateDependency, EncodableCrateUpload, GoodCrate, PublishWarnings,
 };
@@ -195,7 +196,8 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
         LimitErrorReader::new(req.body(), maximums.max_upload_size).read_to_end(&mut tarball)?;
         let hex_cksum: String = Sha256::digest(&tarball).encode_hex();
         let pkg_name = format!("{}-{}", krate.name, vers);
-        verify_tarball(&pkg_name, &tarball, maximums.max_unpack_size)?;
+        let cargo_vcs_info = verify_tarball(&pkg_name, &tarball, maximums.max_unpack_size)?;
+        let pkg_path_in_vcs = cargo_vcs_info.map(|info| info.path_in_vcs);
 
         if let Some(readme) = new_crate.readme {
             worker::render_and_upload_readme(
@@ -205,6 +207,7 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
                     .readme_file
                     .unwrap_or_else(|| String::from("README.md")),
                 repo,
+                pkg_path_in_vcs,
             )
             .enqueue(&conn)?;
         }
@@ -379,7 +382,11 @@ pub fn add_dependencies(
     Ok(git_deps)
 }
 
-fn verify_tarball(pkg_name: &str, tarball: &[u8], max_unpack: u64) -> AppResult<()> {
+fn verify_tarball(
+    pkg_name: &str,
+    tarball: &[u8],
+    max_unpack: u64,
+) -> AppResult<Option<CargoVcsInfo>> {
     // All our data is currently encoded with gzip
     let decoder = GzDecoder::new(tarball);
 
@@ -389,8 +396,12 @@ fn verify_tarball(pkg_name: &str, tarball: &[u8], max_unpack: u64) -> AppResult<
 
     // Use this I/O object now to take a peek inside
     let mut archive = tar::Archive::new(decoder);
+
+    let vcs_info_path = Path::new(&pkg_name).join(".cargo_vcs_info.json");
+    let mut vcs_info = None;
+
     for entry in archive.entries()? {
-        let entry = entry.map_err(|err| {
+        let mut entry = entry.map_err(|err| {
             err.chain(cargo_err(
                 "uploaded tarball is malformed or too large when decompressed",
             ))
@@ -401,8 +412,14 @@ fn verify_tarball(pkg_name: &str, tarball: &[u8], max_unpack: u64) -> AppResult<
         // upload a tarball that contains both `foo-0.1.0/` source code as well
         // as `bar-0.1.0/` source code, and this could overwrite other crates in
         // the registry!
-        if !entry.path()?.starts_with(&pkg_name) {
+        let entry_path = entry.path()?;
+        if !entry_path.starts_with(&pkg_name) {
             return Err(cargo_err("invalid tarball uploaded"));
+        }
+        if entry_path == vcs_info_path {
+            let mut contents = String::new();
+            entry.read_to_string(&mut contents)?;
+            vcs_info = CargoVcsInfo::from_contents(&contents).ok();
         }
 
         // Historical versions of the `tar` crate which Cargo uses internally
@@ -415,7 +432,7 @@ fn verify_tarball(pkg_name: &str, tarball: &[u8], max_unpack: u64) -> AppResult<
             return Err(cargo_err("invalid tarball uploaded"));
         }
     }
-    Ok(())
+    Ok(vcs_info)
 }
 
 #[cfg(test)]
@@ -435,14 +452,57 @@ mod tests {
     #[test]
     fn verify_tarball_test() {
         let mut pkg = tar::Builder::new(vec![]);
-        add_file(&mut pkg, "foo-0.0.1/.cargo_vcs_info.json", br#"{}"#);
+        add_file(&mut pkg, "foo-0.0.1/Cargo.toml", b"");
         let mut serialized_archive = vec![];
         GzEncoder::new(pkg.into_inner().unwrap().as_slice(), Default::default())
             .read_to_end(&mut serialized_archive)
             .unwrap();
 
         let limit = 512 * 1024 * 1024;
-        assert_ok!(verify_tarball("foo-0.0.1", &serialized_archive, limit));
+        assert_eq!(
+            verify_tarball("foo-0.0.1", &serialized_archive, limit).unwrap(),
+            None
+        );
         assert_err!(verify_tarball("bar-0.0.1", &serialized_archive, limit));
+    }
+
+    #[test]
+    fn verify_tarball_test_incomplete_vcs_info() {
+        let mut pkg = tar::Builder::new(vec![]);
+        add_file(&mut pkg, "foo-0.0.1/Cargo.toml", b"");
+        add_file(
+            &mut pkg,
+            "foo-0.0.1/.cargo_vcs_info.json",
+            br#"{"unknown": "field"}"#,
+        );
+        let mut serialized_archive = vec![];
+        GzEncoder::new(pkg.into_inner().unwrap().as_slice(), Default::default())
+            .read_to_end(&mut serialized_archive)
+            .unwrap();
+        let limit = 512 * 1024 * 1024;
+        let vcs_info = verify_tarball("foo-0.0.1", &serialized_archive, limit)
+            .unwrap()
+            .unwrap();
+        assert_eq!(vcs_info.path_in_vcs, "");
+    }
+
+    #[test]
+    fn verify_tarball_test_vcs_info() {
+        let mut pkg = tar::Builder::new(vec![]);
+        add_file(&mut pkg, "foo-0.0.1/Cargo.toml", b"");
+        add_file(
+            &mut pkg,
+            "foo-0.0.1/.cargo_vcs_info.json",
+            br#"{"path_in_vcs": "path/in/vcs"}"#,
+        );
+        let mut serialized_archive = vec![];
+        GzEncoder::new(pkg.into_inner().unwrap().as_slice(), Default::default())
+            .read_to_end(&mut serialized_archive)
+            .unwrap();
+        let limit = 512 * 1024 * 1024;
+        let vcs_info = verify_tarball("foo-0.0.1", &serialized_archive, limit)
+            .unwrap()
+            .unwrap();
+        assert_eq!(vcs_info.path_in_vcs, "path/in/vcs");
     }
 }

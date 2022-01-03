@@ -205,10 +205,15 @@ fn render_pkg_readme<R: Read>(mut archive: Archive<R>, pkg_name: &str) -> anyhow
         let contents = find_file_by_path(&mut entries, Path::new(&path))
             .with_context(|| format!("Failed to read {} file", readme_path))?;
 
+        // pkg_path_in_vcs Unsupported from admin::render_readmes. See #4095
+        // Would need access to cargo_vcs_info
+        let pkg_path_in_vcs = None;
+
         text_to_html(
             &contents,
             &readme_path,
             manifest.package.repository.as_deref(),
+            pkg_path_in_vcs,
         )
     };
     return Ok(rendered);
