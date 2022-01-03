@@ -64,6 +64,7 @@
     "@glimmer/tracking": "1.0.4",
     "@percy/cli": "1.0.0-beta.71",
     "@percy/ember": "3.0.0",
+    "@sinonjs/fake-timers": "8.1.0",
     "@zestia/ember-auto-focus": "4.2.0",
     "broccoli-asset-rev": "3.0.0",
     "ember-a11y-testing": "5.0.0",
@@ -127,7 +128,6 @@
     "qunit": "2.17.2",
     "qunit-console-grouper": "0.3.0",
     "qunit-dom": "2.0.0",
-    "timekeeper": "2.2.0",
     "webpack": "5.65.0"
   },
   "resolutions": {

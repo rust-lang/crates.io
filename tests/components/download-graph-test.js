@@ -8,16 +8,17 @@ import { hbs } from 'ember-cli-htmlbars';
 import { dropTask } from 'ember-concurrency';
 import window from 'ember-window-mock';
 import { setupWindowMock } from 'ember-window-mock/test-support';
-import timekeeper from 'timekeeper';
 
 import { setupRenderingTest } from 'cargo/tests/helpers';
 
 import { toChartData } from '../../components/download-graph';
 import ChartJsLoader from '../../services/chartjs';
+import { setupFakeTimers } from '../helpers/fake-timers';
 
 module('Component | DownloadGraph', function (hooks) {
   setupRenderingTest(hooks);
   setupWindowMock(hooks);
+  setupFakeTimers(hooks, '2020-12-30T12:34:56Z');
 
   test('happy path', async function (assert) {
     this.data = exampleData();
@@ -81,8 +82,6 @@ module('Component | DownloadGraph', function (hooks) {
 
   module('toChartData()', function () {
     test('converts raw download data to Chart.js format', function (assert) {
-      timekeeper.travel(new Date('2020-12-30T12:34:56Z'));
-
       let data = exampleData();
       let result = toChartData(data);
       assert.matchJson(result, {
