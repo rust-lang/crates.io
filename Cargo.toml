@@ -34,7 +34,7 @@ base64 = "=0.13.0"
 cargo-registry-markdown = { path = "cargo-registry-markdown" }
 cargo-registry-s3 = { path = "cargo-registry-s3" }
 chrono = { version = "=0.4.19", features = ["serde"] }
-clap = { version = "=3.0.0", features = ["derive", "unicode"] }
+clap = { version = "=3.0.1", features = ["derive", "unicode"] }
 
 conduit = "=0.10.0"
 conduit-conditional-get = "=0.10.0"
