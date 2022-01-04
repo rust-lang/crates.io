@@ -9,7 +9,7 @@ pub use self::database_pools::DatabasePools;
 use std::collections::HashSet;
 use std::time::Duration;
 
-const DEFAULT_VERSION_ID_CACHE_SIZE: usize = 10_000;
+const DEFAULT_VERSION_ID_CACHE_SIZE: u64 = 10_000;
 const DEFAULT_VERSION_ID_CACHE_TTL: u64 = 5 * 60; // 5 minutes
 
 pub struct Server {
@@ -34,7 +34,7 @@ pub struct Server {
     pub instance_metrics_log_every_seconds: Option<u64>,
     pub force_unconditional_redirects: bool,
     pub blocked_routes: HashSet<String>,
-    pub version_id_cache_size: usize,
+    pub version_id_cache_size: u64,
     pub version_id_cache_ttl: Duration,
 }
 
