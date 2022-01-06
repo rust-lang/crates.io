@@ -284,7 +284,7 @@ dependencies = [
  "sentry-conduit",
  "serde",
  "serde_json",
- "sha2 0.10.0",
+ "sha2 0.10.1",
  "spdx",
  "swirl",
  "tar",
@@ -581,7 +581,7 @@ dependencies = [
  "hkdf",
  "hmac",
  "rand 0.8.4",
- "sha2 0.10.0",
+ "sha2 0.10.1",
  "subtle",
  "time 0.3.5",
  "version_check",
@@ -2650,9 +2650,9 @@ dependencies = [
 
 [[package]]
 name = "sha2"
-version = "0.10.0"
+version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "900d964dd36bb15bcf2f2b35694c072feab74969a54f2bbeec7a2d725d2bdcb6"
+checksum = "99c3bd8169c58782adad9290a9af5939994036b76187f7b4f0e6de91dbbfc0ec"
 dependencies = [
  "cfg-if 1.0.0",
  "cpufeatures",
