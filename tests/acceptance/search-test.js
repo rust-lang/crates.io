@@ -207,7 +207,7 @@ module('Acceptance | search', function (hooks) {
       return { crates: [], meta: { total: 0 } };
     });
 
-    await visit('/search?q=rust keywords:fire,ball&page=3&per_page=15&sort=new');
+    await visit('/search?q=rust keyword:fire keyword:ball&page=3&per_page=15&sort=new');
     assert.verifySteps(['/api/v1/crates']);
   });
 

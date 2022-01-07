@@ -1,9 +1,8 @@
 const CATEGORY_PREFIX = 'category:';
 const KEYWORD_PREFIX = 'keyword:';
-const KEYWORDS_PREFIX = 'keywords:';
 
 /**
- * Process a search query string and extract filters like `keywords:`.
+ * Process a search query string and extract filters like `keyword:`.
  *
  * @param {string} query
  * @return {{ q: string, keyword?: string, all_keywords?: string, category?: string }}
@@ -25,12 +24,6 @@ export function processSearchQuery(query) {
       if (value) {
         keywords.push(value);
       }
-    } else if (token.startsWith(KEYWORDS_PREFIX)) {
-      keywords = token
-        .slice(KEYWORDS_PREFIX.length)
-        .split(',')
-        .map(it => it.trim())
-        .filter(Boolean);
     } else {
       queries.push(token);
     }
