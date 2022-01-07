@@ -7344,10 +7344,10 @@ eslint-plugin-ember@10.5.8:
     requireindex "^1.2.0"
     snake-case "^3.0.3"
 
-eslint-plugin-import-helpers@1.2.0:
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/eslint-plugin-import-helpers/-/eslint-plugin-import-helpers-1.2.0.tgz#36c6b19ee1470237aff3bb5a10c19fc1f325dc13"
-  integrity sha512-xlGTXwavBcvILcJJIuFZkXE6eMr86BgpcWTzUD0HepvYiTJXtN2enEsJT6SnuXONWflIgw24p9xWA1P/ZY2Nyw==
+eslint-plugin-import-helpers@1.2.1:
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-import-helpers/-/eslint-plugin-import-helpers-1.2.1.tgz#22c7ac66c964e8257b2a6fb4aff8a51b35cbdc6d"
+  integrity sha512-BSqLlCnyX4tWGlvPUTpBgUoaFiWxXSztpk9SozZVW4TZU1ygZuF0Lrfn9CO5xx1XT+PVAR9yroP9JPRyB4rAjQ==
 
 eslint-plugin-prettier@4.0.0:
   version "4.0.0"
