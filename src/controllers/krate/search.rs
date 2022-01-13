@@ -104,7 +104,7 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
                     .filter(
                         categories::slug
                             .eq(cat)
-                            .or(categories::slug.like(format!("{}::%", cat))),
+                            .or(categories::slug.like(format!("{cat}::%"))),
                     ),
             ),
         );

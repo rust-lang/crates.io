@@ -54,8 +54,7 @@ fn check_failing_background_jobs(conn: &PgConnection) -> Result<()> {
         on_call::Event::Trigger {
             incident_key: Some(EVENT_KEY.into()),
             description: format!(
-                "{} jobs have been in the queue for more than {} minutes",
-                stalled_job_count, max_job_time
+                "{stalled_job_count} jobs have been in the queue for more than {max_job_time} minutes"
             ),
         }
     } else {
@@ -95,7 +94,7 @@ fn check_stalled_update_downloads(conn: &PgConnection) -> Result<()> {
         if minutes > max_job_time {
             return log_and_trigger_event(on_call::Event::Trigger {
                 incident_key: Some(EVENT_KEY.into()),
-                description: format!("update_downloads job running for {} minutes", minutes),
+                description: format!("update_downloads job running for {minutes} minutes"),
             });
         }
     };
@@ -130,13 +129,13 @@ fn check_spam_attack(conn: &PgConnection) -> Result<()> {
         .optional()?;
 
     if let Some(bad_crate) = bad_crate {
-        event_description = Some(format!("Crate named {} published", bad_crate));
+        event_description = Some(format!("Crate named {bad_crate} published"));
     }
 
     let event = if let Some(event_description) = event_description {
         on_call::Event::Trigger {
             incident_key: Some(EVENT_KEY.into()),
-            description: format!("{}, possible spam attack underway", event_description,),
+            description: format!("{event_description}, possible spam attack underway"),
         }
     } else {
         on_call::Event::Resolve {
@@ -153,11 +152,11 @@ fn log_and_trigger_event(event: on_call::Event) -> Result<()> {
     match event {
         on_call::Event::Trigger {
             ref description, ..
-        } => println!("Paging on-call: {}", description),
+        } => println!("Paging on-call: {description}"),
         on_call::Event::Resolve {
             description: Some(ref description),
             ..
-        } => println!("{}", description),
+        } => println!("{description}"),
         _ => {} // noop
     }
     event.send()

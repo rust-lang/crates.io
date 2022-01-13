@@ -71,7 +71,7 @@ fn disallow_api_token_auth_for_get_crate_following_status() {
 
     // Token auth on GET for get following status is disallowed
     token
-        .get(&format!("/api/v1/crates/{}/following", a_crate))
+        .get(&format!("/api/v1/crates/{a_crate}/following"))
         .assert_forbidden();
 }
 
@@ -95,7 +95,7 @@ fn getting_followed_crates_allows_api_token_auth() {
         }
 
         // Token auth on GET for get following status is disallowed
-        user.get::<F>(&format!("/api/v1/crates/{}/following", crate_name))
+        user.get::<F>(&format!("/api/v1/crates/{crate_name}/following"))
             .good()
             .following
     };
@@ -103,7 +103,7 @@ fn getting_followed_crates_allows_api_token_auth() {
     let follow = |crate_name: &str| {
         assert!(
             token
-                .put::<OkBool>(&format!("/api/v1/crates/{}/follow", crate_name), b"")
+                .put::<OkBool>(&format!("/api/v1/crates/{crate_name}/follow"), b"")
                 .good()
                 .ok
         );

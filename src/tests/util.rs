@@ -141,7 +141,7 @@ pub trait RequestHelper {
 
     /// Search for crates owned by the specified user.
     fn search_by_user_id(&self, id: i32) -> CrateList {
-        self.search(&format!("user_id={}", id))
+        self.search(&format!("user_id={id}"))
     }
 
     /// Enqueue a crate for publishing
@@ -158,24 +158,24 @@ pub trait RequestHelper {
 
     /// Request the JSON used for a crate's page
     fn show_crate(&self, krate_name: &str) -> CrateResponse {
-        let url = format!("/api/v1/crates/{}", krate_name);
+        let url = format!("/api/v1/crates/{krate_name}");
         self.get(&url).good()
     }
 
     /// Request the JSON used to list a crate's owners
     fn show_crate_owners(&self, krate_name: &str) -> OwnersResponse {
-        let url = format!("/api/v1/crates/{}/owners", krate_name);
+        let url = format!("/api/v1/crates/{krate_name}/owners");
         self.get(&url).good()
     }
 
     /// Request the JSON used for a crate version's page
     fn show_version(&self, krate_name: &str, version: &str) -> VersionResponse {
-        let url = format!("/api/v1/crates/{}/{}", krate_name, version);
+        let url = format!("/api/v1/crates/{krate_name}/{version}");
         self.get(&url).good()
     }
 
     fn show_category(&self, category_name: &str) -> CategoryResponse {
-        let url = format!("/api/v1/categories/{}", category_name);
+        let url = format!("/api/v1/categories/{category_name}");
         self.get(&url).good()
     }
 
@@ -310,7 +310,7 @@ impl MockTokenUser {
     where
         F: Fn(&MockTokenUser, &str, &[u8]) -> Response<OkBool>,
     {
-        let url = format!("/api/v1/crates/{}/owners", krate_name);
+        let url = format!("/api/v1/crates/{krate_name}/owners");
         let body = json!({ "owners": owners }).to_string();
         method(self, &url, body.as_bytes())
     }

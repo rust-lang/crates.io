@@ -42,7 +42,7 @@ pub fn new(req: &mut dyn RequestExt) -> EndpointResult {
         .ok_or_else(|| bad_request("missing header: Content-Length"))?;
 
     if length > max_size {
-        return Err(bad_request(&format!("max content length is: {}", max_size)));
+        return Err(bad_request(&format!("max content length is: {max_size}")));
     }
 
     let mut json = vec![0; length as usize];
@@ -52,7 +52,7 @@ pub fn new(req: &mut dyn RequestExt) -> EndpointResult {
         String::from_utf8(json).map_err(|_| bad_request(&"json body was not valid utf-8"))?;
 
     let new: NewApiTokenRequest = json::from_str(&json)
-        .map_err(|e| bad_request(&format!("invalid new token request: {:?}", e)))?;
+        .map_err(|e| bad_request(&format!("invalid new token request: {e:?}")))?;
 
     let name = &new.api_token.name;
     if name.is_empty() {
@@ -88,7 +88,7 @@ pub fn new(req: &mut dyn RequestExt) -> EndpointResult {
 pub fn revoke(req: &mut dyn RequestExt) -> EndpointResult {
     let id = req.params()["id"]
         .parse::<i32>()
-        .map_err(|e| bad_request(&format!("invalid token id: {:?}", e)))?;
+        .map_err(|e| bad_request(&format!("invalid token id: {e:?}")))?;
 
     let authenticated_user = req.authenticate()?;
     let conn = req.db_conn()?;

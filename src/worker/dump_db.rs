@@ -138,7 +138,7 @@ pub fn run_psql(script: &Path, database_url: &str) -> Result<(), PerformError> {
     let output = psql.wait_with_output()?;
     let stderr = String::from_utf8_lossy(&output.stderr);
     if stderr.contains("ERROR") {
-        return Err(format!("Error while executing psql: {}", stderr).into());
+        return Err(format!("Error while executing psql: {stderr}").into());
     }
     if !output.status.success() {
         return Err("psql did not finish successfully.".into());

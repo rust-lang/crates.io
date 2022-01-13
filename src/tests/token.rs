@@ -151,7 +151,7 @@ fn create_token_exceeded_tokens_per_user() {
     let id = user.as_model().id;
     app.db(|conn| {
         for i in 0..1000 {
-            assert_ok!(ApiToken::insert(conn, id, &format!("token {}", i)));
+            assert_ok!(ApiToken::insert(conn, id, &format!("token {i}")));
         }
     });
     let response = user.put::<()>(URL, NEW_BAR);

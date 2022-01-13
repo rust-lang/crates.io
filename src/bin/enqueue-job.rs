@@ -11,7 +11,7 @@ fn main() -> Result<()> {
     let mut args = std::env::args().skip(1);
 
     let job = args.next().unwrap_or_default();
-    println!("Enqueueing background job: {}", job);
+    println!("Enqueueing background job: {job}");
 
     match &*job {
         "update_downloads" => {

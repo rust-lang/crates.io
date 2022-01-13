@@ -110,7 +110,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Do not change this line! Removing the line or changing its contents in any way will break
     // the test suite :)
-    println!("Listening at http://{}", addr);
+    println!("Listening at http://{addr}");
 
     // Creating this file tells heroku to tell nginx that the application is ready
     // to receive traffic.
@@ -120,7 +120,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         } else {
             "/tmp/app-initialized"
         };
-        println!("Writing to {}", path);
+        println!("Writing to {path}");
         File::create(path).unwrap();
 
         // Launch nginx via the Heroku nginx buildpack
@@ -137,7 +137,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Persisting remaining downloads counters");
     match app.downloads_counter.persist_all_shards(&app) {
         Ok(stats) => stats.log(),
-        Err(err) => println!("downloads_counter error: {}", err),
+        Err(err) => println!("downloads_counter error: {err}"),
     }
 
     println!("Server has gracefully shutdown!");
@@ -154,7 +154,7 @@ fn downloads_counter_thread(app: Arc<App>) {
 
         match app.downloads_counter.persist_next_shard(&app) {
             Ok(stats) => stats.log(),
-            Err(err) => println!("downloads_counter error: {}", err),
+            Err(err) => println!("downloads_counter error: {err}"),
         }
     });
 }
@@ -169,7 +169,7 @@ fn log_instance_metrics_thread(app: Arc<App>) {
 
     std::thread::spawn(move || loop {
         if let Err(err) = log_instance_metrics_inner(&app) {
-            eprintln!("log_instance_metrics error: {}", err);
+            eprintln!("log_instance_metrics error: {err}");
         }
         std::thread::sleep(interval);
     });

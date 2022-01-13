@@ -59,7 +59,7 @@ impl MockCookieUser {
             }
         });
 
-        let url = format!("/api/v1/me/crate_owner_invitations/{}", krate_id);
+        let url = format!("/api/v1/me/crate_owner_invitations/{krate_id}");
         self.put(&url, body.to_string().as_bytes())
     }
 
@@ -97,7 +97,7 @@ impl MockCookieUser {
             crate_owner_invitation: InvitationResponse,
         }
 
-        let url = format!("/api/v1/me/crate_owner_invitations/{}", krate_id);
+        let url = format!("/api/v1/me/crate_owner_invitations/{krate_id}");
         let crate_owner_invite: CrateOwnerInvitation =
             self.put(&url, body.to_string().as_bytes()).good();
         assert!(!crate_owner_invite.crate_owner_invitation.accepted);
@@ -125,7 +125,7 @@ impl MockAnonymousUser {
         &self,
         token: &str,
     ) -> Response<T> {
-        let url = format!("/api/v1/me/crate_owner_invitations/accept/{}", token);
+        let url = format!("/api/v1/me/crate_owner_invitations/accept/{token}");
         self.put(&url, &[])
     }
 }

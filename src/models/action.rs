@@ -44,7 +44,7 @@ impl FromSql<Integer, Pg> for VersionAction {
             0 => Ok(VersionAction::Publish),
             1 => Ok(VersionAction::Yank),
             2 => Ok(VersionAction::Unyank),
-            n => Err(format!("unknown version action: {}", n).into()),
+            n => Err(format!("unknown version action: {n}").into()),
         }
     }
 }

@@ -85,7 +85,7 @@ impl Bucket {
             "{}.s3{}.amazonaws.com",
             self.name,
             match self.region {
-                Some(ref r) if !r.is_empty() => format!("-{}", r),
+                Some(ref r) if !r.is_empty() => format!("-{r}"),
                 Some(_) => String::new(),
                 None => String::new(),
             }
@@ -95,13 +95,9 @@ impl Bucket {
     fn auth(&self, verb: &str, date: &str, path: &str, md5: &str, content_type: &str) -> String {
         let string = format!(
             "{verb}\n{md5}\n{ty}\n{date}\n{headers}/{name}/{path}",
-            verb = verb,
-            md5 = md5,
             ty = content_type,
-            date = date,
             headers = "",
             name = self.name,
-            path = path
         );
         let signature = {
             let key = self.secret_key.as_bytes();

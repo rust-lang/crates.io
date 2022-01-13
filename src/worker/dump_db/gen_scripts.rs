@@ -31,7 +31,7 @@ impl TableConfig {
             .columns
             .iter()
             .filter(|&(_, &vis)| vis == ColumnVisibility::Public)
-            .map(|(col, _)| format!("\"{}\"", col))
+            .map(|(col, _)| format!("\"{col}\""))
             .collect::<Vec<String>>()
             .join(", ");
         if columns.is_empty() {
@@ -141,8 +141,7 @@ mod tests {
         } in db_columns.difference(&vis_columns)
         {
             errors.push(format!(
-                "No visibility information for columns {}.{}.",
-                table_name, column_name
+                "No visibility information for columns {table_name}.{column_name}."
             ));
         }
         for Column {
@@ -151,8 +150,7 @@ mod tests {
         } in vis_columns.difference(&db_columns)
         {
             errors.push(format!(
-                "Column {}.{} does not exist in the database.",
-                table_name, column_name
+                "Column {table_name}.{column_name} does not exist in the database."
             ));
         }
         assert!(

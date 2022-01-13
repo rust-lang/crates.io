@@ -210,7 +210,7 @@ impl Crate {
         crates::name: SelectableExpression<QS>,
     {
         if name.len() > 2 {
-            let wildcard_name = format!("%{}%", name);
+            let wildcard_name = format!("%{name}%");
             Box::new(canon_crate_name(crates::name).like(canon_crate_name(wildcard_name)))
         } else {
             diesel_infix_operator!(MatchesWord, "%>");

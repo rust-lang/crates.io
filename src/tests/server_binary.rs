@@ -206,7 +206,7 @@ where
                 }
             }
 
-            println!("[server {}] {}", kind, line);
+            println!("[server {kind}] {line}");
         }
     });
 }

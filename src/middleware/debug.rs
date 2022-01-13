@@ -14,7 +14,7 @@ impl Middleware for Debug {
         res.map(|res| {
             debug!("  <- {:?}", res.status());
             for (k, v) in res.headers().iter() {
-                debug!("  <- {} {:?}", k, v);
+                debug!("  <- {k} {v:?}");
             }
             res
         })
