@@ -54,7 +54,7 @@
   "devDependencies": {
     "@babel/eslint-parser": "7.16.5",
     "@ember/optional-features": "2.0.0",
-    "@ember/render-modifiers": "2.0.2",
+    "@ember/render-modifiers": "2.0.3",
     "@ember/test-helpers": "2.6.0",
     "@ember/test-waiters": "3.0.1",
     "@embroider/compat": "0.50.1",
