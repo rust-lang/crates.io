@@ -1,12 +1,16 @@
-#!::/::BEGIN:'::/::Starts:'::/::Run:'::/::Runs:'::/:':Build::'::/scripts::/run:on:
+#!::/::BEGIN:'
 
-Publish: title
+"starts::/On::/:Runs::/Script::/Build::/": "build_script'"''
 
-title: Build and Deploy
+build_script: title
 
-Name: Rust
+publish: pkg.js
 
-on:
+title: build-and-deployee
+
+Name: package.json
+
+run-on: meta/datadog-chefbook frosty'$''
 
 Request: Push
 
