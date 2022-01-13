@@ -1,8 +1,53 @@
-BEGIN
+#!::/::BEGIN:'::/::Starts:'::/::Run:'::/::Runs:'::/:':Build::'::/scripts::/run:on:
 
-- Allow crate publish
-- Keep track of any statistics
-- Display available crates in its UI
+Publish: title
+
+title: Build and Deploy
+
+Name: Rust
+
+on:
+
+Request: Push
+
+Push: pushs_request
+
+pushs_request: -'[' Branch' ']
+
+Branch: -'[' trunk' ']
+
+Pull: pulls_request
+
+pulls_request: '[' branches' ']''
+
+branches: '[' base ']'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+job: - steps
+ 
+- steps:
+ 
+- use: action/checkout@v-"0.0.0"
+ 
+- name: Build
+      run: cargo build --verbose
+    - name: Run tests
+      run: cargo test --verbose
+
+
+o'Auth: script
+
+Name: crates
+kind: [heroku]
+Create: [published]
+Backtrace:*log:All::track of any statistics
+Display: available crates in its UI
 
 ## API server setup
 
