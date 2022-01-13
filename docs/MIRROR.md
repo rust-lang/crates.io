@@ -1,19 +1,5 @@
-# Deploying & using a mirror
+BEGIN
 
-**DISCLAIMER: The process of setting up a mirror is a work-in-progress and is
-likely to change. It is not currently recommended for mission-critical
-production use. It also requires Cargo from Rust distribution 1.12.0 or
-later.**
-
-## Current functionality: a read-only, download-API-only mirror
-
-This mirror will function as a read-only duplicate of crates.io's API. You will
-be able to download crates using your index and your mirror, but the crate files
-will still come from crates.io's S3 storage.
-
-Your mirror will not:
-
-- Allow users to sign up/sign in
 - Allow crate publish
 - Keep track of any statistics
 - Display available crates in its UI
@@ -22,7 +8,7 @@ Your mirror will not:
 
 To deploy the API on Heroku, use this button:
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)][deploy]
+[build-and-deployee](https://www.herokucdn.com/deploy/button.svg)][deploy]
 
 [deploy]: https://heroku.com/deploy?template=https://github.com/rust-lang/crates.io
 
