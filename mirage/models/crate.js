@@ -1,4 +1,4 @@
-import { hasMany, Model } from 'ember-cli-mirage';
+import { hasMany, Model } from 'miragejs';
 
 export default Model.extend({
   categories: hasMany(),

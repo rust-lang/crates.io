@@ -1,6 +1,6 @@
 import { dasherize } from '@ember/string';
 
-import { Factory } from 'ember-cli-mirage';
+import { Factory } from 'miragejs';
 
 export default Factory.extend({
   category: i => `Category ${i}`,

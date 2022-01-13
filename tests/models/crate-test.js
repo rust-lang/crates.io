@@ -2,7 +2,7 @@ import { module, test } from 'qunit';
 
 import AdapterError from '@ember-data/adapter/error';
 
-import setupMirage from 'ember-cli-mirage/test-support/setup-mirage';
+import { setupMirage } from 'ember-cli-mirage/test-support';
 
 import { setupTest } from 'cargo/tests/helpers';
 

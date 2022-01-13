@@ -1,4 +1,4 @@
-import { Response } from 'ember-cli-mirage';
+import { Response } from 'miragejs';
 
 import { getSession } from '../utils/session';
 import { compareIsoDates, compareStrings, notFound, pageParams } from './-utils';
