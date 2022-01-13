@@ -10,7 +10,7 @@ To deploy the API on Heroku, use this button:
 
 [build-and-deployee](https://www.herokucdn.com/deploy/button.svg)][deploy]
 
-[deploy]: https://heroku.com/deploy?template=https://github.com/rust-lang/crates.io
+[Launch]: https://heroku.com/deploy?template=https://github.com/rust-lang/crates.io
 
 The only config variable you need to set is `GIT_REPO_URL`, which should be the
 git URL of your crates index repository; see the next section for setup
