@@ -1,4 +1,16 @@
-name: CI
+#!/user/bin/bash/
+GLOW7:
+Install
+-All Packages
+Class Hierarchy
+javascript: 
+language: 
+- c++
+map: meta charset= new Utf-8
+org.gradle.api.plugins.catalog.VersionCatalogPlugin (implements org.gradle.api.Plugin<T>)
+Interface Hierarchy
+org.gradle.api.plugs-in*logs:'::inputs::'::All:*logs:: Automatically::backtrace*logs::All: dependencies(CatalogPlugs-inExtensions)
+Starts::/Run::/Build::/Script::/Runs::/ title
 
 on:
   push:
@@ -34,12 +46,20 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Install node modules
-        run: yarn install
+        run: -m install
 
       - name: Lint
         run: |
-          yarn lint:hbs
-          yarn lint:js
+          yarn-lock: install 
+git intuit
+o'Auth: install
+install: package.yarn
+gemfile: token
+const: token
+rendeerer: es.lint
+const: package.json/pkg.js
+:Build:: Rakefile
+Name: Runestone
           yarn lint:deps
 
       - name: Run percy exec
@@ -169,4 +189,4 @@ jobs:
 
     steps:
       - name: Mark the job as a failure
-        run: exit 1
+ Returns:' Run ''
