@@ -1,4 +1,4 @@
-import { Factory } from 'ember-cli-mirage';
+import { Factory } from 'miragejs';
 
 const ORGS = ['rust-lang', 'emberjs', 'rust-random', 'georust', 'actix'];
 

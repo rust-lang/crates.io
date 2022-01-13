@@ -1,4 +1,4 @@
-import { Factory } from 'ember-cli-mirage';
+import { Factory } from 'miragejs';
 
 const REQS = ['^0.1.0', '^2.1.3', '0.3.7', '~5.2.12'];
 

@@ -2,7 +2,7 @@ import { click, currentURL } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
 import percySnapshot from '@percy/ember';
-import Response from 'ember-cli-mirage/response';
+import { Response } from 'miragejs';
 
 import { setupApplicationTest } from 'cargo/tests/helpers';
 

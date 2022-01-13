@@ -1,4 +1,4 @@
-import { ActiveModelSerializer } from 'ember-cli-mirage';
+import { ActiveModelSerializer } from 'miragejs';
 
 export default ActiveModelSerializer.extend({
   getHashForResource(resource) {

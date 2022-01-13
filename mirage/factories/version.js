@@ -1,4 +1,4 @@
-import { Factory } from 'ember-cli-mirage';
+import { Factory } from 'miragejs';
 
 const LICENSES = ['MIT/Apache-2.0', 'MIT', 'Apache-2.0'];
 
