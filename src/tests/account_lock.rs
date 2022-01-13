@@ -29,10 +29,7 @@ fn account_locked_indefinitely() {
     let response = user.get::<()>(URL);
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
 
-    let error_message = format!(
-        "This account is indefinitely locked. Reason: {}",
-        LOCK_REASON
-    );
+    let error_message = format!("This account is indefinitely locked. Reason: {LOCK_REASON}");
     assert_eq!(
         response.into_json(),
         json!({ "errors": [{ "detail": error_message }] })
@@ -50,10 +47,7 @@ fn account_locked_with_future_expiry() {
     let response = user.get::<()>(URL);
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
 
-    let error_message = format!(
-        "This account is locked until {}. Reason: {}",
-        until, LOCK_REASON,
-    );
+    let error_message = format!("This account is locked until {until}. Reason: {LOCK_REASON}");
     assert_eq!(
         response.into_json(),
         json!({ "errors": [{ "detail": error_message }] })

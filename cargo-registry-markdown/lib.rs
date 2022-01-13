@@ -390,8 +390,7 @@ mod tests {
                 assert_eq!(
                     result,
                     format!(
-                        "<p><a href=\"https://{}/rust-lang/test/blob/HEAD/hi\" rel=\"nofollow noopener noreferrer\">hi</a></p>\n",
-                        host
+                        "<p><a href=\"https://{host}/rust-lang/test/blob/HEAD/hi\" rel=\"nofollow noopener noreferrer\">hi</a></p>\n"
                     )
                 );
 
@@ -399,8 +398,7 @@ mod tests {
                 assert_eq!(
                     result,
                     format!(
-                        "<p><a href=\"https://{}/rust-lang/test/blob/HEAD/there\" rel=\"nofollow noopener noreferrer\">there</a></p>\n",
-                        host
+                        "<p><a href=\"https://{host}/rust-lang/test/blob/HEAD/there\" rel=\"nofollow noopener noreferrer\">there</a></p>\n"
                     )
                 );
 
@@ -408,8 +406,7 @@ mod tests {
                 assert_eq!(
                     result,
                     format!(
-                        "<p><img src=\"https://{}/rust-lang/test/raw/HEAD/img.png\" alt=\"alt\"></p>\n",
-                        host
+                        "<p><img src=\"https://{host}/rust-lang/test/raw/HEAD/img.png\" alt=\"alt\"></p>\n",
                     )
                 );
 
@@ -417,8 +414,7 @@ mod tests {
                 assert_eq!(
                     result,
                     format!(
-                        "<img src=\"https://{}/rust-lang/test/raw/HEAD/img.png\" alt=\"alt\">\n",
-                        host
+                        "<img src=\"https://{host}/rust-lang/test/raw/HEAD/img.png\" alt=\"alt\">\n",
                     )
                 );
 
@@ -426,8 +422,7 @@ mod tests {
                 assert_eq!(
                     result,
                     format!(
-                        "<p><img src=\"https://{}/rust-lang/test/raw/HEAD/sanitize.svg?sanitize=true\" alt=\"alt\"></p>\n",
-                        host
+                        "<p><img src=\"https://{host}/rust-lang/test/raw/HEAD/sanitize.svg?sanitize=true\" alt=\"alt\"></p>\n",
                     )
                 );
 
@@ -435,8 +430,7 @@ mod tests {
                 assert_eq!(
                     result,
                     format!(
-                        "<p><img src=\"https://{}/rust-lang/test/raw/HEAD/subdir/sanitize.svg?sanitize=true\" alt=\"alt\"></p>\n",
-                        host
+                        "<p><img src=\"https://{host}/rust-lang/test/raw/HEAD/subdir/sanitize.svg?sanitize=true\" alt=\"alt\"></p>\n",
                     )
                 );
 
@@ -444,8 +438,7 @@ mod tests {
                 assert_eq!(
                     result,
                     format!(
-                        "<p><img src=\"https://{}/rust-lang/test/raw/HEAD/subdir1/subdir2/sanitize.svg?sanitize=true\" alt=\"alt\"></p>\n",
-                        host
+                        "<p><img src=\"https://{host}/rust-lang/test/raw/HEAD/subdir1/subdir2/sanitize.svg?sanitize=true\" alt=\"alt\"></p>\n",
                     )
                 );
             }

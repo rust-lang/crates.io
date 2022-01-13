@@ -30,7 +30,7 @@ fn index() {
         (ids[0], ids[1])
     });
 
-    let query = format!("ids[]={}&ids[]={}", v1, v2);
+    let query = format!("ids[]={v1}&ids[]={v2}");
     let json: VersionList = anon.get_with_query(url, &query).good();
     assert_eq!(json.versions.len(), 2);
 

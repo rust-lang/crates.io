@@ -259,7 +259,7 @@ impl EncodableCrate {
         } = krate;
         let versions_link = match versions {
             Some(..) => None,
-            None => Some(format!("/api/v1/crates/{}/versions", name)),
+            None => Some(format!("/api/v1/crates/{name}/versions")),
         };
         let keyword_ids = keywords.map(|kws| kws.iter().map(|kw| kw.keyword.clone()).collect());
         let category_ids = categories.map(|cats| cats.iter().map(|cat| cat.slug.clone()).collect());
@@ -300,12 +300,12 @@ impl EncodableCrate {
             description,
             repository,
             links: EncodableCrateLinks {
-                version_downloads: format!("/api/v1/crates/{}/downloads", name),
+                version_downloads: format!("/api/v1/crates/{name}/downloads"),
                 versions: versions_link,
-                owners: Some(format!("/api/v1/crates/{}/owners", name)),
-                owner_team: Some(format!("/api/v1/crates/{}/owner_team", name)),
-                owner_user: Some(format!("/api/v1/crates/{}/owner_user", name)),
-                reverse_dependencies: format!("/api/v1/crates/{}/reverse_dependencies", name),
+                owners: Some(format!("/api/v1/crates/{name}/owners")),
+                owner_team: Some(format!("/api/v1/crates/{name}/owner_team")),
+                owner_user: Some(format!("/api/v1/crates/{name}/owner_user")),
+                reverse_dependencies: format!("/api/v1/crates/{name}/reverse_dependencies"),
             },
         }
     }
@@ -388,7 +388,7 @@ impl From<Owner> for EncodableOwner {
                 gh_avatar,
                 ..
             }) => {
-                let url = format!("https://github.com/{}", gh_login);
+                let url = format!("https://github.com/{gh_login}");
                 Self {
                     id,
                     login: gh_login,
@@ -520,7 +520,7 @@ impl EncodablePrivateUser {
             gh_avatar,
             ..
         } = user;
-        let url = format!("https://github.com/{}", gh_login);
+        let url = format!("https://github.com/{gh_login}");
 
         EncodablePrivateUser {
             id,
@@ -556,7 +556,7 @@ impl From<User> for EncodablePublicUser {
             gh_avatar,
             ..
         } = user;
-        let url = format!("https://github.com/{}", gh_login);
+        let url = format!("https://github.com/{gh_login}");
         EncodablePublicUser {
             id,
             avatar: gh_avatar,
@@ -620,14 +620,14 @@ impl EncodableVersion {
         } = version;
 
         let links = EncodableVersionLinks {
-            dependencies: format!("/api/v1/crates/{}/{}/dependencies", crate_name, num),
-            version_downloads: format!("/api/v1/crates/{}/{}/downloads", crate_name, num),
-            authors: format!("/api/v1/crates/{}/{}/authors", crate_name, num),
+            dependencies: format!("/api/v1/crates/{crate_name}/{num}/dependencies"),
+            version_downloads: format!("/api/v1/crates/{crate_name}/{num}/downloads"),
+            authors: format!("/api/v1/crates/{crate_name}/{num}/authors"),
         };
 
         Self {
-            dl_path: format!("/api/v1/crates/{}/{}/download", crate_name, num),
-            readme_path: format!("/api/v1/crates/{}/{}/readme", crate_name, num),
+            dl_path: format!("/api/v1/crates/{crate_name}/{num}/download"),
+            readme_path: format!("/api/v1/crates/{crate_name}/{num}/readme"),
             num,
             id,
             krate: crate_name.to_string(),

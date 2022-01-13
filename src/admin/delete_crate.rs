@@ -37,7 +37,7 @@ fn delete(opts: Opts, conn: &PgConnection) {
     let n = diesel::delete(crates::table.find(krate.id))
         .execute(conn)
         .unwrap();
-    println!("  {} deleted", n);
+    println!("  {n} deleted");
 
     if !dialoguer::confirm("commit?") {
         panic!("aborting transaction");

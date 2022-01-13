@@ -57,10 +57,8 @@ fn verify_origin(req: &dyn RequestExt) -> AppResult<()> {
         .find(|value| !allowed_origins.iter().any(|it| it == value));
 
     if let Some(bad_origin) = bad_origin {
-        let error_message = format!(
-            "only same-origin requests can be authenticated. got {:?}",
-            bad_origin
-        );
+        let error_message =
+            format!("only same-origin requests can be authenticated. got {bad_origin:?}");
         return Err(internal(&error_message).chain(forbidden()));
     }
     Ok(())

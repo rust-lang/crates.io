@@ -59,7 +59,7 @@ pub fn sync_yanked(
         .lines()
         .map(|line| {
             let mut git_crate = serde_json::from_str::<Crate>(line)
-                .map_err(|_| format!("couldn't decode: `{}`", line))?;
+                .map_err(|_| format!("couldn't decode: `{line}`"))?;
             if git_crate.name != krate || git_crate.vers != version_num {
                 return Ok(line.to_string());
             }
@@ -73,7 +73,7 @@ pub fn sync_yanked(
         fs::write(&dst, new.as_bytes())?;
 
         let action = if yanked { "Yanking" } else { "Unyanking" };
-        let message = format!("{} crate `{}#{}`", action, krate, version_num);
+        let message = format!("{action} crate `{krate}#{version_num}`");
 
         repo.commit_and_push(&message, &dst)?;
     } else {
@@ -107,11 +107,11 @@ pub fn squash_index(env: &Environment) -> Result<(), PerformError> {
         "--atomic",
         "origin",
         // Overwrite master, but only if it server matches the expected value
-        &format!("--force-with-lease=refs/heads/master:{}", original_head),
+        &format!("--force-with-lease=refs/heads/master:{original_head}"),
         // The new squashed commit is pushed to master
         "HEAD:refs/heads/master",
         // The previous value of HEAD is pushed to a snapshot branch
-        &format!("{}:refs/heads/snapshot-{}", original_head, now),
+        &format!("{original_head}:refs/heads/snapshot-{now}"),
     ]))?;
 
     println!("The index has been successfully squashed.");

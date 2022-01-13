@@ -59,7 +59,7 @@ impl Drop for Bomb {
             Err(..) if !thread::panicking() => panic!("server subtask failed: {}", stderr),
             Err(e) => {
                 if !stderr.is_empty() {
-                    println!("server subtask failed ({:?}): {}", e, stderr)
+                    println!("server subtask failed ({e:?}): {stderr}")
                 }
             }
             Ok(_) if thread::panicking() => {}
@@ -293,7 +293,7 @@ fn replay_http(
 ) -> impl Future<Output = Result<Response<Body>, Error>> + Send {
     static IGNORED_HEADERS: &[&str] = &["authorization", "date", "cache-control"];
 
-    debug!("<- {:?}", req);
+    debug!("<- {req:?}");
     assert_eq!(req.uri().to_string(), exchange.request.uri);
     assert_eq!(req.method().to_string(), exchange.request.method);
     assert_ok!(writeln!(
@@ -340,7 +340,7 @@ fn replay_http(
         let status = StatusCode::from_u16(exchange.response.status).unwrap();
         let response = builder.status(status).body(body.into()).unwrap();
 
-        debug!("-> {:?}", response);
+        debug!("-> {response:?}");
         Ok(response)
     }
 }

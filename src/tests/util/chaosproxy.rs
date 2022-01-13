@@ -45,7 +45,7 @@ impl ChaosProxy {
         let instance_clone = instance.clone();
         instance.runtime.spawn(async move {
             if let Err(err) = instance_clone.server_loop().await {
-                eprintln!("ChaosProxy server error: {}", err);
+                eprintln!("ChaosProxy server error: {err}");
             }
         });
 
@@ -100,14 +100,14 @@ impl ChaosProxy {
             let self_clone = self.clone();
             self.runtime.spawn(async move {
                 if let Err(err) = self_clone.proxy_data(client_read, backend_write).await {
-                    eprintln!("ChaosProxy connection error: {}", err);
+                    eprintln!("ChaosProxy connection error: {err}");
                 }
             });
 
             let self_clone = self.clone();
             tokio::spawn(async move {
                 if let Err(err) = self_clone.proxy_data(backend_read, client_write).await {
-                    eprintln!("ChaosProxy connection error: {}", err);
+                    eprintln!("ChaosProxy connection error: {err}");
                 }
             });
         }

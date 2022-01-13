@@ -31,7 +31,7 @@ impl Event {
         let response = Client::new()
             .post("https://events.pagerduty.com/generic/2010-04-15/create_event.json")
             .header(header::ACCEPT, "application/vnd.pagerduty+json;version=2")
-            .header(header::AUTHORIZATION, format!("Token token={}", api_token))
+            .header(header::AUTHORIZATION, format!("Token token={api_token}"))
             .json(&FullEvent {
                 service_key,
                 event: self,

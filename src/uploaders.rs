@@ -44,7 +44,7 @@ impl Uploader {
                     None => bucket.host(),
                 };
                 let path = Uploader::crate_path(crate_name, version);
-                format!("https://{}/{}", host, path)
+                format!("https://{host}/{path}")
             }
             Uploader::Local => format!("/{}", Uploader::crate_path(crate_name, version)),
         }
@@ -65,7 +65,7 @@ impl Uploader {
                     None => bucket.host(),
                 };
                 let path = Uploader::readme_path(crate_name, version);
-                format!("https://{}/{}", host, path)
+                format!("https://{host}/{path}")
             }
             Uploader::Local => format!("/{}", Uploader::readme_path(crate_name, version)),
         }
@@ -74,12 +74,12 @@ impl Uploader {
     /// Returns the internal path of an uploaded crate's version archive.
     fn crate_path(name: &str, version: &str) -> String {
         // No slash in front so we can use join
-        format!("crates/{}/{}-{}.crate", name, name, version)
+        format!("crates/{name}/{name}-{version}.crate")
     }
 
     /// Returns the internal path of an uploaded crate's version readme.
     fn readme_path(name: &str, version: &str) -> String {
-        format!("readmes/{}/{}-{}.html", name, name, version)
+        format!("readmes/{name}/{name}-{version}.html")
     }
 
     /// Uploads a file using the configured uploader (either `S3`, `Local`).

@@ -26,7 +26,7 @@ impl GitHubClient {
     }
 
     pub fn org_by_name(&self, org_name: &str, auth: &AccessToken) -> AppResult<GitHubOrganization> {
-        let url = format!("/orgs/{}", org_name);
+        let url = format!("/orgs/{org_name}");
         self.request(&url, auth)
     }
 
@@ -36,7 +36,7 @@ impl GitHubClient {
         team_name: &str,
         auth: &AccessToken,
     ) -> AppResult<GitHubTeam> {
-        let url = format!("/orgs/{}/teams/{}", org_name, team_name);
+        let url = format!("/orgs/{org_name}/teams/{team_name}");
         self.request(&url, auth)
     }
 
@@ -47,10 +47,7 @@ impl GitHubClient {
         username: &str,
         auth: &AccessToken,
     ) -> AppResult<GitHubTeamMembership> {
-        let url = format!(
-            "/organizations/{}/team/{}/memberships/{}",
-            org_id, team_id, username
-        );
+        let url = format!("/organizations/{org_id}/team/{team_id}/memberships/{username}");
         self.request(&url, auth)
     }
 
@@ -62,7 +59,7 @@ impl GitHubClient {
         T: DeserializeOwned,
     {
         let url = format!("{}{}", self.base_url, url);
-        info!("GITHUB HTTP: {}", url);
+        info!("GITHUB HTTP: {url}");
 
         self.client()
             .get(&url)

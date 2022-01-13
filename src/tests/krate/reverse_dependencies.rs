@@ -12,7 +12,7 @@ struct RevDeps {
 
 impl crate::util::MockAnonymousUser {
     fn reverse_dependencies(&self, krate_name: &str) -> RevDeps {
-        let url = format!("/api/v1/crates/{}/reverse_dependencies", krate_name);
+        let url = format!("/api/v1/crates/{krate_name}/reverse_dependencies");
         self.get(&url).good()
     }
 }

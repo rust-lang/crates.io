@@ -76,8 +76,7 @@ impl<'de> Deserialize<'de> for EncodableCrateName {
             let value = de::Unexpected::Str(&s);
             let expected = format!(
                 "a valid crate name to start with a letter, contain only letters, \
-                 numbers, hyphens, or underscores and have at most {} characters",
-                MAX_NAME_LENGTH
+                 numbers, hyphens, or underscores and have at most {MAX_NAME_LENGTH} characters"
             );
             Err(de::Error::invalid_value(value, &expected.as_ref()))
         } else {
@@ -102,8 +101,7 @@ impl<'de> Deserialize<'de> for EncodableDependencyName {
             let value = de::Unexpected::Str(&s);
             let expected = format!(
                 "a valid dependency name to start with a letter or underscore, contain only letters, \
-                 numbers, hyphens, or underscores and have at most {} characters",
-                MAX_NAME_LENGTH
+                 numbers, hyphens, or underscores and have at most {MAX_NAME_LENGTH} characters"
             );
             Err(de::Error::invalid_value(value, &expected.as_ref()))
         } else {

@@ -48,7 +48,7 @@ impl FromSql<Integer, Pg> for DependencyKind {
             0 => Ok(DependencyKind::Normal),
             1 => Ok(DependencyKind::Build),
             2 => Ok(DependencyKind::Dev),
-            n => Err(format!("unknown kind: {}", n).into()),
+            n => Err(format!("unknown kind: {n}").into()),
         }
     }
 }

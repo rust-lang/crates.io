@@ -241,7 +241,7 @@ impl Repository {
                 repo.remote_with_fetch(
                     name,
                     url,
-                    &format!("+refs/heads/master:refs/remotes/{}/master", name),
+                    &format!("+refs/heads/master:refs/remotes/{name}/master"),
                 )
             })
             .clone(
@@ -368,13 +368,13 @@ impl Repository {
     /// This function also prints the commit message and a success or failure
     /// message to the console.
     pub fn commit_and_push(&self, message: &str, modified_file: &Path) -> anyhow::Result<()> {
-        println!("Committing and pushing \"{}\"", message);
+        println!("Committing and pushing \"{message}\"");
 
         let relative_path = modified_file.strip_prefix(self.checkout_path.path())?;
         self.perform_commit_and_push(message, relative_path)
-            .map(|_| println!("Commit and push finished for \"{}\"", message))
+            .map(|_| println!("Commit and push finished for \"{message}\""))
             .map_err(|err| {
-                eprintln!("Commit and push for \"{}\" errored: {}", message, err);
+                eprintln!("Commit and push for \"{message}\" errored: {err}");
                 err
             })
     }
@@ -396,7 +396,7 @@ impl Repository {
         let head = self.head_oid()?;
 
         if head != original_head {
-            println!("Resetting index from {} to {}", original_head, head);
+            println!("Resetting index from {original_head} to {head}");
         }
 
         let obj = self.repository.find_object(head, None)?;

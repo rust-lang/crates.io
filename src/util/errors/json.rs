@@ -141,9 +141,8 @@ impl AppError for TooManyRequests {
 
         let detail = format!(
             "You have published too many crates in a \
-             short period of time. Please try again after {} or email \
-             help@crates.io to have your limit increased.",
-            retry_after
+             short period of time. Please try again after {retry_after} or email \
+             help@crates.io to have your limit increased."
         );
         let mut response = json_error(&detail, StatusCode::TOO_MANY_REQUESTS);
         response.headers_mut().insert(

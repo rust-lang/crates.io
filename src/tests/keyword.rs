@@ -65,7 +65,7 @@ fn update_crate() {
     let user = user.as_model();
 
     let cnt = |kw: &str| {
-        let json: GoodKeyword = anon.get(&format!("/api/v1/keywords/{}", kw)).good();
+        let json: GoodKeyword = anon.get(&format!("/api/v1/keywords/{kw}")).good();
         json.keyword.crates_cnt as usize
     };
 

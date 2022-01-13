@@ -57,7 +57,7 @@ trait MockEmailHelper: RequestHelper {
             "url": "https://arbitrary.com",
             "kind": null
         }});
-        let url = format!("/api/v1/users/{}", user_id);
+        let url = format!("/api/v1/users/{user_id}");
         self.put(&url, body.to_string().as_bytes())
     }
 }
@@ -74,7 +74,7 @@ impl crate::util::MockCookieUser {
     }
 
     fn confirm_email(&self, email_token: &str) -> OkBool {
-        let url = format!("/api/v1/confirm/{}", email_token);
+        let url = format!("/api/v1/confirm/{email_token}");
         self.put(&url, &[]).good()
     }
 

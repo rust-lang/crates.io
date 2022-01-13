@@ -24,7 +24,7 @@ fn assert_dl_count(
     query: Option<&str>,
     count: i32,
 ) {
-    let url = format!("/api/v1/crates/{}/downloads", name_and_version);
+    let url = format!("/api/v1/crates/{name_and_version}/downloads");
     let downloads: Downloads = if let Some(query) = query {
         anon.get_with_query(&url, query).good()
     } else {
@@ -50,7 +50,7 @@ fn download() {
     });
 
     let download = |name_and_version: &str| {
-        let url = format!("/api/v1/crates/{}/download", name_and_version);
+        let url = format!("/api/v1/crates/{name_and_version}/download");
         let response = anon.get::<()>(&url);
         assert_eq!(response.status(), StatusCode::FOUND);
         // TODO: test the with_json code path
@@ -71,13 +71,13 @@ fn download() {
     assert_dl_count(&anon, "FOO_DOWNLOAD", None, 2);
 
     let yesterday = (Utc::today() + Duration::days(-1)).format("%F");
-    let query = format!("before_date={}", yesterday);
+    let query = format!("before_date={yesterday}");
     assert_dl_count(&anon, "FOO_DOWNLOAD/1.0.0", Some(&query), 0);
     // crate/downloads always returns the last 90 days and ignores date params
     assert_dl_count(&anon, "FOO_DOWNLOAD", Some(&query), 2);
 
     let tomorrow = (Utc::today() + Duration::days(1)).format("%F");
-    let query = format!("before_date={}", tomorrow);
+    let query = format!("before_date={tomorrow}");
     assert_dl_count(&anon, "FOO_DOWNLOAD/1.0.0", Some(&query), 2);
     assert_dl_count(&anon, "FOO_DOWNLOAD", Some(&query), 2);
 }

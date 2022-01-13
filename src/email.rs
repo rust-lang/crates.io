@@ -74,12 +74,9 @@ https://{}/confirm/{}",
     ) -> AppResult<()> {
         let subject = "Crate ownership invitation";
         let body = format!(
-            "{} has invited you to become an owner of the crate {}!\n
-Visit https://{domain}/accept-invite/{} to accept this invitation,
+            "{user_name} has invited you to become an owner of the crate {crate_name}!\n
+Visit https://{domain}/accept-invite/{token} to accept this invitation,
 or go to https://{domain}/me/pending-invites to manage all of your crate ownership invitations.",
-            user_name,
-            crate_name,
-            token,
             domain = crate::config::domain_name()
         );
 

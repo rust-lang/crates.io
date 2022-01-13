@@ -38,7 +38,7 @@ impl Category {
 fn required_string_from_toml<'a>(toml: &'a toml::value::Table, key: &str) -> Result<&'a str> {
     toml.get(key)
         .and_then(toml::Value::as_str)
-        .with_context(|| format!("Expected category TOML attribute '{}' to be a String", key))
+        .with_context(|| format!("Expected category TOML attribute '{key}' to be a String"))
 }
 
 fn optional_string_from_toml<'a>(toml: &'a toml::value::Table, key: &str) -> &'a str {
@@ -54,7 +54,7 @@ fn categories_from_toml(
     for (slug, details) in categories {
         let details = details
             .as_table()
-            .with_context(|| format!("category {} was not a TOML table", slug))?;
+            .with_context(|| format!("category {slug} was not a TOML table"))?;
 
         let category = Category::from_parent(
             slug,
@@ -66,7 +66,7 @@ fn categories_from_toml(
         if let Some(categories) = details.get("categories") {
             let categories = categories
                 .as_table()
-                .with_context(|| format!("child categories of {} were not a table", slug))?;
+                .with_context(|| format!("child categories of {slug} were not a table"))?;
 
             result.extend(categories_from_toml(categories, Some(&category))?);
         }

@@ -77,9 +77,9 @@ fn metrics_endpoint_auth_disabled() {
 }
 
 fn request_metrics(anon: &MockAnonymousUser, kind: &str, token: Option<&str>) -> Response<()> {
-    let mut req = anon.get_request(&format!("/api/private/metrics/{}", kind));
+    let mut req = anon.get_request(&format!("/api/private/metrics/{kind}"));
     if let Some(token) = token {
-        req.header("Authorization", &format!("Bearer {}", token));
+        req.header("Authorization", &format!("Bearer {token}"));
     }
     anon.run(req)
 }

@@ -52,8 +52,8 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
     };
     let older_than = older_than.naive_utc();
 
-    println!("Start time:                   {}", start_time);
-    println!("Rendering readmes older than: {}", older_than);
+    println!("Start time:                   {start_time}");
+    println!("Rendering readmes older than: {older_than}");
 
     let mut query = versions::table
         .inner_join(crates::table)
@@ -67,14 +67,14 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
         .into_boxed();
 
     if let Some(crate_name) = opts.crate_name {
-        println!("Rendering readmes for {}", crate_name);
+        println!("Rendering readmes for {crate_name}");
         query = query.filter(crates::name.eq(crate_name));
     }
 
     let version_ids: Vec<i32> = query.load(&conn).expect("error loading version ids");
 
     let total_versions = version_ids.len();
-    println!("Rendering {} versions", total_versions);
+    println!("Rendering {total_versions} versions");
 
     let page_size = opts.page_size;
 
@@ -138,8 +138,8 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
         }
         for handle in tasks {
             match handle.join() {
-                Err(err) => println!("Thread panicked: {:?}", err),
-                Ok(Err(err)) => println!("Thread failed: {:?}", err),
+                Err(err) => println!("Thread panicked: {err:?}"),
+                Ok(Err(err)) => println!("Thread failed: {err:?}"),
                 _ => {}
             }
         }
@@ -161,7 +161,7 @@ fn get_readme(
 
     let location = match uploader {
         Uploader::S3 { .. } => location,
-        Uploader::Local => format!("http://localhost:8888/{}", location),
+        Uploader::Local => format!("http://localhost:8888/{location}"),
     };
 
     let mut extra_headers = header::HeaderMap::new();
@@ -188,7 +188,7 @@ fn render_pkg_readme<R: Read>(mut archive: Archive<R>, pkg_name: &str) -> anyhow
     let mut entries = archive.entries().context("Invalid tar archive entries")?;
 
     let manifest: Manifest = {
-        let path = format!("{}/Cargo.toml", pkg_name);
+        let path = format!("{pkg_name}/Cargo.toml");
         let contents = find_file_by_path(&mut entries, Path::new(&path))
             .context("Failed to read Cargo.toml file")?;
 
@@ -201,9 +201,9 @@ fn render_pkg_readme<R: Read>(mut archive: Archive<R>, pkg_name: &str) -> anyhow
             .readme
             .clone()
             .unwrap_or_else(|| "README.md".into());
-        let path = format!("{}/{}", pkg_name, readme_path);
+        let path = format!("{pkg_name}/{readme_path}");
         let contents = find_file_by_path(&mut entries, Path::new(&path))
-            .with_context(|| format!("Failed to read {} file", readme_path))?;
+            .with_context(|| format!("Failed to read {readme_path} file"))?;
 
         // pkg_path_in_vcs Unsupported from admin::render_readmes. See #4095
         // Would need access to cargo_vcs_info

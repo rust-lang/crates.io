@@ -19,8 +19,7 @@ impl FreshSchema {
                 DROP SCHEMA IF EXISTS {schema_name} CASCADE;
                 CREATE SCHEMA {schema_name};
                 SET search_path TO {schema_name}, public;
-            ",
-            schema_name = schema_name
+            "
         ))
         .expect("failed to initialize schema");
 
@@ -30,7 +29,7 @@ impl FreshSchema {
 
         let database_url = url::Url::parse_with_params(
             database_url,
-            &[("options", format!("--search_path={},public", schema_name))],
+            &[("options", format!("--search_path={schema_name},public"))],
         )
         .unwrap()
         .to_string();
@@ -61,5 +60,5 @@ fn generate_schema_name() -> String {
         .map(|_| rng.sample(rand::distributions::Alphanumeric) as char)
         .take(16)
         .collect();
-    format!("cratesio_test_{}", random_string)
+    format!("cratesio_test_{random_string}")
 }

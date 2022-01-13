@@ -72,7 +72,7 @@ mod prelude {
             let query_string = url::form_urlencoded::Serializer::new(String::new())
                 .extend_pairs(params)
                 .finish();
-            format!("?{}", query_string)
+            format!("?{query_string}")
         }
 
         fn log_metadata<V: std::fmt::Display>(&mut self, key: &'static str, value: V) {

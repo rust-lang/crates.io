@@ -286,7 +286,7 @@ mod tests {
         assert_ok!(validate_license_expr("GPL-3.0+"));
 
         let error = assert_err!(validate_license_expr("apache 2.0"));
-        let error = format!("{}", error);
+        let error = format!("{error}");
         assert!(error.starts_with("unknown or invalid license expression; see http"));
     }
 }
