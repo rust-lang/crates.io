@@ -84,7 +84,7 @@ jobs:
 
       - uses: Swatinem/rust-cache@v1.3.0
 
-      - run: cargo fmt -- --check
+      - run: cargo fmt --check
       - run: cargo clippy --all-targets --all-features --all
 
   backend:
