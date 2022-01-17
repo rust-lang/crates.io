@@ -272,8 +272,17 @@ impl TestAppBuilder {
         self
     }
 
-    pub fn with_slow_real_db_pool(mut self) -> Self {
+    /// Configures the test database to be slow, it also configures a replica database pool.
+    pub fn with_slow_real_db_pool(mut self, configure_replica: bool) -> Self {
         self.config.use_test_database_pool = false;
+        if configure_replica {
+            self.config.db.replica = Some(config::DbPoolConfig {
+                url: self.config.db.primary.url.clone(),
+                read_only_mode: true,
+                pool_size: 1,
+                min_idle: None,
+            });
+        }
         self
     }
 }

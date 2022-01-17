@@ -7,7 +7,7 @@ use std::time::Duration;
 
 #[test]
 fn download_crate_with_broken_networking_primary_database() {
-    let (app, anon, _, owner) = TestApp::init().with_slow_real_db_pool().with_token();
+    let (app, anon, _, owner) = TestApp::init().with_slow_real_db_pool(false).with_token();
     app.db(|conn| {
         CrateBuilder::new("crate_name", owner.as_model().user_id)
             .version("1.0.0")
@@ -68,7 +68,7 @@ fn assert_unconditional_redirects(anon: &MockAnonymousUser) {
 
 #[test]
 fn http_error_with_unhealthy_database() {
-    let (app, anon) = TestApp::init().with_slow_real_db_pool().empty();
+    let (app, anon) = TestApp::init().with_slow_real_db_pool(false).empty();
 
     let response = anon.get::<()>("/api/v1/summary");
     assert_eq!(response.status(), StatusCode::OK);
@@ -86,4 +86,29 @@ fn http_error_with_unhealthy_database() {
 
     let response = anon.get::<()>("/api/v1/summary");
     assert_eq!(response.status(), StatusCode::OK);
+}
+
+#[test]
+fn switch_to_read_replica_with_unhealthy_primary_database() {
+    const URL: &str = "api/v1/users/foo";
+
+    let (app, _, owner) = TestApp::init().with_slow_real_db_pool(true).with_user();
+    app.db_new_user("foo");
+
+    // Primary database contains the user information
+    let response = owner.get::<()>(URL);
+    assert_eq!(response.status(), StatusCode::OK);
+
+    app.db_chaosproxy().break_networking();
+
+    // Fallback to replica database, user is not stored there yet
+    let response = owner.get::<()>(URL);
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+
+    // restore connection
+    app.db_chaosproxy().restore_networking();
+    app.as_inner()
+        .primary_database
+        .wait_until_healthy(Duration::from_millis(500))
+        .expect("the database did not return healthy");
 }

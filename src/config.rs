@@ -5,7 +5,7 @@ mod base;
 mod database_pools;
 
 pub use self::base::Base;
-pub use self::database_pools::DatabasePools;
+pub use self::database_pools::{DatabasePools, DbPoolConfig};
 use std::collections::HashSet;
 use std::time::Duration;
 
