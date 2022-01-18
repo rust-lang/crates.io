@@ -1,5 +1,5 @@
 'use strict';
 
 module.exports = {
-  extends: ['octane', 'a11y'],
+  extends: ['recommended', 'a11y'],
 };
