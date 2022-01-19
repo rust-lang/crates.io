@@ -1,13 +1,15 @@
 use crate::{
     builders::CrateBuilder,
-    util::{MockAnonymousUser, RequestHelper, TestApp},
+    util::{MockAnonymousUser, RequestHelper, TestApp, TestDatabase},
 };
 use http::StatusCode;
 use std::time::Duration;
 
 #[test]
 fn download_crate_with_broken_networking_primary_database() {
-    let (app, anon, _, owner) = TestApp::init().with_slow_real_db_pool(false).with_token();
+    let (app, anon, _, owner) = TestApp::init()
+        .with_database(TestDatabase::SlowRealPool { replica: false })
+        .with_token();
     app.db(|conn| {
         CrateBuilder::new("crate_name", owner.as_model().user_id)
             .version("1.0.0")
@@ -23,13 +25,13 @@ fn download_crate_with_broken_networking_primary_database() {
     // do an unconditional redirect to the CDN, without checking whether the crate exists or what
     // the exact capitalization of crate name is.
 
-    app.db_chaosproxy().break_networking();
+    app.primary_db_chaosproxy().break_networking();
     assert_unconditional_redirects(&anon);
 
     // After restoring the network and waiting for the database pool to get healthy again redirects
     // should be checked again.
 
-    app.db_chaosproxy().restore_networking();
+    app.primary_db_chaosproxy().restore_networking();
     app.as_inner()
         .primary_database
         .wait_until_healthy(Duration::from_millis(500))
@@ -68,17 +70,19 @@ fn assert_unconditional_redirects(anon: &MockAnonymousUser) {
 
 #[test]
 fn http_error_with_unhealthy_database() {
-    let (app, anon) = TestApp::init().with_slow_real_db_pool(false).empty();
+    let (app, anon) = TestApp::init()
+        .with_database(TestDatabase::SlowRealPool { replica: false })
+        .empty();
 
     let response = anon.get::<()>("/api/v1/summary");
     assert_eq!(response.status(), StatusCode::OK);
 
-    app.db_chaosproxy().break_networking();
+    app.primary_db_chaosproxy().break_networking();
 
     let response = anon.get::<()>("/api/v1/summary");
     assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
 
-    app.db_chaosproxy().restore_networking();
+    app.primary_db_chaosproxy().restore_networking();
     app.as_inner()
         .primary_database
         .wait_until_healthy(Duration::from_millis(500))
@@ -92,21 +96,35 @@ fn http_error_with_unhealthy_database() {
 fn switch_to_read_replica_with_unhealthy_primary_database() {
     const URL: &str = "api/v1/users/foo";
 
-    let (app, _, owner) = TestApp::init().with_slow_real_db_pool(true).with_user();
+    let (app, _, owner) = TestApp::init()
+        .with_database(TestDatabase::SlowRealPool { replica: true })
+        .with_user();
     app.db_new_user("foo");
 
     // Primary database contains the user information
     let response = owner.get::<()>(URL);
     assert_eq!(response.status(), StatusCode::OK);
 
-    app.db_chaosproxy().break_networking();
-
-    // Fallback to replica database, user is not stored there yet
+    // Disable replica, switch fail over to primary database
+    app.replica_db_chaosproxy().break_networking();
     let response = owner.get::<()>(URL);
-    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_eq!(response.status(), StatusCode::OK);
+
+    // Fallback to replica database
+    app.primary_db_chaosproxy().break_networking();
+    app.replica_db_chaosproxy().restore_networking();
+    let response = owner.get::<()>(URL);
+    assert_eq!(response.status(), StatusCode::OK);
+
+    // Disable both databases, no data found
+    app.primary_db_chaosproxy().break_networking();
+    app.replica_db_chaosproxy().break_networking();
+    let response = owner.get::<()>(URL);
+    assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
 
     // restore connection
-    app.db_chaosproxy().restore_networking();
+    app.primary_db_chaosproxy().restore_networking();
+    app.replica_db_chaosproxy().restore_networking();
     app.as_inner()
         .primary_database
         .wait_until_healthy(Duration::from_millis(500))

@@ -41,7 +41,7 @@ mod test_app;
 pub(crate) use chaosproxy::ChaosProxy;
 pub(crate) use fresh_schema::FreshSchema;
 pub use response::Response;
-pub use test_app::TestApp;
+pub use test_app::{TestApp, TestDatabase};
 
 /// This function can be used to create a `Cookie` header for mock requests that
 /// include cookie-based authentication.

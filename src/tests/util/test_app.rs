@@ -19,7 +19,9 @@ struct TestAppInner {
     middle: conduit_middleware::MiddlewareBuilder,
     index: Option<UpstreamIndex>,
     runner: Option<Runner<Environment, DieselPool>>,
-    db_chaosproxy: Option<Arc<ChaosProxy>>,
+
+    primary_db_chaosproxy: Option<Arc<ChaosProxy>>,
+    replica_db_chaosproxy: Option<Arc<ChaosProxy>>,
 
     // Must be the last field of the struct!
     _fresh_schema: Option<FreshSchema>,
@@ -69,6 +71,7 @@ impl TestApp {
             bomb: None,
             index: None,
             build_job_runner: false,
+            test_database: TestDatabase::TestPool,
         }
     }
 
@@ -154,11 +157,28 @@ impl TestApp {
         &self.0.middle
     }
 
-    pub(crate) fn db_chaosproxy(&self) -> Arc<ChaosProxy> {
-        self.0.db_chaosproxy.clone().expect(
-            "ChaosProxy is not enabled on this test, call with_slow_real_pool during app init",
-        )
+    pub(crate) fn primary_db_chaosproxy(&self) -> Arc<ChaosProxy> {
+        self.0
+            .primary_db_chaosproxy
+            .clone()
+            .expect("ChaosProxy is not enabled on this test, call with_database during app init")
     }
+
+    pub(crate) fn replica_db_chaosproxy(&self) -> Arc<ChaosProxy> {
+        self.0
+            .replica_db_chaosproxy
+            .clone()
+            .expect("ChaosProxy is not enabled on this test, call with_database during app init")
+    }
+}
+
+/// Defines the type of test database.
+pub enum TestDatabase {
+    /// Use the fast test database pool
+    TestPool,
+    /// Use the slow test database pool with a fresh schema that enables ChaosProxy
+    /// TODO rewrite comment, uses a database pool
+    SlowRealPool { replica: bool },
 }
 
 pub struct TestAppBuilder {
@@ -167,6 +187,7 @@ pub struct TestAppBuilder {
     bomb: Option<record::Bomb>,
     index: Option<UpstreamIndex>,
     build_job_runner: bool,
+    test_database: TestDatabase,
 }
 
 impl TestAppBuilder {
@@ -174,15 +195,27 @@ impl TestAppBuilder {
     pub fn empty(mut self) -> (TestApp, MockAnonymousUser) {
         // Run each test inside a fresh database schema, deleted at the end of the test,
         // The schema will be cleared up once the app is dropped.
-        let (db_chaosproxy, fresh_schema) = if !self.config.use_test_database_pool {
-            let fresh_schema = FreshSchema::new(&self.config.db.primary.url);
-            let (proxy, url) = ChaosProxy::proxy_database_url(fresh_schema.database_url()).unwrap();
-            self.config.db.primary.url = url;
+        let (primary_db_chaosproxy, replica_db_chaosproxy, fresh_schema) =
+            if !self.config.use_test_database_pool {
+                let fresh_schema = FreshSchema::new(&self.config.db.primary.url);
+                let (primary_proxy, url) =
+                    ChaosProxy::proxy_database_url(fresh_schema.database_url()).unwrap();
+                self.config.db.primary.url = url;
 
-            (Some(proxy), Some(fresh_schema))
-        } else {
-            (None, None)
-        };
+                let replica_proxy = match (self.test_database, self.config.db.replica.as_mut()) {
+                    (TestDatabase::SlowRealPool { replica: true }, Some(pool_config)) => {
+                        let (replica_proxy, url) =
+                            ChaosProxy::proxy_database_url(fresh_schema.database_url()).unwrap();
+                        pool_config.url = url;
+                        Some(replica_proxy)
+                    }
+                    _ => None,
+                };
+
+                (Some(primary_proxy), replica_proxy, Some(fresh_schema))
+            } else {
+                (None, None, None)
+            };
 
         let (app, middle) = build_app(self.config, self.proxy);
 
@@ -218,7 +251,8 @@ impl TestAppBuilder {
             middle,
             index: self.index,
             runner,
-            db_chaosproxy,
+            primary_db_chaosproxy,
+            replica_db_chaosproxy,
         };
         let test_app = TestApp(Rc::new(test_app_inner));
         let anon = MockAnonymousUser {
@@ -272,17 +306,10 @@ impl TestAppBuilder {
         self
     }
 
-    /// Configures the test database to be slow, it also configures a replica database pool.
-    pub fn with_slow_real_db_pool(mut self, configure_replica: bool) -> Self {
+    /// Configures the test database
+    pub fn with_database(mut self, test_database: TestDatabase) -> Self {
         self.config.use_test_database_pool = false;
-        if configure_replica {
-            self.config.db.replica = Some(config::DbPoolConfig {
-                url: self.config.db.primary.url.clone(),
-                read_only_mode: true,
-                pool_size: 1,
-                min_idle: None,
-            });
-        }
+        self.test_database = test_database;
         self
     }
 }
