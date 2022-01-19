@@ -139,9 +139,13 @@
   },
   "engines": {
     "node": "16.13.2",
-    "npm": "^8.0.0"
+    "yarn": "1.22.17"
   },
   "ember": {
     "edition": "octane"
+  },
+  "volta": {
+    "node": "16.13.2",
+    "yarn": "1.22.17"
   }
 }
