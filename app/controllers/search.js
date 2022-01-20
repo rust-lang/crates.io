@@ -7,6 +7,7 @@ import { restartableTask } from 'ember-concurrency';
 import { bool, reads } from 'macro-decorators';
 
 import { pagination } from '../utils/pagination';
+import { CATEGORY_PREFIX, processSearchQuery } from '../utils/search';
 
 export default class SearchController extends Controller {
   @service store;
@@ -48,6 +49,11 @@ export default class SearchController extends Controller {
 
   @bool('totalItems') hasItems;
 
+  get hasMultiCategoryFilter() {
+    let tokens = this.q.trim().split(/\s+/);
+    return tokens.filter(token => token.startsWith(CATEGORY_PREFIX)).length > 1;
+  }
+
   @action fetchData() {
     this.dataTask.perform().catch(() => {
       // we ignore errors here because they are handled in the template already
@@ -61,6 +67,10 @@ export default class SearchController extends Controller {
       q = q.trim();
     }
 
-    return yield this.store.query('crate', { all_keywords, page, per_page, q, sort });
+    let searchOptions = all_keywords
+      ? { page, per_page, sort, q, all_keywords }
+      : { page, per_page, sort, ...processSearchQuery(q) };
+
+    return yield this.store.query('crate', searchOptions);
   }
 }

@@ -191,4 +191,42 @@ module('Acceptance | search', function (hooks) {
     await visit('/search?q=rust&page=3&per_page=15&sort=new&all_keywords=fire ball');
     assert.verifySteps(['/api/v1/crates']);
   });
+
+  test('supports `keyword:bla` filters', async function (assert) {
+    this.server.get('/api/v1/crates', function (schema, request) {
+      assert.step('/api/v1/crates');
+
+      assert.deepEqual(request.queryParams, {
+        all_keywords: 'fire ball',
+        page: '3',
+        per_page: '15',
+        q: 'rust',
+        sort: 'new',
+      });
+
+      return { crates: [], meta: { total: 0 } };
+    });
+
+    await visit('/search?q=rust keyword:fire keyword:ball&page=3&per_page=15&sort=new');
+    assert.verifySteps(['/api/v1/crates']);
+  });
+
+  test('`all_keywords` query parameter takes precedence over `keyword` filters', async function (assert) {
+    this.server.get('/api/v1/crates', function (schema, request) {
+      assert.step('/api/v1/crates');
+
+      assert.deepEqual(request.queryParams, {
+        all_keywords: 'fire ball',
+        page: '3',
+        per_page: '15',
+        q: 'rust keywords:foo',
+        sort: 'new',
+      });
+
+      return { crates: [], meta: { total: 0 } };
+    });
+
+    await visit('/search?q=rust keywords:foo&page=3&per_page=15&sort=new&all_keywords=fire ball');
+    assert.verifySteps(['/api/v1/crates']);
+  });
 });
