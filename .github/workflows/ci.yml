@@ -46,21 +46,6 @@ jobs:
         if: github.repository != 'rust-lang/crates.io'
         run: yarn test-coverage
 
-  embroider:
-    name: Frontend (embroider)
-    runs-on: ubuntu-20.04
-    env:
-      USE_EMBROIDER: 'true'
-
-    steps:
-      - uses: actions/checkout@v2
-      - uses: volta-cli/action@v1
-
-      - run: yarn install
-
-      - run: yarn test
-        continue-on-error: true
-
   backend-lint:
     name: Backend (linting)
     runs-on: ubuntu-20.04

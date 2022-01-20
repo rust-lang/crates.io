@@ -3,8 +3,6 @@
 const EmberApp = require('ember-cli/lib/broccoli/ember-app');
 const postcssCustomMedia = require('postcss-custom-media');
 
-const { USE_EMBROIDER } = process.env;
-
 module.exports = function (defaults) {
   let env = EmberApp.env();
   let isProd = env === 'production';
@@ -50,13 +48,9 @@ module.exports = function (defaults) {
   app.import('node_modules/normalize.css/normalize.css', { prepend: true });
   app.import('vendor/qunit.css', { type: 'test' });
 
-  if (USE_EMBROIDER) {
-    const { Webpack } = require('@embroider/webpack');
-    return require('@embroider/compat').compatBuild(app, Webpack, {
-      staticAddonTestSupportTrees: true,
-      staticModifiers: true,
-    });
-  }
-
-  return app.toTree();
+  const { Webpack } = require('@embroider/webpack');
+  return require('@embroider/compat').compatBuild(app, Webpack, {
+    staticAddonTestSupportTrees: true,
+    staticModifiers: true,
+  });
 };
