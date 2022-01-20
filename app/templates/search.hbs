@@ -8,6 +8,12 @@
   data-test-header
 />
 
+{{#if this.hasMultiCategoryFilter}}
+  <div local-class="warning">
+    Support for using multiple <code>category:</code> filters is not yet implemented.
+  </div>
+{{/if}}
+
 {{#if this.firstResultPending}}
   <h2>Loading search results...</h2>
 {{else if this.dataTask.lastComplete.error}}

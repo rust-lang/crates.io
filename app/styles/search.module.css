@@ -5,6 +5,15 @@
     margin-bottom: 25px;
 }
 
+.warning {
+    margin: 0 0 16px;
+    padding: 8px;
+    color: var(--orange-700);
+    background: var(--orange-100);
+    border-left: solid var(--orange-400) 4px;
+    border-radius: 2px;
+}
+
 .sort-by-label {
     composes: small from './shared/typography.module.css';
 }

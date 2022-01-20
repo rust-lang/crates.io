@@ -1,4 +1,4 @@
-const CATEGORY_PREFIX = 'category:';
+export const CATEGORY_PREFIX = 'category:';
 const KEYWORD_PREFIX = 'keyword:';
 
 /**
