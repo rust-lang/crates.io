@@ -93,38 +93,21 @@ fn http_error_with_unhealthy_database() {
 }
 
 #[test]
-fn switch_to_read_replica_with_unhealthy_primary_database() {
-    const URL: &str = "api/v1/users/foo";
+fn fallback_to_replica_returns_user_info() {
+    const URL: &str = "/api/v1/users/foo";
 
     let (app, _, owner) = TestApp::init()
         .with_database(TestDatabase::SlowRealPool { replica: true })
         .with_user();
     app.db_new_user("foo");
-
-    // Primary database contains the user information
-    let response = owner.get::<()>(URL);
-    assert_eq!(response.status(), StatusCode::OK);
-
-    // Disable replica, switch fail over to primary database
-    app.replica_db_chaosproxy().break_networking();
-    let response = owner.get::<()>(URL);
-    assert_eq!(response.status(), StatusCode::OK);
-
-    // Fallback to replica database
     app.primary_db_chaosproxy().break_networking();
-    app.replica_db_chaosproxy().restore_networking();
-    let response = owner.get::<()>(URL);
-    assert_eq!(response.status(), StatusCode::OK);
 
-    // Disable both databases, no data found
-    app.primary_db_chaosproxy().break_networking();
-    app.replica_db_chaosproxy().break_networking();
+    // response is fetched from replica
     let response = owner.get::<()>(URL);
-    assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+    assert_eq!(response.status(), 200);
 
     // restore connection
     app.primary_db_chaosproxy().restore_networking();
-    app.replica_db_chaosproxy().restore_networking();
     app.as_inner()
         .primary_database
         .wait_until_healthy(Duration::from_millis(500))

@@ -1,7 +1,7 @@
 use super::{MockAnonymousUser, MockCookieUser, MockTokenUser};
 use crate::record;
 use crate::util::{chaosproxy::ChaosProxy, fresh_schema::FreshSchema};
-use cargo_registry::config;
+use cargo_registry::config::{self, DbPoolConfig};
 use cargo_registry::{background_jobs::Environment, db::DieselPool, App, Emails};
 use cargo_registry_index::testing::UpstreamIndex;
 use cargo_registry_index::{Credentials, Repository as WorkerRepository, RepositoryConfig};
@@ -202,11 +202,16 @@ impl TestAppBuilder {
                     ChaosProxy::proxy_database_url(fresh_schema.database_url()).unwrap();
                 self.config.db.primary.url = url;
 
-                let replica_proxy = match (self.test_database, self.config.db.replica.as_mut()) {
-                    (TestDatabase::SlowRealPool { replica: true }, Some(pool_config)) => {
+                let replica_proxy = match self.test_database {
+                    TestDatabase::SlowRealPool { replica: true } => {
                         let (replica_proxy, url) =
                             ChaosProxy::proxy_database_url(fresh_schema.database_url()).unwrap();
-                        pool_config.url = url;
+                        self.config.db.replica = Some(DbPoolConfig {
+                            url,
+                            read_only_mode: true,
+                            pool_size: 1,
+                            min_idle: None,
+                        });
                         Some(replica_proxy)
                     }
                     _ => None,
