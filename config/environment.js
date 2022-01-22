@@ -27,9 +27,6 @@ module.exports = function (environment) {
       hostWhitelist: ['crates.io', /^localhost:\d+$/, /\.herokuapp\.com$/],
     },
 
-    'ember-cli-mirage': {
-      discoverEmberDataModels: false,
-    },
     'ember-cli-notifications': {
       autoClear: true,
       clearDuration: 10_000,
