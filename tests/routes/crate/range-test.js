@@ -112,4 +112,24 @@ module('Route | crate.range', function (hooks) {
     assert.dom('[data-test-go-back]').exists();
     assert.dom('[data-test-try-again]').doesNotExist();
   });
+
+  test('shows an error page if versions fail to load', async function (assert) {
+    let crate = this.server.create('crate', { name: 'foo' });
+    this.server.create('version', { crate, num: '3.2.1' });
+
+    this.server.get('/api/v1/crates/:crate_name/versions', {}, 500);
+
+    // Load `crate` and then explicitly unload the side-loaded `versions`.
+    let store = this.owner.lookup('service:store');
+    let crateRecord = await store.findRecord('crate', 'foo');
+    let versions = crateRecord.hasMany('versions').value();
+    versions.forEach(record => record.unloadRecord());
+
+    await visit('/crates/foo/range/^3');
+    assert.equal(currentURL(), '/crates/foo/range/%5E3');
+    assert.dom('[data-test-404-page]').exists();
+    assert.dom('[data-test-title]').hasText('foo: Failed to load version data');
+    assert.dom('[data-test-go-back]').doesNotExist();
+    assert.dom('[data-test-try-again]').exists();
+  });
 });
