@@ -78,6 +78,15 @@ module('Route | crate.range', function (hooks) {
     assert.dom('[data-test-notification-message]').doesNotExist();
   });
 
+  test('shows an error page if crate not found', async function (assert) {
+    await visit('/crates/foo/range/^3');
+    assert.equal(currentURL(), '/crates/foo/range/%5E3');
+    assert.dom('[data-test-404-page]').exists();
+    assert.dom('[data-test-title]').hasText('Crate not found');
+    assert.dom('[data-test-go-back]').exists();
+    assert.dom('[data-test-try-again]').doesNotExist();
+  });
+
   test('shows an error page if no match found', async function (assert) {
     let crate = this.server.create('crate', { name: 'foo' });
     this.server.create('version', { crate, num: '1.0.0' });
