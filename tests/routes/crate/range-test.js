@@ -1,7 +1,9 @@
-import { currentURL, visit } from '@ember/test-helpers';
+import { currentURL } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
 import { setupApplicationTest } from 'cargo/tests/helpers';
+
+import { visit } from '../../helpers/visit-ignoring-abort';
 
 module('Route | crate.range', function (hooks) {
   setupApplicationTest(hooks);
@@ -76,7 +78,7 @@ module('Route | crate.range', function (hooks) {
     assert.dom('[data-test-notification-message]').doesNotExist();
   });
 
-  test('redirects to main crate page if no match found', async function (assert) {
+  test('shows an error page if no match found', async function (assert) {
     let crate = this.server.create('crate', { name: 'foo' });
     this.server.create('version', { crate, num: '1.0.0' });
     this.server.create('version', { crate, num: '1.1.0' });
@@ -84,9 +86,10 @@ module('Route | crate.range', function (hooks) {
     this.server.create('version', { crate, num: '2.0.0' });
 
     await visit('/crates/foo/range/^3');
-    assert.equal(currentURL(), `/crates/foo`);
-    assert.dom('[data-test-crate-name]').hasText('foo');
-    assert.dom('[data-test-crate-version]').hasText('2.0.0');
-    assert.dom('[data-test-notification-message="error"]').hasText("No matching version of crate 'foo' found for: ^3");
+    assert.equal(currentURL(), '/crates/foo/range/%5E3');
+    assert.dom('[data-test-404-page]').exists();
+    assert.dom('[data-test-title]').hasText('foo: No matching version found for ^3');
+    assert.dom('[data-test-go-back]').exists();
+    assert.dom('[data-test-try-again]').doesNotExist();
   });
 });
