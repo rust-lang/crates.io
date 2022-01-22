@@ -52,5 +52,13 @@ module.exports = function (defaults) {
   return require('@embroider/compat').compatBuild(app, Webpack, {
     staticAddonTestSupportTrees: true,
     staticModifiers: true,
+    packagerOptions: {
+      webpackConfig: {
+        resolve: {
+          // disables `crypto` import warning in `axe-core`
+          fallback: { crypto: false },
+        },
+      },
+    },
   });
 };
