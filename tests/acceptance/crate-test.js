@@ -85,7 +85,7 @@ module('Acceptance | crate page', function (hooks) {
     await visit('/crates/nanomsg');
     assert.equal(currentURL(), '/crates/nanomsg');
     assert.dom('[data-test-404-page]').exists();
-    assert.dom('[data-test-title]').hasText('Crate not found');
+    assert.dom('[data-test-title]').hasText('nanomsg: Crate not found');
     assert.dom('[data-test-go-back]').exists();
     assert.dom('[data-test-try-again]').doesNotExist();
   });
@@ -96,7 +96,7 @@ module('Acceptance | crate page', function (hooks) {
     await visit('/crates/nanomsg');
     assert.equal(currentURL(), '/crates/nanomsg');
     assert.dom('[data-test-404-page]').exists();
-    assert.dom('[data-test-title]').hasText('Crate failed to load');
+    assert.dom('[data-test-title]').hasText('nanomsg: Failed to load crate data');
     assert.dom('[data-test-go-back]').doesNotExist();
     assert.dom('[data-test-try-again]').exists();
   });
@@ -110,7 +110,7 @@ module('Acceptance | crate page', function (hooks) {
 
     assert.equal(currentURL(), '/crates/nanomsg/0.7.0');
     assert.dom('[data-test-404-page]').exists();
-    assert.dom('[data-test-title]').hasText('Version not found');
+    assert.dom('[data-test-title]').hasText('nanomsg: Version 0.7.0 not found');
     assert.dom('[data-test-go-back]').exists();
     assert.dom('[data-test-try-again]').doesNotExist();
   });
@@ -126,7 +126,7 @@ module('Acceptance | crate page', function (hooks) {
     await click('[data-test-just-updated] [data-test-crate-link="0"]');
     assert.equal(currentURL(), '/crates/nanomsg');
     assert.dom('[data-test-404-page]').exists();
-    assert.dom('[data-test-title]').hasText('Crate failed to load');
+    assert.dom('[data-test-title]').hasText('nanomsg: Failed to load version data');
     assert.dom('[data-test-go-back]').doesNotExist();
     assert.dom('[data-test-try-again]').exists();
   });

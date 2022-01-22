@@ -16,7 +16,8 @@ export default class VersionRoute extends Route {
     try {
       versions = await crate.get('versions');
     } catch (error) {
-      return this.router.replaceWith('catch-all', { transition, error, title: 'Crate failed to load', tryAgain: true });
+      let title = `${crate.name}: Failed to load version data`;
+      return this.router.replaceWith('catch-all', { transition, error, title, tryAgain: true });
     }
 
     let version;
@@ -24,7 +25,8 @@ export default class VersionRoute extends Route {
     if (requestedVersion) {
       version = versions.find(version => version.num === requestedVersion);
       if (!version) {
-        return this.router.replaceWith('catch-all', { transition, title: 'Version not found' });
+        let title = `${crate.name}: Version ${requestedVersion} not found`;
+        return this.router.replaceWith('catch-all', { transition, title });
       }
     } else {
       let { defaultVersion } = crate;
