@@ -34,12 +34,6 @@ module.exports = function (environment) {
       autoClear: true,
       clearDuration: 10_000,
     },
-    emberKeyboard: {
-      disableInputsInitializer: true,
-
-      // see https://github.com/adopted-ember-addons/ember-keyboard/pull/499
-      propagation: true,
-    },
   };
 
   if (environment === 'development') {
