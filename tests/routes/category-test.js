@@ -9,16 +9,22 @@ module('Route | category', function (hooks) {
   setupApplicationTest(hooks);
 
   test("shows an error message if the category can't be found", async function (assert) {
-    await visit('/categories/unknown');
-    assert.equal(currentURL(), '/');
-    assert.dom('[data-test-notification-message]').hasText("Category 'unknown' does not exist");
+    await visit('/categories/foo');
+    assert.equal(currentURL(), '/categories/foo');
+    assert.dom('[data-test-404-page]').exists();
+    assert.dom('[data-test-title]').hasText('foo: Category not found');
+    assert.dom('[data-test-go-back]').exists();
+    assert.dom('[data-test-try-again]').doesNotExist();
   });
 
   test('server error causes the error page to be shown', async function (assert) {
     this.server.get('/api/v1/categories/:categoryId', {}, 500);
 
-    await visit('/categories/error');
-    assert.equal(currentURL(), '/categories/error');
-    assert.dom('[data-test-error-message]').includesText('GET /api/v1/categories/error returned a 500');
+    await visit('/categories/foo');
+    assert.equal(currentURL(), '/categories/foo');
+    assert.dom('[data-test-404-page]').exists();
+    assert.dom('[data-test-title]').hasText('foo: Failed to load category data');
+    assert.dom('[data-test-go-back]').doesNotExist();
+    assert.dom('[data-test-try-again]').exists();
   });
 });
