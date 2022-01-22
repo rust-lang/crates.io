@@ -3,20 +3,22 @@ import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
 export default class CategoryRoute extends Route {
-  @service notifications;
   @service router;
   @service store;
 
-  async model(params) {
+  async model(params, transition) {
+    let categoryName = params.category_id;
+
     try {
-      return await this.store.find('category', params.category_id);
+      return await this.store.find('category', categoryName);
     } catch (error) {
       if (error instanceof NotFoundError) {
-        this.notifications.error(`Category '${params.category_id}' does not exist`);
-        return this.router.replaceWith('index');
+        let title = `${categoryName}: Category not found`;
+        this.router.replaceWith('catch-all', { transition, title });
+      } else {
+        let title = `${categoryName}: Failed to load category data`;
+        this.router.replaceWith('catch-all', { transition, error, title, tryAgain: true });
       }
-
-      throw error;
     }
   }
 }
