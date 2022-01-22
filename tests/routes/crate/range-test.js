@@ -87,6 +87,17 @@ module('Route | crate.range', function (hooks) {
     assert.dom('[data-test-try-again]').doesNotExist();
   });
 
+  test('shows an error page if crate fails to load', async function (assert) {
+    this.server.get('/api/v1/crates/:crate_name', {}, 500);
+
+    await visit('/crates/foo/range/^3');
+    assert.equal(currentURL(), '/crates/foo/range/%5E3');
+    assert.dom('[data-test-404-page]').exists();
+    assert.dom('[data-test-title]').hasText('Crate failed to load');
+    assert.dom('[data-test-go-back]').doesNotExist();
+    assert.dom('[data-test-try-again]').exists();
+  });
+
   test('shows an error page if no match found', async function (assert) {
     let crate = this.server.create('crate', { name: 'foo' });
     this.server.create('version', { crate, num: '1.0.0' });
