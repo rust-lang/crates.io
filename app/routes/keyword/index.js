@@ -2,6 +2,7 @@ import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
 export default class KeywordIndexRoute extends Route {
+  @service router;
   @service store;
 
   queryParams = {
@@ -9,9 +10,14 @@ export default class KeywordIndexRoute extends Route {
     sort: { refreshModel: true },
   };
 
-  model(params) {
-    params.keyword = this.modelFor('keyword').id;
-    return this.store.query('crate', params);
+  async model(params, transition) {
+    let keyword = this.modelFor('keyword');
+    try {
+      return await this.store.query('crate', { ...params, keyword });
+    } catch (error) {
+      let title = `${keyword}: Failed to load crates`;
+      this.router.replaceWith('catch-all', { transition, error, title, tryAgain: true });
+    }
   }
 
   setupController(controller) {
