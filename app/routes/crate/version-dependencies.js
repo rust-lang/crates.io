@@ -2,27 +2,31 @@ import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
 export default class VersionRoute extends Route {
-  @service notifications;
   @service router;
 
-  async model(params) {
+  async model(params, transition) {
     let crate = this.modelFor('crate');
-    let versions = await crate.get('versions');
+
+    let versions;
+    try {
+      versions = await crate.get('versions');
+    } catch (error) {
+      let title = `${crate.name}: Failed to load version data`;
+      return this.router.replaceWith('catch-all', { transition, error, title, tryAgain: true });
+    }
 
     let requestedVersion = params.version_num;
     let version = versions.find(version => version.num === requestedVersion);
     if (!version) {
-      this.notifications.error(`Version '${requestedVersion}' of crate '${crate.name}' does not exist`);
-      this.router.replaceWith('crate.index');
+      let title = `${crate.name}: Version ${requestedVersion} not found`;
+      return this.router.replaceWith('catch-all', { transition, title });
     }
 
     try {
       await version.loadDepsTask.perform();
-    } catch {
-      this.notifications.error(
-        `Failed to load the list of dependencies for the '${crate.name}' crate. Please try again later!`,
-      );
-      this.router.replaceWith('crate.index');
+    } catch (error) {
+      let title = `${crate.name}: Failed to load dependencies`;
+      return this.router.replaceWith('catch-all', { transition, error, title, tryAgain: true });
     }
 
     return version;

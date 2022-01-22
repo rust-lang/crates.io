@@ -1,4 +1,4 @@
-import { currentURL, visit } from '@ember/test-helpers';
+import { currentURL } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
 import percySnapshot from '@percy/ember';
@@ -8,6 +8,7 @@ import { getPageTitle } from 'ember-page-title/test-support';
 import { setupApplicationTest } from 'cargo/tests/helpers';
 
 import axeConfig from '../axe-config';
+import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Acceptance | crate dependencies page', function (hooks) {
   setupApplicationTest(hooks);
@@ -39,17 +40,70 @@ module('Acceptance | crate dependencies page', function (hooks) {
     assert.dom('[data-test-dev-dependencies] li').doesNotExist();
   });
 
+  test('shows an error page if crate not found', async function (assert) {
+    await visit('/crates/foo/1.0.0/dependencies');
+    assert.equal(currentURL(), '/crates/foo/1.0.0/dependencies');
+    assert.dom('[data-test-404-page]').exists();
+    assert.dom('[data-test-title]').hasText('foo: Crate not found');
+    assert.dom('[data-test-go-back]').exists();
+    assert.dom('[data-test-try-again]').doesNotExist();
+  });
+
+  test('shows an error page if crate fails to load', async function (assert) {
+    this.server.get('/api/v1/crates/:crate_name', {}, 500);
+
+    await visit('/crates/foo/1.0.0/dependencies');
+    assert.equal(currentURL(), '/crates/foo/1.0.0/dependencies');
+    assert.dom('[data-test-404-page]').exists();
+    assert.dom('[data-test-title]').hasText('foo: Failed to load crate data');
+    assert.dom('[data-test-go-back]').doesNotExist();
+    assert.dom('[data-test-try-again]').exists();
+  });
+
+  test('shows an error page if version is not found', async function (assert) {
+    let crate = this.server.create('crate', { name: 'foo' });
+    this.server.create('version', { crate, num: '2.0.0' });
+
+    await visit('/crates/foo/1.0.0/dependencies');
+    assert.equal(currentURL(), '/crates/foo/1.0.0/dependencies');
+    assert.dom('[data-test-404-page]').exists();
+    assert.dom('[data-test-title]').hasText('foo: Version 1.0.0 not found');
+    assert.dom('[data-test-go-back]').exists();
+    assert.dom('[data-test-try-again]').doesNotExist();
+  });
+
+  test('shows an error page if versions fail to load', async function (assert) {
+    let crate = this.server.create('crate', { name: 'foo' });
+    this.server.create('version', { crate, num: '2.0.0' });
+
+    this.server.get('/api/v1/crates/:crate_name/versions', {}, 500);
+
+    // Load `crate` and then explicitly unload the side-loaded `versions`.
+    let store = this.owner.lookup('service:store');
+    let crateRecord = await store.findRecord('crate', 'foo');
+    let versions = crateRecord.hasMany('versions').value();
+    versions.forEach(record => record.unloadRecord());
+
+    await visit('/crates/foo/1.0.0/dependencies');
+    assert.equal(currentURL(), '/crates/foo/1.0.0/dependencies');
+    assert.dom('[data-test-404-page]').exists();
+    assert.dom('[data-test-title]').hasText('foo: Failed to load version data');
+    assert.dom('[data-test-go-back]').doesNotExist();
+    assert.dom('[data-test-try-again]').exists();
+  });
+
   test('shows error message if loading of dependencies fails', async function (assert) {
-    this.server.loadFixtures();
+    let crate = this.server.create('crate', { name: 'foo' });
+    this.server.create('version', { crate, num: '1.0.0' });
 
     this.server.get('/api/v1/crates/:crate_name/:version_num/dependencies', {}, 500);
 
-    await visit('/crates/nanomsg/dependencies');
-    assert.equal(currentURL(), '/crates/nanomsg');
-
-    assert
-      .dom('[data-test-notification-message="error"]')
-      .hasText("Failed to load the list of dependencies for the 'nanomsg' crate. Please try again later!");
+    await visit('/crates/foo/1.0.0/dependencies');
+    assert.equal(currentURL(), '/crates/foo/1.0.0/dependencies');
+    assert.dom('[data-test-404-page]').exists();
+    assert.dom('[data-test-title]').hasText('foo: Failed to load dependencies');
+    assert.dom('[data-test-go-back]').doesNotExist();
+    assert.dom('[data-test-try-again]').exists();
   });
 
   test('hides description if loading of dependency details fails', async function (assert) {
