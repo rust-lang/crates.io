@@ -31,7 +31,7 @@ module('Route | crate.version | model() hook', function (hooks) {
       await visit('/crates/foo/2.0.0');
       assert.equal(currentURL(), `/crates/foo/2.0.0`);
       assert.dom('[data-test-404-page]').exists();
-      assert.dom('[data-test-title]').hasText('Version not found');
+      assert.dom('[data-test-title]').hasText('foo: Version 2.0.0 not found');
       assert.dom('[data-test-go-back]').exists();
       assert.dom('[data-test-try-again]').doesNotExist();
     });

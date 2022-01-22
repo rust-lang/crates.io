@@ -7,13 +7,17 @@ export default class CrateRoute extends Route {
   @service store;
 
   async model(params, transition) {
+    let crateName = params.crate_id;
+
     try {
-      return await this.store.find('crate', params.crate_id);
+      return await this.store.find('crate', crateName);
     } catch (error) {
       if (error.errors?.some(e => e.detail === 'Not Found')) {
-        this.router.replaceWith('catch-all', { transition, error, title: 'Crate not found' });
+        let title = `${crateName}: Crate not found`;
+        this.router.replaceWith('catch-all', { transition, error, title });
       } else {
-        this.router.replaceWith('catch-all', { transition, error, title: 'Crate failed to load', tryAgain: true });
+        let title = `${crateName}: Failed to load crate data`;
+        this.router.replaceWith('catch-all', { transition, error, title, tryAgain: true });
       }
     }
   }
