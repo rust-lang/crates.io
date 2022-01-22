@@ -29,7 +29,7 @@ rustdoc-args = [
 ]
 
 [dependencies]
-anyhow = "=1.0.52"
+anyhow = "=1.0.53"
 base64 = "=0.13.0"
 cargo-registry-markdown = { path = "cargo-registry-markdown" }
 cargo-registry-s3 = { path = "cargo-registry-s3" }
