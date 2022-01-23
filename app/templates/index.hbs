@@ -165,7 +165,7 @@
           {{#each this.model.popular_keywords as |keyword|}}
             <li>
               <FrontPageList::Item
-                @link={{link "keyword" keyword}}
+                @link={{link "keyword" keyword.id}}
                 @title={{keyword.id}}
                 @subtitle="{{format-num keyword.crates_cnt}} crates"
               />
