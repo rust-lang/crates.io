@@ -1,6 +1,6 @@
-{{page-title this.keyword.keyword ' - Keywords'}}
+{{page-title @model.keyword ' - Keywords'}}
 
-<PageHeader @title="All Crates" @suffix="for keyword '{{this.keyword.keyword}}'"/>
+<PageHeader @title="All Crates" @suffix="for keyword '{{@model.keyword}}'"/>
 
 <div local-class="results-meta">
   <ResultsCount
@@ -22,6 +22,6 @@
   </div>
 </div>
 
-<CrateList @crates={{this.model}} local-class="list" />
+<CrateList @crates={{@model.crates}} local-class="list" />
 
 <Pagination @pagination={{this.pagination}} />

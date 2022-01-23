@@ -1,22 +1,24 @@
-import { NotFoundError } from '@ember-data/adapter/error';
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
-export default class KeywordRoute extends Route {
-  @service notifications;
+export default class KeywordIndexRoute extends Route {
   @service router;
   @service store;
 
-  async model({ keyword_id }) {
-    try {
-      return await this.store.find('keyword', keyword_id);
-    } catch (error) {
-      if (error instanceof NotFoundError) {
-        this.notifications.error(`Keyword '${keyword_id}' does not exist`);
-        return this.router.replaceWith('index');
-      }
+  queryParams = {
+    page: { refreshModel: true },
+    sort: { refreshModel: true },
+  };
 
-      throw error;
+  async model(params, transition) {
+    let { keyword_id: keyword, page, sort } = params;
+
+    try {
+      let crates = await this.store.query('crate', { keyword, page, sort });
+      return { keyword, crates };
+    } catch (error) {
+      let title = `${keyword}: Failed to load crates`;
+      this.router.replaceWith('catch-all', { transition, error, title, tryAgain: true });
     }
   }
 }

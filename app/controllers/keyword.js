@@ -3,7 +3,7 @@ import { tracked } from '@glimmer/tracking';
 
 import { reads } from 'macro-decorators';
 
-import { pagination } from '../../utils/pagination';
+import { pagination } from '../utils/pagination';
 
 export default class KeywordIndexController extends Controller {
   queryParams = ['page', 'per_page', 'sort'];
@@ -11,7 +11,7 @@ export default class KeywordIndexController extends Controller {
   @tracked per_page = 10;
   @tracked sort = 'recent-downloads';
 
-  @reads('model.meta.total') totalItems;
+  @reads('model.crates.meta.total') totalItems;
 
   @pagination() pagination;
 
