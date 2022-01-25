@@ -1,7 +1,7 @@
 use crate::background_jobs::Environment;
-use crate::git::Crate;
 use crate::schema;
 use anyhow::Context;
+use cargo_registry_index::Crate;
 use chrono::Utc;
 use diesel::prelude::*;
 use std::fs::{self, OpenOptions};

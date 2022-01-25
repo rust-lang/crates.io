@@ -13,8 +13,8 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
 use cargo_registry::config;
-use cargo_registry::git::{Repository, RepositoryConfig};
 use cargo_registry::{background_jobs::*, db};
+use cargo_registry_index::{Repository, RepositoryConfig};
 use diesel::r2d2;
 use reqwest::blocking::Client;
 use std::sync::{Arc, Mutex};

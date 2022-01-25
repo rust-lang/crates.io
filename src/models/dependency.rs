@@ -4,6 +4,7 @@ use diesel::sql_types::Integer;
 
 use crate::models::{Crate, Version};
 use crate::schema::*;
+use cargo_registry_index::DependencyKind as IndexDependencyKind;
 
 #[derive(Identifiable, Associations, Debug, Queryable, QueryableByName)]
 #[belongs_to(Version)]
@@ -40,6 +41,16 @@ pub enum DependencyKind {
     Build = 1,
     Dev = 2,
     // if you add a kind here, be sure to update `from_row` below.
+}
+
+impl From<DependencyKind> for IndexDependencyKind {
+    fn from(dk: DependencyKind) -> Self {
+        match dk {
+            DependencyKind::Normal => IndexDependencyKind::Normal,
+            DependencyKind::Build => IndexDependencyKind::Build,
+            DependencyKind::Dev => IndexDependencyKind::Dev,
+        }
+    }
 }
 
 impl FromSql<Integer, Pg> for DependencyKind {

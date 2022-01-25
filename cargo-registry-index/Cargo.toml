@@ -1,0 +1,24 @@
+[package]
+name = "cargo-registry-index"
+version = "0.0.0"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/rust-lang/crates.io"
+description = "crates.io package index utilities"
+edition = "2018"
+resolver = "2"
+
+[lib]
+path = "lib.rs"
+
+[features]
+testing = ["serde_json"]
+
+[dependencies]
+anyhow = "=1.0.53"
+base64 = "=0.13.0"
+dotenv = "=0.15.0"
+git2 = "=0.13.25"
+serde = { version = "=1.0.135", features = ["derive"] }
+tempfile = "=3.3.0"
+url = "=2.2.2"
+serde_json = { version = "=1.0.78", optional = true }

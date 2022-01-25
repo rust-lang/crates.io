@@ -31,6 +31,7 @@ rustdoc-args = [
 [dependencies]
 anyhow = "=1.0.53"
 base64 = "=0.13.0"
+cargo-registry-index = { path = "cargo-registry-index" }
 cargo-registry-markdown = { path = "cargo-registry-markdown" }
 cargo-registry-s3 = { path = "cargo-registry-s3" }
 chrono = { version = "=0.4.19", features = ["serde"] }
@@ -56,7 +57,6 @@ dotenv = "=0.15.0"
 flate2 = "=1.0.22"
 futures-channel = { version = "=0.3.19", default-features = false }
 futures-util = "=0.3.19"
-git2 = "=0.13.25"
 hex = "=0.4.3"
 http = "=0.2.6"
 hyper = { version = "=0.14.16", features = ["client", "http1"] }
@@ -89,6 +89,7 @@ tracing-subscriber = { version = "=0.3.6", features = ["env-filter"] }
 url = "=2.2.2"
 
 [dev-dependencies]
+cargo-registry-index = { path = "cargo-registry-index", features = ["testing"] }
 claim = "=0.5.0"
 conduit-test = "=0.10.0"
 hyper-tls = "=0.5.0"

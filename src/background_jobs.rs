@@ -5,8 +5,8 @@ use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use swirl::PerformError;
 
 use crate::db::{DieselPool, DieselPooledConn, PoolError};
-use crate::git::Repository;
 use crate::uploaders::Uploader;
+use cargo_registry_index::Repository;
 
 impl<'a> swirl::db::BorrowedConnection<'a> for DieselPool {
     type Connection = DieselPooledConn<'a>;

@@ -238,6 +238,7 @@ version = "0.2.2"
 dependencies = [
  "anyhow",
  "base64",
+ "cargo-registry-index",
  "cargo-registry-markdown",
  "cargo-registry-s3",
  "chrono",
@@ -263,7 +264,6 @@ dependencies = [
  "flate2",
  "futures-channel",
  "futures-util",
- "git2",
  "hex",
  "http",
  "hyper",
@@ -296,6 +296,20 @@ dependencies = [
  "tower-service",
  "tracing",
  "tracing-subscriber",
+ "url",
+]
+
+[[package]]
+name = "cargo-registry-index"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "base64",
+ "dotenv",
+ "git2",
+ "serde",
+ "serde_json",
+ "tempfile",
  "url",
 ]
 

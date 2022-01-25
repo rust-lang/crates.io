@@ -1,17 +1,12 @@
 use super::{MockAnonymousUser, MockCookieUser, MockTokenUser};
-use crate::git::UpstreamIndex;
 use crate::record;
 use crate::util::{chaosproxy::ChaosProxy, fresh_schema::FreshSchema};
 use cargo_registry::config;
-use cargo_registry::{
-    background_jobs::Environment,
-    db::DieselPool,
-    git::{Credentials, RepositoryConfig},
-    App, Emails,
-};
+use cargo_registry::{background_jobs::Environment, db::DieselPool, App, Emails};
+use cargo_registry_index::testing::UpstreamIndex;
+use cargo_registry_index::{Credentials, Repository as WorkerRepository, RepositoryConfig};
 use std::{rc::Rc, sync::Arc, time::Duration};
 
-use cargo_registry::git::Repository as WorkerRepository;
 use diesel::PgConnection;
 use reqwest::{blocking::Client, Proxy};
 use std::collections::HashSet;
@@ -133,7 +128,7 @@ impl TestApp {
     }
 
     /// Obtain a list of crates from the index HEAD
-    pub fn crates_from_index_head(&self, crate_name: &str) -> Vec<cargo_registry::git::Crate> {
+    pub fn crates_from_index_head(&self, crate_name: &str) -> Vec<cargo_registry_index::Crate> {
         self.upstream_index()
             .crates_from_index_head(crate_name)
             .unwrap()

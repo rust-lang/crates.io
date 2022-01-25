@@ -25,13 +25,10 @@ impl UpstreamIndex {
     }
 
     /// Obtain a list of crates from the index HEAD
-    pub fn crates_from_index_head(
-        &self,
-        crate_name: &str,
-    ) -> anyhow::Result<Vec<cargo_registry::git::Crate>> {
+    pub fn crates_from_index_head(&self, crate_name: &str) -> anyhow::Result<Vec<crate::Crate>> {
         let repo = &self.repository;
 
-        let path = cargo_registry::git::Repository::relative_index_file(crate_name);
+        let path = crate::Repository::relative_index_file(crate_name);
 
         let head = repo.head()?;
         let tree = head.peel_to_tree()?;
