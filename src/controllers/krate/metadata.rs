@@ -46,8 +46,6 @@ pub fn summary(req: &mut dyn RequestExt) -> EndpointResult {
                 Ok(EncodableCrate::from_minimal(
                     krate,
                     &top_versions,
-                    None,
-                    false,
                     recent_downloads,
                 ))
             })

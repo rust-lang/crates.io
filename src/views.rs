@@ -313,8 +313,6 @@ impl EncodableCrate {
     pub fn from_minimal(
         krate: Crate,
         top_versions: &TopVersions,
-        badges: Option<Vec<Badge>>,
-        exact_match: bool,
         recent_downloads: Option<i64>,
     ) -> Self {
         Self::from(
@@ -323,8 +321,8 @@ impl EncodableCrate {
             None,
             None,
             None,
-            badges,
-            exact_match,
+            None,
+            false,
             recent_downloads,
         )
     }
