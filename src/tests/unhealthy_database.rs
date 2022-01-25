@@ -102,9 +102,44 @@ fn fallback_to_replica_returns_user_info() {
     app.db_new_user("foo");
     app.primary_db_chaosproxy().break_networking();
 
-    // response is fetched from replica
+    // When the primary database is down, requests are forwarded to the replica database
     let response = owner.get::<()>(URL);
     assert_eq!(response.status(), 200);
+
+    // restore primary database connection
+    app.primary_db_chaosproxy().restore_networking();
+    app.as_inner()
+        .primary_database
+        .wait_until_healthy(Duration::from_millis(500))
+        .expect("the database did not return healthy");
+}
+
+#[test]
+fn restored_replica_returns_user_info() {
+    const URL: &str = "/api/v1/users/foo";
+
+    let (app, _, owner) = TestApp::init()
+        .with_database(TestDatabase::SlowRealPool { replica: true })
+        .with_user();
+    app.db_new_user("foo");
+    app.primary_db_chaosproxy().break_networking();
+    app.replica_db_chaosproxy().break_networking();
+
+    // When both primary and replica database are down, the request returns an error
+    let response = owner.get::<()>(URL);
+    assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+    // Once the replica database is restored, it should serve as a fallback again
+    app.replica_db_chaosproxy().restore_networking();
+    app.as_inner()
+        .read_only_replica_database
+        .as_ref()
+        .expect("no replica database configured")
+        .wait_until_healthy(Duration::from_millis(500))
+        .expect("the database did not return healthy");
+
+    let response = owner.get::<()>(URL);
+    assert_eq!(response.status(), StatusCode::OK);
 
     // restore connection
     app.primary_db_chaosproxy().restore_networking();
