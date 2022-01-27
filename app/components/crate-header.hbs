@@ -23,7 +23,7 @@
     <ul local-class="keywords">
       {{#each @crate.keywords as |keyword|}}
         <li>
-          <LinkTo @route="keyword" @model={{keyword}}>
+          <LinkTo @route="keyword" @model={{keyword.id}} data-test-keyword={{keyword.id}}>
             <span local-class="hash">#</span>{{keyword.id}}
           </LinkTo>
         </li>

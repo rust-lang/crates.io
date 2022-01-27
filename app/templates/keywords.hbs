@@ -21,9 +21,9 @@
 
 <div local-class="list">
   {{#each this.model as |keyword|}}
-    <div local-class="row">
-      <LinkTo @route="keyword" @model={{keyword}}>{{keyword.id}}</LinkTo>
-      <span local-class="crate-count">
+    <div local-class="row" data-test-keyword={{keyword.id}}>
+      <LinkTo @route="keyword" @model={{keyword.id}}>{{keyword.id}}</LinkTo>
+      <span local-class="crate-count" data-test-count>
         {{format-num keyword.crates_cnt}} {{if (eq keyword.crates_cnt 1) "crate" "crates"}}
       </span>
     </div>
