@@ -5,7 +5,7 @@ module.exports = function (environment) {
     modulePrefix: 'cargo',
     environment,
     rootURL: '/',
-    locationType: 'auto',
+    locationType: 'history',
     historySupportMiddleware: true,
     EmberENV: {
       FEATURES: {
