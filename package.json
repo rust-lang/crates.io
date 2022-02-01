@@ -132,7 +132,7 @@
     "webpack": "5.67.0"
   },
   "resolutions": {
-    "ember-css-modules/postcss": "8.4.5",
+    "ember-css-modules/postcss": "8.4.6",
     "ember-inflector": "4.0.2",
     "ember-modifier": "3.1.0",
     "miragejs": "0.1.43"
