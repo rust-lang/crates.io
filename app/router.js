@@ -8,7 +8,6 @@ export default class Router extends EmberRouter {
 }
 
 Router.map(function () {
-  this.route('github-authorize', { path: '/authorize/github' });
   this.route('crates');
   this.route('crate', { path: '/crates/:crate_id' }, function () {
     this.route('versions');
