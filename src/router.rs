@@ -36,6 +36,7 @@ pub fn build_router(app: &App) -> RouteBuilder {
 
     // Routes used by the frontend
     api_router.get("/crates/:crate_id", C(krate::metadata::show));
+    api_router.get("/crates/:crate_id/crate", C(krate::metadata::krate));
     api_router.get("/crates/:crate_id/:version", C(version::metadata::show));
     api_router.get(
         "/crates/:crate_id/:version/readme",

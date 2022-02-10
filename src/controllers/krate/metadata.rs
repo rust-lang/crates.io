@@ -45,7 +45,7 @@ pub fn summary(req: &mut dyn RequestExt) -> EndpointResult {
             .map(|((top_versions, krate), recent_downloads)| {
                 Ok(EncodableCrate::from_minimal(
                     krate,
-                    &top_versions,
+                    Some(&top_versions),
                     None,
                     false,
                     recent_downloads,
@@ -159,7 +159,7 @@ pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
     Ok(req.json(&json!({
         "crate": EncodableCrate::from(
             krate.clone(),
-            &top_versions,
+            Some(&top_versions),
             Some(ids),
             Some(&kws),
             Some(&cats),
@@ -173,6 +173,26 @@ pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
             .collect::<Vec<_>>(),
         "keywords": kws.into_iter().map(Keyword::into).collect::<Vec<EncodableKeyword>>(),
         "categories": cats.into_iter().map(Category::into).collect::<Vec<EncodableCategory>>(),
+    })))
+}
+
+/// Handles the `GET /crates/:crate_id/crate` route.
+///
+/// A minimal version of [`show`] that only covers the crate itself, without versions or catalog information
+/// (such as keywords and categories).
+pub fn krate(req: &mut dyn RequestExt) -> EndpointResult {
+    let name = &req.params()["crate_id"];
+    let conn = req.db_read_only()?;
+    let krate: Crate = Crate::by_name(name).first(&*conn)?;
+
+    Ok(req.json(&json!({
+        "crate": EncodableCrate::from_minimal(
+            krate,
+            None,
+            None,
+            false,
+            None,
+        ),
     })))
 }
 

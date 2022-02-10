@@ -238,7 +238,7 @@ impl EncodableCrate {
     #[allow(clippy::too_many_arguments)]
     pub fn from(
         krate: Crate,
-        top_versions: &TopVersions,
+        top_versions: Option<&TopVersions>,
         versions: Option<Vec<i32>>,
         keywords: Option<&[Keyword]>,
         categories: Option<&[Category]>,
@@ -267,18 +267,18 @@ impl EncodableCrate {
         let documentation = Self::remove_blocked_documentation_urls(documentation);
 
         let max_version = top_versions
-            .highest
-            .as_ref()
+            .and_then(|v| v.highest.as_ref())
             .map(|v| v.to_string())
             .unwrap_or_else(|| "0.0.0".to_string());
 
         let newest_version = top_versions
-            .newest
-            .as_ref()
+            .and_then(|v| v.newest.as_ref())
             .map(|v| v.to_string())
             .unwrap_or_else(|| "0.0.0".to_string());
 
-        let max_stable_version = top_versions.highest_stable.as_ref().map(|v| v.to_string());
+        let max_stable_version = top_versions
+            .and_then(|v| v.highest_stable.as_ref())
+            .map(|v| v.to_string());
 
         EncodableCrate {
             id: name.clone(),
@@ -312,7 +312,7 @@ impl EncodableCrate {
 
     pub fn from_minimal(
         krate: Crate,
-        top_versions: &TopVersions,
+        top_versions: Option<&TopVersions>,
         badges: Option<Vec<Badge>>,
         exact_match: bool,
         recent_downloads: Option<i64>,
