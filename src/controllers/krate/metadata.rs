@@ -185,15 +185,9 @@ pub fn krate(req: &mut dyn RequestExt) -> EndpointResult {
     let conn = req.db_read_only()?;
     let krate: Crate = Crate::by_name(name).first(&*conn)?;
 
-    Ok(req.json(&json!({
-        "crate": EncodableCrate::from_minimal(
-            krate,
-            None,
-            None,
-            false,
-            None,
-        ),
-    })))
+    Ok(req.json(&EncodableCrate::from_minimal(
+        krate, None, None, false, None,
+    )))
 }
 
 /// Handles the `GET /crates/:crate_id/:version/readme` route.
