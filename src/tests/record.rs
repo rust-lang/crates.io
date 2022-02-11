@@ -247,7 +247,7 @@ async fn record_http(req: Request<Body>, client: Client) -> Result<ResponseAndEx
             .iter()
             .map(|h| (h.0.as_str().to_string(), h.1.to_str().unwrap().to_string()))
             .collect(),
-        body: base64::encode(&body.to_vec()),
+        body: base64::encode(&body),
     };
 
     // Construct an outgoing request
@@ -273,7 +273,7 @@ async fn record_http(req: Request<Body>, client: Client) -> Result<ResponseAndEx
             .iter()
             .map(|h| (h.0.as_str().to_string(), h.1.to_str().unwrap().to_string()))
             .collect(),
-        body: base64::encode(&body.to_vec()),
+        body: base64::encode(&body),
     };
 
     // Construct an outgoing response
@@ -371,7 +371,7 @@ impl GhUser {
             return;
         }
 
-        let password = crate::env(&format!("GH_PASS_{}", self.login.replace("-", "_")));
+        let password = crate::env(&format!("GH_PASS_{}", self.login.replace('-', "_")));
         #[derive(Serialize)]
         struct Authorization {
             scopes: Vec<String>,

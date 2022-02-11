@@ -267,7 +267,7 @@ pub fn text_to_html(
         }
     }
 
-    encode_minimal(text).replace("\n", "<br>\n")
+    encode_minimal(text).replace('\n', "<br>\n")
 }
 
 /// Helper function to build a new `HashSet` from the items slice.

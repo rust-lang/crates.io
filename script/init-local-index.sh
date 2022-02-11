@@ -11,10 +11,10 @@ mkdir -p tmp
 rm -rf tmp/index-bare tmp/index-tmp
 
 echo "Initializing repository in tmp/index-bare..."
-git init -q --bare tmp/index-bare
+git init -q --bare --initial-branch=master tmp/index-bare
 
 echo "Creating temporary clone in tmp/index-tmp..."
-git init -q tmp/index-tmp
+git init -q --initial-branch=master tmp/index-tmp
 cd tmp/index-tmp
 cat > config.json <<-EOF
 {
