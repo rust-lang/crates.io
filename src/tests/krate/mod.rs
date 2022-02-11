@@ -1,6 +1,7 @@
 mod dependencies;
 mod downloads;
 mod following;
+mod krate;
 mod owners;
 mod publish;
 mod reverse_dependencies;

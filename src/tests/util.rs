@@ -23,7 +23,10 @@ use crate::{
     builders::PublishBuilder, CategoryListResponse, CategoryResponse, CrateList, CrateResponse,
     GoodCrate, OkBool, OwnersResponse, VersionResponse,
 };
-use cargo_registry::models::{ApiToken, CreatedApiToken, User};
+use cargo_registry::{
+    models::{ApiToken, CreatedApiToken, User},
+    views::EncodableCrate,
+};
 
 use conduit::{BoxError, Handler, Method};
 use conduit_cookie::SessionMiddleware;
@@ -159,6 +162,12 @@ pub trait RequestHelper {
     /// Request the JSON used for a crate's page
     fn show_crate(&self, krate_name: &str) -> CrateResponse {
         let url = format!("/api/v1/crates/{krate_name}");
+        self.get(&url).good()
+    }
+
+    /// Request the JSON used for a crate's minimal page
+    fn show_crate_minimal(&self, krate_name: &str) -> EncodableCrate {
+        let url = format!("/api/v1/crates/{krate_name}/crate");
         self.get(&url).good()
     }
 
