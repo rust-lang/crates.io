@@ -180,7 +180,7 @@ pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
 ///
 /// A minimal version of [`show`] that only covers the crate itself, without versions or catalog information
 /// (such as keywords and categories).
-pub fn krate(req: &mut dyn RequestExt) -> EndpointResult {
+pub fn show_minimal(req: &mut dyn RequestExt) -> EndpointResult {
     let name = &req.params()["crate_id"];
     let conn = req.db_read_only()?;
     let krate: Crate = Crate::by_name(name).first(&*conn)?;
