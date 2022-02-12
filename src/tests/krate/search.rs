@@ -113,6 +113,9 @@ fn index_queries() {
     let cl = anon.search("keyword=kw3&category=cat1");
     assert_eq!(cl.crates.len(), 0);
     assert_eq!(cl.meta.total, 0);
+
+    // ignores 0x00 characters that Postgres does not support
+    assert_eq!(anon.search("q=k\u{0}w1").meta.total, 3);
 }
 
 #[test]

@@ -49,6 +49,11 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
         .map(|s| s == "yes")
         .unwrap_or(true);
 
+    // Remove 0x00 characters from the query string because Postgres can not
+    // handle them and will return an error, which would cause us to throw
+    // an Internal Server Error ourselves.
+    let q_string = params.get("q").map(|q| q.replace('\u{0}', ""));
+
     let selection = (
         ALL_COLUMNS,
         false.into_sql::<Bool>(),
@@ -61,7 +66,7 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
 
     let mut supports_seek = true;
 
-    if let Some(q_string) = params.get("q") {
+    if let Some(q_string) = &q_string {
         // Searching with a query string always puts the exact match at the start of the results,
         // so we can't support seek-based pagination with it.
         supports_seek = false;
