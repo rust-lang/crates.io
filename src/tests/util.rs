@@ -23,10 +23,7 @@ use crate::{
     builders::PublishBuilder, CategoryListResponse, CategoryResponse, CrateList, CrateResponse,
     GoodCrate, OkBool, OwnersResponse, VersionResponse,
 };
-use cargo_registry::{
-    models::{ApiToken, CreatedApiToken, User},
-    views::EncodableCrate,
-};
+use cargo_registry::models::{ApiToken, CreatedApiToken, User};
 
 use conduit::{BoxError, Handler, Method};
 use conduit_cookie::SessionMiddleware;
@@ -106,6 +103,14 @@ pub trait RequestHelper {
         self.run(self.get_request(path))
     }
 
+    /// Issue a GET request with a query string
+    #[track_caller]
+    fn get_query<T>(&self, path: &str, query: &str) -> Response<T> {
+        let mut req = self.get_request(path);
+        req.with_query(query);
+        self.run(req)
+    }
+
     /// Issue a GET request that includes query parameters
     #[track_caller]
     fn get_with_query<T>(&self, path: &str, query: &str) -> Response<T> {
@@ -166,9 +171,9 @@ pub trait RequestHelper {
     }
 
     /// Request the JSON used for a crate's minimal page
-    fn show_crate_minimal(&self, krate_name: &str) -> EncodableCrate {
-        let url = format!("/api/v1/crates/{krate_name}/crate");
-        self.get(&url).good()
+    fn show_crate_minimal(&self, krate_name: &str) -> CrateResponse {
+        let url = format!("/api/v1/crates/{krate_name}");
+        self.get_query(&url, "include=").good()
     }
 
     /// Request the JSON used to list a crate's owners

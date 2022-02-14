@@ -69,8 +69,8 @@ struct CrateMeta {
 pub struct CrateResponse {
     #[serde(rename = "crate")]
     krate: EncodableCrate,
-    versions: Vec<EncodableVersion>,
-    keywords: Vec<EncodableKeyword>,
+    versions: Option<Vec<EncodableVersion>>,
+    keywords: Option<Vec<EncodableKeyword>>,
 }
 #[derive(Deserialize)]
 pub struct VersionResponse {
