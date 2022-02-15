@@ -68,7 +68,7 @@ moka = "=0.7.2"
 oauth2 = { version = "=4.1.0", default-features = false, features = ["reqwest"] }
 parking_lot = "=0.12.0"
 prometheus = { version = "=0.13.0", default-features = false }
-rand = "=0.8.4"
+rand = "=0.8.5"
 reqwest = { version = "=0.11.9", features = ["blocking", "gzip", "json"] }
 scheduled-thread-pool = "=0.2.5"
 semver = { version = "=1.0.5", features = ["serde"] }
