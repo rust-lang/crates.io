@@ -63,15 +63,14 @@ dependencies = [
 
 [[package]]
 name = "ammonia"
-version = "3.1.3"
+version = "3.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b74b175af97d1aecc1add0878b1cbfcbf3bd4c22d7713eeb6d597da23e29bc0d"
+checksum = "ea9f21d23d82bae9d33c21080572af1fa749788e68234b5d8fa5e39d3e0783ed"
 dependencies = [
  "html5ever",
  "lazy_static",
  "maplit",
  "markup5ever_rcdom",
- "matches",
  "tendril",
  "url",
 ]
