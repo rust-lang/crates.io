@@ -109,7 +109,7 @@
     "ember-tooltips": "3.5.1",
     "ember-truth-helpers": "3.0.0",
     "ember-web-app": "5.0.1",
-    "ember-window-mock": "0.8.0",
+    "ember-window-mock": "0.8.1",
     "eslint": "8.9.0",
     "eslint-config-prettier": "8.3.0",
     "eslint-plugin-ember": "10.5.9",
