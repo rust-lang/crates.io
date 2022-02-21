@@ -129,7 +129,7 @@
     "qunit": "2.18.0",
     "qunit-console-grouper": "0.3.0",
     "qunit-dom": "2.0.0",
-    "webpack": "5.68.0"
+    "webpack": "5.69.1"
   },
   "resolutions": {
     "ember-css-modules/postcss": "8.4.6",
