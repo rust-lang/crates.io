@@ -6959,10 +6959,10 @@ ember-web-app@5.0.1:
     web-app-manifest-validator "^1.1.0"
     xmlbuilder "^15.1.1"
 
-ember-window-mock@0.8.0:
-  version "0.8.0"
-  resolved "https://registry.yarnpkg.com/ember-window-mock/-/ember-window-mock-0.8.0.tgz#695bef0d991116951ebbc532ddf6aa0c9b3e4043"
-  integrity sha512-v7FKm9/9x90G9mqVVan6FxjBsof5L3ERMt/X+XnfFQgnkzUV0eUn/bEvQJS4/ho7O/cTWRwZPqP5nQMUM6SCHQ==
+ember-window-mock@0.8.1:
+  version "0.8.1"
+  resolved "https://registry.yarnpkg.com/ember-window-mock/-/ember-window-mock-0.8.1.tgz#1fc5db20b3d9fc3592d4ef6f83d6b5a629c79174"
+  integrity sha512-wl9TJuBYFWKsPqDY2gms2jbre1L39AkrPQ9EqbhqHbZI4aEq8u8IZJ0nJaOa7IVr/Jy/kSUXYQGTgvNhz1AzPw==
   dependencies:
     ember-cli-babel "^7.26.11"
     ember-cli-htmlbars "^6.0.1"
