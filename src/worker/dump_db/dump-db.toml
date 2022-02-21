@@ -136,6 +136,16 @@ created_at = "public"
 [metadata.columns]
 total_downloads = "public"
 
+[persistent_sessions.columns]
+id = "private"
+user_id = "private"
+hashed_token = "private"
+created_at = "private"
+last_used_at = "private"
+revoked = "private"
+last_ip_address = "private"
+last_user_agent = "private"
+
 [publish_limit_buckets.columns]
 user_id = "private"
 tokens = "private"
