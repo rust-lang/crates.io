@@ -1,6 +1,7 @@
 pub use self::action::{insert_version_owner_action, VersionAction, VersionOwnerAction};
 pub use self::badge::{Badge, CrateBadge, MaintenanceStatus};
 pub use self::category::{Category, CrateCategory, NewCategory};
+pub use self::persistent_session::PersistentSession;
 pub use self::crate_owner_invitation::{CrateOwnerInvitation, NewCrateOwnerInvitationOutcome};
 pub use self::dependency::{Dependency, DependencyKind, ReverseDependency};
 pub use self::download::VersionDownload;
@@ -20,6 +21,7 @@ pub mod helpers;
 mod action;
 mod badge;
 pub mod category;
+mod persistent_session;
 mod crate_owner_invitation;
 pub mod dependency;
 mod download;
