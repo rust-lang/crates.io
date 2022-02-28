@@ -62,7 +62,7 @@
     "@embroider/webpack": "1.2.0",
     "@glimmer/component": "1.0.4",
     "@glimmer/tracking": "1.0.4",
-    "@percy/cli": "1.0.0-beta.75",
+    "@percy/cli": "1.0.0-beta.76",
     "@percy/ember": "3.0.0",
     "@sinonjs/fake-timers": "9.1.0",
     "@zestia/ember-auto-focus": "4.2.0",
