@@ -26,7 +26,7 @@ jobs:
       PERCY_PROJECT: crates-io/crates.io
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v3.0.0
       - uses: volta-cli/action@v1
 
       - name: Install node modules
@@ -54,7 +54,7 @@ jobs:
       RUSTFLAGS: "-D warnings"
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v3.0.0
 
       - run: rustup default ${{ env.RUST_VERSION }}
       - run: rustup component add rustfmt
@@ -98,7 +98,7 @@ jobs:
           - 5432:5432
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v3.0.0
 
       - name: Install ${{ env.RUST_VERSION }} Rust
         if: matrix.rust == 'stable'
