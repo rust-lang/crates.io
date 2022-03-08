@@ -3,7 +3,9 @@ use std::sync::Mutex;
 
 use crate::util::errors::{server_error, AppResult};
 
+use crate::config;
 use crate::middleware::log_request::add_custom_metadata;
+use crate::Env;
 use lettre::transport::file::FileTransport;
 use lettre::transport::smtp::authentication::{Credentials, Mechanism};
 use lettre::transport::smtp::SmtpTransport;
@@ -18,7 +20,7 @@ pub struct Emails {
 impl Emails {
     /// Create a new instance detecting the backend from the environment. This will either connect
     /// to a SMTP server or store the emails on the local filesystem.
-    pub fn from_environment() -> Self {
+    pub fn from_environment(config: &config::Server) -> Self {
         let backend = match (
             dotenv::var("MAILGUN_SMTP_LOGIN"),
             dotenv::var("MAILGUN_SMTP_PASSWORD"),
@@ -33,6 +35,10 @@ impl Emails {
                 path: "/tmp".into(),
             },
         };
+
+        if config.base.env == Env::Production && !matches!(backend, EmailBackend::Smtp { .. }) {
+            panic!("only the smtp backend is allowed in production");
+        }
 
         Self { backend }
     }

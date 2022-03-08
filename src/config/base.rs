@@ -12,7 +12,7 @@
 use crate::{env, uploaders::Uploader, Env, Replica};
 
 pub struct Base {
-    pub(super) env: Env,
+    pub env: Env,
     uploader: Uploader,
 }
 

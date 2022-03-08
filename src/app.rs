@@ -164,13 +164,13 @@ impl App {
             read_only_replica_database: replica_database,
             github,
             github_oauth,
-            config,
             version_id_cacher,
             downloads_counter: DownloadsCounter::new(),
-            emails: Emails::from_environment(),
+            emails: Emails::from_environment(&config),
             service_metrics: ServiceMetrics::new().expect("could not initialize service metrics"),
             instance_metrics,
             http_client,
+            config,
         }
     }
 
