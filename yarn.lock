@@ -6881,10 +6881,10 @@ ember-svg-jar@2.3.4:
     mkdirp "^0.5.1"
     path-posix "^1.0.0"
 
-ember-template-lint@4.2.0:
-  version "4.2.0"
-  resolved "https://registry.yarnpkg.com/ember-template-lint/-/ember-template-lint-4.2.0.tgz#13ce814c414a07c2dfe8185067261ab3b1317317"
-  integrity sha512-zuTo280sMarKwL92748fjMfBYogdN8AikbLPD+/csFbYA99HreG3DzgYj61uEjYaymA7nbyDmVYxfDTH9bHZAg==
+ember-template-lint@4.3.0:
+  version "4.3.0"
+  resolved "https://registry.yarnpkg.com/ember-template-lint/-/ember-template-lint-4.3.0.tgz#4bb6050db57eeeaa8f944151c9fef9cf582e7217"
+  integrity sha512-a+UFZDTGMUStY8wnzFQyD3BmA/UKdegQ4WDikS0TbhVTx9tK6aOnVh5lV33Xr4Fbf3Pee1N1//XdCulWpUajMg==
   dependencies:
     "@lint-todo/utils" "^12.0.1"
     aria-query "^5.0.0"
@@ -12649,12 +12649,12 @@ rxjs@^6.4.0, rxjs@^6.6.0:
   dependencies:
     tslib "^1.9.0"
 
-safe-buffer@5.1.2, safe-buffer@~5.1.0, safe-buffer@~5.1.1:
+safe-buffer@5.1.2, safe-buffer@>=5.1.0, safe-buffer@^5.0.1, safe-buffer@^5.1.0, safe-buffer@^5.1.1, safe-buffer@^5.1.2, safe-buffer@~5.1.0, safe-buffer@~5.1.1:
   version "5.1.2"
   resolved "https://registry.yarnpkg.com/safe-buffer/-/safe-buffer-5.1.2.tgz#991ec69d296e0313747d59bdfd2b745c35f8828d"
   integrity sha512-Gd2UZBJDkXlY7GbJxfsE8/nvKkUEU1G38c1siN6QP6a9PT9MmHB8GnpscSmMJSoF8LOIrt8ud/wPtojys4G6+g==
 
-safe-buffer@5.2.1, safe-buffer@>=5.1.0, safe-buffer@^5.0.1, safe-buffer@^5.1.0, safe-buffer@^5.1.1, safe-buffer@^5.1.2, safe-buffer@^5.2.0:
+safe-buffer@5.2.1, safe-buffer@^5.2.0:
   version "5.2.1"
   resolved "https://registry.yarnpkg.com/safe-buffer/-/safe-buffer-5.2.1.tgz#1eaf9fa9bdb1fdd4ec75f58f9cdb4e6b7827eec6"
   integrity sha512-rp3So07KcdmmKbGvgaNxQSJr7bGVSVk5S9Eq1F+ppbRo70+YeaDxkw5Dd8NPN+GD6bjnYm2VuPuCXmpuYvmCXQ==
