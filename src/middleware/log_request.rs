@@ -8,14 +8,29 @@ use conduit::{header, RequestExt, StatusCode};
 
 use crate::middleware::normalize_path::OriginalPath;
 use crate::middleware::response_timing::ResponseTime;
+use std::cell::RefCell;
 use std::fmt::{self, Display, Formatter};
 
 const SLOW_REQUEST_THRESHOLD_MS: u64 = 1000;
+
+// A thread local is used instead of a request extension to avoid the need to pass the request
+// object everywhere in the codebase. When migrating to async this will need to be moved to an
+// async-equivalent, as thread locals misbehave in async contexes.
+thread_local! {
+    static CUSTOM_METADATA: RefCell<Vec<(&'static str, String)>> = RefCell::new(Vec::new());
+}
 
 #[derive(Default)]
 pub(super) struct LogRequests();
 
 impl Middleware for LogRequests {
+    fn before(&self, _: &mut dyn RequestExt) -> BeforeResult {
+        // Remove any metadata set by the previous task before processing any new request.
+        CUSTOM_METADATA.with(|metadata| metadata.borrow_mut().clear());
+
+        Ok(())
+    }
+
     fn after(&self, req: &mut dyn RequestExt, res: AfterResult) -> AfterResult {
         println!("{}", RequestLine { req, res: &res });
 
@@ -23,33 +38,21 @@ impl Middleware for LogRequests {
     }
 }
 
-struct CustomMetadata {
-    entries: Vec<(&'static str, String)>,
-}
-
-pub fn add_custom_metadata<V: Display>(req: &mut dyn RequestExt, key: &'static str, value: V) {
-    if let Some(metadata) = req.mut_extensions().get_mut::<CustomMetadata>() {
-        metadata.entries.push((key, value.to_string()));
-    } else {
-        let mut metadata = CustomMetadata {
-            entries: Vec::new(),
-        };
-        metadata.entries.push((key, value.to_string()));
-        req.mut_extensions().insert(metadata);
-    }
-
+pub fn add_custom_metadata<V: Display>(key: &'static str, value: V) {
+    CUSTOM_METADATA.with(|metadata| metadata.borrow_mut().push((key, value.to_string())));
     sentry::configure_scope(|scope| scope.set_extra(key, value.to_string().into()));
 }
 
 #[cfg(test)]
-pub(crate) fn get_log_message(req: &dyn RequestExt, key: &'static str) -> String {
-    // Unwrap shouldn't panic as no other code has access to the private struct to remove it
-    for (k, v) in &req.extensions().get::<CustomMetadata>().unwrap().entries {
-        if key == *k {
-            return v.clone();
+pub(crate) fn get_log_message(key: &'static str) -> String {
+    CUSTOM_METADATA.with(|metadata| {
+        for (k, v) in &*metadata.borrow() {
+            if key == *k {
+                return v.clone();
+            }
         }
-    }
-    panic!("expected log message for {} not found", key);
+        panic!("expected log message for {} not found", key);
+    })
 }
 
 struct RequestLine<'r> {
@@ -95,11 +98,12 @@ impl Display for RequestLine<'_> {
         line.add_field("status", status.as_str())?;
         line.add_quoted_field("user_agent", request_header(self.req, header::USER_AGENT))?;
 
-        if let Some(metadata) = self.req.extensions().get::<CustomMetadata>() {
-            for (key, value) in &metadata.entries {
+        CUSTOM_METADATA.with(|metadata| {
+            for (key, value) in &*metadata.borrow() {
                 line.add_quoted_field(key, value)?;
             }
-        }
+            fmt::Result::Ok(())
+        })?;
 
         if let Err(err) = self.res {
             line.add_quoted_field("error", err)?;

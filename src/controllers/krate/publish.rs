@@ -16,6 +16,7 @@ use crate::models::{
 };
 use crate::worker;
 
+use crate::middleware::log_request::add_custom_metadata;
 use crate::schema::*;
 use crate::util::errors::{cargo_err, AppResult};
 use crate::util::{read_fill, read_le_u32, CargoVcsInfo, LimitErrorReader, Maximums};
@@ -59,8 +60,8 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
 
     let new_crate = parse_new_headers(req)?;
 
-    req.log_metadata("crate_name", new_crate.name.to_string());
-    req.log_metadata("crate_version", new_crate.vers.to_string());
+    add_custom_metadata("crate_name", new_crate.name.to_string());
+    add_custom_metadata("crate_version", new_crate.vers.to_string());
 
     let conn = app.primary_database.get()?;
     let ids = req.authenticate()?;
@@ -265,7 +266,7 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
 fn parse_new_headers(req: &mut dyn RequestExt) -> AppResult<EncodableCrateUpload> {
     // Read the json upload request
     let metadata_length = u64::from(read_le_u32(req.body())?);
-    req.log_metadata("metadata_length", metadata_length);
+    add_custom_metadata("metadata_length", metadata_length);
 
     let max = req.app().config.max_upload_size;
     if metadata_length > max {

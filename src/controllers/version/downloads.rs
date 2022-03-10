@@ -5,6 +5,7 @@
 use super::{extract_crate_name_and_semver, version_and_crate};
 use crate::controllers::prelude::*;
 use crate::db::PoolError;
+use crate::middleware::log_request::add_custom_metadata;
 use crate::models::{Crate, VersionDownload};
 use crate::schema::*;
 use crate::views::EncodableVersionDownload;
@@ -108,7 +109,7 @@ pub fn download(req: &mut dyn RequestExt) -> EndpointResult {
         .crate_location(&crate_name, &*version);
 
     if let Some((key, value)) = log_metadata {
-        req.log_metadata(key, value);
+        add_custom_metadata(key, value);
     }
 
     if req.wants_json() {

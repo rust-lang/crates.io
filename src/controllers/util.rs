@@ -129,9 +129,9 @@ impl<'a> UserAuthenticationExt for dyn RequestExt + 'a {
             }
         }
 
-        log_request::add_custom_metadata(self, "uid", authenticated_user.user_id());
+        log_request::add_custom_metadata("uid", authenticated_user.user_id());
         if let Some(id) = authenticated_user.api_token_id() {
-            log_request::add_custom_metadata(self, "tokenid", id);
+            log_request::add_custom_metadata("tokenid", id);
         }
 
         Ok(authenticated_user)

@@ -5,6 +5,7 @@ use conduit_router::{RequestParams, RouteBuilder, RoutePattern};
 
 use crate::controllers::*;
 use crate::middleware::app::RequestApp;
+use crate::middleware::log_request::add_custom_metadata;
 use crate::util::errors::{std_error, AppError, RouteBlocked};
 use crate::util::EndpointResult;
 use crate::{App, Env};
@@ -171,7 +172,7 @@ impl Handler for C {
             Ok(resp) => Ok(resp),
             Err(e) => {
                 if let Some(cause) = e.cause() {
-                    req.log_metadata("cause", cause.to_string())
+                    add_custom_metadata("cause", cause.to_string())
                 };
                 match e.response() {
                     Some(response) => Ok(response),
@@ -249,7 +250,7 @@ mod tests {
         .unwrap();
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
         assert_eq!(
-            crate::middleware::log_request::get_log_message(&req, "cause"),
+            crate::middleware::log_request::get_log_message("cause"),
             "middle error caused by invalid digit found in string"
         );
 
