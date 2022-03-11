@@ -6524,10 +6524,10 @@ ember-cli@4.2.0:
     workerpool "^6.1.4"
     yam "^1.0.0"
 
-ember-click-outside@3.0.0:
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/ember-click-outside/-/ember-click-outside-3.0.0.tgz#a7271345c5960b5dfe1e45a7f7245d1cf8f383dc"
-  integrity sha512-X2hLE9Set/tQ9KAEUxfGzCTUgJu/g2sKG+t2ghk/EDz8zF+Y/DPtlxeyZTR6NEPsUbzu3Pqe9gWJUxwaiXC0wg==
+ember-click-outside@4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/ember-click-outside/-/ember-click-outside-4.0.0.tgz#49f3522da340580411f16ce0d51f251839922fa6"
+  integrity sha512-3SstFhDWu3K5PQzo0FZwk66Ehe1l6QFU/R+WjAt8yOXw2sHzJHOdx2N+fNWJHZsJ97BSqdL7L0qotJEMX46u6Q==
   dependencies:
     ember-cli-babel "^7.26.6"
     ember-cli-htmlbars "^5.7.1"
