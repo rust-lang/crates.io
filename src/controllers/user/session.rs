@@ -1,14 +1,29 @@
 use crate::controllers::frontend_prelude::*;
 
-use conduit_cookie::RequestSession;
+use conduit_cookie::{RequestCookies, RequestSession};
+use cookie::{Cookie, SameSite};
 use oauth2::reqwest::http_client;
 use oauth2::{AuthorizationCode, Scope, TokenResponse};
 
 use crate::email::Emails;
 use crate::github::GithubUser;
-use crate::models::{NewUser, User};
+use crate::models::{NewUser, PersistentSession, User};
 use crate::schema::users;
 use crate::util::errors::ReadOnlyMode;
+use crate::util::token::NewSecureToken;
+use crate::util::token::SecureToken;
+use crate::Env;
+
+pub const SESSION_COOKIE_NAME: &str = "crates_auth";
+
+fn session_cookie(token: &NewSecureToken, secure: bool) -> Cookie<'static> {
+    Cookie::build(SESSION_COOKIE_NAME, token.plaintext().to_string())
+        .http_only(true)
+        .secure(secure)
+        .same_site(SameSite::Strict)
+        .path("/")
+        .finish()
+}
 
 /// Handles the `GET /api/private/session/begin` route.
 ///
@@ -102,7 +117,24 @@ pub fn authorize(req: &mut dyn RequestExt) -> EndpointResult {
         &*req.db_write()?,
     )?;
 
+    let user_agent = req
+        .headers()
+        .get(header::USER_AGENT)
+        .and_then(|value| value.to_str().ok())
+        .map(|value| value.to_string())
+        .unwrap_or_default();
+
+    // Setup a session for the newly logged in user.
+    let token = SecureToken::generate(crate::util::token::SecureTokenKind::Session);
+    let session = PersistentSession::create(user.id, &token, req.remote_addr().ip(), &user_agent);
+    session.insert(&*req.db_conn()?)?;
+
+    // Setup session cookie.
+    let secure = req.app().config.env() == Env::Production;
+    req.cookies_mut().add(session_cookie(&token, secure));
+
     // Log in by setting a cookie and the middleware authentication
+    // TODO(adsnaider): Remove.
     req.session_mut()
         .insert("user_id".to_string(), user.id.to_string());
 

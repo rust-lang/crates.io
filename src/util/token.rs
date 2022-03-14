@@ -84,7 +84,7 @@ impl std::ops::Deref for NewSecureToken {
     }
 }
 
-fn generate_secure_alphanumeric_string(len: usize) -> String {
+pub(crate) fn generate_secure_alphanumeric_string(len: usize) -> String {
     const CHARS: &[u8] = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
     OsRng
@@ -122,6 +122,7 @@ secure_token_kind! {
     #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
     pub(crate) enum SecureTokenKind {
         Api => "cio", // Crates.IO
+        Session => "ses", // Session tokens.
     }
 }
 
@@ -172,6 +173,7 @@ mod tests {
         };
 
         ensure(SecureTokenKind::Api, "cio");
+        ensure(SecureTokenKind::Session, "ses");
 
         assert!(
             remaining.is_empty(),
