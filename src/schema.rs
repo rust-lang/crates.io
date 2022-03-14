@@ -1082,7 +1082,6 @@ joinable!(dependencies -> versions (version_id));
 joinable!(emails -> users (user_id));
 joinable!(follows -> crates (crate_id));
 joinable!(follows -> users (user_id));
-joinable!(persistent_sessions -> users (user_id));
 joinable!(publish_limit_buckets -> users (user_id));
 joinable!(publish_rate_overrides -> users (user_id));
 joinable!(readme_renderings -> versions (version_id));

@@ -2,9 +2,11 @@ use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use ipnetwork::IpNetwork;
 use std::net::IpAddr;
+use thiserror::Error;
 
 use crate::schema::persistent_sessions;
 use crate::util::token::SecureToken;
+use crate::util::token::SecureTokenKind;
 
 #[derive(Clone, Debug, PartialEq, Eq, Identifiable, Queryable)]
 #[table_name = "persistent_sessions"]
@@ -17,6 +19,14 @@ pub struct PersistentSession {
     pub revoked: bool,
     pub last_ip_address: IpNetwork,
     pub last_user_agent: String,
+}
+
+#[derive(Error, Debug, PartialEq)]
+pub enum SessionError {
+    #[error("token prefix doesn't match session tokens")]
+    InvalidSessionToken,
+    #[error("database manipulation error")]
+    DieselError(#[from] diesel::result::Error),
 }
 
 impl PersistentSession {
@@ -32,6 +42,19 @@ impl PersistentSession {
             last_ip_address: last_ip_address.into(),
             last_user_agent,
         }
+    }
+
+    pub fn revoke_from_token(conn: &PgConnection, token: &str) -> Result<usize, SessionError> {
+        let hashed_token = SecureToken::parse(SecureTokenKind::Session, token)
+            .ok_or(SessionError::InvalidSessionToken)?;
+        let sessions = persistent_sessions::table
+            .filter(persistent_sessions::hashed_token.eq(hashed_token))
+            .filter(persistent_sessions::revoked.eq(false));
+
+        diesel::update(sessions)
+            .set(persistent_sessions::revoked.eq(true))
+            .execute(conn)
+            .map_err(SessionError::DieselError)
     }
 }
 

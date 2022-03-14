@@ -173,7 +173,24 @@ fn save_user_to_database(
 
 /// Handles the `DELETE /api/private/session` route.
 pub fn logout(req: &mut dyn RequestExt) -> EndpointResult {
+    // TODO(adsnaider): Remove this.
     req.session_mut().remove(&"user_id".to_string());
+    if let Some(session_token) = req
+        .cookies()
+        .get(SESSION_COOKIE_NAME)
+        .map(|cookie| cookie.value().to_string())
+    {
+        req.cookies_mut().remove(Cookie::named(SESSION_COOKIE_NAME));
+
+        if let Ok(conn) = req.db_conn() {
+            match PersistentSession::revoke_from_token(&conn, &session_token) {
+                Ok(0) => {}
+                Ok(1) => {}
+                Ok(_count) => {}
+                Err(_e) => {}
+            }
+        }
+    }
     Ok(req.json(&true))
 }
 
