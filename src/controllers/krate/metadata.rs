@@ -251,7 +251,7 @@ impl Default for ShowIncludeMode {
 
 impl ShowIncludeMode {
     const INVALID_COMPONENT: &'static str =
-        "invalid component for ?mode= (expected 'versions', 'keywords', 'categories', 'badges', 'downloads', or 'full')";
+        "invalid component for ?include= (expected 'versions', 'keywords', 'categories', 'badges', 'downloads', or 'full')";
 }
 
 impl FromStr for ShowIncludeMode {
