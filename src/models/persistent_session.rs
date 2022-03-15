@@ -44,6 +44,32 @@ impl PersistentSession {
         }
     }
 
+    pub fn find_from_token_and_update(
+        conn: &PgConnection,
+        token: &str,
+        ip_address: IpAddr,
+        user_agent: &str,
+    ) -> Result<Option<Self>, SessionError> {
+        let hashed_token = SecureToken::parse(SecureTokenKind::Session, token)
+            .ok_or(SessionError::InvalidSessionToken)?;
+        let sessions = persistent_sessions::table
+            .filter(persistent_sessions::revoked.eq(false))
+            .filter(persistent_sessions::hashed_token.eq(hashed_token));
+
+        conn.transaction(|| {
+            diesel::update(sessions.clone())
+                .set((
+                    persistent_sessions::last_used_at.eq(diesel::dsl::now),
+                    persistent_sessions::last_ip_address.eq(IpNetwork::from(ip_address)),
+                    persistent_sessions::last_user_agent.eq(user_agent),
+                ))
+                .get_result(conn)
+                .optional()
+        })
+        .or_else(|_| sessions.first(conn).optional())
+        .map_err(SessionError::DieselError)
+    }
+
     pub fn revoke_from_token(conn: &PgConnection, token: &str) -> Result<usize, SessionError> {
         let hashed_token = SecureToken::parse(SecureTokenKind::Session, token)
             .ok_or(SessionError::InvalidSessionToken)?;

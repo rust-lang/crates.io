@@ -1,13 +1,14 @@
 use chrono::Utc;
-use conduit_cookie::RequestSession;
+use conduit_cookie::RequestCookies;
 
 use super::prelude::*;
-
+use crate::controllers::user::session::SESSION_COOKIE_NAME;
 use crate::middleware::log_request;
-use crate::models::{ApiToken, User};
+use crate::models::{ApiToken, PersistentSession, User};
 use crate::util::errors::{
     account_locked, forbidden, internal, AppError, AppResult, InsecurelyGeneratedTokenRevoked,
 };
+use conduit_cookie::RequestSession;
 
 #[derive(Debug)]
 pub struct AuthenticatedUser {
@@ -67,6 +68,7 @@ fn verify_origin(req: &dyn RequestExt) -> AppResult<()> {
 fn authenticate_user(req: &dyn RequestExt) -> AppResult<AuthenticatedUser> {
     let conn = req.db_write()?;
 
+    // TODO(adsnaider): Remove this.
     let session = req.session();
     let user_id_from_session = session.get("user_id").and_then(|s| s.parse::<i32>().ok());
 
@@ -78,6 +80,34 @@ fn authenticate_user(req: &dyn RequestExt) -> AppResult<AuthenticatedUser> {
             user,
             token_id: None,
         });
+    }
+
+    if let Some(session_token) = req
+        .cookies()
+        .get(SESSION_COOKIE_NAME)
+        .map(|cookie| cookie.value())
+    {
+        let ip_addr = req.remote_addr().ip();
+
+        let user_agent = req
+            .headers()
+            .get(header::USER_AGENT)
+            .and_then(|value| value.to_str().ok())
+            .unwrap_or_default();
+
+        if let Some(session) = PersistentSession::find_from_token_and_update(
+            &conn,
+            session_token,
+            ip_addr,
+            user_agent,
+        )? {
+            let user = User::find(&conn, session.user_id)
+                .map_err(|e| e.chain(internal("user_id from session not found in the database")))?;
+            return Ok(AuthenticatedUser {
+                user,
+                token_id: None,
+            });
+        }
     }
 
     // Otherwise, look for an `Authorization` header on the request
