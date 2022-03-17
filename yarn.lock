@@ -1182,6 +1182,14 @@
     ember-cli-version-checker "^5.1.2"
     semver "^7.3.5"
 
+"@embroider/addon-shim@^1.5.0":
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/@embroider/addon-shim/-/addon-shim-1.5.0.tgz#639b8b394336a5ae26dd3e24ffc3d34d864ac5ce"
+  integrity sha512-5zgwA/wTYjgn2Oo6hKRQhF/5Gnwb+hGhj/WXhZQa5yA7fRRdBV1tVMS7b7SLawZcmOhuWkyPwFdgsYtGBvDB0w==
+  dependencies:
+    "@embroider/shared-internals" "^1.5.0"
+    semver "^7.3.5"
+
 "@embroider/babel-loader-8@1.5.0":
   version "1.5.0"
   resolved "https://registry.yarnpkg.com/@embroider/babel-loader-8/-/babel-loader-8-1.5.0.tgz#8aef1f38c94f89b9e0ba891b6f1c5fc39c4a96db"
@@ -1316,7 +1324,7 @@
     semver "^7.3.2"
     typescript-memoize "^1.0.0-alpha.3"
 
-"@embroider/shared-internals@1.5.0", "@embroider/shared-internals@^1.0.0":
+"@embroider/shared-internals@1.5.0", "@embroider/shared-internals@^1.0.0", "@embroider/shared-internals@^1.5.0":
   version "1.5.0"
   resolved "https://registry.yarnpkg.com/@embroider/shared-internals/-/shared-internals-1.5.0.tgz#d3883f13571be36fcdbc59c65c785db7b6d8186e"
   integrity sha512-kdR7Fh2YdzsNofJO+DJxLfrlMbW4/NNf78aMXgE21z/tg9GO5W2mKlI1DzsO2JlO5yfZdiYfqb9C9vSLJEx14A==
@@ -6704,14 +6712,13 @@ ember-inflector@4.0.2, "ember-inflector@^2.0.0 || ^3.0.0 || ^4.0.2", ember-infle
   dependencies:
     ember-cli-babel "^7.26.5"
 
-ember-keyboard@7.0.1:
-  version "7.0.1"
-  resolved "https://registry.yarnpkg.com/ember-keyboard/-/ember-keyboard-7.0.1.tgz#6cf336efd4ea6cb69ec93d20fb0b819bd7241a9d"
-  integrity sha512-MKK9/3yzn30ekmFAQO7z+okCQa7Z5wCSI5m7lR3EL2dMIeRd/9eeLhbQNCU00Slx+GjwsGyCEWPqIQmekFJxpQ==
+ember-keyboard@8.0.0:
+  version "8.0.0"
+  resolved "https://registry.yarnpkg.com/ember-keyboard/-/ember-keyboard-8.0.0.tgz#dd4a7253d277be9ed9d6878f073ea32406e29435"
+  integrity sha512-/9poW0DS8akMLvYsvn1scAMMCsyOPt22L4W7c4CLruFkUY7wdVrfFxb/qHwDmtWxyZDka0yc8aIZHqL6sSa9wQ==
   dependencies:
-    ember-cli-babel "^7.26.6"
-    ember-cli-htmlbars "^6.0.1"
-    ember-modifier "^2.1.2 || ^3.0.0"
+    "@embroider/addon-shim" "^1.5.0"
+    ember-modifier "^2.1.2 || ^3.1.0"
     ember-modifier-manager-polyfill "^1.2.0"
 
 ember-link@1.3.1:
@@ -6743,7 +6750,7 @@ ember-modifier-manager-polyfill@^1.2.0:
     ember-cli-version-checker "^2.1.2"
     ember-compatibility-helpers "^1.2.0"
 
-ember-modifier@3.1.0, "ember-modifier@^2.1.0 || ^3.0.0", "ember-modifier@^2.1.2 || ^3.0.0", ember-modifier@^3.0.0:
+ember-modifier@3.1.0, "ember-modifier@^2.1.0 || ^3.0.0", "ember-modifier@^2.1.2 || ^3.1.0", ember-modifier@^3.0.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/ember-modifier/-/ember-modifier-3.1.0.tgz#ba5b0941302accd787ed3dcfc8d20400b77ffc41"
   integrity sha512-G5Lj9jVFsD2sVJcRNQfaGKG1p81wT4LGfClBhCuB4TgwP1NGJKdqI+Q8BW2MptONxQt/71UjjUH0YK7Gm9eahg==
