@@ -21,7 +21,7 @@ pub struct Opts {
 }
 
 pub fn run(opts: Opts) {
-    let conn = db::connect_now().unwrap();
+    let conn = db::connect_now(&Default::default()).unwrap();
     conn.transaction::<_, diesel::result::Error, _>(|| {
         transfer(opts, &conn);
         Ok(())

@@ -1,8 +1,6 @@
 // Sync available crate categories from `src/categories.toml`.
 // Runs when the server is started.
 
-use crate::db;
-
 use anyhow::{Context, Result};
 use diesel::prelude::*;
 
@@ -75,11 +73,6 @@ fn categories_from_toml(
     }
 
     Ok(result)
-}
-
-pub fn sync(toml_str: &str) -> Result<()> {
-    let conn = db::connect_now()?;
-    sync_with_connection(toml_str, &conn)
 }
 
 pub fn sync_with_connection(toml_str: &str, conn: &PgConnection) -> Result<()> {

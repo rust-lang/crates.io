@@ -9,6 +9,7 @@ use thiserror::Error;
 use url::Url;
 
 use crate::middleware::app::RequestApp;
+use crate::{config, Env};
 
 #[derive(Clone)]
 pub enum DieselPool {
@@ -22,10 +23,11 @@ pub enum DieselPool {
 impl DieselPool {
     pub(crate) fn new(
         url: &str,
-        config: r2d2::Builder<ConnectionManager<PgConnection>>,
+        config: &config::Server,
+        r2d2_config: r2d2::Builder<ConnectionManager<PgConnection>>,
         time_to_obtain_connection_metric: Histogram,
     ) -> Result<DieselPool, PoolError> {
-        let manager = ConnectionManager::new(connection_url(url));
+        let manager = ConnectionManager::new(connection_url(config, url));
 
         // For crates.io we want the behavior of creating a database pool to be slightly different
         // than the defaults of R2D2: the library's build() method assumes its consumers always
@@ -39,7 +41,7 @@ impl DieselPool {
         // establish any connection continue booting up the application. The database pool will
         // automatically be marked as unhealthy and the rest of the application will adapt.
         let pool = DieselPool::Pool {
-            pool: config.build_unchecked(manager),
+            pool: r2d2_config.build_unchecked(manager),
             time_to_obtain_connection_metric,
         };
         match pool.wait_until_healthy(Duration::from_secs(5)) {
@@ -51,9 +53,9 @@ impl DieselPool {
         Ok(pool)
     }
 
-    pub(crate) fn new_test(url: &str) -> DieselPool {
+    pub(crate) fn new_test(config: &config::Server, url: &str) -> DieselPool {
         let conn =
-            PgConnection::establish(&connection_url(url)).expect("failed to establish connection");
+            PgConnection::establish(&connection_url(config, url)).expect("failed to establish connection");
         conn.begin_test_transaction()
             .expect("failed to begin test transaction");
         DieselPool::Test(Arc::new(ReentrantMutex::new(conn)))
@@ -131,16 +133,19 @@ impl Deref for DieselPooledConn<'_> {
     }
 }
 
-pub fn connect_now() -> ConnectionResult<PgConnection> {
-    let url = connection_url(&crate::env("DATABASE_URL"));
+pub fn connect_now(config: &config::Server) -> ConnectionResult<PgConnection> {
+    let url = connection_url(config, &config.db.primary.url);
     PgConnection::establish(&url)
 }
 
-pub fn connection_url(url: &str) -> String {
+pub fn connection_url(config: &config::Server, url: &str) -> String {
     let mut url = Url::parse(url).expect("Invalid database URL");
-    if dotenv::var("HEROKU").is_ok() && !url.query_pairs().any(|(k, _)| k == "sslmode") {
+
+    // Enforce secure connections in production.
+    if config.base.env == Env::Production && !url.query_pairs().any(|(k, _)| k == "sslmode") {
         url.query_pairs_mut().append_pair("sslmode", "require");
     }
+
     url.into()
 }
 
