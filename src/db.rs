@@ -54,8 +54,8 @@ impl DieselPool {
     }
 
     pub(crate) fn new_test(config: &config::Server, url: &str) -> DieselPool {
-        let conn =
-            PgConnection::establish(&connection_url(config, url)).expect("failed to establish connection");
+        let conn = PgConnection::establish(&connection_url(config, url))
+            .expect("failed to establish connection");
         conn.begin_test_transaction()
             .expect("failed to begin test transaction");
         DieselPool::Test(Arc::new(ReentrantMutex::new(conn)))
@@ -142,11 +142,25 @@ pub fn connection_url(config: &config::Server, url: &str) -> String {
     let mut url = Url::parse(url).expect("Invalid database URL");
 
     // Enforce secure connections in production.
-    if config.base.env == Env::Production && !url.query_pairs().any(|(k, _)| k == "sslmode") {
-        url.query_pairs_mut().append_pair("sslmode", "require");
+    if config.base.env == Env::Production {
+        maybe_append_url_param(&mut url, "sslmode", "require");
     }
 
+    // Configure the time it takes for diesel to return an error when there is full packet loss
+    // between the application and the database.
+    maybe_append_url_param(
+        &mut url,
+        "tcp_user_timeout",
+        &config.db.tcp_timeout_ms.to_string(),
+    );
+
     url.into()
+}
+
+fn maybe_append_url_param(url: &mut Url, key: &str, value: &str) {
+    if !url.query_pairs().any(|(k, _)| k == key) {
+        url.query_pairs_mut().append_pair(key, value);
+    }
 }
 
 pub trait RequestTransaction {
