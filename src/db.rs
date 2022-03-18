@@ -1,8 +1,9 @@
 use conduit::RequestExt;
 use diesel::prelude::*;
-use diesel::r2d2::{self, ConnectionManager, CustomizeConnection};
+use diesel::r2d2::{self, event::HandleEvent, ConnectionManager, CustomizeConnection};
 use parking_lot::{ReentrantMutex, ReentrantMutexGuard};
-use prometheus::Histogram;
+use prometheus::{Histogram, IntCounter};
+use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
 use std::{ops::Deref, time::Duration};
 use thiserror::Error;
@@ -14,6 +15,8 @@ use crate::middleware::app::RequestApp;
 pub enum DieselPool {
     Pool {
         pool: r2d2::Pool<ConnectionManager<PgConnection>>,
+        state: Arc<StateTracker>,
+        used_conns_metric: Histogram,
         time_to_obtain_connection_metric: Histogram,
     },
     Test(Arc<ReentrantMutex<PgConnection>>),
@@ -22,10 +25,16 @@ pub enum DieselPool {
 impl DieselPool {
     pub(crate) fn new(
         url: &str,
-        config: r2d2::Builder<ConnectionManager<PgConnection>>,
+        mut config: r2d2::Builder<ConnectionManager<PgConnection>>,
+        used_conns_metric: Histogram,
         time_to_obtain_connection_metric: Histogram,
+        timeouts_when_obtaining_connections: IntCounter,
     ) -> Result<DieselPool, PoolError> {
         let manager = ConnectionManager::new(connection_url(url));
+
+        // Track the pool state using r2d2's event handler.
+        let state = Arc::new(StateTracker::new(timeouts_when_obtaining_connections));
+        config = config.event_handler(Box::new(StateEventHandler(state.clone())));
 
         // For crates.io we want the behavior of creating a database pool to be slightly different
         // than the defaults of R2D2: the library's build() method assumes its consumers always
@@ -40,6 +49,8 @@ impl DieselPool {
         // automatically be marked as unhealthy and the rest of the application will adapt.
         let pool = DieselPool::Pool {
             pool: config.build_unchecked(manager),
+            state,
+            used_conns_metric,
             time_to_obtain_connection_metric,
         };
         match pool.wait_until_healthy(Duration::from_secs(5)) {
@@ -63,8 +74,13 @@ impl DieselPool {
         match self {
             DieselPool::Pool {
                 pool,
+                state,
+                used_conns_metric,
                 time_to_obtain_connection_metric,
             } => time_to_obtain_connection_metric.observe_closure_duration(|| {
+                // Record the number of used connections before obtaining the current one.
+                used_conns_metric.observe(state.used_connections.load(Ordering::SeqCst) as f64);
+
                 if let Some(conn) = pool.try_get() {
                     Ok(DieselPooledConn::Pool(conn))
                 } else if !self.is_healthy() {
@@ -79,13 +95,7 @@ impl DieselPool {
 
     pub fn state(&self) -> PoolState {
         match self {
-            DieselPool::Pool { pool, .. } => {
-                let state = pool.state();
-                PoolState {
-                    connections: state.connections,
-                    idle_connections: state.idle_connections,
-                }
-            }
+            DieselPool::Pool { state, .. } => state.pool_state(),
             DieselPool::Test(_) => PoolState {
                 connections: 0,
                 idle_connections: 0,
@@ -205,4 +215,61 @@ pub enum PoolError {
     R2D2(#[from] r2d2::PoolError),
     #[error("unhealthy database pool")]
     UnhealthyPool,
+}
+
+/// As r2d2's state is behind a mutex, we had operational issues in the past trying to access it on
+/// every request to populate metrics (a lot of requests started timing out).
+///
+/// This reimplements state tracking using atomics and r2d2's event handlers. Event handlers are
+/// executed the same time a connection is checked in or out, without having to acquire another
+/// mutex lock, so the performance should be higher than accessing the state managed by r2d2.
+#[derive(Debug)]
+pub struct StateTracker {
+    open_connections: AtomicU32,
+    used_connections: AtomicU32,
+    timeouts_metric: IntCounter,
+}
+
+impl StateTracker {
+    fn new(timeouts_metric: IntCounter) -> Self {
+        StateTracker {
+            open_connections: AtomicU32::new(0),
+            used_connections: AtomicU32::new(0),
+            timeouts_metric,
+        }
+    }
+
+    fn pool_state(&self) -> PoolState {
+        let connections = self.open_connections.load(Ordering::SeqCst);
+        PoolState {
+            connections,
+            idle_connections: connections
+                .saturating_sub(self.used_connections.load(Ordering::SeqCst)),
+        }
+    }
+}
+
+#[derive(Debug)]
+struct StateEventHandler(Arc<StateTracker>);
+
+impl HandleEvent for StateEventHandler {
+    fn handle_acquire(&self, _: r2d2::event::AcquireEvent) {
+        self.0.open_connections.fetch_add(1, Ordering::SeqCst);
+    }
+
+    fn handle_release(&self, _: r2d2::event::ReleaseEvent) {
+        self.0.open_connections.fetch_sub(1, Ordering::SeqCst);
+    }
+
+    fn handle_checkout(&self, _: r2d2::event::CheckoutEvent) {
+        self.0.used_connections.fetch_add(1, Ordering::SeqCst);
+    }
+
+    fn handle_checkin(&self, _: r2d2::event::CheckinEvent) {
+        self.0.used_connections.fetch_sub(1, Ordering::SeqCst);
+    }
+
+    fn handle_timeout(&self, _: r2d2::event::TimeoutEvent) {
+        self.0.timeouts_metric.inc();
+    }
 }
