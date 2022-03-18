@@ -142,6 +142,10 @@ fn excluded_crate_id() {
 
     let json: SummaryResponse = anon.get("/api/v1/summary").good();
 
+    assert_eq!(json.most_downloaded.len(), 1);
+    assert_eq!(json.most_downloaded[0].name, "some_downloads");
+    assert_eq!(json.most_downloaded[0].downloads, 20);
+
     assert_eq!(json.most_recently_downloaded.len(), 1);
     assert_eq!(json.most_recently_downloaded[0].name, "some_downloads");
     assert_eq!(json.most_recently_downloaded[0].recent_downloads, Some(10));

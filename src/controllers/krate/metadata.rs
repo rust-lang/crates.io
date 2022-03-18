@@ -73,8 +73,13 @@ pub fn summary(req: &mut dyn RequestExt) -> EndpointResult {
         .select(selection)
         .limit(10)
         .load(&*conn)?;
-    let most_downloaded = crates
-        .left_join(recent_crate_downloads::table)
+
+    let mut most_downloaded_query = crates.left_join(recent_crate_downloads::table).into_boxed();
+    if !config.excluded_crate_names.is_empty() {
+        most_downloaded_query =
+            most_downloaded_query.filter(name.ne(all(&config.excluded_crate_names)));
+    }
+    let most_downloaded = most_downloaded_query
         .then_order_by(downloads.desc())
         .select(selection)
         .limit(10)
