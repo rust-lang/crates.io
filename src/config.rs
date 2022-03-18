@@ -25,6 +25,7 @@ pub struct Server {
     pub blocked_traffic: Vec<(String, Vec<String>)>,
     pub max_allowed_page_offset: u32,
     pub page_offset_ua_blocklist: Vec<String>,
+    pub excluded_crate_ids: Vec<i32>,
     pub domain_name: String,
     pub allowed_origins: Vec<String>,
     pub downloads_persist_interval_ms: usize,
@@ -84,6 +85,15 @@ impl Default for Server {
             Some(s) => s.split(',').map(String::from).collect(),
         };
         let base = Base::from_environment();
+        let excluded_crate_ids: Vec<i32> = match env_optional::<String>("EXCLUDED_CRATE_IDS") {
+            None => vec![],
+            Some(s) if s.is_empty() => vec![],
+            Some(s) => s
+                .split(',')
+                .map(|n| n.parse())
+                .collect::<Result<Vec<_>, _>>()
+                .unwrap_or_default(),
+        };
         Server {
             db: DatabasePools::full_from_environment(&base),
             base,
@@ -97,6 +107,7 @@ impl Default for Server {
             blocked_traffic: blocked_traffic(),
             max_allowed_page_offset: env_optional("WEB_MAX_ALLOWED_PAGE_OFFSET").unwrap_or(200),
             page_offset_ua_blocklist,
+            excluded_crate_ids,
             domain_name: domain_name(),
             allowed_origins,
             downloads_persist_interval_ms: dotenv::var("DOWNLOADS_PERSIST_INTERVAL_MS")

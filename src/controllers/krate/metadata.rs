@@ -24,6 +24,9 @@ use crate::models::krate::ALL_COLUMNS;
 /// Handles the `GET /summary` route.
 pub fn summary(req: &mut dyn RequestExt) -> EndpointResult {
     use crate::schema::crates::dsl::*;
+    use diesel::dsl::any;
+
+    let config = &req.app().config;
 
     let conn = req.db_read_only()?;
     let num_crates: i64 = crates.count().get_result(&*conn)?;
@@ -77,8 +80,14 @@ pub fn summary(req: &mut dyn RequestExt) -> EndpointResult {
         .limit(10)
         .load(&*conn)?;
 
-    let most_recently_downloaded = crates
+    let mut most_recently_downloaded_query = crates
         .inner_join(recent_crate_downloads::table)
+        .into_boxed();
+    if !config.excluded_crate_ids.is_empty() {
+        most_recently_downloaded_query = most_recently_downloaded_query
+            .filter(recent_crate_downloads::crate_id.ne(any(&config.excluded_crate_ids)));
+    }
+    let most_recently_downloaded = most_recently_downloaded_query
         .then_order_by(recent_crate_downloads::downloads.desc())
         .select(selection)
         .limit(10)
