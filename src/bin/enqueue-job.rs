@@ -7,7 +7,7 @@ use swirl::schema::background_jobs::dsl::*;
 use swirl::Job;
 
 fn main() -> Result<()> {
-    let conn = db::connect_now(&Default::default())?;
+    let conn = db::oneoff_connection()?;
     let mut args = std::env::args().skip(1);
 
     let job = args.next().unwrap_or_default();

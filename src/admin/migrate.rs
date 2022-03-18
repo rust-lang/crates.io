@@ -11,13 +11,15 @@ diesel_migrations::embed_migrations!("./migrations");
 pub struct Opts;
 
 pub fn run(_opts: Opts) -> Result<(), Error> {
-    let config = crate::config::Server::default();
+    let config = crate::config::DatabasePools::full_from_environment(
+        &crate::config::Base::from_environment(),
+    );
 
     // TODO: Refactor logic so that we can also check things from App::new() here.
     // If the app will panic due to bad configuration, it is better to error in the release phase
     // to avoid launching dynos that will fail.
 
-    if config.db.are_all_read_only() {
+    if config.are_all_read_only() {
         // TODO: Check `any_pending_migrations()` with a read-only connection and error if true.
         // It looks like this requires changes upstream to make this pub in `migration_macros`.
 
@@ -30,7 +32,7 @@ pub fn run(_opts: Opts) -> Result<(), Error> {
     }
 
     // The primary is online, access directly via `DATABASE_URL`.
-    let conn = crate::db::connect_now(&config)?;
+    let conn = crate::db::oneoff_connection_with_config(&config)?;
 
     println!("==> migrating the database");
     embedded_migrations::run_with_output(&conn, &mut std::io::stdout())?;

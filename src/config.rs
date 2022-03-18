@@ -83,9 +83,10 @@ impl Default for Server {
             Some(s) if s.is_empty() => vec![],
             Some(s) => s.split(',').map(String::from).collect(),
         };
+        let base = Base::from_environment();
         Server {
-            db: DatabasePools::full_from_environment(),
-            base: Base::from_environment(),
+            db: DatabasePools::full_from_environment(&base),
+            base,
             session_key: env("SESSION_KEY"),
             gh_client_id: env("GH_CLIENT_ID"),
             gh_client_secret: env("GH_CLIENT_SECRET"),

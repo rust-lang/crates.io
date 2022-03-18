@@ -37,7 +37,7 @@ fn main() {
         }
     }
 
-    let db_url = db::connection_url(&config, &config.db.primary.url);
+    let db_url = db::connection_url(&config.db, &config.db.primary.url);
 
     let job_start_timeout = dotenv::var("BACKGROUND_JOB_TIMEOUT")
         .unwrap_or_else(|_| "30".into())

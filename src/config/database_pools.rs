@@ -11,7 +11,8 @@
 //! - `READ_ONLY_MODE`: If defined (even as empty) then force all connections to be read-only.
 //! - `DB_TCP_TIMEOUT_MS`: TCP timeout in milliseconds. See the doc comment for more details.
 
-use crate::env;
+use crate::config::Base;
+use crate::{env, Env};
 
 pub struct DatabasePools {
     /// Settings for the primary database. This is usually writeable, but will be read-only in
@@ -25,6 +26,8 @@ pub struct DatabasePools {
     /// unnecessarily long outage (before the unhealthy database logic kicks in), while setting it
     /// too low might result in healthy connections being dropped.
     pub tcp_timeout_ms: u64,
+    /// Whether to enforce that all the database connections are encrypted with TLS.
+    pub enforce_tls: bool,
 }
 
 #[derive(Debug)]
@@ -49,7 +52,7 @@ impl DatabasePools {
     /// # Panics
     ///
     /// This function panics if `DB_OFFLINE=leader` but `READ_ONLY_REPLICA_URL` is unset.
-    pub fn full_from_environment() -> Self {
+    pub fn full_from_environment(base: &Base) -> Self {
         let leader_url = env("DATABASE_URL");
         let follower_url = dotenv::var("READ_ONLY_REPLICA_URL").ok();
         let read_only_mode = dotenv::var("READ_ONLY_MODE").is_ok();
@@ -79,6 +82,8 @@ impl DatabasePools {
             Err(_) => 15 * 1000, // 15 seconds
         };
 
+        let enforce_tls = base.env == Env::Production;
+
         match dotenv::var("DB_OFFLINE").as_deref() {
             // The actual leader is down, use the follower in read-only mode as the primary and
             // don't configure a replica.
@@ -92,6 +97,7 @@ impl DatabasePools {
                 },
                 replica: None,
                 tcp_timeout_ms,
+                enforce_tls,
             },
             // The follower is down, don't configure the replica.
             Ok("follower") => Self {
@@ -103,6 +109,7 @@ impl DatabasePools {
                 },
                 replica: None,
                 tcp_timeout_ms,
+                enforce_tls,
             },
             _ => Self {
                 primary: DbPoolConfig {
@@ -121,6 +128,7 @@ impl DatabasePools {
                     min_idle: replica_min_idle,
                 }),
                 tcp_timeout_ms,
+                enforce_tls,
             },
         }
     }
@@ -135,6 +143,7 @@ impl DatabasePools {
             },
             replica: None,
             tcp_timeout_ms: 1000, // 1 second
+            enforce_tls: false,
         }
     }
 }

@@ -11,7 +11,7 @@ use cargo_registry::{admin::on_call, db, schema::*};
 use diesel::prelude::*;
 
 fn main() -> Result<()> {
-    let conn = db::connect_now(&Default::default())?;
+    let conn = db::oneoff_connection()?;
 
     check_failing_background_jobs(&conn)?;
     check_stalled_update_downloads(&conn)?;

@@ -8,8 +8,8 @@ use std::{ops::Deref, time::Duration};
 use thiserror::Error;
 use url::Url;
 
+use crate::config;
 use crate::middleware::app::RequestApp;
-use crate::{config, Env};
 
 #[derive(Clone)]
 pub enum DieselPool {
@@ -23,7 +23,7 @@ pub enum DieselPool {
 impl DieselPool {
     pub(crate) fn new(
         url: &str,
-        config: &config::Server,
+        config: &config::DatabasePools,
         r2d2_config: r2d2::Builder<ConnectionManager<PgConnection>>,
         time_to_obtain_connection_metric: Histogram,
     ) -> Result<DieselPool, PoolError> {
@@ -53,7 +53,7 @@ impl DieselPool {
         Ok(pool)
     }
 
-    pub(crate) fn new_test(config: &config::Server, url: &str) -> DieselPool {
+    pub(crate) fn new_test(config: &config::DatabasePools, url: &str) -> DieselPool {
         let conn = PgConnection::establish(&connection_url(config, url))
             .expect("failed to establish connection");
         conn.begin_test_transaction()
@@ -133,16 +133,22 @@ impl Deref for DieselPooledConn<'_> {
     }
 }
 
-pub fn connect_now(config: &config::Server) -> ConnectionResult<PgConnection> {
-    let url = connection_url(config, &config.db.primary.url);
+pub fn oneoff_connection_with_config(
+    config: &config::DatabasePools,
+) -> ConnectionResult<PgConnection> {
+    let url = connection_url(config, &config.primary.url);
     PgConnection::establish(&url)
 }
 
-pub fn connection_url(config: &config::Server, url: &str) -> String {
+pub fn oneoff_connection() -> ConnectionResult<PgConnection> {
+    let config = config::DatabasePools::full_from_environment(&config::Base::from_environment());
+    oneoff_connection_with_config(&config)
+}
+
+pub fn connection_url(config: &config::DatabasePools, url: &str) -> String {
     let mut url = Url::parse(url).expect("Invalid database URL");
 
-    // Enforce secure connections in production.
-    if config.base.env == Env::Production {
+    if config.enforce_tls {
         maybe_append_url_param(&mut url, "sslmode", "require");
     }
 
@@ -151,7 +157,7 @@ pub fn connection_url(config: &config::Server, url: &str) -> String {
     maybe_append_url_param(
         &mut url,
         "tcp_user_timeout",
-        &config.db.tcp_timeout_ms.to_string(),
+        &config.tcp_timeout_ms.to_string(),
     );
 
     url.into()
