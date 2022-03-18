@@ -150,6 +150,8 @@ fn version_size() {
 
     let version1 = crate_json
         .versions
+        .as_ref()
+        .unwrap()
         .iter()
         .find(|v| v.num == "1.0.0")
         .expect("Could not find v1.0.0");
@@ -157,6 +159,8 @@ fn version_size() {
 
     let version2 = crate_json
         .versions
+        .as_ref()
+        .unwrap()
         .iter()
         .find(|v| v.num == "2.0.0")
         .expect("Could not find v2.0.0");

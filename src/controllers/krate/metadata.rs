@@ -5,6 +5,7 @@
 //! `Cargo.toml` file.
 
 use std::cmp::Reverse;
+use std::str::FromStr;
 
 use crate::controllers::frontend_prelude::*;
 use crate::controllers::helpers::pagination::PaginationOptions;
@@ -45,7 +46,7 @@ pub fn summary(req: &mut dyn RequestExt) -> EndpointResult {
             .map(|((top_versions, krate), recent_downloads)| {
                 Ok(EncodableCrate::from_minimal(
                     krate,
-                    &top_versions,
+                    Some(&top_versions),
                     None,
                     false,
                     recent_downloads,
@@ -111,69 +112,181 @@ pub fn summary(req: &mut dyn RequestExt) -> EndpointResult {
 /// Handles the `GET /crates/:crate_id` route.
 pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
     let name = &req.params()["crate_id"];
+    let include = req
+        .query()
+        .get("include")
+        .map(|mode| ShowIncludeMode::from_str(mode))
+        .transpose()?
+        .unwrap_or_default();
+
     let conn = req.db_read_only()?;
     let krate: Crate = Crate::by_name(name).first(&*conn)?;
 
-    let mut versions_and_publishers: Vec<(Version, Option<User>)> = krate
-        .all_versions()
-        .left_outer_join(users::table)
-        .select((versions::all_columns, users::all_columns.nullable()))
-        .load(&*conn)?;
+    let versions_publishers_and_audit_actions = if include.versions {
+        let mut versions_and_publishers: Vec<(Version, Option<User>)> = krate
+            .all_versions()
+            .left_outer_join(users::table)
+            .select((versions::all_columns, users::all_columns.nullable()))
+            .load(&*conn)?;
+        versions_and_publishers
+            .sort_by_cached_key(|(version, _)| Reverse(semver::Version::parse(&version.num).ok()));
 
-    versions_and_publishers
-        .sort_by_cached_key(|(version, _)| Reverse(semver::Version::parse(&version.num).ok()));
-
-    let versions = versions_and_publishers
-        .iter()
-        .map(|(v, _)| v)
-        .cloned()
-        .collect::<Vec<_>>();
-    let versions_publishers_and_audit_actions = versions_and_publishers
-        .into_iter()
-        .zip(VersionOwnerAction::for_versions(&conn, &versions)?.into_iter())
-        .map(|((v, pb), aas)| (v, pb, aas))
-        .collect::<Vec<_>>();
+        let versions = versions_and_publishers
+            .iter()
+            .map(|(v, _)| v)
+            .cloned()
+            .collect::<Vec<_>>();
+        Some(
+            versions_and_publishers
+                .into_iter()
+                .zip(VersionOwnerAction::for_versions(&conn, &versions)?.into_iter())
+                .map(|((v, pb), aas)| (v, pb, aas))
+                .collect::<Vec<_>>(),
+        )
+    } else {
+        None
+    };
     let ids = versions_publishers_and_audit_actions
-        .iter()
-        .map(|v| v.0.id)
-        .collect();
+        .as_ref()
+        .map(|vps| vps.iter().map(|v| v.0.id).collect());
 
-    let kws = CrateKeyword::belonging_to(&krate)
-        .inner_join(keywords::table)
-        .select(keywords::all_columns)
-        .load(&*conn)?;
-    let cats = CrateCategory::belonging_to(&krate)
-        .inner_join(categories::table)
-        .select(categories::all_columns)
-        .load(&*conn)?;
-    let recent_downloads = RecentCrateDownloads::belonging_to(&krate)
-        .select(recent_crate_downloads::downloads)
-        .get_result(&*conn)
-        .optional()?;
+    let kws = if include.keywords {
+        Some(
+            CrateKeyword::belonging_to(&krate)
+                .inner_join(keywords::table)
+                .select(keywords::all_columns)
+                .load(&*conn)?,
+        )
+    } else {
+        None
+    };
+    let cats = if include.categories {
+        Some(
+            CrateCategory::belonging_to(&krate)
+                .inner_join(categories::table)
+                .select(categories::all_columns)
+                .load(&*conn)?,
+        )
+    } else {
+        None
+    };
+    let recent_downloads = if include.downloads {
+        RecentCrateDownloads::belonging_to(&krate)
+            .select(recent_crate_downloads::downloads)
+            .get_result(&*conn)
+            .optional()?
+    } else {
+        None
+    };
 
-    let badges = badges::table
-        .filter(badges::crate_id.eq(krate.id))
-        .load(&*conn)?;
-    let top_versions = krate.top_versions(&conn)?;
+    let badges = if include.badges {
+        Some(
+            badges::table
+                .filter(badges::crate_id.eq(krate.id))
+                .load(&*conn)?,
+        )
+    } else {
+        None
+    };
+    let top_versions = if include.versions {
+        Some(krate.top_versions(&conn)?)
+    } else {
+        None
+    };
 
-    Ok(req.json(&json!({
-        "crate": EncodableCrate::from(
-            krate.clone(),
-            &top_versions,
-            Some(ids),
-            Some(&kws),
-            Some(&cats),
-            Some(badges),
-            false,
-            recent_downloads,
-        ),
-        "versions": versions_publishers_and_audit_actions
-            .into_iter()
+    let encodable_crate = EncodableCrate::from(
+        krate.clone(),
+        top_versions.as_ref(),
+        ids,
+        kws.as_deref(),
+        cats.as_deref(),
+        badges,
+        false,
+        recent_downloads,
+    );
+    let encodable_versions = versions_publishers_and_audit_actions.map(|vpa| {
+        vpa.into_iter()
             .map(|(v, pb, aas)| EncodableVersion::from(v, &krate.name, pb, aas))
-            .collect::<Vec<_>>(),
-        "keywords": kws.into_iter().map(Keyword::into).collect::<Vec<EncodableKeyword>>(),
-        "categories": cats.into_iter().map(Category::into).collect::<Vec<EncodableCategory>>(),
+            .collect::<Vec<_>>()
+    });
+    let encodable_keywords = kws.map(|kws| {
+        kws.into_iter()
+            .map(Keyword::into)
+            .collect::<Vec<EncodableKeyword>>()
+    });
+    let encodable_cats = cats.map(|cats| {
+        cats.into_iter()
+            .map(Category::into)
+            .collect::<Vec<EncodableCategory>>()
+    });
+    Ok(req.json(&json!({
+        "crate": encodable_crate,
+        "versions": encodable_versions,
+        "keywords": encodable_keywords,
+        "categories": encodable_cats,
     })))
+}
+
+#[derive(Debug)]
+struct ShowIncludeMode {
+    versions: bool,
+    keywords: bool,
+    categories: bool,
+    badges: bool,
+    downloads: bool,
+}
+
+impl Default for ShowIncludeMode {
+    fn default() -> Self {
+        // Send everything for legacy clients that expect the full response
+        Self {
+            versions: true,
+            keywords: true,
+            categories: true,
+            badges: true,
+            downloads: true,
+        }
+    }
+}
+
+impl ShowIncludeMode {
+    const INVALID_COMPONENT: &'static str =
+        "invalid component for ?include= (expected 'versions', 'keywords', 'categories', 'badges', 'downloads', or 'full')";
+}
+
+impl FromStr for ShowIncludeMode {
+    type Err = Box<dyn AppError>;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut mode = Self {
+            versions: false,
+            keywords: false,
+            categories: false,
+            badges: false,
+            downloads: false,
+        };
+        for component in s.split(',') {
+            match component {
+                "" => {}
+                "full" => {
+                    mode = Self {
+                        versions: true,
+                        keywords: true,
+                        categories: true,
+                        badges: true,
+                        downloads: true,
+                    }
+                }
+                "versions" => mode.versions = true,
+                "keywords" => mode.keywords = true,
+                "categories" => mode.categories = true,
+                "badges" => mode.badges = true,
+                "downloads" => mode.downloads = true,
+                _ => return Err(bad_request(Self::INVALID_COMPONENT)),
+            }
+        }
+        Ok(mode)
+    }
 }
 
 /// Handles the `GET /crates/:crate_id/:version/readme` route.

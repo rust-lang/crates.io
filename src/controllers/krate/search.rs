@@ -335,7 +335,7 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
             |((((max_version, krate), perfect_match), recent_downloads), badges)| {
                 EncodableCrate::from_minimal(
                     krate,
-                    &max_version,
+                    Some(&max_version),
                     Some(badges),
                     perfect_match,
                     Some(recent_downloads),
