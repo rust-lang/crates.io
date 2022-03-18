@@ -100,7 +100,7 @@ impl App {
         let thread_pool = Arc::new(ScheduledThreadPool::new(db_helper_threads));
 
         let primary_database = if config.use_test_database_pool {
-            DieselPool::new_test(&config.db.primary.url)
+            DieselPool::new_test(&config.db, &config.db.primary.url)
         } else {
             let primary_db_connection_config = ConnectionConfig {
                 statement_timeout: db_connection_timeout,
@@ -116,6 +116,7 @@ impl App {
 
             DieselPool::new(
                 &config.db.primary.url,
+                &config.db,
                 primary_db_config,
                 instance_metrics
                     .database_time_to_obtain_connection
@@ -126,7 +127,7 @@ impl App {
 
         let replica_database = if let Some(pool_config) = config.db.replica.as_ref() {
             if config.use_test_database_pool {
-                Some(DieselPool::new_test(&pool_config.url))
+                Some(DieselPool::new_test(&config.db, &pool_config.url))
             } else {
                 let replica_db_connection_config = ConnectionConfig {
                     statement_timeout: db_connection_timeout,
@@ -143,6 +144,7 @@ impl App {
                 Some(
                     DieselPool::new(
                         &pool_config.url,
+                        &config.db,
                         replica_db_config,
                         instance_metrics
                             .database_time_to_obtain_connection

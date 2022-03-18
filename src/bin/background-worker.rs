@@ -24,11 +24,10 @@ use std::time::Duration;
 fn main() {
     println!("Booting runner");
 
-    let db_config = config::DatabasePools::full_from_environment();
-    let base_config = config::Base::from_environment();
-    let uploader = base_config.uploader();
+    let config = config::Server::default();
+    let uploader = config.base.uploader();
 
-    if db_config.are_all_read_only() {
+    if config.db.are_all_read_only() {
         loop {
             println!(
                 "Cannot run background jobs with a read-only pool. Please scale background_worker \
@@ -38,7 +37,7 @@ fn main() {
         }
     }
 
-    let db_url = db::connection_url(&db_config.primary.url);
+    let db_url = db::connection_url(&config.db, &config.db.primary.url);
 
     let job_start_timeout = dotenv::var("BACKGROUND_JOB_TIMEOUT")
         .unwrap_or_else(|_| "30".into())

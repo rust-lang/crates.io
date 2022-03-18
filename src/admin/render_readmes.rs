@@ -40,7 +40,7 @@ pub struct Opts {
 
 pub fn run(opts: Opts) -> anyhow::Result<()> {
     let base_config = Arc::new(config::Base::from_environment());
-    let conn = db::connect_now().unwrap();
+    let conn = db::oneoff_connection().unwrap();
 
     let start_time = Utc::now();
 
