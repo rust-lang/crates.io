@@ -300,6 +300,7 @@ fn simple_config() -> config::Server {
         blocked_traffic: Default::default(),
         max_allowed_page_offset: 200,
         page_offset_ua_blocklist: vec![],
+        excluded_crate_names: vec![],
         domain_name: "crates.io".into(),
         allowed_origins: Vec::new(),
         downloads_persist_interval_ms: 1000,

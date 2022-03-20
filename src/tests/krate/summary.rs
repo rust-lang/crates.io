@@ -107,3 +107,46 @@ fn summary_new_crates() {
 
     assert_eq!(json.new_crates.len(), 5);
 }
+
+#[test]
+fn excluded_crate_id() {
+    let (app, anon, user) = TestApp::init()
+        .with_config(|config| {
+            config.excluded_crate_names = vec![
+                "most_recent_downloads".into(),
+                // make sure no error occurs with a crate name that doesn't exist and that the name
+                // matches are exact, not substrings
+                "downloads".into(),
+            ];
+        })
+        .with_user();
+    let user = user.as_model();
+    app.db(|conn| {
+        CrateBuilder::new("some_downloads", user.id)
+            .version(VersionBuilder::new("0.1.0"))
+            .description("description")
+            .keyword("popular")
+            .category("cat1")
+            .downloads(20)
+            .recent_downloads(10)
+            .expect_build(conn);
+
+        CrateBuilder::new("most_recent_downloads", user.id)
+            .version(VersionBuilder::new("0.2.0"))
+            .keyword("popular")
+            .category("cat1")
+            .downloads(5000)
+            .recent_downloads(50)
+            .expect_build(conn);
+    });
+
+    let json: SummaryResponse = anon.get("/api/v1/summary").good();
+
+    assert_eq!(json.most_downloaded.len(), 1);
+    assert_eq!(json.most_downloaded[0].name, "some_downloads");
+    assert_eq!(json.most_downloaded[0].downloads, 20);
+
+    assert_eq!(json.most_recently_downloaded.len(), 1);
+    assert_eq!(json.most_recently_downloaded[0].name, "some_downloads");
+    assert_eq!(json.most_recently_downloaded[0].recent_downloads, Some(10));
+}
