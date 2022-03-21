@@ -7651,17 +7651,17 @@ fast-url-parser@1.1.3:
   dependencies:
     punycode "^1.3.2"
 
-fastboot-app-server@3.2.0:
-  version "3.2.0"
-  resolved "https://registry.yarnpkg.com/fastboot-app-server/-/fastboot-app-server-3.2.0.tgz#e43028c088f2439dd9217462d81c39421fce3e32"
-  integrity sha512-rbRiIvnVB2Sicn27leJ1PbcSi1iXDvI2csgYyJhSRmyGIVWo1M3DSgRGPpk92Qy36DHCKt6lUlkIz7WZGiz60g==
+fastboot-app-server@3.3.0:
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/fastboot-app-server/-/fastboot-app-server-3.3.0.tgz#8cf48f4cfc442cacddded08961b3b0b0cfafd7ce"
+  integrity sha512-Raz1ifRxdUlWbYCvXa1xUmGU/m7zNC62Gjjg7MqS42GATC4GCI0yVTB/cDsz5DtOpwxIush0HWfvZVIrz7tDrA==
   dependencies:
     basic-auth "^2.0.1"
     chalk "^4.1.2"
     compression "^1.7.4"
     express "^4.17.2"
-    fastboot "3.2.0"
-    fastboot-express-middleware "3.2.0"
+    fastboot "3.3.0"
+    fastboot-express-middleware "3.3.0"
 
 fastboot-express-middleware@3.2.0:
   version "3.2.0"
