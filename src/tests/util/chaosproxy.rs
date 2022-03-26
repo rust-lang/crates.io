@@ -129,7 +129,7 @@ impl ChaosProxy {
                         // EOF, the socket was closed
                         return Ok(());
                     }
-                    to.write(&buf[0..len]).await?;
+                    to.write_all(&buf[0..len]).await?;
                 }
                 _ = break_connections_recv.recv() => {
                     to.shutdown().await?;
