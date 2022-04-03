@@ -125,7 +125,7 @@
     "nyc": "15.1.0",
     "postcss-custom-media": "8.0.0",
     "postcss-nested": "5.0.6",
-    "prettier": "2.6.0",
+    "prettier": "2.6.2",
     "qunit": "2.18.0",
     "qunit-console-grouper": "0.3.0",
     "qunit-dom": "2.0.0",
