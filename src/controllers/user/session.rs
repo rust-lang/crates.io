@@ -16,7 +16,7 @@ use crate::Env;
 
 pub const SESSION_COOKIE_NAME: &str = "crates_auth";
 
-fn session_cookie(token: &NewSecureToken, secure: bool) -> Cookie<'static> {
+pub fn session_cookie(token: &NewSecureToken, secure: bool) -> Cookie<'static> {
     Cookie::build(SESSION_COOKIE_NAME, token.plaintext().to_string())
         .http_only(true)
         .secure(secure)

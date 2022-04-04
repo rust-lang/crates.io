@@ -2,12 +2,50 @@ use crate::util::{RequestHelper, Response};
 use crate::TestApp;
 
 use crate::util::encode_session_header;
+use cargo_registry::controllers::user::session::session_cookie;
+use cargo_registry::util::token::SecureToken;
+use cargo_registry::util::token::SecureTokenKind;
 use conduit::{header, Body, Method, StatusCode};
 
 static URL: &str = "/api/v1/me/updates";
 static MUST_LOGIN: &[u8] = br#"{"errors":[{"detail":"must be logged in to perform that action"}]}"#;
 static INTERNAL_ERROR_NO_USER: &str =
     "user_id from cookie not found in database caused by NotFound";
+
+#[test]
+fn persistent_session_user() {
+    let (app, _) = TestApp::init().empty();
+    let user = app.db_new_user("user1").with_session();
+    let request = user.request_builder(Method::GET, URL);
+    let response: Response<Body> = user.run(request);
+    assert_eq!(response.status(), StatusCode::OK);
+}
+
+#[test]
+fn incorrect_session_is_forbidden() {
+    let (_, anon) = TestApp::init().empty();
+
+    let token = SecureToken::generate(SecureTokenKind::Session);
+    // Create a cookie that isn't in the database.
+    let cookie = session_cookie(&token, false).to_string();
+    let mut request = anon.request_builder(Method::GET, URL);
+    request.header(header::COOKIE, &cookie);
+    let response: Response<Body> = anon.run(request);
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_eq!(
+        response.into_json(),
+        json!({"errors": [{"detail": "must be logged in to perform that action"}]})
+    );
+}
+
+#[test]
+fn cookie_user() {
+    let (_, _, cookie_user) = TestApp::init().with_user();
+    let request = cookie_user.request_builder(Method::GET, URL);
+
+    let response: Response<Body> = cookie_user.run(request);
+    assert_eq!(response.status(), StatusCode::OK);
+}
 
 #[test]
 fn anonymous_user_unauthorized() {

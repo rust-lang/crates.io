@@ -23,7 +23,12 @@ use crate::{
     builders::PublishBuilder, CategoryListResponse, CategoryResponse, CrateList, CrateResponse,
     GoodCrate, OkBool, OwnersResponse, VersionResponse,
 };
+use cargo_registry::controllers::user::session::session_cookie;
+use cargo_registry::models::PersistentSession;
 use cargo_registry::models::{ApiToken, CreatedApiToken, User};
+use cargo_registry::util::token::NewSecureToken;
+use cargo_registry::util::token::SecureToken;
+use cargo_registry::util::token::SecureTokenKind;
 
 use conduit::{BoxError, Handler, Method};
 use conduit_cookie::SessionMiddleware;
@@ -270,6 +275,43 @@ impl MockCookieUser {
             app: self.app.clone(),
             token,
         }
+    }
+
+    pub fn with_session(&self) -> MockSessionUser {
+        let ip_addr = "192.168.0.42";
+        let user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36";
+
+        let token = SecureToken::generate(SecureTokenKind::Session);
+
+        self.app.db(|conn| {
+            PersistentSession::create(self.user.id, &token, ip_addr.parse().unwrap(), user_agent)
+                .insert(&conn)
+                .unwrap()
+        });
+
+        MockSessionUser {
+            app: self.app.clone(),
+            token,
+        }
+    }
+}
+
+pub struct MockSessionUser {
+    app: TestApp,
+    token: NewSecureToken,
+}
+
+impl RequestHelper for MockSessionUser {
+    fn request_builder(&self, method: Method, path: &str) -> MockRequest {
+        let cookie = session_cookie(&self.token, false).to_string();
+
+        let mut request = req(method, path);
+        request.header(header::COOKIE, &cookie);
+        request
+    }
+
+    fn app(&self) -> &TestApp {
+        &self.app
     }
 }
 
