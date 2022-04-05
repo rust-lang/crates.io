@@ -285,7 +285,7 @@ impl MockCookieUser {
 
         self.app.db(|conn| {
             PersistentSession::create(self.user.id, &token, ip_addr.parse().unwrap(), user_agent)
-                .insert(&conn)
+                .insert(conn)
                 .unwrap()
         });
 
