@@ -84,7 +84,7 @@ impl std::ops::Deref for NewSecureToken {
     }
 }
 
-pub(crate) fn generate_secure_alphanumeric_string(len: usize) -> String {
+fn generate_secure_alphanumeric_string(len: usize) -> String {
     const CHARS: &[u8] = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
     OsRng
