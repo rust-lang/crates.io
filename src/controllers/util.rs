@@ -68,7 +68,8 @@ fn verify_origin(req: &dyn RequestExt) -> AppResult<()> {
 fn authenticate_user(req: &dyn RequestExt) -> AppResult<AuthenticatedUser> {
     let conn = req.db_write()?;
 
-    // TODO(adsnaider): Remove this.
+    // TODO(adsnaider): Remove as part of https://github.com/rust-lang/crates.io/issues/2630.
+    // Log in with the session id.
     let session = req.session();
     let user_id_from_session = session.get("user_id").and_then(|s| s.parse::<i32>().ok());
 
@@ -82,6 +83,7 @@ fn authenticate_user(req: &dyn RequestExt) -> AppResult<AuthenticatedUser> {
         });
     }
 
+    // Log in with persistent session token.
     if let Some(session_token) = req
         .cookies()
         .get(SESSION_COOKIE_NAME)

@@ -14,8 +14,10 @@ use crate::util::token::NewSecureToken;
 use crate::util::token::SecureToken;
 use crate::Env;
 
+/// Name of the cookie used for session-based authentication.
 pub const SESSION_COOKIE_NAME: &str = "crates_auth";
 
+/// Creates a session cookie with the given token.
 pub fn session_cookie(token: &NewSecureToken, secure: bool) -> Cookie<'static> {
     Cookie::build(SESSION_COOKIE_NAME, token.plaintext().to_string())
         .http_only(true)
@@ -117,6 +119,7 @@ pub fn authorize(req: &mut dyn RequestExt) -> EndpointResult {
         &*req.db_write()?,
     )?;
 
+    // Setup a persistent session for the newly logged in user.
     let user_agent = req
         .headers()
         .get(header::USER_AGENT)
@@ -124,17 +127,16 @@ pub fn authorize(req: &mut dyn RequestExt) -> EndpointResult {
         .map(|value| value.to_string())
         .unwrap_or_default();
 
-    // Setup a session for the newly logged in user.
     let token = SecureToken::generate(crate::util::token::SecureTokenKind::Session);
-    let session = PersistentSession::create(user.id, &token, req.remote_addr().ip(), &user_agent);
-    session.insert(&*req.db_conn()?)?;
+    PersistentSession::create(user.id, &token, req.remote_addr().ip(), &user_agent)
+        .insert(&*req.db_conn()?)?;
 
-    // Setup session cookie.
+    // Setup persistent session cookie.
     let secure = req.app().config.env() == Env::Production;
     req.cookies_mut().add(session_cookie(&token, secure));
 
-    // Log in by setting a cookie and the middleware authentication
-    // TODO(adsnaider): Remove.
+    // TODO(adsnaider): Remove as part of https://github.com/rust-lang/crates.io/issues/2630.
+    // Log in by setting a cookie and the middleware authentication.
     req.session_mut()
         .insert("user_id".to_string(), user.id.to_string());
 
@@ -173,8 +175,10 @@ fn save_user_to_database(
 
 /// Handles the `DELETE /api/private/session` route.
 pub fn logout(req: &mut dyn RequestExt) -> EndpointResult {
-    // TODO(adsnaider): Remove this.
+    // TODO(adsnaider): Remove as part of https://github.com/rust-lang/crates.io/issues/2630.
     req.session_mut().remove(&"user_id".to_string());
+
+    // Remove persistent session from database.
     if let Some(session_token) = req
         .cookies()
         .get(SESSION_COOKIE_NAME)
@@ -183,12 +187,8 @@ pub fn logout(req: &mut dyn RequestExt) -> EndpointResult {
         req.cookies_mut().remove(Cookie::named(SESSION_COOKIE_NAME));
 
         if let Ok(conn) = req.db_conn() {
-            match PersistentSession::revoke_from_token(&conn, &session_token) {
-                Ok(0) => {}
-                Ok(1) => {}
-                Ok(_count) => {}
-                Err(_e) => {}
-            }
+            // TODO(adsnaider): Maybe log errors somehow?
+            let _ = PersistentSession::revoke_from_token(&conn, &session_token);
         }
     }
     Ok(req.json(&true))
