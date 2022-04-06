@@ -46,6 +46,7 @@ module.exports = function (defaults) {
   });
 
   app.import('node_modules/normalize.css/normalize.css', { prepend: true });
+  app.import('node_modules/highlight.js/styles/github.css');
   app.import('vendor/qunit.css', { type: 'test' });
 
   const { Webpack } = require('@embroider/webpack');
