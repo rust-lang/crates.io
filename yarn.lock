@@ -6132,10 +6132,10 @@ ember-cli-code-coverage@1.0.3:
     node-dir "^0.1.17"
     walk-sync "^2.1.0"
 
-ember-cli-dependency-checker@3.2.0:
-  version "3.2.0"
-  resolved "https://registry.yarnpkg.com/ember-cli-dependency-checker/-/ember-cli-dependency-checker-3.2.0.tgz#9202ad9e14d6fda33cffc22a11c343c2a8885330"
-  integrity sha512-dkSmcJ/jY/2ms/S6ph2jXSfOW5VfOpLfg5DFEbra0SaMNgYkNDFF1o0U4OdTsG37L5h/AXWNuVtnOa4TMabz9Q==
+ember-cli-dependency-checker@3.3.0:
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/ember-cli-dependency-checker/-/ember-cli-dependency-checker-3.3.0.tgz#556b2a4b7b1e442fa23453599b36866e648daf67"
+  integrity sha512-eXjzvjTGP3u+/gUl27tDf3YVTUw72KBZr+eVk7xrupRpwaziyP6cBxvJ01Fp0IrTm+92VInYzRJm9ucAZ3Hvdw==
   dependencies:
     chalk "^2.3.0"
     find-yarn-workspace-root "^1.1.0"
