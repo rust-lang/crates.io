@@ -1,5 +1,6 @@
 import { modifier } from 'ember-modifier';
 import hljs from 'highlight.js/lib/core';
+import 'highlight.js/styles/github.css';
 import bash from 'highlight.js/lib/languages/bash';
 import c from 'highlight.js/lib/languages/c';
 import cpp from 'highlight.js/lib/languages/cpp';
