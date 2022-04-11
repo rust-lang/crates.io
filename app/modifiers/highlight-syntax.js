@@ -40,6 +40,9 @@ hljs.registerLanguage('yaml', yaml);
 hljs.registerAliases('clike', { languageName: 'c' });
 hljs.registerAliases('markup', { languageName: 'xml' });
 
+// common aliases
+hljs.registerAliases('rs', { languageName: 'rust' });
+
 export default modifier((element, _, { selector }) => {
   let elements = selector ? element.querySelectorAll(selector) : [element];
 
