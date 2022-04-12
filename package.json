@@ -48,7 +48,7 @@
     "macro-decorators": "0.1.2",
     "morgan": "1.10.0",
     "pretty-bytes": "6.0.0",
-    "semver": "7.3.6",
+    "semver": "7.3.7",
     "tracked-toolbox": "1.2.3"
   },
   "devDependencies": {
