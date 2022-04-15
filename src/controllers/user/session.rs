@@ -15,7 +15,7 @@ use crate::util::token::SecureToken;
 use crate::Env;
 
 /// Name of the cookie used for session-based authentication.
-pub const SESSION_COOKIE_NAME: &str = "crates_auth";
+pub const SESSION_COOKIE_NAME: &str = "__Host-auth";
 
 /// Creates a session cookie with the given token.
 pub fn session_cookie(token: &NewSecureToken, secure: bool) -> Cookie<'static> {
