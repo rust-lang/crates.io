@@ -79,8 +79,6 @@ impl PersistentSession {
             .filter(persistent_sessions::revoked.eq(false))
             .filter(persistent_sessions::hashed_token.eq(hashed_token));
 
-        // TODO: Do we want to check if the user agent or IP address don't match? What about the
-        // created_at/last_user_at times, do we want to expire the tokens?
         conn.transaction(|| {
             diesel::update(sessions.clone())
                 .set((
