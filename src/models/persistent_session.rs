@@ -1,7 +1,10 @@
 use chrono::NaiveDateTime;
+use cookie::{Cookie, SameSite};
 use diesel::prelude::*;
 use ipnetwork::IpNetwork;
 use std::net::IpAddr;
+use std::num::ParseIntError;
+use std::str::FromStr;
 use thiserror::Error;
 
 use crate::schema::persistent_sessions;
@@ -67,15 +70,16 @@ impl PersistentSession {
     /// * `Ok(Some(...))` if a session matches the `token`.
     /// * `Ok(None)` if no session matches the `token`.
     /// * `Err(...)` for other errors such as invalid tokens or diesel errors.
-    pub fn find_from_token_and_update(
+    pub fn find_and_update(
         conn: &PgConnection,
-        token: &str,
+        session_cookie: &SessionCookie,
         ip_address: IpAddr,
         user_agent: &str,
     ) -> Result<Option<Self>, SessionError> {
-        let hashed_token = SecureToken::parse(SecureTokenKind::Session, token)
+        let hashed_token = SecureToken::parse(SecureTokenKind::Session, &session_cookie.token)
             .ok_or(SessionError::InvalidSessionToken)?;
         let sessions = persistent_sessions::table
+            .filter(persistent_sessions::id.eq(session_cookie.id))
             .filter(persistent_sessions::revoked.eq(false))
             .filter(persistent_sessions::hashed_token.eq(hashed_token));
 
@@ -129,5 +133,64 @@ impl NewPersistentSession<'_, '_> {
         diesel::insert_into(persistent_sessions::table)
             .values(self)
             .get_result(conn)
+    }
+}
+
+/// Holds the information needed for the session cookie.
+#[derive(Debug, PartialEq, Eq)]
+pub struct SessionCookie {
+    /// The session ID in the database.
+    id: i64,
+    /// The token
+    token: String,
+}
+
+impl SessionCookie {
+    /// Name of the cookie used for session-based authentication.
+    pub const SESSION_COOKIE_NAME: &'static str = "__Host-auth";
+
+    /// Creates a new `SessionCookie`.
+    pub fn new(id: i64, token: String) -> Self {
+        Self { id, token }
+    }
+
+    /// Returns the `[Cookie]`.
+    pub fn build(&self, secure: bool) -> Cookie<'static> {
+        Cookie::build(
+            Self::SESSION_COOKIE_NAME,
+            format!("{}:{}", self.id, &self.token),
+        )
+        .http_only(true)
+        .secure(secure)
+        .same_site(SameSite::Strict)
+        .path("/")
+        .finish()
+    }
+}
+
+/// Error returned when the session cookie couldn't be parsed.
+#[derive(Error, Debug, PartialEq)]
+pub enum ParseSessionCookieError {
+    #[error("The session id wasn't in the cookie.")]
+    MissingSessionId,
+    #[error("The session id couldn't be parsed from the cookie.")]
+    IdParseError(#[from] ParseIntError),
+    #[error("The session token wasn't in the cookie.")]
+    MissingToken,
+}
+
+impl FromStr for SessionCookie {
+    type Err = ParseSessionCookieError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut id_and_token = s.split(':');
+        let id: i64 = id_and_token
+            .next()
+            .ok_or(ParseSessionCookieError::MissingSessionId)?
+            .parse()?;
+        let token = id_and_token
+            .next()
+            .ok_or(ParseSessionCookieError::MissingToken)?;
+
+        Ok(Self::new(id, token.to_string()))
     }
 }

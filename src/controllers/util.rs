@@ -2,8 +2,8 @@ use chrono::Utc;
 use conduit_cookie::RequestCookies;
 
 use super::prelude::*;
-use crate::controllers::user::session::SESSION_COOKIE_NAME;
 use crate::middleware::log_request;
+use crate::models::persistent_session::SessionCookie;
 use crate::models::{ApiToken, PersistentSession, User};
 use crate::util::errors::{
     account_locked, forbidden, internal, AppError, AppResult, InsecurelyGeneratedTokenRevoked,
@@ -84,10 +84,11 @@ fn authenticate_user(req: &dyn RequestExt) -> AppResult<AuthenticatedUser> {
     }
 
     // Log in with persistent session token.
-    if let Some(session_token) = req
+    if let Some(Ok(session_cookie)) = req
         .cookies()
-        .get(SESSION_COOKIE_NAME)
+        .get(SessionCookie::SESSION_COOKIE_NAME)
         .map(|cookie| cookie.value())
+        .map(|cookie| cookie.parse::<SessionCookie>())
     {
         let ip_addr = req.remote_addr().ip();
 
@@ -97,12 +98,9 @@ fn authenticate_user(req: &dyn RequestExt) -> AppResult<AuthenticatedUser> {
             .and_then(|value| value.to_str().ok())
             .unwrap_or_default();
 
-        if let Some(session) = PersistentSession::find_from_token_and_update(
-            &conn,
-            session_token,
-            ip_addr,
-            user_agent,
-        )? {
+        if let Some(session) =
+            PersistentSession::find_and_update(&conn, &session_cookie, ip_addr, user_agent)?
+        {
             let user = User::find(&conn, session.user_id)
                 .map_err(|e| e.chain(internal("user_id from session not found in the database")))?;
             return Ok(AuthenticatedUser {

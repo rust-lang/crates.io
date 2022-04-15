@@ -13,6 +13,3 @@ CREATE TABLE persistent_sessions
 );
 
 COMMENT ON TABLE persistent_sessions IS 'This table contains the hashed tokens for all of the cookie-based persistent sessions';
-
-CREATE INDEX persistent_sessions_token_index
-    ON persistent_sessions (hashed_token);

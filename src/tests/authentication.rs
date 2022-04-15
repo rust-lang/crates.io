@@ -2,7 +2,7 @@ use crate::util::{RequestHelper, Response};
 use crate::TestApp;
 
 use crate::util::encode_session_header;
-use cargo_registry::controllers::user::session::session_cookie;
+use cargo_registry::models::persistent_session::SessionCookie;
 use cargo_registry::util::token::SecureToken;
 use cargo_registry::util::token::SecureTokenKind;
 use conduit::{header, Body, Method, StatusCode};
@@ -27,7 +27,9 @@ fn incorrect_session_is_forbidden() {
 
     let token = SecureToken::generate(SecureTokenKind::Session);
     // Create a cookie that isn't in the database.
-    let cookie = session_cookie(&token, false).to_string();
+    let cookie = SessionCookie::new(123, token.plaintext().to_string())
+        .build(false)
+        .to_string();
     let mut request = anon.request_builder(Method::GET, URL);
     request.header(header::COOKIE, &cookie);
     let response: Response<Body> = anon.run(request);

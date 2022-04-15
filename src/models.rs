@@ -29,7 +29,7 @@ mod follow;
 mod keyword;
 pub mod krate;
 mod owner;
-mod persistent_session;
+pub mod persistent_session;
 mod rights;
 mod team;
 mod token;

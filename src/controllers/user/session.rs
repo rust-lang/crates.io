@@ -1,31 +1,18 @@
 use crate::controllers::frontend_prelude::*;
 
 use conduit_cookie::{RequestCookies, RequestSession};
-use cookie::{Cookie, SameSite};
+use cookie::Cookie;
 use oauth2::reqwest::http_client;
 use oauth2::{AuthorizationCode, Scope, TokenResponse};
 
 use crate::email::Emails;
 use crate::github::GithubUser;
+use crate::models::persistent_session::SessionCookie;
 use crate::models::{NewUser, PersistentSession, User};
 use crate::schema::users;
 use crate::util::errors::ReadOnlyMode;
-use crate::util::token::NewSecureToken;
 use crate::util::token::SecureToken;
 use crate::Env;
-
-/// Name of the cookie used for session-based authentication.
-pub const SESSION_COOKIE_NAME: &str = "__Host-auth";
-
-/// Creates a session cookie with the given token.
-pub fn session_cookie(token: &NewSecureToken, secure: bool) -> Cookie<'static> {
-    Cookie::build(SESSION_COOKIE_NAME, token.plaintext().to_string())
-        .http_only(true)
-        .secure(secure)
-        .same_site(SameSite::Strict)
-        .path("/")
-        .finish()
-}
 
 /// Handles the `GET /api/private/session/begin` route.
 ///
@@ -128,12 +115,14 @@ pub fn authorize(req: &mut dyn RequestExt) -> EndpointResult {
         .unwrap_or_default();
 
     let token = SecureToken::generate(crate::util::token::SecureTokenKind::Session);
-    PersistentSession::create(user.id, &token, req.remote_addr().ip(), &user_agent)
+    let session = PersistentSession::create(user.id, &token, req.remote_addr().ip(), &user_agent)
         .insert(&*req.db_conn()?)?;
+
+    let cookie = SessionCookie::new(session.id, token.plaintext().to_string());
 
     // Setup persistent session cookie.
     let secure = req.app().config.env() == Env::Production;
-    req.cookies_mut().add(session_cookie(&token, secure));
+    req.cookies_mut().add(cookie.build(secure));
 
     // TODO(adsnaider): Remove as part of https://github.com/rust-lang/crates.io/issues/2630.
     // Log in by setting a cookie and the middleware authentication.
@@ -181,10 +170,11 @@ pub fn logout(req: &mut dyn RequestExt) -> EndpointResult {
     // Remove persistent session from database.
     if let Some(session_token) = req
         .cookies()
-        .get(SESSION_COOKIE_NAME)
+        .get(SessionCookie::SESSION_COOKIE_NAME)
         .map(|cookie| cookie.value().to_string())
     {
-        req.cookies_mut().remove(Cookie::named(SESSION_COOKIE_NAME));
+        req.cookies_mut()
+            .remove(Cookie::named(SessionCookie::SESSION_COOKIE_NAME));
 
         if let Ok(conn) = req.db_conn() {
             // TODO(adsnaider): Maybe log errors somehow?
