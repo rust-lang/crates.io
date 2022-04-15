@@ -1,8 +1,8 @@
 CREATE TABLE persistent_sessions
 (
-    id SERIAL
-        CONSTRAINT persistent_sessions_pk
-            PRIMARY KEY,
+    id BIGSERIAL
+      CONSTRAINT persistent_sessions_pk
+        PRIMARY KEY,
     user_id INTEGER NOT NULL,
     hashed_token bytea NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,

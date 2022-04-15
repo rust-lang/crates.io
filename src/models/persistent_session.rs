@@ -18,7 +18,7 @@ use crate::util::token::SecureTokenKind;
 #[table_name = "persistent_sessions"]
 pub struct PersistentSession {
     /// The id of this session.
-    pub id: i32,
+    pub id: i64,
     /// The user id associated with this session.
     pub user_id: i32,
     /// The token (hashed) that identifies the session.
