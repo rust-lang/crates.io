@@ -22,6 +22,25 @@ fn persistent_session_user() {
 }
 
 #[test]
+fn persistent_session_revoked_after_logout() {
+    let (app, _) = TestApp::init().empty();
+    let user = app.db_new_user("user1").with_session();
+    let request = user.request_builder(Method::GET, URL);
+    let response: Response<Body> = user.run(request);
+    assert_eq!(response.status(), StatusCode::OK);
+
+    // Logout
+    let request = user.request_builder(Method::DELETE, "/api/private/session");
+    let response: Response<Body> = user.run(request);
+    assert_eq!(response.status(), StatusCode::OK);
+
+    // Now this request should fail since we logged out.
+    let request = user.request_builder(Method::GET, URL);
+    let response: Response<Body> = user.run(request);
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+}
+
+#[test]
 fn incorrect_session_is_forbidden() {
     let (_, anon) = TestApp::init().empty();
 
