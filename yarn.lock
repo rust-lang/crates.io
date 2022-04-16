@@ -1618,12 +1618,13 @@
   resolved "https://registry.yarnpkg.com/@juggle/resize-observer/-/resize-observer-3.3.1.tgz#b50a781709c81e10701004214340f25475a171a0"
   integrity sha512-zMM9Ds+SawiUkakS7y94Ymqx+S0ORzpG3frZirN3l+UlXUmSUR7hF4wxCVqW+ei94JzV5kt0uXBcoOEAuiydrw==
 
-"@lint-todo/utils@^12.0.1":
-  version "12.0.1"
-  resolved "https://registry.yarnpkg.com/@lint-todo/utils/-/utils-12.0.1.tgz#d61ef329f9f6c7332adee7b1f68651f190d53a7f"
-  integrity sha512-Xiy5wN+ns95gEHepJ55TXEBAZrkZlzrF9wTjqoTgv+RYOYL3+qQ+v0RtPH2n/UwPJEFuXJ6QKiT99RnUOt1pzw==
+"@lint-todo/utils@^13.0.2":
+  version "13.0.2"
+  resolved "https://registry.yarnpkg.com/@lint-todo/utils/-/utils-13.0.2.tgz#0d2fc6cc24452564dd2ee97be01437aa92b4c1a8"
+  integrity sha512-tLZfEjU5i7KThQbWZ4u5dLUJx9+euGnytz402uAH4VRa0jMxyc2HNXw+h6qPdKxM/wGAvwEQGn7l1j2kyLI7rQ==
   dependencies:
     "@types/eslint" "^7.2.13"
+    find-up "^5.0.0"
     fs-extra "^9.1.0"
     proper-lockfile "^4.1.2"
     slash "^3.0.0"
@@ -6884,12 +6885,12 @@ ember-svg-jar@2.3.4:
     mkdirp "^0.5.1"
     path-posix "^1.0.0"
 
-ember-template-lint@4.4.0:
-  version "4.4.0"
-  resolved "https://registry.yarnpkg.com/ember-template-lint/-/ember-template-lint-4.4.0.tgz#76f8cea3ba56e2cde56be0942d718872cfe0828e"
-  integrity sha512-4HyyNo1CrKCeSwPbpZ+XHFM1NMl4JzXJweotYWOQ//Yepbv8LWLVy4NqLMUxTeujz0KZmUhAgoGsahASv7roaw==
+ember-template-lint@4.4.1:
+  version "4.4.1"
+  resolved "https://registry.yarnpkg.com/ember-template-lint/-/ember-template-lint-4.4.1.tgz#781224d485707d14b5af2fe267d7df8c82cb4c68"
+  integrity sha512-9ejLTAf00yP1XboEHWeATajUfWoe+FOtkr42GHz8Y5ktpbmrqjs0H45JRTBJX7d7pbN1aHveZtkQC7rzO1dApg==
   dependencies:
-    "@lint-todo/utils" "^12.0.1"
+    "@lint-todo/utils" "^13.0.2"
     aria-query "^5.0.0"
     chalk "^4.1.2"
     ci-info "^3.3.0"
