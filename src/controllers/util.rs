@@ -90,23 +90,16 @@ fn authenticate_user(req: &dyn RequestExt) -> AppResult<AuthenticatedUser> {
         .map(|cookie| cookie.value())
         .map(|cookie| cookie.parse::<SessionCookie>())
     {
-        let ip_addr = req.remote_addr().ip();
-
-        let user_agent = req
-            .headers()
-            .get(header::USER_AGENT)
-            .and_then(|value| value.to_str().ok())
-            .unwrap_or_default();
-
-        if let Some(session) =
-            PersistentSession::find_and_update(&conn, &session_cookie, ip_addr, user_agent)?
-        {
-            let user = User::find(&conn, session.user_id)
-                .map_err(|e| e.chain(internal("user_id from session not found in the database")))?;
-            return Ok(AuthenticatedUser {
-                user,
-                token_id: None,
-            });
+        if let Some(session) = PersistentSession::find(session_cookie.session_id(), &conn)? {
+            if session.is_authorized(session_cookie.token()) {
+                let user = User::find(&conn, session.user_id).map_err(|e| {
+                    e.chain(internal("user_id from session not found in the database"))
+                })?;
+                return Ok(AuthenticatedUser {
+                    user,
+                    token_id: None,
+                });
+            }
         }
     }
 

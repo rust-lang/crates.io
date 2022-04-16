@@ -1,8 +1,6 @@
 use chrono::NaiveDateTime;
 use cookie::{Cookie, SameSite};
 use diesel::prelude::*;
-use ipnetwork::IpNetwork;
-use std::net::IpAddr;
 use std::num::ParseIntError;
 use std::str::FromStr;
 use thiserror::Error;
@@ -28,106 +26,69 @@ pub struct PersistentSession {
     pub hashed_token: SecureToken,
     /// Datetime the session was created.
     pub created_at: NaiveDateTime,
-    /// Datetime the session was last used.
-    pub last_used_at: NaiveDateTime,
     /// Whether the session is revoked.
     pub revoked: bool,
-    /// Last IP address that used the session.
-    pub last_ip_address: IpNetwork,
-    /// Last user agent that used the session.
-    pub last_user_agent: String,
-}
-
-/// Session-related errors.
-#[derive(Error, Debug, PartialEq)]
-pub enum SessionError {
-    #[error("token prefix doesn't match session tokens")]
-    InvalidSessionToken,
-    #[error("database manipulation error")]
-    DieselError(#[from] diesel::result::Error),
 }
 
 impl PersistentSession {
     /// Creates a `NewPersistentSession` that can be inserted into the database.
-    pub fn create<'a, 'b>(
-        user_id: i32,
-        token: &'a SecureToken,
-        last_ip_address: IpAddr,
-        last_user_agent: &'b str,
-    ) -> NewPersistentSession<'a, 'b> {
+    pub fn create<'a>(user_id: i32, token: &'a SecureToken) -> NewPersistentSession<'a> {
         NewPersistentSession {
             user_id,
             hashed_token: token,
-            last_ip_address: last_ip_address.into(),
-            last_user_agent,
         }
     }
 
-    /// Finds an unrevoked session that matches `token` from the database and returns it.
+    /// Finds the session with the ID.
     ///
     /// # Returns
     ///
-    /// * `Ok(Some(...))` if a session matches the `token`.
-    /// * `Ok(None)` if no session matches the `token`.
-    /// * `Err(...)` for other errors such as invalid tokens or diesel errors.
-    pub fn find_and_update(
-        conn: &PgConnection,
-        session_cookie: &SessionCookie,
-        ip_address: IpAddr,
-        user_agent: &str,
-    ) -> Result<Option<Self>, SessionError> {
-        let hashed_token = SecureToken::parse(SecureTokenKind::Session, &session_cookie.token)
-            .ok_or(SessionError::InvalidSessionToken)?;
-        let sessions = persistent_sessions::table
-            .filter(persistent_sessions::id.eq(session_cookie.id))
-            .filter(persistent_sessions::revoked.eq(false))
-            .filter(persistent_sessions::hashed_token.eq(hashed_token));
-
-        conn.transaction(|| {
-            diesel::update(sessions.clone())
-                .set((
-                    persistent_sessions::last_used_at.eq(diesel::dsl::now),
-                    persistent_sessions::last_ip_address.eq(IpNetwork::from(ip_address)),
-                    persistent_sessions::last_user_agent.eq(user_agent),
-                ))
-                .get_result(conn)
-                .optional()
-        })
-        .or_else(|_| sessions.first(conn).optional())
-        .map_err(SessionError::DieselError)
+    /// * `Ok(Some(...))` if a session matches the id.
+    /// * `Ok(None)` if no session matches the id.
+    /// * `Err(...)` for other errors..
+    pub fn find(id: i64, conn: &PgConnection) -> Result<Option<Self>, diesel::result::Error> {
+        persistent_sessions::table
+            .find(id)
+            .get_result(conn)
+            .optional()
     }
 
-    /// Revokes the `token` in the database.
-    ///
-    /// # Returns
-    ///
-    /// The number of sessions that were revoked or an error if the `token` isn't valid or there
-    /// was an issue with the database connection.
-    pub fn revoke_from_token(conn: &PgConnection, token: &str) -> Result<usize, SessionError> {
-        let hashed_token = SecureToken::parse(SecureTokenKind::Session, token)
-            .ok_or(SessionError::InvalidSessionToken)?;
-        let sessions = persistent_sessions::table
-            .filter(persistent_sessions::hashed_token.eq(hashed_token))
-            .filter(persistent_sessions::revoked.eq(false));
+    /// Updates the session in the database.
+    pub fn update(&self, conn: &PgConnection) -> Result<(), diesel::result::Error> {
+        diesel::update(persistent_sessions::table.find(self.id))
+            .set((
+                persistent_sessions::user_id.eq(&self.user_id),
+                persistent_sessions::hashed_token.eq(&self.hashed_token),
+                persistent_sessions::revoked.eq(&self.revoked),
+            ))
+            .get_result::<Self>(conn)
+            .map(|_| ())
+    }
 
-        diesel::update(sessions)
-            .set(persistent_sessions::revoked.eq(true))
-            .execute(conn)
-            .map_err(SessionError::DieselError)
+    pub fn is_authorized(&self, token: &str) -> bool {
+        if let Some(hashed_token) = SecureToken::parse(SecureTokenKind::Session, token) {
+            !self.revoked && self.hashed_token == hashed_token
+        } else {
+            false
+        }
+    }
+
+    /// Revokes the session (needs update).
+    pub fn revoke(&mut self) -> &mut Self {
+        self.revoked = true;
+        self
     }
 }
 
 /// A new, insertable persistent session.
 #[derive(Clone, Debug, PartialEq, Eq, Insertable)]
 #[table_name = "persistent_sessions"]
-pub struct NewPersistentSession<'a, 'b> {
+pub struct NewPersistentSession<'a> {
     user_id: i32,
     hashed_token: &'a SecureToken,
-    last_ip_address: IpNetwork,
-    last_user_agent: &'b str,
 }
 
-impl NewPersistentSession<'_, '_> {
+impl NewPersistentSession<'_> {
     /// Inserts the session into the database.
     pub fn insert(self, conn: &PgConnection) -> Result<PersistentSession, diesel::result::Error> {
         diesel::insert_into(persistent_sessions::table)
@@ -165,6 +126,14 @@ impl SessionCookie {
         .same_site(SameSite::Strict)
         .path("/")
         .finish()
+    }
+
+    pub fn session_id(&self) -> i64 {
+        self.id
+    }
+
+    pub fn token(&self) -> &str {
+        &self.token
     }
 }
 

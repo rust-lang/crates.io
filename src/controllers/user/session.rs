@@ -4,9 +4,11 @@ use conduit_cookie::{RequestCookies, RequestSession};
 use cookie::Cookie;
 use oauth2::reqwest::http_client;
 use oauth2::{AuthorizationCode, Scope, TokenResponse};
+use thiserror::Error;
 
 use crate::email::Emails;
 use crate::github::GithubUser;
+use crate::models::persistent_session::ParseSessionCookieError;
 use crate::models::persistent_session::SessionCookie;
 use crate::models::{NewUser, PersistentSession, User};
 use crate::schema::users;
@@ -107,16 +109,8 @@ pub fn authorize(req: &mut dyn RequestExt) -> EndpointResult {
     )?;
 
     // Setup a persistent session for the newly logged in user.
-    let user_agent = req
-        .headers()
-        .get(header::USER_AGENT)
-        .and_then(|value| value.to_str().ok())
-        .map(|value| value.to_string())
-        .unwrap_or_default();
-
     let token = SecureToken::generate(crate::util::token::SecureTokenKind::Session);
-    let session = PersistentSession::create(user.id, &token, req.remote_addr().ip(), &user_agent)
-        .insert(&*req.db_conn()?)?;
+    let session = PersistentSession::create(user.id, &token).insert(&*req.db_conn()?)?;
 
     let cookie = SessionCookie::new(session.id, token.plaintext().to_string());
 
@@ -162,25 +156,36 @@ fn save_user_to_database(
     })
 }
 
+#[derive(Error, Debug, PartialEq)]
+pub enum LogoutError {
+    #[error("No session cookie found.")]
+    MissingSessionCookie,
+    #[error("Session cookie had an unexpected format.")]
+    SessionCookieMalformatted(#[from] ParseSessionCookieError),
+    #[error("Session is not in the database.")]
+    SessionNotInDB,
+}
+
 /// Handles the `DELETE /api/private/session` route.
 pub fn logout(req: &mut dyn RequestExt) -> EndpointResult {
     // TODO(adsnaider): Remove as part of https://github.com/rust-lang/crates.io/issues/2630.
     req.session_mut().remove(&"user_id".to_string());
 
     // Remove persistent session from database.
-    if let Some(session_token) = req
+    let session_cookie = req
         .cookies()
         .get(SessionCookie::SESSION_COOKIE_NAME)
-        .map(|cookie| cookie.value().to_string())
-    {
-        req.cookies_mut()
-            .remove(Cookie::named(SessionCookie::SESSION_COOKIE_NAME));
+        .ok_or(LogoutError::MissingSessionCookie)?
+        .value()
+        .parse::<SessionCookie>()?;
 
-        if let Ok(conn) = req.db_conn() {
-            // TODO(adsnaider): Maybe log errors somehow?
-            let _ = PersistentSession::revoke_from_token(&conn, &session_token);
-        }
-    }
+    req.cookies_mut()
+        .remove(Cookie::named(SessionCookie::SESSION_COOKIE_NAME));
+
+    let conn = req.db_conn()?;
+    let mut session = PersistentSession::find(session_cookie.session_id(), &conn)?
+        .ok_or(LogoutError::SessionNotInDB)?;
+    session.revoke().update(&conn)?;
     Ok(req.json(&true))
 }
 
