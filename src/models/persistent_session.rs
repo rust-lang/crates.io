@@ -33,7 +33,7 @@ pub struct PersistentSession {
 
 impl PersistentSession {
     /// Creates a `NewPersistentSession` for the `user_id` and the token associated with it.
-    pub fn create<'a>(user_id: i32) -> NewPersistentSession {
+    pub fn create(user_id: i32) -> NewPersistentSession {
         let token = SecureToken::generate(SecureTokenKind::Session);
         NewPersistentSession { user_id, token }
     }
