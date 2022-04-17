@@ -6,6 +6,7 @@ use std::str::FromStr;
 use thiserror::Error;
 
 use crate::schema::persistent_sessions;
+use crate::util::token::NewSecureToken;
 use crate::util::token::SecureToken;
 use crate::util::token::SecureTokenKind;
 
@@ -31,12 +32,10 @@ pub struct PersistentSession {
 }
 
 impl PersistentSession {
-    /// Creates a `NewPersistentSession` that can be inserted into the database.
-    pub fn create<'a>(user_id: i32, token: &'a SecureToken) -> NewPersistentSession<'a> {
-        NewPersistentSession {
-            user_id,
-            hashed_token: token,
-        }
+    /// Creates a `NewPersistentSession` for the `user_id` and the token associated with it.
+    pub fn create<'a>(user_id: i32) -> NewPersistentSession {
+        let token = SecureToken::generate(SecureTokenKind::Session);
+        NewPersistentSession { user_id, token }
     }
 
     /// Finds the session with the ID.
@@ -81,19 +80,32 @@ impl PersistentSession {
 }
 
 /// A new, insertable persistent session.
-#[derive(Clone, Debug, PartialEq, Eq, Insertable)]
-#[table_name = "persistent_sessions"]
-pub struct NewPersistentSession<'a> {
+pub struct NewPersistentSession {
     user_id: i32,
-    hashed_token: &'a SecureToken,
+    token: NewSecureToken,
 }
 
-impl NewPersistentSession<'_> {
+impl NewPersistentSession {
     /// Inserts the session into the database.
-    pub fn insert(self, conn: &PgConnection) -> Result<PersistentSession, diesel::result::Error> {
-        diesel::insert_into(persistent_sessions::table)
-            .values(self)
-            .get_result(conn)
+    ///
+    /// # Returns
+    ///
+    /// The
+    pub fn insert(
+        self,
+        conn: &PgConnection,
+    ) -> Result<(PersistentSession, SessionCookie), diesel::result::Error> {
+        let session: PersistentSession = diesel::insert_into(persistent_sessions::table)
+            .values((
+                persistent_sessions::user_id.eq(&self.user_id),
+                persistent_sessions::hashed_token.eq(&*self.token),
+            ))
+            .get_result(conn)?;
+        let id = session.id;
+        Ok((
+            session,
+            SessionCookie::new(id, self.token.plaintext().to_string()),
+        ))
     }
 }
 

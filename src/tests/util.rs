@@ -26,8 +26,6 @@ use crate::{
 use cargo_registry::models::persistent_session::SessionCookie;
 use cargo_registry::models::PersistentSession;
 use cargo_registry::models::{ApiToken, CreatedApiToken, User};
-use cargo_registry::util::token::SecureToken;
-use cargo_registry::util::token::SecureTokenKind;
 
 use conduit::{BoxError, Handler, Method};
 use conduit_cookie::SessionMiddleware;
@@ -277,17 +275,15 @@ impl MockCookieUser {
     }
 
     pub fn with_session(&self) -> MockSessionUser {
-        let token = SecureToken::generate(SecureTokenKind::Session);
-
-        let session = self.app.db(|conn| {
-            PersistentSession::create(self.user.id, &token)
+        let (_session, session_cookie) = self.app.db(|conn| {
+            PersistentSession::create(self.user.id)
                 .insert(conn)
                 .unwrap()
         });
 
         MockSessionUser {
             app: self.app.clone(),
-            session_cookie: SessionCookie::new(session.id, token.plaintext().to_string()),
+            session_cookie,
         }
     }
 }

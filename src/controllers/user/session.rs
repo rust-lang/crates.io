@@ -13,7 +13,6 @@ use crate::models::persistent_session::SessionCookie;
 use crate::models::{NewUser, PersistentSession, User};
 use crate::schema::users;
 use crate::util::errors::ReadOnlyMode;
-use crate::util::token::SecureToken;
 use crate::Env;
 
 /// Handles the `GET /api/private/session/begin` route.
@@ -109,10 +108,7 @@ pub fn authorize(req: &mut dyn RequestExt) -> EndpointResult {
     )?;
 
     // Setup a persistent session for the newly logged in user.
-    let token = SecureToken::generate(crate::util::token::SecureTokenKind::Session);
-    let session = PersistentSession::create(user.id, &token).insert(&*req.db_conn()?)?;
-
-    let cookie = SessionCookie::new(session.id, token.plaintext().to_string());
+    let (_session, cookie) = PersistentSession::create(user.id).insert(&*req.db_conn()?)?;
 
     // Setup persistent session cookie.
     let secure = req.app().config.env() == Env::Production;

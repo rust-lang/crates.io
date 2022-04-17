@@ -12,7 +12,7 @@ pub struct SecureToken {
 }
 
 impl SecureToken {
-    pub fn generate(kind: SecureTokenKind) -> NewSecureToken {
+    pub(crate) fn generate(kind: SecureTokenKind) -> NewSecureToken {
         let plaintext = format!(
             "{}{}",
             kind.prefix(),
@@ -26,7 +26,7 @@ impl SecureToken {
         }
     }
 
-    pub fn parse(kind: SecureTokenKind, plaintext: &str) -> Option<Self> {
+    pub(crate) fn parse(kind: SecureTokenKind, plaintext: &str) -> Option<Self> {
         // This will both reject tokens without a prefix and tokens of the wrong kind.
         if SecureTokenKind::from_token(plaintext) != Some(kind) {
             return None;
@@ -60,18 +60,18 @@ impl FromSql<Bytea, Pg> for SecureToken {
     }
 }
 
-pub struct NewSecureToken {
+pub(crate) struct NewSecureToken {
     plaintext: String,
     inner: SecureToken,
 }
 
 impl NewSecureToken {
-    pub fn plaintext(&self) -> &str {
+    pub(crate) fn plaintext(&self) -> &str {
         &self.plaintext
     }
 
     #[cfg(test)]
-    pub fn into_inner(self) -> SecureToken {
+    pub(crate) fn into_inner(self) -> SecureToken {
         self.inner
     }
 }
@@ -120,7 +120,7 @@ secure_token_kind! {
     /// NEVER CHANGE THE PREFIX OF EXISTING TOKEN TYPES!!! Doing so will implicitly revoke all the
     /// tokens of that kind, distrupting production users.
     #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
-    pub enum SecureTokenKind {
+    pub(crate) enum SecureTokenKind {
         Api => "cio", // Crates.IO
         Session => "scio", // Session tokens.
     }

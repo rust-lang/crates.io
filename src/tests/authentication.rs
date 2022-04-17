@@ -3,8 +3,6 @@ use crate::TestApp;
 
 use crate::util::encode_session_header;
 use cargo_registry::models::persistent_session::SessionCookie;
-use cargo_registry::util::token::SecureToken;
-use cargo_registry::util::token::SecureTokenKind;
 use conduit::{header, Body, Method, StatusCode};
 
 static URL: &str = "/api/v1/me/updates";
@@ -44,11 +42,9 @@ fn persistent_session_revoked_after_logout() {
 fn incorrect_session_is_forbidden() {
     let (_, anon) = TestApp::init().empty();
 
-    let token = SecureToken::generate(SecureTokenKind::Session);
+    let token = "scio:1234:abcdfdfdsafdsfd".to_string();
     // Create a cookie that isn't in the database.
-    let cookie = SessionCookie::new(123, token.plaintext().to_string())
-        .build(false)
-        .to_string();
+    let cookie = SessionCookie::new(123, token).build(false).to_string();
     let mut request = anon.request_builder(Method::GET, URL);
     request.header(header::COOKIE, &cookie);
     let response: Response<Body> = anon.run(request);
