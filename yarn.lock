@@ -6885,10 +6885,10 @@ ember-svg-jar@2.3.4:
     mkdirp "^0.5.1"
     path-posix "^1.0.0"
 
-ember-template-lint@4.4.2:
-  version "4.4.2"
-  resolved "https://registry.yarnpkg.com/ember-template-lint/-/ember-template-lint-4.4.2.tgz#06109a38c025d5cf85c236273883e153cbba71d9"
-  integrity sha512-UUWZnRnlvFeS2H4NfCTmcZFpHkvcPMbQ14jl9HgXI6RRqqhrVN0Tacxe/99s5DV6qIJ9QGWzKp25OzVJetTHQQ==
+ember-template-lint@4.5.0:
+  version "4.5.0"
+  resolved "https://registry.yarnpkg.com/ember-template-lint/-/ember-template-lint-4.5.0.tgz#239dacb6be004ce78ca0cb3147fe728edf05d43e"
+  integrity sha512-cH4FWDtYG3UqBAI5cBucidUgfGhua5jEc0Ookf+Jv3aeNHJWHt3MZc8g4pH2VYzPlGbEoOBd/EUzUVkmKDZYDQ==
   dependencies:
     "@lint-todo/utils" "^13.0.2"
     aria-query "^5.0.0"
@@ -6901,6 +6901,7 @@ ember-template-lint@4.4.2:
     get-stdin "^9.0.0"
     globby "^13.1.1"
     is-glob "^4.0.3"
+    language-tags "^1.0.5"
     micromatch "^4.0.5"
     resolve "^1.22.0"
     v8-compile-cache "^2.3.0"
@@ -9652,6 +9653,18 @@ kind-of@^6.0.0, kind-of@^6.0.2:
   version "6.0.3"
   resolved "https://registry.yarnpkg.com/kind-of/-/kind-of-6.0.3.tgz#07c05034a6c349fa06e24fa35aa76db4580ce4dd"
   integrity sha512-dcS1ul+9tmeD95T+x28/ehLgd9mENa3LsvDTtzm3vyBEO7RPptvAD+t44WVXaUjTBRcrpFeFlC8WCruUR456hw==
+
+language-subtag-registry@~0.3.2:
+  version "0.3.21"
+  resolved "https://registry.yarnpkg.com/language-subtag-registry/-/language-subtag-registry-0.3.21.tgz#04ac218bea46f04cb039084602c6da9e788dd45a"
+  integrity sha512-L0IqwlIXjilBVVYKFT37X9Ih11Um5NEl9cbJIuU/SwP/zEEAbBPOnEeeuxVMf45ydWQRDQN3Nqc96OgbH1K+Pg==
+
+language-tags@^1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/language-tags/-/language-tags-1.0.5.tgz#d321dbc4da30ba8bf3024e040fa5c14661f9193a"
+  integrity sha1-0yHbxNowuovzAk4ED6XBRmH5GTo=
+  dependencies:
+    language-subtag-registry "~0.3.2"
 
 leek@0.0.24:
   version "0.0.24"
