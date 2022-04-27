@@ -17,7 +17,7 @@ testing = ["serde_json"]
 anyhow = "=1.0.57"
 base64 = "=0.13.0"
 dotenv = "=0.15.0"
-git2 = "=0.14.2"
+git2 = "=0.14.3"
 serde = { version = "=1.0.136", features = ["derive"] }
 tempfile = "=3.3.0"
 url = "=2.2.2"
