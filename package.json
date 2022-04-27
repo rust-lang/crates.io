@@ -138,14 +138,14 @@
     "miragejs": "0.1.43"
   },
   "engines": {
-    "node": "16.14.2",
+    "node": "16.15.0",
     "yarn": "1.22.18"
   },
   "ember": {
     "edition": "octane"
   },
   "volta": {
-    "node": "16.14.2",
+    "node": "16.15.0",
     "yarn": "1.22.18"
   }
 }
