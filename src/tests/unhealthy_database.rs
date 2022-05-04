@@ -153,7 +153,9 @@ fn restored_replica_returns_user_info() {
 fn restored_primary_returns_user_info() {
     const URL: &str = "/api/v1/users/foo";
 
-    let (app, _, owner) = TestApp::init().with_database(TestDatabase::SlowRealPool{ replica: true }).with_user();
+    let (app, _, owner) = TestApp::init()
+        .with_database(TestDatabase::SlowRealPool { replica: true })
+        .with_user();
     app.db_new_user("foo");
     app.primary_db_chaosproxy().break_networking();
     app.replica_db_chaosproxy().break_networking();
