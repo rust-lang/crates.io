@@ -171,23 +171,75 @@ fn maybe_append_url_param(url: &mut Url, key: &str, value: &str) {
 
 pub trait RequestTransaction {
     /// Obtain a read/write database connection from the primary pool
-    fn db_conn(&self) -> Result<DieselPooledConn<'_>, PoolError>;
+    fn db_write(&self) -> Result<DieselPooledConn<'_>, PoolError>;
 
     /// Obtain a readonly database connection from the replica pool
     ///
-    /// If there is no replica pool, the primary pool is used instead.
-    fn db_read_only(&self) -> Result<DieselPooledConn<'_>, PoolError>;
+    /// If the replica pool is disabled or unavailable, the primary pool is used instead.
+    fn db_read(&self) -> Result<DieselPooledConn<'_>, PoolError>;
+
+    /// Obtain a readonly database connection from the primary pool
+    ///
+    /// If the primary pool is unavailable, the replica pool is used instead, if not disabled.
+    fn db_read_prefer_primary(&self) -> Result<DieselPooledConn<'_>, PoolError>;
 }
 
 impl<T: RequestExt + ?Sized> RequestTransaction for T {
-    fn db_conn(&self) -> Result<DieselPooledConn<'_>, PoolError> {
+    fn db_write(&self) -> Result<DieselPooledConn<'_>, PoolError> {
         self.app().primary_database.get()
     }
 
-    fn db_read_only(&self) -> Result<DieselPooledConn<'_>, PoolError> {
-        match &self.app().read_only_replica_database {
-            Some(pool) => pool.get(),
+    fn db_read(&self) -> Result<DieselPooledConn<'_>, PoolError> {
+        let read_only_pool = self.app().read_only_replica_database.as_ref();
+        match read_only_pool.map(|pool| pool.get()) {
+            // Replica is available
+            Some(Ok(connection)) => Ok(connection),
+
+            // Replica is not available, but primary might be available
+            Some(Err(PoolError::UnhealthyPool)) => {
+                let _ = self
+                    .app()
+                    .instance_metrics
+                    .database_fallback_used
+                    .get_metric_with_label_values(&["follower"])
+                    .map(|metric| metric.inc());
+
+                self.app().primary_database.get()
+            }
+
+            // Replica failed
+            Some(Err(error)) => Err(error),
+
+            // Replica is disabled, but primary might be available
             None => self.app().primary_database.get(),
+        }
+    }
+
+    fn db_read_prefer_primary(&self) -> Result<DieselPooledConn<'_>, PoolError> {
+        match (
+            self.app().primary_database.get(),
+            &self.app().read_only_replica_database,
+        ) {
+            // Primary is available
+            (Ok(connection), _) => Ok(connection),
+
+            // Primary is not available, but replica might be available
+            (Err(PoolError::UnhealthyPool), Some(read_only_pool)) => {
+                let _ = self
+                    .app()
+                    .instance_metrics
+                    .database_fallback_used
+                    .get_metric_with_label_values(&["primary"])
+                    .map(|metric| metric.inc());
+
+                read_only_pool.get()
+            }
+
+            // Primary failed and replica is disabled
+            (Err(error), None) => Err(error),
+
+            // Primary failed
+            (Err(error), _) => Err(error),
         }
     }
 }

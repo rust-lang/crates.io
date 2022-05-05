@@ -38,7 +38,7 @@ pub fn download(req: &mut dyn RequestExt) -> EndpointResult {
         let conn = if app.config.force_unconditional_redirects {
             None
         } else {
-            match req.db_conn() {
+            match req.db_read_prefer_primary() {
                 Ok(conn) => Some(conn),
                 Err(PoolError::UnhealthyPool) => None,
                 Err(err) => return Err(err.into()),
@@ -123,7 +123,7 @@ pub fn download(req: &mut dyn RequestExt) -> EndpointResult {
 pub fn downloads(req: &mut dyn RequestExt) -> EndpointResult {
     let (crate_name, semver) = extract_crate_name_and_semver(req)?;
 
-    let conn = req.db_read_only()?;
+    let conn = req.db_read()?;
     let (version, _) = version_and_crate(&conn, crate_name, semver)?;
 
     let cutoff_end_date = req

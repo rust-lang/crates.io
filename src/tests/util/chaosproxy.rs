@@ -17,7 +17,6 @@ pub(crate) struct ChaosProxy {
     backend_address: SocketAddr,
 
     runtime: Runtime,
-    listener: TcpListener,
 
     break_networking_send: Sender<()>,
     restore_networking_send: Sender<()>,
@@ -35,7 +34,6 @@ impl ChaosProxy {
             address: listener.local_addr()?,
             backend_address,
 
-            listener,
             runtime,
 
             break_networking_send,
@@ -44,7 +42,7 @@ impl ChaosProxy {
 
         let instance_clone = instance.clone();
         instance.runtime.spawn(async move {
-            if let Err(err) = instance_clone.server_loop().await {
+            if let Err(err) = instance_clone.server_loop(listener).await {
                 eprintln!("ChaosProxy server error: {err}");
             }
         });
@@ -79,38 +77,54 @@ impl ChaosProxy {
             .expect("failed to send the restore_networking message");
     }
 
-    async fn server_loop(self: Arc<Self>) -> Result<(), Error> {
+    async fn server_loop(self: Arc<Self>, initial_listener: TcpListener) -> Result<(), Error> {
+        let mut listener = Some(initial_listener);
+
         let mut break_networking_recv = self.break_networking_send.subscribe();
         let mut restore_networking_recv = self.restore_networking_send.subscribe();
 
         loop {
-            let (client_read, client_write) = tokio::select! {
-                accepted = self.listener.accept() => accepted?.0.into_split(),
+            if let Some(l) = &listener {
+                tokio::select! {
+                    accepted = l.accept() => {
+                        self.clone().accept_connection(accepted?.0).await?;
+                    },
 
-                // When networking is broken stop accepting connections until restore_networking()
-                _ = break_networking_recv.recv() => {
-                    let _ = restore_networking_recv.recv().await;
-                    continue;
-                },
-            };
-            let (backend_read, backend_write) = TcpStream::connect(&self.backend_address)
-                .await?
-                .into_split();
-
-            let self_clone = self.clone();
-            self.runtime.spawn(async move {
-                if let Err(err) = self_clone.proxy_data(client_read, backend_write).await {
-                    eprintln!("ChaosProxy connection error: {err}");
-                }
-            });
-
-            let self_clone = self.clone();
-            tokio::spawn(async move {
-                if let Err(err) = self_clone.proxy_data(backend_read, client_write).await {
-                    eprintln!("ChaosProxy connection error: {err}");
-                }
-            });
+                    _ = break_networking_recv.recv() => {
+                        // Setting the listener to `None` results in the listener being dropped,
+                        // which closes the network port. A new listener will be established when
+                        // networking is restored.
+                        listener = None;
+                    },
+                };
+            } else {
+                let _ = restore_networking_recv.recv().await;
+                listener = Some(TcpListener::bind(self.address).await?);
+            }
         }
+    }
+
+    async fn accept_connection(self: Arc<Self>, accepted: TcpStream) -> Result<(), Error> {
+        let (client_read, client_write) = accepted.into_split();
+        let (backend_read, backend_write) = TcpStream::connect(&self.backend_address)
+            .await?
+            .into_split();
+
+        let self_clone = self.clone();
+        self.runtime.spawn(async move {
+            if let Err(err) = self_clone.proxy_data(client_read, backend_write).await {
+                eprintln!("ChaosProxy connection error: {err}");
+            }
+        });
+
+        let self_clone = self.clone();
+        tokio::spawn(async move {
+            if let Err(err) = self_clone.proxy_data(backend_read, client_write).await {
+                eprintln!("ChaosProxy connection error: {err}");
+            }
+        });
+
+        Ok(())
     }
 
     async fn proxy_data(

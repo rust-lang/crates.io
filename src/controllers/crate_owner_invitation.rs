@@ -82,7 +82,7 @@ fn prepare_list(
         .gather(req)?;
 
     let user = auth.user();
-    let conn = req.db_read_only()?;
+    let conn = req.db_read()?;
     let config = &req.app().config;
 
     let mut crate_names = HashMap::new();
@@ -256,7 +256,7 @@ pub fn handle_invite(req: &mut dyn RequestExt) -> EndpointResult {
 
     let crate_invite = crate_invite.crate_owner_invite;
     let user_id = req.authenticate()?.user_id();
-    let conn = &*req.db_conn()?;
+    let conn = &*req.db_write()?;
     let config = &req.app().config;
 
     let invitation = CrateOwnerInvitation::find_by_id(user_id, crate_invite.crate_id, conn)?;
@@ -272,7 +272,7 @@ pub fn handle_invite(req: &mut dyn RequestExt) -> EndpointResult {
 /// Handles the `PUT /api/v1/me/crate_owner_invitations/accept/:token` route.
 pub fn handle_invite_with_token(req: &mut dyn RequestExt) -> EndpointResult {
     let config = &req.app().config;
-    let conn = req.db_conn()?;
+    let conn = req.db_write()?;
     let req_token = &req.params()["token"];
 
     let invitation = CrateOwnerInvitation::find_by_token(req_token, &conn)?;
