@@ -15,12 +15,10 @@ export default class ApplicationRoute extends Route {
   @service playground;
   @service sentry;
 
-  async beforeModel() {
-    this.router.on('routeDidChange', () => {
-      this.sentry.configureScope(scope => {
-        scope.setTag('routeName', this.router.currentRouteName);
-      });
-    });
+  async beforeModel(transition) {
+    this.setSentryTransaction(transition);
+    this.router.on('routeWillChange', transition => this.setSentryTransaction(transition));
+    this.router.on('routeDidChange', transition => this.setSentryTransaction(transition));
 
     // trigger the task, but don't wait for the result here
     //
@@ -73,6 +71,13 @@ export default class ApplicationRoute extends Route {
         'Some functionality will be temporarily unavailable.';
 
       this.notifications.info(message, { autoClear: false });
+    }
+  }
+
+  setSentryTransaction(transition) {
+    let name = transition.to?.name;
+    if (name) {
+      this.sentry.configureScope(scope => scope.setTransactionName(name));
     }
   }
 }
