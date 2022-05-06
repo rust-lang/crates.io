@@ -21,10 +21,15 @@ class MockSentryService extends Service {
 }
 
 class MockScope {
+  transaction = null;
   tags = {};
 
   setTag(key, value) {
     this.tags[key] = value;
+  }
+
+  setTransactionName(transaction) {
+    this.transaction = transaction;
   }
 }
 
