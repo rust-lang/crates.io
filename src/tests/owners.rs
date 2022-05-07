@@ -198,7 +198,7 @@ fn owners_can_remove_self() {
         json!({ "msg": "owners successfully removed", "ok": true })
     );
 
-    // After you delete yourself, you no longer have permisions to manage the crate.
+    // After you delete yourself, you no longer have permissions to manage the crate.
     let response = token.remove_named_owner("owners_selfremove", username);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(

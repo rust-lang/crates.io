@@ -622,7 +622,7 @@ fn test_zero_downloads() {
 
 /*  Given two crates, one with more all-time downloads, the other with
     more downloads in the past 90 days, check that the index page for
-    categories and keywords is sorted by recent downlaods by default.
+    categories and keywords is sorted by recent downloads by default.
 */
 #[test]
 fn test_default_sort_recent() {

@@ -12,7 +12,7 @@ use std::sync::atomic::{AtomicI64, AtomicUsize, Ordering};
 /// To avoid locking the whole data structure behind a RwLock, which could potentially delay
 /// requests, this uses the dashmap crate. A DashMap has the same public API as an HashMap, but
 /// stores the items into `num_cpus()*4` individually locked shards. This approach reduces the
-/// likelyhood of a request encountering a locked shard.
+/// likelihood of a request encountering a locked shard.
 ///
 /// Persisting the download counts in the database also takes advantage of the inner sharding of
 /// DashMaps: to avoid locking all the download requests at the same time each iteration only
@@ -124,7 +124,7 @@ impl DownloadsCounter {
             // as we'd lose the downloads from the aborted transaction.
             //
             // Ensuring the rows are inserted in a consistent order (in our case by sorting them by
-            // the version ID) will prevent deadlocks from occuring. For more information:
+            // the version ID) will prevent deadlocks from occurring. For more information:
             //
             //     https://www.postgresql.org/docs/11/explicit-locking.html#LOCKING-DEADLOCKS
             //

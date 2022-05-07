@@ -14,7 +14,7 @@ function findElementByFragmentName(document, name) {
   try {
     return document.querySelector(`#${name}`) || document.getElementsByName(name)[0];
   } catch {
-    // Catches execptions thrown when an anchor in a readme was invalid (see issue #3108)
+    // Catches exceptions thrown when an anchor in a readme was invalid (see issue #3108)
     return;
   }
 }

@@ -15,7 +15,7 @@ fn json_error(detail: &str, status: StatusCode) -> AppResponse {
     response
 }
 
-// The following structs are emtpy and do not provide a custom message to the user
+// The following structs are empty and do not provide a custom message to the user
 
 #[derive(Debug)]
 pub(crate) struct NotFound;

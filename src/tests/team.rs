@@ -352,7 +352,7 @@ fn crates_by_team_id() {
 
 #[test]
 fn crates_by_team_id_not_including_deleted_owners() {
-    // This needs to use the proxy beacuse removing a team checks with github that you're on the
+    // This needs to use the proxy because removing a team checks with github that you're on the
     // team before you're allowed to remove it from the crate
     let (app, anon) = TestApp::with_proxy().empty();
     let user = app.db_new_user(mock_user_on_both_teams().gh_login);
