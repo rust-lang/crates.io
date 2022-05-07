@@ -1,6 +1,6 @@
 //! Endpoints that expose metadata about crate versions
 //!
-//! These endpoints provide data that could be obtained direclty from the
+//! These endpoints provide data that could be obtained directly from the
 //! index or cached metadata which was extracted (client side) from the
 //! `Cargo.toml` file.
 
@@ -13,7 +13,7 @@ use super::{extract_crate_name_and_semver, version_and_crate};
 
 /// Handles the `GET /crates/:crate_id/:version/dependencies` route.
 ///
-/// This information can be obtained direclty from the index.
+/// This information can be obtained directly from the index.
 ///
 /// In addition to returning cached data from the index, this returns
 /// fields for `id`, `version_id`, and `downloads` (which appears to always

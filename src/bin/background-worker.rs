@@ -5,7 +5,7 @@
 //! are unable to spawn workers to run jobs (either because we couldn't connect
 //! to the DB, an error occurred while loading, or we just never heard back from
 //! the worker thread), we will rebuild the runner and try again up to 5 times.
-//! After the 5th occurrance, we will panic.
+//! After the 5th occurrence, we will panic.
 //!
 //! Usage:
 //!      cargo run --bin background-worker

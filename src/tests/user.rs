@@ -381,7 +381,7 @@ fn updating_existing_user_doesnt_change_api_token() {
 
     This bug is problematic if the user's email preferences
     are set to private on GitHub, as GitHub will always
-    send none as the email and we will end up inadvertenly
+    send none as the email and we will end up inadvertently
     deleting their email when they sign back in.
 */
 #[test]
