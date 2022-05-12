@@ -1,4 +1,4 @@
-use cidr_utils::cidr::Ipv4Cidr;
+use ipnetwork::Ipv4Network;
 
 use crate::publish_rate_limit::PublishRateLimit;
 use crate::{env, env_optional, uploaders::Uploader, Env};
@@ -27,7 +27,7 @@ pub struct Server {
     pub blocked_traffic: Vec<(String, Vec<String>)>,
     pub max_allowed_page_offset: u32,
     pub page_offset_ua_blocklist: Vec<String>,
-    pub page_offset_cidr_blocklist: Vec<Ipv4Cidr>,
+    pub page_offset_cidr_blocklist: Vec<Ipv4Network>,
     pub excluded_crate_names: Vec<String>,
     pub domain_name: String,
     pub allowed_origins: Vec<String>,
@@ -166,12 +166,12 @@ pub(crate) fn domain_name() -> String {
 /// * Only IPv4 blocks are currently supported.
 /// * The minimum number of host prefix bits must be at least 16.
 ///
-fn parse_cidr_blocks(blocks: &[String]) -> Vec<Ipv4Cidr> {
+fn parse_cidr_blocks(blocks: &[String]) -> Vec<Ipv4Network> {
     blocks
         .iter()
-        .map(|block| match Ipv4Cidr::from_str(block) {
+        .map(|block| match block.parse::<Ipv4Network>() {
             Ok(cidr) => {
-                if cidr.get_bits() < 16 {
+                if cidr.prefix() < 16 {
                     panic!(
                         "WEB_PAGE_OFFSET_CIDR_BLOCKLIST must only contain CIDR blocks with \
                             a host prefix of at least 16 bits."
@@ -232,8 +232,8 @@ fn parse_cidr_block_list_successfully() {
     let blocks = parse_cidr_blocks(&cidr_blocks);
     assert_eq!(
         vec![
-            Ipv4Cidr::from_str("127.0.0.1/24").unwrap(),
-            Ipv4Cidr::from_str("192.168.0.1/31").unwrap(),
+            "127.0.0.1/24".parse::<Ipv4Network>().unwrap(),
+            "192.168.0.1/31".parse::<Ipv4Network>().unwrap(),
         ],
         blocks,
     );

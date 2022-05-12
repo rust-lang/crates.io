@@ -35,7 +35,6 @@ cargo-registry-index = { path = "cargo-registry-index" }
 cargo-registry-markdown = { path = "cargo-registry-markdown" }
 cargo-registry-s3 = { path = "cargo-registry-s3" }
 chrono = { version = "=0.4.19", features = ["serde"] }
-cidr-utils = "=0.5.6"
 clap = { version = "=3.1.18", features = ["derive", "unicode"] }
 
 conduit = "=0.10.0"
@@ -62,6 +61,7 @@ hex = "=0.4.3"
 http = "=0.2.7"
 hyper = { version = "=0.14.18", features = ["client", "http1"] }
 indexmap = { version = "=1.8.1", features = ["serde-1"] }
+ipnetwork = "=0.19.0"
 tikv-jemallocator = { version = "=0.4.3", features = ['unprefixed_malloc_on_supported_platforms', 'profiling'] }
 lettre = { version = "=0.10.0-rc.6", default-features = false, features = ["file-transport", "smtp-transport", "native-tls", "hostname", "builder"] }
 minijinja = "=0.15.0"
