@@ -1,3 +1,5 @@
+use cidr_utils::cidr::Ipv4Cidr;
+
 use crate::publish_rate_limit::PublishRateLimit;
 use crate::{env, env_optional, uploaders::Uploader, Env};
 
@@ -25,6 +27,7 @@ pub struct Server {
     pub blocked_traffic: Vec<(String, Vec<String>)>,
     pub max_allowed_page_offset: u32,
     pub page_offset_ua_blocklist: Vec<String>,
+    pub page_offset_cidr_blocklist: Vec<Ipv4Cidr>,
     pub excluded_crate_names: Vec<String>,
     pub domain_name: String,
     pub allowed_origins: Vec<String>,
@@ -63,6 +66,9 @@ impl Default for Server {
     ///   be blocked if `WEB_MAX_ALLOWED_PAGE_OFFSET` is exceeded. Including an empty string in the
     ///   list will block *all* user-agents exceeding the offset. If not set or empty, no blocking
     ///   will occur.
+    /// - `WEB_PAGE_OFFSET_CIDR_BLOCKLIST`: A comma separated list of CIDR blocks that will be used
+    ///   to block IP addresses given in the `X-Real-Ip` HTTP header, e.g. `192.168.1.0/24`.
+    ///   If not set or empty, no blocking will occur.
     /// - `INSTANCE_METRICS_LOG_EVERY_SECONDS`: How frequently should instance metrics be logged.
     ///   If the environment variable is not present instance metrics are not logged.
     /// - `FORCE_UNCONDITIONAL_REDIRECTS`: Whether to force unconditional redirects in the download
@@ -84,6 +90,13 @@ impl Default for Server {
             Some(s) if s.is_empty() => vec![],
             Some(s) => s.split(',').map(String::from).collect(),
         };
+        let page_offset_cidr_blocklist =
+            match env_optional::<String>("WEB_PAGE_OFFSET_CIDR_BLOCKLIST") {
+                None => vec![],
+                Some(s) if s.is_empty() => vec![],
+                Some(s) => s.split(',').map(String::from).collect(),
+            };
+
         let base = Base::from_environment();
         let excluded_crate_names = match env_optional::<String>("EXCLUDED_CRATE_NAMES") {
             None => vec![],
@@ -103,6 +116,7 @@ impl Default for Server {
             blocked_traffic: blocked_traffic(),
             max_allowed_page_offset: env_optional("WEB_MAX_ALLOWED_PAGE_OFFSET").unwrap_or(200),
             page_offset_ua_blocklist,
+            page_offset_cidr_blocklist: parse_cidr_blocks(&page_offset_cidr_blocklist),
             excluded_crate_names,
             domain_name: domain_name(),
             allowed_origins,
@@ -144,6 +158,33 @@ pub(crate) fn domain_name() -> String {
     dotenv::var("DOMAIN_NAME").unwrap_or_else(|_| "crates.io".into())
 }
 
+/// Parses list of CIDR block strings to valid `Ipv4Cidr` structs.
+///
+/// The purpose is to be able to block IP ranges that overload the API that contains pagination.
+/// A valid CIDR block has the following restriction:
+///
+/// * Only IPv4 blocks are currently supported.
+/// * The minimum number of host prefix bits must be at least 16.
+///
+fn parse_cidr_blocks(blocks: &[String]) -> Vec<Ipv4Cidr> {
+    blocks
+        .iter()
+        .map(|block| match Ipv4Cidr::from_str(block) {
+            Ok(cidr) => {
+                if cidr.get_bits() < 16 {
+                    panic!(
+                        "WEB_PAGE_OFFSET_CIDR_BLOCKLIST must only contain CIDR blocks with \
+                            a host prefix of at least 16 bits."
+                    )
+                } else {
+                    cidr
+                }
+            }
+            Err(_) => panic!("WEB_PAGE_OFFSET_CIDR_BLOCKLIST only allows IPv4 CIDR blocks"),
+        })
+        .collect::<Vec<_>>()
+}
+
 fn blocked_traffic() -> Vec<(String, Vec<String>)> {
     let pattern_list = dotenv::var("BLOCKED_TRAFFIC").unwrap_or_default();
     parse_traffic_patterns(&pattern_list)
@@ -182,4 +223,32 @@ fn parse_traffic_patterns_splits_on_comma_and_looks_for_equal_sign() {
     assert_eq!(vec![("Baz", "QUX")], patterns_2);
 
     assert_none!(parse_traffic_patterns(pattern_string_3).next());
+}
+
+#[test]
+fn parse_cidr_block_list_successfully() {
+    let cidr_blocks = vec!["127.0.0.1/24".to_string(), "192.168.0.1/31".to_string()];
+
+    let blocks = parse_cidr_blocks(&cidr_blocks);
+    assert_eq!(
+        vec![
+            Ipv4Cidr::from_str("127.0.0.1/24").unwrap(),
+            Ipv4Cidr::from_str("192.168.0.1/31").unwrap(),
+        ],
+        blocks,
+    );
+}
+
+#[test]
+#[should_panic]
+fn parse_cidr_blocks_panics_when_host_prefix_is_too_low() {
+    let input = vec!["127.0.0.1/8".to_string()];
+    parse_cidr_blocks(&input);
+}
+
+#[test]
+#[should_panic]
+fn parse_cidr_blocks_panics_when_ipv6_is_given() {
+    let input = vec!["2002::1234:abcd:ffff:c0a8:101/64".to_string()];
+    parse_cidr_blocks(&input);
 }
