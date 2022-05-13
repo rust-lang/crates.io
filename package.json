@@ -120,7 +120,7 @@
     "eslint-plugin-unicorn": "42.0.0",
     "loader.js": "4.7.0",
     "match-json": "1.3.4",
-    "miragejs": "0.1.43",
+    "miragejs": "0.1.44",
     "normalize.css": "8.0.1",
     "nyc": "15.1.0",
     "postcss-custom-media": "8.0.0",
@@ -135,7 +135,7 @@
     "ember-css-modules/postcss": "8.4.13",
     "ember-inflector": "4.0.2",
     "ember-modifier": "3.2.7",
-    "miragejs": "0.1.43"
+    "miragejs": "0.1.44"
   },
   "engines": {
     "node": "16.15.0",
