@@ -10580,10 +10580,10 @@ minipass@^2.2.0:
     safe-buffer "^5.1.2"
     yallist "^3.0.0"
 
-miragejs@0.1.43, miragejs@^0.1.43:
-  version "0.1.43"
-  resolved "https://registry.yarnpkg.com/miragejs/-/miragejs-0.1.43.tgz#47a8546b9e3489f806073e681f380ccfe13d757d"
-  integrity sha512-BhkyxssOZ2i4JqRjWpRnUQu9AFAKHyft8dJbqsg/N64+gCn2vw6vRteMpTKXllLjCPOA9Os8PhGRVXlXs4Ojhw==
+miragejs@0.1.44, miragejs@^0.1.43:
+  version "0.1.44"
+  resolved "https://registry.yarnpkg.com/miragejs/-/miragejs-0.1.44.tgz#9e88f50f14e978c9181b12a5858723f49c9364b5"
+  integrity sha512-uYcWKgvSawAwLoFcheERHmLz1UmyD+4aYB74bB6fcymKQs0cA5oU4GjfnLpKPTeZ58UCwxwfCApL8SM0C2+4BQ==
   dependencies:
     "@miragejs/pretender-node-polyfill" "^0.1.0"
     inflected "^2.0.4"
