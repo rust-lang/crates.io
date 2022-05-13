@@ -1637,10 +1637,10 @@
   resolved "https://registry.yarnpkg.com/@juggle/resize-observer/-/resize-observer-3.3.1.tgz#b50a781709c81e10701004214340f25475a171a0"
   integrity sha512-zMM9Ds+SawiUkakS7y94Ymqx+S0ORzpG3frZirN3l+UlXUmSUR7hF4wxCVqW+ei94JzV5kt0uXBcoOEAuiydrw==
 
-"@lint-todo/utils@^13.0.2":
-  version "13.0.2"
-  resolved "https://registry.yarnpkg.com/@lint-todo/utils/-/utils-13.0.2.tgz#0d2fc6cc24452564dd2ee97be01437aa92b4c1a8"
-  integrity sha512-tLZfEjU5i7KThQbWZ4u5dLUJx9+euGnytz402uAH4VRa0jMxyc2HNXw+h6qPdKxM/wGAvwEQGn7l1j2kyLI7rQ==
+"@lint-todo/utils@^13.0.3":
+  version "13.0.3"
+  resolved "https://registry.yarnpkg.com/@lint-todo/utils/-/utils-13.0.3.tgz#ca222f38738b43eb43384d56e7292ba9cab3e891"
+  integrity sha512-7Grdii4L/ae8FiykBcsEfum3m9yxVKPNQXpqJDPhWMHsReEunaQDkx/WLsjiNBctRb+roNHZQuXQYlJwoTlqOw==
   dependencies:
     "@types/eslint" "^7.2.13"
     find-up "^5.0.0"
@@ -6900,12 +6900,12 @@ ember-svg-jar@2.3.4:
     mkdirp "^0.5.1"
     path-posix "^1.0.0"
 
-ember-template-lint@4.7.0:
-  version "4.7.0"
-  resolved "https://registry.yarnpkg.com/ember-template-lint/-/ember-template-lint-4.7.0.tgz#1eda1c5184907747fccef3a58f986b1e5504500a"
-  integrity sha512-EteQ+kmAfAPt0f1fUXs4GRiOpc0vh7L9WrRd8buLA386YCGUcl3Q3Isi9zdGQC64x24sBZvkeI3lJBgdrcoYgw==
+ember-template-lint@4.8.0:
+  version "4.8.0"
+  resolved "https://registry.yarnpkg.com/ember-template-lint/-/ember-template-lint-4.8.0.tgz#023a4e4117f48acf87fea88d4b902f676b50d9cd"
+  integrity sha512-cn28J9bFd1qXuF23Sb7ydyFto1N+n6XjS/TfcrxKJ4eK5Wew0Ix4RDAdHy/Gc29zD2K0sAuwCwMAIokwCLI9Kg==
   dependencies:
-    "@lint-todo/utils" "^13.0.2"
+    "@lint-todo/utils" "^13.0.3"
     aria-query "^5.0.0"
     chalk "^4.1.2"
     ci-info "^3.3.0"
