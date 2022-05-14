@@ -151,8 +151,10 @@ impl Team {
 
         let org_id = team.organization.id;
 
-        if !team_with_gh_id_contains_user(app, org_id, team.id, req_user)? {
-            return Err(cargo_err("only members of a team can add it as an owner"));
+        if !can_add_team(app, org_id, team.id, req_user)? {
+            return Err(cargo_err(
+                "only members of a team or organization owners can add it as an owner",
+            ));
         }
 
         let org = app.github.org_by_name(org_name, &token)?;
@@ -194,6 +196,20 @@ impl Team {
             .map(Owner::Team);
 
         Ok(teams.collect())
+    }
+}
+
+fn can_add_team(app: &App, org_id: i32, team_id: i32, user: &User) -> AppResult<bool> {
+    Ok(team_with_gh_id_contains_user(app, org_id, team_id, user)?
+        || is_gh_org_owner(app, org_id, user)?)
+}
+
+fn is_gh_org_owner(app: &App, org_id: i32, user: &User) -> AppResult<bool> {
+    let token = AccessToken::new(user.gh_access_token.clone());
+    match app.github.org_membership(org_id, &user.gh_login, &token) {
+        Ok(membership) => Ok(membership.state == "active" && membership.role == "admin"),
+        Err(e) if e.is::<NotFound>() => Ok(false),
+        Err(e) => Err(e),
     }
 }
 
