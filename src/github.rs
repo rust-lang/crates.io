@@ -51,9 +51,7 @@ impl GitHubClient {
         self.request(&url, auth)
     }
 
-    /// Does all the nonsense for sending a GET to Github. Doesn't handle parsing
-    /// because custom error-code handling may be desirable. Use
-    /// `parse_github_response` to handle the "common" processing of responses.
+    /// Does all the nonsense for sending a GET to Github.
     pub fn request<T>(&self, url: &str, auth: &AccessToken) -> AppResult<T>
     where
         T: DeserializeOwned,
