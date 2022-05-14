@@ -7,6 +7,7 @@ use cargo_registry_index::testing::UpstreamIndex;
 use cargo_registry_index::{Credentials, Repository as WorkerRepository, RepositoryConfig};
 use std::{rc::Rc, sync::Arc, time::Duration};
 
+use crate::util::github::{MockGitHubClient, MOCK_GITHUB_DATA};
 use diesel::PgConnection;
 use reqwest::{blocking::Client, Proxy};
 use std::collections::HashSet;
@@ -375,6 +376,10 @@ fn build_app(
     // Use the in-memory email backend for all tests, allowing tests to analyze the emails sent by
     // the application. This will also prevent cluttering the filesystem.
     app.emails = Emails::new_in_memory();
+
+    // Use a custom mock for the GitHub client, allowing to define the GitHub users and
+    // organizations without actually having to create GitHub accounts.
+    app.github = Box::new(MockGitHubClient::new(&MOCK_GITHUB_DATA));
 
     let app = Arc::new(app);
     let handler = cargo_registry::build_handler(Arc::clone(&app));

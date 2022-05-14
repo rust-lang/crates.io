@@ -1,15 +1,12 @@
-use crate::new_user;
-use cargo_registry::models::NewUser;
 use std::{
-    borrow::Cow,
     collections::HashSet,
-    fs::{self, File},
+    fs::File,
     future::Future,
     io::{self, prelude::*},
     path::PathBuf,
     pin::Pin,
     str,
-    sync::{mpsc, Arc, Mutex, Once},
+    sync::{mpsc, Arc, Mutex},
     task::{Context, Poll},
     thread,
 };
@@ -29,11 +26,6 @@ pub struct Bomb {
     quittx: Option<oneshot::Sender<()>>,
     #[allow(clippy::type_complexity)]
     thread: Option<thread::JoinHandle<Option<(Vec<u8>, PathBuf)>>>,
-}
-
-pub struct GhUser {
-    pub login: &'static str,
-    pub init: Once,
 }
 
 #[derive(Clone)]
@@ -342,66 +334,5 @@ fn replay_http(
 
         debug!("-> {response:?}");
         Ok(response)
-    }
-}
-
-impl GhUser {
-    pub fn user(&'static self) -> NewUser<'_> {
-        self.init.call_once(|| self.init());
-        let mut u = new_user(self.login);
-        u.gh_access_token = Cow::Owned(self.token());
-        u
-    }
-
-    fn filename(&self) -> PathBuf {
-        cache_file(&format!("gh-{}", self.login))
-    }
-
-    fn token(&self) -> String {
-        let mut token = String::new();
-        File::open(&self.filename())
-            .unwrap()
-            .read_to_string(&mut token)
-            .unwrap();
-        token
-    }
-
-    fn init(&self) {
-        if fs::metadata(&self.filename()).is_ok() {
-            return;
-        }
-
-        let password = crate::env(&format!("GH_PASS_{}", self.login.replace('-', "_")));
-        #[derive(Serialize)]
-        struct Authorization {
-            scopes: Vec<String>,
-            note: String,
-            client_id: String,
-            client_secret: String,
-        }
-        let client = reqwest::blocking::Client::new();
-        let req = client
-            .post("https://api.github.com/authorizations")
-            .json(&Authorization {
-                scopes: vec!["read:org".to_string()],
-                note: "crates.io test".to_string(),
-                client_id: crate::env("GH_CLIENT_ID"),
-                client_secret: crate::env("GH_CLIENT_SECRET"),
-            })
-            .basic_auth(self.login, Some(password));
-
-        let response = assert_ok!(req
-            .send()
-            .and_then(reqwest::blocking::Response::error_for_status));
-
-        #[derive(Deserialize)]
-        struct Response {
-            token: String,
-        }
-        let resp: Response = assert_ok!(response.json());
-        File::create(&self.filename())
-            .unwrap()
-            .write_all(resp.token.as_bytes())
-            .unwrap();
     }
 }
