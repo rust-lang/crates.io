@@ -6,7 +6,7 @@ use std::{sync::Arc, time::Duration};
 
 use crate::downloads_counter::DownloadsCounter;
 use crate::email::Emails;
-use crate::github::GitHubClient;
+use crate::github::{GitHubClient, RealGitHubClient};
 use crate::metrics::{InstanceMetrics, ServiceMetrics};
 use diesel::r2d2;
 use moka::sync::{Cache, CacheBuilder};
@@ -24,7 +24,7 @@ pub struct App {
     pub read_only_replica_database: Option<DieselPool>,
 
     /// GitHub API client
-    pub github: GitHubClient,
+    pub github: Box<dyn GitHubClient>,
 
     /// The GitHub OAuth2 configuration
     pub github_oauth: BasicClient,
@@ -72,7 +72,10 @@ impl App {
         let instance_metrics =
             InstanceMetrics::new().expect("could not initialize instance metrics");
 
-        let github = GitHubClient::new(http_client.clone(), config.gh_base_url.clone());
+        let github = Box::new(RealGitHubClient::new(
+            http_client.clone(),
+            config.gh_base_url.clone(),
+        ));
 
         let github_oauth = BasicClient::new(
             ClientId::new(config.gh_client_id.clone()),
