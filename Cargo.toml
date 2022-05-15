@@ -15,7 +15,7 @@ conduit = "0.10.0"
 hyper = { version = "0.14", features = ["server", "http1", "stream", "tcp"] }
 http = "0.2"
 percent-encoding = "2"
-thiserror = "1.0.30"
+thiserror = "1.0.31"
 tracing = "0.1"
 tokio = { version = "1", features = ["fs"] }
 tokio-stream = "0.1"
