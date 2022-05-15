@@ -16,7 +16,7 @@ jobs:
     name: Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: rustup override set ${{env.MSRV}}
       - uses: Swatinem/rust-cache@v1.3.0
       - run: cargo check --workspace --all-targets
@@ -27,7 +27,7 @@ jobs:
     name: Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: rustup override set ${{env.MSRV}}
       - uses: Swatinem/rust-cache@v1.3.0
       - run: cargo test --workspace
@@ -36,7 +36,7 @@ jobs:
     name: Rustfmt
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: rustup override set ${{env.MSRV}}
       - run: rustup component add rustfmt
       - uses: Swatinem/rust-cache@v1.3.0
@@ -46,7 +46,7 @@ jobs:
     name: Clippy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: rustup override set ${{env.MSRV}}
       - run: rustup component add clippy
       - uses: Swatinem/rust-cache@v1.3.0
