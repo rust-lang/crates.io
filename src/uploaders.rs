@@ -6,7 +6,7 @@ use crate::util::errors::{internal, AppResult};
 
 use std::env;
 use std::fs::{self, File};
-use std::io::Cursor;
+use std::io::{Cursor, SeekFrom};
 use std::sync::Arc;
 
 use crate::models::Crate;
@@ -90,17 +90,18 @@ impl Uploader {
     ///
     /// This function can panic on an `Self::Local` during development.
     /// Production and tests use `Self::S3` which should not panic.
-    pub fn upload<R: std::io::Read + Send + 'static>(
+    pub fn upload<R: std::io::Read + std::io::Seek + Send + 'static>(
         &self,
         client: &Client,
         path: &str,
         mut content: R,
-        content_length: u64,
         content_type: &str,
         extra_headers: header::HeaderMap,
     ) -> Result<Option<String>> {
         match *self {
             Uploader::S3 { ref bucket, .. } => {
+                let content_length = content.seek(SeekFrom::End(0))?;
+                content.seek(SeekFrom::Start(0))?;
                 bucket.put(
                     client,
                     path,
@@ -131,7 +132,6 @@ impl Uploader {
         vers: &semver::Version,
     ) -> AppResult<()> {
         let path = Uploader::crate_path(&krate.name, &vers.to_string());
-        let content_length = body.len() as u64;
         let content = Cursor::new(body);
         let mut extra_headers = header::HeaderMap::new();
         extra_headers.insert(
@@ -142,7 +142,6 @@ impl Uploader {
             app.http_client(),
             &path,
             content,
-            content_length,
             "application/gzip",
             extra_headers,
         )
@@ -158,21 +157,13 @@ impl Uploader {
         readme: String,
     ) -> Result<()> {
         let path = Uploader::readme_path(crate_name, vers);
-        let content_length = readme.len() as u64;
         let content = Cursor::new(readme);
         let mut extra_headers = header::HeaderMap::new();
         extra_headers.insert(
             header::CACHE_CONTROL,
             header::HeaderValue::from_static(CACHE_CONTROL_README),
         );
-        self.upload(
-            http_client,
-            &path,
-            content,
-            content_length,
-            "text/html",
-            extra_headers,
-        )?;
+        self.upload(http_client, &path, content, "text/html", extra_headers)?;
         Ok(())
     }
 }
