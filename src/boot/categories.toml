@@ -527,6 +527,13 @@ Crates to allow an application to format values for display to a user, \
 potentially adapting the display to various languages and regions.\
 """
 
+[virtualization]
+name = "Virtualization"
+description = """
+For the creation and management of virtual environments and resources
+of any form including containerization systems.\
+"""
+
 [visualization]
 name = "Visualization"
 description = """
