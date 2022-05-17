@@ -10,7 +10,7 @@
         ],
         [
           "content-type",
-          "application/x-tar"
+          "application/gzip"
         ],
         [
           "content-length",
@@ -89,7 +89,7 @@
         ],
         [
           "content-type",
-          "application/x-tar"
+          "application/gzip"
         ],
         [
           "host",

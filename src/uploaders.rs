@@ -143,7 +143,7 @@ impl Uploader {
             &path,
             content,
             content_length,
-            "application/x-tar",
+            "application/gzip",
             extra_headers,
         )
         .map_err(|e| internal(&format_args!("failed to upload crate: {}", e)))?;

@@ -534,7 +534,7 @@
         ],
         [
           "content-type",
-          "application/x-tar"
+          "application/gzip"
         ],
         [
           "content-length",

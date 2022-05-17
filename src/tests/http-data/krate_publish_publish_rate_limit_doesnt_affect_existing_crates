@@ -10,7 +10,7 @@
         ],
         [
           "content-type",
-          "application/x-tar"
+          "application/gzip"
         ],
         [
           "accept-encoding",
@@ -77,7 +77,7 @@
         ],
         [
           "content-type",
-          "application/x-tar"
+          "application/gzip"
         ],
         [
           "accept-encoding",
