@@ -3,10 +3,11 @@ import { action } from '@ember/object';
 import { inject as service } from '@ember/service';
 
 export default class CatchAllController extends Controller {
+  @service router;
   @service session;
 
   @action reload() {
-    this.model.transition.retry();
+    this.router.replaceWith(this.router.currentURL);
   }
 
   @action back() {
