@@ -197,7 +197,6 @@ impl DumpTarball {
             &client,
             target_name,
             tarfile,
-            content_length,
             "application/gzip",
             header::HeaderMap::new(),
         )?;
