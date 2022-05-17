@@ -14,7 +14,7 @@ export default class SearchController extends Controller {
 
   queryParams = ['all_keywords', 'page', 'per_page', 'q', 'sort'];
   @tracked all_keywords;
-  @tracked q = null;
+  @tracked q = '';
   @tracked page = '1';
   @tracked per_page = 10;
   @tracked sort;
@@ -32,6 +32,10 @@ export default class SearchController extends Controller {
   @reads('model.meta.total') totalItems;
 
   @pagination() pagination;
+
+  get pageTitle() {
+    return 'Search Results' + (this.q ? ` for '${this.q}'` : '');
+  }
 
   get currentSortBy() {
     if (this.sort === 'downloads') {
@@ -63,13 +67,11 @@ export default class SearchController extends Controller {
   @restartableTask *dataTask() {
     let { all_keywords, page, per_page, q, sort } = this;
 
-    if (q !== null) {
-      q = q.trim();
-    }
+    let query = q.trim();
 
     let searchOptions = all_keywords
-      ? { page, per_page, sort, q, all_keywords }
-      : { page, per_page, sort, ...processSearchQuery(q) };
+      ? { page, per_page, sort, q: query, all_keywords }
+      : { page, per_page, sort, ...processSearchQuery(query) };
 
     return yield this.store.query('crate', searchOptions);
   }

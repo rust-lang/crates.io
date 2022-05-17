@@ -229,4 +229,18 @@ module('Acceptance | search', function (hooks) {
     await visit('/search?q=rust keywords:foo&page=3&per_page=15&sort=new&all_keywords=fire ball');
     assert.verifySteps(['/api/v1/crates']);
   });
+
+  test('visiting without query parameters works', async function (assert) {
+    this.server.loadFixtures();
+
+    await visit('/search');
+
+    assert.equal(currentURL(), '/search');
+    assert.equal(getPageTitle(), 'Search Results - crates.io: Rust Package Registry');
+
+    assert.dom('[data-test-header]').hasText('Search Results');
+    assert.dom('[data-test-search-nav]').hasText('Displaying 1-10 of 23 total results');
+    assert.dom('[data-test-crate-row="0"] [data-test-crate-link]').hasText('kinetic-rust');
+    assert.dom('[data-test-crate-row="0"] [data-test-version]').hasText('v0.0.16');
+  });
 });
