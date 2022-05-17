@@ -14,7 +14,6 @@ use flate2::read::GzDecoder;
 use reqwest::{blocking::Client, header};
 use tar::{self, Archive};
 
-const CACHE_CONTROL_README: &str = "public,max-age=604800";
 const USER_AGENT: &str = "crates-admin";
 
 #[derive(clap::Parser, Debug)]
@@ -111,25 +110,10 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
             let handle = thread::spawn::<_, anyhow::Result<()>>(move || {
                 println!("[{}-{}] Rendering README...", krate_name, version.num);
                 let readme = get_readme(base_config.uploader(), &client, &version, &krate_name)?;
-                let content_length = readme.len() as u64;
-                let content = std::io::Cursor::new(readme);
-                let readme_path = format!("readmes/{0}/{0}-{1}.html", krate_name, version.num);
-                let mut extra_headers = header::HeaderMap::new();
-                extra_headers.insert(
-                    header::CACHE_CONTROL,
-                    header::HeaderValue::from_static(CACHE_CONTROL_README),
-                );
 
                 base_config
                     .uploader()
-                    .upload(
-                        &client,
-                        &readme_path,
-                        content,
-                        content_length,
-                        "text/html",
-                        extra_headers,
-                    )
+                    .upload_readme(&client, &krate_name, &version.num, readme)
                     .context("Failed to upload rendered README file to S3")?;
 
                 Ok(())
