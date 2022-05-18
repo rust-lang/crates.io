@@ -1182,7 +1182,7 @@
     ember-cli-version-checker "^5.1.2"
     semver "^7.3.5"
 
-"@embroider/addon-shim@^1.5.0":
+"@embroider/addon-shim@^1.5.0", "@embroider/addon-shim@^1.6.0":
   version "1.6.0"
   resolved "https://registry.yarnpkg.com/@embroider/addon-shim/-/addon-shim-1.6.0.tgz#d2d6d1d820605a48273a123a9adb49e163c8de1c"
   integrity sha512-wHXsBsDsKxF6Ftnh67SBzV0OvwCBCBlgN5IVm661ByEdDacwWzYywFpVNcNJpCUttEJPMrqB5MJK7xf/xEqihg==
@@ -1504,7 +1504,7 @@
     "@handlebars/parser" "~2.0.0"
     simple-html-tokenizer "^0.5.11"
 
-"@glimmer/tracking@1.1.2", "@glimmer/tracking@^1.0.0", "@glimmer/tracking@^1.0.3", "@glimmer/tracking@^1.0.4":
+"@glimmer/tracking@1.1.2", "@glimmer/tracking@^1.0.3", "@glimmer/tracking@^1.0.4":
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/@glimmer/tracking/-/tracking-1.1.2.tgz#74e71be07b0a7066518d24044d2665d0cf8281eb"
   integrity sha512-cyV32zsHh+CnftuRX84ALZpd2rpbDrhLhJnTXn9W//QpqdRZ5rdMsxSY9fOsj0CKEc706tmEU299oNnDc0d7tA==
@@ -6077,7 +6077,7 @@ ember-cli-babel-plugin-helpers@^1.0.0, ember-cli-babel-plugin-helpers@^1.1.1:
   resolved "https://registry.yarnpkg.com/ember-cli-babel-plugin-helpers/-/ember-cli-babel-plugin-helpers-1.1.1.tgz#5016b80cdef37036c4282eef2d863e1d73576879"
   integrity sha512-sKvOiPNHr5F/60NLd7SFzMpYPte/nnGkq/tMIfXejfKHIhaiIkYFqX8Z9UFTKWLLn+V7NOaby6niNPZUdvKCRw==
 
-ember-cli-babel@7.26.11, ember-cli-babel@^7.0.0, ember-cli-babel@^7.1.2, ember-cli-babel@^7.1.3, ember-cli-babel@^7.10.0, ember-cli-babel@^7.13.0, ember-cli-babel@^7.13.2, ember-cli-babel@^7.17.2, ember-cli-babel@^7.19.0, ember-cli-babel@^7.21.0, ember-cli-babel@^7.22.1, ember-cli-babel@^7.23.0, ember-cli-babel@^7.23.1, ember-cli-babel@^7.26.11, ember-cli-babel@^7.26.3, ember-cli-babel@^7.26.4, ember-cli-babel@^7.26.5, ember-cli-babel@^7.26.6, ember-cli-babel@^7.26.8, ember-cli-babel@^7.7.3:
+ember-cli-babel@7.26.11, ember-cli-babel@^7.0.0, ember-cli-babel@^7.1.2, ember-cli-babel@^7.1.3, ember-cli-babel@^7.10.0, ember-cli-babel@^7.13.0, ember-cli-babel@^7.13.2, ember-cli-babel@^7.19.0, ember-cli-babel@^7.21.0, ember-cli-babel@^7.22.1, ember-cli-babel@^7.23.0, ember-cli-babel@^7.23.1, ember-cli-babel@^7.26.11, ember-cli-babel@^7.26.3, ember-cli-babel@^7.26.4, ember-cli-babel@^7.26.5, ember-cli-babel@^7.26.6, ember-cli-babel@^7.26.8, ember-cli-babel@^7.7.3:
   version "7.26.11"
   resolved "https://registry.yarnpkg.com/ember-cli-babel/-/ember-cli-babel-7.26.11.tgz#50da0fe4dcd99aada499843940fec75076249a9f"
   integrity sha512-JJYeYjiz/JTn34q7F5DSOjkkZqy8qwFOOxXfE6pe9yEJqWGu4qErKxlz8I22JoVEQ/aBUO+OcKTpmctvykM9YA==
@@ -13876,23 +13876,13 @@ tr46@~0.0.3:
   resolved "https://registry.yarnpkg.com/tr46/-/tr46-0.0.3.tgz#8184fd347dac9cdc185992f3a6622e14b9d9ab6a"
   integrity sha1-gYT9NH2snNwYWZLzpmIuFLnZq2o=
 
-tracked-maps-and-sets@^2.0.0:
-  version "2.2.1"
-  resolved "https://registry.yarnpkg.com/tracked-maps-and-sets/-/tracked-maps-and-sets-2.2.1.tgz#323dd40540c561e8b0ffdec8bf129c68ec5025f9"
-  integrity sha512-XYrXh6L/GpGmVmG3KcN/qoDyi4FxHh8eZY/BA/RuoxynskV+GZSfwrX3R+5DR2CIkzkCx4zi4kkDRg1AMDfDhg==
+tracked-toolbox@2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/tracked-toolbox/-/tracked-toolbox-2.0.0.tgz#7862575527b4c633ef8f9b4111d9d64c07ef2a49"
+  integrity sha512-adZtX+RGN6F+pWs/5JqVuDxLhuia4uhqmQp+UlUaxpykWjDFETtAdQR+LdDJiFPXFAXnS6FBqn/tnSLJQCm3Yw==
   dependencies:
-    "@glimmer/tracking" "^1.0.0"
-    ember-cli-babel "^7.17.2"
-
-tracked-toolbox@1.2.3:
-  version "1.2.3"
-  resolved "https://registry.yarnpkg.com/tracked-toolbox/-/tracked-toolbox-1.2.3.tgz#66ee74b948b270958f9401e93d8a69635ed294f9"
-  integrity sha512-0axTjBYinHurXoat9Qk71GbCxR2GZWDbhV3aGQmeGr7FxGXvfz+/mvuG69Nl3omkOdYy5GRjy7lYXJbDz8lPMA==
-  dependencies:
+    "@embroider/addon-shim" "^1.6.0"
     ember-cache-primitive-polyfill "^1.0.0"
-    ember-cli-babel "^7.21.0"
-    ember-cli-htmlbars "^5.3.1"
-    tracked-maps-and-sets "^2.0.0"
 
 tree-sync@^1.2.2:
   version "1.4.0"
