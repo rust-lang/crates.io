@@ -293,18 +293,33 @@ impl Repository {
             .join(Self::relative_index_file(name))
     }
 
+    /// Returns the relative path to the crate index file.
+    /// Does not perform conversion to lowercase.
+    fn relative_index_file_helper(name: &str) -> Vec<&str> {
+        match name.len() {
+            1 => vec!["1", name],
+            2 => vec!["2", name],
+            3 => vec!["3", &name[..1], name],
+            _ => vec![&name[0..2], &name[2..4], name],
+        }
+    }
+
     /// Returns the relative path to the crate index file that corresponds to
-    /// the given crate name.
+    /// the given crate name as a path (i.e. with platform-dependent folder separators).
     ///
     /// see <https://doc.rust-lang.org/cargo/reference/registries.html#index-format>
     pub fn relative_index_file(name: &str) -> PathBuf {
         let name = name.to_lowercase();
-        match name.len() {
-            1 => Path::new("1").join(&name),
-            2 => Path::new("2").join(&name),
-            3 => Path::new("3").join(&name[..1]).join(&name),
-            _ => Path::new(&name[0..2]).join(&name[2..4]).join(&name),
-        }
+        Self::relative_index_file_helper(&name).iter().collect()
+    }
+
+    /// Returns the relative path to the crate index file that corresponds to
+    /// the given crate name for usage in URLs (i.e. with `/` separator).
+    ///
+    /// see <https://doc.rust-lang.org/cargo/reference/registries.html#index-format>
+    pub fn relative_index_file_for_url(name: &str) -> String {
+        let name = name.to_lowercase();
+        Self::relative_index_file_helper(&name).join("/")
     }
 
     /// Returns the [Object ID](git2::Oid) of the currently checked out commit
@@ -341,6 +356,50 @@ impl Repository {
             .commit(Some("HEAD"), &sig, &sig, msg, &tree, &[&parent])?;
 
         self.push("refs/heads/master")
+    }
+
+    /// Gets a list of files that have been modified since a given `starting_commit`
+    /// (use `starting_commit = None` for a list of all files).
+    pub fn get_files_modified_since(
+        &self,
+        starting_commit: Option<&str>,
+    ) -> anyhow::Result<Vec<PathBuf>> {
+        let starting_commit = match starting_commit {
+            Some(starting_commit) => {
+                let oid = git2::Oid::from_str(starting_commit)
+                    .context("failed to parse commit into Oid")?;
+                let commit = self
+                    .repository
+                    .find_commit(oid)
+                    .context("failed to find commit")?;
+                Some(
+                    commit
+                        .as_object()
+                        .peel_to_tree()
+                        .context("failed to find tree for commit")?,
+                )
+            }
+            None => None,
+        };
+
+        let head = self
+            .repository
+            .find_commit(self.head_oid()?)?
+            .as_object()
+            .peel_to_tree()
+            .context("failed to find tree for HEAD")?;
+        let diff = self
+            .repository
+            .diff_tree_to_tree(starting_commit.as_ref(), Some(&head), None)
+            .context("failed to run diff")?;
+        let files = diff
+            .deltas()
+            .map(|delta| delta.new_file())
+            .filter(|file| file.exists())
+            .map(|file| file.path().unwrap().to_path_buf())
+            .collect();
+
+        Ok(files)
     }
 
     /// Push the current branch to the provided refname

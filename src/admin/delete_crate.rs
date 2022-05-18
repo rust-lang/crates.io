@@ -1,6 +1,7 @@
-use crate::{admin::dialoguer, db, models::Crate, schema::crates};
+use crate::{admin::dialoguer, config, db, models::Crate, schema::crates};
 
 use diesel::prelude::*;
+use reqwest::blocking::Client;
 
 #[derive(clap::Parser, Debug)]
 #[clap(
@@ -25,6 +26,10 @@ pub fn run(opts: Opts) {
 fn delete(opts: Opts, conn: &PgConnection) {
     let krate: Crate = Crate::by_name(&opts.crate_name).first(conn).unwrap();
 
+    let config = config::Base::from_environment();
+    let uploader = config.uploader();
+    let client = Client::new();
+
     let prompt = format!(
         "Are you sure you want to delete {} ({})?",
         opts.crate_name, krate.id
@@ -42,4 +47,6 @@ fn delete(opts: Opts, conn: &PgConnection) {
     if !dialoguer::confirm("commit?") {
         panic!("aborting transaction");
     }
+
+    uploader.delete_index(&client, &krate.name).unwrap();
 }

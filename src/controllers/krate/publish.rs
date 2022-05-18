@@ -215,7 +215,7 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
         // Upload crate tarball
         app.config
             .uploader()
-            .upload_crate(&app, tarball, &krate, vers)?;
+            .upload_crate(app.http_client(), tarball, &krate, vers)?;
 
         let (features, features2): (HashMap<_, _>, HashMap<_, _>) =
             features.into_iter().partition(|(_k, vals)| {
