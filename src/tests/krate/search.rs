@@ -5,7 +5,7 @@ use cargo_registry::models::Category;
 use cargo_registry::schema::crates;
 use diesel::{dsl::*, prelude::*, update};
 use http::StatusCode;
-use ipnetwork::Ipv4Network;
+use ipnetwork::IpNetwork;
 
 #[test]
 fn index() {
@@ -829,8 +829,7 @@ fn pagination_blocks_ip_from_cidr_block_list() {
     let (app, anon, user) = TestApp::init()
         .with_config(|config| {
             config.max_allowed_page_offset = 1;
-            config.page_offset_cidr_blocklist =
-                vec!["127.0.0.1/24".parse::<Ipv4Network>().unwrap()];
+            config.page_offset_cidr_blocklist = vec!["127.0.0.1/24".parse::<IpNetwork>().unwrap()];
         })
         .with_user();
     let user = user.as_model();

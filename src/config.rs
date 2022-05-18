@@ -1,4 +1,4 @@
-use ipnetwork::Ipv4Network;
+use ipnetwork::IpNetwork;
 
 use crate::publish_rate_limit::PublishRateLimit;
 use crate::{env, env_optional, uploaders::Uploader, Env};
@@ -27,7 +27,7 @@ pub struct Server {
     pub blocked_traffic: Vec<(String, Vec<String>)>,
     pub max_allowed_page_offset: u32,
     pub page_offset_ua_blocklist: Vec<String>,
-    pub page_offset_cidr_blocklist: Vec<Ipv4Network>,
+    pub page_offset_cidr_blocklist: Vec<IpNetwork>,
     pub excluded_crate_names: Vec<String>,
     pub domain_name: String,
     pub allowed_origins: Vec<String>,
@@ -158,29 +158,37 @@ pub(crate) fn domain_name() -> String {
     dotenv::var("DOMAIN_NAME").unwrap_or_else(|_| "crates.io".into())
 }
 
-/// Parses list of CIDR block strings to valid `Ipv4Cidr` structs.
+/// Parses list of CIDR block strings to valid `IpNetwork` structs.
 ///
-/// The purpose is to be able to block IP ranges that overload the API that contains pagination.
-/// A valid CIDR block has the following restriction:
+/// The purpose is to be able to block IP ranges that overload the API that uses pagination.
 ///
-/// * Only IPv4 blocks are currently supported.
-/// * The minimum number of host prefix bits must be at least 16.
+/// The minimum number of bits for a host prefix must be
 ///
-fn parse_cidr_blocks(blocks: &[String]) -> Vec<Ipv4Network> {
+/// * at least 16 for IPv4 based CIDRs.
+/// * at least 64 for IPv6 based CIDRs
+///
+fn parse_cidr_blocks(blocks: &[String]) -> Vec<IpNetwork> {
     blocks
         .iter()
-        .map(|block| match block.parse::<Ipv4Network>() {
-            Ok(cidr) => {
-                if cidr.prefix() < 16 {
-                    panic!(
-                        "WEB_PAGE_OFFSET_CIDR_BLOCKLIST must only contain CIDR blocks with \
-                            a host prefix of at least 16 bits."
-                    )
-                } else {
-                    cidr
-                }
+        .map(|block| {
+            let network = block.parse::<IpNetwork>();
+            match network {
+                Ok(cidr) => {
+                    let host_prefix = match cidr {
+                        IpNetwork::V4(_) => 16,
+                        IpNetwork::V6(_) => 64,
+                    };
+                    if cidr.prefix() < host_prefix {
+                        panic!(
+                            "WEB_PAGE_OFFSET_CIDR_BLOCKLIST only allows CIDR blocks with a host prefix \
+                                of at least 16 bits (IPv4) or 64 bits (IPv6)."
+                        );
+                    } else {
+                        cidr
+                    }
+                },
+                Err(_) => panic!("WEB_PAGE_OFFSET_CIDR_BLOCKLIST must contain IPv4 or IPv6 CIDR blocks."),
             }
-            Err(_) => panic!("WEB_PAGE_OFFSET_CIDR_BLOCKLIST only allows IPv4 CIDR blocks"),
         })
         .collect::<Vec<_>>()
 }
@@ -232,8 +240,8 @@ fn parse_cidr_block_list_successfully() {
     let blocks = parse_cidr_blocks(&cidr_blocks);
     assert_eq!(
         vec![
-            "127.0.0.1/24".parse::<Ipv4Network>().unwrap(),
-            "192.168.0.1/31".parse::<Ipv4Network>().unwrap(),
+            "127.0.0.1/24".parse::<IpNetwork>().unwrap(),
+            "192.168.0.1/31".parse::<IpNetwork>().unwrap(),
         ],
         blocks,
     );
@@ -241,14 +249,21 @@ fn parse_cidr_block_list_successfully() {
 
 #[test]
 #[should_panic]
-fn parse_cidr_blocks_panics_when_host_prefix_is_too_low() {
-    let input = vec!["127.0.0.1/8".to_string()];
-    parse_cidr_blocks(&input);
+fn parse_cidr_blocks_panics_when_host_ipv4_prefix_is_too_low() {
+    parse_cidr_blocks(&["127.0.0.1/8".to_string()]);
 }
 
 #[test]
 #[should_panic]
-fn parse_cidr_blocks_panics_when_ipv6_is_given() {
-    let input = vec!["2002::1234:abcd:ffff:c0a8:101/64".to_string()];
-    parse_cidr_blocks(&input);
+fn parse_cidr_blocks_panics_when_host_ipv6_prefix_is_too_low() {
+    parse_cidr_blocks(&["2001:0db8:0123:4567:89ab:cdef:1234:5678/56".to_string()]);
+}
+
+#[test]
+fn parse_ipv6_based_cidr_blocks() {
+    let input = vec![
+        "2002::1234:abcd:ffff:c0a8:101/64".to_string(),
+        "2001:0db8:0123:4567:89ab:cdef:1234:5678/92".to_string(),
+    ];
+    assert_eq!(2, parse_cidr_blocks(&input).len());
 }

@@ -12,7 +12,7 @@ use diesel::query_dsl::LoadQuery;
 use diesel::sql_types::BigInt;
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
-use std::net::Ipv4Addr;
+use std::net::IpAddr;
 use std::str::FromStr;
 use std::sync::Arc;
 
@@ -274,7 +274,7 @@ fn is_useragent_or_ip_blocked(config: &Server, req: &dyn RequestExt) -> bool {
     }
 
     // check if client ip is blocked, needs to be an IPv4 address
-    if let Ok(client_ip) = Ipv4Addr::from_str(client_ip) {
+    if let Ok(client_ip) = IpAddr::from_str(client_ip) {
         if config
             .page_offset_cidr_blocklist
             .iter()
