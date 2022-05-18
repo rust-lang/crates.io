@@ -2609,10 +2609,10 @@
   resolved "https://registry.yarnpkg.com/@xtuc/long/-/long-4.2.2.tgz#d291c6a4e97989b5c61d9acf396ae4fe133a718d"
   integrity sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==
 
-"@zestia/ember-auto-focus@4.3.0":
-  version "4.3.0"
-  resolved "https://registry.yarnpkg.com/@zestia/ember-auto-focus/-/ember-auto-focus-4.3.0.tgz#51cf57f5f95a4eec888e3b3fb0b5ca2070d4a332"
-  integrity sha512-4cqHSmJzrKzBZtDtTrpwJWmBdlBDURe+oTMw701zGaed0IObOpzaGz/4lX8RgRx5UEcxO2BCxO0wAFiEcOufYA==
+"@zestia/ember-auto-focus@4.4.0":
+  version "4.4.0"
+  resolved "https://registry.yarnpkg.com/@zestia/ember-auto-focus/-/ember-auto-focus-4.4.0.tgz#1df6585df7012946389d8745588ee7b8e2357d9a"
+  integrity sha512-Oios2kkkOLkaaKAxQl25XNjdhskv3BWpxOgjE/i8ig30uUloepU0i8idByqQdsUmNdPmsMr7sQ8TEZ2W7NAfMg==
   dependencies:
     ember-cli-babel "^7.26.11"
     ember-cli-htmlbars "^6.0.1"
