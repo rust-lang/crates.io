@@ -4,7 +4,10 @@ use std::{
 };
 
 use self::configuration::VisibilityConfig;
-use crate::{background_jobs::Environment, uploaders::Uploader};
+use crate::{
+    background_jobs::Environment,
+    uploaders::{UploadBucket, Uploader},
+};
 use reqwest::header;
 use swirl::PerformError;
 
@@ -199,6 +202,7 @@ impl DumpTarball {
             tarfile,
             "application/gzip",
             header::HeaderMap::new(),
+            UploadBucket::Default,
         )?;
         Ok(content_length)
     }

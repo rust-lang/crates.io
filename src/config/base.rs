@@ -74,7 +74,7 @@ impl Base {
 
     pub fn test() -> Self {
         let uploader = Uploader::S3 {
-            bucket: s3::Bucket::new(
+            bucket: Box::new(s3::Bucket::new(
                 String::from("alexcrichton-test"),
                 None,
                 dotenv::var("S3_ACCESS_KEY").unwrap_or_default(),
@@ -82,7 +82,16 @@ impl Base {
                 // When testing we route all API traffic over HTTP so we can
                 // sniff/record it, but everywhere else we use https
                 "http",
-            ),
+            )),
+            index_bucket: Some(Box::new(s3::Bucket::new(
+                String::from("alexcrichton-test"),
+                None,
+                dotenv::var("S3_INDEX_ACCESS_KEY").unwrap_or_default(),
+                dotenv::var("S3_INDEX_SECRET_KEY").unwrap_or_default(),
+                // When testing we route all API traffic over HTTP so we can
+                // sniff/record it, but everywhere else we use https
+                "http",
+            ))),
             cdn: None,
         };
         Self {
@@ -96,27 +105,49 @@ impl Base {
     }
 
     fn s3_panic_if_missing_keys() -> Uploader {
+        let index_bucket = match dotenv::var("S3_INDEX_BUCKET") {
+            Ok(name) => Some(Box::new(s3::Bucket::new(
+                name,
+                dotenv::var("S3_INDEX_REGION").ok(),
+                env("S3_INDEX_ACCESS_KEY"),
+                env("S3_INDEX_SECRET_KEY"),
+                "https",
+            ))),
+            Err(_) => None,
+        };
         Uploader::S3 {
-            bucket: s3::Bucket::new(
+            bucket: Box::new(s3::Bucket::new(
                 env("S3_BUCKET"),
                 dotenv::var("S3_REGION").ok(),
                 env("S3_ACCESS_KEY"),
                 env("S3_SECRET_KEY"),
                 "https",
-            ),
+            )),
+            index_bucket,
             cdn: dotenv::var("S3_CDN").ok(),
         }
     }
 
     fn s3_maybe_read_only() -> Uploader {
+        let index_bucket = match dotenv::var("S3_INDEX_BUCKET") {
+            Ok(name) => Some(Box::new(s3::Bucket::new(
+                name,
+                dotenv::var("S3_INDEX_REGION").ok(),
+                dotenv::var("S3_INDEX_ACCESS_KEY").unwrap_or_default(),
+                dotenv::var("S3_INDEX_SECRET_KEY").unwrap_or_default(),
+                "https",
+            ))),
+            Err(_) => None,
+        };
         Uploader::S3 {
-            bucket: s3::Bucket::new(
+            bucket: Box::new(s3::Bucket::new(
                 env("S3_BUCKET"),
                 dotenv::var("S3_REGION").ok(),
                 dotenv::var("S3_ACCESS_KEY").unwrap_or_default(),
                 dotenv::var("S3_SECRET_KEY").unwrap_or_default(),
                 "https",
-            ),
+            )),
+            index_bucket,
             cdn: dotenv::var("S3_CDN").ok(),
         }
     }

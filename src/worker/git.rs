@@ -9,7 +9,7 @@ use std::process::Command;
 use swirl::PerformError;
 
 #[swirl::background_job]
-pub fn add_crate(env: &Environment, krate: Crate) -> Result<(), PerformError> {
+pub fn add_crate(env: &Environment, conn: &PgConnection, krate: Crate) -> Result<(), PerformError> {
     use std::io::prelude::*;
 
     let repo = env.lock_index()?;
@@ -22,9 +22,20 @@ pub fn add_crate(env: &Environment, krate: Crate) -> Result<(), PerformError> {
     file.write_all(b"\n")?;
 
     let message: String = format!("Updating crate `{}#{}`", krate.name, krate.vers);
-
     repo.commit_and_push(&message, &dst)?;
 
+    // Queue another background job to update the http-based index as well.
+    update_crate_index(krate.name.clone()).enqueue(conn)?;
+    Ok(())
+}
+
+#[swirl::background_job]
+pub fn update_crate_index(env: &Environment, crate_name: String) -> Result<(), PerformError> {
+    let repo = env.lock_index()?;
+    let dst = repo.index_file(&crate_name);
+    let contents = std::fs::read_to_string(dst)?;
+    env.uploader
+        .upload_index(env.http_client(), &crate_name, contents)?;
     Ok(())
 }
 
