@@ -202,6 +202,7 @@ pub trait RequestHelper {
 fn req(method: conduit::Method, path: &str) -> MockRequest {
     let mut request = MockRequest::new(method, path);
     request.header(header::USER_AGENT, "conduit-test");
+    request.header("x-real-ip", "127.0.0.1");
     request
 }
 

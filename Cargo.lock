@@ -267,6 +267,7 @@ dependencies = [
  "hyper",
  "hyper-tls",
  "indexmap",
+ "ipnetwork",
  "lazy_static",
  "lettre",
  "minijinja",
@@ -1346,6 +1347,15 @@ name = "ipnet"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "879d54834c8c76457ef4293a689b2a8c59b076067ad77b15efafbb05f92a592b"
+
+[[package]]
+name = "ipnetwork"
+version = "0.19.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1f84f1612606f3753f205a4e9a2efd6fe5b4c573a6269b2cc6c3003d44a0d127"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "itoa"
