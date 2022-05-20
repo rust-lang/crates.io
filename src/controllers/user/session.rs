@@ -108,7 +108,7 @@ pub fn authorize(req: &mut dyn RequestExt) -> EndpointResult {
     )?;
 
     // Setup a persistent session for the newly logged in user.
-    let (_session, cookie) = PersistentSession::create(user.id).insert(&*req.db_conn()?)?;
+    let (_session, cookie) = PersistentSession::create(user.id).insert(&*req.db_write()?)?;
 
     // Setup persistent session cookie.
     let secure = req.app().config.env() == Env::Production;
@@ -178,7 +178,7 @@ pub fn logout(req: &mut dyn RequestExt) -> EndpointResult {
     req.cookies_mut()
         .remove(Cookie::named(SessionCookie::SESSION_COOKIE_NAME));
 
-    let conn = req.db_conn()?;
+    let conn = req.db_write()?;
     let mut session = PersistentSession::find(session_cookie.session_id(), &conn)?
         .ok_or(LogoutError::SessionNotInDB)?;
     session.revoke().update(&conn)?;
