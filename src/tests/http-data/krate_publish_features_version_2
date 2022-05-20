@@ -68,7 +68,7 @@
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/index/3/f/foo",
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/3/f/foo",
       "method": "PUT",
       "headers": [
         [

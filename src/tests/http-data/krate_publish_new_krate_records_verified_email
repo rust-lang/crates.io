@@ -68,7 +68,7 @@
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/index/fo/o_/foo_verified_email",
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/fo/o_/foo_verified_email",
       "method": "PUT",
       "headers": [
         [

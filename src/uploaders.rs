@@ -6,6 +6,7 @@ use crate::util::errors::{internal, AppResult};
 use std::env;
 use std::fs::{self, File};
 use std::io::{Cursor, SeekFrom};
+use std::path::PathBuf;
 
 use crate::models::Crate;
 
@@ -88,8 +89,16 @@ impl Uploader {
 
     /// Returns the internal path of an uploaded crate's index file.
     fn index_path(name: &str) -> String {
-        let path = cargo_registry_index::Repository::relative_index_file_for_url(name);
-        format!("index/{}", path)
+        cargo_registry_index::Repository::relative_index_file_for_url(name)
+    }
+
+    /// Returns the absolute path to the locally uploaded file.
+    fn local_uploads_path(path: &str, upload_bucket: UploadBucket) -> PathBuf {
+        let path = match upload_bucket {
+            UploadBucket::Index => PathBuf::from("index").join(path),
+            UploadBucket::Default => PathBuf::from(path),
+        };
+        env::current_dir().unwrap().join("local_uploads").join(path)
     }
 
     /// Uploads a file using the configured uploader (either `S3`, `Local`).
@@ -136,7 +145,7 @@ impl Uploader {
                 Ok(Some(String::from(path)))
             }
             Uploader::Local => {
-                let filename = env::current_dir().unwrap().join("local_uploads").join(path);
+                let filename = Self::local_uploads_path(path, upload_bucket);
                 let dir = filename.parent().unwrap();
                 fs::create_dir_all(dir)?;
                 let mut file = File::create(&filename)?;
@@ -164,7 +173,7 @@ impl Uploader {
                 }
             }
             Uploader::Local => {
-                let filename = env::current_dir().unwrap().join("local_uploads").join(path);
+                let filename = Self::local_uploads_path(path, upload_bucket);
                 std::fs::remove_file(&filename)?;
             }
         }

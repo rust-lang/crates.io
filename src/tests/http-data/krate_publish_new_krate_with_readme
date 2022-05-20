@@ -135,7 +135,7 @@
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/index/fo/o_/foo_readme",
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/fo/o_/foo_readme",
       "method": "PUT",
       "headers": [
         [
