@@ -68,7 +68,7 @@
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/index/ra/te/rate_limited1",
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/ra/te/rate_limited1",
       "method": "PUT",
       "headers": [
         [
@@ -202,7 +202,7 @@
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/index/ra/te/rate_limited2",
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/ra/te/rate_limited2",
       "method": "PUT",
       "headers": [
         [

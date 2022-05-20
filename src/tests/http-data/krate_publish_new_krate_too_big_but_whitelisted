@@ -68,7 +68,7 @@
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/index/fo/o_/foo_whitelist",
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/fo/o_/foo_whitelist",
       "method": "PUT",
       "headers": [
         [

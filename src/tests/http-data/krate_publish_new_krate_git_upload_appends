@@ -135,7 +135,7 @@
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/index/3/f/fpp",
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/3/f/fpp",
       "method": "PUT",
       "headers": [
         [
@@ -202,7 +202,7 @@
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/index/3/f/fpp",
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/3/f/fpp",
       "method": "PUT",
       "headers": [
         [

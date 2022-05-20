@@ -68,7 +68,7 @@
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/index/ne/w_/new_dep",
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/ne/w_/new_dep",
       "method": "PUT",
       "headers": [
         [

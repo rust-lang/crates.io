@@ -580,7 +580,7 @@
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/index/fo/o_/foo_team_owned",
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/fo/o_/foo_team_owned",
       "method": "PUT",
       "headers": [
         [

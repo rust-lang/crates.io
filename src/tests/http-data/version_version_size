@@ -135,7 +135,7 @@
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/index/fo/o_/foo_version_size",
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/fo/o_/foo_version_size",
       "method": "PUT",
       "headers": [
         [
@@ -202,7 +202,7 @@
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/index/fo/o_/foo_version_size",
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/fo/o_/foo_version_size",
       "method": "PUT",
       "headers": [
         [
