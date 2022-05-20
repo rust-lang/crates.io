@@ -94,7 +94,7 @@ impl Default for Server {
             match env_optional::<String>("WEB_PAGE_OFFSET_CIDR_BLOCKLIST") {
                 None => vec![],
                 Some(s) if s.is_empty() => vec![],
-                Some(s) => s.split(',').map(String::from).collect(),
+                Some(s) => s.split(',').map(parse_cidr_block).collect(),
             };
 
         let base = Base::from_environment();
@@ -116,7 +116,7 @@ impl Default for Server {
             blocked_traffic: blocked_traffic(),
             max_allowed_page_offset: env_optional("WEB_MAX_ALLOWED_PAGE_OFFSET").unwrap_or(200),
             page_offset_ua_blocklist,
-            page_offset_cidr_blocklist: parse_cidr_blocks(&page_offset_cidr_blocklist),
+            page_offset_cidr_blocklist,
             excluded_crate_names,
             domain_name: domain_name(),
             allowed_origins,
@@ -158,7 +158,7 @@ pub(crate) fn domain_name() -> String {
     dotenv::var("DOMAIN_NAME").unwrap_or_else(|_| "crates.io".into())
 }
 
-/// Parses list of CIDR block strings to valid `IpNetwork` structs.
+/// Parses a CIDR block string to a valid `IpNetwork` struct.
 ///
 /// The purpose is to be able to block IP ranges that overload the API that uses pagination.
 ///
@@ -167,30 +167,25 @@ pub(crate) fn domain_name() -> String {
 /// * at least 16 for IPv4 based CIDRs.
 /// * at least 64 for IPv6 based CIDRs
 ///
-fn parse_cidr_blocks(blocks: &[String]) -> Vec<IpNetwork> {
-    blocks
-        .iter()
-        .map(|block| {
-            let network = block.parse::<IpNetwork>();
-            match network {
-                Ok(cidr) => {
-                    let host_prefix = match cidr {
-                        IpNetwork::V4(_) => 16,
-                        IpNetwork::V6(_) => 64,
-                    };
-                    if cidr.prefix() < host_prefix {
-                        panic!(
-                            "WEB_PAGE_OFFSET_CIDR_BLOCKLIST only allows CIDR blocks with a host prefix \
+fn parse_cidr_block(block: &str) -> IpNetwork {
+    let network = block.parse();
+    match network {
+        Ok(cidr) => {
+            let host_prefix = match cidr {
+                IpNetwork::V4(_) => 16,
+                IpNetwork::V6(_) => 64,
+            };
+            if cidr.prefix() < host_prefix {
+                panic!(
+                    "WEB_PAGE_OFFSET_CIDR_BLOCKLIST only allows CIDR blocks with a host prefix \
                                 of at least 16 bits (IPv4) or 64 bits (IPv6)."
-                        );
-                    } else {
-                        cidr
-                    }
-                },
-                Err(_) => panic!("WEB_PAGE_OFFSET_CIDR_BLOCKLIST must contain IPv4 or IPv6 CIDR blocks."),
+                );
+            } else {
+                cidr
             }
-        })
-        .collect::<Vec<_>>()
+        }
+        Err(_) => panic!("WEB_PAGE_OFFSET_CIDR_BLOCKLIST must contain IPv4 or IPv6 CIDR blocks."),
+    }
 }
 
 fn blocked_traffic() -> Vec<(String, Vec<String>)> {
@@ -235,35 +230,40 @@ fn parse_traffic_patterns_splits_on_comma_and_looks_for_equal_sign() {
 
 #[test]
 fn parse_cidr_block_list_successfully() {
-    let cidr_blocks = vec!["127.0.0.1/24".to_string(), "192.168.0.1/31".to_string()];
-
-    let blocks = parse_cidr_blocks(&cidr_blocks);
     assert_eq!(
-        vec![
-            "127.0.0.1/24".parse::<IpNetwork>().unwrap(),
-            "192.168.0.1/31".parse::<IpNetwork>().unwrap(),
-        ],
-        blocks,
+        parse_cidr_block("127.0.0.1/24"),
+        "127.0.0.1/24".parse::<IpNetwork>().unwrap()
+    );
+    assert_eq!(
+        parse_cidr_block("192.168.0.1/31"),
+        "192.168.0.1/31".parse::<IpNetwork>().unwrap()
     );
 }
 
 #[test]
 #[should_panic]
 fn parse_cidr_blocks_panics_when_host_ipv4_prefix_is_too_low() {
-    parse_cidr_blocks(&["127.0.0.1/8".to_string()]);
+    parse_cidr_block("127.0.0.1/8");
 }
 
 #[test]
 #[should_panic]
 fn parse_cidr_blocks_panics_when_host_ipv6_prefix_is_too_low() {
-    parse_cidr_blocks(&["2001:0db8:0123:4567:89ab:cdef:1234:5678/56".to_string()]);
+    parse_cidr_block("2001:0db8:0123:4567:89ab:cdef:1234:5678/56");
 }
 
 #[test]
 fn parse_ipv6_based_cidr_blocks() {
-    let input = vec![
-        "2002::1234:abcd:ffff:c0a8:101/64".to_string(),
-        "2001:0db8:0123:4567:89ab:cdef:1234:5678/92".to_string(),
-    ];
-    assert_eq!(2, parse_cidr_blocks(&input).len());
+    assert_eq!(
+        parse_cidr_block("2002::1234:abcd:ffff:c0a8:101/64"),
+        "2002::1234:abcd:ffff:c0a8:101/64"
+            .parse::<IpNetwork>()
+            .unwrap()
+    );
+    assert_eq!(
+        parse_cidr_block("2001:0db8:0123:4567:89ab:cdef:1234:5678/92"),
+        "2001:0db8:0123:4567:89ab:cdef:1234:5678/92"
+            .parse::<IpNetwork>()
+            .unwrap()
+    );
 }
