@@ -1,5 +1,6 @@
 use cargo_registry::github::{
-    GitHubClient, GitHubOrganization, GitHubTeam, GitHubTeamMembership, GithubUser,
+    GitHubClient, GitHubOrgMembership, GitHubOrganization, GitHubTeam, GitHubTeamMembership,
+    GithubUser,
 };
 use cargo_registry::util::errors::{not_found, AppResult};
 use oauth2::AccessToken;
@@ -8,6 +9,7 @@ pub(crate) const MOCK_GITHUB_DATA: MockData = MockData {
     orgs: &[MockOrg {
         id: 1000,
         name: "test-org",
+        owners: &["user-org-owner"],
         teams: &[
             MockTeam {
                 id: 2000,
@@ -33,6 +35,12 @@ pub(crate) const MOCK_GITHUB_DATA: MockData = MockData {
             login: "user-all-teams",
             name: "User on all teams",
             email: "all-teams@example.com",
+        },
+        MockUser {
+            id: 3,
+            login: "user-org-owner",
+            name: "User owning the org",
+            email: "owner@example.com",
         },
     ],
 };
@@ -120,6 +128,37 @@ impl GitHubClient for MockGitHubClient {
             Err(not_found())
         }
     }
+
+    fn org_membership(
+        &self,
+        org_id: i32,
+        username: &str,
+        _auth: &AccessToken,
+    ) -> AppResult<GitHubOrgMembership> {
+        let org = self
+            .data
+            .orgs
+            .iter()
+            .find(|org| org.id == org_id)
+            .ok_or_else(not_found)?;
+        if org.owners.contains(&username) {
+            Ok(GitHubOrgMembership {
+                state: "active".into(),
+                role: "admin".into(),
+            })
+        } else if org
+            .teams
+            .iter()
+            .any(|team| team.members.contains(&username))
+        {
+            Ok(GitHubOrgMembership {
+                state: "active".into(),
+                role: "member".into(),
+            })
+        } else {
+            Err(not_found())
+        }
+    }
 }
 
 pub(crate) struct MockData {
@@ -137,6 +176,7 @@ struct MockUser {
 struct MockOrg {
     id: i32,
     name: &'static str,
+    owners: &'static [&'static str],
     teams: &'static [MockTeam],
 }
 

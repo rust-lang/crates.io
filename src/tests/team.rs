@@ -147,6 +147,33 @@ fn add_team_mixed_case() {
     assert_eq!(json.teams[0].login, "github:test-org:core");
 }
 
+#[test]
+fn add_team_as_org_owner() {
+    let (app, anon) = TestApp::init().empty();
+    let user = app.db_new_user("user-org-owner");
+    let token = user.db_new_token("arbitrary token name");
+
+    app.db(|conn| {
+        CrateBuilder::new("foo_org_owner", user.as_model().id).expect_build(conn);
+    });
+
+    token
+        .add_named_owner("foo_org_owner", "github:test-org:core")
+        .good();
+
+    app.db(|conn| {
+        let krate: Crate = Crate::by_name("foo_org_owner").first(conn).unwrap();
+        let owners = krate.owners(conn).unwrap();
+        assert_eq!(owners.len(), 2);
+        let owner = &owners[1];
+        assert_eq!(owner.login(), owner.login().to_lowercase());
+    });
+
+    let json = anon.crate_owner_teams("foo_org_owner").good();
+    assert_eq!(json.teams.len(), 1);
+    assert_eq!(json.teams[0].login, "github:test-org:core");
+}
+
 // Test adding team as owner when not on it
 #[test]
 fn add_team_as_non_member() {
@@ -162,7 +189,7 @@ fn add_team_as_non_member() {
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.into_json(),
-        json!({ "errors": [{ "detail": "only members of a team can add it as an owner" }] })
+        json!({ "errors": [{ "detail": "only members of a team or organization owners can add it as an owner" }] })
     );
 }
 
@@ -229,6 +256,16 @@ fn remove_team_as_team_owner() {
         response.into_json(),
         json!({ "errors": [{ "detail": "team members don't have permission to modify owners" }] })
     );
+
+    let user_org_owner = app.db_new_user("user-org-owner");
+    let token_org_owner = user_org_owner.db_new_token("arbitrary token name");
+    let response =
+        token_org_owner.remove_named_owner("foo_remove_team_owner", "github:test-org:all");
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response.into_json(),
+        json!({ "errors": [{ "detail": "only owners have permission to modify owners" }] })
+    );
 }
 
 // Test trying to publish a crate we don't own
@@ -250,6 +287,31 @@ fn publish_not_owned() {
 
     let crate_to_publish = PublishBuilder::new("foo_not_owned").version("2.0.0");
     let response = user_on_one_team.enqueue_publish(crate_to_publish);
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response.into_json(),
+        json!({ "errors": [{ "detail": "this crate exists but you don't seem to be an owner. If you believe this is a mistake, perhaps you need to accept an invitation to be an owner before publishing." }] })
+    );
+}
+
+#[test]
+fn publish_org_owner_owned() {
+    let (app, _) = TestApp::init().empty();
+    let user_on_both_teams = app.db_new_user("user-all-teams");
+    let token_on_both_teams = user_on_both_teams.db_new_token("arbitrary token name");
+
+    app.db(|conn| {
+        CrateBuilder::new("foo_not_owned", user_on_both_teams.as_model().id).expect_build(conn);
+    });
+
+    token_on_both_teams
+        .add_named_owner("foo_not_owned", "github:test-org:core")
+        .good();
+
+    let user_org_owner = app.db_new_user("user-org-owner");
+
+    let crate_to_publish = PublishBuilder::new("foo_not_owned").version("2.0.0");
+    let response = user_org_owner.enqueue_publish(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.into_json(),
@@ -279,6 +341,31 @@ fn publish_owned() {
 }
 
 // Test trying to change owners (when only on an owning team)
+#[test]
+fn add_owners_as_org_owner() {
+    let (app, _) = TestApp::init().empty();
+    let user_on_both_teams = app.db_new_user("user-all-teams");
+    let token_on_both_teams = user_on_both_teams.db_new_token("arbitrary token name");
+
+    app.db(|conn| {
+        CrateBuilder::new("foo_add_owner", user_on_both_teams.as_model().id).expect_build(conn);
+    });
+
+    token_on_both_teams
+        .add_named_owner("foo_add_owner", "github:test-org:all")
+        .good();
+
+    let user_org_owner = app.db_new_user("user-org-owner");
+    let token_org_owner = user_org_owner.db_new_token("arbitrary token name");
+
+    let response = token_org_owner.add_named_owner("foo_add_owner", "arbitrary_username");
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response.into_json(),
+        json!({ "errors": [{ "detail": "only owners have permission to modify owners" }] })
+    );
+}
+
 #[test]
 fn add_owners_as_team_owner() {
     let (app, _) = TestApp::init().empty();
