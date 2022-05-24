@@ -95,7 +95,7 @@ as well.
 
 In order to run the frontend on Windows and macOS, you will need to have installed:
 
-- [node](https://nodejs.org/en/) >= 12.9.1 (see `package.json` and `.github/workflows/ci.yml` for what we currently use)
+- [node](https://nodejs.org/en/) >= 16.15.0 (see `package.json` and `.github/workflows/ci.yml` for what we currently use)
 - [yarn](https://classic.yarnpkg.com/en/docs/install) v1.x
 
 Follow the links for each of these tools for their recommended installation
