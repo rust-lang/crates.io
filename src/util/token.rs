@@ -122,6 +122,7 @@ secure_token_kind! {
     #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
     pub(crate) enum SecureTokenKind {
         Api => "cio", // Crates.IO
+        Session => "scio", // Session tokens.
     }
 }
 
@@ -172,6 +173,7 @@ mod tests {
         };
 
         ensure(SecureTokenKind::Api, "cio");
+        ensure(SecureTokenKind::Session, "scio");
 
         assert!(
             remaining.is_empty(),

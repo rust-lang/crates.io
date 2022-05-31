@@ -23,6 +23,8 @@ use crate::{
     builders::PublishBuilder, CategoryListResponse, CategoryResponse, CrateList, CrateResponse,
     GoodCrate, OkBool, OwnersResponse, VersionResponse,
 };
+use cargo_registry::models::persistent_session::SessionCookie;
+use cargo_registry::models::PersistentSession;
 use cargo_registry::models::{ApiToken, CreatedApiToken, User};
 
 use conduit::{BoxError, Handler, Method};
@@ -270,6 +272,38 @@ impl MockCookieUser {
             app: self.app.clone(),
             token,
         }
+    }
+
+    pub fn with_session(&self) -> MockSessionUser {
+        let (_session, session_cookie) = self.app.db(|conn| {
+            PersistentSession::create(self.user.id)
+                .insert(conn)
+                .unwrap()
+        });
+
+        MockSessionUser {
+            app: self.app.clone(),
+            session_cookie,
+        }
+    }
+}
+
+pub struct MockSessionUser {
+    app: TestApp,
+    session_cookie: SessionCookie,
+}
+
+impl RequestHelper for MockSessionUser {
+    fn request_builder(&self, method: Method, path: &str) -> MockRequest {
+        let cookie = self.session_cookie.build(false).to_string();
+
+        let mut request = req(method, path);
+        request.header(header::COOKIE, &cookie);
+        request
+    }
+
+    fn app(&self) -> &TestApp {
+        &self.app
     }
 }
 

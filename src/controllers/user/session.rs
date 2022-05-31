@@ -1,14 +1,19 @@
 use crate::controllers::frontend_prelude::*;
 
-use conduit_cookie::RequestSession;
+use conduit_cookie::{RequestCookies, RequestSession};
+use cookie::Cookie;
 use oauth2::reqwest::http_client;
 use oauth2::{AuthorizationCode, Scope, TokenResponse};
+use thiserror::Error;
 
 use crate::email::Emails;
 use crate::github::GithubUser;
-use crate::models::{NewUser, User};
+use crate::models::persistent_session::ParseSessionCookieError;
+use crate::models::persistent_session::SessionCookie;
+use crate::models::{NewUser, PersistentSession, User};
 use crate::schema::users;
 use crate::util::errors::ReadOnlyMode;
+use crate::Env;
 
 /// Handles the `GET /api/private/session/begin` route.
 ///
@@ -102,7 +107,15 @@ pub fn authorize(req: &mut dyn RequestExt) -> EndpointResult {
         &*req.db_write()?,
     )?;
 
-    // Log in by setting a cookie and the middleware authentication
+    // Setup a persistent session for the newly logged in user.
+    let (_session, cookie) = PersistentSession::create(user.id).insert(&*req.db_write()?)?;
+
+    // Setup persistent session cookie.
+    let secure = req.app().config.env() == Env::Production;
+    req.cookies_mut().add(cookie.build(secure));
+
+    // TODO(adsnaider): Remove as part of https://github.com/rust-lang/crates.io/issues/2630.
+    // Log in by setting a cookie and the middleware authentication.
     req.session_mut()
         .insert("user_id".to_string(), user.id.to_string());
 
@@ -139,9 +152,36 @@ fn save_user_to_database(
     })
 }
 
+#[derive(Error, Debug, PartialEq)]
+pub enum LogoutError {
+    #[error("No session cookie found.")]
+    MissingSessionCookie,
+    #[error("Session cookie had an unexpected format.")]
+    SessionCookieMalformatted(#[from] ParseSessionCookieError),
+    #[error("Session is not in the database.")]
+    SessionNotInDB,
+}
+
 /// Handles the `DELETE /api/private/session` route.
 pub fn logout(req: &mut dyn RequestExt) -> EndpointResult {
+    // TODO(adsnaider): Remove as part of https://github.com/rust-lang/crates.io/issues/2630.
     req.session_mut().remove(&"user_id".to_string());
+
+    // Remove persistent session from database.
+    let session_cookie = req
+        .cookies()
+        .get(SessionCookie::SESSION_COOKIE_NAME)
+        .ok_or(LogoutError::MissingSessionCookie)?
+        .value()
+        .parse::<SessionCookie>()?;
+
+    req.cookies_mut()
+        .remove(Cookie::named(SessionCookie::SESSION_COOKIE_NAME));
+
+    let conn = req.db_write()?;
+    let mut session = PersistentSession::find(session_cookie.session_id(), &conn)?
+        .ok_or(LogoutError::SessionNotInDB)?;
+    session.revoke().update(&conn)?;
     Ok(req.json(&true))
 }
 

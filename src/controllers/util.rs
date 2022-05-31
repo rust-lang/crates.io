@@ -1,13 +1,14 @@
 use chrono::Utc;
-use conduit_cookie::RequestSession;
+use conduit_cookie::RequestCookies;
 
 use super::prelude::*;
-
 use crate::middleware::log_request;
-use crate::models::{ApiToken, User};
+use crate::models::persistent_session::SessionCookie;
+use crate::models::{ApiToken, PersistentSession, User};
 use crate::util::errors::{
     account_locked, forbidden, internal, AppError, AppResult, InsecurelyGeneratedTokenRevoked,
 };
+use conduit_cookie::RequestSession;
 
 #[derive(Debug)]
 pub struct AuthenticatedUser {
@@ -67,6 +68,8 @@ fn verify_origin(req: &dyn RequestExt) -> AppResult<()> {
 fn authenticate_user(req: &dyn RequestExt) -> AppResult<AuthenticatedUser> {
     let conn = req.db_write()?;
 
+    // TODO(adsnaider): Remove as part of https://github.com/rust-lang/crates.io/issues/2630.
+    // Log in with the session id.
     let session = req.session();
     let user_id_from_session = session.get("user_id").and_then(|s| s.parse::<i32>().ok());
 
@@ -78,6 +81,26 @@ fn authenticate_user(req: &dyn RequestExt) -> AppResult<AuthenticatedUser> {
             user,
             token_id: None,
         });
+    }
+
+    // Log in with persistent session token.
+    if let Some(Ok(session_cookie)) = req
+        .cookies()
+        .get(SessionCookie::SESSION_COOKIE_NAME)
+        .map(|cookie| cookie.value())
+        .map(|cookie| cookie.parse::<SessionCookie>())
+    {
+        if let Some(session) = PersistentSession::find(session_cookie.session_id(), &conn)? {
+            if session.is_authorized(session_cookie.token()) {
+                let user = User::find(&conn, session.user_id).map_err(|e| {
+                    e.chain(internal("user_id from session not found in the database"))
+                })?;
+                return Ok(AuthenticatedUser {
+                    user,
+                    token_id: None,
+                });
+            }
+        }
     }
 
     // Otherwise, look for an `Authorization` header on the request
