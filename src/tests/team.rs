@@ -1,12 +1,9 @@
 use crate::{
     add_team_to_crate,
     builders::{CrateBuilder, PublishBuilder},
-    new_team,
-    record::GhUser,
-    OwnerTeamsResponse, RequestHelper, TestApp,
+    new_team, OwnerTeamsResponse, RequestHelper, TestApp,
 };
-use cargo_registry::models::{Crate, NewTeam, NewUser};
-use std::sync::Once;
+use cargo_registry::models::{Crate, NewTeam};
 
 use conduit::StatusCode;
 use diesel::*;
@@ -17,27 +14,6 @@ impl crate::util::MockAnonymousUser {
         let url = format!("/api/v1/crates/{krate_name}/owner_team");
         self.get(&url)
     }
-}
-
-// Users: `crates-tester-1` and `crates-tester-2`
-// Passwords: ask acrichto or gankro
-// Teams: `crates-test-org:core`, `crates-test-org:just-for-crates-2`
-// tester-1 is on core only, tester-2 is on both
-
-static GH_USER_1: GhUser = GhUser {
-    login: "crates-tester-1",
-    init: Once::new(),
-};
-static GH_USER_2: GhUser = GhUser {
-    login: "crates-tester-2",
-    init: Once::new(),
-};
-
-fn mock_user_on_only_one_team() -> NewUser<'static> {
-    GH_USER_1.user()
-}
-fn mock_user_on_both_teams() -> NewUser<'static> {
-    GH_USER_2.user()
 }
 
 // Test adding team without `github:`
@@ -92,27 +68,26 @@ fn one_colon() {
 
 #[test]
 fn nonexistent_team() {
-    let (app, _, user, token) = TestApp::with_proxy().with_token();
+    let (app, _, user, token) = TestApp::init().with_token();
 
     app.db(|conn| {
         CrateBuilder::new("foo_nonexistent", user.as_model().id).expect_build(conn);
     });
 
-    let response = token.add_named_owner(
-        "foo_nonexistent",
-        "github:crates-test-org:this-does-not-exist",
-    );
+    let response = token.add_named_owner("foo_nonexistent", "github:test-org:this-does-not-exist");
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.into_json(),
-        json!({ "errors": [{ "detail": "could not find the github team crates-test-org/this-does-not-exist" }] })
+        json!({ "errors": [{ "detail": "could not find the github team test-org/this-does-not-exist" }] })
     );
 }
 
 // Test adding a renamed team
 #[test]
 fn add_renamed_team() {
-    let (app, anon, user, token) = TestApp::with_proxy().with_token();
+    let (app, anon) = TestApp::init().empty();
+    let user = app.db_new_user("user-all-teams");
+    let token = user.db_new_token("arbitrary token name");
     let owner_id = user.as_model().id;
 
     app.db(|conn| {
@@ -123,9 +98,9 @@ fn add_renamed_team() {
         // create team with same ID and different name compared to http mock
         // used for `add_named_owner`
         NewTeam::new(
-            "github:crates-test-org:not_core", // different team name
-            13804222,                          // same org ID
-            1699377,                           // same team id as `core` team
+            "github:test-org:old-core", // different team name
+            1000,                       // same org ID
+            2001,                       // same team id as `core` team
             None,
             None,
         )
@@ -136,19 +111,19 @@ fn add_renamed_team() {
     });
 
     token
-        .add_named_owner("foo_renamed_team", "github:crates-test-org:core")
+        .add_named_owner("foo_renamed_team", "github:test-org:core")
         .good();
 
     let json = anon.crate_owner_teams("foo_renamed_team").good();
     assert_eq!(json.teams.len(), 1);
-    assert_eq!(json.teams[0].login, "github:crates-test-org:core");
+    assert_eq!(json.teams[0].login, "github:test-org:core");
 }
 
 // Test adding team names with mixed case, when on the team
 #[test]
 fn add_team_mixed_case() {
-    let (app, anon) = TestApp::with_proxy().empty();
-    let user = app.db_new_user(mock_user_on_both_teams().gh_login);
+    let (app, anon) = TestApp::init().empty();
+    let user = app.db_new_user("user-all-teams");
     let token = user.db_new_token("arbitrary token name");
 
     app.db(|conn| {
@@ -156,7 +131,7 @@ fn add_team_mixed_case() {
     });
 
     token
-        .add_named_owner("foo_mixed_case", "github:Crates-Test-Org:Core")
+        .add_named_owner("foo_mixed_case", "github:Test-Org:Core")
         .good();
 
     app.db(|conn| {
@@ -169,24 +144,21 @@ fn add_team_mixed_case() {
 
     let json = anon.crate_owner_teams("foo_mixed_case").good();
     assert_eq!(json.teams.len(), 1);
-    assert_eq!(json.teams[0].login, "github:crates-test-org:core");
+    assert_eq!(json.teams[0].login, "github:test-org:core");
 }
 
 // Test adding team as owner when not on it
 #[test]
 fn add_team_as_non_member() {
-    let (app, _) = TestApp::with_proxy().empty();
-    let user = app.db_new_user(mock_user_on_only_one_team().gh_login);
+    let (app, _) = TestApp::init().empty();
+    let user = app.db_new_user("user-one-team");
     let token = user.db_new_token("arbitrary token name");
 
     app.db(|conn| {
         CrateBuilder::new("foo_team_non_member", user.as_model().id).expect_build(conn);
     });
 
-    let response = token.add_named_owner(
-        "foo_team_non_member",
-        "github:crates-test-org:just-for-crates-2",
-    );
+    let response = token.add_named_owner("foo_team_non_member", "github:test-org:core");
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.into_json(),
@@ -196,8 +168,8 @@ fn add_team_as_non_member() {
 
 #[test]
 fn remove_team_as_named_owner() {
-    let (app, _) = TestApp::with_proxy().empty();
-    let username = mock_user_on_both_teams().gh_login;
+    let (app, _) = TestApp::init().empty();
+    let username = "user-all-teams";
     let user_on_both_teams = app.db_new_user(username);
     let token_on_both_teams = user_on_both_teams.db_new_token("arbitrary token name");
 
@@ -206,7 +178,7 @@ fn remove_team_as_named_owner() {
     });
 
     token_on_both_teams
-        .add_named_owner("foo_remove_team", "github:crates-test-org:core")
+        .add_named_owner("foo_remove_team", "github:test-org:core")
         .good();
 
     // Removing the individual owner is not allowed, since team members don't
@@ -219,10 +191,10 @@ fn remove_team_as_named_owner() {
     );
 
     token_on_both_teams
-        .remove_named_owner("foo_remove_team", "github:crates-test-org:core")
+        .remove_named_owner("foo_remove_team", "github:test-org:core")
         .good();
 
-    let user_on_one_team = app.db_new_user(mock_user_on_only_one_team().gh_login);
+    let user_on_one_team = app.db_new_user("user-one-team");
     let crate_to_publish = PublishBuilder::new("foo_remove_team").version("2.0.0");
     let response = user_on_one_team.enqueue_publish(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
@@ -234,8 +206,8 @@ fn remove_team_as_named_owner() {
 
 #[test]
 fn remove_team_as_team_owner() {
-    let (app, _) = TestApp::with_proxy().empty();
-    let user_on_both_teams = app.db_new_user(mock_user_on_both_teams().gh_login);
+    let (app, _) = TestApp::init().empty();
+    let user_on_both_teams = app.db_new_user("user-all-teams");
     let token_on_both_teams = user_on_both_teams.db_new_token("arbitrary token name");
 
     app.db(|conn| {
@@ -244,14 +216,14 @@ fn remove_team_as_team_owner() {
     });
 
     token_on_both_teams
-        .add_named_owner("foo_remove_team_owner", "github:crates-test-org:core")
+        .add_named_owner("foo_remove_team_owner", "github:test-org:all")
         .good();
 
-    let user_on_one_team = app.db_new_user(mock_user_on_only_one_team().gh_login);
+    let user_on_one_team = app.db_new_user("user-one-team");
     let token_on_one_team = user_on_one_team.db_new_token("arbitrary token name");
 
-    let response = token_on_one_team
-        .remove_named_owner("foo_remove_team_owner", "github:crates-test-org:core");
+    let response =
+        token_on_one_team.remove_named_owner("foo_remove_team_owner", "github:test-org:all");
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.into_json(),
@@ -262,8 +234,8 @@ fn remove_team_as_team_owner() {
 // Test trying to publish a crate we don't own
 #[test]
 fn publish_not_owned() {
-    let (app, _) = TestApp::with_proxy().empty();
-    let user_on_both_teams = app.db_new_user(mock_user_on_both_teams().gh_login);
+    let (app, _) = TestApp::init().empty();
+    let user_on_both_teams = app.db_new_user("user-all-teams");
     let token_on_both_teams = user_on_both_teams.db_new_token("arbitrary token name");
 
     app.db(|conn| {
@@ -271,10 +243,10 @@ fn publish_not_owned() {
     });
 
     token_on_both_teams
-        .add_named_owner("foo_not_owned", "github:crates-test-org:just-for-crates-2")
+        .add_named_owner("foo_not_owned", "github:test-org:core")
         .good();
 
-    let user_on_one_team = app.db_new_user(mock_user_on_only_one_team().gh_login);
+    let user_on_one_team = app.db_new_user("user-one-team");
 
     let crate_to_publish = PublishBuilder::new("foo_not_owned").version("2.0.0");
     let response = user_on_one_team.enqueue_publish(crate_to_publish);
@@ -289,7 +261,7 @@ fn publish_not_owned() {
 #[test]
 fn publish_owned() {
     let (app, _) = TestApp::full().empty();
-    let user_on_both_teams = app.db_new_user(mock_user_on_both_teams().gh_login);
+    let user_on_both_teams = app.db_new_user("user-all-teams");
     let token_on_both_teams = user_on_both_teams.db_new_token("arbitrary token name");
 
     app.db(|conn| {
@@ -297,10 +269,10 @@ fn publish_owned() {
     });
 
     token_on_both_teams
-        .add_named_owner("foo_team_owned", "github:crates-test-org:core")
+        .add_named_owner("foo_team_owned", "github:test-org:all")
         .good();
 
-    let user_on_one_team = app.db_new_user(mock_user_on_only_one_team().gh_login);
+    let user_on_one_team = app.db_new_user("user-one-team");
 
     let crate_to_publish = PublishBuilder::new("foo_team_owned").version("2.0.0");
     user_on_one_team.enqueue_publish(crate_to_publish).good();
@@ -309,8 +281,8 @@ fn publish_owned() {
 // Test trying to change owners (when only on an owning team)
 #[test]
 fn add_owners_as_team_owner() {
-    let (app, _) = TestApp::with_proxy().empty();
-    let user_on_both_teams = app.db_new_user(mock_user_on_both_teams().gh_login);
+    let (app, _) = TestApp::init().empty();
+    let user_on_both_teams = app.db_new_user("user-all-teams");
     let token_on_both_teams = user_on_both_teams.db_new_token("arbitrary token name");
 
     app.db(|conn| {
@@ -318,10 +290,10 @@ fn add_owners_as_team_owner() {
     });
 
     token_on_both_teams
-        .add_named_owner("foo_add_owner", "github:crates-test-org:core")
+        .add_named_owner("foo_add_owner", "github:test-org:all")
         .good();
 
-    let user_on_one_team = app.db_new_user(mock_user_on_only_one_team().gh_login);
+    let user_on_one_team = app.db_new_user("user-one-team");
     let token_on_one_team = user_on_one_team.db_new_token("arbitrary token name");
 
     let response = token_on_one_team.add_named_owner("foo_add_owner", "arbitrary_username");
@@ -338,7 +310,7 @@ fn crates_by_team_id() {
     let user = user.as_model();
 
     let team = app.db(|conn| {
-        let t = new_team("github:crates-test-org:team_foo")
+        let t = new_team("github:test-org:team")
             .create_or_update(conn)
             .unwrap();
         let krate = CrateBuilder::new("foo", user.id).expect_build(conn);
@@ -352,14 +324,12 @@ fn crates_by_team_id() {
 
 #[test]
 fn crates_by_team_id_not_including_deleted_owners() {
-    // This needs to use the proxy because removing a team checks with github that you're on the
-    // team before you're allowed to remove it from the crate
-    let (app, anon) = TestApp::with_proxy().empty();
-    let user = app.db_new_user(mock_user_on_both_teams().gh_login);
+    let (app, anon) = TestApp::init().empty();
+    let user = app.db_new_user("user-all-teams");
     let user = user.as_model();
 
     let team = app.db(|conn| {
-        let t = NewTeam::new("github:crates-test-org:core", 13804222, 1699377, None, None)
+        let t = NewTeam::new("github:test-org:core", 1000, 2001, None, None)
             .create_or_update(conn)
             .unwrap();
 

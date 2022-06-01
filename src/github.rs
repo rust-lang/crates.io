@@ -10,50 +10,35 @@ use std::str;
 use crate::util::errors::{cargo_err, internal, not_found, AppError, AppResult};
 use reqwest::blocking::Client;
 
-#[derive(Debug)]
-pub struct GitHubClient {
-    base_url: String,
-    client: Option<Client>,
-}
-
-impl GitHubClient {
-    pub fn new(client: Option<Client>, base_url: String) -> Self {
-        Self { base_url, client }
-    }
-
-    pub fn current_user(&self, auth: &AccessToken) -> AppResult<GithubUser> {
-        self.request("/user", auth)
-    }
-
-    pub fn org_by_name(&self, org_name: &str, auth: &AccessToken) -> AppResult<GitHubOrganization> {
-        let url = format!("/orgs/{org_name}");
-        self.request(&url, auth)
-    }
-
-    pub fn team_by_name(
+pub trait GitHubClient: Send + Sync {
+    fn current_user(&self, auth: &AccessToken) -> AppResult<GithubUser>;
+    fn org_by_name(&self, org_name: &str, auth: &AccessToken) -> AppResult<GitHubOrganization>;
+    fn team_by_name(
         &self,
         org_name: &str,
         team_name: &str,
         auth: &AccessToken,
-    ) -> AppResult<GitHubTeam> {
-        let url = format!("/orgs/{org_name}/teams/{team_name}");
-        self.request(&url, auth)
-    }
-
-    pub fn team_membership(
+    ) -> AppResult<GitHubTeam>;
+    fn team_membership(
         &self,
         org_id: i32,
         team_id: i32,
         username: &str,
         auth: &AccessToken,
-    ) -> AppResult<GitHubTeamMembership> {
-        let url = format!("/organizations/{org_id}/team/{team_id}/memberships/{username}");
-        self.request(&url, auth)
-    }
+    ) -> AppResult<GitHubTeamMembership>;
+}
 
-    /// Does all the nonsense for sending a GET to Github. Doesn't handle parsing
-    /// because custom error-code handling may be desirable. Use
-    /// `parse_github_response` to handle the "common" processing of responses.
+#[derive(Debug)]
+pub struct RealGitHubClient {
+    base_url: String,
+    client: Option<Client>,
+}
+
+impl RealGitHubClient {
+    pub fn new(client: Option<Client>, base_url: String) -> Self {
+        Self { base_url, client }
+    }
+    /// Does all the nonsense for sending a GET to Github.
     pub fn request<T>(&self, url: &str, auth: &AccessToken) -> AppResult<T>
     where
         T: DeserializeOwned,
@@ -86,6 +71,38 @@ impl GitHubClient {
         self.client
             .as_ref()
             .expect("No HTTP client is configured.  In tests, use `TestApp::with_proxy()`.")
+    }
+}
+
+impl GitHubClient for RealGitHubClient {
+    fn current_user(&self, auth: &AccessToken) -> AppResult<GithubUser> {
+        self.request("/user", auth)
+    }
+
+    fn org_by_name(&self, org_name: &str, auth: &AccessToken) -> AppResult<GitHubOrganization> {
+        let url = format!("/orgs/{org_name}");
+        self.request(&url, auth)
+    }
+
+    fn team_by_name(
+        &self,
+        org_name: &str,
+        team_name: &str,
+        auth: &AccessToken,
+    ) -> AppResult<GitHubTeam> {
+        let url = format!("/orgs/{org_name}/teams/{team_name}");
+        self.request(&url, auth)
+    }
+
+    fn team_membership(
+        &self,
+        org_id: i32,
+        team_id: i32,
+        username: &str,
+        auth: &AccessToken,
+    ) -> AppResult<GitHubTeamMembership> {
+        let url = format!("/organizations/{org_id}/team/{team_id}/memberships/{username}");
+        self.request(&url, auth)
     }
 }
 
