@@ -11,112 +11,134 @@ use crate::util::EndpointResult;
 use crate::{App, Env};
 
 pub fn build_router(app: &App) -> RouteBuilder {
-    let mut api_router = RouteBuilder::new();
+    let mut router = RouteBuilder::new();
 
     // Route used by both `cargo search` and the frontend
-    api_router.get("/crates", C(krate::search::search));
+    router.get("/api/v1/crates", C(krate::search::search));
 
     // Routes used by `cargo`
-    api_router.put("/crates/new", C(krate::publish::publish));
-    api_router.get("/crates/:crate_id/owners", C(krate::owners::owners));
-    api_router.put("/crates/:crate_id/owners", C(krate::owners::add_owners));
-    api_router.delete("/crates/:crate_id/owners", C(krate::owners::remove_owners));
-    api_router.delete("/crates/:crate_id/:version/yank", C(version::yank::yank));
-    api_router.put(
-        "/crates/:crate_id/:version/unyank",
+    router.put("/api/v1/crates/new", C(krate::publish::publish));
+    router.get("/api/v1/crates/:crate_id/owners", C(krate::owners::owners));
+    router.put(
+        "/api/v1/crates/:crate_id/owners",
+        C(krate::owners::add_owners),
+    );
+    router.delete(
+        "/api/v1/crates/:crate_id/owners",
+        C(krate::owners::remove_owners),
+    );
+    router.delete(
+        "/api/v1/crates/:crate_id/:version/yank",
+        C(version::yank::yank),
+    );
+    router.put(
+        "/api/v1/crates/:crate_id/:version/unyank",
         C(version::yank::unyank),
     );
-    api_router.get(
-        "/crates/:crate_id/:version/download",
+    router.get(
+        "/api/v1/crates/:crate_id/:version/download",
         C(version::downloads::download),
     );
 
     // Routes that appear to be unused
-    api_router.get("/versions", C(version::deprecated::index));
-    api_router.get("/versions/:version_id", C(version::deprecated::show_by_id));
+    router.get("/api/v1/versions", C(version::deprecated::index));
+    router.get(
+        "/api/v1/versions/:version_id",
+        C(version::deprecated::show_by_id),
+    );
 
     // Routes used by the frontend
-    api_router.get("/crates/:crate_id", C(krate::metadata::show));
-    api_router.get("/crates/:crate_id/:version", C(version::metadata::show));
-    api_router.get(
-        "/crates/:crate_id/:version/readme",
+    router.get("/api/v1/crates/:crate_id", C(krate::metadata::show));
+    router.get(
+        "/api/v1/crates/:crate_id/:version",
+        C(version::metadata::show),
+    );
+    router.get(
+        "/api/v1/crates/:crate_id/:version/readme",
         C(krate::metadata::readme),
     );
-    api_router.get(
-        "/crates/:crate_id/:version/dependencies",
+    router.get(
+        "/api/v1/crates/:crate_id/:version/dependencies",
         C(version::metadata::dependencies),
     );
-    api_router.get(
-        "/crates/:crate_id/:version/downloads",
+    router.get(
+        "/api/v1/crates/:crate_id/:version/downloads",
         C(version::downloads::downloads),
     );
-    api_router.get(
-        "/crates/:crate_id/:version/authors",
+    router.get(
+        "/api/v1/crates/:crate_id/:version/authors",
         C(version::metadata::authors),
     );
-    api_router.get(
-        "/crates/:crate_id/downloads",
+    router.get(
+        "/api/v1/crates/:crate_id/downloads",
         C(krate::downloads::downloads),
     );
-    api_router.get("/crates/:crate_id/versions", C(krate::metadata::versions));
-    api_router.put("/crates/:crate_id/follow", C(krate::follow::follow));
-    api_router.delete("/crates/:crate_id/follow", C(krate::follow::unfollow));
-    api_router.get("/crates/:crate_id/following", C(krate::follow::following));
-    api_router.get("/crates/:crate_id/owner_team", C(krate::owners::owner_team));
-    api_router.get("/crates/:crate_id/owner_user", C(krate::owners::owner_user));
-    api_router.get(
-        "/crates/:crate_id/reverse_dependencies",
+    router.get(
+        "/api/v1/crates/:crate_id/versions",
+        C(krate::metadata::versions),
+    );
+    router.put("/api/v1/crates/:crate_id/follow", C(krate::follow::follow));
+    router.delete(
+        "/api/v1/crates/:crate_id/follow",
+        C(krate::follow::unfollow),
+    );
+    router.get(
+        "/api/v1/crates/:crate_id/following",
+        C(krate::follow::following),
+    );
+    router.get(
+        "/api/v1/crates/:crate_id/owner_team",
+        C(krate::owners::owner_team),
+    );
+    router.get(
+        "/api/v1/crates/:crate_id/owner_user",
+        C(krate::owners::owner_user),
+    );
+    router.get(
+        "/api/v1/crates/:crate_id/reverse_dependencies",
         C(krate::metadata::reverse_dependencies),
     );
-    api_router.get("/keywords", C(keyword::index));
-    api_router.get("/keywords/:keyword_id", C(keyword::show));
-    api_router.get("/categories", C(category::index));
-    api_router.get("/categories/:category_id", C(category::show));
-    api_router.get("/category_slugs", C(category::slugs));
-    api_router.get("/users/:user_id", C(user::other::show));
-    api_router.put("/users/:user_id", C(user::me::update_user));
-    api_router.get("/users/:user_id/stats", C(user::other::stats));
-    api_router.get("/teams/:team_id", C(team::show_team));
-    api_router.get("/me", C(user::me::me));
-    api_router.get("/me/updates", C(user::me::updates));
-    api_router.get("/me/tokens", C(token::list));
-    api_router.put("/me/tokens", C(token::new));
-    api_router.delete("/me/tokens/:id", C(token::revoke));
-    api_router.delete("/tokens/current", C(token::revoke_current));
-    api_router.get(
-        "/me/crate_owner_invitations",
+    router.get("/api/v1/keywords", C(keyword::index));
+    router.get("/api/v1/keywords/:keyword_id", C(keyword::show));
+    router.get("/api/v1/categories", C(category::index));
+    router.get("/api/v1/categories/:category_id", C(category::show));
+    router.get("/api/v1/category_slugs", C(category::slugs));
+    router.get("/api/v1/users/:user_id", C(user::other::show));
+    router.put("/api/v1/users/:user_id", C(user::me::update_user));
+    router.get("/api/v1/users/:user_id/stats", C(user::other::stats));
+    router.get("/api/v1/teams/:team_id", C(team::show_team));
+    router.get("/api/v1/me", C(user::me::me));
+    router.get("/api/v1/me/updates", C(user::me::updates));
+    router.get("/api/v1/me/tokens", C(token::list));
+    router.put("/api/v1/me/tokens", C(token::new));
+    router.delete("/api/v1/me/tokens/:id", C(token::revoke));
+    router.delete("/api/v1/tokens/current", C(token::revoke_current));
+    router.get(
+        "/api/v1/me/crate_owner_invitations",
         C(crate_owner_invitation::list),
     );
-    api_router.put(
-        "/me/crate_owner_invitations/:crate_id",
+    router.put(
+        "/api/v1/me/crate_owner_invitations/:crate_id",
         C(crate_owner_invitation::handle_invite),
     );
-    api_router.put(
-        "/me/crate_owner_invitations/accept/:token",
+    router.put(
+        "/api/v1/me/crate_owner_invitations/accept/:token",
         C(crate_owner_invitation::handle_invite_with_token),
     );
-    api_router.put(
-        "/me/email_notifications",
+    router.put(
+        "/api/v1/me/email_notifications",
         C(user::me::update_email_notifications),
     );
-    api_router.get("/summary", C(krate::metadata::summary));
-    api_router.put("/confirm/:email_token", C(user::me::confirm_user_email));
-    api_router.put(
-        "/users/:user_id/resend",
+    router.get("/api/v1/summary", C(krate::metadata::summary));
+    router.put(
+        "/api/v1/confirm/:email_token",
+        C(user::me::confirm_user_email),
+    );
+    router.put(
+        "/api/v1/users/:user_id/resend",
         C(user::me::regenerate_token_and_send),
     );
-    api_router.get("/site_metadata", C(site_metadata::show_deployed_sha));
-    let api_router = Arc::new(api_router);
-
-    let mut router = RouteBuilder::new();
-
-    // Mount the router under the /api/v1 path so we're at least somewhat at the
-    // liberty to change things in the future!
-    router.get("/api/v1/*path", R(Arc::clone(&api_router)));
-    router.put("/api/v1/*path", R(Arc::clone(&api_router)));
-    router.post("/api/v1/*path", R(Arc::clone(&api_router)));
-    router.head("/api/v1/*path", R(Arc::clone(&api_router)));
-    router.delete("/api/v1/*path", R(api_router));
+    router.get("/api/v1/site_metadata", C(site_metadata::show_deployed_sha));
 
     // Session management
     router.get("/api/private/session/begin", C(user::session::begin));
