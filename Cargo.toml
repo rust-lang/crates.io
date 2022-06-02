@@ -21,13 +21,6 @@ doctest = true
 name = "all"
 path = "src/tests/all.rs"
 
-[package.metadata.docs.rs]
-rustdoc-args = [
-    "--no-defaults",
-    "--passes", "collapse-docs",
-    "--passes", "unindent-comments"
-]
-
 [dependencies]
 anyhow = "=1.0.57"
 base64 = "=0.13.0"
