@@ -394,8 +394,7 @@ dependencies = [
 [[package]]
 name = "claim"
 version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f81099d6bb72e1df6d50bb2347224b666a670912bb7f06dbe867a4a070ab3ce8"
+source = "git+https://github.com/Turbo87/rust-claim.git?rev=23892a3#23892a345d38e1434303143a73033925284ad04d"
 dependencies = [
  "autocfg",
 ]
