@@ -2,7 +2,7 @@ use crate::App;
 use anyhow::Error;
 use dashmap::{DashMap, SharedValue};
 use diesel::{pg::upsert::excluded, prelude::*};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::sync::atomic::{AtomicI64, AtomicUsize, Ordering};
 
 /// crates.io receives a lot of download requests, and we can't execute a write query to the
@@ -78,7 +78,7 @@ impl DownloadsCounter {
         let mut stats = PersistStats::default();
         for shard in self.inner.shards() {
             let shard = std::mem::take(&mut *shard.write());
-            stats = stats.merge(self.persist_shard(conn, shard)?);
+            stats = stats.merge(self.persist_shard(conn, shard.iter())?);
         }
 
         Ok(stats)
@@ -92,7 +92,7 @@ impl DownloadsCounter {
         let idx = self.shard_idx.fetch_add(1, Ordering::SeqCst) % shards.len();
         let shard = std::mem::take(&mut *shards[idx].write());
 
-        let mut stats = self.persist_shard(conn, shard)?;
+        let mut stats = self.persist_shard(conn, shard.iter())?;
         stats.shard = Some(idx);
         Ok(stats)
     }
@@ -100,7 +100,7 @@ impl DownloadsCounter {
     fn persist_shard(
         &self,
         conn: &PgConnection,
-        shard: HashMap<i32, SharedValue<AtomicUsize>>,
+        shard: hashbrown::hash_map::Iter<'_, i32, SharedValue<AtomicUsize>>,
     ) -> Result<PersistStats, Error> {
         use crate::schema::{version_downloads, versions};
 
@@ -109,7 +109,6 @@ impl DownloadsCounter {
         let mut counted_versions = 0;
 
         let mut to_insert = shard
-            .iter()
             .map(|(id, atomic)| (*id, atomic.get().load(Ordering::SeqCst)))
             .collect::<Vec<_>>();
 
@@ -248,6 +247,7 @@ mod tests {
     use crate::models::{Crate, NewCrate, NewUser, NewVersion, User};
     use diesel::PgConnection;
     use semver::Version;
+    use std::collections::HashMap;
 
     #[test]
     fn test_increment_and_persist_all() {
