@@ -123,7 +123,7 @@
     "miragejs": "0.1.45",
     "normalize.css": "8.0.1",
     "nyc": "15.1.0",
-    "postcss-custom-media": "8.0.1",
+    "postcss-custom-media": "8.0.2",
     "postcss-nested": "5.0.6",
     "prettier": "2.6.2",
     "qunit": "2.19.1",
