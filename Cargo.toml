@@ -40,7 +40,7 @@ conduit-router = "=0.10.0"
 conduit-static = "=0.10.0"
 
 cookie = { version = "=0.16.0", features = ["secure"] }
-dashmap = { version = "=5.2.0", features = ["raw-api"] }
+dashmap = { version = "=5.3.4", features = ["raw-api"] }
 derive_deref = "=1.1.1"
 dialoguer = "=0.10.1"
 diesel = { version = "=1.4.8", features = ["postgres", "serde_json", "chrono", "r2d2"] }
@@ -50,6 +50,7 @@ dotenv = "=0.15.0"
 flate2 = "=1.0.24"
 futures-channel = { version = "=0.3.21", default-features = false }
 futures-util = "=0.3.21"
+hashbrown = { version = "=0.12.1", default-features = false }
 hex = "=0.4.3"
 http = "=0.2.7"
 hyper = { version = "=0.14.19", features = ["client", "http1"] }
