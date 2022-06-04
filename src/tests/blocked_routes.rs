@@ -27,7 +27,7 @@ fn test_blocked_download_route() {
             config.blocked_routes.clear();
             config
                 .blocked_routes
-                .insert("/crates/:crate_id/:version/download".into());
+                .insert("/api/v1/crates/:crate_id/:version/download".into());
         })
         .with_user();
 
