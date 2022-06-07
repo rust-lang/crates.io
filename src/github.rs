@@ -26,6 +26,12 @@ pub trait GitHubClient: Send + Sync {
         username: &str,
         auth: &AccessToken,
     ) -> AppResult<GitHubTeamMembership>;
+    fn org_membership(
+        &self,
+        org_id: i32,
+        username: &str,
+        auth: &AccessToken,
+    ) -> AppResult<GitHubOrgMembership>;
 }
 
 #[derive(Debug)]
@@ -38,6 +44,7 @@ impl RealGitHubClient {
     pub fn new(client: Option<Client>, base_url: String) -> Self {
         Self { base_url, client }
     }
+
     /// Does all the nonsense for sending a GET to Github.
     pub fn request<T>(&self, url: &str, auth: &AccessToken) -> AppResult<T>
     where
@@ -104,6 +111,18 @@ impl GitHubClient for RealGitHubClient {
         let url = format!("/organizations/{org_id}/team/{team_id}/memberships/{username}");
         self.request(&url, auth)
     }
+
+    fn org_membership(
+        &self,
+        org_id: i32,
+        username: &str,
+        auth: &AccessToken,
+    ) -> AppResult<GitHubOrgMembership> {
+        self.request(
+            &format!("/organizations/{org_id}/memberships/{username}"),
+            auth,
+        )
+    }
 }
 
 fn handle_error_response(error: &reqwest::Error) -> Box<dyn AppError> {
@@ -151,6 +170,12 @@ pub struct GitHubTeam {
 #[derive(Debug, Deserialize)]
 pub struct GitHubTeamMembership {
     pub state: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GitHubOrgMembership {
+    pub state: String,
+    pub role: String,
 }
 
 pub fn team_url(login: &str) -> String {
