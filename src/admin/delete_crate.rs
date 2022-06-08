@@ -12,6 +12,10 @@ use reqwest::blocking::Client;
 pub struct Opts {
     /// Name of the crate
     crate_name: String,
+
+    /// Don't ask for confirmation: yes, we are sure. Best for scripting.
+    #[clap(short, long)]
+    yes: bool,
 }
 
 pub fn run(opts: Opts) {
@@ -30,12 +34,14 @@ fn delete(opts: Opts, conn: &PgConnection) {
     let uploader = config.uploader();
     let client = Client::new();
 
-    let prompt = format!(
-        "Are you sure you want to delete {} ({})?",
-        opts.crate_name, krate.id
-    );
-    if !dialoguer::confirm(&prompt) {
-        return;
+    if !opts.yes {
+        let prompt = format!(
+            "Are you sure you want to delete {} ({})?",
+            opts.crate_name, krate.id
+        );
+        if !dialoguer::confirm(&prompt) {
+            return;
+        }
     }
 
     println!("deleting the crate");
@@ -44,7 +50,7 @@ fn delete(opts: Opts, conn: &PgConnection) {
         .unwrap();
     println!("  {n} deleted");
 
-    if !dialoguer::confirm("commit?") {
+    if !opts.yes && !dialoguer::confirm("commit?") {
         panic!("aborting transaction");
     }
 
