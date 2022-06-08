@@ -174,7 +174,9 @@ impl Uploader {
             }
             Uploader::Local => {
                 let filename = Self::local_uploads_path(path, upload_bucket);
-                std::fs::remove_file(&filename)?;
+                // Ignore errors if the local index file doesn't exist; this can happen if you
+                // aren't running the background job worker locally
+                let _ = std::fs::remove_file(&filename);
             }
         }
         Ok(())
