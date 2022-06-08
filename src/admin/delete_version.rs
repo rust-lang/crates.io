@@ -18,6 +18,9 @@ pub struct Opts {
     crate_name: String,
     /// Version number that should be deleted
     version: String,
+    /// Don't ask for confirmation: yes, we are sure. Best for scripting.
+    #[clap(short, long)]
+    yes: bool,
 }
 
 pub fn run(opts: Opts) {
@@ -36,12 +39,14 @@ fn delete(opts: Opts, conn: &PgConnection) {
         .first(conn)
         .unwrap();
 
-    let prompt = format!(
-        "Are you sure you want to delete {}#{} ({})?",
-        opts.crate_name, opts.version, v.id
-    );
-    if !dialoguer::confirm(&prompt) {
-        return;
+    if !opts.yes {
+        let prompt = format!(
+            "Are you sure you want to delete {}#{} ({})?",
+            opts.crate_name, opts.version, v.id
+        );
+        if !dialoguer::confirm(&prompt) {
+            return;
+        }
     }
 
     println!("deleting version {} ({})", v.num, v.id);
@@ -49,7 +54,7 @@ fn delete(opts: Opts, conn: &PgConnection) {
         .execute(conn)
         .unwrap();
 
-    if !dialoguer::confirm("commit?") {
+    if !opts.yes && !dialoguer::confirm("commit?") {
         panic!("aborting transaction");
     }
 }
