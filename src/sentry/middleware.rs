@@ -11,6 +11,13 @@ pub struct CustomSentryMiddleware {
     inner: SentryMiddleware,
 }
 
+impl CustomSentryMiddleware {
+    pub fn with_transactions() -> Self {
+        let inner = SentryMiddleware::with_transactions();
+        Self { inner }
+    }
+}
+
 impl Middleware for CustomSentryMiddleware {
     fn before(&self, req: &mut dyn RequestExt) -> BeforeResult {
         self.inner.before(req)?;

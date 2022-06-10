@@ -46,7 +46,7 @@ pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBui
     let blocked_traffic = app.config.blocked_traffic.clone();
 
     if env != Env::Test {
-        m.add(SentryMiddleware::default());
+        m.add(SentryMiddleware::with_transactions());
         m.add(log_request::LogRequests::default());
     }
 
