@@ -67,7 +67,7 @@ prometheus = { version = "=0.13.1", default-features = false }
 rand = "=0.8.5"
 reqwest = { version = "=0.11.10", features = ["blocking", "gzip", "json"] }
 scheduled-thread-pool = "=0.2.6"
-semver = { version = "=1.0.9", features = ["serde"] }
+semver = { version = "=1.0.10", features = ["serde"] }
 sentry = { version = "=0.24.3", features = ["tracing"] }
 sentry-conduit = { version = "=0.5.0", default-features = false }
 serde = { version = "=1.0.137", features = ["derive"] }
