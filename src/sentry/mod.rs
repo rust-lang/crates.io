@@ -1,5 +1,6 @@
 mod middleware;
 
+use crate::env_optional;
 pub use middleware::CustomSentryMiddleware as SentryMiddleware;
 use sentry::{ClientInitGuard, ClientOptions, IntoDsn};
 
@@ -25,12 +26,15 @@ pub fn init() -> ClientInitGuard {
 
     let release = dotenv::var("HEROKU_SLUG_COMMIT").ok().map(Into::into);
 
+    let traces_sample_rate = env_optional("SENTRY_TRACES_SAMPLE_RATE").unwrap_or(0.0);
+
     let opts = ClientOptions {
         auto_session_tracking: true,
         dsn,
         environment,
         release,
         session_mode: sentry::SessionMode::Request,
+        traces_sample_rate,
         ..Default::default()
     };
 
