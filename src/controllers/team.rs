@@ -9,8 +9,8 @@ pub async fn show_team(state: AppState, Path(name): Path<String>) -> AppResult<J
     conduit_compat(move || {
         use self::teams::dsl::{login, teams};
 
-        let conn = state.db_read()?;
-        let team: Team = teams.filter(login.eq(&name)).first(&*conn)?;
+        let conn = &mut *state.db_read()?;
+        let team: Team = teams.filter(login.eq(&name)).first(conn)?;
 
         Ok(Json(json!({ "team": EncodableTeam::from(team) })))
     })

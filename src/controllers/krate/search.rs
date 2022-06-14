@@ -115,7 +115,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             );
         }
 
-        let conn = app.db_read()?;
+        let conn = &mut *app.db_read()?;
 
         if let Some(kws) = params.get("all_keywords") {
             // Calculating the total number of results with filters is not supported yet.
@@ -190,7 +190,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             // Calculating the total number of results with filters is not supported yet.
             supports_seek = false;
 
-            let user_id = AuthCheck::default().check(&req, &conn)?.user_id();
+            let user_id = AuthCheck::default().check(&req, conn)?.user_id();
 
             query = query.filter(
                 crates::id.eq_any(
@@ -209,7 +209,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
                 .map(|(_, value)| value.to_string())
                 .collect();
 
-            query = query.filter(crates::name.eq(any(ids)));
+            query = query.filter(crates::name.eq_any(ids));
         }
 
         if !include_yanked {
@@ -265,12 +265,12 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
         let (total, next_page, prev_page, data, conn) = if supports_seek && !explicit_page {
             // Equivalent of:
             // `WHERE name > (SELECT name FROM crates WHERE id = $1) LIMIT $2`
-            query = query.limit(pagination.per_page as i64);
+            query = query.limit(pagination.per_page);
             if let Some(seek) = seek {
                 let crate_name: String = crates::table
                     .find(seek)
                     .select(crates::name)
-                    .get_result(&*conn)?;
+                    .get_result(conn)?;
                 query = query.filter(crates::name.gt(crate_name));
             }
 
@@ -280,9 +280,9 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             //
             // If this becomes a problem in the future the crates count could be denormalized, at least
             // for the filterless happy path.
-            let total: i64 = crates::table.count().get_result(&*conn)?;
+            let total: i64 = crates::table.count().get_result(conn)?;
 
-            let results: Vec<(Crate, bool, Option<i64>)> = query.load(&*conn)?;
+            let results: Vec<(Crate, bool, Option<i64>)> = query.load(conn)?;
 
             let next_page = if let Some(last) = results.last() {
                 let mut params = IndexMap::new();
@@ -298,7 +298,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             (total, next_page, None, results, conn)
         } else {
             let query = query.pages_pagination(pagination);
-            let data: Paginated<(Crate, bool, Option<i64>)> = query.load(&conn)?;
+            let data: Paginated<(Crate, bool, Option<i64>)> = query.load(conn)?;
             (
                 data.total(),
                 data.next_page_params().map(|p| req.query_with_params(p)),
@@ -315,7 +315,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             .collect::<Vec<_>>();
         let crates = data.into_iter().map(|(c, _, _)| c).collect::<Vec<_>>();
 
-        let versions: Vec<Version> = crates.versions().load(&*conn)?;
+        let versions: Vec<Version> = crates.versions().load(conn)?;
         let versions = versions
             .grouped_by(&crates)
             .into_iter()
@@ -350,4 +350,4 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
     .await
 }
 
-diesel_infix_operator!(Contains, "@>");
+diesel::infix_operator!(Contains, "@>");

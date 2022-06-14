@@ -76,13 +76,13 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
     }
 
     conduit_compat(move || {
-        let conn = app.primary_database.get()?;
+        let conn = &mut *app.primary_database.get()?;
 
         // this query should only be used for the endpoint scope calculation
         // since a race condition there would only cause `publish-new` instead of
         // `publish-update` to be used.
         let existing_crate = Crate::by_name(&new_crate.name)
-            .first::<Crate>(&*conn)
+            .first::<Crate>(conn)
             .optional()?;
 
         let endpoint_scope = match existing_crate {
@@ -93,12 +93,12 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         let auth = AuthCheck::default()
             .with_endpoint_scope(endpoint_scope)
             .for_crate(&new_crate.name)
-            .check(&req, &conn)?;
+            .check(&req, conn)?;
 
         let api_token_id = auth.api_token_id();
         let user = auth.user();
 
-        let verified_email_address = user.verified_email(&conn)?;
+        let verified_email_address = user.verified_email(conn)?;
         let verified_email_address = verified_email_address.ok_or_else(|| {
             cargo_err(&format!(
                 "A verified email address is required to publish crates to crates.io. \
@@ -109,7 +109,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
 
         // Create a transaction on the database, if there are no errors,
         // commit the transactions to record a new or updated crate.
-        conn.transaction(|| {
+        conn.transaction(|conn| {
             let _ = &new_crate;
             let name = new_crate.name;
             let vers = &*new_crate.vers;
@@ -144,9 +144,9 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
 
             let license_file = new_crate.license_file.as_deref();
             let krate =
-                persist.create_or_update(&conn, user.id, Some(&app.config.publish_rate_limit))?;
+                persist.create_or_update(conn, user.id, Some(&app.config.publish_rate_limit))?;
 
-            let owners = krate.owners(&conn)?;
+            let owners = krate.owners(conn)?;
             if user.rights(&app, &owners)? < Rights::Publish {
                 return Err(cargo_err(MISSING_RIGHTS_ERROR_MESSAGE));
             }
@@ -159,7 +159,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             }
 
             if let Some(daily_version_limit) = app.config.new_version_rate_limit {
-                let published_today = count_versions_published_today(krate.id, &conn)?;
+                let published_today = count_versions_published_today(krate.id, conn)?;
                 if published_today >= daily_version_limit as i64 {
                     return Err(cargo_err(
                         "You have published too many versions of this crate in the last 24 hours",
@@ -202,10 +202,10 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 hex_cksum.clone(),
                 links.clone(),
             )?
-            .save(&conn, &verified_email_address)?;
+            .save(conn, &verified_email_address)?;
 
             insert_version_owner_action(
-                &conn,
+                conn,
                 version.id,
                 user.id,
                 api_token_id,
@@ -213,16 +213,16 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             )?;
 
             // Link this new version to all dependencies
-            let git_deps = add_dependencies(&conn, &new_crate.deps, version.id)?;
+            let git_deps = add_dependencies(conn, &new_crate.deps, version.id)?;
 
             // Update all keywords for this crate
-            Keyword::update_crate(&conn, &krate, &keywords)?;
+            Keyword::update_crate(conn, &krate, &keywords)?;
 
             // Update all categories for this crate, collecting any invalid categories
             // in order to be able to warn about them
-            let ignored_invalid_categories = Category::update_crate(&conn, &krate, &categories)?;
+            let ignored_invalid_categories = Category::update_crate(conn, &krate, &categories)?;
 
-            let top_versions = krate.top_versions(&conn)?;
+            let top_versions = krate.top_versions(conn)?;
 
             let pkg_name = format!("{}-{}", krate.name, vers);
             let cargo_vcs_info =
@@ -239,7 +239,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                     repo,
                     pkg_path_in_vcs,
                 )
-                .enqueue(&conn)?;
+                .enqueue(conn)?;
             }
 
             // Upload crate tarball
@@ -271,7 +271,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 links,
                 v,
             };
-            worker::add_crate(git_crate).enqueue(&conn)?;
+            worker::add_crate(git_crate).enqueue(conn)?;
 
             // The `other` field on `PublishWarnings` was introduced to handle a temporary warning
             // that is no longer needed. As such, crates.io currently does not return any `other`
@@ -293,7 +293,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
 
 /// Counts the number of versions for `krate_id` that were published within
 /// the last 24 hours.
-fn count_versions_published_today(krate_id: i32, conn: &PgConnection) -> QueryResult<i64> {
+fn count_versions_published_today(krate_id: i32, conn: &mut PgConnection) -> QueryResult<i64> {
     use crate::schema::versions::dsl::*;
     use diesel::dsl::{now, IntervalDsl};
 
@@ -346,7 +346,7 @@ pub fn missing_metadata_error_message(missing: &[&str]) -> String {
 }
 
 pub fn add_dependencies(
-    conn: &PgConnection,
+    conn: &mut PgConnection,
     deps: &[EncodableCrateDependency],
     target_version_id: i32,
 ) -> AppResult<Vec<cargo_registry_index::Dependency>> {

@@ -6,14 +6,13 @@ use diesel::{
     serialize::{self, Output, ToSql},
     sql_types::Integer,
 };
-use std::io::Write;
 
 use crate::models::{ApiToken, User, Version};
 use crate::schema::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, FromSqlRow, AsExpression)]
 #[repr(i32)]
-#[sql_type = "Integer"]
+#[diesel(sql_type = Integer)]
 pub enum VersionAction {
     Publish = 0,
     Yank = 1,
@@ -39,7 +38,7 @@ impl From<VersionAction> for String {
 }
 
 impl FromSql<Integer, Pg> for VersionAction {
-    fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
+    fn from_sql(bytes: diesel::pg::PgValue<'_>) -> deserialize::Result<Self> {
         match <i32 as FromSql<Integer, Pg>>::from_sql(bytes)? {
             0 => Ok(VersionAction::Publish),
             1 => Ok(VersionAction::Yank),
@@ -50,16 +49,16 @@ impl FromSql<Integer, Pg> for VersionAction {
 }
 
 impl ToSql<Integer, Pg> for VersionAction {
-    fn to_sql<W: Write>(&self, out: &mut Output<'_, W, Pg>) -> serialize::Result {
-        ToSql::<Integer, Pg>::to_sql(&(*self as i32), out)
+    fn to_sql(&self, out: &mut Output<'_, '_, Pg>) -> serialize::Result {
+        ToSql::<Integer, Pg>::to_sql(&(*self as i32), &mut out.reborrow())
     }
 }
 
 #[derive(Debug, Clone, Copy, Queryable, Identifiable, Associations)]
-#[belongs_to(Version)]
-#[belongs_to(User, foreign_key = "user_id")]
-#[belongs_to(ApiToken, foreign_key = "api_token_id")]
-#[table_name = "version_owner_actions"]
+#[diesel(belongs_to(Version))]
+#[diesel(belongs_to(User, foreign_key = user_id))]
+#[diesel(belongs_to(ApiToken, foreign_key = api_token_id))]
+#[diesel(table_name = version_owner_actions)]
 pub struct VersionOwnerAction {
     pub id: i32,
     pub version_id: i32,
@@ -70,11 +69,14 @@ pub struct VersionOwnerAction {
 }
 
 impl VersionOwnerAction {
-    pub fn all(conn: &PgConnection) -> QueryResult<Vec<Self>> {
+    pub fn all(conn: &mut PgConnection) -> QueryResult<Vec<Self>> {
         version_owner_actions::table.load(conn)
     }
 
-    pub fn by_version(conn: &PgConnection, version: &Version) -> QueryResult<Vec<(Self, User)>> {
+    pub fn by_version(
+        conn: &mut PgConnection,
+        version: &Version,
+    ) -> QueryResult<Vec<(Self, User)>> {
         use version_owner_actions::dsl::version_id;
 
         version_owner_actions::table
@@ -85,7 +87,7 @@ impl VersionOwnerAction {
     }
 
     pub fn for_versions(
-        conn: &PgConnection,
+        conn: &mut PgConnection,
         versions: &[Version],
     ) -> QueryResult<Vec<Vec<(Self, User)>>> {
         Ok(Self::belonging_to(versions)
@@ -97,7 +99,7 @@ impl VersionOwnerAction {
 }
 
 pub fn insert_version_owner_action(
-    conn: &PgConnection,
+    conn: &mut PgConnection,
     version_id_: i32,
     user_id_: i32,
     api_token_id_: Option<i32>,

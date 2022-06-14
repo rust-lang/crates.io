@@ -27,9 +27,9 @@ pub async fn dependencies(
             return Err(cargo_err(&format_args!("invalid semver: {version}")));
         }
 
-        let conn = state.db_read()?;
-        let (version, _) = version_and_crate(&conn, &crate_name, &version)?;
-        let deps = version.dependencies(&conn)?;
+        let conn = &mut state.db_read()?;
+        let (version, _) = version_and_crate(conn, &crate_name, &version)?;
+        let deps = version.dependencies(conn)?;
         let deps = deps
             .into_iter()
             .map(|(dep, crate_name)| EncodableDependency::from_dep(dep, &crate_name))
@@ -64,10 +64,10 @@ pub async fn show(
             return Err(cargo_err(&format_args!("invalid semver: {version}")));
         }
 
-        let conn = state.db_read()?;
-        let (version, krate) = version_and_crate(&conn, &crate_name, &version)?;
-        let published_by = version.published_by(&conn);
-        let actions = VersionOwnerAction::by_version(&conn, &version)?;
+        let conn = &mut state.db_read()?;
+        let (version, krate) = version_and_crate(conn, &crate_name, &version)?;
+        let published_by = version.published_by(conn);
+        let actions = VersionOwnerAction::by_version(conn, &version)?;
 
         let version = EncodableVersion::from(version, &krate.name, published_by, actions);
         Ok(Json(json!({ "version": version })))

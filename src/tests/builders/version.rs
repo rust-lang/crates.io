@@ -87,7 +87,7 @@ impl<'a> VersionBuilder<'a> {
         self,
         crate_id: i32,
         published_by: i32,
-        connection: &PgConnection,
+        connection: &mut PgConnection,
     ) -> AppResult<Version> {
         use diesel::{insert_into, update};
 
@@ -150,7 +150,7 @@ impl<'a> VersionBuilder<'a> {
         self,
         crate_id: i32,
         published_by: i32,
-        connection: &PgConnection,
+        connection: &mut PgConnection,
     ) -> Version {
         self.build(crate_id, published_by, connection)
             .unwrap_or_else(|e| {

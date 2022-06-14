@@ -12,7 +12,7 @@ use crate::util::token::{SecureToken, SecureTokenKind};
 
 /// The model representing a row in the `api_tokens` database table.
 #[derive(Clone, Debug, PartialEq, Eq, Identifiable, Queryable, Associations, Serialize)]
-#[belongs_to(User)]
+#[diesel(belongs_to(User))]
 pub struct ApiToken {
     pub id: i32,
     #[serde(skip)]
@@ -36,12 +36,12 @@ pub struct ApiToken {
 
 impl ApiToken {
     /// Generates a new named API token for a user
-    pub fn insert(conn: &PgConnection, user_id: i32, name: &str) -> AppResult<CreatedApiToken> {
+    pub fn insert(conn: &mut PgConnection, user_id: i32, name: &str) -> AppResult<CreatedApiToken> {
         Self::insert_with_scopes(conn, user_id, name, None, None)
     }
 
     pub fn insert_with_scopes(
-        conn: &PgConnection,
+        conn: &mut PgConnection,
         user_id: i32,
         name: &str,
         crate_scopes: Option<Vec<CrateScope>>,
@@ -65,7 +65,7 @@ impl ApiToken {
         })
     }
 
-    pub fn find_by_api_token(conn: &PgConnection, token_: &str) -> AppResult<ApiToken> {
+    pub fn find_by_api_token(conn: &mut PgConnection, token_: &str) -> AppResult<ApiToken> {
         use crate::schema::api_tokens::dsl::*;
         use diesel::{dsl::now, update};
 
@@ -78,7 +78,7 @@ impl ApiToken {
 
         // If the database is in read only mode, we can't update last_used_at.
         // Try updating in a new transaction, if that fails, fall back to reading
-        conn.transaction(|| {
+        conn.transaction(|conn| {
             update(tokens)
                 .set(last_used_at.eq(now.nullable()))
                 .get_result(conn)

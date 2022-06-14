@@ -4,14 +4,11 @@ use crate::auth::AuthCheck;
 use diesel::associations::Identifiable;
 
 use crate::controllers::frontend_prelude::*;
-use crate::db::DieselPooledConn;
 use crate::models::{Crate, Follow};
 use crate::schema::*;
 
-fn follow_target(crate_name: &str, conn: &DieselPooledConn<'_>, user_id: i32) -> AppResult<Follow> {
-    let crate_id = Crate::by_name(crate_name)
-        .select(crates::id)
-        .first(&**conn)?;
+fn follow_target(crate_name: &str, conn: &mut PgConnection, user_id: i32) -> AppResult<Follow> {
+    let crate_id = Crate::by_name(crate_name).select(crates::id).first(conn)?;
     Ok(Follow { user_id, crate_id })
 }
 
@@ -22,13 +19,13 @@ pub async fn follow(
     req: Parts,
 ) -> AppResult<Response> {
     conduit_compat(move || {
-        let conn = app.db_write()?;
-        let user_id = AuthCheck::default().check(&req, &conn)?.user_id();
-        let follow = follow_target(&crate_name, &conn, user_id)?;
+        let conn = &mut *app.db_write()?;
+        let user_id = AuthCheck::default().check(&req, conn)?.user_id();
+        let follow = follow_target(&crate_name, conn, user_id)?;
         diesel::insert_into(follows::table)
             .values(&follow)
             .on_conflict_do_nothing()
-            .execute(&*conn)?;
+            .execute(conn)?;
 
         ok_true()
     })
@@ -42,10 +39,10 @@ pub async fn unfollow(
     req: Parts,
 ) -> AppResult<Response> {
     conduit_compat(move || {
-        let conn = app.db_write()?;
-        let user_id = AuthCheck::default().check(&req, &conn)?.user_id();
-        let follow = follow_target(&crate_name, &conn, user_id)?;
-        diesel::delete(&follow).execute(&*conn)?;
+        let conn = &mut *app.db_write()?;
+        let user_id = AuthCheck::default().check(&req, conn)?.user_id();
+        let follow = follow_target(&crate_name, conn, user_id)?;
+        diesel::delete(&follow).execute(conn)?;
 
         ok_true()
     })
@@ -61,11 +58,11 @@ pub async fn following(
     conduit_compat(move || {
         use diesel::dsl::exists;
 
-        let conn = app.db_read_prefer_primary()?;
-        let user_id = AuthCheck::only_cookie().check(&req, &conn)?.user_id();
-        let follow = follow_target(&crate_name, &conn, user_id)?;
+        let conn = &mut *app.db_read_prefer_primary()?;
+        let user_id = AuthCheck::only_cookie().check(&req, conn)?.user_id();
+        let follow = follow_target(&crate_name, conn, user_id)?;
         let following =
-            diesel::select(exists(follows::table.find(follow.id()))).get_result::<bool>(&*conn)?;
+            diesel::select(exists(follows::table.find(follow.id()))).get_result::<bool>(conn)?;
 
         Ok(Json(json!({ "following": following })))
     })

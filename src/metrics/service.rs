@@ -30,7 +30,7 @@ metrics! {
 }
 
 impl ServiceMetrics {
-    pub(crate) fn gather(&self, conn: &PgConnection) -> AppResult<Vec<MetricFamily>> {
+    pub(crate) fn gather(&self, conn: &mut PgConnection) -> AppResult<Vec<MetricFamily>> {
         self.crates_total
             .set(crates::table.select(count_star()).first(conn)?);
         self.versions_total

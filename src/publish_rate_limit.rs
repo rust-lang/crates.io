@@ -34,7 +34,7 @@ impl Default for PublishRateLimit {
 }
 
 #[derive(Queryable, Insertable, Debug, PartialEq, Clone, Copy)]
-#[table_name = "publish_limit_buckets"]
+#[diesel(table_name = publish_limit_buckets)]
 #[allow(dead_code)] // Most fields only read in tests
 struct Bucket {
     user_id: i32,
@@ -43,7 +43,7 @@ struct Bucket {
 }
 
 impl PublishRateLimit {
-    pub fn check_rate_limit(&self, uploader: i32, conn: &PgConnection) -> AppResult<()> {
+    pub fn check_rate_limit(&self, uploader: i32, conn: &mut PgConnection) -> AppResult<()> {
         let bucket = self.take_token(uploader, Utc::now().naive_utc(), conn)?;
         if bucket.tokens >= 1 {
             Ok(())
@@ -66,7 +66,7 @@ impl PublishRateLimit {
         &self,
         uploader: i32,
         now: NaiveDateTime,
-        conn: &PgConnection,
+        conn: &mut PgConnection,
     ) -> QueryResult<Bucket> {
         use self::publish_limit_buckets::dsl::*;
 
@@ -116,14 +116,14 @@ mod tests {
 
     #[test]
     fn take_token_with_no_bucket_creates_new_one() -> QueryResult<()> {
-        let conn = pg_connection();
+        let conn = &mut pg_connection();
         let now = now();
 
         let rate = PublishRateLimit {
             rate: Duration::from_secs(1),
             burst: 10,
         };
-        let bucket = rate.take_token(new_user(&conn, "user1")?, now, &conn)?;
+        let bucket = rate.take_token(new_user(conn, "user1")?, now, conn)?;
         let expected = Bucket {
             user_id: bucket.user_id,
             tokens: 10,
@@ -135,7 +135,7 @@ mod tests {
             rate: Duration::from_millis(50),
             burst: 20,
         };
-        let bucket = rate.take_token(new_user(&conn, "user2")?, now, &conn)?;
+        let bucket = rate.take_token(new_user(conn, "user2")?, now, conn)?;
         let expected = Bucket {
             user_id: bucket.user_id,
             tokens: 20,
@@ -147,15 +147,15 @@ mod tests {
 
     #[test]
     fn take_token_with_existing_bucket_modifies_existing_bucket() -> QueryResult<()> {
-        let conn = pg_connection();
+        let conn = &mut pg_connection();
         let now = now();
 
         let rate = PublishRateLimit {
             rate: Duration::from_secs(1),
             burst: 10,
         };
-        let user_id = new_user_bucket(&conn, 5, now)?.user_id;
-        let bucket = rate.take_token(user_id, now, &conn)?;
+        let user_id = new_user_bucket(conn, 5, now)?.user_id;
+        let bucket = rate.take_token(user_id, now, conn)?;
         let expected = Bucket {
             user_id,
             tokens: 4,
@@ -167,16 +167,16 @@ mod tests {
 
     #[test]
     fn take_token_after_delay_refills() -> QueryResult<()> {
-        let conn = pg_connection();
+        let conn = &mut pg_connection();
         let now = now();
 
         let rate = PublishRateLimit {
             rate: Duration::from_secs(1),
             burst: 10,
         };
-        let user_id = new_user_bucket(&conn, 5, now)?.user_id;
+        let user_id = new_user_bucket(conn, 5, now)?.user_id;
         let refill_time = now + chrono::Duration::seconds(2);
-        let bucket = rate.take_token(user_id, refill_time, &conn)?;
+        let bucket = rate.take_token(user_id, refill_time, conn)?;
         let expected = Bucket {
             user_id,
             tokens: 6,
@@ -188,7 +188,7 @@ mod tests {
 
     #[test]
     fn refill_subsecond_rate() -> QueryResult<()> {
-        let conn = pg_connection();
+        let conn = &mut pg_connection();
         // Subsecond rates have floating point rounding issues, so use a known
         // timestamp that rounds fine
         let now =
@@ -199,9 +199,9 @@ mod tests {
             rate: Duration::from_millis(100),
             burst: 10,
         };
-        let user_id = new_user_bucket(&conn, 5, now)?.user_id;
+        let user_id = new_user_bucket(conn, 5, now)?.user_id;
         let refill_time = now + chrono::Duration::milliseconds(300);
-        let bucket = rate.take_token(user_id, refill_time, &conn)?;
+        let bucket = rate.take_token(user_id, refill_time, conn)?;
         let expected = Bucket {
             user_id,
             tokens: 7,
@@ -213,15 +213,15 @@ mod tests {
 
     #[test]
     fn last_refill_always_advanced_by_multiple_of_rate() -> QueryResult<()> {
-        let conn = pg_connection();
+        let conn = &mut pg_connection();
         let now = now();
 
         let rate = PublishRateLimit {
             rate: Duration::from_millis(100),
             burst: 10,
         };
-        let user_id = new_user_bucket(&conn, 5, now)?.user_id;
-        let bucket = rate.take_token(user_id, now + chrono::Duration::milliseconds(250), &conn)?;
+        let user_id = new_user_bucket(conn, 5, now)?.user_id;
+        let bucket = rate.take_token(user_id, now + chrono::Duration::milliseconds(250), conn)?;
         let expected_refill_time = now + chrono::Duration::milliseconds(200);
         let expected = Bucket {
             user_id,
@@ -234,15 +234,15 @@ mod tests {
 
     #[test]
     fn zero_tokens_returned_when_user_has_no_tokens_left() -> QueryResult<()> {
-        let conn = pg_connection();
+        let conn = &mut pg_connection();
         let now = now();
 
         let rate = PublishRateLimit {
             rate: Duration::from_secs(1),
             burst: 10,
         };
-        let user_id = new_user_bucket(&conn, 1, now)?.user_id;
-        let bucket = rate.take_token(user_id, now, &conn)?;
+        let user_id = new_user_bucket(conn, 1, now)?.user_id;
+        let bucket = rate.take_token(user_id, now, conn)?;
         let expected = Bucket {
             user_id,
             tokens: 0,
@@ -250,23 +250,23 @@ mod tests {
         };
         assert_eq!(expected, bucket);
 
-        let bucket = rate.take_token(user_id, now, &conn)?;
+        let bucket = rate.take_token(user_id, now, conn)?;
         assert_eq!(expected, bucket);
         Ok(())
     }
 
     #[test]
     fn a_user_with_no_tokens_gets_a_token_after_exactly_rate() -> QueryResult<()> {
-        let conn = pg_connection();
+        let conn = &mut pg_connection();
         let now = now();
 
         let rate = PublishRateLimit {
             rate: Duration::from_secs(1),
             burst: 10,
         };
-        let user_id = new_user_bucket(&conn, 0, now)?.user_id;
+        let user_id = new_user_bucket(conn, 0, now)?.user_id;
         let refill_time = now + chrono::Duration::seconds(1);
-        let bucket = rate.take_token(user_id, refill_time, &conn)?;
+        let bucket = rate.take_token(user_id, refill_time, conn)?;
         let expected = Bucket {
             user_id,
             tokens: 1,
@@ -279,16 +279,16 @@ mod tests {
 
     #[test]
     fn tokens_never_refill_past_burst() -> QueryResult<()> {
-        let conn = pg_connection();
+        let conn = &mut pg_connection();
         let now = now();
 
         let rate = PublishRateLimit {
             rate: Duration::from_secs(1),
             burst: 10,
         };
-        let user_id = new_user_bucket(&conn, 8, now)?.user_id;
+        let user_id = new_user_bucket(conn, 8, now)?.user_id;
         let refill_time = now + chrono::Duration::seconds(4);
-        let bucket = rate.take_token(user_id, refill_time, &conn)?;
+        let bucket = rate.take_token(user_id, refill_time, conn)?;
         let expected = Bucket {
             user_id,
             tokens: 10,
@@ -301,25 +301,25 @@ mod tests {
 
     #[test]
     fn override_is_used_instead_of_global_burst_if_present() -> QueryResult<()> {
-        let conn = pg_connection();
+        let conn = &mut pg_connection();
         let now = now();
 
         let rate = PublishRateLimit {
             rate: Duration::from_secs(1),
             burst: 10,
         };
-        let user_id = new_user(&conn, "user1")?;
-        let other_user_id = new_user(&conn, "user2")?;
+        let user_id = new_user(conn, "user1")?;
+        let other_user_id = new_user(conn, "user2")?;
 
         diesel::insert_into(publish_rate_overrides::table)
             .values((
                 publish_rate_overrides::user_id.eq(user_id),
                 publish_rate_overrides::burst.eq(20),
             ))
-            .execute(&conn)?;
+            .execute(conn)?;
 
-        let bucket = rate.take_token(user_id, now, &conn)?;
-        let other_bucket = rate.take_token(other_user_id, now, &conn)?;
+        let bucket = rate.take_token(user_id, now, conn)?;
+        let other_bucket = rate.take_token(other_user_id, now, conn)?;
 
         assert_eq!(20, bucket.tokens);
         assert_eq!(10, other_bucket.tokens);
@@ -328,15 +328,15 @@ mod tests {
 
     #[test]
     fn overrides_can_expire() -> QueryResult<()> {
-        let conn = pg_connection();
+        let conn = &mut pg_connection();
         let now = now();
 
         let rate = PublishRateLimit {
             rate: Duration::from_secs(1),
             burst: 10,
         };
-        let user_id = new_user(&conn, "user1")?;
-        let other_user_id = new_user(&conn, "user2")?;
+        let user_id = new_user(conn, "user1")?;
+        let other_user_id = new_user(conn, "user2")?;
 
         diesel::insert_into(publish_rate_overrides::table)
             .values((
@@ -344,10 +344,10 @@ mod tests {
                 publish_rate_overrides::burst.eq(20),
                 publish_rate_overrides::expires_at.eq(now + chrono::Duration::days(30)),
             ))
-            .execute(&conn)?;
+            .execute(conn)?;
 
-        let bucket = rate.take_token(user_id, now, &conn)?;
-        let other_bucket = rate.take_token(other_user_id, now, &conn)?;
+        let bucket = rate.take_token(user_id, now, conn)?;
+        let other_bucket = rate.take_token(other_user_id, now, conn)?;
 
         assert_eq!(20, bucket.tokens);
         assert_eq!(10, other_bucket.tokens);
@@ -356,10 +356,10 @@ mod tests {
         diesel::update(publish_rate_overrides::table)
             .set(publish_rate_overrides::expires_at.eq(now - chrono::Duration::days(30)))
             .filter(publish_rate_overrides::user_id.eq(user_id))
-            .execute(&conn)?;
+            .execute(conn)?;
 
-        let bucket = rate.take_token(user_id, now, &conn)?;
-        let other_bucket = rate.take_token(other_user_id, now, &conn)?;
+        let bucket = rate.take_token(user_id, now, conn)?;
+        let other_bucket = rate.take_token(other_user_id, now, conn)?;
 
         // The number of tokens of user_id is 10 and not 9 because when the new burst limit is
         // lower than the amount of available tokens, the number of available tokens is reset to
@@ -370,7 +370,7 @@ mod tests {
         Ok(())
     }
 
-    fn new_user(conn: &PgConnection, gh_login: &str) -> QueryResult<i32> {
+    fn new_user(conn: &mut PgConnection, gh_login: &str) -> QueryResult<i32> {
         use crate::models::NewUser;
 
         let user = NewUser {
@@ -382,7 +382,7 @@ mod tests {
     }
 
     fn new_user_bucket(
-        conn: &PgConnection,
+        conn: &mut PgConnection,
         tokens: i32,
         now: NaiveDateTime,
     ) -> QueryResult<Bucket> {

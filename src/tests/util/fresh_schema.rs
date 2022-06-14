@@ -1,6 +1,6 @@
 use diesel::connection::SimpleConnection;
 use diesel::prelude::*;
-use diesel_migrations::{find_migrations_directory, run_pending_migrations_in_directory};
+use diesel_migrations::{FileBasedMigrations, MigrationHarness};
 use rand::Rng;
 
 pub(crate) struct FreshSchema {
@@ -13,7 +13,7 @@ impl FreshSchema {
     pub(crate) fn new(database_url: &str) -> Self {
         let schema_name = generate_schema_name();
 
-        let conn = PgConnection::establish(database_url).expect("can't connect to the test db");
+        let mut conn = PgConnection::establish(database_url).expect("can't connect to the test db");
         conn.batch_execute(&format!(
             "
                 DROP SCHEMA IF EXISTS {schema_name} CASCADE;
@@ -23,8 +23,9 @@ impl FreshSchema {
         ))
         .expect("failed to initialize schema");
 
-        let migrations_dir = find_migrations_directory().unwrap();
-        run_pending_migrations_in_directory(&conn, &migrations_dir, &mut std::io::sink())
+        let migrations =
+            FileBasedMigrations::find_migrations_directory().expect("Could not find migrations");
+        conn.run_pending_migrations(migrations)
             .expect("failed to run migrations on the test schema");
 
         let database_url = url::Url::parse_with_params(

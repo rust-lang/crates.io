@@ -6,7 +6,7 @@ use diesel::sql_types::Text;
 use std::io::Write;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, AsExpression)]
-#[sql_type = "Text"]
+#[diesel(sql_type = Text)]
 pub enum EndpointScope {
     PublishNew,
     PublishUpdate,
@@ -26,7 +26,7 @@ impl From<&EndpointScope> for &[u8] {
 }
 
 impl ToSql<Text, Pg> for EndpointScope {
-    fn to_sql<W: Write>(&self, out: &mut Output<'_, W, Pg>) -> serialize::Result {
+    fn to_sql(&self, out: &mut Output<'_, '_, Pg>) -> serialize::Result {
         out.write_all(self.into())?;
         Ok(IsNull::No)
     }
@@ -47,8 +47,9 @@ impl TryFrom<&[u8]> for EndpointScope {
 }
 
 impl FromSql<Text, Pg> for EndpointScope {
-    fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
-        Ok(EndpointScope::try_from(not_none!(bytes))?)
+    fn from_sql(bytes: diesel::pg::PgValue<'_>) -> deserialize::Result<Self> {
+        let value = <String as FromSql<Text, Pg>>::from_sql(bytes)?;
+        Ok(EndpointScope::try_from(value.as_bytes())?)
     }
 }
 
@@ -82,15 +83,15 @@ impl TryFrom<String> for CrateScope {
 }
 
 impl FromSql<Text, Pg> for CrateScope {
-    fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
+    fn from_sql(bytes: diesel::pg::PgValue<'_>) -> deserialize::Result<Self> {
         let value = <String as FromSql<Text, Pg>>::from_sql(bytes)?;
         Ok(CrateScope::try_from(value)?)
     }
 }
 
 impl ToSql<Text, Pg> for CrateScope {
-    fn to_sql<W: Write>(&self, out: &mut Output<'_, W, Pg>) -> serialize::Result {
-        <String as ToSql<Text, Pg>>::to_sql(&self.pattern, out)
+    fn to_sql(&self, out: &mut Output<'_, '_, Pg>) -> serialize::Result {
+        ToSql::<Text, Pg>::to_sql(&self.pattern, &mut out.reborrow())
     }
 }
 

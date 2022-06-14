@@ -40,12 +40,12 @@ description = "Another category ho hum"
 fn pg_connection() -> PgConnection {
     let database_url =
         dotenv::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set to run tests");
-    let conn = PgConnection::establish(&database_url).unwrap();
+    let mut conn = PgConnection::establish(&database_url).unwrap();
     conn.begin_test_transaction().unwrap();
     conn
 }
 
-fn select_slugs(conn: &PgConnection) -> Vec<String> {
+fn select_slugs(conn: &mut PgConnection) -> Vec<String> {
     categories::table
         .select(categories::slug)
         .order(categories::slug)
@@ -55,33 +55,32 @@ fn select_slugs(conn: &PgConnection) -> Vec<String> {
 
 #[test]
 fn sync_adds_new_categories() {
-    let conn = pg_connection();
+    let conn = &mut pg_connection();
 
-    ::cargo_registry::boot::categories::sync_with_connection(ALGORITHMS_AND_SUCH, &conn).unwrap();
+    ::cargo_registry::boot::categories::sync_with_connection(ALGORITHMS_AND_SUCH, conn).unwrap();
 
-    let categories = select_slugs(&conn);
+    let categories = select_slugs(conn);
     assert_eq!(categories, vec!["algorithms", "algorithms::such"]);
 }
 
 #[test]
 fn sync_removes_missing_categories() {
-    let conn = pg_connection();
+    let conn = &mut pg_connection();
 
-    ::cargo_registry::boot::categories::sync_with_connection(ALGORITHMS_AND_SUCH, &conn).unwrap();
-    ::cargo_registry::boot::categories::sync_with_connection(ALGORITHMS, &conn).unwrap();
+    ::cargo_registry::boot::categories::sync_with_connection(ALGORITHMS_AND_SUCH, conn).unwrap();
+    ::cargo_registry::boot::categories::sync_with_connection(ALGORITHMS, conn).unwrap();
 
-    let categories = select_slugs(&conn);
+    let categories = select_slugs(conn);
     assert_eq!(categories, vec!["algorithms"]);
 }
 
 #[test]
 fn sync_adds_and_removes() {
-    let conn = pg_connection();
+    let conn = &mut pg_connection();
 
-    ::cargo_registry::boot::categories::sync_with_connection(ALGORITHMS_AND_SUCH, &conn).unwrap();
-    ::cargo_registry::boot::categories::sync_with_connection(ALGORITHMS_AND_ANOTHER, &conn)
-        .unwrap();
+    ::cargo_registry::boot::categories::sync_with_connection(ALGORITHMS_AND_SUCH, conn).unwrap();
+    ::cargo_registry::boot::categories::sync_with_connection(ALGORITHMS_AND_ANOTHER, conn).unwrap();
 
-    let categories = select_slugs(&conn);
+    let categories = select_slugs(conn);
     assert_eq!(categories, vec!["algorithms", "another"]);
 }

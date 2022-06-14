@@ -8,7 +8,7 @@ use super::prelude::*;
 use crate::models::{Crate, Version};
 
 fn version_and_crate(
-    conn: &PgConnection,
+    conn: &mut PgConnection,
     crate_name: &str,
     semver: &str,
 ) -> AppResult<(Version, Crate)> {

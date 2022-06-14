@@ -48,7 +48,7 @@ pub async fn download(
                 }
             };
 
-            if let Some(conn) = &conn {
+            if let Some(mut conn) = conn {
                 use self::versions::dsl::*;
 
                 // Returns the crate name as stored in the database, or an error if we could
@@ -62,7 +62,7 @@ pub async fn download(
                             .select((id, crates::name))
                             .filter(Crate::with_name(&crate_name))
                             .filter(num.eq(&version))
-                            .first::<(i32, String)>(&**conn)
+                            .first::<(i32, String)>(&mut *conn)
                     })?;
 
                 // The increment does not happen instantly, but it's deferred to be executed in a batch
@@ -134,8 +134,8 @@ pub async fn downloads(
             return Err(cargo_err(&format_args!("invalid semver: {version}")));
         }
 
-        let conn = app.db_read()?;
-        let (version, _) = version_and_crate(&conn, &crate_name, &version)?;
+        let conn = &mut *app.db_read()?;
+        let (version, _) = version_and_crate(conn, &crate_name, &version)?;
 
         let cutoff_end_date = req
             .query()
@@ -147,7 +147,7 @@ pub async fn downloads(
         let downloads = VersionDownload::belonging_to(&version)
             .filter(version_downloads::date.between(cutoff_start_date, cutoff_end_date))
             .order(version_downloads::date)
-            .load(&*conn)?
+            .load(conn)?
             .into_iter()
             .map(VersionDownload::into)
             .collect::<Vec<EncodableVersionDownload>>();

@@ -155,14 +155,14 @@ fn alert_revoke_token(
     state: &AppState,
     alert: &GitHubSecretAlert,
 ) -> Result<GitHubSecretAlertFeedbackLabel, BoxedAppError> {
-    let conn = state.db_write()?;
+    let conn = &mut *state.db_write()?;
 
     let hashed_token = SecureToken::hash(&alert.token);
 
     // Not using `ApiToken::find_by_api_token()` in order to preserve `last_used_at`
     let token = api_tokens::table
         .filter(api_tokens::token.eq(hashed_token))
-        .get_result::<ApiToken>(&*conn)
+        .get_result::<ApiToken>(conn)
         .optional()?;
 
     let Some(token) = token else {
@@ -180,14 +180,14 @@ fn alert_revoke_token(
 
     diesel::update(&token)
         .set(api_tokens::revoked.eq(true))
-        .execute(&*conn)?;
+        .execute(conn)?;
 
     warn!(
         token_id = %token.id, user_id = %token.user_id,
         "Active API token received and revoked (true positive)",
     );
 
-    if let Err(error) = send_notification_email(&token, alert, state, &conn) {
+    if let Err(error) = send_notification_email(&token, alert, state, conn) {
         warn!(
             token_id = %token.id, user_id = %token.user_id, ?error,
             "Failed to send email notification",
@@ -201,7 +201,7 @@ fn send_notification_email(
     token: &ApiToken,
     alert: &GitHubSecretAlert,
     state: &AppState,
-    conn: &PgConnection,
+    conn: &mut PgConnection,
 ) -> anyhow::Result<()> {
     let user = User::find(conn, token.user_id).context("Failed to find user")?;
     let Some(email) = user.email(conn)? else {

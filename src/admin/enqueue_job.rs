@@ -26,7 +26,7 @@ pub enum Command {
 }
 
 pub fn run(command: Command) -> Result<()> {
-    let conn = db::oneoff_connection()?;
+    let conn = &mut db::oneoff_connection()?;
     println!("Enqueueing background job: {command:?}");
 
     match command {
@@ -34,22 +34,22 @@ pub fn run(command: Command) -> Result<()> {
             let count: i64 = background_jobs
                 .filter(job_type.eq("update_downloads"))
                 .count()
-                .get_result(&conn)
+                .get_result(conn)
                 .unwrap();
 
             if count > 0 {
                 println!("Did not enqueue update_downloads, existing job already in progress");
                 Ok(())
             } else {
-                Ok(worker::update_downloads().enqueue(&conn)?)
+                Ok(worker::update_downloads().enqueue(conn)?)
             }
         }
         Command::DumpDb {
             database_url,
             target_name,
-        } => Ok(worker::dump_db(database_url, target_name).enqueue(&conn)?),
-        Command::DailyDbMaintenance => Ok(worker::daily_db_maintenance().enqueue(&conn)?),
-        Command::SquashIndex => Ok(worker::squash_index().enqueue(&conn)?),
-        Command::NormalizeIndex { dry_run } => Ok(worker::normalize_index(dry_run).enqueue(&conn)?),
+        } => Ok(worker::dump_db(database_url, target_name).enqueue(conn)?),
+        Command::DailyDbMaintenance => Ok(worker::daily_db_maintenance().enqueue(conn)?),
+        Command::SquashIndex => Ok(worker::squash_index().enqueue(conn)?),
+        Command::NormalizeIndex { dry_run } => Ok(worker::normalize_index(dry_run).enqueue(conn)?),
     }
 }

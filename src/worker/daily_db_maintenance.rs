@@ -11,7 +11,7 @@ use crate::swirl::PerformError;
 /// auto-vacuum again.
 use diesel::{sql_query, PgConnection, RunQueryDsl};
 
-pub(crate) fn perform_daily_db_maintenance(conn: &PgConnection) -> Result<(), PerformError> {
+pub(crate) fn perform_daily_db_maintenance(conn: &mut PgConnection) -> Result<(), PerformError> {
     info!("Running VACUUM on version_downloads table");
     sql_query("VACUUM version_downloads;").execute(conn)?;
     info!("Finished running VACUUM on version_downloads table");

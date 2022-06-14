@@ -1,12 +1,11 @@
-use diesel::{backend::Backend, deserialize::FromSql, pg::Pg, serialize::ToSql, sql_types::Bytea};
+use diesel::{deserialize::FromSql, pg::Pg, serialize::ToSql, sql_types::Bytea};
 use rand::{distributions::Uniform, rngs::OsRng, Rng};
 use sha2::{Digest, Sha256};
-use std::io::Write;
 
 const TOKEN_LENGTH: usize = 32;
 
 #[derive(FromSqlRow, AsExpression, Clone, PartialEq, Eq)]
-#[sql_type = "Bytea"]
+#[diesel(sql_type = Bytea)]
 pub struct SecureToken {
     sha256: Vec<u8>,
 }
@@ -48,16 +47,13 @@ impl std::fmt::Debug for SecureToken {
 }
 
 impl ToSql<Bytea, Pg> for SecureToken {
-    fn to_sql<W: Write>(
-        &self,
-        out: &mut diesel::serialize::Output<'_, W, Pg>,
-    ) -> diesel::serialize::Result {
-        ToSql::<Bytea, Pg>::to_sql(&self.sha256, out)
+    fn to_sql(&self, out: &mut diesel::serialize::Output<'_, '_, Pg>) -> diesel::serialize::Result {
+        ToSql::<Bytea, Pg>::to_sql(&self.sha256, &mut out.reborrow())
     }
 }
 
 impl FromSql<Bytea, Pg> for SecureToken {
-    fn from_sql(bytes: Option<&<Pg as Backend>::RawValue>) -> diesel::deserialize::Result<Self> {
+    fn from_sql(bytes: diesel::pg::PgValue<'_>) -> diesel::deserialize::Result<Self> {
         Ok(Self {
             sha256: FromSql::<Bytea, Pg>::from_sql(bytes)?,
         })

@@ -11,11 +11,11 @@ use cargo_registry::{admin::on_call, db, schema::*};
 use diesel::prelude::*;
 
 fn main() -> Result<()> {
-    let conn = db::oneoff_connection()?;
+    let conn = &mut db::oneoff_connection()?;
 
-    check_failing_background_jobs(&conn)?;
-    check_stalled_update_downloads(&conn)?;
-    check_spam_attack(&conn)?;
+    check_failing_background_jobs(conn)?;
+    check_stalled_update_downloads(conn)?;
+    check_spam_attack(conn)?;
     Ok(())
 }
 
@@ -27,7 +27,7 @@ fn main() -> Result<()> {
 ///
 /// Within the default 15 minute time, a job should have already had several
 /// failed retry attempts.
-fn check_failing_background_jobs(conn: &PgConnection) -> Result<()> {
+fn check_failing_background_jobs(conn: &mut PgConnection) -> Result<()> {
     use cargo_registry::schema::background_jobs::dsl::*;
     use diesel::dsl::*;
     use diesel::sql_types::Integer;
@@ -69,7 +69,7 @@ fn check_failing_background_jobs(conn: &PgConnection) -> Result<()> {
 }
 
 /// Check for an `update_downloads` job that has run longer than expected
-fn check_stalled_update_downloads(conn: &PgConnection) -> Result<()> {
+fn check_stalled_update_downloads(conn: &mut PgConnection) -> Result<()> {
     use cargo_registry::schema::background_jobs::dsl::*;
     use chrono::{DateTime, NaiveDateTime, Utc};
 
@@ -106,9 +106,8 @@ fn check_stalled_update_downloads(conn: &PgConnection) -> Result<()> {
 }
 
 /// Check for known spam patterns
-fn check_spam_attack(conn: &PgConnection) -> Result<()> {
+fn check_spam_attack(conn: &mut PgConnection) -> Result<()> {
     use cargo_registry::sql::canon_crate_name;
-    use diesel::dsl::*;
 
     const EVENT_KEY: &str = "spam_attack";
 
@@ -123,7 +122,7 @@ fn check_spam_attack(conn: &PgConnection) -> Result<()> {
     let mut event_description = None;
 
     let bad_crate: Option<String> = crates::table
-        .filter(canon_crate_name(crates::name).eq(any(bad_crate_names)))
+        .filter(canon_crate_name(crates::name).eq_any(bad_crate_names))
         .select(crates::name)
         .first(conn)
         .optional()?;

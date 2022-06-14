@@ -9,7 +9,7 @@ pub fn pg_connection_no_transaction() -> PgConnection {
 }
 
 pub fn pg_connection() -> PgConnection {
-    let conn = pg_connection_no_transaction();
+    let mut conn = pg_connection_no_transaction();
     conn.begin_test_transaction().unwrap();
     conn
 }

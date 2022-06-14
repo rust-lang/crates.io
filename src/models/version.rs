@@ -10,7 +10,7 @@ use crate::schema::*;
 
 // Queryable has a custom implementation below
 #[derive(Clone, Identifiable, Associations, Debug, Queryable, Deserialize, Serialize)]
-#[belongs_to(Crate)]
+#[diesel(belongs_to(Crate))]
 pub struct Version {
     pub id: i32,
     pub crate_id: i32,
@@ -28,7 +28,7 @@ pub struct Version {
 }
 
 #[derive(Insertable, Debug)]
-#[table_name = "versions"]
+#[diesel(table_name = versions)]
 pub struct NewVersion {
     crate_id: i32,
     num: String,
@@ -94,7 +94,7 @@ impl TopVersions {
 
 impl Version {
     /// Returns (dependency, crate dependency name)
-    pub fn dependencies(&self, conn: &PgConnection) -> QueryResult<Vec<(Dependency, String)>> {
+    pub fn dependencies(&self, conn: &mut PgConnection) -> QueryResult<Vec<(Dependency, String)>> {
         Dependency::belonging_to(self)
             .inner_join(crates::table)
             .select((dependencies::all_columns, crates::name))
@@ -102,7 +102,10 @@ impl Version {
             .load(conn)
     }
 
-    pub fn record_readme_rendering(version_id_: i32, conn: &PgConnection) -> QueryResult<usize> {
+    pub fn record_readme_rendering(
+        version_id_: i32,
+        conn: &mut PgConnection,
+    ) -> QueryResult<usize> {
         use crate::schema::readme_renderings::dsl::*;
         use diesel::dsl::now;
 
@@ -116,7 +119,7 @@ impl Version {
 
     /// Gets the User who ran `cargo publish` for this version, if recorded.
     /// Not for use when you have a group of versions you need the publishers for.
-    pub fn published_by(&self, conn: &PgConnection) -> Option<User> {
+    pub fn published_by(&self, conn: &mut PgConnection) -> Option<User> {
         match self.published_by {
             Some(pb) => users::table.find(pb).first(conn).ok(),
             None => None,
@@ -155,12 +158,12 @@ impl NewVersion {
         Ok(new_version)
     }
 
-    pub fn save(&self, conn: &PgConnection, published_by_email: &str) -> AppResult<Version> {
+    pub fn save(&self, conn: &mut PgConnection, published_by_email: &str) -> AppResult<Version> {
         use crate::schema::versions::dsl::*;
         use diesel::dsl::exists;
         use diesel::{insert_into, select};
 
-        conn.transaction(|| {
+        conn.transaction(|conn| {
             let already_uploaded = versions
                 .filter(crate_id.eq(self.crate_id))
                 .filter(num.eq(&self.num));

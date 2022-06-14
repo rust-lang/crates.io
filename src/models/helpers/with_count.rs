@@ -2,7 +2,7 @@
 pub struct WithCount<T> {
     #[diesel(embed)]
     pub(crate) record: T,
-    #[sql_type = "::diesel::sql_types::BigInt"]
+    #[diesel(sql_type = ::diesel::sql_types::BigInt)]
     pub(crate) total: i64,
 }
 

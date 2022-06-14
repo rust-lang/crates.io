@@ -14,8 +14,7 @@ use crate::views::EncodableVersion;
 /// Handles the `GET /versions` route.
 pub async fn index(app: AppState, req: Parts) -> AppResult<Json<Value>> {
     conduit_compat(move || {
-        use diesel::dsl::any;
-        let conn = app.db_read()?;
+        let conn = &mut *app.db_read()?;
 
         // Extract all ids requested.
         let query = url::form_urlencoded::parse(req.uri.query().unwrap_or("").as_bytes());
@@ -31,8 +30,8 @@ pub async fn index(app: AppState, req: Parts) -> AppResult<Json<Value>> {
                 crates::name,
                 users::all_columns.nullable(),
             ))
-            .filter(versions::id.eq(any(ids)))
-            .load(&*conn)?;
+            .filter(versions::id.eq_any(ids))
+            .load(conn)?;
         let versions = versions_and_publishers
             .iter()
             .map(|(v, _, _)| v)
@@ -40,7 +39,7 @@ pub async fn index(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             .collect::<Vec<_>>();
         let versions = versions_and_publishers
             .into_iter()
-            .zip(VersionOwnerAction::for_versions(&conn, &versions)?.into_iter())
+            .zip(VersionOwnerAction::for_versions(conn, &versions)?.into_iter())
             .map(|((version, crate_name, published_by), actions)| {
                 EncodableVersion::from(version, &crate_name, published_by, actions)
             })
@@ -56,7 +55,7 @@ pub async fn index(app: AppState, req: Parts) -> AppResult<Json<Value>> {
 /// be returned by `krate::show`.
 pub async fn show_by_id(state: AppState, Path(id): Path<i32>) -> AppResult<Json<Value>> {
     conduit_compat(move || {
-        let conn = state.db_read()?;
+        let conn = &mut *state.db_read()?;
         let (version, krate, published_by): (Version, Crate, Option<User>) = versions::table
             .find(id)
             .inner_join(crates::table)
@@ -66,8 +65,8 @@ pub async fn show_by_id(state: AppState, Path(id): Path<i32>) -> AppResult<Json<
                 crate::models::krate::ALL_COLUMNS,
                 users::all_columns.nullable(),
             ))
-            .first(&*conn)?;
-        let audit_actions = VersionOwnerAction::by_version(&conn, &version)?;
+            .first(conn)?;
+        let audit_actions = VersionOwnerAction::by_version(conn, &version)?;
 
         let version = EncodableVersion::from(version, &krate.name, published_by, audit_actions);
         Ok(Json(json!({ "version": version })))

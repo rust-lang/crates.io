@@ -227,11 +227,10 @@ impl Serialize for EncodableCrateVersionReq {
 use diesel::pg::Pg;
 use diesel::serialize::{self, Output, ToSql};
 use diesel::sql_types::Text;
-use std::io::Write;
 
 impl ToSql<Text, Pg> for EncodableFeature {
-    fn to_sql<W: Write>(&self, out: &mut Output<'_, W, Pg>) -> serialize::Result {
-        ToSql::<Text, Pg>::to_sql(&**self, out)
+    fn to_sql(&self, out: &mut Output<'_, '_, Pg>) -> serialize::Result {
+        ToSql::<Text, Pg>::to_sql(&**self, &mut out.reborrow())
     }
 }
 

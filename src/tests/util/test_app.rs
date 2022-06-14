@@ -48,8 +48,8 @@ impl Drop for TestAppInner {
 
         // Manually verify that all jobs have completed successfully
         // This will catch any tests that enqueued a job but forgot to initialize the runner
-        let conn = self.app.primary_database.get().unwrap();
-        let job_count: i64 = background_jobs.count().get_result(&*conn).unwrap();
+        let conn = &mut *self.app.primary_database.get().unwrap();
+        let job_count: i64 = background_jobs.count().get_result(conn).unwrap();
         assert_eq!(
             0, job_count,
             "Unprocessed or failed jobs remain in the queue"
@@ -93,9 +93,9 @@ impl TestApp {
     /// Within each test, the connection pool only has 1 connection so it is necessary to drop the
     /// connection before making any API calls.  Once the closure returns, the connection is
     /// dropped, ensuring it is returned to the pool and available for any future API calls.
-    pub fn db<T, F: FnOnce(&PgConnection) -> T>(&self, f: F) -> T {
-        let conn = self.0.app.primary_database.get().unwrap();
-        f(&conn)
+    pub fn db<T, F: FnOnce(&mut PgConnection) -> T>(&self, f: F) -> T {
+        let conn = &mut self.0.app.primary_database.get().unwrap();
+        f(conn)
     }
 
     /// Create a new user with a verified email address in the database and return a mock user

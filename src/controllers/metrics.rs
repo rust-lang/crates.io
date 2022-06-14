@@ -27,7 +27,7 @@ pub async fn prometheus(
         }
 
         let metrics = match kind.as_str() {
-            "service" => app.service_metrics.gather(&*app.db_read()?)?,
+            "service" => app.service_metrics.gather(&mut *app.db_read()?)?,
             "instance" => app.instance_metrics.gather(&app)?,
             _ => return Err(not_found()),
         };

@@ -24,15 +24,15 @@ pub struct Opts {
 }
 
 pub fn run(opts: Opts) {
-    let conn = db::oneoff_connection().unwrap();
-    conn.transaction::<_, diesel::result::Error, _>(|| {
-        delete(opts, &conn);
+    let conn = &mut db::oneoff_connection().unwrap();
+    conn.transaction::<_, diesel::result::Error, _>(|conn| {
+        delete(opts, conn);
         Ok(())
     })
     .unwrap()
 }
 
-fn delete(opts: Opts, conn: &PgConnection) {
+fn delete(opts: Opts, conn: &mut PgConnection) {
     let krate: Crate = Crate::by_name(&opts.crate_name).first(conn).unwrap();
     let v: Version = Version::belonging_to(&krate)
         .filter(versions::num.eq(&opts.version))

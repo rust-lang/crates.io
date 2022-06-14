@@ -11,10 +11,10 @@ use http::Request;
 /// Handles the `GET /crates/:crate_id/owners` route.
 pub async fn owners(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
     conduit_compat(move || {
-        let conn = state.db_read()?;
-        let krate: Crate = Crate::by_name(&crate_name).first(&*conn)?;
+        let conn = &mut *state.db_read()?;
+        let krate: Crate = Crate::by_name(&crate_name).first(conn)?;
         let owners = krate
-            .owners(&conn)?
+            .owners(conn)?
             .into_iter()
             .map(Owner::into)
             .collect::<Vec<EncodableOwner>>();
@@ -27,9 +27,9 @@ pub async fn owners(state: AppState, Path(crate_name): Path<String>) -> AppResul
 /// Handles the `GET /crates/:crate_id/owner_team` route.
 pub async fn owner_team(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
     conduit_compat(move || {
-        let conn = state.db_read()?;
-        let krate: Crate = Crate::by_name(&crate_name).first(&*conn)?;
-        let owners = Team::owning(&krate, &conn)?
+        let conn = &mut *state.db_read()?;
+        let krate: Crate = Crate::by_name(&crate_name).first(conn)?;
+        let owners = Team::owning(&krate, conn)?
             .into_iter()
             .map(Owner::into)
             .collect::<Vec<EncodableOwner>>();
@@ -42,9 +42,9 @@ pub async fn owner_team(state: AppState, Path(crate_name): Path<String>) -> AppR
 /// Handles the `GET /crates/:crate_id/owner_user` route.
 pub async fn owner_user(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
     conduit_compat(move || {
-        let conn = state.db_read()?;
-        let krate: Crate = Crate::by_name(&crate_name).first(&*conn)?;
-        let owners = User::owning(&krate, &conn)?
+        let conn = &mut *state.db_read()?;
+        let krate: Crate = Crate::by_name(&crate_name).first(conn)?;
+        let owners = User::owning(&krate, conn)?
             .into_iter()
             .map(Owner::into)
             .collect::<Vec<EncodableOwner>>();
@@ -102,17 +102,17 @@ fn modify_owners(
 ) -> AppResult<Json<Value>> {
     let logins = parse_owners_request(req)?;
 
-    let conn = app.db_write()?;
+    let conn = &mut *app.db_write()?;
     let auth = AuthCheck::default()
         .with_endpoint_scope(EndpointScope::ChangeOwners)
         .for_crate(crate_name)
-        .check(req, &conn)?;
+        .check(req, conn)?;
 
     let user = auth.user();
 
-    conn.transaction(|| {
-        let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
-        let owners = krate.owners(&conn)?;
+    conn.transaction(|conn| {
+        let krate: Crate = Crate::by_name(crate_name).first(conn)?;
+        let owners = krate.owners(conn)?;
 
         match user.rights(app, &owners)? {
             Rights::Full => {}
@@ -135,15 +135,15 @@ fn modify_owners(
                 if owners.iter().any(login_test) {
                     return Err(cargo_err(&format_args!("`{login}` is already an owner")));
                 }
-                let msg = krate.owner_add(app, &conn, user, login)?;
+                let msg = krate.owner_add(app, conn, user, login)?;
                 msgs.push(msg);
             }
             msgs.join(",")
         } else {
             for login in &logins {
-                krate.owner_remove(app, &conn, user, login)?;
+                krate.owner_remove(app, conn, user, login)?;
             }
-            if User::owning(&krate, &conn)?.is_empty() {
+            if User::owning(&krate, conn)?.is_empty() {
                 return Err(cargo_err(
                     "cannot remove all individual owners of a crate. \
                      Team member don't have permission to modify owners, so \

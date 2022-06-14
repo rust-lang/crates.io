@@ -58,7 +58,7 @@ impl AuthCheck {
     pub fn check<T: RequestPartsExt>(
         &self,
         request: &T,
-        conn: &PgConnection,
+        conn: &mut PgConnection,
     ) -> AppResult<Authentication> {
         let auth = authenticate(request, conn)?;
 
@@ -158,7 +158,7 @@ impl Authentication {
 
 fn authenticate_via_cookie<T: RequestPartsExt>(
     req: &T,
-    conn: &PgConnection,
+    conn: &mut PgConnection,
 ) -> AppResult<Option<CookieAuthentication>> {
     let user_id_from_session = req
         .session()
@@ -179,7 +179,7 @@ fn authenticate_via_cookie<T: RequestPartsExt>(
 
 fn authenticate_via_token<T: RequestPartsExt>(
     req: &T,
-    conn: &PgConnection,
+    conn: &mut PgConnection,
 ) -> AppResult<Option<TokenAuthentication>> {
     let maybe_authorization = req
         .headers()
@@ -207,7 +207,7 @@ fn authenticate_via_token<T: RequestPartsExt>(
     Ok(Some(TokenAuthentication { user, token }))
 }
 
-fn authenticate<T: RequestPartsExt>(req: &T, conn: &PgConnection) -> AppResult<Authentication> {
+fn authenticate<T: RequestPartsExt>(req: &T, conn: &mut PgConnection) -> AppResult<Authentication> {
     controllers::util::verify_origin(req)?;
 
     match authenticate_via_cookie(req, conn) {

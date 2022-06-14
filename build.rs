@@ -1,5 +1,5 @@
 use diesel::prelude::*;
-use diesel_migrations::run_pending_migrations;
+use diesel_migrations::{FileBasedMigrations, MigrationHarness};
 use std::env;
 
 fn main() {
@@ -8,9 +8,13 @@ fn main() {
     println!("cargo:rerun-if-changed=migrations/");
     if env::var("PROFILE") == Ok("debug".into()) {
         if let Ok(database_url) = dotenv::var("TEST_DATABASE_URL") {
-            let connection = PgConnection::establish(&database_url)
+            let connection = &mut PgConnection::establish(&database_url)
                 .expect("Could not connect to TEST_DATABASE_URL");
-            run_pending_migrations(&connection).expect("Error running migrations");
+            let migrations = FileBasedMigrations::find_migrations_directory()
+                .expect("Could not find migrations");
+            connection
+                .run_pending_migrations(migrations)
+                .expect("Error running migrations");
         }
     }
 }

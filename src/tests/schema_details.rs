@@ -45,17 +45,17 @@ fn all_columns_called_version_id_have_a_cascading_foreign_key() {
 
 #[derive(QueryableByName)]
 struct FkConstraint {
-    #[sql_type = "Text"]
-    #[column_name = "conname"]
+    #[diesel(sql_type = Text)]
+    #[diesel(column_name = conname)]
     name: String,
-    #[sql_type = "Text"]
+    #[diesel(sql_type = Text)]
     definition: String,
 }
 
 #[derive(QueryableByName)]
 struct TableNameAndConstraint {
-    #[sql_type = "Text"]
-    #[column_name = "relname"]
+    #[diesel(sql_type = Text)]
+    #[diesel(column_name = relname)]
     table_name: String,
     #[diesel(embed)]
     constraint: Option<FkConstraint>,

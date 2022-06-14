@@ -2,7 +2,10 @@ use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager, CustomizeConnection};
 use prometheus::Histogram;
 use std::sync::{Arc, Mutex, MutexGuard};
-use std::{ops::Deref, time::Duration};
+use std::{
+    ops::{Deref, DerefMut},
+    time::Duration,
+};
 use thiserror::Error;
 use url::Url;
 
@@ -67,7 +70,7 @@ impl DieselPool {
     }
 
     pub(crate) fn new_test(config: &config::DatabasePools, url: &str) -> DieselPool {
-        let conn = PgConnection::establish(&connection_url(config, url))
+        let mut conn = PgConnection::establish(&connection_url(config, url))
             .expect("failed to establish connection");
         conn.begin_test_transaction()
             .expect("failed to begin test transaction");
@@ -150,6 +153,15 @@ impl Deref for DieselPooledConn<'_> {
     }
 }
 
+impl DerefMut for DieselPooledConn<'_> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        match self {
+            DieselPooledConn::Pool(conn) => conn.deref_mut(),
+            DieselPooledConn::Test(conn) => conn.deref_mut(),
+        }
+    }
+}
+
 pub fn oneoff_connection_with_config(
     config: &config::DatabasePools,
 ) -> ConnectionResult<PgConnection> {
@@ -213,7 +225,7 @@ impl CustomizeConnection<PgConnection, r2d2::Error> for ConnectionConfig {
 
 #[cfg(test)]
 pub(crate) fn test_conn() -> PgConnection {
-    let conn = PgConnection::establish(&crate::env("TEST_DATABASE_URL")).unwrap();
+    let mut conn = PgConnection::establish(&crate::env("TEST_DATABASE_URL")).unwrap();
     conn.begin_test_transaction().unwrap();
     conn
 }
