@@ -6186,10 +6186,10 @@ ember-cli-dependency-lint@2.0.1:
     chalk "^2.3.0"
     semver "^5.5.0"
 
-ember-cli-fastboot@3.3.0:
-  version "3.3.0"
-  resolved "https://registry.yarnpkg.com/ember-cli-fastboot/-/ember-cli-fastboot-3.3.0.tgz#c0438c17a19bef704d9d62b68b5049fc017c9581"
-  integrity sha512-PgTAFWI47sLIJCl4yN7/v5PhzawSXb5ih/YPQQR6K0CX+5i17XYxKjhKE4Mp0Jtu/huURv7uACFKytmKVkcEZg==
+ember-cli-fastboot@3.3.1:
+  version "3.3.1"
+  resolved "https://registry.yarnpkg.com/ember-cli-fastboot/-/ember-cli-fastboot-3.3.1.tgz#f69abc5e31fbb2c607b23a5a06a5cebd8a7cb567"
+  integrity sha512-x6q0EyAnYshyhS1GVAsWafkhQeeWBIxAV2iC/zldU1q4/ISxUntSbFoNw8/50I+CwUYUeS4GMPI3f/KKlFKm4A==
   dependencies:
     broccoli-concat "^4.2.5"
     broccoli-file-creator "^2.1.1"
@@ -6201,8 +6201,8 @@ ember-cli-fastboot@3.3.0:
     ember-cli-lodash-subset "^2.0.1"
     ember-cli-preprocess-registry "^3.3.0"
     ember-cli-version-checker "^5.1.2"
-    fastboot "3.3.0"
-    fastboot-express-middleware "3.3.0"
+    fastboot "3.3.1"
+    fastboot-express-middleware "3.3.1"
     fastboot-transform "^0.1.3"
     fs-extra "^10.0.0"
     json-stable-stringify "^1.0.1"
@@ -7705,6 +7705,14 @@ fastboot-express-middleware@3.3.0:
     chalk "^4.1.2"
     fastboot "3.3.0"
 
+fastboot-express-middleware@3.3.1:
+  version "3.3.1"
+  resolved "https://registry.yarnpkg.com/fastboot-express-middleware/-/fastboot-express-middleware-3.3.1.tgz#4738ea1ade4f8f68f03101146d7264d9158e683f"
+  integrity sha512-Ao1aXpLGepdjmXEL07jo+l/TRjqkeaQFgiIPJ/YSCYSmkZCU6GQ71IkhIwnefC2RJT+S2Bx0FtMDXeWPigoZmg==
+  dependencies:
+    chalk "^4.1.2"
+    fastboot "3.3.1"
+
 fastboot-transform@^0.1.3:
   version "0.1.3"
   resolved "https://registry.yarnpkg.com/fastboot-transform/-/fastboot-transform-0.1.3.tgz#7dea0b117594afd8772baa6c9b0919644e7f7dcd"
@@ -7717,6 +7725,19 @@ fastboot@3.3.0:
   version "3.3.0"
   resolved "https://registry.yarnpkg.com/fastboot/-/fastboot-3.3.0.tgz#e0b1cafb3fb6e89095acade221ccfbfe327b3462"
   integrity sha512-WXgR/uKM/r6TCb99Q97vuxH16bhF1scF4LL7Uckel5dNqvvlNVpKEeuggOJafx/JtfIyrldfo7Cn9Xpaoltp7A==
+  dependencies:
+    chalk "^4.1.2"
+    cookie "^0.4.1"
+    debug "^4.3.3"
+    jsdom "^19.0.0"
+    resolve "^1.22.0"
+    simple-dom "^1.4.0"
+    source-map-support "^0.5.21"
+
+fastboot@3.3.1:
+  version "3.3.1"
+  resolved "https://registry.yarnpkg.com/fastboot/-/fastboot-3.3.1.tgz#7b8ffcc64b2c9fa9d93f8a273a65b86d25bd5ab0"
+  integrity sha512-5RUp1OchhDxfiQwc6WNgLhGAsLS6boiUZPDcWgp2ijw5xOcVmRTvYz2pWXE3flEoGTlVlt9PKG06oW6ql40RGg==
   dependencies:
     chalk "^4.1.2"
     cookie "^0.4.1"
