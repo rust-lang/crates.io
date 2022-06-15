@@ -7685,17 +7685,17 @@ fast-sourcemap-concat@^2.1.0:
     source-map-url "^0.3.0"
     sourcemap-validator "^1.1.0"
 
-fastboot-app-server@3.3.0:
-  version "3.3.0"
-  resolved "https://registry.yarnpkg.com/fastboot-app-server/-/fastboot-app-server-3.3.0.tgz#8cf48f4cfc442cacddded08961b3b0b0cfafd7ce"
-  integrity sha512-Raz1ifRxdUlWbYCvXa1xUmGU/m7zNC62Gjjg7MqS42GATC4GCI0yVTB/cDsz5DtOpwxIush0HWfvZVIrz7tDrA==
+fastboot-app-server@3.3.1:
+  version "3.3.1"
+  resolved "https://registry.yarnpkg.com/fastboot-app-server/-/fastboot-app-server-3.3.1.tgz#eabd0151261e6cf3a1bf8ac70520079ac3716ce0"
+  integrity sha512-L1IiIykPYy8wTmUCgI8fOEMq4rakhDU4VnryDTVZwvg2z6mvdSnkU2+W2cxMmrPeFtuS1L2ubQ185YO+d9/gFQ==
   dependencies:
     basic-auth "^2.0.1"
     chalk "^4.1.2"
     compression "^1.7.4"
     express "^4.17.2"
-    fastboot "3.3.0"
-    fastboot-express-middleware "3.3.0"
+    fastboot "3.3.1"
+    fastboot-express-middleware "3.3.1"
 
 fastboot-express-middleware@3.3.0:
   version "3.3.0"
