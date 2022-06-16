@@ -7697,14 +7697,6 @@ fastboot-app-server@3.3.1:
     fastboot "3.3.1"
     fastboot-express-middleware "3.3.1"
 
-fastboot-express-middleware@3.3.0:
-  version "3.3.0"
-  resolved "https://registry.yarnpkg.com/fastboot-express-middleware/-/fastboot-express-middleware-3.3.0.tgz#a3da82533383331bb32c6cd921a0e99705b06740"
-  integrity sha512-iLr4ncGi0gb+40O0D9VOmJ0MI/ROESuolsfNyasDHCdnz7eT+gloT9KG3h6efscCuCQ1IviuE1ynuAVTp9vX8Q==
-  dependencies:
-    chalk "^4.1.2"
-    fastboot "3.3.0"
-
 fastboot-express-middleware@3.3.1:
   version "3.3.1"
   resolved "https://registry.yarnpkg.com/fastboot-express-middleware/-/fastboot-express-middleware-3.3.1.tgz#4738ea1ade4f8f68f03101146d7264d9158e683f"
@@ -7720,19 +7712,6 @@ fastboot-transform@^0.1.3:
   dependencies:
     broccoli-stew "^1.5.0"
     convert-source-map "^1.5.1"
-
-fastboot@3.3.0:
-  version "3.3.0"
-  resolved "https://registry.yarnpkg.com/fastboot/-/fastboot-3.3.0.tgz#e0b1cafb3fb6e89095acade221ccfbfe327b3462"
-  integrity sha512-WXgR/uKM/r6TCb99Q97vuxH16bhF1scF4LL7Uckel5dNqvvlNVpKEeuggOJafx/JtfIyrldfo7Cn9Xpaoltp7A==
-  dependencies:
-    chalk "^4.1.2"
-    cookie "^0.4.1"
-    debug "^4.3.3"
-    jsdom "^19.0.0"
-    resolve "^1.22.0"
-    simple-dom "^1.4.0"
-    source-map-support "^0.5.21"
 
 fastboot@3.3.1:
   version "3.3.1"
@@ -11961,10 +11940,10 @@ prettier-linter-helpers@^1.0.0:
   dependencies:
     fast-diff "^1.1.2"
 
-prettier@2.7.0, prettier@^2.5.1:
-  version "2.7.0"
-  resolved "https://registry.yarnpkg.com/prettier/-/prettier-2.7.0.tgz#a4fdae07e5596c51c9857ea676cd41a0163879d6"
-  integrity sha512-nwoX4GMFgxoPC6diHvSwmK/4yU8FFH3V8XWtLQrbj4IBsK2pkYhG4kf/ljF/haaZ/aii+wNJqISrCDPgxGWDVQ==
+prettier@2.7.1, prettier@^2.5.1:
+  version "2.7.1"
+  resolved "https://registry.yarnpkg.com/prettier/-/prettier-2.7.1.tgz#e235806850d057f97bb08368a4f7d899f7760c64"
+  integrity sha512-ujppO+MkdPqoVINuDFDRLClm7D78qbDt0/NR+wp5FqEZOoTNAjPHWj17QRhu7geIHJfcNhRk1XVQmF8Bp3ye+g==
 
 pretty-bytes@6.0.0:
   version "6.0.0"
