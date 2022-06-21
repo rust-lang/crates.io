@@ -7685,17 +7685,17 @@ fast-sourcemap-concat@^2.1.0:
     source-map-url "^0.3.0"
     sourcemap-validator "^1.1.0"
 
-fastboot-app-server@3.3.1:
-  version "3.3.1"
-  resolved "https://registry.yarnpkg.com/fastboot-app-server/-/fastboot-app-server-3.3.1.tgz#eabd0151261e6cf3a1bf8ac70520079ac3716ce0"
-  integrity sha512-L1IiIykPYy8wTmUCgI8fOEMq4rakhDU4VnryDTVZwvg2z6mvdSnkU2+W2cxMmrPeFtuS1L2ubQ185YO+d9/gFQ==
+fastboot-app-server@3.3.2:
+  version "3.3.2"
+  resolved "https://registry.yarnpkg.com/fastboot-app-server/-/fastboot-app-server-3.3.2.tgz#7aadc5bfdda7b51a20005c26404959c1d80d098b"
+  integrity sha512-jQ+nsmcLhR49Bx1J/74eN/9yez5abzutnck91FdctWgwHMghuuas82v5hoqrKYSVq8I1J5RwS0v7WcICNLH1oA==
   dependencies:
     basic-auth "^2.0.1"
     chalk "^4.1.2"
     compression "^1.7.4"
     express "^4.17.2"
-    fastboot "3.3.1"
-    fastboot-express-middleware "3.3.1"
+    fastboot "3.3.2"
+    fastboot-express-middleware "3.3.2"
 
 fastboot-express-middleware@3.3.1:
   version "3.3.1"
@@ -7704,6 +7704,14 @@ fastboot-express-middleware@3.3.1:
   dependencies:
     chalk "^4.1.2"
     fastboot "3.3.1"
+
+fastboot-express-middleware@3.3.2:
+  version "3.3.2"
+  resolved "https://registry.yarnpkg.com/fastboot-express-middleware/-/fastboot-express-middleware-3.3.2.tgz#6d78de06f1db51f47b4f66658c651a61fcf5ca96"
+  integrity sha512-/Fgr29Q1bMDiv65BeCYmFR88otTg9QJYvmVIWrgkwWSkfya5h1XzCQYEz+VqyhWT1v+BQWq98SuyKfpNrL2cRA==
+  dependencies:
+    chalk "^4.1.2"
+    fastboot "3.3.2"
 
 fastboot-transform@^0.1.3:
   version "0.1.3"
@@ -7717,6 +7725,19 @@ fastboot@3.3.1:
   version "3.3.1"
   resolved "https://registry.yarnpkg.com/fastboot/-/fastboot-3.3.1.tgz#7b8ffcc64b2c9fa9d93f8a273a65b86d25bd5ab0"
   integrity sha512-5RUp1OchhDxfiQwc6WNgLhGAsLS6boiUZPDcWgp2ijw5xOcVmRTvYz2pWXE3flEoGTlVlt9PKG06oW6ql40RGg==
+  dependencies:
+    chalk "^4.1.2"
+    cookie "^0.4.1"
+    debug "^4.3.3"
+    jsdom "^19.0.0"
+    resolve "^1.22.0"
+    simple-dom "^1.4.0"
+    source-map-support "^0.5.21"
+
+fastboot@3.3.2:
+  version "3.3.2"
+  resolved "https://registry.yarnpkg.com/fastboot/-/fastboot-3.3.2.tgz#bf1ac7b01937846b63423a88138e13eb50406d2e"
+  integrity sha512-2NKTW32GvEsDyBrdw1trW1JsbS+9/7sAQuKwkht12mNitimRrSKVLP2AxsM/HSXQE+aiET4XCfKdyeIy0kQbKQ==
   dependencies:
     chalk "^4.1.2"
     cookie "^0.4.1"
@@ -12685,12 +12706,12 @@ rxjs@^6.4.0, rxjs@^6.6.0:
   dependencies:
     tslib "^1.9.0"
 
-safe-buffer@5.1.2, safe-buffer@~5.1.0, safe-buffer@~5.1.1:
+safe-buffer@5.1.2, safe-buffer@>=5.1.0, safe-buffer@^5.0.1, safe-buffer@^5.1.0, safe-buffer@^5.1.1, safe-buffer@^5.1.2, safe-buffer@~5.1.0, safe-buffer@~5.1.1:
   version "5.1.2"
   resolved "https://registry.yarnpkg.com/safe-buffer/-/safe-buffer-5.1.2.tgz#991ec69d296e0313747d59bdfd2b745c35f8828d"
   integrity sha512-Gd2UZBJDkXlY7GbJxfsE8/nvKkUEU1G38c1siN6QP6a9PT9MmHB8GnpscSmMJSoF8LOIrt8ud/wPtojys4G6+g==
 
-safe-buffer@5.2.1, safe-buffer@>=5.1.0, safe-buffer@^5.0.1, safe-buffer@^5.1.0, safe-buffer@^5.1.1, safe-buffer@^5.1.2, safe-buffer@^5.2.0:
+safe-buffer@5.2.1, safe-buffer@^5.2.0:
   version "5.2.1"
   resolved "https://registry.yarnpkg.com/safe-buffer/-/safe-buffer-5.2.1.tgz#1eaf9fa9bdb1fdd4ec75f58f9cdb4e6b7827eec6"
   integrity sha512-rp3So07KcdmmKbGvgaNxQSJr7bGVSVk5S9Eq1F+ppbRo70+YeaDxkw5Dd8NPN+GD6bjnYm2VuPuCXmpuYvmCXQ==
