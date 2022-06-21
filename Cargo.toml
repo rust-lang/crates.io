@@ -54,7 +54,7 @@ hashbrown = { version = "=0.12.1", default-features = false }
 hex = "=0.4.3"
 http = "=0.2.8"
 hyper = { version = "=0.14.19", features = ["client", "http1"] }
-indexmap = { version = "=1.9.0", features = ["serde-1"] }
+indexmap = { version = "=1.9.1", features = ["serde-1"] }
 indicatif = "=0.16.2"
 ipnetwork = "=0.19.0"
 tikv-jemallocator = { version = "=0.5.0", features = ['unprefixed_malloc_on_supported_platforms', 'profiling'] }
