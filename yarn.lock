@@ -1294,7 +1294,7 @@
   resolved "https://registry.yarnpkg.com/@embroider/hbs-loader/-/hbs-loader-1.8.0.tgz#f72e88b945658e2b9bd6e1737ea74e857167482f"
   integrity sha512-fiRvu10UBeGzF2rmRWeR7PSw2a291t5BX1tzI5Dhsj1c1rXFvBWKhdkHWQKm662GoNzaWhlppz5HUVzMLwfeuw==
 
-"@embroider/macros@1.8.0", "@embroider/macros@^1.0.0", "@embroider/macros@^1.6.0":
+"@embroider/macros@1.8.0", "@embroider/macros@^1.0.0", "@embroider/macros@^1.6.0", "@embroider/macros@^1.8.0":
   version "1.8.0"
   resolved "https://registry.yarnpkg.com/@embroider/macros/-/macros-1.8.0.tgz#9e947e6292f0d7768a0f743d883c3e794457eaec"
   integrity sha512-jeRoUMPbZ/ADBU0FsyBGS1UgV5vQmwIPnpbVUsJ0XcZFZq/8ZHV6Ts4yeubvH/lePnUpHaKogs4dDvGk5tpQKw==
@@ -6969,11 +6969,12 @@ ember-test-selectors@6.0.0:
     ember-cli-babel "^7.26.4"
     ember-cli-version-checker "^5.1.2"
 
-ember-tooltips@3.5.2:
-  version "3.5.2"
-  resolved "https://registry.yarnpkg.com/ember-tooltips/-/ember-tooltips-3.5.2.tgz#4dbc57735ac1ccdd05f36249cafebe7b3d30eb58"
-  integrity sha512-sSU8EJ5xh4bpHB/kFShnUGXYhtFeUPAXlXRpCs/tWn26a+z8zudsAZVtKMiOGlYe5Eeyvoi5ErXraRU32lBoxg==
+ember-tooltips@3.6.0:
+  version "3.6.0"
+  resolved "https://registry.yarnpkg.com/ember-tooltips/-/ember-tooltips-3.6.0.tgz#15223e6fa50dec2fcf8dac16be9b12b46f395436"
+  integrity sha512-DsqF6vvL3DKWSUHJKuMJ8KSxbE/T+eZAE2xtzAuHRqjl1AYIOkugGBVynGYYP8+2/10NMwk05LYbT1dirAcEBQ==
   dependencies:
+    "@embroider/macros" "^1.8.0"
     broccoli-file-creator "^2.1.1"
     broccoli-merge-trees "^4.2.0"
     ember-auto-import "^1.11.3"
@@ -7697,14 +7698,6 @@ fastboot-app-server@3.3.2:
     fastboot "3.3.2"
     fastboot-express-middleware "3.3.2"
 
-fastboot-express-middleware@3.3.1:
-  version "3.3.1"
-  resolved "https://registry.yarnpkg.com/fastboot-express-middleware/-/fastboot-express-middleware-3.3.1.tgz#4738ea1ade4f8f68f03101146d7264d9158e683f"
-  integrity sha512-Ao1aXpLGepdjmXEL07jo+l/TRjqkeaQFgiIPJ/YSCYSmkZCU6GQ71IkhIwnefC2RJT+S2Bx0FtMDXeWPigoZmg==
-  dependencies:
-    chalk "^4.1.2"
-    fastboot "3.3.1"
-
 fastboot-express-middleware@3.3.2:
   version "3.3.2"
   resolved "https://registry.yarnpkg.com/fastboot-express-middleware/-/fastboot-express-middleware-3.3.2.tgz#6d78de06f1db51f47b4f66658c651a61fcf5ca96"
@@ -7720,19 +7713,6 @@ fastboot-transform@^0.1.3:
   dependencies:
     broccoli-stew "^1.5.0"
     convert-source-map "^1.5.1"
-
-fastboot@3.3.1:
-  version "3.3.1"
-  resolved "https://registry.yarnpkg.com/fastboot/-/fastboot-3.3.1.tgz#7b8ffcc64b2c9fa9d93f8a273a65b86d25bd5ab0"
-  integrity sha512-5RUp1OchhDxfiQwc6WNgLhGAsLS6boiUZPDcWgp2ijw5xOcVmRTvYz2pWXE3flEoGTlVlt9PKG06oW6ql40RGg==
-  dependencies:
-    chalk "^4.1.2"
-    cookie "^0.4.1"
-    debug "^4.3.3"
-    jsdom "^19.0.0"
-    resolve "^1.22.0"
-    simple-dom "^1.4.0"
-    source-map-support "^0.5.21"
 
 fastboot@3.3.2:
   version "3.3.2"
