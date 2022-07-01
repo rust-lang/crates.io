@@ -40,7 +40,7 @@ macro_rules! metrics {
         }
         impl $name {
             $vis fn new() -> Result<Self, prometheus::Error> {
-                use crate::metrics::macros::MetricFromOpts;
+                use $crate::metrics::macros::MetricFromOpts;
 
                 let registry = prometheus::Registry::new();
                 $(
