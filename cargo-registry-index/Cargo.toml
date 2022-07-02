@@ -18,7 +18,7 @@ anyhow = "=1.0.58"
 base64 = "=0.13.0"
 dotenv = "=0.15.0"
 git2 = "=0.14.4"
-serde = { version = "=1.0.137", features = ["derive"] }
+serde = { version = "=1.0.138", features = ["derive"] }
 tempfile = "=3.3.0"
 url = "=2.2.2"
 serde_json = { version = "=1.0.82", optional = true }
