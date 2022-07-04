@@ -14,7 +14,7 @@ export function register(server) {
   server.get('/api/v1/categories/:category_id', function (schema, request) {
     let catId = request.params.category_id;
     let category = schema.categories.find(catId);
-    return category ? category : notFound();
+    return category ?? notFound();
   });
 
   server.get('/api/v1/category_slugs', function (schema) {

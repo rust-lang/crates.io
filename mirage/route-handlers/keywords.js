@@ -14,6 +14,6 @@ export function register(server) {
   server.get('/api/v1/keywords/:keyword_id', (schema, request) => {
     let keywordId = request.params.keyword_id;
     let keyword = schema.keywords.find(keywordId);
-    return keyword ? keyword : notFound();
+    return keyword ?? notFound();
   });
 }
