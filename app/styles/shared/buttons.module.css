@@ -31,6 +31,7 @@
     outline: 0;
     border-radius: 30px;
     background: linear-gradient(to bottom, var(--bg-color-top) 0%, var(--bg-color-bottom) 100%);
+    cursor: pointer;
 
     img, svg {
         float: left;
