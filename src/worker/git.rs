@@ -5,6 +5,7 @@ use cargo_registry_index::Crate;
 use chrono::Utc;
 use diesel::prelude::*;
 use std::fs::{self, OpenOptions};
+use std::io::ErrorKind;
 use std::process::Command;
 use swirl::PerformError;
 
@@ -33,9 +34,16 @@ pub fn add_crate(env: &Environment, conn: &PgConnection, krate: Crate) -> Result
 pub fn update_crate_index(env: &Environment, crate_name: String) -> Result<(), PerformError> {
     let repo = env.lock_index()?;
     let dst = repo.index_file(&crate_name);
-    let contents = std::fs::read_to_string(dst)?;
+
+    let contents = match fs::read_to_string(dst) {
+        Ok(contents) => Some(contents),
+        Err(e) if e.kind() == ErrorKind::NotFound => None,
+        Err(e) => return Err(e.into()),
+    };
+
     env.uploader
-        .upload_index(env.http_client(), &crate_name, contents)?;
+        .sync_index(env.http_client(), &crate_name, contents)?;
+
     Ok(())
 }
 
