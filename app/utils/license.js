@@ -1,4 +1,4 @@
-// see https://choosealicense.com/appendix/
+// see https://github.com/github/choosealicense.com/tree/43f355b2819747a1c5d83e0a7debbb0815e73036/_licenses
 const CAL_LICENSES = [
   '0bsd',
   'afl-3.0',
@@ -14,6 +14,9 @@ const CAL_LICENSES = [
   'cc-by-sa-4.0',
   'cc0-1.0',
   'cecill-2.1',
+  'cern-ohl-p-2.0',
+  'cern-ohl-s-2.0',
+  'cern-ohl-w-2.0',
   'ecl-2.0',
   'epl-1.0',
   'epl-2.0',
@@ -26,9 +29,11 @@ const CAL_LICENSES = [
   'lgpl-3.0',
   'lppl-1.3c',
   'mit',
+  'mit-0',
   'mpl-2.0',
   'ms-pl',
   'ms-rl',
+  'mulanpsl-2.0',
   'ncsa',
   'odbl-1.0',
   'ofl-1.1',
