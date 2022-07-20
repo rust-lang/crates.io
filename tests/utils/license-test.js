@@ -36,7 +36,7 @@ module('parseLicense()', function () {
       [
         { isKeyword: false, link: 'https://spdx.org/licenses/GPL-2.0-or-later.html', text: 'GPL-2.0-or-later' },
         { isKeyword: true, link: undefined, text: 'WITH' },
-        { isKeyword: false, link: undefined, text: 'Bison-exception-2.2' },
+        { isKeyword: false, link: 'https://spdx.org/licenses/Bison-exception-2.2.html', text: 'Bison-exception-2.2' },
       ],
     ],
     [
