@@ -2,7 +2,7 @@
 
 use cargo_registry::admin::{
     delete_crate, delete_version, migrate, populate, render_readmes, test_pagerduty,
-    transfer_crates, upload_index, verify_token,
+    transfer_crates, upload_index, verify_token, yank_version,
 };
 
 #[derive(clap::Parser, Debug)]
@@ -23,6 +23,7 @@ enum SubCommand {
     VerifyToken(verify_token::Opts),
     Migrate(migrate::Opts),
     UploadIndex(upload_index::Opts),
+    YankVersion(yank_version::Opts),
 }
 
 fn main() -> anyhow::Result<()> {
@@ -40,6 +41,7 @@ fn main() -> anyhow::Result<()> {
         SubCommand::VerifyToken(opts) => verify_token::run(opts).unwrap(),
         SubCommand::Migrate(opts) => migrate::run(opts)?,
         SubCommand::UploadIndex(opts) => upload_index::run(opts)?,
+        SubCommand::YankVersion(opts) => yank_version::run(opts),
     }
 
     Ok(())
