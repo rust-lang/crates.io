@@ -9,3 +9,4 @@ pub mod test_pagerduty;
 pub mod transfer_crates;
 pub mod upload_index;
 pub mod verify_token;
+pub mod yank_version;
