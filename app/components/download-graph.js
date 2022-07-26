@@ -48,6 +48,8 @@ export default class DownloadGraph extends Component {
         },
       },
     });
+
+    this.stacked = true;
   }
 
   @action updateChart() {
@@ -55,6 +57,21 @@ export default class DownloadGraph extends Component {
 
     if (chart) {
       chart.data = this.data;
+      chart.update();
+    }
+  }
+
+  @action toggleChart() {
+    let { chart, data, stacked } = this;
+
+    if (chart) {
+      this.stacked = stacked = !stacked;
+      data.dataset = data.datasets.map(d => {
+        d.fill = stacked ? 'origin' : false;
+        chart.options.scales.y.stacked = stacked;
+        return d;
+      });
+      chart.data = data;
       chart.update();
     }
   }

@@ -125,9 +125,14 @@
 
     h4 {
         color: var(--main-color-light);
+        float: left;
     }
 
     @media only percy {
         display: none;
     }
+}
+
+.graph-data {
+    clear: both;
 }

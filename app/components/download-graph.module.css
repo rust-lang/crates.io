@@ -13,3 +13,9 @@
 .error {
     text-align: center;
 }
+
+.toggle-stacked {
+    float: right;
+    margin-top: 1.33em;
+    margin-bottom: 1.33em;
+}
