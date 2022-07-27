@@ -135,6 +135,11 @@ pub fn proxy() -> (String, Bomb) {
                 let data = assert_ok!(serde_json::to_string_pretty(data));
                 Some((data.into_bytes(), path.clone()))
             }
+            Record::Replay(ref remaining_exchanges) if !remaining_exchanges.is_empty() =>
+                panic!(
+                    "The HTTP proxy for this test received fewer requests than expected (remaining: {})",
+                    remaining_exchanges.len()
+                ),
             Record::Replay(..) => None,
         }
     });
