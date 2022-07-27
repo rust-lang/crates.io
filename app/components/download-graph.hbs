@@ -1,7 +1,36 @@
 <div local-class="toggle-stacked">
-  <a {{on "click" this.toggleChart}}>
-    Toggle Stacked Chart
-  </a>
+  <span local-class="toggle-stacked-label">Display as </span>
+  <Dropdown as |dd|>
+    <dd.Trigger local-class="trigger">
+      <span local-class="trigger-label">
+        {{#if this.stacked}}
+          Stacked
+        {{else}}
+          Unstacked
+        {{/if}}
+      </span>
+    </dd.Trigger>
+    <dd.Menu as |menu|>
+      <menu.Item>
+        <button
+          type="button"
+          local-class="dropdown-button"
+          {{on "click" this.setStacked}}
+        >
+          Stacked
+        </button>
+      </menu.Item>
+      <menu.Item>
+        <button
+          type="button"
+          local-class="dropdown-button"
+          {{on "click" this.setUnstacked}}
+        >
+          Unstacked
+        </button>
+      </menu.Item>
+    </dd.Menu>
+  </Dropdown>
 </div>
 <div
   local-class="wrapper"
