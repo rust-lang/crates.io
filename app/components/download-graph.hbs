@@ -1,37 +1,3 @@
-<div local-class="toggle-stacked">
-  <span local-class="toggle-stacked-label">Display as </span>
-  <Dropdown as |dd|>
-    <dd.Trigger local-class="trigger">
-      <span local-class="trigger-label">
-        {{#if this.stacked}}
-          Stacked
-        {{else}}
-          Unstacked
-        {{/if}}
-      </span>
-    </dd.Trigger>
-    <dd.Menu as |menu|>
-      <menu.Item>
-        <button
-          type="button"
-          local-class="dropdown-button"
-          {{on "click" this.setStacked}}
-        >
-          Stacked
-        </button>
-      </menu.Item>
-      <menu.Item>
-        <button
-          type="button"
-          local-class="dropdown-button"
-          {{on "click" this.setUnstacked}}
-        >
-          Unstacked
-        </button>
-      </menu.Item>
-    </dd.Menu>
-  </Dropdown>
-</div>
 <div
   local-class="wrapper"
   data-test-download-graph
@@ -44,6 +10,7 @@
     <canvas
       {{did-insert this.createChart}}
       {{did-update this.updateChart @data}}
+      {{did-update this.updateStacked @stacked}}
       {{will-destroy this.destroyChart}}
     />
   {{else}}

@@ -13,31 +13,3 @@
 .error {
     text-align: center;
 }
-
-.toggle-stacked {
-    float: right;
-    margin-top: calc(1.33em - 10px);
-    margin-bottom: calc(1.33em - 10px);
-}
-
-.trigger {
-    background-color: var(--main-bg-dark);
-    font-size: 85%;
-    padding: 10px;
-    border: none;
-    border-radius: 5px;
-
-    .trigger-label {
-        min-width: 65px;
-    }
-}
-
-.dropdown-button {
-    background: none;
-    border: 0;
-    padding: 10px 0;
-
-    img {
-        vertical-align: top;
-    }
-}

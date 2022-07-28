@@ -2,7 +2,6 @@ import { action } from '@ember/object';
 import { inject as service } from '@ember/service';
 import { waitForPromise } from '@ember/test-waiters';
 import Component from '@glimmer/component';
-import { tracked } from '@glimmer/tracking';
 
 import subDays from 'date-fns/subDays';
 import window from 'ember-window-mock';
@@ -16,8 +15,6 @@ const ONE_DAY = 24 * 60 * 60 * 1000;
 
 export default class DownloadGraph extends Component {
   @service chartjs;
-
-  @tracked stacked;
 
   @action loadChartJs() {
     waitForPromise(this.chartjs.loadTask.perform()).catch(() => {
@@ -51,8 +48,6 @@ export default class DownloadGraph extends Component {
         },
       },
     });
-
-    this.stacked = true;
   }
 
   @action updateChart() {
@@ -64,27 +59,17 @@ export default class DownloadGraph extends Component {
     }
   }
 
-  @action setStacked() {
-    this.updateStacked(true);
-  }
-
-  @action setUnstacked() {
-    this.updateStacked(false);
-  }
-
-  @action updateStacked(stacked) {
+  @action updateStacked() {
     let { chart, data } = this;
 
     if (chart) {
-      this.stacked = stacked;
       data.dataset = data.datasets.map(d => {
-        d.fill = stacked ? 'origin' : false;
-        chart.options.scales.y.stacked = stacked;
+        d.fill = this.args.stacked ? 'origin' : false;
+        chart.options.scales.y.stacked = this.args.stacked;
         return d;
       });
       chart.data = data;
       chart.update();
-      console.log(this.stacked);
     }
   }
 

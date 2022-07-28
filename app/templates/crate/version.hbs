@@ -79,7 +79,41 @@
     </div>
     <div local-class='graph'>
       <h4>Downloads over the last 90 days</h4>
-      <DownloadGraph @data={{this.downloads}} local-class="graph-data" />
+      <div local-class="toggle-stacked">
+        <span local-class="toggle-stacked-label">Display as </span>
+        <Dropdown as |dd|>
+          <dd.Trigger local-class="trigger">
+            <span local-class="trigger-label">
+              {{#if this.stackedGraph}}
+                Stacked
+              {{else}}
+                Unstacked
+              {{/if}}
+            </span>
+          </dd.Trigger>
+          <dd.Menu as |menu|>
+            <menu.Item>
+              <button
+                type="button"
+                local-class="dropdown-button"
+                {{on "click" this.setStackedGraph}}
+              >
+                Stacked
+              </button>
+            </menu.Item>
+            <menu.Item>
+              <button
+                type="button"
+                local-class="dropdown-button"
+                {{on "click" this.setUnstackedGraph}}
+              >
+                Unstacked
+              </button>
+            </menu.Item>
+          </dd.Menu>
+        </Dropdown>
+      </div>
+      <DownloadGraph @data={{this.downloads}} @stacked={{this.stackedGraph}} local-class="graph-data" />
     </div>
   </div>
 {{/if}}
