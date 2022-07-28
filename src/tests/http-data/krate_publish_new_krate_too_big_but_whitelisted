@@ -13,10 +13,6 @@
           "*/*"
         ],
         [
-          "authorization",
-          "AWS AKIAICL5IWUZYWWKA7JA:qt4nSgvxT4p0mzUU9mA+lDtnKdE="
-        ],
-        [
           "host",
           "alexcrichton-test.s3.amazonaws.com"
         ],
@@ -27,10 +23,6 @@
         [
           "content-type",
           "application/gzip"
-        ],
-        [
-          "date",
-          "Fri, 15 Sep 2017 07:53:06 -0700"
         ]
       ],
       "body": "H4sIAAAAAAAA/+3GTQqAIBAG0DmKF8jUoDlOGPQzEAg50fVDon0rIfre6s0pDecqOm2StfHWW9eOslAN7tZxcM+Lcu4DUxVH1rgbQz8VAQAA4PMIAOClC25Yv/oADgAA"
@@ -57,14 +49,6 @@
         [
           "content-length",
           "167"
-        ],
-        [
-          "date",
-          "Fri, 15 Sep 2017 07:53:06 -0700"
-        ],
-        [
-          "authorization",
-          "AWS AKIAICL5IWUZYWWKA7JA:uDc39eNdF6CcwB+q+JwKsoDLQc4="
         ],
         [
           "content-type",

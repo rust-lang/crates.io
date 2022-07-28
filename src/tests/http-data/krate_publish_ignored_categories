@@ -9,10 +9,6 @@
           "35"
         ],
         [
-          "authorization",
-          "AWS AKIAICL5IWUZYWWKA7JA:V37kbEzeh57sB4yTSZIOJACPoP4="
-        ],
-        [
           "host",
           "alexcrichton-test.s3.amazonaws.com"
         ],
@@ -27,10 +23,6 @@
         [
           "accept",
           "*/*"
-        ],
-        [
-          "date",
-          "Fri, 15 Sep 2017 07:53:06 -0700"
         ]
       ],
       "body": "H4sIAAAAAAAA/+3AAQEAAACCIP+vbkhQwKsBLq+17wAEAAA="
@@ -57,14 +49,6 @@
         [
           "content-length",
           "169"
-        ],
-        [
-          "date",
-          "Fri, 15 Sep 2017 07:53:06 -0700"
-        ],
-        [
-          "authorization",
-          "AWS AKIAICL5IWUZYWWKA7JA:uDc39eNdF6CcwB+q+JwKsoDLQc4="
         ],
         [
           "content-type",

@@ -13,16 +13,8 @@
           "gzip"
         ],
         [
-          "authorization",
-          "AWS AKIAICL5IWUZYWWKA7JA:eW1SP7V3WdqHXWZLcbN1BI2Zo0g="
-        ],
-        [
           "content-length",
           "35"
-        ],
-        [
-          "date",
-          "Fri, 15 Sep 2017 07:53:06 -0700"
         ],
         [
           "content-type",
@@ -57,14 +49,6 @@
         [
           "content-length",
           "167"
-        ],
-        [
-          "date",
-          "Fri, 15 Sep 2017 07:53:06 -0700"
-        ],
-        [
-          "authorization",
-          "AWS AKIAICL5IWUZYWWKA7JA:uDc39eNdF6CcwB+q+JwKsoDLQc4="
         ],
         [
           "content-type",

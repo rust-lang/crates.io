@@ -5,16 +5,8 @@
       "method": "PUT",
       "headers": [
         [
-          "date",
-          "Fri, 15 Sep 2017 07:53:06 -0700"
-        ],
-        [
           "accept",
           "*/*"
-        ],
-        [
-          "authorization",
-          "AWS AKIAICL5IWUZYWWKA7JA:gRG/G3VmzQw6Sg5GU/cdC4qRm3c="
         ],
         [
           "host",
@@ -51,14 +43,6 @@
           "*/*"
         ],
         [
-          "authorization",
-          "AWS AKIAICL5IWUZYWWKA7JA:txrAYLyxwbEqZrth9T2NU1Hycjc="
-        ],
-        [
-          "date",
-          "Fri, 15 Sep 2017 07:53:06 -0700"
-        ],
-        [
           "accept-encoding",
           "gzip"
         ],
@@ -101,14 +85,6 @@
           "354"
         ],
         [
-          "date",
-          "Fri, 15 Sep 2017 07:53:06 -0700"
-        ],
-        [
-          "authorization",
-          "AWS AKIAICL5IWUZYWWKA7JA:uDc39eNdF6CcwB+q+JwKsoDLQc4="
-        ],
-        [
           "content-type",
           "text/plain"
         ],
@@ -141,14 +117,6 @@
         [
           "content-length",
           "354"
-        ],
-        [
-          "date",
-          "Fri, 15 Sep 2017 07:53:06 -0700"
-        ],
-        [
-          "authorization",
-          "AWS AKIAICL5IWUZYWWKA7JA:uDc39eNdF6CcwB+q+JwKsoDLQc4="
         ],
         [
           "content-type",

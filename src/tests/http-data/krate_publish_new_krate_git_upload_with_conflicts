@@ -5,10 +5,6 @@
       "method": "PUT",
       "headers": [
         [
-          "date",
-          "Fri, 15 Sep 2017 07:53:06 -0700"
-        ],
-        [
           "accept-encoding",
           "gzip"
         ],
@@ -19,10 +15,6 @@
         [
           "content-length",
           "35"
-        ],
-        [
-          "authorization",
-          "AWS AKIAICL5IWUZYWWKA7JA:241ftMxnamoj94RBOB/al86Xwjk="
         ],
         [
           "accept",
@@ -57,14 +49,6 @@
         [
           "content-length",
           "167"
-        ],
-        [
-          "date",
-          "Fri, 15 Sep 2017 07:53:06 -0700"
-        ],
-        [
-          "authorization",
-          "AWS AKIAICL5IWUZYWWKA7JA:uDc39eNdF6CcwB+q+JwKsoDLQc4="
         ],
         [
           "content-type",

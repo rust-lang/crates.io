@@ -9,16 +9,8 @@
           "*/*"
         ],
         [
-          "date",
-          "Fri, 15 Sep 2017 07:53:05 -0700"
-        ],
-        [
           "content-length",
           "35"
-        ],
-        [
-          "authorization",
-          "AWS AKIAICL5IWUZYWWKA7JA:kDm23yhf8YuOKpTcbHhNBa6BtQw="
         ],
         [
           "host",
@@ -57,14 +49,6 @@
         [
           "content-length",
           "163"
-        ],
-        [
-          "date",
-          "Fri, 15 Sep 2017 07:53:06 -0700"
-        ],
-        [
-          "authorization",
-          "AWS AKIAICL5IWUZYWWKA7JA:uDc39eNdF6CcwB+q+JwKsoDLQc4="
         ],
         [
           "content-type",

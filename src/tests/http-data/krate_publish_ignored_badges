@@ -9,10 +9,6 @@
           "*/*"
         ],
         [
-          "authorization",
-          "AWS AKIAICL5IWUZYWWKA7JA:d5z7PoInZdjSdMpMeR61v/ZnsRE="
-        ],
-        [
           "host",
           "alexcrichton-test.s3.amazonaws.com"
         ],
@@ -23,10 +19,6 @@
         [
           "accept-encoding",
           "gzip"
-        ],
-        [
-          "date",
-          "Fri, 15 Sep 2017 07:53:05 -0700"
         ],
         [
           "content-type",
@@ -57,14 +49,6 @@
         [
           "content-length",
           "171"
-        ],
-        [
-          "date",
-          "Fri, 15 Sep 2017 07:53:06 -0700"
-        ],
-        [
-          "authorization",
-          "AWS AKIAICL5IWUZYWWKA7JA:uDc39eNdF6CcwB+q+JwKsoDLQc4="
         ],
         [
           "content-type",

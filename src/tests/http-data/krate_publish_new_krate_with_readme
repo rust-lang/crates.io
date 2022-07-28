@@ -5,14 +5,6 @@
       "method": "PUT",
       "headers": [
         [
-          "date",
-          "Fri, 15 Sep 2017 07:53:06 -0700"
-        ],
-        [
-          "authorization",
-          "AWS AKIAICL5IWUZYWWKA7JA:G2u3lkUwozOcUMarUxKm7kfPFRU="
-        ],
-        [
           "host",
           "alexcrichton-test.s3.amazonaws.com"
         ],
@@ -55,16 +47,8 @@
           "*/*"
         ],
         [
-          "date",
-          "Fri, 15 Sep 2017 07:53:06 -0700"
-        ],
-        [
           "content-type",
           "text/html"
-        ],
-        [
-          "authorization",
-          "AWS AKIAICL5IWUZYWWKA7JA:Ip89jXvQWYPf+5zqZQ1vKHnbifA="
         ],
         [
           "host",
@@ -99,14 +83,6 @@
         [
           "content-length",
           "164"
-        ],
-        [
-          "date",
-          "Fri, 15 Sep 2017 07:53:06 -0700"
-        ],
-        [
-          "authorization",
-          "AWS AKIAICL5IWUZYWWKA7JA:uDc39eNdF6CcwB+q+JwKsoDLQc4="
         ],
         [
           "content-type",

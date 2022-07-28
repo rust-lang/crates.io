@@ -17,16 +17,8 @@
           "gzip"
         ],
         [
-          "authorization",
-          "AWS AKIAICL5IWUZYWWKA7JA:3P5wvArAHvV7o8atB0gUc0RTCCc="
-        ],
-        [
           "accept",
           "*/*"
-        ],
-        [
-          "date",
-          "Fri, 15 Sep 2017 07:53:06 -0700"
         ],
         [
           "host",
@@ -59,16 +51,8 @@
           "gzip"
         ],
         [
-          "authorization",
-          "AWS AKIAICL5IWUZYWWKA7JA:3P5wvArAHvV7o8atB0gUc0RTCCc="
-        ],
-        [
           "accept",
           "*/*"
-        ],
-        [
-          "date",
-          "Fri, 15 Sep 2017 07:53:06 -0700"
         ],
         [
           "host",
@@ -99,14 +83,6 @@
         [
           "content-length",
           "334"
-        ],
-        [
-          "date",
-          "Fri, 15 Sep 2017 07:53:06 -0700"
-        ],
-        [
-          "authorization",
-          "AWS AKIAICL5IWUZYWWKA7JA:uDc39eNdF6CcwB+q+JwKsoDLQc4="
         ],
         [
           "content-type",
@@ -141,14 +117,6 @@
         [
           "content-length",
           "334"
-        ],
-        [
-          "date",
-          "Fri, 15 Sep 2017 07:53:06 -0700"
-        ],
-        [
-          "authorization",
-          "AWS AKIAICL5IWUZYWWKA7JA:uDc39eNdF6CcwB+q+JwKsoDLQc4="
         ],
         [
           "content-type",
