@@ -5,10 +5,6 @@
       "method": "PUT",
       "headers": [
         [
-          "host",
-          "alexcrichton-test.s3.amazonaws.com"
-        ],
-        [
           "accept-encoding",
           "gzip"
         ],
@@ -51,10 +47,6 @@
           "text/html"
         ],
         [
-          "host",
-          "alexcrichton-test.s3.amazonaws.com"
-        ],
-        [
           "content-length",
           "0"
         ]
@@ -87,12 +79,7 @@
         [
           "content-type",
           "text/plain"
-        ],
-        [
-          "host",
-          "alexcrichton-test.s3.amazonaws.com"
-        ]
-      ],
+        ]      ],
       "body": "eyJuYW1lIjoiZm9vX3JlYWRtZSIsInZlcnMiOiIxLjAuMCIsImRlcHMiOltdLCJja3N1bSI6ImFjYjU2MDRiMTI2YWM4OTRjMWViMTFjNDU3NWJmMjA3MmZlYTYxMjMyYTg4OGU0NTM3NzBjNzlkN2VkNTY0MTkiLCJmZWF0dXJlcyI6e30sInlhbmtlZCI6ZmFsc2UsImxpbmtzIjpudWxsfQo="
     },
     "response": {

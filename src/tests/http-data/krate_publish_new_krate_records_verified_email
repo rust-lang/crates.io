@@ -13,10 +13,6 @@
           "35"
         ],
         [
-          "host",
-          "alexcrichton-test.s3.amazonaws.com"
-        ],
-        [
           "accept-encoding",
           "gzip"
         ],
@@ -53,12 +49,7 @@
         [
           "content-type",
           "text/plain"
-        ],
-        [
-          "host",
-          "alexcrichton-test.s3.amazonaws.com"
-        ]
-      ],
+        ]      ],
       "body": "eyJuYW1lIjoiZm9vX3ZlcmlmaWVkX2VtYWlsIiwidmVycyI6IjEuMC4wIiwiZGVwcyI6W10sImNrc3VtIjoiYWNiNTYwNGIxMjZhYzg5NGMxZWIxMWM0NTc1YmYyMDcyZmVhNjEyMzJhODg4ZTQ1Mzc3MGM3OWQ3ZWQ1NjQxOSIsImZlYXR1cmVzIjp7fSwieWFua2VkIjpmYWxzZSwibGlua3MiOm51bGx9Cg=="
     },
     "response": {

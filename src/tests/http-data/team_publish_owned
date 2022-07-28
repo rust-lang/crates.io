@@ -5,10 +5,6 @@
       "method": "PUT",
       "headers": [
         [
-          "host",
-          "alexcrichton-test.s3.amazonaws.com"
-        ],
-        [
           "accept",
           "*/*"
         ],
@@ -53,12 +49,7 @@
         [
           "content-type",
           "text/plain"
-        ],
-        [
-          "host",
-          "alexcrichton-test.s3.amazonaws.com"
-        ]
-      ],
+        ]      ],
       "body": "eyJuYW1lIjoiZm9vX3RlYW1fb3duZWQiLCJ2ZXJzIjoiMi4wLjAiLCJkZXBzIjpbXSwiY2tzdW0iOiJhY2I1NjA0YjEyNmFjODk0YzFlYjExYzQ1NzViZjIwNzJmZWE2MTIzMmE4ODhlNDUzNzcwYzc5ZDdlZDU2NDE5IiwiZmVhdHVyZXMiOnt9LCJ5YW5rZWQiOmZhbHNlLCJsaW5rcyI6bnVsbH0K"
     },
     "response": {

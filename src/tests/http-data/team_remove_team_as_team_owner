@@ -13,10 +13,6 @@
           "application/gzip"
         ],
         [
-          "host",
-          "alexcrichton-test.s3.amazonaws.com"
-        ],
-        [
           "content-length",
           "35"
         ],

@@ -283,7 +283,7 @@ fn replay_http(
     mut exchange: Exchange,
     stdout: &mut dyn Write,
 ) -> impl Future<Output = Result<Response<Body>, Error>> + Send {
-    static IGNORED_HEADERS: &[&str] = &["authorization", "date", "cache-control"];
+    static IGNORED_HEADERS: &[&str] = &["authorization", "date", "cache-control", "host"];
 
     debug!("<- {req:?}");
     assert_eq!(req.uri().to_string(), exchange.request.uri);

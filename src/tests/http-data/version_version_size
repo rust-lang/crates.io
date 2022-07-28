@@ -13,10 +13,6 @@
           "35"
         ],
         [
-          "host",
-          "alexcrichton-test.s3.amazonaws.com"
-        ],
-        [
           "accept-encoding",
           "gzip"
         ],
@@ -53,12 +49,7 @@
         [
           "content-type",
           "application/gzip"
-        ],
-        [
-          "host",
-          "alexcrichton-test.s3.amazonaws.com"
-        ]
-      ],
+        ]      ],
       "body": "H4sIAAAAAAAA/+3GMQ6AIAwAwD6FD4itDj6HYIKmi02oOvh6nQwfgIXedJtIuFNWliMoP2mYPHocV96hOvxRcfxOONMCTVx6xuwcdCqCMcaYHr0JrJTmAAgAAA=="
     },
     "response": {
@@ -87,12 +78,7 @@
         [
           "content-type",
           "text/plain"
-        ],
-        [
-          "host",
-          "alexcrichton-test.s3.amazonaws.com"
-        ]
-      ],
+        ]      ],
       "body": "eyJuYW1lIjoiZm9vX3ZlcnNpb25fc2l6ZSIsInZlcnMiOiIxLjAuMCIsImRlcHMiOltdLCJja3N1bSI6ImFjYjU2MDRiMTI2YWM4OTRjMWViMTFjNDU3NWJmMjA3MmZlYTYxMjMyYTg4OGU0NTM3NzBjNzlkN2VkNTY0MTkiLCJmZWF0dXJlcyI6e30sInlhbmtlZCI6ZmFsc2UsImxpbmtzIjpudWxsfQp7Im5hbWUiOiJmb29fdmVyc2lvbl9zaXplIiwidmVycyI6IjIuMC4wIiwiZGVwcyI6W10sImNrc3VtIjoiNzUyMmRkNjFiZGRmZDM1MDFiYTQ4YWY4YmFiY2ZmZDJjODkwOTE5ZGE5MGM4NWI2ZWFhZjdmZDk0NzlmOTAxYSIsImZlYXR1cmVzIjp7fSwieWFua2VkIjpmYWxzZSwibGlua3MiOm51bGx9Cg=="
     },
     "response": {
@@ -121,12 +107,7 @@
         [
           "content-type",
           "text/plain"
-        ],
-        [
-          "host",
-          "alexcrichton-test.s3.amazonaws.com"
-        ]
-      ],
+        ]      ],
       "body": "eyJuYW1lIjoiZm9vX3ZlcnNpb25fc2l6ZSIsInZlcnMiOiIxLjAuMCIsImRlcHMiOltdLCJja3N1bSI6ImFjYjU2MDRiMTI2YWM4OTRjMWViMTFjNDU3NWJmMjA3MmZlYTYxMjMyYTg4OGU0NTM3NzBjNzlkN2VkNTY0MTkiLCJmZWF0dXJlcyI6e30sInlhbmtlZCI6ZmFsc2UsImxpbmtzIjpudWxsfQp7Im5hbWUiOiJmb29fdmVyc2lvbl9zaXplIiwidmVycyI6IjIuMC4wIiwiZGVwcyI6W10sImNrc3VtIjoiNzUyMmRkNjFiZGRmZDM1MDFiYTQ4YWY4YmFiY2ZmZDJjODkwOTE5ZGE5MGM4NWI2ZWFhZjdmZDk0NzlmOTAxYSIsImZlYXR1cmVzIjp7fSwieWFua2VkIjpmYWxzZSwibGlua3MiOm51bGx9Cg=="
     },
     "response": {

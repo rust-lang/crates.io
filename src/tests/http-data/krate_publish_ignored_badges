@@ -9,10 +9,6 @@
           "*/*"
         ],
         [
-          "host",
-          "alexcrichton-test.s3.amazonaws.com"
-        ],
-        [
           "content-length",
           "35"
         ],
@@ -53,12 +49,7 @@
         [
           "content-type",
           "text/plain"
-        ],
-        [
-          "host",
-          "alexcrichton-test.s3.amazonaws.com"
-        ]
-      ],
+        ]      ],
       "body": "eyJuYW1lIjoiZm9vX2lnbm9yZWRfYmFkZ2UiLCJ2ZXJzIjoiMS4wLjAiLCJkZXBzIjpbXSwiY2tzdW0iOiJhY2I1NjA0YjEyNmFjODk0YzFlYjExYzQ1NzViZjIwNzJmZWE2MTIzMmE4ODhlNDUzNzcwYzc5ZDdlZDU2NDE5IiwiZmVhdHVyZXMiOnt9LCJ5YW5rZWQiOmZhbHNlLCJsaW5rcyI6bnVsbH0K"
     },
     "response": {
