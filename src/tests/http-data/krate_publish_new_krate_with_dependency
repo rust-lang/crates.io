@@ -5,8 +5,8 @@
       "method": "PUT",
       "headers": [
         [
-          "content-type",
-          "application/gzip"
+          "accept",
+          "*/*"
         ],
         [
           "accept-encoding",
@@ -17,8 +17,8 @@
           "35"
         ],
         [
-          "accept",
-          "*/*"
+          "content-type",
+          "application/gzip"
         ]
       ],
       "body": "H4sIAAAAAAAA/+3AAQEAAACCIP+vbkhQwKsBLq+17wAEAAA="
@@ -35,12 +35,12 @@
       "method": "PUT",
       "headers": [
         [
-          "accept-encoding",
-          "gzip"
-        ],
-        [
           "accept",
           "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip"
         ],
         [
           "content-length",
@@ -49,7 +49,8 @@
         [
           "content-type",
           "text/plain"
-        ]      ],
+        ]
+      ],
       "body": "eyJuYW1lIjoibmV3X2RlcCIsInZlcnMiOiIxLjAuMCIsImRlcHMiOlt7Im5hbWUiOiJmb28tZGVwIiwicmVxIjoiMS4wLjAiLCJmZWF0dXJlcyI6W10sIm9wdGlvbmFsIjpmYWxzZSwiZGVmYXVsdF9mZWF0dXJlcyI6dHJ1ZSwidGFyZ2V0IjpudWxsLCJraW5kIjoibm9ybWFsIn1dLCJja3N1bSI6ImFjYjU2MDRiMTI2YWM4OTRjMWViMTFjNDU3NWJmMjA3MmZlYTYxMjMyYTg4OGU0NTM3NzBjNzlkN2VkNTY0MTkiLCJmZWF0dXJlcyI6e30sInlhbmtlZCI6ZmFsc2UsImxpbmtzIjpudWxsfQo="
     },
     "response": {

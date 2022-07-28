@@ -5,21 +5,22 @@
       "method": "PUT",
       "headers": [
         [
-          "content-length",
-          "35"
-        ],
-        [
           "accept",
           "*/*"
         ],
         [
-          "content-type",
-          "application/gzip"
-        ],
-        [
           "accept-encoding",
           "gzip"
-        ]      ],
+        ],
+        [
+          "content-length",
+          "35"
+        ],
+        [
+          "content-type",
+          "application/gzip"
+        ]
+      ],
       "body": "H4sIAAAAAAAA/+3AAQEAAACCIP+vbkhQwKsBLq+17wAEAAA="
     },
     "response": {
@@ -34,12 +35,12 @@
       "method": "PUT",
       "headers": [
         [
-          "accept-encoding",
-          "gzip"
-        ],
-        [
           "accept",
           "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip"
         ],
         [
           "content-length",
@@ -48,7 +49,8 @@
         [
           "content-type",
           "text/plain"
-        ]      ],
+        ]
+      ],
       "body": "eyJuYW1lIjoiZm9vX25ldyIsInZlcnMiOiIxLjAuMCIsImRlcHMiOltdLCJja3N1bSI6ImFjYjU2MDRiMTI2YWM4OTRjMWViMTFjNDU3NWJmMjA3MmZlYTYxMjMyYTg4OGU0NTM3NzBjNzlkN2VkNTY0MTkiLCJmZWF0dXJlcyI6e30sInlhbmtlZCI6ZmFsc2UsImxpbmtzIjpudWxsfQo="
     },
     "response": {

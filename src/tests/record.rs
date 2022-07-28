@@ -227,6 +227,7 @@ struct Exchange {
 struct RecordedRequest {
     uri: String,
     method: String,
+    #[serde(serialize_with = "sorted_headers")]
     headers: HashSet<(String, String)>,
     body: String,
 }
@@ -234,8 +235,24 @@ struct RecordedRequest {
 #[derive(Serialize, Deserialize)]
 struct RecordedResponse {
     status: u16,
+    #[serde(serialize_with = "sorted_headers")]
     headers: HashSet<(String, String)>,
     body: String,
+}
+
+fn sorted_headers<S>(headers: &HashSet<(String, String)>, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+{
+    use serde::ser::SerializeSeq;
+
+    let mut headers = headers.clone().into_iter().collect::<Vec<_>>();
+    headers.sort_by_cached_key(|(name, _)| name.clone());
+    let mut seq = serializer.serialize_seq(Some(headers.len()))?;
+    for header in &headers {
+        seq.serialize_element(header)?;
+    }
+    seq.end()
 }
 
 type Client = hyper::Client<hyper_tls::HttpsConnector<hyper::client::HttpConnector>>;
