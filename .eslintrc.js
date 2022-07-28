@@ -31,6 +31,8 @@ module.exports = {
 
     // disabled because we still use `this.set()` in a few places and it works just fine
     'ember/classic-decorator-no-classic-methods': 'off',
+    // disabled because the alternatives are currently not worth the additional complexity
+    'ember/no-array-prototype-extensions': 'off',
 
     'ember-concurrency/no-perform-without-catch': 'warn',
     'ember-concurrency/require-task-name-suffix': 'error',
