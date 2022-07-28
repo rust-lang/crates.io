@@ -37,32 +37,7 @@
     },
     "response": {
       "status": 200,
-      "headers": [
-        [
-          "Server",
-          "AmazonS3"
-        ],
-        [
-          "date",
-          "Wed, 04 Oct 2017 16:43:52 GMT"
-        ],
-        [
-          "x-amz-request-id",
-          "91ED595B08C18CA0"
-        ],
-        [
-          "content-length",
-          "0"
-        ],
-        [
-          "x-amz-id-2",
-          "scR/+d6erFUIqoNtsf41rqZKLqshu57YYxRnFcZW1dPkQx7q1z/Y5rMXY7CXtobcFt58EfggMAY="
-        ],
-        [
-          "ETag",
-          "\"f9016ad360cebb4fe2e6e96e5949f022\""
-        ]
-      ],
+      "headers": [],
       "body": ""
     }
   },
@@ -104,32 +79,7 @@
     },
     "response": {
       "status": 200,
-      "headers": [
-        [
-          "x-amz-request-id",
-          "26589A5E52F8395C"
-        ],
-        [
-          "x-amz-id-2",
-          "JdIvnNTw53aqXjBIqBLNuN4kxf/w1XWX+xuIiGBDYy7yzOSDuAMtBSrTW4ZWetcCIdqCUHuQ51A="
-        ],
-        [
-          "content-length",
-          "0"
-        ],
-        [
-          "Server",
-          "AmazonS3"
-        ],
-        [
-          "date",
-          "Fri,15 Sep 2017 14:53:07 GMT"
-        ],
-        [
-          "ETag",
-          "\"f9016ad360cebb4fe2e6e96e5949f022\""
-        ]
-      ],
+      "headers": [],
       "body": ""
     }
   }

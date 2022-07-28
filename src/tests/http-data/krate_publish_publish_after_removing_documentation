@@ -37,32 +37,7 @@
     },
     "response": {
       "status": 200,
-      "headers": [
-        [
-          "x-amz-id-2",
-          "Es2wWCc+tXkMbbp+bEcjLFQn6yGqPeAUiBI5XqXZ8mAZUIpe7vYiCfBfoU727trNpEFMymyhgZY="
-        ],
-        [
-          "date",
-          "Fri, 15 Sep 2017 14:53:07 GMT"
-        ],
-        [
-          "ETag",
-          "\"f9016ad360cebb4fe2e6e96e5949f022\""
-        ],
-        [
-          "Server",
-          "AmazonS3"
-        ],
-        [
-          "content-length",
-          "0"
-        ],
-        [
-          "x-amz-request-id",
-          "98298F12367C7A0B"
-        ]
-      ],
+      "headers": [],
       "body": ""
     }
   },
@@ -104,32 +79,7 @@
     },
     "response": {
       "status": 200,
-      "headers": [
-        [
-          "ETag",
-          "\"f9016ad360cebb4fe2e6e96e5949f022\""
-        ],
-        [
-          "x-amz-id-2",
-          "gnBA5fngpIAF7AVe+goe2YZkL6gB7yRp25LNjBl7wqyMNeIXGMLTyWd/46bkoVNv/S9t9BZ5IB4="
-        ],
-        [
-          "content-length",
-          "0"
-        ],
-        [
-          "x-amz-request-id",
-          "2E4EDB9109077234"
-        ],
-        [
-          "date",
-          "Fri, 15 Sep 2017 14:53:07 GMT"
-        ],
-        [
-          "Server",
-          "AmazonS3"
-        ]
-      ],
+      "headers": [],
       "body": ""
     }
   },
@@ -171,32 +121,7 @@
     },
     "response": {
       "status": 200,
-      "headers": [
-        [
-          "x-amz-request-id",
-          "26589A5E52F8395C"
-        ],
-        [
-          "x-amz-id-2",
-          "JdIvnNTw53aqXjBIqBLNuN4kxf/w1XWX+xuIiGBDYy7yzOSDuAMtBSrTW4ZWetcCIdqCUHuQ51A="
-        ],
-        [
-          "content-length",
-          "0"
-        ],
-        [
-          "Server",
-          "AmazonS3"
-        ],
-        [
-          "date",
-          "Fri,15 Sep 2017 14:53:07 GMT"
-        ],
-        [
-          "ETag",
-          "\"f9016ad360cebb4fe2e6e96e5949f022\""
-        ]
-      ],
+      "headers": [],
       "body": ""
     }
   },
@@ -238,32 +163,7 @@
     },
     "response": {
       "status": 200,
-      "headers": [
-        [
-          "x-amz-request-id",
-          "26589A5E52F8395C"
-        ],
-        [
-          "x-amz-id-2",
-          "JdIvnNTw53aqXjBIqBLNuN4kxf/w1XWX+xuIiGBDYy7yzOSDuAMtBSrTW4ZWetcCIdqCUHuQ51A="
-        ],
-        [
-          "content-length",
-          "0"
-        ],
-        [
-          "Server",
-          "AmazonS3"
-        ],
-        [
-          "date",
-          "Fri,15 Sep 2017 14:53:07 GMT"
-        ],
-        [
-          "ETag",
-          "\"f9016ad360cebb4fe2e6e96e5949f022\""
-        ]
-      ],
+      "headers": [],
       "body": ""
     }
   }

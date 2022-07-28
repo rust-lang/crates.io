@@ -37,32 +37,7 @@
     },
     "response": {
       "status": 200,
-      "headers": [
-        [
-          "ETag",
-          "\"f9016ad360cebb4fe2e6e96e5949f022\""
-        ],
-        [
-          "content-length",
-          "0"
-        ],
-        [
-          "x-amz-request-id",
-          "C12A8938D71A4201"
-        ],
-        [
-          "x-amz-id-2",
-          "rB2yu7IE1xZHzXPwtrEfahVBXR3HqAgX/cpvGkMRILb1oYRnwdOnOumakKD5DYyy1WRcLWXrTyI="
-        ],
-        [
-          "date",
-          "Wed, 04 Oct 2017 16:42:05 GMT"
-        ],
-        [
-          "Server",
-          "AmazonS3"
-        ]
-      ],
+      "headers": [],
       "body": ""
     }
   }
