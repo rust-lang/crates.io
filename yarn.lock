@@ -1818,13 +1818,13 @@
   resolved "https://registry.yarnpkg.com/@percy/dom/-/dom-1.6.3.tgz#cd2bf2569ba328f886ba9e026498a060fd980ffc"
   integrity sha512-V4D/og0AOI1uFb5xtRYuypjmG6PuVwe+eMz10hFThRsxCiRGKlS7QnZUyNQkRwIO/k2r7LnboBpIUzBakSCgzA==
 
-"@percy/ember@3.0.0":
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/@percy/ember/-/ember-3.0.0.tgz#4e89148e139d42b88e93526d47bf29d39a24094f"
-  integrity sha512-0QuQLtfeX7Xf2dOfrs6v5IEABSQuFimZDSgPMHaEGV9hOze+J7YKeWtpzBOCjcaaT36JRVdNwA+SdMX0gALP6A==
+"@percy/ember@3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@percy/ember/-/ember-3.0.1.tgz#2f1f74993db8b327391ff657316d3083a8e27ecb"
+  integrity sha512-TOTwai5AsjtpAUWnCijKp8djfsWXfo4eUfF0Wc4QUjba+d3rk9FzvcppjJSmDPSJplyBlAyv1bxO1NMIfr80WQ==
   dependencies:
-    "@percy/sdk-utils" "^1.0.0-beta.46"
-    ember-cli-babel "^7.26.3"
+    "@percy/sdk-utils" "^1.6.4"
+    ember-cli-babel "^7.26.11"
 
 "@percy/env@1.6.3":
   version "1.6.3"
@@ -1836,10 +1836,10 @@
   resolved "https://registry.yarnpkg.com/@percy/logger/-/logger-1.6.3.tgz#c13c64c20f9f842fe36266abbddfe9f07cfd2b6a"
   integrity sha512-900DQ6KmDZVADuVdPARpZHvodALrswLOd/z4x2du484o/hyiNtO2nvO3rzyTCPVI+nreMT82yCy3JqnNwtJaSQ==
 
-"@percy/sdk-utils@^1.0.0-beta.46":
-  version "1.6.1"
-  resolved "https://registry.yarnpkg.com/@percy/sdk-utils/-/sdk-utils-1.6.1.tgz#257549ced3549188aebdb37ffb6e46f77dca77eb"
-  integrity sha512-H1a5UzlYYYUYj0I+hm3o1chgx1XMjTjeKHPneg25APfaDn5fCK1sm4xddurYFMk2sIv5Gxx8pvVMFSl4SlA/ZA==
+"@percy/sdk-utils@^1.6.4":
+  version "1.7.0"
+  resolved "https://registry.yarnpkg.com/@percy/sdk-utils/-/sdk-utils-1.7.0.tgz#93313215c4de045e3d68b0ad6ffc21dcc4ef2fb8"
+  integrity sha512-2NalLar7GJX++Df5nxh5FdnWa8g314g4Tgp3q2Muc4vLBiUmlHSua237Hdf051b+z9ES6itSaImyY+FWO8IFKg==
 
 "@scalvert/ember-setup-middleware-reporter@^0.1.1":
   version "0.1.1"
