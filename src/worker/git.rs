@@ -99,6 +99,9 @@ pub fn sync_yanked(
         debug!("Skipping `yanked` update because index is up-to-date");
     }
 
+    // Queue another background job to update the http-based index as well.
+    update_crate_index(krate.clone()).enqueue(conn)?;
+
     Ok(())
 }
 
