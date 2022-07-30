@@ -46,8 +46,7 @@ fn yank_works_as_intended() {
 
     // Upload a new crate, putting it in the git index
     let crate_to_publish = PublishBuilder::new("fyk");
-    token.enqueue_publish(crate_to_publish).good();
-    app.run_pending_background_jobs();
+    token.publish_crate(crate_to_publish).good();
 
     let crates = app.crates_from_index_head("fyk");
     assert_eq!(crates.len(), 1);
@@ -124,7 +123,7 @@ fn yank_max_version() {
 
     // Upload a new crate
     let crate_to_publish = PublishBuilder::new("fyk_max");
-    token.enqueue_publish(crate_to_publish).good();
+    token.publish_crate(crate_to_publish).good();
 
     // double check the max version
     let json = anon.show_crate("fyk_max");
@@ -132,7 +131,7 @@ fn yank_max_version() {
 
     // add version 2.0.0
     let crate_to_publish = PublishBuilder::new("fyk_max").version("2.0.0");
-    let json = token.enqueue_publish(crate_to_publish).good();
+    let json = token.publish_crate(crate_to_publish).good();
     assert_eq!(json.krate.max_version, "2.0.0");
 
     // yank version 1.0.0
@@ -178,7 +177,7 @@ fn publish_after_yank_max_version() {
 
     // Upload a new crate
     let crate_to_publish = PublishBuilder::new("fyk_max");
-    token.enqueue_publish(crate_to_publish).good();
+    token.publish_crate(crate_to_publish).good();
 
     // double check the max version
     let json = anon.show_crate("fyk_max");
@@ -192,7 +191,7 @@ fn publish_after_yank_max_version() {
 
     // add version 2.0.0
     let crate_to_publish = PublishBuilder::new("fyk_max").version("2.0.0");
-    let json = token.enqueue_publish(crate_to_publish).good();
+    let json = token.publish_crate(crate_to_publish).good();
     assert_eq!(json.krate.max_version, "2.0.0");
 
     // unyank version 1.0.0
@@ -208,7 +207,7 @@ fn yank_records_an_audit_action() {
 
     // Upload a new crate, putting it in the git index
     let crate_to_publish = PublishBuilder::new("fyk");
-    token.enqueue_publish(crate_to_publish).good();
+    token.publish_crate(crate_to_publish).good();
 
     // Yank it
     token.yank("fyk", "1.0.0").good();
@@ -229,7 +228,7 @@ fn unyank_records_an_audit_action() {
 
     // Upload a new crate
     let crate_to_publish = PublishBuilder::new("fyk");
-    token.enqueue_publish(crate_to_publish).good();
+    token.publish_crate(crate_to_publish).good();
 
     // Yank version 1.0.0
     token.yank("fyk", "1.0.0").good();

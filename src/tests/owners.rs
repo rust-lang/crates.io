@@ -136,7 +136,7 @@ fn new_crate_owner() {
 
     // Create a crate under one user
     let crate_to_publish = PublishBuilder::new("foo_owner").version("1.0.0");
-    token.enqueue_publish(crate_to_publish).good();
+    token.publish_crate(crate_to_publish).good();
 
     // Add the second user as an owner (with a different case to make sure that works)
     let user2 = app.db_new_user("Bar");
@@ -154,7 +154,7 @@ fn new_crate_owner() {
     let crate_to_publish = PublishBuilder::new("foo_owner").version("2.0.0");
     user2
         .db_new_token("bar_token")
-        .enqueue_publish(crate_to_publish)
+        .publish_crate(crate_to_publish)
         .good();
 }
 

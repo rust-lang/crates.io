@@ -1,7 +1,7 @@
 //! This module provides utility types and traits for managing a test session
 //!
 //! Tests start by using one of the `TestApp` constructors: `init`, `with_proxy`, or `full`.  This returns a
-//! `TestAppBuilder` which provides convience methods for creating up to one user, optionally with
+//! `TestAppBuilder` which provides convenience methods for creating up to one user, optionally with
 //! a token.  The builder methods all return at least an initialized `TestApp` and a
 //! `MockAnonymousUser`.  The `MockAnonymousUser` can be used to issue requests in an
 //! unauthenticated session.
@@ -153,16 +153,14 @@ pub trait RequestHelper {
         self.search(&format!("user_id={id}"))
     }
 
-    /// Enqueue a crate for publishing
+    /// Publish the crate and run background jobs to completion
     ///
-    /// The publish endpoint will enqueue a background job to update the index.  A test must run
-    /// any pending background jobs if it intends to observe changes to the index.
-    ///
-    /// Any pending jobs are run when the `TestApp` is dropped to ensure that the test fails unless
-    /// all background tasks complete successfully.
+    /// Background jobs will publish to the git index and sync to the HTTP index.
     #[track_caller]
-    fn enqueue_publish(&self, publish_builder: PublishBuilder) -> Response<GoodCrate> {
-        self.put("/api/v1/crates/new", &publish_builder.body())
+    fn publish_crate(&self, publish_builder: PublishBuilder) -> Response<GoodCrate> {
+        let response = self.put("/api/v1/crates/new", &publish_builder.body());
+        self.app().run_pending_background_jobs();
+        response
     }
 
     /// Request the JSON used for a crate's page
