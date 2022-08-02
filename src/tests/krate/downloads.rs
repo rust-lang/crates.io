@@ -96,6 +96,21 @@ fn download_nonexistent_version_of_existing_crate_404s() {
 }
 
 #[test]
+fn download_version_with_plus() {
+    let (app, anon, user) = TestApp::init().with_user();
+    let user = user.as_model();
+
+    app.db(|conn| {
+        CrateBuilder::new("foo_plus", user.id)
+            .version(VersionBuilder::new("1.0.0+hello"))
+            .expect_build(conn);
+    });
+
+    anon.get::<()>("/api/v1/crates/foo_plus/1.0.0+hello/download")
+        .assert_redirect_ends_with("/crates/foo_plus/foo_plus-1.0.0+hello.crate");
+}
+
+#[test]
 fn download_noncanonical_crate_name() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
