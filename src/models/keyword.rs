@@ -50,14 +50,13 @@ impl Keyword {
     }
 
     pub fn valid_name(name: &str) -> bool {
-        if name.is_empty() {
-            return false;
-        }
-        // unwrap is okay because name is non-empty
-        name.chars().next().unwrap().is_ascii_alphanumeric()
-            && name
-                .chars()
-                .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
+        let mut chars = name.chars();
+        let first = match chars.next() {
+            None => return false,
+            Some(c) => c,
+        };
+        first.is_ascii_alphanumeric()
+            && chars.all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
     }
 
     pub fn update_crate(conn: &PgConnection, krate: &Crate, keywords: &[&str]) -> QueryResult<()> {
