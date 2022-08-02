@@ -54,11 +54,10 @@ impl Keyword {
             return false;
         }
         // unwrap is okay because name is non-empty
-        name.chars().next().unwrap().is_alphanumeric()
+        name.chars().next().unwrap().is_ascii_alphanumeric()
             && name
                 .chars()
-                .all(|c| c.is_alphanumeric() || c == '_' || c == '-')
-            && name.chars().all(|c| c.is_ascii())
+                .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
     }
 
     pub fn update_crate(conn: &PgConnection, krate: &Crate, keywords: &[&str]) -> QueryResult<()> {
