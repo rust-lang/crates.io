@@ -10,6 +10,7 @@
     <canvas
       {{did-insert this.createChart}}
       {{did-update this.updateChart @data}}
+      {{did-update this.updateStacked @stacked}}
       {{will-destroy this.destroyChart}}
     />
   {{else}}

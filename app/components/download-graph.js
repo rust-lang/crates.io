@@ -59,6 +59,20 @@ export default class DownloadGraph extends Component {
     }
   }
 
+  @action updateStacked() {
+    let { chart, data } = this;
+
+    if (chart) {
+      data.dataset = data.datasets.map(d => {
+        d.fill = this.args.stacked ? 'origin' : false;
+        chart.options.scales.y.stacked = this.args.stacked;
+        return d;
+      });
+      chart.data = data;
+      chart.update();
+    }
+  }
+
   @action destroyChart() {
     this.chart?.destroy();
   }
