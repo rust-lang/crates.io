@@ -33,7 +33,7 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
     }
 
     let pb = ProgressBar::new(files.len() as u64);
-    pb.set_style(ProgressStyle::default_bar().template("{bar:60} ({pos}/{len}, ETA {eta})"));
+    pb.set_style(ProgressStyle::with_template("{bar:60} ({pos}/{len}, ETA {eta})").unwrap());
 
     for file in files.iter().progress_with(pb) {
         let crate_name = file.file_name().unwrap().to_str().unwrap();
