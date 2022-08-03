@@ -21,4 +21,4 @@ git2 = "=0.15.0"
 serde = { version = "=1.0.141", features = ["derive"] }
 tempfile = "=3.3.0"
 url = "=2.2.2"
-serde_json = { version = "=1.0.82", optional = true }
+serde_json = { version = "=1.0.83", optional = true }
