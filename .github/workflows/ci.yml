@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - run: rustup override set ${{env.MSRV}}
+      - run: rustup override set 1.62
       - run: rustup component add rustfmt
       - uses: Swatinem/rust-cache@v2.0.0
       - run: cargo fmt --all -- --check
