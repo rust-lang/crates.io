@@ -5,20 +5,20 @@
       "method": "PUT",
       "headers": [
         [
-          "accept-encoding",
-          "gzip"
+          "accept",
+          "*/*"
         ],
         [
-          "content-type",
-          "application/gzip"
+          "accept-encoding",
+          "gzip"
         ],
         [
           "content-length",
           "35"
         ],
         [
-          "accept",
-          "*/*"
+          "content-type",
+          "application/gzip"
         ]
       ],
       "body": "H4sIAAAAAAAA/+3AAQEAAACCIP+vbkhQwKsBLq+17wAEAAA="
@@ -35,12 +35,12 @@
       "method": "PUT",
       "headers": [
         [
-          "accept-encoding",
-          "gzip"
-        ],
-        [
           "accept",
           "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip"
         ],
         [
           "content-length",
@@ -49,7 +49,8 @@
         [
           "content-type",
           "text/plain"
-        ]      ],
+        ]
+      ],
       "body": "eyJuYW1lIjoiZm9vX2dvb2RfY2F0IiwidmVycyI6IjEuMC4wIiwiZGVwcyI6W10sImNrc3VtIjoiYWNiNTYwNGIxMjZhYzg5NGMxZWIxMWM0NTc1YmYyMDcyZmVhNjEyMzJhODg4ZTQ1Mzc3MGM3OWQ3ZWQ1NjQxOSIsImZlYXR1cmVzIjp7fSwieWFua2VkIjpmYWxzZSwibGlua3MiOm51bGx9Cg=="
     },
     "response": {
