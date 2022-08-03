@@ -17,52 +17,14 @@
           "gzip"
         ],
         [
-          "authorization",
-          "AWS AKIAICL5IWUZYWWKA7JA:3P5wvArAHvV7o8atB0gUc0RTCCc="
-        ],
-        [
           "accept",
           "*/*"
-        ],
-        [
-          "date",
-          "Fri, 15 Sep 2017 07:53:06 -0700"
-        ],
-        [
-          "host",
-          "alexcrichton-test.s3.amazonaws.com"
-        ]
-      ],
+        ]      ],
       "body": "H4sIAAAAAAAA/+3AAQEAAACCIP+vbkhQwKsBLq+17wAEAAA="
     },
     "response": {
       "status": 200,
-      "headers": [
-        [
-          "x-amz-id-2",
-          "9ZLFTsEwh2iNu+BlWzaTZ85mFA7pxZgsGhQCj3Qi67LqT/iB5eiCOJQPYww2BEkoivJbr0mWruo="
-        ],
-        [
-          "date",
-          "Fri, 15 Sep 2017 14:53:07 GMT"
-        ],
-        [
-          "content-length",
-          "0"
-        ],
-        [
-          "x-amz-request-id",
-          "FD643F2FC49A7DF3"
-        ],
-        [
-          "Server",
-          "AmazonS3"
-        ],
-        [
-          "ETag",
-          "\"f9016ad360cebb4fe2e6e96e5949f022\""
-        ]
-      ],
+      "headers": [],
       "body": ""
     }
   },
@@ -84,52 +46,14 @@
           "167"
         ],
         [
-          "date",
-          "Fri, 15 Sep 2017 07:53:06 -0700"
-        ],
-        [
-          "authorization",
-          "AWS AKIAICL5IWUZYWWKA7JA:uDc39eNdF6CcwB+q+JwKsoDLQc4="
-        ],
-        [
           "content-type",
           "text/plain"
-        ],
-        [
-          "host",
-          "alexcrichton-test.s3.amazonaws.com"
-        ]
-      ],
+        ]      ],
       "body": "eyJuYW1lIjoicmF0ZV9saW1pdGVkMSIsInZlcnMiOiIxLjAuMCIsImRlcHMiOltdLCJja3N1bSI6ImFjYjU2MDRiMTI2YWM4OTRjMWViMTFjNDU3NWJmMjA3MmZlYTYxMjMyYTg4OGU0NTM3NzBjNzlkN2VkNTY0MTkiLCJmZWF0dXJlcyI6e30sInlhbmtlZCI6ZmFsc2UsImxpbmtzIjpudWxsfQo="
     },
     "response": {
       "status": 200,
-      "headers": [
-        [
-          "x-amz-request-id",
-          "26589A5E52F8395C"
-        ],
-        [
-          "x-amz-id-2",
-          "JdIvnNTw53aqXjBIqBLNuN4kxf/w1XWX+xuIiGBDYy7yzOSDuAMtBSrTW4ZWetcCIdqCUHuQ51A="
-        ],
-        [
-          "content-length",
-          "0"
-        ],
-        [
-          "Server",
-          "AmazonS3"
-        ],
-        [
-          "date",
-          "Fri,15 Sep 2017 14:53:07 GMT"
-        ],
-        [
-          "ETag",
-          "\"f9016ad360cebb4fe2e6e96e5949f022\""
-        ]
-      ],
+      "headers": [],
       "body": ""
     }
   },
@@ -151,52 +75,14 @@
           "gzip"
         ],
         [
-          "authorization",
-          "AWS AKIAICL5IWUZYWWKA7JA:3P5wvArAHvV7o8atB0gUc0RTCCc="
-        ],
-        [
           "accept",
           "*/*"
-        ],
-        [
-          "date",
-          "Fri, 15 Sep 2017 07:53:06 -0700"
-        ],
-        [
-          "host",
-          "alexcrichton-test.s3.amazonaws.com"
-        ]
-      ],
+        ]      ],
       "body": "H4sIAAAAAAAA/+3AAQEAAACCIP+vbkhQwKsBLq+17wAEAAA="
     },
     "response": {
       "status": 200,
-      "headers": [
-        [
-          "x-amz-id-2",
-          "9ZLFTsEwh2iNu+BlWzaTZ85mFA7pxZgsGhQCj3Qi67LqT/iB5eiCOJQPYww2BEkoivJbr0mWruo="
-        ],
-        [
-          "date",
-          "Fri, 15 Sep 2017 14:53:07 GMT"
-        ],
-        [
-          "content-length",
-          "0"
-        ],
-        [
-          "x-amz-request-id",
-          "FD643F2FC49A7DF3"
-        ],
-        [
-          "Server",
-          "AmazonS3"
-        ],
-        [
-          "ETag",
-          "\"f9016ad360cebb4fe2e6e96e5949f022\""
-        ]
-      ],
+      "headers": [],
       "body": ""
     }
   },
@@ -218,52 +104,14 @@
           "167"
         ],
         [
-          "date",
-          "Fri, 15 Sep 2017 07:53:06 -0700"
-        ],
-        [
-          "authorization",
-          "AWS AKIAICL5IWUZYWWKA7JA:uDc39eNdF6CcwB+q+JwKsoDLQc4="
-        ],
-        [
           "content-type",
           "text/plain"
-        ],
-        [
-          "host",
-          "alexcrichton-test.s3.amazonaws.com"
-        ]
-      ],
+        ]      ],
       "body": "eyJuYW1lIjoicmF0ZV9saW1pdGVkMiIsInZlcnMiOiIxLjAuMCIsImRlcHMiOltdLCJja3N1bSI6ImFjYjU2MDRiMTI2YWM4OTRjMWViMTFjNDU3NWJmMjA3MmZlYTYxMjMyYTg4OGU0NTM3NzBjNzlkN2VkNTY0MTkiLCJmZWF0dXJlcyI6e30sInlhbmtlZCI6ZmFsc2UsImxpbmtzIjpudWxsfQo="
     },
     "response": {
       "status": 200,
-      "headers": [
-        [
-          "x-amz-request-id",
-          "26589A5E52F8395C"
-        ],
-        [
-          "x-amz-id-2",
-          "JdIvnNTw53aqXjBIqBLNuN4kxf/w1XWX+xuIiGBDYy7yzOSDuAMtBSrTW4ZWetcCIdqCUHuQ51A="
-        ],
-        [
-          "content-length",
-          "0"
-        ],
-        [
-          "Server",
-          "AmazonS3"
-        ],
-        [
-          "date",
-          "Fri,15 Sep 2017 14:53:07 GMT"
-        ],
-        [
-          "ETag",
-          "\"f9016ad360cebb4fe2e6e96e5949f022\""
-        ]
-      ],
+      "headers": [],
       "body": ""
     }
   }

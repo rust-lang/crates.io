@@ -5,18 +5,6 @@
       "method": "PUT",
       "headers": [
         [
-          "date",
-          "Fri, 15 Sep 2017 07:53:06 -0700"
-        ],
-        [
-          "authorization",
-          "AWS AKIAICL5IWUZYWWKA7JA:G2u3lkUwozOcUMarUxKm7kfPFRU="
-        ],
-        [
-          "host",
-          "alexcrichton-test.s3.amazonaws.com"
-        ],
-        [
           "accept-encoding",
           "gzip"
         ],
@@ -37,32 +25,7 @@
     },
     "response": {
       "status": 200,
-      "headers": [
-        [
-          "Server",
-          "AmazonS3"
-        ],
-        [
-          "x-amz-request-id",
-          "A89963967BE30C76"
-        ],
-        [
-          "content-length",
-          "0"
-        ],
-        [
-          "x-amz-id-2",
-          "fuS0z4LTFF4qMus2P2V61JZ+XL6iydvh+fZN0tLKUZE4sL/j7UEqu5UATJkAjCbwpGYI6JN5SsQ="
-        ],
-        [
-          "date",
-          "Fri, 15 Sep 2017 14:53:07 GMT"
-        ],
-        [
-          "ETag",
-          "\"f9016ad360cebb4fe2e6e96e5949f022\""
-        ]
-      ],
+      "headers": [],
       "body": ""
     }
   },
@@ -80,20 +43,8 @@
           "*/*"
         ],
         [
-          "date",
-          "Fri, 15 Sep 2017 07:53:06 -0700"
-        ],
-        [
           "content-type",
           "text/html"
-        ],
-        [
-          "authorization",
-          "AWS AKIAICL5IWUZYWWKA7JA:Ip89jXvQWYPf+5zqZQ1vKHnbifA="
-        ],
-        [
-          "host",
-          "alexcrichton-test.s3.amazonaws.com"
         ],
         [
           "content-length",
@@ -104,32 +55,7 @@
     },
     "response": {
       "status": 200,
-      "headers": [
-        [
-          "x-amz-id-2",
-          "cUKZKz6kCSgxURf9dTIK8nJTnaDpWQCPU2nzn3lpjKzKw2L/l9mQXrYOHYddLjP+ODY1phhr6xM="
-        ],
-        [
-          "Server",
-          "AmazonS3"
-        ],
-        [
-          "content-length",
-          "0"
-        ],
-        [
-          "date",
-          "Fri, 15 Sep 2017 14:53:07 GMT"
-        ],
-        [
-          "x-amz-request-id",
-          "6F979F8896D4A1B2"
-        ],
-        [
-          "ETag",
-          "\"d41d8cd98f00b204e9800998ecf8427e\""
-        ]
-      ],
+      "headers": [],
       "body": ""
     }
   },
@@ -151,52 +77,14 @@
           "164"
         ],
         [
-          "date",
-          "Fri, 15 Sep 2017 07:53:06 -0700"
-        ],
-        [
-          "authorization",
-          "AWS AKIAICL5IWUZYWWKA7JA:uDc39eNdF6CcwB+q+JwKsoDLQc4="
-        ],
-        [
           "content-type",
           "text/plain"
-        ],
-        [
-          "host",
-          "alexcrichton-test.s3.amazonaws.com"
-        ]
-      ],
+        ]      ],
       "body": "eyJuYW1lIjoiZm9vX3JlYWRtZSIsInZlcnMiOiIxLjAuMCIsImRlcHMiOltdLCJja3N1bSI6ImFjYjU2MDRiMTI2YWM4OTRjMWViMTFjNDU3NWJmMjA3MmZlYTYxMjMyYTg4OGU0NTM3NzBjNzlkN2VkNTY0MTkiLCJmZWF0dXJlcyI6e30sInlhbmtlZCI6ZmFsc2UsImxpbmtzIjpudWxsfQo="
     },
     "response": {
       "status": 200,
-      "headers": [
-        [
-          "x-amz-request-id",
-          "26589A5E52F8395C"
-        ],
-        [
-          "x-amz-id-2",
-          "JdIvnNTw53aqXjBIqBLNuN4kxf/w1XWX+xuIiGBDYy7yzOSDuAMtBSrTW4ZWetcCIdqCUHuQ51A="
-        ],
-        [
-          "content-length",
-          "0"
-        ],
-        [
-          "Server",
-          "AmazonS3"
-        ],
-        [
-          "date",
-          "Fri,15 Sep 2017 14:53:07 GMT"
-        ],
-        [
-          "ETag",
-          "\"f9016ad360cebb4fe2e6e96e5949f022\""
-        ]
-      ],
+      "headers": [],
       "body": ""
     }
   }

@@ -9,18 +9,6 @@
           "*/*"
         ],
         [
-          "host",
-          "alexcrichton-test.s3.amazonaws.com"
-        ],
-        [
-          "authorization",
-          "AWS AKIAICL5IWUZYWWKA7JA:uDc39eNdF6CcwB+q+JwKsoDLQc4="
-        ],
-        [
-          "date",
-          "Fri, 15 Sep 2017 07:53:06 -0700"
-        ],
-        [
           "content-length",
           "35"
         ],
@@ -37,32 +25,7 @@
     },
     "response": {
       "status": 200,
-      "headers": [
-        [
-          "x-amz-request-id",
-          "26589A5E52F8395C"
-        ],
-        [
-          "ETag",
-          "\"f9016ad360cebb4fe2e6e96e5949f022\""
-        ],
-        [
-          "Server",
-          "AmazonS3"
-        ],
-        [
-          "date",
-          "Fri, 15 Sep 2017 14:53:07 GMT"
-        ],
-        [
-          "x-amz-id-2",
-          "JdIvnNTw53aqXjBIqBLNuN4kxf/w1XWX+xuIiGBDYy7yzOSDuAMtBSrTW4ZWetcCIdqCUHuQ51A="
-        ],
-        [
-          "content-length",
-          "0"
-        ]
-      ],
+      "headers": [],
       "body": ""
     }
   },
@@ -84,52 +47,14 @@
           "304"
         ],
         [
-          "date",
-          "Fri, 15 Sep 2017 07:53:06 -0700"
-        ],
-        [
-          "authorization",
-          "AWS AKIAICL5IWUZYWWKA7JA:uDc39eNdF6CcwB+q+JwKsoDLQc4="
-        ],
-        [
           "content-type",
           "text/plain"
-        ],
-        [
-          "host",
-          "alexcrichton-test.s3.amazonaws.com"
-        ]
-      ],
+        ]      ],
       "body": "eyJuYW1lIjoibmV3LWtyYXRlIiwidmVycyI6IjEuMC4wIiwiZGVwcyI6W3sibmFtZSI6Il9teS1uYW1lIiwicmVxIjoiPiAwIiwiZmVhdHVyZXMiOltdLCJvcHRpb25hbCI6ZmFsc2UsImRlZmF1bHRfZmVhdHVyZXMiOnRydWUsInRhcmdldCI6bnVsbCwia2luZCI6Im5vcm1hbCIsInBhY2thZ2UiOiJwYWNrYWdlLW5hbWUifV0sImNrc3VtIjoiYWNiNTYwNGIxMjZhYzg5NGMxZWIxMWM0NTc1YmYyMDcyZmVhNjEyMzJhODg4ZTQ1Mzc3MGM3OWQ3ZWQ1NjQxOSIsImZlYXR1cmVzIjp7fSwieWFua2VkIjpmYWxzZSwibGlua3MiOm51bGx9Cg=="
     },
     "response": {
       "status": 200,
-      "headers": [
-        [
-          "x-amz-request-id",
-          "26589A5E52F8395C"
-        ],
-        [
-          "x-amz-id-2",
-          "JdIvnNTw53aqXjBIqBLNuN4kxf/w1XWX+xuIiGBDYy7yzOSDuAMtBSrTW4ZWetcCIdqCUHuQ51A="
-        ],
-        [
-          "content-length",
-          "0"
-        ],
-        [
-          "Server",
-          "AmazonS3"
-        ],
-        [
-          "date",
-          "Fri,15 Sep 2017 14:53:07 GMT"
-        ],
-        [
-          "ETag",
-          "\"f9016ad360cebb4fe2e6e96e5949f022\""
-        ]
-      ],
+      "headers": [],
       "body": ""
     }
   }
