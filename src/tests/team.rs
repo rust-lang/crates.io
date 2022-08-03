@@ -195,7 +195,7 @@ fn add_team_as_non_member() {
 
 #[test]
 fn remove_team_as_named_owner() {
-    let (app, _) = TestApp::init().empty();
+    let (app, _) = TestApp::full().empty();
     let username = "user-all-teams";
     let user_on_both_teams = app.db_new_user(username);
     let token_on_both_teams = user_on_both_teams.db_new_token("arbitrary token name");
@@ -223,7 +223,7 @@ fn remove_team_as_named_owner() {
 
     let user_on_one_team = app.db_new_user("user-one-team");
     let crate_to_publish = PublishBuilder::new("foo_remove_team").version("2.0.0");
-    let response = user_on_one_team.enqueue_publish(crate_to_publish);
+    let response = user_on_one_team.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.into_json(),
@@ -271,7 +271,7 @@ fn remove_team_as_team_owner() {
 // Test trying to publish a crate we don't own
 #[test]
 fn publish_not_owned() {
-    let (app, _) = TestApp::init().empty();
+    let (app, _) = TestApp::full().empty();
     let user_on_both_teams = app.db_new_user("user-all-teams");
     let token_on_both_teams = user_on_both_teams.db_new_token("arbitrary token name");
 
@@ -286,7 +286,7 @@ fn publish_not_owned() {
     let user_on_one_team = app.db_new_user("user-one-team");
 
     let crate_to_publish = PublishBuilder::new("foo_not_owned").version("2.0.0");
-    let response = user_on_one_team.enqueue_publish(crate_to_publish);
+    let response = user_on_one_team.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.into_json(),
@@ -296,7 +296,7 @@ fn publish_not_owned() {
 
 #[test]
 fn publish_org_owner_owned() {
-    let (app, _) = TestApp::init().empty();
+    let (app, _) = TestApp::full().empty();
     let user_on_both_teams = app.db_new_user("user-all-teams");
     let token_on_both_teams = user_on_both_teams.db_new_token("arbitrary token name");
 
@@ -311,7 +311,7 @@ fn publish_org_owner_owned() {
     let user_org_owner = app.db_new_user("user-org-owner");
 
     let crate_to_publish = PublishBuilder::new("foo_not_owned").version("2.0.0");
-    let response = user_org_owner.enqueue_publish(crate_to_publish);
+    let response = user_org_owner.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.into_json(),
@@ -337,7 +337,7 @@ fn publish_owned() {
     let user_on_one_team = app.db_new_user("user-one-team");
 
     let crate_to_publish = PublishBuilder::new("foo_team_owned").version("2.0.0");
-    user_on_one_team.enqueue_publish(crate_to_publish).good();
+    user_on_one_team.publish_crate(crate_to_publish).good();
 }
 
 // Test trying to change owners (when only on an owning team)

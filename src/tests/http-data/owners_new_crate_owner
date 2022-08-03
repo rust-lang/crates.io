@@ -31,6 +31,36 @@
   },
   {
     "request": {
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/fo/o_/foo_owner",
+      "method": "PUT",
+      "headers": [
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip"
+        ],
+        [
+          "content-length",
+          "163"
+        ],
+        [
+          "content-type",
+          "text/plain"
+        ]
+      ],
+      "body": "eyJuYW1lIjoiZm9vX293bmVyIiwidmVycyI6IjEuMC4wIiwiZGVwcyI6W10sImNrc3VtIjoiYWNiNTYwNGIxMjZhYzg5NGMxZWIxMWM0NTc1YmYyMDcyZmVhNjEyMzJhODg4ZTQ1Mzc3MGM3OWQ3ZWQ1NjQxOSIsImZlYXR1cmVzIjp7fSwieWFua2VkIjpmYWxzZSwibGlua3MiOm51bGx9Cg=="
+    },
+    "response": {
+      "status": 200,
+      "headers": [],
+      "body": ""
+    }
+  },
+  {
+    "request": {
       "uri": "http://alexcrichton-test.s3.amazonaws.com/crates/foo_owner/foo_owner-2.0.0.crate",
       "method": "PUT",
       "headers": [
@@ -52,36 +82,6 @@
         ]
       ],
       "body": "H4sIAAAAAAAA/+3AAQEAAACCIP+vbkhQwKsBLq+17wAEAAA="
-    },
-    "response": {
-      "status": 200,
-      "headers": [],
-      "body": ""
-    }
-  },
-  {
-    "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/fo/o_/foo_owner",
-      "method": "PUT",
-      "headers": [
-        [
-          "accept",
-          "*/*"
-        ],
-        [
-          "accept-encoding",
-          "gzip"
-        ],
-        [
-          "content-length",
-          "326"
-        ],
-        [
-          "content-type",
-          "text/plain"
-        ]
-      ],
-      "body": "eyJuYW1lIjoiZm9vX293bmVyIiwidmVycyI6IjEuMC4wIiwiZGVwcyI6W10sImNrc3VtIjoiYWNiNTYwNGIxMjZhYzg5NGMxZWIxMWM0NTc1YmYyMDcyZmVhNjEyMzJhODg4ZTQ1Mzc3MGM3OWQ3ZWQ1NjQxOSIsImZlYXR1cmVzIjp7fSwieWFua2VkIjpmYWxzZSwibGlua3MiOm51bGx9CnsibmFtZSI6ImZvb19vd25lciIsInZlcnMiOiIyLjAuMCIsImRlcHMiOltdLCJja3N1bSI6ImFjYjU2MDRiMTI2YWM4OTRjMWViMTFjNDU3NWJmMjA3MmZlYTYxMjMyYTg4OGU0NTM3NzBjNzlkN2VkNTY0MTkiLCJmZWF0dXJlcyI6e30sInlhbmtlZCI6ZmFsc2UsImxpbmtzIjpudWxsfQo="
     },
     "response": {
       "status": 200,
