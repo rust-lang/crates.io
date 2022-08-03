@@ -216,3 +216,12 @@ published_by = "public"
 [versions_published_by.columns]
 version_id = "private"
 email = "private"
+
+[webhooks.columns]
+id = "public"
+owner_id = "public"
+crate_id = "public"
+webhook_url = "public"
+created_at = "public"
+updated_at = "public"
+deleted = "public"
