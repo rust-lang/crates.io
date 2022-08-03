@@ -231,7 +231,7 @@ fn new_krate_with_dependency() {
 
 #[test]
 fn new_krate_with_broken_dependency_requirement() {
-    let (app, _, user, token) = TestApp::full().with_token();
+    let (app, _, user, token) = TestApp::init().with_token();
 
     app.db(|conn| {
         // Insert a crate directly into the database so that new_dep can depend on it
