@@ -150,7 +150,7 @@ fn new_krate_version_with_plus() {
     let (_, _, _, token) = TestApp::full().with_token();
 
     let crate_to_publish = PublishBuilder::new("foo_plus").version("1.0.0+build-metadata");
-    let json: GoodCrate = token.enqueue_publish(crate_to_publish).good();
+    let json: GoodCrate = token.publish_crate(crate_to_publish).good();
 
     assert_eq!(json.krate.name, "foo_plus");
     assert_eq!(json.krate.max_version, "1.0.0+build-metadata");

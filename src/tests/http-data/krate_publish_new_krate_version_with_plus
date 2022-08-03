@@ -1,7 +1,7 @@
 [
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/crates/foo_plus/foo_plus-1.0.0+build-metadata.crate",
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/crates/foo_plus/foo_plus-1.0.0%2Bbuild-metadata.crate",
       "method": "PUT",
       "headers": [
         [

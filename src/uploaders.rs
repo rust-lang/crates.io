@@ -79,6 +79,7 @@ impl Uploader {
 
     /// Returns the internal path of an uploaded crate's version archive.
     fn crate_path(name: &str, version: &str) -> String {
+        let version = version.replace('+', "%2B");
         format!("crates/{name}/{name}-{version}.crate")
     }
 

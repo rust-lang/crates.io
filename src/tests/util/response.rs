@@ -48,14 +48,19 @@ impl<T> Response<T> {
 
     #[track_caller]
     pub fn assert_redirect_ends_with(&self, target: &str) -> &Self {
-        assert!(self
+        let redirect_url = self
             .response
             .headers()
             .get(header::LOCATION)
             .unwrap()
             .to_str()
-            .unwrap()
-            .ends_with(target));
+            .unwrap();
+        assert!(
+            redirect_url.ends_with(target),
+            "assertion failed: `redirect_url.ends_with(target)`
+ redirect_url: `\"{redirect_url}\"`
+       target: `\"{target}\"`"
+        );
         self
     }
 }

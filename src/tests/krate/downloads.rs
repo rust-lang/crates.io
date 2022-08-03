@@ -107,7 +107,7 @@ fn download_version_with_plus() {
     });
 
     anon.get::<()>("/api/v1/crates/foo_plus/1.0.0+hello/download")
-        .assert_redirect_ends_with("/crates/foo_plus/foo_plus-1.0.0+hello.crate");
+        .assert_redirect_ends_with("/crates/foo_plus/foo_plus-1.0.0%2Bhello.crate");
 }
 
 #[test]
