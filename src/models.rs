@@ -14,6 +14,7 @@ pub use self::team::{NewTeam, Team};
 pub use self::token::{ApiToken, CreatedApiToken};
 pub use self::user::{NewUser, User};
 pub use self::version::{NewVersion, TopVersions, Version};
+pub use self::webhook::{NewWebhook, Webhook};
 
 pub mod helpers;
 
@@ -33,3 +34,4 @@ mod team;
 mod token;
 pub mod user;
 mod version;
+pub mod webhook;

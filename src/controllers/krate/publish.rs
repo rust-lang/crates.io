@@ -14,7 +14,7 @@ use crate::models::{
     insert_version_owner_action, Badge, Category, Crate, DependencyKind, Keyword, NewCrate,
     NewVersion, Rights, VersionAction,
 };
-use crate::worker;
+use crate::worker::{self, notify_owners};
 
 use crate::middleware::log_request::add_custom_metadata;
 use crate::schema::*;
@@ -251,6 +251,8 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
             invalid_badges: ignored_invalid_badges,
             other: vec![],
         };
+
+        notify_owners(krate.id.clone()).enqueue(&conn)?;
 
         Ok(req.json(&GoodCrate {
             krate: EncodableCrate::from_minimal(krate, Some(&top_versions), None, false, None),

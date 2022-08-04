@@ -129,6 +129,7 @@ pub fn build_router(app: &App) -> RouteBuilder {
         "/api/v1/me/email_notifications",
         C(user::me::update_email_notifications),
     );
+    router.put("api/v1/me/webhooks", C(user::webhook::new));
     router.get("/api/v1/summary", C(krate::metadata::summary));
     router.put(
         "/api/v1/confirm/:email_token",

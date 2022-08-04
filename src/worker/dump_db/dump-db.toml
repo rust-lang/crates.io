@@ -220,8 +220,6 @@ email = "private"
 [webhooks.columns]
 id = "public"
 owner_id = "public"
-crate_id = "public"
 webhook_url = "public"
 created_at = "public"
 updated_at = "public"
-deleted = "public"
