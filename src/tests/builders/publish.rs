@@ -2,22 +2,22 @@ use cargo_registry::views::krate_publish as u;
 use std::{collections::HashMap, io::Read};
 
 use flate2::{write::GzEncoder, Compression};
+use once_cell::sync::Lazy;
 
 use super::DependencyBuilder;
 
-lazy_static! {
-    // The bytes of an empty tarball is not an empty vector of bytes because of tarball headers.
-    // Unless files are added to a PublishBuilder, the `.crate` tarball that gets uploaded
-    // will be empty, so precompute the empty tarball bytes to use as a default.
-    static ref EMPTY_TARBALL_BYTES: Vec<u8> = {
-        let mut empty_tarball = vec![];
-        {
-            let mut ar =
-                tar::Builder::new(GzEncoder::new(&mut empty_tarball, Compression::default()));
-            assert_ok!(ar.finish());
-        }
-        empty_tarball
-    };
+// The bytes of an empty tarball is not an empty vector of bytes because of tarball headers.
+// Unless files are added to a PublishBuilder, the `.crate` tarball that gets uploaded
+// will be empty, so precompute the empty tarball bytes to use as a default.
+static EMPTY_TARBALL_BYTES: Lazy<Vec<u8>> = Lazy::new(generate_empty_tarball);
+
+fn generate_empty_tarball() -> Vec<u8> {
+    let mut empty_tarball = vec![];
+    {
+        let mut ar = tar::Builder::new(GzEncoder::new(&mut empty_tarball, Compression::default()));
+        assert_ok!(ar.finish());
+    }
+    empty_tarball
 }
 
 /// A builder for constructing a crate for the purposes of testing publishing. If you only need
