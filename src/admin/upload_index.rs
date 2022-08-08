@@ -35,10 +35,11 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
     let pb = ProgressBar::new(files.len() as u64);
     pb.set_style(ProgressStyle::with_template("{bar:60} ({pos}/{len}, ETA {eta})").unwrap());
 
-    for file in files.iter().progress_with(pb) {
+    for file in files.iter().progress_with(pb.clone()) {
         let crate_name = file.file_name().unwrap().to_str().unwrap();
         let path = repo.index_file(crate_name);
         if !path.exists() {
+            pb.suspend(|| println!("skipping file `{}`", crate_name));
             continue;
         }
 
