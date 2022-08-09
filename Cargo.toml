@@ -27,7 +27,7 @@ base64 = "=0.13.0"
 cargo-registry-index = { path = "cargo-registry-index" }
 cargo-registry-markdown = { path = "cargo-registry-markdown" }
 cargo-registry-s3 = { path = "cargo-registry-s3" }
-chrono = { version = "=0.4.20", features = ["serde"] }
+chrono = { version = "=0.4.21", features = ["serde"] }
 clap = { version = "=3.2.16", features = ["derive", "unicode"] }
 
 conduit = "=0.10.0"
