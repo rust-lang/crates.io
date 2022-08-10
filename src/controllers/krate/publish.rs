@@ -366,6 +366,7 @@ pub fn add_dependencies(
                     default_features.eq(dep.default_features),
                     features.eq(&dep.features),
                     target.eq(dep.target.as_deref()),
+                    explicit_name.eq(dep.explicit_name_in_toml.as_deref())
                 ),
             ))
         })

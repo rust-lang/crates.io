@@ -20,6 +20,7 @@ pub struct Dependency {
     pub features: Vec<String>,
     pub target: Option<String>,
     pub kind: DependencyKind,
+    pub explicit_name: Option<String>,
 }
 
 #[derive(Debug, QueryableByName)]

@@ -110,6 +110,7 @@ default_features = "public"
 features = "public"
 target = "public"
 kind = "public"
+explicit_name = "public"
 
 [__diesel_schema_migrations.columns]
 version = "private"
