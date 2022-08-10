@@ -11,7 +11,7 @@ use diesel::{delete, update, ExpressionMethods, QueryDsl, RunQueryDsl};
 use flate2::write::GzEncoder;
 use flate2::Compression;
 use http::StatusCode;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::io::Read;
 use std::iter::FromIterator;
 use std::time::Duration;
@@ -953,9 +953,9 @@ fn features_version_2() {
     assert_eq!(crates[0].name, "foo");
     assert_eq!(crates[0].deps.len(), 1);
     assert_eq!(crates[0].v, Some(2));
-    let features = HashMap::from_iter([("old_feat".to_string(), vec![])]);
+    let features = BTreeMap::from_iter([("old_feat".to_string(), vec![])]);
     assert_eq!(crates[0].features, features);
-    let features2 = HashMap::from_iter([(
+    let features2 = BTreeMap::from_iter([(
         "new_feat".to_string(),
         vec!["dep:bar".to_string(), "bar?/feat".to_string()],
     )]);
