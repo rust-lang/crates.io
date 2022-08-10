@@ -154,6 +154,11 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
         // This is only redundant for now. Eventually the duplication will be removed.
         let license = new_crate.license.clone();
 
+        // Read tarball from request
+        let mut tarball = Vec::new();
+        LimitErrorReader::new(req.body(), maximums.max_upload_size).read_to_end(&mut tarball)?;
+        let hex_cksum: String = Sha256::digest(&tarball).encode_hex();
+
         // Persist the new version of this crate
         let version = NewVersion::new(
             krate.id,
@@ -165,6 +170,7 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
             // to get here, and max upload sizes are way less than i32 max
             file_length as i32,
             user.id,
+            hex_cksum.clone(),
         )?
         .save(&conn, &verified_email_address)?;
 
@@ -191,10 +197,6 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
         let ignored_invalid_badges = Badge::update_crate(&conn, &krate, new_crate.badges.as_ref())?;
         let top_versions = krate.top_versions(&conn)?;
 
-        // Read tarball from request
-        let mut tarball = Vec::new();
-        LimitErrorReader::new(req.body(), maximums.max_upload_size).read_to_end(&mut tarball)?;
-        let hex_cksum: String = Sha256::digest(&tarball).encode_hex();
         let pkg_name = format!("{}-{}", krate.name, vers);
         let cargo_vcs_info = verify_tarball(&pkg_name, &tarball, maximums.max_unpack_size)?;
         let pkg_path_in_vcs = cargo_vcs_info.map(|info| info.path_in_vcs);

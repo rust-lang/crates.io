@@ -457,6 +457,7 @@ mod tests {
                 None,
                 0,
                 self.user.id,
+                "0000000000000000000000000000000000000000000000000000000000000000".to_string(),
             )
             .expect("failed to create version")
             .save(conn, "ghost@example.com")
