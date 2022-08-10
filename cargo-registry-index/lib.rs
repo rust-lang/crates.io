@@ -139,7 +139,7 @@ pub struct Crate {
     pub v: Option<u32>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, PartialOrd, Ord, Eq)]
 pub struct Dependency {
     pub name: String,
     pub req: String,
@@ -152,7 +152,7 @@ pub struct Dependency {
     pub package: Option<String>,
 }
 
-#[derive(Copy, Clone, Serialize, Deserialize, Debug)]
+#[derive(Copy, Clone, Serialize, Deserialize, Debug, PartialEq, PartialOrd, Ord, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum DependencyKind {
     Normal,
