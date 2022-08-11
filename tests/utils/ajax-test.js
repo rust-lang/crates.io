@@ -103,10 +103,17 @@ module('ajax()', function (hooks) {
       assert.true(error.isJsonError);
       assert.false(error.isNetworkError);
 
+      let expectedCauseMessages = [
+        // Chrome < 104
+        'Unexpected token f in JSON at position 2',
+        // Chrome >= 104
+        "Expected property name or '}' in JSON at position 2",
+      ];
+
       let { cause } = error;
       assert.ok(!(cause instanceof HttpError));
       assert.equal(cause.name, 'SyntaxError');
-      assert.equal(cause.message, 'Unexpected token f in JSON at position 2');
+      assert.ok(expectedCauseMessages.includes(cause.message));
       return true;
     });
   });
