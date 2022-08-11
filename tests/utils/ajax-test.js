@@ -106,7 +106,7 @@ module('ajax()', function (hooks) {
       let { cause } = error;
       assert.ok(!(cause instanceof HttpError));
       assert.equal(cause.name, 'SyntaxError');
-      assert.equal(cause.message, 'Unexpected token f in JSON at position 2');
+      assert.equal(cause.message, "Expected property name or '}' in JSON at position 2");
       return true;
     });
   });
