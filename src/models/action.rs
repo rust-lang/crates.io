@@ -11,7 +11,7 @@ use std::io::Write;
 use crate::models::{ApiToken, User, Version};
 use crate::schema::*;
 
-#[derive(Debug, Clone, Copy, PartialEq, FromSqlRow, AsExpression)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, FromSqlRow, AsExpression)]
 #[repr(i32)]
 #[sql_type = "Integer"]
 pub enum VersionAction {

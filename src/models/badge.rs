@@ -19,7 +19,7 @@ pub struct CrateBadge {
     pub badge: Badge,
 }
 
-#[derive(Debug, PartialEq, Clone, Deserialize, Serialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case", tag = "badge_type", content = "attributes")]
 pub enum Badge {
     TravisCi {
@@ -76,7 +76,7 @@ pub enum Badge {
     },
 }
 
-#[derive(Debug, PartialEq, Clone, Copy, Deserialize, Serialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum MaintenanceStatus {
     ActivelyDeveloped,
