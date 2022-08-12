@@ -27,7 +27,7 @@ impl Keyword {
     pub fn find_by_keyword(conn: &PgConnection, name: &str) -> QueryResult<Keyword> {
         keywords::table
             .filter(keywords::keyword.eq(lower(name)))
-            .first(&*conn)
+            .first(conn)
     }
 
     pub fn find_or_create_all(conn: &PgConnection, names: &[&str]) -> QueryResult<Vec<Keyword>> {

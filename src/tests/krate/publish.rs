@@ -34,7 +34,7 @@ fn uploading_new_version_touches_crate() {
     app.db(|conn| {
         diesel::update(crates::table)
             .set(crates::updated_at.eq(crates::updated_at - 1.hour()))
-            .execute(&*conn)
+            .execute(conn)
             .unwrap();
     });
 

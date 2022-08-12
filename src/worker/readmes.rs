@@ -32,7 +32,7 @@ pub fn render_and_upload_readme(
             .find(version_id)
             .inner_join(crates::table)
             .select((crates::name, versions::num))
-            .first(&*conn)?;
+            .first(conn)?;
         env.uploader
             .upload_readme(env.http_client(), &crate_name, &vers, rendered)?;
         Ok(())

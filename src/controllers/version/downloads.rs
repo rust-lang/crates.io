@@ -107,7 +107,7 @@ pub fn download(req: &mut dyn RequestExt) -> EndpointResult {
         .app()
         .config
         .uploader()
-        .crate_location(&crate_name, &*version);
+        .crate_location(&crate_name, version);
 
     if req.wants_json() {
         Ok(req.json(&json!({ "url": redirect_url })))
