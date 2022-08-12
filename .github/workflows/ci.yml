@@ -27,7 +27,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3.0.2
-      - uses: volta-cli/action@v1
+      - uses: volta-cli/action@v2
 
       - name: Install node modules
         run: yarn install
