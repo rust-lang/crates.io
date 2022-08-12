@@ -77,7 +77,7 @@ fn summary_new_crates() {
         // set total_downloads global value for `num_downloads` prop
         update(metadata::table)
             .set(metadata::total_downloads.eq(6000))
-            .execute(&*conn)
+            .execute(conn)
             .unwrap();
     });
 

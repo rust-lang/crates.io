@@ -336,19 +336,19 @@ fn exact_match_on_queries_with_sort() {
         // Set the updated at column for each crate
         update(&krate1)
             .set(crates::updated_at.eq(now - 3.weeks()))
-            .execute(&*conn)
+            .execute(conn)
             .unwrap();
         update(&krate2)
             .set(crates::updated_at.eq(now - 5.days()))
-            .execute(&*conn)
+            .execute(conn)
             .unwrap();
         update(&krate3)
             .set(crates::updated_at.eq(now - 10.seconds()))
-            .execute(&*conn)
+            .execute(conn)
             .unwrap();
         update(&krate4)
             .set(crates::updated_at.eq(now))
-            .execute(&*conn)
+            .execute(conn)
             .unwrap();
     });
 

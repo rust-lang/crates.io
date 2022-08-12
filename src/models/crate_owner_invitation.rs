@@ -84,13 +84,13 @@ impl CrateOwnerInvitation {
     pub fn find_by_id(user_id: i32, crate_id: i32, conn: &PgConnection) -> AppResult<Self> {
         Ok(crate_owner_invitations::table
             .find((user_id, crate_id))
-            .first::<Self>(&*conn)?)
+            .first::<Self>(conn)?)
     }
 
     pub fn find_by_token(token: &str, conn: &PgConnection) -> AppResult<Self> {
         Ok(crate_owner_invitations::table
             .filter(crate_owner_invitations::token.eq(token))
-            .first::<Self>(&*conn)?)
+            .first::<Self>(conn)?)
     }
 
     pub fn accept(self, conn: &PgConnection, config: &config::Server) -> AppResult<()> {

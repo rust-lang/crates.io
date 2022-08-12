@@ -437,7 +437,7 @@ fn github_with_email_does_not_overwrite_email() {
     let original_email: String = app.db(|conn| {
         Email::belonging_to(model)
             .select(emails::email)
-            .first(&*conn)
+            .first(conn)
             .unwrap()
     });
 
@@ -573,7 +573,7 @@ fn test_confirm_user_email() {
     let email_token: String = app.db(|conn| {
         Email::belonging_to(user_model)
             .select(emails::token)
-            .first(&*conn)
+            .first(conn)
             .unwrap()
     });
 
@@ -747,7 +747,7 @@ fn test_update_email_notifications_not_owned() {
             crate_owners::table
                 .select(crate_owners::email_notifications)
                 .filter(crate_owners::crate_id.eq(not_my_crate.id))
-                .first(&*conn)
+                .first(conn)
         })
         .unwrap();
 

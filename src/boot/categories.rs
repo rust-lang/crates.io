@@ -105,11 +105,11 @@ pub fn sync_with_connection(toml_str: &str, conn: &PgConnection) -> Result<()> {
                 description.eq(excluded(description)),
             ))
             .returning(slug)
-            .get_results(&*conn)?;
+            .get_results(conn)?;
 
         diesel::delete(categories)
             .filter(slug.ne(all(slugs)))
-            .execute(&*conn)?;
+            .execute(conn)?;
         Ok(())
     })
 }
