@@ -789,12 +789,7 @@ fn good_badges() {
 
     let json = anon.show_crate("foobadger");
     let badges = json.krate.badges.unwrap();
-    assert_eq!(badges.len(), 1);
-    assert_eq!(badges[0].badge_type, "travis-ci");
-    assert_eq!(
-        badges[0].attributes["repository"],
-        Some(String::from("rust-lang/crates.io"))
-    );
+    assert_eq!(badges.len(), 0);
 }
 
 #[test]
