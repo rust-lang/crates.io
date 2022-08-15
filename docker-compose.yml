@@ -53,7 +53,7 @@ services:
     build:
       context: .
       dockerfile: frontend.Dockerfile
-    entrypoint: yarn start -- --proxy http://backend:8888
+    entrypoint: pnpm start -- --proxy http://backend:8888
     links:
       - backend
     ports:

@@ -131,21 +131,24 @@
     "qunit-dom": "2.0.0",
     "webpack": "5.74.0"
   },
-  "resolutions": {
-    "ember-css-modules/postcss": "8.4.16",
-    "ember-inflector": "4.0.2",
-    "ember-modifier": "3.2.7",
-    "miragejs": "0.1.45"
+  "pnpm": {
+    "overrides": {
+      "ember-css-modules>postcss": "8.4.16",
+      "ember-inflector": "4.0.2",
+      "ember-modifier": "3.2.7",
+      "miragejs": "0.1.45"
+    },
+    "peerDependencyRules": {
+      "ignoreMissing": ["@babel/core", "eslint-plugin-*"]
+    }
   },
   "engines": {
-    "node": "16.17.0",
-    "yarn": "1.22.18"
+    "node": "16.17.0"
   },
   "ember": {
     "edition": "octane"
   },
   "volta": {
-    "node": "16.17.0",
-    "yarn": "1.22.18"
+    "node": "16.17.0"
   }
 }
