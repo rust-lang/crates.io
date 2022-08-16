@@ -813,15 +813,7 @@ fn ignored_badges() {
     let json = token.publish_crate(crate_to_publish).good();
     assert_eq!(json.krate.name, "foo_ignored_badge");
     assert_eq!(json.krate.max_version, "1.0.0");
-    assert_eq!(json.warnings.invalid_badges.len(), 2);
-    assert!(json
-        .warnings
-        .invalid_badges
-        .contains(&"travis-ci".to_string(),));
-    assert!(json
-        .warnings
-        .invalid_badges
-        .contains(&"not-a-badge".to_string(),));
+    assert_eq!(json.warnings.invalid_badges.len(), 0);
 
     let json = anon.show_crate("foo_ignored_badge");
     let badges = json.krate.badges.unwrap();

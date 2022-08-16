@@ -11,8 +11,8 @@ use swirl::Job;
 
 use crate::controllers::cargo_prelude::*;
 use crate::models::{
-    insert_version_owner_action, Badge, Category, Crate, DependencyKind, Keyword, NewCrate,
-    NewVersion, Rights, VersionAction,
+    insert_version_owner_action, Category, Crate, DependencyKind, Keyword, NewCrate, NewVersion,
+    Rights, VersionAction,
 };
 use crate::worker;
 
@@ -186,9 +186,6 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
         // in order to be able to warn about them
         let ignored_invalid_categories = Category::update_crate(&conn, &krate, &categories)?;
 
-        // Update all badges for this crate, collecting any invalid badges in
-        // order to be able to warn about them
-        let ignored_invalid_badges = Badge::update_crate(&conn, &krate, new_crate.badges.as_ref())?;
         let top_versions = krate.top_versions(&conn)?;
 
         // Read tarball from request
@@ -248,7 +245,7 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
         // warnings at this time, but if we need to, the field is available.
         let warnings = PublishWarnings {
             invalid_categories: ignored_invalid_categories,
-            invalid_badges: ignored_invalid_badges,
+            invalid_badges: vec![],
             other: vec![],
         };
 
