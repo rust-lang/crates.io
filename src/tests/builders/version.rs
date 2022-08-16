@@ -18,6 +18,7 @@ pub struct VersionBuilder<'a> {
     num: semver::Version,
     size: i32,
     yanked: bool,
+    checksum: String,
 }
 
 impl<'a> VersionBuilder<'a> {
@@ -41,6 +42,7 @@ impl<'a> VersionBuilder<'a> {
             num,
             size: 0,
             yanked: false,
+            checksum: String::new(),
         }
     }
 
@@ -91,6 +93,7 @@ impl<'a> VersionBuilder<'a> {
             self.license_file,
             self.size,
             published_by,
+            self.checksum,
         )?
         .save(connection, "someone@example.com")?;
 

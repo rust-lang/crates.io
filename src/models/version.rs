@@ -23,6 +23,7 @@ pub struct Version {
     pub license: Option<String>,
     pub crate_size: Option<i32>,
     pub published_by: Option<i32>,
+    pub checksum: Option<String>,
 }
 
 #[derive(Insertable, Debug)]
@@ -34,6 +35,7 @@ pub struct NewVersion {
     license: Option<String>,
     crate_size: Option<i32>,
     published_by: i32,
+    checksum: String,
 }
 
 /// The highest version (semver order) and the most recently updated version.
@@ -121,6 +123,7 @@ impl Version {
 }
 
 impl NewVersion {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         crate_id: i32,
         num: &semver::Version,
@@ -129,6 +132,7 @@ impl NewVersion {
         license_file: Option<&str>,
         crate_size: i32,
         published_by: i32,
+        checksum: String,
     ) -> AppResult<Self> {
         let features = serde_json::to_value(features)?;
 
@@ -139,6 +143,7 @@ impl NewVersion {
             license,
             crate_size: Some(crate_size),
             published_by,
+            checksum,
         };
 
         new_version.validate_license(license_file)?;
