@@ -109,6 +109,7 @@ mod test {
             0,
             user_id,
             "0000000000000000000000000000000000000000000000000000000000000000".to_string(),
+            None,
         )
         .unwrap();
         let version = version.save(conn, "someone@example.com").unwrap();
