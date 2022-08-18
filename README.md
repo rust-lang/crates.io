@@ -2,8 +2,8 @@
 
 [![What's Deployed](https://img.shields.io/badge/whatsdeployed-prod-green.svg)](https://whatsdeployed.io/s-9IG)
 
-Source code for the default [Cargo](http://doc.crates.io) registry. Viewable
-online at [crates.io](https://crates.io).
+Source code for the default [Cargo](https://doc.rust-lang.org/cargo/) registry.
+Viewable online at [crates.io](https://crates.io).
 
 ## Status of crates.io
 
