@@ -44,6 +44,16 @@ pub enum DependencyKind {
     // if you add a kind here, be sure to update `from_row` below.
 }
 
+impl From<IndexDependencyKind> for DependencyKind {
+    fn from(dk: IndexDependencyKind) -> Self {
+        match dk {
+            IndexDependencyKind::Normal => DependencyKind::Normal,
+            IndexDependencyKind::Build => DependencyKind::Build,
+            IndexDependencyKind::Dev => DependencyKind::Dev,
+        }
+    }
+}
+
 impl From<DependencyKind> for IndexDependencyKind {
     fn from(dk: DependencyKind) -> Self {
         match dk {
