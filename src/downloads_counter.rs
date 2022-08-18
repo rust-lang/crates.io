@@ -247,7 +247,7 @@ mod tests {
     use crate::models::{Crate, NewCrate, NewUser, NewVersion, User};
     use diesel::PgConnection;
     use semver::Version;
-    use std::collections::HashMap;
+    use std::collections::BTreeMap;
 
     #[test]
     fn test_increment_and_persist_all() {
@@ -452,7 +452,7 @@ mod tests {
             let version = NewVersion::new(
                 self.krate.id,
                 &Version::parse(&format!("{}.0.0", self.next_version)).unwrap(),
-                &HashMap::new(),
+                &BTreeMap::new(),
                 None,
                 None,
                 0,
