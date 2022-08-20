@@ -1,5 +1,5 @@
 use cargo_registry::views::krate_publish as u;
-use std::{collections::HashMap, io::Read};
+use std::{collections::BTreeMap, collections::HashMap, io::Read};
 
 use flate2::{write::GzEncoder, Compression};
 use once_cell::sync::Lazy;
@@ -36,7 +36,7 @@ pub struct PublishBuilder {
     readme: Option<String>,
     tarball: Vec<u8>,
     version: semver::Version,
-    features: HashMap<u::EncodableFeatureName, Vec<u::EncodableFeature>>,
+    features: BTreeMap<u::EncodableFeatureName, Vec<u::EncodableFeature>>,
 }
 
 impl PublishBuilder {
@@ -56,7 +56,7 @@ impl PublishBuilder {
             readme: None,
             tarball: EMPTY_TARBALL_BYTES.to_vec(),
             version: semver::Version::parse("1.0.0").unwrap(),
-            features: HashMap::new(),
+            features: BTreeMap::new(),
         }
     }
 

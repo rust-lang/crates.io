@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
@@ -127,7 +127,7 @@ impl NewVersion {
     pub fn new(
         crate_id: i32,
         num: &semver::Version,
-        features: &HashMap<String, Vec<String>>,
+        features: &BTreeMap<String, Vec<String>>,
         license: Option<String>,
         license_file: Option<&str>,
         crate_size: i32,

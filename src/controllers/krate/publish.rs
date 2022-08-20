@@ -3,7 +3,7 @@
 use flate2::read::GzDecoder;
 use hex::ToHex;
 use sha2::{Digest, Sha256};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::io::Read;
 use std::path::Path;
 use std::sync::Arc;
@@ -216,7 +216,7 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
             .uploader()
             .upload_crate(app.http_client(), tarball, &krate, vers)?;
 
-        let (features, features2): (HashMap<_, _>, HashMap<_, _>) =
+        let (features, features2): (BTreeMap<_, _>, BTreeMap<_, _>) =
             features.into_iter().partition(|(_k, vals)| {
                 !vals
                     .iter()

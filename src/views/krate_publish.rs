@@ -2,7 +2,7 @@
 //! and manages the serialising and deserialising of this information
 //! to and from structs. The serlializing is only utilised in
 //! integration tests.
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 
@@ -17,7 +17,7 @@ pub struct EncodableCrateUpload {
     pub name: EncodableCrateName,
     pub vers: EncodableCrateVersion,
     pub deps: Vec<EncodableCrateDependency>,
-    pub features: HashMap<EncodableFeatureName, Vec<EncodableFeature>>,
+    pub features: BTreeMap<EncodableFeatureName, Vec<EncodableFeature>>,
     pub description: Option<String>,
     pub homepage: Option<String>,
     pub documentation: Option<String>,
@@ -53,7 +53,7 @@ pub struct EncodableCategoryList(pub Vec<EncodableCategory>);
 pub struct EncodableCategory(pub String);
 #[derive(Serialize, Debug, Deref)]
 pub struct EncodableFeature(pub String);
-#[derive(PartialEq, Eq, Hash, Serialize, Debug, Deref)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Debug, Deref)]
 pub struct EncodableFeatureName(pub String);
 
 #[derive(Serialize, Deserialize, Debug)]

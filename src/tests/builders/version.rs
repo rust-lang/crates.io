@@ -3,7 +3,7 @@ use cargo_registry::{
     schema::{dependencies, versions},
     util::errors::AppResult,
 };
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
@@ -12,7 +12,7 @@ use diesel::prelude::*;
 pub struct VersionBuilder<'a> {
     created_at: Option<NaiveDateTime>,
     dependencies: Vec<(i32, Option<&'static str>)>,
-    features: HashMap<String, Vec<String>>,
+    features: BTreeMap<String, Vec<String>>,
     license: Option<&'a str>,
     license_file: Option<&'a str>,
     num: semver::Version,
@@ -36,7 +36,7 @@ impl<'a> VersionBuilder<'a> {
         VersionBuilder {
             created_at: None,
             dependencies: Vec::new(),
-            features: HashMap::new(),
+            features: BTreeMap::new(),
             license: None,
             license_file: None,
             num,

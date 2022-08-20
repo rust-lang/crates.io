@@ -5,7 +5,7 @@ extern crate serde;
 pub mod testing;
 
 use anyhow::{anyhow, Context};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -101,7 +101,7 @@ pub struct Crate {
     pub vers: String,
     pub deps: Vec<Dependency>,
     pub cksum: String,
-    pub features: HashMap<String, Vec<String>>,
+    pub features: BTreeMap<String, Vec<String>>,
     /// This field contains features with new, extended syntax. Specifically,
     /// namespaced features (`dep:`) and weak dependencies (`pkg?/feat`).
     ///
@@ -112,7 +112,7 @@ pub struct Crate {
     /// will fail to load due to not being able to parse the new syntax, even
     /// with a `Cargo.lock` file.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub features2: Option<HashMap<String, Vec<String>>>,
+    pub features2: Option<BTreeMap<String, Vec<String>>>,
     pub yanked: Option<bool>,
     #[serde(default)]
     pub links: Option<String>,
@@ -139,7 +139,7 @@ pub struct Crate {
     pub v: Option<u32>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, PartialOrd, Ord, Eq)]
 pub struct Dependency {
     pub name: String,
     pub req: String,
@@ -152,7 +152,7 @@ pub struct Dependency {
     pub package: Option<String>,
 }
 
-#[derive(Copy, Clone, Serialize, Deserialize, Debug)]
+#[derive(Copy, Clone, Serialize, Deserialize, Debug, PartialEq, PartialOrd, Ord, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum DependencyKind {
     Normal,
