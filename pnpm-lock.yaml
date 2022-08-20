@@ -262,7 +262,7 @@ packages:
     engines: {node: ^10.13.0 || ^12.13.0 || >=14.0.0}
     peerDependencies:
       '@babel/core': '>=7.11.0'
-      eslint: ^7.5.0 || ^8.0.0
+      eslint: '*'
     peerDependenciesMeta:
       '@babel/core':
         optional: true
@@ -5456,6 +5456,9 @@ packages:
     engines: {node: '>= 10'}
     peerDependencies:
       postcss: ^8.1.0
+    peerDependenciesMeta:
+      postcss:
+        optional: true
     dependencies:
       broccoli-caching-writer: 3.0.3
       ensure-posix-path: 1.1.1
@@ -9082,7 +9085,7 @@ packages:
     resolution: {integrity: sha512-obmWKLUNCnhtQRKc+tmnYuQl0pFU1ibYJQ5BGhTVB08bHe9wC8qUeG7c08dj9XX+AuPj1YSGSQIHl1pnDHZR0Q==}
     hasBin: true
     peerDependencies:
-      eslint: '>=7.0.0'
+      eslint: '*'
     dependencies:
       eslint: 8.22.0
     dev: true
@@ -9090,7 +9093,7 @@ packages:
   /eslint-plugin-ember-concurrency/0.5.1_eslint@8.22.0:
     resolution: {integrity: sha512-sQjDs/pZt2+882M15hnEdmcxh7LIObP9d8kt5yw5nKNR6tGF5SIBPx00Jji61KYISakFHzSgcZfgquK3dfY8xA==}
     peerDependencies:
-      eslint: 6.* || 7.*
+      eslint: '*'
     dependencies:
       eslint: 8.22.0
     dev: true
@@ -9099,7 +9102,7 @@ packages:
     resolution: {integrity: sha512-iQzqn8/GdBbNv2T3YetpjEBemoH0v9e9ea8Bu6JLOX2TN+HMK2l52/QBRFgrnaxLXBjPO3iy2c3sCieYV27EvQ==}
     engines: {node: 14.* || 16.* || >= 18}
     peerDependencies:
-      eslint: '>= 7'
+      eslint: '*'
     dependencies:
       '@ember-data/rfc395-data': 0.0.4
       css-tree: 2.2.1
@@ -9115,7 +9118,7 @@ packages:
   /eslint-plugin-import-helpers/1.2.1_eslint@8.22.0:
     resolution: {integrity: sha512-BSqLlCnyX4tWGlvPUTpBgUoaFiWxXSztpk9SozZVW4TZU1ygZuF0Lrfn9CO5xx1XT+PVAR9yroP9JPRyB4rAjQ==}
     peerDependencies:
-      eslint: 5.x - 8.x
+      eslint: '*'
     dependencies:
       eslint: 8.22.0
     dev: true
@@ -9124,7 +9127,7 @@ packages:
     resolution: {integrity: sha512-f/0rXLXUt0oFYs8ra4w49wYZBG5GKZpAYsJSm6rnYL5uVDjd+zowwMwVZHnAjf4edNrKpCDYfXDgmRE/Ak7QyQ==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
-      eslint: '>=7.28.0'
+      eslint: '*'
       eslint-config-prettier: '*'
       prettier: '>=2.0.0'
     peerDependenciesMeta:
@@ -9141,7 +9144,7 @@ packages:
     resolution: {integrity: sha512-uqqkzj3k5ee36XOkr6Y9DfTC/6uXq/aWuuo14o79Bky+SmQy3NzK+Vee7UBICDEHhi7SDsFPxdsBFm9cjNAuvg==}
     engines: {node: 12.* || 14.* || >= 16.*}
     peerDependencies:
-      eslint: ^7.11.0
+      eslint: '*'
     dependencies:
       eslint: 8.22.0
     dev: true
@@ -9150,7 +9153,7 @@ packages:
     resolution: {integrity: sha512-DtqZ5mf/GMlfWoz1abIjq5jZfaFuHzGBZYIeuJfEoKKGWRHr2JiJR+ea+BF7Wx2N1PPRoT/2fwgiK1NnmNE3Hg==}
     engines: {node: '>=14.18'}
     peerDependencies:
-      eslint: '>=8.18.0'
+      eslint: '*'
     dependencies:
       '@babel/helper-validator-identifier': 7.18.6
       ci-info: 3.3.2
@@ -9196,7 +9199,7 @@ packages:
     resolution: {integrity: sha512-uuQC43IGctw68pJA1RgbQS8/NP7rch6Cwd4j3ZBtgo4/8Flj4eGE7ZYSZRN3iq5pVUv6GPdW5Z1RFleo84uLDA==}
     engines: {node: ^10.0.0 || ^12.0.0 || >= 14.0.0}
     peerDependencies:
-      eslint: '>=5'
+      eslint: '*'
     dependencies:
       eslint: 8.22.0
       eslint-visitor-keys: 2.1.0
@@ -10855,6 +10858,9 @@ packages:
     engines: {node: ^10 || ^12 || >= 14}
     peerDependencies:
       postcss: ^8.1.0
+    peerDependenciesMeta:
+      postcss:
+        optional: true
     dependencies:
       postcss: 8.4.16
 
@@ -13417,6 +13423,9 @@ packages:
     engines: {node: ^12 || ^14 || >=16}
     peerDependencies:
       postcss: ^8.3
+    peerDependenciesMeta:
+      postcss:
+        optional: true
     dependencies:
       postcss-value-parser: 4.2.0
     dev: true
@@ -13501,6 +13510,9 @@ packages:
     engines: {node: '>=10.0.0'}
     peerDependencies:
       postcss: ^8.0.0
+    peerDependenciesMeta:
+      postcss:
+        optional: true
     dependencies:
       postcss-value-parser: 4.2.0
       read-cache: 1.0.0
@@ -13541,6 +13553,9 @@ packages:
     engines: {node: ^10 || ^12 || >= 14}
     peerDependencies:
       postcss: ^8.1.0
+    peerDependenciesMeta:
+      postcss:
+        optional: true
     dependencies:
       postcss: 8.4.16
 
@@ -13549,6 +13564,9 @@ packages:
     engines: {node: ^10 || ^12 || >= 14}
     peerDependencies:
       postcss: ^8.1.0
+    peerDependenciesMeta:
+      postcss:
+        optional: true
     dependencies:
       icss-utils: 5.1.0_postcss@8.4.16
       postcss: 8.4.16
@@ -13560,6 +13578,9 @@ packages:
     engines: {node: ^10 || ^12 || >= 14}
     peerDependencies:
       postcss: ^8.1.0
+    peerDependenciesMeta:
+      postcss:
+        optional: true
     dependencies:
       postcss: 8.4.16
       postcss-selector-parser: 6.0.10
@@ -13569,6 +13590,9 @@ packages:
     engines: {node: ^10 || ^12 || >= 14}
     peerDependencies:
       postcss: ^8.1.0
+    peerDependenciesMeta:
+      postcss:
+        optional: true
     dependencies:
       icss-utils: 5.1.0_postcss@8.4.16
       postcss: 8.4.16
@@ -13578,6 +13602,9 @@ packages:
     engines: {node: '>=12.0'}
     peerDependencies:
       postcss: ^8.2.14
+    peerDependenciesMeta:
+      postcss:
+        optional: true
     dependencies:
       postcss-selector-parser: 6.0.10
     dev: true
