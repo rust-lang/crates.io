@@ -139,7 +139,7 @@
       "miragejs": "0.1.45"
     },
     "peerDependencyRules": {
-      "ignoreMissing": ["@babel/core", "eslint-plugin-*"]
+      "ignoreMissing": ["@babel/core", "eslint-plugin-*", "postcss"]
     }
   },
   "engines": {
