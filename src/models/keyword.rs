@@ -56,7 +56,7 @@ impl Keyword {
             Some(c) => c,
         };
         first.is_ascii_alphanumeric()
-            && chars.all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
+            && chars.all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-' || c == '+')
     }
 
     pub fn update_crate(conn: &PgConnection, krate: &Crate, keywords: &[&str]) -> QueryResult<()> {

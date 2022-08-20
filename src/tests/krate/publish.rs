@@ -711,6 +711,18 @@ fn publish_after_removing_documentation() {
 }
 
 #[test]
+fn good_keywords() {
+    let (_, _, _, token) = TestApp::full().with_token();
+    let crate_to_publish = PublishBuilder::new("foo_good_key")
+        .keyword("c++")
+        .keyword("crates-io_index")
+        .keyword("1password");
+    let json = token.publish_crate(crate_to_publish).good();
+    assert_eq!(json.krate.name, "foo_good_key");
+    assert_eq!(json.krate.max_version, "1.0.0");
+}
+
+#[test]
 fn bad_keywords() {
     let (_, _, _, token) = TestApp::full().with_token();
     let crate_to_publish =
