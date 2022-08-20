@@ -48,7 +48,6 @@
             "lookupNameTemplate": "rust-lang/rust",
         }
     ],
-    "postUpdateOptions": ["yarnDedupeFewer"],
     "packageRules": [{
         "matchPackageNames": ["ember-cli", "ember-data", "ember-source"],
         "separateMinorPatch": true,
