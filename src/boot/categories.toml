@@ -62,7 +62,7 @@ aerodynamics, etc.\
 [aerospace.categories.space-protocols]
 name = "Space protocols"
 description = """
-Protocol implementations for implicatoins in space like CCSDS.\
+Protocol implementations for implications in space like CCSDS.\
 """
 
 [aerospace.categories.unmanned-aerial-vehicles]
