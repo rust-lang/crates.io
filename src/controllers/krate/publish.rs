@@ -171,6 +171,7 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
             file_length as i32,
             user.id,
             hex_cksum.clone(),
+            links.clone(),
         )?
         .save(&conn, &verified_email_address)?;
 

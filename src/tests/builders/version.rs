@@ -19,6 +19,7 @@ pub struct VersionBuilder<'a> {
     size: i32,
     yanked: bool,
     checksum: String,
+    links: Option<String>,
 }
 
 impl<'a> VersionBuilder<'a> {
@@ -43,6 +44,7 @@ impl<'a> VersionBuilder<'a> {
             size: 0,
             yanked: false,
             checksum: String::new(),
+            links: None,
         }
     }
 
@@ -94,6 +96,7 @@ impl<'a> VersionBuilder<'a> {
             self.size,
             published_by,
             self.checksum,
+            self.links,
         )?
         .save(connection, "someone@example.com")?;
 
