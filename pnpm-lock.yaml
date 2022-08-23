@@ -54,7 +54,7 @@ specifiers:
   ember-event-helpers: 0.1.1
   ember-exam: 8.0.0
   ember-export-application-global: 2.0.1
-  ember-fetch: 8.1.1
+  ember-fetch: 8.1.2
   ember-keyboard: 8.2.0
   ember-link: 2.0.0
   ember-load-initializers: 2.1.2
@@ -156,7 +156,7 @@ devDependencies:
   ember-event-helpers: 0.1.1
   ember-exam: 8.0.0_lbln745d2c6liir575g7ycbl3a
   ember-export-application-global: 2.0.1
-  ember-fetch: 8.1.1
+  ember-fetch: 8.1.2
   ember-keyboard: 8.2.0_@ember+test-helpers@2.8.1
   ember-link: 2.0.0
   ember-load-initializers: 2.1.2
@@ -3494,7 +3494,7 @@ packages:
     resolution: {integrity: sha512-9K4zoImiZc3HlIp6AVUDE4CWYx22a+lhSZMYNpbjW04+YF0KWj4pJXnEMjdnFTiQibFFmElcsasJXDbdI/EPhA==}
     dependencies:
       '@types/eslint': 8.4.6
-      '@types/estree': 0.0.51
+      '@types/estree': 1.0.0
 
   /@types/eslint/7.29.0:
     resolution: {integrity: sha512-VNcvioYDH8/FxaeTKkM4/TiTwt6pBV9E3OfGmvaw8tPl0rrHCJ4Ll15HRT+pMiFAf/MLQvAzC+6RzUMEL9Ceng==}
@@ -3506,7 +3506,7 @@ packages:
   /@types/eslint/8.4.6:
     resolution: {integrity: sha512-/fqTbjxyFUaYNO7VcW5g+4npmqVACz1bB7RTHYuLj+PRjw9hrCwrUXVQFpChUS0JsyEFvMZ7U/PfmvWgxJhI9g==}
     dependencies:
-      '@types/estree': 0.0.51
+      '@types/estree': 1.0.0
       '@types/json-schema': 7.0.11
 
   /@types/estree/0.0.51:
@@ -3514,7 +3514,6 @@ packages:
 
   /@types/estree/1.0.0:
     resolution: {integrity: sha512-WulqXMDUTYAXCjZnk6JtIHPigp55cVtDgDrO2gHRwhyJto21+1zbVCtOYB2L1F9w4qCQ0rOGWBnBe0FNTiEJIQ==}
-    dev: true
 
   /@types/express-serve-static-core/4.17.30:
     resolution: {integrity: sha512-gstzbTWro2/nFed1WXtf+TtrpwxH7Ggs4RLYTLbeVgIkUQOI3WG/JKjgeOU1zXDvezllupjrf8OPIdvTbIaVOQ==}
@@ -8612,8 +8611,8 @@ packages:
     engines: {node: '>= 4'}
     dev: true
 
-  /ember-fetch/8.1.1:
-    resolution: {integrity: sha512-Xi1wNmPtVmfIoFH675AA0ELIdYUcoZ2p+6j9c8eDFjiGJiFesyp01bDtl5ryBI/1VPOByJLsDkT+4C11HixsJw==}
+  /ember-fetch/8.1.2:
+    resolution: {integrity: sha512-TVx24/jrvDIuPL296DV0hBwp7BWLcSMf0I8464KGz01sPytAB+ZAePbc9ooBTJDkKZEGFgatJa4nj3yF1S9Bpw==}
     engines: {node: '>= 10'}
     dependencies:
       abortcontroller-polyfill: 1.7.3
