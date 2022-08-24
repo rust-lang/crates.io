@@ -46,7 +46,7 @@ specifiers:
   ember-cli-notifications: 8.0.0
   ember-cli-terser: 4.0.2
   ember-click-outside: 5.0.1
-  ember-concurrency: 2.3.0
+  ember-concurrency: 2.3.1
   ember-css-modules: 2.0.1
   ember-data: 4.6.1
   ember-disable-prototype-extensions: 1.1.3
@@ -148,7 +148,7 @@ devDependencies:
   ember-cli-notifications: 8.0.0
   ember-cli-terser: 4.0.2
   ember-click-outside: 5.0.1
-  ember-concurrency: 2.3.0
+  ember-concurrency: 2.3.1
   ember-css-modules: 2.0.1
   ember-data: 4.6.1_webpack@5.74.0
   ember-disable-prototype-extensions: 1.1.3
@@ -8461,8 +8461,8 @@ packages:
       - '@babel/core'
       - supports-color
 
-  /ember-concurrency/2.3.0:
-    resolution: {integrity: sha512-Y0l4wuxLa02KyBKjmkIUk1nCp640FOKGClbdQM8DONz7qeJiFOmxFazzlZjjbvXHIZwqOjGwHDrl9RA+ta5bJQ==}
+  /ember-concurrency/2.3.1:
+    resolution: {integrity: sha512-V3fpM5vJk0GmfIC88wXtO5m2u2ge35y2Vjnk/LtcU4nQ8W/2TMx+1Eu9QzA+F//BoZRUtLnUDt//0E8c08WBLQ==}
     engines: {node: 10.* || 12.* || 14.* || >= 16}
     dependencies:
       '@babel/helper-plugin-utils': 7.18.9
