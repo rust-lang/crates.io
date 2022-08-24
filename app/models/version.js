@@ -99,31 +99,31 @@ export default class Version extends Model {
   @alias('loadDepsTask.last.value.build') buildDependencies;
   @alias('loadDepsTask.last.value.dev') devDependencies;
 
-  @keepLatestTask *loadDepsTask() {
+  loadDepsTask = keepLatestTask(async () => {
     // trigger the async relationship to load the content
-    let dependencies = yield this.dependencies;
+    let dependencies = await this.dependencies;
 
     let normal = dependencies.filterBy('kind', 'normal').uniqBy('crate_id');
     let build = dependencies.filterBy('kind', 'build').uniqBy('crate_id');
     let dev = dependencies.filterBy('kind', 'dev').uniqBy('crate_id');
 
     return { normal, build, dev };
-  }
+  });
 
-  @keepLatestTask *loadReadmeTask() {
+  loadReadmeTask = keepLatestTask(async () => {
     if (this.readme_path) {
-      let response = yield fetch(this.readme_path);
+      let response = await fetch(this.readme_path);
       if (!response.ok) {
         throw new Error(`README request for ${this.crateName} v${this.num} failed`);
       }
 
-      return yield response.text();
+      return await response.text();
     }
-  }
+  });
 
-  @task *loadDocsBuildsTask() {
-    return yield ajax(`https://docs.rs/crate/${this.crateName}/${this.num}/builds.json`);
-  }
+  loadDocsBuildsTask = task(async () => {
+    return await ajax(`https://docs.rs/crate/${this.crateName}/${this.num}/builds.json`);
+  });
 
   get hasDocsRsLink() {
     let docsBuilds = this.loadDocsBuildsTask.lastSuccessful?.value;
@@ -158,23 +158,23 @@ export default class Version extends Model {
     return null;
   }
 
-  @keepLatestTask *yankTask() {
-    let response = yield fetch(`/api/v1/crates/${this.crate.id}/${this.num}/yank`, { method: 'DELETE' });
+  yankTask = keepLatestTask(async () => {
+    let response = await fetch(`/api/v1/crates/${this.crate.id}/${this.num}/yank`, { method: 'DELETE' });
     if (!response.ok) {
       throw new Error(`Yank request for ${this.crateName} v${this.num} failed`);
     }
     this.set('yanked', true);
 
-    return yield response.text();
-  }
+    return await response.text();
+  });
 
-  @keepLatestTask *unyankTask() {
-    let response = yield fetch(`/api/v1/crates/${this.crate.id}/${this.num}/unyank`, { method: 'PUT' });
+  unyankTask = keepLatestTask(async () => {
+    let response = await fetch(`/api/v1/crates/${this.crate.id}/${this.num}/unyank`, { method: 'PUT' });
     if (!response.ok) {
       throw new Error(`Unyank request for ${this.crateName} v${this.num} failed`);
     }
     this.set('yanked', false);
 
-    return yield response.text();
-  }
+    return await response.text();
+  });
 }

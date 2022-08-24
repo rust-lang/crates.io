@@ -23,16 +23,16 @@ export default class extends Component {
     });
   }
 
-  @dropTask *followStateTask() {
-    let d = yield ajax(`/api/v1/crates/${this.args.crate.name}/following`);
+  followStateTask = dropTask(async () => {
+    let d = await ajax(`/api/v1/crates/${this.args.crate.name}/following`);
     this.following = d.following;
-  }
+  });
 
-  @task *toggleFollowTask() {
+  toggleFollowTask = task(async () => {
     let crate = this.args.crate;
 
     try {
-      yield this.following ? crate.unfollow() : crate.follow();
+      this.following ? await crate.unfollow() : await crate.follow();
       this.following = !this.following;
     } catch {
       this.notifications.error(
@@ -41,5 +41,5 @@ export default class extends Component {
         } crate. Please try again later!`,
       );
     }
-  }
+  });
 }

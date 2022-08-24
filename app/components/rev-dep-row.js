@@ -26,8 +26,8 @@ export default class VersionRow extends Component {
     return this.loadCrateTask.lastSuccessful?.value?.description;
   }
 
-  @task *loadCrateTask() {
+  loadCrateTask = task(async () => {
     let { dependency } = this.args;
-    return yield this.store.findRecord('crate', dependency.version.crateName);
-  }
+    return await this.store.findRecord('crate', dependency.version.crateName);
+  });
 }

@@ -64,7 +64,7 @@ export default class SearchController extends Controller {
     });
   }
 
-  @restartableTask *dataTask() {
+  dataTask = restartableTask(async () => {
     let { all_keywords, page, per_page, q, sort } = this;
 
     let query = q.trim();
@@ -73,6 +73,6 @@ export default class SearchController extends Controller {
       ? { page, per_page, sort, q: query, all_keywords }
       : { page, per_page, sort, ...processSearchQuery(query) };
 
-    return yield this.store.query('crate', searchOptions);
-  }
+    return await this.store.query('crate', searchOptions);
+  });
 }

@@ -34,12 +34,12 @@ export default class CrateVersionController extends Controller {
 
   @alias('loadReadmeTask.last.value') readme;
 
-  @task *loadReadmeTask() {
+  loadReadmeTask = task(async () => {
     let version = this.currentVersion;
 
     let readme = version.loadReadmeTask.lastSuccessful
       ? version.loadReadmeTask.lastSuccessful.value
-      : yield version.loadReadmeTask.perform();
+      : await version.loadReadmeTask.perform();
 
     if (typeof document !== 'undefined') {
       setTimeout(() => {
@@ -50,5 +50,5 @@ export default class CrateVersionController extends Controller {
     }
 
     return readme;
-  }
+  });
 }

@@ -9,7 +9,7 @@ import startOfDay from 'date-fns/startOfDay';
 import { dropTask } from 'ember-concurrency';
 
 export default class ChartJsLoader extends Service {
-  @dropTask *loadTask() {
+  async _load() {
     let {
       Chart,
       LineController,
@@ -21,7 +21,7 @@ export default class ChartJsLoader extends Service {
       Legend,
       Tooltip,
       _adapters,
-    } = yield import('chart.js');
+    } = await import('chart.js');
 
     Chart.register(LineController, LineElement, PointElement, LinearScale, TimeScale, Filler, Legend, Tooltip);
 
@@ -67,4 +67,8 @@ export default class ChartJsLoader extends Service {
 
     return Chart;
   }
+
+  loadTask = dropTask(async () => {
+    return await this._load();
+  });
 }

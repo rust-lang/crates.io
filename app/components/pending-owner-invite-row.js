@@ -10,11 +10,11 @@ export default class PendingOwnerInviteRow extends Component {
   @tracked isAccepted = false;
   @tracked isDeclined = false;
 
-  @task *acceptInvitationTask() {
+  acceptInvitationTask = task(async () => {
     this.args.invite.set('accepted', true);
 
     try {
-      yield this.args.invite.save();
+      await this.args.invite.save();
       this.isAccepted = true;
     } catch (error) {
       if (error.errors?.[0]?.detail && error.errors[0].detail !== '[object Object]') {
@@ -23,13 +23,13 @@ export default class PendingOwnerInviteRow extends Component {
         this.notifications.error('Error in accepting invite');
       }
     }
-  }
+  });
 
-  @task *declineInvitationTask() {
+  declineInvitationTask = task(async () => {
     this.args.invite.set('accepted', false);
 
     try {
-      yield this.args.invite.save();
+      await this.args.invite.save();
       this.isDeclined = true;
     } catch (error) {
       if (error.errors?.[0]?.detail && error.errors[0].detail !== '[object Object]') {
@@ -38,5 +38,5 @@ export default class PendingOwnerInviteRow extends Component {
         this.notifications.error('Error in declining invite');
       }
     }
-  }
+  });
 }

@@ -12,9 +12,9 @@ export default class EmailInput extends Component {
   @tracked isEditing = false;
   @tracked disableResend = false;
 
-  @task *resendEmailTask() {
+  resendEmailTask = task(async () => {
     try {
-      yield this.args.user.resendVerificationEmail();
+      await this.args.user.resendVerificationEmail();
       this.disableResend = true;
     } catch (error) {
       if (error.errors) {
@@ -23,7 +23,7 @@ export default class EmailInput extends Component {
         this.notifications.error('Unknown error in resending message');
       }
     }
-  }
+  });
 
   @action
   editEmail() {
@@ -31,12 +31,12 @@ export default class EmailInput extends Component {
     this.isEditing = true;
   }
 
-  @task *saveEmailTask() {
+  saveEmailTask = task(async () => {
     let userEmail = this.value;
     let user = this.args.user;
 
     try {
-      yield user.changeEmail(userEmail);
+      await user.changeEmail(userEmail);
 
       this.isEditing = false;
       this.disableResend = false;
@@ -48,5 +48,5 @@ export default class EmailInput extends Component {
 
       this.notifications.error(`Error in saving email: ${msg}`);
     }
-  }
+  });
 }

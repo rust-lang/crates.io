@@ -24,7 +24,7 @@ export default class ProgressService extends Service {
     });
   }
 
-  @task *counterTask(promise) {
+  counterTask = task(async promise => {
     this.updateTask.perform().catch(error => {
       if (!didCancel(error)) {
         // this task shouldn't be able to fail, but if it does we'll let Sentry know
@@ -32,17 +32,17 @@ export default class ProgressService extends Service {
       }
     });
 
-    yield promise;
-  }
+    await promise;
+  });
 
-  @dropTask *updateTask() {
+  updateTask = dropTask(async () => {
     if (Ember.testing) return;
 
     let progress = 0;
     this._style = `width: 0%`;
 
     while (this.counterTask.isRunning) {
-      yield rawTimeout(SPEED);
+      await rawTimeout(SPEED);
 
       let currentAmount;
       if (progress >= 0 && progress < 0.2) {
@@ -66,7 +66,7 @@ export default class ProgressService extends Service {
     }
 
     this._style = `transition: width ${SPEED}ms linear; width: 100%`;
-    yield rawTimeout(SPEED);
+    await rawTimeout(SPEED);
     this._style = `transition: opacity ${SPEED * 2}ms linear; width: 100%; opacity: 0`;
-  }
+  });
 }

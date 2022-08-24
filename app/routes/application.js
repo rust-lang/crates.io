@@ -54,17 +54,17 @@ export default class ApplicationRoute extends Route {
     return true;
   }
 
-  @task *preloadPlaygroundCratesTask() {
-    yield rawTimeout(1000);
-    yield this.playground.loadCrates();
-  }
+  preloadPlaygroundCratesTask = task(async () => {
+    await rawTimeout(1000);
+    await this.playground.loadCrates();
+  });
 
-  @dropTask *checkReadOnlyStatusTask() {
+  checkReadOnlyStatusTask = dropTask(async () => {
     // delay the status check to let the more relevant data load first
     let timeout = Ember.testing ? 0 : 1000;
-    yield rawTimeout(timeout);
+    await rawTimeout(timeout);
 
-    let { read_only: readOnly } = yield ajax('/api/v1/site_metadata');
+    let { read_only: readOnly } = await ajax('/api/v1/site_metadata');
     if (readOnly) {
       let message =
         'crates.io is currently in read-only mode for maintenance reasons. ' +
@@ -72,7 +72,7 @@ export default class ApplicationRoute extends Route {
 
       this.notifications.info(message, { autoClear: false });
     }
-  }
+  });
 
   setSentryTransaction(transition) {
     let name = transition.to?.name;
