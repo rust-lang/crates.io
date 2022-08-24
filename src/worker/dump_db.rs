@@ -4,17 +4,16 @@ use std::{
 };
 
 use self::configuration::VisibilityConfig;
+use crate::{background_jobs::DumpDbJob, swirl::PerformError};
 use crate::{
-    background_jobs::Environment,
+    background_jobs::{Environment, Job},
     uploaders::{UploadBucket, Uploader},
 };
 use reqwest::header;
-use swirl::PerformError;
 
 /// Create CSV dumps of the public information in the database, wrap them in a
 /// tarball and upload to S3.
-#[swirl::background_job]
-pub fn dump_db(
+pub fn perform_dump_db(
     env: &Environment,
     database_url: String,
     target_name: String,
@@ -31,6 +30,13 @@ pub fn dump_db(
     let size = tarball.upload(&target_name, &env.uploader)?;
     info!("Database dump uploaded {} bytes to {}.", size, &target_name);
     Ok(())
+}
+
+pub fn dump_db(database_url: String, target_name: String) -> Job {
+    Job::DumpDb(DumpDbJob {
+        database_url,
+        target_name,
+    })
 }
 
 /// Manage the export directory.

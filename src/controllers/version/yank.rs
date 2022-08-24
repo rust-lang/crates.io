@@ -1,7 +1,6 @@
 //! Endpoints for yanking and unyanking specific versions of crates
 
 use crate::auth::AuthCheck;
-use swirl::Job;
 
 use super::{extract_crate_name_and_semver, version_and_crate};
 use crate::controllers::cargo_prelude::*;

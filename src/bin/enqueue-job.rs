@@ -1,10 +1,9 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
 use anyhow::{anyhow, Result};
+use cargo_registry::schema::background_jobs::dsl::*;
 use cargo_registry::{db, env, worker};
 use diesel::prelude::*;
-use swirl::schema::background_jobs::dsl::*;
-use swirl::Job;
 
 fn main() -> Result<()> {
     let conn = db::oneoff_connection()?;

@@ -1,5 +1,8 @@
-use crate::background_jobs::Environment;
+use crate::background_jobs::{
+    Environment, IndexAddCrateJob, IndexSquashJob, IndexSyncToHttpJob, IndexUpdateYankedJob, Job,
+};
 use crate::schema;
+use crate::swirl::PerformError;
 use anyhow::Context;
 use cargo_registry_index::{Crate, Repository};
 use chrono::Utc;
@@ -7,11 +10,13 @@ use diesel::prelude::*;
 use std::fs::{self, OpenOptions};
 use std::io::ErrorKind;
 use std::process::Command;
-use swirl::PerformError;
 
 #[instrument(skip_all, fields(krate.name = ?krate.name, krate.vers = ?krate.vers))]
-#[swirl::background_job]
-pub fn add_crate(env: &Environment, conn: &PgConnection, krate: Crate) -> Result<(), PerformError> {
+pub fn perform_index_add_crate(
+    env: &Environment,
+    conn: &PgConnection,
+    krate: &Crate,
+) -> Result<(), PerformError> {
     info!("Syncing git index to HTTP-based index");
 
     use std::io::prelude::*;
@@ -33,9 +38,15 @@ pub fn add_crate(env: &Environment, conn: &PgConnection, krate: Crate) -> Result
     Ok(())
 }
 
+pub fn add_crate(krate: Crate) -> Job {
+    Job::IndexAddCrate(IndexAddCrateJob { krate })
+}
+
 #[instrument(skip(env))]
-#[swirl::background_job]
-pub fn update_crate_index(env: &Environment, crate_name: String) -> Result<(), PerformError> {
+pub fn perform_index_sync_to_http(
+    env: &Environment,
+    crate_name: String,
+) -> Result<(), PerformError> {
     info!("Syncing git index to HTTP-based index");
 
     let repo = env.lock_index()?;
@@ -59,17 +70,20 @@ pub fn update_crate_index(env: &Environment, crate_name: String) -> Result<(), P
     Ok(())
 }
 
+pub fn update_crate_index(crate_name: String) -> Job {
+    Job::IndexSyncToHttp(IndexSyncToHttpJob { crate_name })
+}
+
 /// Yanks or unyanks a crate version. This requires finding the index
 /// file, deserlialise the crate from JSON, change the yank boolean to
 /// `true` or `false`, write all the lines back out, and commit and
 /// push the changes.
 #[instrument(skip(env, conn))]
-#[swirl::background_job]
-pub fn sync_yanked(
+pub fn perform_index_update_yanked(
     env: &Environment,
     conn: &PgConnection,
-    krate: String,
-    version_num: String,
+    krate: &str,
+    version_num: &str,
 ) -> Result<(), PerformError> {
     info!("Syncing yanked status from database into the index");
 
@@ -86,7 +100,7 @@ pub fn sync_yanked(
     debug!(yanked);
 
     let repo = env.lock_index()?;
-    let dst = repo.index_file(&krate);
+    let dst = repo.index_file(krate);
 
     let prev = fs::read_to_string(&dst)?;
     let new = prev
@@ -115,15 +129,18 @@ pub fn sync_yanked(
     }
 
     // Queue another background job to update the http-based index as well.
-    update_crate_index(krate.clone()).enqueue(conn)?;
+    update_crate_index(krate.to_string()).enqueue(conn)?;
 
     Ok(())
 }
 
+pub fn sync_yanked(krate: String, version_num: String) -> Job {
+    Job::IndexUpdateYanked(IndexUpdateYankedJob { krate, version_num })
+}
+
 /// Collapse the index into a single commit, archiving the current history in a snapshot branch.
 #[instrument(skip(env))]
-#[swirl::background_job]
-pub fn squash_index(env: &Environment) -> Result<(), PerformError> {
+pub fn perform_index_squash(env: &Environment) -> Result<(), PerformError> {
     info!("Squashing the index into a single commit");
 
     let repo = env.lock_index()?;
@@ -156,4 +173,8 @@ pub fn squash_index(env: &Environment) -> Result<(), PerformError> {
     info!("The index has been successfully squashed.");
 
     Ok(())
+}
+
+pub fn squash_index() -> Job {
+    Job::IndexSquash(IndexSquashJob {})
 }

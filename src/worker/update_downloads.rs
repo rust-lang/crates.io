@@ -3,13 +3,17 @@ use crate::{
     schema::{crates, metadata, version_downloads, versions},
 };
 
+use crate::background_jobs::{Job, UpdateDownloadsJob};
+use crate::swirl::PerformError;
 use diesel::prelude::*;
-use swirl::PerformError;
 
-#[swirl::background_job]
-pub fn update_downloads(conn: &PgConnection) -> Result<(), PerformError> {
+pub fn perform_update_downloads(conn: &PgConnection) -> Result<(), PerformError> {
     update(conn)?;
     Ok(())
+}
+
+pub fn update_downloads() -> Job {
+    Job::UpdateDownloads(UpdateDownloadsJob {})
 }
 
 fn update(conn: &PgConnection) -> QueryResult<()> {
