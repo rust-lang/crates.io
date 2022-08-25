@@ -22,7 +22,7 @@ pub fn index(req: &mut dyn RequestExt) -> EndpointResult {
 
     let query = query.pages_pagination(PaginationOptions::builder().gather(req)?);
     let conn = req.db_read()?;
-    let data: Paginated<Keyword> = query.load(&*conn)?;
+    let data: Paginated<Keyword> = query.load(&conn)?;
     let total = data.total();
     let kws = data
         .into_iter()

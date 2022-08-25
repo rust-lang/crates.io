@@ -295,7 +295,7 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
         (total, next_page, None, results, conn)
     } else {
         let query = query.pages_pagination(pagination);
-        let data: Paginated<(Crate, bool, Option<i64>)> = query.load(&*conn)?;
+        let data: Paginated<(Crate, bool, Option<i64>)> = query.load(&conn)?;
         (
             data.total(),
             data.next_page_params().map(|p| req.query_with_params(p)),
