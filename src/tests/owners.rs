@@ -766,7 +766,7 @@ fn extract_token_from_invite_email(emails: &Emails) -> String {
     let after_token = " ";
     let body = message.body.as_str();
     let before_pos = body.find(before_token).unwrap() + before_token.len();
-    let after_pos = before_pos + (&body[before_pos..]).find(after_token).unwrap();
+    let after_pos = before_pos + body[before_pos..].find(after_token).unwrap();
     body[before_pos..after_pos].to_string()
 }
 

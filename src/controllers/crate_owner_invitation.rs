@@ -94,7 +94,7 @@ fn prepare_list(
             ListFilter::CrateName(crate_name) => {
                 // Only allow crate owners to query pending invitations for their crate.
                 let krate: Crate = Crate::by_name(&crate_name).first(&*conn)?;
-                let owners = krate.owners(&*conn)?;
+                let owners = krate.owners(&conn)?;
                 if user.rights(req.app(), &owners)? != Rights::Full {
                     return Err(forbidden());
                 }

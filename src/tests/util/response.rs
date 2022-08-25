@@ -105,7 +105,7 @@ where
         Ok(body.len())
     );
 
-    match serde_json::from_slice(&*body) {
+    match serde_json::from_slice(&body) {
         Ok(t) => t,
         Err(e) => panic!("failed to decode: {:?}", e),
     }

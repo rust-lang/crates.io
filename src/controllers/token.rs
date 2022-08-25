@@ -78,7 +78,7 @@ pub fn new(req: &mut dyn RequestExt) -> EndpointResult {
         )));
     }
 
-    let api_token = ApiToken::insert(&*conn, user.id, name)?;
+    let api_token = ApiToken::insert(&conn, user.id, name)?;
     let api_token = EncodableApiTokenWithToken::from(api_token);
 
     Ok(req.json(&json!({ "api_token": api_token })))
