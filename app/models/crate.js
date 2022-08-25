@@ -1,6 +1,6 @@
 import Model, { attr, hasMany } from '@ember-data/model';
 
-import { memberAction } from 'ember-api-actions';
+import { customAction } from '../utils/custom-action';
 
 export default class Crate extends Model {
   @attr name;
@@ -47,36 +47,29 @@ export default class Crate extends Model {
     return [...teams, ...users];
   }
 
-  follow = memberAction({ type: 'PUT', path: 'follow' });
-  unfollow = memberAction({ type: 'DELETE', path: 'follow' });
+  async follow() {
+    return await customAction(this, { method: 'PUT', path: 'follow' });
+  }
 
-  inviteOwner = memberAction({
-    type: 'PUT',
-    path: 'owners',
-    before(username) {
-      return { owners: [username] };
-    },
-    after(response) {
-      if (response.ok) {
-        return response;
-      } else {
-        throw response;
-      }
-    },
-  });
+  async unfollow() {
+    return await customAction(this, { method: 'DELETE', path: 'follow' });
+  }
 
-  removeOwner = memberAction({
-    type: 'DELETE',
-    path: 'owners',
-    before(username) {
-      return { owners: [username] };
-    },
-    after(response) {
-      if (response.ok) {
-        return response;
-      } else {
-        throw response;
-      }
-    },
-  });
+  async inviteOwner(username) {
+    let response = await customAction(this, { method: 'PUT', path: 'owners', data: { owners: [username] } });
+    if (response.ok) {
+      return response;
+    } else {
+      throw response;
+    }
+  }
+
+  async removeOwner(username) {
+    let response = await customAction(this, { method: 'DELETE', path: 'owners', data: { owners: [username] } });
+    if (response.ok) {
+      return response;
+    } else {
+      throw response;
+    }
+  }
 }

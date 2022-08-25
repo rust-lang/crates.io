@@ -30,7 +30,6 @@ specifiers:
   copy-text-to-clipboard: 3.0.1
   date-fns: 2.29.2
   ember-a11y-testing: 5.0.0
-  ember-api-actions: 0.2.9
   ember-auto-import: 2.4.2
   ember-cli: 4.6.0
   ember-cli-app-version: 5.0.0
@@ -134,7 +133,6 @@ devDependencies:
   '@zestia/ember-auto-focus': 4.4.0
   broccoli-asset-rev: 3.0.0
   ember-a11y-testing: 5.0.0_q2umwxufvnpx3vgxqbnuszsnxm
-  ember-api-actions: 0.2.9
   ember-auto-import: 2.4.2_webpack@5.74.0
   ember-cli: 4.6.0
   ember-cli-app-version: 5.0.0
@@ -894,19 +892,6 @@ packages:
       '@babel/helper-plugin-utils': 7.18.9
       '@babel/plugin-syntax-logical-assignment-operators': 7.10.4_@babel+core@7.18.10
 
-  /@babel/plugin-proposal-nullish-coalescing-operator/7.18.6:
-    resolution: {integrity: sha512-wQxQzxYeJqHcfppzBDnm1yAY0jSRkUXR2z8RePZYrKwMKgMlE8+Z6LUno+bd6LvbGh8Gltvy74+9pIYkr+XkKA==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    peerDependenciesMeta:
-      '@babel/core':
-        optional: true
-    dependencies:
-      '@babel/helper-plugin-utils': 7.18.9
-      '@babel/plugin-syntax-nullish-coalescing-operator': 7.8.3
-    dev: true
-
   /@babel/plugin-proposal-nullish-coalescing-operator/7.18.6_@babel+core@7.18.10:
     resolution: {integrity: sha512-wQxQzxYeJqHcfppzBDnm1yAY0jSRkUXR2z8RePZYrKwMKgMlE8+Z6LUno+bd6LvbGh8Gltvy74+9pIYkr+XkKA==}
     engines: {node: '>=6.9.0'}
@@ -961,20 +946,6 @@ packages:
       '@babel/core': 7.18.10
       '@babel/helper-plugin-utils': 7.18.9
       '@babel/plugin-syntax-optional-catch-binding': 7.8.3_@babel+core@7.18.10
-
-  /@babel/plugin-proposal-optional-chaining/7.18.9:
-    resolution: {integrity: sha512-v5nwt4IqBXihxGsW2QmCWMDS3B3bzGIk/EQVZz2ei7f3NJl8NzAJVvUmpDW5q1CRNY+Beb/k58UAH1Km1N411w==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    peerDependenciesMeta:
-      '@babel/core':
-        optional: true
-    dependencies:
-      '@babel/helper-plugin-utils': 7.18.9
-      '@babel/helper-skip-transparent-expression-wrappers': 7.18.9
-      '@babel/plugin-syntax-optional-chaining': 7.8.3
-    dev: true
 
   /@babel/plugin-proposal-optional-chaining/7.18.9_@babel+core@7.18.10:
     resolution: {integrity: sha512-v5nwt4IqBXihxGsW2QmCWMDS3B3bzGIk/EQVZz2ei7f3NJl8NzAJVvUmpDW5q1CRNY+Beb/k58UAH1Km1N411w==}
@@ -1183,17 +1154,6 @@ packages:
       '@babel/core': 7.18.10
       '@babel/helper-plugin-utils': 7.18.9
 
-  /@babel/plugin-syntax-nullish-coalescing-operator/7.8.3:
-    resolution: {integrity: sha512-aSff4zPII1u2QD7y+F8oDsz19ew4IGEJg9SVW+bqwpwtfFleiQDMdzA/R+UlWDzfnHFCxxleFT0PMIrR36XLNQ==}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    peerDependenciesMeta:
-      '@babel/core':
-        optional: true
-    dependencies:
-      '@babel/helper-plugin-utils': 7.18.9
-    dev: true
-
   /@babel/plugin-syntax-nullish-coalescing-operator/7.8.3_@babel+core@7.18.10:
     resolution: {integrity: sha512-aSff4zPII1u2QD7y+F8oDsz19ew4IGEJg9SVW+bqwpwtfFleiQDMdzA/R+UlWDzfnHFCxxleFT0PMIrR36XLNQ==}
     peerDependencies:
@@ -1237,17 +1197,6 @@ packages:
     dependencies:
       '@babel/core': 7.18.10
       '@babel/helper-plugin-utils': 7.18.9
-
-  /@babel/plugin-syntax-optional-chaining/7.8.3:
-    resolution: {integrity: sha512-KoK9ErH1MBlCPxV0VANkXW2/dw4vlbGDrFgz8bmUsBGYkFRcbRwMh6cIJubdPrkxRwuGdtCk0v/wPTKbQgBjkg==}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    peerDependenciesMeta:
-      '@babel/core':
-        optional: true
-    dependencies:
-      '@babel/helper-plugin-utils': 7.18.9
-    dev: true
 
   /@babel/plugin-syntax-optional-chaining/7.8.3_@babel+core@7.18.10:
     resolution: {integrity: sha512-KoK9ErH1MBlCPxV0VANkXW2/dw4vlbGDrFgz8bmUsBGYkFRcbRwMh6cIJubdPrkxRwuGdtCk0v/wPTKbQgBjkg==}
@@ -1931,21 +1880,6 @@ packages:
 
   /@babel/plugin-transform-typescript/7.5.5:
     resolution: {integrity: sha512-pehKf4m640myZu5B2ZviLaiBlxMCjSZ1qTEO459AXKX5GnPueyulJeCqZFs1nz/Ya2dDzXQ1NxZ/kKNWyD4h6w==}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    peerDependenciesMeta:
-      '@babel/core':
-        optional: true
-    dependencies:
-      '@babel/helper-create-class-features-plugin': 7.18.9
-      '@babel/helper-plugin-utils': 7.18.9
-      '@babel/plugin-syntax-typescript': 7.18.6
-    transitivePeerDependencies:
-      - supports-color
-    dev: true
-
-  /@babel/plugin-transform-typescript/7.8.7:
-    resolution: {integrity: sha512-7O0UsPQVNKqpHeHLpfvOG4uXmlw+MOxYvUv6Otc9uH5SYMIxvF6eBdjkWvC3f9G+VXe0RsNExyAQBeTRug/wqQ==}
     peerDependencies:
       '@babel/core': ^7.0.0-0
     peerDependenciesMeta:
@@ -7676,17 +7610,6 @@ packages:
       - webpack
     dev: true
 
-  /ember-api-actions/0.2.9:
-    resolution: {integrity: sha512-RDyGOL+CkpzpovOB3W2acawCfoDB/P3cevR+QDA+VqOeFDz9sd9bOkDvx0Vn1qeapGC/1yGx6cTpQkQhmuNLmg==}
-    engines: {node: 10.* || >= 12.*}
-    dependencies:
-      ember-cli-babel: 7.26.11
-      ember-cli-typescript: 3.1.4
-    transitivePeerDependencies:
-      - '@babel/core'
-      - supports-color
-    dev: true
-
   /ember-app-scheduler/7.0.1:
     resolution: {integrity: sha512-7140A/4OJuYBlncfxmreZHX5S7FxO/4KX5NswowIrvGZpaLuoeULjBHgiKBWC1OUzsdHST4jwaDufniHEROajg==}
     engines: {node: 12.* || 14.* || >= 16}
@@ -8208,29 +8131,6 @@ packages:
       debug: 4.3.4
       ember-cli-babel-plugin-helpers: 1.1.1
       execa: 2.1.0
-      fs-extra: 8.1.0
-      resolve: 1.22.1
-      rsvp: 4.8.5
-      semver: 6.3.0
-      stagehand: 1.0.0
-      walk-sync: 2.2.0
-    transitivePeerDependencies:
-      - '@babel/core'
-      - supports-color
-    dev: true
-
-  /ember-cli-typescript/3.1.4:
-    resolution: {integrity: sha512-HJ73kL45OGRmIkPhBNFt31I1SGUvdZND+LCH21+qpq3pPlFpJG8GORyXpP+2ze8PbnITNLzwe5AwUrpyuRswdQ==}
-    engines: {node: 8.* || >= 10.*}
-    dependencies:
-      '@babel/plugin-proposal-nullish-coalescing-operator': 7.18.6
-      '@babel/plugin-proposal-optional-chaining': 7.18.9
-      '@babel/plugin-transform-typescript': 7.8.7
-      ansi-to-html: 0.6.15
-      broccoli-stew: 3.0.0
-      debug: 4.3.4
-      ember-cli-babel-plugin-helpers: 1.1.1
-      execa: 3.4.0
       fs-extra: 8.1.0
       resolve: 1.22.1
       rsvp: 4.8.5
@@ -9517,22 +9417,6 @@ packages:
       is-stream: 2.0.1
       merge-stream: 2.0.0
       npm-run-path: 3.1.0
-      onetime: 5.1.2
-      p-finally: 2.0.1
-      signal-exit: 3.0.7
-      strip-final-newline: 2.0.0
-    dev: true
-
-  /execa/3.4.0:
-    resolution: {integrity: sha512-r9vdGQk4bmCuK1yKQu1KTwcT2zwfWdbdaXfCtAh+5nU/4fSX+JAb7vZGvI5naJrQlvONrEB20jeruESI69530g==}
-    engines: {node: ^8.12.0 || >=9.7.0}
-    dependencies:
-      cross-spawn: 7.0.3
-      get-stream: 5.2.0
-      human-signals: 1.1.1
-      is-stream: 2.0.1
-      merge-stream: 2.0.0
-      npm-run-path: 4.0.1
       onetime: 5.1.2
       p-finally: 2.0.1
       signal-exit: 3.0.7
