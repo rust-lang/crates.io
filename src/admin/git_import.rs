@@ -63,7 +63,7 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
             Ok(())
         });
         if let Err(err) = result {
-            pb.suspend(|| println!("{}", err));
+            pb.suspend(|| println!("{err:?}"));
         }
     }
     println!("completed");
