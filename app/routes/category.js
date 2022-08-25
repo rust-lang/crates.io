@@ -10,7 +10,7 @@ export default class CategoryRoute extends Route {
     let categoryName = params.category_id;
 
     try {
-      return await this.store.find('category', categoryName);
+      return await this.store.findRecord('category', categoryName);
     } catch (error) {
       if (error instanceof NotFoundError) {
         let title = `${categoryName}: Category not found`;

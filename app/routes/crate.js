@@ -10,7 +10,7 @@ export default class CrateRoute extends Route {
     let crateName = params.crate_id;
 
     try {
-      return await this.store.find('crate', crateName);
+      return await this.store.findRecord('crate', crateName);
     } catch (error) {
       if (error.errors?.some(e => e.detail === 'Not Found')) {
         let title = `${crateName}: Crate not found`;
