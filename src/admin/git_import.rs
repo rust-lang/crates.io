@@ -53,7 +53,7 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
         }
         let file = File::open(path)?;
         let reader = BufReader::new(file);
-        conn.transaction(|| -> anyhow::Result<()> {
+        let result = conn.transaction(|| -> anyhow::Result<()> {
             for line in reader.lines() {
                 let krate: cargo_registry_index::Crate = serde_json::from_str(&line?)?;
                 import_data(&conn, &krate).with_context(|| {
@@ -61,7 +61,10 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
                 })?
             }
             Ok(())
-        })?;
+        });
+        if let Err(err) = result {
+            println!("{}", err);
+        }
     }
     println!("completed");
 
