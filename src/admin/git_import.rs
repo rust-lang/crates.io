@@ -56,8 +56,9 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
         conn.transaction(|| -> anyhow::Result<()> {
             for line in reader.lines() {
                 let krate: cargo_registry_index::Crate = serde_json::from_str(&line?)?;
-                import_data(&conn, &krate)
-                    .with_context(|| format!("failed to update crate: {krate:?}"))?
+                import_data(&conn, &krate).with_context(|| {
+                    format!("Failed to update crate {}#{}", krate.name, krate.vers)
+                })?
             }
             Ok(())
         })?;
@@ -74,7 +75,12 @@ fn import_data(conn: &PgConnection, krate: &cargo_registry_index::Crate) -> anyh
         .filter(versions::num.eq(&krate.vers))
         .select(versions::id)
         .first(conn)
-        .context("could not find crate")?;
+        .with_context(|| {
+            format!(
+                "Failed to find {}#{} in the database",
+                krate.name, krate.vers
+            )
+        })?;
 
     // Update the `checksum` and `links` fields.
     diesel::update(versions::table)
@@ -85,7 +91,13 @@ fn import_data(conn: &PgConnection, krate: &cargo_registry_index::Crate) -> anyh
         .filter(versions::id.eq(version_id))
         .filter(versions::checksum.is_null())
         .filter(versions::links.is_null())
-        .execute(conn)?;
+        .execute(conn)
+        .with_context(|| {
+            format!(
+                "Failed to update checksum/links of {}#{} (id: {version_id})",
+                krate.name, krate.vers
+            )
+        })?;
 
     // Check if any of this crate's dependencies have a missing explicit_name.
     if krate.deps.iter().any(|d| d.package.is_some())
@@ -102,6 +114,7 @@ fn import_data(conn: &PgConnection, krate: &cargo_registry_index::Crate) -> anyh
                 // database. The only difference in git is the field we're trying to
                 // fill (explicit_name). Using `first` here & filtering out existing `explicit_name`
                 // entries ensure that we assign one explicit_name to each dep.
+
                 let id: i32 = dependencies::table
                     .inner_join(crates::table)
                     .filter(dependencies::explicit_name.is_null())
@@ -115,11 +128,23 @@ fn import_data(conn: &PgConnection, krate: &cargo_registry_index::Crate) -> anyh
                     .filter(crates::name.eq(package))
                     .select(dependencies::id)
                     .first(conn)
-                    .context("could not find dep")?;
+                    .with_context(|| {
+                        format!(
+                            "{}#{}: Failed to find matching dependency: {} {}",
+                            krate.name, krate.vers, package, dep.req
+                        )
+                    })?;
+
                 diesel::update(dependencies::table)
                     .set(dependencies::explicit_name.eq(&dep.name))
                     .filter(dependencies::id.eq(id))
-                    .execute(conn)?;
+                    .execute(conn)
+                    .with_context(|| {
+                        format!(
+                            "Failed to update `explicit_name` of dependency {id} to {}",
+                            dep.name
+                        )
+                    })?;
             }
         }
     }
