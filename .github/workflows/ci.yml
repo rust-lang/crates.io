@@ -49,7 +49,7 @@ jobs:
 
       - name: Run percy exec
         if: github.repository == 'rust-lang/crates.io'
-        run: pnpx percy exec -- pnpm test-coverage
+        run: pnpm percy exec -- pnpm test-coverage
 
       - name: test-coverage
         if: github.repository != 'rust-lang/crates.io'
