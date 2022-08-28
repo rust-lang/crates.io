@@ -1,0 +1,30 @@
+---
+source: src/tests/version.rs
+assertion_line: 63
+expression: json
+---
+version:
+  audit_actions: []
+  crate: foo_vers_show_id
+  crate_size: 1234
+  created_at: "[datetime]"
+  dl_path: /api/v1/crates/foo_vers_show_id/2.0.0/download
+  downloads: 0
+  features: {}
+  id: "[id]"
+  license: ~
+  links:
+    authors: /api/v1/crates/foo_vers_show_id/2.0.0/authors
+    dependencies: /api/v1/crates/foo_vers_show_id/2.0.0/dependencies
+    version_downloads: /api/v1/crates/foo_vers_show_id/2.0.0/downloads
+  num: 2.0.0
+  published_by:
+    avatar: ~
+    id: "[id]"
+    login: foo
+    name: ~
+    url: "https://github.com/foo"
+  readme_path: /api/v1/crates/foo_vers_show_id/2.0.0/readme
+  updated_at: "[datetime]"
+  yanked: false
+

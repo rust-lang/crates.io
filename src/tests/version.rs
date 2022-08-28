@@ -48,6 +48,7 @@ fn index() {
 fn show_by_id() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
+    let user_id = user.id;
 
     let v = app.db(|conn| {
         let krate = CrateBuilder::new("foo_vers_show_id", user.id).expect_build(conn);
@@ -55,11 +56,16 @@ fn show_by_id() {
             .size(1234)
             .expect_build(krate.id, user.id, conn)
     });
+    let version_id = v.id;
 
     let url = format!("/api/v1/versions/{}", v.id);
-    let json: VersionResponse = anon.get(&url).good();
-    assert_eq!(json.version.id, v.id);
-    assert_eq!(json.version.crate_size, Some(1234));
+    let json: Value = anon.get(&url).good();
+    assert_yaml_snapshot!(json, {
+        ".version.id" => util::insta::id_redaction(version_id),
+        ".version.created_at" => "[datetime]",
+        ".version.updated_at" => "[datetime]",
+        ".version.published_by.id" => util::insta::id_redaction(user_id),
+    });
 }
 
 #[test]
