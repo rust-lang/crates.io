@@ -465,6 +465,21 @@ mod tests {
     }
 
     #[test]
+    fn rustdoc_links() {
+        let repository = "https://github.com/foo/bar/";
+
+        assert_eq!(
+            markdown_to_html("[stylish](::stylish)", Some(repository), ""),
+            "<p><a href=\"https://github.com/foo/bar/blob/HEAD/::stylish\" rel=\"nofollow noopener noreferrer\">stylish</a></p>\n"
+        );
+
+        assert_eq!(
+            markdown_to_html("[Display](stylish::Display)", Some(repository), ""),
+            "<p><a rel=\"nofollow noopener noreferrer\">Display</a></p>\n"
+        );
+    }
+
+    #[test]
     fn text_to_html_renders_markdown() {
         for f in &[
             "README",
