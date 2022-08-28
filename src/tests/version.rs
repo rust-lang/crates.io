@@ -2,25 +2,21 @@ use crate::{
     builders::{CrateBuilder, PublishBuilder, VersionBuilder},
     util, RequestHelper, TestApp,
 };
-use cargo_registry::{models::Version, schema::versions, views::EncodableVersion};
+use cargo_registry::{models::Version, schema::versions};
 
 use diesel::prelude::*;
 use insta::assert_yaml_snapshot;
 use serde_json::Value;
 
-#[derive(Deserialize)]
-struct VersionList {
-    versions: Vec<EncodableVersion>,
-}
-
 #[test]
 fn index() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
+
     let url = "/api/v1/versions";
 
-    let json: VersionList = anon.get(url).good();
-    assert_eq!(json.versions.len(), 0);
+    let json: Value = anon.get(url).good();
+    assert_yaml_snapshot!(json);
 
     let (v1, v2) = app.db(|conn| {
         CrateBuilder::new("foo_vers_index", user.id)
@@ -32,16 +28,14 @@ fn index() {
     });
 
     let query = format!("ids[]={v1}&ids[]={v2}");
-    let json: VersionList = anon.get_with_query(url, &query).good();
-    assert_eq!(json.versions.len(), 2);
-
-    for v in &json.versions {
-        match v.num.as_ref() {
-            "2.0.0" => assert_eq!(v.license, Some(String::from("MIT"))),
-            "2.0.1" => assert_eq!(v.license, Some(String::from("MIT/Apache-2.0"))),
-            _ => panic!("unexpected version"),
-        }
-    }
+    let json: Value = anon.get_with_query(url, &query).good();
+    assert_yaml_snapshot!(json, {
+        ".versions[0].id" => util::insta::id_redaction(v2),
+        ".versions[1].id" => util::insta::id_redaction(v1),
+        ".versions[].created_at" => "[datetime]",
+        ".versions[].updated_at" => "[datetime]",
+        ".versions[].published_by.id" => util::insta::id_redaction(user.id),
+    });
 }
 
 #[test]
