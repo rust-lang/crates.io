@@ -30,8 +30,8 @@ fn index() {
     let query = format!("ids[]={v1}&ids[]={v2}");
     let json: Value = anon.get_with_query(url, &query).good();
     assert_yaml_snapshot!(json, {
-        ".versions[0].id" => insta::id_redaction(v2),
-        ".versions[1].id" => insta::id_redaction(v1),
+        ".versions" => insta::sorted_redaction(),
+        ".versions[].id" => insta::any_id_redaction(),
         ".versions[].created_at" => "[datetime]",
         ".versions[].updated_at" => "[datetime]",
         ".versions[].published_by.id" => insta::id_redaction(user.id),
