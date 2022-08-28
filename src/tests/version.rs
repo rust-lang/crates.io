@@ -1,6 +1,6 @@
 use crate::{
     builders::{CrateBuilder, PublishBuilder, VersionBuilder},
-    RequestHelper, TestApp, VersionResponse,
+    util, RequestHelper, TestApp, VersionResponse,
 };
 use cargo_registry::{models::Version, schema::versions, views::EncodableVersion};
 
@@ -79,16 +79,10 @@ fn show_by_crate_name_and_version() {
     let url = "/api/v1/crates/foo_vers_show/2.0.0";
     let json: Value = anon.get(url).good();
     assert_yaml_snapshot!(json, {
-        ".version.id" => insta::dynamic_redaction(move |value, _path| {
-            assert_eq!(value.as_i64().unwrap(), version_id as i64);
-            "[id]"
-        }),
+        ".version.id" => util::insta::id_redaction(version_id),
         ".version.created_at" => "[datetime]",
         ".version.updated_at" => "[datetime]",
-        ".version.published_by.id" => insta::dynamic_redaction(move |value, _path| {
-            assert_eq!(value.as_i64().unwrap(), user_id as i64);
-            "[id]"
-        }),
+        ".version.published_by.id" => util::insta::id_redaction(user_id),
     });
 }
 
