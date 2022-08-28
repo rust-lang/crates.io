@@ -1,11 +1,11 @@
 use crate::{
     builders::{CrateBuilder, PublishBuilder, VersionBuilder},
-    util, RequestHelper, TestApp,
+    RequestHelper, TestApp,
 };
 use cargo_registry::{models::Version, schema::versions};
 
+use crate::util::insta::{self, assert_yaml_snapshot};
 use diesel::prelude::*;
-use insta::assert_yaml_snapshot;
 use serde_json::Value;
 
 #[test]
@@ -30,11 +30,11 @@ fn index() {
     let query = format!("ids[]={v1}&ids[]={v2}");
     let json: Value = anon.get_with_query(url, &query).good();
     assert_yaml_snapshot!(json, {
-        ".versions[0].id" => util::insta::id_redaction(v2),
-        ".versions[1].id" => util::insta::id_redaction(v1),
+        ".versions[0].id" => insta::id_redaction(v2),
+        ".versions[1].id" => insta::id_redaction(v1),
         ".versions[].created_at" => "[datetime]",
         ".versions[].updated_at" => "[datetime]",
-        ".versions[].published_by.id" => util::insta::id_redaction(user.id),
+        ".versions[].published_by.id" => insta::id_redaction(user.id),
     });
 }
 
@@ -55,10 +55,10 @@ fn show_by_id() {
     let url = format!("/api/v1/versions/{}", v.id);
     let json: Value = anon.get(&url).good();
     assert_yaml_snapshot!(json, {
-        ".version.id" => util::insta::id_redaction(version_id),
+        ".version.id" => insta::id_redaction(version_id),
         ".version.created_at" => "[datetime]",
         ".version.updated_at" => "[datetime]",
-        ".version.published_by.id" => util::insta::id_redaction(user_id),
+        ".version.published_by.id" => insta::id_redaction(user_id),
     });
 }
 
@@ -79,10 +79,10 @@ fn show_by_crate_name_and_version() {
     let url = "/api/v1/crates/foo_vers_show/2.0.0";
     let json: Value = anon.get(url).good();
     assert_yaml_snapshot!(json, {
-        ".version.id" => util::insta::id_redaction(version_id),
+        ".version.id" => insta::id_redaction(version_id),
         ".version.created_at" => "[datetime]",
         ".version.updated_at" => "[datetime]",
-        ".version.published_by.id" => util::insta::id_redaction(user_id),
+        ".version.published_by.id" => insta::id_redaction(user_id),
     });
 }
 
@@ -111,7 +111,7 @@ fn show_by_crate_name_and_semver_no_published_by() {
     let url = "/api/v1/crates/foo_vers_show_no_pb/1.0.0";
     let json: Value = anon.get(url).good();
     assert_yaml_snapshot!(json, {
-        ".version.id" => util::insta::id_redaction(version_id),
+        ".version.id" => insta::id_redaction(version_id),
         ".version.created_at" => "[datetime]",
         ".version.updated_at" => "[datetime]",
     });
