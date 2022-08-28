@@ -188,6 +188,12 @@ impl UrlRelativeEvaluate for SanitizeUrl {
             // Always allow fragment URLs.
             return Some(Cow::Borrowed(url));
         }
+
+        if url.starts_with("::") {
+            // Always reject relative rustdoc URLs.
+            return None;
+        }
+
         self.base_url.as_ref().map(|base_url| {
             let mut new_url = base_url.clone();
             // Assumes GitHub’s URL scheme. GitHub renders text and markdown
@@ -470,7 +476,7 @@ mod tests {
 
         assert_eq!(
             markdown_to_html("[stylish](::stylish)", Some(repository), ""),
-            "<p><a href=\"https://github.com/foo/bar/blob/HEAD/::stylish\" rel=\"nofollow noopener noreferrer\">stylish</a></p>\n"
+            "<p><a rel=\"nofollow noopener noreferrer\">stylish</a></p>\n"
         );
 
         assert_eq!(
