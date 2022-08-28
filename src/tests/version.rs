@@ -5,6 +5,7 @@ use crate::{
 use cargo_registry::{models::Version, schema::versions, views::EncodableVersion};
 
 use diesel::prelude::*;
+use insta::assert_yaml_snapshot;
 use serde_json::Value;
 
 #[derive(Deserialize)]
@@ -62,9 +63,10 @@ fn show_by_id() {
 }
 
 #[test]
-fn show_by_crate_name_and_semver_with_published_by() {
+fn show_by_crate_name_and_version() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
+    let user_id = user.id;
 
     let v = app.db(|conn| {
         let krate = CrateBuilder::new("foo_vers_show", user.id).expect_build(conn);
@@ -72,11 +74,22 @@ fn show_by_crate_name_and_semver_with_published_by() {
             .size(1234)
             .expect_build(krate.id, user.id, conn)
     });
+    let version_id = v.id;
 
-    let json: VersionResponse = anon.show_version("foo_vers_show", "2.0.0");
-    assert_eq!(json.version.id, v.id);
-    assert_eq!(json.version.crate_size, Some(1234));
-    assert_eq!(json.version.published_by.unwrap().login, user.gh_login);
+    let url = "/api/v1/crates/foo_vers_show/2.0.0";
+    let json: Value = anon.get(url).good();
+    assert_yaml_snapshot!(json, {
+        ".version.id" => insta::dynamic_redaction(move |value, _path| {
+            assert_eq!(value.as_i64().unwrap(), version_id as i64);
+            "[id]"
+        }),
+        ".version.created_at" => "[datetime]",
+        ".version.updated_at" => "[datetime]",
+        ".version.published_by.id" => insta::dynamic_redaction(move |value, _path| {
+            assert_eq!(value.as_i64().unwrap(), user_id as i64);
+            "[id]"
+        }),
+    });
 }
 
 #[test]
