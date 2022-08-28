@@ -27,4 +27,17 @@ module('Route | category', function (hooks) {
     assert.dom('[data-test-go-back]').doesNotExist();
     assert.dom('[data-test-try-again]').exists();
   });
+
+  test('updates the search field when the categories route is accessed', async function (assert) {
+    this.server.create('category', { category: 'foo' });
+
+    await visit('/');
+    assert.dom('[data-test-search-input]').hasValue('');
+
+    await visit('/categories/foo');
+    assert.dom('[data-test-search-input]').hasValue('category:foo ');
+
+    await visit('/');
+    assert.dom('[data-test-search-input]').hasValue('');
+  });
 });
