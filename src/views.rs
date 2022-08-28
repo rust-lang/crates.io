@@ -597,6 +597,7 @@ pub struct EncodableVersion {
     pub crate_size: Option<i32>,
     pub published_by: Option<EncodablePublicUser>,
     pub audit_actions: Vec<EncodableAuditAction>,
+    pub checksum: String,
 }
 
 impl EncodableVersion {
@@ -616,6 +617,7 @@ impl EncodableVersion {
             yanked,
             license,
             crate_size,
+            checksum,
             ..
         } = version;
 
@@ -639,6 +641,7 @@ impl EncodableVersion {
             license,
             links,
             crate_size,
+            checksum,
             published_by: published_by.map(User::into),
             audit_actions: audit_actions
                 .into_iter()
@@ -749,6 +752,7 @@ mod tests {
                 authors: "".to_string(),
             },
             crate_size: Some(1234),
+            checksum: String::new(),
             published_by: None,
             audit_actions: vec![EncodableAuditAction {
                 action: "publish".to_string(),
