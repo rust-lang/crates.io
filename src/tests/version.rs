@@ -1,6 +1,6 @@
 use crate::{
     builders::{CrateBuilder, PublishBuilder, VersionBuilder},
-    util, RequestHelper, TestApp, VersionResponse,
+    util, RequestHelper, TestApp,
 };
 use cargo_registry::{models::Version, schema::versions, views::EncodableVersion};
 
@@ -99,20 +99,28 @@ fn show_by_crate_name_and_semver_no_published_by() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
-    app.db(|conn| {
-        CrateBuilder::new("foo_vers_show_no_pb", user.id)
-            .version("1.0.0")
-            .expect_build(conn);
+    let v = app.db(|conn| {
+        let krate = CrateBuilder::new("foo_vers_show_no_pb", user.id).expect_build(conn);
+        let version = VersionBuilder::new("1.0.0").expect_build(krate.id, user.id, conn);
+
         // Mimic a version published before we started recording who published versions
         let none: Option<i32> = None;
         update(versions::table)
             .set(versions::published_by.eq(none))
             .execute(conn)
             .unwrap();
-    });
 
-    let json: VersionResponse = anon.show_version("foo_vers_show_no_pb", "1.0.0");
-    assert_none!(json.version.published_by);
+        version
+    });
+    let version_id = v.id;
+
+    let url = "/api/v1/crates/foo_vers_show_no_pb/1.0.0";
+    let json: Value = anon.get(url).good();
+    assert_yaml_snapshot!(json, {
+        ".version.id" => util::insta::id_redaction(version_id),
+        ".version.created_at" => "[datetime]",
+        ".version.updated_at" => "[datetime]",
+    });
 }
 
 #[test]
