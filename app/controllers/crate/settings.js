@@ -9,11 +9,11 @@ export default class CrateSettingsController extends Controller {
   crate = null;
   username = '';
 
-  @task *addOwnerTask() {
+  addOwnerTask = task(async () => {
     const username = this.username;
 
     try {
-      yield this.crate.inviteOwner(username);
+      await this.crate.inviteOwner(username);
       this.notifications.success(`An invite has been sent to ${username}`);
     } catch (error) {
       if (error.errors) {
@@ -22,10 +22,11 @@ export default class CrateSettingsController extends Controller {
         this.notifications.error('Error sending invite');
       }
     }
-  }
-  @task *removeOwnerTask(owner) {
+  });
+
+  removeOwnerTask = task(async owner => {
     try {
-      yield this.crate.removeOwner(owner.get('login'));
+      await this.crate.removeOwner(owner.get('login'));
 
       if (owner.kind === 'team') {
         this.notifications.success(`Team ${owner.get('display_name')} removed as crate owner`);
@@ -43,5 +44,5 @@ export default class CrateSettingsController extends Controller {
 
       this.notifications.error(message);
     }
-  }
+  });
 }

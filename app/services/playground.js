@@ -14,8 +14,8 @@ export default class PlaygroundService extends Service {
     }
   }
 
-  @dropTask *loadCratesTask() {
-    let response = yield ajax('https://play.rust-lang.org/meta/crates');
+  loadCratesTask = dropTask(async () => {
+    let response = await ajax('https://play.rust-lang.org/meta/crates');
     return response.crates;
-  }
+  });
 }

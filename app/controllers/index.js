@@ -21,8 +21,8 @@ export default class IndexController extends Controller {
     });
   }
 
-  @dropTask *dataTask() {
-    let data = yield this.fetcher.ajax('/api/v1/summary');
+  dataTask = dropTask(async () => {
+    let data = await this.fetcher.ajax('/api/v1/summary');
 
     addCrates(this.store, data.new_crates);
     addCrates(this.store, data.most_downloaded);
@@ -30,7 +30,7 @@ export default class IndexController extends Controller {
     addCrates(this.store, data.most_recently_downloaded);
 
     return data;
-  }
+  });
 }
 
 function addCrates(store, crates) {

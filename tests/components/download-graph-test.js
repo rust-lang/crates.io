@@ -36,10 +36,10 @@ module('Component | DownloadGraph', function (hooks) {
     let deferred = defer();
 
     class MockService extends ChartJsLoader {
-      @dropTask *loadTask() {
-        yield deferred.promise;
-        return yield super.loadTask.perform();
-      }
+      loadTask = dropTask(async () => {
+        await deferred.promise;
+        return await this._load();
+      });
     }
 
     this.owner.register('service:chartjs', MockService);
@@ -61,10 +61,9 @@ module('Component | DownloadGraph', function (hooks) {
 
   test('error behavior', async function (assert) {
     class MockService extends Service {
-      // eslint-disable-next-line require-yield
-      @dropTask *loadTask() {
+      loadTask = dropTask(async () => {
         throw new Error('nope');
-      }
+      });
     }
 
     this.owner.register('service:chartjs', MockService);

@@ -19,11 +19,11 @@ export default class ApiTokens extends Component {
     this.newToken = this.store.createRecord('api-token');
   }
 
-  @task *saveTokenTask() {
+  saveTokenTask = task(async () => {
     let token = this.newToken;
 
     try {
-      yield token.save();
+      await token.save();
       this.args.tokens.unshiftObject(token);
       this.newToken = undefined;
     } catch (error) {
@@ -34,11 +34,11 @@ export default class ApiTokens extends Component {
 
       this.notifications.error(msg);
     }
-  }
+  });
 
-  @task *revokeTokenTask(token) {
+  revokeTokenTask = task(async token => {
     try {
-      yield token.destroyRecord();
+      await token.destroyRecord();
       this.args.tokens.removeObject(token);
     } catch (error) {
       let msg =
@@ -48,5 +48,5 @@ export default class ApiTokens extends Component {
 
       this.notifications.error(msg);
     }
-  }
+  });
 }
