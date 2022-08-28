@@ -42,7 +42,6 @@ fn index() {
 fn show_by_id() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
-    let user_id = user.id;
 
     let v = app.db(|conn| {
         let krate = CrateBuilder::new("foo_vers_show_id", user.id).expect_build(conn);
@@ -50,15 +49,14 @@ fn show_by_id() {
             .size(1234)
             .expect_build(krate.id, user.id, conn)
     });
-    let version_id = v.id;
 
     let url = format!("/api/v1/versions/{}", v.id);
     let json: Value = anon.get(&url).good();
     assert_yaml_snapshot!(json, {
-        ".version.id" => insta::id_redaction(version_id),
+        ".version.id" => insta::id_redaction(v.id),
         ".version.created_at" => "[datetime]",
         ".version.updated_at" => "[datetime]",
-        ".version.published_by.id" => insta::id_redaction(user_id),
+        ".version.published_by.id" => insta::id_redaction(user.id),
     });
 }
 
@@ -66,7 +64,6 @@ fn show_by_id() {
 fn show_by_crate_name_and_version() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
-    let user_id = user.id;
 
     let v = app.db(|conn| {
         let krate = CrateBuilder::new("foo_vers_show", user.id).expect_build(conn);
@@ -74,15 +71,14 @@ fn show_by_crate_name_and_version() {
             .size(1234)
             .expect_build(krate.id, user.id, conn)
     });
-    let version_id = v.id;
 
     let url = "/api/v1/crates/foo_vers_show/2.0.0";
     let json: Value = anon.get(url).good();
     assert_yaml_snapshot!(json, {
-        ".version.id" => insta::id_redaction(version_id),
+        ".version.id" => insta::id_redaction(v.id),
         ".version.created_at" => "[datetime]",
         ".version.updated_at" => "[datetime]",
-        ".version.published_by.id" => insta::id_redaction(user_id),
+        ".version.published_by.id" => insta::id_redaction(user.id),
     });
 }
 
@@ -106,12 +102,11 @@ fn show_by_crate_name_and_semver_no_published_by() {
 
         version
     });
-    let version_id = v.id;
 
     let url = "/api/v1/crates/foo_vers_show_no_pb/1.0.0";
     let json: Value = anon.get(url).good();
     assert_yaml_snapshot!(json, {
-        ".version.id" => insta::id_redaction(version_id),
+        ".version.id" => insta::id_redaction(v.id),
         ".version.created_at" => "[datetime]",
         ".version.updated_at" => "[datetime]",
     });
