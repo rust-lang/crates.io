@@ -23,7 +23,7 @@ pub struct Version {
     pub license: Option<String>,
     pub crate_size: Option<i32>,
     pub published_by: Option<i32>,
-    pub checksum: Option<String>,
+    pub checksum: String,
     pub links: Option<String>,
 }
 
