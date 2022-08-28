@@ -9,7 +9,6 @@
 /node_modules
 /bower_components
 package-lock.json
-pnpm-lock.yaml
 yarn.lock
 
 # misc
