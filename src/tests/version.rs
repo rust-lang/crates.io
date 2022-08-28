@@ -136,7 +136,7 @@ fn authors() {
 
     let json: Value = anon.get("/api/v1/crates/foo_authors/1.0.0/authors").good();
     let json = json.as_object().unwrap();
-    assert!(json.contains_key("users"));
+    assert_yaml_snapshot!(json);
 }
 
 #[test]

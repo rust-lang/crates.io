@@ -1,0 +1,9 @@
+---
+source: src/tests/version.rs
+assertion_line: 139
+expression: json
+---
+meta:
+  names: []
+users: []
+
