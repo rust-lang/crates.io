@@ -237,7 +237,7 @@ dependencies = [
  "dashmap",
  "derive_deref",
  "dialoguer",
- "diesel",
+ "diesel 2.0.0",
  "diesel_full_text_search",
  "diesel_migrations",
  "dotenv",
@@ -737,8 +737,23 @@ checksum = "b28135ecf6b7d446b43e27e225622a038cc4e2930a1022f51cdb97ada19b8e4d"
 dependencies = [
  "bitflags",
  "byteorder",
+ "diesel_derives 1.4.1",
+ "pq-sys",
+ "r2d2",
+ "serde_json",
+]
+
+[[package]]
+name = "diesel"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "01e2adfd0a7a81070ed7beec0c62636458926326c16fedb77796d41e447b282d"
+dependencies = [
+ "bitflags",
+ "byteorder",
  "chrono",
- "diesel_derives",
+ "diesel_derives 2.0.0",
+ "itoa",
  "pq-sys",
  "r2d2",
  "serde_json",
@@ -756,12 +771,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "diesel_derives"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "22a7ab9d7967e6a1a247ea38aedf88ab808b4ac0c159576bc71866ab8f9f9250"
+dependencies = [
+ "proc-macro-error",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "diesel_full_text_search"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7ad3168d9d2008c58b8c9fabb79ddc38d1f9d511fa15e0dcbd6b987912b05783"
 dependencies = [
- "diesel",
+ "diesel 1.4.8",
 ]
 
 [[package]]
@@ -1546,7 +1573,7 @@ version = "1.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2b4fc84e4af020b837029e017966f86a1c2d5e83e64b589963d5047525995860"
 dependencies = [
- "diesel",
+ "diesel 1.4.8",
 ]
 
 [[package]]
@@ -2691,7 +2718,7 @@ name = "swirl"
 version = "0.1.0"
 source = "git+https://github.com/sgrif/swirl.git?rev=e87cf37#e87cf3772cd99d8edb478121c44972ea613c932f"
 dependencies = [
- "diesel",
+ "diesel 1.4.8",
  "inventory",
  "serde",
  "serde_derive",

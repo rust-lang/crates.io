@@ -43,7 +43,7 @@ cookie = { version = "=0.16.0", features = ["secure"] }
 dashmap = { version = "=5.3.4", features = ["raw-api"] }
 derive_deref = "=1.1.1"
 dialoguer = "=0.10.2"
-diesel = { version = "=1.4.8", features = ["postgres", "serde_json", "chrono", "r2d2"] }
+diesel = { version = "=2.0.0", features = ["postgres", "serde_json", "chrono", "r2d2"] }
 diesel_full_text_search = "=1.0.1"
 diesel_migrations = { version = "=1.4.0", features = ["postgres"] }
 dotenv = "=0.15.0"
@@ -95,6 +95,6 @@ tokio = "=1.20.1"
 tower-service = "=0.3.2"
 
 [build-dependencies]
-diesel = { version = "=1.4.8", features = ["postgres"] }
+diesel = { version = "=2.0.0", features = ["postgres"] }
 diesel_migrations = { version = "=1.4.0", features = ["postgres"] }
 dotenv = "=0.15.0"
