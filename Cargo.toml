@@ -89,6 +89,7 @@ cargo-registry-index = { path = "cargo-registry-index", features = ["testing"] }
 claim = { git = "https://github.com/Turbo87/rust-claim.git", rev = "23892a3" }
 conduit-test = "=0.10.0"
 hyper-tls = "=0.5.0"
+insta = { version = "=1.19.0", features = ["redactions", "yaml"] }
 once_cell = "=1.13.1"
 tokio = "=1.20.1"
 tower-service = "=0.3.2"

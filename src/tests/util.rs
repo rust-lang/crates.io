@@ -36,6 +36,7 @@ use std::collections::HashMap;
 mod chaosproxy;
 mod fresh_schema;
 mod github;
+pub mod insta;
 mod response;
 mod test_app;
 

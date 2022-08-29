@@ -1,25 +1,22 @@
 use crate::{
     builders::{CrateBuilder, PublishBuilder, VersionBuilder},
-    RequestHelper, TestApp, VersionResponse,
+    RequestHelper, TestApp,
 };
-use cargo_registry::{models::Version, schema::versions, views::EncodableVersion};
+use cargo_registry::{models::Version, schema::versions};
 
+use crate::util::insta::{self, assert_yaml_snapshot};
 use diesel::prelude::*;
 use serde_json::Value;
-
-#[derive(Deserialize)]
-struct VersionList {
-    versions: Vec<EncodableVersion>,
-}
 
 #[test]
 fn index() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
+
     let url = "/api/v1/versions";
 
-    let json: VersionList = anon.get(url).good();
-    assert_eq!(json.versions.len(), 0);
+    let json: Value = anon.get(url).good();
+    assert_yaml_snapshot!(json);
 
     let (v1, v2) = app.db(|conn| {
         CrateBuilder::new("foo_vers_index", user.id)
@@ -31,16 +28,14 @@ fn index() {
     });
 
     let query = format!("ids[]={v1}&ids[]={v2}");
-    let json: VersionList = anon.get_with_query(url, &query).good();
-    assert_eq!(json.versions.len(), 2);
-
-    for v in &json.versions {
-        match v.num.as_ref() {
-            "2.0.0" => assert_eq!(v.license, Some(String::from("MIT"))),
-            "2.0.1" => assert_eq!(v.license, Some(String::from("MIT/Apache-2.0"))),
-            _ => panic!("unexpected version"),
-        }
-    }
+    let json: Value = anon.get_with_query(url, &query).good();
+    assert_yaml_snapshot!(json, {
+        ".versions" => insta::sorted_redaction(),
+        ".versions[].id" => insta::any_id_redaction(),
+        ".versions[].created_at" => "[datetime]",
+        ".versions[].updated_at" => "[datetime]",
+        ".versions[].published_by.id" => insta::id_redaction(user.id),
+    });
 }
 
 #[test]
@@ -56,13 +51,17 @@ fn show_by_id() {
     });
 
     let url = format!("/api/v1/versions/{}", v.id);
-    let json: VersionResponse = anon.get(&url).good();
-    assert_eq!(json.version.id, v.id);
-    assert_eq!(json.version.crate_size, Some(1234));
+    let json: Value = anon.get(&url).good();
+    assert_yaml_snapshot!(json, {
+        ".version.id" => insta::id_redaction(v.id),
+        ".version.created_at" => "[datetime]",
+        ".version.updated_at" => "[datetime]",
+        ".version.published_by.id" => insta::id_redaction(user.id),
+    });
 }
 
 #[test]
-fn show_by_crate_name_and_semver_with_published_by() {
+fn show_by_crate_name_and_version() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
@@ -73,10 +72,14 @@ fn show_by_crate_name_and_semver_with_published_by() {
             .expect_build(krate.id, user.id, conn)
     });
 
-    let json: VersionResponse = anon.show_version("foo_vers_show", "2.0.0");
-    assert_eq!(json.version.id, v.id);
-    assert_eq!(json.version.crate_size, Some(1234));
-    assert_eq!(json.version.published_by.unwrap().login, user.gh_login);
+    let url = "/api/v1/crates/foo_vers_show/2.0.0";
+    let json: Value = anon.get(url).good();
+    assert_yaml_snapshot!(json, {
+        ".version.id" => insta::id_redaction(v.id),
+        ".version.created_at" => "[datetime]",
+        ".version.updated_at" => "[datetime]",
+        ".version.published_by.id" => insta::id_redaction(user.id),
+    });
 }
 
 #[test]
@@ -86,20 +89,27 @@ fn show_by_crate_name_and_semver_no_published_by() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
-    app.db(|conn| {
-        CrateBuilder::new("foo_vers_show_no_pb", user.id)
-            .version("1.0.0")
-            .expect_build(conn);
+    let v = app.db(|conn| {
+        let krate = CrateBuilder::new("foo_vers_show_no_pb", user.id).expect_build(conn);
+        let version = VersionBuilder::new("1.0.0").expect_build(krate.id, user.id, conn);
+
         // Mimic a version published before we started recording who published versions
         let none: Option<i32> = None;
         update(versions::table)
             .set(versions::published_by.eq(none))
             .execute(conn)
             .unwrap();
+
+        version
     });
 
-    let json: VersionResponse = anon.show_version("foo_vers_show_no_pb", "1.0.0");
-    assert_none!(json.version.published_by);
+    let url = "/api/v1/crates/foo_vers_show_no_pb/1.0.0";
+    let json: Value = anon.get(url).good();
+    assert_yaml_snapshot!(json, {
+        ".version.id" => insta::id_redaction(v.id),
+        ".version.created_at" => "[datetime]",
+        ".version.updated_at" => "[datetime]",
+    });
 }
 
 #[test]
@@ -115,7 +125,7 @@ fn authors() {
 
     let json: Value = anon.get("/api/v1/crates/foo_authors/1.0.0/authors").good();
     let json = json.as_object().unwrap();
-    assert!(json.contains_key("users"));
+    assert_yaml_snapshot!(json);
 }
 
 #[test]
