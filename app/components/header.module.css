@@ -107,7 +107,7 @@
 
 .sep {
     margin: 0 10px;
-    color: var(--separator-color);
+    opacity: 0.5;
 }
 
 .doc-links {
