@@ -2,13 +2,8 @@ use crate::util::insta::assert_yaml_snapshot;
 use crate::{
     builders::CrateBuilder, new_category, util::MockAnonymousUser, RequestHelper, TestApp,
 };
-use cargo_registry::{models::Category, views::EncodableCategoryWithSubcategories};
+use cargo_registry::models::Category;
 use serde_json::Value;
-
-#[derive(Deserialize)]
-struct CategoryWithSubcategories {
-    category: EncodableCategoryWithSubcategories,
-}
 
 #[test]
 fn index() {
@@ -52,11 +47,10 @@ fn show() {
     });
 
     // The category and its subcategories should be in the json
-    let json: CategoryWithSubcategories = anon.get(url).good();
-    assert_eq!(json.category.category, "Foo Bar");
-    assert_eq!(json.category.slug, "foo-bar");
-    assert_eq!(json.category.subcategories.len(), 1);
-    assert_eq!(json.category.subcategories[0].category, "Baz");
+    let json: Value = anon.get(url).good();
+    assert_yaml_snapshot!(json, {
+        ".**.created_at" => "[datetime]",
+    });
 }
 
 #[test]
