@@ -45,7 +45,7 @@ derive_deref = "=1.1.1"
 dialoguer = "=0.10.2"
 diesel = { version = "=1.4.8", features = ["postgres", "serde_json", "chrono", "r2d2"] }
 diesel_full_text_search = "=1.0.1"
-diesel_migrations = { version = "=1.4.0", features = ["postgres"] }
+diesel_migrations = { version = "=2.0.0", features = ["postgres"] }
 dotenv = "=0.15.0"
 flate2 = "=1.0.24"
 futures-channel = { version = "=0.3.23", default-features = false }
@@ -96,5 +96,5 @@ tower-service = "=0.3.2"
 
 [build-dependencies]
 diesel = { version = "=1.4.8", features = ["postgres"] }
-diesel_migrations = { version = "=1.4.0", features = ["postgres"] }
+diesel_migrations = { version = "=2.0.0", features = ["postgres"] }
 dotenv = "=0.15.0"
