@@ -1,0 +1,13 @@
+---
+source: src/tests/category.rs
+assertion_line: 153
+expression: response
+---
+category_slugs:
+  - description: For crates that bar
+    id: bar
+    slug: bar
+  - description: For crates that foo
+    id: foo
+    slug: foo
+

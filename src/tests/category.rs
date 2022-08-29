@@ -1,7 +1,9 @@
+use crate::util::insta::assert_yaml_snapshot;
 use crate::{
     builders::CrateBuilder, new_category, util::MockAnonymousUser, RequestHelper, TestApp,
 };
 use cargo_registry::{models::Category, views::EncodableCategoryWithSubcategories};
+use serde_json::Value;
 
 #[derive(Deserialize)]
 struct CategoryWithSubcategories {
@@ -147,32 +149,6 @@ fn category_slugs_returns_all_slugs_in_alphabetical_order() {
             .unwrap();
     });
 
-    #[derive(Deserialize, Debug, PartialEq)]
-    struct Slug {
-        id: String,
-        slug: String,
-        description: String,
-    }
-
-    #[derive(Deserialize, Debug, PartialEq)]
-    struct Slugs {
-        category_slugs: Vec<Slug>,
-    }
-
-    let response = anon.get("/api/v1/category_slugs").good();
-    let expected_response = Slugs {
-        category_slugs: vec![
-            Slug {
-                id: "bar".into(),
-                slug: "bar".into(),
-                description: "For crates that bar".into(),
-            },
-            Slug {
-                id: "foo".into(),
-                slug: "foo".into(),
-                description: "For crates that foo".into(),
-            },
-        ],
-    };
-    assert_eq!(expected_response, response);
+    let response: Value = anon.get("/api/v1/category_slugs").good();
+    assert_yaml_snapshot!(response);
 }
