@@ -15,9 +15,8 @@ fn index() {
     let (app, anon) = TestApp::init().empty();
 
     // List 0 categories if none exist
-    let json = anon.show_category_list();
-    assert_eq!(json.categories.len(), 0);
-    assert_eq!(json.meta.total, 0);
+    let json: Value = anon.get("/api/v1/categories").good();
+    assert_yaml_snapshot!(json);
 
     // Create a category and a subcategory
     app.db(|conn| {
@@ -30,10 +29,10 @@ fn index() {
     });
 
     // Only the top-level categories should be on the page
-    let json = anon.show_category_list();
-    assert_eq!(json.categories.len(), 1);
-    assert_eq!(json.meta.total, 1);
-    assert_eq!(json.categories[0].category, "foo");
+    let json: Value = anon.get("/api/v1/categories").good();
+    assert_yaml_snapshot!(json, {
+        ".categories[].created_at" => "[datetime]",
+    });
 }
 
 #[test]
