@@ -10,7 +10,7 @@ on:
   pull_request:
 
 env:
-  DIESEL_CLI_VERSION: 1.4.1
+  DIESEL_CLI_VERSION: 2.0.0
   PNPM_VERSION: 7.9.0
   RUST_VERSION: 1.63.0
 
