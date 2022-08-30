@@ -1,6 +1,9 @@
+use std::sync::Arc;
+
 use conduit::{box_error, Body, Handler, HandlerResult, RequestExt, Response, StatusCode};
 use futures_util::future::Future;
 use hyper::{body::to_bytes, service::Service};
+use tokio::{sync::oneshot, task::JoinHandle};
 
 use super::service::{BlockingHandler, ServiceError};
 use super::HyperResponse;
@@ -152,4 +155,54 @@ async fn path_is_percent_decoded_but_not_query_string() {
         .unwrap();
     let resp = service.call(req).await.unwrap();
     assert_eq!(resp.status(), StatusCode::OK);
+}
+
+async fn spawn_http_server() -> (
+    String,
+    JoinHandle<Result<(), hyper::Error>>,
+    oneshot::Sender<()>,
+) {
+    let (quit_tx, quit_rx) = oneshot::channel::<()>();
+    let addr = ([127, 0, 0, 1], 0).into();
+    let server = hyper::Server::bind(&addr).serve(hyper::service::make_service_fn(move |_| {
+        let handler = Arc::new(BlockingHandler::new(OkResult));
+        let remote_addr = ([0, 0, 0, 0], 0).into();
+        async move { crate::Service::from_blocking(handler, remote_addr) }
+    }));
+
+    let url = format!("http://{}", server.local_addr());
+    let server = server.with_graceful_shutdown(async {
+        quit_rx.await.ok();
+    });
+
+    (url, tokio::spawn(server), quit_tx)
+}
+
+#[tokio::test]
+async fn content_length_too_large() {
+    const ACTUAL_BODY_SIZE: usize = 10_000;
+    const CLAIMED_CONTENT_LENGTH: u64 = 11_111_111_111_111_111_111;
+
+    let (url, server, quit_tx) = spawn_http_server().await;
+
+    let client = hyper::Client::new();
+    let (mut sender, body) = hyper::Body::channel();
+    sender
+        .send_data(vec![0; ACTUAL_BODY_SIZE].into())
+        .await
+        .unwrap();
+    let req = hyper::Request::put(url)
+        .header(hyper::header::CONTENT_LENGTH, CLAIMED_CONTENT_LENGTH)
+        .body(body)
+        .unwrap();
+
+    let resp = client
+        .request(req)
+        .await
+        .expect("should be a valid response");
+
+    quit_tx.send(()).unwrap();
+    server.await.unwrap().unwrap();
+
+    assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
 }
