@@ -1,21 +1,17 @@
+use crate::util::insta::assert_yaml_snapshot;
 use crate::{
     builders::CrateBuilder, new_category, util::MockAnonymousUser, RequestHelper, TestApp,
 };
-use cargo_registry::{models::Category, views::EncodableCategoryWithSubcategories};
-
-#[derive(Deserialize)]
-struct CategoryWithSubcategories {
-    category: EncodableCategoryWithSubcategories,
-}
+use cargo_registry::models::Category;
+use serde_json::Value;
 
 #[test]
 fn index() {
     let (app, anon) = TestApp::init().empty();
 
     // List 0 categories if none exist
-    let json = anon.show_category_list();
-    assert_eq!(json.categories.len(), 0);
-    assert_eq!(json.meta.total, 0);
+    let json: Value = anon.get("/api/v1/categories").good();
+    assert_yaml_snapshot!(json);
 
     // Create a category and a subcategory
     app.db(|conn| {
@@ -28,10 +24,10 @@ fn index() {
     });
 
     // Only the top-level categories should be on the page
-    let json = anon.show_category_list();
-    assert_eq!(json.categories.len(), 1);
-    assert_eq!(json.meta.total, 1);
-    assert_eq!(json.categories[0].category, "foo");
+    let json: Value = anon.get("/api/v1/categories").good();
+    assert_yaml_snapshot!(json, {
+        ".categories[].created_at" => "[datetime]",
+    });
 }
 
 #[test]
@@ -51,11 +47,10 @@ fn show() {
     });
 
     // The category and its subcategories should be in the json
-    let json: CategoryWithSubcategories = anon.get(url).good();
-    assert_eq!(json.category.category, "Foo Bar");
-    assert_eq!(json.category.slug, "foo-bar");
-    assert_eq!(json.category.subcategories.len(), 1);
-    assert_eq!(json.category.subcategories[0].category, "Baz");
+    let json: Value = anon.get(url).good();
+    assert_yaml_snapshot!(json, {
+        ".**.created_at" => "[datetime]",
+    });
 }
 
 #[test]
@@ -147,32 +142,6 @@ fn category_slugs_returns_all_slugs_in_alphabetical_order() {
             .unwrap();
     });
 
-    #[derive(Deserialize, Debug, PartialEq)]
-    struct Slug {
-        id: String,
-        slug: String,
-        description: String,
-    }
-
-    #[derive(Deserialize, Debug, PartialEq)]
-    struct Slugs {
-        category_slugs: Vec<Slug>,
-    }
-
-    let response = anon.get("/api/v1/category_slugs").good();
-    let expected_response = Slugs {
-        category_slugs: vec![
-            Slug {
-                id: "bar".into(),
-                slug: "bar".into(),
-                description: "For crates that bar".into(),
-            },
-            Slug {
-                id: "foo".into(),
-                slug: "foo".into(),
-                description: "For crates that foo".into(),
-            },
-        ],
-    };
-    assert_eq!(expected_response, response);
+    let response: Value = anon.get("/api/v1/category_slugs").good();
+    assert_yaml_snapshot!(response);
 }

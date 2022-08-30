@@ -1,0 +1,21 @@
+---
+source: src/tests/category.rs
+assertion_line: 51
+expression: json
+---
+category:
+  category: Foo Bar
+  crates_cnt: 0
+  created_at: "[datetime]"
+  description: Foo Bar crates
+  id: foo-bar
+  parent_categories: []
+  slug: foo-bar
+  subcategories:
+    - category: Baz
+      crates_cnt: 0
+      created_at: "[datetime]"
+      description: Baz crates
+      id: "foo-bar::baz"
+      slug: "foo-bar::baz"
+
