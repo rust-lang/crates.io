@@ -5,6 +5,7 @@ expression: json
 ---
 versions:
   - audit_actions: []
+    checksum: "                                                                "
     crate: foo_vers_index
     crate_size: 0
     created_at: "[datetime]"
@@ -28,6 +29,7 @@ versions:
     updated_at: "[datetime]"
     yanked: false
   - audit_actions: []
+    checksum: "                                                                "
     crate: foo_vers_index
     crate_size: 0
     created_at: "[datetime]"

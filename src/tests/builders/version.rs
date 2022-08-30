@@ -60,6 +60,12 @@ impl<'a> VersionBuilder<'a> {
         self
     }
 
+    /// Sets the version's `checksum` value.
+    pub fn checksum(mut self, checksum: &str) -> Self {
+        self.checksum = checksum.to_string();
+        self
+    }
+
     /// Adds a dependency to this version.
     pub fn dependency(mut self, dependency: &Crate, target: Option<&'static str>) -> Self {
         self.dependencies.push((dependency.id, target));

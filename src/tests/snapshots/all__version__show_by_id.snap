@@ -1,10 +1,11 @@
 ---
 source: src/tests/version.rs
-assertion_line: 63
+assertion_line: 55
 expression: json
 ---
 version:
   audit_actions: []
+  checksum: "                                                                "
   crate: foo_vers_show_id
   crate_size: 1234
   created_at: "[datetime]"

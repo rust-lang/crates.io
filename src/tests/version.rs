@@ -69,6 +69,7 @@ fn show_by_crate_name_and_version() {
         let krate = CrateBuilder::new("foo_vers_show", user.id).expect_build(conn);
         VersionBuilder::new("2.0.0")
             .size(1234)
+            .checksum("c241cd77c3723ccf1aa453f169ee60c0a888344da504bee0142adb859092acb4")
             .expect_build(krate.id, user.id, conn)
     });
 
