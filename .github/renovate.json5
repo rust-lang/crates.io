@@ -12,8 +12,6 @@
     ],
     "js": {
         "labels": ["A-frontend"],
-        "reviewers": ["locks", "pichfl", "Turbo87"],
-        "reviewersSampleSize": 1,
     },
     "rust": {
         "labels": ["A-backend"],
