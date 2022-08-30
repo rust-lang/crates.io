@@ -78,6 +78,12 @@ a, .link {
     }
 }
 
+/* Using `:not(...)` here for specificity reasons */
+a:not([href]) {
+    color: initial;
+    cursor: initial;
+}
+
 pre:global(.terminal) {
     background: var(--main-color);
     color: white;
