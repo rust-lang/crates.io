@@ -76,5 +76,12 @@
             "^sentry-conduit$",
         ],
         "groupName": "conduit packages",
+    }, {
+        "matchLanguages": ["rust"],
+        "matchPackagePatterns": [
+            "^diesel$",
+            "^diesel_",
+        ],
+        "groupName": "diesel packages",
     }],
 }
