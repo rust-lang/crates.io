@@ -3,6 +3,21 @@
 This crate integrates a `hyper 0.14` server with a `conduit 0.10` application
 stack.
 
+## Usage
+
+This crate is in maintenance mode, intended only for use within the crates.io
+codebase. If you wish to use this crate please reach out to us in the
+[issue-tracker](https://github.com/conduit-rust/conduit-hyper/issues).
+
+While some protection against large requests is provided, this server should
+not be exposed directly to the public internet. It is highly recommended that
+the server be used behind a production-grade reverse-proxy for such
+applications. 
+
+Potential security vulnerabilities should be reported per our [security policy].
+
+[security policy]: https://github.com/conduit-rust/.github/security/policy
+
 ## Error and Panic Handling
 
 If the application handler returns an `Err(_)` the server will log the

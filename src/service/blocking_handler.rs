@@ -6,9 +6,17 @@ use crate::{ConduitResponse, HyperResponse};
 use std::net::SocketAddr;
 use std::sync::Arc;
 
+use conduit::header::CONTENT_LENGTH;
 use conduit::{Handler, StartInstant, StatusCode};
+use hyper::body::HttpBody;
 use hyper::{Body, Request, Response};
-use tracing::error;
+use tracing::{error, warn};
+
+/// The maximum size allowed in the `Content-Length` header
+///
+/// Chunked requests may grow to be larger over time if that much data is actually sent.
+/// See the usage section of the README if you plan to use this server in production.
+const MAX_CONTENT_LENGTH: u64 = 128 * 1024 * 1024; // 128 MB
 
 #[derive(Debug)]
 pub struct BlockingHandler<H: Handler> {
@@ -28,6 +36,10 @@ impl<H: Handler> BlockingHandler<H> {
         request: Request<Body>,
         remote_addr: SocketAddr,
     ) -> Result<HyperResponse, ServiceError> {
+        if let Err(response) = check_content_length(&request) {
+            return Ok(response);
+        }
+
         let (parts, body) = request.into_parts();
         let now = StartInstant::now();
 
@@ -68,4 +80,47 @@ fn server_error_response(message: &str) -> HyperResponse {
         .status(StatusCode::INTERNAL_SERVER_ERROR)
         .body(body)
         .expect("Unexpected invalid header")
+}
+
+/// Check for `Content-Length` values that are invalid or too large
+///
+/// If a `Content-Length` is provided then `hyper::body::to_bytes()` may try to allocate a buffer
+/// of this size upfront, leading to a process abort and denial of service to other clients.
+///
+/// This only checks for requests that claim to be too large. If the request is chunked then it
+/// is possible to allocate larger chunks of memory over time, by actually sending large volumes of
+/// data. Request sizes must be limited higher in the stack to protect against this type of attack.
+fn check_content_length(request: &Request<Body>) -> Result<(), HyperResponse> {
+    fn bad_request(message: &str) -> HyperResponse {
+        warn!("Bad request: Content-Length {}", message);
+
+        Response::builder()
+            .status(StatusCode::BAD_REQUEST)
+            .body(Body::empty())
+            .expect("Unexpected invalid header")
+    }
+
+    if let Some(content_length) = request.headers().get(CONTENT_LENGTH) {
+        let content_length = match content_length.to_str() {
+            Ok(some) => some,
+            Err(_) => return Err(bad_request("not ASCII")),
+        };
+
+        let content_length = match content_length.parse::<u64>() {
+            Ok(some) => some,
+            Err(_) => return Err(bad_request("not a u64")),
+        };
+
+        if content_length > MAX_CONTENT_LENGTH {
+            return Err(bad_request("too large"));
+        }
+    }
+
+    // A duplicate check, aligning with the specific impl of `hyper::body::to_bytes`
+    // (at the time of this writing)
+    if request.size_hint().lower() > MAX_CONTENT_LENGTH {
+        return Err(bad_request("size_hint().lower() too large"));
+    }
+
+    Ok(())
 }
