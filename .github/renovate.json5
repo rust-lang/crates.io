@@ -77,7 +77,6 @@
         ],
         "groupName": "conduit packages",
     }, {
-        "matchLanguages": ["rust"],
         "matchPackagePatterns": [
             "^diesel$",
             "^diesel_",
