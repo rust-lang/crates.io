@@ -1,5 +1,5 @@
 :root, [data-theme="classic"] {
-    --footer-bg-color: var(--green800);
+    --footer-bg-color: var(--header-bg-color);
     --footer-header-color: var(--yellow500);
     --footer-header-shadow-color: var(--green900);
     --footer-link-color: #fff;
