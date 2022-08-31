@@ -13,11 +13,11 @@ use std::{
 
 use futures_channel::oneshot;
 use futures_util::future;
-use hyper::{body::to_bytes, Body, Error, Request, Response, Server, StatusCode, Uri};
-use tokio::{
-    net::{TcpListener, TcpStream},
-    runtime,
+use hyper::{
+    body::to_bytes, server::conn::AddrStream, Body, Error, Request, Response, Server, StatusCode,
+    Uri,
 };
+use tokio::runtime;
 
 /// Headers that are ignored when capturing and replaying request logs
 static IGNORED_HEADERS: &[&str] = &[
@@ -112,34 +112,33 @@ pub fn proxy() -> (String, Bomb) {
 
     let thread = thread::spawn(move || {
         let rt = assert_ok!(runtime::Builder::new_current_thread().enable_io().build());
-
-        let client = if let Record::Capture(_, _) = record {
-            Some(hyper::Client::builder().build(hyper_tls::HttpsConnector::new()))
-        } else {
-            None
-        };
-
-        let listener = assert_ok!(rt.block_on(TcpListener::bind("127.0.0.1:0")));
-        url_tx
-            .send(format!("http://{}", assert_ok!(listener.local_addr())))
-            .unwrap();
-
+        let needs_client = matches!(record, Record::Capture(_, _));
         let record = Arc::new(Mutex::new(record));
-        let srv = Server::builder(hyper::server::accept::poll_fn(move |cx| {
-            listener
-                .poll_accept(cx)
-                .map(|res| Some(res.map(|(stream, _)| stream)))
-        }))
-        .serve(Proxy {
-            sink: sink2,
-            record: Arc::clone(&record),
-            client,
-        })
-        .with_graceful_shutdown(async {
-            quitrx.await.ok();
-        });
+        rt.block_on(async {
+            let client = if needs_client {
+                Some(hyper::Client::builder().build(hyper_tls::HttpsConnector::new()))
+            } else {
+                None
+            };
 
-        rt.block_on(srv).ok();
+            let addr = ([127, 0, 0, 0], 0).into();
+            let server = Server::bind(&addr).serve(Proxy {
+                sink: sink2,
+                record: Arc::clone(&record),
+                client,
+            });
+
+            url_tx
+                .send(format!("http://{}", server.local_addr()))
+                .unwrap();
+
+            server
+                .with_graceful_shutdown(async {
+                    quitrx.await.ok();
+                })
+                .await
+                .unwrap();
+        });
 
         let record = record.lock().unwrap();
         match *record {
@@ -203,7 +202,7 @@ impl tower_service::Service<Request<Body>> for Proxy {
     }
 }
 
-impl<'a> tower_service::Service<&'a TcpStream> for Proxy {
+impl<'a> tower_service::Service<&'a AddrStream> for Proxy {
     type Response = Proxy;
     type Error = Error;
     type Future = Pin<Box<dyn Future<Output = Result<Proxy, Error>> + Send + 'static>>;
@@ -212,7 +211,7 @@ impl<'a> tower_service::Service<&'a TcpStream> for Proxy {
         Poll::Ready(Ok(()))
     }
 
-    fn call(&mut self, _: &'a TcpStream) -> Self::Future {
+    fn call(&mut self, _: &'a AddrStream) -> Self::Future {
         Box::pin(future::ok(self.clone()))
     }
 }
