@@ -10,7 +10,7 @@
 
 .heading {
     display: flex;
-    align-items: center;
+    align-items: baseline;
 
     h1, h2 {
         margin: 0;
