@@ -18,7 +18,7 @@ module('Route | crate.version | model() hook', function (hooks) {
       await visit('/crates/foo/1.2.3');
       assert.equal(currentURL(), `/crates/foo/1.2.3`);
       assert.dom('[data-test-crate-name]').hasText('foo');
-      assert.dom('[data-test-crate-version]').hasText('1.2.3');
+      assert.dom('[data-test-crate-version]').hasText('v1.2.3');
       assert.dom('[data-test-notification-message]').doesNotExist();
     });
 
@@ -48,7 +48,7 @@ module('Route | crate.version | model() hook', function (hooks) {
       await visit('/crates/foo');
       assert.equal(currentURL(), `/crates/foo`);
       assert.dom('[data-test-crate-name]').hasText('foo');
-      assert.dom('[data-test-crate-version]').hasText('2.0.0');
+      assert.dom('[data-test-crate-version]').hasText('v2.0.0');
       assert.dom('[data-test-notification-message]').doesNotExist();
     });
 
@@ -61,7 +61,7 @@ module('Route | crate.version | model() hook', function (hooks) {
       await visit('/crates/foo');
       assert.equal(currentURL(), `/crates/foo`);
       assert.dom('[data-test-crate-name]').hasText('foo');
-      assert.dom('[data-test-crate-version]').hasText('1.0.0');
+      assert.dom('[data-test-crate-version]').hasText('v1.0.0');
       assert.dom('[data-test-notification-message]').doesNotExist();
     });
 
@@ -76,7 +76,7 @@ module('Route | crate.version | model() hook', function (hooks) {
       await visit('/crates/foo');
       assert.equal(currentURL(), `/crates/foo`);
       assert.dom('[data-test-crate-name]').hasText('foo');
-      assert.dom('[data-test-crate-version]').hasText('2.0.0-beta.2');
+      assert.dom('[data-test-crate-version]').hasText('v2.0.0-beta.2');
       assert.dom('[data-test-notification-message]').doesNotExist();
     });
 
@@ -89,7 +89,7 @@ module('Route | crate.version | model() hook', function (hooks) {
       await visit('/crates/foo');
       assert.equal(currentURL(), `/crates/foo`);
       assert.dom('[data-test-crate-name]').hasText('foo');
-      assert.dom('[data-test-crate-version]').hasText('2.0.0-beta.1');
+      assert.dom('[data-test-crate-version]').hasText('v2.0.0-beta.1');
       assert.dom('[data-test-notification-message]').doesNotExist();
     });
   });

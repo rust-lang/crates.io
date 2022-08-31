@@ -18,7 +18,7 @@ module('Route | crate.range', function (hooks) {
     await visit('/crates/foo/range/^1.1.0');
     assert.equal(currentURL(), `/crates/foo/1.2.3`);
     assert.dom('[data-test-crate-name]').hasText('foo');
-    assert.dom('[data-test-crate-version]').hasText('1.2.3');
+    assert.dom('[data-test-crate-version]').hasText('v1.2.3');
     assert.dom('[data-test-notification-message]').doesNotExist();
   });
 
@@ -32,7 +32,7 @@ module('Route | crate.range', function (hooks) {
     await visit('/crates/foo/range/~1.1.0');
     assert.equal(currentURL(), `/crates/foo/1.1.1`);
     assert.dom('[data-test-crate-name]').hasText('foo');
-    assert.dom('[data-test-crate-version]').hasText('1.1.1');
+    assert.dom('[data-test-crate-version]').hasText('v1.1.1');
     assert.dom('[data-test-notification-message]').doesNotExist();
   });
 
@@ -46,7 +46,7 @@ module('Route | crate.range', function (hooks) {
     await visit('/crates/foo/range/>=1.3.0, <1.4.0');
     assert.equal(currentURL(), `/crates/foo/1.3.4`);
     assert.dom('[data-test-crate-name]').hasText('foo');
-    assert.dom('[data-test-crate-version]').hasText('1.3.4');
+    assert.dom('[data-test-crate-version]').hasText('v1.3.4');
     assert.dom('[data-test-notification-message]').doesNotExist();
   });
 
@@ -60,7 +60,7 @@ module('Route | crate.range', function (hooks) {
     await visit('/crates/foo/range/^1.0.0');
     assert.equal(currentURL(), `/crates/foo/1.1.1`);
     assert.dom('[data-test-crate-name]').hasText('foo');
-    assert.dom('[data-test-crate-version]').hasText('1.1.1');
+    assert.dom('[data-test-crate-version]').hasText('v1.1.1');
     assert.dom('[data-test-notification-message]').doesNotExist();
   });
 
@@ -74,7 +74,7 @@ module('Route | crate.range', function (hooks) {
     await visit('/crates/foo/range/^1.0.0');
     assert.equal(currentURL(), `/crates/foo/1.1.1`);
     assert.dom('[data-test-crate-name]').hasText('foo');
-    assert.dom('[data-test-crate-version]').hasText('1.1.1');
+    assert.dom('[data-test-crate-version]').hasText('v1.1.1');
     assert.dom('[data-test-notification-message]').doesNotExist();
   });
 
