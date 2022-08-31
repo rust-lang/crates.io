@@ -7,7 +7,7 @@ use conduit_hyper::Service;
 use futures_util::future::FutureExt;
 use prometheus::Encoder;
 use reqwest::blocking::Client;
-use std::io::Write;
+use std::io::{self, Write};
 use tokio::io::AsyncWriteExt;
 use tokio::signal::unix::{signal, SignalKind};
 use tracing::Level;
@@ -68,8 +68,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             _ => 500,
         });
 
-    println!("Booting with a hyper based server");
-
     let rt = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .worker_threads(CORE_THREADS)
@@ -85,28 +83,29 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             async move { Service::from_blocking(handler, addr) }
         });
 
-    let addr = (ip, port).into();
-    #[allow(clippy::async_yields_async)]
-    let server = rt.block_on(async { hyper::Server::bind(&addr).serve(make_service) });
+    let (addr, server) = rt.block_on(async {
+        let server = hyper::Server::bind(&(ip, port).into()).serve(make_service);
 
-    let mut sig_int = rt.block_on(async { signal(SignalKind::interrupt()) })?;
-    let mut sig_term = rt.block_on(async { signal(SignalKind::terminate()) })?;
+        // When the user configures PORT=0 the operating system will allocate a random unused port.
+        // This fetches that random port and uses it to display the the correct url later.
+        let addr = server.local_addr();
 
-    // When the user configures PORT=0 the operative system will allocate a random unused port.
-    // This fetches that random port and uses it to display the "listening on port" message later.
-    let addr = server.local_addr();
+        let mut sig_int = signal(SignalKind::interrupt())?;
+        let mut sig_term = signal(SignalKind::terminate())?;
+        let server = server.with_graceful_shutdown(async move {
+            // Wait for either signal
+            tokio::select! {
+                _ = sig_int.recv().fuse() => {},
+                _ = sig_term.recv().fuse() => {},
+            };
+            tokio::io::stdout()
+                .write_all(b"Starting graceful shutdown\n")
+                .await
+                .ok();
+        });
 
-    let server = server.with_graceful_shutdown(async move {
-        // Wait for either signal
-        futures_util::select! {
-            _ = sig_int.recv().fuse() => {},
-            _ = sig_term.recv().fuse() => {},
-        };
-        let mut stdout = tokio::io::stdout();
-        stdout.write_all(b"Starting graceful shutdown\n").await.ok();
-    });
-
-    let server = rt.spawn(async { server.await.unwrap() });
+        Ok::<_, io::Error>((addr, server))
+    })?;
 
     // Do not change this line! Removing the line or changing its contents in any way will break
     // the test suite :)
@@ -132,7 +131,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Block the main thread until the server has shutdown
-    rt.block_on(async { server.await.unwrap() });
+    rt.block_on(server)?;
 
     println!("Persisting remaining downloads counters");
     match app.downloads_counter.persist_all_shards(&app) {
