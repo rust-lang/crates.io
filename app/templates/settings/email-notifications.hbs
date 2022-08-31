@@ -1,6 +1,6 @@
 {{page-title 'Settings'}}
 
-<PageHeader @title="Account Settings" @icon="gear"/>
+<PageHeader @title="Account Settings" />
 
 <SettingsPage>
   <form local-class="me-email-notifications" {{on "submit" (prevent-default this.saveEmailNotifications)}} >

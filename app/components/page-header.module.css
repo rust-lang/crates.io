@@ -11,13 +11,6 @@
     margin: 0;
 }
 
-.icon {
-    flex-shrink: 0;
-    margin-right: 10px;
-    width: 32px;
-    height: 32px;
-}
-
 .suffix {
     color: var(--main-color-light);
     padding-left: 10px;
