@@ -86,7 +86,7 @@ url = "=2.2.2"
 
 [dev-dependencies]
 cargo-registry-index = { path = "cargo-registry-index", features = ["testing"] }
-claim = { git = "https://github.com/Turbo87/rust-claim.git", rev = "23892a3" }
+claims = "=0.6.0"
 conduit-test = "=0.10.0"
 hyper-tls = "=0.5.0"
 insta = { version = "=1.19.0", features = ["redactions", "yaml"] }

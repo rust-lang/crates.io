@@ -222,7 +222,7 @@ dependencies = [
  "cargo-registry-markdown",
  "cargo-registry-s3",
  "chrono",
- "claim",
+ "claims",
  "clap",
  "conduit",
  "conduit-conditional-get",
@@ -372,9 +372,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "claim"
-version = "0.5.0"
-source = "git+https://github.com/Turbo87/rust-claim.git?rev=23892a3#23892a345d38e1434303143a73033925284ad04d"
+name = "claims"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "70417827831b0ea25b74bb976a601915e8a82a6643fb2fe726b40287f1aa98ef"
 dependencies = [
  "autocfg",
 ]

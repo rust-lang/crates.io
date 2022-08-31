@@ -11,7 +11,7 @@
 
 #[cfg(test)]
 #[macro_use]
-extern crate claim;
+extern crate claims;
 #[macro_use]
 extern crate derive_deref;
 #[macro_use]
