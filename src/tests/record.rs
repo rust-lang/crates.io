@@ -121,7 +121,7 @@ pub fn proxy() -> (String, Bomb) {
                 None
             };
 
-            let addr = ([127, 0, 0, 0], 0).into();
+            let addr = ([127, 0, 0, 1], 0).into();
             let server = Server::bind(&addr).serve(Proxy {
                 sink: sink2,
                 record: Arc::clone(&record),
