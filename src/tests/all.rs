@@ -1,7 +1,7 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
 #[macro_use]
-extern crate claim;
+extern crate claims;
 #[macro_use]
 extern crate diesel;
 #[macro_use]
