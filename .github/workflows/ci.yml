@@ -28,7 +28,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3.0.2
-      - uses: volta-cli/action@v3.0.1
+      - uses: volta-cli/action@v3.0.2
 
       - uses: pnpm/action-setup@v2.2.2
         with:
