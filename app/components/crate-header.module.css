@@ -27,13 +27,6 @@
     }
 }
 
-.crate-icon {
-    flex-shrink: 0;
-    margin-right: 10px;
-    width: 32px;
-    height: 32px;
-}
-
 .description {
     margin-top: 15px;
     line-height: 1.35;

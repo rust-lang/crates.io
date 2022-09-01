@@ -1,7 +1,6 @@
 {{page-title this.category.category ' - Categories'}}
 
 <PageHeader local-class="header">
-  <LinkTo @route="categories" aria-label="Categories">{{svg-jar "crate"}}</LinkTo>
   <h1>
     {{#each this.category.parent_categories as |parent|}}<LinkTo @route="category" @model={{parent.slug}}>{{parent.category}}</LinkTo>::{{/each}}
     {{~ this.category.category }}
