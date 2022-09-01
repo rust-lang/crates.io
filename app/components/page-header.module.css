@@ -7,7 +7,7 @@
 
 .heading {
     display: flex;
-    align-items: center;
+    align-items: baseline;
     margin: 0;
 }
 
