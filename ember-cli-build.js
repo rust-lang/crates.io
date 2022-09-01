@@ -20,6 +20,11 @@ module.exports = function (defaults) {
     babel: {
       plugins: [require.resolve('ember-auto-import/babel-plugin')],
     },
+
+    'ember-cli-babel': {
+      throwUnlessParallelizable: true,
+    },
+
     'ember-fetch': {
       preferNative: true,
     },
