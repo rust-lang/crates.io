@@ -1,1 +1,15 @@
 <meta name="description" content={{this.model.description}}>
+
+<meta property="og:title" content="{{this.model.name}}">
+<meta property="og:type" content="website" />
+<meta property="og:image" content="https://crates.io/assets/Cargo-Logo-Small.png">
+<meta property="og:url" content="https://crates.io/crates/{{this.model.name}}">
+<meta name="twitter:card" content="summary_large_image">
+
+<!--  Non-Essential, But Recommended -->
+<meta property="og:description" content={{this.model.description}}>
+<meta property="og:site_name" content="crates.io: Rust Package Registry">
+<meta name="twitter:image:alt" content={{this.model.description}}>
+
+<!--  Non-Essential, But Required for Analytics -->
+<meta name="twitter:site" content="@cratesiostatus">
