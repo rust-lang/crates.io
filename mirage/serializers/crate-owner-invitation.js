@@ -24,7 +24,9 @@ export default BaseSerializer.extend({
     delete hash.id;
     delete hash.token;
 
-    hash.crate_id = Number(hash.crate_id);
+    // TODO: Check this further, `crate_id` are strings in the current fixtures
+    // when attempting to parse into number we will get `NaN`s here.
+    // hash.crate_id = Number(hash.crate_id);
 
     let crate = this.schema.crates.find(hash.crate_id);
     hash.crate_name = crate.name;
