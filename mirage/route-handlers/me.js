@@ -1,5 +1,6 @@
 import { Response } from 'miragejs';
 
+import { pageParams } from './-utils';
 import { getSession } from '../utils/session';
 
 export function register(server) {
@@ -98,13 +99,16 @@ export function register(server) {
     return { ok: true };
   });
 
-  server.get('/api/v1/me/crate_owner_invitations', function (schema) {
+  server.get('/api/v1/me/crate_owner_invitations', function (schema, request) {
     let { user } = getSession(schema);
     if (!user) {
       return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
     }
 
-    return schema.crateOwnerInvitations.where({ inviteeId: user.id });
+    const { start, end } = pageParams(request);
+    const invites = schema.crateOwnerInvitations.where({ inviteeId: user.id });
+
+    return { ...this.serialize(invites.slice(start, end)), meta: { total: invites.length } };
   });
 
   server.put('/api/v1/me/crate_owner_invitations/:crate_id', (schema, request) => {
