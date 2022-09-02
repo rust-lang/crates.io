@@ -104,6 +104,9 @@ export function register(server) {
       return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
     }
 
+    console.log(schema.crateOwnerInvitations.all());
+    console.log(schema.crates.all());
+
     return schema.crateOwnerInvitations.where({ inviteeId: user.id });
   });
 
