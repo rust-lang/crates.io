@@ -15,6 +15,6 @@ path = "lib.rs"
 [dependencies]
 base64 = "=0.13.0"
 chrono = "=0.4.22"
-sha-1 = "=0.10.0"
+sha-1 = "=0.10.3"
 hmac = "=0.12.1"
 reqwest = { version = "=0.11.11", features = ["blocking"] }
