@@ -5,10 +5,7 @@ import { compareIsoDates, compareStrings, notFound, pageParams } from './-utils'
 
 export function list(schema, request) {
   const { start, end } = pageParams(request);
-  console.log({
-    start,
-    end,
-  });
+
   let crates = schema.crates.all();
 
   if (request.queryParams.following === '1') {

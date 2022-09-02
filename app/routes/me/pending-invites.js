@@ -7,7 +7,6 @@ export default class PendingInvitesRoute extends AuthenticatedRoute {
 
   queryParams = {
     page: { refreshModel: true },
-    sort: { refreshModel: true },
   };
 
   model() {
