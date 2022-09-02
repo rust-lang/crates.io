@@ -124,13 +124,11 @@ export default class SessionService extends Service {
   logoutTask = task(async () => {
     await ajax(`/api/private/session`, { method: 'DELETE' });
 
-    this.savedTransition = null;
     this.isLoggedIn = false;
 
-    await this.loadUserTask.cancelAll({ resetState: true });
-    this.sentry.setUser(null);
-
-    this.router.transitionTo('index');
+    // We perform a proper page navigation here instead of an in-app transition to ensure
+    // that the Ember Data store and any other in-memory data is cleared on logout.
+    window.location.assign('/');
   });
 
   loadUserTask = dropTask(async () => {
