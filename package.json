@@ -86,7 +86,7 @@
     "ember-cli-notifications": "8.0.0",
     "ember-cli-terser": "4.0.2",
     "ember-click-outside": "5.0.1",
-    "ember-concurrency": "2.3.2",
+    "ember-concurrency": "2.3.3",
     "ember-css-modules": "2.0.1",
     "ember-data": "4.6.1",
     "ember-disable-prototype-extensions": "1.1.3",
