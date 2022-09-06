@@ -9,7 +9,7 @@ export default class PendingInvitesRoute extends AuthenticatedRoute {
     page: { refreshModel: true },
   };
 
-  model() {
-    return this.store.findAll('crate-owner-invite');
+  model(params) {
+    return this.store.query('crate-owner-invite', params);
   }
 }

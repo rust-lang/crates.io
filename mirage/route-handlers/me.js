@@ -108,7 +108,11 @@ export function register(server) {
     const { start, end } = pageParams(request);
     const invites = schema.crateOwnerInvitations.where({ inviteeId: user.id });
 
-    return { ...this.serialize(invites.slice(start, end)), meta: { total: invites.length } };
+    let response = this.serialize(invites.slice(start, end));
+
+    response.meta = { total: invites.length };
+
+    return response;
   });
 
   server.put('/api/v1/me/crate_owner_invitations/:crate_id', (schema, request) => {
