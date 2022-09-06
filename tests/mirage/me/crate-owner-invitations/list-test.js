@@ -15,7 +15,7 @@ module('Mirage | GET /api/v1/me/crate_owner_invitations', function (hooks) {
 
     let response = await fetch('/api/v1/me/crate_owner_invitations');
     assert.equal(response.status, 200);
-    assert.deepEqual(await response.json(), { crate_owner_invitations: [] });
+    assert.deepEqual(await response.json(), { crate_owner_invitations: [], meta: { total: 0 } });
   });
 
   test('returns the list of invitations for the authenticated user', async function (assert) {
@@ -47,6 +47,7 @@ module('Mirage | GET /api/v1/me/crate_owner_invitations', function (hooks) {
     let response = await fetch('/api/v1/me/crate_owner_invitations');
     assert.equal(response.status, 200);
     assert.deepEqual(await response.json(), {
+      meta: { total: 0 },
       crate_owner_invitations: [
         {
           crate_id: Number(nanomsg.id),
