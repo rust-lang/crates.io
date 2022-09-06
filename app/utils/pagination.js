@@ -5,11 +5,6 @@ const VIEWABLE_PAGES = 9;
 export function pagination() {
   return macro(function () {
     let { page, per_page: perPage, totalItems } = this;
-    console.log({
-      page,
-      perPage,
-      totalItems,
-    });
     return _pagination(page, perPage, totalItems);
   });
 }

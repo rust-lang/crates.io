@@ -1,7 +1,7 @@
 import { Response } from 'miragejs';
 
-import { pageParams } from './-utils';
 import { getSession } from '../utils/session';
+import { pageParams } from './-utils';
 
 export function register(server) {
   server.get('/api/v1/me', function (schema) {
