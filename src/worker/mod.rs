@@ -3,6 +3,7 @@
 //! the daily database maintenance, but also operations like rendering READMEs
 //! and uploading them to S3.
 
+pub mod cloudfront;
 mod daily_db_maintenance;
 pub mod dump_db;
 mod git;

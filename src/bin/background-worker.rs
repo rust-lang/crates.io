@@ -13,6 +13,7 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
 use cargo_registry::config;
+use cargo_registry::worker::cloudfront::CloudFront;
 use cargo_registry::{background_jobs::*, db};
 use cargo_registry_index::{Repository, RepositoryConfig};
 use diesel::r2d2;
@@ -52,12 +53,19 @@ fn main() {
     ));
     println!("Index cloned");
 
+    let cloudfront = CloudFront::from_environment();
+
     let build_runner = || {
         let client = Client::builder()
             .timeout(Duration::from_secs(45))
             .build()
             .expect("Couldn't build client");
-        let environment = Environment::new_shared(repository.clone(), uploader.clone(), client);
+        let environment = Environment::new_shared(
+            repository.clone(),
+            uploader.clone(),
+            client,
+            cloudfront.clone(),
+        );
         let db_config = r2d2::Pool::builder().min_idle(Some(0));
         swirl::Runner::builder(environment)
             .connection_pool_builder(&db_url, db_config)
