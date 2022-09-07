@@ -31,7 +31,7 @@ specifiers:
   date-fns: 2.29.2
   ember-a11y-testing: 5.0.0
   ember-auto-import: 2.4.2
-  ember-cli: 4.6.0
+  ember-cli: 4.7.0
   ember-cli-app-version: 5.0.0
   ember-cli-babel: 7.26.11
   ember-cli-bundle-analyzer: 0.2.2
@@ -134,12 +134,12 @@ devDependencies:
   broccoli-asset-rev: 3.0.0
   ember-a11y-testing: 5.0.0_q2umwxufvnpx3vgxqbnuszsnxm
   ember-auto-import: 2.4.2_webpack@5.74.0
-  ember-cli: 4.6.0
+  ember-cli: 4.7.0
   ember-cli-app-version: 5.0.0
   ember-cli-babel: 7.26.11
   ember-cli-bundle-analyzer: 0.2.2
   ember-cli-code-coverage: 1.0.3
-  ember-cli-dependency-checker: 3.3.1_ember-cli@4.6.0
+  ember-cli-dependency-checker: 3.3.1_ember-cli@4.7.0
   ember-cli-dependency-lint: 2.0.1
   ember-cli-deprecation-workflow: 2.1.0
   ember-cli-fastboot: 3.3.2
@@ -7879,14 +7879,14 @@ packages:
       - supports-color
     dev: true
 
-  /ember-cli-dependency-checker/3.3.1_ember-cli@4.6.0:
+  /ember-cli-dependency-checker/3.3.1_ember-cli@4.7.0:
     resolution: {integrity: sha512-Tg6OeijjXNKWkDm6057Tr0N9j9Vlz/ITewXWpn1A/+Wbt3EowBx5ZKfvoupqz05EznKgL1B/ecG0t+JN7Qm6MA==}
     engines: {node: '>= 6'}
     peerDependencies:
       ember-cli: ^3.2.0 || ^4.0.0
     dependencies:
       chalk: 2.4.2
-      ember-cli: 4.6.0
+      ember-cli: 4.7.0
       find-yarn-workspace-root: 1.2.1
       is-git-url: 1.0.0
       resolve: 1.22.1
@@ -8251,8 +8251,8 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /ember-cli/4.6.0:
-    resolution: {integrity: sha512-4OAPHJJt4wARrTzfpfEM49KA1JJjMZ/8mhUncdqJFJG19/mS6yJiAUemnsLhZLnbjicB/gYSQ3rrUv/vxeX3cA==}
+  /ember-cli/4.7.0:
+    resolution: {integrity: sha512-OJApGmIFBqzIYLQ6Qmp7BdJZxtNExkp2oUaAoFJhu9Z5VAVnORFiPOR+bQkR50SNVusHTvlR4zC7mMLrNTy+XQ==}
     engines: {node: '>= 14'}
     hasBin: true
     dependencies:
