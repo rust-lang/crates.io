@@ -139,7 +139,16 @@ fn prepare_list(
                 )
                 .load(&*conn)?
         }
-        Page::Numeric(_) => unreachable!("page-based pagination is disabled"),
+        Page::Numeric(_) => query
+            .pages_pagination(pagination)
+            .filter(
+                crate_owner_invitations::crate_id.gt(seek_key.0).or(
+                    crate_owner_invitations::crate_id
+                        .eq(seek_key.0)
+                        .and(crate_owner_invitations::invited_user_id.gt(seek_key.1)),
+                ),
+            )
+            .load(&*conn)?,
     };
     let next_page = if raw_invitations.len() > pagination.per_page as usize {
         // We fetch `per_page + 1` to check if there are records for the next page. Since the last
