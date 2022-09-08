@@ -82,7 +82,7 @@ tokio = { version = "=1.21.0", features = ["net", "signal", "io-std", "io-util",
 toml = "=0.5.9"
 tracing = "=0.1.36"
 tracing-subscriber = { version = "=0.3.15", features = ["env-filter"] }
-url = "=2.3.0"
+url = "=2.3.1"
 
 [dev-dependencies]
 cargo-registry-index = { path = "cargo-registry-index", features = ["testing"] }
