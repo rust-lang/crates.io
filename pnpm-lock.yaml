@@ -41,7 +41,7 @@ specifiers:
   ember-cli-deprecation-workflow: 2.1.0
   ember-cli-fastboot: 3.3.2
   ember-cli-head: 2.0.0
-  ember-cli-htmlbars: 6.1.0
+  ember-cli-htmlbars: 6.1.1
   ember-cli-inject-live-reload: 2.1.0
   ember-cli-mirage: 2.4.0
   ember-cli-notifications: 8.0.0
@@ -144,7 +144,7 @@ devDependencies:
   ember-cli-deprecation-workflow: 2.1.0
   ember-cli-fastboot: 3.3.2
   ember-cli-head: 2.0.0
-  ember-cli-htmlbars: 6.1.0
+  ember-cli-htmlbars: 6.1.1
   ember-cli-inject-live-reload: 2.1.0
   ember-cli-mirage: 2.4.0_h4kvezvdl2p6ya2gzyu2xbdooi
   ember-cli-notifications: 8.0.0
@@ -169,7 +169,7 @@ devDependencies:
   ember-router-scroll: 4.1.2
   ember-source: 4.2.0_webpack@5.74.0
   ember-svg-jar: 2.3.4
-  ember-template-lint: 4.14.0_ember-cli-htmlbars@6.1.0
+  ember-template-lint: 4.14.0_ember-cli-htmlbars@6.1.1
   ember-test-selectors: 6.0.0
   ember-tooltips: 3.6.0
   ember-truth-helpers: 3.1.1
@@ -3878,7 +3878,7 @@ packages:
     engines: {node: 12.* || 14.* || >= 16}
     dependencies:
       ember-cli-babel: 7.26.11
-      ember-cli-htmlbars: 6.1.0
+      ember-cli-htmlbars: 6.1.1
       ember-modifier: 3.2.7
     transitivePeerDependencies:
       - '@babel/core'
@@ -7984,8 +7984,8 @@ packages:
       - supports-color
     dev: true
 
-  /ember-cli-htmlbars/6.1.0:
-    resolution: {integrity: sha512-kT+MA2JsNLk10HpxAjpB5HHtR0WCoxZEUwLsy/BBww5lXmsrf34QzmTw7SL6DabZVxs+YCb9RhU9KTmFygGxCg==}
+  /ember-cli-htmlbars/6.1.1:
+    resolution: {integrity: sha512-DKf2rjzIVw9zWCuFsBGJScrgf5Mz7dSg08Cq+FWFYIxnpssINUbNUoB0NHWnUJK4QqCvaExOyOmjm0kO455CPg==}
     engines: {node: 12.* || 14.* || >= 16}
     dependencies:
       '@ember/edition-utils': 1.2.0
@@ -8073,7 +8073,7 @@ packages:
       broccoli-merge-trees: 4.2.0
       broccoli-postcss: 6.1.0
       ember-cli-babel: 7.26.11
-      ember-cli-htmlbars: 6.1.0
+      ember-cli-htmlbars: 6.1.1
       ember-decorators-polyfill: 1.1.5
       ember-get-config: 0.5.0
       ember-on-modifier: 1.0.1
@@ -8462,7 +8462,7 @@ packages:
       broccoli-postcss: 6.1.0
       debug: 4.3.4
       ember-cli-babel: 7.26.11
-      ember-cli-htmlbars: 6.1.0
+      ember-cli-htmlbars: 6.1.1
       ensure-posix-path: 1.1.1
       hash-string: 1.0.0
       lodash.merge: 4.6.2
@@ -8666,7 +8666,7 @@ packages:
     dependencies:
       '@glimmer/tracking': 1.1.2
       ember-cli-babel: 7.26.11
-      ember-cli-htmlbars: 6.1.0
+      ember-cli-htmlbars: 6.1.1
       ember-cli-typescript: 4.2.1
     transitivePeerDependencies:
       - supports-color
@@ -8863,7 +8863,7 @@ packages:
       - supports-color
     dev: true
 
-  /ember-template-imports/3.1.1_ember-cli-htmlbars@6.1.0:
+  /ember-template-imports/3.1.1_ember-cli-htmlbars@6.1.1:
     resolution: {integrity: sha512-ZsujuOwaF6lWDDeKC0NleCUAC8f06CfxWQPmejNnxg5gUdqHFTfW9L++X9RLLV/pJZ6eCtax7L94XkXQJ1LfBA==}
     engines: {node: 12.* || >= 14}
     peerDependencies:
@@ -8872,7 +8872,7 @@ packages:
       babel-import-util: 0.2.0
       broccoli-stew: 3.0.0
       ember-cli-babel-plugin-helpers: 1.1.1
-      ember-cli-htmlbars: 6.1.0
+      ember-cli-htmlbars: 6.1.1
       ember-cli-version-checker: 5.1.2
       line-column: 1.0.2
       magic-string: 0.25.9
@@ -8883,7 +8883,7 @@ packages:
       - supports-color
     dev: true
 
-  /ember-template-lint/4.14.0_ember-cli-htmlbars@6.1.0:
+  /ember-template-lint/4.14.0_ember-cli-htmlbars@6.1.1:
     resolution: {integrity: sha512-kr7jvAx74y4CZxMJ+B8AYszYZjdyE0opSPo+6vLW43jKyq2oowjqPDEBd6upsUALvYtNAPn8b6D+Vbiy7UP+Kg==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     hasBin: true
@@ -8893,7 +8893,7 @@ packages:
       chalk: 4.1.2
       ci-info: 3.3.2
       date-fns: 2.29.2
-      ember-template-imports: 3.1.1_ember-cli-htmlbars@6.1.0
+      ember-template-imports: 3.1.1_ember-cli-htmlbars@6.1.1
       ember-template-recast: 6.1.3
       find-up: 6.3.0
       fuse.js: 6.6.2
@@ -8993,7 +8993,7 @@ packages:
     engines: {node: 12.* || 14.* || >= 16}
     dependencies:
       ember-cli-babel: 7.26.11
-      ember-cli-htmlbars: 6.1.0
+      ember-cli-htmlbars: 6.1.1
     transitivePeerDependencies:
       - supports-color
     dev: true
