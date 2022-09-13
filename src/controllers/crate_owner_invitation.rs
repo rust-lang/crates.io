@@ -20,7 +20,9 @@ pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
     let user_id = auth.user_id();
 
     let PrivateListResponse {
-        invitations, users, ..
+        invitations,
+        users,
+        meta,
     } = prepare_list(req, auth, ListFilter::InviteeId(user_id))?;
 
     // The schema for the private endpoints is converted to the schema used by v1 endpoints.
@@ -47,6 +49,7 @@ pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
     Ok(req.json(&json!({
         "crate_owner_invitations": crate_owner_invitations,
         "users": users,
+        "meta": meta,
     })))
 }
 
@@ -123,6 +126,10 @@ fn prepare_list(
         ))
         // We fetch one element over the page limit to then detect whether there is a next page.
         .limit(pagination.per_page as i64 + 1);
+    let total = crate_owner_invitations::table
+        .count()
+        .get_result(&*conn)
+        .unwrap();
 
     // Load and paginate the results.
     let mut raw_invitations: Vec<CrateOwnerInvitation> = match pagination.page {
@@ -225,7 +232,7 @@ fn prepare_list(
     Ok(PrivateListResponse {
         invitations,
         users: users.into_iter().map(|(_, user)| user.into()).collect(),
-        meta: ResponseMeta { next_page },
+        meta: ResponseMeta { next_page, total },
     })
 }
 
@@ -239,6 +246,7 @@ struct PrivateListResponse {
 #[derive(Serialize)]
 struct ResponseMeta {
     next_page: Option<String>,
+    total: i64,
 }
 
 #[derive(Deserialize)]
