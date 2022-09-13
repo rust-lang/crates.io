@@ -14,11 +14,11 @@ path = "lib.rs"
 testing = ["serde_json"]
 
 [dependencies]
-anyhow = "=1.0.63"
+anyhow = "=1.0.64"
 base64 = "=0.13.0"
 dotenv = "=0.15.0"
 git2 = "=0.15.0"
 serde = { version = "=1.0.144", features = ["derive"] }
 tempfile = "=3.3.0"
-url = "=2.2.2"
+url = "=2.3.1"
 serde_json = { version = "=1.0.85", optional = true }
