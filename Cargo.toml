@@ -22,7 +22,7 @@ name = "all"
 path = "src/tests/all.rs"
 
 [dependencies]
-anyhow = "=1.0.64"
+anyhow = "=1.0.65"
 base64 = "=0.13.0"
 cargo-registry-index = { path = "cargo-registry-index" }
 cargo-registry-markdown = { path = "cargo-registry-markdown" }
