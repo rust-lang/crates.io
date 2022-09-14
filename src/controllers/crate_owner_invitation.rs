@@ -126,10 +126,6 @@ fn prepare_list(
         ))
         // We fetch one element over the page limit to then detect whether there is a next page.
         .limit(pagination.per_page as i64 + 1);
-    let total = crate_owner_invitations::table
-        .count()
-        .get_result(&*conn)
-        .unwrap();
 
     // Load and paginate the results.
     let mut raw_invitations: Vec<CrateOwnerInvitation> = match pagination.page {
@@ -229,7 +225,7 @@ fn prepare_list(
     Ok(PrivateListResponse {
         invitations,
         users: users.into_iter().map(|(_, user)| user.into()).collect(),
-        meta: ResponseMeta { next_page, total },
+        meta: ResponseMeta { next_page },
     })
 }
 
@@ -243,7 +239,6 @@ struct PrivateListResponse {
 #[derive(Serialize)]
 struct ResponseMeta {
     next_page: Option<String>,
-    total: i64,
 }
 
 #[derive(Deserialize)]
