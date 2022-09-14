@@ -6,7 +6,7 @@ export default class PendingInvitesRoute extends AuthenticatedRoute {
   @service store;
 
   queryParams = {
-    page: { refreshModel: true },
+    seek: { refreshModel: true },
   };
 
   model(params) {

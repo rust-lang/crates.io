@@ -1,14 +1,10 @@
 import Controller from '@ember/controller';
-import { tracked } from '@glimmer/tracking';
 
 import { reads } from 'macro-decorators';
 
-import { pagination } from '../../utils/seek';
+import { pagination } from '../../utils/seek-pagination';
 
 export default class PendingInvitesController extends Controller {
-  queryParams = ['seek'];
-  @tracked seek = 'WzEsIDFd';
-
-  @reads('model.meta.total') totalItems;
+  @reads('model.meta.next_page') nextPage;
   @pagination() pagination;
 }

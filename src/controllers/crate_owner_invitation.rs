@@ -136,6 +136,7 @@ fn prepare_list(
         Page::Unspecified => query.load(&*conn)?,
         Page::Seek(s) => {
             let seek_key: (i32, i32) = s.decode()?;
+            println!("{} {}", seek_key.0, seek_key.1);
             query
                 .filter(
                     crate_owner_invitations::crate_id.gt(seek_key.0).or(
@@ -154,15 +155,12 @@ fn prepare_list(
         raw_invitations.pop();
 
         if let Some(last) = raw_invitations.last() {
-            let mut params = IndexMap::new();
-            params.insert(
-                "seek".into(),
-                crate::controllers::helpers::pagination::encode_seek((
-                    last.crate_id,
-                    last.invited_user_id,
-                ))?,
-            );
-            Some(req.query_with_params(params))
+            let seek_key = crate::controllers::helpers::pagination::encode_seek((
+                last.crate_id,
+                last.invited_user_id,
+            ))?;
+
+            Some(seek_key)
         } else {
             None
         }
