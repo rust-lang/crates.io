@@ -136,7 +136,6 @@ fn prepare_list(
         Page::Unspecified => query.load(&*conn)?,
         Page::Seek(s) => {
             let seek_key: (i32, i32) = s.decode()?;
-            println!("{} {}", seek_key.0, seek_key.1);
             query
                 .filter(
                     crate_owner_invitations::crate_id.gt(seek_key.0).or(
