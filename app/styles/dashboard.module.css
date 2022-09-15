@@ -51,6 +51,11 @@
             font-size: 105%;
             line-height: 20px;
         }
+
+        svg {
+            display: inline-block; 
+            vertical-align: text-top;
+        }
     }
 
     @media only screen and (max-width: 750px) {
@@ -74,6 +79,11 @@
 .my-feed {
     flex-grow: 5;
     h2 { font-size: 105%; }
+
+    svg {
+        display: inline-block; 
+        vertical-align: text-top;
+    }
 
     @media only screen and (max-width: 750px) {
         order: 0;
