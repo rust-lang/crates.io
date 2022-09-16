@@ -60,6 +60,15 @@ Another way to help out and to get to know the codebase is to review other peopl
 pull requests! Take a look at [`docs/PR-REVIEW.md`](https://github.com/rust-lang/crates.io/blob/master/docs/PR-REVIEW.md)
 for guidelines on how to do that.
 
+## Checking Release State
+
+If you are curious on the version that is published for crates.io, you can
+visit [whatsdeployed.io](https://whatsdeployed.io/s/FEM/rust-lang/crates.io).
+There you will find the commits involved in the current release.
+
+If you are only interested on the commit hash, you can also hit the site
+metadata endpoint available on `/api/v1/site_metadata`.
+
 ## Setting up a development environment
 
 First, you'll need git to clone the repo. [GitHub has help pages about setting
