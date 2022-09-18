@@ -22,13 +22,13 @@ name = "all"
 path = "src/tests/all.rs"
 
 [dependencies]
-anyhow = "=1.0.64"
+anyhow = "=1.0.65"
 base64 = "=0.13.0"
 cargo-registry-index = { path = "cargo-registry-index" }
 cargo-registry-markdown = { path = "cargo-registry-markdown" }
 cargo-registry-s3 = { path = "cargo-registry-s3" }
 chrono = { version = "=0.4.22", features = ["serde"] }
-clap = { version = "=3.2.20", features = ["derive", "unicode"] }
+clap = { version = "=3.2.22", features = ["derive", "unicode"] }
 
 conduit = "=0.10.0"
 conduit-conditional-get = "=0.10.0"
@@ -55,11 +55,11 @@ hex = "=0.4.3"
 http = "=0.2.8"
 hyper = { version = "=0.14.20", features = ["client", "http1"] }
 indexmap = { version = "=1.9.1", features = ["serde-1"] }
-indicatif = "=0.17.0"
+indicatif = "=0.17.1"
 ipnetwork = "=0.20.0"
 tikv-jemallocator = { version = "=0.5.0", features = ['unprefixed_malloc_on_supported_platforms', 'profiling'] }
 lettre = { version = "=0.10.1", default-features = false, features = ["file-transport", "smtp-transport", "native-tls", "hostname", "builder"] }
-minijinja = "=0.20.0"
+minijinja = "=0.21.0"
 moka = "=0.9.4"
 oauth2 = { version = "=4.2.3", default-features = false, features = ["reqwest"] }
 parking_lot = "=0.12.1"
@@ -67,18 +67,18 @@ prometheus = { version = "=0.13.2", default-features = false }
 rand = "=0.8.5"
 reqwest = { version = "=0.11.11", features = ["blocking", "gzip", "json"] }
 scheduled-thread-pool = "=0.2.6"
-semver = { version = "=1.0.13", features = ["serde"] }
+semver = { version = "=1.0.14", features = ["serde"] }
 sentry = { version = "=0.27.0", features = ["tracing"] }
 sentry-conduit = { version = "=0.7.0", default-features = false }
 serde = { version = "=1.0.144", features = ["derive"] }
 serde_json = "=1.0.85"
-sha2 = "=0.10.5"
+sha2 = "=0.10.6"
 spdx = "=0.9.0"
 swirl = { git = "https://github.com/sgrif/swirl.git", rev = "e87cf37" }
 tar = "=0.4.38"
 tempfile = "=3.3.0"
-thiserror = "=1.0.34"
-tokio = { version = "=1.21.0", features = ["net", "signal", "io-std", "io-util", "rt-multi-thread", "macros"]}
+thiserror = "=1.0.35"
+tokio = { version = "=1.21.1", features = ["net", "signal", "io-std", "io-util", "rt-multi-thread", "macros"]}
 toml = "=0.5.9"
 tracing = "=0.1.36"
 tracing-subscriber = { version = "=0.3.15", features = ["env-filter"] }
@@ -89,9 +89,9 @@ cargo-registry-index = { path = "cargo-registry-index", features = ["testing"] }
 claims = "=0.7.1"
 conduit-test = "=0.10.0"
 hyper-tls = "=0.5.0"
-insta = { version = "=1.19.1", features = ["redactions", "yaml"] }
+insta = { version = "=1.20.0", features = ["redactions", "yaml"] }
 once_cell = "=1.14.0"
-tokio = "=1.21.0"
+tokio = "=1.21.1"
 tower-service = "=0.3.2"
 
 [build-dependencies]

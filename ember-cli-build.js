@@ -8,6 +8,14 @@ module.exports = function (defaults) {
   let isProd = env === 'production';
 
   let app = new EmberApp(defaults, {
+    '@embroider/macros': {
+      setConfig: {
+        '@ember-data/store': {
+          polyfillUUID: true,
+        },
+      },
+    },
+
     autoImport: {
       webpack: {
         devtool: isProd ? 'source-map' : 'eval-source-map',
