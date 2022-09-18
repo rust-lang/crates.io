@@ -24,7 +24,7 @@ module('Acceptance | crate page', function (hooks) {
     assert.equal(getPageTitle(), 'nanomsg - crates.io: Rust Package Registry');
 
     assert.dom('[data-test-heading] [data-test-crate-name]').hasText('nanomsg');
-    assert.dom('[data-test-heading] [data-test-crate-version]').hasText('0.6.1');
+    assert.dom('[data-test-heading] [data-test-crate-version]').hasText('v0.6.1');
   });
 
   test('visiting /crates/nanomsg', async function (assert) {
@@ -39,7 +39,7 @@ module('Acceptance | crate page', function (hooks) {
     assert.equal(getPageTitle(), 'nanomsg - crates.io: Rust Package Registry');
 
     assert.dom('[data-test-heading] [data-test-crate-name]').hasText('nanomsg');
-    assert.dom('[data-test-heading] [data-test-crate-version]').hasText('0.6.1');
+    assert.dom('[data-test-heading] [data-test-crate-version]').hasText('v0.6.1');
     assert.dom('[data-test-crate-stats-label]').hasText('Stats Overview');
 
     await percySnapshot(assert);
@@ -58,7 +58,7 @@ module('Acceptance | crate page', function (hooks) {
     assert.equal(getPageTitle(), 'nanomsg - crates.io: Rust Package Registry');
 
     assert.dom('[data-test-heading] [data-test-crate-name]').hasText('nanomsg');
-    assert.dom('[data-test-heading] [data-test-crate-version]').hasText('0.6.1');
+    assert.dom('[data-test-heading] [data-test-crate-version]').hasText('v0.6.1');
     assert.dom('[data-test-crate-stats-label]').hasText('Stats Overview');
   });
 
@@ -74,7 +74,7 @@ module('Acceptance | crate page', function (hooks) {
     assert.equal(getPageTitle(), 'nanomsg - crates.io: Rust Package Registry');
 
     assert.dom('[data-test-heading] [data-test-crate-name]').hasText('nanomsg');
-    assert.dom('[data-test-heading] [data-test-crate-version]').hasText('0.6.0');
+    assert.dom('[data-test-heading] [data-test-crate-version]').hasText('v0.6.0');
     assert.dom('[data-test-crate-stats-label]').hasText('Stats Overview for 0.6.0 (see all)');
 
     await percySnapshot(assert);
