@@ -20,9 +20,7 @@ pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
     let user_id = auth.user_id();
 
     let PrivateListResponse {
-        invitations,
-        users,
-        meta,
+        invitations, users, ..
     } = prepare_list(req, auth, ListFilter::InviteeId(user_id))?;
 
     // The schema for the private endpoints is converted to the schema used by v1 endpoints.
@@ -49,7 +47,6 @@ pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
     Ok(req.json(&json!({
         "crate_owner_invitations": crate_owner_invitations,
         "users": users,
-        "meta": meta,
     })))
 }
 
@@ -150,12 +147,15 @@ fn prepare_list(
         raw_invitations.pop();
 
         if let Some(last) = raw_invitations.last() {
-            let seek_key = crate::controllers::helpers::pagination::encode_seek((
-                last.crate_id,
-                last.invited_user_id,
-            ))?;
-
-            Some(seek_key)
+            let mut params = IndexMap::new();
+            params.insert(
+                "seek".into(),
+                crate::controllers::helpers::pagination::encode_seek((
+                    last.crate_id,
+                    last.invited_user_id,
+                ))?,
+            );
+            Some(req.query_with_params(params))
         } else {
             None
         }
