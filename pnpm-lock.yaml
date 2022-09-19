@@ -2,6 +2,7 @@ lockfileVersion: 5.4
 
 overrides:
   ember-css-modules>postcss: 8.4.16
+  ember-get-config: 2.1.1
   ember-inflector: 4.0.2
   ember-modifier: 3.2.7
   miragejs: 0.1.45
@@ -5591,13 +5592,6 @@ packages:
       - supports-color
     dev: true
 
-  /broccoli-file-creator/1.2.0:
-    resolution: {integrity: sha512-l9zthHg6bAtnOfRr/ieZ1srRQEsufMZID7xGYRW3aBDv3u/3Eux+Iawl10tAGYE5pL9YB4n5X4vxkp6iNOoZ9g==}
-    dependencies:
-      broccoli-plugin: 1.3.1
-      mkdirp: 0.5.6
-    dev: true
-
   /broccoli-file-creator/2.1.1:
     resolution: {integrity: sha512-YpjOExWr92C5vhnK0kmD81kM7U09kdIRZk9w4ZDCDHuHXW+VE/x6AGEOQQW3loBQQ6Jk+k+TSm8dESy4uZsnjw==}
     engines: {node: ^4.5 || 6.* || >= 7.*}
@@ -8063,7 +8057,7 @@ packages:
       ember-cli-babel: 7.26.11
       ember-data: 4.6.3_webpack@5.74.0
       ember-destroyable-polyfill: 2.0.3
-      ember-get-config: 0.5.0
+      ember-get-config: 2.1.1
       ember-inflector: 4.0.2
       ember-qunit: 5.1.5_m2vpijm5kklvqmlfibufmotnbi
       lodash-es: 4.17.21
@@ -8092,7 +8086,7 @@ packages:
       ember-cli-babel: 7.26.11
       ember-cli-htmlbars: 6.1.1
       ember-decorators-polyfill: 1.1.5
-      ember-get-config: 0.5.0
+      ember-get-config: 2.1.1
       ember-on-modifier: 1.0.1
       lodash.get: 4.4.2
       postcss-import: 14.1.0
@@ -8626,13 +8620,12 @@ packages:
       - supports-color
     dev: true
 
-  /ember-get-config/0.5.0:
-    resolution: {integrity: sha512-y1osD6g8wV/BlDjuaN6OG5MT0iHY2X/yE38gUj/05uUIMIRfpcwOdWnFQHBiXIhDojvAJQTEF1VOYFIETQMkeQ==}
+  /ember-get-config/2.1.1:
+    resolution: {integrity: sha512-uNmv1cPG/4qsac8oIf5txJ2FZ8p88LEpG4P3dNcjsJS98Y8hd0GPMFwVqpnzI78Lz7VYRGQWY4jnE4qm5R3j4g==}
     engines: {node: 12.* || 14.* || >= 16}
     dependencies:
-      broccoli-file-creator: 1.2.0
+      '@embroider/macros': 1.8.3
       ember-cli-babel: 7.26.11
-      ember-cli-htmlbars: 5.7.2
     transitivePeerDependencies:
       - supports-color
     dev: true
