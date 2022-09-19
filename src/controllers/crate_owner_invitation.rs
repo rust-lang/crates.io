@@ -20,7 +20,9 @@ pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
     let user_id = auth.user_id();
 
     let PrivateListResponse {
-        invitations, users, ..
+        invitations,
+        users,
+        meta,
     } = prepare_list(req, auth, ListFilter::InviteeId(user_id))?;
 
     // The schema for the private endpoints is converted to the schema used by v1 endpoints.
@@ -47,6 +49,7 @@ pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
     Ok(req.json(&json!({
         "crate_owner_invitations": crate_owner_invitations,
         "users": users,
+        "meta": meta,
     })))
 }
 

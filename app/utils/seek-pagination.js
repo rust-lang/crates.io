@@ -2,11 +2,11 @@ import macro from 'macro-decorators';
 
 export function pagination() {
   return macro(function () {
-    let { nextPage, totalItems } = this;
+    const { nextPage } = this;
+    const nextPageParams = new URLSearchParams(nextPage);
 
     return {
-      nextPage,
-      totalItems,
+      nextPage: nextPageParams.get('seek'),
     };
   });
 }
