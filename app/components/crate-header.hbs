@@ -1,16 +1,10 @@
 <PageHeader local-class="header" data-test-heading>
-  <div local-class="header-row">
-    <div local-class="heading">
-      <h1 data-test-crate-name>{{@crate.name}}</h1>
-      {{#if @version}}
-        <h2 data-test-crate-version>v{{@version.num}}</h2>
-      {{/if}}
-    </div>
-
-    {{#if this.session.currentUser}}
-      <FollowButton @crate={{@crate}}/>
+  <h1 local-class="heading">
+    <span data-test-crate-name>{{@crate.name}}</span>
+    {{#if @version}}
+      <small data-test-crate-version>v{{@version.num}}</small>
     {{/if}}
-  </div>
+  </h1>
 
   {{#if @crate.description}}
     <div local-class="description">
@@ -28,6 +22,10 @@
         </li>
       {{/each}}
     </ul>
+  {{/if}}
+
+  {{#if this.session.currentUser}}
+    <FollowButton @crate={{@crate}} local-class="follow-button"/>
   {{/if}}
 </PageHeader>
 
