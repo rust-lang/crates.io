@@ -6,7 +6,7 @@
   <div local-class='top'>
 
     <div local-class="metadata">
-      <h3>Metadata</h3>
+      <h2 local-class="heading">Metadata</h2>
 
       <time
         datetime={{date-format-iso @version.updated_at}}
@@ -37,7 +37,7 @@
     </div>
 
     <div>
-      <h3>Install</h3>
+      <h2 local-class="heading">Install</h2>
 
       <p local-class="copy-help">Add the following line to your Cargo.toml file:</p>
       {{#if (is-clipboard-supported)}}
@@ -83,7 +83,7 @@
     </div>
 
     <div>
-      <h3>Owners</h3>
+      <h2 local-class="heading">Owners</h2>
       <OwnersList @owners={{@crate.owners}} />
     </div>
   </div>
@@ -92,7 +92,7 @@
     {{#unless @crate.categories.isPending}}
       {{#if @crate.categories}}
         <div>
-          <h3>Categories</h3>
+          <h2 local-class="heading">Categories</h2>
           <ul local-class="categories">
             {{#each @crate.categories as |category|}}
               <li><LinkTo @route="category" @model={{category.slug}}>{{category.category}}</LinkTo></li>

@@ -3,27 +3,17 @@
     padding-bottom: 30px;
 }
 
-.header-row {
-    display: flex;
-    justify-content: space-between;
-}
-
 .heading {
     display: flex;
     align-items: baseline;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    word-break: break-word;
 
-    h1, h2 {
-        margin: 0;
-        padding: 0;
-    }
-
-    h1 {
-        word-break: break-word;
-    }
-
-    h2 {
+    small {
         color: var(--main-color-light);
-        margin-left: 10px;
     }
 }
 
@@ -52,6 +42,28 @@
     font-size: 90%;
 }
 
+.follow-button {
+    margin-top: 15px;
+}
+
 .nav {
     margin-bottom: 20px;
+}
+
+
+@media only screen and (min-width: 751px) {
+    .header {
+        display: grid;
+        grid-template-columns: 1fr auto;
+    }
+
+    .follow-button {
+        margin: -10px -10px 0 10px;
+        grid-column: 2;
+        grid-row: 1;
+    }
+
+    .description, .keywords {
+        grid-column: 1 / 3;
+    }
 }

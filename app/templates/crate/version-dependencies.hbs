@@ -6,7 +6,7 @@
   @versionNum={{this.version.num}}
 />
 
-<h3 local-class="heading">Dependencies</h3>
+<h2 local-class="heading">Dependencies</h2>
 {{#if this.version.normalDependencies}}
   <ul local-class="list" data-test-dependencies>
     {{#each this.version.normalDependencies as |dependency|}}
@@ -20,7 +20,7 @@
 {{/if}}
 
 {{#if this.version.buildDependencies}}
-  <h3 local-class="heading">Build-Dependencies</h3>
+  <h2 local-class="heading">Build-Dependencies</h2>
   <ul local-class="list" data-test-build-dependencies>
     {{#each this.version.buildDependencies as |dependency|}}
       <li><DependencyList::Row @dependency={{dependency}} /></li>
@@ -29,7 +29,7 @@
 {{/if}}
 
 {{#if this.version.devDependencies}}
-  <h3 local-class="heading">Dev-Dependencies</h3>
+  <h2 local-class="heading">Dev-Dependencies</h2>
   <ul local-class="list" data-test-dev-dependencies>
     {{#each this.version.devDependencies as |dependency|}}
       <li><DependencyList::Row @dependency={{dependency}} /></li>

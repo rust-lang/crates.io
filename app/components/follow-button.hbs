@@ -7,6 +7,7 @@
   }}
   local-class="button"
   data-test-follow-button
+  ...attributes
   {{on "click" (perform this.toggleFollowTask)}}
 >
   {{#if (or this.followStateTask.isRunning this.toggleFollowTask.isRunning)}}
