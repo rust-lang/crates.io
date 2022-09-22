@@ -22,6 +22,12 @@
     }
 }
 
+.heading {
+    font-size: 1.17em;
+    margin-block-start: 1em;
+    margin-block-end: 1em;
+}
+
 .date,
 .license,
 .bytes {
