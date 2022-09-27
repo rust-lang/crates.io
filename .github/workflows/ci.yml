@@ -28,7 +28,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3.0.2
-      - uses: volta-cli/action@v3.0.2
 
       - uses: pnpm/action-setup@v2.2.2
         with:
@@ -37,6 +36,7 @@ jobs:
       - uses: actions/setup-node@v3.5.0
         with:
           cache: pnpm
+          node-version-file: package.json
 
       - name: Install node modules
         run: pnpm install
