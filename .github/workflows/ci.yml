@@ -27,7 +27,7 @@ jobs:
       PERCY_PROJECT: crates-io/crates.io
 
     steps:
-      - uses: actions/checkout@v3.0.2
+      - uses: actions/checkout@v3.1.0
 
       - uses: pnpm/action-setup@v2.2.2
         with:
@@ -63,7 +63,7 @@ jobs:
       RUSTFLAGS: "-D warnings"
 
     steps:
-      - uses: actions/checkout@v3.0.2
+      - uses: actions/checkout@v3.1.0
 
       - run: rustup default ${{ env.RUST_VERSION }}
       - run: rustup component add rustfmt
@@ -107,7 +107,7 @@ jobs:
           - 5432:5432
 
     steps:
-      - uses: actions/checkout@v3.0.2
+      - uses: actions/checkout@v3.1.0
 
       - name: Install ${{ env.RUST_VERSION }} Rust
         if: matrix.rust == 'stable'
