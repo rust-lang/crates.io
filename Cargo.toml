@@ -23,7 +23,7 @@ path = "src/tests/all.rs"
 
 [dependencies]
 anyhow = "=1.0.65"
-aws-sigv4 = "=0.48.0"
+aws-sigv4 = "=0.49.0"
 base64 = "=0.13.0"
 cargo-registry-index = { path = "cargo-registry-index" }
 cargo-registry-markdown = { path = "cargo-registry-markdown" }
