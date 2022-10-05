@@ -236,6 +236,7 @@ impl TestAppBuilder {
                 index,
                 app.config.uploader().clone(),
                 app.http_client().clone(),
+                None,
             );
 
             Some(

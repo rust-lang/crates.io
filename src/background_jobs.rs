@@ -6,6 +6,7 @@ use swirl::PerformError;
 
 use crate::db::{DieselPool, DieselPooledConn, PoolError};
 use crate::uploaders::Uploader;
+use crate::worker::cloudfront::CloudFront;
 use cargo_registry_index::Repository;
 
 impl<'a> swirl::db::BorrowedConnection<'a> for DieselPool {
@@ -24,6 +25,7 @@ pub struct Environment {
     index: Arc<Mutex<Repository>>,
     pub uploader: Uploader,
     http_client: AssertUnwindSafe<Client>,
+    cloudfront: Option<CloudFront>,
 }
 
 impl Clone for Environment {
@@ -32,24 +34,37 @@ impl Clone for Environment {
             index: self.index.clone(),
             uploader: self.uploader.clone(),
             http_client: AssertUnwindSafe(self.http_client.0.clone()),
+            cloudfront: self.cloudfront.clone(),
         }
     }
 }
 
 impl Environment {
-    pub fn new(index: Repository, uploader: Uploader, http_client: Client) -> Self {
-        Self::new_shared(Arc::new(Mutex::new(index)), uploader, http_client)
+    pub fn new(
+        index: Repository,
+        uploader: Uploader,
+        http_client: Client,
+        cloudfront: Option<CloudFront>,
+    ) -> Self {
+        Self::new_shared(
+            Arc::new(Mutex::new(index)),
+            uploader,
+            http_client,
+            cloudfront,
+        )
     }
 
     pub fn new_shared(
         index: Arc<Mutex<Repository>>,
         uploader: Uploader,
         http_client: Client,
+        cloudfront: Option<CloudFront>,
     ) -> Self {
         Self {
             index,
             uploader,
             http_client: AssertUnwindSafe(http_client),
+            cloudfront,
         }
     }
 
@@ -62,5 +77,9 @@ impl Environment {
     /// Returns a client for making HTTP requests to upload crate files.
     pub(crate) fn http_client(&self) -> &Client {
         &self.http_client
+    }
+
+    pub(crate) fn cloudfront(&self) -> Option<&CloudFront> {
+        self.cloudfront.as_ref()
     }
 }

@@ -1,7 +1,7 @@
 use crate::background_jobs::Environment;
 use crate::schema;
 use anyhow::Context;
-use cargo_registry_index::Crate;
+use cargo_registry_index::{Crate, Repository};
 use chrono::Utc;
 use diesel::prelude::*;
 use std::fs::{self, OpenOptions};
@@ -43,6 +43,14 @@ pub fn update_crate_index(env: &Environment, crate_name: String) -> Result<(), P
 
     env.uploader
         .sync_index(env.http_client(), &crate_name, contents)?;
+
+    if let Some(cloudfront) = env.cloudfront() {
+        trace!(?crate_name, "invalidate CloudFront");
+        cloudfront.invalidate(
+            env.http_client(),
+            &Repository::relative_index_file_for_url(&crate_name),
+        )?;
+    }
 
     Ok(())
 }
