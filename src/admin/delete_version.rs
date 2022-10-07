@@ -8,7 +8,7 @@ use crate::{
 use diesel::prelude::*;
 
 #[derive(clap::Parser, Debug)]
-#[clap(
+#[command(
     name = "delete-version",
     about = "Purge all references to a crate's version from the database.",
     after_help = "Please be super sure you want to do this before running this!"
@@ -19,7 +19,7 @@ pub struct Opts {
     /// Version number that should be deleted
     version: String,
     /// Don't ask for confirmation: yes, we are sure. Best for scripting.
-    #[clap(short, long)]
+    #[arg(short, long)]
     yes: bool,
 }
 

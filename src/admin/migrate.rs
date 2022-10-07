@@ -4,7 +4,7 @@ static CATEGORIES_TOML: &str = include_str!("../boot/categories.toml");
 diesel_migrations::embed_migrations!("./migrations");
 
 #[derive(clap::Parser, Debug, Copy, Clone)]
-#[clap(
+#[command(
     name = "migrate",
     about = "Verify config, migrate the database, and other release tasks."
 )]

@@ -17,7 +17,7 @@ use tar::{self, Archive};
 const USER_AGENT: &str = "crates-admin";
 
 #[derive(clap::Parser, Debug)]
-#[clap(
+#[command(
     name = "render-readmes",
     about = "Iterates over every crate versions ever uploaded and (re-)renders their \
         readme using the readme renderer from the cargo_registry crate.",
@@ -25,15 +25,15 @@ const USER_AGENT: &str = "crates-admin";
 )]
 pub struct Opts {
     /// How many versions should be queried and processed at a time.
-    #[clap(long, default_value = "25")]
+    #[arg(long, default_value = "25")]
     page_size: usize,
 
     /// Only rerender readmes that are older than this date.
-    #[clap(long)]
+    #[arg(long)]
     older_than: Option<String>,
 
     /// Only rerender readmes for the specified crate.
-    #[clap(long = "crate")]
+    #[arg(long = "crate")]
     crate_name: Option<String>,
 }
 

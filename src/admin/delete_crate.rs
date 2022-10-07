@@ -4,7 +4,7 @@ use diesel::prelude::*;
 use reqwest::blocking::Client;
 
 #[derive(clap::Parser, Debug)]
-#[clap(
+#[command(
     name = "delete-crate",
     about = "Purge all references to a crate from the database.",
     after_help = "Please be super sure you want to do this before running this!"
@@ -14,7 +14,7 @@ pub struct Opts {
     crate_name: String,
 
     /// Don't ask for confirmation: yes, we are sure. Best for scripting.
-    #[clap(short, long)]
+    #[arg(short, long)]
     yes: bool,
 }
 

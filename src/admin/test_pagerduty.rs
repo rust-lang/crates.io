@@ -24,9 +24,9 @@ impl FromStr for EventType {
 }
 
 #[derive(clap::Parser, Debug)]
-#[clap(name = "test-pagerduty", about = "Send a test event to pagerduty")]
+#[command(name = "test-pagerduty", about = "Send a test event to pagerduty")]
 pub struct Opts {
-    #[clap(value_enum)]
+    #[arg(value_enum)]
     event_type: EventType,
     description: Option<String>,
 }
