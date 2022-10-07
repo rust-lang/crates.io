@@ -82,7 +82,7 @@ thiserror = "=1.0.37"
 tokio = { version = "=1.21.2", features = ["net", "signal", "io-std", "io-util", "rt-multi-thread", "macros"]}
 toml = "=0.5.9"
 tracing = "=0.1.37"
-tracing-subscriber = { version = "=0.3.15", features = ["env-filter"] }
+tracing-subscriber = { version = "=0.3.16", features = ["env-filter"] }
 url = "=2.3.1"
 
 [dev-dependencies]
