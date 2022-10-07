@@ -3,7 +3,7 @@ use std::str::FromStr;
 
 use crate::admin::on_call;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, clap::ValueEnum)]
 pub enum EventType {
     Trigger,
     Acknowledge,
@@ -26,7 +26,7 @@ impl FromStr for EventType {
 #[derive(clap::Parser, Debug)]
 #[clap(name = "test-pagerduty", about = "Send a test event to pagerduty")]
 pub struct Opts {
-    #[clap(possible_values = &["trigger", "acknowledge", "resolve"])]
+    #[clap(value_enum)]
     event_type: EventType,
     description: Option<String>,
 }
