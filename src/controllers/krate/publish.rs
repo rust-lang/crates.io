@@ -128,6 +128,10 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
             )));
         }
 
+        app.config
+            .publish_rate_limit
+            .check_daily_limit(krate.id, &conn)?;
+
         // Length of the .crate tarball, which appears after the metadata in the request body.
         // TODO: Not sure why we're using the total content length (metadata + .crate file length)
         // to compare against the max upload size... investigate that and perhaps change to use
