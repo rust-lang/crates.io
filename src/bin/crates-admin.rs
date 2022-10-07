@@ -6,7 +6,7 @@ use cargo_registry::admin::{
 };
 
 #[derive(clap::Parser, Debug)]
-#[clap(name = "crates-admin")]
+#[command(name = "crates-admin")]
 struct Opts {
     #[clap(subcommand)]
     command: SubCommand,

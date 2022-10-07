@@ -1,7 +1,7 @@
 use crate::{db, models::User, util::errors::AppResult};
 
 #[derive(clap::Parser, Debug)]
-#[clap(
+#[command(
     name = "verify-token",
     about = "Look up a username by API token.",
     long_about = "Look up a username by API token. Used by staff to verify someone's identity \

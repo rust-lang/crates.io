@@ -9,7 +9,7 @@ use diesel::prelude::*;
 use swirl::Job;
 
 #[derive(clap::Parser, Debug)]
-#[clap(
+#[command(
     name = "yank-version",
     about = "Yank a crate from the database and index."
 )]
@@ -19,7 +19,7 @@ pub struct Opts {
     /// Version number that should be deleted
     version: String,
     /// Don't ask for confirmation: yes, we are sure. Best for scripting.
-    #[clap(short, long)]
+    #[arg(short, long)]
     yes: bool,
 }
 

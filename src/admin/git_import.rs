@@ -17,13 +17,13 @@ use crate::{
 };
 
 #[derive(clap::Parser, Debug, Copy, Clone)]
-#[clap(
+#[command(
     name = "git-import",
     about = "Import missing fields from git into the database"
 )]
 pub struct Opts {
     /// Time in milliseconds to sleep between crate updates to reduce database load.
-    #[clap(long)]
+    #[arg(long)]
     delay: u64,
 }
 

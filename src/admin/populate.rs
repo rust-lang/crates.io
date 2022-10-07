@@ -4,12 +4,12 @@ use diesel::prelude::*;
 use rand::{thread_rng, Rng};
 
 #[derive(clap::Parser, Debug)]
-#[clap(
+#[command(
     name = "populate",
     about = "Populate a set of dummy download statistics for a specific version in the database."
 )]
 pub struct Opts {
-    #[clap(required = true)]
+    #[arg(required = true)]
     version_ids: Vec<i32>,
 }
 

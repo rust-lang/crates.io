@@ -9,7 +9,7 @@ use std::process::exit;
 use diesel::prelude::*;
 
 #[derive(clap::Parser, Debug)]
-#[clap(
+#[command(
     name = "transfer-crates",
     about = "Transfer all crates from one user to another."
 )]

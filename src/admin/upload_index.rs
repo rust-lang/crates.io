@@ -6,7 +6,7 @@ use reqwest::blocking::Client;
 use crate::config;
 
 #[derive(clap::Parser, Debug)]
-#[clap(
+#[command(
     name = "upload-index",
     about = "Upload index from git to S3 (http-based index)"
 )]
