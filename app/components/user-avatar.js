@@ -21,12 +21,15 @@ export default class UserAvatar extends Component {
     let user = this.args.user;
 
     switch (user.kind) {
-      case 'user':
+      case 'user': {
         return user.name;
-      case 'team':
+      }
+      case 'team': {
         return `${user.name} team`;
-      default:
+      }
+      default: {
         return `${user.name} (${user.kind})`;
+      }
     }
   }
 

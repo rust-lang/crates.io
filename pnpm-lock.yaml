@@ -80,7 +80,7 @@ specifiers:
   eslint-plugin-import-helpers: 1.2.1
   eslint-plugin-prettier: 4.2.1
   eslint-plugin-qunit-dom: 0.2.0
-  eslint-plugin-unicorn: 43.0.2
+  eslint-plugin-unicorn: 44.0.2
   fastboot-app-server: 3.3.2
   highlight.js: 11.6.0
   loader.js: 4.7.0
@@ -183,7 +183,7 @@ devDependencies:
   eslint-plugin-import-helpers: 1.2.1_eslint@8.24.0
   eslint-plugin-prettier: 4.2.1_cfn5x6ujhhgzv3423d6k7r2zzm
   eslint-plugin-qunit-dom: 0.2.0_eslint@8.24.0
-  eslint-plugin-unicorn: 43.0.2_eslint@8.24.0
+  eslint-plugin-unicorn: 44.0.2_eslint@8.24.0
   loader.js: 4.7.0
   match-json: 1.3.4
   miragejs: 0.1.45
@@ -8486,8 +8486,8 @@ packages:
       eslint: 8.24.0
     dev: true
 
-  /eslint-plugin-unicorn/43.0.2_eslint@8.24.0:
-    resolution: {integrity: sha512-DtqZ5mf/GMlfWoz1abIjq5jZfaFuHzGBZYIeuJfEoKKGWRHr2JiJR+ea+BF7Wx2N1PPRoT/2fwgiK1NnmNE3Hg==}
+  /eslint-plugin-unicorn/44.0.2_eslint@8.24.0:
+    resolution: {integrity: sha512-GLIDX1wmeEqpGaKcnMcqRvMVsoabeF0Ton0EX4Th5u6Kmf7RM9WBl705AXFEsns56ESkEs0uyelLuUTvz9Tr0w==}
     engines: {node: '>=14.18'}
     peerDependencies:
       eslint: '*'
