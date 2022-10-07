@@ -62,7 +62,7 @@ specifiers:
   ember-load-initializers: 2.1.2
   ember-modifier: 3.2.7
   ember-page-title: 7.0.0
-  ember-qunit: 5.1.5
+  ember-qunit: 6.0.0
   ember-resolver: 8.0.3
   ember-router-scroll: 4.1.2
   ember-source: 4.2.0
@@ -147,7 +147,7 @@ devDependencies:
   ember-cli-head: 2.0.0
   ember-cli-htmlbars: 6.1.1
   ember-cli-inject-live-reload: 2.1.0
-  ember-cli-mirage: 2.4.0_xfm6cbcs2j7mto67kglz26rava
+  ember-cli-mirage: 2.4.0_ym5xwr6oe3zp2fy3blslt4yihu
   ember-cli-notifications: 8.0.0
   ember-cli-terser: 4.0.2
   ember-click-outside: 5.0.1
@@ -157,7 +157,7 @@ devDependencies:
   ember-disable-prototype-extensions: 1.1.3
   ember-error-route: 0.2.0
   ember-event-helpers: 0.1.1
-  ember-exam: 8.0.0_lbln745d2c6liir575g7ycbl3a
+  ember-exam: 8.0.0_hw4gmnmaavatvusbqxof7renqm
   ember-export-application-global: 2.0.1
   ember-fetch: 8.1.2
   ember-keyboard: 8.2.0_@ember+test-helpers@2.8.1
@@ -165,7 +165,7 @@ devDependencies:
   ember-load-initializers: 2.1.2
   ember-modifier: 3.2.7
   ember-page-title: 7.0.0
-  ember-qunit: 5.1.5_m2vpijm5kklvqmlfibufmotnbi
+  ember-qunit: 6.0.0_q2umwxufvnpx3vgxqbnuszsnxm
   ember-resolver: 8.0.3
   ember-router-scroll: 4.1.2
   ember-source: 4.2.0_webpack@5.74.0
@@ -7268,7 +7268,7 @@ packages:
     engines: {node: ^4.5 || 6.* || >= 7.*}
     dev: true
 
-  /ember-cli-mirage/2.4.0_xfm6cbcs2j7mto67kglz26rava:
+  /ember-cli-mirage/2.4.0_ym5xwr6oe3zp2fy3blslt4yihu:
     resolution: {integrity: sha512-cy8B+IZV07V6xgnFzktKUsntTQvIqPSS3u4+XaLdNW91yOowLsN2BsuQldN3eCnwswgE3a9eGNGS4I0BD4llNA==}
     engines: {node: '>= 10.*'}
     peerDependencies:
@@ -7294,7 +7294,7 @@ packages:
       ember-destroyable-polyfill: 2.0.3
       ember-get-config: 2.1.1
       ember-inflector: 4.0.2
-      ember-qunit: 5.1.5_m2vpijm5kklvqmlfibufmotnbi
+      ember-qunit: 6.0.0_q2umwxufvnpx3vgxqbnuszsnxm
       lodash-es: 4.17.21
       miragejs: 0.1.45
     transitivePeerDependencies:
@@ -7780,7 +7780,7 @@ packages:
       - supports-color
     dev: true
 
-  /ember-exam/8.0.0_lbln745d2c6liir575g7ycbl3a:
+  /ember-exam/8.0.0_hw4gmnmaavatvusbqxof7renqm:
     resolution: {integrity: sha512-XKfFC0bpSDSJWFkmrcVxOtjwoVf8sPlMDizhNZF06O/R0UyH9lMOrUT/KWcIZ1vQd4Vqbg9DpakONmOyYQGXhw==}
     engines: {node: 12.* || 14.* || >= 16}
     peerDependencies:
@@ -7802,7 +7802,7 @@ packages:
       ember-auto-import: 2.4.2_webpack@5.74.0
       ember-cli-babel: 7.26.11
       ember-cli-version-checker: 5.1.2
-      ember-qunit: 5.1.5_m2vpijm5kklvqmlfibufmotnbi
+      ember-qunit: 6.0.0_q2umwxufvnpx3vgxqbnuszsnxm
       execa: 4.1.0
       fs-extra: 10.1.0
       js-yaml: 4.1.0
@@ -7965,9 +7965,9 @@ packages:
       - supports-color
     dev: true
 
-  /ember-qunit/5.1.5_m2vpijm5kklvqmlfibufmotnbi:
-    resolution: {integrity: sha512-2cFA4oMygh43RtVcMaBrr086Tpdhgbn3fVZ2awLkzF/rnSN0D0PSRpd7hAD7OdBPerC/ZYRwzVyGXLoW/Zes4A==}
-    engines: {node: 10.* || 12.* || >= 14.*}
+  /ember-qunit/6.0.0_q2umwxufvnpx3vgxqbnuszsnxm:
+    resolution: {integrity: sha512-idNWh9Ap2HN9e3Xozh5Jrciu5tDhn0okM/bgwDjdks3dwuMhEox45iiRTx469FWQ9+ixjZ40AsXsRTDkfCmvmw==}
+    engines: {node: 14.* || 16.* || >= 17}
     peerDependencies:
       '@ember/test-helpers': ^2.4.0
       qunit: ^2.13.0
@@ -7976,17 +7976,16 @@ packages:
       broccoli-funnel: 3.0.8
       broccoli-merge-trees: 3.0.2
       common-tags: 1.8.2
-      ember-auto-import: 1.12.2
+      ember-auto-import: 2.4.2_webpack@5.74.0
       ember-cli-babel: 7.26.11
       ember-cli-test-loader: 3.0.0
       qunit: 2.19.1
-      resolve-package-path: 3.1.0
+      resolve-package-path: 4.0.3
       silent-error: 1.1.1
-      validate-peer-dependencies: 1.2.0
+      validate-peer-dependencies: 2.1.0
     transitivePeerDependencies:
       - supports-color
-      - webpack-cli
-      - webpack-command
+      - webpack
     dev: true
 
   /ember-resolver/8.0.3:
