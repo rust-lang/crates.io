@@ -72,7 +72,7 @@ export default class SessionService extends Service {
     let { url } = await ajax(`/api/private/session/begin`);
     win.location = url;
 
-    let event = await race([waitForEvent(window, 'message'), this.windowCloseWatcherTask.perform(win)]);
+    let event = await race([this.windowEventWatcherTask.perform(), this.windowCloseWatcherTask.perform(win)]);
     if (event.closed) {
       this.notifications.warning('Login was canceled because the popup window was closed.');
       return;
@@ -109,6 +109,10 @@ export default class SessionService extends Service {
     if (transition) {
       transition.retry();
     }
+  });
+
+  windowEventWatcherTask = task(async () => {
+    return await waitForEvent(window, 'message');
   });
 
   windowCloseWatcherTask = task(async window => {
