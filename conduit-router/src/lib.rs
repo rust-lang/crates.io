@@ -49,6 +49,7 @@ impl RouteBuilder {
     }
 
     #[instrument(level = "trace", skip(self))]
+    #[allow(clippy::suspicious_else_formatting)]
     fn recognize<'a>(
         &'a self,
         method: &Method,
@@ -67,17 +68,15 @@ impl RouteBuilder {
         pattern: &'static str,
         handler: H,
     ) -> &mut Self {
-        {
-            let router = match self.routers.entry(method) {
-                Entry::Occupied(e) => e.into_mut(),
-                Entry::Vacant(e) => e.insert(Router::new()),
-            };
-            let wrapped_handler = WrappedHandler {
-                pattern: RoutePattern(pattern),
-                handler: Box::new(handler),
-            };
-            router.add(pattern, wrapped_handler);
-        }
+        let router = match self.routers.entry(method) {
+            Entry::Occupied(e) => e.into_mut(),
+            Entry::Vacant(e) => e.insert(Router::new()),
+        };
+        let wrapped_handler = WrappedHandler {
+            pattern: RoutePattern(pattern),
+            handler: Box::new(handler),
+        };
+        router.add(pattern, wrapped_handler);
         self
     }
 
@@ -126,11 +125,9 @@ impl conduit::Handler for RouteBuilder {
         let pattern = m.handler().pattern;
         debug!(pattern = pattern.0, "matching route handler found");
 
-        {
-            let extensions = request.mut_extensions();
-            extensions.insert(pattern);
-            extensions.insert(params);
-        }
+        let extensions = request.mut_extensions();
+        extensions.insert(pattern);
+        extensions.insert(params);
 
         let span = trace_span!("handler", pattern = pattern.0);
         span.in_scope(|| m.handler().call(request))
