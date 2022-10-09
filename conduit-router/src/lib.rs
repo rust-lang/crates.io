@@ -1,4 +1,5 @@
 #![warn(rust_2018_idioms)]
+#![allow(clippy::suspicious_else_formatting)]
 
 #[macro_use]
 extern crate tracing;
@@ -49,7 +50,6 @@ impl RouteBuilder {
     }
 
     #[instrument(level = "trace", skip(self))]
-    #[allow(clippy::suspicious_else_formatting)]
     fn recognize<'a>(
         &'a self,
         method: &Method,
