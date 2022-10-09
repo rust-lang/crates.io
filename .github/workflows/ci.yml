@@ -9,7 +9,7 @@ on:
 
 env:
   # minimum supported rust version
-  MSRV: 1.49
+  MSRV: 1.56
 
 jobs:
   check:
