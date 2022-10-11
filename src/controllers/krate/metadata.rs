@@ -40,6 +40,7 @@ pub fn summary(req: &mut dyn RequestExt) -> EndpointResult {
         let krates = data.into_iter().map(|(c, _)| c).collect::<Vec<_>>();
 
         let versions: Vec<Version> = krates.versions().load(&*conn)?;
+        let all_versions_yanked = versions.is_empty();
         versions
             .grouped_by(&krates)
             .into_iter()
@@ -53,6 +54,7 @@ pub fn summary(req: &mut dyn RequestExt) -> EndpointResult {
                     None,
                     false,
                     recent_downloads,
+                    all_versions_yanked,
                 ))
             })
             .collect()
@@ -125,6 +127,8 @@ pub fn summary(req: &mut dyn RequestExt) -> EndpointResult {
 
 /// Handles the `GET /crates/:crate_id` route.
 pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
+    use diesel::dsl::exists;
+
     let name = &req.params()["crate_id"];
     let include = req
         .query()
@@ -135,6 +139,14 @@ pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
 
     let conn = req.db_read()?;
     let krate: Crate = Crate::by_name(name).first(&*conn)?;
+
+    let all_versions_yanked = if include.versions {
+        // this query checks if there any non-yanked versions for a crate.
+        // then inverts the result.
+        !diesel::select(exists(krate.versions())).get_result::<bool>(&*conn)?
+    } else {
+        false
+    };
 
     let versions_publishers_and_audit_actions = if include.versions {
         let mut versions_and_publishers: Vec<(Version, Option<User>)> = krate
@@ -193,7 +205,7 @@ pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
         None
     };
 
-    let badges = if include.badges {
+    let badges = if include.badges && !all_versions_yanked {
         Some(
             badges::table
                 .filter(badges::crate_id.eq(krate.id))
@@ -202,7 +214,7 @@ pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
     } else {
         None
     };
-    let top_versions = if include.versions {
+    let top_versions = if include.versions && !all_versions_yanked {
         Some(krate.top_versions(&conn)?)
     } else {
         None
@@ -217,6 +229,7 @@ pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
         badges,
         false,
         recent_downloads,
+        all_versions_yanked,
     );
     let encodable_versions = versions_publishers_and_audit_actions.map(|vpa| {
         vpa.into_iter()

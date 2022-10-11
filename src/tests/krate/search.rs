@@ -517,6 +517,57 @@ fn index_include_yanked() {
 }
 
 #[test]
+fn yanked_crates() {
+    let (app, anon, user) = TestApp::init().with_user();
+    let user = user.as_model();
+
+    app.db(|conn| {
+        //TODO Add badge test case here.
+        CrateBuilder::new("test_all_yanked", user.id)
+            .version(VersionBuilder::new("1.0.0").yanked(true))
+            .version(VersionBuilder::new("2.0.0").yanked(true))
+            .description("yanked crate")
+            .homepage("https://github.com/test/yanked-crate")
+            .documentation("https://yanked-crate.github.io")
+            .expect_build(conn);
+
+        CrateBuilder::new("test_unyanked", user.id)
+            .version(VersionBuilder::new("1.0.0"))
+            .version(VersionBuilder::new("2.0.0"))
+            .description("unyanked crate")
+            .homepage("https://github.com/test/unyanked-crate")
+            .documentation("https://unyanked-crate.github.io")
+            .expect_build(conn);
+    });
+
+    let json = anon.search("q=test");
+    assert_eq!(json.meta.total, 2);
+
+    assert_eq!(json.crates[0].name, "test_all_yanked");
+    assert_eq!(json.crates[0].max_version, "0.0.0");
+    assert_eq!(json.crates[0].badges, None);
+    assert_eq!(json.crates[0].documentation, None);
+    assert_eq!(json.crates[0].homepage, None);
+    assert_eq!(json.crates[0].description, None);
+
+    assert_eq!(json.crates[1].name, "test_unyanked");
+    assert_eq!(json.crates[1].max_version, "2.0.0");
+    assert_eq!(json.crates[1].badges, Some(vec![]));
+    assert_eq!(
+        json.crates[1].documentation,
+        Some("https://unyanked-crate.github.io".to_string())
+    );
+    assert_eq!(
+        json.crates[1].homepage,
+        Some("https://github.com/test/unyanked-crate".to_string())
+    );
+    assert_eq!(
+        json.crates[1].description,
+        Some("unyanked crate".to_string())
+    );
+}
+
+#[test]
 fn yanked_versions_are_not_considered_for_max_version() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();

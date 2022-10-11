@@ -199,6 +199,16 @@ impl<'a> NewCrate<'a> {
 }
 
 impl Crate {
+    pub fn from_yanked(krate: Crate) -> Crate {
+        Crate {
+            description: None,
+            homepage: None,
+            documentation: None,
+            repository: None,
+            ..krate
+        }
+    }
+
     /// SQL filter based on whether the crate's name loosely matches the given
     /// string.
     ///

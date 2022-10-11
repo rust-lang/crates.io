@@ -245,6 +245,7 @@ impl EncodableCrate {
         badges: Option<Vec<Badge>>,
         exact_match: bool,
         recent_downloads: Option<i64>,
+        all_versions_yanked: bool,
     ) -> Self {
         let Crate {
             name,
@@ -256,15 +257,29 @@ impl EncodableCrate {
             documentation,
             repository,
             ..
-        } = krate;
+        } = if all_versions_yanked {
+            Crate::from_yanked(krate)
+        } else {
+            krate
+        };
         let versions_link = match versions {
             Some(..) => None,
             None => Some(format!("/api/v1/crates/{name}/versions")),
         };
         let keyword_ids = keywords.map(|kws| kws.iter().map(|kw| kw.keyword.clone()).collect());
         let category_ids = categories.map(|cats| cats.iter().map(|cat| cat.slug.clone()).collect());
-        let badges = badges.map(|_| vec![]);
         let documentation = Self::remove_blocked_documentation_urls(documentation);
+
+        let badges = if all_versions_yanked {
+            None
+        } else {
+            badges.map(|_| vec![])
+        };
+        let top_versions = if all_versions_yanked {
+            None
+        } else {
+            top_versions
+        };
 
         let max_version = top_versions
             .and_then(|v| v.highest.as_ref())
@@ -316,6 +331,7 @@ impl EncodableCrate {
         badges: Option<Vec<Badge>>,
         exact_match: bool,
         recent_downloads: Option<i64>,
+        all_versions_yanked: bool,
     ) -> Self {
         Self::from(
             krate,
@@ -326,6 +342,7 @@ impl EncodableCrate {
             badges,
             exact_match,
             recent_downloads,
+            all_versions_yanked,
         )
     }
 

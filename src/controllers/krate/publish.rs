@@ -253,7 +253,14 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
         };
 
         Ok(req.json(&GoodCrate {
-            krate: EncodableCrate::from_minimal(krate, Some(&top_versions), None, false, None),
+            krate: EncodableCrate::from_minimal(
+                krate,
+                Some(&top_versions),
+                None,
+                false,
+                None,
+                false,
+            ),
             warnings,
         }))
     })

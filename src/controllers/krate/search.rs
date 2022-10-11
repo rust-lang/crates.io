@@ -313,6 +313,12 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
     let crates = data.into_iter().map(|(c, _, _)| c).collect::<Vec<_>>();
 
     let versions: Vec<Version> = crates.versions().load(&*conn)?;
+    let yanked_crates = versions
+        .clone()
+        .grouped_by(&crates)
+        .into_iter()
+        .map(|v| v.is_empty());
+
     let versions = versions
         .grouped_by(&crates)
         .into_iter()
@@ -331,14 +337,19 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
         .zip(perfect_matches)
         .zip(recent_downloads)
         .zip(badges)
+        .zip(yanked_crates)
         .map(
-            |((((max_version, krate), perfect_match), recent_downloads), badges)| {
+            |(
+                ((((max_version, krate), perfect_match), recent_downloads), badges),
+                all_versions_yanked,
+            )| {
                 EncodableCrate::from_minimal(
                     krate,
                     Some(&max_version),
                     Some(badges),
                     perfect_match,
                     Some(recent_downloads),
+                    all_versions_yanked,
                 )
             },
         )
