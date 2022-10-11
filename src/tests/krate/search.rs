@@ -287,7 +287,7 @@ fn index_sorting() {
 
 #[test]
 #[allow(clippy::cognitive_complexity)]
-fn exact_match_on_queries_with_sort() {
+fn ignore_exact_match_on_queries_with_sort() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
@@ -352,17 +352,17 @@ fn exact_match_on_queries_with_sort() {
             .unwrap();
     });
 
-    // Sort by downloads
+    // Sort by downloads, order always the same no matter the crate name query
     let json = anon.search("q=foo_sort&sort=downloads");
     assert_eq!(json.meta.total, 3);
-    assert_eq!(json.crates[0].name, "foo_sort");
-    assert_eq!(json.crates[1].name, "baz_sort");
-    assert_eq!(json.crates[2].name, "bar_sort");
+    assert_eq!(json.crates[0].name, "baz_sort");
+    assert_eq!(json.crates[1].name, "bar_sort");
+    assert_eq!(json.crates[2].name, "foo_sort");
 
     let json = anon.search("q=bar_sort&sort=downloads");
     assert_eq!(json.meta.total, 3);
-    assert_eq!(json.crates[0].name, "bar_sort");
-    assert_eq!(json.crates[1].name, "baz_sort");
+    assert_eq!(json.crates[0].name, "baz_sort");
+    assert_eq!(json.crates[1].name, "bar_sort");
     assert_eq!(json.crates[2].name, "foo_sort");
 
     let json = anon.search("q=baz_sort&sort=downloads");
@@ -378,12 +378,21 @@ fn exact_match_on_queries_with_sort() {
     assert_eq!(json.crates[2].name, "bar_sort");
     assert_eq!(json.crates[3].name, "foo_sort");
 
-    // Sort by recent-downloads
+    // Sort by recent-downloads, order always the same no matter the crate name query
     let json = anon.search("q=bar_sort&sort=recent-downloads");
     assert_eq!(json.meta.total, 3);
-    assert_eq!(json.crates[0].name, "bar_sort");
-    assert_eq!(json.crates[1].name, "foo_sort");
-    assert_eq!(json.crates[2].name, "baz_sort");
+    assert_eq!(json.crates[0].name, "foo_sort");
+    assert_eq!(json.crates[1].name, "baz_sort");
+    assert_eq!(json.crates[2].name, "bar_sort");
+
+    // Test for bug with showing null results first when sorting
+    // by descending downloads
+    let json = anon.search("sort=recent-downloads");
+    assert_eq!(json.meta.total, 4);
+    assert_eq!(json.crates[0].name, "foo_sort");
+    assert_eq!(json.crates[1].name, "baz_sort");
+    assert_eq!(json.crates[2].name, "bar_sort");
+    assert_eq!(json.crates[3].name, "other_sort");
 
     // Sort by recent-updates
     let json = anon.search("q=bar_sort&sort=recent-updates");
@@ -398,15 +407,6 @@ fn exact_match_on_queries_with_sort() {
     assert_eq!(json.crates[0].name, "bar_sort");
     assert_eq!(json.crates[1].name, "baz_sort");
     assert_eq!(json.crates[2].name, "foo_sort");
-
-    // Test for bug with showing null results first when sorting
-    // by descending downloads
-    let json = anon.search("sort=recent-downloads");
-    assert_eq!(json.meta.total, 4);
-    assert_eq!(json.crates[0].name, "foo_sort");
-    assert_eq!(json.crates[1].name, "baz_sort");
-    assert_eq!(json.crates[2].name, "bar_sort");
-    assert_eq!(json.crates[3].name, "other_sort");
 }
 
 #[test]
