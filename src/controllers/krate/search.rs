@@ -220,16 +220,17 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
         ));
     }
 
+    // Any sort other than 'relevance' (default) would ignore exact crate name matches
     if sort == Some("downloads") {
         // Custom sorting is not supported yet with seek.
         supports_seek = false;
 
-        query = query.then_order_by(crates::downloads.desc())
+        query = query.order(crates::downloads.desc())
     } else if sort == Some("recent-downloads") {
         // Custom sorting is not supported yet with seek.
         supports_seek = false;
 
-        query = query.then_order_by(recent_crate_downloads::downloads.desc().nulls_last())
+        query = query.order(recent_crate_downloads::downloads.desc().nulls_last())
     } else if sort == Some("recent-updates") {
         // Custom sorting is not supported yet with seek.
         supports_seek = false;
