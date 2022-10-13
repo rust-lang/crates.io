@@ -48,10 +48,6 @@ category from existing categories.
 After your PR is accepted, the next time that crates.io is deployed the
 categories will be synced from this file.
 
-## Running a mirror
-
-Please see [docs/MIRROR.md](https://github.com/rust-lang/crates.io/blob/master/docs/MIRROR.md) for instructions on setting up a mirror of crates.io.
-
 ## License
 
 Licensed under either of these:
