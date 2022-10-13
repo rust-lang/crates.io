@@ -14,15 +14,21 @@
 </div>
 
 <p local-class="explainer">
-  You can use the API tokens on this page to run <a href="https://doc.rust-lang.org/cargo/">cargo</a>
+  You can use the API tokens generated on this page to run <a href="https://doc.rust-lang.org/cargo/">cargo</a>
   commands that need write access to crates.io. If you want to publish your own
   crates then this is required.
 </p>
 
 <p local-class="explainer">
-  Run <a href="https://doc.rust-lang.org/cargo/commands/cargo-login.html"><code>cargo login</code></a>
-  on the command line to save the API token that you will use for local
-  development. For CI systems you can use the
+  To prevent keys being silently leaked they are stored on crates.io in hashed form. This means you
+  can only download keys when you first create them. If you have old unused keys you can safely delete
+  them and create a new one.
+</p>
+
+<p local-class="explainer">
+  To use an API token, run <a href="https://doc.rust-lang.org/cargo/commands/cargo-login.html"><code>cargo login</code></a>
+  on the command line and paste the key when prompted. This will save it to a local file (<code>~/.cargo/credentials.toml</code> by default).
+  For CI systems you can use the
   <a href="https://doc.rust-lang.org/cargo/reference/config.html?highlight=CARGO_REGISTRY_TOKEN#credentials"><code>CARGO_REGISTRY_TOKEN</code></a>
   environment variable, but make sure that the token stays secret!
 </p>
