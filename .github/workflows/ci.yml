@@ -33,7 +33,7 @@ jobs:
         with:
           version: ${{ env.PNPM_VERSION }}
 
-      - uses: actions/setup-node@v3.5.0
+      - uses: actions/setup-node@v3.5.1
         with:
           cache: pnpm
           node-version-file: package.json
