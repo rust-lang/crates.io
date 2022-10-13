@@ -1,4 +1,4 @@
-FROM node:16.17.0-alpine
+FROM node:16.17.1-alpine
 
 # Install `pnpm`
 RUN npm install --global pnpm@7.9.0
