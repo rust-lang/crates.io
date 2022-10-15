@@ -73,23 +73,6 @@ pub enum Env {
     Production,
 }
 
-/// Used for setting different values depending on the type of registry this instance is.
-///
-/// `Primary` indicates this instance is a primary registry that is the source of truth for these
-/// crates' information. `ReadOnlyMirror` indicates this instanceis a read-only mirror of crate
-/// information that exists on another instance.
-///
-/// The app's `config.mirror` value is set in *src/bin/server.rs* to `ReadOnlyMirror` if the
-/// `MIRROR` environment variable is set and to `Primary` otherwise.
-///
-/// There may be more ways to run crates.io servers in the future, such as a
-/// mirror that also has private crates that crates.io does not have.
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
-pub enum Replica {
-    Primary,
-    ReadOnlyMirror,
-}
-
 /// Configures routes, sessions, logging, and other middleware.
 ///
 /// Called from *src/bin/server.rs*.
