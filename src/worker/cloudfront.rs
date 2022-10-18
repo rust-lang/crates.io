@@ -16,10 +16,8 @@ pub struct CloudFront {
 impl CloudFront {
     pub fn from_environment() -> Option<Self> {
         let distribution_id = dotenv::var("CLOUDFRONT_DISTRIBUTION").ok()?;
-        let access_key =
-            dotenv::var("CLOUDFRONT_ACCESS_KEY").expect("missing CLOUDFRONT_ACCESS_KEY");
-        let secret_key =
-            dotenv::var("CLOUDFRONT_SECRET_KEY").expect("missing CLOUDFRONT_SECRET_KEY");
+        let access_key = dotenv::var("AWS_ACCESS_KEY").expect("missing AWS_ACCESS_KEY");
+        let secret_key = dotenv::var("AWS_SECRET_KEY").expect("missing AWS_SECRET_KEY");
         Some(Self {
             distribution_id,
             access_key,
