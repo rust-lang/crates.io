@@ -5,8 +5,8 @@
 //! - `S3_BUCKET`: The S3 bucket used to store crate files. If not present during development,
 //!    cargo_registry will fall back to a local uploader.
 //! - `S3_REGION`: The region in which the bucket was created. Optional if US standard.
-//! - `S3_ACCESS_KEY`: The access key to interact with S3. Optional if running a mirror.
-//! - `S3_SECRET_KEY`: The secret key to interact with S3. Optional if running a mirror.
+//! - `AWS_ACCESS_KEY`: The access key to interact with S3. Optional if running a mirror.
+//! - `AWS_SECRET_KEY`: The secret key to interact with S3. Optional if running a mirror.
 //! - `S3_CDN`: Optional CDN configuration for building public facing URLs.
 
 use crate::{env, uploaders::Uploader, Env, Replica};
@@ -77,8 +77,8 @@ impl Base {
             bucket: Box::new(s3::Bucket::new(
                 String::from("alexcrichton-test"),
                 None,
-                dotenv::var("S3_ACCESS_KEY").unwrap_or_default(),
-                dotenv::var("S3_SECRET_KEY").unwrap_or_default(),
+                dotenv::var("AWS_ACCESS_KEY").unwrap_or_default(),
+                dotenv::var("AWS_SECRET_KEY").unwrap_or_default(),
                 // When testing we route all API traffic over HTTP so we can
                 // sniff/record it, but everywhere else we use https
                 "http",
@@ -86,8 +86,8 @@ impl Base {
             index_bucket: Some(Box::new(s3::Bucket::new(
                 String::from("alexcrichton-test"),
                 None,
-                dotenv::var("S3_INDEX_ACCESS_KEY").unwrap_or_default(),
-                dotenv::var("S3_INDEX_SECRET_KEY").unwrap_or_default(),
+                dotenv::var("AWS_ACCESS_KEY").unwrap_or_default(),
+                dotenv::var("AWS_SECRET_KEY").unwrap_or_default(),
                 // When testing we route all API traffic over HTTP so we can
                 // sniff/record it, but everywhere else we use https
                 "http",
@@ -109,8 +109,8 @@ impl Base {
             Ok(name) => Some(Box::new(s3::Bucket::new(
                 name,
                 dotenv::var("S3_INDEX_REGION").ok(),
-                env("S3_INDEX_ACCESS_KEY"),
-                env("S3_INDEX_SECRET_KEY"),
+                env("AWS_ACCESS_KEY"),
+                env("AWS_SECRET_KEY"),
                 "https",
             ))),
             Err(_) => None,
@@ -119,8 +119,8 @@ impl Base {
             bucket: Box::new(s3::Bucket::new(
                 env("S3_BUCKET"),
                 dotenv::var("S3_REGION").ok(),
-                env("S3_ACCESS_KEY"),
-                env("S3_SECRET_KEY"),
+                env("AWS_ACCESS_KEY"),
+                env("AWS_SECRET_KEY"),
                 "https",
             )),
             index_bucket,
@@ -133,8 +133,8 @@ impl Base {
             Ok(name) => Some(Box::new(s3::Bucket::new(
                 name,
                 dotenv::var("S3_INDEX_REGION").ok(),
-                dotenv::var("S3_INDEX_ACCESS_KEY").unwrap_or_default(),
-                dotenv::var("S3_INDEX_SECRET_KEY").unwrap_or_default(),
+                dotenv::var("AWS_ACCESS_KEY").unwrap_or_default(),
+                dotenv::var("AWS_SECRET_KEY").unwrap_or_default(),
                 "https",
             ))),
             Err(_) => None,
@@ -143,8 +143,8 @@ impl Base {
             bucket: Box::new(s3::Bucket::new(
                 env("S3_BUCKET"),
                 dotenv::var("S3_REGION").ok(),
-                dotenv::var("S3_ACCESS_KEY").unwrap_or_default(),
-                dotenv::var("S3_SECRET_KEY").unwrap_or_default(),
+                dotenv::var("AWS_ACCESS_KEY").unwrap_or_default(),
+                dotenv::var("AWS_SECRET_KEY").unwrap_or_default(),
                 "https",
             )),
             index_bucket,
