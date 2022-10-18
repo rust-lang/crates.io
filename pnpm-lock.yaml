@@ -67,7 +67,7 @@ specifiers:
   ember-router-scroll: 4.1.2
   ember-source: 4.8.0
   ember-svg-jar: 2.4.0
-  ember-template-lint: 4.16.0
+  ember-template-lint: 4.16.1
   ember-test-selectors: 6.0.0
   ember-tooltips: 3.6.0
   ember-truth-helpers: 3.1.1
@@ -170,7 +170,7 @@ devDependencies:
   ember-router-scroll: 4.1.2
   ember-source: 4.8.0_gsocywzcpltb62s22lnmo6ims4
   ember-svg-jar: 2.4.0
-  ember-template-lint: 4.16.0_ember-cli-htmlbars@6.1.1
+  ember-template-lint: 4.16.1_ember-cli-htmlbars@6.1.1
   ember-test-selectors: 6.0.0
   ember-tooltips: 3.6.0
   ember-truth-helpers: 3.1.1
@@ -8083,8 +8083,8 @@ packages:
       - supports-color
     dev: true
 
-  /ember-template-lint/4.16.0_ember-cli-htmlbars@6.1.1:
-    resolution: {integrity: sha512-nxUORaVKsEADA7CmZmHCFsZ/BJIS1C7rNUwAWyBHhNhIivN0yGHw9woUCcBIbIWGEmdLGwTS69gXXM+SZqp4kA==}
+  /ember-template-lint/4.16.1_ember-cli-htmlbars@6.1.1:
+    resolution: {integrity: sha512-60bWhXYh0aalnd0ogR0RL5bKsNKvJoS4b5KC6cBUj556UMruNh5YBAi/GcBcc0COxP+tThaGC0g/kIqNL03wIg==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     hasBin: true
     dependencies:
