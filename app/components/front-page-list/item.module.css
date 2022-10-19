@@ -12,7 +12,7 @@
     text-decoration: none;
     border-radius: 5px;
     box-shadow: var(--shadow);
-    transition: background-color 300ms;
+    transition: background-color var(--transition-slow);
 
     &:focus-visible {
         outline: none;
@@ -22,7 +22,7 @@
     &:hover, &:focus-visible {
         color: #525252;
         background-color: hsl(58deg 72% 97%);
-        transition: background-color 0ms;
+        transition: background-color var(--transition-instant);
     }
 
     &:active {

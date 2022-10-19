@@ -102,7 +102,7 @@
     margin-top: -3px;
     margin-left: 10px;
     opacity: 0;
-    transition: opacity 100ms;
+    transition: opacity var(--transition-fast);
 
     .copy-button:hover & {
         opacity: 1;

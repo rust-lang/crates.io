@@ -64,13 +64,13 @@
         font-size: 16px;
         line-height: 16px;
         white-space: nowrap;
-        transition: 300ms;
+        transition: var(--transition-medium);
 
         &:hover {
             color: var(--footer-link-hover-color);
             text-shadow: 1px 1px 1px var(--footer-link-hover-shadow-color);
             /* apply color fade only on mouse-out */
-            transition: 0s;
+            transition: var(--transition-instant);
 
             svg {
                 filter: drop-shadow(1px 1px 1px var(--footer-link-hover-shadow-color));

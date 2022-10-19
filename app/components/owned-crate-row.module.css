@@ -6,7 +6,7 @@
     padding: 20px 30px;
     font-weight: bold;
     cursor: pointer;
-    transition: color 200ms ease-in;
+    transition: color var(--transition-medium) ease-in;
 
     &.checked {
         background-color: var(--main-bg-dark);
