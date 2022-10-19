@@ -1,7 +1,6 @@
 //! Base configuration options
 //!
 //! - `HEROKU`: Is this instance of cargo_registry currently running on Heroku.
-//! - `MIRROR`: (deprecated) Is this instance of cargo_registry a mirror of crates.io.
 //! - `S3_BUCKET`: The S3 bucket used to store crate files. If not present during development,
 //!    cargo_registry will fall back to a local uploader.
 //! - `S3_REGION`: The region in which the bucket was created. Optional if US standard.
@@ -9,7 +8,7 @@
 //! - `AWS_SECRET_KEY`: The secret key to interact with S3. Optional if running a mirror.
 //! - `S3_CDN`: Optional CDN configuration for building public facing URLs.
 
-use crate::{env, uploaders::Uploader, Env, Replica};
+use crate::{env, uploaders::Uploader, Env};
 
 pub struct Base {
     pub env: Env,
@@ -18,11 +17,6 @@ pub struct Base {
 
 impl Base {
     pub fn from_environment() -> Self {
-        let mirror = if dotenv::var("MIRROR").is_ok() {
-            Replica::ReadOnlyMirror
-        } else {
-            Replica::Primary
-        };
         let heroku = dotenv::var("HEROKU").is_ok();
         let env = if heroku {
             Env::Production
@@ -30,23 +24,12 @@ impl Base {
             Env::Development
         };
 
-        let uploader = match (env, mirror) {
-            (Env::Production, Replica::Primary) => {
+        let uploader = match env {
+            Env::Production => {
                 // `env` panics if these vars are not set, and in production for a primary instance,
                 // that's what we want since we don't want to be able to start the server if the
                 // server doesn't know where to upload crates.
                 Self::s3_panic_if_missing_keys()
-            }
-            (Env::Production, Replica::ReadOnlyMirror) => {
-                // Read-only mirrors don't need access key or secret key since by definition,
-                // they'll only need to read from a bucket, not upload.
-                //
-                // Read-only mirrors might have access key or secret key, so use them if those
-                // environment variables are set.
-                //
-                // Read-only mirrors definitely need bucket though, so that they know where
-                // to serve crate files from.
-                Self::s3_maybe_read_only()
             }
             // In Development mode, either running as a primary instance or a read-only mirror
             _ => {
