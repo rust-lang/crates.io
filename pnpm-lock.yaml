@@ -32,7 +32,7 @@ specifiers:
   date-fns: 2.29.3
   ember-a11y-testing: 5.0.0
   ember-auto-import: 2.4.3
-  ember-cli: 4.7.0
+  ember-cli: 4.8.0
   ember-cli-app-version: 5.0.0
   ember-cli-babel: 7.26.11
   ember-cli-bundle-analyzer: 0.2.2
@@ -135,12 +135,12 @@ devDependencies:
   broccoli-asset-rev: 3.0.0
   ember-a11y-testing: 5.0.0_ftw4mxvf7ajeaaqqi4c4fr6hay
   ember-auto-import: 2.4.3_webpack@5.74.0
-  ember-cli: 4.7.0
+  ember-cli: 4.8.0
   ember-cli-app-version: 5.0.0
   ember-cli-babel: 7.26.11
   ember-cli-bundle-analyzer: 0.2.2
   ember-cli-code-coverage: 1.0.3
-  ember-cli-dependency-checker: 3.3.1_ember-cli@4.7.0
+  ember-cli-dependency-checker: 3.3.1_ember-cli@4.8.0
   ember-cli-dependency-lint: 2.0.1
   ember-cli-deprecation-workflow: 2.1.0
   ember-cli-fastboot: 3.3.2
@@ -3035,7 +3035,7 @@ packages:
   /@types/glob/8.0.0:
     resolution: {integrity: sha512-l6NQsDDyQUVeoTynNpC9uRvCUint/gSUXQA2euwmTuWGvPY5LSDUu6tkCtJB2SvGQlJQzLaKqcGZP4//7EDveA==}
     dependencies:
-      '@types/minimatch': 3.0.5
+      '@types/minimatch': 5.1.2
       '@types/node': 18.11.0
 
   /@types/htmlbars-inline-precompile/3.0.0:
@@ -3060,7 +3060,6 @@ packages:
 
   /@types/minimatch/5.1.2:
     resolution: {integrity: sha512-K0VQKziLUWkVKiRVrx4a40iPaxTUefQmjtkQofBkYRcoaaL/8rhwDWww9qWbrgicNOgnpIsMxyNIUM4+n6dUIA==}
-    dev: true
 
   /@types/node/18.11.0:
     resolution: {integrity: sha512-IOXCvVRToe7e0ny7HpT/X9Rb2RYtElG1a+VshjwT00HxrM2dWBApHQoqsI6WiY7Q03vdf2bCrIGzVrkF/5t10w==}
@@ -7084,14 +7083,14 @@ packages:
       - supports-color
     dev: true
 
-  /ember-cli-dependency-checker/3.3.1_ember-cli@4.7.0:
+  /ember-cli-dependency-checker/3.3.1_ember-cli@4.8.0:
     resolution: {integrity: sha512-Tg6OeijjXNKWkDm6057Tr0N9j9Vlz/ITewXWpn1A/+Wbt3EowBx5ZKfvoupqz05EznKgL1B/ecG0t+JN7Qm6MA==}
     engines: {node: '>= 6'}
     peerDependencies:
       ember-cli: ^3.2.0 || ^4.0.0
     dependencies:
       chalk: 2.4.2
-      ember-cli: 4.7.0
+      ember-cli: 4.8.0
       find-yarn-workspace-root: 1.2.1
       is-git-url: 1.0.0
       resolve: 1.22.1
@@ -7451,8 +7450,8 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /ember-cli/4.7.0:
-    resolution: {integrity: sha512-OJApGmIFBqzIYLQ6Qmp7BdJZxtNExkp2oUaAoFJhu9Z5VAVnORFiPOR+bQkR50SNVusHTvlR4zC7mMLrNTy+XQ==}
+  /ember-cli/4.8.0:
+    resolution: {integrity: sha512-NiLCOd+/ckgJvH/DzV5aWUPfGHm3LomktonXQVsFkdbfs4YF/+RHBkqwGuEH73RcOLmTRDj6YWVMOTDjWvXT/Q==}
     engines: {node: '>= 14'}
     hasBin: true
     dependencies:
@@ -7516,7 +7515,7 @@ packages:
       is-git-url: 1.0.0
       is-language-code: 3.1.0
       isbinaryfile: 5.0.0
-      js-yaml: 3.14.1
+      js-yaml: 4.1.0
       leek: 0.0.24
       lodash.template: 4.5.0
       markdown-it: 13.0.1
@@ -7544,7 +7543,7 @@ packages:
       tiny-lr: 2.0.0
       tree-sync: 2.1.0
       uuid: 8.3.2
-      walk-sync: 2.2.0
+      walk-sync: 3.0.0
       watch-detector: 1.0.2
       workerpool: 6.2.1
       yam: 1.0.0
