@@ -66,7 +66,7 @@ specifiers:
   ember-resolver: 8.0.3
   ember-router-scroll: 4.1.2
   ember-source: 4.8.0
-  ember-svg-jar: 2.4.0
+  ember-svg-jar: 2.4.1
   ember-template-lint: 4.16.1
   ember-test-selectors: 6.0.0
   ember-tooltips: 3.6.0
@@ -169,7 +169,7 @@ devDependencies:
   ember-resolver: 8.0.3
   ember-router-scroll: 4.1.2
   ember-source: 4.8.0_gsocywzcpltb62s22lnmo6ims4
-  ember-svg-jar: 2.4.0
+  ember-svg-jar: 2.4.1
   ember-template-lint: 4.16.1_ember-cli-htmlbars@6.1.1
   ember-test-selectors: 6.0.0
   ember-tooltips: 3.6.0
@@ -8040,8 +8040,8 @@ packages:
       - supports-color
       - webpack
 
-  /ember-svg-jar/2.4.0:
-    resolution: {integrity: sha512-bkQc1jweoS4sqpx+jaqsZWmY/tFbjq5C5gX93IsZ9lE/sDA5qypvGbXmze9VIQuhIT4viT3T39q1mFoevaW2xw==}
+  /ember-svg-jar/2.4.1:
+    resolution: {integrity: sha512-zs5SUUOG/K/PvFIjzG7Rr2HT5go1IPC+TvOdwF/MsguDPREPoVUZMSPEAln/6q8OG8A+3DK/hHk2Q4Ot3KyDBg==}
     engines: {node: 12.* || 14.* || >= 16}
     dependencies:
       broccoli-caching-writer: 3.0.3
