@@ -7,7 +7,6 @@
     background-color: white;
     border-radius: 5px;
     box-shadow: var(--shadow);
-    transition: all 300ms;
 }
 
 .description-box {
@@ -35,16 +34,16 @@
     color: var(--main-color);
     cursor: pointer;
     opacity: 0;
-    transition: 250ms;
+    transition: var(--transition-medium);
 
     .crate-row:hover & {
         opacity: .8;
-        transition: 0s;
+        transition: var(--transition-instant);
     }
 
     .crate-row:hover &:hover, &:focus {
         opacity: 1;
-        transition: 0s;
+        transition: var(--transition-instant);
     }
 
     svg {

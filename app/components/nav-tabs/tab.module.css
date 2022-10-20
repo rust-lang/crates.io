@@ -9,7 +9,7 @@
     border-top-right-radius: var(--nav-tabs-radius);
     border-bottom: var(--nav-tabs-border-width) solid transparent;
     margin-bottom: calc(0px - var(--nav-tabs-border-width));
-    transition: color 300ms, border-bottom-color 300ms;
+    transition: color var(--transition-medium), border-bottom-color var(--transition-medium);
 
     &.active {
         color: var(--link-hover-color);
@@ -20,7 +20,7 @@
     &:hover {
         color: var(--link-hover-color);
         border-bottom-color: var(--link-hover-color);
-        transition: color 0s, border-bottom-color 0s;
+        transition: color var(--transition-instant), border-bottom-color var(--transition-instant);
     }
 
     &:focus-visible {
@@ -28,7 +28,7 @@
         margin: -3px;
         border: 3px solid var(--yellow500);
         position: relative;
-        transition: border-bottom-color 0s;
+        transition: border-bottom-color var(--transition-instant);
         z-index: 1;
     }
 

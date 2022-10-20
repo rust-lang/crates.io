@@ -3,7 +3,7 @@
     padding: 10px 12px;
     border-radius: 6px;
     color: var(--main-color-light);
-    transition: all 300ms ease-in;
+    transition: all var(--transition-medium) ease-in;
 
     &:hover {
         background-color: var(--main-bg-dark);

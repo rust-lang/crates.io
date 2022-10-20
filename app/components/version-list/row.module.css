@@ -12,11 +12,11 @@
     background-color: white;
     border-radius: 5px;
     box-shadow: var(--shadow);
-    transition: all 300ms;
+    transition: all var(--transition-slow);
 
     &:hover, &.focused {
         background-color: var(--hover-bg-color);
-        transition: all 0ms;
+        transition: all var(--transition-instant);
     }
 
     &.focused {
@@ -76,7 +76,7 @@
     background-color: var(--bg-color);
     border: 1px solid white;
     border-radius: 50%;
-    transition: all 150ms;
+    transition: all var(--transition-fast);
 
     > svg {
         height: 1em;

@@ -23,6 +23,13 @@
 
     --header-bg-color: hsl(115, 31%, 23%);
 
+    --transition-x-slow: 1000ms;
+    --transition-slow: 500ms;
+    --transition-medium: 250ms;
+    --transition-fast: 150ms;
+    --transition-x-fast: 50ms;
+    --transition-instant: 0ms;
+
     --font-sans: "Fira Sans", sans-serif;
     --font-monospace: "Fira Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
         "Courier New", monospace;
