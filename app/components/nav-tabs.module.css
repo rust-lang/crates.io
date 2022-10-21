@@ -1,8 +1,8 @@
 .list {
     --nav-tabs-border-width: 2px;
-    --nav-tabs-padding-h: 20px;
-    --nav-tabs-padding-v: 12px;
-    --nav-tabs-radius: 5px;
+    --nav-tabs-padding-h: var(--space-s);
+    --nav-tabs-padding-v: var(--space-2xs);
+    --nav-tabs-radius: var(--space-3xs);
 
     display: flex;
     list-style: none;
