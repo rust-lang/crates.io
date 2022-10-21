@@ -6,26 +6,26 @@
 }
 
 .value {
-    font-size: 30px;
+    font-size: var(--space-m-l);
     font-weight: bold;
-    line-height: 30px;
+    line-height: 1em;
 }
 
 .label {
     grid-column: 1;
     grid-row: 2;
     color: #76838a;
-    font-size: 16px;
+    font-size: var(--space-s);
     font-weight: normal;
-    line-height: 27px;
+    line-height: 1.6;
 }
 
 .icon {
     grid-column: 2;
     grid-row: 1 / 3;
-    width: 40px;
-    height: 40px;
-    margin-left: 16px;
-    margin-top: 4px;
+    width: var(--space-l-xl);
+    height: var(--space-l-xl);
+    margin-left: var(--space-s);
+    margin-top: var(--space-3xs);
     color: #76838a;
 }
