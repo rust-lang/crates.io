@@ -30,7 +30,8 @@
     --transition-x-fast: 50ms;
     --transition-instant: 0ms;
 
-    --font-sans: "Fira Sans", sans-serif;
+    --font-heading: "Fira Sans", sans-serif;
+    --font-body: var(--font-heading);
     --font-monospace: "Fira Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
         "Courier New", monospace;
 
@@ -62,11 +63,15 @@ html, body {
 
 body {
     background-color: var(--header-bg-color);
-    font-family: var(--font-sans);
+    font-family: var(--font-body);
     font-size: 16px;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+}
+
+h1, h2, h3, h4 {
+    font-family: var(--font-heading);
 }
 
 h1 {
