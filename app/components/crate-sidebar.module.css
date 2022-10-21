@@ -1,28 +1,9 @@
 .sidebar {
-    .top, .bottom {
-        display: flex;
+    display: flex;
+    flex-direction: column;
 
-        > * + * {
-            margin-top: var(--space-m);
-        }
-    }
-
-    .bottom {
+    > * + * {
         margin-top: var(--space-m);
-    }
-
-    .top > * { flex: 1 }
-
-    @media only screen and (min-width: 890px) {
-        .top, .bottom {
-            flex-direction: column;
-        }
-    }
-
-    @media only screen and (max-width: 890px) {
-        .top, .bottom {
-            flex-direction: column;
-        }
     }
 }
 
