@@ -25,15 +25,6 @@
     }
 }
 
-.about {
-    line-height: 180%;
-    margin-bottom: 40px;
-
-    > h3 {
-        margin-top: 0;
-    }
-}
-
 .no-readme {
     padding: 40px 15px;
     text-align: center;
