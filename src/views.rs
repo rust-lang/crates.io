@@ -503,6 +503,7 @@ pub struct EncodablePrivateUser {
     pub email: Option<String>,
     pub avatar: Option<String>,
     pub url: Option<String>,
+    pub admin: bool,
 }
 
 impl EncodablePrivateUser {
@@ -513,6 +514,7 @@ impl EncodablePrivateUser {
         email_verified: bool,
         email_verification_sent: bool,
     ) -> Self {
+        let admin = user.admin().is_ok();
         let User {
             id,
             name,
@@ -531,6 +533,7 @@ impl EncodablePrivateUser {
             login: gh_login,
             name,
             url: Some(url),
+            admin,
         }
     }
 }

@@ -4,7 +4,7 @@ use conduit_cookie::RequestSession;
 use super::prelude::*;
 
 use crate::middleware::log_request;
-use crate::models::{ApiToken, User};
+use crate::models::{AdminUser, ApiToken, User};
 use crate::util::errors::{
     account_locked, forbidden, internal, AppError, AppResult, InsecurelyGeneratedTokenRevoked,
 };
@@ -26,6 +26,10 @@ impl AuthenticatedUser {
 
     pub fn user(self) -> User {
         self.user
+    }
+
+    pub fn admin_user(self) -> AppResult<AdminUser> {
+        AdminUser::new(&self.user)
     }
 
     /// Disallows token authenticated users

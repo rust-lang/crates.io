@@ -117,6 +117,7 @@ fn me() {
     let user = app.db_new_user("foo");
     let json = user.show_me();
 
+    assert!(!json.user.admin);
     assert_eq!(json.owned_crates.len(), 0);
 
     app.db(|conn| {
@@ -126,6 +127,11 @@ fn me() {
     let updated_json = user.show_me();
 
     assert_eq!(updated_json.owned_crates.len(), 1);
+
+    let admin_user = app.db_new_user("carols10cents");
+    let admin_json = admin_user.show_me();
+
+    assert!(admin_json.user.admin);
 }
 
 #[test]
