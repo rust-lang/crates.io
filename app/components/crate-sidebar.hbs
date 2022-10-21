@@ -56,7 +56,7 @@
       {{/if}}
     </div>
 
-    <div>
+    <div local-class="links">
       {{#if this.showHomepage}}
         <CrateSidebar::Link
           @title="Homepage"
@@ -101,29 +101,29 @@
         </div>
       {{/if}}
     {{/unless}}
+
+    {{#if this.playgroundLink}}
+      <div>
+        <a
+          href={{this.playgroundLink}}
+          target="_blank"
+          rel="noopener noreferrer"
+          local-class="playground-button"
+          data-test-playground-button
+        >
+          Try on Rust Playground
+
+          {{#if this.canHover}}
+            <EmberTooltip @text="The top 100 crates are available on the Rust Playground for you to try out directly in your browser." />
+          {{/if}}
+        </a>
+        {{#unless this.canHover}}
+          <p local-class="playground-help" data-test-playground-help>
+            The top 100 crates are available on the Rust Playground for you to
+            try out directly in your browser.
+          </p>
+        {{/unless}}
+      </div>
+    {{/if}}
   </div>
-
-  {{#if this.playgroundLink}}
-    <div>
-      <a
-        href={{this.playgroundLink}}
-        target="_blank"
-        rel="noopener noreferrer"
-        local-class="playground-button"
-        data-test-playground-button
-      >
-        Try on Rust Playground
-
-        {{#if this.canHover}}
-          <EmberTooltip @text="The top 100 crates are available on the Rust Playground for you to try out directly in your browser." />
-        {{/if}}
-      </a>
-      {{#unless this.canHover}}
-        <p local-class="playground-help" data-test-playground-help>
-          The top 100 crates are available on the Rust Playground for you to
-          try out directly in your browser.
-        </p>
-      {{/unless}}
-    </div>
-  {{/if}}
 </section>
