@@ -110,11 +110,6 @@
     opacity: 0.5;
 }
 
-.doc-links {
-    left: auto;
-    min-width: 150px;
-}
-
 .nav {
     grid-area: nav;
     display: flex;
