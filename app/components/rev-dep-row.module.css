@@ -6,9 +6,9 @@
 
     position: relative;
     font-size: 18px;
-    padding: 15px 25px;
+    padding: var(--space-s) var(--space-m);
     background-color: white;
-    border-radius: 5px;
+    border-radius: var(--space-3xs);
     box-shadow: var(--shadow);
     transition: all var(--transition-slow);
 
@@ -41,7 +41,7 @@
 .link {
     color: var(--crate-color);
     font-weight: 500;
-    margin-right: 15px;
+    margin-right: var(--space-s);
     outline: none;
 
     &:hover {
@@ -74,7 +74,7 @@
     font-variant: tabular-nums;
 
     @media only screen and (max-width: 550px) {
-        margin-top: 10px;
+        margin-top: var(--space-xs);
     }
 }
 
@@ -86,14 +86,19 @@
 }
 
 .description {
-    margin-top: 10px;
+    margin-top: var(--space-2xs);
     color: var(--crate-color);
     font-size: 90%;
+    line-height: 1.5;
+
+    @media only screen and (max-width: 550px) {
+        margin-top: var(--space-xs);
+    }
 }
 
 .description-placeholder {
     height: 1em;
     width: 70%;
-    border-radius: 5px;
+    border-radius: var(--space-3xs);
     opacity: var(--placeholder-opacity);
 }
