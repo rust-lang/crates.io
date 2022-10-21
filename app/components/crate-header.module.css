@@ -1,13 +1,8 @@
-.header {
-    padding-top: 30px;
-    padding-bottom: 30px;
-}
-
 .heading {
     display: flex;
     align-items: baseline;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: var(--space-xs);
     margin: 0;
     padding: 0;
     word-break: break-word;
@@ -18,20 +13,20 @@
 }
 
 .description {
-    margin-top: 15px;
+    margin-top: var(--space-xs);
     line-height: 1.35;
 }
 
 .keywords {
     list-style: none;
-    margin: 10px 0 0;
+    margin: var(--space-xs) 0 0;
     padding: 0;
 
-    > li {
+    > * {
         display: inline;
 
-        &:not(:last-child) {
-            margin-right: 15px;
+        + * {
+            margin-left: var(--space-s);
         }
     }
 }
@@ -43,13 +38,12 @@
 }
 
 .follow-button {
-    margin-top: 15px;
+    margin-top: var(--space-s);
 }
 
 .nav {
-    margin-bottom: 20px;
+    margin-bottom: var(--space-s);
 }
-
 
 @media only screen and (min-width: 751px) {
     .header {
@@ -58,7 +52,7 @@
     }
 
     .follow-button {
-        margin: -10px -10px 0 10px;
+        margin: -10px -10px 0 var(--space-s);
         grid-column: 2;
         grid-row: 1;
     }
