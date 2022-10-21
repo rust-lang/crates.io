@@ -8,10 +8,10 @@
 .docs {
     --shadow: 0 2px 3px hsla(51, 50%, 44%, .35);
 
-    margin-bottom: 25px;
-    padding: 25px;
+    margin-bottom: var(--space-l);
+    padding: var(--space-m) var(--space-l);
     background-color: white;
-    border-radius: 5px;
+    border-radius: var(--space-3xs);
     box-shadow: var(--shadow);
 
     @media only screen and (max-width: 550px) {
@@ -26,11 +26,12 @@
 }
 
 .no-readme {
-    padding: 40px 15px;
+    padding: var(--space-l) var(--space-s);
     text-align: center;
     font-size: 20px;
     font-weight: 300;
     overflow-wrap: break-word;
+    line-height: 1.5;
 
     code {
         font-size: 18px;
@@ -41,38 +42,38 @@
 .placeholder-title {
     width: 30%;
     height: 25px;
-    margin: 15px 0 25px;
-    border-radius: 5px;
+    margin: var(--space-s) 0 var(--space-m);
+    border-radius: var(--space-3xs);
     opacity: 0.6;
 }
 
 .placeholder-subtitle {
     width: 50%;
     height: 20px;
-    margin: 35px 0 25px;
-    border-radius: 5px;
+    margin: var(--space-l) 0 var(--space-m);
+    border-radius: var(--space-3xs);
     opacity: 0.6;
 }
 
 .placeholder-text {
     width: 100%;
     height: 16px;
-    margin-top: 15px;
-    border-radius: 5px;
+    margin-top: var(--space-xs);
+    border-radius: var(--space-3xs);
     opacity: 0.3;
 }
 
 .sidebar {
     @media only screen and (min-width: 890px) {
-        margin-top: 20px;
-        margin-left: 20px;
+        margin-top: var(--space-m);
+        margin-left: var(--space-m);
     }
 }
 
 .crate-downloads {
     display: flex;
     flex-wrap: wrap;
-    margin-top: 25px;
+    margin-top: var(--space-l);
     border-top: 5px solid var(--gray-border);
 
     h3 { width: 100%; }
@@ -86,7 +87,7 @@
 
 .stat {
     border-left: 1px solid var(--gray-border);
-    padding: 10px 20px;
+    padding: var(--space-s) var(--space-m);
     display: flex;
     flex-wrap: wrap;
     flex-direction: column;
@@ -95,7 +96,7 @@
     .num {
         font-size: 160%;
         font-weight: bold;
-        margin-bottom: 4px;
+        margin-bottom: var(--space-3xs);
     }
 
     .num__align {
@@ -111,8 +112,7 @@
 .graph {
     flex-grow: 10;
     width: 100%;
-    margin: 30px 0;
-    padding-bottom: 20px;
+    margin: var(--space-xs) 0 var(--space-m);
 
     h4 {
         color: var(--main-color-light);
@@ -139,12 +139,12 @@
         padding: 10px;
         border: none;
         border-radius: 5px;
-    
+
         .trigger-label {
             min-width: 65px;
         }
     }
-    
+
     .dropdown-button {
         background: none;
         border: 0;
