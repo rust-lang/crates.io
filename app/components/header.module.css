@@ -76,11 +76,7 @@
 
     .hero & {
         justify-self: center;
-        padding: 40px 0 60px;
-
-        @media only screen and (max-width: 450px) {
-            padding: 40px 0 30px;
-        }
+        padding: var(--space-l) 0 var(--space-l-xl);
     }
 }
 
