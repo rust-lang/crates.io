@@ -1,6 +1,6 @@
 .page {
     display: grid;
-    gap: 16px;
+    gap: var(--space-s);
 
     @media (--min-m) {
         grid-template:
@@ -11,6 +11,6 @@
 
 .content {
     h2:first-child {
-        margin-top: 4px;
+        margin-top: var(--space-3xs);
     }
 }
