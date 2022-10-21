@@ -6,5 +6,5 @@
     border: 1px solid var(--gray-border);
     list-style: none;
     overflow: hidden;
-    border-radius: 5px;
+    border-radius: var(--space-3xs);
 }

@@ -5,7 +5,7 @@
     cursor: pointer;
 
     .arrow {
-        margin-left: 0.6em;
+        margin-left: var(--space-2xs);
         font-size: 50%;
         display: inline-block;
         vertical-align: middle;
