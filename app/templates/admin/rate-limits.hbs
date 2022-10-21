@@ -1,0 +1,18 @@
+{{page-title 'Admin Actions'}}
+
+<PageHeader @title="Admin Actions" data-test-heading />
+
+<div local-class="page" ...attributes>
+  <SideMenu as |menu|>
+    <menu.Item @link={{link "admin.rate-limits"}}>Increase Rate Limit</menu.Item>
+    <menu.Item>More actions coming soon</menu.Item>
+  </SideMenu>
+
+  <div local-class="content">
+    <div local-class='rate-limit'>
+      <h2>Increase Rate Limit</h2>
+      <label>email address:</label>
+    </div>
+  </div>
+
+</div>

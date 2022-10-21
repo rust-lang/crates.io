@@ -30,6 +30,9 @@ Router.map(function () {
     this.route('following');
     this.route('pending-invites');
   });
+  this.route('admin', function () {
+    this.route('rate-limits');
+  });
   this.route('settings', function () {
     this.route('appearance');
     this.route('email-notifications');
