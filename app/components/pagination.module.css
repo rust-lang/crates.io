@@ -1,18 +1,22 @@
 .pagination {
-    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 90%;
-    margin-bottom: 20px;
+    margin-bottom: var(--space-xs);
 
     ol {
         list-style: none;
         padding: 0;
+        margin: 0;
     }
-    ol, li { display: inline; }
+    ol, li { display: inline-block; }
 
     a {
         color: var(--main-color-light);
         text-decoration: none;
-        padding: 5px 6px;
+        padding: var(--space-3xs) var(--space-2xs);
+        border-radius: var(--space-3xs);
     }
     a:hover { background-color: var(--main-bg-dark); }
     a:global(.active) { background-color: var(--main-bg-dark); }
