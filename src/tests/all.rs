@@ -28,6 +28,7 @@ use std::{
 use diesel::prelude::*;
 
 mod account_lock;
+mod admin_actions;
 mod authentication;
 mod badge;
 mod blocked_routes;

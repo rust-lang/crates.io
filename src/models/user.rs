@@ -121,6 +121,16 @@ impl User {
         Ok(Self::find(conn, api_token.user_id)?)
     }
 
+    /// Queries the database for a user with the specified verified email address.
+    pub fn find_by_verified_email(conn: &PgConnection, email: &str) -> AppResult<User> {
+        let email: Email = emails::table
+            .filter(emails::email.eq(email))
+            .filter(emails::verified.eq(true))
+            .first(conn)?;
+
+        Ok(Self::find(conn, email.user_id)?)
+    }
+
     pub fn owning(krate: &Crate, conn: &PgConnection) -> QueryResult<Vec<Owner>> {
         let users = CrateOwner::by_owner_kind(OwnerKind::User)
             .inner_join(users::table)
