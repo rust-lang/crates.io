@@ -15,7 +15,7 @@ testing = ["serde_json"]
 
 [dependencies]
 anyhow = "=1.0.66"
-base64 = "=0.13.0"
+base64 = "=0.13.1"
 dotenv = "=0.15.0"
 git2 = "=0.15.0"
 serde = { version = "=1.0.146", features = ["derive"] }
