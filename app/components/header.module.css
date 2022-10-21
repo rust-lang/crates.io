@@ -12,7 +12,7 @@
         "logo search nav" auto /
         auto 1fr auto;
     align-items: center;
-    padding: 10px 20px;
+    padding: var(--space-2xs) var(--space-m);
     color: white;
 
     a {
@@ -54,24 +54,25 @@
     align-items: center;
 
     h1 {
-        font-size: 24px;
+        margin: 0;
+        font-size: var(--space-m);
     }
 }
 
 .logo {
-    width: 60px;
+    width: var(--space-xl);
     height: auto;
     /* negative margin to account for blank space in the image */
     margin-left: -10px;
-    margin-right: 10px;
+    margin-right: calc(var(--space-s) - 10px);
 }
 
 .search-form {
     grid-area: search;
-    padding: 0 16px;
+    margin: 0 var(--space-m);
 
     @media only screen and (max-width: 820px) {
-        padding: 10px 0;
+        margin: var(--space-s) 0;
     }
 
     .hero & {
@@ -102,7 +103,7 @@
 }
 
 .sep {
-    margin: 0 10px;
+    margin: 0 var(--space-2xs);
     opacity: 0.5;
 }
 
@@ -135,8 +136,9 @@
     composes: button-reset from '../styles/shared/buttons.module.css';
     display: inline-flex;
     align-items: center;
-    margin: 0 -5px;
-    padding: 5px;
+    /* negative margin for larger click target */
+    margin: calc(var(--space-2xs) * -1);
+    padding: var(--space-2xs);
     cursor: pointer;
 
     &:disabled {
@@ -144,18 +146,21 @@
     }
 
     .spinner {
-        margin-right: 6px;
+        --spinner-color: white;
+        --spinner-bg-color: rgba(255, 255, 255, .2);
+
+        margin-right: var(--space-2xs);
     }
 }
 
 .login-icon {
-    width: 16px;
-    margin-right: 6px;
+    width: 1em;
+    margin-right: var(--space-2xs);
     opacity: 0.5;
 }
 
 .avatar {
-    margin-right: 0.5em;
+    margin-right: var(--space-2xs);
 }
 
 .current-user-links {
@@ -167,7 +172,7 @@
 .dropdown-button {
     background: none;
     border: 0;
-    padding: 10px 0;
+    padding: 0;
 
     img {
         vertical-align: top;
@@ -184,6 +189,6 @@
     }
 
     .spinner {
-        margin-right: 6px;
+        margin-right: var(--space-2xs);
     }
 }
