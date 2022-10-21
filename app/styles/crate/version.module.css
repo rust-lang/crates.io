@@ -15,8 +15,8 @@
     box-shadow: var(--shadow);
 
     @media only screen and (max-width: 550px) {
-        margin-left: -15px;
-        margin-right: -15px;
+        margin-left: calc(var(--main-layout-padding) * -1);
+        margin-right: calc(var(--main-layout-padding) * -1);
         border-radius: 0;
     }
 

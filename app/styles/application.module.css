@@ -171,8 +171,10 @@ noscript {
 }
 
 .inner-main {
+    --main-layout-padding: 15px;
+
     composes: width-limit;
     display: flex;
     flex-direction: column;
-    padding: 15px;
+    padding: var(--main-layout-padding);
 }
