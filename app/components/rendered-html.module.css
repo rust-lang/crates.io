@@ -18,20 +18,20 @@
         code {
             display: block;
             overflow-x: auto;
-            padding: 1em;
+            padding: var(--space-s);
             background-color: #f6f8fa;
             font-size: 85%;
-            border-radius: 6px;
+            border-radius: var(--space-3xs);
         }
     }
 
     p, li {
         code {
             background-color: #f6f8fa;
-            border-radius: 6px;
+            border-radius: var(--space-3xs);
             font-size: 85%;
             margin: 0;
-            padding: .2em .4em;
+            padding: var(--space-4xs) var(--space-3xs);
         }
     }
 
@@ -46,7 +46,7 @@
 
         th, td {
             border: 1px solid #dfe2e5;
-            padding: 6px 13px;
+            padding: var(--space-2xs) var(--space-s);
         }
     }
 }
