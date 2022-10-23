@@ -341,6 +341,7 @@ fn simple_config() -> config::Server {
         max_upload_size: 3000,
         max_unpack_size: 2000,
         publish_rate_limit: Default::default(),
+        new_version_rate_limit: Some(10),
         blocked_traffic: Default::default(),
         max_allowed_page_offset: 200,
         page_offset_ua_blocklist: vec![],

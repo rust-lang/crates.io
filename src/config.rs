@@ -25,6 +25,7 @@ pub struct Server {
     pub max_upload_size: u64,
     pub max_unpack_size: u64,
     pub publish_rate_limit: PublishRateLimit,
+    pub new_version_rate_limit: Option<u32>,
     pub blocked_traffic: Vec<(String, Vec<String>)>,
     pub max_allowed_page_offset: u32,
     pub page_offset_ua_blocklist: Vec<String>,
@@ -118,6 +119,7 @@ impl Default for Server {
             max_upload_size: 10 * 1024 * 1024, // 10 MB default file upload size limit
             max_unpack_size: 512 * 1024 * 1024, // 512 MB max when decompressed
             publish_rate_limit: Default::default(),
+            new_version_rate_limit: env_optional("MAX_NEW_VERSIONS_DAILY"),
             blocked_traffic: blocked_traffic(),
             max_allowed_page_offset: env_optional("WEB_MAX_ALLOWED_PAGE_OFFSET").unwrap_or(200),
             page_offset_ua_blocklist,
