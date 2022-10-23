@@ -4,13 +4,12 @@
     display: flex;
     align-items: center;
     width: 100%;
-    height: 60px;
-    margin: 8px 0;
-    padding: 0 15px;
+    height: var(--space-2xl);
+    padding: 0 var(--space-s);
     background-color: white;
     color: #525252;
     text-decoration: none;
-    border-radius: 5px;
+    border-radius: var(--space-3xs);
     box-shadow: var(--shadow);
     transition: background-color var(--transition-slow);
 
@@ -47,15 +46,15 @@
 }
 
 .subtitle {
-    margin-top: 4px;
+    margin-top: var(--space-3xs);
     font-size: 13px;
     color: rgb(118, 131, 138);
 }
 
 .right {
     flex-shrink: 0;
-    height: 16px;
+    height: var(--space-s);
     width: auto;
-    margin-left: 10px;
+    margin-left: var(--space-xs);
     color: rgb(118, 131, 138);
 }

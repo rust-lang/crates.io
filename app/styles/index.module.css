@@ -1,27 +1,11 @@
-.title-header {
-    text-align: center;
+.hero-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-s);
     border-bottom: 5px solid var(--gray-border);
-    margin-top: 25px;
-    padding-bottom: 40px;
-
-    @media only screen and (max-width: 570px) {
-        margin-top: 0;
-    }
-
-    h1 {
-        font-size: 50px;
-        @media only screen and (max-width: 370px) {
-            font-size: 40px;
-        }
-    }
-
-    .links a:not(:first-child) {
-        margin: 0 20px;
-        @media only screen and (max-width: 570px) {
-            clear: both;
-            margin: 20px 0 0 0;
-        }
-    }
+    margin-top: var(--space-s);
+    padding-bottom: var(--space-l);
 }
 
 .hero-button {
@@ -33,68 +17,69 @@
 }
 
 .blurb {
-    margin: 30px 0 40px 0;
+    margin: var(--space-l) var(--space-s);
     display: flex;
+    gap: var(--space-l);
 
-    .intro { flex: 6; line-height: 25px; padding: 10px;}
-
-    .stats {
-        flex: 4;
-        display: flex;
+    @media only screen and (max-width: 650px) {
         flex-direction: column;
-
-        padding: 10px;
-
-        .crates { margin-top: 16px; }
+        align-items: center;
     }
+}
 
-    @media only screen and (max-width: 530px) {
-        flex-direction: column;
-        .stats {
-            border: none;
-            margin: 32px auto 0;
-        }
+.intro {
+    flex: 6;
+    line-height: 1.5;
+}
+
+.stats {
+    flex: 4;
+    display: flex;
+    flex-direction: column;
+
+    > * + * {
+        margin-top: var(--space-s);
     }
 }
 
 .lists {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: left;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: var(--space-s);
+    padding: 0 var(--space-s);
 
-    > section {
-        margin: 0;
-        padding: 0 15px;
-        width: 33.33%;
-        @media only screen and (max-width: 750px) {
-            width: 50%;
-        }
-        @media only screen and (max-width: 550px) {
-            width: 100%;
-        }
+    @media only screen and (max-width: 750px) {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    @media only screen and (max-width: 550px) {
+        grid-template-columns: 1fr;
     }
 
     h2 {
-        font-size: 105%;
-        line-height: 20px;
+        font-size: 1.05rem;
     }
 }
 
 .list {
     list-style: none;
     padding: 0;
+
+    > * + * {
+        margin-top: var(--space-2xs);
+    }
 }
 
 .error-message {
-    line-height: 25px;
+    line-height: 1.5;
 }
 
 .try-again-button {
     composes: yellow-button from './shared/buttons.module.css';
     align-self: center;
-    margin: 20px 0;
+    margin: var(--space-s) 0;
 
     .spinner {
-        margin-left: 7px;
+        margin-left: var(--space-2xs);
     }
 }

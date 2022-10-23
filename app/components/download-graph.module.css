@@ -2,7 +2,7 @@
     display: grid;
     place-items: center;
     border: solid 1px var(--gray-border);
-    border-radius: 5px;
+    border-radius: var(--space-3xs);
     min-height: 400px;
 }
 

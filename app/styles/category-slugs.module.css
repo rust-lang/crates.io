@@ -1,14 +1,21 @@
 .list {
     background-color: white;
-    padding: 20px 20px 0;
-    margin: 0;
+    border-radius: var(--space-3xs);
+    box-shadow: 0 1px 3px hsla(51, 90%, 42%, .35);
+    margin-bottom: var(--space-s);
 
     dt {
-        margin-bottom: 5px;
+        padding: var(--space-s);
+        padding-bottom: var(--space-2xs);
+        font-family: var(--font-monospace);
         font-weight: bold;
     }
 
     dd {
-        margin-bottom: 20px;
+        margin: 0 var(--space-s) var(--space-s);
+    }
+
+    > * + dt {
+        border-top: 1px solid hsla(51, 90%, 42%, .25);
     }
 }

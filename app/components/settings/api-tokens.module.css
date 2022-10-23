@@ -18,15 +18,15 @@
 }
 
 .token-list {
-    margin: 24px 0;
+    margin: var(--space-m) 0;
     padding: 0;
     list-style: none;
-    border-radius: 5px;
+    border-radius: var(--space-3xs);
     background-color: white;
     box-shadow: 0 2px 3px hsla(51, 50%, 44%, .35);
 
     > * {
-        padding: 24px;
+        padding: var(--space-m);
     }
 
     > * + * {
@@ -49,44 +49,44 @@
 }
 
 .new-token-form {
-    padding: 24px;
-    border-radius: 6px;
+    padding: var(--space-m);
+    border-radius: var(--space-3xs);
     background-color: white;
     box-shadow: 0 2px 3px hsla(51, 50%, 44%, .35);
-    margin: 24px 0;
+    margin-top: var(--space-m);
 
     .input {
-        padding: 8px;
+        padding: var(--space-2xs);
         width: 100%;
         border: 1px solid #ada796;
-        border-radius: 4px;
+        border-radius: var(--space-3xs);
     }
 }
 
 .actions {
-    margin-top: 12px;
+    margin-top: var(--space-s);
     display: flex;
     align-items: center;
 }
 
 .spinner {
-    margin-left: 10px
+    margin-left: var(--space-xs);
 }
 
 .save-button {
     composes: yellow-button small from '../../styles/shared/buttons.module.css';
     flex-grow: 1;
-    border-radius: 4px;
+    border-radius: var(--space-3xs);
 }
 
 .revoke-button {
     composes: tan-button small from '../../styles/shared/buttons.module.css';
     flex-grow: 1;
-    border-radius: 4px;
+    border-radius: var(--space-3xs);
 }
 
 .new-token {
-    margin: 24px 0;
+    margin-top: var(--space-s);
 }
 
 .new-token-explainer {
@@ -100,19 +100,19 @@
     background: var(--main-color);
     color: white;
     font-family: var(--font-monospace);
-    border-radius: 4px;
-    margin-top: 16px;
+    border-radius: var(--space-3xs);
+    margin-top: var(--space-xs);
 }
 
 .token-value {
-    padding: 20px;
+    padding: var(--space-s);
     user-select: all;
 }
 
 .copy-button {
     composes: button-reset from '../../styles/shared/buttons.module.css';
     align-self: stretch;
-    padding: 0 16px;
+    padding: 0 var(--space-s);
     cursor: pointer;
 
     &:hover {
@@ -125,18 +125,18 @@
 }
 
 .copy-button-icon {
-    width: 24px;
-    height: 24px;
+    width: auto;
+    height: 1.3em;
 }
 
 .empty-state {
     display: grid;
     place-items: center;
     align-content: center;
-    margin: 24px 0;
-    padding: 64px;
+    margin: var(--space-m) 0;
+    padding: var(--space-xl-2xl);
     border: 2px black dashed;
-    border-radius: 5px;
+    border-radius: var(--space-3xs);
     background-color: white;
     box-shadow: 0 2px 3px hsla(51, 50%, 44%, .35);
 }
@@ -147,7 +147,7 @@
 
 .empty-state-button {
     composes: yellow-button small from '../../styles/shared/buttons.module.css';
-    margin-top: 20px;
+    margin-top: var(--space-m);
     border-radius: 4px;
 }
 
@@ -155,16 +155,11 @@
     .new-token-form {
         display: grid;
         grid-template-columns: 1fr auto;
-        align-items: center;
-        padding: 16px 24px;
-
-        .input {
-            padding: 8px;
-            margin-right: 16px;
-        }
+        align-items: stretch;
+        padding: var(--space-s) var(--space-m);
 
         .actions {
-            margin: 0 0 0 16px;
+            margin: 0 0 0 var(--space-xs);
         }
     }
 
@@ -181,7 +176,7 @@
         .actions {
             grid-area: actions;
             align-self: start;
-            margin: 0 0 0 16px;
+            margin: 0 0 0 var(--space-xs);
         }
 
         .new-token {

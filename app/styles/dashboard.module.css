@@ -5,14 +5,13 @@
 
 .header-icon {
     flex-shrink: 0;
-    margin-right: 10px;
+    margin-right: var(--space-2xs);
     width: 32px;
     height: 32px;
 }
 
 .stats {
     margin-left: auto;
-    padding: 10px;
 
     .num {
         font-size: 30px;
@@ -26,11 +25,24 @@
 
 .stats-label {
     composes: small from './shared/typography.module.css';
-    margin-left: 5px;
+    margin-left: var(--space-2xs);
 }
 
 .my-info {
     display: flex;
+    gap: var(--space-s);
+
+    h2 {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3xs);
+        font-size: 1.05em;
+        margin: 0;
+
+        > * {
+            flex-shrink: 0;
+        }
+    }
 
     @media only screen and (max-width: 750px) {
         flex-direction: column;
@@ -40,27 +52,19 @@
 .my-crate-lists {
     flex-direction: column;
     flex-grow: 2;
-    margin-right: 20px;
 
     .header {
         display: flex;
         justify-content: space-between;
         align-items: center;
+    }
 
-        h2 {
-            font-size: 105%;
-            line-height: 20px;
-        }
-
-        svg {
-            display: inline-block; 
-            vertical-align: text-top;
-        }
+    > ul {
+        margin: var(--space-s) 0;
     }
 
     @media only screen and (max-width: 750px) {
         order: 1;
-        margin-right: 0;
     }
 }
 
@@ -78,12 +82,6 @@
 
 .my-feed {
     flex-grow: 5;
-    h2 { font-size: 105%; }
-
-    svg {
-        display: inline-block; 
-        vertical-align: text-top;
-    }
 
     @media only screen and (max-width: 750px) {
         order: 0;
@@ -91,23 +89,25 @@
 }
 
 .feed {
-    background: white;
-    padding: 0 20px 20px;
+    background-color: white;
+    border-radius: var(--space-3xs);
+    box-shadow: 0 1px 3px hsla(51, 90%, 42%, .35);
+    margin: var(--space-s) 0;
 }
 
 .feed-list {
+    list-style: none;
     margin: 0;
     padding: 0;
-}
 
-.feed-row {
-    display: flex;
-    align-items: baseline;
-    padding: 20px 0;
-    border-bottom: 2px solid var(--gray-border);
+    > * {
+        display: flex;
+        align-items: baseline;
+        padding: var(--space-s);
+    }
 
-    &:last-of-type {
-        border: none;
+    > * + * {
+        border-top: 1px solid hsla(51, 90%, 42%, .25);
     }
 }
 
@@ -122,16 +122,21 @@
 }
 
 .load-more {
-    display: block;
-    text-align: center;
-    width: 100%;
-    padding: 10px;
-    outline: 0;
-    border: 0;
-    background-color: #dbd9cf;
-    color: white;
+    padding: var(--space-s);
+    border-top: 1px solid hsla(51, 90%, 42%, .25);
 
-    &:hover, &:focus {
-        background-color: #c5c2b2;
+    button {
+        display: block;
+        text-align: center;
+        width: 100%;
+        padding: var(--space-2xs);
+        outline: 0;
+        border: 0;
+        background-color: #dbd9cf;
+        color: white;
+
+        &:hover, &:focus {
+            background-color: #c5c2b2;
+        }
     }
 }

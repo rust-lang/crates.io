@@ -1,7 +1,7 @@
 .header {
-    padding: 20px 25px;
+    padding: var(--space-s) var(--space-m);
     background-color: var(--main-bg-dark);
-    margin-bottom: 20px;
+    margin-bottom: var(--space-s);
     border-radius: 5px;
 }
 
@@ -13,9 +13,9 @@
 
 .suffix {
     color: var(--main-color-light);
-    padding-left: 10px;
+    padding-left: var(--space-2xs);
 }
 
 .loading-spinner {
-    margin: 0 15px;
+    margin: 0 var(--space-2xs);
 }

@@ -24,11 +24,11 @@
   </div>
   <div local-class='stats'>
     <div local-class='downloads' data-test-downloads>
-      {{svg-jar "download"}}
+      {{svg-jar "download" local-class="download-icon"}}
       <span><abbr title="Total number of downloads">All-Time:</abbr> {{ format-num @crate.downloads }}</span>
     </div>
     <div local-class="recent-downloads" data-test-recent-downloads>
-      {{svg-jar "download"}}
+      {{svg-jar "download" local-class="download-icon"}}
       <span><abbr title="Downloads in the last 90 days">Recent:</abbr> {{ format-num @crate.recent_downloads }}</span>
     </div>
     <div local-class="updated-at" >

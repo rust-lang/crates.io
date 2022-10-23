@@ -4,16 +4,14 @@
 }
 
 .title {
-    font-size: 1.17em;
-    margin-block-start: 1em;
-    margin-block-end: 1em;
+    composes: heading from '../crate-sidebar.module.css';
 }
 
 .icon {
     flex-shrink: 0;
     height: 1em;
     width: auto;
-    margin-right: 7px;
+    margin-right: var(--space-2xs);
 }
 
 .link {

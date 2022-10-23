@@ -1,20 +1,18 @@
 .results-meta {
-    margin-bottom: 25px;
+    margin-bottom: var(--space-s);
 }
 
 .list {
     list-style: none;
-    margin: 0 0 20px;
+    margin: 0 0 var(--space-s);
     padding: 0;
 
-    li {
-        &:not(:first-child) {
-            margin-top: 10px;
-        }
+    > * + * {
+        margin-top: var(--space-2xs);
     }
 }
 
 .no-results {
     text-align: center;
-    margin: 20px;
+    margin: var(--space-m) 0;
 }

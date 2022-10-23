@@ -20,13 +20,13 @@
 .content {
     composes: width-limit from '../styles/application.module.css';
     display: grid;
-    gap: 40px 20px;
-    padding: 30px;
+    gap: var(--space-xl) var(--space-m);
+    padding: var(--space-l);
 
     @media only screen and (min-width: 551px) {
         grid-template-columns: repeat(2, 1fr);
         justify-content: center;
-        padding: 50px 30px;
+        padding: var(--space-xl) var(--space-m);
     }
 
     @media only screen and (min-width: 751px) {
@@ -34,7 +34,7 @@
     }
 
     h1 {
-        margin: 0 0 20px;
+        margin: 0 0 var(--space-s);
         font-size: 20px;
         font-weight: 500;
         color: var(--footer-header-color);
@@ -47,22 +47,22 @@
         padding: 0;
 
         > * + * {
-            margin-top: 15px;
+            margin-top: var(--space-xs);
         }
     }
 
     li {
-        height: 16px;
+        height: 1rem;
     }
 
     a {
         display: inline-flex;
         /* slightly increased click targets */
-        margin: -5px;
-        padding: 5px;
+        margin: calc(var(--space-2xs) * -1);
+        padding: var(--space-2xs);
         color: #fff;
         font-size: 16px;
-        line-height: 16px;
+        line-height: 1em;
         white-space: nowrap;
         transition: var(--transition-medium);
 
@@ -79,9 +79,9 @@
     }
 
     svg {
-        height: 20px;
-        width: 20px;
-        margin: -2px 10px -2px 0;
+        height: 1.25em;
+        width: 1.25em;
+        margin: -.125em var(--space-xs) -.125em 0;
         flex-shrink: 0;
     }
 }

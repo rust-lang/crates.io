@@ -3,7 +3,7 @@
     align-items: center;
     background-color: #fff;
     border: 1px solid #d5d3cb;
-    padding: 20px 30px;
+    padding: var(--space-xs) var(--space-m);
     font-weight: bold;
     cursor: pointer;
     transition: color var(--transition-medium) ease-in;
@@ -21,9 +21,9 @@
     display: grid;
     place-items: center;
     flex-shrink: 0;
-    width: 36px;
-    height: 36px;
-    margin-left: 10px;
+    width: var(--space-l);
+    height: var(--space-l);
+    margin-left: var(--space-m);
     border: 2px solid #d5d3cb;
     border-radius: 50%;
 

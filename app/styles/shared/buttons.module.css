@@ -20,7 +20,7 @@
     --bg-color-top-dark: #fed585;
     --bg-color-bottom-dark: #fdbb39;
 
-    padding: 15px 40px;
+    padding: var(--space-xs) var(--space-m-l);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -29,14 +29,14 @@
     font-weight: bold;
     border: none;
     outline: 0;
-    border-radius: 30px;
+    border-radius: 5000px;
     background: linear-gradient(to bottom, var(--bg-color-top) 0%, var(--bg-color-bottom) 100%);
     cursor: pointer;
 
     img, svg {
         float: left;
         display: inline-block;
-        margin-right: 10px;
+        margin-right: var(--space-2xs);
     }
 
     &:hover, &:focus, &.active {
@@ -68,6 +68,5 @@
 }
 
 .small {
-    padding: 10px 20px;
-    border-radius: 30px;
+    padding: var(--space-2xs) var(--space-s);
 }

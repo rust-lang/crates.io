@@ -1,5 +1,5 @@
 .me-email-notifications {
-    padding-bottom: 20px;
+    margin-bottom: var(--space-s);
     display: flex;
     flex-direction: column;
 
@@ -20,20 +20,19 @@
 .notifications-row {
     display: flex;
     flex-direction: row;
+    align-items: center;
+    gap: var(--space-2xs);
 }
 
 .select-all-button,
 .deselect-all-button {
     composes: yellow-button small from '../shared/buttons.module.css';
-    margin-right: 1rem;
 }
 
 .notifications-error,
 .notifications-success {
     border-top-width: 0;
     font-weight: bold;
-
-    padding: 0 10px 10px 20px;
 }
 
 .notifications-error {
@@ -43,7 +42,6 @@
 .notifications-success {
     color: green;
 }
-
 
 .update-notifications-button {
     composes: yellow-button from '../shared/buttons.module.css';

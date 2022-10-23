@@ -2,7 +2,7 @@
   {{!-- The extra div wrapper is needed for specificity issues with `margin` --}}
   <ol local-class="list">
     {{#each @crates as |crate index|}}
-      <li local-class="row">
+      <li>
         <CrateRow @crate={{crate}} data-test-crate-row={{index}} />
       </li>
     {{/each}}

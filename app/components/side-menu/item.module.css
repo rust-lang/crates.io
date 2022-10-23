@@ -1,7 +1,7 @@
 .link {
     display: block;
-    padding: 10px 12px;
-    border-radius: 6px;
+    padding: var(--space-2xs) var(--space-xs);
+    border-radius: var(--space-3xs);
     color: var(--main-color-light);
     transition: all var(--transition-medium) ease-in;
 

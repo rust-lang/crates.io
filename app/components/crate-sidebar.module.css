@@ -1,31 +1,21 @@
 .sidebar {
-    .top, .bottom {
-        display: flex;
-    }
+    display: flex;
+    flex-direction: column;
 
-    .top > * { flex: 1 }
-
-    @media only screen and (min-width: 890px) {
-        .top, .bottom {
-            flex-direction: column;
-        }
-
-        .categories {
-            padding-left: 20px;
-        }
-    }
-
-    @media only screen and (max-width: 890px) {
-        .top, .bottom {
-            flex-direction: column;
-        }
+    > * + * {
+        margin-top: var(--space-m);
     }
 }
 
 .heading {
     font-size: 1.17em;
-    margin-block-start: 1em;
-    margin-block-end: 1em;
+    margin: 0 0 var(--space-s);
+}
+
+.metadata {
+    > * + * {
+        margin-top: var(--space-2xs);
+    }
 }
 
 .date,
@@ -33,11 +23,10 @@
 .bytes {
     display: flex;
     align-items: center;
-    margin-bottom: 10px;
 
     svg {
         flex-shrink: 0;
-        margin-right: 7px;
+        margin-right: var(--space-2xs);
         height: 1em;
         width: auto;
     }
@@ -69,14 +58,14 @@
     width: 100%;
     align-items: center;
     justify-content: space-between;
-    padding: 7px 12px;
+    padding: var(--space-2xs) var(--space-xs);
     font-family: var(--font-monospace);
     font-size: 14px;
     line-height: 1.5em;
     color: var(--main-color);
     background: transparent;
-    border-radius: 5px;
-    border: solid 2px var(--gray-border);
+    border-radius: var(--space-3xs);
+    border: solid var(--space-4xs) var(--gray-border);
 
     span {
         flex: auto;
@@ -100,7 +89,7 @@
     width: auto;
     /* for slightly nicer alignment... */
     margin-top: -3px;
-    margin-left: 10px;
+    margin-left: var(--space-2xs);
     opacity: 0;
     transition: opacity var(--transition-fast);
 
@@ -109,16 +98,27 @@
     }
 }
 
+.links {
+    > * + * {
+        margin-top: var(--space-m);
+    }
+}
+
 .more-versions-link,
 .reverse-deps-link {
     composes: small from '../styles/shared/typography.module.css';
+}
+
+.categories {
+    margin: 0;
+    padding-left: 20px;
+    line-height: 1.5;
 }
 
 .playground-button {
     composes: yellow-button small from '../styles/shared/buttons.module.css';
     justify-content: center;
     width: 220px;
-    margin-top: 20px;
 }
 
 .playground-help {

@@ -10,9 +10,9 @@
     align-items: center;
     position: relative;
     font-size: 18px;
-    padding: 15px 25px;
+    padding: var(--space-s) var(--space-m);
     background-color: white;
-    border-radius: 5px;
+    border-radius: var(--space-3xs);
     box-shadow: var(--shadow);
     transition: all var(--transition-slow);
 
@@ -47,7 +47,7 @@
 }
 
 .range-lg, .range-sm {
-    margin-right: 15px;
+    margin-right: var(--space-s);
     min-width: 100px;
     color: var(--range-color);
     font-variant: tabular-nums;
@@ -72,7 +72,7 @@
 .link {
     color: var(--crate-color);
     font-weight: 500;
-    margin-right: 15px;
+    margin-right: var(--space-s);
     outline: none;
 
     &:hover {
@@ -94,7 +94,7 @@
     text-transform: uppercase;
     letter-spacing: .7px;
     font-size: 13px;
-    margin-right: 15px;
+    margin-right: var(--space-s);
 
     a {
         position: relative;
@@ -108,7 +108,7 @@
     svg {
         height: 1em;
         width: auto;
-        margin-right: 2px;
+        margin-right: var(--space-4xs);
         margin-bottom: -.1em;
     }
 
@@ -119,7 +119,7 @@
 
     @media only screen and (max-width: 550px) {
         display: block;
-        margin-top: 10px;
+        margin-top: var(--space-xs);
     }
 }
 
@@ -145,14 +145,15 @@
 }
 
 .description {
-    margin-top: 10px;
+    margin-top: var(--space-xs);
     color: var(--crate-color);
     font-size: 90%;
+    line-height: 1.5;
 }
 
 .description-placeholder {
     height: 1em;
     width: 70%;
-    border-radius: 5px;
+    border-radius: var(--space-3xs);
     opacity: var(--placeholder-opacity);
 }

@@ -1,10 +1,7 @@
 .header {
     display: flex;
     align-items: center;
-
-    h1 {
-        padding: 0 10px;
-    }
+    gap: var(--space-xs);
 }
 
 .github-link {
@@ -22,7 +19,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 25px;
+    margin-bottom: var(--space-s);
 }
 
 .sort-by-label {
@@ -30,5 +27,5 @@
 }
 
 .list {
-    margin-bottom: 20px;
+    margin-bottom: var(--space-s);
 }

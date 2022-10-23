@@ -2,16 +2,16 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 25px;
+    margin-bottom: var(--space-s);
 }
 
 .warning {
-    margin: 0 0 16px;
-    padding: 8px;
+    margin: 0 0 var(--space-s);
+    padding: var(--space-2xs);
     color: var(--orange-700);
     background: var(--orange-100);
-    border-left: solid var(--orange-400) 4px;
-    border-radius: 2px;
+    border-left: solid var(--orange-400) var(--space-3xs);
+    border-radius: var(--space-4xs);
 }
 
 .sort-by-label {
@@ -19,11 +19,11 @@
 }
 
 .list {
-    margin-bottom: 20px;
+    margin-bottom: var(--space-s);
 }
 
 .try-again-button {
     composes: yellow-button from './shared/buttons.module.css';
     align-self: center;
-    margin-top: 20px;
+    margin-top: var(--space-m);
 }

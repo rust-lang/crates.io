@@ -1,26 +1,21 @@
-.me-email {
-    border-bottom: 5px solid var(--gray-border);
-    padding-bottom: 20px;
-    margin-bottom: 20px;
-}
-
 .email-form {
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    border: 2px solid var(--gray-border);
-    padding: 10px 20px;
+    gap: var(--space-s);
+    padding: var(--space-s) var(--space-m);
+    background-color: white;
+    border-radius: var(--space-3xs);
+    box-shadow: 0 1px 3px hsla(51, 90%, 42%, .35);
 }
 
 .email-input-label {
     font-weight: bold;
-    margin-right: 10px;
 }
 
 .email-input {
     width: 400px;
-    margin-right: 10px;
 }
 
 .submit-button {
@@ -29,18 +24,20 @@
 
 .list {
     background-color: white;
-    padding: 0 20px;
-}
+    border-radius: var(--space-3xs);
+    box-shadow: 0 1px 3px hsla(51, 90%, 42%, .35);
 
-.row {
-    border-bottom: 2px solid var(--gray-border);
-    padding: 20px 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
+    > * {
+        padding: var(--space-s) var(--space-m);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+    }
 
-    &:last-of-type { border: none; }
+    > * + * {
+        border-top: 1px solid hsla(51, 90%, 42%, .25);
+    }
 }
 
 .email-column {

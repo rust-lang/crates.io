@@ -1,17 +1,18 @@
 .list {
     list-style: none;
     padding: 0;
-}
+    margin: 0;
 
-.row {
-    margin: 8px 0;
+    > * + * {
+        margin-top: var(--space-2xs);
+    }
 }
 
 .link {
     color: #525252;
     background-color: #edebdd;
     font-size: 90%;
-    padding: 20px 10px;
+    padding: var(--space-s) var(--space-xs);
     display: flex;
     align-items: center;
 }
@@ -19,5 +20,5 @@
 .download-icon {
     color: #b13b89;
     margin-left: auto;
-    margin-right: 4px;
+    margin-right: var(--space-3xs);
 }

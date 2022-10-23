@@ -8,13 +8,13 @@
     }
 
     h2 {
-        margin-top: 10px;
+        margin-top: var(--space-2xs);
         color: var(--main-color-light);
     }
 }
 
 .avatar {
-    margin-right: 20px;
+    margin-right: var(--space-m);
 }
 
 .header-row {
@@ -23,7 +23,7 @@
 }
 
 .github-link {
-    margin-left: 16px;
+    margin-left: var(--space-s);
 
     &, &:hover {
         color: var(--main-color);
@@ -39,7 +39,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 25px;
+    margin-bottom: var(--space-s);
 }
 
 .sort-by-label {
@@ -47,5 +47,5 @@
 }
 
 .list {
-    margin-bottom: 20px;
+    margin-bottom: var(--space-s);
 }

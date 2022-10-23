@@ -3,10 +3,8 @@
     margin: 0;
     padding: 0;
 
-    li {
-        &:not(:first-child) {
-            margin-top: 10px;
-        }
+    > * + * {
+        margin-top: var(--space-2xs);
     }
 }
 

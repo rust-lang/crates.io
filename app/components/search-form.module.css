@@ -1,29 +1,29 @@
 .form {
-    --border-radius: 15px;
-    --submit-icon-size: 16px;
-    --submit-button-padding-left: 8px;
-    --submit-button-padding-right: 10px;
+    --border-radius: 5000px;
+    --submit-icon-size: 1em;
+    --submit-button-padding-left: var(--space-2xs);
+    --submit-button-padding-right: var(--space-xs);
     --submit-button-width: calc(var(--submit-button-padding-left) + var(--submit-icon-size) + var(--submit-button-padding-right));
-    --input-padding: 5px;
-    --input-padding-left: 10px;
+    --input-padding: var(--space-3xs);
+    --input-padding-left: var(--space-xs);
     --input-padding-right: calc(var(--submit-button-width) + var(--input-padding));
 
     position: relative;
+    font-size: calc(var(--space-s) * 0.9);
 
     &.size-big {
-        --border-radius: 30px;
         --input-padding: 8px;
         --input-padding-left: 16px;
-        --submit-icon-size: 20px;
         --submit-button-padding-left: 12px;
         --submit-button-padding-right: 16px;
+
+        font-size: var(--space-s);
     }
 }
 
 .input {
-    --search-form-focus-shadow: 0 0 0 4px var(--yellow500);
+    --search-form-focus-shadow: 0 0 0 var(--space-3xs) var(--yellow500);
 
-    font-size: 90%;
     border: none;
     color: black;
     width: 100%;
@@ -31,10 +31,6 @@
     border-radius: var(--border-radius);
     box-shadow: 1px 2px 4px 0 var(--green900);
     transition: box-shadow var(--transition-fast);
-
-    .size-big & {
-        font-size: 125%;
-    }
 
     &:focus {
         outline: none;

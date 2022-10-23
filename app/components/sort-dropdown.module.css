@@ -1,12 +1,12 @@
 .trigger {
     background-color: var(--main-bg-dark);
     font-size: 85%;
-    padding: 10px;
+    padding: var(--space-2xs);
     border: none;
-    border-radius: 5px;
+    border-radius: var(--space-3xs);
 }
 
 .icon {
     color: #1a9c5d;
-    margin-right: 0.5em;
+    margin-right: var(--space-2xs);
 }

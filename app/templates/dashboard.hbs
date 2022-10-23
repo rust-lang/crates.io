@@ -47,7 +47,7 @@
     <div local-class="feed">
       <ul local-class="feed-list">
         {{#each this.myFeed as |version|}}
-          <div local-class="feed-row">
+          <li local-class="feed-row">
             <LinkTo @route="crate.version" @models={{array version.crateName version.num}}>
               {{ version.crateName }}
               <span local-class="feed-version">{{ version.num }}</span>
@@ -55,20 +55,19 @@
             <span local-class="feed-date">
               {{date-format-distance-to-now version.created_at addSuffix=true}}
             </span>
-          </div>
+          </li>
         {{/each}}
       </ul>
 
-      {{#if this.loadMoreTask.isRunning}}
-        <span local-class='load-more'>
-          <LoadingSpinner />
-        </span>
-      {{else}}
-        {{#if this.hasMore}}
-          <button type="button" local-class='load-more' {{on "click" (perform this.loadMoreTask)}}>
+      {{#if this.hasMore}}
+        <div local-class="load-more">
+          <button type="button" disabled={{this.loadMoreTask.isRunning}} {{on "click" (perform this.loadMoreTask)}}>
             Load More
+            {{#if this.loadMoreTask.isRunning}}
+              <LoadingSpinner />
+            {{/if}}
           </button>
-        {{/if}}
+        </div>
       {{/if}}
     </div>
   </div>
