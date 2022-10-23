@@ -126,7 +126,7 @@ a:not([href]) {
 pre:global(.terminal) {
     background: var(--main-color);
     color: white;
-    padding: 20px;
+    padding: var(--space-s);
     font-family: var(--font-monospace);
 }
 
@@ -136,8 +136,10 @@ abbr[title] {
 }
 
 noscript {
+    display: grid;
+    justify-items: center;
+    padding: var(--space-m);
     color: white;
-    padding: 10px 0;
 }
 
 :global {
@@ -171,7 +173,7 @@ noscript {
 }
 
 .inner-main {
-    --main-layout-padding: 15px;
+    --main-layout-padding: var(--space-s);
 
     composes: width-limit;
     display: flex;
