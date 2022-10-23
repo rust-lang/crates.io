@@ -128,9 +128,14 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
             )));
         }
 
-        app.config
-            .publish_rate_limit
-            .check_daily_limit(krate.id, &conn)?;
+        if let Some(daily_version_limit) = app.config.new_version_rate_limit {
+            let published_today = count_versions_published_today(krate.id, &conn)?;
+            if published_today >= daily_version_limit as i64 {
+                return Err(cargo_err(
+                    "You have published too many versions of this crate in the last 24 hours",
+                ));
+            }
+        }
 
         // Length of the .crate tarball, which appears after the metadata in the request body.
         // TODO: Not sure why we're using the total content length (metadata + .crate file length)
@@ -261,6 +266,19 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
             warnings,
         }))
     })
+}
+
+/// Counts the number of versions for `krate_id` that were published within
+/// the last 24 hours.
+fn count_versions_published_today(krate_id: i32, conn: &PgConnection) -> QueryResult<i64> {
+    use crate::schema::versions::dsl::*;
+    use diesel::dsl::{now, IntervalDsl};
+
+    versions
+        .filter(crate_id.eq(krate_id))
+        .filter(created_at.gt(now - 24.hours()))
+        .count()
+        .get_result(conn)
 }
 
 /// Used by the `krate::new` function.

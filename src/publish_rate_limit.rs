@@ -6,13 +6,12 @@ use std::time::Duration;
 
 use crate::schema::{publish_limit_buckets, publish_rate_overrides};
 use crate::sql::{date_part, floor, greatest, interval_part, least};
-use crate::util::errors::{cargo_err, AppResult, TooManyRequests};
+use crate::util::errors::{AppResult, TooManyRequests};
 
 #[derive(Debug, Clone, Copy)]
 pub struct PublishRateLimit {
     pub rate: Duration,
     pub burst: i32,
-    pub daily: Option<i64>,
 }
 
 impl Default for PublishRateLimit {
@@ -27,14 +26,9 @@ impl Default for PublishRateLimit {
             .parse()
             .ok()
             .unwrap_or(5);
-        let daily = dotenv::var("MAX_NEW_VERSIONS_DAILY")
-            .unwrap_or_default()
-            .parse()
-            .ok();
         Self {
             rate: Duration::from_secs(60) * minutes,
             burst,
-            daily,
         }
     }
 }
@@ -112,27 +106,6 @@ impl PublishRateLimit {
         use diesel::dsl::*;
         (self.rate.as_millis() as i64).milliseconds()
     }
-
-    pub fn check_daily_limit(&self, krate_id: i32, conn: &PgConnection) -> AppResult<()> {
-        use crate::schema::versions::dsl::*;
-        use diesel::dsl::{count_star, now, IntervalDsl};
-
-        if let Some(daily_limit) = self.daily {
-            let today: i64 = versions
-                .filter(crate_id.eq(krate_id))
-                .filter(created_at.gt(now - 24.hours()))
-                .select(count_star())
-                .first(conn)
-                .optional()?
-                .unwrap_or_default();
-            if today >= daily_limit {
-                return Err(cargo_err(
-                    "You have published too many versions of this crate in the last 24 hours",
-                ));
-            }
-        }
-        Ok(())
-    }
 }
 
 #[cfg(test)]
@@ -149,7 +122,6 @@ mod tests {
         let rate = PublishRateLimit {
             rate: Duration::from_secs(1),
             burst: 10,
-            daily: None,
         };
         let bucket = rate.take_token(new_user(&conn, "user1")?, now, &conn)?;
         let expected = Bucket {
@@ -162,7 +134,6 @@ mod tests {
         let rate = PublishRateLimit {
             rate: Duration::from_millis(50),
             burst: 20,
-            daily: None,
         };
         let bucket = rate.take_token(new_user(&conn, "user2")?, now, &conn)?;
         let expected = Bucket {
@@ -182,7 +153,6 @@ mod tests {
         let rate = PublishRateLimit {
             rate: Duration::from_secs(1),
             burst: 10,
-            daily: None,
         };
         let user_id = new_user_bucket(&conn, 5, now)?.user_id;
         let bucket = rate.take_token(user_id, now, &conn)?;
@@ -203,7 +173,6 @@ mod tests {
         let rate = PublishRateLimit {
             rate: Duration::from_secs(1),
             burst: 10,
-            daily: None,
         };
         let user_id = new_user_bucket(&conn, 5, now)?.user_id;
         let refill_time = now + chrono::Duration::seconds(2);
@@ -229,7 +198,6 @@ mod tests {
         let rate = PublishRateLimit {
             rate: Duration::from_millis(100),
             burst: 10,
-            daily: None,
         };
         let user_id = new_user_bucket(&conn, 5, now)?.user_id;
         let refill_time = now + chrono::Duration::milliseconds(300);
@@ -251,7 +219,6 @@ mod tests {
         let rate = PublishRateLimit {
             rate: Duration::from_millis(100),
             burst: 10,
-            daily: None,
         };
         let user_id = new_user_bucket(&conn, 5, now)?.user_id;
         let bucket = rate.take_token(user_id, now + chrono::Duration::milliseconds(250), &conn)?;
@@ -273,7 +240,6 @@ mod tests {
         let rate = PublishRateLimit {
             rate: Duration::from_secs(1),
             burst: 10,
-            daily: None,
         };
         let user_id = new_user_bucket(&conn, 1, now)?.user_id;
         let bucket = rate.take_token(user_id, now, &conn)?;
@@ -297,7 +263,6 @@ mod tests {
         let rate = PublishRateLimit {
             rate: Duration::from_secs(1),
             burst: 10,
-            daily: None,
         };
         let user_id = new_user_bucket(&conn, 0, now)?.user_id;
         let refill_time = now + chrono::Duration::seconds(1);
@@ -320,7 +285,6 @@ mod tests {
         let rate = PublishRateLimit {
             rate: Duration::from_secs(1),
             burst: 10,
-            daily: None,
         };
         let user_id = new_user_bucket(&conn, 8, now)?.user_id;
         let refill_time = now + chrono::Duration::seconds(4);
@@ -343,7 +307,6 @@ mod tests {
         let rate = PublishRateLimit {
             rate: Duration::from_secs(1),
             burst: 10,
-            daily: None,
         };
         let user_id = new_user(&conn, "user1")?;
         let other_user_id = new_user(&conn, "user2")?;
@@ -371,7 +334,6 @@ mod tests {
         let rate = PublishRateLimit {
             rate: Duration::from_secs(1),
             burst: 10,
-            daily: None,
         };
         let user_id = new_user(&conn, "user1")?;
         let other_user_id = new_user(&conn, "user2")?;
