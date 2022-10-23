@@ -7,7 +7,7 @@
 .content {
     display: grid;
     place-items: center;
-    margin: 25px 0;
+    margin: var(--space-m) 0;
 }
 
 .logo {
