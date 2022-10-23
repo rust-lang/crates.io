@@ -9,16 +9,16 @@
 
 .subcategories {
     background-color: white;
-    padding: 0 20px;
-    margin-bottom: 20px;
-}
+    border-radius: var(--space-3xs);
+    box-shadow: 0 1px 3px hsla(51, 90%, 42%, .35);
+    margin-bottom: var(--space-s);
 
-.subcategory {
-    border-bottom: 2px solid var(--gray-border);
-    padding: 20px 0;
+    > * {
+        padding: var(--space-s);
+    }
 
-    &:last-of-type {
-        border: none;
+    > * + * {
+        border-top: 1px solid hsla(51, 90%, 42%, .25);
     }
 }
 
@@ -28,14 +28,14 @@
 }
 
 .category-description {
-    margin-top: 6px;
+    margin-top: var(--space-2xs);
 }
 
 .results-meta {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 25px;
+    margin-bottom: var(--space-s);
 }
 
 .sort-by-label {
@@ -43,5 +43,5 @@
 }
 
 .list {
-    margin-bottom: 20px;
+    margin-bottom: var(--space-s);
 }
