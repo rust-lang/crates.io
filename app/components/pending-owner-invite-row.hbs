@@ -18,12 +18,10 @@
       </h3>
     </div>
     <div>
-      <p>
-        Invited by:
-        <LinkTo @route="user" @model={{@invite.invited_by_username}} data-test-inviter-link>
-          {{@invite.invited_by_username}}
-        </LinkTo>
-      </p>
+      Invited by:
+      <LinkTo @route="user" @model={{@invite.invited_by_username}} data-test-inviter-link>
+        {{@invite.invited_by_username}}
+      </LinkTo>
     </div>
     <div local-class="date-column" data-test-date>
       {{date-format-distance-to-now @invite.created_at addSuffix=true}}

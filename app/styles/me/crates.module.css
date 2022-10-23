@@ -2,7 +2,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 25px;
+    margin-bottom: var(--space-s);
 }
 
 .sort-by-label {
@@ -10,5 +10,5 @@
 }
 
 .list {
-    margin-bottom: 20px;
+    margin-bottom: var(--space-s);
 }

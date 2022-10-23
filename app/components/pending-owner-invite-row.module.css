@@ -7,6 +7,10 @@
 
 .crate-column {
     width: 200px;
+
+    h3 {
+        margin: 0;
+    }
 }
 
 .date-column {
