@@ -1,19 +1,19 @@
 .themes-form {
     display: flex;
-    gap: 8px;
+    gap: var(--space-xs);
     flex-wrap: wrap;
 }
 
 .theme-label {
     display: inline-block;
-    padding: 16px;
+    padding: var(--space-s);
     background: white;
-    border-radius: 6px;
+    border-radius: var(--space-3xs);
     box-shadow: 0 2px 3px hsla(51, 50%, 44%, .35);
 }
 
 .theme-preview {
     width: 200px;
     height: 160px;
-    margin-bottom: 16px;
+    margin-bottom: var(--space-s);
 }
