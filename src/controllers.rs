@@ -75,6 +75,7 @@ pub mod util;
 
 pub mod category;
 pub mod crate_owner_invitation;
+pub mod github;
 pub mod keyword;
 pub mod krate;
 pub mod metrics;

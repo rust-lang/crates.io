@@ -33,6 +33,7 @@ mod blocked_routes;
 mod builders;
 mod categories;
 mod dump_db;
+mod github_secret_scanning;
 mod krate;
 mod not_found_error;
 mod owners;

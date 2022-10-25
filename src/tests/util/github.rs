@@ -1,3 +1,4 @@
+use cargo_registry::controllers::github::secret_scanning::GitHubPublicKey;
 use cargo_registry::github::{
     GitHubClient, GitHubOrgMembership, GitHubOrganization, GitHubTeam, GitHubTeamMembership,
     GithubUser,
@@ -41,6 +42,14 @@ pub(crate) const MOCK_GITHUB_DATA: MockData = MockData {
             login: "user-org-owner",
             name: "User owning the org",
             email: "owner@example.com",
+        },
+    ],
+    // Test key from https://docs.github.com/en/developers/overview/secret-scanning-partner-program#create-a-secret-alert-service
+    public_keys: &[
+        MockPublicKey {
+            key_identifier: "f9525bf080f75b3506ca1ead061add62b8633a346606dc5fe544e29231c6ee0d",
+            key: "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEsz9ugWDj5jK5ELBK42ynytbo38gP\nHzZFI03Exwz8Lh/tCfL3YxwMdLjB+bMznsanlhK0RwcGP3IDb34kQDIo3Q==\n-----END PUBLIC KEY-----",
+            is_current: true,
         },
     ],
 };
@@ -159,11 +168,16 @@ impl GitHubClient for MockGitHubClient {
             Err(not_found())
         }
     }
+
+    fn public_keys(&self, _username: &str, _password: &str) -> AppResult<Vec<GitHubPublicKey>> {
+        Ok(self.data.public_keys.iter().collect())
+    }
 }
 
 pub(crate) struct MockData {
     orgs: &'static [MockOrg],
     users: &'static [MockUser],
+    public_keys: &'static [MockPublicKey],
 }
 
 struct MockUser {
@@ -184,4 +198,30 @@ struct MockTeam {
     id: i32,
     name: &'static str,
     members: &'static [&'static str],
+}
+
+struct MockPublicKey {
+    key_identifier: &'static str,
+    key: &'static str,
+    is_current: bool,
+}
+
+impl From<&'static MockPublicKey> for GitHubPublicKey {
+    fn from(k: &'static MockPublicKey) -> Self {
+        Self {
+            key_identifier: k.key_identifier.to_string(),
+            key: k.key.to_string(),
+            is_current: k.is_current,
+        }
+    }
+}
+
+impl FromIterator<&'static MockPublicKey> for Vec<GitHubPublicKey> {
+    fn from_iter<I: IntoIterator<Item = &'static MockPublicKey>>(iter: I) -> Self {
+        let mut c = Vec::new();
+        for k in iter {
+            c.push(k.into());
+        }
+        c
+    }
 }

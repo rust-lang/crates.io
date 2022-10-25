@@ -117,6 +117,11 @@ pub trait RequestHelper {
         self.request_builder(Method::GET, path)
     }
 
+    /// Create a POST request
+    fn post_request(&self, path: &str) -> MockRequest {
+        self.request_builder(Method::POST, path)
+    }
+
     /// Issue a GET request
     #[track_caller]
     fn get<T>(&self, path: &str) -> Response<T> {

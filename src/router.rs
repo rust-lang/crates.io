@@ -157,6 +157,12 @@ pub fn build_router(app: &App) -> RouteBuilder {
         C(crate_owner_invitation::private_list),
     );
 
+    // Alerts from GitHub scanning for exposed API tokens
+    router.post(
+        "/api/github/secret-scanning/verify",
+        C(github::secret_scanning::verify),
+    );
+
     // Only serve the local checkout of the git index in development mode.
     // In production, for crates.io, cargo gets the index from
     // https://github.com/rust-lang/crates.io-index directly.
