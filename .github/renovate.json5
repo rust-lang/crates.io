@@ -33,6 +33,12 @@
         },
         {
             "fileMatch": ["^.github/workflows/[^\\.]+\\.ya?ml$"],
+            "matchStrings": ["PNPM_VERSION:\\s*(?<currentValue>.*?)\n"],
+            "depNameTemplate": "pnpm",
+            "datasourceTemplate": "npm"
+        },
+        {
+            "fileMatch": ["^.github/workflows/[^\\.]+\\.ya?ml$"],
             "matchStrings": ["RUST_VERSION:\\s*(?<currentValue>.*?)\n"],
             "depNameTemplate": "rust",
             "datasourceTemplate": "github-releases",
