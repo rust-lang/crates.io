@@ -21,7 +21,7 @@ The server does the following things:
 ## Routes
 
 The API URLs that the server responds to (aka "routes") are defined in
-*src/lib.rs*.
+*src/router.rs*.
 
 All of the `api_router` routes are mounted under the `/api/v1` path (see the
 lines that look like `router.get("/api/v1/*path", R(api_router.clone()));`).
