@@ -9,7 +9,7 @@ overrides:
 
 specifiers:
   '@babel/eslint-parser': 7.19.1
-  '@babel/plugin-proposal-decorators': 7.19.6
+  '@babel/plugin-proposal-decorators': 7.20.0
   '@ember/optional-features': 2.0.0
   '@ember/render-modifiers': 2.0.4
   '@ember/test-helpers': 2.8.1
@@ -118,7 +118,7 @@ dependencies:
 
 devDependencies:
   '@babel/eslint-parser': 7.19.1_eslint@8.26.0
-  '@babel/plugin-proposal-decorators': 7.19.6
+  '@babel/plugin-proposal-decorators': 7.20.0
   '@ember/optional-features': 2.0.0
   '@ember/render-modifiers': 2.0.4_ember-source@4.8.0
   '@ember/test-helpers': 2.8.1_ember-source@4.8.0
@@ -651,8 +651,8 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /@babel/plugin-proposal-decorators/7.19.6:
-    resolution: {integrity: sha512-PKWforYpkVkogpOW0RaPuh7eQ7AoFgBJP+d87tQCRY2LVbvyGtfRM7RtrhCBsNgZb+2EY28SeWB6p2xe1Z5oAw==}
+  /@babel/plugin-proposal-decorators/7.20.0:
+    resolution: {integrity: sha512-vnuRRS20ygSxclEYikHzVrP9nZDFXaSzvJxGLQNAiBX041TmhS4hOUHWNIpq/q4muENuEP9XPJFXTNFejhemkg==}
     engines: {node: '>=6.9.0'}
     peerDependencies:
       '@babel/core': ^7.0.0-0
@@ -669,8 +669,8 @@ packages:
       - supports-color
     dev: true
 
-  /@babel/plugin-proposal-decorators/7.19.6_@babel+core@7.19.6:
-    resolution: {integrity: sha512-PKWforYpkVkogpOW0RaPuh7eQ7AoFgBJP+d87tQCRY2LVbvyGtfRM7RtrhCBsNgZb+2EY28SeWB6p2xe1Z5oAw==}
+  /@babel/plugin-proposal-decorators/7.20.0_@babel+core@7.19.6:
+    resolution: {integrity: sha512-vnuRRS20ygSxclEYikHzVrP9nZDFXaSzvJxGLQNAiBX041TmhS4hOUHWNIpq/q4muENuEP9XPJFXTNFejhemkg==}
     engines: {node: '>=6.9.0'}
     peerDependencies:
       '@babel/core': ^7.0.0-0
@@ -6959,7 +6959,7 @@ packages:
     dependencies:
       '@babel/core': 7.19.6
       '@babel/plugin-proposal-class-properties': 7.18.6_@babel+core@7.19.6
-      '@babel/plugin-proposal-decorators': 7.19.6_@babel+core@7.19.6
+      '@babel/plugin-proposal-decorators': 7.20.0_@babel+core@7.19.6
       '@babel/preset-env': 7.19.4_@babel+core@7.19.6
       '@embroider/macros': 1.9.0
       '@embroider/shared-internals': 1.8.3
@@ -7037,7 +7037,7 @@ packages:
       '@babel/core': 7.19.6
       '@babel/helper-compilation-targets': 7.19.3_@babel+core@7.19.6
       '@babel/plugin-proposal-class-properties': 7.18.6_@babel+core@7.19.6
-      '@babel/plugin-proposal-decorators': 7.19.6_@babel+core@7.19.6
+      '@babel/plugin-proposal-decorators': 7.20.0_@babel+core@7.19.6
       '@babel/plugin-proposal-private-methods': 7.18.6_@babel+core@7.19.6
       '@babel/plugin-proposal-private-property-in-object': 7.18.6_@babel+core@7.19.6
       '@babel/plugin-transform-modules-amd': 7.19.6_@babel+core@7.19.6
