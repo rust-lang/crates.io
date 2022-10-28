@@ -1,7 +1,7 @@
 import Model, { attr } from '@ember-data/model';
 import { inject as service } from '@ember/service';
 
-import { customAction } from '../utils/custom-action';
+import { apiAction } from '@mainmatter/ember-api-actions';
 
 export default class User extends Model {
   @service store;
@@ -16,11 +16,11 @@ export default class User extends Model {
   @attr kind;
 
   async stats() {
-    return await customAction(this, { method: 'GET', path: 'stats' });
+    return await apiAction(this, { method: 'GET', path: 'stats' });
   }
 
   async changeEmail(email) {
-    await customAction(this, { method: 'PUT', data: { user: { email } } });
+    await apiAction(this, { method: 'PUT', data: { user: { email } } });
 
     this.store.pushPayload({
       user: {
@@ -33,6 +33,6 @@ export default class User extends Model {
   }
 
   async resendVerificationEmail() {
-    return await customAction(this, { method: 'PUT', path: 'resend' });
+    return await apiAction(this, { method: 'PUT', path: 'resend' });
   }
 }

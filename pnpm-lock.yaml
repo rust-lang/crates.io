@@ -20,6 +20,7 @@ specifiers:
   '@glimmer/component': 1.1.2
   '@glimmer/tracking': 1.1.2
   '@juggle/resize-observer': 3.4.0
+  '@mainmatter/ember-api-actions': 0.1.1
   '@percy/cli': 1.12.0
   '@percy/ember': 4.0.0
   '@sentry/browser': 7.17.1
@@ -128,6 +129,7 @@ devDependencies:
   '@embroider/webpack': 1.9.0_4mpovkaptyark33dbwnkp36cwi
   '@glimmer/component': 1.1.2
   '@glimmer/tracking': 1.1.2
+  '@mainmatter/ember-api-actions': 0.1.1
   '@percy/cli': 1.12.0
   '@percy/ember': 4.0.0
   '@sinonjs/fake-timers': 9.1.2
@@ -2497,6 +2499,15 @@ packages:
       slash: 3.0.0
       tslib: 2.4.0
       upath: 2.0.1
+    dev: true
+
+  /@mainmatter/ember-api-actions/0.1.1:
+    resolution: {integrity: sha512-5SiMAsd4gnrMMd4HGoFHFUyYA4A/KBSWdf8SdZ+AohUV/6dByNVqPA0gJNZurI6GKZ9LkArUyDIM6RCBgR2t8g==}
+    engines: {node: 14.* || 16.* || >= 18}
+    dependencies:
+      ember-cli-babel: 7.26.11
+    transitivePeerDependencies:
+      - supports-color
     dev: true
 
   /@miragejs/pretender-node-polyfill/0.1.2:
