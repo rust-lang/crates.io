@@ -98,13 +98,20 @@ export function register(server) {
     return { ok: true };
   });
 
-  server.get('/api/v1/me/crate_owner_invitations', function (schema) {
+  server.get('/api/private/crate_owner_invitations', function (schema, request) {
     let { user } = getSession(schema);
     if (!user) {
       return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
     }
 
-    return schema.crateOwnerInvitations.where({ inviteeId: user.id });
+    const { start, end } = pageParams(request);
+    const invites = schema.crateOwnerInvitations.where({ inviteeId: user.id });
+
+    let response = this.serialize(invites.slice(start, end));
+
+    response.meta = { total: invites.length };
+
+    return response;
   });
 
   server.put('/api/v1/me/crate_owner_invitations/:crate_id', (schema, request) => {

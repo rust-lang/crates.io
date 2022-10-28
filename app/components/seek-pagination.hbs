@@ -1,0 +1,7 @@
+{{#if @pagination.nextPage}}
+  <nav local-class='seek-pagination' aria-label="Pagination navigation">
+    <LinkTo @query={{hash seek=@pagination.nextPage}} local-class="next" rel="next" title="Goes to next page" data-test-pagination-next>
+      Next Page
+    </LinkTo>
+  </nav>
+{{/if}}
