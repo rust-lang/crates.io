@@ -5,7 +5,7 @@ import fetch from 'fetch';
 import { setupTest } from '../../../helpers';
 import setupMirage from '../../../helpers/setup-mirage';
 
-module('Mirage | GET /api/v1/me/crate_owner_invitations', function (hooks) {
+module('Mirage | GET /api/private/crate_owner_invitations', function (hooks) {
   setupTest(hooks);
   setupMirage(hooks);
 
@@ -13,7 +13,7 @@ module('Mirage | GET /api/v1/me/crate_owner_invitations', function (hooks) {
     let user = this.server.create('user');
     this.server.create('mirage-session', { user });
 
-    let response = await fetch('/api/v1/me/crate_owner_invitations');
+    let response = await fetch('/api/private/crate_owner_invitations');
     assert.equal(response.status, 200);
     assert.deepEqual(await response.json(), { crate_owner_invitations: [] });
   });
@@ -44,7 +44,7 @@ module('Mirage | GET /api/v1/me/crate_owner_invitations', function (hooks) {
       inviter: inviter2,
     });
 
-    let response = await fetch('/api/v1/me/crate_owner_invitations');
+    let response = await fetch('/api/private/crate_owner_invitations');
     assert.equal(response.status, 200);
     assert.deepEqual(await response.json(), {
       crate_owner_invitations: [
@@ -55,6 +55,7 @@ module('Mirage | GET /api/v1/me/crate_owner_invitations', function (hooks) {
           invited_by_username: 'janed',
           invitee_id: Number(user.id),
           inviter_id: Number(inviter.id),
+          expires_at: '2017-01-24T12:34:56Z',
         },
         {
           crate_id: Number(ember.id),
@@ -63,6 +64,7 @@ module('Mirage | GET /api/v1/me/crate_owner_invitations', function (hooks) {
           invited_by_username: 'wycats',
           invitee_id: Number(user.id),
           inviter_id: Number(inviter2.id),
+          expires_at: '2017-01-31T12:34:56Z',
         },
       ],
       users: [
@@ -92,7 +94,7 @@ module('Mirage | GET /api/v1/me/crate_owner_invitations', function (hooks) {
   });
 
   test('returns an error if unauthenticated', async function (assert) {
-    let response = await fetch('/api/v1/me/crate_owner_invitations');
+    let response = await fetch('/api/private/crate_owner_invitations');
     assert.equal(response.status, 403);
     assert.deepEqual(await response.json(), {
       errors: [{ detail: 'must be logged in to perform that action' }],
