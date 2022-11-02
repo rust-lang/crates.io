@@ -11,7 +11,7 @@ on:
 
 env:
   DIESEL_CLI_VERSION: 1.4.1
-  PNPM_VERSION: 7.14.1
+  PNPM_VERSION: 7.14.2
   RUST_VERSION: 1.64.0
 
 jobs:
