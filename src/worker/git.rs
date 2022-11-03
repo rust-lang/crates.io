@@ -131,7 +131,7 @@ pub fn squash_index(env: &Environment) -> Result<(), PerformError> {
 
     // Shell out to git because libgit2 does not currently support push leases
 
-    repo.run_command(Command::new("git").args(&[
+    repo.run_command(Command::new("git").args([
         "push",
         // Both updates should succeed or fail together
         "--atomic",

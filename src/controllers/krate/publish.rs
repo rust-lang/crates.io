@@ -436,7 +436,7 @@ fn verify_tarball(
         // as `bar-0.1.0/` source code, and this could overwrite other crates in
         // the registry!
         let entry_path = entry.path()?;
-        if !entry_path.starts_with(&pkg_name) {
+        if !entry_path.starts_with(pkg_name) {
             return Err(cargo_err("invalid tarball uploaded"));
         }
         if entry_path == vcs_info_path {

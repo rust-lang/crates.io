@@ -130,7 +130,7 @@ impl Drop for DumpDirectory {
 
 pub fn run_psql(script: &Path, database_url: &str) -> Result<(), PerformError> {
     debug!(?script, "Running psql script…");
-    let psql_script = File::open(&script)?;
+    let psql_script = File::open(script)?;
     let psql = std::process::Command::new("psql")
         .arg(database_url)
         .current_dir(script.parent().unwrap())

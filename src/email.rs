@@ -148,7 +148,7 @@ or go to https://{domain}/me/pending-invites to manage all of your crate ownersh
             EmailBackend::FileSystem { path } => {
                 add_custom_metadata("email_backend", "fs");
 
-                let id = FileTransport::new(&path).send(&email).map_err(|err| {
+                let id = FileTransport::new(path).send(&email).map_err(|err| {
                     add_custom_metadata("email_error", err);
                     server_error("Email file could not be generated")
                 })?;

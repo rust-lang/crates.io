@@ -229,7 +229,7 @@ impl PublishBuilder {
         );
         body.extend(json.as_bytes().iter().cloned());
 
-        body.extend(&[
+        body.extend([
             tarball.len() as u8,
             (tarball.len() >> 8) as u8,
             (tarball.len() >> 16) as u8,
