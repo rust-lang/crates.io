@@ -55,7 +55,6 @@ module('Mirage | GET /api/private/crate_owner_invitations', function (hooks) {
           invited_by_username: 'janed',
           invitee_id: Number(user.id),
           inviter_id: Number(inviter.id),
-          expires_at: '2017-01-24T12:34:56Z',
         },
         {
           crate_id: Number(ember.id),
@@ -64,7 +63,6 @@ module('Mirage | GET /api/private/crate_owner_invitations', function (hooks) {
           invited_by_username: 'wycats',
           invitee_id: Number(user.id),
           inviter_id: Number(inviter2.id),
-          expires_at: '2017-01-31T12:34:56Z',
         },
       ],
       users: [
