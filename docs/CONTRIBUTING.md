@@ -285,7 +285,7 @@ by typing `\q`) without any errors to connect to your running Postgres server.
 On all platforms, install through `cargo` by running:
 
 ```
-cargo install diesel_cli --no-default-features --features postgres --version 1
+cargo install diesel_cli --no-default-features --features postgres --version ^1
 ```
 
 This will install a binary named `diesel`, so you should be able to run `diesel
