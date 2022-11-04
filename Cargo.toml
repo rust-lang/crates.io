@@ -29,7 +29,7 @@ cargo-registry-index = { path = "cargo-registry-index" }
 cargo-registry-markdown = { path = "cargo-registry-markdown" }
 cargo-registry-s3 = { path = "cargo-registry-s3" }
 chrono = { version = "=0.4.22", features = ["serde"] }
-clap = { version = "=4.0.18", features = ["derive", "unicode", "wrap_help"] }
+clap = { version = "=4.0.19", features = ["derive", "unicode", "wrap_help"] }
 
 conduit = "=0.10.0"
 conduit-conditional-get = "=0.10.0"
