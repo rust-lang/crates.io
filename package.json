@@ -147,12 +147,12 @@
     }
   },
   "engines": {
-    "node": "16.18.0"
+    "node": "16.18.1"
   },
   "ember": {
     "edition": "octane"
   },
   "volta": {
-    "node": "16.18.0"
+    "node": "16.18.1"
   }
 }
