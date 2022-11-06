@@ -9,7 +9,7 @@ use crate::app::App;
 use crate::controllers::helpers::pagination::*;
 use crate::models::version::TopVersions;
 use crate::models::{
-    Badge, CrateOwner, CrateOwnerInvitation, NewCrateOwnerInvitationOutcome, Owner, OwnerKind,
+    CrateOwner, CrateOwnerInvitation, NewCrateOwnerInvitationOutcome, Owner, OwnerKind,
     ReverseDependency, User, Version,
 };
 use crate::util::errors::{cargo_err, AppResult};
@@ -413,12 +413,6 @@ impl Crate {
             .set(crate_owners::deleted.eq(true))
             .execute(conn)?;
         Ok(())
-    }
-
-    pub fn badges(&self, conn: &PgConnection) -> QueryResult<Vec<Badge>> {
-        badges::table
-            .filter(badges::crate_id.eq(self.id))
-            .load(conn)
     }
 
     /// Returns (dependency, dependent crate name, dependent crate downloads)
