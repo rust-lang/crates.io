@@ -1,13 +1,6 @@
 export default [
   {
-    badges: [
-      {
-        badge_type: 'maintenance',
-        attributes: {
-          status: 'actively-developed',
-        },
-      },
-    ],
+    badges: [],
     created_at: '2014-11-23T09:01:21Z',
     description: 'A Kinetic protocol library written in Rust',
     documentation: 'https://icorderi.github.io/kinetic-rust/doc/kinetic/',
@@ -22,14 +15,7 @@ export default [
     versionIds: [],
   },
   {
-    badges: [
-      {
-        badge_type: 'maintenance',
-        attributes: {
-          value: 'actively-developed',
-        },
-      },
-    ],
+    badges: [],
     categoryIds: [],
     created_at: '2014-12-08T02:08:06Z',
     description: 'A high-level, Rust idiomatic wrapper around nanomsg.',
@@ -70,55 +56,7 @@ export default [
     name: 'rust_mixin',
     repository: 'https://github.com/huonw/external_mixin',
     updated_at: '2015-02-27T11:52:13Z',
-    badges: [
-      {
-        attributes: {
-          project: 'robertohuertasm/github-oss',
-          pipeline: 'microserver',
-          build: '2',
-        },
-        badge_type: 'azure-devops',
-      },
-      {
-        attributes: {
-          repository: 'huonw/external_mixin',
-        },
-        badge_type: 'appveyor',
-      },
-      {
-        attributes: {
-          branch: 'master',
-          repository: 'huonw/external_mixin',
-        },
-        badge_type: 'travis-ci',
-      },
-      {
-        attributes: {
-          repository: 'huonw/external_mixin',
-        },
-        badge_type: 'is-it-maintained-issue-resolution',
-      },
-      {
-        attributes: {
-          repository: 'huonw/external_mixin',
-        },
-        badge_type: 'is-it-maintained-open-issues',
-      },
-      {
-        attributes: {
-          branch: 'master',
-          repository: 'huonw/external_mixin',
-        },
-        badge_type: 'codecov',
-      },
-      {
-        attributes: {
-          branch: 'master',
-          repository: 'huonw/external_mixin',
-        },
-        badge_type: 'coveralls',
-      },
-    ],
+    badges: [],
     versionIds: [],
   },
   {
