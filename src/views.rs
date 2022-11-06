@@ -1,11 +1,10 @@
 use chrono::NaiveDateTime;
-use std::collections::HashMap;
 use url::Url;
 
 use crate::github;
 use crate::models::{
-    Badge, Category, Crate, CrateOwnerInvitation, CreatedApiToken, Dependency, DependencyKind,
-    Keyword, Owner, ReverseDependency, Team, TopVersions, User, Version, VersionDownload,
+    Category, Crate, CrateOwnerInvitation, CreatedApiToken, Dependency, DependencyKind, Keyword,
+    Owner, ReverseDependency, Team, TopVersions, User, Version, VersionDownload,
     VersionOwnerAction,
 };
 use crate::util::rfc3339;
@@ -13,19 +12,6 @@ use crate::util::rfc3339;
 /// Hosts in this list are known to not be hosting documentation,
 /// and are possibly of malicious intent e.g. ad tracking networks, etc.
 const DOCUMENTATION_BLOCKLIST: &[&str] = &["rust-ci.org", "rustless.org", "ironframework.io"];
-
-#[derive(PartialEq, Eq, Debug, Serialize, Deserialize)]
-pub struct EncodableBadge {
-    pub badge_type: String,
-    pub attributes: HashMap<String, Option<String>>,
-}
-
-impl From<Badge> for EncodableBadge {
-    fn from(badge: Badge) -> Self {
-        // The serde attributes on Badge ensure it can be deserialized to EncodableBadge
-        serde_json::from_value(serde_json::to_value(badge).unwrap()).unwrap()
-    }
-}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct EncodableCategory {
@@ -216,7 +202,7 @@ pub struct EncodableCrate {
     pub versions: Option<Vec<i32>>,
     pub keywords: Option<Vec<String>>,
     pub categories: Option<Vec<String>>,
-    pub badges: Option<Vec<EncodableBadge>>,
+    pub badges: Option<Vec<()>>,
     #[serde(with = "rfc3339")]
     pub created_at: NaiveDateTime,
     // NOTE: Used by shields.io, altering `downloads` requires a PR with shields.io
@@ -242,7 +228,7 @@ impl EncodableCrate {
         versions: Option<Vec<i32>>,
         keywords: Option<&[Keyword]>,
         categories: Option<&[Category]>,
-        badges: Option<Vec<Badge>>,
+        badges: Option<Vec<()>>,
         exact_match: bool,
         recent_downloads: Option<i64>,
     ) -> Self {
@@ -313,7 +299,7 @@ impl EncodableCrate {
     pub fn from_minimal(
         krate: Crate,
         top_versions: Option<&TopVersions>,
-        badges: Option<Vec<Badge>>,
+        badges: Option<Vec<()>>,
         exact_match: bool,
         recent_downloads: Option<i64>,
     ) -> Self {
