@@ -2,7 +2,7 @@
 //! and manages the serialising and deserialising of this information
 //! to and from structs. The serlializing is only utilised in
 //! integration tests.
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 
@@ -30,7 +30,6 @@ pub struct EncodableCrateUpload {
     pub license: Option<String>,
     pub license_file: Option<String>,
     pub repository: Option<String>,
-    pub badges: Option<HashMap<String, HashMap<String, String>>>,
     #[serde(default)]
     pub links: Option<String>,
 }
