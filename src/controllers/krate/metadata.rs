@@ -193,15 +193,8 @@ pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
         None
     };
 
-    let badges = if include.badges {
-        Some(
-            badges::table
-                .filter(badges::crate_id.eq(krate.id))
-                .load(&*conn)?,
-        )
-    } else {
-        None
-    };
+    let badges = if include.badges { Some(vec![]) } else { None };
+
     let top_versions = if include.versions {
         Some(krate.top_versions(&conn)?)
     } else {
