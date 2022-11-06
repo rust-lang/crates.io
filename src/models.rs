@@ -1,5 +1,4 @@
 pub use self::action::{insert_version_owner_action, VersionAction, VersionOwnerAction};
-pub use self::badge::{Badge, CrateBadge, MaintenanceStatus};
 pub use self::category::{Category, CrateCategory, NewCategory};
 pub use self::crate_owner_invitation::{CrateOwnerInvitation, NewCrateOwnerInvitationOutcome};
 pub use self::dependency::{Dependency, DependencyKind, ReverseDependency};
@@ -18,7 +17,6 @@ pub use self::version::{NewVersion, TopVersions, Version};
 pub mod helpers;
 
 mod action;
-mod badge;
 pub mod category;
 mod crate_owner_invitation;
 pub mod dependency;
