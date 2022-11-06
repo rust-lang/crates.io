@@ -11,7 +11,7 @@ use diesel::{delete, update, ExpressionMethods, QueryDsl, RunQueryDsl};
 use flate2::write::GzEncoder;
 use flate2::Compression;
 use http::StatusCode;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 use std::io::Read;
 use std::iter::FromIterator;
 use std::time::Duration;
@@ -779,57 +779,6 @@ fn ignored_categories() {
     assert_eq!(json.krate.name, "foo_ignored_cat");
     assert_eq!(json.krate.max_version, "1.0.0");
     assert_eq!(json.warnings.invalid_categories, vec!["bar"]);
-}
-
-#[test]
-fn good_badges() {
-    let (_, anon, _, token) = TestApp::full().with_token();
-
-    let mut badges = HashMap::new();
-    let mut badge_attributes = HashMap::new();
-    badge_attributes.insert(
-        String::from("repository"),
-        String::from("rust-lang/crates.io"),
-    );
-    badges.insert(String::from("travis-ci"), badge_attributes);
-
-    let crate_to_publish = PublishBuilder::new("foobadger").badges(badges);
-
-    let json = token.publish_crate(crate_to_publish).good();
-    assert_eq!(json.krate.name, "foobadger");
-    assert_eq!(json.krate.max_version, "1.0.0");
-
-    let json = anon.show_crate("foobadger");
-    let badges = json.krate.badges.unwrap();
-    assert_eq!(badges.len(), 0);
-}
-
-#[test]
-fn ignored_badges() {
-    let (_, anon, _, token) = TestApp::full().with_token();
-
-    let mut badges = HashMap::new();
-
-    // Known badge type, missing required repository attribute
-    let mut badge_attributes = HashMap::new();
-    badge_attributes.insert(String::from("branch"), String::from("master"));
-    badges.insert(String::from("travis-ci"), badge_attributes);
-
-    // Unknown badge type
-    let mut unknown_badge_attributes = HashMap::new();
-    unknown_badge_attributes.insert(String::from("repository"), String::from("rust-lang/rust"));
-    badges.insert(String::from("not-a-badge"), unknown_badge_attributes);
-
-    let crate_to_publish = PublishBuilder::new("foo_ignored_badge").badges(badges);
-
-    let json = token.publish_crate(crate_to_publish).good();
-    assert_eq!(json.krate.name, "foo_ignored_badge");
-    assert_eq!(json.krate.max_version, "1.0.0");
-    assert_eq!(json.warnings.invalid_badges.len(), 0);
-
-    let json = anon.show_crate("foo_ignored_badge");
-    let badges = json.krate.badges.unwrap();
-    assert_eq!(badges.len(), 0);
 }
 
 #[test]

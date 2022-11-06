@@ -1,5 +1,5 @@
 use cargo_registry::views::krate_publish as u;
-use std::{collections::BTreeMap, collections::HashMap, io::Read};
+use std::{collections::BTreeMap, io::Read};
 
 use flate2::{write::GzEncoder, Compression};
 use once_cell::sync::Lazy;
@@ -24,7 +24,6 @@ fn generate_empty_tarball() -> Vec<u8> {
 /// a crate to exist and don't need to test behavior caused by the publish request, inserting
 /// a crate into the database directly by using CrateBuilder will be faster.
 pub struct PublishBuilder {
-    badges: HashMap<String, HashMap<String, String>>,
     categories: Vec<String>,
     deps: Vec<u::EncodableCrateDependency>,
     desc: Option<String>,
@@ -44,7 +43,6 @@ impl PublishBuilder {
     /// in its tarball.
     pub fn new(krate_name: &str) -> Self {
         PublishBuilder {
-            badges: HashMap::new(),
             categories: vec![],
             deps: vec![],
             desc: Some("description".to_string()),
@@ -150,12 +148,6 @@ impl PublishBuilder {
         self
     }
 
-    /// Add badges to this crate.
-    pub fn badges(mut self, badges: HashMap<String, HashMap<String, String>>) -> Self {
-        self.badges = badges;
-        self
-    }
-
     /// Remove the license from this crate. Publish will fail unless license or license file is set.
     pub fn unset_license(mut self) -> Self {
         self.license = None;
@@ -202,7 +194,6 @@ impl PublishBuilder {
             license: self.license,
             license_file: self.license_file,
             repository: None,
-            badges: Some(self.badges),
             links: None,
         };
 
