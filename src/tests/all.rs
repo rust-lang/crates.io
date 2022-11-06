@@ -29,7 +29,6 @@ use diesel::prelude::*;
 
 mod account_lock;
 mod authentication;
-mod badge;
 mod blocked_routes;
 mod builders;
 mod categories;
