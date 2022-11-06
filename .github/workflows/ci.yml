@@ -69,7 +69,7 @@ jobs:
       - run: rustup component add rustfmt
       - run: rustup component add clippy
 
-      - uses: Swatinem/rust-cache@v2.0.2
+      - uses: Swatinem/rust-cache@v2.1.0
 
       - run: cargo fmt --check
       - run: cargo clippy --all-targets --all-features --all
@@ -121,7 +121,7 @@ jobs:
           rustup update ${{ matrix.rust }}
           rustup default ${{ matrix.rust }}
 
-      - uses: Swatinem/rust-cache@v2.0.2
+      - uses: Swatinem/rust-cache@v2.1.0
 
       - name: Setup database
         run: |
