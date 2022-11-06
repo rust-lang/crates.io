@@ -7,9 +7,7 @@ use indexmap::IndexMap;
 
 use crate::controllers::cargo_prelude::*;
 use crate::controllers::helpers::Paginate;
-use crate::models::{
-    Crate, CrateBadge, CrateOwner, CrateVersions, OwnerKind, TopVersions, Version,
-};
+use crate::models::{Crate, CrateOwner, CrateVersions, OwnerKind, TopVersions, Version};
 use crate::schema::*;
 use crate::util::errors::bad_request;
 use crate::views::EncodableCrate;
@@ -319,25 +317,16 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
         .into_iter()
         .map(TopVersions::from_versions);
 
-    let badges: Vec<CrateBadge> = CrateBadge::belonging_to(&crates)
-        .select((badges::crate_id, badges::all_columns))
-        .load(&*conn)?;
-    let badges = badges
-        .grouped_by(&crates)
-        .into_iter()
-        .map(|badges| badges.into_iter().map(|cb| cb.badge).collect());
-
     let crates = versions
         .zip(crates)
         .zip(perfect_matches)
         .zip(recent_downloads)
-        .zip(badges)
         .map(
-            |((((max_version, krate), perfect_match), recent_downloads), badges)| {
+            |(((max_version, krate), perfect_match), recent_downloads)| {
                 EncodableCrate::from_minimal(
                     krate,
                     Some(&max_version),
-                    Some(badges),
+                    Some(vec![]),
                     perfect_match,
                     Some(recent_downloads),
                 )
