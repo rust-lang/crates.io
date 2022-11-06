@@ -216,7 +216,7 @@ pub struct EncodableCrate {
     pub versions: Option<Vec<i32>>,
     pub keywords: Option<Vec<String>>,
     pub categories: Option<Vec<String>>,
-    pub badges: Option<Vec<EncodableBadge>>,
+    pub badges: Option<Vec<()>>,
     #[serde(with = "rfc3339")]
     pub created_at: NaiveDateTime,
     // NOTE: Used by shields.io, altering `downloads` requires a PR with shields.io
