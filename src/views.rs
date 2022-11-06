@@ -9,6 +9,9 @@ use crate::models::{
 };
 use crate::util::rfc3339;
 
+pub mod krate_publish;
+pub use self::krate_publish::{EncodableCrateDependency, EncodableCrateUpload};
+
 /// Hosts in this list are known to not be hosting documentation,
 /// and are possibly of malicious intent e.g. ad tracking networks, etc.
 const DOCUMENTATION_BLOCKLIST: &[&str] = &["rust-ci.org", "rustless.org", "ironframework.io"];
@@ -661,9 +664,6 @@ pub struct PublishWarnings {
     pub invalid_badges: Vec<String>,
     pub other: Vec<String>,
 }
-
-pub mod krate_publish;
-pub use self::krate_publish::{EncodableCrateDependency, EncodableCrateUpload};
 
 #[cfg(test)]
 mod tests {
