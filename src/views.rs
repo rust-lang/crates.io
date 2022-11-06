@@ -242,7 +242,7 @@ impl EncodableCrate {
         versions: Option<Vec<i32>>,
         keywords: Option<&[Keyword]>,
         categories: Option<&[Category]>,
-        badges: Option<Vec<Badge>>,
+        badges: Option<Vec<()>>,
         exact_match: bool,
         recent_downloads: Option<i64>,
     ) -> Self {
@@ -313,7 +313,7 @@ impl EncodableCrate {
     pub fn from_minimal(
         krate: Crate,
         top_versions: Option<&TopVersions>,
-        badges: Option<Vec<Badge>>,
+        badges: Option<Vec<()>>,
         exact_match: bool,
         recent_downloads: Option<i64>,
     ) -> Self {
