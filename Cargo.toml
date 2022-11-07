@@ -54,7 +54,7 @@ futures-util = "=0.3.25"
 hashbrown = { version = "=0.12.3", default-features = false }
 hex = "=0.4.3"
 http = "=0.2.8"
-hyper = { version = "=0.14.22", features = ["client", "http1"] }
+hyper = { version = "=0.14.23", features = ["client", "http1"] }
 indexmap = { version = "=1.9.1", features = ["serde-1"] }
 indicatif = "=0.17.1"
 ipnetwork = "=0.20.0"
