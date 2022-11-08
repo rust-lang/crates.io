@@ -1,5 +1,6 @@
 use std::time::SystemTime;
 
+use anyhow::Context;
 use aws_sigv4::{
     http_request::{self, SignableRequest, SigningSettings},
     SigningParams,
@@ -62,12 +63,16 @@ impl CloudFront {
             .build()
             .unwrap(); // all required fields are set
         let (mut signature_headers, _) = http_request::sign(request, &params).unwrap().into_parts();
-        client
+        let response = client
             .post(url)
             .headers(signature_headers.take_headers().unwrap_or_default())
             .body(body)
-            .send()?
-            .error_for_status()?;
+            .send()?;
+        if let Some(err) = response.error_for_status_ref().err() {
+            let headers = format!("{:?}", response.headers());
+            let body = response.text()?;
+            return Err(err).context(format!("{headers}; body: {body}"));
+        }
         Ok(())
     }
 }
