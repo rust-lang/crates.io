@@ -100,7 +100,7 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
             .load(&conn)
             .expect("error loading versions");
 
-        let mut tasks = Vec::with_capacity(page_size as usize);
+        let mut tasks = Vec::with_capacity(page_size);
         for (version, krate_name) in versions {
             Version::record_readme_rendering(version.id, &conn)
                 .context("Couldn't record rendering time")?;
