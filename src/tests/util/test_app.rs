@@ -368,7 +368,7 @@ fn build_app(
     let client = if let Some(proxy) = proxy {
         let mut builder = Client::builder();
         builder = builder
-            .proxy(Proxy::all(&proxy).expect("Unable to configure proxy with the provided URL"));
+            .proxy(Proxy::all(proxy).expect("Unable to configure proxy with the provided URL"));
         Some(builder.build().expect("TLS backend cannot be initialized"))
     } else {
         None

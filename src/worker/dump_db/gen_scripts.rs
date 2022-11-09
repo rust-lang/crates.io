@@ -128,7 +128,7 @@ mod tests {
             .0
             .iter()
             .flat_map(|(table, config)| {
-                config.columns.iter().map(move |(column, _)| Column {
+                config.columns.keys().map(|column| Column {
                     table_name: table.clone(),
                     column_name: column.clone(),
                 })

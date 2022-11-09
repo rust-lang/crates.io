@@ -188,7 +188,7 @@ impl RepositoryConfig {
 
                 let credentials = Credentials::Ssh {
                     key: String::from_utf8(
-                        base64::decode(&encoded_key).expect("failed to base64 decode the ssh key"),
+                        base64::decode(encoded_key).expect("failed to base64 decode the ssh key"),
                     )
                     .expect("failed to convert the ssh key to a string"),
                 };

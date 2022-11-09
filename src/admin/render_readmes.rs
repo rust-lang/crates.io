@@ -100,7 +100,7 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
             .load(&conn)
             .expect("error loading versions");
 
-        let mut tasks = Vec::with_capacity(page_size as usize);
+        let mut tasks = Vec::with_capacity(page_size);
         for (version, krate_name) in versions {
             Version::record_readme_rendering(version.id, &conn)
                 .context("Couldn't record rendering time")?;
@@ -153,7 +153,7 @@ fn get_readme(
         header::USER_AGENT,
         header::HeaderValue::from_static(USER_AGENT),
     );
-    let request = client.get(&location).headers(extra_headers);
+    let request = client.get(location).headers(extra_headers);
     let response = request.send().context("Failed to fetch crate")?;
 
     if !response.status().is_success() {

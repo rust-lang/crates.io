@@ -239,7 +239,7 @@ mod tests {
         fs::write(p.join("data").join("users.csv"), "").unwrap();
 
         let tarball = DumpTarball::create(&p).unwrap();
-        let gz = GzDecoder::new(File::open(&tarball.tarball_path).unwrap());
+        let gz = GzDecoder::new(File::open(&*tarball.tarball_path).unwrap());
         let mut tar = Archive::new(gz);
 
         for (i, entry) in tar.entries().unwrap().enumerate() {

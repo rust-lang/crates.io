@@ -66,7 +66,7 @@ impl Drop for Bomb {
             }
             Ok(_) if thread::panicking() => {}
             Ok(Some((data, file))) if data != b"[]\n" => {
-                assert_ok!(assert_ok!(File::create(&file)).write_all(&data));
+                assert_ok!(assert_ok!(File::create(file)).write_all(&data));
             }
             Ok(_) => {}
         }

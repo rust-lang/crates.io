@@ -408,7 +408,7 @@ impl Crate {
     ) -> AppResult<()> {
         let owner = Owner::find_or_create_by_login(app, conn, req_user, login)?;
 
-        let target = crate_owners::table.find((self.id(), owner.id(), owner.kind() as i32));
+        let target = crate_owners::table.find((self.id(), owner.id(), owner.kind()));
         diesel::update(target)
             .set(crate_owners::deleted.eq(true))
             .execute(conn)?;
