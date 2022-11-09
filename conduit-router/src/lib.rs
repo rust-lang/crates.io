@@ -108,7 +108,7 @@ impl conduit::Handler for RouteBuilder {
             let method = request.method();
             let path = request.path();
 
-            match self.recognize(&method, path) {
+            match self.recognize(method, path) {
                 Ok(m) => m,
                 Err(e) => {
                     info!("{}", e);
