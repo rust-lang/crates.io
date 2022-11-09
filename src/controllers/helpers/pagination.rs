@@ -294,7 +294,7 @@ fn is_useragent_or_ip_blocked(config: &Server, req: &dyn RequestExt) -> bool {
 /// hopefully the base64 will be enough to convey that doing it is unsupported.
 pub(crate) fn encode_seek<S: Serialize>(params: S) -> AppResult<String> {
     Ok(base64::encode_config(
-        &serde_json::to_vec(&params)?,
+        serde_json::to_vec(&params)?,
         base64::URL_SAFE_NO_PAD,
     ))
 }

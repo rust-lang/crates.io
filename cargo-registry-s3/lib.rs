@@ -52,7 +52,7 @@ impl Bucket {
         let url = self.url(path);
 
         client
-            .put(&url)
+            .put(url)
             .header(header::AUTHORIZATION, auth)
             .header(header::CONTENT_TYPE, content_type)
             .header(header::DATE, date)
@@ -72,7 +72,7 @@ impl Bucket {
         let url = self.url(path);
 
         client
-            .delete(&url)
+            .delete(url)
             .header(header::DATE, date)
             .header(header::AUTHORIZATION, auth)
             .send()?

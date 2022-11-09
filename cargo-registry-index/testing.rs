@@ -21,7 +21,7 @@ impl UpstreamIndex {
     }
 
     pub fn url() -> Url {
-        Url::from_file_path(&bare()).unwrap()
+        Url::from_file_path(bare()).unwrap()
     }
 
     /// Obtain a list of crates from the index HEAD
@@ -76,14 +76,14 @@ fn bare() -> PathBuf {
 
 fn init() {
     static INIT: Once = Once::new();
-    let _ = fs::remove_dir_all(&bare());
+    let _ = fs::remove_dir_all(bare());
 
     INIT.call_once(|| {
         fs::create_dir_all(root().parent().unwrap()).unwrap();
     });
 
     let bare = git2::Repository::init_opts(
-        &bare(),
+        bare(),
         git2::RepositoryInitOptions::new()
             .bare(true)
             .initial_head("master"),

@@ -153,7 +153,7 @@ fn get_readme(
         header::USER_AGENT,
         header::HeaderValue::from_static(USER_AGENT),
     );
-    let request = client.get(&location).headers(extra_headers);
+    let request = client.get(location).headers(extra_headers);
     let response = request.send().context("Failed to fetch crate")?;
 
     if !response.status().is_success() {
