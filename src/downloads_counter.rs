@@ -97,10 +97,10 @@ impl DownloadsCounter {
         Ok(stats)
     }
 
-    fn persist_shard(
+    fn persist_shard<'a, Iter: Iterator<Item = (&'a i32, &'a SharedValue<AtomicUsize>)>>(
         &self,
         conn: &PgConnection,
-        shard: hashbrown::hash_map::Iter<'_, i32, SharedValue<AtomicUsize>>,
+        shard: Iter,
     ) -> Result<PersistStats, Error> {
         use crate::schema::{version_downloads, versions};
 

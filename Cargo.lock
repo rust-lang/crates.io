@@ -296,7 +296,6 @@ dependencies = [
  "flate2",
  "futures-channel",
  "futures-util",
- "hashbrown",
  "hex",
  "http",
  "hyper",
