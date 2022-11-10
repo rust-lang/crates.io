@@ -51,7 +51,7 @@ dotenv = "=0.15.0"
 flate2 = "=1.0.24"
 futures-channel = { version = "=0.3.25", default-features = false }
 futures-util = "=0.3.25"
-hashbrown = { version = "=0.12.3", default-features = false }
+hashbrown = { version = "=0.13.1", default-features = false }
 hex = "=0.4.3"
 http = "=0.2.8"
 hyper = { version = "=0.14.23", features = ["client", "http1"] }
