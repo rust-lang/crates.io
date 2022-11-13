@@ -78,13 +78,6 @@ jobs:
     name: Backend
     runs-on: ubuntu-20.04
 
-    continue-on-error: ${{ matrix.rust != 'stable' }}
-    strategy:
-      matrix:
-        rust:
-          - stable
-          - beta
-
     env:
       RUST_BACKTRACE: 1
       DATABASE_URL: postgres://postgres:postgres@localhost/cargo_registry_test
@@ -109,17 +102,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3.1.0
 
-      - name: Install ${{ env.RUST_VERSION }} Rust
-        if: matrix.rust == 'stable'
+      - name: Install Rust
         run: |
           rustup update ${{ env.RUST_VERSION }}
           rustup default ${{ env.RUST_VERSION }}
-
-      - name: Install ${{ matrix.rust }} Rust
-        if: matrix.rust != 'stable'
-        run: |
-          rustup update ${{ matrix.rust }}
-          rustup default ${{ matrix.rust }}
 
       - uses: Swatinem/rust-cache@v2.2.0
 
