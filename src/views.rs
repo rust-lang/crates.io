@@ -209,7 +209,7 @@ pub struct EncodableCrate {
     #[serde(with = "rfc3339")]
     pub created_at: NaiveDateTime,
     // NOTE: Used by shields.io, altering `downloads` requires a PR with shields.io
-    pub downloads: i32,
+    pub downloads: i64,
     pub recent_downloads: Option<i64>,
     // NOTE: Used by shields.io, altering `max_version` requires a PR with shields.io
     pub max_version: String,
@@ -268,6 +268,17 @@ impl EncodableCrate {
         let max_stable_version = top_versions
             .and_then(|v| v.highest_stable.as_ref())
             .map(|v| v.to_string());
+
+        // the total number of downloads is eventually consistent, but can lag
+        // behind the number of "recent downloads". to hide this inconsistency
+        // we will use the "recent downloads" as "total downloads" in case it is
+        // higher.
+        let downloads = downloads as i64;
+        let downloads = if matches!(recent_downloads, Some(x) if x > downloads) {
+            recent_downloads.unwrap()
+        } else {
+            downloads
+        };
 
         EncodableCrate {
             id: name.clone(),
