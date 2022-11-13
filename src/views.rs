@@ -678,7 +678,10 @@ mod tests {
             slug: "".to_string(),
             description: "".to_string(),
             crates_cnt: 1,
-            created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
+            created_at: NaiveDate::from_ymd_opt(2017, 1, 6)
+                .unwrap()
+                .and_hms_opt(14, 23, 11)
+                .unwrap(),
         };
         let json = serde_json::to_string(&cat).unwrap();
         assert_some!(json
@@ -694,7 +697,10 @@ mod tests {
             slug: "".to_string(),
             description: "".to_string(),
             crates_cnt: 1,
-            created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
+            created_at: NaiveDate::from_ymd_opt(2017, 1, 6)
+                .unwrap()
+                .and_hms_opt(14, 23, 11)
+                .unwrap(),
             subcategories: vec![],
             parent_categories: vec![],
         };
@@ -709,7 +715,10 @@ mod tests {
         let key = EncodableKeyword {
             id: "".to_string(),
             keyword: "".to_string(),
-            created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
+            created_at: NaiveDate::from_ymd_opt(2017, 1, 6)
+                .unwrap()
+                .and_hms_opt(14, 23, 11)
+                .unwrap(),
             crates_cnt: 0,
         };
         let json = serde_json::to_string(&key).unwrap();
@@ -726,8 +735,14 @@ mod tests {
             num: "".to_string(),
             dl_path: "".to_string(),
             readme_path: "".to_string(),
-            updated_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
-            created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 12),
+            updated_at: NaiveDate::from_ymd_opt(2017, 1, 6)
+                .unwrap()
+                .and_hms_opt(14, 23, 11)
+                .unwrap(),
+            created_at: NaiveDate::from_ymd_opt(2017, 1, 6)
+                .unwrap()
+                .and_hms_opt(14, 23, 12)
+                .unwrap(),
             downloads: 0,
             features: serde_json::from_str("{}").unwrap(),
             yanked: false,
@@ -749,7 +764,10 @@ mod tests {
                     avatar: None,
                     url: None,
                 },
-                time: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 12),
+                time: NaiveDate::from_ymd_opt(2017, 1, 6)
+                    .unwrap()
+                    .and_hms_opt(14, 23, 12)
+                    .unwrap(),
             }],
         };
         let json = serde_json::to_string(&ver).unwrap();
@@ -767,12 +785,18 @@ mod tests {
         let crt = EncodableCrate {
             id: "".to_string(),
             name: "".to_string(),
-            updated_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
+            updated_at: NaiveDate::from_ymd_opt(2017, 1, 6)
+                .unwrap()
+                .and_hms_opt(14, 23, 11)
+                .unwrap(),
             versions: None,
             keywords: None,
             categories: None,
             badges: None,
-            created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 12),
+            created_at: NaiveDate::from_ymd_opt(2017, 1, 6)
+                .unwrap()
+                .and_hms_opt(14, 23, 12)
+                .unwrap(),
             downloads: 0,
             recent_downloads: None,
             max_version: "".to_string(),
@@ -809,8 +833,14 @@ mod tests {
             invited_by_username: "".to_string(),
             crate_name: "".to_string(),
             crate_id: 123,
-            created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
-            expires_at: NaiveDate::from_ymd(2020, 10, 24).and_hms(16, 30, 00),
+            created_at: NaiveDate::from_ymd_opt(2017, 1, 6)
+                .unwrap()
+                .and_hms_opt(14, 23, 11)
+                .unwrap(),
+            expires_at: NaiveDate::from_ymd_opt(2020, 10, 24)
+                .unwrap()
+                .and_hms_opt(16, 30, 00)
+                .unwrap(),
         };
         let json = serde_json::to_string(&inv).unwrap();
         assert_some!(json

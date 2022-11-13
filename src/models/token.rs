@@ -96,8 +96,16 @@ mod tests {
             token: SecureToken::generate(SecureTokenKind::Api).into_inner(),
             revoked: false,
             name: "".to_string(),
-            created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
-            last_used_at: Some(NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 12)),
+            created_at: NaiveDate::from_ymd_opt(2017, 1, 6)
+                .unwrap()
+                .and_hms_opt(14, 23, 11)
+                .unwrap(),
+            last_used_at: Some(
+                NaiveDate::from_ymd_opt(2017, 1, 6)
+                    .unwrap()
+                    .and_hms_opt(14, 23, 12),
+            )
+            .unwrap(),
         };
         let json = serde_json::to_string(&tok).unwrap();
         assert_some!(json
@@ -115,8 +123,16 @@ mod tests {
             name: "".to_string(),
             token: "".to_string(),
             revoked: false,
-            created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
-            last_used_at: Some(NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 12)),
+            created_at: NaiveDate::from_ymd_opt(2017, 1, 6)
+                .unwrap()
+                .and_hms_opt(14, 23, 11)
+                .unwrap(),
+            last_used_at: Some(
+                NaiveDate::from_ymd_opt(2017, 1, 6)
+                    .unwrap()
+                    .and_hms_opt(14, 23, 12),
+            )
+            .unwrap(),
         };
         let json = serde_json::to_string(&tok).unwrap();
         assert_some!(json
