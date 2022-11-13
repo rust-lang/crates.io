@@ -127,7 +127,7 @@ pub fn downloads(req: &mut dyn RequestExt) -> EndpointResult {
         .query()
         .get("before_date")
         .and_then(|d| NaiveDate::parse_from_str(d, "%F").ok())
-        .unwrap_or_else(|| Utc::today().naive_utc());
+        .unwrap_or_else(|| Utc::now().date_naive());
     let cutoff_start_date = cutoff_end_date - Duration::days(89);
 
     let downloads = VersionDownload::belonging_to(&version)
