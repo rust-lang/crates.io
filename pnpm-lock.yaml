@@ -68,7 +68,7 @@ specifiers:
   ember-router-scroll: 4.1.2
   ember-source: 4.8.2
   ember-svg-jar: 2.4.2
-  ember-template-lint: 4.18.0
+  ember-template-lint: 4.18.1
   ember-test-selectors: 6.0.0
   ember-tooltips: 3.6.0
   ember-truth-helpers: 3.1.1
@@ -172,7 +172,7 @@ devDependencies:
   ember-router-scroll: 4.1.2
   ember-source: 4.8.2_klhxxmjkcvtuhwro2kkspsfzna
   ember-svg-jar: 2.4.2
-  ember-template-lint: 4.18.0_ember-cli-htmlbars@6.1.1
+  ember-template-lint: 4.18.1_ember-cli-htmlbars@6.1.1
   ember-test-selectors: 6.0.0
   ember-tooltips: 3.6.0
   ember-truth-helpers: 3.1.1
@@ -2978,7 +2978,7 @@ packages:
     resolution: {integrity: sha512-9K4zoImiZc3HlIp6AVUDE4CWYx22a+lhSZMYNpbjW04+YF0KWj4pJXnEMjdnFTiQibFFmElcsasJXDbdI/EPhA==}
     dependencies:
       '@types/eslint': 8.4.10
-      '@types/estree': 0.0.51
+      '@types/estree': 1.0.0
 
   /@types/eslint/7.29.0:
     resolution: {integrity: sha512-VNcvioYDH8/FxaeTKkM4/TiTwt6pBV9E3OfGmvaw8tPl0rrHCJ4Ll15HRT+pMiFAf/MLQvAzC+6RzUMEL9Ceng==}
@@ -2990,7 +2990,7 @@ packages:
   /@types/eslint/8.4.10:
     resolution: {integrity: sha512-Sl/HOqN8NKPmhWo2VBEPm0nvHnu2LL3v9vKo8MEq0EtbJ4eVzGPl41VNPvn5E1i5poMk4/XD8UriLHpJvEP/Nw==}
     dependencies:
-      '@types/estree': 0.0.51
+      '@types/estree': 1.0.0
       '@types/json-schema': 7.0.11
 
   /@types/estree/0.0.51:
@@ -2998,7 +2998,6 @@ packages:
 
   /@types/estree/1.0.0:
     resolution: {integrity: sha512-WulqXMDUTYAXCjZnk6JtIHPigp55cVtDgDrO2gHRwhyJto21+1zbVCtOYB2L1F9w4qCQ0rOGWBnBe0FNTiEJIQ==}
-    dev: true
 
   /@types/express-serve-static-core/4.17.31:
     resolution: {integrity: sha512-DxMhY+NAsTwMMFHBTtJFNp5qiHKJ7TeqOo23zVEM9alT1Ml27Q3xcTH0xwxn7Q0BbMcVEJOs/7aQtUWupUQN3Q==}
@@ -8115,8 +8114,8 @@ packages:
       - supports-color
     dev: true
 
-  /ember-template-lint/4.18.0_ember-cli-htmlbars@6.1.1:
-    resolution: {integrity: sha512-58tARMZMXwfOWOTTzY0vD8Qu+6h1HBSo7elhY+/i/ZE3GSA3wxCqCrqiBLgfWA+gJ7guu5zSFiGVcFMXQLwU5w==}
+  /ember-template-lint/4.18.1_ember-cli-htmlbars@6.1.1:
+    resolution: {integrity: sha512-YATwZ1zENT5wfW41/W+wz36gJVFlR8FdSXrWhoJbg89r1goTtkLNG7jhU+/jF11sXOcq0KqvK4TOQsfwPDW8Ug==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     hasBin: true
     dependencies:
