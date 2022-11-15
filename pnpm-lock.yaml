@@ -28,7 +28,7 @@ specifiers:
   '@sinonjs/fake-timers': 10.0.0
   '@zestia/ember-auto-focus': 4.4.0
   broccoli-asset-rev: 3.0.0
-  chart.js: 3.9.1
+  chart.js: 4.0.1
   copy-text-to-clipboard: 3.0.1
   date-fns: 2.29.3
   ember-a11y-testing: 5.0.0
@@ -106,7 +106,7 @@ dependencies:
   '@juggle/resize-observer': 3.4.0
   '@sentry/browser': 7.19.0
   '@sentry/utils': 7.19.0
-  chart.js: 3.9.1
+  chart.js: 4.0.1
   copy-text-to-clipboard: 3.0.1
   date-fns: 2.29.3
   fastboot-app-server: 3.3.2
@@ -5630,8 +5630,9 @@ packages:
       inherits: 2.0.4
     dev: true
 
-  /chart.js/3.9.1:
-    resolution: {integrity: sha512-Ro2JbLmvg83gXF5F4sniaQ+lTbSv18E+TIf2cOeiH1Iqd2PGFOtem+DUufMZsCJwFE7ywPOpfXFBwRTGq7dh6w==}
+  /chart.js/4.0.1:
+    resolution: {integrity: sha512-5/8/9eBivwBZK81mKvmIwTb2Pmw4D/5h1RK9fBWZLLZ8mCJ+kfYNmV9rMrGoa5Hgy2/wVDBMLSUDudul2/9ihA==}
+    engines: {pnpm: ^7.0.0}
     dev: false
 
   /cheerio-select/2.1.0:
