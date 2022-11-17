@@ -2,7 +2,8 @@ mod middleware;
 
 use crate::env_optional;
 pub use middleware::CustomSentryMiddleware as SentryMiddleware;
-use sentry::{ClientInitGuard, ClientOptions, IntoDsn};
+use sentry::{ClientInitGuard, ClientOptions, IntoDsn, TransactionContext};
+use std::sync::Arc;
 
 /// Initializes the Sentry SDK from the environment variables.
 ///
@@ -28,13 +29,26 @@ pub fn init() -> ClientInitGuard {
 
     let traces_sample_rate = env_optional("SENTRY_TRACES_SAMPLE_RATE").unwrap_or(0.0);
 
+    let traces_sampler = move |ctx: &TransactionContext| -> f32 {
+        let is_download_endpoint =
+            ctx.name().starts_with("/api/v1/crates/") && ctx.name().ends_with("/download");
+
+        if is_download_endpoint {
+            // Reduce the sample rate for the download endpoint, since we have significantly
+            // more traffic on that endpoint compared to the rest
+            traces_sample_rate / 10.
+        } else {
+            traces_sample_rate
+        }
+    };
+
     let opts = ClientOptions {
         auto_session_tracking: true,
         dsn,
         environment,
         release,
         session_mode: sentry::SessionMode::Request,
-        traces_sample_rate,
+        traces_sampler: Some(Arc::new(traces_sampler)),
         ..Default::default()
     };
 
