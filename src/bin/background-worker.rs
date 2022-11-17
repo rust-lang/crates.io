@@ -22,10 +22,13 @@ use std::env;
 use std::sync::{Arc, Mutex};
 use std::thread::sleep;
 use std::time::Duration;
+use tracing::Level;
 use tracing_subscriber::{filter, prelude::*};
 
 fn main() {
     println!("Booting runner");
+
+    let _sentry = cargo_registry::sentry::init();
 
     // Initialize logging
 
@@ -34,8 +37,11 @@ fn main() {
         .parse::<filter::Targets>()
         .expect("Invalid RUST_LOG value");
 
+    let sentry_filter = filter::Targets::new().with_default(Level::INFO);
+
     tracing_subscriber::registry()
         .with(tracing_subscriber::fmt::layer().with_filter(log_filter))
+        .with(sentry::integrations::tracing::layer().with_filter(sentry_filter))
         .init();
 
     let config = config::Server::default();
