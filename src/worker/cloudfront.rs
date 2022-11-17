@@ -31,19 +31,17 @@ impl CloudFront {
     /// Invalidate a file on CloudFront
     ///
     /// `path` is the path to the file to invalidate, such as `config.json`, or `re/ge/regex`
+    #[instrument(skip(self, client))]
     pub fn invalidate(&self, client: &Client, path: &str) -> anyhow::Result<()> {
         let path = path.trim_start_matches('/');
         let url = format!(
             "https://cloudfront.amazonaws.com/2020-05-31/distribution/{}/invalidation",
             self.distribution_id
         );
+        trace!(?url);
 
         let backoff = Exponential::from_millis(1000).map(jitter).take(2);
         retry::retry_with_index(backoff, |attempt| {
-            if attempt > 1 {
-                debug!(?attempt, "Retrying CloudFront invalidation…")
-            }
-
             let now = chrono::offset::Utc::now().timestamp_micros();
             let body = format!(
                 r#"
@@ -59,6 +57,7 @@ impl CloudFront {
 </InvalidationBatch>
 "#
             );
+            trace!(?body);
 
             let request = match http::Request::post(&url)
                 .body(&body)
@@ -68,6 +67,7 @@ impl CloudFront {
                 Err(error) => return OperationResult::Err(error),
             };
 
+            trace!("Signing invalidation request");
             let request = SignableRequest::from(&request);
             let params = SigningParams::builder()
                 .access_key(&self.access_key)
@@ -82,6 +82,7 @@ impl CloudFront {
             let (mut signature_headers, _) =
                 http_request::sign(request, &params).unwrap().into_parts();
 
+            debug!(?attempt, "Sending invalidation request");
             let response = match client
                 .post(&url)
                 .headers(signature_headers.take_headers().unwrap_or_default())
@@ -96,14 +97,16 @@ impl CloudFront {
             let status = response.status();
 
             let result = match response.error_for_status_ref() {
-                Ok(_) => Ok(()),
+                Ok(_) => {
+                    debug!(?status, "Invalidation request successful");
+                    Ok(())
+                }
                 Err(error) => {
-                    let headers = format!("{:?}", response.headers());
-                    let body = response
-                        .text()
-                        .unwrap_or_else(|_| "Failed to decode response payload".to_string());
+                    let headers = response.headers().clone();
+                    let body = response.text();
+                    debug!(?status, ?headers, ?body, "Invalidation request failed");
 
-                    Err(error).context(format!("{headers}; body: {body}"))
+                    Err(error).with_context(|| format!("Failed to invalidate {path}"))
                 }
             };
 
