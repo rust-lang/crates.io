@@ -18,12 +18,25 @@ use cargo_registry::{background_jobs::*, db};
 use cargo_registry_index::{Repository, RepositoryConfig};
 use diesel::r2d2;
 use reqwest::blocking::Client;
+use std::env;
 use std::sync::{Arc, Mutex};
 use std::thread::sleep;
 use std::time::Duration;
+use tracing_subscriber::{filter, prelude::*};
 
 fn main() {
     println!("Booting runner");
+
+    // Initialize logging
+
+    let log_filter = env::var("RUST_LOG")
+        .unwrap_or_default()
+        .parse::<filter::Targets>()
+        .expect("Invalid RUST_LOG value");
+
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::fmt::layer().with_filter(log_filter))
+        .init();
 
     let config = config::Server::default();
     let uploader = config.base.uploader();
