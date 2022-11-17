@@ -40,7 +40,7 @@ fn main() {
     let sentry_filter = filter::Targets::new().with_default(Level::INFO);
 
     tracing_subscriber::registry()
-        .with(tracing_subscriber::fmt::layer().with_filter(log_filter))
+        .with(tracing_logfmt::layer().with_filter(log_filter))
         .with(sentry::integrations::tracing::layer().with_filter(sentry_filter))
         .init();
 
