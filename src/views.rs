@@ -361,11 +361,16 @@ impl EncodableCrate {
 fn domain_is_blocked(domain: &str) -> bool {
     DOCUMENTATION_BLOCKLIST
         .iter()
-        .any(|blocked| domain_is_subdomain(domain, blocked))
+        .any(|blocked| &domain == blocked || domain_is_subdomain(domain, blocked))
 }
 
 fn domain_is_subdomain(potential_subdomain: &str, root: &str) -> bool {
-    potential_subdomain.ends_with(root)
+    if !potential_subdomain.ends_with(root) {
+        return false;
+    }
+
+    let root_with_prefix = format!(".{root}");
+    potential_subdomain.ends_with(&root_with_prefix)
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -916,5 +921,12 @@ mod tests {
             ),),),
             None
         );
+    }
+
+    #[test]
+    fn documentation_blocked_non_subdomain() {
+        let input = Some(String::from("http://foorust-ci.org/"));
+        let result = EncodableCrate::remove_blocked_documentation_urls(input);
+        assert_some_eq!(result, "http://foorust-ci.org/");
     }
 }
