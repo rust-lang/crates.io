@@ -350,15 +350,18 @@ impl EncodableCrate {
         };
 
         // Match documentation URL host against blocked host array elements
-        if DOCUMENTATION_BLOCKLIST
-            .iter()
-            .any(|blocked| url_host.ends_with(blocked))
-        {
+        if domain_is_blocked(url_host) {
             None
         } else {
             Some(url)
         }
     }
+}
+
+fn domain_is_blocked(domain: &str) -> bool {
+    DOCUMENTATION_BLOCKLIST
+        .iter()
+        .any(|blocked| domain.ends_with(blocked))
 }
 
 #[derive(Serialize, Deserialize, Debug)]
