@@ -6,4 +6,8 @@ export default class CrateOwnerInviteAdapter extends ApplicationAdapter {
   pathForType() {
     return 'crate_owner_invitations';
   }
+
+  urlForQuery() {
+    return '/api/private/crate_owner_invitations';
+  }
 }
