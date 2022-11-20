@@ -350,7 +350,10 @@ impl EncodableCrate {
         };
 
         // Match documentation URL host against blocked host array elements
-        if DOCUMENTATION_BLOCKLIST.contains(&url_host) {
+        if DOCUMENTATION_BLOCKLIST
+            .iter()
+            .any(|blocked| url_host.ends_with(blocked))
+        {
             None
         } else {
             Some(url)
@@ -893,6 +896,16 @@ mod tests {
         assert_eq!(
             EncodableCrate::remove_blocked_documentation_urls(Some(String::from(
                 "http://rust-ci.org/crate/crate-0.1/doc/crate-0.1",
+            ),),),
+            None
+        );
+    }
+
+    #[test]
+    fn documentation_blocked_subdomain() {
+        assert_eq!(
+            EncodableCrate::remove_blocked_documentation_urls(Some(String::from(
+                "http://www.rust-ci.org/crate/crate-0.1/doc/crate-0.1",
             ),),),
             None
         );
