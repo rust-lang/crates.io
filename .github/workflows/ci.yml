@@ -50,4 +50,4 @@ jobs:
       - run: rustup override set ${{env.MSRV}}
       - run: rustup component add clippy
       - uses: Swatinem/rust-cache@v2.2.0
-      - run: cargo clippy --workspace -- --deny warnings
+      - run: cargo clippy --workspace -- --deny warnings --allow clippy::suspicious_else_formatting

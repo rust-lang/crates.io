@@ -35,7 +35,7 @@ impl Handler for Static {
             return Ok(not_found());
         }
         let mtime = FileTime::from_last_modification_time(&data);
-        let mtime = OffsetDateTime::from_unix_timestamp(mtime.unix_seconds() as i64);
+        let mtime = OffsetDateTime::from_unix_timestamp(mtime.unix_seconds());
 
         Response::builder()
             .header(header::CONTENT_TYPE, mime)
