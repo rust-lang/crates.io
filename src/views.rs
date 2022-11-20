@@ -361,7 +361,11 @@ impl EncodableCrate {
 fn domain_is_blocked(domain: &str) -> bool {
     DOCUMENTATION_BLOCKLIST
         .iter()
-        .any(|blocked| domain.ends_with(blocked))
+        .any(|blocked| domain_is_subdomain(domain, blocked))
+}
+
+fn domain_is_subdomain(potential_subdomain: &str, root: &str) -> bool {
+    potential_subdomain.ends_with(root)
 }
 
 #[derive(Serialize, Deserialize, Debug)]
