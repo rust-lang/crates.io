@@ -32,7 +32,7 @@ function hashchange() {
 }
 
 export function initialize() {
-  if (typeof window === 'undefined' || typeof window.addEventListener === 'undefined') {
+  if (typeof window === 'undefined' || window.addEventListener === undefined) {
     // Don't run this initializer under FastBoot
     return;
   }
