@@ -8,6 +8,6 @@ export default class HeadDataService extends Service {
   @tracked crate;
 
   get description() {
-    return !this.crate ? DEFAULT_DESCRIPTION : this.crate.description || DEFAULT_CRATE_DESCRIPTION;
+    return this.crate ? this.crate.description || DEFAULT_CRATE_DESCRIPTION : DEFAULT_DESCRIPTION;
   }
 }

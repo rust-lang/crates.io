@@ -37,7 +37,7 @@ export default class ChartJsLoader extends Service {
           return null;
         }
         assert('`value` must be a `Date`', value instanceof Date);
-        return !isNaN(value) ? value.getTime() : null;
+        return isNaN(value) ? null : value.getTime();
       },
 
       format(time, fmt) {
