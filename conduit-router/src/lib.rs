@@ -1,5 +1,4 @@
 #![warn(rust_2018_idioms)]
-#![allow(clippy::suspicious_else_formatting)]
 
 #[macro_use]
 extern crate tracing;
