@@ -324,7 +324,8 @@ impl TestAppBuilder {
 
 pub fn init_logger() {
     let _ = tracing_subscriber::fmt()
-        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .compact()
+        .with_max_level(tracing::Level::INFO)
         .without_time()
         .with_test_writer()
         .try_init();
