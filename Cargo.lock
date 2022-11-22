@@ -331,7 +331,6 @@ dependencies = [
  "toml",
  "tower-service",
  "tracing",
- "tracing-logfmt",
  "tracing-subscriber",
  "url",
 ]
@@ -3307,18 +3306,6 @@ dependencies = [
  "lazy_static",
  "log",
  "tracing-core",
-]
-
-[[package]]
-name = "tracing-logfmt"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c08aacc136419ba433b3f9bfd434a1bb62fe385328935e6ac11d952122b8a8cb"
-dependencies = [
- "time 0.3.17",
- "tracing",
- "tracing-core",
- "tracing-subscriber",
 ]
 
 [[package]]
