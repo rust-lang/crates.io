@@ -90,12 +90,10 @@ pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBui
     if let Ok(capacity) = env::var("DB_PRIMARY_POOL_SIZE") {
         if let Ok(capacity) = capacity.parse() {
             if capacity >= 10 {
-                println!("Enabling BalanceCapacity middleware with {capacity} pool capacity");
+                info!(?capacity, "Enabling BalanceCapacity middleware");
                 m.around(balance_capacity::BalanceCapacity::new(capacity))
             } else {
-                println!(
-                    "BalanceCapacity middleware not enabled. DB_PRIMARY_POOL_SIZE is too low."
-                );
+                info!("BalanceCapacity middleware not enabled. DB_PRIMARY_POOL_SIZE is too low.");
             }
         }
     }

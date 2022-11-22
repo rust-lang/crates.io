@@ -123,6 +123,7 @@ impl ServerBin {
         let mut process = Command::new(env!("CARGO_BIN_EXE_server"))
             .env_clear()
             .envs(self.env.into_iter())
+            .env("RUST_LOG", "info")
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .spawn()?;
@@ -199,7 +200,10 @@ where
             // If we expect the port number to be logged into this stream, look for it and send it
             // over the channel as soon as it's found.
             if let Some(port_send) = &port_send {
-                if let Some(url) = line.strip_prefix("Listening at ") {
+                let pattern = "Listening at ";
+                if let Some(idx) = line.find(pattern) {
+                    let start = idx + pattern.len();
+                    let url = &line[start..];
                     let url = Url::parse(url).unwrap();
                     let port = url.port().unwrap();
                     port_send

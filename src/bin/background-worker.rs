@@ -12,6 +12,9 @@
 
 #![warn(clippy::all, rust_2018_idioms)]
 
+#[macro_use]
+extern crate tracing;
+
 use cargo_registry::config;
 use cargo_registry::worker::cloudfront::CloudFront;
 use cargo_registry::{background_jobs::*, db};
@@ -23,19 +26,19 @@ use std::thread::sleep;
 use std::time::Duration;
 
 fn main() {
-    println!("Booting runner");
-
     let _sentry = cargo_registry::sentry::init();
 
     // Initialize logging
     cargo_registry::util::tracing::init();
+
+    info!("Booting runner");
 
     let config = config::Server::default();
     let uploader = config.base.uploader();
 
     if config.db.are_all_read_only() {
         loop {
-            println!(
+            warn!(
                 "Cannot run background jobs with a read-only pool. Please scale background_worker \
                 to 0 processes until the leader database is available."
             );
@@ -50,13 +53,13 @@ fn main() {
         .parse()
         .expect("Invalid value for `BACKGROUND_JOB_TIMEOUT`");
 
-    println!("Cloning index");
+    info!("Cloning index");
 
     let repository_config = RepositoryConfig::from_environment();
     let repository = Arc::new(Mutex::new(
         Repository::open(&repository_config).expect("Failed to clone index"),
     ));
-    println!("Index cloned");
+    info!("Index cloned");
 
     let cloudfront = CloudFront::from_environment();
 
@@ -79,7 +82,7 @@ fn main() {
     };
     let mut runner = build_runner();
 
-    println!("Runner booted, running jobs");
+    info!("Runner booted, running jobs");
 
     let mut failure_count = 0;
 
@@ -87,10 +90,7 @@ fn main() {
         if let Err(e) = runner.run_all_pending_jobs() {
             failure_count += 1;
             if failure_count < 5 {
-                eprintln!(
-                    "Error running jobs (n = {}) -- retrying: {:?}",
-                    failure_count, e,
-                );
+                warn!(?failure_count, err = ?e, "Error running jobs -- retrying");
                 runner = build_runner();
             } else {
                 panic!("Failed to begin running jobs 5 times. Restarting the process");
