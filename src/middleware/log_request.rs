@@ -78,14 +78,7 @@ impl Display for RequestLine<'_> {
         line.add_quoted_field("path", FullPath(self.req))?;
 
         // The request_id is not logged for successful download requests
-        if !(self.req.path().ends_with("/download")
-            && self
-                .res
-                .as_ref()
-                .ok()
-                .map(|ok| ok.status().is_redirection())
-                == Some(true))
-        {
+        if !(self.req.path().ends_with("/download") && status.is_redirection()) {
             line.add_field("request_id", request_header(self.req, "x-request-id"))?;
         }
 
