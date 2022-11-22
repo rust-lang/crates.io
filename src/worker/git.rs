@@ -9,8 +9,11 @@ use std::io::ErrorKind;
 use std::process::Command;
 use swirl::PerformError;
 
+#[instrument(skip_all, fields(krate.name = ?krate.name, krate.vers = ?krate.vers))]
 #[swirl::background_job]
 pub fn add_crate(env: &Environment, conn: &PgConnection, krate: Crate) -> Result<(), PerformError> {
+    info!("Syncing git index to HTTP-based index");
+
     use std::io::prelude::*;
 
     let repo = env.lock_index()?;
@@ -30,8 +33,11 @@ pub fn add_crate(env: &Environment, conn: &PgConnection, krate: Crate) -> Result
     Ok(())
 }
 
+#[instrument(skip(env))]
 #[swirl::background_job]
 pub fn update_crate_index(env: &Environment, crate_name: String) -> Result<(), PerformError> {
+    info!("Syncing git index to HTTP-based index");
+
     let repo = env.lock_index()?;
     let dst = repo.index_file(&crate_name);
 
@@ -45,11 +51,9 @@ pub fn update_crate_index(env: &Environment, crate_name: String) -> Result<(), P
         .sync_index(env.http_client(), &crate_name, contents)?;
 
     if let Some(cloudfront) = env.cloudfront() {
-        trace!(?crate_name, "invalidate CloudFront");
-        cloudfront.invalidate(
-            env.http_client(),
-            &Repository::relative_index_file_for_url(&crate_name),
-        )?;
+        let path = Repository::relative_index_file_for_url(&crate_name);
+        info!(%path, "Invalidating index file on CloudFront");
+        cloudfront.invalidate(env.http_client(), &path)?;
     }
 
     Ok(())
@@ -59,6 +63,7 @@ pub fn update_crate_index(env: &Environment, crate_name: String) -> Result<(), P
 /// file, deserlialise the crate from JSON, change the yank boolean to
 /// `true` or `false`, write all the lines back out, and commit and
 /// push the changes.
+#[instrument(skip(env, conn))]
 #[swirl::background_job]
 pub fn sync_yanked(
     env: &Environment,
@@ -66,7 +71,9 @@ pub fn sync_yanked(
     krate: String,
     version_num: String,
 ) -> Result<(), PerformError> {
-    trace!(?krate, ?version_num, "Load yanked status from database");
+    info!("Syncing yanked status from database into the index");
+
+    debug!("Loading yanked status from database");
 
     let yanked: bool = schema::versions::table
         .inner_join(schema::crates::table)
@@ -76,7 +83,7 @@ pub fn sync_yanked(
         .get_result(conn)
         .context("Failed to load yanked status from database")?;
 
-    trace!(?krate, ?version_num, yanked);
+    debug!(yanked);
 
     let repo = env.lock_index()?;
     let dst = repo.index_file(&krate);
@@ -114,10 +121,12 @@ pub fn sync_yanked(
 }
 
 /// Collapse the index into a single commit, archiving the current history in a snapshot branch.
+#[instrument(skip(env))]
 #[swirl::background_job]
 pub fn squash_index(env: &Environment) -> Result<(), PerformError> {
+    info!("Squashing the index into a single commit");
+
     let repo = env.lock_index()?;
-    info!("Squashing the index into a single commit.");
 
     let now = Utc::now().format("%Y-%m-%d");
     let original_head = repo.head_oid()?.to_string();
