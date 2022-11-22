@@ -38,13 +38,13 @@ impl Base {
                     // for the related S3 environment variables and configure the app to upload to
                     // and read from S3 like production does. All values except for bucket are
                     // optional, like production read-only mirrors.
-                    println!("Using S3 uploader");
+                    info!("Using S3 uploader");
                     Self::s3_maybe_read_only()
                 } else {
                     // If we don't set the `S3_BUCKET` variable, we'll use a development-only
                     // uploader that makes it possible to run and publish to a locally-running
                     // crates.io instance without needing to set up an account and a bucket in S3.
-                    println!(
+                    info!(
                         "Using local uploader, crate files will be in the local_uploads directory"
                     );
                     Uploader::Local
