@@ -1,6 +1,6 @@
 use crate::builders::CrateBuilder;
 use crate::util::{ChaosProxy, FreshSchema};
-use anyhow::Error;
+use anyhow::{Context, Error};
 use cargo_registry::models::{NewUser, User};
 use diesel::prelude::*;
 use reqwest::blocking::{Client, Response};
@@ -138,7 +138,7 @@ impl ServerBin {
         // - the server binary doesn't print "listening on port {port}" anymore
         let port: u16 = port_recv
             .recv_timeout(Duration::from_secs(SERVER_BOOT_TIMEOUT_SECONDS))
-            .map_err(|_| anyhow::anyhow!("the server took too much time to initialize"))?
+            .context("the server took too much time to initialize")?
             .parse()?;
 
         let http = Client::builder()
