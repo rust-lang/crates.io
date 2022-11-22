@@ -111,7 +111,7 @@ module('ajax()', function (hooks) {
       ];
 
       let { cause } = error;
-      assert.ok(!(cause instanceof HttpError));
+      assert.notOk(cause instanceof HttpError);
       assert.equal(cause.name, 'SyntaxError');
       assert.ok(expectedCauseMessages.includes(cause.message));
       return true;
@@ -139,7 +139,7 @@ module('ajax()', function (hooks) {
       assert.true(error.isNetworkError);
 
       let { cause } = error;
-      assert.ok(!(cause instanceof HttpError));
+      assert.notOk(cause instanceof HttpError);
       assert.equal(cause.name, 'TypeError');
       assert.equal(cause.message, 'NetworkError when attempting to fetch resource.');
       return true;
