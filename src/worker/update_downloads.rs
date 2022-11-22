@@ -22,9 +22,9 @@ fn update(conn: &PgConnection) -> QueryResult<()> {
         .filter(downloads.ne(counted))
         .load(conn)?;
 
-    println!("Updating {} versions", rows.len());
+    info!(rows = rows.len(), "Updating versions");
     collect(conn, &rows)?;
-    println!("Finished updating versions");
+    info!("Finished updating versions");
 
     // Anything older than 24 hours ago will be frozen and will not be queried
     // against again.
@@ -34,11 +34,11 @@ fn update(conn: &PgConnection) -> QueryResult<()> {
         .filter(downloads.eq(counted))
         .filter(processed.eq(false))
         .execute(conn)?;
-    println!("Finished freezing old version_downloads");
+    info!("Finished freezing old version_downloads");
 
     no_arg_sql_function!(refresh_recent_crate_downloads, ());
     select(refresh_recent_crate_downloads).execute(conn)?;
-    println!("Finished running refresh_recent_crate_downloads");
+    info!("Finished running refresh_recent_crate_downloads");
 
     Ok(())
 }

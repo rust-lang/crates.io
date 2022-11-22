@@ -12,8 +12,8 @@ use swirl::PerformError;
 
 #[swirl::background_job]
 pub fn daily_db_maintenance(conn: &PgConnection) -> Result<(), PerformError> {
-    println!("Running VACUUM on version_downloads table");
+    info!("Running VACUUM on version_downloads table");
     sql_query("VACUUM version_downloads;").execute(conn)?;
-    println!("Finished running VACUUM on version_downloads table");
+    info!("Finished running VACUUM on version_downloads table");
     Ok(())
 }
