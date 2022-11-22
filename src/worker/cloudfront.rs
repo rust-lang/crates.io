@@ -104,7 +104,7 @@ impl CloudFront {
                 Err(error) => {
                     let headers = response.headers().clone();
                     let body = response.text();
-                    debug!(?status, ?headers, ?body, "Invalidation request failed");
+                    warn!(?status, ?headers, ?body, "Invalidation request failed");
 
                     Err(error).with_context(|| format!("Failed to invalidate {path}"))
                 }
