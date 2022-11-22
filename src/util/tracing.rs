@@ -1,6 +1,5 @@
-use std::env;
 use tracing::Level;
-use tracing_subscriber::{filter, prelude::*};
+use tracing_subscriber::{filter, prelude::*, EnvFilter};
 
 /// Initializes the `tracing` logging framework.
 ///
@@ -10,10 +9,7 @@ use tracing_subscriber::{filter, prelude::*};
 /// This function also sets up the Sentry error reporting integration for the
 /// `tracing` framework, which is hardcoded to include all `INFO` level events.
 pub fn init() {
-    let log_filter = env::var("RUST_LOG")
-        .unwrap_or_default()
-        .parse::<filter::Targets>()
-        .expect("Invalid RUST_LOG value");
+    let log_filter = EnvFilter::from_default_env();
 
     let sentry_filter = filter::Targets::new().with_default(Level::INFO);
 
