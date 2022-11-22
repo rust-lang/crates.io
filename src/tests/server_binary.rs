@@ -14,48 +14,50 @@ use url::Url;
 const SERVER_BOOT_TIMEOUT_SECONDS: u64 = 30;
 
 #[test]
-fn normal_startup() -> Result<(), Error> {
-    let server_bin = ServerBin::prepare()?;
-    initialize_dummy_crate(&server_bin.db()?);
+fn normal_startup() {
+    let server_bin = ServerBin::prepare().unwrap();
+    initialize_dummy_crate(&server_bin.db().unwrap());
 
-    let running_server = server_bin.start()?;
+    let running_server = server_bin.start().unwrap();
 
     // Ensure the application correctly responds to download requests
-    let resp = running_server.get("api/v1/crates/FOO/1.0.0/download")?;
+    let resp = running_server
+        .get("api/v1/crates/FOO/1.0.0/download")
+        .unwrap();
     assert!(resp.status().is_redirection());
     assert!(resp
         .headers()
         .get("location")
         .unwrap()
-        .to_str()?
+        .to_str()
+        .unwrap()
         .ends_with("/crates/foo/foo-1.0.0.crate"));
-
-    Ok(())
 }
 
 #[test]
-fn startup_without_database() -> Result<(), Error> {
-    let server_bin = ServerBin::prepare()?;
-    initialize_dummy_crate(&server_bin.db()?);
+fn startup_without_database() {
+    let server_bin = ServerBin::prepare().unwrap();
+    initialize_dummy_crate(&server_bin.db().unwrap());
 
     // Break the networking *before* starting the binary, to ensure the binary can fully startup
     // without a database connection. Most of crates.io should not work when started without a
     // database, but unconditional redirects will work.
     server_bin.chaosproxy.break_networking();
 
-    let running_server = server_bin.start()?;
+    let running_server = server_bin.start().unwrap();
 
     // Ensure unconditional redirects work.
-    let resp = running_server.get("api/v1/crates/FOO/1.0.0/download")?;
+    let resp = running_server
+        .get("api/v1/crates/FOO/1.0.0/download")
+        .unwrap();
     assert!(resp.status().is_redirection());
     assert!(resp
         .headers()
         .get("location")
         .unwrap()
-        .to_str()?
+        .to_str()
+        .unwrap()
         .ends_with("/crates/FOO/FOO-1.0.0.crate"));
-
-    Ok(())
 }
 
 fn initialize_dummy_crate(conn: &PgConnection) {
