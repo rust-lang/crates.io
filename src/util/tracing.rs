@@ -1,5 +1,5 @@
-use tracing::Level;
-use tracing_subscriber::{filter, prelude::*, EnvFilter};
+use tracing_subscriber::filter::LevelFilter;
+use tracing_subscriber::{prelude::*, EnvFilter};
 
 /// Initializes the `tracing` logging framework.
 ///
@@ -11,7 +11,7 @@ use tracing_subscriber::{filter, prelude::*, EnvFilter};
 pub fn init() {
     let log_filter = EnvFilter::from_default_env();
 
-    let sentry_filter = filter::Targets::new().with_default(Level::INFO);
+    let sentry_filter = LevelFilter::INFO;
 
     tracing_subscriber::registry()
         .with(tracing_logfmt::layer().with_filter(log_filter))
