@@ -40,7 +40,8 @@ impl CloudFront {
         );
         trace!(?url);
 
-        let backoff = Exponential::from_millis(1000).map(jitter).take(2);
+        let attempts = 10;
+        let backoff = Exponential::from_millis(500).map(jitter).take(attempts - 1);
         retry::retry_with_index(backoff, |attempt| {
             let now = chrono::offset::Utc::now().timestamp_micros();
             let body = format!(
