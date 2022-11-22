@@ -64,7 +64,7 @@ module('Acceptance | /crates/:crate_id/reverse_dependencies', function (hooks) {
     assert.dom('[data-test-total-rows]').hasText('22');
   });
 
-  test('shows an error if the server is broken', async function (assert) {
+  test('shows a generic error if the server is broken', async function (assert) {
     let { foo } = prepare(this);
 
     this.server.get('/api/v1/crates/:crate_id/reverse_dependencies', {}, 500);
@@ -76,7 +76,7 @@ module('Acceptance | /crates/:crate_id/reverse_dependencies', function (hooks) {
       .hasText('Could not load reverse dependencies for the "foo" crate');
   });
 
-  test('shows an error if the server is broken', async function (assert) {
+  test('shows a detailed error if available', async function (assert) {
     let { foo } = prepare(this);
 
     let payload = { errors: [{ detail: 'cannot request more than 100 items' }] };
