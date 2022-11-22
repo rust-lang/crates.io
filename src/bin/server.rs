@@ -1,5 +1,8 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
+#[macro_use]
+extern crate tracing;
+
 use cargo_registry::{env_optional, metrics::LogEncoder, util::errors::AppResult, App, Env};
 use std::{fs::File, process::Command, sync::Arc, time::Duration};
 
@@ -8,7 +11,6 @@ use futures_util::future::FutureExt;
 use prometheus::Encoder;
 use reqwest::blocking::Client;
 use std::io::{self, Write};
-use tokio::io::AsyncWriteExt;
 use tokio::signal::unix::{signal, SignalKind};
 
 const CORE_THREADS: usize = 4;
@@ -85,10 +87,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 _ = sig_int.recv().fuse() => {},
                 _ = sig_term.recv().fuse() => {},
             };
-            tokio::io::stdout()
-                .write_all(b"Starting graceful shutdown\n")
-                .await
-                .ok();
+
+            info!("Starting graceful shutdown");
         });
 
         Ok::<_, io::Error>((addr, server))
@@ -96,7 +96,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Do not change this line! Removing the line or changing its contents in any way will break
     // the test suite :)
-    println!("Listening at http://{addr}");
+    info!("Listening at http://{addr}");
 
     // Creating this file tells heroku to tell nginx that the application is ready
     // to receive traffic.
@@ -106,7 +106,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         } else {
             "/tmp/app-initialized"
         };
-        println!("Writing to {path}");
+        info!("Writing to {path}");
         File::create(path).unwrap();
 
         // Launch nginx via the Heroku nginx buildpack
@@ -120,13 +120,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Block the main thread until the server has shutdown
     rt.block_on(server)?;
 
-    println!("Persisting remaining downloads counters");
+    info!("Persisting remaining downloads counters");
     match app.downloads_counter.persist_all_shards(&app) {
         Ok(stats) => stats.log(),
-        Err(err) => println!("downloads_counter error: {err}"),
+        Err(err) => error!(?err, "downloads_counter error"),
     }
 
-    println!("Server has gracefully shutdown!");
+    info!("Server has gracefully shutdown!");
     Ok(())
 }
 
@@ -140,7 +140,7 @@ fn downloads_counter_thread(app: Arc<App>) {
 
         match app.downloads_counter.persist_next_shard(&app) {
             Ok(stats) => stats.log(),
-            Err(err) => println!("downloads_counter error: {err}"),
+            Err(err) => error!(?err, "downloads_counter error"),
         }
     });
 }
@@ -155,7 +155,7 @@ fn log_instance_metrics_thread(app: Arc<App>) {
 
     std::thread::spawn(move || loop {
         if let Err(err) = log_instance_metrics_inner(&app) {
-            eprintln!("log_instance_metrics error: {err}");
+            error!(?err, "log_instance_metrics error");
         }
         std::thread::sleep(interval);
     });
