@@ -32,7 +32,7 @@ impl Middleware for LogRequests {
     }
 
     fn after(&self, req: &mut dyn RequestExt, res: AfterResult) -> AfterResult {
-        println!("{}", RequestLine { req, res: &res });
+        RequestLine::new(req, &res).log();
 
         res
     }
@@ -58,27 +58,39 @@ pub(crate) fn get_log_message(key: &'static str) -> String {
 struct RequestLine<'r> {
     req: &'r dyn RequestExt,
     res: &'r AfterResult,
+    status: StatusCode,
+}
+
+impl<'a> RequestLine<'a> {
+    fn new(request: &'a dyn RequestExt, response: &'a AfterResult) -> Self {
+        let status = response.as_ref().map(|res| res.status());
+        let status = status.unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
+
+        RequestLine {
+            req: request,
+            res: response,
+            status,
+        }
+    }
+
+    fn log(&self) {
+        if self.status.is_server_error() {
+            error!(target: "http", "{self}");
+        } else {
+            info!(target: "http", "{self}");
+        };
+    }
 }
 
 impl Display for RequestLine<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let mut line = LogLine::new(f);
 
-        let status = self.res.as_ref().map(|res| res.status());
-        let status = status.unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
-
-        let at = if status.is_server_error() {
-            "error"
-        } else {
-            "info"
-        };
-
-        line.add_field("at", at)?;
         line.add_field("method", self.req.method())?;
         line.add_quoted_field("path", FullPath(self.req))?;
 
         let is_download_endpoint = self.req.path().ends_with("/download");
-        let is_download_redirect = is_download_endpoint && status.is_redirection();
+        let is_download_redirect = is_download_endpoint && self.status.is_redirection();
 
         // The request_id is not logged for successful download requests
         if !is_download_redirect {
@@ -94,7 +106,7 @@ impl Display for RequestLine<'_> {
 
         // The `status` is not logged for successful download requests
         if !is_download_redirect {
-            line.add_field("status", status.as_str())?;
+            line.add_field("status", self.status.as_str())?;
         }
 
         line.add_quoted_field("user_agent", request_header(self.req, header::USER_AGENT))?;
