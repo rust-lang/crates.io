@@ -77,8 +77,11 @@ impl Display for RequestLine<'_> {
         line.add_field("method", self.req.method())?;
         line.add_quoted_field("path", FullPath(self.req))?;
 
+        let is_download_endpoint = self.req.path().ends_with("/download");
+        let is_download_redirect = is_download_endpoint && status.is_redirection();
+
         // The request_id is not logged for successful download requests
-        if !(self.req.path().ends_with("/download") && status.is_redirection()) {
+        if !is_download_redirect {
             line.add_field("request_id", request_header(self.req, "x-request-id"))?;
         }
 
@@ -88,7 +91,12 @@ impl Display for RequestLine<'_> {
         if let Some(response_time) = response_time {
             line.add_field("service", response_time)?;
         }
-        line.add_field("status", status.as_str())?;
+
+        // The `status` is not logged for successful download requests
+        if !is_download_redirect {
+            line.add_field("status", status.as_str())?;
+        }
+
         line.add_quoted_field("user_agent", request_header(self.req, header::USER_AGENT))?;
 
         CUSTOM_METADATA.with(|metadata| {
