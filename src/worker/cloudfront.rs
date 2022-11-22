@@ -1,4 +1,4 @@
-use std::time::SystemTime;
+use std::time::{Duration, SystemTime};
 
 use anyhow::Context;
 use aws_sigv4::{
@@ -41,7 +41,11 @@ impl CloudFront {
         trace!(?url);
 
         let attempts = 10;
-        let backoff = Exponential::from_millis(500).map(jitter).take(attempts - 1);
+        let backoff = Exponential::from_millis(500)
+            .map(|duration| duration.clamp(Duration::ZERO, Duration::from_secs(30)))
+            .map(jitter)
+            .take(attempts - 1);
+
         retry::retry_with_index(backoff, |attempt| {
             let now = chrono::offset::Utc::now().timestamp_micros();
             let body = format!(
