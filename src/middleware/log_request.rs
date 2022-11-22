@@ -91,7 +91,12 @@ impl Display for RequestLine<'_> {
         if let Some(response_time) = response_time {
             line.add_field("service", response_time)?;
         }
-        line.add_field("status", status.as_str())?;
+
+        // The `status` is not logged for successful download requests
+        if !is_download_redirect {
+            line.add_field("status", status.as_str())?;
+        }
+
         line.add_quoted_field("user_agent", request_header(self.req, header::USER_AGENT))?;
 
         CUSTOM_METADATA.with(|metadata| {
