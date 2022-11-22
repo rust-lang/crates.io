@@ -32,7 +32,8 @@ impl Middleware for LogRequests {
     }
 
     fn after(&self, req: &mut dyn RequestExt, res: AfterResult) -> AfterResult {
-        println!("{}", RequestLine { req, res: &res });
+        let request_line = RequestLine::new(req, &res);
+        println!("{request_line}");
 
         res
     }
@@ -58,6 +59,15 @@ pub(crate) fn get_log_message(key: &'static str) -> String {
 struct RequestLine<'r> {
     req: &'r dyn RequestExt,
     res: &'r AfterResult,
+}
+
+impl<'a> RequestLine<'a> {
+    fn new(request: &'a dyn RequestExt, response: &'a AfterResult) -> Self {
+        RequestLine {
+            req: request,
+            res: response,
+        }
+    }
 }
 
 impl Display for RequestLine<'_> {
