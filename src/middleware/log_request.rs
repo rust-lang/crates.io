@@ -77,8 +77,10 @@ impl Display for RequestLine<'_> {
         line.add_field("method", self.req.method())?;
         line.add_quoted_field("path", FullPath(self.req))?;
 
+        let is_download_endpoint = self.req.path().ends_with("/download");
+
         // The request_id is not logged for successful download requests
-        if !(self.req.path().ends_with("/download") && status.is_redirection()) {
+        if !(is_download_endpoint && status.is_redirection()) {
             line.add_field("request_id", request_header(self.req, "x-request-id"))?;
         }
 
