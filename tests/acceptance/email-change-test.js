@@ -45,7 +45,7 @@ module('Acceptance | Email Change', function (hooks) {
 
     user.reload();
     assert.strictEqual(user.email, 'new@email.com');
-    assert.strictEqual(user.emailVerified, false);
+    assert.false(user.emailVerified);
     assert.ok(user.emailVerificationToken);
   });
 
@@ -82,7 +82,7 @@ module('Acceptance | Email Change', function (hooks) {
 
     user.reload();
     assert.strictEqual(user.email, 'new@email.com');
-    assert.strictEqual(user.emailVerified, false);
+    assert.false(user.emailVerified);
     assert.ok(user.emailVerificationToken);
   });
 
@@ -104,7 +104,7 @@ module('Acceptance | Email Change', function (hooks) {
 
     user.reload();
     assert.strictEqual(user.email, 'old@email.com');
-    assert.strictEqual(user.emailVerified, true);
+    assert.true(user.emailVerified);
     assert.notOk(user.emailVerificationToken);
   });
 
@@ -128,7 +128,7 @@ module('Acceptance | Email Change', function (hooks) {
 
     user.reload();
     assert.strictEqual(user.email, 'old@email.com');
-    assert.strictEqual(user.emailVerified, true);
+    assert.true(user.emailVerified);
     assert.notOk(user.emailVerificationToken);
   });
 

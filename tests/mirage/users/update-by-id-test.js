@@ -20,7 +20,7 @@ module('Mirage | PUT /api/v1/users/:id', function (hooks) {
 
     user.reload();
     assert.strictEqual(user.email, 'new@email.com');
-    assert.strictEqual(user.emailVerified, false);
+    assert.false(user.emailVerified);
     assert.strictEqual(user.emailVerificationToken, 'secret123');
   });
 
