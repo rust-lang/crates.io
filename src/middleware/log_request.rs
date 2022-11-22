@@ -32,8 +32,7 @@ impl Middleware for LogRequests {
     }
 
     fn after(&self, req: &mut dyn RequestExt, res: AfterResult) -> AfterResult {
-        let request_line = RequestLine::new(req, &res);
-        println!("{request_line}");
+        RequestLine::new(req, &res).log();
 
         res
     }
@@ -67,6 +66,10 @@ impl<'a> RequestLine<'a> {
             req: request,
             res: response,
         }
+    }
+
+    fn log(&self) {
+        println!("{self}");
     }
 }
 
