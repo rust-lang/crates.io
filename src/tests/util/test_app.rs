@@ -324,6 +324,7 @@ impl TestAppBuilder {
 
 pub fn init_logger() {
     let _ = tracing_subscriber::fmt()
+        .compact()
         .with_max_level(tracing::Level::INFO)
         .without_time()
         .with_test_writer()
