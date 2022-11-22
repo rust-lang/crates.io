@@ -11,7 +11,7 @@ module('Mirage | GET /api/v1/crates/:id', function (hooks) {
 
   test('returns 404 for unknown crates', async function (assert) {
     let response = await fetch('/api/v1/crates/foo');
-    assert.equal(response.status, 404);
+    assert.strictEqual(response.status, 404);
     assert.deepEqual(await response.json(), { errors: [{ detail: 'Not Found' }] });
   });
 
@@ -20,7 +20,7 @@ module('Mirage | GET /api/v1/crates/:id', function (hooks) {
     this.server.create('version', { crate, num: '1.0.0-beta.1' });
 
     let response = await fetch('/api/v1/crates/rand');
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
     assert.deepEqual(await response.json(), {
       categories: [],
       crate: {
@@ -79,7 +79,7 @@ module('Mirage | GET /api/v1/crates/:id', function (hooks) {
     this.server.create('version', { crate, num: '1.2.0' });
 
     let response = await fetch('/api/v1/crates/rand');
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
 
     let responsePayload = await response.json();
     assert.deepEqual(responsePayload.crate.versions, ['1', '2', '3']);
@@ -148,7 +148,7 @@ module('Mirage | GET /api/v1/crates/:id', function (hooks) {
     this.server.create('version', { crate });
 
     let response = await fetch('/api/v1/crates/rand');
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
 
     let responsePayload = await response.json();
     assert.deepEqual(responsePayload.crate.categories, ['no-std']);
@@ -171,7 +171,7 @@ module('Mirage | GET /api/v1/crates/:id', function (hooks) {
     this.server.create('version', { crate });
 
     let response = await fetch('/api/v1/crates/rand');
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
 
     let responsePayload = await response.json();
     assert.deepEqual(responsePayload.crate.keywords, ['no-std']);

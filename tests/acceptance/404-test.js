@@ -10,7 +10,7 @@ module('Acceptance | 404', function (hooks) {
 
   test('/unknown-route shows a 404 page', async function (assert) {
     await visit('/unknown-route');
-    assert.equal(currentURL(), '/unknown-route');
+    assert.strictEqual(currentURL(), '/unknown-route');
     assert.dom('[data-test-404-page]').exists();
     assert.dom('[data-test-title]').hasText('Page not found');
     assert.dom('[data-test-go-back]').exists();

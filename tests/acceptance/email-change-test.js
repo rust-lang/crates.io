@@ -14,7 +14,7 @@ module('Acceptance | Email Change', function (hooks) {
     this.authenticateAs(user);
 
     await visit('/settings/profile');
-    assert.equal(currentURL(), '/settings/profile');
+    assert.strictEqual(currentURL(), '/settings/profile');
     assert.dom('[data-test-email-input]').exists();
     assert.dom('[data-test-email-input] [data-test-no-email]').doesNotExist();
     assert.dom('[data-test-email-input] [data-test-email-address]').includesText('old@email.com');
@@ -45,7 +45,7 @@ module('Acceptance | Email Change', function (hooks) {
 
     user.reload();
     assert.strictEqual(user.email, 'new@email.com');
-    assert.strictEqual(user.emailVerified, false);
+    assert.false(user.emailVerified);
     assert.ok(user.emailVerificationToken);
   });
 
@@ -55,7 +55,7 @@ module('Acceptance | Email Change', function (hooks) {
     this.authenticateAs(user);
 
     await visit('/settings/profile');
-    assert.equal(currentURL(), '/settings/profile');
+    assert.strictEqual(currentURL(), '/settings/profile');
     assert.dom('[data-test-email-input]').exists();
     assert.dom('[data-test-email-input] [data-test-no-email]').exists();
     assert.dom('[data-test-email-input] [data-test-email-address]').hasText('');
@@ -82,7 +82,7 @@ module('Acceptance | Email Change', function (hooks) {
 
     user.reload();
     assert.strictEqual(user.email, 'new@email.com');
-    assert.strictEqual(user.emailVerified, false);
+    assert.false(user.emailVerified);
     assert.ok(user.emailVerificationToken);
   });
 
@@ -104,7 +104,7 @@ module('Acceptance | Email Change', function (hooks) {
 
     user.reload();
     assert.strictEqual(user.email, 'old@email.com');
-    assert.strictEqual(user.emailVerified, true);
+    assert.true(user.emailVerified);
     assert.notOk(user.emailVerificationToken);
   });
 
@@ -128,7 +128,7 @@ module('Acceptance | Email Change', function (hooks) {
 
     user.reload();
     assert.strictEqual(user.email, 'old@email.com');
-    assert.strictEqual(user.emailVerified, true);
+    assert.true(user.emailVerified);
     assert.notOk(user.emailVerificationToken);
   });
 
@@ -139,7 +139,7 @@ module('Acceptance | Email Change', function (hooks) {
       this.authenticateAs(user);
 
       await visit('/settings/profile');
-      assert.equal(currentURL(), '/settings/profile');
+      assert.strictEqual(currentURL(), '/settings/profile');
       assert.dom('[data-test-email-input]').exists();
       assert.dom('[data-test-email-input] [data-test-email-address]').includesText('john@doe.com');
       assert.dom('[data-test-email-input] [data-test-verified]').doesNotExist();
@@ -159,7 +159,7 @@ module('Acceptance | Email Change', function (hooks) {
       this.server.put('/api/v1/users/:user_id/resend', {}, 500);
 
       await visit('/settings/profile');
-      assert.equal(currentURL(), '/settings/profile');
+      assert.strictEqual(currentURL(), '/settings/profile');
       assert.dom('[data-test-email-input]').exists();
       assert.dom('[data-test-email-input] [data-test-email-address]').includesText('john@doe.com');
       assert.dom('[data-test-email-input] [data-test-verified]').doesNotExist();

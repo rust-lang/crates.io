@@ -12,7 +12,7 @@ module('Mirage | GET /api/v1/summary', function (hooks) {
 
   test('empty case', async function (assert) {
     let response = await fetch('/api/v1/summary');
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
     assert.deepEqual(await response.json(), {
       just_updated: [],
       most_downloaded: [],
@@ -32,11 +32,11 @@ module('Mirage | GET /api/v1/summary', function (hooks) {
     this.server.createList('version', crates.length, { crate: i => crates[i] });
 
     let response = await fetch('/api/v1/summary');
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
 
     let responsePayload = await response.json();
 
-    assert.equal(responsePayload.just_updated.length, 10);
+    assert.strictEqual(responsePayload.just_updated.length, 10);
     assert.deepEqual(responsePayload.just_updated[0], {
       id: 'crate-0',
       badges: [],
@@ -63,7 +63,7 @@ module('Mirage | GET /api/v1/summary', function (hooks) {
       versions: null,
     });
 
-    assert.equal(responsePayload.most_downloaded.length, 10);
+    assert.strictEqual(responsePayload.most_downloaded.length, 10);
     assert.deepEqual(responsePayload.most_downloaded[0], {
       id: 'crate-4',
       badges: [],
@@ -90,7 +90,7 @@ module('Mirage | GET /api/v1/summary', function (hooks) {
       versions: null,
     });
 
-    assert.equal(responsePayload.most_recently_downloaded.length, 10);
+    assert.strictEqual(responsePayload.most_recently_downloaded.length, 10);
     assert.deepEqual(responsePayload.most_recently_downloaded[0], {
       id: 'crate-0',
       badges: [],
@@ -117,7 +117,7 @@ module('Mirage | GET /api/v1/summary', function (hooks) {
       versions: null,
     });
 
-    assert.equal(responsePayload.new_crates.length, 10);
+    assert.strictEqual(responsePayload.new_crates.length, 10);
     assert.deepEqual(responsePayload.new_crates[0], {
       id: 'crate-0',
       badges: [],
@@ -144,10 +144,10 @@ module('Mirage | GET /api/v1/summary', function (hooks) {
       versions: null,
     });
 
-    assert.equal(responsePayload.num_crates, 20);
-    assert.equal(responsePayload.num_downloads, 1_419_675);
+    assert.strictEqual(responsePayload.num_crates, 20);
+    assert.strictEqual(responsePayload.num_downloads, 1_419_675);
 
-    assert.equal(responsePayload.popular_categories.length, 10);
+    assert.strictEqual(responsePayload.popular_categories.length, 10);
     assert.deepEqual(responsePayload.popular_categories[0], {
       id: 'category-0',
       category: 'Category 0',
@@ -157,7 +157,7 @@ module('Mirage | GET /api/v1/summary', function (hooks) {
       slug: 'category-0',
     });
 
-    assert.equal(responsePayload.popular_keywords.length, 10);
+    assert.strictEqual(responsePayload.popular_keywords.length, 10);
     assert.deepEqual(responsePayload.popular_keywords[0], {
       id: 'keyword-1',
       crates_cnt: 0,

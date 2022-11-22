@@ -16,9 +16,12 @@ module('Acceptance | Login', function (hooks) {
     let deferred = defer();
 
     window.open = (url, target, features) => {
-      assert.equal(url, '');
-      assert.equal(target, '_blank');
-      assert.equal(features, 'width=1000,height=450,toolbar=0,scrollbars=1,status=1,resizable=1,location=1,menuBar=0');
+      assert.strictEqual(url, '');
+      assert.strictEqual(target, '_blank');
+      assert.strictEqual(
+        features,
+        'width=1000,height=450,toolbar=0,scrollbars=1,status=1,resizable=1,location=1,menuBar=0',
+      );
       deferred.resolve();
       return { document: { write() {}, close() {} }, close() {} };
     };
@@ -49,10 +52,10 @@ module('Acceptance | Login', function (hooks) {
     }));
 
     await visit('/');
-    assert.equal(currentURL(), '/');
+    assert.strictEqual(currentURL(), '/');
 
     await click('[data-test-login-button]');
-    assert.equal(currentURL(), '/');
+    assert.strictEqual(currentURL(), '/');
 
     // wait for `window.open()` to be called
     await deferred.promise;
@@ -81,10 +84,10 @@ module('Acceptance | Login', function (hooks) {
     this.server.get('/api/private/session/authorize', payload, 403);
 
     await visit('/');
-    assert.equal(currentURL(), '/');
+    assert.strictEqual(currentURL(), '/');
 
     await click('[data-test-login-button]');
-    assert.equal(currentURL(), '/');
+    assert.strictEqual(currentURL(), '/');
 
     // wait for `window.open()` to be called
     await deferred.promise;

@@ -20,8 +20,8 @@ module('Acceptance | crate page', function (hooks) {
     await visit('/');
     await click('[data-test-just-updated] [data-test-crate-link="0"]');
 
-    assert.equal(currentURL(), '/crates/nanomsg');
-    assert.equal(getPageTitle(), 'nanomsg - crates.io: Rust Package Registry');
+    assert.strictEqual(currentURL(), '/crates/nanomsg');
+    assert.strictEqual(getPageTitle(), 'nanomsg - crates.io: Rust Package Registry');
 
     assert.dom('[data-test-heading] [data-test-crate-name]').hasText('nanomsg');
     assert.dom('[data-test-heading] [data-test-crate-version]').hasText('v0.6.1');
@@ -34,9 +34,9 @@ module('Acceptance | crate page', function (hooks) {
 
     await visit('/crates/nanomsg');
 
-    assert.equal(currentURL(), '/crates/nanomsg');
-    assert.equal(currentRouteName(), 'crate.index');
-    assert.equal(getPageTitle(), 'nanomsg - crates.io: Rust Package Registry');
+    assert.strictEqual(currentURL(), '/crates/nanomsg');
+    assert.strictEqual(currentRouteName(), 'crate.index');
+    assert.strictEqual(getPageTitle(), 'nanomsg - crates.io: Rust Package Registry');
 
     assert.dom('[data-test-heading] [data-test-crate-name]').hasText('nanomsg');
     assert.dom('[data-test-heading] [data-test-crate-version]').hasText('v0.6.1');
@@ -53,9 +53,9 @@ module('Acceptance | crate page', function (hooks) {
 
     await visit('/crates/nanomsg/');
 
-    assert.equal(currentURL(), '/crates/nanomsg/');
-    assert.equal(currentRouteName(), 'crate.index');
-    assert.equal(getPageTitle(), 'nanomsg - crates.io: Rust Package Registry');
+    assert.strictEqual(currentURL(), '/crates/nanomsg/');
+    assert.strictEqual(currentRouteName(), 'crate.index');
+    assert.strictEqual(getPageTitle(), 'nanomsg - crates.io: Rust Package Registry');
 
     assert.dom('[data-test-heading] [data-test-crate-name]').hasText('nanomsg');
     assert.dom('[data-test-heading] [data-test-crate-version]').hasText('v0.6.1');
@@ -69,9 +69,9 @@ module('Acceptance | crate page', function (hooks) {
 
     await visit('/crates/nanomsg/0.6.0');
 
-    assert.equal(currentURL(), '/crates/nanomsg/0.6.0');
-    assert.equal(currentRouteName(), 'crate.version');
-    assert.equal(getPageTitle(), 'nanomsg - crates.io: Rust Package Registry');
+    assert.strictEqual(currentURL(), '/crates/nanomsg/0.6.0');
+    assert.strictEqual(currentRouteName(), 'crate.version');
+    assert.strictEqual(getPageTitle(), 'nanomsg - crates.io: Rust Package Registry');
 
     assert.dom('[data-test-heading] [data-test-crate-name]').hasText('nanomsg');
     assert.dom('[data-test-heading] [data-test-crate-version]').hasText('v0.6.0');
@@ -83,7 +83,7 @@ module('Acceptance | crate page', function (hooks) {
 
   test('unknown crate shows an error message', async function (assert) {
     await visit('/crates/nanomsg');
-    assert.equal(currentURL(), '/crates/nanomsg');
+    assert.strictEqual(currentURL(), '/crates/nanomsg');
     assert.dom('[data-test-404-page]').exists();
     assert.dom('[data-test-title]').hasText('nanomsg: Crate not found');
     assert.dom('[data-test-go-back]').exists();
@@ -94,7 +94,7 @@ module('Acceptance | crate page', function (hooks) {
     this.server.get('/api/v1/crates/:crate_name', {}, 500);
 
     await visit('/crates/nanomsg');
-    assert.equal(currentURL(), '/crates/nanomsg');
+    assert.strictEqual(currentURL(), '/crates/nanomsg');
     assert.dom('[data-test-404-page]').exists();
     assert.dom('[data-test-title]').hasText('nanomsg: Failed to load crate data');
     assert.dom('[data-test-go-back]').doesNotExist();
@@ -108,7 +108,7 @@ module('Acceptance | crate page', function (hooks) {
 
     await visit('/crates/nanomsg/0.7.0');
 
-    assert.equal(currentURL(), '/crates/nanomsg/0.7.0');
+    assert.strictEqual(currentURL(), '/crates/nanomsg/0.7.0');
     assert.dom('[data-test-404-page]').exists();
     assert.dom('[data-test-title]').hasText('nanomsg: Version 0.7.0 not found');
     assert.dom('[data-test-go-back]').exists();
@@ -124,7 +124,7 @@ module('Acceptance | crate page', function (hooks) {
 
     await visit('/');
     await click('[data-test-just-updated] [data-test-crate-link="0"]');
-    assert.equal(currentURL(), '/crates/nanomsg');
+    assert.strictEqual(currentURL(), '/crates/nanomsg');
     assert.dom('[data-test-404-page]').exists();
     assert.dom('[data-test-title]').hasText('nanomsg: Failed to load version data');
     assert.dom('[data-test-go-back]').doesNotExist();
@@ -146,7 +146,7 @@ module('Acceptance | crate page', function (hooks) {
     await visit('/crates/nanomsg');
     await click('[data-test-rev-deps-tab] a');
 
-    assert.equal(currentURL(), '/crates/nanomsg/reverse_dependencies');
+    assert.strictEqual(currentURL(), '/crates/nanomsg/reverse_dependencies');
     assert.dom('a[href="/crates/unicorn-rpc"]').hasText('unicorn-rpc');
   });
 
@@ -156,7 +156,7 @@ module('Acceptance | crate page', function (hooks) {
     await visit('/crates/nanomsg');
     await click('[data-test-owners] [data-test-owner-link="blabaere"]');
 
-    assert.equal(currentURL(), '/users/blabaere');
+    assert.strictEqual(currentURL(), '/users/blabaere');
     assert.dom('[data-test-heading] [data-test-username]').hasText('blabaere');
   });
 
@@ -166,7 +166,7 @@ module('Acceptance | crate page', function (hooks) {
     await visit('/crates/nanomsg');
     await click('[data-test-owners] [data-test-owner-link="github:org:thehydroimpulse"]');
 
-    assert.equal(currentURL(), '/teams/github:org:thehydroimpulse');
+    assert.strictEqual(currentURL(), '/teams/github:org:thehydroimpulse');
     assert.dom('[data-test-heading] [data-test-team-name]').hasText('thehydroimpulseteam');
   });
 
@@ -248,6 +248,6 @@ module('Acceptance | crate page', function (hooks) {
     await visit('/crates/nanomsg');
     await click('[data-test-settings-tab] a');
 
-    assert.equal(currentURL(), '/crates/nanomsg/settings');
+    assert.strictEqual(currentURL(), '/crates/nanomsg/settings');
   });
 });

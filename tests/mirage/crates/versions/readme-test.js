@@ -11,16 +11,16 @@ module('Mirage | GET /api/v1/crates/:id/:version/readme', function (hooks) {
 
   test('returns 404 for unknown crates', async function (assert) {
     let response = await fetch('/api/v1/crates/foo/1.0.0/readme');
-    assert.equal(response.status, 404);
-    assert.equal(await response.text(), '');
+    assert.strictEqual(response.status, 404);
+    assert.strictEqual(await response.text(), '');
   });
 
   test('returns 404 for unknown versions', async function (assert) {
     this.server.create('crate', { name: 'rand' });
 
     let response = await fetch('/api/v1/crates/rand/1.0.0/readme');
-    assert.equal(response.status, 404);
-    assert.equal(await response.text(), '');
+    assert.strictEqual(response.status, 404);
+    assert.strictEqual(await response.text(), '');
   });
 
   test('returns 404 for versions without README', async function (assert) {
@@ -28,8 +28,8 @@ module('Mirage | GET /api/v1/crates/:id/:version/readme', function (hooks) {
     this.server.create('version', { crate, num: '1.0.0' });
 
     let response = await fetch('/api/v1/crates/rand/1.0.0/readme');
-    assert.equal(response.status, 404);
-    assert.equal(await response.text(), '');
+    assert.strictEqual(response.status, 404);
+    assert.strictEqual(await response.text(), '');
   });
 
   test('returns the README as raw HTML', async function (assert) {
@@ -39,7 +39,7 @@ module('Mirage | GET /api/v1/crates/:id/:version/readme', function (hooks) {
     this.server.create('version', { crate, num: '1.0.0', readme: readme });
 
     let response = await fetch('/api/v1/crates/rand/1.0.0/readme');
-    assert.equal(response.status, 200);
-    assert.equal(await response.text(), readme);
+    assert.strictEqual(response.status, 200);
+    assert.strictEqual(await response.text(), readme);
   });
 });

@@ -10,36 +10,36 @@ module('Acceptance | Email Confirmation', function (hooks) {
 
   test('unauthenticated happy path', async function (assert) {
     let user = this.server.create('user', { emailVerificationToken: 'badc0ffee' });
-    assert.strictEqual(user.emailVerified, false);
+    assert.false(user.emailVerified);
 
     await visit('/confirm/badc0ffee');
-    assert.equal(currentURL(), '/');
+    assert.strictEqual(currentURL(), '/');
     assert.dom('[data-test-notification-message="success"]').exists();
 
     user.reload();
-    assert.strictEqual(user.emailVerified, true);
+    assert.true(user.emailVerified);
   });
 
   test('authenticated happy path', async function (assert) {
     let user = this.server.create('user', { emailVerificationToken: 'badc0ffee' });
-    assert.strictEqual(user.emailVerified, false);
+    assert.false(user.emailVerified);
 
     this.authenticateAs(user);
 
     await visit('/confirm/badc0ffee');
-    assert.equal(currentURL(), '/');
+    assert.strictEqual(currentURL(), '/');
     assert.dom('[data-test-notification-message="success"]').exists();
 
     let { currentUser } = this.owner.lookup('service:session');
-    assert.strictEqual(currentUser.email_verified, true);
+    assert.true(currentUser.email_verified);
 
     user.reload();
-    assert.strictEqual(user.emailVerified, true);
+    assert.true(user.emailVerified);
   });
 
   test('error case', async function (assert) {
     await visit('/confirm/badc0ffee');
-    assert.equal(currentURL(), '/');
+    assert.strictEqual(currentURL(), '/');
     assert.dom('[data-test-notification-message]').hasText('Unknown error in email confirmation');
   });
 });

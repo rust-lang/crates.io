@@ -17,8 +17,8 @@ module('Acceptance | crate dependencies page', function (hooks) {
     this.server.loadFixtures();
 
     await visit('/crates/nanomsg/dependencies');
-    assert.equal(currentURL(), '/crates/nanomsg/0.6.1/dependencies');
-    assert.equal(getPageTitle(), 'nanomsg - crates.io: Rust Package Registry');
+    assert.strictEqual(currentURL(), '/crates/nanomsg/0.6.1/dependencies');
+    assert.strictEqual(getPageTitle(), 'nanomsg - crates.io: Rust Package Registry');
 
     assert.dom('[data-test-dependencies] li').exists({ count: 2 });
     assert.dom('[data-test-build-dependencies] li').exists({ count: 1 });
@@ -42,7 +42,7 @@ module('Acceptance | crate dependencies page', function (hooks) {
 
   test('shows an error page if crate not found', async function (assert) {
     await visit('/crates/foo/1.0.0/dependencies');
-    assert.equal(currentURL(), '/crates/foo/1.0.0/dependencies');
+    assert.strictEqual(currentURL(), '/crates/foo/1.0.0/dependencies');
     assert.dom('[data-test-404-page]').exists();
     assert.dom('[data-test-title]').hasText('foo: Crate not found');
     assert.dom('[data-test-go-back]').exists();
@@ -53,7 +53,7 @@ module('Acceptance | crate dependencies page', function (hooks) {
     this.server.get('/api/v1/crates/:crate_name', {}, 500);
 
     await visit('/crates/foo/1.0.0/dependencies');
-    assert.equal(currentURL(), '/crates/foo/1.0.0/dependencies');
+    assert.strictEqual(currentURL(), '/crates/foo/1.0.0/dependencies');
     assert.dom('[data-test-404-page]').exists();
     assert.dom('[data-test-title]').hasText('foo: Failed to load crate data');
     assert.dom('[data-test-go-back]').doesNotExist();
@@ -65,7 +65,7 @@ module('Acceptance | crate dependencies page', function (hooks) {
     this.server.create('version', { crate, num: '2.0.0' });
 
     await visit('/crates/foo/1.0.0/dependencies');
-    assert.equal(currentURL(), '/crates/foo/1.0.0/dependencies');
+    assert.strictEqual(currentURL(), '/crates/foo/1.0.0/dependencies');
     assert.dom('[data-test-404-page]').exists();
     assert.dom('[data-test-title]').hasText('foo: Version 1.0.0 not found');
     assert.dom('[data-test-go-back]').exists();
@@ -85,7 +85,7 @@ module('Acceptance | crate dependencies page', function (hooks) {
     versions.forEach(record => record.unloadRecord());
 
     await visit('/crates/foo/1.0.0/dependencies');
-    assert.equal(currentURL(), '/crates/foo/1.0.0/dependencies');
+    assert.strictEqual(currentURL(), '/crates/foo/1.0.0/dependencies');
     assert.dom('[data-test-404-page]').exists();
     assert.dom('[data-test-title]').hasText('foo: Failed to load version data');
     assert.dom('[data-test-go-back]').doesNotExist();
@@ -99,7 +99,7 @@ module('Acceptance | crate dependencies page', function (hooks) {
     this.server.get('/api/v1/crates/:crate_name/:version_num/dependencies', {}, 500);
 
     await visit('/crates/foo/1.0.0/dependencies');
-    assert.equal(currentURL(), '/crates/foo/1.0.0/dependencies');
+    assert.strictEqual(currentURL(), '/crates/foo/1.0.0/dependencies');
     assert.dom('[data-test-404-page]').exists();
     assert.dom('[data-test-title]').hasText('foo: Failed to load dependencies');
     assert.dom('[data-test-go-back]').doesNotExist();
@@ -121,7 +121,7 @@ module('Acceptance | crate dependencies page', function (hooks) {
     this.server.get('/api/v1/crates', {}, 500);
 
     await visit('/crates/nanomsg/dependencies');
-    assert.equal(currentURL(), '/crates/nanomsg/0.6.1/dependencies');
+    assert.strictEqual(currentURL(), '/crates/nanomsg/0.6.1/dependencies');
 
     assert.dom('[data-test-dependencies] li').exists({ count: 2 });
 

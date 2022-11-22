@@ -15,12 +15,12 @@ module('Mirage | PUT /api/v1/users/:id', function (hooks) {
 
     let body = JSON.stringify({ user: { email: 'new@email.com' } });
     let response = await fetch(`/api/v1/users/${user.id}`, { method: 'PUT', body });
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
     assert.deepEqual(await response.json(), { ok: true });
 
     user.reload();
     assert.strictEqual(user.email, 'new@email.com');
-    assert.strictEqual(user.emailVerified, false);
+    assert.false(user.emailVerified);
     assert.strictEqual(user.emailVerificationToken, 'secret123');
   });
 
@@ -29,7 +29,7 @@ module('Mirage | PUT /api/v1/users/:id', function (hooks) {
 
     let body = JSON.stringify({ user: { email: 'new@email.com' } });
     let response = await fetch(`/api/v1/users/${user.id}`, { method: 'PUT', body });
-    assert.equal(response.status, 403);
+    assert.strictEqual(response.status, 403);
     assert.deepEqual(await response.json(), { errors: [{ detail: 'must be logged in to perform that action' }] });
 
     user.reload();
@@ -42,7 +42,7 @@ module('Mirage | PUT /api/v1/users/:id', function (hooks) {
 
     let body = JSON.stringify({ user: { email: 'new@email.com' } });
     let response = await fetch(`/api/v1/users/wrong-id`, { method: 'PUT', body });
-    assert.equal(response.status, 400);
+    assert.strictEqual(response.status, 400);
     assert.deepEqual(await response.json(), { errors: [{ detail: 'current user does not match requested user' }] });
 
     user.reload();
@@ -55,7 +55,7 @@ module('Mirage | PUT /api/v1/users/:id', function (hooks) {
 
     let body = JSON.stringify({});
     let response = await fetch(`/api/v1/users/${user.id}`, { method: 'PUT', body });
-    assert.equal(response.status, 400);
+    assert.strictEqual(response.status, 400);
     assert.deepEqual(await response.json(), { errors: [{ detail: 'invalid json request' }] });
 
     user.reload();
@@ -68,7 +68,7 @@ module('Mirage | PUT /api/v1/users/:id', function (hooks) {
 
     let body = JSON.stringify({ user: { email: '' } });
     let response = await fetch(`/api/v1/users/${user.id}`, { method: 'PUT', body });
-    assert.equal(response.status, 400);
+    assert.strictEqual(response.status, 400);
     assert.deepEqual(await response.json(), { errors: [{ detail: 'empty email rejected' }] });
 
     user.reload();

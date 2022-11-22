@@ -28,7 +28,7 @@ module('Acceptance | /crates/:crate_id/reverse_dependencies', function (hooks) {
     let { foo, bar, baz } = prepare(this);
 
     await visit(`/crates/${foo.name}/reverse_dependencies`);
-    assert.equal(currentURL(), `/crates/${foo.name}/reverse_dependencies`);
+    assert.strictEqual(currentURL(), `/crates/${foo.name}/reverse_dependencies`);
     assert.dom('[data-test-row]').exists({ count: 2 });
     assert.dom('[data-test-row="0"] [data-test-crate-name]').hasText(bar.name);
     assert.dom('[data-test-row="0"] [data-test-description]').hasText(bar.description);
@@ -46,44 +46,44 @@ module('Acceptance | /crates/:crate_id/reverse_dependencies', function (hooks) {
     }
 
     await visit(`/crates/${foo.name}/reverse_dependencies`);
-    assert.equal(currentURL(), `/crates/${foo.name}/reverse_dependencies`);
+    assert.strictEqual(currentURL(), `/crates/${foo.name}/reverse_dependencies`);
     assert.dom('[data-test-row]').exists({ count: 10 });
     assert.dom('[data-test-current-rows]').hasText('1-10');
     assert.dom('[data-test-total-rows]').hasText('22');
 
     await click('[data-test-pagination-next]');
-    assert.equal(currentURL(), `/crates/${foo.name}/reverse_dependencies?page=2`);
+    assert.strictEqual(currentURL(), `/crates/${foo.name}/reverse_dependencies?page=2`);
     assert.dom('[data-test-row]').exists({ count: 10 });
     assert.dom('[data-test-current-rows]').hasText('11-20');
     assert.dom('[data-test-total-rows]').hasText('22');
 
     await click('[data-test-pagination-next]');
-    assert.equal(currentURL(), `/crates/${foo.name}/reverse_dependencies?page=3`);
+    assert.strictEqual(currentURL(), `/crates/${foo.name}/reverse_dependencies?page=3`);
     assert.dom('[data-test-row]').exists({ count: 2 });
     assert.dom('[data-test-current-rows]').hasText('21-22');
     assert.dom('[data-test-total-rows]').hasText('22');
   });
 
-  test('shows an error if the server is broken', async function (assert) {
+  test('shows a generic error if the server is broken', async function (assert) {
     let { foo } = prepare(this);
 
     this.server.get('/api/v1/crates/:crate_id/reverse_dependencies', {}, 500);
 
     await visit(`/crates/${foo.name}/reverse_dependencies`);
-    assert.equal(currentURL(), '/');
+    assert.strictEqual(currentURL(), '/');
     assert
       .dom('[data-test-notification-message="error"]')
       .hasText('Could not load reverse dependencies for the "foo" crate');
   });
 
-  test('shows an error if the server is broken', async function (assert) {
+  test('shows a detailed error if available', async function (assert) {
     let { foo } = prepare(this);
 
     let payload = { errors: [{ detail: 'cannot request more than 100 items' }] };
     this.server.get('/api/v1/crates/:crate_id/reverse_dependencies', payload, 400);
 
     await visit(`/crates/${foo.name}/reverse_dependencies`);
-    assert.equal(currentURL(), '/');
+    assert.strictEqual(currentURL(), '/');
     assert
       .dom('[data-test-notification-message="error"]')
       .hasText('Could not load reverse dependencies for the "foo" crate: cannot request more than 100 items');

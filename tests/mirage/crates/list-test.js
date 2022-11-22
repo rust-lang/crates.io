@@ -11,7 +11,7 @@ module('Mirage | GET /api/v1/crates', function (hooks) {
 
   test('empty case', async function (assert) {
     let response = await fetch('/api/v1/crates');
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
     assert.deepEqual(await response.json(), {
       crates: [],
       meta: {
@@ -36,7 +36,7 @@ module('Mirage | GET /api/v1/crates', function (hooks) {
     });
 
     let response = await fetch('/api/v1/crates');
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
     assert.deepEqual(await response.json(), {
       crates: [
         {
@@ -76,11 +76,11 @@ module('Mirage | GET /api/v1/crates', function (hooks) {
     this.server.createList('version', crates.length, { crate: i => crates[i] });
 
     let response = await fetch('/api/v1/crates');
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
 
     let responsePayload = await response.json();
-    assert.equal(responsePayload.crates.length, 10);
-    assert.equal(responsePayload.meta.total, 25);
+    assert.strictEqual(responsePayload.crates.length, 10);
+    assert.strictEqual(responsePayload.meta.total, 25);
   });
 
   test('supports `page` and `per_page` parameters', async function (assert) {
@@ -90,15 +90,15 @@ module('Mirage | GET /api/v1/crates', function (hooks) {
     this.server.createList('version', crates.length, { crate: i => crates[i] });
 
     let response = await fetch('/api/v1/crates?page=2&per_page=5');
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
 
     let responsePayload = await response.json();
-    assert.equal(responsePayload.crates.length, 5);
+    assert.strictEqual(responsePayload.crates.length, 5);
     assert.deepEqual(
       responsePayload.crates.map(it => it.id),
       ['crate-06', 'crate-07', 'crate-08', 'crate-09', 'crate-10'],
     );
-    assert.equal(responsePayload.meta.total, 25);
+    assert.strictEqual(responsePayload.meta.total, 25);
   });
 
   test('supports a `letter` parameter', async function (assert) {
@@ -110,15 +110,15 @@ module('Mirage | GET /api/v1/crates', function (hooks) {
     this.server.create('version', { crate: baz });
 
     let response = await fetch('/api/v1/crates?letter=b');
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
 
     let responsePayload = await response.json();
-    assert.equal(responsePayload.crates.length, 2);
+    assert.strictEqual(responsePayload.crates.length, 2);
     assert.deepEqual(
       responsePayload.crates.map(it => it.id),
       ['bar', 'BAZ'],
     );
-    assert.equal(responsePayload.meta.total, 2);
+    assert.strictEqual(responsePayload.meta.total, 2);
   });
 
   test('supports a `q` parameter', async function (assert) {
@@ -130,15 +130,15 @@ module('Mirage | GET /api/v1/crates', function (hooks) {
     this.server.create('version', { crate: crate3 });
 
     let response = await fetch('/api/v1/crates?q=123');
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
 
     let responsePayload = await response.json();
-    assert.equal(responsePayload.crates.length, 2);
+    assert.strictEqual(responsePayload.crates.length, 2);
     assert.deepEqual(
       responsePayload.crates.map(it => it.id),
       ['123456', '00123'],
     );
-    assert.equal(responsePayload.meta.total, 2);
+    assert.strictEqual(responsePayload.meta.total, 2);
   });
 
   test('supports a `user_id` parameter', async function (assert) {
@@ -155,12 +155,12 @@ module('Mirage | GET /api/v1/crates', function (hooks) {
     this.server.create('version', { crate: baz });
 
     let response = await fetch(`/api/v1/crates?user_id=${user1.id}`);
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
 
     let responsePayload = await response.json();
-    assert.equal(responsePayload.crates.length, 1);
-    assert.equal(responsePayload.crates[0].id, 'bar');
-    assert.equal(responsePayload.meta.total, 1);
+    assert.strictEqual(responsePayload.crates.length, 1);
+    assert.strictEqual(responsePayload.crates[0].id, 'bar');
+    assert.strictEqual(responsePayload.meta.total, 1);
   });
 
   test('supports a `team_id` parameter', async function (assert) {
@@ -177,12 +177,12 @@ module('Mirage | GET /api/v1/crates', function (hooks) {
     this.server.create('version', { crate: baz });
 
     let response = await fetch(`/api/v1/crates?team_id=${team1.id}`);
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
 
     let responsePayload = await response.json();
-    assert.equal(responsePayload.crates.length, 1);
-    assert.equal(responsePayload.crates[0].id, 'bar');
-    assert.equal(responsePayload.meta.total, 1);
+    assert.strictEqual(responsePayload.crates.length, 1);
+    assert.strictEqual(responsePayload.crates[0].id, 'bar');
+    assert.strictEqual(responsePayload.meta.total, 1);
   });
 
   test('supports a `following` parameter', async function (assert) {
@@ -195,12 +195,12 @@ module('Mirage | GET /api/v1/crates', function (hooks) {
     this.authenticateAs(user);
 
     let response = await fetch(`/api/v1/crates?following=1`);
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
 
     let responsePayload = await response.json();
-    assert.equal(responsePayload.crates.length, 1);
-    assert.equal(responsePayload.crates[0].id, 'bar');
-    assert.equal(responsePayload.meta.total, 1);
+    assert.strictEqual(responsePayload.crates.length, 1);
+    assert.strictEqual(responsePayload.crates[0].id, 'bar');
+    assert.strictEqual(responsePayload.meta.total, 1);
   });
 
   test('supports multiple `ids[]` parameters', async function (assert) {
@@ -214,13 +214,13 @@ module('Mirage | GET /api/v1/crates', function (hooks) {
     this.server.create('version', { crate: other });
 
     let response = await fetch(`/api/v1/crates?ids[]=foo&ids[]=bar&ids[]=baz&ids[]=baz&ids[]=unknown`);
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
 
     let responsePayload = await response.json();
-    assert.equal(responsePayload.crates.length, 3);
-    assert.equal(responsePayload.crates[0].id, 'foo');
-    assert.equal(responsePayload.crates[1].id, 'bar');
-    assert.equal(responsePayload.crates[2].id, 'baz');
-    assert.equal(responsePayload.meta.total, 3);
+    assert.strictEqual(responsePayload.crates.length, 3);
+    assert.strictEqual(responsePayload.crates[0].id, 'foo');
+    assert.strictEqual(responsePayload.crates[1].id, 'bar');
+    assert.strictEqual(responsePayload.crates[2].id, 'baz');
+    assert.strictEqual(responsePayload.meta.total, 3);
   });
 });

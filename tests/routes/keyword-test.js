@@ -10,7 +10,7 @@ module('Route | keyword', function (hooks) {
 
   test('shows an empty list if the keyword does not exist on the server', async function (assert) {
     await visit('/keywords/foo');
-    assert.equal(currentURL(), '/keywords/foo');
+    assert.strictEqual(currentURL(), '/keywords/foo');
     assert.dom('[data-test-crate-row]').doesNotExist();
   });
 
@@ -18,7 +18,7 @@ module('Route | keyword', function (hooks) {
     this.server.get('/api/v1/crates', {}, 500);
 
     await visit('/keywords/foo');
-    assert.equal(currentURL(), '/keywords/foo');
+    assert.strictEqual(currentURL(), '/keywords/foo');
     assert.dom('[data-test-404-page]').exists();
     assert.dom('[data-test-title]').hasText('foo: Failed to load crates');
     assert.dom('[data-test-go-back]').doesNotExist();

@@ -11,7 +11,7 @@ module('Mirage | GET /api/v1/crates/:id/versions', function (hooks) {
 
   test('returns 404 for unknown crates', async function (assert) {
     let response = await fetch('/api/v1/crates/foo/versions');
-    assert.equal(response.status, 404);
+    assert.strictEqual(response.status, 404);
     assert.deepEqual(await response.json(), { errors: [{ detail: 'Not Found' }] });
   });
 
@@ -19,7 +19,7 @@ module('Mirage | GET /api/v1/crates/:id/versions', function (hooks) {
     this.server.create('crate', { name: 'rand' });
 
     let response = await fetch('/api/v1/crates/rand/versions');
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
     assert.deepEqual(await response.json(), {
       versions: [],
     });
@@ -33,7 +33,7 @@ module('Mirage | GET /api/v1/crates/:id/versions', function (hooks) {
     this.server.create('version', { crate, num: '1.2.0' });
 
     let response = await fetch('/api/v1/crates/rand/versions');
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
     assert.deepEqual(await response.json(), {
       versions: [
         {

@@ -11,7 +11,7 @@ module('Mirage | GET /api/v1/categories/:id', function (hooks) {
 
   test('returns 404 for unknown categories', async function (assert) {
     let response = await fetch('/api/v1/categories/foo');
-    assert.equal(response.status, 404);
+    assert.strictEqual(response.status, 404);
     assert.deepEqual(await response.json(), { errors: [{ detail: 'Not Found' }] });
   });
 
@@ -22,7 +22,7 @@ module('Mirage | GET /api/v1/categories/:id', function (hooks) {
     });
 
     let response = await fetch('/api/v1/categories/no-std');
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
     assert.deepEqual(await response.json(), {
       category: {
         id: 'no-std',
@@ -42,7 +42,7 @@ module('Mirage | GET /api/v1/categories/:id', function (hooks) {
     this.server.createList('crate', 3, { categoryIds: ['not-cli'] });
 
     let response = await fetch('/api/v1/categories/cli');
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
     assert.deepEqual(await response.json(), {
       category: {
         category: 'cli',

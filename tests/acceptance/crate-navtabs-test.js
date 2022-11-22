@@ -17,7 +17,7 @@ module('Acceptance | crate navigation tabs', function (hooks) {
     this.server.create('version', { crate, num: '0.6.1' });
 
     await visit('/crates/nanomsg');
-    assert.equal(currentURL(), '/crates/nanomsg');
+    assert.strictEqual(currentURL(), '/crates/nanomsg');
 
     assert.dom(TAB_README).hasAttribute('href', '/crates/nanomsg').hasAttribute('data-test-active');
     assert.dom(TAB_VERSIONS).hasAttribute('href', '/crates/nanomsg/versions').hasNoAttribute('data-test-active');
@@ -29,7 +29,7 @@ module('Acceptance | crate navigation tabs', function (hooks) {
     assert.dom(TAB_SETTINGS).doesNotExist();
 
     await click(TAB_VERSIONS);
-    assert.equal(currentURL(), '/crates/nanomsg/versions');
+    assert.strictEqual(currentURL(), '/crates/nanomsg/versions');
 
     assert.dom(TAB_README).hasAttribute('href', '/crates/nanomsg').hasNoAttribute('data-test-active');
     assert.dom(TAB_VERSIONS).hasAttribute('href', '/crates/nanomsg/versions').hasAttribute('data-test-active');
@@ -41,7 +41,7 @@ module('Acceptance | crate navigation tabs', function (hooks) {
     assert.dom(TAB_SETTINGS).doesNotExist();
 
     await click(TAB_DEPS);
-    assert.equal(currentURL(), '/crates/nanomsg/0.6.1/dependencies');
+    assert.strictEqual(currentURL(), '/crates/nanomsg/0.6.1/dependencies');
 
     assert.dom(TAB_README).hasAttribute('href', '/crates/nanomsg/0.6.1').hasNoAttribute('data-test-active');
     assert.dom(TAB_VERSIONS).hasAttribute('href', '/crates/nanomsg/versions').hasNoAttribute('data-test-active');
@@ -53,7 +53,7 @@ module('Acceptance | crate navigation tabs', function (hooks) {
     assert.dom(TAB_SETTINGS).doesNotExist();
 
     await click(TAB_REV_DEPS);
-    assert.equal(currentURL(), '/crates/nanomsg/reverse_dependencies');
+    assert.strictEqual(currentURL(), '/crates/nanomsg/reverse_dependencies');
 
     assert.dom(TAB_README).hasAttribute('href', '/crates/nanomsg').hasNoAttribute('data-test-active');
     assert.dom(TAB_VERSIONS).hasAttribute('href', '/crates/nanomsg/versions').hasNoAttribute('data-test-active');

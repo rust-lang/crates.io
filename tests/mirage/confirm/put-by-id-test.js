@@ -11,33 +11,33 @@ module('Mirage | PUT /api/v1/confirm/:token', function (hooks) {
 
   test('returns `ok: true` for a known token (unauthenticated)', async function (assert) {
     let user = this.server.create('user', { emailVerificationToken: 'foo' });
-    assert.strictEqual(user.emailVerified, false);
+    assert.false(user.emailVerified);
 
     let response = await fetch('/api/v1/confirm/foo', { method: 'PUT' });
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
     assert.deepEqual(await response.json(), { ok: true });
 
     user.reload();
-    assert.strictEqual(user.emailVerified, true);
+    assert.true(user.emailVerified);
   });
 
   test('returns `ok: true` for a known token (authenticated)', async function (assert) {
     let user = this.server.create('user', { emailVerificationToken: 'foo' });
-    assert.strictEqual(user.emailVerified, false);
+    assert.false(user.emailVerified);
 
     this.server.create('mirage-session', { user });
 
     let response = await fetch('/api/v1/confirm/foo', { method: 'PUT' });
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
     assert.deepEqual(await response.json(), { ok: true });
 
     user.reload();
-    assert.strictEqual(user.emailVerified, true);
+    assert.true(user.emailVerified);
   });
 
   test('returns an error for unknown tokens', async function (assert) {
     let response = await fetch('/api/v1/confirm/unknown', { method: 'PUT' });
-    assert.equal(response.status, 400);
+    assert.strictEqual(response.status, 400);
     assert.deepEqual(await response.json(), {
       errors: [{ detail: 'Email belonging to token not found.' }],
     });

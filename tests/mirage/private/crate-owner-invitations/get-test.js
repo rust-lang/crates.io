@@ -36,7 +36,7 @@ module('Mirage | GET /api/private/crate_owner_invitations', function (hooks) {
     });
 
     let response = await fetch(`/api/private/crate_owner_invitations?invitee_id=${user.id}`);
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
     assert.deepEqual(await response.json(), {
       crate_owner_invitations: [
         {
@@ -90,7 +90,7 @@ module('Mirage | GET /api/private/crate_owner_invitations', function (hooks) {
     this.server.create('mirage-session', { user });
 
     let response = await fetch(`/api/private/crate_owner_invitations?invitee_id=${user.id}`);
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
     assert.deepEqual(await response.json(), {
       crate_owner_invitations: [],
       users: [],
@@ -113,13 +113,13 @@ module('Mirage | GET /api/private/crate_owner_invitations', function (hooks) {
     }
 
     let response = await fetch(`/api/private/crate_owner_invitations?invitee_id=${user.id}`);
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
     let responseJSON = await response.json();
     assert.strictEqual(responseJSON['crate_owner_invitations'].length, 10);
     assert.ok(responseJSON.meta['next_page']);
 
     response = await fetch(`/api/private/crate_owner_invitations${responseJSON.meta['next_page']}`);
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
     responseJSON = await response.json();
     assert.strictEqual(responseJSON['crate_owner_invitations'].length, 5);
     assert.strictEqual(responseJSON.meta['next_page'], null);
@@ -152,7 +152,7 @@ module('Mirage | GET /api/private/crate_owner_invitations', function (hooks) {
     });
 
     let response = await fetch(`/api/private/crate_owner_invitations?crate_name=ember-rs`);
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
     assert.deepEqual(await response.json(), {
       crate_owner_invitations: [
         {
@@ -188,7 +188,7 @@ module('Mirage | GET /api/private/crate_owner_invitations', function (hooks) {
 
   test('returns 403 if unauthenticated', async function (assert) {
     let response = await fetch(`/api/private/crate_owner_invitations?invitee_id=42`);
-    assert.equal(response.status, 403);
+    assert.strictEqual(response.status, 403);
     assert.deepEqual(await response.json(), {
       errors: [{ detail: 'must be logged in to perform that action' }],
     });
@@ -199,7 +199,7 @@ module('Mirage | GET /api/private/crate_owner_invitations', function (hooks) {
     this.server.create('mirage-session', { user });
 
     let response = await fetch(`/api/private/crate_owner_invitations`);
-    assert.equal(response.status, 400);
+    assert.strictEqual(response.status, 400);
     assert.deepEqual(await response.json(), {
       errors: [{ detail: 'missing or invalid filter' }],
     });
@@ -210,7 +210,7 @@ module('Mirage | GET /api/private/crate_owner_invitations', function (hooks) {
     this.server.create('mirage-session', { user });
 
     let response = await fetch(`/api/private/crate_owner_invitations?crate_name=foo`);
-    assert.equal(response.status, 404);
+    assert.strictEqual(response.status, 404);
     assert.deepEqual(await response.json(), {
       errors: [{ detail: 'Not Found' }],
     });
@@ -221,7 +221,7 @@ module('Mirage | GET /api/private/crate_owner_invitations', function (hooks) {
     this.server.create('mirage-session', { user });
 
     let response = await fetch(`/api/private/crate_owner_invitations?invitee_id=${user.id + 1}`);
-    assert.equal(response.status, 403);
+    assert.strictEqual(response.status, 403);
     assert.deepEqual(await response.json(), {
       errors: [{ detail: 'must be logged in to perform that action' }],
     });
