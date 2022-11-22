@@ -1,5 +1,7 @@
 #[macro_use]
 extern crate serde;
+#[macro_use]
+extern crate tracing;
 
 #[cfg(feature = "testing")]
 pub mod testing;
@@ -177,10 +179,8 @@ impl RepositoryConfig {
         match (username, password, http_url, ssh_key, ssh_url) {
             (extra_user, extra_pass, extra_http_url, Ok(encoded_key), Ok(ssh_url)) => {
                 if let (Ok(_), Ok(_), Ok(_)) = (extra_user, extra_pass, extra_http_url) {
-                    println!(
-                        "warning: both http and ssh credentials to authenticate with git are set"
-                    );
-                    println!("note: ssh credentials will take precedence over the http ones");
+                    warn!("both http and ssh credentials to authenticate with git are set");
+                    info!("note: ssh credentials will take precedence over the http ones");
                 }
 
                 let index_location =
@@ -439,13 +439,13 @@ impl Repository {
     /// This function also prints the commit message and a success or failure
     /// message to the console.
     pub fn commit_and_push(&self, message: &str, modified_file: &Path) -> anyhow::Result<()> {
-        println!("Committing and pushing \"{message}\"");
+        info!("Committing and pushing \"{message}\"");
 
         let relative_path = modified_file.strip_prefix(self.checkout_path.path())?;
         self.perform_commit_and_push(message, relative_path)
-            .map(|_| println!("Commit and push finished for \"{message}\""))
+            .map(|_| info!("Commit and push finished for \"{message}\""))
             .map_err(|err| {
-                eprintln!("Commit and push for \"{message}\" errored: {err}");
+                error!(?err, "Commit and push for \"{message}\" errored");
                 err
             })
     }
@@ -467,7 +467,7 @@ impl Repository {
         let head = self.head_oid()?;
 
         if head != original_head {
-            println!("Resetting index from {original_head} to {head}");
+            info!("Resetting index from {original_head} to {head}");
         }
 
         let obj = self.repository.find_object(head, None)?;
