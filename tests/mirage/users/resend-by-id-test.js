@@ -14,7 +14,7 @@ module('Mirage | PUT /api/v1/users/:id/resend', function (hooks) {
     this.server.create('mirage-session', { user });
 
     let response = await fetch(`/api/v1/users/${user.id}/resend`, { method: 'PUT' });
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
     assert.deepEqual(await response.json(), { ok: true });
   });
 
@@ -22,7 +22,7 @@ module('Mirage | PUT /api/v1/users/:id/resend', function (hooks) {
     let user = this.server.create('user');
 
     let response = await fetch(`/api/v1/users/${user.id}/resend`, { method: 'PUT' });
-    assert.equal(response.status, 403);
+    assert.strictEqual(response.status, 403);
     assert.deepEqual(await response.json(), { errors: [{ detail: 'must be logged in to perform that action' }] });
   });
 
@@ -31,7 +31,7 @@ module('Mirage | PUT /api/v1/users/:id/resend', function (hooks) {
     this.server.create('mirage-session', { user });
 
     let response = await fetch(`/api/v1/users/wrong-id/resend`, { method: 'PUT' });
-    assert.equal(response.status, 400);
+    assert.strictEqual(response.status, 400);
     assert.deepEqual(await response.json(), { errors: [{ detail: 'current user does not match requested user' }] });
   });
 });

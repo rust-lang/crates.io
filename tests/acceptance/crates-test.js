@@ -21,8 +21,8 @@ module('Acceptance | crates page', function (hooks) {
     await visit('/');
     await click('[data-test-all-crates-link]');
 
-    assert.equal(currentURL(), '/crates');
-    assert.equal(getPageTitle(), 'Crates - crates.io: Rust Package Registry');
+    assert.strictEqual(currentURL(), '/crates');
+    assert.strictEqual(getPageTitle(), 'Crates - crates.io: Rust Package Registry');
 
     await percySnapshot(assert);
     await a11yAudit(axeConfig);
@@ -34,8 +34,8 @@ module('Acceptance | crates page', function (hooks) {
     await visit('/crates');
     await click('[data-test-all-crates-link]');
 
-    assert.equal(currentURL(), '/crates');
-    assert.equal(getPageTitle(), 'Crates - crates.io: Rust Package Registry');
+    assert.strictEqual(currentURL(), '/crates');
+    assert.strictEqual(getPageTitle(), 'Crates - crates.io: Rust Package Registry');
   });
 
   test('listing crates', async function (assert) {
@@ -61,7 +61,7 @@ module('Acceptance | crates page', function (hooks) {
     await visit('/crates');
     await click('[data-test-pagination-next]');
 
-    assert.equal(currentURL(), '/crates?page=2');
+    assert.strictEqual(currentURL(), '/crates?page=2');
     assert.dom('[data-test-crates-nav] [data-test-current-rows]').hasText(`${page_start}-${total}`);
     assert.dom('[data-test-crates-nav] [data-test-total-rows]').hasText(`${total}`);
   });

@@ -11,7 +11,7 @@ module('Mirage | GET /api/v1/keywords/:id', function (hooks) {
 
   test('returns 404 for unknown keywords', async function (assert) {
     let response = await fetch('/api/v1/keywords/foo');
-    assert.equal(response.status, 404);
+    assert.strictEqual(response.status, 404);
     assert.deepEqual(await response.json(), { errors: [{ detail: 'Not Found' }] });
   });
 
@@ -19,7 +19,7 @@ module('Mirage | GET /api/v1/keywords/:id', function (hooks) {
     this.server.create('keyword', { keyword: 'cli' });
 
     let response = await fetch('/api/v1/keywords/cli');
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
     assert.deepEqual(await response.json(), {
       keyword: {
         id: 'cli',
@@ -36,7 +36,7 @@ module('Mirage | GET /api/v1/keywords/:id', function (hooks) {
     this.server.createList('crate', 3, { keywordIds: ['not-cli'] });
 
     let response = await fetch('/api/v1/keywords/cli');
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
     assert.deepEqual(await response.json(), {
       keyword: {
         id: 'cli',

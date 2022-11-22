@@ -16,6 +16,6 @@ module('Service | Redirector', function (hooks) {
 
     let redirector = this.owner.lookup('service:redirector');
     redirector.redirectTo(URL);
-    assert.equal(window.location.href, URL);
+    assert.strictEqual(window.location.href, URL);
   });
 });

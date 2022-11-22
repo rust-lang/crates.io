@@ -32,10 +32,10 @@ module('ajax()', function (hooks) {
       let expectedMessage = 'GET /foo failed\n\ncaused by: HttpError: GET /foo failed with: 500 Internal Server Error';
 
       assert.ok(error instanceof AjaxError);
-      assert.equal(error.name, 'AjaxError');
+      assert.strictEqual(error.name, 'AjaxError');
       assert.ok(error.message.startsWith(expectedMessage), error.message);
-      assert.equal(error.method, 'GET');
-      assert.equal(error.url, '/foo');
+      assert.strictEqual(error.method, 'GET');
+      assert.strictEqual(error.url, '/foo');
       assert.ok(error.cause);
       assert.true(error.isHttpError);
       assert.true(error.isServerError);
@@ -45,12 +45,12 @@ module('ajax()', function (hooks) {
 
       let { cause } = error;
       assert.ok(cause instanceof HttpError);
-      assert.equal(cause.name, 'HttpError');
-      assert.equal(cause.message, 'GET /foo failed with: 500 Internal Server Error');
-      assert.equal(cause.method, 'GET');
-      assert.equal(cause.url, '/foo');
+      assert.strictEqual(cause.name, 'HttpError');
+      assert.strictEqual(cause.message, 'GET /foo failed with: 500 Internal Server Error');
+      assert.strictEqual(cause.method, 'GET');
+      assert.strictEqual(cause.url, '/foo');
       assert.ok(cause.response);
-      assert.equal(cause.response.url, '/foo');
+      assert.strictEqual(cause.response.url, '/foo');
       return true;
     });
   });
@@ -62,10 +62,10 @@ module('ajax()', function (hooks) {
       let expectedMessage = 'GET /foo failed\n\ncaused by: HttpError: GET /foo failed with: 404 Not Found';
 
       assert.ok(error instanceof AjaxError);
-      assert.equal(error.name, 'AjaxError');
+      assert.strictEqual(error.name, 'AjaxError');
       assert.ok(error.message.startsWith(expectedMessage), error.message);
-      assert.equal(error.method, 'GET');
-      assert.equal(error.url, '/foo');
+      assert.strictEqual(error.method, 'GET');
+      assert.strictEqual(error.url, '/foo');
       assert.ok(error.cause);
       assert.true(error.isHttpError);
       assert.false(error.isServerError);
@@ -75,12 +75,12 @@ module('ajax()', function (hooks) {
 
       let { cause } = error;
       assert.ok(cause instanceof HttpError);
-      assert.equal(cause.name, 'HttpError');
-      assert.equal(cause.message, 'GET /foo failed with: 404 Not Found');
-      assert.equal(cause.method, 'GET');
-      assert.equal(cause.url, '/foo');
+      assert.strictEqual(cause.name, 'HttpError');
+      assert.strictEqual(cause.message, 'GET /foo failed with: 404 Not Found');
+      assert.strictEqual(cause.method, 'GET');
+      assert.strictEqual(cause.url, '/foo');
       assert.ok(cause.response);
-      assert.equal(cause.response.url, '/foo');
+      assert.strictEqual(cause.response.url, '/foo');
       return true;
     });
   });
@@ -92,10 +92,10 @@ module('ajax()', function (hooks) {
       let expectedMessage = 'GET /foo failed\n\ncaused by: SyntaxError';
 
       assert.ok(error instanceof AjaxError);
-      assert.equal(error.name, 'AjaxError');
+      assert.strictEqual(error.name, 'AjaxError');
       assert.ok(error.message.startsWith(expectedMessage), error.message);
-      assert.equal(error.method, 'GET');
-      assert.equal(error.url, '/foo');
+      assert.strictEqual(error.method, 'GET');
+      assert.strictEqual(error.url, '/foo');
       assert.ok(error.cause);
       assert.false(error.isHttpError);
       assert.false(error.isServerError);
@@ -112,7 +112,7 @@ module('ajax()', function (hooks) {
 
       let { cause } = error;
       assert.notOk(cause instanceof HttpError);
-      assert.equal(cause.name, 'SyntaxError');
+      assert.strictEqual(cause.name, 'SyntaxError');
       assert.ok(expectedCauseMessages.includes(cause.message));
       return true;
     });
@@ -127,10 +127,10 @@ module('ajax()', function (hooks) {
       let expectedMessage = 'GET /foo failed\n\ncaused by: TypeError';
 
       assert.ok(error instanceof AjaxError);
-      assert.equal(error.name, 'AjaxError');
+      assert.strictEqual(error.name, 'AjaxError');
       assert.ok(error.message.startsWith(expectedMessage), error.message);
-      assert.equal(error.method, 'GET');
-      assert.equal(error.url, '/foo');
+      assert.strictEqual(error.method, 'GET');
+      assert.strictEqual(error.url, '/foo');
       assert.ok(error.cause);
       assert.false(error.isHttpError);
       assert.false(error.isServerError);
@@ -140,8 +140,8 @@ module('ajax()', function (hooks) {
 
       let { cause } = error;
       assert.notOk(cause instanceof HttpError);
-      assert.equal(cause.name, 'TypeError');
-      assert.equal(cause.message, 'NetworkError when attempting to fetch resource.');
+      assert.strictEqual(cause.name, 'TypeError');
+      assert.strictEqual(cause.message, 'NetworkError when attempting to fetch resource.');
       return true;
     });
   });

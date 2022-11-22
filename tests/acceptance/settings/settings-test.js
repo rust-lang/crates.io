@@ -35,7 +35,7 @@ module('Acceptance | Settings', function (hooks) {
     prepare(this);
 
     await visit('/crates/nanomsg/settings');
-    assert.equal(currentURL(), '/crates/nanomsg/settings');
+    assert.strictEqual(currentURL(), '/crates/nanomsg/settings');
 
     assert.dom('[data-test-owners] [data-test-owner-team]').exists({ count: 2 });
     assert.dom('[data-test-owners] [data-test-owner-user]').exists({ count: 2 });
@@ -52,6 +52,6 @@ module('Acceptance | Settings', function (hooks) {
     prepare(this);
 
     await visit('/crates/nanomsg/owners');
-    assert.equal(currentURL(), '/crates/nanomsg/settings');
+    assert.strictEqual(currentURL(), '/crates/nanomsg/settings');
   });
 });

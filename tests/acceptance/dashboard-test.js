@@ -12,7 +12,7 @@ module('Acceptance | Dashboard', function (hooks) {
 
   test('shows "page requires authentication" error when not logged in', async function (assert) {
     await visit('/dashboard');
-    assert.equal(currentURL(), '/dashboard');
+    assert.strictEqual(currentURL(), '/dashboard');
     assert.dom('[data-test-title]').hasText('This page requires authentication');
     assert.dom('[data-test-login]').exists();
   });
@@ -55,7 +55,7 @@ module('Acceptance | Dashboard', function (hooks) {
     this.server.get(`/api/v1/users/${user.id}/stats`, { total_downloads: 3892 });
 
     await visit('/dashboard');
-    assert.equal(currentURL(), '/dashboard');
+    assert.strictEqual(currentURL(), '/dashboard');
     await percySnapshot(assert);
   });
 });

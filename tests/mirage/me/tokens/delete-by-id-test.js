@@ -16,11 +16,11 @@ module('Mirage | DELETE /api/v1/me/tokens/:tokenId', function (hooks) {
     let token = this.server.create('api-token', { user });
 
     let response = await fetch(`/api/v1/me/tokens/${token.id}`, { method: 'DELETE' });
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
     assert.deepEqual(await response.json(), {});
 
     let tokens = this.server.schema.apiTokens.all().models;
-    assert.equal(tokens.length, 0);
+    assert.strictEqual(tokens.length, 0);
   });
 
   test('returns an error if unauthenticated', async function (assert) {
@@ -28,7 +28,7 @@ module('Mirage | DELETE /api/v1/me/tokens/:tokenId', function (hooks) {
     let token = this.server.create('api-token', { user });
 
     let response = await fetch(`/api/v1/me/tokens/${token.id}`, { method: 'DELETE' });
-    assert.equal(response.status, 403);
+    assert.strictEqual(response.status, 403);
     assert.deepEqual(await response.json(), {
       errors: [{ detail: 'must be logged in to perform that action' }],
     });

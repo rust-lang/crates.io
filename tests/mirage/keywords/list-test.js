@@ -11,7 +11,7 @@ module('Mirage | GET /api/v1/keywords', function (hooks) {
 
   test('empty case', async function (assert) {
     let response = await fetch('/api/v1/keywords');
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
     assert.deepEqual(await response.json(), {
       keywords: [],
       meta: {
@@ -25,7 +25,7 @@ module('Mirage | GET /api/v1/keywords', function (hooks) {
     this.server.createList('keyword', 2);
 
     let response = await fetch('/api/v1/keywords');
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
     assert.deepEqual(await response.json(), {
       keywords: [
         {
@@ -54,11 +54,11 @@ module('Mirage | GET /api/v1/keywords', function (hooks) {
     this.server.createList('keyword', 25);
 
     let response = await fetch('/api/v1/keywords');
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
 
     let responsePayload = await response.json();
-    assert.equal(responsePayload.keywords.length, 10);
-    assert.equal(responsePayload.meta.total, 25);
+    assert.strictEqual(responsePayload.keywords.length, 10);
+    assert.strictEqual(responsePayload.meta.total, 25);
   });
 
   test('supports `page` and `per_page` parameters', async function (assert) {
@@ -67,14 +67,14 @@ module('Mirage | GET /api/v1/keywords', function (hooks) {
     });
 
     let response = await fetch('/api/v1/keywords?page=2&per_page=5');
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
 
     let responsePayload = await response.json();
-    assert.equal(responsePayload.keywords.length, 5);
+    assert.strictEqual(responsePayload.keywords.length, 5);
     assert.deepEqual(
       responsePayload.keywords.map(it => it.id),
       ['k06', 'k07', 'k08', 'k09', 'k10'],
     );
-    assert.equal(responsePayload.meta.total, 25);
+    assert.strictEqual(responsePayload.meta.total, 25);
   });
 });

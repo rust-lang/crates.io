@@ -14,7 +14,7 @@ module('Mirage | PUT /api/v1/confirm/:token', function (hooks) {
     assert.false(user.emailVerified);
 
     let response = await fetch('/api/v1/confirm/foo', { method: 'PUT' });
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
     assert.deepEqual(await response.json(), { ok: true });
 
     user.reload();
@@ -28,7 +28,7 @@ module('Mirage | PUT /api/v1/confirm/:token', function (hooks) {
     this.server.create('mirage-session', { user });
 
     let response = await fetch('/api/v1/confirm/foo', { method: 'PUT' });
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
     assert.deepEqual(await response.json(), { ok: true });
 
     user.reload();
@@ -37,7 +37,7 @@ module('Mirage | PUT /api/v1/confirm/:token', function (hooks) {
 
   test('returns an error for unknown tokens', async function (assert) {
     let response = await fetch('/api/v1/confirm/unknown', { method: 'PUT' });
-    assert.equal(response.status, 400);
+    assert.strictEqual(response.status, 400);
     assert.deepEqual(await response.json(), {
       errors: [{ detail: 'Email belonging to token not found.' }],
     });

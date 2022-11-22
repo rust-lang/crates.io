@@ -12,21 +12,21 @@ module('Acceptance | /accept-invite/:token', function (hooks) {
 
   test('visiting to /accept-invite shows 404 page', async function (assert) {
     await visit('/accept-invite');
-    assert.equal(currentURL(), '/accept-invite');
+    assert.strictEqual(currentURL(), '/accept-invite');
     assert.dom('[data-test-404-page]').exists();
     assert.dom('[data-test-title]').hasText('Page not found');
   });
 
   test('visiting to /accept-invite/ shows 404 page', async function (assert) {
     await visit('/accept-invite/');
-    assert.equal(currentURL(), '/accept-invite/');
+    assert.strictEqual(currentURL(), '/accept-invite/');
     assert.dom('[data-test-404-page]').exists();
     assert.dom('[data-test-title]').hasText('Page not found');
   });
 
   test('shows error for unknown token', async function (assert) {
     await visit('/accept-invite/unknown');
-    assert.equal(currentURL(), '/accept-invite/unknown');
+    assert.strictEqual(currentURL(), '/accept-invite/unknown');
     assert.dom('[data-test-error-message]').hasText('You may want to visit crates.io/me/pending-invites to try again.');
   });
 
@@ -37,7 +37,7 @@ module('Acceptance | /accept-invite/:token', function (hooks) {
     this.server.put('/api/v1/me/crate_owner_invitations/accept/:token', payload, 410);
 
     await visit('/accept-invite/secret123');
-    assert.equal(currentURL(), '/accept-invite/secret123');
+    assert.strictEqual(currentURL(), '/accept-invite/secret123');
     assert.dom('[data-test-error-message]').hasText(errorMessage);
   });
 
@@ -50,7 +50,7 @@ module('Acceptance | /accept-invite/:token', function (hooks) {
     let invite = this.server.create('crate-owner-invitation', { crate, invitee, inviter });
 
     await visit(`/accept-invite/${invite.token}`);
-    assert.equal(currentURL(), `/accept-invite/${invite.token}`);
+    assert.strictEqual(currentURL(), `/accept-invite/${invite.token}`);
     assert
       .dom('[data-test-success-message]')
       .hasText(

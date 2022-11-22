@@ -40,7 +40,7 @@ module('Acceptance | api-tokens', function (hooks) {
     prepare(this);
 
     await visit('/settings/tokens');
-    assert.equal(currentURL(), '/settings/tokens');
+    assert.strictEqual(currentURL(), '/settings/tokens');
     assert.dom('[data-test-api-token]').exists({ count: 2 });
 
     let [row1, row2] = findAll('[data-test-api-token]');
@@ -67,11 +67,15 @@ module('Acceptance | api-tokens', function (hooks) {
     prepare(this);
 
     await visit('/settings/tokens');
-    assert.equal(currentURL(), '/settings/tokens');
+    assert.strictEqual(currentURL(), '/settings/tokens');
     assert.dom('[data-test-api-token]').exists({ count: 2 });
 
     await click('[data-test-api-token="1"] [data-test-revoke-token-button]');
-    assert.equal(this.server.schema.apiTokens.all().length, 1, 'API token has been deleted from the backend database');
+    assert.strictEqual(
+      this.server.schema.apiTokens.all().length,
+      1,
+      'API token has been deleted from the backend database',
+    );
 
     assert.dom('[data-test-api-token]').exists({ count: 1 });
     assert.dom('[data-test-api-token="2"]').exists();
@@ -86,7 +90,7 @@ module('Acceptance | api-tokens', function (hooks) {
     });
 
     await visit('/settings/tokens');
-    assert.equal(currentURL(), '/settings/tokens');
+    assert.strictEqual(currentURL(), '/settings/tokens');
     assert.dom('[data-test-api-token]').exists({ count: 2 });
 
     await click('[data-test-api-token="1"] [data-test-revoke-token-button]');
@@ -100,7 +104,7 @@ module('Acceptance | api-tokens', function (hooks) {
     prepare(this);
 
     await visit('/settings/tokens');
-    assert.equal(currentURL(), '/settings/tokens');
+    assert.strictEqual(currentURL(), '/settings/tokens');
     assert.dom('[data-test-api-token]').exists({ count: 2 });
     assert.dom('[data-test-focused-input]').doesNotExist();
     assert.dom('[data-test-save-token-button]').doesNotExist();

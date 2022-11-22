@@ -42,7 +42,7 @@ module('Acceptance | /me/pending-invites', function (hooks) {
 
   test('shows "page requires authentication" error when not logged in', async function (assert) {
     await visit('/me/pending-invites');
-    assert.equal(currentURL(), '/me/pending-invites');
+    assert.strictEqual(currentURL(), '/me/pending-invites');
     assert.dom('[data-test-title]').hasText('This page requires authentication');
     assert.dom('[data-test-login]').exists();
   });
@@ -51,7 +51,7 @@ module('Acceptance | /me/pending-invites', function (hooks) {
     prepare(this);
 
     await visit('/me/pending-invites');
-    assert.equal(currentURL(), '/me/pending-invites');
+    assert.strictEqual(currentURL(), '/me/pending-invites');
     assert.dom('[data-test-invite]').exists({ count: 2 });
     assert.dom('[data-test-invite="nanomsg"]').exists();
     assert.dom('[data-test-invite="nanomsg"] [data-test-date]').hasText('11 months ago');
@@ -76,7 +76,7 @@ module('Acceptance | /me/pending-invites', function (hooks) {
     this.server.schema.crateOwnerInvitations.all().destroy();
 
     await visit('/me/pending-invites');
-    assert.equal(currentURL(), '/me/pending-invites');
+    assert.strictEqual(currentURL(), '/me/pending-invites');
     assert.dom('[data-test-invite]').doesNotExist();
     assert.dom('[data-test-empty-state]').exists();
   });
@@ -85,11 +85,11 @@ module('Acceptance | /me/pending-invites', function (hooks) {
     let { nanomsg, user } = prepare(this);
 
     let { crateOwnerInvitations, crateOwnerships } = this.server.schema;
-    assert.equal(crateOwnerInvitations.where({ crateId: nanomsg.id, inviteeId: user.id }).length, 1);
-    assert.equal(crateOwnerships.where({ crateId: nanomsg.id, userId: user.id }).length, 0);
+    assert.strictEqual(crateOwnerInvitations.where({ crateId: nanomsg.id, inviteeId: user.id }).length, 1);
+    assert.strictEqual(crateOwnerships.where({ crateId: nanomsg.id, userId: user.id }).length, 0);
 
     await visit('/me/pending-invites');
-    assert.equal(currentURL(), '/me/pending-invites');
+    assert.strictEqual(currentURL(), '/me/pending-invites');
 
     await click('[data-test-invite="nanomsg"] [data-test-decline-button]');
     assert.dom('[data-test-error-message]').doesNotExist();
@@ -100,8 +100,8 @@ module('Acceptance | /me/pending-invites', function (hooks) {
     assert.dom('[data-test-invite="nanomsg"] [data-test-crate-link]').doesNotExist();
     assert.dom('[data-test-invite="nanomsg"] [data-test-inviter-link]').doesNotExist();
 
-    assert.equal(crateOwnerInvitations.where({ crateId: nanomsg.id, inviteeId: user.id }).length, 0);
-    assert.equal(crateOwnerships.where({ crateId: nanomsg.id, userId: user.id }).length, 0);
+    assert.strictEqual(crateOwnerInvitations.where({ crateId: nanomsg.id, inviteeId: user.id }).length, 0);
+    assert.strictEqual(crateOwnerships.where({ crateId: nanomsg.id, userId: user.id }).length, 0);
   });
 
   test('error message is shown if decline request fails', async function (assert) {
@@ -110,7 +110,7 @@ module('Acceptance | /me/pending-invites', function (hooks) {
     this.server.put('/api/v1/me/crate_owner_invitations/:crate_id', () => new Response(500));
 
     await visit('/me/pending-invites');
-    assert.equal(currentURL(), '/me/pending-invites');
+    assert.strictEqual(currentURL(), '/me/pending-invites');
 
     await click('[data-test-invite="nanomsg"] [data-test-decline-button]');
     assert.dom('[data-test-notification-message="error"]').containsText('Error in declining invite');
@@ -122,11 +122,11 @@ module('Acceptance | /me/pending-invites', function (hooks) {
     let { nanomsg, user } = prepare(this);
 
     let { crateOwnerInvitations, crateOwnerships } = this.server.schema;
-    assert.equal(crateOwnerInvitations.where({ crateId: nanomsg.id, inviteeId: user.id }).length, 1);
-    assert.equal(crateOwnerships.where({ crateId: nanomsg.id, userId: user.id }).length, 0);
+    assert.strictEqual(crateOwnerInvitations.where({ crateId: nanomsg.id, inviteeId: user.id }).length, 1);
+    assert.strictEqual(crateOwnerships.where({ crateId: nanomsg.id, userId: user.id }).length, 0);
 
     await visit('/me/pending-invites');
-    assert.equal(currentURL(), '/me/pending-invites');
+    assert.strictEqual(currentURL(), '/me/pending-invites');
 
     await click('[data-test-invite="nanomsg"] [data-test-accept-button]');
     assert.dom('[data-test-error-message]').doesNotExist();
@@ -139,8 +139,8 @@ module('Acceptance | /me/pending-invites', function (hooks) {
 
     await percySnapshot(assert);
 
-    assert.equal(crateOwnerInvitations.where({ crateId: nanomsg.id, inviteeId: user.id }).length, 0);
-    assert.equal(crateOwnerships.where({ crateId: nanomsg.id, userId: user.id }).length, 1);
+    assert.strictEqual(crateOwnerInvitations.where({ crateId: nanomsg.id, inviteeId: user.id }).length, 0);
+    assert.strictEqual(crateOwnerships.where({ crateId: nanomsg.id, userId: user.id }).length, 1);
   });
 
   test('error message is shown if accept request fails', async function (assert) {
@@ -149,7 +149,7 @@ module('Acceptance | /me/pending-invites', function (hooks) {
     this.server.put('/api/v1/me/crate_owner_invitations/:crate_id', () => new Response(500));
 
     await visit('/me/pending-invites');
-    assert.equal(currentURL(), '/me/pending-invites');
+    assert.strictEqual(currentURL(), '/me/pending-invites');
 
     await click('[data-test-invite="nanomsg"] [data-test-accept-button]');
     assert.dom('[data-test-notification-message="error"]').hasText('Error in accepting invite');
@@ -166,7 +166,7 @@ module('Acceptance | /me/pending-invites', function (hooks) {
     this.server.put('/api/v1/me/crate_owner_invitations/:crate_id', payload, 410);
 
     await visit('/me/pending-invites');
-    assert.equal(currentURL(), '/me/pending-invites');
+    assert.strictEqual(currentURL(), '/me/pending-invites');
 
     await click('[data-test-invite="nanomsg"] [data-test-accept-button]');
     assert.dom('[data-test-notification-message="error"]').hasText('Error in accepting invite: ' + errorMessage);

@@ -270,9 +270,9 @@ module('Model | Version', function (hooks) {
     let crateRecord = await this.store.findRecord('crate', crate.name);
     assert.ok(crateRecord);
     let versions = (await crateRecord.versions).toArray();
-    assert.equal(versions.length, 1);
+    assert.strictEqual(versions.length, 1);
     let version = versions[0];
     assert.ok(version.published_by);
-    assert.equal(version.published_by.name, 'JD');
+    assert.strictEqual(version.published_by.name, 'JD');
   });
 });

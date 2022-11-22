@@ -11,7 +11,7 @@ module('Mirage | GET /api/v1/categories', function (hooks) {
 
   test('empty case', async function (assert) {
     let response = await fetch('/api/v1/categories');
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
     assert.deepEqual(await response.json(), {
       categories: [],
       meta: {
@@ -28,7 +28,7 @@ module('Mirage | GET /api/v1/categories', function (hooks) {
     this.server.createList('category', 2);
 
     let response = await fetch('/api/v1/categories');
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
     assert.deepEqual(await response.json(), {
       categories: [
         {
@@ -66,11 +66,11 @@ module('Mirage | GET /api/v1/categories', function (hooks) {
     this.server.createList('category', 25);
 
     let response = await fetch('/api/v1/categories');
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
 
     let responsePayload = await response.json();
-    assert.equal(responsePayload.categories.length, 10);
-    assert.equal(responsePayload.meta.total, 25);
+    assert.strictEqual(responsePayload.categories.length, 10);
+    assert.strictEqual(responsePayload.meta.total, 25);
   });
 
   test('supports `page` and `per_page` parameters', async function (assert) {
@@ -79,14 +79,14 @@ module('Mirage | GET /api/v1/categories', function (hooks) {
     });
 
     let response = await fetch('/api/v1/categories?page=2&per_page=5');
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
 
     let responsePayload = await response.json();
-    assert.equal(responsePayload.categories.length, 5);
+    assert.strictEqual(responsePayload.categories.length, 5);
     assert.deepEqual(
       responsePayload.categories.map(it => it.id),
       ['cat-06', 'cat-07', 'cat-08', 'cat-09', 'cat-10'],
     );
-    assert.equal(responsePayload.meta.total, 25);
+    assert.strictEqual(responsePayload.meta.total, 25);
   });
 });

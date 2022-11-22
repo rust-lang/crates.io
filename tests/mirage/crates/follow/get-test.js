@@ -11,7 +11,7 @@ module('Mirage | GET /api/v1/crates/:crateId/following', function (hooks) {
 
   test('returns 403 if unauthenticated', async function (assert) {
     let response = await fetch('/api/v1/crates/foo/following');
-    assert.equal(response.status, 403);
+    assert.strictEqual(response.status, 403);
     assert.deepEqual(await response.json(), {
       errors: [{ detail: 'must be logged in to perform that action' }],
     });
@@ -22,7 +22,7 @@ module('Mirage | GET /api/v1/crates/:crateId/following', function (hooks) {
     this.authenticateAs(user);
 
     let response = await fetch('/api/v1/crates/foo/following');
-    assert.equal(response.status, 404);
+    assert.strictEqual(response.status, 404);
     assert.deepEqual(await response.json(), { errors: [{ detail: 'Not Found' }] });
   });
 
@@ -33,7 +33,7 @@ module('Mirage | GET /api/v1/crates/:crateId/following', function (hooks) {
     this.authenticateAs(user);
 
     let response = await fetch('/api/v1/crates/rand/following');
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
     assert.deepEqual(await response.json(), { following: true });
   });
 
@@ -44,7 +44,7 @@ module('Mirage | GET /api/v1/crates/:crateId/following', function (hooks) {
     this.authenticateAs(user);
 
     let response = await fetch('/api/v1/crates/rand/following');
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
     assert.deepEqual(await response.json(), { following: false });
   });
 });

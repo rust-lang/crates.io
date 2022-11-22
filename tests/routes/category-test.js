@@ -10,7 +10,7 @@ module('Route | category', function (hooks) {
 
   test("shows an error message if the category can't be found", async function (assert) {
     await visit('/categories/foo');
-    assert.equal(currentURL(), '/categories/foo');
+    assert.strictEqual(currentURL(), '/categories/foo');
     assert.dom('[data-test-404-page]').exists();
     assert.dom('[data-test-title]').hasText('foo: Category not found');
     assert.dom('[data-test-go-back]').exists();
@@ -21,7 +21,7 @@ module('Route | category', function (hooks) {
     this.server.get('/api/v1/categories/:categoryId', {}, 500);
 
     await visit('/categories/foo');
-    assert.equal(currentURL(), '/categories/foo');
+    assert.strictEqual(currentURL(), '/categories/foo');
     assert.dom('[data-test-404-page]').exists();
     assert.dom('[data-test-title]').hasText('foo: Failed to load category data');
     assert.dom('[data-test-go-back]').doesNotExist();

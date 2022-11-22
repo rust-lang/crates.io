@@ -11,7 +11,7 @@ module('Mirage | GET /api/v1/teams/:id', function (hooks) {
 
   test('returns 404 for unknown teams', async function (assert) {
     let response = await fetch('/api/v1/teams/foo');
-    assert.equal(response.status, 404);
+    assert.strictEqual(response.status, 404);
     assert.deepEqual(await response.json(), { errors: [{ detail: 'Not Found' }] });
   });
 
@@ -19,7 +19,7 @@ module('Mirage | GET /api/v1/teams/:id', function (hooks) {
     let team = this.server.create('team', { name: 'maintainers' });
 
     let response = await fetch(`/api/v1/teams/${team.login}`);
-    assert.equal(response.status, 200);
+    assert.strictEqual(response.status, 200);
     assert.deepEqual(await response.json(), {
       team: {
         id: 1,

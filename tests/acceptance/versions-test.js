@@ -14,7 +14,7 @@ module('Acceptance | crate versions page', function (hooks) {
     this.server.create('version', { crate, num: '0.2.1', created_at: '2020-01-01' });
 
     await visit('/crates/nanomsg/versions');
-    assert.equal(currentURL(), '/crates/nanomsg/versions');
+    assert.strictEqual(currentURL(), '/crates/nanomsg/versions');
 
     let versions = findAll('[data-test-version]').map(it => it.dataset.testVersion);
     assert.deepEqual(versions, ['0.2.1', '0.3.0', '0.2.0', '0.1.0']);

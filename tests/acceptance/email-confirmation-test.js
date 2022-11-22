@@ -13,7 +13,7 @@ module('Acceptance | Email Confirmation', function (hooks) {
     assert.false(user.emailVerified);
 
     await visit('/confirm/badc0ffee');
-    assert.equal(currentURL(), '/');
+    assert.strictEqual(currentURL(), '/');
     assert.dom('[data-test-notification-message="success"]').exists();
 
     user.reload();
@@ -27,7 +27,7 @@ module('Acceptance | Email Confirmation', function (hooks) {
     this.authenticateAs(user);
 
     await visit('/confirm/badc0ffee');
-    assert.equal(currentURL(), '/');
+    assert.strictEqual(currentURL(), '/');
     assert.dom('[data-test-notification-message="success"]').exists();
 
     let { currentUser } = this.owner.lookup('service:session');
@@ -39,7 +39,7 @@ module('Acceptance | Email Confirmation', function (hooks) {
 
   test('error case', async function (assert) {
     await visit('/confirm/badc0ffee');
-    assert.equal(currentURL(), '/');
+    assert.strictEqual(currentURL(), '/');
     assert.dom('[data-test-notification-message]').hasText('Unknown error in email confirmation');
   });
 });

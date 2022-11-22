@@ -16,7 +16,7 @@ module('Route | crate.version | model() hook', function (hooks) {
       this.server.create('version', { crate, num: '2.0.0-beta.1' });
 
       await visit('/crates/foo/1.2.3');
-      assert.equal(currentURL(), `/crates/foo/1.2.3`);
+      assert.strictEqual(currentURL(), `/crates/foo/1.2.3`);
       assert.dom('[data-test-crate-name]').hasText('foo');
       assert.dom('[data-test-crate-version]').hasText('v1.2.3');
       assert.dom('[data-test-notification-message]').doesNotExist();
@@ -29,7 +29,7 @@ module('Route | crate.version | model() hook', function (hooks) {
       this.server.create('version', { crate, num: '2.0.0-beta.1' });
 
       await visit('/crates/foo/2.0.0');
-      assert.equal(currentURL(), `/crates/foo/2.0.0`);
+      assert.strictEqual(currentURL(), `/crates/foo/2.0.0`);
       assert.dom('[data-test-404-page]').exists();
       assert.dom('[data-test-title]').hasText('foo: Version 2.0.0 not found');
       assert.dom('[data-test-go-back]').exists();
@@ -46,7 +46,7 @@ module('Route | crate.version | model() hook', function (hooks) {
       this.server.create('version', { crate, num: '2.0.0' });
 
       await visit('/crates/foo');
-      assert.equal(currentURL(), `/crates/foo`);
+      assert.strictEqual(currentURL(), `/crates/foo`);
       assert.dom('[data-test-crate-name]').hasText('foo');
       assert.dom('[data-test-crate-version]').hasText('v2.0.0');
       assert.dom('[data-test-notification-message]').doesNotExist();
@@ -59,7 +59,7 @@ module('Route | crate.version | model() hook', function (hooks) {
       this.server.create('version', { crate, num: '2.0.0-beta.1' });
 
       await visit('/crates/foo');
-      assert.equal(currentURL(), `/crates/foo`);
+      assert.strictEqual(currentURL(), `/crates/foo`);
       assert.dom('[data-test-crate-name]').hasText('foo');
       assert.dom('[data-test-crate-version]').hasText('v1.0.0');
       assert.dom('[data-test-notification-message]').doesNotExist();
@@ -74,7 +74,7 @@ module('Route | crate.version | model() hook', function (hooks) {
       this.server.create('version', { crate, num: '2.0.0', yanked: true });
 
       await visit('/crates/foo');
-      assert.equal(currentURL(), `/crates/foo`);
+      assert.strictEqual(currentURL(), `/crates/foo`);
       assert.dom('[data-test-crate-name]').hasText('foo');
       assert.dom('[data-test-crate-version]').hasText('v2.0.0-beta.2');
       assert.dom('[data-test-notification-message]').doesNotExist();
@@ -87,7 +87,7 @@ module('Route | crate.version | model() hook', function (hooks) {
       this.server.create('version', { crate, num: '2.0.0-beta.1', yanked: true });
 
       await visit('/crates/foo');
-      assert.equal(currentURL(), `/crates/foo`);
+      assert.strictEqual(currentURL(), `/crates/foo`);
       assert.dom('[data-test-crate-name]').hasText('foo');
       assert.dom('[data-test-crate-version]').hasText('v2.0.0-beta.1');
       assert.dom('[data-test-notification-message]').doesNotExist();
