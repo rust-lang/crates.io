@@ -117,7 +117,7 @@ pub fn sync_yanked(
 #[swirl::background_job]
 pub fn squash_index(env: &Environment) -> Result<(), PerformError> {
     let repo = env.lock_index()?;
-    println!("Squashing the index into a single commit.");
+    info!("Squashing the index into a single commit.");
 
     let now = Utc::now().format("%Y-%m-%d");
     let original_head = repo.head_oid()?.to_string();
@@ -144,7 +144,7 @@ pub fn squash_index(env: &Environment) -> Result<(), PerformError> {
         &format!("{original_head}:refs/heads/snapshot-{now}"),
     ]))?;
 
-    println!("The index has been successfully squashed.");
+    info!("The index has been successfully squashed.");
 
     Ok(())
 }
