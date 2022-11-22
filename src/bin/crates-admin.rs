@@ -28,6 +28,11 @@ enum SubCommand {
 }
 
 fn main() -> anyhow::Result<()> {
+    let _sentry = cargo_registry::sentry::init();
+
+    // Initialize logging
+    cargo_registry::util::tracing::init();
+
     use clap::Parser;
 
     let opts: Opts = Opts::parse();
