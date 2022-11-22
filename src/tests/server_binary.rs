@@ -121,6 +121,7 @@ impl ServerBin {
         let mut process = Command::new(env!("CARGO_BIN_EXE_server"))
             .env_clear()
             .envs(self.env.into_iter())
+            .env("RUST_LOG", "info")
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .spawn()?;
