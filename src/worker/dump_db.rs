@@ -21,15 +21,15 @@ pub fn dump_db(
 ) -> Result<(), PerformError> {
     let directory = DumpDirectory::create()?;
 
-    println!("Begin exporting database");
+    info!("Begin exporting database");
     directory.populate(&database_url)?;
 
-    println!("Creating tarball");
+    info!("Creating tarball");
     let tarball = DumpTarball::create(&directory.export_dir)?;
 
-    println!("Uploading tarball");
+    info!("Uploading tarball");
     let size = tarball.upload(&target_name, &env.uploader)?;
-    println!("Database dump uploaded {} bytes to {}.", size, &target_name);
+    info!("Database dump uploaded {} bytes to {}.", size, &target_name);
     Ok(())
 }
 
