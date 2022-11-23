@@ -26,6 +26,8 @@ name = "private"
 created_at = "private"
 last_used_at = "private"
 revoked = "private"
+crate_scopes = "private"
+endpoint_scopes = "private"
 
 [background_jobs.columns]
 id = "private"
