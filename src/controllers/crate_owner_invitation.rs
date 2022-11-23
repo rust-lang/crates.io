@@ -1,7 +1,7 @@
 use super::frontend_prelude::*;
 
+use crate::auth::AuthenticatedUser;
 use crate::controllers::helpers::pagination::{Page, PaginationOptions};
-use crate::controllers::util::AuthenticatedUser;
 use crate::models::{Crate, CrateOwnerInvitation, Rights, User};
 use crate::schema::{crate_owner_invitations, crates, users};
 use crate::util::errors::{forbidden, internal};
