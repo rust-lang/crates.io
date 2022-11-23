@@ -264,6 +264,69 @@ fn modify_multiple_owners() {
 }
 
 #[test]
+fn owner_change_via_cookie() {
+    let (app, _, cookie) = TestApp::full().with_user();
+
+    let user2 = app.db_new_user("user-2");
+    let user2 = user2.as_model();
+
+    let krate =
+        app.db(|conn| CrateBuilder::new("foo_crate", cookie.as_model().id).expect_build(conn));
+
+    let url = format!("/api/v1/crates/{}/owners", krate.name);
+    let body = json!({ "owners": [user2.gh_login] });
+    let body = serde_json::to_vec(&body).unwrap();
+    let response = cookie.put::<()>(&url, &body);
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response.into_json(),
+        json!({ "ok": true, "msg": "user user-2 has been invited to be an owner of crate foo_crate" })
+    );
+}
+
+#[test]
+fn owner_change_via_token() {
+    let (app, _, _, token) = TestApp::full().with_token();
+
+    let user2 = app.db_new_user("user-2");
+    let user2 = user2.as_model();
+
+    let krate =
+        app.db(|conn| CrateBuilder::new("foo_crate", token.as_model().user_id).expect_build(conn));
+
+    let url = format!("/api/v1/crates/{}/owners", krate.name);
+    let body = json!({ "owners": [user2.gh_login] });
+    let body = serde_json::to_vec(&body).unwrap();
+    let response = token.put::<()>(&url, &body);
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response.into_json(),
+        json!({ "ok": true, "msg": "user user-2 has been invited to be an owner of crate foo_crate" })
+    );
+}
+
+#[test]
+fn owner_change_without_auth() {
+    let (app, anon, cookie) = TestApp::full().with_user();
+
+    let user2 = app.db_new_user("user-2");
+    let user2 = user2.as_model();
+
+    let krate =
+        app.db(|conn| CrateBuilder::new("foo_crate", cookie.as_model().id).expect_build(conn));
+
+    let url = format!("/api/v1/crates/{}/owners", krate.name);
+    let body = json!({ "owners": [user2.gh_login] });
+    let body = serde_json::to_vec(&body).unwrap();
+    let response = anon.put::<()>(&url, &body);
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_eq!(
+        response.into_json(),
+        json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
+    );
+}
+
+#[test]
 fn invite_already_invited_user() {
     let (app, _, _, owner) = TestApp::init().with_token();
     app.db_new_user("invited_user");
