@@ -1,6 +1,7 @@
 use crate::controllers;
 use crate::db::RequestTransaction;
 use crate::middleware::log_request;
+use crate::models::token::{CrateScope, EndpointScope};
 use crate::models::{ApiToken, User};
 use crate::util::errors::{
     account_locked, forbidden, internal, AppError, AppResult, InsecurelyGeneratedTokenRevoked,
@@ -13,17 +14,43 @@ use http::header;
 #[derive(Debug, Clone)]
 pub struct AuthCheck {
     allow_token: bool,
+    endpoint_scope: Option<EndpointScope>,
+    crate_name: Option<String>,
 }
 
 impl AuthCheck {
     #[must_use]
     pub fn default() -> Self {
-        Self { allow_token: true }
+        Self {
+            allow_token: true,
+            endpoint_scope: None,
+            crate_name: None,
+        }
     }
 
     #[must_use]
     pub fn only_cookie() -> Self {
-        Self { allow_token: false }
+        Self {
+            allow_token: false,
+            endpoint_scope: None,
+            crate_name: None,
+        }
+    }
+
+    pub fn with_endpoint_scope(&self, endpoint_scope: EndpointScope) -> Self {
+        Self {
+            allow_token: self.allow_token,
+            endpoint_scope: Some(endpoint_scope),
+            crate_name: self.crate_name.clone(),
+        }
+    }
+
+    pub fn for_crate(&self, crate_name: &str) -> Self {
+        Self {
+            allow_token: self.allow_token,
+            endpoint_scope: self.endpoint_scope,
+            crate_name: Some(crate_name.to_string()),
+        }
     }
 
     pub fn check(&self, request: &dyn RequestExt) -> AppResult<AuthenticatedUser> {
@@ -47,12 +74,56 @@ impl AuthCheck {
             log_request::add_custom_metadata("tokenid", id);
         }
 
-        if !self.allow_token && auth.token.is_some() {
-            let error_message = "API Token authentication was explicitly disallowed for this API";
-            return Err(internal(error_message).chain(forbidden()));
+        if let Some(ref token) = auth.token {
+            if !self.allow_token {
+                let error_message =
+                    "API Token authentication was explicitly disallowed for this API";
+                return Err(internal(error_message).chain(forbidden()));
+            }
+
+            if !self.endpoint_scope_matches(token.endpoint_scopes.as_ref()) {
+                let error_message = "Endpoint scope mismatch";
+                return Err(internal(error_message).chain(forbidden()));
+            }
+
+            if !self.crate_scope_matches(token.crate_scopes.as_ref()) {
+                let error_message = "Crate scope mismatch";
+                return Err(internal(error_message).chain(forbidden()));
+            }
         }
 
         Ok(auth)
+    }
+
+    fn endpoint_scope_matches(&self, token_scopes: Option<&Vec<EndpointScope>>) -> bool {
+        match (&token_scopes, &self.endpoint_scope) {
+            // The token is a legacy token.
+            (None, _) => true,
+
+            // The token is NOT a legacy token, and the endpoint only allows legacy tokens.
+            (Some(_), None) => false,
+
+            // The token is NOT a legacy token, and the endpoint allows a certain endpoint scope or a legacy token.
+            (Some(token_scopes), Some(endpoint_scope)) => token_scopes.contains(endpoint_scope),
+        }
+    }
+
+    fn crate_scope_matches(&self, token_scopes: Option<&Vec<CrateScope>>) -> bool {
+        match (&token_scopes, &self.crate_name) {
+            // The token is a legacy token.
+            (None, _) => true,
+
+            // The token does not have any crate scopes.
+            (Some(token_scopes), _) if token_scopes.is_empty() => true,
+
+            // The token has crate scopes, but the endpoint does not deal with crates.
+            (Some(_), None) => false,
+
+            // The token is NOT a legacy token, and the endpoint allows a certain endpoint scope or a legacy token.
+            (Some(token_scopes), Some(crate_name)) => token_scopes
+                .iter()
+                .any(|token_scope| token_scope.matches(crate_name)),
+        }
     }
 }
 
@@ -119,4 +190,104 @@ fn authenticate_user(req: &dyn RequestExt) -> AppResult<AuthenticatedUser> {
 
     // Unable to authenticate the user
     return Err(internal("no cookie session or auth header found").chain(forbidden()));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn cs(scope: &str) -> CrateScope {
+        CrateScope::try_from(scope).unwrap()
+    }
+
+    #[test]
+    fn regular_endpoint() {
+        let auth_check = AuthCheck::default();
+
+        assert!(auth_check.endpoint_scope_matches(None));
+        assert!(!auth_check.endpoint_scope_matches(Some(&vec![EndpointScope::PublishNew])));
+        assert!(!auth_check.endpoint_scope_matches(Some(&vec![EndpointScope::PublishUpdate])));
+        assert!(!auth_check.endpoint_scope_matches(Some(&vec![EndpointScope::Yank])));
+        assert!(!auth_check.endpoint_scope_matches(Some(&vec![EndpointScope::ChangeOwners])));
+
+        assert!(auth_check.crate_scope_matches(None));
+        assert!(!auth_check.crate_scope_matches(Some(&vec![cs("tokio-console")])));
+        assert!(!auth_check.crate_scope_matches(Some(&vec![cs("tokio-*")])));
+    }
+
+    #[test]
+    fn publish_new_endpoint() {
+        let auth_check = AuthCheck::default()
+            .with_endpoint_scope(EndpointScope::PublishNew)
+            .for_crate("tokio-console");
+
+        assert!(auth_check.endpoint_scope_matches(None));
+        assert!(auth_check.endpoint_scope_matches(Some(&vec![EndpointScope::PublishNew])));
+        assert!(!auth_check.endpoint_scope_matches(Some(&vec![EndpointScope::PublishUpdate])));
+        assert!(!auth_check.endpoint_scope_matches(Some(&vec![EndpointScope::Yank])));
+        assert!(!auth_check.endpoint_scope_matches(Some(&vec![EndpointScope::ChangeOwners])));
+
+        assert!(auth_check.crate_scope_matches(None));
+        assert!(auth_check.crate_scope_matches(Some(&vec![cs("tokio-console")])));
+        assert!(auth_check.crate_scope_matches(Some(&vec![cs("tokio-*")])));
+        assert!(!auth_check.crate_scope_matches(Some(&vec![cs("anyhow")])));
+        assert!(!auth_check.crate_scope_matches(Some(&vec![cs("actix-*")])));
+    }
+
+    #[test]
+    fn publish_update_endpoint() {
+        let auth_check = AuthCheck::default()
+            .with_endpoint_scope(EndpointScope::PublishUpdate)
+            .for_crate("tokio-console");
+
+        assert!(auth_check.endpoint_scope_matches(None));
+        assert!(!auth_check.endpoint_scope_matches(Some(&vec![EndpointScope::PublishNew])));
+        assert!(auth_check.endpoint_scope_matches(Some(&vec![EndpointScope::PublishUpdate])));
+        assert!(!auth_check.endpoint_scope_matches(Some(&vec![EndpointScope::Yank])));
+        assert!(!auth_check.endpoint_scope_matches(Some(&vec![EndpointScope::ChangeOwners])));
+
+        assert!(auth_check.crate_scope_matches(None));
+        assert!(auth_check.crate_scope_matches(Some(&vec![cs("tokio-console")])));
+        assert!(auth_check.crate_scope_matches(Some(&vec![cs("tokio-*")])));
+        assert!(!auth_check.crate_scope_matches(Some(&vec![cs("anyhow")])));
+        assert!(!auth_check.crate_scope_matches(Some(&vec![cs("actix-*")])));
+    }
+
+    #[test]
+    fn yank_endpoint() {
+        let auth_check = AuthCheck::default()
+            .with_endpoint_scope(EndpointScope::Yank)
+            .for_crate("tokio-console");
+
+        assert!(auth_check.endpoint_scope_matches(None));
+        assert!(!auth_check.endpoint_scope_matches(Some(&vec![EndpointScope::PublishNew])));
+        assert!(!auth_check.endpoint_scope_matches(Some(&vec![EndpointScope::PublishUpdate])));
+        assert!(auth_check.endpoint_scope_matches(Some(&vec![EndpointScope::Yank])));
+        assert!(!auth_check.endpoint_scope_matches(Some(&vec![EndpointScope::ChangeOwners])));
+
+        assert!(auth_check.crate_scope_matches(None));
+        assert!(auth_check.crate_scope_matches(Some(&vec![cs("tokio-console")])));
+        assert!(auth_check.crate_scope_matches(Some(&vec![cs("tokio-*")])));
+        assert!(!auth_check.crate_scope_matches(Some(&vec![cs("anyhow")])));
+        assert!(!auth_check.crate_scope_matches(Some(&vec![cs("actix-*")])));
+    }
+
+    #[test]
+    fn owner_change_endpoint() {
+        let auth_check = AuthCheck::default()
+            .with_endpoint_scope(EndpointScope::ChangeOwners)
+            .for_crate("tokio-console");
+
+        assert!(auth_check.endpoint_scope_matches(None));
+        assert!(!auth_check.endpoint_scope_matches(Some(&vec![EndpointScope::PublishNew])));
+        assert!(!auth_check.endpoint_scope_matches(Some(&vec![EndpointScope::PublishUpdate])));
+        assert!(!auth_check.endpoint_scope_matches(Some(&vec![EndpointScope::Yank])));
+        assert!(auth_check.endpoint_scope_matches(Some(&vec![EndpointScope::ChangeOwners])));
+
+        assert!(auth_check.crate_scope_matches(None));
+        assert!(auth_check.crate_scope_matches(Some(&vec![cs("tokio-console")])));
+        assert!(auth_check.crate_scope_matches(Some(&vec![cs("tokio-*")])));
+        assert!(!auth_check.crate_scope_matches(Some(&vec![cs("anyhow")])));
+        assert!(!auth_check.crate_scope_matches(Some(&vec![cs("actix-*")])));
+    }
 }
