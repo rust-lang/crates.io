@@ -5,7 +5,7 @@ overrides:
   ember-get-config: 2.1.1
   ember-inflector: 4.0.2
   ember-modifier: 3.2.7
-  miragejs: 0.1.45
+  miragejs: 0.1.46
 
 specifiers:
   '@babel/eslint-parser': 7.19.1
@@ -88,7 +88,7 @@ specifiers:
   loader.js: 4.7.0
   macro-decorators: 0.1.2
   match-json: 1.3.4
-  miragejs: 0.1.45
+  miragejs: 0.1.46
   morgan: 1.10.0
   normalize.css: 8.0.1
   nyc: 15.1.0
@@ -190,7 +190,7 @@ devDependencies:
   eslint-plugin-unicorn: 45.0.0_eslint@8.28.0
   loader.js: 4.7.0
   match-json: 1.3.4
-  miragejs: 0.1.45
+  miragejs: 0.1.46
   normalize.css: 8.0.1
   nyc: 15.1.0
   postcss-custom-media: 8.0.2
@@ -7256,7 +7256,7 @@ packages:
       ember-inflector: 4.0.2
       ember-qunit: 6.0.0_qhusffjocg4cnbdwj4yxijwhva
       lodash-es: 4.17.21
-      miragejs: 0.1.45
+      miragejs: 0.1.46
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
@@ -11732,8 +11732,8 @@ packages:
       yallist: 3.1.1
     dev: true
 
-  /miragejs/0.1.45:
-    resolution: {integrity: sha512-NFdpFVXmBuQfErQh70yL44h4NhSZYHZVbg0qzrIxB5gRZYNZGH1sriduejbxpmKVdqCbmjPypaXvEgBgohqydQ==}
+  /miragejs/0.1.46:
+    resolution: {integrity: sha512-xmWiFaGamslyUqZt7tDd0kkjWa8Ow4I7ID/Gi8c+iCVibZyU+SAiIZNmUynnDGD1Q8g8nlydtzADnb5+21gwww==}
     engines: {node: 6.* || 8.* || >= 10.*}
     dependencies:
       '@miragejs/pretender-node-polyfill': 0.1.2
