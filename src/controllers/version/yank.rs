@@ -1,5 +1,6 @@
 //! Endpoints for yanking and unyanking specific versions of crates
 
+use crate::auth::AuthCheck;
 use swirl::Job;
 
 use super::{extract_crate_name_and_semver, version_and_crate};
@@ -31,13 +32,13 @@ pub fn unyank(req: &mut dyn RequestExt) -> EndpointResult {
 fn modify_yank(req: &mut dyn RequestExt, yanked: bool) -> EndpointResult {
     // FIXME: Should reject bad requests before authentication, but can't due to
     // lifetime issues with `req`.
-    let authenticated_user = req.authenticate()?;
+    let auth = AuthCheck::default().check(req)?;
     let (crate_name, semver) = extract_crate_name_and_semver(req)?;
 
     let conn = req.db_write()?;
     let (version, krate) = version_and_crate(&conn, crate_name, semver)?;
-    let api_token_id = authenticated_user.api_token_id();
-    let user = authenticated_user.user();
+    let api_token_id = auth.api_token_id();
+    let user = auth.user();
     let owners = krate.owners(&conn)?;
 
     if user.rights(req.app(), &owners)? < Rights::Publish {

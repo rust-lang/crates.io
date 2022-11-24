@@ -1,5 +1,6 @@
 use super::frontend_prelude::*;
 
+use crate::auth::AuthCheck;
 use crate::auth::AuthenticatedUser;
 use crate::controllers::helpers::pagination::{Page, PaginationOptions};
 use crate::models::{Crate, CrateOwnerInvitation, Rights, User};
@@ -16,7 +17,7 @@ use std::collections::{HashMap, HashSet};
 
 /// Handles the `GET /api/v1/me/crate_owner_invitations` route.
 pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
-    let auth = req.authenticate()?.forbid_api_token_auth()?;
+    let auth = AuthCheck::only_cookie().check(req)?;
     let user_id = auth.user_id();
 
     let PrivateListResponse {
@@ -52,7 +53,7 @@ pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
 
 /// Handles the `GET /api/private/crate_owner_invitations` route.
 pub fn private_list(req: &mut dyn RequestExt) -> EndpointResult {
-    let auth = req.authenticate()?.forbid_api_token_auth()?;
+    let auth = AuthCheck::only_cookie().check(req)?;
 
     let filter = if let Some(crate_name) = req.query().get("crate_name") {
         ListFilter::CrateName(crate_name.clone())
@@ -255,7 +256,9 @@ pub fn handle_invite(req: &mut dyn RequestExt) -> EndpointResult {
         serde_json::from_str(&body).map_err(|_| bad_request("invalid json request"))?;
 
     let crate_invite = crate_invite.crate_owner_invite;
-    let user_id = req.authenticate()?.user_id();
+
+    let auth = AuthCheck::default().check(req)?;
+    let user_id = auth.user_id();
     let conn = &*req.db_write()?;
     let config = &req.app().config;
 

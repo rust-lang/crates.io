@@ -10,6 +10,32 @@ use conduit::RequestExt;
 use conduit_cookie::RequestSession;
 use http::header;
 
+#[derive(Debug, Clone)]
+pub struct AuthCheck {
+    allow_token: bool,
+}
+
+impl AuthCheck {
+    #[must_use]
+    pub fn default() -> Self {
+        Self { allow_token: true }
+    }
+
+    #[must_use]
+    pub fn only_cookie() -> Self {
+        Self { allow_token: false }
+    }
+
+    pub fn check(&self, request: &dyn RequestExt) -> AppResult<AuthenticatedUser> {
+        let mut auth = request.authenticate()?;
+        if !self.allow_token {
+            auth = auth.forbid_api_token_auth()?;
+        }
+
+        Ok(auth)
+    }
+}
+
 #[derive(Debug)]
 pub struct AuthenticatedUser {
     user: User,

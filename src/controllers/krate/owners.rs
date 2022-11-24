@@ -1,5 +1,6 @@
 //! All routes related to managing owners of a crate
 
+use crate::auth::AuthCheck;
 use crate::controllers::prelude::*;
 use crate::models::{Crate, Owner, Rights, Team, User};
 use crate::views::EncodableOwner;
@@ -79,13 +80,14 @@ fn parse_owners_request(req: &mut dyn RequestExt) -> AppResult<Vec<String>> {
 }
 
 fn modify_owners(req: &mut dyn RequestExt, add: bool) -> EndpointResult {
-    let authenticated_user = req.authenticate()?;
+    let auth = AuthCheck::default().check(req)?;
+
     let logins = parse_owners_request(req)?;
     let app = req.app();
     let crate_name = &req.params()["crate_id"];
 
     let conn = req.db_write()?;
-    let user = authenticated_user.user();
+    let user = auth.user();
 
     conn.transaction(|| {
         let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
