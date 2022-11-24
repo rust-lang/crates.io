@@ -33,7 +33,6 @@ mod blocked_routes;
 mod builders;
 mod categories;
 mod dump_db;
-mod keyword;
 mod krate;
 mod metrics;
 mod not_found_error;
