@@ -70,6 +70,30 @@ impl TryFrom<&str> for CrateScope {
     }
 }
 
+impl TryFrom<String> for CrateScope {
+    type Error = String;
+
+    fn try_from(pattern: String) -> Result<Self, Self::Error> {
+        match CrateScope::is_valid_pattern(&pattern) {
+            true => Ok(CrateScope { pattern }),
+            false => Err("Invalid crate scope pattern".to_string()),
+        }
+    }
+}
+
+impl FromSql<Text, Pg> for CrateScope {
+    fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
+        let value = <String as FromSql<Text, Pg>>::from_sql(bytes)?;
+        Ok(CrateScope::try_from(value)?)
+    }
+}
+
+impl ToSql<Text, Pg> for CrateScope {
+    fn to_sql<W: Write>(&self, out: &mut Output<'_, W, Pg>) -> serialize::Result {
+        <String as ToSql<Text, Pg>>::to_sql(&self.pattern, out)
+    }
+}
+
 impl CrateScope {
     fn is_valid_pattern(pattern: &str) -> bool {
         if pattern.is_empty() {
