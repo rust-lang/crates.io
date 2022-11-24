@@ -47,7 +47,7 @@ impl AuthCheck {
             log_request::add_custom_metadata("tokenid", id);
         }
 
-        if !self.allow_token && auth.token_id.is_some() {
+        if !self.allow_token && auth.token.is_some() {
             let error_message = "API Token authentication was explicitly disallowed for this API";
             return Err(internal(error_message).chain(forbidden()));
         }
@@ -59,7 +59,7 @@ impl AuthCheck {
 #[derive(Debug)]
 pub struct AuthenticatedUser {
     user: User,
-    token_id: Option<i32>,
+    token: Option<ApiToken>,
 }
 
 impl AuthenticatedUser {
@@ -68,7 +68,11 @@ impl AuthenticatedUser {
     }
 
     pub fn api_token_id(&self) -> Option<i32> {
-        self.token_id
+        self.api_token().map(|token| token.id)
+    }
+
+    pub fn api_token(&self) -> Option<&ApiToken> {
+        self.token.as_ref()
     }
 
     pub fn user(self) -> User {
@@ -86,10 +90,7 @@ fn authenticate_user(req: &dyn RequestExt) -> AppResult<AuthenticatedUser> {
         let user = User::find(&conn, id)
             .map_err(|err| err.chain(internal("user_id from cookie not found in database")))?;
 
-        return Ok(AuthenticatedUser {
-            user,
-            token_id: None,
-        });
+        return Ok(AuthenticatedUser { user, token: None });
     }
 
     // Otherwise, look for an `Authorization` header on the request
@@ -112,7 +113,7 @@ fn authenticate_user(req: &dyn RequestExt) -> AppResult<AuthenticatedUser> {
 
         return Ok(AuthenticatedUser {
             user,
-            token_id: Some(token.id),
+            token: Some(token),
         });
     }
 
