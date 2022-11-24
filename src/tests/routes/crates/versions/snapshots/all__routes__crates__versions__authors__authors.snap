@@ -1,0 +1,9 @@
+---
+source: src/tests/routes/crates/versions/authors.rs
+assertion_line: 19
+expression: json
+---
+meta:
+  names: []
+users: []
+
