@@ -34,7 +34,6 @@ mod builders;
 mod categories;
 mod dump_db;
 mod krate;
-mod metrics;
 mod not_found_error;
 mod owners;
 mod pagination;
