@@ -3,6 +3,7 @@ mod scopes;
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 
+pub use self::scopes::{CrateScope, EndpointScope};
 use crate::models::User;
 use crate::schema::api_tokens;
 use crate::util::errors::{AppResult, InsecurelyGeneratedTokenRevoked};
@@ -27,10 +28,10 @@ pub struct ApiToken {
     pub revoked: bool,
     /// `None` or a list of crate scope patterns (see RFC #2947)
     #[serde(skip)]
-    pub crate_scopes: Option<Vec<scopes::CrateScope>>,
+    pub crate_scopes: Option<Vec<CrateScope>>,
     /// A list of endpoint scopes or `None` for the `legacy` endpoint scope (see RFC #2947)
     #[serde(skip)]
-    pub endpoint_scopes: Option<Vec<scopes::EndpointScope>>,
+    pub endpoint_scopes: Option<Vec<EndpointScope>>,
 }
 
 impl ApiToken {
@@ -43,8 +44,8 @@ impl ApiToken {
         conn: &PgConnection,
         user_id: i32,
         name: &str,
-        crate_scopes: Option<Vec<scopes::CrateScope>>,
-        endpoint_scopes: Option<Vec<scopes::EndpointScope>>,
+        crate_scopes: Option<Vec<CrateScope>>,
+        endpoint_scopes: Option<Vec<EndpointScope>>,
     ) -> AppResult<CreatedApiToken> {
         let token = SecureToken::generate(SecureTokenKind::Api);
 

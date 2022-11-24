@@ -28,6 +28,6 @@ pub mod krate;
 mod owner;
 mod rights;
 mod team;
-mod token;
+pub mod token;
 pub mod user;
 mod version;
