@@ -13,14 +13,20 @@ pub enum EndpointScope {
     ChangeOwners,
 }
 
+impl From<&EndpointScope> for &[u8] {
+    fn from(scope: &EndpointScope) -> Self {
+        match scope {
+            EndpointScope::PublishNew => b"publish-new",
+            EndpointScope::PublishUpdate => b"publish-update",
+            EndpointScope::Yank => b"yank",
+            EndpointScope::ChangeOwners => b"change-owners",
+        }
+    }
+}
+
 impl ToSql<Text, Pg> for EndpointScope {
     fn to_sql<W: Write>(&self, out: &mut Output<'_, W, Pg>) -> serialize::Result {
-        match *self {
-            EndpointScope::PublishNew => out.write_all(b"publish-new")?,
-            EndpointScope::PublishUpdate => out.write_all(b"publish-update")?,
-            EndpointScope::Yank => out.write_all(b"yank")?,
-            EndpointScope::ChangeOwners => out.write_all(b"change-owners")?,
-        }
+        out.write_all(self.into())?;
         Ok(IsNull::No)
     }
 }
