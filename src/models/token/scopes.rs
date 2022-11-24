@@ -31,14 +31,22 @@ impl ToSql<Text, Pg> for EndpointScope {
     }
 }
 
-impl FromSql<Text, Pg> for EndpointScope {
-    fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
-        match not_none!(bytes) {
+impl TryFrom<&[u8]> for EndpointScope {
+    type Error = String;
+
+    fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
+        match bytes {
             b"publish-new" => Ok(EndpointScope::PublishNew),
             b"publish-update" => Ok(EndpointScope::PublishUpdate),
             b"yank" => Ok(EndpointScope::Yank),
             b"change-owners" => Ok(EndpointScope::ChangeOwners),
-            _ => Err("Unrecognized enum variant".into()),
+            _ => Err("Unrecognized enum variant".to_string()),
         }
+    }
+}
+
+impl FromSql<Text, Pg> for EndpointScope {
+    fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
+        Ok(EndpointScope::try_from(not_none!(bytes))?)
     }
 }
