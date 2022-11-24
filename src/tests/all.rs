@@ -41,6 +41,7 @@ mod not_found_error;
 mod owners;
 mod read_only_mode;
 mod record;
+mod routes;
 mod schema_details;
 mod server;
 mod server_binary;
