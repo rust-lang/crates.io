@@ -1,34 +1,9 @@
-use crate::util::insta::assert_yaml_snapshot;
-use crate::{
-    builders::CrateBuilder, new_category, util::MockAnonymousUser, RequestHelper, TestApp,
-};
+use crate::builders::CrateBuilder;
+use crate::new_category;
+use crate::util::{MockAnonymousUser, RequestHelper, TestApp};
 use cargo_registry::models::Category;
+use insta::assert_yaml_snapshot;
 use serde_json::Value;
-
-#[test]
-fn index() {
-    let (app, anon) = TestApp::init().empty();
-
-    // List 0 categories if none exist
-    let json: Value = anon.get("/api/v1/categories").good();
-    assert_yaml_snapshot!(json);
-
-    // Create a category and a subcategory
-    app.db(|conn| {
-        new_category("foo", "foo", "Foo crates")
-            .create_or_update(conn)
-            .unwrap();
-        new_category("foo::bar", "foo::bar", "Bar crates")
-            .create_or_update(conn)
-            .unwrap();
-    });
-
-    // Only the top-level categories should be on the page
-    let json: Value = anon.get("/api/v1/categories").good();
-    assert_yaml_snapshot!(json, {
-        ".categories[].created_at" => "[datetime]",
-    });
-}
 
 #[test]
 fn show() {
@@ -128,20 +103,4 @@ fn update_crate() {
         assert_eq!(count(&anon, "cat1::bar"), 1);
         assert_eq!(count(&anon, "category-2"), 0);
     });
-}
-
-#[test]
-fn category_slugs_returns_all_slugs_in_alphabetical_order() {
-    let (app, anon) = TestApp::init().empty();
-    app.db(|conn| {
-        new_category("Foo", "foo", "For crates that foo")
-            .create_or_update(conn)
-            .unwrap();
-        new_category("Bar", "bar", "For crates that bar")
-            .create_or_update(conn)
-            .unwrap();
-    });
-
-    let response: Value = anon.get("/api/v1/category_slugs").good();
-    assert_yaml_snapshot!(response);
 }

@@ -32,7 +32,6 @@ mod authentication;
 mod blocked_routes;
 mod builders;
 mod categories;
-mod category;
 mod dump_db;
 mod keyword;
 mod krate;

@@ -11,3 +11,5 @@
 //! - testing output serialization of a route
 //! - testing query parameter combinations of a route
 
+pub mod categories;
+pub mod category_slugs;
