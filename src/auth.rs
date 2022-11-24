@@ -87,12 +87,12 @@ fn authenticate_user(req: &dyn RequestExt) -> AppResult<AuthenticatedUser> {
 }
 
 pub trait UserAuthenticationExt {
-    fn authenticate(&mut self) -> AppResult<AuthenticatedUser>;
+    fn authenticate(&self) -> AppResult<AuthenticatedUser>;
 }
 
 impl<'a> UserAuthenticationExt for dyn RequestExt + 'a {
     /// Obtain `AuthenticatedUser` for the request or return an `Forbidden` error
-    fn authenticate(&mut self) -> AppResult<AuthenticatedUser> {
+    fn authenticate(&self) -> AppResult<AuthenticatedUser> {
         controllers::util::verify_origin(self)?;
 
         let authenticated_user = authenticate_user(self)?;
