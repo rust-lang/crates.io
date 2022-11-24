@@ -15,4 +15,5 @@ pub mod categories;
 pub mod category_slugs;
 pub mod crates;
 pub mod me;
+pub mod summary;
 pub mod versions;
