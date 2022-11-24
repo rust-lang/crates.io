@@ -27,9 +27,11 @@ impl AuthCheck {
     }
 
     pub fn check(&self, request: &dyn RequestExt) -> AppResult<AuthenticatedUser> {
-        let mut auth = request.authenticate()?;
-        if !self.allow_token {
-            auth = auth.forbid_api_token_auth()?;
+        let auth = request.authenticate()?;
+
+        if !self.allow_token && auth.token_id.is_some() {
+            let error_message = "API Token authentication was explicitly disallowed for this API";
+            return Err(internal(error_message).chain(forbidden()));
         }
 
         Ok(auth)
@@ -53,18 +55,6 @@ impl AuthenticatedUser {
 
     pub fn user(self) -> User {
         self.user
-    }
-
-    /// Disallows token authenticated users
-    pub fn forbid_api_token_auth(self) -> AppResult<Self> {
-        if self.token_id.is_none() {
-            Ok(self)
-        } else {
-            Err(
-                internal("API Token authentication was explicitly disallowed for this API")
-                    .chain(forbidden()),
-            )
-        }
     }
 }
 
