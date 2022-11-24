@@ -1,4 +1,3 @@
-mod dependencies;
 mod downloads;
 mod following;
 mod owners;
