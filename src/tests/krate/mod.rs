@@ -1,4 +1,3 @@
-mod downloads;
 mod following;
 mod owners;
 mod publish;
