@@ -48,7 +48,7 @@ diesel = { version = "=1.4.8", features = ["postgres", "serde_json", "chrono", "
 diesel_full_text_search = "=1.0.1"
 diesel_migrations = { version = "=1.4.0", features = ["postgres"] }
 dotenv = "=0.15.0"
-flate2 = "=1.0.24"
+flate2 = "=1.0.25"
 futures-channel = { version = "=0.3.25", default-features = false }
 futures-util = "=0.3.25"
 hex = "=0.4.3"
