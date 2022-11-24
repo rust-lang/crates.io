@@ -15,6 +15,7 @@ mod prelude {
     pub use conduit::{header, RequestExt, StatusCode};
     pub use conduit_router::RequestParams;
 
+    pub use crate::auth::UserAuthenticationExt;
     pub use crate::db::RequestTransaction;
     pub use crate::middleware::app::RequestApp;
     pub use crate::util::errors::{cargo_err, AppError, AppResult}; // TODO: Remove cargo_err from here
@@ -22,10 +23,6 @@ mod prelude {
 
     use indexmap::IndexMap;
     use serde::Serialize;
-
-    pub trait UserAuthenticationExt {
-        fn authenticate(&mut self) -> AppResult<super::util::AuthenticatedUser>;
-    }
 
     pub trait RequestUtils {
         fn redirect(&self, url: String) -> AppResponse;
@@ -74,7 +71,7 @@ mod prelude {
 }
 
 pub mod helpers;
-mod util;
+pub mod util;
 
 pub mod category;
 pub mod crate_owner_invitation;
