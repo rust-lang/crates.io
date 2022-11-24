@@ -8,6 +8,7 @@ use cargo_registry_index::{Credentials, Repository as WorkerRepository, Reposito
 use std::{rc::Rc, sync::Arc, time::Duration};
 
 use crate::util::github::{MockGitHubClient, MOCK_GITHUB_DATA};
+use cargo_registry::models::token::{CrateScope, EndpointScope};
 use diesel::PgConnection;
 use reqwest::{blocking::Client, Proxy};
 use std::collections::HashSet;
@@ -289,6 +290,17 @@ impl TestAppBuilder {
         let (app, anon) = self.empty();
         let user = app.db_new_user("foo");
         let token = user.db_new_token("bar");
+        (app, anon, user, token)
+    }
+
+    pub fn with_scoped_token(
+        self,
+        crate_scopes: Option<Vec<CrateScope>>,
+        endpoint_scopes: Option<Vec<EndpointScope>>,
+    ) -> (TestApp, MockAnonymousUser, MockCookieUser, MockTokenUser) {
+        let (app, anon) = self.empty();
+        let user = app.db_new_user("foo");
+        let token = user.db_new_scoped_token("bar", crate_scopes, endpoint_scopes);
         (app, anon, user, token)
     }
 
