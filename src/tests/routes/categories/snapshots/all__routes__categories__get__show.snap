@@ -1,6 +1,6 @@
 ---
-source: src/tests/category.rs
-assertion_line: 51
+source: src/tests/routes/categories/get.rs
+assertion_line: 26
 expression: json
 ---
 category:

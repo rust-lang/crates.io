@@ -1,6 +1,6 @@
 ---
-source: src/tests/version.rs
-assertion_line: 55
+source: src/tests/routes/versions/read.rs
+assertion_line: 20
 expression: json
 ---
 version:

@@ -197,7 +197,7 @@ fn new_with_underscore_renamed_dependency() {
 
 #[test]
 fn new_krate_with_dependency() {
-    use super::dependencies::Deps;
+    use crate::routes::crates::versions::dependencies::Deps;
 
     let (app, anon, user, token) = TestApp::full().with_token();
 

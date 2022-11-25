@@ -1,9 +1,0 @@
----
-source: src/tests/category.rs
-assertion_line: 19
-expression: json
----
-categories: []
-meta:
-  total: 0
-

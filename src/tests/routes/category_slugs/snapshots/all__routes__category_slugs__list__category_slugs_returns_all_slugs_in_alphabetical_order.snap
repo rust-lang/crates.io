@@ -1,6 +1,6 @@
 ---
-source: src/tests/category.rs
-assertion_line: 153
+source: src/tests/routes/category_slugs/list.rs
+assertion_line: 19
 expression: response
 ---
 category_slugs:

@@ -1,7 +1,0 @@
----
-source: src/tests/version.rs
-assertion_line: 23
-expression: json
----
-versions: []
-
