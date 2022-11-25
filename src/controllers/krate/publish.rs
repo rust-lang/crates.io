@@ -1,5 +1,6 @@
 //! Functionality related to publishing a new crate or version of a crate.
 
+use crate::auth::AuthCheck;
 use flate2::read::GzDecoder;
 use hex::ToHex;
 use sha2::{Digest, Sha256};
@@ -64,9 +65,9 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
     add_custom_metadata("crate_version", new_crate.vers.to_string());
 
     let conn = app.primary_database.get()?;
-    let ids = req.authenticate()?;
-    let api_token_id = ids.api_token_id();
-    let user = ids.user();
+    let auth = AuthCheck::default().check(req)?;
+    let api_token_id = auth.api_token_id();
+    let user = auth.user();
 
     let verified_email_address = user.verified_email(&conn)?;
     let verified_email_address = verified_email_address.ok_or_else(|| {

@@ -10,6 +10,52 @@ use conduit::RequestExt;
 use conduit_cookie::RequestSession;
 use http::header;
 
+#[derive(Debug, Clone)]
+pub struct AuthCheck {
+    allow_token: bool,
+}
+
+impl AuthCheck {
+    #[must_use]
+    pub fn default() -> Self {
+        Self { allow_token: true }
+    }
+
+    #[must_use]
+    pub fn only_cookie() -> Self {
+        Self { allow_token: false }
+    }
+
+    pub fn check(&self, request: &dyn RequestExt) -> AppResult<AuthenticatedUser> {
+        controllers::util::verify_origin(request)?;
+
+        let auth = authenticate_user(request)?;
+
+        if let Some(reason) = &auth.user.account_lock_reason {
+            let still_locked = if let Some(until) = auth.user.account_lock_until {
+                until > Utc::now().naive_utc()
+            } else {
+                true
+            };
+            if still_locked {
+                return Err(account_locked(reason, auth.user.account_lock_until));
+            }
+        }
+
+        log_request::add_custom_metadata("uid", auth.user_id());
+        if let Some(id) = auth.api_token_id() {
+            log_request::add_custom_metadata("tokenid", id);
+        }
+
+        if !self.allow_token && auth.token_id.is_some() {
+            let error_message = "API Token authentication was explicitly disallowed for this API";
+            return Err(internal(error_message).chain(forbidden()));
+        }
+
+        Ok(auth)
+    }
+}
+
 #[derive(Debug)]
 pub struct AuthenticatedUser {
     user: User,
@@ -27,18 +73,6 @@ impl AuthenticatedUser {
 
     pub fn user(self) -> User {
         self.user
-    }
-
-    /// Disallows token authenticated users
-    pub fn forbid_api_token_auth(self) -> AppResult<Self> {
-        if self.token_id.is_none() {
-            Ok(self)
-        } else {
-            Err(
-                internal("API Token authentication was explicitly disallowed for this API")
-                    .chain(forbidden()),
-            )
-        }
     }
 }
 
@@ -84,38 +118,4 @@ fn authenticate_user(req: &dyn RequestExt) -> AppResult<AuthenticatedUser> {
 
     // Unable to authenticate the user
     return Err(internal("no cookie session or auth header found").chain(forbidden()));
-}
-
-pub trait UserAuthenticationExt {
-    fn authenticate(&self) -> AppResult<AuthenticatedUser>;
-}
-
-impl<'a> UserAuthenticationExt for dyn RequestExt + 'a {
-    /// Obtain `AuthenticatedUser` for the request or return an `Forbidden` error
-    fn authenticate(&self) -> AppResult<AuthenticatedUser> {
-        controllers::util::verify_origin(self)?;
-
-        let authenticated_user = authenticate_user(self)?;
-
-        if let Some(reason) = &authenticated_user.user.account_lock_reason {
-            let still_locked = if let Some(until) = authenticated_user.user.account_lock_until {
-                until > Utc::now().naive_utc()
-            } else {
-                true
-            };
-            if still_locked {
-                return Err(account_locked(
-                    reason,
-                    authenticated_user.user.account_lock_until,
-                ));
-            }
-        }
-
-        log_request::add_custom_metadata("uid", authenticated_user.user_id());
-        if let Some(id) = authenticated_user.api_token_id() {
-            log_request::add_custom_metadata("tokenid", id);
-        }
-
-        Ok(authenticated_user)
-    }
 }

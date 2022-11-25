@@ -54,7 +54,7 @@ pub mod uploaders;
 pub mod util;
 pub mod worker;
 
-mod auth;
+pub mod auth;
 pub mod controllers;
 pub mod models;
 mod router;

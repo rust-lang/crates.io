@@ -5,14 +5,15 @@ use crate::schema::api_tokens;
 use crate::util::read_fill;
 use crate::views::EncodableApiTokenWithToken;
 
+use crate::auth::AuthCheck;
 use conduit::{Body, Response};
 use serde_json as json;
 
 /// Handles the `GET /me/tokens` route.
 pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
-    let authenticated_user = req.authenticate()?.forbid_api_token_auth()?;
+    let auth = AuthCheck::only_cookie().check(req)?;
     let conn = req.db_read_prefer_primary()?;
-    let user = authenticated_user.user();
+    let user = auth.user();
 
     let tokens: Vec<ApiToken> = ApiToken::belonging_to(&user)
         .filter(api_tokens::revoked.eq(false))
@@ -59,15 +60,15 @@ pub fn new(req: &mut dyn RequestExt) -> EndpointResult {
         return Err(bad_request("name must have a value"));
     }
 
-    let authenticated_user = req.authenticate()?;
-    if authenticated_user.api_token_id().is_some() {
+    let auth = AuthCheck::default().check(req)?;
+    if auth.api_token_id().is_some() {
         return Err(bad_request(
             "cannot use an API token to create a new API token",
         ));
     }
 
     let conn = req.db_write()?;
-    let user = authenticated_user.user();
+    let user = auth.user();
 
     let max_token_per_user = 500;
     let count: i64 = ApiToken::belonging_to(&user).count().get_result(&*conn)?;
@@ -90,9 +91,9 @@ pub fn revoke(req: &mut dyn RequestExt) -> EndpointResult {
         .parse::<i32>()
         .map_err(|e| bad_request(&format!("invalid token id: {e:?}")))?;
 
-    let authenticated_user = req.authenticate()?;
+    let auth = AuthCheck::default().check(req)?;
     let conn = req.db_write()?;
-    let user = authenticated_user.user();
+    let user = auth.user();
     diesel::update(ApiToken::belonging_to(&user).find(id))
         .set(api_tokens::revoked.eq(true))
         .execute(&*conn)?;
@@ -102,8 +103,8 @@ pub fn revoke(req: &mut dyn RequestExt) -> EndpointResult {
 
 /// Handles the `DELETE /tokens/current` route.
 pub fn revoke_current(req: &mut dyn RequestExt) -> EndpointResult {
-    let authenticated_user = req.authenticate()?;
-    let api_token_id = authenticated_user
+    let auth = AuthCheck::default().check(req)?;
+    let api_token_id = auth
         .api_token_id()
         .ok_or_else(|| bad_request("token not provided"))?;
 

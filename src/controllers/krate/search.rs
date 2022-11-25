@@ -1,5 +1,6 @@
 //! Endpoint for searching and discovery functionality
 
+use crate::auth::AuthCheck;
 use diesel::dsl::*;
 use diesel::sql_types::Array;
 use diesel_full_text_search::*;
@@ -186,7 +187,8 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
         // Calculating the total number of results with filters is not supported yet.
         supports_seek = false;
 
-        let user_id = req.authenticate()?.user_id();
+        let user_id = AuthCheck::default().check(req)?.user_id();
+
         query = query.filter(
             crates::id.eq_any(
                 follows::table
