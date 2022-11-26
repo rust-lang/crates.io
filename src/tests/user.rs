@@ -374,16 +374,15 @@ fn updating_existing_user_doesnt_change_api_token() {
     assert_eq!("bar_token", user.gh_access_token);
 }
 
-/*  Given a GitHub user, check that if the user logs in,
-    updates their email, logs out, then logs back in, the
-    email they added to crates.io will not be overwritten
-    by the information sent by GitHub.
-
-    This bug is problematic if the user's email preferences
-    are set to private on GitHub, as GitHub will always
-    send none as the email and we will end up inadvertently
-    deleting their email when they sign back in.
-*/
+/// Given a GitHub user, check that if the user logs in,
+/// updates their email, logs out, then logs back in, the
+/// email they added to crates.io will not be overwritten
+/// by the information sent by GitHub.
+///
+/// This bug is problematic if the user's email preferences
+/// are set to private on GitHub, as GitHub will always
+/// send none as the email and we will end up inadvertently
+/// deleting their email when they sign back in.
 #[test]
 fn github_without_email_does_not_overwrite_email() {
     let (app, _) = TestApp::init().empty();
@@ -425,9 +424,8 @@ fn github_without_email_does_not_overwrite_email() {
     assert_eq!(json.user.email.unwrap(), "apricot@apricots.apricot");
 }
 
-/* Given a new user, test that if they sign in with one email, change their email on GitHub, then
-   sign in again, that the email in crates.io will remain set to the original email used on GitHub.
-*/
+/// Given a new user, test that if they sign in with one email, change their email on GitHub, then
+/// sign in again, that the email in crates.io will remain set to the original email used on GitHub.
 #[test]
 fn github_with_email_does_not_overwrite_email() {
     use cargo_registry::schema::emails;
@@ -461,10 +459,9 @@ fn github_with_email_does_not_overwrite_email() {
     assert_eq!(json.user.email, Some(original_email));
 }
 
-/*  Given a crates.io user, check that the user's email can be
-    updated in the database (PUT /user/:user_id), then check
-    that the updated email is sent back to the user (GET /me).
-*/
+/// Given a crates.io user, check that the user's email can be
+/// updated in the database (PUT /user/:user_id), then check
+/// that the updated email is sent back to the user (GET /me).
 #[test]
 fn test_email_get_and_put() {
     let (_app, _anon, user) = TestApp::init().with_user();
@@ -480,16 +477,15 @@ fn test_email_get_and_put() {
     assert!(json.user.email_verification_sent);
 }
 
-/*  Given a crates.io user, check to make sure that the user
-    cannot add to the database an empty string or null as
-    their email. If an attempt is made, update_user.rs will
-    return an error indicating that an empty email cannot be
-    added.
-
-    This is checked on the frontend already, but I'd like to
-    make sure that a user cannot get around that and delete
-    their email by adding an empty string.
-*/
+/// Given a crates.io user, check to make sure that the user
+/// cannot add to the database an empty string or null as
+/// their email. If an attempt is made, update_user.rs will
+/// return an error indicating that an empty email cannot be
+/// added.
+///
+/// This is checked on the frontend already, but I'd like to
+/// make sure that a user cannot get around that and delete
+/// their email by adding an empty string.
 #[test]
 fn test_empty_email_not_added() {
     let (_app, _anon, user) = TestApp::init().with_user();
@@ -510,12 +506,11 @@ fn test_empty_email_not_added() {
     );
 }
 
-/*  Check to make sure that neither other signed in users nor anonymous users can edit another
-    user's email address.
-
-    If an attempt is made, update_user.rs will return an error indicating that the current user
-    does not match the requested user.
-*/
+/// Check to make sure that neither other signed in users nor anonymous users can edit another
+/// user's email address.
+///
+/// If an attempt is made, update_user.rs will return an error indicating that the current user
+/// does not match the requested user.
 #[test]
 fn test_other_users_cannot_change_my_email() {
     let (app, anon, user) = TestApp::init().with_user();
@@ -543,12 +538,11 @@ fn test_other_users_cannot_change_my_email() {
     );
 }
 
-/* Given a new user, test that their email can be added
-   to the email table and a token for the email is generated
-   and added to the token table. When /confirm/:email_token is
-   requested, check that the response back is ok, and that
-   the email_verified field on user is now set to true.
-*/
+/// Given a new user, test that their email can be added
+/// to the email table and a token for the email is generated
+/// and added to the token table. When /confirm/:email_token is
+/// requested, check that the response back is ok, and that
+/// the email_verified field on user is now set to true.
 #[test]
 fn test_confirm_user_email() {
     use cargo_registry::schema::emails;
@@ -585,10 +579,9 @@ fn test_confirm_user_email() {
     assert!(json.user.email_verification_sent);
 }
 
-/* Given a user who existed before we added email confirmation,
-   test that `email_verification_sent` is false so that we don't
-   make the user think we've sent an email when we haven't.
-*/
+/// Given a user who existed before we added email confirmation,
+/// test that `email_verification_sent` is false so that we don't
+/// make the user think we've sent an email when we haven't.
 #[test]
 fn test_existing_user_email() {
     use cargo_registry::schema::emails;
@@ -638,9 +631,8 @@ fn test_user_owned_crates_doesnt_include_deleted_ownership() {
     assert_eq!(json.owned_crates.len(), 0);
 }
 
-/* A user should be able to update the email notifications for crates they own. Only the crates that
-   were sent in the request should be updated to the corresponding `email_notifications` value.
-*/
+/// A user should be able to update the email notifications for crates they own. Only the crates that
+/// were sent in the request should be updated to the corresponding `email_notifications` value.
 #[test]
 fn test_update_email_notifications() {
     let (app, _, user) = TestApp::init().with_user();
@@ -723,9 +715,8 @@ fn test_update_email_notifications() {
     })
 }
 
-/* A user should not be able to update the `email_notifications` value for a crate that is not
-   owned by them.
-*/
+/// A user should not be able to update the `email_notifications` value for a crate that is not
+/// owned by them.
 #[test]
 fn test_update_email_notifications_not_owned() {
     let (app, _, user) = TestApp::init().with_user();

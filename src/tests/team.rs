@@ -16,7 +16,7 @@ impl crate::util::MockAnonymousUser {
     }
 }
 
-// Test adding team without `github:`
+/// Test adding team without `github:`
 #[test]
 fn not_github() {
     let (app, _, user, token) = TestApp::init().with_token();
@@ -49,7 +49,7 @@ fn weird_name() {
     );
 }
 
-// Test adding team without second `:`
+/// Test adding team without second `:`
 #[test]
 fn one_colon() {
     let (app, _, user, token) = TestApp::init().with_token();
@@ -82,7 +82,7 @@ fn nonexistent_team() {
     );
 }
 
-// Test adding a renamed team
+/// Test adding a renamed team
 #[test]
 fn add_renamed_team() {
     let (app, anon) = TestApp::init().empty();
@@ -119,7 +119,7 @@ fn add_renamed_team() {
     assert_eq!(json.teams[0].login, "github:test-org:core");
 }
 
-// Test adding team names with mixed case, when on the team
+/// Test adding team names with mixed case, when on the team
 #[test]
 fn add_team_mixed_case() {
     let (app, anon) = TestApp::init().empty();
@@ -174,7 +174,7 @@ fn add_team_as_org_owner() {
     assert_eq!(json.teams[0].login, "github:test-org:core");
 }
 
-// Test adding team as owner when not on it
+/// Test adding team as owner when not on it
 #[test]
 fn add_team_as_non_member() {
     let (app, _) = TestApp::init().empty();
@@ -268,7 +268,7 @@ fn remove_team_as_team_owner() {
     );
 }
 
-// Test trying to publish a crate we don't own
+/// Test trying to publish a crate we don't own
 #[test]
 fn publish_not_owned() {
     let (app, _) = TestApp::full().empty();
@@ -319,7 +319,7 @@ fn publish_org_owner_owned() {
     );
 }
 
-// Test trying to publish a krate we do own (but only because of teams)
+/// Test trying to publish a krate we do own (but only because of teams)
 #[test]
 fn publish_owned() {
     let (app, _) = TestApp::full().empty();
@@ -340,7 +340,7 @@ fn publish_owned() {
     user_on_one_team.publish_crate(crate_to_publish).good();
 }
 
-// Test trying to change owners (when only on an owning team)
+/// Test trying to change owners (when only on an owning team)
 #[test]
 fn add_owners_as_org_owner() {
     let (app, _) = TestApp::init().empty();

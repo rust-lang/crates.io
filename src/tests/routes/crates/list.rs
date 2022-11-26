@@ -554,13 +554,12 @@ fn max_stable_version() {
     assert_eq!(json.crates[0].max_stable_version, Some("1.0.0".to_string()));
 }
 
-/*  Given two crates, one with downloads less than 90 days ago, the
-    other with all downloads greater than 90 days ago, check that
-    the order returned is by recent downloads, descending. Check
-    also that recent download counts are returned in recent_downloads,
-    and total downloads counts are returned in downloads, and that
-    these numbers do not overlap.
-*/
+/// Given two crates, one with downloads less than 90 days ago, the
+/// other with all downloads greater than 90 days ago, check that
+/// the order returned is by recent downloads, descending. Check
+/// also that recent download counts are returned in recent_downloads,
+/// and total downloads counts are returned in downloads, and that
+/// these numbers do not overlap.
 #[test]
 fn test_recent_download_count() {
     let (app, anon, user) = TestApp::init().with_user();
@@ -595,10 +594,9 @@ fn test_recent_download_count() {
     assert_eq!(json.crates[1].downloads, 10);
 }
 
-/*  Given one crate with zero downloads, check that the crate
-   still shows up in index results, but that it displays 0
-   for both recent downloads and downloads.
-*/
+/// Given one crate with zero downloads, check that the crate
+/// still shows up in index results, but that it displays 0
+/// for both recent downloads and downloads.
 #[test]
 fn test_zero_downloads() {
     let (app, anon, user) = TestApp::init().with_user();
@@ -620,10 +618,9 @@ fn test_zero_downloads() {
     assert_eq!(json.crates[0].downloads, 0);
 }
 
-/*  Given two crates, one with more all-time downloads, the other with
-    more downloads in the past 90 days, check that the index page for
-    categories and keywords is sorted by recent downloads by default.
-*/
+/// Given two crates, one with more all-time downloads, the other with
+/// more downloads in the past 90 days, check that the index page for
+/// categories and keywords is sorted by recent downloads by default.
 #[test]
 fn test_default_sort_recent() {
     let (app, anon, user) = TestApp::init().with_user();
