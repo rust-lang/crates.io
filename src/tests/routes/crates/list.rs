@@ -819,3 +819,31 @@ fn pagination_parameters_only_accept_integers() {
         json!({ "errors": [{ "detail": "invalid digit found in string" }] })
     );
 }
+
+#[test]
+fn crates_by_user_id() {
+    let (app, _, user) = TestApp::init().with_user();
+    let id = user.as_model().id;
+    app.db(|conn| {
+        CrateBuilder::new("foo_my_packages", id).expect_build(conn);
+    });
+
+    let response = user.search_by_user_id(id);
+    assert_eq!(response.crates.len(), 1);
+}
+
+#[test]
+fn crates_by_user_id_not_including_deleted_owners() {
+    let (app, anon, user) = TestApp::init().with_user();
+    let user = user.as_model();
+
+    app.db(|conn| {
+        let krate = CrateBuilder::new("foo_my_packages", user.id).expect_build(conn);
+        krate
+            .owner_remove(app.as_inner(), conn, user, "foo")
+            .unwrap();
+    });
+
+    let response = anon.search_by_user_id(user.id);
+    assert_eq!(response.crates.len(), 0);
+}
