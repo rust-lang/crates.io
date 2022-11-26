@@ -29,8 +29,8 @@ static IGNORED_HEADERS: &[&str] = &[
     "user-agent",
 ];
 
-// A "bomb" so when the test task exists we know when to shut down
-// the server and fail if the subtask failed.
+/// A "bomb" so when the test task exists we know when to shut down
+/// the server and fail if the subtask failed.
 pub struct Bomb {
     iorx: Sink,
     quittx: Option<oneshot::Sender<()>>,

@@ -170,8 +170,8 @@ fn create_and_add_owner(
     user
 }
 
-// Ensures that so long as at least one owner remains associated with the crate,
-// a user can still remove their own login as an owner
+/// Ensures that so long as at least one owner remains associated with the crate,
+/// a user can still remove their own login as an owner
 #[test]
 fn owners_can_remove_self() {
     let (app, _, user, token) = TestApp::init().with_token();
@@ -207,7 +207,7 @@ fn owners_can_remove_self() {
     );
 }
 
-// Verify consistency when adidng or removing multiple owners in a single request.
+/// Verify consistency when adidng or removing multiple owners in a single request.
 #[test]
 fn modify_multiple_owners() {
     let (app, _, user, token) = TestApp::init().with_token();
@@ -406,13 +406,12 @@ fn invite_with_existing_expired_invite() {
     assert_eq!(2, app.as_inner().emails.mails_in_memory().unwrap().len());
 }
 
-/*  Testing the crate ownership between two crates and one team.
-    Given two crates, one crate owned by both a team and a user,
-    one only owned by a user, check that the CrateList returned
-    for the user_id contains only the crates owned by that user,
-    and that the CrateList returned for the team_id contains
-    only crates owned by that team.
-*/
+/// Testing the crate ownership between two crates and one team.
+/// Given two crates, one crate owned by both a team and a user,
+/// one only owned by a user, check that the CrateList returned
+/// for the user_id contains only the crates owned by that user,
+/// and that the CrateList returned for the team_id contains
+/// only crates owned by that team.
 #[test]
 fn check_ownership_two_crates() {
     let (app, anon, user) = TestApp::init().with_user();
@@ -440,14 +439,13 @@ fn check_ownership_two_crates() {
     assert_eq!(json.crates[0].name, krate_owned_by_team.name);
 }
 
-/*  Given a crate owned by both a team and a user, check that the
-    JSON returned by the /owner_team route and /owner_user route
-    contains the correct kind of owner
-
-    Note that in this case function new_team must take a team name
-    of form github:org_name:team_name as that is the format
-    EncodableOwner::encodable is expecting
-*/
+/// Given a crate owned by both a team and a user, check that the
+/// JSON returned by the /owner_team route and /owner_user route
+/// contains the correct kind of owner
+///
+/// Note that in this case function new_team must take a team name
+/// of form github:org_name:team_name as that is the format
+/// EncodableOwner::encodable is expecting
 #[test]
 fn check_ownership_one_crate() {
     let (app, anon, user) = TestApp::init().with_user();
@@ -572,12 +570,11 @@ fn invitations_list_does_not_include_expired_invites_v1() {
     );
 }
 
-/*  Given a user inviting a different user to be a crate
-    owner, check that the user invited can accept their
-    invitation, the invitation will be deleted from
-    the invitations table, and a new crate owner will be
-    inserted into the table for the given crate.
-*/
+/// Given a user inviting a different user to be a crate
+/// owner, check that the user invited can accept their
+/// invitation, the invitation will be deleted from
+/// the invitations table, and a new crate owner will be
+/// inserted into the table for the given crate.
 #[test]
 fn test_accept_invitation() {
     let (app, anon, owner, owner_token) = TestApp::init().with_token();
@@ -600,11 +597,10 @@ fn test_accept_invitation() {
     assert_eq!(json.users.len(), 2);
 }
 
-/*  Given a user inviting a different user to be a crate
-    owner, check that the user invited can decline their
-    invitation and the invitation will be deleted from
-    the invitations table.
-*/
+/// Given a user inviting a different user to be a crate
+/// owner, check that the user invited can decline their
+/// invitation and the invitation will be deleted from
+/// the invitations table.
 #[test]
 fn test_decline_invitation() {
     let (app, anon, owner, owner_token) = TestApp::init().with_token();
@@ -652,8 +648,8 @@ fn test_accept_invitation_by_mail() {
     assert_eq!(json.users.len(), 2);
 }
 
-/// Hacky way to simulate the expiration of an ownership invitation. Instead of letting a month
-/// pass, the creation date of the invite is moved back a month.
+//// Hacky way to simulate the expiration of an ownership invitation. Instead of letting a month
+//// pass, the creation date of the invite is moved back a month.
 fn expire_invitation(app: &TestApp, crate_id: i32) {
     use cargo_registry::schema::crate_owner_invitations;
 
