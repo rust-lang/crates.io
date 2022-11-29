@@ -87,6 +87,10 @@ impl Display for RequestLine<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let mut line = LogLine::new(f);
 
+        // The download endpoint is our most requested endpoint by 1-2 orders of
+        // magnitude. Since we pay per logged GB we try to reduce the amount of
+        // bytes per log line for this endpoint.
+
         let is_download_endpoint = self.req.path().ends_with("/download");
         let is_download_redirect = is_download_endpoint && self.status.is_redirection();
 
@@ -97,7 +101,6 @@ impl Display for RequestLine<'_> {
 
         line.add_quoted_field("path", FullPath(self.req))?;
 
-        // The request_id is not logged for successful download requests
         if !is_download_redirect {
             line.add_field("request_id", request_header(self.req, "x-request-id"))?;
         }
@@ -111,7 +114,6 @@ impl Display for RequestLine<'_> {
             }
         }
 
-        // The `status` is not logged for successful download requests
         if !is_download_redirect {
             line.add_field("status", self.status.as_str())?;
         }
