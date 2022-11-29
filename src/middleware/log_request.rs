@@ -8,6 +8,7 @@ use conduit::{header, RequestExt, StatusCode};
 
 use crate::middleware::normalize_path::OriginalPath;
 use crate::middleware::response_timing::ResponseTime;
+use http::Method;
 use std::cell::RefCell;
 use std::fmt::{self, Display, Formatter};
 
@@ -86,13 +87,20 @@ impl Display for RequestLine<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let mut line = LogLine::new(f);
 
-        line.add_field("method", self.req.method())?;
-        line.add_quoted_field("path", FullPath(self.req))?;
+        // The download endpoint is our most requested endpoint by 1-2 orders of
+        // magnitude. Since we pay per logged GB we try to reduce the amount of
+        // bytes per log line for this endpoint.
 
         let is_download_endpoint = self.req.path().ends_with("/download");
         let is_download_redirect = is_download_endpoint && self.status.is_redirection();
 
-        // The request_id is not logged for successful download requests
+        let method = self.req.method();
+        if !is_download_redirect || method != Method::GET {
+            line.add_field("method", method)?;
+        }
+
+        line.add_quoted_field("path", FullPath(self.req))?;
+
         if !is_download_redirect {
             line.add_field("request_id", request_header(self.req, "x-request-id"))?;
         }
@@ -101,10 +109,11 @@ impl Display for RequestLine<'_> {
 
         let response_time = self.req.extensions().get::<ResponseTime>();
         if let Some(response_time) = response_time {
-            line.add_field("service", response_time)?;
+            if !is_download_redirect || response_time.as_millis() > 0 {
+                line.add_field("service", response_time)?;
+            }
         }
 
-        // The `status` is not logged for successful download requests
         if !is_download_redirect {
             line.add_field("status", self.status.as_str())?;
         }
