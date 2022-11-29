@@ -106,7 +106,9 @@ impl Display for RequestLine<'_> {
 
         let response_time = self.req.extensions().get::<ResponseTime>();
         if let Some(response_time) = response_time {
-            line.add_field("service", response_time)?;
+            if !is_download_redirect || response_time.as_millis() > 0 {
+                line.add_field("service", response_time)?;
+            }
         }
 
         // The `status` is not logged for successful download requests
