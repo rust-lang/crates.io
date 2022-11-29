@@ -116,7 +116,7 @@ pub struct Crate {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub features2: Option<BTreeMap<String, Vec<String>>>,
     pub yanked: Option<bool>,
-    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub links: Option<String>,
     /// The schema version for this entry.
     ///
