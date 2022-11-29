@@ -8,6 +8,7 @@ use conduit::{header, RequestExt, StatusCode};
 
 use crate::middleware::normalize_path::OriginalPath;
 use crate::middleware::response_timing::ResponseTime;
+use http::Method;
 use std::cell::RefCell;
 use std::fmt::{self, Display, Formatter};
 
@@ -86,11 +87,15 @@ impl Display for RequestLine<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let mut line = LogLine::new(f);
 
-        line.add_field("method", self.req.method())?;
-        line.add_quoted_field("path", FullPath(self.req))?;
-
         let is_download_endpoint = self.req.path().ends_with("/download");
         let is_download_redirect = is_download_endpoint && self.status.is_redirection();
+
+        let method = self.req.method();
+        if !is_download_redirect || method != Method::GET {
+            line.add_field("method", method)?;
+        }
+
+        line.add_quoted_field("path", FullPath(self.req))?;
 
         // The request_id is not logged for successful download requests
         if !is_download_redirect {
