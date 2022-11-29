@@ -32,7 +32,7 @@ specifiers:
   copy-text-to-clipboard: 3.0.1
   date-fns: 2.29.3
   ember-a11y-testing: 5.0.0
-  ember-auto-import: 2.4.3
+  ember-auto-import: 2.5.0
   ember-cli: 4.8.0
   ember-cli-app-version: 5.0.0
   ember-cli-babel: 7.26.11
@@ -137,7 +137,7 @@ devDependencies:
   '@zestia/ember-auto-focus': 4.4.0
   broccoli-asset-rev: 3.0.0
   ember-a11y-testing: 5.0.0_qhusffjocg4cnbdwj4yxijwhva
-  ember-auto-import: 2.4.3_webpack@5.75.0
+  ember-auto-import: 2.5.0_webpack@5.75.0
   ember-cli: 4.8.0
   ember-cli-app-version: 5.0.0
   ember-cli-babel: 7.26.11
@@ -1769,7 +1769,7 @@ packages:
       '@ember-data/store': 4.6.4_webpack@5.75.0
       '@ember/edition-utils': 1.2.0
       '@ember/string': 3.0.0
-      ember-auto-import: 2.4.3_webpack@5.75.0
+      ember-auto-import: 2.5.0_webpack@5.75.0
       ember-cli-babel: 7.26.11
       ember-cli-test-info: 1.0.0
       ember-cli-typescript: 5.2.1
@@ -1796,7 +1796,7 @@ packages:
       '@ember-data/private-build-infra': 4.6.4
       '@ember/edition-utils': 1.2.0
       '@ember/string': 3.0.0
-      ember-auto-import: 2.4.3_webpack@5.75.0
+      ember-auto-import: 2.5.0_webpack@5.75.0
       ember-cli-babel: 7.26.11
       ember-cli-test-info: 1.0.0
       ember-cli-typescript: 5.2.1
@@ -1816,7 +1816,7 @@ packages:
       '@ember/edition-utils': 1.2.0
       '@ember/string': 3.0.0
       '@embroider/macros': 1.10.0
-      ember-auto-import: 2.4.3_webpack@5.75.0
+      ember-auto-import: 2.5.0_webpack@5.75.0
       ember-cached-decorator-polyfill: 0.1.4
       ember-cli-babel: 7.26.11
       ember-cli-string-utils: 1.1.0
@@ -1872,7 +1872,7 @@ packages:
       '@ember-data/private-build-infra': 4.6.4
       '@ember-data/store': 4.6.4_webpack@5.75.0
       '@ember/edition-utils': 1.2.0
-      ember-auto-import: 2.4.3_webpack@5.75.0
+      ember-auto-import: 2.5.0_webpack@5.75.0
       ember-cli-babel: 7.26.11
       ember-cli-test-info: 1.0.0
       ember-cli-typescript: 5.2.1
@@ -1891,7 +1891,7 @@ packages:
     dependencies:
       '@ember-data/private-build-infra': 4.6.4
       '@ember-data/store': 4.6.4_webpack@5.75.0
-      ember-auto-import: 2.4.3_webpack@5.75.0
+      ember-auto-import: 2.5.0_webpack@5.75.0
       ember-cli-babel: 7.26.11
       ember-cli-test-info: 1.0.0
       ember-cli-typescript: 5.2.1
@@ -1910,7 +1910,7 @@ packages:
       '@ember/string': 3.0.0
       '@embroider/macros': 1.10.0
       '@glimmer/tracking': 1.1.2
-      ember-auto-import: 2.4.3_webpack@5.75.0
+      ember-auto-import: 2.5.0_webpack@5.75.0
       ember-cached-decorator-polyfill: 0.1.4
       ember-cli-babel: 7.26.11
       ember-cli-path-utils: 1.0.0
@@ -2174,6 +2174,7 @@ packages:
       resolve-package-path: 4.0.3
       semver: 7.3.8
       typescript-memoize: 1.1.1
+    dev: true
 
   /@embroider/shared-internals/2.0.0:
     resolution: {integrity: sha512-qZ2/xky9mWm5YC6noOa6AiAwgISEQ78YTZNv4SNu2PFgEK/H+Ha/3ddngzGSsnXkVnIHZyxIBzhxETonQYHY9g==}
@@ -6862,7 +6863,7 @@ packages:
       axe-core: 4.5.2
       body-parser: 1.20.1
       broccoli-persistent-filter: 3.1.3
-      ember-auto-import: 2.4.3_webpack@5.75.0
+      ember-auto-import: 2.5.0_webpack@5.75.0
       ember-cli-babel: 7.26.11
       ember-cli-typescript: 4.2.1
       ember-cli-version-checker: 5.1.2
@@ -6931,8 +6932,8 @@ packages:
       - webpack-command
     dev: true
 
-  /ember-auto-import/2.4.3_webpack@5.75.0:
-    resolution: {integrity: sha512-yqtXDixgtBgaNIiz3DIIjJgpPoV5/UWBnsYIR/IxwDYpsGswyRWQ4D+IamkCDtaGDkZ7dNE9QZDBOrJCAG6KNA==}
+  /ember-auto-import/2.5.0_webpack@5.75.0:
+    resolution: {integrity: sha512-fKERUmpZLn4RJiCwTjS7D5zJxgnbF4E6GiSp1GYh53K96S+5UBs06r7ScDI52rq34z0+qdSrA6qiDJ3i/lWqKg==}
     engines: {node: 12.* || 14.* || >= 16}
     dependencies:
       '@babel/core': 7.20.2
@@ -6940,7 +6941,7 @@ packages:
       '@babel/plugin-proposal-decorators': 7.20.5_@babel+core@7.20.2
       '@babel/preset-env': 7.20.2_@babel+core@7.20.2
       '@embroider/macros': 1.10.0
-      '@embroider/shared-internals': 1.8.3
+      '@embroider/shared-internals': 2.0.0
       babel-loader: 8.3.0_npabyccmuonwo2rku4k53xo3hi
       babel-plugin-ember-modules-api-polyfill: 3.5.0
       babel-plugin-htmlbars-inline-precompile: 5.3.1
@@ -7685,7 +7686,7 @@ packages:
       '@embroider/macros': 1.10.0
       '@glimmer/env': 0.1.7
       broccoli-merge-trees: 4.2.0
-      ember-auto-import: 2.4.3_webpack@5.75.0
+      ember-auto-import: 2.5.0_webpack@5.75.0
       ember-cli-babel: 7.26.11
       ember-cli-typescript: 5.2.1
       ember-inflector: 4.0.2
@@ -7761,7 +7762,7 @@ packages:
       chalk: 4.1.2
       cli-table3: 0.6.3
       debug: 4.3.4
-      ember-auto-import: 2.4.3_webpack@5.75.0
+      ember-auto-import: 2.5.0_webpack@5.75.0
       ember-cli-babel: 7.26.11
       ember-cli-version-checker: 5.1.2
       ember-qunit: 6.0.0_qhusffjocg4cnbdwj4yxijwhva
@@ -7938,7 +7939,7 @@ packages:
       broccoli-funnel: 3.0.8
       broccoli-merge-trees: 3.0.2
       common-tags: 1.8.2
-      ember-auto-import: 2.4.3_webpack@5.75.0
+      ember-auto-import: 2.5.0_webpack@5.75.0
       ember-cli-babel: 7.26.11
       ember-cli-test-loader: 3.0.0
       qunit: 2.19.3
@@ -8019,7 +8020,7 @@ packages:
       broccoli-funnel: 3.0.8
       broccoli-merge-trees: 4.2.0
       chalk: 4.1.2
-      ember-auto-import: 2.4.3_webpack@5.75.0
+      ember-auto-import: 2.5.0_webpack@5.75.0
       ember-cli-babel: 7.26.11
       ember-cli-get-component-path-option: 1.0.0
       ember-cli-is-package-missing: 1.0.0
