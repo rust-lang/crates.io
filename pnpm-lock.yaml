@@ -76,7 +76,7 @@ specifiers:
   ember-window-mock: 0.8.1
   eslint: 8.28.0
   eslint-config-prettier: 8.5.0
-  eslint-plugin-ember: 11.2.0
+  eslint-plugin-ember: 11.2.1
   eslint-plugin-ember-concurrency: 0.5.1
   eslint-plugin-import-helpers: 1.3.1
   eslint-plugin-prettier: 4.2.1
@@ -181,7 +181,7 @@ devDependencies:
   ember-window-mock: 0.8.1
   eslint: 8.28.0
   eslint-config-prettier: 8.5.0_eslint@8.28.0
-  eslint-plugin-ember: 11.2.0_ju7w56ryppj6wf4c4eda7fss5m
+  eslint-plugin-ember: 11.2.1_ju7w56ryppj6wf4c4eda7fss5m
   eslint-plugin-ember-concurrency: 0.5.1_eslint@8.28.0
   eslint-plugin-import-helpers: 1.3.1_eslint@8.28.0
   eslint-plugin-prettier: 4.2.1_cwlo2dingkvfydnaculr42urve
@@ -2306,6 +2306,12 @@ packages:
       '@simple-dom/interface': 1.4.0
     dev: true
 
+  /@glimmer/interfaces/0.84.2:
+    resolution: {integrity: sha512-tMZxQpOddUVmHEOuripkNqVR7ba0K4doiYnFd4WyswqoHPlxqpBujbIamQ+bWCWEF0U4yxsXKa31ekS/JHkiBQ==}
+    dependencies:
+      '@simple-dom/interface': 1.4.0
+    dev: true
+
   /@glimmer/reference/0.83.1:
     resolution: {integrity: sha512-BThEwDlMkJB1WBPWDrww+VxgGyDbwxh5FFPvGhkovvCZnCb7fAMUCt9pi6CUZtviugkWOBFtE9P4eZZbOLkXeg==}
     dependencies:
@@ -2325,6 +2331,15 @@ packages:
       simple-html-tokenizer: 0.5.11
     dev: true
 
+  /@glimmer/syntax/0.84.2:
+    resolution: {integrity: sha512-SPBd1tpIR9XeaXsXsMRCnKz63eLnIZ0d5G9QC4zIBFBC3pQdtG0F5kWeuRVCdfTIFuR+5WBMfk5jvg+3gbQhjg==}
+    dependencies:
+      '@glimmer/interfaces': 0.84.2
+      '@glimmer/util': 0.84.2
+      '@handlebars/parser': 2.0.0
+      simple-html-tokenizer: 0.5.11
+    dev: true
+
   /@glimmer/tracking/1.1.2:
     resolution: {integrity: sha512-cyV32zsHh+CnftuRX84ALZpd2rpbDrhLhJnTXn9W//QpqdRZ5rdMsxSY9fOsj0CKEc706tmEU299oNnDc0d7tA==}
     dependencies:
@@ -2340,6 +2355,14 @@ packages:
     dependencies:
       '@glimmer/env': 0.1.7
       '@glimmer/interfaces': 0.83.1
+      '@simple-dom/interface': 1.4.0
+    dev: true
+
+  /@glimmer/util/0.84.2:
+    resolution: {integrity: sha512-VbhzE2s4rmU+qJF3gGBTL1IDjq+/G2Th51XErS8MQVMCmE4CU2pdwSzec8PyOowqCGUOrVIWuMzEI6VoPM4L4w==}
+    dependencies:
+      '@glimmer/env': 0.1.7
+      '@glimmer/interfaces': 0.84.2
       '@simple-dom/interface': 1.4.0
     dev: true
 
@@ -8412,14 +8435,14 @@ packages:
       eslint: 8.28.0
     dev: true
 
-  /eslint-plugin-ember/11.2.0_ju7w56ryppj6wf4c4eda7fss5m:
-    resolution: {integrity: sha512-stMzVwyP7OpIJG8cTCUEWEn/QrPwVUKXVrxn88WM0eFFJ4V3003hNueYagRY1Sa9Wd/EtrSb7BMV6AC1YFRRqQ==}
+  /eslint-plugin-ember/11.2.1_ju7w56ryppj6wf4c4eda7fss5m:
+    resolution: {integrity: sha512-CUC1ZHC2QBksBCMkl9GSCoKcC+IGPkSEhO6qc+R5pW0Llw44m4bEsxoVVNDpZNe/TQRiFmv3Lot9QdtygfAiIw==}
     engines: {node: 14.* || 16.* || >= 18}
     peerDependencies:
       eslint: '*'
     dependencies:
       '@ember-data/rfc395-data': 0.0.4
-      '@glimmer/syntax': 0.83.1
+      '@glimmer/syntax': 0.84.2
       css-tree: 2.2.1
       ember-rfc176-data: 0.3.17
       ember-template-imports: 3.4.0_ember-cli-htmlbars@6.1.1
@@ -8427,7 +8450,7 @@ packages:
       eslint-utils: 3.0.0_eslint@8.28.0
       estraverse: 5.3.0
       lodash.kebabcase: 4.1.1
-      magic-string: 0.25.9
+      magic-string: 0.26.7
       requireindex: 1.2.0
       snake-case: 3.0.4
     transitivePeerDependencies:
