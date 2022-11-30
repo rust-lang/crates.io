@@ -493,6 +493,12 @@ description = """
 Crates related to robotics.\
 """
 
+[science.categories.neuroscience]
+name = "Neuroscience"
+description = """
+Crates related to neuroscience.\
+"""
+
 [simulation]
 name = "Simulation"
 description = """
