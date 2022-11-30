@@ -63,9 +63,9 @@ dependencies = [
 
 [[package]]
 name = "ammonia"
-version = "3.2.1"
+version = "3.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4b477377562f3086b7778d241786e9406b883ccfaa03557c0fe0924b9349f13a"
+checksum = "64e6d1c7838db705c9b756557ee27c384ce695a1c51a6fe528784cb1c6840170"
 dependencies = [
  "html5ever",
  "maplit",
