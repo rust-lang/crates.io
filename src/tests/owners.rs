@@ -321,11 +321,17 @@ fn owner_change_via_change_owner_token() {
     let body = json!({ "owners": [user2.gh_login] });
     let body = serde_json::to_vec(&body).unwrap();
     let response = token.put::<()>(&url, &body);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
         response.into_json(),
-        json!({ "ok": true, "msg": "user user-2 has been invited to be an owner of crate foo_crate" })
+        json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
     );
+    // TODO swap these assertions once token scopes are activated for this endpoint
+    // assert_eq!(response.status(), StatusCode::OK);
+    // assert_eq!(
+    //     response.into_json(),
+    //     json!({ "ok": true, "msg": "user user-2 has been invited to be an owner of crate foo_crate" })
+    // );
 }
 
 #[test]
@@ -344,11 +350,17 @@ fn owner_change_via_change_owner_token_with_matching_crate_scope() {
     let body = json!({ "owners": [user2.gh_login] });
     let body = serde_json::to_vec(&body).unwrap();
     let response = token.put::<()>(&url, &body);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
         response.into_json(),
-        json!({ "ok": true, "msg": "user user-2 has been invited to be an owner of crate foo_crate" })
+        json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
     );
+    // TODO swap these assertions once token scopes are activated for this endpoint
+    // assert_eq!(response.status(), StatusCode::OK);
+    // assert_eq!(
+    //     response.into_json(),
+    //     json!({ "ok": true, "msg": "user user-2 has been invited to be an owner of crate foo_crate" })
+    // );
 }
 
 #[test]
@@ -367,17 +379,11 @@ fn owner_change_via_change_owner_token_with_wrong_crate_scope() {
     let body = json!({ "owners": [user2.gh_login] });
     let body = serde_json::to_vec(&body).unwrap();
     let response = token.put::<()>(&url, &body);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
         response.into_json(),
-        json!({ "ok": true, "msg": "user user-2 has been invited to be an owner of crate foo_crate" })
+        json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
     );
-    // TODO this should return "403 Forbidden" once token scopes are implemented for this endpoint
-    // assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    // assert_eq!(
-    //     response.into_json(),
-    //     json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
-    // );
 }
 
 #[test]
@@ -395,17 +401,11 @@ fn owner_change_via_publish_token() {
     let body = json!({ "owners": [user2.gh_login] });
     let body = serde_json::to_vec(&body).unwrap();
     let response = token.put::<()>(&url, &body);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
         response.into_json(),
-        json!({ "ok": true, "msg": "user user-2 has been invited to be an owner of crate foo_crate" })
+        json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
     );
-    // TODO this should return "403 Forbidden" once token scopes are implemented for this endpoint
-    // assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    // assert_eq!(
-    //     response.into_json(),
-    //     json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
-    // );
 }
 
 #[test]
