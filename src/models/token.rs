@@ -23,6 +23,12 @@ pub struct ApiToken {
     pub last_used_at: Option<NaiveDateTime>,
     #[serde(skip)]
     pub revoked: bool,
+    /// `None` or a list of crate scope patterns (see RFC #2947)
+    #[serde(skip)]
+    pub crate_scopes: Option<Vec<String>>,
+    /// A list of endpoint scopes or `None` for the `legacy` endpoint scope (see RFC #2947)
+    #[serde(skip)]
+    pub endpoint_scopes: Option<Vec<String>>,
 }
 
 impl ApiToken {
@@ -106,6 +112,8 @@ mod tests {
                     .and_hms_opt(14, 23, 12),
             )
             .unwrap(),
+            crate_scopes: None,
+            endpoint_scopes: None,
         };
         let json = serde_json::to_string(&tok).unwrap();
         assert_some!(json
