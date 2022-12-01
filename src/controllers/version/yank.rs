@@ -5,6 +5,7 @@ use swirl::Job;
 
 use super::{extract_crate_name_and_semver, version_and_crate};
 use crate::controllers::cargo_prelude::*;
+use crate::models::token::EndpointScope;
 use crate::models::Rights;
 use crate::models::{insert_version_owner_action, VersionAction};
 use crate::schema::versions;
@@ -32,8 +33,13 @@ pub fn unyank(req: &mut dyn RequestExt) -> EndpointResult {
 fn modify_yank(req: &mut dyn RequestExt, yanked: bool) -> EndpointResult {
     // FIXME: Should reject bad requests before authentication, but can't due to
     // lifetime issues with `req`.
-    let auth = AuthCheck::default().check(req)?;
+
     let (crate_name, semver) = extract_crate_name_and_semver(req)?;
+
+    let auth = AuthCheck::default()
+        .with_endpoint_scope(EndpointScope::Yank)
+        .for_crate(crate_name)
+        .check(req)?;
 
     let conn = req.db_write()?;
     let (version, krate) = version_and_crate(&conn, crate_name, semver)?;
