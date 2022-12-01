@@ -1,3 +1,4 @@
+use crate::models::Crate;
 use diesel::deserialize::{self, FromSql};
 use diesel::pg::Pg;
 use diesel::serialize::{self, IsNull, Output, ToSql};
@@ -48,5 +49,137 @@ impl TryFrom<&[u8]> for EndpointScope {
 impl FromSql<Text, Pg> for EndpointScope {
     fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
         Ok(EndpointScope::try_from(not_none!(bytes))?)
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CrateScope {
+    pattern: String,
+}
+
+impl TryFrom<&str> for CrateScope {
+    type Error = String;
+
+    fn try_from(pattern: &str) -> Result<Self, Self::Error> {
+        match CrateScope::is_valid_pattern(pattern) {
+            true => Ok(CrateScope {
+                pattern: pattern.to_string(),
+            }),
+            false => Err("Invalid crate scope pattern".to_string()),
+        }
+    }
+}
+
+impl TryFrom<String> for CrateScope {
+    type Error = String;
+
+    fn try_from(pattern: String) -> Result<Self, Self::Error> {
+        match CrateScope::is_valid_pattern(&pattern) {
+            true => Ok(CrateScope { pattern }),
+            false => Err("Invalid crate scope pattern".to_string()),
+        }
+    }
+}
+
+impl FromSql<Text, Pg> for CrateScope {
+    fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
+        let value = <String as FromSql<Text, Pg>>::from_sql(bytes)?;
+        Ok(CrateScope::try_from(value)?)
+    }
+}
+
+impl ToSql<Text, Pg> for CrateScope {
+    fn to_sql<W: Write>(&self, out: &mut Output<'_, W, Pg>) -> serialize::Result {
+        <String as ToSql<Text, Pg>>::to_sql(&self.pattern, out)
+    }
+}
+
+impl CrateScope {
+    fn is_valid_pattern(pattern: &str) -> bool {
+        if pattern.is_empty() {
+            return false;
+        }
+
+        if pattern == "*" {
+            return true;
+        }
+
+        let name_without_wildcard = pattern.strip_suffix('*').unwrap_or(pattern);
+        Crate::valid_name(name_without_wildcard)
+    }
+
+    pub fn matches(&self, crate_name: &str) -> bool {
+        let canonicalize = |name: &str| name.replace('-', "_");
+
+        if self.pattern == "*" {
+            return true;
+        }
+
+        return match self.pattern.strip_suffix('*') {
+            Some(prefix) => {
+                crate_name.starts_with(prefix)
+                    || canonicalize(crate_name).starts_with(&canonicalize(prefix))
+            }
+            None => {
+                crate_name == self.pattern
+                    || canonicalize(crate_name) == canonicalize(&self.pattern)
+            }
+        };
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn crate_scope_validation() {
+        assert_ok!(CrateScope::try_from("foo"));
+
+        // wildcards
+        assert_ok!(CrateScope::try_from("foo*"));
+        assert_ok!(CrateScope::try_from("f*"));
+        assert_ok!(CrateScope::try_from("*"));
+        assert_err!(CrateScope::try_from("te*st"));
+
+        // hyphens and underscores
+        assert_ok!(CrateScope::try_from("foo-bar"));
+        assert_ok!(CrateScope::try_from("foo_bar"));
+
+        // empty string
+        assert_err!(CrateScope::try_from(""));
+
+        // invalid characters
+        assert_err!(CrateScope::try_from("test#"));
+    }
+
+    #[test]
+    fn crate_scope_matching() {
+        let scope = |pattern: &str| CrateScope::try_from(pattern).unwrap();
+
+        assert!(scope("foo").matches("foo"));
+        assert!(!scope("foo").matches("bar"));
+        assert!(!scope("foo").matches("fo"));
+        assert!(!scope("foo").matches("fooo"));
+
+        // wildcards
+        assert!(scope("foo*").matches("foo"));
+        assert!(!scope("foo*").matches("bar"));
+        assert!(scope("foo*").matches("foo-bar"));
+        assert!(scope("foo*").matches("foo_bar"));
+        assert!(scope("f*").matches("foo"));
+        assert!(scope("*").matches("foo"));
+
+        // hyphens and underscores
+        assert!(!scope("foo").matches("foo-bar"));
+        assert!(!scope("foo").matches("foo_bar"));
+        assert!(scope("foo-bar").matches("foo-bar"));
+        assert!(scope("foo-bar").matches("foo_bar"));
+        assert!(scope("foo_bar").matches("foo-bar"));
+        assert!(scope("foo_bar").matches("foo_bar"));
+        assert!(scope("foo-*").matches("foo-bar"));
+        assert!(scope("foo-*").matches("foo_bar"));
+        assert!(scope("foo_*").matches("foo-bar"));
+        assert!(scope("foo_*").matches("foo_bar"));
     }
 }
