@@ -30,7 +30,7 @@ pub struct ApiToken {
     pub crate_scopes: Option<Vec<String>>,
     /// A list of endpoint scopes or `None` for the `legacy` endpoint scope (see RFC #2947)
     #[serde(skip)]
-    pub endpoint_scopes: Option<Vec<String>>,
+    pub endpoint_scopes: Option<Vec<scopes::EndpointScope>>,
 }
 
 impl ApiToken {
