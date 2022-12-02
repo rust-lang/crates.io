@@ -109,21 +109,13 @@ impl CrateScope {
     }
 
     pub fn matches(&self, crate_name: &str) -> bool {
-        let canonicalize = |name: &str| name.replace('-', "_");
-
         if self.pattern == "*" {
             return true;
         }
 
         return match self.pattern.strip_suffix('*') {
-            Some(prefix) => {
-                crate_name.starts_with(prefix)
-                    || canonicalize(crate_name).starts_with(&canonicalize(prefix))
-            }
-            None => {
-                crate_name == self.pattern
-                    || canonicalize(crate_name) == canonicalize(&self.pattern)
-            }
+            Some(prefix) => crate_name.starts_with(prefix),
+            None => crate_name == self.pattern,
         };
     }
 }
@@ -174,12 +166,12 @@ mod tests {
         assert!(!scope("foo").matches("foo-bar"));
         assert!(!scope("foo").matches("foo_bar"));
         assert!(scope("foo-bar").matches("foo-bar"));
-        assert!(scope("foo-bar").matches("foo_bar"));
-        assert!(scope("foo_bar").matches("foo-bar"));
+        assert!(!scope("foo-bar").matches("foo_bar"));
+        assert!(!scope("foo_bar").matches("foo-bar"));
         assert!(scope("foo_bar").matches("foo_bar"));
         assert!(scope("foo-*").matches("foo-bar"));
-        assert!(scope("foo-*").matches("foo_bar"));
-        assert!(scope("foo_*").matches("foo-bar"));
+        assert!(!scope("foo-*").matches("foo_bar"));
+        assert!(!scope("foo_*").matches("foo-bar"));
         assert!(scope("foo_*").matches("foo_bar"));
     }
 }
