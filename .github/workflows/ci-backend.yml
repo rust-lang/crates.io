@@ -65,10 +65,7 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2.2.0
 
-      - name: Setup database
-        run: |
-          cargo install diesel_cli --vers ${{ env.DIESEL_CLI_VERSION }} --no-default-features --features postgres --debug
-          diesel database setup --locked-schema
+      - run: cargo install diesel_cli --vers ${{ env.DIESEL_CLI_VERSION }} --no-default-features --features postgres --debug
+      - run: diesel database setup --locked-schema
 
-      - name: Run tests
-        run: cargo test --workspace
+      - run: cargo test --workspace

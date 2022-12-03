@@ -27,14 +27,11 @@ jobs:
           cache: pnpm
           node-version-file: package.json
 
-      - name: Install node modules
-        run: pnpm install
+      - run: pnpm install
 
-      - name: Lint
-        run: |
-          pnpm lint:hbs
-          pnpm lint:js
-          pnpm lint:deps
+      - run: pnpm lint:hbs
+      - run: pnpm lint:js
+      - run: pnpm lint:deps
 
   test:
     runs-on: ubuntu-20.04
@@ -58,13 +55,10 @@ jobs:
           cache: pnpm
           node-version-file: package.json
 
-      - name: Install node modules
-        run: pnpm install
+      - run: pnpm install
 
-      - name: Run percy exec
-        if: github.repository == 'rust-lang/crates.io'
+      - if: github.repository == 'rust-lang/crates.io'
         run: pnpm percy exec -- pnpm test-coverage
 
-      - name: test-coverage
-        if: github.repository != 'rust-lang/crates.io'
+      - if: github.repository != 'rust-lang/crates.io'
         run: pnpm test-coverage
