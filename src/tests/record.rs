@@ -79,6 +79,7 @@ fn cache_file(name: &str) -> PathBuf {
         .unwrap()
         .join("http-data")
         .join(name)
+        .with_extension("json")
 }
 
 enum Record {
