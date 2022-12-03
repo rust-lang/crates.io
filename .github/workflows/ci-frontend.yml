@@ -1,0 +1,52 @@
+name: CI / Frontend
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+  pull_request:
+
+env:
+  PNPM_VERSION: 7.17.1
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-20.04
+    env:
+      JOBS: 1 # See https://git.io/vdao3 for details.
+
+      # Percy secrets are included here to enable Percy's GitHub integration
+      # on community-submitted PRs
+      PERCY_TOKEN: 0d8707a02b19aebbec79bb0bf302b8d2fa95edb33169cfe41b084289596670b1
+      PERCY_PROJECT: crates-io/crates.io
+
+    steps:
+      - uses: actions/checkout@v3.1.0
+
+      - uses: pnpm/action-setup@v2.2.4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v3.5.1
+        with:
+          cache: pnpm
+          node-version-file: package.json
+
+      - name: Install node modules
+        run: pnpm install
+
+      - name: Lint
+        run: |
+          pnpm lint:hbs
+          pnpm lint:js
+          pnpm lint:deps
+
+      - name: Run percy exec
+        if: github.repository == 'rust-lang/crates.io'
+        run: pnpm percy exec -- pnpm test-coverage
+
+      - name: test-coverage
+        if: github.repository != 'rust-lang/crates.io'
+        run: pnpm test-coverage
