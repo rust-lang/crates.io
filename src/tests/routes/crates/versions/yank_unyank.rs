@@ -91,3 +91,66 @@ fn unyank_records_an_audit_action() {
     assert_eq!(action.action, "unyank");
     assert_eq!(action.user.id, token.as_model().user_id);
 }
+
+mod auth {
+    use super::*;
+    use crate::util::{MockAnonymousUser, MockCookieUser};
+
+    const CRATE_NAME: &str = "fyk";
+    const CRATE_VERSION: &str = "1.0.0";
+
+    fn prepare() -> (TestApp, MockAnonymousUser, MockCookieUser) {
+        let (app, anon, cookie) = TestApp::full().with_user();
+
+        let pb = PublishBuilder::new(CRATE_NAME).version(CRATE_VERSION);
+        cookie.publish_crate(pb).good();
+
+        (app, anon, cookie)
+    }
+
+    #[test]
+    fn unauthenticated() {
+        let (_, client, _) = prepare();
+
+        let response = client.yank(CRATE_NAME, CRATE_VERSION);
+        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+        assert_eq!(
+            response.into_json(),
+            json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
+        );
+
+        let response = client.unyank(CRATE_NAME, CRATE_VERSION);
+        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+        assert_eq!(
+            response.into_json(),
+            json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
+        );
+    }
+
+    #[test]
+    fn cookie_user() {
+        let (_, _, client) = prepare();
+
+        let response = client.yank(CRATE_NAME, CRATE_VERSION);
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.into_json(), json!({ "ok": true }));
+
+        let response = client.unyank(CRATE_NAME, CRATE_VERSION);
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.into_json(), json!({ "ok": true }));
+    }
+
+    #[test]
+    fn token_user() {
+        let (_, _, client) = prepare();
+        let client = client.db_new_token("test-token");
+
+        let response = client.yank(CRATE_NAME, CRATE_VERSION);
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.into_json(), json!({ "ok": true }));
+
+        let response = client.unyank(CRATE_NAME, CRATE_VERSION);
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.into_json(), json!({ "ok": true }));
+    }
+}
