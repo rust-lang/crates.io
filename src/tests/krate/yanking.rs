@@ -3,26 +3,15 @@ use crate::util::{RequestHelper, TestApp};
 use crate::OkBool;
 use http::StatusCode;
 
-impl crate::util::MockTokenUser {
+trait YankRequestHelper {
     /// Yank the specified version of the specified crate and run all pending background jobs
-    fn yank(&self, krate_name: &str, version: &str) -> crate::util::Response<OkBool> {
-        let url = format!("/api/v1/crates/{krate_name}/{version}/yank");
-        let response = self.delete(&url);
-        self.app().run_pending_background_jobs();
-        response
-    }
+    fn yank(&self, krate_name: &str, version: &str) -> crate::util::Response<OkBool>;
 
     /// Unyank the specified version of the specified crate and run all pending background jobs
-    fn unyank(&self, krate_name: &str, version: &str) -> crate::util::Response<OkBool> {
-        let url = format!("/api/v1/crates/{krate_name}/{version}/unyank");
-        let response = self.put(&url, &[]);
-        self.app().run_pending_background_jobs();
-        response
-    }
+    fn unyank(&self, krate_name: &str, version: &str) -> crate::util::Response<OkBool>;
 }
 
-impl crate::util::MockCookieUser {
-    /// Yank the specified version of the specified crate and run all pending background jobs
+impl<T: RequestHelper> YankRequestHelper for T {
     fn yank(&self, krate_name: &str, version: &str) -> crate::util::Response<OkBool> {
         let url = format!("/api/v1/crates/{krate_name}/{version}/yank");
         let response = self.delete(&url);
@@ -30,7 +19,6 @@ impl crate::util::MockCookieUser {
         response
     }
 
-    /// Unyank the specified version of the specified crate and run all pending background jobs
     fn unyank(&self, krate_name: &str, version: &str) -> crate::util::Response<OkBool> {
         let url = format!("/api/v1/crates/{krate_name}/{version}/unyank");
         let response = self.put(&url, &[]);
