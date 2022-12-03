@@ -10,5 +10,5 @@ export default class Category extends Model {
   @attr subcategories;
   @attr parent_categories;
 
-  @hasMany('crate', { async: true }) crates;
+  @hasMany('crate', { async: true, inverse: null }) crates;
 }

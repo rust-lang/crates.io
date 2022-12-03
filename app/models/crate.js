@@ -17,14 +17,13 @@ export default class Crate extends Model {
   @attr documentation;
   @attr repository;
 
-  @hasMany('versions', { async: true }) versions;
-
-  @hasMany('teams', { async: true }) owner_team;
-  @hasMany('users', { async: true }) owner_user;
-  @hasMany('version-download', { async: true }) version_downloads;
-  @hasMany('keywords', { async: true }) keywords;
-  @hasMany('categories', { async: true }) categories;
-  @hasMany('dependency', { async: true }) reverse_dependencies;
+  @hasMany('version', { async: true, inverse: 'crate' }) versions;
+  @hasMany('team', { async: true, inverse: null }) owner_team;
+  @hasMany('user', { async: true, inverse: null }) owner_user;
+  @hasMany('version-download', { async: true, inverse: null }) version_downloads;
+  @hasMany('keyword', { async: true, inverse: null }) keywords;
+  @hasMany('category', { async: true, inverse: null }) categories;
+  @hasMany('dependency', { async: true, inverse: null }) reverse_dependencies;
 
   /**
    * This is the default version that will be shown when visiting the crate
