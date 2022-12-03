@@ -6,5 +6,5 @@ export default class VersionDownload extends Model {
   /** @type string */
   @attr date;
 
-  @belongsTo('version', { async: false }) version;
+  @belongsTo('version', { async: false, inverse: null }) version;
 }

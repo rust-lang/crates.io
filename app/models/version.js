@@ -22,11 +22,11 @@ export default class Version extends Model {
   @attr license;
   @attr crate_size;
 
-  @belongsTo('crate', { async: false }) crate;
+  @belongsTo('crate', { async: false, inverse: 'versions' }) crate;
 
-  @belongsTo('user', { async: false }) published_by;
-  @hasMany('dependency', { async: true }) dependencies;
-  @hasMany('version-download', { async: true }) version_downloads;
+  @belongsTo('user', { async: false, inverse: null }) published_by;
+  @hasMany('dependency', { async: true, inverse: 'version' }) dependencies;
+  @hasMany('version-download', { async: true, inverse: null }) version_downloads;
 
   get crateName() {
     return this.belongsTo('crate').id();

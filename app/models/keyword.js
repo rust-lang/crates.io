@@ -5,5 +5,5 @@ export default class Keyword extends Model {
   @attr('date') created_at;
   @attr crates_cnt;
 
-  @hasMany('crate', { async: true }) crates;
+  @hasMany('crate', { async: true, inverse: null }) crates;
 }

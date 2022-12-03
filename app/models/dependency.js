@@ -13,5 +13,5 @@ export default class Dependency extends Model {
   @attr kind;
   @attr downloads;
 
-  @belongsTo('version', { async: false }) version;
+  @belongsTo('version', { async: false, inverse: 'dependencies' }) version;
 }
