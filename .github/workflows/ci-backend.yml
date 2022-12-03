@@ -58,10 +58,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3.1.0
 
-      - name: Install Rust
-        run: |
-          rustup update ${{ env.RUST_VERSION }}
-          rustup default ${{ env.RUST_VERSION }}
+      - run: rustup default ${{ env.RUST_VERSION }}
 
       - uses: Swatinem/rust-cache@v2.2.0
 
