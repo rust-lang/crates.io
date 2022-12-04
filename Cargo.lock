@@ -590,9 +590,9 @@ dependencies = [
 
 [[package]]
 name = "conduit-static"
-version = "0.10.0"
+version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5d62df0c659106efe0ecef9ce6b92a4999c602dc85a569f496cdb32482ab79a1"
+checksum = "a155756c77fa2431ab120dd47ae2038e50fbfc7cce26a0c7c7aa35d6fb7067de"
 dependencies = [
  "conduit",
  "conduit-mime-types",

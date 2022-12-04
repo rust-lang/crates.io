@@ -38,7 +38,7 @@ conduit-git-http-backend = "=0.10.0"
 conduit-hyper = "=0.4.2"
 conduit-middleware = "=0.10.0"
 conduit-router = "=0.10.0"
-conduit-static = "=0.10.0"
+conduit-static = "=0.10.1"
 
 cookie = { version = "=0.16.1", features = ["secure"] }
 dashmap = { version = "=5.4.0", features = ["raw-api"] }
