@@ -50,7 +50,7 @@ fn show_latest_user_case_insensitively() {
         .create_or_update(None, &app.as_inner().emails, conn));
     });
 
-    let json: UserShowPublicResponse = anon.get("api/v1/users/fOObAr").good();
+    let json: UserShowPublicResponse = anon.get("/api/v1/users/fOObAr").good();
     assert_eq!(
         "I was second, I took the foobar username on github",
         json.user.name.unwrap()
