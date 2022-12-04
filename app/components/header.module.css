@@ -12,7 +12,7 @@
         "logo search nav" auto /
         auto 1fr auto;
     align-items: center;
-    padding: var(--space-2xs) var(--space-m);
+    padding: var(--space-xs) var(--space-m);
     color: white;
 
     a {
@@ -60,11 +60,9 @@
 }
 
 .logo {
-    width: var(--space-xl);
-    height: auto;
-    /* negative margin to account for blank space in the image */
-    margin-left: -10px;
-    margin-right: calc(var(--space-s) - 10px);
+    width: auto;
+    height: calc(var(--space-m) * 1.4);
+    margin-right: var(--space-xs);
 }
 
 .search-form {
