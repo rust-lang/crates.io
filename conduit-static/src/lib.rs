@@ -19,7 +19,8 @@ impl Static {
 
 impl Handler for Static {
     fn call(&self, request: &mut dyn RequestExt) -> HandlerResult {
-        let request_path = &request.path()[1..];
+        let request_path = request.path();
+        let request_path = request_path.strip_prefix('/').unwrap_or(request_path);
         if request_path.contains("..") {
             return Ok(not_found());
         }
@@ -132,5 +133,16 @@ mod tests {
         let res = handler.call(&mut req).expect("No response");
         assert_eq!(res.status(), StatusCode::OK);
         assert!(res.headers().get(header::LAST_MODIFIED).is_some());
+    }
+
+    #[test]
+    fn emoji_path() {
+        let td = TempDir::new("conduit-static").unwrap();
+        let root = td.path();
+        File::create(&root.join("test")).unwrap();
+        let handler = Static::new(root);
+        let mut req = MockRequest::new(Method::GET, "🎉");
+        let res = handler.call(&mut req).expect("No response");
+        assert_eq!(res.status(), StatusCode::NOT_FOUND);
     }
 }
