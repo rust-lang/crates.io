@@ -32,7 +32,7 @@ fn following() {
 
     let unfollow = || {
         assert!(
-            user.delete::<OkBool>("api/v1/crates/foo_following/follow")
+            user.delete::<OkBool>("/api/v1/crates/foo_following/follow")
                 .good()
                 .ok
         );
