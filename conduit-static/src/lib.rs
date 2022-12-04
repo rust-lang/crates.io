@@ -15,11 +15,8 @@ impl Static {
             path: path.as_ref().to_path_buf(),
         }
     }
-}
 
-impl Handler for Static {
-    fn call(&self, request: &mut dyn RequestExt) -> HandlerResult {
-        let request_path = request.path();
+    pub fn lookup(&self, request_path: &str) -> HandlerResult {
         let request_path = request_path.strip_prefix('/').unwrap_or(request_path);
         if request_path.contains("..") {
             return Ok(not_found());
@@ -44,6 +41,12 @@ impl Handler for Static {
             .header(header::LAST_MODIFIED, mtime.format("%a, %d %b %Y %T GMT"))
             .body(Body::File(file))
             .map_err(box_error)
+    }
+}
+
+impl Handler for Static {
+    fn call(&self, request: &mut dyn RequestExt) -> HandlerResult {
+        self.lookup(request.path())
     }
 }
 
@@ -77,6 +80,25 @@ mod tests {
             .unwrap();
         let mut req = MockRequest::new(Method::GET, "/Cargo.toml");
         let res = handler.call(&mut req).expect("No response");
+        assert_eq!(
+            res.headers().get(header::CONTENT_TYPE).unwrap(),
+            "application/toml"
+        );
+        assert_eq!(res.headers().get(header::CONTENT_LENGTH).unwrap(), "9");
+        assert_eq!(*res.into_cow(), b"[package]"[..]);
+    }
+
+    #[test]
+    fn test_lookup() {
+        let td = TempDir::new("conduit-static").unwrap();
+        let root = td.path();
+        let handler = Static::new(root);
+        File::create(&root.join("Cargo.toml"))
+            .unwrap()
+            .write_all(b"[package]")
+            .unwrap();
+
+        let res = handler.lookup("Cargo.toml").expect("No response");
         assert_eq!(
             res.headers().get(header::CONTENT_TYPE).unwrap(),
             "application/toml"
