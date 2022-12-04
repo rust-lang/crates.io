@@ -203,13 +203,6 @@ http {
 			expires max;
 		}
 
-		location ~ ^/cargo-[0-9a-f]*\.png$ {
-			add_header X-Content-Type-Options nosniff;
-			add_header Cache-Control public;
-			root dist;
-			expires max;
-		}
-
 		location ~ /(favicon\.ico|robots\.txt|opensearch\.xml) {
 			add_header X-Content-Type-Options nosniff;
 			add_header Cache-Control public;
