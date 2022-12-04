@@ -56,6 +56,9 @@ pub struct App {
     /// this is either None (in which case any attempt to create an outgoing connection
     /// will panic) or a `Client` configured with a per-test replay proxy.
     pub(crate) http_client: Option<Client>,
+
+    /// A client for HTTP requests to the Ember.js fastboot server
+    pub fastboot_client: Option<Client>,
 }
 
 impl App {
@@ -164,6 +167,11 @@ impl App {
             .time_to_live(config.version_id_cache_ttl)
             .build();
 
+        let fastboot_client = match dotenv::var("USE_FASTBOOT") {
+            Ok(val) if val == "staging-experimental" => Some(Client::new()),
+            _ => None,
+        };
+
         App {
             primary_database,
             read_only_replica_database: replica_database,
@@ -175,6 +183,7 @@ impl App {
             service_metrics: ServiceMetrics::new().expect("could not initialize service metrics"),
             instance_metrics,
             http_client,
+            fastboot_client,
             config,
         }
     }

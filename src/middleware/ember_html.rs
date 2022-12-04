@@ -13,6 +13,7 @@ use std::fmt::Write;
 
 use crate::util::{errors::NotFound, AppResponse};
 
+use crate::middleware::app::RequestApp;
 use anyhow::{ensure, Result};
 use conduit::{Body, HandlerResult};
 use conduit_static::Static;
@@ -21,20 +22,13 @@ use reqwest::blocking::Client;
 pub(super) struct EmberHtml {
     api_handler: Option<Box<dyn Handler>>,
     static_handler: Static,
-    fastboot_client: Option<Client>,
 }
 
 impl EmberHtml {
     pub fn new(path: &str) -> Self {
-        let fastboot_client = match dotenv::var("USE_FASTBOOT") {
-            Ok(val) if val == "staging-experimental" => Some(Client::new()),
-            _ => None,
-        };
-
         Self {
             api_handler: None,
             static_handler: Static::new(path),
-            fastboot_client,
         }
     }
 }
@@ -53,7 +47,7 @@ impl Handler for EmberHtml {
         if req.path().starts_with("/api/") || req.path().starts_with("/git/") {
             api_handler.call(req)
         } else {
-            if let Some(client) = &self.fastboot_client {
+            if let Some(client) = &req.app().fastboot_client {
                 // During local fastboot development, forward requests to the local fastboot server.
                 // In prodution, including when running with fastboot, nginx proxies the requests
                 // to the correct endpoint and requests should never make it here.
