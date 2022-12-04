@@ -67,8 +67,7 @@ impl Handler for EmberHtml {
                 .any(|val| val.to_str().unwrap_or_default().contains("html"))
             {
                 // Serve static Ember page to bootstrap the frontend
-                *req.path_mut() = String::from("/index.html");
-                self.static_handler.call(req)
+                self.static_handler.lookup("index.html")
             } else {
                 // Return a 404 to crawlers that don't send `Accept: text/hml`.
                 // This is to preserve legacy behavior and will likely change.
