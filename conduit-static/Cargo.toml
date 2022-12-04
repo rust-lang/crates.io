@@ -1,6 +1,6 @@
 [package]
 name = "conduit-static"
-version = "0.10.0"
+version = "0.10.1"
 authors = ["wycats@gmail.com",
            "Alex Crichton <alex@alexcrichton.com>"]
 description = "Middleware for serving static files for conduit"
