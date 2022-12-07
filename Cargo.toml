@@ -24,6 +24,7 @@ path = "src/tests/all.rs"
 [dependencies]
 anyhow = "=1.0.66"
 aws-sigv4 = "=0.51.0"
+axum = "=0.6.1"
 base64 = "=0.13.1"
 cargo-registry-index = { path = "cargo-registry-index" }
 cargo-registry-markdown = { path = "cargo-registry-markdown" }
@@ -35,7 +36,7 @@ conduit = "=0.10.0"
 conduit-conditional-get = "=0.10.0"
 conduit-cookie = "=0.10.0"
 conduit-git-http-backend = "=0.10.0"
-conduit-hyper = { path = "conduit-hyper" }
+conduit-axum = { path = "conduit-axum" }
 conduit-middleware = "=0.10.0"
 conduit-router = "=0.10.0"
 conduit-static = "=0.10.1"

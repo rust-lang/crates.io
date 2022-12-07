@@ -1,16 +1,19 @@
 use crate::adaptor::ConduitRequest;
+use crate::error::ServiceError;
 use crate::file_stream::FileStream;
-use crate::service::ServiceError;
-use crate::{ConduitResponse, HyperResponse};
+use crate::{AxumResponse, ConduitResponse};
 
 use std::net::SocketAddr;
 use std::sync::Arc;
 
+use axum::body::{Body, HttpBody};
+use axum::extract::{ConnectInfo, Extension};
+use axum::handler::Handler as AxumHandler;
+use axum::response::IntoResponse;
 use conduit::{Handler, StartInstant};
 use http::header::CONTENT_LENGTH;
 use http::StatusCode;
-use hyper::body::HttpBody;
-use hyper::{Body, Request, Response};
+use hyper::{Request, Response};
 use tracing::{error, warn};
 
 /// The maximum size allowed in the `Content-Length` header
@@ -19,68 +22,72 @@ use tracing::{error, warn};
 /// See the usage section of the README if you plan to use this server in production.
 const MAX_CONTENT_LENGTH: u64 = 128 * 1024 * 1024; // 128 MB
 
-#[derive(Debug)]
-pub struct BlockingHandler<H: Handler> {
-    handler: Arc<H>,
+pub trait ConduitFallback {
+    fn conduit_fallback(self, handler: impl Handler) -> Self;
 }
 
-impl<H: Handler> BlockingHandler<H> {
-    pub fn new(handler: H) -> Self {
-        Self {
-            handler: Arc::new(handler),
-        }
-    }
-
-    // pub(crate) is for tests
-    pub(crate) async fn blocking_handler(
-        self: Arc<Self>,
-        request: Request<Body>,
-        remote_addr: SocketAddr,
-    ) -> Result<HyperResponse, ServiceError> {
-        if let Err(response) = check_content_length(&request) {
-            return Ok(response);
-        }
-
-        let (parts, body) = request.into_parts();
-        let now = StartInstant::now();
-
-        let full_body = hyper::body::to_bytes(body).await?;
-        let request = Request::from_parts(parts, full_body);
-
-        let handler = self.handler.clone();
-        tokio::task::spawn_blocking(move || {
-            let mut request = ConduitRequest::new(request, remote_addr, now);
-            handler
-                .call(&mut request)
-                .map(conduit_into_hyper)
-                .unwrap_or_else(|e| server_error_response(&e.to_string()))
-        })
-        .await
-        .map_err(Into::into)
+impl ConduitFallback for axum::Router {
+    fn conduit_fallback(self, handler: impl Handler) -> Self {
+        let handler: Arc<dyn Handler> = Arc::new(handler);
+        self.fallback(fallback_to_conduit.layer(Extension(handler)))
     }
 }
 
-/// Turns a `ConduitResponse` into a `HyperResponse`
-pub fn conduit_into_hyper(response: ConduitResponse) -> HyperResponse {
+async fn fallback_to_conduit(
+    handler: Extension<Arc<dyn Handler>>,
+    ConnectInfo(remote_addr): ConnectInfo<SocketAddr>,
+    request: Request<Body>,
+) -> Result<AxumResponse, ServiceError> {
+    if let Err(response) = check_content_length(&request) {
+        return Ok(response);
+    }
+
+    let (parts, body) = request.into_parts();
+    let now = StartInstant::now();
+
+    let full_body = hyper::body::to_bytes(body).await?;
+    let request = Request::from_parts(parts, full_body);
+
+    let handler = handler.clone();
+    tokio::task::spawn_blocking(move || {
+        let mut request = ConduitRequest::new(request, remote_addr, now);
+        handler
+            .call(&mut request)
+            .map(conduit_into_hyper)
+            .unwrap_or_else(|e| server_error_response(&e.to_string()))
+    })
+    .await
+    .map_err(Into::into)
+}
+
+/// Turns a `ConduitResponse` into a `AxumResponse`
+pub fn conduit_into_hyper(response: ConduitResponse) -> AxumResponse {
     use conduit::Body::*;
 
     let (parts, body) = response.into_parts();
-    let body = match body {
-        Static(slice) => slice.into(),
-        Owned(vec) => vec.into(),
-        File(file) => FileStream::from_std(file).into_streamed_body(),
-    };
-    HyperResponse::from_parts(parts, body)
+    match body {
+        Static(slice) => Response::from_parts(parts, axum::body::Body::from(slice)).into_response(),
+        Owned(vec) => Response::from_parts(parts, axum::body::Body::from(vec)).into_response(),
+        File(file) => Response::from_parts(parts, FileStream::from_std(file).into_streamed_body())
+            .into_response(),
+    }
+}
+
+impl IntoResponse for ServiceError {
+    fn into_response(self) -> AxumResponse {
+        server_error_response(&self.to_string())
+    }
 }
 
 /// Logs an error message and returns a generic status 500 response
-fn server_error_response(message: &str) -> HyperResponse {
+fn server_error_response(message: &str) -> AxumResponse {
     error!("Internal Server Error: {}", message);
     let body = hyper::Body::from("Internal Server Error");
     Response::builder()
         .status(StatusCode::INTERNAL_SERVER_ERROR)
         .body(body)
         .expect("Unexpected invalid header")
+        .into_response()
 }
 
 /// Check for `Content-Length` values that are invalid or too large
@@ -91,14 +98,15 @@ fn server_error_response(message: &str) -> HyperResponse {
 /// This only checks for requests that claim to be too large. If the request is chunked then it
 /// is possible to allocate larger chunks of memory over time, by actually sending large volumes of
 /// data. Request sizes must be limited higher in the stack to protect against this type of attack.
-fn check_content_length(request: &Request<Body>) -> Result<(), HyperResponse> {
-    fn bad_request(message: &str) -> HyperResponse {
+fn check_content_length(request: &Request<Body>) -> Result<(), AxumResponse> {
+    fn bad_request(message: &str) -> AxumResponse {
         warn!("Bad request: Content-Length {}", message);
 
         Response::builder()
             .status(StatusCode::BAD_REQUEST)
             .body(Body::empty())
             .expect("Unexpected invalid header")
+            .into_response()
     }
 
     if let Some(content_length) = request.headers().get(CONTENT_LENGTH) {

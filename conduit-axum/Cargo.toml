@@ -1,14 +1,15 @@
 [package]
-name = "conduit-hyper"
-version = "0.4.2"
+name = "conduit-axum"
+version = "0.0.0"
 authors = ["Justin Geibel <jtgeibel@gmail.com>"]
 license = "MIT OR Apache-2.0"
-description = "Host a conduit based web application on a hyper server"
+description = "Host a conduit based web application on an axum server"
 readme = "README.md"
 edition = "2021"
 rust-version = "1.56.0"
 
 [dependencies]
+axum = "=0.6.1"
 conduit = "=0.10.0"
 hyper = { version = "=0.14.23", features = ["server", "stream"] }
 http = "=0.2.8"

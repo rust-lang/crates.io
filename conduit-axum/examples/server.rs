@@ -1,7 +1,7 @@
 #![deny(clippy::all)]
 
 use conduit::{Body, Handler, RequestExt, ResponseResult};
-use conduit_hyper::Server;
+use conduit_axum::Server;
 use conduit_router::RouteBuilder;
 use http::{header, Response};
 

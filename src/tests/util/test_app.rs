@@ -9,7 +9,6 @@ use std::{rc::Rc, sync::Arc, time::Duration};
 
 use crate::util::github::{MockGitHubClient, MOCK_GITHUB_DATA};
 use cargo_registry::models::token::{CrateScope, EndpointScope};
-use conduit_hyper::BlockingHandler;
 use diesel::PgConnection;
 use reqwest::{blocking::Client, Proxy};
 use std::collections::HashSet;
@@ -19,7 +18,7 @@ struct TestAppInner {
     app: Arc<App>,
     // The bomb (if created) needs to be held in scope until the end of the test.
     _bomb: Option<record::Bomb>,
-    handler: Arc<BlockingHandler<conduit_middleware::MiddlewareBuilder>>,
+    router: axum::Router,
     index: Option<UpstreamIndex>,
     runner: Option<Runner<Environment, DieselPool>>,
 
@@ -156,9 +155,9 @@ impl TestApp {
         &self.0.app
     }
 
-    /// Obtain a reference to the inner `conduit-hyper` handler
-    pub fn handler(&self) -> &Arc<BlockingHandler<conduit_middleware::MiddlewareBuilder>> {
-        &self.0.handler
+    /// Obtain a reference to the axum Router
+    pub fn router(&self) -> &axum::Router {
+        &self.0.router
     }
 
     pub(crate) fn primary_db_chaosproxy(&self) -> Arc<ChaosProxy> {
@@ -226,9 +225,7 @@ impl TestAppBuilder {
                 (None, None, None)
             };
 
-        let (app, middle) = build_app(self.config, self.proxy);
-
-        let handler = Arc::new(BlockingHandler::new(middle));
+        let (app, router) = build_app(self.config, self.proxy);
 
         let runner = if self.build_job_runner {
             let repository_config = RepositoryConfig {
@@ -260,7 +257,7 @@ impl TestAppBuilder {
             app,
             _fresh_schema: fresh_schema,
             _bomb: self.bomb,
-            handler,
+            router,
             index: self.index,
             runner,
             primary_db_chaosproxy,
@@ -368,10 +365,7 @@ fn simple_config() -> config::Server {
     }
 }
 
-fn build_app(
-    config: config::Server,
-    proxy: Option<String>,
-) -> (Arc<App>, conduit_middleware::MiddlewareBuilder) {
+fn build_app(config: config::Server, proxy: Option<String>) -> (Arc<App>, axum::Router) {
     let client = if let Some(proxy) = proxy {
         let mut builder = Client::builder();
         builder = builder
@@ -392,6 +386,6 @@ fn build_app(
     app.github = Box::new(MockGitHubClient::new(&MOCK_GITHUB_DATA));
 
     let app = Arc::new(app);
-    let handler = cargo_registry::build_handler(Arc::clone(&app));
-    (app, handler)
+    let router = cargo_registry::build_handler(Arc::clone(&app));
+    (app, router)
 }

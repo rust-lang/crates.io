@@ -14,7 +14,7 @@
 //!
 //! ```no_run
 //! use conduit::Handler;
-//! use conduit_hyper::Server;
+//! use conduit_axum::Server;
 //! use tokio::runtime::Runtime;
 //!
 //! #[tokio::main]
@@ -43,14 +43,15 @@
 //! ```
 
 mod adaptor;
+mod error;
+mod fallback;
 mod file_stream;
 mod server;
-mod service;
 #[cfg(test)]
 mod tests;
 
+pub use fallback::ConduitFallback;
 pub use server::Server;
-pub use service::{conduit_into_hyper, BlockingHandler, Service};
 
-type HyperResponse = http::Response<hyper::Body>;
+type AxumResponse = axum::response::Response;
 type ConduitResponse = http::Response<conduit::Body>;

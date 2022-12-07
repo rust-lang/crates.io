@@ -29,7 +29,7 @@ pub use crate::{app::App, email::Emails, uploaders::Uploader};
 use std::str::FromStr;
 use std::sync::Arc;
 
-use conduit_middleware::MiddlewareBuilder;
+use conduit_axum::ConduitFallback;
 use tikv_jemallocator::Jemalloc;
 
 #[global_allocator]
@@ -77,9 +77,11 @@ pub enum Env {
 /// Configures routes, sessions, logging, and other middleware.
 ///
 /// Called from *src/bin/server.rs*.
-pub fn build_handler(app: Arc<App>) -> MiddlewareBuilder {
+pub fn build_handler(app: Arc<App>) -> axum::Router {
     let endpoints = router::build_router(&app);
-    middleware::build_middleware(app, endpoints)
+    let conduit_handler = middleware::build_middleware(app, endpoints);
+
+    axum::Router::new().conduit_fallback(conduit_handler)
 }
 
 /// Convenience function requiring that an environment variable is set.
