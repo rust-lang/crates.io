@@ -68,7 +68,7 @@ specifiers:
   ember-router-scroll: 4.1.2
   ember-source: 4.9.1
   ember-svg-jar: 2.4.2
-  ember-template-lint: 5.1.1
+  ember-template-lint: 5.2.0
   ember-test-selectors: 6.0.0
   ember-tooltips: 3.6.0
   ember-truth-helpers: 3.1.1
@@ -173,7 +173,7 @@ devDependencies:
   ember-router-scroll: 4.1.2
   ember-source: 4.9.1_klhxxmjkcvtuhwro2kkspsfzna
   ember-svg-jar: 2.4.2
-  ember-template-lint: 5.1.1_ember-cli-htmlbars@6.1.1
+  ember-template-lint: 5.2.0_ember-cli-htmlbars@6.1.1
   ember-test-selectors: 6.0.0
   ember-tooltips: 3.6.0
   ember-truth-helpers: 3.1.1
@@ -2956,7 +2956,7 @@ packages:
     resolution: {integrity: sha512-9K4zoImiZc3HlIp6AVUDE4CWYx22a+lhSZMYNpbjW04+YF0KWj4pJXnEMjdnFTiQibFFmElcsasJXDbdI/EPhA==}
     dependencies:
       '@types/eslint': 8.4.10
-      '@types/estree': 0.0.51
+      '@types/estree': 1.0.0
 
   /@types/eslint/7.29.0:
     resolution: {integrity: sha512-VNcvioYDH8/FxaeTKkM4/TiTwt6pBV9E3OfGmvaw8tPl0rrHCJ4Ll15HRT+pMiFAf/MLQvAzC+6RzUMEL9Ceng==}
@@ -2968,7 +2968,7 @@ packages:
   /@types/eslint/8.4.10:
     resolution: {integrity: sha512-Sl/HOqN8NKPmhWo2VBEPm0nvHnu2LL3v9vKo8MEq0EtbJ4eVzGPl41VNPvn5E1i5poMk4/XD8UriLHpJvEP/Nw==}
     dependencies:
-      '@types/estree': 0.0.51
+      '@types/estree': 1.0.0
       '@types/json-schema': 7.0.11
 
   /@types/estree/0.0.51:
@@ -2976,7 +2976,6 @@ packages:
 
   /@types/estree/1.0.0:
     resolution: {integrity: sha512-WulqXMDUTYAXCjZnk6JtIHPigp55cVtDgDrO2gHRwhyJto21+1zbVCtOYB2L1F9w4qCQ0rOGWBnBe0FNTiEJIQ==}
-    dev: true
 
   /@types/express-serve-static-core/4.17.31:
     resolution: {integrity: sha512-DxMhY+NAsTwMMFHBTtJFNp5qiHKJ7TeqOo23zVEM9alT1Ml27Q3xcTH0xwxn7Q0BbMcVEJOs/7aQtUWupUQN3Q==}
@@ -8105,8 +8104,8 @@ packages:
       - supports-color
     dev: true
 
-  /ember-template-lint/5.1.1_ember-cli-htmlbars@6.1.1:
-    resolution: {integrity: sha512-CPiVV9tQkD1HOR7weoaNAdzshdmJhsi7lprwpburTjLvaQEZqzOhwxaDnU/lDFJmom03gHjaLLdKvBaae/9U3A==}
+  /ember-template-lint/5.2.0_ember-cli-htmlbars@6.1.1:
+    resolution: {integrity: sha512-A0wQ1cmaTshIiVhl90QFiaTp1aLw0jy8/uUNWNwD/0PnnaKAi4Oz/wbfjKX/4ZKnhFHgjTFeVyeve1ItoqR7cg==}
     engines: {node: ^14.18.0 || ^16.0.0 || >= 18.0.0}
     hasBin: true
     dependencies:
@@ -8117,6 +8116,7 @@ packages:
       date-fns: 2.29.3
       ember-template-imports: 3.4.0_ember-cli-htmlbars@6.1.1
       ember-template-recast: 6.1.3
+      eslint-formatter-kakoune: 1.0.0
       find-up: 6.3.0
       fuse.js: 6.6.2
       get-stdin: 9.0.0
@@ -8426,6 +8426,10 @@ packages:
       eslint: '*'
     dependencies:
       eslint: 8.29.0
+    dev: true
+
+  /eslint-formatter-kakoune/1.0.0:
+    resolution: {integrity: sha512-Uk/TVLt6Nf6Xoz7C1iYuZjOSdJxe5aaauGRke8JhKeJwD66Y61/pY2FjtLP04Ooq9PwV34bzrkKkU2UZ5FtDRA==}
     dev: true
 
   /eslint-plugin-ember-concurrency/0.5.1_eslint@8.29.0:
