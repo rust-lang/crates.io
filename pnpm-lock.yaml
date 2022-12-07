@@ -23,8 +23,8 @@ specifiers:
   '@mainmatter/ember-api-actions': 0.4.0
   '@percy/cli': 1.16.0
   '@percy/ember': 4.0.0
-  '@sentry/browser': 7.24.0
-  '@sentry/utils': 7.24.0
+  '@sentry/browser': 7.24.1
+  '@sentry/utils': 7.24.1
   '@sinonjs/fake-timers': 10.0.0
   '@zestia/ember-auto-focus': 4.4.0
   broccoli-asset-rev: 3.0.0
@@ -105,8 +105,8 @@ specifiers:
 
 dependencies:
   '@juggle/resize-observer': 3.4.0
-  '@sentry/browser': 7.24.0
-  '@sentry/utils': 7.24.0
+  '@sentry/browser': 7.24.1
+  '@sentry/utils': 7.24.1
   chart.js: 4.0.1
   copy-text-to-clipboard: 3.0.1
   date-fns: 2.29.3
@@ -2708,35 +2708,35 @@ packages:
       - supports-color
     dev: true
 
-  /@sentry/browser/7.24.0:
-    resolution: {integrity: sha512-G2eeYWF7rIz1Dm8PCQiuuTzctrrJSWqD5MCWOICqHr8FrxOPVsVO3Qa/B7/+BSpHd+V7sSUU17oFu41SAWZCOg==}
+  /@sentry/browser/7.24.1:
+    resolution: {integrity: sha512-Tr7p1Bg8a+ycdUmZuega0TTOl6xNZUj17PBFZnCjpZtxUMxlwR6aBlM0TxF6/bV6fUJchmoLCAjL3kLIHSSo6Q==}
     engines: {node: '>=8'}
     dependencies:
-      '@sentry/core': 7.24.0
-      '@sentry/types': 7.24.0
-      '@sentry/utils': 7.24.0
+      '@sentry/core': 7.24.1
+      '@sentry/types': 7.24.1
+      '@sentry/utils': 7.24.1
       tslib: 1.14.1
     dev: false
 
-  /@sentry/core/7.24.0:
-    resolution: {integrity: sha512-QVRtmnaWEI0/MHIfBozgsMfh+7WU6OfpvUd72x1Dpk3Zk6Zs7Hqq0YfxfeBd7ApjNjGogPl1beaHcHAHlr3IyA==}
+  /@sentry/core/7.24.1:
+    resolution: {integrity: sha512-x/kBpBVFCZn4ijVVAPAw0cmHy0PfXgBpYGQ1X3+EEzI3pkvlygvnF2pLR/4LrsC23zGfIRlbDj4DwK5hxoFF4g==}
     engines: {node: '>=8'}
     dependencies:
-      '@sentry/types': 7.24.0
-      '@sentry/utils': 7.24.0
+      '@sentry/types': 7.24.1
+      '@sentry/utils': 7.24.1
       tslib: 1.14.1
     dev: false
 
-  /@sentry/types/7.24.0:
-    resolution: {integrity: sha512-Xs4r9esBPieJUA6cGmMqfSQiinILdlhScjM+NqDSzxOo8+LRCJzckTLhUttBGVlaAoa4hjCEsfkHA1tVV1DycA==}
+  /@sentry/types/7.24.1:
+    resolution: {integrity: sha512-77E1cgw31YmEeqTi5RNMfIgwDB164UdtAGKtTtCehbF9HffO3Lp4f3G8TumqNKOik1RDNHrn+ZWqbj2c97UZZA==}
     engines: {node: '>=8'}
     dev: false
 
-  /@sentry/utils/7.24.0:
-    resolution: {integrity: sha512-baaRDhHWHTyhmR6V8YKSo0NvN+D17pIKRDmb2vpWHVpTjobKCivNBLRoy3VhnIMS/24XyZnL028QLwkUNLg1Ug==}
+  /@sentry/utils/7.24.1:
+    resolution: {integrity: sha512-wH0+ToU3OpL373Nx0YiuYje82a8lf6fm7q+MqyWyC6sVETe4YiL4+Ge0WLEJ0XEGFjxfL4gSZL3FhoVbJQxUtA==}
     engines: {node: '>=8'}
     dependencies:
-      '@sentry/types': 7.24.0
+      '@sentry/types': 7.24.1
       tslib: 1.14.1
     dev: false
 
