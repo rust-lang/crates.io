@@ -76,7 +76,7 @@ impl RequestExt for ConduitRequest {
     }
 
     fn path(&self) -> &str {
-        &*self.path
+        &self.path
     }
 
     fn path_mut(&mut self) -> &mut String {
