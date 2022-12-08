@@ -1,6 +1,7 @@
 use std::cmp;
 
-use conduit::{header, Body, Response};
+use conduit::Body;
+use http::{header, Response};
 use serde::Serialize;
 
 pub use self::io_util::{read_fill, read_le_u32, LimitErrorReader};
@@ -15,7 +16,7 @@ pub mod rfc3339;
 pub(crate) mod token;
 pub mod tracing;
 
-pub type AppResponse = Response<conduit::Body>;
+pub type AppResponse = Response<Body>;
 pub type EndpointResult = Result<AppResponse, Box<dyn errors::AppError>>;
 
 /// Serialize a value to JSON and build a status 200 Response

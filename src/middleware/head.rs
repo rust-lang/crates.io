@@ -3,7 +3,7 @@
 use super::prelude::*;
 
 use crate::util::RequestProxy;
-use conduit::Method;
+use http::Method;
 
 #[derive(Default)]
 pub struct Head {

@@ -1,8 +1,9 @@
 #![deny(clippy::all)]
 
-use conduit::{header, Body, Handler, RequestExt, Response, ResponseResult};
+use conduit::{Body, Handler, RequestExt, ResponseResult};
 use conduit_hyper::Server;
 use conduit_router::RouteBuilder;
+use http::{header, Response};
 
 use std::io;
 use std::thread::sleep;

@@ -221,9 +221,9 @@ mod tests {
     use crate::util::errors::{bad_request, cargo_err, forbidden, internal, not_found, AppError};
     use crate::util::EndpointResult;
 
-    use conduit::StatusCode;
     use conduit_test::MockRequest;
     use diesel::result::Error as DieselError;
+    use http::StatusCode;
 
     fn err<E: AppError>(err: E) -> EndpointResult {
         Err(Box::new(err))

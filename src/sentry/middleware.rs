@@ -1,7 +1,8 @@
 use crate::middleware::response_timing::ResponseTime;
-use conduit::{RequestExt, StatusCode};
+use conduit::RequestExt;
 use conduit_cookie::RequestSession;
 use conduit_middleware::{AfterResult, BeforeResult, Middleware};
+use http::StatusCode;
 use sentry_conduit::SentryMiddleware;
 
 /// Custom wrapper around the `sentry_conduit` middleware, that adds additional

@@ -2,13 +2,14 @@
 
 use std::{io::Read, net::SocketAddr};
 
-use conduit::{Method, RequestExt};
+use conduit::RequestExt;
+use http::Method;
 
 type RequestMutRef<'a> = &'a mut (dyn RequestExt + 'a);
 
 pub struct RequestProxy<'a> {
     other: RequestMutRef<'a>,
-    method: conduit::Method,
+    method: Method,
 }
 
 impl<'a> RequestProxy<'a> {
@@ -19,7 +20,7 @@ impl<'a> RequestProxy<'a> {
 }
 
 impl<'a> RequestExt for RequestProxy<'a> {
-    fn method(&self) -> &conduit::Method {
+    fn method(&self) -> &Method {
         &self.method
     }
 
@@ -32,7 +33,7 @@ impl<'a> RequestExt for RequestProxy<'a> {
     }
 
     // Pass-through
-    fn http_version(&self) -> conduit::Version {
+    fn http_version(&self) -> http::Version {
         self.other.http_version()
     }
     fn scheme(&self) -> conduit::Scheme {
@@ -53,16 +54,16 @@ impl<'a> RequestExt for RequestProxy<'a> {
     fn content_length(&self) -> Option<u64> {
         self.other.content_length()
     }
-    fn headers(&self) -> &conduit::HeaderMap {
+    fn headers(&self) -> &http::HeaderMap {
         self.other.headers()
     }
     fn body(&mut self) -> &mut dyn Read {
         self.other.body()
     }
-    fn extensions(&self) -> &conduit::Extensions {
+    fn extensions(&self) -> &http::Extensions {
         self.other.extensions()
     }
-    fn mut_extensions(&mut self) -> &mut conduit::Extensions {
+    fn mut_extensions(&mut self) -> &mut http::Extensions {
         self.other.mut_extensions()
     }
 }

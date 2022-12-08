@@ -1,4 +1,5 @@
-use conduit::{header::AsHeaderName, RequestExt};
+use conduit::RequestExt;
+use http::header::AsHeaderName;
 
 /// Returns the value of the request header, or an empty slice if it is not
 /// present.

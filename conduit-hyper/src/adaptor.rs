@@ -12,9 +12,9 @@
 use std::io::{Cursor, Read};
 use std::net::SocketAddr;
 
-use conduit::{Extensions, HeaderMap, Host, Method, RequestExt, Scheme, StartInstant, Version};
+use conduit::{Host, RequestExt, Scheme, StartInstant};
 use http::request::Parts as HttpParts;
-use http::Request;
+use http::{Extensions, HeaderMap, Method, Request, Version};
 use hyper::body::Bytes;
 
 pub(crate) struct ConduitRequest {

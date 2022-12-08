@@ -12,7 +12,8 @@ use std::env;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use super::prelude::*;
-use conduit::{RequestExt, StatusCode};
+use conduit::RequestExt;
+use http::StatusCode;
 
 #[derive(Default)]
 pub(super) struct BalanceCapacity {
