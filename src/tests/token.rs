@@ -1,7 +1,7 @@
 use crate::{RequestHelper, TestApp};
 use cargo_registry::{models::ApiToken, util::errors::TOKEN_FORMAT_ERROR, views::EncodableMe};
-use conduit::{header, StatusCode};
 use diesel::prelude::*;
+use http::{header, StatusCode};
 
 #[test]
 fn using_token_updates_last_used_at() {

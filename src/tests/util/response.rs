@@ -4,7 +4,7 @@ use std::marker::PhantomData;
 
 use conduit::{Body, HandlerResult};
 
-use conduit::{header, StatusCode};
+use http::{header, StatusCode};
 
 /// A type providing helper methods for working with responses
 #[must_use]

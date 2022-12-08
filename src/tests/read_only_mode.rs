@@ -1,8 +1,8 @@
 use crate::builders::CrateBuilder;
 use crate::{RequestHelper, TestApp};
 
-use conduit::StatusCode;
 use diesel::prelude::*;
+use http::StatusCode;
 
 #[test]
 fn can_hit_read_only_endpoints_in_read_only_mode() {

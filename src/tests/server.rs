@@ -1,7 +1,7 @@
 use crate::builders::*;
 use crate::util::*;
 
-use conduit::{header, Method, StatusCode};
+use http::{header, Method, StatusCode};
 
 #[test]
 fn user_agent_is_required() {

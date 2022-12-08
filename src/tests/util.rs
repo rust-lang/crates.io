@@ -25,13 +25,14 @@ use crate::{
 };
 use cargo_registry::models::{ApiToken, CreatedApiToken, User};
 
-use conduit::{BoxError, Handler, Method};
+use conduit::{BoxError, Handler};
 use conduit_cookie::SessionMiddleware;
 use conduit_test::MockRequest;
+use http::Method;
 
 use cargo_registry::models::token::{CrateScope, EndpointScope};
-use conduit::header;
 use cookie::Cookie;
+use http::header;
 use std::collections::HashMap;
 
 mod chaosproxy;
@@ -200,7 +201,7 @@ pub trait RequestHelper {
     }
 }
 
-fn req(method: conduit::Method, path: &str) -> MockRequest {
+fn req(method: Method, path: &str) -> MockRequest {
     let mut request = MockRequest::new(method, path);
     request.header(header::USER_AGENT, "conduit-test");
     request.header("x-real-ip", "127.0.0.1");
