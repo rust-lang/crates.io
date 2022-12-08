@@ -1,15 +1,15 @@
-use cargo_registry::util::AppResponse;
 use serde_json::Value;
 use std::marker::PhantomData;
 
 use conduit::HandlerResult;
+use conduit_hyper::conduit_into_hyper;
 
 use http::{header, StatusCode};
 
 /// A type providing helper methods for working with responses
 #[must_use]
 pub struct Response<T> {
-    response: AppResponse,
+    response: reqwest::blocking::Response,
     return_type: PhantomData<T>,
 }
 
@@ -30,8 +30,12 @@ where
 impl<T> Response<T> {
     #[track_caller]
     pub(super) fn new(response: HandlerResult) -> Self {
+        let conduit_response = assert_ok!(response);
+        let hyper_response = conduit_into_hyper(conduit_response);
+        let reqwest_response = hyper_response.into();
+
         Self {
-            response: assert_ok!(response),
+            response: reqwest_response,
             return_type: PhantomData,
         }
     }
@@ -74,12 +78,10 @@ impl Response<()> {
     }
 }
 
-fn json<T>(r: AppResponse) -> T
+fn json<T>(r: reqwest::blocking::Response) -> T
 where
     for<'de> T: serde::Deserialize<'de>,
 {
-    use conduit::Body::*;
-
     let content_type = r
         .headers()
         .get(header::CONTENT_TYPE)
@@ -96,15 +98,10 @@ where
         .parse()
         .unwrap();
 
-    let body: std::borrow::Cow<'static, [u8]> = match r.into_body() {
-        Static(slice) => slice.into(),
-        Owned(vec) => vec.into(),
-        File(_) => unimplemented!(),
-    };
+    let bytes = r.bytes().unwrap();
+    assert_eq!(content_length, bytes.len());
 
-    assert_eq!(content_length, body.len());
-
-    match serde_json::from_slice(&body) {
+    match serde_json::from_slice(&bytes) {
         Ok(t) => t,
         Err(e) => panic!("failed to decode: {:?}", e),
     }
