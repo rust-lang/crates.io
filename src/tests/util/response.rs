@@ -2,7 +2,7 @@ use cargo_registry::util::AppResponse;
 use serde_json::Value;
 use std::marker::PhantomData;
 
-use conduit::{Body, HandlerResult};
+use conduit::HandlerResult;
 
 use http::{header, StatusCode};
 
@@ -19,11 +19,11 @@ where
 {
     /// Assert that the response is good and deserialize the message
     #[track_caller]
-    pub fn good(mut self) -> T {
+    pub fn good(self) -> T {
         if !self.status().is_success() {
             panic!("bad response: {:?}", self.status());
         }
-        json(&mut self.response)
+        json(self.response)
     }
 }
 
@@ -38,8 +38,8 @@ impl<T> Response<T> {
 
     /// Consume the response body and convert it to a JSON value
     #[track_caller]
-    pub fn into_json(mut self) -> Value {
-        json(&mut self.response)
+    pub fn into_json(self) -> Value {
+        json(self.response)
     }
 
     pub fn status(&self) -> StatusCode {
@@ -74,36 +74,35 @@ impl Response<()> {
     }
 }
 
-fn json<T>(r: &mut AppResponse) -> T
+fn json<T>(r: AppResponse) -> T
 where
     for<'de> T: serde::Deserialize<'de>,
 {
     use conduit::Body::*;
 
-    let mut body = Body::empty();
-    std::mem::swap(r.body_mut(), &mut body);
-    let body: std::borrow::Cow<'static, [u8]> = match body {
+    let content_type = r
+        .headers()
+        .get(header::CONTENT_TYPE)
+        .expect("Missing content-type header");
+
+    assert_eq!(content_type, "application/json; charset=utf-8");
+
+    let content_length: usize = r
+        .headers()
+        .get(header::CONTENT_LENGTH)
+        .expect("Missing content-length header")
+        .to_str()
+        .unwrap()
+        .parse()
+        .unwrap();
+
+    let body: std::borrow::Cow<'static, [u8]> = match r.into_body() {
         Static(slice) => slice.into(),
         Owned(vec) => vec.into(),
         File(_) => unimplemented!(),
     };
 
-    assert_eq!(
-        r.headers()
-            .get(header::CONTENT_TYPE)
-            .expect("Missing content-type header"),
-        "application/json; charset=utf-8"
-    );
-
-    assert_eq!(
-        r.headers()
-            .get(header::CONTENT_LENGTH)
-            .expect("Missing content-length header")
-            .to_str()
-            .unwrap()
-            .parse(),
-        Ok(body.len())
-    );
+    assert_eq!(content_length, body.len());
 
     match serde_json::from_slice(&body) {
         Ok(t) => t,
