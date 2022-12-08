@@ -40,10 +40,6 @@ impl<T> Response<T> {
         json(self.response)
     }
 
-    pub fn status(&self) -> StatusCode {
-        self.response.status()
-    }
-
     #[track_caller]
     pub fn assert_redirect_ends_with(&self, target: &str) -> &Self {
         assert!(self
