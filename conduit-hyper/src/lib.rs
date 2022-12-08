@@ -50,7 +50,7 @@ mod service;
 mod tests;
 
 pub use server::Server;
-pub use service::{BlockingHandler, Service};
+pub use service::{conduit_into_hyper, BlockingHandler, Service};
 
 type HyperResponse = http::Response<hyper::Body>;
 type ConduitResponse = http::Response<conduit::Body>;

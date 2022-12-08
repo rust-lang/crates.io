@@ -7,7 +7,7 @@ use hyper::{service, Body, Request, Response};
 mod blocking_handler;
 mod error;
 
-pub use blocking_handler::BlockingHandler;
+pub use blocking_handler::{conduit_into_hyper, BlockingHandler};
 pub use error::ServiceError;
 
 /// A builder for a `hyper::Service`.

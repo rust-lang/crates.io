@@ -61,7 +61,7 @@ impl<H: Handler> BlockingHandler<H> {
 }
 
 /// Turns a `ConduitResponse` into a `HyperResponse`
-fn conduit_into_hyper(response: ConduitResponse) -> HyperResponse {
+pub fn conduit_into_hyper(response: ConduitResponse) -> HyperResponse {
     use conduit::Body::*;
 
     let (parts, body) = response.into_parts();
