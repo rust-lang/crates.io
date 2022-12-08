@@ -1,0 +1,28 @@
+[package]
+name = "conduit-hyper"
+version = "0.4.2"
+authors = ["Justin Geibel <jtgeibel@gmail.com>"]
+license = "MIT OR Apache-2.0"
+description = "Host a conduit based web application on a hyper server"
+readme = "README.md"
+edition = "2021"
+rust-version = "1.56.0"
+
+[dependencies]
+bytes = "1"
+conduit = "0.10.0"
+hyper = { version = "0.14", features = ["server", "http1", "stream", "tcp"] }
+http = "0.2"
+percent-encoding = "2"
+thiserror = "1.0.37"
+tracing = "0.1"
+tokio = { version = "1", features = ["fs"] }
+tokio-stream = "0.1"
+tower-service = "0.3"
+
+[dev-dependencies]
+conduit-router = "0.10.0"
+futures-util = "0.3"
+hyper = { version = "0.14", features = ["client"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+tracing-subscriber = "0.3.16"
