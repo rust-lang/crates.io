@@ -1,9 +1,6 @@
 use serde_json::Value;
 use std::marker::PhantomData;
 
-use conduit::HandlerResult;
-use conduit_hyper::conduit_into_hyper;
-
 use http::{header, StatusCode};
 
 /// A type providing helper methods for working with responses
@@ -29,13 +26,9 @@ where
 
 impl<T> Response<T> {
     #[track_caller]
-    pub(super) fn new(response: HandlerResult) -> Self {
-        let conduit_response = assert_ok!(response);
-        let hyper_response = conduit_into_hyper(conduit_response);
-        let reqwest_response = hyper_response.into();
-
+    pub(super) fn new(response: reqwest::blocking::Response) -> Self {
         Self {
-            response: reqwest_response,
+            response,
             return_type: PhantomData,
         }
     }

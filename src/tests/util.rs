@@ -27,6 +27,7 @@ use cargo_registry::models::{ApiToken, CreatedApiToken, User};
 
 use conduit::{BoxError, Handler};
 use conduit_cookie::SessionMiddleware;
+use conduit_hyper::conduit_into_hyper;
 use conduit_test::MockRequest;
 use http::Method;
 
@@ -87,7 +88,10 @@ pub trait RequestHelper {
     /// Run a request that is expected to succeed
     #[track_caller]
     fn run<T>(&self, mut request: MockRequest) -> Response<T> {
-        Response::new(self.app().as_middleware().call(&mut request))
+        let conduit_response = assert_ok!(self.app().as_middleware().call(&mut request));
+        let hyper_response = conduit_into_hyper(conduit_response);
+
+        Response::new(hyper_response.into())
     }
 
     /// Run a request that is expected to error
