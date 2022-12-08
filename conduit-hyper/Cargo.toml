@@ -4,7 +4,6 @@ version = "0.4.2"
 authors = ["Justin Geibel <jtgeibel@gmail.com>"]
 license = "MIT OR Apache-2.0"
 description = "Host a conduit based web application on a hyper server"
-repository = "https://github.com/jtgeibel/conduit-hyper"
 readme = "README.md"
 edition = "2021"
 rust-version = "1.56.0"
