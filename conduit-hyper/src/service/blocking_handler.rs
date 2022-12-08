@@ -6,8 +6,9 @@ use crate::{ConduitResponse, HyperResponse};
 use std::net::SocketAddr;
 use std::sync::Arc;
 
-use conduit::header::CONTENT_LENGTH;
-use conduit::{Handler, StartInstant, StatusCode};
+use conduit::{Handler, StartInstant};
+use http::header::CONTENT_LENGTH;
+use http::StatusCode;
 use hyper::body::HttpBody;
 use hyper::{Body, Request, Response};
 use tracing::{error, warn};

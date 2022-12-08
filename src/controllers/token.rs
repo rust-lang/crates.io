@@ -6,7 +6,8 @@ use crate::util::read_fill;
 use crate::views::EncodableApiTokenWithToken;
 
 use crate::auth::AuthCheck;
-use conduit::{Body, Response};
+use conduit::Body;
+use http::Response;
 use serde_json as json;
 
 /// Handles the `GET /me/tokens` route.

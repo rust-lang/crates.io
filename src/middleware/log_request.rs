@@ -4,11 +4,11 @@
 use super::prelude::*;
 use crate::util::request_header;
 
-use conduit::{header, RequestExt, StatusCode};
+use conduit::RequestExt;
 
 use crate::middleware::normalize_path::OriginalPath;
 use crate::middleware::response_timing::ResponseTime;
-use http::Method;
+use http::{header, Method, StatusCode};
 use std::cell::RefCell;
 use std::fmt::{self, Display, Formatter};
 

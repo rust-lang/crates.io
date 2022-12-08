@@ -82,7 +82,7 @@ impl Handler for EmberHtml {
 /// This function can panic and should only be used in development mode.
 fn proxy_to_fastboot(client: &Client, req: &dyn RequestExt) -> Result<AppResponse> {
     ensure!(
-        req.method() == conduit::Method::GET,
+        req.method() == http::Method::GET,
         "Only support GET but request method was {}",
         req.method()
     );

@@ -4,7 +4,7 @@ use super::{AppError, InternalAppErrorStatic};
 use crate::util::{json_response, AppResponse};
 
 use chrono::NaiveDateTime;
-use conduit::{header, StatusCode};
+use http::{header, StatusCode};
 
 /// Generates a response with the provided status and description as JSON
 fn json_error(detail: &str, status: StatusCode) -> AppResponse {

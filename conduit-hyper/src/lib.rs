@@ -52,5 +52,5 @@ mod tests;
 pub use server::Server;
 pub use service::{BlockingHandler, Service};
 
-type HyperResponse = hyper::Response<hyper::Body>;
-type ConduitResponse = conduit::Response<conduit::Body>;
+type HyperResponse = http::Response<hyper::Body>;
+type ConduitResponse = http::Response<conduit::Body>;

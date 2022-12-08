@@ -310,8 +310,8 @@ pub(crate) fn decode_seek<D: for<'a> Deserialize<'a>>(seek: &str) -> AppResult<D
 #[cfg(test)]
 mod tests {
     use super::*;
-    use conduit::StatusCode;
     use conduit_test::{MockRequest, ResponseExt};
+    use http::StatusCode;
 
     #[test]
     fn no_pagination_param() {

@@ -1,7 +1,8 @@
 use std::sync::Arc;
 
-use conduit::{box_error, Body, Handler, HandlerResult, RequestExt, Response, StatusCode};
+use conduit::{box_error, Body, Handler, HandlerResult, RequestExt};
 use futures_util::future::Future;
+use http::{Response, StatusCode};
 use hyper::{body::to_bytes, service::Service};
 use tokio::{sync::oneshot, task::JoinHandle};
 

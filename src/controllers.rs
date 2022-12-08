@@ -12,8 +12,9 @@ mod prelude {
     pub use super::helpers::ok_true;
     pub use diesel::prelude::*;
 
-    pub use conduit::{header, RequestExt, StatusCode};
+    pub use conduit::RequestExt;
     pub use conduit_router::RequestParams;
+    pub use http::{header, StatusCode};
 
     pub use crate::db::RequestTransaction;
     pub use crate::middleware::app::RequestApp;
@@ -44,7 +45,7 @@ mod prelude {
         }
 
         fn redirect(&self, url: String) -> AppResponse {
-            conduit::Response::builder()
+            http::Response::builder()
                 .status(StatusCode::FOUND)
                 .header(header::LOCATION, url)
                 .body(conduit::Body::empty())

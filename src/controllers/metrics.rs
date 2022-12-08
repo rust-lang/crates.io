@@ -1,6 +1,7 @@
 use crate::controllers::frontend_prelude::*;
 use crate::util::errors::{forbidden, not_found, MetricsDisabled};
-use conduit::{Body, Response};
+use conduit::Body;
+use http::Response;
 use prometheus::{Encoder, TextEncoder};
 
 /// Handles the `GET /api/private/metrics/:kind` endpoint.
