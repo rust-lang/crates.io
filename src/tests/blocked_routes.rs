@@ -1,6 +1,6 @@
 use crate::builders::{CrateBuilder, VersionBuilder};
 use crate::util::{RequestHelper, TestApp};
-use conduit::StatusCode;
+use http::StatusCode;
 
 #[test]
 fn test_non_blocked_download_route() {

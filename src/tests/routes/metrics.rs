@@ -1,6 +1,6 @@
 use crate::util::{MockAnonymousUser, Response};
 use crate::{RequestHelper, TestApp};
-use conduit::StatusCode;
+use http::StatusCode;
 
 #[test]
 fn metrics_endpoint_works() {

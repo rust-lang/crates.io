@@ -1,6 +1,6 @@
 use crate::{util::RequestHelper, TestApp};
 use chrono::{Duration, NaiveDateTime, Utc};
-use conduit::StatusCode;
+use http::StatusCode;
 
 const URL: &str = "/api/v1/me";
 const LOCK_REASON: &str = "test lock reason";

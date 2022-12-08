@@ -2,7 +2,7 @@ use crate::util::{RequestHelper, Response};
 use crate::TestApp;
 
 use crate::util::encode_session_header;
-use conduit::{header, Body, Method, StatusCode};
+use http::{header, Method, StatusCode};
 
 static URL: &str = "/api/v1/me/updates";
 static MUST_LOGIN: &[u8] = br#"{"errors":[{"detail":"must be logged in to perform that action"}]}"#;
@@ -12,7 +12,7 @@ static INTERNAL_ERROR_NO_USER: &str =
 #[test]
 fn anonymous_user_unauthorized() {
     let (_, anon) = TestApp::init().empty();
-    let response: Response<Body> = anon.get(URL);
+    let response: Response<()> = anon.get(URL);
 
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(response.into_json().to_string().as_bytes(), MUST_LOGIN);
@@ -23,7 +23,7 @@ fn token_auth_cannot_find_token() {
     let (_, anon) = TestApp::init().empty();
     let mut request = anon.request_builder(Method::GET, URL);
     request.header(header::AUTHORIZATION, "cio1tkfake-token");
-    let response: Response<Body> = anon.run(request);
+    let response: Response<()> = anon.run(request);
 
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(response.into_json().to_string().as_bytes(), MUST_LOGIN);

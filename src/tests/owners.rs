@@ -16,8 +16,8 @@ use cargo_registry::{
 
 use cargo_registry::models::token::{CrateScope, EndpointScope};
 use chrono::{Duration, Utc};
-use conduit::StatusCode;
 use diesel::prelude::*;
+use http::StatusCode;
 
 #[derive(Deserialize)]
 struct TeamResponse {

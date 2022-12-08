@@ -5,8 +5,8 @@ use crate::{
 };
 use cargo_registry::models::{Crate, NewTeam};
 
-use conduit::StatusCode;
 use diesel::*;
+use http::StatusCode;
 
 impl crate::util::MockAnonymousUser {
     /// List the team owners of the specified crate.
