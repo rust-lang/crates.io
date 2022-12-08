@@ -1,5 +1,6 @@
 use serde_json::Value;
 use std::marker::PhantomData;
+use std::ops::Deref;
 
 use http::{header, StatusCode};
 
@@ -68,6 +69,14 @@ impl Response<()> {
     #[track_caller]
     pub fn assert_forbidden(&self) {
         assert_eq!(StatusCode::FORBIDDEN, self.status());
+    }
+}
+
+impl<T> Deref for Response<T> {
+    type Target = reqwest::blocking::Response;
+
+    fn deref(&self) -> &Self::Target {
+        &self.response
     }
 }
 
