@@ -19,6 +19,8 @@ pub fn download(req: &mut dyn RequestExt) -> EndpointResult {
     let mut crate_name = req.params()["crate_id"].clone();
     let version = req.params()["version"].as_str();
 
+    let mut log_metadata = None;
+
     let cache_key = (crate_name.to_string(), version.to_string());
     if let Some(version_id) = app.version_id_cacher.get(&cache_key) {
         app.instance_metrics.version_id_cache_hits.inc();
@@ -64,9 +66,7 @@ pub fn download(req: &mut dyn RequestExt) -> EndpointResult {
                 app.instance_metrics
                     .downloads_non_canonical_crate_name_total
                     .inc();
-
-                add_custom_metadata("bot", "dl");
-
+                log_metadata = Some(("bot", "dl"));
                 crate_name = canonical_crate_name;
             } else {
                 // The version_id is only cached if the provided crate name was canonical.
@@ -98,8 +98,7 @@ pub fn download(req: &mut dyn RequestExt) -> EndpointResult {
             app.instance_metrics
                 .downloads_unconditional_redirects_total
                 .inc();
-
-            add_custom_metadata("unconditional_redirect", "true");
+            log_metadata = Some(("unconditional_redirect", "true"));
         }
     };
 
@@ -108,6 +107,10 @@ pub fn download(req: &mut dyn RequestExt) -> EndpointResult {
         .config
         .uploader()
         .crate_location(&crate_name, version);
+
+    if let Some((key, value)) = log_metadata {
+        add_custom_metadata(req, key, value);
+    }
 
     if req.wants_json() {
         Ok(req.json(&json!({ "url": redirect_url })))

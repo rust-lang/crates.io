@@ -200,7 +200,7 @@ impl Handler for C {
             Ok(resp) => Ok(resp),
             Err(e) => {
                 if let Some(cause) = e.cause() {
-                    add_custom_metadata("cause", cause.to_string())
+                    add_custom_metadata(req, "cause", cause.to_string())
                 };
                 match e.response() {
                     Some(response) => Ok(response),
@@ -224,6 +224,7 @@ impl<H: Handler> Handler for R<H> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::middleware::log_request::CustomMetadata;
     use crate::util::errors::{bad_request, cargo_err, forbidden, internal, not_found, AppError};
     use crate::util::EndpointResult;
 
@@ -238,6 +239,7 @@ mod tests {
     #[test]
     fn http_error_responses() {
         let mut req = MockRequest::new(::conduit::Method::GET, "/");
+        req.mut_extensions().insert(CustomMetadata::default());
 
         // Types for handling common error status codes
         assert_eq!(
@@ -278,7 +280,7 @@ mod tests {
         .unwrap();
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
         assert_eq!(
-            crate::middleware::log_request::get_log_message("cause"),
+            crate::middleware::log_request::get_log_message(&req, "cause"),
             "middle error caused by invalid digit found in string"
         );
 
