@@ -10,7 +10,7 @@ rust-version = "1.56.0"
 
 [dependencies]
 conduit = "=0.10.0"
-hyper = { version = "=0.14.23", features = ["server", "http1", "stream", "tcp"] }
+hyper = { version = "=0.14.23", features = ["server", "stream"] }
 http = "=0.2.8"
 percent-encoding = "=2.2.0"
 thiserror = "=1.0.37"
