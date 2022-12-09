@@ -74,7 +74,7 @@ fn index_queries() {
     assert_eq!(anon.search("keyword=kw1").crates.len(), 3);
     assert_eq!(anon.search("keyword=KW1").crates.len(), 3);
     assert_eq!(anon.search("keyword=kw2").crates.len(), 0);
-    assert_eq!(anon.search("all_keywords=kw1 kw3").crates.len(), 1);
+    assert_eq!(anon.search("all_keywords=kw1%20kw3").crates.len(), 1);
 
     assert_eq!(anon.search("q=foo&keyword=kw1").crates.len(), 1);
     assert_eq!(anon.search("q=foo2&keyword=kw1").crates.len(), 0);
@@ -115,7 +115,7 @@ fn index_queries() {
     assert_eq!(cl.meta.total, 0);
 
     // ignores 0x00 characters that Postgres does not support
-    assert_eq!(anon.search("q=k\u{0}w1").meta.total, 3);
+    assert_eq!(anon.search("q=k%00w1").meta.total, 3);
 }
 
 #[test]
