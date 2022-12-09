@@ -66,7 +66,7 @@ pub struct TestApp(Rc<TestAppInner>);
 impl TestApp {
     /// Initialize an application with an `Uploader` that panics
     pub fn init() -> TestAppBuilder {
-        init_logger();
+        cargo_registry::util::tracing::init_for_test();
 
         TestAppBuilder {
             config: simple_config(),
@@ -335,15 +335,6 @@ impl TestAppBuilder {
         self.test_database = test_database;
         self
     }
-}
-
-pub fn init_logger() {
-    let _ = tracing_subscriber::fmt()
-        .compact()
-        .with_max_level(tracing::Level::INFO)
-        .without_time()
-        .with_test_writer()
-        .try_init();
 }
 
 fn simple_config() -> config::Server {

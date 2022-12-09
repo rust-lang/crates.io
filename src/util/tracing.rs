@@ -21,3 +21,13 @@ pub fn init() {
         .with(sentry_layer)
         .init();
 }
+
+/// Initializes the `tracing` logging framework for usage in tests.
+pub fn init_for_test() {
+    let _ = tracing_subscriber::fmt()
+        .compact()
+        .with_max_level(tracing::Level::INFO)
+        .without_time()
+        .with_test_writer()
+        .try_init();
+}
