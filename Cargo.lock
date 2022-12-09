@@ -541,7 +541,6 @@ dependencies = [
 name = "conduit-hyper"
 version = "0.4.2"
 dependencies = [
- "bytes",
  "conduit",
  "conduit-router",
  "futures-util",
