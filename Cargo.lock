@@ -550,7 +550,6 @@ dependencies = [
  "thiserror",
  "tokio",
  "tokio-stream",
- "tower-service",
  "tracing",
  "tracing-subscriber",
 ]

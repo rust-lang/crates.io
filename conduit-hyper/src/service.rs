@@ -48,7 +48,7 @@ impl Service {
         handler: Arc<BlockingHandler<H>>,
         remote_addr: SocketAddr,
     ) -> Result<
-        impl tower_service::Service<
+        impl service::Service<
             Request<Body>,
             Response = Response<Body>,
             Error = ServiceError,
