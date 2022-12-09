@@ -1,8 +1,7 @@
 use std::task::{Context, Poll};
 use std::{io::Error, pin::Pin};
 
-use bytes::Bytes;
-use hyper::body::Body;
+use hyper::body::{Body, Bytes};
 use tokio::{fs::File, io::AsyncRead};
 use tokio_stream::Stream;
 
