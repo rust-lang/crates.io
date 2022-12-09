@@ -128,8 +128,6 @@ or go to https://{domain}/me/pending-invites to manage all of your crate ownersh
                 login,
                 password,
             } => {
-                add_custom_metadata("email_backend", "smtp");
-
                 SmtpTransport::relay(server)
                     .and_then(|transport| {
                         transport
@@ -146,8 +144,6 @@ or go to https://{domain}/me/pending-invites to manage all of your crate ownersh
                 add_custom_metadata("email_id", message_id);
             }
             EmailBackend::FileSystem { path } => {
-                add_custom_metadata("email_backend", "fs");
-
                 let id = FileTransport::new(path).send(&email).map_err(|err| {
                     add_custom_metadata("email_error", err);
                     server_error("Email file could not be generated")
@@ -156,8 +152,6 @@ or go to https://{domain}/me/pending-invites to manage all of your crate ownersh
                 add_custom_metadata("email_path", path.join(format!("{id}.eml")).display());
             }
             EmailBackend::Memory { mails } => {
-                add_custom_metadata("email_backend", "memory");
-
                 mails.lock().unwrap().push(StoredEmail {
                     to: recipient.into(),
                     subject: subject.into(),
