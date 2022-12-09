@@ -4,7 +4,6 @@ use std::sync::Mutex;
 use crate::util::errors::{server_error, AppResult};
 
 use crate::config;
-use crate::middleware::log_request::add_custom_metadata;
 use crate::Env;
 use lettre::transport::file::FileTransport;
 use lettre::transport::smtp::authentication::{Credentials, Mechanism};
@@ -163,20 +162,24 @@ Source type: {source}\n",
                             .build()
                             .send(&email)
                     })
-                    .map_err(|e| {
-                        add_custom_metadata("email_error", e);
+                    .map_err(|error| {
+                        error!(?error, "Failed to send email");
                         server_error("Failed to send the email")
                     })?;
 
-                add_custom_metadata("email_id", message_id);
+                info!(?message_id, ?subject, "Email sent");
             }
             EmailBackend::FileSystem { path } => {
-                let id = FileTransport::new(path).send(&email).map_err(|err| {
-                    add_custom_metadata("email_error", err);
+                let id = FileTransport::new(path).send(&email).map_err(|error| {
+                    error!(?error, "Failed to send email");
                     server_error("Email file could not be generated")
                 })?;
 
-                add_custom_metadata("email_path", path.join(format!("{id}.eml")).display());
+                info!(
+                    path = ?path.join(format!("{id}.eml")),
+                    ?subject,
+                    "Email sent"
+                );
             }
             EmailBackend::Memory { mails } => {
                 mails.lock().unwrap().push(StoredEmail {
