@@ -6,8 +6,6 @@ use http::{header, Method, StatusCode};
 
 static URL: &str = "/api/v1/me/updates";
 static MUST_LOGIN: &[u8] = br#"{"errors":[{"detail":"must be logged in to perform that action"}]}"#;
-static INTERNAL_ERROR_NO_USER: &str =
-    "user_id from cookie not found in database caused by NotFound";
 
 #[test]
 fn anonymous_user_unauthorized() {
@@ -42,6 +40,6 @@ fn cookie_auth_cannot_find_user() {
     let mut request = anon.request_builder(Method::GET, URL);
     request.header(header::COOKIE, &cookie);
 
-    let error = anon.run_err(request);
-    assert_eq!(error.to_string(), INTERNAL_ERROR_NO_USER);
+    let error = anon.run::<()>(request);
+    assert_eq!(error.status(), StatusCode::INTERNAL_SERVER_ERROR);
 }

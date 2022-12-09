@@ -25,9 +25,8 @@ use crate::{
 };
 use cargo_registry::models::{ApiToken, CreatedApiToken, User};
 
-use conduit::{BoxError, Handler};
+use conduit::RequestExt;
 use conduit_cookie::SessionMiddleware;
-use conduit_hyper::conduit_into_hyper;
 use conduit_test::MockRequest;
 use http::Method;
 
@@ -35,6 +34,8 @@ use cargo_registry::models::token::{CrateScope, EndpointScope};
 use cookie::Cookie;
 use http::header;
 use std::collections::HashMap;
+use std::net::SocketAddr;
+use tower_service::Service;
 
 mod chaosproxy;
 mod fresh_schema;
@@ -87,17 +88,21 @@ pub trait RequestHelper {
 
     /// Run a request that is expected to succeed
     #[track_caller]
-    fn run<T>(&self, mut request: MockRequest) -> Response<T> {
-        let conduit_response = assert_ok!(self.app().as_middleware().call(&mut request));
-        let hyper_response = conduit_into_hyper(conduit_response);
+    fn run<T>(&self, request: MockRequest) -> Response<T> {
+        let handler = self.app().handler().clone();
+        let remote_addr = SocketAddr::from(([127, 0, 0, 1], 80));
+        let mut service = conduit_hyper::Service::from_blocking(handler, remote_addr).unwrap();
+
+        let req = convert_request(request);
+
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+
+        let hyper_response = rt.block_on(service.call(req)).unwrap();
 
         Response::new(hyper_response.into())
-    }
-
-    /// Run a request that is expected to error
-    #[track_caller]
-    fn run_err(&self, mut request: MockRequest) -> BoxError {
-        self.app().as_middleware().call(&mut request).err().unwrap()
     }
 
     /// Create a get request
@@ -358,4 +363,27 @@ impl MockTokenUser {
 #[derive(Deserialize, Debug)]
 pub struct Error {
     pub detail: String,
+}
+
+fn convert_request(mut mock_request: MockRequest) -> http::Request<hyper::Body> {
+    let mut buffer = Vec::new();
+    mock_request.body().read_to_end(&mut buffer).unwrap();
+
+    let body = hyper::Body::from(buffer);
+
+    let mut path = mock_request.path().to_string();
+    if let Some(query) = mock_request.query_string() {
+        path += "?";
+        path += query;
+    }
+
+    let mut req = http::Request::builder()
+        .method(mock_request.method())
+        .uri(path);
+
+    for (name, value) in mock_request.headers() {
+        req = req.header(name, value)
+    }
+
+    req.body(body).unwrap()
 }

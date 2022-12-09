@@ -9,6 +9,7 @@ use std::{rc::Rc, sync::Arc, time::Duration};
 
 use crate::util::github::{MockGitHubClient, MOCK_GITHUB_DATA};
 use cargo_registry::models::token::{CrateScope, EndpointScope};
+use conduit_hyper::BlockingHandler;
 use diesel::PgConnection;
 use reqwest::{blocking::Client, Proxy};
 use std::collections::HashSet;
@@ -18,7 +19,7 @@ struct TestAppInner {
     app: Arc<App>,
     // The bomb (if created) needs to be held in scope until the end of the test.
     _bomb: Option<record::Bomb>,
-    middle: conduit_middleware::MiddlewareBuilder,
+    handler: Arc<BlockingHandler<conduit_middleware::MiddlewareBuilder>>,
     index: Option<UpstreamIndex>,
     runner: Option<Runner<Environment, DieselPool>>,
 
@@ -155,9 +156,9 @@ impl TestApp {
         &self.0.app
     }
 
-    /// Obtain a reference to the inner middleware builder
-    pub fn as_middleware(&self) -> &conduit_middleware::MiddlewareBuilder {
-        &self.0.middle
+    /// Obtain a reference to the inner `conduit-hyper` handler
+    pub fn handler(&self) -> &Arc<BlockingHandler<conduit_middleware::MiddlewareBuilder>> {
+        &self.0.handler
     }
 
     pub(crate) fn primary_db_chaosproxy(&self) -> Arc<ChaosProxy> {
@@ -227,6 +228,8 @@ impl TestAppBuilder {
 
         let (app, middle) = build_app(self.config, self.proxy);
 
+        let handler = Arc::new(BlockingHandler::new(middle));
+
         let runner = if self.build_job_runner {
             let repository_config = RepositoryConfig {
                 index_location: UpstreamIndex::url(),
@@ -257,7 +260,7 @@ impl TestAppBuilder {
             app,
             _fresh_schema: fresh_schema,
             _bomb: self.bomb,
-            middle,
+            handler,
             index: self.index,
             runner,
             primary_db_chaosproxy,
