@@ -53,7 +53,7 @@ async fn fallback_to_conduit(
         let mut request = ConduitRequest::new(request, remote_addr, now);
         handler
             .call(&mut request)
-            .map(conduit_into_hyper)
+            .map(conduit_into_axum)
             .unwrap_or_else(|e| server_error_response(&e.to_string()))
     })
     .await
@@ -61,7 +61,7 @@ async fn fallback_to_conduit(
 }
 
 /// Turns a `ConduitResponse` into a `AxumResponse`
-pub fn conduit_into_hyper(response: ConduitResponse) -> AxumResponse {
+pub fn conduit_into_axum(response: ConduitResponse) -> AxumResponse {
     use conduit::Body::*;
 
     let (parts, body) = response.into_parts();
