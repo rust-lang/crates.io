@@ -1,13 +1,13 @@
-use std::sync::Arc;
+use std::net::SocketAddr;
 
+use axum::extract::ConnectInfo;
+use axum::{Extension, Router};
 use conduit::{box_error, Body, Handler, HandlerResult, RequestExt};
-use futures_util::future::Future;
-use http::{Response, StatusCode};
+use http::{HeaderValue, Request, Response, StatusCode};
 use hyper::{body::to_bytes, service::Service};
 use tokio::{sync::oneshot, task::JoinHandle};
 
-use super::service::{BlockingHandler, ServiceError};
-use super::HyperResponse;
+use crate::{AxumResponse, ConduitFallback};
 
 struct OkResult;
 impl Handler for OkResult {
@@ -73,32 +73,26 @@ impl Handler for AssertPercentDecodedPath {
     }
 }
 
-fn make_service<H: Handler>(
-    handler: H,
-) -> impl Service<
-    hyper::Request<hyper::Body>,
-    Response = HyperResponse,
-    Future = impl Future<Output = Result<HyperResponse, ServiceError>> + Send + 'static,
-    Error = ServiceError,
-> {
-    use hyper::service::service_fn;
+fn make_service<H: Handler>(handler: H) -> Router {
+    let remote_addr: SocketAddr = ([0, 0, 0, 0], 0).into();
 
-    let handler = std::sync::Arc::new(BlockingHandler::new(handler));
-
-    service_fn(move |request: hyper::Request<hyper::Body>| {
-        let remote_addr = ([0, 0, 0, 0], 0).into();
-        handler.clone().blocking_handler(request, remote_addr)
-    })
+    Router::new()
+        .conduit_fallback(handler)
+        .layer(Extension(ConnectInfo(remote_addr)))
 }
 
-async fn simulate_request<H: Handler>(handler: H) -> HyperResponse {
+async fn simulate_request<H: Handler>(handler: H) -> AxumResponse {
     let mut service = make_service(handler);
-    service.call(hyper::Request::default()).await.unwrap()
+    service.call(Request::default()).await.unwrap()
 }
 
-async fn assert_generic_err(resp: HyperResponse) {
+async fn assert_generic_err(resp: AxumResponse) {
     assert_eq!(resp.status(), StatusCode::INTERNAL_SERVER_ERROR);
-    assert!(resp.headers().is_empty());
+    assert_eq!(resp.headers().len(), 1);
+    assert_eq!(
+        resp.headers().get("content-length"),
+        Some(&HeaderValue::from_static("21"))
+    );
     let full_body = to_bytes(resp.into_body()).await.unwrap();
     assert_eq!(&*full_body, b"Internal Server Error");
 }
@@ -107,7 +101,9 @@ async fn assert_generic_err(resp: HyperResponse) {
 async fn valid_ok_response() {
     let resp = simulate_request(OkResult).await;
     assert_eq!(resp.status(), StatusCode::OK);
-    assert_eq!(resp.headers().len(), 1);
+    assert_eq!(resp.headers().len(), 2);
+    assert!(resp.headers().get("ok").is_some());
+    assert!(resp.headers().get("content-length").is_some());
     let full_body = to_bytes(resp.into_body()).await.unwrap();
     assert_eq!(&*full_body, b"Hello, world!");
 }
@@ -165,11 +161,10 @@ async fn spawn_http_server() -> (
 ) {
     let (quit_tx, quit_rx) = oneshot::channel::<()>();
     let addr = ([127, 0, 0, 1], 0).into();
-    let server = hyper::Server::bind(&addr).serve(hyper::service::make_service_fn(move |_| {
-        let handler = Arc::new(BlockingHandler::new(OkResult));
-        let remote_addr = ([0, 0, 0, 0], 0).into();
-        async move { crate::Service::from_blocking(handler, remote_addr) }
-    }));
+
+    let router = Router::new().conduit_fallback(OkResult);
+    let make_service = router.into_make_service_with_connect_info::<SocketAddr>();
+    let server = hyper::Server::bind(&addr).serve(make_service);
 
     let url = format!("http://{}", server.local_addr());
     let server = server.with_graceful_shutdown(async {

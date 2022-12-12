@@ -30,6 +30,7 @@ use conduit_cookie::SessionMiddleware;
 use conduit_test::MockRequest;
 use http::Method;
 
+use axum::extract::{ConnectInfo, Extension};
 use cargo_registry::models::token::{CrateScope, EndpointScope};
 use cookie::Cookie;
 use http::header;
@@ -89,9 +90,9 @@ pub trait RequestHelper {
     /// Run a request that is expected to succeed
     #[track_caller]
     fn run<T>(&self, request: MockRequest) -> Response<T> {
-        let handler = self.app().handler().clone();
+        let router = self.app().router().clone();
         let remote_addr = SocketAddr::from(([127, 0, 0, 1], 80));
-        let mut service = conduit_hyper::Service::from_blocking(handler, remote_addr).unwrap();
+        let mut router = router.layer(Extension(ConnectInfo(remote_addr)));
 
         let req = convert_request(request);
 
@@ -100,7 +101,13 @@ pub trait RequestHelper {
             .build()
             .unwrap();
 
-        let hyper_response = rt.block_on(service.call(req)).unwrap();
+        let axum_response = rt.block_on(router.call(req)).unwrap();
+
+        // axum responses can't be converted directly to reqwest responses,
+        // so we have to convert it to a hyper response first.
+        let (parts, body) = axum_response.into_parts();
+        let bytes = rt.block_on(hyper::body::to_bytes(body)).unwrap();
+        let hyper_response = hyper::Response::from_parts(parts, bytes);
 
         Response::new(hyper_response.into())
     }

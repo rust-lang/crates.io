@@ -6,11 +6,11 @@ extern crate tracing;
 use cargo_registry::{env_optional, metrics::LogEncoder, util::errors::AppResult, App, Env};
 use std::{fs::File, process::Command, sync::Arc, time::Duration};
 
-use conduit_hyper::Service;
 use futures_util::future::FutureExt;
 use prometheus::Encoder;
 use reqwest::blocking::Client;
 use std::io::{self, Write};
+use std::net::SocketAddr;
 use tokio::signal::unix::{signal, SignalKind};
 
 const CORE_THREADS: usize = 4;
@@ -32,7 +32,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Start the background thread periodically logging instance metrics.
     log_instance_metrics_thread(app.clone());
 
-    let handler = cargo_registry::build_handler(app.clone());
+    let axum_router = cargo_registry::build_handler(app.clone());
 
     let heroku = dotenv::var("HEROKU").is_ok();
     let fastboot = dotenv::var("USE_FASTBOOT").is_ok();
@@ -64,13 +64,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .build()
         .unwrap();
 
-    let handler = Arc::new(conduit_hyper::BlockingHandler::new(handler));
-    let make_service =
-        hyper::service::make_service_fn(move |socket: &hyper::server::conn::AddrStream| {
-            let addr = socket.remote_addr();
-            let handler = handler.clone();
-            async move { Service::from_blocking(handler, addr) }
-        });
+    let make_service = axum_router.into_make_service_with_connect_info::<SocketAddr>();
 
     let (addr, server) = rt.block_on(async {
         let server = hyper::Server::bind(&(ip, port).into()).serve(make_service);

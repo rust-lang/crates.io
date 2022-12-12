@@ -1,7 +1,7 @@
 use std::task::{Context, Poll};
 use std::{io::Error, pin::Pin};
 
-use hyper::body::{Body, Bytes};
+use axum::body::{Bytes, StreamBody};
 use tokio::{fs::File, io::AsyncRead};
 use tokio_stream::Stream;
 
@@ -19,8 +19,8 @@ impl FileStream {
         Self { file, buffer }
     }
 
-    pub fn into_streamed_body(self) -> Body {
-        Body::wrap_stream(self)
+    pub fn into_streamed_body(self) -> StreamBody<Self> {
+        StreamBody::new(self)
     }
 }
 
