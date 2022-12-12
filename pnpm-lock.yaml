@@ -33,7 +33,7 @@ specifiers:
   date-fns: 2.29.3
   ember-a11y-testing: 5.1.0
   ember-auto-import: 2.5.0
-  ember-cli: 4.9.1
+  ember-cli: 4.9.2
   ember-cli-app-version: 5.0.0
   ember-cli-babel: 7.26.11
   ember-cli-bundle-analyzer: 0.2.2
@@ -138,12 +138,12 @@ devDependencies:
   broccoli-asset-rev: 3.0.0
   ember-a11y-testing: 5.1.0_qhusffjocg4cnbdwj4yxijwhva
   ember-auto-import: 2.5.0_webpack@5.75.0
-  ember-cli: 4.9.1
+  ember-cli: 4.9.2
   ember-cli-app-version: 5.0.0
   ember-cli-babel: 7.26.11
   ember-cli-bundle-analyzer: 0.2.2
   ember-cli-code-coverage: 1.0.3
-  ember-cli-dependency-checker: 3.3.1_ember-cli@4.9.1
+  ember-cli-dependency-checker: 3.3.1_ember-cli@4.9.2
   ember-cli-dependency-lint: 2.0.1
   ember-cli-deprecation-workflow: 2.1.0
   ember-cli-fastboot: 3.3.2
@@ -3024,7 +3024,7 @@ packages:
   /@types/glob/8.0.0:
     resolution: {integrity: sha512-l6NQsDDyQUVeoTynNpC9uRvCUint/gSUXQA2euwmTuWGvPY5LSDUu6tkCtJB2SvGQlJQzLaKqcGZP4//7EDveA==}
     dependencies:
-      '@types/minimatch': 3.0.5
+      '@types/minimatch': 5.1.2
       '@types/node': 18.11.13
 
   /@types/htmlbars-inline-precompile/3.0.0:
@@ -3049,7 +3049,6 @@ packages:
 
   /@types/minimatch/5.1.2:
     resolution: {integrity: sha512-K0VQKziLUWkVKiRVrx4a40iPaxTUefQmjtkQofBkYRcoaaL/8rhwDWww9qWbrgicNOgnpIsMxyNIUM4+n6dUIA==}
-    dev: true
 
   /@types/node/18.11.13:
     resolution: {integrity: sha512-IASpMGVcWpUsx5xBOrxMj7Bl8lqfuTY7FKAnPmu5cHkfQVWF8GulWS1jbRqA934qZL35xh5xN/+Xe/i26Bod4w==}
@@ -7108,14 +7107,14 @@ packages:
       - supports-color
     dev: true
 
-  /ember-cli-dependency-checker/3.3.1_ember-cli@4.9.1:
+  /ember-cli-dependency-checker/3.3.1_ember-cli@4.9.2:
     resolution: {integrity: sha512-Tg6OeijjXNKWkDm6057Tr0N9j9Vlz/ITewXWpn1A/+Wbt3EowBx5ZKfvoupqz05EznKgL1B/ecG0t+JN7Qm6MA==}
     engines: {node: '>= 6'}
     peerDependencies:
       ember-cli: ^3.2.0 || ^4.0.0
     dependencies:
       chalk: 2.4.2
-      ember-cli: 4.9.1
+      ember-cli: 4.9.2
       find-yarn-workspace-root: 1.2.1
       is-git-url: 1.0.0
       resolve: 1.22.1
@@ -7475,8 +7474,8 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /ember-cli/4.9.1:
-    resolution: {integrity: sha512-4L2rCv6lKWMXUHCOW8x3gr/aQT4DHxGhT3U912xT8DOSisq7hQctoV7Qm5Ps4h54cfkQFUmI0MSsMF3XEPi5fg==}
+  /ember-cli/4.9.2:
+    resolution: {integrity: sha512-zvZjB0uHY2ewCrfNc0k3dM9QpfcDQ4GW5h1MmNXN7+nAPfFROSwJ/o24t6DHUFcU/B9H7Dd+2GGC4W6NKz6Shw==}
     engines: {node: '>= 14'}
     hasBin: true
     dependencies:
