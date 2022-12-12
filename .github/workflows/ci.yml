@@ -1,0 +1,172 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+  pull_request:
+
+env:
+  DIESEL_CLI_VERSION: 1.4.1
+  PNPM_VERSION: 7.18.1
+  RUST_VERSION: 1.65.0
+
+jobs:
+  changed-files:
+    name: Changed Files
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v3.1.0
+
+      - uses: tj-actions/changed-files@v34
+        id: changed-files-non-js
+        with:
+          files_ignore: |
+            app/**
+            mirage/**
+            public/**
+            tests/**
+            .eslintrc
+            .template-lintrc.js
+            ember-cli-build.js
+            package.json
+            pnpm-lock.yaml
+            testem.js
+
+      - uses: tj-actions/changed-files@v34
+        id: changed-files-non-rust
+        with:
+          files_ignore: |
+            cargo-registry-*/**
+            conduit-*/**
+            migrations/**
+            src/**
+            build.rs
+            Cargo.lock
+            Cargo.toml
+            RustConfig
+
+    outputs:
+      non-js: ${{ steps.changed-files-non-js.outputs.any_modified }}
+      non-rust: ${{ steps.changed-files-non-rust.outputs.any_modified }}
+
+  backend-lint:
+    name: Backend / Lint
+    runs-on: ubuntu-20.04
+    needs: changed-files
+    if: needs.changed-files.outputs.non-js == 'true'
+
+    env:
+      RUSTFLAGS: "-D warnings"
+
+    steps:
+      - uses: actions/checkout@v3.1.0
+
+      - run: rustup default ${{ env.RUST_VERSION }}
+      - run: rustup component add rustfmt
+      - run: rustup component add clippy
+
+      - uses: Swatinem/rust-cache@v2.2.0
+
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets --all-features --all
+
+  backend-test:
+    name: Backend / Test
+    runs-on: ubuntu-20.04
+    needs: changed-files
+    if: needs.changed-files.outputs.non-js == 'true'
+
+    env:
+      RUST_BACKTRACE: 1
+      DATABASE_URL: postgres://postgres:postgres@localhost/cargo_registry_test
+      TEST_DATABASE_URL: postgres://postgres:postgres@localhost/cargo_registry_test
+      RUSTFLAGS: "-D warnings"
+      MALLOC_CONF: "background_thread:true,abort_conf:true,abort:true,junk:true"
+
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v3.1.0
+
+      - run: rustup default ${{ env.RUST_VERSION }}
+
+      - uses: Swatinem/rust-cache@v2.2.0
+
+      - run: cargo install diesel_cli --vers ${{ env.DIESEL_CLI_VERSION }} --no-default-features --features postgres --debug
+      - run: diesel database setup --locked-schema
+
+      - run: cargo test --workspace
+
+  frontend-lint:
+    name: Frontend / Lint
+    runs-on: ubuntu-20.04
+    needs: changed-files
+    if: needs.changed-files.outputs.non-rust == 'true'
+
+    steps:
+      - uses: actions/checkout@v3.1.0
+
+      - uses: pnpm/action-setup@v2.2.4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v3.5.1
+        with:
+          cache: pnpm
+          node-version-file: package.json
+
+      - run: pnpm install
+
+      - run: pnpm lint:hbs
+      - run: pnpm lint:js
+      - run: pnpm lint:deps
+
+  frontend-test:
+    name: Frontend / Test
+    runs-on: ubuntu-20.04
+    needs: changed-files
+    if: needs.changed-files.outputs.non-rust == 'true'
+
+    env:
+      JOBS: 1 # See https://git.io/vdao3 for details.
+
+      # Percy secrets are included here to enable Percy's GitHub integration
+      # on community-submitted PRs
+      PERCY_TOKEN: 0d8707a02b19aebbec79bb0bf302b8d2fa95edb33169cfe41b084289596670b1
+      PERCY_PROJECT: crates-io/crates.io
+
+    steps:
+      - uses: actions/checkout@v3.1.0
+
+      - uses: pnpm/action-setup@v2.2.4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v3.5.1
+        with:
+          cache: pnpm
+          node-version-file: package.json
+
+      - run: pnpm install
+
+      - if: github.repository == 'rust-lang/crates.io'
+        run: pnpm percy exec -- pnpm test-coverage
+
+      - if: github.repository != 'rust-lang/crates.io'
+        run: pnpm test-coverage
