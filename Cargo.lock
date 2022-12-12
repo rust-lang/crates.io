@@ -247,6 +247,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9e1b586273c5702936fe7b7d6896644d8be71e6314cfe09d3167c95f712589e8"
 
 [[package]]
+name = "base64"
+version = "0.20.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0ea22880d78093b0cbe17c89f64a7d457941e65759157ec6cb31a31d652b05e5"
+
+[[package]]
 name = "bitflags"
 version = "1.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -320,7 +326,7 @@ dependencies = [
  "anyhow",
  "aws-sigv4",
  "axum",
- "base64",
+ "base64 0.20.0",
  "cargo-registry-index",
  "cargo-registry-markdown",
  "cargo-registry-s3",
@@ -391,7 +397,7 @@ name = "cargo-registry-index"
 version = "0.0.0"
 dependencies = [
  "anyhow",
- "base64",
+ "base64 0.20.0",
  "dotenv",
  "git2",
  "serde",
@@ -415,7 +421,7 @@ dependencies = [
 name = "cargo-registry-s3"
 version = "0.2.0"
 dependencies = [
- "base64",
+ "base64 0.20.0",
  "chrono",
  "hmac",
  "reqwest",
@@ -601,7 +607,7 @@ version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2f88a8f6cc0c410bea02244bfec3ad16b290be77c9d222048be44cb2d1f457f1"
 dependencies = [
- "base64",
+ "base64 0.13.1",
  "conduit",
  "conduit-middleware",
  "cookie",
@@ -698,7 +704,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "344adc371239ef32293cb1c4fe519592fcf21206c79c02854320afcdf3ab4917"
 dependencies = [
  "aes-gcm",
- "base64",
+ "base64 0.13.1",
  "hkdf",
  "hmac",
  "rand",
@@ -973,7 +979,7 @@ version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "34dd14c63662e0206599796cd5e1ad0268ab2b9d19b868d6050d688eba2bbf98"
 dependencies = [
- "base64",
+ "base64 0.13.1",
  "memchr",
 ]
 
@@ -1620,7 +1626,7 @@ version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2eabca5e0b4d0e98e7f2243fb5b7520b6af2b65d8f87bcc86f2c75185a6ff243"
 dependencies = [
- "base64",
+ "base64 0.13.1",
  "email-encoding",
  "email_address",
  "fastrand",
@@ -1979,7 +1985,7 @@ version = "4.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eeaf26a72311c087f8c5ba617c96fac67a5c04f430e716ac8d8ab2de62e23368"
 dependencies = [
- "base64",
+ "base64 0.13.1",
  "chrono",
  "getrandom",
  "http",
@@ -2466,7 +2472,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "68cc60575865c7831548863cc02356512e3f1dc2f3f82cb837d7fc4cc8f3c97c"
 dependencies = [
  "async-compression",
- "base64",
+ "base64 0.13.1",
  "bytes",
  "encoding_rs",
  "futures-core",
@@ -3601,7 +3607,7 @@ version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b97acb4c28a254fd7a4aeec976c46a7fa404eac4d7c134b30c75144846d7cb8f"
 dependencies = [
- "base64",
+ "base64 0.13.1",
  "chunked_transfer",
  "log",
  "native-tls",
