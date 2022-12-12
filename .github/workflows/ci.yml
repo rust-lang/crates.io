@@ -14,9 +14,50 @@ env:
   RUST_VERSION: 1.65.0
 
 jobs:
+  changed-files:
+    name: Changed Files
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v3.1.0
+
+      - uses: tj-actions/changed-files@v34
+        id: changed-files-non-js
+        with:
+          files_ignore: |
+            app/**
+            mirage/**
+            public/**
+            tests/**
+            .eslintrc
+            .template-lintrc.js
+            ember-cli-build.js
+            package.json
+            pnpm-lock.yaml
+            testem.js
+
+      - uses: tj-actions/changed-files@v34
+        id: changed-files-non-rust
+        with:
+          files_ignore: |
+            cargo-registry-*/**
+            conduit-*/**
+            migrations/**
+            src/**
+            build.rs
+            Cargo.lock
+            Cargo.toml
+            RustConfig
+
+    outputs:
+      non-js: ${{ steps.changed-files-non-js.outputs.any_modified }}
+      non-rust: ${{ steps.changed-files-non-rust.outputs.any_modified }}
+
   backend-lint:
     name: Backend / Lint
     runs-on: ubuntu-20.04
+    needs: changed-files
+    if: needs.changed-files.outputs.non-js == 'true'
 
     env:
       RUSTFLAGS: "-D warnings"
@@ -36,6 +77,8 @@ jobs:
   backend-test:
     name: Backend / Test
     runs-on: ubuntu-20.04
+    needs: changed-files
+    if: needs.changed-files.outputs.non-js == 'true'
 
     env:
       RUST_BACKTRACE: 1
@@ -73,6 +116,8 @@ jobs:
   frontend-lint:
     name: Frontend / Lint
     runs-on: ubuntu-20.04
+    needs: changed-files
+    if: needs.changed-files.outputs.non-rust == 'true'
 
     steps:
       - uses: actions/checkout@v3.1.0
@@ -95,6 +140,9 @@ jobs:
   frontend-test:
     name: Frontend / Test
     runs-on: ubuntu-20.04
+    needs: changed-files
+    if: needs.changed-files.outputs.non-rust == 'true'
+
     env:
       JOBS: 1 # See https://git.io/vdao3 for details.
 
