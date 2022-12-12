@@ -48,9 +48,9 @@ pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBui
 
     if env != Env::Test {
         m.add(SentryMiddleware::with_transactions());
-        m.add(log_request::LogRequests::default());
     }
 
+    m.add(log_request::LogRequests::default());
     m.add(ResponseTiming::default());
 
     if env == Env::Development {
