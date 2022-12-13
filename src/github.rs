@@ -7,6 +7,7 @@ use serde::de::DeserializeOwned;
 
 use std::str;
 
+use crate::controllers::github::secret_scanning::{GitHubPublicKey, GitHubPublicKeyList};
 use crate::util::errors::{cargo_err, internal, not_found, AppError, AppResult};
 use reqwest::blocking::Client;
 
@@ -32,6 +33,7 @@ pub trait GitHubClient: Send + Sync {
         username: &str,
         auth: &AccessToken,
     ) -> AppResult<GitHubOrgMembership>;
+    fn public_keys(&self, username: &str, password: &str) -> AppResult<Vec<GitHubPublicKey>>;
 }
 
 #[derive(Debug)]
@@ -46,7 +48,7 @@ impl RealGitHubClient {
     }
 
     /// Does all the nonsense for sending a GET to Github.
-    pub fn request<T>(&self, url: &str, auth: &AccessToken) -> AppResult<T>
+    fn _request<T>(&self, url: &str, auth: &str) -> AppResult<T>
     where
         T: DeserializeOwned,
     {
@@ -56,13 +58,29 @@ impl RealGitHubClient {
         self.client()
             .get(&url)
             .header(header::ACCEPT, "application/vnd.github.v3+json")
-            .header(header::AUTHORIZATION, format!("token {}", auth.secret()))
+            .header(header::AUTHORIZATION, auth)
             .header(header::USER_AGENT, "crates.io (https://crates.io)")
             .send()?
             .error_for_status()
             .map_err(|e| handle_error_response(&e))?
             .json()
             .map_err(Into::into)
+    }
+
+    /// Sends a GET to GitHub using OAuth access token authentication
+    pub fn request<T>(&self, url: &str, auth: &AccessToken) -> AppResult<T>
+    where
+        T: DeserializeOwned,
+    {
+        self._request(url, &format!("token {}", auth.secret()))
+    }
+
+    /// Sends a GET to GitHub using basic authentication
+    pub fn request_basic<T>(&self, url: &str, username: &str, password: &str) -> AppResult<T>
+    where
+        T: DeserializeOwned,
+    {
+        self._request(url, &format!("basic {}:{}", username, password))
     }
 
     /// Returns a client for making HTTP requests to upload crate files.
@@ -122,6 +140,15 @@ impl GitHubClient for RealGitHubClient {
             &format!("/organizations/{org_id}/memberships/{username}"),
             auth,
         )
+    }
+
+    /// Returns the list of public keys that can be used to verify GitHub secret alert signatures
+    fn public_keys(&self, username: &str, password: &str) -> AppResult<Vec<GitHubPublicKey>> {
+        let url = "/meta/public_keys/secret_scanning";
+        match self.request_basic::<GitHubPublicKeyList>(url, username, password) {
+            Ok(v) => Ok(v.public_keys),
+            Err(e) => Err(e),
+        }
     }
 }
 

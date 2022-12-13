@@ -371,6 +371,7 @@ dependencies = [
  "rand",
  "reqwest",
  "retry",
+ "ring",
  "scheduled-thread-pool",
  "semver 1.0.14",
  "sentry",

@@ -91,6 +91,33 @@ or go to https://{domain}/me/pending-invites to manage all of your crate ownersh
         self.send(email, subject, &body)
     }
 
+    /// Attempts to send an API token exposure notification email
+    pub fn send_token_exposed_notification(
+        &self,
+        email: &str,
+        url: &str,
+        reporter: &str,
+        source: &str,
+        token_name: &str,
+    ) -> AppResult<()> {
+        let subject = "Exposed API token found";
+        let mut body = format!(
+            "{reporter} has notified us that your crates.io API token {token_name}\n
+has been exposed publicly. We have revoked this token as a precaution.\n
+Please review your account at https://{domain} to confirm that no\n
+unexpected changes have been made to your settings or crates.\n
+\n
+Source type: {source}\n",
+            domain = crate::config::domain_name()
+        );
+        if url.is_empty() {
+            body.push_str("\nWe were not informed of the URL where the token was found.\n");
+        } else {
+            body.push_str(&format!("\nURL where the token was found: {url}\n"));
+        }
+        self.send(email, subject, &body)
+    }
+
     /// This is supposed to be used only during tests, to retrieve the messages stored in the
     /// "memory" backend. It's not cfg'd away because our integration tests need to access this.
     pub fn mails_in_memory(&self) -> Option<Vec<StoredEmail>> {
