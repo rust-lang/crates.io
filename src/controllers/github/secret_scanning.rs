@@ -2,6 +2,7 @@ use crate::controllers::frontend_prelude::*;
 use crate::models::{ApiToken, User};
 use crate::schema::api_tokens;
 use crate::util::read_fill;
+use crate::util::token::SecureToken;
 use base64;
 use once_cell::sync::Lazy;
 use ring::signature;
@@ -151,10 +152,12 @@ fn alert_revoke_token(
 ) -> Result<GitHubSecretAlertFeedbackLabel, Box<dyn AppError>> {
     let conn = req.db_write()?;
 
+    let hashed_token = SecureToken::hash(&alert.token);
+
     // not using ApiToken::find_by_api_token in order to preserve last_used_at
     // the token field has a uniqueness constraint so get_result() should be safe to use
     let token = diesel::update(api_tokens::table)
-        .filter(api_tokens::token.eq(alert.token.as_bytes()))
+        .filter(api_tokens::token.eq(hashed_token))
         .set(api_tokens::revoked.eq(true))
         .get_result::<ApiToken>(&*conn)
         .optional()?;
