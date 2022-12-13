@@ -186,11 +186,20 @@ fn alert_revoke_token(
 pub struct GitHubSecretAlertFeedback {
     pub token_raw: String,
     pub token_type: String,
-    pub label: String,
+    pub label: GitHubSecretAlertFeedbackLabel,
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum GitHubSecretAlertFeedbackLabel {
+    TruePositive,
+    FalsePositive,
 }
 
 /// Handles the `POST /api/github/secret-scanning/verify` route.
 pub fn verify(req: &mut dyn RequestExt) -> EndpointResult {
+    use GitHubSecretAlertFeedbackLabel::*;
+
     let max_size = 8192;
     let length = req
         .content_length()
@@ -214,13 +223,13 @@ pub fn verify(req: &mut dyn RequestExt) -> EndpointResult {
             token_raw: alert.token.clone(),
             token_type: alert.r#type.clone(),
             label: match alert_revoke_token(req, &alert) {
-                Ok(()) => "true_positive".to_string(),
+                Ok(()) => TruePositive,
                 Err(e) => {
                     warn!(
                         "Error revoking API token in GitHub secret alert: {} ({e:?})",
                         alert.token
                     );
-                    "false_positive".to_string()
+                    FalsePositive
                 }
             },
         })

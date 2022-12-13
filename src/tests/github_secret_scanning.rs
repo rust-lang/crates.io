@@ -1,5 +1,7 @@
 use crate::{RequestHelper, TestApp};
-use cargo_registry::controllers::github::secret_scanning::GitHubSecretAlertFeedback;
+use cargo_registry::controllers::github::secret_scanning::{
+    GitHubSecretAlertFeedback, GitHubSecretAlertFeedbackLabel,
+};
 use cargo_registry::{models::ApiToken, schema::api_tokens};
 use conduit::StatusCode;
 use diesel::prelude::*;
@@ -49,7 +51,10 @@ fn github_secret_alert_revokes_token() {
     assert_eq!(feedback.len(), 1);
     assert_eq!(feedback[0].token_raw, "some_token");
     assert_eq!(feedback[0].token_type, "some_type");
-    assert_eq!(feedback[0].label, "true_positive");
+    assert_eq!(
+        feedback[0].label,
+        GitHubSecretAlertFeedbackLabel::TruePositive
+    );
 
     // Ensure that the token was revoked
     app.db(|conn| {
@@ -95,7 +100,10 @@ fn github_secret_alert_for_unknown_token() {
     assert_eq!(feedback.len(), 1);
     assert_eq!(feedback[0].token_raw, "some_token");
     assert_eq!(feedback[0].token_type, "some_type");
-    assert_eq!(feedback[0].label, "false_positive");
+    assert_eq!(
+        feedback[0].label,
+        GitHubSecretAlertFeedbackLabel::FalsePositive
+    );
 
     // Ensure that the token was not revoked
     app.db(|conn| {
