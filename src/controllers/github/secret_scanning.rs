@@ -148,38 +148,50 @@ struct GitHubSecretAlert {
 fn alert_revoke_token(
     req: &dyn RequestExt,
     alert: &GitHubSecretAlert,
-) -> Result<(), Box<dyn AppError>> {
+) -> Result<GitHubSecretAlertFeedbackLabel, Box<dyn AppError>> {
     let conn = req.db_write()?;
 
     // not using ApiToken::find_by_api_token in order to preserve last_used_at
     // the token field has a uniqueness constraint so get_result() should be safe to use
-    let token: ApiToken = diesel::update(api_tokens::table)
+    let token = diesel::update(api_tokens::table)
         .filter(api_tokens::token.eq(alert.token.as_bytes()))
         .set(api_tokens::revoked.eq(true))
-        .get_result::<ApiToken>(&*conn)?;
+        .get_result::<ApiToken>(&*conn)
+        .optional()?;
+
+    let Some(token) = token else {
+        return Ok(GitHubSecretAlertFeedbackLabel::FalsePositive);
+    };
 
     // send email notification to the token owner
     let user = User::find(&conn, token.user_id)?;
-    info!(
+    warn!(
         "Revoked API token '{}' for user {} ({})",
         alert.token, user.gh_login, user.id
     );
-    match user.email(&conn)? {
-        None => {
-            info!(
-                "No email address for user {} ({}), cannot send email notification",
-                user.gh_login, user.id
-            );
-            Ok(())
-        }
-        Some(email) => req.app().emails.send_token_exposed_notification(
+
+    if let Some(email) = user.email(&conn)? {
+        let result = req.app().emails.send_token_exposed_notification(
             &email,
             &alert.url,
             "GitHub",
             &alert.source,
             &token.name,
-        ),
-    }
+        );
+        if let Err(error) = result {
+            warn!(
+                gh_login = %user.gh_login, user_id = %user.id, ?error,
+                "Failed to send email notification",
+            );
+        }
+    } else {
+        warn!(
+            gh_login = %user.gh_login, user_id = %user.id,
+            "Failed to send email notification: No address found",
+        );
+    };
+
+    Ok(GitHubSecretAlertFeedbackLabel::TruePositive)
 }
 
 #[derive(Deserialize, Serialize)]
@@ -198,8 +210,6 @@ pub enum GitHubSecretAlertFeedbackLabel {
 
 /// Handles the `POST /api/github/secret-scanning/verify` route.
 pub fn verify(req: &mut dyn RequestExt) -> EndpointResult {
-    use GitHubSecretAlertFeedbackLabel::*;
-
     let max_size = 8192;
     let length = req
         .content_length()
@@ -217,23 +227,17 @@ pub fn verify(req: &mut dyn RequestExt) -> EndpointResult {
     let alerts: Vec<GitHubSecretAlert> = json::from_slice(&json)
         .map_err(|e| bad_request(&format!("invalid secret alert request: {e:?}")))?;
 
-    let feedback: Vec<GitHubSecretAlertFeedback> = alerts
+    let feedback = alerts
         .into_iter()
-        .map(|alert| GitHubSecretAlertFeedback {
-            token_raw: alert.token.clone(),
-            token_type: alert.r#type.clone(),
-            label: match alert_revoke_token(req, &alert) {
-                Ok(()) => TruePositive,
-                Err(e) => {
-                    warn!(
-                        "Error revoking API token in GitHub secret alert: {} ({e:?})",
-                        alert.token
-                    );
-                    FalsePositive
-                }
-            },
+        .map(|alert| {
+            let label = alert_revoke_token(req, &alert)?;
+            Ok(GitHubSecretAlertFeedback {
+                token_raw: alert.token,
+                token_type: alert.r#type,
+                label,
+            })
         })
-        .collect();
+        .collect::<Result<Vec<GitHubSecretAlertFeedback>, Box<dyn AppError>>>()?;
 
     Ok(req.json(&feedback))
 }
