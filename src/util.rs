@@ -13,7 +13,7 @@ mod io_util;
 mod request_helpers;
 mod request_proxy;
 pub mod rfc3339;
-pub(crate) mod token;
+pub mod token;
 pub mod tracing;
 
 pub type AppResponse = Response<Body>;

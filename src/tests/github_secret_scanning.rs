@@ -2,6 +2,7 @@ use crate::{RequestHelper, TestApp};
 use cargo_registry::controllers::github::secret_scanning::{
     GitHubSecretAlertFeedback, GitHubSecretAlertFeedbackLabel,
 };
+use cargo_registry::util::token::SecureToken;
 use cargo_registry::{models::ApiToken, schema::api_tokens};
 use conduit::StatusCode;
 use diesel::prelude::*;
@@ -33,8 +34,9 @@ fn github_secret_alert_revokes_token() {
 
     // Set token to expected value in signed request
     app.db(|conn| {
+        let hashed_token = SecureToken::hash("some_token");
         diesel::update(api_tokens::table)
-            .set(api_tokens::token.eq(b"some_token" as &[u8]))
+            .set(api_tokens::token.eq(hashed_token))
             .execute(conn)
             .unwrap();
     });
