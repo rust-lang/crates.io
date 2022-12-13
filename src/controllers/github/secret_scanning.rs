@@ -205,9 +205,7 @@ pub fn verify(req: &mut dyn RequestExt) -> EndpointResult {
     verify_github_signature(req, &json)
         .map_err(|e| bad_request(&format!("failed to verify request signature: {e:?}")))?;
 
-    let json = String::from_utf8(json)
-        .map_err(|e| bad_request(&format!("failed to decode request body: {e:?}")))?;
-    let alerts: Vec<GitHubSecretAlert> = json::from_str(&json)
+    let alerts: Vec<GitHubSecretAlert> = json::from_slice(&json)
         .map_err(|e| bad_request(&format!("invalid secret alert request: {e:?}")))?;
 
     let feedback: Vec<GitHubSecretAlertFeedback> = alerts
