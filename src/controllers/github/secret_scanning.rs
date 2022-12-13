@@ -169,8 +169,8 @@ fn alert_revoke_token(
     // send email notification to the token owner
     let user = User::find(&conn, token.user_id)?;
     warn!(
-        "Revoked API token '{}' for user {} ({})",
-        alert.token, user.gh_login, user.id
+        gh_login = %user.gh_login, user_id = %user.id, token_id = %token.id,
+        "Revoked API token",
     );
 
     if let Some(email) = user.email(&conn)? {
@@ -189,8 +189,8 @@ fn alert_revoke_token(
         }
     } else {
         warn!(
-            gh_login = %user.gh_login, user_id = %user.id,
-            "Failed to send email notification: No address found",
+            gh_login = %user.gh_login, user_id = %user.id, error = "No address found",
+            "Failed to send email notification",
         );
     };
 
