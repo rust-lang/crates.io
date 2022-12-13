@@ -66,8 +66,8 @@ fn key_from_spki(key: &GitHubPublicKey) -> Result<Vec<u8>, std::io::Error> {
 /// Check if cache of public keys is populated and not expired
 fn is_cache_valid(timestamp: Option<chrono::DateTime<chrono::Utc>>) -> bool {
     timestamp.is_some()
-        && chrono::Utc::now() - timestamp.unwrap()
-            < chrono::Duration::seconds(PUBLIC_KEY_CACHE_LIFETIME_SECONDS)
+        && chrono::Utc::now()
+            < timestamp.unwrap() + chrono::Duration::seconds(PUBLIC_KEY_CACHE_LIFETIME_SECONDS)
 }
 
 // Fetches list of public keys from GitHub API
@@ -82,8 +82,7 @@ fn get_public_keys(req: &dyn RequestExt) -> Result<Vec<GitHubPublicKey>, Box<dyn
     let app = req.app();
     let keys = app
         .github
-        .public_keys(&app.config.gh_client_id, &app.config.gh_client_secret)
-        .unwrap();
+        .public_keys(&app.config.gh_client_id, &app.config.gh_client_secret)?;
 
     // Populate cache
     if let Ok(mut cache) = PUBLIC_KEY_CACHE.lock() {
@@ -110,32 +109,31 @@ fn verify_github_signature(req: &dyn RequestExt, json: &[u8]) -> Result<(), Box<
     let public_keys = get_public_keys(req)
         .map_err(|e| bad_request(&format!("failed to fetch GitHub public keys: {e:?}")))?;
 
-    for key in public_keys {
-        if key.key_identifier == req_key_id {
-            if !key.is_current {
-                return Err(bad_request(&format!(
-                    "key id {req_key_id} is not a current key"
-                )));
-            }
-            let key_bytes =
-                key_from_spki(&key).map_err(|_| bad_request("cannot parse public key"))?;
-            let gh_key =
-                signature::UnparsedPublicKey::new(&signature::ECDSA_P256_SHA256_ASN1, &key_bytes);
+    let key = public_keys
+        .iter()
+        .find(|key| key.key_identifier == req_key_id);
 
-            return match gh_key.verify(json, &sig) {
-                Ok(v) => {
-                    info!(
-                        "GitHub secret alert request validated with key id {}",
-                        key.key_identifier
-                    );
-                    Ok(v)
-                }
-                Err(e) => Err(bad_request(&format!("invalid signature: {e:?}"))),
-            };
-        }
+    let Some(key) = key else {
+        return Err(bad_request(&format!("unknown key id {req_key_id}")));
+    };
+
+    if !key.is_current {
+        let error = bad_request(&format!("key id {req_key_id} is not a current key"));
+        return Err(error);
     }
 
-    return Err(bad_request(&format!("unknown key id {req_key_id}")));
+    let key_bytes = key_from_spki(key).map_err(|_| bad_request("cannot parse public key"))?;
+    let gh_key = signature::UnparsedPublicKey::new(&signature::ECDSA_P256_SHA256_ASN1, &key_bytes);
+
+    gh_key
+        .verify(json, &sig)
+        .map_err(|e| bad_request(&format!("invalid signature: {e:?}")))?;
+
+    debug!(
+        key_id = %key.key_identifier,
+        "GitHub secret alert request validated",
+    );
+    Ok(())
 }
 
 #[derive(Deserialize, Serialize)]
@@ -150,45 +148,64 @@ struct GitHubSecretAlert {
 fn alert_revoke_token(
     req: &dyn RequestExt,
     alert: &GitHubSecretAlert,
-) -> Result<(), Box<dyn AppError>> {
+) -> Result<GitHubSecretAlertFeedbackLabel, Box<dyn AppError>> {
     let conn = req.db_write()?;
 
     // not using ApiToken::find_by_api_token in order to preserve last_used_at
     // the token field has a uniqueness constraint so get_result() should be safe to use
-    let token: ApiToken = diesel::update(api_tokens::table)
+    let token = diesel::update(api_tokens::table)
         .filter(api_tokens::token.eq(alert.token.as_bytes()))
         .set(api_tokens::revoked.eq(true))
-        .get_result::<ApiToken>(&*conn)?;
+        .get_result::<ApiToken>(&*conn)
+        .optional()?;
+
+    let Some(token) = token else {
+        return Ok(GitHubSecretAlertFeedbackLabel::FalsePositive);
+    };
 
     // send email notification to the token owner
     let user = User::find(&conn, token.user_id)?;
-    info!(
+    warn!(
         "Revoked API token '{}' for user {} ({})",
         alert.token, user.gh_login, user.id
     );
-    match user.email(&conn)? {
-        None => {
-            info!(
-                "No email address for user {} ({}), cannot send email notification",
-                user.gh_login, user.id
-            );
-            Ok(())
-        }
-        Some(email) => req.app().emails.send_token_exposed_notification(
+
+    if let Some(email) = user.email(&conn)? {
+        let result = req.app().emails.send_token_exposed_notification(
             &email,
             &alert.url,
             "GitHub",
             &alert.source,
             &token.name,
-        ),
-    }
+        );
+        if let Err(error) = result {
+            warn!(
+                gh_login = %user.gh_login, user_id = %user.id, ?error,
+                "Failed to send email notification",
+            );
+        }
+    } else {
+        warn!(
+            gh_login = %user.gh_login, user_id = %user.id,
+            "Failed to send email notification: No address found",
+        );
+    };
+
+    Ok(GitHubSecretAlertFeedbackLabel::TruePositive)
 }
 
 #[derive(Deserialize, Serialize)]
 pub struct GitHubSecretAlertFeedback {
     pub token_raw: String,
     pub token_type: String,
-    pub label: String,
+    pub label: GitHubSecretAlertFeedbackLabel,
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum GitHubSecretAlertFeedbackLabel {
+    TruePositive,
+    FalsePositive,
 }
 
 /// Handles the `POST /api/github/secret-scanning/verify` route.
@@ -207,28 +224,20 @@ pub fn verify(req: &mut dyn RequestExt) -> EndpointResult {
     verify_github_signature(req, &json)
         .map_err(|e| bad_request(&format!("failed to verify request signature: {e:?}")))?;
 
-    let json = String::from_utf8(json)
-        .map_err(|e| bad_request(&format!("failed to decode request body: {e:?}")))?;
-    let alerts: Vec<GitHubSecretAlert> = json::from_str(&json)
+    let alerts: Vec<GitHubSecretAlert> = json::from_slice(&json)
         .map_err(|e| bad_request(&format!("invalid secret alert request: {e:?}")))?;
 
-    let feedback: Vec<GitHubSecretAlertFeedback> = alerts
+    let feedback = alerts
         .into_iter()
-        .map(|alert| GitHubSecretAlertFeedback {
-            token_raw: alert.token.clone(),
-            token_type: alert.r#type.clone(),
-            label: match alert_revoke_token(req, &alert) {
-                Ok(()) => "true_positive".to_string(),
-                Err(e) => {
-                    warn!(
-                        "Error revoking API token in GitHub secret alert: {} ({e:?})",
-                        alert.token
-                    );
-                    "false_positive".to_string()
-                }
-            },
+        .map(|alert| {
+            let label = alert_revoke_token(req, &alert)?;
+            Ok(GitHubSecretAlertFeedback {
+                token_raw: alert.token,
+                token_type: alert.r#type,
+                label,
+            })
         })
-        .collect();
+        .collect::<Result<Vec<GitHubSecretAlertFeedback>, Box<dyn AppError>>>()?;
 
     Ok(req.json(&feedback))
 }
