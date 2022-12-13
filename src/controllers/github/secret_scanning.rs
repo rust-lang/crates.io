@@ -109,32 +109,31 @@ fn verify_github_signature(req: &dyn RequestExt, json: &[u8]) -> Result<(), Box<
     let public_keys = get_public_keys(req)
         .map_err(|e| bad_request(&format!("failed to fetch GitHub public keys: {e:?}")))?;
 
-    for key in public_keys {
-        if key.key_identifier == req_key_id {
-            if !key.is_current {
-                return Err(bad_request(&format!(
-                    "key id {req_key_id} is not a current key"
-                )));
-            }
-            let key_bytes =
-                key_from_spki(&key).map_err(|_| bad_request("cannot parse public key"))?;
-            let gh_key =
-                signature::UnparsedPublicKey::new(&signature::ECDSA_P256_SHA256_ASN1, &key_bytes);
+    let key = public_keys
+        .iter()
+        .find(|key| key.key_identifier == req_key_id);
 
-            return match gh_key.verify(json, &sig) {
-                Ok(v) => {
-                    info!(
-                        "GitHub secret alert request validated with key id {}",
-                        key.key_identifier
-                    );
-                    Ok(v)
-                }
-                Err(e) => Err(bad_request(&format!("invalid signature: {e:?}"))),
-            };
-        }
+    let Some(key) = key else {
+        return Err(bad_request(&format!("unknown key id {req_key_id}")));
+    };
+
+    if !key.is_current {
+        let error = bad_request(&format!("key id {req_key_id} is not a current key"));
+        return Err(error);
     }
 
-    return Err(bad_request(&format!("unknown key id {req_key_id}")));
+    let key_bytes = key_from_spki(key).map_err(|_| bad_request("cannot parse public key"))?;
+    let gh_key = signature::UnparsedPublicKey::new(&signature::ECDSA_P256_SHA256_ASN1, &key_bytes);
+
+    gh_key
+        .verify(json, &sig)
+        .map_err(|e| bad_request(&format!("invalid signature: {e:?}")))?;
+
+    debug!(
+        key_id = %key.key_identifier,
+        "GitHub secret alert request validated",
+    );
+    Ok(())
 }
 
 #[derive(Deserialize, Serialize)]
