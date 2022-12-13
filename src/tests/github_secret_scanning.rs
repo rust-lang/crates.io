@@ -75,6 +75,67 @@ fn github_secret_alert_revokes_token() {
 }
 
 #[test]
+fn github_secret_alert_for_revoked_token() {
+    let (app, anon, user, token) = TestApp::init().with_token();
+
+    // Ensure no emails were sent up to this point
+    assert_eq!(0, app.as_inner().emails.mails_in_memory().unwrap().len());
+
+    // Ensure that the token currently exists in the database
+    app.db(|conn| {
+        let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user.as_model())
+            .filter(api_tokens::revoked.eq(false))
+            .load(conn));
+        assert_eq!(tokens.len(), 1);
+        assert_eq!(tokens[0].name, token.as_model().name);
+    });
+
+    // Set token to expected value in signed request and revoke it
+    app.db(|conn| {
+        let hashed_token = SecureToken::hash("some_token");
+        diesel::update(api_tokens::table)
+            .set((
+                api_tokens::token.eq(hashed_token),
+                api_tokens::revoked.eq(true),
+            ))
+            .execute(conn)
+            .unwrap();
+    });
+
+    let mut request = anon.post_request(URL);
+    request.with_body(GITHUB_ALERT);
+    request.header("GITHUB-PUBLIC-KEY-IDENTIFIER", GITHUB_PUBLIC_KEY_IDENTIFIER);
+    request.header("GITHUB-PUBLIC-KEY-SIGNATURE", GITHUB_PUBLIC_KEY_SIGNATURE);
+    let response = anon.run::<Vec<GitHubSecretAlertFeedback>>(request);
+    assert_eq!(response.status(), StatusCode::OK);
+
+    // Ensure feedback is a false positive
+    let feedback = response.good();
+    assert_eq!(feedback.len(), 1);
+    assert_eq!(feedback[0].token_raw, "some_token");
+    assert_eq!(feedback[0].token_type, "some_type");
+    assert_eq!(
+        feedback[0].label,
+        GitHubSecretAlertFeedbackLabel::FalsePositive
+    );
+
+    // Ensure that the token is still revoked
+    app.db(|conn| {
+        let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user.as_model())
+            .filter(api_tokens::revoked.eq(false))
+            .load(conn));
+        assert_eq!(tokens.len(), 0);
+        let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user.as_model())
+            .filter(api_tokens::revoked.eq(true))
+            .load(conn));
+        assert_eq!(tokens.len(), 1);
+    });
+
+    // Ensure still no emails were sent
+    assert_eq!(0, app.as_inner().emails.mails_in_memory().unwrap().len());
+}
+
+#[test]
 fn github_secret_alert_for_unknown_token() {
     let (app, anon, user, token) = TestApp::init().with_token();
 

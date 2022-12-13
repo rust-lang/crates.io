@@ -158,6 +158,7 @@ fn alert_revoke_token(
     // the token field has a uniqueness constraint so get_result() should be safe to use
     let token = diesel::update(api_tokens::table)
         .filter(api_tokens::token.eq(hashed_token))
+        .filter(api_tokens::revoked.eq(false))
         .set(api_tokens::revoked.eq(true))
         .get_result::<ApiToken>(&*conn)
         .optional()?;
