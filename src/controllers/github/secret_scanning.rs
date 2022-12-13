@@ -66,8 +66,8 @@ fn key_from_spki(key: &GitHubPublicKey) -> Result<Vec<u8>, std::io::Error> {
 /// Check if cache of public keys is populated and not expired
 fn is_cache_valid(timestamp: Option<chrono::DateTime<chrono::Utc>>) -> bool {
     timestamp.is_some()
-        && chrono::Utc::now() - timestamp.unwrap()
-            < chrono::Duration::seconds(PUBLIC_KEY_CACHE_LIFETIME_SECONDS)
+        && chrono::Utc::now()
+            < timestamp.unwrap() + chrono::Duration::seconds(PUBLIC_KEY_CACHE_LIFETIME_SECONDS)
 }
 
 // Fetches list of public keys from GitHub API
