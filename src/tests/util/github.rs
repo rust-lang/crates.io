@@ -170,7 +170,7 @@ impl GitHubClient for MockGitHubClient {
     }
 
     fn public_keys(&self, _username: &str, _password: &str) -> AppResult<Vec<GitHubPublicKey>> {
-        Ok(self.data.public_keys.iter().collect())
+        Ok(self.data.public_keys.iter().map(Into::into).collect())
     }
 }
 
@@ -213,15 +213,5 @@ impl From<&'static MockPublicKey> for GitHubPublicKey {
             key: k.key.to_string(),
             is_current: k.is_current,
         }
-    }
-}
-
-impl FromIterator<&'static MockPublicKey> for Vec<GitHubPublicKey> {
-    fn from_iter<I: IntoIterator<Item = &'static MockPublicKey>>(iter: I) -> Self {
-        let mut c = Vec::new();
-        for k in iter {
-            c.push(k.into());
-        }
-        c
     }
 }
