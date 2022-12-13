@@ -82,8 +82,7 @@ fn get_public_keys(req: &dyn RequestExt) -> Result<Vec<GitHubPublicKey>, Box<dyn
     let app = req.app();
     let keys = app
         .github
-        .public_keys(&app.config.gh_client_id, &app.config.gh_client_secret)
-        .unwrap();
+        .public_keys(&app.config.gh_client_id, &app.config.gh_client_secret)?;
 
     // Populate cache
     if let Ok(mut cache) = PUBLIC_KEY_CACHE.lock() {
