@@ -18,7 +18,7 @@ impl SecureToken {
             kind.prefix(),
             generate_secure_alphanumeric_string(TOKEN_LENGTH)
         );
-        let sha256 = Sha256::digest(plaintext.as_bytes()).as_slice().to_vec();
+        let sha256 = Self::hash(&plaintext);
 
         NewSecureToken {
             plaintext,
@@ -32,8 +32,12 @@ impl SecureToken {
             return None;
         }
 
-        let sha256 = Sha256::digest(plaintext.as_bytes()).as_slice().to_vec();
+        let sha256 = Self::hash(plaintext);
         Some(Self { sha256 })
+    }
+
+    pub fn hash(plaintext: &str) -> Vec<u8> {
+        Sha256::digest(plaintext.as_bytes()).as_slice().to_vec()
     }
 }
 
