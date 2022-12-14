@@ -1,5 +1,3 @@
-use base64::alphabet::STANDARD;
-use base64::engine::fast_portable::{FastPortable, PAD};
 use base64::write::EncoderWriter;
 use indexmap::IndexMap;
 use prometheus::proto::{MetricFamily, MetricType};
@@ -12,8 +10,6 @@ use std::io::Write;
 use std::rc::Rc;
 
 const CHUNKS_MAX_SIZE_BYTES: usize = 5000;
-
-const BASE64_ENGINE: FastPortable = FastPortable::from(&STANDARD, PAD);
 
 /// The `LogEncoder` struct encodes Prometheus metrics in the format [`crates-io-heroku-metrics`]
 /// expects metrics to be logged. This can be used to forward instance metrics to it, allowing them
@@ -139,7 +135,7 @@ fn serialize_and_split_list<'a, S: Serialize + 'a>(
     while items.peek().is_some() {
         let mut writer = TrackedWriter::new();
         let written_count = writer.written_count.clone();
-        let mut serializer = Serializer::new(EncoderWriter::from(&mut writer, &BASE64_ENGINE));
+        let mut serializer = Serializer::new(EncoderWriter::new(&mut writer, base64::STANDARD));
 
         let mut seq = serializer.serialize_seq(None)?;
         #[allow(clippy::while_let_on_iterator)]
