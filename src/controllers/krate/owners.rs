@@ -2,6 +2,7 @@
 
 use crate::auth::AuthCheck;
 use crate::controllers::prelude::*;
+use crate::models::token::EndpointScope;
 use crate::models::{Crate, Owner, Rights, Team, User};
 use crate::views::EncodableOwner;
 
@@ -80,7 +81,12 @@ fn parse_owners_request(req: &mut dyn RequestExt) -> AppResult<Vec<String>> {
 }
 
 fn modify_owners(req: &mut dyn RequestExt, add: bool) -> EndpointResult {
-    let auth = AuthCheck::default().check(req)?;
+    let crate_name = &req.params()["crate_id"];
+
+    let auth = AuthCheck::default()
+        .with_endpoint_scope(EndpointScope::ChangeOwners)
+        .for_crate(crate_name)
+        .check(req)?;
 
     let logins = parse_owners_request(req)?;
     let app = req.app();

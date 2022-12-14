@@ -18,6 +18,7 @@ use crate::models::{
 use crate::worker;
 
 use crate::middleware::log_request::add_custom_metadata;
+use crate::models::token::EndpointScope;
 use crate::schema::*;
 use crate::util::errors::{cargo_err, AppResult};
 use crate::util::{read_fill, read_le_u32, CargoVcsInfo, LimitErrorReader, Maximums};
@@ -65,7 +66,24 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
     add_custom_metadata("crate_version", new_crate.vers.to_string());
 
     let conn = app.primary_database.get()?;
-    let auth = AuthCheck::default().check(req)?;
+
+    // this query should only be used for the endpoint scope calculation
+    // since a race condition there would only cause `publish-new` instead of
+    // `publish-update` to be used.
+    let existing_crate = Crate::by_name(&new_crate.name)
+        .first::<Crate>(&*conn)
+        .optional()?;
+
+    let endpoint_scope = match existing_crate {
+        Some(_) => EndpointScope::PublishUpdate,
+        None => EndpointScope::PublishNew,
+    };
+
+    let auth = AuthCheck::default()
+        .with_endpoint_scope(endpoint_scope)
+        .for_crate(&new_crate.name)
+        .check(req)?;
+
     let api_token_id = auth.api_token_id();
     let user = auth.user();
 
