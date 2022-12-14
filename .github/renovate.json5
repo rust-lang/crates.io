@@ -11,10 +11,10 @@
         ":automergeTesters",
     ],
     "js": {
-        "labels": ["A-frontend"],
+        "labels": ["A-frontend 🐹"],
     },
     "rust": {
-        "labels": ["A-backend"],
+        "labels": ["A-backend ⚙️"],
     },
     "regexManagers": [
         {
