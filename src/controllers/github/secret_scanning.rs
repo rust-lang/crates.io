@@ -3,6 +3,7 @@ use crate::models::{ApiToken, User};
 use crate::schema::api_tokens;
 use crate::util::read_fill;
 use crate::util::token::SecureToken;
+use anyhow::{anyhow, Context};
 use base64;
 use once_cell::sync::Lazy;
 use ring::signature;
@@ -167,35 +168,39 @@ fn alert_revoke_token(
         return Ok(GitHubSecretAlertFeedbackLabel::FalsePositive);
     };
 
-    // send email notification to the token owner
-    let user = User::find(&conn, token.user_id)?;
     warn!(
-        gh_login = %user.gh_login, user_id = %user.id, token_id = %token.id,
+        token_id = %token.id, user_id = %token.user_id,
         "Revoked API token",
     );
 
-    if let Some(email) = user.email(&conn)? {
-        let result = req.app().emails.send_token_exposed_notification(
-            &email,
-            &alert.url,
-            "GitHub",
-            &alert.source,
-            &token.name,
-        );
-        if let Err(error) = result {
-            warn!(
-                gh_login = %user.gh_login, user_id = %user.id, ?error,
-                "Failed to send email notification",
-            );
-        }
-    } else {
+    if let Err(error) = send_notification_email(&token, alert, req) {
         warn!(
-            gh_login = %user.gh_login, user_id = %user.id, error = "No address found",
+            token_id = %token.id, user_id = %token.user_id, ?error,
             "Failed to send email notification",
-        );
-    };
+        )
+    }
 
     Ok(GitHubSecretAlertFeedbackLabel::TruePositive)
+}
+
+fn send_notification_email(
+    token: &ApiToken,
+    alert: &GitHubSecretAlert,
+    req: &dyn RequestExt,
+) -> anyhow::Result<()> {
+    let conn = req.db_read()?;
+
+    let user = User::find(&conn, token.user_id).context("Failed to find user")?;
+    let Some(email) = user.email(&conn)? else {
+        return Err(anyhow!("No address found"));
+    };
+
+    req.app()
+        .emails
+        .send_token_exposed_notification(&email, &alert.url, "GitHub", &alert.source, &token.name)
+        .map_err(|error| anyhow!("{error}"))?;
+
+    Ok(())
 }
 
 #[derive(Deserialize, Serialize)]
