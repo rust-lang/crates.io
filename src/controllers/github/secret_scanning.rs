@@ -155,22 +155,32 @@ fn alert_revoke_token(
 
     let hashed_token = SecureToken::hash(&alert.token);
 
-    // not using ApiToken::find_by_api_token in order to preserve last_used_at
-    // the token field has a uniqueness constraint so get_result() should be safe to use
-    let token = diesel::update(api_tokens::table)
+    // Not using `ApiToken::find_by_api_token()` in order to preserve `last_used_at`
+    let token = api_tokens::table
         .filter(api_tokens::token.eq(hashed_token))
-        .filter(api_tokens::revoked.eq(false))
-        .set(api_tokens::revoked.eq(true))
         .get_result::<ApiToken>(&*conn)
         .optional()?;
 
     let Some(token) = token else {
+        debug!("Unknown API token received (false positive)");
         return Ok(GitHubSecretAlertFeedbackLabel::FalsePositive);
     };
 
+    if token.revoked {
+        debug!(
+            token_id = %token.id, user_id = %token.user_id,
+            "Already revoked API token received (true positive)",
+        );
+        return Ok(GitHubSecretAlertFeedbackLabel::TruePositive);
+    }
+
+    diesel::update(&token)
+        .set(api_tokens::revoked.eq(true))
+        .execute(&*conn)?;
+
     warn!(
         token_id = %token.id, user_id = %token.user_id,
-        "Revoked API token",
+        "Active API token received and revoked (true positive)",
     );
 
     if let Err(error) = send_notification_email(&token, alert, req) {
