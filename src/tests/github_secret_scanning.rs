@@ -109,14 +109,14 @@ fn github_secret_alert_for_revoked_token() {
     let response = anon.run::<Vec<GitHubSecretAlertFeedback>>(request);
     assert_eq!(response.status(), StatusCode::OK);
 
-    // Ensure feedback is a false positive
+    // Ensure feedback is a true positive
     let feedback = response.good();
     assert_eq!(feedback.len(), 1);
     assert_eq!(feedback[0].token_raw, "some_token");
     assert_eq!(feedback[0].token_type, "some_type");
     assert_eq!(
         feedback[0].label,
-        GitHubSecretAlertFeedbackLabel::FalsePositive
+        GitHubSecretAlertFeedbackLabel::TruePositive
     );
 
     // Ensure that the token is still revoked

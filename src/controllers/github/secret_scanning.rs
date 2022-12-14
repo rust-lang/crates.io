@@ -3,6 +3,7 @@ use crate::models::{ApiToken, User};
 use crate::schema::api_tokens;
 use crate::util::read_fill;
 use crate::util::token::SecureToken;
+use anyhow::{anyhow, Context};
 use base64;
 use once_cell::sync::Lazy;
 use ring::signature;
@@ -154,48 +155,62 @@ fn alert_revoke_token(
 
     let hashed_token = SecureToken::hash(&alert.token);
 
-    // not using ApiToken::find_by_api_token in order to preserve last_used_at
-    // the token field has a uniqueness constraint so get_result() should be safe to use
-    let token = diesel::update(api_tokens::table)
+    // Not using `ApiToken::find_by_api_token()` in order to preserve `last_used_at`
+    let token = api_tokens::table
         .filter(api_tokens::token.eq(hashed_token))
-        .filter(api_tokens::revoked.eq(false))
-        .set(api_tokens::revoked.eq(true))
         .get_result::<ApiToken>(&*conn)
         .optional()?;
 
     let Some(token) = token else {
+        debug!("Unknown API token received (false positive)");
         return Ok(GitHubSecretAlertFeedbackLabel::FalsePositive);
     };
 
-    // send email notification to the token owner
-    let user = User::find(&conn, token.user_id)?;
+    if token.revoked {
+        debug!(
+            token_id = %token.id, user_id = %token.user_id,
+            "Already revoked API token received (true positive)",
+        );
+        return Ok(GitHubSecretAlertFeedbackLabel::TruePositive);
+    }
+
+    diesel::update(&token)
+        .set(api_tokens::revoked.eq(true))
+        .execute(&*conn)?;
+
     warn!(
-        gh_login = %user.gh_login, user_id = %user.id, token_id = %token.id,
-        "Revoked API token",
+        token_id = %token.id, user_id = %token.user_id,
+        "Active API token received and revoked (true positive)",
     );
 
-    if let Some(email) = user.email(&conn)? {
-        let result = req.app().emails.send_token_exposed_notification(
-            &email,
-            &alert.url,
-            "GitHub",
-            &alert.source,
-            &token.name,
-        );
-        if let Err(error) = result {
-            warn!(
-                gh_login = %user.gh_login, user_id = %user.id, ?error,
-                "Failed to send email notification",
-            );
-        }
-    } else {
+    if let Err(error) = send_notification_email(&token, alert, req) {
         warn!(
-            gh_login = %user.gh_login, user_id = %user.id, error = "No address found",
+            token_id = %token.id, user_id = %token.user_id, ?error,
             "Failed to send email notification",
-        );
-    };
+        )
+    }
 
     Ok(GitHubSecretAlertFeedbackLabel::TruePositive)
+}
+
+fn send_notification_email(
+    token: &ApiToken,
+    alert: &GitHubSecretAlert,
+    req: &dyn RequestExt,
+) -> anyhow::Result<()> {
+    let conn = req.db_read()?;
+
+    let user = User::find(&conn, token.user_id).context("Failed to find user")?;
+    let Some(email) = user.email(&conn)? else {
+        return Err(anyhow!("No address found"));
+    };
+
+    req.app()
+        .emails
+        .send_token_exposed_notification(&email, &alert.url, "GitHub", &alert.source, &token.name)
+        .map_err(|error| anyhow!("{error}"))?;
+
+    Ok(())
 }
 
 #[derive(Deserialize, Serialize)]
