@@ -6,8 +6,6 @@ use crate::util::errors::{bad_request, AppResult};
 use crate::util::request_header;
 
 use crate::App;
-use base64::alphabet::URL_SAFE;
-use base64::engine::fast_portable::{FastPortable, NO_PAD};
 use diesel::pg::Pg;
 use diesel::query_builder::*;
 use diesel::query_dsl::LoadQuery;
@@ -21,8 +19,6 @@ use std::sync::Arc;
 const MAX_PAGE_BEFORE_SUSPECTED_BOT: u32 = 10;
 const DEFAULT_PER_PAGE: u32 = 10;
 const MAX_PER_PAGE: u32 = 100;
-
-const URL_SAFE_NO_PAD: FastPortable = FastPortable::from(&URL_SAFE, NO_PAD);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum Page {
@@ -297,17 +293,17 @@ fn is_useragent_or_ip_blocked(config: &Server, req: &dyn RequestExt) -> bool {
 /// technical measure to prevent API consumers for manually creating or modifying them, but
 /// hopefully the base64 will be enough to convey that doing it is unsupported.
 pub(crate) fn encode_seek<S: Serialize>(params: S) -> AppResult<String> {
-    Ok(base64::encode_engine(
+    Ok(base64::encode_config(
         serde_json::to_vec(&params)?,
-        &URL_SAFE_NO_PAD,
+        base64::URL_SAFE_NO_PAD,
     ))
 }
 
 /// Decode a list of params previously encoded with [`encode_seek`].
 pub(crate) fn decode_seek<D: for<'a> Deserialize<'a>>(seek: &str) -> AppResult<D> {
-    Ok(serde_json::from_slice(&base64::decode_engine(
+    Ok(serde_json::from_slice(&base64::decode_config(
         seek,
-        &URL_SAFE_NO_PAD,
+        base64::URL_SAFE_NO_PAD,
     )?)?)
 }
 
