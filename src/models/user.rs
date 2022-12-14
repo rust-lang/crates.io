@@ -171,10 +171,10 @@ impl User {
     }
 
     /// Queries for the email belonging to a particular user
-    pub fn email(&self, conn: &PgConnection) -> AppResult<Option<String>> {
-        Ok(Email::belonging_to(self)
+    pub fn email(&self, conn: &PgConnection) -> QueryResult<Option<String>> {
+        Email::belonging_to(self)
             .select(emails::email)
             .first(conn)
-            .optional()?)
+            .optional()
     }
 }
