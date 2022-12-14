@@ -38,17 +38,12 @@ use conduit_router::RouteBuilder;
 use std::env;
 use std::sync::Arc;
 
-use crate::sentry::SentryMiddleware;
 use crate::{App, Env};
 
 pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBuilder {
     let mut m = MiddlewareBuilder::new(endpoints);
     let env = app.config.env();
     let blocked_traffic = app.config.blocked_traffic.clone();
-
-    if env != Env::Test {
-        m.add(SentryMiddleware::with_transactions());
-    }
 
     m.add(log_request::LogRequests::default());
     m.add(ResponseTiming::default());

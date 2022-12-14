@@ -1,7 +1,4 @@
-mod middleware;
-
 use crate::env_optional;
-pub use middleware::CustomSentryMiddleware as SentryMiddleware;
 use sentry::{ClientInitGuard, ClientOptions, IntoDsn, TransactionContext};
 use std::sync::Arc;
 

@@ -380,7 +380,6 @@ dependencies = [
  "scheduled-thread-pool",
  "semver 1.0.14",
  "sentry",
- "sentry-conduit",
  "serde",
  "serde_json",
  "sha2",
@@ -392,6 +391,7 @@ dependencies = [
  "tikv-jemallocator",
  "tokio",
  "toml",
+ "tower",
  "tower-service",
  "tracing",
  "tracing-subscriber",
@@ -2697,6 +2697,7 @@ dependencies = [
  "sentry-contexts",
  "sentry-core",
  "sentry-panic",
+ "sentry-tower",
  "sentry-tracing",
  "tokio",
  "ureq",
@@ -2711,17 +2712,6 @@ dependencies = [
  "backtrace",
  "once_cell",
  "regex",
- "sentry-core",
-]
-
-[[package]]
-name = "sentry-conduit"
-version = "0.29.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "98208bd7694f95ee5591211a6e006af56344268eb8da6942a60a32713f1fee73"
-dependencies = [
- "conduit",
- "conduit-middleware",
  "sentry-core",
 ]
 
@@ -2760,6 +2750,20 @@ checksum = "0af37b8500f273e511ebd6eb0d342ff7937d64ce3f134764b2b4653112d48cb4"
 dependencies = [
  "sentry-backtrace",
  "sentry-core",
+]
+
+[[package]]
+name = "sentry-tower"
+version = "0.29.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eac2ab74919ee9ad3e6f5fc3fac0a4af2e8a6397b5fd7e0394f19928a4a3a3d3"
+dependencies = [
+ "http",
+ "pin-project",
+ "sentry-core",
+ "tower-layer",
+ "tower-service",
+ "url",
 ]
 
 [[package]]
