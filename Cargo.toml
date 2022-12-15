@@ -24,7 +24,7 @@ path = "src/tests/all.rs"
 [dependencies]
 anyhow = "=1.0.66"
 aws-sigv4 = "=0.52.0"
-axum = "=0.6.1"
+axum = { version = "=0.6.1", features = ["macros"] }
 base64 = "=0.13.1"
 cargo-registry-index = { path = "cargo-registry-index" }
 cargo-registry-markdown = { path = "cargo-registry-markdown" }
