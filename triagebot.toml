@@ -1,4 +1,0 @@
-[relabel]
-allow-unauthenticated = ["*"]
-
-[assign]
