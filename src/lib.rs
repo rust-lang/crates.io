@@ -85,11 +85,13 @@ pub fn build_handler(app: Arc<App>) -> axum::Router {
 
     type Request = http::Request<axum::body::Body>;
 
-    axum::Router::new().conduit_fallback(conduit_handler).layer(
-        tower::ServiceBuilder::new()
-            .layer(sentry_tower::NewSentryLayer::<Request>::new_from_top())
-            .layer(sentry_tower::SentryHttpLayer::with_transaction()),
-    )
+    let middleware = tower::ServiceBuilder::new()
+        .layer(sentry_tower::NewSentryLayer::<Request>::new_from_top())
+        .layer(sentry_tower::SentryHttpLayer::with_transaction());
+
+    axum::Router::new()
+        .conduit_fallback(conduit_handler)
+        .layer(middleware)
 }
 
 /// Convenience function requiring that an environment variable is set.
