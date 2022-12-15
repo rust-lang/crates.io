@@ -7,7 +7,9 @@ use crate::util::request_header;
 use conduit::RequestExt;
 
 use crate::middleware::normalize_path::OriginalPath;
-use http::{header, Method, StatusCode};
+use axum::middleware::Next;
+use axum::response::IntoResponse;
+use http::{header, Method, Request, StatusCode, Uri};
 use std::cell::RefCell;
 use std::fmt::{self, Display, Formatter};
 
@@ -36,6 +38,16 @@ impl Middleware for LogRequests {
 
         res
     }
+}
+
+pub async fn log_requests<B>(
+    method: Method,
+    uri: Uri,
+    req: Request<B>,
+    next: Next<B>,
+) -> impl IntoResponse {
+    debug!(target: "axum", "method={} path=\"{}\"", method, uri);
+    next.run(req).await
 }
 
 pub fn add_custom_metadata<V: Display>(key: &'static str, value: V) {
