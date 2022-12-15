@@ -13,30 +13,16 @@ use axum::middleware::Next;
 use axum::response::IntoResponse;
 use axum::TypedHeader;
 use http::{header, Method, Request, StatusCode, Uri};
-use std::cell::RefCell;
 use std::fmt::{self, Display, Formatter};
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 const SLOW_REQUEST_THRESHOLD_MS: u128 = 1000;
-
-// A thread local is used instead of a request extension to avoid the need to pass the request
-// object everywhere in the codebase. When migrating to async this will need to be moved to an
-// async-equivalent, as thread locals misbehave in async contexes.
-thread_local! {
-    static CUSTOM_METADATA: RefCell<Vec<(&'static str, String)>> = RefCell::new(Vec::new());
-}
 
 #[derive(Default)]
 pub(super) struct LogRequests();
 
 impl Middleware for LogRequests {
-    fn before(&self, _: &mut dyn RequestExt) -> BeforeResult {
-        // Remove any metadata set by the previous task before processing any new request.
-        CUSTOM_METADATA.with(|metadata| metadata.borrow_mut().clear());
-
-        Ok(())
-    }
-
     fn after(&self, req: &mut dyn RequestExt, res: AfterResult) -> AfterResult {
         RequestLine::new(req, &res).log();
 
@@ -57,6 +43,7 @@ pub struct Metadata {
     request: RequestMetadata,
     status: StatusCode,
     duration: Duration,
+    custom_metadata: CustomMetadata,
 }
 
 impl Display for Metadata {
@@ -100,13 +87,12 @@ impl Display for Metadata {
 
         line.add_quoted_field("user_agent", self.request.user_agent.as_str())?;
 
-        // CUSTOM_METADATA.with(|metadata| {
-        //     for (key, value) in &*metadata.borrow() {
-        //         line.add_quoted_field(key, value)?;
-        //     }
-        //     fmt::Result::Ok(())
-        // })?;
-        //
+        if let Ok(metadata) = self.custom_metadata.lock() {
+            for (key, value) in &*metadata {
+                line.add_quoted_field(key, value)?;
+            }
+        }
+
         // if let Err(err) = self.res {
         //     line.add_quoted_field("error", err)?;
         // }
@@ -121,10 +107,13 @@ impl Display for Metadata {
 
 pub async fn log_requests<B>(
     request_metadata: RequestMetadata,
-    req: Request<B>,
+    mut req: Request<B>,
     next: Next<B>,
 ) -> impl IntoResponse {
     let start_instant = Instant::now();
+
+    let custom_metadata = CustomMetadata::default();
+    req.extensions_mut().insert(custom_metadata.clone());
 
     let response = next.run(req).await;
 
@@ -132,27 +121,40 @@ pub async fn log_requests<B>(
         request: request_metadata,
         status: response.status(),
         duration: start_instant.elapsed(),
+        custom_metadata,
     };
     debug!(target: "axum", "{metadata}");
 
     response
 }
 
-pub fn add_custom_metadata<V: Display>(key: &'static str, value: V) {
-    CUSTOM_METADATA.with(|metadata| metadata.borrow_mut().push((key, value.to_string())));
+#[derive(Clone, Debug, Deref, Default)]
+pub struct CustomMetadata(Arc<Mutex<Vec<(&'static str, String)>>>);
+
+pub fn add_custom_metadata<V: Display>(req: &dyn RequestExt, key: &'static str, value: V) {
+    if let Some(metadata) = req.extensions().get::<CustomMetadata>() {
+        if let Ok(mut metadata) = metadata.lock() {
+            metadata.push((key, value.to_string()));
+        }
+    }
+
     sentry::configure_scope(|scope| scope.set_extra(key, value.to_string().into()));
 }
 
 #[cfg(test)]
-pub(crate) fn get_log_message(key: &'static str) -> String {
-    CUSTOM_METADATA.with(|metadata| {
-        for (k, v) in &*metadata.borrow() {
-            if key == *k {
-                return v.clone();
+pub(crate) fn get_log_message(req: &dyn RequestExt, key: &'static str) -> String {
+    // Unwrap shouldn't panic as no other code has access to the private struct to remove it
+    if let Some(metadata) = req.extensions().get::<CustomMetadata>() {
+        if let Ok(metadata) = metadata.lock() {
+            for (k, v) in &*metadata {
+                if key == *k {
+                    return v.clone();
+                }
             }
         }
-        panic!("expected log message for {} not found", key);
-    })
+    }
+
+    panic!("expected log message for {} not found", key);
 }
 
 struct RequestLine<'r> {
@@ -217,12 +219,13 @@ impl Display for RequestLine<'_> {
 
         line.add_quoted_field("user_agent", request_header(self.req, header::USER_AGENT))?;
 
-        CUSTOM_METADATA.with(|metadata| {
-            for (key, value) in &*metadata.borrow() {
-                line.add_quoted_field(key, value)?;
+        if let Some(mutex) = self.req.extensions().get::<CustomMetadata>() {
+            if let Ok(metadata) = mutex.lock() {
+                for (key, value) in &*metadata {
+                    line.add_quoted_field(key, value)?;
+                }
             }
-            fmt::Result::Ok(())
-        })?;
+        };
 
         if let Err(err) = self.res {
             line.add_quoted_field("error", err)?;

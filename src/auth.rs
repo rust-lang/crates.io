@@ -71,9 +71,9 @@ impl AuthCheck {
             }
         }
 
-        log_request::add_custom_metadata("uid", auth.user_id());
+        log_request::add_custom_metadata(request, "uid", auth.user_id());
         if let Some(id) = auth.api_token_id() {
-            log_request::add_custom_metadata("tokenid", id);
+            log_request::add_custom_metadata(request, "tokenid", id);
         }
 
         if let Some(ref token) = auth.token {
