@@ -40,13 +40,18 @@ impl Middleware for LogRequests {
     }
 }
 
-pub async fn log_requests<B>(
+#[derive(axum::extract::FromRequestParts)]
+pub struct RequestMetadata {
     method: Method,
     uri: Uri,
+}
+
+pub async fn log_requests<B>(
+    request_metadata: RequestMetadata,
     req: Request<B>,
     next: Next<B>,
 ) -> impl IntoResponse {
-    debug!(target: "axum", "method={} path=\"{}\"", method, uri);
+    debug!(target: "axum", "method={} path=\"{}\"", request_metadata.method, request_metadata.uri);
     next.run(req).await
 }
 
