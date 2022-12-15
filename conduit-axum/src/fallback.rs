@@ -82,7 +82,8 @@ impl IntoResponse for ServiceError {
 
 /// Logs an error message and returns a generic status 500 response
 fn server_error_response<E: Error + ?Sized>(error: &E) -> AxumResponse {
-    error!("Internal Server Error: {}", error);
+    error!(%error, "Internal Server Error");
+
     let body = hyper::Body::from("Internal Server Error");
     Response::builder()
         .status(StatusCode::INTERNAL_SERVER_ERROR)
