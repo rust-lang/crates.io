@@ -6,10 +6,16 @@ use crate::util::request_header;
 
 use conduit::RequestExt;
 
+use crate::headers::{XRealIp, XRequestId};
 use crate::middleware::normalize_path::OriginalPath;
-use http::{header, Method, StatusCode};
+use axum::headers::UserAgent;
+use axum::middleware::Next;
+use axum::response::IntoResponse;
+use axum::TypedHeader;
+use http::{header, Method, Request, StatusCode, Uri};
 use std::cell::RefCell;
 use std::fmt::{self, Display, Formatter};
+use std::time::{Duration, Instant};
 
 const SLOW_REQUEST_THRESHOLD_MS: u128 = 1000;
 
@@ -36,6 +42,100 @@ impl Middleware for LogRequests {
 
         res
     }
+}
+
+#[derive(axum::extract::FromRequestParts)]
+pub struct RequestMetadata {
+    method: Method,
+    uri: Uri,
+    user_agent: TypedHeader<UserAgent>,
+    request_id: Option<TypedHeader<XRequestId>>,
+    real_ip: Option<TypedHeader<XRealIp>>,
+}
+
+pub struct Metadata {
+    request: RequestMetadata,
+    status: StatusCode,
+    duration: Duration,
+}
+
+impl Display for Metadata {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let mut line = LogLine::new(f);
+
+        // The download endpoint is our most requested endpoint by 1-2 orders of
+        // magnitude. Since we pay per logged GB we try to reduce the amount of
+        // bytes per log line for this endpoint.
+
+        let is_download_endpoint = self.request.uri.path().ends_with("/download");
+        let is_download_redirect = is_download_endpoint && self.status.is_redirection();
+
+        let method = &self.request.method;
+        if !is_download_redirect || method != Method::GET {
+            line.add_field("method", method)?;
+        }
+
+        line.add_quoted_field("path", &self.request.uri)?;
+
+        if !is_download_redirect {
+            match &self.request.request_id {
+                Some(header) => line.add_field("request_id", header.as_str())?,
+                None => line.add_field("request_id", "")?,
+            };
+        }
+
+        match &self.request.real_ip {
+            Some(header) => line.add_quoted_field("fwd", header.as_str())?,
+            None => line.add_quoted_field("fwd", "")?,
+        };
+
+        let response_time_in_ms = self.duration.as_millis();
+        if !is_download_redirect || response_time_in_ms > 0 {
+            line.add_field("service", format!("{}ms", response_time_in_ms))?;
+        }
+
+        if !is_download_redirect {
+            line.add_field("status", self.status.as_str())?;
+        }
+
+        line.add_quoted_field("user_agent", self.request.user_agent.as_str())?;
+
+        // CUSTOM_METADATA.with(|metadata| {
+        //     for (key, value) in &*metadata.borrow() {
+        //         line.add_quoted_field(key, value)?;
+        //     }
+        //     fmt::Result::Ok(())
+        // })?;
+        //
+        // if let Err(err) = self.res {
+        //     line.add_quoted_field("error", err)?;
+        // }
+
+        if response_time_in_ms > SLOW_REQUEST_THRESHOLD_MS {
+            line.add_marker("SLOW REQUEST")?;
+        }
+
+        Ok(())
+    }
+}
+
+pub async fn log_requests<B>(
+    request_metadata: RequestMetadata,
+    req: Request<B>,
+    next: Next<B>,
+) -> impl IntoResponse {
+    let start_instant = Instant::now();
+
+    let response = next.run(req).await;
+
+    let metadata = Metadata {
+        request: request_metadata,
+        status: response.status(),
+        duration: start_instant.elapsed(),
+    };
+    debug!(target: "axum", "{metadata}");
+
+    response
 }
 
 pub fn add_custom_metadata<V: Display>(key: &'static str, value: V) {

@@ -44,6 +44,7 @@ pub mod db;
 mod downloads_counter;
 pub mod email;
 pub mod github;
+pub mod headers;
 pub mod metrics;
 pub mod middleware;
 mod publish_rate_limit;
@@ -78,18 +79,23 @@ pub enum Env {
 ///
 /// Called from *src/bin/server.rs*.
 pub fn build_handler(app: Arc<App>) -> axum::Router {
+    use crate::middleware::log_request::log_requests;
     use ::sentry::integrations::tower as sentry_tower;
+    use axum::middleware::from_fn;
 
     let endpoints = router::build_router(&app);
     let conduit_handler = middleware::build_middleware(app, endpoints);
 
     type Request = http::Request<axum::body::Body>;
 
-    axum::Router::new().conduit_fallback(conduit_handler).layer(
-        tower::ServiceBuilder::new()
-            .layer(sentry_tower::NewSentryLayer::<Request>::new_from_top())
-            .layer(sentry_tower::SentryHttpLayer::with_transaction()),
-    )
+    let middleware = tower::ServiceBuilder::new()
+        .layer(sentry_tower::NewSentryLayer::<Request>::new_from_top())
+        .layer(sentry_tower::SentryHttpLayer::with_transaction())
+        .layer(from_fn(log_requests));
+
+    axum::Router::new()
+        .conduit_fallback(conduit_handler)
+        .layer(middleware)
 }
 
 /// Convenience function requiring that an environment variable is set.
