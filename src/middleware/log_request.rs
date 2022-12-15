@@ -12,6 +12,7 @@ use axum::response::IntoResponse;
 use http::{header, Method, Request, StatusCode, Uri};
 use std::cell::RefCell;
 use std::fmt::{self, Display, Formatter};
+use std::time::{Duration, Instant};
 
 const SLOW_REQUEST_THRESHOLD_MS: u128 = 1000;
 
@@ -46,13 +47,27 @@ pub struct RequestMetadata {
     uri: Uri,
 }
 
+pub struct Metadata {
+    request: RequestMetadata,
+    duration: Duration,
+}
+
 pub async fn log_requests<B>(
     request_metadata: RequestMetadata,
     req: Request<B>,
     next: Next<B>,
 ) -> impl IntoResponse {
-    debug!(target: "axum", "method={} path=\"{}\"", request_metadata.method, request_metadata.uri);
-    next.run(req).await
+    let start_instant = Instant::now();
+
+    let response = next.run(req).await;
+
+    let metadata = Metadata {
+        request: request_metadata,
+        duration: start_instant.elapsed(),
+    };
+    debug!(target: "axum", "method={} path=\"{}\" service={}ms", metadata.request.method, metadata.request.uri, metadata.duration.as_millis());
+
+    response
 }
 
 pub fn add_custom_metadata<V: Display>(key: &'static str, value: V) {
