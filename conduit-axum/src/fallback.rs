@@ -84,6 +84,8 @@ impl IntoResponse for ServiceError {
 fn server_error_response<E: Error + ?Sized>(error: &E) -> AxumResponse {
     error!(%error, "Internal Server Error");
 
+    sentry_core::capture_error(error);
+
     let body = hyper::Body::from("Internal Server Error");
     Response::builder()
         .status(StatusCode::INTERNAL_SERVER_ERROR)
