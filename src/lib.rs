@@ -44,6 +44,7 @@ pub mod db;
 mod downloads_counter;
 pub mod email;
 pub mod github;
+pub mod headers;
 pub mod metrics;
 pub mod middleware;
 mod publish_rate_limit;
