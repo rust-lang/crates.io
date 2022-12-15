@@ -55,6 +55,19 @@ pub struct Metadata {
     duration: Duration,
 }
 
+impl Display for Metadata {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let mut line = LogLine::new(f);
+
+        line.add_field("method", &self.request.method)?;
+        line.add_quoted_field("path", &self.request.uri)?;
+        line.add_field("service", format!("{}ms", self.duration.as_millis()))?;
+        line.add_quoted_field("user_agent", self.request.user_agent.as_str())?;
+
+        Ok(())
+    }
+}
+
 pub async fn log_requests<B>(
     request_metadata: RequestMetadata,
     req: Request<B>,
@@ -68,14 +81,7 @@ pub async fn log_requests<B>(
         request: request_metadata,
         duration: start_instant.elapsed(),
     };
-    debug!(
-        target: "axum",
-        "method={} path=\"{}\" service={}ms user_agent=\"{}\"",
-        metadata.request.method,
-        metadata.request.uri,
-        metadata.duration.as_millis(),
-        metadata.request.user_agent.as_str(),
-    );
+    debug!(target: "axum", "{metadata}");
 
     response
 }
