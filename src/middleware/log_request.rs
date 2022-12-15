@@ -111,12 +111,6 @@ impl Display for RequestLine<'_> {
         if let Some(response_time) = response_time {
             if !is_download_redirect || response_time.as_millis() > 0 {
                 line.add_field("service", response_time)?;
-
-                let conduit_time = self.req.elapsed().as_millis();
-                let nginx_time = response_time.as_millis() as i128 - conduit_time as i128;
-                if nginx_time != 0 {
-                    line.add_field("nginx_time", nginx_time)?;
-                }
             }
         }
 
