@@ -7,8 +7,10 @@ use crate::util::request_header;
 use conduit::RequestExt;
 
 use crate::middleware::normalize_path::OriginalPath;
+use axum::headers::UserAgent;
 use axum::middleware::Next;
 use axum::response::IntoResponse;
+use axum::TypedHeader;
 use http::{header, Method, Request, StatusCode, Uri};
 use std::cell::RefCell;
 use std::fmt::{self, Display, Formatter};
@@ -45,6 +47,7 @@ impl Middleware for LogRequests {
 pub struct RequestMetadata {
     method: Method,
     uri: Uri,
+    user_agent: TypedHeader<UserAgent>,
 }
 
 pub struct Metadata {
@@ -65,7 +68,14 @@ pub async fn log_requests<B>(
         request: request_metadata,
         duration: start_instant.elapsed(),
     };
-    debug!(target: "axum", "method={} path=\"{}\" service={}ms", metadata.request.method, metadata.request.uri, metadata.duration.as_millis());
+    debug!(
+        target: "axum",
+        "method={} path=\"{}\" service={}ms user_agent=\"{}\"",
+        metadata.request.method,
+        metadata.request.uri,
+        metadata.duration.as_millis(),
+        metadata.request.user_agent.as_str(),
+    );
 
     response
 }
