@@ -36,7 +36,7 @@ impl Header for XRequestId {
     }
 }
 
-static X_REAL_IP: HeaderName = HeaderName::from_static("x-request-id");
+static X_REAL_IP: HeaderName = HeaderName::from_static("x-real-ip");
 
 pub struct XRealIp(String);
 
