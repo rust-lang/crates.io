@@ -6,7 +6,7 @@ use crate::util::request_header;
 
 use conduit::RequestExt;
 
-use crate::headers::XRequestId;
+use crate::headers::{XRealIp, XRequestId};
 use crate::middleware::normalize_path::OriginalPath;
 use axum::headers::UserAgent;
 use axum::middleware::Next;
@@ -50,6 +50,7 @@ pub struct RequestMetadata {
     uri: Uri,
     user_agent: TypedHeader<UserAgent>,
     request_id: Option<TypedHeader<XRequestId>>,
+    real_ip: Option<TypedHeader<XRealIp>>,
 }
 
 pub struct Metadata {
@@ -83,7 +84,10 @@ impl Display for Metadata {
             };
         }
 
-        // line.add_quoted_field("fwd", request_header(self.req, "x-real-ip"))?;
+        match &self.request.real_ip {
+            Some(header) => line.add_quoted_field("fwd", header.as_str())?,
+            None => line.add_quoted_field("fwd", "")?,
+        };
 
         let response_time_in_ms = self.duration.as_millis();
         if !is_download_redirect || response_time_in_ms > 0 {
