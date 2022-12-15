@@ -78,10 +78,18 @@ pub enum Env {
 ///
 /// Called from *src/bin/server.rs*.
 pub fn build_handler(app: Arc<App>) -> axum::Router {
+    use ::sentry::integrations::tower as sentry_tower;
+
     let endpoints = router::build_router(&app);
     let conduit_handler = middleware::build_middleware(app, endpoints);
 
-    axum::Router::new().conduit_fallback(conduit_handler)
+    type Request = http::Request<axum::body::Body>;
+
+    axum::Router::new().conduit_fallback(conduit_handler).layer(
+        tower::ServiceBuilder::new()
+            .layer(sentry_tower::NewSentryLayer::<Request>::new_from_top())
+            .layer(sentry_tower::SentryHttpLayer::with_transaction()),
+    )
 }
 
 /// Convenience function requiring that an environment variable is set.
