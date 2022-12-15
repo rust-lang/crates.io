@@ -7,12 +7,11 @@ use crate::util::request_header;
 use conduit::RequestExt;
 
 use crate::middleware::normalize_path::OriginalPath;
-use crate::middleware::response_timing::ResponseTime;
 use http::{header, Method, StatusCode};
 use std::cell::RefCell;
 use std::fmt::{self, Display, Formatter};
 
-const SLOW_REQUEST_THRESHOLD_MS: u64 = 1000;
+const SLOW_REQUEST_THRESHOLD_MS: u128 = 1000;
 
 // A thread local is used instead of a request extension to avoid the need to pass the request
 // object everywhere in the codebase. When migrating to async this will need to be moved to an
@@ -107,11 +106,9 @@ impl Display for RequestLine<'_> {
 
         line.add_quoted_field("fwd", request_header(self.req, "x-real-ip"))?;
 
-        let response_time = self.req.extensions().get::<ResponseTime>();
-        if let Some(response_time) = response_time {
-            if !is_download_redirect || response_time.as_millis() > 0 {
-                line.add_field("service", response_time)?;
-            }
+        let response_time_in_ms = self.req.elapsed().as_millis();
+        if !is_download_redirect || response_time_in_ms > 0 {
+            line.add_field("service", format!("{}ms", response_time_in_ms))?;
         }
 
         if !is_download_redirect {
@@ -131,10 +128,8 @@ impl Display for RequestLine<'_> {
             line.add_quoted_field("error", err)?;
         }
 
-        if let Some(response_time) = response_time {
-            if response_time.as_millis() > SLOW_REQUEST_THRESHOLD_MS {
-                line.add_marker("SLOW REQUEST")?;
-            }
+        if response_time_in_ms > SLOW_REQUEST_THRESHOLD_MS {
+            line.add_marker("SLOW REQUEST")?;
         }
 
         Ok(())
