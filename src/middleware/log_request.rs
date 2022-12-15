@@ -43,6 +43,7 @@ pub struct Metadata {
     request: RequestMetadata,
     status: StatusCode,
     duration: Duration,
+    custom_metadata: CustomMetadata,
 }
 
 impl Display for Metadata {
@@ -86,13 +87,12 @@ impl Display for Metadata {
 
         line.add_quoted_field("user_agent", self.request.user_agent.as_str())?;
 
-        // CUSTOM_METADATA.with(|metadata| {
-        //     for (key, value) in &*metadata.borrow() {
-        //         line.add_quoted_field(key, value)?;
-        //     }
-        //     fmt::Result::Ok(())
-        // })?;
-        //
+        if let Ok(metadata) = self.custom_metadata.lock() {
+            for (key, value) in &*metadata {
+                line.add_quoted_field(key, value)?;
+            }
+        }
+
         // if let Err(err) = self.res {
         //     line.add_quoted_field("error", err)?;
         // }
@@ -113,7 +113,7 @@ pub async fn log_requests<B>(
     let start_instant = Instant::now();
 
     let custom_metadata = CustomMetadata::default();
-    req.extensions_mut().insert(custom_metadata);
+    req.extensions_mut().insert(custom_metadata.clone());
 
     let response = next.run(req).await;
 
@@ -121,6 +121,7 @@ pub async fn log_requests<B>(
         request: request_metadata,
         status: response.status(),
         duration: start_instant.elapsed(),
+        custom_metadata,
     };
     debug!(target: "axum", "{metadata}");
 
