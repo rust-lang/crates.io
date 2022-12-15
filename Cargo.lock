@@ -589,6 +589,7 @@ dependencies = [
  "http",
  "hyper",
  "percent-encoding",
+ "sentry-core",
  "thiserror",
  "tokio",
  "tokio-stream",

@@ -3,6 +3,7 @@ use crate::error::ServiceError;
 use crate::file_stream::FileStream;
 use crate::{AxumResponse, ConduitResponse};
 
+use std::error::Error;
 use std::net::SocketAddr;
 use std::sync::Arc;
 
@@ -54,7 +55,7 @@ async fn fallback_to_conduit(
         handler
             .call(&mut request)
             .map(conduit_into_axum)
-            .unwrap_or_else(|e| server_error_response(&e.to_string()))
+            .unwrap_or_else(|e| server_error_response(&*e))
     })
     .await
     .map_err(Into::into)
@@ -75,13 +76,16 @@ pub fn conduit_into_axum(response: ConduitResponse) -> AxumResponse {
 
 impl IntoResponse for ServiceError {
     fn into_response(self) -> AxumResponse {
-        server_error_response(&self.to_string())
+        server_error_response(&self)
     }
 }
 
 /// Logs an error message and returns a generic status 500 response
-fn server_error_response(message: &str) -> AxumResponse {
-    error!("Internal Server Error: {}", message);
+fn server_error_response<E: Error + ?Sized>(error: &E) -> AxumResponse {
+    error!(%error, "Internal Server Error");
+
+    sentry_core::capture_error(error);
+
     let body = hyper::Body::from("Internal Server Error");
     Response::builder()
         .status(StatusCode::INTERNAL_SERVER_ERROR)
