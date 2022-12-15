@@ -15,6 +15,7 @@ use conduit::{Handler, StartInstant};
 use http::header::CONTENT_LENGTH;
 use http::StatusCode;
 use hyper::{Request, Response};
+use sentry_core::Hub;
 use tracing::{error, warn};
 
 /// The maximum size allowed in the `Content-Length` header
@@ -46,16 +47,20 @@ async fn fallback_to_conduit(
     let (parts, body) = request.into_parts();
     let now = StartInstant::now();
 
+    let hub = Hub::current();
+
     let full_body = hyper::body::to_bytes(body).await?;
     let request = Request::from_parts(parts, full_body);
 
     let handler = handler.clone();
     tokio::task::spawn_blocking(move || {
-        let mut request = ConduitRequest::new(request, remote_addr, now);
-        handler
-            .call(&mut request)
-            .map(conduit_into_axum)
-            .unwrap_or_else(|e| server_error_response(&*e))
+        Hub::run(hub, || {
+            let mut request = ConduitRequest::new(request, remote_addr, now);
+            handler
+                .call(&mut request)
+                .map(conduit_into_axum)
+                .unwrap_or_else(|e| server_error_response(&*e))
+        })
     })
     .await
     .map_err(Into::into)
