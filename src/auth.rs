@@ -20,6 +20,8 @@ pub struct AuthCheck {
 
 impl AuthCheck {
     #[must_use]
+    // #[must_use] can't be applied in the `Default` trait impl
+    #[allow(clippy::should_implement_trait)]
     pub fn default() -> Self {
         Self {
             allow_token: true,
