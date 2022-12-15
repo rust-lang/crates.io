@@ -1,3 +1,6 @@
+use sentry::integrations::tracing::EventFilter;
+use tracing::Level;
+use tracing::Metadata;
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::{prelude::*, EnvFilter};
 
@@ -14,12 +17,23 @@ pub fn init() {
         .without_time()
         .with_filter(EnvFilter::from_default_env());
 
-    let sentry_layer = sentry::integrations::tracing::layer().with_filter(LevelFilter::INFO);
+    let sentry_layer = sentry::integrations::tracing::layer()
+        .event_filter(event_filter)
+        .with_filter(LevelFilter::INFO);
 
     tracing_subscriber::registry()
         .with(log_layer)
         .with(sentry_layer)
         .init();
+}
+
+pub fn event_filter(metadata: &Metadata<'_>) -> EventFilter {
+    match metadata.level() {
+        &Level::ERROR if metadata.target() == "http" => EventFilter::Breadcrumb,
+        &Level::ERROR => EventFilter::Exception,
+        &Level::WARN | &Level::INFO => EventFilter::Breadcrumb,
+        &Level::DEBUG | &Level::TRACE => EventFilter::Ignore,
+    }
 }
 
 /// Initializes the `tracing` logging framework for usage in tests.
