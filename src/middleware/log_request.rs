@@ -52,6 +52,7 @@ pub struct RequestMetadata {
 
 pub struct Metadata {
     request: RequestMetadata,
+    status: StatusCode,
     duration: Duration,
 }
 
@@ -62,6 +63,7 @@ impl Display for Metadata {
         line.add_field("method", &self.request.method)?;
         line.add_quoted_field("path", &self.request.uri)?;
         line.add_field("service", format!("{}ms", self.duration.as_millis()))?;
+        line.add_field("status", self.status.as_str())?;
         line.add_quoted_field("user_agent", self.request.user_agent.as_str())?;
 
         Ok(())
@@ -79,6 +81,7 @@ pub async fn log_requests<B>(
 
     let metadata = Metadata {
         request: request_metadata,
+        status: response.status(),
         duration: start_instant.elapsed(),
     };
     debug!(target: "axum", "{metadata}");
