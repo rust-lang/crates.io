@@ -26,6 +26,11 @@ impl Middleware for LogRequests {
     fn after(&self, req: &mut dyn RequestExt, res: AfterResult) -> AfterResult {
         RequestLine::new(req, &res).log();
 
+        if let Err(error) = &res {
+            // Move handler error into custom metadata for axum traffic logging
+            add_custom_metadata(req, "error", error.to_string());
+        }
+
         res
     }
 }
@@ -92,10 +97,6 @@ impl Display for Metadata {
                 line.add_quoted_field(key, value)?;
             }
         }
-
-        // if let Err(err) = self.res {
-        //     line.add_quoted_field("error", err)?;
-        // }
 
         if response_time_in_ms > SLOW_REQUEST_THRESHOLD_MS {
             line.add_marker("SLOW REQUEST")?;
