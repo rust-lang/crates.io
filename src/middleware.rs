@@ -6,7 +6,7 @@ mod prelude {
 }
 
 use self::app::AppMiddleware;
-use self::debug::*;
+pub use self::debug::debug_requests;
 use self::ember_html::EmberHtml;
 use self::head::Head;
 use self::known_error_to_json::KnownErrorToJson;
@@ -44,12 +44,6 @@ pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBui
     let blocked_traffic = app.config.blocked_traffic.clone();
 
     m.add(log_request::LogRequests::default());
-
-    if env == Env::Development {
-        // Optionally print debug information for each request
-        // To enable, set the environment variable: `RUST_LOG=cargo_registry::middleware=debug`
-        m.add(Debug);
-    }
 
     if env::var_os("LOG_CONNECTION_POOL_STATUS").is_some() {
         m.add(LogConnectionPoolStatus::new(&app));

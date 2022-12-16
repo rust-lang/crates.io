@@ -1,41 +1,24 @@
 //! Debug middleware that prints debug info to stdout
 
-use super::prelude::*;
+use axum::middleware::Next;
+use axum::response::IntoResponse;
+use http::Request;
 
-#[derive(Clone, Copy, Debug)]
-pub struct Debug;
-
-impl Middleware for Debug {
-    fn before(&self, req: &mut dyn RequestExt) -> BeforeResult {
-        DebugRequest.before(req)
+pub async fn debug_requests<B>(req: Request<B>, next: Next<B>) -> impl IntoResponse {
+    debug!("  version: {:?}", req.version());
+    debug!("  method: {:?}", req.method());
+    debug!("  path: {}", req.uri().path());
+    debug!("  query_string: {:?}", req.uri().query());
+    for (k, ref v) in req.headers().iter() {
+        debug!("  hdr: {}={:?}", k, v);
     }
 
-    fn after(&self, _req: &mut dyn RequestExt, res: AfterResult) -> AfterResult {
-        res.map(|res| {
-            debug!("  <- {:?}", res.status());
-            for (k, v) in res.headers().iter() {
-                debug!("  <- {k} {v:?}");
-            }
-            res
-        })
-    }
-}
+    let response = next.run(req).await;
 
-#[derive(Clone, Copy, Debug)]
-struct DebugRequest;
-
-impl Middleware for DebugRequest {
-    fn before(&self, req: &mut dyn RequestExt) -> BeforeResult {
-        debug!("  version: {:?}", req.http_version());
-        debug!("  method: {:?}", req.method());
-        debug!("  scheme: {:?}", req.scheme());
-        debug!("  host: {:?}", req.host());
-        debug!("  path: {}", req.path());
-        debug!("  query_string: {:?}", req.query_string());
-        debug!("  remote_addr: {:?}", req.remote_addr());
-        for (k, ref v) in req.headers().iter() {
-            debug!("  hdr: {}={:?}", k, v);
-        }
-        Ok(())
+    debug!("  <- {:?}", response.status());
+    for (k, v) in response.headers().iter() {
+        debug!("  <- {k} {v:?}");
     }
+
+    response
 }

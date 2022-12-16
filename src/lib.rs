@@ -79,9 +79,13 @@ pub enum Env {
 ///
 /// Called from *src/bin/server.rs*.
 pub fn build_handler(app: Arc<App>) -> axum::Router {
+    use crate::middleware::debug_requests;
     use crate::middleware::log_request::log_requests;
     use ::sentry::integrations::tower as sentry_tower;
+    use axum::error_handling::HandleErrorLayer;
     use axum::middleware::from_fn;
+
+    let env = app.config.env();
 
     let endpoints = router::build_router(&app);
     let conduit_handler = middleware::build_middleware(app, endpoints);
@@ -91,11 +95,23 @@ pub fn build_handler(app: Arc<App>) -> axum::Router {
     let middleware = tower::ServiceBuilder::new()
         .layer(sentry_tower::NewSentryLayer::<Request>::new_from_top())
         .layer(sentry_tower::SentryHttpLayer::with_transaction())
-        .layer(from_fn(log_requests));
+        .layer(from_fn(log_requests))
+        // The following layer is unfortunately necessary for `option_layer()` to work
+        .layer(HandleErrorLayer::new(dummy_error_handler))
+        // Optionally print debug information for each request
+        // To enable, set the environment variable: `RUST_LOG=cargo_registry::middleware=debug`
+        .option_layer((env == Env::Development).then(|| from_fn(debug_requests)));
 
     axum::Router::new()
         .conduit_fallback(conduit_handler)
         .layer(middleware)
+}
+
+/// This function is only necessary because `.option_layer()` changes the error type
+/// and we need to change it back. Since the axum middleware has no way of returning
+/// an actual error this function should never actually be called.
+async fn dummy_error_handler(_err: axum::BoxError) -> http::StatusCode {
+    http::StatusCode::INTERNAL_SERVER_ERROR
 }
 
 /// Convenience function requiring that an environment variable is set.
