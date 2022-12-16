@@ -25,6 +25,7 @@ path = "src/tests/all.rs"
 anyhow = "=1.0.67"
 aws-sigv4 = "=0.52.0"
 axum = { version = "=0.6.1", features = ["headers", "macros"] }
+axum-extra = { version = "=0.4.2", features = ["cookie-signed"] }
 base64 = "=0.13.1"
 cargo-registry-index = { path = "cargo-registry-index" }
 cargo-registry-markdown = { path = "cargo-registry-markdown" }

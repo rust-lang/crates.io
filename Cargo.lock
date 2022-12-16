@@ -224,6 +224,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "axum-extra"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f9a320103719de37b7b4da4c8eb629d4573f6bcfd3dfe80d3208806895ccf81d"
+dependencies = [
+ "axum",
+ "bytes",
+ "cookie",
+ "futures-util",
+ "http",
+ "mime",
+ "pin-project-lite",
+ "tokio",
+ "tower",
+ "tower-http",
+ "tower-layer",
+ "tower-service",
+]
+
+[[package]]
 name = "axum-macros"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -345,6 +365,7 @@ dependencies = [
  "anyhow",
  "aws-sigv4",
  "axum",
+ "axum-extra",
  "base64",
  "cargo-registry-index",
  "cargo-registry-markdown",
@@ -728,6 +749,7 @@ dependencies = [
  "base64",
  "hkdf",
  "hmac",
+ "percent-encoding",
  "rand",
  "sha2",
  "subtle",
