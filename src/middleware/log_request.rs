@@ -2,17 +2,15 @@
 //! information that we care about like User-Agent
 
 use super::prelude::*;
-use crate::util::request_header;
 
 use conduit::RequestExt;
 
 use crate::headers::{XRealIp, XRequestId};
-use crate::middleware::normalize_path::OriginalPath;
 use axum::headers::UserAgent;
 use axum::middleware::Next;
 use axum::response::IntoResponse;
 use axum::TypedHeader;
-use http::{header, Method, Request, StatusCode, Uri};
+use http::{Method, Request, StatusCode, Uri};
 use std::fmt::{self, Display, Formatter};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -24,8 +22,6 @@ pub(super) struct LogRequests();
 
 impl Middleware for LogRequests {
     fn after(&self, req: &mut dyn RequestExt, res: AfterResult) -> AfterResult {
-        RequestLine::new(req, &res).log();
-
         if let Err(error) = &res {
             // Move handler error into custom metadata for axum traffic logging
             add_custom_metadata(req, "error", error.to_string());
@@ -124,7 +120,12 @@ pub async fn log_requests<B>(
         duration: start_instant.elapsed(),
         custom_metadata,
     };
-    debug!(target: "axum", "{metadata}");
+
+    if metadata.status.is_server_error() {
+        error!(target: "http", "{metadata}");
+    } else {
+        info!(target: "http", "{metadata}");
+    };
 
     response
 }
@@ -156,108 +157,6 @@ pub(crate) fn get_log_message(req: &dyn RequestExt, key: &'static str) -> String
     }
 
     panic!("expected log message for {} not found", key);
-}
-
-struct RequestLine<'r> {
-    req: &'r dyn RequestExt,
-    res: &'r AfterResult,
-    status: StatusCode,
-}
-
-impl<'a> RequestLine<'a> {
-    fn new(request: &'a dyn RequestExt, response: &'a AfterResult) -> Self {
-        let status = response.as_ref().map(|res| res.status());
-        let status = status.unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
-
-        RequestLine {
-            req: request,
-            res: response,
-            status,
-        }
-    }
-
-    fn log(&self) {
-        if self.status.is_server_error() {
-            error!(target: "http", "{self}");
-        } else {
-            info!(target: "http", "{self}");
-        };
-    }
-}
-
-impl Display for RequestLine<'_> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let mut line = LogLine::new(f);
-
-        // The download endpoint is our most requested endpoint by 1-2 orders of
-        // magnitude. Since we pay per logged GB we try to reduce the amount of
-        // bytes per log line for this endpoint.
-
-        let is_download_endpoint = self.req.path().ends_with("/download");
-        let is_download_redirect = is_download_endpoint && self.status.is_redirection();
-
-        let method = self.req.method();
-        if !is_download_redirect || method != Method::GET {
-            line.add_field("method", method)?;
-        }
-
-        line.add_quoted_field("path", FullPath(self.req))?;
-
-        if !is_download_redirect {
-            line.add_field("request_id", request_header(self.req, "x-request-id"))?;
-        }
-
-        line.add_quoted_field("fwd", request_header(self.req, "x-real-ip"))?;
-
-        let response_time_in_ms = self.req.elapsed().as_millis();
-        if !is_download_redirect || response_time_in_ms > 0 {
-            line.add_field("service", format!("{}ms", response_time_in_ms))?;
-        }
-
-        if !is_download_redirect {
-            line.add_field("status", self.status.as_str())?;
-        }
-
-        line.add_quoted_field("user_agent", request_header(self.req, header::USER_AGENT))?;
-
-        if let Some(mutex) = self.req.extensions().get::<CustomMetadata>() {
-            if let Ok(metadata) = mutex.lock() {
-                for (key, value) in &*metadata {
-                    line.add_quoted_field(key, value)?;
-                }
-            }
-        };
-
-        if let Err(err) = self.res {
-            line.add_quoted_field("error", err)?;
-        }
-
-        if response_time_in_ms > SLOW_REQUEST_THRESHOLD_MS {
-            line.add_marker("SLOW REQUEST")?;
-        }
-
-        Ok(())
-    }
-}
-
-struct FullPath<'a>(&'a dyn RequestExt);
-
-impl<'a> Display for FullPath<'a> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let request = self.0;
-
-        let original_path = request.extensions().get::<OriginalPath>();
-        let path = original_path
-            .map(|p| p.0.as_str())
-            .unwrap_or_else(|| request.path());
-
-        write!(f, "{}", path)?;
-
-        if let Some(q_string) = request.query_string() {
-            write!(f, "?{}", q_string)?;
-        }
-        Ok(())
-    }
 }
 
 struct LogLine<'f, 'g> {
