@@ -6,7 +6,6 @@ mod prelude {
 }
 
 use self::app::AppMiddleware;
-pub use self::debug::debug_requests;
 use self::ember_html::EmberHtml;
 use self::head::Head;
 use self::known_error_to_json::KnownErrorToJson;
@@ -31,10 +30,39 @@ use conduit_cookie::{Middleware as Cookie, SessionMiddleware};
 use conduit_middleware::MiddlewareBuilder;
 use conduit_router::RouteBuilder;
 
+use ::sentry::integrations::tower as sentry_tower;
+use axum::error_handling::HandleErrorLayer;
+use axum::middleware::from_fn;
+use axum::Router;
 use std::env;
 use std::sync::Arc;
 
 use crate::{App, Env};
+
+pub fn apply_axum_middleware(app: &Arc<App>, router: Router) -> Router {
+    type Request = http::Request<axum::body::Body>;
+
+    let env = app.config.env();
+
+    let middleware = tower::ServiceBuilder::new()
+        .layer(sentry_tower::NewSentryLayer::<Request>::new_from_top())
+        .layer(sentry_tower::SentryHttpLayer::with_transaction())
+        .layer(from_fn(log_request::log_requests))
+        // The following layer is unfortunately necessary for `option_layer()` to work
+        .layer(HandleErrorLayer::new(dummy_error_handler))
+        // Optionally print debug information for each request
+        // To enable, set the environment variable: `RUST_LOG=cargo_registry::middleware=debug`
+        .option_layer((env == Env::Development).then(|| from_fn(debug::debug_requests)));
+
+    router.layer(middleware)
+}
+
+/// This function is only necessary because `.option_layer()` changes the error type
+/// and we need to change it back. Since the axum middleware has no way of returning
+/// an actual error this function should never actually be called.
+async fn dummy_error_handler(_err: axum::BoxError) -> http::StatusCode {
+    http::StatusCode::INTERNAL_SERVER_ERROR
+}
 
 pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBuilder {
     let mut m = MiddlewareBuilder::new(endpoints);
