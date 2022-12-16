@@ -204,7 +204,7 @@ impl App {
     }
 
     /// A unique key used with conduit_cookie to generate signed/encrypted cookies
-    pub fn session_key(&self) -> &str {
+    pub fn session_key(&self) -> &cookie::Key {
         &self.config.session_key
     }
 }

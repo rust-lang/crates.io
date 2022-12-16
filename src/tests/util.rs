@@ -60,9 +60,8 @@ pub use test_app::{TestApp, TestDatabase};
 ///
 /// The implementation matches roughly what is happening inside of the
 /// `SessionMiddleware` from `conduit_cookie`.
-pub fn encode_session_header(session_key: &str, user_id: i32) -> String {
+pub fn encode_session_header(session_key: &cookie::Key, user_id: i32) -> String {
     let cookie_name = "cargo_session";
-    let cookie_key = cookie::Key::derive_from(session_key.as_bytes());
 
     // build session data map
     let mut map = HashMap::new();
@@ -74,7 +73,7 @@ pub fn encode_session_header(session_key: &str, user_id: i32) -> String {
     // put the cookie into a signed cookie jar
     let cookie = Cookie::build(cookie_name, encoded).finish();
     let mut jar = cookie::CookieJar::new();
-    jar.signed_mut(&cookie_key).add(cookie);
+    jar.signed_mut(session_key).add(cookie);
 
     // read the raw cookie from the cookie jar
     jar.get(cookie_name).unwrap().to_string()

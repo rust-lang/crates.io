@@ -18,7 +18,7 @@ const DEFAULT_VERSION_ID_CACHE_TTL: u64 = 5 * 60; // 5 minutes
 pub struct Server {
     pub base: Base,
     pub db: DatabasePools,
-    pub session_key: String,
+    pub session_key: cookie::Key,
     pub gh_client_id: String,
     pub gh_client_secret: String,
     pub gh_base_url: String,
@@ -112,7 +112,7 @@ impl Default for Server {
         Server {
             db: DatabasePools::full_from_environment(&base),
             base,
-            session_key: env("SESSION_KEY"),
+            session_key: cookie::Key::derive_from(env("SESSION_KEY").as_bytes()),
             gh_client_id: env("GH_CLIENT_ID"),
             gh_client_secret: env("GH_CLIENT_SECRET"),
             gh_base_url: "https://api.github.com".to_string(),

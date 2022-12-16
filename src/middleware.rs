@@ -76,7 +76,7 @@ pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBui
     m.add(Cookie::new());
     m.add(SessionMiddleware::new(
         "cargo_session",
-        cookie::Key::derive_from(app.session_key().as_bytes()),
+        app.session_key().clone(),
         env == Env::Production,
     ));
 
