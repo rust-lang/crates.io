@@ -37,12 +37,13 @@ use axum::Router;
 use std::env;
 use std::sync::Arc;
 
+use crate::app::AppState;
 use crate::{App, Env};
 
-pub fn apply_axum_middleware(app: &Arc<App>, router: Router) -> Router {
+pub fn apply_axum_middleware(state: AppState, router: Router) -> Router {
     type Request = http::Request<axum::body::Body>;
 
-    let env = app.config.env();
+    let env = state.config.env();
 
     let middleware = tower::ServiceBuilder::new()
         .layer(sentry_tower::NewSentryLayer::<Request>::new_from_top())

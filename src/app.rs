@@ -2,6 +2,7 @@
 
 use crate::db::{ConnectionConfig, DieselPool};
 use crate::{config, Env};
+use std::ops::Deref;
 use std::{sync::Arc, time::Duration};
 
 use crate::downloads_counter::DownloadsCounter;
@@ -206,5 +207,17 @@ impl App {
     /// A unique key used with conduit_cookie to generate signed/encrypted cookies
     pub fn session_key(&self) -> &cookie::Key {
         &self.config.session_key
+    }
+}
+
+#[derive(Clone)]
+pub struct AppState(pub Arc<App>);
+
+// deref so you can still access the inner fields easily
+impl Deref for AppState {
+    type Target = App;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
