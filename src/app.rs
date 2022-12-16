@@ -9,6 +9,7 @@ use crate::downloads_counter::DownloadsCounter;
 use crate::email::Emails;
 use crate::github::{GitHubClient, RealGitHubClient};
 use crate::metrics::{InstanceMetrics, ServiceMetrics};
+use axum::extract::FromRef;
 use diesel::r2d2;
 use moka::sync::{Cache, CacheBuilder};
 use oauth2::basic::BasicClient;
@@ -219,5 +220,11 @@ impl Deref for AppState {
 
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl FromRef<AppState> for cookie::Key {
+    fn from_ref(app: &AppState) -> Self {
+        app.session_key().clone()
     }
 }
