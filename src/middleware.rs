@@ -20,7 +20,7 @@ mod ember_html;
 mod head;
 mod known_error_to_json;
 pub mod log_request;
-mod normalize_path;
+pub mod normalize_path;
 mod require_user_agent;
 mod static_or_continue;
 mod update_metrics;
@@ -71,7 +71,6 @@ pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBui
 
     m.add(log_request::LogRequests::default());
 
-    m.add(normalize_path::NormalizePath);
     m.add(ConditionalGet);
 
     m.add(Cookie::new());
