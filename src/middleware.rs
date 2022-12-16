@@ -10,7 +10,6 @@ pub use self::debug::debug_requests;
 use self::ember_html::EmberHtml;
 use self::head::Head;
 use self::known_error_to_json::KnownErrorToJson;
-use self::log_connection_pool_status::LogConnectionPoolStatus;
 use self::static_or_continue::StaticOrContinue;
 use self::update_metrics::UpdateMetrics;
 
@@ -21,7 +20,6 @@ mod debug;
 mod ember_html;
 mod head;
 mod known_error_to_json;
-mod log_connection_pool_status;
 pub mod log_request;
 mod normalize_path;
 mod require_user_agent;
@@ -44,10 +42,6 @@ pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBui
     let blocked_traffic = app.config.blocked_traffic.clone();
 
     m.add(log_request::LogRequests::default());
-
-    if env::var_os("LOG_CONNECTION_POOL_STATUS").is_some() {
-        m.add(LogConnectionPoolStatus::new(&app));
-    }
 
     m.add(normalize_path::NormalizePath);
     m.add(ConditionalGet);
