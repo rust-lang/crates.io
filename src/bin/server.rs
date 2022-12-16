@@ -3,15 +3,18 @@
 #[macro_use]
 extern crate tracing;
 
+use cargo_registry::middleware::normalize_path::normalize_path;
 use cargo_registry::{env_optional, metrics::LogEncoder, util::errors::AppResult, App, Env};
 use std::{fs::File, process::Command, sync::Arc, time::Duration};
 
+use axum::ServiceExt;
 use futures_util::future::FutureExt;
 use prometheus::Encoder;
 use reqwest::blocking::Client;
 use std::io::{self, Write};
 use std::net::SocketAddr;
 use tokio::signal::unix::{signal, SignalKind};
+use tower::Layer;
 
 const CORE_THREADS: usize = 4;
 
@@ -33,6 +36,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     log_instance_metrics_thread(app.clone());
 
     let axum_router = cargo_registry::build_handler(app.clone());
+
+    // Apply the `normalize_path` middleware around the axum router
+    let normalize_path = axum::middleware::from_fn(normalize_path);
+    let axum_router = normalize_path.layer(axum_router);
 
     let heroku = dotenv::var("HEROKU").is_ok();
     let fastboot = dotenv::var("USE_FASTBOOT").is_ok();

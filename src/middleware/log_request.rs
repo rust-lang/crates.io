@@ -6,12 +6,14 @@ use super::prelude::*;
 use conduit::RequestExt;
 
 use crate::headers::{XRealIp, XRequestId};
+use crate::middleware::normalize_path::OriginalPath;
 use axum::headers::UserAgent;
 use axum::middleware::Next;
 use axum::response::IntoResponse;
-use axum::TypedHeader;
+use axum::{Extension, TypedHeader};
 use http::{Method, Request, StatusCode, Uri};
 use std::fmt::{self, Display, Formatter};
+use std::ops::Deref;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
@@ -35,6 +37,7 @@ impl Middleware for LogRequests {
 pub struct RequestMetadata {
     method: Method,
     uri: Uri,
+    original_path: Option<Extension<OriginalPath>>,
     user_agent: TypedHeader<UserAgent>,
     request_id: Option<TypedHeader<XRequestId>>,
     real_ip: Option<TypedHeader<XRealIp>>,
@@ -63,7 +66,11 @@ impl Display for Metadata {
             line.add_field("method", method)?;
         }
 
-        line.add_quoted_field("path", &self.request.uri)?;
+        if let Some(original_path) = &self.request.original_path {
+            line.add_quoted_field("path", &original_path.deref().0)?;
+        } else {
+            line.add_quoted_field("path", &self.request.uri)?;
+        }
 
         if !is_download_redirect {
             match &self.request.request_id {
@@ -87,6 +94,10 @@ impl Display for Metadata {
         }
 
         line.add_quoted_field("user_agent", self.request.user_agent.as_str())?;
+
+        if self.request.original_path.is_some() {
+            line.add_quoted_field("normalized_path", &self.request.uri)?;
+        }
 
         if let Ok(metadata) = self.custom_metadata.lock() {
             for (key, value) in &*metadata {

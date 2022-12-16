@@ -1,21 +1,22 @@
 //! Normalize request path if necessary
 
-use super::prelude::*;
-
+use axum::middleware::Next;
+use axum::response::Response;
+use http::{Request, Uri};
 use std::path::{Component, Path, PathBuf};
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct OriginalPath(pub String);
 
-pub struct NormalizePath;
+pub async fn normalize_path<B>(mut req: Request<B>, next: Next<B>) -> Response {
+    normalize_path_inner(&mut req);
+    next.run(req).await
+}
 
-impl Middleware for NormalizePath {
-    fn before(&self, req: &mut dyn RequestExt) -> BeforeResult {
-        let path = req.path();
-        if !(path.contains("//") || path.contains("/.")) {
-            // Avoid allocations if rewriting is unnecessary
-            return Ok(());
-        }
-
+fn normalize_path_inner<B>(req: &mut Request<B>) {
+    let uri = req.uri();
+    let path = uri.path();
+    if path.contains("//") || path.contains("/.") {
         let original_path = OriginalPath(path.to_string());
 
         let path = Path::new(path)
@@ -43,35 +44,54 @@ impl Middleware for NormalizePath {
             .to_string_lossy()
             .to_string(); // non-Unicode is replaced with U+FFFD REPLACEMENT CHARACTER
 
-        add_custom_metadata(req, "normalized_path", path.clone());
+        let new_path_and_query = uri.path_and_query().map(|path_and_query| {
+            match path_and_query.query() {
+                Some(query) => format!("{}?{}", path, query),
+                None => path,
+            }
+            .parse()
+            .unwrap()
+        });
 
-        *req.path_mut() = path;
-        req.mut_extensions().insert(original_path);
+        let mut parts = uri.clone().into_parts();
+        parts.path_and_query = new_path_and_query;
 
-        Ok(())
+        if let Ok(new_uri) = Uri::from_parts(parts) {
+            *req.uri_mut() = new_uri;
+            req.extensions_mut().insert(original_path);
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::NormalizePath;
-
-    use conduit::RequestExt;
-    use conduit_middleware::Middleware;
-    use conduit_test::MockRequest;
+    use super::{normalize_path_inner, OriginalPath};
+    use http::Request;
 
     #[test]
     fn path_normalization() {
-        let mut req = MockRequest::new(::conduit::Method::GET, "/api/v1/.");
-        let _ = NormalizePath.before(&mut req);
-        assert_eq!(req.path(), "/api/v1");
+        let mut req = Request::get("/api/v1/.").body(()).unwrap();
+        normalize_path_inner(&mut req);
+        assert_eq!(req.uri().path(), "/api/v1");
+        assert_eq!(
+            assert_some!(req.extensions().get::<OriginalPath>()).0,
+            "/api/v1/."
+        );
 
-        let mut req = MockRequest::new(::conduit::Method::GET, "/api/./v1");
-        let _ = NormalizePath.before(&mut req);
-        assert_eq!(req.path(), "/api/v1");
+        let mut req = Request::get("/api/./v1").body(()).unwrap();
+        normalize_path_inner(&mut req);
+        assert_eq!(req.uri().path(), "/api/v1");
+        assert_eq!(
+            assert_some!(req.extensions().get::<OriginalPath>()).0,
+            "/api/./v1"
+        );
 
-        let mut req = MockRequest::new(::conduit::Method::GET, "//api/v1/../v2");
-        let _ = NormalizePath.before(&mut req);
-        assert_eq!(req.path(), "/api/v2");
+        let mut req = Request::get("//api/v1/../v2").body(()).unwrap();
+        normalize_path_inner(&mut req);
+        assert_eq!(req.uri().path(), "/api/v2");
+        assert_eq!(
+            assert_some!(req.extensions().get::<OriginalPath>()).0,
+            "//api/v1/../v2"
+        );
     }
 }
