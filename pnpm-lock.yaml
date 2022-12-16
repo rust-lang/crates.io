@@ -28,7 +28,7 @@ specifiers:
   '@sinonjs/fake-timers': 10.0.2
   '@zestia/ember-auto-focus': 4.4.0
   broccoli-asset-rev: 3.0.0
-  chart.js: 4.0.1
+  chart.js: 4.1.0
   copy-text-to-clipboard: 3.0.1
   date-fns: 2.29.3
   ember-a11y-testing: 5.1.0
@@ -107,7 +107,7 @@ dependencies:
   '@juggle/resize-observer': 3.4.0
   '@sentry/browser': 7.26.0
   '@sentry/utils': 7.26.0
-  chart.js: 4.0.1
+  chart.js: 4.1.0
   copy-text-to-clipboard: 3.0.1
   date-fns: 2.29.3
   fastboot-app-server: 3.3.2
@@ -2464,6 +2464,10 @@ packages:
 
   /@juggle/resize-observer/3.4.0:
     resolution: {integrity: sha512-dfLbk+PwWvFzSxwk3n5ySL0hfBog779o8h68wK/7/APo/7cgyWp5jcXockbxdk5kFRkbeXWm4Fbi9FrdN381sA==}
+    dev: false
+
+  /@kurkle/color/0.3.1:
+    resolution: {integrity: sha512-hW0GwZj06z/ZFUW2Espl7toVDjghJN+EKqyXzPSV8NV89d5BYp5rRMBJoc+aUN0x5OXDMeRQHazejr2Xmqj2tw==}
     dev: false
 
   /@lint-todo/utils/13.1.0:
@@ -5620,9 +5624,11 @@ packages:
       inherits: 2.0.4
     dev: true
 
-  /chart.js/4.0.1:
-    resolution: {integrity: sha512-5/8/9eBivwBZK81mKvmIwTb2Pmw4D/5h1RK9fBWZLLZ8mCJ+kfYNmV9rMrGoa5Hgy2/wVDBMLSUDudul2/9ihA==}
+  /chart.js/4.1.0:
+    resolution: {integrity: sha512-Xta4vonV3e1pwFGLTyUMqXk2aH03D6253DSt52pdS7247u2SpIpQb6kCewxNgx1JfeLBUnjaxHYbHpOv6w78Og==}
     engines: {pnpm: ^7.0.0}
+    dependencies:
+      '@kurkle/color': 0.3.1
     dev: false
 
   /cheerio-select/2.1.0:
