@@ -392,7 +392,7 @@ dependencies = [
  "retry",
  "ring",
  "scheduled-thread-pool",
- "semver 1.0.14",
+ "semver 1.0.15",
  "sentry",
  "serde",
  "serde_json",
@@ -456,7 +456,7 @@ checksum = "4acbb09d9ee8e23699b9634375c72795d095bf268439da88562cf9b501f181fa"
 dependencies = [
  "camino",
  "cargo-platform",
- "semver 1.0.14",
+ "semver 1.0.15",
  "serde",
  "serde_json",
 ]
@@ -2607,7 +2607,7 @@ version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bfa0f585226d2e68097d4f95d113b15b83a82e819ab25717ec0590d9584ef366"
 dependencies = [
- "semver 1.0.14",
+ "semver 1.0.15",
 ]
 
 [[package]]
@@ -2710,9 +2710,9 @@ dependencies = [
 
 [[package]]
 name = "semver"
-version = "1.0.14"
+version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e25dfac463d778e353db5be2449d1cce89bd6fd23c9f1ea21310ce6e5a1b29c4"
+checksum = "3bfa246f936730408c0abee392cc1a50b118ece708c7f630516defd64480c7d8"
 dependencies = [
  "serde",
 ]
