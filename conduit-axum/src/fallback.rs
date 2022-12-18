@@ -11,7 +11,8 @@ use axum::body::{Body, HttpBody};
 use axum::extract::{ConnectInfo, Extension};
 use axum::handler::Handler as AxumHandler;
 use axum::response::IntoResponse;
-use conduit::{Handler, StartInstant};
+use conduit::{Handler, RequestExt, StartInstant};
+use conduit_router::RoutePattern;
 use http::header::CONTENT_LENGTH;
 use http::StatusCode;
 use hyper::{Request, Response};
@@ -58,7 +59,7 @@ async fn fallback_to_conduit(
             let mut request = ConduitRequest::new(request, remote_addr, now);
             handler
                 .call(&mut request)
-                .map(conduit_into_axum)
+                .map(|response| conduit_into_axum(response, request))
                 .unwrap_or_else(|e| server_error_response(&*e))
         })
     })
@@ -67,8 +68,12 @@ async fn fallback_to_conduit(
 }
 
 /// Turns a `ConduitResponse` into a `AxumResponse`
-fn conduit_into_axum(response: ConduitResponse) -> AxumResponse {
+fn conduit_into_axum(mut response: ConduitResponse, mut request: ConduitRequest) -> AxumResponse {
     use conduit::Body::*;
+
+    if let Some(pattern) = request.mut_extensions().remove::<RoutePattern>() {
+        response.extensions_mut().insert(pattern);
+    }
 
     let (parts, body) = response.into_parts();
     match body {
