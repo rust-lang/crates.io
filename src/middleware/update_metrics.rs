@@ -1,5 +1,5 @@
 use crate::app::AppState;
-use axum::extract::State;
+use axum::extract::{MatchedPath, State};
 use axum::middleware::Next;
 use axum::response::Response;
 use conduit_router::RoutePattern;
@@ -8,6 +8,7 @@ use std::time::Instant;
 
 pub async fn update_metrics<B>(
     State(state): State<AppState>,
+    matched_path: Option<MatchedPath>,
     req: Request<B>,
     next: Next<B>,
 ) -> Response {
@@ -21,11 +22,14 @@ pub async fn update_metrics<B>(
     metrics.requests_in_flight.dec();
     metrics.requests_total.inc();
 
-    let endpoint = response
-        .extensions()
-        .get::<RoutePattern>()
-        .map(|p| p.pattern())
-        .unwrap_or("<unknown>");
+    let endpoint = match matched_path {
+        Some(ref matched_path) => matched_path.as_str(),
+        None => response
+            .extensions()
+            .get::<RoutePattern>()
+            .map(|route_pattern| route_pattern.pattern())
+            .unwrap_or("<unknown>"),
+    };
     metrics
         .response_times
         .with_label_values(&[endpoint])
