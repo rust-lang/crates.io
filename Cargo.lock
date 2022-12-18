@@ -224,6 +224,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "axum-extra"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f9a320103719de37b7b4da4c8eb629d4573f6bcfd3dfe80d3208806895ccf81d"
+dependencies = [
+ "axum",
+ "bytes",
+ "cookie",
+ "futures-util",
+ "http",
+ "mime",
+ "pin-project-lite",
+ "tokio",
+ "tower",
+ "tower-http",
+ "tower-layer",
+ "tower-service",
+]
+
+[[package]]
 name = "axum-macros"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -345,6 +365,7 @@ dependencies = [
  "anyhow",
  "aws-sigv4",
  "axum",
+ "axum-extra",
  "base64",
  "cargo-registry-index",
  "cargo-registry-markdown",
@@ -355,7 +376,6 @@ dependencies = [
  "conduit",
  "conduit-axum",
  "conduit-conditional-get",
- "conduit-cookie",
  "conduit-git-http-backend",
  "conduit-middleware",
  "conduit-router",
@@ -623,18 +643,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "conduit-cookie"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f88a8f6cc0c410bea02244bfec3ad16b290be77c9d222048be44cb2d1f457f1"
-dependencies = [
- "base64",
- "conduit",
- "conduit-middleware",
- "cookie",
-]
-
-[[package]]
 name = "conduit-git-http-backend"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -728,6 +736,7 @@ dependencies = [
  "base64",
  "hkdf",
  "hmac",
+ "percent-encoding",
  "rand",
  "sha2",
  "subtle",

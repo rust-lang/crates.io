@@ -29,6 +29,7 @@ pub use crate::{app::App, email::Emails, uploaders::Uploader};
 use std::str::FromStr;
 use std::sync::Arc;
 
+use crate::app::AppState;
 use conduit_axum::ConduitFallback;
 use tikv_jemallocator::Jemalloc;
 
@@ -82,8 +83,9 @@ pub fn build_handler(app: Arc<App>) -> axum::Router {
     let endpoints = router::build_router(&app);
     let conduit_handler = middleware::build_middleware(app.clone(), endpoints);
 
-    let axum_router = axum::Router::new();
-    middleware::apply_axum_middleware(&app, axum_router.conduit_fallback(conduit_handler))
+    let state = AppState(app);
+    let axum_router = axum::Router::new().with_state(state.clone());
+    middleware::apply_axum_middleware(state, axum_router.conduit_fallback(conduit_handler))
 }
 
 /// Convenience function requiring that an environment variable is set.

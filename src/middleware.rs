@@ -22,27 +22,28 @@ mod known_error_to_json;
 pub mod log_request;
 pub mod normalize_path;
 mod require_user_agent;
+pub mod session;
 mod static_or_continue;
 mod update_metrics;
 
 use conduit_conditional_get::ConditionalGet;
-use conduit_cookie::{Middleware as Cookie, SessionMiddleware};
 use conduit_middleware::MiddlewareBuilder;
 use conduit_router::RouteBuilder;
 
 use ::sentry::integrations::tower as sentry_tower;
 use axum::error_handling::HandleErrorLayer;
-use axum::middleware::from_fn;
+use axum::middleware::{from_fn, from_fn_with_state};
 use axum::Router;
 use std::env;
 use std::sync::Arc;
 
+use crate::app::AppState;
 use crate::{App, Env};
 
-pub fn apply_axum_middleware(app: &Arc<App>, router: Router) -> Router {
+pub fn apply_axum_middleware(state: AppState, router: Router) -> Router {
     type Request = http::Request<axum::body::Body>;
 
-    let env = app.config.env();
+    let env = state.config.env();
 
     let middleware = tower::ServiceBuilder::new()
         .layer(sentry_tower::NewSentryLayer::<Request>::new_from_top())
@@ -52,7 +53,8 @@ pub fn apply_axum_middleware(app: &Arc<App>, router: Router) -> Router {
         .layer(HandleErrorLayer::new(dummy_error_handler))
         // Optionally print debug information for each request
         // To enable, set the environment variable: `RUST_LOG=cargo_registry::middleware=debug`
-        .option_layer((env == Env::Development).then(|| from_fn(debug::debug_requests)));
+        .option_layer((env == Env::Development).then(|| from_fn(debug::debug_requests)))
+        .layer(from_fn_with_state(state, session::attach_session));
 
     router.layer(middleware)
 }
@@ -72,13 +74,6 @@ pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBui
     m.add(log_request::LogRequests::default());
 
     m.add(ConditionalGet);
-
-    m.add(Cookie::new());
-    m.add(SessionMiddleware::new(
-        "cargo_session",
-        cookie::Key::derive_from(app.session_key().as_bytes()),
-        env == Env::Production,
-    ));
 
     m.add(AppMiddleware::new(app));
     m.add(KnownErrorToJson);

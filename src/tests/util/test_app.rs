@@ -338,7 +338,7 @@ fn simple_config() -> config::Server {
     config::Server {
         base: config::Base::test(),
         db: config::DatabasePools::test_from_environment(),
-        session_key: "test this has to be over 32 bytes long".to_string(),
+        session_key: cookie::Key::derive_from("test this has to be over 32 bytes long".as_bytes()),
         gh_client_id: dotenv::var("GH_CLIENT_ID").unwrap_or_default(),
         gh_client_secret: dotenv::var("GH_CLIENT_SECRET").unwrap_or_default(),
         gh_base_url: "http://api.github.com".to_string(),

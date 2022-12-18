@@ -1,11 +1,11 @@
 use crate::controllers::frontend_prelude::*;
 
-use conduit_cookie::RequestSession;
 use oauth2::reqwest::http_client;
 use oauth2::{AuthorizationCode, Scope, TokenResponse};
 
 use crate::email::Emails;
 use crate::github::GithubUser;
+use crate::middleware::session::RequestSession;
 use crate::models::{NewUser, User};
 use crate::schema::users;
 use crate::util::errors::ReadOnlyMode;
@@ -33,8 +33,7 @@ pub fn begin(req: &mut dyn RequestExt) -> EndpointResult {
         .add_scope(Scope::new("read:org".to_string()))
         .url();
     let state = state.secret().to_string();
-    req.session_mut()
-        .insert("github_oauth_state".to_string(), state.clone());
+    req.session_insert("github_oauth_state".to_string(), state.clone());
 
     Ok(req.json(&json!({ "url": url.to_string(), "state": state })))
 }
@@ -76,7 +75,7 @@ pub fn authorize(req: &mut dyn RequestExt) -> EndpointResult {
     // Make sure that the state we just got matches the session state that we
     // should have issued earlier.
     {
-        let session_state = req.session_mut().remove(&"github_oauth_state".to_string());
+        let session_state = req.session_remove("github_oauth_state");
         let session_state = session_state.as_deref();
         if Some(&state[..]) != session_state {
             return Err(bad_request("invalid state parameter"));
@@ -103,8 +102,7 @@ pub fn authorize(req: &mut dyn RequestExt) -> EndpointResult {
     )?;
 
     // Log in by setting a cookie and the middleware authentication
-    req.session_mut()
-        .insert("user_id".to_string(), user.id.to_string());
+    req.session_insert("user_id".to_string(), user.id.to_string());
 
     super::me::me(req)
 }
@@ -141,7 +139,7 @@ fn save_user_to_database(
 
 /// Handles the `DELETE /api/private/session` route.
 pub fn logout(req: &mut dyn RequestExt) -> EndpointResult {
-    req.session_mut().remove(&"user_id".to_string());
+    req.session_remove("user_id");
     Ok(req.json(&true))
 }
 

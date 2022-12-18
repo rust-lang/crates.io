@@ -1,6 +1,7 @@
 use crate::controllers;
 use crate::db::RequestTransaction;
 use crate::middleware::log_request;
+use crate::middleware::session::RequestSession;
 use crate::models::token::{CrateScope, EndpointScope};
 use crate::models::{ApiToken, User};
 use crate::util::errors::{
@@ -8,7 +9,6 @@ use crate::util::errors::{
 };
 use chrono::Utc;
 use conduit::RequestExt;
-use conduit_cookie::RequestSession;
 use http::header;
 
 #[derive(Debug, Clone)]
@@ -156,8 +156,9 @@ impl AuthenticatedUser {
 fn authenticate_user(req: &dyn RequestExt) -> AppResult<AuthenticatedUser> {
     let conn = req.db_write()?;
 
-    let session = req.session();
-    let user_id_from_session = session.get("user_id").and_then(|s| s.parse::<i32>().ok());
+    let user_id_from_session = req
+        .session_get("user_id")
+        .and_then(|s| s.parse::<i32>().ok());
 
     if let Some(id) = user_id_from_session {
         let user = User::find(&conn, id)
