@@ -5,6 +5,8 @@ use crate::{
 use http::StatusCode;
 use std::time::Duration;
 
+const DB_HEALTHY_TIMEOUT: Duration = Duration::from_millis(2000);
+
 #[test]
 fn download_crate_with_broken_networking_primary_database() {
     let (app, anon, _, owner) = TestApp::init()
@@ -34,7 +36,7 @@ fn download_crate_with_broken_networking_primary_database() {
     app.primary_db_chaosproxy().restore_networking();
     app.as_inner()
         .primary_database
-        .wait_until_healthy(Duration::from_millis(500))
+        .wait_until_healthy(DB_HEALTHY_TIMEOUT)
         .expect("the database did not return healthy");
 
     assert_checked_redirects(&anon);
@@ -85,7 +87,7 @@ fn http_error_with_unhealthy_database() {
     app.primary_db_chaosproxy().restore_networking();
     app.as_inner()
         .primary_database
-        .wait_until_healthy(Duration::from_millis(500))
+        .wait_until_healthy(DB_HEALTHY_TIMEOUT)
         .expect("the database did not return healthy");
 
     let response = anon.get::<()>("/api/v1/summary");
@@ -110,7 +112,7 @@ fn fallback_to_replica_returns_user_info() {
     app.primary_db_chaosproxy().restore_networking();
     app.as_inner()
         .primary_database
-        .wait_until_healthy(Duration::from_millis(500))
+        .wait_until_healthy(DB_HEALTHY_TIMEOUT)
         .expect("the database did not return healthy");
 }
 
@@ -135,7 +137,7 @@ fn restored_replica_returns_user_info() {
         .read_only_replica_database
         .as_ref()
         .expect("no replica database configured")
-        .wait_until_healthy(Duration::from_millis(500))
+        .wait_until_healthy(DB_HEALTHY_TIMEOUT)
         .expect("the database did not return healthy");
 
     let response = owner.get::<()>(URL);
@@ -145,7 +147,7 @@ fn restored_replica_returns_user_info() {
     app.primary_db_chaosproxy().restore_networking();
     app.as_inner()
         .primary_database
-        .wait_until_healthy(Duration::from_millis(500))
+        .wait_until_healthy(DB_HEALTHY_TIMEOUT)
         .expect("the database did not return healthy");
 }
 
@@ -168,7 +170,7 @@ fn restored_primary_returns_user_info() {
     app.primary_db_chaosproxy().restore_networking();
     app.as_inner()
         .primary_database
-        .wait_until_healthy(Duration::from_millis(500))
+        .wait_until_healthy(DB_HEALTHY_TIMEOUT)
         .expect("the database did not return healthy");
 
     let response = owner.get::<()>(URL);
