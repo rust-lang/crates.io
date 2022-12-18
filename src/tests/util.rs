@@ -244,9 +244,6 @@ impl RequestHelper for MockAnonymousUser {
 }
 
 /// A type that can generate cookie authenticated requests
-///
-/// The `user.id` value is directly injected into a request extension and thus the conduit_cookie
-/// session logic is not exercised.
 pub struct MockCookieUser {
     app: TestApp,
     user: User,
