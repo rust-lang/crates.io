@@ -362,6 +362,7 @@ fn simple_config() -> config::Server {
         blocked_routes: HashSet::new(),
         version_id_cache_size: 10000,
         version_id_cache_ttl: Duration::from_secs(5 * 60),
+        cdn_user_agent: "Amazon CloudFront".to_string(),
     }
 }
 

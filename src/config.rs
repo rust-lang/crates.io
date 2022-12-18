@@ -42,6 +42,7 @@ pub struct Server {
     pub blocked_routes: HashSet<String>,
     pub version_id_cache_size: u64,
     pub version_id_cache_ttl: Duration,
+    pub cdn_user_agent: String,
 }
 
 impl Default for Server {
@@ -147,6 +148,8 @@ impl Default for Server {
             version_id_cache_ttl: Duration::from_secs(
                 env_optional("VERSION_ID_CACHE_TTL").unwrap_or(DEFAULT_VERSION_ID_CACHE_TTL),
             ),
+            cdn_user_agent: dotenv::var("WEB_CDN_USER_AGENT")
+                .unwrap_or_else(|_| "Amazon CloudFront".into()),
         }
     }
 }
