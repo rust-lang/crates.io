@@ -23,10 +23,10 @@ use crate::{
     builders::PublishBuilder, CategoryListResponse, CategoryResponse, CrateList, CrateResponse,
     GoodCrate, OkBool, OwnersResponse, VersionResponse,
 };
+use cargo_registry::middleware::session;
 use cargo_registry::models::{ApiToken, CreatedApiToken, User};
 
 use conduit::RequestExt;
-use conduit_cookie::SessionMiddleware;
 use conduit_test::MockRequest;
 use http::Method;
 
@@ -58,8 +58,8 @@ pub use test_app::{TestApp, TestDatabase};
 /// request.header(header::COOKIE, &cookie);
 /// ```
 ///
-/// The implementation matches roughly what is happening inside of the
-/// `SessionMiddleware` from `conduit_cookie`.
+/// The implementation matches roughly what is happening inside of our
+/// session middleware.
 pub fn encode_session_header(session_key: &cookie::Key, user_id: i32) -> String {
     let cookie_name = "cargo_session";
 
@@ -68,7 +68,7 @@ pub fn encode_session_header(session_key: &cookie::Key, user_id: i32) -> String 
     map.insert("user_id".into(), user_id.to_string());
 
     // encode the map into a cookie value string
-    let encoded = SessionMiddleware::encode(&map);
+    let encoded = session::encode(&map);
 
     // put the cookie into a signed cookie jar
     let cookie = Cookie::build(cookie_name, encoded).finish();

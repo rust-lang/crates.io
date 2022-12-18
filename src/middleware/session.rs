@@ -1,7 +1,6 @@
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
 use axum_extra::extract::SignedCookieJar;
-use conduit_cookie::SessionMiddleware;
 use cookie::time::Duration;
 use cookie::{Cookie, SameSite};
 use http::Request;
@@ -17,10 +16,7 @@ pub async fn attach_session<B>(
     next: Next<B>,
 ) -> Response {
     // Decode session cookie
-    let data = jar
-        .get(COOKIE_NAME)
-        .map(SessionMiddleware::decode)
-        .unwrap_or_default();
+    let data = jar.get(COOKIE_NAME).map(decode).unwrap_or_default();
 
     // Save decoded session data in request extension,
     // and keep an `Arc` clone for later
@@ -34,7 +30,7 @@ pub async fn attach_session<B>(
     let session = session.read().unwrap();
     if session.dirty {
         // Return response with additional `Set-Cookie` header
-        let encoded = SessionMiddleware::encode(&session.data);
+        let encoded = encode(&session.data);
         let cookie = Cookie::build(COOKIE_NAME, encoded)
             .http_only(true)
             .secure(true)
@@ -99,4 +95,35 @@ impl<T: conduit::RequestExt + ?Sized> RequestSession for T {
         session.dirty = true;
         session.data.remove(key)
     }
+}
+
+pub fn decode(cookie: Cookie<'_>) -> HashMap<String, String> {
+    let mut ret = HashMap::new();
+    let bytes = base64::decode(cookie.value().as_bytes()).unwrap_or_default();
+    let mut parts = bytes.split(|&a| a == 0xff);
+    while let (Some(key), Some(value)) = (parts.next(), parts.next()) {
+        if key.is_empty() {
+            break;
+        }
+        if let (Ok(key), Ok(value)) = (std::str::from_utf8(key), std::str::from_utf8(value)) {
+            ret.insert(key.to_string(), value.to_string());
+        }
+    }
+    ret
+}
+
+pub fn encode(h: &HashMap<String, String>) -> String {
+    let mut ret = Vec::new();
+    for (i, (k, v)) in h.iter().enumerate() {
+        if i != 0 {
+            ret.push(0xff)
+        }
+        ret.extend(k.bytes());
+        ret.push(0xff);
+        ret.extend(v.bytes());
+    }
+    while ret.len() * 8 % 6 != 0 {
+        ret.push(0xff);
+    }
+    base64::encode(&ret[..])
 }
