@@ -205,7 +205,7 @@ impl App {
             .expect("No HTTP client is configured.  In tests, use `TestApp::with_proxy()`.")
     }
 
-    /// A unique key used with conduit_cookie to generate signed/encrypted cookies
+    /// A unique key to generate signed cookies
     pub fn session_key(&self) -> &cookie::Key {
         &self.config.session_key
     }
