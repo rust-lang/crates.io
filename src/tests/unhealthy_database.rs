@@ -5,7 +5,7 @@ use crate::{
 use http::StatusCode;
 use std::time::Duration;
 
-const DB_HEALTHY_TIMEOUT: Duration = Duration::from_millis(500);
+const DB_HEALTHY_TIMEOUT: Duration = Duration::from_millis(2000);
 
 #[test]
 fn download_crate_with_broken_networking_primary_database() {
