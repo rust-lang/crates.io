@@ -14,7 +14,7 @@ path = "lib.rs"
 testing = ["serde_json"]
 
 [dependencies]
-anyhow = "=1.0.66"
+anyhow = "=1.0.67"
 base64 = "=0.13.1"
 dotenv = "=0.15.0"
 git2 = "=0.15.0"
