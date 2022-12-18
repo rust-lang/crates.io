@@ -10,7 +10,6 @@ use self::ember_html::EmberHtml;
 use self::head::Head;
 use self::known_error_to_json::KnownErrorToJson;
 use self::static_or_continue::StaticOrContinue;
-use self::update_metrics::UpdateMetrics;
 
 pub mod app;
 mod balance_capacity;
@@ -49,6 +48,10 @@ pub fn apply_axum_middleware(state: AppState, router: Router) -> Router {
         .layer(sentry_tower::NewSentryLayer::<Request>::new_from_top())
         .layer(sentry_tower::SentryHttpLayer::with_transaction())
         .layer(from_fn(log_request::log_requests))
+        .layer(from_fn_with_state(
+            state.clone(),
+            update_metrics::update_metrics,
+        ))
         // The following layer is unfortunately necessary for `option_layer()` to work
         .layer(HandleErrorLayer::new(dummy_error_handler))
         // Optionally print debug information for each request
@@ -77,9 +80,6 @@ pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBui
 
     m.add(AppMiddleware::new(app));
     m.add(KnownErrorToJson);
-
-    // This is added *after* AppMiddleware to make sure the app is available.
-    m.add(UpdateMetrics);
 
     // Note: The following `m.around()` middleware is run from bottom to top
 
