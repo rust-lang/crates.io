@@ -376,7 +376,6 @@ dependencies = [
  "conduit",
  "conduit-axum",
  "conduit-conditional-get",
- "conduit-cookie",
  "conduit-git-http-backend",
  "conduit-middleware",
  "conduit-router",
@@ -641,18 +640,6 @@ dependencies = [
  "conduit",
  "conduit-middleware",
  "time 0.2.27",
-]
-
-[[package]]
-name = "conduit-cookie"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f88a8f6cc0c410bea02244bfec3ad16b290be77c9d222048be44cb2d1f457f1"
-dependencies = [
- "base64",
- "conduit",
- "conduit-middleware",
- "cookie",
 ]
 
 [[package]]
