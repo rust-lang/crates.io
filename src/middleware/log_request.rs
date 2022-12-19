@@ -145,18 +145,22 @@ pub async fn log_requests<B>(
 pub struct CustomMetadata(Arc<Mutex<Vec<(&'static str, String)>>>);
 
 pub trait CustomMetadataRequestExt {
-    fn add_custom_metadata<V: Display>(&self, key: &'static str, value: V);
-}
-
-impl CustomMetadataRequestExt for dyn RequestExt + '_ {
     fn add_custom_metadata<V: Display>(&self, key: &'static str, value: V) {
-        if let Some(metadata) = self.extensions().get::<CustomMetadata>() {
+        if let Some(metadata) = self.metadata_extension() {
             if let Ok(mut metadata) = metadata.lock() {
                 metadata.push((key, value.to_string()));
             }
         }
 
         sentry::configure_scope(|scope| scope.set_extra(key, value.to_string().into()));
+    }
+
+    fn metadata_extension(&self) -> Option<&CustomMetadata>;
+}
+
+impl CustomMetadataRequestExt for dyn RequestExt + '_ {
+    fn metadata_extension(&self) -> Option<&CustomMetadata> {
+        self.extensions().get::<CustomMetadata>()
     }
 }
 
