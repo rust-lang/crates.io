@@ -83,7 +83,7 @@ specifiers:
   eslint-plugin-qunit: 7.3.4
   eslint-plugin-qunit-dom: 0.2.0
   eslint-plugin-unicorn: 45.0.2
-  fastboot-app-server: 4.0.0
+  fastboot-app-server: 4.1.0
   highlight.js: 11.7.0
   loader.js: 4.7.0
   macro-decorators: 0.1.2
@@ -110,7 +110,7 @@ dependencies:
   chart.js: 4.1.1
   copy-text-to-clipboard: 3.0.1
   date-fns: 2.29.3
-  fastboot-app-server: 4.0.0
+  fastboot-app-server: 4.1.0
   highlight.js: 11.7.0
   macro-decorators: 0.1.2
   morgan: 1.10.0
@@ -8974,16 +8974,16 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /fastboot-app-server/4.0.0:
-    resolution: {integrity: sha512-ncW/7EiKVBQRTEBpUTm15zTyX7DfkRxSbpGGt+V9I9znRL02SP5tSOhFkKIuuYO5s+3I2bvynTswxku+n9KHCA==}
+  /fastboot-app-server/4.1.0:
+    resolution: {integrity: sha512-LNwV0DuomU6jmPrFK9RbXOhnxjrCR8mHONz32kfg1O2Z53aOXiXEEqDsbeTWpGib2uXCsR5hFHl9X0GarZQEhA==}
     engines: {node: 12.* || 14.* || >=16}
     dependencies:
       basic-auth: 2.0.1
       chalk: 4.1.2
       compression: 1.7.4
       express: 4.18.2
-      fastboot: 4.0.0
-      fastboot-express-middleware: 4.0.0
+      fastboot: 4.1.0
+      fastboot-express-middleware: 4.1.0
     transitivePeerDependencies:
       - bufferutil
       - canvas
@@ -9002,6 +9002,20 @@ packages:
       - canvas
       - supports-color
       - utf-8-validate
+    dev: true
+
+  /fastboot-express-middleware/4.1.0:
+    resolution: {integrity: sha512-RH/YnAn8S/CuzVsK0SLH5cVDP50R3MedqPFhf69T3z6h7LSFm12VAU2TKkqtW/N7qDs00CK1Clus2CwuzXVtWA==}
+    engines: {node: 12.* || 14.* || >=16}
+    dependencies:
+      chalk: 4.1.2
+      fastboot: 4.1.0
+    transitivePeerDependencies:
+      - bufferutil
+      - canvas
+      - supports-color
+      - utf-8-validate
+    dev: false
 
   /fastboot-transform/0.1.3:
     resolution: {integrity: sha512-6otygPIJw1ARp1jJb+6KVO56iKBjhO+5x59RSC9qiZTbZRrv+HZAuP00KD3s+nWMvcFDemtdkugki9DNFTTwCQ==}
@@ -9028,6 +9042,25 @@ packages:
       - canvas
       - supports-color
       - utf-8-validate
+    dev: true
+
+  /fastboot/4.1.0:
+    resolution: {integrity: sha512-NoUUiWhLS4JfrYiHmbRjqqWmzttO+6hVyt+CawsZCg79ljTGAIhPThy8cxg11yiDNiaM9EY3kocWZrCMUM7o4g==}
+    engines: {node: 12.* || 14.* || >=16}
+    dependencies:
+      chalk: 4.1.2
+      cookie: 0.4.2
+      debug: 4.3.4
+      jsdom: 19.0.0
+      resolve: 1.22.1
+      simple-dom: 1.4.0
+      source-map-support: 0.5.21
+    transitivePeerDependencies:
+      - bufferutil
+      - canvas
+      - supports-color
+      - utf-8-validate
+    dev: false
 
   /fastq/1.14.0:
     resolution: {integrity: sha512-eR2D+V9/ExcbF9ls441yIuN6TI2ED1Y2ZcA5BmMtJsOkWOFRJQ0Jt0g1UwqXJJVAb+V+umH5Dfr8oh4EVP7VVg==}
