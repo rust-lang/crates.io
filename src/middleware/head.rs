@@ -1,31 +1,17 @@
 //! Middleware that proxies HEAD requests into a GET request then throws away the body
 
-use super::prelude::*;
+use axum::body::BoxBody;
+use axum::middleware::Next;
+use axum::response::Response;
+use http::{Method, Request};
 
-use crate::util::RequestProxy;
-use http::Method;
-
-#[derive(Default)]
-pub struct Head {
-    handler: Option<Box<dyn Handler>>,
-}
-
-impl AroundMiddleware for Head {
-    fn with_handler(&mut self, handler: Box<dyn Handler>) {
-        self.handler = Some(handler);
+pub async fn support_head_requests<B>(mut req: Request<B>, next: Next<B>) -> Response {
+    if req.method() != Method::HEAD {
+        return next.run(req).await;
     }
-}
 
-impl Handler for Head {
-    fn call(&self, req: &mut dyn RequestExt) -> AfterResult {
-        if req.method() == Method::HEAD {
-            let mut req = RequestProxy::rewrite_method(req, Method::GET);
-            self.handler.as_ref().unwrap().call(&mut req).map(|mut r| {
-                *r.body_mut() = Body::empty();
-                r
-            })
-        } else {
-            self.handler.as_ref().unwrap().call(req)
-        }
-    }
+    *req.method_mut() = Method::GET;
+    let mut response = next.run(req).await;
+    *response.body_mut() = BoxBody::default();
+    response
 }

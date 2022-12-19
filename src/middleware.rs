@@ -7,7 +7,6 @@ mod prelude {
 
 use self::app::AppMiddleware;
 use self::ember_html::EmberHtml;
-use self::head::Head;
 use self::known_error_to_json::KnownErrorToJson;
 use self::static_or_continue::StaticOrContinue;
 
@@ -62,7 +61,8 @@ pub fn apply_axum_middleware(state: AppState, router: Router) -> Router {
             state.clone(),
             require_user_agent::require_user_agent,
         ))
-        .layer(from_fn_with_state(state, block_traffic::block_traffic));
+        .layer(from_fn_with_state(state, block_traffic::block_traffic))
+        .layer(from_fn(head::support_head_requests));
 
     router.layer(middleware)
 }
@@ -116,8 +116,6 @@ pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBui
         // Locally serve crates and readmes
         m.around(StaticOrContinue::new("local_uploads"));
     }
-
-    m.around(Head::default());
 
     m
 }

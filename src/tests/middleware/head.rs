@@ -18,6 +18,5 @@ fn head_method_works_for_404() {
     let req = anon.request_builder(Method::HEAD, "/unknown");
     let res = anon.run::<()>(req);
     assert_eq!(res.status(), StatusCode::NOT_FOUND);
-    // TODO this should not return a response body
-    // assert_eq!(res.into_text(), "");
+    assert_eq!(res.into_text(), "");
 }
