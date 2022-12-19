@@ -6,12 +6,10 @@ use serde::Serialize;
 
 pub use self::io_util::{read_fill, read_le_u32, LimitErrorReader};
 pub use self::request_helpers::*;
-pub use self::request_proxy::RequestProxy;
 
 pub mod errors;
 mod io_util;
 mod request_helpers;
-mod request_proxy;
 pub mod rfc3339;
 pub mod token;
 pub mod tracing;
