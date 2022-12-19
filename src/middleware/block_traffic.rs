@@ -9,45 +9,28 @@
 //! examples). Values of the headers must match exactly.
 
 use super::prelude::*;
-use crate::App;
-use std::sync::Arc;
+use crate::app::AppState;
+use axum::extract::State;
+use axum::middleware::Next;
+use axum::response::IntoResponse;
 
-#[derive(Default)]
-pub struct BlockTraffic {
-    header_name: String,
-    blocked_values: Vec<String>,
-    handler: Option<Box<dyn Handler>>,
-}
+pub async fn block_traffic<B>(
+    State(state): State<AppState>,
+    req: http::Request<B>,
+    next: Next<B>,
+) -> axum::response::Response {
+    let domain_name = state.config.domain_name.clone();
+    let blocked_traffic = &state.config.blocked_traffic;
 
-impl BlockTraffic {
-    pub fn new(header_name: String, blocked_values: Vec<String>) -> Self {
-        Self {
-            header_name,
-            blocked_values,
-            handler: None,
-        }
-    }
-}
-
-impl AroundMiddleware for BlockTraffic {
-    fn with_handler(&mut self, handler: Box<dyn Handler>) {
-        self.handler = Some(handler);
-    }
-}
-
-impl Handler for BlockTraffic {
-    fn call(&self, req: &mut dyn RequestExt) -> AfterResult {
-        let app = req.extensions().get::<Arc<App>>().expect("Missing app");
-        let domain_name = app.config.domain_name.clone();
-
+    for (header_name, blocked_values) in blocked_traffic {
         let has_blocked_value = req
             .headers()
-            .get_all(&self.header_name)
+            .get_all(header_name)
             .iter()
             .map(|val| val.to_str().unwrap_or_default())
-            .any(|value| self.blocked_values.iter().any(|v| v == value));
+            .any(|value| blocked_values.iter().any(|v| v == value));
         if has_blocked_value {
-            let cause = format!("blocked due to contents of header {}", self.header_name);
+            let cause = format!("blocked due to contents of header {}", header_name);
             req.add_custom_metadata("cause", cause);
             let body = format!(
                 "We are unable to process your request at this time. \
@@ -64,13 +47,9 @@ impl Handler for BlockTraffic {
                     .unwrap_or_default()
             );
 
-            Response::builder()
-                .status(StatusCode::FORBIDDEN)
-                .header(header::CONTENT_LENGTH, body.len())
-                .body(Body::from_vec(body.into_bytes()))
-                .map_err(box_error)
-        } else {
-            self.handler.as_ref().unwrap().call(req)
+            return (StatusCode::FORBIDDEN, body).into_response();
         }
     }
+
+    next.run(req).await
 }

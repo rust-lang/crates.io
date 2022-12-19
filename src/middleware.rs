@@ -59,9 +59,10 @@ pub fn apply_axum_middleware(state: AppState, router: Router) -> Router {
         .option_layer((env == Env::Development).then(|| from_fn(debug::debug_requests)))
         .layer(from_fn_with_state(state.clone(), session::attach_session))
         .layer(from_fn_with_state(
-            state,
+            state.clone(),
             require_user_agent::require_user_agent,
-        ));
+        ))
+        .layer(from_fn_with_state(state, block_traffic::block_traffic));
 
     router.layer(middleware)
 }
@@ -76,7 +77,6 @@ async fn dummy_error_handler(_err: axum::BoxError) -> http::StatusCode {
 pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBuilder {
     let mut m = MiddlewareBuilder::new(endpoints);
     let env = app.config.env();
-    let blocked_traffic = app.config.blocked_traffic.clone();
 
     m.add(log_request::LogRequests::default());
 
@@ -118,10 +118,6 @@ pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBui
     }
 
     m.around(Head::default());
-
-    for (header, blocked_values) in blocked_traffic {
-        m.around(block_traffic::BlockTraffic::new(header, blocked_values));
-    }
 
     m
 }

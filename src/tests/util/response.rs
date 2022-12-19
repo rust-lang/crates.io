@@ -41,6 +41,11 @@ impl<T> Response<T> {
     }
 
     #[track_caller]
+    pub fn into_text(self) -> String {
+        assert_ok!(self.response.text())
+    }
+
+    #[track_caller]
     pub fn assert_redirect_ends_with(&self, target: &str) -> &Self {
         assert!(self
             .response
