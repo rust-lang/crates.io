@@ -164,6 +164,12 @@ impl CustomMetadataRequestExt for dyn RequestExt + '_ {
     }
 }
 
+impl<B> CustomMetadataRequestExt for Request<B> {
+    fn metadata_extension(&self) -> Option<&CustomMetadata> {
+        self.extensions().get::<CustomMetadata>()
+    }
+}
+
 #[cfg(test)]
 pub(crate) fn get_log_message(req: &dyn RequestExt, key: &'static str) -> String {
     // Unwrap shouldn't panic as no other code has access to the private struct to remove it
