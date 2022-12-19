@@ -76,7 +76,6 @@ async fn dummy_error_handler(_err: axum::BoxError) -> http::StatusCode {
 pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBuilder {
     let mut m = MiddlewareBuilder::new(endpoints);
     let env = app.config.env();
-    let blocked_traffic = app.config.blocked_traffic.clone();
 
     m.add(log_request::LogRequests::default());
 
@@ -118,10 +117,7 @@ pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBui
     }
 
     m.around(Head::default());
-
-    for (header, blocked_values) in blocked_traffic {
-        m.around(block_traffic::BlockTraffic::new(header, blocked_values));
-    }
+    m.around(block_traffic::BlockTraffic::new());
 
     m
 }

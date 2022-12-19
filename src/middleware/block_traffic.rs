@@ -14,18 +14,12 @@ use std::sync::Arc;
 
 #[derive(Default)]
 pub struct BlockTraffic {
-    header_name: String,
-    blocked_values: Vec<String>,
     handler: Option<Box<dyn Handler>>,
 }
 
 impl BlockTraffic {
-    pub fn new(header_name: String, blocked_values: Vec<String>) -> Self {
-        Self {
-            header_name,
-            blocked_values,
-            handler: None,
-        }
+    pub fn new() -> Self {
+        Self { handler: None }
     }
 }
 
@@ -39,36 +33,39 @@ impl Handler for BlockTraffic {
     fn call(&self, req: &mut dyn RequestExt) -> AfterResult {
         let app = req.extensions().get::<Arc<App>>().expect("Missing app");
         let domain_name = app.config.domain_name.clone();
+        let blocked_traffic = &app.config.blocked_traffic;
 
-        let has_blocked_value = req
-            .headers()
-            .get_all(&self.header_name)
-            .iter()
-            .map(|val| val.to_str().unwrap_or_default())
-            .any(|value| self.blocked_values.iter().any(|v| v == value));
-        if has_blocked_value {
-            let cause = format!("blocked due to contents of header {}", self.header_name);
-            req.add_custom_metadata("cause", cause);
-            let body = format!(
-                "We are unable to process your request at this time. \
+        for (header_name, blocked_values) in blocked_traffic {
+            let has_blocked_value = req
+                .headers()
+                .get_all(header_name)
+                .iter()
+                .map(|val| val.to_str().unwrap_or_default())
+                .any(|value| blocked_values.iter().any(|v| v == value));
+            if has_blocked_value {
+                let cause = format!("blocked due to contents of header {}", header_name);
+                req.add_custom_metadata("cause", cause);
+                let body = format!(
+                    "We are unable to process your request at this time. \
                  This usually means that you are in violation of our crawler \
                  policy (https://{}/policies#crawlers). \
                  Please open an issue at https://github.com/rust-lang/crates.io \
                  or email help@crates.io \
                  and provide the request id {}",
-                domain_name,
-                // Heroku should always set this header
-                req.headers()
-                    .get("x-request-id")
-                    .map(|val| val.to_str().unwrap_or_default())
-                    .unwrap_or_default()
-            );
+                    domain_name,
+                    // Heroku should always set this header
+                    req.headers()
+                        .get("x-request-id")
+                        .map(|val| val.to_str().unwrap_or_default())
+                        .unwrap_or_default()
+                );
 
-            return Response::builder()
-                .status(StatusCode::FORBIDDEN)
-                .header(header::CONTENT_LENGTH, body.len())
-                .body(Body::from_vec(body.into_bytes()))
-                .map_err(box_error);
+                return Response::builder()
+                    .status(StatusCode::FORBIDDEN)
+                    .header(header::CONTENT_LENGTH, body.len())
+                    .body(Body::from_vec(body.into_bytes()))
+                    .map_err(box_error);
+            }
         }
 
         self.handler.as_ref().unwrap().call(req)
