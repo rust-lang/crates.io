@@ -64,13 +64,13 @@ impl Handler for BlockTraffic {
                     .unwrap_or_default()
             );
 
-            Response::builder()
+            return Response::builder()
                 .status(StatusCode::FORBIDDEN)
                 .header(header::CONTENT_LENGTH, body.len())
                 .body(Body::from_vec(body.into_bytes()))
-                .map_err(box_error)
-        } else {
-            self.handler.as_ref().unwrap().call(req)
+                .map_err(box_error);
         }
+
+        self.handler.as_ref().unwrap().call(req)
     }
 }
