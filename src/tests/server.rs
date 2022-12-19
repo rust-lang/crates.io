@@ -1,6 +1,7 @@
 use crate::builders::*;
 use crate::util::*;
 
+use ::insta::assert_display_snapshot;
 use http::{header, Method, StatusCode};
 
 #[test]
@@ -63,6 +64,7 @@ fn block_traffic_via_arbitrary_header_and_value() {
     req.header("x-request-id", "abcd");
     let resp = anon.run::<()>(req);
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);
+    assert_display_snapshot!(resp.into_text());
 
     let mut req = anon.request_builder(Method::GET, "/api/v1/crates/dl_no_ua/0.99.0/download");
     // A request with a header value we don't want to block is allowed, even though there might
