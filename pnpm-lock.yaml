@@ -64,7 +64,7 @@ specifiers:
   ember-modifier: 3.2.7
   ember-page-title: 7.0.0
   ember-qunit: 6.0.0
-  ember-resolver: 8.0.3
+  ember-resolver: 9.0.0
   ember-router-scroll: 4.1.2
   ember-source: 4.9.3
   ember-svg-jar: 2.4.2
@@ -169,7 +169,7 @@ devDependencies:
   ember-modifier: 3.2.7
   ember-page-title: 7.0.0
   ember-qunit: 6.0.0_kpjf7lqvbhq5wc56pgzqud54da
-  ember-resolver: 8.0.3
+  ember-resolver: 9.0.0_ember-source@4.9.3
   ember-router-scroll: 4.1.2
   ember-source: 4.9.3_klhxxmjkcvtuhwro2kkspsfzna
   ember-svg-jar: 2.4.2
@@ -7998,18 +7998,18 @@ packages:
       - webpack
     dev: true
 
-  /ember-resolver/8.0.3:
-    resolution: {integrity: sha512-fA53fxfG821BRqNiB9mQDuzZpzSRcSAYZTYBlRQOHsJwoYdjyE7idz4YcytbSsa409G5J2kP6B+PiKOBh0odlw==}
-    engines: {node: '>= 10.*'}
+  /ember-resolver/9.0.0_ember-source@4.9.3:
+    resolution: {integrity: sha512-oC8HzL6XyfnLFZfyMgc1gDif5s1IOKLCGesvRO57tZoA92QzXW8eD8WNVMT9reoJPKRhymTFlWnwBmq7iQE3wg==}
+    engines: {node: 14.* || 16.* || >= 18}
+    peerDependencies:
+      ember-source: ^4.8.3
+    peerDependenciesMeta:
+      ember-source:
+        optional: true
     dependencies:
-      babel-plugin-debug-macros: 0.3.4
-      broccoli-funnel: 3.0.8
-      broccoli-merge-trees: 4.2.0
       ember-cli-babel: 7.26.11
-      ember-cli-version-checker: 5.1.2
-      resolve: 1.22.1
+      ember-source: 4.9.3_klhxxmjkcvtuhwro2kkspsfzna
     transitivePeerDependencies:
-      - '@babel/core'
       - supports-color
     dev: true
 
