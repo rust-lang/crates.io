@@ -8,42 +8,43 @@
 //! 0.17 (released alongside rustc 1.17).
 
 use super::prelude::*;
-use crate::middleware::app::RequestApp;
+use crate::app::AppState;
+use axum::extract::State;
+use axum::headers::UserAgent;
+use axum::middleware::Next;
+use axum::response::IntoResponse;
+use axum::TypedHeader;
+use http::StatusCode;
 
-use crate::util::request_header;
+pub async fn require_user_agent<B>(
+    user_agent: Option<TypedHeader<UserAgent>>,
+    State(state): State<AppState>,
+    req: http::Request<B>,
+    next: Next<B>,
+) -> axum::response::Response {
+    let cdn_user_agent = &state.config.cdn_user_agent;
 
-#[derive(Default)]
-pub struct RequireUserAgent {
-    handler: Option<Box<dyn Handler>>,
-}
+    let agent = match user_agent {
+        Some(ref header) => header.as_str(),
+        None => "",
+    };
 
-impl AroundMiddleware for RequireUserAgent {
-    fn with_handler(&mut self, handler: Box<dyn Handler>) {
-        self.handler = Some(handler);
-    }
-}
+    let has_user_agent = !agent.is_empty() && agent != cdn_user_agent;
+    let is_download = req.uri().path().ends_with("download");
 
-impl Handler for RequireUserAgent {
-    fn call(&self, req: &mut dyn RequestExt) -> AfterResult {
-        let cdn_user_agent = &req.app().config.cdn_user_agent;
+    if !has_user_agent && !is_download {
+        req.add_custom_metadata("cause", "no user agent");
 
-        let agent = request_header(req, header::USER_AGENT);
-        let has_user_agent = !agent.is_empty() && agent != cdn_user_agent;
-        let is_download = req.path().ends_with("download");
-        if !has_user_agent && !is_download {
-            req.add_custom_metadata("cause", "no user agent");
-            let body = format!(
-                include_str!("no_user_agent_message.txt"),
-                request_header(req, "x-request-id"),
-            );
+        let request_id = req
+            .headers()
+            .get("x-request-id")
+            .map(|header| header.to_str().unwrap_or_default())
+            .unwrap_or_default();
 
-            Response::builder()
-                .status(StatusCode::FORBIDDEN)
-                .header(header::CONTENT_LENGTH, body.len())
-                .body(Body::from_vec(body.into_bytes()))
-                .map_err(box_error)
-        } else {
-            self.handler.as_ref().unwrap().call(req)
-        }
+        let body = format!(include_str!("no_user_agent_message.txt"), request_id);
+
+        (StatusCode::FORBIDDEN, body).into_response()
+    } else {
+        next.run(req).await
     }
 }
