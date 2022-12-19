@@ -57,7 +57,11 @@ pub fn apply_axum_middleware(state: AppState, router: Router) -> Router {
         // Optionally print debug information for each request
         // To enable, set the environment variable: `RUST_LOG=cargo_registry::middleware=debug`
         .option_layer((env == Env::Development).then(|| from_fn(debug::debug_requests)))
-        .layer(from_fn_with_state(state, session::attach_session));
+        .layer(from_fn_with_state(state.clone(), session::attach_session))
+        .layer(from_fn_with_state(
+            state,
+            require_user_agent::require_user_agent,
+        ));
 
     router.layer(middleware)
 }
@@ -118,8 +122,6 @@ pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBui
     for (header, blocked_values) in blocked_traffic {
         m.around(block_traffic::BlockTraffic::new(header, blocked_values));
     }
-
-    m.around(require_user_agent::RequireUserAgent::default());
 
     m
 }
