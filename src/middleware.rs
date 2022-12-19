@@ -59,9 +59,10 @@ pub fn apply_axum_middleware(state: AppState, router: Router) -> Router {
         .option_layer((env == Env::Development).then(|| from_fn(debug::debug_requests)))
         .layer(from_fn_with_state(state.clone(), session::attach_session))
         .layer(from_fn_with_state(
-            state,
+            state.clone(),
             require_user_agent::require_user_agent,
-        ));
+        ))
+        .layer(from_fn_with_state(state, block_traffic::block_traffic));
 
     router.layer(middleware)
 }
@@ -117,7 +118,6 @@ pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBui
     }
 
     m.around(Head::default());
-    m.around(block_traffic::BlockTraffic::new());
 
     m
 }
