@@ -26,7 +26,7 @@ impl Middleware for LogRequests {
     fn after(&self, req: &mut dyn RequestExt, res: AfterResult) -> AfterResult {
         if let Err(error) = &res {
             // Move handler error into custom metadata for axum traffic logging
-            add_custom_metadata(req, "error", error.to_string());
+            req.add_custom_metadata("error", error.to_string())
         }
 
         res
@@ -144,14 +144,30 @@ pub async fn log_requests<B>(
 #[derive(Clone, Debug, Deref, Default)]
 pub struct CustomMetadata(Arc<Mutex<Vec<(&'static str, String)>>>);
 
-pub fn add_custom_metadata<V: Display>(req: &dyn RequestExt, key: &'static str, value: V) {
-    if let Some(metadata) = req.extensions().get::<CustomMetadata>() {
-        if let Ok(mut metadata) = metadata.lock() {
-            metadata.push((key, value.to_string()));
+pub trait CustomMetadataRequestExt {
+    fn add_custom_metadata<V: Display>(&self, key: &'static str, value: V) {
+        if let Some(metadata) = self.metadata_extension() {
+            if let Ok(mut metadata) = metadata.lock() {
+                metadata.push((key, value.to_string()));
+            }
         }
+
+        sentry::configure_scope(|scope| scope.set_extra(key, value.to_string().into()));
     }
 
-    sentry::configure_scope(|scope| scope.set_extra(key, value.to_string().into()));
+    fn metadata_extension(&self) -> Option<&CustomMetadata>;
+}
+
+impl CustomMetadataRequestExt for dyn RequestExt + '_ {
+    fn metadata_extension(&self) -> Option<&CustomMetadata> {
+        self.extensions().get::<CustomMetadata>()
+    }
+}
+
+impl<B> CustomMetadataRequestExt for Request<B> {
+    fn metadata_extension(&self) -> Option<&CustomMetadata> {
+        self.extensions().get::<CustomMetadata>()
+    }
 }
 
 #[cfg(test)]

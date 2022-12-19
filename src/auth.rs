@@ -1,6 +1,6 @@
 use crate::controllers;
 use crate::db::RequestTransaction;
-use crate::middleware::log_request;
+use crate::middleware::log_request::CustomMetadataRequestExt;
 use crate::middleware::session::RequestSession;
 use crate::models::token::{CrateScope, EndpointScope};
 use crate::models::{ApiToken, User};
@@ -71,9 +71,9 @@ impl AuthCheck {
             }
         }
 
-        log_request::add_custom_metadata(request, "uid", auth.user_id());
+        request.add_custom_metadata("uid", auth.user_id());
         if let Some(id) = auth.api_token_id() {
-            log_request::add_custom_metadata(request, "tokenid", id);
+            request.add_custom_metadata("tokenid", id);
         }
 
         if let Some(ref token) = auth.token {
