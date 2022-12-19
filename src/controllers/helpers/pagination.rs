@@ -1,6 +1,6 @@
 use crate::config::Server;
 use crate::controllers::prelude::*;
-use crate::middleware::log_request::add_custom_metadata;
+use crate::middleware::log_request::CustomMetadataRequestExt;
 use crate::models::helpers::with_count::*;
 use crate::util::errors::{bad_request, AppResult};
 use crate::util::request_header;
@@ -95,7 +95,7 @@ impl PaginationOptionsBuilder {
                 }
 
                 if numeric_page > MAX_PAGE_BEFORE_SUSPECTED_BOT {
-                    add_custom_metadata(req, "bot", "suspected");
+                    req.add_custom_metadata("bot", "suspected");
                 }
 
                 // Block large offsets for known violators of the crawler policy
@@ -104,7 +104,7 @@ impl PaginationOptionsBuilder {
                     if numeric_page > config.max_allowed_page_offset
                         && is_useragent_or_ip_blocked(config, req)
                     {
-                        add_custom_metadata(req, "cause", "large page offset");
+                        req.add_custom_metadata("cause", "large page offset");
                         return Err(bad_request("requested page offset is too large"));
                     }
                 }

@@ -5,7 +5,7 @@ use conduit_router::{RequestParams, RouteBuilder, RoutePattern};
 
 use crate::controllers::*;
 use crate::middleware::app::RequestApp;
-use crate::middleware::log_request::add_custom_metadata;
+use crate::middleware::log_request::CustomMetadataRequestExt;
 use crate::util::errors::{std_error, AppError, RouteBlocked};
 use crate::util::EndpointResult;
 use crate::{App, Env};
@@ -200,7 +200,7 @@ impl Handler for C {
             Ok(resp) => Ok(resp),
             Err(e) => {
                 if let Some(cause) = e.cause() {
-                    add_custom_metadata(req, "cause", cause.to_string())
+                    req.add_custom_metadata("cause", cause.to_string())
                 };
                 match e.response() {
                     Some(response) => Ok(response),

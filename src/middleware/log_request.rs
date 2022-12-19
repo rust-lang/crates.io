@@ -26,7 +26,7 @@ impl Middleware for LogRequests {
     fn after(&self, req: &mut dyn RequestExt, res: AfterResult) -> AfterResult {
         if let Err(error) = &res {
             // Move handler error into custom metadata for axum traffic logging
-            add_custom_metadata(req, "error", error.to_string());
+            req.add_custom_metadata("error", error.to_string())
         }
 
         res
@@ -143,10 +143,6 @@ pub async fn log_requests<B>(
 
 #[derive(Clone, Debug, Deref, Default)]
 pub struct CustomMetadata(Arc<Mutex<Vec<(&'static str, String)>>>);
-
-pub fn add_custom_metadata<V: Display>(req: &dyn RequestExt, key: &'static str, value: V) {
-    req.add_custom_metadata(key, value)
-}
 
 pub trait CustomMetadataRequestExt {
     fn add_custom_metadata<V: Display>(&self, key: &'static str, value: V);

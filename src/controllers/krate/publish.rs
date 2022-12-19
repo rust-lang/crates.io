@@ -17,7 +17,7 @@ use crate::models::{
 };
 use crate::worker;
 
-use crate::middleware::log_request::add_custom_metadata;
+use crate::middleware::log_request::CustomMetadataRequestExt;
 use crate::models::token::EndpointScope;
 use crate::schema::*;
 use crate::util::errors::{cargo_err, AppResult};
@@ -62,8 +62,8 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
 
     let new_crate = parse_new_headers(req)?;
 
-    add_custom_metadata(req, "crate_name", new_crate.name.to_string());
-    add_custom_metadata(req, "crate_version", new_crate.vers.to_string());
+    req.add_custom_metadata("crate_name", new_crate.name.to_string());
+    req.add_custom_metadata("crate_version", new_crate.vers.to_string());
 
     let conn = app.primary_database.get()?;
 
@@ -307,7 +307,7 @@ fn count_versions_published_today(krate_id: i32, conn: &PgConnection) -> QueryRe
 fn parse_new_headers(req: &mut dyn RequestExt) -> AppResult<EncodableCrateUpload> {
     // Read the json upload request
     let metadata_length = u64::from(read_le_u32(req.body())?);
-    add_custom_metadata(req, "metadata_length", metadata_length);
+    req.add_custom_metadata("metadata_length", metadata_length);
 
     let max = req.app().config.max_upload_size;
     if metadata_length > max {
