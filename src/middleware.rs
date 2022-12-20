@@ -40,6 +40,13 @@ pub fn apply_axum_middleware(state: AppState, router: Router) -> Router {
 
     let env = state.config.env();
 
+    let capacity = state.config.db.primary.pool_size;
+    if capacity >= 10 {
+        info!(?capacity, "Enabling BalanceCapacity middleware");
+    } else {
+        info!("BalanceCapacity middleware not enabled. DB_PRIMARY_POOL_SIZE is too low.");
+    }
+
     let middleware = tower::ServiceBuilder::new()
         .layer(sentry_tower::NewSentryLayer::<Request>::new_from_top())
         .layer(sentry_tower::SentryHttpLayer::with_transaction())
@@ -73,7 +80,18 @@ pub fn apply_axum_middleware(state: AppState, router: Router) -> Router {
         .option_layer((env != Env::Test).then(|| from_fn(static_or_continue::serve_dist)))
         .layer(HandleErrorLayer::new(dummy_error_handler))
         .option_layer(
-            (env != Env::Test).then(|| from_fn_with_state(state, ember_html::serve_html)),
+            (env != Env::Test).then(|| from_fn_with_state(state.clone(), ember_html::serve_html)),
+        )
+        // This is currently the final middleware to run. If a middleware layer requires a database
+        // connection, it should be run after this middleware so that the potential pool usage can be
+        // tracked here.
+        //
+        // In production we currently have 2 equally sized pools (primary and a read-only replica).
+        // Because such a large portion of production traffic is for download requests (which update
+        // download counts), we consider only the primary pool here.
+        .layer(HandleErrorLayer::new(dummy_error_handler))
+        .option_layer(
+            (capacity >= 10).then(|| from_fn_with_state(state, balance_capacity::balance_capacity)),
         );
 
     router.layer(middleware)
@@ -88,7 +106,6 @@ async fn dummy_error_handler(_err: axum::BoxError) -> http::StatusCode {
 
 pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBuilder {
     let mut m = MiddlewareBuilder::new(endpoints);
-    let capacity = app.config.db.primary.pool_size as usize;
 
     m.add(log_request::LogRequests::default());
 
@@ -96,22 +113,6 @@ pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBui
 
     m.add(AppMiddleware::new(app));
     m.add(KnownErrorToJson);
-
-    // Note: The following `m.around()` middleware is run from bottom to top
-
-    // This is currently the final middleware to run. If a middleware layer requires a database
-    // connection, it should be run after this middleware so that the potential pool usage can be
-    // tracked here.
-    //
-    // In production we currently have 2 equally sized pools (primary and a read-only replica).
-    // Because such a large portion of production traffic is for download requests (which update
-    // download counts), we consider only the primary pool here.
-    if capacity >= 10 {
-        info!(?capacity, "Enabling BalanceCapacity middleware");
-        m.around(balance_capacity::BalanceCapacity::new())
-    } else {
-        info!("BalanceCapacity middleware not enabled. DB_PRIMARY_POOL_SIZE is too low.");
-    }
 
     m
 }

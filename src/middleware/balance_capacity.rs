@@ -10,96 +10,81 @@
 
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use super::prelude::*;
-use crate::middleware::app::RequestApp;
-use conduit::RequestExt;
-use http::StatusCode;
+use crate::app::AppState;
+use crate::middleware::log_request::CustomMetadataRequestExt;
+use axum::extract::State;
+use axum::middleware::Next;
+use axum::response::{IntoResponse, Response};
+use http::{Request, StatusCode};
 
-#[derive(Default)]
-pub(super) struct BalanceCapacity {
-    handler: Option<Box<dyn Handler>>,
-}
+/// Handle a request when load exceeds a threshold
+///
+/// In report-only mode, log metadata is added but the request is still served. Otherwise,
+/// the request is rejected with a service unavailable response.
+async fn handle_high_load<B>(
+    app_state: &AppState,
+    request: Request<B>,
+    next: Next<B>,
+    note: &str,
+) -> Response {
+    let config = &app_state.config.balance_capacity;
+    if config.report_only {
+        // In report-only mode we serve all requests but add log metadata
+        request.add_custom_metadata("would_reject", note);
+        next.run(request).await
+    } else {
+        // Reject the request
+        request.add_custom_metadata("cause", note);
 
-impl BalanceCapacity {
-    pub fn new() -> Self {
-        Self { handler: None }
-    }
-
-    /// Handle a request normally
-    fn handle(&self, request: &mut dyn RequestExt) -> AfterResult {
-        self.handler.as_ref().unwrap().call(request)
-    }
-
-    /// Handle a request when load exceeds a threshold
-    ///
-    /// In report-only mode, log metadata is added but the request is still served. Otherwise,
-    /// the request is rejected with a service unavailable response.
-    fn handle_high_load(&self, request: &mut dyn RequestExt, note: &str) -> AfterResult {
-        let config = &request.app().config.balance_capacity;
-        if config.report_only {
-            // In report-only mode we serve all requests but add log metadata
-            request.add_custom_metadata("would_reject", note);
-            self.handle(request)
-        } else {
-            // Reject the request
-            request.add_custom_metadata("cause", note);
-            let body = "Service temporarily unavailable";
-            Response::builder()
-                .status(StatusCode::SERVICE_UNAVAILABLE)
-                .header(header::CONTENT_LENGTH, body.len())
-                .body(Body::from_static(body.as_bytes()))
-                .map_err(box_error)
-        }
+        let body = "Service temporarily unavailable";
+        (StatusCode::SERVICE_UNAVAILABLE, body).into_response()
     }
 }
 
-impl AroundMiddleware for BalanceCapacity {
-    fn with_handler(&mut self, handler: Box<dyn Handler>) {
-        self.handler = Some(handler);
+pub async fn balance_capacity<B>(
+    State(app_state): State<AppState>,
+    request: Request<B>,
+    next: Next<B>,
+) -> Response {
+    let config = &app_state.config.balance_capacity;
+    let db_capacity = app_state.config.db.primary.pool_size;
+    let state = &app_state.balance_capacity;
+
+    // The _drop_on_exit ensures the counter is decremented for all exit paths (including panics)
+    let (_drop_on_exit1, in_flight_total) = RequestCounter::add_one(&state.in_flight_total);
+
+    // Begin logging total request count so early stages of load increase can be located
+    if in_flight_total >= config.log_total_at_count {
+        request.add_custom_metadata("in_flight_total", in_flight_total);
     }
-}
 
-impl Handler for BalanceCapacity {
-    fn call(&self, request: &mut dyn RequestExt) -> AfterResult {
-        let config = &request.app().config.balance_capacity;
-        let state = request.app().balance_capacity.clone();
-        let db_capacity = request.app().config.db.primary.pool_size;
-
-        // The _drop_on_exit ensures the counter is decremented for all exit paths (including panics)
-        let (_drop_on_exit1, in_flight_total) = RequestCounter::add_one(&state.in_flight_total);
-
-        // Begin logging total request count so early stages of load increase can be located
-        if in_flight_total >= config.log_total_at_count {
-            request.add_custom_metadata("in_flight_total", in_flight_total);
-        }
-
-        // Download requests are always accepted and do not affect the capacity tracking
-        if request.path().starts_with("/api/v1/crates/") && request.path().ends_with("/download") {
-            return self.handle(request);
-        }
-
-        // The _drop_on_exit ensures the counter is decremented for all exit paths (including panics)
-        let (_drop_on_exit2, count) = RequestCounter::add_one(&state.in_flight_non_dl_requests);
-        let load = 100 * count / (db_capacity as usize);
-
-        // Begin logging non-download request count so early stages of non-download load increase can be located
-        if load >= config.log_at_percentage {
-            request.add_custom_metadata("in_flight_non_dl_requests", count);
-        }
-
-        // Reject read-only requests as load nears capacity. Bots are likely to send only safe
-        // requests and this helps prioritize requests that users may be reluctant to retry.
-        if load >= config.throttle_at_percentage && request.method().is_safe() {
-            return self.handle_high_load(request, "over capacity (throttle)");
-        }
-
-        // As load reaches capacity, all non-download requests are rejected
-        if load >= config.dl_only_at_percentage {
-            return self.handle_high_load(request, "over capacity (download only)");
-        }
-
-        self.handle(request)
+    // Download requests are always accepted and do not affect the capacity tracking
+    let path = request.uri().path();
+    if path.starts_with("/api/v1/crates/") && path.ends_with("/download") {
+        return next.run(request).await;
     }
+
+    // The _drop_on_exit ensures the counter is decremented for all exit paths (including panics)
+    let (_drop_on_exit2, count) = RequestCounter::add_one(&state.in_flight_non_dl_requests);
+    let load = 100 * count / (db_capacity as usize);
+
+    // Begin logging non-download request count so early stages of non-download load increase can be located
+    if load >= config.log_at_percentage {
+        request.add_custom_metadata("in_flight_non_dl_requests", count);
+    }
+
+    // Reject read-only requests as load nears capacity. Bots are likely to send only safe
+    // requests and this helps prioritize requests that users may be reluctant to retry.
+    if load >= config.throttle_at_percentage && request.method().is_safe() {
+        return handle_high_load(&app_state, request, next, "over capacity (throttle)").await;
+    }
+
+    // As load reaches capacity, all non-download requests are rejected
+    if load >= config.dl_only_at_percentage {
+        return handle_high_load(&app_state, request, next, "over capacity (download only)").await;
+    }
+
+    next.run(request).await
 }
 
 /// A struct that stores a reference to an atomic counter so it can be decremented when dropped
