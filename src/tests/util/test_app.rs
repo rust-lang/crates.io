@@ -1,7 +1,7 @@
 use super::{MockAnonymousUser, MockCookieUser, MockTokenUser};
 use crate::record;
 use crate::util::{chaosproxy::ChaosProxy, fresh_schema::FreshSchema};
-use cargo_registry::config::{self, DbPoolConfig};
+use cargo_registry::config::{self, BalanceCapacityConfig, DbPoolConfig};
 use cargo_registry::{background_jobs::Environment, db::DieselPool, App, Emails};
 use cargo_registry_index::testing::UpstreamIndex;
 use cargo_registry_index::{Credentials, Repository as WorkerRepository, RepositoryConfig};
@@ -363,6 +363,7 @@ fn simple_config() -> config::Server {
         version_id_cache_size: 10000,
         version_id_cache_ttl: Duration::from_secs(5 * 60),
         cdn_user_agent: "Amazon CloudFront".to_string(),
+        balance_capacity: BalanceCapacityConfig::for_testing(),
     }
 }
 

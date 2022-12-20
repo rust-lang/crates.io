@@ -4,11 +4,13 @@ use ipnetwork::IpNetwork;
 use crate::publish_rate_limit::PublishRateLimit;
 use crate::{env, env_optional, uploaders::Uploader, Env};
 
+mod balance_capacity;
 mod base;
 mod database_pools;
 
 pub use self::base::Base;
 pub use self::database_pools::{DatabasePools, DbPoolConfig};
+pub use crate::config::balance_capacity::BalanceCapacityConfig;
 use std::collections::HashSet;
 use std::time::Duration;
 
@@ -43,6 +45,7 @@ pub struct Server {
     pub version_id_cache_size: u64,
     pub version_id_cache_ttl: Duration,
     pub cdn_user_agent: String,
+    pub balance_capacity: BalanceCapacityConfig,
 }
 
 impl Default for Server {
@@ -150,6 +153,7 @@ impl Default for Server {
             ),
             cdn_user_agent: dotenv::var("WEB_CDN_USER_AGENT")
                 .unwrap_or_else(|_| "Amazon CloudFront".into()),
+            balance_capacity: BalanceCapacityConfig::from_environment(),
         }
     }
 }

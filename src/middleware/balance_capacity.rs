@@ -8,10 +8,10 @@
 //! we should avoid dropping download requests even if that means rejecting some legitimate
 //! requests to other endpoints.
 
-use std::env;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use super::prelude::*;
+use crate::middleware::app::RequestApp;
 use conduit::RequestExt;
 use http::StatusCode;
 
@@ -21,11 +21,6 @@ pub(super) struct BalanceCapacity {
     in_flight_total: AtomicUsize,
     db_capacity: usize,
     in_flight_non_dl_requests: AtomicUsize,
-    report_only: bool,
-    log_total_at_count: usize,
-    log_at_percentage: usize,
-    throttle_at_percentage: usize,
-    dl_only_at_percentage: usize,
 }
 
 impl BalanceCapacity {
@@ -35,13 +30,6 @@ impl BalanceCapacity {
             in_flight_total: AtomicUsize::new(0),
             db_capacity,
             in_flight_non_dl_requests: AtomicUsize::new(0),
-
-            report_only: env::var("WEB_CAPACITY_REPORT_ONLY").ok().is_some(),
-            log_total_at_count: read_env_percentage("WEB_CAPACITY_LOG_TOTAL_AT_COUNT", 50),
-            // The following are a percentage of `db_capacity`
-            log_at_percentage: read_env_percentage("WEB_CAPACITY_LOG_PCT", 50),
-            throttle_at_percentage: read_env_percentage("WEB_CAPACITY_THROTTLE_PCT", 70),
-            dl_only_at_percentage: read_env_percentage("WEB_CAPACITY_DL_ONLY_PCT", 80),
         }
     }
 
@@ -55,7 +43,8 @@ impl BalanceCapacity {
     /// In report-only mode, log metadata is added but the request is still served. Otherwise,
     /// the request is rejected with a service unavailable response.
     fn handle_high_load(&self, request: &mut dyn RequestExt, note: &str) -> AfterResult {
-        if self.report_only {
+        let config = &request.app().config.balance_capacity;
+        if config.report_only {
             // In report-only mode we serve all requests but add log metadata
             request.add_custom_metadata("would_reject", note);
             self.handle(request)
@@ -80,11 +69,13 @@ impl AroundMiddleware for BalanceCapacity {
 
 impl Handler for BalanceCapacity {
     fn call(&self, request: &mut dyn RequestExt) -> AfterResult {
+        let config = &request.app().config.balance_capacity;
+
         // The _drop_on_exit ensures the counter is decremented for all exit paths (including panics)
         let (_drop_on_exit1, in_flight_total) = RequestCounter::add_one(&self.in_flight_total);
 
         // Begin logging total request count so early stages of load increase can be located
-        if in_flight_total >= self.log_total_at_count {
+        if in_flight_total >= config.log_total_at_count {
             request.add_custom_metadata("in_flight_total", in_flight_total);
         }
 
@@ -98,30 +89,22 @@ impl Handler for BalanceCapacity {
         let load = 100 * count / self.db_capacity;
 
         // Begin logging non-download request count so early stages of non-download load increase can be located
-        if load >= self.log_at_percentage {
+        if load >= config.log_at_percentage {
             request.add_custom_metadata("in_flight_non_dl_requests", count);
         }
 
         // Reject read-only requests as load nears capacity. Bots are likely to send only safe
         // requests and this helps prioritize requests that users may be reluctant to retry.
-        if load >= self.throttle_at_percentage && request.method().is_safe() {
+        if load >= config.throttle_at_percentage && request.method().is_safe() {
             return self.handle_high_load(request, "over capacity (throttle)");
         }
 
         // As load reaches capacity, all non-download requests are rejected
-        if load >= self.dl_only_at_percentage {
+        if load >= config.dl_only_at_percentage {
             return self.handle_high_load(request, "over capacity (download only)");
         }
 
         self.handle(request)
-    }
-}
-
-fn read_env_percentage(name: &str, default: usize) -> usize {
-    if let Ok(value) = env::var(name) {
-        value.parse().unwrap_or(default)
-    } else {
-        default
     }
 }
 
