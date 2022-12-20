@@ -60,7 +60,7 @@ pub struct App {
     pub(crate) http_client: Option<Client>,
 
     /// A client for HTTP requests to the Ember.js fastboot server
-    pub fastboot_client: Option<Client>,
+    pub fastboot_client: Option<reqwest::Client>,
 }
 
 impl App {
@@ -170,7 +170,7 @@ impl App {
             .build();
 
         let fastboot_client = match dotenv::var("USE_FASTBOOT") {
-            Ok(val) if val == "staging-experimental" => Some(Client::new()),
+            Ok(val) if val == "staging-experimental" => Some(reqwest::Client::new()),
             _ => None,
         };
 
