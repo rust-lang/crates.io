@@ -1,36 +1,42 @@
 //! This module implements middleware to serve static files from the
 //! specified directory.
-use super::prelude::*;
 
-use conduit_static::Static;
+use axum::middleware::Next;
+use axum::response::Response;
+use http::{Method, Request, StatusCode};
+use tower::ServiceExt;
+use tower_http::services::ServeDir;
 
-pub struct StaticOrContinue {
-    fallback_handler: Option<Box<dyn Handler>>,
-    static_handler: Static,
-}
+pub async fn serve_local_uploads<B>(request: Request<B>, next: Next<B>) -> Response {
+    if request.method() == Method::GET || request.method() == Method::HEAD {
+        let mut static_req = Request::new(());
+        *static_req.method_mut() = request.method().clone();
+        *static_req.uri_mut() = request.uri().clone();
+        *static_req.headers_mut() = request.headers().clone();
 
-impl StaticOrContinue {
-    pub fn new(directory: &str) -> StaticOrContinue {
-        StaticOrContinue {
-            fallback_handler: None,
-            static_handler: Static::new(directory),
+        if let Ok(response) = ServeDir::new("local_uploads").oneshot(static_req).await {
+            if response.status() != StatusCode::NOT_FOUND {
+                return response.map(axum::body::boxed);
+            }
         }
     }
+
+    next.run(request).await
 }
 
-impl AroundMiddleware for StaticOrContinue {
-    fn with_handler(&mut self, handler: Box<dyn Handler>) {
-        self.fallback_handler = Some(handler);
-    }
-}
+pub async fn serve_dist<B>(request: Request<B>, next: Next<B>) -> Response {
+    if request.method() == Method::GET || request.method() == Method::HEAD {
+        let mut static_req = Request::new(());
+        *static_req.method_mut() = request.method().clone();
+        *static_req.uri_mut() = request.uri().clone();
+        *static_req.headers_mut() = request.headers().clone();
 
-impl Handler for StaticOrContinue {
-    fn call(&self, req: &mut dyn RequestExt) -> AfterResult {
-        match self.static_handler.call(req) {
-            Ok(ref resp) if resp.status() == StatusCode::NOT_FOUND => {}
-            ret => return ret,
+        if let Ok(response) = ServeDir::new("dist").oneshot(static_req).await {
+            if response.status() != StatusCode::NOT_FOUND {
+                return response.map(axum::body::boxed);
+            }
         }
-
-        self.fallback_handler.as_ref().unwrap().call(req)
     }
+
+    next.run(request).await
 }

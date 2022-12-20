@@ -8,7 +8,6 @@ mod prelude {
 use self::app::AppMiddleware;
 use self::ember_html::EmberHtml;
 use self::known_error_to_json::KnownErrorToJson;
-use self::static_or_continue::StaticOrContinue;
 
 pub mod app;
 mod balance_capacity;
@@ -62,7 +61,13 @@ pub fn apply_axum_middleware(state: AppState, router: Router) -> Router {
             require_user_agent::require_user_agent,
         ))
         .layer(from_fn_with_state(state, block_traffic::block_traffic))
-        .layer(from_fn(head::support_head_requests));
+        .layer(from_fn(head::support_head_requests))
+        .layer(HandleErrorLayer::new(dummy_error_handler))
+        .option_layer(
+            (env == Env::Development).then(|| from_fn(static_or_continue::serve_local_uploads)),
+        )
+        .layer(HandleErrorLayer::new(dummy_error_handler))
+        .option_layer((env != Env::Test).then(|| from_fn(static_or_continue::serve_dist)));
 
     router.layer(middleware)
 }
@@ -109,12 +114,6 @@ pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBui
     // Not needed for the backend tests.
     if env != Env::Test {
         m.around(EmberHtml::new("dist"));
-        m.around(StaticOrContinue::new("dist"));
-    }
-
-    if env == Env::Development {
-        // Locally serve crates and readmes
-        m.around(StaticOrContinue::new("local_uploads"));
     }
 
     m
