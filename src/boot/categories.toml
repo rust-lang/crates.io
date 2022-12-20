@@ -496,7 +496,7 @@ Crates related to robotics.\
 [science.categories.neuroscience]
 name = "Neuroscience"
 description = """
-Crates for reaserch tools and processing of data related to the brain and nervous system.\
+Crates for research tools and processing of data related to the brain and nervous system.\
 """
 
 [simulation]
