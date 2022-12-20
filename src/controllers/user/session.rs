@@ -168,8 +168,7 @@ mod tests {
 
         assert!(
             result.is_ok(),
-            "Creating a User from a GitHub user failed when it shouldn't have, {:?}",
-            result
+            "Creating a User from a GitHub user failed when it shouldn't have, {result:?}"
         );
     }
 }

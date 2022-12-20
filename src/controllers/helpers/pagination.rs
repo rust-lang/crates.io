@@ -89,8 +89,7 @@ impl PaginationOptionsBuilder {
                 let numeric_page = s.parse().map_err(|e| bad_request(&e))?;
                 if numeric_page < 1 {
                     return Err(bad_request(&format_args!(
-                        "page indexing starts from 1, page {} is invalid",
-                        numeric_page,
+                        "page indexing starts from 1, page {numeric_page} is invalid",
                     )));
                 }
 
@@ -129,8 +128,7 @@ impl PaginationOptionsBuilder {
             .unwrap_or(Ok(DEFAULT_PER_PAGE))?;
         if per_page > MAX_PER_PAGE {
             return Err(bad_request(&format_args!(
-                "cannot request more than {} items",
-                MAX_PER_PAGE,
+                "cannot request more than {MAX_PER_PAGE} items",
             )));
         }
 

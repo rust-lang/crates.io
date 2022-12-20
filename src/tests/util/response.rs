@@ -106,6 +106,6 @@ where
 
     match serde_json::from_slice(&bytes) {
         Ok(t) => t,
-        Err(e) => panic!("failed to decode: {:?}", e),
+        Err(e) => panic!("failed to decode: {e:?}"),
     }
 }

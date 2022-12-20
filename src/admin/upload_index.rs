@@ -39,7 +39,7 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
         let crate_name = file.file_name().unwrap().to_str().unwrap();
         let path = repo.index_file(crate_name);
         if !path.exists() {
-            pb.suspend(|| println!("skipping file `{}`", crate_name));
+            pb.suspend(|| println!("skipping file `{crate_name}`"));
             continue;
         }
 

@@ -135,15 +135,13 @@ impl<'a> NewCrate<'a> {
             // making it difficult to ensure that both slashes are present.
             if !url.starts_with("http://") && !url.starts_with("https://") {
                 return Err(cargo_err(&format_args!(
-                    "URL for field `{}` must begin with http:// or https:// (url: {})",
-                    field, url
+                    "URL for field `{field}` must begin with http:// or https:// (url: {url})"
                 )));
             }
 
             // Ensure the entire URL parses as well
-            Url::parse(url).map_err(|_| {
-                cargo_err(&format_args!("`{}` is not a valid url: `{}`", field, url))
-            })?;
+            Url::parse(url)
+                .map_err(|_| cargo_err(&format_args!("`{field}` is not a valid url: `{url}`")))?;
             Ok(())
         }
 

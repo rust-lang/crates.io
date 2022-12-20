@@ -131,7 +131,7 @@ impl Uploader {
 
                 if let Some(bucket) = bucket {
                     let content_length = content.seek(SeekFrom::End(0))?;
-                    content.seek(SeekFrom::Start(0))?;
+                    content.rewind()?;
                     bucket.put(
                         client,
                         path,
@@ -205,7 +205,7 @@ impl Uploader {
             extra_headers,
             UploadBucket::Default,
         )
-        .map_err(|e| internal(&format_args!("failed to upload crate: {}", e)))?;
+        .map_err(|e| internal(&format_args!("failed to upload crate: {e}")))?;
         Ok(())
     }
 

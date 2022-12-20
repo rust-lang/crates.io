@@ -80,7 +80,7 @@ impl RealGitHubClient {
     where
         T: DeserializeOwned,
     {
-        self._request(url, &format!("basic {}:{}", username, password))
+        self._request(url, &format!("basic {username}:{password}"))
     }
 
     /// Returns a client for making HTTP requests to upload crate files.
@@ -166,8 +166,7 @@ fn handle_error_response(error: &reqwest::Error) -> Box<dyn AppError> {
         ),
         Some(Status::NOT_FOUND) => not_found(),
         _ => internal(&format_args!(
-            "didn't get a 200 result from github: {}",
-            error
+            "didn't get a 200 result from github: {error}"
         )),
     }
 }

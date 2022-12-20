@@ -86,7 +86,7 @@ impl Display for Metadata {
 
         let response_time_in_ms = self.duration.as_millis();
         if !is_download_redirect || response_time_in_ms > 0 {
-            line.add_field("service", format!("{}ms", response_time_in_ms))?;
+            line.add_field("service", format!("{response_time_in_ms}ms"))?;
         }
 
         if !is_download_redirect {
@@ -183,7 +183,7 @@ pub(crate) fn get_log_message(req: &dyn RequestExt, key: &'static str) -> String
         }
     }
 
-    panic!("expected log message for {} not found", key);
+    panic!("expected log message for {key} not found");
 }
 
 struct LogLine<'f, 'g> {

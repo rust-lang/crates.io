@@ -94,7 +94,7 @@ fn invalid_names() {
         let errors = json.get("errors").unwrap().as_array().unwrap();
         let first_error = errors.first().unwrap().as_object().unwrap();
         let detail = first_error.get("detail").unwrap().as_str().unwrap();
-        assert!(detail.contains(error_message), "{:?}", detail);
+        assert!(detail.contains(error_message), "{detail:?}");
     };
 
     let error_message = "expected a valid crate name";

@@ -194,7 +194,7 @@ where
                 Ok(line) => line,
                 // We receive an EOF when the process terminates
                 Err(err) if err.kind() == std::io::ErrorKind::UnexpectedEof => break,
-                Err(err) => panic!("unexpected error while reading process {}: {}", kind, err),
+                Err(err) => panic!("unexpected error while reading process {kind}: {err}"),
             };
 
             // If we expect the port number to be logged into this stream, look for it and send it

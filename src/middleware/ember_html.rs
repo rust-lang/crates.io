@@ -89,7 +89,7 @@ fn proxy_to_fastboot(client: &Client, req: &dyn RequestExt) -> Result<AppRespons
 
     let mut url = format!("http://127.0.0.1:9000{}", req.path());
     if let Some(query) = req.query_string() {
-        write!(url, "?{}", query)?;
+        write!(url, "?{query}")?;
     }
     let mut fastboot_response = client
         .request(req.method().into(), &*url)

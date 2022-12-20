@@ -31,7 +31,7 @@ impl<'a> VersionBuilder<'a> {
     #[track_caller]
     pub fn new(num: &str) -> Self {
         let num = semver::Version::parse(num).unwrap_or_else(|e| {
-            panic!("The version {} is not valid: {}", num, e);
+            panic!("The version {num} is not valid: {e}");
         });
 
         VersionBuilder {
@@ -154,7 +154,7 @@ impl<'a> VersionBuilder<'a> {
     ) -> Version {
         self.build(crate_id, published_by, connection)
             .unwrap_or_else(|e| {
-                panic!("Unable to create version: {:?}", e);
+                panic!("Unable to create version: {e:?}");
             })
     }
 }
