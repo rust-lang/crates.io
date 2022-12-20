@@ -3,6 +3,7 @@
 use crate::db::{ConnectionConfig, DieselPool};
 use crate::{config, Env};
 use std::ops::Deref;
+use std::sync::atomic::AtomicUsize;
 use std::{sync::Arc, time::Duration};
 
 use crate::downloads_counter::DownloadsCounter;
@@ -61,6 +62,9 @@ pub struct App {
 
     /// A client for HTTP requests to the Ember.js fastboot server
     pub fastboot_client: Option<reqwest::Client>,
+
+    /// In-flight request counters for the `balance_capacity` middleware.
+    pub balance_capacity: Arc<BalanceCapacityState>,
 }
 
 impl App {
@@ -186,6 +190,7 @@ impl App {
             instance_metrics,
             http_client,
             fastboot_client,
+            balance_capacity: Default::default(),
             config,
         }
     }
@@ -209,6 +214,12 @@ impl App {
     pub fn session_key(&self) -> &cookie::Key {
         &self.config.session_key
     }
+}
+
+#[derive(Debug, Default)]
+pub struct BalanceCapacityState {
+    pub in_flight_total: AtomicUsize,
+    pub in_flight_non_dl_requests: AtomicUsize,
 }
 
 #[derive(Clone)]
