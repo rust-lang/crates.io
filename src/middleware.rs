@@ -6,7 +6,6 @@ mod prelude {
 }
 
 use self::app::AppMiddleware;
-use self::ember_html::EmberHtml;
 use self::known_error_to_json::KnownErrorToJson;
 
 pub mod app;
@@ -60,14 +59,23 @@ pub fn apply_axum_middleware(state: AppState, router: Router) -> Router {
             state.clone(),
             require_user_agent::require_user_agent,
         ))
-        .layer(from_fn_with_state(state, block_traffic::block_traffic))
+        .layer(from_fn_with_state(
+            state.clone(),
+            block_traffic::block_traffic,
+        ))
         .layer(from_fn(head::support_head_requests))
         .layer(HandleErrorLayer::new(dummy_error_handler))
         .option_layer(
             (env == Env::Development).then(|| from_fn(static_or_continue::serve_local_uploads)),
         )
+        // Serve the static files in the *dist* directory, which are the frontend assets.
+        // Not needed for the backend tests.
         .layer(HandleErrorLayer::new(dummy_error_handler))
-        .option_layer((env != Env::Test).then(|| from_fn(static_or_continue::serve_dist)));
+        .option_layer((env != Env::Test).then(|| from_fn(static_or_continue::serve_dist)))
+        .layer(HandleErrorLayer::new(dummy_error_handler))
+        .option_layer(
+            (env != Env::Test).then(|| from_fn_with_state(state, ember_html::serve_html)),
+        );
 
     router.layer(middleware)
 }
@@ -81,7 +89,6 @@ async fn dummy_error_handler(_err: axum::BoxError) -> http::StatusCode {
 
 pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBuilder {
     let mut m = MiddlewareBuilder::new(endpoints);
-    let env = app.config.env();
 
     m.add(log_request::LogRequests::default());
 
@@ -108,12 +115,6 @@ pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBui
                 info!("BalanceCapacity middleware not enabled. DB_PRIMARY_POOL_SIZE is too low.");
             }
         }
-    }
-
-    // Serve the static files in the *dist* directory, which are the frontend assets.
-    // Not needed for the backend tests.
-    if env != Env::Test {
-        m.around(EmberHtml::new("dist"));
     }
 
     m
