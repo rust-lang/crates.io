@@ -64,7 +64,7 @@ pub struct App {
     pub fastboot_client: Option<reqwest::Client>,
 
     /// In-flight request counters for the `balance_capacity` middleware.
-    pub balance_capacity: Arc<BalanceCapacityState>,
+    pub balance_capacity: BalanceCapacityState,
 }
 
 impl App {
