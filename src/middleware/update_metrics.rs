@@ -4,6 +4,7 @@ use axum::middleware::Next;
 use axum::response::Response;
 use conduit_router::RoutePattern;
 use http::Request;
+use prometheus::IntGauge;
 use std::time::Instant;
 
 pub async fn update_metrics<B>(
@@ -15,11 +16,10 @@ pub async fn update_metrics<B>(
     let start_instant = Instant::now();
 
     let metrics = &state.instance_metrics;
-    metrics.requests_in_flight.inc();
+    let _guard = GaugeGuard::inc_for(&metrics.requests_in_flight);
 
     let response = next.run(req).await;
 
-    metrics.requests_in_flight.dec();
     metrics.requests_total.inc();
 
     let endpoint = match matched_path {
@@ -42,4 +42,22 @@ pub async fn update_metrics<B>(
         .inc();
 
     response
+}
+
+/// A struct that stores a reference to an `IntGauge` so it can be decremented when dropped
+struct GaugeGuard<'a> {
+    gauge: &'a IntGauge,
+}
+
+impl<'a> GaugeGuard<'a> {
+    fn inc_for(gauge: &'a IntGauge) -> Self {
+        gauge.inc();
+        Self { gauge }
+    }
+}
+
+impl<'a> Drop for GaugeGuard<'a> {
+    fn drop(&mut self) {
+        self.gauge.dec();
+    }
 }
