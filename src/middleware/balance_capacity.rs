@@ -19,16 +19,14 @@ use http::StatusCode;
 pub(super) struct BalanceCapacity {
     handler: Option<Box<dyn Handler>>,
     in_flight_total: AtomicUsize,
-    db_capacity: usize,
     in_flight_non_dl_requests: AtomicUsize,
 }
 
 impl BalanceCapacity {
-    pub fn new(db_capacity: usize) -> Self {
+    pub fn new() -> Self {
         Self {
             handler: None,
             in_flight_total: AtomicUsize::new(0),
-            db_capacity,
             in_flight_non_dl_requests: AtomicUsize::new(0),
         }
     }
@@ -70,6 +68,7 @@ impl AroundMiddleware for BalanceCapacity {
 impl Handler for BalanceCapacity {
     fn call(&self, request: &mut dyn RequestExt) -> AfterResult {
         let config = &request.app().config.balance_capacity;
+        let db_capacity = request.app().config.db.primary.pool_size;
 
         // The _drop_on_exit ensures the counter is decremented for all exit paths (including panics)
         let (_drop_on_exit1, in_flight_total) = RequestCounter::add_one(&self.in_flight_total);
@@ -86,7 +85,7 @@ impl Handler for BalanceCapacity {
 
         // The _drop_on_exit ensures the counter is decremented for all exit paths (including panics)
         let (_drop_on_exit2, count) = RequestCounter::add_one(&self.in_flight_non_dl_requests);
-        let load = 100 * count / self.db_capacity;
+        let load = 100 * count / (db_capacity as usize);
 
         // Begin logging non-download request count so early stages of non-download load increase can be located
         if load >= config.log_at_percentage {

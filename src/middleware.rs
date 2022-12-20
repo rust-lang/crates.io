@@ -108,7 +108,7 @@ pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBui
     // download counts), we consider only the primary pool here.
     if capacity >= 10 {
         info!(?capacity, "Enabling BalanceCapacity middleware");
-        m.around(balance_capacity::BalanceCapacity::new(capacity))
+        m.around(balance_capacity::BalanceCapacity::new())
     } else {
         info!("BalanceCapacity middleware not enabled. DB_PRIMARY_POOL_SIZE is too low.");
     }
