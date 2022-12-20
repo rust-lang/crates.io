@@ -26,10 +26,12 @@ extern crate serde_json;
 extern crate tracing;
 
 pub use crate::{app::App, email::Emails, uploaders::Uploader};
+use axum::routing::get;
 use std::str::FromStr;
 use std::sync::Arc;
 
 use crate::app::AppState;
+use crate::controllers::site_metadata;
 use conduit_axum::ConduitFallback;
 use tikv_jemallocator::Jemalloc;
 
@@ -85,7 +87,12 @@ pub fn build_handler(app: Arc<App>) -> axum::Router {
     let conduit_handler = middleware::build_middleware(app.clone(), endpoints);
 
     let state = AppState(app);
-    let axum_router = axum::Router::new().with_state(state.clone());
+    let axum_router = axum::Router::new()
+        .route(
+            "/api/v1/site_metadata",
+            get(site_metadata::show_deployed_sha),
+        )
+        .with_state(state.clone());
     middleware::apply_axum_middleware(state, axum_router.conduit_fallback(conduit_handler))
 }
 
