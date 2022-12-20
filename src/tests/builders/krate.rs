@@ -178,7 +178,7 @@ impl<'a> CrateBuilder<'a> {
     pub fn expect_build(self, connection: &PgConnection) -> Crate {
         let name = self.krate.name;
         self.build(connection).unwrap_or_else(|e| {
-            panic!("Unable to create crate {}: {:?}", name, e);
+            panic!("Unable to create crate {name}: {e:?}");
         })
     }
 }

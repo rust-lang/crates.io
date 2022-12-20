@@ -194,7 +194,7 @@ mod tests {
                     continue;
                 }
                 if variant.prefix().starts_with(other.prefix()) {
-                    panic!("variants {:?} and {:?} share a prefix", variant, other);
+                    panic!("variants {variant:?} and {other:?} share a prefix");
                 }
             }
         }

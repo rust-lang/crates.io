@@ -99,7 +99,7 @@ pub fn build_handler(app: Arc<App>) -> axum::Router {
 /// in the current environment.
 #[track_caller]
 pub fn env(s: &str) -> String {
-    dotenv::var(s).unwrap_or_else(|_| panic!("must have `{}` defined", s))
+    dotenv::var(s).unwrap_or_else(|_| panic!("must have `{s}` defined"))
 }
 
 /// Parse an optional environment variable
@@ -115,6 +115,6 @@ pub fn env(s: &str) -> String {
 pub fn env_optional<T: FromStr>(s: &str) -> Option<T> {
     dotenv::var(s).ok().map(|s| {
         s.parse()
-            .unwrap_or_else(|_| panic!("`{}` was defined but could not be parsed", s))
+            .unwrap_or_else(|_| panic!("`{s}` was defined but could not be parsed"))
     })
 }

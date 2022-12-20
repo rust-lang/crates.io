@@ -93,7 +93,7 @@ fn families_to_json_events(families: &[MetricFamily]) -> Vec<VectorEvent<'_>> {
                     }
                 }
                 other => {
-                    panic!("unsupported metric type: {:?}", other)
+                    panic!("unsupported metric type: {other:?}")
                 }
             };
             events.push(VectorEvent {

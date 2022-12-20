@@ -58,7 +58,7 @@ impl Drop for Bomb {
             .unwrap()
             .to_string();
         match res {
-            Err(..) if !thread::panicking() => panic!("server subtask failed: {}", stderr),
+            Err(..) if !thread::panicking() => panic!("server subtask failed: {stderr}"),
             Err(e) => {
                 if !stderr.is_empty() {
                     println!("server subtask failed ({e:?}): {stderr}")
@@ -342,7 +342,7 @@ fn replay_http(
             name.as_str().to_string(),
             value.to_str().unwrap().to_string(),
         );
-        assert_ok!(writeln!(stdout, "received: {:?}", pair));
+        assert_ok!(writeln!(stdout, "received: {pair:?}"));
         if name == "user-agent" {
             assert_eq!(value, "crates.io (https://crates.io)");
             continue;
@@ -351,7 +351,7 @@ fn replay_http(
             continue;
         }
         if !exchange.request.headers.remove(&pair) {
-            panic!("found {:?} but didn't expect it", pair);
+            panic!("found {pair:?} but didn't expect it");
         }
     }
     for (name, value) in exchange.request.headers.drain() {

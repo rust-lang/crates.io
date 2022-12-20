@@ -205,7 +205,7 @@ impl Uploader {
             extra_headers,
             UploadBucket::Default,
         )
-        .map_err(|e| internal(&format_args!("failed to upload crate: {}", e)))?;
+        .map_err(|e| internal(&format_args!("failed to upload crate: {e}")))?;
         Ok(())
     }
 

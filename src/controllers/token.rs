@@ -75,8 +75,7 @@ pub fn new(req: &mut dyn RequestExt) -> EndpointResult {
     let count: i64 = ApiToken::belonging_to(&user).count().get_result(&*conn)?;
     if count >= max_token_per_user {
         return Err(bad_request(&format!(
-            "maximum tokens per user is: {}",
-            max_token_per_user
+            "maximum tokens per user is: {max_token_per_user}"
         )));
     }
 

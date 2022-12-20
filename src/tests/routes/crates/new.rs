@@ -8,7 +8,7 @@ fn daily_limit() {
     let max_daily_versions = app.as_inner().config.new_version_rate_limit.unwrap();
     for version in 1..=max_daily_versions {
         let crate_to_publish =
-            PublishBuilder::new("foo_daily_limit").version(&format!("0.0.{}", version));
+            PublishBuilder::new("foo_daily_limit").version(&format!("0.0.{version}"));
         user.publish_crate(crate_to_publish).good();
     }
 

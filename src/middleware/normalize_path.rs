@@ -46,7 +46,7 @@ fn normalize_path_inner<B>(req: &mut Request<B>) {
 
         let new_path_and_query = uri.path_and_query().map(|path_and_query| {
             match path_and_query.query() {
-                Some(query) => format!("{}?{}", path, query),
+                Some(query) => format!("{path}?{query}"),
                 None => path,
             }
             .parse()

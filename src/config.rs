@@ -212,8 +212,7 @@ fn parse_traffic_patterns(patterns: &str) -> impl Iterator<Item = (&str, &str)> 
         } else {
             panic!(
                 "BLOCKED_TRAFFIC must be in the form HEADER=VALUE_ENV_VAR, \
-                 got invalid pattern {}",
-                pattern
+                 got invalid pattern {pattern}"
             )
         }
     })

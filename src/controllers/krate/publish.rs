@@ -311,13 +311,13 @@ fn parse_new_headers(req: &mut dyn RequestExt) -> AppResult<EncodableCrateUpload
 
     let max = req.app().config.max_upload_size;
     if metadata_length > max {
-        return Err(cargo_err(&format_args!("max upload size is: {}", max)));
+        return Err(cargo_err(&format_args!("max upload size is: {max}")));
     }
     let mut json = vec![0; metadata_length as usize];
     read_fill(req.body(), &mut json)?;
     let json = String::from_utf8(json).map_err(|_| cargo_err("json body was not valid utf-8"))?;
     let new: EncodableCrateUpload = serde_json::from_str(&json)
-        .map_err(|e| cargo_err(&format_args!("invalid upload request: {}", e)))?;
+        .map_err(|e| cargo_err(&format_args!("invalid upload request: {e}")))?;
 
     // Make sure required fields are provided
     fn empty(s: Option<&String>) -> bool {

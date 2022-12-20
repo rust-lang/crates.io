@@ -30,7 +30,7 @@ pub async fn block_traffic<B>(
             .map(|val| val.to_str().unwrap_or_default())
             .any(|value| blocked_values.iter().any(|v| v == value));
         if has_blocked_value {
-            let cause = format!("blocked due to contents of header {}", header_name);
+            let cause = format!("blocked due to contents of header {header_name}");
             req.add_custom_metadata("cause", cause);
             let body = format!(
                 "We are unable to process your request at this time. \

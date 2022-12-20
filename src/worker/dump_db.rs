@@ -253,7 +253,7 @@ mod tests {
                 5 => "0000-00-00/data/crate_owners.csv", // depends on crates.csv and users.csv
                 _ => panic!("unexpected extra tar entry: {:?}", entry.path()),
             });
-            assert_eq!(entry.path().unwrap(), expected_path, "entry {}", i);
+            assert_eq!(entry.path().unwrap(), expected_path, "entry {i}");
         }
     }
 }
