@@ -30,7 +30,6 @@ use ::sentry::integrations::tower as sentry_tower;
 use axum::error_handling::HandleErrorLayer;
 use axum::middleware::{from_fn, from_fn_with_state};
 use axum::Router;
-use std::env;
 use std::sync::Arc;
 
 use crate::app::AppState;
@@ -89,6 +88,7 @@ async fn dummy_error_handler(_err: axum::BoxError) -> http::StatusCode {
 
 pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBuilder {
     let mut m = MiddlewareBuilder::new(endpoints);
+    let capacity = app.config.db.primary.pool_size as usize;
 
     m.add(log_request::LogRequests::default());
 
@@ -106,15 +106,11 @@ pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBui
     // In production we currently have 2 equally sized pools (primary and a read-only replica).
     // Because such a large portion of production traffic is for download requests (which update
     // download counts), we consider only the primary pool here.
-    if let Ok(capacity) = env::var("DB_PRIMARY_POOL_SIZE") {
-        if let Ok(capacity) = capacity.parse() {
-            if capacity >= 10 {
-                info!(?capacity, "Enabling BalanceCapacity middleware");
-                m.around(balance_capacity::BalanceCapacity::new(capacity))
-            } else {
-                info!("BalanceCapacity middleware not enabled. DB_PRIMARY_POOL_SIZE is too low.");
-            }
-        }
+    if capacity >= 10 {
+        info!(?capacity, "Enabling BalanceCapacity middleware");
+        m.around(balance_capacity::BalanceCapacity::new(capacity))
+    } else {
+        info!("BalanceCapacity middleware not enabled. DB_PRIMARY_POOL_SIZE is too low.");
     }
 
     m
