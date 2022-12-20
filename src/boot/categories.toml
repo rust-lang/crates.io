@@ -283,6 +283,12 @@ description = """
 Crates for dealing with files and filesystems.\
 """
 
+[finance]
+name = "Finance"
+description = """
+Crates for dealing with money. Accounting, trading, investments, taxes, banking and payment processing using government-backed currencies.\
+"""
+
 [game-engines]
 name = "Game engines"
 description = """
