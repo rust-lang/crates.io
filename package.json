@@ -56,7 +56,7 @@
     "@babel/plugin-proposal-decorators": "7.20.5",
     "@ember/optional-features": "2.0.0",
     "@ember/render-modifiers": "2.0.4",
-    "@ember/test-helpers": "2.9.1",
+    "@ember/test-helpers": "2.9.2",
     "@ember/test-waiters": "3.0.2",
     "@embroider/compat": "2.0.2",
     "@embroider/core": "2.0.2",
