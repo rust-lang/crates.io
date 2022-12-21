@@ -1,5 +1,5 @@
 env := "development"
-app := if env == "production" { "crates-io" } else if env == "staging"{ "crates-io-staging" } else { "" }
+app := if env == "production" { "crates-io" } else if env == "staging"{ "staging-crates-io" } else { "" }
 
 # List available commands
 _default:
