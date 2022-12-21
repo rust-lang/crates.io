@@ -4,8 +4,7 @@ version = "0.0.0"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/rust-lang/crates.io"
 description = "crates.io package index utilities"
-edition = "2018"
-resolver = "2"
+edition = "2021"
 
 [lib]
 path = "lib.rs"
