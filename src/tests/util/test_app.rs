@@ -2,17 +2,17 @@ use super::{MockAnonymousUser, MockCookieUser, MockTokenUser};
 use crate::record;
 use crate::util::{chaosproxy::ChaosProxy, fresh_schema::FreshSchema};
 use cargo_registry::config::{self, BalanceCapacityConfig, DbPoolConfig};
-use cargo_registry::{background_jobs::Environment, db::DieselPool, App, Emails};
+use cargo_registry::{background_jobs::Environment, App, Emails};
 use cargo_registry_index::testing::UpstreamIndex;
 use cargo_registry_index::{Credentials, Repository as WorkerRepository, RepositoryConfig};
 use std::{rc::Rc, sync::Arc, time::Duration};
 
 use crate::util::github::{MockGitHubClient, MOCK_GITHUB_DATA};
 use cargo_registry::models::token::{CrateScope, EndpointScope};
+use cargo_registry::swirl::Runner;
 use diesel::PgConnection;
 use reqwest::{blocking::Client, Proxy};
 use std::collections::HashSet;
-use swirl::Runner;
 
 struct TestAppInner {
     app: Arc<App>,
@@ -20,7 +20,7 @@ struct TestAppInner {
     _bomb: Option<record::Bomb>,
     router: axum::Router,
     index: Option<UpstreamIndex>,
-    runner: Option<Runner<Environment, DieselPool>>,
+    runner: Option<Runner>,
 
     primary_db_chaosproxy: Option<Arc<ChaosProxy>>,
     replica_db_chaosproxy: Option<Arc<ChaosProxy>>,
@@ -31,8 +31,8 @@ struct TestAppInner {
 
 impl Drop for TestAppInner {
     fn drop(&mut self) {
+        use cargo_registry::schema::background_jobs::dsl::*;
         use diesel::prelude::*;
-        use swirl::schema::background_jobs::dsl::*;
 
         // Avoid a double-panic if the test is already failing
         if std::thread::panicking() {
@@ -240,15 +240,10 @@ impl TestAppBuilder {
                 None,
             );
 
-            Some(
-                Runner::builder(environment)
-                    // We only have 1 connection in tests, so trying to run more than
-                    // 1 job concurrently will just block
-                    .thread_count(1)
-                    .connection_pool(app.primary_database.clone())
-                    .job_start_timeout(Duration::from_secs(5))
-                    .build(),
-            )
+            Some(Runner::test_runner(
+                environment,
+                app.primary_database.clone(),
+            ))
         } else {
             None
         };

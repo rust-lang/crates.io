@@ -6,7 +6,6 @@ use crate::{
 };
 
 use diesel::prelude::*;
-use swirl::Job;
 
 #[derive(clap::Parser, Debug)]
 #[command(

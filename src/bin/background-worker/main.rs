@@ -19,11 +19,12 @@ use cargo_registry::config;
 use cargo_registry::worker::cloudfront::CloudFront;
 use cargo_registry::{background_jobs::*, db};
 use cargo_registry_index::{Repository, RepositoryConfig};
-use diesel::r2d2;
 use reqwest::blocking::Client;
 use std::sync::{Arc, Mutex};
 use std::thread::sleep;
 use std::time::Duration;
+
+use cargo_registry::swirl;
 
 fn main() {
     let _sentry = cargo_registry::sentry::init();
@@ -74,11 +75,7 @@ fn main() {
             client,
             cloudfront.clone(),
         );
-        let db_config = r2d2::Pool::builder().min_idle(Some(0));
-        swirl::Runner::builder(environment)
-            .connection_pool_builder(&db_url, db_config)
-            .job_start_timeout(Duration::from_secs(job_start_timeout))
-            .build()
+        swirl::Runner::production_runner(environment, db_url.clone(), job_start_timeout)
     };
     let mut runner = build_runner();
 

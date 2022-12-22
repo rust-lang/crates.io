@@ -4,7 +4,7 @@ use diesel::r2d2::{self, ConnectionManager, CustomizeConnection};
 use parking_lot::{ReentrantMutex, ReentrantMutexGuard};
 use prometheus::Histogram;
 use std::sync::Arc;
-use std::{ops::Deref, time::Duration};
+use std::{error::Error, ops::Deref, time::Duration};
 use thiserror::Error;
 use url::Url;
 
@@ -17,10 +17,24 @@ pub enum DieselPool {
         pool: r2d2::Pool<ConnectionManager<PgConnection>>,
         time_to_obtain_connection_metric: Histogram,
     },
+    BackgroundJobPool {
+        pool: r2d2::Pool<ConnectionManager<PgConnection>>,
+    },
     Test(Arc<ReentrantMutex<PgConnection>>),
 }
 
+type Callback<'a> = &'a dyn Fn(&PgConnection) -> Result<(), Box<dyn Error>>;
+
 impl DieselPool {
+    pub(crate) fn with_connection(&self, f: Callback<'_>) -> Result<(), Box<dyn Error>> {
+        match self {
+            DieselPool::Pool { pool, .. } | DieselPool::BackgroundJobPool { pool } => {
+                f(&*pool.get()?)
+            }
+            DieselPool::Test(connection) => f(&connection.lock()),
+        }
+    }
+
     pub(crate) fn new(
         url: &str,
         config: &config::DatabasePools,
@@ -53,6 +67,10 @@ impl DieselPool {
         Ok(pool)
     }
 
+    pub fn new_background_worker(pool: r2d2::Pool<ConnectionManager<PgConnection>>) -> Self {
+        Self::BackgroundJobPool { pool }
+    }
+
     pub(crate) fn new_test(config: &config::DatabasePools, url: &str) -> DieselPool {
         let conn = PgConnection::establish(&connection_url(config, url))
             .expect("failed to establish connection");
@@ -75,13 +93,14 @@ impl DieselPool {
                     Ok(DieselPooledConn::Pool(pool.get()?))
                 }
             }),
+            DieselPool::BackgroundJobPool { pool } => Ok(DieselPooledConn::Pool(pool.get()?)),
             DieselPool::Test(conn) => Ok(DieselPooledConn::Test(conn.lock())),
         }
     }
 
     pub fn state(&self) -> PoolState {
         match self {
-            DieselPool::Pool { pool, .. } => {
+            DieselPool::Pool { pool, .. } | DieselPool::BackgroundJobPool { pool } => {
                 let state = pool.state();
                 PoolState {
                     connections: state.connections,
@@ -97,11 +116,13 @@ impl DieselPool {
 
     pub fn wait_until_healthy(&self, timeout: Duration) -> Result<(), PoolError> {
         match self {
-            DieselPool::Pool { pool, .. } => match pool.get_timeout(timeout) {
-                Ok(_) => Ok(()),
-                Err(_) if !self.is_healthy() => Err(PoolError::UnhealthyPool),
-                Err(err) => Err(PoolError::R2D2(err)),
-            },
+            DieselPool::Pool { pool, .. } | DieselPool::BackgroundJobPool { pool } => {
+                match pool.get_timeout(timeout) {
+                    Ok(_) => Ok(()),
+                    Err(_) if !self.is_healthy() => Err(PoolError::UnhealthyPool),
+                    Err(err) => Err(PoolError::R2D2(err)),
+                }
+            }
             DieselPool::Test(_) => Ok(()),
         }
     }

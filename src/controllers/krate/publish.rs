@@ -8,7 +8,6 @@ use std::collections::BTreeMap;
 use std::io::Read;
 use std::path::Path;
 use std::sync::Arc;
-use swirl::Job;
 
 use crate::controllers::cargo_prelude::*;
 use crate::models::{

@@ -1,3 +1,5 @@
+use crate::background_jobs::{DailyDbMaintenanceJob, Job};
+use crate::swirl::PerformError;
 /// Run daily database maintenance tasks
 ///
 /// By default PostgreSQL will run an auto-vacuum when 20% of the tuples in a table are dead.
@@ -7,13 +9,15 @@
 /// We only need to keep 90 days of entries in `version_downloads`. Once we have a mechanism to
 /// archive daily download counts and drop historical data, we can drop this task and rely on
 /// auto-vacuum again.
-use diesel::{sql_query, RunQueryDsl};
-use swirl::PerformError;
+use diesel::{sql_query, PgConnection, RunQueryDsl};
 
-#[swirl::background_job]
-pub fn daily_db_maintenance(conn: &PgConnection) -> Result<(), PerformError> {
+pub(crate) fn perform_daily_db_maintenance(conn: &PgConnection) -> Result<(), PerformError> {
     info!("Running VACUUM on version_downloads table");
     sql_query("VACUUM version_downloads;").execute(conn)?;
     info!("Finished running VACUUM on version_downloads table");
     Ok(())
+}
+
+pub fn daily_db_maintenance() -> Job {
+    Job::DailyDbMaintenance(DailyDbMaintenanceJob {})
 }
