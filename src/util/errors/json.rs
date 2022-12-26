@@ -1,3 +1,5 @@
+use axum::response::{IntoResponse, Response};
+use axum::Json;
 use std::fmt;
 
 use super::{AppError, InternalAppErrorStatic};
@@ -284,5 +286,12 @@ impl AppError for RouteBlocked {
 impl fmt::Display for RouteBlocked {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str("This route is temporarily blocked. See https://status.crates.io.")
+    }
+}
+
+impl IntoResponse for RouteBlocked {
+    fn into_response(self) -> Response {
+        let body = Json(json!({ "errors": [{ "detail": self.to_string() }] }));
+        (StatusCode::SERVICE_UNAVAILABLE, body).into_response()
     }
 }
