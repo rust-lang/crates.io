@@ -1,9 +1,7 @@
-use std::sync::Arc;
-
 use axum::routing::get;
 use axum::Router;
 use conduit::{Handler, HandlerResult, RequestExt};
-use conduit_router::{RequestParams, RouteBuilder, RoutePattern};
+use conduit_router::{RouteBuilder, RoutePattern};
 
 use crate::app::AppState;
 use crate::controllers::*;
@@ -220,16 +218,6 @@ impl Handler for C {
                 }
             }
         }
-    }
-}
-
-struct R<H>(pub Arc<H>);
-
-impl<H: Handler> Handler for R<H> {
-    fn call(&self, req: &mut dyn RequestExt) -> HandlerResult {
-        *req.path_mut() = req.params()["path"].to_string();
-        let R(ref sub_router) = *self;
-        sub_router.call(req)
     }
 }
 
