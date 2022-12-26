@@ -375,7 +375,6 @@ dependencies = [
  "clap",
  "conduit",
  "conduit-axum",
- "conduit-conditional-get",
  "conduit-middleware",
  "conduit-router",
  "conduit-static",
@@ -629,17 +628,6 @@ dependencies = [
  "tokio-stream",
  "tracing",
  "tracing-subscriber",
-]
-
-[[package]]
-name = "conduit-conditional-get"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "03a3bf59476c2bf4c1f4f06517fc106bb59182a2acb64c3aca1c6e73b62615ad"
-dependencies = [
- "conduit",
- "conduit-middleware",
- "time 0.2.27",
 ]
 
 [[package]]

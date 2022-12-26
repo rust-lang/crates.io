@@ -34,7 +34,6 @@ chrono = { version = "=0.4.23", features = ["serde"] }
 clap = { version = "=4.0.32", features = ["derive", "unicode", "wrap_help"] }
 
 conduit = "=0.10.0"
-conduit-conditional-get = "=0.10.0"
 conduit-axum = { path = "conduit-axum" }
 conduit-middleware = "=0.10.0"
 conduit-router = "=0.10.0"
