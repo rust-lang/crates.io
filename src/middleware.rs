@@ -23,7 +23,6 @@ pub mod session;
 mod static_or_continue;
 mod update_metrics;
 
-use conduit_conditional_get::ConditionalGet;
 use conduit_middleware::MiddlewareBuilder;
 use conduit_router::RouteBuilder;
 
@@ -114,8 +113,6 @@ pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBui
     let mut m = MiddlewareBuilder::new(endpoints);
 
     m.add(log_request::LogRequests::default());
-
-    m.add(ConditionalGet);
 
     m.add(AppMiddleware::new(app));
     m.add(KnownErrorToJson);
