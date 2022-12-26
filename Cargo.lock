@@ -1316,15 +1316,6 @@ checksum = "2540771e65fc8cb83cd6e8a237f70c319bd5c29f78ed1084ba5d50eeac86f7f9"
 
 [[package]]
 name = "hermit-abi"
-version = "0.1.19"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "62b467343b94ba476dcb2500d242dadbb39557df889310ac77c5d99100aaac33"
-dependencies = [
- "libc",
-]
-
-[[package]]
-name = "hermit-abi"
 version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ee512640fe35acbfb4bb779db6f0d80704c2cacfa2e39b601ef3e3f47d1ae4c7"
@@ -1593,11 +1584,11 @@ dependencies = [
 
 [[package]]
 name = "is-terminal"
-version = "0.4.1"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "927609f78c2913a6f6ac3c27a4fe87f43e2a35367c0c4b0f8265e8f49a104330"
+checksum = "28dfb6c8100ccc63462345b67d1bbc3679177c75ee4bf59bf29c8b1d110b8189"
 dependencies = [
- "hermit-abi 0.2.6",
+ "hermit-abi",
  "io-lifetimes",
  "rustix",
  "windows-sys 0.42.0",
@@ -1657,9 +1648,9 @@ dependencies = [
 
 [[package]]
 name = "libc"
-version = "0.2.138"
+version = "0.2.139"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "db6d7e329c562c5dfab7a46a2afabc8b987ab9a4834c9d1ca04dc54c1546cef8"
+checksum = "201de327520df007757c1f0adce6e827fe8562fbc28bfd9c15571c66ca1f5f79"
 
 [[package]]
 name = "libgit2-sys"
@@ -1979,11 +1970,11 @@ dependencies = [
 
 [[package]]
 name = "num_cpus"
-version = "1.14.0"
+version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f6058e64324c71e02bc2b150e4f3bc8286db6c83092132ffa3f6b1eab0f9def5"
+checksum = "0fac9e2da13b5eb447a6ce3d392f23a29d8694bff781bf03a16cd9ac8697593b"
 dependencies = [
- "hermit-abi 0.1.19",
+ "hermit-abi",
  "libc",
 ]
 
@@ -2036,9 +2027,9 @@ checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
 
 [[package]]
 name = "openssl"
-version = "0.10.44"
+version = "0.10.45"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "29d971fd5722fec23977260f6e81aa67d2f22cadbdc2aa049f1022d9a3be1566"
+checksum = "b102428fd03bc5edf97f62620f7298614c45cedf287c271e7ed450bbaf83f2e1"
 dependencies = [
  "bitflags",
  "cfg-if",
@@ -2068,9 +2059,9 @@ checksum = "ff011a302c396a5197692431fc1948019154afc178baf7d8e37367442a4601cf"
 
 [[package]]
 name = "openssl-sys"
-version = "0.9.79"
+version = "0.9.80"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5454462c0eced1e97f2ec09036abc8da362e66802f66fd20f86854d9d8cbcbc4"
+checksum = "23bbbf7854cd45b83958ebe919f0e8e516793727652e27fda10a8384cfc790b7"
 dependencies = [
  "autocfg",
  "cc",
@@ -2139,9 +2130,9 @@ checksum = "478c572c3d73181ff3c2539045f6eb99e5491218eae919370993b890cdbdd98e"
 
 [[package]]
 name = "pest"
-version = "2.5.1"
+version = "2.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cc8bed3549e0f9b0a2a78bf7c0018237a2cdf085eecbbc048e52612438e4e9d0"
+checksum = "0f6e86fb9e7026527a0d46bc308b841d73170ef8f443e1807f6ef88526a816d4"
 dependencies = [
  "thiserror",
  "ucd-trie",
@@ -2149,9 +2140,9 @@ dependencies = [
 
 [[package]]
 name = "pest_derive"
-version = "2.5.1"
+version = "2.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cdc078600d06ff90d4ed238f0119d84ab5d43dbaad278b0e33a8820293b32344"
+checksum = "96504449aa860c8dcde14f9fba5c58dc6658688ca1fe363589d6327b8662c603"
 dependencies = [
  "pest",
  "pest_generator",
@@ -2159,9 +2150,9 @@ dependencies = [
 
 [[package]]
 name = "pest_generator"
-version = "2.5.1"
+version = "2.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "28a1af60b1c4148bb269006a750cff8e2ea36aff34d2d96cf7be0b14d1bed23c"
+checksum = "798e0220d1111ae63d66cb66a5dcb3fc2d986d520b98e49e1852bfdb11d7c5e7"
 dependencies = [
  "pest",
  "pest_meta",
@@ -2172,9 +2163,9 @@ dependencies = [
 
 [[package]]
 name = "pest_meta"
-version = "2.5.1"
+version = "2.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fec8605d59fc2ae0c6c1aefc0c7c7a9769732017c0ce07f7a9cfffa7b4404f20"
+checksum = "984298b75898e30a843e278a9f2452c31e349a073a0ce6fd950a12a74464e065"
 dependencies = [
  "once_cell",
  "pest",
@@ -2271,9 +2262,9 @@ dependencies = [
 
 [[package]]
 name = "portable-atomic"
-version = "0.3.18"
+version = "0.3.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "81bdd679d533107e090c2704a35982fc06302e30898e63ffa26a81155c012e92"
+checksum = "26f6a7b87c2e435a3241addceeeff740ff8b7e76b74c13bf9acb17fa454ea00b"
 
 [[package]]
 name = "ppv-lite86"
@@ -2322,9 +2313,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro-hack"
-version = "0.5.19"
+version = "0.5.20+deprecated"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dbf0c48bc1d91375ae5c3cd81e3722dff1abcf81a30960240640d223f59fe0e5"
+checksum = "dc375e1527247fe1a97d8b7156678dfe7c1af2fc075c9a4db3690ecd2a148068"
 
 [[package]]
 name = "proc-macro2"
