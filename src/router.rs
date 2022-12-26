@@ -1,9 +1,7 @@
-use std::sync::Arc;
-
 use axum::routing::get;
 use axum::Router;
 use conduit::{Handler, HandlerResult, RequestExt};
-use conduit_router::{RequestParams, RouteBuilder, RoutePattern};
+use conduit_router::{RouteBuilder, RoutePattern};
 
 use crate::app::AppState;
 use crate::controllers::*;
@@ -11,18 +9,28 @@ use crate::middleware::app::RequestApp;
 use crate::middleware::log_request::CustomMetadataRequestExt;
 use crate::util::errors::{std_error, AppError, RouteBlocked};
 use crate::util::EndpointResult;
-use crate::{App, Env};
+use crate::Env;
 
 pub fn build_axum_router(state: AppState) -> Router {
-    Router::new()
-        .route(
-            "/api/v1/site_metadata",
-            get(site_metadata::show_deployed_sha),
-        )
-        .with_state(state)
+    let mut router = Router::new().route(
+        "/api/v1/site_metadata",
+        get(site_metadata::show_deployed_sha),
+    );
+
+    // Only serve the local checkout of the git index in development mode.
+    // In production, for crates.io, cargo gets the index from
+    // https://github.com/rust-lang/crates.io-index directly.
+    if state.config.env() == Env::Development {
+        router = router.route(
+            "/git/index/*path",
+            get(git::http_backend).post(git::http_backend),
+        );
+    }
+
+    router.with_state(state)
 }
 
-pub fn build_router(app: &App) -> RouteBuilder {
+pub fn build_router() -> RouteBuilder {
     let mut router = RouteBuilder::new();
 
     // Route used by both `cargo search` and the frontend
@@ -174,16 +182,6 @@ pub fn build_router(app: &App) -> RouteBuilder {
         C(github::secret_scanning::verify),
     );
 
-    // Only serve the local checkout of the git index in development mode.
-    // In production, for crates.io, cargo gets the index from
-    // https://github.com/rust-lang/crates.io-index directly.
-    if app.config.env() == Env::Development {
-        let s = conduit_git_http_backend::Serve("./tmp/index-bare".into());
-        let s = Arc::new(s);
-        router.get("/git/index/*path", R(Arc::clone(&s)));
-        router.post("/git/index/*path", R(s));
-    }
-
     router
 }
 
@@ -220,16 +218,6 @@ impl Handler for C {
                 }
             }
         }
-    }
-}
-
-struct R<H>(pub Arc<H>);
-
-impl<H: Handler> Handler for R<H> {
-    fn call(&self, req: &mut dyn RequestExt) -> HandlerResult {
-        *req.path_mut() = req.params()["path"].to_string();
-        let R(ref sub_router) = *self;
-        sub_router.call(req)
     }
 }
 
