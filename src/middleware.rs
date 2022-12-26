@@ -71,6 +71,10 @@ pub fn apply_axum_middleware(state: AppState, router: Router) -> Router {
             state.clone(),
             block_traffic::block_traffic,
         ))
+        .layer(from_fn_with_state(
+            state.clone(),
+            block_traffic::block_routes,
+        ))
         .layer(from_fn(head::support_head_requests))
         .layer(HandleErrorLayer::new(dummy_error_handler))
         .option_layer(
