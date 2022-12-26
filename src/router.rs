@@ -196,7 +196,8 @@ impl Handler for C {
 
             // Configure the Sentry `transaction` field *before* we handle the request,
             // but *after* the conduit-router has figured out which handler to use.
-            sentry::configure_scope(|scope| scope.set_transaction(Some(pattern)));
+            let tx_name = format!("{} {}", req.method(), pattern);
+            sentry::configure_scope(|scope| scope.set_transaction(Some(&tx_name)));
 
             // Allow blocking individual routes by their pattern through the `BLOCKED_ROUTES`
             // environment variable. This is not in a middleware because we need access to
