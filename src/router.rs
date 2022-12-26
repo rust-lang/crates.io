@@ -138,7 +138,6 @@ pub fn build_router(app: &App) -> RouteBuilder {
         "/api/v1/users/:user_id/resend",
         C(user::me::regenerate_token_and_send),
     );
-    router.get("/api/v1/site_metadata", C(site_metadata::show_deployed_sha));
 
     // Session management
     router.get("/api/private/session/begin", C(user::session::begin));
