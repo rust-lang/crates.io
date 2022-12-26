@@ -376,7 +376,6 @@ dependencies = [
  "conduit",
  "conduit-axum",
  "conduit-conditional-get",
- "conduit-git-http-backend",
  "conduit-middleware",
  "conduit-router",
  "conduit-static",
@@ -641,16 +640,6 @@ dependencies = [
  "conduit",
  "conduit-middleware",
  "time 0.2.27",
-]
-
-[[package]]
-name = "conduit-git-http-backend"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1abf8373148fdbfdcae9ba820382c44e07c661fa6e94d2ec6fdc3cecadc1c8bd"
-dependencies = [
- "conduit",
- "flate2",
 ]
 
 [[package]]
