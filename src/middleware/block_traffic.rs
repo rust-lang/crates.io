@@ -10,7 +10,8 @@
 
 use super::prelude::*;
 use crate::app::AppState;
-use axum::extract::State;
+use crate::util::errors::RouteBlocked;
+use axum::extract::{MatchedPath, State};
 use axum::middleware::Next;
 use axum::response::IntoResponse;
 
@@ -48,6 +49,23 @@ pub async fn block_traffic<B>(
             );
 
             return (StatusCode::FORBIDDEN, body).into_response();
+        }
+    }
+
+    next.run(req).await
+}
+
+/// Allow blocking individual routes by their pattern through the `BLOCKED_ROUTES`
+/// environment variable.
+pub async fn block_routes<B>(
+    matched_path: Option<MatchedPath>,
+    State(state): State<AppState>,
+    req: http::Request<B>,
+    next: Next<B>,
+) -> axum::response::Response {
+    if let Some(matched_path) = matched_path {
+        if state.config.blocked_routes.contains(matched_path.as_str()) {
+            return RouteBlocked.into_response();
         }
     }
 
