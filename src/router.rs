@@ -1,14 +1,26 @@
 use std::sync::Arc;
 
+use axum::routing::get;
+use axum::Router;
 use conduit::{Handler, HandlerResult, RequestExt};
 use conduit_router::{RequestParams, RouteBuilder, RoutePattern};
 
+use crate::app::AppState;
 use crate::controllers::*;
 use crate::middleware::app::RequestApp;
 use crate::middleware::log_request::CustomMetadataRequestExt;
 use crate::util::errors::{std_error, AppError, RouteBlocked};
 use crate::util::EndpointResult;
 use crate::{App, Env};
+
+pub fn build_axum_router(state: AppState) -> Router {
+    Router::new()
+        .route(
+            "/api/v1/site_metadata",
+            get(site_metadata::show_deployed_sha),
+        )
+        .with_state(state)
+}
 
 pub fn build_router(app: &App) -> RouteBuilder {
     let mut router = RouteBuilder::new();
