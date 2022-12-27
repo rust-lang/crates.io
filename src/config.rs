@@ -34,7 +34,7 @@ pub struct Server {
     pub page_offset_cidr_blocklist: Vec<IpNetwork>,
     pub excluded_crate_names: Vec<String>,
     pub domain_name: String,
-    pub allowed_origins: Vec<String>,
+    pub allowed_origins: AllowedOrigins,
     pub downloads_persist_interval_ms: usize,
     pub ownership_invitations_expiration_days: u64,
     pub metrics_authorization_token: Option<String>,
@@ -86,10 +86,7 @@ impl Default for Server {
     ///
     /// This function panics if the Server configuration is invalid.
     fn default() -> Self {
-        let allowed_origins = env("WEB_ALLOWED_ORIGINS")
-            .split(',')
-            .map(ToString::to_string)
-            .collect();
+        let allowed_origins = AllowedOrigins::from_default_env();
         let page_offset_ua_blocklist = match env_optional::<String>("WEB_PAGE_OFFSET_UA_BLOCKLIST")
         {
             None => vec![],
@@ -220,6 +217,24 @@ fn parse_traffic_patterns(patterns: &str) -> impl Iterator<Item = (&str, &str)> 
             )
         }
     })
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct AllowedOrigins(Vec<String>);
+
+impl AllowedOrigins {
+    pub fn from_default_env() -> Self {
+        let allowed_origins = env("WEB_ALLOWED_ORIGINS")
+            .split(',')
+            .map(ToString::to_string)
+            .collect();
+
+        Self(allowed_origins)
+    }
+
+    pub fn contains(&self, value: &str) -> bool {
+        self.0.iter().any(|it| it == value)
+    }
 }
 
 #[test]

@@ -14,7 +14,7 @@ pub fn verify_origin(req: &dyn RequestExt) -> AppResult<()> {
         .get_all(header::ORIGIN)
         .iter()
         .filter_map(|value| value.to_str().ok())
-        .find(|value| !allowed_origins.iter().any(|it| it == value));
+        .find(|value| !allowed_origins.contains(value));
 
     if let Some(bad_origin) = bad_origin {
         let error_message =
