@@ -249,7 +249,7 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
         .limit_page_numbers()
         .enable_seek(supports_seek)
         .gather(req)?;
-    let conn = req.db_read()?;
+    let conn = req.app().db_read()?;
 
     let (explicit_page, seek) = match pagination.page.clone() {
         Page::Numeric(_) => (true, None),

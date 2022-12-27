@@ -16,7 +16,6 @@ mod prelude {
     pub use conduit_router::RequestParams;
     pub use http::{header, StatusCode};
 
-    pub use crate::db::RequestTransaction;
     pub use crate::middleware::app::RequestApp;
     pub use crate::util::errors::{cargo_err, AppError, AppResult}; // TODO: Remove cargo_err from here
     pub use crate::util::{AppResponse, EndpointResult};

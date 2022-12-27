@@ -1,5 +1,5 @@
 use crate::controllers;
-use crate::db::RequestTransaction;
+use crate::middleware::app::RequestApp;
 use crate::middleware::log_request::CustomMetadataRequestExt;
 use crate::middleware::session::RequestSession;
 use crate::models::token::{CrateScope, EndpointScope};
@@ -154,7 +154,7 @@ impl AuthenticatedUser {
 }
 
 fn authenticate_user(req: &dyn RequestExt) -> AppResult<AuthenticatedUser> {
-    let conn = req.db_write()?;
+    let conn = req.app().db_write()?;
 
     let user_id_from_session = req
         .session_get("user_id")

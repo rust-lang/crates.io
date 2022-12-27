@@ -40,13 +40,14 @@ fn modify_yank(req: &mut dyn RequestExt, yanked: bool) -> EndpointResult {
         .for_crate(crate_name)
         .check(req)?;
 
-    let conn = req.db_write()?;
+    let state = req.app();
+    let conn = state.db_write()?;
     let (version, krate) = version_and_crate(&conn, crate_name, semver)?;
     let api_token_id = auth.api_token_id();
     let user = auth.user();
     let owners = krate.owners(&conn)?;
 
-    if user.rights(req.app(), &owners)? < Rights::Publish {
+    if user.rights(state, &owners)? < Rights::Publish {
         return Err(cargo_err("must already be an owner to yank or unyank"));
     }
 

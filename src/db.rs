@@ -1,4 +1,3 @@
-use conduit::RequestExt;
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager, CustomizeConnection};
 use parking_lot::{ReentrantMutex, ReentrantMutexGuard};
@@ -9,7 +8,6 @@ use thiserror::Error;
 use url::Url;
 
 use crate::config;
-use crate::middleware::app::RequestApp;
 
 #[derive(Clone)]
 pub enum DieselPool {
@@ -187,35 +185,6 @@ pub fn connection_url(config: &config::DatabasePools, url: &str) -> String {
 fn maybe_append_url_param(url: &mut Url, key: &str, value: &str) {
     if !url.query_pairs().any(|(k, _)| k == key) {
         url.query_pairs_mut().append_pair(key, value);
-    }
-}
-
-pub trait RequestTransaction {
-    /// Obtain a read/write database connection from the primary pool
-    fn db_write(&self) -> Result<DieselPooledConn<'_>, PoolError>;
-
-    /// Obtain a readonly database connection from the replica pool
-    ///
-    /// If the replica pool is disabled or unavailable, the primary pool is used instead.
-    fn db_read(&self) -> Result<DieselPooledConn<'_>, PoolError>;
-
-    /// Obtain a readonly database connection from the primary pool
-    ///
-    /// If the primary pool is unavailable, the replica pool is used instead, if not disabled.
-    fn db_read_prefer_primary(&self) -> Result<DieselPooledConn<'_>, PoolError>;
-}
-
-impl<T: RequestExt + ?Sized> RequestTransaction for T {
-    fn db_write(&self) -> Result<DieselPooledConn<'_>, PoolError> {
-        self.app().db_write()
-    }
-
-    fn db_read(&self) -> Result<DieselPooledConn<'_>, PoolError> {
-        self.app().db_read()
-    }
-
-    fn db_read_prefer_primary(&self) -> Result<DieselPooledConn<'_>, PoolError> {
-        self.app().db_read_prefer_primary()
     }
 }
 

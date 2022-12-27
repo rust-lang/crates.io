@@ -10,7 +10,7 @@ pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
     use self::users::dsl::{gh_login, id, users};
 
     let name = lower(&req.params()["user_id"]);
-    let conn = req.db_read_prefer_primary()?;
+    let conn = req.app().db_read_prefer_primary()?;
     let user: User = users
         .filter(lower(gh_login).eq(name))
         .order(id.desc())
@@ -26,7 +26,7 @@ pub fn stats(req: &mut dyn RequestExt) -> EndpointResult {
     let user_id = &req.params()["user_id"]
         .parse::<i32>()
         .map_err(|err| err.chain(bad_request("invalid user_id")))?;
-    let conn = req.db_read_prefer_primary()?;
+    let conn = req.app().db_read_prefer_primary()?;
 
     let data: i64 = CrateOwner::by_owner_kind(OwnerKind::User)
         .inner_join(crates::table)

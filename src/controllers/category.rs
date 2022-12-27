@@ -15,7 +15,7 @@ pub fn index(req: &mut dyn RequestExt) -> EndpointResult {
     let offset = options.offset().unwrap_or_default();
     let sort = query.get("sort").map_or("alpha", String::as_str);
 
-    let conn = req.db_read()?;
+    let conn = req.app().db_read()?;
     let categories =
         Category::toplevel(&conn, sort, i64::from(options.per_page), i64::from(offset))?;
     let categories = categories
@@ -35,7 +35,7 @@ pub fn index(req: &mut dyn RequestExt) -> EndpointResult {
 /// Handles the `GET /categories/:category_id` route.
 pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
     let slug = &req.params()["category_id"];
-    let conn = req.db_read()?;
+    let conn = req.app().db_read()?;
     let cat: Category = Category::by_slug(slug).first(&*conn)?;
     let subcats = cat
         .subcategories(&conn)?
@@ -65,7 +65,7 @@ pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
 
 /// Handles the `GET /category_slugs` route.
 pub fn slugs(req: &mut dyn RequestExt) -> EndpointResult {
-    let conn = req.db_read()?;
+    let conn = req.app().db_read()?;
     let slugs: Vec<Slug> = categories::table
         .select((categories::slug, categories::slug, categories::description))
         .order(categories::slug)

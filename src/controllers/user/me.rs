@@ -15,7 +15,7 @@ use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCra
 /// Handles the `GET /me` route.
 pub fn me(req: &mut dyn RequestExt) -> EndpointResult {
     let user_id = AuthCheck::only_cookie().check(req)?.user_id();
-    let conn = req.db_read_prefer_primary()?;
+    let conn = req.app().db_read_prefer_primary()?;
 
     let (user, verified, email, verification_sent): (User, Option<bool>, Option<String>, bool) =
         users::table
@@ -70,7 +70,7 @@ pub fn updates(req: &mut dyn RequestExt) -> EndpointResult {
             users::all_columns.nullable(),
         ))
         .pages_pagination(PaginationOptions::builder().gather(req)?);
-    let conn = req.db_read_prefer_primary()?;
+    let conn = req.app().db_read_prefer_primary()?;
     let data: Paginated<(Version, String, Option<User>)> = query.load(&conn)?;
     let more = data.next_page_params().is_some();
     let versions = data.iter().map(|(v, _, _)| v).cloned().collect::<Vec<_>>();
@@ -103,7 +103,9 @@ pub fn update_user(req: &mut dyn RequestExt) -> EndpointResult {
     req.body().read_to_string(&mut body)?;
 
     let param_user_id = &req.params()["user_id"];
-    let conn = req.db_write()?;
+
+    let state = req.app();
+    let conn = state.db_write()?;
     let user = auth.user();
 
     // need to check if current user matches user to be updated
@@ -152,8 +154,7 @@ pub fn update_user(req: &mut dyn RequestExt) -> EndpointResult {
         // an invalid email set in their GitHub profile, and we should let them sign in even though
         // we're trying to silently use their invalid address during signup and can't send them an
         // email. They'll then have to provide a valid email address.
-        let _ = req
-            .app()
+        let _ = state
             .emails
             .send_user_confirm(user_email, &user.gh_login, &token);
 
@@ -167,7 +168,7 @@ pub fn update_user(req: &mut dyn RequestExt) -> EndpointResult {
 pub fn confirm_user_email(req: &mut dyn RequestExt) -> EndpointResult {
     use diesel::update;
 
-    let conn = req.db_write()?;
+    let conn = req.app().db_write()?;
     let req_token = &req.params()["email_token"];
 
     let updated_rows = update(emails::table.filter(emails::token.eq(req_token)))
@@ -192,7 +193,8 @@ pub fn regenerate_token_and_send(req: &mut dyn RequestExt) -> EndpointResult {
 
     let auth = AuthCheck::default().check(req)?;
 
-    let conn = req.db_write()?;
+    let state = req.app();
+    let conn = state.db_write()?;
     let user = auth.user();
 
     // need to check if current user matches user to be updated
@@ -206,7 +208,7 @@ pub fn regenerate_token_and_send(req: &mut dyn RequestExt) -> EndpointResult {
             .get_result(&*conn)
             .map_err(|_| bad_request("Email could not be found"))?;
 
-        req.app()
+        state
             .emails
             .send_user_confirm(&email.email, &user.gh_login, &email.token)
     })?;
@@ -234,7 +236,7 @@ pub fn update_email_notifications(req: &mut dyn RequestExt) -> EndpointResult {
         .collect();
 
     let user_id = AuthCheck::default().check(req)?.user_id();
-    let conn = req.db_write()?;
+    let conn = req.app().db_write()?;
 
     // Build inserts from existing crates belonging to the current user
     let to_insert = CrateOwner::by_owner_kind(OwnerKind::User)
