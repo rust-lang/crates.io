@@ -135,7 +135,7 @@ pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
             persist.create_or_update(&conn, user.id, Some(&app.config.publish_rate_limit))?;
 
         let owners = krate.owners(&conn)?;
-        if user.rights(req.app(), &owners)? < Rights::Publish {
+        if user.rights(&app, &owners)? < Rights::Publish {
             return Err(cargo_err(MISSING_RIGHTS_ERROR_MESSAGE));
         }
 
