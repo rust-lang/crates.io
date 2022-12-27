@@ -1,6 +1,6 @@
 //! Application-wide components in a struct accessible from each request
 
-use crate::db::{ConnectionConfig, DieselPool};
+use crate::db::{ConnectionConfig, DieselPool, DieselPooledConn, PoolError};
 use crate::{config, Env};
 use std::ops::Deref;
 use std::sync::atomic::AtomicUsize;
@@ -213,6 +213,69 @@ impl App {
     /// A unique key to generate signed cookies
     pub fn session_key(&self) -> &cookie::Key {
         &self.config.session_key
+    }
+
+    /// Obtain a read/write database connection from the primary pool
+    pub fn db_write(&self) -> Result<DieselPooledConn<'_>, PoolError> {
+        self.primary_database.get()
+    }
+
+    /// Obtain a readonly database connection from the replica pool
+    ///
+    /// If the replica pool is disabled or unavailable, the primary pool is used instead.
+    pub fn db_read(&self) -> Result<DieselPooledConn<'_>, PoolError> {
+        let read_only_pool = self.read_only_replica_database.as_ref();
+        match read_only_pool.map(|pool| pool.get()) {
+            // Replica is available
+            Some(Ok(connection)) => Ok(connection),
+
+            // Replica is not available, but primary might be available
+            Some(Err(PoolError::UnhealthyPool)) => {
+                let _ = self
+                    .instance_metrics
+                    .database_fallback_used
+                    .get_metric_with_label_values(&["follower"])
+                    .map(|metric| metric.inc());
+
+                self.primary_database.get()
+            }
+
+            // Replica failed
+            Some(Err(error)) => Err(error),
+
+            // Replica is disabled, but primary might be available
+            None => self.primary_database.get(),
+        }
+    }
+
+    /// Obtain a readonly database connection from the primary pool
+    ///
+    /// If the primary pool is unavailable, the replica pool is used instead, if not disabled.
+    pub fn db_read_prefer_primary(&self) -> Result<DieselPooledConn<'_>, PoolError> {
+        match (
+            self.primary_database.get(),
+            &self.read_only_replica_database,
+        ) {
+            // Primary is available
+            (Ok(connection), _) => Ok(connection),
+
+            // Primary is not available, but replica might be available
+            (Err(PoolError::UnhealthyPool), Some(read_only_pool)) => {
+                let _ = self
+                    .instance_metrics
+                    .database_fallback_used
+                    .get_metric_with_label_values(&["primary"])
+                    .map(|metric| metric.inc());
+
+                read_only_pool.get()
+            }
+
+            // Primary failed and replica is disabled
+            (Err(error), None) => Err(error),
+
+            // Primary failed
+            (Err(error), _) => Err(error),
+        }
     }
 }
 

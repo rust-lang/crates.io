@@ -207,61 +207,15 @@ pub trait RequestTransaction {
 
 impl<T: RequestExt + ?Sized> RequestTransaction for T {
     fn db_write(&self) -> Result<DieselPooledConn<'_>, PoolError> {
-        self.app().primary_database.get()
+        self.app().db_write()
     }
 
     fn db_read(&self) -> Result<DieselPooledConn<'_>, PoolError> {
-        let read_only_pool = self.app().read_only_replica_database.as_ref();
-        match read_only_pool.map(|pool| pool.get()) {
-            // Replica is available
-            Some(Ok(connection)) => Ok(connection),
-
-            // Replica is not available, but primary might be available
-            Some(Err(PoolError::UnhealthyPool)) => {
-                let _ = self
-                    .app()
-                    .instance_metrics
-                    .database_fallback_used
-                    .get_metric_with_label_values(&["follower"])
-                    .map(|metric| metric.inc());
-
-                self.app().primary_database.get()
-            }
-
-            // Replica failed
-            Some(Err(error)) => Err(error),
-
-            // Replica is disabled, but primary might be available
-            None => self.app().primary_database.get(),
-        }
+        self.app().db_read()
     }
 
     fn db_read_prefer_primary(&self) -> Result<DieselPooledConn<'_>, PoolError> {
-        match (
-            self.app().primary_database.get(),
-            &self.app().read_only_replica_database,
-        ) {
-            // Primary is available
-            (Ok(connection), _) => Ok(connection),
-
-            // Primary is not available, but replica might be available
-            (Err(PoolError::UnhealthyPool), Some(read_only_pool)) => {
-                let _ = self
-                    .app()
-                    .instance_metrics
-                    .database_fallback_used
-                    .get_metric_with_label_values(&["primary"])
-                    .map(|metric| metric.inc());
-
-                read_only_pool.get()
-            }
-
-            // Primary failed and replica is disabled
-            (Err(error), None) => Err(error),
-
-            // Primary failed
-            (Err(error), _) => Err(error),
-        }
+        self.app().db_read_prefer_primary()
     }
 }
 
