@@ -246,7 +246,7 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
     }
 
     let pagination: PaginationOptions = PaginationOptions::builder()
-        .limit_page_numbers(req.app().clone())
+        .limit_page_numbers()
         .enable_seek(supports_seek)
         .gather(req)?;
     let conn = req.db_read()?;

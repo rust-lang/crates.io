@@ -5,7 +5,6 @@ use crate::models::helpers::with_count::*;
 use crate::util::errors::{bad_request, AppResult};
 use crate::util::request_header;
 
-use crate::App;
 use diesel::pg::Pg;
 use diesel::query_builder::*;
 use diesel::query_dsl::LoadQuery;
@@ -14,7 +13,6 @@ use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use std::net::IpAddr;
 use std::str::FromStr;
-use std::sync::Arc;
 
 const MAX_PAGE_BEFORE_SUSPECTED_BOT: u32 = 10;
 const DEFAULT_PER_PAGE: u32 = 10;
@@ -36,7 +34,7 @@ pub(crate) struct PaginationOptions {
 impl PaginationOptions {
     pub(crate) fn builder() -> PaginationOptionsBuilder {
         PaginationOptionsBuilder {
-            limit_page_numbers: None,
+            limit_page_numbers: false,
             enable_seek: false,
             enable_pages: true,
         }
@@ -52,14 +50,14 @@ impl PaginationOptions {
 }
 
 pub(crate) struct PaginationOptionsBuilder {
-    limit_page_numbers: Option<Arc<App>>,
+    limit_page_numbers: bool,
     enable_pages: bool,
     enable_seek: bool,
 }
 
 impl PaginationOptionsBuilder {
-    pub(crate) fn limit_page_numbers(mut self, app: Arc<App>) -> Self {
-        self.limit_page_numbers = Some(app);
+    pub(crate) fn limit_page_numbers(mut self) -> Self {
+        self.limit_page_numbers = true;
         self
     }
 
@@ -98,8 +96,8 @@ impl PaginationOptionsBuilder {
                 }
 
                 // Block large offsets for known violators of the crawler policy
-                if let Some(ref app) = self.limit_page_numbers {
-                    let config = &app.config;
+                if self.limit_page_numbers {
+                    let config = &req.app().config;
                     if numeric_page > config.max_allowed_page_offset
                         && is_useragent_or_ip_blocked(config, req)
                     {
