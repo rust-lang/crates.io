@@ -88,10 +88,14 @@ async fn simulate_request<H: Handler>(handler: H) -> AxumResponse {
 
 async fn assert_generic_err(resp: AxumResponse) {
     assert_eq!(resp.status(), StatusCode::INTERNAL_SERVER_ERROR);
-    assert_eq!(resp.headers().len(), 1);
+    assert_eq!(resp.headers().len(), 2);
     assert_eq!(
         resp.headers().get("content-length"),
         Some(&HeaderValue::from_static("21"))
+    );
+    assert_eq!(
+        resp.headers().get("content-type"),
+        Some(&HeaderValue::from_static("text/plain; charset=utf-8"))
     );
     let full_body = to_bytes(resp.into_body()).await.unwrap();
     assert_eq!(&*full_body, b"Internal Server Error");

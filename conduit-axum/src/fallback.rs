@@ -96,12 +96,7 @@ fn server_error_response<E: Error + ?Sized>(error: &E) -> AxumResponse {
 
     sentry_core::capture_error(error);
 
-    let body = hyper::Body::from("Internal Server Error");
-    Response::builder()
-        .status(StatusCode::INTERNAL_SERVER_ERROR)
-        .body(body)
-        .expect("Unexpected invalid header")
-        .into_response()
+    (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error").into_response()
 }
 
 /// Check for `Content-Length` values that are invalid or too large
