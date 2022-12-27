@@ -2,7 +2,6 @@ use axum::routing::get;
 use axum::Router;
 use conduit::{Handler, HandlerResult, RequestExt};
 use conduit_router::{RouteBuilder, RoutePattern};
-use std::error::Error;
 
 use crate::app::AppState;
 use crate::controllers::*;
@@ -215,7 +214,7 @@ impl Handler for C {
                 };
                 match e.response() {
                     Some(response) => Ok(response),
-                    None => Err(std_error(e)),
+                    None => Err(Box::new(AppErrToStdErr(e))),
                 }
             }
         }
@@ -225,10 +224,6 @@ impl Handler for C {
 #[derive(Debug, thiserror::Error)]
 #[error("{0}")]
 struct AppErrToStdErr(pub Box<dyn AppError>);
-
-fn std_error(e: Box<dyn AppError>) -> Box<dyn Error + Send> {
-    Box::new(AppErrToStdErr(e))
-}
 
 #[cfg(test)]
 mod tests {
