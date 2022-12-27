@@ -14,7 +14,7 @@ use chrono::{Duration, NaiveDate, Utc};
 /// Handles the `GET /crates/:crate_id/:version/download` route.
 /// This returns a URL to the location where the crate is stored.
 pub fn download(req: &mut dyn RequestExt) -> EndpointResult {
-    let app = req.app().clone();
+    let app = req.app();
 
     let mut crate_name = req.params()["crate_id"].clone();
     let version = req.params()["version"].as_str();
@@ -38,7 +38,7 @@ pub fn download(req: &mut dyn RequestExt) -> EndpointResult {
         let conn = if app.config.force_unconditional_redirects {
             None
         } else {
-            match req.db_read_prefer_primary() {
+            match app.db_read_prefer_primary() {
                 Ok(conn) => Some(conn),
                 Err(PoolError::UnhealthyPool) => None,
                 Err(err) => return Err(err.into()),
@@ -102,11 +102,7 @@ pub fn download(req: &mut dyn RequestExt) -> EndpointResult {
         }
     };
 
-    let redirect_url = req
-        .app()
-        .config
-        .uploader()
-        .crate_location(&crate_name, version);
+    let redirect_url = app.config.uploader().crate_location(&crate_name, version);
 
     if let Some((key, value)) = log_metadata {
         req.add_custom_metadata(key, value);
