@@ -183,7 +183,7 @@ fn alert_revoke_token(
         "Active API token received and revoked (true positive)",
     );
 
-    if let Err(error) = send_notification_email(&token, alert, req) {
+    if let Err(error) = send_notification_email(&token, alert, req.app()) {
         warn!(
             token_id = %token.id, user_id = %token.user_id, ?error,
             "Failed to send email notification",
@@ -196,16 +196,16 @@ fn alert_revoke_token(
 fn send_notification_email(
     token: &ApiToken,
     alert: &GitHubSecretAlert,
-    req: &dyn RequestExt,
+    state: &AppState,
 ) -> anyhow::Result<()> {
-    let conn = req.db_read()?;
+    let conn = state.db_read()?;
 
     let user = User::find(&conn, token.user_id).context("Failed to find user")?;
     let Some(email) = user.email(&conn)? else {
         return Err(anyhow!("No address found"));
     };
 
-    req.app()
+    state
         .emails
         .send_token_exposed_notification(&email, &alert.url, "GitHub", &alert.source, &token.name)
         .map_err(|error| anyhow!("{error}"))?;
