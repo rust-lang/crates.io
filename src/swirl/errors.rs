@@ -1,6 +1,5 @@
 use diesel::result::Error as DieselError;
 use std::error::Error;
-use std::fmt;
 
 use crate::db::PoolError;
 
@@ -42,9 +41,10 @@ pub enum FetchError {
 }
 
 /// An error returned by `Runner::check_for_failed_jobs`. Only used in tests.
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum FailedJobsError {
     /// Jobs failed to run
+    #[error("{0} jobs failed")]
     JobsFailed(
         /// The number of failed jobs
         i64,
@@ -55,16 +55,11 @@ pub enum FailedJobsError {
     /// Some other error occurred. Worker threads may have panicked, an error
     /// occurred counting failed jobs in the DB, or something else
     /// unexpectedly went wrong.
-    __Unknown(Box<dyn Error + Send + Sync>),
+    #[error(transparent)]
+    __Unknown(#[from] Box<dyn Error + Send + Sync>),
 }
 
 pub(super) use FailedJobsError::JobsFailed;
-
-impl From<Box<dyn Error + Send + Sync>> for FailedJobsError {
-    fn from(e: Box<dyn Error + Send + Sync>) -> Self {
-        FailedJobsError::__Unknown(e)
-    }
-}
 
 impl From<DieselError> for FailedJobsError {
     fn from(e: DieselError) -> Self {
@@ -77,26 +72,6 @@ impl PartialEq for FailedJobsError {
         match (self, other) {
             (JobsFailed(x), JobsFailed(y)) => x == y,
             _ => false,
-        }
-    }
-}
-
-impl fmt::Display for FailedJobsError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        use FailedJobsError::*;
-
-        match self {
-            JobsFailed(x) => write!(f, "{x} jobs failed"),
-            FailedJobsError::__Unknown(e) => e.fmt(f),
-        }
-    }
-}
-
-impl Error for FailedJobsError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            JobsFailed(_) => None,
-            FailedJobsError::__Unknown(e) => Some(&**e),
         }
     }
 }
