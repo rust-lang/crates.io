@@ -1,3 +1,4 @@
+use crate::app::AppState;
 use crate::controllers::frontend_prelude::*;
 use crate::models::{ApiToken, User};
 use crate::schema::api_tokens;
@@ -5,6 +6,7 @@ use crate::util::read_fill;
 use crate::util::token::SecureToken;
 use anyhow::{anyhow, Context};
 use base64;
+use http::HeaderMap;
 use once_cell::sync::Lazy;
 use ring::signature;
 use serde_json as json;
@@ -73,7 +75,7 @@ fn is_cache_valid(timestamp: Option<chrono::DateTime<chrono::Utc>>) -> bool {
 }
 
 // Fetches list of public keys from GitHub API
-fn get_public_keys(req: &dyn RequestExt) -> Result<Vec<GitHubPublicKey>, Box<dyn AppError>> {
+fn get_public_keys(state: &AppState) -> Result<Vec<GitHubPublicKey>, Box<dyn AppError>> {
     // Return list from cache if populated and still valid
     if let Ok(cache) = PUBLIC_KEY_CACHE.lock() {
         if is_cache_valid(cache.timestamp) {
@@ -81,10 +83,9 @@ fn get_public_keys(req: &dyn RequestExt) -> Result<Vec<GitHubPublicKey>, Box<dyn
         }
     }
     // Fetch from GitHub API
-    let app = req.app();
-    let keys = app
+    let keys = state
         .github
-        .public_keys(&app.config.gh_client_id, &app.config.gh_client_secret)?;
+        .public_keys(&state.config.gh_client_id, &state.config.gh_client_secret)?;
 
     // Populate cache
     if let Ok(mut cache) = PUBLIC_KEY_CACHE.lock() {
@@ -95,9 +96,12 @@ fn get_public_keys(req: &dyn RequestExt) -> Result<Vec<GitHubPublicKey>, Box<dyn
 }
 
 /// Verifies that the GitHub signature in request headers is valid
-fn verify_github_signature(req: &dyn RequestExt, json: &[u8]) -> Result<(), Box<dyn AppError>> {
+fn verify_github_signature(
+    headers: &HeaderMap,
+    state: &AppState,
+    json: &[u8],
+) -> Result<(), Box<dyn AppError>> {
     // Read and decode request headers
-    let headers = req.headers();
     let req_key_id = headers
         .get("GITHUB-PUBLIC-KEY-IDENTIFIER")
         .ok_or_else(|| bad_request("missing HTTP header: GITHUB-PUBLIC-KEY-IDENTIFIER"))?
@@ -108,7 +112,7 @@ fn verify_github_signature(req: &dyn RequestExt, json: &[u8]) -> Result<(), Box<
         .ok_or_else(|| bad_request("missing HTTP header: GITHUB-PUBLIC-KEY-SIGNATURE"))?;
     let sig = base64::decode(sig)
         .map_err(|e| bad_request(&format!("failed to decode signature as base64: {e:?}")))?;
-    let public_keys = get_public_keys(req)
+    let public_keys = get_public_keys(state)
         .map_err(|e| bad_request(&format!("failed to fetch GitHub public keys: {e:?}")))?;
 
     let key = public_keys
@@ -148,10 +152,10 @@ struct GitHubSecretAlert {
 
 /// Revokes an API token and notifies the token owner
 fn alert_revoke_token(
-    req: &dyn RequestExt,
+    state: &AppState,
     alert: &GitHubSecretAlert,
 ) -> Result<GitHubSecretAlertFeedbackLabel, Box<dyn AppError>> {
-    let conn = req.db_write()?;
+    let conn = state.db_write()?;
 
     let hashed_token = SecureToken::hash(&alert.token);
 
@@ -183,7 +187,7 @@ fn alert_revoke_token(
         "Active API token received and revoked (true positive)",
     );
 
-    if let Err(error) = send_notification_email(&token, alert, req) {
+    if let Err(error) = send_notification_email(&token, alert, state) {
         warn!(
             token_id = %token.id, user_id = %token.user_id, ?error,
             "Failed to send email notification",
@@ -196,16 +200,16 @@ fn alert_revoke_token(
 fn send_notification_email(
     token: &ApiToken,
     alert: &GitHubSecretAlert,
-    req: &dyn RequestExt,
+    state: &AppState,
 ) -> anyhow::Result<()> {
-    let conn = req.db_read()?;
+    let conn = state.db_read()?;
 
     let user = User::find(&conn, token.user_id).context("Failed to find user")?;
     let Some(email) = user.email(&conn)? else {
         return Err(anyhow!("No address found"));
     };
 
-    req.app()
+    state
         .emails
         .send_token_exposed_notification(&email, &alert.url, "GitHub", &alert.source, &token.name)
         .map_err(|error| anyhow!("{error}"))?;
@@ -240,7 +244,9 @@ pub fn verify(req: &mut dyn RequestExt) -> EndpointResult {
 
     let mut json = vec![0; length as usize];
     read_fill(req.body(), &mut json)?;
-    verify_github_signature(req, &json)
+
+    let state = req.app();
+    verify_github_signature(req.headers(), state, &json)
         .map_err(|e| bad_request(&format!("failed to verify request signature: {e:?}")))?;
 
     let alerts: Vec<GitHubSecretAlert> = json::from_slice(&json)
@@ -249,7 +255,7 @@ pub fn verify(req: &mut dyn RequestExt) -> EndpointResult {
     let feedback = alerts
         .into_iter()
         .map(|alert| {
-            let label = alert_revoke_token(req, &alert)?;
+            let label = alert_revoke_token(state, &alert)?;
             Ok(GitHubSecretAlertFeedback {
                 token_raw: alert.token,
                 token_type: alert.r#type,
