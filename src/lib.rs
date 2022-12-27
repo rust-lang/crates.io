@@ -82,10 +82,11 @@ pub enum Env {
 ///
 /// Called from *src/bin/server.rs*.
 pub fn build_handler(app: Arc<App>) -> axum::Router {
-    let endpoints = router::build_router();
-    let conduit_handler = middleware::build_middleware(app.clone(), endpoints);
-
     let state = AppState(app);
+
+    let endpoints = router::build_router();
+    let conduit_handler = middleware::build_middleware(state.clone(), endpoints);
+
     let axum_router = build_axum_router(state.clone());
     middleware::apply_axum_middleware(state, axum_router.conduit_fallback(conduit_handler))
 }

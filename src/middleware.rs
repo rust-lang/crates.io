@@ -30,10 +30,9 @@ use ::sentry::integrations::tower as sentry_tower;
 use axum::error_handling::HandleErrorLayer;
 use axum::middleware::{from_fn, from_fn_with_state};
 use axum::Router;
-use std::sync::Arc;
 
 use crate::app::AppState;
-use crate::{App, Env};
+use crate::Env;
 
 pub fn apply_axum_middleware(state: AppState, router: Router) -> Router {
     type Request = http::Request<axum::body::Body>;
@@ -109,7 +108,7 @@ async fn dummy_error_handler(_err: axum::BoxError) -> http::StatusCode {
     http::StatusCode::INTERNAL_SERVER_ERROR
 }
 
-pub fn build_middleware(app: Arc<App>, endpoints: RouteBuilder) -> MiddlewareBuilder {
+pub fn build_middleware(app: AppState, endpoints: RouteBuilder) -> MiddlewareBuilder {
     let mut m = MiddlewareBuilder::new(endpoints);
 
     m.add(log_request::LogRequests::default());
