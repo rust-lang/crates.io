@@ -21,63 +21,24 @@ pub enum EnqueueError {
 pub(crate) type PerformError = Box<dyn Error>;
 
 /// An error occurred while attempting to fetch jobs from the queue
+#[derive(Debug, thiserror::Error)]
 pub enum FetchError {
     /// We could not acquire a database connection from the pool.
     ///
     /// Either the connection pool is too small, or new connections cannot be
     /// established.
-    NoDatabaseConnection(PoolError),
+    #[error("Timed out acquiring a database connection. Try increasing the connection pool size.")]
+    NoDatabaseConnection(#[source] PoolError),
 
     /// Could not execute the query to load a job from the database.
-    FailedLoadingJob(DieselError),
+    #[error("An error occurred loading a job from the database.")]
+    FailedLoadingJob(#[source] DieselError),
 
     /// No message was received from the worker thread.
     ///
     /// Either the thread pool is too small, or jobs have hung indefinitely
+    #[error("No message was received from the worker thread. Try increasing the thread pool size or timeout period.")]
     NoMessageReceived,
-}
-
-impl fmt::Debug for FetchError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            FetchError::NoDatabaseConnection(e) => {
-                f.debug_tuple("NoDatabaseConnection").field(e).finish()
-            }
-            FetchError::FailedLoadingJob(e) => f.debug_tuple("FailedLoadingJob").field(e).finish(),
-            FetchError::NoMessageReceived => f.debug_struct("NoMessageReceived").finish(),
-        }
-    }
-}
-
-impl fmt::Display for FetchError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            FetchError::NoDatabaseConnection(e) => {
-                write!(f, "Timed out acquiring a database connection. ")?;
-                write!(f, "Try increasing the connection pool size: ")?;
-                write!(f, "{e}")?;
-            }
-            FetchError::FailedLoadingJob(e) => {
-                write!(f, "An error occurred loading a job from the database: ")?;
-                write!(f, "{e}")?;
-            }
-            FetchError::NoMessageReceived => {
-                write!(f, "No message was received from the worker thread. ")?;
-                write!(f, "Try increasing the thread pool size or timeout period.")?;
-            }
-        }
-        Ok(())
-    }
-}
-
-impl Error for FetchError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            FetchError::NoDatabaseConnection(e) => Some(e),
-            FetchError::FailedLoadingJob(e) => Some(e),
-            FetchError::NoMessageReceived => None,
-        }
-    }
 }
 
 /// An error returned by `Runner::check_for_failed_jobs`. Only used in tests.
