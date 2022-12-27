@@ -7,7 +7,7 @@ use crate::app::AppState;
 use crate::controllers::*;
 use crate::middleware::app::RequestApp;
 use crate::middleware::log_request::CustomMetadataRequestExt;
-use crate::util::errors::{std_error, AppError, RouteBlocked};
+use crate::util::errors::{AppError, RouteBlocked};
 use crate::util::EndpointResult;
 use crate::Env;
 
@@ -214,12 +214,16 @@ impl Handler for C {
                 };
                 match e.response() {
                     Some(response) => Ok(response),
-                    None => Err(std_error(e)),
+                    None => Err(Box::new(AppErrToStdErr(e))),
                 }
             }
         }
     }
 }
+
+#[derive(Debug, thiserror::Error)]
+#[error("{0}")]
+struct AppErrToStdErr(pub Box<dyn AppError>);
 
 #[cfg(test)]
 mod tests {

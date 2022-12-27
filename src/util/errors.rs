@@ -233,14 +233,6 @@ pub fn internal<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
     })
 }
 
-#[derive(Debug, thiserror::Error)]
-#[error("{0}")]
-struct AppErrToStdErr(pub Box<dyn AppError>);
-
-pub(crate) fn std_error(e: Box<dyn AppError>) -> Box<dyn Error + Send> {
-    Box::new(AppErrToStdErr(e))
-}
-
 #[test]
 fn chain_error_internal() {
     assert_eq!(
