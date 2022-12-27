@@ -13,7 +13,6 @@ pub fn verify_origin(req: &dyn RequestExt) -> AppResult<()> {
     let bad_origin = headers
         .get_all(header::ORIGIN)
         .iter()
-        .filter_map(|value| value.to_str().ok())
         .find(|value| !allowed_origins.contains(value));
 
     if let Some(bad_origin) = bad_origin {

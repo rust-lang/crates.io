@@ -11,6 +11,7 @@ mod database_pools;
 pub use self::base::Base;
 pub use self::database_pools::{DatabasePools, DbPoolConfig};
 pub use crate::config::balance_capacity::BalanceCapacityConfig;
+use http::HeaderValue;
 use std::collections::HashSet;
 use std::time::Duration;
 
@@ -232,7 +233,7 @@ impl AllowedOrigins {
         Self(allowed_origins)
     }
 
-    pub fn contains(&self, value: &str) -> bool {
+    pub fn contains(&self, value: &HeaderValue) -> bool {
         self.0.iter().any(|it| it == value)
     }
 }
