@@ -17,7 +17,6 @@
 //! As a rule of thumb, if the metric requires a database query to be updated it's probably a
 //! service-level metric, and you should add it to `src/metrics/service.rs` instead.
 
-use crate::util::errors::AppResult;
 use crate::{app::App, db::DieselPool};
 use prometheus::{
     proto::MetricFamily, Histogram, HistogramVec, IntCounter, IntCounterVec, IntGauge, IntGaugeVec,
@@ -64,7 +63,7 @@ metrics! {
 }
 
 impl InstanceMetrics {
-    pub fn gather(&self, app: &App) -> AppResult<Vec<MetricFamily>> {
+    pub fn gather(&self, app: &App) -> prometheus::Result<Vec<MetricFamily>> {
         // Database pool stats
         self.refresh_pool_stats("primary", &app.primary_database)?;
         if let Some(follower) = &app.read_only_replica_database {
