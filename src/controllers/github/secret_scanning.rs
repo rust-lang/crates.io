@@ -6,6 +6,7 @@ use crate::util::read_fill;
 use crate::util::token::SecureToken;
 use anyhow::{anyhow, Context};
 use base64;
+use http::HeaderMap;
 use once_cell::sync::Lazy;
 use ring::signature;
 use serde_json as json;
@@ -95,9 +96,12 @@ fn get_public_keys(state: &AppState) -> Result<Vec<GitHubPublicKey>, Box<dyn App
 }
 
 /// Verifies that the GitHub signature in request headers is valid
-fn verify_github_signature(req: &dyn RequestExt, json: &[u8]) -> Result<(), Box<dyn AppError>> {
+fn verify_github_signature(
+    headers: &HeaderMap,
+    state: &AppState,
+    json: &[u8],
+) -> Result<(), Box<dyn AppError>> {
     // Read and decode request headers
-    let headers = req.headers();
     let req_key_id = headers
         .get("GITHUB-PUBLIC-KEY-IDENTIFIER")
         .ok_or_else(|| bad_request("missing HTTP header: GITHUB-PUBLIC-KEY-IDENTIFIER"))?
@@ -108,7 +112,7 @@ fn verify_github_signature(req: &dyn RequestExt, json: &[u8]) -> Result<(), Box<
         .ok_or_else(|| bad_request("missing HTTP header: GITHUB-PUBLIC-KEY-SIGNATURE"))?;
     let sig = base64::decode(sig)
         .map_err(|e| bad_request(&format!("failed to decode signature as base64: {e:?}")))?;
-    let public_keys = get_public_keys(req.app())
+    let public_keys = get_public_keys(state)
         .map_err(|e| bad_request(&format!("failed to fetch GitHub public keys: {e:?}")))?;
 
     let key = public_keys
@@ -240,7 +244,7 @@ pub fn verify(req: &mut dyn RequestExt) -> EndpointResult {
 
     let mut json = vec![0; length as usize];
     read_fill(req.body(), &mut json)?;
-    verify_github_signature(req, &json)
+    verify_github_signature(req.headers(), req.app(), &json)
         .map_err(|e| bad_request(&format!("failed to verify request signature: {e:?}")))?;
 
     let alerts: Vec<GitHubSecretAlert> = json::from_slice(&json)
