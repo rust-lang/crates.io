@@ -83,8 +83,10 @@ fn prepare_list(
         .gather(req)?;
 
     let user = auth.user();
-    let conn = req.db_read()?;
-    let config = &req.app().config;
+
+    let state = req.app();
+    let conn = state.db_read()?;
+    let config = &state.config;
 
     let mut crate_names = HashMap::new();
     let mut users = IndexMap::new();
@@ -96,7 +98,7 @@ fn prepare_list(
                 // Only allow crate owners to query pending invitations for their crate.
                 let krate: Crate = Crate::by_name(&crate_name).first(&*conn)?;
                 let owners = krate.owners(&conn)?;
-                if user.rights(req.app(), &owners)? != Rights::Full {
+                if user.rights(state, &owners)? != Rights::Full {
                     return Err(forbidden());
                 }
 
@@ -199,7 +201,7 @@ fn prepare_list(
     }
 
     // Turn `CrateOwnerInvitation`s into `EncodablePrivateCrateOwnerInvitation`.
-    let config = &req.app().config;
+    let config = &state.config;
     let mut invitations = Vec::new();
     let mut users_in_response = HashSet::new();
     for invitation in raw_invitations.into_iter() {
@@ -259,8 +261,10 @@ pub fn handle_invite(req: &mut dyn RequestExt) -> EndpointResult {
 
     let auth = AuthCheck::default().check(req)?;
     let user_id = auth.user_id();
-    let conn = &*req.db_write()?;
-    let config = &req.app().config;
+
+    let state = req.app();
+    let conn = &*state.db_write()?;
+    let config = &state.config;
 
     let invitation = CrateOwnerInvitation::find_by_id(user_id, crate_invite.crate_id, conn)?;
     if crate_invite.accepted {
@@ -274,8 +278,10 @@ pub fn handle_invite(req: &mut dyn RequestExt) -> EndpointResult {
 
 /// Handles the `PUT /api/v1/me/crate_owner_invitations/accept/:token` route.
 pub fn handle_invite_with_token(req: &mut dyn RequestExt) -> EndpointResult {
-    let config = &req.app().config;
-    let conn = req.db_write()?;
+    let state = req.app();
+    let config = &state.config;
+    let conn = state.db_write()?;
+
     let req_token = &req.params()["token"];
 
     let invitation = CrateOwnerInvitation::find_by_token(req_token, &conn)?;

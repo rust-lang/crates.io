@@ -13,7 +13,7 @@ use serde_json as json;
 /// Handles the `GET /me/tokens` route.
 pub fn list(req: &mut dyn RequestExt) -> EndpointResult {
     let auth = AuthCheck::only_cookie().check(req)?;
-    let conn = req.db_read_prefer_primary()?;
+    let conn = req.app().db_read_prefer_primary()?;
     let user = auth.user();
 
     let tokens: Vec<ApiToken> = ApiToken::belonging_to(&user)
@@ -68,7 +68,7 @@ pub fn new(req: &mut dyn RequestExt) -> EndpointResult {
         ));
     }
 
-    let conn = req.db_write()?;
+    let conn = req.app().db_write()?;
     let user = auth.user();
 
     let max_token_per_user = 500;
@@ -92,7 +92,7 @@ pub fn revoke(req: &mut dyn RequestExt) -> EndpointResult {
         .map_err(|e| bad_request(&format!("invalid token id: {e:?}")))?;
 
     let auth = AuthCheck::default().check(req)?;
-    let conn = req.db_write()?;
+    let conn = req.app().db_write()?;
     let user = auth.user();
     diesel::update(ApiToken::belonging_to(&user).find(id))
         .set(api_tokens::revoked.eq(true))
@@ -108,7 +108,7 @@ pub fn revoke_current(req: &mut dyn RequestExt) -> EndpointResult {
         .api_token_id()
         .ok_or_else(|| bad_request("token not provided"))?;
 
-    let conn = req.db_write()?;
+    let conn = req.app().db_write()?;
     diesel::update(api_tokens::table.filter(api_tokens::id.eq(api_token_id)))
         .set(api_tokens::revoked.eq(true))
         .execute(&*conn)?;
