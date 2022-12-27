@@ -1,3 +1,4 @@
+use crate::app::AppState;
 use crate::controllers::frontend_prelude::*;
 use crate::models::{ApiToken, User};
 use crate::schema::api_tokens;
@@ -73,7 +74,7 @@ fn is_cache_valid(timestamp: Option<chrono::DateTime<chrono::Utc>>) -> bool {
 }
 
 // Fetches list of public keys from GitHub API
-fn get_public_keys(req: &dyn RequestExt) -> Result<Vec<GitHubPublicKey>, Box<dyn AppError>> {
+fn get_public_keys(state: &AppState) -> Result<Vec<GitHubPublicKey>, Box<dyn AppError>> {
     // Return list from cache if populated and still valid
     if let Ok(cache) = PUBLIC_KEY_CACHE.lock() {
         if is_cache_valid(cache.timestamp) {
@@ -81,10 +82,9 @@ fn get_public_keys(req: &dyn RequestExt) -> Result<Vec<GitHubPublicKey>, Box<dyn
         }
     }
     // Fetch from GitHub API
-    let app = req.app();
-    let keys = app
+    let keys = state
         .github
-        .public_keys(&app.config.gh_client_id, &app.config.gh_client_secret)?;
+        .public_keys(&state.config.gh_client_id, &state.config.gh_client_secret)?;
 
     // Populate cache
     if let Ok(mut cache) = PUBLIC_KEY_CACHE.lock() {
@@ -108,7 +108,7 @@ fn verify_github_signature(req: &dyn RequestExt, json: &[u8]) -> Result<(), Box<
         .ok_or_else(|| bad_request("missing HTTP header: GITHUB-PUBLIC-KEY-SIGNATURE"))?;
     let sig = base64::decode(sig)
         .map_err(|e| bad_request(&format!("failed to decode signature as base64: {e:?}")))?;
-    let public_keys = get_public_keys(req)
+    let public_keys = get_public_keys(req.app())
         .map_err(|e| bad_request(&format!("failed to fetch GitHub public keys: {e:?}")))?;
 
     let key = public_keys
