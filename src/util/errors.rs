@@ -115,22 +115,6 @@ impl dyn AppError {
     pub fn is<T: Any>(&self) -> bool {
         self.get_type_id() == TypeId::of::<T>()
     }
-
-    fn try_convert(err: &(dyn Error + Send + 'static)) -> Option<Box<Self>> {
-        if matches!(err.downcast_ref(), Some(PoolError::UnhealthyPool)) {
-            return Some(service_unavailable("Service unavailable"));
-        }
-
-        match err.downcast_ref() {
-            Some(DieselError::NotFound) => Some(not_found()),
-            Some(DieselError::DatabaseError(_, info))
-                if info.message().ends_with("read-only transaction") =>
-            {
-                Some(Box::new(ReadOnlyMode))
-            }
-            _ => None,
-        }
-    }
 }
 
 impl AppError for Box<dyn AppError> {
@@ -183,11 +167,89 @@ impl<E: Error + Send + 'static> AppError for E {
     }
 }
 
-impl<E: Error + Send + 'static> From<E> for Box<dyn AppError> {
-    fn from(err: E) -> Box<dyn AppError> {
-        <dyn AppError>::try_convert(&err).unwrap_or_else(|| Box::new(err))
+impl From<base64::DecodeError> for Box<dyn AppError> {
+    fn from(err: base64::DecodeError) -> Box<dyn AppError> {
+        Box::new(err)
     }
 }
+
+impl From<diesel::ConnectionError> for Box<dyn AppError> {
+    fn from(err: diesel::ConnectionError) -> Box<dyn AppError> {
+        Box::new(err)
+    }
+}
+
+impl From<DieselError> for Box<dyn AppError> {
+    fn from(err: DieselError) -> Box<dyn AppError> {
+        match err {
+            DieselError::NotFound => not_found(),
+            DieselError::DatabaseError(_, info)
+                if info.message().ends_with("read-only transaction") =>
+            {
+                Box::new(ReadOnlyMode)
+            }
+            _ => Box::new(err),
+        }
+    }
+}
+
+impl From<http::Error> for Box<dyn AppError> {
+    fn from(err: http::Error) -> Box<dyn AppError> {
+        Box::new(err)
+    }
+}
+
+impl From<lettre::error::Error> for Box<dyn AppError> {
+    fn from(err: lettre::error::Error) -> Box<dyn AppError> {
+        Box::new(err)
+    }
+}
+
+impl From<lettre::address::AddressError> for Box<dyn AppError> {
+    fn from(err: lettre::address::AddressError) -> Box<dyn AppError> {
+        Box::new(err)
+    }
+}
+
+impl From<PoolError> for Box<dyn AppError> {
+    fn from(err: PoolError) -> Box<dyn AppError> {
+        match err {
+            PoolError::UnhealthyPool => service_unavailable("Service unavailable"),
+            _ => Box::new(err),
+        }
+    }
+}
+
+impl From<prometheus::Error> for Box<dyn AppError> {
+    fn from(err: prometheus::Error) -> Box<dyn AppError> {
+        Box::new(err)
+    }
+}
+
+impl From<reqwest::Error> for Box<dyn AppError> {
+    fn from(err: reqwest::Error) -> Box<dyn AppError> {
+        Box::new(err)
+    }
+}
+
+impl From<serde_json::Error> for Box<dyn AppError> {
+    fn from(err: serde_json::Error) -> Box<dyn AppError> {
+        Box::new(err)
+    }
+}
+
+impl From<std::io::Error> for Box<dyn AppError> {
+    fn from(err: std::io::Error) -> Box<dyn AppError> {
+        Box::new(err)
+    }
+}
+
+impl From<crate::swirl::errors::EnqueueError> for Box<dyn AppError> {
+    fn from(err: crate::swirl::errors::EnqueueError) -> Box<dyn AppError> {
+        Box::new(err)
+    }
+}
+
 // =============================================================================
 // Internal error for use with `chain_error`
 
