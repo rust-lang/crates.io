@@ -5,44 +5,16 @@ use std::fmt;
 use crate::db::PoolError;
 
 /// An error occurred queueing the job
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
 #[non_exhaustive]
 pub enum EnqueueError {
     /// An error occurred serializing the job
-    SerializationError(serde_json::error::Error),
+    #[error(transparent)]
+    SerializationError(#[from] serde_json::error::Error),
 
     /// An error occurred inserting the job into the database
-    DatabaseError(DieselError),
-}
-
-impl From<serde_json::error::Error> for EnqueueError {
-    fn from(e: serde_json::error::Error) -> Self {
-        EnqueueError::SerializationError(e)
-    }
-}
-
-impl From<DieselError> for EnqueueError {
-    fn from(e: DieselError) -> Self {
-        EnqueueError::DatabaseError(e)
-    }
-}
-
-impl fmt::Display for EnqueueError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            EnqueueError::SerializationError(e) => e.fmt(f),
-            EnqueueError::DatabaseError(e) => e.fmt(f),
-        }
-    }
-}
-
-impl Error for EnqueueError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            EnqueueError::SerializationError(e) => Some(e),
-            EnqueueError::DatabaseError(e) => Some(e),
-        }
-    }
+    #[error(transparent)]
+    DatabaseError(#[from] DieselError),
 }
 
 /// An error occurred performing the job
