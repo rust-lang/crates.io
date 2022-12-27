@@ -18,11 +18,6 @@ impl Middleware for AppMiddleware {
         req.mut_extensions().insert(self.app.clone());
         Ok(())
     }
-
-    fn after(&self, req: &mut dyn RequestExt, res: AfterResult) -> AfterResult {
-        req.mut_extensions().remove::<AppState>().unwrap();
-        res
-    }
 }
 
 /// Adds an `app()` method to the `Request` type returning the global `App` instance
