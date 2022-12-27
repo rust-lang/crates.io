@@ -244,7 +244,9 @@ pub fn verify(req: &mut dyn RequestExt) -> EndpointResult {
 
     let mut json = vec![0; length as usize];
     read_fill(req.body(), &mut json)?;
-    verify_github_signature(req.headers(), req.app(), &json)
+
+    let state = req.app();
+    verify_github_signature(req.headers(), state, &json)
         .map_err(|e| bad_request(&format!("failed to verify request signature: {e:?}")))?;
 
     let alerts: Vec<GitHubSecretAlert> = json::from_slice(&json)
@@ -253,7 +255,7 @@ pub fn verify(req: &mut dyn RequestExt) -> EndpointResult {
     let feedback = alerts
         .into_iter()
         .map(|alert| {
-            let label = alert_revoke_token(req.app(), &alert)?;
+            let label = alert_revoke_token(state, &alert)?;
             Ok(GitHubSecretAlertFeedback {
                 token_raw: alert.token,
                 token_type: alert.r#type,
