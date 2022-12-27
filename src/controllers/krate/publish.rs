@@ -7,7 +7,6 @@ use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 use std::io::Read;
 use std::path::Path;
-use std::sync::Arc;
 
 use crate::controllers::cargo_prelude::*;
 use crate::models::{
@@ -44,7 +43,7 @@ pub const WILDCARD_ERROR_MESSAGE: &str = "wildcard (`*`) dependency constraints 
 /// threads and return completion or error through other methods  a `cargo publish
 /// --status` command, via crates.io's front end, or email.
 pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
-    let app = Arc::clone(req.app());
+    let app = req.app().clone();
 
     // The format of the req.body() of a publish request is as follows:
     //
