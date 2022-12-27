@@ -148,10 +148,10 @@ struct GitHubSecretAlert {
 
 /// Revokes an API token and notifies the token owner
 fn alert_revoke_token(
-    req: &dyn RequestExt,
+    state: &AppState,
     alert: &GitHubSecretAlert,
 ) -> Result<GitHubSecretAlertFeedbackLabel, Box<dyn AppError>> {
-    let conn = req.db_write()?;
+    let conn = state.db_write()?;
 
     let hashed_token = SecureToken::hash(&alert.token);
 
@@ -183,7 +183,7 @@ fn alert_revoke_token(
         "Active API token received and revoked (true positive)",
     );
 
-    if let Err(error) = send_notification_email(&token, alert, req.app()) {
+    if let Err(error) = send_notification_email(&token, alert, state) {
         warn!(
             token_id = %token.id, user_id = %token.user_id, ?error,
             "Failed to send email notification",
@@ -249,7 +249,7 @@ pub fn verify(req: &mut dyn RequestExt) -> EndpointResult {
     let feedback = alerts
         .into_iter()
         .map(|alert| {
-            let label = alert_revoke_token(req, &alert)?;
+            let label = alert_revoke_token(req.app(), &alert)?;
             Ok(GitHubSecretAlertFeedback {
                 token_raw: alert.token,
                 token_type: alert.r#type,
