@@ -77,7 +77,7 @@ impl InstanceMetrics {
         Ok(self.registry.gather())
     }
 
-    fn refresh_pool_stats(&self, name: &str, pool: &DieselPool) -> AppResult<()> {
+    fn refresh_pool_stats(&self, name: &str, pool: &DieselPool) -> prometheus::Result<()> {
         let state = pool.state();
 
         self.database_idle_conns
