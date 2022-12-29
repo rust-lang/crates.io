@@ -69,14 +69,6 @@ impl Runner {
 }
 
 impl Runner {
-    #[doc(hidden)]
-    /// For use in integration tests
-    pub(super) fn connection_pool(&self) -> &DieselPool {
-        &self.connection_pool
-    }
-}
-
-impl Runner {
     /// Runs all pending jobs in the queue
     ///
     /// This function will return once all jobs in the queue have begun running,
@@ -120,20 +112,18 @@ impl Runner {
 
     fn run_single_job(&self, sender: SyncSender<Event>) {
         let environment = self.environment.clone();
-        // FIXME: https://github.com/sfackler/r2d2/pull/70
-        let connection_pool = AssertUnwindSafe(self.connection_pool().clone());
-        self.get_single_job(sender, move |job| {
+        self.get_single_job(sender, move |job, conn| {
             let job = Job::from_value(&job.job_type, job.data)?;
-
-            // Make sure to move the whole `AssertUnwindSafe`
-            let connection_pool = connection_pool;
-            job.perform(&environment, &connection_pool.0)
+            job.perform(&environment, conn)
         })
     }
 
     fn get_single_job<F>(&self, sender: SyncSender<Event>, f: F)
     where
-        F: FnOnce(storage::BackgroundJob) -> Result<(), PerformError> + Send + UnwindSafe + 'static,
+        F: FnOnce(storage::BackgroundJob, &PgConnection) -> Result<(), PerformError>
+            + Send
+            + UnwindSafe
+            + 'static,
     {
         use diesel::result::Error::RollbackTransaction;
 
@@ -166,9 +156,18 @@ impl Runner {
                 };
                 let job_id = job.id;
 
-                let result = catch_unwind(|| f(job))
-                    .map_err(|e| try_to_extract_panic_info(&e))
-                    .and_then(|r| r);
+                let result = conn
+                    .transaction(|| {
+                        let conn = AssertUnwindSafe(conn);
+                        catch_unwind(|| {
+                            // Ensure the whole `AssertUnwindSafe(_)` is moved
+                            let conn = conn;
+                            f(job, conn.0)
+                        })
+                        .map_err(|e| try_to_extract_panic_info(&e))
+                    })
+                    // TODO: Replace with flatten() once that stabilizes
+                    .and_then(std::convert::identity);
 
                 match result {
                     Ok(_) => storage::delete_successful_job(conn, job_id)?,
@@ -269,7 +268,7 @@ mod tests {
         let return_barrier = Arc::new(AssertUnwindSafe(Barrier::new(2)));
         let return_barrier2 = return_barrier.clone();
 
-        runner.get_single_job(dummy_sender(), move |job| {
+        runner.get_single_job(dummy_sender(), move |job, _| {
             fetch_barrier.0.wait(); // Tell thread 2 it can lock its job
             assert_eq!(first_job_id, job.id);
             return_barrier.0.wait(); // Wait for thread 2 to lock its job
@@ -277,7 +276,7 @@ mod tests {
         });
 
         fetch_barrier2.0.wait(); // Wait until thread 1 locks its job
-        runner.get_single_job(dummy_sender(), move |job| {
+        runner.get_single_job(dummy_sender(), move |job, _| {
             assert_eq!(second_job_id, job.id);
             return_barrier2.0.wait(); // Tell thread 1 it can unlock its job
             Ok(())
@@ -293,7 +292,7 @@ mod tests {
         let runner = runner();
         create_dummy_job(&runner);
 
-        runner.get_single_job(dummy_sender(), |_| Ok(()));
+        runner.get_single_job(dummy_sender(), |_, _| Ok(()));
         runner.wait_for_jobs().unwrap();
 
         let remaining_jobs = background_jobs
@@ -311,10 +310,10 @@ mod tests {
         let barrier = Arc::new(AssertUnwindSafe(Barrier::new(2)));
         let barrier2 = barrier.clone();
 
-        runner.get_single_job(dummy_sender(), move |_| {
+        runner.get_single_job(dummy_sender(), move |_, _| {
             barrier.0.wait();
-            // error so the job goes back into the queue
-            Err("nope".into())
+            // The job should go back into the queue after a panic
+            panic!();
         });
 
         let conn = &*runner.connection().unwrap();
@@ -350,7 +349,7 @@ mod tests {
         let runner = runner();
         let job_id = create_dummy_job(&runner).id;
 
-        runner.get_single_job(dummy_sender(), |_| panic!());
+        runner.get_single_job(dummy_sender(), |_, _| panic!());
         runner.wait_for_jobs().unwrap();
 
         let tries = background_jobs
