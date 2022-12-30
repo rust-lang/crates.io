@@ -36,7 +36,7 @@ specifiers:
   ember-cli: 4.9.2
   ember-cli-app-version: 5.0.0
   ember-cli-babel: 7.26.11
-  ember-cli-bundle-analyzer: 0.2.2
+  ember-cli-bundle-analyzer: 0.3.0
   ember-cli-code-coverage: 1.0.3
   ember-cli-dependency-checker: 3.3.1
   ember-cli-dependency-lint: 2.0.1
@@ -141,7 +141,7 @@ devDependencies:
   ember-cli: 4.9.2
   ember-cli-app-version: 5.0.0
   ember-cli-babel: 7.26.11
-  ember-cli-bundle-analyzer: 0.2.2
+  ember-cli-bundle-analyzer: 0.3.0_ember-source@4.9.3
   ember-cli-code-coverage: 1.0.3
   ember-cli-dependency-checker: 3.3.1_ember-cli@4.9.2
   ember-cli-dependency-lint: 2.0.1
@@ -7094,15 +7094,16 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /ember-cli-bundle-analyzer/0.2.2:
-    resolution: {integrity: sha512-NsFZZmEObzTkXIrRrSjOi8UytaaPqKWc/m9jjHt1/yB49EXaGy0w4dAjE2cretAgxzXr8xsV8V3ZU9qaHJ85/Q==}
-    engines: {node: 10.* || >= 12}
+  /ember-cli-bundle-analyzer/0.3.0_ember-source@4.9.3:
+    resolution: {integrity: sha512-D5Z4uKDSmpgcorQrX91NmFWPG7G4icshbCVwUBxqPnt4CzJR1Lb5XASC0y0vxQHhZA7sy1+dK6bUIqorWmU4Wg==}
+    engines: {node: 16.* || >= 18}
+    peerDependencies:
+      ember-source: ^3.28.0 || ^4.0.0
     dependencies:
       broccoli-concat-analyser: 5.0.0
       debug: 4.3.4
-      ember-cli-babel: 7.26.11
-      ember-cli-htmlbars: 5.7.2
       ember-cli-version-checker: 5.1.2
+      ember-source: 4.9.3_klhxxmjkcvtuhwro2kkspsfzna
       hash-files: 1.1.1
       intercept-stdout: 0.1.2
       node-html-light: 1.4.0
