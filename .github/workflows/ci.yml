@@ -21,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3.2.0
 
-      - uses: tj-actions/changed-files@v35.1.1
+      - uses: tj-actions/changed-files@v35.1.2
         id: changed-files-non-js
         with:
           files_ignore: |
@@ -36,7 +36,7 @@ jobs:
             pnpm-lock.yaml
             testem.js
 
-      - uses: tj-actions/changed-files@v35.1.1
+      - uses: tj-actions/changed-files@v35.1.2
         id: changed-files-non-rust
         with:
           files_ignore: |
