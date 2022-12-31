@@ -12,7 +12,7 @@ mod update_downloads;
 
 pub use daily_db_maintenance::daily_db_maintenance;
 pub use dump_db::dump_db;
-pub use git::{add_crate, squash_index, sync_yanked};
+pub use git::{add_crate, normalize_index, squash_index, sync_yanked};
 pub use readmes::render_and_upload_readme;
 pub use update_downloads::update_downloads;
 
@@ -20,7 +20,7 @@ pub(crate) use daily_db_maintenance::perform_daily_db_maintenance;
 pub(crate) use dump_db::perform_dump_db;
 pub(crate) use git::{
     perform_index_add_crate, perform_index_squash, perform_index_sync_to_http,
-    perform_index_update_yanked,
+    perform_index_update_yanked, perform_normalize_index,
 };
 pub(crate) use readmes::perform_render_and_upload_readme;
 pub(crate) use update_downloads::perform_update_downloads;

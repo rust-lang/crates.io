@@ -18,6 +18,7 @@ pub enum Job {
     IndexSquash(IndexSquashJob),
     IndexSyncToHttp(IndexSyncToHttpJob),
     IndexUpdateYanked(IndexUpdateYankedJob),
+    NormalizeIndex(NormalizeIndexJob),
     RenderAndUploadReadme(RenderAndUploadReadmeJob),
     UpdateDownloads(UpdateDownloadsJob),
 }
@@ -29,6 +30,7 @@ impl Job {
     const INDEX_SQUASH: &str = "squash_index";
     const INDEX_SYNC_TO_HTTP: &str = "update_crate_index";
     const INDEX_UPDATE_YANKED: &str = "sync_yanked";
+    const NORMALIZE_INDEX: &str = "normalize_index";
     const RENDER_AND_UPLOAD_README: &str = "render_and_upload_readme";
     const UPDATE_DOWNLOADS: &str = "update_downloads";
 
@@ -40,6 +42,7 @@ impl Job {
             Job::IndexSquash(_) => Self::INDEX_SQUASH,
             Job::IndexSyncToHttp(_) => Self::INDEX_SYNC_TO_HTTP,
             Job::IndexUpdateYanked(_) => Self::INDEX_UPDATE_YANKED,
+            Job::NormalizeIndex(_) => Self::NORMALIZE_INDEX,
             Job::RenderAndUploadReadme(_) => Self::RENDER_AND_UPLOAD_README,
             Job::UpdateDownloads(_) => Self::UPDATE_DOWNLOADS,
         }
@@ -53,6 +56,7 @@ impl Job {
             Job::IndexSquash(inner) => serde_json::to_value(inner),
             Job::IndexSyncToHttp(inner) => serde_json::to_value(inner),
             Job::IndexUpdateYanked(inner) => serde_json::to_value(inner),
+            Job::NormalizeIndex(inner) => serde_json::to_value(inner),
             Job::RenderAndUploadReadme(inner) => serde_json::to_value(inner),
             Job::UpdateDownloads(inner) => serde_json::to_value(inner),
         }
@@ -80,6 +84,7 @@ impl Job {
             Self::INDEX_SQUASH => Job::IndexSquash(from_value(value)?),
             Self::INDEX_SYNC_TO_HTTP => Job::IndexSyncToHttp(from_value(value)?),
             Self::INDEX_UPDATE_YANKED => Job::IndexUpdateYanked(from_value(value)?),
+            Self::NORMALIZE_INDEX => Job::NormalizeIndex(from_value(value)?),
             Self::RENDER_AND_UPLOAD_README => Job::RenderAndUploadReadme(from_value(value)?),
             Self::UPDATE_DOWNLOADS => Job::UpdateDownloads(from_value(value)?),
             job_type => Err(PerformError::from(format!("Unknown job type {job_type}")))?,
@@ -106,6 +111,7 @@ impl Job {
             Job::IndexUpdateYanked(args) => conn.with_connection(&|conn| {
                 worker::perform_index_update_yanked(env, conn, &args.krate, &args.version_num)
             }),
+            Job::NormalizeIndex(args) => worker::perform_normalize_index(env, args),
             Job::RenderAndUploadReadme(args) => conn.with_connection(&|conn| {
                 worker::perform_render_and_upload_readme(
                     conn,
@@ -148,6 +154,11 @@ pub struct IndexSyncToHttpJob {
 pub struct IndexUpdateYankedJob {
     pub(super) krate: String,
     pub(super) version_num: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct NormalizeIndexJob {
+    pub dry_run: bool,
 }
 
 #[derive(Serialize, Deserialize)]
