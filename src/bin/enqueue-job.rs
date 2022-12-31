@@ -22,7 +22,10 @@ enum Command {
 
 fn main() -> Result<()> {
     let command = Command::parse();
+    run(command)
+}
 
+fn run(command: Command) -> Result<()> {
     let conn = db::oneoff_connection()?;
     println!("Enqueueing background job: {command:?}");
 
