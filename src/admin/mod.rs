@@ -4,7 +4,6 @@ pub mod dialoguer;
 pub mod enqueue_job;
 pub mod git_import;
 pub mod migrate;
-pub mod normalize_index;
 pub mod on_call;
 pub mod populate;
 pub mod render_readmes;
