@@ -1,8 +1,8 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
 use cargo_registry::admin::{
-    delete_crate, delete_version, git_import, migrate, populate, render_readmes, test_pagerduty,
-    transfer_crates, upload_index, verify_token, yank_version,
+    delete_crate, delete_version, enqueue_job, git_import, migrate, populate, render_readmes,
+    test_pagerduty, transfer_crates, upload_index, verify_token, yank_version,
 };
 
 #[derive(clap::Parser, Debug)]
@@ -19,6 +19,8 @@ enum Command {
     UploadIndex(upload_index::Opts),
     YankVersion(yank_version::Opts),
     GitImport(git_import::Opts),
+    #[clap(subcommand)]
+    EnqueueJob(enqueue_job::Command),
 }
 
 fn main() -> anyhow::Result<()> {
@@ -43,6 +45,7 @@ fn main() -> anyhow::Result<()> {
         Command::UploadIndex(opts) => upload_index::run(opts)?,
         Command::YankVersion(opts) => yank_version::run(opts),
         Command::GitImport(opts) => git_import::run(opts)?,
+        Command::EnqueueJob(command) => enqueue_job::run(command)?,
     }
 
     Ok(())
