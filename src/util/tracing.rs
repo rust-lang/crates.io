@@ -39,9 +39,13 @@ pub fn event_filter(metadata: &Metadata<'_>) -> EventFilter {
 
 /// Initializes the `tracing` logging framework for usage in tests.
 pub fn init_for_test() {
+    let env_filter = EnvFilter::builder()
+        .with_default_directive(LevelFilter::INFO.into())
+        .from_env_lossy();
+
     let _ = tracing_subscriber::fmt()
         .compact()
-        .with_max_level(tracing::Level::INFO)
+        .with_env_filter(env_filter)
         .without_time()
         .with_test_writer()
         .try_init();
