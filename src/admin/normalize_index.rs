@@ -57,7 +57,6 @@ pub fn run(_opts: Opts) -> anyhow::Result<()> {
             krate.deps.sort();
             versions.push(krate);
         }
-        versions.sort_by_cached_key(|version| semver::Version::parse(&version.vers).ok());
         for version in versions {
             serde_json::to_writer(&mut body, &version).unwrap();
             body.push(b'\n');
