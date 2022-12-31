@@ -5,7 +5,6 @@ use std::{
 };
 
 use cargo_registry_index::{Repository, RepositoryConfig};
-use chrono::Utc;
 use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
 
 use crate::admin::dialoguer;
@@ -64,38 +63,14 @@ pub fn run(_opts: Opts) -> anyhow::Result<()> {
         std::fs::write(path, body)?;
     }
 
-    let original_head = repo.head_oid()?.to_string();
-
-    // Add an additional commit after the squash commit that normalizes the index.
     println!("committing normalization");
     let msg = "Normalize index format\n\n\
         More information can be found at https://github.com/rust-lang/crates.io/pull/5066";
     repo.run_command(Command::new("git").args(["commit", "-am", msg]))?;
-    let snapshot_head = repo.head_oid()?.to_string();
-
-    println!("squashing");
-    let now = Utc::now().format("%Y-%m-%d");
-    let msg = format!("Collapse index into one commit\n\n\
-        Previous HEAD was {}, now on the `snapshot-{}` branch\n\n\
-        More information about this change can be found [online] and on [this issue].\n\n\
-        [online]: https://internals.rust-lang.org/t/cargos-crate-index-upcoming-squash-into-one-commit/8440\n\
-        [this issue]: https://github.com/rust-lang/crates-io-cargo-teams/issues/47", snapshot_head, now);
-    repo.squash_to_single_commit(&msg)?;
 
     if dialoguer::confirm("push to origin?") {
-        repo.run_command(Command::new("git").args([
-            "push",
-            // Both updates should succeed or fail together
-            "--atomic",
-            "origin",
-            // Overwrite master, but only if it server matches the expected value
-            &format!("--force-with-lease=refs/heads/master:{original_head}"),
-            // The new squashed commit is pushed to master
-            "HEAD:refs/heads/master",
-            // The previous value of HEAD is pushed to a snapshot branch
-            &format!("{snapshot_head}:refs/heads/snapshot-{now}"),
-        ]))?;
-        println!("The index has been successfully normalized and squashed.");
+        repo.run_command(Command::new("git").args(["push", "origin"]))?;
+        println!("The index has been successfully normalized.");
     }
     Ok(())
 }
