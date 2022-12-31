@@ -3,7 +3,7 @@ use crate::{
     schema::{crates, metadata, version_downloads, versions},
 };
 
-use crate::background_jobs::{Job, UpdateDownloadsJob};
+use crate::background_jobs::Job;
 use crate::swirl::PerformError;
 use diesel::prelude::*;
 
@@ -13,7 +13,7 @@ pub fn perform_update_downloads(conn: &PgConnection) -> Result<(), PerformError>
 }
 
 pub fn update_downloads() -> Job {
-    Job::UpdateDownloads(UpdateDownloadsJob {})
+    Job::UpdateDownloads
 }
 
 fn update(conn: &PgConnection) -> QueryResult<()> {

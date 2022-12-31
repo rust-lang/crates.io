@@ -12,15 +12,15 @@ use crate::worker::cloudfront::CloudFront;
 use cargo_registry_index::Repository;
 
 pub enum Job {
-    DailyDbMaintenance(DailyDbMaintenanceJob),
+    DailyDbMaintenance,
     DumpDb(DumpDbJob),
     IndexAddCrate(IndexAddCrateJob),
-    IndexSquash(IndexSquashJob),
+    IndexSquash,
     IndexSyncToHttp(IndexSyncToHttpJob),
     IndexUpdateYanked(IndexUpdateYankedJob),
     NormalizeIndex(NormalizeIndexJob),
     RenderAndUploadReadme(RenderAndUploadReadmeJob),
-    UpdateDownloads(UpdateDownloadsJob),
+    UpdateDownloads,
 }
 
 impl Job {
@@ -36,29 +36,29 @@ impl Job {
 
     fn as_type_str(&self) -> &'static str {
         match self {
-            Job::DailyDbMaintenance(_) => Self::DAILY_DB_MAINTENANCE,
+            Job::DailyDbMaintenance => Self::DAILY_DB_MAINTENANCE,
             Job::DumpDb(_) => Self::DUMP_DB,
             Job::IndexAddCrate(_) => Self::INDEX_ADD_CRATE,
-            Job::IndexSquash(_) => Self::INDEX_SQUASH,
+            Job::IndexSquash => Self::INDEX_SQUASH,
             Job::IndexSyncToHttp(_) => Self::INDEX_SYNC_TO_HTTP,
             Job::IndexUpdateYanked(_) => Self::INDEX_UPDATE_YANKED,
             Job::NormalizeIndex(_) => Self::NORMALIZE_INDEX,
             Job::RenderAndUploadReadme(_) => Self::RENDER_AND_UPLOAD_README,
-            Job::UpdateDownloads(_) => Self::UPDATE_DOWNLOADS,
+            Job::UpdateDownloads => Self::UPDATE_DOWNLOADS,
         }
     }
 
     fn to_value(&self) -> serde_json::Result<serde_json::Value> {
         match self {
-            Job::DailyDbMaintenance(inner) => serde_json::to_value(inner),
+            Job::DailyDbMaintenance => Ok(serde_json::Value::Null),
             Job::DumpDb(inner) => serde_json::to_value(inner),
             Job::IndexAddCrate(inner) => serde_json::to_value(inner),
-            Job::IndexSquash(inner) => serde_json::to_value(inner),
+            Job::IndexSquash => Ok(serde_json::Value::Null),
             Job::IndexSyncToHttp(inner) => serde_json::to_value(inner),
             Job::IndexUpdateYanked(inner) => serde_json::to_value(inner),
             Job::NormalizeIndex(inner) => serde_json::to_value(inner),
             Job::RenderAndUploadReadme(inner) => serde_json::to_value(inner),
-            Job::UpdateDownloads(inner) => serde_json::to_value(inner),
+            Job::UpdateDownloads => Ok(serde_json::Value::Null),
         }
     }
 
@@ -78,15 +78,15 @@ impl Job {
     ) -> Result<Self, PerformError> {
         use serde_json::from_value;
         Ok(match job_type {
-            Self::DAILY_DB_MAINTENANCE => Job::DailyDbMaintenance(from_value(value)?),
+            Self::DAILY_DB_MAINTENANCE => Job::DailyDbMaintenance,
             Self::DUMP_DB => Job::DumpDb(from_value(value)?),
             Self::INDEX_ADD_CRATE => Job::IndexAddCrate(from_value(value)?),
-            Self::INDEX_SQUASH => Job::IndexSquash(from_value(value)?),
+            Self::INDEX_SQUASH => Job::IndexSquash,
             Self::INDEX_SYNC_TO_HTTP => Job::IndexSyncToHttp(from_value(value)?),
             Self::INDEX_UPDATE_YANKED => Job::IndexUpdateYanked(from_value(value)?),
             Self::NORMALIZE_INDEX => Job::NormalizeIndex(from_value(value)?),
             Self::RENDER_AND_UPLOAD_README => Job::RenderAndUploadReadme(from_value(value)?),
-            Self::UPDATE_DOWNLOADS => Job::UpdateDownloads(from_value(value)?),
+            Self::UPDATE_DOWNLOADS => Job::UpdateDownloads,
             job_type => Err(PerformError::from(format!("Unknown job type {job_type}")))?,
         })
     }
@@ -100,13 +100,11 @@ impl Job {
             .as_ref()
             .expect("Application should configure a background runner environment");
         match self {
-            Job::DailyDbMaintenance(_) => {
-                conn.with_connection(&worker::perform_daily_db_maintenance)
-            }
+            Job::DailyDbMaintenance => conn.with_connection(&worker::perform_daily_db_maintenance),
             Job::DumpDb(args) => worker::perform_dump_db(env, args.database_url, args.target_name),
             Job::IndexAddCrate(args) => conn
                 .with_connection(&|conn| worker::perform_index_add_crate(env, conn, &args.krate)),
-            Job::IndexSquash(_) => worker::perform_index_squash(env),
+            Job::IndexSquash => worker::perform_index_squash(env),
             Job::IndexSyncToHttp(args) => worker::perform_index_sync_to_http(env, args.crate_name),
             Job::IndexUpdateYanked(args) => conn.with_connection(&|conn| {
                 worker::perform_index_update_yanked(env, conn, &args.krate, &args.version_num)
@@ -123,13 +121,10 @@ impl Job {
                     args.pkg_path_in_vcs.as_deref(),
                 )
             }),
-            Job::UpdateDownloads(_) => conn.with_connection(&worker::perform_update_downloads),
+            Job::UpdateDownloads => conn.with_connection(&worker::perform_update_downloads),
         }
     }
 }
-
-#[derive(Serialize, Deserialize)]
-pub struct DailyDbMaintenanceJob {}
 
 #[derive(Serialize, Deserialize)]
 pub struct DumpDbJob {
@@ -141,9 +136,6 @@ pub struct DumpDbJob {
 pub struct IndexAddCrateJob {
     pub(super) krate: cargo_registry_index::Crate,
 }
-
-#[derive(Serialize, Deserialize)]
-pub struct IndexSquashJob {}
 
 #[derive(Serialize, Deserialize)]
 pub struct IndexSyncToHttpJob {
@@ -169,9 +161,6 @@ pub struct RenderAndUploadReadmeJob {
     pub(super) base_url: Option<String>,
     pub(super) pkg_path_in_vcs: Option<String>,
 }
-
-#[derive(Serialize, Deserialize)]
-pub struct UpdateDownloadsJob {}
 
 pub struct Environment {
     index: Arc<Mutex<Repository>>,
