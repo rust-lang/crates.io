@@ -59,7 +59,13 @@ async fn fallback_to_conduit(
             let mut request = ConduitRequest::new(request, remote_addr, now);
             handler
                 .call(&mut request)
-                .map(|response| conduit_into_axum(response, request))
+                .map(|mut response| {
+                    if let Some(pattern) = request.mut_extensions().remove::<RoutePattern>() {
+                        response.extensions_mut().insert(pattern);
+                    }
+
+                    conduit_into_axum(response)
+                })
                 .unwrap_or_else(|e| server_error_response(&*e))
         })
     })
@@ -68,12 +74,8 @@ async fn fallback_to_conduit(
 }
 
 /// Turns a `ConduitResponse` into a `AxumResponse`
-fn conduit_into_axum(mut response: ConduitResponse, mut request: ConduitRequest) -> AxumResponse {
+fn conduit_into_axum(response: ConduitResponse) -> AxumResponse {
     use conduit::Body::*;
-
-    if let Some(pattern) = request.mut_extensions().remove::<RoutePattern>() {
-        response.extensions_mut().insert(pattern);
-    }
 
     let (parts, body) = response.into_parts();
     match body {
