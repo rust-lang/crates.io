@@ -10,7 +10,7 @@ env:
   # renovate: datasource=crate depName=cargo-tarpaulin
   CARGO_TARPAULIN_VERSION: 0.23.1
   # renovate: datasource=crate depName=diesel_cli
-  DIESEL_CLI_VERSION: 1.4.1
+  DIESEL_CLI_VERSION: =1.4.1
   # renovate: datasource=github-releases depName=rust lookupName=rust-lang/rust
   RUST_VERSION: 1.66.0
 
