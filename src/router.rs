@@ -201,7 +201,7 @@ impl Handler for C {
             // environment variable. This is not in a middleware because we need access to
             // `RoutePattern` before executing the response handler.
             if req.app().config.blocked_routes.contains(pattern) {
-                return Ok(RouteBlocked.response().unwrap());
+                return Ok(RouteBlocked.response());
             }
         }
 
@@ -212,18 +212,11 @@ impl Handler for C {
                 if let Some(cause) = e.cause() {
                     req.add_custom_metadata("cause", cause.to_string())
                 };
-                match e.response() {
-                    Some(response) => Ok(response),
-                    None => Err(Box::new(AppErrToStdErr(e))),
-                }
+                Ok(e.response())
             }
         }
     }
 }
-
-#[derive(Debug, thiserror::Error)]
-#[error("{0}")]
-struct AppErrToStdErr(pub Box<dyn AppError>);
 
 #[cfg(test)]
 mod tests {
