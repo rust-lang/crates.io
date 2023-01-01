@@ -288,17 +288,24 @@ mod tests {
             "middle error caused by invalid digit found in string"
         );
 
-        // All other error types are propogated up the middleware, eventually becoming status 500
-        assert!(C(|_| Err(internal(""))).call(&mut req).is_err());
-        assert!(
+        // All other error types are converted to internal server errors
+        assert_eq!(
+            C(|_| Err(internal(""))).call(&mut req).unwrap().status(),
+            StatusCode::INTERNAL_SERVER_ERROR
+        );
+        assert_eq!(
             C(|_| err::<::serde_json::Error>(::serde::de::Error::custom("ExpectedColon")))
                 .call(&mut req)
-                .is_err()
+                .unwrap()
+                .status(),
+            StatusCode::INTERNAL_SERVER_ERROR
         );
-        assert!(
+        assert_eq!(
             C(|_| err(::std::io::Error::new(::std::io::ErrorKind::Other, "")))
                 .call(&mut req)
-                .is_err()
+                .unwrap()
+                .status(),
+            StatusCode::INTERNAL_SERVER_ERROR
         );
     }
 }

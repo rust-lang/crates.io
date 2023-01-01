@@ -18,7 +18,9 @@ use std::error::Error;
 use std::fmt;
 
 use chrono::NaiveDateTime;
+use conduit_axum::ErrorField;
 use diesel::result::Error as DieselError;
+use http::{Response, StatusCode};
 
 use crate::db::PoolError;
 use crate::util::AppResponse;
@@ -163,7 +165,11 @@ impl<E: AppError> fmt::Display for ChainedError<E> {
 
 impl<E: Error + Send + 'static> AppError for E {
     fn response(&self) -> Option<AppResponse> {
-        None
+        error!(error = %self, "Internal Server Error");
+
+        sentry::capture_error(self);
+
+        Some(server_error_response(self.to_string()))
     }
 }
 
@@ -267,7 +273,11 @@ impl fmt::Display for InternalAppError {
 
 impl AppError for InternalAppError {
     fn response(&self) -> Option<AppResponse> {
-        None
+        error!(error = %self.description, "Internal Server Error");
+
+        sentry::capture_message(&self.description, sentry::Level::Error);
+
+        Some(server_error_response(self.description.to_string()))
     }
 }
 
@@ -285,7 +295,11 @@ impl fmt::Display for InternalAppErrorStatic {
 
 impl AppError for InternalAppErrorStatic {
     fn response(&self) -> Option<AppResponse> {
-        None
+        error!(error = %self.description, "Internal Server Error");
+
+        sentry::capture_message(self.description, sentry::Level::Error);
+
+        Some(server_error_response(self.description.to_string()))
     }
 }
 
@@ -293,6 +307,14 @@ pub fn internal<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
     Box::new(InternalAppError {
         description: error.to_string(),
     })
+}
+
+fn server_error_response(error: String) -> AppResponse {
+    Response::builder()
+        .status(StatusCode::INTERNAL_SERVER_ERROR)
+        .extension(ErrorField(error))
+        .body(conduit::Body::from_static(b"Internal Server Error"))
+        .unwrap()
 }
 
 #[test]
