@@ -90,7 +90,7 @@ where
         .get(header::CONTENT_TYPE)
         .expect("Missing content-type header");
 
-    assert_eq!(content_type, "application/json; charset=utf-8");
+    assert_eq!(content_type, "application/json");
 
     let content_length: usize = r
         .headers()
