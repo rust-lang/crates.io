@@ -9,7 +9,7 @@ use axum::headers::UserAgent;
 use axum::middleware::Next;
 use axum::response::IntoResponse;
 use axum::{Extension, TypedHeader};
-use conduit_axum::ErrorField;
+use conduit_axum::{CauseField, ErrorField};
 use http::{Method, Request, StatusCode, Uri};
 use std::fmt::{self, Display, Formatter};
 use std::ops::Deref;
@@ -31,6 +31,7 @@ pub struct RequestMetadata {
 pub struct Metadata<'a> {
     request: RequestMetadata,
     status: StatusCode,
+    cause: Option<&'a CauseField>,
     error: Option<&'a ErrorField>,
     duration: Duration,
     custom_metadata: CustomMetadata,
@@ -91,6 +92,10 @@ impl Display for Metadata<'_> {
             }
         }
 
+        if let Some(CauseField(ref cause)) = self.cause {
+            line.add_quoted_field("cause", cause)?;
+        }
+
         if let Some(ErrorField(ref error)) = self.error {
             line.add_quoted_field("error", error)?;
         }
@@ -118,6 +123,7 @@ pub async fn log_requests<B>(
     let metadata = Metadata {
         request: request_metadata,
         status: response.status(),
+        cause: response.extensions().get(),
         error: response.extensions().get(),
         duration: start_instant.elapsed(),
         custom_metadata,
