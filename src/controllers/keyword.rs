@@ -1,4 +1,8 @@
 use super::prelude::*;
+use crate::app::AppState;
+use axum::extract::{Path, State};
+use axum::response::IntoResponse;
+use axum::Json;
 
 use crate::controllers::helpers::pagination::PaginationOptions;
 use crate::controllers::helpers::{pagination::Paginated, Paginate};
@@ -36,11 +40,13 @@ pub fn index(req: &mut dyn RequestExt) -> EndpointResult {
 }
 
 /// Handles the `GET /keywords/:keyword_id` route.
-pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
-    let name = &req.params()["keyword_id"];
-    let conn = req.app().db_read()?;
+pub async fn show(Path(name): Path<String>, State(state): State<AppState>) -> impl IntoResponse {
+    conduit_compat(move || {
+        let conn = state.db_read()?;
 
-    let kw = Keyword::find_by_keyword(&conn, name)?;
+        let kw = Keyword::find_by_keyword(&conn, &name)?;
 
-    Ok(req.json(&json!({ "keyword": EncodableKeyword::from(kw) })))
+        Ok(Json(json!({ "keyword": EncodableKeyword::from(kw) })))
+    })
+    .await
 }
