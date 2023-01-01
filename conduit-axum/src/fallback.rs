@@ -1,7 +1,7 @@
 use crate::adaptor::ConduitRequest;
 use crate::error::ServiceError;
 use crate::file_stream::FileStream;
-use crate::{AxumResponse, ConduitResponse};
+use crate::{spawn_blocking, AxumResponse, ConduitResponse};
 
 use std::error::Error;
 use std::net::SocketAddr;
@@ -16,7 +16,6 @@ use conduit_router::RoutePattern;
 use http::header::CONTENT_LENGTH;
 use http::StatusCode;
 use hyper::{Request, Response};
-use sentry_core::Hub;
 use tracing::{error, warn};
 
 /// The maximum size allowed in the `Content-Length` header
@@ -48,26 +47,22 @@ async fn fallback_to_conduit(
     let (parts, body) = request.into_parts();
     let now = StartInstant::now();
 
-    let hub = Hub::current();
-
     let full_body = hyper::body::to_bytes(body).await?;
     let request = Request::from_parts(parts, full_body);
 
     let handler = handler.clone();
-    tokio::task::spawn_blocking(move || {
-        Hub::run(hub, || {
-            let mut request = ConduitRequest::new(request, remote_addr, now);
-            handler
-                .call(&mut request)
-                .map(|mut response| {
-                    if let Some(pattern) = request.mut_extensions().remove::<RoutePattern>() {
-                        response.extensions_mut().insert(pattern);
-                    }
+    spawn_blocking(move || {
+        let mut request = ConduitRequest::new(request, remote_addr, now);
+        handler
+            .call(&mut request)
+            .map(|mut response| {
+                if let Some(pattern) = request.mut_extensions().remove::<RoutePattern>() {
+                    response.extensions_mut().insert(pattern);
+                }
 
-                    conduit_into_axum(response)
-                })
-                .unwrap_or_else(|e| server_error_response(&*e))
-        })
+                conduit_into_axum(response)
+            })
+            .unwrap_or_else(|e| server_error_response(&*e))
     })
     .await
     .map_err(Into::into)
