@@ -13,12 +13,13 @@
 //!   typically not converted to user facing errors and most usage is within the models,
 //!   controllers, and middleware layers.
 
+use axum::response::IntoResponse;
 use std::any::{Any, TypeId};
 use std::error::Error;
 use std::fmt;
 
 use chrono::NaiveDateTime;
-use conduit_axum::ErrorField;
+use conduit_axum::{conduit_into_axum, CauseField, ErrorField};
 use diesel::result::Error as DieselError;
 use http::{Response, StatusCode};
 
@@ -130,6 +131,20 @@ impl AppError for Box<dyn AppError> {
 
     fn get_type_id(&self) -> TypeId {
         (**self).get_type_id()
+    }
+}
+
+impl IntoResponse for Box<dyn AppError> {
+    fn into_response(self) -> axum::response::Response {
+        let mut response = conduit_into_axum(self.response());
+
+        if let Some(cause) = self.cause() {
+            response
+                .extensions_mut()
+                .insert(CauseField(cause.to_string()));
+        }
+
+        response
     }
 }
 
