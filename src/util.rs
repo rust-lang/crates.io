@@ -27,7 +27,7 @@ pub type EndpointResult = Result<AppResponse, Box<dyn errors::AppError>>;
 pub fn json_response<T: Serialize>(t: &T) -> AppResponse {
     let json = serde_json::to_string(t).unwrap();
     Response::builder()
-        .header(header::CONTENT_TYPE, "application/json; charset=utf-8")
+        .header(header::CONTENT_TYPE, "application/json")
         .header(header::CONTENT_LENGTH, json.len())
         .body(Body::from_vec(json.into_bytes()))
         .unwrap() // Header values are well formed, so should not panic
