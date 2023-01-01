@@ -8,6 +8,10 @@ on:
 
   pull_request:
 
+concurrency:
+  group: ci-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
 env:
   DIESEL_CLI_VERSION: 1.4.1
   PNPM_VERSION: 7.21.0
