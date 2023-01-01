@@ -9,11 +9,8 @@ where
     F: FnOnce() -> Result<R, Box<dyn AppError>> + Send + 'static,
     R: IntoResponse,
 {
-    spawn_blocking(move || match f() {
-        Ok(response) => response.into_response(),
-        Err(error) => error.into_response(),
-    })
-    .await
-    .map_err(ServiceError::from)
-    .into_response()
+    spawn_blocking(move || f().into_response())
+        .await
+        .map_err(ServiceError::from)
+        .into_response()
 }
