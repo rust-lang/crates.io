@@ -9,6 +9,7 @@
         ":semanticCommitsDisabled",
         ":automergeLinters",
         ":automergeTesters",
+        "github>Turbo87/renovate-config//githubActions/regexManagers",
     ],
     "js": {
         "labels": ["A-frontend 🐹"],
@@ -17,33 +18,6 @@
         "labels": ["A-backend ⚙️"],
     },
     "regexManagers": [
-        {
-            "fileMatch": ["^.github/workflows/[^\\.]+\\.ya?ml$"],
-            "matchStrings": ["CARGO_TARPAULIN_VERSION:\\s*(?<currentValue>.*?)\n"],
-            "depNameTemplate": "cargo-tarpaulin",
-            "datasourceTemplate": "crate",
-            "versioningTemplate": "semver"
-        },
-        {
-            "fileMatch": ["^.github/workflows/[^\\.]+\\.ya?ml$"],
-            "matchStrings": ["DIESEL_CLI_VERSION:\\s*(?<currentValue>.*?)\n"],
-            "depNameTemplate": "diesel_cli",
-            "datasourceTemplate": "crate",
-            "versioningTemplate": "semver",
-        },
-        {
-            "fileMatch": ["^.github/workflows/[^\\.]+\\.ya?ml$"],
-            "matchStrings": ["PNPM_VERSION:\\s*(?<currentValue>.*?)\n"],
-            "depNameTemplate": "pnpm",
-            "datasourceTemplate": "npm"
-        },
-        {
-            "fileMatch": ["^.github/workflows/[^\\.]+\\.ya?ml$"],
-            "matchStrings": ["RUST_VERSION:\\s*(?<currentValue>.*?)\n"],
-            "depNameTemplate": "rust",
-            "datasourceTemplate": "github-releases",
-            "lookupNameTemplate": "rust-lang/rust",
-        },
         {
             "fileMatch": ["^RustConfig$"],
             "matchStrings": ["VERSION=(?<currentValue>.*?)\n"],
@@ -72,7 +46,7 @@
         "matchManagers": ["regex"],
         "matchPackageNames": ["rust"],
         "commitMessageTopic": "Rust",
-        "labels": ["A-backend"],
+        "labels": ["A-backend ⚙️"],
     }, {
         "matchPackagePatterns": [
             "^conduit$",
