@@ -75,7 +75,7 @@ pub struct ErrorField(pub String);
 pub struct CauseField(pub String);
 
 /// Turns a `ConduitResponse` into a `AxumResponse`
-fn conduit_into_axum(response: ConduitResponse) -> AxumResponse {
+pub fn conduit_into_axum(response: ConduitResponse) -> AxumResponse {
     use conduit::Body::*;
 
     let (parts, body) = response.into_parts();

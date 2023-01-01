@@ -51,7 +51,7 @@ mod server;
 mod tests;
 mod tokio_utils;
 
-pub use fallback::{CauseField, ConduitFallback, ErrorField};
+pub use fallback::{conduit_into_axum, CauseField, ConduitFallback, ErrorField};
 pub use server::Server;
 pub use tokio_utils::spawn_blocking;
 
