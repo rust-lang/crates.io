@@ -167,22 +167,6 @@ impl<B> CustomMetadataRequestExt for Request<B> {
     }
 }
 
-#[cfg(test)]
-pub(crate) fn get_log_message(req: &dyn RequestExt, key: &'static str) -> String {
-    // Unwrap shouldn't panic as no other code has access to the private struct to remove it
-    if let Some(metadata) = req.extensions().get::<CustomMetadata>() {
-        if let Ok(metadata) = metadata.lock() {
-            for (k, v) in &*metadata {
-                if key == *k {
-                    return v.clone();
-                }
-            }
-        }
-    }
-
-    panic!("expected log message for {key} not found");
-}
-
 struct LogLine<'f, 'g> {
     f: &'f mut Formatter<'g>,
     first: bool,
