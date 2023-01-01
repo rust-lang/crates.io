@@ -1,8 +1,6 @@
 //! Log all requests in a format similar to Heroku's router, but with additional
 //! information that we care about like User-Agent
 
-use super::prelude::*;
-
 use conduit::RequestExt;
 
 use crate::headers::{XRealIp, XRequestId};
@@ -11,6 +9,7 @@ use axum::headers::UserAgent;
 use axum::middleware::Next;
 use axum::response::IntoResponse;
 use axum::{Extension, TypedHeader};
+use conduit_axum::ErrorField;
 use http::{Method, Request, StatusCode, Uri};
 use std::fmt::{self, Display, Formatter};
 use std::ops::Deref;
@@ -18,20 +17,6 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 const SLOW_REQUEST_THRESHOLD_MS: u128 = 1000;
-
-#[derive(Default)]
-pub(super) struct LogRequests();
-
-impl Middleware for LogRequests {
-    fn after(&self, req: &mut dyn RequestExt, res: AfterResult) -> AfterResult {
-        if let Err(error) = &res {
-            // Move handler error into custom metadata for axum traffic logging
-            req.add_custom_metadata("error", error.to_string())
-        }
-
-        res
-    }
-}
 
 #[derive(axum::extract::FromRequestParts)]
 pub struct RequestMetadata {
@@ -43,14 +28,15 @@ pub struct RequestMetadata {
     real_ip: Option<TypedHeader<XRealIp>>,
 }
 
-pub struct Metadata {
+pub struct Metadata<'a> {
     request: RequestMetadata,
     status: StatusCode,
+    error: Option<&'a ErrorField>,
     duration: Duration,
     custom_metadata: CustomMetadata,
 }
 
-impl Display for Metadata {
+impl Display for Metadata<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let mut line = LogLine::new(f);
 
@@ -105,6 +91,10 @@ impl Display for Metadata {
             }
         }
 
+        if let Some(ErrorField(ref error)) = self.error {
+            line.add_quoted_field("error", error)?;
+        }
+
         if response_time_in_ms > SLOW_REQUEST_THRESHOLD_MS {
             line.add_marker("SLOW REQUEST")?;
         }
@@ -128,6 +118,7 @@ pub async fn log_requests<B>(
     let metadata = Metadata {
         request: request_metadata,
         status: response.status(),
+        error: response.extensions().get(),
         duration: start_instant.elapsed(),
         custom_metadata,
     };

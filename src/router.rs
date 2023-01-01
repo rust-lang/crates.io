@@ -201,7 +201,7 @@ impl Handler for C {
             // environment variable. This is not in a middleware because we need access to
             // `RoutePattern` before executing the response handler.
             if req.app().config.blocked_routes.contains(pattern) {
-                return Ok(RouteBlocked.response().unwrap());
+                return Ok(RouteBlocked.response());
             }
         }
 
@@ -212,18 +212,11 @@ impl Handler for C {
                 if let Some(cause) = e.cause() {
                     req.add_custom_metadata("cause", cause.to_string())
                 };
-                match e.response() {
-                    Some(response) => Ok(response),
-                    None => Err(Box::new(AppErrToStdErr(e))),
-                }
+                Ok(e.response())
             }
         }
     }
 }
-
-#[derive(Debug, thiserror::Error)]
-#[error("{0}")]
-struct AppErrToStdErr(pub Box<dyn AppError>);
 
 #[cfg(test)]
 mod tests {
@@ -288,17 +281,24 @@ mod tests {
             "middle error caused by invalid digit found in string"
         );
 
-        // All other error types are propogated up the middleware, eventually becoming status 500
-        assert!(C(|_| Err(internal(""))).call(&mut req).is_err());
-        assert!(
+        // All other error types are converted to internal server errors
+        assert_eq!(
+            C(|_| Err(internal(""))).call(&mut req).unwrap().status(),
+            StatusCode::INTERNAL_SERVER_ERROR
+        );
+        assert_eq!(
             C(|_| err::<::serde_json::Error>(::serde::de::Error::custom("ExpectedColon")))
                 .call(&mut req)
-                .is_err()
+                .unwrap()
+                .status(),
+            StatusCode::INTERNAL_SERVER_ERROR
         );
-        assert!(
+        assert_eq!(
             C(|_| err(::std::io::Error::new(::std::io::ErrorKind::Other, "")))
                 .call(&mut req)
-                .is_err()
+                .unwrap()
+                .status(),
+            StatusCode::INTERNAL_SERVER_ERROR
         );
     }
 }

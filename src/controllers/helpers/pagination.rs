@@ -415,11 +415,7 @@ mod tests {
     }
 
     fn assert_pagination_error(options: PaginationOptionsBuilder, query: &str, message: &str) {
-        let response = options
-            .gather(&mut mock(query))
-            .unwrap_err()
-            .response()
-            .unwrap();
+        let response = options.gather(&mut mock(query)).unwrap_err().response();
 
         assert_eq!(StatusCode::BAD_REQUEST, response.status());
 

@@ -111,8 +111,6 @@ async fn dummy_error_handler(_err: axum::BoxError) -> http::StatusCode {
 pub fn build_middleware(app: AppState, endpoints: RouteBuilder) -> MiddlewareBuilder {
     let mut m = MiddlewareBuilder::new(endpoints);
 
-    m.add(log_request::LogRequests::default());
-
     m.add(AppMiddleware::new(app));
     m.add(KnownErrorToJson);
 
