@@ -49,9 +49,12 @@ mod file_stream;
 mod server;
 #[cfg(test)]
 mod tests;
+mod tokio_utils;
 
-pub use fallback::{CauseField, ConduitFallback, ErrorField};
+pub use error::ServiceError;
+pub use fallback::{conduit_into_axum, CauseField, ConduitFallback, ErrorField};
 pub use server::Server;
+pub use tokio_utils::spawn_blocking;
 
 type AxumResponse = axum::response::Response;
 type ConduitResponse = http::Response<conduit::Body>;

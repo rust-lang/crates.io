@@ -12,10 +12,12 @@ use crate::util::EndpointResult;
 use crate::Env;
 
 pub fn build_axum_router(state: AppState) -> Router {
-    let mut router = Router::new().route(
-        "/api/v1/site_metadata",
-        get(site_metadata::show_deployed_sha),
-    );
+    let mut router = Router::new()
+        .route(
+            "/api/v1/site_metadata",
+            get(site_metadata::show_deployed_sha),
+        )
+        .route("/api/v1/keywords/:keyword_id", get(keyword::show));
 
     // Only serve the local checkout of the git index in development mode.
     // In production, for crates.io, cargo gets the index from
@@ -119,7 +121,6 @@ pub fn build_router() -> RouteBuilder {
         C(krate::metadata::reverse_dependencies),
     );
     router.get("/api/v1/keywords", C(keyword::index));
-    router.get("/api/v1/keywords/:keyword_id", C(keyword::show));
     router.get("/api/v1/categories", C(category::index));
     router.get("/api/v1/categories/:category_id", C(category::show));
     router.get("/api/v1/category_slugs", C(category::slugs));
