@@ -67,6 +67,9 @@ async fn fallback_to_conduit(
     .map_err(Into::into)
 }
 
+#[derive(Clone, Debug)]
+pub struct ErrorField(pub String);
+
 /// Turns a `ConduitResponse` into a `AxumResponse`
 fn conduit_into_axum(mut response: ConduitResponse, mut request: ConduitRequest) -> AxumResponse {
     use conduit::Body::*;
@@ -96,7 +99,12 @@ fn server_error_response<E: Error + ?Sized>(error: &E) -> AxumResponse {
 
     sentry_core::capture_error(error);
 
-    (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error").into_response()
+    (
+        StatusCode::INTERNAL_SERVER_ERROR,
+        Extension(ErrorField(error.to_string())),
+        "Internal Server Error",
+    )
+        .into_response()
 }
 
 /// Check for `Content-Length` values that are invalid or too large
