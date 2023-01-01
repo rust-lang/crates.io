@@ -76,6 +76,9 @@ async fn fallback_to_conduit(
 #[derive(Clone, Debug)]
 pub struct ErrorField(pub String);
 
+#[derive(Clone, Debug)]
+pub struct CauseField(pub String);
+
 /// Turns a `ConduitResponse` into a `AxumResponse`
 fn conduit_into_axum(response: ConduitResponse) -> AxumResponse {
     use conduit::Body::*;

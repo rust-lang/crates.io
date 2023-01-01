@@ -1,12 +1,12 @@
 use axum::routing::get;
 use axum::Router;
 use conduit::{Handler, HandlerResult, RequestExt};
+use conduit_axum::CauseField;
 use conduit_router::{RouteBuilder, RoutePattern};
 
 use crate::app::AppState;
 use crate::controllers::*;
 use crate::middleware::app::RequestApp;
-use crate::middleware::log_request::CustomMetadataRequestExt;
 use crate::util::errors::{AppError, RouteBlocked};
 use crate::util::EndpointResult;
 use crate::Env;
@@ -209,10 +209,15 @@ impl Handler for C {
         match f(req) {
             Ok(resp) => Ok(resp),
             Err(e) => {
+                let mut response = e.response();
+
                 if let Some(cause) = e.cause() {
-                    req.add_custom_metadata("cause", cause.to_string())
-                };
-                Ok(e.response())
+                    response
+                        .extensions_mut()
+                        .insert(CauseField(cause.to_string()));
+                }
+
+                Ok(response)
             }
         }
     }
@@ -277,7 +282,7 @@ mod tests {
         .unwrap();
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
         assert_eq!(
-            crate::middleware::log_request::get_log_message(&req, "cause"),
+            response.extensions().get::<CauseField>().unwrap().0,
             "middle error caused by invalid digit found in string"
         );
 

@@ -50,7 +50,7 @@ mod server;
 #[cfg(test)]
 mod tests;
 
-pub use fallback::{ConduitFallback, ErrorField};
+pub use fallback::{CauseField, ConduitFallback, ErrorField};
 pub use server::Server;
 
 type AxumResponse = axum::response::Response;
