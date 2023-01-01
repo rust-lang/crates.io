@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # renovate: datasource=crate depName=diesel_cli
+  # renovate: datasource=crate depName=diesel_cli versioning=semver
   DIESEL_CLI_VERSION: 1.4.1
   # renovate: datasource=npm depName=pnpm
   PNPM_VERSION: 7.21.0
