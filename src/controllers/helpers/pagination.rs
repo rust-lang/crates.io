@@ -71,7 +71,7 @@ impl PaginationOptionsBuilder {
         self
     }
 
-    pub(crate) fn gather(self, req: &mut dyn RequestExt) -> AppResult<PaginationOptions> {
+    pub(crate) fn gather(self, req: &dyn RequestExt) -> AppResult<PaginationOptions> {
         let params = req.query();
         let page_param = params.get("page");
         let seek_param = params.get("seek");
@@ -311,7 +311,7 @@ mod tests {
 
     #[test]
     fn no_pagination_param() {
-        let pagination = PaginationOptions::builder().gather(&mut mock("")).unwrap();
+        let pagination = PaginationOptions::builder().gather(&mock("")).unwrap();
         assert_eq!(Page::Unspecified, pagination.page);
         assert_eq!(DEFAULT_PER_PAGE, pagination.per_page);
     }
@@ -327,7 +327,7 @@ mod tests {
         assert_error("page=0", "page indexing starts from 1, page 0 is invalid");
 
         let pagination = PaginationOptions::builder()
-            .gather(&mut mock("page=5"))
+            .gather(&mock("page=5"))
             .unwrap();
         assert_eq!(Page::Numeric(5), pagination.page);
     }
@@ -343,7 +343,7 @@ mod tests {
         assert_error("per_page=101", "cannot request more than 100 items");
 
         let pagination = PaginationOptions::builder()
-            .gather(&mut mock("per_page=5"))
+            .gather(&mock("per_page=5"))
             .unwrap();
         assert_eq!(5, pagination.per_page);
     }
@@ -358,7 +358,7 @@ mod tests {
 
         let pagination = PaginationOptions::builder()
             .enable_seek(true)
-            .gather(&mut mock("seek=OTg"))
+            .gather(&mock("seek=OTg"))
             .unwrap();
 
         if let Page::Seek(raw) = pagination.page {
@@ -415,7 +415,7 @@ mod tests {
     }
 
     fn assert_pagination_error(options: PaginationOptionsBuilder, query: &str, message: &str) {
-        let response = options.gather(&mut mock(query)).unwrap_err().response();
+        let response = options.gather(&mock(query)).unwrap_err().response();
 
         assert_eq!(StatusCode::BAD_REQUEST, response.status());
 
