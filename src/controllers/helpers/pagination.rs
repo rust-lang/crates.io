@@ -3,7 +3,7 @@ use crate::controllers::prelude::*;
 use crate::middleware::log_request::CustomMetadataRequestExt;
 use crate::models::helpers::with_count::*;
 use crate::util::errors::{bad_request, AppResult};
-use crate::util::request_header;
+use crate::util::HeaderMapExt;
 
 use diesel::pg::Pg;
 use diesel::query_builder::*;
@@ -257,8 +257,9 @@ impl RawSeekPayload {
 /// A request can be blocked if either the User Agent is on the User Agent block list or if the client
 /// IP is on the CIDR block list.
 fn is_useragent_or_ip_blocked(config: &Server, req: &dyn RequestExt) -> bool {
-    let user_agent = request_header(req, header::USER_AGENT);
-    let client_ip = request_header(req, "x-real-ip");
+    let headers = req.headers();
+    let user_agent = headers.get_str_or_default(header::USER_AGENT);
+    let client_ip = headers.get_str_or_default("x-real-ip");
 
     // check if user agent is blocked
     if config
