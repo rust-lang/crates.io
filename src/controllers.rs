@@ -25,31 +25,28 @@ mod prelude {
     use serde::Serialize;
 
     pub trait RequestUtils {
-        fn redirect(&self, url: String) -> AppResponse;
-
-        fn json<T: Serialize>(&self, t: &T) -> AppResponse;
-        fn query(&self) -> IndexMap<String, String>;
-        fn wants_json(&self) -> bool;
-        fn query_with_params(&self, params: IndexMap<String, String>) -> String;
-    }
-
-    impl<'a> RequestUtils for dyn RequestExt + 'a {
-        fn json<T: Serialize>(&self, t: &T) -> AppResponse {
-            crate::util::json_response(t)
-        }
-
-        fn query(&self) -> IndexMap<String, String> {
-            url::form_urlencoded::parse(self.query_string().unwrap_or("").as_bytes())
-                .into_owned()
-                .collect()
-        }
-
         fn redirect(&self, url: String) -> AppResponse {
             http::Response::builder()
                 .status(StatusCode::FOUND)
                 .header(header::LOCATION, url)
                 .body(conduit::Body::empty())
                 .unwrap() // Should not panic unless url contains "\r\n"
+        }
+
+        fn json<T: Serialize>(&self, t: &T) -> AppResponse {
+            crate::util::json_response(t)
+        }
+
+        fn query(&self) -> IndexMap<String, String>;
+        fn wants_json(&self) -> bool;
+        fn query_with_params(&self, params: IndexMap<String, String>) -> String;
+    }
+
+    impl<'a> RequestUtils for dyn RequestExt + 'a {
+        fn query(&self) -> IndexMap<String, String> {
+            url::form_urlencoded::parse(self.query_string().unwrap_or("").as_bytes())
+                .into_owned()
+                .collect()
         }
 
         fn wants_json(&self) -> bool {
