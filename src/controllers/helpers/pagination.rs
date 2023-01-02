@@ -9,6 +9,7 @@ use diesel::pg::Pg;
 use diesel::query_builder::*;
 use diesel::query_dsl::LoadQuery;
 use diesel::sql_types::BigInt;
+use http::HeaderMap;
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use std::net::IpAddr;
@@ -99,7 +100,7 @@ impl PaginationOptionsBuilder {
                 if self.limit_page_numbers {
                     let config = &req.app().config;
                     if numeric_page > config.max_allowed_page_offset
-                        && is_useragent_or_ip_blocked(config, req)
+                        && is_useragent_or_ip_blocked(config, req.headers())
                     {
                         req.add_custom_metadata("cause", "large page offset");
                         return Err(bad_request("requested page offset is too large"));
@@ -256,8 +257,7 @@ impl RawSeekPayload {
 ///
 /// A request can be blocked if either the User Agent is on the User Agent block list or if the client
 /// IP is on the CIDR block list.
-fn is_useragent_or_ip_blocked(config: &Server, req: &dyn RequestExt) -> bool {
-    let headers = req.headers();
+fn is_useragent_or_ip_blocked(config: &Server, headers: &HeaderMap) -> bool {
     let user_agent = headers.get_str_or_default(header::USER_AGENT);
     let client_ip = headers.get_str_or_default("x-real-ip");
 
