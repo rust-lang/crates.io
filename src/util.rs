@@ -25,11 +25,11 @@ pub type EndpointResult = Result<AppResponse, Box<dyn errors::AppError>>;
 ///
 /// This function will panic if serialization fails.
 pub fn json_response<T: Serialize>(t: &T) -> AppResponse {
-    let json = serde_json::to_string(t).unwrap();
+    let json = serde_json::to_vec(t).unwrap();
     Response::builder()
         .header(header::CONTENT_TYPE, "application/json")
         .header(header::CONTENT_LENGTH, json.len())
-        .body(Body::from_vec(json.into_bytes()))
+        .body(Body::from_vec(json))
         .unwrap() // Header values are well formed, so should not panic
 }
 
