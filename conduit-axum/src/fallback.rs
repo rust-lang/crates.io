@@ -4,6 +4,8 @@ use crate::file_stream::FileStream;
 use crate::{spawn_blocking, AxumResponse, ConduitResponse};
 
 use std::error::Error;
+use std::future::Future;
+use std::pin::Pin;
 use std::sync::Arc;
 
 use axum::body::{Body, HttpBody};
@@ -29,45 +31,60 @@ pub trait ConduitFallback {
 
 impl ConduitFallback for axum::Router {
     fn conduit_fallback(self, handler: impl Handler) -> Self {
-        let handler: Arc<dyn Handler> = Arc::new(handler);
-        self.fallback(fallback_to_conduit.layer(Extension(handler)))
+        self.fallback(ConduitAxumHandler(Arc::new(handler)))
     }
 }
 
-async fn fallback_to_conduit(
-    handler: Extension<Arc<dyn Handler>>,
-    request: Request<Body>,
-) -> AxumResponse {
-    if let Err(response) = check_content_length(&request) {
-        return response.into_response();
+#[derive(Debug)]
+pub struct ConduitAxumHandler<H>(pub Arc<H>);
+
+impl<H> Clone for ConduitAxumHandler<H> {
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
     }
+}
 
-    let (parts, body) = request.into_parts();
-    let now = StartInstant::now();
+impl<S, H> AxumHandler<((),), S> for ConduitAxumHandler<H>
+where
+    S: Send + Sync + 'static,
+    H: Handler,
+{
+    type Future = Pin<Box<dyn Future<Output = AxumResponse> + Send>>;
 
-    let full_body = match hyper::body::to_bytes(body).await {
-        Ok(body) => body,
-        Err(err) => return server_error_response(&err),
-    };
-    let request = Request::from_parts(parts, full_body);
+    fn call(self, request: Request<Body>, _state: S) -> Self::Future {
+        Box::pin(async move {
+            if let Err(response) = check_content_length(&request) {
+                return response.into_response();
+            }
 
-    let handler = handler.clone();
-    spawn_blocking(move || {
-        let mut request = ConduitRequest::new(request, now);
-        handler
-            .call(&mut request)
-            .map(|mut response| {
-                if let Some(pattern) = request.mut_extensions().remove::<RoutePattern>() {
-                    response.extensions_mut().insert(pattern);
-                }
+            let (parts, body) = request.into_parts();
+            let now = StartInstant::now();
 
-                conduit_into_axum(response)
+            let full_body = match hyper::body::to_bytes(body).await {
+                Ok(body) => body,
+                Err(err) => return server_error_response(&err),
+            };
+            let request = Request::from_parts(parts, full_body);
+
+            let Self(handler) = self;
+            spawn_blocking(move || {
+                let mut request = ConduitRequest::new(request, now);
+                handler
+                    .call(&mut request)
+                    .map(|mut response| {
+                        if let Some(pattern) = request.mut_extensions().remove::<RoutePattern>() {
+                            response.extensions_mut().insert(pattern);
+                        }
+
+                        conduit_into_axum(response)
+                    })
+                    .unwrap_or_else(|e| server_error_response(&*e))
             })
-            .unwrap_or_else(|e| server_error_response(&*e))
-    })
-    .await
-    .map_err(ServiceError::from)
-    .into_response()
+            .await
+            .map_err(ServiceError::from)
+            .into_response()
+        })
+    }
 }
 
 #[derive(Clone, Debug)]
