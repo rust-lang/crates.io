@@ -31,7 +31,6 @@ use std::sync::Arc;
 
 use crate::app::AppState;
 use crate::router::build_axum_router;
-use conduit_axum::ConduitFallback;
 use tikv_jemallocator::Jemalloc;
 
 #[global_allocator]
@@ -84,11 +83,8 @@ pub enum Env {
 pub fn build_handler(app: Arc<App>) -> axum::Router {
     let state = AppState(app);
 
-    let endpoints = router::build_router();
-    let conduit_handler = middleware::build_middleware(state.clone(), endpoints);
-
     let axum_router = build_axum_router(state.clone());
-    middleware::apply_axum_middleware(state, axum_router.conduit_fallback(conduit_handler))
+    middleware::apply_axum_middleware(state, axum_router)
 }
 
 /// Convenience function requiring that an environment variable is set.

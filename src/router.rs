@@ -1,15 +1,16 @@
 use axum::handler::Handler as AxumHandler;
 use axum::middleware::from_fn_with_state;
+use axum::response::IntoResponse;
 use axum::routing::{delete, get, post, put};
 use axum::Router;
 use conduit::{Handler, HandlerResult, RequestExt};
 use conduit_axum::{CauseField, ConduitAxumHandler};
-use conduit_router::{RouteBuilder, RoutePattern};
+use conduit_router::RoutePattern;
 
 use crate::app::AppState;
 use crate::controllers::*;
 use crate::middleware::app::{add_app_state_extension, RequestApp};
-use crate::util::errors::{AppError, RouteBlocked};
+use crate::util::errors::{not_found, AppError, RouteBlocked};
 use crate::util::EndpointResult;
 use crate::Env;
 
@@ -197,11 +198,9 @@ pub fn build_axum_router(state: AppState) -> Router {
         );
     }
 
-    router.with_state(state)
-}
-
-pub fn build_router() -> RouteBuilder {
-    RouteBuilder::new()
+    router
+        .fallback(|| async { not_found().into_response() })
+        .with_state(state)
 }
 
 struct C(pub fn(&mut dyn RequestExt) -> EndpointResult);

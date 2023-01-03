@@ -5,15 +5,12 @@ mod prelude {
     pub use http::{header, Response, StatusCode};
 }
 
-use self::known_error_to_json::KnownErrorToJson;
-
 pub mod app;
 mod balance_capacity;
 mod block_traffic;
 mod debug;
 mod ember_html;
 mod head;
-mod known_error_to_json;
 pub mod log_request;
 pub mod normalize_path;
 mod require_user_agent;
@@ -21,9 +18,6 @@ mod sentry;
 pub mod session;
 mod static_or_continue;
 mod update_metrics;
-
-use conduit_middleware::MiddlewareBuilder;
-use conduit_router::RouteBuilder;
 
 use ::sentry::integrations::tower as sentry_tower;
 use axum::error_handling::HandleErrorLayer;
@@ -105,12 +99,4 @@ pub fn apply_axum_middleware(state: AppState, router: Router) -> Router {
 /// an actual error this function should never actually be called.
 async fn dummy_error_handler(_err: axum::BoxError) -> http::StatusCode {
     http::StatusCode::INTERNAL_SERVER_ERROR
-}
-
-pub fn build_middleware(_app: AppState, endpoints: RouteBuilder) -> MiddlewareBuilder {
-    let mut m = MiddlewareBuilder::new(endpoints);
-
-    m.add(KnownErrorToJson);
-
-    m
 }
