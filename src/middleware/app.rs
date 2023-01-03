@@ -6,24 +6,6 @@ use http::Request;
 
 use crate::app::AppState;
 
-/// Middleware that injects the `App` instance into the `Request` extensions
-pub struct AppMiddleware {
-    app: AppState,
-}
-
-impl AppMiddleware {
-    pub fn new(app: AppState) -> AppMiddleware {
-        AppMiddleware { app }
-    }
-}
-
-impl Middleware for AppMiddleware {
-    fn before(&self, req: &mut dyn RequestExt) -> BeforeResult {
-        req.mut_extensions().insert(self.app.clone());
-        Ok(())
-    }
-}
-
 /// `axum` middleware that injects the `AppState` instance into the `Request` extensions.
 pub async fn add_app_state_extension<B>(
     State(app_state): State<AppState>,
