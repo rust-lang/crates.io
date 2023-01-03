@@ -12,10 +12,12 @@ use std::thread::sleep;
 async fn main() {
     tracing_subscriber::fmt::init();
 
+    let router = axum::Router::new();
+
     let app = build_conduit_handler();
     let addr = ([127, 0, 0, 1], 12345).into();
 
-    Server::serve(&addr, app).await;
+    Server::serve(&addr, router, app).await;
 }
 
 fn build_conduit_handler() -> impl Handler {

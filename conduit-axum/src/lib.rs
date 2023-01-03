@@ -19,9 +19,11 @@
 //!
 //! #[tokio::main]
 //! async fn main() {
+//!     let router = axum::Router::new();
+//!
 //!     let app = build_conduit_handler();
 //!     let addr = ([127, 0, 0, 1], 12345).into();
-//!     let server = Server::serve(&addr, app);
+//!     let server = Server::serve(&addr, router, app);
 //!
 //!     server.await;
 //! }

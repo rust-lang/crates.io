@@ -14,8 +14,12 @@ impl Server {
     /// `tokio::Runtime` it is not possible to furter configure the `hyper::Server`.  If more
     /// control, such as configuring a graceful shutdown is necessary, then call
     /// `Service::from_blocking` instead.
-    pub fn serve<H: conduit::Handler>(addr: &SocketAddr, handler: H) -> impl Future {
-        let router = axum::Router::new().conduit_fallback(handler);
+    pub fn serve<H: conduit::Handler>(
+        addr: &SocketAddr,
+        router: axum::Router,
+        handler: H,
+    ) -> impl Future {
+        let router = router.conduit_fallback(handler);
         let make_service = router.into_make_service_with_connect_info::<SocketAddr>();
 
         hyper::Server::bind(addr).serve(make_service)
