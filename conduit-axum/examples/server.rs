@@ -1,7 +1,8 @@
 #![deny(clippy::all)]
 
+use axum::routing::get;
 use conduit::{Body, Handler, RequestExt, ResponseResult};
-use conduit_axum::Server;
+use conduit_axum::{ConduitAxumHandler, Server};
 use conduit_router::RouteBuilder;
 use http::{header, Response};
 
@@ -12,10 +13,19 @@ use std::thread::sleep;
 async fn main() {
     tracing_subscriber::fmt::init();
 
+    let router = axum::Router::new()
+        .route("/axum/", get(wrap(endpoint)))
+        .route("/axum/panic", get(wrap(panic)))
+        .route("/axum/error", get(wrap(error)));
+
     let app = build_conduit_handler();
     let addr = ([127, 0, 0, 1], 12345).into();
 
-    Server::serve(&addr, app).await;
+    Server::serve(&addr, router, app).await;
+}
+
+pub fn wrap<H>(handler: H) -> ConduitAxumHandler<H> {
+    ConduitAxumHandler::wrap(handler)
 }
 
 fn build_conduit_handler() -> impl Handler {

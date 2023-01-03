@@ -19,9 +19,11 @@
 //!
 //! #[tokio::main]
 //! async fn main() {
+//!     let router = axum::Router::new();
+//!
 //!     let app = build_conduit_handler();
 //!     let addr = ([127, 0, 0, 1], 12345).into();
-//!     let server = Server::serve(&addr, app);
+//!     let server = Server::serve(&addr, router, app);
 //!
 //!     server.await;
 //! }
@@ -52,7 +54,9 @@ mod tests;
 mod tokio_utils;
 
 pub use error::ServiceError;
-pub use fallback::{conduit_into_axum, CauseField, ConduitFallback, ErrorField};
+pub use fallback::{
+    conduit_into_axum, CauseField, ConduitAxumHandler, ConduitFallback, ErrorField,
+};
 pub use server::Server;
 pub use tokio_utils::spawn_blocking;
 
