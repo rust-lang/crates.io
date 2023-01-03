@@ -14,7 +14,6 @@ use axum::extract::{rejection::PathRejection, Extension, FromRequestParts, Path}
 use axum::handler::Handler as AxumHandler;
 use axum::response::IntoResponse;
 use conduit::{Handler, RequestExt};
-use conduit_router::RoutePattern;
 use http::header::CONTENT_LENGTH;
 use http::StatusCode;
 use hyper::{Request, Response};
@@ -88,13 +87,7 @@ where
                 let mut request = ConduitRequest::new(request);
                 handler
                     .call(&mut request)
-                    .map(|mut response| {
-                        if let Some(pattern) = request.mut_extensions().remove::<RoutePattern>() {
-                            response.extensions_mut().insert(pattern);
-                        }
-
-                        conduit_into_axum(response)
-                    })
+                    .map(conduit_into_axum)
                     .unwrap_or_else(|e| server_error_response(&*e))
             })
             .await

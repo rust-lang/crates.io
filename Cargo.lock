@@ -369,8 +369,6 @@ dependencies = [
  "clap",
  "conduit",
  "conduit-axum",
- "conduit-middleware",
- "conduit-router",
  "conduit-test",
  "cookie",
  "dashmap",
@@ -610,7 +608,6 @@ version = "0.0.0"
 dependencies = [
  "axum",
  "conduit",
- "conduit-router",
  "futures-util",
  "http",
  "hyper",
@@ -621,27 +618,6 @@ dependencies = [
  "tokio-stream",
  "tracing",
  "tracing-subscriber",
-]
-
-[[package]]
-name = "conduit-middleware"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cdf9cfb6facb9f26ba69ba15b34388cd6564df1709609a93982bc5ac8e7f3a95"
-dependencies = [
- "conduit",
-]
-
-[[package]]
-name = "conduit-router"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "13cf1394b153c7ec3f8d659315b963791b831e40a3f89ca096b42c0f41fef535"
-dependencies = [
- "conduit",
- "route-recognizer",
- "thiserror",
- "tracing",
 ]
 
 [[package]]
@@ -2465,12 +2441,6 @@ dependencies = [
  "web-sys",
  "winapi",
 ]
-
-[[package]]
-name = "route-recognizer"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "afab94fb28594581f62d981211a9a4d53cc8130bbcbbb89a0440d9b8e81a7746"
 
 [[package]]
 name = "rustc-demangle"

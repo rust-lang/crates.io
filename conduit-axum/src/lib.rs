@@ -13,19 +13,22 @@
 //! Typical usage:
 //!
 //! ```no_run
+//! use axum::routing::get;
 //! use conduit::Handler;
-//! use conduit_axum::Server;
+//! use conduit_axum::ConduitAxumHandler;
 //! use tokio::runtime::Runtime;
 //!
 //! #[tokio::main]
 //! async fn main() {
-//!     let router = axum::Router::new();
+//!     let router = axum::Router::new()
+//!         .route("/", get(ConduitAxumHandler::wrap(build_conduit_handler())));
 //!
-//!     let app = build_conduit_handler();
 //!     let addr = ([127, 0, 0, 1], 12345).into();
-//!     let server = Server::serve(&addr, router, app);
 //!
-//!     server.await;
+//!     axum::Server::bind(&addr)
+//!         .serve( router.into_make_service())
+//!         .await
+//!         .unwrap();
 //! }
 //!
 //! fn build_conduit_handler() -> impl Handler {
@@ -48,7 +51,6 @@ mod adaptor;
 mod error;
 mod fallback;
 mod file_stream;
-mod server;
 #[cfg(test)]
 mod tests;
 mod tokio_utils;
@@ -58,7 +60,6 @@ pub use fallback::{
     conduit_into_axum, CauseField, ConduitAxumHandler, ConduitFallback, ErrorField,
     RequestParamsExt,
 };
-pub use server::Server;
 pub use tokio_utils::spawn_blocking;
 
 type AxumResponse = axum::response::Response;

@@ -1,9 +1,8 @@
 #![deny(clippy::all)]
 
 use axum::routing::get;
-use conduit::{Body, Handler, RequestExt, ResponseResult};
-use conduit_axum::{ConduitAxumHandler, Server};
-use conduit_router::RouteBuilder;
+use conduit::{Body, RequestExt, ResponseResult};
+use conduit_axum::ConduitAxumHandler;
 use http::{header, Response};
 
 use std::io;
@@ -14,26 +13,20 @@ async fn main() {
     tracing_subscriber::fmt::init();
 
     let router = axum::Router::new()
-        .route("/axum/", get(wrap(endpoint)))
-        .route("/axum/panic", get(wrap(panic)))
-        .route("/axum/error", get(wrap(error)));
+        .route("/", get(wrap(endpoint)))
+        .route("/panic", get(wrap(panic)))
+        .route("/error", get(wrap(error)));
 
-    let app = build_conduit_handler();
     let addr = ([127, 0, 0, 1], 12345).into();
 
-    Server::serve(&addr, router, app).await;
+    axum::Server::bind(&addr)
+        .serve(router.into_make_service())
+        .await
+        .unwrap()
 }
 
 pub fn wrap<H>(handler: H) -> ConduitAxumHandler<H> {
     ConduitAxumHandler::wrap(handler)
-}
-
-fn build_conduit_handler() -> impl Handler {
-    let mut router = RouteBuilder::new();
-    router.get("/", endpoint);
-    router.get("/panic", panic);
-    router.get("/error", error);
-    router
 }
 
 fn endpoint(_: &mut dyn RequestExt) -> ResponseResult<http::Error> {

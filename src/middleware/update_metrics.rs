@@ -2,7 +2,7 @@ use crate::app::AppState;
 use axum::extract::{MatchedPath, State};
 use axum::middleware::Next;
 use axum::response::Response;
-use conduit_router::RoutePattern;
+
 use http::Request;
 use prometheus::IntGauge;
 use std::time::Instant;
@@ -24,11 +24,7 @@ pub async fn update_metrics<B>(
 
     let endpoint = match matched_path {
         Some(ref matched_path) => matched_path.as_str(),
-        None => response
-            .extensions()
-            .get::<RoutePattern>()
-            .map(|route_pattern| route_pattern.pattern())
-            .unwrap_or("<unknown>"),
+        None => "<unknown>",
     };
     metrics
         .response_times

@@ -5,12 +5,11 @@ use axum::routing::{delete, get, post, put};
 use axum::Router;
 use conduit::{Handler, HandlerResult, RequestExt};
 use conduit_axum::{CauseField, ConduitAxumHandler};
-use conduit_router::RoutePattern;
 
 use crate::app::AppState;
 use crate::controllers::*;
-use crate::middleware::app::{add_app_state_extension, RequestApp};
-use crate::util::errors::{not_found, AppError, RouteBlocked};
+use crate::middleware::app::add_app_state_extension;
+use crate::util::errors::{not_found, AppError};
 use crate::util::EndpointResult;
 use crate::Env;
 
@@ -207,22 +206,6 @@ struct C(pub fn(&mut dyn RequestExt) -> EndpointResult);
 
 impl Handler for C {
     fn call(&self, req: &mut dyn RequestExt) -> HandlerResult {
-        if let Some(pattern) = req.extensions().get::<RoutePattern>() {
-            let pattern = pattern.pattern();
-
-            // Configure the Sentry `transaction` field *before* we handle the request,
-            // but *after* the conduit-router has figured out which handler to use.
-            let tx_name = format!("{} {}", req.method(), pattern);
-            sentry::configure_scope(|scope| scope.set_transaction(Some(&tx_name)));
-
-            // Allow blocking individual routes by their pattern through the `BLOCKED_ROUTES`
-            // environment variable. This is not in a middleware because we need access to
-            // `RoutePattern` before executing the response handler.
-            if req.app().config.blocked_routes.contains(pattern) {
-                return Ok(RouteBlocked.response());
-            }
-        }
-
         let C(f) = *self;
         match f(req) {
             Ok(resp) => Ok(resp),

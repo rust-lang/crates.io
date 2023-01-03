@@ -1,7 +1,6 @@
 use super::prelude::*;
 use crate::util::errors::{forbidden, internal, AppError, AppResult};
 use conduit_axum::RequestParamsExt;
-use conduit_router::RequestParams;
 
 /// The Origin header (https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Origin)
 /// is sent with CORS requests and POST requests, and indicates where the request comes from.
@@ -31,10 +30,7 @@ pub trait RequestParamExt<'a> {
 
 impl<'a> RequestParamExt<'a> for &'a (dyn RequestExt + 'a) {
     fn param(self, key: &str) -> Option<&'a str> {
-        return if let Some(params) = self.axum_params() {
-            params.0.get(key).map(|s| &s[..])
-        } else {
-            self.params().find(key)
-        };
+        self.axum_params()
+            .and_then(|params| params.0.get(key).map(|s| &s[..]))
     }
 }
