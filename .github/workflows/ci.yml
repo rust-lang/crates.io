@@ -16,7 +16,7 @@ env:
   # renovate: datasource=crate depName=diesel_cli versioning=semver
   DIESEL_CLI_VERSION: 1.4.1
   # renovate: datasource=npm depName=pnpm
-  PNPM_VERSION: 7.21.0
+  PNPM_VERSION: 7.22.0
   # renovate: datasource=github-releases depName=rust lookupName=rust-lang/rust
   RUST_VERSION: 1.66.0
 
