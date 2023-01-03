@@ -1,7 +1,4 @@
-use std::net::SocketAddr;
-
-use axum::extract::ConnectInfo;
-use axum::{Extension, Router};
+use axum::Router;
 use conduit::{box_error, Body, Handler, HandlerResult, RequestExt};
 use http::{HeaderValue, Request, Response, StatusCode};
 use hyper::{body::to_bytes, service::Service};
@@ -74,11 +71,7 @@ impl Handler for AssertPercentDecodedPath {
 }
 
 fn make_service<H: Handler>(handler: H) -> Router {
-    let remote_addr: SocketAddr = ([0, 0, 0, 0], 0).into();
-
-    Router::new()
-        .conduit_fallback(handler)
-        .layer(Extension(ConnectInfo(remote_addr)))
+    Router::new().conduit_fallback(handler)
 }
 
 async fn simulate_request<H: Handler>(handler: H) -> AxumResponse {
@@ -167,7 +160,7 @@ async fn spawn_http_server() -> (
     let addr = ([127, 0, 0, 1], 0).into();
 
     let router = Router::new().conduit_fallback(OkResult);
-    let make_service = router.into_make_service_with_connect_info::<SocketAddr>();
+    let make_service = router.into_make_service();
     let server = hyper::Server::bind(&addr).serve(make_service);
 
     let url = format!("http://{}", server.local_addr());

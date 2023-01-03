@@ -4,11 +4,10 @@ use crate::file_stream::FileStream;
 use crate::{spawn_blocking, AxumResponse, ConduitResponse};
 
 use std::error::Error;
-use std::net::SocketAddr;
 use std::sync::Arc;
 
 use axum::body::{Body, HttpBody};
-use axum::extract::{ConnectInfo, Extension};
+use axum::extract::Extension;
 use axum::handler::Handler as AxumHandler;
 use axum::response::IntoResponse;
 use conduit::{Handler, RequestExt, StartInstant};
@@ -37,7 +36,6 @@ impl ConduitFallback for axum::Router {
 
 async fn fallback_to_conduit(
     handler: Extension<Arc<dyn Handler>>,
-    ConnectInfo(remote_addr): ConnectInfo<SocketAddr>,
     request: Request<Body>,
 ) -> Result<AxumResponse, ServiceError> {
     if let Err(response) = check_content_length(&request) {
@@ -52,7 +50,7 @@ async fn fallback_to_conduit(
 
     let handler = handler.clone();
     spawn_blocking(move || {
-        let mut request = ConduitRequest::new(request, remote_addr, now);
+        let mut request = ConduitRequest::new(request, now);
         handler
             .call(&mut request)
             .map(|mut response| {

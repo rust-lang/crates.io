@@ -20,12 +20,11 @@ use hyper::body::Bytes;
 pub(crate) struct ConduitRequest {
     parts: HttpParts,
     path: String,
-    remote_addr: SocketAddr,
     body: Cursor<Bytes>,
 }
 
 impl ConduitRequest {
-    pub(crate) fn new(request: Request<Bytes>, remote_addr: SocketAddr, now: StartInstant) -> Self {
+    pub(crate) fn new(request: Request<Bytes>, now: StartInstant) -> Self {
         let (mut parts, body) = request.into_parts();
         let path = parts.uri.path().as_bytes();
         let path = percent_encoding::percent_decode(path)
@@ -37,7 +36,6 @@ impl ConduitRequest {
         Self {
             parts,
             path,
-            remote_addr,
             body: Cursor::new(body),
         }
     }
@@ -68,7 +66,7 @@ impl RequestExt for ConduitRequest {
 
     /// Always returns an address of 0.0.0.0:0
     fn remote_addr(&self) -> SocketAddr {
-        self.remote_addr
+        ([0, 0, 0, 0], 0).into()
     }
 
     fn virtual_root(&self) -> Option<&str> {
