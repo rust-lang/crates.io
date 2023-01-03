@@ -35,8 +35,6 @@ clap = { version = "=4.0.32", features = ["derive", "env", "unicode", "wrap_help
 
 conduit = "=0.10.0"
 conduit-axum = { path = "conduit-axum" }
-conduit-middleware = "=0.10.0"
-conduit-router = "=0.10.0"
 
 cookie = { version = "=0.16.1", features = ["secure"] }
 dashmap = { version = "=5.4.0", features = ["raw-api"] }

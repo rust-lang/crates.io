@@ -11,7 +11,6 @@ rust-version = "1.56.0"
 [dependencies]
 axum = "=0.6.1"
 conduit = "=0.10.0"
-conduit-router = "=0.10.0"
 hyper = { version = "=0.14.23", features = ["server", "stream"] }
 http = "=0.2.8"
 percent-encoding = "=2.2.0"
@@ -22,7 +21,6 @@ tokio = { version = "=1.23.0", features = ["fs"] }
 tokio-stream = "=0.1.11"
 
 [dev-dependencies]
-conduit-router = "=0.10.0"
 futures-util = "=0.3.25"
 hyper = { version = "=0.14.23", features = ["client"] }
 tokio = { version = "=1.23.0", features = ["macros", "rt-multi-thread"] }
