@@ -12,7 +12,7 @@ use axum::body::{Body, HttpBody};
 use axum::extract::Extension;
 use axum::handler::Handler as AxumHandler;
 use axum::response::IntoResponse;
-use conduit::{Handler, RequestExt, StartInstant};
+use conduit::{Handler, RequestExt};
 use conduit_router::RoutePattern;
 use http::header::CONTENT_LENGTH;
 use http::StatusCode;
@@ -64,7 +64,6 @@ where
             }
 
             let (parts, body) = request.into_parts();
-            let now = StartInstant::now();
 
             let full_body = match hyper::body::to_bytes(body).await {
                 Ok(body) => body,
@@ -74,7 +73,7 @@ where
 
             let Self(handler) = self;
             spawn_blocking(move || {
-                let mut request = ConduitRequest::new(request, now);
+                let mut request = ConduitRequest::new(request);
                 handler
                     .call(&mut request)
                     .map(|mut response| {
