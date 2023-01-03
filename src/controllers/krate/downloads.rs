@@ -17,7 +17,7 @@ pub fn downloads(req: &mut dyn RequestExt) -> EndpointResult {
     use diesel::dsl::*;
     use diesel::sql_types::BigInt;
 
-    let crate_name = &req.params()["crate_id"];
+    let crate_name = req.param("crate_id").unwrap();
     let conn = req.app().db_read()?;
     let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
 

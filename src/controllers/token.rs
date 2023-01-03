@@ -87,7 +87,9 @@ pub fn new(req: &mut dyn RequestExt) -> EndpointResult {
 
 /// Handles the `DELETE /me/tokens/:id` route.
 pub fn revoke(req: &mut dyn RequestExt) -> EndpointResult {
-    let id = req.params()["id"]
+    let id = req
+        .param("id")
+        .unwrap()
         .parse::<i32>()
         .map_err(|e| bad_request(&format!("invalid token id: {e:?}")))?;
 

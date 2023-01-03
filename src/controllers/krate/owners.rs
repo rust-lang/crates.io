@@ -8,7 +8,7 @@ use crate::views::EncodableOwner;
 
 /// Handles the `GET /crates/:crate_id/owners` route.
 pub fn owners(req: &mut dyn RequestExt) -> EndpointResult {
-    let crate_name = &req.params()["crate_id"];
+    let crate_name = req.param("crate_id").unwrap();
     let conn = req.app().db_read()?;
     let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
     let owners = krate
@@ -22,7 +22,7 @@ pub fn owners(req: &mut dyn RequestExt) -> EndpointResult {
 
 /// Handles the `GET /crates/:crate_id/owner_team` route.
 pub fn owner_team(req: &mut dyn RequestExt) -> EndpointResult {
-    let crate_name = &req.params()["crate_id"];
+    let crate_name = req.param("crate_id").unwrap();
     let conn = req.app().db_read()?;
     let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
     let owners = Team::owning(&krate, &conn)?
@@ -35,7 +35,7 @@ pub fn owner_team(req: &mut dyn RequestExt) -> EndpointResult {
 
 /// Handles the `GET /crates/:crate_id/owner_user` route.
 pub fn owner_user(req: &mut dyn RequestExt) -> EndpointResult {
-    let crate_name = &req.params()["crate_id"];
+    let crate_name = req.param("crate_id").unwrap();
     let conn = req.app().db_read()?;
     let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
     let owners = User::owning(&krate, &conn)?
@@ -81,7 +81,7 @@ fn parse_owners_request(req: &mut dyn RequestExt) -> AppResult<Vec<String>> {
 }
 
 fn modify_owners(req: &mut dyn RequestExt, add: bool) -> EndpointResult {
-    let crate_name = &req.params()["crate_id"];
+    let crate_name = req.param("crate_id").unwrap();
 
     let auth = AuthCheck::default()
         .with_endpoint_scope(EndpointScope::ChangeOwners)
@@ -90,7 +90,7 @@ fn modify_owners(req: &mut dyn RequestExt, add: bool) -> EndpointResult {
 
     let logins = parse_owners_request(req)?;
     let app = req.app();
-    let crate_name = &req.params()["crate_id"];
+    let crate_name = req.param("crate_id").unwrap();
 
     let conn = app.db_write()?;
     let user = auth.user();

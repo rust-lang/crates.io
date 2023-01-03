@@ -10,10 +10,10 @@ mod frontend_prelude {
 
 mod prelude {
     pub use super::helpers::ok_true;
+    pub use super::util::RequestParamExt;
     pub use diesel::prelude::*;
 
     pub use conduit::RequestExt;
-    pub use conduit_router::RequestParams;
     pub use http::{header, StatusCode};
 
     pub use super::conduit_axum::conduit_compat;

@@ -8,7 +8,7 @@ use crate::views::EncodableTeam;
 pub fn show_team(req: &mut dyn RequestExt) -> EndpointResult {
     use self::teams::dsl::{login, teams};
 
-    let name = &req.params()["team_id"];
+    let name = req.param("team_id").unwrap();
     let conn = req.app().db_read()?;
     let team: Team = teams.filter(login.eq(name)).first(&*conn)?;
 

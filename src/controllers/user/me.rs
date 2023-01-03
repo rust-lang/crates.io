@@ -102,14 +102,14 @@ pub fn update_user(req: &mut dyn RequestExt) -> EndpointResult {
     let mut body = String::new();
     req.body().read_to_string(&mut body)?;
 
-    let param_user_id = &req.params()["user_id"];
+    let param_user_id = req.param("user_id").unwrap();
 
     let state = req.app();
     let conn = state.db_write()?;
     let user = auth.user();
 
     // need to check if current user matches user to be updated
-    if &user.id.to_string() != param_user_id {
+    if user.id.to_string() != param_user_id {
         return Err(bad_request("current user does not match requested user"));
     }
 
@@ -169,7 +169,7 @@ pub fn confirm_user_email(req: &mut dyn RequestExt) -> EndpointResult {
     use diesel::update;
 
     let conn = req.app().db_write()?;
-    let req_token = &req.params()["email_token"];
+    let req_token = req.param("email_token").unwrap();
 
     let updated_rows = update(emails::table.filter(emails::token.eq(req_token)))
         .set(emails::verified.eq(true))
@@ -187,7 +187,9 @@ pub fn regenerate_token_and_send(req: &mut dyn RequestExt) -> EndpointResult {
     use diesel::dsl::sql;
     use diesel::update;
 
-    let param_user_id = req.params()["user_id"]
+    let param_user_id = req
+        .param("user_id")
+        .unwrap()
         .parse::<i32>()
         .map_err(|err| err.chain(bad_request("invalid user_id")))?;
 

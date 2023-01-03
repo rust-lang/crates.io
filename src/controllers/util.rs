@@ -1,5 +1,6 @@
 use super::prelude::*;
 use crate::util::errors::{forbidden, internal, AppError, AppResult};
+use conduit_router::RequestParams;
 
 /// The Origin header (https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Origin)
 /// is sent with CORS requests and POST requests, and indicates where the request comes from.
@@ -21,4 +22,14 @@ pub fn verify_origin(req: &dyn RequestExt) -> AppResult<()> {
         return Err(internal(&error_message).chain(forbidden()));
     }
     Ok(())
+}
+
+pub trait RequestParamExt<'a> {
+    fn param(self, key: &str) -> Option<&'a str>;
+}
+
+impl<'a> RequestParamExt<'a> for &'a (dyn RequestExt + 'a) {
+    fn param(self, key: &str) -> Option<&'a str> {
+        self.params().find(key)
+    }
 }
