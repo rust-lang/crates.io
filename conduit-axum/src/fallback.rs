@@ -31,12 +31,18 @@ pub trait ConduitFallback {
 
 impl ConduitFallback for axum::Router {
     fn conduit_fallback(self, handler: impl Handler) -> Self {
-        self.fallback(ConduitAxumHandler(Arc::new(handler)))
+        self.fallback(ConduitAxumHandler::wrap(handler))
     }
 }
 
 #[derive(Debug)]
 pub struct ConduitAxumHandler<H>(pub Arc<H>);
+
+impl<H> ConduitAxumHandler<H> {
+    pub fn wrap(handler: H) -> Self {
+        Self(Arc::new(handler))
+    }
+}
 
 impl<H> Clone for ConduitAxumHandler<H> {
     fn clone(&self) -> Self {
