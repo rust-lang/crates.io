@@ -5,7 +5,6 @@ mod prelude {
     pub use http::{header, Response, StatusCode};
 }
 
-use self::app::AppMiddleware;
 use self::known_error_to_json::KnownErrorToJson;
 
 pub mod app;
@@ -108,10 +107,9 @@ async fn dummy_error_handler(_err: axum::BoxError) -> http::StatusCode {
     http::StatusCode::INTERNAL_SERVER_ERROR
 }
 
-pub fn build_middleware(app: AppState, endpoints: RouteBuilder) -> MiddlewareBuilder {
+pub fn build_middleware(_app: AppState, endpoints: RouteBuilder) -> MiddlewareBuilder {
     let mut m = MiddlewareBuilder::new(endpoints);
 
-    m.add(AppMiddleware::new(app));
     m.add(KnownErrorToJson);
 
     m
