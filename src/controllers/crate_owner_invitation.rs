@@ -282,7 +282,7 @@ pub fn handle_invite_with_token(req: &mut dyn RequestExt) -> EndpointResult {
     let config = &state.config;
     let conn = state.db_write()?;
 
-    let req_token = &req.params()["token"];
+    let req_token = req.param("token").unwrap();
 
     let invitation = CrateOwnerInvitation::find_by_token(req_token, &conn)?;
     let crate_id = invitation.crate_id;

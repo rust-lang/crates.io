@@ -34,7 +34,7 @@ pub fn index(req: &mut dyn RequestExt) -> EndpointResult {
 
 /// Handles the `GET /categories/:category_id` route.
 pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
-    let slug = &req.params()["category_id"];
+    let slug = req.param("category_id").unwrap();
     let conn = req.app().db_read()?;
     let cat: Category = Category::by_slug(slug).first(&*conn)?;
     let subcats = cat

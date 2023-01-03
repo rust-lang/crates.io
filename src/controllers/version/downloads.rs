@@ -16,8 +16,8 @@ use chrono::{Duration, NaiveDate, Utc};
 pub fn download(req: &mut dyn RequestExt) -> EndpointResult {
     let app = req.app();
 
-    let mut crate_name = req.params()["crate_id"].clone();
-    let version = req.params()["version"].as_str();
+    let mut crate_name = req.param("crate_id").unwrap().to_string();
+    let version = req.param("version").unwrap();
 
     let mut log_metadata = None;
 

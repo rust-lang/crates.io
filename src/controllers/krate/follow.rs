@@ -13,7 +13,7 @@ fn follow_target(
     conn: &DieselPooledConn<'_>,
     user_id: i32,
 ) -> AppResult<Follow> {
-    let crate_name = &req.params()["crate_id"];
+    let crate_name = req.param("crate_id").unwrap();
     let crate_id = Crate::by_name(crate_name)
         .select(crates::id)
         .first(&**conn)?;

@@ -52,7 +52,7 @@ pub fn index(req: &mut dyn RequestExt) -> EndpointResult {
 /// The frontend doesn't appear to hit this endpoint. Instead, the version information appears to
 /// be returned by `krate::show`.
 pub fn show_by_id(req: &mut dyn RequestExt) -> EndpointResult {
-    let id = &req.params()["version_id"];
+    let id = req.param("version_id").unwrap();
     let id = id.parse().unwrap_or(0);
     let conn = req.app().db_read()?;
     let (version, krate, published_by): (Version, Crate, Option<User>) = versions::table

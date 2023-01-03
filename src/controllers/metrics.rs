@@ -24,7 +24,7 @@ pub fn prometheus(req: &mut dyn RequestExt) -> EndpointResult {
         return Err(Box::new(MetricsDisabled));
     }
 
-    let metrics = match req.params()["kind"].as_str() {
+    let metrics = match req.param("kind").unwrap() {
         "service" => app.service_metrics.gather(&*app.db_read()?)?,
         "instance" => app.instance_metrics.gather(app)?,
         _ => return Err(not_found()),
