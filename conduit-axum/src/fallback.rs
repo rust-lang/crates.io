@@ -37,15 +37,18 @@ impl ConduitFallback for axum::Router {
 async fn fallback_to_conduit(
     handler: Extension<Arc<dyn Handler>>,
     request: Request<Body>,
-) -> Result<AxumResponse, ServiceError> {
+) -> AxumResponse {
     if let Err(response) = check_content_length(&request) {
-        return Ok(response);
+        return response.into_response();
     }
 
     let (parts, body) = request.into_parts();
     let now = StartInstant::now();
 
-    let full_body = hyper::body::to_bytes(body).await?;
+    let full_body = match hyper::body::to_bytes(body).await {
+        Ok(body) => body,
+        Err(err) => return server_error_response(&err),
+    };
     let request = Request::from_parts(parts, full_body);
 
     let handler = handler.clone();
@@ -63,7 +66,8 @@ async fn fallback_to_conduit(
             .unwrap_or_else(|e| server_error_response(&*e))
     })
     .await
-    .map_err(Into::into)
+    .map_err(ServiceError::from)
+    .into_response()
 }
 
 #[derive(Clone, Debug)]
