@@ -3,13 +3,14 @@ use crate::error::ServiceError;
 use crate::file_stream::FileStream;
 use crate::{spawn_blocking, AxumResponse, ConduitResponse};
 
+use std::collections::BTreeMap;
 use std::error::Error;
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 
 use axum::body::{Body, HttpBody};
-use axum::extract::Extension;
+use axum::extract::{rejection::PathRejection, Extension, FromRequestParts, Path};
 use axum::handler::Handler as AxumHandler;
 use axum::response::IntoResponse;
 use conduit::{Handler, RequestExt};
@@ -57,18 +58,29 @@ where
 {
     type Future = Pin<Box<dyn Future<Output = AxumResponse> + Send>>;
 
-    fn call(self, request: Request<Body>, _state: S) -> Self::Future {
+    fn call(self, request: Request<Body>, state: S) -> Self::Future {
         Box::pin(async move {
             if let Err(response) = check_content_length(&request) {
                 return response.into_response();
             }
 
-            let (parts, body) = request.into_parts();
+            let (mut parts, body) = request.into_parts();
+
+            // Make `axum::Router` path params available to `conduit` compat
+            // handlers. (see [RequestParamsExt] below)
+            match Params::from_request_parts(&mut parts, &state).await {
+                Ok(path) => {
+                    parts.extensions.insert(path);
+                }
+                Err(PathRejection::MissingPathParams(_)) => {}
+                Err(err) => return err.into_response(),
+            };
 
             let full_body = match hyper::body::to_bytes(body).await {
                 Ok(body) => body,
                 Err(err) => return server_error_response(&err),
             };
+
             let request = Request::from_parts(parts, full_body);
 
             let Self(handler) = self;
@@ -173,4 +185,16 @@ fn check_content_length(request: &Request<Body>) -> Result<(), AxumResponse> {
     }
 
     Ok(())
+}
+
+pub type Params = Path<BTreeMap<String, String>>;
+
+pub trait RequestParamsExt<'a> {
+    fn axum_params(self) -> Option<&'a Params>;
+}
+
+impl<'a> RequestParamsExt<'a> for &'a (dyn RequestExt + 'a) {
+    fn axum_params(self) -> Option<&'a Params> {
+        self.extensions().get::<Params>()
+    }
 }
