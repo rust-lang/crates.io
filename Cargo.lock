@@ -596,8 +596,6 @@ dependencies = [
 [[package]]
 name = "conduit"
 version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b4e5a80747296346305a040817f5b717b968e1c44b0a1158083e42c923a8a96f"
 dependencies = [
  "http",
 ]
@@ -623,8 +621,6 @@ dependencies = [
 [[package]]
 name = "conduit-test"
 version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f1db57af62805ce0593e8bfa5c587d6e46b4c0694e7ebd2963bd7159ed0974a4"
 dependencies = [
  "conduit",
 ]

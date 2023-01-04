@@ -33,7 +33,7 @@ cargo-registry-s3 = { path = "cargo-registry-s3" }
 chrono = { version = "=0.4.23", features = ["serde"] }
 clap = { version = "=4.0.32", features = ["derive", "env", "unicode", "wrap_help"] }
 
-conduit = "=0.10.0"
+conduit = { path = "conduit" }
 conduit-axum = { path = "conduit-axum" }
 
 cookie = { version = "=0.16.1", features = ["secure"] }
@@ -87,7 +87,7 @@ url = "=2.3.1"
 [dev-dependencies]
 cargo-registry-index = { path = "cargo-registry-index", features = ["testing"] }
 claims = "=0.7.1"
-conduit-test = "=0.10.0"
+conduit-test = { path = "conduit-test" }
 hyper-tls = "=0.5.0"
 insta = { version = "=1.24.0", features = ["redactions", "yaml"] }
 tokio = "=1.23.0"
