@@ -411,9 +411,8 @@ mod tests {
     }
 
     fn mock(query: &str) -> MockRequest {
-        let mut req = MockRequest::new(http::Method::GET, "/");
-        req.with_query(query);
-        req
+        let path_and_query = format!("/?{query}");
+        MockRequest::new(http::Method::GET, &path_and_query)
     }
 
     fn assert_pagination_error(options: PaginationOptionsBuilder, query: &str, message: &str) {

@@ -130,8 +130,8 @@ pub trait RequestHelper {
     /// Issue a GET request that includes query parameters
     #[track_caller]
     fn get_with_query<T>(&self, path: &str, query: &str) -> Response<T> {
-        let mut request = self.request_builder(Method::GET, path);
-        request.with_query(query);
+        let path_and_query = format!("{path}?{query}");
+        let request = self.request_builder(Method::GET, &path_and_query);
         self.run(request)
     }
 
