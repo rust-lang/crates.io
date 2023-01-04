@@ -12,7 +12,7 @@
 use std::io::{Cursor, Read};
 use std::net::SocketAddr;
 
-use conduit::{Host, RequestExt, Scheme};
+use conduit::{Host, RequestExt};
 use http::request::Parts as HttpParts;
 use http::{Extensions, HeaderMap, Method, Request, Version};
 use hyper::body::Bytes;
@@ -46,11 +46,6 @@ impl RequestExt for ConduitRequest {
 
     fn method(&self) -> &Method {
         &self.parts.method
-    }
-
-    /// Always returns Http
-    fn scheme(&self) -> Scheme {
-        Scheme::Http
     }
 
     fn headers(&self) -> &HeaderMap {

@@ -56,12 +56,6 @@ pub fn box_error<E: Error + Send + 'static>(error: E) -> BoxError {
 }
 
 #[derive(PartialEq, Debug, Clone, Copy)]
-pub enum Scheme {
-    Http,
-    Https,
-}
-
-#[derive(PartialEq, Debug, Clone, Copy)]
 pub enum Host<'a> {
     Name(&'a str),
     Socket(SocketAddr),
@@ -76,9 +70,6 @@ pub trait RequestExt {
 
     /// The request method, such as GET, POST, PUT, DELETE or PATCH
     fn method(&self) -> &Method;
-
-    /// The scheme part of the request URL
-    fn scheme(&self) -> Scheme;
 
     /// The host part of the requested URL
     fn host(&self) -> Host<'_>;

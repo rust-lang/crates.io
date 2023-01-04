@@ -4,7 +4,7 @@ use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 
 use conduit::{
     header::{HeaderValue, IntoHeaderName},
-    Body, Extensions, HeaderMap, Host, Method, Response, Scheme, Version,
+    Body, Extensions, HeaderMap, Host, Method, Response, Version,
 };
 
 pub trait ResponseExt {
@@ -101,9 +101,7 @@ impl conduit::RequestExt for MockRequest {
     fn method(&self) -> &Method {
         &self.method
     }
-    fn scheme(&self) -> Scheme {
-        Scheme::Http
-    }
+
     fn host(&self) -> Host<'_> {
         Host::Name("example.com")
     }
@@ -150,7 +148,7 @@ mod tests {
 
     use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 
-    use conduit::{header, Host, Method, RequestExt, Scheme, Version};
+    use conduit::{header, Host, Method, RequestExt, Version};
 
     #[test]
     fn simple_request_test() {
@@ -158,7 +156,6 @@ mod tests {
 
         assert_eq!(req.http_version(), Version::HTTP_11);
         assert_eq!(req.method(), Method::GET);
-        assert_eq!(req.scheme(), Scheme::Http);
         assert_eq!(req.host(), Host::Name("example.com"));
         assert_eq!(req.path(), "/");
         assert_eq!(req.query_string(), None);
