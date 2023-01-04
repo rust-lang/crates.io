@@ -47,6 +47,7 @@
 //! # }
 //! ```
 
+mod body;
 mod error;
 mod fallback;
 mod file_stream;
