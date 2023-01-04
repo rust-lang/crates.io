@@ -57,8 +57,7 @@ mod tokio_utils;
 
 pub use error::ServiceError;
 pub use fallback::{
-    conduit_into_axum, CauseField, ConduitAxumHandler, ConduitFallback, ErrorField,
-    RequestParamsExt,
+    conduit_into_axum, CauseField, ConduitAxumHandler, ErrorField, RequestParamsExt,
 };
 pub use tokio_utils::spawn_blocking;
 

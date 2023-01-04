@@ -25,16 +25,6 @@ use tracing::{error, warn};
 /// See the usage section of the README if you plan to use this server in production.
 const MAX_CONTENT_LENGTH: u64 = 128 * 1024 * 1024; // 128 MB
 
-pub trait ConduitFallback {
-    fn conduit_fallback(self, handler: impl Handler) -> Self;
-}
-
-impl ConduitFallback for axum::Router {
-    fn conduit_fallback(self, handler: impl Handler) -> Self {
-        self.fallback(ConduitAxumHandler::wrap(handler))
-    }
-}
-
 #[derive(Debug)]
 pub struct ConduitAxumHandler<H>(pub Arc<H>);
 
