@@ -1,8 +1,6 @@
 //! Log all requests in a format similar to Heroku's router, but with additional
 //! information that we care about like User-Agent
 
-use conduit::RequestExt;
-
 use crate::headers::{XRealIp, XRequestId};
 use crate::middleware::normalize_path::OriginalPath;
 use axum::headers::UserAgent;
@@ -153,12 +151,6 @@ pub trait CustomMetadataRequestExt {
     }
 
     fn metadata_extension(&self) -> Option<&CustomMetadata>;
-}
-
-impl CustomMetadataRequestExt for dyn RequestExt + '_ {
-    fn metadata_extension(&self) -> Option<&CustomMetadata> {
-        self.extensions().get::<CustomMetadata>()
-    }
 }
 
 impl<B> CustomMetadataRequestExt for Request<B> {

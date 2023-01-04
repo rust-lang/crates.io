@@ -6,7 +6,7 @@ use crate::schema::categories;
 use crate::views::{EncodableCategory, EncodableCategoryWithSubcategories};
 
 /// Handles the `GET /categories` route.
-pub fn index(req: &mut dyn RequestExt) -> EndpointResult {
+pub fn index(req: &mut ConduitRequest) -> EndpointResult {
     let query = req.query();
     // FIXME: There are 69 categories, 47 top level. This isn't going to
     // grow by an OoM. We need a limit for /summary, but we don't need
@@ -33,7 +33,7 @@ pub fn index(req: &mut dyn RequestExt) -> EndpointResult {
 }
 
 /// Handles the `GET /categories/:category_id` route.
-pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
+pub fn show(req: &mut ConduitRequest) -> EndpointResult {
     let slug = req.param("category_id").unwrap();
     let conn = req.app().db_read()?;
     let cat: Category = Category::by_slug(slug).first(&*conn)?;
@@ -64,7 +64,7 @@ pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
 }
 
 /// Handles the `GET /category_slugs` route.
-pub fn slugs(req: &mut dyn RequestExt) -> EndpointResult {
+pub fn slugs(req: &mut ConduitRequest) -> EndpointResult {
     let conn = req.app().db_read()?;
     let slugs: Vec<Slug> = categories::table
         .select((categories::slug, categories::slug, categories::description))

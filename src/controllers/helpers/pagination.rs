@@ -72,7 +72,7 @@ impl PaginationOptionsBuilder {
         self
     }
 
-    pub(crate) fn gather(self, req: &dyn RequestExt) -> AppResult<PaginationOptions> {
+    pub(crate) fn gather(self, req: &ConduitRequest) -> AppResult<PaginationOptions> {
         let params = req.query();
         let page_param = params.get("page");
         let seek_param = params.get("seek");

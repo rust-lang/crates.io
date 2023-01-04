@@ -42,7 +42,7 @@ pub const WILDCARD_ERROR_MESSAGE: &str = "wildcard (`*`) dependency constraints 
 /// Currently blocks the HTTP thread, perhaps some function calls can spawn new
 /// threads and return completion or error through other methods  a `cargo publish
 /// --status` command, via crates.io's front end, or email.
-pub fn publish(req: &mut dyn RequestExt) -> EndpointResult {
+pub fn publish(req: &mut ConduitRequest) -> EndpointResult {
     let app = req.app().clone();
 
     // The format of the req.body() of a publish request is as follows:
@@ -302,7 +302,7 @@ fn count_versions_published_today(krate_id: i32, conn: &PgConnection) -> QueryRe
 ///
 /// This function parses the JSON headers to interpret the data and validates
 /// the data during and after the parsing. Returns crate metadata.
-fn parse_new_headers(req: &mut dyn RequestExt) -> AppResult<EncodableCrateUpload> {
+fn parse_new_headers(req: &mut ConduitRequest) -> AppResult<EncodableCrateUpload> {
     // Read the json upload request
     let metadata_length = u64::from(read_le_u32(req.body())?);
     req.add_custom_metadata("metadata_length", metadata_length);

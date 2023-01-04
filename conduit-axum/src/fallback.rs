@@ -13,7 +13,7 @@ use axum::body::{Body, HttpBody};
 use axum::extract::{rejection::PathRejection, Extension, FromRequestParts, Path};
 use axum::handler::Handler as AxumHandler;
 use axum::response::IntoResponse;
-use conduit::{Handler, RequestExt};
+use conduit::{ConduitRequest, Handler};
 use http::header::CONTENT_LENGTH;
 use http::StatusCode;
 use hyper::Request;
@@ -158,7 +158,7 @@ pub trait RequestParamsExt<'a> {
     fn axum_params(self) -> Option<&'a Params>;
 }
 
-impl<'a> RequestParamsExt<'a> for &'a (dyn RequestExt + 'a) {
+impl<'a> RequestParamsExt<'a> for &'a ConduitRequest {
     fn axum_params(self) -> Option<&'a Params> {
         self.extensions().get::<Params>()
     }

@@ -9,7 +9,7 @@ use crate::models::{Crate, Follow};
 use crate::schema::*;
 
 fn follow_target(
-    req: &dyn RequestExt,
+    req: &ConduitRequest,
     conn: &DieselPooledConn<'_>,
     user_id: i32,
 ) -> AppResult<Follow> {
@@ -21,7 +21,7 @@ fn follow_target(
 }
 
 /// Handles the `PUT /crates/:crate_id/follow` route.
-pub fn follow(req: &mut dyn RequestExt) -> EndpointResult {
+pub fn follow(req: &mut ConduitRequest) -> EndpointResult {
     let user_id = AuthCheck::default().check(req)?.user_id();
     let conn = req.app().db_write()?;
     let follow = follow_target(req, &conn, user_id)?;
@@ -34,7 +34,7 @@ pub fn follow(req: &mut dyn RequestExt) -> EndpointResult {
 }
 
 /// Handles the `DELETE /crates/:crate_id/follow` route.
-pub fn unfollow(req: &mut dyn RequestExt) -> EndpointResult {
+pub fn unfollow(req: &mut ConduitRequest) -> EndpointResult {
     let user_id = AuthCheck::default().check(req)?.user_id();
     let conn = req.app().db_write()?;
     let follow = follow_target(req, &conn, user_id)?;
@@ -44,7 +44,7 @@ pub fn unfollow(req: &mut dyn RequestExt) -> EndpointResult {
 }
 
 /// Handles the `GET /crates/:crate_id/following` route.
-pub fn following(req: &mut dyn RequestExt) -> EndpointResult {
+pub fn following(req: &mut ConduitRequest) -> EndpointResult {
     use diesel::dsl::exists;
 
     let user_id = AuthCheck::only_cookie().check(req)?.user_id();

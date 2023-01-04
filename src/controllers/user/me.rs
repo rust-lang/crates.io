@@ -13,7 +13,7 @@ use crate::schema::{crate_owners, crates, emails, follows, users, versions};
 use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCrate};
 
 /// Handles the `GET /me` route.
-pub fn me(req: &mut dyn RequestExt) -> EndpointResult {
+pub fn me(req: &mut ConduitRequest) -> EndpointResult {
     let user_id = AuthCheck::only_cookie().check(req)?.user_id();
     let conn = req.app().db_read_prefer_primary()?;
 
@@ -52,7 +52,7 @@ pub fn me(req: &mut dyn RequestExt) -> EndpointResult {
 }
 
 /// Handles the `GET /me/updates` route.
-pub fn updates(req: &mut dyn RequestExt) -> EndpointResult {
+pub fn updates(req: &mut ConduitRequest) -> EndpointResult {
     use diesel::dsl::any;
 
     let auth = AuthCheck::only_cookie().check(req)?;
@@ -93,7 +93,7 @@ pub fn updates(req: &mut dyn RequestExt) -> EndpointResult {
 }
 
 /// Handles the `PUT /users/:user_id` route.
-pub fn update_user(req: &mut dyn RequestExt) -> EndpointResult {
+pub fn update_user(req: &mut ConduitRequest) -> EndpointResult {
     use self::emails::user_id;
     use diesel::insert_into;
 
@@ -162,7 +162,7 @@ pub fn update_user(req: &mut dyn RequestExt) -> EndpointResult {
 }
 
 /// Handles the `PUT /confirm/:email_token` route
-pub fn confirm_user_email(req: &mut dyn RequestExt) -> EndpointResult {
+pub fn confirm_user_email(req: &mut ConduitRequest) -> EndpointResult {
     use diesel::update;
 
     let conn = req.app().db_write()?;
@@ -180,7 +180,7 @@ pub fn confirm_user_email(req: &mut dyn RequestExt) -> EndpointResult {
 }
 
 /// Handles `PUT /user/:user_id/resend` route
-pub fn regenerate_token_and_send(req: &mut dyn RequestExt) -> EndpointResult {
+pub fn regenerate_token_and_send(req: &mut ConduitRequest) -> EndpointResult {
     use diesel::dsl::sql;
     use diesel::update;
 
@@ -216,7 +216,7 @@ pub fn regenerate_token_and_send(req: &mut dyn RequestExt) -> EndpointResult {
 }
 
 /// Handles `PUT /me/email_notifications` route
-pub fn update_email_notifications(req: &mut dyn RequestExt) -> EndpointResult {
+pub fn update_email_notifications(req: &mut ConduitRequest) -> EndpointResult {
     use self::crate_owners::dsl::*;
     use diesel::pg::upsert::excluded;
 

@@ -6,6 +6,7 @@ use std::io::{Cursor, Read};
 
 pub use http::{header, Extensions, HeaderMap, Method, Request, Response, StatusCode, Uri};
 
+pub type ConduitRequest = Request<Cursor<Bytes>>;
 pub type ResponseResult<Error> = Result<Response<Bytes>, Error>;
 
 pub type BoxError = Box<dyn Error + Send>;
@@ -54,7 +55,7 @@ pub trait RequestExt {
     fn extensions_mut(&mut self) -> &mut Extensions;
 }
 
-impl RequestExt for Request<Cursor<Bytes>> {
+impl RequestExt for ConduitRequest {
     fn method(&self) -> &Method {
         self.method()
     }
@@ -86,15 +87,15 @@ impl RequestExt for Request<Cursor<Bytes>> {
 /// A Handler takes a request and returns a response or an error.
 /// By default, a bare function implements `Handler`.
 pub trait Handler: Sync + Send + 'static {
-    fn call(&self, request: &mut dyn RequestExt) -> HandlerResult;
+    fn call(&self, request: &mut ConduitRequest) -> HandlerResult;
 }
 
 impl<F, E> Handler for F
 where
-    F: Fn(&mut dyn RequestExt) -> ResponseResult<E> + Sync + Send + 'static,
+    F: Fn(&mut ConduitRequest) -> ResponseResult<E> + Sync + Send + 'static,
     E: Error + Send + 'static,
 {
-    fn call(&self, request: &mut dyn RequestExt) -> HandlerResult {
+    fn call(&self, request: &mut ConduitRequest) -> HandlerResult {
         (*self)(request).map_err(box_error)
     }
 }

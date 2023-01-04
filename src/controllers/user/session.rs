@@ -25,7 +25,7 @@ use crate::util::errors::ReadOnlyMode;
 ///     "url": "https://github.com/login/oauth/authorize?client_id=...&state=...&scope=read%3Aorg"
 /// }
 /// ```
-pub fn begin(req: &mut dyn RequestExt) -> EndpointResult {
+pub fn begin(req: &mut ConduitRequest) -> EndpointResult {
     let (url, state) = req
         .app()
         .github_oauth
@@ -66,7 +66,7 @@ pub fn begin(req: &mut dyn RequestExt) -> EndpointResult {
 ///     }
 /// }
 /// ```
-pub fn authorize(req: &mut dyn RequestExt) -> EndpointResult {
+pub fn authorize(req: &mut ConduitRequest) -> EndpointResult {
     // Parse the url query
     let mut query = req.query();
     let code = query.remove("code").unwrap_or_default();
@@ -134,7 +134,7 @@ fn save_user_to_database(
 }
 
 /// Handles the `DELETE /api/private/session` route.
-pub fn logout(req: &mut dyn RequestExt) -> EndpointResult {
+pub fn logout(req: &mut ConduitRequest) -> EndpointResult {
     req.session_remove("user_id");
     Ok(req.json(&true))
 }

@@ -18,17 +18,17 @@ fn version_and_crate(
     Ok((version, krate))
 }
 
-fn extract_crate_name_and_semver(req: &dyn RequestExt) -> AppResult<(&str, &str)> {
+fn extract_crate_name_and_semver(req: &ConduitRequest) -> AppResult<(&str, &str)> {
     let name = extract_crate_name(req);
     let version = extract_semver(req)?;
     Ok((name, version))
 }
 
-fn extract_crate_name(req: &dyn RequestExt) -> &str {
+fn extract_crate_name(req: &ConduitRequest) -> &str {
     req.param("crate_id").unwrap()
 }
 
-fn extract_semver(req: &dyn RequestExt) -> AppResult<&str> {
+fn extract_semver(req: &ConduitRequest) -> AppResult<&str> {
     let semver = req.param("version").unwrap();
     if semver::Version::parse(semver).is_err() {
         return Err(cargo_err(&format_args!("invalid semver: {semver}")));

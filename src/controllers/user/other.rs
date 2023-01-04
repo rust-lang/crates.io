@@ -6,7 +6,7 @@ use crate::sql::lower;
 use crate::views::EncodablePublicUser;
 
 /// Handles the `GET /users/:user_id` route.
-pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
+pub fn show(req: &mut ConduitRequest) -> EndpointResult {
     use self::users::dsl::{gh_login, id, users};
 
     let name = lower(req.param("user_id").unwrap());
@@ -20,7 +20,7 @@ pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
 }
 
 /// Handles the `GET /users/:user_id/stats` route.
-pub fn stats(req: &mut dyn RequestExt) -> EndpointResult {
+pub fn stats(req: &mut ConduitRequest) -> EndpointResult {
     use diesel::dsl::sum;
 
     let user_id = req

@@ -18,7 +18,7 @@ use super::{extract_crate_name_and_semver, version_and_crate};
 /// In addition to returning cached data from the index, this returns
 /// fields for `id`, `version_id`, and `downloads` (which appears to always
 /// be 0)
-pub fn dependencies(req: &mut dyn RequestExt) -> EndpointResult {
+pub fn dependencies(req: &mut ConduitRequest) -> EndpointResult {
     let (crate_name, semver) = extract_crate_name_and_semver(req)?;
     let conn = req.app().db_read()?;
     let (version, _) = version_and_crate(&conn, crate_name, semver)?;
@@ -32,7 +32,7 @@ pub fn dependencies(req: &mut dyn RequestExt) -> EndpointResult {
 }
 
 /// Handles the `GET /crates/:crate_id/:version/authors` route.
-pub fn authors(req: &mut dyn RequestExt) -> EndpointResult {
+pub fn authors(req: &mut ConduitRequest) -> EndpointResult {
     // Currently we return the empty list.
     // Because the API is not used anymore after RFC https://github.com/rust-lang/rfcs/pull/3052.
 
@@ -46,7 +46,7 @@ pub fn authors(req: &mut dyn RequestExt) -> EndpointResult {
 ///
 /// The frontend doesn't appear to hit this endpoint, but our tests do, and it seems to be a useful
 /// API route to have.
-pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
+pub fn show(req: &mut ConduitRequest) -> EndpointResult {
     let (crate_name, semver) = extract_crate_name_and_semver(req)?;
     let conn = req.app().db_read()?;
     let (version, krate) = version_and_crate(&conn, crate_name, semver)?;

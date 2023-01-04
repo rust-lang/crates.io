@@ -8,7 +8,7 @@ use crate::util::errors::{
     account_locked, forbidden, internal, AppError, AppResult, InsecurelyGeneratedTokenRevoked,
 };
 use chrono::Utc;
-use conduit::RequestExt;
+use conduit::ConduitRequest;
 use http::header;
 
 #[derive(Debug, Clone)]
@@ -55,7 +55,7 @@ impl AuthCheck {
         }
     }
 
-    pub fn check(&self, request: &dyn RequestExt) -> AppResult<AuthenticatedUser> {
+    pub fn check(&self, request: &ConduitRequest) -> AppResult<AuthenticatedUser> {
         controllers::util::verify_origin(request)?;
 
         let auth = authenticate_user(request)?;
@@ -153,7 +153,7 @@ impl AuthenticatedUser {
     }
 }
 
-fn authenticate_user(req: &dyn RequestExt) -> AppResult<AuthenticatedUser> {
+fn authenticate_user(req: &ConduitRequest) -> AppResult<AuthenticatedUser> {
     let conn = req.app().db_write()?;
 
     let user_id_from_session = req

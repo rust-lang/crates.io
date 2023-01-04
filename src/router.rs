@@ -3,7 +3,7 @@ use axum::middleware::from_fn_with_state;
 use axum::response::IntoResponse;
 use axum::routing::{delete, get, post, put};
 use axum::Router;
-use conduit::{Handler, HandlerResult, RequestExt};
+use conduit::{ConduitRequest, Handler, HandlerResult};
 use conduit_axum::{CauseField, ConduitAxumHandler};
 
 use crate::app::AppState;
@@ -202,10 +202,10 @@ pub fn build_axum_router(state: AppState) -> Router {
         .with_state(state)
 }
 
-struct C(pub fn(&mut dyn RequestExt) -> EndpointResult);
+struct C(pub fn(&mut ConduitRequest) -> EndpointResult);
 
 impl Handler for C {
-    fn call(&self, req: &mut dyn RequestExt) -> HandlerResult {
+    fn call(&self, req: &mut ConduitRequest) -> HandlerResult {
         let C(f) = *self;
         match f(req) {
             Ok(resp) => Ok(resp),

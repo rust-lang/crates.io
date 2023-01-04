@@ -1,6 +1,6 @@
 use axum::body::Bytes;
 use axum::Router;
-use conduit::{box_error, Handler, HandlerResult, RequestExt};
+use conduit::{box_error, ConduitRequest, Handler, HandlerResult};
 use http::{HeaderValue, Request, Response, StatusCode};
 use hyper::{body::to_bytes, service::Service};
 use tokio::{sync::oneshot, task::JoinHandle};
@@ -10,7 +10,7 @@ use crate::ConduitAxumHandler;
 
 struct OkResult;
 impl Handler for OkResult {
-    fn call(&self, _req: &mut dyn RequestExt) -> HandlerResult {
+    fn call(&self, _req: &mut ConduitRequest) -> HandlerResult {
         Response::builder()
             .header("ok", "value")
             .body(Bytes::from_static(b"Hello, world!"))
@@ -20,7 +20,7 @@ impl Handler for OkResult {
 
 struct ErrorResult;
 impl Handler for ErrorResult {
-    fn call(&self, _req: &mut dyn RequestExt) -> HandlerResult {
+    fn call(&self, _req: &mut ConduitRequest) -> HandlerResult {
         let error = ::std::io::Error::last_os_error();
         Err(Box::new(error))
     }
@@ -28,14 +28,14 @@ impl Handler for ErrorResult {
 
 struct Panic;
 impl Handler for Panic {
-    fn call(&self, _req: &mut dyn RequestExt) -> HandlerResult {
+    fn call(&self, _req: &mut ConduitRequest) -> HandlerResult {
         panic!()
     }
 }
 
 struct InvalidHeader;
 impl Handler for InvalidHeader {
-    fn call(&self, _req: &mut dyn RequestExt) -> HandlerResult {
+    fn call(&self, _req: &mut ConduitRequest) -> HandlerResult {
         Response::builder()
             .header("invalid-value", "\r\n")
             .body(Bytes::from_static(b"discarded"))
@@ -45,7 +45,7 @@ impl Handler for InvalidHeader {
 
 struct InvalidStatus;
 impl Handler for InvalidStatus {
-    fn call(&self, _req: &mut dyn RequestExt) -> HandlerResult {
+    fn call(&self, _req: &mut ConduitRequest) -> HandlerResult {
         Response::builder()
             .status(1000)
             .body(Bytes::new())
@@ -55,7 +55,7 @@ impl Handler for InvalidStatus {
 
 struct Sleep;
 impl Handler for Sleep {
-    fn call(&self, req: &mut dyn RequestExt) -> HandlerResult {
+    fn call(&self, req: &mut ConduitRequest) -> HandlerResult {
         std::thread::sleep(std::time::Duration::from_millis(100));
         OkResult.call(req)
     }
@@ -63,7 +63,7 @@ impl Handler for Sleep {
 
 struct AssertPercentDecodedPath;
 impl Handler for AssertPercentDecodedPath {
-    fn call(&self, req: &mut dyn RequestExt) -> HandlerResult {
+    fn call(&self, req: &mut ConduitRequest) -> HandlerResult {
         if req.uri().path() == "/%3a" && req.uri().query() == Some("%3a") {
             OkResult.call(req)
         } else {
