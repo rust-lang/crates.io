@@ -38,6 +38,15 @@ impl Body {
     }
 }
 
+impl From<Body> for Bytes {
+    fn from(value: Body) -> Self {
+        match value {
+            Body::Static(bytes) => bytes.into(),
+            Body::Owned(bytes) => bytes.into(),
+        }
+    }
+}
+
 /// A helper to convert a concrete error type into a `Box<dyn Error + Send>`
 ///
 /// # Example

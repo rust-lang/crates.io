@@ -1,27 +1,10 @@
 use bytes::Bytes;
-use std::borrow::Cow;
 use std::io::{Cursor, Read};
 
 use conduit::{
     header::{HeaderValue, IntoHeaderName},
-    Body, Extensions, HeaderMap, Method, Response, Uri,
+    Extensions, HeaderMap, Method, Uri,
 };
-
-pub trait ResponseExt {
-    fn into_cow(self) -> Cow<'static, [u8]>;
-}
-
-impl ResponseExt for Response<Body> {
-    /// Convert the request into a copy-on-write body
-    fn into_cow(self) -> Cow<'static, [u8]> {
-        use conduit::Body::*;
-
-        match self.into_body() {
-            Static(slice) => slice.into(),
-            Owned(vec) => vec.into(),
-        }
-    }
-}
 
 pub struct MockRequest {
     request: conduit::Request<Cursor<Bytes>>,
