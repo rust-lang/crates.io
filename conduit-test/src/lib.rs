@@ -1,3 +1,4 @@
+use bytes::Bytes;
 use std::borrow::Cow;
 use std::convert::TryInto;
 use std::io::{Cursor, Read};
@@ -24,7 +25,7 @@ impl ResponseExt for Response<Body> {
 }
 
 pub struct MockRequest {
-    request: conduit::Request<Cursor<Vec<u8>>>,
+    request: conduit::Request<Cursor<Bytes>>,
 }
 
 impl MockRequest {
@@ -32,7 +33,7 @@ impl MockRequest {
         let request = conduit::Request::builder()
             .method(&method)
             .uri(path)
-            .body(Cursor::new(vec![]))
+            .body(Cursor::new(Bytes::new()))
             .unwrap();
 
         MockRequest { request }
@@ -45,7 +46,7 @@ impl MockRequest {
     }
 
     pub fn with_body(&mut self, bytes: &[u8]) -> &mut MockRequest {
-        *self.request.body_mut() = Cursor::new(bytes.to_vec());
+        *self.request.body_mut() = Cursor::new(bytes.to_vec().into());
         self
     }
 
