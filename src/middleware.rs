@@ -1,9 +1,3 @@
-mod prelude {
-    pub use crate::middleware::log_request::CustomMetadataRequestExt;
-    pub use conduit::{box_error, Handler};
-    pub use http::{header, Response, StatusCode};
-}
-
 pub mod app;
 mod balance_capacity;
 mod block_traffic;

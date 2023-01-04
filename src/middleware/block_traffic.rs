@@ -8,12 +8,13 @@
 //! the versions of curl or Cargo specified or from either of the IPs (values are nonsensical
 //! examples). Values of the headers must match exactly.
 
-use super::prelude::*;
 use crate::app::AppState;
+use crate::middleware::log_request::CustomMetadataRequestExt;
 use crate::util::errors::RouteBlocked;
 use axum::extract::{MatchedPath, State};
 use axum::middleware::Next;
 use axum::response::IntoResponse;
+use http::StatusCode;
 
 pub async fn block_traffic<B>(
     State(state): State<AppState>,
