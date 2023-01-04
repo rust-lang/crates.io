@@ -6,7 +6,6 @@ use std::io::Read;
 pub use http::{header, Extensions, HeaderMap, Method, Request, Response, StatusCode, Uri};
 
 pub type ResponseResult<Error> = Result<Response<Body>, Error>;
-pub type HttpResult = ResponseResult<http::Error>;
 
 pub type BoxError = Box<dyn Error + Send>;
 pub type HandlerResult = Result<Response<Body>, BoxError>;
