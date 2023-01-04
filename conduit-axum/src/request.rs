@@ -20,9 +20,7 @@ pub(crate) struct ConduitRequest {
 }
 
 impl ConduitRequest {
-    pub(crate) fn new(request: Request<Bytes>) -> Self {
-        let (parts, body) = request.into_parts();
-        let request = Request::from_parts(parts, Cursor::new(body));
+    pub(crate) fn new(request: Request<Cursor<Bytes>>) -> Self {
         Self { request }
     }
 }
