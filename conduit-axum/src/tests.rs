@@ -4,7 +4,7 @@ use http::{HeaderValue, Request, Response, StatusCode};
 use hyper::{body::to_bytes, service::Service};
 use tokio::{sync::oneshot, task::JoinHandle};
 
-use crate::{AxumResponse, ConduitFallback};
+use crate::{AxumResponse, ConduitAxumHandler};
 
 struct OkResult;
 impl Handler for OkResult {
@@ -71,7 +71,7 @@ impl Handler for AssertPercentDecodedPath {
 }
 
 fn make_service<H: Handler>(handler: H) -> Router {
-    Router::new().conduit_fallback(handler)
+    Router::new().fallback(ConduitAxumHandler::wrap(handler))
 }
 
 async fn simulate_request<H: Handler>(handler: H) -> AxumResponse {
@@ -159,7 +159,7 @@ async fn spawn_http_server() -> (
     let (quit_tx, quit_rx) = oneshot::channel::<()>();
     let addr = ([127, 0, 0, 1], 0).into();
 
-    let router = Router::new().conduit_fallback(OkResult);
+    let router = Router::new().fallback(ConduitAxumHandler::wrap(OkResult));
     let make_service = router.into_make_service();
     let server = hyper::Server::bind(&addr).serve(make_service);
 
