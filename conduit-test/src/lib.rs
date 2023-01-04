@@ -1,4 +1,6 @@
+use bytes::Bytes;
 use std::borrow::Cow;
+use std::convert::TryInto;
 use std::io::{Cursor, Read};
 
 use conduit::{
@@ -22,46 +24,29 @@ impl ResponseExt for Response<Body> {
     }
 }
 
-fn uri(path_and_query: &str) -> Uri {
-    Uri::builder()
-        .path_and_query(path_and_query)
-        .build()
-        .unwrap()
-}
-
 pub struct MockRequest {
-    method: Method,
-    uri: Uri,
-    body: Option<Vec<u8>>,
-    headers: HeaderMap,
-    extensions: Extensions,
-    reader: Option<Cursor<Vec<u8>>>,
+    request: conduit::Request<Cursor<Bytes>>,
 }
 
 impl MockRequest {
     pub fn new(method: Method, path: &str) -> MockRequest {
-        let headers = HeaderMap::new();
-        let extensions = Extensions::new();
+        let request = conduit::Request::builder()
+            .method(&method)
+            .uri(path)
+            .body(Cursor::new(Bytes::new()))
+            .unwrap();
 
-        MockRequest {
-            uri: uri(path),
-            extensions,
-            body: None,
-            headers,
-            method,
-            reader: None,
-        }
+        MockRequest { request }
     }
 
     pub fn with_query(&mut self, string: &str) -> &mut MockRequest {
-        let path_and_query = format!("{}?{}", self.uri.path(), string);
-        self.uri = uri(&path_and_query);
+        let path_and_query = format!("{}?{}", self.request.uri().path(), string);
+        *self.request.uri_mut() = path_and_query.try_into().unwrap();
         self
     }
 
     pub fn with_body(&mut self, bytes: &[u8]) -> &mut MockRequest {
-        self.body = Some(bytes.to_vec());
-        self.reader = None;
+        *self.request.body_mut() = Cursor::new(bytes.to_vec().into());
         self
     }
 
@@ -69,7 +54,8 @@ impl MockRequest {
     where
         K: IntoHeaderName,
     {
-        self.headers
+        self.request
+            .headers_mut()
             .insert(name, HeaderValue::from_str(value).unwrap());
         self
     }
@@ -77,34 +63,30 @@ impl MockRequest {
 
 impl conduit::RequestExt for MockRequest {
     fn method(&self) -> &Method {
-        &self.method
+        self.request.method()
     }
 
     fn uri(&self) -> &Uri {
-        &self.uri
+        self.request.uri()
     }
 
     fn content_length(&self) -> Option<u64> {
-        self.body.as_ref().map(|b| b.len() as u64)
+        Some(self.request.body().get_ref().len() as u64)
     }
 
     fn headers(&self) -> &HeaderMap {
-        &self.headers
+        self.request.headers()
     }
 
     fn body(&mut self) -> &mut dyn Read {
-        if self.reader.is_none() {
-            let body = self.body.clone().unwrap_or_default();
-            self.reader = Some(Cursor::new(body));
-        }
-        self.reader.as_mut().unwrap()
+        self.request.body_mut()
     }
 
     fn extensions(&self) -> &Extensions {
-        &self.extensions
+        self.request.extensions()
     }
     fn mut_extensions(&mut self) -> &mut Extensions {
-        &mut self.extensions
+        self.request.extensions_mut()
     }
 }
 
@@ -120,7 +102,7 @@ mod tests {
 
         assert_eq!(req.method(), Method::GET);
         assert_eq!(req.uri(), "/");
-        assert_eq!(req.content_length(), None);
+        assert_eq!(req.content_length(), Some(0));
         assert_eq!(req.headers().len(), 0);
         let mut s = String::new();
         req.body().read_to_string(&mut s).expect("No body");

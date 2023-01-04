@@ -622,6 +622,7 @@ dependencies = [
 name = "conduit-test"
 version = "0.10.0"
 dependencies = [
+ "bytes",
  "conduit",
 ]
 

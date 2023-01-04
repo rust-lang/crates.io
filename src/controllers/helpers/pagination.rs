@@ -411,7 +411,7 @@ mod tests {
     }
 
     fn mock(query: &str) -> MockRequest {
-        let mut req = MockRequest::new(http::Method::GET, "");
+        let mut req = MockRequest::new(http::Method::GET, "/");
         req.with_query(query);
         req
     }
