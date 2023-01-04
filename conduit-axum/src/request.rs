@@ -13,7 +13,7 @@ use std::io::{Cursor, Read};
 
 use conduit::RequestExt;
 use http::request::Parts as HttpParts;
-use http::{Extensions, HeaderMap, Method, Request, Uri, Version};
+use http::{Extensions, HeaderMap, Method, Request, Uri};
 use hyper::body::Bytes;
 
 pub(crate) struct ConduitRequest {
@@ -33,10 +33,6 @@ impl ConduitRequest {
 }
 
 impl RequestExt for ConduitRequest {
-    fn http_version(&self) -> Version {
-        self.parts.version
-    }
-
     fn method(&self) -> &Method {
         &self.parts.method
     }

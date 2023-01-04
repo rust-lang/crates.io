@@ -3,9 +3,7 @@
 use std::error::Error;
 use std::io::Read;
 
-pub use http::{
-    header, Extensions, HeaderMap, Method, Request, Response, StatusCode, Uri, Version,
-};
+pub use http::{header, Extensions, HeaderMap, Method, Request, Response, StatusCode, Uri};
 
 pub type ResponseResult<Error> = Result<Response<Body>, Error>;
 pub type HttpResult = ResponseResult<http::Error>;
@@ -55,9 +53,6 @@ pub fn box_error<E: Error + Send + 'static>(error: E) -> BoxError {
 }
 
 pub trait RequestExt {
-    /// The version of HTTP being used
-    fn http_version(&self) -> Version;
-
     /// The request method, such as GET, POST, PUT, DELETE or PATCH
     fn method(&self) -> &Method;
 
