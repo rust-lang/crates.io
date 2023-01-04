@@ -30,12 +30,10 @@ use conduit::RequestExt;
 use conduit_test::MockRequest;
 use http::Method;
 
-use axum::extract::{ConnectInfo, Extension};
 use cargo_registry::models::token::{CrateScope, EndpointScope};
 use cookie::Cookie;
 use http::header;
 use std::collections::HashMap;
-use std::net::SocketAddr;
 use tower_service::Service;
 
 mod chaosproxy;
@@ -89,9 +87,7 @@ pub trait RequestHelper {
     /// Run a request that is expected to succeed
     #[track_caller]
     fn run<T>(&self, request: MockRequest) -> Response<T> {
-        let router = self.app().router().clone();
-        let remote_addr = SocketAddr::from(([127, 0, 0, 1], 80));
-        let mut router = router.layer(Extension(ConnectInfo(remote_addr)));
+        let mut router = self.app().router().clone();
 
         let req = convert_request(request);
 
