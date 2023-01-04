@@ -1,5 +1,5 @@
-use crate::adaptor::ConduitRequest;
 use crate::error::ServiceError;
+use crate::request::ConduitRequest;
 use crate::response::{conduit_into_axum, AxumResponse};
 use crate::spawn_blocking;
 

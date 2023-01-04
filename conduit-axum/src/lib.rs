@@ -47,10 +47,10 @@
 //! # }
 //! ```
 
-mod adaptor;
 mod error;
 mod fallback;
 mod file_stream;
+mod request;
 mod response;
 #[cfg(test)]
 mod tests;
