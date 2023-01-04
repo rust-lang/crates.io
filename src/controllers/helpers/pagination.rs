@@ -309,7 +309,6 @@ mod tests {
     use super::*;
     use conduit_test::MockRequest;
     use http::StatusCode;
-    use hyper::body::Bytes;
     use serde_json::Value;
 
     #[test]
@@ -420,7 +419,7 @@ mod tests {
         let response = options.gather(&mock(query)).unwrap_err().response();
         assert_eq!(StatusCode::BAD_REQUEST, response.status());
 
-        let bytes = Bytes::from(response.into_body());
+        let bytes = response.into_body();
         let parsed: Value = serde_json::from_slice(&bytes).unwrap();
         assert_eq!(parsed, json!({ "errors": [{ "detail": message }] }));
     }

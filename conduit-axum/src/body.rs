@@ -1,10 +1,5 @@
-use axum::body::boxed;
+use axum::body::{boxed, Body, Bytes};
 
-pub fn conduit_into_axum(body: conduit::Body) -> axum::body::BoxBody {
-    use conduit::Body::*;
-
-    match body {
-        Static(slice) => boxed(axum::body::Body::from(slice)),
-        Owned(vec) => boxed(axum::body::Body::from(vec)),
-    }
+pub fn conduit_into_axum(body: Bytes) -> axum::body::BoxBody {
+    boxed(Body::from(body))
 }

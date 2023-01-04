@@ -1,7 +1,8 @@
 #![deny(clippy::all)]
 
+use axum::body::Bytes;
 use axum::routing::get;
-use conduit::{Body, RequestExt, ResponseResult};
+use conduit::{RequestExt, ResponseResult};
 use conduit_axum::ConduitAxumHandler;
 use http::{header, Response};
 
@@ -37,7 +38,7 @@ fn endpoint(_: &mut dyn RequestExt) -> ResponseResult<http::Error> {
     Response::builder()
         .header(header::CONTENT_TYPE, "text/plain; charset=utf-8")
         .header(header::CONTENT_LENGTH, body.len())
-        .body(Body::from_static(body))
+        .body(Bytes::from_static(body))
 }
 
 fn panic(_: &mut dyn RequestExt) -> ResponseResult<http::Error> {

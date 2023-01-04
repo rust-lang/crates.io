@@ -1,6 +1,6 @@
 use crate::controllers::frontend_prelude::*;
 use crate::util::errors::{forbidden, not_found, MetricsDisabled};
-use conduit::Body;
+use axum::body::Bytes;
 use http::Response;
 use prometheus::{Encoder, TextEncoder};
 
@@ -36,5 +36,5 @@ pub fn prometheus(req: &mut dyn RequestExt) -> EndpointResult {
     Ok(Response::builder()
         .header(header::CONTENT_TYPE, "text/plain; charset=utf-8")
         .header(header::CONTENT_LENGTH, output.len())
-        .body(Body::from_vec(output))?)
+        .body(Bytes::from(output))?)
 }

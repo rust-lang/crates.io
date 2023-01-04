@@ -6,7 +6,7 @@ use crate::util::read_fill;
 use crate::views::EncodableApiTokenWithToken;
 
 use crate::auth::AuthCheck;
-use conduit::Body;
+use axum::body::Bytes;
 use http::Response;
 use serde_json as json;
 
@@ -115,5 +115,5 @@ pub fn revoke_current(req: &mut dyn RequestExt) -> EndpointResult {
         .set(api_tokens::revoked.eq(true))
         .execute(&*conn)?;
 
-    Ok(Response::builder().status(204).body(Body::empty()).unwrap())
+    Ok(Response::builder().status(204).body(Bytes::new()).unwrap())
 }
