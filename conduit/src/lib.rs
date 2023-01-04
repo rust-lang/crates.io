@@ -28,17 +28,8 @@ pub fn box_error<E: Error + Send + 'static>(error: E) -> BoxError {
 }
 
 pub trait RequestExt {
-    /// The request method, such as GET, POST, PUT, DELETE or PATCH
-    fn method(&self) -> &Method;
-
-    /// The request URI
-    fn uri(&self) -> &Uri;
-
     /// The byte-size of the body, if any
     fn content_length(&self) -> Option<u64>;
-
-    /// The request's headers, as conduit::Headers.
-    fn headers(&self) -> &HeaderMap;
 
     /// A Reader for the body of the request
     ///
@@ -47,40 +38,15 @@ pub trait RequestExt {
     /// The returned value implements the blocking `Read` API and should only
     /// be read from while in a blocking context.
     fn body(&mut self) -> &mut dyn Read;
-
-    /// A readable map of extensions
-    fn extensions(&self) -> &Extensions;
-
-    /// A mutable map of extensions
-    fn extensions_mut(&mut self) -> &mut Extensions;
 }
 
 impl RequestExt for ConduitRequest {
-    fn method(&self) -> &Method {
-        self.method()
-    }
-
-    fn uri(&self) -> &Uri {
-        self.uri()
-    }
-
     fn content_length(&self) -> Option<u64> {
         Some(self.body().get_ref().len() as u64)
     }
 
-    fn headers(&self) -> &HeaderMap {
-        self.headers()
-    }
-
     fn body(&mut self) -> &mut dyn Read {
         self.body_mut()
-    }
-
-    fn extensions(&self) -> &Extensions {
-        self.extensions()
-    }
-    fn extensions_mut(&mut self) -> &mut Extensions {
-        self.extensions_mut()
     }
 }
 
