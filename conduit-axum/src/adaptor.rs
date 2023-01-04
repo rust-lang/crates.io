@@ -67,10 +67,6 @@ impl RequestExt for ConduitRequest {
         ([0, 0, 0, 0], 0).into()
     }
 
-    fn virtual_root(&self) -> Option<&str> {
-        None
-    }
-
     fn path(&self) -> &str {
         &self.path
     }

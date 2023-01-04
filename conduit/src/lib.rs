@@ -83,11 +83,6 @@ pub trait RequestExt {
     /// The host part of the requested URL
     fn host(&self) -> Host<'_>;
 
-    /// The initial part of the request URL's path that corresponds
-    /// to a virtual root. This allows an application to have a
-    /// virtual location that consumes part of the path.
-    fn virtual_root(&self) -> Option<&str>;
-
     /// The remainder of the path.
     fn path(&self) -> &str;
 

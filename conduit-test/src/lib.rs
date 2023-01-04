@@ -107,9 +107,6 @@ impl conduit::RequestExt for MockRequest {
     fn host(&self) -> Host<'_> {
         Host::Name("example.com")
     }
-    fn virtual_root(&self) -> Option<&str> {
-        None
-    }
 
     fn path(&self) -> &str {
         &self.path
@@ -167,7 +164,6 @@ mod tests {
         assert_eq!(req.method(), Method::GET);
         assert_eq!(req.scheme(), Scheme::Http);
         assert_eq!(req.host(), Host::Name("example.com"));
-        assert_eq!(req.virtual_root(), None);
         assert_eq!(req.path(), "/");
         assert_eq!(req.query_string(), None);
         assert_eq!(
