@@ -99,13 +99,8 @@ pub fn update_user(req: &mut dyn RequestExt) -> EndpointResult {
 
     let auth = AuthCheck::default().check(req)?;
 
-    let mut body = String::new();
-    req.body().read_to_string(&mut body)?;
-
     let param_user_id = req.param("user_id").unwrap();
 
-    let state = req.app();
-    let conn = state.db_write()?;
     let user = auth.user();
 
     // need to check if current user matches user to be updated
@@ -124,7 +119,7 @@ pub fn update_user(req: &mut dyn RequestExt) -> EndpointResult {
     }
 
     let user_update: UserUpdate =
-        serde_json::from_str(&body).map_err(|_| bad_request("invalid json request"))?;
+        serde_json::from_reader(req.body()).map_err(|_| bad_request("invalid json request"))?;
 
     let user_email = match &user_update.user.email {
         Some(email) => email.trim(),
@@ -135,6 +130,8 @@ pub fn update_user(req: &mut dyn RequestExt) -> EndpointResult {
         return Err(bad_request("empty email rejected"));
     }
 
+    let state = req.app();
+    let conn = state.db_write()?;
     conn.transaction::<_, Box<dyn AppError>, _>(|| {
         let new_email = NewEmail {
             user_id: user.id,
@@ -229,13 +226,12 @@ pub fn update_email_notifications(req: &mut dyn RequestExt) -> EndpointResult {
         email_notifications: bool,
     }
 
-    let mut body = String::new();
-    req.body().read_to_string(&mut body)?;
-    let updates: HashMap<i32, bool> = serde_json::from_str::<Vec<CrateEmailNotifications>>(&body)
-        .map_err(|_| bad_request("invalid json request"))?
-        .iter()
-        .map(|c| (c.id, c.email_notifications))
-        .collect();
+    let updates: HashMap<i32, bool> =
+        serde_json::from_reader::<_, Vec<CrateEmailNotifications>>(req.body())
+            .map_err(|_| bad_request("invalid json request"))?
+            .iter()
+            .map(|c| (c.id, c.email_notifications))
+            .collect();
 
     let user_id = AuthCheck::default().check(req)?.user_id();
     let conn = req.app().db_write()?;
