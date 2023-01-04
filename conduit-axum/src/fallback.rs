@@ -16,7 +16,7 @@ use axum::response::IntoResponse;
 use conduit::{Handler, RequestExt};
 use http::header::CONTENT_LENGTH;
 use http::StatusCode;
-use hyper::{Request, Response};
+use hyper::Request;
 use tracing::{error, warn};
 
 /// The maximum size allowed in the `Content-Length` header
@@ -124,12 +124,7 @@ fn server_error_response<E: Error + ?Sized>(error: &E) -> AxumResponse {
 fn check_content_length(request: &Request<Body>) -> Result<(), AxumResponse> {
     fn bad_request(message: &str) -> AxumResponse {
         warn!("Bad request: Content-Length {}", message);
-
-        Response::builder()
-            .status(StatusCode::BAD_REQUEST)
-            .body(Body::empty())
-            .expect("Unexpected invalid header")
-            .into_response()
+        StatusCode::BAD_REQUEST.into_response()
     }
 
     if let Some(content_length) = request.headers().get(CONTENT_LENGTH) {
