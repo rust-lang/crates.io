@@ -597,6 +597,7 @@ dependencies = [
 name = "conduit"
 version = "0.10.0"
 dependencies = [
+ "bytes",
  "http",
 ]
 

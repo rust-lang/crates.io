@@ -1,11 +1,11 @@
 use crate::error::ServiceError;
-use crate::request::ConduitRequest;
 use crate::response::{conduit_into_axum, AxumResponse};
 use crate::spawn_blocking;
 
 use std::collections::BTreeMap;
 use std::error::Error;
 use std::future::Future;
+use std::io::Cursor;
 use std::pin::Pin;
 use std::sync::Arc;
 
@@ -70,11 +70,11 @@ where
                 Err(err) => return server_error_response(&err),
             };
 
-            let request = Request::from_parts(parts, full_body);
+            let request = Request::from_parts(parts, Cursor::new(full_body));
 
             let Self(handler) = self;
             spawn_blocking(move || {
-                let mut request = ConduitRequest::new(request);
+                let mut request = request;
                 handler
                     .call(&mut request)
                     .map(conduit_into_axum)

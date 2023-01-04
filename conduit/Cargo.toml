@@ -9,4 +9,5 @@ repository = "https://github.com/conduit-rust/conduit"
 edition = "2018"
 
 [dependencies]
+bytes = "1.3.0"
 http = "0.2"

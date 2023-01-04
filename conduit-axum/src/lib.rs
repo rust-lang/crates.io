@@ -50,7 +50,6 @@
 mod body;
 mod error;
 mod fallback;
-mod request;
 mod response;
 #[cfg(test)]
 mod tests;
