@@ -1,4 +1,3 @@
-use super::prelude::*;
 use axum::extract::State;
 use axum::middleware::Next;
 use axum::response::Response;
@@ -22,7 +21,7 @@ pub trait RequestApp {
     fn app(&self) -> &AppState;
 }
 
-impl<T: RequestExt + ?Sized> RequestApp for T {
+impl<T> RequestApp for Request<T> {
     fn app(&self) -> &AppState {
         self.extensions().get::<AppState>().expect("Missing app")
     }
