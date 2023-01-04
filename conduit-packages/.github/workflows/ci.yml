@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+      - main
+  pull_request:
+
+env:
+  # minimum supported rust version
+  MSRV: 1.56
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: rustup override set ${{env.MSRV}}
+      - uses: Swatinem/rust-cache@v2.2.0
+      - run: cargo check --workspace --all-targets
+        env:
+          RUSTFLAGS: "-D warnings"
+
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: rustup override set ${{env.MSRV}}
+      - uses: Swatinem/rust-cache@v2.2.0
+      - run: cargo test --workspace
+
+  fmt:
+    name: Rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: rustup override set 1.62
+      - run: rustup component add rustfmt
+      - uses: Swatinem/rust-cache@v2.2.0
+      - run: cargo fmt --all -- --check
+
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: rustup override set 1.62
+      - run: rustup component add clippy
+      - uses: Swatinem/rust-cache@v2.2.0
+      - run: cargo clippy --workspace -- --deny warnings

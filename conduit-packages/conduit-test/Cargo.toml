@@ -1,0 +1,12 @@
+[package]
+name = "conduit-test"
+version = "0.10.0"
+authors = ["wycats@gmail.com",
+           "Alex Crichton <alex@alexcrichton.com>"]
+description = "Testing utilities for conduit-based stacks"
+repository = "https://github.com/conduit-rust/conduit"
+license = "MIT"
+edition = "2018"
+
+[dependencies]
+conduit = { version ="0.10.0", path = "../conduit" }
