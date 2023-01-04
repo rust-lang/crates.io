@@ -4,7 +4,8 @@ use http::{HeaderValue, Request, Response, StatusCode};
 use hyper::{body::to_bytes, service::Service};
 use tokio::{sync::oneshot, task::JoinHandle};
 
-use crate::{AxumResponse, ConduitAxumHandler};
+use crate::response::AxumResponse;
+use crate::ConduitAxumHandler;
 
 struct OkResult;
 impl Handler for OkResult {
