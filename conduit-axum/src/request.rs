@@ -13,26 +13,20 @@ use std::io::{Cursor, Read};
 
 use conduit::RequestExt;
 use http::request::Parts as HttpParts;
-use http::{Extensions, HeaderMap, Method, Request, Version};
+use http::{Extensions, HeaderMap, Method, Request, Uri, Version};
 use hyper::body::Bytes;
 
 pub(crate) struct ConduitRequest {
     parts: HttpParts,
-    path: String,
     body: Cursor<Bytes>,
 }
 
 impl ConduitRequest {
     pub(crate) fn new(request: Request<Bytes>) -> Self {
         let (parts, body) = request.into_parts();
-        let path = parts.uri.path().as_bytes();
-        let path = percent_encoding::percent_decode(path)
-            .decode_utf8_lossy()
-            .into_owned();
 
         Self {
             parts,
-            path,
             body: Cursor::new(body),
         }
     }
@@ -47,6 +41,10 @@ impl RequestExt for ConduitRequest {
         &self.parts.method
     }
 
+    fn uri(&self) -> &Uri {
+        &self.parts.uri
+    }
+
     fn headers(&self) -> &HeaderMap {
         &self.parts.headers
     }
@@ -56,20 +54,12 @@ impl RequestExt for ConduitRequest {
         Some(self.body.get_ref().len() as u64)
     }
 
-    fn path(&self) -> &str {
-        &self.path
-    }
-
     fn extensions(&self) -> &Extensions {
         &self.parts.extensions
     }
 
     fn mut_extensions(&mut self) -> &mut Extensions {
         &mut self.parts.extensions
-    }
-
-    fn query_string(&self) -> Option<&str> {
-        self.parts.uri.query()
     }
 
     fn body(&mut self) -> &mut dyn Read {

@@ -379,15 +379,9 @@ fn convert_request(mut mock_request: MockRequest) -> http::Request<hyper::Body> 
 
     let body = hyper::Body::from(buffer);
 
-    let mut path = mock_request.path().to_string();
-    if let Some(query) = mock_request.query_string() {
-        path += "?";
-        path += query;
-    }
-
     let mut req = http::Request::builder()
         .method(mock_request.method())
-        .uri(path);
+        .uri(mock_request.uri());
 
     for (name, value) in mock_request.headers() {
         req = req.header(name, value)
