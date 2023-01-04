@@ -1,4 +1,5 @@
 use bytes::Bytes;
+use hyper::Request;
 use std::io::{Cursor, Read};
 
 use conduit::{
@@ -63,6 +64,13 @@ impl conduit::RequestExt for MockRequest {
     }
     fn extensions_mut(&mut self) -> &mut Extensions {
         self.request.extensions_mut()
+    }
+}
+
+impl From<MockRequest> for Request<hyper::Body> {
+    fn from(mock_request: MockRequest) -> Self {
+        let (parts, body) = mock_request.request.into_parts();
+        Request::from_parts(parts, hyper::Body::from(body.into_inner()))
     }
 }
 
