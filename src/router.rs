@@ -242,7 +242,7 @@ mod tests {
     #[test]
     fn http_error_responses() {
         let mut req = MockRequest::new(::conduit::Method::GET, "/");
-        req.mut_extensions().insert(CustomMetadata::default());
+        req.extensions_mut().insert(CustomMetadata::default());
 
         // Types for handling common error status codes
         assert_eq!(

@@ -54,7 +54,7 @@ impl RequestExt for ConduitRequest {
         &self.parts.extensions
     }
 
-    fn mut_extensions(&mut self) -> &mut Extensions {
+    fn extensions_mut(&mut self) -> &mut Extensions {
         &mut self.parts.extensions
     }
 
