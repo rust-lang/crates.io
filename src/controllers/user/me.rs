@@ -119,7 +119,7 @@ pub fn update_user(req: &mut ConduitRequest) -> EndpointResult {
     }
 
     let user_update: UserUpdate =
-        serde_json::from_reader(req.body()).map_err(|_| bad_request("invalid json request"))?;
+        serde_json::from_reader(req.body_mut()).map_err(|_| bad_request("invalid json request"))?;
 
     let user_email = match &user_update.user.email {
         Some(email) => email.trim(),
@@ -227,7 +227,7 @@ pub fn update_email_notifications(req: &mut ConduitRequest) -> EndpointResult {
     }
 
     let updates: HashMap<i32, bool> =
-        serde_json::from_reader::<_, Vec<CrateEmailNotifications>>(req.body())
+        serde_json::from_reader::<_, Vec<CrateEmailNotifications>>(req.body_mut())
             .map_err(|_| bad_request("invalid json request"))?
             .iter()
             .map(|c| (c.id, c.email_notifications))

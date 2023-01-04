@@ -158,7 +158,7 @@ pub fn publish(req: &mut ConduitRequest) -> EndpointResult {
         // TODO: Not sure why we're using the total content length (metadata + .crate file length)
         // to compare against the max upload size... investigate that and perhaps change to use
         // this file length.
-        let file_length = read_le_u32(req.body())?;
+        let file_length = read_le_u32(req.body_mut())?;
 
         let content_length = req
             .content_length()
@@ -182,7 +182,8 @@ pub fn publish(req: &mut ConduitRequest) -> EndpointResult {
 
         // Read tarball from request
         let mut tarball = Vec::new();
-        LimitErrorReader::new(req.body(), maximums.max_upload_size).read_to_end(&mut tarball)?;
+        LimitErrorReader::new(req.body_mut(), maximums.max_upload_size)
+            .read_to_end(&mut tarball)?;
         let hex_cksum: String = Sha256::digest(&tarball).encode_hex();
 
         // Persist the new version of this crate
@@ -304,7 +305,7 @@ fn count_versions_published_today(krate_id: i32, conn: &PgConnection) -> QueryRe
 /// the data during and after the parsing. Returns crate metadata.
 fn parse_new_headers(req: &mut ConduitRequest) -> AppResult<EncodableCrateUpload> {
     // Read the json upload request
-    let metadata_length = u64::from(read_le_u32(req.body())?);
+    let metadata_length = u64::from(read_le_u32(req.body_mut())?);
     req.add_custom_metadata("metadata_length", metadata_length);
 
     let max = req.app().config.max_upload_size;
@@ -312,7 +313,7 @@ fn parse_new_headers(req: &mut ConduitRequest) -> AppResult<EncodableCrateUpload
         return Err(cargo_err(&format_args!("max upload size is: {max}")));
     }
     let mut json = vec![0; metadata_length as usize];
-    read_fill(req.body(), &mut json)?;
+    read_fill(req.body_mut(), &mut json)?;
     let json = String::from_utf8(json).map_err(|_| cargo_err("json body was not valid utf-8"))?;
     let new: EncodableCrateUpload = serde_json::from_str(&json)
         .map_err(|e| cargo_err(&format_args!("invalid upload request: {e}")))?;

@@ -2,7 +2,7 @@
 
 use bytes::Bytes;
 use std::error::Error;
-use std::io::{Cursor, Read};
+use std::io::Cursor;
 
 pub use http::{header, Extensions, HeaderMap, Method, Request, Response, StatusCode, Uri};
 
@@ -30,23 +30,11 @@ pub fn box_error<E: Error + Send + 'static>(error: E) -> BoxError {
 pub trait RequestExt {
     /// The byte-size of the body, if any
     fn content_length(&self) -> Option<u64>;
-
-    /// A Reader for the body of the request
-    ///
-    /// # Blocking
-    ///
-    /// The returned value implements the blocking `Read` API and should only
-    /// be read from while in a blocking context.
-    fn body(&mut self) -> &mut dyn Read;
 }
 
 impl RequestExt for ConduitRequest {
     fn content_length(&self) -> Option<u64> {
         Some(self.body().get_ref().len() as u64)
-    }
-
-    fn body(&mut self) -> &mut dyn Read {
-        self.body_mut()
     }
 }
 
