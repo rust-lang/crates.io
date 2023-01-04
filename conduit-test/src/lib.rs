@@ -1,10 +1,10 @@
 use bytes::Bytes;
 use hyper::Request;
-use std::io::{Cursor, Read};
+use std::io::Cursor;
 
 use conduit::{
     header::{HeaderValue, IntoHeaderName},
-    Extensions, HeaderMap, Method, Uri,
+    Method,
 };
 
 pub struct MockRequest {
@@ -42,35 +42,6 @@ impl MockRequest {
     }
 }
 
-impl conduit::RequestExt for MockRequest {
-    fn method(&self) -> &Method {
-        self.request.method()
-    }
-
-    fn uri(&self) -> &Uri {
-        self.request.uri()
-    }
-
-    fn content_length(&self) -> Option<u64> {
-        Some(self.request.body().get_ref().len() as u64)
-    }
-
-    fn headers(&self) -> &HeaderMap {
-        self.request.headers()
-    }
-
-    fn body(&mut self) -> &mut dyn Read {
-        self.request.body_mut()
-    }
-
-    fn extensions(&self) -> &Extensions {
-        self.request.extensions()
-    }
-    fn extensions_mut(&mut self) -> &mut Extensions {
-        self.request.extensions_mut()
-    }
-}
-
 impl From<MockRequest> for Request<hyper::Body> {
     fn from(mock_request: MockRequest) -> Self {
         let (parts, body) = mock_request.request.into_parts();
@@ -82,7 +53,7 @@ impl From<MockRequest> for Request<hyper::Body> {
 mod tests {
     use super::MockRequest;
 
-    use conduit::{header, Method, RequestExt};
+    use conduit::{header, Method};
 
     #[test]
     fn simple_request_test() {
@@ -90,7 +61,6 @@ mod tests {
 
         assert_eq!(req.method(), Method::GET);
         assert_eq!(req.uri(), "/");
-        assert_eq!(req.content_length(), Some(0));
         assert_eq!(req.headers().len(), 0);
         assert_eq!(req.body().get_ref(), "");
     }
@@ -104,7 +74,6 @@ mod tests {
         assert_eq!(req.method(), Method::POST);
         assert_eq!(req.uri(), "/articles");
         assert_eq!(req.body().get_ref(), "Hello world");
-        assert_eq!(req.content_length(), Some(11));
     }
 
     #[test]
