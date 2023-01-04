@@ -6,37 +6,10 @@ use std::io::{Cursor, Read};
 
 pub use http::{header, Extensions, HeaderMap, Method, Request, Response, StatusCode, Uri};
 
-pub type ResponseResult<Error> = Result<Response<Body>, Error>;
+pub type ResponseResult<Error> = Result<Response<Bytes>, Error>;
 
 pub type BoxError = Box<dyn Error + Send>;
-pub type HandlerResult = Result<Response<Body>, BoxError>;
-
-/// A type representing a `Response` body.
-///
-/// This type is intended exclusively for use as part of a `Response<Body>`.
-/// Each conduit server provides its own request type that implements
-/// `RequestExt` which provides the request body as a `&'a mut dyn Read`.
-pub enum Body {
-    Static(&'static [u8]),
-    Owned(Vec<u8>),
-}
-
-impl Body {
-    /// Create a new `Body` from an empty static slice.
-    pub fn empty() -> Self {
-        Self::from_static(b"")
-    }
-
-    /// Create a new `Body` from the provided static byte slice.
-    pub fn from_static(bytes: &'static [u8]) -> Self {
-        Self::Static(bytes)
-    }
-
-    /// Create a new `Body` by taking ownership of the provided bytes.
-    pub fn from_vec(bytes: Vec<u8>) -> Self {
-        Self::Owned(bytes)
-    }
-}
+pub type HandlerResult = Result<Response<Bytes>, BoxError>;
 
 /// A helper to convert a concrete error type into a `Box<dyn Error + Send>`
 ///
@@ -44,9 +17,10 @@ impl Body {
 ///
 /// ```
 /// # use std::error::Error;
-/// # use conduit::{box_error, Body, Response};
-/// # let _: Result<Response<Body>, Box<dyn Error + Send>> =
-/// Response::builder().body(Body::empty()).map_err(box_error);
+/// # use bytes::Bytes;
+/// # use conduit::{box_error, Response};
+/// # let _: Result<Response<Bytes>, Box<dyn Error + Send>> =
+/// Response::builder().body(Bytes::new()).map_err(box_error);
 /// ```
 pub fn box_error<E: Error + Send + 'static>(error: E) -> BoxError {
     Box::new(error)

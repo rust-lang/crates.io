@@ -11,6 +11,7 @@ mod frontend_prelude {
 mod prelude {
     pub use super::helpers::ok_true;
     pub use super::util::RequestParamExt;
+    use axum::body::Bytes;
     pub use diesel::prelude::*;
 
     pub use conduit::RequestExt;
@@ -29,7 +30,7 @@ mod prelude {
             http::Response::builder()
                 .status(StatusCode::FOUND)
                 .header(header::LOCATION, url)
-                .body(conduit::Body::empty())
+                .body(Bytes::new())
                 .unwrap() // Should not panic unless url contains "\r\n"
         }
 

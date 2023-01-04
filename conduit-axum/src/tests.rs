@@ -1,5 +1,6 @@
+use axum::body::Bytes;
 use axum::Router;
-use conduit::{box_error, Body, Handler, HandlerResult, RequestExt};
+use conduit::{box_error, Handler, HandlerResult, RequestExt};
 use http::{HeaderValue, Request, Response, StatusCode};
 use hyper::{body::to_bytes, service::Service};
 use tokio::{sync::oneshot, task::JoinHandle};
@@ -12,7 +13,7 @@ impl Handler for OkResult {
     fn call(&self, _req: &mut dyn RequestExt) -> HandlerResult {
         Response::builder()
             .header("ok", "value")
-            .body(Body::from_static(b"Hello, world!"))
+            .body(Bytes::from_static(b"Hello, world!"))
             .map_err(box_error)
     }
 }
@@ -37,7 +38,7 @@ impl Handler for InvalidHeader {
     fn call(&self, _req: &mut dyn RequestExt) -> HandlerResult {
         Response::builder()
             .header("invalid-value", "\r\n")
-            .body(Body::from_static(b"discarded"))
+            .body(Bytes::from_static(b"discarded"))
             .map_err(box_error)
     }
 }
@@ -47,7 +48,7 @@ impl Handler for InvalidStatus {
     fn call(&self, _req: &mut dyn RequestExt) -> HandlerResult {
         Response::builder()
             .status(1000)
-            .body(Body::empty())
+            .body(Bytes::new())
             .map_err(box_error)
     }
 }

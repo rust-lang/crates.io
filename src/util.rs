@@ -1,6 +1,6 @@
 use std::cmp;
 
-use conduit::Body;
+use axum::body::Bytes;
 use http::{header, Response};
 use serde::Serialize;
 
@@ -14,7 +14,7 @@ pub mod rfc3339;
 pub mod token;
 pub mod tracing;
 
-pub type AppResponse = Response<Body>;
+pub type AppResponse = Response<Bytes>;
 pub type EndpointResult = Result<AppResponse, Box<dyn errors::AppError>>;
 
 /// Serialize a value to JSON and build a status 200 Response
@@ -29,7 +29,7 @@ pub fn json_response<T: Serialize>(t: &T) -> AppResponse {
     Response::builder()
         .header(header::CONTENT_TYPE, "application/json")
         .header(header::CONTENT_LENGTH, json.len())
-        .body(Body::from_vec(json))
+        .body(Bytes::from(json))
         .unwrap() // Header values are well formed, so should not panic
 }
 

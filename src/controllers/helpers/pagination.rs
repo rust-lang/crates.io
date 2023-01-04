@@ -307,7 +307,7 @@ pub(crate) fn decode_seek<D: for<'a> Deserialize<'a>>(seek: &str) -> AppResult<D
 #[cfg(test)]
 mod tests {
     use super::*;
-    use conduit_test::{MockRequest, ResponseExt};
+    use conduit_test::MockRequest;
     use http::StatusCode;
     use serde_json::Value;
 
@@ -419,7 +419,8 @@ mod tests {
         let response = options.gather(&mock(query)).unwrap_err().response();
         assert_eq!(StatusCode::BAD_REQUEST, response.status());
 
-        let parsed: Value = serde_json::from_slice(&response.into_cow()).unwrap();
+        let bytes = response.into_body();
+        let parsed: Value = serde_json::from_slice(&bytes).unwrap();
         assert_eq!(parsed, json!({ "errors": [{ "detail": message }] }));
     }
 }

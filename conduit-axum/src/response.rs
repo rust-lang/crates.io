@@ -1,9 +1,10 @@
 use crate::body;
+use axum::body::Bytes;
 use axum::response::IntoResponse;
 use http::Response;
 
 pub type AxumResponse = axum::response::Response;
-pub type ConduitResponse = Response<conduit::Body>;
+pub type ConduitResponse = Response<Bytes>;
 
 /// Turns a `ConduitResponse` into a `AxumResponse`
 pub fn conduit_into_axum(response: ConduitResponse) -> AxumResponse {

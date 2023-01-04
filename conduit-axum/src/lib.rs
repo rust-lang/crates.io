@@ -37,12 +37,13 @@
 //! }
 //! #
 //! # use std::{error, io};
-//! # use conduit::{box_error, Body, Response, RequestExt, HandlerResult};
+//! # use axum::body::Bytes;
+//! # use conduit::{box_error, Response, RequestExt, HandlerResult};
 //! #
 //! # struct Endpoint();
 //! # impl Handler for Endpoint {
 //! #     fn call(&self, _: &mut dyn RequestExt) -> HandlerResult {
-//! #         Response::builder().body(Body::empty()).map_err(box_error)
+//! #         Response::builder().body(Bytes::new()).map_err(box_error)
 //! #     }
 //! # }
 //! ```

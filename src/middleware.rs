@@ -1,6 +1,6 @@
 mod prelude {
     pub use crate::middleware::log_request::CustomMetadataRequestExt;
-    pub use conduit::{box_error, Body, Handler, RequestExt};
+    pub use conduit::{box_error, Handler, RequestExt};
     pub use http::{header, Response, StatusCode};
 }
 

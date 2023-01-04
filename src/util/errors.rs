@@ -18,6 +18,7 @@ use std::any::{Any, TypeId};
 use std::error::Error;
 use std::fmt;
 
+use axum::body::Bytes;
 use chrono::NaiveDateTime;
 use conduit_axum::{conduit_into_axum, CauseField, ErrorField};
 use diesel::result::Error as DieselError;
@@ -328,7 +329,7 @@ fn server_error_response(error: String) -> AppResponse {
     Response::builder()
         .status(StatusCode::INTERNAL_SERVER_ERROR)
         .extension(ErrorField(error))
-        .body(conduit::Body::from_static(b"Internal Server Error"))
+        .body(Bytes::from_static(b"Internal Server Error"))
         .unwrap()
 }
 
