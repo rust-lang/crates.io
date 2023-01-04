@@ -85,7 +85,7 @@ impl conduit::RequestExt for MockRequest {
     fn extensions(&self) -> &Extensions {
         self.request.extensions()
     }
-    fn mut_extensions(&mut self) -> &mut Extensions {
+    fn extensions_mut(&mut self) -> &mut Extensions {
         self.request.extensions_mut()
     }
 }

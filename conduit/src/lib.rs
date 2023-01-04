@@ -77,7 +77,7 @@ pub trait RequestExt {
     fn extensions(&self) -> &Extensions;
 
     /// A mutable map of extensions
-    fn mut_extensions(&mut self) -> &mut Extensions;
+    fn extensions_mut(&mut self) -> &mut Extensions;
 }
 
 /// A Handler takes a request and returns a response or an error.
