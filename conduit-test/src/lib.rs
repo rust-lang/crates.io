@@ -1,19 +1,14 @@
 use bytes::Bytes;
-use hyper::Request;
+use hyper::http::{header::IntoHeaderName, HeaderValue, Method, Request};
 use std::io::Cursor;
 
-use conduit::{
-    header::{HeaderValue, IntoHeaderName},
-    Method,
-};
-
 pub struct MockRequest {
-    request: conduit::Request<Cursor<Bytes>>,
+    request: Request<Cursor<Bytes>>,
 }
 
 impl MockRequest {
     pub fn new(method: Method, path: &str) -> MockRequest {
-        let request = conduit::Request::builder()
+        let request = Request::builder()
             .method(&method)
             .uri(path)
             .body(Cursor::new(Bytes::new()))
@@ -53,7 +48,7 @@ impl From<MockRequest> for Request<hyper::Body> {
 mod tests {
     use super::MockRequest;
 
-    use conduit::{header, Method};
+    use hyper::http::{header, Method};
 
     #[test]
     fn simple_request_test() {
