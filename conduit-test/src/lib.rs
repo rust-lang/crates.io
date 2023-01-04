@@ -1,6 +1,5 @@
 use std::borrow::Cow;
 use std::io::{Cursor, Read};
-use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 
 use conduit::{
     header::{HeaderValue, IntoHeaderName},
@@ -114,10 +113,6 @@ impl conduit::RequestExt for MockRequest {
         self.query_string.as_ref().map(|s| &s[..])
     }
 
-    fn remote_addr(&self) -> SocketAddr {
-        SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1), 80))
-    }
-
     fn content_length(&self) -> Option<u64> {
         self.body.as_ref().map(|b| b.len() as u64)
     }
@@ -146,8 +141,6 @@ impl conduit::RequestExt for MockRequest {
 mod tests {
     use super::MockRequest;
 
-    use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
-
     use conduit::{header, Host, Method, RequestExt, Version};
 
     #[test]
@@ -159,10 +152,6 @@ mod tests {
         assert_eq!(req.host(), Host::Name("example.com"));
         assert_eq!(req.path(), "/");
         assert_eq!(req.query_string(), None);
-        assert_eq!(
-            req.remote_addr(),
-            SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1), 80))
-        );
         assert_eq!(req.content_length(), None);
         assert_eq!(req.headers().len(), 0);
         let mut s = String::new();

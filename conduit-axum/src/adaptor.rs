@@ -10,7 +10,6 @@
 //! `RequestInfo` which is `Send` and is moved into `ConduitRequest::new`.
 
 use std::io::{Cursor, Read};
-use std::net::SocketAddr;
 
 use conduit::{Host, RequestExt};
 use http::request::Parts as HttpParts;
@@ -55,11 +54,6 @@ impl RequestExt for ConduitRequest {
     /// Returns the length of the buffered body
     fn content_length(&self) -> Option<u64> {
         Some(self.body.get_ref().len() as u64)
-    }
-
-    /// Always returns an address of 0.0.0.0:0
-    fn remote_addr(&self) -> SocketAddr {
-        ([0, 0, 0, 0], 0).into()
     }
 
     fn path(&self) -> &str {

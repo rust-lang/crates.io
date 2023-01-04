@@ -80,10 +80,6 @@ pub trait RequestExt {
     /// The portion of the request URL that follows the "?"
     fn query_string(&self) -> Option<&str>;
 
-    /// The remote IP address of the client or the last proxy that
-    /// sent the request.
-    fn remote_addr(&self) -> SocketAddr;
-
     /// The byte-size of the body, if any
     fn content_length(&self) -> Option<u64>;
 
