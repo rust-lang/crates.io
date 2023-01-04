@@ -30,8 +30,7 @@ fn uri(path_and_query: &str) -> Uri {
 }
 
 pub struct MockRequest {
-    request: conduit::Request<Option<Vec<u8>>>,
-    reader: Option<Cursor<Vec<u8>>>,
+    request: conduit::Request<Cursor<Vec<u8>>>,
 }
 
 impl MockRequest {
@@ -39,13 +38,10 @@ impl MockRequest {
         let request = conduit::Request::builder()
             .method(&method)
             .uri(uri(path))
-            .body(None)
+            .body(Cursor::new(vec![]))
             .unwrap();
 
-        MockRequest {
-            request,
-            reader: None,
-        }
+        MockRequest { request }
     }
 
     pub fn with_query(&mut self, string: &str) -> &mut MockRequest {
@@ -55,8 +51,7 @@ impl MockRequest {
     }
 
     pub fn with_body(&mut self, bytes: &[u8]) -> &mut MockRequest {
-        *self.request.body_mut() = Some(bytes.to_vec());
-        self.reader = None;
+        *self.request.body_mut() = Cursor::new(bytes.to_vec());
         self
     }
 
@@ -85,7 +80,7 @@ impl conduit::RequestExt for MockRequest {
     }
 
     fn content_length(&self) -> Option<u64> {
-        self.request.body().as_ref().map(|b| b.len() as u64)
+        Some(self.request.body().get_ref().len() as u64)
     }
 
     fn headers(&self) -> &HeaderMap {
@@ -93,11 +88,7 @@ impl conduit::RequestExt for MockRequest {
     }
 
     fn body(&mut self) -> &mut dyn Read {
-        if self.reader.is_none() {
-            let body = self.request.body().clone().unwrap_or_default();
-            self.reader = Some(Cursor::new(body));
-        }
-        self.reader.as_mut().unwrap()
+        self.request.body_mut()
     }
 
     fn extensions(&self) -> &Extensions {
@@ -121,7 +112,7 @@ mod tests {
         assert_eq!(req.http_version(), Version::HTTP_11);
         assert_eq!(req.method(), Method::GET);
         assert_eq!(req.uri(), "/");
-        assert_eq!(req.content_length(), None);
+        assert_eq!(req.content_length(), Some(0));
         assert_eq!(req.headers().len(), 0);
         let mut s = String::new();
         req.body().read_to_string(&mut s).expect("No body");
