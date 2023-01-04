@@ -1,9 +1,0 @@
-[package]
-name = "static-file-server"
-version = "0.0.0"
-edition = "2018"
-
-[dependencies]
-civet = "0.12.0-alpha.5"
-conduit = { version ="0.10.0", path = "../../conduit" }
-conduit-static = { version ="0.10.1", path = "../../conduit-static" }
