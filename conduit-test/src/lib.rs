@@ -58,14 +58,6 @@ impl MockRequest {
         self
     }
 
-    pub fn with_path(&mut self, path: &str) -> &mut MockRequest {
-        self.uri = match self.uri.query() {
-            Some(query) => uri(&format!("{}?{}", path, query)),
-            None => uri(path),
-        };
-        self
-    }
-
     pub fn with_query(&mut self, string: &str) -> &mut MockRequest {
         let path_and_query = format!("{}?{}", self.uri.path(), string);
         self.uri = uri(&path_and_query);
