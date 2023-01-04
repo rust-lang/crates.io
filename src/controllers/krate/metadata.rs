@@ -22,7 +22,7 @@ use crate::views::{
 use crate::models::krate::ALL_COLUMNS;
 
 /// Handles the `GET /summary` route.
-pub fn summary(req: &mut dyn RequestExt) -> EndpointResult {
+pub fn summary(req: &mut ConduitRequest) -> EndpointResult {
     use crate::schema::crates::dsl::*;
     use diesel::dsl::all;
 
@@ -125,7 +125,7 @@ pub fn summary(req: &mut dyn RequestExt) -> EndpointResult {
 }
 
 /// Handles the `GET /crates/:crate_id` route.
-pub fn show(req: &mut dyn RequestExt) -> EndpointResult {
+pub fn show(req: &mut ConduitRequest) -> EndpointResult {
     let name = req.param("crate_id").unwrap();
     let include = req
         .query()
@@ -298,7 +298,7 @@ impl FromStr for ShowIncludeMode {
 }
 
 /// Handles the `GET /crates/:crate_id/:version/readme` route.
-pub fn readme(req: &mut dyn RequestExt) -> EndpointResult {
+pub fn readme(req: &mut ConduitRequest) -> EndpointResult {
     let crate_name = req.param("crate_id").unwrap();
     let version = req.param("version").unwrap();
 
@@ -318,7 +318,7 @@ pub fn readme(req: &mut dyn RequestExt) -> EndpointResult {
 /// Handles the `GET /crates/:crate_id/versions` route.
 // FIXME: Not sure why this is necessary since /crates/:crate_id returns
 // this information already, but ember is definitely requesting it
-pub fn versions(req: &mut dyn RequestExt) -> EndpointResult {
+pub fn versions(req: &mut ConduitRequest) -> EndpointResult {
     let crate_name = req.param("crate_id").unwrap();
     let conn = req.app().db_read()?;
     let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
@@ -346,7 +346,7 @@ pub fn versions(req: &mut dyn RequestExt) -> EndpointResult {
 }
 
 /// Handles the `GET /crates/:crate_id/reverse_dependencies` route.
-pub fn reverse_dependencies(req: &mut dyn RequestExt) -> EndpointResult {
+pub fn reverse_dependencies(req: &mut ConduitRequest) -> EndpointResult {
     use diesel::dsl::any;
 
     let pagination_options = PaginationOptions::builder().gather(req)?;

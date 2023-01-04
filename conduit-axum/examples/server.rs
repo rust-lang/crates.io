@@ -2,7 +2,7 @@
 
 use axum::body::Bytes;
 use axum::routing::get;
-use conduit::{RequestExt, ResponseResult};
+use conduit::{ConduitRequest, ResponseResult};
 use conduit_axum::ConduitAxumHandler;
 use http::{header, Response};
 
@@ -30,7 +30,7 @@ pub fn wrap<H>(handler: H) -> ConduitAxumHandler<H> {
     ConduitAxumHandler::wrap(handler)
 }
 
-fn endpoint(_: &mut dyn RequestExt) -> ResponseResult<http::Error> {
+fn endpoint(_: &mut ConduitRequest) -> ResponseResult<http::Error> {
     let body = b"Hello world!";
 
     sleep(std::time::Duration::from_secs(2));
@@ -41,11 +41,11 @@ fn endpoint(_: &mut dyn RequestExt) -> ResponseResult<http::Error> {
         .body(Bytes::from_static(body))
 }
 
-fn panic(_: &mut dyn RequestExt) -> ResponseResult<http::Error> {
+fn panic(_: &mut ConduitRequest) -> ResponseResult<http::Error> {
     // For now, connection is immediately closed
     panic!("message");
 }
 
-fn error(_: &mut dyn RequestExt) -> ResponseResult<io::Error> {
+fn error(_: &mut ConduitRequest) -> ResponseResult<io::Error> {
     Err(io::Error::new(io::ErrorKind::Other, "io error, oops"))
 }

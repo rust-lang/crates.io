@@ -5,7 +5,7 @@ use http::Response;
 use prometheus::{Encoder, TextEncoder};
 
 /// Handles the `GET /api/private/metrics/:kind` endpoint.
-pub fn prometheus(req: &mut dyn RequestExt) -> EndpointResult {
+pub fn prometheus(req: &mut ConduitRequest) -> EndpointResult {
     let app = req.app();
 
     if let Some(expected_token) = &app.config.metrics_authorization_token {

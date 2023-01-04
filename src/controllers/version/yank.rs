@@ -19,17 +19,17 @@ use crate::worker;
 /// Crate deletion is not implemented to avoid breaking builds,
 /// and the goal of yanking a crate is to prevent crates
 /// beginning to depend on the yanked crate version.
-pub fn yank(req: &mut dyn RequestExt) -> EndpointResult {
+pub fn yank(req: &mut ConduitRequest) -> EndpointResult {
     modify_yank(req, true)
 }
 
 /// Handles the `PUT /crates/:crate_id/:version/unyank` route.
-pub fn unyank(req: &mut dyn RequestExt) -> EndpointResult {
+pub fn unyank(req: &mut ConduitRequest) -> EndpointResult {
     modify_yank(req, false)
 }
 
 /// Changes `yanked` flag on a crate version record
-fn modify_yank(req: &mut dyn RequestExt, yanked: bool) -> EndpointResult {
+fn modify_yank(req: &mut ConduitRequest, yanked: bool) -> EndpointResult {
     // FIXME: Should reject bad requests before authentication, but can't due to
     // lifetime issues with `req`.
 

@@ -7,7 +7,7 @@ use conduit_axum::RequestParamsExt;
 /// We don't want to accept authenticated requests that originated from other sites, so this
 /// function returns an error if the Origin header doesn't match what we expect "this site" to
 /// be: https://crates.io in production, or http://localhost:port/ in development.
-pub fn verify_origin(req: &dyn RequestExt) -> AppResult<()> {
+pub fn verify_origin(req: &ConduitRequest) -> AppResult<()> {
     let headers = req.headers();
     let allowed_origins = &req.app().config.allowed_origins;
 
@@ -28,7 +28,7 @@ pub trait RequestParamExt<'a> {
     fn param(self, key: &str) -> Option<&'a str>;
 }
 
-impl<'a> RequestParamExt<'a> for &'a (dyn RequestExt + 'a) {
+impl<'a> RequestParamExt<'a> for &'a ConduitRequest {
     fn param(self, key: &str) -> Option<&'a str> {
         self.axum_params()
             .and_then(|params| params.0.get(key).map(|s| &s[..]))

@@ -14,7 +14,7 @@ mod prelude {
     use axum::body::Bytes;
     pub use diesel::prelude::*;
 
-    pub use conduit::RequestExt;
+    pub use conduit::{ConduitRequest, RequestExt};
     pub use http::{header, StatusCode};
 
     pub use super::conduit_axum::conduit_compat;
@@ -43,7 +43,7 @@ mod prelude {
         fn query_with_params(&self, params: IndexMap<String, String>) -> String;
     }
 
-    impl<'a> RequestUtils for dyn RequestExt + 'a {
+    impl RequestUtils for ConduitRequest {
         fn query(&self) -> IndexMap<String, String> {
             url::form_urlencoded::parse(self.uri().query().unwrap_or("").as_bytes())
                 .into_owned()
