@@ -63,7 +63,7 @@ pub trait RequestSession {
     fn session_remove(&mut self, key: &str) -> Option<String>;
 }
 
-impl<T: conduit::RequestExt + ?Sized> RequestSession for T {
+impl<T> RequestSession for Request<T> {
     fn session_get(&self, key: &str) -> Option<String> {
         let session = self
             .extensions()
