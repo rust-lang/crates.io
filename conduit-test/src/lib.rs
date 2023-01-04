@@ -30,37 +30,32 @@ fn uri(path_and_query: &str) -> Uri {
 }
 
 pub struct MockRequest {
-    method: Method,
-    uri: Uri,
-    body: Option<Vec<u8>>,
-    headers: HeaderMap,
-    extensions: Extensions,
+    request: conduit::Request<Option<Vec<u8>>>,
     reader: Option<Cursor<Vec<u8>>>,
 }
 
 impl MockRequest {
     pub fn new(method: Method, path: &str) -> MockRequest {
-        let headers = HeaderMap::new();
-        let extensions = Extensions::new();
+        let request = conduit::Request::builder()
+            .method(&method)
+            .uri(uri(path))
+            .body(None)
+            .unwrap();
 
         MockRequest {
-            uri: uri(path),
-            extensions,
-            body: None,
-            headers,
-            method,
+            request,
             reader: None,
         }
     }
 
     pub fn with_query(&mut self, string: &str) -> &mut MockRequest {
-        let path_and_query = format!("{}?{}", self.uri.path(), string);
-        self.uri = uri(&path_and_query);
+        let path_and_query = format!("{}?{}", self.request.uri().path(), string);
+        *self.request.uri_mut() = uri(&path_and_query);
         self
     }
 
     pub fn with_body(&mut self, bytes: &[u8]) -> &mut MockRequest {
-        self.body = Some(bytes.to_vec());
+        *self.request.body_mut() = Some(bytes.to_vec());
         self.reader = None;
         self
     }
@@ -69,7 +64,8 @@ impl MockRequest {
     where
         K: IntoHeaderName,
     {
-        self.headers
+        self.request
+            .headers_mut()
             .insert(name, HeaderValue::from_str(value).unwrap());
         self
     }
@@ -81,34 +77,34 @@ impl conduit::RequestExt for MockRequest {
     }
 
     fn method(&self) -> &Method {
-        &self.method
+        self.request.method()
     }
 
     fn uri(&self) -> &Uri {
-        &self.uri
+        self.request.uri()
     }
 
     fn content_length(&self) -> Option<u64> {
-        self.body.as_ref().map(|b| b.len() as u64)
+        self.request.body().as_ref().map(|b| b.len() as u64)
     }
 
     fn headers(&self) -> &HeaderMap {
-        &self.headers
+        self.request.headers()
     }
 
     fn body(&mut self) -> &mut dyn Read {
         if self.reader.is_none() {
-            let body = self.body.clone().unwrap_or_default();
+            let body = self.request.body().clone().unwrap_or_default();
             self.reader = Some(Cursor::new(body));
         }
         self.reader.as_mut().unwrap()
     }
 
     fn extensions(&self) -> &Extensions {
-        &self.extensions
+        self.request.extensions()
     }
     fn mut_extensions(&mut self) -> &mut Extensions {
-        &mut self.extensions
+        self.request.extensions_mut()
     }
 }
 
