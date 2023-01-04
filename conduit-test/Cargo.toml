@@ -11,3 +11,4 @@ edition = "2018"
 [dependencies]
 bytes = "1.3.0"
 conduit = { version ="0.10.0", path = "../conduit" }
+hyper = "0.14.23"

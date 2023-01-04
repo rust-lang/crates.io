@@ -26,7 +26,6 @@ use crate::{
 use cargo_registry::middleware::session;
 use cargo_registry::models::{ApiToken, CreatedApiToken, User};
 
-use conduit::RequestExt;
 use conduit_test::MockRequest;
 use http::Method;
 
@@ -89,14 +88,12 @@ pub trait RequestHelper {
     fn run<T>(&self, request: MockRequest) -> Response<T> {
         let mut router = self.app().router().clone();
 
-        let req = convert_request(request);
-
         let rt = tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()
             .unwrap();
 
-        let axum_response = rt.block_on(router.call(req)).unwrap();
+        let axum_response = rt.block_on(router.call(request.into())).unwrap();
 
         // axum responses can't be converted directly to reqwest responses,
         // so we have to convert it to a hyper response first.
@@ -359,21 +356,4 @@ impl MockTokenUser {
 #[derive(Deserialize, Debug)]
 pub struct Error {
     pub detail: String,
-}
-
-fn convert_request(mut mock_request: MockRequest) -> http::Request<hyper::Body> {
-    let mut buffer = Vec::new();
-    mock_request.body().read_to_end(&mut buffer).unwrap();
-
-    let body = hyper::Body::from(buffer);
-
-    let mut req = http::Request::builder()
-        .method(mock_request.method())
-        .uri(mock_request.uri());
-
-    for (name, value) in mock_request.headers() {
-        req = req.header(name, value)
-    }
-
-    req.body(body).unwrap()
 }

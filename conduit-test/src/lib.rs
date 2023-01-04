@@ -1,9 +1,10 @@
 use bytes::Bytes;
+use hyper::Request;
 use std::io::{Cursor, Read};
 
 use conduit::{
     header::{HeaderValue, IntoHeaderName},
-    Extensions, HeaderMap, Method, Uri,
+    Extensions, HeaderMap, Method, RequestExt, Uri,
 };
 
 pub struct MockRequest {
@@ -63,6 +64,25 @@ impl conduit::RequestExt for MockRequest {
     }
     fn extensions_mut(&mut self) -> &mut Extensions {
         self.request.extensions_mut()
+    }
+}
+
+impl From<MockRequest> for Request<hyper::Body> {
+    fn from(mut mock_request: MockRequest) -> Self {
+        let mut buffer = Vec::new();
+        mock_request.body().read_to_end(&mut buffer).unwrap();
+
+        let body = hyper::Body::from(buffer);
+
+        let mut req = Request::builder()
+            .method(mock_request.method())
+            .uri(mock_request.uri());
+
+        for (name, value) in mock_request.headers() {
+            req = req.header(name, value)
+        }
+
+        req.body(body).unwrap()
     }
 }
 
