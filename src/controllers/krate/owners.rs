@@ -64,8 +64,6 @@ pub fn remove_owners(req: &mut dyn RequestExt) -> EndpointResult {
 /// {"owners": ["username", "github:org:team", ...]}
 /// ```
 fn parse_owners_request(req: &mut dyn RequestExt) -> AppResult<Vec<String>> {
-    let mut body = String::new();
-    req.body().read_to_string(&mut body)?;
     #[derive(Deserialize)]
     struct Request {
         // identical, for back-compat (owners preferred)
@@ -73,7 +71,7 @@ fn parse_owners_request(req: &mut dyn RequestExt) -> AppResult<Vec<String>> {
         owners: Option<Vec<String>>,
     }
     let request: Request =
-        serde_json::from_str(&body).map_err(|_| cargo_err("invalid json request"))?;
+        serde_json::from_reader(req.body()).map_err(|_| cargo_err("invalid json request"))?;
     request
         .owners
         .or(request.users)

@@ -2,7 +2,6 @@ use super::frontend_prelude::*;
 
 use crate::models::ApiToken;
 use crate::schema::api_tokens;
-use crate::util::read_fill;
 use crate::views::EncodableApiTokenWithToken;
 
 use crate::auth::AuthCheck;
@@ -47,13 +46,7 @@ pub fn new(req: &mut dyn RequestExt) -> EndpointResult {
         return Err(bad_request(&format!("max content length is: {max_size}")));
     }
 
-    let mut json = vec![0; length as usize];
-    read_fill(req.body(), &mut json)?;
-
-    let json =
-        String::from_utf8(json).map_err(|_| bad_request(&"json body was not valid utf-8"))?;
-
-    let new: NewApiTokenRequest = json::from_str(&json)
+    let new: NewApiTokenRequest = json::from_reader(req.body())
         .map_err(|e| bad_request(&format!("invalid new token request: {e:?}")))?;
 
     let name = &new.api_token.name;
