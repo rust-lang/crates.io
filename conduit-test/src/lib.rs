@@ -3,7 +3,7 @@ use std::io::{Cursor, Read};
 
 use conduit::{
     header::{HeaderValue, IntoHeaderName},
-    Body, Extensions, HeaderMap, Method, Response, Version,
+    Body, Extensions, HeaderMap, Method, Response, Uri, Version,
 };
 
 pub trait ResponseExt {
@@ -22,10 +22,16 @@ impl ResponseExt for Response<Body> {
     }
 }
 
+fn uri(path_and_query: &str) -> Uri {
+    Uri::builder()
+        .path_and_query(path_and_query)
+        .build()
+        .unwrap()
+}
+
 pub struct MockRequest {
-    path: String,
     method: Method,
-    query_string: Option<String>,
+    uri: Uri,
     body: Option<Vec<u8>>,
     headers: HeaderMap,
     extensions: Extensions,
@@ -38,9 +44,8 @@ impl MockRequest {
         let extensions = Extensions::new();
 
         MockRequest {
-            path: path.to_string(),
+            uri: uri(path),
             extensions,
-            query_string: None,
             body: None,
             headers,
             method,
@@ -54,12 +59,16 @@ impl MockRequest {
     }
 
     pub fn with_path(&mut self, path: &str) -> &mut MockRequest {
-        self.path = path.to_string();
+        self.uri = match self.uri.query() {
+            Some(query) => uri(&format!("{}?{}", path, query)),
+            None => uri(path),
+        };
         self
     }
 
     pub fn with_query(&mut self, string: &str) -> &mut MockRequest {
-        self.query_string = Some(string.to_string());
+        let path_and_query = format!("{}?{}", self.uri.path(), string);
+        self.uri = uri(&path_and_query);
         self
     }
 
@@ -88,12 +97,8 @@ impl conduit::RequestExt for MockRequest {
         &self.method
     }
 
-    fn path(&self) -> &str {
-        &self.path
-    }
-
-    fn query_string(&self) -> Option<&str> {
-        self.query_string.as_ref().map(|s| &s[..])
+    fn uri(&self) -> &Uri {
+        &self.uri
     }
 
     fn content_length(&self) -> Option<u64> {
@@ -132,8 +137,7 @@ mod tests {
 
         assert_eq!(req.http_version(), Version::HTTP_11);
         assert_eq!(req.method(), Method::GET);
-        assert_eq!(req.path(), "/");
-        assert_eq!(req.query_string(), None);
+        assert_eq!(req.uri(), "/");
         assert_eq!(req.content_length(), None);
         assert_eq!(req.headers().len(), 0);
         let mut s = String::new();
@@ -147,7 +151,7 @@ mod tests {
         req.with_body(b"Hello world");
 
         assert_eq!(req.method(), Method::POST);
-        assert_eq!(req.path(), "/articles");
+        assert_eq!(req.uri(), "/articles");
         let mut s = String::new();
         req.body().read_to_string(&mut s).expect("No body");
         assert_eq!(s, "Hello world".to_string());
@@ -159,7 +163,7 @@ mod tests {
         let mut req = MockRequest::new(Method::POST, "/articles");
         req.with_query("foo=bar");
 
-        assert_eq!(req.query_string().expect("No query string"), "foo=bar");
+        assert_eq!(req.uri().query().expect("No query string"), "foo=bar");
     }
 
     #[test]

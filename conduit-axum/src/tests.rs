@@ -63,7 +63,7 @@ impl Handler for Sleep {
 struct AssertPercentDecodedPath;
 impl Handler for AssertPercentDecodedPath {
     fn call(&self, req: &mut dyn RequestExt) -> HandlerResult {
-        if req.path() == "/:" && req.query_string() == Some("%3a") {
+        if req.uri().path() == "/%3a" && req.uri().query() == Some("%3a") {
             OkResult.call(req)
         } else {
             ErrorResult.call(req)

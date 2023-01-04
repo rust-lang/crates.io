@@ -200,7 +200,7 @@ pub fn search(req: &mut dyn RequestExt) -> EndpointResult {
         // Calculating the total number of results with filters is not supported yet.
         supports_seek = false;
 
-        let query_bytes = req.query_string().unwrap_or("").as_bytes();
+        let query_bytes = req.uri().query().unwrap_or("").as_bytes();
         let ids: Vec<_> = url::form_urlencoded::parse(query_bytes)
             .filter(|(key, _)| key == "ids[]")
             .map(|(_, value)| value.to_string())

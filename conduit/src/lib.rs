@@ -3,7 +3,7 @@
 use std::error::Error;
 use std::io::Read;
 
-pub use http::{header, HeaderMap, Method, Request, Response, StatusCode, Version};
+pub use http::{header, HeaderMap, Method, Request, Response, StatusCode, Uri, Version};
 
 pub type ResponseResult<Error> = Result<Response<Body>, Error>;
 pub type HttpResult = ResponseResult<http::Error>;
@@ -62,11 +62,8 @@ pub trait RequestExt {
     /// The request method, such as GET, POST, PUT, DELETE or PATCH
     fn method(&self) -> &Method;
 
-    /// The remainder of the path.
-    fn path(&self) -> &str;
-
-    /// The portion of the request URL that follows the "?"
-    fn query_string(&self) -> Option<&str>;
+    /// The request URI
+    fn uri(&self) -> &Uri;
 
     /// The byte-size of the body, if any
     fn content_length(&self) -> Option<u64>;

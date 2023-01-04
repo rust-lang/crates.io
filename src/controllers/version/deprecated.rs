@@ -17,7 +17,7 @@ pub fn index(req: &mut dyn RequestExt) -> EndpointResult {
     let conn = req.app().db_read()?;
 
     // Extract all ids requested.
-    let query = url::form_urlencoded::parse(req.query_string().unwrap_or("").as_bytes());
+    let query = url::form_urlencoded::parse(req.uri().query().unwrap_or("").as_bytes());
     let ids = query
         .filter_map(|(ref a, ref b)| if *a == "ids[]" { b.parse().ok() } else { None })
         .collect::<Vec<i32>>();

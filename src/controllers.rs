@@ -44,7 +44,7 @@ mod prelude {
 
     impl<'a> RequestUtils for dyn RequestExt + 'a {
         fn query(&self) -> IndexMap<String, String> {
-            url::form_urlencoded::parse(self.query_string().unwrap_or("").as_bytes())
+            url::form_urlencoded::parse(self.uri().query().unwrap_or("").as_bytes())
                 .into_owned()
                 .collect()
         }
