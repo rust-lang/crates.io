@@ -12,25 +12,12 @@ pub trait ResponseExt {
 
 impl ResponseExt for Response<Body> {
     /// Convert the request into a copy-on-write body
-    ///
-    /// # Blocking
-    ///
-    /// This function may block if the value is a `Body::File`.
-    ///
-    /// # Panics
-    ///
-    /// This function panics if there is an error reading a `Body::File`.
     fn into_cow(self) -> Cow<'static, [u8]> {
         use conduit::Body::*;
 
         match self.into_body() {
             Static(slice) => slice.into(),
             Owned(vec) => vec.into(),
-            File(mut file) => {
-                let mut vec = Vec::new();
-                std::io::copy(&mut file, &mut vec).unwrap();
-                vec.into()
-            }
         }
     }
 }

@@ -1,7 +1,6 @@
 #![warn(rust_2018_idioms)]
 
 use std::error::Error;
-use std::fs::File;
 use std::io::Read;
 
 pub use http::{header, HeaderMap, Method, Request, Response, StatusCode, Version};
@@ -20,7 +19,6 @@ pub type HandlerResult = Result<Response<Body>, BoxError>;
 pub enum Body {
     Static(&'static [u8]),
     Owned(Vec<u8>),
-    File(File),
 }
 
 impl Body {
