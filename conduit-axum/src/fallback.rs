@@ -1,7 +1,7 @@
 use crate::adaptor::ConduitRequest;
 use crate::error::ServiceError;
-use crate::file_stream::FileStream;
-use crate::{spawn_blocking, AxumResponse, ConduitResponse};
+use crate::response::{conduit_into_axum, AxumResponse};
+use crate::spawn_blocking;
 
 use std::collections::BTreeMap;
 use std::error::Error;
@@ -92,19 +92,6 @@ pub struct ErrorField(pub String);
 
 #[derive(Clone, Debug)]
 pub struct CauseField(pub String);
-
-/// Turns a `ConduitResponse` into a `AxumResponse`
-pub fn conduit_into_axum(response: ConduitResponse) -> AxumResponse {
-    use conduit::Body::*;
-
-    let (parts, body) = response.into_parts();
-    match body {
-        Static(slice) => Response::from_parts(parts, axum::body::Body::from(slice)).into_response(),
-        Owned(vec) => Response::from_parts(parts, axum::body::Body::from(vec)).into_response(),
-        File(file) => Response::from_parts(parts, FileStream::from_std(file).into_streamed_body())
-            .into_response(),
-    }
-}
 
 impl IntoResponse for ServiceError {
     fn into_response(self) -> AxumResponse {
