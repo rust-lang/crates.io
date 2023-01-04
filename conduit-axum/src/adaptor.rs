@@ -10,9 +10,8 @@
 //! `RequestInfo` which is `Send` and is moved into `ConduitRequest::new`.
 
 use std::io::{Cursor, Read};
-use std::net::SocketAddr;
 
-use conduit::{Host, RequestExt, Scheme};
+use conduit::RequestExt;
 use http::request::Parts as HttpParts;
 use http::{Extensions, HeaderMap, Method, Request, Version};
 use hyper::body::Bytes;
@@ -48,11 +47,6 @@ impl RequestExt for ConduitRequest {
         &self.parts.method
     }
 
-    /// Always returns Http
-    fn scheme(&self) -> Scheme {
-        Scheme::Http
-    }
-
     fn headers(&self) -> &HeaderMap {
         &self.parts.headers
     }
@@ -62,21 +56,8 @@ impl RequestExt for ConduitRequest {
         Some(self.body.get_ref().len() as u64)
     }
 
-    /// Always returns an address of 0.0.0.0:0
-    fn remote_addr(&self) -> SocketAddr {
-        ([0, 0, 0, 0], 0).into()
-    }
-
-    fn virtual_root(&self) -> Option<&str> {
-        None
-    }
-
     fn path(&self) -> &str {
         &self.path
-    }
-
-    fn path_mut(&mut self) -> &mut String {
-        &mut self.path
     }
 
     fn extensions(&self) -> &Extensions {
@@ -85,18 +66,6 @@ impl RequestExt for ConduitRequest {
 
     fn mut_extensions(&mut self) -> &mut Extensions {
         &mut self.parts.extensions
-    }
-
-    /// Returns the value of the `Host` header
-    ///
-    /// If the header is not present or is invalid UTF-8, then the empty string is returned
-    fn host(&self) -> Host<'_> {
-        let host = self
-            .headers()
-            .get(http::header::HOST)
-            .map(|h| h.to_str().unwrap_or(""))
-            .unwrap_or("");
-        Host::Name(host)
     }
 
     fn query_string(&self) -> Option<&str> {

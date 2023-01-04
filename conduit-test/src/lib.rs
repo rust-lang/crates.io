@@ -1,10 +1,9 @@
 use std::borrow::Cow;
 use std::io::{Cursor, Read};
-use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 
 use conduit::{
     header::{HeaderValue, IntoHeaderName},
-    Body, Extensions, HeaderMap, Host, Method, Response, Scheme, StartInstant, Version,
+    Body, Extensions, HeaderMap, Method, Response, Version,
 };
 
 pub trait ResponseExt {
@@ -49,8 +48,7 @@ pub struct MockRequest {
 impl MockRequest {
     pub fn new(method: Method, path: &str) -> MockRequest {
         let headers = HeaderMap::new();
-        let mut extensions = Extensions::new();
-        extensions.insert(StartInstant::now());
+        let extensions = Extensions::new();
 
         MockRequest {
             path: path.to_string(),
@@ -102,30 +100,13 @@ impl conduit::RequestExt for MockRequest {
     fn method(&self) -> &Method {
         &self.method
     }
-    fn scheme(&self) -> Scheme {
-        Scheme::Http
-    }
-    fn host(&self) -> Host<'_> {
-        Host::Name("example.com")
-    }
-    fn virtual_root(&self) -> Option<&str> {
-        None
-    }
 
     fn path(&self) -> &str {
         &self.path
     }
 
-    fn path_mut(&mut self) -> &mut String {
-        &mut self.path
-    }
-
     fn query_string(&self) -> Option<&str> {
         self.query_string.as_ref().map(|s| &s[..])
-    }
-
-    fn remote_addr(&self) -> SocketAddr {
-        SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1), 80))
     }
 
     fn content_length(&self) -> Option<u64> {
@@ -156,9 +137,7 @@ impl conduit::RequestExt for MockRequest {
 mod tests {
     use super::MockRequest;
 
-    use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
-
-    use conduit::{header, Host, Method, RequestExt, Scheme, Version};
+    use conduit::{header, Method, RequestExt, Version};
 
     #[test]
     fn simple_request_test() {
@@ -166,15 +145,8 @@ mod tests {
 
         assert_eq!(req.http_version(), Version::HTTP_11);
         assert_eq!(req.method(), Method::GET);
-        assert_eq!(req.scheme(), Scheme::Http);
-        assert_eq!(req.host(), Host::Name("example.com"));
-        assert_eq!(req.virtual_root(), None);
         assert_eq!(req.path(), "/");
         assert_eq!(req.query_string(), None);
-        assert_eq!(
-            req.remote_addr(),
-            SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1), 80))
-        );
         assert_eq!(req.content_length(), None);
         assert_eq!(req.headers().len(), 0);
         let mut s = String::new();
