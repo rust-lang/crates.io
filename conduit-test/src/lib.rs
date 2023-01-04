@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use std::convert::TryInto;
 use std::io::{Cursor, Read};
 
 use conduit::{
@@ -22,13 +23,6 @@ impl ResponseExt for Response<Body> {
     }
 }
 
-fn uri(path_and_query: &str) -> Uri {
-    Uri::builder()
-        .path_and_query(path_and_query)
-        .build()
-        .unwrap()
-}
-
 pub struct MockRequest {
     request: conduit::Request<Cursor<Vec<u8>>>,
 }
@@ -37,7 +31,7 @@ impl MockRequest {
     pub fn new(method: Method, path: &str) -> MockRequest {
         let request = conduit::Request::builder()
             .method(&method)
-            .uri(uri(path))
+            .uri(path)
             .body(Cursor::new(vec![]))
             .unwrap();
 
@@ -46,7 +40,7 @@ impl MockRequest {
 
     pub fn with_query(&mut self, string: &str) -> &mut MockRequest {
         let path_and_query = format!("{}?{}", self.request.uri().path(), string);
-        *self.request.uri_mut() = uri(&path_and_query);
+        *self.request.uri_mut() = path_and_query.try_into().unwrap();
         self
     }
 
