@@ -3,7 +3,9 @@
 use std::error::Error;
 use std::io::Read;
 
-pub use http::{header, HeaderMap, Method, Request, Response, StatusCode, Uri, Version};
+pub use http::{
+    header, Extensions, HeaderMap, Method, Request, Response, StatusCode, Uri, Version,
+};
 
 pub type ResponseResult<Error> = Result<Response<Body>, Error>;
 pub type HttpResult = ResponseResult<http::Error>;
@@ -51,9 +53,6 @@ impl Body {
 pub fn box_error<E: Error + Send + 'static>(error: E) -> BoxError {
     Box::new(error)
 }
-
-/// A Dictionary for extensions provided by the server or middleware
-pub type Extensions = http::Extensions;
 
 pub trait RequestExt {
     /// The version of HTTP being used
