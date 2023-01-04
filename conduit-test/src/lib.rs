@@ -1,19 +1,14 @@
 use bytes::Bytes;
-use hyper::Request;
-use std::io::{Cursor, Read};
-
-use conduit::{
-    header::{HeaderValue, IntoHeaderName},
-    Extensions, HeaderMap, Method, Uri,
-};
+use hyper::http::{header::IntoHeaderName, HeaderValue, Method, Request};
+use std::io::Cursor;
 
 pub struct MockRequest {
-    request: conduit::Request<Cursor<Bytes>>,
+    request: Request<Cursor<Bytes>>,
 }
 
 impl MockRequest {
     pub fn new(method: Method, path: &str) -> MockRequest {
-        let request = conduit::Request::builder()
+        let request = Request::builder()
             .method(&method)
             .uri(path)
             .body(Cursor::new(Bytes::new()))
@@ -36,34 +31,9 @@ impl MockRequest {
             .insert(name, HeaderValue::from_str(value).unwrap());
         self
     }
-}
 
-impl conduit::RequestExt for MockRequest {
-    fn method(&self) -> &Method {
-        self.request.method()
-    }
-
-    fn uri(&self) -> &Uri {
-        self.request.uri()
-    }
-
-    fn content_length(&self) -> Option<u64> {
-        Some(self.request.body().get_ref().len() as u64)
-    }
-
-    fn headers(&self) -> &HeaderMap {
-        self.request.headers()
-    }
-
-    fn body(&mut self) -> &mut dyn Read {
-        self.request.body_mut()
-    }
-
-    fn extensions(&self) -> &Extensions {
-        self.request.extensions()
-    }
-    fn extensions_mut(&mut self) -> &mut Extensions {
-        self.request.extensions_mut()
+    pub fn into_inner(self) -> Request<Cursor<Bytes>> {
+        self.request
     }
 }
 
@@ -78,37 +48,32 @@ impl From<MockRequest> for Request<hyper::Body> {
 mod tests {
     use super::MockRequest;
 
-    use conduit::{header, Method, RequestExt};
+    use hyper::http::{header, Method};
 
     #[test]
     fn simple_request_test() {
-        let mut req = MockRequest::new(Method::GET, "/");
+        let req = MockRequest::new(Method::GET, "/").into_inner();
 
         assert_eq!(req.method(), Method::GET);
         assert_eq!(req.uri(), "/");
-        assert_eq!(req.content_length(), Some(0));
         assert_eq!(req.headers().len(), 0);
-        let mut s = String::new();
-        req.body().read_to_string(&mut s).expect("No body");
-        assert_eq!(s, "".to_string());
+        assert_eq!(req.body().get_ref(), "");
     }
 
     #[test]
     fn request_body_test() {
         let mut req = MockRequest::new(Method::POST, "/articles");
         req.with_body(b"Hello world");
+        let req = req.into_inner();
 
         assert_eq!(req.method(), Method::POST);
         assert_eq!(req.uri(), "/articles");
-        let mut s = String::new();
-        req.body().read_to_string(&mut s).expect("No body");
-        assert_eq!(s, "Hello world".to_string());
-        assert_eq!(req.content_length(), Some(11));
+        assert_eq!(req.body().get_ref(), "Hello world");
     }
 
     #[test]
     fn request_query_test() {
-        let req = MockRequest::new(Method::POST, "/articles?foo=bar");
+        let req = MockRequest::new(Method::POST, "/articles?foo=bar").into_inner();
         assert_eq!(req.uri().query().expect("No query string"), "foo=bar");
     }
 
@@ -117,6 +82,7 @@ mod tests {
         let mut req = MockRequest::new(Method::POST, "/articles");
         req.header(header::USER_AGENT, "lulz");
         req.header(header::DNT, "1");
+        let req = req.into_inner();
 
         assert_eq!(req.headers().len(), 2);
         assert_eq!(req.headers().get(header::USER_AGENT).unwrap(), "lulz");
