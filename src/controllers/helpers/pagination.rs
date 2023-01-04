@@ -309,6 +309,7 @@ mod tests {
     use super::*;
     use conduit_test::{MockRequest, ResponseExt};
     use http::StatusCode;
+    use serde_json::Value;
 
     #[test]
     fn no_pagination_param() {
@@ -417,19 +418,9 @@ mod tests {
 
     fn assert_pagination_error(options: PaginationOptionsBuilder, query: &str, message: &str) {
         let response = options.gather(&mock(query)).unwrap_err().response();
-
         assert_eq!(StatusCode::BAD_REQUEST, response.status());
 
-        #[derive(Deserialize)]
-        struct Parsed {
-            errors: [ParsedError; 1],
-        }
-        #[derive(Deserialize)]
-        struct ParsedError {
-            detail: String,
-        }
-
-        let parsed: Parsed = serde_json::from_slice(&response.into_cow()).unwrap();
-        assert_eq!(message, parsed.errors[0].detail);
+        let parsed: Value = serde_json::from_slice(&response.into_cow()).unwrap();
+        assert_eq!(parsed, json!({ "errors": [{ "detail": message }] }));
     }
 }
