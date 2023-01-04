@@ -1,5 +1,4 @@
 use crate::error::ServiceError;
-use crate::request::ConduitRequest;
 use crate::response::{conduit_into_axum, AxumResponse};
 use crate::spawn_blocking;
 
@@ -75,7 +74,7 @@ where
 
             let Self(handler) = self;
             spawn_blocking(move || {
-                let mut request = ConduitRequest::new(request);
+                let mut request = request;
                 handler
                     .call(&mut request)
                     .map(conduit_into_axum)

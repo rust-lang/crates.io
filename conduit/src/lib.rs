@@ -1,7 +1,8 @@
 #![warn(rust_2018_idioms)]
 
+use bytes::Bytes;
 use std::error::Error;
-use std::io::Read;
+use std::io::{Cursor, Read};
 
 pub use http::{header, Extensions, HeaderMap, Method, Request, Response, StatusCode, Uri};
 
@@ -78,6 +79,35 @@ pub trait RequestExt {
 
     /// A mutable map of extensions
     fn extensions_mut(&mut self) -> &mut Extensions;
+}
+
+impl RequestExt for Request<Cursor<Bytes>> {
+    fn method(&self) -> &Method {
+        self.method()
+    }
+
+    fn uri(&self) -> &Uri {
+        self.uri()
+    }
+
+    fn content_length(&self) -> Option<u64> {
+        Some(self.body().get_ref().len() as u64)
+    }
+
+    fn headers(&self) -> &HeaderMap {
+        self.headers()
+    }
+
+    fn body(&mut self) -> &mut dyn Read {
+        self.body_mut()
+    }
+
+    fn extensions(&self) -> &Extensions {
+        self.extensions()
+    }
+    fn extensions_mut(&mut self) -> &mut Extensions {
+        self.extensions_mut()
+    }
 }
 
 /// A Handler takes a request and returns a response or an error.
