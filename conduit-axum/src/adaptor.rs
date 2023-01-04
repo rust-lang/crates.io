@@ -11,7 +11,7 @@
 
 use std::io::{Cursor, Read};
 
-use conduit::{Host, RequestExt};
+use conduit::RequestExt;
 use http::request::Parts as HttpParts;
 use http::{Extensions, HeaderMap, Method, Request, Version};
 use hyper::body::Bytes;
@@ -66,18 +66,6 @@ impl RequestExt for ConduitRequest {
 
     fn mut_extensions(&mut self) -> &mut Extensions {
         &mut self.parts.extensions
-    }
-
-    /// Returns the value of the `Host` header
-    ///
-    /// If the header is not present or is invalid UTF-8, then the empty string is returned
-    fn host(&self) -> Host<'_> {
-        let host = self
-            .headers()
-            .get(http::header::HOST)
-            .map(|h| h.to_str().unwrap_or(""))
-            .unwrap_or("");
-        Host::Name(host)
     }
 
     fn query_string(&self) -> Option<&str> {

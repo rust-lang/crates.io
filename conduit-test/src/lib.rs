@@ -3,7 +3,7 @@ use std::io::{Cursor, Read};
 
 use conduit::{
     header::{HeaderValue, IntoHeaderName},
-    Body, Extensions, HeaderMap, Host, Method, Response, Version,
+    Body, Extensions, HeaderMap, Method, Response, Version,
 };
 
 pub trait ResponseExt {
@@ -101,10 +101,6 @@ impl conduit::RequestExt for MockRequest {
         &self.method
     }
 
-    fn host(&self) -> Host<'_> {
-        Host::Name("example.com")
-    }
-
     fn path(&self) -> &str {
         &self.path
     }
@@ -141,7 +137,7 @@ impl conduit::RequestExt for MockRequest {
 mod tests {
     use super::MockRequest;
 
-    use conduit::{header, Host, Method, RequestExt, Version};
+    use conduit::{header, Method, RequestExt, Version};
 
     #[test]
     fn simple_request_test() {
@@ -149,7 +145,6 @@ mod tests {
 
         assert_eq!(req.http_version(), Version::HTTP_11);
         assert_eq!(req.method(), Method::GET);
-        assert_eq!(req.host(), Host::Name("example.com"));
         assert_eq!(req.path(), "/");
         assert_eq!(req.query_string(), None);
         assert_eq!(req.content_length(), None);

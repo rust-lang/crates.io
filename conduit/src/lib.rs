@@ -3,7 +3,6 @@
 use std::error::Error;
 use std::fs::File;
 use std::io::Read;
-use std::net::SocketAddr;
 
 pub use http::{header, HeaderMap, Method, Request, Response, StatusCode, Version};
 
@@ -55,12 +54,6 @@ pub fn box_error<E: Error + Send + 'static>(error: E) -> BoxError {
     Box::new(error)
 }
 
-#[derive(PartialEq, Debug, Clone, Copy)]
-pub enum Host<'a> {
-    Name(&'a str),
-    Socket(SocketAddr),
-}
-
 /// A Dictionary for extensions provided by the server or middleware
 pub type Extensions = http::Extensions;
 
@@ -70,9 +63,6 @@ pub trait RequestExt {
 
     /// The request method, such as GET, POST, PUT, DELETE or PATCH
     fn method(&self) -> &Method;
-
-    /// The host part of the requested URL
-    fn host(&self) -> Host<'_>;
 
     /// The remainder of the path.
     fn path(&self) -> &str;
