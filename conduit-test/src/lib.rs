@@ -1,6 +1,5 @@
 use bytes::Bytes;
 use std::borrow::Cow;
-use std::convert::TryInto;
 use std::io::{Cursor, Read};
 
 use conduit::{
@@ -37,12 +36,6 @@ impl MockRequest {
             .unwrap();
 
         MockRequest { request }
-    }
-
-    pub fn with_query(&mut self, string: &str) -> &mut MockRequest {
-        let path_and_query = format!("{}?{}", self.request.uri().path(), string);
-        *self.request.uri_mut() = path_and_query.try_into().unwrap();
-        self
     }
 
     pub fn with_body(&mut self, bytes: &[u8]) -> &mut MockRequest {
@@ -124,9 +117,7 @@ mod tests {
 
     #[test]
     fn request_query_test() {
-        let mut req = MockRequest::new(Method::POST, "/articles");
-        req.with_query("foo=bar");
-
+        let req = MockRequest::new(Method::POST, "/articles?foo=bar");
         assert_eq!(req.uri().query().expect("No query string"), "foo=bar");
     }
 
