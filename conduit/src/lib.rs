@@ -86,9 +86,6 @@ pub trait RequestExt {
     /// The remainder of the path.
     fn path(&self) -> &str;
 
-    /// Obtain the request path for mutation/rewrite
-    fn path_mut(&mut self) -> &mut String;
-
     /// The portion of the request URL that follows the "?"
     fn query_string(&self) -> Option<&str>;
 
