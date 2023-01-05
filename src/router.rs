@@ -150,7 +150,7 @@ pub fn build_axum_router(state: AppState) -> Router {
         // Alerts from GitHub scanning for exposed API tokens
         .route(
             "/api/github/secret-scanning/verify",
-            post(conduit(github::secret_scanning::verify)),
+            post(github::secret_scanning::verify),
         );
 
     // Only serve the local checkout of the git index in development mode.
