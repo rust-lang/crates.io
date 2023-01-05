@@ -54,22 +54,25 @@ pub async fn index(req: ConduitRequest) -> AppResult<Json<Value>> {
 /// Handles the `GET /versions/:version_id` route.
 /// The frontend doesn't appear to hit this endpoint. Instead, the version information appears to
 /// be returned by `krate::show`.
-pub fn show_by_id(req: ConduitRequest) -> AppResult<Json<Value>> {
-    let id = req.param("version_id").unwrap();
-    let id = id.parse().unwrap_or(0);
-    let conn = req.app().db_read()?;
-    let (version, krate, published_by): (Version, Crate, Option<User>) = versions::table
-        .find(id)
-        .inner_join(crates::table)
-        .left_outer_join(users::table)
-        .select((
-            versions::all_columns,
-            crate::models::krate::ALL_COLUMNS,
-            users::all_columns.nullable(),
-        ))
-        .first(&*conn)?;
-    let audit_actions = VersionOwnerAction::by_version(&conn, &version)?;
+pub async fn show_by_id(req: ConduitRequest) -> AppResult<Json<Value>> {
+    conduit_compat(move || {
+        let id = req.param("version_id").unwrap();
+        let id = id.parse().unwrap_or(0);
+        let conn = req.app().db_read()?;
+        let (version, krate, published_by): (Version, Crate, Option<User>) = versions::table
+            .find(id)
+            .inner_join(crates::table)
+            .left_outer_join(users::table)
+            .select((
+                versions::all_columns,
+                crate::models::krate::ALL_COLUMNS,
+                users::all_columns.nullable(),
+            ))
+            .first(&*conn)?;
+        let audit_actions = VersionOwnerAction::by_version(&conn, &version)?;
 
-    let version = EncodableVersion::from(version, &krate.name, published_by, audit_actions);
-    Ok(Json(json!({ "version": version })))
+        let version = EncodableVersion::from(version, &krate.name, published_by, audit_actions);
+        Ok(Json(json!({ "version": version })))
+    })
+    .await
 }

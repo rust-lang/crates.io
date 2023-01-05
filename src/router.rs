@@ -36,7 +36,7 @@ pub fn build_axum_router(state: AppState) -> Router {
         .route("/api/v1/versions", get(version::deprecated::index))
         .route(
             "/api/v1/versions/:version_id",
-            get(conduit(version::deprecated::show_by_id)),
+            get(version::deprecated::show_by_id),
         )
         // Routes used by the frontend
         .route(
