@@ -109,14 +109,14 @@ pub fn download(req: ConduitRequest) -> AppResult<Response> {
     }
 
     if req.wants_json() {
-        Ok(req.json(json!({ "url": redirect_url })))
+        Ok(Json(json!({ "url": redirect_url })).into_response())
     } else {
         Ok(req.redirect(redirect_url))
     }
 }
 
 /// Handles the `GET /crates/:crate_id/:version/downloads` route.
-pub fn downloads(req: ConduitRequest) -> AppResult<Response> {
+pub fn downloads(req: ConduitRequest) -> AppResult<Json<Value>> {
     let (crate_name, semver) = extract_crate_name_and_semver(&req)?;
 
     let conn = req.app().db_read()?;
@@ -137,5 +137,5 @@ pub fn downloads(req: ConduitRequest) -> AppResult<Response> {
         .map(VersionDownload::into)
         .collect::<Vec<EncodableVersionDownload>>();
 
-    Ok(req.json(json!({ "version_downloads": downloads })))
+    Ok(Json(json!({ "version_downloads": downloads })))
 }

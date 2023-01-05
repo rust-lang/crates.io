@@ -13,7 +13,7 @@ use crate::schema::{crate_owners, crates, emails, follows, users, versions};
 use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCrate};
 
 /// Handles the `GET /me` route.
-pub fn me(req: ConduitRequest) -> AppResult<Response> {
+pub fn me(req: ConduitRequest) -> AppResult<Json<EncodableMe>> {
     let user_id = AuthCheck::only_cookie().check(&req)?.user_id();
     let conn = req.app().db_read_prefer_primary()?;
 
@@ -45,14 +45,14 @@ pub fn me(req: ConduitRequest) -> AppResult<Response> {
 
     let verified = verified.unwrap_or(false);
     let verification_sent = verified || verification_sent;
-    Ok(req.json(EncodableMe {
+    Ok(Json(EncodableMe {
         user: EncodablePrivateUser::from(user, email, verified, verification_sent),
         owned_crates,
     }))
 }
 
 /// Handles the `GET /me/updates` route.
-pub fn updates(req: ConduitRequest) -> AppResult<Response> {
+pub fn updates(req: ConduitRequest) -> AppResult<Json<Value>> {
     use diesel::dsl::any;
 
     let auth = AuthCheck::only_cookie().check(&req)?;
@@ -86,7 +86,7 @@ pub fn updates(req: ConduitRequest) -> AppResult<Response> {
         })
         .collect::<Vec<_>>();
 
-    Ok(req.json(json!({
+    Ok(Json(json!({
         "versions": versions,
         "meta": { "more": more },
     })))

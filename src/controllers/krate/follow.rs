@@ -44,7 +44,7 @@ pub fn unfollow(req: ConduitRequest) -> AppResult<Response> {
 }
 
 /// Handles the `GET /crates/:crate_id/following` route.
-pub fn following(req: ConduitRequest) -> AppResult<Response> {
+pub fn following(req: ConduitRequest) -> AppResult<Json<Value>> {
     use diesel::dsl::exists;
 
     let user_id = AuthCheck::only_cookie().check(&req)?.user_id();
@@ -53,5 +53,5 @@ pub fn following(req: ConduitRequest) -> AppResult<Response> {
     let following =
         diesel::select(exists(follows::table.find(follow.id()))).get_result::<bool>(&*conn)?;
 
-    Ok(req.json(json!({ "following": following })))
+    Ok(Json(json!({ "following": following })))
 }

@@ -7,7 +7,7 @@ use crate::models::{Crate, Owner, Rights, Team, User};
 use crate::views::EncodableOwner;
 
 /// Handles the `GET /crates/:crate_id/owners` route.
-pub fn owners(req: ConduitRequest) -> AppResult<Response> {
+pub fn owners(req: ConduitRequest) -> AppResult<Json<Value>> {
     let crate_name = req.param("crate_id").unwrap();
     let conn = req.app().db_read()?;
     let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
@@ -17,11 +17,11 @@ pub fn owners(req: ConduitRequest) -> AppResult<Response> {
         .map(Owner::into)
         .collect::<Vec<EncodableOwner>>();
 
-    Ok(req.json(json!({ "users": owners })))
+    Ok(Json(json!({ "users": owners })))
 }
 
 /// Handles the `GET /crates/:crate_id/owner_team` route.
-pub fn owner_team(req: ConduitRequest) -> AppResult<Response> {
+pub fn owner_team(req: ConduitRequest) -> AppResult<Json<Value>> {
     let crate_name = req.param("crate_id").unwrap();
     let conn = req.app().db_read()?;
     let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
@@ -30,11 +30,11 @@ pub fn owner_team(req: ConduitRequest) -> AppResult<Response> {
         .map(Owner::into)
         .collect::<Vec<EncodableOwner>>();
 
-    Ok(req.json(json!({ "teams": owners })))
+    Ok(Json(json!({ "teams": owners })))
 }
 
 /// Handles the `GET /crates/:crate_id/owner_user` route.
-pub fn owner_user(req: ConduitRequest) -> AppResult<Response> {
+pub fn owner_user(req: ConduitRequest) -> AppResult<Json<Value>> {
     let crate_name = req.param("crate_id").unwrap();
     let conn = req.app().db_read()?;
     let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
@@ -43,16 +43,16 @@ pub fn owner_user(req: ConduitRequest) -> AppResult<Response> {
         .map(Owner::into)
         .collect::<Vec<EncodableOwner>>();
 
-    Ok(req.json(json!({ "users": owners })))
+    Ok(Json(json!({ "users": owners })))
 }
 
 /// Handles the `PUT /crates/:crate_id/owners` route.
-pub fn add_owners(mut req: ConduitRequest) -> AppResult<Response> {
+pub fn add_owners(mut req: ConduitRequest) -> AppResult<Json<Value>> {
     modify_owners(&mut req, true)
 }
 
 /// Handles the `DELETE /crates/:crate_id/owners` route.
-pub fn remove_owners(mut req: ConduitRequest) -> AppResult<Response> {
+pub fn remove_owners(mut req: ConduitRequest) -> AppResult<Json<Value>> {
     modify_owners(&mut req, false)
 }
 
@@ -78,7 +78,7 @@ fn parse_owners_request(req: &mut ConduitRequest) -> AppResult<Vec<String>> {
         .ok_or_else(|| cargo_err("invalid json request"))
 }
 
-fn modify_owners(req: &mut ConduitRequest, add: bool) -> AppResult<Response> {
+fn modify_owners(req: &mut ConduitRequest, add: bool) -> AppResult<Json<Value>> {
     let crate_name = req.param("crate_id").unwrap();
 
     let auth = AuthCheck::default()
@@ -136,6 +136,6 @@ fn modify_owners(req: &mut ConduitRequest, add: bool) -> AppResult<Response> {
             "owners successfully removed".to_owned()
         };
 
-        Ok(req.json(json!({ "ok": true, "msg": comma_sep_msg })))
+        Ok(Json(json!({ "ok": true, "msg": comma_sep_msg })))
     })
 }

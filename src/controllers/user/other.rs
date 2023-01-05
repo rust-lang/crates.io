@@ -6,7 +6,7 @@ use crate::sql::lower;
 use crate::views::EncodablePublicUser;
 
 /// Handles the `GET /users/:user_id` route.
-pub fn show(req: ConduitRequest) -> AppResult<Response> {
+pub fn show(req: ConduitRequest) -> AppResult<Json<Value>> {
     use self::users::dsl::{gh_login, id, users};
 
     let name = lower(req.param("user_id").unwrap());
@@ -16,11 +16,11 @@ pub fn show(req: ConduitRequest) -> AppResult<Response> {
         .order(id.desc())
         .first(&*conn)?;
 
-    Ok(req.json(json!({ "user": EncodablePublicUser::from(user) })))
+    Ok(Json(json!({ "user": EncodablePublicUser::from(user) })))
 }
 
 /// Handles the `GET /users/:user_id/stats` route.
-pub fn stats(req: ConduitRequest) -> AppResult<Response> {
+pub fn stats(req: ConduitRequest) -> AppResult<Json<Value>> {
     use diesel::dsl::sum;
 
     let user_id = req
@@ -37,5 +37,5 @@ pub fn stats(req: ConduitRequest) -> AppResult<Response> {
         .first::<Option<i64>>(&*conn)?
         .unwrap_or(0);
 
-    Ok(req.json(json!({ "total_downloads": data })))
+    Ok(Json(json!({ "total_downloads": data })))
 }

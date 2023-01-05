@@ -18,7 +18,7 @@ use super::{extract_crate_name_and_semver, version_and_crate};
 /// In addition to returning cached data from the index, this returns
 /// fields for `id`, `version_id`, and `downloads` (which appears to always
 /// be 0)
-pub fn dependencies(req: ConduitRequest) -> AppResult<Response> {
+pub fn dependencies(req: ConduitRequest) -> AppResult<Json<Value>> {
     let (crate_name, semver) = extract_crate_name_and_semver(&req)?;
     let conn = req.app().db_read()?;
     let (version, _) = version_and_crate(&conn, crate_name, semver)?;
@@ -28,7 +28,7 @@ pub fn dependencies(req: ConduitRequest) -> AppResult<Response> {
         .map(|(dep, crate_name)| EncodableDependency::from_dep(dep, &crate_name))
         .collect::<Vec<_>>();
 
-    Ok(req.json(json!({ "dependencies": deps })))
+    Ok(Json(json!({ "dependencies": deps })))
 }
 
 /// Handles the `GET /crates/:crate_id/:version/authors` route.
@@ -46,7 +46,7 @@ pub fn authors(_req: ConduitRequest) -> Json<Value> {
 ///
 /// The frontend doesn't appear to hit this endpoint, but our tests do, and it seems to be a useful
 /// API route to have.
-pub fn show(req: ConduitRequest) -> AppResult<Response> {
+pub fn show(req: ConduitRequest) -> AppResult<Json<Value>> {
     let (crate_name, semver) = extract_crate_name_and_semver(&req)?;
     let conn = req.app().db_read()?;
     let (version, krate) = version_and_crate(&conn, crate_name, semver)?;
@@ -54,5 +54,5 @@ pub fn show(req: ConduitRequest) -> AppResult<Response> {
     let actions = VersionOwnerAction::by_version(&conn, &version)?;
 
     let version = EncodableVersion::from(version, &krate.name, published_by, actions);
-    Ok(req.json(json!({ "version": version })))
+    Ok(Json(json!({ "version": version })))
 }

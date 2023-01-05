@@ -16,7 +16,7 @@ use indexmap::IndexMap;
 use std::collections::{HashMap, HashSet};
 
 /// Handles the `GET /api/v1/me/crate_owner_invitations` route.
-pub fn list(req: ConduitRequest) -> AppResult<Response> {
+pub fn list(req: ConduitRequest) -> AppResult<Json<Value>> {
     let auth = AuthCheck::only_cookie().check(&req)?;
     let user_id = auth.user_id();
 
@@ -45,14 +45,14 @@ pub fn list(req: ConduitRequest) -> AppResult<Response> {
         })
         .collect::<AppResult<Vec<EncodableCrateOwnerInvitationV1>>>()?;
 
-    Ok(req.json(json!({
+    Ok(Json(json!({
         "crate_owner_invitations": crate_owner_invitations,
         "users": users,
     })))
 }
 
 /// Handles the `GET /api/private/crate_owner_invitations` route.
-pub fn private_list(req: ConduitRequest) -> AppResult<Response> {
+pub fn private_list(req: ConduitRequest) -> AppResult<Json<PrivateListResponse>> {
     let auth = AuthCheck::only_cookie().check(&req)?;
 
     let filter = if let Some(crate_name) = req.query().get("crate_name") {
@@ -64,7 +64,7 @@ pub fn private_list(req: ConduitRequest) -> AppResult<Response> {
     };
 
     let list = prepare_list(&req, auth, filter)?;
-    Ok(req.json(list))
+    Ok(Json(list))
 }
 
 enum ListFilter {
@@ -233,7 +233,7 @@ fn prepare_list(
 }
 
 #[derive(Serialize)]
-struct PrivateListResponse {
+pub struct PrivateListResponse {
     invitations: Vec<EncodableCrateOwnerInvitation>,
     users: Vec<EncodablePublicUser>,
     meta: ResponseMeta,
@@ -250,7 +250,7 @@ struct OwnerInvitation {
 }
 
 /// Handles the `PUT /api/v1/me/crate_owner_invitations/:crate_id` route.
-pub fn handle_invite(mut req: ConduitRequest) -> AppResult<Response> {
+pub fn handle_invite(mut req: ConduitRequest) -> AppResult<Json<Value>> {
     let crate_invite: OwnerInvitation =
         serde_json::from_reader(req.body_mut()).map_err(|_| bad_request("invalid json request"))?;
 
@@ -270,11 +270,11 @@ pub fn handle_invite(mut req: ConduitRequest) -> AppResult<Response> {
         invitation.decline(conn)?;
     }
 
-    Ok(req.json(json!({ "crate_owner_invitation": crate_invite })))
+    Ok(Json(json!({ "crate_owner_invitation": crate_invite })))
 }
 
 /// Handles the `PUT /api/v1/me/crate_owner_invitations/accept/:token` route.
-pub fn handle_invite_with_token(req: ConduitRequest) -> AppResult<Response> {
+pub fn handle_invite_with_token(req: ConduitRequest) -> AppResult<Json<Value>> {
     let state = req.app();
     let config = &state.config;
     let conn = state.db_write()?;
@@ -285,7 +285,7 @@ pub fn handle_invite_with_token(req: ConduitRequest) -> AppResult<Response> {
     let crate_id = invitation.crate_id;
     invitation.accept(&conn, config)?;
 
-    Ok(req.json(json!({
+    Ok(Json(json!({
         "crate_owner_invitation": {
             "crate_id": crate_id,
             "accepted": true,

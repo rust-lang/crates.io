@@ -9,7 +9,7 @@ use axum::response::IntoResponse;
 use serde_json as json;
 
 /// Handles the `GET /me/tokens` route.
-pub fn list(req: ConduitRequest) -> AppResult<Response> {
+pub fn list(req: ConduitRequest) -> AppResult<Json<Value>> {
     let auth = AuthCheck::only_cookie().check(&req)?;
     let conn = req.app().db_read_prefer_primary()?;
     let user = auth.user();
@@ -19,11 +19,11 @@ pub fn list(req: ConduitRequest) -> AppResult<Response> {
         .order(api_tokens::created_at.desc())
         .load(&*conn)?;
 
-    Ok(req.json(json!({ "api_tokens": tokens })))
+    Ok(Json(json!({ "api_tokens": tokens })))
 }
 
 /// Handles the `PUT /me/tokens` route.
-pub fn new(mut req: ConduitRequest) -> AppResult<Response> {
+pub fn new(mut req: ConduitRequest) -> AppResult<Json<Value>> {
     /// The incoming serialization format for the `ApiToken` model.
     #[derive(Deserialize, Serialize)]
     struct NewApiToken {
@@ -74,11 +74,11 @@ pub fn new(mut req: ConduitRequest) -> AppResult<Response> {
     let api_token = ApiToken::insert(&conn, user.id, name)?;
     let api_token = EncodableApiTokenWithToken::from(api_token);
 
-    Ok(req.json(json!({ "api_token": api_token })))
+    Ok(Json(json!({ "api_token": api_token })))
 }
 
 /// Handles the `DELETE /me/tokens/:id` route.
-pub fn revoke(req: ConduitRequest) -> AppResult<Response> {
+pub fn revoke(req: ConduitRequest) -> AppResult<Json<Value>> {
     let id = req
         .param("id")
         .unwrap()
@@ -92,7 +92,7 @@ pub fn revoke(req: ConduitRequest) -> AppResult<Response> {
         .set(api_tokens::revoked.eq(true))
         .execute(&*conn)?;
 
-    Ok(req.json(json!({})))
+    Ok(Json(json!({})))
 }
 
 /// Handles the `DELETE /tokens/current` route.
