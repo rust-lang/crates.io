@@ -67,41 +67,44 @@ pub fn begin(mut req: ConduitRequest) -> AppResult<Json<Value>> {
 ///     }
 /// }
 /// ```
-pub fn authorize(mut req: ConduitRequest) -> AppResult<Json<EncodableMe>> {
-    // Parse the url query
-    let mut query = req.query();
-    let code = query.remove("code").unwrap_or_default();
-    let state = query.remove("state").unwrap_or_default();
+pub async fn authorize(mut req: ConduitRequest) -> AppResult<Json<EncodableMe>> {
+    conduit_compat(move || {
+        // Parse the url query
+        let mut query = req.query();
+        let code = query.remove("code").unwrap_or_default();
+        let state = query.remove("state").unwrap_or_default();
 
-    // Make sure that the state we just got matches the session state that we
-    // should have issued earlier.
-    {
-        let session_state = req.session_remove("github_oauth_state");
-        let session_state = session_state.as_deref();
-        if Some(&state[..]) != session_state {
-            return Err(bad_request("invalid state parameter"));
+        // Make sure that the state we just got matches the session state that we
+        // should have issued earlier.
+        {
+            let session_state = req.session_remove("github_oauth_state");
+            let session_state = session_state.as_deref();
+            if Some(&state[..]) != session_state {
+                return Err(bad_request("invalid state parameter"));
+            }
         }
-    }
 
-    let app = req.app();
+        let app = req.app();
 
-    // Fetch the access token from GitHub using the code we just got
-    let code = AuthorizationCode::new(code);
-    let token = app
-        .github_oauth
-        .exchange_code(code)
-        .request(http_client)
-        .map_err(|err| err.chain(server_error("Error obtaining token")))?;
-    let token = token.access_token();
+        // Fetch the access token from GitHub using the code we just got
+        let code = AuthorizationCode::new(code);
+        let token = app
+            .github_oauth
+            .exchange_code(code)
+            .request(http_client)
+            .map_err(|err| err.chain(server_error("Error obtaining token")))?;
+        let token = token.access_token();
 
-    // Fetch the user info from GitHub using the access token we just got and create a user record
-    let ghuser = app.github.current_user(token)?;
-    let user = save_user_to_database(&ghuser, token.secret(), &app.emails, &*app.db_write()?)?;
+        // Fetch the user info from GitHub using the access token we just got and create a user record
+        let ghuser = app.github.current_user(token)?;
+        let user = save_user_to_database(&ghuser, token.secret(), &app.emails, &*app.db_write()?)?;
 
-    // Log in by setting a cookie and the middleware authentication
-    req.session_insert("user_id".to_string(), user.id.to_string());
+        // Log in by setting a cookie and the middleware authentication
+        req.session_insert("user_id".to_string(), user.id.to_string());
 
-    super::me::me(req)
+        super::me::me(req)
+    })
+    .await
 }
 
 fn save_user_to_database(

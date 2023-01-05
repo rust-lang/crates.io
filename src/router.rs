@@ -146,7 +146,7 @@ pub fn build_axum_router(state: AppState) -> Router {
         )
         .route(
             "/api/private/session/authorize",
-            get(conduit(user::session::authorize)),
+            get(user::session::authorize),
         )
         .route(
             "/api/private/session",
