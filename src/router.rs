@@ -62,7 +62,7 @@ pub fn build_axum_router(state: AppState) -> Router {
         )
         .route(
             "/api/v1/crates/:crate_id/downloads",
-            get(conduit(krate::downloads::downloads)),
+            get(krate::downloads::downloads),
         )
         .route(
             "/api/v1/crates/:crate_id/versions",
