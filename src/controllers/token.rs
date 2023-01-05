@@ -26,58 +26,61 @@ pub async fn list(req: ConduitRequest) -> AppResult<Json<Value>> {
 }
 
 /// Handles the `PUT /me/tokens` route.
-pub fn new(mut req: ConduitRequest) -> AppResult<Json<Value>> {
-    /// The incoming serialization format for the `ApiToken` model.
-    #[derive(Deserialize, Serialize)]
-    struct NewApiToken {
-        name: String,
-    }
+pub async fn new(mut req: ConduitRequest) -> AppResult<Json<Value>> {
+    conduit_compat(move || {
+        /// The incoming serialization format for the `ApiToken` model.
+        #[derive(Deserialize, Serialize)]
+        struct NewApiToken {
+            name: String,
+        }
 
-    /// The incoming serialization format for the `ApiToken` model.
-    #[derive(Deserialize, Serialize)]
-    struct NewApiTokenRequest {
-        api_token: NewApiToken,
-    }
+        /// The incoming serialization format for the `ApiToken` model.
+        #[derive(Deserialize, Serialize)]
+        struct NewApiTokenRequest {
+            api_token: NewApiToken,
+        }
 
-    let max_size = 2000;
-    let length = req
-        .content_length()
-        .ok_or_else(|| bad_request("missing header: Content-Length"))?;
+        let max_size = 2000;
+        let length = req
+            .content_length()
+            .ok_or_else(|| bad_request("missing header: Content-Length"))?;
 
-    if length > max_size {
-        return Err(bad_request(&format!("max content length is: {max_size}")));
-    }
+        if length > max_size {
+            return Err(bad_request(&format!("max content length is: {max_size}")));
+        }
 
-    let new: NewApiTokenRequest = json::from_reader(req.body_mut())
-        .map_err(|e| bad_request(&format!("invalid new token request: {e:?}")))?;
+        let new: NewApiTokenRequest = json::from_reader(req.body_mut())
+            .map_err(|e| bad_request(&format!("invalid new token request: {e:?}")))?;
 
-    let name = &new.api_token.name;
-    if name.is_empty() {
-        return Err(bad_request("name must have a value"));
-    }
+        let name = &new.api_token.name;
+        if name.is_empty() {
+            return Err(bad_request("name must have a value"));
+        }
 
-    let auth = AuthCheck::default().check(&req)?;
-    if auth.api_token_id().is_some() {
-        return Err(bad_request(
-            "cannot use an API token to create a new API token",
-        ));
-    }
+        let auth = AuthCheck::default().check(&req)?;
+        if auth.api_token_id().is_some() {
+            return Err(bad_request(
+                "cannot use an API token to create a new API token",
+            ));
+        }
 
-    let conn = req.app().db_write()?;
-    let user = auth.user();
+        let conn = req.app().db_write()?;
+        let user = auth.user();
 
-    let max_token_per_user = 500;
-    let count: i64 = ApiToken::belonging_to(&user).count().get_result(&*conn)?;
-    if count >= max_token_per_user {
-        return Err(bad_request(&format!(
-            "maximum tokens per user is: {max_token_per_user}"
-        )));
-    }
+        let max_token_per_user = 500;
+        let count: i64 = ApiToken::belonging_to(&user).count().get_result(&*conn)?;
+        if count >= max_token_per_user {
+            return Err(bad_request(&format!(
+                "maximum tokens per user is: {max_token_per_user}"
+            )));
+        }
 
-    let api_token = ApiToken::insert(&conn, user.id, name)?;
-    let api_token = EncodableApiTokenWithToken::from(api_token);
+        let api_token = ApiToken::insert(&conn, user.id, name)?;
+        let api_token = EncodableApiTokenWithToken::from(api_token);
 
-    Ok(Json(json!({ "api_token": api_token })))
+        Ok(Json(json!({ "api_token": api_token })))
+    })
+    .await
 }
 
 /// Handles the `DELETE /me/tokens/:id` route.
