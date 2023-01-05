@@ -42,248 +42,251 @@ pub const WILDCARD_ERROR_MESSAGE: &str = "wildcard (`*`) dependency constraints 
 /// Currently blocks the HTTP thread, perhaps some function calls can spawn new
 /// threads and return completion or error through other methods  a `cargo publish
 /// --status` command, via crates.io's front end, or email.
-pub fn publish(mut req: ConduitRequest) -> AppResult<Json<GoodCrate>> {
-    let app = req.app().clone();
+pub async fn publish(mut req: ConduitRequest) -> AppResult<Json<GoodCrate>> {
+    conduit_compat(move || {
+        let app = req.app().clone();
 
-    // The format of the req.body() of a publish request is as follows:
-    //
-    // metadata length
-    // metadata in JSON about the crate being published
-    // .crate tarball length
-    // .crate tarball file
-    //
-    // - The metadata is read and interpreted in the parse_new_headers function.
-    // - The .crate tarball length is read in this function in order to save the size of the file
-    //   in the version record in the database.
-    // - Then the .crate tarball length is passed to the upload_crate function where the actual
-    //   file is read and uploaded.
+        // The format of the req.body() of a publish request is as follows:
+        //
+        // metadata length
+        // metadata in JSON about the crate being published
+        // .crate tarball length
+        // .crate tarball file
+        //
+        // - The metadata is read and interpreted in the parse_new_headers function.
+        // - The .crate tarball length is read in this function in order to save the size of the file
+        //   in the version record in the database.
+        // - Then the .crate tarball length is passed to the upload_crate function where the actual
+        //   file is read and uploaded.
 
-    let new_crate = parse_new_headers(&mut req)?;
+        let new_crate = parse_new_headers(&mut req)?;
 
-    req.add_custom_metadata("crate_name", new_crate.name.to_string());
-    req.add_custom_metadata("crate_version", new_crate.vers.to_string());
+        req.add_custom_metadata("crate_name", new_crate.name.to_string());
+        req.add_custom_metadata("crate_version", new_crate.vers.to_string());
 
-    let conn = app.primary_database.get()?;
+        let conn = app.primary_database.get()?;
 
-    // this query should only be used for the endpoint scope calculation
-    // since a race condition there would only cause `publish-new` instead of
-    // `publish-update` to be used.
-    let existing_crate = Crate::by_name(&new_crate.name)
-        .first::<Crate>(&*conn)
-        .optional()?;
+        // this query should only be used for the endpoint scope calculation
+        // since a race condition there would only cause `publish-new` instead of
+        // `publish-update` to be used.
+        let existing_crate = Crate::by_name(&new_crate.name)
+            .first::<Crate>(&*conn)
+            .optional()?;
 
-    let endpoint_scope = match existing_crate {
-        Some(_) => EndpointScope::PublishUpdate,
-        None => EndpointScope::PublishNew,
-    };
+        let endpoint_scope = match existing_crate {
+            Some(_) => EndpointScope::PublishUpdate,
+            None => EndpointScope::PublishNew,
+        };
 
-    let auth = AuthCheck::default()
-        .with_endpoint_scope(endpoint_scope)
-        .for_crate(&new_crate.name)
-        .check(&req)?;
+        let auth = AuthCheck::default()
+            .with_endpoint_scope(endpoint_scope)
+            .for_crate(&new_crate.name)
+            .check(&req)?;
 
-    let api_token_id = auth.api_token_id();
-    let user = auth.user();
+        let api_token_id = auth.api_token_id();
+        let user = auth.user();
 
-    let verified_email_address = user.verified_email(&conn)?;
-    let verified_email_address = verified_email_address.ok_or_else(|| {
-        cargo_err(&format!(
-            "A verified email address is required to publish crates to crates.io. \
+        let verified_email_address = user.verified_email(&conn)?;
+        let verified_email_address = verified_email_address.ok_or_else(|| {
+            cargo_err(&format!(
+                "A verified email address is required to publish crates to crates.io. \
              Visit https://{}/me to set and verify your email address.",
-            app.config.domain_name,
-        ))
-    })?;
+                app.config.domain_name,
+            ))
+        })?;
 
-    // Create a transaction on the database, if there are no errors,
-    // commit the transactions to record a new or updated crate.
-    conn.transaction(|| {
-        let _ = &new_crate;
-        let name = new_crate.name;
-        let vers = &*new_crate.vers;
-        let links = new_crate.links;
-        let repo = new_crate.repository;
-        let features = new_crate
-            .features
-            .into_iter()
-            .map(|(k, v)| (k.0, v.into_iter().map(|v| v.0).collect()))
-            .collect();
-        let keywords = new_crate
-            .keywords
-            .iter()
-            .map(|s| s.as_str())
-            .collect::<Vec<_>>();
-        let categories = new_crate
-            .categories
-            .iter()
-            .map(|s| s.as_str())
-            .collect::<Vec<_>>();
+        // Create a transaction on the database, if there are no errors,
+        // commit the transactions to record a new or updated crate.
+        conn.transaction(|| {
+            let _ = &new_crate;
+            let name = new_crate.name;
+            let vers = &*new_crate.vers;
+            let links = new_crate.links;
+            let repo = new_crate.repository;
+            let features = new_crate
+                .features
+                .into_iter()
+                .map(|(k, v)| (k.0, v.into_iter().map(|v| v.0).collect()))
+                .collect();
+            let keywords = new_crate
+                .keywords
+                .iter()
+                .map(|s| s.as_str())
+                .collect::<Vec<_>>();
+            let categories = new_crate
+                .categories
+                .iter()
+                .map(|s| s.as_str())
+                .collect::<Vec<_>>();
 
-        // Persist the new crate, if it doesn't already exist
-        let persist = NewCrate {
-            name: &name,
-            description: new_crate.description.as_deref(),
-            homepage: new_crate.homepage.as_deref(),
-            documentation: new_crate.documentation.as_deref(),
-            readme: new_crate.readme.as_deref(),
-            repository: repo.as_deref(),
-            max_upload_size: None,
-        };
+            // Persist the new crate, if it doesn't already exist
+            let persist = NewCrate {
+                name: &name,
+                description: new_crate.description.as_deref(),
+                homepage: new_crate.homepage.as_deref(),
+                documentation: new_crate.documentation.as_deref(),
+                readme: new_crate.readme.as_deref(),
+                repository: repo.as_deref(),
+                max_upload_size: None,
+            };
 
-        let license_file = new_crate.license_file.as_deref();
-        let krate =
-            persist.create_or_update(&conn, user.id, Some(&app.config.publish_rate_limit))?;
+            let license_file = new_crate.license_file.as_deref();
+            let krate =
+                persist.create_or_update(&conn, user.id, Some(&app.config.publish_rate_limit))?;
 
-        let owners = krate.owners(&conn)?;
-        if user.rights(&app, &owners)? < Rights::Publish {
-            return Err(cargo_err(MISSING_RIGHTS_ERROR_MESSAGE));
-        }
-
-        if krate.name != *name {
-            return Err(cargo_err(&format_args!(
-                "crate was previously named `{}`",
-                krate.name
-            )));
-        }
-
-        if let Some(daily_version_limit) = app.config.new_version_rate_limit {
-            let published_today = count_versions_published_today(krate.id, &conn)?;
-            if published_today >= daily_version_limit as i64 {
-                return Err(cargo_err(
-                    "You have published too many versions of this crate in the last 24 hours",
-                ));
+            let owners = krate.owners(&conn)?;
+            if user.rights(&app, &owners)? < Rights::Publish {
+                return Err(cargo_err(MISSING_RIGHTS_ERROR_MESSAGE));
             }
-        }
 
-        // Length of the .crate tarball, which appears after the metadata in the request body.
-        // TODO: Not sure why we're using the total content length (metadata + .crate file length)
-        // to compare against the max upload size... investigate that and perhaps change to use
-        // this file length.
-        let file_length = read_le_u32(req.body_mut())?;
+            if krate.name != *name {
+                return Err(cargo_err(&format_args!(
+                    "crate was previously named `{}`",
+                    krate.name
+                )));
+            }
 
-        let content_length = req
-            .content_length()
-            .ok_or_else(|| cargo_err("missing header: Content-Length"))?;
+            if let Some(daily_version_limit) = app.config.new_version_rate_limit {
+                let published_today = count_versions_published_today(krate.id, &conn)?;
+                if published_today >= daily_version_limit as i64 {
+                    return Err(cargo_err(
+                        "You have published too many versions of this crate in the last 24 hours",
+                    ));
+                }
+            }
 
-        let maximums = Maximums::new(
-            krate.max_upload_size,
-            app.config.max_upload_size,
-            app.config.max_unpack_size,
-        );
+            // Length of the .crate tarball, which appears after the metadata in the request body.
+            // TODO: Not sure why we're using the total content length (metadata + .crate file length)
+            // to compare against the max upload size... investigate that and perhaps change to use
+            // this file length.
+            let file_length = read_le_u32(req.body_mut())?;
 
-        if content_length > maximums.max_upload_size {
-            return Err(cargo_err(&format_args!(
-                "max upload size is: {}",
-                maximums.max_upload_size
-            )));
-        }
+            let content_length = req
+                .content_length()
+                .ok_or_else(|| cargo_err("missing header: Content-Length"))?;
 
-        // This is only redundant for now. Eventually the duplication will be removed.
-        let license = new_crate.license.clone();
+            let maximums = Maximums::new(
+                krate.max_upload_size,
+                app.config.max_upload_size,
+                app.config.max_unpack_size,
+            );
 
-        // Read tarball from request
-        let mut tarball = Vec::new();
-        LimitErrorReader::new(req.body_mut(), maximums.max_upload_size)
-            .read_to_end(&mut tarball)?;
-        let hex_cksum: String = Sha256::digest(&tarball).encode_hex();
+            if content_length > maximums.max_upload_size {
+                return Err(cargo_err(&format_args!(
+                    "max upload size is: {}",
+                    maximums.max_upload_size
+                )));
+            }
 
-        // Persist the new version of this crate
-        let version = NewVersion::new(
-            krate.id,
-            vers,
-            &features,
-            license,
-            license_file,
-            // Downcast is okay because the file length must be less than the max upload size
-            // to get here, and max upload sizes are way less than i32 max
-            file_length as i32,
-            user.id,
-            hex_cksum.clone(),
-            links.clone(),
-        )?
-        .save(&conn, &verified_email_address)?;
+            // This is only redundant for now. Eventually the duplication will be removed.
+            let license = new_crate.license.clone();
 
-        insert_version_owner_action(
-            &conn,
-            version.id,
-            user.id,
-            api_token_id,
-            VersionAction::Publish,
-        )?;
+            // Read tarball from request
+            let mut tarball = Vec::new();
+            LimitErrorReader::new(req.body_mut(), maximums.max_upload_size)
+                .read_to_end(&mut tarball)?;
+            let hex_cksum: String = Sha256::digest(&tarball).encode_hex();
 
-        // Link this new version to all dependencies
-        let git_deps = add_dependencies(&conn, &new_crate.deps, version.id)?;
+            // Persist the new version of this crate
+            let version = NewVersion::new(
+                krate.id,
+                vers,
+                &features,
+                license,
+                license_file,
+                // Downcast is okay because the file length must be less than the max upload size
+                // to get here, and max upload sizes are way less than i32 max
+                file_length as i32,
+                user.id,
+                hex_cksum.clone(),
+                links.clone(),
+            )?
+            .save(&conn, &verified_email_address)?;
 
-        // Update all keywords for this crate
-        Keyword::update_crate(&conn, &krate, &keywords)?;
-
-        // Update all categories for this crate, collecting any invalid categories
-        // in order to be able to warn about them
-        let ignored_invalid_categories = Category::update_crate(&conn, &krate, &categories)?;
-
-        let top_versions = krate.top_versions(&conn)?;
-
-        let pkg_name = format!("{}-{}", krate.name, vers);
-        let cargo_vcs_info = verify_tarball(&pkg_name, &tarball, maximums.max_unpack_size)?;
-        let pkg_path_in_vcs = cargo_vcs_info.map(|info| info.path_in_vcs);
-
-        if let Some(readme) = new_crate.readme {
-            worker::render_and_upload_readme(
+            insert_version_owner_action(
+                &conn,
                 version.id,
-                readme,
-                new_crate
-                    .readme_file
-                    .unwrap_or_else(|| String::from("README.md")),
-                repo,
-                pkg_path_in_vcs,
-            )
-            .enqueue(&conn)?;
-        }
+                user.id,
+                api_token_id,
+                VersionAction::Publish,
+            )?;
 
-        // Upload crate tarball
-        app.config
-            .uploader()
-            .upload_crate(app.http_client(), tarball, &krate, vers)?;
+            // Link this new version to all dependencies
+            let git_deps = add_dependencies(&conn, &new_crate.deps, version.id)?;
 
-        let (features, features2): (BTreeMap<_, _>, BTreeMap<_, _>) =
-            features.into_iter().partition(|(_k, vals)| {
-                !vals
-                    .iter()
-                    .any(|v| v.starts_with("dep:") || v.contains("?/"))
-            });
-        let (features2, v) = if features2.is_empty() {
-            (None, None)
-        } else {
-            (Some(features2), Some(2))
-        };
+            // Update all keywords for this crate
+            Keyword::update_crate(&conn, &krate, &keywords)?;
 
-        // Register this crate in our local git repo.
-        let git_crate = cargo_registry_index::Crate {
-            name: name.0,
-            vers: vers.to_string(),
-            cksum: hex_cksum,
-            features,
-            features2,
-            deps: git_deps,
-            yanked: Some(false),
-            links,
-            v,
-        };
-        worker::add_crate(git_crate).enqueue(&conn)?;
+            // Update all categories for this crate, collecting any invalid categories
+            // in order to be able to warn about them
+            let ignored_invalid_categories = Category::update_crate(&conn, &krate, &categories)?;
 
-        // The `other` field on `PublishWarnings` was introduced to handle a temporary warning
-        // that is no longer needed. As such, crates.io currently does not return any `other`
-        // warnings at this time, but if we need to, the field is available.
-        let warnings = PublishWarnings {
-            invalid_categories: ignored_invalid_categories,
-            invalid_badges: vec![],
-            other: vec![],
-        };
+            let top_versions = krate.top_versions(&conn)?;
 
-        Ok(Json(GoodCrate {
-            krate: EncodableCrate::from_minimal(krate, Some(&top_versions), None, false, None),
-            warnings,
-        }))
+            let pkg_name = format!("{}-{}", krate.name, vers);
+            let cargo_vcs_info = verify_tarball(&pkg_name, &tarball, maximums.max_unpack_size)?;
+            let pkg_path_in_vcs = cargo_vcs_info.map(|info| info.path_in_vcs);
+
+            if let Some(readme) = new_crate.readme {
+                worker::render_and_upload_readme(
+                    version.id,
+                    readme,
+                    new_crate
+                        .readme_file
+                        .unwrap_or_else(|| String::from("README.md")),
+                    repo,
+                    pkg_path_in_vcs,
+                )
+                .enqueue(&conn)?;
+            }
+
+            // Upload crate tarball
+            app.config
+                .uploader()
+                .upload_crate(app.http_client(), tarball, &krate, vers)?;
+
+            let (features, features2): (BTreeMap<_, _>, BTreeMap<_, _>) =
+                features.into_iter().partition(|(_k, vals)| {
+                    !vals
+                        .iter()
+                        .any(|v| v.starts_with("dep:") || v.contains("?/"))
+                });
+            let (features2, v) = if features2.is_empty() {
+                (None, None)
+            } else {
+                (Some(features2), Some(2))
+            };
+
+            // Register this crate in our local git repo.
+            let git_crate = cargo_registry_index::Crate {
+                name: name.0,
+                vers: vers.to_string(),
+                cksum: hex_cksum,
+                features,
+                features2,
+                deps: git_deps,
+                yanked: Some(false),
+                links,
+                v,
+            };
+            worker::add_crate(git_crate).enqueue(&conn)?;
+
+            // The `other` field on `PublishWarnings` was introduced to handle a temporary warning
+            // that is no longer needed. As such, crates.io currently does not return any `other`
+            // warnings at this time, but if we need to, the field is available.
+            let warnings = PublishWarnings {
+                invalid_categories: ignored_invalid_categories,
+                invalid_badges: vec![],
+                other: vec![],
+            };
+
+            Ok(Json(GoodCrate {
+                krate: EncodableCrate::from_minimal(krate, Some(&top_versions), None, false, None),
+                warnings,
+            }))
+        })
     })
+    .await
 }
 
 /// Counts the number of versions for `krate_id` that were published within

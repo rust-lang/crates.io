@@ -13,7 +13,7 @@ pub fn build_axum_router(state: AppState) -> Router {
         // Route used by both `cargo search` and the frontend
         .route("/api/v1/crates", get(krate::search::search))
         // Routes used by `cargo`
-        .route("/api/v1/crates/new", put(conduit(krate::publish::publish)))
+        .route("/api/v1/crates/new", put(krate::publish::publish))
         .route(
             "/api/v1/crates/:crate_id/owners",
             get(conduit(krate::owners::owners))
