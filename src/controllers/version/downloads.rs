@@ -119,26 +119,29 @@ pub async fn download(req: ConduitRequest) -> AppResult<Response> {
 }
 
 /// Handles the `GET /crates/:crate_id/:version/downloads` route.
-pub fn downloads(req: ConduitRequest) -> AppResult<Json<Value>> {
-    let (crate_name, semver) = extract_crate_name_and_semver(&req)?;
+pub async fn downloads(req: ConduitRequest) -> AppResult<Json<Value>> {
+    conduit_compat(move || {
+        let (crate_name, semver) = extract_crate_name_and_semver(&req)?;
 
-    let conn = req.app().db_read()?;
-    let (version, _) = version_and_crate(&conn, crate_name, semver)?;
+        let conn = req.app().db_read()?;
+        let (version, _) = version_and_crate(&conn, crate_name, semver)?;
 
-    let cutoff_end_date = req
-        .query()
-        .get("before_date")
-        .and_then(|d| NaiveDate::parse_from_str(d, "%F").ok())
-        .unwrap_or_else(|| Utc::now().date_naive());
-    let cutoff_start_date = cutoff_end_date - Duration::days(89);
+        let cutoff_end_date = req
+            .query()
+            .get("before_date")
+            .and_then(|d| NaiveDate::parse_from_str(d, "%F").ok())
+            .unwrap_or_else(|| Utc::now().date_naive());
+        let cutoff_start_date = cutoff_end_date - Duration::days(89);
 
-    let downloads = VersionDownload::belonging_to(&version)
-        .filter(version_downloads::date.between(cutoff_start_date, cutoff_end_date))
-        .order(version_downloads::date)
-        .load(&*conn)?
-        .into_iter()
-        .map(VersionDownload::into)
-        .collect::<Vec<EncodableVersionDownload>>();
+        let downloads = VersionDownload::belonging_to(&version)
+            .filter(version_downloads::date.between(cutoff_start_date, cutoff_end_date))
+            .order(version_downloads::date)
+            .load(&*conn)?
+            .into_iter()
+            .map(VersionDownload::into)
+            .collect::<Vec<EncodableVersionDownload>>();
 
-    Ok(Json(json!({ "version_downloads": downloads })))
+        Ok(Json(json!({ "version_downloads": downloads })))
+    })
+    .await
 }
