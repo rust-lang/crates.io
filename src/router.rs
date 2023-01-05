@@ -127,7 +127,7 @@ pub fn build_axum_router(state: AppState) -> Router {
         )
         .route(
             "/api/v1/users/:user_id/resend",
-            put(conduit(user::me::regenerate_token_and_send)),
+            put(user::me::regenerate_token_and_send),
         )
         .route(
             "/api/v1/site_metadata",

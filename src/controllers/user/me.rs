@@ -192,39 +192,42 @@ pub async fn confirm_user_email(req: ConduitRequest) -> AppResult<Response> {
 }
 
 /// Handles `PUT /user/:user_id/resend` route
-pub fn regenerate_token_and_send(req: ConduitRequest) -> AppResult<Response> {
-    use diesel::dsl::sql;
-    use diesel::update;
+pub async fn regenerate_token_and_send(req: ConduitRequest) -> AppResult<Response> {
+    conduit_compat(move || {
+        use diesel::dsl::sql;
+        use diesel::update;
 
-    let param_user_id = req
-        .param("user_id")
-        .unwrap()
-        .parse::<i32>()
-        .map_err(|err| err.chain(bad_request("invalid user_id")))?;
+        let param_user_id = req
+            .param("user_id")
+            .unwrap()
+            .parse::<i32>()
+            .map_err(|err| err.chain(bad_request("invalid user_id")))?;
 
-    let auth = AuthCheck::default().check(&req)?;
+        let auth = AuthCheck::default().check(&req)?;
 
-    let state = req.app();
-    let conn = state.db_write()?;
-    let user = auth.user();
+        let state = req.app();
+        let conn = state.db_write()?;
+        let user = auth.user();
 
-    // need to check if current user matches user to be updated
-    if user.id != param_user_id {
-        return Err(bad_request("current user does not match requested user"));
-    }
+        // need to check if current user matches user to be updated
+        if user.id != param_user_id {
+            return Err(bad_request("current user does not match requested user"));
+        }
 
-    conn.transaction(|| {
-        let email: Email = update(Email::belonging_to(&user))
-            .set(emails::token.eq(sql("DEFAULT")))
-            .get_result(&*conn)
-            .map_err(|_| bad_request("Email could not be found"))?;
+        conn.transaction(|| {
+            let email: Email = update(Email::belonging_to(&user))
+                .set(emails::token.eq(sql("DEFAULT")))
+                .get_result(&*conn)
+                .map_err(|_| bad_request("Email could not be found"))?;
 
-        state
-            .emails
-            .send_user_confirm(&email.email, &user.gh_login, &email.token)
-    })?;
+            state
+                .emails
+                .send_user_confirm(&email.email, &user.gh_login, &email.token)
+        })?;
 
-    ok_true()
+        ok_true()
+    })
+    .await
 }
 
 /// Handles `PUT /me/email_notifications` route
