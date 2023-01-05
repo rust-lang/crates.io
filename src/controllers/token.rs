@@ -105,16 +105,19 @@ pub async fn revoke(req: ConduitRequest) -> AppResult<Json<Value>> {
 }
 
 /// Handles the `DELETE /tokens/current` route.
-pub fn revoke_current(req: ConduitRequest) -> AppResult<Response> {
-    let auth = AuthCheck::default().check(&req)?;
-    let api_token_id = auth
-        .api_token_id()
-        .ok_or_else(|| bad_request("token not provided"))?;
+pub async fn revoke_current(req: ConduitRequest) -> AppResult<Response> {
+    conduit_compat(move || {
+        let auth = AuthCheck::default().check(&req)?;
+        let api_token_id = auth
+            .api_token_id()
+            .ok_or_else(|| bad_request("token not provided"))?;
 
-    let conn = req.app().db_write()?;
-    diesel::update(api_tokens::table.filter(api_tokens::id.eq(api_token_id)))
-        .set(api_tokens::revoked.eq(true))
-        .execute(&*conn)?;
+        let conn = req.app().db_write()?;
+        diesel::update(api_tokens::table.filter(api_tokens::id.eq(api_token_id)))
+            .set(api_tokens::revoked.eq(true))
+            .execute(&*conn)?;
 
-    Ok(StatusCode::NO_CONTENT.into_response())
+        Ok(StatusCode::NO_CONTENT.into_response())
+    })
+    .await
 }
