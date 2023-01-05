@@ -12,6 +12,8 @@ pub mod session;
 mod static_or_continue;
 mod update_metrics;
 
+use app::add_app_state_extension;
+
 use ::sentry::integrations::tower as sentry_tower;
 use axum::error_handling::HandleErrorLayer;
 use axum::middleware::{from_fn, from_fn_with_state};
@@ -72,6 +74,7 @@ pub fn apply_axum_middleware(state: AppState, router: Router) -> Router {
         .option_layer(
             (env != Env::Test).then(|| from_fn_with_state(state.clone(), ember_html::serve_html)),
         )
+        .layer(from_fn_with_state(state.clone(), add_app_state_extension))
         // This is currently the final middleware to run. If a middleware layer requires a database
         // connection, it should be run after this middleware so that the potential pool usage can be
         // tracked here.

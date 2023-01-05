@@ -1,22 +1,14 @@
-use axum::handler::Handler as AxumHandler;
-use axum::middleware::from_fn_with_state;
-use axum::response::{IntoResponse, Response};
+use axum::response::IntoResponse;
 use axum::routing::{delete, get, post, put};
 use axum::Router;
 use conduit_axum::{ConduitAxumHandler, ConduitRequest, Handler, HandlerResult};
 
 use crate::app::AppState;
 use crate::controllers::*;
-use crate::middleware::app::add_app_state_extension;
-use crate::util::errors::{not_found, AppResult};
+use crate::util::errors::not_found;
 use crate::Env;
 
 pub fn build_axum_router(state: AppState) -> Router {
-    let conduit = |handler| {
-        ConduitAxumHandler::wrap(C(handler))
-            .layer(from_fn_with_state(state.clone(), add_app_state_extension))
-    };
-
     let mut router = Router::new()
         // Route used by both `cargo search` and the frontend
         .route("/api/v1/crates", get(conduit(krate::search::search)))
@@ -200,15 +192,18 @@ pub fn build_axum_router(state: AppState) -> Router {
         .with_state(state)
 }
 
-struct C(pub fn(ConduitRequest) -> AppResult<Response>);
+fn conduit<R: IntoResponse + 'static>(
+    handler: fn(ConduitRequest) -> R,
+) -> ConduitAxumHandler<C<R>> {
+    ConduitAxumHandler::wrap(C(handler))
+}
 
-impl Handler for C {
+struct C<R>(pub fn(ConduitRequest) -> R);
+
+impl<R: IntoResponse + 'static> Handler for C<R> {
     fn call(&self, req: ConduitRequest) -> HandlerResult {
         let C(f) = *self;
-        match f(req) {
-            Ok(resp) => resp,
-            Err(e) => e.into_response(),
-        }
+        f(req).into_response()
     }
 }
 
@@ -231,6 +226,8 @@ mod tests {
 
     #[test]
     fn http_error_responses() {
+        type R = AppResult<()>;
+
         let req = || {
             let mut req = MockRequest::new(Method::GET, "/").into_inner();
             req.extensions_mut().insert(CustomMetadata::default());
@@ -239,37 +236,38 @@ mod tests {
 
         // Types for handling common error status codes
         assert_eq!(
-            C(|_| Err(bad_request(""))).call(req()).status(),
+            C(|_| R::Err(bad_request(""))).call(req()).status(),
             StatusCode::BAD_REQUEST
         );
         assert_eq!(
-            C(|_| Err(forbidden())).call(req()).status(),
+            C(|_| R::Err(forbidden())).call(req()).status(),
             StatusCode::FORBIDDEN
         );
         assert_eq!(
-            C(|_| Err(DieselError::NotFound.into()))
+            C(|_| R::Err(DieselError::NotFound.into()))
                 .call(req())
                 .status(),
             StatusCode::NOT_FOUND
         );
         assert_eq!(
-            C(|_| Err(not_found())).call(req()).status(),
+            C(|_| R::Err(not_found())).call(req()).status(),
             StatusCode::NOT_FOUND
         );
 
         // cargo_err errors are returned as 200 so that cargo displays this nicely on the command line
         assert_eq!(
-            C(|_| Err(cargo_err(""))).call(req()).status(),
+            C(|_| R::Err(cargo_err(""))).call(req()).status(),
             StatusCode::OK
         );
 
         // Inner errors are captured for logging when wrapped by a user facing error
         let response = C(|_| {
-            Err("-1"
-                .parse::<u8>()
-                .map_err(|err| err.chain(internal("middle error")))
-                .map_err(|err| err.chain(bad_request("outer user facing error")))
-                .unwrap_err())
+            R::Err(
+                "-1".parse::<u8>()
+                    .map_err(|err| err.chain(internal("middle error")))
+                    .map_err(|err| err.chain(bad_request("outer user facing error")))
+                    .unwrap_err(),
+            )
         })
         .call(req());
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
@@ -280,7 +278,7 @@ mod tests {
 
         // All other error types are converted to internal server errors
         assert_eq!(
-            C(|_| Err(internal(""))).call(req()).status(),
+            C(|_| R::Err(internal(""))).call(req()).status(),
             StatusCode::INTERNAL_SERVER_ERROR
         );
         assert_eq!(

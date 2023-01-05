@@ -12,7 +12,9 @@ mod prelude {
     pub use super::helpers::ok_true;
     pub use super::util::RequestParamExt;
     pub use axum::response::{IntoResponse, Response};
+    pub use axum::Json;
     pub use diesel::prelude::*;
+    pub use serde_json::Value;
 
     pub use conduit_axum::ConduitRequest;
     pub use http::{header, StatusCode};
@@ -29,7 +31,7 @@ mod prelude {
         }
 
         fn json<T: Serialize>(&self, t: T) -> Response {
-            crate::util::json_response(t).into_response()
+            Json(t).into_response()
         }
 
         fn query(&self) -> IndexMap<String, String>;
