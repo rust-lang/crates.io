@@ -8,7 +8,7 @@ pub type ConduitRequest = Request<Cursor<Bytes>>;
 pub type ResponseResult<Error> = Result<Response<Bytes>, Error>;
 
 pub type BoxError = Box<dyn Error + Send>;
-pub type HandlerResult = Result<Response<Bytes>, BoxError>;
+pub type HandlerResult = ResponseResult<BoxError>;
 
 /// A helper to convert a concrete error type into a `Box<dyn Error + Send>`
 ///
