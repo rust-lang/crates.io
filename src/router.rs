@@ -95,7 +95,7 @@ pub fn build_axum_router(state: AppState) -> Router {
         .route("/api/v1/category_slugs", get(category::slugs))
         .route(
             "/api/v1/users/:user_id",
-            get(conduit(user::other::show)).put(conduit(user::me::update_user)),
+            get(user::other::show).put(conduit(user::me::update_user)),
         )
         .route(
             "/api/v1/users/:user_id/stats",
