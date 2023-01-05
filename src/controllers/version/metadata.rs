@@ -18,17 +18,20 @@ use super::{extract_crate_name_and_semver, version_and_crate};
 /// In addition to returning cached data from the index, this returns
 /// fields for `id`, `version_id`, and `downloads` (which appears to always
 /// be 0)
-pub fn dependencies(req: ConduitRequest) -> AppResult<Json<Value>> {
-    let (crate_name, semver) = extract_crate_name_and_semver(&req)?;
-    let conn = req.app().db_read()?;
-    let (version, _) = version_and_crate(&conn, crate_name, semver)?;
-    let deps = version.dependencies(&conn)?;
-    let deps = deps
-        .into_iter()
-        .map(|(dep, crate_name)| EncodableDependency::from_dep(dep, &crate_name))
-        .collect::<Vec<_>>();
+pub async fn dependencies(req: ConduitRequest) -> AppResult<Json<Value>> {
+    conduit_compat(move || {
+        let (crate_name, semver) = extract_crate_name_and_semver(&req)?;
+        let conn = req.app().db_read()?;
+        let (version, _) = version_and_crate(&conn, crate_name, semver)?;
+        let deps = version.dependencies(&conn)?;
+        let deps = deps
+            .into_iter()
+            .map(|(dep, crate_name)| EncodableDependency::from_dep(dep, &crate_name))
+            .collect::<Vec<_>>();
 
-    Ok(Json(json!({ "dependencies": deps })))
+        Ok(Json(json!({ "dependencies": deps })))
+    })
+    .await
 }
 
 /// Handles the `GET /crates/:crate_id/:version/authors` route.
