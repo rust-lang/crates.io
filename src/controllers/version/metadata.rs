@@ -46,13 +46,16 @@ pub fn authors(_req: ConduitRequest) -> Json<Value> {
 ///
 /// The frontend doesn't appear to hit this endpoint, but our tests do, and it seems to be a useful
 /// API route to have.
-pub fn show(req: ConduitRequest) -> AppResult<Json<Value>> {
-    let (crate_name, semver) = extract_crate_name_and_semver(&req)?;
-    let conn = req.app().db_read()?;
-    let (version, krate) = version_and_crate(&conn, crate_name, semver)?;
-    let published_by = version.published_by(&conn);
-    let actions = VersionOwnerAction::by_version(&conn, &version)?;
+pub async fn show(req: ConduitRequest) -> AppResult<Json<Value>> {
+    conduit_compat(move || {
+        let (crate_name, semver) = extract_crate_name_and_semver(&req)?;
+        let conn = req.app().db_read()?;
+        let (version, krate) = version_and_crate(&conn, crate_name, semver)?;
+        let published_by = version.published_by(&conn);
+        let actions = VersionOwnerAction::by_version(&conn, &version)?;
 
-    let version = EncodableVersion::from(version, &krate.name, published_by, actions);
-    Ok(Json(json!({ "version": version })))
+        let version = EncodableVersion::from(version, &krate.name, published_by, actions);
+        Ok(Json(json!({ "version": version })))
+    })
+    .await
 }
