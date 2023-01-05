@@ -114,7 +114,7 @@ pub fn build_axum_router(state: AppState) -> Router {
         )
         .route(
             "/api/v1/me/crate_owner_invitations/accept/:token",
-            put(conduit(crate_owner_invitation::handle_invite_with_token)),
+            put(crate_owner_invitation::handle_invite_with_token),
         )
         .route(
             "/api/v1/me/email_notifications",

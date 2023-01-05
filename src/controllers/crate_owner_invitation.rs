@@ -280,21 +280,24 @@ pub async fn handle_invite(mut req: ConduitRequest) -> AppResult<Json<Value>> {
 }
 
 /// Handles the `PUT /api/v1/me/crate_owner_invitations/accept/:token` route.
-pub fn handle_invite_with_token(req: ConduitRequest) -> AppResult<Json<Value>> {
-    let state = req.app();
-    let config = &state.config;
-    let conn = state.db_write()?;
+pub async fn handle_invite_with_token(req: ConduitRequest) -> AppResult<Json<Value>> {
+    conduit_compat(move || {
+        let state = req.app();
+        let config = &state.config;
+        let conn = state.db_write()?;
 
-    let req_token = req.param("token").unwrap();
+        let req_token = req.param("token").unwrap();
 
-    let invitation = CrateOwnerInvitation::find_by_token(req_token, &conn)?;
-    let crate_id = invitation.crate_id;
-    invitation.accept(&conn, config)?;
+        let invitation = CrateOwnerInvitation::find_by_token(req_token, &conn)?;
+        let crate_id = invitation.crate_id;
+        invitation.accept(&conn, config)?;
 
-    Ok(Json(json!({
-        "crate_owner_invitation": {
-            "crate_id": crate_id,
-            "accepted": true,
-        },
-    })))
+        Ok(Json(json!({
+            "crate_owner_invitation": {
+                "crate_id": crate_id,
+                "accepted": true,
+            },
+        })))
+    })
+    .await
 }
