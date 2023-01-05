@@ -24,16 +24,19 @@ pub async fn owners(req: ConduitRequest) -> AppResult<Json<Value>> {
 }
 
 /// Handles the `GET /crates/:crate_id/owner_team` route.
-pub fn owner_team(req: ConduitRequest) -> AppResult<Json<Value>> {
-    let crate_name = req.param("crate_id").unwrap();
-    let conn = req.app().db_read()?;
-    let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
-    let owners = Team::owning(&krate, &conn)?
-        .into_iter()
-        .map(Owner::into)
-        .collect::<Vec<EncodableOwner>>();
+pub async fn owner_team(req: ConduitRequest) -> AppResult<Json<Value>> {
+    conduit_compat(move || {
+        let crate_name = req.param("crate_id").unwrap();
+        let conn = req.app().db_read()?;
+        let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
+        let owners = Team::owning(&krate, &conn)?
+            .into_iter()
+            .map(Owner::into)
+            .collect::<Vec<EncodableOwner>>();
 
-    Ok(Json(json!({ "teams": owners })))
+        Ok(Json(json!({ "teams": owners })))
+    })
+    .await
 }
 
 /// Handles the `GET /crates/:crate_id/owner_user` route.
