@@ -1,6 +1,6 @@
 use super::prelude::*;
 use crate::app::AppState;
-use axum::extract::{Path, State};
+use axum::extract::{Path, Query, State};
 use axum::Json;
 
 use crate::controllers::helpers::pagination::PaginationOptions;
@@ -8,24 +8,29 @@ use crate::controllers::helpers::{pagination::Paginated, Paginate};
 use crate::models::Keyword;
 use crate::views::EncodableKeyword;
 
+#[derive(Deserialize)]
+pub struct IndexQuery {
+    sort: Option<String>,
+}
+
 /// Handles the `GET /keywords` route.
-pub async fn index(req: ConduitRequest) -> AppResult<Json<Value>> {
+pub async fn index(
+    state: State<AppState>,
+    qp: Query<IndexQuery>,
+    req: ConduitRequest,
+) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         use crate::schema::keywords;
 
-        let query = req.query();
-        let sort = query.get("sort").map(|s| &s[..]).unwrap_or("alpha");
-
         let mut query = keywords::table.into_boxed();
 
-        if sort == "crates" {
-            query = query.order(keywords::crates_cnt.desc());
-        } else {
-            query = query.order(keywords::keyword.asc());
-        }
+        query = match &qp.sort {
+            Some(sort) if sort == "crates" => query.order(keywords::crates_cnt.desc()),
+            _ => query.order(keywords::keyword.asc()),
+        };
 
         let query = query.pages_pagination(PaginationOptions::builder().gather(&req)?);
-        let conn = req.app().db_read()?;
+        let conn = state.db_read()?;
         let data: Paginated<Keyword> = query.load(&conn)?;
         let total = data.total();
         let kws = data
