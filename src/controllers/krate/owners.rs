@@ -7,7 +7,7 @@ use crate::models::{Crate, Owner, Rights, Team, User};
 use crate::views::EncodableOwner;
 
 /// Handles the `GET /crates/:crate_id/owners` route.
-pub fn owners(req: &mut ConduitRequest) -> EndpointResult {
+pub fn owners(req: ConduitRequest) -> EndpointResult {
     let crate_name = req.param("crate_id").unwrap();
     let conn = req.app().db_read()?;
     let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
@@ -21,7 +21,7 @@ pub fn owners(req: &mut ConduitRequest) -> EndpointResult {
 }
 
 /// Handles the `GET /crates/:crate_id/owner_team` route.
-pub fn owner_team(req: &mut ConduitRequest) -> EndpointResult {
+pub fn owner_team(req: ConduitRequest) -> EndpointResult {
     let crate_name = req.param("crate_id").unwrap();
     let conn = req.app().db_read()?;
     let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
@@ -34,7 +34,7 @@ pub fn owner_team(req: &mut ConduitRequest) -> EndpointResult {
 }
 
 /// Handles the `GET /crates/:crate_id/owner_user` route.
-pub fn owner_user(req: &mut ConduitRequest) -> EndpointResult {
+pub fn owner_user(req: ConduitRequest) -> EndpointResult {
     let crate_name = req.param("crate_id").unwrap();
     let conn = req.app().db_read()?;
     let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
@@ -47,13 +47,13 @@ pub fn owner_user(req: &mut ConduitRequest) -> EndpointResult {
 }
 
 /// Handles the `PUT /crates/:crate_id/owners` route.
-pub fn add_owners(req: &mut ConduitRequest) -> EndpointResult {
-    modify_owners(req, true)
+pub fn add_owners(mut req: ConduitRequest) -> EndpointResult {
+    modify_owners(&mut req, true)
 }
 
 /// Handles the `DELETE /crates/:crate_id/owners` route.
-pub fn remove_owners(req: &mut ConduitRequest) -> EndpointResult {
-    modify_owners(req, false)
+pub fn remove_owners(mut req: ConduitRequest) -> EndpointResult {
+    modify_owners(&mut req, false)
 }
 
 /// Parse the JSON request body of requests to modify the owners of a crate.

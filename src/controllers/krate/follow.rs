@@ -21,10 +21,10 @@ fn follow_target(
 }
 
 /// Handles the `PUT /crates/:crate_id/follow` route.
-pub fn follow(req: &mut ConduitRequest) -> EndpointResult {
-    let user_id = AuthCheck::default().check(req)?.user_id();
+pub fn follow(req: ConduitRequest) -> EndpointResult {
+    let user_id = AuthCheck::default().check(&req)?.user_id();
     let conn = req.app().db_write()?;
-    let follow = follow_target(req, &conn, user_id)?;
+    let follow = follow_target(&req, &conn, user_id)?;
     diesel::insert_into(follows::table)
         .values(&follow)
         .on_conflict_do_nothing()
@@ -34,22 +34,22 @@ pub fn follow(req: &mut ConduitRequest) -> EndpointResult {
 }
 
 /// Handles the `DELETE /crates/:crate_id/follow` route.
-pub fn unfollow(req: &mut ConduitRequest) -> EndpointResult {
-    let user_id = AuthCheck::default().check(req)?.user_id();
+pub fn unfollow(req: ConduitRequest) -> EndpointResult {
+    let user_id = AuthCheck::default().check(&req)?.user_id();
     let conn = req.app().db_write()?;
-    let follow = follow_target(req, &conn, user_id)?;
+    let follow = follow_target(&req, &conn, user_id)?;
     diesel::delete(&follow).execute(&*conn)?;
 
     ok_true()
 }
 
 /// Handles the `GET /crates/:crate_id/following` route.
-pub fn following(req: &mut ConduitRequest) -> EndpointResult {
+pub fn following(req: ConduitRequest) -> EndpointResult {
     use diesel::dsl::exists;
 
-    let user_id = AuthCheck::only_cookie().check(req)?.user_id();
+    let user_id = AuthCheck::only_cookie().check(&req)?.user_id();
     let conn = req.app().db_read_prefer_primary()?;
-    let follow = follow_target(req, &conn, user_id)?;
+    let follow = follow_target(&req, &conn, user_id)?;
     let following =
         diesel::select(exists(follows::table.find(follow.id()))).get_result::<bool>(&*conn)?;
 

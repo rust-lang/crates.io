@@ -42,7 +42,7 @@ pub const WILDCARD_ERROR_MESSAGE: &str = "wildcard (`*`) dependency constraints 
 /// Currently blocks the HTTP thread, perhaps some function calls can spawn new
 /// threads and return completion or error through other methods  a `cargo publish
 /// --status` command, via crates.io's front end, or email.
-pub fn publish(req: &mut ConduitRequest) -> EndpointResult {
+pub fn publish(mut req: ConduitRequest) -> EndpointResult {
     let app = req.app().clone();
 
     // The format of the req.body() of a publish request is as follows:
@@ -58,7 +58,7 @@ pub fn publish(req: &mut ConduitRequest) -> EndpointResult {
     // - Then the .crate tarball length is passed to the upload_crate function where the actual
     //   file is read and uploaded.
 
-    let new_crate = parse_new_headers(req)?;
+    let new_crate = parse_new_headers(&mut req)?;
 
     req.add_custom_metadata("crate_name", new_crate.name.to_string());
     req.add_custom_metadata("crate_version", new_crate.vers.to_string());
@@ -80,7 +80,7 @@ pub fn publish(req: &mut ConduitRequest) -> EndpointResult {
     let auth = AuthCheck::default()
         .with_endpoint_scope(endpoint_scope)
         .for_crate(&new_crate.name)
-        .check(req)?;
+        .check(&req)?;
 
     let api_token_id = auth.api_token_id();
     let user = auth.user();

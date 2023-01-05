@@ -13,7 +13,7 @@ use chrono::{Duration, NaiveDate, Utc};
 
 /// Handles the `GET /crates/:crate_id/:version/download` route.
 /// This returns a URL to the location where the crate is stored.
-pub fn download(req: &mut ConduitRequest) -> EndpointResult {
+pub fn download(req: ConduitRequest) -> EndpointResult {
     let app = req.app();
 
     let mut crate_name = req.param("crate_id").unwrap().to_string();
@@ -116,8 +116,8 @@ pub fn download(req: &mut ConduitRequest) -> EndpointResult {
 }
 
 /// Handles the `GET /crates/:crate_id/:version/downloads` route.
-pub fn downloads(req: &mut ConduitRequest) -> EndpointResult {
-    let (crate_name, semver) = extract_crate_name_and_semver(req)?;
+pub fn downloads(req: ConduitRequest) -> EndpointResult {
+    let (crate_name, semver) = extract_crate_name_and_semver(&req)?;
 
     let conn = req.app().db_read()?;
     let (version, _) = version_and_crate(&conn, crate_name, semver)?;

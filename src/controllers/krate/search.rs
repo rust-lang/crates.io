@@ -38,7 +38,7 @@ use crate::sql::{array_agg, canon_crate_name, lower};
 /// caused the break. In the future, we should look at splitting this
 /// function out to cover the different use cases, and create unit tests
 /// for them.
-pub fn search(req: &mut ConduitRequest) -> EndpointResult {
+pub fn search(req: ConduitRequest) -> EndpointResult {
     use diesel::sql_types::{Bool, Text};
 
     let params = req.query();
@@ -187,7 +187,7 @@ pub fn search(req: &mut ConduitRequest) -> EndpointResult {
         // Calculating the total number of results with filters is not supported yet.
         supports_seek = false;
 
-        let user_id = AuthCheck::default().check(req)?.user_id();
+        let user_id = AuthCheck::default().check(&req)?.user_id();
 
         query = query.filter(
             crates::id.eq_any(
@@ -248,7 +248,7 @@ pub fn search(req: &mut ConduitRequest) -> EndpointResult {
     let pagination: PaginationOptions = PaginationOptions::builder()
         .limit_page_numbers()
         .enable_seek(supports_seek)
-        .gather(req)?;
+        .gather(&req)?;
     let conn = req.app().db_read()?;
 
     let (explicit_page, seek) = match pagination.page.clone() {

@@ -72,13 +72,10 @@ where
             let request = Request::from_parts(parts, Cursor::new(full_body));
 
             let Self(handler) = self;
-            spawn_blocking(move || {
-                let mut request = request;
-                handler.call(&mut request)
-            })
-            .await
-            .map_err(ServiceError::from)
-            .into_response()
+            spawn_blocking(move || handler.call(request))
+                .await
+                .map_err(ServiceError::from)
+                .into_response()
         })
     }
 }
