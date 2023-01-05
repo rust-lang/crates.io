@@ -34,7 +34,7 @@ mod prelude {
                 .unwrap() // Should not panic unless url contains "\r\n"
         }
 
-        fn json<T: Serialize>(&self, t: &T) -> AppResponse {
+        fn json<T: Serialize>(&self, t: T) -> AppResponse {
             crate::util::json_response(t)
         }
 

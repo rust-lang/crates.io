@@ -336,7 +336,7 @@ pub fn search(req: &mut ConduitRequest) -> EndpointResult {
         )
         .collect::<Vec<_>>();
 
-    Ok(req.json(&json!({
+    Ok(req.json(json!({
         "crates": crates,
         "meta": {
             "total": total,

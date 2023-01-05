@@ -28,7 +28,7 @@ pub fn dependencies(req: &mut ConduitRequest) -> EndpointResult {
         .map(|(dep, crate_name)| EncodableDependency::from_dep(dep, &crate_name))
         .collect::<Vec<_>>();
 
-    Ok(req.json(&json!({ "dependencies": deps })))
+    Ok(req.json(json!({ "dependencies": deps })))
 }
 
 /// Handles the `GET /crates/:crate_id/:version/authors` route.
@@ -36,7 +36,7 @@ pub fn authors(req: &mut ConduitRequest) -> EndpointResult {
     // Currently we return the empty list.
     // Because the API is not used anymore after RFC https://github.com/rust-lang/rfcs/pull/3052.
 
-    Ok(req.json(&json!({
+    Ok(req.json(json!({
         "users": [],
         "meta": { "names": [] },
     })))
@@ -54,5 +54,5 @@ pub fn show(req: &mut ConduitRequest) -> EndpointResult {
     let actions = VersionOwnerAction::by_version(&conn, &version)?;
 
     let version = EncodableVersion::from(version, &krate.name, published_by, actions);
-    Ok(req.json(&json!({ "version": version })))
+    Ok(req.json(json!({ "version": version })))
 }

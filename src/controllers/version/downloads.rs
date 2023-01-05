@@ -109,7 +109,7 @@ pub fn download(req: &mut ConduitRequest) -> EndpointResult {
     }
 
     if req.wants_json() {
-        Ok(req.json(&json!({ "url": redirect_url })))
+        Ok(req.json(json!({ "url": redirect_url })))
     } else {
         Ok(req.redirect(redirect_url))
     }
@@ -137,5 +137,5 @@ pub fn downloads(req: &mut ConduitRequest) -> EndpointResult {
         .map(VersionDownload::into)
         .collect::<Vec<EncodableVersionDownload>>();
 
-    Ok(req.json(&json!({ "version_downloads": downloads })))
+    Ok(req.json(json!({ "version_downloads": downloads })))
 }

@@ -45,7 +45,7 @@ pub fn me(req: &mut ConduitRequest) -> EndpointResult {
 
     let verified = verified.unwrap_or(false);
     let verification_sent = verified || verification_sent;
-    Ok(req.json(&EncodableMe {
+    Ok(req.json(EncodableMe {
         user: EncodablePrivateUser::from(user, email, verified, verification_sent),
         owned_crates,
     }))
@@ -86,7 +86,7 @@ pub fn updates(req: &mut ConduitRequest) -> EndpointResult {
         })
         .collect::<Vec<_>>();
 
-    Ok(req.json(&json!({
+    Ok(req.json(json!({
         "versions": versions,
         "meta": { "more": more },
     })))

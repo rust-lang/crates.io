@@ -35,7 +35,7 @@ pub fn begin(req: &mut ConduitRequest) -> EndpointResult {
     let state = state.secret().to_string();
     req.session_insert("github_oauth_state".to_string(), state.clone());
 
-    Ok(req.json(&json!({ "url": url.to_string(), "state": state })))
+    Ok(req.json(json!({ "url": url.to_string(), "state": state })))
 }
 
 /// Handles the `GET /api/private/session/authorize` route.
@@ -136,7 +136,7 @@ fn save_user_to_database(
 /// Handles the `DELETE /api/private/session` route.
 pub fn logout(req: &mut ConduitRequest) -> EndpointResult {
     req.session_remove("user_id");
-    Ok(req.json(&true))
+    Ok(req.json(true))
 }
 
 #[cfg(test)]

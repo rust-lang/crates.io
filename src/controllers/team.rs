@@ -12,5 +12,5 @@ pub fn show_team(req: &mut ConduitRequest) -> EndpointResult {
     let conn = req.app().db_read()?;
     let team: Team = teams.filter(login.eq(name)).first(&*conn)?;
 
-    Ok(req.json(&json!({ "team": EncodableTeam::from(team) })))
+    Ok(req.json(json!({ "team": EncodableTeam::from(team) })))
 }

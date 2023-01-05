@@ -33,7 +33,7 @@ pub fn index(req: &mut ConduitRequest) -> EndpointResult {
         .map(Keyword::into)
         .collect::<Vec<EncodableKeyword>>();
 
-    Ok(req.json(&json!({
+    Ok(req.json(json!({
         "keywords": kws,
         "meta": { "total": total },
     })))
