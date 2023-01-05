@@ -143,7 +143,7 @@ fn save_user_to_database(
 }
 
 /// Handles the `DELETE /api/private/session` route.
-pub fn logout(mut req: ConduitRequest) -> Json<bool> {
+pub async fn logout(mut req: ConduitRequest) -> Json<bool> {
     req.session_remove("user_id");
     Json(true)
 }

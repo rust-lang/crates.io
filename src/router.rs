@@ -139,10 +139,7 @@ pub fn build_axum_router(state: AppState) -> Router {
             "/api/private/session/authorize",
             get(user::session::authorize),
         )
-        .route(
-            "/api/private/session",
-            delete(conduit(user::session::logout)),
-        )
+        .route("/api/private/session", delete(user::session::logout))
         // Metrics
         .route(
             "/api/private/metrics/:kind",
