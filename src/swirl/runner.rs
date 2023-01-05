@@ -1,3 +1,4 @@
+use diesel::connection::{AnsiTransactionManager, TransactionManager};
 use diesel::prelude::*;
 use diesel::r2d2;
 use diesel::r2d2::ConnectionManager;
@@ -156,6 +157,16 @@ impl Runner {
                 };
                 let job_id = job.id;
 
+                let transaction_manager = conn.transaction_manager();
+                let initial_depth = <AnsiTransactionManager as TransactionManager<
+                    PgConnection,
+                >>::get_transaction_depth(
+                    transaction_manager
+                );
+                if initial_depth != 1 {
+                    warn!("Initial transaction depth is not 1. This is very unexpected");
+                }
+
                 let result = conn
                     .transaction(|| {
                         let conn = AssertUnwindSafe(conn);
@@ -168,6 +179,21 @@ impl Runner {
                     })
                     // TODO: Replace with flatten() once that stabilizes
                     .and_then(std::convert::identity);
+
+                loop {
+                    let depth = <AnsiTransactionManager as TransactionManager<
+                            PgConnection,
+                        >>::get_transaction_depth(
+                            transaction_manager
+                        );
+                    if depth == initial_depth {
+                        break;
+                    }
+                    warn!("Rolling back a transaction due to a panic in a background task");
+                    let _ = transaction_manager
+                        .rollback_transaction(conn)
+                        .map_err(|e| error!("Error while rolling back transaction: {e}"));
+                }
 
                 match result {
                     Ok(_) => storage::delete_successful_job(conn, job_id)?,
@@ -310,10 +336,12 @@ mod tests {
         let barrier = Arc::new(AssertUnwindSafe(Barrier::new(2)));
         let barrier2 = barrier.clone();
 
-        runner.get_single_job(dummy_sender(), move |_, _| {
-            barrier.0.wait();
-            // The job should go back into the queue after a panic
-            panic!();
+        runner.get_single_job(dummy_sender(), move |_, conn| {
+            conn.transaction(|| {
+                barrier.0.wait();
+                // The job should go back into the queue after a panic
+                panic!();
+            })
         });
 
         let conn = &*runner.connection().unwrap();
