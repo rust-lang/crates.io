@@ -24,8 +24,8 @@ pub async fn yank(req: ConduitRequest) -> AppResult<Response> {
 }
 
 /// Handles the `PUT /crates/:crate_id/:version/unyank` route.
-pub fn unyank(req: ConduitRequest) -> AppResult<Response> {
-    modify_yank(&req, false)
+pub async fn unyank(req: ConduitRequest) -> AppResult<Response> {
+    conduit_compat(move || modify_yank(&req, false)).await
 }
 
 /// Changes `yanked` flag on a crate version record

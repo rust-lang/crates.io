@@ -26,7 +26,7 @@ pub fn build_axum_router(state: AppState) -> Router {
         )
         .route(
             "/api/v1/crates/:crate_id/:version/unyank",
-            put(conduit(version::yank::unyank)),
+            put(version::yank::unyank),
         )
         .route(
             "/api/v1/crates/:crate_id/:version/download",
