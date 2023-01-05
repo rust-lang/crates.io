@@ -39,10 +39,7 @@ pub fn build_axum_router(state: AppState) -> Router {
             get(version::deprecated::show_by_id),
         )
         // Routes used by the frontend
-        .route(
-            "/api/v1/crates/:crate_id",
-            get(conduit(krate::metadata::show)),
-        )
+        .route("/api/v1/crates/:crate_id", get(krate::metadata::show))
         .route(
             "/api/v1/crates/:crate_id/:version",
             get(conduit(version::metadata::show)),
