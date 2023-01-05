@@ -14,13 +14,13 @@
 //!
 //! ```no_run
 //! use axum::routing::get;
-//! use conduit_axum::{Handler, ConduitAxumHandler};
+//! use axum::response::IntoResponse;
 //! use tokio::runtime::Runtime;
 //!
 //! #[tokio::main]
 //! async fn main() {
 //!     let router = axum::Router::new()
-//!         .route("/", get(ConduitAxumHandler::wrap(build_conduit_handler())));
+//!         .route("/", get(handler));
 //!
 //!     let addr = ([127, 0, 0, 1], 12345).into();
 //!
@@ -30,22 +30,9 @@
 //!         .unwrap();
 //! }
 //!
-//! fn build_conduit_handler() -> impl Handler {
+//! async fn handler() -> impl IntoResponse {
 //!     // ...
-//! #     Endpoint()
 //! }
-//! #
-//! # use std::{error, io};
-//! # use axum::body::Bytes;
-//! # use axum::response::IntoResponse;
-//! # use conduit_axum::{box_error, Response, ConduitRequest, HandlerResult};
-//! #
-//! # struct Endpoint();
-//! # impl Handler for Endpoint {
-//! #     fn call(&self, _: ConduitRequest) -> HandlerResult {
-//! #         ().into_response()
-//! #     }
-//! # }
 //! ```
 
 mod conduit;
@@ -58,7 +45,5 @@ mod tokio_utils;
 
 pub use conduit::*;
 pub use error::ServiceError;
-pub use fallback::{
-    server_error_response, CauseField, ConduitAxumHandler, ErrorField, RequestParamsExt,
-};
+pub use fallback::{server_error_response, CauseField, ErrorField, RequestParamsExt};
 pub use tokio_utils::spawn_blocking;

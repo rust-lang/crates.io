@@ -1,16 +1,12 @@
 use crate::error::ServiceError;
 use crate::response::AxumResponse;
-use crate::{spawn_blocking, ConduitRequest, Handler};
+use crate::ConduitRequest;
 
 use std::collections::BTreeMap;
 use std::error::Error;
-use std::future::Future;
-use std::pin::Pin;
-use std::sync::Arc;
 
 use axum::body::{Body, HttpBody};
-use axum::extract::{Extension, FromRequest, Path};
-use axum::handler::Handler as AxumHandler;
+use axum::extract::{Extension, Path};
 use axum::response::IntoResponse;
 use http::header::CONTENT_LENGTH;
 use http::StatusCode;
@@ -22,44 +18,6 @@ use tracing::{error, warn};
 /// Chunked requests may grow to be larger over time if that much data is actually sent.
 /// See the usage section of the README if you plan to use this server in production.
 const MAX_CONTENT_LENGTH: u64 = 128 * 1024 * 1024; // 128 MB
-
-#[derive(Debug)]
-pub struct ConduitAxumHandler<H>(pub Arc<H>);
-
-impl<H> ConduitAxumHandler<H> {
-    pub fn wrap(handler: H) -> Self {
-        Self(Arc::new(handler))
-    }
-}
-
-impl<H> Clone for ConduitAxumHandler<H> {
-    fn clone(&self) -> Self {
-        Self(self.0.clone())
-    }
-}
-
-impl<S, H> AxumHandler<((),), S> for ConduitAxumHandler<H>
-where
-    S: Send + Sync + 'static,
-    H: Handler,
-{
-    type Future = Pin<Box<dyn Future<Output = AxumResponse> + Send>>;
-
-    fn call(self, request: Request<Body>, state: S) -> Self::Future {
-        Box::pin(async move {
-            let request = match ConduitRequest::from_request(request, &state).await {
-                Ok(request) => request,
-                Err(err) => return err,
-            };
-
-            let Self(handler) = self;
-            spawn_blocking(move || handler.call(request))
-                .await
-                .map_err(ServiceError::from)
-                .into_response()
-        })
-    }
-}
 
 #[derive(Clone, Debug)]
 pub struct ErrorField(pub String);

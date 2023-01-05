@@ -1,7 +1,6 @@
 use axum::response::IntoResponse;
 use axum::routing::{delete, get, post, put};
 use axum::Router;
-use conduit_axum::{ConduitRequest, Handler, HandlerResult};
 
 use crate::app::AppState;
 use crate::controllers::*;
@@ -166,15 +165,6 @@ pub fn build_axum_router(state: AppState) -> Router {
     router
         .fallback(|| async { not_found().into_response() })
         .with_state(state)
-}
-
-struct C<R>(pub fn(ConduitRequest) -> R);
-
-impl<R: IntoResponse + 'static> Handler for C<R> {
-    fn call(&self, req: ConduitRequest) -> HandlerResult {
-        let C(f) = *self;
-        f(req).into_response()
-    }
 }
 
 #[cfg(test)]
