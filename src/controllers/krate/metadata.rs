@@ -356,47 +356,50 @@ pub async fn versions(req: ConduitRequest) -> AppResult<Json<Value>> {
 }
 
 /// Handles the `GET /crates/:crate_id/reverse_dependencies` route.
-pub fn reverse_dependencies(req: ConduitRequest) -> AppResult<Json<Value>> {
-    use diesel::dsl::any;
+pub async fn reverse_dependencies(req: ConduitRequest) -> AppResult<Json<Value>> {
+    conduit_compat(move || {
+        use diesel::dsl::any;
 
-    let pagination_options = PaginationOptions::builder().gather(&req)?;
-    let name = req.param("crate_id").unwrap();
-    let conn = req.app().db_read()?;
-    let krate: Crate = Crate::by_name(name).first(&*conn)?;
-    let (rev_deps, total) = krate.reverse_dependencies(&conn, pagination_options)?;
-    let rev_deps: Vec<_> = rev_deps
-        .into_iter()
-        .map(|dep| EncodableDependency::from_reverse_dep(dep, &krate.name))
-        .collect();
+        let pagination_options = PaginationOptions::builder().gather(&req)?;
+        let name = req.param("crate_id").unwrap();
+        let conn = req.app().db_read()?;
+        let krate: Crate = Crate::by_name(name).first(&*conn)?;
+        let (rev_deps, total) = krate.reverse_dependencies(&conn, pagination_options)?;
+        let rev_deps: Vec<_> = rev_deps
+            .into_iter()
+            .map(|dep| EncodableDependency::from_reverse_dep(dep, &krate.name))
+            .collect();
 
-    let version_ids: Vec<i32> = rev_deps.iter().map(|dep| dep.version_id).collect();
+        let version_ids: Vec<i32> = rev_deps.iter().map(|dep| dep.version_id).collect();
 
-    let versions_and_publishers: Vec<(Version, String, Option<User>)> = versions::table
-        .filter(versions::id.eq(any(version_ids)))
-        .inner_join(crates::table)
-        .left_outer_join(users::table)
-        .select((
-            versions::all_columns,
-            crates::name,
-            users::all_columns.nullable(),
-        ))
-        .load(&*conn)?;
-    let versions = versions_and_publishers
-        .iter()
-        .map(|(v, _, _)| v)
-        .cloned()
-        .collect::<Vec<_>>();
-    let versions = versions_and_publishers
-        .into_iter()
-        .zip(VersionOwnerAction::for_versions(&conn, &versions)?.into_iter())
-        .map(|((version, krate_name, published_by), actions)| {
-            EncodableVersion::from(version, &krate_name, published_by, actions)
-        })
-        .collect::<Vec<_>>();
+        let versions_and_publishers: Vec<(Version, String, Option<User>)> = versions::table
+            .filter(versions::id.eq(any(version_ids)))
+            .inner_join(crates::table)
+            .left_outer_join(users::table)
+            .select((
+                versions::all_columns,
+                crates::name,
+                users::all_columns.nullable(),
+            ))
+            .load(&*conn)?;
+        let versions = versions_and_publishers
+            .iter()
+            .map(|(v, _, _)| v)
+            .cloned()
+            .collect::<Vec<_>>();
+        let versions = versions_and_publishers
+            .into_iter()
+            .zip(VersionOwnerAction::for_versions(&conn, &versions)?.into_iter())
+            .map(|((version, krate_name, published_by), actions)| {
+                EncodableVersion::from(version, &krate_name, published_by, actions)
+            })
+            .collect::<Vec<_>>();
 
-    Ok(Json(json!({
-        "dependencies": rev_deps,
-        "versions": versions,
-        "meta": { "total": total },
-    })))
+        Ok(Json(json!({
+            "dependencies": rev_deps,
+            "versions": versions,
+            "meta": { "total": total },
+        })))
+    })
+    .await
 }
