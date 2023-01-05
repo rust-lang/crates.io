@@ -37,13 +37,16 @@ pub async fn follow(req: ConduitRequest) -> AppResult<Response> {
 }
 
 /// Handles the `DELETE /crates/:crate_id/follow` route.
-pub fn unfollow(req: ConduitRequest) -> AppResult<Response> {
-    let user_id = AuthCheck::default().check(&req)?.user_id();
-    let conn = req.app().db_write()?;
-    let follow = follow_target(&req, &conn, user_id)?;
-    diesel::delete(&follow).execute(&*conn)?;
+pub async fn unfollow(req: ConduitRequest) -> AppResult<Response> {
+    conduit_compat(move || {
+        let user_id = AuthCheck::default().check(&req)?.user_id();
+        let conn = req.app().db_write()?;
+        let follow = follow_target(&req, &conn, user_id)?;
+        diesel::delete(&follow).execute(&*conn)?;
 
-    ok_true()
+        ok_true()
+    })
+    .await
 }
 
 /// Handles the `GET /crates/:crate_id/following` route.
