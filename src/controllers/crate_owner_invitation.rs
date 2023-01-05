@@ -16,39 +16,42 @@ use indexmap::IndexMap;
 use std::collections::{HashMap, HashSet};
 
 /// Handles the `GET /api/v1/me/crate_owner_invitations` route.
-pub fn list(req: ConduitRequest) -> AppResult<Json<Value>> {
-    let auth = AuthCheck::only_cookie().check(&req)?;
-    let user_id = auth.user_id();
+pub async fn list(req: ConduitRequest) -> AppResult<Json<Value>> {
+    conduit_compat(move || {
+        let auth = AuthCheck::only_cookie().check(&req)?;
+        let user_id = auth.user_id();
 
-    let PrivateListResponse {
-        invitations, users, ..
-    } = prepare_list(&req, auth, ListFilter::InviteeId(user_id))?;
+        let PrivateListResponse {
+            invitations, users, ..
+        } = prepare_list(&req, auth, ListFilter::InviteeId(user_id))?;
 
-    // The schema for the private endpoints is converted to the schema used by v1 endpoints.
-    let crate_owner_invitations = invitations
-        .into_iter()
-        .map(|private| {
-            Ok(EncodableCrateOwnerInvitationV1 {
-                invited_by_username: users
-                    .iter()
-                    .find(|u| u.id == private.inviter_id)
-                    .ok_or_else(|| internal(&format!("missing user {}", private.inviter_id)))?
-                    .login
-                    .clone(),
-                invitee_id: private.invitee_id,
-                inviter_id: private.inviter_id,
-                crate_name: private.crate_name,
-                crate_id: private.crate_id,
-                created_at: private.created_at,
-                expires_at: private.expires_at,
+        // The schema for the private endpoints is converted to the schema used by v1 endpoints.
+        let crate_owner_invitations = invitations
+            .into_iter()
+            .map(|private| {
+                Ok(EncodableCrateOwnerInvitationV1 {
+                    invited_by_username: users
+                        .iter()
+                        .find(|u| u.id == private.inviter_id)
+                        .ok_or_else(|| internal(&format!("missing user {}", private.inviter_id)))?
+                        .login
+                        .clone(),
+                    invitee_id: private.invitee_id,
+                    inviter_id: private.inviter_id,
+                    crate_name: private.crate_name,
+                    crate_id: private.crate_id,
+                    created_at: private.created_at,
+                    expires_at: private.expires_at,
+                })
             })
-        })
-        .collect::<AppResult<Vec<EncodableCrateOwnerInvitationV1>>>()?;
+            .collect::<AppResult<Vec<EncodableCrateOwnerInvitationV1>>>()?;
 
-    Ok(Json(json!({
-        "crate_owner_invitations": crate_owner_invitations,
-        "users": users,
-    })))
+        Ok(Json(json!({
+            "crate_owner_invitations": crate_owner_invitations,
+            "users": users,
+        })))
+    })
+    .await
 }
 
 /// Handles the `GET /api/private/crate_owner_invitations` route.
