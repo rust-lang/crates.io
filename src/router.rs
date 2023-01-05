@@ -9,8 +9,6 @@ use crate::util::errors::{not_found, AppResult};
 use crate::Env;
 
 pub fn build_axum_router(state: AppState) -> Router {
-    let conduit = |handler| ConduitAxumHandler::wrap(C(handler));
-
     let mut router = Router::new()
         // Route used by both `cargo search` and the frontend
         .route("/api/v1/crates", get(conduit(krate::search::search)))
@@ -192,6 +190,10 @@ pub fn build_axum_router(state: AppState) -> Router {
     router
         .fallback(|| async { not_found().into_response() })
         .with_state(state)
+}
+
+fn conduit(handler: fn(ConduitRequest) -> AppResult<Response>) -> ConduitAxumHandler<C> {
+    ConduitAxumHandler::wrap(C(handler))
 }
 
 struct C(pub fn(ConduitRequest) -> AppResult<Response>);
