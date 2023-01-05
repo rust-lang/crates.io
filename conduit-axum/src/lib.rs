@@ -37,12 +37,13 @@
 //! #
 //! # use std::{error, io};
 //! # use axum::body::Bytes;
+//! # use axum::response::IntoResponse;
 //! # use conduit_axum::{box_error, Response, ConduitRequest, HandlerResult};
 //! #
 //! # struct Endpoint();
 //! # impl Handler for Endpoint {
 //! #     fn call(&self, _: &mut ConduitRequest) -> HandlerResult {
-//! #         Response::builder().body(Bytes::new()).map_err(box_error)
+//! #         Ok(().into_response())
 //! #     }
 //! # }
 //! ```

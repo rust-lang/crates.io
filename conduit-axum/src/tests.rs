@@ -1,20 +1,24 @@
-use crate::{box_error, ConduitRequest, Handler, HandlerResult};
-use axum::body::Bytes;
+use crate::{ConduitRequest, Handler, HandlerResult};
+use axum::response::IntoResponse;
 use axum::Router;
-use http::{HeaderValue, Request, Response, StatusCode};
+use http::header::HeaderName;
+use http::{HeaderMap, HeaderValue, Request, StatusCode};
 use hyper::{body::to_bytes, service::Service};
 use tokio::{sync::oneshot, task::JoinHandle};
 
 use crate::response::AxumResponse;
 use crate::ConduitAxumHandler;
 
+fn single_header(key: &str, value: &str) -> HeaderMap {
+    let mut headers = HeaderMap::new();
+    headers.insert(key.parse::<HeaderName>().unwrap(), value.parse().unwrap());
+    headers
+}
+
 struct OkResult;
 impl Handler for OkResult {
     fn call(&self, _req: &mut ConduitRequest) -> HandlerResult {
-        Response::builder()
-            .header("ok", "value")
-            .body(Bytes::from_static(b"Hello, world!"))
-            .map_err(box_error)
+        Ok((single_header("ok", "value"), "Hello, world!").into_response())
     }
 }
 
@@ -36,20 +40,7 @@ impl Handler for Panic {
 struct InvalidHeader;
 impl Handler for InvalidHeader {
     fn call(&self, _req: &mut ConduitRequest) -> HandlerResult {
-        Response::builder()
-            .header("invalid-value", "\r\n")
-            .body(Bytes::from_static(b"discarded"))
-            .map_err(box_error)
-    }
-}
-
-struct InvalidStatus;
-impl Handler for InvalidStatus {
-    fn call(&self, _req: &mut ConduitRequest) -> HandlerResult {
-        Response::builder()
-            .status(1000)
-            .body(Bytes::new())
-            .map_err(box_error)
+        Ok((single_header("invalid-value", "\r\n"), "discarded").into_response())
     }
 }
 
@@ -100,9 +91,13 @@ async fn assert_generic_err(resp: AxumResponse) {
 async fn valid_ok_response() {
     let resp = simulate_request(OkResult).await;
     assert_eq!(resp.status(), StatusCode::OK);
-    assert_eq!(resp.headers().len(), 2);
+    assert_eq!(resp.headers().len(), 3);
     assert!(resp.headers().get("ok").is_some());
     assert!(resp.headers().get("content-length").is_some());
+    assert_eq!(
+        resp.headers().get("content-type").unwrap(),
+        "text/plain; charset=utf-8"
+    );
     let full_body = to_bytes(resp.into_body()).await.unwrap();
     assert_eq!(&*full_body, b"Hello, world!");
 }
@@ -110,7 +105,6 @@ async fn valid_ok_response() {
 #[tokio::test]
 async fn invalid_ok_responses() {
     assert_generic_err(simulate_request(InvalidHeader).await).await;
-    assert_generic_err(simulate_request(InvalidStatus).await).await;
 }
 
 #[tokio::test]

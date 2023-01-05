@@ -3,12 +3,12 @@ use axum::middleware::from_fn_with_state;
 use axum::response::IntoResponse;
 use axum::routing::{delete, get, post, put};
 use axum::Router;
-use conduit_axum::{CauseField, ConduitAxumHandler, ConduitRequest, Handler, HandlerResult};
+use conduit_axum::{conduit_into_axum, ConduitAxumHandler, ConduitRequest, Handler, HandlerResult};
 
 use crate::app::AppState;
 use crate::controllers::*;
 use crate::middleware::app::add_app_state_extension;
-use crate::util::errors::{not_found, AppError};
+use crate::util::errors::not_found;
 use crate::util::EndpointResult;
 use crate::Env;
 
@@ -207,18 +207,8 @@ impl Handler for C {
     fn call(&self, req: &mut ConduitRequest) -> HandlerResult {
         let C(f) = *self;
         match f(req) {
-            Ok(resp) => Ok(resp),
-            Err(e) => {
-                let mut response = e.response();
-
-                if let Some(cause) = e.cause() {
-                    response
-                        .extensions_mut()
-                        .insert(CauseField(cause.to_string()));
-                }
-
-                Ok(response)
-            }
+            Ok(resp) => Ok(conduit_into_axum(resp)),
+            Err(e) => Ok(e.into_response()),
         }
     }
 }
@@ -230,6 +220,7 @@ mod tests {
     use crate::util::errors::{bad_request, cargo_err, forbidden, internal, not_found, AppError};
     use crate::util::EndpointResult;
 
+    use conduit_axum::CauseField;
     use conduit_test::MockRequest;
     use diesel::result::Error as DieselError;
     use http::{Method, StatusCode};

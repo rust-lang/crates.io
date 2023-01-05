@@ -1,10 +1,9 @@
 #![deny(clippy::all)]
 
-use axum::body::Bytes;
 use axum::routing::get;
 use conduit_axum::{ConduitAxumHandler, ConduitRequest, ResponseResult};
-use http::{header, Response};
 
+use axum::response::IntoResponse;
 use std::io;
 use std::thread::sleep;
 
@@ -30,14 +29,9 @@ pub fn wrap<H>(handler: H) -> ConduitAxumHandler<H> {
 }
 
 fn endpoint(_: &mut ConduitRequest) -> ResponseResult<http::Error> {
-    let body = b"Hello world!";
-
     sleep(std::time::Duration::from_secs(2));
 
-    Response::builder()
-        .header(header::CONTENT_TYPE, "text/plain; charset=utf-8")
-        .header(header::CONTENT_LENGTH, body.len())
-        .body(Bytes::from_static(body))
+    Ok("Hello world!".into_response())
 }
 
 fn panic(_: &mut ConduitRequest) -> ResponseResult<http::Error> {
