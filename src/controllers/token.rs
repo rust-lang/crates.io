@@ -20,7 +20,7 @@ pub fn list(req: &mut ConduitRequest) -> EndpointResult {
         .order(api_tokens::created_at.desc())
         .load(&*conn)?;
 
-    Ok(req.json(&json!({ "api_tokens": tokens })))
+    Ok(req.json(json!({ "api_tokens": tokens })))
 }
 
 /// Handles the `PUT /me/tokens` route.
@@ -75,7 +75,7 @@ pub fn new(req: &mut ConduitRequest) -> EndpointResult {
     let api_token = ApiToken::insert(&conn, user.id, name)?;
     let api_token = EncodableApiTokenWithToken::from(api_token);
 
-    Ok(req.json(&json!({ "api_token": api_token })))
+    Ok(req.json(json!({ "api_token": api_token })))
 }
 
 /// Handles the `DELETE /me/tokens/:id` route.
@@ -93,7 +93,7 @@ pub fn revoke(req: &mut ConduitRequest) -> EndpointResult {
         .set(api_tokens::revoked.eq(true))
         .execute(&*conn)?;
 
-    Ok(req.json(&json!({})))
+    Ok(req.json(json!({})))
 }
 
 /// Handles the `DELETE /tokens/current` route.

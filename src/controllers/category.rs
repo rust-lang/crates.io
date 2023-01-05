@@ -26,7 +26,7 @@ pub fn index(req: &mut ConduitRequest) -> EndpointResult {
     // Query for the total count of categories
     let total = Category::count_toplevel(&conn)?;
 
-    Ok(req.json(&json!({
+    Ok(req.json(json!({
         "categories": categories,
         "meta": { "total": total },
     })))
@@ -60,7 +60,7 @@ pub fn show(req: &mut ConduitRequest) -> EndpointResult {
         parent_categories: parents,
     };
 
-    Ok(req.json(&json!({ "category": cat_with_subcats })))
+    Ok(req.json(json!({ "category": cat_with_subcats })))
 }
 
 /// Handles the `GET /category_slugs` route.
@@ -78,5 +78,5 @@ pub fn slugs(req: &mut ConduitRequest) -> EndpointResult {
         description: String,
     }
 
-    Ok(req.json(&json!({ "category_slugs": slugs })))
+    Ok(req.json(json!({ "category_slugs": slugs })))
 }

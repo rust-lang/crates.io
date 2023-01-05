@@ -279,7 +279,7 @@ pub fn publish(req: &mut ConduitRequest) -> EndpointResult {
             other: vec![],
         };
 
-        Ok(req.json(&GoodCrate {
+        Ok(req.json(GoodCrate {
             krate: EncodableCrate::from_minimal(krate, Some(&top_versions), None, false, None),
             warnings,
         }))

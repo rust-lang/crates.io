@@ -264,7 +264,7 @@ pub fn verify(req: &mut ConduitRequest) -> EndpointResult {
         })
         .collect::<Result<Vec<GitHubSecretAlertFeedback>, Box<dyn AppError>>>()?;
 
-    Ok(req.json(&feedback))
+    Ok(req.json(feedback))
 }
 
 #[cfg(test)]

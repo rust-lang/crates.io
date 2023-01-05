@@ -17,7 +17,7 @@ pub fn owners(req: &mut ConduitRequest) -> EndpointResult {
         .map(Owner::into)
         .collect::<Vec<EncodableOwner>>();
 
-    Ok(req.json(&json!({ "users": owners })))
+    Ok(req.json(json!({ "users": owners })))
 }
 
 /// Handles the `GET /crates/:crate_id/owner_team` route.
@@ -30,7 +30,7 @@ pub fn owner_team(req: &mut ConduitRequest) -> EndpointResult {
         .map(Owner::into)
         .collect::<Vec<EncodableOwner>>();
 
-    Ok(req.json(&json!({ "teams": owners })))
+    Ok(req.json(json!({ "teams": owners })))
 }
 
 /// Handles the `GET /crates/:crate_id/owner_user` route.
@@ -43,7 +43,7 @@ pub fn owner_user(req: &mut ConduitRequest) -> EndpointResult {
         .map(Owner::into)
         .collect::<Vec<EncodableOwner>>();
 
-    Ok(req.json(&json!({ "users": owners })))
+    Ok(req.json(json!({ "users": owners })))
 }
 
 /// Handles the `PUT /crates/:crate_id/owners` route.
@@ -136,6 +136,6 @@ fn modify_owners(req: &mut ConduitRequest, add: bool) -> EndpointResult {
             "owners successfully removed".to_owned()
         };
 
-        Ok(req.json(&json!({ "ok": true, "msg": comma_sep_msg })))
+        Ok(req.json(json!({ "ok": true, "msg": comma_sep_msg })))
     })
 }

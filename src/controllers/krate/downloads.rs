@@ -50,7 +50,7 @@ pub fn downloads(req: &mut ConduitRequest) -> EndpointResult {
         downloads: i64,
     }
 
-    Ok(req.json(&json!({
+    Ok(req.json(json!({
         "version_downloads": downloads,
         "meta": {
             "extra_downloads": extra,

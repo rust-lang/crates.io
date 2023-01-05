@@ -45,7 +45,7 @@ pub fn index(req: &mut ConduitRequest) -> EndpointResult {
         })
         .collect::<Vec<_>>();
 
-    Ok(req.json(&json!({ "versions": versions })))
+    Ok(req.json(json!({ "versions": versions })))
 }
 
 /// Handles the `GET /versions/:version_id` route.
@@ -68,5 +68,5 @@ pub fn show_by_id(req: &mut ConduitRequest) -> EndpointResult {
     let audit_actions = VersionOwnerAction::by_version(&conn, &version)?;
 
     let version = EncodableVersion::from(version, &krate.name, published_by, audit_actions);
-    Ok(req.json(&json!({ "version": version })))
+    Ok(req.json(json!({ "version": version })))
 }

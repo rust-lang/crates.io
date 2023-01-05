@@ -45,7 +45,7 @@ pub fn list(req: &mut ConduitRequest) -> EndpointResult {
         })
         .collect::<AppResult<Vec<EncodableCrateOwnerInvitationV1>>>()?;
 
-    Ok(req.json(&json!({
+    Ok(req.json(json!({
         "crate_owner_invitations": crate_owner_invitations,
         "users": users,
     })))
@@ -64,7 +64,7 @@ pub fn private_list(req: &mut ConduitRequest) -> EndpointResult {
     };
 
     let list = prepare_list(req, auth, filter)?;
-    Ok(req.json(&list))
+    Ok(req.json(list))
 }
 
 enum ListFilter {
@@ -270,7 +270,7 @@ pub fn handle_invite(req: &mut ConduitRequest) -> EndpointResult {
         invitation.decline(conn)?;
     }
 
-    Ok(req.json(&json!({ "crate_owner_invitation": crate_invite })))
+    Ok(req.json(json!({ "crate_owner_invitation": crate_invite })))
 }
 
 /// Handles the `PUT /api/v1/me/crate_owner_invitations/accept/:token` route.
@@ -285,7 +285,7 @@ pub fn handle_invite_with_token(req: &mut ConduitRequest) -> EndpointResult {
     let crate_id = invitation.crate_id;
     invitation.accept(&conn, config)?;
 
-    Ok(req.json(&json!({
+    Ok(req.json(json!({
         "crate_owner_invitation": {
             "crate_id": crate_id,
             "accepted": true,

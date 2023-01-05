@@ -16,7 +16,7 @@ pub fn show(req: &mut ConduitRequest) -> EndpointResult {
         .order(id.desc())
         .first(&*conn)?;
 
-    Ok(req.json(&json!({ "user": EncodablePublicUser::from(user) })))
+    Ok(req.json(json!({ "user": EncodablePublicUser::from(user) })))
 }
 
 /// Handles the `GET /users/:user_id/stats` route.
@@ -37,5 +37,5 @@ pub fn stats(req: &mut ConduitRequest) -> EndpointResult {
         .first::<Option<i64>>(&*conn)?
         .unwrap_or(0);
 
-    Ok(req.json(&json!({ "total_downloads": data })))
+    Ok(req.json(json!({ "total_downloads": data })))
 }

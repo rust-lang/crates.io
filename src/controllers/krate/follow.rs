@@ -53,5 +53,5 @@ pub fn following(req: &mut ConduitRequest) -> EndpointResult {
     let following =
         diesel::select(exists(follows::table.find(follow.id()))).get_result::<bool>(&*conn)?;
 
-    Ok(req.json(&json!({ "following": following })))
+    Ok(req.json(json!({ "following": following })))
 }
