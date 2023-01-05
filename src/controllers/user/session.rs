@@ -118,7 +118,7 @@ fn save_user_to_database(
     )
     .create_or_update(user.email.as_deref(), emails, conn)
     .map_err(Into::into)
-    .or_else(|e: Box<dyn AppError>| {
+    .or_else(|e: BoxedAppError| {
         // If we're in read only mode, we can't update their details
         // just look for an existing user
         if e.is::<ReadOnlyMode>() {

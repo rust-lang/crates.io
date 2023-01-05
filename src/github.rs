@@ -8,7 +8,7 @@ use serde::de::DeserializeOwned;
 use std::str;
 
 use crate::controllers::github::secret_scanning::{GitHubPublicKey, GitHubPublicKeyList};
-use crate::util::errors::{cargo_err, internal, not_found, AppError, AppResult};
+use crate::util::errors::{cargo_err, internal, not_found, AppResult, BoxedAppError};
 use reqwest::blocking::Client;
 
 pub trait GitHubClient: Send + Sync {
@@ -152,7 +152,7 @@ impl GitHubClient for RealGitHubClient {
     }
 }
 
-fn handle_error_response(error: &reqwest::Error) -> Box<dyn AppError> {
+fn handle_error_response(error: &reqwest::Error) -> BoxedAppError {
     use reqwest::StatusCode as Status;
 
     match error.status() {

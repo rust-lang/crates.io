@@ -263,7 +263,7 @@ impl ShowIncludeMode {
 }
 
 impl FromStr for ShowIncludeMode {
-    type Err = Box<dyn AppError>;
+    type Err = BoxedAppError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut mode = Self {

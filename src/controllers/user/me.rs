@@ -132,7 +132,7 @@ pub fn update_user(mut req: ConduitRequest) -> EndpointResult {
 
     let state = req.app();
     let conn = state.db_write()?;
-    conn.transaction::<_, Box<dyn AppError>, _>(|| {
+    conn.transaction::<_, BoxedAppError, _>(|| {
         let new_email = NewEmail {
             user_id: user.id,
             email: user_email,
