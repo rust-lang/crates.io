@@ -74,7 +74,7 @@ pub fn build_axum_router(state: AppState) -> Router {
         )
         .route(
             "/api/v1/crates/:crate_id/following",
-            get(conduit(krate::follow::following)),
+            get(krate::follow::following),
         )
         .route(
             "/api/v1/crates/:crate_id/owner_team",

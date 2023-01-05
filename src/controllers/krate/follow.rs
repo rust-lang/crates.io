@@ -50,14 +50,17 @@ pub async fn unfollow(req: ConduitRequest) -> AppResult<Response> {
 }
 
 /// Handles the `GET /crates/:crate_id/following` route.
-pub fn following(req: ConduitRequest) -> AppResult<Json<Value>> {
-    use diesel::dsl::exists;
+pub async fn following(req: ConduitRequest) -> AppResult<Json<Value>> {
+    conduit_compat(move || {
+        use diesel::dsl::exists;
 
-    let user_id = AuthCheck::only_cookie().check(&req)?.user_id();
-    let conn = req.app().db_read_prefer_primary()?;
-    let follow = follow_target(&req, &conn, user_id)?;
-    let following =
-        diesel::select(exists(follows::table.find(follow.id()))).get_result::<bool>(&*conn)?;
+        let user_id = AuthCheck::only_cookie().check(&req)?.user_id();
+        let conn = req.app().db_read_prefer_primary()?;
+        let follow = follow_target(&req, &conn, user_id)?;
+        let following =
+            diesel::select(exists(follows::table.find(follow.id()))).get_result::<bool>(&*conn)?;
 
-    Ok(Json(json!({ "following": following })))
+        Ok(Json(json!({ "following": following })))
+    })
+    .await
 }
