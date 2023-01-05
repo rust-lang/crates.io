@@ -253,27 +253,30 @@ struct OwnerInvitation {
 }
 
 /// Handles the `PUT /api/v1/me/crate_owner_invitations/:crate_id` route.
-pub fn handle_invite(mut req: ConduitRequest) -> AppResult<Json<Value>> {
-    let crate_invite: OwnerInvitation =
-        serde_json::from_reader(req.body_mut()).map_err(|_| bad_request("invalid json request"))?;
+pub async fn handle_invite(mut req: ConduitRequest) -> AppResult<Json<Value>> {
+    conduit_compat(move || {
+        let crate_invite: OwnerInvitation = serde_json::from_reader(req.body_mut())
+            .map_err(|_| bad_request("invalid json request"))?;
 
-    let crate_invite = crate_invite.crate_owner_invite;
+        let crate_invite = crate_invite.crate_owner_invite;
 
-    let auth = AuthCheck::default().check(&req)?;
-    let user_id = auth.user_id();
+        let auth = AuthCheck::default().check(&req)?;
+        let user_id = auth.user_id();
 
-    let state = req.app();
-    let conn = &*state.db_write()?;
-    let config = &state.config;
+        let state = req.app();
+        let conn = &*state.db_write()?;
+        let config = &state.config;
 
-    let invitation = CrateOwnerInvitation::find_by_id(user_id, crate_invite.crate_id, conn)?;
-    if crate_invite.accepted {
-        invitation.accept(conn, config)?;
-    } else {
-        invitation.decline(conn)?;
-    }
+        let invitation = CrateOwnerInvitation::find_by_id(user_id, crate_invite.crate_id, conn)?;
+        if crate_invite.accepted {
+            invitation.accept(conn, config)?;
+        } else {
+            invitation.decline(conn)?;
+        }
 
-    Ok(Json(json!({ "crate_owner_invitation": crate_invite })))
+        Ok(Json(json!({ "crate_owner_invitation": crate_invite })))
+    })
+    .await
 }
 
 /// Handles the `PUT /api/v1/me/crate_owner_invitations/accept/:token` route.

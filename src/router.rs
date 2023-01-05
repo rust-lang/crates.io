@@ -110,7 +110,7 @@ pub fn build_axum_router(state: AppState) -> Router {
         )
         .route(
             "/api/v1/me/crate_owner_invitations/:crate_id",
-            put(conduit(crate_owner_invitation::handle_invite)),
+            put(crate_owner_invitation::handle_invite),
         )
         .route(
             "/api/v1/me/crate_owner_invitations/accept/:token",
