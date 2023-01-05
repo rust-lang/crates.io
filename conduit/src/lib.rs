@@ -27,17 +27,6 @@ pub fn box_error<E: Error + Send + 'static>(error: E) -> BoxError {
     Box::new(error)
 }
 
-pub trait RequestExt {
-    /// The byte-size of the body, if any
-    fn content_length(&self) -> Option<u64>;
-}
-
-impl RequestExt for ConduitRequest {
-    fn content_length(&self) -> Option<u64> {
-        Some(self.body().get_ref().len() as u64)
-    }
-}
-
 /// A Handler takes a request and returns a response or an error.
 /// By default, a bare function implements `Handler`.
 pub trait Handler: Sync + Send + 'static {

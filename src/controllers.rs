@@ -14,7 +14,7 @@ mod prelude {
     use axum::body::Bytes;
     pub use diesel::prelude::*;
 
-    pub use conduit::{ConduitRequest, RequestExt};
+    pub use conduit::ConduitRequest;
     pub use http::{header, StatusCode};
 
     pub use super::conduit_axum::conduit_compat;
@@ -41,6 +41,7 @@ mod prelude {
         fn query(&self) -> IndexMap<String, String>;
         fn wants_json(&self) -> bool;
         fn query_with_params(&self, params: IndexMap<String, String>) -> String;
+        fn content_length(&self) -> Option<u64>;
     }
 
     impl RequestUtils for ConduitRequest {
@@ -64,6 +65,10 @@ mod prelude {
                 .extend_pairs(params)
                 .finish();
             format!("?{query_string}")
+        }
+
+        fn content_length(&self) -> Option<u64> {
+            Some(self.body().get_ref().len() as u64)
         }
     }
 }
