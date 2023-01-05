@@ -325,31 +325,34 @@ pub async fn readme(req: ConduitRequest) -> AppResult<Response> {
 /// Handles the `GET /crates/:crate_id/versions` route.
 // FIXME: Not sure why this is necessary since /crates/:crate_id returns
 // this information already, but ember is definitely requesting it
-pub fn versions(req: ConduitRequest) -> AppResult<Json<Value>> {
-    let crate_name = req.param("crate_id").unwrap();
-    let conn = req.app().db_read()?;
-    let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
-    let mut versions_and_publishers: Vec<(Version, Option<User>)> = krate
-        .all_versions()
-        .left_outer_join(users::table)
-        .select((versions::all_columns, users::all_columns.nullable()))
-        .load(&*conn)?;
+pub async fn versions(req: ConduitRequest) -> AppResult<Json<Value>> {
+    conduit_compat(move || {
+        let crate_name = req.param("crate_id").unwrap();
+        let conn = req.app().db_read()?;
+        let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
+        let mut versions_and_publishers: Vec<(Version, Option<User>)> = krate
+            .all_versions()
+            .left_outer_join(users::table)
+            .select((versions::all_columns, users::all_columns.nullable()))
+            .load(&*conn)?;
 
-    versions_and_publishers
-        .sort_by_cached_key(|(version, _)| Reverse(semver::Version::parse(&version.num).ok()));
+        versions_and_publishers
+            .sort_by_cached_key(|(version, _)| Reverse(semver::Version::parse(&version.num).ok()));
 
-    let versions = versions_and_publishers
-        .iter()
-        .map(|(v, _)| v)
-        .cloned()
-        .collect::<Vec<_>>();
-    let versions = versions_and_publishers
-        .into_iter()
-        .zip(VersionOwnerAction::for_versions(&conn, &versions)?.into_iter())
-        .map(|((v, pb), aas)| EncodableVersion::from(v, crate_name, pb, aas))
-        .collect::<Vec<_>>();
+        let versions = versions_and_publishers
+            .iter()
+            .map(|(v, _)| v)
+            .cloned()
+            .collect::<Vec<_>>();
+        let versions = versions_and_publishers
+            .into_iter()
+            .zip(VersionOwnerAction::for_versions(&conn, &versions)?.into_iter())
+            .map(|((v, pb), aas)| EncodableVersion::from(v, crate_name, pb, aas))
+            .collect::<Vec<_>>();
 
-    Ok(Json(json!({ "versions": versions })))
+        Ok(Json(json!({ "versions": versions })))
+    })
+    .await
 }
 
 /// Handles the `GET /crates/:crate_id/reverse_dependencies` route.
