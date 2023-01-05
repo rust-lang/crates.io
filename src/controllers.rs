@@ -19,9 +19,7 @@ mod prelude {
 
     pub use super::conduit_axum::conduit_compat;
     pub use crate::middleware::app::RequestApp;
-    pub use crate::util::errors::{cargo_err, AppError, AppResult, BoxedAppError}; // TODO: Remove cargo_err from here
-    pub use crate::util::EndpointResult;
-
+    pub use crate::util::errors::{cargo_err, AppError, AppResult, BoxedAppError};
     use indexmap::IndexMap;
     use serde::Serialize;
 

@@ -232,7 +232,7 @@ pub enum GitHubSecretAlertFeedbackLabel {
 }
 
 /// Handles the `POST /api/github/secret-scanning/verify` route.
-pub fn verify(mut req: ConduitRequest) -> EndpointResult {
+pub fn verify(mut req: ConduitRequest) -> AppResult<Response> {
     let max_size = 8192;
     let length = req
         .content_length()

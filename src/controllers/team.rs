@@ -5,7 +5,7 @@ use crate::schema::teams;
 use crate::views::EncodableTeam;
 
 /// Handles the `GET /teams/:team_id` route.
-pub fn show_team(req: ConduitRequest) -> EndpointResult {
+pub fn show_team(req: ConduitRequest) -> AppResult<Response> {
     use self::teams::dsl::{login, teams};
 
     let name = req.param("team_id").unwrap();

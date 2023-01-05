@@ -9,7 +9,7 @@ use axum::response::IntoResponse;
 use serde_json as json;
 
 /// Handles the `GET /me/tokens` route.
-pub fn list(req: ConduitRequest) -> EndpointResult {
+pub fn list(req: ConduitRequest) -> AppResult<Response> {
     let auth = AuthCheck::only_cookie().check(&req)?;
     let conn = req.app().db_read_prefer_primary()?;
     let user = auth.user();
@@ -23,7 +23,7 @@ pub fn list(req: ConduitRequest) -> EndpointResult {
 }
 
 /// Handles the `PUT /me/tokens` route.
-pub fn new(mut req: ConduitRequest) -> EndpointResult {
+pub fn new(mut req: ConduitRequest) -> AppResult<Response> {
     /// The incoming serialization format for the `ApiToken` model.
     #[derive(Deserialize, Serialize)]
     struct NewApiToken {
@@ -78,7 +78,7 @@ pub fn new(mut req: ConduitRequest) -> EndpointResult {
 }
 
 /// Handles the `DELETE /me/tokens/:id` route.
-pub fn revoke(req: ConduitRequest) -> EndpointResult {
+pub fn revoke(req: ConduitRequest) -> AppResult<Response> {
     let id = req
         .param("id")
         .unwrap()
@@ -96,7 +96,7 @@ pub fn revoke(req: ConduitRequest) -> EndpointResult {
 }
 
 /// Handles the `DELETE /tokens/current` route.
-pub fn revoke_current(req: ConduitRequest) -> EndpointResult {
+pub fn revoke_current(req: ConduitRequest) -> AppResult<Response> {
     let auth = AuthCheck::default().check(&req)?;
     let api_token_id = auth
         .api_token_id()
