@@ -30,7 +30,7 @@ pub fn build_axum_router(state: AppState) -> Router {
         )
         .route(
             "/api/v1/crates/:crate_id/:version/download",
-            get(conduit(version::downloads::download)),
+            get(version::downloads::download),
         )
         // Routes that appear to be unused
         .route("/api/v1/versions", get(conduit(version::deprecated::index)))
