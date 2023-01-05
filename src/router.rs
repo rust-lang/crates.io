@@ -141,10 +141,7 @@ pub fn build_axum_router(state: AppState) -> Router {
         )
         .route("/api/private/session", delete(user::session::logout))
         // Metrics
-        .route(
-            "/api/private/metrics/:kind",
-            get(conduit(metrics::prometheus)),
-        )
+        .route("/api/private/metrics/:kind", get(metrics::prometheus))
         // Crate ownership invitations management in the frontend
         .route(
             "/api/private/crate_owner_invitations",
