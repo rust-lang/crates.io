@@ -231,7 +231,7 @@ mod tests {
         let req = || {
             let mut req = MockRequest::new(Method::GET, "/").into_inner();
             req.extensions_mut().insert(CustomMetadata::default());
-            req
+            ConduitRequest(req)
         };
 
         // Types for handling common error status codes

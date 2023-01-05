@@ -70,6 +70,7 @@ where
             };
 
             let request = Request::from_parts(parts, Cursor::new(full_body));
+            let request = ConduitRequest(request);
 
             let Self(handler) = self;
             spawn_blocking(move || handler.call(request))

@@ -1,11 +1,10 @@
 use axum::body::Bytes;
 use std::error::Error;
 use std::io::Cursor;
+use std::ops::{Deref, DerefMut};
 
 use crate::response::AxumResponse;
 pub use http::{header, Extensions, HeaderMap, Method, Request, Response, StatusCode, Uri};
-
-pub type ConduitRequest = Request<Cursor<Bytes>>;
 
 pub type BoxError = Box<dyn Error + Send>;
 pub type HandlerResult = AxumResponse;
@@ -23,6 +22,23 @@ pub type HandlerResult = AxumResponse;
 /// ```
 pub fn box_error<E: Error + Send + 'static>(error: E) -> BoxError {
     Box::new(error)
+}
+
+#[derive(Debug)]
+pub struct ConduitRequest(pub Request<Cursor<Bytes>>);
+
+impl Deref for ConduitRequest {
+    type Target = Request<Cursor<Bytes>>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for ConduitRequest {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
 }
 
 /// A Handler takes a request and returns a response or an error.
