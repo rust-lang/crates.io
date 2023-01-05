@@ -118,7 +118,7 @@ pub fn build_axum_router(state: AppState) -> Router {
         )
         .route(
             "/api/v1/me/email_notifications",
-            put(conduit(user::me::update_email_notifications)),
+            put(user::me::update_email_notifications),
         )
         .route("/api/v1/summary", get(conduit(krate::metadata::summary)))
         .route(

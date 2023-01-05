@@ -225,53 +225,56 @@ pub fn regenerate_token_and_send(req: ConduitRequest) -> AppResult<Response> {
 }
 
 /// Handles `PUT /me/email_notifications` route
-pub fn update_email_notifications(mut req: ConduitRequest) -> AppResult<Response> {
-    use self::crate_owners::dsl::*;
-    use diesel::pg::upsert::excluded;
+pub async fn update_email_notifications(mut req: ConduitRequest) -> AppResult<Response> {
+    conduit_compat(move || {
+        use self::crate_owners::dsl::*;
+        use diesel::pg::upsert::excluded;
 
-    #[derive(Deserialize)]
-    struct CrateEmailNotifications {
-        id: i32,
-        email_notifications: bool,
-    }
+        #[derive(Deserialize)]
+        struct CrateEmailNotifications {
+            id: i32,
+            email_notifications: bool,
+        }
 
-    let updates: HashMap<i32, bool> =
-        serde_json::from_reader::<_, Vec<CrateEmailNotifications>>(req.body_mut())
-            .map_err(|_| bad_request("invalid json request"))?
-            .iter()
-            .map(|c| (c.id, c.email_notifications))
-            .collect();
+        let updates: HashMap<i32, bool> =
+            serde_json::from_reader::<_, Vec<CrateEmailNotifications>>(req.body_mut())
+                .map_err(|_| bad_request("invalid json request"))?
+                .iter()
+                .map(|c| (c.id, c.email_notifications))
+                .collect();
 
-    let user_id = AuthCheck::default().check(&req)?.user_id();
-    let conn = req.app().db_write()?;
+        let user_id = AuthCheck::default().check(&req)?.user_id();
+        let conn = req.app().db_write()?;
 
-    // Build inserts from existing crates belonging to the current user
-    let to_insert = CrateOwner::by_owner_kind(OwnerKind::User)
-        .filter(owner_id.eq(user_id))
-        .select((crate_id, owner_id, owner_kind, email_notifications))
-        .load(&*conn)?
-        .into_iter()
-        // Remove records whose `email_notifications` will not change from their current value
-        .map(
-            |(c_id, o_id, o_kind, e_notifications): (i32, i32, i32, bool)| {
-                let current_e_notifications = *updates.get(&c_id).unwrap_or(&e_notifications);
-                (
-                    crate_id.eq(c_id),
-                    owner_id.eq(o_id),
-                    owner_kind.eq(o_kind),
-                    email_notifications.eq(current_e_notifications),
-                )
-            },
-        )
-        .collect::<Vec<_>>();
+        // Build inserts from existing crates belonging to the current user
+        let to_insert = CrateOwner::by_owner_kind(OwnerKind::User)
+            .filter(owner_id.eq(user_id))
+            .select((crate_id, owner_id, owner_kind, email_notifications))
+            .load(&*conn)?
+            .into_iter()
+            // Remove records whose `email_notifications` will not change from their current value
+            .map(
+                |(c_id, o_id, o_kind, e_notifications): (i32, i32, i32, bool)| {
+                    let current_e_notifications = *updates.get(&c_id).unwrap_or(&e_notifications);
+                    (
+                        crate_id.eq(c_id),
+                        owner_id.eq(o_id),
+                        owner_kind.eq(o_kind),
+                        email_notifications.eq(current_e_notifications),
+                    )
+                },
+            )
+            .collect::<Vec<_>>();
 
-    // Upsert crate owners; this should only actually exectute updates
-    diesel::insert_into(crate_owners)
-        .values(&to_insert)
-        .on_conflict((crate_id, owner_id, owner_kind))
-        .do_update()
-        .set(email_notifications.eq(excluded(email_notifications)))
-        .execute(&*conn)?;
+        // Upsert crate owners; this should only actually exectute updates
+        diesel::insert_into(crate_owners)
+            .values(&to_insert)
+            .on_conflict((crate_id, owner_id, owner_kind))
+            .do_update()
+            .set(email_notifications.eq(excluded(email_notifications)))
+            .execute(&*conn)?;
 
-    ok_true()
+        ok_true()
+    })
+    .await
 }
