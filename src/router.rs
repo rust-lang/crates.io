@@ -100,7 +100,7 @@ pub fn build_axum_router(state: AppState) -> Router {
         .route("/api/v1/users/:user_id/stats", get(user::other::stats))
         .route("/api/v1/teams/:team_id", get(team::show_team))
         .route("/api/v1/me", get(user::me::me))
-        .route("/api/v1/me/updates", get(conduit(user::me::updates)))
+        .route("/api/v1/me/updates", get(user::me::updates))
         .route(
             "/api/v1/me/tokens",
             get(conduit(token::list)).put(conduit(token::new)),

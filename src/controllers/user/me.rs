@@ -55,44 +55,47 @@ pub async fn me(req: ConduitRequest) -> AppResult<Json<EncodableMe>> {
 }
 
 /// Handles the `GET /me/updates` route.
-pub fn updates(req: ConduitRequest) -> AppResult<Json<Value>> {
-    use diesel::dsl::any;
+pub async fn updates(req: ConduitRequest) -> AppResult<Json<Value>> {
+    conduit_compat(move || {
+        use diesel::dsl::any;
 
-    let auth = AuthCheck::only_cookie().check(&req)?;
-    let user = auth.user();
+        let auth = AuthCheck::only_cookie().check(&req)?;
+        let user = auth.user();
 
-    let followed_crates = Follow::belonging_to(&user).select(follows::crate_id);
-    let query = versions::table
-        .inner_join(crates::table)
-        .left_outer_join(users::table)
-        .filter(crates::id.eq(any(followed_crates)))
-        .order(versions::created_at.desc())
-        .select((
-            versions::all_columns,
-            crates::name,
-            users::all_columns.nullable(),
-        ))
-        .pages_pagination(PaginationOptions::builder().gather(&req)?);
-    let conn = req.app().db_read_prefer_primary()?;
-    let data: Paginated<(Version, String, Option<User>)> = query.load(&conn)?;
-    let more = data.next_page_params().is_some();
-    let versions = data.iter().map(|(v, _, _)| v).cloned().collect::<Vec<_>>();
-    let data = data
-        .into_iter()
-        .zip(VersionOwnerAction::for_versions(&conn, &versions)?.into_iter())
-        .map(|((v, cn, pb), voas)| (v, cn, pb, voas));
+        let followed_crates = Follow::belonging_to(&user).select(follows::crate_id);
+        let query = versions::table
+            .inner_join(crates::table)
+            .left_outer_join(users::table)
+            .filter(crates::id.eq(any(followed_crates)))
+            .order(versions::created_at.desc())
+            .select((
+                versions::all_columns,
+                crates::name,
+                users::all_columns.nullable(),
+            ))
+            .pages_pagination(PaginationOptions::builder().gather(&req)?);
+        let conn = req.app().db_read_prefer_primary()?;
+        let data: Paginated<(Version, String, Option<User>)> = query.load(&conn)?;
+        let more = data.next_page_params().is_some();
+        let versions = data.iter().map(|(v, _, _)| v).cloned().collect::<Vec<_>>();
+        let data = data
+            .into_iter()
+            .zip(VersionOwnerAction::for_versions(&conn, &versions)?.into_iter())
+            .map(|((v, cn, pb), voas)| (v, cn, pb, voas));
 
-    let versions = data
-        .into_iter()
-        .map(|(version, crate_name, published_by, actions)| {
-            EncodableVersion::from(version, &crate_name, published_by, actions)
-        })
-        .collect::<Vec<_>>();
+        let versions = data
+            .into_iter()
+            .map(|(version, crate_name, published_by, actions)| {
+                EncodableVersion::from(version, &crate_name, published_by, actions)
+            })
+            .collect::<Vec<_>>();
 
-    Ok(Json(json!({
-        "versions": versions,
-        "meta": { "more": more },
-    })))
+        Ok(Json(json!({
+            "versions": versions,
+            "meta": { "more": more },
+        })))
+    })
+    .await
 }
 
 /// Handles the `PUT /users/:user_id` route.
