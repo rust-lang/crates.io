@@ -5,12 +5,11 @@ use crate::{spawn_blocking, ConduitRequest, Handler};
 use std::collections::BTreeMap;
 use std::error::Error;
 use std::future::Future;
-use std::io::Cursor;
 use std::pin::Pin;
 use std::sync::Arc;
 
 use axum::body::{Body, HttpBody};
-use axum::extract::{rejection::PathRejection, Extension, FromRequestParts, Path};
+use axum::extract::{Extension, FromRequest, Path};
 use axum::handler::Handler as AxumHandler;
 use axum::response::IntoResponse;
 use http::header::CONTENT_LENGTH;
@@ -48,29 +47,10 @@ where
 
     fn call(self, request: Request<Body>, state: S) -> Self::Future {
         Box::pin(async move {
-            if let Err(response) = check_content_length(&request) {
-                return response.into_response();
-            }
-
-            let (mut parts, body) = request.into_parts();
-
-            // Make `axum::Router` path params available to `conduit` compat
-            // handlers. (see [RequestParamsExt] below)
-            match Params::from_request_parts(&mut parts, &state).await {
-                Ok(path) => {
-                    parts.extensions.insert(path);
-                }
-                Err(PathRejection::MissingPathParams(_)) => {}
-                Err(err) => return err.into_response(),
+            let request = match ConduitRequest::from_request(request, &state).await {
+                Ok(request) => request,
+                Err(err) => return err,
             };
-
-            let full_body = match hyper::body::to_bytes(body).await {
-                Ok(body) => body,
-                Err(err) => return server_error_response(&err),
-            };
-
-            let request = Request::from_parts(parts, Cursor::new(full_body));
-            let request = ConduitRequest(request);
 
             let Self(handler) = self;
             spawn_blocking(move || handler.call(request))
@@ -115,7 +95,7 @@ pub fn server_error_response<E: Error + ?Sized>(error: &E) -> AxumResponse {
 /// This only checks for requests that claim to be too large. If the request is chunked then it
 /// is possible to allocate larger chunks of memory over time, by actually sending large volumes of
 /// data. Request sizes must be limited higher in the stack to protect against this type of attack.
-fn check_content_length(request: &Request<Body>) -> Result<(), AxumResponse> {
+pub(crate) fn check_content_length(request: &Request<Body>) -> Result<(), AxumResponse> {
     fn bad_request(message: &str) -> AxumResponse {
         warn!("Bad request: Content-Length {}", message);
         StatusCode::BAD_REQUEST.into_response()
