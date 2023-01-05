@@ -32,12 +32,11 @@ pub trait Handler: Sync + Send + 'static {
     fn call(&self, request: &mut ConduitRequest) -> HandlerResult;
 }
 
-impl<F, E> Handler for F
+impl<F> Handler for F
 where
-    F: Fn(&mut ConduitRequest) -> ResponseResult<E> + Sync + Send + 'static,
-    E: Error + Send + 'static,
+    F: Fn(&mut ConduitRequest) -> HandlerResult + Sync + Send + 'static,
 {
     fn call(&self, request: &mut ConduitRequest) -> HandlerResult {
-        (*self)(request).map_err(box_error)
+        (*self)(request)
     }
 }
