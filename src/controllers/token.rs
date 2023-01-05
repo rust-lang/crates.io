@@ -84,21 +84,24 @@ pub async fn new(mut req: ConduitRequest) -> AppResult<Json<Value>> {
 }
 
 /// Handles the `DELETE /me/tokens/:id` route.
-pub fn revoke(req: ConduitRequest) -> AppResult<Json<Value>> {
-    let id = req
-        .param("id")
-        .unwrap()
-        .parse::<i32>()
-        .map_err(|e| bad_request(&format!("invalid token id: {e:?}")))?;
+pub async fn revoke(req: ConduitRequest) -> AppResult<Json<Value>> {
+    conduit_compat(move || {
+        let id = req
+            .param("id")
+            .unwrap()
+            .parse::<i32>()
+            .map_err(|e| bad_request(&format!("invalid token id: {e:?}")))?;
 
-    let auth = AuthCheck::default().check(&req)?;
-    let conn = req.app().db_write()?;
-    let user = auth.user();
-    diesel::update(ApiToken::belonging_to(&user).find(id))
-        .set(api_tokens::revoked.eq(true))
-        .execute(&*conn)?;
+        let auth = AuthCheck::default().check(&req)?;
+        let conn = req.app().db_write()?;
+        let user = auth.user();
+        diesel::update(ApiToken::belonging_to(&user).find(id))
+            .set(api_tokens::revoked.eq(true))
+            .execute(&*conn)?;
 
-    Ok(Json(json!({})))
+        Ok(Json(json!({})))
+    })
+    .await
 }
 
 /// Handles the `DELETE /tokens/current` route.
