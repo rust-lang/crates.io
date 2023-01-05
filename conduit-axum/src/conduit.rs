@@ -1,6 +1,4 @@
-#![warn(rust_2018_idioms)]
-
-use bytes::Bytes;
+use axum::body::Bytes;
 use std::error::Error;
 use std::io::Cursor;
 
@@ -18,8 +16,8 @@ pub type HandlerResult = Result<Response<Bytes>, BoxError>;
 ///
 /// ```
 /// # use std::error::Error;
-/// # use bytes::Bytes;
-/// # use conduit::{box_error, Response};
+/// # use axum::body::Bytes;
+/// # use conduit_axum::{box_error, Response};
 /// # let _: Result<Response<Bytes>, Box<dyn Error + Send>> =
 /// Response::builder().body(Bytes::new()).map_err(box_error);
 /// ```

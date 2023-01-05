@@ -4,8 +4,8 @@ use cargo_registry::controllers::github::secret_scanning::{
 };
 use cargo_registry::util::token::SecureToken;
 use cargo_registry::{models::ApiToken, schema::api_tokens};
-use conduit::StatusCode;
 use diesel::prelude::*;
+use http::StatusCode;
 
 static URL: &str = "/api/github/secret-scanning/verify";
 

@@ -3,8 +3,7 @@ use axum::middleware::from_fn_with_state;
 use axum::response::IntoResponse;
 use axum::routing::{delete, get, post, put};
 use axum::Router;
-use conduit::{ConduitRequest, Handler, HandlerResult};
-use conduit_axum::{CauseField, ConduitAxumHandler};
+use conduit_axum::{CauseField, ConduitAxumHandler, ConduitRequest, Handler, HandlerResult};
 
 use crate::app::AppState;
 use crate::controllers::*;
@@ -233,7 +232,7 @@ mod tests {
 
     use conduit_test::MockRequest;
     use diesel::result::Error as DieselError;
-    use http::StatusCode;
+    use http::{Method, StatusCode};
 
     fn err<E: AppError>(err: E) -> EndpointResult {
         Err(Box::new(err))
@@ -241,7 +240,7 @@ mod tests {
 
     #[test]
     fn http_error_responses() {
-        let mut req = MockRequest::new(::conduit::Method::GET, "/").into_inner();
+        let mut req = MockRequest::new(Method::GET, "/").into_inner();
         req.extensions_mut().insert(CustomMetadata::default());
 
         // Types for handling common error status codes

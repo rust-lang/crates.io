@@ -2,8 +2,7 @@
 
 use axum::body::Bytes;
 use axum::routing::get;
-use conduit::{ConduitRequest, ResponseResult};
-use conduit_axum::ConduitAxumHandler;
+use conduit_axum::{ConduitAxumHandler, ConduitRequest, ResponseResult};
 use http::{header, Response};
 
 use std::io;
