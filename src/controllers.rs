@@ -11,7 +11,7 @@ mod frontend_prelude {
 mod prelude {
     pub use super::helpers::ok_true;
     pub use super::util::RequestParamExt;
-    use axum::body::Bytes;
+    use axum::response::IntoResponse;
     pub use diesel::prelude::*;
 
     pub use conduit_axum::ConduitRequest;
@@ -27,15 +27,11 @@ mod prelude {
 
     pub trait RequestUtils {
         fn redirect(&self, url: String) -> AppResponse {
-            http::Response::builder()
-                .status(StatusCode::FOUND)
-                .header(header::LOCATION, url)
-                .body(Bytes::new())
-                .unwrap() // Should not panic unless url contains "\r\n"
+            (StatusCode::FOUND, [(header::LOCATION, url)]).into_response()
         }
 
         fn json<T: Serialize>(&self, t: T) -> AppResponse {
-            crate::util::json_response(t)
+            crate::util::json_response(t).into_response()
         }
 
         fn query(&self) -> IndexMap<String, String>;

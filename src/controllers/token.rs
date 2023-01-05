@@ -5,8 +5,7 @@ use crate::schema::api_tokens;
 use crate::views::EncodableApiTokenWithToken;
 
 use crate::auth::AuthCheck;
-use axum::body::Bytes;
-use http::Response;
+use axum::response::IntoResponse;
 use serde_json as json;
 
 /// Handles the `GET /me/tokens` route.
@@ -108,5 +107,5 @@ pub fn revoke_current(req: &mut ConduitRequest) -> EndpointResult {
         .set(api_tokens::revoked.eq(true))
         .execute(&*conn)?;
 
-    Ok(Response::builder().status(204).body(Bytes::new()).unwrap())
+    Ok(StatusCode::NO_CONTENT.into_response())
 }

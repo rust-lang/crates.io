@@ -3,7 +3,7 @@ use axum::middleware::from_fn_with_state;
 use axum::response::IntoResponse;
 use axum::routing::{delete, get, post, put};
 use axum::Router;
-use conduit_axum::{conduit_into_axum, ConduitAxumHandler, ConduitRequest, Handler, HandlerResult};
+use conduit_axum::{ConduitAxumHandler, ConduitRequest, Handler, HandlerResult};
 
 use crate::app::AppState;
 use crate::controllers::*;
@@ -207,7 +207,7 @@ impl Handler for C {
     fn call(&self, req: &mut ConduitRequest) -> HandlerResult {
         let C(f) = *self;
         match f(req) {
-            Ok(resp) => Ok(conduit_into_axum(resp)),
+            Ok(resp) => Ok(resp),
             Err(e) => Ok(e.into_response()),
         }
     }
