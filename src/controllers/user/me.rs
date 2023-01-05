@@ -93,72 +93,75 @@ pub fn updates(req: ConduitRequest) -> AppResult<Json<Value>> {
 }
 
 /// Handles the `PUT /users/:user_id` route.
-pub fn update_user(mut req: ConduitRequest) -> AppResult<Response> {
-    use self::emails::user_id;
-    use diesel::insert_into;
+pub async fn update_user(mut req: ConduitRequest) -> AppResult<Response> {
+    conduit_compat(move || {
+        use self::emails::user_id;
+        use diesel::insert_into;
 
-    let auth = AuthCheck::default().check(&req)?;
+        let auth = AuthCheck::default().check(&req)?;
 
-    let param_user_id = req.param("user_id").unwrap();
+        let param_user_id = req.param("user_id").unwrap();
 
-    let user = auth.user();
+        let user = auth.user();
 
-    // need to check if current user matches user to be updated
-    if user.id.to_string() != param_user_id {
-        return Err(bad_request("current user does not match requested user"));
-    }
+        // need to check if current user matches user to be updated
+        if user.id.to_string() != param_user_id {
+            return Err(bad_request("current user does not match requested user"));
+        }
 
-    #[derive(Deserialize)]
-    struct UserUpdate {
-        user: User,
-    }
+        #[derive(Deserialize)]
+        struct UserUpdate {
+            user: User,
+        }
 
-    #[derive(Deserialize)]
-    struct User {
-        email: Option<String>,
-    }
+        #[derive(Deserialize)]
+        struct User {
+            email: Option<String>,
+        }
 
-    let user_update: UserUpdate =
-        serde_json::from_reader(req.body_mut()).map_err(|_| bad_request("invalid json request"))?;
+        let user_update: UserUpdate = serde_json::from_reader(req.body_mut())
+            .map_err(|_| bad_request("invalid json request"))?;
 
-    let user_email = match &user_update.user.email {
-        Some(email) => email.trim(),
-        None => return Err(bad_request("empty email rejected")),
-    };
-
-    if user_email.is_empty() {
-        return Err(bad_request("empty email rejected"));
-    }
-
-    let state = req.app();
-    let conn = state.db_write()?;
-    conn.transaction::<_, BoxedAppError, _>(|| {
-        let new_email = NewEmail {
-            user_id: user.id,
-            email: user_email,
+        let user_email = match &user_update.user.email {
+            Some(email) => email.trim(),
+            None => return Err(bad_request("empty email rejected")),
         };
 
-        let token: String = insert_into(emails::table)
-            .values(&new_email)
-            .on_conflict(user_id)
-            .do_update()
-            .set(&new_email)
-            .returning(emails::token)
-            .get_result(&*conn)
-            .map_err(|_| server_error("Error in creating token"))?;
+        if user_email.is_empty() {
+            return Err(bad_request("empty email rejected"));
+        }
 
-        // This swallows any errors that occur while attempting to send the email. Some users have
-        // an invalid email set in their GitHub profile, and we should let them sign in even though
-        // we're trying to silently use their invalid address during signup and can't send them an
-        // email. They'll then have to provide a valid email address.
-        let _ = state
-            .emails
-            .send_user_confirm(user_email, &user.gh_login, &token);
+        let state = req.app();
+        let conn = state.db_write()?;
+        conn.transaction::<_, BoxedAppError, _>(|| {
+            let new_email = NewEmail {
+                user_id: user.id,
+                email: user_email,
+            };
 
-        Ok(())
-    })?;
+            let token: String = insert_into(emails::table)
+                .values(&new_email)
+                .on_conflict(user_id)
+                .do_update()
+                .set(&new_email)
+                .returning(emails::token)
+                .get_result(&*conn)
+                .map_err(|_| server_error("Error in creating token"))?;
 
-    ok_true()
+            // This swallows any errors that occur while attempting to send the email. Some users have
+            // an invalid email set in their GitHub profile, and we should let them sign in even though
+            // we're trying to silently use their invalid address during signup and can't send them an
+            // email. They'll then have to provide a valid email address.
+            let _ = state
+                .emails
+                .send_user_confirm(user_email, &user.gh_login, &token);
+
+            Ok(())
+        })?;
+
+        ok_true()
+    })
+    .await
 }
 
 /// Handles the `PUT /confirm/:email_token` route
