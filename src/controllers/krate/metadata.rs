@@ -302,21 +302,24 @@ impl FromStr for ShowIncludeMode {
 }
 
 /// Handles the `GET /crates/:crate_id/:version/readme` route.
-pub fn readme(req: ConduitRequest) -> AppResult<Response> {
-    let crate_name = req.param("crate_id").unwrap();
-    let version = req.param("version").unwrap();
+pub async fn readme(req: ConduitRequest) -> AppResult<Response> {
+    conduit_compat(move || {
+        let crate_name = req.param("crate_id").unwrap();
+        let version = req.param("version").unwrap();
 
-    let redirect_url = req
-        .app()
-        .config
-        .uploader()
-        .readme_location(crate_name, version);
+        let redirect_url = req
+            .app()
+            .config
+            .uploader()
+            .readme_location(crate_name, version);
 
-    if req.wants_json() {
-        Ok(Json(json!({ "url": redirect_url })).into_response())
-    } else {
-        Ok(req.redirect(redirect_url))
-    }
+        if req.wants_json() {
+            Ok(Json(json!({ "url": redirect_url })).into_response())
+        } else {
+            Ok(req.redirect(redirect_url))
+        }
+    })
+    .await
 }
 
 /// Handles the `GET /crates/:crate_id/versions` route.
