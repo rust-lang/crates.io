@@ -19,8 +19,8 @@ use crate::worker;
 /// Crate deletion is not implemented to avoid breaking builds,
 /// and the goal of yanking a crate is to prevent crates
 /// beginning to depend on the yanked crate version.
-pub fn yank(req: ConduitRequest) -> AppResult<Response> {
-    modify_yank(&req, true)
+pub async fn yank(req: ConduitRequest) -> AppResult<Response> {
+    conduit_compat(move || modify_yank(&req, true)).await
 }
 
 /// Handles the `PUT /crates/:crate_id/:version/unyank` route.

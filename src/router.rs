@@ -22,7 +22,7 @@ pub fn build_axum_router(state: AppState) -> Router {
         )
         .route(
             "/api/v1/crates/:crate_id/:version/yank",
-            delete(conduit(version::yank::yank)),
+            delete(version::yank::yank),
         )
         .route(
             "/api/v1/crates/:crate_id/:version/unyank",
