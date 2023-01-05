@@ -20,8 +20,6 @@ pub async fn download(req: ConduitRequest) -> AppResult<Response> {
         let mut crate_name = req.param("crate_id").unwrap().to_string();
         let version = req.param("version").unwrap();
 
-        let mut log_metadata = None;
-
         let cache_key = (crate_name.to_string(), version.to_string());
         if let Some(version_id) = app.version_id_cacher.get(&cache_key) {
             app.instance_metrics.version_id_cache_hits.inc();
@@ -67,7 +65,7 @@ pub async fn download(req: ConduitRequest) -> AppResult<Response> {
                     app.instance_metrics
                         .downloads_non_canonical_crate_name_total
                         .inc();
-                    log_metadata = Some(("bot", "dl"));
+                    req.add_custom_metadata("bot", "dl");
                     crate_name = canonical_crate_name;
                 } else {
                     // The version_id is only cached if the provided crate name was canonical.
@@ -99,16 +97,12 @@ pub async fn download(req: ConduitRequest) -> AppResult<Response> {
                 app.instance_metrics
                     .downloads_unconditional_redirects_total
                     .inc();
-                log_metadata = Some(("unconditional_redirect", "true"));
+
+                req.add_custom_metadata("unconditional_redirect", "true");
             }
         };
 
         let redirect_url = app.config.uploader().crate_location(&crate_name, version);
-
-        if let Some((key, value)) = log_metadata {
-            req.add_custom_metadata(key, value);
-        }
-
         if req.wants_json() {
             Ok(Json(json!({ "url": redirect_url })).into_response())
         } else {
