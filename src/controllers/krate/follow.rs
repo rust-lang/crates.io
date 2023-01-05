@@ -21,16 +21,19 @@ fn follow_target(
 }
 
 /// Handles the `PUT /crates/:crate_id/follow` route.
-pub fn follow(req: ConduitRequest) -> AppResult<Response> {
-    let user_id = AuthCheck::default().check(&req)?.user_id();
-    let conn = req.app().db_write()?;
-    let follow = follow_target(&req, &conn, user_id)?;
-    diesel::insert_into(follows::table)
-        .values(&follow)
-        .on_conflict_do_nothing()
-        .execute(&*conn)?;
+pub async fn follow(req: ConduitRequest) -> AppResult<Response> {
+    conduit_compat(move || {
+        let user_id = AuthCheck::default().check(&req)?.user_id();
+        let conn = req.app().db_write()?;
+        let follow = follow_target(&req, &conn, user_id)?;
+        diesel::insert_into(follows::table)
+            .values(&follow)
+            .on_conflict_do_nothing()
+            .execute(&*conn)?;
 
-    ok_true()
+        ok_true()
+    })
+    .await
 }
 
 /// Handles the `DELETE /crates/:crate_id/follow` route.
