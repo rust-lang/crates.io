@@ -70,19 +70,22 @@ pub async fn show(req: ConduitRequest) -> AppResult<Json<Value>> {
 }
 
 /// Handles the `GET /category_slugs` route.
-pub fn slugs(req: ConduitRequest) -> AppResult<Json<Value>> {
-    let conn = req.app().db_read()?;
-    let slugs: Vec<Slug> = categories::table
-        .select((categories::slug, categories::slug, categories::description))
-        .order(categories::slug)
-        .load(&*conn)?;
+pub async fn slugs(req: ConduitRequest) -> AppResult<Json<Value>> {
+    conduit_compat(move || {
+        let conn = req.app().db_read()?;
+        let slugs: Vec<Slug> = categories::table
+            .select((categories::slug, categories::slug, categories::description))
+            .order(categories::slug)
+            .load(&*conn)?;
 
-    #[derive(Serialize, Queryable)]
-    struct Slug {
-        id: String,
-        slug: String,
-        description: String,
-    }
+        #[derive(Serialize, Queryable)]
+        struct Slug {
+            id: String,
+            slug: String,
+            description: String,
+        }
 
-    Ok(Json(json!({ "category_slugs": slugs })))
+        Ok(Json(json!({ "category_slugs": slugs })))
+    })
+    .await
 }
