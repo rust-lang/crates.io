@@ -26,17 +26,20 @@ use crate::views::EncodableMe;
 ///     "url": "https://github.com/login/oauth/authorize?client_id=...&state=...&scope=read%3Aorg"
 /// }
 /// ```
-pub fn begin(mut req: ConduitRequest) -> AppResult<Json<Value>> {
-    let (url, state) = req
-        .app()
-        .github_oauth
-        .authorize_url(oauth2::CsrfToken::new_random)
-        .add_scope(Scope::new("read:org".to_string()))
-        .url();
-    let state = state.secret().to_string();
-    req.session_insert("github_oauth_state".to_string(), state.clone());
+pub async fn begin(mut req: ConduitRequest) -> AppResult<Json<Value>> {
+    conduit_compat(move || {
+        let (url, state) = req
+            .app()
+            .github_oauth
+            .authorize_url(oauth2::CsrfToken::new_random)
+            .add_scope(Scope::new("read:org".to_string()))
+            .url();
+        let state = state.secret().to_string();
+        req.session_insert("github_oauth_state".to_string(), state.clone());
 
-    Ok(Json(json!({ "url": url.to_string(), "state": state })))
+        Ok(Json(json!({ "url": url.to_string(), "state": state })))
+    })
+    .await
 }
 
 /// Handles the `GET /api/private/session/authorize` route.
@@ -67,41 +70,46 @@ pub fn begin(mut req: ConduitRequest) -> AppResult<Json<Value>> {
 ///     }
 /// }
 /// ```
-pub fn authorize(mut req: ConduitRequest) -> AppResult<Json<EncodableMe>> {
-    // Parse the url query
-    let mut query = req.query();
-    let code = query.remove("code").unwrap_or_default();
-    let state = query.remove("state").unwrap_or_default();
+pub async fn authorize(mut req: ConduitRequest) -> AppResult<Json<EncodableMe>> {
+    let req = conduit_compat(move || {
+        // Parse the url query
+        let mut query = req.query();
+        let code = query.remove("code").unwrap_or_default();
+        let state = query.remove("state").unwrap_or_default();
 
-    // Make sure that the state we just got matches the session state that we
-    // should have issued earlier.
-    {
-        let session_state = req.session_remove("github_oauth_state");
-        let session_state = session_state.as_deref();
-        if Some(&state[..]) != session_state {
-            return Err(bad_request("invalid state parameter"));
+        // Make sure that the state we just got matches the session state that we
+        // should have issued earlier.
+        {
+            let session_state = req.session_remove("github_oauth_state");
+            let session_state = session_state.as_deref();
+            if Some(&state[..]) != session_state {
+                return Err(bad_request("invalid state parameter"));
+            }
         }
-    }
 
-    let app = req.app();
+        let app = req.app();
 
-    // Fetch the access token from GitHub using the code we just got
-    let code = AuthorizationCode::new(code);
-    let token = app
-        .github_oauth
-        .exchange_code(code)
-        .request(http_client)
-        .map_err(|err| err.chain(server_error("Error obtaining token")))?;
-    let token = token.access_token();
+        // Fetch the access token from GitHub using the code we just got
+        let code = AuthorizationCode::new(code);
+        let token = app
+            .github_oauth
+            .exchange_code(code)
+            .request(http_client)
+            .map_err(|err| err.chain(server_error("Error obtaining token")))?;
+        let token = token.access_token();
 
-    // Fetch the user info from GitHub using the access token we just got and create a user record
-    let ghuser = app.github.current_user(token)?;
-    let user = save_user_to_database(&ghuser, token.secret(), &app.emails, &*app.db_write()?)?;
+        // Fetch the user info from GitHub using the access token we just got and create a user record
+        let ghuser = app.github.current_user(token)?;
+        let user = save_user_to_database(&ghuser, token.secret(), &app.emails, &*app.db_write()?)?;
 
-    // Log in by setting a cookie and the middleware authentication
-    req.session_insert("user_id".to_string(), user.id.to_string());
+        // Log in by setting a cookie and the middleware authentication
+        req.session_insert("user_id".to_string(), user.id.to_string());
 
-    super::me::me(req)
+        Ok(req)
+    })
+    .await?;
+
+    super::me::me(req).await
 }
 
 fn save_user_to_database(
@@ -135,7 +143,7 @@ fn save_user_to_database(
 }
 
 /// Handles the `DELETE /api/private/session` route.
-pub fn logout(mut req: ConduitRequest) -> Json<bool> {
+pub async fn logout(mut req: ConduitRequest) -> Json<bool> {
     req.session_remove("user_id");
     Json(true)
 }

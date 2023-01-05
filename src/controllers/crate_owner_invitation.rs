@@ -16,55 +16,61 @@ use indexmap::IndexMap;
 use std::collections::{HashMap, HashSet};
 
 /// Handles the `GET /api/v1/me/crate_owner_invitations` route.
-pub fn list(req: ConduitRequest) -> AppResult<Json<Value>> {
-    let auth = AuthCheck::only_cookie().check(&req)?;
-    let user_id = auth.user_id();
+pub async fn list(req: ConduitRequest) -> AppResult<Json<Value>> {
+    conduit_compat(move || {
+        let auth = AuthCheck::only_cookie().check(&req)?;
+        let user_id = auth.user_id();
 
-    let PrivateListResponse {
-        invitations, users, ..
-    } = prepare_list(&req, auth, ListFilter::InviteeId(user_id))?;
+        let PrivateListResponse {
+            invitations, users, ..
+        } = prepare_list(&req, auth, ListFilter::InviteeId(user_id))?;
 
-    // The schema for the private endpoints is converted to the schema used by v1 endpoints.
-    let crate_owner_invitations = invitations
-        .into_iter()
-        .map(|private| {
-            Ok(EncodableCrateOwnerInvitationV1 {
-                invited_by_username: users
-                    .iter()
-                    .find(|u| u.id == private.inviter_id)
-                    .ok_or_else(|| internal(&format!("missing user {}", private.inviter_id)))?
-                    .login
-                    .clone(),
-                invitee_id: private.invitee_id,
-                inviter_id: private.inviter_id,
-                crate_name: private.crate_name,
-                crate_id: private.crate_id,
-                created_at: private.created_at,
-                expires_at: private.expires_at,
+        // The schema for the private endpoints is converted to the schema used by v1 endpoints.
+        let crate_owner_invitations = invitations
+            .into_iter()
+            .map(|private| {
+                Ok(EncodableCrateOwnerInvitationV1 {
+                    invited_by_username: users
+                        .iter()
+                        .find(|u| u.id == private.inviter_id)
+                        .ok_or_else(|| internal(&format!("missing user {}", private.inviter_id)))?
+                        .login
+                        .clone(),
+                    invitee_id: private.invitee_id,
+                    inviter_id: private.inviter_id,
+                    crate_name: private.crate_name,
+                    crate_id: private.crate_id,
+                    created_at: private.created_at,
+                    expires_at: private.expires_at,
+                })
             })
-        })
-        .collect::<AppResult<Vec<EncodableCrateOwnerInvitationV1>>>()?;
+            .collect::<AppResult<Vec<EncodableCrateOwnerInvitationV1>>>()?;
 
-    Ok(Json(json!({
-        "crate_owner_invitations": crate_owner_invitations,
-        "users": users,
-    })))
+        Ok(Json(json!({
+            "crate_owner_invitations": crate_owner_invitations,
+            "users": users,
+        })))
+    })
+    .await
 }
 
 /// Handles the `GET /api/private/crate_owner_invitations` route.
-pub fn private_list(req: ConduitRequest) -> AppResult<Json<PrivateListResponse>> {
-    let auth = AuthCheck::only_cookie().check(&req)?;
+pub async fn private_list(req: ConduitRequest) -> AppResult<Json<PrivateListResponse>> {
+    conduit_compat(move || {
+        let auth = AuthCheck::only_cookie().check(&req)?;
 
-    let filter = if let Some(crate_name) = req.query().get("crate_name") {
-        ListFilter::CrateName(crate_name.clone())
-    } else if let Some(id) = req.query().get("invitee_id").and_then(|i| i.parse().ok()) {
-        ListFilter::InviteeId(id)
-    } else {
-        return Err(bad_request("missing or invalid filter"));
-    };
+        let filter = if let Some(crate_name) = req.query().get("crate_name") {
+            ListFilter::CrateName(crate_name.clone())
+        } else if let Some(id) = req.query().get("invitee_id").and_then(|i| i.parse().ok()) {
+            ListFilter::InviteeId(id)
+        } else {
+            return Err(bad_request("missing or invalid filter"));
+        };
 
-    let list = prepare_list(&req, auth, filter)?;
-    Ok(Json(list))
+        let list = prepare_list(&req, auth, filter)?;
+        Ok(Json(list))
+    })
+    .await
 }
 
 enum ListFilter {
@@ -250,45 +256,51 @@ struct OwnerInvitation {
 }
 
 /// Handles the `PUT /api/v1/me/crate_owner_invitations/:crate_id` route.
-pub fn handle_invite(mut req: ConduitRequest) -> AppResult<Json<Value>> {
-    let crate_invite: OwnerInvitation =
-        serde_json::from_reader(req.body_mut()).map_err(|_| bad_request("invalid json request"))?;
+pub async fn handle_invite(mut req: ConduitRequest) -> AppResult<Json<Value>> {
+    conduit_compat(move || {
+        let crate_invite: OwnerInvitation = serde_json::from_reader(req.body_mut())
+            .map_err(|_| bad_request("invalid json request"))?;
 
-    let crate_invite = crate_invite.crate_owner_invite;
+        let crate_invite = crate_invite.crate_owner_invite;
 
-    let auth = AuthCheck::default().check(&req)?;
-    let user_id = auth.user_id();
+        let auth = AuthCheck::default().check(&req)?;
+        let user_id = auth.user_id();
 
-    let state = req.app();
-    let conn = &*state.db_write()?;
-    let config = &state.config;
+        let state = req.app();
+        let conn = &*state.db_write()?;
+        let config = &state.config;
 
-    let invitation = CrateOwnerInvitation::find_by_id(user_id, crate_invite.crate_id, conn)?;
-    if crate_invite.accepted {
-        invitation.accept(conn, config)?;
-    } else {
-        invitation.decline(conn)?;
-    }
+        let invitation = CrateOwnerInvitation::find_by_id(user_id, crate_invite.crate_id, conn)?;
+        if crate_invite.accepted {
+            invitation.accept(conn, config)?;
+        } else {
+            invitation.decline(conn)?;
+        }
 
-    Ok(Json(json!({ "crate_owner_invitation": crate_invite })))
+        Ok(Json(json!({ "crate_owner_invitation": crate_invite })))
+    })
+    .await
 }
 
 /// Handles the `PUT /api/v1/me/crate_owner_invitations/accept/:token` route.
-pub fn handle_invite_with_token(req: ConduitRequest) -> AppResult<Json<Value>> {
-    let state = req.app();
-    let config = &state.config;
-    let conn = state.db_write()?;
+pub async fn handle_invite_with_token(req: ConduitRequest) -> AppResult<Json<Value>> {
+    conduit_compat(move || {
+        let state = req.app();
+        let config = &state.config;
+        let conn = state.db_write()?;
 
-    let req_token = req.param("token").unwrap();
+        let req_token = req.param("token").unwrap();
 
-    let invitation = CrateOwnerInvitation::find_by_token(req_token, &conn)?;
-    let crate_id = invitation.crate_id;
-    invitation.accept(&conn, config)?;
+        let invitation = CrateOwnerInvitation::find_by_token(req_token, &conn)?;
+        let crate_id = invitation.crate_id;
+        invitation.accept(&conn, config)?;
 
-    Ok(Json(json!({
-        "crate_owner_invitation": {
-            "crate_id": crate_id,
-            "accepted": true,
-        },
-    })))
+        Ok(Json(json!({
+            "crate_owner_invitation": {
+                "crate_id": crate_id,
+                "accepted": true,
+            },
+        })))
+    })
+    .await
 }

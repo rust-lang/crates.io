@@ -7,53 +7,62 @@ use crate::models::{Crate, Owner, Rights, Team, User};
 use crate::views::EncodableOwner;
 
 /// Handles the `GET /crates/:crate_id/owners` route.
-pub fn owners(req: ConduitRequest) -> AppResult<Json<Value>> {
-    let crate_name = req.param("crate_id").unwrap();
-    let conn = req.app().db_read()?;
-    let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
-    let owners = krate
-        .owners(&conn)?
-        .into_iter()
-        .map(Owner::into)
-        .collect::<Vec<EncodableOwner>>();
+pub async fn owners(req: ConduitRequest) -> AppResult<Json<Value>> {
+    conduit_compat(move || {
+        let crate_name = req.param("crate_id").unwrap();
+        let conn = req.app().db_read()?;
+        let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
+        let owners = krate
+            .owners(&conn)?
+            .into_iter()
+            .map(Owner::into)
+            .collect::<Vec<EncodableOwner>>();
 
-    Ok(Json(json!({ "users": owners })))
+        Ok(Json(json!({ "users": owners })))
+    })
+    .await
 }
 
 /// Handles the `GET /crates/:crate_id/owner_team` route.
-pub fn owner_team(req: ConduitRequest) -> AppResult<Json<Value>> {
-    let crate_name = req.param("crate_id").unwrap();
-    let conn = req.app().db_read()?;
-    let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
-    let owners = Team::owning(&krate, &conn)?
-        .into_iter()
-        .map(Owner::into)
-        .collect::<Vec<EncodableOwner>>();
+pub async fn owner_team(req: ConduitRequest) -> AppResult<Json<Value>> {
+    conduit_compat(move || {
+        let crate_name = req.param("crate_id").unwrap();
+        let conn = req.app().db_read()?;
+        let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
+        let owners = Team::owning(&krate, &conn)?
+            .into_iter()
+            .map(Owner::into)
+            .collect::<Vec<EncodableOwner>>();
 
-    Ok(Json(json!({ "teams": owners })))
+        Ok(Json(json!({ "teams": owners })))
+    })
+    .await
 }
 
 /// Handles the `GET /crates/:crate_id/owner_user` route.
-pub fn owner_user(req: ConduitRequest) -> AppResult<Json<Value>> {
-    let crate_name = req.param("crate_id").unwrap();
-    let conn = req.app().db_read()?;
-    let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
-    let owners = User::owning(&krate, &conn)?
-        .into_iter()
-        .map(Owner::into)
-        .collect::<Vec<EncodableOwner>>();
+pub async fn owner_user(req: ConduitRequest) -> AppResult<Json<Value>> {
+    conduit_compat(move || {
+        let crate_name = req.param("crate_id").unwrap();
+        let conn = req.app().db_read()?;
+        let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
+        let owners = User::owning(&krate, &conn)?
+            .into_iter()
+            .map(Owner::into)
+            .collect::<Vec<EncodableOwner>>();
 
-    Ok(Json(json!({ "users": owners })))
+        Ok(Json(json!({ "users": owners })))
+    })
+    .await
 }
 
 /// Handles the `PUT /crates/:crate_id/owners` route.
-pub fn add_owners(mut req: ConduitRequest) -> AppResult<Json<Value>> {
-    modify_owners(&mut req, true)
+pub async fn add_owners(mut req: ConduitRequest) -> AppResult<Json<Value>> {
+    conduit_compat(move || modify_owners(&mut req, true)).await
 }
 
 /// Handles the `DELETE /crates/:crate_id/owners` route.
-pub fn remove_owners(mut req: ConduitRequest) -> AppResult<Json<Value>> {
-    modify_owners(&mut req, false)
+pub async fn remove_owners(mut req: ConduitRequest) -> AppResult<Json<Value>> {
+    conduit_compat(move || modify_owners(&mut req, false)).await
 }
 
 /// Parse the JSON request body of requests to modify the owners of a crate.
