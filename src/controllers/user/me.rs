@@ -13,42 +13,45 @@ use crate::schema::{crate_owners, crates, emails, follows, users, versions};
 use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCrate};
 
 /// Handles the `GET /me` route.
-pub fn me(req: ConduitRequest) -> AppResult<Json<EncodableMe>> {
-    let user_id = AuthCheck::only_cookie().check(&req)?.user_id();
-    let conn = req.app().db_read_prefer_primary()?;
+pub async fn me(req: ConduitRequest) -> AppResult<Json<EncodableMe>> {
+    conduit_compat(move || {
+        let user_id = AuthCheck::only_cookie().check(&req)?.user_id();
+        let conn = req.app().db_read_prefer_primary()?;
 
-    let (user, verified, email, verification_sent): (User, Option<bool>, Option<String>, bool) =
-        users::table
-            .find(user_id)
-            .left_join(emails::table)
-            .select((
-                users::all_columns,
-                emails::verified.nullable(),
-                emails::email.nullable(),
-                emails::token_generated_at.nullable().is_not_null(),
-            ))
-            .first(&*conn)?;
+        let (user, verified, email, verification_sent): (User, Option<bool>, Option<String>, bool) =
+            users::table
+                .find(user_id)
+                .left_join(emails::table)
+                .select((
+                    users::all_columns,
+                    emails::verified.nullable(),
+                    emails::email.nullable(),
+                    emails::token_generated_at.nullable().is_not_null(),
+                ))
+                .first(&*conn)?;
 
-    let owned_crates = CrateOwner::by_owner_kind(OwnerKind::User)
-        .inner_join(crates::table)
-        .filter(crate_owners::owner_id.eq(user_id))
-        .select((crates::id, crates::name, crate_owners::email_notifications))
-        .order(crates::name.asc())
-        .load(&*conn)?
-        .into_iter()
-        .map(|(id, name, email_notifications)| OwnedCrate {
-            id,
-            name,
-            email_notifications,
-        })
-        .collect();
+        let owned_crates = CrateOwner::by_owner_kind(OwnerKind::User)
+            .inner_join(crates::table)
+            .filter(crate_owners::owner_id.eq(user_id))
+            .select((crates::id, crates::name, crate_owners::email_notifications))
+            .order(crates::name.asc())
+            .load(&*conn)?
+            .into_iter()
+            .map(|(id, name, email_notifications)| OwnedCrate {
+                id,
+                name,
+                email_notifications,
+            })
+            .collect();
 
-    let verified = verified.unwrap_or(false);
-    let verification_sent = verified || verification_sent;
-    Ok(Json(EncodableMe {
-        user: EncodablePrivateUser::from(user, email, verified, verification_sent),
-        owned_crates,
-    }))
+        let verified = verified.unwrap_or(false);
+        let verification_sent = verified || verification_sent;
+        Ok(Json(EncodableMe {
+            user: EncodablePrivateUser::from(user, email, verified, verification_sent),
+            owned_crates,
+        }))
+    })
+    .await
 }
 
 /// Handles the `GET /me/updates` route.

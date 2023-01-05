@@ -68,7 +68,7 @@ pub fn begin(mut req: ConduitRequest) -> AppResult<Json<Value>> {
 /// }
 /// ```
 pub async fn authorize(mut req: ConduitRequest) -> AppResult<Json<EncodableMe>> {
-    conduit_compat(move || {
+    let req = conduit_compat(move || {
         // Parse the url query
         let mut query = req.query();
         let code = query.remove("code").unwrap_or_default();
@@ -102,9 +102,11 @@ pub async fn authorize(mut req: ConduitRequest) -> AppResult<Json<EncodableMe>> 
         // Log in by setting a cookie and the middleware authentication
         req.session_insert("user_id".to_string(), user.id.to_string());
 
-        super::me::me(req)
+        Ok(req)
     })
-    .await
+    .await?;
+
+    super::me::me(req).await
 }
 
 fn save_user_to_database(
