@@ -82,7 +82,7 @@ pub fn build_axum_router(state: AppState) -> Router {
         )
         .route(
             "/api/v1/crates/:crate_id/owner_user",
-            get(conduit(krate::owners::owner_user)),
+            get(krate::owners::owner_user),
         )
         .route(
             "/api/v1/crates/:crate_id/reverse_dependencies",
