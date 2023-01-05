@@ -7,8 +7,8 @@
 //! Requests to the download endpoint are always allowed, to support versions of cargo older than
 //! 0.17 (released alongside rustc 1.17).
 
-use super::prelude::*;
 use crate::app::AppState;
+use crate::middleware::log_request::CustomMetadataRequestExt;
 use axum::extract::State;
 use axum::headers::UserAgent;
 use axum::middleware::Next;
