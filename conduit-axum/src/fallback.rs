@@ -74,9 +74,7 @@ where
             let Self(handler) = self;
             spawn_blocking(move || {
                 let mut request = request;
-                handler
-                    .call(&mut request)
-                    .unwrap_or_else(|e| server_error_response(&*e))
+                handler.call(&mut request)
             })
             .await
             .map_err(ServiceError::from)
@@ -98,7 +96,7 @@ impl IntoResponse for ServiceError {
 }
 
 /// Logs an error message and returns a generic status 500 response
-fn server_error_response<E: Error + ?Sized>(error: &E) -> AxumResponse {
+pub fn server_error_response<E: Error + ?Sized>(error: &E) -> AxumResponse {
     error!(%error, "Internal Server Error");
 
     sentry_core::capture_error(error);
