@@ -1,8 +1,5 @@
 use std::cmp;
 
-use axum::Json;
-use serde::Serialize;
-
 pub use self::io_util::{read_fill, read_le_u32, LimitErrorReader};
 pub use self::request_helpers::*;
 
@@ -12,17 +9,6 @@ mod request_helpers;
 pub mod rfc3339;
 pub mod token;
 pub mod tracing;
-
-/// Serialize a value to JSON and build a status 200 Response
-///
-/// This helper sets appropriate values for `Content-Type` and `Content-Length`.
-///
-/// # Panics
-///
-/// This function will panic if serialization fails.
-pub fn json_response<T: Serialize>(t: T) -> Json<T> {
-    Json(t)
-}
 
 #[derive(Debug, Copy, Clone)]
 pub struct Maximums {
