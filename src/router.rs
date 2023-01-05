@@ -134,10 +134,7 @@ pub fn build_axum_router(state: AppState) -> Router {
             get(site_metadata::show_deployed_sha),
         )
         // Session management
-        .route(
-            "/api/private/session/begin",
-            get(conduit(user::session::begin)),
-        )
+        .route("/api/private/session/begin", get(user::session::begin))
         .route(
             "/api/private/session/authorize",
             get(user::session::authorize),

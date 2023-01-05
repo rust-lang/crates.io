@@ -26,17 +26,20 @@ use crate::views::EncodableMe;
 ///     "url": "https://github.com/login/oauth/authorize?client_id=...&state=...&scope=read%3Aorg"
 /// }
 /// ```
-pub fn begin(mut req: ConduitRequest) -> AppResult<Json<Value>> {
-    let (url, state) = req
-        .app()
-        .github_oauth
-        .authorize_url(oauth2::CsrfToken::new_random)
-        .add_scope(Scope::new("read:org".to_string()))
-        .url();
-    let state = state.secret().to_string();
-    req.session_insert("github_oauth_state".to_string(), state.clone());
+pub async fn begin(mut req: ConduitRequest) -> AppResult<Json<Value>> {
+    conduit_compat(move || {
+        let (url, state) = req
+            .app()
+            .github_oauth
+            .authorize_url(oauth2::CsrfToken::new_random)
+            .add_scope(Scope::new("read:org".to_string()))
+            .url();
+        let state = state.secret().to_string();
+        req.session_insert("github_oauth_state".to_string(), state.clone());
 
-    Ok(Json(json!({ "url": url.to_string(), "state": state })))
+        Ok(Json(json!({ "url": url.to_string(), "state": state })))
+    })
+    .await
 }
 
 /// Handles the `GET /api/private/session/authorize` route.
