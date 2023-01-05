@@ -36,34 +36,37 @@ pub async fn index(req: ConduitRequest) -> AppResult<Json<Value>> {
 }
 
 /// Handles the `GET /categories/:category_id` route.
-pub fn show(req: ConduitRequest) -> AppResult<Json<Value>> {
-    let slug = req.param("category_id").unwrap();
-    let conn = req.app().db_read()?;
-    let cat: Category = Category::by_slug(slug).first(&*conn)?;
-    let subcats = cat
-        .subcategories(&conn)?
-        .into_iter()
-        .map(Category::into)
-        .collect();
-    let parents = cat
-        .parent_categories(&conn)?
-        .into_iter()
-        .map(Category::into)
-        .collect();
+pub async fn show(req: ConduitRequest) -> AppResult<Json<Value>> {
+    conduit_compat(move || {
+        let slug = req.param("category_id").unwrap();
+        let conn = req.app().db_read()?;
+        let cat: Category = Category::by_slug(slug).first(&*conn)?;
+        let subcats = cat
+            .subcategories(&conn)?
+            .into_iter()
+            .map(Category::into)
+            .collect();
+        let parents = cat
+            .parent_categories(&conn)?
+            .into_iter()
+            .map(Category::into)
+            .collect();
 
-    let cat = EncodableCategory::from(cat);
-    let cat_with_subcats = EncodableCategoryWithSubcategories {
-        id: cat.id,
-        category: cat.category,
-        slug: cat.slug,
-        description: cat.description,
-        created_at: cat.created_at,
-        crates_cnt: cat.crates_cnt,
-        subcategories: subcats,
-        parent_categories: parents,
-    };
+        let cat = EncodableCategory::from(cat);
+        let cat_with_subcats = EncodableCategoryWithSubcategories {
+            id: cat.id,
+            category: cat.category,
+            slug: cat.slug,
+            description: cat.description,
+            created_at: cat.created_at,
+            crates_cnt: cat.crates_cnt,
+            subcategories: subcats,
+            parent_categories: parents,
+        };
 
-    Ok(Json(json!({ "category": cat_with_subcats })))
+        Ok(Json(json!({ "category": cat_with_subcats })))
+    })
+    .await
 }
 
 /// Handles the `GET /category_slugs` route.
