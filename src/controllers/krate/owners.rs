@@ -7,17 +7,20 @@ use crate::models::{Crate, Owner, Rights, Team, User};
 use crate::views::EncodableOwner;
 
 /// Handles the `GET /crates/:crate_id/owners` route.
-pub fn owners(req: ConduitRequest) -> AppResult<Json<Value>> {
-    let crate_name = req.param("crate_id").unwrap();
-    let conn = req.app().db_read()?;
-    let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
-    let owners = krate
-        .owners(&conn)?
-        .into_iter()
-        .map(Owner::into)
-        .collect::<Vec<EncodableOwner>>();
+pub async fn owners(req: ConduitRequest) -> AppResult<Json<Value>> {
+    conduit_compat(move || {
+        let crate_name = req.param("crate_id").unwrap();
+        let conn = req.app().db_read()?;
+        let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
+        let owners = krate
+            .owners(&conn)?
+            .into_iter()
+            .map(Owner::into)
+            .collect::<Vec<EncodableOwner>>();
 
-    Ok(Json(json!({ "users": owners })))
+        Ok(Json(json!({ "users": owners })))
+    })
+    .await
 }
 
 /// Handles the `GET /crates/:crate_id/owner_team` route.

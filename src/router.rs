@@ -16,7 +16,7 @@ pub fn build_axum_router(state: AppState) -> Router {
         .route("/api/v1/crates/new", put(krate::publish::publish))
         .route(
             "/api/v1/crates/:crate_id/owners",
-            get(conduit(krate::owners::owners))
+            get(krate::owners::owners)
                 .put(conduit(krate::owners::add_owners))
                 .delete(conduit(krate::owners::remove_owners)),
         )
