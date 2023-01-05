@@ -1,13 +1,12 @@
-use crate::{server_error_response, ConduitRequest, Handler, HandlerResult};
+use crate::{server_error_response, spawn_blocking, ConduitRequest, HandlerResult, ServiceError};
 use axum::response::IntoResponse;
 use axum::Router;
 use http::header::HeaderName;
 use http::{HeaderMap, HeaderValue, Request, StatusCode};
-use hyper::{body::to_bytes, service::Service};
+use hyper::body::to_bytes;
 use tokio::{sync::oneshot, task::JoinHandle};
 
 use crate::response::AxumResponse;
-use crate::ConduitAxumHandler;
 
 fn single_header(key: &str, value: &str) -> HeaderMap {
     let mut headers = HeaderMap::new();
@@ -15,69 +14,37 @@ fn single_header(key: &str, value: &str) -> HeaderMap {
     headers
 }
 
-struct OkResult;
-impl Handler for OkResult {
-    fn call(&self, _req: ConduitRequest) -> HandlerResult {
-        (single_header("ok", "value"), "Hello, world!").into_response()
+async fn ok_result(_req: ConduitRequest) -> HandlerResult {
+    (single_header("ok", "value"), "Hello, world!").into_response()
+}
+
+async fn error_result(_req: ConduitRequest) -> HandlerResult {
+    server_error_response(&std::io::Error::last_os_error())
+}
+
+async fn panic(_req: ConduitRequest) -> HandlerResult {
+    panic!()
+}
+
+async fn sleep(req: ConduitRequest) -> Result<AxumResponse, ServiceError> {
+    spawn_blocking(move || std::thread::sleep(std::time::Duration::from_millis(100)))
+        .await
+        .map_err(ServiceError::from)?;
+
+    Ok(ok_result(req).await)
+}
+
+async fn assert_percent_decode_path(req: ConduitRequest) -> HandlerResult {
+    if req.uri().path() == "/%3a" && req.uri().query() == Some("%3a") {
+        ok_result(req).await
+    } else {
+        error_result(req).await
     }
-}
-
-struct ErrorResult;
-impl Handler for ErrorResult {
-    fn call(&self, _req: ConduitRequest) -> HandlerResult {
-        server_error_response(&std::io::Error::last_os_error())
-    }
-}
-
-struct Panic;
-impl Handler for Panic {
-    fn call(&self, _req: ConduitRequest) -> HandlerResult {
-        panic!()
-    }
-}
-
-struct InvalidHeader;
-impl Handler for InvalidHeader {
-    fn call(&self, _req: ConduitRequest) -> HandlerResult {
-        (single_header("invalid-value", "\r\n"), "discarded").into_response()
-    }
-}
-
-struct Sleep;
-impl Handler for Sleep {
-    fn call(&self, req: ConduitRequest) -> HandlerResult {
-        std::thread::sleep(std::time::Duration::from_millis(100));
-        OkResult.call(req)
-    }
-}
-
-struct AssertPercentDecodedPath;
-impl Handler for AssertPercentDecodedPath {
-    fn call(&self, req: ConduitRequest) -> HandlerResult {
-        if req.uri().path() == "/%3a" && req.uri().query() == Some("%3a") {
-            OkResult.call(req)
-        } else {
-            ErrorResult.call(req)
-        }
-    }
-}
-
-fn make_service<H: Handler>(handler: H) -> Router {
-    Router::new().fallback(ConduitAxumHandler::wrap(handler))
-}
-
-async fn simulate_request<H: Handler>(handler: H) -> AxumResponse {
-    let mut service = make_service(handler);
-    service.call(Request::default()).await.unwrap()
 }
 
 async fn assert_generic_err(resp: AxumResponse) {
     assert_eq!(resp.status(), StatusCode::INTERNAL_SERVER_ERROR);
-    assert_eq!(resp.headers().len(), 2);
-    assert_eq!(
-        resp.headers().get("content-length"),
-        Some(&HeaderValue::from_static("21"))
-    );
+    assert_eq!(resp.headers().len(), 1);
     assert_eq!(
         resp.headers().get("content-type"),
         Some(&HeaderValue::from_static("text/plain; charset=utf-8"))
@@ -88,11 +55,10 @@ async fn assert_generic_err(resp: AxumResponse) {
 
 #[tokio::test]
 async fn valid_ok_response() {
-    let resp = simulate_request(OkResult).await;
+    let resp = ok_result(ConduitRequest(Request::default())).await;
     assert_eq!(resp.status(), StatusCode::OK);
-    assert_eq!(resp.headers().len(), 3);
+    assert_eq!(resp.headers().len(), 2);
     assert!(resp.headers().get("ok").is_some());
-    assert!(resp.headers().get("content-length").is_some());
     assert_eq!(
         resp.headers().get("content-type").unwrap(),
         "text/plain; charset=utf-8"
@@ -102,27 +68,20 @@ async fn valid_ok_response() {
 }
 
 #[tokio::test]
-async fn invalid_ok_responses() {
-    assert_generic_err(simulate_request(InvalidHeader).await).await;
-}
-
-#[tokio::test]
 async fn err_responses() {
-    assert_generic_err(simulate_request(ErrorResult).await).await;
+    assert_generic_err(error_result(ConduitRequest(Request::default())).await).await;
 }
 
 #[ignore] // catch_unwind not yet implemented
 #[tokio::test]
 async fn recover_from_panic() {
-    assert_generic_err(simulate_request(Panic).await).await;
+    assert_generic_err(panic(ConduitRequest(Request::default())).await).await;
 }
 
 #[tokio::test]
 async fn sleeping_doesnt_block_another_request() {
-    let mut service = make_service(Sleep);
-
-    let first = service.call(hyper::Request::default());
-    let second = service.call(hyper::Request::default());
+    let first = sleep(ConduitRequest(Request::default()));
+    let second = sleep(ConduitRequest(Request::default()));
 
     let start = std::time::Instant::now();
 
@@ -130,6 +89,7 @@ async fn sleeping_doesnt_block_another_request() {
     let (first, second) = futures_util::join!(first, second);
 
     // Elapsed time should be closer to 100ms than 200ms
+    dbg!(start.elapsed().as_millis());
     assert!(start.elapsed().as_millis() < 150);
 
     assert_eq!(first.unwrap().status(), StatusCode::OK);
@@ -138,11 +98,8 @@ async fn sleeping_doesnt_block_another_request() {
 
 #[tokio::test]
 async fn path_is_percent_decoded_but_not_query_string() {
-    let mut service = make_service(AssertPercentDecodedPath);
-    let req = hyper::Request::put("/%3a?%3a")
-        .body(hyper::Body::default())
-        .unwrap();
-    let resp = service.call(req).await.unwrap();
+    let req = Request::put("/%3a?%3a").body(Default::default()).unwrap();
+    let resp = assert_percent_decode_path(ConduitRequest(req)).await;
     assert_eq!(resp.status(), StatusCode::OK);
 }
 
@@ -154,7 +111,7 @@ async fn spawn_http_server() -> (
     let (quit_tx, quit_rx) = oneshot::channel::<()>();
     let addr = ([127, 0, 0, 1], 0).into();
 
-    let router = Router::new().fallback(ConduitAxumHandler::wrap(OkResult));
+    let router = Router::new().fallback(ok_result);
     let make_service = router.into_make_service();
     let server = hyper::Server::bind(&addr).serve(make_service);
 
