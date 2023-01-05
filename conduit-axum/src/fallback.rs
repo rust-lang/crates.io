@@ -1,5 +1,5 @@
 use crate::error::ServiceError;
-use crate::response::{conduit_into_axum, AxumResponse};
+use crate::response::AxumResponse;
 use crate::{spawn_blocking, ConduitRequest, Handler};
 
 use std::collections::BTreeMap;
@@ -76,7 +76,6 @@ where
                 let mut request = request;
                 handler
                     .call(&mut request)
-                    .map(conduit_into_axum)
                     .unwrap_or_else(|e| server_error_response(&*e))
             })
             .await

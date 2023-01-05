@@ -2,13 +2,14 @@ use axum::body::Bytes;
 use std::error::Error;
 use std::io::Cursor;
 
+use crate::response::AxumResponse;
 pub use http::{header, Extensions, HeaderMap, Method, Request, Response, StatusCode, Uri};
 
 pub type ConduitRequest = Request<Cursor<Bytes>>;
-pub type ResponseResult<Error> = Result<Response<Bytes>, Error>;
+pub type ResponseResult<Error> = Result<AxumResponse, Error>;
 
 pub type BoxError = Box<dyn Error + Send>;
-pub type HandlerResult = Result<Response<Bytes>, BoxError>;
+pub type HandlerResult = ResponseResult<BoxError>;
 
 /// A helper to convert a concrete error type into a `Box<dyn Error + Send>`
 ///
