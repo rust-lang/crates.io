@@ -850,6 +850,79 @@ fn new_krate_tarball_with_hard_links() {
 }
 
 #[test]
+fn tarball_between_default_axum_limit_and_max_upload_size() {
+    // We explicitly disable compression to be able to influence the final tarball size
+    let compression = Compression::none();
+
+    let max_upload_size = 5 * 1024 * 1024;
+    let (_, _, _, token) = TestApp::full()
+        .with_config(|config| {
+            config.max_upload_size = max_upload_size;
+            config.max_unpack_size = max_upload_size;
+        })
+        .with_token();
+
+    let mut tarball = Vec::new();
+    {
+        // `data` is smaller than `max_upload_size`, but bigger than the regular request body limit
+        let data = &[b'a'; 3 * 1024 * 1024] as &[_];
+
+        let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, compression));
+        let mut header = tar::Header::new_gnu();
+        assert_ok!(header.set_path("foo-1.1.0/Cargo.toml"));
+        header.set_size(data.len() as u64);
+        header.set_cksum();
+        assert_ok!(ar.append(&header, data));
+        assert_ok!(ar.finish());
+    }
+
+    let crate_to_publish = PublishBuilder::new("foo").version("1.1.0").tarball(tarball);
+
+    let response = token.publish_crate(crate_to_publish);
+    assert_eq!(response.status(), StatusCode::OK);
+    let json = response.good();
+    assert_eq!(json.krate.name, "foo");
+    assert_eq!(json.krate.max_version, "1.1.0");
+}
+
+#[test]
+fn tarball_bigger_than_max_upload_size() {
+    // We explicitly disable compression to be able to influence the final tarball size
+    let compression = Compression::none();
+
+    let max_upload_size = 5 * 1024 * 1024;
+    let (_, _, _, token) = TestApp::full()
+        .with_config(|config| {
+            config.max_upload_size = max_upload_size;
+            config.max_unpack_size = max_upload_size;
+        })
+        .with_token();
+
+    let mut tarball = Vec::new();
+    {
+        // `data` is bigger than `max_upload_size`
+        let data = &[b'a'; 6 * 1024 * 1024] as &[_];
+
+        let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, compression));
+        let mut header = tar::Header::new_gnu();
+        assert_ok!(header.set_path("foo-1.1.0/Cargo.toml"));
+        header.set_size(data.len() as u64);
+        header.set_cksum();
+        assert_ok!(ar.append(&header, data));
+        assert_ok!(ar.finish());
+    }
+
+    let crate_to_publish = PublishBuilder::new("foo").version("1.1.0").tarball(tarball);
+
+    let response = token.publish_crate(crate_to_publish);
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response.into_json(),
+        json!({ "errors": [{ "detail": format!("max upload size is: {max_upload_size}") }] })
+    );
+}
+
+#[test]
 fn publish_new_crate_rate_limited() {
     let (_, anon, _, token) = TestApp::full()
         .with_publish_rate_limit(Duration::from_millis(500), 1)
