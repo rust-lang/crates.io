@@ -9,33 +9,36 @@ use crate::models::Keyword;
 use crate::views::EncodableKeyword;
 
 /// Handles the `GET /keywords` route.
-pub fn index(req: ConduitRequest) -> AppResult<Json<Value>> {
-    use crate::schema::keywords;
+pub async fn index(req: ConduitRequest) -> AppResult<Json<Value>> {
+    conduit_compat(move || {
+        use crate::schema::keywords;
 
-    let query = req.query();
-    let sort = query.get("sort").map(|s| &s[..]).unwrap_or("alpha");
+        let query = req.query();
+        let sort = query.get("sort").map(|s| &s[..]).unwrap_or("alpha");
 
-    let mut query = keywords::table.into_boxed();
+        let mut query = keywords::table.into_boxed();
 
-    if sort == "crates" {
-        query = query.order(keywords::crates_cnt.desc());
-    } else {
-        query = query.order(keywords::keyword.asc());
-    }
+        if sort == "crates" {
+            query = query.order(keywords::crates_cnt.desc());
+        } else {
+            query = query.order(keywords::keyword.asc());
+        }
 
-    let query = query.pages_pagination(PaginationOptions::builder().gather(&req)?);
-    let conn = req.app().db_read()?;
-    let data: Paginated<Keyword> = query.load(&conn)?;
-    let total = data.total();
-    let kws = data
-        .into_iter()
-        .map(Keyword::into)
-        .collect::<Vec<EncodableKeyword>>();
+        let query = query.pages_pagination(PaginationOptions::builder().gather(&req)?);
+        let conn = req.app().db_read()?;
+        let data: Paginated<Keyword> = query.load(&conn)?;
+        let total = data.total();
+        let kws = data
+            .into_iter()
+            .map(Keyword::into)
+            .collect::<Vec<EncodableKeyword>>();
 
-    Ok(Json(json!({
-        "keywords": kws,
-        "meta": { "total": total },
-    })))
+        Ok(Json(json!({
+            "keywords": kws,
+            "meta": { "total": total },
+        })))
+    })
+    .await
 }
 
 /// Handles the `GET /keywords/:keyword_id` route.

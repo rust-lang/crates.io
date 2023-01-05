@@ -91,7 +91,7 @@ pub fn build_axum_router(state: AppState) -> Router {
             "/api/v1/crates/:crate_id/reverse_dependencies",
             get(conduit(krate::metadata::reverse_dependencies)),
         )
-        .route("/api/v1/keywords", get(conduit(keyword::index)))
+        .route("/api/v1/keywords", get(keyword::index))
         .route("/api/v1/keywords/:keyword_id", get(keyword::show))
         .route("/api/v1/categories", get(conduit(category::index)))
         .route(
