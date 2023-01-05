@@ -145,7 +145,7 @@ pub fn build_axum_router(state: AppState) -> Router {
         // Crate ownership invitations management in the frontend
         .route(
             "/api/private/crate_owner_invitations",
-            get(conduit(crate_owner_invitation::private_list)),
+            get(crate_owner_invitation::private_list),
         )
         // Alerts from GitHub scanning for exposed API tokens
         .route(

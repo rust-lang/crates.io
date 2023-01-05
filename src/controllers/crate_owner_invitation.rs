@@ -55,19 +55,22 @@ pub async fn list(req: ConduitRequest) -> AppResult<Json<Value>> {
 }
 
 /// Handles the `GET /api/private/crate_owner_invitations` route.
-pub fn private_list(req: ConduitRequest) -> AppResult<Json<PrivateListResponse>> {
-    let auth = AuthCheck::only_cookie().check(&req)?;
+pub async fn private_list(req: ConduitRequest) -> AppResult<Json<PrivateListResponse>> {
+    conduit_compat(move || {
+        let auth = AuthCheck::only_cookie().check(&req)?;
 
-    let filter = if let Some(crate_name) = req.query().get("crate_name") {
-        ListFilter::CrateName(crate_name.clone())
-    } else if let Some(id) = req.query().get("invitee_id").and_then(|i| i.parse().ok()) {
-        ListFilter::InviteeId(id)
-    } else {
-        return Err(bad_request("missing or invalid filter"));
-    };
+        let filter = if let Some(crate_name) = req.query().get("crate_name") {
+            ListFilter::CrateName(crate_name.clone())
+        } else if let Some(id) = req.query().get("invitee_id").and_then(|i| i.parse().ok()) {
+            ListFilter::InviteeId(id)
+        } else {
+            return Err(bad_request("missing or invalid filter"));
+        };
 
-    let list = prepare_list(&req, auth, filter)?;
-    Ok(Json(list))
+        let list = prepare_list(&req, auth, filter)?;
+        Ok(Json(list))
+    })
+    .await
 }
 
 enum ListFilter {
