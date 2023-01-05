@@ -55,8 +55,8 @@ pub async fn add_owners(mut req: ConduitRequest) -> AppResult<Json<Value>> {
 }
 
 /// Handles the `DELETE /crates/:crate_id/owners` route.
-pub fn remove_owners(mut req: ConduitRequest) -> AppResult<Json<Value>> {
-    modify_owners(&mut req, false)
+pub async fn remove_owners(mut req: ConduitRequest) -> AppResult<Json<Value>> {
+    conduit_compat(move || modify_owners(&mut req, false)).await
 }
 
 /// Parse the JSON request body of requests to modify the owners of a crate.
