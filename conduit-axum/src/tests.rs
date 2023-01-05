@@ -1,4 +1,4 @@
-use crate::{ConduitRequest, Handler, HandlerResult};
+use crate::{server_error_response, ConduitRequest, Handler, HandlerResult};
 use axum::response::IntoResponse;
 use axum::Router;
 use http::header::HeaderName;
@@ -18,15 +18,14 @@ fn single_header(key: &str, value: &str) -> HeaderMap {
 struct OkResult;
 impl Handler for OkResult {
     fn call(&self, _req: &mut ConduitRequest) -> HandlerResult {
-        Ok((single_header("ok", "value"), "Hello, world!").into_response())
+        (single_header("ok", "value"), "Hello, world!").into_response()
     }
 }
 
 struct ErrorResult;
 impl Handler for ErrorResult {
     fn call(&self, _req: &mut ConduitRequest) -> HandlerResult {
-        let error = ::std::io::Error::last_os_error();
-        Err(Box::new(error))
+        server_error_response(&std::io::Error::last_os_error())
     }
 }
 
@@ -40,7 +39,7 @@ impl Handler for Panic {
 struct InvalidHeader;
 impl Handler for InvalidHeader {
     fn call(&self, _req: &mut ConduitRequest) -> HandlerResult {
-        Ok((single_header("invalid-value", "\r\n"), "discarded").into_response())
+        (single_header("invalid-value", "\r\n"), "discarded").into_response()
     }
 }
 

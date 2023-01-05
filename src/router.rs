@@ -3,7 +3,7 @@ use axum::middleware::from_fn_with_state;
 use axum::response::IntoResponse;
 use axum::routing::{delete, get, post, put};
 use axum::Router;
-use conduit_axum::{conduit_into_axum, ConduitAxumHandler, ConduitRequest, Handler, HandlerResult};
+use conduit_axum::{ConduitAxumHandler, ConduitRequest, Handler, HandlerResult};
 
 use crate::app::AppState;
 use crate::controllers::*;
@@ -207,8 +207,8 @@ impl Handler for C {
     fn call(&self, req: &mut ConduitRequest) -> HandlerResult {
         let C(f) = *self;
         match f(req) {
-            Ok(resp) => Ok(conduit_into_axum(resp)),
-            Err(e) => Ok(e.into_response()),
+            Ok(resp) => resp,
+            Err(e) => e.into_response(),
         }
     }
 }
@@ -236,28 +236,27 @@ mod tests {
 
         // Types for handling common error status codes
         assert_eq!(
-            C(|_| Err(bad_request(""))).call(&mut req).unwrap().status(),
+            C(|_| Err(bad_request(""))).call(&mut req).status(),
             StatusCode::BAD_REQUEST
         );
         assert_eq!(
-            C(|_| Err(forbidden())).call(&mut req).unwrap().status(),
+            C(|_| Err(forbidden())).call(&mut req).status(),
             StatusCode::FORBIDDEN
         );
         assert_eq!(
             C(|_| Err(DieselError::NotFound.into()))
                 .call(&mut req)
-                .unwrap()
                 .status(),
             StatusCode::NOT_FOUND
         );
         assert_eq!(
-            C(|_| Err(not_found())).call(&mut req).unwrap().status(),
+            C(|_| Err(not_found())).call(&mut req).status(),
             StatusCode::NOT_FOUND
         );
 
         // cargo_err errors are returned as 200 so that cargo displays this nicely on the command line
         assert_eq!(
-            C(|_| Err(cargo_err(""))).call(&mut req).unwrap().status(),
+            C(|_| Err(cargo_err(""))).call(&mut req).status(),
             StatusCode::OK
         );
 
@@ -269,8 +268,7 @@ mod tests {
                 .map_err(|err| err.chain(bad_request("outer user facing error")))
                 .unwrap_err())
         })
-        .call(&mut req)
-        .unwrap();
+        .call(&mut req);
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
         assert_eq!(
             response.extensions().get::<CauseField>().unwrap().0,
@@ -279,20 +277,18 @@ mod tests {
 
         // All other error types are converted to internal server errors
         assert_eq!(
-            C(|_| Err(internal(""))).call(&mut req).unwrap().status(),
+            C(|_| Err(internal(""))).call(&mut req).status(),
             StatusCode::INTERNAL_SERVER_ERROR
         );
         assert_eq!(
             C(|_| err::<::serde_json::Error>(::serde::de::Error::custom("ExpectedColon")))
                 .call(&mut req)
-                .unwrap()
                 .status(),
             StatusCode::INTERNAL_SERVER_ERROR
         );
         assert_eq!(
             C(|_| err(::std::io::Error::new(::std::io::ErrorKind::Other, "")))
                 .call(&mut req)
-                .unwrap()
                 .status(),
             StatusCode::INTERNAL_SERVER_ERROR
         );

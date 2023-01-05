@@ -6,10 +6,9 @@ use crate::response::AxumResponse;
 pub use http::{header, Extensions, HeaderMap, Method, Request, Response, StatusCode, Uri};
 
 pub type ConduitRequest = Request<Cursor<Bytes>>;
-pub type ResponseResult<Error> = Result<AxumResponse, Error>;
 
 pub type BoxError = Box<dyn Error + Send>;
-pub type HandlerResult = ResponseResult<BoxError>;
+pub type HandlerResult = AxumResponse;
 
 /// A helper to convert a concrete error type into a `Box<dyn Error + Send>`
 ///
@@ -32,12 +31,11 @@ pub trait Handler: Sync + Send + 'static {
     fn call(&self, request: &mut ConduitRequest) -> HandlerResult;
 }
 
-impl<F, E> Handler for F
+impl<F> Handler for F
 where
-    F: Fn(&mut ConduitRequest) -> ResponseResult<E> + Sync + Send + 'static,
-    E: Error + Send + 'static,
+    F: Fn(&mut ConduitRequest) -> HandlerResult + Sync + Send + 'static,
 {
     fn call(&self, request: &mut ConduitRequest) -> HandlerResult {
-        (*self)(request).map_err(box_error)
+        (*self)(request)
     }
 }

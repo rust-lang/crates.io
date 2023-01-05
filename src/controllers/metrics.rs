@@ -1,7 +1,6 @@
 use crate::controllers::frontend_prelude::*;
 use crate::util::errors::{forbidden, not_found, MetricsDisabled};
-use axum::body::Bytes;
-use http::Response;
+use axum::response::IntoResponse;
 use prometheus::{Encoder, TextEncoder};
 
 /// Handles the `GET /api/private/metrics/:kind` endpoint.
@@ -33,8 +32,9 @@ pub fn prometheus(req: &mut ConduitRequest) -> EndpointResult {
     let mut output = Vec::new();
     TextEncoder::new().encode(&metrics, &mut output)?;
 
-    Ok(Response::builder()
-        .header(header::CONTENT_TYPE, "text/plain; charset=utf-8")
-        .header(header::CONTENT_LENGTH, output.len())
-        .body(Bytes::from(output))?)
+    Ok((
+        [(header::CONTENT_TYPE, "text/plain; charset=utf-8")],
+        output,
+    )
+        .into_response())
 }

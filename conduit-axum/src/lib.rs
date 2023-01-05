@@ -43,7 +43,7 @@
 //! # struct Endpoint();
 //! # impl Handler for Endpoint {
 //! #     fn call(&self, _: &mut ConduitRequest) -> HandlerResult {
-//! #         Ok(().into_response())
+//! #         ().into_response()
 //! #     }
 //! # }
 //! ```
@@ -59,6 +59,8 @@ mod tokio_utils;
 
 pub use conduit::*;
 pub use error::ServiceError;
-pub use fallback::{CauseField, ConduitAxumHandler, ErrorField, RequestParamsExt};
+pub use fallback::{
+    server_error_response, CauseField, ConduitAxumHandler, ErrorField, RequestParamsExt,
+};
 pub use response::conduit_into_axum;
 pub use tokio_utils::spawn_blocking;

@@ -1,7 +1,6 @@
 use std::cmp;
 
-use axum::body::Bytes;
-use http::{header, Response};
+use axum::Json;
 use serde::Serialize;
 
 pub use self::io_util::{read_fill, read_le_u32, LimitErrorReader};
@@ -14,7 +13,7 @@ pub mod rfc3339;
 pub mod token;
 pub mod tracing;
 
-pub type AppResponse = Response<Bytes>;
+pub type AppResponse = axum::response::Response;
 pub type EndpointResult = Result<AppResponse, Box<dyn errors::AppError>>;
 
 /// Serialize a value to JSON and build a status 200 Response
@@ -24,13 +23,8 @@ pub type EndpointResult = Result<AppResponse, Box<dyn errors::AppError>>;
 /// # Panics
 ///
 /// This function will panic if serialization fails.
-pub fn json_response<T: Serialize>(t: T) -> AppResponse {
-    let json = serde_json::to_vec(&t).unwrap();
-    Response::builder()
-        .header(header::CONTENT_TYPE, "application/json")
-        .header(header::CONTENT_LENGTH, json.len())
-        .body(Bytes::from(json))
-        .unwrap() // Header values are well formed, so should not panic
+pub fn json_response<T: Serialize>(t: T) -> Json<T> {
+    Json(t)
 }
 
 #[derive(Debug, Copy, Clone)]

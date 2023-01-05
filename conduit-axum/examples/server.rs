@@ -1,7 +1,7 @@
 #![deny(clippy::all)]
 
 use axum::routing::get;
-use conduit_axum::{ConduitAxumHandler, ConduitRequest, ResponseResult};
+use conduit_axum::{server_error_response, ConduitAxumHandler, ConduitRequest, HandlerResult};
 
 use axum::response::IntoResponse;
 use std::io;
@@ -28,17 +28,17 @@ pub fn wrap<H>(handler: H) -> ConduitAxumHandler<H> {
     ConduitAxumHandler::wrap(handler)
 }
 
-fn endpoint(_: &mut ConduitRequest) -> ResponseResult<http::Error> {
+fn endpoint(_: &mut ConduitRequest) -> HandlerResult {
     sleep(std::time::Duration::from_secs(2));
 
-    Ok("Hello world!".into_response())
+    "Hello world!".into_response()
 }
 
-fn panic(_: &mut ConduitRequest) -> ResponseResult<http::Error> {
+fn panic(_: &mut ConduitRequest) -> HandlerResult {
     // For now, connection is immediately closed
     panic!("message");
 }
 
-fn error(_: &mut ConduitRequest) -> ResponseResult<io::Error> {
-    Err(io::Error::new(io::ErrorKind::Other, "io error, oops"))
+fn error(_: &mut ConduitRequest) -> HandlerResult {
+    server_error_response(&io::Error::new(io::ErrorKind::Other, "io error, oops"))
 }
