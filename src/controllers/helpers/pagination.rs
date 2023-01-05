@@ -310,7 +310,6 @@ mod tests {
     use axum::body::Bytes;
     use conduit_test::MockRequest;
     use http::{Request, StatusCode};
-    use serde_json::Value;
     use std::io::Cursor;
 
     #[test]
@@ -418,11 +417,10 @@ mod tests {
     }
 
     fn assert_pagination_error(options: PaginationOptionsBuilder, query: &str, message: &str) {
-        let response = options.gather(&mock(query)).unwrap_err().response();
-        assert_eq!(StatusCode::BAD_REQUEST, response.status());
+        let error = options.gather(&mock(query)).unwrap_err();
+        assert_eq!(error.to_string(), message);
 
-        let bytes = response.into_body();
-        let parsed: Value = serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(parsed, json!({ "errors": [{ "detail": message }] }));
+        let response = error.response();
+        assert_eq!(StatusCode::BAD_REQUEST, response.status());
     }
 }
