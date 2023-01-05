@@ -367,7 +367,6 @@ dependencies = [
  "chrono",
  "claims",
  "clap",
- "conduit",
  "conduit-axum",
  "conduit-test",
  "cookie",
@@ -594,19 +593,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "conduit"
-version = "0.10.0"
-dependencies = [
- "bytes",
- "http",
-]
-
-[[package]]
 name = "conduit-axum"
 version = "0.0.0"
 dependencies = [
  "axum",
- "conduit",
  "futures-util",
  "http",
  "hyper",

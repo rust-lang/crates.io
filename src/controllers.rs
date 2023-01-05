@@ -14,7 +14,7 @@ mod prelude {
     use axum::body::Bytes;
     pub use diesel::prelude::*;
 
-    pub use conduit::ConduitRequest;
+    pub use conduit_axum::ConduitRequest;
     pub use http::{header, StatusCode};
 
     pub use super::conduit_axum::conduit_compat;

@@ -8,7 +8,7 @@ use crate::util::errors::{
     account_locked, forbidden, internal, AppError, AppResult, InsecurelyGeneratedTokenRevoked,
 };
 use chrono::Utc;
-use conduit::ConduitRequest;
+use conduit_axum::ConduitRequest;
 use http::header;
 
 #[derive(Debug, Clone)]

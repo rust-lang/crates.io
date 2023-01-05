@@ -1,6 +1,6 @@
+use crate::{box_error, ConduitRequest, Handler, HandlerResult};
 use axum::body::Bytes;
 use axum::Router;
-use conduit::{box_error, ConduitRequest, Handler, HandlerResult};
 use http::{HeaderValue, Request, Response, StatusCode};
 use hyper::{body::to_bytes, service::Service};
 use tokio::{sync::oneshot, task::JoinHandle};

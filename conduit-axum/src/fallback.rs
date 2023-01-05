@@ -1,6 +1,6 @@
 use crate::error::ServiceError;
 use crate::response::{conduit_into_axum, AxumResponse};
-use crate::spawn_blocking;
+use crate::{spawn_blocking, ConduitRequest, Handler};
 
 use std::collections::BTreeMap;
 use std::error::Error;
@@ -13,7 +13,6 @@ use axum::body::{Body, HttpBody};
 use axum::extract::{rejection::PathRejection, Extension, FromRequestParts, Path};
 use axum::handler::Handler as AxumHandler;
 use axum::response::IntoResponse;
-use conduit::{ConduitRequest, Handler};
 use http::header::CONTENT_LENGTH;
 use http::StatusCode;
 use hyper::Request;
