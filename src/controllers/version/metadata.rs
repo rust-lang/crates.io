@@ -35,7 +35,7 @@ pub async fn dependencies(req: ConduitRequest) -> AppResult<Json<Value>> {
 }
 
 /// Handles the `GET /crates/:crate_id/:version/authors` route.
-pub fn authors(_req: ConduitRequest) -> Json<Value> {
+pub async fn authors() -> Json<Value> {
     // Currently we return the empty list.
     // Because the API is not used anymore after RFC https://github.com/rust-lang/rfcs/pull/3052.
 
