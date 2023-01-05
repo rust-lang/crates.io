@@ -10,7 +10,7 @@ use crate::models::Keyword;
 use crate::views::EncodableKeyword;
 
 /// Handles the `GET /keywords` route.
-pub fn index(req: &mut ConduitRequest) -> EndpointResult {
+pub fn index(req: ConduitRequest) -> EndpointResult {
     use crate::schema::keywords;
 
     let query = req.query();
@@ -24,7 +24,7 @@ pub fn index(req: &mut ConduitRequest) -> EndpointResult {
         query = query.order(keywords::keyword.asc());
     }
 
-    let query = query.pages_pagination(PaginationOptions::builder().gather(req)?);
+    let query = query.pages_pagination(PaginationOptions::builder().gather(&req)?);
     let conn = req.app().db_read()?;
     let data: Paginated<Keyword> = query.load(&conn)?;
     let total = data.total();

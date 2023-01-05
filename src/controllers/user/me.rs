@@ -13,8 +13,8 @@ use crate::schema::{crate_owners, crates, emails, follows, users, versions};
 use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCrate};
 
 /// Handles the `GET /me` route.
-pub fn me(req: &mut ConduitRequest) -> EndpointResult {
-    let user_id = AuthCheck::only_cookie().check(req)?.user_id();
+pub fn me(req: ConduitRequest) -> EndpointResult {
+    let user_id = AuthCheck::only_cookie().check(&req)?.user_id();
     let conn = req.app().db_read_prefer_primary()?;
 
     let (user, verified, email, verification_sent): (User, Option<bool>, Option<String>, bool) =
@@ -52,10 +52,10 @@ pub fn me(req: &mut ConduitRequest) -> EndpointResult {
 }
 
 /// Handles the `GET /me/updates` route.
-pub fn updates(req: &mut ConduitRequest) -> EndpointResult {
+pub fn updates(req: ConduitRequest) -> EndpointResult {
     use diesel::dsl::any;
 
-    let auth = AuthCheck::only_cookie().check(req)?;
+    let auth = AuthCheck::only_cookie().check(&req)?;
     let user = auth.user();
 
     let followed_crates = Follow::belonging_to(&user).select(follows::crate_id);
@@ -69,7 +69,7 @@ pub fn updates(req: &mut ConduitRequest) -> EndpointResult {
             crates::name,
             users::all_columns.nullable(),
         ))
-        .pages_pagination(PaginationOptions::builder().gather(req)?);
+        .pages_pagination(PaginationOptions::builder().gather(&req)?);
     let conn = req.app().db_read_prefer_primary()?;
     let data: Paginated<(Version, String, Option<User>)> = query.load(&conn)?;
     let more = data.next_page_params().is_some();
@@ -93,11 +93,11 @@ pub fn updates(req: &mut ConduitRequest) -> EndpointResult {
 }
 
 /// Handles the `PUT /users/:user_id` route.
-pub fn update_user(req: &mut ConduitRequest) -> EndpointResult {
+pub fn update_user(mut req: ConduitRequest) -> EndpointResult {
     use self::emails::user_id;
     use diesel::insert_into;
 
-    let auth = AuthCheck::default().check(req)?;
+    let auth = AuthCheck::default().check(&req)?;
 
     let param_user_id = req.param("user_id").unwrap();
 
@@ -162,7 +162,7 @@ pub fn update_user(req: &mut ConduitRequest) -> EndpointResult {
 }
 
 /// Handles the `PUT /confirm/:email_token` route
-pub fn confirm_user_email(req: &mut ConduitRequest) -> EndpointResult {
+pub fn confirm_user_email(req: ConduitRequest) -> EndpointResult {
     use diesel::update;
 
     let conn = req.app().db_write()?;
@@ -180,7 +180,7 @@ pub fn confirm_user_email(req: &mut ConduitRequest) -> EndpointResult {
 }
 
 /// Handles `PUT /user/:user_id/resend` route
-pub fn regenerate_token_and_send(req: &mut ConduitRequest) -> EndpointResult {
+pub fn regenerate_token_and_send(req: ConduitRequest) -> EndpointResult {
     use diesel::dsl::sql;
     use diesel::update;
 
@@ -190,7 +190,7 @@ pub fn regenerate_token_and_send(req: &mut ConduitRequest) -> EndpointResult {
         .parse::<i32>()
         .map_err(|err| err.chain(bad_request("invalid user_id")))?;
 
-    let auth = AuthCheck::default().check(req)?;
+    let auth = AuthCheck::default().check(&req)?;
 
     let state = req.app();
     let conn = state.db_write()?;
@@ -216,7 +216,7 @@ pub fn regenerate_token_and_send(req: &mut ConduitRequest) -> EndpointResult {
 }
 
 /// Handles `PUT /me/email_notifications` route
-pub fn update_email_notifications(req: &mut ConduitRequest) -> EndpointResult {
+pub fn update_email_notifications(mut req: ConduitRequest) -> EndpointResult {
     use self::crate_owners::dsl::*;
     use diesel::pg::upsert::excluded;
 
@@ -233,7 +233,7 @@ pub fn update_email_notifications(req: &mut ConduitRequest) -> EndpointResult {
             .map(|c| (c.id, c.email_notifications))
             .collect();
 
-    let user_id = AuthCheck::default().check(req)?.user_id();
+    let user_id = AuthCheck::default().check(&req)?.user_id();
     let conn = req.app().db_write()?;
 
     // Build inserts from existing crates belonging to the current user

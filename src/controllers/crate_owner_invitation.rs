@@ -16,13 +16,13 @@ use indexmap::IndexMap;
 use std::collections::{HashMap, HashSet};
 
 /// Handles the `GET /api/v1/me/crate_owner_invitations` route.
-pub fn list(req: &mut ConduitRequest) -> EndpointResult {
-    let auth = AuthCheck::only_cookie().check(req)?;
+pub fn list(req: ConduitRequest) -> EndpointResult {
+    let auth = AuthCheck::only_cookie().check(&req)?;
     let user_id = auth.user_id();
 
     let PrivateListResponse {
         invitations, users, ..
-    } = prepare_list(req, auth, ListFilter::InviteeId(user_id))?;
+    } = prepare_list(&req, auth, ListFilter::InviteeId(user_id))?;
 
     // The schema for the private endpoints is converted to the schema used by v1 endpoints.
     let crate_owner_invitations = invitations
@@ -52,8 +52,8 @@ pub fn list(req: &mut ConduitRequest) -> EndpointResult {
 }
 
 /// Handles the `GET /api/private/crate_owner_invitations` route.
-pub fn private_list(req: &mut ConduitRequest) -> EndpointResult {
-    let auth = AuthCheck::only_cookie().check(req)?;
+pub fn private_list(req: ConduitRequest) -> EndpointResult {
+    let auth = AuthCheck::only_cookie().check(&req)?;
 
     let filter = if let Some(crate_name) = req.query().get("crate_name") {
         ListFilter::CrateName(crate_name.clone())
@@ -63,7 +63,7 @@ pub fn private_list(req: &mut ConduitRequest) -> EndpointResult {
         return Err(bad_request("missing or invalid filter"));
     };
 
-    let list = prepare_list(req, auth, filter)?;
+    let list = prepare_list(&req, auth, filter)?;
     Ok(req.json(list))
 }
 
@@ -73,7 +73,7 @@ enum ListFilter {
 }
 
 fn prepare_list(
-    req: &mut ConduitRequest,
+    req: &ConduitRequest,
     auth: AuthenticatedUser,
     filter: ListFilter,
 ) -> AppResult<PrivateListResponse> {
@@ -250,13 +250,13 @@ struct OwnerInvitation {
 }
 
 /// Handles the `PUT /api/v1/me/crate_owner_invitations/:crate_id` route.
-pub fn handle_invite(req: &mut ConduitRequest) -> EndpointResult {
+pub fn handle_invite(mut req: ConduitRequest) -> EndpointResult {
     let crate_invite: OwnerInvitation =
         serde_json::from_reader(req.body_mut()).map_err(|_| bad_request("invalid json request"))?;
 
     let crate_invite = crate_invite.crate_owner_invite;
 
-    let auth = AuthCheck::default().check(req)?;
+    let auth = AuthCheck::default().check(&req)?;
     let user_id = auth.user_id();
 
     let state = req.app();
@@ -274,7 +274,7 @@ pub fn handle_invite(req: &mut ConduitRequest) -> EndpointResult {
 }
 
 /// Handles the `PUT /api/v1/me/crate_owner_invitations/accept/:token` route.
-pub fn handle_invite_with_token(req: &mut ConduitRequest) -> EndpointResult {
+pub fn handle_invite_with_token(req: ConduitRequest) -> EndpointResult {
     let state = req.app();
     let config = &state.config;
     let conn = state.db_write()?;

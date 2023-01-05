@@ -9,8 +9,8 @@ use axum::response::IntoResponse;
 use serde_json as json;
 
 /// Handles the `GET /me/tokens` route.
-pub fn list(req: &mut ConduitRequest) -> EndpointResult {
-    let auth = AuthCheck::only_cookie().check(req)?;
+pub fn list(req: ConduitRequest) -> EndpointResult {
+    let auth = AuthCheck::only_cookie().check(&req)?;
     let conn = req.app().db_read_prefer_primary()?;
     let user = auth.user();
 
@@ -23,7 +23,7 @@ pub fn list(req: &mut ConduitRequest) -> EndpointResult {
 }
 
 /// Handles the `PUT /me/tokens` route.
-pub fn new(req: &mut ConduitRequest) -> EndpointResult {
+pub fn new(mut req: ConduitRequest) -> EndpointResult {
     /// The incoming serialization format for the `ApiToken` model.
     #[derive(Deserialize, Serialize)]
     struct NewApiToken {
@@ -53,7 +53,7 @@ pub fn new(req: &mut ConduitRequest) -> EndpointResult {
         return Err(bad_request("name must have a value"));
     }
 
-    let auth = AuthCheck::default().check(req)?;
+    let auth = AuthCheck::default().check(&req)?;
     if auth.api_token_id().is_some() {
         return Err(bad_request(
             "cannot use an API token to create a new API token",
@@ -78,14 +78,14 @@ pub fn new(req: &mut ConduitRequest) -> EndpointResult {
 }
 
 /// Handles the `DELETE /me/tokens/:id` route.
-pub fn revoke(req: &mut ConduitRequest) -> EndpointResult {
+pub fn revoke(req: ConduitRequest) -> EndpointResult {
     let id = req
         .param("id")
         .unwrap()
         .parse::<i32>()
         .map_err(|e| bad_request(&format!("invalid token id: {e:?}")))?;
 
-    let auth = AuthCheck::default().check(req)?;
+    let auth = AuthCheck::default().check(&req)?;
     let conn = req.app().db_write()?;
     let user = auth.user();
     diesel::update(ApiToken::belonging_to(&user).find(id))
@@ -96,8 +96,8 @@ pub fn revoke(req: &mut ConduitRequest) -> EndpointResult {
 }
 
 /// Handles the `DELETE /tokens/current` route.
-pub fn revoke_current(req: &mut ConduitRequest) -> EndpointResult {
-    let auth = AuthCheck::default().check(req)?;
+pub fn revoke_current(req: ConduitRequest) -> EndpointResult {
+    let auth = AuthCheck::default().check(&req)?;
     let api_token_id = auth
         .api_token_id()
         .ok_or_else(|| bad_request("token not provided"))?;

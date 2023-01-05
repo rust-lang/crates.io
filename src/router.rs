@@ -201,12 +201,12 @@ pub fn build_axum_router(state: AppState) -> Router {
         .with_state(state)
 }
 
-struct C(pub fn(&mut ConduitRequest) -> EndpointResult);
+struct C(pub fn(ConduitRequest) -> EndpointResult);
 
 impl Handler for C {
-    fn call(&self, mut req: ConduitRequest) -> HandlerResult {
+    fn call(&self, req: ConduitRequest) -> HandlerResult {
         let C(f) = *self;
-        match f(&mut req) {
+        match f(req) {
             Ok(resp) => resp,
             Err(e) => e.into_response(),
         }
