@@ -179,67 +179,38 @@ impl<R: IntoResponse + 'static> Handler for C<R> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::middleware::log_request::CustomMetadata;
     use crate::util::errors::{
-        bad_request, cargo_err, forbidden, internal, not_found, AppError, AppResult,
+        bad_request, cargo_err, forbidden, internal, not_found, AppError, BoxedAppError,
     };
-    use axum::response::Response;
+    use axum::response::IntoResponse;
     use conduit_axum::CauseField;
-    use conduit_test::MockRequest;
     use diesel::result::Error as DieselError;
-    use http::{Method, StatusCode};
-
-    fn err<E: AppError>(err: E) -> AppResult<Response> {
-        Err(Box::new(err))
-    }
+    use http::StatusCode;
+    use serde::de::Error;
 
     #[test]
     fn http_error_responses() {
-        type R = AppResult<()>;
-
-        let req = || {
-            let mut req = MockRequest::new(Method::GET, "/").into_inner();
-            req.extensions_mut().insert(CustomMetadata::default());
-            ConduitRequest(req)
-        };
-
         // Types for handling common error status codes
+        assert_eq!(bad_request("").response().status(), StatusCode::BAD_REQUEST);
+        assert_eq!(forbidden().response().status(), StatusCode::FORBIDDEN);
         assert_eq!(
-            C(|_| R::Err(bad_request(""))).call(req()).status(),
-            StatusCode::BAD_REQUEST
-        );
-        assert_eq!(
-            C(|_| R::Err(forbidden())).call(req()).status(),
-            StatusCode::FORBIDDEN
-        );
-        assert_eq!(
-            C(|_| R::Err(DieselError::NotFound.into()))
-                .call(req())
+            BoxedAppError::from(DieselError::NotFound)
+                .response()
                 .status(),
             StatusCode::NOT_FOUND
         );
-        assert_eq!(
-            C(|_| R::Err(not_found())).call(req()).status(),
-            StatusCode::NOT_FOUND
-        );
+        assert_eq!(not_found().response().status(), StatusCode::NOT_FOUND);
 
         // cargo_err errors are returned as 200 so that cargo displays this nicely on the command line
-        assert_eq!(
-            C(|_| R::Err(cargo_err(""))).call(req()).status(),
-            StatusCode::OK
-        );
+        assert_eq!(cargo_err("").response().status(), StatusCode::OK);
 
         // Inner errors are captured for logging when wrapped by a user facing error
-        let response = C(|_| {
-            R::Err(
-                "-1".parse::<u8>()
-                    .map_err(|err| err.chain(internal("middle error")))
-                    .map_err(|err| err.chain(bad_request("outer user facing error")))
-                    .unwrap_err(),
-            )
-        })
-        .call(req());
+        let response = "-1"
+            .parse::<u8>()
+            .map_err(|err| err.chain(internal("middle error")))
+            .map_err(|err| err.chain(bad_request("outer user facing error")))
+            .unwrap_err()
+            .into_response();
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
         assert_eq!(
             response.extensions().get::<CauseField>().unwrap().0,
@@ -248,18 +219,18 @@ mod tests {
 
         // All other error types are converted to internal server errors
         assert_eq!(
-            C(|_| R::Err(internal(""))).call(req()).status(),
+            internal("").response().status(),
             StatusCode::INTERNAL_SERVER_ERROR
         );
         assert_eq!(
-            C(|_| err::<::serde_json::Error>(::serde::de::Error::custom("ExpectedColon")))
-                .call(req())
+            BoxedAppError::from(serde_json::Error::custom("ExpectedColon"))
+                .response()
                 .status(),
             StatusCode::INTERNAL_SERVER_ERROR
         );
         assert_eq!(
-            C(|_| err(::std::io::Error::new(::std::io::ErrorKind::Other, "")))
-                .call(req())
+            BoxedAppError::from(::std::io::Error::new(::std::io::ErrorKind::Other, ""))
+                .response()
                 .status(),
             StatusCode::INTERNAL_SERVER_ERROR
         );
