@@ -23,6 +23,7 @@ use chrono::NaiveDateTime;
 use conduit_axum::{CauseField, ErrorField};
 use diesel::result::Error as DieselError;
 use http::StatusCode;
+use tokio::task::JoinError;
 
 use crate::db::PoolError;
 
@@ -269,6 +270,12 @@ impl From<std::io::Error> for BoxedAppError {
 
 impl From<crate::swirl::errors::EnqueueError> for BoxedAppError {
     fn from(err: crate::swirl::errors::EnqueueError) -> BoxedAppError {
+        Box::new(err)
+    }
+}
+
+impl From<JoinError> for BoxedAppError {
+    fn from(err: JoinError) -> BoxedAppError {
         Box::new(err)
     }
 }

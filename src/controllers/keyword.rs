@@ -1,7 +1,6 @@
 use super::prelude::*;
 use crate::app::AppState;
 use axum::extract::{Path, State};
-use axum::response::IntoResponse;
 use axum::Json;
 
 use crate::controllers::helpers::pagination::PaginationOptions;
@@ -40,7 +39,10 @@ pub fn index(req: ConduitRequest) -> AppResult<Json<Value>> {
 }
 
 /// Handles the `GET /keywords/:keyword_id` route.
-pub async fn show(Path(name): Path<String>, State(state): State<AppState>) -> impl IntoResponse {
+pub async fn show(
+    Path(name): Path<String>,
+    State(state): State<AppState>,
+) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         let conn = state.db_read()?;
 
