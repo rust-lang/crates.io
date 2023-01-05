@@ -21,7 +21,7 @@ fn follow_target(
 }
 
 /// Handles the `PUT /crates/:crate_id/follow` route.
-pub fn follow(req: ConduitRequest) -> EndpointResult {
+pub fn follow(req: ConduitRequest) -> AppResult<Response> {
     let user_id = AuthCheck::default().check(&req)?.user_id();
     let conn = req.app().db_write()?;
     let follow = follow_target(&req, &conn, user_id)?;
@@ -34,7 +34,7 @@ pub fn follow(req: ConduitRequest) -> EndpointResult {
 }
 
 /// Handles the `DELETE /crates/:crate_id/follow` route.
-pub fn unfollow(req: ConduitRequest) -> EndpointResult {
+pub fn unfollow(req: ConduitRequest) -> AppResult<Response> {
     let user_id = AuthCheck::default().check(&req)?.user_id();
     let conn = req.app().db_write()?;
     let follow = follow_target(&req, &conn, user_id)?;
@@ -44,7 +44,7 @@ pub fn unfollow(req: ConduitRequest) -> EndpointResult {
 }
 
 /// Handles the `GET /crates/:crate_id/following` route.
-pub fn following(req: ConduitRequest) -> EndpointResult {
+pub fn following(req: ConduitRequest) -> AppResult<Response> {
     use diesel::dsl::exists;
 
     let user_id = AuthCheck::only_cookie().check(&req)?.user_id();

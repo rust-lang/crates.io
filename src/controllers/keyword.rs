@@ -10,7 +10,7 @@ use crate::models::Keyword;
 use crate::views::EncodableKeyword;
 
 /// Handles the `GET /keywords` route.
-pub fn index(req: ConduitRequest) -> EndpointResult {
+pub fn index(req: ConduitRequest) -> AppResult<Response> {
     use crate::schema::keywords;
 
     let query = req.query();

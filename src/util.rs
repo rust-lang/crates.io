@@ -13,9 +13,6 @@ pub mod rfc3339;
 pub mod token;
 pub mod tracing;
 
-pub type AppResponse = axum::response::Response;
-pub type EndpointResult = Result<AppResponse, Box<dyn errors::AppError>>;
-
 /// Serialize a value to JSON and build a status 200 Response
 ///
 /// This helper sets appropriate values for `Content-Type` and `Content-Length`.

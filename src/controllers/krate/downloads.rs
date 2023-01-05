@@ -13,7 +13,7 @@ use crate::sql::to_char;
 use crate::views::EncodableVersionDownload;
 
 /// Handles the `GET /crates/:crate_id/downloads` route.
-pub fn downloads(req: ConduitRequest) -> EndpointResult {
+pub fn downloads(req: ConduitRequest) -> AppResult<Response> {
     use diesel::dsl::*;
     use diesel::sql_types::BigInt;
 

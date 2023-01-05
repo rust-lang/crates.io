@@ -2,7 +2,7 @@ use axum::response::{IntoResponse, Response};
 use axum::Json;
 use std::fmt;
 
-use super::{AppError, InternalAppErrorStatic};
+use super::{AppError, BoxedAppError, InternalAppErrorStatic};
 
 use chrono::NaiveDateTime;
 use http::{header, StatusCode};
@@ -157,7 +157,7 @@ impl fmt::Display for TooManyRequests {
 pub struct InsecurelyGeneratedTokenRevoked;
 
 impl InsecurelyGeneratedTokenRevoked {
-    pub fn boxed() -> Box<dyn AppError> {
+    pub fn boxed() -> BoxedAppError {
         Box::new(Self)
     }
 }

@@ -75,7 +75,7 @@ fn is_cache_valid(timestamp: Option<chrono::DateTime<chrono::Utc>>) -> bool {
 }
 
 // Fetches list of public keys from GitHub API
-fn get_public_keys(state: &AppState) -> Result<Vec<GitHubPublicKey>, Box<dyn AppError>> {
+fn get_public_keys(state: &AppState) -> Result<Vec<GitHubPublicKey>, BoxedAppError> {
     // Return list from cache if populated and still valid
     if let Ok(cache) = PUBLIC_KEY_CACHE.lock() {
         if is_cache_valid(cache.timestamp) {
@@ -100,7 +100,7 @@ fn verify_github_signature(
     headers: &HeaderMap,
     state: &AppState,
     json: &[u8],
-) -> Result<(), Box<dyn AppError>> {
+) -> Result<(), BoxedAppError> {
     // Read and decode request headers
     let req_key_id = headers
         .get("GITHUB-PUBLIC-KEY-IDENTIFIER")
@@ -154,7 +154,7 @@ struct GitHubSecretAlert {
 fn alert_revoke_token(
     state: &AppState,
     alert: &GitHubSecretAlert,
-) -> Result<GitHubSecretAlertFeedbackLabel, Box<dyn AppError>> {
+) -> Result<GitHubSecretAlertFeedbackLabel, BoxedAppError> {
     let conn = state.db_write()?;
 
     let hashed_token = SecureToken::hash(&alert.token);
@@ -232,7 +232,7 @@ pub enum GitHubSecretAlertFeedbackLabel {
 }
 
 /// Handles the `POST /api/github/secret-scanning/verify` route.
-pub fn verify(mut req: ConduitRequest) -> EndpointResult {
+pub fn verify(mut req: ConduitRequest) -> AppResult<Response> {
     let max_size = 8192;
     let length = req
         .content_length()
@@ -262,7 +262,7 @@ pub fn verify(mut req: ConduitRequest) -> EndpointResult {
                 label,
             })
         })
-        .collect::<Result<Vec<GitHubSecretAlertFeedback>, Box<dyn AppError>>>()?;
+        .collect::<Result<Vec<GitHubSecretAlertFeedback>, BoxedAppError>>()?;
 
     Ok(req.json(feedback))
 }

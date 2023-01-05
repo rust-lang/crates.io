@@ -1,6 +1,6 @@
 use axum::handler::Handler as AxumHandler;
 use axum::middleware::from_fn_with_state;
-use axum::response::IntoResponse;
+use axum::response::{IntoResponse, Response};
 use axum::routing::{delete, get, post, put};
 use axum::Router;
 use conduit_axum::{ConduitAxumHandler, ConduitRequest, Handler, HandlerResult};
@@ -8,8 +8,7 @@ use conduit_axum::{ConduitAxumHandler, ConduitRequest, Handler, HandlerResult};
 use crate::app::AppState;
 use crate::controllers::*;
 use crate::middleware::app::add_app_state_extension;
-use crate::util::errors::not_found;
-use crate::util::EndpointResult;
+use crate::util::errors::{not_found, AppResult};
 use crate::Env;
 
 pub fn build_axum_router(state: AppState) -> Router {
@@ -201,7 +200,7 @@ pub fn build_axum_router(state: AppState) -> Router {
         .with_state(state)
 }
 
-struct C(pub fn(ConduitRequest) -> EndpointResult);
+struct C(pub fn(ConduitRequest) -> AppResult<Response>);
 
 impl Handler for C {
     fn call(&self, req: ConduitRequest) -> HandlerResult {
@@ -217,15 +216,16 @@ impl Handler for C {
 mod tests {
     use super::*;
     use crate::middleware::log_request::CustomMetadata;
-    use crate::util::errors::{bad_request, cargo_err, forbidden, internal, not_found, AppError};
-    use crate::util::EndpointResult;
-
+    use crate::util::errors::{
+        bad_request, cargo_err, forbidden, internal, not_found, AppError, AppResult,
+    };
+    use axum::response::Response;
     use conduit_axum::CauseField;
     use conduit_test::MockRequest;
     use diesel::result::Error as DieselError;
     use http::{Method, StatusCode};
 
-    fn err<E: AppError>(err: E) -> EndpointResult {
+    fn err<E: AppError>(err: E) -> AppResult<Response> {
         Err(Box::new(err))
     }
 

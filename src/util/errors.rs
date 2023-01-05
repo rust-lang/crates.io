@@ -34,12 +34,14 @@ pub(crate) use json::{
     ReadOnlyMode, RouteBlocked, TooManyRequests,
 };
 
+pub type BoxedAppError = Box<dyn AppError>;
+
 /// Returns an error with status 200 and the provided description as JSON
 ///
 /// This is for backwards compatibility with cargo endpoints.  For all other
 /// endpoints, use helpers like `bad_request` or `server_error` which set a
 /// correct status code.
-pub fn cargo_err<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
+pub fn cargo_err<S: ToString + ?Sized>(error: &S) -> BoxedAppError {
     Box::new(json::Ok(error.to_string()))
 }
 
@@ -49,32 +51,32 @@ pub fn cargo_err<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
 // non-200 response codes for its stores to work properly.
 
 /// Return an error with status 400 and the provided description as JSON
-pub fn bad_request<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
+pub fn bad_request<S: ToString + ?Sized>(error: &S) -> BoxedAppError {
     Box::new(json::BadRequest(error.to_string()))
 }
 
-pub fn account_locked(reason: &str, until: Option<NaiveDateTime>) -> Box<dyn AppError> {
+pub fn account_locked(reason: &str, until: Option<NaiveDateTime>) -> BoxedAppError {
     Box::new(json::AccountLocked {
         reason: reason.to_string(),
         until,
     })
 }
 
-pub fn forbidden() -> Box<dyn AppError> {
+pub fn forbidden() -> BoxedAppError {
     Box::new(json::Forbidden)
 }
 
-pub fn not_found() -> Box<dyn AppError> {
+pub fn not_found() -> BoxedAppError {
     Box::new(json::NotFound)
 }
 
 /// Returns an error with status 500 and the provided description as JSON
-pub fn server_error<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
+pub fn server_error<S: ToString + ?Sized>(error: &S) -> BoxedAppError {
     Box::new(json::ServerError(error.to_string()))
 }
 
 /// Returns an error with status 503 and the provided description as JSON
-pub fn service_unavailable<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
+pub fn service_unavailable<S: ToString + ?Sized>(error: &S) -> BoxedAppError {
     Box::new(json::ServiceUnavailable(error.to_string()))
 }
 
@@ -102,7 +104,7 @@ pub trait AppError: Send + fmt::Display + fmt::Debug + 'static {
         TypeId::of::<Self>()
     }
 
-    fn chain<E>(self, error: E) -> Box<dyn AppError>
+    fn chain<E>(self, error: E) -> BoxedAppError
     where
         Self: Sized,
         E: AppError,
@@ -120,7 +122,7 @@ impl dyn AppError {
     }
 }
 
-impl AppError for Box<dyn AppError> {
+impl AppError for BoxedAppError {
     fn response(&self) -> axum::response::Response {
         (**self).response()
     }
@@ -134,7 +136,7 @@ impl AppError for Box<dyn AppError> {
     }
 }
 
-impl IntoResponse for Box<dyn AppError> {
+impl IntoResponse for BoxedAppError {
     fn into_response(self) -> axum::response::Response {
         let mut response = self.response();
 
@@ -148,7 +150,7 @@ impl IntoResponse for Box<dyn AppError> {
     }
 }
 
-pub type AppResult<T> = Result<T, Box<dyn AppError>>;
+pub type AppResult<T> = Result<T, BoxedAppError>;
 
 // =============================================================================
 // Chaining errors
@@ -156,7 +158,7 @@ pub type AppResult<T> = Result<T, Box<dyn AppError>>;
 #[derive(Debug)]
 struct ChainedError<E> {
     error: E,
-    cause: Box<dyn AppError>,
+    cause: BoxedAppError,
 }
 
 impl<E: AppError> AppError for ChainedError<E> {
@@ -188,20 +190,20 @@ impl<E: Error + Send + 'static> AppError for E {
     }
 }
 
-impl From<base64::DecodeError> for Box<dyn AppError> {
-    fn from(err: base64::DecodeError) -> Box<dyn AppError> {
+impl From<base64::DecodeError> for BoxedAppError {
+    fn from(err: base64::DecodeError) -> BoxedAppError {
         Box::new(err)
     }
 }
 
-impl From<diesel::ConnectionError> for Box<dyn AppError> {
-    fn from(err: diesel::ConnectionError) -> Box<dyn AppError> {
+impl From<diesel::ConnectionError> for BoxedAppError {
+    fn from(err: diesel::ConnectionError) -> BoxedAppError {
         Box::new(err)
     }
 }
 
-impl From<DieselError> for Box<dyn AppError> {
-    fn from(err: DieselError) -> Box<dyn AppError> {
+impl From<DieselError> for BoxedAppError {
+    fn from(err: DieselError) -> BoxedAppError {
         match err {
             DieselError::NotFound => not_found(),
             DieselError::DatabaseError(_, info)
@@ -214,26 +216,26 @@ impl From<DieselError> for Box<dyn AppError> {
     }
 }
 
-impl From<http::Error> for Box<dyn AppError> {
-    fn from(err: http::Error) -> Box<dyn AppError> {
+impl From<http::Error> for BoxedAppError {
+    fn from(err: http::Error) -> BoxedAppError {
         Box::new(err)
     }
 }
 
-impl From<lettre::error::Error> for Box<dyn AppError> {
-    fn from(err: lettre::error::Error) -> Box<dyn AppError> {
+impl From<lettre::error::Error> for BoxedAppError {
+    fn from(err: lettre::error::Error) -> BoxedAppError {
         Box::new(err)
     }
 }
 
-impl From<lettre::address::AddressError> for Box<dyn AppError> {
-    fn from(err: lettre::address::AddressError) -> Box<dyn AppError> {
+impl From<lettre::address::AddressError> for BoxedAppError {
+    fn from(err: lettre::address::AddressError) -> BoxedAppError {
         Box::new(err)
     }
 }
 
-impl From<PoolError> for Box<dyn AppError> {
-    fn from(err: PoolError) -> Box<dyn AppError> {
+impl From<PoolError> for BoxedAppError {
+    fn from(err: PoolError) -> BoxedAppError {
         match err {
             PoolError::UnhealthyPool => service_unavailable("Service unavailable"),
             _ => Box::new(err),
@@ -241,32 +243,32 @@ impl From<PoolError> for Box<dyn AppError> {
     }
 }
 
-impl From<prometheus::Error> for Box<dyn AppError> {
-    fn from(err: prometheus::Error) -> Box<dyn AppError> {
+impl From<prometheus::Error> for BoxedAppError {
+    fn from(err: prometheus::Error) -> BoxedAppError {
         Box::new(err)
     }
 }
 
-impl From<reqwest::Error> for Box<dyn AppError> {
-    fn from(err: reqwest::Error) -> Box<dyn AppError> {
+impl From<reqwest::Error> for BoxedAppError {
+    fn from(err: reqwest::Error) -> BoxedAppError {
         Box::new(err)
     }
 }
 
-impl From<serde_json::Error> for Box<dyn AppError> {
-    fn from(err: serde_json::Error) -> Box<dyn AppError> {
+impl From<serde_json::Error> for BoxedAppError {
+    fn from(err: serde_json::Error) -> BoxedAppError {
         Box::new(err)
     }
 }
 
-impl From<std::io::Error> for Box<dyn AppError> {
-    fn from(err: std::io::Error) -> Box<dyn AppError> {
+impl From<std::io::Error> for BoxedAppError {
+    fn from(err: std::io::Error) -> BoxedAppError {
         Box::new(err)
     }
 }
 
-impl From<crate::swirl::errors::EnqueueError> for Box<dyn AppError> {
-    fn from(err: crate::swirl::errors::EnqueueError) -> Box<dyn AppError> {
+impl From<crate::swirl::errors::EnqueueError> for BoxedAppError {
+    fn from(err: crate::swirl::errors::EnqueueError) -> BoxedAppError {
         Box::new(err)
     }
 }
@@ -318,7 +320,7 @@ impl AppError for InternalAppErrorStatic {
     }
 }
 
-pub fn internal<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
+pub fn internal<S: ToString + ?Sized>(error: &S) -> BoxedAppError {
     Box::new(InternalAppError {
         description: error.to_string(),
     })

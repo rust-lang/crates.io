@@ -4,7 +4,7 @@ use axum::response::IntoResponse;
 use prometheus::{Encoder, TextEncoder};
 
 /// Handles the `GET /api/private/metrics/:kind` endpoint.
-pub fn prometheus(req: ConduitRequest) -> EndpointResult {
+pub fn prometheus(req: ConduitRequest) -> AppResult<Response> {
     let app = req.app();
 
     if let Some(expected_token) = &app.config.metrics_authorization_token {
