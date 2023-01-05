@@ -9,6 +9,7 @@ use crate::middleware::session::RequestSession;
 use crate::models::{NewUser, User};
 use crate::schema::users;
 use crate::util::errors::ReadOnlyMode;
+use crate::views::EncodableMe;
 
 /// Handles the `GET /api/private/session/begin` route.
 ///
@@ -25,7 +26,7 @@ use crate::util::errors::ReadOnlyMode;
 ///     "url": "https://github.com/login/oauth/authorize?client_id=...&state=...&scope=read%3Aorg"
 /// }
 /// ```
-pub fn begin(mut req: ConduitRequest) -> AppResult<Response> {
+pub fn begin(mut req: ConduitRequest) -> AppResult<Json<Value>> {
     let (url, state) = req
         .app()
         .github_oauth
@@ -35,7 +36,7 @@ pub fn begin(mut req: ConduitRequest) -> AppResult<Response> {
     let state = state.secret().to_string();
     req.session_insert("github_oauth_state".to_string(), state.clone());
 
-    Ok(req.json(json!({ "url": url.to_string(), "state": state })))
+    Ok(Json(json!({ "url": url.to_string(), "state": state })))
 }
 
 /// Handles the `GET /api/private/session/authorize` route.
@@ -66,7 +67,7 @@ pub fn begin(mut req: ConduitRequest) -> AppResult<Response> {
 ///     }
 /// }
 /// ```
-pub fn authorize(mut req: ConduitRequest) -> AppResult<Response> {
+pub fn authorize(mut req: ConduitRequest) -> AppResult<Json<EncodableMe>> {
     // Parse the url query
     let mut query = req.query();
     let code = query.remove("code").unwrap_or_default();
@@ -134,9 +135,9 @@ fn save_user_to_database(
 }
 
 /// Handles the `DELETE /api/private/session` route.
-pub fn logout(mut req: ConduitRequest) -> AppResult<Response> {
+pub fn logout(mut req: ConduitRequest) -> Json<bool> {
     req.session_remove("user_id");
-    Ok(req.json(true))
+    Json(true)
 }
 
 #[cfg(test)]

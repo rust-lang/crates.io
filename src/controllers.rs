@@ -23,15 +23,10 @@ mod prelude {
     pub use crate::middleware::app::RequestApp;
     pub use crate::util::errors::{cargo_err, AppError, AppResult, BoxedAppError};
     use indexmap::IndexMap;
-    use serde::Serialize;
 
     pub trait RequestUtils {
         fn redirect(&self, url: String) -> Response {
             (StatusCode::FOUND, [(header::LOCATION, url)]).into_response()
-        }
-
-        fn json<T: Serialize>(&self, t: T) -> Response {
-            Json(t).into_response()
         }
 
         fn query(&self) -> IndexMap<String, String>;

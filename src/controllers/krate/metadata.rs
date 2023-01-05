@@ -22,7 +22,7 @@ use crate::views::{
 use crate::models::krate::ALL_COLUMNS;
 
 /// Handles the `GET /summary` route.
-pub fn summary(req: ConduitRequest) -> AppResult<Response> {
+pub fn summary(req: ConduitRequest) -> AppResult<Json<Value>> {
     use crate::schema::crates::dsl::*;
     use diesel::dsl::all;
 
@@ -112,7 +112,7 @@ pub fn summary(req: ConduitRequest) -> AppResult<Response> {
         .map(Category::into)
         .collect::<Vec<EncodableCategory>>();
 
-    Ok(req.json(json!({
+    Ok(Json(json!({
         "num_downloads": num_downloads,
         "num_crates": num_crates,
         "new_crates": encode_crates(new_crates)?,
@@ -125,7 +125,7 @@ pub fn summary(req: ConduitRequest) -> AppResult<Response> {
 }
 
 /// Handles the `GET /crates/:crate_id` route.
-pub fn show(req: ConduitRequest) -> AppResult<Response> {
+pub fn show(req: ConduitRequest) -> AppResult<Json<Value>> {
     let name = req.param("crate_id").unwrap();
     let include = req
         .query()
@@ -227,7 +227,7 @@ pub fn show(req: ConduitRequest) -> AppResult<Response> {
             .map(Category::into)
             .collect::<Vec<EncodableCategory>>()
     });
-    Ok(req.json(json!({
+    Ok(Json(json!({
         "crate": encodable_crate,
         "versions": encodable_versions,
         "keywords": encodable_keywords,
@@ -309,7 +309,7 @@ pub fn readme(req: ConduitRequest) -> AppResult<Response> {
         .readme_location(crate_name, version);
 
     if req.wants_json() {
-        Ok(req.json(json!({ "url": redirect_url })))
+        Ok(Json(json!({ "url": redirect_url })).into_response())
     } else {
         Ok(req.redirect(redirect_url))
     }
@@ -318,7 +318,7 @@ pub fn readme(req: ConduitRequest) -> AppResult<Response> {
 /// Handles the `GET /crates/:crate_id/versions` route.
 // FIXME: Not sure why this is necessary since /crates/:crate_id returns
 // this information already, but ember is definitely requesting it
-pub fn versions(req: ConduitRequest) -> AppResult<Response> {
+pub fn versions(req: ConduitRequest) -> AppResult<Json<Value>> {
     let crate_name = req.param("crate_id").unwrap();
     let conn = req.app().db_read()?;
     let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
@@ -342,11 +342,11 @@ pub fn versions(req: ConduitRequest) -> AppResult<Response> {
         .map(|((v, pb), aas)| EncodableVersion::from(v, crate_name, pb, aas))
         .collect::<Vec<_>>();
 
-    Ok(req.json(json!({ "versions": versions })))
+    Ok(Json(json!({ "versions": versions })))
 }
 
 /// Handles the `GET /crates/:crate_id/reverse_dependencies` route.
-pub fn reverse_dependencies(req: ConduitRequest) -> AppResult<Response> {
+pub fn reverse_dependencies(req: ConduitRequest) -> AppResult<Json<Value>> {
     use diesel::dsl::any;
 
     let pagination_options = PaginationOptions::builder().gather(&req)?;
@@ -384,7 +384,7 @@ pub fn reverse_dependencies(req: ConduitRequest) -> AppResult<Response> {
         })
         .collect::<Vec<_>>();
 
-    Ok(req.json(json!({
+    Ok(Json(json!({
         "dependencies": rev_deps,
         "versions": versions,
         "meta": { "total": total },

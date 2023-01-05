@@ -232,7 +232,7 @@ pub enum GitHubSecretAlertFeedbackLabel {
 }
 
 /// Handles the `POST /api/github/secret-scanning/verify` route.
-pub fn verify(mut req: ConduitRequest) -> AppResult<Response> {
+pub fn verify(mut req: ConduitRequest) -> AppResult<Json<Vec<GitHubSecretAlertFeedback>>> {
     let max_size = 8192;
     let length = req
         .content_length()
@@ -262,9 +262,9 @@ pub fn verify(mut req: ConduitRequest) -> AppResult<Response> {
                 label,
             })
         })
-        .collect::<Result<Vec<GitHubSecretAlertFeedback>, BoxedAppError>>()?;
+        .collect::<Result<_, BoxedAppError>>()?;
 
-    Ok(req.json(feedback))
+    Ok(Json(feedback))
 }
 
 #[cfg(test)]

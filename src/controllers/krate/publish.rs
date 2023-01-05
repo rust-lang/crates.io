@@ -42,7 +42,7 @@ pub const WILDCARD_ERROR_MESSAGE: &str = "wildcard (`*`) dependency constraints 
 /// Currently blocks the HTTP thread, perhaps some function calls can spawn new
 /// threads and return completion or error through other methods  a `cargo publish
 /// --status` command, via crates.io's front end, or email.
-pub fn publish(mut req: ConduitRequest) -> AppResult<Response> {
+pub fn publish(mut req: ConduitRequest) -> AppResult<Json<GoodCrate>> {
     let app = req.app().clone();
 
     // The format of the req.body() of a publish request is as follows:
@@ -279,7 +279,7 @@ pub fn publish(mut req: ConduitRequest) -> AppResult<Response> {
             other: vec![],
         };
 
-        Ok(req.json(GoodCrate {
+        Ok(Json(GoodCrate {
             krate: EncodableCrate::from_minimal(krate, Some(&top_versions), None, false, None),
             warnings,
         }))

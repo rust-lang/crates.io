@@ -10,7 +10,7 @@ use crate::models::Keyword;
 use crate::views::EncodableKeyword;
 
 /// Handles the `GET /keywords` route.
-pub fn index(req: ConduitRequest) -> AppResult<Response> {
+pub fn index(req: ConduitRequest) -> AppResult<Json<Value>> {
     use crate::schema::keywords;
 
     let query = req.query();
@@ -33,7 +33,7 @@ pub fn index(req: ConduitRequest) -> AppResult<Response> {
         .map(Keyword::into)
         .collect::<Vec<EncodableKeyword>>();
 
-    Ok(req.json(json!({
+    Ok(Json(json!({
         "keywords": kws,
         "meta": { "total": total },
     })))

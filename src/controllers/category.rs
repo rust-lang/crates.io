@@ -6,7 +6,7 @@ use crate::schema::categories;
 use crate::views::{EncodableCategory, EncodableCategoryWithSubcategories};
 
 /// Handles the `GET /categories` route.
-pub fn index(req: ConduitRequest) -> AppResult<Response> {
+pub fn index(req: ConduitRequest) -> AppResult<Json<Value>> {
     let query = req.query();
     // FIXME: There are 69 categories, 47 top level. This isn't going to
     // grow by an OoM. We need a limit for /summary, but we don't need
@@ -26,14 +26,14 @@ pub fn index(req: ConduitRequest) -> AppResult<Response> {
     // Query for the total count of categories
     let total = Category::count_toplevel(&conn)?;
 
-    Ok(req.json(json!({
+    Ok(Json(json!({
         "categories": categories,
         "meta": { "total": total },
     })))
 }
 
 /// Handles the `GET /categories/:category_id` route.
-pub fn show(req: ConduitRequest) -> AppResult<Response> {
+pub fn show(req: ConduitRequest) -> AppResult<Json<Value>> {
     let slug = req.param("category_id").unwrap();
     let conn = req.app().db_read()?;
     let cat: Category = Category::by_slug(slug).first(&*conn)?;
@@ -60,11 +60,11 @@ pub fn show(req: ConduitRequest) -> AppResult<Response> {
         parent_categories: parents,
     };
 
-    Ok(req.json(json!({ "category": cat_with_subcats })))
+    Ok(Json(json!({ "category": cat_with_subcats })))
 }
 
 /// Handles the `GET /category_slugs` route.
-pub fn slugs(req: ConduitRequest) -> AppResult<Response> {
+pub fn slugs(req: ConduitRequest) -> AppResult<Json<Value>> {
     let conn = req.app().db_read()?;
     let slugs: Vec<Slug> = categories::table
         .select((categories::slug, categories::slug, categories::description))
@@ -78,5 +78,5 @@ pub fn slugs(req: ConduitRequest) -> AppResult<Response> {
         description: String,
     }
 
-    Ok(req.json(json!({ "category_slugs": slugs })))
+    Ok(Json(json!({ "category_slugs": slugs })))
 }

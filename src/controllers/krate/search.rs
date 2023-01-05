@@ -38,7 +38,7 @@ use crate::sql::{array_agg, canon_crate_name, lower};
 /// caused the break. In the future, we should look at splitting this
 /// function out to cover the different use cases, and create unit tests
 /// for them.
-pub fn search(req: ConduitRequest) -> AppResult<Response> {
+pub fn search(req: ConduitRequest) -> AppResult<Json<Value>> {
     use diesel::sql_types::{Bool, Text};
 
     let params = req.query();
@@ -336,7 +336,7 @@ pub fn search(req: ConduitRequest) -> AppResult<Response> {
         )
         .collect::<Vec<_>>();
 
-    Ok(req.json(json!({
+    Ok(Json(json!({
         "crates": crates,
         "meta": {
             "total": total,

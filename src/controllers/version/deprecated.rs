@@ -12,7 +12,7 @@ use crate::schema::*;
 use crate::views::EncodableVersion;
 
 /// Handles the `GET /versions` route.
-pub fn index(req: ConduitRequest) -> AppResult<Response> {
+pub fn index(req: ConduitRequest) -> AppResult<Json<Value>> {
     use diesel::dsl::any;
     let conn = req.app().db_read()?;
 
@@ -45,13 +45,13 @@ pub fn index(req: ConduitRequest) -> AppResult<Response> {
         })
         .collect::<Vec<_>>();
 
-    Ok(req.json(json!({ "versions": versions })))
+    Ok(Json(json!({ "versions": versions })))
 }
 
 /// Handles the `GET /versions/:version_id` route.
 /// The frontend doesn't appear to hit this endpoint. Instead, the version information appears to
 /// be returned by `krate::show`.
-pub fn show_by_id(req: ConduitRequest) -> AppResult<Response> {
+pub fn show_by_id(req: ConduitRequest) -> AppResult<Json<Value>> {
     let id = req.param("version_id").unwrap();
     let id = id.parse().unwrap_or(0);
     let conn = req.app().db_read()?;
@@ -68,5 +68,5 @@ pub fn show_by_id(req: ConduitRequest) -> AppResult<Response> {
     let audit_actions = VersionOwnerAction::by_version(&conn, &version)?;
 
     let version = EncodableVersion::from(version, &krate.name, published_by, audit_actions);
-    Ok(req.json(json!({ "version": version })))
+    Ok(Json(json!({ "version": version })))
 }

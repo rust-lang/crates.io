@@ -13,7 +13,7 @@ use crate::sql::to_char;
 use crate::views::EncodableVersionDownload;
 
 /// Handles the `GET /crates/:crate_id/downloads` route.
-pub fn downloads(req: ConduitRequest) -> AppResult<Response> {
+pub fn downloads(req: ConduitRequest) -> AppResult<Json<Value>> {
     use diesel::dsl::*;
     use diesel::sql_types::BigInt;
 
@@ -50,7 +50,7 @@ pub fn downloads(req: ConduitRequest) -> AppResult<Response> {
         downloads: i64,
     }
 
-    Ok(req.json(json!({
+    Ok(Json(json!({
         "version_downloads": downloads,
         "meta": {
             "extra_downloads": extra,
