@@ -18,14 +18,13 @@ use std::any::{Any, TypeId};
 use std::error::Error;
 use std::fmt;
 
-use axum::body::Bytes;
+use axum::Extension;
 use chrono::NaiveDateTime;
-use conduit_axum::{conduit_into_axum, CauseField, ErrorField};
+use conduit_axum::{CauseField, ErrorField};
 use diesel::result::Error as DieselError;
-use http::{Response, StatusCode};
+use http::StatusCode;
 
 use crate::db::PoolError;
-use crate::util::AppResponse;
 
 mod json;
 
@@ -87,7 +86,7 @@ pub trait AppError: Send + fmt::Display + fmt::Debug + 'static {
     ///
     /// If none is returned, the error will bubble up the middleware stack
     /// where it is eventually logged and turned into a status 500 response.
-    fn response(&self) -> AppResponse;
+    fn response(&self) -> axum::response::Response;
 
     /// The cause of an error response
     ///
@@ -122,7 +121,7 @@ impl dyn AppError {
 }
 
 impl AppError for Box<dyn AppError> {
-    fn response(&self) -> AppResponse {
+    fn response(&self) -> axum::response::Response {
         (**self).response()
     }
 
@@ -137,7 +136,7 @@ impl AppError for Box<dyn AppError> {
 
 impl IntoResponse for Box<dyn AppError> {
     fn into_response(self) -> axum::response::Response {
-        let mut response = conduit_into_axum(self.response());
+        let mut response = self.response();
 
         if let Some(cause) = self.cause() {
             response
@@ -161,7 +160,7 @@ struct ChainedError<E> {
 }
 
 impl<E: AppError> AppError for ChainedError<E> {
-    fn response(&self) -> AppResponse {
+    fn response(&self) -> axum::response::Response {
         self.error.response()
     }
 
@@ -180,7 +179,7 @@ impl<E: AppError> fmt::Display for ChainedError<E> {
 // Error impls
 
 impl<E: Error + Send + 'static> AppError for E {
-    fn response(&self) -> AppResponse {
+    fn response(&self) -> axum::response::Response {
         error!(error = %self, "Internal Server Error");
 
         sentry::capture_error(self);
@@ -288,7 +287,7 @@ impl fmt::Display for InternalAppError {
 }
 
 impl AppError for InternalAppError {
-    fn response(&self) -> AppResponse {
+    fn response(&self) -> axum::response::Response {
         error!(error = %self.description, "Internal Server Error");
 
         sentry::capture_message(&self.description, sentry::Level::Error);
@@ -310,7 +309,7 @@ impl fmt::Display for InternalAppErrorStatic {
 }
 
 impl AppError for InternalAppErrorStatic {
-    fn response(&self) -> AppResponse {
+    fn response(&self) -> axum::response::Response {
         error!(error = %self.description, "Internal Server Error");
 
         sentry::capture_message(self.description, sentry::Level::Error);
@@ -325,12 +324,13 @@ pub fn internal<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
     })
 }
 
-fn server_error_response(error: String) -> AppResponse {
-    Response::builder()
-        .status(StatusCode::INTERNAL_SERVER_ERROR)
-        .extension(ErrorField(error))
-        .body(Bytes::from_static(b"Internal Server Error"))
-        .unwrap()
+fn server_error_response(error: String) -> axum::response::Response {
+    (
+        StatusCode::INTERNAL_SERVER_ERROR,
+        Extension(ErrorField(error)),
+        "Internal Server Error",
+    )
+        .into_response()
 }
 
 #[test]

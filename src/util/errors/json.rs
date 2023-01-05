@@ -3,18 +3,14 @@ use axum::Json;
 use std::fmt;
 
 use super::{AppError, InternalAppErrorStatic};
-use crate::util::{json_response, AppResponse};
 
 use chrono::NaiveDateTime;
 use http::{header, StatusCode};
 
 /// Generates a response with the provided status and description as JSON
-fn json_error(detail: &str, status: StatusCode) -> AppResponse {
+fn json_error(detail: &str, status: StatusCode) -> Response {
     let json = json!({ "errors": [{ "detail": detail }] });
-
-    let mut response = json_response(&json);
-    *response.status_mut() = status;
-    response
+    (status, Json(json)).into_response()
 }
 
 // The following structs are empty and do not provide a custom message to the user
@@ -22,16 +18,9 @@ fn json_error(detail: &str, status: StatusCode) -> AppResponse {
 #[derive(Debug)]
 pub(crate) struct NotFound;
 
-// This struct has this helper impl for use as `NotFound.into()`
-impl From<NotFound> for AppResponse {
-    fn from(_: NotFound) -> AppResponse {
-        json_error("Not Found", StatusCode::NOT_FOUND)
-    }
-}
-
 impl AppError for NotFound {
-    fn response(&self) -> AppResponse {
-        Self.into()
+    fn response(&self) -> Response {
+        json_error("Not Found", StatusCode::NOT_FOUND)
     }
 }
 
@@ -47,7 +36,7 @@ pub(super) struct Forbidden;
 pub(crate) struct ReadOnlyMode;
 
 impl AppError for Forbidden {
-    fn response(&self) -> AppResponse {
+    fn response(&self) -> Response {
         let detail = "must be logged in to perform that action";
         json_error(detail, StatusCode::FORBIDDEN)
     }
@@ -60,7 +49,7 @@ impl fmt::Display for Forbidden {
 }
 
 impl AppError for ReadOnlyMode {
-    fn response(&self) -> AppResponse {
+    fn response(&self) -> Response {
         let detail = "Crates.io is currently in read-only mode for maintenance. \
                       Please try again later.";
         json_error(detail, StatusCode::SERVICE_UNAVAILABLE)
@@ -89,7 +78,7 @@ pub(crate) struct TooManyRequests {
 }
 
 impl AppError for Ok {
-    fn response(&self) -> AppResponse {
+    fn response(&self) -> Response {
         json_error(&self.0, StatusCode::OK)
     }
 }
@@ -101,7 +90,7 @@ impl fmt::Display for Ok {
 }
 
 impl AppError for BadRequest {
-    fn response(&self) -> AppResponse {
+    fn response(&self) -> Response {
         json_error(&self.0, StatusCode::BAD_REQUEST)
     }
 }
@@ -113,7 +102,7 @@ impl fmt::Display for BadRequest {
 }
 
 impl AppError for ServerError {
-    fn response(&self) -> AppResponse {
+    fn response(&self) -> Response {
         json_error(&self.0, StatusCode::INTERNAL_SERVER_ERROR)
     }
 }
@@ -125,7 +114,7 @@ impl fmt::Display for ServerError {
 }
 
 impl AppError for ServiceUnavailable {
-    fn response(&self) -> AppResponse {
+    fn response(&self) -> Response {
         json_error(&self.0, StatusCode::SERVICE_UNAVAILABLE)
     }
 }
@@ -137,7 +126,7 @@ impl fmt::Display for ServiceUnavailable {
 }
 
 impl AppError for TooManyRequests {
-    fn response(&self) -> AppResponse {
+    fn response(&self) -> Response {
         const HTTP_DATE_FORMAT: &str = "%a, %d %b %Y %H:%M:%S GMT";
         let retry_after = self.retry_after.format(HTTP_DATE_FORMAT);
 
@@ -174,7 +163,7 @@ impl InsecurelyGeneratedTokenRevoked {
 }
 
 impl AppError for InsecurelyGeneratedTokenRevoked {
-    fn response(&self) -> AppResponse {
+    fn response(&self) -> Response {
         json_error(&self.to_string(), StatusCode::UNAUTHORIZED)
     }
 
@@ -210,7 +199,7 @@ pub(super) struct AccountLocked {
 }
 
 impl AppError for AccountLocked {
-    fn response(&self) -> AppResponse {
+    fn response(&self) -> Response {
         json_error(&self.to_string(), StatusCode::FORBIDDEN)
     }
 }
@@ -240,7 +229,7 @@ pub(crate) struct OwnershipInvitationExpired {
 }
 
 impl AppError for OwnershipInvitationExpired {
-    fn response(&self) -> AppResponse {
+    fn response(&self) -> Response {
         json_error(&self.to_string(), StatusCode::GONE)
     }
 }
@@ -260,7 +249,7 @@ impl fmt::Display for OwnershipInvitationExpired {
 pub(crate) struct MetricsDisabled;
 
 impl AppError for MetricsDisabled {
-    fn response(&self) -> AppResponse {
+    fn response(&self) -> Response {
         json_error(&self.to_string(), StatusCode::NOT_FOUND)
     }
 }
@@ -275,7 +264,7 @@ impl fmt::Display for MetricsDisabled {
 pub(crate) struct RouteBlocked;
 
 impl AppError for RouteBlocked {
-    fn response(&self) -> AppResponse {
+    fn response(&self) -> Response {
         json_error(&self.to_string(), StatusCode::SERVICE_UNAVAILABLE)
     }
 }
