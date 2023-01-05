@@ -32,14 +32,14 @@ pub fn dependencies(req: ConduitRequest) -> AppResult<Response> {
 }
 
 /// Handles the `GET /crates/:crate_id/:version/authors` route.
-pub fn authors(req: ConduitRequest) -> AppResult<Response> {
+pub fn authors(_req: ConduitRequest) -> Json<Value> {
     // Currently we return the empty list.
     // Because the API is not used anymore after RFC https://github.com/rust-lang/rfcs/pull/3052.
 
-    Ok(req.json(json!({
+    Json(json!({
         "users": [],
         "meta": { "names": [] },
-    })))
+    }))
 }
 
 /// Handles the `GET /crates/:crate/:version` route.

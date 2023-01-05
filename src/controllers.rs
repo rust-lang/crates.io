@@ -14,6 +14,7 @@ mod prelude {
     pub use axum::response::{IntoResponse, Response};
     pub use axum::Json;
     pub use diesel::prelude::*;
+    pub use serde_json::Value;
 
     pub use conduit_axum::ConduitRequest;
     pub use http::{header, StatusCode};
