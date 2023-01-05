@@ -9,17 +9,20 @@ use axum::response::IntoResponse;
 use serde_json as json;
 
 /// Handles the `GET /me/tokens` route.
-pub fn list(req: ConduitRequest) -> AppResult<Json<Value>> {
-    let auth = AuthCheck::only_cookie().check(&req)?;
-    let conn = req.app().db_read_prefer_primary()?;
-    let user = auth.user();
+pub async fn list(req: ConduitRequest) -> AppResult<Json<Value>> {
+    conduit_compat(move || {
+        let auth = AuthCheck::only_cookie().check(&req)?;
+        let conn = req.app().db_read_prefer_primary()?;
+        let user = auth.user();
 
-    let tokens: Vec<ApiToken> = ApiToken::belonging_to(&user)
-        .filter(api_tokens::revoked.eq(false))
-        .order(api_tokens::created_at.desc())
-        .load(&*conn)?;
+        let tokens: Vec<ApiToken> = ApiToken::belonging_to(&user)
+            .filter(api_tokens::revoked.eq(false))
+            .order(api_tokens::created_at.desc())
+            .load(&*conn)?;
 
-    Ok(Json(json!({ "api_tokens": tokens })))
+        Ok(Json(json!({ "api_tokens": tokens })))
+    })
+    .await
 }
 
 /// Handles the `PUT /me/tokens` route.

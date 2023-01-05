@@ -103,7 +103,7 @@ pub fn build_axum_router(state: AppState) -> Router {
         .route("/api/v1/me/updates", get(user::me::updates))
         .route(
             "/api/v1/me/tokens",
-            get(conduit(token::list)).put(conduit(token::new)),
+            get(token::list).put(conduit(token::new)),
         )
         .route("/api/v1/me/tokens/:id", delete(conduit(token::revoke)))
         .route(
