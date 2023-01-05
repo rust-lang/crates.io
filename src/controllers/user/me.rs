@@ -171,21 +171,24 @@ pub async fn update_user(mut req: ConduitRequest) -> AppResult<Response> {
 }
 
 /// Handles the `PUT /confirm/:email_token` route
-pub fn confirm_user_email(req: ConduitRequest) -> AppResult<Response> {
-    use diesel::update;
+pub async fn confirm_user_email(req: ConduitRequest) -> AppResult<Response> {
+    conduit_compat(move || {
+        use diesel::update;
 
-    let conn = req.app().db_write()?;
-    let req_token = req.param("email_token").unwrap();
+        let conn = req.app().db_write()?;
+        let req_token = req.param("email_token").unwrap();
 
-    let updated_rows = update(emails::table.filter(emails::token.eq(req_token)))
-        .set(emails::verified.eq(true))
-        .execute(&*conn)?;
+        let updated_rows = update(emails::table.filter(emails::token.eq(req_token)))
+            .set(emails::verified.eq(true))
+            .execute(&*conn)?;
 
-    if updated_rows == 0 {
-        return Err(bad_request("Email belonging to token not found."));
-    }
+        if updated_rows == 0 {
+            return Err(bad_request("Email belonging to token not found."));
+        }
 
-    ok_true()
+        ok_true()
+    })
+    .await
 }
 
 /// Handles `PUT /user/:user_id/resend` route

@@ -123,7 +123,7 @@ pub fn build_axum_router(state: AppState) -> Router {
         .route("/api/v1/summary", get(krate::metadata::summary))
         .route(
             "/api/v1/confirm/:email_token",
-            put(conduit(user::me::confirm_user_email)),
+            put(user::me::confirm_user_email),
         )
         .route(
             "/api/v1/users/:user_id/resend",
