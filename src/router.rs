@@ -90,7 +90,7 @@ pub fn build_axum_router(state: AppState) -> Router {
         )
         .route("/api/v1/keywords", get(keyword::index))
         .route("/api/v1/keywords/:keyword_id", get(keyword::show))
-        .route("/api/v1/categories", get(conduit(category::index)))
+        .route("/api/v1/categories", get(category::index))
         .route(
             "/api/v1/categories/:category_id",
             get(conduit(category::show)),

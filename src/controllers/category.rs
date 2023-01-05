@@ -6,30 +6,33 @@ use crate::schema::categories;
 use crate::views::{EncodableCategory, EncodableCategoryWithSubcategories};
 
 /// Handles the `GET /categories` route.
-pub fn index(req: ConduitRequest) -> AppResult<Json<Value>> {
-    let query = req.query();
-    // FIXME: There are 69 categories, 47 top level. This isn't going to
-    // grow by an OoM. We need a limit for /summary, but we don't need
-    // to paginate this.
-    let options = PaginationOptions::builder().gather(&req)?;
-    let offset = options.offset().unwrap_or_default();
-    let sort = query.get("sort").map_or("alpha", String::as_str);
+pub async fn index(req: ConduitRequest) -> AppResult<Json<Value>> {
+    conduit_compat(move || {
+        let query = req.query();
+        // FIXME: There are 69 categories, 47 top level. This isn't going to
+        // grow by an OoM. We need a limit for /summary, but we don't need
+        // to paginate this.
+        let options = PaginationOptions::builder().gather(&req)?;
+        let offset = options.offset().unwrap_or_default();
+        let sort = query.get("sort").map_or("alpha", String::as_str);
 
-    let conn = req.app().db_read()?;
-    let categories =
-        Category::toplevel(&conn, sort, i64::from(options.per_page), i64::from(offset))?;
-    let categories = categories
-        .into_iter()
-        .map(Category::into)
-        .collect::<Vec<EncodableCategory>>();
+        let conn = req.app().db_read()?;
+        let categories =
+            Category::toplevel(&conn, sort, i64::from(options.per_page), i64::from(offset))?;
+        let categories = categories
+            .into_iter()
+            .map(Category::into)
+            .collect::<Vec<EncodableCategory>>();
 
-    // Query for the total count of categories
-    let total = Category::count_toplevel(&conn)?;
+        // Query for the total count of categories
+        let total = Category::count_toplevel(&conn)?;
 
-    Ok(Json(json!({
-        "categories": categories,
-        "meta": { "total": total },
-    })))
+        Ok(Json(json!({
+            "categories": categories,
+            "meta": { "total": total },
+        })))
+    })
+    .await
 }
 
 /// Handles the `GET /categories/:category_id` route.
