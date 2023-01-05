@@ -1,5 +1,3 @@
-use axum::handler::Handler as AxumHandler;
-use axum::middleware::from_fn_with_state;
 use axum::response::{IntoResponse, Response};
 use axum::routing::{delete, get, post, put};
 use axum::Router;
@@ -7,15 +5,11 @@ use conduit_axum::{ConduitAxumHandler, ConduitRequest, Handler, HandlerResult};
 
 use crate::app::AppState;
 use crate::controllers::*;
-use crate::middleware::app::add_app_state_extension;
 use crate::util::errors::{not_found, AppResult};
 use crate::Env;
 
 pub fn build_axum_router(state: AppState) -> Router {
-    let conduit = |handler| {
-        ConduitAxumHandler::wrap(C(handler))
-            .layer(from_fn_with_state(state.clone(), add_app_state_extension))
-    };
+    let conduit = |handler| ConduitAxumHandler::wrap(C(handler));
 
     let mut router = Router::new()
         // Route used by both `cargo search` and the frontend
