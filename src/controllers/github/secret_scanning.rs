@@ -243,7 +243,7 @@ pub fn verify(req: &mut ConduitRequest) -> EndpointResult {
     }
 
     let mut json = vec![0; length as usize];
-    read_fill(req.body(), &mut json)?;
+    read_fill(req.body_mut(), &mut json)?;
 
     let state = req.app();
     verify_github_signature(req.headers(), state, &json)

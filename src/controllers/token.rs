@@ -46,7 +46,7 @@ pub fn new(req: &mut ConduitRequest) -> EndpointResult {
         return Err(bad_request(&format!("max content length is: {max_size}")));
     }
 
-    let new: NewApiTokenRequest = json::from_reader(req.body())
+    let new: NewApiTokenRequest = json::from_reader(req.body_mut())
         .map_err(|e| bad_request(&format!("invalid new token request: {e:?}")))?;
 
     let name = &new.api_token.name;

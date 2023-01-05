@@ -71,7 +71,7 @@ fn parse_owners_request(req: &mut ConduitRequest) -> AppResult<Vec<String>> {
         owners: Option<Vec<String>>,
     }
     let request: Request =
-        serde_json::from_reader(req.body()).map_err(|_| cargo_err("invalid json request"))?;
+        serde_json::from_reader(req.body_mut()).map_err(|_| cargo_err("invalid json request"))?;
     request
         .owners
         .or(request.users)

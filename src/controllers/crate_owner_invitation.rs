@@ -252,7 +252,7 @@ struct OwnerInvitation {
 /// Handles the `PUT /api/v1/me/crate_owner_invitations/:crate_id` route.
 pub fn handle_invite(req: &mut ConduitRequest) -> EndpointResult {
     let crate_invite: OwnerInvitation =
-        serde_json::from_reader(req.body()).map_err(|_| bad_request("invalid json request"))?;
+        serde_json::from_reader(req.body_mut()).map_err(|_| bad_request("invalid json request"))?;
 
     let crate_invite = crate_invite.crate_owner_invite;
 
