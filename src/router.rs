@@ -33,7 +33,7 @@ pub fn build_axum_router(state: AppState) -> Router {
             get(version::downloads::download),
         )
         // Routes that appear to be unused
-        .route("/api/v1/versions", get(conduit(version::deprecated::index)))
+        .route("/api/v1/versions", get(version::deprecated::index))
         .route(
             "/api/v1/versions/:version_id",
             get(conduit(version::deprecated::show_by_id)),

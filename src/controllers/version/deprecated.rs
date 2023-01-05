@@ -12,40 +12,43 @@ use crate::schema::*;
 use crate::views::EncodableVersion;
 
 /// Handles the `GET /versions` route.
-pub fn index(req: ConduitRequest) -> AppResult<Json<Value>> {
-    use diesel::dsl::any;
-    let conn = req.app().db_read()?;
+pub async fn index(req: ConduitRequest) -> AppResult<Json<Value>> {
+    conduit_compat(move || {
+        use diesel::dsl::any;
+        let conn = req.app().db_read()?;
 
-    // Extract all ids requested.
-    let query = url::form_urlencoded::parse(req.uri().query().unwrap_or("").as_bytes());
-    let ids = query
-        .filter_map(|(ref a, ref b)| if *a == "ids[]" { b.parse().ok() } else { None })
-        .collect::<Vec<i32>>();
+        // Extract all ids requested.
+        let query = url::form_urlencoded::parse(req.uri().query().unwrap_or("").as_bytes());
+        let ids = query
+            .filter_map(|(ref a, ref b)| if *a == "ids[]" { b.parse().ok() } else { None })
+            .collect::<Vec<i32>>();
 
-    let versions_and_publishers: Vec<(Version, String, Option<User>)> = versions::table
-        .inner_join(crates::table)
-        .left_outer_join(users::table)
-        .select((
-            versions::all_columns,
-            crates::name,
-            users::all_columns.nullable(),
-        ))
-        .filter(versions::id.eq(any(ids)))
-        .load(&*conn)?;
-    let versions = versions_and_publishers
-        .iter()
-        .map(|(v, _, _)| v)
-        .cloned()
-        .collect::<Vec<_>>();
-    let versions = versions_and_publishers
-        .into_iter()
-        .zip(VersionOwnerAction::for_versions(&conn, &versions)?.into_iter())
-        .map(|((version, crate_name, published_by), actions)| {
-            EncodableVersion::from(version, &crate_name, published_by, actions)
-        })
-        .collect::<Vec<_>>();
+        let versions_and_publishers: Vec<(Version, String, Option<User>)> = versions::table
+            .inner_join(crates::table)
+            .left_outer_join(users::table)
+            .select((
+                versions::all_columns,
+                crates::name,
+                users::all_columns.nullable(),
+            ))
+            .filter(versions::id.eq(any(ids)))
+            .load(&*conn)?;
+        let versions = versions_and_publishers
+            .iter()
+            .map(|(v, _, _)| v)
+            .cloned()
+            .collect::<Vec<_>>();
+        let versions = versions_and_publishers
+            .into_iter()
+            .zip(VersionOwnerAction::for_versions(&conn, &versions)?.into_iter())
+            .map(|((version, crate_name, published_by), actions)| {
+                EncodableVersion::from(version, &crate_name, published_by, actions)
+            })
+            .collect::<Vec<_>>();
 
-    Ok(Json(json!({ "versions": versions })))
+        Ok(Json(json!({ "versions": versions })))
+    })
+    .await
 }
 
 /// Handles the `GET /versions/:version_id` route.
