@@ -79,18 +79,3 @@ where
         Ok(ConduitRequest(request))
     }
 }
-
-/// A Handler takes a request and returns a response or an error.
-/// By default, a bare function implements `Handler`.
-pub trait Handler: Sync + Send + 'static {
-    fn call(&self, request: ConduitRequest) -> HandlerResult;
-}
-
-impl<F> Handler for F
-where
-    F: Fn(ConduitRequest) -> HandlerResult + Sync + Send + 'static,
-{
-    fn call(&self, request: ConduitRequest) -> HandlerResult {
-        (*self)(request)
-    }
-}
