@@ -28,17 +28,17 @@ pub fn wrap<H>(handler: H) -> ConduitAxumHandler<H> {
     ConduitAxumHandler::wrap(handler)
 }
 
-fn endpoint(_: &mut ConduitRequest) -> HandlerResult {
+fn endpoint(_: ConduitRequest) -> HandlerResult {
     sleep(std::time::Duration::from_secs(2));
 
     "Hello world!".into_response()
 }
 
-fn panic(_: &mut ConduitRequest) -> HandlerResult {
+fn panic(_: ConduitRequest) -> HandlerResult {
     // For now, connection is immediately closed
     panic!("message");
 }
 
-fn error(_: &mut ConduitRequest) -> HandlerResult {
+fn error(_: ConduitRequest) -> HandlerResult {
     server_error_response(&io::Error::new(io::ErrorKind::Other, "io error, oops"))
 }

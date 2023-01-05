@@ -42,7 +42,7 @@
 //! #
 //! # struct Endpoint();
 //! # impl Handler for Endpoint {
-//! #     fn call(&self, _: &mut ConduitRequest) -> HandlerResult {
+//! #     fn call(&self, _: ConduitRequest) -> HandlerResult {
 //! #         ().into_response()
 //! #     }
 //! # }

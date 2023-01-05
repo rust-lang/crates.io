@@ -17,35 +17,35 @@ fn single_header(key: &str, value: &str) -> HeaderMap {
 
 struct OkResult;
 impl Handler for OkResult {
-    fn call(&self, _req: &mut ConduitRequest) -> HandlerResult {
+    fn call(&self, _req: ConduitRequest) -> HandlerResult {
         (single_header("ok", "value"), "Hello, world!").into_response()
     }
 }
 
 struct ErrorResult;
 impl Handler for ErrorResult {
-    fn call(&self, _req: &mut ConduitRequest) -> HandlerResult {
+    fn call(&self, _req: ConduitRequest) -> HandlerResult {
         server_error_response(&std::io::Error::last_os_error())
     }
 }
 
 struct Panic;
 impl Handler for Panic {
-    fn call(&self, _req: &mut ConduitRequest) -> HandlerResult {
+    fn call(&self, _req: ConduitRequest) -> HandlerResult {
         panic!()
     }
 }
 
 struct InvalidHeader;
 impl Handler for InvalidHeader {
-    fn call(&self, _req: &mut ConduitRequest) -> HandlerResult {
+    fn call(&self, _req: ConduitRequest) -> HandlerResult {
         (single_header("invalid-value", "\r\n"), "discarded").into_response()
     }
 }
 
 struct Sleep;
 impl Handler for Sleep {
-    fn call(&self, req: &mut ConduitRequest) -> HandlerResult {
+    fn call(&self, req: ConduitRequest) -> HandlerResult {
         std::thread::sleep(std::time::Duration::from_millis(100));
         OkResult.call(req)
     }
@@ -53,7 +53,7 @@ impl Handler for Sleep {
 
 struct AssertPercentDecodedPath;
 impl Handler for AssertPercentDecodedPath {
-    fn call(&self, req: &mut ConduitRequest) -> HandlerResult {
+    fn call(&self, req: ConduitRequest) -> HandlerResult {
         if req.uri().path() == "/%3a" && req.uri().query() == Some("%3a") {
             OkResult.call(req)
         } else {
