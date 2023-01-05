@@ -48,7 +48,6 @@
 //! # }
 //! ```
 
-mod body;
 mod conduit;
 mod error;
 mod fallback;
@@ -62,5 +61,4 @@ pub use error::ServiceError;
 pub use fallback::{
     server_error_response, CauseField, ConduitAxumHandler, ErrorField, RequestParamsExt,
 };
-pub use response::conduit_into_axum;
 pub use tokio_utils::spawn_blocking;
