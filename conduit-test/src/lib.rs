@@ -1,9 +1,8 @@
 use bytes::Bytes;
 use hyper::http::{header::IntoHeaderName, HeaderValue, Method, Request};
-use std::io::Cursor;
 
 pub struct MockRequest {
-    request: Request<Cursor<Bytes>>,
+    request: Request<Bytes>,
 }
 
 impl MockRequest {
@@ -11,14 +10,14 @@ impl MockRequest {
         let request = Request::builder()
             .method(&method)
             .uri(path)
-            .body(Cursor::new(Bytes::new()))
+            .body(Bytes::new())
             .unwrap();
 
         MockRequest { request }
     }
 
     pub fn with_body(&mut self, bytes: &[u8]) -> &mut MockRequest {
-        *self.request.body_mut() = Cursor::new(bytes.to_vec().into());
+        *self.request.body_mut() = bytes.to_vec().into();
         self
     }
 
@@ -32,7 +31,7 @@ impl MockRequest {
         self
     }
 
-    pub fn into_inner(self) -> Request<Cursor<Bytes>> {
+    pub fn into_inner(self) -> Request<Bytes> {
         self.request
     }
 }
@@ -40,7 +39,7 @@ impl MockRequest {
 impl From<MockRequest> for Request<hyper::Body> {
     fn from(mock_request: MockRequest) -> Self {
         let (parts, body) = mock_request.request.into_parts();
-        Request::from_parts(parts, hyper::Body::from(body.into_inner()))
+        Request::from_parts(parts, hyper::Body::from(body))
     }
 }
 
@@ -57,7 +56,7 @@ mod tests {
         assert_eq!(req.method(), Method::GET);
         assert_eq!(req.uri(), "/");
         assert_eq!(req.headers().len(), 0);
-        assert_eq!(req.body().get_ref(), "");
+        assert_eq!(req.body(), "");
     }
 
     #[test]
@@ -68,7 +67,7 @@ mod tests {
 
         assert_eq!(req.method(), Method::POST);
         assert_eq!(req.uri(), "/articles");
-        assert_eq!(req.body().get_ref(), "Hello world");
+        assert_eq!(req.body(), "Hello world");
     }
 
     #[test]

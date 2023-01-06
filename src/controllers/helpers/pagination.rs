@@ -309,6 +309,7 @@ mod tests {
     use super::*;
     use conduit_test::MockRequest;
     use http::StatusCode;
+    use std::io::Cursor;
 
     #[test]
     fn no_pagination_param() {
@@ -411,7 +412,11 @@ mod tests {
 
     fn mock(query: &str) -> ConduitRequest {
         let path_and_query = format!("/?{query}");
-        ConduitRequest(MockRequest::new(http::Method::GET, &path_and_query).into_inner())
+        ConduitRequest(
+            MockRequest::new(http::Method::GET, &path_and_query)
+                .into_inner()
+                .map(Cursor::new),
+        )
     }
 
     fn assert_pagination_error(options: PaginationOptionsBuilder, query: &str, message: &str) {
