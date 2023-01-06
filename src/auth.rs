@@ -59,14 +59,14 @@ impl AuthCheck {
 
         let auth = authenticate_user(request)?;
 
-        if let Some(reason) = &auth.user.account_lock_reason {
-            let still_locked = if let Some(until) = auth.user.account_lock_until {
+        if let Some(reason) = &auth.user().account_lock_reason {
+            let still_locked = if let Some(until) = auth.user().account_lock_until {
                 until > Utc::now().naive_utc()
             } else {
                 true
             };
             if still_locked {
-                return Err(account_locked(reason, auth.user.account_lock_until));
+                return Err(account_locked(reason, auth.user().account_lock_until));
             }
         }
 
@@ -75,7 +75,7 @@ impl AuthCheck {
             request.add_custom_metadata("tokenid", id);
         }
 
-        if let Some(ref token) = auth.token {
+        if let Some(token) = auth.api_token() {
             if !self.allow_token {
                 let error_message =
                     "API Token authentication was explicitly disallowed for this API";
