@@ -78,8 +78,8 @@ enum ListFilter {
     InviteeId(i32),
 }
 
-fn prepare_list(
-    req: &ConduitRequest,
+fn prepare_list<B>(
+    req: &Request<B>,
     auth: AuthenticatedUser,
     filter: ListFilter,
 ) -> AppResult<PrivateListResponse> {

@@ -35,10 +35,10 @@ pub async fn unyank(
 }
 
 /// Changes `yanked` flag on a crate version record
-fn modify_yank(
+fn modify_yank<B>(
     crate_name: &str,
     version: &str,
-    req: &ConduitRequest,
+    req: &Request<B>,
     yanked: bool,
 ) -> AppResult<Response> {
     // FIXME: Should reject bad requests before authentication, but can't due to

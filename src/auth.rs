@@ -8,8 +8,7 @@ use crate::util::errors::{
     account_locked, forbidden, internal, AppError, AppResult, InsecurelyGeneratedTokenRevoked,
 };
 use chrono::Utc;
-use conduit_axum::ConduitRequest;
-use http::header;
+use http::{header, Request};
 
 #[derive(Debug, Clone)]
 pub struct AuthCheck {
@@ -55,7 +54,7 @@ impl AuthCheck {
         }
     }
 
-    pub fn check(&self, request: &ConduitRequest) -> AppResult<AuthenticatedUser> {
+    pub fn check<B>(&self, request: &Request<B>) -> AppResult<AuthenticatedUser> {
         controllers::util::verify_origin(request)?;
 
         let auth = authenticate_user(request)?;
@@ -153,7 +152,7 @@ impl AuthenticatedUser {
     }
 }
 
-fn authenticate_user(req: &ConduitRequest) -> AppResult<AuthenticatedUser> {
+fn authenticate_user<B>(req: &Request<B>) -> AppResult<AuthenticatedUser> {
     let conn = req.app().db_write()?;
 
     let user_id_from_session = req
