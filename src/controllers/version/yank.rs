@@ -2,7 +2,7 @@
 
 use crate::auth::AuthCheck;
 
-use super::{extract_crate_name_and_semver, version_and_crate};
+use super::version_and_crate;
 use crate::controllers::cargo_prelude::*;
 use crate::models::token::EndpointScope;
 use crate::models::Rights;
@@ -19,21 +19,34 @@ use crate::worker;
 /// Crate deletion is not implemented to avoid breaking builds,
 /// and the goal of yanking a crate is to prevent crates
 /// beginning to depend on the yanked crate version.
-pub async fn yank(req: ConduitRequest) -> AppResult<Response> {
-    conduit_compat(move || modify_yank(&req, true)).await
+pub async fn yank(
+    Path((crate_name, version)): Path<(String, String)>,
+    req: ConduitRequest,
+) -> AppResult<Response> {
+    conduit_compat(move || modify_yank(&crate_name, &version, &req, true)).await
 }
 
 /// Handles the `PUT /crates/:crate_id/:version/unyank` route.
-pub async fn unyank(req: ConduitRequest) -> AppResult<Response> {
-    conduit_compat(move || modify_yank(&req, false)).await
+pub async fn unyank(
+    Path((crate_name, version)): Path<(String, String)>,
+    req: ConduitRequest,
+) -> AppResult<Response> {
+    conduit_compat(move || modify_yank(&crate_name, &version, &req, false)).await
 }
 
 /// Changes `yanked` flag on a crate version record
-fn modify_yank(req: &ConduitRequest, yanked: bool) -> AppResult<Response> {
+fn modify_yank(
+    crate_name: &str,
+    version: &str,
+    req: &ConduitRequest,
+    yanked: bool,
+) -> AppResult<Response> {
     // FIXME: Should reject bad requests before authentication, but can't due to
     // lifetime issues with `req`.
 
-    let (crate_name, semver) = extract_crate_name_and_semver(req)?;
+    if semver::Version::parse(version).is_err() {
+        return Err(cargo_err(&format_args!("invalid semver: {version}")));
+    }
 
     let auth = AuthCheck::default()
         .with_endpoint_scope(EndpointScope::Yank)
@@ -42,7 +55,7 @@ fn modify_yank(req: &ConduitRequest, yanked: bool) -> AppResult<Response> {
 
     let state = req.app();
     let conn = state.db_write()?;
-    let (version, krate) = version_and_crate(&conn, crate_name, semver)?;
+    let (version, krate) = version_and_crate(&conn, crate_name, version)?;
     let api_token_id = auth.api_token_id();
     let user = auth.user();
     let owners = krate.owners(&conn)?;
