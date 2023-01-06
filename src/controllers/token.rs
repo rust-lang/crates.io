@@ -15,7 +15,7 @@ pub async fn list(req: ConduitRequest) -> AppResult<Json<Value>> {
         let conn = req.app().db_read_prefer_primary()?;
         let user = auth.user();
 
-        let tokens: Vec<ApiToken> = ApiToken::belonging_to(&user)
+        let tokens: Vec<ApiToken> = ApiToken::belonging_to(user)
             .filter(api_tokens::revoked.eq(false))
             .order(api_tokens::created_at.desc())
             .load(&*conn)?;
@@ -59,7 +59,7 @@ pub async fn new(mut req: ConduitRequest) -> AppResult<Json<Value>> {
         let user = auth.user();
 
         let max_token_per_user = 500;
-        let count: i64 = ApiToken::belonging_to(&user).count().get_result(&*conn)?;
+        let count: i64 = ApiToken::belonging_to(user).count().get_result(&*conn)?;
         if count >= max_token_per_user {
             return Err(bad_request(&format!(
                 "maximum tokens per user is: {max_token_per_user}"
@@ -80,7 +80,7 @@ pub async fn revoke(Path(id): Path<i32>, req: ConduitRequest) -> AppResult<Json<
         let auth = AuthCheck::default().check(&req)?;
         let conn = req.app().db_write()?;
         let user = auth.user();
-        diesel::update(ApiToken::belonging_to(&user).find(id))
+        diesel::update(ApiToken::belonging_to(user).find(id))
             .set(api_tokens::revoked.eq(true))
             .execute(&*conn)?;
 

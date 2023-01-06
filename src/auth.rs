@@ -147,8 +147,8 @@ impl AuthenticatedUser {
         self.token.as_ref()
     }
 
-    pub fn user(self) -> User {
-        self.user
+    pub fn user(&self) -> &User {
+        &self.user
     }
 }
 
