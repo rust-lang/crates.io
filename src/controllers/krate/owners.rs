@@ -139,13 +139,13 @@ fn modify_owners<B: Read>(
                 if owners.iter().any(login_test) {
                     return Err(cargo_err(&format_args!("`{login}` is already an owner")));
                 }
-                let msg = krate.owner_add(app, &conn, &user, login)?;
+                let msg = krate.owner_add(app, &conn, user, login)?;
                 msgs.push(msg);
             }
             msgs.join(",")
         } else {
             for login in &logins {
-                krate.owner_remove(app, &conn, &user, login)?;
+                krate.owner_remove(app, &conn, user, login)?;
             }
             if User::owning(&krate, &conn)?.is_empty() {
                 return Err(cargo_err(
