@@ -86,7 +86,7 @@ cargo-registry-index = { path = "cargo-registry-index", features = ["testing"] }
 claims = "=0.7.1"
 conduit-test = { path = "conduit-test" }
 hyper-tls = "=0.5.0"
-insta = { version = "=1.24.1", features = ["redactions", "yaml"] }
+insta = { version = "=1.26.0", features = ["redactions", "yaml"] }
 tokio = "=1.24.1"
 tower-service = "=0.3.2"
 
