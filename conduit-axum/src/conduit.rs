@@ -32,6 +32,12 @@ pub fn box_error<E: Error + Send + 'static>(error: E) -> BoxError {
 #[derive(Debug)]
 pub struct ConduitRequest(pub Request<Cursor<Bytes>>);
 
+impl ConduitRequest {
+    pub fn content_length(&self) -> u64 {
+        self.body().get_ref().len() as u64
+    }
+}
+
 impl Deref for ConduitRequest {
     type Target = Request<Cursor<Bytes>>;
 

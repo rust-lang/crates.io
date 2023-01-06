@@ -32,7 +32,6 @@ mod prelude {
         fn query(&self) -> IndexMap<String, String>;
         fn wants_json(&self) -> bool;
         fn query_with_params(&self, params: IndexMap<String, String>) -> String;
-        fn content_length(&self) -> u64;
     }
 
     impl RequestUtils for ConduitRequest {
@@ -56,10 +55,6 @@ mod prelude {
                 .extend_pairs(params)
                 .finish();
             format!("?{query_string}")
-        }
-
-        fn content_length(&self) -> u64 {
-            self.body().get_ref().len() as u64
         }
     }
 }
