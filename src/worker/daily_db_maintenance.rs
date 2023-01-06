@@ -1,4 +1,4 @@
-use crate::background_jobs::{DailyDbMaintenanceJob, Job};
+use crate::background_jobs::Job;
 use crate::swirl::PerformError;
 /// Run daily database maintenance tasks
 ///
@@ -19,5 +19,5 @@ pub(crate) fn perform_daily_db_maintenance(conn: &PgConnection) -> Result<(), Pe
 }
 
 pub fn daily_db_maintenance() -> Job {
-    Job::DailyDbMaintenance(DailyDbMaintenanceJob {})
+    Job::DailyDbMaintenance
 }

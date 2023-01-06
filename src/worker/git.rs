@@ -1,6 +1,5 @@
 use crate::background_jobs::{
-    Environment, IndexAddCrateJob, IndexSquashJob, IndexSyncToHttpJob, IndexUpdateYankedJob, Job,
-    NormalizeIndexJob,
+    Environment, IndexAddCrateJob, IndexSyncToHttpJob, IndexUpdateYankedJob, Job, NormalizeIndexJob,
 };
 use crate::schema;
 use crate::swirl::PerformError;
@@ -177,7 +176,7 @@ pub fn perform_index_squash(env: &Environment) -> Result<(), PerformError> {
 }
 
 pub fn squash_index() -> Job {
-    Job::IndexSquash(IndexSquashJob {})
+    Job::IndexSquash
 }
 
 pub fn perform_normalize_index(
