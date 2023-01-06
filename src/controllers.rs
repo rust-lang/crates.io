@@ -11,6 +11,7 @@ mod frontend_prelude {
 mod prelude {
     pub use super::helpers::ok_true;
     pub use super::util::RequestParamExt;
+    pub use axum::extract::Path;
     pub use axum::response::{IntoResponse, Response};
     pub use axum::Json;
     pub use diesel::prelude::*;
