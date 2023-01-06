@@ -129,9 +129,8 @@ pub async fn summary(req: ConduitRequest) -> AppResult<Json<Value>> {
 }
 
 /// Handles the `GET /crates/:crate_id` route.
-pub async fn show(req: ConduitRequest) -> AppResult<Json<Value>> {
+pub async fn show(Path(name): Path<String>, req: ConduitRequest) -> AppResult<Json<Value>> {
     conduit_compat(move || {
-        let name = req.param("crate_id").unwrap();
         let include = req
             .query()
             .get("include")
@@ -140,7 +139,7 @@ pub async fn show(req: ConduitRequest) -> AppResult<Json<Value>> {
             .unwrap_or_default();
 
         let conn = req.app().db_read()?;
-        let krate: Crate = Crate::by_name(name).first(&*conn)?;
+        let krate: Crate = Crate::by_name(&name).first(&*conn)?;
 
         let versions_publishers_and_audit_actions = if include.versions {
             let mut versions_and_publishers: Vec<(Version, Option<User>)> = krate
@@ -306,16 +305,16 @@ impl FromStr for ShowIncludeMode {
 }
 
 /// Handles the `GET /crates/:crate_id/:version/readme` route.
-pub async fn readme(req: ConduitRequest) -> AppResult<Response> {
+pub async fn readme(
+    Path((crate_name, version)): Path<(String, String)>,
+    req: ConduitRequest,
+) -> AppResult<Response> {
     conduit_compat(move || {
-        let crate_name = req.param("crate_id").unwrap();
-        let version = req.param("version").unwrap();
-
         let redirect_url = req
             .app()
             .config
             .uploader()
-            .readme_location(crate_name, version);
+            .readme_location(&crate_name, &version);
 
         if req.wants_json() {
             Ok(Json(json!({ "url": redirect_url })).into_response())
@@ -329,11 +328,13 @@ pub async fn readme(req: ConduitRequest) -> AppResult<Response> {
 /// Handles the `GET /crates/:crate_id/versions` route.
 // FIXME: Not sure why this is necessary since /crates/:crate_id returns
 // this information already, but ember is definitely requesting it
-pub async fn versions(req: ConduitRequest) -> AppResult<Json<Value>> {
+pub async fn versions(
+    Path(crate_name): Path<String>,
+    req: ConduitRequest,
+) -> AppResult<Json<Value>> {
     conduit_compat(move || {
-        let crate_name = req.param("crate_id").unwrap();
         let conn = req.app().db_read()?;
-        let krate: Crate = Crate::by_name(crate_name).first(&*conn)?;
+        let krate: Crate = Crate::by_name(&crate_name).first(&*conn)?;
         let mut versions_and_publishers: Vec<(Version, Option<User>)> = krate
             .all_versions()
             .left_outer_join(users::table)
@@ -351,7 +352,7 @@ pub async fn versions(req: ConduitRequest) -> AppResult<Json<Value>> {
         let versions = versions_and_publishers
             .into_iter()
             .zip(VersionOwnerAction::for_versions(&conn, &versions)?.into_iter())
-            .map(|((v, pb), aas)| EncodableVersion::from(v, crate_name, pb, aas))
+            .map(|((v, pb), aas)| EncodableVersion::from(v, &crate_name, pb, aas))
             .collect::<Vec<_>>();
 
         Ok(Json(json!({ "versions": versions })))
@@ -360,14 +361,16 @@ pub async fn versions(req: ConduitRequest) -> AppResult<Json<Value>> {
 }
 
 /// Handles the `GET /crates/:crate_id/reverse_dependencies` route.
-pub async fn reverse_dependencies(req: ConduitRequest) -> AppResult<Json<Value>> {
+pub async fn reverse_dependencies(
+    Path(name): Path<String>,
+    req: ConduitRequest,
+) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         use diesel::dsl::any;
 
         let pagination_options = PaginationOptions::builder().gather(&req)?;
-        let name = req.param("crate_id").unwrap();
         let conn = req.app().db_read()?;
-        let krate: Crate = Crate::by_name(name).first(&*conn)?;
+        let krate: Crate = Crate::by_name(&name).first(&*conn)?;
         let (rev_deps, total) = krate.reverse_dependencies(&conn, pagination_options)?;
         let rev_deps: Vec<_> = rev_deps
             .into_iter()
