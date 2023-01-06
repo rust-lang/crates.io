@@ -1,14 +1,12 @@
 use axum::async_trait;
 use axum::body::Bytes;
-use axum::extract::rejection::PathRejection;
-use axum::extract::{FromRequest, FromRequestParts};
-use axum::response::IntoResponse;
+use axum::extract::FromRequest;
 use hyper::Body;
 use std::error::Error;
 use std::io::Cursor;
 use std::ops::{Deref, DerefMut};
 
-use crate::fallback::{check_content_length, Params};
+use crate::fallback::check_content_length;
 use crate::response::AxumResponse;
 use crate::server_error_response;
 pub use http::{header, Extensions, HeaderMap, Method, Request, Response, StatusCode, Uri};
@@ -55,20 +53,10 @@ where
 {
     type Rejection = AxumResponse;
 
-    async fn from_request(req: Request<Body>, state: &S) -> Result<Self, Self::Rejection> {
+    async fn from_request(req: Request<Body>, _state: &S) -> Result<Self, Self::Rejection> {
         check_content_length(&req)?;
 
-        let (mut parts, body) = req.into_parts();
-
-        // Make `axum::Router` path params available to `conduit` compat
-        // handlers. (see [RequestParamsExt] below)
-        match Params::from_request_parts(&mut parts, state).await {
-            Ok(path) => {
-                parts.extensions.insert(path);
-            }
-            Err(PathRejection::MissingPathParams(_)) => {}
-            Err(err) => return Err(err.into_response()),
-        };
+        let (parts, body) = req.into_parts();
 
         let full_body = match hyper::body::to_bytes(body).await {
             Ok(body) => body,
