@@ -72,7 +72,7 @@ impl PaginationOptionsBuilder {
         self
     }
 
-    pub(crate) fn gather(self, req: &ConduitRequest) -> AppResult<PaginationOptions> {
+    pub(crate) fn gather<B>(self, req: &Request<B>) -> AppResult<PaginationOptions> {
         let params = req.query();
         let page_param = params.get("page");
         let seek_param = params.get("seek");
@@ -307,9 +307,9 @@ pub(crate) fn decode_seek<D: for<'a> Deserialize<'a>>(seek: &str) -> AppResult<D
 #[cfg(test)]
 mod tests {
     use super::*;
+    use axum::body::Bytes;
     use conduit_test::MockRequest;
     use http::StatusCode;
-    use std::io::Cursor;
 
     #[test]
     fn no_pagination_param() {
@@ -410,13 +410,9 @@ mod tests {
         );
     }
 
-    fn mock(query: &str) -> ConduitRequest {
+    fn mock(query: &str) -> Request<Bytes> {
         let path_and_query = format!("/?{query}");
-        ConduitRequest(
-            MockRequest::new(http::Method::GET, &path_and_query)
-                .into_inner()
-                .map(Cursor::new),
-        )
+        MockRequest::new(http::Method::GET, &path_and_query).into_inner()
     }
 
     fn assert_pagination_error(options: PaginationOptionsBuilder, query: &str, message: &str) {
