@@ -3,6 +3,7 @@
 use crate::auth::AuthCheck;
 use flate2::read::GzDecoder;
 use hex::ToHex;
+use http::Request;
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 use std::io::Read;
@@ -304,7 +305,7 @@ fn count_versions_published_today(krate_id: i32, conn: &PgConnection) -> QueryRe
 ///
 /// This function parses the JSON headers to interpret the data and validates
 /// the data during and after the parsing. Returns crate metadata.
-fn parse_new_headers(req: &mut ConduitRequest) -> AppResult<EncodableCrateUpload> {
+fn parse_new_headers<B: Read>(req: &mut Request<B>) -> AppResult<EncodableCrateUpload> {
     // Read the json upload request
     let metadata_length = u64::from(read_le_u32(req.body_mut())?);
     req.add_custom_metadata("metadata_length", metadata_length);
