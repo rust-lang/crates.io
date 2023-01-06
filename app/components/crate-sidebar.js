@@ -15,7 +15,9 @@ export default class CrateSidebar extends Component {
   }
 
   get cargoAddCommand() {
-    return `cargo add ${this.args.crate.name}`;
+    return this.args.requestedVersion
+      ? `cargo add ${this.args.crate.name}@${this.args.requestedVersion}`
+      : `cargo add ${this.args.crate.name}`;
   }
 
   get tomlSnippet() {
