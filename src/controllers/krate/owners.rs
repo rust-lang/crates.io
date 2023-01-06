@@ -5,6 +5,8 @@ use crate::controllers::prelude::*;
 use crate::models::token::EndpointScope;
 use crate::models::{Crate, Owner, Rights, Team, User};
 use crate::views::EncodableOwner;
+use http::Request;
+use std::io::Read;
 
 /// Handles the `GET /crates/:crate_id/owners` route.
 pub async fn owners(Path(crate_name): Path<String>, req: ConduitRequest) -> AppResult<Json<Value>> {
@@ -81,7 +83,7 @@ pub async fn remove_owners(
 /// ```json
 /// {"owners": ["username", "github:org:team", ...]}
 /// ```
-fn parse_owners_request(req: &mut ConduitRequest) -> AppResult<Vec<String>> {
+fn parse_owners_request<B: Read>(req: &mut Request<B>) -> AppResult<Vec<String>> {
     #[derive(Deserialize)]
     struct Request {
         // identical, for back-compat (owners preferred)
@@ -96,7 +98,11 @@ fn parse_owners_request(req: &mut ConduitRequest) -> AppResult<Vec<String>> {
         .ok_or_else(|| cargo_err("invalid json request"))
 }
 
-fn modify_owners(crate_name: &str, req: &mut ConduitRequest, add: bool) -> AppResult<Json<Value>> {
+fn modify_owners<B: Read>(
+    crate_name: &str,
+    req: &mut Request<B>,
+    add: bool,
+) -> AppResult<Json<Value>> {
     let auth = AuthCheck::default()
         .with_endpoint_scope(EndpointScope::ChangeOwners)
         .for_crate(crate_name)
