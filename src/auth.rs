@@ -59,11 +59,6 @@ impl AuthCheck {
 
         let auth = authenticate_user(request)?;
 
-        request.add_custom_metadata("uid", auth.user_id());
-        if let Some(id) = auth.api_token_id() {
-            request.add_custom_metadata("tokenid", id);
-        }
-
         if let Some(token) = auth.api_token() {
             if !self.allow_token {
                 let error_message =
@@ -154,6 +149,8 @@ fn authenticate_user<B>(req: &Request<B>) -> AppResult<AuthenticatedUser> {
 
         ensure_not_locked(&user)?;
 
+        req.add_custom_metadata("uid", id);
+
         return Ok(AuthenticatedUser { user, token: None });
     }
 
@@ -176,6 +173,9 @@ fn authenticate_user<B>(req: &Request<B>) -> AppResult<AuthenticatedUser> {
             .map_err(|err| err.chain(internal("user_id from token not found in database")))?;
 
         ensure_not_locked(&user)?;
+
+        req.add_custom_metadata("uid", token.user_id);
+        req.add_custom_metadata("tokenid", token.id);
 
         return Ok(AuthenticatedUser {
             user,
