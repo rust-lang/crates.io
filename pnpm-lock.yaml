@@ -68,7 +68,7 @@ specifiers:
   ember-router-scroll: 4.1.2
   ember-source: 4.9.3
   ember-svg-jar: 2.4.2
-  ember-template-lint: 5.3.0
+  ember-template-lint: 5.3.1
   ember-test-selectors: 6.0.0
   ember-tooltips: 3.6.0
   ember-truth-helpers: 3.1.1
@@ -173,7 +173,7 @@ devDependencies:
   ember-router-scroll: 4.1.2
   ember-source: 4.9.3_klhxxmjkcvtuhwro2kkspsfzna
   ember-svg-jar: 2.4.2
-  ember-template-lint: 5.3.0_ember-cli-htmlbars@6.1.1
+  ember-template-lint: 5.3.1_ember-cli-htmlbars@6.1.1
   ember-test-selectors: 6.0.0
   ember-tooltips: 3.6.0
   ember-truth-helpers: 3.1.1
@@ -2978,7 +2978,7 @@ packages:
     resolution: {integrity: sha512-9K4zoImiZc3HlIp6AVUDE4CWYx22a+lhSZMYNpbjW04+YF0KWj4pJXnEMjdnFTiQibFFmElcsasJXDbdI/EPhA==}
     dependencies:
       '@types/eslint': 8.4.10
-      '@types/estree': 0.0.51
+      '@types/estree': 1.0.0
 
   /@types/eslint/7.29.0:
     resolution: {integrity: sha512-VNcvioYDH8/FxaeTKkM4/TiTwt6pBV9E3OfGmvaw8tPl0rrHCJ4Ll15HRT+pMiFAf/MLQvAzC+6RzUMEL9Ceng==}
@@ -2990,7 +2990,7 @@ packages:
   /@types/eslint/8.4.10:
     resolution: {integrity: sha512-Sl/HOqN8NKPmhWo2VBEPm0nvHnu2LL3v9vKo8MEq0EtbJ4eVzGPl41VNPvn5E1i5poMk4/XD8UriLHpJvEP/Nw==}
     dependencies:
-      '@types/estree': 0.0.51
+      '@types/estree': 1.0.0
       '@types/json-schema': 7.0.11
 
   /@types/estree/0.0.51:
@@ -2998,7 +2998,6 @@ packages:
 
   /@types/estree/1.0.0:
     resolution: {integrity: sha512-WulqXMDUTYAXCjZnk6JtIHPigp55cVtDgDrO2gHRwhyJto21+1zbVCtOYB2L1F9w4qCQ0rOGWBnBe0FNTiEJIQ==}
-    dev: true
 
   /@types/express-serve-static-core/4.17.32:
     resolution: {integrity: sha512-aI5h/VOkxOF2Z1saPy0Zsxs5avets/iaiAJYznQFm5By/pamU31xWKL//epiF4OfUA2qTOc9PV6tCUjhO8wlZA==}
@@ -8132,8 +8131,8 @@ packages:
       - supports-color
     dev: true
 
-  /ember-template-lint/5.3.0_ember-cli-htmlbars@6.1.1:
-    resolution: {integrity: sha512-P4GsqYDN3bvTgN8+v3LQsBQVfDnu/EJJzZH8LqAYZxFfRQmBeZMcMFjB6I8QS9NYkYKOXO4I4ApiJYtFHRXsUw==}
+  /ember-template-lint/5.3.1_ember-cli-htmlbars@6.1.1:
+    resolution: {integrity: sha512-c1eqYkjMjbZ2Hxfsv49bQcNCfRd2gDjoQv9t48BOb8/l94ygzf8YQN6uzQcIW/zvtVEugh04yGm8moxd7UR4vQ==}
     engines: {node: ^14.18.0 || ^16.0.0 || >= 18.0.0}
     hasBin: true
     dependencies:
