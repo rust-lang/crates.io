@@ -6,11 +6,11 @@ use crate::sql::lower;
 use crate::views::EncodablePublicUser;
 
 /// Handles the `GET /users/:user_id` route.
-pub async fn show(req: ConduitRequest) -> AppResult<Json<Value>> {
+pub async fn show(Path(user_name): Path<String>, req: ConduitRequest) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         use self::users::dsl::{gh_login, id, users};
 
-        let name = lower(req.param("user_id").unwrap());
+        let name = lower(&user_name);
         let conn = req.app().db_read_prefer_primary()?;
         let user: User = users
             .filter(lower(gh_login).eq(name))
@@ -23,15 +23,10 @@ pub async fn show(req: ConduitRequest) -> AppResult<Json<Value>> {
 }
 
 /// Handles the `GET /users/:user_id/stats` route.
-pub async fn stats(req: ConduitRequest) -> AppResult<Json<Value>> {
+pub async fn stats(Path(user_id): Path<i32>, req: ConduitRequest) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         use diesel::dsl::sum;
 
-        let user_id = req
-            .param("user_id")
-            .unwrap()
-            .parse::<i32>()
-            .map_err(|err| err.chain(bad_request("invalid user_id")))?;
         let conn = req.app().db_read_prefer_primary()?;
 
         let data: i64 = CrateOwner::by_owner_kind(OwnerKind::User)
