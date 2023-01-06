@@ -42,18 +42,6 @@ fn create_token_no_name() {
 }
 
 #[test]
-fn create_token_long_body() {
-    let (_, _, user) = TestApp::init().with_user();
-    let too_big = &[5; 5192]; // Send a request with a 5kB body of 5's
-    let response = user.put::<()>("/api/v1/me/tokens", too_big);
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": "max content length is: 2000" }] })
-    );
-}
-
-#[test]
 fn create_token_exceeded_tokens_per_user() {
     let (app, _, user) = TestApp::init().with_user();
     let id = user.as_model().id;

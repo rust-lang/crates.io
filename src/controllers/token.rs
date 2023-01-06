@@ -40,13 +40,6 @@ pub async fn new(mut req: ConduitRequest) -> AppResult<Json<Value>> {
             api_token: NewApiToken,
         }
 
-        let max_size = 2000;
-        let length = req.content_length();
-
-        if length > max_size {
-            return Err(bad_request(&format!("max content length is: {max_size}")));
-        }
-
         let new: NewApiTokenRequest = json::from_reader(req.body_mut())
             .map_err(|e| bad_request(&format!("invalid new token request: {e:?}")))?;
 
