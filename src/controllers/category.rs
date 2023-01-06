@@ -36,11 +36,10 @@ pub async fn index(req: ConduitRequest) -> AppResult<Json<Value>> {
 }
 
 /// Handles the `GET /categories/:category_id` route.
-pub async fn show(req: ConduitRequest) -> AppResult<Json<Value>> {
+pub async fn show(Path(slug): Path<String>, req: ConduitRequest) -> AppResult<Json<Value>> {
     conduit_compat(move || {
-        let slug = req.param("category_id").unwrap();
         let conn = req.app().db_read()?;
-        let cat: Category = Category::by_slug(slug).first(&*conn)?;
+        let cat: Category = Category::by_slug(&slug).first(&*conn)?;
         let subcats = cat
             .subcategories(&conn)?
             .into_iter()
