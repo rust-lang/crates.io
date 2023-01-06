@@ -2,9 +2,10 @@ use crate::app::AppState;
 use crate::controllers::frontend_prelude::*;
 use crate::models::{ApiToken, User};
 use crate::schema::api_tokens;
-use crate::util::read_fill;
 use crate::util::token::SecureToken;
 use anyhow::{anyhow, Context};
+use axum::body::Bytes;
+use axum::extract::State;
 use base64;
 use http::HeaderMap;
 use once_cell::sync::Lazy;
@@ -232,29 +233,22 @@ pub enum GitHubSecretAlertFeedbackLabel {
 }
 
 /// Handles the `POST /api/github/secret-scanning/verify` route.
-pub async fn verify(mut req: ConduitRequest) -> AppResult<Json<Vec<GitHubSecretAlertFeedback>>> {
+pub async fn verify(
+    state: State<AppState>,
+    headers: HeaderMap,
+    body: Bytes,
+) -> AppResult<Json<Vec<GitHubSecretAlertFeedback>>> {
     conduit_compat(move || {
-        let max_size = 8192;
-        let length = req.content_length();
-
-        if length > max_size {
-            return Err(bad_request(&format!("max content length is: {max_size}")));
-        }
-
-        let mut json = vec![0; length as usize];
-        read_fill(req.body_mut(), &mut json)?;
-
-        let state = req.app();
-        verify_github_signature(req.headers(), state, &json)
+        verify_github_signature(&headers, &state, &body)
             .map_err(|e| bad_request(&format!("failed to verify request signature: {e:?}")))?;
 
-        let alerts: Vec<GitHubSecretAlert> = json::from_slice(&json)
+        let alerts: Vec<GitHubSecretAlert> = json::from_slice(&body)
             .map_err(|e| bad_request(&format!("invalid secret alert request: {e:?}")))?;
 
         let feedback = alerts
             .into_iter()
             .map(|alert| {
-                let label = alert_revoke_token(state, &alert)?;
+                let label = alert_revoke_token(&state, &alert)?;
                 Ok(GitHubSecretAlertFeedback {
                     token_raw: alert.token,
                     token_type: alert.r#type,
