@@ -17,7 +17,7 @@ mod prelude {
     pub use serde_json::Value;
 
     pub use conduit_axum::ConduitRequest;
-    pub use http::{header, StatusCode};
+    pub use http::{header, Request, StatusCode};
 
     pub use super::conduit_axum::conduit_compat;
     pub use crate::middleware::app::RequestApp;
@@ -34,7 +34,7 @@ mod prelude {
         fn query_with_params(&self, params: IndexMap<String, String>) -> String;
     }
 
-    impl RequestUtils for ConduitRequest {
+    impl<B> RequestUtils for Request<B> {
         fn query(&self) -> IndexMap<String, String> {
             url::form_urlencoded::parse(self.uri().query().unwrap_or("").as_bytes())
                 .into_owned()
