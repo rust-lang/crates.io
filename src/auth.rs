@@ -58,7 +58,6 @@ impl AuthCheck {
         controllers::util::verify_origin(request)?;
 
         let auth = authenticate_user(request)?;
-        ensure_not_locked(auth.user())?;
 
         request.add_custom_metadata("uid", auth.user_id());
         if let Some(id) = auth.api_token_id() {
@@ -153,6 +152,8 @@ fn authenticate_user<B>(req: &Request<B>) -> AppResult<AuthenticatedUser> {
         let user = User::find(&conn, id)
             .map_err(|err| err.chain(internal("user_id from cookie not found in database")))?;
 
+        ensure_not_locked(&user)?;
+
         return Ok(AuthenticatedUser { user, token: None });
     }
 
@@ -173,6 +174,8 @@ fn authenticate_user<B>(req: &Request<B>) -> AppResult<AuthenticatedUser> {
 
         let user = User::find(&conn, token.user_id)
             .map_err(|err| err.chain(internal("user_id from token not found in database")))?;
+
+        ensure_not_locked(&user)?;
 
         return Ok(AuthenticatedUser {
             user,
