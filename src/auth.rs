@@ -111,14 +111,25 @@ impl AuthCheck {
 }
 
 #[derive(Debug)]
-pub struct AuthenticatedUser {
+pub enum AuthenticatedUser {
+    Cookie(CookieUser),
+    Token(TokenUser),
+}
+
+#[derive(Debug)]
+pub struct CookieUser {
     user: User,
-    token: Option<ApiToken>,
+}
+
+#[derive(Debug)]
+pub struct TokenUser {
+    token: ApiToken,
+    user: User,
 }
 
 impl AuthenticatedUser {
     pub fn user_id(&self) -> i32 {
-        self.user.id
+        self.user().id
     }
 
     pub fn api_token_id(&self) -> Option<i32> {
@@ -126,11 +137,17 @@ impl AuthenticatedUser {
     }
 
     pub fn api_token(&self) -> Option<&ApiToken> {
-        self.token.as_ref()
+        match self {
+            AuthenticatedUser::Token(token) => Some(&token.token),
+            _ => None,
+        }
     }
 
     pub fn user(&self) -> &User {
-        &self.user
+        match self {
+            AuthenticatedUser::Cookie(cookie) => &cookie.user,
+            AuthenticatedUser::Token(token) => &token.user,
+        }
     }
 }
 
@@ -151,7 +168,7 @@ fn authenticate_user<B>(req: &Request<B>) -> AppResult<AuthenticatedUser> {
 
         req.add_custom_metadata("uid", id);
 
-        return Ok(AuthenticatedUser { user, token: None });
+        return Ok(AuthenticatedUser::Cookie(CookieUser { user }));
     }
 
     // Otherwise, look for an `Authorization` header on the request
@@ -177,10 +194,7 @@ fn authenticate_user<B>(req: &Request<B>) -> AppResult<AuthenticatedUser> {
         req.add_custom_metadata("uid", token.user_id);
         req.add_custom_metadata("tokenid", token.id);
 
-        return Ok(AuthenticatedUser {
-            user,
-            token: Some(token),
-        });
+        return Ok(AuthenticatedUser::Token(TokenUser { user, token }));
     }
 
     // Unable to authenticate the user
