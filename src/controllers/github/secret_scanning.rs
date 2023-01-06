@@ -235,9 +235,7 @@ pub enum GitHubSecretAlertFeedbackLabel {
 pub async fn verify(mut req: ConduitRequest) -> AppResult<Json<Vec<GitHubSecretAlertFeedback>>> {
     conduit_compat(move || {
         let max_size = 8192;
-        let length = req
-            .content_length()
-            .ok_or_else(|| bad_request("missing header: Content-Length"))?;
+        let length = req.content_length();
 
         if length > max_size {
             return Err(bad_request(&format!("max content length is: {max_size}")));
