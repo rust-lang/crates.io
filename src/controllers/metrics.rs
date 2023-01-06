@@ -4,7 +4,7 @@ use axum::response::IntoResponse;
 use prometheus::{Encoder, TextEncoder};
 
 /// Handles the `GET /api/private/metrics/:kind` endpoint.
-pub async fn prometheus(req: ConduitRequest) -> AppResult<Response> {
+pub async fn prometheus(Path(kind): Path<String>, req: ConduitRequest) -> AppResult<Response> {
     conduit_compat(move || {
         let app = req.app();
 
@@ -24,7 +24,7 @@ pub async fn prometheus(req: ConduitRequest) -> AppResult<Response> {
             return Err(Box::new(MetricsDisabled));
         }
 
-        let metrics = match req.param("kind").unwrap() {
+        let metrics = match kind.as_str() {
             "service" => app.service_metrics.gather(&*app.db_read()?)?,
             "instance" => app.instance_metrics.gather(app)?,
             _ => return Err(not_found()),
