@@ -33,7 +33,7 @@ pub async fn list(req: ConduitRequest) -> AppResult<Json<Value>> {
                     invited_by_username: users
                         .iter()
                         .find(|u| u.id == private.inviter_id)
-                        .ok_or_else(|| internal(&format!("missing user {}", private.inviter_id)))?
+                        .ok_or_else(|| internal(format!("missing user {}", private.inviter_id)))?
                         .login
                         .clone(),
                     invitee_id: private.invitee_id,
@@ -217,7 +217,7 @@ fn prepare_list<B>(
             crate_id: invitation.crate_id,
             crate_name: crate_names
                 .get(&invitation.crate_id)
-                .ok_or_else(|| internal(&format!("missing crate with id {}", invitation.crate_id)))?
+                .ok_or_else(|| internal(format!("missing crate with id {}", invitation.crate_id)))?
                 .clone(),
             created_at: invitation.created_at,
             expires_at: invitation.expires_at(config),
