@@ -84,14 +84,8 @@ pub async fn new(mut req: ConduitRequest) -> AppResult<Json<Value>> {
 }
 
 /// Handles the `DELETE /me/tokens/:id` route.
-pub async fn revoke(req: ConduitRequest) -> AppResult<Json<Value>> {
+pub async fn revoke(Path(id): Path<i32>, req: ConduitRequest) -> AppResult<Json<Value>> {
     conduit_compat(move || {
-        let id = req
-            .param("id")
-            .unwrap()
-            .parse::<i32>()
-            .map_err(|e| bad_request(&format!("invalid token id: {e:?}")))?;
-
         let auth = AuthCheck::default().check(&req)?;
         let conn = req.app().db_write()?;
         let user = auth.user();

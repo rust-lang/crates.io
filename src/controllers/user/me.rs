@@ -99,19 +99,20 @@ pub async fn updates(req: ConduitRequest) -> AppResult<Json<Value>> {
 }
 
 /// Handles the `PUT /users/:user_id` route.
-pub async fn update_user(mut req: ConduitRequest) -> AppResult<Response> {
+pub async fn update_user(
+    Path(param_user_id): Path<i32>,
+    mut req: ConduitRequest,
+) -> AppResult<Response> {
     conduit_compat(move || {
         use self::emails::user_id;
         use diesel::insert_into;
 
         let auth = AuthCheck::default().check(&req)?;
 
-        let param_user_id = req.param("user_id").unwrap();
-
         let user = auth.user();
 
         // need to check if current user matches user to be updated
-        if user.id.to_string() != param_user_id {
+        if user.id != param_user_id {
             return Err(bad_request("current user does not match requested user"));
         }
 
@@ -171,14 +172,16 @@ pub async fn update_user(mut req: ConduitRequest) -> AppResult<Response> {
 }
 
 /// Handles the `PUT /confirm/:email_token` route
-pub async fn confirm_user_email(req: ConduitRequest) -> AppResult<Response> {
+pub async fn confirm_user_email(
+    Path(token): Path<String>,
+    req: ConduitRequest,
+) -> AppResult<Response> {
     conduit_compat(move || {
         use diesel::update;
 
         let conn = req.app().db_write()?;
-        let req_token = req.param("email_token").unwrap();
 
-        let updated_rows = update(emails::table.filter(emails::token.eq(req_token)))
+        let updated_rows = update(emails::table.filter(emails::token.eq(&token)))
             .set(emails::verified.eq(true))
             .execute(&*conn)?;
 
@@ -192,16 +195,13 @@ pub async fn confirm_user_email(req: ConduitRequest) -> AppResult<Response> {
 }
 
 /// Handles `PUT /user/:user_id/resend` route
-pub async fn regenerate_token_and_send(req: ConduitRequest) -> AppResult<Response> {
+pub async fn regenerate_token_and_send(
+    Path(param_user_id): Path<i32>,
+    req: ConduitRequest,
+) -> AppResult<Response> {
     conduit_compat(move || {
         use diesel::dsl::sql;
         use diesel::update;
-
-        let param_user_id = req
-            .param("user_id")
-            .unwrap()
-            .parse::<i32>()
-            .map_err(|err| err.chain(bad_request("invalid user_id")))?;
 
         let auth = AuthCheck::default().check(&req)?;
 

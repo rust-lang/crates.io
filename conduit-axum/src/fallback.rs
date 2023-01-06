@@ -1,12 +1,10 @@
 use crate::error::ServiceError;
 use crate::response::AxumResponse;
-use crate::ConduitRequest;
 
-use std::collections::BTreeMap;
 use std::error::Error;
 
 use axum::body::{Body, HttpBody};
-use axum::extract::{Extension, Path};
+use axum::extract::Extension;
 use axum::response::IntoResponse;
 use http::header::CONTENT_LENGTH;
 use http::StatusCode;
@@ -82,16 +80,4 @@ pub(crate) fn check_content_length(request: &Request<Body>) -> Result<(), AxumRe
     }
 
     Ok(())
-}
-
-pub type Params = Path<BTreeMap<String, String>>;
-
-pub trait RequestParamsExt<'a> {
-    fn axum_params(self) -> Option<&'a Params>;
-}
-
-impl<'a> RequestParamsExt<'a> for &'a ConduitRequest {
-    fn axum_params(self) -> Option<&'a Params> {
-        self.extensions().get::<Params>()
-    }
 }
