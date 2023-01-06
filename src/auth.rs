@@ -55,8 +55,6 @@ impl AuthCheck {
     }
 
     pub fn check<B>(&self, request: &Request<B>) -> AppResult<AuthenticatedUser> {
-        controllers::util::verify_origin(request)?;
-
         let auth = authenticate_user(request)?;
 
         if let Some(token) = auth.api_token() {
@@ -137,6 +135,8 @@ impl AuthenticatedUser {
 }
 
 fn authenticate_user<B>(req: &Request<B>) -> AppResult<AuthenticatedUser> {
+    controllers::util::verify_origin(req)?;
+
     let conn = req.app().db_write()?;
 
     let user_id_from_session = req
