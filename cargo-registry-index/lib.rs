@@ -116,7 +116,7 @@ pub struct Crate {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub features2: Option<BTreeMap<String, Vec<String>>>,
     pub yanked: Option<bool>,
-    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub links: Option<String>,
     /// The schema version for this entry.
     ///
@@ -524,7 +524,12 @@ impl Repository {
         let output = command.output()?;
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            return Err(anyhow!("Running git command failed with: {}", stderr));
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            return Err(anyhow!(
+                "Running git command failed with: {}{}",
+                stderr,
+                stdout
+            ));
         }
 
         Ok(())

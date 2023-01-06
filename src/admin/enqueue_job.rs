@@ -19,6 +19,10 @@ pub enum Command {
     },
     DailyDbMaintenance,
     SquashIndex,
+    NormalizeIndex {
+        #[arg(long = "dry-run")]
+        dry_run: bool,
+    },
 }
 
 pub fn run(command: Command) -> Result<()> {
@@ -46,5 +50,6 @@ pub fn run(command: Command) -> Result<()> {
         } => Ok(worker::dump_db(database_url, target_name).enqueue(&conn)?),
         Command::DailyDbMaintenance => Ok(worker::daily_db_maintenance().enqueue(&conn)?),
         Command::SquashIndex => Ok(worker::squash_index().enqueue(&conn)?),
+        Command::NormalizeIndex { dry_run } => Ok(worker::normalize_index(dry_run).enqueue(&conn)?),
     }
 }
