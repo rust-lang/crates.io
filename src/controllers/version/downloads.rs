@@ -2,7 +2,7 @@
 //!
 //! Crate level functionality is located in `krate::downloads`.
 
-use super::{extract_crate_name_and_semver, version_and_crate};
+use super::version_and_crate;
 use crate::controllers::prelude::*;
 use crate::db::PoolError;
 use crate::middleware::log_request::CustomMetadataRequestExt;
@@ -13,12 +13,12 @@ use chrono::{Duration, NaiveDate, Utc};
 
 /// Handles the `GET /crates/:crate_id/:version/download` route.
 /// This returns a URL to the location where the crate is stored.
-pub async fn download(req: ConduitRequest) -> AppResult<Response> {
+pub async fn download(
+    Path((mut crate_name, version)): Path<(String, String)>,
+    req: ConduitRequest,
+) -> AppResult<Response> {
     conduit_compat(move || {
         let app = req.app();
-
-        let mut crate_name = req.param("crate_id").unwrap().to_string();
-        let version = req.param("version").unwrap();
 
         let cache_key = (crate_name.to_string(), version.to_string());
         if let Some(version_id) = app.version_id_cacher.get(&cache_key) {
@@ -57,7 +57,7 @@ pub async fn download(req: ConduitRequest) -> AppResult<Response> {
                             .inner_join(crates::table)
                             .select((id, crates::name))
                             .filter(Crate::with_name(&crate_name))
-                            .filter(num.eq(version))
+                            .filter(num.eq(&version))
                             .first::<(i32, String)>(&**conn)
                     })?;
 
@@ -102,7 +102,7 @@ pub async fn download(req: ConduitRequest) -> AppResult<Response> {
             }
         };
 
-        let redirect_url = app.config.uploader().crate_location(&crate_name, version);
+        let redirect_url = app.config.uploader().crate_location(&crate_name, &version);
         if req.wants_json() {
             Ok(Json(json!({ "url": redirect_url })).into_response())
         } else {
@@ -113,12 +113,17 @@ pub async fn download(req: ConduitRequest) -> AppResult<Response> {
 }
 
 /// Handles the `GET /crates/:crate_id/:version/downloads` route.
-pub async fn downloads(req: ConduitRequest) -> AppResult<Json<Value>> {
+pub async fn downloads(
+    Path((crate_name, version)): Path<(String, String)>,
+    req: ConduitRequest,
+) -> AppResult<Json<Value>> {
     conduit_compat(move || {
-        let (crate_name, semver) = extract_crate_name_and_semver(&req)?;
+        if semver::Version::parse(&version).is_err() {
+            return Err(cargo_err(&format_args!("invalid semver: {version}")));
+        }
 
         let conn = req.app().db_read()?;
-        let (version, _) = version_and_crate(&conn, crate_name, semver)?;
+        let (version, _) = version_and_crate(&conn, &crate_name, &version)?;
 
         let cutoff_end_date = req
             .query()
