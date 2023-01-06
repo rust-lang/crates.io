@@ -58,17 +58,7 @@ impl AuthCheck {
         controllers::util::verify_origin(request)?;
 
         let auth = authenticate_user(request)?;
-
-        if let Some(reason) = &auth.user().account_lock_reason {
-            let still_locked = if let Some(until) = auth.user().account_lock_until {
-                until > Utc::now().naive_utc()
-            } else {
-                true
-            };
-            if still_locked {
-                return Err(account_locked(reason, auth.user().account_lock_until));
-            }
-        }
+        ensure_not_locked(auth.user())?;
 
         request.add_custom_metadata("uid", auth.user_id());
         if let Some(id) = auth.api_token_id() {
@@ -192,6 +182,21 @@ fn authenticate_user<B>(req: &Request<B>) -> AppResult<AuthenticatedUser> {
 
     // Unable to authenticate the user
     return Err(internal("no cookie session or auth header found").chain(forbidden()));
+}
+
+fn ensure_not_locked(user: &User) -> AppResult<()> {
+    if let Some(reason) = &user.account_lock_reason {
+        let still_locked = if let Some(until) = user.account_lock_until {
+            until > Utc::now().naive_utc()
+        } else {
+            true
+        };
+        if still_locked {
+            return Err(account_locked(reason, user.account_lock_until));
+        }
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]
