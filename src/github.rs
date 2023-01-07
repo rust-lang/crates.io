@@ -165,9 +165,7 @@ fn handle_error_response(error: &reqwest::Error) -> BoxedAppError {
              GitHub org memberships.",
         ),
         Some(Status::NOT_FOUND) => not_found(),
-        _ => internal(&format_args!(
-            "didn't get a 200 result from github: {error}"
-        )),
+        _ => internal(format!("didn't get a 200 result from github: {error}")),
     }
 }
 

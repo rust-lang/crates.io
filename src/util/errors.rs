@@ -327,7 +327,7 @@ impl AppError for InternalAppErrorStatic {
     }
 }
 
-pub fn internal<S: ToString + ?Sized>(error: &S) -> BoxedAppError {
+pub fn internal<S: ToString>(error: S) -> BoxedAppError {
     Box::new(InternalAppError {
         description: error.to_string(),
     })
