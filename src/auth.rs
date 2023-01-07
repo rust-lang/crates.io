@@ -55,25 +55,7 @@ impl AuthCheck {
     }
 
     pub fn check<B>(&self, request: &Request<B>) -> AppResult<AuthenticatedUser> {
-        controllers::util::verify_origin(request)?;
-
         let auth = authenticate_user(request)?;
-
-        if let Some(reason) = &auth.user().account_lock_reason {
-            let still_locked = if let Some(until) = auth.user().account_lock_until {
-                until > Utc::now().naive_utc()
-            } else {
-                true
-            };
-            if still_locked {
-                return Err(account_locked(reason, auth.user().account_lock_until));
-            }
-        }
-
-        request.add_custom_metadata("uid", auth.user_id());
-        if let Some(id) = auth.api_token_id() {
-            request.add_custom_metadata("tokenid", id);
-        }
 
         if let Some(token) = auth.api_token() {
             if !self.allow_token {
@@ -153,6 +135,8 @@ impl AuthenticatedUser {
 }
 
 fn authenticate_user<B>(req: &Request<B>) -> AppResult<AuthenticatedUser> {
+    controllers::util::verify_origin(req)?;
+
     let conn = req.app().db_write()?;
 
     let user_id_from_session = req
@@ -162,6 +146,10 @@ fn authenticate_user<B>(req: &Request<B>) -> AppResult<AuthenticatedUser> {
     if let Some(id) = user_id_from_session {
         let user = User::find(&conn, id)
             .map_err(|err| err.chain(internal("user_id from cookie not found in database")))?;
+
+        ensure_not_locked(&user)?;
+
+        req.add_custom_metadata("uid", id);
 
         return Ok(AuthenticatedUser { user, token: None });
     }
@@ -184,6 +172,11 @@ fn authenticate_user<B>(req: &Request<B>) -> AppResult<AuthenticatedUser> {
         let user = User::find(&conn, token.user_id)
             .map_err(|err| err.chain(internal("user_id from token not found in database")))?;
 
+        ensure_not_locked(&user)?;
+
+        req.add_custom_metadata("uid", token.user_id);
+        req.add_custom_metadata("tokenid", token.id);
+
         return Ok(AuthenticatedUser {
             user,
             token: Some(token),
@@ -192,6 +185,21 @@ fn authenticate_user<B>(req: &Request<B>) -> AppResult<AuthenticatedUser> {
 
     // Unable to authenticate the user
     return Err(internal("no cookie session or auth header found").chain(forbidden()));
+}
+
+fn ensure_not_locked(user: &User) -> AppResult<()> {
+    if let Some(reason) = &user.account_lock_reason {
+        let still_locked = if let Some(until) = user.account_lock_until {
+            until > Utc::now().naive_utc()
+        } else {
+            true
+        };
+        if still_locked {
+            return Err(account_locked(reason, user.account_lock_until));
+        }
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]
