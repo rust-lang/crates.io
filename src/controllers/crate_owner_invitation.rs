@@ -1,7 +1,7 @@
 use super::frontend_prelude::*;
 
 use crate::auth::AuthCheck;
-use crate::auth::AuthenticatedUser;
+use crate::auth::Authentication;
 use crate::controllers::helpers::pagination::{Page, PaginationOptions};
 use crate::models::{Crate, CrateOwnerInvitation, Rights, User};
 use crate::schema::{crate_owner_invitations, crates, users};
@@ -80,7 +80,7 @@ enum ListFilter {
 
 fn prepare_list<B>(
     req: &Request<B>,
-    auth: AuthenticatedUser,
+    auth: Authentication,
     filter: ListFilter,
 ) -> AppResult<PrivateListResponse> {
     let pagination: PaginationOptions = PaginationOptions::builder()

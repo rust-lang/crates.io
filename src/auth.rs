@@ -54,7 +54,7 @@ impl AuthCheck {
         }
     }
 
-    pub fn check<B>(&self, request: &Request<B>) -> AppResult<AuthenticatedUser> {
+    pub fn check<B>(&self, request: &Request<B>) -> AppResult<Authentication> {
         let auth = authenticate_user(request)?;
 
         if let Some(token) = auth.api_token() {
@@ -111,23 +111,23 @@ impl AuthCheck {
 }
 
 #[derive(Debug)]
-pub enum AuthenticatedUser {
-    Cookie(CookieUser),
-    Token(TokenUser),
+pub enum Authentication {
+    Cookie(CookieAuthentication),
+    Token(TokenAuthentication),
 }
 
 #[derive(Debug)]
-pub struct CookieUser {
+pub struct CookieAuthentication {
     user: User,
 }
 
 #[derive(Debug)]
-pub struct TokenUser {
+pub struct TokenAuthentication {
     token: ApiToken,
     user: User,
 }
 
-impl AuthenticatedUser {
+impl Authentication {
     pub fn user_id(&self) -> i32 {
         self.user().id
     }
@@ -138,20 +138,20 @@ impl AuthenticatedUser {
 
     pub fn api_token(&self) -> Option<&ApiToken> {
         match self {
-            AuthenticatedUser::Token(token) => Some(&token.token),
+            Authentication::Token(token) => Some(&token.token),
             _ => None,
         }
     }
 
     pub fn user(&self) -> &User {
         match self {
-            AuthenticatedUser::Cookie(cookie) => &cookie.user,
-            AuthenticatedUser::Token(token) => &token.user,
+            Authentication::Cookie(cookie) => &cookie.user,
+            Authentication::Token(token) => &token.user,
         }
     }
 }
 
-fn authenticate_user<B>(req: &Request<B>) -> AppResult<AuthenticatedUser> {
+fn authenticate_user<B>(req: &Request<B>) -> AppResult<Authentication> {
     controllers::util::verify_origin(req)?;
 
     let conn = req.app().db_write()?;
@@ -168,7 +168,7 @@ fn authenticate_user<B>(req: &Request<B>) -> AppResult<AuthenticatedUser> {
 
         req.add_custom_metadata("uid", id);
 
-        return Ok(AuthenticatedUser::Cookie(CookieUser { user }));
+        return Ok(Authentication::Cookie(CookieAuthentication { user }));
     }
 
     // Otherwise, look for an `Authorization` header on the request
@@ -194,7 +194,7 @@ fn authenticate_user<B>(req: &Request<B>) -> AppResult<AuthenticatedUser> {
         req.add_custom_metadata("uid", token.user_id);
         req.add_custom_metadata("tokenid", token.id);
 
-        return Ok(AuthenticatedUser::Token(TokenUser { user, token }));
+        return Ok(Authentication::Token(TokenAuthentication { user, token }));
     }
 
     // Unable to authenticate the user
