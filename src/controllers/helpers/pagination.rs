@@ -1,5 +1,6 @@
 use crate::config::Server;
 use crate::controllers::prelude::*;
+use crate::controllers::util::RequestPartsExt;
 use crate::middleware::log_request::CustomMetadataRequestExt;
 use crate::models::helpers::with_count::*;
 use crate::util::errors::{bad_request, AppResult};
@@ -72,7 +73,7 @@ impl PaginationOptionsBuilder {
         self
     }
 
-    pub(crate) fn gather<B>(self, req: &Request<B>) -> AppResult<PaginationOptions> {
+    pub(crate) fn gather<T: RequestPartsExt>(self, req: &T) -> AppResult<PaginationOptions> {
         let params = req.query();
         let page_param = params.get("page");
         let seek_param = params.get("seek");
