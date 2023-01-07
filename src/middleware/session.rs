@@ -1,3 +1,4 @@
+use crate::controllers::util::RequestPartsExt;
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
 use axum_extra::extract::SignedCookieJar;
@@ -63,7 +64,7 @@ pub trait RequestSession {
     fn session_remove(&mut self, key: &str) -> Option<String>;
 }
 
-impl<T> RequestSession for Request<T> {
+impl<T: RequestPartsExt> RequestSession for T {
     fn session_get(&self, key: &str) -> Option<String> {
         let session = self
             .extensions()
