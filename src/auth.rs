@@ -161,18 +161,16 @@ fn authenticate_via_cookie<T: RequestPartsExt>(
         .session_get("user_id")
         .and_then(|s| s.parse::<i32>().ok());
 
-    if let Some(id) = user_id_from_session {
-        let user = User::find(conn, id)
-            .map_err(|err| err.chain(internal("user_id from cookie not found in database")))?;
+    let Some(id) = user_id_from_session else { return Ok(None) };
 
-        ensure_not_locked(&user)?;
+    let user = User::find(conn, id)
+        .map_err(|err| err.chain(internal("user_id from cookie not found in database")))?;
 
-        req.add_custom_metadata("uid", id);
+    ensure_not_locked(&user)?;
 
-        return Ok(Some(CookieAuthentication { user }));
-    }
+    req.add_custom_metadata("uid", id);
 
-    Ok(None)
+    Ok(Some(CookieAuthentication { user }))
 }
 
 fn authenticate_via_token<T: RequestPartsExt>(
@@ -184,27 +182,25 @@ fn authenticate_via_token<T: RequestPartsExt>(
         .get(header::AUTHORIZATION)
         .and_then(|h| h.to_str().ok());
 
-    if let Some(header_value) = maybe_authorization {
-        let token = ApiToken::find_by_api_token(conn, header_value).map_err(|e| {
-            if e.is::<InsecurelyGeneratedTokenRevoked>() {
-                e
-            } else {
-                e.chain(internal("invalid token")).chain(forbidden())
-            }
-        })?;
+    let Some(header_value) = maybe_authorization else { return Ok(None) };
 
-        let user = User::find(conn, token.user_id)
-            .map_err(|err| err.chain(internal("user_id from token not found in database")))?;
+    let token = ApiToken::find_by_api_token(conn, header_value).map_err(|e| {
+        if e.is::<InsecurelyGeneratedTokenRevoked>() {
+            e
+        } else {
+            e.chain(internal("invalid token")).chain(forbidden())
+        }
+    })?;
 
-        ensure_not_locked(&user)?;
+    let user = User::find(conn, token.user_id)
+        .map_err(|err| err.chain(internal("user_id from token not found in database")))?;
 
-        req.add_custom_metadata("uid", token.user_id);
-        req.add_custom_metadata("tokenid", token.id);
+    ensure_not_locked(&user)?;
 
-        return Ok(Some(TokenAuthentication { user, token }));
-    }
+    req.add_custom_metadata("uid", token.user_id);
+    req.add_custom_metadata("tokenid", token.id);
 
-    Ok(None)
+    Ok(Some(TokenAuthentication { user, token }))
 }
 
 fn authenticate<T: RequestPartsExt>(req: &T) -> AppResult<Authentication> {
