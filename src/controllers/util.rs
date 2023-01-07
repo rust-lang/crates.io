@@ -8,7 +8,7 @@ use http::{Extensions, HeaderMap, HeaderValue, Method, Request, Uri, Version};
 /// We don't want to accept authenticated requests that originated from other sites, so this
 /// function returns an error if the Origin header doesn't match what we expect "this site" to
 /// be: https://crates.io in production, or http://localhost:port/ in development.
-pub fn verify_origin<B>(req: &Request<B>) -> AppResult<()> {
+pub fn verify_origin<T: RequestPartsExt>(req: &T) -> AppResult<()> {
     let headers = req.headers();
     let allowed_origins = &req.app().config.allowed_origins;
 
