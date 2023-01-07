@@ -20,6 +20,7 @@ mod prelude {
     pub use http::{header, Request, StatusCode};
 
     pub use super::conduit_axum::conduit_compat;
+    use crate::controllers::util::RequestPartsExt;
     pub use crate::middleware::app::RequestApp;
     pub use crate::util::errors::{cargo_err, AppError, AppResult, BoxedAppError};
     use indexmap::IndexMap;
@@ -34,7 +35,7 @@ mod prelude {
         fn query_with_params(&self, params: IndexMap<String, String>) -> String;
     }
 
-    impl<B> RequestUtils for Request<B> {
+    impl<T: RequestPartsExt> RequestUtils for T {
         fn query(&self) -> IndexMap<String, String> {
             url::form_urlencoded::parse(self.uri().query().unwrap_or("").as_bytes())
                 .into_owned()
