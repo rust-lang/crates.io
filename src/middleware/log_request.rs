@@ -1,6 +1,7 @@
 //! Log all requests in a format similar to Heroku's router, but with additional
 //! information that we care about like User-Agent
 
+use crate::controllers::util::RequestPartsExt;
 use crate::headers::{XRealIp, XRequestId};
 use crate::middleware::normalize_path::OriginalPath;
 use axum::headers::UserAgent;
@@ -140,22 +141,18 @@ pub async fn log_requests<B>(
 pub struct CustomMetadata(Arc<Mutex<Vec<(&'static str, String)>>>);
 
 pub trait CustomMetadataRequestExt {
+    fn add_custom_metadata<V: Display>(&self, key: &'static str, value: V);
+}
+
+impl<T: RequestPartsExt> CustomMetadataRequestExt for T {
     fn add_custom_metadata<V: Display>(&self, key: &'static str, value: V) {
-        if let Some(metadata) = self.metadata_extension() {
+        if let Some(metadata) = self.extensions().get::<CustomMetadata>() {
             if let Ok(mut metadata) = metadata.lock() {
                 metadata.push((key, value.to_string()));
             }
         }
 
         sentry::configure_scope(|scope| scope.set_extra(key, value.to_string().into()));
-    }
-
-    fn metadata_extension(&self) -> Option<&CustomMetadata>;
-}
-
-impl<B> CustomMetadataRequestExt for Request<B> {
-    fn metadata_extension(&self) -> Option<&CustomMetadata> {
-        self.extensions().get::<CustomMetadata>()
     }
 }
 
