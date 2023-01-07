@@ -4,6 +4,7 @@ use axum::response::Response;
 use http::Request;
 
 use crate::app::AppState;
+use crate::controllers::util::RequestPartsExt;
 
 /// `axum` middleware that injects the `AppState` instance into the `Request` extensions.
 pub async fn add_app_state_extension<B>(
@@ -21,7 +22,7 @@ pub trait RequestApp {
     fn app(&self) -> &AppState;
 }
 
-impl<T> RequestApp for Request<T> {
+impl<T: RequestPartsExt> RequestApp for T {
     fn app(&self) -> &AppState {
         self.extensions().get::<AppState>().expect("Missing app")
     }
