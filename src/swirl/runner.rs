@@ -190,9 +190,18 @@ impl Runner {
                         break;
                     }
                     warn!("Rolling back a transaction due to a panic in a background task");
-                    let _ = transaction_manager
+                    match transaction_manager
                         .rollback_transaction(conn)
-                        .map_err(|e| error!("Error while rolling back transaction: {e}"));
+                        {
+                            Ok(_) => (),
+                            Err(e) => {
+                                error!("Leaking a thread and database connection because of an error while rolling back transaction: {e}");
+                                loop {
+                                    std::thread::sleep(Duration::from_secs(24 * 60 * 60));
+                                    error!("How am I still alive?");
+                                }
+                            }
+                        }
                 }
 
                 match result {
