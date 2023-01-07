@@ -9,6 +9,7 @@ use crate::util::errors::{
     account_locked, forbidden, internal, AppError, AppResult, InsecurelyGeneratedTokenRevoked,
 };
 use chrono::Utc;
+use diesel::PgConnection;
 use http::header;
 
 #[derive(Debug, Clone)]
@@ -152,34 +153,39 @@ impl Authentication {
     }
 }
 
-fn authenticate_user<T: RequestPartsExt>(req: &T) -> AppResult<Authentication> {
-    controllers::util::verify_origin(req)?;
-
-    let conn = req.app().db_write()?;
-
+fn authenticate_via_cookie<T: RequestPartsExt>(
+    req: &T,
+    conn: &PgConnection,
+) -> AppResult<Option<CookieAuthentication>> {
     let user_id_from_session = req
         .session_get("user_id")
         .and_then(|s| s.parse::<i32>().ok());
 
     if let Some(id) = user_id_from_session {
-        let user = User::find(&conn, id)
+        let user = User::find(conn, id)
             .map_err(|err| err.chain(internal("user_id from cookie not found in database")))?;
 
         ensure_not_locked(&user)?;
 
         req.add_custom_metadata("uid", id);
 
-        return Ok(Authentication::Cookie(CookieAuthentication { user }));
+        return Ok(Some(CookieAuthentication { user }));
     }
 
-    // Otherwise, look for an `Authorization` header on the request
+    Ok(None)
+}
+
+fn authenticate_via_token<T: RequestPartsExt>(
+    req: &T,
+    conn: &PgConnection,
+) -> AppResult<Option<TokenAuthentication>> {
     let maybe_authorization = req
         .headers()
         .get(header::AUTHORIZATION)
         .and_then(|h| h.to_str().ok());
 
     if let Some(header_value) = maybe_authorization {
-        let token = ApiToken::find_by_api_token(&conn, header_value).map_err(|e| {
+        let token = ApiToken::find_by_api_token(conn, header_value).map_err(|e| {
             if e.is::<InsecurelyGeneratedTokenRevoked>() {
                 e
             } else {
@@ -187,7 +193,7 @@ fn authenticate_user<T: RequestPartsExt>(req: &T) -> AppResult<Authentication> {
             }
         })?;
 
-        let user = User::find(&conn, token.user_id)
+        let user = User::find(conn, token.user_id)
             .map_err(|err| err.chain(internal("user_id from token not found in database")))?;
 
         ensure_not_locked(&user)?;
@@ -195,7 +201,27 @@ fn authenticate_user<T: RequestPartsExt>(req: &T) -> AppResult<Authentication> {
         req.add_custom_metadata("uid", token.user_id);
         req.add_custom_metadata("tokenid", token.id);
 
-        return Ok(Authentication::Token(TokenAuthentication { user, token }));
+        return Ok(Some(TokenAuthentication { user, token }));
+    }
+
+    Ok(None)
+}
+
+fn authenticate_user<T: RequestPartsExt>(req: &T) -> AppResult<Authentication> {
+    controllers::util::verify_origin(req)?;
+
+    let conn = req.app().db_write()?;
+
+    match authenticate_via_cookie(req, &conn) {
+        Ok(None) => {}
+        Ok(Some(auth)) => return Ok(Authentication::Cookie(auth)),
+        Err(err) => return Err(err),
+    }
+
+    match authenticate_via_token(req, &conn) {
+        Ok(None) => {}
+        Ok(Some(auth)) => return Ok(Authentication::Token(auth)),
+        Err(err) => return Err(err),
     }
 
     // Unable to authenticate the user
