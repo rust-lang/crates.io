@@ -57,7 +57,7 @@ impl AuthCheck {
     }
 
     pub fn check<T: RequestPartsExt>(&self, request: &T) -> AppResult<Authentication> {
-        let auth = authenticate_user(request)?;
+        let auth = authenticate(request)?;
 
         if let Some(token) = auth.api_token() {
             if !self.allow_token {
@@ -207,7 +207,7 @@ fn authenticate_via_token<T: RequestPartsExt>(
     Ok(None)
 }
 
-fn authenticate_user<T: RequestPartsExt>(req: &T) -> AppResult<Authentication> {
+fn authenticate<T: RequestPartsExt>(req: &T) -> AppResult<Authentication> {
     controllers::util::verify_origin(req)?;
 
     let conn = req.app().db_write()?;
