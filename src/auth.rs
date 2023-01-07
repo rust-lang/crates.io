@@ -1,4 +1,5 @@
 use crate::controllers;
+use crate::controllers::util::RequestPartsExt;
 use crate::middleware::app::RequestApp;
 use crate::middleware::log_request::CustomMetadataRequestExt;
 use crate::middleware::session::RequestSession;
@@ -8,7 +9,7 @@ use crate::util::errors::{
     account_locked, forbidden, internal, AppError, AppResult, InsecurelyGeneratedTokenRevoked,
 };
 use chrono::Utc;
-use http::{header, Request};
+use http::header;
 
 #[derive(Debug, Clone)]
 pub struct AuthCheck {
@@ -54,7 +55,7 @@ impl AuthCheck {
         }
     }
 
-    pub fn check<B>(&self, request: &Request<B>) -> AppResult<Authentication> {
+    pub fn check<T: RequestPartsExt>(&self, request: &T) -> AppResult<Authentication> {
         let auth = authenticate_user(request)?;
 
         if let Some(token) = auth.api_token() {
@@ -151,7 +152,7 @@ impl Authentication {
     }
 }
 
-fn authenticate_user<B>(req: &Request<B>) -> AppResult<Authentication> {
+fn authenticate_user<T: RequestPartsExt>(req: &T) -> AppResult<Authentication> {
     controllers::util::verify_origin(req)?;
 
     let conn = req.app().db_write()?;
