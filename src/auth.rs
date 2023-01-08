@@ -57,7 +57,9 @@ impl AuthCheck {
     }
 
     pub fn check<T: RequestPartsExt>(&self, request: &T) -> AppResult<Authentication> {
-        let auth = authenticate(request)?;
+        let conn = request.app().db_write()?;
+
+        let auth = authenticate(request, &conn)?;
 
         if let Some(token) = auth.api_token() {
             if !self.allow_token {
@@ -203,18 +205,16 @@ fn authenticate_via_token<T: RequestPartsExt>(
     Ok(Some(TokenAuthentication { user, token }))
 }
 
-fn authenticate<T: RequestPartsExt>(req: &T) -> AppResult<Authentication> {
+fn authenticate<T: RequestPartsExt>(req: &T, conn: &PgConnection) -> AppResult<Authentication> {
     controllers::util::verify_origin(req)?;
 
-    let conn = req.app().db_write()?;
-
-    match authenticate_via_cookie(req, &conn) {
+    match authenticate_via_cookie(req, conn) {
         Ok(None) => {}
         Ok(Some(auth)) => return Ok(Authentication::Cookie(auth)),
         Err(err) => return Err(err),
     }
 
-    match authenticate_via_token(req, &conn) {
+    match authenticate_via_token(req, conn) {
         Ok(None) => {}
         Ok(Some(auth)) => return Ok(Authentication::Token(auth)),
         Err(err) => return Err(err),
