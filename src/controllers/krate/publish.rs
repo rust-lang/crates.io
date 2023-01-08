@@ -316,8 +316,7 @@ fn parse_new_headers<B: Read>(req: &mut Request<B>) -> AppResult<EncodableCrateU
     }
     let mut json = vec![0; metadata_length as usize];
     read_fill(req.body_mut(), &mut json)?;
-    let json = String::from_utf8(json).map_err(|_| cargo_err("json body was not valid utf-8"))?;
-    let new: EncodableCrateUpload = serde_json::from_str(&json)
+    let new: EncodableCrateUpload = serde_json::from_slice(&json)
         .map_err(|e| cargo_err(&format_args!("invalid upload request: {e}")))?;
 
     // Make sure required fields are provided
