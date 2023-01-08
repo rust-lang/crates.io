@@ -188,7 +188,7 @@ fn alert_revoke_token(
         "Active API token received and revoked (true positive)",
     );
 
-    if let Err(error) = send_notification_email(&token, alert, state) {
+    if let Err(error) = send_notification_email(&token, alert, state, &conn) {
         warn!(
             token_id = %token.id, user_id = %token.user_id, ?error,
             "Failed to send email notification",
@@ -202,11 +202,10 @@ fn send_notification_email(
     token: &ApiToken,
     alert: &GitHubSecretAlert,
     state: &AppState,
+    conn: &PgConnection,
 ) -> anyhow::Result<()> {
-    let conn = state.db_read()?;
-
-    let user = User::find(&conn, token.user_id).context("Failed to find user")?;
-    let Some(email) = user.email(&conn)? else {
+    let user = User::find(conn, token.user_id).context("Failed to find user")?;
+    let Some(email) = user.email(conn)? else {
         return Err(anyhow!("No address found"));
     };
 
