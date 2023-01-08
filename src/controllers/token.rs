@@ -11,8 +11,8 @@ use serde_json as json;
 /// Handles the `GET /me/tokens` route.
 pub async fn list(req: ConduitRequest) -> AppResult<Json<Value>> {
     conduit_compat(move || {
-        let auth = AuthCheck::only_cookie().check(&req)?;
         let conn = req.app().db_read_prefer_primary()?;
+        let auth = AuthCheck::only_cookie().check(&req, &conn)?;
         let user = auth.user();
 
         let tokens: Vec<ApiToken> = ApiToken::belonging_to(user)
@@ -48,14 +48,15 @@ pub async fn new(mut req: ConduitRequest) -> AppResult<Json<Value>> {
             return Err(bad_request("name must have a value"));
         }
 
-        let auth = AuthCheck::default().check(&req)?;
+        let conn = req.app().db_write()?;
+
+        let auth = AuthCheck::default().check(&req, &conn)?;
         if auth.api_token_id().is_some() {
             return Err(bad_request(
                 "cannot use an API token to create a new API token",
             ));
         }
 
-        let conn = req.app().db_write()?;
         let user = auth.user();
 
         let max_token_per_user = 500;
@@ -77,8 +78,8 @@ pub async fn new(mut req: ConduitRequest) -> AppResult<Json<Value>> {
 /// Handles the `DELETE /me/tokens/:id` route.
 pub async fn revoke(Path(id): Path<i32>, req: ConduitRequest) -> AppResult<Json<Value>> {
     conduit_compat(move || {
-        let auth = AuthCheck::default().check(&req)?;
         let conn = req.app().db_write()?;
+        let auth = AuthCheck::default().check(&req, &conn)?;
         let user = auth.user();
         diesel::update(ApiToken::belonging_to(user).find(id))
             .set(api_tokens::revoked.eq(true))
@@ -92,12 +93,12 @@ pub async fn revoke(Path(id): Path<i32>, req: ConduitRequest) -> AppResult<Json<
 /// Handles the `DELETE /tokens/current` route.
 pub async fn revoke_current(req: ConduitRequest) -> AppResult<Response> {
     conduit_compat(move || {
-        let auth = AuthCheck::default().check(&req)?;
+        let conn = req.app().db_write()?;
+        let auth = AuthCheck::default().check(&req, &conn)?;
         let api_token_id = auth
             .api_token_id()
             .ok_or_else(|| bad_request("token not provided"))?;
 
-        let conn = req.app().db_write()?;
         diesel::update(api_tokens::table.filter(api_tokens::id.eq(api_token_id)))
             .set(api_tokens::revoked.eq(true))
             .execute(&*conn)?;

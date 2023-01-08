@@ -18,7 +18,8 @@ use std::collections::{HashMap, HashSet};
 /// Handles the `GET /api/v1/me/crate_owner_invitations` route.
 pub async fn list(req: ConduitRequest) -> AppResult<Json<Value>> {
     conduit_compat(move || {
-        let auth = AuthCheck::only_cookie().check(&req)?;
+        let conn = req.app().db_write()?;
+        let auth = AuthCheck::only_cookie().check(&req, &conn)?;
         let user_id = auth.user_id();
 
         let PrivateListResponse {
@@ -57,7 +58,8 @@ pub async fn list(req: ConduitRequest) -> AppResult<Json<Value>> {
 /// Handles the `GET /api/private/crate_owner_invitations` route.
 pub async fn private_list(req: ConduitRequest) -> AppResult<Json<PrivateListResponse>> {
     conduit_compat(move || {
-        let auth = AuthCheck::only_cookie().check(&req)?;
+        let conn = req.app().db_write()?;
+        let auth = AuthCheck::only_cookie().check(&req, &conn)?;
 
         let filter = if let Some(crate_name) = req.query().get("crate_name") {
             ListFilter::CrateName(crate_name.clone())
@@ -263,18 +265,19 @@ pub async fn handle_invite(mut req: ConduitRequest) -> AppResult<Json<Value>> {
 
         let crate_invite = crate_invite.crate_owner_invite;
 
-        let auth = AuthCheck::default().check(&req)?;
+        let state = req.app();
+        let conn = state.db_write()?;
+
+        let auth = AuthCheck::default().check(&req, &conn)?;
         let user_id = auth.user_id();
 
-        let state = req.app();
-        let conn = &*state.db_write()?;
         let config = &state.config;
 
-        let invitation = CrateOwnerInvitation::find_by_id(user_id, crate_invite.crate_id, conn)?;
+        let invitation = CrateOwnerInvitation::find_by_id(user_id, crate_invite.crate_id, &conn)?;
         if crate_invite.accepted {
-            invitation.accept(conn, config)?;
+            invitation.accept(&conn, config)?;
         } else {
-            invitation.decline(conn)?;
+            invitation.decline(&conn)?;
         }
 
         Ok(Json(json!({ "crate_owner_invitation": crate_invite })))

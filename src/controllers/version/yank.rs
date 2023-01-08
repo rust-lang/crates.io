@@ -48,13 +48,14 @@ fn modify_yank<B>(
         return Err(cargo_err(&format_args!("invalid semver: {version}")));
     }
 
+    let state = req.app();
+    let conn = state.db_write()?;
+
     let auth = AuthCheck::default()
         .with_endpoint_scope(EndpointScope::Yank)
         .for_crate(crate_name)
-        .check(req)?;
+        .check(req, &conn)?;
 
-    let state = req.app();
-    let conn = state.db_write()?;
     let (version, krate) = version_and_crate(&conn, crate_name, version)?;
     let api_token_id = auth.api_token_id();
     let user = auth.user();

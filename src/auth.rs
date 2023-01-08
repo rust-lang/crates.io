@@ -1,6 +1,5 @@
 use crate::controllers;
 use crate::controllers::util::RequestPartsExt;
-use crate::middleware::app::RequestApp;
 use crate::middleware::log_request::CustomMetadataRequestExt;
 use crate::middleware::session::RequestSession;
 use crate::models::token::{CrateScope, EndpointScope};
@@ -56,10 +55,12 @@ impl AuthCheck {
         }
     }
 
-    pub fn check<T: RequestPartsExt>(&self, request: &T) -> AppResult<Authentication> {
-        let conn = request.app().db_write()?;
-
-        let auth = authenticate(request, &conn)?;
+    pub fn check<T: RequestPartsExt>(
+        &self,
+        request: &T,
+        conn: &PgConnection,
+    ) -> AppResult<Authentication> {
+        let auth = authenticate(request, conn)?;
 
         if let Some(token) = auth.api_token() {
             if !self.allow_token {

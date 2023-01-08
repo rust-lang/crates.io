@@ -103,15 +103,15 @@ fn modify_owners<B: Read>(
     req: &mut Request<B>,
     add: bool,
 ) -> AppResult<Json<Value>> {
-    let auth = AuthCheck::default()
-        .with_endpoint_scope(EndpointScope::ChangeOwners)
-        .for_crate(crate_name)
-        .check(req)?;
-
     let logins = parse_owners_request(req)?;
     let app = req.app();
 
     let conn = app.db_write()?;
+    let auth = AuthCheck::default()
+        .with_endpoint_scope(EndpointScope::ChangeOwners)
+        .for_crate(crate_name)
+        .check(req, &conn)?;
+
     let user = auth.user();
 
     conn.transaction(|| {
