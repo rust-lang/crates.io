@@ -115,6 +115,8 @@ pub async fn search(req: ConduitRequest) -> AppResult<Json<Value>> {
             );
         }
 
+        let conn = req.app().db_read()?;
+
         if let Some(kws) = params.get("all_keywords") {
             // Calculating the total number of results with filters is not supported yet.
             supports_seek = false;
@@ -188,7 +190,7 @@ pub async fn search(req: ConduitRequest) -> AppResult<Json<Value>> {
             // Calculating the total number of results with filters is not supported yet.
             supports_seek = false;
 
-            let user_id = AuthCheck::default().check(&req)?.user_id();
+            let user_id = AuthCheck::default().check(&req, &conn)?.user_id();
 
             query = query.filter(
                 crates::id.eq_any(
@@ -250,7 +252,6 @@ pub async fn search(req: ConduitRequest) -> AppResult<Json<Value>> {
             .limit_page_numbers()
             .enable_seek(supports_seek)
             .gather(&req)?;
-        let conn = req.app().db_read()?;
 
         let (explicit_page, seek) = match pagination.page.clone() {
             Page::Numeric(_) => (true, None),

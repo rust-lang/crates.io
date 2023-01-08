@@ -82,7 +82,7 @@ pub async fn publish(mut req: ConduitRequest) -> AppResult<Json<GoodCrate>> {
         let auth = AuthCheck::default()
             .with_endpoint_scope(endpoint_scope)
             .for_crate(&new_crate.name)
-            .check(&req)?;
+            .check(&req, &conn)?;
 
         let api_token_id = auth.api_token_id();
         let user = auth.user();

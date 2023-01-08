@@ -15,8 +15,8 @@ use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCra
 /// Handles the `GET /me` route.
 pub async fn me(req: ConduitRequest) -> AppResult<Json<EncodableMe>> {
     conduit_compat(move || {
-        let user_id = AuthCheck::only_cookie().check(&req)?.user_id();
         let conn = req.app().db_read_prefer_primary()?;
+        let user_id = AuthCheck::only_cookie().check(&req, &conn)?.user_id();
 
         let (user, verified, email, verification_sent): (User, Option<bool>, Option<String>, bool) =
             users::table
@@ -59,7 +59,8 @@ pub async fn updates(req: ConduitRequest) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         use diesel::dsl::any;
 
-        let auth = AuthCheck::only_cookie().check(&req)?;
+        let conn = req.app().db_read_prefer_primary()?;
+        let auth = AuthCheck::only_cookie().check(&req, &conn)?;
         let user = auth.user();
 
         let followed_crates = Follow::belonging_to(user).select(follows::crate_id);
@@ -74,7 +75,6 @@ pub async fn updates(req: ConduitRequest) -> AppResult<Json<Value>> {
                 users::all_columns.nullable(),
             ))
             .pages_pagination(PaginationOptions::builder().gather(&req)?);
-        let conn = req.app().db_read_prefer_primary()?;
         let data: Paginated<(Version, String, Option<User>)> = query.load(&conn)?;
         let more = data.next_page_params().is_some();
         let versions = data.iter().map(|(v, _, _)| v).cloned().collect::<Vec<_>>();
@@ -107,8 +107,10 @@ pub async fn update_user(
         use self::emails::user_id;
         use diesel::insert_into;
 
-        let auth = AuthCheck::default().check(&req)?;
+        let state = req.app().clone();
+        let conn = state.db_write()?;
 
+        let auth = AuthCheck::default().check(&req, &conn)?;
         let user = auth.user();
 
         // need to check if current user matches user to be updated
@@ -138,8 +140,6 @@ pub async fn update_user(
             return Err(bad_request("empty email rejected"));
         }
 
-        let state = req.app();
-        let conn = state.db_write()?;
         conn.transaction::<_, BoxedAppError, _>(|| {
             let new_email = NewEmail {
                 user_id: user.id,
@@ -203,10 +203,10 @@ pub async fn regenerate_token_and_send(
         use diesel::dsl::sql;
         use diesel::update;
 
-        let auth = AuthCheck::default().check(&req)?;
-
         let state = req.app();
         let conn = state.db_write()?;
+
+        let auth = AuthCheck::default().check(&req, &conn)?;
         let user = auth.user();
 
         // need to check if current user matches user to be updated
@@ -249,8 +249,8 @@ pub async fn update_email_notifications(mut req: ConduitRequest) -> AppResult<Re
                 .map(|c| (c.id, c.email_notifications))
                 .collect();
 
-        let user_id = AuthCheck::default().check(&req)?.user_id();
         let conn = req.app().db_write()?;
+        let user_id = AuthCheck::default().check(&req, &conn)?.user_id();
 
         // Build inserts from existing crates belonging to the current user
         let to_insert = CrateOwner::by_owner_kind(OwnerKind::User)
