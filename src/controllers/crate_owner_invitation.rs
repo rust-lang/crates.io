@@ -18,13 +18,13 @@ use std::collections::{HashMap, HashSet};
 /// Handles the `GET /api/v1/me/crate_owner_invitations` route.
 pub async fn list(req: ConduitRequest) -> AppResult<Json<Value>> {
     conduit_compat(move || {
-        let conn = req.app().db_write()?;
+        let conn = req.app().db_read()?;
         let auth = AuthCheck::only_cookie().check(&req, &conn)?;
         let user_id = auth.user_id();
 
         let PrivateListResponse {
             invitations, users, ..
-        } = prepare_list(&req, auth, ListFilter::InviteeId(user_id))?;
+        } = prepare_list(&req, auth, ListFilter::InviteeId(user_id), &conn)?;
 
         // The schema for the private endpoints is converted to the schema used by v1 endpoints.
         let crate_owner_invitations = invitations
@@ -58,7 +58,7 @@ pub async fn list(req: ConduitRequest) -> AppResult<Json<Value>> {
 /// Handles the `GET /api/private/crate_owner_invitations` route.
 pub async fn private_list(req: ConduitRequest) -> AppResult<Json<PrivateListResponse>> {
     conduit_compat(move || {
-        let conn = req.app().db_write()?;
+        let conn = req.app().db_read()?;
         let auth = AuthCheck::only_cookie().check(&req, &conn)?;
 
         let filter = if let Some(crate_name) = req.query().get("crate_name") {
@@ -69,7 +69,7 @@ pub async fn private_list(req: ConduitRequest) -> AppResult<Json<PrivateListResp
             return Err(bad_request("missing or invalid filter"));
         };
 
-        let list = prepare_list(&req, auth, filter)?;
+        let list = prepare_list(&req, auth, filter, &conn)?;
         Ok(Json(list))
     })
     .await
@@ -84,6 +84,7 @@ fn prepare_list<B>(
     req: &Request<B>,
     auth: Authentication,
     filter: ListFilter,
+    conn: &PgConnection,
 ) -> AppResult<PrivateListResponse> {
     let pagination: PaginationOptions = PaginationOptions::builder()
         .enable_pages(false)
@@ -93,7 +94,6 @@ fn prepare_list<B>(
     let user = auth.user();
 
     let state = req.app();
-    let conn = state.db_read()?;
     let config = &state.config;
 
     let mut crate_names = HashMap::new();
@@ -104,8 +104,8 @@ fn prepare_list<B>(
         match filter {
             ListFilter::CrateName(crate_name) => {
                 // Only allow crate owners to query pending invitations for their crate.
-                let krate: Crate = Crate::by_name(&crate_name).first(&*conn)?;
-                let owners = krate.owners(&conn)?;
+                let krate: Crate = Crate::by_name(&crate_name).first(conn)?;
+                let owners = krate.owners(conn)?;
                 if user.rights(state, &owners)? != Rights::Full {
                     return Err(forbidden());
                 }
@@ -137,7 +137,7 @@ fn prepare_list<B>(
 
     // Load and paginate the results.
     let mut raw_invitations: Vec<CrateOwnerInvitation> = match pagination.page {
-        Page::Unspecified => query.load(&*conn)?,
+        Page::Unspecified => query.load(conn)?,
         Page::Seek(s) => {
             let seek_key: (i32, i32) = s.decode()?;
             query
@@ -148,7 +148,7 @@ fn prepare_list<B>(
                             .and(crate_owner_invitations::invited_user_id.gt(seek_key.1)),
                     ),
                 )
-                .load(&*conn)?
+                .load(conn)?
         }
         Page::Numeric(_) => unreachable!("page-based pagination is disabled"),
     };
@@ -184,7 +184,7 @@ fn prepare_list<B>(
         let new_names: Vec<(i32, String)> = crates::table
             .select((crates::id, crates::name))
             .filter(crates::id.eq_any(missing_crate_names))
-            .load(&*conn)?;
+            .load(conn)?;
         for (id, name) in new_names.into_iter() {
             crate_names.insert(id, name);
         }
@@ -202,7 +202,7 @@ fn prepare_list<B>(
     if !missing_users.is_empty() {
         let new_users: Vec<User> = users::table
             .filter(users::id.eq_any(missing_users))
-            .load(&*conn)?;
+            .load(conn)?;
         for user in new_users.into_iter() {
             users.insert(user.id, user);
         }
