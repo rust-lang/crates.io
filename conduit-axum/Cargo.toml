@@ -9,7 +9,7 @@ edition = "2021"
 rust-version = "1.56.0"
 
 [dependencies]
-axum = "=0.6.1"
+axum = "=0.6.2"
 hyper = { version = "=0.14.23", features = ["server", "stream"] }
 http = "=0.2.8"
 percent-encoding = "=2.2.0"
