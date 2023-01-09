@@ -182,8 +182,7 @@ pub async fn publish(mut req: ConduitRequest) -> AppResult<Json<GoodCrate>> {
 
             // Read tarball from request
             let mut tarball = Vec::new();
-            LimitErrorReader::new(req.body_mut(), maximums.max_upload_size)
-                .read_to_end(&mut tarball)?;
+            req.body_mut().read_to_end(&mut tarball)?;
             let hex_cksum: String = Sha256::digest(&tarball).encode_hex();
 
             // Persist the new version of this crate
