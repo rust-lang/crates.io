@@ -162,7 +162,7 @@ pub async fn publish(mut req: ConduitRequest) -> AppResult<Json<GoodCrate>> {
             // this file length.
             let file_length = read_le_u32(req.body_mut())?;
 
-            let content_length = req.content_length();
+            let content_length = req.body().get_ref().len() as u64;
 
             let maximums = Maximums::new(
                 krate.max_upload_size,
