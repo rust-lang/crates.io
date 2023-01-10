@@ -287,11 +287,10 @@ pub async fn handle_invite(req: ConduitRequest) -> AppResult<Json<Value>> {
 
 /// Handles the `PUT /api/v1/me/crate_owner_invitations/accept/:token` route.
 pub async fn handle_invite_with_token(
+    state: State<AppState>,
     Path(token): Path<String>,
-    req: Parts,
 ) -> AppResult<Json<Value>> {
     conduit_compat(move || {
-        let state = req.app();
         let config = &state.config;
         let conn = state.db_write()?;
 

@@ -172,11 +172,14 @@ pub async fn update_user(
 }
 
 /// Handles the `PUT /confirm/:email_token` route
-pub async fn confirm_user_email(Path(token): Path<String>, req: Parts) -> AppResult<Response> {
+pub async fn confirm_user_email(
+    state: State<AppState>,
+    Path(token): Path<String>,
+) -> AppResult<Response> {
     conduit_compat(move || {
         use diesel::update;
 
-        let conn = req.app().db_write()?;
+        let conn = state.db_write()?;
 
         let updated_rows = update(emails::table.filter(emails::token.eq(&token)))
             .set(emails::verified.eq(true))

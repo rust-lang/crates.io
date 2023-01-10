@@ -19,15 +19,15 @@ use super::version_and_crate;
 /// fields for `id`, `version_id`, and `downloads` (which appears to always
 /// be 0)
 pub async fn dependencies(
+    state: State<AppState>,
     Path((crate_name, version)): Path<(String, String)>,
-    req: Parts,
 ) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         if semver::Version::parse(&version).is_err() {
             return Err(cargo_err(&format_args!("invalid semver: {version}")));
         }
 
-        let conn = req.app().db_read()?;
+        let conn = state.db_read()?;
         let (version, _) = version_and_crate(&conn, &crate_name, &version)?;
         let deps = version.dependencies(&conn)?;
         let deps = deps
@@ -56,15 +56,15 @@ pub async fn authors() -> Json<Value> {
 /// The frontend doesn't appear to hit this endpoint, but our tests do, and it seems to be a useful
 /// API route to have.
 pub async fn show(
+    state: State<AppState>,
     Path((crate_name, version)): Path<(String, String)>,
-    req: Parts,
 ) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         if semver::Version::parse(&version).is_err() {
             return Err(cargo_err(&format_args!("invalid semver: {version}")));
         }
 
-        let conn = req.app().db_read()?;
+        let conn = state.db_read()?;
         let (version, krate) = version_and_crate(&conn, &crate_name, &version)?;
         let published_by = version.published_by(&conn);
         let actions = VersionOwnerAction::by_version(&conn, &version)?;
