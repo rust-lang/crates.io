@@ -3,9 +3,9 @@ use reqwest::{blocking::Client, header};
 
 use crate::util::errors::{internal, AppResult};
 
+use reqwest::blocking::Body;
 use std::env;
 use std::fs::{self, File};
-use std::io::{Cursor, SeekFrom};
 use std::path::PathBuf;
 
 use crate::models::Crate;
@@ -109,11 +109,11 @@ impl Uploader {
     ///
     /// This function can panic on an `Self::Local` during development.
     /// Production and tests use `Self::S3` which should not panic.
-    pub fn upload<R: std::io::Read + std::io::Seek + Send + 'static>(
+    pub fn upload<R: Into<Body>>(
         &self,
         client: &Client,
         path: &str,
-        mut content: R,
+        content: R,
         content_type: &str,
         extra_headers: header::HeaderMap,
         upload_bucket: UploadBucket,
@@ -130,16 +130,7 @@ impl Uploader {
                 };
 
                 if let Some(bucket) = bucket {
-                    let content_length = content.seek(SeekFrom::End(0))?;
-                    content.rewind()?;
-                    bucket.put(
-                        client,
-                        path,
-                        content,
-                        content_length,
-                        content_type,
-                        extra_headers,
-                    )?;
+                    bucket.put(client, path, content, content_type, extra_headers)?;
                 }
 
                 Ok(Some(String::from(path)))
@@ -149,7 +140,9 @@ impl Uploader {
                 let dir = filename.parent().unwrap();
                 fs::create_dir_all(dir)?;
                 let mut file = File::create(&filename)?;
-                std::io::copy(&mut content, &mut file)?;
+                let mut body = content.into();
+                let mut buffer = body.buffer()?;
+                std::io::copy(&mut buffer, &mut file)?;
                 Ok(filename.to_str().map(String::from))
             }
         }
@@ -183,15 +176,14 @@ impl Uploader {
     }
 
     /// Uploads a crate and returns the checksum of the uploaded crate file.
-    pub fn upload_crate(
+    pub fn upload_crate<R: Into<Body>>(
         &self,
         http_client: &Client,
-        body: Vec<u8>,
+        body: R,
         krate: &Crate,
         vers: &semver::Version,
     ) -> AppResult<()> {
         let path = Uploader::crate_path(&krate.name, &vers.to_string());
-        let content = Cursor::new(body);
         let mut extra_headers = header::HeaderMap::new();
         extra_headers.insert(
             header::CACHE_CONTROL,
@@ -200,7 +192,7 @@ impl Uploader {
         self.upload(
             http_client,
             &path,
-            content,
+            body,
             "application/gzip",
             extra_headers,
             UploadBucket::Default,
@@ -217,7 +209,6 @@ impl Uploader {
         readme: String,
     ) -> Result<()> {
         let path = Uploader::readme_path(crate_name, vers);
-        let content = Cursor::new(readme);
         let mut extra_headers = header::HeaderMap::new();
         extra_headers.insert(
             header::CACHE_CONTROL,
@@ -226,7 +217,7 @@ impl Uploader {
         self.upload(
             http_client,
             &path,
-            content,
+            readme,
             "text/html",
             extra_headers,
             UploadBucket::Default,
@@ -241,7 +232,6 @@ impl Uploader {
         index: String,
     ) -> Result<()> {
         let path = Uploader::index_path(crate_name);
-        let content = Cursor::new(index);
         let mut extra_headers = header::HeaderMap::new();
         extra_headers.insert(
             header::CACHE_CONTROL,
@@ -250,7 +240,7 @@ impl Uploader {
         self.upload(
             http_client,
             &path,
-            content,
+            index,
             "text/plain",
             extra_headers,
             UploadBucket::Index,
