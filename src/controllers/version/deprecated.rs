@@ -54,9 +54,9 @@ pub async fn index(req: Parts) -> AppResult<Json<Value>> {
 /// Handles the `GET /versions/:version_id` route.
 /// The frontend doesn't appear to hit this endpoint. Instead, the version information appears to
 /// be returned by `krate::show`.
-pub async fn show_by_id(Path(id): Path<i32>, req: ConduitRequest) -> AppResult<Json<Value>> {
+pub async fn show_by_id(state: State<AppState>, Path(id): Path<i32>) -> AppResult<Json<Value>> {
     conduit_compat(move || {
-        let conn = req.app().db_read()?;
+        let conn = state.db_read()?;
         let (version, krate, published_by): (Version, Crate, Option<User>) = versions::table
             .find(id)
             .inner_join(crates::table)

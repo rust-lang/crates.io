@@ -6,12 +6,12 @@ use crate::sql::lower;
 use crate::views::EncodablePublicUser;
 
 /// Handles the `GET /users/:user_id` route.
-pub async fn show(Path(user_name): Path<String>, req: Parts) -> AppResult<Json<Value>> {
+pub async fn show(state: State<AppState>, Path(user_name): Path<String>) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         use self::users::dsl::{gh_login, id, users};
 
         let name = lower(&user_name);
-        let conn = req.app().db_read_prefer_primary()?;
+        let conn = state.db_read_prefer_primary()?;
         let user: User = users
             .filter(lower(gh_login).eq(name))
             .order(id.desc())
@@ -23,11 +23,11 @@ pub async fn show(Path(user_name): Path<String>, req: Parts) -> AppResult<Json<V
 }
 
 /// Handles the `GET /users/:user_id/stats` route.
-pub async fn stats(Path(user_id): Path<i32>, req: Parts) -> AppResult<Json<Value>> {
+pub async fn stats(state: State<AppState>, Path(user_id): Path<i32>) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         use diesel::dsl::sum;
 
-        let conn = req.app().db_read_prefer_primary()?;
+        let conn = state.db_read_prefer_primary()?;
 
         let data: i64 = CrateOwner::by_owner_kind(OwnerKind::User)
             .inner_join(crates::table)

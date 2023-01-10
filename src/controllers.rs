@@ -10,7 +10,7 @@ mod frontend_prelude {
 
 mod prelude {
     pub use super::helpers::ok_true;
-    pub use axum::extract::Path;
+    pub use axum::extract::{Path, State};
     pub use axum::response::{IntoResponse, Response};
     pub use axum::Json;
     pub use diesel::prelude::*;
@@ -20,6 +20,7 @@ mod prelude {
     pub use http::{header, request::Parts, Request, StatusCode};
 
     pub use super::conduit_axum::conduit_compat;
+    pub use crate::app::AppState;
     use crate::controllers::util::RequestPartsExt;
     pub use crate::middleware::app::RequestApp;
     pub use crate::util::errors::{cargo_err, AppError, AppResult, BoxedAppError};
