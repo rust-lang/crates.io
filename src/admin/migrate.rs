@@ -39,7 +39,6 @@ pub fn run(_opts: Opts) -> Result<(), Error> {
     let conn = &mut crate::db::oneoff_connection_with_config(&config)?;
 
     info!("Migrating the database");
-    // let migrations = ;
     let mut stdout = std::io::stdout();
     let mut harness = HarnessWithOutput::new(conn, &mut stdout);
     harness

@@ -405,7 +405,7 @@ mod tests {
 
     impl<'a> Drop for TestGuard<'a> {
         fn drop(&mut self) {
-            ::diesel::sql_query("TRUNCATE TABLE background_jobs")
+            diesel::sql_query("TRUNCATE TABLE background_jobs")
                 .execute(&mut *runner().connection().unwrap())
                 .unwrap();
         }
@@ -419,7 +419,7 @@ mod tests {
     }
 
     fn create_dummy_job(runner: &Runner) -> storage::BackgroundJob {
-        ::diesel::insert_into(background_jobs)
+        diesel::insert_into(background_jobs)
             .values((job_type.eq("Foo"), data.eq(serde_json::json!(null))))
             .returning((id, job_type, data))
             .get_result(&mut *runner.connection().unwrap())

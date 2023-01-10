@@ -1,6 +1,6 @@
 use diesel::deserialize::{self, FromSql};
 use diesel::pg::Pg;
-use diesel::sql_types::Integer;
+use diesel::sql_types::{Text, Integer};
 
 use crate::models::{Crate, Version};
 use crate::schema::*;
@@ -27,9 +27,9 @@ pub struct Dependency {
 pub struct ReverseDependency {
     #[diesel(embed)]
     pub dependency: Dependency,
-    #[diesel(sql_type = ::diesel::sql_types::Integer)]
+    #[diesel(sql_type = Integer)]
     pub crate_downloads: i32,
-    #[diesel(sql_type = ::diesel::sql_types::Text)]
+    #[diesel(sql_type = Text)]
     #[diesel(column_name = crate_name)]
     pub name: String,
 }
