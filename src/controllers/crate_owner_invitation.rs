@@ -16,7 +16,7 @@ use indexmap::IndexMap;
 use std::collections::{HashMap, HashSet};
 
 /// Handles the `GET /api/v1/me/crate_owner_invitations` route.
-pub async fn list(req: ConduitRequest) -> AppResult<Json<Value>> {
+pub async fn list(req: Parts) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         let conn = req.app().db_read()?;
         let auth = AuthCheck::only_cookie().check(&req, &conn)?;
@@ -56,7 +56,7 @@ pub async fn list(req: ConduitRequest) -> AppResult<Json<Value>> {
 }
 
 /// Handles the `GET /api/private/crate_owner_invitations` route.
-pub async fn private_list(req: ConduitRequest) -> AppResult<Json<PrivateListResponse>> {
+pub async fn private_list(req: Parts) -> AppResult<Json<PrivateListResponse>> {
     conduit_compat(move || {
         let conn = req.app().db_read()?;
         let auth = AuthCheck::only_cookie().check(&req, &conn)?;
@@ -80,8 +80,8 @@ enum ListFilter {
     InviteeId(i32),
 }
 
-fn prepare_list<B>(
-    req: &Request<B>,
+fn prepare_list(
+    req: &Parts,
     auth: Authentication,
     filter: ListFilter,
     conn: &PgConnection,
@@ -288,7 +288,7 @@ pub async fn handle_invite(req: ConduitRequest) -> AppResult<Json<Value>> {
 /// Handles the `PUT /api/v1/me/crate_owner_invitations/accept/:token` route.
 pub async fn handle_invite_with_token(
     Path(token): Path<String>,
-    req: ConduitRequest,
+    req: Parts,
 ) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         let state = req.app();

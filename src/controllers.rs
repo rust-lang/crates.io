@@ -17,7 +17,7 @@ mod prelude {
     pub use serde_json::Value;
 
     pub use conduit_axum::ConduitRequest;
-    pub use http::{header, Request, StatusCode};
+    pub use http::{header, request::Parts, Request, StatusCode};
 
     pub use super::conduit_axum::conduit_compat;
     use crate::controllers::util::RequestPartsExt;

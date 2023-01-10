@@ -17,7 +17,7 @@ pub struct IndexQuery {
 pub async fn index(
     state: State<AppState>,
     qp: Query<IndexQuery>,
-    req: ConduitRequest,
+    req: Parts,
 ) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         use crate::schema::keywords;

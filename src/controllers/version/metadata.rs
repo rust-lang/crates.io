@@ -20,7 +20,7 @@ use super::version_and_crate;
 /// be 0)
 pub async fn dependencies(
     Path((crate_name, version)): Path<(String, String)>,
-    req: ConduitRequest,
+    req: Parts,
 ) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         if semver::Version::parse(&version).is_err() {
@@ -57,7 +57,7 @@ pub async fn authors() -> Json<Value> {
 /// API route to have.
 pub async fn show(
     Path((crate_name, version)): Path<(String, String)>,
-    req: ConduitRequest,
+    req: Parts,
 ) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         if semver::Version::parse(&version).is_err() {

@@ -9,7 +9,7 @@ use axum::body::Bytes;
 use http::Request;
 
 /// Handles the `GET /crates/:crate_id/owners` route.
-pub async fn owners(Path(crate_name): Path<String>, req: ConduitRequest) -> AppResult<Json<Value>> {
+pub async fn owners(Path(crate_name): Path<String>, req: Parts) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         let conn = req.app().db_read()?;
         let krate: Crate = Crate::by_name(&crate_name).first(&*conn)?;
@@ -25,10 +25,7 @@ pub async fn owners(Path(crate_name): Path<String>, req: ConduitRequest) -> AppR
 }
 
 /// Handles the `GET /crates/:crate_id/owner_team` route.
-pub async fn owner_team(
-    Path(crate_name): Path<String>,
-    req: ConduitRequest,
-) -> AppResult<Json<Value>> {
+pub async fn owner_team(Path(crate_name): Path<String>, req: Parts) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         let conn = req.app().db_read()?;
         let krate: Crate = Crate::by_name(&crate_name).first(&*conn)?;
@@ -43,10 +40,7 @@ pub async fn owner_team(
 }
 
 /// Handles the `GET /crates/:crate_id/owner_user` route.
-pub async fn owner_user(
-    Path(crate_name): Path<String>,
-    req: ConduitRequest,
-) -> AppResult<Json<Value>> {
+pub async fn owner_user(Path(crate_name): Path<String>, req: Parts) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         let conn = req.app().db_read()?;
         let krate: Crate = Crate::by_name(&crate_name).first(&*conn)?;

@@ -21,7 +21,7 @@ use crate::worker;
 /// beginning to depend on the yanked crate version.
 pub async fn yank(
     Path((crate_name, version)): Path<(String, String)>,
-    req: ConduitRequest,
+    req: Parts,
 ) -> AppResult<Response> {
     conduit_compat(move || modify_yank(&crate_name, &version, &req, true)).await
 }
@@ -29,18 +29,13 @@ pub async fn yank(
 /// Handles the `PUT /crates/:crate_id/:version/unyank` route.
 pub async fn unyank(
     Path((crate_name, version)): Path<(String, String)>,
-    req: ConduitRequest,
+    req: Parts,
 ) -> AppResult<Response> {
     conduit_compat(move || modify_yank(&crate_name, &version, &req, false)).await
 }
 
 /// Changes `yanked` flag on a crate version record
-fn modify_yank<B>(
-    crate_name: &str,
-    version: &str,
-    req: &Request<B>,
-    yanked: bool,
-) -> AppResult<Response> {
+fn modify_yank(crate_name: &str, version: &str, req: &Parts, yanked: bool) -> AppResult<Response> {
     // FIXME: Should reject bad requests before authentication, but can't due to
     // lifetime issues with `req`.
 
