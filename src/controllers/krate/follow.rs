@@ -16,7 +16,7 @@ fn follow_target(crate_name: &str, conn: &DieselPooledConn<'_>, user_id: i32) ->
 }
 
 /// Handles the `PUT /crates/:crate_id/follow` route.
-pub async fn follow(Path(crate_name): Path<String>, req: ConduitRequest) -> AppResult<Response> {
+pub async fn follow(Path(crate_name): Path<String>, req: Parts) -> AppResult<Response> {
     conduit_compat(move || {
         let conn = req.app().db_write()?;
         let user_id = AuthCheck::default().check(&req, &conn)?.user_id();
@@ -32,7 +32,7 @@ pub async fn follow(Path(crate_name): Path<String>, req: ConduitRequest) -> AppR
 }
 
 /// Handles the `DELETE /crates/:crate_id/follow` route.
-pub async fn unfollow(Path(crate_name): Path<String>, req: ConduitRequest) -> AppResult<Response> {
+pub async fn unfollow(Path(crate_name): Path<String>, req: Parts) -> AppResult<Response> {
     conduit_compat(move || {
         let conn = req.app().db_write()?;
         let user_id = AuthCheck::default().check(&req, &conn)?.user_id();
@@ -45,10 +45,7 @@ pub async fn unfollow(Path(crate_name): Path<String>, req: ConduitRequest) -> Ap
 }
 
 /// Handles the `GET /crates/:crate_id/following` route.
-pub async fn following(
-    Path(crate_name): Path<String>,
-    req: ConduitRequest,
-) -> AppResult<Json<Value>> {
+pub async fn following(Path(crate_name): Path<String>, req: Parts) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         use diesel::dsl::exists;
 

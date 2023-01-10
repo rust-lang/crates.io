@@ -22,7 +22,7 @@ use crate::views::{
 use crate::models::krate::ALL_COLUMNS;
 
 /// Handles the `GET /summary` route.
-pub async fn summary(req: ConduitRequest) -> AppResult<Json<Value>> {
+pub async fn summary(req: Parts) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         use crate::schema::crates::dsl::*;
         use diesel::dsl::all;
@@ -129,7 +129,7 @@ pub async fn summary(req: ConduitRequest) -> AppResult<Json<Value>> {
 }
 
 /// Handles the `GET /crates/:crate_id` route.
-pub async fn show(Path(name): Path<String>, req: ConduitRequest) -> AppResult<Json<Value>> {
+pub async fn show(Path(name): Path<String>, req: Parts) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         let include = req
             .query()
@@ -307,7 +307,7 @@ impl FromStr for ShowIncludeMode {
 /// Handles the `GET /crates/:crate_id/:version/readme` route.
 pub async fn readme(
     Path((crate_name, version)): Path<(String, String)>,
-    req: ConduitRequest,
+    req: Parts,
 ) -> AppResult<Response> {
     conduit_compat(move || {
         let redirect_url = req
@@ -328,10 +328,7 @@ pub async fn readme(
 /// Handles the `GET /crates/:crate_id/versions` route.
 // FIXME: Not sure why this is necessary since /crates/:crate_id returns
 // this information already, but ember is definitely requesting it
-pub async fn versions(
-    Path(crate_name): Path<String>,
-    req: ConduitRequest,
-) -> AppResult<Json<Value>> {
+pub async fn versions(Path(crate_name): Path<String>, req: Parts) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         let conn = req.app().db_read()?;
         let krate: Crate = Crate::by_name(&crate_name).first(&*conn)?;
@@ -361,10 +358,7 @@ pub async fn versions(
 }
 
 /// Handles the `GET /crates/:crate_id/reverse_dependencies` route.
-pub async fn reverse_dependencies(
-    Path(name): Path<String>,
-    req: ConduitRequest,
-) -> AppResult<Json<Value>> {
+pub async fn reverse_dependencies(Path(name): Path<String>, req: Parts) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         use diesel::dsl::any;
 

@@ -6,7 +6,7 @@ use crate::schema::categories;
 use crate::views::{EncodableCategory, EncodableCategoryWithSubcategories};
 
 /// Handles the `GET /categories` route.
-pub async fn index(req: ConduitRequest) -> AppResult<Json<Value>> {
+pub async fn index(req: Parts) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         let query = req.query();
         // FIXME: There are 69 categories, 47 top level. This isn't going to
@@ -36,7 +36,7 @@ pub async fn index(req: ConduitRequest) -> AppResult<Json<Value>> {
 }
 
 /// Handles the `GET /categories/:category_id` route.
-pub async fn show(Path(slug): Path<String>, req: ConduitRequest) -> AppResult<Json<Value>> {
+pub async fn show(Path(slug): Path<String>, req: Parts) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         let conn = req.app().db_read()?;
         let cat: Category = Category::by_slug(&slug).first(&*conn)?;
@@ -69,7 +69,7 @@ pub async fn show(Path(slug): Path<String>, req: ConduitRequest) -> AppResult<Js
 }
 
 /// Handles the `GET /category_slugs` route.
-pub async fn slugs(req: ConduitRequest) -> AppResult<Json<Value>> {
+pub async fn slugs(req: Parts) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         let conn = req.app().db_read()?;
         let slugs: Vec<Slug> = categories::table

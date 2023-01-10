@@ -38,7 +38,7 @@ use crate::sql::{array_agg, canon_crate_name, lower};
 /// caused the break. In the future, we should look at splitting this
 /// function out to cover the different use cases, and create unit tests
 /// for them.
-pub async fn search(req: ConduitRequest) -> AppResult<Json<Value>> {
+pub async fn search(req: Parts) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         use diesel::sql_types::{Bool, Text};
 
@@ -203,7 +203,7 @@ pub async fn search(req: ConduitRequest) -> AppResult<Json<Value>> {
             // Calculating the total number of results with filters is not supported yet.
             supports_seek = false;
 
-            let query_bytes = req.uri().query().unwrap_or("").as_bytes();
+            let query_bytes = req.uri.query().unwrap_or("").as_bytes();
             let ids: Vec<_> = url::form_urlencoded::parse(query_bytes)
                 .filter(|(key, _)| key == "ids[]")
                 .map(|(_, value)| value.to_string())

@@ -9,7 +9,7 @@ use axum::response::IntoResponse;
 use serde_json as json;
 
 /// Handles the `GET /me/tokens` route.
-pub async fn list(req: ConduitRequest) -> AppResult<Json<Value>> {
+pub async fn list(req: Parts) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         let conn = req.app().db_read_prefer_primary()?;
         let auth = AuthCheck::only_cookie().check(&req, &conn)?;
@@ -76,7 +76,7 @@ pub async fn new(req: ConduitRequest) -> AppResult<Json<Value>> {
 }
 
 /// Handles the `DELETE /me/tokens/:id` route.
-pub async fn revoke(Path(id): Path<i32>, req: ConduitRequest) -> AppResult<Json<Value>> {
+pub async fn revoke(Path(id): Path<i32>, req: Parts) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         let conn = req.app().db_write()?;
         let auth = AuthCheck::default().check(&req, &conn)?;
@@ -91,7 +91,7 @@ pub async fn revoke(Path(id): Path<i32>, req: ConduitRequest) -> AppResult<Json<
 }
 
 /// Handles the `DELETE /tokens/current` route.
-pub async fn revoke_current(req: ConduitRequest) -> AppResult<Response> {
+pub async fn revoke_current(req: Parts) -> AppResult<Response> {
     conduit_compat(move || {
         let conn = req.app().db_write()?;
         let auth = AuthCheck::default().check(&req, &conn)?;

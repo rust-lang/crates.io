@@ -13,10 +13,7 @@ use crate::sql::to_char;
 use crate::views::EncodableVersionDownload;
 
 /// Handles the `GET /crates/:crate_id/downloads` route.
-pub async fn downloads(
-    Path(crate_name): Path<String>,
-    req: ConduitRequest,
-) -> AppResult<Json<Value>> {
+pub async fn downloads(Path(crate_name): Path<String>, req: Parts) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         use diesel::dsl::*;
         use diesel::sql_types::BigInt;

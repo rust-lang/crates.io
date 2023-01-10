@@ -15,7 +15,7 @@ use chrono::{Duration, NaiveDate, Utc};
 /// This returns a URL to the location where the crate is stored.
 pub async fn download(
     Path((mut crate_name, version)): Path<(String, String)>,
-    req: ConduitRequest,
+    req: Parts,
 ) -> AppResult<Response> {
     conduit_compat(move || {
         let app = req.app();
@@ -115,7 +115,7 @@ pub async fn download(
 /// Handles the `GET /crates/:crate_id/:version/downloads` route.
 pub async fn downloads(
     Path((crate_name, version)): Path<(String, String)>,
-    req: ConduitRequest,
+    req: Parts,
 ) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         if semver::Version::parse(&version).is_err() {

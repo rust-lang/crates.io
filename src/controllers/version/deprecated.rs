@@ -12,13 +12,13 @@ use crate::schema::*;
 use crate::views::EncodableVersion;
 
 /// Handles the `GET /versions` route.
-pub async fn index(req: ConduitRequest) -> AppResult<Json<Value>> {
+pub async fn index(req: Parts) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         use diesel::dsl::any;
         let conn = req.app().db_read()?;
 
         // Extract all ids requested.
-        let query = url::form_urlencoded::parse(req.uri().query().unwrap_or("").as_bytes());
+        let query = url::form_urlencoded::parse(req.uri.query().unwrap_or("").as_bytes());
         let ids = query
             .filter_map(|(ref a, ref b)| if *a == "ids[]" { b.parse().ok() } else { None })
             .collect::<Vec<i32>>();
