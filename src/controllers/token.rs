@@ -26,7 +26,7 @@ pub async fn list(req: ConduitRequest) -> AppResult<Json<Value>> {
 }
 
 /// Handles the `PUT /me/tokens` route.
-pub async fn new(mut req: ConduitRequest) -> AppResult<Json<Value>> {
+pub async fn new(req: ConduitRequest) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         /// The incoming serialization format for the `ApiToken` model.
         #[derive(Deserialize, Serialize)]
@@ -40,7 +40,7 @@ pub async fn new(mut req: ConduitRequest) -> AppResult<Json<Value>> {
             api_token: NewApiToken,
         }
 
-        let new: NewApiTokenRequest = json::from_reader(req.body_mut())
+        let new: NewApiTokenRequest = json::from_slice(req.body())
             .map_err(|e| bad_request(&format!("invalid new token request: {e:?}")))?;
 
         let name = &new.api_token.name;

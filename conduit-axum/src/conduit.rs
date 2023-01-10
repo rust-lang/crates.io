@@ -5,7 +5,6 @@ use axum::{async_trait, RequestExt};
 use http_body::LengthLimitError;
 use hyper::Body;
 use std::error::Error;
-use std::io::Cursor;
 use std::ops::{Deref, DerefMut};
 
 use crate::response::AxumResponse;
@@ -31,10 +30,10 @@ pub fn box_error<E: Error + Send + 'static>(error: E) -> BoxError {
 }
 
 #[derive(Debug)]
-pub struct ConduitRequest(pub Request<Cursor<Bytes>>);
+pub struct ConduitRequest(pub Request<Bytes>);
 
 impl Deref for ConduitRequest {
-    type Target = Request<Cursor<Bytes>>;
+    type Target = Request<Bytes>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -80,6 +79,6 @@ where
             }
         };
 
-        Ok(ConduitRequest(request.map(Cursor::new)))
+        Ok(ConduitRequest(request))
     }
 }

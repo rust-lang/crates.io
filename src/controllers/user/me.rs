@@ -101,7 +101,7 @@ pub async fn updates(req: ConduitRequest) -> AppResult<Json<Value>> {
 /// Handles the `PUT /users/:user_id` route.
 pub async fn update_user(
     Path(param_user_id): Path<i32>,
-    mut req: ConduitRequest,
+    req: ConduitRequest,
 ) -> AppResult<Response> {
     conduit_compat(move || {
         use self::emails::user_id;
@@ -128,8 +128,8 @@ pub async fn update_user(
             email: Option<String>,
         }
 
-        let user_update: UserUpdate = serde_json::from_reader(req.body_mut())
-            .map_err(|_| bad_request("invalid json request"))?;
+        let user_update: UserUpdate =
+            serde_json::from_slice(req.body()).map_err(|_| bad_request("invalid json request"))?;
 
         let user_email = match &user_update.user.email {
             Some(email) => email.trim(),
@@ -231,7 +231,7 @@ pub async fn regenerate_token_and_send(
 }
 
 /// Handles `PUT /me/email_notifications` route
-pub async fn update_email_notifications(mut req: ConduitRequest) -> AppResult<Response> {
+pub async fn update_email_notifications(req: ConduitRequest) -> AppResult<Response> {
     conduit_compat(move || {
         use self::crate_owners::dsl::*;
         use diesel::pg::upsert::excluded;
@@ -243,7 +243,7 @@ pub async fn update_email_notifications(mut req: ConduitRequest) -> AppResult<Re
         }
 
         let updates: HashMap<i32, bool> =
-            serde_json::from_reader::<_, Vec<CrateEmailNotifications>>(req.body_mut())
+            serde_json::from_slice::<Vec<CrateEmailNotifications>>(req.body())
                 .map_err(|_| bad_request("invalid json request"))?
                 .iter()
                 .map(|c| (c.id, c.email_notifications))
