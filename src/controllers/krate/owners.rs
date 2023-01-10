@@ -5,8 +5,8 @@ use crate::controllers::prelude::*;
 use crate::models::token::EndpointScope;
 use crate::models::{Crate, Owner, Rights, Team, User};
 use crate::views::EncodableOwner;
+use axum::body::Bytes;
 use http::Request;
-use std::io::Read;
 
 /// Handles the `GET /crates/:crate_id/owners` route.
 pub async fn owners(Path(crate_name): Path<String>, req: ConduitRequest) -> AppResult<Json<Value>> {
@@ -63,17 +63,17 @@ pub async fn owner_user(
 /// Handles the `PUT /crates/:crate_id/owners` route.
 pub async fn add_owners(
     Path(crate_name): Path<String>,
-    mut req: ConduitRequest,
+    req: ConduitRequest,
 ) -> AppResult<Json<Value>> {
-    conduit_compat(move || modify_owners(&crate_name, &mut req, true)).await
+    conduit_compat(move || modify_owners(&crate_name, &req, true)).await
 }
 
 /// Handles the `DELETE /crates/:crate_id/owners` route.
 pub async fn remove_owners(
     Path(crate_name): Path<String>,
-    mut req: ConduitRequest,
+    req: ConduitRequest,
 ) -> AppResult<Json<Value>> {
-    conduit_compat(move || modify_owners(&crate_name, &mut req, false)).await
+    conduit_compat(move || modify_owners(&crate_name, &req, false)).await
 }
 
 /// Parse the JSON request body of requests to modify the owners of a crate.
@@ -83,7 +83,7 @@ pub async fn remove_owners(
 /// ```json
 /// {"owners": ["username", "github:org:team", ...]}
 /// ```
-fn parse_owners_request<B: Read>(req: &mut Request<B>) -> AppResult<Vec<String>> {
+fn parse_owners_request(req: &Request<Bytes>) -> AppResult<Vec<String>> {
     #[derive(Deserialize)]
     struct Request {
         // identical, for back-compat (owners preferred)
@@ -91,18 +91,14 @@ fn parse_owners_request<B: Read>(req: &mut Request<B>) -> AppResult<Vec<String>>
         owners: Option<Vec<String>>,
     }
     let request: Request =
-        serde_json::from_reader(req.body_mut()).map_err(|_| cargo_err("invalid json request"))?;
+        serde_json::from_slice(req.body()).map_err(|_| cargo_err("invalid json request"))?;
     request
         .owners
         .or(request.users)
         .ok_or_else(|| cargo_err("invalid json request"))
 }
 
-fn modify_owners<B: Read>(
-    crate_name: &str,
-    req: &mut Request<B>,
-    add: bool,
-) -> AppResult<Json<Value>> {
+fn modify_owners(crate_name: &str, req: &Request<Bytes>, add: bool) -> AppResult<Json<Value>> {
     let logins = parse_owners_request(req)?;
     let app = req.app();
 

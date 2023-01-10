@@ -258,10 +258,10 @@ struct OwnerInvitation {
 }
 
 /// Handles the `PUT /api/v1/me/crate_owner_invitations/:crate_id` route.
-pub async fn handle_invite(mut req: ConduitRequest) -> AppResult<Json<Value>> {
+pub async fn handle_invite(req: ConduitRequest) -> AppResult<Json<Value>> {
     conduit_compat(move || {
-        let crate_invite: OwnerInvitation = serde_json::from_reader(req.body_mut())
-            .map_err(|_| bad_request("invalid json request"))?;
+        let crate_invite: OwnerInvitation =
+            serde_json::from_slice(req.body()).map_err(|_| bad_request("invalid json request"))?;
 
         let crate_invite = crate_invite.crate_owner_invite;
 

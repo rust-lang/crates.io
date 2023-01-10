@@ -46,8 +46,7 @@ pub const WILDCARD_ERROR_MESSAGE: &str = "wildcard (`*`) dependency constraints 
 /// threads and return completion or error through other methods  a `cargo publish
 /// --status` command, via crates.io's front end, or email.
 pub async fn publish(req: ConduitRequest) -> AppResult<Json<GoodCrate>> {
-    let (req, body) = req.0.into_parts();
-    let bytes = body.into_inner();
+    let (req, bytes) = req.0.into_parts();
     let (json_bytes, tarball_bytes) = split_body(bytes, &req)?;
 
     let new_crate: EncodableCrateUpload = serde_json::from_slice(&json_bytes)
