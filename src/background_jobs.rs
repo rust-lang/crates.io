@@ -3,6 +3,7 @@ use reqwest::blocking::Client;
 use std::panic::AssertUnwindSafe;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
+use crate::db::DieselPool;
 use crate::swirl::errors::EnqueueError;
 use crate::swirl::PerformError;
 use crate::uploaders::Uploader;
@@ -93,31 +94,34 @@ impl Job {
     pub(super) fn perform(
         self,
         env: &Option<Environment>,
-        conn: &PgConnection,
+        conn: &DieselPool,
     ) -> Result<(), PerformError> {
         let env = env
             .as_ref()
             .expect("Application should configure a background runner environment");
         match self {
-            Job::DailyDbMaintenance => worker::perform_daily_db_maintenance(conn),
+            Job::DailyDbMaintenance => conn.with_connection(&worker::perform_daily_db_maintenance),
             Job::DumpDb(args) => worker::perform_dump_db(env, args.database_url, args.target_name),
-            Job::IndexAddCrate(args) => worker::perform_index_add_crate(env, conn, &args.krate),
+            Job::IndexAddCrate(args) => conn
+                .with_connection(&|conn| worker::perform_index_add_crate(env, conn, &args.krate)),
             Job::IndexSquash => worker::perform_index_squash(env),
             Job::IndexSyncToHttp(args) => worker::perform_index_sync_to_http(env, args.crate_name),
-            Job::IndexUpdateYanked(args) => {
+            Job::IndexUpdateYanked(args) => conn.with_connection(&|conn| {
                 worker::perform_index_update_yanked(env, conn, &args.krate, &args.version_num)
-            }
+            }),
             Job::NormalizeIndex(args) => worker::perform_normalize_index(env, args),
-            Job::RenderAndUploadReadme(args) => worker::perform_render_and_upload_readme(
-                conn,
-                env,
-                args.version_id,
-                &args.text,
-                &args.readme_path,
-                args.base_url.as_deref(),
-                args.pkg_path_in_vcs.as_deref(),
-            ),
-            Job::UpdateDownloads => worker::perform_update_downloads(conn),
+            Job::RenderAndUploadReadme(args) => conn.with_connection(&|conn| {
+                worker::perform_render_and_upload_readme(
+                    conn,
+                    env,
+                    args.version_id,
+                    &args.text,
+                    &args.readme_path,
+                    args.base_url.as_deref(),
+                    args.pkg_path_in_vcs.as_deref(),
+                )
+            }),
+            Job::UpdateDownloads => conn.with_connection(&worker::perform_update_downloads),
         }
     }
 }
