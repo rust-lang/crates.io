@@ -1,4 +1,5 @@
 use crate::{server_error_response, spawn_blocking, ConduitRequest, HandlerResult, ServiceError};
+use axum::extract::DefaultBodyLimit;
 use axum::response::IntoResponse;
 use axum::Router;
 use http::header::HeaderName;
@@ -111,7 +112,9 @@ async fn spawn_http_server() -> (
     let (quit_tx, quit_rx) = oneshot::channel::<()>();
     let addr = ([127, 0, 0, 1], 0).into();
 
-    let router = Router::new().fallback(ok_result);
+    let router = Router::new()
+        .fallback(ok_result)
+        .layer(DefaultBodyLimit::max(4096));
     let make_service = router.into_make_service();
     let server = hyper::Server::bind(&addr).serve(make_service);
 
@@ -125,8 +128,7 @@ async fn spawn_http_server() -> (
 
 #[tokio::test]
 async fn content_length_too_large() {
-    const ACTUAL_BODY_SIZE: usize = 10_000;
-    const CLAIMED_CONTENT_LENGTH: u64 = 11_111_111_111_111_111_111;
+    const ACTUAL_BODY_SIZE: usize = 4097;
 
     let (url, server, quit_tx) = spawn_http_server().await;
 
@@ -136,10 +138,7 @@ async fn content_length_too_large() {
         .send_data(vec![0; ACTUAL_BODY_SIZE].into())
         .await
         .unwrap();
-    let req = hyper::Request::put(url)
-        .header(hyper::header::CONTENT_LENGTH, CLAIMED_CONTENT_LENGTH)
-        .body(body)
-        .unwrap();
+    let req = hyper::Request::put(url).body(body).unwrap();
 
     let resp = client
         .request(req)
