@@ -593,6 +593,7 @@ dependencies = [
  "axum",
  "futures-util",
  "http",
+ "http-body",
  "hyper",
  "percent-encoding",
  "sentry-core",
