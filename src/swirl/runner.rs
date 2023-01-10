@@ -172,23 +172,17 @@ impl Runner {
                     // TODO: Replace with flatten() once that stabilizes
                     .and_then(std::convert::identity);
 
+                // If the job panics it could leave the connection inside an inner transaction(s).
+                // Attempt to roll those back so we can mark the job as failed, but if the rollback
+                // fails then there isn't much we can do at this point so return early. `r2d2` will
+                // detect the bad state and drop it from the pool.
                 loop {
-                    let depth = get_transaction_depth(conn);
-                    if depth == Ok(initial_depth) {
+                    let depth = get_transaction_depth(conn)?;
+                    if depth == initial_depth {
                         break;
                     }
                     warn!("Rolling back a transaction due to a panic in a background task");
-                    match <AnsiTransactionManager as TransactionManager<PgConnection>>::rollback_transaction(conn)
-                        {
-                            Ok(_) => (),
-                            Err(e) => {
-                                error!("Leaking a thread and database connection because of an error while rolling back transaction: {e}");
-                                loop {
-                                    std::thread::sleep(Duration::from_secs(24 * 60 * 60));
-                                    error!("How am I still alive?");
-                                }
-                            }
-                        }
+                    AnsiTransactionManager::rollback_transaction(conn)?;
                 }
 
                 match result {
@@ -246,7 +240,7 @@ impl Runner {
 }
 
 fn get_transaction_depth(conn: &mut PgConnection) -> QueryResult<u32> {
-    let transaction_manager = <AnsiTransactionManager as TransactionManager<PgConnection>>::transaction_manager_status_mut(conn);
+    let transaction_manager = AnsiTransactionManager::transaction_manager_status_mut(conn);
     Ok(transaction_manager
         .transaction_depth()?
         .map(u32::from)
