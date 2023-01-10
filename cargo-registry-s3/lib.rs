@@ -37,12 +37,11 @@ impl Bucket {
         }
     }
 
-    pub fn put<R: std::io::Read + Send + 'static>(
+    pub fn put<R: Into<Body>>(
         &self,
         client: &Client,
         path: &str,
         content: R,
-        content_length: u64,
         content_type: &str,
         extra_headers: header::HeaderMap,
     ) -> Result<Response, Error> {
@@ -58,7 +57,7 @@ impl Bucket {
             .header(header::DATE, date)
             .header(header::USER_AGENT, "crates.io (https://crates.io)")
             .headers(extra_headers)
-            .body(Body::sized(content, content_length))
+            .body(content.into())
             .timeout(Duration::from_secs(60))
             .send()?
             .error_for_status()

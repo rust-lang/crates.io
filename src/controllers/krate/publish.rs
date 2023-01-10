@@ -1,15 +1,17 @@
 //! Functionality related to publishing a new crate or version of a crate.
 
 use crate::auth::AuthCheck;
+use axum::body::Bytes;
 use flate2::read::GzDecoder;
 use hex::ToHex;
-use http::Request;
+use hyper::body::Buf;
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 use std::io::Read;
 use std::path::Path;
 
 use crate::controllers::cargo_prelude::*;
+use crate::controllers::util::RequestPartsExt;
 use crate::models::{
     insert_version_owner_action, Category, Crate, DependencyKind, Keyword, NewCrate, NewVersion,
     Rights, VersionAction,
@@ -20,7 +22,7 @@ use crate::middleware::log_request::CustomMetadataRequestExt;
 use crate::models::token::EndpointScope;
 use crate::schema::*;
 use crate::util::errors::{cargo_err, AppResult};
-use crate::util::{read_fill, read_le_u32, CargoVcsInfo, LimitErrorReader, Maximums};
+use crate::util::{CargoVcsInfo, LimitErrorReader, Maximums};
 use crate::views::{
     EncodableCrate, EncodableCrateDependency, EncodableCrateUpload, GoodCrate, PublishWarnings,
 };
@@ -43,27 +45,38 @@ pub const WILDCARD_ERROR_MESSAGE: &str = "wildcard (`*`) dependency constraints 
 /// Currently blocks the HTTP thread, perhaps some function calls can spawn new
 /// threads and return completion or error through other methods  a `cargo publish
 /// --status` command, via crates.io's front end, or email.
-pub async fn publish(mut req: ConduitRequest) -> AppResult<Json<GoodCrate>> {
+pub async fn publish(req: ConduitRequest) -> AppResult<Json<GoodCrate>> {
+    let (req, body) = req.0.into_parts();
+    let bytes = body.into_inner();
+    let (json_bytes, tarball_bytes) = split_body(bytes, &req)?;
+
+    let new_crate: EncodableCrateUpload = serde_json::from_slice(&json_bytes)
+        .map_err(|e| cargo_err(&format_args!("invalid upload request: {e}")))?;
+
+    req.add_custom_metadata("crate_name", new_crate.name.to_string());
+    req.add_custom_metadata("crate_version", new_crate.vers.to_string());
+
+    // Make sure required fields are provided
+    fn empty(s: Option<&String>) -> bool {
+        s.map_or(true, String::is_empty)
+    }
+
+    // It can have up to three elements per below conditions.
+    let mut missing = Vec::with_capacity(3);
+
+    if empty(new_crate.description.as_ref()) {
+        missing.push("description");
+    }
+    if empty(new_crate.license.as_ref()) && empty(new_crate.license_file.as_ref()) {
+        missing.push("license");
+    }
+    if !missing.is_empty() {
+        let message = missing_metadata_error_message(&missing);
+        return Err(cargo_err(&message));
+    }
+
     conduit_compat(move || {
         let app = req.app().clone();
-
-        // The format of the req.body() of a publish request is as follows:
-        //
-        // metadata length
-        // metadata in JSON about the crate being published
-        // .crate tarball length
-        // .crate tarball file
-        //
-        // - The metadata is read and interpreted in the parse_new_headers function.
-        // - The .crate tarball length is read in this function in order to save the size of the file
-        //   in the version record in the database.
-        // - Then the .crate tarball length is passed to the upload_crate function where the actual
-        //   file is read and uploaded.
-
-        let new_crate = parse_new_headers(&mut req)?;
-
-        req.add_custom_metadata("crate_name", new_crate.name.to_string());
-        req.add_custom_metadata("crate_version", new_crate.vers.to_string());
 
         let conn = app.primary_database.get()?;
 
@@ -156,13 +169,7 @@ pub async fn publish(mut req: ConduitRequest) -> AppResult<Json<GoodCrate>> {
                 }
             }
 
-            // Length of the .crate tarball, which appears after the metadata in the request body.
-            // TODO: Not sure why we're using the total content length (metadata + .crate file length)
-            // to compare against the max upload size... investigate that and perhaps change to use
-            // this file length.
-            let file_length = read_le_u32(req.body_mut())?;
-
-            let content_length = req.body().get_ref().len() as u64;
+            let content_length = tarball_bytes.len() as u64;
 
             let maximums = Maximums::new(
                 krate.max_upload_size,
@@ -181,9 +188,7 @@ pub async fn publish(mut req: ConduitRequest) -> AppResult<Json<GoodCrate>> {
             let license = new_crate.license.clone();
 
             // Read tarball from request
-            let mut tarball = Vec::new();
-            req.body_mut().read_to_end(&mut tarball)?;
-            let hex_cksum: String = Sha256::digest(&tarball).encode_hex();
+            let hex_cksum: String = Sha256::digest(&tarball_bytes).encode_hex();
 
             // Persist the new version of this crate
             let version = NewVersion::new(
@@ -194,7 +199,7 @@ pub async fn publish(mut req: ConduitRequest) -> AppResult<Json<GoodCrate>> {
                 license_file,
                 // Downcast is okay because the file length must be less than the max upload size
                 // to get here, and max upload sizes are way less than i32 max
-                file_length as i32,
+                content_length as i32,
                 user.id,
                 hex_cksum.clone(),
                 links.clone(),
@@ -222,7 +227,8 @@ pub async fn publish(mut req: ConduitRequest) -> AppResult<Json<GoodCrate>> {
             let top_versions = krate.top_versions(&conn)?;
 
             let pkg_name = format!("{}-{}", krate.name, vers);
-            let cargo_vcs_info = verify_tarball(&pkg_name, &tarball, maximums.max_unpack_size)?;
+            let cargo_vcs_info =
+                verify_tarball(&pkg_name, &tarball_bytes, maximums.max_unpack_size)?;
             let pkg_path_in_vcs = cargo_vcs_info.map(|info| info.path_in_vcs);
 
             if let Some(readme) = new_crate.readme {
@@ -241,7 +247,7 @@ pub async fn publish(mut req: ConduitRequest) -> AppResult<Json<GoodCrate>> {
             // Upload crate tarball
             app.config
                 .uploader()
-                .upload_crate(app.http_client(), tarball, &krate, vers)?;
+                .upload_crate(app.http_client(), tarball_bytes, &krate, vers)?;
 
             let (features, features2): (BTreeMap<_, _>, BTreeMap<_, _>) =
                 features.into_iter().partition(|(_k, vals)| {
@@ -300,44 +306,36 @@ fn count_versions_published_today(krate_id: i32, conn: &PgConnection) -> QueryRe
         .get_result(conn)
 }
 
-/// Used by the `krate::new` function.
-///
-/// This function parses the JSON headers to interpret the data and validates
-/// the data during and after the parsing. Returns crate metadata.
-fn parse_new_headers<B: Read>(req: &mut Request<B>) -> AppResult<EncodableCrateUpload> {
-    // Read the json upload request
-    let metadata_length = u64::from(read_le_u32(req.body_mut())?);
-    req.add_custom_metadata("metadata_length", metadata_length);
+#[instrument(skip_all)]
+fn split_body<R: RequestPartsExt>(mut bytes: Bytes, req: &R) -> AppResult<(Bytes, Bytes)> {
+    // The format of the req.body() of a publish request is as follows:
+    //
+    // metadata length
+    // metadata in JSON about the crate being published
+    // .crate tarball length
+    // .crate tarball file
 
-    let max = req.app().config.max_upload_size;
-    if metadata_length > max {
-        return Err(cargo_err(&format_args!("max upload size is: {max}")));
-    }
-    let mut json = vec![0; metadata_length as usize];
-    read_fill(req.body_mut(), &mut json)?;
-    let new: EncodableCrateUpload = serde_json::from_slice(&json)
-        .map_err(|e| cargo_err(&format_args!("invalid upload request: {e}")))?;
+    let json_len = bytes.get_u32_le() as usize;
+    req.add_custom_metadata("metadata_length", json_len);
 
-    // Make sure required fields are provided
-    fn empty(s: Option<&String>) -> bool {
-        s.map_or(true, String::is_empty)
+    if json_len > bytes.len() {
+        return Err(cargo_err(&format!(
+            "invalid metadata length for remaining payload: {json_len}"
+        )));
     }
 
-    // It can have up to three elements per below conditions.
-    let mut missing = Vec::with_capacity(3);
+    let json_bytes = bytes.split_to(json_len);
 
-    if empty(new.description.as_ref()) {
-        missing.push("description");
-    }
-    if empty(new.license.as_ref()) && empty(new.license_file.as_ref()) {
-        missing.push("license");
-    }
-    if !missing.is_empty() {
-        let message = missing_metadata_error_message(&missing);
-        return Err(cargo_err(&message));
+    let tarball_len = bytes.get_u32_le() as usize;
+    if tarball_len > bytes.len() {
+        return Err(cargo_err(&format!(
+            "invalid metadata length for remaining payload: {tarball_len}"
+        )));
     }
 
-    Ok(new)
+    let tarball_bytes = bytes.split_to(tarball_len);
+
+    Ok((json_bytes, tarball_bytes))
 }
 
 pub fn missing_metadata_error_message(missing: &[&str]) -> String {
