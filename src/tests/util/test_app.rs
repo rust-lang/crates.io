@@ -11,6 +11,7 @@ use crate::util::github::{MockGitHubClient, MOCK_GITHUB_DATA};
 use cargo_registry::models::token::{CrateScope, EndpointScope};
 use cargo_registry::swirl::Runner;
 use diesel::PgConnection;
+use oauth2::{ClientId, ClientSecret};
 use reqwest::{blocking::Client, Proxy};
 use std::collections::HashSet;
 
@@ -334,8 +335,8 @@ fn simple_config() -> config::Server {
         base: config::Base::test(),
         db: config::DatabasePools::test_from_environment(),
         session_key: cookie::Key::derive_from("test this has to be over 32 bytes long".as_bytes()),
-        gh_client_id: dotenv::var("GH_CLIENT_ID").unwrap_or_default(),
-        gh_client_secret: dotenv::var("GH_CLIENT_SECRET").unwrap_or_default(),
+        gh_client_id: ClientId::new(dotenv::var("GH_CLIENT_ID").unwrap_or_default()),
+        gh_client_secret: ClientSecret::new(dotenv::var("GH_CLIENT_SECRET").unwrap_or_default()),
         max_upload_size: 3000,
         max_unpack_size: 2000,
         publish_rate_limit: Default::default(),

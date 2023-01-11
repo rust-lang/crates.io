@@ -84,9 +84,10 @@ fn get_public_keys(state: &AppState) -> Result<Vec<GitHubPublicKey>, BoxedAppErr
         }
     }
     // Fetch from GitHub API
-    let keys = state
-        .github
-        .public_keys(&state.config.gh_client_id, &state.config.gh_client_secret)?;
+    let keys = state.github.public_keys(
+        &state.config.gh_client_id,
+        state.config.gh_client_secret.secret(),
+    )?;
 
     // Populate cache
     if let Ok(mut cache) = PUBLIC_KEY_CACHE.lock() {
