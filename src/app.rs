@@ -76,7 +76,7 @@ impl App {
     /// - Database connection pools
     /// - A `git2::Repository` instance from the index repo checkout (that server.rs ensures exists)
     pub fn new(config: config::Server, http_client: Option<Client>) -> App {
-        use oauth2::{AuthUrl, ClientId, ClientSecret, TokenUrl};
+        use oauth2::{AuthUrl, TokenUrl};
 
         let instance_metrics =
             InstanceMetrics::new().expect("could not initialize instance metrics");
@@ -84,8 +84,8 @@ impl App {
         let github = Box::new(RealGitHubClient::new(http_client.clone()));
 
         let github_oauth = BasicClient::new(
-            ClientId::new(config.gh_client_id.clone()),
-            Some(ClientSecret::new(config.gh_client_secret.clone())),
+            config.gh_client_id.clone(),
+            Some(config.gh_client_secret.clone()),
             AuthUrl::new(String::from("https://github.com/login/oauth/authorize")).unwrap(),
             Some(
                 TokenUrl::new(String::from("https://github.com/login/oauth/access_token")).unwrap(),

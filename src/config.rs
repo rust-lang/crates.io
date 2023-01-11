@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Context};
 use ipnetwork::IpNetwork;
+use oauth2::{ClientId, ClientSecret};
 
 use crate::publish_rate_limit::PublishRateLimit;
 use crate::{env, env_optional, uploaders::Uploader, Env};
@@ -22,8 +23,8 @@ pub struct Server {
     pub base: Base,
     pub db: DatabasePools,
     pub session_key: cookie::Key,
-    pub gh_client_id: String,
-    pub gh_client_secret: String,
+    pub gh_client_id: ClientId,
+    pub gh_client_secret: ClientSecret,
     pub max_upload_size: u64,
     pub max_unpack_size: u64,
     pub publish_rate_limit: PublishRateLimit,
@@ -114,8 +115,8 @@ impl Default for Server {
             db: DatabasePools::full_from_environment(&base),
             base,
             session_key: cookie::Key::derive_from(env("SESSION_KEY").as_bytes()),
-            gh_client_id: env("GH_CLIENT_ID"),
-            gh_client_secret: env("GH_CLIENT_SECRET"),
+            gh_client_id: ClientId::new(env("GH_CLIENT_ID")),
+            gh_client_secret: ClientSecret::new(env("GH_CLIENT_SECRET")),
             max_upload_size: 10 * 1024 * 1024, // 10 MB default file upload size limit
             max_unpack_size: 512 * 1024 * 1024, // 512 MB max when decompressed
             publish_rate_limit: Default::default(),
