@@ -81,10 +81,7 @@ impl App {
         let instance_metrics =
             InstanceMetrics::new().expect("could not initialize instance metrics");
 
-        let github = Box::new(RealGitHubClient::new(
-            http_client.clone(),
-            config.gh_base_url.clone(),
-        ));
+        let github = Box::new(RealGitHubClient::new(http_client.clone()));
 
         let github_oauth = BasicClient::new(
             ClientId::new(config.gh_client_id.clone()),

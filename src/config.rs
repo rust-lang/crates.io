@@ -24,7 +24,6 @@ pub struct Server {
     pub session_key: cookie::Key,
     pub gh_client_id: String,
     pub gh_client_secret: String,
-    pub gh_base_url: String,
     pub max_upload_size: u64,
     pub max_unpack_size: u64,
     pub publish_rate_limit: PublishRateLimit,
@@ -117,7 +116,6 @@ impl Default for Server {
             session_key: cookie::Key::derive_from(env("SESSION_KEY").as_bytes()),
             gh_client_id: env("GH_CLIENT_ID"),
             gh_client_secret: env("GH_CLIENT_SECRET"),
-            gh_base_url: "https://api.github.com".to_string(),
             max_upload_size: 10 * 1024 * 1024, // 10 MB default file upload size limit
             max_unpack_size: 512 * 1024 * 1024, // 512 MB max when decompressed
             publish_rate_limit: Default::default(),

@@ -38,13 +38,12 @@ pub trait GitHubClient: Send + Sync {
 
 #[derive(Debug)]
 pub struct RealGitHubClient {
-    base_url: String,
     client: Option<Client>,
 }
 
 impl RealGitHubClient {
-    pub fn new(client: Option<Client>, base_url: String) -> Self {
-        Self { base_url, client }
+    pub fn new(client: Option<Client>) -> Self {
+        Self { client }
     }
 
     /// Does all the nonsense for sending a GET to Github.
@@ -52,7 +51,7 @@ impl RealGitHubClient {
     where
         T: DeserializeOwned,
     {
-        let url = format!("{}{}", self.base_url, url);
+        let url = format!("https://api.github.com{}", url);
         info!("GITHUB HTTP: {url}");
 
         self.client()
