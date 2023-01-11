@@ -162,11 +162,16 @@ fn new_category<'a>(category: &'a str, slug: &'a str, description: &'a str) -> N
 // This reflects the configuration of our test environment. In the production application, this
 // does not hold true.
 #[test]
-#[should_panic]
-fn recursive_get_of_db_conn_in_tests_will_panic() {
+fn multiple_live_references_to_the_same_connection_can_be_checked_out() {
+    use std::ptr;
+
     let (app, _) = TestApp::init().empty();
     let app = app.as_inner();
 
-    let _conn1 = app.primary_database.get().unwrap();
-    let _conn2 = app.primary_database.get().unwrap();
+    let conn1 = app.primary_database.get().unwrap();
+    let conn2 = app.primary_database.get().unwrap();
+    let conn1_ref: &PgConnection = &conn1;
+    let conn2_ref: &PgConnection = &conn2;
+
+    assert!(ptr::eq(conn1_ref, conn2_ref));
 }
