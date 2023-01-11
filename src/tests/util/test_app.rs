@@ -336,7 +336,6 @@ fn simple_config() -> config::Server {
         session_key: cookie::Key::derive_from("test this has to be over 32 bytes long".as_bytes()),
         gh_client_id: dotenv::var("GH_CLIENT_ID").unwrap_or_default(),
         gh_client_secret: dotenv::var("GH_CLIENT_SECRET").unwrap_or_default(),
-        gh_base_url: "http://api.github.com".to_string(),
         max_upload_size: 3000,
         max_unpack_size: 2000,
         publish_rate_limit: Default::default(),
