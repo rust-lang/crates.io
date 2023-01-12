@@ -3,7 +3,7 @@ use axum::extract::DefaultBodyLimit;
 use axum::response::IntoResponse;
 use axum::Router;
 use http::header::HeaderName;
-use http::{HeaderMap, HeaderValue, Request, StatusCode};
+use http::{HeaderMap, HeaderValue, Request, StatusCode, Uri};
 use hyper::body::to_bytes;
 use tokio::{sync::oneshot, task::JoinHandle};
 
@@ -15,32 +15,36 @@ fn single_header(key: &str, value: &str) -> HeaderMap {
     headers
 }
 
-async fn ok_result(_req: ConduitRequest) -> HandlerResult {
+async fn ok_result() -> HandlerResult {
     (single_header("ok", "value"), "Hello, world!").into_response()
 }
 
-async fn error_result(_req: ConduitRequest) -> HandlerResult {
+async fn error_result() -> HandlerResult {
     server_error_response(&std::io::Error::last_os_error())
 }
 
-async fn panic(_req: ConduitRequest) -> HandlerResult {
+async fn panic() -> HandlerResult {
     panic!()
 }
 
-async fn sleep(req: ConduitRequest) -> Result<AxumResponse, ServiceError> {
+async fn sleep() -> Result<AxumResponse, ServiceError> {
     spawn_blocking(move || std::thread::sleep(std::time::Duration::from_millis(100)))
         .await
         .map_err(ServiceError::from)?;
 
-    Ok(ok_result(req).await)
+    Ok(ok_result().await)
 }
 
-async fn assert_percent_decode_path(req: ConduitRequest) -> HandlerResult {
-    if req.uri().path() == "/%3a" && req.uri().query() == Some("%3a") {
-        ok_result(req).await
+async fn assert_percent_decode_path(uri: Uri) -> HandlerResult {
+    if uri.path() == "/%3a" && uri.query() == Some("%3a") {
+        ok_result().await
     } else {
-        error_result(req).await
+        error_result().await
     }
+}
+
+async fn conduit_request(_req: ConduitRequest) -> HandlerResult {
+    ().into_response()
 }
 
 async fn assert_generic_err(resp: AxumResponse) {
@@ -56,7 +60,7 @@ async fn assert_generic_err(resp: AxumResponse) {
 
 #[tokio::test]
 async fn valid_ok_response() {
-    let resp = ok_result(ConduitRequest(Request::default())).await;
+    let resp = ok_result().await;
     assert_eq!(resp.status(), StatusCode::OK);
     assert_eq!(resp.headers().len(), 2);
     assert!(resp.headers().get("ok").is_some());
@@ -70,19 +74,19 @@ async fn valid_ok_response() {
 
 #[tokio::test]
 async fn err_responses() {
-    assert_generic_err(error_result(ConduitRequest(Request::default())).await).await;
+    assert_generic_err(error_result().await).await;
 }
 
 #[ignore] // catch_unwind not yet implemented
 #[tokio::test]
 async fn recover_from_panic() {
-    assert_generic_err(panic(ConduitRequest(Request::default())).await).await;
+    assert_generic_err(panic().await).await;
 }
 
 #[tokio::test]
 async fn sleeping_doesnt_block_another_request() {
-    let first = sleep(ConduitRequest(Request::default()));
-    let second = sleep(ConduitRequest(Request::default()));
+    let first = sleep();
+    let second = sleep();
 
     let start = std::time::Instant::now();
 
@@ -99,8 +103,8 @@ async fn sleeping_doesnt_block_another_request() {
 
 #[tokio::test]
 async fn path_is_percent_decoded_but_not_query_string() {
-    let req = Request::put("/%3a?%3a").body(Default::default()).unwrap();
-    let resp = assert_percent_decode_path(ConduitRequest(req)).await;
+    let req = Request::put("/%3a?%3a").body(()).unwrap();
+    let resp = assert_percent_decode_path(req.uri().clone()).await;
     assert_eq!(resp.status(), StatusCode::OK);
 }
 
@@ -113,7 +117,7 @@ async fn spawn_http_server() -> (
     let addr = ([127, 0, 0, 1], 0).into();
 
     let router = Router::new()
-        .fallback(ok_result)
+        .fallback(conduit_request)
         .layer(DefaultBodyLimit::max(4096));
     let make_service = router.into_make_service();
     let server = hyper::Server::bind(&addr).serve(make_service);
