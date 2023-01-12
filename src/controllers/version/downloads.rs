@@ -5,7 +5,7 @@
 use super::version_and_crate;
 use crate::controllers::prelude::*;
 use crate::db::PoolError;
-use crate::middleware::log_request::CustomMetadataRequestExt;
+use crate::middleware::log_request::RequestLogExt;
 use crate::models::{Crate, VersionDownload};
 use crate::schema::*;
 use crate::views::EncodableVersionDownload;

@@ -34,7 +34,7 @@ pub struct Metadata<'a> {
     cause: Option<&'a CauseField>,
     error: Option<&'a ErrorField>,
     duration: Duration,
-    custom_metadata: CustomMetadata,
+    custom_metadata: RequestLog,
 }
 
 impl Display for Metadata<'_> {
@@ -114,7 +114,7 @@ pub async fn log_requests<B>(
 ) -> impl IntoResponse {
     let start_instant = Instant::now();
 
-    let custom_metadata = CustomMetadata::default();
+    let custom_metadata = RequestLog::default();
     req.extensions_mut().insert(custom_metadata.clone());
 
     let response = next.run(req).await;
@@ -138,9 +138,9 @@ pub async fn log_requests<B>(
 }
 
 #[derive(Clone, Debug, Deref, Default)]
-pub struct CustomMetadata(Arc<Mutex<Vec<(&'static str, String)>>>);
+pub struct RequestLog(Arc<Mutex<Vec<(&'static str, String)>>>);
 
-impl CustomMetadata {
+impl RequestLog {
     pub fn add<V: Display>(&self, key: &'static str, value: V) {
         let mut metadata = self.lock();
         metadata.push((key, value.to_string()));
@@ -149,15 +149,15 @@ impl CustomMetadata {
     }
 }
 
-pub trait CustomMetadataRequestExt {
-    fn request_log(&self) -> &CustomMetadata;
+pub trait RequestLogExt {
+    fn request_log(&self) -> &RequestLog;
 }
 
-impl<T: RequestPartsExt> CustomMetadataRequestExt for T {
-    fn request_log(&self) -> &CustomMetadata {
+impl<T: RequestPartsExt> RequestLogExt for T {
+    fn request_log(&self) -> &RequestLog {
         self.extensions()
-            .get::<CustomMetadata>()
-            .expect("Failed to find `CustomMetadata` request extension")
+            .get::<RequestLog>()
+            .expect("Failed to find `RequestLog` request extension")
     }
 }
 

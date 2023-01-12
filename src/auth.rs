@@ -1,6 +1,6 @@
 use crate::controllers;
 use crate::controllers::util::RequestPartsExt;
-use crate::middleware::log_request::CustomMetadataRequestExt;
+use crate::middleware::log_request::RequestLogExt;
 use crate::middleware::session::RequestSession;
 use crate::models::token::{CrateScope, EndpointScope};
 use crate::models::{ApiToken, User};

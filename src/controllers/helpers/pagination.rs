@@ -1,7 +1,7 @@
 use crate::config::Server;
 use crate::controllers::prelude::*;
 use crate::controllers::util::RequestPartsExt;
-use crate::middleware::log_request::CustomMetadataRequestExt;
+use crate::middleware::log_request::RequestLogExt;
 use crate::models::helpers::with_count::*;
 use crate::util::errors::{bad_request, AppResult};
 use crate::util::HeaderMapExt;

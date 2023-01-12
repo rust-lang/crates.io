@@ -8,7 +8,7 @@
 //! 0.17 (released alongside rustc 1.17).
 
 use crate::app::AppState;
-use crate::middleware::log_request::CustomMetadataRequestExt;
+use crate::middleware::log_request::RequestLogExt;
 use axum::extract::State;
 use axum::headers::UserAgent;
 use axum::middleware::Next;

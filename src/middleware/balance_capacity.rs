@@ -11,7 +11,7 @@
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use crate::app::AppState;
-use crate::middleware::log_request::CustomMetadataRequestExt;
+use crate::middleware::log_request::RequestLogExt;
 use axum::extract::State;
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};

@@ -9,7 +9,7 @@
 //! examples). Values of the headers must match exactly.
 
 use crate::app::AppState;
-use crate::middleware::log_request::CustomMetadataRequestExt;
+use crate::middleware::log_request::RequestLogExt;
 use crate::util::errors::RouteBlocked;
 use axum::extract::{MatchedPath, State};
 use axum::middleware::Next;

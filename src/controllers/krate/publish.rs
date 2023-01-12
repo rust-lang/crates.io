@@ -18,7 +18,7 @@ use crate::models::{
 };
 use crate::worker;
 
-use crate::middleware::log_request::CustomMetadataRequestExt;
+use crate::middleware::log_request::RequestLogExt;
 use crate::models::token::EndpointScope;
 use crate::schema::*;
 use crate::util::errors::{cargo_err, AppResult};
