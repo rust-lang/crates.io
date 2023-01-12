@@ -26,8 +26,9 @@ use crate::{
 use cargo_registry::middleware::session;
 use cargo_registry::models::{ApiToken, CreatedApiToken, User};
 
-use http::Method;
+use http::{Method, Request};
 
+use axum::body::Bytes;
 use cargo_registry::models::token::{CrateScope, EndpointScope};
 use cookie::Cookie;
 use http::header;
@@ -44,7 +45,8 @@ mod test_app;
 
 pub(crate) use chaosproxy::ChaosProxy;
 pub(crate) use fresh_schema::FreshSchema;
-pub use mock_request::MockRequest;
+use mock_request::MockRequest;
+pub use mock_request::MockRequestExt;
 pub use response::Response;
 pub use test_app::{TestApp, TestDatabase};
 
@@ -94,7 +96,9 @@ pub trait RequestHelper {
             .build()
             .unwrap();
 
-        let axum_response = rt.block_on(router.call(request.into())).unwrap();
+        let axum_response = rt
+            .block_on(router.call(request.map(hyper::Body::from)))
+            .unwrap();
 
         // axum responses can't be converted directly to reqwest responses,
         // so we have to convert it to a hyper response first.
@@ -208,10 +212,13 @@ pub trait RequestHelper {
 }
 
 fn req(method: Method, path: &str) -> MockRequest {
-    let mut request = MockRequest::new(method, path);
-    request.header(header::USER_AGENT, "conduit-test");
-    request.header("x-real-ip", "127.0.0.1");
-    request
+    Request::builder()
+        .method(method)
+        .uri(path)
+        .header(header::USER_AGENT, "conduit-test")
+        .header("x-real-ip", "127.0.0.1")
+        .body(Bytes::new())
+        .unwrap()
 }
 
 /// A type that can generate unauthenticated requests
