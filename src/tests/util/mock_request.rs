@@ -1,5 +1,5 @@
-use bytes::Bytes;
-use hyper::http::{header::IntoHeaderName, HeaderValue, Method, Request};
+use axum::body::Bytes;
+use http::{header::IntoHeaderName, HeaderValue, Method, Request};
 
 pub struct MockRequest {
     request: Request<Bytes>,

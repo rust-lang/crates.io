@@ -26,7 +26,6 @@ use crate::{
 use cargo_registry::middleware::session;
 use cargo_registry::models::{ApiToken, CreatedApiToken, User};
 
-use conduit_test::MockRequest;
 use http::Method;
 
 use cargo_registry::models::token::{CrateScope, EndpointScope};
@@ -39,11 +38,13 @@ mod chaosproxy;
 mod fresh_schema;
 mod github;
 pub mod insta;
+mod mock_request;
 mod response;
 mod test_app;
 
 pub(crate) use chaosproxy::ChaosProxy;
 pub(crate) use fresh_schema::FreshSchema;
+pub use mock_request::MockRequest;
 pub use response::Response;
 pub use test_app::{TestApp, TestDatabase};
 
