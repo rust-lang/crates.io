@@ -26,8 +26,9 @@ use crate::{
 use cargo_registry::middleware::session;
 use cargo_registry::models::{ApiToken, CreatedApiToken, User};
 
-use http::Method;
+use http::{Method, Request};
 
+use axum::body::Bytes;
 use cargo_registry::models::token::{CrateScope, EndpointScope};
 use cookie::Cookie;
 use http::header;
@@ -44,8 +45,8 @@ mod test_app;
 
 pub(crate) use chaosproxy::ChaosProxy;
 pub(crate) use fresh_schema::FreshSchema;
+use mock_request::MockRequest;
 pub use mock_request::MockRequestExt;
-use mock_request::{mock_request, MockRequest};
 pub use response::Response;
 pub use test_app::{TestApp, TestDatabase};
 
@@ -211,10 +212,13 @@ pub trait RequestHelper {
 }
 
 fn req(method: Method, path: &str) -> MockRequest {
-    let mut request = mock_request(method, path);
-    request.header(header::USER_AGENT, "conduit-test");
-    request.header("x-real-ip", "127.0.0.1");
-    request
+    Request::builder()
+        .method(method)
+        .uri(path)
+        .header(header::USER_AGENT, "conduit-test")
+        .header("x-real-ip", "127.0.0.1")
+        .body(Bytes::new())
+        .unwrap()
 }
 
 /// A type that can generate unauthenticated requests

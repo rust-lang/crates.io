@@ -1,15 +1,7 @@
 use axum::body::Bytes;
-use http::{header::IntoHeaderName, HeaderValue, Method, Request};
+use http::{header::IntoHeaderName, HeaderValue, Request};
 
 pub type MockRequest = Request<Bytes>;
-
-pub fn mock_request(method: Method, path: &str) -> MockRequest {
-    Request::builder()
-        .method(&method)
-        .uri(path)
-        .body(Bytes::new())
-        .unwrap()
-}
 
 pub trait MockRequestExt {
     fn with_body(&mut self, bytes: &[u8]);
@@ -33,9 +25,18 @@ impl MockRequestExt for MockRequest {
 
 #[cfg(test)]
 mod tests {
-    use super::{mock_request, MockRequestExt};
+    use super::{MockRequest, MockRequestExt};
 
-    use hyper::http::{header, Method};
+    use axum::body::Bytes;
+    use hyper::http::{header, Method, Request};
+
+    pub fn mock_request(method: Method, path: &str) -> MockRequest {
+        Request::builder()
+            .method(&method)
+            .uri(path)
+            .body(Bytes::new())
+            .unwrap()
+    }
 
     #[test]
     fn simple_request_test() {
