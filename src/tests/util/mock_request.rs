@@ -16,19 +16,17 @@ impl MockRequest {
         MockRequest { request }
     }
 
-    pub fn with_body(&mut self, bytes: &[u8]) -> &mut MockRequest {
+    pub fn with_body(&mut self, bytes: &[u8]) {
         *self.request.body_mut() = bytes.to_vec().into();
-        self
     }
 
-    pub fn header<K>(&mut self, name: K, value: &str) -> &mut MockRequest
+    pub fn header<K>(&mut self, name: K, value: &str)
     where
         K: IntoHeaderName,
     {
         self.request
             .headers_mut()
             .insert(name, HeaderValue::from_str(value).unwrap());
-        self
     }
 
     pub fn into_inner(self) -> Request<Bytes> {
