@@ -146,10 +146,13 @@ pub trait CustomMetadataRequestExt {
 
 impl<T: RequestPartsExt> CustomMetadataRequestExt for T {
     fn add_custom_metadata<V: Display>(&self, key: &'static str, value: V) {
-        if let Some(metadata) = self.extensions().get::<CustomMetadata>() {
-            let mut metadata = metadata.lock();
-            metadata.push((key, value.to_string()));
-        }
+        let metadata = self
+            .extensions()
+            .get::<CustomMetadata>()
+            .expect("Failed to find `CustomMetadata` request extension");
+
+        let mut metadata = metadata.lock();
+        metadata.push((key, value.to_string()));
 
         sentry::configure_scope(|scope| scope.set_extra(key, value.to_string().into()));
     }
