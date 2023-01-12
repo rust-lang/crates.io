@@ -9,9 +9,9 @@ use axum::extract::State;
 use base64;
 use http::HeaderMap;
 use once_cell::sync::Lazy;
+use parking_lot::Mutex;
 use ring::signature;
 use serde_json as json;
-use std::sync::Mutex;
 
 static PEM_HEADER: &str = "-----BEGIN PUBLIC KEY-----\n";
 static PEM_FOOTER: &str = "\n-----END PUBLIC KEY-----";
@@ -78,11 +78,11 @@ fn is_cache_valid(timestamp: Option<chrono::DateTime<chrono::Utc>>) -> bool {
 // Fetches list of public keys from GitHub API
 fn get_public_keys(state: &AppState) -> Result<Vec<GitHubPublicKey>, BoxedAppError> {
     // Return list from cache if populated and still valid
-    if let Ok(cache) = PUBLIC_KEY_CACHE.lock() {
-        if is_cache_valid(cache.timestamp) {
-            return Ok(cache.keys.clone());
-        }
+    let mut cache = PUBLIC_KEY_CACHE.lock();
+    if is_cache_valid(cache.timestamp) {
+        return Ok(cache.keys.clone());
     }
+
     // Fetch from GitHub API
     let keys = state.github.public_keys(
         &state.config.gh_client_id,
@@ -90,10 +90,9 @@ fn get_public_keys(state: &AppState) -> Result<Vec<GitHubPublicKey>, BoxedAppErr
     )?;
 
     // Populate cache
-    if let Ok(mut cache) = PUBLIC_KEY_CACHE.lock() {
-        cache.keys = keys.clone();
-        cache.timestamp = Some(chrono::Utc::now());
-    }
+    cache.keys = keys.clone();
+    cache.timestamp = Some(chrono::Utc::now());
+
     Ok(keys)
 }
 
