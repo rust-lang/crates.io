@@ -7,12 +7,10 @@ use hyper::Body;
 use std::error::Error;
 use std::ops::{Deref, DerefMut};
 
-use crate::response::AxumResponse;
 use crate::server_error_response;
 pub use http::{header, Extensions, HeaderMap, Method, Request, Response, StatusCode, Uri};
 
 pub type BoxError = Box<dyn Error + Send>;
-pub type HandlerResult = AxumResponse;
 
 /// A helper to convert a concrete error type into a `Box<dyn Error + Send>`
 ///
@@ -51,7 +49,7 @@ impl<S> FromRequest<S, Body> for ConduitRequest
 where
     S: Send + Sync,
 {
-    type Rejection = AxumResponse;
+    type Rejection = axum::response::Response;
 
     async fn from_request(req: Request<Body>, _state: &S) -> Result<Self, Self::Rejection> {
         let request = match req.with_limited_body() {

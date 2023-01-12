@@ -38,7 +38,6 @@
 mod conduit;
 mod error;
 mod fallback;
-mod response;
 #[cfg(test)]
 mod tests;
 mod tokio_utils;
