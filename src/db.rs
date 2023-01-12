@@ -8,14 +8,16 @@ use url::Url;
 
 use crate::config;
 
+pub type ConnectionPool = r2d2::Pool<ConnectionManager<PgConnection>>;
+
 #[derive(Clone)]
 pub enum DieselPool {
     Pool {
-        pool: r2d2::Pool<ConnectionManager<PgConnection>>,
+        pool: ConnectionPool,
         time_to_obtain_connection_metric: Histogram,
     },
     BackgroundJobPool {
-        pool: r2d2::Pool<ConnectionManager<PgConnection>>,
+        pool: ConnectionPool,
     },
     Test(Arc<Mutex<PgConnection>>),
 }
@@ -55,6 +57,13 @@ impl DieselPool {
 
     pub fn new_background_worker(pool: r2d2::Pool<ConnectionManager<PgConnection>>) -> Self {
         Self::BackgroundJobPool { pool }
+    }
+
+    pub(crate) fn to_real_pool(&self) -> Option<ConnectionPool> {
+        match self {
+            Self::Pool { pool, .. } | Self::BackgroundJobPool { pool } => Some(pool.clone()),
+            _ => None,
+        }
     }
 
     pub(crate) fn new_test(config: &config::DatabasePools, url: &str) -> DieselPool {

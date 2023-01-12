@@ -12,7 +12,7 @@ use threadpool::ThreadPool;
 
 use super::errors::*;
 use super::storage;
-use crate::background_jobs::{Environment, Job};
+use crate::background_jobs::{Environment, Job, PerformState};
 use crate::db::{DieselPool, DieselPooledConn};
 use event::Event;
 
@@ -56,9 +56,7 @@ impl Runner {
             job_start_timeout: Duration::from_secs(10),
         }
     }
-}
 
-impl Runner {
     pub fn test_runner(environment: Environment, connection_pool: DieselPool) -> Self {
         Self {
             connection_pool,
@@ -67,9 +65,7 @@ impl Runner {
             job_start_timeout: Duration::from_secs(5),
         }
     }
-}
 
-impl Runner {
     /// Runs all pending jobs in the queue
     ///
     /// This function will return once all jobs in the queue have begun running,
@@ -113,15 +109,15 @@ impl Runner {
 
     fn run_single_job(&self, sender: SyncSender<Event>) {
         let environment = self.environment.clone();
-        self.get_single_job(sender, move |job, conn| {
+        self.get_single_job(sender, move |job, state| {
             let job = Job::from_value(&job.job_type, job.data)?;
-            job.perform(&environment, conn)
+            job.perform(&environment, state)
         })
     }
 
     fn get_single_job<F>(&self, sender: SyncSender<Event>, f: F)
     where
-        F: FnOnce(storage::BackgroundJob, &PgConnection) -> Result<(), PerformError>
+        F: FnOnce(storage::BackgroundJob, PerformState<'_>) -> Result<(), PerformError>
             + Send
             + UnwindSafe
             + 'static,
@@ -169,11 +165,12 @@ impl Runner {
 
                 let result = conn
                     .transaction(|| {
-                        let conn = AssertUnwindSafe(conn);
+                        let pool = pool.to_real_pool();
+                        let state = AssertUnwindSafe(PerformState {conn, pool});
                         catch_unwind(|| {
                             // Ensure the whole `AssertUnwindSafe(_)` is moved
-                            let conn = conn;
-                            f(job, conn.0)
+                            let state = state;
+                            f(job, state.0)
                         })
                         .map_err(|e| try_to_extract_panic_info(&e))
                     })
@@ -345,8 +342,8 @@ mod tests {
         let barrier = Arc::new(AssertUnwindSafe(Barrier::new(2)));
         let barrier2 = barrier.clone();
 
-        runner.get_single_job(dummy_sender(), move |_, conn| {
-            conn.transaction(|| {
+        runner.get_single_job(dummy_sender(), move |_, state| {
+            state.conn.transaction(|| {
                 barrier.0.wait();
                 // The job should go back into the queue after a panic
                 panic!();

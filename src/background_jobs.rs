@@ -1,8 +1,10 @@
 use diesel::prelude::*;
+use diesel::r2d2::{ConnectionManager, PooledConnection};
 use reqwest::blocking::Client;
 use std::panic::AssertUnwindSafe;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
+use crate::db::ConnectionPool;
 use crate::swirl::errors::EnqueueError;
 use crate::swirl::PerformError;
 use crate::uploaders::Uploader;
@@ -20,6 +22,20 @@ pub enum Job {
     NormalizeIndex(NormalizeIndexJob),
     RenderAndUploadReadme(RenderAndUploadReadmeJob),
     UpdateDownloads,
+}
+
+/// Database state that is passed to `Job::perform()`.
+pub(crate) struct PerformState<'a> {
+    /// The existing connection used to lock the background job.
+    ///
+    /// Most jobs can reuse the existing connection, however it will already be within a
+    /// transaction and is thus not appropriate in all cases.
+    pub(crate) conn: &'a PgConnection,
+    /// A connection pool for obtaining a unique connection.
+    ///
+    /// This will be `None` within our standard test framework, as there everything is expected to
+    /// run within a single transaction.
+    pub(crate) pool: Option<ConnectionPool>,
 }
 
 impl Job {
@@ -93,13 +109,16 @@ impl Job {
     pub(super) fn perform(
         self,
         env: &Option<Environment>,
-        conn: &PgConnection,
+        state: PerformState<'_>,
     ) -> Result<(), PerformError> {
+        let PerformState { conn, pool } = state;
         let env = env
             .as_ref()
             .expect("Application should configure a background runner environment");
         match self {
-            Job::DailyDbMaintenance => worker::perform_daily_db_maintenance(conn),
+            Job::DailyDbMaintenance => {
+                worker::perform_daily_db_maintenance(&*fresh_connection(pool)?)
+            }
             Job::DumpDb(args) => worker::perform_dump_db(env, args.database_url, args.target_name),
             Job::IndexAddCrate(args) => worker::perform_index_add_crate(env, conn, &args.krate),
             Job::IndexSquash => worker::perform_index_squash(env),
@@ -117,9 +136,24 @@ impl Job {
                 args.base_url.as_deref(),
                 args.pkg_path_in_vcs.as_deref(),
             ),
-            Job::UpdateDownloads => worker::perform_update_downloads(conn),
+            Job::UpdateDownloads => worker::perform_update_downloads(&*fresh_connection(pool)?),
         }
     }
+}
+
+/// A helper function for jobs needing a fresh connection (i.e. not already within a transaction).
+///
+/// This will error when run from our main test framework, as there most work is expected to be
+/// done within an existing transaction.
+fn fresh_connection(
+    pool: Option<ConnectionPool>,
+) -> Result<PooledConnection<ConnectionManager<PgConnection>>, PerformError> {
+    let Some(pool) = pool else {
+        // In production a pool should be available. This can only be hit in tests, which don't
+        // provide the pool.
+        return Err(String::from("Database pool was unavailable").into());
+    };
+    Ok(pool.get()?)
 }
 
 #[derive(Serialize, Deserialize)]
