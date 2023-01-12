@@ -1,13 +1,11 @@
-use crate::{server_error_response, spawn_blocking, ConduitRequest, HandlerResult, ServiceError};
+use crate::{server_error_response, spawn_blocking, ConduitRequest, ServiceError};
 use axum::extract::DefaultBodyLimit;
-use axum::response::IntoResponse;
+use axum::response::{IntoResponse, Response};
 use axum::Router;
 use http::header::HeaderName;
 use http::{HeaderMap, HeaderValue, Request, StatusCode, Uri};
 use hyper::body::to_bytes;
 use tokio::{sync::oneshot, task::JoinHandle};
-
-use crate::response::AxumResponse;
 
 fn single_header(key: &str, value: &str) -> HeaderMap {
     let mut headers = HeaderMap::new();
@@ -15,19 +13,19 @@ fn single_header(key: &str, value: &str) -> HeaderMap {
     headers
 }
 
-async fn ok_result() -> HandlerResult {
+async fn ok_result() -> Response {
     (single_header("ok", "value"), "Hello, world!").into_response()
 }
 
-async fn error_result() -> HandlerResult {
+async fn error_result() -> Response {
     server_error_response(&std::io::Error::last_os_error())
 }
 
-async fn panic() -> HandlerResult {
+async fn panic() -> Response {
     panic!()
 }
 
-async fn sleep() -> Result<AxumResponse, ServiceError> {
+async fn sleep() -> Result<Response, ServiceError> {
     spawn_blocking(move || std::thread::sleep(std::time::Duration::from_millis(100)))
         .await
         .map_err(ServiceError::from)?;
@@ -35,7 +33,7 @@ async fn sleep() -> Result<AxumResponse, ServiceError> {
     Ok(ok_result().await)
 }
 
-async fn assert_percent_decode_path(uri: Uri) -> HandlerResult {
+async fn assert_percent_decode_path(uri: Uri) -> Response {
     if uri.path() == "/%3a" && uri.query() == Some("%3a") {
         ok_result().await
     } else {
@@ -43,11 +41,9 @@ async fn assert_percent_decode_path(uri: Uri) -> HandlerResult {
     }
 }
 
-async fn conduit_request(_req: ConduitRequest) -> HandlerResult {
-    ().into_response()
-}
+async fn conduit_request(_req: ConduitRequest) {}
 
-async fn assert_generic_err(resp: AxumResponse) {
+async fn assert_generic_err(resp: Response) {
     assert_eq!(resp.status(), StatusCode::INTERNAL_SERVER_ERROR);
     assert_eq!(resp.headers().len(), 1);
     assert_eq!(
