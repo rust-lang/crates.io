@@ -308,9 +308,7 @@ pub(crate) fn decode_seek<D: for<'a> Deserialize<'a>>(seek: &str) -> AppResult<D
 #[cfg(test)]
 mod tests {
     use super::*;
-    use axum::body::Bytes;
-    use conduit_test::MockRequest;
-    use http::StatusCode;
+    use http::{Method, StatusCode};
 
     #[test]
     fn no_pagination_param() {
@@ -411,9 +409,12 @@ mod tests {
         );
     }
 
-    fn mock(query: &str) -> Request<Bytes> {
-        let path_and_query = format!("/?{query}");
-        MockRequest::new(http::Method::GET, &path_and_query).into_inner()
+    fn mock(query: &str) -> Request<()> {
+        Request::builder()
+            .method(Method::GET)
+            .uri(format!("/?{query}"))
+            .body(())
+            .unwrap()
     }
 
     fn assert_pagination_error(options: PaginationOptionsBuilder, query: &str, message: &str) {
