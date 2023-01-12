@@ -1,3 +1,4 @@
+use crate::util::MockRequestExt;
 use crate::{RequestHelper, TestApp};
 use cargo_registry::controllers::github::secret_scanning::{
     GitHubSecretAlertFeedback, GitHubSecretAlertFeedbackLabel,

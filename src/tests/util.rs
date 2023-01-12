@@ -44,7 +44,8 @@ mod test_app;
 
 pub(crate) use chaosproxy::ChaosProxy;
 pub(crate) use fresh_schema::FreshSchema;
-pub use mock_request::MockRequest;
+pub use mock_request::MockRequestExt;
+use mock_request::{mock_request, MockRequest};
 pub use response::Response;
 pub use test_app::{TestApp, TestDatabase};
 
@@ -94,7 +95,9 @@ pub trait RequestHelper {
             .build()
             .unwrap();
 
-        let axum_response = rt.block_on(router.call(request.into())).unwrap();
+        let axum_response = rt
+            .block_on(router.call(request.map(hyper::Body::from)))
+            .unwrap();
 
         // axum responses can't be converted directly to reqwest responses,
         // so we have to convert it to a hyper response first.
@@ -208,7 +211,7 @@ pub trait RequestHelper {
 }
 
 fn req(method: Method, path: &str) -> MockRequest {
-    let mut request = MockRequest::new(method, path);
+    let mut request = mock_request(method, path);
     request.header(header::USER_AGENT, "conduit-test");
     request.header("x-real-ip", "127.0.0.1");
     request

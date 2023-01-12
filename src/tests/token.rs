@@ -1,3 +1,4 @@
+use crate::util::MockRequestExt;
 use crate::{RequestHelper, TestApp};
 use cargo_registry::{models::ApiToken, util::errors::TOKEN_FORMAT_ERROR, views::EncodableMe};
 use diesel::prelude::*;

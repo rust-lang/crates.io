@@ -1,4 +1,4 @@
-use crate::util::{MockAnonymousUser, Response};
+use crate::util::{MockAnonymousUser, MockRequestExt, Response};
 use crate::{RequestHelper, TestApp};
 use http::StatusCode;
 

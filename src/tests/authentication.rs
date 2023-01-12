@@ -1,4 +1,4 @@
-use crate::util::{RequestHelper, Response};
+use crate::util::{MockRequestExt, RequestHelper, Response};
 use crate::TestApp;
 
 use crate::util::encode_session_header;
