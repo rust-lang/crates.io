@@ -5,8 +5,9 @@ use axum_extra::extract::SignedCookieJar;
 use cookie::time::Duration;
 use cookie::{Cookie, SameSite};
 use http::Request;
+use parking_lot::RwLock;
 use std::collections::HashMap;
-use std::sync::{Arc, PoisonError, RwLock};
+use std::sync::Arc;
 
 static COOKIE_NAME: &str = "cargo_session";
 static MAX_AGE_DAYS: i64 = 90;
@@ -28,7 +29,7 @@ pub async fn attach_session<B>(
     let response = next.run(req).await;
 
     // Check if the session data was mutated
-    let session = session.read().unwrap();
+    let session = session.read();
     if session.dirty {
         // Return response with additional `Set-Cookie` header
         let encoded = encode(&session.data);
@@ -70,8 +71,7 @@ impl<T: RequestPartsExt> RequestSession for T {
             .extensions()
             .get::<Arc<RwLock<Session>>>()
             .expect("missing cookie session")
-            .read()
-            .unwrap_or_else(PoisonError::into_inner);
+            .read();
         session.data.get(key).cloned()
     }
 
@@ -80,8 +80,7 @@ impl<T: RequestPartsExt> RequestSession for T {
             .extensions()
             .get::<Arc<RwLock<Session>>>()
             .expect("missing cookie session")
-            .write()
-            .unwrap_or_else(PoisonError::into_inner);
+            .write();
         session.dirty = true;
         session.data.insert(key, value)
     }
@@ -91,8 +90,7 @@ impl<T: RequestPartsExt> RequestSession for T {
             .extensions()
             .get::<Arc<RwLock<Session>>>()
             .expect("missing cookie session")
-            .write()
-            .unwrap_or_else(PoisonError::into_inner);
+            .write();
         session.dirty = true;
         session.data.remove(key)
     }
