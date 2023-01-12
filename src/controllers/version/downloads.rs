@@ -5,7 +5,7 @@
 use super::version_and_crate;
 use crate::controllers::prelude::*;
 use crate::db::PoolError;
-use crate::middleware::log_request::CustomMetadataRequestExt;
+use crate::middleware::log_request::RequestLogExt;
 use crate::models::{Crate, VersionDownload};
 use crate::schema::*;
 use crate::views::EncodableVersionDownload;
@@ -65,7 +65,7 @@ pub async fn download(
                     app.instance_metrics
                         .downloads_non_canonical_crate_name_total
                         .inc();
-                    req.add_custom_metadata("bot", "dl");
+                    req.request_log().add("bot", "dl");
                     crate_name = canonical_crate_name;
                 } else {
                     // The version_id is only cached if the provided crate name was canonical.
@@ -98,7 +98,7 @@ pub async fn download(
                     .downloads_unconditional_redirects_total
                     .inc();
 
-                req.add_custom_metadata("unconditional_redirect", "true");
+                req.request_log().add("unconditional_redirect", "true");
             }
         };
 

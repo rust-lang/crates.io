@@ -34,7 +34,7 @@ pub struct Metadata<'a> {
     cause: Option<&'a CauseField>,
     error: Option<&'a ErrorField>,
     duration: Duration,
-    custom_metadata: CustomMetadata,
+    custom_metadata: RequestLog,
 }
 
 impl Display for Metadata<'_> {
@@ -114,7 +114,7 @@ pub async fn log_requests<B>(
 ) -> impl IntoResponse {
     let start_instant = Instant::now();
 
-    let custom_metadata = CustomMetadata::default();
+    let custom_metadata = RequestLog::default();
     req.extensions_mut().insert(custom_metadata.clone());
 
     let response = next.run(req).await;
@@ -138,20 +138,26 @@ pub async fn log_requests<B>(
 }
 
 #[derive(Clone, Debug, Deref, Default)]
-pub struct CustomMetadata(Arc<Mutex<Vec<(&'static str, String)>>>);
+pub struct RequestLog(Arc<Mutex<Vec<(&'static str, String)>>>);
 
-pub trait CustomMetadataRequestExt {
-    fn add_custom_metadata<V: Display>(&self, key: &'static str, value: V);
-}
-
-impl<T: RequestPartsExt> CustomMetadataRequestExt for T {
-    fn add_custom_metadata<V: Display>(&self, key: &'static str, value: V) {
-        if let Some(metadata) = self.extensions().get::<CustomMetadata>() {
-            let mut metadata = metadata.lock();
-            metadata.push((key, value.to_string()));
-        }
+impl RequestLog {
+    pub fn add<V: Display>(&self, key: &'static str, value: V) {
+        let mut metadata = self.lock();
+        metadata.push((key, value.to_string()));
 
         sentry::configure_scope(|scope| scope.set_extra(key, value.to_string().into()));
+    }
+}
+
+pub trait RequestLogExt {
+    fn request_log(&self) -> &RequestLog;
+}
+
+impl<T: RequestPartsExt> RequestLogExt for T {
+    fn request_log(&self) -> &RequestLog {
+        self.extensions()
+            .get::<RequestLog>()
+            .expect("Failed to find `RequestLog` request extension")
     }
 }
 
