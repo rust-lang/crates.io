@@ -368,7 +368,6 @@ dependencies = [
  "claims",
  "clap",
  "conduit-axum",
- "conduit-test",
  "cookie",
  "dashmap",
  "derive_deref",
@@ -602,14 +601,6 @@ dependencies = [
  "tokio-stream",
  "tracing",
  "tracing-subscriber",
-]
-
-[[package]]
-name = "conduit-test"
-version = "0.10.0"
-dependencies = [
- "bytes",
- "hyper",
 ]
 
 [[package]]
