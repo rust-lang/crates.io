@@ -28,9 +28,9 @@ pub fn box_error<E: Error + Send + 'static>(error: E) -> BoxError {
 }
 
 #[derive(Debug)]
-pub struct ConduitRequest(pub Request<Bytes>);
+pub struct BytesRequest(pub Request<Bytes>);
 
-impl Deref for ConduitRequest {
+impl Deref for BytesRequest {
     type Target = Request<Bytes>;
 
     fn deref(&self) -> &Self::Target {
@@ -38,14 +38,14 @@ impl Deref for ConduitRequest {
     }
 }
 
-impl DerefMut for ConduitRequest {
+impl DerefMut for BytesRequest {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
 }
 
 #[async_trait]
-impl<S> FromRequest<S, Body> for ConduitRequest
+impl<S> FromRequest<S, Body> for BytesRequest
 where
     S: Send + Sync,
 {
@@ -77,6 +77,6 @@ where
             }
         };
 
-        Ok(ConduitRequest(request))
+        Ok(BytesRequest(request))
     }
 }

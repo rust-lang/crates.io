@@ -1,4 +1,4 @@
-use crate::{server_error_response, spawn_blocking, ConduitRequest, ServiceError};
+use crate::{server_error_response, spawn_blocking, BytesRequest, ServiceError};
 use axum::extract::DefaultBodyLimit;
 use axum::response::{IntoResponse, Response};
 use axum::Router;
@@ -41,7 +41,7 @@ async fn assert_percent_decode_path(uri: Uri) -> Response {
     }
 }
 
-async fn conduit_request(_req: ConduitRequest) {}
+async fn conduit_request(_req: BytesRequest) {}
 
 async fn assert_generic_err(resp: Response) {
     assert_eq!(resp.status(), StatusCode::INTERNAL_SERVER_ERROR);

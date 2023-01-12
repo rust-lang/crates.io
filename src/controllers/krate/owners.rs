@@ -66,7 +66,7 @@ pub async fn owner_user(
 /// Handles the `PUT /crates/:crate_id/owners` route.
 pub async fn add_owners(
     Path(crate_name): Path<String>,
-    req: ConduitRequest,
+    req: BytesRequest,
 ) -> AppResult<Json<Value>> {
     conduit_compat(move || modify_owners(&crate_name, &req, true)).await
 }
@@ -74,7 +74,7 @@ pub async fn add_owners(
 /// Handles the `DELETE /crates/:crate_id/owners` route.
 pub async fn remove_owners(
     Path(crate_name): Path<String>,
-    req: ConduitRequest,
+    req: BytesRequest,
 ) -> AppResult<Json<Value>> {
     conduit_compat(move || modify_owners(&crate_name, &req, false)).await
 }
