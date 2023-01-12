@@ -20,6 +20,23 @@ impl SessionExtension {
     fn new(session: Session) -> Self {
         Self(Arc::new(RwLock::new(session)))
     }
+
+    pub fn get(&self, key: &str) -> Option<String> {
+        let session = self.read();
+        session.data.get(key).cloned()
+    }
+
+    pub fn insert(&self, key: String, value: String) -> Option<String> {
+        let mut session = self.write();
+        session.dirty = true;
+        session.data.insert(key, value)
+    }
+
+    pub fn remove(&self, key: &str) -> Option<String> {
+        let mut session = self.write();
+        session.dirty = true;
+        session.data.remove(key)
+    }
 }
 
 impl Deref for SessionExtension {
@@ -85,32 +102,24 @@ pub trait RequestSession {
 
 impl<T: RequestPartsExt> RequestSession for T {
     fn session_get(&self, key: &str) -> Option<String> {
-        let session = self
-            .extensions()
+        self.extensions()
             .get::<SessionExtension>()
             .expect("missing cookie session")
-            .read();
-        session.data.get(key).cloned()
+            .get(key)
     }
 
     fn session_insert(&self, key: String, value: String) -> Option<String> {
-        let mut session = self
-            .extensions()
+        self.extensions()
             .get::<SessionExtension>()
             .expect("missing cookie session")
-            .write();
-        session.dirty = true;
-        session.data.insert(key, value)
+            .insert(key, value)
     }
 
     fn session_remove(&self, key: &str) -> Option<String> {
-        let mut session = self
-            .extensions()
+        self.extensions()
             .get::<SessionExtension>()
             .expect("missing cookie session")
-            .write();
-        session.dirty = true;
-        session.data.remove(key)
+            .remove(key)
     }
 }
 
