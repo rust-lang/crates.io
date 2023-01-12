@@ -1,10 +1,9 @@
 use crate::error::ServiceError;
-use crate::response::AxumResponse;
 
 use std::error::Error;
 
 use axum::extract::Extension;
-use axum::response::IntoResponse;
+use axum::response::{IntoResponse, Response};
 use http::StatusCode;
 use tracing::error;
 
@@ -15,13 +14,13 @@ pub struct ErrorField(pub String);
 pub struct CauseField(pub String);
 
 impl IntoResponse for ServiceError {
-    fn into_response(self) -> AxumResponse {
+    fn into_response(self) -> Response {
         server_error_response(&self)
     }
 }
 
 /// Logs an error message and returns a generic status 500 response
-pub fn server_error_response<E: Error + ?Sized>(error: &E) -> AxumResponse {
+pub fn server_error_response<E: Error + ?Sized>(error: &E) -> Response {
     error!(%error, "Internal Server Error");
 
     sentry_core::capture_error(error);
