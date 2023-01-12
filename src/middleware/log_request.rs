@@ -10,9 +10,10 @@ use axum::response::IntoResponse;
 use axum::{Extension, TypedHeader};
 use conduit_axum::{CauseField, ErrorField};
 use http::{Method, Request, StatusCode, Uri};
+use parking_lot::Mutex;
 use std::fmt::{self, Display, Formatter};
 use std::ops::Deref;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 const SLOW_REQUEST_THRESHOLD_MS: u128 = 1000;
@@ -85,10 +86,9 @@ impl Display for Metadata<'_> {
             line.add_quoted_field("normalized_path", &self.request.uri)?;
         }
 
-        if let Ok(metadata) = self.custom_metadata.lock() {
-            for (key, value) in &*metadata {
-                line.add_quoted_field(key, value)?;
-            }
+        let metadata = self.custom_metadata.lock();
+        for (key, value) in &*metadata {
+            line.add_quoted_field(key, value)?;
         }
 
         if let Some(CauseField(ref cause)) = self.cause {
@@ -147,9 +147,8 @@ pub trait CustomMetadataRequestExt {
 impl<T: RequestPartsExt> CustomMetadataRequestExt for T {
     fn add_custom_metadata<V: Display>(&self, key: &'static str, value: V) {
         if let Some(metadata) = self.extensions().get::<CustomMetadata>() {
-            if let Ok(mut metadata) = metadata.lock() {
-                metadata.push((key, value.to_string()));
-            }
+            let mut metadata = metadata.lock();
+            metadata.push((key, value.to_string()));
         }
 
         sentry::configure_scope(|scope| scope.set_extra(key, value.to_string().into()));
