@@ -7,10 +7,28 @@ use cookie::{Cookie, SameSite};
 use http::Request;
 use parking_lot::RwLock;
 use std::collections::HashMap;
+use std::ops::Deref;
 use std::sync::Arc;
 
 static COOKIE_NAME: &str = "cargo_session";
 static MAX_AGE_DAYS: i64 = 90;
+
+#[derive(Clone)]
+struct SessionExtension(Arc<RwLock<Session>>);
+
+impl SessionExtension {
+    fn new(session: Session) -> Self {
+        Self(Arc::new(RwLock::new(session)))
+    }
+}
+
+impl Deref for SessionExtension {
+    type Target = RwLock<Session>;
+
+    fn deref(&self) -> &Self::Target {
+        self.0.as_ref()
+    }
+}
 
 pub async fn attach_session<B>(
     jar: SignedCookieJar,
@@ -22,7 +40,7 @@ pub async fn attach_session<B>(
 
     // Save decoded session data in request extension,
     // and keep an `Arc` clone for later
-    let session = Arc::new(RwLock::new(Session::new(data)));
+    let session = SessionExtension::new(Session::new(data));
     req.extensions_mut().insert(session.clone());
 
     // Process the request
@@ -69,7 +87,7 @@ impl<T: RequestPartsExt> RequestSession for T {
     fn session_get(&self, key: &str) -> Option<String> {
         let session = self
             .extensions()
-            .get::<Arc<RwLock<Session>>>()
+            .get::<SessionExtension>()
             .expect("missing cookie session")
             .read();
         session.data.get(key).cloned()
@@ -78,7 +96,7 @@ impl<T: RequestPartsExt> RequestSession for T {
     fn session_insert(&self, key: String, value: String) -> Option<String> {
         let mut session = self
             .extensions()
-            .get::<Arc<RwLock<Session>>>()
+            .get::<SessionExtension>()
             .expect("missing cookie session")
             .write();
         session.dirty = true;
@@ -88,7 +106,7 @@ impl<T: RequestPartsExt> RequestSession for T {
     fn session_remove(&self, key: &str) -> Option<String> {
         let mut session = self
             .extensions()
-            .get::<Arc<RwLock<Session>>>()
+            .get::<SessionExtension>()
             .expect("missing cookie session")
             .write();
         session.dirty = true;
