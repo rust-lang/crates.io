@@ -60,8 +60,8 @@ impl Session {
 
 pub trait RequestSession {
     fn session_get(&self, key: &str) -> Option<String>;
-    fn session_insert(&mut self, key: String, value: String) -> Option<String>;
-    fn session_remove(&mut self, key: &str) -> Option<String>;
+    fn session_insert(&self, key: String, value: String) -> Option<String>;
+    fn session_remove(&self, key: &str) -> Option<String>;
 }
 
 impl<T: RequestPartsExt> RequestSession for T {
@@ -75,10 +75,10 @@ impl<T: RequestPartsExt> RequestSession for T {
         session.data.get(key).cloned()
     }
 
-    fn session_insert(&mut self, key: String, value: String) -> Option<String> {
+    fn session_insert(&self, key: String, value: String) -> Option<String> {
         let mut session = self
-            .extensions_mut()
-            .get_mut::<Arc<RwLock<Session>>>()
+            .extensions()
+            .get::<Arc<RwLock<Session>>>()
             .expect("missing cookie session")
             .write()
             .unwrap_or_else(PoisonError::into_inner);
@@ -86,10 +86,10 @@ impl<T: RequestPartsExt> RequestSession for T {
         session.data.insert(key, value)
     }
 
-    fn session_remove(&mut self, key: &str) -> Option<String> {
+    fn session_remove(&self, key: &str) -> Option<String> {
         let mut session = self
-            .extensions_mut()
-            .get_mut::<Arc<RwLock<Session>>>()
+            .extensions()
+            .get::<Arc<RwLock<Session>>>()
             .expect("missing cookie session")
             .write()
             .unwrap_or_else(PoisonError::into_inner);

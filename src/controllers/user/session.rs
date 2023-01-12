@@ -26,7 +26,7 @@ use crate::views::EncodableMe;
 ///     "url": "https://github.com/login/oauth/authorize?client_id=...&state=...&scope=read%3Aorg"
 /// }
 /// ```
-pub async fn begin(mut req: Parts) -> AppResult<Json<Value>> {
+pub async fn begin(req: Parts) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         let (url, state) = req
             .app()
@@ -70,7 +70,7 @@ pub async fn begin(mut req: Parts) -> AppResult<Json<Value>> {
 ///     }
 /// }
 /// ```
-pub async fn authorize(mut req: Parts) -> AppResult<Json<EncodableMe>> {
+pub async fn authorize(req: Parts) -> AppResult<Json<EncodableMe>> {
     let req = conduit_compat(move || {
         // Parse the url query
         let mut query = req.query();
@@ -143,7 +143,7 @@ fn save_user_to_database(
 }
 
 /// Handles the `DELETE /api/private/session` route.
-pub async fn logout(mut req: Parts) -> Json<bool> {
+pub async fn logout(req: Parts) -> Json<bool> {
     req.session_remove("user_id");
     Json(true)
 }
