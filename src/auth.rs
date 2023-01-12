@@ -161,7 +161,8 @@ fn authenticate_via_cookie<T: RequestPartsExt>(
     conn: &PgConnection,
 ) -> AppResult<Option<CookieAuthentication>> {
     let user_id_from_session = req
-        .session_get("user_id")
+        .session()
+        .get("user_id")
         .and_then(|s| s.parse::<i32>().ok());
 
     let Some(id) = user_id_from_session else { return Ok(None) };

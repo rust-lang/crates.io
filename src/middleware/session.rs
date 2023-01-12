@@ -14,7 +14,7 @@ static COOKIE_NAME: &str = "cargo_session";
 static MAX_AGE_DAYS: i64 = 90;
 
 #[derive(Clone)]
-struct SessionExtension(Arc<RwLock<Session>>);
+pub struct SessionExtension(Arc<RwLock<Session>>);
 
 impl SessionExtension {
     fn new(session: Session) -> Self {
@@ -83,7 +83,7 @@ pub async fn attach_session<B>(
 }
 
 /// Request extension holding the session data
-struct Session {
+pub struct Session {
     data: HashMap<String, String>,
     dirty: bool,
 }
@@ -95,31 +95,14 @@ impl Session {
 }
 
 pub trait RequestSession {
-    fn session_get(&self, key: &str) -> Option<String>;
-    fn session_insert(&self, key: String, value: String) -> Option<String>;
-    fn session_remove(&self, key: &str) -> Option<String>;
+    fn session(&self) -> &SessionExtension;
 }
 
 impl<T: RequestPartsExt> RequestSession for T {
-    fn session_get(&self, key: &str) -> Option<String> {
+    fn session(&self) -> &SessionExtension {
         self.extensions()
             .get::<SessionExtension>()
             .expect("missing cookie session")
-            .get(key)
-    }
-
-    fn session_insert(&self, key: String, value: String) -> Option<String> {
-        self.extensions()
-            .get::<SessionExtension>()
-            .expect("missing cookie session")
-            .insert(key, value)
-    }
-
-    fn session_remove(&self, key: &str) -> Option<String> {
-        self.extensions()
-            .get::<SessionExtension>()
-            .expect("missing cookie session")
-            .remove(key)
     }
 }
 

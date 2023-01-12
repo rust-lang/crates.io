@@ -35,7 +35,8 @@ pub async fn begin(req: Parts) -> AppResult<Json<Value>> {
             .add_scope(Scope::new("read:org".to_string()))
             .url();
         let state = state.secret().to_string();
-        req.session_insert("github_oauth_state".to_string(), state.clone());
+        req.session()
+            .insert("github_oauth_state".to_string(), state.clone());
 
         Ok(Json(json!({ "url": url.to_string(), "state": state })))
     })
@@ -79,8 +80,9 @@ pub async fn authorize(req: Parts) -> AppResult<Json<EncodableMe>> {
 
         // Make sure that the state we just got matches the session state that we
         // should have issued earlier.
+        let session = req.session();
         {
-            let session_state = req.session_remove("github_oauth_state");
+            let session_state = session.remove("github_oauth_state");
             let session_state = session_state.as_deref();
             if Some(&state[..]) != session_state {
                 return Err(bad_request("invalid state parameter"));
@@ -103,7 +105,7 @@ pub async fn authorize(req: Parts) -> AppResult<Json<EncodableMe>> {
         let user = save_user_to_database(&ghuser, token.secret(), &app.emails, &*app.db_write()?)?;
 
         // Log in by setting a cookie and the middleware authentication
-        req.session_insert("user_id".to_string(), user.id.to_string());
+        session.insert("user_id".to_string(), user.id.to_string());
 
         Ok(req)
     })
@@ -144,7 +146,7 @@ fn save_user_to_database(
 
 /// Handles the `DELETE /api/private/session` route.
 pub async fn logout(req: Parts) -> Json<bool> {
-    req.session_remove("user_id");
+    req.session().remove("user_id");
     Json(true)
 }
 
