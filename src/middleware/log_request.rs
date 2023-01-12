@@ -150,15 +150,14 @@ impl CustomMetadata {
 }
 
 pub trait CustomMetadataRequestExt {
-    fn add_custom_metadata<V: Display>(&self, key: &'static str, value: V);
+    fn request_log(&self) -> &CustomMetadata;
 }
 
 impl<T: RequestPartsExt> CustomMetadataRequestExt for T {
-    fn add_custom_metadata<V: Display>(&self, key: &'static str, value: V) {
+    fn request_log(&self) -> &CustomMetadata {
         self.extensions()
             .get::<CustomMetadata>()
             .expect("Failed to find `CustomMetadata` request extension")
-            .add(key, value);
     }
 }
 

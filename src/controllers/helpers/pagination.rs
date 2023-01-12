@@ -94,7 +94,7 @@ impl PaginationOptionsBuilder {
                 }
 
                 if numeric_page > MAX_PAGE_BEFORE_SUSPECTED_BOT {
-                    req.add_custom_metadata("bot", "suspected");
+                    req.request_log().add("bot", "suspected");
                 }
 
                 // Block large offsets for known violators of the crawler policy
@@ -103,7 +103,7 @@ impl PaginationOptionsBuilder {
                     if numeric_page > config.max_allowed_page_offset
                         && is_useragent_or_ip_blocked(config, req.headers())
                     {
-                        req.add_custom_metadata("cause", "large page offset");
+                        req.request_log().add("cause", "large page offset");
                         return Err(bad_request("requested page offset is too large"));
                     }
                 }

@@ -33,7 +33,7 @@ pub async fn require_user_agent<B>(
     let is_download = req.uri().path().ends_with("download");
 
     if !has_user_agent && !is_download {
-        req.add_custom_metadata("cause", "no user agent");
+        req.request_log().add("cause", "no user agent");
 
         let request_id = req
             .headers()

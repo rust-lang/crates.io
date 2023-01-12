@@ -52,8 +52,9 @@ pub async fn publish(req: ConduitRequest) -> AppResult<Json<GoodCrate>> {
     let new_crate: EncodableCrateUpload = serde_json::from_slice(&json_bytes)
         .map_err(|e| cargo_err(&format_args!("invalid upload request: {e}")))?;
 
-    req.add_custom_metadata("crate_name", new_crate.name.to_string());
-    req.add_custom_metadata("crate_version", new_crate.vers.to_string());
+    let request_log = req.request_log();
+    request_log.add("crate_name", new_crate.name.to_string());
+    request_log.add("crate_version", new_crate.vers.to_string());
 
     // Make sure required fields are provided
     fn empty(s: Option<&String>) -> bool {
@@ -315,7 +316,7 @@ fn split_body<R: RequestPartsExt>(mut bytes: Bytes, req: &R) -> AppResult<(Bytes
     // .crate tarball file
 
     let json_len = bytes.get_u32_le() as usize;
-    req.add_custom_metadata("metadata_length", json_len);
+    req.request_log().add("metadata_length", json_len);
 
     if json_len > bytes.len() {
         return Err(cargo_err(&format!(

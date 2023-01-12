@@ -172,7 +172,7 @@ fn authenticate_via_cookie<T: RequestPartsExt>(
 
     ensure_not_locked(&user)?;
 
-    req.add_custom_metadata("uid", id);
+    req.request_log().add("uid", id);
 
     Ok(Some(CookieAuthentication { user }))
 }
@@ -201,8 +201,8 @@ fn authenticate_via_token<T: RequestPartsExt>(
 
     ensure_not_locked(&user)?;
 
-    req.add_custom_metadata("uid", token.user_id);
-    req.add_custom_metadata("tokenid", token.id);
+    req.request_log().add("uid", token.user_id);
+    req.request_log().add("tokenid", token.id);
 
     Ok(Some(TokenAuthentication { user, token }))
 }

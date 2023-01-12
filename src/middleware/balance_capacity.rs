@@ -30,11 +30,11 @@ async fn handle_high_load<B>(
     let config = &app_state.config.balance_capacity;
     if config.report_only {
         // In report-only mode we serve all requests but add log metadata
-        request.add_custom_metadata("would_reject", note);
+        request.request_log().add("would_reject", note);
         next.run(request).await
     } else {
         // Reject the request
-        request.add_custom_metadata("cause", note);
+        request.request_log().add("cause", note);
 
         let body = "Service temporarily unavailable";
         (StatusCode::SERVICE_UNAVAILABLE, body).into_response()
@@ -50,12 +50,14 @@ pub async fn balance_capacity<B>(
     let db_capacity = app_state.config.db.primary.pool_size;
     let state = &app_state.balance_capacity;
 
+    let request_log = request.request_log();
+
     // The _drop_on_exit ensures the counter is decremented for all exit paths (including panics)
     let (_drop_on_exit1, in_flight_total) = RequestCounter::add_one(&state.in_flight_total);
 
     // Begin logging total request count so early stages of load increase can be located
     if in_flight_total >= config.log_total_at_count {
-        request.add_custom_metadata("in_flight_total", in_flight_total);
+        request_log.add("in_flight_total", in_flight_total);
     }
 
     // Download requests are always accepted and do not affect the capacity tracking
@@ -70,7 +72,7 @@ pub async fn balance_capacity<B>(
 
     // Begin logging non-download request count so early stages of non-download load increase can be located
     if load >= config.log_at_percentage {
-        request.add_custom_metadata("in_flight_non_dl_requests", count);
+        request_log.add("in_flight_non_dl_requests", count);
     }
 
     // Reject read-only requests as load nears capacity. Bots are likely to send only safe
