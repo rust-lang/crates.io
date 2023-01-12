@@ -1,4 +1,5 @@
 use crate::controllers::util::RequestPartsExt;
+use axum::extract::{Extension, FromRequestParts};
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
 use axum_extra::extract::SignedCookieJar;
@@ -13,7 +14,8 @@ use std::sync::Arc;
 static COOKIE_NAME: &str = "cargo_session";
 static MAX_AGE_DAYS: i64 = 90;
 
-#[derive(Clone)]
+#[derive(Clone, FromRequestParts)]
+#[from_request(via(Extension))]
 pub struct SessionExtension(Arc<RwLock<Session>>);
 
 impl SessionExtension {
