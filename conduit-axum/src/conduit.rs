@@ -12,7 +12,6 @@ use crate::server_error_response;
 pub use http::{header, Extensions, HeaderMap, Method, Request, Response, StatusCode, Uri};
 
 pub type BoxError = Box<dyn Error + Send>;
-pub type HandlerResult = AxumResponse;
 
 /// A helper to convert a concrete error type into a `Box<dyn Error + Send>`
 ///
