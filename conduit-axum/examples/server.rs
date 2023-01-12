@@ -1,7 +1,7 @@
 #![deny(clippy::all)]
 
 use axum::routing::get;
-use conduit_axum::{server_error_response, spawn_blocking, ConduitRequest, ServiceError};
+use conduit_axum::{server_error_response, spawn_blocking, ServiceError};
 
 use axum::response::IntoResponse;
 use std::io;
@@ -24,18 +24,18 @@ async fn main() {
         .unwrap()
 }
 
-async fn endpoint(_: ConduitRequest) -> impl IntoResponse {
+async fn endpoint() -> impl IntoResponse {
     spawn_blocking(move || sleep(std::time::Duration::from_secs(2)))
         .await
         .map_err(ServiceError::from)
         .map(|_| "Hello world!")
 }
 
-async fn panic(_: ConduitRequest) -> impl IntoResponse {
+async fn panic() -> impl IntoResponse {
     // For now, connection is immediately closed
     panic!("message");
 }
 
-async fn error(_: ConduitRequest) -> impl IntoResponse {
+async fn error() -> impl IntoResponse {
     server_error_response(&io::Error::new(io::ErrorKind::Other, "io error, oops"))
 }
