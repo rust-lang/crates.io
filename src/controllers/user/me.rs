@@ -99,10 +99,7 @@ pub async fn updates(req: Parts) -> AppResult<Json<Value>> {
 }
 
 /// Handles the `PUT /users/:user_id` route.
-pub async fn update_user(
-    Path(param_user_id): Path<i32>,
-    req: ConduitRequest,
-) -> AppResult<Response> {
+pub async fn update_user(Path(param_user_id): Path<i32>, req: BytesRequest) -> AppResult<Response> {
     conduit_compat(move || {
         use self::emails::user_id;
         use diesel::insert_into;
@@ -231,7 +228,7 @@ pub async fn regenerate_token_and_send(
 }
 
 /// Handles `PUT /me/email_notifications` route
-pub async fn update_email_notifications(req: ConduitRequest) -> AppResult<Response> {
+pub async fn update_email_notifications(req: BytesRequest) -> AppResult<Response> {
     conduit_compat(move || {
         use self::crate_owners::dsl::*;
         use diesel::pg::upsert::excluded;

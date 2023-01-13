@@ -26,7 +26,7 @@ pub async fn list(req: Parts) -> AppResult<Json<Value>> {
 }
 
 /// Handles the `PUT /me/tokens` route.
-pub async fn new(req: ConduitRequest) -> AppResult<Json<Value>> {
+pub async fn new(req: BytesRequest) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         /// The incoming serialization format for the `ApiToken` model.
         #[derive(Deserialize, Serialize)]

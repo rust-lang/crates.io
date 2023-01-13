@@ -16,7 +16,7 @@ mod prelude {
     pub use diesel::prelude::*;
     pub use serde_json::Value;
 
-    pub use conduit_axum::ConduitRequest;
+    pub use conduit_axum::BytesRequest;
     pub use http::{header, request::Parts, Request, StatusCode};
 
     pub use super::conduit_axum::conduit_compat;

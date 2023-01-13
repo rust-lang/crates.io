@@ -76,7 +76,7 @@ impl<B> RequestPartsExt for Request<B> {
     }
 }
 
-impl RequestPartsExt for ConduitRequest {
+impl RequestPartsExt for BytesRequest {
     fn method(&self) -> &Method {
         self.0.method()
     }
