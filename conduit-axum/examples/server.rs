@@ -1,11 +1,12 @@
 #![deny(clippy::all)]
 
 use axum::routing::get;
-use conduit_axum::{server_error_response, spawn_blocking, ServiceError};
+use conduit_axum::{server_error_response, ServiceError};
 
 use axum::response::IntoResponse;
 use std::io;
 use std::thread::sleep;
+use tokio::task::spawn_blocking;
 
 #[tokio::main]
 async fn main() {
