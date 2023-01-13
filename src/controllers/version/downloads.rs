@@ -21,7 +21,7 @@ pub async fn download(
     let wants_json = req.wants_json();
 
     let cache_key = (crate_name.to_string(), version.to_string());
-    let redirect_url = conduit_compat(move || {
+    let (crate_name, version, app) = conduit_compat(move || {
         if let Some(version_id) = app.version_id_cacher.get(&cache_key) {
             app.instance_metrics.version_id_cache_hits.inc();
 
@@ -105,11 +105,11 @@ pub async fn download(
             }
         };
 
-        let redirect_url = app.config.uploader().crate_location(&crate_name, &version);
-        Ok(redirect_url)
+        Ok((crate_name, version, app))
     })
     .await?;
 
+    let redirect_url = app.config.uploader().crate_location(&crate_name, &version);
     if wants_json {
         Ok(Json(json!({ "url": redirect_url })).into_response())
     } else {
