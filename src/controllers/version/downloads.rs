@@ -20,8 +20,8 @@ pub async fn download(
 ) -> AppResult<Response> {
     let wants_json = req.wants_json();
 
+    let cache_key = (crate_name.to_string(), version.to_string());
     let redirect_url = conduit_compat(move || {
-        let cache_key = (crate_name.to_string(), version.to_string());
         if let Some(version_id) = app.version_id_cacher.get(&cache_key) {
             app.instance_metrics.version_id_cache_hits.inc();
 
