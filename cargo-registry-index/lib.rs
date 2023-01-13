@@ -7,6 +7,7 @@ extern crate tracing;
 pub mod testing;
 
 use anyhow::{anyhow, Context};
+use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -141,7 +142,7 @@ pub struct Crate {
     pub v: Option<u32>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, PartialOrd, Ord, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct Dependency {
     pub name: String,
     pub req: String,
@@ -152,6 +153,24 @@ pub struct Dependency {
     pub kind: Option<DependencyKind>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub package: Option<String>,
+}
+
+impl PartialOrd for Dependency {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Dependency {
+    fn cmp(&self, other: &Self) -> Ordering {
+        // In old `cargo` versions the dependency order appears to matter if the
+        // same dependency exists twice but with different `kind` fields. In
+        // those cases the `optional` field can sometimes be ignored or
+        // misinterpreted. With this manual `Ord` implementation we ensure that
+        // `normal` dependencies are always first when multiple with the same
+        // `name` exist.
+        (&self.name, self.kind, &self.req).cmp(&(&other.name, other.kind, &other.req))
+    }
 }
 
 #[derive(Copy, Clone, Serialize, Deserialize, Debug, PartialEq, PartialOrd, Ord, Eq)]
