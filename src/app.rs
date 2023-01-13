@@ -10,7 +10,7 @@ use crate::downloads_counter::DownloadsCounter;
 use crate::email::Emails;
 use crate::github::{GitHubClient, RealGitHubClient};
 use crate::metrics::{InstanceMetrics, ServiceMetrics};
-use axum::extract::FromRef;
+use axum::extract::{FromRef, FromRequestParts, State};
 use diesel::r2d2;
 use moka::future::{Cache, CacheBuilder};
 use oauth2::basic::BasicClient;
@@ -282,7 +282,8 @@ pub struct BalanceCapacityState {
     pub in_flight_non_dl_requests: AtomicUsize,
 }
 
-#[derive(Clone)]
+#[derive(Clone, FromRequestParts)]
+#[from_request(via(State))]
 pub struct AppState(pub Arc<App>);
 
 // deref so you can still access the inner fields easily

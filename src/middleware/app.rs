@@ -1,4 +1,3 @@
-use axum::extract::State;
 use axum::middleware::Next;
 use axum::response::Response;
 use http::Request;
@@ -8,7 +7,7 @@ use crate::controllers::util::RequestPartsExt;
 
 /// `axum` middleware that injects the `AppState` instance into the `Request` extensions.
 pub async fn add_app_state_extension<B>(
-    State(app_state): State<AppState>,
+    app_state: AppState,
     mut request: Request<B>,
     next: Next<B>,
 ) -> Response {

@@ -16,9 +16,13 @@ fn follow_target(crate_name: &str, conn: &DieselPooledConn<'_>, user_id: i32) ->
 }
 
 /// Handles the `PUT /crates/:crate_id/follow` route.
-pub async fn follow(Path(crate_name): Path<String>, req: Parts) -> AppResult<Response> {
+pub async fn follow(
+    app: AppState,
+    Path(crate_name): Path<String>,
+    req: Parts,
+) -> AppResult<Response> {
     conduit_compat(move || {
-        let conn = req.app().db_write()?;
+        let conn = app.db_write()?;
         let user_id = AuthCheck::default().check(&req, &conn)?.user_id();
         let follow = follow_target(&crate_name, &conn, user_id)?;
         diesel::insert_into(follows::table)
@@ -32,9 +36,13 @@ pub async fn follow(Path(crate_name): Path<String>, req: Parts) -> AppResult<Res
 }
 
 /// Handles the `DELETE /crates/:crate_id/follow` route.
-pub async fn unfollow(Path(crate_name): Path<String>, req: Parts) -> AppResult<Response> {
+pub async fn unfollow(
+    app: AppState,
+    Path(crate_name): Path<String>,
+    req: Parts,
+) -> AppResult<Response> {
     conduit_compat(move || {
-        let conn = req.app().db_write()?;
+        let conn = app.db_write()?;
         let user_id = AuthCheck::default().check(&req, &conn)?.user_id();
         let follow = follow_target(&crate_name, &conn, user_id)?;
         diesel::delete(&follow).execute(&*conn)?;
@@ -45,11 +53,15 @@ pub async fn unfollow(Path(crate_name): Path<String>, req: Parts) -> AppResult<R
 }
 
 /// Handles the `GET /crates/:crate_id/following` route.
-pub async fn following(Path(crate_name): Path<String>, req: Parts) -> AppResult<Json<Value>> {
+pub async fn following(
+    app: AppState,
+    Path(crate_name): Path<String>,
+    req: Parts,
+) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         use diesel::dsl::exists;
 
-        let conn = req.app().db_read_prefer_primary()?;
+        let conn = app.db_read_prefer_primary()?;
         let user_id = AuthCheck::only_cookie().check(&req, &conn)?.user_id();
         let follow = follow_target(&crate_name, &conn, user_id)?;
         let following =

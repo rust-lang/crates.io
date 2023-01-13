@@ -26,10 +26,9 @@ use crate::views::EncodableMe;
 ///     "url": "https://github.com/login/oauth/authorize?client_id=...&state=...&scope=read%3Aorg"
 /// }
 /// ```
-pub async fn begin(session: SessionExtension, req: Parts) -> AppResult<Json<Value>> {
+pub async fn begin(app: AppState, session: SessionExtension) -> AppResult<Json<Value>> {
     conduit_compat(move || {
-        let (url, state) = req
-            .app()
+        let (url, state) = app
             .github_oauth
             .authorize_url(oauth2::CsrfToken::new_random)
             .add_scope(Scope::new("read:org".to_string()))
@@ -70,7 +69,13 @@ pub async fn begin(session: SessionExtension, req: Parts) -> AppResult<Json<Valu
 ///     }
 /// }
 /// ```
-pub async fn authorize(session: SessionExtension, req: Parts) -> AppResult<Json<EncodableMe>> {
+pub async fn authorize(
+    app: AppState,
+    session: SessionExtension,
+    req: Parts,
+) -> AppResult<Json<EncodableMe>> {
+    let app_clone = app.clone();
+
     let req = conduit_compat(move || {
         // Parse the url query
         let mut query = req.query();
@@ -86,8 +91,6 @@ pub async fn authorize(session: SessionExtension, req: Parts) -> AppResult<Json<
                 return Err(bad_request("invalid state parameter"));
             }
         }
-
-        let app = req.app();
 
         // Fetch the access token from GitHub using the code we just got
         let code = AuthorizationCode::new(code);
@@ -109,7 +112,7 @@ pub async fn authorize(session: SessionExtension, req: Parts) -> AppResult<Json<
     })
     .await?;
 
-    super::me::me(req).await
+    super::me::me(app_clone, req).await
 }
 
 fn save_user_to_database(

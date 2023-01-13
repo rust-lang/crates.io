@@ -13,9 +13,9 @@ use crate::schema::{crate_owners, crates, emails, follows, users, versions};
 use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCrate};
 
 /// Handles the `GET /me` route.
-pub async fn me(req: Parts) -> AppResult<Json<EncodableMe>> {
+pub async fn me(app: AppState, req: Parts) -> AppResult<Json<EncodableMe>> {
     conduit_compat(move || {
-        let conn = req.app().db_read_prefer_primary()?;
+        let conn = app.db_read_prefer_primary()?;
         let user_id = AuthCheck::only_cookie().check(&req, &conn)?.user_id();
 
         let (user, verified, email, verification_sent): (User, Option<bool>, Option<String>, bool) =
@@ -55,11 +55,11 @@ pub async fn me(req: Parts) -> AppResult<Json<EncodableMe>> {
 }
 
 /// Handles the `GET /me/updates` route.
-pub async fn updates(req: Parts) -> AppResult<Json<Value>> {
+pub async fn updates(app: AppState, req: Parts) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         use diesel::dsl::any;
 
-        let conn = req.app().db_read_prefer_primary()?;
+        let conn = app.db_read_prefer_primary()?;
         let auth = AuthCheck::only_cookie().check(&req, &conn)?;
         let user = auth.user();
 
@@ -99,12 +99,16 @@ pub async fn updates(req: Parts) -> AppResult<Json<Value>> {
 }
 
 /// Handles the `PUT /users/:user_id` route.
-pub async fn update_user(Path(param_user_id): Path<i32>, req: BytesRequest) -> AppResult<Response> {
+pub async fn update_user(
+    app: AppState,
+    Path(param_user_id): Path<i32>,
+    req: BytesRequest,
+) -> AppResult<Response> {
     conduit_compat(move || {
         use self::emails::user_id;
         use diesel::insert_into;
 
-        let state = req.app().clone();
+        let state = app.clone();
         let conn = state.db_write()?;
 
         let auth = AuthCheck::default().check(&req, &conn)?;
@@ -169,10 +173,7 @@ pub async fn update_user(Path(param_user_id): Path<i32>, req: BytesRequest) -> A
 }
 
 /// Handles the `PUT /confirm/:email_token` route
-pub async fn confirm_user_email(
-    state: State<AppState>,
-    Path(token): Path<String>,
-) -> AppResult<Response> {
+pub async fn confirm_user_email(state: AppState, Path(token): Path<String>) -> AppResult<Response> {
     conduit_compat(move || {
         use diesel::update;
 
@@ -193,6 +194,7 @@ pub async fn confirm_user_email(
 
 /// Handles `PUT /user/:user_id/resend` route
 pub async fn regenerate_token_and_send(
+    state: AppState,
     Path(param_user_id): Path<i32>,
     req: Parts,
 ) -> AppResult<Response> {
@@ -200,7 +202,6 @@ pub async fn regenerate_token_and_send(
         use diesel::dsl::sql;
         use diesel::update;
 
-        let state = req.app();
         let conn = state.db_write()?;
 
         let auth = AuthCheck::default().check(&req, &conn)?;
@@ -228,7 +229,7 @@ pub async fn regenerate_token_and_send(
 }
 
 /// Handles `PUT /me/email_notifications` route
-pub async fn update_email_notifications(req: BytesRequest) -> AppResult<Response> {
+pub async fn update_email_notifications(app: AppState, req: BytesRequest) -> AppResult<Response> {
     conduit_compat(move || {
         use self::crate_owners::dsl::*;
         use diesel::pg::upsert::excluded;
@@ -246,7 +247,7 @@ pub async fn update_email_notifications(req: BytesRequest) -> AppResult<Response
                 .map(|c| (c.id, c.email_notifications))
                 .collect();
 
-        let conn = req.app().db_write()?;
+        let conn = app.db_write()?;
         let user_id = AuthCheck::default().check(&req, &conn)?.user_id();
 
         // Build inserts from existing crates belonging to the current user

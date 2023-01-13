@@ -9,9 +9,9 @@ use axum::response::IntoResponse;
 use serde_json as json;
 
 /// Handles the `GET /me/tokens` route.
-pub async fn list(req: Parts) -> AppResult<Json<Value>> {
+pub async fn list(app: AppState, req: Parts) -> AppResult<Json<Value>> {
     conduit_compat(move || {
-        let conn = req.app().db_read_prefer_primary()?;
+        let conn = app.db_read_prefer_primary()?;
         let auth = AuthCheck::only_cookie().check(&req, &conn)?;
         let user = auth.user();
 
@@ -26,7 +26,7 @@ pub async fn list(req: Parts) -> AppResult<Json<Value>> {
 }
 
 /// Handles the `PUT /me/tokens` route.
-pub async fn new(req: BytesRequest) -> AppResult<Json<Value>> {
+pub async fn new(app: AppState, req: BytesRequest) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         /// The incoming serialization format for the `ApiToken` model.
         #[derive(Deserialize, Serialize)]
@@ -48,7 +48,7 @@ pub async fn new(req: BytesRequest) -> AppResult<Json<Value>> {
             return Err(bad_request("name must have a value"));
         }
 
-        let conn = req.app().db_write()?;
+        let conn = app.db_write()?;
 
         let auth = AuthCheck::default().check(&req, &conn)?;
         if auth.api_token_id().is_some() {
@@ -76,9 +76,9 @@ pub async fn new(req: BytesRequest) -> AppResult<Json<Value>> {
 }
 
 /// Handles the `DELETE /me/tokens/:id` route.
-pub async fn revoke(Path(id): Path<i32>, req: Parts) -> AppResult<Json<Value>> {
+pub async fn revoke(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult<Json<Value>> {
     conduit_compat(move || {
-        let conn = req.app().db_write()?;
+        let conn = app.db_write()?;
         let auth = AuthCheck::default().check(&req, &conn)?;
         let user = auth.user();
         diesel::update(ApiToken::belonging_to(user).find(id))
@@ -91,9 +91,9 @@ pub async fn revoke(Path(id): Path<i32>, req: Parts) -> AppResult<Json<Value>> {
 }
 
 /// Handles the `DELETE /tokens/current` route.
-pub async fn revoke_current(req: Parts) -> AppResult<Response> {
+pub async fn revoke_current(app: AppState, req: Parts) -> AppResult<Response> {
     conduit_compat(move || {
-        let conn = req.app().db_write()?;
+        let conn = app.db_write()?;
         let auth = AuthCheck::default().check(&req, &conn)?;
         let api_token_id = auth
             .api_token_id()

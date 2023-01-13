@@ -1,5 +1,5 @@
 use crate::app::AppState;
-use axum::extract::{MatchedPath, State};
+use axum::extract::MatchedPath;
 use axum::middleware::Next;
 use axum::response::Response;
 
@@ -8,7 +8,7 @@ use prometheus::IntGauge;
 use std::time::Instant;
 
 pub async fn update_metrics<B>(
-    State(state): State<AppState>,
+    state: AppState,
     matched_path: Option<MatchedPath>,
     req: Request<B>,
     next: Next<B>,

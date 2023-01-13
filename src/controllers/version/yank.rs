@@ -20,22 +20,30 @@ use crate::worker;
 /// and the goal of yanking a crate is to prevent crates
 /// beginning to depend on the yanked crate version.
 pub async fn yank(
+    app: AppState,
     Path((crate_name, version)): Path<(String, String)>,
     req: Parts,
 ) -> AppResult<Response> {
-    conduit_compat(move || modify_yank(&crate_name, &version, &req, true)).await
+    conduit_compat(move || modify_yank(&crate_name, &version, &app, &req, true)).await
 }
 
 /// Handles the `PUT /crates/:crate_id/:version/unyank` route.
 pub async fn unyank(
+    app: AppState,
     Path((crate_name, version)): Path<(String, String)>,
     req: Parts,
 ) -> AppResult<Response> {
-    conduit_compat(move || modify_yank(&crate_name, &version, &req, false)).await
+    conduit_compat(move || modify_yank(&crate_name, &version, &app, &req, false)).await
 }
 
 /// Changes `yanked` flag on a crate version record
-fn modify_yank(crate_name: &str, version: &str, req: &Parts, yanked: bool) -> AppResult<Response> {
+fn modify_yank(
+    crate_name: &str,
+    version: &str,
+    state: &AppState,
+    req: &Parts,
+    yanked: bool,
+) -> AppResult<Response> {
     // FIXME: Should reject bad requests before authentication, but can't due to
     // lifetime issues with `req`.
 
@@ -43,7 +51,6 @@ fn modify_yank(crate_name: &str, version: &str, req: &Parts, yanked: bool) -> Ap
         return Err(cargo_err(&format_args!("invalid semver: {version}")));
     }
 
-    let state = req.app();
     let conn = state.db_write()?;
 
     let auth = AuthCheck::default()

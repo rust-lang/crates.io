@@ -1,5 +1,4 @@
 use crate::app::AppState;
-use axum::extract::State;
 use axum::response::IntoResponse;
 use axum::Json;
 
@@ -7,7 +6,7 @@ use axum::Json;
 ///
 /// The sha is contained within the `HEROKU_SLUG_COMMIT` environment variable.
 /// If `HEROKU_SLUG_COMMIT` is not set, returns `"unknown"`.
-pub async fn show_deployed_sha(State(state): State<AppState>) -> impl IntoResponse {
+pub async fn show_deployed_sha(state: AppState) -> impl IntoResponse {
     let read_only = state.config.db.are_all_read_only();
 
     let deployed_sha =

@@ -9,10 +9,7 @@ use axum::body::Bytes;
 use http::Request;
 
 /// Handles the `GET /crates/:crate_id/owners` route.
-pub async fn owners(
-    state: State<AppState>,
-    Path(crate_name): Path<String>,
-) -> AppResult<Json<Value>> {
+pub async fn owners(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         let conn = state.db_read()?;
         let krate: Crate = Crate::by_name(&crate_name).first(&*conn)?;
@@ -28,10 +25,7 @@ pub async fn owners(
 }
 
 /// Handles the `GET /crates/:crate_id/owner_team` route.
-pub async fn owner_team(
-    state: State<AppState>,
-    Path(crate_name): Path<String>,
-) -> AppResult<Json<Value>> {
+pub async fn owner_team(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         let conn = state.db_read()?;
         let krate: Crate = Crate::by_name(&crate_name).first(&*conn)?;
@@ -46,10 +40,7 @@ pub async fn owner_team(
 }
 
 /// Handles the `GET /crates/:crate_id/owner_user` route.
-pub async fn owner_user(
-    state: State<AppState>,
-    Path(crate_name): Path<String>,
-) -> AppResult<Json<Value>> {
+pub async fn owner_user(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         let conn = state.db_read()?;
         let krate: Crate = Crate::by_name(&crate_name).first(&*conn)?;
@@ -65,18 +56,20 @@ pub async fn owner_user(
 
 /// Handles the `PUT /crates/:crate_id/owners` route.
 pub async fn add_owners(
+    app: AppState,
     Path(crate_name): Path<String>,
     req: BytesRequest,
 ) -> AppResult<Json<Value>> {
-    conduit_compat(move || modify_owners(&crate_name, &req, true)).await
+    conduit_compat(move || modify_owners(&app, &crate_name, &req, true)).await
 }
 
 /// Handles the `DELETE /crates/:crate_id/owners` route.
 pub async fn remove_owners(
+    app: AppState,
     Path(crate_name): Path<String>,
     req: BytesRequest,
 ) -> AppResult<Json<Value>> {
-    conduit_compat(move || modify_owners(&crate_name, &req, false)).await
+    conduit_compat(move || modify_owners(&app, &crate_name, &req, false)).await
 }
 
 /// Parse the JSON request body of requests to modify the owners of a crate.
@@ -101,9 +94,13 @@ fn parse_owners_request(req: &Request<Bytes>) -> AppResult<Vec<String>> {
         .ok_or_else(|| cargo_err("invalid json request"))
 }
 
-fn modify_owners(crate_name: &str, req: &Request<Bytes>, add: bool) -> AppResult<Json<Value>> {
+fn modify_owners(
+    app: &AppState,
+    crate_name: &str,
+    req: &Request<Bytes>,
+    add: bool,
+) -> AppResult<Json<Value>> {
     let logins = parse_owners_request(req)?;
-    let app = req.app();
 
     let conn = app.db_write()?;
     let auth = AuthCheck::default()

@@ -16,15 +16,15 @@ use indexmap::IndexMap;
 use std::collections::{HashMap, HashSet};
 
 /// Handles the `GET /api/v1/me/crate_owner_invitations` route.
-pub async fn list(req: Parts) -> AppResult<Json<Value>> {
+pub async fn list(app: AppState, req: Parts) -> AppResult<Json<Value>> {
     conduit_compat(move || {
-        let conn = req.app().db_read()?;
+        let conn = app.db_read()?;
         let auth = AuthCheck::only_cookie().check(&req, &conn)?;
         let user_id = auth.user_id();
 
         let PrivateListResponse {
             invitations, users, ..
-        } = prepare_list(&req, auth, ListFilter::InviteeId(user_id), &conn)?;
+        } = prepare_list(&app, &req, auth, ListFilter::InviteeId(user_id), &conn)?;
 
         // The schema for the private endpoints is converted to the schema used by v1 endpoints.
         let crate_owner_invitations = invitations
@@ -56,9 +56,9 @@ pub async fn list(req: Parts) -> AppResult<Json<Value>> {
 }
 
 /// Handles the `GET /api/private/crate_owner_invitations` route.
-pub async fn private_list(req: Parts) -> AppResult<Json<PrivateListResponse>> {
+pub async fn private_list(app: AppState, req: Parts) -> AppResult<Json<PrivateListResponse>> {
     conduit_compat(move || {
-        let conn = req.app().db_read()?;
+        let conn = app.db_read()?;
         let auth = AuthCheck::only_cookie().check(&req, &conn)?;
 
         let filter = if let Some(crate_name) = req.query().get("crate_name") {
@@ -69,7 +69,7 @@ pub async fn private_list(req: Parts) -> AppResult<Json<PrivateListResponse>> {
             return Err(bad_request("missing or invalid filter"));
         };
 
-        let list = prepare_list(&req, auth, filter, &conn)?;
+        let list = prepare_list(&app, &req, auth, filter, &conn)?;
         Ok(Json(list))
     })
     .await
@@ -81,6 +81,7 @@ enum ListFilter {
 }
 
 fn prepare_list(
+    state: &AppState,
     req: &Parts,
     auth: Authentication,
     filter: ListFilter,
@@ -93,7 +94,6 @@ fn prepare_list(
 
     let user = auth.user();
 
-    let state = req.app();
     let config = &state.config;
 
     let mut crate_names = HashMap::new();
@@ -258,14 +258,13 @@ struct OwnerInvitation {
 }
 
 /// Handles the `PUT /api/v1/me/crate_owner_invitations/:crate_id` route.
-pub async fn handle_invite(req: BytesRequest) -> AppResult<Json<Value>> {
+pub async fn handle_invite(state: AppState, req: BytesRequest) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         let crate_invite: OwnerInvitation =
             serde_json::from_slice(req.body()).map_err(|_| bad_request("invalid json request"))?;
 
         let crate_invite = crate_invite.crate_owner_invite;
 
-        let state = req.app();
         let conn = state.db_write()?;
 
         let auth = AuthCheck::default().check(&req, &conn)?;
@@ -287,7 +286,7 @@ pub async fn handle_invite(req: BytesRequest) -> AppResult<Json<Value>> {
 
 /// Handles the `PUT /api/v1/me/crate_owner_invitations/accept/:token` route.
 pub async fn handle_invite_with_token(
-    state: State<AppState>,
+    state: AppState,
     Path(token): Path<String>,
 ) -> AppResult<Json<Value>> {
     conduit_compat(move || {

@@ -11,13 +11,13 @@
 use crate::app::AppState;
 use crate::middleware::log_request::RequestLogExt;
 use crate::util::errors::RouteBlocked;
-use axum::extract::{MatchedPath, State};
+use axum::extract::MatchedPath;
 use axum::middleware::Next;
 use axum::response::IntoResponse;
 use http::StatusCode;
 
 pub async fn block_traffic<B>(
-    State(state): State<AppState>,
+    state: AppState,
     req: http::Request<B>,
     next: Next<B>,
 ) -> axum::response::Response {
@@ -59,7 +59,7 @@ pub async fn block_traffic<B>(
 /// environment variable.
 pub async fn block_routes<B>(
     matched_path: Option<MatchedPath>,
-    State(state): State<AppState>,
+    state: AppState,
     req: http::Request<B>,
     next: Next<B>,
 ) -> axum::response::Response {
