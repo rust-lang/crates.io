@@ -21,18 +21,19 @@ pub async fn download(
     let wants_json = req.wants_json();
 
     let cache_key = (crate_name.to_string(), version.to_string());
-    let (crate_name, version, app) = conduit_compat(move || {
-        if let Some(version_id) = app.version_id_cacher.get(&cache_key) {
-            app.instance_metrics.version_id_cache_hits.inc();
+    let (crate_name, version) = if let Some(version_id) = app.version_id_cacher.get(&cache_key) {
+        app.instance_metrics.version_id_cache_hits.inc();
 
-            // The increment does not happen instantly, but it's deferred to be executed in a batch
-            // along with other downloads. See crate::downloads_counter for the implementation.
-            app.downloads_counter.increment(version_id);
+        // The increment does not happen instantly, but it's deferred to be executed in a batch
+        // along with other downloads. See crate::downloads_counter for the implementation.
+        app.downloads_counter.increment(version_id);
 
-            Ok((crate_name, version, app))
-        } else {
-            app.instance_metrics.version_id_cache_misses.inc();
+        (crate_name, version)
+    } else {
+        app.instance_metrics.version_id_cache_misses.inc();
 
+        let app = app.clone();
+        conduit_compat(move || {
             // When no database connection is ready unconditional redirects will be performed. This could
             // happen if the pool is not healthy or if an operator manually configured the application to
             // always perform unconditional redirects (for example as part of the mitigations for an
@@ -74,7 +75,7 @@ pub async fn download(
                         .inc();
                     req.request_log().add("bot", "dl");
 
-                    Ok((canonical_crate_name, version, app))
+                    Ok((canonical_crate_name, version))
                 } else {
                     // The version_id is only cached if the provided crate name was canonical.
                     // Non-canonical requests fallback to the "slow" path with a DB query, but
@@ -83,7 +84,7 @@ pub async fn download(
                         .blocking()
                         .insert(cache_key, version_id);
 
-                    Ok((crate_name, version, app))
+                    Ok((crate_name, version))
                 }
             } else {
                 // The download endpoint is the most critical route in the whole crates.io application,
@@ -108,11 +109,11 @@ pub async fn download(
 
                 req.request_log().add("unconditional_redirect", "true");
 
-                Ok((crate_name, version, app))
+                Ok((crate_name, version))
             }
-        }
-    })
-    .await?;
+        })
+        .await?
+    };
 
     let redirect_url = app.config.uploader().crate_location(&crate_name, &version);
     if wants_json {
