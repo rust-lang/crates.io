@@ -1,4 +1,4 @@
-use crate::{server_error_response, ServiceError};
+use crate::server_error_response;
 use axum::response::{IntoResponse, Response};
 use http::header::HeaderName;
 use http::{HeaderMap, HeaderValue, Request, StatusCode, Uri};
@@ -23,10 +23,10 @@ async fn panic() -> Response {
     panic!()
 }
 
-async fn sleep() -> Result<Response, ServiceError> {
+async fn sleep() -> Result<Response, StatusCode> {
     spawn_blocking(move || std::thread::sleep(std::time::Duration::from_millis(100)))
         .await
-        .map_err(ServiceError::from)?;
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     Ok(ok_result().await)
 }

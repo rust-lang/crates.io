@@ -1,5 +1,3 @@
-use crate::error::ServiceError;
-
 use std::error::Error;
 
 use axum::extract::Extension;
@@ -12,12 +10,6 @@ pub struct ErrorField(pub String);
 
 #[derive(Clone, Debug)]
 pub struct CauseField(pub String);
-
-impl IntoResponse for ServiceError {
-    fn into_response(self) -> Response {
-        server_error_response(&self)
-    }
-}
 
 /// Logs an error message and returns a generic status 500 response
 pub fn server_error_response<E: Error + ?Sized>(error: &E) -> Response {

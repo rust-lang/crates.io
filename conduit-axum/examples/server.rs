@@ -1,9 +1,10 @@
 #![deny(clippy::all)]
 
 use axum::routing::get;
-use conduit_axum::{server_error_response, ServiceError};
+use conduit_axum::server_error_response;
 
 use axum::response::IntoResponse;
+use http::StatusCode;
 use std::io;
 use std::thread::sleep;
 use tokio::task::spawn_blocking;
@@ -28,7 +29,7 @@ async fn main() {
 async fn endpoint() -> impl IntoResponse {
     spawn_blocking(move || sleep(std::time::Duration::from_secs(2)))
         .await
-        .map_err(ServiceError::from)
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
         .map(|_| "Hello world!")
 }
 

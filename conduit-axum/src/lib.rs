@@ -35,10 +35,8 @@
 //! }
 //! ```
 
-mod error;
 mod fallback;
 #[cfg(test)]
 mod tests;
 
-pub use error::ServiceError;
 pub use fallback::{server_error_response, CauseField, ErrorField};
