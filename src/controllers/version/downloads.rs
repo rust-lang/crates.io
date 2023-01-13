@@ -15,20 +15,25 @@ use chrono::{Duration, NaiveDate, Utc};
 /// This returns a URL to the location where the crate is stored.
 pub async fn download(
     app: AppState,
-    Path((mut crate_name, version)): Path<(String, String)>,
+    Path((crate_name, version)): Path<(String, String)>,
     req: Parts,
 ) -> AppResult<Response> {
-    conduit_compat(move || {
-        let cache_key = (crate_name.to_string(), version.to_string());
-        if let Some(version_id) = app.version_id_cacher.get(&cache_key) {
-            app.instance_metrics.version_id_cache_hits.inc();
+    let wants_json = req.wants_json();
 
-            // The increment does not happen instantly, but it's deferred to be executed in a batch
-            // along with other downloads. See crate::downloads_counter for the implementation.
-            app.downloads_counter.increment(version_id);
-        } else {
-            app.instance_metrics.version_id_cache_misses.inc();
+    let cache_key = (crate_name.to_string(), version.to_string());
+    let (crate_name, version) = if let Some(version_id) = app.version_id_cacher.get(&cache_key) {
+        app.instance_metrics.version_id_cache_hits.inc();
 
+        // The increment does not happen instantly, but it's deferred to be executed in a batch
+        // along with other downloads. See crate::downloads_counter for the implementation.
+        app.downloads_counter.increment(version_id);
+
+        (crate_name, version)
+    } else {
+        app.instance_metrics.version_id_cache_misses.inc();
+
+        let app = app.clone();
+        conduit_compat(move || {
             // When no database connection is ready unconditional redirects will be performed. This could
             // happen if the pool is not healthy or if an operator manually configured the application to
             // always perform unconditional redirects (for example as part of the mitigations for an
@@ -60,12 +65,17 @@ pub async fn download(
                             .first::<(i32, String)>(&**conn)
                     })?;
 
+                // The increment does not happen instantly, but it's deferred to be executed in a batch
+                // along with other downloads. See crate::downloads_counter for the implementation.
+                app.downloads_counter.increment(version_id);
+
                 if canonical_crate_name != crate_name {
                     app.instance_metrics
                         .downloads_non_canonical_crate_name_total
                         .inc();
                     req.request_log().add("bot", "dl");
-                    crate_name = canonical_crate_name;
+
+                    Ok((canonical_crate_name, version))
                 } else {
                     // The version_id is only cached if the provided crate name was canonical.
                     // Non-canonical requests fallback to the "slow" path with a DB query, but
@@ -73,11 +83,9 @@ pub async fn download(
                     app.version_id_cacher
                         .blocking()
                         .insert(cache_key, version_id);
-                }
 
-                // The increment does not happen instantly, but it's deferred to be executed in a batch
-                // along with other downloads. See crate::downloads_counter for the implementation.
-                app.downloads_counter.increment(version_id);
+                    Ok((crate_name, version))
+                }
             } else {
                 // The download endpoint is the most critical route in the whole crates.io application,
                 // as it's relied upon by users and automations to download crates. Keeping it working
@@ -100,17 +108,19 @@ pub async fn download(
                     .inc();
 
                 req.request_log().add("unconditional_redirect", "true");
-            }
-        };
 
-        let redirect_url = app.config.uploader().crate_location(&crate_name, &version);
-        if req.wants_json() {
-            Ok(Json(json!({ "url": redirect_url })).into_response())
-        } else {
-            Ok(redirect(redirect_url))
-        }
-    })
-    .await
+                Ok((crate_name, version))
+            }
+        })
+        .await?
+    };
+
+    let redirect_url = app.config.uploader().crate_location(&crate_name, &version);
+    if wants_json {
+        Ok(Json(json!({ "url": redirect_url })).into_response())
+    } else {
+        Ok(redirect(redirect_url))
+    }
 }
 
 /// Handles the `GET /crates/:crate_id/:version/downloads` route.
