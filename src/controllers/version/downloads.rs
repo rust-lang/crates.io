@@ -71,7 +71,9 @@ pub async fn download(
                     // The version_id is only cached if the provided crate name was canonical.
                     // Non-canonical requests fallback to the "slow" path with a DB query, but
                     // we typically only get a few hundred non-canonical requests in a day anyway.
-                    app.version_id_cacher.insert(cache_key, version_id);
+                    app.version_id_cacher
+                        .blocking()
+                        .insert(cache_key, version_id);
                 }
 
                 // The increment does not happen instantly, but it's deferred to be executed in a batch
