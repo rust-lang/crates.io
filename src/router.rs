@@ -175,11 +175,11 @@ pub fn build_axum_router(state: AppState) -> Router {
 
 #[cfg(test)]
 mod tests {
+    use crate::middleware::log_request::CauseField;
     use crate::util::errors::{
         bad_request, cargo_err, forbidden, internal, not_found, AppError, BoxedAppError,
     };
     use axum::response::IntoResponse;
-    use conduit_axum::CauseField;
     use diesel::result::Error as DieselError;
     use http::StatusCode;
     use serde::de::Error;

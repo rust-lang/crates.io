@@ -32,7 +32,6 @@ cargo-registry-markdown = { path = "cargo-registry-markdown" }
 cargo-registry-s3 = { path = "cargo-registry-s3" }
 chrono = { version = "=0.4.23", features = ["serde"] }
 clap = { version = "=4.0.32", features = ["derive", "env", "unicode", "wrap_help"] }
-conduit-axum = { path = "conduit-axum" }
 cookie = { version = "=0.16.1", features = ["secure"] }
 dashmap = { version = "=5.4.0", features = ["raw-api"] }
 derive_deref = "=1.1.1"
@@ -46,6 +45,7 @@ futures-channel = { version = "=0.3.25", default-features = false }
 futures-util = "=0.3.25"
 hex = "=0.4.3"
 http = "=0.2.8"
+http-body = "=0.4.5"
 hyper = { version = "=0.14.23", features = ["client", "http1"] }
 indexmap = { version = "=1.9.2", features = ["serde-1"] }
 indicatif = "=0.17.2"

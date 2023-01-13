@@ -8,7 +8,6 @@ use axum::headers::UserAgent;
 use axum::middleware::Next;
 use axum::response::IntoResponse;
 use axum::{Extension, TypedHeader};
-use conduit_axum::{CauseField, ErrorField};
 use http::{Method, Request, StatusCode, Uri};
 use parking_lot::Mutex;
 use std::fmt::{self, Display, Formatter};
@@ -17,6 +16,12 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 const SLOW_REQUEST_THRESHOLD_MS: u128 = 1000;
+
+#[derive(Clone, Debug)]
+pub struct ErrorField(pub String);
+
+#[derive(Clone, Debug)]
+pub struct CauseField(pub String);
 
 #[derive(axum::extract::FromRequestParts)]
 pub struct RequestMetadata {

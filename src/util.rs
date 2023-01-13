@@ -1,8 +1,10 @@
 use std::cmp;
 
+pub use self::bytes_request::BytesRequest;
 pub use self::io_util::{read_fill, read_le_u32, LimitErrorReader};
 pub use self::request_helpers::*;
 
+mod bytes_request;
 pub mod errors;
 mod io_util;
 mod request_helpers;
