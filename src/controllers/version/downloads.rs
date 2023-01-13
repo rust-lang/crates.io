@@ -106,7 +106,7 @@ pub async fn download(
         if req.wants_json() {
             Ok(Json(json!({ "url": redirect_url })).into_response())
         } else {
-            Ok(req.redirect(redirect_url))
+            Ok(redirect(redirect_url))
         }
     })
     .await

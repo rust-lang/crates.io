@@ -26,11 +26,11 @@ mod prelude {
     pub use crate::util::BytesRequest;
     use indexmap::IndexMap;
 
-    pub trait RequestUtils {
-        fn redirect(&self, url: String) -> Response {
-            (StatusCode::FOUND, [(header::LOCATION, url)]).into_response()
-        }
+    pub fn redirect(url: String) -> Response {
+        (StatusCode::FOUND, [(header::LOCATION, url)]).into_response()
+    }
 
+    pub trait RequestUtils {
         fn query(&self) -> IndexMap<String, String>;
         fn wants_json(&self) -> bool;
         fn query_with_params(&self, params: IndexMap<String, String>) -> String;
