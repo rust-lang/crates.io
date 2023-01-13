@@ -6,7 +6,7 @@ use crate::schema::categories;
 use crate::views::{EncodableCategory, EncodableCategoryWithSubcategories};
 
 /// Handles the `GET /categories` route.
-pub async fn index(req: Parts) -> AppResult<Json<Value>> {
+pub async fn index(app: AppState, req: Parts) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         let query = req.query();
         // FIXME: There are 69 categories, 47 top level. This isn't going to
@@ -16,7 +16,7 @@ pub async fn index(req: Parts) -> AppResult<Json<Value>> {
         let offset = options.offset().unwrap_or_default();
         let sort = query.get("sort").map_or("alpha", String::as_str);
 
-        let conn = req.app().db_read()?;
+        let conn = app.db_read()?;
         let categories =
             Category::toplevel(&conn, sort, i64::from(options.per_page), i64::from(offset))?;
         let categories = categories

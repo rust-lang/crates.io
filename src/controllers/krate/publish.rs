@@ -45,7 +45,7 @@ pub const WILDCARD_ERROR_MESSAGE: &str = "wildcard (`*`) dependency constraints 
 /// Currently blocks the HTTP thread, perhaps some function calls can spawn new
 /// threads and return completion or error through other methods  a `cargo publish
 /// --status` command, via crates.io's front end, or email.
-pub async fn publish(req: BytesRequest) -> AppResult<Json<GoodCrate>> {
+pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCrate>> {
     let (req, bytes) = req.0.into_parts();
     let (json_bytes, tarball_bytes) = split_body(bytes, &req)?;
 
@@ -76,8 +76,6 @@ pub async fn publish(req: BytesRequest) -> AppResult<Json<GoodCrate>> {
     }
 
     conduit_compat(move || {
-        let app = req.app().clone();
-
         let conn = app.primary_database.get()?;
 
         // this query should only be used for the endpoint scope calculation

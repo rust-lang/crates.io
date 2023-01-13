@@ -128,7 +128,7 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
 }
 
 /// Handles the `GET /crates/:crate_id` route.
-pub async fn show(Path(name): Path<String>, req: Parts) -> AppResult<Json<Value>> {
+pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         let include = req
             .query()
@@ -137,7 +137,7 @@ pub async fn show(Path(name): Path<String>, req: Parts) -> AppResult<Json<Value>
             .transpose()?
             .unwrap_or_default();
 
-        let conn = req.app().db_read()?;
+        let conn = app.db_read()?;
         let krate: Crate = Crate::by_name(&name).first(&*conn)?;
 
         let versions_publishers_and_audit_actions = if include.versions {
@@ -305,16 +305,12 @@ impl FromStr for ShowIncludeMode {
 
 /// Handles the `GET /crates/:crate_id/:version/readme` route.
 pub async fn readme(
+    app: AppState,
     Path((crate_name, version)): Path<(String, String)>,
     req: Parts,
 ) -> AppResult<Response> {
     conduit_compat(move || {
-        let redirect_url = req
-            .app()
-            .config
-            .uploader()
-            .readme_location(&crate_name, &version);
-
+        let redirect_url = app.config.uploader().readme_location(&crate_name, &version);
         if req.wants_json() {
             Ok(Json(json!({ "url": redirect_url })).into_response())
         } else {
@@ -357,12 +353,16 @@ pub async fn versions(state: AppState, Path(crate_name): Path<String>) -> AppRes
 }
 
 /// Handles the `GET /crates/:crate_id/reverse_dependencies` route.
-pub async fn reverse_dependencies(Path(name): Path<String>, req: Parts) -> AppResult<Json<Value>> {
+pub async fn reverse_dependencies(
+    app: AppState,
+    Path(name): Path<String>,
+    req: Parts,
+) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         use diesel::dsl::any;
 
         let pagination_options = PaginationOptions::builder().gather(&req)?;
-        let conn = req.app().db_read()?;
+        let conn = app.db_read()?;
         let krate: Crate = Crate::by_name(&name).first(&*conn)?;
         let (rev_deps, total) = krate.reverse_dependencies(&conn, pagination_options)?;
         let rev_deps: Vec<_> = rev_deps

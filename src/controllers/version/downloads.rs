@@ -14,12 +14,11 @@ use chrono::{Duration, NaiveDate, Utc};
 /// Handles the `GET /crates/:crate_id/:version/download` route.
 /// This returns a URL to the location where the crate is stored.
 pub async fn download(
+    app: AppState,
     Path((mut crate_name, version)): Path<(String, String)>,
     req: Parts,
 ) -> AppResult<Response> {
     conduit_compat(move || {
-        let app = req.app();
-
         let cache_key = (crate_name.to_string(), version.to_string());
         if let Some(version_id) = app.version_id_cacher.get(&cache_key) {
             app.instance_metrics.version_id_cache_hits.inc();
@@ -114,6 +113,7 @@ pub async fn download(
 
 /// Handles the `GET /crates/:crate_id/:version/downloads` route.
 pub async fn downloads(
+    app: AppState,
     Path((crate_name, version)): Path<(String, String)>,
     req: Parts,
 ) -> AppResult<Json<Value>> {
@@ -122,7 +122,7 @@ pub async fn downloads(
             return Err(cargo_err(&format_args!("invalid semver: {version}")));
         }
 
-        let conn = req.app().db_read()?;
+        let conn = app.db_read()?;
         let (version, _) = version_and_crate(&conn, &crate_name, &version)?;
 
         let cutoff_end_date = req
