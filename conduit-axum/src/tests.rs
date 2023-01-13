@@ -1,11 +1,8 @@
-use crate::{server_error_response, spawn_blocking, BytesRequest, ServiceError};
-use axum::extract::DefaultBodyLimit;
+use crate::{server_error_response, spawn_blocking, ServiceError};
 use axum::response::{IntoResponse, Response};
-use axum::Router;
 use http::header::HeaderName;
 use http::{HeaderMap, HeaderValue, Request, StatusCode, Uri};
 use hyper::body::to_bytes;
-use tokio::{sync::oneshot, task::JoinHandle};
 
 fn single_header(key: &str, value: &str) -> HeaderMap {
     let mut headers = HeaderMap::new();
@@ -40,8 +37,6 @@ async fn assert_percent_decode_path(uri: Uri) -> Response {
         error_result().await
     }
 }
-
-async fn conduit_request(_req: BytesRequest) {}
 
 async fn assert_generic_err(resp: Response) {
     assert_eq!(resp.status(), StatusCode::INTERNAL_SERVER_ERROR);
@@ -102,51 +97,4 @@ async fn path_is_percent_decoded_but_not_query_string() {
     let req = Request::put("/%3a?%3a").body(()).unwrap();
     let resp = assert_percent_decode_path(req.uri().clone()).await;
     assert_eq!(resp.status(), StatusCode::OK);
-}
-
-async fn spawn_http_server() -> (
-    String,
-    JoinHandle<Result<(), hyper::Error>>,
-    oneshot::Sender<()>,
-) {
-    let (quit_tx, quit_rx) = oneshot::channel::<()>();
-    let addr = ([127, 0, 0, 1], 0).into();
-
-    let router = Router::new()
-        .fallback(conduit_request)
-        .layer(DefaultBodyLimit::max(4096));
-    let make_service = router.into_make_service();
-    let server = hyper::Server::bind(&addr).serve(make_service);
-
-    let url = format!("http://{}", server.local_addr());
-    let server = server.with_graceful_shutdown(async {
-        quit_rx.await.ok();
-    });
-
-    (url, tokio::spawn(server), quit_tx)
-}
-
-#[tokio::test]
-async fn content_length_too_large() {
-    const ACTUAL_BODY_SIZE: usize = 4097;
-
-    let (url, server, quit_tx) = spawn_http_server().await;
-
-    let client = hyper::Client::new();
-    let (mut sender, body) = hyper::Body::channel();
-    sender
-        .send_data(vec![0; ACTUAL_BODY_SIZE].into())
-        .await
-        .unwrap();
-    let req = hyper::Request::put(url).body(body).unwrap();
-
-    let resp = client
-        .request(req)
-        .await
-        .expect("should be a valid response");
-
-    quit_tx.send(()).unwrap();
-    server.await.unwrap().unwrap();
-
-    assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
 }

@@ -16,7 +16,6 @@ mod prelude {
     pub use diesel::prelude::*;
     pub use serde_json::Value;
 
-    pub use conduit_axum::BytesRequest;
     pub use http::{header, request::Parts, Request, StatusCode};
 
     pub use super::conduit_axum::conduit_compat;
@@ -24,6 +23,7 @@ mod prelude {
     use crate::controllers::util::RequestPartsExt;
     pub use crate::middleware::app::RequestApp;
     pub use crate::util::errors::{cargo_err, AppError, AppResult, BoxedAppError};
+    pub use crate::util::BytesRequest;
     use indexmap::IndexMap;
 
     pub trait RequestUtils {
