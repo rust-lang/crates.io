@@ -5,7 +5,6 @@ use crate::schema::api_tokens;
 use crate::util::token::SecureToken;
 use anyhow::{anyhow, Context};
 use axum::body::Bytes;
-use axum::extract::State;
 use base64;
 use http::HeaderMap;
 use once_cell::sync::Lazy;
@@ -233,7 +232,7 @@ pub enum GitHubSecretAlertFeedbackLabel {
 
 /// Handles the `POST /api/github/secret-scanning/verify` route.
 pub async fn verify(
-    state: State<AppState>,
+    state: AppState,
     headers: HeaderMap,
     body: Bytes,
 ) -> AppResult<Json<Vec<GitHubSecretAlertFeedback>>> {

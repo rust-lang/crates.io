@@ -1,6 +1,6 @@
 use super::prelude::*;
 use crate::app::AppState;
-use axum::extract::{Path, Query, State};
+use axum::extract::{Path, Query};
 use axum::Json;
 
 use crate::controllers::helpers::pagination::PaginationOptions;
@@ -14,11 +14,7 @@ pub struct IndexQuery {
 }
 
 /// Handles the `GET /keywords` route.
-pub async fn index(
-    state: State<AppState>,
-    qp: Query<IndexQuery>,
-    req: Parts,
-) -> AppResult<Json<Value>> {
+pub async fn index(state: AppState, qp: Query<IndexQuery>, req: Parts) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         use crate::schema::keywords;
 
@@ -47,10 +43,7 @@ pub async fn index(
 }
 
 /// Handles the `GET /keywords/:keyword_id` route.
-pub async fn show(
-    Path(name): Path<String>,
-    State(state): State<AppState>,
-) -> AppResult<Json<Value>> {
+pub async fn show(Path(name): Path<String>, state: AppState) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         let conn = state.db_read()?;
 

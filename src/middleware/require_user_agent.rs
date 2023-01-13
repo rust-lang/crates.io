@@ -9,7 +9,6 @@
 
 use crate::app::AppState;
 use crate::middleware::log_request::RequestLogExt;
-use axum::extract::State;
 use axum::headers::UserAgent;
 use axum::middleware::Next;
 use axum::response::IntoResponse;
@@ -18,7 +17,7 @@ use http::StatusCode;
 
 pub async fn require_user_agent<B>(
     user_agent: Option<TypedHeader<UserAgent>>,
-    State(state): State<AppState>,
+    state: AppState,
     req: http::Request<B>,
     next: Next<B>,
 ) -> axum::response::Response {

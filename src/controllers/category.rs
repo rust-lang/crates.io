@@ -36,7 +36,7 @@ pub async fn index(req: Parts) -> AppResult<Json<Value>> {
 }
 
 /// Handles the `GET /categories/:category_id` route.
-pub async fn show(state: State<AppState>, Path(slug): Path<String>) -> AppResult<Json<Value>> {
+pub async fn show(state: AppState, Path(slug): Path<String>) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         let conn = state.db_read()?;
         let cat: Category = Category::by_slug(&slug).first(&*conn)?;
@@ -69,7 +69,7 @@ pub async fn show(state: State<AppState>, Path(slug): Path<String>) -> AppResult
 }
 
 /// Handles the `GET /category_slugs` route.
-pub async fn slugs(state: State<AppState>) -> AppResult<Json<Value>> {
+pub async fn slugs(state: AppState) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         let conn = state.db_read()?;
         let slugs: Vec<Slug> = categories::table

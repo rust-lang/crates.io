@@ -12,7 +12,6 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use crate::app::AppState;
 use crate::middleware::log_request::RequestLogExt;
-use axum::extract::State;
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
 use http::{Request, StatusCode};
@@ -42,7 +41,7 @@ async fn handle_high_load<B>(
 }
 
 pub async fn balance_capacity<B>(
-    State(app_state): State<AppState>,
+    app_state: AppState,
     request: Request<B>,
     next: Next<B>,
 ) -> Response {

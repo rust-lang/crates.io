@@ -22,7 +22,7 @@ use crate::views::{
 use crate::models::krate::ALL_COLUMNS;
 
 /// Handles the `GET /summary` route.
-pub async fn summary(state: State<AppState>) -> AppResult<Json<Value>> {
+pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         use crate::schema::crates::dsl::*;
         use diesel::dsl::all;
@@ -327,10 +327,7 @@ pub async fn readme(
 /// Handles the `GET /crates/:crate_id/versions` route.
 // FIXME: Not sure why this is necessary since /crates/:crate_id returns
 // this information already, but ember is definitely requesting it
-pub async fn versions(
-    state: State<AppState>,
-    Path(crate_name): Path<String>,
-) -> AppResult<Json<Value>> {
+pub async fn versions(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         let conn = state.db_read()?;
         let krate: Crate = Crate::by_name(&crate_name).first(&*conn)?;

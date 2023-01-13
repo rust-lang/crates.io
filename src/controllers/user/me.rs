@@ -169,10 +169,7 @@ pub async fn update_user(Path(param_user_id): Path<i32>, req: BytesRequest) -> A
 }
 
 /// Handles the `PUT /confirm/:email_token` route
-pub async fn confirm_user_email(
-    state: State<AppState>,
-    Path(token): Path<String>,
-) -> AppResult<Response> {
+pub async fn confirm_user_email(state: AppState, Path(token): Path<String>) -> AppResult<Response> {
     conduit_compat(move || {
         use diesel::update;
 

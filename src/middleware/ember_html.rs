@@ -10,7 +10,6 @@
 
 use crate::app::AppState;
 use anyhow::ensure;
-use axum::extract::State;
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
 use http::{header, Request, StatusCode};
@@ -20,7 +19,7 @@ use tower::ServiceExt;
 use tower_http::services::ServeFile;
 
 pub async fn serve_html<B: Send + 'static>(
-    State(state): State<AppState>,
+    state: AppState,
     request: Request<B>,
     next: Next<B>,
 ) -> Response {

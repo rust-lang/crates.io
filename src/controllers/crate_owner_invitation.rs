@@ -287,7 +287,7 @@ pub async fn handle_invite(req: BytesRequest) -> AppResult<Json<Value>> {
 
 /// Handles the `PUT /api/v1/me/crate_owner_invitations/accept/:token` route.
 pub async fn handle_invite_with_token(
-    state: State<AppState>,
+    state: AppState,
     Path(token): Path<String>,
 ) -> AppResult<Json<Value>> {
     conduit_compat(move || {

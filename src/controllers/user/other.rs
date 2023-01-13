@@ -6,7 +6,7 @@ use crate::sql::lower;
 use crate::views::EncodablePublicUser;
 
 /// Handles the `GET /users/:user_id` route.
-pub async fn show(state: State<AppState>, Path(user_name): Path<String>) -> AppResult<Json<Value>> {
+pub async fn show(state: AppState, Path(user_name): Path<String>) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         use self::users::dsl::{gh_login, id, users};
 
@@ -23,7 +23,7 @@ pub async fn show(state: State<AppState>, Path(user_name): Path<String>) -> AppR
 }
 
 /// Handles the `GET /users/:user_id/stats` route.
-pub async fn stats(state: State<AppState>, Path(user_id): Path<i32>) -> AppResult<Json<Value>> {
+pub async fn stats(state: AppState, Path(user_id): Path<i32>) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         use diesel::dsl::sum;
 

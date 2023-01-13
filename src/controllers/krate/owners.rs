@@ -9,10 +9,7 @@ use axum::body::Bytes;
 use http::Request;
 
 /// Handles the `GET /crates/:crate_id/owners` route.
-pub async fn owners(
-    state: State<AppState>,
-    Path(crate_name): Path<String>,
-) -> AppResult<Json<Value>> {
+pub async fn owners(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         let conn = state.db_read()?;
         let krate: Crate = Crate::by_name(&crate_name).first(&*conn)?;
@@ -28,10 +25,7 @@ pub async fn owners(
 }
 
 /// Handles the `GET /crates/:crate_id/owner_team` route.
-pub async fn owner_team(
-    state: State<AppState>,
-    Path(crate_name): Path<String>,
-) -> AppResult<Json<Value>> {
+pub async fn owner_team(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         let conn = state.db_read()?;
         let krate: Crate = Crate::by_name(&crate_name).first(&*conn)?;
@@ -46,10 +40,7 @@ pub async fn owner_team(
 }
 
 /// Handles the `GET /crates/:crate_id/owner_user` route.
-pub async fn owner_user(
-    state: State<AppState>,
-    Path(crate_name): Path<String>,
-) -> AppResult<Json<Value>> {
+pub async fn owner_user(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         let conn = state.db_read()?;
         let krate: Crate = Crate::by_name(&crate_name).first(&*conn)?;
