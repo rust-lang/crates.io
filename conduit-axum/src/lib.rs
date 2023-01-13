@@ -35,8 +35,5 @@
 //! }
 //! ```
 
-mod fallback;
 #[cfg(test)]
 mod tests;
-
-pub use fallback::{CauseField, ErrorField};

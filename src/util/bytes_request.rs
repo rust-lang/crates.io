@@ -1,8 +1,8 @@
+use crate::middleware::log_request::ErrorField;
 use axum::body::Bytes;
 use axum::extract::FromRequest;
 use axum::response::{IntoResponse, Response};
 use axum::{async_trait, Extension, RequestExt};
-use conduit_axum::ErrorField;
 use http::{Request, StatusCode};
 use http_body::LengthLimitError;
 use hyper::Body;

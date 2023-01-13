@@ -20,12 +20,12 @@ use std::fmt;
 
 use axum::Extension;
 use chrono::NaiveDateTime;
-use conduit_axum::{CauseField, ErrorField};
 use diesel::result::Error as DieselError;
 use http::StatusCode;
 use tokio::task::JoinError;
 
 use crate::db::PoolError;
+use crate::middleware::log_request::{CauseField, ErrorField};
 
 mod json;
 
