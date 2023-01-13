@@ -15,7 +15,7 @@ use chrono::{Duration, NaiveDate, Utc};
 /// This returns a URL to the location where the crate is stored.
 pub async fn download(
     app: AppState,
-    Path((mut crate_name, version)): Path<(String, String)>,
+    Path((crate_name, version)): Path<(String, String)>,
     req: Parts,
 ) -> AppResult<Response> {
     let wants_json = req.wants_json();
@@ -28,6 +28,8 @@ pub async fn download(
             // The increment does not happen instantly, but it's deferred to be executed in a batch
             // along with other downloads. See crate::downloads_counter for the implementation.
             app.downloads_counter.increment(version_id);
+
+            Ok((crate_name, version, app))
         } else {
             app.instance_metrics.version_id_cache_misses.inc();
 
@@ -62,12 +64,17 @@ pub async fn download(
                             .first::<(i32, String)>(&**conn)
                     })?;
 
+                // The increment does not happen instantly, but it's deferred to be executed in a batch
+                // along with other downloads. See crate::downloads_counter for the implementation.
+                app.downloads_counter.increment(version_id);
+
                 if canonical_crate_name != crate_name {
                     app.instance_metrics
                         .downloads_non_canonical_crate_name_total
                         .inc();
                     req.request_log().add("bot", "dl");
-                    crate_name = canonical_crate_name;
+
+                    Ok((canonical_crate_name, version, app))
                 } else {
                     // The version_id is only cached if the provided crate name was canonical.
                     // Non-canonical requests fallback to the "slow" path with a DB query, but
@@ -75,11 +82,9 @@ pub async fn download(
                     app.version_id_cacher
                         .blocking()
                         .insert(cache_key, version_id);
-                }
 
-                // The increment does not happen instantly, but it's deferred to be executed in a batch
-                // along with other downloads. See crate::downloads_counter for the implementation.
-                app.downloads_counter.increment(version_id);
+                    Ok((crate_name, version, app))
+                }
             } else {
                 // The download endpoint is the most critical route in the whole crates.io application,
                 // as it's relied upon by users and automations to download crates. Keeping it working
@@ -102,10 +107,10 @@ pub async fn download(
                     .inc();
 
                 req.request_log().add("unconditional_redirect", "true");
-            }
-        };
 
-        Ok((crate_name, version, app))
+                Ok((crate_name, version, app))
+            }
+        }
     })
     .await?;
 
