@@ -1,8 +1,9 @@
-use crate::{server_error_response, spawn_blocking, ServiceError};
+use crate::{server_error_response, ServiceError};
 use axum::response::{IntoResponse, Response};
 use http::header::HeaderName;
 use http::{HeaderMap, HeaderValue, Request, StatusCode, Uri};
 use hyper::body::to_bytes;
+use tokio::task::spawn_blocking;
 
 fn single_header(key: &str, value: &str) -> HeaderMap {
     let mut headers = HeaderMap::new();
