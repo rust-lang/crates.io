@@ -35,14 +35,12 @@
 //! }
 //! ```
 
-mod conduit;
 mod error;
 mod fallback;
 #[cfg(test)]
 mod tests;
 mod tokio_utils;
 
-pub use conduit::*;
 pub use error::ServiceError;
 pub use fallback::{server_error_response, CauseField, ErrorField};
 pub use tokio_utils::spawn_blocking;
