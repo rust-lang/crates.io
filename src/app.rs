@@ -12,7 +12,7 @@ use crate::github::{GitHubClient, RealGitHubClient};
 use crate::metrics::{InstanceMetrics, ServiceMetrics};
 use axum::extract::FromRef;
 use diesel::r2d2;
-use moka::sync::{Cache, CacheBuilder};
+use moka::future::{Cache, CacheBuilder};
 use oauth2::basic::BasicClient;
 use reqwest::blocking::Client;
 use scheduled_thread_pool::ScheduledThreadPool;
