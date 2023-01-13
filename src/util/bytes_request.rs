@@ -1,11 +1,12 @@
 use axum::body::Bytes;
 use axum::extract::FromRequest;
-use axum::response::IntoResponse;
-use axum::{async_trait, RequestExt};
-use conduit_axum::server_error_response;
+use axum::response::{IntoResponse, Response};
+use axum::{async_trait, Extension, RequestExt};
+use conduit_axum::ErrorField;
 use http::{Request, StatusCode};
 use http_body::LengthLimitError;
 use hyper::Body;
+use std::error::Error;
 use std::ops::{Deref, DerefMut};
 
 #[derive(Debug)]
@@ -30,7 +31,7 @@ impl<S> FromRequest<S, Body> for BytesRequest
 where
     S: Send + Sync,
 {
-    type Rejection = axum::response::Response;
+    type Rejection = Response;
 
     async fn from_request(req: Request<Body>, _state: &S) -> Result<Self, Self::Rejection> {
         let request = match req.with_limited_body() {
@@ -60,6 +61,20 @@ where
 
         Ok(BytesRequest(request))
     }
+}
+
+/// Logs an error message and returns a generic status 500 response
+fn server_error_response<E: Error + ?Sized>(error: &E) -> Response {
+    error!(%error, "Internal Server Error");
+
+    sentry::capture_error(error);
+
+    (
+        StatusCode::INTERNAL_SERVER_ERROR,
+        Extension(ErrorField(error.to_string())),
+        "Internal Server Error",
+    )
+        .into_response()
 }
 
 #[cfg(test)]

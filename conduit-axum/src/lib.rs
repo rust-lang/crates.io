@@ -39,4 +39,4 @@ mod fallback;
 #[cfg(test)]
 mod tests;
 
-pub use fallback::{server_error_response, CauseField, ErrorField};
+pub use fallback::{CauseField, ErrorField};

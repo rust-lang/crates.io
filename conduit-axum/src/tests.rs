@@ -1,4 +1,3 @@
-use crate::server_error_response;
 use axum::response::{IntoResponse, Response};
 use http::header::HeaderName;
 use http::{HeaderMap, HeaderValue, Request, StatusCode, Uri};
@@ -16,7 +15,7 @@ async fn ok_result() -> Response {
 }
 
 async fn error_result() -> Response {
-    server_error_response(&std::io::Error::last_os_error())
+    (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error").into_response()
 }
 
 async fn panic() -> Response {

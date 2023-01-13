@@ -1,11 +1,8 @@
 #![deny(clippy::all)]
 
-use axum::routing::get;
-use conduit_axum::server_error_response;
-
 use axum::response::IntoResponse;
+use axum::routing::get;
 use http::StatusCode;
-use std::io;
 use std::thread::sleep;
 use tokio::task::spawn_blocking;
 
@@ -39,5 +36,5 @@ async fn panic() -> impl IntoResponse {
 }
 
 async fn error() -> impl IntoResponse {
-    server_error_response(&io::Error::new(io::ErrorKind::Other, "io error, oops"))
+    (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error")
 }
