@@ -87,7 +87,7 @@ specifiers:
   highlight.js: 11.7.0
   loader.js: 4.7.0
   macro-decorators: 0.1.2
-  match-json: 1.3.4
+  match-json: 1.3.5
   miragejs: 0.1.47
   morgan: 1.10.0
   normalize.css: 8.0.1
@@ -189,7 +189,7 @@ devDependencies:
   eslint-plugin-qunit-dom: 0.2.0_eslint@8.31.0
   eslint-plugin-unicorn: 45.0.2_eslint@8.31.0
   loader.js: 4.7.0
-  match-json: 1.3.4
+  match-json: 1.3.5
   miragejs: 0.1.47
   normalize.css: 8.0.1
   nyc: 15.1.0
@@ -11841,8 +11841,8 @@ packages:
       uc.micro: 1.0.6
     dev: true
 
-  /match-json/1.3.4:
-    resolution: {integrity: sha512-pIe23l+6vDJvdKvr7YRHki+NHWmZ6431svHd9SNrubIhlUnCBKGbr6DCW4IXJz1EoLRJAYgbvHE/MQLv/JDAHw==}
+  /match-json/1.3.5:
+    resolution: {integrity: sha512-V5Jw1rIdjt37vfQRqvKtXW4dKbSTpvgwyEPKOBikY90xQ5Wr5yOmfpjcTm12d0Kqq+TfMqlXJkETf4yOF9JhUw==}
     dev: true
 
   /matcher-collection/1.1.2:
