@@ -35,7 +35,7 @@ clap = { version = "=4.1.1", features = ["derive", "env", "unicode", "wrap_help"
 cookie = { version = "=0.16.1", features = ["secure"] }
 dashmap = { version = "=5.4.0", features = ["raw-api"] }
 derive_deref = "=1.1.1"
-dialoguer = "=0.10.2"
+dialoguer = "=0.10.3"
 diesel = { version = "=1.4.8", features = ["postgres", "serde_json", "chrono", "r2d2"] }
 diesel_full_text_search = "=1.0.1"
 diesel_migrations = { version = "=1.4.0", features = ["postgres"] }
