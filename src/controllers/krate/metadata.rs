@@ -308,16 +308,13 @@ pub async fn readme(
     app: AppState,
     Path((crate_name, version)): Path<(String, String)>,
     req: Parts,
-) -> AppResult<Response> {
-    conduit_compat(move || {
-        let redirect_url = app.config.uploader().readme_location(&crate_name, &version);
-        if req.wants_json() {
-            Ok(Json(json!({ "url": redirect_url })).into_response())
-        } else {
-            Ok(redirect(redirect_url))
-        }
-    })
-    .await
+) -> Response {
+    let redirect_url = app.config.uploader().readme_location(&crate_name, &version);
+    if req.wants_json() {
+        Json(json!({ "url": redirect_url })).into_response()
+    } else {
+        redirect(redirect_url)
+    }
 }
 
 /// Handles the `GET /crates/:crate_id/versions` route.
