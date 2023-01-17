@@ -26,19 +26,17 @@ use crate::views::EncodableMe;
 ///     "url": "https://github.com/login/oauth/authorize?client_id=...&state=...&scope=read%3Aorg"
 /// }
 /// ```
-pub async fn begin(app: AppState, session: SessionExtension) -> AppResult<Json<Value>> {
-    conduit_compat(move || {
-        let (url, state) = app
-            .github_oauth
-            .authorize_url(oauth2::CsrfToken::new_random)
-            .add_scope(Scope::new("read:org".to_string()))
-            .url();
-        let state = state.secret().to_string();
-        session.insert("github_oauth_state".to_string(), state.clone());
+pub async fn begin(app: AppState, session: SessionExtension) -> Json<Value> {
+    let (url, state) = app
+        .github_oauth
+        .authorize_url(oauth2::CsrfToken::new_random)
+        .add_scope(Scope::new("read:org".to_string()))
+        .url();
 
-        Ok(Json(json!({ "url": url.to_string(), "state": state })))
-    })
-    .await
+    let state = state.secret().to_string();
+    session.insert("github_oauth_state".to_string(), state.clone());
+
+    Json(json!({ "url": url.to_string(), "state": state }))
 }
 
 /// Handles the `GET /api/private/session/authorize` route.
