@@ -1,38 +1,28 @@
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager, CustomizeConnection};
-use parking_lot::{ReentrantMutex, ReentrantMutexGuard};
 use prometheus::Histogram;
-use std::sync::Arc;
-use std::{error::Error, ops::Deref, time::Duration};
+use std::sync::{Arc, Mutex, MutexGuard};
+use std::{ops::Deref, time::Duration};
 use thiserror::Error;
 use url::Url;
 
 use crate::config;
 
+pub type ConnectionPool = r2d2::Pool<ConnectionManager<PgConnection>>;
+
 #[derive(Clone)]
 pub enum DieselPool {
     Pool {
-        pool: r2d2::Pool<ConnectionManager<PgConnection>>,
+        pool: ConnectionPool,
         time_to_obtain_connection_metric: Histogram,
     },
     BackgroundJobPool {
-        pool: r2d2::Pool<ConnectionManager<PgConnection>>,
+        pool: ConnectionPool,
     },
-    Test(Arc<ReentrantMutex<PgConnection>>),
+    Test(Arc<Mutex<PgConnection>>),
 }
 
-type Callback<'a> = &'a dyn Fn(&PgConnection) -> Result<(), Box<dyn Error>>;
-
 impl DieselPool {
-    pub(crate) fn with_connection(&self, f: Callback<'_>) -> Result<(), Box<dyn Error>> {
-        match self {
-            DieselPool::Pool { pool, .. } | DieselPool::BackgroundJobPool { pool } => {
-                f(&*pool.get()?)
-            }
-            DieselPool::Test(connection) => f(&connection.lock()),
-        }
-    }
-
     pub(crate) fn new(
         url: &str,
         config: &config::DatabasePools,
@@ -69,12 +59,19 @@ impl DieselPool {
         Self::BackgroundJobPool { pool }
     }
 
+    pub(crate) fn to_real_pool(&self) -> Option<ConnectionPool> {
+        match self {
+            Self::Pool { pool, .. } | Self::BackgroundJobPool { pool } => Some(pool.clone()),
+            _ => None,
+        }
+    }
+
     pub(crate) fn new_test(config: &config::DatabasePools, url: &str) -> DieselPool {
         let conn = PgConnection::establish(&connection_url(config, url))
             .expect("failed to establish connection");
         conn.begin_test_transaction()
             .expect("failed to begin test transaction");
-        DieselPool::Test(Arc::new(ReentrantMutex::new(conn)))
+        DieselPool::Test(Arc::new(Mutex::new(conn)))
     }
 
     pub fn get(&self) -> Result<DieselPooledConn<'_>, PoolError> {
@@ -92,7 +89,7 @@ impl DieselPool {
                 }
             }),
             DieselPool::BackgroundJobPool { pool } => Ok(DieselPooledConn::Pool(pool.get()?)),
-            DieselPool::Test(conn) => Ok(DieselPooledConn::Test(conn.lock())),
+            DieselPool::Test(conn) => Ok(DieselPooledConn::Test(conn.try_lock().unwrap())),
         }
     }
 
@@ -136,9 +133,10 @@ pub struct PoolState {
     pub idle_connections: u32,
 }
 
+#[allow(clippy::large_enum_variant)]
 pub enum DieselPooledConn<'a> {
     Pool(r2d2::PooledConnection<ConnectionManager<PgConnection>>),
-    Test(ReentrantMutexGuard<'a, PgConnection>),
+    Test(MutexGuard<'a, PgConnection>),
 }
 
 impl Deref for DieselPooledConn<'_> {
