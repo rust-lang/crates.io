@@ -402,6 +402,12 @@ description = """
 Crates that are able to function without the Rust standard library.
 """
 
+[no-std.categories.no-alloc]
+name = "No dynamic allocation"
+description = """
+Crates that are able to function without the Rust alloc crate.\
+"""
+
 [os]
 name = "Operating systems"
 description = """
