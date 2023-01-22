@@ -499,6 +499,12 @@ Crates related to solving problems involving physics, chemistry, \
 biology, machine learning, geoscience, and other scientific fields.\
 """
 
+[science.categories.geo]
+name = "Geospatial"
+description = """
+Processing of spatial information, maps, navigation data, and geographic information systems.
+"""
+
 [science.categories.robotics]
 name = "Robotics"
 description = """
