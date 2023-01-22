@@ -1,4 +1,5 @@
 use crate::util::{RequestHelper, TestApp};
+use cargo_registry::models::token::{CrateScope, EndpointScope};
 use cargo_registry::models::ApiToken;
 use cargo_registry::views::EncodableApiTokenWithToken;
 use diesel::prelude::*;
@@ -72,6 +73,8 @@ fn create_token_success() {
     assert_eq!(tokens[0].name, "bar");
     assert!(!tokens[0].revoked);
     assert_eq!(tokens[0].last_used_at, None);
+    assert_eq!(tokens[0].crate_scopes, None);
+    assert_eq!(tokens[0].endpoint_scopes, None);
 }
 
 #[test]
@@ -105,5 +108,110 @@ fn cannot_create_token_with_token() {
     assert_eq!(
         response.into_json(),
         json!({ "errors": [{ "detail": "cannot use an API token to create a new API token" }] })
+    );
+}
+
+#[test]
+fn create_token_with_scopes() {
+    let (app, _, user) = TestApp::init().with_user();
+
+    let json = json!({
+        "api_token": {
+            "name": "bar",
+            "crate_scopes": ["tokio", "tokio-*"],
+            "endpoint_scopes": ["publish-update"],
+        }
+    });
+
+    let json: NewResponse = user
+        .put("/api/v1/me/tokens", &serde_json::to_vec(&json).unwrap())
+        .good();
+    assert_eq!(json.api_token.name, "bar");
+    assert!(!json.api_token.token.is_empty());
+
+    let tokens: Vec<ApiToken> =
+        app.db(|conn| assert_ok!(ApiToken::belonging_to(user.as_model()).load(conn)));
+    assert_eq!(tokens.len(), 1);
+    assert_eq!(tokens[0].name, "bar");
+    assert!(!tokens[0].revoked);
+    assert_eq!(tokens[0].last_used_at, None);
+    assert_eq!(
+        tokens[0].crate_scopes,
+        Some(vec![
+            CrateScope::try_from("tokio").unwrap(),
+            CrateScope::try_from("tokio-*").unwrap()
+        ])
+    );
+    assert_eq!(
+        tokens[0].endpoint_scopes,
+        Some(vec![EndpointScope::PublishUpdate])
+    );
+}
+
+#[test]
+fn create_token_with_null_scopes() {
+    let (app, _, user) = TestApp::init().with_user();
+
+    let json = json!({
+        "api_token": {
+            "name": "bar",
+            "crate_scopes": null,
+            "endpoint_scopes": null,
+        }
+    });
+
+    let json: NewResponse = user
+        .put("/api/v1/me/tokens", &serde_json::to_vec(&json).unwrap())
+        .good();
+    assert_eq!(json.api_token.name, "bar");
+    assert!(!json.api_token.token.is_empty());
+
+    let tokens: Vec<ApiToken> =
+        app.db(|conn| assert_ok!(ApiToken::belonging_to(user.as_model()).load(conn)));
+    assert_eq!(tokens.len(), 1);
+    assert_eq!(tokens[0].name, "bar");
+    assert!(!tokens[0].revoked);
+    assert_eq!(tokens[0].last_used_at, None);
+    assert_eq!(tokens[0].crate_scopes, None);
+    assert_eq!(tokens[0].endpoint_scopes, None);
+}
+
+#[test]
+fn create_token_with_empty_crate_scope() {
+    let (_, _, user) = TestApp::init().with_user();
+
+    let json = json!({
+        "api_token": {
+            "name": "bar",
+            "crate_scopes": ["", "tokio-*"],
+            "endpoint_scopes": ["publish-update"],
+        }
+    });
+
+    let response = user.put::<()>("/api/v1/me/tokens", &serde_json::to_vec(&json).unwrap());
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_eq!(
+        response.into_json(),
+        json!({ "errors": [{ "detail": "invalid crate scope" }] })
+    );
+}
+
+#[test]
+fn create_token_with_invalid_endpoint_scope() {
+    let (_, _, user) = TestApp::init().with_user();
+
+    let json = json!({
+        "api_token": {
+            "name": "bar",
+            "crate_scopes": ["tokio", "tokio-*"],
+            "endpoint_scopes": ["crash"],
+        }
+    });
+
+    let response = user.put::<()>("/api/v1/me/tokens", &serde_json::to_vec(&json).unwrap());
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_eq!(
+        response.into_json(),
+        json!({ "errors": [{ "detail": "invalid endpoint scope" }] })
     );
 }
