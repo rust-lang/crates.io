@@ -5,6 +5,7 @@ use crate::schema::api_tokens;
 use crate::views::EncodableApiTokenWithToken;
 
 use crate::auth::AuthCheck;
+use crate::models::token::{CrateScope, EndpointScope};
 use axum::response::IntoResponse;
 use serde_json as json;
 
@@ -32,6 +33,8 @@ pub async fn new(app: AppState, req: BytesRequest) -> AppResult<Json<Value>> {
         #[derive(Deserialize, Serialize)]
         struct NewApiToken {
             name: String,
+            crate_scopes: Option<Vec<String>>,
+            endpoint_scopes: Option<Vec<String>>,
         }
 
         /// The incoming serialization format for the `ApiToken` model.
@@ -67,7 +70,32 @@ pub async fn new(app: AppState, req: BytesRequest) -> AppResult<Json<Value>> {
             )));
         }
 
-        let api_token = ApiToken::insert(&conn, user.id, name)?;
+        let crate_scopes = new
+            .api_token
+            .crate_scopes
+            .map(|scopes| {
+                scopes
+                    .into_iter()
+                    .map(CrateScope::try_from)
+                    .collect::<Result<Vec<_>, _>>()
+            })
+            .transpose()
+            .map_err(|_err| bad_request("invalid crate scope"))?;
+
+        let endpoint_scopes = new
+            .api_token
+            .endpoint_scopes
+            .map(|scopes| {
+                scopes
+                    .into_iter()
+                    .map(|scope| EndpointScope::try_from(scope.as_bytes()))
+                    .collect::<Result<Vec<_>, _>>()
+            })
+            .transpose()
+            .map_err(|_err| bad_request("invalid endpoint scope"))?;
+
+        let api_token =
+            ApiToken::insert_with_scopes(&conn, user.id, name, crate_scopes, endpoint_scopes)?;
         let api_token = EncodableApiTokenWithToken::from(api_token);
 
         Ok(Json(json!({ "api_token": api_token })))
