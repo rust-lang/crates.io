@@ -1,6 +1,6 @@
 use diesel::deserialize::{self, FromSql};
 use diesel::pg::Pg;
-use diesel::sql_types::{Text, Integer};
+use diesel::sql_types::{Integer, Text};
 
 use crate::models::{Crate, Version};
 use crate::schema::*;

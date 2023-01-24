@@ -161,7 +161,7 @@ impl Runner {
                 let result = conn
                     .transaction(|conn| {
                         let pool = pool.to_real_pool();
-                        let state = AssertUnwindSafe(PerformState {conn, pool});
+                        let state = AssertUnwindSafe(PerformState { conn, pool });
                         catch_unwind(|| {
                             // Ensure the whole `AssertUnwindSafe(_)` is moved
                             let state = state;
