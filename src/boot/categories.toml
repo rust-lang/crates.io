@@ -29,7 +29,7 @@
 [accessibility]
 name = "Accessibility"
 description = """
-Tools for making your creations usable by as many people as possible. \
+Assistive technology that helps overcome disabilities and impairments to make software usable by as many people as possible. \
 """
 
 [aerospace]
