@@ -245,7 +245,7 @@ Crates to help you verify the correctness of your code.\
 [email]
 name = "Email"
 description = """
-Crates to help with Sending, receiving, formatting, and parsing email.\
+Crates to help with sending, receiving, formatting, and parsing email.\
 """
 
 [embedded]
