@@ -18,7 +18,7 @@ env:
   # renovate: datasource=npm depName=pnpm
   PNPM_VERSION: 7.26.0
   # renovate: datasource=github-releases depName=rust lookupName=rust-lang/rust
-  RUST_VERSION: 1.66.1
+  RUST_VERSION: 1.67.0
 
 jobs:
   changed-files:
