@@ -29,7 +29,7 @@
 [accessibility]
 name = "Accessibility"
 description = """
-Tools for making your creations usable by as many people as possible. \
+Assistive technology that helps overcome disabilities and impairments to make software usable by as many people as possible. \
 """
 
 [aerospace]
@@ -245,7 +245,7 @@ Crates to help you verify the correctness of your code.\
 [email]
 name = "Email"
 description = """
-Crates to help with Sending, receiving, formatting, and parsing email.\
+Crates to help with sending, receiving, formatting, and parsing email.\
 """
 
 [embedded]
