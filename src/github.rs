@@ -51,7 +51,7 @@ impl RealGitHubClient {
     where
         T: DeserializeOwned,
     {
-        let url = format!("https://api.github.com{}", url);
+        let url = format!("https://api.github.com{url}");
         info!("GITHUB HTTP: {url}");
 
         self.client()
