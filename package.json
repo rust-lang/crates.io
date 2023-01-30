@@ -65,7 +65,7 @@
     "@glimmer/tracking": "1.1.2",
     "@mainmatter/ember-api-actions": "0.4.0",
     "@percy/cli": "1.17.0",
-    "@percy/ember": "4.0.0",
+    "@percy/ember": "4.1.0",
     "@sinonjs/fake-timers": "10.0.2",
     "@zestia/ember-auto-focus": "4.4.0",
     "broccoli-asset-rev": "3.0.0",

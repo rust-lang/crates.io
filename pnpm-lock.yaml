@@ -22,7 +22,7 @@ specifiers:
   '@juggle/resize-observer': 3.4.0
   '@mainmatter/ember-api-actions': 0.4.0
   '@percy/cli': 1.17.0
-  '@percy/ember': 4.0.0
+  '@percy/ember': 4.1.0
   '@sentry/browser': 7.34.0
   '@sentry/utils': 7.34.0
   '@sinonjs/fake-timers': 10.0.2
@@ -132,7 +132,7 @@ devDependencies:
   '@glimmer/tracking': 1.1.2
   '@mainmatter/ember-api-actions': 0.4.0
   '@percy/cli': 1.17.0
-  '@percy/ember': 4.0.0
+  '@percy/ember': 4.1.0
   '@sinonjs/fake-timers': 10.0.2
   '@zestia/ember-auto-focus': 4.4.0
   broccoli-asset-rev: 3.0.0
@@ -2875,8 +2875,8 @@ packages:
     resolution: {integrity: sha512-C6qaqOk4p8ax/gPruQtVy+Ml7Yb6nWpKYThk4afy4N0Jq9hZa0qBzlVE1vO4jtxHK8JaZ2lXGG4Gdxz4FOQuMA==}
     dev: true
 
-  /@percy/ember/4.0.0:
-    resolution: {integrity: sha512-x0/R/EnoiGYnfmo+qIg6p6D2/IeGeQbVEszt6U7l59lsDl0+fEUe0rNEEcDCOjvThSWLzBS+9SPlDWVJxhLPCg==}
+  /@percy/ember/4.1.0:
+    resolution: {integrity: sha512-PFxACxeZMayFMlk7lYFbXORIQ1wNiCyJ5vRKBX2ueBYLQECtTvZCr0waH6CPySHe3qrnib/71IVNX1R7XUc7Dg==}
     engines: {node: '>= 14'}
     dependencies:
       '@percy/sdk-utils': 1.17.0
