@@ -76,7 +76,7 @@ specifiers:
   ember-window-mock: 0.8.1
   eslint: 8.33.0
   eslint-config-prettier: 8.6.0
-  eslint-plugin-ember: 11.4.5
+  eslint-plugin-ember: 11.4.6
   eslint-plugin-ember-concurrency: 0.5.1
   eslint-plugin-import-helpers: 1.3.1
   eslint-plugin-prettier: 4.2.1
@@ -181,7 +181,7 @@ devDependencies:
   ember-window-mock: 0.8.1
   eslint: 8.33.0
   eslint-config-prettier: 8.6.0_eslint@8.33.0
-  eslint-plugin-ember: 11.4.5_ts2vatvaxdlzpnb72m3ljib5ka
+  eslint-plugin-ember: 11.4.6_eslint@8.33.0
   eslint-plugin-ember-concurrency: 0.5.1_eslint@8.33.0
   eslint-plugin-import-helpers: 1.3.1_eslint@8.33.0
   eslint-plugin-prettier: 4.2.1_jqplj6qf3uqpxpu4gdyhwwasnq
@@ -8333,6 +8333,23 @@ packages:
       - supports-color
     dev: true
 
+  /ember-template-imports/3.4.1:
+    resolution: {integrity: sha512-KXnBFTAVxCfXnSCUgd/iuic9ajWbmFkRUBEeorJAMqxvougsPoK22s5ygE9O3GnzYdPpMwn+8v+/NAGy8HRBGA==}
+    engines: {node: 12.* || >= 14}
+    dependencies:
+      babel-import-util: 0.2.0
+      broccoli-stew: 3.0.0
+      ember-cli-babel-plugin-helpers: 1.1.1
+      ember-cli-version-checker: 5.1.2
+      line-column: 1.0.2
+      magic-string: 0.25.9
+      parse-static-imports: 1.1.0
+      string.prototype.matchall: 4.0.8
+      validate-peer-dependencies: 1.2.0
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
   /ember-template-lint/5.3.3_ember-cli-htmlbars@6.2.0:
     resolution: {integrity: sha512-8LfW8GNZq55Fv1awMahZsGUX2RsMvIAyo+hSt5rOE0qunGntmr5f8NlMzeKaJWqAvSXPlvIXhGrAwnhHnhAGZw==}
     engines: {node: ^14.18.0 || ^16.0.0 || >= 18.0.0}
@@ -8687,8 +8704,8 @@ packages:
       eslint: 8.33.0
     dev: true
 
-  /eslint-plugin-ember/11.4.5_ts2vatvaxdlzpnb72m3ljib5ka:
-    resolution: {integrity: sha512-LOM9A5cLJJ1I6EnS0GxFI9/kypjbbIEvuoU3udVMAiEhjflHwjZfPAqS52MCNqyKqaTVqFOKdPiN+IiBxzGpTQ==}
+  /eslint-plugin-ember/11.4.6_eslint@8.33.0:
+    resolution: {integrity: sha512-ak+gDkZrOQUjpLYiDWJA1D2jWJy0MYTf409Ki6du06+vYNifuMJIFpJhH9oKsD1FPU1sQylzhHcOeiHfbQTWmA==}
     engines: {node: 14.* || 16.* || >= 18}
     peerDependencies:
       eslint: '*'
@@ -8697,7 +8714,7 @@ packages:
       '@glimmer/syntax': 0.84.2
       css-tree: 2.3.1
       ember-rfc176-data: 0.3.18
-      ember-template-imports: 3.4.0_ember-cli-htmlbars@6.2.0
+      ember-template-imports: 3.4.1
       eslint: 8.33.0
       eslint-utils: 3.0.0_eslint@8.33.0
       estraverse: 5.3.0
@@ -8707,7 +8724,6 @@ packages:
       requireindex: 1.2.0
       snake-case: 3.0.4
     transitivePeerDependencies:
-      - ember-cli-htmlbars
       - supports-color
     dev: true
 
