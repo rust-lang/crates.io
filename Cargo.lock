@@ -464,6 +464,7 @@ dependencies = [
  "base64 0.13.1",
  "dotenv",
  "git2",
+ "once_cell",
  "serde",
  "serde_json",
  "tempfile",
