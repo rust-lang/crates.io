@@ -7,6 +7,7 @@ extern crate tracing;
 pub mod testing;
 
 use anyhow::{anyhow, Context};
+use git2::cert::Cert;
 use git2::CertificateCheckStatus;
 use once_cell::sync::Lazy;
 use std::cmp::Ordering;
@@ -442,6 +443,7 @@ impl Repository {
         {
             let mut origin = self.repository.find_remote("origin")?;
             let mut callbacks = git2::RemoteCallbacks::new();
+            callbacks.certificate_check(Self::certificate_check);
             callbacks.credentials(|_, user_from_url, cred_type| {
                 self.credentials.git2_callback(user_from_url, cred_type)
             });
@@ -515,24 +517,29 @@ impl Repository {
             credentials.git2_callback(user_from_url, cred_type)
         });
 
-        callbacks.certificate_check(|cert, hostname| {
-            if hostname == "github.com" {
-                if let Some(hash) = cert.as_hostkey().and_then(|key| key.hash_sha256()) {
-                    if GITHUB_FINGERPRINTS
-                        .iter()
-                        .any(|fingerprint| fingerprint == hash)
-                    {
-                        return Ok(CertificateCheckStatus::CertificateOk);
-                    }
-                }
-            }
-
-            Ok(CertificateCheckStatus::CertificatePassthrough)
-        });
+        callbacks.certificate_check(Self::certificate_check);
 
         let mut opts = git2::FetchOptions::new();
         opts.remote_callbacks(callbacks);
         opts
+    }
+
+    fn certificate_check(
+        cert: &Cert,
+        hostname: &str,
+    ) -> Result<CertificateCheckStatus, git2::Error> {
+        if hostname == "github.com" {
+            if let Some(hash) = cert.as_hostkey().and_then(|key| key.hash_sha256()) {
+                if GITHUB_FINGERPRINTS
+                    .iter()
+                    .any(|fingerprint| fingerprint == hash)
+                {
+                    return Ok(CertificateCheckStatus::CertificateOk);
+                }
+            }
+        }
+
+        Ok(CertificateCheckStatus::CertificatePassthrough)
     }
 
     /// Reset `HEAD` to a single commit with all the index contents, but no parent
