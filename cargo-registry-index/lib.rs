@@ -443,6 +443,7 @@ impl Repository {
         {
             let mut origin = self.repository.find_remote("origin")?;
             let mut callbacks = git2::RemoteCallbacks::new();
+            callbacks.certificate_check(Self::certificate_check);
             callbacks.credentials(|_, user_from_url, cred_type| {
                 self.credentials.git2_callback(user_from_url, cred_type)
             });
