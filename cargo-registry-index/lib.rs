@@ -7,6 +7,8 @@ extern crate tracing;
 pub mod testing;
 
 use anyhow::{anyhow, Context};
+use git2::CertificateCheckStatus;
+use once_cell::sync::Lazy;
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::io::Write;
@@ -17,6 +19,18 @@ use tempfile::TempDir;
 use url::Url;
 
 static DEFAULT_GIT_SSH_USERNAME: &str = "git";
+
+// We are hardcoding the github.com SSH key fingerprints from
+// https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/githubs-ssh-key-fingerprints
+// here. This is considered good enough for now, but could eventually be replaced
+// by an environment variable that acts as a `known_hosts` file.
+static GITHUB_FINGERPRINTS: Lazy<[Vec<u8>; 3]> = Lazy::new(|| {
+    [
+        base64::decode(b"+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU").unwrap(),
+        base64::decode(b"p2QAMXNIC1TJYWeIOttrVc98/R1BUFWu3/LiyKgUfQM").unwrap(),
+        base64::decode(b"nThbg6kXUpJWGl7E1IGOCspRomTxdCARLviKw6E5SY8").unwrap(),
+    ]
+});
 
 #[derive(Clone)]
 pub enum Credentials {
@@ -496,9 +510,26 @@ impl Repository {
 
     fn fetch_options(credentials: &Credentials) -> git2::FetchOptions<'_> {
         let mut callbacks = git2::RemoteCallbacks::new();
+
         callbacks.credentials(move |_, user_from_url, cred_type| {
             credentials.git2_callback(user_from_url, cred_type)
         });
+
+        callbacks.certificate_check(|cert, hostname| {
+            if hostname == "github.com" {
+                if let Some(hash) = cert.as_hostkey().and_then(|key| key.hash_sha256()) {
+                    if GITHUB_FINGERPRINTS
+                        .iter()
+                        .any(|fingerprint| fingerprint == hash)
+                    {
+                        return Ok(CertificateCheckStatus::CertificateOk);
+                    }
+                }
+            }
+
+            Ok(CertificateCheckStatus::CertificatePassthrough)
+        });
+
         let mut opts = git2::FetchOptions::new();
         opts.remote_callbacks(callbacks);
         opts
