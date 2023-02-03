@@ -17,7 +17,7 @@ env:
 jobs:
   coverage:
     name: Test Coverage
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     env:
       RUST_BACKTRACE: 1
