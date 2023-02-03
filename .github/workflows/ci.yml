@@ -23,7 +23,7 @@ env:
 jobs:
   changed-files:
     name: Changed Files
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/checkout@v3.3.0
@@ -63,7 +63,7 @@ jobs:
 
   backend-lint:
     name: Backend / Lint
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: changed-files
     if: needs.changed-files.outputs.non-js == 'true'
 
@@ -84,7 +84,7 @@ jobs:
 
   backend-test:
     name: Backend / Test
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: changed-files
     if: needs.changed-files.outputs.non-js == 'true'
 
@@ -123,7 +123,7 @@ jobs:
 
   frontend-lint:
     name: Frontend / Lint
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: changed-files
     if: needs.changed-files.outputs.non-rust == 'true'
 
@@ -147,7 +147,7 @@ jobs:
 
   frontend-test:
     name: Frontend / Test
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: changed-files
     if: needs.changed-files.outputs.non-rust == 'true'
 
