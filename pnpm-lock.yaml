@@ -31,7 +31,7 @@ specifiers:
   chart.js: 4.2.0
   copy-text-to-clipboard: 3.0.1
   date-fns: 2.29.3
-  ember-a11y-testing: 5.1.0
+  ember-a11y-testing: 5.2.0
   ember-auto-import: 2.6.0
   ember-cli: 4.10.0
   ember-cli-app-version: 6.0.0
@@ -136,7 +136,7 @@ devDependencies:
   '@sinonjs/fake-timers': 10.0.2
   '@zestia/ember-auto-focus': 4.4.0
   broccoli-asset-rev: 3.0.0
-  ember-a11y-testing: 5.1.0_dvame2fsqhpslri2nygrxd77tm
+  ember-a11y-testing: 5.2.0_dvame2fsqhpslri2nygrxd77tm
   ember-auto-import: 2.6.0_webpack@5.75.0
   ember-cli: 4.10.0
   ember-cli-app-version: 6.0.0_ember-source@4.10.0
@@ -7089,8 +7089,8 @@ packages:
       minimalistic-crypto-utils: 1.0.1
     dev: true
 
-  /ember-a11y-testing/5.1.0_dvame2fsqhpslri2nygrxd77tm:
-    resolution: {integrity: sha512-XAjFn5DwhqWUdPLqVsE4Mlq8zLlRrxJHxoIBHFYsbz5k8fCQL6qLuI+eEiMq2URkfk6LVSvarTWov8TnWplrOw==}
+  /ember-a11y-testing/5.2.0_dvame2fsqhpslri2nygrxd77tm:
+    resolution: {integrity: sha512-dWU3+ADTL7gnm+zxFL238OZJpGvLGRGEy07Zxgd64mNIdfNYYPeXOVZ6wjKUIuDXlKzvEnrwHV9D/pcj2rq9UA==}
     engines: {node: 12.* || 14.* || >= 16}
     peerDependencies:
       '@ember/test-helpers': ^2.0.0
