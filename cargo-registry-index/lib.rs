@@ -7,9 +7,6 @@ extern crate tracing;
 pub mod testing;
 
 use anyhow::{anyhow, Context};
-use git2::cert::Cert;
-use git2::CertificateCheckStatus;
-use once_cell::sync::Lazy;
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::io::Write;
@@ -20,18 +17,6 @@ use tempfile::TempDir;
 use url::Url;
 
 static DEFAULT_GIT_SSH_USERNAME: &str = "git";
-
-// We are hardcoding the github.com SSH key fingerprints from
-// https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/githubs-ssh-key-fingerprints
-// here. This is considered good enough for now, but could eventually be replaced
-// by an environment variable that acts as a `known_hosts` file.
-static GITHUB_FINGERPRINTS: Lazy<[Vec<u8>; 3]> = Lazy::new(|| {
-    [
-        base64::decode(b"+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU").unwrap(),
-        base64::decode(b"p2QAMXNIC1TJYWeIOttrVc98/R1BUFWu3/LiyKgUfQM").unwrap(),
-        base64::decode(b"nThbg6kXUpJWGl7E1IGOCspRomTxdCARLviKw6E5SY8").unwrap(),
-    ]
-});
 
 #[derive(Clone)]
 pub enum Credentials {
@@ -443,7 +428,6 @@ impl Repository {
         {
             let mut origin = self.repository.find_remote("origin")?;
             let mut callbacks = git2::RemoteCallbacks::new();
-            callbacks.certificate_check(Self::certificate_check);
             callbacks.credentials(|_, user_from_url, cred_type| {
                 self.credentials.git2_callback(user_from_url, cred_type)
             });
@@ -517,29 +501,9 @@ impl Repository {
             credentials.git2_callback(user_from_url, cred_type)
         });
 
-        callbacks.certificate_check(Self::certificate_check);
-
         let mut opts = git2::FetchOptions::new();
         opts.remote_callbacks(callbacks);
         opts
-    }
-
-    fn certificate_check(
-        cert: &Cert,
-        hostname: &str,
-    ) -> Result<CertificateCheckStatus, git2::Error> {
-        if hostname == "github.com" {
-            if let Some(hash) = cert.as_hostkey().and_then(|key| key.hash_sha256()) {
-                if GITHUB_FINGERPRINTS
-                    .iter()
-                    .any(|fingerprint| fingerprint == hash)
-                {
-                    return Ok(CertificateCheckStatus::CertificateOk);
-                }
-            }
-        }
-
-        Ok(CertificateCheckStatus::CertificatePassthrough)
     }
 
     /// Reset `HEAD` to a single commit with all the index contents, but no parent
@@ -572,10 +536,7 @@ impl Repository {
         let temp_key_path = self.credentials.write_temporary_ssh_key()?;
         command.env(
             "GIT_SSH_COMMAND",
-            format!(
-                "ssh -o StrictHostKeyChecking=accept-new -i {}",
-                temp_key_path.display()
-            ),
+            format!("ssh -i {}", temp_key_path.display()),
         );
 
         let output = command.output()?;

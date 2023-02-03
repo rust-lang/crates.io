@@ -17,7 +17,7 @@ extern crate tracing;
 
 use cargo_registry::config;
 use cargo_registry::worker::cloudfront::CloudFront;
-use cargo_registry::{background_jobs::*, db};
+use cargo_registry::{background_jobs::*, db, ssh};
 use cargo_registry_index::{Repository, RepositoryConfig};
 use reqwest::blocking::Client;
 use std::sync::{Arc, Mutex};
@@ -55,6 +55,10 @@ fn main() {
         .expect("Invalid value for `BACKGROUND_JOB_TIMEOUT`");
 
     info!("Cloning index");
+
+    if dotenv::var("HEROKU").is_ok() {
+        ssh::write_known_hosts_file().unwrap();
+    }
 
     let repository_config = RepositoryConfig::from_environment();
     let repository = Arc::new(Mutex::new(

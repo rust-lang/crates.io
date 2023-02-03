@@ -51,6 +51,7 @@ pub mod middleware;
 mod publish_rate_limit;
 pub mod schema;
 pub mod sql;
+pub mod ssh;
 pub mod swirl;
 mod test_util;
 pub mod uploaders;
