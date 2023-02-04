@@ -95,7 +95,7 @@ specifiers:
   postcss-custom-media: 8.0.2
   postcss-nested: 6.0.0
   prettier: 2.8.3
-  pretty-bytes: 6.0.0
+  pretty-bytes: 6.1.0
   qunit: 2.19.4
   qunit-console-grouper: 0.3.0
   qunit-dom: 2.0.0
@@ -114,7 +114,7 @@ dependencies:
   highlight.js: 11.7.0
   macro-decorators: 0.1.2
   morgan: 1.10.0
-  pretty-bytes: 6.0.0
+  pretty-bytes: 6.1.0
   semver: 7.3.8
   tracked-toolbox: 2.0.0_ember-source@4.10.0
 
@@ -13532,8 +13532,8 @@ packages:
     engines: {node: '>=10.13.0'}
     hasBin: true
 
-  /pretty-bytes/6.0.0:
-    resolution: {integrity: sha512-6UqkYefdogmzqAZWzJ7laYeJnaXDy2/J+ZqiiMtS7t7OfpXWTlaeGMwX8U6EFvPV/YWWEKRkS8hKS4k60WHTOg==}
+  /pretty-bytes/6.1.0:
+    resolution: {integrity: sha512-Rk753HI8f4uivXi4ZCIYdhmG1V+WKzvRMg/X+M42a6t7D07RcmopXJMDNk6N++7Bl75URRGsb40ruvg7Hcp2wQ==}
     engines: {node: ^14.13.1 || >=16.0.0}
     dev: false
 

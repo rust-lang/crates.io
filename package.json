@@ -47,7 +47,7 @@
     "highlight.js": "11.7.0",
     "macro-decorators": "0.1.2",
     "morgan": "1.10.0",
-    "pretty-bytes": "6.0.0",
+    "pretty-bytes": "6.1.0",
     "semver": "7.3.8",
     "tracked-toolbox": "2.0.0"
   },
