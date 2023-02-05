@@ -539,23 +539,31 @@ impl Repository {
         let checkout_path = self.checkout_path.path();
         command.current_dir(checkout_path);
 
-        let temp_key_path = self.credentials.write_temporary_ssh_key()?;
-        command.env(
-            "GIT_SSH_COMMAND",
-            format!("ssh -i {}", temp_key_path.display()),
-        );
-
-        let output = command.output()?;
-        if !output.status.success() {
-            let stderr = String::from_utf8_lossy(&output.stderr);
-            let stdout = String::from_utf8_lossy(&output.stdout);
-            return Err(anyhow!(
-                "Running git command failed with: {}{}",
-                stderr,
-                stdout
-            ));
-        }
-
-        Ok(())
+        run_via_cli(command, &self.credentials)
     }
+}
+
+/// Runs the specified `git` command through the `git` CLI.
+///
+/// This function also temporarily sets the `GIT_SSH_COMMAND` environment
+/// variable to ensure that `git push` commands are able to succeed.
+pub fn run_via_cli(command: &mut Command, credentials: &Credentials) -> anyhow::Result<()> {
+    let temp_key_path = credentials.write_temporary_ssh_key()?;
+    command.env(
+        "GIT_SSH_COMMAND",
+        format!("ssh -i {}", temp_key_path.display()),
+    );
+
+    let output = command.output()?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        return Err(anyhow!(
+            "Running git command failed with: {}{}",
+            stderr,
+            stdout
+        ));
+    }
+
+    Ok(())
 }
