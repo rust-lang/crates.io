@@ -26,6 +26,13 @@ pub enum Credentials {
 }
 
 impl Credentials {
+    fn ssh_key(&self) -> Option<&str> {
+        match self {
+            Credentials::Ssh { key } => Some(key),
+            _ => None,
+        }
+    }
+
     fn git2_callback(
         &self,
         user_from_url: Option<&str>,
@@ -73,10 +80,9 @@ impl Credentials {
     /// - If creation of the temporary file fails, `Err` is returned.
     ///
     fn write_temporary_ssh_key(&self) -> anyhow::Result<tempfile::TempPath> {
-        let key = match self {
-            Credentials::Ssh { key } => key,
-            _ => return Err(anyhow!("SSH key not available")),
-        };
+        let key = self
+            .ssh_key()
+            .ok_or_else(|| anyhow!("SSH key not available"))?;
 
         let dir = if cfg!(target_os = "linux") {
             // When running on production, ensure the file is created in tmpfs and not persisted to disk
