@@ -271,21 +271,23 @@ impl Repository {
             .tempdir()
             .context("Failed to create temporary directory")?;
 
-        let repository = git2::build::RepoBuilder::new()
-            .fetch_options(Self::fetch_options(&repository_config.credentials))
-            .remote_create(|repo, name, url| {
-                // Manually create the remote with a fetchspec, to avoid cloning old snaphots
-                repo.remote_with_fetch(
-                    name,
-                    url,
-                    &format!("+refs/heads/master:refs/remotes/{name}/master"),
-                )
-            })
-            .clone(
+        let Some(checkout_path_str) = checkout_path.path().to_str() else {
+            return Err(anyhow!("Failed to convert Path to &str"));
+        };
+
+        run_via_cli(
+            Command::new("git").args([
+                "clone",
+                "--single-branch",
                 repository_config.index_location.as_str(),
-                checkout_path.path(),
-            )
-            .context("Failed to clone index repository")?;
+                checkout_path_str,
+            ]),
+            &repository_config.credentials,
+        )
+        .context("Failed to clone index repository")?;
+
+        let repository = git2::Repository::open(checkout_path.path())
+            .context("Failed to open cloned index repository")?;
 
         // All commits to the index registry made through crates.io will be made by bors, the Rust
         // community's friendly GitHub bot.
