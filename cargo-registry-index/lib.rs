@@ -548,11 +548,17 @@ impl Repository {
 /// This function also temporarily sets the `GIT_SSH_COMMAND` environment
 /// variable to ensure that `git push` commands are able to succeed.
 pub fn run_via_cli(command: &mut Command, credentials: &Credentials) -> anyhow::Result<()> {
-    let temp_key_path = credentials.write_temporary_ssh_key()?;
-    command.env(
-        "GIT_SSH_COMMAND",
-        format!("ssh -i {}", temp_key_path.display()),
-    );
+    let temp_key_path = credentials
+        .ssh_key()
+        .map(|_| credentials.write_temporary_ssh_key())
+        .transpose()?;
+
+    if let Some(temp_key_path) = &temp_key_path {
+        command.env(
+            "GIT_SSH_COMMAND",
+            format!("ssh -i {}", temp_key_path.display()),
+        );
+    }
 
     let output = command.output()?;
     if !output.status.success() {
