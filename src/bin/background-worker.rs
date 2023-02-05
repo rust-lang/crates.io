@@ -22,7 +22,7 @@ use cargo_registry_index::{Repository, RepositoryConfig};
 use reqwest::blocking::Client;
 use std::sync::{Arc, Mutex};
 use std::thread::sleep;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use cargo_registry::swirl;
 
@@ -60,11 +60,14 @@ fn main() {
         ssh::write_known_hosts_file().unwrap();
     }
 
+    let clone_start = Instant::now();
     let repository_config = RepositoryConfig::from_environment();
     let repository = Arc::new(Mutex::new(
         Repository::open(&repository_config).expect("Failed to clone index"),
     ));
-    info!("Index cloned");
+
+    let clone_duration = clone_start.elapsed();
+    info!(duration = ?clone_duration, "Index cloned");
 
     let cloudfront = CloudFront::from_environment();
 
