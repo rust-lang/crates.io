@@ -560,6 +560,7 @@ pub fn run_via_cli(command: &mut Command, credentials: &Credentials) -> anyhow::
         );
     }
 
+    debug!(?command);
     let output = command.output()?;
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
