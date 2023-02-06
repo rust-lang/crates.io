@@ -8,8 +8,8 @@ use std::cmp::Reverse;
 use std::str::FromStr;
 
 use crate::controllers::frontend_prelude::*;
+use crate::controllers::helpers::pagination::{Paginated, PaginationOptions};
 use crate::controllers::helpers::Paginate;
-use crate::controllers::helpers::pagination::{PaginationOptions, Paginated};
 
 use crate::models::{
     Category, Crate, CrateCategory, CrateKeyword, CrateVersions, Keyword, RecentCrateDownloads,
@@ -321,7 +321,11 @@ pub async fn readme(
 /// Handles the `GET /crates/:crate_id/versions` route.
 // FIXME: Not sure why this is necessary since /crates/:crate_id returns
 // this information already, but ember is definitely requesting it
-pub async fn versions(state: AppState, Path(crate_name): Path<String>, req: Parts) -> AppResult<Json<Value>> {
+pub async fn versions(
+    state: AppState,
+    Path(crate_name): Path<String>,
+    req: Parts,
+) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         let conn = state.db_read()?;
         let krate: Crate = Crate::by_name(&crate_name).first(&*conn)?;
@@ -336,7 +340,7 @@ pub async fn versions(state: AppState, Path(crate_name): Path<String>, req: Part
                 .pages_pagination(pagination_options)
                 .load(&conn)?;
             let more = data.next_page_params().is_some();
-    
+
             (
                 data.into_iter().collect::<Vec<_>>(),
                 Some(json!({ "more": more })),
