@@ -8,7 +8,8 @@ use std::cmp::Reverse;
 use std::str::FromStr;
 
 use crate::controllers::frontend_prelude::*;
-use crate::controllers::helpers::pagination::PaginationOptions;
+use crate::controllers::helpers::Paginate;
+use crate::controllers::helpers::pagination::{PaginationOptions, Paginated};
 
 use crate::models::{
     Category, Crate, CrateCategory, CrateKeyword, CrateVersions, Keyword, RecentCrateDownloads,
@@ -320,15 +321,34 @@ pub async fn readme(
 /// Handles the `GET /crates/:crate_id/versions` route.
 // FIXME: Not sure why this is necessary since /crates/:crate_id returns
 // this information already, but ember is definitely requesting it
-pub async fn versions(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
+pub async fn versions(state: AppState, Path(crate_name): Path<String>, req: Parts) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         let conn = state.db_read()?;
         let krate: Crate = Crate::by_name(&crate_name).first(&*conn)?;
-        let mut versions_and_publishers: Vec<(Version, Option<User>)> = krate
-            .all_versions()
-            .left_outer_join(users::table)
-            .select((versions::all_columns, users::all_columns.nullable()))
-            .load(&*conn)?;
+        // to keep retrocompatibility, we paginate only if per_page parameter is present
+        let (mut versions_and_publishers, meta) = if req.query().get("per_page").is_some() {
+            let pagination_options = PaginationOptions::builder().gather(&req)?;
+            let data: Paginated<(Version, Option<User>)> = krate
+                .all_versions()
+                .left_outer_join(users::table)
+                .select((versions::all_columns, users::all_columns.nullable()))
+                .order(versions::created_at.desc())
+                .pages_pagination(pagination_options)
+                .load(&conn)?;
+            let more = data.next_page_params().is_some();
+    
+            (
+                data.into_iter().collect::<Vec<_>>(),
+                Some(json!({ "more": more })),
+            )
+        } else {
+            let data: Vec<(Version, Option<User>)> = krate
+                .all_versions()
+                .left_outer_join(users::table)
+                .select((versions::all_columns, users::all_columns.nullable()))
+                .load(&*conn)?;
+            (data, None)
+        };
 
         versions_and_publishers
             .sort_by_cached_key(|(version, _)| Reverse(semver::Version::parse(&version.num).ok()));
@@ -344,7 +364,18 @@ pub async fn versions(state: AppState, Path(crate_name): Path<String>) -> AppRes
             .map(|((v, pb), aas)| EncodableVersion::from(v, &crate_name, pb, aas))
             .collect::<Vec<_>>();
 
-        Ok(Json(json!({ "versions": versions })))
+        // probably here would be simplier with a concrete response type
+        let response = if let Some(meta) = meta {
+            json!({
+                "versions": versions,
+                "meta": meta,
+            })
+        } else {
+            json!({
+                "versions": versions,
+            })
+        };
+        Ok(Json(response))
     })
     .await
 }
