@@ -26,6 +26,10 @@ pub fn build_axum_router(state: AppState) -> Router {
                 .delete(krate::owners::remove_owners),
         )
         .route(
+            "/api/v1/crates/:crate_id/:version",
+            delete(version::delete::delete),
+        )
+        .route(
             "/api/v1/crates/:crate_id/:version/yank",
             delete(version::yank::yank),
         )

@@ -1,3 +1,4 @@
+pub mod delete;
 pub mod deprecated;
 pub mod downloads;
 pub mod metadata;
