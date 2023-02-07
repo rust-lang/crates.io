@@ -56,7 +56,6 @@ specifiers:
   ember-error-route: 0.2.0
   ember-event-helpers: 0.1.1
   ember-exam: 8.0.0
-  ember-export-application-global: 2.0.1
   ember-fetch: 8.1.2
   ember-keyboard: 8.2.0
   ember-link: 2.0.1
@@ -161,7 +160,6 @@ devDependencies:
   ember-error-route: 0.2.0
   ember-event-helpers: 0.1.1
   ember-exam: 8.0.0_lxs4qsxg7wqb7jjwy3rhxijg74
-  ember-export-application-global: 2.0.1
   ember-fetch: 8.1.2
   ember-keyboard: 8.2.0_@ember+test-helpers@2.9.3
   ember-link: 2.0.1
@@ -8031,11 +8029,6 @@ packages:
     transitivePeerDependencies:
       - supports-color
       - webpack
-    dev: true
-
-  /ember-export-application-global/2.0.1:
-    resolution: {integrity: sha512-B7wiurPgsxsSGzJuPFkpBWnaeuCu2PGpG2BjyrfA1VcL7//o+5RSnZqiCEY326y7qmxb2GoCgo0ft03KBU0rRw==}
-    engines: {node: '>= 4'}
     dev: true
 
   /ember-fetch/8.1.2:
