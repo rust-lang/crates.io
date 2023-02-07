@@ -26,6 +26,13 @@ pub enum Credentials {
 }
 
 impl Credentials {
+    fn ssh_key(&self) -> Option<&str> {
+        match self {
+            Credentials::Ssh { key } => Some(key),
+            _ => None,
+        }
+    }
+
     fn git2_callback(
         &self,
         user_from_url: Option<&str>,
@@ -73,10 +80,9 @@ impl Credentials {
     /// - If creation of the temporary file fails, `Err` is returned.
     ///
     fn write_temporary_ssh_key(&self) -> anyhow::Result<tempfile::TempPath> {
-        let key = match self {
-            Credentials::Ssh { key } => key,
-            _ => return Err(anyhow!("SSH key not available")),
-        };
+        let key = self
+            .ssh_key()
+            .ok_or_else(|| anyhow!("SSH key not available"))?;
 
         let dir = if cfg!(target_os = "linux") {
             // When running on production, ensure the file is created in tmpfs and not persisted to disk
@@ -265,21 +271,23 @@ impl Repository {
             .tempdir()
             .context("Failed to create temporary directory")?;
 
-        let repository = git2::build::RepoBuilder::new()
-            .fetch_options(Self::fetch_options(&repository_config.credentials))
-            .remote_create(|repo, name, url| {
-                // Manually create the remote with a fetchspec, to avoid cloning old snaphots
-                repo.remote_with_fetch(
-                    name,
-                    url,
-                    &format!("+refs/heads/master:refs/remotes/{name}/master"),
-                )
-            })
-            .clone(
+        let Some(checkout_path_str) = checkout_path.path().to_str() else {
+            return Err(anyhow!("Failed to convert Path to &str"));
+        };
+
+        run_via_cli(
+            Command::new("git").args([
+                "clone",
+                "--single-branch",
                 repository_config.index_location.as_str(),
-                checkout_path.path(),
-            )
-            .context("Failed to clone index repository")?;
+                checkout_path_str,
+            ]),
+            &repository_config.credentials,
+        )
+        .context("Failed to clone index repository")?;
+
+        let repository = git2::Repository::open(checkout_path.path())
+            .context("Failed to open cloned index repository")?;
 
         // All commits to the index registry made through crates.io will be made by bors, the Rust
         // community's friendly GitHub bot.
@@ -533,23 +541,38 @@ impl Repository {
         let checkout_path = self.checkout_path.path();
         command.current_dir(checkout_path);
 
-        let temp_key_path = self.credentials.write_temporary_ssh_key()?;
+        run_via_cli(command, &self.credentials)
+    }
+}
+
+/// Runs the specified `git` command through the `git` CLI.
+///
+/// This function also temporarily sets the `GIT_SSH_COMMAND` environment
+/// variable to ensure that `git push` commands are able to succeed.
+pub fn run_via_cli(command: &mut Command, credentials: &Credentials) -> anyhow::Result<()> {
+    let temp_key_path = credentials
+        .ssh_key()
+        .map(|_| credentials.write_temporary_ssh_key())
+        .transpose()?;
+
+    if let Some(temp_key_path) = &temp_key_path {
         command.env(
             "GIT_SSH_COMMAND",
             format!("ssh -i {}", temp_key_path.display()),
         );
-
-        let output = command.output()?;
-        if !output.status.success() {
-            let stderr = String::from_utf8_lossy(&output.stderr);
-            let stdout = String::from_utf8_lossy(&output.stdout);
-            return Err(anyhow!(
-                "Running git command failed with: {}{}",
-                stderr,
-                stdout
-            ));
-        }
-
-        Ok(())
     }
+
+    debug!(?command);
+    let output = command.output()?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        return Err(anyhow!(
+            "Running git command failed with: {}{}",
+            stderr,
+            stdout
+        ));
+    }
+
+    Ok(())
 }
