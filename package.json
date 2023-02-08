@@ -74,7 +74,7 @@
     "ember-cli": "4.10.0",
     "ember-cli-app-version": "6.0.0",
     "ember-cli-babel": "7.26.11",
-    "ember-cli-bundle-analyzer": "0.3.0",
+    "ember-cli-bundle-analyzer": "1.0.0",
     "ember-cli-code-coverage": "2.0.0",
     "ember-cli-dependency-checker": "3.3.1",
     "ember-cli-dependency-lint": "2.0.1",
