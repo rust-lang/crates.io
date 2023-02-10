@@ -155,7 +155,7 @@ export default class Version extends Model {
       return crateDocsLink;
     }
 
-    return null;
+    return docsRsLink;
   }
 
   yankTask = keepLatestTask(async () => {
