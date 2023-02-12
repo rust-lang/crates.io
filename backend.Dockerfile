@@ -3,10 +3,13 @@ ARG RUST_VERSION=1.67.1
 
 FROM rust:$RUST_VERSION
 
+# renovate: datasource=crate depName=diesel_cli versioning=semver
+ARG DIESEL_CLI_VERSION=1.4.1
+
 RUN apt-get update \
     && apt-get install -y postgresql \
     && rm -rf /var/lib/apt/lists/* \
-    && cargo install diesel_cli --version 1.4.1 --no-default-features --features postgres
+    && cargo install diesel_cli --version $DIESEL_CLI_VERSION --no-default-features --features postgres
 
 WORKDIR /app
 COPY . /app
