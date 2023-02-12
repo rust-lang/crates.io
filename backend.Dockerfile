@@ -1,4 +1,7 @@
-FROM rust:latest
+# renovate: datasource=github-releases depName=rust lookupName=rust-lang/rust
+ARG RUST_VERSION=1.67.1
+
+FROM rust:$RUST_VERSION
 
 RUN apt-get update \
     && apt-get install -y postgresql \
