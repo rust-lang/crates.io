@@ -1,7 +1,13 @@
-FROM node:18.14.0-alpine
+# renovate: datasource=node depName=node
+ARG NODE_VERSION=18.14.0
+
+FROM node:${NODE_VERSION}-alpine
+
+# renovate: datasource=npm depName=pnpm
+ARG PNPM_VERSION=7.27.0
 
 # Install `pnpm`
-RUN npm install --global pnpm@7.9.0
+RUN npm install --global pnpm@$PNPM_VERSION
 
 WORKDIR /app
 

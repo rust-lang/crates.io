@@ -9,7 +9,8 @@
         ":semanticCommitsDisabled",
         ":automergeLinters",
         ":automergeTesters",
-        "github>Turbo87/renovate-config//githubActions/regexManagers",
+        "regexManagers:dockerfileVersions",
+        "regexManagers:githubActionsVersions",
     ],
     "js": {
         "labels": ["A-frontend 🐹"],
