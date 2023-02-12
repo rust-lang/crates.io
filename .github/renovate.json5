@@ -9,6 +9,7 @@
         ":semanticCommitsDisabled",
         ":automergeLinters",
         ":automergeTesters",
+        "regexManagers:dockerfileVersions",
         "regexManagers:githubActionsVersions",
     ],
     "js": {
