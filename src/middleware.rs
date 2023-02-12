@@ -17,7 +17,9 @@ use app::add_app_state_extension;
 use ::sentry::integrations::tower as sentry_tower;
 use axum::middleware::{from_fn, from_fn_with_state};
 use axum::Router;
+use axum_extra::either::Either;
 use axum_extra::middleware::option_layer;
+use tower::layer::util::Identity;
 
 use crate::app::AppState;
 use crate::Env;
@@ -45,9 +47,9 @@ pub fn apply_axum_middleware(state: AppState, router: Router) -> Router {
         ))
         // Optionally print debug information for each request
         // To enable, set the environment variable: `RUST_LOG=cargo_registry::middleware=debug`
-        .layer(option_layer(
-            (env == Env::Development).then(|| from_fn(debug::debug_requests)),
-        ))
+        .layer(conditional_layer(env == Env::Development, || {
+            from_fn(debug::debug_requests)
+        }))
         .layer(from_fn_with_state(state.clone(), session::attach_session))
         .layer(from_fn_with_state(
             state.clone(),
@@ -62,17 +64,17 @@ pub fn apply_axum_middleware(state: AppState, router: Router) -> Router {
             block_traffic::block_routes,
         ))
         .layer(from_fn(head::support_head_requests))
-        .layer(option_layer(
-            (env == Env::Development).then(|| from_fn(static_or_continue::serve_local_uploads)),
-        ))
+        .layer(conditional_layer(env == Env::Development, || {
+            from_fn(static_or_continue::serve_local_uploads)
+        }))
         // Serve the static files in the *dist* directory, which are the frontend assets.
         // Not needed for the backend tests.
-        .layer(option_layer(
-            (env != Env::Test).then(|| from_fn(static_or_continue::serve_dist)),
-        ))
-        .layer(option_layer((env != Env::Test).then(|| {
+        .layer(conditional_layer(env != Env::Test, || {
+            from_fn(static_or_continue::serve_dist)
+        }))
+        .layer(conditional_layer(env != Env::Test, || {
             from_fn_with_state(state.clone(), ember_html::serve_html)
-        })))
+        }))
         .layer(from_fn_with_state(state.clone(), add_app_state_extension))
         // This is currently the final middleware to run. If a middleware layer requires a database
         // connection, it should be run after this middleware so that the potential pool usage can be
@@ -81,9 +83,13 @@ pub fn apply_axum_middleware(state: AppState, router: Router) -> Router {
         // In production we currently have 2 equally sized pools (primary and a read-only replica).
         // Because such a large portion of production traffic is for download requests (which update
         // download counts), we consider only the primary pool here.
-        .layer(option_layer((capacity >= 10).then(|| {
+        .layer(conditional_layer(capacity >= 10, || {
             from_fn_with_state(state, balance_capacity::balance_capacity)
-        })));
+        }));
 
     router.layer(middleware)
+}
+
+pub fn conditional_layer<L, F: FnOnce() -> L>(condition: bool, layer: F) -> Either<L, Identity> {
+    option_layer(condition.then(layer))
 }
