@@ -261,7 +261,7 @@ checksum = "51227033e4d3acad15c879092ac8a228532707b5db5ff2628f638334f63e1b7a"
 dependencies = [
  "axum",
  "bytes",
- "cookie 0.17.0",
+ "cookie",
  "futures-util",
  "http",
  "mime",
@@ -403,7 +403,7 @@ dependencies = [
  "chrono",
  "claims",
  "clap",
- "cookie 0.16.1",
+ "cookie",
  "dashmap",
  "derive_deref",
  "dialoguer",
@@ -646,28 +646,13 @@ dependencies = [
 
 [[package]]
 name = "cookie"
-version = "0.16.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "344adc371239ef32293cb1c4fe519592fcf21206c79c02854320afcdf3ab4917"
-dependencies = [
- "aes-gcm",
- "base64 0.13.1",
- "hkdf",
- "hmac",
- "rand",
- "sha2",
- "subtle",
- "time 0.3.17",
- "version_check",
-]
-
-[[package]]
-name = "cookie"
 version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7efb37c3e1ccb1ff97164ad95ac1606e8ccd35b3fa0a7d99a304c7f4a428cc24"
 dependencies = [
+ "aes-gcm",
  "base64 0.21.0",
+ "hkdf",
  "hmac",
  "percent-encoding",
  "rand",
