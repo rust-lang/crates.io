@@ -55,7 +55,7 @@ lettre = { version = "=0.10.2", default-features = false, features = ["file-tran
 minijinja = "=0.30.4"
 moka = { version = "=0.10.0", features = ["future"]  }
 oauth2 = { version = "=4.3.0", default-features = false, features = ["reqwest"] }
-once_cell = "=1.17.0"
+once_cell = "=1.17.1"
 parking_lot = "=0.12.1"
 prometheus = { version = "=0.13.3", default-features = false }
 rand = "=0.8.5"
