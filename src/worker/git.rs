@@ -14,7 +14,7 @@ use std::process::Command;
 #[instrument(skip_all, fields(krate.name = ?krate.name, krate.vers = ?krate.vers))]
 pub fn perform_index_add_crate(
     env: &Environment,
-    conn: &PgConnection,
+    conn: &mut PgConnection,
     krate: &Crate,
 ) -> Result<(), PerformError> {
     info!("Syncing git index to HTTP-based index");
@@ -81,7 +81,7 @@ pub fn update_crate_index(crate_name: String) -> Job {
 #[instrument(skip(env, conn))]
 pub fn perform_index_update_yanked(
     env: &Environment,
-    conn: &PgConnection,
+    conn: &mut PgConnection,
     krate: &str,
     version_num: &str,
 ) -> Result<(), PerformError> {

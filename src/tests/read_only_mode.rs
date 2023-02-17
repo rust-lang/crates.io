@@ -58,7 +58,7 @@ fn can_download_crate_in_read_only_mode() {
     })
 }
 
-fn set_read_only(conn: &PgConnection) -> QueryResult<()> {
+fn set_read_only(conn: &mut PgConnection) -> QueryResult<()> {
     diesel::sql_query("SET TRANSACTION READ ONLY").execute(conn)?;
     diesel::sql_query("SAVEPOINT test_post_readonly").execute(conn)?;
     Ok(())

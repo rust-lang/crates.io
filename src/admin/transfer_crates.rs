@@ -21,15 +21,15 @@ pub struct Opts {
 }
 
 pub fn run(opts: Opts) {
-    let conn = db::oneoff_connection().unwrap();
-    conn.transaction::<_, diesel::result::Error, _>(|| {
-        transfer(opts, &conn);
+    let conn = &mut db::oneoff_connection().unwrap();
+    conn.transaction::<_, diesel::result::Error, _>(|conn| {
+        transfer(opts, conn);
         Ok(())
     })
     .unwrap()
 }
 
-fn transfer(opts: Opts, conn: &PgConnection) {
+fn transfer(opts: Opts, conn: &mut PgConnection) {
     let from: User = users::table
         .filter(users::gh_login.eq(opts.from_user))
         .first(conn)

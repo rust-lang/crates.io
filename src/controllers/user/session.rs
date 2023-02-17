@@ -101,7 +101,8 @@ pub async fn authorize(
 
         // Fetch the user info from GitHub using the access token we just got and create a user record
         let ghuser = app.github.current_user(token)?;
-        let user = save_user_to_database(&ghuser, token.secret(), &app.emails, &*app.db_write()?)?;
+        let user =
+            save_user_to_database(&ghuser, token.secret(), &app.emails, &mut *app.db_write()?)?;
 
         // Log in by setting a cookie and the middleware authentication
         session.insert("user_id".to_string(), user.id.to_string());
@@ -117,7 +118,7 @@ fn save_user_to_database(
     user: &GithubUser,
     access_token: &str,
     emails: &Emails,
-    conn: &PgConnection,
+    conn: &mut PgConnection,
 ) -> AppResult<User> {
     NewUser::new(
         user.id,
@@ -162,7 +163,7 @@ mod tests {
     #[test]
     fn gh_user_with_invalid_email_doesnt_fail() {
         let emails = Emails::new_in_memory();
-        let conn = pg_connection();
+        let conn = &mut pg_connection();
         let gh_user = GithubUser {
             email: Some("String.Format(\"{0}.{1}@live.com\", FirstName, LastName)".into()),
             name: Some("My Name".into()),
@@ -170,7 +171,7 @@ mod tests {
             id: -1,
             avatar_url: None,
         };
-        let result = save_user_to_database(&gh_user, "arbitrary_token", &emails, &conn);
+        let result = save_user_to_database(&gh_user, "arbitrary_token", &emails, conn);
 
         assert!(
             result.is_ok(),

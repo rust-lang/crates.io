@@ -14,25 +14,26 @@ pub struct Keyword {
 }
 
 #[derive(Associations, Insertable, Identifiable, Debug, Clone, Copy)]
-#[belongs_to(Keyword)]
-#[belongs_to(Crate)]
-#[table_name = "crates_keywords"]
-#[primary_key(crate_id, keyword_id)]
+#[diesel(belongs_to(Keyword))]
+#[diesel(belongs_to(Crate))]
+#[diesel(table_name = crates_keywords)]
+#[diesel(primary_key(crate_id, keyword_id))]
 pub struct CrateKeyword {
     crate_id: i32,
     keyword_id: i32,
 }
 
 impl Keyword {
-    pub fn find_by_keyword(conn: &PgConnection, name: &str) -> QueryResult<Keyword> {
+    pub fn find_by_keyword(conn: &mut PgConnection, name: &str) -> QueryResult<Keyword> {
         keywords::table
             .filter(keywords::keyword.eq(lower(name)))
             .first(conn)
     }
 
-    pub fn find_or_create_all(conn: &PgConnection, names: &[&str]) -> QueryResult<Vec<Keyword>> {
-        use diesel::dsl::any;
-
+    pub fn find_or_create_all(
+        conn: &mut PgConnection,
+        names: &[&str],
+    ) -> QueryResult<Vec<Keyword>> {
         let lowercase_names: Vec<_> = names.iter().map(|s| s.to_lowercase()).collect();
 
         let new_keywords: Vec<_> = lowercase_names
@@ -45,7 +46,7 @@ impl Keyword {
             .on_conflict_do_nothing()
             .execute(conn)?;
         keywords::table
-            .filter(keywords::keyword.eq(any(&lowercase_names)))
+            .filter(keywords::keyword.eq_any(&lowercase_names))
             .load(conn)
     }
 
@@ -59,8 +60,12 @@ impl Keyword {
             && chars.all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-' || c == '+')
     }
 
-    pub fn update_crate(conn: &PgConnection, krate: &Crate, keywords: &[&str]) -> QueryResult<()> {
-        conn.transaction(|| {
+    pub fn update_crate(
+        conn: &mut PgConnection,
+        krate: &Crate,
+        keywords: &[&str],
+    ) -> QueryResult<()> {
+        conn.transaction(|conn| {
             let keywords = Keyword::find_or_create_all(conn, keywords)?;
             diesel::delete(CrateKeyword::belonging_to(krate)).execute(conn)?;
             let crate_keywords = keywords
@@ -86,7 +91,7 @@ mod tests {
     fn pg_connection() -> PgConnection {
         let database_url =
             dotenv::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set to run tests");
-        let conn = PgConnection::establish(&database_url).unwrap();
+        let mut conn = PgConnection::establish(&database_url).unwrap();
         // These tests deadlock if run concurrently
         conn.batch_execute("BEGIN;").unwrap();
         conn
@@ -94,16 +99,16 @@ mod tests {
 
     #[test]
     fn dont_associate_with_non_lowercased_keywords() {
-        let conn = pg_connection();
+        let conn = &mut pg_connection();
         // The code should be preventing lowercased keywords from existing,
         // but if one happens to sneak in there, don't associate crates with it.
 
         diesel::insert_into(keywords::table)
             .values(keywords::keyword.eq("NO"))
-            .execute(&conn)
+            .execute(conn)
             .unwrap();
 
-        let associated = Keyword::find_or_create_all(&conn, &["no"]).unwrap();
+        let associated = Keyword::find_or_create_all(conn, &["no"]).unwrap();
         assert_eq!(associated.len(), 1);
         assert_eq!(associated.first().unwrap().keyword, "no");
     }

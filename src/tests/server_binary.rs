@@ -16,7 +16,7 @@ const SERVER_BOOT_TIMEOUT_SECONDS: u64 = 30;
 #[test]
 fn normal_startup() {
     let server_bin = ServerBin::prepare().unwrap();
-    initialize_dummy_crate(&server_bin.db().unwrap());
+    initialize_dummy_crate(&mut server_bin.db().unwrap());
 
     let running_server = server_bin.start().unwrap();
 
@@ -37,7 +37,7 @@ fn normal_startup() {
 #[test]
 fn startup_without_database() {
     let server_bin = ServerBin::prepare().unwrap();
-    initialize_dummy_crate(&server_bin.db().unwrap());
+    initialize_dummy_crate(&mut server_bin.db().unwrap());
 
     // Break the networking *before* starting the binary, to ensure the binary can fully startup
     // without a database connection. Most of crates.io should not work when started without a
@@ -60,7 +60,7 @@ fn startup_without_database() {
         .ends_with("/crates/FOO/FOO-1.0.0.crate"));
 }
 
-fn initialize_dummy_crate(conn: &PgConnection) {
+fn initialize_dummy_crate(conn: &mut PgConnection) {
     use cargo_registry::schema::users;
 
     let user: User = diesel::insert_into(users::table)

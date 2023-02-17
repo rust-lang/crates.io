@@ -20,16 +20,16 @@ use crate::schema::*;
 use crate::sql::canon_crate_name;
 
 #[derive(Debug, Queryable, Identifiable, Associations, Clone, Copy)]
-#[belongs_to(Crate)]
-#[primary_key(crate_id)]
-#[table_name = "recent_crate_downloads"]
+#[diesel(belongs_to(Crate))]
+#[diesel(primary_key(crate_id))]
+#[diesel(table_name = recent_crate_downloads)]
 pub struct RecentCrateDownloads {
     pub crate_id: i32,
     pub downloads: i32,
 }
 
-#[derive(Debug, Clone, Queryable, Identifiable, Associations, AsChangeset, QueryableByName)]
-#[table_name = "crates"]
+#[derive(Debug, Clone, Queryable, Identifiable, AsChangeset, QueryableByName)]
+#[diesel(table_name = crates)]
 pub struct Crate {
     pub id: i32,
     pub name: String,
@@ -80,9 +80,9 @@ type ByName<'a> = diesel::dsl::Filter<All, WithName<'a>>;
 type ByExactName<'a> = diesel::dsl::Filter<All, diesel::dsl::Eq<crates::name, &'a str>>;
 
 #[derive(Insertable, AsChangeset, Default, Debug)]
-#[table_name = "crates"]
-#[changeset_options(treat_none_as_null = "true")]
-#[primary_key(name, max_upload_size)] // This is actually just to skip updating them
+#[diesel(table_name = crates)]
+#[diesel(treat_none_as_null = true)]
+#[diesel(primary_key(name, max_upload_size))] // This is actually just to skip updating them
 pub struct NewCrate<'a> {
     pub name: &'a str,
     pub description: Option<&'a str>,
@@ -96,7 +96,7 @@ pub struct NewCrate<'a> {
 impl<'a> NewCrate<'a> {
     pub fn create_or_update(
         self,
-        conn: &PgConnection,
+        conn: &mut PgConnection,
         uploader: i32,
         rate_limit: Option<&PublishRateLimit>,
     ) -> AppResult<Crate> {
@@ -105,7 +105,7 @@ impl<'a> NewCrate<'a> {
         self.validate()?;
         self.ensure_name_not_reserved(conn)?;
 
-        conn.transaction(|| {
+        conn.transaction(|conn| {
             // To avoid race conditions, we try to insert
             // first so we know whether to add an owner
             if let Some(krate) = self.save_new_crate(conn, uploader)? {
@@ -151,7 +151,7 @@ impl<'a> NewCrate<'a> {
         Ok(())
     }
 
-    fn ensure_name_not_reserved(&self, conn: &PgConnection) -> AppResult<()> {
+    fn ensure_name_not_reserved(&self, conn: &mut PgConnection) -> AppResult<()> {
         use crate::schema::reserved_crate_names::dsl::*;
         use diesel::dsl::exists;
         use diesel::select;
@@ -167,10 +167,10 @@ impl<'a> NewCrate<'a> {
         }
     }
 
-    fn save_new_crate(&self, conn: &PgConnection, user_id: i32) -> QueryResult<Option<Crate>> {
+    fn save_new_crate(&self, conn: &mut PgConnection, user_id: i32) -> QueryResult<Option<Crate>> {
         use crate::schema::crates::dsl::*;
 
-        conn.transaction(|| {
+        conn.transaction(|conn| {
             let maybe_inserted: Option<Crate> = diesel::insert_into(crates)
                 .values(self)
                 .on_conflict_do_nothing()
@@ -211,7 +211,7 @@ impl Crate {
             let wildcard_name = format!("%{name}%");
             Box::new(canon_crate_name(crates::name).like(canon_crate_name(wildcard_name)))
         } else {
-            diesel_infix_operator!(MatchesWord, "%>");
+            diesel::infix_operator!(MatchesWord, "%>");
             Box::new(MatchesWord::new(
                 canon_crate_name(crates::name),
                 name.into_sql::<Text>(),
@@ -236,7 +236,7 @@ impl Crate {
         crates::table.select(ALL_COLUMNS)
     }
 
-    pub fn find_version(&self, conn: &PgConnection, version: &str) -> AppResult<Version> {
+    pub fn find_version(&self, conn: &mut PgConnection, version: &str) -> AppResult<Version> {
         self.all_versions()
             .filter(versions::num.eq(version))
             .first(conn)
@@ -306,7 +306,7 @@ impl Crate {
 
     /// Return both the newest (most recently updated) and
     /// highest version (in semver order) for the current crate.
-    pub fn top_versions(&self, conn: &PgConnection) -> QueryResult<TopVersions> {
+    pub fn top_versions(&self, conn: &mut PgConnection) -> QueryResult<TopVersions> {
         use crate::schema::versions::dsl::*;
 
         Ok(TopVersions::from_date_version_pairs(
@@ -314,7 +314,7 @@ impl Crate {
         ))
     }
 
-    pub fn owners(&self, conn: &PgConnection) -> QueryResult<Vec<Owner>> {
+    pub fn owners(&self, conn: &mut PgConnection) -> QueryResult<Vec<Owner>> {
         let users = CrateOwner::by_owner_kind(OwnerKind::User)
             .filter(crate_owners::crate_id.eq(self.id))
             .inner_join(users::table)
@@ -336,7 +336,7 @@ impl Crate {
     pub fn owner_add(
         &self,
         app: &App,
-        conn: &PgConnection,
+        conn: &mut PgConnection,
         req_user: &User,
         login: &str,
     ) -> AppResult<String> {
@@ -400,7 +400,7 @@ impl Crate {
     pub fn owner_remove(
         &self,
         app: &App,
-        conn: &PgConnection,
+        conn: &mut PgConnection,
         req_user: &User,
         login: &str,
     ) -> AppResult<()> {
@@ -416,7 +416,7 @@ impl Crate {
     /// Returns (dependency, dependent crate name, dependent crate downloads)
     pub(crate) fn reverse_dependencies(
         &self,
-        conn: &PgConnection,
+        conn: &mut PgConnection,
         options: PaginationOptions,
     ) -> AppResult<(Vec<ReverseDependency>, i64)> {
         use diesel::sql_query;
@@ -426,8 +426,8 @@ impl Crate {
         let rows: Vec<WithCount<ReverseDependency>> =
             sql_query(include_str!("krate_reverse_dependencies.sql"))
                 .bind::<Integer, _>(self.id)
-                .bind::<BigInt, _>(i64::from(offset))
-                .bind::<BigInt, _>(i64::from(options.per_page))
+                .bind::<BigInt, _>(offset)
+                .bind::<BigInt, _>(options.per_page)
                 .load(conn)?;
 
         Ok(rows.records_and_total())

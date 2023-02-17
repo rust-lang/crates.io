@@ -30,7 +30,7 @@ pub struct Team {
 }
 
 #[derive(Insertable, AsChangeset, Debug)]
-#[table_name = "teams"]
+#[diesel(table_name = teams)]
 pub struct NewTeam<'a> {
     pub login: &'a str,
     pub github_id: i32,
@@ -56,7 +56,7 @@ impl<'a> NewTeam<'a> {
         }
     }
 
-    pub fn create_or_update(&self, conn: &PgConnection) -> QueryResult<Team> {
+    pub fn create_or_update(&self, conn: &mut PgConnection) -> QueryResult<Team> {
         use crate::schema::teams::dsl::*;
         use diesel::insert_into;
 
@@ -77,7 +77,7 @@ impl Team {
     /// This function will panic if login contains less than 2 `:` characters.
     pub fn create_or_update(
         app: &App,
-        conn: &PgConnection,
+        conn: &mut PgConnection,
         login: &str,
         req_user: &User,
     ) -> AppResult<Self> {
@@ -116,7 +116,7 @@ impl Team {
     /// convenience to avoid rebuilding it.
     fn create_or_update_github_team(
         app: &App,
-        conn: &PgConnection,
+        conn: &mut PgConnection,
         login: &str,
         org_name: &str,
         team_name: &str,
@@ -183,7 +183,7 @@ impl Team {
         }
     }
 
-    pub fn owning(krate: &Crate, conn: &PgConnection) -> QueryResult<Vec<Owner>> {
+    pub fn owning(krate: &Crate, conn: &mut PgConnection) -> QueryResult<Vec<Owner>> {
         let base_query = CrateOwner::belonging_to(krate).filter(crate_owners::deleted.eq(false));
         let teams = base_query
             .inner_join(teams::table)

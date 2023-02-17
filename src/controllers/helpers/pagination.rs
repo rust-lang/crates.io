@@ -17,8 +17,8 @@ use std::net::IpAddr;
 use std::str::FromStr;
 
 const MAX_PAGE_BEFORE_SUSPECTED_BOT: u32 = 10;
-const DEFAULT_PER_PAGE: u32 = 10;
-const MAX_PER_PAGE: u32 = 100;
+const DEFAULT_PER_PAGE: i64 = 10;
+const MAX_PER_PAGE: i64 = 100;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum Page {
@@ -30,7 +30,7 @@ pub(crate) enum Page {
 #[derive(Debug, Clone)]
 pub(crate) struct PaginationOptions {
     pub(crate) page: Page,
-    pub(crate) per_page: u32,
+    pub(crate) per_page: i64,
 }
 
 impl PaginationOptions {
@@ -42,9 +42,9 @@ impl PaginationOptions {
         }
     }
 
-    pub(crate) fn offset(&self) -> Option<u32> {
+    pub(crate) fn offset(&self) -> Option<i64> {
         if let Page::Numeric(p) = self.page {
-            Some((p - 1) * self.per_page)
+            Some((p - 1) as i64 * self.per_page)
         } else {
             None
         }
@@ -204,12 +204,12 @@ pub(crate) struct PaginatedQuery<T> {
 }
 
 impl<T> PaginatedQuery<T> {
-    pub(crate) fn load<U>(self, conn: &PgConnection) -> QueryResult<Paginated<U>>
+    pub(crate) fn load<'a, U>(self, conn: &mut PgConnection) -> QueryResult<Paginated<U>>
     where
-        Self: LoadQuery<PgConnection, WithCount<U>>,
+        Self: LoadQuery<'a, PgConnection, WithCount<U>>,
     {
         let options = self.options.clone();
-        let records_and_total = self.internal_load(conn)?;
+        let records_and_total = self.internal_load(conn)?.collect::<QueryResult<_>>()?;
         Ok(Paginated {
             records_and_total,
             options,
@@ -232,14 +232,13 @@ impl<T> QueryFragment<Pg> for PaginatedQuery<T>
 where
     T: QueryFragment<Pg>,
 {
-    fn walk_ast(&self, mut out: AstPass<'_, Pg>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
         out.push_sql("SELECT *, COUNT(*) OVER () FROM (");
         self.query.walk_ast(out.reborrow())?;
         out.push_sql(") t LIMIT ");
-        out.push_bind_param::<BigInt, _>(&i64::from(self.options.per_page))?;
+        out.push_bind_param::<BigInt, _>(&self.options.per_page)?;
         if let Some(offset) = self.options.offset() {
-            out.push_sql(" OFFSET ");
-            out.push_bind_param::<BigInt, _>(&i64::from(offset))?;
+            out.push_sql(format!(" OFFSET {offset}").as_str());
         }
         Ok(())
     }

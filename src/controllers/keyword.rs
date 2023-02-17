@@ -26,8 +26,8 @@ pub async fn index(state: AppState, qp: Query<IndexQuery>, req: Parts) -> AppRes
         };
 
         let query = query.pages_pagination(PaginationOptions::builder().gather(&req)?);
-        let conn = state.db_read()?;
-        let data: Paginated<Keyword> = query.load(&conn)?;
+        let conn = &mut state.db_read()?;
+        let data: Paginated<Keyword> = query.load(conn)?;
         let total = data.total();
         let kws = data
             .into_iter()
@@ -45,9 +45,9 @@ pub async fn index(state: AppState, qp: Query<IndexQuery>, req: Parts) -> AppRes
 /// Handles the `GET /keywords/:keyword_id` route.
 pub async fn show(Path(name): Path<String>, state: AppState) -> AppResult<Json<Value>> {
     conduit_compat(move || {
-        let conn = state.db_read()?;
+        let conn = &mut state.db_read()?;
 
-        let kw = Keyword::find_by_keyword(&conn, &name)?;
+        let kw = Keyword::find_by_keyword(conn, &name)?;
 
         Ok(Json(json!({ "keyword": EncodableKeyword::from(kw) })))
     })

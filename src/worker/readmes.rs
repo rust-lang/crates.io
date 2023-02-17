@@ -8,7 +8,7 @@ use crate::background_jobs::{Environment, Job, RenderAndUploadReadmeJob};
 use crate::models::Version;
 
 pub fn perform_render_and_upload_readme(
-    conn: &PgConnection,
+    conn: &mut PgConnection,
     env: &Environment,
     version_id: i32,
     text: &str,
@@ -21,7 +21,7 @@ pub fn perform_render_and_upload_readme(
 
     let rendered = text_to_html(text, readme_path, base_url, pkg_path_in_vcs);
 
-    conn.transaction(|| {
+    conn.transaction(|conn| {
         Version::record_readme_rendering(version_id, conn)?;
         let (crate_name, vers): (String, String) = versions::table
             .find(version_id)

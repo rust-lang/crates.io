@@ -111,7 +111,7 @@ impl<'a> CrateBuilder<'a> {
         self
     }
 
-    pub fn build(mut self, connection: &PgConnection) -> AppResult<Crate> {
+    pub fn build(mut self, connection: &mut PgConnection) -> AppResult<Crate> {
         use diesel::{insert_into, select, update};
 
         let mut krate = self
@@ -147,8 +147,8 @@ impl<'a> CrateBuilder<'a> {
                 ))
                 .execute(connection)?;
 
-            no_arg_sql_function!(refresh_recent_crate_downloads, ());
-            select(refresh_recent_crate_downloads).execute(connection)?;
+            sql_function!(fn refresh_recent_crate_downloads());
+            select(refresh_recent_crate_downloads()).execute(connection)?;
         }
 
         if !self.categories.is_empty() {
@@ -175,7 +175,7 @@ impl<'a> CrateBuilder<'a> {
     ///
     /// Panics (and fails the test) if any part of inserting the crate record fails.
     #[track_caller]
-    pub fn expect_build(self, connection: &PgConnection) -> Crate {
+    pub fn expect_build(self, connection: &mut PgConnection) -> Crate {
         let name = self.krate.name;
         self.build(connection).unwrap_or_else(|e| {
             panic!("Unable to create crate {name}: {e:?}");

@@ -51,17 +51,17 @@ fn modify_yank(
         return Err(cargo_err(&format_args!("invalid semver: {version}")));
     }
 
-    let conn = state.db_write()?;
+    let conn = &mut *state.db_write()?;
 
     let auth = AuthCheck::default()
         .with_endpoint_scope(EndpointScope::Yank)
         .for_crate(crate_name)
-        .check(req, &conn)?;
+        .check(req, conn)?;
 
-    let (version, krate) = version_and_crate(&conn, crate_name, version)?;
+    let (version, krate) = version_and_crate(conn, crate_name, version)?;
     let api_token_id = auth.api_token_id();
     let user = auth.user();
-    let owners = krate.owners(&conn)?;
+    let owners = krate.owners(conn)?;
 
     if user.rights(state, &owners)? < Rights::Publish {
         return Err(cargo_err("must already be an owner to yank or unyank"));
@@ -74,7 +74,7 @@ fn modify_yank(
 
     diesel::update(&version)
         .set(versions::yanked.eq(yanked))
-        .execute(&*conn)?;
+        .execute(conn)?;
 
     let action = if yanked {
         VersionAction::Yank
@@ -82,9 +82,9 @@ fn modify_yank(
         VersionAction::Unyank
     };
 
-    insert_version_owner_action(&conn, version.id, user.id, api_token_id, action)?;
+    insert_version_owner_action(conn, version.id, user.id, api_token_id, action)?;
 
-    worker::sync_yanked(krate.name, version.num).enqueue(&conn)?;
+    worker::sync_yanked(krate.name, version.num).enqueue(conn)?;
 
     ok_true()
 }

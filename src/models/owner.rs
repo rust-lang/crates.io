@@ -9,11 +9,11 @@ use crate::schema::{crate_owners, users};
 use crate::sql::lower;
 
 #[derive(Insertable, Associations, Identifiable, Debug, Clone, Copy)]
-#[belongs_to(Crate)]
-#[belongs_to(User, foreign_key = "owner_id")]
-#[belongs_to(Team, foreign_key = "owner_id")]
-#[table_name = "crate_owners"]
-#[primary_key(crate_id, owner_id, owner_kind)]
+#[diesel(belongs_to(Crate))]
+#[diesel(belongs_to(User, foreign_key = owner_id))]
+#[diesel(belongs_to(Team, foreign_key = owner_id))]
+#[diesel(table_name = crate_owners)]
+#[diesel(primary_key(crate_id, owner_id, owner_kind))]
 pub struct CrateOwner {
     pub crate_id: i32,
     pub owner_id: i32,
@@ -60,7 +60,7 @@ impl Owner {
     /// sensitive.
     pub fn find_or_create_by_login(
         app: &App,
-        conn: &PgConnection,
+        conn: &mut PgConnection,
         req_user: &User,
         name: &str,
     ) -> AppResult<Owner> {

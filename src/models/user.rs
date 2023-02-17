@@ -10,7 +10,7 @@ use crate::models::{ApiToken, Crate, CrateOwner, Email, NewEmail, Owner, OwnerKi
 use crate::schema::{crate_owners, emails, users};
 
 /// The model representing a row in the `users` database table.
-#[derive(Clone, Debug, PartialEq, Eq, Queryable, Identifiable, AsChangeset, Associations)]
+#[derive(Clone, Debug, PartialEq, Eq, Queryable, Identifiable, AsChangeset)]
 pub struct User {
     pub id: i32,
     pub gh_access_token: String,
@@ -24,7 +24,7 @@ pub struct User {
 
 /// Represents a new user record insertable to the `users` table
 #[derive(Insertable, Debug, Default)]
-#[table_name = "users"]
+#[diesel(table_name = users)]
 pub struct NewUser<'a> {
     pub gh_id: i32,
     pub gh_login: &'a str,
@@ -55,7 +55,7 @@ impl<'a> NewUser<'a> {
         &self,
         email: Option<&'a str>,
         emails: &Emails,
-        conn: &PgConnection,
+        conn: &mut PgConnection,
     ) -> QueryResult<User> {
         use crate::schema::users::dsl::*;
         use diesel::dsl::sql;
@@ -63,7 +63,7 @@ impl<'a> NewUser<'a> {
         use diesel::pg::upsert::excluded;
         use diesel::sql_types::Integer;
 
-        conn.transaction(|| {
+        conn.transaction(|conn| {
             let user: User = insert_into(users)
                 .values(self)
                 // We need the `WHERE gh_id > 0` condition here because `gh_id` set
@@ -110,18 +110,18 @@ impl<'a> NewUser<'a> {
 }
 
 impl User {
-    pub fn find(conn: &PgConnection, id: i32) -> QueryResult<User> {
+    pub fn find(conn: &mut PgConnection, id: i32) -> QueryResult<User> {
         users::table.find(id).first(conn)
     }
 
     /// Queries the database for a user with a certain `api_token` value.
-    pub fn find_by_api_token(conn: &PgConnection, token: &str) -> AppResult<User> {
+    pub fn find_by_api_token(conn: &mut PgConnection, token: &str) -> AppResult<User> {
         let api_token = ApiToken::find_by_api_token(conn, token)?;
 
         Ok(Self::find(conn, api_token.user_id)?)
     }
 
-    pub fn owning(krate: &Crate, conn: &PgConnection) -> QueryResult<Vec<Owner>> {
+    pub fn owning(krate: &Crate, conn: &mut PgConnection) -> QueryResult<Vec<Owner>> {
         let users = CrateOwner::by_owner_kind(OwnerKind::User)
             .inner_join(users::table)
             .select(users::all_columns)
@@ -162,7 +162,7 @@ impl User {
 
     /// Queries the database for the verified emails
     /// belonging to a given user
-    pub fn verified_email(&self, conn: &PgConnection) -> QueryResult<Option<String>> {
+    pub fn verified_email(&self, conn: &mut PgConnection) -> QueryResult<Option<String>> {
         Email::belonging_to(self)
             .select(emails::email)
             .filter(emails::verified.eq(true))
@@ -171,7 +171,7 @@ impl User {
     }
 
     /// Queries for the email belonging to a particular user
-    pub fn email(&self, conn: &PgConnection) -> QueryResult<Option<String>> {
+    pub fn email(&self, conn: &mut PgConnection) -> QueryResult<Option<String>> {
         Email::belonging_to(self)
             .select(emails::email)
             .first(conn)

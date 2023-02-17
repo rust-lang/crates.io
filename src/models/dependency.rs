@@ -1,15 +1,15 @@
 use diesel::deserialize::{self, FromSql};
 use diesel::pg::Pg;
-use diesel::sql_types::Integer;
+use diesel::sql_types::{Integer, Text};
 
 use crate::models::{Crate, Version};
 use crate::schema::*;
 use cargo_registry_index::DependencyKind as IndexDependencyKind;
 
 #[derive(Identifiable, Associations, Debug, Queryable, QueryableByName)]
-#[belongs_to(Version)]
-#[belongs_to(Crate)]
-#[table_name = "dependencies"]
+#[diesel(belongs_to(Version))]
+#[diesel(belongs_to(Crate))]
+#[diesel(table_name = dependencies)]
 pub struct Dependency {
     pub id: i32,
     pub version_id: i32,
@@ -27,10 +27,10 @@ pub struct Dependency {
 pub struct ReverseDependency {
     #[diesel(embed)]
     pub dependency: Dependency,
-    #[sql_type = "::diesel::sql_types::Integer"]
+    #[diesel(sql_type = Integer)]
     pub crate_downloads: i32,
-    #[sql_type = "::diesel::sql_types::Text"]
-    #[column_name = "crate_name"]
+    #[diesel(sql_type = Text)]
+    #[diesel(column_name = crate_name)]
     pub name: String,
 }
 
@@ -55,7 +55,7 @@ impl From<DependencyKind> for IndexDependencyKind {
 }
 
 impl FromSql<Integer, Pg> for DependencyKind {
-    fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
+    fn from_sql(bytes: diesel::pg::PgValue<'_>) -> deserialize::Result<Self> {
         match <i32 as FromSql<Integer, Pg>>::from_sql(bytes)? {
             0 => Ok(DependencyKind::Normal),
             1 => Ok(DependencyKind::Build),

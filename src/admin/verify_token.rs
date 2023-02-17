@@ -13,8 +13,8 @@ pub struct Opts {
 }
 
 pub fn run(opts: Opts) -> AppResult<()> {
-    let conn = db::oneoff_connection()?;
-    let user = User::find_by_api_token(&conn, &opts.api_token)?;
+    let conn = &mut db::oneoff_connection()?;
+    let user = User::find_by_api_token(conn, &opts.api_token)?;
     println!("The token belongs to user {}", user.gh_login);
     Ok(())
 }

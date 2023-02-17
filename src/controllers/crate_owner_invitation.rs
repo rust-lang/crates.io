@@ -18,13 +18,13 @@ use std::collections::{HashMap, HashSet};
 /// Handles the `GET /api/v1/me/crate_owner_invitations` route.
 pub async fn list(app: AppState, req: Parts) -> AppResult<Json<Value>> {
     conduit_compat(move || {
-        let conn = app.db_read()?;
-        let auth = AuthCheck::only_cookie().check(&req, &conn)?;
+        let conn = &mut app.db_read()?;
+        let auth = AuthCheck::only_cookie().check(&req, conn)?;
         let user_id = auth.user_id();
 
         let PrivateListResponse {
             invitations, users, ..
-        } = prepare_list(&app, &req, auth, ListFilter::InviteeId(user_id), &conn)?;
+        } = prepare_list(&app, &req, auth, ListFilter::InviteeId(user_id), conn)?;
 
         // The schema for the private endpoints is converted to the schema used by v1 endpoints.
         let crate_owner_invitations = invitations
@@ -58,8 +58,8 @@ pub async fn list(app: AppState, req: Parts) -> AppResult<Json<Value>> {
 /// Handles the `GET /api/private/crate_owner_invitations` route.
 pub async fn private_list(app: AppState, req: Parts) -> AppResult<Json<PrivateListResponse>> {
     conduit_compat(move || {
-        let conn = app.db_read()?;
-        let auth = AuthCheck::only_cookie().check(&req, &conn)?;
+        let conn = &mut app.db_read()?;
+        let auth = AuthCheck::only_cookie().check(&req, conn)?;
 
         let filter = if let Some(crate_name) = req.query().get("crate_name") {
             ListFilter::CrateName(crate_name.clone())
@@ -69,7 +69,7 @@ pub async fn private_list(app: AppState, req: Parts) -> AppResult<Json<PrivateLi
             return Err(bad_request("missing or invalid filter"));
         };
 
-        let list = prepare_list(&app, &req, auth, filter, &conn)?;
+        let list = prepare_list(&app, &req, auth, filter, conn)?;
         Ok(Json(list))
     })
     .await
@@ -85,7 +85,7 @@ fn prepare_list(
     req: &Parts,
     auth: Authentication,
     filter: ListFilter,
-    conn: &PgConnection,
+    conn: &mut PgConnection,
 ) -> AppResult<PrivateListResponse> {
     let pagination: PaginationOptions = PaginationOptions::builder()
         .enable_pages(false)
@@ -133,7 +133,7 @@ fn prepare_list(
             crate_owner_invitations::invited_user_id,
         ))
         // We fetch one element over the page limit to then detect whether there is a next page.
-        .limit(pagination.per_page as i64 + 1);
+        .limit(pagination.per_page + 1);
 
     // Load and paginate the results.
     let mut raw_invitations: Vec<CrateOwnerInvitation> = match pagination.page {
@@ -265,18 +265,18 @@ pub async fn handle_invite(state: AppState, req: BytesRequest) -> AppResult<Json
 
         let crate_invite = crate_invite.crate_owner_invite;
 
-        let conn = state.db_write()?;
+        let conn = &mut state.db_write()?;
 
-        let auth = AuthCheck::default().check(&req, &conn)?;
+        let auth = AuthCheck::default().check(&req, conn)?;
         let user_id = auth.user_id();
 
         let config = &state.config;
 
-        let invitation = CrateOwnerInvitation::find_by_id(user_id, crate_invite.crate_id, &conn)?;
+        let invitation = CrateOwnerInvitation::find_by_id(user_id, crate_invite.crate_id, conn)?;
         if crate_invite.accepted {
-            invitation.accept(&conn, config)?;
+            invitation.accept(conn, config)?;
         } else {
-            invitation.decline(&conn)?;
+            invitation.decline(conn)?;
         }
 
         Ok(Json(json!({ "crate_owner_invitation": crate_invite })))
@@ -291,11 +291,11 @@ pub async fn handle_invite_with_token(
 ) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         let config = &state.config;
-        let conn = state.db_write()?;
+        let conn = &mut state.db_write()?;
 
-        let invitation = CrateOwnerInvitation::find_by_token(&token, &conn)?;
+        let invitation = CrateOwnerInvitation::find_by_token(&token, conn)?;
         let crate_id = invitation.crate_id;
-        invitation.accept(&conn, config)?;
+        invitation.accept(conn, config)?;
 
         Ok(Json(json!({
             "crate_owner_invitation": {

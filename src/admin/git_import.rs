@@ -28,7 +28,7 @@ pub struct Opts {
 }
 
 pub fn run(opts: Opts) -> anyhow::Result<()> {
-    let conn = db::oneoff_connection().unwrap();
+    let mut conn = db::oneoff_connection().unwrap();
     println!("fetching git repo");
     let config = RepositoryConfig::from_environment();
     let repo = Repository::open(&config)?;
@@ -53,10 +53,10 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
         }
         let file = File::open(path)?;
         let reader = BufReader::new(file);
-        let result = conn.transaction(|| -> anyhow::Result<()> {
+        let result = conn.transaction(|conn| -> anyhow::Result<()> {
             for line in reader.lines() {
                 let krate: cargo_registry_index::Crate = serde_json::from_str(&line?)?;
-                import_data(&conn, &krate).with_context(|| {
+                import_data(conn, &krate).with_context(|| {
                     format!("Failed to update crate {}#{}", krate.name, krate.vers)
                 })?
             }
@@ -71,7 +71,7 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn import_data(conn: &PgConnection, krate: &cargo_registry_index::Crate) -> anyhow::Result<()> {
+fn import_data(conn: &mut PgConnection, krate: &cargo_registry_index::Crate) -> anyhow::Result<()> {
     let version_id: i32 = versions::table
         .inner_join(crates::table)
         .filter(crates::name.eq(&krate.name))

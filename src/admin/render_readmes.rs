@@ -9,7 +9,7 @@ use std::{io::Read, path::Path, sync::Arc, thread};
 
 use cargo_registry_markdown::text_to_html;
 use chrono::{TimeZone, Utc};
-use diesel::{dsl::any, prelude::*};
+use diesel::prelude::*;
 use flate2::read::GzDecoder;
 use reqwest::{blocking::Client, header};
 use tar::{self, Archive};
@@ -39,7 +39,7 @@ pub struct Opts {
 
 pub fn run(opts: Opts) -> anyhow::Result<()> {
     let base_config = Arc::new(config::Base::from_environment());
-    let conn = db::oneoff_connection().unwrap();
+    let conn = &mut db::oneoff_connection().unwrap();
 
     let start_time = Utc::now();
 
@@ -70,7 +70,7 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
         query = query.filter(crates::name.eq(crate_name));
     }
 
-    let version_ids: Vec<i32> = query.load(&conn).expect("error loading version ids");
+    let version_ids: Vec<i32> = query.load(conn).expect("error loading version ids");
 
     let total_versions = version_ids.len();
     println!("Rendering {total_versions} versions");
@@ -95,14 +95,14 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
 
         let versions: Vec<(Version, String)> = versions::table
             .inner_join(crates::table)
-            .filter(versions::id.eq(any(version_ids_chunk)))
+            .filter(versions::id.eq_any(version_ids_chunk))
             .select((versions::all_columns, crates::name))
-            .load(&conn)
+            .load(conn)
             .expect("error loading versions");
 
         let mut tasks = Vec::with_capacity(page_size);
         for (version, krate_name) in versions {
-            Version::record_readme_rendering(version.id, &conn)
+            Version::record_readme_rendering(version.id, conn)
                 .context("Couldn't record rendering time")?;
 
             let client = client.clone();

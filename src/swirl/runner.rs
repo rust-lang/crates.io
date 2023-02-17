@@ -127,7 +127,7 @@ impl Runner {
         // The connection may not be `Send` so we need to clone the pool instead
         let pool = self.connection_pool.clone();
         self.thread_pool.execute(move || {
-            let conn = &*match pool.get() {
+            let conn = &mut *match pool.get() {
                 Ok(conn) => conn,
                 Err(e) => {
                     // TODO: Review error handling and possibly drop all usage of `let _ =` in this file
@@ -136,7 +136,7 @@ impl Runner {
                 }
             };
 
-            let job_run_result = conn.transaction::<_, diesel::result::Error, _>(|| {
+            let job_run_result = conn.transaction::<_, diesel::result::Error, _>(|conn| {
                 let job = match storage::find_next_unlocked_job(conn).optional() {
                     Ok(Some(j)) => {
                         let _ = sender.send(Event::Working);
@@ -153,20 +153,15 @@ impl Runner {
                 };
                 let job_id = job.id;
 
-                let transaction_manager = conn.transaction_manager();
-                let initial_depth = <AnsiTransactionManager as TransactionManager<
-                    PgConnection,
-                >>::get_transaction_depth(
-                    transaction_manager
-                );
+                let initial_depth = get_transaction_depth(conn)?;
                 if initial_depth != 1 {
                     warn!("Initial transaction depth is not 1. This is very unexpected");
                 }
 
                 let result = conn
-                    .transaction(|| {
+                    .transaction(|conn| {
                         let pool = pool.to_real_pool();
-                        let state = AssertUnwindSafe(PerformState {conn, pool});
+                        let state = AssertUnwindSafe(PerformState { conn, pool });
                         catch_unwind(|| {
                             // Ensure the whole `AssertUnwindSafe(_)` is moved
                             let state = state;
@@ -177,28 +172,17 @@ impl Runner {
                     // TODO: Replace with flatten() once that stabilizes
                     .and_then(std::convert::identity);
 
+                // If the job panics it could leave the connection inside an inner transaction(s).
+                // Attempt to roll those back so we can mark the job as failed, but if the rollback
+                // fails then there isn't much we can do at this point so return early. `r2d2` will
+                // detect the bad state and drop it from the pool.
                 loop {
-                    let depth = <AnsiTransactionManager as TransactionManager<
-                            PgConnection,
-                        >>::get_transaction_depth(
-                            transaction_manager
-                        );
+                    let depth = get_transaction_depth(conn)?;
                     if depth == initial_depth {
                         break;
                     }
                     warn!("Rolling back a transaction due to a panic in a background task");
-                    match transaction_manager
-                        .rollback_transaction(conn)
-                        {
-                            Ok(_) => (),
-                            Err(e) => {
-                                error!("Leaking a thread and database connection because of an error while rolling back transaction: {e}");
-                                loop {
-                                    std::thread::sleep(Duration::from_secs(24 * 60 * 60));
-                                    error!("How am I still alive?");
-                                }
-                            }
-                        }
+                    AnsiTransactionManager::rollback_transaction(conn)?;
                 }
 
                 match result {
@@ -236,7 +220,7 @@ impl Runner {
     // FIXME: Only public for `src/tests/util/test_app.rs`
     pub fn check_for_failed_jobs(&self) -> Result<(), FailedJobsError> {
         self.wait_for_jobs()?;
-        let failed_jobs = storage::failed_job_count(&*self.connection()?)?;
+        let failed_jobs = storage::failed_job_count(&mut *self.connection()?)?;
         if failed_jobs == 0 {
             Ok(())
         } else {
@@ -253,6 +237,14 @@ impl Runner {
             Err(format!("{panic_count} threads panicked").into())
         }
     }
+}
+
+fn get_transaction_depth(conn: &mut PgConnection) -> QueryResult<u32> {
+    let transaction_manager = AnsiTransactionManager::transaction_manager_status_mut(conn);
+    Ok(transaction_manager
+        .transaction_depth()?
+        .map(u32::from)
+        .unwrap_or(0))
 }
 
 /// Try to figure out what's in the box, and print it if we can.
@@ -329,7 +321,7 @@ mod tests {
 
         let remaining_jobs = background_jobs
             .count()
-            .get_result(&*runner.connection().unwrap());
+            .get_result(&mut *runner.connection().unwrap());
         assert_eq!(Ok(0), remaining_jobs);
     }
 
@@ -343,14 +335,14 @@ mod tests {
         let barrier2 = barrier.clone();
 
         runner.get_single_job(dummy_sender(), move |_, state| {
-            state.conn.transaction(|| {
+            state.conn.transaction(|_| {
                 barrier.0.wait();
                 // The job should go back into the queue after a panic
                 panic!();
             })
         });
 
-        let conn = &*runner.connection().unwrap();
+        let conn = &mut *runner.connection().unwrap();
         // Wait for the first thread to acquire the lock
         barrier2.0.wait();
         // We are intentionally not using `get_single_job` here.
@@ -390,7 +382,7 @@ mod tests {
             .find(job_id)
             .select(retries)
             .for_update()
-            .first::<i32>(&*runner.connection().unwrap())
+            .first::<i32>(&mut *runner.connection().unwrap())
             .unwrap();
         assert_eq!(1, tries);
     }
@@ -413,8 +405,8 @@ mod tests {
 
     impl<'a> Drop for TestGuard<'a> {
         fn drop(&mut self) {
-            ::diesel::sql_query("TRUNCATE TABLE background_jobs")
-                .execute(&*runner().connection().unwrap())
+            diesel::sql_query("TRUNCATE TABLE background_jobs")
+                .execute(&mut *runner().connection().unwrap())
                 .unwrap();
         }
     }
@@ -427,10 +419,10 @@ mod tests {
     }
 
     fn create_dummy_job(runner: &Runner) -> storage::BackgroundJob {
-        ::diesel::insert_into(background_jobs)
+        diesel::insert_into(background_jobs)
             .values((job_type.eq("Foo"), data.eq(serde_json::json!(null))))
             .returning((id, job_type, data))
-            .get_result(&*runner.connection().unwrap())
+            .get_result(&mut *runner.connection().unwrap())
             .unwrap()
     }
 }

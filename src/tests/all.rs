@@ -3,8 +3,6 @@
 #[macro_use]
 extern crate claims;
 #[macro_use]
-extern crate diesel;
-#[macro_use]
 extern crate serde;
 #[macro_use]
 extern crate serde_json;
@@ -132,7 +130,12 @@ fn new_team(login: &str) -> NewTeam<'_> {
     }
 }
 
-fn add_team_to_crate(t: &Team, krate: &Crate, u: &User, conn: &PgConnection) -> QueryResult<()> {
+fn add_team_to_crate(
+    t: &Team,
+    krate: &Crate,
+    u: &User,
+    conn: &mut PgConnection,
+) -> QueryResult<()> {
     let crate_owner = CrateOwner {
         crate_id: krate.id,
         owner_id: t.id,

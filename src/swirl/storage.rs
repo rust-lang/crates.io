@@ -24,7 +24,7 @@ fn retriable() -> Box<dyn BoxableExpression<background_jobs::table, Pg, SqlType 
 
 /// Finds the next job that is unlocked, and ready to be retried. If a row is
 /// found, it will be locked.
-pub(super) fn find_next_unlocked_job(conn: &PgConnection) -> QueryResult<BackgroundJob> {
+pub(super) fn find_next_unlocked_job(conn: &mut PgConnection) -> QueryResult<BackgroundJob> {
     use schema::background_jobs::dsl::*;
 
     background_jobs
@@ -37,7 +37,7 @@ pub(super) fn find_next_unlocked_job(conn: &PgConnection) -> QueryResult<Backgro
 }
 
 /// The number of jobs that have failed at least once
-pub(super) fn failed_job_count(conn: &PgConnection) -> QueryResult<i64> {
+pub(super) fn failed_job_count(conn: &mut PgConnection) -> QueryResult<i64> {
     use schema::background_jobs::dsl::*;
 
     background_jobs
@@ -47,7 +47,7 @@ pub(super) fn failed_job_count(conn: &PgConnection) -> QueryResult<i64> {
 }
 
 /// Deletes a job that has successfully completed running
-pub(super) fn delete_successful_job(conn: &PgConnection, job_id: i64) -> QueryResult<()> {
+pub(super) fn delete_successful_job(conn: &mut PgConnection, job_id: i64) -> QueryResult<()> {
     use schema::background_jobs::dsl::*;
 
     delete(background_jobs.find(job_id)).execute(conn)?;
@@ -58,7 +58,7 @@ pub(super) fn delete_successful_job(conn: &PgConnection, job_id: i64) -> QueryRe
 ///
 /// Ignores any database errors that may have occurred. If the DB has gone away,
 /// we assume that just trying again with a new connection will succeed.
-pub(super) fn update_failed_job(conn: &PgConnection, job_id: i64) {
+pub(super) fn update_failed_job(conn: &mut PgConnection, job_id: i64) {
     use schema::background_jobs::dsl::*;
 
     let _ = update(background_jobs.find(job_id))

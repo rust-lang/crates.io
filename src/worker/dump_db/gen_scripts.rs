@@ -122,8 +122,8 @@ mod tests {
     /// test database.
     #[test]
     fn check_visibility_config() {
-        let conn = pg_connection();
-        let db_columns = HashSet::<Column>::from_iter(get_db_columns(&conn));
+        let conn = &mut pg_connection();
+        let db_columns = HashSet::<Column>::from_iter(get_db_columns(conn));
         let vis_columns = VisibilityConfig::get()
             .0
             .iter()
@@ -177,7 +177,7 @@ mod tests {
         column_name: String,
     }
 
-    fn get_db_columns(conn: &PgConnection) -> Vec<Column> {
+    fn get_db_columns(conn: &mut PgConnection) -> Vec<Column> {
         use information_schema::columns::dsl::*;
         columns
             .select((table_name, column_name))

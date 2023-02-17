@@ -1,7 +1,11 @@
 use anyhow::Error;
+use diesel_migrations::{
+    embed_migrations, EmbeddedMigrations, HarnessWithOutput, MigrationHarness,
+};
 
 static CATEGORIES_TOML: &str = include_str!("../boot/categories.toml");
-diesel_migrations::embed_migrations!("./migrations");
+
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("./migrations");
 
 #[derive(clap::Parser, Debug, Copy, Clone)]
 #[command(
@@ -32,13 +36,17 @@ pub fn run(_opts: Opts) -> Result<(), Error> {
     }
 
     // The primary is online, access directly via `DATABASE_URL`.
-    let conn = crate::db::oneoff_connection_with_config(&config)?;
+    let conn = &mut crate::db::oneoff_connection_with_config(&config)?;
 
     info!("Migrating the database");
-    embedded_migrations::run_with_output(&conn, &mut std::io::stdout())?;
+    let mut stdout = std::io::stdout();
+    let mut harness = HarnessWithOutput::new(conn, &mut stdout);
+    harness
+        .run_pending_migrations(MIGRATIONS)
+        .expect("failed to run migrations");
 
     info!("Synchronizing crate categories");
-    crate::boot::categories::sync_with_connection(CATEGORIES_TOML, &conn).unwrap();
+    crate::boot::categories::sync_with_connection(CATEGORIES_TOML, conn).unwrap();
 
     Ok(())
 }

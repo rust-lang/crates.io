@@ -75,9 +75,8 @@ fn categories_from_toml(
     Ok(result)
 }
 
-pub fn sync_with_connection(toml_str: &str, conn: &PgConnection) -> Result<()> {
+pub fn sync_with_connection(toml_str: &str, conn: &mut PgConnection) -> Result<()> {
     use crate::schema::categories::dsl::*;
-    use diesel::dsl::all;
     use diesel::pg::upsert::excluded;
 
     let toml: toml::value::Table =
@@ -95,7 +94,7 @@ pub fn sync_with_connection(toml_str: &str, conn: &PgConnection) -> Result<()> {
         })
         .collect::<Vec<_>>();
 
-    conn.transaction(|| {
+    conn.transaction(|conn| {
         let slugs: Vec<String> = diesel::insert_into(categories)
             .values(&to_insert)
             .on_conflict(slug)
@@ -108,7 +107,7 @@ pub fn sync_with_connection(toml_str: &str, conn: &PgConnection) -> Result<()> {
             .get_results(conn)?;
 
         diesel::delete(categories)
-            .filter(slug.ne(all(slugs)))
+            .filter(slug.ne_all(slugs))
             .execute(conn)?;
         Ok(())
     })

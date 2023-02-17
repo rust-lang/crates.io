@@ -23,15 +23,15 @@ pub struct Opts {
 }
 
 pub fn run(opts: Opts) {
-    let conn = db::oneoff_connection().unwrap();
-    conn.transaction::<_, diesel::result::Error, _>(|| {
-        yank(opts, &conn);
+    let mut conn = db::oneoff_connection().unwrap();
+    conn.transaction::<_, diesel::result::Error, _>(|conn| {
+        yank(opts, conn);
         Ok(())
     })
     .unwrap()
 }
 
-fn yank(opts: Opts, conn: &PgConnection) {
+fn yank(opts: Opts, conn: &mut PgConnection) {
     let Opts {
         crate_name,
         version,

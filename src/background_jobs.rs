@@ -30,7 +30,7 @@ pub(crate) struct PerformState<'a> {
     ///
     /// Most jobs can reuse the existing connection, however it will already be within a
     /// transaction and is thus not appropriate in all cases.
-    pub(crate) conn: &'a PgConnection,
+    pub(crate) conn: &'a mut PgConnection,
     /// A connection pool for obtaining a unique connection.
     ///
     /// This will be `None` within our standard test framework, as there everything is expected to
@@ -77,7 +77,7 @@ impl Job {
         }
     }
 
-    pub fn enqueue(&self, conn: &PgConnection) -> Result<(), EnqueueError> {
+    pub fn enqueue(&self, conn: &mut PgConnection) -> Result<(), EnqueueError> {
         use crate::schema::background_jobs::dsl::*;
 
         let job_data = self.to_value()?;
@@ -117,7 +117,7 @@ impl Job {
             .expect("Application should configure a background runner environment");
         match self {
             Job::DailyDbMaintenance => {
-                worker::perform_daily_db_maintenance(&*fresh_connection(pool)?)
+                worker::perform_daily_db_maintenance(&mut *fresh_connection(pool)?)
             }
             Job::DumpDb(args) => worker::perform_dump_db(env, args.database_url, args.target_name),
             Job::IndexAddCrate(args) => worker::perform_index_add_crate(env, conn, &args.krate),
@@ -136,7 +136,7 @@ impl Job {
                 args.base_url.as_deref(),
                 args.pkg_path_in_vcs.as_deref(),
             ),
-            Job::UpdateDownloads => worker::perform_update_downloads(&*fresh_connection(pool)?),
+            Job::UpdateDownloads => worker::perform_update_downloads(&mut *fresh_connection(pool)?),
         }
     }
 }
