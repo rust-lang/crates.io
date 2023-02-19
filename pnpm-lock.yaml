@@ -92,7 +92,7 @@ specifiers:
   normalize.css: 8.0.1
   nyc: 15.1.0
   postcss-custom-media: 8.0.2
-  postcss-nested: 6.0.0
+  postcss-nested: 6.0.1
   prettier: 2.8.4
   pretty-bytes: 6.1.0
   qunit: 2.19.4
@@ -192,7 +192,7 @@ devDependencies:
   normalize.css: 8.0.1
   nyc: 15.1.0
   postcss-custom-media: 8.0.2
-  postcss-nested: 6.0.0
+  postcss-nested: 6.0.1
   prettier: 2.8.4
   qunit: 2.19.4
   qunit-console-grouper: 0.3.0
@@ -13329,8 +13329,8 @@ packages:
       icss-utils: 5.1.0_postcss@8.4.21
       postcss: 8.4.21
 
-  /postcss-nested/6.0.0:
-    resolution: {integrity: sha512-0DkamqrPcmkBDsLn+vQDIrtkSbNkv5AD/M322ySo9kqFkCIYklym2xEmWkwo+Y3/qZo34tzEPNUw4y7yMCdv5w==}
+  /postcss-nested/6.0.1:
+    resolution: {integrity: sha512-mEp4xPMi5bSWiMbsgoPfcP74lsWLHkQbZc3sY+jWYd65CUwXrUaTp0fmNpa01ZcETKlIgUdFN/MpS2xZtqL9dQ==}
     engines: {node: '>=12.0'}
     peerDependencies:
       postcss: ^8.2.14
