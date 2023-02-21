@@ -5,6 +5,7 @@ use crate::util::errors::{server_error, AppResult};
 
 use crate::config;
 use crate::Env;
+use lettre::message::header::ContentType;
 use lettre::transport::file::FileTransport;
 use lettre::transport::smtp::authentication::{Credentials, Mechanism};
 use lettre::transport::smtp::SmtpTransport;
@@ -146,6 +147,7 @@ Source type: {source}\n",
             .to(recipient.parse()?)
             .from(self.sender_address().parse()?)
             .subject(subject)
+            .header(ContentType::TEXT_PLAIN)
             .body(body.to_string())?;
 
         match &self.backend {
