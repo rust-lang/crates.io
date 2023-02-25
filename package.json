@@ -100,7 +100,7 @@
     "ember-load-initializers": "2.1.2",
     "ember-modifier": "3.2.7",
     "ember-page-title": "7.0.0",
-    "ember-qunit": "6.1.1",
+    "ember-qunit": "6.2.0",
     "ember-resolver": "10.0.0",
     "ember-router-scroll": "4.1.2",
     "ember-source": "4.11.0",
