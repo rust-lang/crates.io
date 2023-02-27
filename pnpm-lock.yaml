@@ -21,7 +21,7 @@ specifiers:
   '@glimmer/tracking': 1.1.2
   '@juggle/resize-observer': 3.4.0
   '@mainmatter/ember-api-actions': 0.4.1
-  '@percy/cli': 1.19.2
+  '@percy/cli': 1.20.0
   '@percy/ember': 4.2.0
   '@sentry/browser': 7.38.0
   '@sentry/utils': 7.38.0
@@ -130,7 +130,7 @@ devDependencies:
   '@glimmer/component': 1.1.2
   '@glimmer/tracking': 1.1.2
   '@mainmatter/ember-api-actions': 0.4.1
-  '@percy/cli': 1.19.2
+  '@percy/cli': 1.20.0
   '@percy/ember': 4.2.0
   '@sinonjs/fake-timers': 10.0.2
   '@zestia/ember-auto-focus': 4.4.0
@@ -2756,59 +2756,59 @@ packages:
       fastq: 1.15.0
     dev: true
 
-  /@percy/cli-app/1.19.2:
-    resolution: {integrity: sha512-VSXRT7HLMoLFANFN8GNJaAvApC6eIt4uDU+XI3xnPAdYpfA/YoRf4IamqQeIlggnul6BPFtkkk5QX+cNR2J5og==}
+  /@percy/cli-app/1.20.0:
+    resolution: {integrity: sha512-7DMaNBWpW3MiibVcTH6FzZdE0QKFO5sHz4dyUmNNJ/Uxs3hVHVAEP2BQxU0lOYLW6wM7uumCfsc8ccgWxIsK3Q==}
     engines: {node: '>=14'}
     dependencies:
-      '@percy/cli-command': 1.19.2
-      '@percy/cli-exec': 1.19.2
+      '@percy/cli-command': 1.20.0
+      '@percy/cli-exec': 1.20.0
     transitivePeerDependencies:
       - bufferutil
       - supports-color
       - utf-8-validate
     dev: true
 
-  /@percy/cli-build/1.19.2:
-    resolution: {integrity: sha512-JrNoWskp08gwSIVQ1HEpILVyTE9LLp1CqKNUHpvLd9t/BT1mHBj53rgPw/EV10c2TlNE/cCh5JkZnEtuxiQqCA==}
+  /@percy/cli-build/1.20.0:
+    resolution: {integrity: sha512-TJ1Khk4cUq3yaHm3e7o1kyXlChfKIaGzxSykO5iIfJ4LYmo+DI6qBe8zGBEgxZ7NoABalGCsT3FswwwrF3TRSw==}
     engines: {node: '>=14'}
     dependencies:
-      '@percy/cli-command': 1.19.2
+      '@percy/cli-command': 1.20.0
     transitivePeerDependencies:
       - bufferutil
       - supports-color
       - utf-8-validate
     dev: true
 
-  /@percy/cli-command/1.19.2:
-    resolution: {integrity: sha512-UK3/uCUtt7ddKufXNyS7SBA06HClSl89TLJFZ1MOmvuqZJFBKzjaoHxEJ+FpAfiWwtcB7Z2BDizm0526wUxR8g==}
+  /@percy/cli-command/1.20.0:
+    resolution: {integrity: sha512-6EWwevC26L4D8IxhGAwPssJyNVw9tTleur9fkX8t0v9gjVctxS4vvuIjThe2Ti8HMk31UkYfPoaIpO6Dss2o1g==}
     engines: {node: '>=14'}
     hasBin: true
     dependencies:
-      '@percy/config': 1.19.2
-      '@percy/core': 1.19.2
-      '@percy/logger': 1.19.2
+      '@percy/config': 1.20.0
+      '@percy/core': 1.20.0
+      '@percy/logger': 1.20.0
     transitivePeerDependencies:
       - bufferutil
       - supports-color
       - utf-8-validate
     dev: true
 
-  /@percy/cli-config/1.19.2:
-    resolution: {integrity: sha512-UANzk3wJ3chLJwUQ1GBxu6wjm7goyy0qMkJ1xoOrAjuBL77b54h8NbR/vC6SgeRW2YbZZfHlWVCU8b9y3NE5FA==}
+  /@percy/cli-config/1.20.0:
+    resolution: {integrity: sha512-JJhhvQXNFIHr2yFgx0KTVoyG+7PLWXAR+Dfh7m8hpmF9I7O2A5IJUuXbVpRmHGNqSoLvQyOto4Dc6UQzNE5TEg==}
     engines: {node: '>=14'}
     dependencies:
-      '@percy/cli-command': 1.19.2
+      '@percy/cli-command': 1.20.0
     transitivePeerDependencies:
       - bufferutil
       - supports-color
       - utf-8-validate
     dev: true
 
-  /@percy/cli-exec/1.19.2:
-    resolution: {integrity: sha512-79W1dVgpimu5VVzpU+h6ex9x71S5cN3yZQ4Nm1IAbbIX+DPgZam12bTmTl3hXSE8624Z8+GCgbck4SdY3nJcDg==}
+  /@percy/cli-exec/1.20.0:
+    resolution: {integrity: sha512-aZqmmAV7YLixpJ/jD2Nh/02n/lsJWI6EA4f27cmtz5E7tAMz/8BwJC2GxzH0J2PZV7Yf73COT5zgCaQFJec5gA==}
     engines: {node: '>=14'}
     dependencies:
-      '@percy/cli-command': 1.19.2
+      '@percy/cli-command': 1.20.0
       cross-spawn: 7.0.3
       which: 2.0.2
     transitivePeerDependencies:
@@ -2817,11 +2817,11 @@ packages:
       - utf-8-validate
     dev: true
 
-  /@percy/cli-snapshot/1.19.2:
-    resolution: {integrity: sha512-T21wBoFiF/we/bsYcxUFvbVpCtDI/K5K66p5h06dBdUNjwLAQvC08Ym21EDE1zi1Zr2+IQki/FRFhPlx6rf9/w==}
+  /@percy/cli-snapshot/1.20.0:
+    resolution: {integrity: sha512-s5ycpdgJbuxZ/RPjNc3EpJ2DpANza41dqLg7Q6O3kWhtAGhrBQENy7DBzNOYCTpEaDtP0IP53lI6+x7w3VQS5w==}
     engines: {node: '>=14'}
     dependencies:
-      '@percy/cli-command': 1.19.2
+      '@percy/cli-command': 1.20.0
       yaml: 2.2.1
     transitivePeerDependencies:
       - bufferutil
@@ -2829,11 +2829,11 @@ packages:
       - utf-8-validate
     dev: true
 
-  /@percy/cli-upload/1.19.2:
-    resolution: {integrity: sha512-byISZAE79+DDyMhLEK7smjaLXenfJyieEWPAghrodcItBn3ua5ornjKzkquw5B1wErpI+qGjJBwRyz34FKOD4Q==}
+  /@percy/cli-upload/1.20.0:
+    resolution: {integrity: sha512-a1v0CIEo8pfIhs3zM5vIaWexl73Ln0ApAW0vbzv6G33mrX2HAFf3nrnf7vJxBalZ7spPkeTl+61iRrgz0s9/Zg==}
     engines: {node: '>=14'}
     dependencies:
-      '@percy/cli-command': 1.19.2
+      '@percy/cli-command': 1.20.0
       fast-glob: 3.2.12
       image-size: 1.0.2
     transitivePeerDependencies:
@@ -2842,53 +2842,53 @@ packages:
       - utf-8-validate
     dev: true
 
-  /@percy/cli/1.19.2:
-    resolution: {integrity: sha512-mHn+/MJBGWuSAu2fsIvvUJf/h6qzGXIwlZq6kVbUJl5Qwh4CPESeTRIGG8MKqJbQX+79vn8w4tdiIDHpPQ7HkQ==}
+  /@percy/cli/1.20.0:
+    resolution: {integrity: sha512-23dfreXNT1PNBzn1f97hpMzD9l86koKPqdUAaXjFqL+iVrxSnq9Dfvw8W7QbChQOEsIjjhdeRkGOFrb1WZLsPg==}
     engines: {node: '>=14'}
     hasBin: true
     dependencies:
-      '@percy/cli-app': 1.19.2
-      '@percy/cli-build': 1.19.2
-      '@percy/cli-command': 1.19.2
-      '@percy/cli-config': 1.19.2
-      '@percy/cli-exec': 1.19.2
-      '@percy/cli-snapshot': 1.19.2
-      '@percy/cli-upload': 1.19.2
-      '@percy/client': 1.19.2
-      '@percy/logger': 1.19.2
+      '@percy/cli-app': 1.20.0
+      '@percy/cli-build': 1.20.0
+      '@percy/cli-command': 1.20.0
+      '@percy/cli-config': 1.20.0
+      '@percy/cli-exec': 1.20.0
+      '@percy/cli-snapshot': 1.20.0
+      '@percy/cli-upload': 1.20.0
+      '@percy/client': 1.20.0
+      '@percy/logger': 1.20.0
     transitivePeerDependencies:
       - bufferutil
       - supports-color
       - utf-8-validate
     dev: true
 
-  /@percy/client/1.19.2:
-    resolution: {integrity: sha512-3uHkr1OU8sgSqNo1QiT3IsrHUdN2yOexRpPLqNnaX0JRu0G0OdPw/WgDz3fATbXfkuCXuoZjYCVTK1KeZXAqzA==}
+  /@percy/client/1.20.0:
+    resolution: {integrity: sha512-x1iDqx3oCOHSdCP8TX4EZehNbjXFQFq6RhPmLIt8L8ZkNi+ugXPVc4J32evLw7dM+zwgVxXJvF4cwPYkHkOrFw==}
     engines: {node: '>=14'}
     dependencies:
-      '@percy/env': 1.19.2
-      '@percy/logger': 1.19.2
+      '@percy/env': 1.20.0
+      '@percy/logger': 1.20.0
     dev: true
 
-  /@percy/config/1.19.2:
-    resolution: {integrity: sha512-ZnArnLR2k1fA2Jx4xx8vfoILYUjMqnrEhvELucxQbzZGnYYfugXv0LL/EFlN9cnN+SoVbsMgHZO84TNu0/XE9A==}
+  /@percy/config/1.20.0:
+    resolution: {integrity: sha512-2PlcF7OIEaX4sXtw4Wa+dxy3U6QcWWcrPFSa6W2hxJ8WplnO0UwYMq+PbJ/lP47LWURDvPgLNxyYrywQLe1NHg==}
     engines: {node: '>=14'}
     dependencies:
-      '@percy/logger': 1.19.2
+      '@percy/logger': 1.20.0
       ajv: 8.12.0
       cosmiconfig: 7.1.0
       yaml: 2.2.1
     dev: true
 
-  /@percy/core/1.19.2:
-    resolution: {integrity: sha512-mluVlJUyOVhnZ1WxTYWG5dlUFyyWpWlMqyJEnthrrr+0Pqd4pDD++8gsYV0+CxXmofKtNRNOabfNGK0XLpybkw==}
+  /@percy/core/1.20.0:
+    resolution: {integrity: sha512-zb9W5udAnyr3BOMN3vDiWs/BEhgfY5zH4bUapw99zUxu19+/ipt31EWooI911CqxbHwoFtqr+o7JtIYmnICT6g==}
     engines: {node: '>=14'}
     requiresBuild: true
     dependencies:
-      '@percy/client': 1.19.2
-      '@percy/config': 1.19.2
-      '@percy/dom': 1.19.2
-      '@percy/logger': 1.19.2
+      '@percy/client': 1.20.0
+      '@percy/config': 1.20.0
+      '@percy/dom': 1.20.0
+      '@percy/logger': 1.20.0
       content-disposition: 0.5.4
       cross-spawn: 7.0.3
       extract-zip: 2.0.1
@@ -2904,8 +2904,8 @@ packages:
       - utf-8-validate
     dev: true
 
-  /@percy/dom/1.19.2:
-    resolution: {integrity: sha512-U8tBcdy5HgYDChir/ow2YLgo7Ee2IcyRt7+JolUzVvI1GzSUyOjP73wPc8Qi1EH1MkrOPNrGSO4tdfiVr0h70A==}
+  /@percy/dom/1.20.0:
+    resolution: {integrity: sha512-DA1kWILeoYxTF2H8J36ILH2GGcFpfFDaOrFMjQUvXMMkkEivxNR+dcemIlqphma+HDI2UuGnSXs4MQQ33MGXOQ==}
     dev: true
 
   /@percy/ember/4.2.0:
@@ -2918,13 +2918,13 @@ packages:
       - supports-color
     dev: true
 
-  /@percy/env/1.19.2:
-    resolution: {integrity: sha512-tM1zsD7jABkBDILqhcafb0UnLIsXQ5Saur7iXEsrAIRWjbx4I6ArUu+0CXu5EqJdXHwNFV2kLpt6ULU9gn+bIA==}
+  /@percy/env/1.20.0:
+    resolution: {integrity: sha512-hk/tPi+e7O0uF3FOOaMXYzA/7Gp0kBcYkYOOHL18/XrpETfBm8uXcP/26FrENdwSAH1nM/bu873NVgeS4pMECw==}
     engines: {node: '>=14'}
     dev: true
 
-  /@percy/logger/1.19.2:
-    resolution: {integrity: sha512-HD721muAG3fyB5kW/2XIZd+yy91VUb9c0PMc9M7D4nP0ikd7zbTOa4L+pX9bV5hN9OylrGmwXrKDSz++CEreCA==}
+  /@percy/logger/1.20.0:
+    resolution: {integrity: sha512-x76tOiB/m6GnND9KQ4Fjm+hl7l1NlITuveNWYuSS8Z2euqiggBAXdRuNSqV/oLR4UfgfiY6vYb7ENVpo9G33Iw==}
     engines: {node: '>=14'}
     dev: true
 
