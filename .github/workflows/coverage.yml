@@ -8,7 +8,7 @@ on:
 
 env:
   # renovate: datasource=crate depName=cargo-tarpaulin versioning=semver
-  CARGO_TARPAULIN_VERSION: 0.25.0
+  CARGO_TARPAULIN_VERSION: 0.25.1
   # renovate: datasource=crate depName=diesel_cli versioning=semver
   DIESEL_CLI_VERSION: 2.0.1
   # renovate: datasource=github-releases depName=rust lookupName=rust-lang/rust
