@@ -119,7 +119,7 @@
     "eslint-plugin-prettier": "4.2.1",
     "eslint-plugin-qunit": "7.3.4",
     "eslint-plugin-qunit-dom": "0.2.0",
-    "eslint-plugin-unicorn": "45.0.2",
+    "eslint-plugin-unicorn": "46.0.0",
     "loader.js": "4.7.0",
     "match-json": "1.3.5",
     "miragejs": "0.1.47",
