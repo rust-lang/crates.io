@@ -247,7 +247,7 @@ by typing `\q`) without any errors to connect to your running Postgres server.
 > Fix that by creating a template database for yourself:
 >
 > ```
-> createdb [yourusername]
+> sudo -u postgres createdb [yourusername]
 > ```
 >
 > Try running `psql` again as yourself. If you're still getting errors, here are
