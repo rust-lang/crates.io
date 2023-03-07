@@ -26,7 +26,7 @@ specifiers:
   '@sentry/browser': 7.40.0
   '@sentry/utils': 7.40.0
   '@sinonjs/fake-timers': 10.0.2
-  '@zestia/ember-auto-focus': 4.4.0
+  '@zestia/ember-auto-focus': 5.0.0
   broccoli-asset-rev: 3.0.0
   chart.js: 4.2.1
   copy-text-to-clipboard: 3.0.1
@@ -133,7 +133,7 @@ devDependencies:
   '@percy/cli': 1.20.0
   '@percy/ember': 4.2.0
   '@sinonjs/fake-timers': 10.0.2
-  '@zestia/ember-auto-focus': 4.4.0
+  '@zestia/ember-auto-focus': 5.0.0_axyfa26lq6uktmguq4zzkd3jei
   broccoli-asset-rev: 3.0.0
   ember-a11y-testing: 5.2.0_dvame2fsqhpslri2nygrxd77tm
   ember-auto-import: 2.6.1_webpack@5.75.0
@@ -3593,16 +3593,21 @@ packages:
   /@xtuc/long/4.2.2:
     resolution: {integrity: sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==}
 
-  /@zestia/ember-auto-focus/4.4.0:
-    resolution: {integrity: sha512-Oios2kkkOLkaaKAxQl25XNjdhskv3BWpxOgjE/i8ig30uUloepU0i8idByqQdsUmNdPmsMr7sQ8TEZ2W7NAfMg==}
-    engines: {node: 12.* || 14.* || >= 16}
+  /@zestia/ember-auto-focus/5.0.0_axyfa26lq6uktmguq4zzkd3jei:
+    resolution: {integrity: sha512-TL31Ku777b3P3ntenNBRdNQcY7b3eDDPpReqU1erfikHAmYshBDESYhEoLp2nQWfX0a7/oEwLfLmTSTpZ8unjw==}
+    engines: {node: 14.* || 16.* || >= 18}
+    peerDependencies:
+      ember-source: ^3.28.0 || ^4.0.0
     dependencies:
+      ember-auto-import: 2.6.1_webpack@5.75.0
       ember-cli-babel: 7.26.11
       ember-cli-htmlbars: 6.2.0
       ember-modifier: 3.2.7
+      ember-source: 4.11.0_klhxxmjkcvtuhwro2kkspsfzna
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
+      - webpack
     dev: true
 
   /abab/2.0.6:
