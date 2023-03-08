@@ -20,6 +20,7 @@ use axum::Router;
 use axum_extra::either::Either;
 use axum_extra::middleware::option_layer;
 use tower::layer::util::Identity;
+use tower_http::catch_panic::CatchPanicLayer;
 
 use crate::app::AppState;
 use crate::Env;
@@ -41,6 +42,7 @@ pub fn apply_axum_middleware(state: AppState, router: Router) -> Router {
         .layer(sentry_tower::SentryHttpLayer::with_transaction())
         .layer(from_fn(self::sentry::set_transaction))
         .layer(from_fn(log_request::log_requests))
+        .layer(CatchPanicLayer::new())
         .layer(from_fn_with_state(
             state.clone(),
             update_metrics::update_metrics,
