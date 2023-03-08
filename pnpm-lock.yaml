@@ -20,7 +20,7 @@ specifiers:
   '@glimmer/component': 1.1.2
   '@glimmer/tracking': 1.1.2
   '@juggle/resize-observer': 3.4.0
-  '@mainmatter/ember-api-actions': 0.5.0
+  '@mainmatter/ember-api-actions': 0.6.0
   '@percy/cli': 1.20.0
   '@percy/ember': 4.2.0
   '@sentry/browser': 7.41.0
@@ -129,7 +129,7 @@ devDependencies:
   '@embroider/webpack': 2.1.1_eyqzvd6leggmxnqpxutivef5lu
   '@glimmer/component': 1.1.2
   '@glimmer/tracking': 1.1.2
-  '@mainmatter/ember-api-actions': 0.5.0
+  '@mainmatter/ember-api-actions': 0.6.0
   '@percy/cli': 1.20.0
   '@percy/ember': 4.2.0
   '@sinonjs/fake-timers': 10.0.2
@@ -2690,8 +2690,8 @@ packages:
       upath: 2.0.1
     dev: true
 
-  /@mainmatter/ember-api-actions/0.5.0:
-    resolution: {integrity: sha512-9X/UBtduCF277pulR/Lz+DHIn+QApuJUuMJQVOE50k+keLKxmODSJykt59n6MVF2IHkZBaHvHOVpGkCry3NW7w==}
+  /@mainmatter/ember-api-actions/0.6.0:
+    resolution: {integrity: sha512-Xij9uypPMelG45DsaxqANecj0FYNN4tiUHcbstsVLkSNkvYPUOuZcYrBhnMQUyvQUCbIsWBl+wBjs9hbDAVOXQ==}
     engines: {node: 14.* || 16.* || >= 18}
     dependencies:
       ember-cli-babel: 7.26.11
