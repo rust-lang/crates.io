@@ -23,6 +23,10 @@ pub enum Command {
         #[arg(long = "dry-run")]
         dry_run: bool,
     },
+    FixFeatures2 {
+        #[arg(long = "dry-run")]
+        dry_run: bool,
+    },
 }
 
 pub fn run(command: Command) -> Result<()> {
@@ -51,5 +55,6 @@ pub fn run(command: Command) -> Result<()> {
         Command::DailyDbMaintenance => Ok(worker::daily_db_maintenance().enqueue(conn)?),
         Command::SquashIndex => Ok(worker::squash_index().enqueue(conn)?),
         Command::NormalizeIndex { dry_run } => Ok(worker::normalize_index(dry_run).enqueue(conn)?),
+        Command::FixFeatures2 { dry_run } => Ok(worker::fix_features2(dry_run).enqueue(conn)?),
     }
 }

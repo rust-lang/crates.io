@@ -15,6 +15,7 @@ use cargo_registry_index::Repository;
 pub enum Job {
     DailyDbMaintenance,
     DumpDb(DumpDbJob),
+    FixFeatures2(FixFeatures2Job),
     IndexAddCrate(IndexAddCrateJob),
     IndexSquash,
     IndexSyncToHttp(IndexSyncToHttpJob),
@@ -41,6 +42,7 @@ pub(crate) struct PerformState<'a> {
 impl Job {
     const DAILY_DB_MAINTENANCE: &str = "daily_db_maintenance";
     const DUMP_DB: &str = "dump_db";
+    const FIX_FEATURES2: &str = "fix_features2";
     const INDEX_ADD_CRATE: &str = "add_crate";
     const INDEX_SQUASH: &str = "squash_index";
     const INDEX_SYNC_TO_HTTP: &str = "update_crate_index";
@@ -53,6 +55,7 @@ impl Job {
         match self {
             Job::DailyDbMaintenance => Self::DAILY_DB_MAINTENANCE,
             Job::DumpDb(_) => Self::DUMP_DB,
+            Job::FixFeatures2(_) => Self::FIX_FEATURES2,
             Job::IndexAddCrate(_) => Self::INDEX_ADD_CRATE,
             Job::IndexSquash => Self::INDEX_SQUASH,
             Job::IndexSyncToHttp(_) => Self::INDEX_SYNC_TO_HTTP,
@@ -67,6 +70,7 @@ impl Job {
         match self {
             Job::DailyDbMaintenance => Ok(serde_json::Value::Null),
             Job::DumpDb(inner) => serde_json::to_value(inner),
+            Job::FixFeatures2(inner) => serde_json::to_value(inner),
             Job::IndexAddCrate(inner) => serde_json::to_value(inner),
             Job::IndexSquash => Ok(serde_json::Value::Null),
             Job::IndexSyncToHttp(inner) => serde_json::to_value(inner),
@@ -95,6 +99,7 @@ impl Job {
         Ok(match job_type {
             Self::DAILY_DB_MAINTENANCE => Job::DailyDbMaintenance,
             Self::DUMP_DB => Job::DumpDb(from_value(value)?),
+            Self::FIX_FEATURES2 => Job::FixFeatures2(from_value(value)?),
             Self::INDEX_ADD_CRATE => Job::IndexAddCrate(from_value(value)?),
             Self::INDEX_SQUASH => Job::IndexSquash,
             Self::INDEX_SYNC_TO_HTTP => Job::IndexSyncToHttp(from_value(value)?),
@@ -120,6 +125,7 @@ impl Job {
                 worker::perform_daily_db_maintenance(&mut *fresh_connection(pool)?)
             }
             Job::DumpDb(args) => worker::perform_dump_db(env, args.database_url, args.target_name),
+            Job::FixFeatures2(args) => worker::perform_fix_features2(env, args),
             Job::IndexAddCrate(args) => worker::perform_index_add_crate(env, conn, &args.krate),
             Job::IndexSquash => worker::perform_index_squash(env),
             Job::IndexSyncToHttp(args) => worker::perform_index_sync_to_http(env, args.crate_name),
@@ -180,6 +186,11 @@ pub struct IndexUpdateYankedJob {
 
 #[derive(Serialize, Deserialize)]
 pub struct NormalizeIndexJob {
+    pub dry_run: bool,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct FixFeatures2Job {
     pub dry_run: bool,
 }
 

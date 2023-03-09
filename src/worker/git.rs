@@ -1,5 +1,6 @@
 use crate::background_jobs::{
-    Environment, IndexAddCrateJob, IndexSyncToHttpJob, IndexUpdateYankedJob, Job, NormalizeIndexJob,
+    Environment, FixFeatures2Job, IndexAddCrateJob, IndexSyncToHttpJob, IndexUpdateYankedJob, Job,
+    NormalizeIndexJob,
 };
 use crate::schema;
 use crate::swirl::PerformError;
@@ -251,4 +252,76 @@ pub fn perform_normalize_index(
 
 pub fn normalize_index(dry_run: bool) -> Job {
     Job::NormalizeIndex(NormalizeIndexJob { dry_run })
+}
+
+pub fn perform_fix_features2(env: &Environment, args: FixFeatures2Job) -> Result<(), PerformError> {
+    info!("Fixing `features2` usage in the index");
+
+    let repo = env.lock_index()?;
+
+    let files = repo.get_files_modified_since(None)?;
+    let num_files = files.len();
+
+    for (i, file) in files.iter().enumerate() {
+        if i % 50 == 0 {
+            info!(num_files, i, ?file);
+        }
+
+        let crate_name = file.file_name().unwrap().to_str().unwrap();
+        let path = repo.index_file(crate_name);
+        if !path.exists() {
+            continue;
+        }
+
+        let file = fs::File::open(&path)?;
+        let reader = BufReader::new(file);
+        let mut versions = Vec::new();
+        let mut changed = false;
+        for line in reader.lines() {
+            let line = line?;
+            if line.is_empty() {
+                continue;
+            }
+
+            let mut krate: Crate = serde_json::from_str(&line)?;
+            if !krate.features.is_empty() {
+                if let Some(features2) = krate.features2.as_mut() {
+                    features2.extend(std::mem::take(&mut krate.features));
+                    changed = true;
+                }
+            }
+
+            versions.push(krate);
+        }
+
+        if changed {
+            let mut body: Vec<u8> = Vec::new();
+            for version in versions {
+                serde_json::to_writer(&mut body, &version).unwrap();
+                body.push(b'\n');
+            }
+            fs::write(path, body)?;
+        }
+    }
+
+    info!("Committing `features2` fix");
+    let msg = "Fix `features2` usage\n\n\
+        More information can be found at https://github.com/rust-lang/crates.io/issues/6135";
+    repo.run_command(Command::new("git").args(["commit", "-am", msg]))?;
+
+    let branch = match args.dry_run {
+        false => "master",
+        true => "features2-dry-run",
+    };
+
+    info!(?branch, "Pushing to upstream repository");
+    repo.run_command(Command::new("git").args(["push", "origin", &format!("HEAD:{branch}")]))?;
+
+    info!("`features2` fix completed");
+
+    Ok(())
+}
+
+pub fn fix_features2(dry_run: bool) -> Job {
+    Job::FixFeatures2(FixFeatures2Job { dry_run })
 }
