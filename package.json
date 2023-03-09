@@ -63,7 +63,7 @@
     "@embroider/webpack": "2.1.1",
     "@glimmer/component": "1.1.2",
     "@glimmer/tracking": "1.1.2",
-    "@mainmatter/ember-api-actions": "0.5.0",
+    "@mainmatter/ember-api-actions": "0.6.0",
     "@percy/cli": "1.20.0",
     "@percy/ember": "4.2.0",
     "@sinonjs/fake-timers": "10.0.2",
