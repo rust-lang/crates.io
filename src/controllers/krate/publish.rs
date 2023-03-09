@@ -247,17 +247,17 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 .uploader()
                 .upload_crate(app.http_client(), tarball_bytes, &krate, vers)?;
 
-            let (features, features2): (BTreeMap<_, _>, BTreeMap<_, _>) =
-                features.into_iter().partition(|(_k, vals)| {
-                    !vals
-                        .iter()
-                        .any(|v| v.starts_with("dep:") || v.contains("?/"))
-                });
-            let (features2, v) = if features2.is_empty() {
-                (None, None)
-            } else {
-                (Some(features2), Some(2))
+            let uses_features2_syntax = features
+                .iter()
+                .flat_map(|(_key, values)| values)
+                .any(|values| values.starts_with("dep:") || values.contains("?/"));
+
+            let (features, features2) = match uses_features2_syntax {
+                true => (BTreeMap::new(), Some(features)),
+                false => (features, None),
             };
+
+            let v = features2.as_ref().map(|_| 2);
 
             // Register this crate in our local git repo.
             let git_crate = cargo_registry_index::Crate {
