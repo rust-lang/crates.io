@@ -76,7 +76,7 @@ threadpool = "=1.8.1"
 tokio = { version = "=1.26.0", features = ["net", "signal", "io-std", "io-util", "rt-multi-thread", "macros"]}
 toml = "=0.7.2"
 tower = "=0.4.13"
-tower-http = { version = "=0.4.0", features = ["fs"] }
+tower-http = { version = "=0.4.0", features = ["fs", "catch-panic"] }
 tracing = "=0.1.37"
 tracing-subscriber = { version = "=0.3.16", features = ["env-filter"] }
 url = "=2.3.1"
