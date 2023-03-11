@@ -65,7 +65,7 @@ ring = "=0.16.20"
 scheduled-thread-pool = "=0.2.7"
 semver = { version = "=1.0.16", features = ["serde"] }
 sentry = { version = "=0.30.0", features = ["tracing", "tower", "tower-http"] }
-serde = { version = "=1.0.154", features = ["derive"] }
+serde = { version = "=1.0.155", features = ["derive"] }
 serde_json = "=1.0.94"
 sha2 = "=0.10.6"
 spdx = "=0.10.0"
