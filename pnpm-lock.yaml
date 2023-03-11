@@ -29,7 +29,7 @@ specifiers:
   '@zestia/ember-auto-focus': 5.0.0
   broccoli-asset-rev: 3.0.0
   chart.js: 4.2.1
-  copy-text-to-clipboard: 3.0.1
+  copy-text-to-clipboard: 3.1.0
   date-fns: 2.29.3
   ember-a11y-testing: 5.2.0
   ember-auto-import: 2.6.1
@@ -107,7 +107,7 @@ dependencies:
   '@sentry/browser': 7.42.0
   '@sentry/utils': 7.42.0
   chart.js: 4.2.1
-  copy-text-to-clipboard: 3.0.1
+  copy-text-to-clipboard: 3.1.0
   date-fns: 2.29.3
   fastboot-app-server: 4.1.0
   highlight.js: 11.7.0
@@ -6477,8 +6477,8 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: true
 
-  /copy-text-to-clipboard/3.0.1:
-    resolution: {integrity: sha512-rvVsHrpFcL4F2P8ihsoLdFHmd404+CMg71S756oRSeQgqk51U3kicGdnvfkrxva0xXH92SjGS62B0XIJsbh+9Q==}
+  /copy-text-to-clipboard/3.1.0:
+    resolution: {integrity: sha512-PFM6BnjLnOON/lB3ta/Jg7Ywsv+l9kQGD4TWDCSlRBGmqnnTM5MrDkhAFgw+8HZt0wW6Q2BBE4cmy9sq+s9Qng==}
     engines: {node: '>=12'}
     dev: false
 
