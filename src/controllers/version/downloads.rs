@@ -97,7 +97,7 @@ pub async fn download(
                 //
                 // Thankfully Cargo always uses the right name when calling the endpoint, and we can
                 // keep it working during a full database outage by unconditionally redirecting without
-                // checking whether the crate exists or the rigth name is used. Non-Cargo clients might
+                // checking whether the crate exists or the right name is used. Non-Cargo clients might
                 // get a 404 response instead of a 500, but that's worth it.
                 //
                 // Without a working database we also can't count downloads, but that's also less
