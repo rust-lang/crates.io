@@ -164,7 +164,7 @@ In order to run the backend, you will need to have installed:
 - [Rust](https://www.rust-lang.org/en-US/) stable >= 1.16.0 and cargo, which comes with Rust
 - [Postgres](https://www.postgresql.org/) >= 9.5
 - [OpenSSL](https://www.openssl.org/) >= 1.0.2k
-- [diesel_cli](http://diesel.rs/guides/getting-started/) >= 1.2.0 and < 2.0.0
+- [diesel_cli](http://diesel.rs/guides/getting-started/) >= 2.0.0 and < 3.0.0
 
 ##### Rust
 
@@ -285,7 +285,7 @@ by typing `\q`) without any errors to connect to your running Postgres server.
 On all platforms, install through `cargo` by running:
 
 ```
-cargo install diesel_cli --no-default-features --features postgres --version ^1
+cargo install diesel_cli --no-default-features --features postgres --version ^2
 ```
 
 This will install a binary named `diesel`, so you should be able to run `diesel
