@@ -8,7 +8,7 @@ overrides:
   miragejs: 0.1.47
 
 specifiers:
-  '@babel/eslint-parser': 7.19.1
+  '@babel/eslint-parser': 7.21.3
   '@babel/plugin-proposal-decorators': 7.21.0
   '@ember/optional-features': 2.0.0
   '@ember/render-modifiers': 2.0.5
@@ -118,7 +118,7 @@ dependencies:
   tracked-toolbox: 2.0.0_ember-source@4.11.0
 
 devDependencies:
-  '@babel/eslint-parser': 7.19.1_eslint@8.36.0
+  '@babel/eslint-parser': 7.21.3_eslint@8.36.0
   '@babel/plugin-proposal-decorators': 7.21.0
   '@ember/optional-features': 2.0.0
   '@ember/render-modifiers': 2.0.5_ember-source@4.11.0
@@ -262,8 +262,8 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /@babel/eslint-parser/7.19.1_eslint@8.36.0:
-    resolution: {integrity: sha512-AqNf2QWt1rtu2/1rLswy6CDP7H9Oh3mMhk177Y67Rg8d7RD9WfOLLv8CGn6tisFvS2htm86yIe1yLF6I1UDaGQ==}
+  /@babel/eslint-parser/7.21.3_eslint@8.36.0:
+    resolution: {integrity: sha512-kfhmPimwo6k4P8zxNs8+T7yR44q1LdpsZdE1NkCsVlfiuTPRfnGgjaF8Qgug9q9Pou17u6wneYF0lDCZJATMFg==}
     engines: {node: ^10.13.0 || ^12.13.0 || >=14.0.0}
     peerDependencies:
       '@babel/core': '>=7.11.0'
