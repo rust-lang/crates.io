@@ -26,13 +26,31 @@ else
     tar -xf $TARBALL_PATH --strip 1 -C $DUMP_PATH
 fi
 
+# Figure out which database to connect to, using the psql standard $PGDATABASE
+# first, otherwise extracting it from $DATABASE_URL as defined in .env. If
+# that's unset, then we'll fall back to the hard-coded default cargo_registry.
+if [ -n "${PGDATABASE+x}" ]; then
+  DATABASE_NAME="$PGDATABASE"
+elif [ -n "${DATABASE_URL+x}" ]; then
+  DATABASE_NAME="$(echo "$DATABASE_URL" | awk -F / '{ print $NF }')"
+else
+  DATABASE_NAME=cargo_registry
+fi
+readonly DATABASE_NAME
+
+# PostgreSQL doesn't permit dropping a database with active connections, so we
+# need to connect to another database. While `postgres` is technically not
+# required to be present, in practice it almost always is, including if the
+# standard `postgres` container is being used in Docker.
+readonly DROP_CREATE_DATABASE_NAME="${DROP_CREATE_DATABASE_NAME:-postgres}"
+
 cd $DUMP_PATH
-echo "Creating 'cargo_registry' database"
-psql --command="DROP DATABASE IF EXISTS cargo_registry"
-psql --command="CREATE DATABASE cargo_registry"
+echo "Creating '$DATABASE_NAME' database"
+psql --command="DROP DATABASE IF EXISTS $DATABASE_NAME" "$DROP_CREATE_DATABASE_NAME"
+psql --command="CREATE DATABASE $DATABASE_NAME" "$DROP_CREATE_DATABASE_NAME"
 
 echo "Importing database schema"
-psql -a cargo_registry < schema.sql
+psql -a "$DATABASE_NAME" < schema.sql
 
 echo "Importing data"
-psql -a cargo_registry < import.sql
+psql -a "$DATABASE_NAME" < import.sql
