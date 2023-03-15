@@ -54,3 +54,7 @@ psql -a "$DATABASE_NAME" < schema.sql
 
 echo "Importing data"
 psql -a "$DATABASE_NAME" < import.sql
+
+# Importing the database doesn't cause materialised views to be refreshed, so
+# let's do that.
+psql --command="REFRESH MATERIALIZED VIEW recent_crate_downloads" "$DATABASE_NAME"
