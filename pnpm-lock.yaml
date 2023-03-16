@@ -75,7 +75,7 @@ specifiers:
   ember-window-mock: 0.8.1
   eslint: 8.36.0
   eslint-config-prettier: 8.7.0
-  eslint-plugin-ember: 11.4.7
+  eslint-plugin-ember: 11.4.8
   eslint-plugin-ember-concurrency: 0.5.1
   eslint-plugin-import-helpers: 1.3.1
   eslint-plugin-prettier: 4.2.1
@@ -179,7 +179,7 @@ devDependencies:
   ember-window-mock: 0.8.1
   eslint: 8.36.0
   eslint-config-prettier: 8.7.0_eslint@8.36.0
-  eslint-plugin-ember: 11.4.7_eslint@8.36.0
+  eslint-plugin-ember: 11.4.8_eslint@8.36.0
   eslint-plugin-ember-concurrency: 0.5.1_eslint@8.36.0
   eslint-plugin-import-helpers: 1.3.1_eslint@8.36.0
   eslint-plugin-prettier: 4.2.1_eqzx3hpkgx5nnvxls3azrcc7dm
@@ -8743,8 +8743,8 @@ packages:
       eslint: 8.36.0
     dev: true
 
-  /eslint-plugin-ember/11.4.7_eslint@8.36.0:
-    resolution: {integrity: sha512-9owpi2uCBBl8XXg0V5oW6nnQf4soqmRI8xs1Srf/kg9Om109CyxpY41i+ZSjRNFaTuWufXHSs5NCraFcrThoDg==}
+  /eslint-plugin-ember/11.4.8_eslint@8.36.0:
+    resolution: {integrity: sha512-ytHEMDNkXbkBAfw2loR62pLozOiMp+Y7BJaupSQK25lCsfrhVMsfog2uTvicoCwDDPgcOJrivdUmMbfErOGOdQ==}
     engines: {node: 14.* || 16.* || >= 18}
     peerDependencies:
       eslint: '*'
