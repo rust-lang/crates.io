@@ -3,7 +3,7 @@ import { inject as service } from '@ember/service';
 import { waitForPromise } from '@ember/test-waiters';
 import Component from '@glimmer/component';
 
-import subDays from 'date-fns/subDays';
+import { addMinutes, subDays as brokenSubDays, subMinutes } from 'date-fns';
 import window from 'ember-window-mock';
 import semverSort from 'semver/functions/sort';
 
@@ -189,4 +189,19 @@ export function toChartData(data) {
 
 function midnightForDate(date) {
   return Date.parse(date.toISOString().slice(0, 10));
+}
+
+// This works around a bug in date-fn's subDays() function when crossing a DST
+// transition: https://github.com/date-fns/date-fns/issues/571
+//
+// The specific implementation is based on @bertho-zero's here:
+// https://github.com/date-fns/date-fns/issues/571#issuecomment-602496322
+function subDays(date, amount) {
+  const originalTZO = date.getTimezoneOffset();
+  const endDate = brokenSubDays(date, amount);
+  const endTZO = endDate.getTimezoneOffset();
+
+  const dstDiff = originalTZO - endTZO;
+
+  return dstDiff >= 0 ? addMinutes(endDate, dstDiff) : subMinutes(endDate, Math.abs(dstDiff));
 }
