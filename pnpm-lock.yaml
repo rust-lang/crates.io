@@ -74,7 +74,7 @@ specifiers:
   ember-web-app: 5.0.1
   ember-window-mock: 0.8.1
   eslint: 8.36.0
-  eslint-config-prettier: 8.7.0
+  eslint-config-prettier: 8.8.0
   eslint-plugin-ember: 11.4.8
   eslint-plugin-ember-concurrency: 0.5.1
   eslint-plugin-import-helpers: 1.3.1
@@ -178,11 +178,11 @@ devDependencies:
   ember-web-app: 5.0.1
   ember-window-mock: 0.8.1
   eslint: 8.36.0
-  eslint-config-prettier: 8.7.0_eslint@8.36.0
+  eslint-config-prettier: 8.8.0_eslint@8.36.0
   eslint-plugin-ember: 11.4.8_eslint@8.36.0
   eslint-plugin-ember-concurrency: 0.5.1_eslint@8.36.0
   eslint-plugin-import-helpers: 1.3.1_eslint@8.36.0
-  eslint-plugin-prettier: 4.2.1_w3shflqoegspmha2z74hzwkfbm
+  eslint-plugin-prettier: 4.2.1_ose2zoovovx4ulolhifz3tfzx4
   eslint-plugin-qunit: 7.3.4_eslint@8.36.0
   eslint-plugin-qunit-dom: 0.2.0_eslint@8.36.0
   eslint-plugin-unicorn: 46.0.0_eslint@8.36.0
@@ -8724,8 +8724,8 @@ packages:
     optionalDependencies:
       source-map: 0.6.1
 
-  /eslint-config-prettier/8.7.0_eslint@8.36.0:
-    resolution: {integrity: sha512-HHVXLSlVUhMSmyW4ZzEuvjpwqamgmlfkutD53cYXLikh4pt/modINRcCIApJ84czDxM4GZInwUrromsDdTImTA==}
+  /eslint-config-prettier/8.8.0_eslint@8.36.0:
+    resolution: {integrity: sha512-wLbQiFre3tdGgpDv67NQKnJuTlcUVYHas3k+DZCc2U2BadthoEY4B7hLPvAxaqdyOGCzuLfii2fqGph10va7oA==}
     hasBin: true
     peerDependencies:
       eslint: '*'
@@ -8776,7 +8776,7 @@ packages:
       eslint: 8.36.0
     dev: true
 
-  /eslint-plugin-prettier/4.2.1_w3shflqoegspmha2z74hzwkfbm:
+  /eslint-plugin-prettier/4.2.1_ose2zoovovx4ulolhifz3tfzx4:
     resolution: {integrity: sha512-f/0rXLXUt0oFYs8ra4w49wYZBG5GKZpAYsJSm6rnYL5uVDjd+zowwMwVZHnAjf4edNrKpCDYfXDgmRE/Ak7QyQ==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
@@ -8788,7 +8788,7 @@ packages:
         optional: true
     dependencies:
       eslint: 8.36.0
-      eslint-config-prettier: 8.7.0_eslint@8.36.0
+      eslint-config-prettier: 8.8.0_eslint@8.36.0
       prettier: 2.8.6
       prettier-linter-helpers: 1.0.0
     dev: true
