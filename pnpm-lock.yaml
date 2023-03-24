@@ -93,7 +93,7 @@ specifiers:
   nyc: 15.1.0
   postcss-custom-media: 8.0.2
   postcss-nested: 6.0.1
-  prettier: 2.8.6
+  prettier: 2.8.7
   pretty-bytes: 6.1.0
   qunit: 2.19.4
   qunit-console-grouper: 0.3.0
@@ -182,7 +182,7 @@ devDependencies:
   eslint-plugin-ember: 11.4.8_eslint@8.36.0
   eslint-plugin-ember-concurrency: 0.5.1_eslint@8.36.0
   eslint-plugin-import-helpers: 1.3.1_eslint@8.36.0
-  eslint-plugin-prettier: 4.2.1_ose2zoovovx4ulolhifz3tfzx4
+  eslint-plugin-prettier: 4.2.1_ywlv3zveqg2kxfq44lflihh5mm
   eslint-plugin-qunit: 7.3.4_eslint@8.36.0
   eslint-plugin-qunit-dom: 0.2.0_eslint@8.36.0
   eslint-plugin-unicorn: 46.0.0_eslint@8.36.0
@@ -193,7 +193,7 @@ devDependencies:
   nyc: 15.1.0
   postcss-custom-media: 8.0.2
   postcss-nested: 6.0.1
-  prettier: 2.8.6
+  prettier: 2.8.7
   qunit: 2.19.4
   qunit-console-grouper: 0.3.0
   qunit-dom: 2.0.0
@@ -8786,7 +8786,7 @@ packages:
       eslint: 8.36.0
     dev: true
 
-  /eslint-plugin-prettier/4.2.1_ose2zoovovx4ulolhifz3tfzx4:
+  /eslint-plugin-prettier/4.2.1_ywlv3zveqg2kxfq44lflihh5mm:
     resolution: {integrity: sha512-f/0rXLXUt0oFYs8ra4w49wYZBG5GKZpAYsJSm6rnYL5uVDjd+zowwMwVZHnAjf4edNrKpCDYfXDgmRE/Ak7QyQ==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
@@ -8799,7 +8799,7 @@ packages:
     dependencies:
       eslint: 8.36.0
       eslint-config-prettier: 8.8.0_eslint@8.36.0
-      prettier: 2.8.6
+      prettier: 2.8.7
       prettier-linter-helpers: 1.0.0
     dev: true
 
@@ -13559,8 +13559,8 @@ packages:
       fast-diff: 1.2.0
     dev: true
 
-  /prettier/2.8.6:
-    resolution: {integrity: sha512-mtuzdiBbHwPEgl7NxWlqOkithPyp4VN93V7VeHVWBF+ad3I5avc0RVDT4oImXQy9H/AqxA2NSQH8pSxHW6FYbQ==}
+  /prettier/2.8.7:
+    resolution: {integrity: sha512-yPngTo3aXUUmyuTjeTUT75txrf+aMh9FiD7q9ZE/i6r0bPb22g4FsE6Y338PQX1bmfy08i9QQCB7/rcUAVntfw==}
     engines: {node: '>=10.13.0'}
     hasBin: true
 
@@ -14028,7 +14028,7 @@ packages:
       '@babel/core': 7.21.3
       '@babel/plugin-syntax-decorators': 7.21.0_@babel+core@7.21.3
       '@babel/plugin-transform-typescript': 7.21.3_@babel+core@7.21.3
-      prettier: 2.8.6
+      prettier: 2.8.7
     transitivePeerDependencies:
       - supports-color
 
