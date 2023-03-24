@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v3.4.0
+      - uses: actions/checkout@v3.5.0
 
       - uses: tj-actions/changed-files@v35.7.2
         id: changed-files-non-js
@@ -71,7 +71,7 @@ jobs:
       RUSTFLAGS: "-D warnings"
 
     steps:
-      - uses: actions/checkout@v3.4.0
+      - uses: actions/checkout@v3.5.0
 
       - run: rustup default ${{ env.RUST_VERSION }}
       - run: rustup component add rustfmt
@@ -110,7 +110,7 @@ jobs:
           - 5432:5432
 
     steps:
-      - uses: actions/checkout@v3.4.0
+      - uses: actions/checkout@v3.5.0
 
       - run: rustup default ${{ env.RUST_VERSION }}
 
@@ -128,7 +128,7 @@ jobs:
     if: needs.changed-files.outputs.non-rust == 'true'
 
     steps:
-      - uses: actions/checkout@v3.4.0
+      - uses: actions/checkout@v3.5.0
 
       - uses: pnpm/action-setup@v2.2.4
         with:
@@ -160,7 +160,7 @@ jobs:
       PERCY_PROJECT: crates-io/crates.io
 
     steps:
-      - uses: actions/checkout@v3.4.0
+      - uses: actions/checkout@v3.5.0
 
       - uses: pnpm/action-setup@v2.2.4
         with:
