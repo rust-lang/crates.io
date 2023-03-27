@@ -12,7 +12,7 @@ env:
   # renovate: datasource=crate depName=diesel_cli versioning=semver
   DIESEL_CLI_VERSION: 2.0.1
   # renovate: datasource=github-releases depName=rust lookupName=rust-lang/rust
-  RUST_VERSION: 1.68.0
+  RUST_VERSION: 1.68.1
 
 jobs:
   coverage:
