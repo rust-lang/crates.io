@@ -281,7 +281,7 @@ dependencies = [
  "heck",
  "proc-macro2",
  "quote",
- "syn 2.0.3",
+ "syn 2.0.8",
 ]
 
 [[package]]
@@ -606,15 +606,13 @@ dependencies = [
 
 [[package]]
 name = "comrak"
-version = "0.16.0"
+version = "0.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "784836d0812dade01579cc0cc9b1684847044e716fd7aa6bffbc172e42199500"
+checksum = "0c5a805f31fb098b1611170028501077ceb8c9e78f5345530f4fdefae9b61119"
 dependencies = [
  "entities",
  "memchr",
  "once_cell",
- "pest",
- "pest_derive",
  "regex",
  "slug",
  "typed-arena",
