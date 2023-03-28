@@ -19,8 +19,6 @@ use crate::views::{
     EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword, EncodableVersion,
 };
 
-use crate::models::krate::ALL_COLUMNS;
-
 /// Handles the `GET /summary` route.
 pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
     conduit_compat(move || {
@@ -61,7 +59,10 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
                 .collect()
         }
 
-        let selection = (ALL_COLUMNS, recent_crate_downloads::downloads.nullable());
+        let selection = (
+            Crate::as_select(),
+            recent_crate_downloads::downloads.nullable(),
+        );
 
         let new_crates = crates
             .left_join(recent_crate_downloads::table)
