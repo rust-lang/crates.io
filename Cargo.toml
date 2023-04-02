@@ -51,7 +51,7 @@ indexmap = { version = "=1.9.3", features = ["serde-1"] }
 indicatif = "=0.17.3"
 ipnetwork = "=0.20.0"
 tikv-jemallocator = { version = "=0.5.0", features = ['unprefixed_malloc_on_supported_platforms', 'profiling'] }
-lettre = { version = "=0.10.3", default-features = false, features = ["file-transport", "smtp-transport", "native-tls", "hostname", "builder"] }
+lettre = { version = "=0.10.4", default-features = false, features = ["file-transport", "smtp-transport", "native-tls", "hostname", "builder"] }
 minijinja = "=0.31.0"
 moka = { version = "=0.10.1", features = ["future"]  }
 oauth2 = { version = "=4.3.0", default-features = false, features = ["reqwest"] }
