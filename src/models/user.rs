@@ -6,7 +6,9 @@ use crate::app::App;
 use crate::email::Emails;
 use crate::util::errors::AppResult;
 
-use crate::models::{ApiToken, Crate, CrateOwner, Email, NewEmail, Owner, OwnerKind, Rights};
+use crate::models::{
+    helpers::admin, ApiToken, Crate, CrateOwner, Email, NewEmail, Owner, OwnerKind, Rights,
+};
 use crate::schema::{crate_owners, emails, users};
 
 /// The model representing a row in the `users` database table.
@@ -176,5 +178,50 @@ impl User {
             .select(emails::email)
             .first(conn)
             .optional()
+    }
+
+    /// Attempt to turn this user into an AdminUser
+    pub fn admin(&self) -> AppResult<AdminUser> {
+        AdminUser::new(self)
+    }
+}
+
+pub struct AdminUser(User);
+
+impl AdminUser {
+    pub fn new(user: &User) -> AppResult<Self> {
+        admin::is_authorized_admin(user.gh_login.as_str()).map(|_| Self(user.clone()))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn hardcoded_admins() {
+        let user = User {
+            id: 3,
+            gh_access_token: "arbitrary".into(),
+            gh_login: "literally_anything".into(),
+            name: None,
+            gh_avatar: None,
+            gh_id: 7,
+            account_lock_reason: None,
+            account_lock_until: None,
+        };
+        assert!(user.admin().is_err());
+
+        let sneaky_user = User {
+            gh_login: "carols10cents_plus_extra_stuff".into(),
+            ..user
+        };
+        assert!(sneaky_user.admin().is_err());
+
+        let real_real_real = User {
+            gh_login: "carols10cents".into(),
+            ..sneaky_user
+        };
+        assert!(real_real_real.admin().is_ok());
     }
 }

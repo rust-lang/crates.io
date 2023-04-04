@@ -474,6 +474,7 @@ dependencies = [
  "indicatif",
  "insta",
  "ipnetwork",
+ "lazy_static",
  "lettre",
  "minijinja",
  "moka",
