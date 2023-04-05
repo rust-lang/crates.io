@@ -186,6 +186,7 @@ impl User {
     }
 }
 
+#[derive(Debug)]
 pub struct AdminUser(User);
 
 impl AdminUser {

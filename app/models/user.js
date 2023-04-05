@@ -14,6 +14,7 @@ export default class User extends Model {
   @attr avatar;
   @attr url;
   @attr kind;
+  @attr admin;
 
   async stats() {
     return await apiAction(this, { method: 'GET', path: 'stats' });

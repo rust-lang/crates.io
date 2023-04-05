@@ -336,6 +336,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "axum-template"
+version = "0.15.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f926c4ca412af0a88bd119a6d214b026a0c98d8c763eaead70032628d3d0a549"
+dependencies = [
+ "axum",
+ "handlebars",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
 name = "backtrace"
 version = "0.3.67"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -447,6 +459,7 @@ dependencies = [
  "aws-sigv4",
  "axum",
  "axum-extra",
+ "axum-template",
  "base64 0.13.1",
  "cargo-registry-index",
  "cargo-registry-markdown",
@@ -465,6 +478,7 @@ dependencies = [
  "flate2",
  "futures-channel",
  "futures-util",
+ "handlebars",
  "hex",
  "http",
  "http-body",
@@ -1284,6 +1298,20 @@ dependencies = [
  "tokio",
  "tokio-util",
  "tracing",
+]
+
+[[package]]
+name = "handlebars"
+version = "4.3.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "035ef95d03713f2c347a72547b7cd38cbc9af7cd51e6099fb62d586d4a6dee3a"
+dependencies = [
+ "log",
+ "pest",
+ "pest_derive",
+ "serde",
+ "serde_json",
+ "thiserror",
 ]
 
 [[package]]
