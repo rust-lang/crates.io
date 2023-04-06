@@ -103,9 +103,9 @@ export default class Version extends Model {
     // trigger the async relationship to load the content
     let dependencies = await this.dependencies;
 
-    let normal = dependencies.filterBy('kind', 'normal').uniqBy('crate_id');
-    let build = dependencies.filterBy('kind', 'build').uniqBy('crate_id');
-    let dev = dependencies.filterBy('kind', 'dev').uniqBy('crate_id');
+    let normal = dependencies.filter(d => d.kind === 'normal');
+    let build = dependencies.filter(d => d.kind === 'build');
+    let dev = dependencies.filter(d => d.kind === 'dev');
 
     return { normal, build, dev };
   });
