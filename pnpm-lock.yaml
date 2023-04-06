@@ -289,6 +289,9 @@ devDependencies:
   qunit-dom:
     specifier: 2.0.0
     version: 2.0.0
+  tracked-built-ins:
+    specifier: 3.1.1
+    version: 3.1.1
   webpack:
     specifier: 5.77.0
     version: 5.77.0
@@ -7631,6 +7634,24 @@ packages:
       - supports-color
     dev: true
 
+  /ember-cli-typescript@5.2.1:
+    resolution: {integrity: sha512-qqp5TAIuPHxHiGXJKL+78Euyhy0zSKQMovPh8sJpN/ZBYx0H90pONufHR3anaMcp1snVfx4B+mb9+7ijOik8ZA==}
+    engines: {node: '>= 12.*'}
+    dependencies:
+      ansi-to-html: 0.6.15
+      broccoli-stew: 3.0.0
+      debug: 4.3.4(supports-color@8.1.1)
+      execa: 4.1.0
+      fs-extra: 9.1.0
+      resolve: 1.22.1
+      rsvp: 4.8.5
+      semver: 7.3.8
+      stagehand: 1.0.1
+      walk-sync: 2.2.0
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
   /ember-cli-version-checker@2.2.0:
     resolution: {integrity: sha512-G+KtYIVlSOWGcNaTFHk76xR4GdzDLzAS4uxZUKdASuFX0KJE43C6DaqL+y3VTpUFLI2FIkAS6HZ4I1YBi+S3hg==}
     engines: {node: '>= 4'}
@@ -8394,6 +8415,16 @@ packages:
       - supports-color
       - webpack-cli
       - webpack-command
+    dev: true
+
+  /ember-tracked-storage-polyfill@1.0.0:
+    resolution: {integrity: sha512-eL7lZat68E6P/D7b9UoTB5bB5Oh/0aju0Z7PCMi3aTwhaydRaxloE7TGrTRYU+NdJuyNVZXeGyxFxn2frvd3TA==}
+    engines: {node: 12.* || >= 14}
+    dependencies:
+      ember-cli-babel: 7.26.11
+      ember-cli-htmlbars: 5.7.2
+    transitivePeerDependencies:
+      - supports-color
     dev: true
 
   /ember-truth-helpers@3.1.1:
@@ -15316,6 +15347,17 @@ packages:
     engines: {node: '>=12'}
     dependencies:
       punycode: 2.3.0
+
+  /tracked-built-ins@3.1.1:
+    resolution: {integrity: sha512-W8qLBxZzeC2zhEDdbPKi2GTffsiFn8PRbgal/2Fl6E/84CMvnpS6cPMmkvUmSLgKbqcAxl/RhyjWnhIZ9iPQjQ==}
+    engines: {node: 14.* || 16.* || >= 18.*}
+    dependencies:
+      ember-cli-babel: 7.26.11
+      ember-cli-typescript: 5.2.1
+      ember-tracked-storage-polyfill: 1.0.0
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
 
   /tracked-toolbox@2.0.0(ember-source@4.12.0):
     resolution: {integrity: sha512-adZtX+RGN6F+pWs/5JqVuDxLhuia4uhqmQp+UlUaxpykWjDFETtAdQR+LdDJiFPXFAXnS6FBqn/tnSLJQCm3Yw==}
