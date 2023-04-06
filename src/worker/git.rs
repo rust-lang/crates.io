@@ -17,7 +17,7 @@ pub fn perform_index_add_crate(
     conn: &mut PgConnection,
     krate: &Crate,
 ) -> Result<(), PerformError> {
-    info!("Syncing git index to HTTP-based index");
+    info!("Adding {}#{} to the git index", krate.name, krate.vers);
 
     use std::io::prelude::*;
 
