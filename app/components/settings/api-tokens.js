@@ -4,7 +4,6 @@ import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 
 import { task } from 'ember-concurrency';
-import { filterBy, sortBy } from 'macro-decorators';
 
 export default class ApiTokens extends Component {
   @service store;
@@ -12,8 +11,9 @@ export default class ApiTokens extends Component {
 
   @tracked newToken;
 
-  @filterBy('args.tokens', 'isNew', false) filteredTokens;
-  @sortBy('filteredTokens', 'created_at', false) sortedTokens;
+  get sortedTokens() {
+    return this.args.tokens.filter(t => !t.isNew).sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+  }
 
   @action startNewToken() {
     this.newToken = this.store.createRecord('api-token');
@@ -24,7 +24,7 @@ export default class ApiTokens extends Component {
 
     try {
       await token.save();
-      this.args.tokens.unshiftObject(token);
+      this.args.tokens.unshift(token);
       this.newToken = undefined;
     } catch (error) {
       let msg =
@@ -39,7 +39,11 @@ export default class ApiTokens extends Component {
   revokeTokenTask = task(async token => {
     try {
       await token.destroyRecord();
-      this.args.tokens.removeObject(token);
+
+      let index = this.args.tokens.indexOf(token);
+      if (index !== -1) {
+        this.args.tokens.splice(index, 1);
+      }
     } catch (error) {
       let msg =
         error.errors && error.errors[0] && error.errors[0].detail
