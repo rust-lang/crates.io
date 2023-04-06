@@ -26,7 +26,7 @@ pub async fn serve_html<B: Send + 'static>(
     let path = &request.uri().path();
 
     // The "/git/" prefix is only used in development (when within a docker container)
-    if path.starts_with("/api/") || path.starts_with("/git/") {
+    if path.starts_with("/admin/") || path.starts_with("/api/") || path.starts_with("/git/") {
         next.run(request).await
     } else {
         if let Some(client) = &state.fastboot_client {

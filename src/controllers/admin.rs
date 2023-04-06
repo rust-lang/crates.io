@@ -4,7 +4,7 @@ use crate::{auth::AuthCheck, models::User, schema::users};
 
 use super::prelude::*;
 
-/// Handles the `GET /admin` route.
+/// Handles the `GET /admin/` route.
 pub async fn index(app: AppState, req: Parts) -> AppResult<Html<String>> {
     tracing::warn!("in admin index");
 
