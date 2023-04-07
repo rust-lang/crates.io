@@ -110,8 +110,8 @@ devDependencies:
     specifier: 2.6.3
     version: 2.6.3(webpack@5.77.0)
   ember-cli:
-    specifier: 4.11.0
-    version: 4.11.0
+    specifier: 4.12.0
+    version: 4.12.0
   ember-cli-app-version:
     specifier: 6.0.0
     version: 6.0.0(ember-source@4.12.0)
@@ -126,7 +126,7 @@ devDependencies:
     version: 2.0.0
   ember-cli-dependency-checker:
     specifier: 3.3.1
-    version: 3.3.1(ember-cli@4.11.0)
+    version: 3.3.1(ember-cli@4.12.0)
   ember-cli-dependency-lint:
     specifier: 2.0.1
     version: 2.0.1
@@ -7320,14 +7320,14 @@ packages:
       - utf-8-validate
     dev: true
 
-  /ember-cli-dependency-checker@3.3.1(ember-cli@4.11.0):
+  /ember-cli-dependency-checker@3.3.1(ember-cli@4.12.0):
     resolution: {integrity: sha512-Tg6OeijjXNKWkDm6057Tr0N9j9Vlz/ITewXWpn1A/+Wbt3EowBx5ZKfvoupqz05EznKgL1B/ecG0t+JN7Qm6MA==}
     engines: {node: '>= 6'}
     peerDependencies:
       ember-cli: ^3.2.0 || ^4.0.0
     dependencies:
       chalk: 2.4.2
-      ember-cli: 4.11.0
+      ember-cli: 4.12.0
       find-yarn-workspace-root: 1.2.1
       is-git-url: 1.0.0
       resolve: 1.22.1
@@ -7687,8 +7687,8 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /ember-cli@4.11.0:
-    resolution: {integrity: sha512-X0Ep67O/r2nCViILV8wEvI0xiRlLRS8GgeDklQ3SvDXQp2d3xbI8ARW76pcb1du39HPgIi0G6F/OpJ1uOr4ZQQ==}
+  /ember-cli@4.12.0:
+    resolution: {integrity: sha512-4b8F6w1xwyLaukiNIq+LzqgaMXEIj1gib/OeCCqLtav4tnOgcj5xKtZ6ZRypUZq92BoSN7j5Tq21Z1kWWcMsZQ==}
     engines: {node: '>= 14'}
     hasBin: true
     dependencies:
@@ -7729,7 +7729,6 @@ packages:
       ember-cli-normalize-entity-name: 1.0.0
       ember-cli-preprocess-registry: 3.3.0
       ember-cli-string-utils: 1.1.0
-      ember-source-channel-url: 3.0.0
       ensure-posix-path: 1.1.1
       execa: 5.1.1
       exit: 0.1.2
@@ -7738,7 +7737,7 @@ packages:
       find-up: 5.0.0
       find-yarn-workspace-root: 2.0.0
       fixturify-project: 2.1.1
-      fs-extra: 10.1.0
+      fs-extra: 11.1.1
       fs-tree-diff: 2.0.1
       get-caller-file: 2.0.5
       git-repo-info: 2.1.1
@@ -7758,7 +7757,7 @@ packages:
       lodash.template: 4.5.0
       markdown-it: 13.0.1
       markdown-it-terminal: 0.4.0(markdown-it@13.0.1)
-      minimatch: 5.1.6
+      minimatch: 7.4.5
       morgan: 1.10.0
       nopt: 3.0.6
       npm-package-arg: 10.1.0
@@ -7781,7 +7780,7 @@ packages:
       testem: 3.10.1
       tiny-lr: 2.0.0
       tree-sync: 2.1.0
-      uuid: 8.3.2
+      uuid: 9.0.0
       walk-sync: 3.0.0
       watch-detector: 1.0.2
       workerpool: 6.4.0
@@ -7801,7 +7800,6 @@ packages:
       - eco
       - ect
       - ejs
-      - encoding
       - haml-coffee
       - hamlet
       - hamljs
@@ -8233,16 +8231,6 @@ packages:
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
-    dev: true
-
-  /ember-source-channel-url@3.0.0:
-    resolution: {integrity: sha512-vF/8BraOc66ZxIDo3VuNP7iiDrnXEINclJgSJmqwAAEpg84Zb1DHPI22XTXSDA+E8fW5btPUxu65c3ZXi8AQFA==}
-    engines: {node: 10.* || 12.* || >= 14}
-    hasBin: true
-    dependencies:
-      node-fetch: 2.6.9
-    transitivePeerDependencies:
-      - encoding
     dev: true
 
   /ember-source@4.12.0(@glimmer/component@1.1.2)(webpack@5.77.0):
@@ -9641,6 +9629,15 @@ packages:
       graceful-fs: 4.2.11
       jsonfile: 6.1.0
       universalify: 2.0.0
+
+  /fs-extra@11.1.1:
+    resolution: {integrity: sha512-MGIE4HOvQCeUCzmlHs0vXpih4ysz4wg9qiSAu6cd42lVwPbTM1TjV7RusoyQqMmk/95gdQZX72u+YW+c3eEpFQ==}
+    engines: {node: '>=14.14'}
+    dependencies:
+      graceful-fs: 4.2.11
+      jsonfile: 6.1.0
+      universalify: 2.0.0
+    dev: true
 
   /fs-extra@4.0.3:
     resolution: {integrity: sha512-q6rbdDd1o2mAnQreO7YADIxf/Whx4AHBiRf6d+/cVT8h44ss+lHgxf1FemcqDnQt9X3ct4McHr+JMGlYSsK7Cg==}
@@ -12009,6 +12006,13 @@ packages:
 
   /minimatch@5.1.6:
     resolution: {integrity: sha512-lKwV/1brpG6mBUFHtb7NUmtABCb2WZZmm2wNiOA5hAb8VdCS4B3dtMWyvcoViccwAW/COERjXLt0zP1zXUN26g==}
+    engines: {node: '>=10'}
+    dependencies:
+      brace-expansion: 2.0.1
+    dev: true
+
+  /minimatch@7.4.5:
+    resolution: {integrity: sha512-OzOamaOmNBJZUv2qqY1OSWa+++4YPpOkLgkc0w30Oov5ufKlWWXnFUl0l4dgmSv5Shq/zRVkEOXAe2NaqO4l5Q==}
     engines: {node: '>=10'}
     dependencies:
       brace-expansion: 2.0.1
@@ -15684,6 +15688,11 @@ packages:
 
   /uuid@8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
+    hasBin: true
+    dev: true
+
+  /uuid@9.0.0:
+    resolution: {integrity: sha512-MXcSTerfPa4uqyzStbRoTgt5XIe3x5+42+q1sDuy3R5MDk66URdLMOZe5aPX/SQd+kuYAh0FdP/pO28IkQyTeg==}
     hasBin: true
     dev: true
 
