@@ -30,7 +30,6 @@ pub fn init() {
 pub fn event_filter(metadata: &Metadata<'_>) -> EventFilter {
     match metadata.level() {
         &Level::ERROR if metadata.target() == "http" => EventFilter::Breadcrumb,
-        &Level::ERROR if metadata.target() == "conduit_axum::fallback" => EventFilter::Ignore,
         &Level::ERROR => EventFilter::Exception,
         &Level::WARN | &Level::INFO => EventFilter::Breadcrumb,
         &Level::DEBUG | &Level::TRACE => EventFilter::Ignore,
