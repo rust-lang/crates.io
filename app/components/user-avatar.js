@@ -20,7 +20,7 @@ export default class UserAvatar extends Component {
   get title() {
     let user = this.args.user;
 
-    if (user.kind === 'user') {
+    if (!user.kind || user.kind === 'user') {
       return user.name;
     } else if (user.kind === 'team') {
       return `${user.name} team`;
