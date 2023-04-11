@@ -20,16 +20,12 @@ export default class UserAvatar extends Component {
   get title() {
     let user = this.args.user;
 
-    switch (user.kind) {
-      case 'user': {
-        return user.name;
-      }
-      case 'team': {
-        return `${user.name} team`;
-      }
-      default: {
-        return `${user.name} (${user.kind})`;
-      }
+    if (user.kind === 'user') {
+      return user.name;
+    } else if (user.kind === 'team') {
+      return `${user.name} team`;
+    } else {
+      return `${user.name} (${user.kind})`;
     }
   }
 
