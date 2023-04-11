@@ -5,8 +5,9 @@ use diesel::serialize::{self, IsNull, Output, ToSql};
 use diesel::sql_types::Text;
 use std::io::Write;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, AsExpression)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, AsExpression, Serialize)]
 #[diesel(sql_type = Text)]
+#[serde(rename_all = "kebab-case")]
 pub enum EndpointScope {
     PublishNew,
     PublishUpdate,
@@ -124,6 +125,18 @@ impl CrateScope {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn endpoint_scope_serialization() {
+        fn assert(scope: EndpointScope, expected: &str) {
+            assert_ok_eq!(serde_json::to_string(&scope), expected);
+        }
+
+        assert(EndpointScope::ChangeOwners, "\"change-owners\"");
+        assert(EndpointScope::PublishNew, "\"publish-new\"");
+        assert(EndpointScope::PublishUpdate, "\"publish-update\"");
+        assert(EndpointScope::Yank, "\"yank\"");
+    }
 
     #[test]
     fn crate_scope_validation() {
