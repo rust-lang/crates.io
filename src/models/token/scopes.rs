@@ -54,7 +54,8 @@ impl FromSql<Text, Pg> for EndpointScope {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(transparent)]
 pub struct CrateScope {
     pattern: String,
 }
@@ -136,6 +137,22 @@ mod tests {
         assert(EndpointScope::PublishNew, "\"publish-new\"");
         assert(EndpointScope::PublishUpdate, "\"publish-update\"");
         assert(EndpointScope::Yank, "\"yank\"");
+    }
+
+    #[test]
+    fn crate_scope_serialization() {
+        fn assert(scope: &str, expected: &str) {
+            let scope = assert_ok!(CrateScope::try_from(scope));
+            assert_ok_eq!(serde_json::to_string(&scope), expected);
+        }
+
+        assert("foo", "\"foo\"");
+        assert("foo*", "\"foo*\"");
+        assert("f*", "\"f*\"");
+        assert("*", "\"*\"");
+        assert("foo-bar", "\"foo-bar\"");
+        assert("foo_bar", "\"foo_bar\"");
+        assert("FooBar", "\"FooBar\"");
     }
 
     #[test]
