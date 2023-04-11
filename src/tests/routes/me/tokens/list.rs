@@ -1,17 +1,7 @@
-use crate::routes::me::tokens::delete::RevokedResponse;
+use crate::util::insta::{self, assert_yaml_snapshot};
 use crate::util::{RequestHelper, TestApp};
 use cargo_registry::models::ApiToken;
-use std::collections::HashSet;
-
-#[derive(Deserialize)]
-struct DecodableApiToken {
-    name: String,
-}
-
-#[derive(Deserialize)]
-struct ListResponse {
-    api_tokens: Vec<DecodableApiToken>,
-}
+use http::StatusCode;
 
 #[test]
 fn list_logged_out() {
@@ -28,33 +18,31 @@ fn list_with_api_token_is_forbidden() {
 #[test]
 fn list_empty() {
     let (_, _, user) = TestApp::init().with_user();
-    let json: ListResponse = user.get("/api/v1/me/tokens").good();
-    assert_eq!(json.api_tokens.len(), 0);
+    let response = user.get::<()>("/api/v1/me/tokens");
+    assert_eq!(response.status(), StatusCode::OK);
+    let json = response.into_json();
+    let response_tokens = json["api_tokens"].as_array().unwrap();
+    assert_eq!(response_tokens.len(), 0);
 }
 
 #[test]
 fn list_tokens() {
     let (app, _, user) = TestApp::init().with_user();
     let id = user.as_model().id;
-    let tokens = app.db(|conn| {
+    app.db(|conn| {
         vec![
             assert_ok!(ApiToken::insert(conn, id, "bar")),
             assert_ok!(ApiToken::insert(conn, id, "baz")),
         ]
     });
 
-    let json: ListResponse = user.get("/api/v1/me/tokens").good();
-    assert_eq!(json.api_tokens.len(), tokens.len());
-    assert_eq!(
-        json.api_tokens
-            .into_iter()
-            .map(|t| t.name)
-            .collect::<HashSet<_>>(),
-        tokens
-            .into_iter()
-            .map(|t| t.model.name)
-            .collect::<HashSet<_>>()
-    );
+    let response = user.get::<()>("/api/v1/me/tokens");
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_yaml_snapshot!(response.into_json(), {
+        ".api_tokens[].id" => insta::any_id_redaction(),
+        ".api_tokens[].created_at" => "[datetime]",
+        ".api_tokens[].last_used_at" => "[datetime]",
+    });
 }
 
 #[test]
@@ -69,19 +57,21 @@ fn list_tokens_exclude_revoked() {
     });
 
     // List tokens expecting them all to be there.
-    let json: ListResponse = user.get("/api/v1/me/tokens").good();
-    assert_eq!(json.api_tokens.len(), tokens.len());
+    let response = user.get::<()>("/api/v1/me/tokens");
+    assert_eq!(response.status(), StatusCode::OK);
+    let json = response.into_json();
+    let response_tokens = json["api_tokens"].as_array().unwrap();
+    assert_eq!(response_tokens.len(), 2);
 
     // Revoke the first token.
-    let _json: RevokedResponse = user
-        .delete(&format!("/api/v1/me/tokens/{}", tokens[0].model.id))
-        .good();
+    let response = user.delete::<()>(&format!("/api/v1/me/tokens/{}", tokens[0].model.id));
+    assert_eq!(response.status(), StatusCode::OK);
 
     // Check that we now have one less token being listed.
-    let json: ListResponse = user.get("/api/v1/me/tokens").good();
-    assert_eq!(json.api_tokens.len(), tokens.len() - 1);
-    assert!(!json
-        .api_tokens
-        .iter()
-        .any(|token| token.name == tokens[0].model.name));
+    let response = user.get::<()>("/api/v1/me/tokens");
+    assert_eq!(response.status(), StatusCode::OK);
+    let json = response.into_json();
+    let response_tokens = json["api_tokens"].as_array().unwrap();
+    assert_eq!(response_tokens.len(), 1);
+    assert_eq!(response_tokens[0]["name"], json!("baz"));
 }

@@ -1,0 +1,14 @@
+---
+source: src/tests/routes/me/tokens/list.rs
+expression: response.into_json()
+---
+api_tokens:
+  - created_at: "[datetime]"
+    id: "[id]"
+    last_used_at: "[datetime]"
+    name: bar
+  - created_at: "[datetime]"
+    id: "[id]"
+    last_used_at: "[datetime]"
+    name: baz
+
