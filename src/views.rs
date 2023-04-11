@@ -2,10 +2,9 @@ use chrono::NaiveDateTime;
 use url::Url;
 
 use crate::github;
-use crate::models::token::{CrateScope, EndpointScope};
 use crate::models::{
-    Category, Crate, CrateOwnerInvitation, CreatedApiToken, Dependency, DependencyKind, Keyword,
-    Owner, ReverseDependency, Team, TopVersions, User, Version, VersionDownload,
+    ApiToken, Category, Crate, CrateOwnerInvitation, CreatedApiToken, Dependency, DependencyKind,
+    Keyword, Owner, ReverseDependency, Team, TopVersions, User, Version, VersionDownload,
     VersionOwnerAction,
 };
 use crate::util::rfc3339;
@@ -470,29 +469,17 @@ impl From<Team> for EncodableTeam {
 /// the chance of token leaks.
 #[derive(Serialize, Debug)]
 pub struct EncodableApiTokenWithToken {
-    pub id: i32,
-    pub name: String,
-    pub token: String,
-    #[serde(with = "rfc3339")]
-    pub created_at: NaiveDateTime,
-    #[serde(with = "rfc3339::option")]
-    pub last_used_at: Option<NaiveDateTime>,
-    /// `None` or a list of crate scope patterns (see RFC #2947)
-    pub crate_scopes: Option<Vec<CrateScope>>,
-    /// A list of endpoint scopes or `None` for the `legacy` endpoint scope (see RFC #2947)
-    pub endpoint_scopes: Option<Vec<EndpointScope>>,
+    #[serde(flatten)]
+    pub token: ApiToken,
+    #[serde(rename = "token")]
+    pub plaintext: String,
 }
 
 impl From<CreatedApiToken> for EncodableApiTokenWithToken {
     fn from(token: CreatedApiToken) -> Self {
         EncodableApiTokenWithToken {
-            id: token.model.id,
-            name: token.model.name,
-            token: token.plaintext,
-            created_at: token.model.created_at,
-            last_used_at: token.model.last_used_at,
-            crate_scopes: token.model.crate_scopes,
-            endpoint_scopes: token.model.endpoint_scopes,
+            token: token.model,
+            plaintext: token.plaintext,
         }
     }
 }

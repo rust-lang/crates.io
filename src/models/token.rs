@@ -104,7 +104,6 @@ impl std::fmt::Debug for CreatedApiToken {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::views::EncodableApiTokenWithToken;
     use chrono::NaiveDate;
 
     #[test]
@@ -115,34 +114,6 @@ mod tests {
             token: SecureToken::generate(SecureTokenKind::Api).into_inner(),
             revoked: false,
             name: "".to_string(),
-            created_at: NaiveDate::from_ymd_opt(2017, 1, 6)
-                .unwrap()
-                .and_hms_opt(14, 23, 11)
-                .unwrap(),
-            last_used_at: Some(
-                NaiveDate::from_ymd_opt(2017, 1, 6)
-                    .unwrap()
-                    .and_hms_opt(14, 23, 12),
-            )
-            .unwrap(),
-            crate_scopes: None,
-            endpoint_scopes: None,
-        };
-        let json = serde_json::to_string(&tok).unwrap();
-        assert_some!(json
-            .as_str()
-            .find(r#""created_at":"2017-01-06T14:23:11+00:00""#));
-        assert_some!(json
-            .as_str()
-            .find(r#""last_used_at":"2017-01-06T14:23:12+00:00""#));
-    }
-
-    #[test]
-    fn encodeable_api_token_with_token_serializes_to_rfc3339() {
-        let tok = EncodableApiTokenWithToken {
-            id: 12345,
-            name: "".to_string(),
-            token: "".to_string(),
             created_at: NaiveDate::from_ymd_opt(2017, 1, 6)
                 .unwrap()
                 .and_hms_opt(14, 23, 11)
