@@ -1,5 +1,6 @@
 use crate::util::insta::{self, assert_yaml_snapshot};
 use crate::util::{RequestHelper, TestApp};
+use cargo_registry::models::token::{CrateScope, EndpointScope};
 use cargo_registry::models::ApiToken;
 use http::StatusCode;
 
@@ -32,7 +33,16 @@ fn list_tokens() {
     app.db(|conn| {
         vec![
             assert_ok!(ApiToken::insert(conn, id, "bar")),
-            assert_ok!(ApiToken::insert(conn, id, "baz")),
+            assert_ok!(ApiToken::insert_with_scopes(
+                conn,
+                id,
+                "baz",
+                Some(vec![
+                    CrateScope::try_from("serde").unwrap(),
+                    CrateScope::try_from("serde-*").unwrap()
+                ]),
+                Some(vec![EndpointScope::PublishUpdate])
+            )),
         ]
     });
 

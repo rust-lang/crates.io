@@ -27,10 +27,8 @@ pub struct ApiToken {
     #[serde(skip)]
     pub revoked: bool,
     /// `None` or a list of crate scope patterns (see RFC #2947)
-    #[serde(skip)]
     pub crate_scopes: Option<Vec<CrateScope>>,
     /// A list of endpoint scopes or `None` for the `legacy` endpoint scope (see RFC #2947)
-    #[serde(skip)]
     pub endpoint_scopes: Option<Vec<EndpointScope>>,
 }
 
