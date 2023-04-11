@@ -1,3 +1,4 @@
+use anyhow::{anyhow, Context};
 use std::{
     fs::{self, File},
     path::{Path, PathBuf},
@@ -50,26 +51,40 @@ pub struct DumpDirectory {
 }
 
 impl DumpDirectory {
-    pub fn create() -> Result<Self, PerformError> {
+    pub fn create() -> anyhow::Result<Self> {
         let timestamp = chrono::Utc::now();
         let timestamp_str = timestamp.format("%Y-%m-%d-%H%M%S").to_string();
         let export_dir = std::env::temp_dir().join("dump-db").join(timestamp_str);
+
         debug!(?export_dir, "Creating database dump folder…");
-        std::fs::create_dir_all(&export_dir)?;
+        fs::create_dir_all(&export_dir).with_context(|| {
+            format!(
+                "Failed to create export directory: {}",
+                export_dir.display()
+            )
+        })?;
+
         Ok(Self {
             timestamp,
             export_dir,
         })
     }
 
-    pub fn populate(&self, database_url: &str) -> Result<(), PerformError> {
-        self.add_readme()?;
-        self.add_metadata()?;
-        self.dump_schema(database_url)?;
+    pub fn populate(&self, database_url: &str) -> anyhow::Result<()> {
+        self.add_readme()
+            .context("Failed to write README.md file")?;
+
+        self.add_metadata()
+            .context("Failed to write metadata.json file")?;
+
+        self.dump_schema(database_url)
+            .context("Failed to generate schema.sql file")?;
+
         self.dump_db(database_url)
+            .context("Failed to create database dump")
     }
 
-    fn add_readme(&self) -> Result<(), PerformError> {
+    fn add_readme(&self) -> anyhow::Result<()> {
         use std::io::Write;
 
         let path = self.export_dir.join("README.md");
@@ -79,7 +94,7 @@ impl DumpDirectory {
         Ok(())
     }
 
-    fn add_metadata(&self) -> Result<(), PerformError> {
+    fn add_metadata(&self) -> anyhow::Result<()> {
         #[derive(Serialize)]
         struct Metadata<'a> {
             timestamp: &'a chrono::DateTime<chrono::Utc>,
@@ -97,10 +112,11 @@ impl DumpDirectory {
         Ok(())
     }
 
-    pub fn dump_schema(&self, database_url: &str) -> Result<(), PerformError> {
+    pub fn dump_schema(&self, database_url: &str) -> anyhow::Result<()> {
         let path = self.export_dir.join("schema.sql");
         debug!(?path, "Writing schema.sql file…");
-        let schema_sql = File::create(path)?;
+        let schema_sql =
+            File::create(&path).with_context(|| format!("Failed to create {}", path.display()))?;
 
         let status = std::process::Command::new("pg_dump")
             .arg("--schema-only")
@@ -108,22 +124,32 @@ impl DumpDirectory {
             .arg("--no-acl")
             .arg(database_url)
             .stdout(schema_sql)
-            .spawn()?
-            .wait()?;
+            .spawn()
+            .context("Failed to run `pg_dump` command")?
+            .wait()
+            .context("Failed to wait for `pg_dump` to exit")?;
+
         if !status.success() {
-            return Err("pg_dump did not finish successfully.".into());
+            return Err(anyhow!(
+                "pg_dump did not finish successfully (exit code: {}).",
+                status
+            ));
         }
+
         Ok(())
     }
 
-    pub fn dump_db(&self, database_url: &str) -> Result<(), PerformError> {
+    pub fn dump_db(&self, database_url: &str) -> anyhow::Result<()> {
         debug!("Generating export.sql and import.sql files…");
         let export_script = self.export_dir.join("export.sql");
         let import_script = self.export_dir.join("import.sql");
-        gen_scripts::gen_scripts(&export_script, &import_script)?;
+        gen_scripts::gen_scripts(&export_script, &import_script)
+            .context("Failed to generate export/import scripts")?;
 
         debug!("Filling data folder…");
-        std::fs::create_dir(self.export_dir.join("data"))?;
+        fs::create_dir(self.export_dir.join("data"))
+            .context("Failed to create `data` directory")?;
+
         run_psql(&export_script, database_url)
     }
 }
@@ -134,23 +160,30 @@ impl Drop for DumpDirectory {
     }
 }
 
-pub fn run_psql(script: &Path, database_url: &str) -> Result<(), PerformError> {
+pub fn run_psql(script: &Path, database_url: &str) -> anyhow::Result<()> {
     debug!(?script, "Running psql script…");
-    let psql_script = File::open(script)?;
+    let psql_script =
+        File::open(script).with_context(|| format!("Failed to open {}", script.display()))?;
+
     let psql = std::process::Command::new("psql")
         .arg(database_url)
         .current_dir(script.parent().unwrap())
         .stdin(psql_script)
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::piped())
-        .spawn()?;
-    let output = psql.wait_with_output()?;
+        .spawn()
+        .context("Failed to run psql command")?;
+
+    let output = psql
+        .wait_with_output()
+        .context("Failed to wait for psql command to exit")?;
+
     let stderr = String::from_utf8_lossy(&output.stderr);
     if stderr.contains("ERROR") {
-        return Err(format!("Error while executing psql: {stderr}").into());
+        return Err(anyhow!("Error while executing psql: {stderr}"));
     }
     if !output.status.success() {
-        return Err("psql did not finish successfully.".into());
+        return Err(anyhow!("psql did not finish successfully."));
     }
     Ok(())
 }

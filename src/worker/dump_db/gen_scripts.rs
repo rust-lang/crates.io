@@ -1,12 +1,12 @@
+use anyhow::Context;
 use std::{fs::File, path::Path};
 
-use crate::swirl::PerformError;
 use crate::worker::dump_db::configuration::{ColumnVisibility, TableConfig, VisibilityConfig};
 
-pub fn gen_scripts(export_script: &Path, import_script: &Path) -> Result<(), PerformError> {
+pub fn gen_scripts(export_script: &Path, import_script: &Path) -> anyhow::Result<()> {
     let config = VisibilityConfig::get();
-    let export_sql = File::create(export_script)?;
-    let import_sql = File::create(import_script)?;
+    let export_sql = File::create(export_script).context("Failed to create export script file")?;
+    let import_sql = File::create(import_script).context("Failed to create import script file")?;
     config.gen_psql_scripts(export_sql, import_sql)
 }
 
@@ -72,19 +72,17 @@ impl VisibilityConfig {
         TemplateContext { tables }
     }
 
-    fn gen_psql_scripts<W>(
-        &self,
-        mut export_writer: W,
-        mut import_writer: W,
-    ) -> Result<(), PerformError>
+    fn gen_psql_scripts<W>(&self, mut export_writer: W, mut import_writer: W) -> anyhow::Result<()>
     where
         W: std::io::Write,
     {
         use minijinja::Environment;
 
         let mut env = Environment::new();
-        env.add_template("dump-export.sql", include_str!("dump-export.sql.j2"))?;
-        env.add_template("dump-import.sql", include_str!("dump-import.sql.j2"))?;
+        env.add_template("dump-export.sql", include_str!("dump-export.sql.j2"))
+            .context("Failed to load dump-export.sql.j2 template")?;
+        env.add_template("dump-import.sql", include_str!("dump-import.sql.j2"))
+            .context("Failed to load dump-import.sql.j2 template")?;
 
         let context = self.template_context();
 
@@ -92,19 +90,25 @@ impl VisibilityConfig {
         let export_sql = env
             .get_template("dump-export.sql")
             .unwrap()
-            .render(&context)?;
+            .render(&context)
+            .context("Failed to render dump-export.sql file")?;
 
         debug!("Rendering dump-import.sql file…");
         let import_sql = env
             .get_template("dump-import.sql")
             .unwrap()
-            .render(&context)?;
+            .render(&context)
+            .context("Failed to render dump-import.sql file")?;
 
         debug!("Writing dump-export.sql file…");
-        export_writer.write_all(export_sql.as_bytes())?;
+        export_writer
+            .write_all(export_sql.as_bytes())
+            .context("Failed to write dump-export.sql file")?;
 
         debug!("Writing dump-import.sql file…");
-        import_writer.write_all(import_sql.as_bytes())?;
+        import_writer
+            .write_all(import_sql.as_bytes())
+            .context("Failed to write dump-import.sql file")?;
 
         Ok(())
     }
