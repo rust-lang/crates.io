@@ -13,7 +13,12 @@ module('Mirage | GET /api/v1/me/tokens', function (hooks) {
     let user = this.server.create('user');
     this.server.create('mirage-session', { user });
 
-    this.server.create('api-token', { user, createdAt: '2017-11-19T12:59:22Z' });
+    this.server.create('api-token', {
+      user,
+      createdAt: '2017-11-19T12:59:22Z',
+      crateScopes: ['serde', 'serde-*'],
+      endpointScopes: ['publish-update'],
+    });
     this.server.create('api-token', { user, createdAt: '2017-11-19T13:59:22Z' });
     this.server.create('api-token', { user, createdAt: '2017-11-19T14:59:22Z' });
 
@@ -23,19 +28,25 @@ module('Mirage | GET /api/v1/me/tokens', function (hooks) {
       api_tokens: [
         {
           id: 3,
+          crate_scopes: null,
           created_at: '2017-11-19T14:59:22.000Z',
+          endpoint_scopes: null,
           last_used_at: null,
           name: 'API Token 3',
         },
         {
           id: 2,
+          crate_scopes: null,
           created_at: '2017-11-19T13:59:22.000Z',
+          endpoint_scopes: null,
           last_used_at: null,
           name: 'API Token 2',
         },
         {
           id: 1,
+          crate_scopes: ['serde', 'serde-*'],
           created_at: '2017-11-19T12:59:22.000Z',
+          endpoint_scopes: ['publish-update'],
           last_used_at: null,
           name: 'API Token 1',
         },

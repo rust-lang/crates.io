@@ -37,8 +37,14 @@ export function register(server) {
       return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
     }
 
-    let { name } = this.normalizedRequestAttrs('api-token');
-    let token = server.create('api-token', { user, name, createdAt: new Date().toISOString() });
+    let { name, crateScopes = null, endpointScopes = null } = this.normalizedRequestAttrs('api-token');
+    let token = server.create('api-token', {
+      user,
+      name,
+      crateScopes,
+      endpointScopes,
+      createdAt: new Date().toISOString(),
+    });
 
     let json = this.serialize(token);
     json.api_token.revoked = false;
