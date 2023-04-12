@@ -5,8 +5,9 @@ use diesel::serialize::{self, IsNull, Output, ToSql};
 use diesel::sql_types::Text;
 use std::io::Write;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, AsExpression)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, AsExpression, Serialize)]
 #[diesel(sql_type = Text)]
+#[serde(rename_all = "kebab-case")]
 pub enum EndpointScope {
     PublishNew,
     PublishUpdate,
@@ -53,7 +54,8 @@ impl FromSql<Text, Pg> for EndpointScope {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(transparent)]
 pub struct CrateScope {
     pattern: String,
 }
@@ -124,6 +126,34 @@ impl CrateScope {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn endpoint_scope_serialization() {
+        fn assert(scope: EndpointScope, expected: &str) {
+            assert_ok_eq!(serde_json::to_string(&scope), expected);
+        }
+
+        assert(EndpointScope::ChangeOwners, "\"change-owners\"");
+        assert(EndpointScope::PublishNew, "\"publish-new\"");
+        assert(EndpointScope::PublishUpdate, "\"publish-update\"");
+        assert(EndpointScope::Yank, "\"yank\"");
+    }
+
+    #[test]
+    fn crate_scope_serialization() {
+        fn assert(scope: &str, expected: &str) {
+            let scope = assert_ok!(CrateScope::try_from(scope));
+            assert_ok_eq!(serde_json::to_string(&scope), expected);
+        }
+
+        assert("foo", "\"foo\"");
+        assert("foo*", "\"foo*\"");
+        assert("f*", "\"f*\"");
+        assert("*", "\"*\"");
+        assert("foo-bar", "\"foo-bar\"");
+        assert("foo_bar", "\"foo_bar\"");
+        assert("FooBar", "\"FooBar\"");
+    }
 
     #[test]
     fn crate_scope_validation() {

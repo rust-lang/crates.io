@@ -1,0 +1,21 @@
+---
+source: src/tests/routes/me/tokens/list.rs
+expression: response.into_json()
+---
+api_tokens:
+  - crate_scopes: ~
+    created_at: "[datetime]"
+    endpoint_scopes: ~
+    id: "[id]"
+    last_used_at: "[datetime]"
+    name: bar
+  - crate_scopes:
+      - serde
+      - serde-*
+    created_at: "[datetime]"
+    endpoint_scopes:
+      - publish-update
+    id: "[id]"
+    last_used_at: "[datetime]"
+    name: baz
+
