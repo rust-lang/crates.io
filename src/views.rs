@@ -2,6 +2,7 @@ use chrono::NaiveDateTime;
 use url::Url;
 
 use crate::github;
+use crate::models::token::{CrateScope, EndpointScope};
 use crate::models::{
     Category, Crate, CrateOwnerInvitation, CreatedApiToken, Dependency, DependencyKind, Keyword,
     Owner, ReverseDependency, Team, TopVersions, User, Version, VersionDownload,
@@ -477,6 +478,10 @@ pub struct EncodableApiTokenWithToken {
     pub created_at: NaiveDateTime,
     #[serde(with = "rfc3339::option")]
     pub last_used_at: Option<NaiveDateTime>,
+    /// `None` or a list of crate scope patterns (see RFC #2947)
+    pub crate_scopes: Option<Vec<CrateScope>>,
+    /// A list of endpoint scopes or `None` for the `legacy` endpoint scope (see RFC #2947)
+    pub endpoint_scopes: Option<Vec<EndpointScope>>,
 }
 
 impl From<CreatedApiToken> for EncodableApiTokenWithToken {
@@ -488,6 +493,8 @@ impl From<CreatedApiToken> for EncodableApiTokenWithToken {
             revoked: token.model.revoked,
             created_at: token.model.created_at,
             last_used_at: token.model.last_used_at,
+            crate_scopes: token.model.crate_scopes,
+            endpoint_scopes: token.model.endpoint_scopes,
         }
     }
 }
