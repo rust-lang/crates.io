@@ -363,10 +363,8 @@ fn replay_http(
 
     async {
         let _ = &exchange;
-        assert_eq!(
-            to_bytes(req.into_body()).await.unwrap(),
-            base64::decode(&exchange.request.body).unwrap()
-        );
+        let body = base64::encode(to_bytes(req.into_body()).await.unwrap());
+        assert_eq!(&exchange.request.body, &body,);
 
         let mut builder = Response::builder();
         for (key, value) in exchange.response.headers {
