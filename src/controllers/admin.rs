@@ -1,6 +1,7 @@
 use axum_template::RenderHtml;
+use chrono::NaiveDateTime;
 
-use crate::{extractors::admin::AdminUser, views::admin::krates::CrateVersion};
+use crate::{extractors::admin::AdminUser, views::admin::{krates::CrateVersion, templating::components}};
 
 use super::prelude::*;
 
@@ -37,10 +38,12 @@ pub async fn index(app: AppState, _user: AdminUser) -> AppResult<impl IntoRespon
                     CrateVersion {
                         id,
                         num,
-                        created_at,
+                        created_at: NaiveDateTime::into(created_at),
                         name,
-                        published_by_username,
-                        published_by_avatar,
+                        publisher: components::User::new(
+                            published_by_username,
+                            published_by_avatar,
+                        ),
                     }
                 },
             )

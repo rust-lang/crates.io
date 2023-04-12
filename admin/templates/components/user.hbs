@@ -1,0 +1,13 @@
+<a href='/users/{{this.username}}'>
+  {{#if this.avatar}}
+    <img
+      src='{{this.avatar}}'
+      alt='{{this.username}}'
+      aria-hidden='true'
+      width='32'
+      height='32'
+      class='d-inline-block me-1'
+    />
+  {{~/if~}}
+  {{~this.username}}
+</a>

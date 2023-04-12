@@ -4,6 +4,9 @@ use axum_template::engine::Engine;
 use handlebars::{handlebars_helper, Handlebars, TemplateError};
 use thiserror::Error;
 
+pub mod components;
+mod helpers;
+
 #[derive(rust_embed::RustEmbed)]
 #[folder = "admin/templates/"]
 struct Assets;
@@ -79,18 +82,6 @@ impl From<TemplateError> for Error {
     fn from(value: TemplateError) -> Self {
         // TemplateError is big, so we box it to avoid clippy warnings.
         Self::Template(Box::new(value))
-    }
-}
-
-mod helpers {
-    use cargo_registry_index::Repository;
-
-    pub(super) fn crate_index_path(name: &str) -> String {
-        String::from(
-            Repository::relative_index_file(name)
-                .to_str()
-                .expect("invalid UTF-8 in crate name"),
-        )
     }
 }
 

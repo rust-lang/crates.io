@@ -4,8 +4,7 @@
       <tr>
         <th>Crate</th>
         <th>Version</th>
-        <th>Published at</th>
-        <th>Published by</th>
+        <th>Published</th>
         <th/>
       <tr>
     </thead>
@@ -17,14 +16,10 @@
             <div style="font-size: 80%"><a href="https://index.crates.io/{{crate-index-path this.name}}">View in sparse index</a></div>
           </td>
           <td>{{this.num}}</td>
-          <td>{{this.created_at}}</td>
           <td>
-            <a href="/users/{{this.published_by_username}}">
-              {{#if this.published_by_avatar}}
-                <img src="{{this.published_by_avatar}}" alt="{{this.published_by_username}}" aria-hidden="true" width="32" height="32" class="d-inline-block me-1">
-              {{~/if~}}
-              {{~this.published_by_username}}
-            </a>
+            <em>{{> components/datetime this.created_at}}</em>
+            by
+            {{> components/user this.publisher }}
           </td>
           <td><button type="button" class="btn btn-danger">Yank</button></td>
         </tr>
