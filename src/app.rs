@@ -1,6 +1,7 @@
 //! Application-wide components in a struct accessible from each request
 
 use crate::db::{ConnectionConfig, DieselPool, DieselPooledConn, PoolError};
+use crate::views::admin::templating;
 use crate::{config, Env};
 use std::ops::Deref;
 use std::sync::atomic::AtomicUsize;
@@ -17,7 +18,6 @@ use handlebars::Handlebars;
 use moka::future::{Cache, CacheBuilder};
 use oauth2::basic::BasicClient;
 use reqwest::blocking::Client;
-use rust_embed::RustEmbed;
 use scheduled_thread_pool::ScheduledThreadPool;
 
 /// The `App` struct holds the main components of the application like
@@ -181,9 +181,8 @@ impl App {
             _ => None,
         };
 
-        let admin_engine = Engine::from(
-            templating::registry().expect("could not initialise admin template engine"),
-        );
+        let admin_engine =
+            templating::engine().expect("could not initialise admin templating engine");
 
         App {
             primary_database,
@@ -309,33 +308,5 @@ impl Deref for AppState {
 impl FromRef<AppState> for cookie::Key {
     fn from_ref(app: &AppState) -> Self {
         app.session_key().clone()
-    }
-}
-
-mod templating {
-    use handlebars::{Handlebars, TemplateError};
-
-    #[cfg(not(debug_assertions))]
-    #[derive(rust_embed::RustEmbed)]
-    #[folder = "admin/templates/"]
-    struct Assets;
-
-    pub(super) fn registry() -> Result<Handlebars<'static>, TemplateError> {
-        let mut hbs = Handlebars::new();
-        hbs.set_strict_mode(true);
-
-        #[cfg(debug_assertions)]
-        {
-            hbs.set_dev_mode(true);
-            hbs.register_templates_directory(".hbs", "admin/templates")?;
-        }
-
-        #[cfg(not(debug_assertions))]
-        {
-            // TODO: fix to match names by actually walking the embed.
-            hbs.register_embed_templates::<Assets>()?;
-        }
-
-        Ok(hbs)
     }
 }
