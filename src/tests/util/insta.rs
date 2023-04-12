@@ -13,3 +13,10 @@ pub fn any_id_redaction() -> insta::internals::Redaction {
         "[id]"
     })
 }
+
+pub fn api_token_redaction() -> insta::internals::Redaction {
+    insta::dynamic_redaction(move |value, _path| {
+        assert!(assert_some!(value.as_str()).starts_with("cio"));
+        "[token]"
+    })
+}
