@@ -237,6 +237,10 @@ http {
 		<% if ENV['USE_FASTBOOT'] == "staging-experimental" %>
 			# Experimentally send all non-backend requests to FastBoot
 
+            location /admin/ {
+                proxy_pass http://app_server;
+            }
+
 			location /api/ {
 				proxy_pass http://app_server;
 			}

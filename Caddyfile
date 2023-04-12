@@ -1,0 +1,8 @@
+http://localhost:4200, http://127.0.0.1:4200 {
+	@backend {
+		path /api/* /admin/* /git/*
+	}
+
+	reverse_proxy @backend 127.0.0.1:8888
+	reverse_proxy 127.0.0.1:4201
+}
