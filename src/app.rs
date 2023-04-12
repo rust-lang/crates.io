@@ -11,10 +11,13 @@ use crate::email::Emails;
 use crate::github::{GitHubClient, RealGitHubClient};
 use crate::metrics::{InstanceMetrics, ServiceMetrics};
 use axum::extract::{FromRef, FromRequestParts, State};
+use axum_template::engine::Engine;
 use diesel::r2d2;
+use handlebars::Handlebars;
 use moka::future::{Cache, CacheBuilder};
 use oauth2::basic::BasicClient;
 use reqwest::blocking::Client;
+use rust_embed::RustEmbed;
 use scheduled_thread_pool::ScheduledThreadPool;
 
 /// The `App` struct holds the main components of the application like
@@ -65,6 +68,9 @@ pub struct App {
 
     /// In-flight request counters for the `balance_capacity` middleware.
     pub balance_capacity: BalanceCapacityState,
+
+    /// Admin templating engine.
+    pub admin_engine: Engine<Handlebars<'static>>,
 }
 
 impl App {
@@ -175,6 +181,10 @@ impl App {
             _ => None,
         };
 
+        let admin_engine = Engine::from(
+            templating::registry().expect("could not initialise admin template engine"),
+        );
+
         App {
             primary_database,
             read_only_replica_database: replica_database,
@@ -189,6 +199,7 @@ impl App {
             fastboot_client,
             balance_capacity: Default::default(),
             config,
+            admin_engine,
         }
     }
 
@@ -298,5 +309,33 @@ impl Deref for AppState {
 impl FromRef<AppState> for cookie::Key {
     fn from_ref(app: &AppState) -> Self {
         app.session_key().clone()
+    }
+}
+
+mod templating {
+    use handlebars::{Handlebars, TemplateError};
+
+    #[cfg(not(debug_assertions))]
+    #[derive(rust_embed::RustEmbed)]
+    #[folder = "admin/templates/"]
+    struct Assets;
+
+    pub(super) fn registry() -> Result<Handlebars<'static>, TemplateError> {
+        let mut hbs = Handlebars::new();
+        hbs.set_strict_mode(true);
+
+        #[cfg(debug_assertions)]
+        {
+            hbs.set_dev_mode(true);
+            hbs.register_templates_directory(".hbs", "admin/templates")?;
+        }
+
+        #[cfg(not(debug_assertions))]
+        {
+            // TODO: fix to match names by actually walking the embed.
+            hbs.register_embed_templates::<Assets>()?;
+        }
+
+        Ok(hbs)
     }
 }

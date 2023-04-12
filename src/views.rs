@@ -9,6 +9,8 @@ use crate::models::{
 };
 use crate::util::rfc3339;
 
+pub mod admin;
+
 pub mod krate_publish;
 pub use self::krate_publish::{EncodableCrateDependency, EncodableCrateUpload};
 

@@ -1,26 +1,49 @@
-use axum::response::Html;
+use axum_template::RenderHtml;
 
-use crate::{auth::AuthCheck, models::User, schema::users};
+use crate::{extractors::admin::AdminUser, views::admin::krates::CrateVersion};
 
 use super::prelude::*;
 
 /// Handles the `GET /admin/` route.
-pub async fn index(app: AppState, req: Parts) -> AppResult<Html<String>> {
-    tracing::warn!("in admin index");
-
+pub async fn index(app: AppState, _user: AdminUser) -> AppResult<impl IntoResponse> {
     conduit_compat(move || {
-        let conn = &mut *app.db_read_prefer_primary()?;
-        let user_id = AuthCheck::only_cookie().check(&req, conn)?.user_id();
+        use crate::schema::{crates, versions};
 
-        let user = users::table
-            .find(user_id)
-            .select(users::all_columns)
-            .first::<User>(conn)?
-            .admin()?;
+        let conn = &mut *app.db_read()?;
 
-        dbg!(user);
+        // TODO: move to a new controller and redirect when hitting /admin/.
+        // TODO: refactor into something that's not a spaghetti query.
+        // TODO: pagination.
+        // TODO: search.
 
-        Ok(Html("a wolf at the door".into()))
+        // XXX: can we send an iterator to RenderHtml?
+        let recent_versions: Vec<CrateVersion> = versions::table
+            .inner_join(crates::table)
+            .select((
+                versions::id,
+                versions::num,
+                versions::created_at,
+                crates::name,
+            ))
+            .order(versions::created_at.desc())
+            .limit(50)
+            .load(conn)?
+            .into_iter()
+            .map(|(id, num, created_at, name)| -> CrateVersion {
+                CrateVersion {
+                    id,
+                    num,
+                    created_at,
+                    name,
+                }
+            })
+            .collect();
+
+        Ok(RenderHtml(
+            "crates",
+            app.admin_engine.clone(),
+            recent_versions,
+        ))
     })
     .await
 }

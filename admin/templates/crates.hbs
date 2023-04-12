@@ -1,0 +1,29 @@
+{{#*inline "body"}}
+  <table class="table align-middle">
+    <thead>
+      <tr>
+        <th>Crate</th>
+        <th>Version</th>
+        <th>Published at</th>
+        <th/>
+      <tr>
+    </thead>
+    <tbody>
+      {{#each this}}
+        <tr>
+          <td>
+            <div><a href="/crates/{{this.name}}">{{this.name}}</a></div>
+            <div style="font-size: 80%"><a href="https://index.crates.io/">View in sparse index</a></div>
+          </td>
+          <td>{{this.num}}</td>
+          <td>{{this.created_at}}</td>
+          <td><button type="button" class="btn btn-danger">Yank</button></td>
+        </tr>
+      {{/each}}
+    </tbody>
+  </table>
+{{/inline}}
+
+{{#*inline "title"}}Crates{{/inline}}
+
+{{> page}}

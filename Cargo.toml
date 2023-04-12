@@ -26,6 +26,7 @@ anyhow = "=1.0.70"
 aws-sigv4 = "=0.55.1"
 axum = { version = "=0.6.16", features = ["headers", "macros", "matched-path"] }
 axum-extra = { version = "=0.7.4", features = ["cookie-signed"] }
+axum-template = { version = "0.15.1", features = ["handlebars"] }
 base64 = "=0.13.1"
 cargo-registry-index = { path = "cargo-registry-index" }
 cargo-registry-markdown = { path = "cargo-registry-markdown" }
@@ -39,10 +40,12 @@ dialoguer = "=0.10.4"
 diesel = { version = "=2.0.4", features = ["postgres", "serde_json", "chrono", "r2d2"] }
 diesel_full_text_search = "=2.0.0"
 diesel_migrations = { version = "=2.0.0", features = ["postgres"] }
+diesel = { version = "=2.0.3", features = ["postgres", "serde_json", "chrono", "r2d2"] }
 dotenv = "=0.15.0"
 flate2 = "=1.0.25"
 futures-channel = { version = "=0.3.28", default-features = false }
 futures-util = "=0.3.28"
+handlebars = { version = "4.3.6", features = ["dir_source", "rust-embed"] }
 hex = "=0.4.3"
 http = "=0.2.9"
 http-body = "=0.4.5"
@@ -50,7 +53,7 @@ hyper = { version = "=0.14.26", features = ["backports", "client", "deprecated",
 indexmap = { version = "=1.9.3", features = ["serde-1"] }
 indicatif = "=0.17.3"
 ipnetwork = "=0.20.0"
-tikv-jemallocator = { version = "=0.5.0", features = ['unprefixed_malloc_on_supported_platforms', 'profiling'] }
+lazy_static = "1.4.0"
 lettre = { version = "=0.10.4", default-features = false, features = ["file-transport", "smtp-transport", "native-tls", "hostname", "builder"] }
 minijinja = "=0.31.1"
 moka = { version = "=0.10.2", features = ["future"]  }
@@ -62,6 +65,7 @@ rand = "=0.8.5"
 reqwest = { version = "=0.11.16", features = ["blocking", "gzip", "json"] }
 retry = "=2.0.0"
 ring = "=0.16.20"
+rust-embed = { version = "6.6.1" }
 scheduled-thread-pool = "=0.2.7"
 semver = { version = "=1.0.17", features = ["serde"] }
 sentry = { version = "=0.30.0", features = ["tracing", "tower", "tower-http"] }
@@ -73,6 +77,7 @@ tar = "=0.4.38"
 tempfile = "=3.5.0"
 thiserror = "=1.0.40"
 threadpool = "=1.8.1"
+tikv-jemallocator = { version = "=0.5.0", features = ['unprefixed_malloc_on_supported_platforms', 'profiling'] }
 tokio = { version = "=1.27.0", features = ["net", "signal", "io-std", "io-util", "rt-multi-thread", "macros"]}
 toml = "=0.7.3"
 tower = "=0.4.13"
@@ -80,9 +85,6 @@ tower-http = { version = "=0.4.0", features = ["fs", "catch-panic"] }
 tracing = "=0.1.37"
 tracing-subscriber = { version = "=0.3.16", features = ["env-filter"] }
 url = "=2.3.1"
-lazy_static = "1.4.0"
-axum-template = { version = "0.15.1", features = ["handlebars"] }
-handlebars = "4.3.6"
 
 [dev-dependencies]
 cargo-registry-index = { path = "cargo-registry-index", features = ["testing"] }
