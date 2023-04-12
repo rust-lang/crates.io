@@ -467,7 +467,7 @@ impl From<Team> for EncodableTeam {
 /// The serialization format for the `ApiToken` model with its token value.
 /// This should only be used when initially creating a new token to minimize
 /// the chance of token leaks.
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Serialize, Debug)]
 pub struct EncodableApiTokenWithToken {
     pub id: i32,
     pub name: String,
