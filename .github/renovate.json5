@@ -31,7 +31,7 @@
         "matchPackageNames": ["ember-cli", "ember-data", "ember-source"],
         "separateMinorPatch": true,
     }, {
-        "matchPackageNames": ["@percy/cli", "webpack"],
+        "matchPackageNames": ["@percy/cli", "tj-actions/changed-files", "webpack"],
         "extends": ["schedule:weekly"],
     }, {
         "matchLanguages": ["js"],
