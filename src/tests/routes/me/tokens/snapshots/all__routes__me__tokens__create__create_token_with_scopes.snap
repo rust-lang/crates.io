@@ -1,0 +1,17 @@
+---
+source: src/tests/routes/me/tokens/create.rs
+expression: response.into_json()
+---
+api_token:
+  crate_scopes:
+    - tokio
+    - tokio-*
+  created_at: "[datetime]"
+  endpoint_scopes:
+    - publish-update
+  id: "[id]"
+  last_used_at: "[datetime]"
+  name: bar
+  revoked: false
+  token: "[token]"
+

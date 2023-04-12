@@ -154,6 +154,8 @@ mod tests {
                     .and_hms_opt(14, 23, 12),
             )
             .unwrap(),
+            crate_scopes: None,
+            endpoint_scopes: None,
         };
         let json = serde_json::to_string(&tok).unwrap();
         assert_some!(json
