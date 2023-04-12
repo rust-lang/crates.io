@@ -175,7 +175,26 @@ impl Ord for Dependency {
         // misinterpreted. With this manual `Ord` implementation we ensure that
         // `normal` dependencies are always first when multiple with the same
         // `name` exist.
-        (&self.name, self.kind, &self.req).cmp(&(&other.name, other.kind, &other.req))
+        (
+            &self.name,
+            self.kind,
+            &self.req,
+            self.optional,
+            self.default_features,
+            &self.target,
+            &self.package,
+            &self.features,
+        )
+            .cmp(&(
+                &other.name,
+                other.kind,
+                &other.req,
+                other.optional,
+                other.default_features,
+                &other.target,
+                &other.package,
+                &other.features,
+            ))
     }
 }
 

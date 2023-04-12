@@ -409,8 +409,9 @@ pub fn add_dependencies(
         })
         .collect::<Result<Vec<_>, _>>()?;
 
-    let (git_deps, new_dependencies): (Vec<_>, Vec<_>) =
+    let (mut git_deps, new_dependencies): (Vec<_>, Vec<_>) =
         git_and_new_dependencies.into_iter().unzip();
+    git_deps.sort();
 
     insert_into(dependencies)
         .values(&new_dependencies)

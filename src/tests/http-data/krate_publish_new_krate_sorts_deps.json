@@ -1,0 +1,62 @@
+[
+  {
+    "request": {
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/crates/two-deps/two-deps-1.0.0.crate",
+      "method": "PUT",
+      "headers": [
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip"
+        ],
+        [
+          "content-length",
+          "35"
+        ],
+        [
+          "content-type",
+          "application/gzip"
+        ]
+      ],
+      "body": "H4sIAAAAAAAA/+3AAQEAAACCIP+vbkhQwKsBLq+17wAEAAA="
+    },
+    "response": {
+      "status": 200,
+      "headers": [],
+      "body": ""
+    }
+  },
+  {
+    "request": {
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/tw/o-/two-deps",
+      "method": "PUT",
+      "headers": [
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip"
+        ],
+        [
+          "content-length",
+          "376"
+        ],
+        [
+          "content-type",
+          "text/plain"
+        ]
+      ],
+      "body": "eyJuYW1lIjoidHdvLWRlcHMiLCJ2ZXJzIjoiMS4wLjAiLCJkZXBzIjpbeyJuYW1lIjoiZGVwLWEiLCJyZXEiOiI+IDAiLCJmZWF0dXJlcyI6W10sIm9wdGlvbmFsIjpmYWxzZSwiZGVmYXVsdF9mZWF0dXJlcyI6dHJ1ZSwidGFyZ2V0IjpudWxsLCJraW5kIjoibm9ybWFsIn0seyJuYW1lIjoiZGVwLWIiLCJyZXEiOiI+IDAiLCJmZWF0dXJlcyI6W10sIm9wdGlvbmFsIjpmYWxzZSwiZGVmYXVsdF9mZWF0dXJlcyI6dHJ1ZSwidGFyZ2V0IjpudWxsLCJraW5kIjoibm9ybWFsIn1dLCJja3N1bSI6ImFjYjU2MDRiMTI2YWM4OTRjMWViMTFjNDU3NWJmMjA3MmZlYTYxMjMyYTg4OGU0NTM3NzBjNzlkN2VkNTY0MTkiLCJmZWF0dXJlcyI6e30sInlhbmtlZCI6ZmFsc2V9Cg=="
+    },
+    "response": {
+      "status": 200,
+      "headers": [],
+      "body": ""
+    }
+  }
+]
