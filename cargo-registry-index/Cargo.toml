@@ -21,4 +21,4 @@ serde = { version = "=1.0.160", features = ["derive"] }
 tempfile = "=3.5.0"
 tracing = "=0.1.37"
 url = "=2.3.1"
-serde_json = { version = "=1.0.95", optional = true }
+serde_json = { version = "=1.0.96", optional = true }
