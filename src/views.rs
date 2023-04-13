@@ -473,7 +473,6 @@ pub struct EncodableApiTokenWithToken {
     pub id: i32,
     pub name: String,
     pub token: String,
-    pub revoked: bool,
     #[serde(with = "rfc3339")]
     pub created_at: NaiveDateTime,
     #[serde(with = "rfc3339::option")]
@@ -490,7 +489,6 @@ impl From<CreatedApiToken> for EncodableApiTokenWithToken {
             id: token.model.id,
             name: token.model.name,
             token: token.plaintext,
-            revoked: token.model.revoked,
             created_at: token.model.created_at,
             last_used_at: token.model.last_used_at,
             crate_scopes: token.model.crate_scopes,

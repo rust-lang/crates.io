@@ -143,7 +143,6 @@ mod tests {
             id: 12345,
             name: "".to_string(),
             token: "".to_string(),
-            revoked: false,
             created_at: NaiveDate::from_ymd_opt(2017, 1, 6)
                 .unwrap()
                 .and_hms_opt(14, 23, 11)

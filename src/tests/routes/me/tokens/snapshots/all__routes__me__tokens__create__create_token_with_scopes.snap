@@ -12,6 +12,5 @@ api_token:
   id: "[id]"
   last_used_at: "[datetime]"
   name: bar
-  revoked: false
   token: "[token]"
 
