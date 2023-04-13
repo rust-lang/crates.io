@@ -51,7 +51,7 @@
           "text/plain"
         ]
       ],
-      "body": "eyJuYW1lIjoiZm9vX2NvbmZsaWN0cyIsInZlcnMiOiIxLjAuMCIsImRlcHMiOltdLCJja3N1bSI6ImFjYjU2MDRiMTI2YWM4OTRjMWViMTFjNDU3NWJmMjA3MmZlYTYxMjMyYTg4OGU0NTM3NzBjNzlkN2VkNTY0MTkiLCJmZWF0dXJlcyI6e30sInlhbmtlZCI6ZmFsc2V9Cg=="
+      "body": "{\"name\":\"foo_conflicts\",\"vers\":\"1.0.0\",\"deps\":[],\"cksum\":\"acb5604b126ac894c1eb11c4575bf2072fea61232a888e453770c79d7ed56419\",\"features\":{},\"yanked\":false}\n"
     },
     "response": {
       "status": 200,

@@ -51,7 +51,7 @@
           "text/plain"
         ]
       ],
-      "body": "eyJuYW1lIjoicmF0ZV9saW1pdGVkMSIsInZlcnMiOiIxLjAuMCIsImRlcHMiOltdLCJja3N1bSI6ImFjYjU2MDRiMTI2YWM4OTRjMWViMTFjNDU3NWJmMjA3MmZlYTYxMjMyYTg4OGU0NTM3NzBjNzlkN2VkNTY0MTkiLCJmZWF0dXJlcyI6e30sInlhbmtlZCI6ZmFsc2V9Cg=="
+      "body": "{\"name\":\"rate_limited1\",\"vers\":\"1.0.0\",\"deps\":[],\"cksum\":\"acb5604b126ac894c1eb11c4575bf2072fea61232a888e453770c79d7ed56419\",\"features\":{},\"yanked\":false}\n"
     },
     "response": {
       "status": 200,
@@ -111,7 +111,7 @@
           "text/plain"
         ]
       ],
-      "body": "eyJuYW1lIjoicmF0ZV9saW1pdGVkMiIsInZlcnMiOiIxLjAuMCIsImRlcHMiOltdLCJja3N1bSI6ImFjYjU2MDRiMTI2YWM4OTRjMWViMTFjNDU3NWJmMjA3MmZlYTYxMjMyYTg4OGU0NTM3NzBjNzlkN2VkNTY0MTkiLCJmZWF0dXJlcyI6e30sInlhbmtlZCI6ZmFsc2V9Cg=="
+      "body": "{\"name\":\"rate_limited2\",\"vers\":\"1.0.0\",\"deps\":[],\"cksum\":\"acb5604b126ac894c1eb11c4575bf2072fea61232a888e453770c79d7ed56419\",\"features\":{},\"yanked\":false}\n"
     },
     "response": {
       "status": 200,

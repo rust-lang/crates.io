@@ -13,6 +13,7 @@ use std::{
 
 use futures_channel::oneshot;
 use futures_util::future;
+use http::header::CONTENT_TYPE;
 use hyper::{
     body::to_bytes, server::conn::AddrStream, Body, Error, Request, Response, Server, StatusCode,
     Uri,
@@ -363,8 +364,20 @@ fn replay_http(
 
     async {
         let _ = &exchange;
-        let body = base64::encode(to_bytes(req.into_body()).await.unwrap());
-        assert_eq!(&exchange.request.body, &body,);
+
+        let content_type = req.headers().get(CONTENT_TYPE).cloned();
+
+        let body = to_bytes(req.into_body()).await.unwrap();
+        match content_type {
+            Some(t) if t == "text/plain" => {
+                let body = String::from_utf8_lossy(&body);
+                assert_eq!(body, exchange.request.body);
+            }
+            _ => {
+                let body = base64::encode(body);
+                assert_eq!(body, exchange.request.body);
+            }
+        }
 
         let mut builder = Response::builder();
         for (key, value) in exchange.response.headers {

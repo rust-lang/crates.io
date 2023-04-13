@@ -51,7 +51,7 @@
           "text/plain"
         ]
       ],
-      "body": "eyJuYW1lIjoibmV3LWtyYXRlIiwidmVycyI6IjEuMC4wIiwiZGVwcyI6W3sibmFtZSI6Im15LW5hbWUiLCJyZXEiOiI+IDAiLCJmZWF0dXJlcyI6W10sIm9wdGlvbmFsIjpmYWxzZSwiZGVmYXVsdF9mZWF0dXJlcyI6dHJ1ZSwidGFyZ2V0IjpudWxsLCJraW5kIjoibm9ybWFsIiwicGFja2FnZSI6InBhY2thZ2UtbmFtZSJ9XSwiY2tzdW0iOiJhY2I1NjA0YjEyNmFjODk0YzFlYjExYzQ1NzViZjIwNzJmZWE2MTIzMmE4ODhlNDUzNzcwYzc5ZDdlZDU2NDE5IiwiZmVhdHVyZXMiOnt9LCJ5YW5rZWQiOmZhbHNlfQo="
+      "body": "{\"name\":\"new-krate\",\"vers\":\"1.0.0\",\"deps\":[{\"name\":\"my-name\",\"req\":\"> 0\",\"features\":[],\"optional\":false,\"default_features\":true,\"target\":null,\"kind\":\"normal\",\"package\":\"package-name\"}],\"cksum\":\"acb5604b126ac894c1eb11c4575bf2072fea61232a888e453770c79d7ed56419\",\"features\":{},\"yanked\":false}\n"
     },
     "response": {
       "status": 200,

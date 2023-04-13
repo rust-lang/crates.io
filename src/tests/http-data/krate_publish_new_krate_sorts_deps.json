@@ -51,7 +51,7 @@
           "text/plain"
         ]
       ],
-      "body": "eyJuYW1lIjoidHdvLWRlcHMiLCJ2ZXJzIjoiMS4wLjAiLCJkZXBzIjpbeyJuYW1lIjoiZGVwLWEiLCJyZXEiOiI+IDAiLCJmZWF0dXJlcyI6W10sIm9wdGlvbmFsIjpmYWxzZSwiZGVmYXVsdF9mZWF0dXJlcyI6dHJ1ZSwidGFyZ2V0IjpudWxsLCJraW5kIjoibm9ybWFsIn0seyJuYW1lIjoiZGVwLWIiLCJyZXEiOiI+IDAiLCJmZWF0dXJlcyI6W10sIm9wdGlvbmFsIjpmYWxzZSwiZGVmYXVsdF9mZWF0dXJlcyI6dHJ1ZSwidGFyZ2V0IjpudWxsLCJraW5kIjoibm9ybWFsIn1dLCJja3N1bSI6ImFjYjU2MDRiMTI2YWM4OTRjMWViMTFjNDU3NWJmMjA3MmZlYTYxMjMyYTg4OGU0NTM3NzBjNzlkN2VkNTY0MTkiLCJmZWF0dXJlcyI6e30sInlhbmtlZCI6ZmFsc2V9Cg=="
+      "body": "{\"name\":\"two-deps\",\"vers\":\"1.0.0\",\"deps\":[{\"name\":\"dep-a\",\"req\":\"> 0\",\"features\":[],\"optional\":false,\"default_features\":true,\"target\":null,\"kind\":\"normal\"},{\"name\":\"dep-b\",\"req\":\"> 0\",\"features\":[],\"optional\":false,\"default_features\":true,\"target\":null,\"kind\":\"normal\"}],\"cksum\":\"acb5604b126ac894c1eb11c4575bf2072fea61232a888e453770c79d7ed56419\",\"features\":{},\"yanked\":false}\n"
     },
     "response": {
       "status": 200,
