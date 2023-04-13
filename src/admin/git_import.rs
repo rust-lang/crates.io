@@ -13,7 +13,7 @@ use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
 use crate::{
     admin::dialoguer,
     db,
-    schema::{crates, dependencies, versions},
+    schema::{crates, versions},
 };
 
 #[derive(clap::Parser, Debug, Copy, Clone)]
@@ -56,9 +56,16 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
         let result = conn.transaction(|conn| -> anyhow::Result<()> {
             for line in reader.lines() {
                 let krate: cargo_registry_index::Crate = serde_json::from_str(&line?)?;
-                import_data(conn, &krate).with_context(|| {
-                    format!("Failed to update crate {}#{}", krate.name, krate.vers)
-                })?
+                if krate.links.is_some() {
+                    let rows = import_data(conn, &krate).with_context(|| {
+                        format!("Failed to update crate {}#{}", krate.name, krate.vers)
+                    })?;
+                    if rows > 0 {
+                        pb.suspend(|| {
+                            println!("edited {rows} rows for {}#{}", krate.name, krate.vers)
+                        });
+                    }
+                }
             }
             Ok(())
         });
@@ -71,7 +78,10 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn import_data(conn: &mut PgConnection, krate: &cargo_registry_index::Crate) -> anyhow::Result<()> {
+fn import_data(
+    conn: &mut PgConnection,
+    krate: &cargo_registry_index::Crate,
+) -> anyhow::Result<usize> {
     let version_id: i32 = versions::table
         .inner_join(crates::table)
         .filter(crates::name.eq(&krate.name))
@@ -85,71 +95,17 @@ fn import_data(conn: &mut PgConnection, krate: &cargo_registry_index::Crate) -> 
             )
         })?;
 
-    // Update the `checksum` and `links` fields.
-    diesel::update(versions::table)
-        .set((
-            versions::checksum.eq(&krate.cksum),
-            versions::links.eq(&krate.links),
-        ))
+    // Update `links` fields.
+    let rows = diesel::update(versions::table)
+        .set((versions::links.eq(&krate.links),))
         .filter(versions::id.eq(version_id))
-        .filter(versions::checksum.is_null())
         .filter(versions::links.is_null())
         .execute(conn)
         .with_context(|| {
             format!(
-                "Failed to update checksum/links of {}#{} (id: {version_id})",
+                "Failed to update links of {}#{} (id: {version_id})",
                 krate.name, krate.vers
             )
         })?;
-
-    // Check if any of this crate's dependencies have a missing explicit_name.
-    if krate.deps.iter().any(|d| d.package.is_some())
-        && dependencies::table
-            .filter(dependencies::version_id.eq(version_id))
-            .filter(dependencies::explicit_name.is_not_null())
-            .count()
-            .get_result::<i64>(conn)?
-            == 0
-    {
-        for dep in &krate.deps {
-            if let Some(package) = &dep.package {
-                // This is a little tricky because there can be two identical deps in the
-                // database. The only difference in git is the field we're trying to
-                // fill (explicit_name). Using `first` here & filtering out existing `explicit_name`
-                // entries ensure that we assign one explicit_name to each dep.
-
-                let id: i32 = dependencies::table
-                    .inner_join(crates::table)
-                    .filter(dependencies::explicit_name.is_null())
-                    .filter(dependencies::version_id.eq(version_id))
-                    .filter(dependencies::req.eq(&dep.req))
-                    .filter(dependencies::features.eq(&dep.features))
-                    .filter(dependencies::optional.eq(&dep.optional))
-                    .filter(dependencies::default_features.eq(&dep.default_features))
-                    .filter(dependencies::target.is_not_distinct_from(&dep.target))
-                    .filter(dependencies::kind.eq(dep.kind.map(|k| k as i32).unwrap_or_default()))
-                    .filter(crates::name.eq(package))
-                    .select(dependencies::id)
-                    .first(conn)
-                    .with_context(|| {
-                        format!(
-                            "{}#{}: Failed to find matching dependency: {} {}",
-                            krate.name, krate.vers, package, dep.req
-                        )
-                    })?;
-
-                diesel::update(dependencies::table)
-                    .set(dependencies::explicit_name.eq(&dep.name))
-                    .filter(dependencies::id.eq(id))
-                    .execute(conn)
-                    .with_context(|| {
-                        format!(
-                            "Failed to update `explicit_name` of dependency {id} to {}",
-                            dep.name
-                        )
-                    })?;
-            }
-        }
-    }
-    Ok(())
+    Ok(rows)
 }
