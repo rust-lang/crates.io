@@ -46,7 +46,7 @@ futures-util = "=0.3.28"
 hex = "=0.4.3"
 http = "=0.2.9"
 http-body = "=0.4.5"
-hyper = { version = "=0.14.25", features = ["backports", "client", "deprecated", "http1"] }
+hyper = { version = "=0.14.26", features = ["backports", "client", "deprecated", "http1"] }
 indexmap = { version = "=1.9.3", features = ["serde-1"] }
 indicatif = "=0.17.3"
 ipnetwork = "=0.20.0"
