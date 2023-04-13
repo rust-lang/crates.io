@@ -9,7 +9,7 @@ use crate::models::{Crate, Dependency, User};
 use crate::schema::*;
 
 // Queryable has a custom implementation below
-#[derive(Clone, Identifiable, Associations, Debug, Queryable, Deserialize, Serialize)]
+#[derive(Clone, Identifiable, Associations, Debug, Queryable, Selectable, Deserialize, Serialize)]
 #[diesel(belongs_to(Crate))]
 pub struct Version {
     pub id: i32,

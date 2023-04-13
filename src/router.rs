@@ -158,7 +158,8 @@ pub fn build_axum_router(state: AppState) -> Router {
             post(github::secret_scanning::verify),
         )
         // Admin console
-        .route("/admin/", get(admin::index));
+        .route("/admin/", get(admin::index))
+        .route("/admin/crates/", get(admin::crates));
 
     // Only serve the local checkout of the git index in development mode.
     // In production, for crates.io, cargo gets the index from

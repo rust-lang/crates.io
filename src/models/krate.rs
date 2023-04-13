@@ -28,7 +28,7 @@ pub struct RecentCrateDownloads {
     pub downloads: i32,
 }
 
-#[derive(Debug, Clone, Queryable, Identifiable, AsChangeset, QueryableByName)]
+#[derive(Debug, Clone, Queryable, Identifiable, AsChangeset, QueryableByName, Selectable)]
 #[diesel(table_name = crates)]
 pub struct Crate {
     pub id: i32,

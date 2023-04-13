@@ -1,4 +1,11 @@
 {{#*inline "body"}}
+  <div class="d-flex align-items-end mt-3 mb-3">
+    <h1 class="me-auto">{{> title}}</h1>
+    <form class="d-flex align-items-center" method="GET">
+      <input class="form-control" name="q" type="search" placeholder="crate name" spellcheck="false">
+    </form>
+  </div>
+
   <table class="table align-middle">
     <thead>
       <tr>
@@ -12,7 +19,16 @@
       {{#each this}}
         <tr>
           <td>
-            <div><a href="/crates/{{this.name}}">{{this.name}}</a></div>
+            <div>
+              <a href="/crates/{{this.name}}">
+                {{#if this.yanked}}
+                  <s>{{this.name}}</s>
+                {{~else}}
+                  {{this.name}}
+                {{/if~}}
+              </a>
+              {{#if this.yanked}}<i title="Yanked" class="bi bi-trash-fill"></i>{{/if}}
+            </div>
             <div style="font-size: 80%"><a href="https://index.crates.io/{{crate-index-path this.name}}">View in sparse index</a></div>
           </td>
           <td>{{this.num}}</td>
@@ -21,11 +37,57 @@
             by
             {{> components/user this.publisher }}
           </td>
-          <td><button type="button" class="btn btn-danger">Yank</button></td>
+          <td>
+            {{#if this.yanked}}
+              <button type="button" class="btn btn-outline-primary unyank" data-unyank-name="{{this.name}}" data-unyank-version="{{this.num}}">Unyank</button>
+            {{else}}
+              <button type="button" class="btn btn-danger yank" data-yank-name="{{this.name}}" data-yank-version="{{this.num}}">Yank</button>
+            {{/if}}
+          </td>
         </tr>
       {{/each}}
     </tbody>
   </table>
+
+  <script>
+    window.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll("[data-yank-name]").forEach(btn => {
+        const name = btn.getAttribute("data-yank-name");
+        const version = btn.getAttribute("data-yank-version");
+
+        btn.addEventListener("click", async event => {
+          event.preventDefault();
+          if (confirm(`Are you sure you want to yank ${name} ${version}?`)) {
+            btn.disabled = true;
+            btn.innerHTML = "<div class='spinner-border' role='status'></div>";
+
+            try {
+              const response = await fetch(`/api/v1/crates/${name}/${version}/yank`, {
+                method: "DELETE",
+              });
+
+              if (response.status >= 400){
+                throw `Unexpected status code: ${response.status}`;
+              }
+
+              // Errors can also be returned as a top level errors field.
+              const data = await response.json();
+              if ("errors" in data) {
+                throw data.errors.map(error => error.detail).join("; ");
+              }
+
+              window.location.reload();
+            } catch (e) {
+              btn.innerHTML = `<span data-bs-toggle="tooltip"><i class="bi bi-exclamation-octagon-fill"></i> Error</span>`;
+              const error = document.createElement("div");
+              error.innerText = e.toString();
+              btn.parentElement.appendChild(error);
+            }
+          }
+        });
+      });
+    });
+  </script>
 {{/inline}}
 
 {{#*inline "title"}}Crates{{/inline}}

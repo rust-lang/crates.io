@@ -1,11 +1,18 @@
+use crate::models;
+
 #[derive(Debug, Clone, Serialize)]
 pub struct User {
+    id: i32,
     avatar: Option<String>,
     username: String,
 }
 
-impl User {
-    pub fn new(username: String, avatar: Option<String>) -> Self {
-        Self { avatar, username }
+impl From<models::User> for User {
+    fn from(value: models::User) -> Self {
+        Self {
+            id: value.id,
+            avatar: value.gh_avatar,
+            username: value.gh_login,
+        }
     }
 }

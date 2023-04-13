@@ -1,2 +1,2 @@
-pub mod krates;
+pub mod crates;
 pub mod templating;

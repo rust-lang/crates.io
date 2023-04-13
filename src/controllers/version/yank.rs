@@ -63,7 +63,7 @@ fn modify_yank(
     let user = auth.user();
     let owners = krate.owners(conn)?;
 
-    if user.rights(state, &owners)? < Rights::Publish {
+    if user.rights(state, &owners)? < Rights::Publish && user.admin().is_err() {
         return Err(cargo_err("must already be an owner to yank or unyank"));
     }
 

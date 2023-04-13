@@ -465,7 +465,6 @@ dependencies = [
  "cargo-registry-markdown",
  "cargo-registry-s3",
  "chrono",
- "chrono-human-duration",
  "claims",
  "clap",
  "cookie",
@@ -602,15 +601,6 @@ dependencies = [
  "time 0.1.45",
  "wasm-bindgen",
  "winapi",
-]
-
-[[package]]
-name = "chrono-human-duration"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "19283df3a144dfdeee6568e42ad7f0939d3c261bcdfe954b1a1098f6f7c1b908"
-dependencies = [
- "chrono",
 ]
 
 [[package]]

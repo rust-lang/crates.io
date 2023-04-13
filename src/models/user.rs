@@ -12,7 +12,7 @@ use crate::models::{
 use crate::schema::{crate_owners, emails, users};
 
 /// The model representing a row in the `users` database table.
-#[derive(Clone, Debug, PartialEq, Eq, Queryable, Identifiable, AsChangeset)]
+#[derive(Clone, Debug, PartialEq, Eq, Queryable, Identifiable, AsChangeset, Selectable)]
 pub struct User {
     pub id: i32,
     pub gh_access_token: String,
