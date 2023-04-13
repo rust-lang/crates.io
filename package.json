@@ -148,13 +148,13 @@
     }
   },
   "engines": {
-    "node": "18.15.0",
+    "node": "18.16.0",
     "pnpm": "8.2.0"
   },
   "ember": {
     "edition": "octane"
   },
   "volta": {
-    "node": "18.15.0"
+    "node": "18.16.0"
   }
 }
