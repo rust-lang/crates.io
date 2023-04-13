@@ -23,7 +23,7 @@ path = "src/tests/all.rs"
 
 [dependencies]
 anyhow = "=1.0.70"
-aws-sigv4 = "=0.55.0"
+aws-sigv4 = "=0.55.1"
 axum = { version = "=0.6.15", features = ["headers", "macros", "matched-path"] }
 axum-extra = { version = "=0.7.3", features = ["cookie-signed"] }
 base64 = "=0.13.1"
