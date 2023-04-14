@@ -51,7 +51,7 @@
           "text/plain"
         ]
       ],
-      "body": "eyJuYW1lIjoiZm9vX2dvb2Rfa2V5IiwidmVycyI6IjEuMC4wIiwiZGVwcyI6W10sImNrc3VtIjoiYWNiNTYwNGIxMjZhYzg5NGMxZWIxMWM0NTc1YmYyMDcyZmVhNjEyMzJhODg4ZTQ1Mzc3MGM3OWQ3ZWQ1NjQxOSIsImZlYXR1cmVzIjp7fSwieWFua2VkIjpmYWxzZX0K"
+      "body": "{\"name\":\"foo_good_key\",\"vers\":\"1.0.0\",\"deps\":[],\"cksum\":\"acb5604b126ac894c1eb11c4575bf2072fea61232a888e453770c79d7ed56419\",\"features\":{},\"yanked\":false}\n"
     },
     "response": {
       "status": 200,

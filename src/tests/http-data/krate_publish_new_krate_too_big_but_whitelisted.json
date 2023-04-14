@@ -51,7 +51,7 @@
           "text/plain"
         ]
       ],
-      "body": "eyJuYW1lIjoiZm9vX3doaXRlbGlzdCIsInZlcnMiOiIxLjEuMCIsImRlcHMiOltdLCJja3N1bSI6IjRlMzNkYzU5YmJiYzk2NjQ1ZmMwMTk0NWZiNTAyNTA3ZDFiN2JkM2EyZDA2MjI3YmY3YjBmZTg4NDJmMjg0YzIiLCJmZWF0dXJlcyI6e30sInlhbmtlZCI6ZmFsc2V9Cg=="
+      "body": "{\"name\":\"foo_whitelist\",\"vers\":\"1.1.0\",\"deps\":[],\"cksum\":\"4e33dc59bbbc96645fc01945fb502507d1b7bd3a2d06227bf7b0fe8842f284c2\",\"features\":{},\"yanked\":false}\n"
     },
     "response": {
       "status": 200,
