@@ -41,7 +41,7 @@ jobs:
           - 5432:5432
 
     steps:
-      - uses: actions/checkout@v3.5.1
+      - uses: actions/checkout@v3.5.2
 
       # Set up Rust
       - run: rustup default ${{ env.RUST_VERSION }}
