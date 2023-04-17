@@ -253,9 +253,9 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             .enable_seek(supports_seek)
             .gather(&req)?;
 
-        let (explicit_page, seek) = match pagination.page.clone() {
+        let (explicit_page, seek) = match pagination.page {
             Page::Numeric(_) => (true, None),
-            Page::Seek(s) => (false, Some(s.decode::<i32>()?)),
+            Page::Seek(ref s) => (false, Some(s.decode::<i32>()?)),
             Page::Unspecified => (false, None),
         };
 
