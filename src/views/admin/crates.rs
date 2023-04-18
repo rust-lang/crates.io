@@ -7,17 +7,24 @@ use crate::models::{Crate, User, Version};
 use super::templating::components;
 
 #[derive(Serialize)]
-pub struct CrateVersion {
-    pub id: i32,
-    pub name: String,
-    pub num: String,
-    pub created_at: components::DateTime,
-    pub publisher: components::User,
-    pub yanked: bool,
+struct View {
+    // TODO: pagination.
+    q: Option<String>,
+    versions: Vec<CrateVersion>,
+}
+
+#[derive(Serialize)]
+struct CrateVersion {
+    id: i32,
+    name: String,
+    num: String,
+    created_at: components::DateTime,
+    publisher: components::User,
+    yanked: bool,
 }
 
 impl CrateVersion {
-    pub fn new(version: Version, krate: Crate, user: User) -> Self {
+    fn new(version: Version, krate: Crate, user: User) -> Self {
         Self {
             id: version.id,
             name: krate.name,
@@ -29,13 +36,19 @@ impl CrateVersion {
     }
 }
 
-pub fn render_versions(
+pub fn render(
     engine: &Engine<Handlebars<'static>>,
-    iter: impl Iterator<Item = CrateVersion>,
+    q: Option<&str>,
+    version_iter: impl Iterator<Item = (Version, Crate, User)>,
 ) -> impl IntoResponse {
     RenderHtml(
         "crates",
         engine.clone(),
-        iter.collect::<Vec<CrateVersion>>(),
+        View {
+            q: q.map(|s| s.to_string()),
+            versions: version_iter
+                .map(|(version, krate, user)| CrateVersion::new(version, krate, user))
+                .collect(),
+        },
     )
 }

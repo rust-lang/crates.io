@@ -2,7 +2,7 @@
   <div class="d-flex align-items-end mt-3 mb-3">
     <h1 class="me-auto">{{> title}}</h1>
     <form class="d-flex align-items-center" method="GET">
-      <input class="form-control" name="q" type="search" placeholder="crate name" spellcheck="false">
+      <input class="form-control" name="q" type="search" placeholder="crate name" spellcheck="false" value="{{this.q}}">
     </form>
   </div>
 
@@ -16,7 +16,7 @@
       <tr>
     </thead>
     <tbody>
-      {{#each this}}
+      {{#each this.versions}}
         <tr>
           <td>
             <div>
@@ -37,7 +37,7 @@
             by
             {{> components/user this.publisher }}
           </td>
-          <td>
+          <td class="text-end">
             {{#if this.yanked}}
               <button type="button" class="btn btn-outline-primary unyank" data-unyank-name="{{this.name}}" data-unyank-version="{{this.num}}">Unyank</button>
             {{else}}
