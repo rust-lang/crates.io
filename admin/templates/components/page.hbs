@@ -1,0 +1,27 @@
+{{#if this.paginated}}
+<nav>
+  <ul class="pagination">
+    {{#if this.previous}}
+      <li class="page-item">
+        <a class="page-link" href="{{ this.previous }}">
+          <span>&laquo;</span>
+        </a>
+      </li>
+    {{/if}}
+    {{#each this.pages}}
+      <li class="page-item">
+        <a class="page-link {{#if this.active}}active{{/if}}" href="{{ this.url }}">
+          <span>{{ this.number }}</span>
+        </a>
+      </li>
+    {{/each}}
+    {{#if this.next}}
+      <li class="page-item">
+        <a class="page-link" href="{{ this.next }}">
+          <span>&raquo;</span>
+        </a>
+      </li>
+    {{/if}}
+  </ul>
+</nav>
+{{/if}}

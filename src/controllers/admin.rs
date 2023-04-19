@@ -4,6 +4,7 @@ use diesel::sql_types::Text;
 use diesel_full_text_search::{TsQuery, TsQueryExtensions};
 
 use crate::{
+    controllers::helpers::pagination::{Page, Paginate, Paginated, PaginationOptions},
     extractors::admin::AdminUser,
     models::{Crate, User, Version},
     views::admin::crates::render,
@@ -21,6 +22,10 @@ pub struct CrateQuery {
 }
 
 impl CrateQuery {
+    fn page(&self) -> u32 {
+        self.page.unwrap_or(1)
+    }
+
     fn query_string(&self) -> Option<&str> {
         match &self.q {
             Some(q) if !q.is_empty() => Some(q.as_str()),
@@ -35,7 +40,12 @@ pub async fn crates(
     q: Query<CrateQuery>,
     _user: AdminUser,
 ) -> AppResult<impl IntoResponse> {
-    const PER_PAGE: i64 = 50;
+    const PER_PAGE: u32 = 50;
+
+    let pagination = PaginationOptions {
+        page: Page::Numeric(q.page()),
+        per_page: PER_PAGE as i64,
+    };
 
     conduit_compat(move || {
         use crate::schema::{crates, users, versions};
@@ -47,9 +57,11 @@ pub async fn crates(
             .inner_join(crates::table)
             .inner_join(users::table)
             .order(versions::created_at.desc())
-            .limit(PER_PAGE)
-            .offset(PER_PAGE * q.page.unwrap_or(0) as i64)
-            .select((Version::as_select(), Crate::as_select(), User::as_select()))
+            .select((
+                versions::all_columns,
+                crate::models::krate::ALL_COLUMNS,
+                users::all_columns,
+            ))
             .into_boxed();
 
         if let Some(q_string) = q.query_string() {
@@ -64,13 +76,14 @@ pub async fn crates(
                         .matches(crates::textsearchable_index_col)
                         .or(Crate::loosly_matches_name(q_string)),
                 )
-                .select((Version::as_select(), Crate::as_select(), User::as_select()))
+                // .select((Version::as_select(), Crate::as_select(), User::as_select()))
                 .order(Crate::with_name(q_string).desc())
                 .then_order_by(versions::created_at.desc());
         }
 
-        let recent_versions = query.load::<(Version, Crate, User)>(conn)?.into_iter();
-        Ok(render(&app.admin_engine, q.query_string(), recent_versions))
+        let data: Paginated<(Version, Crate, User)> =
+            query.pages_pagination(pagination).load(conn)?;
+        Ok(render(&app.admin_engine, q.query_string(), data))
     })
     .await
 }

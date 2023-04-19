@@ -2,13 +2,16 @@ use axum::response::IntoResponse;
 use axum_template::{engine::Engine, RenderHtml};
 use handlebars::Handlebars;
 
-use crate::models::{Crate, User, Version};
+use crate::{
+    controllers::helpers::pagination::Paginated,
+    models::{Crate, User, Version},
+};
 
 use super::templating::components;
 
 #[derive(Serialize)]
 struct View {
-    // TODO: pagination.
+    page: components::Page,
     q: Option<String>,
     versions: Vec<CrateVersion>,
 }
@@ -39,14 +42,16 @@ impl CrateVersion {
 pub fn render(
     engine: &Engine<Handlebars<'static>>,
     q: Option<&str>,
-    version_iter: impl Iterator<Item = (Version, Crate, User)>,
+    page: Paginated<(Version, Crate, User)>,
 ) -> impl IntoResponse {
     RenderHtml(
         "crates",
         engine.clone(),
         View {
             q: q.map(|s| s.to_string()),
-            versions: version_iter
+            page: components::Page::new(&page, q),
+            versions: page
+                .into_iter()
                 .map(|(version, krate, user)| CrateVersion::new(version, krate, user))
                 .collect(),
         },
