@@ -32,7 +32,6 @@ cargo-registry-index = { path = "cargo-registry-index" }
 cargo-registry-markdown = { path = "cargo-registry-markdown" }
 cargo-registry-s3 = { path = "cargo-registry-s3" }
 chrono = { version = "=0.4.24", features = ["serde"] }
-chrono-human-duration = "0.1.1"
 clap = { version = "=4.2.3", features = ["derive", "env", "unicode", "wrap_help"] }
 cookie = { version = "=0.17.0", features = ["secure"] }
 dashmap = { version = "=5.4.0", features = ["raw-api"] }
@@ -41,7 +40,6 @@ dialoguer = "=0.10.4"
 diesel = { version = "=2.0.4", features = ["postgres", "serde_json", "chrono", "r2d2"] }
 diesel_full_text_search = "=2.0.0"
 diesel_migrations = { version = "=2.0.0", features = ["postgres"] }
-diesel = { version = "=2.0.3", features = ["postgres", "serde_json", "chrono", "r2d2"] }
 dotenv = "=0.15.0"
 flate2 = "=1.0.25"
 futures-channel = { version = "=0.3.28", default-features = false }
