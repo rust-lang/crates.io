@@ -441,10 +441,11 @@ impl Crate {
         conn: &mut PgConnection,
     ) -> QueryResult<Vec<cargo_registry_index::Crate>> {
         let mut versions: Vec<Version> = self.all_versions().load(conn)?;
-        versions.sort_by_cached_key(|k| {
-            semver::Version::parse(&k.num)
-                .expect("version was valid semver when inserted into the database")
-        });
+
+        // We sort by `created_at` by default, but since tests run within a
+        // single database transaction the versions will all have the same
+        // `created_at` timestamp, so we sort by semver as a secondary key.
+        versions.sort_by_cached_key(|k| (k.created_at, semver::Version::parse(&k.num).ok()));
 
         versions
             .into_iter()
