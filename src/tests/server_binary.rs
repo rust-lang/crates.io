@@ -34,6 +34,7 @@ fn normal_startup() {
         .ends_with("/crates/foo/foo-1.0.0.crate"));
 }
 
+#[cfg(feature = "slow-tests")]
 #[test]
 fn startup_without_database() {
     let server_bin = ServerBin::prepare().unwrap();
