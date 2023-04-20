@@ -1,5 +1,5 @@
 # renovate: datasource=github-releases depName=rust lookupName=rust-lang/rust
-ARG RUST_VERSION=1.68.2
+ARG RUST_VERSION=1.69.0
 
 FROM rust:$RUST_VERSION
 
