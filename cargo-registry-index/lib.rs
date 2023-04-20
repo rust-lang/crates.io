@@ -148,6 +148,14 @@ pub struct Crate {
     pub v: Option<u32>,
 }
 
+impl Crate {
+    pub fn write_to<W: Write>(&self, mut writer: W) -> anyhow::Result<()> {
+        serde_json::to_writer(&mut writer, self)?;
+        writer.write_all(b"\n")?;
+        Ok(())
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct Dependency {
     pub name: String,
@@ -594,4 +602,30 @@ pub fn run_via_cli(command: &mut Command, credentials: &Credentials) -> anyhow::
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use claims::*;
+
+    #[test]
+    fn crate_writer() {
+        let krate = Crate {
+            name: "foo".to_string(),
+            vers: "1.2.3".to_string(),
+            deps: vec![],
+            cksum: "0123456789asbcdef".to_string(),
+            features: Default::default(),
+            features2: None,
+            yanked: None,
+            links: None,
+            v: None,
+        };
+        let mut buffer = Vec::new();
+        assert_ok!(krate.write_to(&mut buffer));
+        assert_ok_eq!(String::from_utf8(buffer), "\
+            {\"name\":\"foo\",\"vers\":\"1.2.3\",\"deps\":[],\"cksum\":\"0123456789asbcdef\",\"features\":{},\"yanked\":null}\n\
+        ");
+    }
 }
