@@ -11,7 +11,7 @@ use crate::app::App;
 use crate::controllers::helpers::pagination::*;
 use crate::models::version::TopVersions;
 use crate::models::{
-    CrateOwner, CrateOwnerInvitation, NewCrateOwnerInvitationOutcome, Owner, OwnerKind,
+    CrateOwner, CrateOwnerInvitation, Dependency, NewCrateOwnerInvitationOutcome, Owner, OwnerKind,
     ReverseDependency, User, Version,
 };
 use crate::util::errors::{cargo_err, AppResult};
@@ -447,11 +447,18 @@ impl Crate {
         // `created_at` timestamp, so we sort by semver as a secondary key.
         versions.sort_by_cached_key(|k| (k.created_at, semver::Version::parse(&k.num).ok()));
 
+        let deps: Vec<(Dependency, String)> = Dependency::belonging_to(&versions)
+            .inner_join(crates::table)
+            .select((dependencies::all_columns, crates::name))
+            .load(conn)?;
+
+        let deps = deps.grouped_by(&versions);
+
         versions
             .into_iter()
-            .map(|version| {
-                let mut deps: Vec<cargo_registry_index::Dependency> = version
-                    .dependencies(conn)?
+            .zip(deps)
+            .map(|(version, deps)| {
+                let mut deps = deps
                     .into_iter()
                     .map(|(dep, name)| {
                         // If this dependency has an explicit name in `Cargo.toml` that
@@ -463,6 +470,7 @@ impl Crate {
                             Some(explicit_name) => (explicit_name, Some(name)),
                             None => (name, None),
                         };
+
                         cargo_registry_index::Dependency {
                             name,
                             req: dep.req,
@@ -474,7 +482,8 @@ impl Crate {
                             target: dep.target,
                         }
                     })
-                    .collect();
+                    .collect::<Vec<_>>();
+
                 deps.sort();
 
                 let features: BTreeMap<String, Vec<String>> =
