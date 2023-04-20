@@ -435,74 +435,77 @@ impl Crate {
         Ok(rows.records_and_total())
     }
 
-    /// Serialize the crate as an index metadata file
-    pub fn index_metadata(&self, conn: &mut PgConnection) -> QueryResult<String> {
+    /// Gather all the necessary data to write an index metadata file
+    pub fn index_metadata(
+        &self,
+        conn: &mut PgConnection,
+    ) -> QueryResult<Vec<cargo_registry_index::Crate>> {
         let mut versions: Vec<Version> = self.all_versions().load(conn)?;
         versions.sort_by_cached_key(|k| {
             semver::Version::parse(&k.num)
                 .expect("version was valid semver when inserted into the database")
         });
 
-        let mut body = Vec::new();
-        for version in versions {
-            let mut deps: Vec<cargo_registry_index::Dependency> = version
-                .dependencies(conn)?
-                .into_iter()
-                .map(|(dep, name)| {
-                    // If this dependency has an explicit name in `Cargo.toml` that
-                    // means that the `name` we have listed is actually the package name
-                    // that we're depending on. The `name` listed in the index is the
-                    // Cargo.toml-written-name which is what cargo uses for
-                    // `--extern foo=...`
-                    let (name, package) = match dep.explicit_name {
-                        Some(explicit_name) => (explicit_name, Some(name)),
-                        None => (name, None),
-                    };
-                    cargo_registry_index::Dependency {
-                        name,
-                        req: dep.req,
-                        features: dep.features,
-                        optional: dep.optional,
-                        default_features: dep.default_features,
-                        kind: Some(dep.kind.into()),
-                        package,
-                        target: dep.target,
-                    }
-                })
-                .collect();
-            deps.sort();
+        versions
+            .into_iter()
+            .map(|version| {
+                let mut deps: Vec<cargo_registry_index::Dependency> = version
+                    .dependencies(conn)?
+                    .into_iter()
+                    .map(|(dep, name)| {
+                        // If this dependency has an explicit name in `Cargo.toml` that
+                        // means that the `name` we have listed is actually the package name
+                        // that we're depending on. The `name` listed in the index is the
+                        // Cargo.toml-written-name which is what cargo uses for
+                        // `--extern foo=...`
+                        let (name, package) = match dep.explicit_name {
+                            Some(explicit_name) => (explicit_name, Some(name)),
+                            None => (name, None),
+                        };
+                        cargo_registry_index::Dependency {
+                            name,
+                            req: dep.req,
+                            features: dep.features,
+                            optional: dep.optional,
+                            default_features: dep.default_features,
+                            kind: Some(dep.kind.into()),
+                            package,
+                            target: dep.target,
+                        }
+                    })
+                    .collect();
+                deps.sort();
 
-            let features: BTreeMap<String, Vec<String>> =
-                serde_json::from_value(version.features).unwrap_or_default();
-            let (features, features2): (BTreeMap<_, _>, BTreeMap<_, _>) =
-                features.into_iter().partition(|(_k, vals)| {
-                    !vals
-                        .iter()
-                        .any(|v| v.starts_with("dep:") || v.contains("?/"))
-                });
+                let features: BTreeMap<String, Vec<String>> =
+                    serde_json::from_value(version.features).unwrap_or_default();
+                let (features, features2): (BTreeMap<_, _>, BTreeMap<_, _>) =
+                    features.into_iter().partition(|(_k, vals)| {
+                        !vals
+                            .iter()
+                            .any(|v| v.starts_with("dep:") || v.contains("?/"))
+                    });
 
-            let (features2, v) = if features2.is_empty() {
-                (None, None)
-            } else {
-                (Some(features2), Some(2))
-            };
+                let (features2, v) = if features2.is_empty() {
+                    (None, None)
+                } else {
+                    (Some(features2), Some(2))
+                };
 
-            let krate = cargo_registry_index::Crate {
-                name: self.name.clone(),
-                vers: version.num.to_string(),
-                cksum: version.checksum,
-                yanked: Some(version.yanked),
-                deps,
-                features,
-                links: version.links,
-                features2,
-                v,
-            };
-            serde_json::to_writer(&mut body, &krate).unwrap();
-            body.push(b'\n');
-        }
-        let body = String::from_utf8(body).unwrap();
-        Ok(body)
+                let krate = cargo_registry_index::Crate {
+                    name: self.name.clone(),
+                    vers: version.num.to_string(),
+                    cksum: version.checksum,
+                    yanked: Some(version.yanked),
+                    deps,
+                    features,
+                    links: version.links,
+                    features2,
+                    v,
+                };
+
+                Ok(krate)
+            })
+            .collect()
     }
 }
 
