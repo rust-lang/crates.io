@@ -34,6 +34,7 @@ mod dump_db;
 mod github_secret_scanning;
 mod krate;
 mod middleware;
+mod models;
 mod not_found_error;
 mod owners;
 mod pagination;
