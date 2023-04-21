@@ -1,3 +1,4 @@
+use crate::background_jobs::Job;
 use crate::{admin::dialoguer, config, db, models::Crate, schema::crates};
 
 use diesel::prelude::*;
@@ -54,5 +55,9 @@ fn delete(opts: Opts, conn: &mut PgConnection) {
         panic!("aborting transaction");
     }
 
-    uploader.delete_index(&client, &krate.name).unwrap();
+    if dotenv::var("FEATURE_INDEX_SYNC").is_ok() {
+        Job::enqueue_sync_to_index(&krate.name, conn).unwrap();
+    } else {
+        uploader.delete_index(&client, &krate.name).unwrap();
+    }
 }

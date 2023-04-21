@@ -10,7 +10,7 @@ edition = "2021"
 path = "lib.rs"
 
 [features]
-testing = ["serde_json"]
+testing = []
 
 [dependencies]
 anyhow = "=1.0.70"
@@ -18,7 +18,10 @@ base64 = "=0.13.1"
 dotenv = "=0.15.0"
 git2 = "=0.17.1"
 serde = { version = "=1.0.160", features = ["derive"] }
+serde_json = "=1.0.96"
 tempfile = "=3.5.0"
 tracing = "=0.1.37"
 url = "=2.3.1"
-serde_json = { version = "=1.0.96", optional = true }
+
+[dev-dependencies]
+claims = "=0.7.1"

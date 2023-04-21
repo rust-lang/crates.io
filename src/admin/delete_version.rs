@@ -1,3 +1,4 @@
+use crate::background_jobs::Job;
 use crate::{
     admin::dialoguer,
     db,
@@ -56,5 +57,9 @@ fn delete(opts: Opts, conn: &mut PgConnection) {
 
     if !opts.yes && !dialoguer::confirm("commit?") {
         panic!("aborting transaction");
+    }
+
+    if dotenv::var("FEATURE_INDEX_SYNC").is_ok() {
+        Job::enqueue_sync_to_index(&krate.name, conn).unwrap();
     }
 }

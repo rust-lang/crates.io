@@ -1,14 +1,15 @@
 use crate::background_jobs::{
     Environment, IndexAddCrateJob, IndexSyncToHttpJob, IndexUpdateYankedJob, Job, NormalizeIndexJob,
 };
+use crate::models;
 use crate::schema;
 use crate::swirl::PerformError;
 use anyhow::Context;
 use cargo_registry_index::{Crate, Repository};
 use chrono::Utc;
 use diesel::prelude::*;
-use std::fs::{self, OpenOptions};
-use std::io::{BufRead, BufReader, ErrorKind};
+use std::fs::{self, File, OpenOptions};
+use std::io::{BufRead, BufReader, ErrorKind, Write};
 use std::process::Command;
 
 #[instrument(skip_all, fields(krate.name = ?krate.name, krate.vers = ?krate.vers))]
@@ -72,6 +73,98 @@ pub fn perform_index_sync_to_http(
 
 pub fn update_crate_index(crate_name: String) -> Job {
     Job::IndexSyncToHttp(IndexSyncToHttpJob { crate_name })
+}
+
+/// Regenerates or removes an index file for a single crate
+#[instrument(skip_all, fields(krate.name = ?krate))]
+pub fn sync_to_git_index(
+    env: &Environment,
+    conn: &mut PgConnection,
+    krate: &str,
+) -> Result<(), PerformError> {
+    info!("Syncing to git index");
+
+    let new = get_index_data(krate, conn).context("Failed to get index data")?;
+
+    let repo = env.lock_index()?;
+    let dst = repo.index_file(krate);
+
+    // Read the previous crate contents
+    let old = match fs::read_to_string(&dst) {
+        Ok(content) => Some(content),
+        Err(error) if error.kind() == ErrorKind::NotFound => None,
+        Err(error) => return Err(error.into()),
+    };
+
+    match (old, new) {
+        (None, Some(new)) => {
+            fs::create_dir_all(dst.parent().unwrap())?;
+            let mut file = File::create(&dst)?;
+            file.write_all(new.as_bytes())?;
+            repo.commit_and_push(&format!("Creating crate `{}`", krate), &dst)?;
+        }
+        (Some(old), Some(new)) if old != new => {
+            let mut file = File::create(&dst)?;
+            file.write_all(new.as_bytes())?;
+            repo.commit_and_push(&format!("Updating crate `{}`", krate), &dst)?;
+        }
+        (Some(_old), None) => {
+            fs::remove_file(&dst)?;
+            repo.commit_and_push(&format!("Deleting crate `{}`", krate), &dst)?;
+        }
+        _ => debug!("Skipping sync because index is up-to-date"),
+    }
+
+    Ok(())
+}
+
+/// Regenerates or removes an index file for a single crate
+#[instrument(skip_all, fields(krate.name = ?krate))]
+pub fn sync_to_sparse_index(
+    env: &Environment,
+    conn: &mut PgConnection,
+    krate: &str,
+) -> Result<(), PerformError> {
+    info!("Syncing to sparse index");
+
+    let content = get_index_data(krate, conn).context("Failed to get index data")?;
+
+    env.uploader
+        .sync_index(env.http_client(), krate, content)
+        .context("Failed to sync index data")?;
+
+    if let Some(cloudfront) = env.cloudfront() {
+        let path = Repository::relative_index_file_for_url(krate);
+
+        info!(%path, "Invalidating index file on CloudFront");
+        cloudfront
+            .invalidate(env.http_client(), &path)
+            .context("Failed to invalidate CloudFront")?;
+    }
+
+    Ok(())
+}
+
+#[instrument(skip_all, fields(krate.name = ?name))]
+pub fn get_index_data(name: &str, conn: &mut PgConnection) -> anyhow::Result<Option<String>> {
+    debug!("Looking up crate by name");
+    let Some(krate): Option<models::Crate> = models::Crate::by_exact_name(name).first(conn).optional()? else {
+        return Ok(None);
+    };
+
+    debug!("Gathering remaining index data");
+    let crates = krate
+        .index_metadata(conn)
+        .context("Failed to gather index metadata")?;
+
+    debug!("Serializing index data");
+    let mut bytes = Vec::new();
+    cargo_registry_index::write_crates(&crates, &mut bytes)
+        .context("Failed to serialize index metadata")?;
+
+    let str = String::from_utf8(bytes).context("Failed to decode index metadata as utf8")?;
+
+    Ok(Some(str))
 }
 
 /// Yanks or unyanks a crate version. This requires finding the index

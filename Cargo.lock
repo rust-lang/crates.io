@@ -513,6 +513,7 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "base64 0.13.1",
+ "claims",
  "dotenv",
  "git2",
  "serde",

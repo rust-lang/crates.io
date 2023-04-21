@@ -18,6 +18,8 @@ pub enum Job {
     IndexAddCrate(IndexAddCrateJob),
     IndexSquash,
     IndexSyncToHttp(IndexSyncToHttpJob),
+    SyncToGitIndex(SyncToIndexJob),
+    SyncToSparseIndex(SyncToIndexJob),
     IndexUpdateYanked(IndexUpdateYankedJob),
     NormalizeIndex(NormalizeIndexJob),
     RenderAndUploadReadme(RenderAndUploadReadmeJob),
@@ -47,7 +49,46 @@ impl Job {
     const INDEX_UPDATE_YANKED: &str = "sync_yanked";
     const NORMALIZE_INDEX: &str = "normalize_index";
     const RENDER_AND_UPLOAD_README: &str = "render_and_upload_readme";
+    const SYNC_TO_GIT_INDEX: &str = "sync_to_git_index";
+    const SYNC_TO_SPARSE_INDEX: &str = "sync_to_sparse_index";
     const UPDATE_DOWNLOADS: &str = "update_downloads";
+
+    pub fn enqueue_sync_to_index<T: ToString>(
+        krate: T,
+        conn: &mut PgConnection,
+    ) -> Result<(), EnqueueError> {
+        use crate::schema::background_jobs::dsl::*;
+
+        let to_git = Self::sync_to_git_index(krate.to_string());
+        let to_git = (
+            job_type.eq(to_git.as_type_str()),
+            data.eq(to_git.to_value()?),
+        );
+
+        let to_sparse = Self::sync_to_sparse_index(krate.to_string());
+        let to_sparse = (
+            job_type.eq(to_sparse.as_type_str()),
+            data.eq(to_sparse.to_value()?),
+        );
+
+        diesel::insert_into(background_jobs)
+            .values(vec![to_git, to_sparse])
+            .execute(conn)?;
+
+        Ok(())
+    }
+
+    pub fn sync_to_git_index<T: ToString>(krate: T) -> Job {
+        Job::SyncToGitIndex(SyncToIndexJob {
+            krate: krate.to_string(),
+        })
+    }
+
+    pub fn sync_to_sparse_index<T: ToString>(krate: T) -> Job {
+        Job::SyncToSparseIndex(SyncToIndexJob {
+            krate: krate.to_string(),
+        })
+    }
 
     fn as_type_str(&self) -> &'static str {
         match self {
@@ -59,6 +100,8 @@ impl Job {
             Job::IndexUpdateYanked(_) => Self::INDEX_UPDATE_YANKED,
             Job::NormalizeIndex(_) => Self::NORMALIZE_INDEX,
             Job::RenderAndUploadReadme(_) => Self::RENDER_AND_UPLOAD_README,
+            Job::SyncToGitIndex(_) => Self::SYNC_TO_GIT_INDEX,
+            Job::SyncToSparseIndex(_) => Self::SYNC_TO_SPARSE_INDEX,
             Job::UpdateDownloads => Self::UPDATE_DOWNLOADS,
         }
     }
@@ -73,6 +116,8 @@ impl Job {
             Job::IndexUpdateYanked(inner) => serde_json::to_value(inner),
             Job::NormalizeIndex(inner) => serde_json::to_value(inner),
             Job::RenderAndUploadReadme(inner) => serde_json::to_value(inner),
+            Job::SyncToGitIndex(inner) => serde_json::to_value(inner),
+            Job::SyncToSparseIndex(inner) => serde_json::to_value(inner),
             Job::UpdateDownloads => Ok(serde_json::Value::Null),
         }
     }
@@ -101,6 +146,8 @@ impl Job {
             Self::INDEX_UPDATE_YANKED => Job::IndexUpdateYanked(from_value(value)?),
             Self::NORMALIZE_INDEX => Job::NormalizeIndex(from_value(value)?),
             Self::RENDER_AND_UPLOAD_README => Job::RenderAndUploadReadme(from_value(value)?),
+            Self::SYNC_TO_GIT_INDEX => Job::SyncToGitIndex(from_value(value)?),
+            Self::SYNC_TO_SPARSE_INDEX => Job::SyncToSparseIndex(from_value(value)?),
             Self::UPDATE_DOWNLOADS => Job::UpdateDownloads,
             job_type => Err(PerformError::from(format!("Unknown job type {job_type}")))?,
         })
@@ -136,6 +183,8 @@ impl Job {
                 args.base_url.as_deref(),
                 args.pkg_path_in_vcs.as_deref(),
             ),
+            Job::SyncToGitIndex(args) => worker::sync_to_git_index(env, conn, &args.krate),
+            Job::SyncToSparseIndex(args) => worker::sync_to_sparse_index(env, conn, &args.krate),
             Job::UpdateDownloads => worker::perform_update_downloads(&mut *fresh_connection(pool)?),
         }
     }
@@ -170,6 +219,11 @@ pub struct IndexAddCrateJob {
 #[derive(Serialize, Deserialize)]
 pub struct IndexSyncToHttpJob {
     pub(super) crate_name: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct SyncToIndexJob {
+    pub(super) krate: String,
 }
 
 #[derive(Serialize, Deserialize)]
