@@ -53,6 +53,31 @@ impl Job {
     const SYNC_TO_SPARSE_INDEX: &str = "sync_to_sparse_index";
     const UPDATE_DOWNLOADS: &str = "update_downloads";
 
+    pub fn enqueue_sync_to_index<T: ToString>(
+        krate: T,
+        conn: &mut PgConnection,
+    ) -> Result<(), EnqueueError> {
+        use crate::schema::background_jobs::dsl::*;
+
+        let to_git = Self::sync_to_git_index(krate.to_string());
+        let to_git = (
+            job_type.eq(to_git.as_type_str()),
+            data.eq(to_git.to_value()?),
+        );
+
+        let to_sparse = Self::sync_to_sparse_index(krate.to_string());
+        let to_sparse = (
+            job_type.eq(to_sparse.as_type_str()),
+            data.eq(to_sparse.to_value()?),
+        );
+
+        diesel::insert_into(background_jobs)
+            .values(vec![to_git, to_sparse])
+            .execute(conn)?;
+
+        Ok(())
+    }
+
     pub fn sync_to_git_index<T: ToString>(krate: T) -> Job {
         Job::SyncToGitIndex(SyncToIndexJob {
             krate: krate.to_string(),

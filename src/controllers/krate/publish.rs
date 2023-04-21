@@ -274,8 +274,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             };
 
             if app.config.feature_index_sync {
-                Job::sync_to_git_index(&git_crate.name).enqueue(conn)?;
-                Job::sync_to_sparse_index(&git_crate.name).enqueue(conn)?;
+                Job::enqueue_sync_to_index(&krate.name, conn)?;
             } else {
                 worker::add_crate(git_crate).enqueue(conn)?;
             }

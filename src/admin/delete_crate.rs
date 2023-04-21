@@ -56,10 +56,7 @@ fn delete(opts: Opts, conn: &mut PgConnection) {
     }
 
     if dotenv::var("FEATURE_INDEX_SYNC").is_ok() {
-        Job::sync_to_git_index(&krate.name).enqueue(conn).unwrap();
-        Job::sync_to_sparse_index(&krate.name)
-            .enqueue(conn)
-            .unwrap();
+        Job::enqueue_sync_to_index(&krate.name, conn).unwrap();
     } else {
         uploader.delete_index(&client, &krate.name).unwrap();
     }

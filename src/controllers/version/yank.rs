@@ -86,8 +86,7 @@ fn modify_yank(
     insert_version_owner_action(conn, version.id, user.id, api_token_id, action)?;
 
     if state.config.feature_index_sync {
-        Job::sync_to_git_index(&krate.name).enqueue(conn)?;
-        Job::sync_to_sparse_index(&krate.name).enqueue(conn)?;
+        Job::enqueue_sync_to_index(&krate.name, conn)?;
     } else {
         worker::sync_yanked(krate.name, version.num).enqueue(conn)?;
     }
