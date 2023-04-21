@@ -44,14 +44,14 @@
         ],
         [
           "content-length",
-          "154"
+          "309"
         ],
         [
           "content-type",
           "text/plain"
         ]
       ],
-      "body": "{\"name\":\"foo_whitelist\",\"vers\":\"1.1.0\",\"deps\":[],\"cksum\":\"4e33dc59bbbc96645fc01945fb502507d1b7bd3a2d06227bf7b0fe8842f284c2\",\"features\":{},\"yanked\":false}\n"
+      "body": "{\"name\":\"foo_whitelist\",\"vers\":\"0.99.0\",\"deps\":[],\"cksum\":\"                                                                \",\"features\":{},\"yanked\":false}\n{\"name\":\"foo_whitelist\",\"vers\":\"1.1.0\",\"deps\":[],\"cksum\":\"4e33dc59bbbc96645fc01945fb502507d1b7bd3a2d06227bf7b0fe8842f284c2\",\"features\":{},\"yanked\":false}\n"
     },
     "response": {
       "status": 200,

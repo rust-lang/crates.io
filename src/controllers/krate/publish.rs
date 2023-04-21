@@ -1,6 +1,7 @@
 //! Functionality related to publishing a new crate or version of a crate.
 
 use crate::auth::AuthCheck;
+use crate::background_jobs::Job;
 use axum::body::Bytes;
 use flate2::read::GzDecoder;
 use hex::ToHex;
@@ -271,7 +272,13 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 links,
                 v,
             };
-            worker::add_crate(git_crate).enqueue(conn)?;
+
+            if app.config.feature_index_sync {
+                Job::sync_to_git_index(&git_crate.name).enqueue(conn)?;
+                Job::sync_to_sparse_index(&git_crate.name).enqueue(conn)?;
+            } else {
+                worker::add_crate(git_crate).enqueue(conn)?;
+            }
 
             // The `other` field on `PublishWarnings` was introduced to handle a temporary warning
             // that is no longer needed. As such, crates.io currently does not return any `other`
