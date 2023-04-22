@@ -78,16 +78,67 @@ impl Job {
         Ok(())
     }
 
-    pub fn sync_to_git_index<T: ToString>(krate: T) -> Job {
-        Job::SyncToGitIndex(SyncToIndexJob {
+    pub fn add_crate(krate: cargo_registry_index::Crate) -> Self {
+        Self::IndexAddCrate(IndexAddCrateJob { krate })
+    }
+
+    pub fn daily_db_maintenance() -> Self {
+        Self::DailyDbMaintenance
+    }
+
+    pub fn dump_db(database_url: String, target_name: String) -> Self {
+        Self::DumpDb(DumpDbJob {
+            database_url,
+            target_name,
+        })
+    }
+
+    pub fn normalize_index(dry_run: bool) -> Self {
+        Self::NormalizeIndex(NormalizeIndexJob { dry_run })
+    }
+
+    pub fn render_and_upload_readme(
+        version_id: i32,
+        text: String,
+        readme_path: String,
+        base_url: Option<String>,
+        pkg_path_in_vcs: Option<String>,
+    ) -> Self {
+        Self::RenderAndUploadReadme(RenderAndUploadReadmeJob {
+            version_id,
+            text,
+            readme_path,
+            base_url,
+            pkg_path_in_vcs,
+        })
+    }
+
+    pub fn squash_index() -> Self {
+        Self::IndexSquash
+    }
+
+    pub fn sync_to_git_index<T: ToString>(krate: T) -> Self {
+        Self::SyncToGitIndex(SyncToIndexJob {
             krate: krate.to_string(),
         })
     }
 
-    pub fn sync_to_sparse_index<T: ToString>(krate: T) -> Job {
-        Job::SyncToSparseIndex(SyncToIndexJob {
+    pub fn sync_to_sparse_index<T: ToString>(krate: T) -> Self {
+        Self::SyncToSparseIndex(SyncToIndexJob {
             krate: krate.to_string(),
         })
+    }
+
+    pub fn sync_yanked(krate: String, version_num: String) -> Self {
+        Self::IndexUpdateYanked(IndexUpdateYankedJob { krate, version_num })
+    }
+
+    pub fn update_crate_index(crate_name: String) -> Self {
+        Self::IndexSyncToHttp(IndexSyncToHttpJob { crate_name })
+    }
+
+    pub fn update_downloads() -> Self {
+        Self::UpdateDownloads
     }
 
     fn as_type_str(&self) -> &'static str {

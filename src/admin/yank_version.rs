@@ -68,8 +68,6 @@ fn yank(opts: Opts, conn: &mut PgConnection) {
     if dotenv::var("FEATURE_INDEX_SYNC").is_ok() {
         Job::enqueue_sync_to_index(&krate.name, conn).unwrap();
     } else {
-        crate::worker::sync_yanked(krate.name, v.num)
-            .enqueue(conn)
-            .unwrap();
+        Job::sync_yanked(krate.name, v.num).enqueue(conn).unwrap();
     }
 }

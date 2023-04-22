@@ -1,4 +1,3 @@
-use crate::background_jobs::Job;
 use crate::swirl::PerformError;
 /// Run daily database maintenance tasks
 ///
@@ -16,8 +15,4 @@ pub(crate) fn perform_daily_db_maintenance(conn: &mut PgConnection) -> Result<()
     sql_query("VACUUM version_downloads;").execute(conn)?;
     info!("Finished running VACUUM on version_downloads table");
     Ok(())
-}
-
-pub fn daily_db_maintenance() -> Job {
-    Job::DailyDbMaintenance
 }

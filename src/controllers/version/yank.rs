@@ -9,7 +9,6 @@ use crate::models::token::EndpointScope;
 use crate::models::Rights;
 use crate::models::{insert_version_owner_action, VersionAction};
 use crate::schema::versions;
-use crate::worker;
 
 /// Handles the `DELETE /crates/:crate_id/:version/yank` route.
 /// This does not delete a crate version, it makes the crate
@@ -88,7 +87,7 @@ fn modify_yank(
     if state.config.feature_index_sync {
         Job::enqueue_sync_to_index(&krate.name, conn)?;
     } else {
-        worker::sync_yanked(krate.name, version.num).enqueue(conn)?;
+        Job::sync_yanked(krate.name, version.num).enqueue(conn)?;
     }
 
     ok_true()

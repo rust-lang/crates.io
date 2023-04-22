@@ -3,17 +3,12 @@ use crate::{
     schema::{crates, metadata, version_downloads, versions},
 };
 
-use crate::background_jobs::Job;
 use crate::swirl::PerformError;
 use diesel::prelude::*;
 
 pub fn perform_update_downloads(conn: &mut PgConnection) -> Result<(), PerformError> {
     update(conn)?;
     Ok(())
-}
-
-pub fn update_downloads() -> Job {
-    Job::UpdateDownloads
 }
 
 fn update(conn: &mut PgConnection) -> QueryResult<()> {

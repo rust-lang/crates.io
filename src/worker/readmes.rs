@@ -4,7 +4,7 @@ use crate::swirl::PerformError;
 use cargo_registry_markdown::text_to_html;
 use diesel::PgConnection;
 
-use crate::background_jobs::{Environment, Job, RenderAndUploadReadmeJob};
+use crate::background_jobs::Environment;
 use crate::models::Version;
 
 pub fn perform_render_and_upload_readme(
@@ -31,21 +31,5 @@ pub fn perform_render_and_upload_readme(
         env.uploader
             .upload_readme(env.http_client(), &crate_name, &vers, rendered)?;
         Ok(())
-    })
-}
-
-pub fn render_and_upload_readme(
-    version_id: i32,
-    text: String,
-    readme_path: String,
-    base_url: Option<String>,
-    pkg_path_in_vcs: Option<String>,
-) -> Job {
-    Job::RenderAndUploadReadme(RenderAndUploadReadmeJob {
-        version_id,
-        text,
-        readme_path,
-        base_url,
-        pkg_path_in_vcs,
     })
 }
