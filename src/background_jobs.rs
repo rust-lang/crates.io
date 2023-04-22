@@ -13,16 +13,16 @@ use crate::worker::cloudfront::CloudFront;
 use cargo_registry_index::Repository;
 
 pub enum Job {
+    AddCrate(AddCrateJob),
     DailyDbMaintenance,
     DumpDb(DumpDbJob),
-    AddCrate(AddCrateJob),
+    NormalizeIndex(NormalizeIndexJob),
+    RenderAndUploadReadme(RenderAndUploadReadmeJob),
     SquashIndex,
-    UpdateCrateIndex(UpdateCrateIndexJob),
     SyncToGitIndex(SyncToIndexJob),
     SyncToSparseIndex(SyncToIndexJob),
     SyncYanked(SyncYankedJob),
-    NormalizeIndex(NormalizeIndexJob),
-    RenderAndUploadReadme(RenderAndUploadReadmeJob),
+    UpdateCrateIndex(UpdateCrateIndexJob),
     UpdateDownloads,
 }
 
@@ -41,16 +41,16 @@ pub(crate) struct PerformState<'a> {
 }
 
 impl Job {
+    const ADD_CRATE: &str = "add_crate";
     const DAILY_DB_MAINTENANCE: &str = "daily_db_maintenance";
     const DUMP_DB: &str = "dump_db";
-    const ADD_CRATE: &str = "add_crate";
-    const SQUASH_INDEX: &str = "squash_index";
-    const UPDATE_CRATE_INDEX: &str = "update_crate_index";
-    const SYNC_YANKED: &str = "sync_yanked";
     const NORMALIZE_INDEX: &str = "normalize_index";
     const RENDER_AND_UPLOAD_README: &str = "render_and_upload_readme";
+    const SQUASH_INDEX: &str = "squash_index";
     const SYNC_TO_GIT_INDEX: &str = "sync_to_git_index";
     const SYNC_TO_SPARSE_INDEX: &str = "sync_to_sparse_index";
+    const SYNC_YANKED: &str = "sync_yanked";
+    const UPDATE_CRATE_INDEX: &str = "update_crate_index";
     const UPDATE_DOWNLOADS: &str = "update_downloads";
 
     pub fn enqueue_sync_to_index<T: ToString>(
@@ -143,32 +143,32 @@ impl Job {
 
     fn as_type_str(&self) -> &'static str {
         match self {
+            Job::AddCrate(_) => Self::ADD_CRATE,
             Job::DailyDbMaintenance => Self::DAILY_DB_MAINTENANCE,
             Job::DumpDb(_) => Self::DUMP_DB,
-            Job::AddCrate(_) => Self::ADD_CRATE,
-            Job::SquashIndex => Self::SQUASH_INDEX,
-            Job::UpdateCrateIndex(_) => Self::UPDATE_CRATE_INDEX,
-            Job::SyncYanked(_) => Self::SYNC_YANKED,
             Job::NormalizeIndex(_) => Self::NORMALIZE_INDEX,
             Job::RenderAndUploadReadme(_) => Self::RENDER_AND_UPLOAD_README,
+            Job::SquashIndex => Self::SQUASH_INDEX,
             Job::SyncToGitIndex(_) => Self::SYNC_TO_GIT_INDEX,
             Job::SyncToSparseIndex(_) => Self::SYNC_TO_SPARSE_INDEX,
+            Job::SyncYanked(_) => Self::SYNC_YANKED,
+            Job::UpdateCrateIndex(_) => Self::UPDATE_CRATE_INDEX,
             Job::UpdateDownloads => Self::UPDATE_DOWNLOADS,
         }
     }
 
     fn to_value(&self) -> serde_json::Result<serde_json::Value> {
         match self {
+            Job::AddCrate(inner) => serde_json::to_value(inner),
             Job::DailyDbMaintenance => Ok(serde_json::Value::Null),
             Job::DumpDb(inner) => serde_json::to_value(inner),
-            Job::AddCrate(inner) => serde_json::to_value(inner),
-            Job::SquashIndex => Ok(serde_json::Value::Null),
-            Job::UpdateCrateIndex(inner) => serde_json::to_value(inner),
-            Job::SyncYanked(inner) => serde_json::to_value(inner),
             Job::NormalizeIndex(inner) => serde_json::to_value(inner),
             Job::RenderAndUploadReadme(inner) => serde_json::to_value(inner),
+            Job::SquashIndex => Ok(serde_json::Value::Null),
             Job::SyncToGitIndex(inner) => serde_json::to_value(inner),
             Job::SyncToSparseIndex(inner) => serde_json::to_value(inner),
+            Job::SyncYanked(inner) => serde_json::to_value(inner),
+            Job::UpdateCrateIndex(inner) => serde_json::to_value(inner),
             Job::UpdateDownloads => Ok(serde_json::Value::Null),
         }
     }
@@ -189,16 +189,16 @@ impl Job {
     ) -> Result<Self, PerformError> {
         use serde_json::from_value;
         Ok(match job_type {
+            Self::ADD_CRATE => Job::AddCrate(from_value(value)?),
             Self::DAILY_DB_MAINTENANCE => Job::DailyDbMaintenance,
             Self::DUMP_DB => Job::DumpDb(from_value(value)?),
-            Self::ADD_CRATE => Job::AddCrate(from_value(value)?),
-            Self::SQUASH_INDEX => Job::SquashIndex,
-            Self::UPDATE_CRATE_INDEX => Job::UpdateCrateIndex(from_value(value)?),
-            Self::SYNC_YANKED => Job::SyncYanked(from_value(value)?),
             Self::NORMALIZE_INDEX => Job::NormalizeIndex(from_value(value)?),
             Self::RENDER_AND_UPLOAD_README => Job::RenderAndUploadReadme(from_value(value)?),
+            Self::SQUASH_INDEX => Job::SquashIndex,
             Self::SYNC_TO_GIT_INDEX => Job::SyncToGitIndex(from_value(value)?),
             Self::SYNC_TO_SPARSE_INDEX => Job::SyncToSparseIndex(from_value(value)?),
+            Self::SYNC_YANKED => Job::SyncYanked(from_value(value)?),
+            Self::UPDATE_CRATE_INDEX => Job::UpdateCrateIndex(from_value(value)?),
             Self::UPDATE_DOWNLOADS => Job::UpdateDownloads,
             job_type => Err(PerformError::from(format!("Unknown job type {job_type}")))?,
         })
