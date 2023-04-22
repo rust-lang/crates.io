@@ -1,5 +1,6 @@
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, PooledConnection};
+use paste::paste;
 use reqwest::blocking::Client;
 use std::fmt::Display;
 use std::panic::AssertUnwindSafe;
@@ -13,18 +14,74 @@ use crate::worker;
 use crate::worker::cloudfront::CloudFront;
 use cargo_registry_index::Repository;
 
-pub enum Job {
-    AddCrate(AddCrateJob),
-    DailyDbMaintenance,
-    DumpDb(DumpDbJob),
-    NormalizeIndex(NormalizeIndexJob),
-    RenderAndUploadReadme(RenderAndUploadReadmeJob),
-    SquashIndex,
-    SyncToGitIndex(SyncToIndexJob),
-    SyncToSparseIndex(SyncToIndexJob),
-    SyncYanked(SyncYankedJob),
-    UpdateCrateIndex(UpdateCrateIndexJob),
-    UpdateDownloads,
+macro_rules! jobs {
+    {
+        $vis:vis enum $name:ident {
+            $($variant:ident $(($content:ident))?),+ $(,)?
+        }
+    } => {
+        $vis enum $name {
+            $($variant $(($content))?,)+
+        }
+
+        paste! {
+            impl $name {
+                fn as_type_str(&self) -> &'static str {
+                    match self {
+                        $(Self:: $variant $(([<_ $content:snake:lower>]))? => stringify!([<$variant:snake:lower>]),)+
+                    }
+                }
+
+                fn to_value(&self) -> serde_json::Result<serde_json::Value> {
+                    match self {
+                        $(Self:: $variant $(([<$content:snake:lower>]))? => job_variant_to_value!($([<$content:snake:lower>])?),)+
+                    }
+                }
+
+                pub fn from_value(job_type: &str, value: serde_json::Value) -> Result<Self, PerformError> {
+                    Ok(match job_type {
+                        $(stringify!([<$variant:snake:lower>]) => job_variant_from_value!($variant value $($content)?),)+
+                        job_type => Err(PerformError::from(format!("Unknown job type {job_type}")))?,
+                    })
+                }
+
+            }
+        }
+    }
+}
+
+macro_rules! job_variant_to_value {
+    () => {
+        Ok(serde_json::Value::Null)
+    };
+    ($content:ident) => {
+        serde_json::to_value($content)
+    };
+}
+
+macro_rules! job_variant_from_value {
+    ($variant:ident $value:ident) => {
+        Self::$variant
+    };
+    ($variant:ident $value:ident $content:ident) => {
+        Self::$variant(serde_json::from_value($value)?)
+    };
+}
+
+jobs! {
+    pub enum Job {
+        AddCrate(AddCrateJob),
+        DailyDbMaintenance,
+        DumpDb(DumpDbJob),
+        NormalizeIndex(NormalizeIndexJob),
+        RenderAndUploadReadme(RenderAndUploadReadmeJob),
+        SquashIndex,
+        SyncToGitIndex(SyncToIndexJob),
+        SyncToSparseIndex(SyncToIndexJob),
+        SyncYanked(SyncYankedJob),
+        UpdateCrateIndex(UpdateCrateIndexJob),
+        UpdateDownloads,
+    }
 }
 
 /// Database state that is passed to `Job::perform()`.
@@ -42,18 +99,6 @@ pub(crate) struct PerformState<'a> {
 }
 
 impl Job {
-    const ADD_CRATE: &str = "add_crate";
-    const DAILY_DB_MAINTENANCE: &str = "daily_db_maintenance";
-    const DUMP_DB: &str = "dump_db";
-    const NORMALIZE_INDEX: &str = "normalize_index";
-    const RENDER_AND_UPLOAD_README: &str = "render_and_upload_readme";
-    const SQUASH_INDEX: &str = "squash_index";
-    const SYNC_TO_GIT_INDEX: &str = "sync_to_git_index";
-    const SYNC_TO_SPARSE_INDEX: &str = "sync_to_sparse_index";
-    const SYNC_YANKED: &str = "sync_yanked";
-    const UPDATE_CRATE_INDEX: &str = "update_crate_index";
-    const UPDATE_DOWNLOADS: &str = "update_downloads";
-
     #[instrument(name = "swirl.enqueue", skip_all, fields(message = "sync_to_index", krate = %krate))]
     pub fn enqueue_sync_to_index<T: ToString + Display>(
         krate: T,
@@ -143,38 +188,6 @@ impl Job {
         Self::UpdateDownloads
     }
 
-    fn as_type_str(&self) -> &'static str {
-        match self {
-            Job::AddCrate(_) => Self::ADD_CRATE,
-            Job::DailyDbMaintenance => Self::DAILY_DB_MAINTENANCE,
-            Job::DumpDb(_) => Self::DUMP_DB,
-            Job::NormalizeIndex(_) => Self::NORMALIZE_INDEX,
-            Job::RenderAndUploadReadme(_) => Self::RENDER_AND_UPLOAD_README,
-            Job::SquashIndex => Self::SQUASH_INDEX,
-            Job::SyncToGitIndex(_) => Self::SYNC_TO_GIT_INDEX,
-            Job::SyncToSparseIndex(_) => Self::SYNC_TO_SPARSE_INDEX,
-            Job::SyncYanked(_) => Self::SYNC_YANKED,
-            Job::UpdateCrateIndex(_) => Self::UPDATE_CRATE_INDEX,
-            Job::UpdateDownloads => Self::UPDATE_DOWNLOADS,
-        }
-    }
-
-    fn to_value(&self) -> serde_json::Result<serde_json::Value> {
-        match self {
-            Job::AddCrate(inner) => serde_json::to_value(inner),
-            Job::DailyDbMaintenance => Ok(serde_json::Value::Null),
-            Job::DumpDb(inner) => serde_json::to_value(inner),
-            Job::NormalizeIndex(inner) => serde_json::to_value(inner),
-            Job::RenderAndUploadReadme(inner) => serde_json::to_value(inner),
-            Job::SquashIndex => Ok(serde_json::Value::Null),
-            Job::SyncToGitIndex(inner) => serde_json::to_value(inner),
-            Job::SyncToSparseIndex(inner) => serde_json::to_value(inner),
-            Job::SyncYanked(inner) => serde_json::to_value(inner),
-            Job::UpdateCrateIndex(inner) => serde_json::to_value(inner),
-            Job::UpdateDownloads => Ok(serde_json::Value::Null),
-        }
-    }
-
     #[instrument(name = "swirl.enqueue", skip(self, conn), fields(message = self.as_type_str()))]
     pub fn enqueue(&self, conn: &mut PgConnection) -> Result<(), EnqueueError> {
         use crate::schema::background_jobs::dsl::*;
@@ -184,27 +197,6 @@ impl Job {
             .values((job_type.eq(self.as_type_str()), data.eq(job_data)))
             .execute(conn)?;
         Ok(())
-    }
-
-    pub(super) fn from_value(
-        job_type: &str,
-        value: serde_json::Value,
-    ) -> Result<Self, PerformError> {
-        use serde_json::from_value;
-        Ok(match job_type {
-            Self::ADD_CRATE => Job::AddCrate(from_value(value)?),
-            Self::DAILY_DB_MAINTENANCE => Job::DailyDbMaintenance,
-            Self::DUMP_DB => Job::DumpDb(from_value(value)?),
-            Self::NORMALIZE_INDEX => Job::NormalizeIndex(from_value(value)?),
-            Self::RENDER_AND_UPLOAD_README => Job::RenderAndUploadReadme(from_value(value)?),
-            Self::SQUASH_INDEX => Job::SquashIndex,
-            Self::SYNC_TO_GIT_INDEX => Job::SyncToGitIndex(from_value(value)?),
-            Self::SYNC_TO_SPARSE_INDEX => Job::SyncToSparseIndex(from_value(value)?),
-            Self::SYNC_YANKED => Job::SyncYanked(from_value(value)?),
-            Self::UPDATE_CRATE_INDEX => Job::UpdateCrateIndex(from_value(value)?),
-            Self::UPDATE_DOWNLOADS => Job::UpdateDownloads,
-            job_type => Err(PerformError::from(format!("Unknown job type {job_type}")))?,
-        })
     }
 
     pub(super) fn perform(
