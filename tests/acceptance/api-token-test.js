@@ -133,6 +133,25 @@ module('Acceptance | api-tokens', function (hooks) {
     assert.dom('[data-test-token]').hasText(token.token);
   });
 
+  test('API tokens are only visible in plaintext until the page is left', async function (assert) {
+    prepare(this);
+
+    await visit('/settings/tokens');
+    await click('[data-test-new-token-button]');
+    await fillIn('[data-test-focused-input]', 'the new token');
+    await click('[data-test-save-token-button]');
+
+    let token = this.server.schema.apiTokens.findBy({ name: 'the new token' });
+    assert.dom('[data-test-token]').hasText(token.token);
+
+    // leave the API tokens page
+    await visit('/settings');
+
+    // and visit it again
+    await visit('/settings/tokens');
+    assert.dom('[data-test-token]').doesNotExist();
+  });
+
   test('navigating away while creating a token does not keep it in the list', async function (assert) {
     prepare(this);
 
