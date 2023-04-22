@@ -1,6 +1,4 @@
-use crate::background_jobs::{
-    Environment, IndexAddCrateJob, IndexSyncToHttpJob, IndexUpdateYankedJob, Job, NormalizeIndexJob,
-};
+use crate::background_jobs::{Environment, Job, NormalizeIndexJob};
 use crate::models;
 use crate::schema;
 use crate::swirl::PerformError;
@@ -35,12 +33,8 @@ pub fn perform_index_add_crate(
     repo.commit_and_push(&message, &dst)?;
 
     // Queue another background job to update the http-based index as well.
-    update_crate_index(krate.name.clone()).enqueue(conn)?;
+    Job::update_crate_index(krate.name.clone()).enqueue(conn)?;
     Ok(())
-}
-
-pub fn add_crate(krate: Crate) -> Job {
-    Job::IndexAddCrate(IndexAddCrateJob { krate })
 }
 
 #[instrument(skip(env))]
@@ -69,10 +63,6 @@ pub fn perform_index_sync_to_http(
     }
 
     Ok(())
-}
-
-pub fn update_crate_index(crate_name: String) -> Job {
-    Job::IndexSyncToHttp(IndexSyncToHttpJob { crate_name })
 }
 
 /// Regenerates or removes an index file for a single crate
@@ -222,13 +212,9 @@ pub fn perform_index_update_yanked(
     }
 
     // Queue another background job to update the http-based index as well.
-    update_crate_index(krate.to_string()).enqueue(conn)?;
+    Job::update_crate_index(krate.to_string()).enqueue(conn)?;
 
     Ok(())
-}
-
-pub fn sync_yanked(krate: String, version_num: String) -> Job {
-    Job::IndexUpdateYanked(IndexUpdateYankedJob { krate, version_num })
 }
 
 /// Collapse the index into a single commit, archiving the current history in a snapshot branch.
@@ -266,10 +252,6 @@ pub fn perform_index_squash(env: &Environment) -> Result<(), PerformError> {
     info!("The index has been successfully squashed.");
 
     Ok(())
-}
-
-pub fn squash_index() -> Job {
-    Job::IndexSquash
 }
 
 pub fn perform_normalize_index(
@@ -340,8 +322,4 @@ pub fn perform_normalize_index(
     info!("Index normalization completed");
 
     Ok(())
-}
-
-pub fn normalize_index(dry_run: bool) -> Job {
-    Job::NormalizeIndex(NormalizeIndexJob { dry_run })
 }

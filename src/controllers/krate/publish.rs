@@ -17,7 +17,6 @@ use crate::models::{
     insert_version_owner_action, Category, Crate, DependencyKind, Keyword, NewCrate, NewVersion,
     Rights, VersionAction,
 };
-use crate::worker;
 
 use crate::middleware::log_request::RequestLogExt;
 use crate::models::token::EndpointScope;
@@ -231,7 +230,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             let pkg_path_in_vcs = cargo_vcs_info.map(|info| info.path_in_vcs);
 
             if let Some(readme) = new_crate.readme {
-                worker::render_and_upload_readme(
+                Job::render_and_upload_readme(
                     version.id,
                     readme,
                     new_crate
@@ -276,7 +275,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             if app.config.feature_index_sync {
                 Job::enqueue_sync_to_index(&krate.name, conn)?;
             } else {
-                worker::add_crate(git_crate).enqueue(conn)?;
+                Job::add_crate(git_crate).enqueue(conn)?;
             }
 
             // The `other` field on `PublishWarnings` was introduced to handle a temporary warning

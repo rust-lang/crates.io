@@ -5,9 +5,9 @@ use std::{
 };
 
 use self::configuration::VisibilityConfig;
-use crate::{background_jobs::DumpDbJob, swirl::PerformError};
+use crate::swirl::PerformError;
 use crate::{
-    background_jobs::{Environment, Job},
+    background_jobs::Environment,
     uploaders::{UploadBucket, Uploader},
 };
 use reqwest::header;
@@ -31,13 +31,6 @@ pub fn perform_dump_db(
     let size = tarball.upload(&target_name, &env.uploader)?;
     info!("Database dump uploaded {} bytes to {}.", size, &target_name);
     Ok(())
-}
-
-pub fn dump_db(database_url: String, target_name: String) -> Job {
-    Job::DumpDb(DumpDbJob {
-        database_url,
-        target_name,
-    })
 }
 
 /// Manage the export directory.

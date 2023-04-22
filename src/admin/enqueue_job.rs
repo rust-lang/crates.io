@@ -1,5 +1,6 @@
+use crate::background_jobs::Job;
+use crate::db;
 use crate::schema::background_jobs::dsl::*;
-use crate::{db, worker};
 use anyhow::Result;
 use diesel::prelude::*;
 
@@ -41,15 +42,15 @@ pub fn run(command: Command) -> Result<()> {
                 println!("Did not enqueue update_downloads, existing job already in progress");
                 Ok(())
             } else {
-                Ok(worker::update_downloads().enqueue(conn)?)
+                Ok(Job::update_downloads().enqueue(conn)?)
             }
         }
         Command::DumpDb {
             database_url,
             target_name,
-        } => Ok(worker::dump_db(database_url, target_name).enqueue(conn)?),
-        Command::DailyDbMaintenance => Ok(worker::daily_db_maintenance().enqueue(conn)?),
-        Command::SquashIndex => Ok(worker::squash_index().enqueue(conn)?),
-        Command::NormalizeIndex { dry_run } => Ok(worker::normalize_index(dry_run).enqueue(conn)?),
+        } => Ok(Job::dump_db(database_url, target_name).enqueue(conn)?),
+        Command::DailyDbMaintenance => Ok(Job::daily_db_maintenance().enqueue(conn)?),
+        Command::SquashIndex => Ok(Job::squash_index().enqueue(conn)?),
+        Command::NormalizeIndex { dry_run } => Ok(Job::normalize_index(dry_run).enqueue(conn)?),
     }
 }
