@@ -608,7 +608,7 @@ fn new_krate_without_any_email_fails() {
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.into_json(),
-        json!({ "errors": [{ "detail": "A verified email address is required to publish crates to crates.io. Visit https://crates.io/me to set and verify your email address." }] })
+        json!({ "errors": [{ "detail": "A verified email address is required to publish crates to crates.io. Visit https://crates.io/settings/profile to set and verify your email address." }] })
     );
 }
 
@@ -629,7 +629,7 @@ fn new_krate_with_unverified_email_fails() {
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.into_json(),
-        json!({ "errors": [{ "detail": "A verified email address is required to publish crates to crates.io. Visit https://crates.io/me to set and verify your email address." }] })
+        json!({ "errors": [{ "detail": "A verified email address is required to publish crates to crates.io. Visit https://crates.io/settings/profile to set and verify your email address." }] })
     );
 }
 
