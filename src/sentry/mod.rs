@@ -41,6 +41,9 @@ pub fn init() -> ClientInitGuard {
                 // more traffic on that endpoint compared to the rest
                 return traces_sample_rate / 100.;
             }
+        } else if op == "swirl.perform" || op == "admin.command" {
+            // Record all traces for background tasks and admin commands
+            return 1.;
         }
 
         traces_sample_rate
