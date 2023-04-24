@@ -14,8 +14,8 @@ use std::path::Path;
 use crate::controllers::cargo_prelude::*;
 use crate::controllers::util::RequestPartsExt;
 use crate::models::{
-    insert_version_owner_action, Category, Crate, DependencyKind, Keyword, NewCrate, NewVersion,
-    Rights, VersionAction,
+    insert_version_owner_action, Category, Crate, Keyword, NewCrate, NewVersion, Rights,
+    VersionAction,
 };
 
 use crate::middleware::log_request::RequestLogExt;
@@ -208,9 +208,9 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 // to get here, and max upload sizes are way less than i32 max
                 content_length as i32,
                 user.id,
-                hex_cksum.clone(),
-                links.clone(),
-                rust_version.clone(),
+                hex_cksum,
+                links,
+                rust_version,
             )?
             .save(conn, &verified_email_address)?;
 
@@ -343,11 +343,11 @@ pub fn add_dependencies(
     conn: &mut PgConnection,
     deps: &[EncodableCrateDependency],
     target_version_id: i32,
-) -> AppResult<Vec<cargo_registry_index::Dependency>> {
+) -> AppResult<()> {
     use self::dependencies::dsl::*;
     use diesel::insert_into;
 
-    let git_and_new_dependencies = deps
+    let new_dependencies = deps
         .iter()
         .map(|dep| {
             if let Some(registry) = &dep.registry {
@@ -367,51 +367,25 @@ pub fn add_dependencies(
                 }
             }
 
-            // If this dependency has an explicit name in `Cargo.toml` that
-            // means that the `name` we have listed is actually the package name
-            // that we're depending on. The `name` listed in the index is the
-            // Cargo.toml-written-name which is what cargo uses for
-            // `--extern foo=...`
-            let (name, package) = match &dep.explicit_name_in_toml {
-                Some(explicit) => (explicit.to_string(), Some(dep.name.to_string())),
-                None => (dep.name.to_string(), None),
-            };
-
             Ok((
-                cargo_registry_index::Dependency {
-                    name,
-                    req: dep.version_req.to_string(),
-                    features: dep.features.iter().map(|s| s.0.to_string()).collect(),
-                    optional: dep.optional,
-                    default_features: dep.default_features,
-                    target: dep.target.clone(),
-                    kind: dep.kind.or(Some(DependencyKind::Normal)).map(|dk| dk.into()),
-                    package,
-                },
-                (
-                    version_id.eq(target_version_id),
-                    crate_id.eq(krate.id),
-                    req.eq(dep.version_req.to_string()),
-                    dep.kind.map(|k| kind.eq(k as i32)),
-                    optional.eq(dep.optional),
-                    default_features.eq(dep.default_features),
-                    features.eq(&dep.features),
-                    target.eq(dep.target.as_deref()),
-                    explicit_name.eq(dep.explicit_name_in_toml.as_deref())
-                ),
+                version_id.eq(target_version_id),
+                crate_id.eq(krate.id),
+                req.eq(dep.version_req.to_string()),
+                dep.kind.map(|k| kind.eq(k as i32)),
+                optional.eq(dep.optional),
+                default_features.eq(dep.default_features),
+                features.eq(&dep.features),
+                target.eq(dep.target.as_deref()),
+                explicit_name.eq(dep.explicit_name_in_toml.as_deref())
             ))
         })
         .collect::<Result<Vec<_>, _>>()?;
-
-    let (mut git_deps, new_dependencies): (Vec<_>, Vec<_>) =
-        git_and_new_dependencies.into_iter().unzip();
-    git_deps.sort();
 
     insert_into(dependencies)
         .values(&new_dependencies)
         .execute(conn)?;
 
-    Ok(git_deps)
+    Ok(())
 }
 
 #[derive(Debug)]
