@@ -28,7 +28,7 @@ pub fn init() -> ClientInitGuard {
 
     let traces_sampler = move |ctx: &TransactionContext| -> f32 {
         let is_download_endpoint =
-            ctx.name().starts_with("/api/v1/crates/") && ctx.name().ends_with("/download");
+            ctx.name().starts_with("GET /api/v1/crates/") && ctx.name().ends_with("/download");
 
         if is_download_endpoint {
             // Reduce the sample rate for the download endpoint, since we have significantly
