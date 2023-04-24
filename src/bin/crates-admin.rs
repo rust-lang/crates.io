@@ -1,5 +1,8 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
+#[macro_use]
+extern crate tracing;
+
 use cargo_registry::admin::{
     delete_crate, delete_version, enqueue_job, git_import, migrate, populate, render_readmes,
     test_pagerduty, transfer_crates, upload_index, verify_token, yank_version,
@@ -31,7 +34,9 @@ fn main() -> anyhow::Result<()> {
 
     use clap::Parser;
 
+    let span = info_span!("admin.command", command = tracing::field::Empty);
     let command = Command::parse();
+    span.record("command", tracing::field::debug(&command));
 
     match command {
         Command::DeleteCrate(opts) => delete_crate::run(opts),
