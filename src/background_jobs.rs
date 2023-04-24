@@ -173,6 +173,7 @@ impl Job {
         }
     }
 
+    #[instrument(name = "swirl.enqueue", skip(self, conn), fields(message = self.as_type_str()))]
     pub fn enqueue(&self, conn: &mut PgConnection) -> Result<(), EnqueueError> {
         use crate::schema::background_jobs::dsl::*;
 
