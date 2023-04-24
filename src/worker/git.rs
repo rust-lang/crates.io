@@ -1,6 +1,5 @@
 use crate::background_jobs::{Environment, Job, NormalizeIndexJob};
 use crate::models;
-use crate::schema;
 use crate::swirl::PerformError;
 use anyhow::Context;
 use cargo_registry_index::{Crate, Repository};
@@ -155,66 +154,6 @@ pub fn get_index_data(name: &str, conn: &mut PgConnection) -> anyhow::Result<Opt
     let str = String::from_utf8(bytes).context("Failed to decode index metadata as utf8")?;
 
     Ok(Some(str))
-}
-
-/// Yanks or unyanks a crate version. This requires finding the index
-/// file, deserlialise the crate from JSON, change the yank boolean to
-/// `true` or `false`, write all the lines back out, and commit and
-/// push the changes.
-#[instrument(skip(env, conn))]
-pub fn perform_index_update_yanked(
-    env: &Environment,
-    conn: &mut PgConnection,
-    krate: &str,
-    version_num: &str,
-) -> Result<(), PerformError> {
-    info!("Syncing yanked status from database into the index");
-
-    debug!("Loading yanked status from database");
-
-    let yanked: bool = schema::versions::table
-        .inner_join(schema::crates::table)
-        .filter(schema::crates::name.eq(&krate))
-        .filter(schema::versions::num.eq(&version_num))
-        .select(schema::versions::yanked)
-        .get_result(conn)
-        .context("Failed to load yanked status from database")?;
-
-    debug!(yanked);
-
-    let repo = env.lock_index()?;
-    let dst = repo.index_file(krate);
-
-    let prev = fs::read_to_string(&dst)?;
-    let new = prev
-        .lines()
-        .map(|line| {
-            let mut git_crate = serde_json::from_str::<Crate>(line)
-                .map_err(|_| format!("couldn't decode: `{line}`"))?;
-            if git_crate.name != krate || git_crate.vers != version_num {
-                return Ok(line.to_string());
-            }
-            git_crate.yanked = Some(yanked);
-            Ok(serde_json::to_string(&git_crate)?)
-        })
-        .collect::<Result<Vec<_>, PerformError>>();
-    let new = new?.join("\n") + "\n";
-
-    if new != prev {
-        fs::write(&dst, new.as_bytes())?;
-
-        let action = if yanked { "Yank" } else { "Unyank" };
-        let message = format!("{action} crate `{krate}#{version_num}`");
-
-        repo.commit_and_push(&message, &dst)?;
-    } else {
-        debug!("Skipping `yanked` update because index is up-to-date");
-    }
-
-    // Queue another background job to update the http-based index as well.
-    Job::update_crate_index(krate.to_string()).enqueue(conn)?;
-
-    Ok(())
 }
 
 /// Collapse the index into a single commit, archiving the current history in a snapshot branch.

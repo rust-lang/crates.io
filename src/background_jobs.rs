@@ -78,7 +78,6 @@ jobs! {
         SquashIndex,
         SyncToGitIndex(SyncToIndexJob),
         SyncToSparseIndex(SyncToIndexJob),
-        SyncYanked(SyncYankedJob),
         UpdateCrateIndex(UpdateCrateIndexJob),
         UpdateDownloads,
     }
@@ -176,10 +175,6 @@ impl Job {
         })
     }
 
-    pub fn sync_yanked(krate: String, version_num: String) -> Self {
-        Self::SyncYanked(SyncYankedJob { krate, version_num })
-    }
-
     pub fn update_crate_index(crate_name: String) -> Self {
         Self::UpdateCrateIndex(UpdateCrateIndexJob { crate_name })
     }
@@ -216,9 +211,6 @@ impl Job {
             Job::AddCrate(args) => worker::perform_index_add_crate(env, conn, &args.krate),
             Job::SquashIndex => worker::perform_index_squash(env),
             Job::UpdateCrateIndex(args) => worker::perform_index_sync_to_http(env, args.crate_name),
-            Job::SyncYanked(args) => {
-                worker::perform_index_update_yanked(env, conn, &args.krate, &args.version_num)
-            }
             Job::NormalizeIndex(args) => worker::perform_normalize_index(env, args),
             Job::RenderAndUploadReadme(args) => worker::perform_render_and_upload_readme(
                 conn,
