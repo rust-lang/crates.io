@@ -1,8 +1,7 @@
 use crate::background_jobs::Job;
-use crate::{admin::dialoguer, config, db, models::Crate, schema::crates};
+use crate::{admin::dialoguer, db, models::Crate, schema::crates};
 
 use diesel::prelude::*;
-use reqwest::blocking::Client;
 
 #[derive(clap::Parser, Debug)]
 #[command(
@@ -31,10 +30,6 @@ pub fn run(opts: Opts) {
 fn delete(opts: Opts, conn: &mut PgConnection) {
     let krate: Crate = Crate::by_name(&opts.crate_name).first(conn).unwrap();
 
-    let config = config::Base::from_environment();
-    let uploader = config.uploader();
-    let client = Client::new();
-
     if !opts.yes {
         let prompt = format!(
             "Are you sure you want to delete {} ({})?",
@@ -55,9 +50,5 @@ fn delete(opts: Opts, conn: &mut PgConnection) {
         panic!("aborting transaction");
     }
 
-    if dotenv::var("FEATURE_INDEX_SYNC").is_ok() {
-        Job::enqueue_sync_to_index(&krate.name, conn).unwrap();
-    } else {
-        uploader.delete_index(&client, &krate.name).unwrap();
-    }
+    Job::enqueue_sync_to_index(&krate.name, conn).unwrap();
 }

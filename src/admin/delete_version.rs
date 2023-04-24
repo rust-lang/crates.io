@@ -59,7 +59,5 @@ fn delete(opts: Opts, conn: &mut PgConnection) {
         panic!("aborting transaction");
     }
 
-    if dotenv::var("FEATURE_INDEX_SYNC").is_ok() {
-        Job::enqueue_sync_to_index(&krate.name, conn).unwrap();
-    }
+    Job::enqueue_sync_to_index(&krate.name, conn).unwrap();
 }

@@ -7,7 +7,6 @@ use flate2::read::GzDecoder;
 use hex::ToHex;
 use hyper::body::Buf;
 use sha2::{Digest, Sha256};
-use std::collections::BTreeMap;
 use std::io::Read;
 use std::ops::Deref;
 use std::path::Path;
@@ -224,7 +223,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             )?;
 
             // Link this new version to all dependencies
-            let git_deps = add_dependencies(conn, &new_crate.deps, version.id)?;
+            add_dependencies(conn, &new_crate.deps, version.id)?;
 
             // Update all keywords for this crate
             Keyword::update_crate(conn, &krate, &keywords)?;
@@ -255,37 +254,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 .uploader()
                 .upload_crate(app.http_client(), tarball_bytes, &krate, vers)?;
 
-            let (features, features2): (BTreeMap<_, _>, BTreeMap<_, _>) =
-                features.into_iter().partition(|(_k, vals)| {
-                    !vals
-                        .iter()
-                        .any(|v| v.starts_with("dep:") || v.contains("?/"))
-                });
-            let (features2, v) = if features2.is_empty() {
-                (None, None)
-            } else {
-                (Some(features2), Some(2))
-            };
-
-            // Register this crate in our local git repo.
-            let git_crate = cargo_registry_index::Crate {
-                name: name.0,
-                vers: vers.to_string(),
-                cksum: hex_cksum,
-                features,
-                features2,
-                deps: git_deps,
-                yanked: Some(false),
-                links,
-                rust_version,
-                v,
-            };
-
-            if app.config.feature_index_sync {
-                Job::enqueue_sync_to_index(&krate.name, conn)?;
-            } else {
-                Job::add_crate(git_crate).enqueue(conn)?;
-            }
+            Job::enqueue_sync_to_index(&krate.name, conn)?;
 
             // The `other` field on `PublishWarnings` was introduced to handle a temporary warning
             // that is no longer needed. As such, crates.io currently does not return any `other`
