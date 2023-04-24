@@ -9,34 +9,6 @@ use std::fs::{self, File};
 use std::io::{BufRead, BufReader, ErrorKind, Write};
 use std::process::Command;
 
-#[instrument(skip(env))]
-pub fn perform_index_sync_to_http(
-    env: &Environment,
-    crate_name: String,
-) -> Result<(), PerformError> {
-    info!("Syncing git index to HTTP-based index");
-
-    let repo = env.lock_index()?;
-    let dst = repo.index_file(&crate_name);
-
-    let contents = match fs::read_to_string(dst) {
-        Ok(contents) => Some(contents),
-        Err(e) if e.kind() == ErrorKind::NotFound => None,
-        Err(e) => return Err(e.into()),
-    };
-
-    env.uploader
-        .sync_index(env.http_client(), &crate_name, contents)?;
-
-    if let Some(cloudfront) = env.cloudfront() {
-        let path = Repository::relative_index_file_for_url(&crate_name);
-        info!(%path, "Invalidating index file on CloudFront");
-        cloudfront.invalidate(env.http_client(), &path)?;
-    }
-
-    Ok(())
-}
-
 /// Regenerates or removes an index file for a single crate
 #[instrument(skip_all, fields(krate.name = ?krate))]
 pub fn sync_to_git_index(
