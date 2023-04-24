@@ -37,7 +37,7 @@ fn update(conn: &mut PgConnection) -> QueryResult<()> {
 
     sql_function!(fn refresh_recent_crate_downloads());
     select(refresh_recent_crate_downloads()).execute(conn)?;
-    println!("Finished running refresh_recent_crate_downloads");
+    info!("Finished running refresh_recent_crate_downloads");
 
     Ok(())
 }
