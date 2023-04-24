@@ -27,6 +27,10 @@ pub fn init() -> ClientInitGuard {
     let traces_sample_rate = env_optional("SENTRY_TRACES_SAMPLE_RATE").unwrap_or(0.0);
 
     let traces_sampler = move |ctx: &TransactionContext| -> f32 {
+        if let Some(sampled) = ctx.sampled() {
+            return if sampled { 1.0 } else { 0.0 };
+        }
+
         let is_download_endpoint =
             ctx.name().starts_with("GET /api/v1/crates/") && ctx.name().ends_with("/download");
 
