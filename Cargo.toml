@@ -71,6 +71,7 @@ reqwest = { version = "=0.11.16", features = ["blocking", "gzip", "json"] }
 retry = "=2.0.0"
 ring = "=0.16.20"
 scheduled-thread-pool = "=0.2.7"
+secrecy = "=0.8.0"
 semver = { version = "=1.0.17", features = ["serde"] }
 sentry = { version = "=0.31.0", features = ["tracing", "tower", "tower-http"] }
 serde = { version = "=1.0.160", features = ["derive"] }
