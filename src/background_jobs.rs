@@ -70,7 +70,6 @@ macro_rules! job_variant_from_value {
 
 jobs! {
     pub enum Job {
-        AddCrate(AddCrateJob),
         DailyDbMaintenance,
         DumpDb(DumpDbJob),
         NormalizeIndex(NormalizeIndexJob),
@@ -122,10 +121,6 @@ impl Job {
             .execute(conn)?;
 
         Ok(())
-    }
-
-    pub fn add_crate(krate: cargo_registry_index::Crate) -> Self {
-        Self::AddCrate(AddCrateJob { krate })
     }
 
     pub fn daily_db_maintenance() -> Self {
@@ -208,7 +203,6 @@ impl Job {
                 worker::perform_daily_db_maintenance(&mut *fresh_connection(pool)?)
             }
             Job::DumpDb(args) => worker::perform_dump_db(env, args.database_url, args.target_name),
-            Job::AddCrate(args) => worker::perform_index_add_crate(env, conn, &args.krate),
             Job::SquashIndex => worker::perform_index_squash(env),
             Job::UpdateCrateIndex(args) => worker::perform_index_sync_to_http(env, args.crate_name),
             Job::NormalizeIndex(args) => worker::perform_normalize_index(env, args),

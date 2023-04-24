@@ -1,40 +1,13 @@
-use crate::background_jobs::{Environment, Job, NormalizeIndexJob};
+use crate::background_jobs::{Environment, NormalizeIndexJob};
 use crate::models;
 use crate::swirl::PerformError;
 use anyhow::Context;
 use cargo_registry_index::{Crate, Repository};
 use chrono::Utc;
 use diesel::prelude::*;
-use std::fs::{self, File, OpenOptions};
+use std::fs::{self, File};
 use std::io::{BufRead, BufReader, ErrorKind, Write};
 use std::process::Command;
-
-#[instrument(skip_all, fields(krate.name = ?krate.name, krate.vers = ?krate.vers))]
-pub fn perform_index_add_crate(
-    env: &Environment,
-    conn: &mut PgConnection,
-    krate: &Crate,
-) -> Result<(), PerformError> {
-    info!("Adding {}#{} to the git index", krate.name, krate.vers);
-
-    use std::io::prelude::*;
-
-    let repo = env.lock_index()?;
-    let dst = repo.index_file(&krate.name);
-
-    // Add the crate to its relevant file
-    fs::create_dir_all(dst.parent().unwrap())?;
-    let mut file = OpenOptions::new().append(true).create(true).open(&dst)?;
-    serde_json::to_writer(&mut file, &krate)?;
-    file.write_all(b"\n")?;
-
-    let message: String = format!("Update crate `{}#{}`", krate.name, krate.vers);
-    repo.commit_and_push(&message, &dst)?;
-
-    // Queue another background job to update the http-based index as well.
-    Job::update_crate_index(krate.name.clone()).enqueue(conn)?;
-    Ok(())
-}
 
 #[instrument(skip(env))]
 pub fn perform_index_sync_to_http(
