@@ -27,16 +27,26 @@ pub fn init() -> ClientInitGuard {
     let traces_sample_rate = env_optional("SENTRY_TRACES_SAMPLE_RATE").unwrap_or(0.0);
 
     let traces_sampler = move |ctx: &TransactionContext| -> f32 {
-        let is_download_endpoint =
-            ctx.name().starts_with("GET /api/v1/crates/") && ctx.name().ends_with("/download");
-
-        if is_download_endpoint {
-            // Reduce the sample rate for the download endpoint, since we have significantly
-            // more traffic on that endpoint compared to the rest
-            traces_sample_rate / 10.
-        } else {
-            traces_sample_rate
+        if let Some(sampled) = ctx.sampled() {
+            return if sampled { 1.0 } else { 0.0 };
         }
+
+        let op = ctx.operation();
+        if op == "http.server" {
+            let is_download_endpoint =
+                ctx.name().starts_with("GET /api/v1/crates/") && ctx.name().ends_with("/download");
+
+            if is_download_endpoint {
+                // Reduce the sample rate for the download endpoint, since we have significantly
+                // more traffic on that endpoint compared to the rest
+                return traces_sample_rate / 100.;
+            }
+        } else if op == "swirl.perform" || op == "admin.command" {
+            // Record all traces for background tasks and admin commands
+            return 1.;
+        }
+
+        traces_sample_rate
     };
 
     let opts = ClientOptions {
