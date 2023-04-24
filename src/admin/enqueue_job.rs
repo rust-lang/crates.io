@@ -3,6 +3,7 @@ use crate::db;
 use crate::schema::background_jobs::dsl::*;
 use anyhow::Result;
 use diesel::prelude::*;
+use secrecy::{ExposeSecret, SecretString};
 
 #[derive(clap::Parser, Debug)]
 #[command(
@@ -14,7 +15,7 @@ pub enum Command {
     UpdateDownloads,
     DumpDb {
         #[arg(env = "READ_ONLY_REPLICA_URL")]
-        database_url: String,
+        database_url: SecretString,
         #[arg(default_value = "db-dump.tar.gz")]
         target_name: String,
     },
@@ -48,7 +49,7 @@ pub fn run(command: Command) -> Result<()> {
         Command::DumpDb {
             database_url,
             target_name,
-        } => Ok(Job::dump_db(database_url, target_name).enqueue(conn)?),
+        } => Ok(Job::dump_db(database_url.expose_secret().to_string(), target_name).enqueue(conn)?),
         Command::DailyDbMaintenance => Ok(Job::daily_db_maintenance().enqueue(conn)?),
         Command::SquashIndex => Ok(Job::squash_index().enqueue(conn)?),
         Command::NormalizeIndex { dry_run } => Ok(Job::normalize_index(dry_run).enqueue(conn)?),
