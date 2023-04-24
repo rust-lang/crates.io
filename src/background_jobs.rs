@@ -1,6 +1,7 @@
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, PooledConnection};
 use reqwest::blocking::Client;
+use std::fmt::Display;
 use std::panic::AssertUnwindSafe;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
@@ -53,7 +54,8 @@ impl Job {
     const UPDATE_CRATE_INDEX: &str = "update_crate_index";
     const UPDATE_DOWNLOADS: &str = "update_downloads";
 
-    pub fn enqueue_sync_to_index<T: ToString>(
+    #[instrument(name = "swirl.enqueue", skip_all, fields(message = "sync_to_index", krate = %krate))]
+    pub fn enqueue_sync_to_index<T: ToString + Display>(
         krate: T,
         conn: &mut PgConnection,
     ) -> Result<(), EnqueueError> {
@@ -173,6 +175,7 @@ impl Job {
         }
     }
 
+    #[instrument(name = "swirl.enqueue", skip(self, conn), fields(message = self.as_type_str()))]
     pub fn enqueue(&self, conn: &mut PgConnection) -> Result<(), EnqueueError> {
         use crate::schema::background_jobs::dsl::*;
 

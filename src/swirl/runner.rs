@@ -158,6 +158,9 @@ impl Runner {
                     warn!("Initial transaction depth is not 1. This is very unexpected");
                 }
 
+                let tx_ctx = sentry::TransactionContext::new(&job.job_type, "swirl.perform");
+                let tx = sentry::start_transaction(tx_ctx);
+
                 let result = conn
                     .transaction(|conn| {
                         let pool = pool.to_real_pool();
@@ -171,6 +174,12 @@ impl Runner {
                     })
                     // TODO: Replace with flatten() once that stabilizes
                     .and_then(std::convert::identity);
+
+                tx.set_status(match result.is_ok() {
+                    true => sentry::protocol::SpanStatus::Ok,
+                    false => sentry::protocol::SpanStatus::UnknownError,
+                });
+                tx.finish();
 
                 // If the job panics it could leave the connection inside an inner transaction(s).
                 // Attempt to roll those back so we can mark the job as failed, but if the rollback
