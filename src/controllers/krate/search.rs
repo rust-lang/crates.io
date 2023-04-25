@@ -280,9 +280,12 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             //
             // If this becomes a problem in the future the crates count could be denormalized, at least
             // for the filterless happy path.
-            let total: i64 = crates::table.count().get_result(conn)?;
+            let total: i64 = info_span!("db.query", message = "SELECT COUNT(*) FROM crates")
+                .in_scope(|| crates::table.count().get_result(conn))?;
 
-            let results: Vec<(Crate, bool, Option<i64>)> = query.load(conn)?;
+            let results: Vec<(Crate, bool, Option<i64>)> =
+                info_span!("db.query", message = "SELECT ... FROM crates")
+                    .in_scope(|| query.load(conn))?;
 
             let next_page = if let Some(last) = results.last() {
                 let mut params = IndexMap::new();
@@ -298,7 +301,9 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             (total, next_page, None, results, conn)
         } else {
             let query = query.pages_pagination(pagination);
-            let data: Paginated<(Crate, bool, Option<i64>)> = query.load(conn)?;
+            let data: Paginated<(Crate, bool, Option<i64>)> =
+                info_span!("db.query", message = "SELECT ..., COUNT(*) FROM crates")
+                    .in_scope(|| query.load(conn))?;
             (
                 data.total(),
                 data.next_page_params().map(|p| req.query_with_params(p)),
@@ -315,7 +320,8 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             .collect::<Vec<_>>();
         let crates = data.into_iter().map(|(c, _, _)| c).collect::<Vec<_>>();
 
-        let versions: Vec<Version> = crates.versions().load(conn)?;
+        let versions: Vec<Version> = info_span!("db.query", message = "SELECT ... FROM versions")
+            .in_scope(|| crates.versions().load(conn))?;
         let versions = versions
             .grouped_by(&crates)
             .into_iter()
