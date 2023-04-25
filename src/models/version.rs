@@ -25,6 +25,7 @@ pub struct Version {
     pub published_by: Option<i32>,
     pub checksum: String,
     pub links: Option<String>,
+    pub rust_version: Option<String>,
 }
 
 #[derive(Insertable, Debug)]
