@@ -416,6 +416,7 @@ impl Crate {
     }
 
     /// Returns (dependency, dependent crate name, dependent crate downloads)
+    #[instrument(skip_all, fields(krate.name = %self.name))]
     pub(crate) fn reverse_dependencies(
         &self,
         conn: &mut PgConnection,
