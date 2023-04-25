@@ -211,7 +211,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 user.id,
                 hex_cksum.clone(),
                 links.clone(),
-                rust_version,
+                rust_version.clone(),
             )?
             .save(conn, &verified_email_address)?;
 
@@ -277,6 +277,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 deps: git_deps,
                 yanked: Some(false),
                 links,
+                rust_version,
                 v,
             };
 

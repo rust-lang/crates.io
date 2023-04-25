@@ -510,6 +510,7 @@ impl Crate {
                     deps,
                     features,
                     links: version.links,
+                    rust_version: version.rust_version,
                     features2,
                     v,
                 };
