@@ -161,19 +161,23 @@ impl Runner {
                 let tx_ctx = sentry::TransactionContext::new(&job.job_type, "swirl.perform");
                 let tx = sentry::start_transaction(tx_ctx);
 
-                let result = conn
-                    .transaction(|conn| {
-                        let pool = pool.to_real_pool();
-                        let state = AssertUnwindSafe(PerformState { conn, pool });
-                        catch_unwind(|| {
-                            // Ensure the whole `AssertUnwindSafe(_)` is moved
-                            let state = state;
-                            f(job, state.0)
+                let result = sentry::with_scope(
+                    |scope| scope.set_span(Some(tx.clone().into())),
+                    || {
+                        conn.transaction(|conn| {
+                            let pool = pool.to_real_pool();
+                            let state = AssertUnwindSafe(PerformState { conn, pool });
+                            catch_unwind(|| {
+                                // Ensure the whole `AssertUnwindSafe(_)` is moved
+                                let state = state;
+                                f(job, state.0)
+                            })
+                            .map_err(|e| try_to_extract_panic_info(&e))
                         })
-                        .map_err(|e| try_to_extract_panic_info(&e))
-                    })
-                    // TODO: Replace with flatten() once that stabilizes
-                    .and_then(std::convert::identity);
+                        // TODO: Replace with flatten() once that stabilizes
+                        .and_then(std::convert::identity)
+                    },
+                );
 
                 tx.set_status(match result.is_ok() {
                     true => sentry::protocol::SpanStatus::Ok,
