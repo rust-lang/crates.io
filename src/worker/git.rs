@@ -29,7 +29,7 @@ pub fn perform_index_add_crate(
     serde_json::to_writer(&mut file, &krate)?;
     file.write_all(b"\n")?;
 
-    let message: String = format!("Updating crate `{}#{}`", krate.name, krate.vers);
+    let message: String = format!("Update crate `{}#{}`", krate.name, krate.vers);
     repo.commit_and_push(&message, &dst)?;
 
     // Queue another background job to update the http-based index as well.
@@ -91,16 +91,16 @@ pub fn sync_to_git_index(
             fs::create_dir_all(dst.parent().unwrap())?;
             let mut file = File::create(&dst)?;
             file.write_all(new.as_bytes())?;
-            repo.commit_and_push(&format!("Creating crate `{}`", krate), &dst)?;
+            repo.commit_and_push(&format!("Create crate `{}`", krate), &dst)?;
         }
         (Some(old), Some(new)) if old != new => {
             let mut file = File::create(&dst)?;
             file.write_all(new.as_bytes())?;
-            repo.commit_and_push(&format!("Updating crate `{}`", krate), &dst)?;
+            repo.commit_and_push(&format!("Update crate `{}`", krate), &dst)?;
         }
         (Some(_old), None) => {
             fs::remove_file(&dst)?;
-            repo.commit_and_push(&format!("Deleting crate `{}`", krate), &dst)?;
+            repo.commit_and_push(&format!("Delete crate `{}`", krate), &dst)?;
         }
         _ => debug!("Skipping sync because index is up-to-date"),
     }
@@ -203,7 +203,7 @@ pub fn perform_index_update_yanked(
     if new != prev {
         fs::write(&dst, new.as_bytes())?;
 
-        let action = if yanked { "Yanking" } else { "Unyanking" };
+        let action = if yanked { "Yank" } else { "Unyank" };
         let message = format!("{action} crate `{krate}#{version_num}`");
 
         repo.commit_and_push(&message, &dst)?;
