@@ -21,7 +21,11 @@ pub async fn download(
     let wants_json = req.wants_json();
 
     let cache_key = (crate_name.to_string(), version.to_string());
-    let (crate_name, version) = if let Some(version_id) = app.version_id_cacher.get(&cache_key) {
+
+    let cache_result =
+        info_span!("cache.read", ?cache_key).in_scope(|| app.version_id_cacher.get(&cache_key));
+
+    let (crate_name, version) = if let Some(version_id) = cache_result {
         app.instance_metrics.version_id_cache_hits.inc();
 
         // The increment does not happen instantly, but it's deferred to be executed in a batch
@@ -57,12 +61,16 @@ pub async fn download(
                     .instance_metrics
                     .downloads_select_query_execution_time
                     .observe_closure_duration(|| {
-                        versions
-                            .inner_join(crates::table)
-                            .select((id, crates::name))
-                            .filter(Crate::with_name(&crate_name))
-                            .filter(num.eq(&version))
-                            .first::<(i32, String)>(&mut *conn)
+                        info_span!("db.query", message = "SELECT ... FROM versions").in_scope(
+                            || {
+                                versions
+                                    .inner_join(crates::table)
+                                    .select((id, crates::name))
+                                    .filter(Crate::with_name(&crate_name))
+                                    .filter(num.eq(&version))
+                                    .first::<(i32, String)>(&mut *conn)
+                            },
+                        )
                     })?;
 
                 // The increment does not happen instantly, but it's deferred to be executed in a batch
@@ -80,9 +88,11 @@ pub async fn download(
                     // The version_id is only cached if the provided crate name was canonical.
                     // Non-canonical requests fallback to the "slow" path with a DB query, but
                     // we typically only get a few hundred non-canonical requests in a day anyway.
-                    app.version_id_cacher
-                        .blocking()
-                        .insert(cache_key, version_id);
+                    info_span!("cache.write", ?cache_key).in_scope(|| {
+                        app.version_id_cacher
+                            .blocking()
+                            .insert(cache_key, version_id)
+                    });
 
                     Ok((crate_name, version))
                 }
