@@ -26,6 +26,7 @@ versions:
       name: ~
       url: "https://github.com/foo"
     readme_path: /api/v1/crates/foo_vers_index/2.0.0/readme
+    rust_version: ~
     updated_at: "[datetime]"
     yanked: false
   - audit_actions: []
@@ -50,6 +51,7 @@ versions:
       name: ~
       url: "https://github.com/foo"
     readme_path: /api/v1/crates/foo_vers_index/2.0.1/readme
+    rust_version: ~
     updated_at: "[datetime]"
     yanked: false
 

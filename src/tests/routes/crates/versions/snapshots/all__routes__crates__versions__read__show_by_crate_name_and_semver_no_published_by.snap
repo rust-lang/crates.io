@@ -21,6 +21,7 @@ version:
   num: 1.0.0
   published_by: ~
   readme_path: /api/v1/crates/foo_vers_show_no_pb/1.0.0/readme
+  rust_version: ~
   updated_at: "[datetime]"
   yanked: false
 

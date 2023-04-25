@@ -14,6 +14,7 @@ fn show_by_crate_name_and_version() {
         VersionBuilder::new("2.0.0")
             .size(1234)
             .checksum("c241cd77c3723ccf1aa453f169ee60c0a888344da504bee0142adb859092acb4")
+            .rust_version("1.64")
             .expect_build(krate.id, user.id, conn)
     });
 
