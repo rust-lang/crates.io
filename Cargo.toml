@@ -32,7 +32,7 @@ slow-tests = []
 [dependencies]
 anyhow = "=1.0.70"
 aws-sigv4 = "=0.55.1"
-axum = { version = "=0.6.16", features = ["headers", "macros", "matched-path"] }
+axum = { version = "=0.6.17", features = ["headers", "macros", "matched-path"] }
 axum-extra = { version = "=0.7.4", features = ["cookie-signed"] }
 base64 = "=0.13.1"
 cargo-registry-index = { path = "cargo-registry-index" }
