@@ -39,6 +39,7 @@ pub struct NewVersion {
     published_by: i32,
     checksum: String,
     links: Option<String>,
+    rust_version: Option<String>,
 }
 
 /// The highest version (semver order) and the most recently updated version.
@@ -140,6 +141,7 @@ impl NewVersion {
         published_by: i32,
         checksum: String,
         links: Option<String>,
+        rust_version: Option<String>,
     ) -> AppResult<Self> {
         let features = serde_json::to_value(features)?;
 
@@ -152,6 +154,7 @@ impl NewVersion {
             published_by,
             checksum,
             links,
+            rust_version,
         };
 
         new_version.validate_license(license_file)?;

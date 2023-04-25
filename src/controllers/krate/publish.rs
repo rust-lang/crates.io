@@ -9,6 +9,7 @@ use hyper::body::Buf;
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 use std::io::Read;
+use std::ops::Deref;
 use std::path::Path;
 
 use crate::controllers::cargo_prelude::*;
@@ -189,6 +190,14 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             // Read tarball from request
             let hex_cksum: String = Sha256::digest(&tarball_bytes).encode_hex();
 
+            let pkg_name = format!("{}-{}", krate.name, vers);
+            let tarball_info = verify_tarball(&pkg_name, &tarball_bytes, maximums.max_unpack_size)?;
+
+            let rust_version = tarball_info
+                .manifest
+                .and_then(|m| m.package.rust_version)
+                .map(|rv| rv.deref().to_string());
+
             // Persist the new version of this crate
             let version = NewVersion::new(
                 krate.id,
@@ -202,6 +211,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 user.id,
                 hex_cksum.clone(),
                 links.clone(),
+                rust_version,
             )?
             .save(conn, &verified_email_address)?;
 
@@ -225,8 +235,6 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
 
             let top_versions = krate.top_versions(conn)?;
 
-            let pkg_name = format!("{}-{}", krate.name, vers);
-            let tarball_info = verify_tarball(&pkg_name, &tarball_bytes, maximums.max_unpack_size)?;
             let pkg_path_in_vcs = tarball_info.vcs_info.map(|info| info.path_in_vcs);
 
             if let Some(readme) = new_crate.readme {
@@ -428,7 +436,6 @@ pub fn add_dependencies(
 
 #[derive(Debug)]
 struct TarballInfo {
-    #[allow(dead_code)]
     manifest: Option<Manifest>,
     vcs_info: Option<CargoVcsInfo>,
 }

@@ -103,6 +103,7 @@ impl<'a> VersionBuilder<'a> {
             published_by,
             self.checksum,
             self.links,
+            None,
         )?
         .save(connection, "someone@example.com")?;
 
