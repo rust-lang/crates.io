@@ -43,6 +43,9 @@ pub fn init() -> ClientInitGuard {
             } else if ctx.name() == "PUT /crates/new" {
                 // Record all traces for crate publishing
                 return 1.;
+            } else if ctx.name().starts_with("GET /api/private/metrics/") {
+                // Ignore all traces for internal metrics collection
+                return 0.;
             }
         } else if op == "swirl.perform" || op == "admin.command" {
             // Record all traces for background tasks and admin commands
