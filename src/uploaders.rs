@@ -109,6 +109,7 @@ impl Uploader {
     ///
     /// This function can panic on an `Self::Local` during development.
     /// Production and tests use `Self::S3` which should not panic.
+    #[instrument(skip_all, fields(%path))]
     pub fn upload<R: Into<Body>>(
         &self,
         client: &Client,
@@ -149,6 +150,7 @@ impl Uploader {
     }
 
     /// Deletes a file using the configured uploader (either `S3`, `Local`).
+    #[instrument(skip_all, fields(%path))]
     pub fn delete(&self, client: &Client, path: &str, upload_bucket: UploadBucket) -> Result<()> {
         match *self {
             Uploader::S3 {
@@ -176,6 +178,7 @@ impl Uploader {
     }
 
     /// Uploads a crate and returns the checksum of the uploaded crate file.
+    #[instrument(skip_all)]
     pub fn upload_crate<R: Into<Body>>(
         &self,
         http_client: &Client,
@@ -201,6 +204,7 @@ impl Uploader {
         Ok(())
     }
 
+    #[instrument(skip_all)]
     pub(crate) fn upload_readme(
         &self,
         http_client: &Client,
@@ -225,6 +229,7 @@ impl Uploader {
         Ok(())
     }
 
+    #[instrument(skip_all)]
     pub(crate) fn upload_index(
         &self,
         http_client: &Client,
@@ -248,6 +253,7 @@ impl Uploader {
         Ok(())
     }
 
+    #[instrument(skip_all)]
     pub(crate) fn delete_index(&self, http_client: &Client, crate_name: &str) -> Result<()> {
         let path = Uploader::index_path(crate_name);
         self.delete(http_client, &path, UploadBucket::Index)?;
