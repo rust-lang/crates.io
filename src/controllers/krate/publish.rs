@@ -591,5 +591,6 @@ repository = "https://github.com/foo/bar"
         let manifest = assert_some!(tarball_info.manifest);
         assert_some_eq!(manifest.package.readme, "README.md");
         assert_some_eq!(manifest.package.repository, "https://github.com/foo/bar");
+        assert_some_eq!(manifest.package.rust_version, "1.59");
     }
 }
