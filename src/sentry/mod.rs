@@ -44,6 +44,9 @@ pub fn init() -> ClientInitGuard {
         } else if op == "swirl.perform" || op == "admin.command" {
             // Record all traces for background tasks and admin commands
             return 1.;
+        } else if op == "swirl.run" {
+            // Ignore top-level span from the background worker
+            return 0.;
         }
 
         traces_sample_rate

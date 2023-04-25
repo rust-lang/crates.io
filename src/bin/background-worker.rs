@@ -32,6 +32,8 @@ fn main() {
     // Initialize logging
     cargo_registry::util::tracing::init();
 
+    let _span = info_span!("swirl.run");
+
     info!("Booting runner");
 
     let config = config::Server::default();
