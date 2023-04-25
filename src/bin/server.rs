@@ -24,6 +24,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Initialize logging
     cargo_registry::util::tracing::init();
 
+    let _span = info_span!("server.run");
+
     let config = cargo_registry::config::Server::default();
     let env = config.env();
     let client = Client::new();
