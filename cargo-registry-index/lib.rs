@@ -299,6 +299,7 @@ impl Repository {
     /// - If cloning the crate index fails.
     /// - If reading the global git config fails.
     ///
+    #[instrument(skip_all)]
     pub fn open(repository_config: &RepositoryConfig) -> anyhow::Result<Self> {
         let checkout_path = tempfile::Builder::new()
             .prefix("git")
@@ -401,6 +402,7 @@ impl Repository {
     ///
     /// Note that `modified_file` expects a file path **relative** to the
     /// repository working folder!
+    #[instrument(skip_all, fields(message = %msg))]
     fn perform_commit_and_push(&self, msg: &str, modified_file: &Path) -> anyhow::Result<()> {
         // git add $file
         let mut index = self.repository.index()?;
@@ -421,6 +423,7 @@ impl Repository {
 
     /// Gets a list of files that have been modified since a given `starting_commit`
     /// (use `starting_commit = None` for a list of all files).
+    #[instrument(skip_all)]
     pub fn get_files_modified_since(
         &self,
         starting_commit: Option<&str>,
@@ -464,6 +467,7 @@ impl Repository {
     }
 
     /// Push the current branch to the provided refname
+    #[instrument(skip_all)]
     fn push(&self, refspec: &str) -> anyhow::Result<()> {
         let mut ref_status = Ok(());
         let mut callback_called = false;
@@ -513,6 +517,7 @@ impl Repository {
 
     /// Fetches any changes from the `origin` remote and performs a hard reset
     /// to the tip of the `origin/master` branch.
+    #[instrument(skip_all)]
     pub fn reset_head(&self) -> anyhow::Result<()> {
         let mut origin = self.repository.find_remote("origin")?;
         let original_head = self.head_oid()?;
@@ -549,6 +554,7 @@ impl Repository {
     }
 
     /// Reset `HEAD` to a single commit with all the index contents, but no parent
+    #[instrument(skip_all)]
     pub fn squash_to_single_commit(&self, msg: &str) -> anyhow::Result<()> {
         let tree = self.repository.find_commit(self.head_oid()?)?.tree()?;
         let sig = self.repository.signature()?;
@@ -583,6 +589,7 @@ impl Repository {
 ///
 /// This function also temporarily sets the `GIT_SSH_COMMAND` environment
 /// variable to ensure that `git push` commands are able to succeed.
+#[instrument(skip_all)]
 pub fn run_via_cli(command: &mut Command, credentials: &Credentials) -> anyhow::Result<()> {
     let temp_key_path = credentials
         .ssh_key()
