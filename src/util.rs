@@ -7,6 +7,7 @@ pub use self::request_helpers::*;
 mod bytes_request;
 pub mod errors;
 mod io_util;
+pub mod manifest;
 mod request_helpers;
 pub mod rfc3339;
 pub mod token;
