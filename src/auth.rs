@@ -55,6 +55,7 @@ impl AuthCheck {
         }
     }
 
+    #[instrument(name = "auth.check", skip_all)]
     pub fn check<T: RequestPartsExt>(
         &self,
         request: &T,
@@ -156,6 +157,7 @@ impl Authentication {
     }
 }
 
+#[instrument(skip_all)]
 fn authenticate_via_cookie<T: RequestPartsExt>(
     req: &T,
     conn: &mut PgConnection,
@@ -177,6 +179,7 @@ fn authenticate_via_cookie<T: RequestPartsExt>(
     Ok(Some(CookieAuthentication { user }))
 }
 
+#[instrument(skip_all)]
 fn authenticate_via_token<T: RequestPartsExt>(
     req: &T,
     conn: &mut PgConnection,
@@ -207,6 +210,7 @@ fn authenticate_via_token<T: RequestPartsExt>(
     Ok(Some(TokenAuthentication { user, token }))
 }
 
+#[instrument(skip_all)]
 fn authenticate<T: RequestPartsExt>(req: &T, conn: &mut PgConnection) -> AppResult<Authentication> {
     controllers::util::verify_origin(req)?;
 

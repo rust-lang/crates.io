@@ -339,6 +339,7 @@ impl Environment {
         }
     }
 
+    #[instrument(skip_all)]
     pub fn lock_index(&self) -> Result<MutexGuard<'_, Repository>, PerformError> {
         let repo = self.index.lock().unwrap_or_else(PoisonError::into_inner);
         repo.reset_head()?;

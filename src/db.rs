@@ -77,6 +77,7 @@ impl DieselPool {
         DieselPool::Test(Arc::new(Mutex::new(conn)))
     }
 
+    #[instrument(name = "db.connect", skip_all)]
     pub fn get(&self) -> Result<DieselPooledConn<'_>, PoolError> {
         match self {
             DieselPool::Pool {
@@ -112,6 +113,7 @@ impl DieselPool {
         }
     }
 
+    #[instrument(skip_all)]
     pub fn wait_until_healthy(&self, timeout: Duration) -> Result<(), PoolError> {
         match self {
             DieselPool::Pool { pool, .. } | DieselPool::BackgroundJobPool { pool } => {

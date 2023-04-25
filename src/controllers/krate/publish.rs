@@ -350,6 +350,7 @@ pub fn missing_metadata_error_message(missing: &[&str]) -> String {
     )
 }
 
+#[instrument(skip_all)]
 pub fn add_dependencies(
     conn: &mut PgConnection,
     deps: &[EncodableCrateDependency],
@@ -425,6 +426,7 @@ pub fn add_dependencies(
     Ok(git_deps)
 }
 
+#[instrument(skip_all, fields(%pkg_name))]
 fn verify_tarball(
     pkg_name: &str,
     tarball: &[u8],
