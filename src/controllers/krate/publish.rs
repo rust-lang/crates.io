@@ -584,7 +584,7 @@ mod tests {
             "foo-0.0.1/Cargo.toml",
             br#"
 [package]
-rust_version = "1.59"
+rust-version = "1.59"
 readme = "README.md"
 repository = "https://github.com/foo/bar"
 "#,

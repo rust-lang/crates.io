@@ -6,6 +6,7 @@ pub struct Manifest {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub struct Package {
     pub readme: Option<String>,
     pub repository: Option<String>,
