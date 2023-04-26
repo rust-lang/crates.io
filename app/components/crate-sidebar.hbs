@@ -17,6 +17,16 @@
       </span>
     </time>
 
+    {{#if @version.msrv}}
+      <div local-class="msrv" data-test-msrv>
+        {{svg-jar "rust"}}
+        <span>
+          v{{@version.msrv}}
+          <EmberTooltip @text="Minimum Supported Rust Version" />
+        </span>
+      </div>
+    {{/if}}
+
     {{#if @version.license}}
       <div local-class="license" data-test-license>
         {{svg-jar "license"}}

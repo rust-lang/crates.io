@@ -30,7 +30,7 @@ module('Acceptance | crate page', function (hooks) {
   test('visiting /crates/nanomsg', async function (assert) {
     let crate = this.server.create('crate', { name: 'nanomsg' });
     this.server.create('version', { crate, num: '0.6.0' });
-    this.server.create('version', { crate, num: '0.6.1' });
+    this.server.create('version', { crate, num: '0.6.1', rust_version: '1.69' });
 
     await visit('/crates/nanomsg');
 
