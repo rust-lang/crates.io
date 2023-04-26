@@ -22,6 +22,12 @@ export default class Version extends Model {
   @attr license;
   @attr crate_size;
 
+  /**
+   * The minimum supported Rust version of this crate version.
+   * @type string | null
+   */
+  @attr rust_version;
+
   @belongsTo('crate', { async: false, inverse: 'versions' }) crate;
 
   @belongsTo('user', { async: false, inverse: null }) published_by;
@@ -30,6 +36,12 @@ export default class Version extends Model {
 
   get crateName() {
     return this.belongsTo('crate').id();
+  }
+
+  get msrv() {
+    let rustVersion = this.rust_version;
+    // add `.0` suffix if the `rust-version` field only has two version components
+    return /^.+\..+$/.test(rustVersion) ? `${rustVersion}.0` : rustVersion;
   }
 
   get isNew() {
