@@ -190,6 +190,15 @@
     }
 }
 
+.msrv {
+    text-transform: initial;
+
+    svg {
+        /* this makes the text look a little more aligned with the icon... 🤷 */
+        margin-bottom: -0.15em;
+    }
+}
+
 .bytes {
     font-variant-numeric: tabular-nums;
 }
