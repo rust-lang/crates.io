@@ -1023,3 +1023,15 @@ fn new_krate_sorts_deps() {
     assert_eq!(deps[0].name, "dep-a");
     assert_eq!(deps[1].name, "dep-b");
 }
+
+#[test]
+fn empty_payload() {
+    let (_, _, user) = TestApp::full().with_user();
+
+    let response = user.put::<()>("/api/v1/crates/new", &[]);
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response.into_json(),
+        json!({ "errors": [{ "detail": "invalid metadata length" }] })
+    );
+}

@@ -327,6 +327,11 @@ fn split_body<R: RequestPartsExt>(mut bytes: Bytes, req: &R) -> AppResult<(Bytes
     // .crate tarball length
     // .crate tarball file
 
+    if bytes.len() < 4 {
+        // Avoid panic in `get_u32_le()` if there is not enough remaining data
+        return Err(cargo_err("invalid metadata length"));
+    }
+
     let json_len = bytes.get_u32_le() as usize;
     req.request_log().add("metadata_length", json_len);
 
@@ -337,6 +342,11 @@ fn split_body<R: RequestPartsExt>(mut bytes: Bytes, req: &R) -> AppResult<(Bytes
     }
 
     let json_bytes = bytes.split_to(json_len);
+
+    if bytes.len() < 4 {
+        // Avoid panic in `get_u32_le()` if there is not enough remaining data
+        return Err(cargo_err("invalid metadata length"));
+    }
 
     let tarball_len = bytes.get_u32_le() as usize;
     if tarball_len > bytes.len() {
