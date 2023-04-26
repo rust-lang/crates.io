@@ -41,7 +41,7 @@ export default class Version extends Model {
   get msrv() {
     let rustVersion = this.rust_version;
     // add `.0` suffix if the `rust-version` field only has two version components
-    return /^.+\..+$/.test(rustVersion) ? `${rustVersion}.0` : rustVersion;
+    return /^[^.]+\.[^.]+$/.test(rustVersion) ? `${rustVersion}.0` : rustVersion;
   }
 
   get isNew() {

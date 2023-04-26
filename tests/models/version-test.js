@@ -36,6 +36,21 @@ module('Model | Version', function (hooks) {
     assert.false(versions[0].isNew);
   });
 
+  test('msrv', async function (assert) {
+    let version = await this.store.createRecord('version');
+    assert.strictEqual(version.msrv, undefined);
+
+    version.rust_version = '1.69.1';
+    assert.strictEqual(version.msrv, '1.69.1');
+
+    version.rust_version = '1.69';
+    assert.strictEqual(version.msrv, '1.69.0');
+
+    // this is not actually allowed by the backend
+    version.rust_version = '1';
+    assert.strictEqual(version.msrv, '1');
+  });
+
   module('semver', function () {
     async function prepare(context, { num }) {
       let { server, store } = context;
