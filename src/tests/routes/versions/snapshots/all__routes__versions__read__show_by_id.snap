@@ -26,6 +26,7 @@ version:
     name: ~
     url: "https://github.com/foo"
   readme_path: /api/v1/crates/foo_vers_show_id/2.0.0/readme
+  rust_version: ~
   updated_at: "[datetime]"
   yanked: false
 

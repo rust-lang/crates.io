@@ -9,6 +9,7 @@ use hyper::body::Buf;
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 use std::io::Read;
+use std::ops::Deref;
 use std::path::Path;
 
 use crate::controllers::cargo_prelude::*;
@@ -22,6 +23,7 @@ use crate::middleware::log_request::RequestLogExt;
 use crate::models::token::EndpointScope;
 use crate::schema::*;
 use crate::util::errors::{cargo_err, AppResult};
+use crate::util::manifest::Manifest;
 use crate::util::{CargoVcsInfo, LimitErrorReader, Maximums};
 use crate::views::{
     EncodableCrate, EncodableCrateDependency, EncodableCrateUpload, GoodCrate, PublishWarnings,
@@ -188,6 +190,14 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             // Read tarball from request
             let hex_cksum: String = Sha256::digest(&tarball_bytes).encode_hex();
 
+            let pkg_name = format!("{}-{}", krate.name, vers);
+            let tarball_info = verify_tarball(&pkg_name, &tarball_bytes, maximums.max_unpack_size)?;
+
+            let rust_version = tarball_info
+                .manifest
+                .and_then(|m| m.package.rust_version)
+                .map(|rv| rv.deref().to_string());
+
             // Persist the new version of this crate
             let version = NewVersion::new(
                 krate.id,
@@ -201,6 +211,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 user.id,
                 hex_cksum.clone(),
                 links.clone(),
+                rust_version.clone(),
             )?
             .save(conn, &verified_email_address)?;
 
@@ -224,10 +235,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
 
             let top_versions = krate.top_versions(conn)?;
 
-            let pkg_name = format!("{}-{}", krate.name, vers);
-            let cargo_vcs_info =
-                verify_tarball(&pkg_name, &tarball_bytes, maximums.max_unpack_size)?;
-            let pkg_path_in_vcs = cargo_vcs_info.map(|info| info.path_in_vcs);
+            let pkg_path_in_vcs = tarball_info.vcs_info.map(|info| info.path_in_vcs);
 
             if let Some(readme) = new_crate.readme {
                 Job::render_and_upload_readme(
@@ -269,6 +277,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 deps: git_deps,
                 yanked: Some(false),
                 links,
+                rust_version,
                 v,
             };
 
@@ -426,12 +435,14 @@ pub fn add_dependencies(
     Ok(git_deps)
 }
 
+#[derive(Debug)]
+struct TarballInfo {
+    manifest: Option<Manifest>,
+    vcs_info: Option<CargoVcsInfo>,
+}
+
 #[instrument(skip_all, fields(%pkg_name))]
-fn verify_tarball(
-    pkg_name: &str,
-    tarball: &[u8],
-    max_unpack: u64,
-) -> AppResult<Option<CargoVcsInfo>> {
+fn verify_tarball(pkg_name: &str, tarball: &[u8], max_unpack: u64) -> AppResult<TarballInfo> {
     // All our data is currently encoded with gzip
     let decoder = GzDecoder::new(tarball);
 
@@ -444,6 +455,9 @@ fn verify_tarball(
 
     let vcs_info_path = Path::new(&pkg_name).join(".cargo_vcs_info.json");
     let mut vcs_info = None;
+
+    let manifest_path = Path::new(&pkg_name).join("Cargo.toml");
+    let mut manifest = None;
 
     for entry in archive.entries()? {
         let mut entry = entry.map_err(|err| {
@@ -465,6 +479,12 @@ fn verify_tarball(
             let mut contents = String::new();
             entry.read_to_string(&mut contents)?;
             vcs_info = CargoVcsInfo::from_contents(&contents).ok();
+        } else if entry_path == manifest_path {
+            // Try to extract and read the Cargo.toml from the tarball, silently
+            // erroring if it cannot be read.
+            let mut contents = String::new();
+            entry.read_to_string(&mut contents)?;
+            manifest = toml::from_str(&contents).ok();
         }
 
         // Historical versions of the `tar` crate which Cargo uses internally
@@ -477,7 +497,8 @@ fn verify_tarball(
             return Err(cargo_err("invalid tarball uploaded"));
         }
     }
-    Ok(vcs_info)
+
+    Ok(TarballInfo { manifest, vcs_info })
 }
 
 #[cfg(test)]
@@ -505,7 +526,9 @@ mod tests {
 
         let limit = 512 * 1024 * 1024;
         assert_eq!(
-            verify_tarball("foo-0.0.1", &serialized_archive, limit).unwrap(),
+            verify_tarball("foo-0.0.1", &serialized_archive, limit)
+                .unwrap()
+                .vcs_info,
             None
         );
         assert_err!(verify_tarball("bar-0.0.1", &serialized_archive, limit));
@@ -527,6 +550,7 @@ mod tests {
         let limit = 512 * 1024 * 1024;
         let vcs_info = verify_tarball("foo-0.0.1", &serialized_archive, limit)
             .unwrap()
+            .vcs_info
             .unwrap();
         assert_eq!(vcs_info.path_in_vcs, "");
     }
@@ -547,7 +571,34 @@ mod tests {
         let limit = 512 * 1024 * 1024;
         let vcs_info = verify_tarball("foo-0.0.1", &serialized_archive, limit)
             .unwrap()
+            .vcs_info
             .unwrap();
         assert_eq!(vcs_info.path_in_vcs, "path/in/vcs");
+    }
+
+    #[test]
+    fn verify_tarball_test_manifest() {
+        let mut pkg = tar::Builder::new(vec![]);
+        add_file(
+            &mut pkg,
+            "foo-0.0.1/Cargo.toml",
+            br#"
+[package]
+rust_version = "1.59"
+readme = "README.md"
+repository = "https://github.com/foo/bar"
+"#,
+        );
+        let mut serialized_archive = vec![];
+        GzEncoder::new(pkg.into_inner().unwrap().as_slice(), Default::default())
+            .read_to_end(&mut serialized_archive)
+            .unwrap();
+
+        let limit = 512 * 1024 * 1024;
+        let tarball_info = assert_ok!(verify_tarball("foo-0.0.1", &serialized_archive, limit));
+        let manifest = assert_some!(tarball_info.manifest);
+        assert_some_eq!(manifest.package.readme, "README.md");
+        assert_some_eq!(manifest.package.repository, "https://github.com/foo/bar");
+        assert_some_eq!(manifest.package.rust_version, "1.59");
     }
 }

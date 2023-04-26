@@ -20,6 +20,7 @@ pub struct VersionBuilder<'a> {
     yanked: bool,
     checksum: String,
     links: Option<String>,
+    rust_version: Option<String>,
 }
 
 impl<'a> VersionBuilder<'a> {
@@ -45,6 +46,7 @@ impl<'a> VersionBuilder<'a> {
             yanked: false,
             checksum: String::new(),
             links: None,
+            rust_version: None,
         }
     }
 
@@ -83,6 +85,12 @@ impl<'a> VersionBuilder<'a> {
         self
     }
 
+    /// Sets the version's `rust_version` value.
+    pub fn rust_version(mut self, rust_version: &str) -> Self {
+        self.rust_version = Some(rust_version.to_owned());
+        self
+    }
+
     pub fn build(
         self,
         crate_id: i32,
@@ -103,6 +111,7 @@ impl<'a> VersionBuilder<'a> {
             published_by,
             self.checksum,
             self.links,
+            self.rust_version,
         )?
         .save(connection, "someone@example.com")?;
 

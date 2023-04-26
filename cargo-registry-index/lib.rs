@@ -125,6 +125,8 @@ pub struct Crate {
     pub yanked: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub links: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rust_version: Option<String>,
     /// The schema version for this entry.
     ///
     /// If this is None, it defaults to version 1. Entries with unknown
@@ -634,6 +636,7 @@ mod tests {
             features2: None,
             yanked: None,
             links: None,
+            rust_version: None,
             v: None,
         };
         let mut buffer = Vec::new();
@@ -657,6 +660,7 @@ mod tests {
                 features2: None,
                 yanked: None,
                 links: None,
+                rust_version: None,
                 v: None,
             })
             .collect::<Vec<_>>();

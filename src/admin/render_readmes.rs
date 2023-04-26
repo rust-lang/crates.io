@@ -3,6 +3,7 @@ use crate::{
     models::Version,
     schema::{crates, readme_renderings, versions},
     uploaders::Uploader,
+    util::manifest::Manifest,
 };
 use anyhow::{anyhow, Context};
 use std::{io::Read, path::Path, sync::Arc, thread};
@@ -200,18 +201,7 @@ fn render_pkg_readme<R: Read>(mut archive: Archive<R>, pkg_name: &str) -> anyhow
             pkg_path_in_vcs,
         )
     };
-    return Ok(rendered);
-
-    #[derive(Debug, Deserialize)]
-    struct Package {
-        readme: Option<String>,
-        repository: Option<String>,
-    }
-
-    #[derive(Debug, Deserialize)]
-    struct Manifest {
-        package: Package,
-    }
+    Ok(rendered)
 }
 
 /// Search an entry by its path in a Tar archive.
