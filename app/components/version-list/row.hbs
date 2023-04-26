@@ -60,6 +60,13 @@
 
     {{#if (or @version.crate_size @version.license @version.featureList)}}
       <div local-class="metadata-row">
+        {{#if @version.msrv}}
+          <span local-class="msrv">
+            {{svg-jar "rust"}}
+            v{{@version.msrv}}
+          </span>
+        {{/if}}
+
         {{#if @version.crate_size}}
           <span local-class="bytes">
             {{svg-jar "weight"}}
