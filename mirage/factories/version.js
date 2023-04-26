@@ -17,6 +17,7 @@ export default Factory.extend({
 
   crate_size: i => (((i + 13) * 42) % 13) * 54_321,
   readme: null,
+  rust_version: null,
 
   afterCreate(version) {
     if (!version.crateId) {

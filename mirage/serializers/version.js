@@ -15,6 +15,7 @@ export default BaseSerializer.extend({
     'yanked',
     'license',
     'crate_size',
+    'rust_version',
   ],
 
   include: ['publishedBy'],
