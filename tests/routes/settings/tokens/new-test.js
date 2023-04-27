@@ -23,6 +23,23 @@ module('/settings/tokens/new', function (hooks) {
     context.authenticateAs(user);
   }
 
+  test('can navigate to the route', async function (assert) {
+    prepare(this);
+
+    await visit('/');
+    assert.strictEqual(currentURL(), '/');
+
+    await click('[data-test-user-menu] [data-test-toggle]');
+    await click('[data-test-user-menu] [data-test-settings]');
+    assert.strictEqual(currentURL(), '/settings/profile');
+
+    await click('[data-test-settings-menu] [data-test-tokens] a');
+    assert.strictEqual(currentURL(), '/settings/tokens');
+
+    await click('[data-test-new-token-button]', { altKey: true });
+    assert.strictEqual(currentURL(), '/settings/tokens/new');
+  });
+
   test('access is blocked if unauthenticated', async function (assert) {
     await visit('/settings/tokens/new');
     assert.strictEqual(currentURL(), '/settings/tokens/new');
