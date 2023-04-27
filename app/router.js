@@ -34,7 +34,9 @@ Router.map(function () {
     this.route('appearance');
     this.route('email-notifications');
     this.route('profile');
-    this.route('tokens');
+    this.route('tokens', function () {
+      this.route('new');
+    });
   });
   this.route('user', { path: '/users/:user_id' });
   this.route('install');

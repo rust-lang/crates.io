@@ -1,0 +1,45 @@
+.form-group, .buttons {
+    position: relative;
+    margin: var(--space-s) 0;
+}
+
+.form-group {
+    label {
+        display: block;
+        margin-bottom: var(--space-3xs);
+        font-weight: 600;
+    }
+}
+
+.buttons {
+    display: flex;
+    gap: var(--space-2xs);
+    flex-wrap: wrap;
+}
+
+.name-input {
+    max-width: 440px;
+    width: 100%;
+    padding: var(--space-2xs);
+    border: 1px solid #ada796;
+    border-radius: var(--space-3xs);
+
+    &[aria-invalid="true"] {
+        background: #fff2f2;
+        border-color: red;
+    }
+}
+
+.generate-button {
+    composes: yellow-button small from '../../../styles/shared/buttons.module.css';
+    border-radius: 4px;
+
+    .spinner {
+        margin-left: var(--space-2xs);
+    }
+}
+
+.cancel-button {
+    composes: tan-button small from '../../../styles/shared/buttons.module.css';
+    border-radius: 4px;
+}

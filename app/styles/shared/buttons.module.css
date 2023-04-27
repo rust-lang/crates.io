@@ -33,6 +33,10 @@
     background: linear-gradient(to bottom, var(--bg-color-top) 0%, var(--bg-color-bottom) 100%);
     cursor: pointer;
 
+    &:hover, &:active, &:visited {
+        color: var(--text-color);
+    }
+
     img, svg {
         float: left;
         display: inline-block;

@@ -8,6 +8,7 @@ import { task } from 'ember-concurrency';
 export default class ApiTokens extends Component {
   @service store;
   @service notifications;
+  @service router;
 
   @tracked newToken;
 
@@ -15,8 +16,12 @@ export default class ApiTokens extends Component {
     return this.args.tokens.filter(t => !t.isNew).sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
   }
 
-  @action startNewToken() {
-    this.newToken = this.store.createRecord('api-token');
+  @action startNewToken(event) {
+    if (event.altKey) {
+      this.router.transitionTo('settings.tokens.new');
+    } else {
+      this.newToken = this.store.createRecord('api-token');
+    }
   }
 
   saveTokenTask = task(async () => {

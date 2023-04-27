@@ -1,0 +1,43 @@
+<h2>New API Token</h2>
+
+<form local-class="form" {{on "submit" (prevent-default (perform this.saveTokenTask))}}>
+  <div local-class="form-group">
+    <label for={{this.id}}>Name</label>
+    <Input
+      id={{this.id}}
+      @type="text"
+      @value={{this.name}}
+      disabled={{this.saveTokenTask.isRunning}}
+      aria-required="true"
+      aria-invalid={{if this.nameInvalid "true" "false"}}
+      local-class="name-input"
+      data-test-name
+      {{auto-focus}}
+      {{on "input" this.resetNameValidation}}
+    />
+  </div>
+
+  <div local-class="buttons">
+    <button
+      type="submit"
+      local-class="generate-button"
+      disabled={{this.saveTokenTask.isRunning}}
+      data-test-generate
+    >
+      Generate Token
+
+      {{#if this.saveTokenTask.isRunning}}
+        <LoadingSpinner local-class="spinner" data-test-spinner />
+      {{/if}}
+    </button>
+
+    <LinkTo
+      @route="settings.tokens.index"
+      local-class="cancel-button"
+      data-test-cancel
+    >
+      Cancel
+    </LinkTo>
+  </div>
+
+</form>
