@@ -13,7 +13,7 @@ path = "lib.rs"
 testing = []
 
 [dependencies]
-anyhow = "=1.0.70"
+anyhow = "=1.0.71"
 base64 = "=0.13.1"
 dotenv = "=0.15.0"
 git2 = "=0.17.1"
