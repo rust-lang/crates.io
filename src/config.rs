@@ -70,7 +70,7 @@ impl Default for Server {
     ///   querying metrics will be completely disabled.
     /// - `WEB_MAX_ALLOWED_PAGE_OFFSET`: Page offsets larger than this value are rejected. Defaults
     ///   to 200.
-    /// - `WEB_PAGE_OFFSET_UA_BLOCKLIST`: A comma seperated list of user-agent substrings that will
+    /// - `WEB_PAGE_OFFSET_UA_BLOCKLIST`: A comma separated list of user-agent substrings that will
     ///   be blocked if `WEB_MAX_ALLOWED_PAGE_OFFSET` is exceeded. Including an empty string in the
     ///   list will block *all* user-agents exceeding the offset. If not set or empty, no blocking
     ///   will occur.
