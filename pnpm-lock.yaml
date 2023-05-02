@@ -50,8 +50,8 @@ dependencies:
 
 devDependencies:
   '@babel/eslint-parser':
-    specifier: 7.21.3
-    version: 7.21.3(eslint@8.39.0)
+    specifier: 7.21.8
+    version: 7.21.8(eslint@8.39.0)
   '@babel/plugin-proposal-decorators':
     specifier: 7.21.0
     version: 7.21.0(@babel/core@7.21.5)
@@ -334,8 +334,8 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /@babel/eslint-parser@7.21.3(eslint@8.39.0):
-    resolution: {integrity: sha512-kfhmPimwo6k4P8zxNs8+T7yR44q1LdpsZdE1NkCsVlfiuTPRfnGgjaF8Qgug9q9Pou17u6wneYF0lDCZJATMFg==}
+  /@babel/eslint-parser@7.21.8(eslint@8.39.0):
+    resolution: {integrity: sha512-HLhI+2q+BP3sf78mFUZNCGc10KEmoUqtUT1OCdMZsN+qr4qFeLUod62/zAnF3jNQstwyasDkZnVXwfK2Bml7MQ==}
     engines: {node: ^10.13.0 || ^12.13.0 || >=14.0.0}
     peerDependencies:
       '@babel/core': '>=7.11.0'
