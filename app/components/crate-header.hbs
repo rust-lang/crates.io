@@ -3,6 +3,13 @@
     <span data-test-crate-name>{{@crate.name}}</span>
     {{#if @version}}
       <small data-test-crate-version>v{{@version.num}}</small>
+
+      {{#if @version.yanked}}
+        <span local-class="yanked-badge">
+          {{svg-jar "trash"}}
+          Yanked
+        </span>
+      {{/if}}
     {{/if}}
   </h1>
 
