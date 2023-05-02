@@ -79,7 +79,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let server = hyper::Server::bind(&(ip, port).into()).serve(make_service);
 
         // When the user configures PORT=0 the operating system will allocate a random unused port.
-        // This fetches that random port and uses it to display the the correct url later.
+        // This fetches that random port and uses it to display the correct url later.
         let addr = server.local_addr();
 
         let mut sig_int = signal(SignalKind::interrupt())?;
