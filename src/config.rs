@@ -47,7 +47,6 @@ pub struct Server {
     pub version_id_cache_ttl: Duration,
     pub cdn_user_agent: String,
     pub balance_capacity: BalanceCapacityConfig,
-    pub feature_index_sync: bool,
 }
 
 impl Default for Server {
@@ -152,7 +151,6 @@ impl Default for Server {
             cdn_user_agent: dotenv::var("WEB_CDN_USER_AGENT")
                 .unwrap_or_else(|_| "Amazon CloudFront".into()),
             balance_capacity: BalanceCapacityConfig::from_environment(),
-            feature_index_sync: dotenv::var("FEATURE_INDEX_SYNC").is_ok(),
         }
     }
 }

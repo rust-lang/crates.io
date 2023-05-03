@@ -7,7 +7,6 @@ use flate2::read::GzDecoder;
 use hex::ToHex;
 use hyper::body::Buf;
 use sha2::{Digest, Sha256};
-use std::collections::BTreeMap;
 use std::io::Read;
 use std::ops::Deref;
 use std::path::Path;
@@ -15,8 +14,8 @@ use std::path::Path;
 use crate::controllers::cargo_prelude::*;
 use crate::controllers::util::RequestPartsExt;
 use crate::models::{
-    insert_version_owner_action, Category, Crate, DependencyKind, Keyword, NewCrate, NewVersion,
-    Rights, VersionAction,
+    insert_version_owner_action, Category, Crate, Keyword, NewCrate, NewVersion, Rights,
+    VersionAction,
 };
 
 use crate::middleware::log_request::RequestLogExt;
@@ -209,9 +208,9 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 // to get here, and max upload sizes are way less than i32 max
                 content_length as i32,
                 user.id,
-                hex_cksum.clone(),
-                links.clone(),
-                rust_version.clone(),
+                hex_cksum,
+                links,
+                rust_version,
             )?
             .save(conn, &verified_email_address)?;
 
@@ -224,7 +223,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             )?;
 
             // Link this new version to all dependencies
-            let git_deps = add_dependencies(conn, &new_crate.deps, version.id)?;
+            add_dependencies(conn, &new_crate.deps, version.id)?;
 
             // Update all keywords for this crate
             Keyword::update_crate(conn, &krate, &keywords)?;
@@ -255,37 +254,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 .uploader()
                 .upload_crate(app.http_client(), tarball_bytes, &krate, vers)?;
 
-            let (features, features2): (BTreeMap<_, _>, BTreeMap<_, _>) =
-                features.into_iter().partition(|(_k, vals)| {
-                    !vals
-                        .iter()
-                        .any(|v| v.starts_with("dep:") || v.contains("?/"))
-                });
-            let (features2, v) = if features2.is_empty() {
-                (None, None)
-            } else {
-                (Some(features2), Some(2))
-            };
-
-            // Register this crate in our local git repo.
-            let git_crate = cargo_registry_index::Crate {
-                name: name.0,
-                vers: vers.to_string(),
-                cksum: hex_cksum,
-                features,
-                features2,
-                deps: git_deps,
-                yanked: Some(false),
-                links,
-                rust_version,
-                v,
-            };
-
-            if app.config.feature_index_sync {
-                Job::enqueue_sync_to_index(&krate.name, conn)?;
-            } else {
-                Job::add_crate(git_crate).enqueue(conn)?;
-            }
+            Job::enqueue_sync_to_index(&krate.name, conn)?;
 
             // The `other` field on `PublishWarnings` was introduced to handle a temporary warning
             // that is no longer needed. As such, crates.io currently does not return any `other`
@@ -374,11 +343,11 @@ pub fn add_dependencies(
     conn: &mut PgConnection,
     deps: &[EncodableCrateDependency],
     target_version_id: i32,
-) -> AppResult<Vec<cargo_registry_index::Dependency>> {
+) -> AppResult<()> {
     use self::dependencies::dsl::*;
     use diesel::insert_into;
 
-    let git_and_new_dependencies = deps
+    let new_dependencies = deps
         .iter()
         .map(|dep| {
             if let Some(registry) = &dep.registry {
@@ -398,51 +367,25 @@ pub fn add_dependencies(
                 }
             }
 
-            // If this dependency has an explicit name in `Cargo.toml` that
-            // means that the `name` we have listed is actually the package name
-            // that we're depending on. The `name` listed in the index is the
-            // Cargo.toml-written-name which is what cargo uses for
-            // `--extern foo=...`
-            let (name, package) = match &dep.explicit_name_in_toml {
-                Some(explicit) => (explicit.to_string(), Some(dep.name.to_string())),
-                None => (dep.name.to_string(), None),
-            };
-
             Ok((
-                cargo_registry_index::Dependency {
-                    name,
-                    req: dep.version_req.to_string(),
-                    features: dep.features.iter().map(|s| s.0.to_string()).collect(),
-                    optional: dep.optional,
-                    default_features: dep.default_features,
-                    target: dep.target.clone(),
-                    kind: dep.kind.or(Some(DependencyKind::Normal)).map(|dk| dk.into()),
-                    package,
-                },
-                (
-                    version_id.eq(target_version_id),
-                    crate_id.eq(krate.id),
-                    req.eq(dep.version_req.to_string()),
-                    dep.kind.map(|k| kind.eq(k as i32)),
-                    optional.eq(dep.optional),
-                    default_features.eq(dep.default_features),
-                    features.eq(&dep.features),
-                    target.eq(dep.target.as_deref()),
-                    explicit_name.eq(dep.explicit_name_in_toml.as_deref())
-                ),
+                version_id.eq(target_version_id),
+                crate_id.eq(krate.id),
+                req.eq(dep.version_req.to_string()),
+                dep.kind.map(|k| kind.eq(k as i32)),
+                optional.eq(dep.optional),
+                default_features.eq(dep.default_features),
+                features.eq(&dep.features),
+                target.eq(dep.target.as_deref()),
+                explicit_name.eq(dep.explicit_name_in_toml.as_deref())
             ))
         })
         .collect::<Result<Vec<_>, _>>()?;
-
-    let (mut git_deps, new_dependencies): (Vec<_>, Vec<_>) =
-        git_and_new_dependencies.into_iter().unzip();
-    git_deps.sort();
 
     insert_into(dependencies)
         .values(&new_dependencies)
         .execute(conn)?;
 
-    Ok(git_deps)
+    Ok(())
 }
 
 #[derive(Debug)]
