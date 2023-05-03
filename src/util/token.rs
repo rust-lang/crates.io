@@ -118,7 +118,7 @@ secure_token_kind! {
     /// new kind of token you should also add its own kind with its own unique prefix.
     ///
     /// NEVER CHANGE THE PREFIX OF EXISTING TOKEN TYPES!!! Doing so will implicitly revoke all the
-    /// tokens of that kind, distrupting production users.
+    /// tokens of that kind, disrupting production users.
     #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
     pub(crate) enum SecureTokenKind {
         Api => "cio", // Crates.IO
