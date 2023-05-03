@@ -5,7 +5,7 @@
       <small data-test-crate-version>v{{@version.num}}</small>
 
       {{#if @version.yanked}}
-        <span local-class="yanked-badge">
+        <span local-class="yanked-badge" data-test-yanked>
           {{svg-jar "trash"}}
           Yanked
 
