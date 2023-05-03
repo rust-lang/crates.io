@@ -180,3 +180,7 @@ noscript {
     flex-direction: column;
     padding: var(--main-layout-padding);
 }
+
+:global(.ember-tooltip) {
+    font-weight: normal;
+}

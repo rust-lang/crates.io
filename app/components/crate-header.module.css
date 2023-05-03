@@ -23,6 +23,7 @@
     align-items: center;
     gap: var(--space-3xs);
     white-space: nowrap;
+    cursor: default;
 
     svg {
         width: 1em;
