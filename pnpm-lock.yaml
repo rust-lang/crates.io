@@ -197,8 +197,8 @@ devDependencies:
     specifier: 6.2.0
     version: 6.2.0(@ember/test-helpers@2.9.3)(ember-source@4.12.0)(qunit@2.19.4)(webpack@5.81.0)
   ember-resolver:
-    specifier: 10.0.0
-    version: 10.0.0(@ember/string@3.0.1)(ember-source@4.12.0)
+    specifier: 10.1.0
+    version: 10.1.0(@ember/string@3.0.1)(ember-source@4.12.0)
   ember-router-scroll:
     specifier: 4.1.2
     version: 4.1.2
@@ -8169,8 +8169,8 @@ packages:
       - webpack
     dev: true
 
-  /ember-resolver@10.0.0(@ember/string@3.0.1)(ember-source@4.12.0):
-    resolution: {integrity: sha512-e99wFJ4ZpleJ6JMEcIk4WEYP4s3nc+9/iNSXtwBHXC8ADJHJTeN3HjnT/eEbFbswdui4FYxIYuK+UCdP09811Q==}
+  /ember-resolver@10.1.0(@ember/string@3.0.1)(ember-source@4.12.0):
+    resolution: {integrity: sha512-Ju/ORUUbGnR83AgC3qV6fIVuM5tyi/nPRf9ggTM2+kdeGPLNTSkNZ0zSbjWEm0kerDezMjj/RoGuLvZl/L758w==}
     engines: {node: 14.* || 16.* || >= 18}
     peerDependencies:
       '@ember/string': ^3.0.1
