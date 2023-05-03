@@ -333,7 +333,10 @@ mod tests {
     fn text_with_kbd_tag() {
         let text = "foo_readme\n\nHello <kbd>alert('Hello World')</kbd>";
         let result = markdown_to_html(text, None, "");
-        assert_eq!(result, "<p>foo_readme</p>\n<p>Hello <kbd>alert(\'Hello World\')</kbd></p>\n");
+        assert_eq!(
+            result,
+            "<p>foo_readme</p>\n<p>Hello <kbd>alert(\'Hello World\')</kbd></p>\n"
+        );
     }
 
     #[test]
