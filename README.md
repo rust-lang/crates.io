@@ -15,7 +15,7 @@ of the following ways:
 
 - [File a new issue](https://github.com/rust-lang/crates.io/issues/new)
 - Email [help@crates.io](mailto:help@crates.io)
-- Chat on web presence > #crates-io-team channel on https://discord.gg/rust-lang
+- Chat on the #t-crates-io Zulip stream on https://rust-lang.zulipchat.com/#narrow/stream/318791-t-crates-io/
 
 A volunteer will get back to you as soon as possible.
 
