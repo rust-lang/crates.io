@@ -39,6 +39,21 @@
         font-family: var(--font-monospace);
     }
 
+    kbd {
+        font-family: var(--font-monospace);
+        font-size: 11px;
+
+        padding: 2px 5px 3px 5px;
+
+        border-radius: 7px;
+
+        position: relative;
+        bottom: 2px;
+
+        border: 1px solid var(--grey700);
+        box-shadow: inset 0 -2px 0 var(--grey600);
+    }
+
     table {
         border-collapse: collapse;
         display: block;
