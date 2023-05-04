@@ -12,10 +12,18 @@ use crate::storage::StorageConfig;
 use http::HeaderValue;
 use std::collections::HashSet;
 use std::net::IpAddr;
+use std::num::ParseIntError;
+use std::str::FromStr;
 use std::time::Duration;
 
 const DEFAULT_VERSION_ID_CACHE_SIZE: u64 = 10_000;
 const DEFAULT_VERSION_ID_CACHE_TTL: u64 = 5 * 60; // 5 minutes
+
+// The defaults correspond to the current crates.io team, which as at the time of writing, is the
+// GitHub user names carols10cents, jtgeibel, Turbo87, JohnTitor, LawnGnome, and mdtro.
+//
+// FIXME: this needs to be removed once we can detect the admins from the Rust teams API.
+const DEFAULT_GH_ADMIN_USER_IDS: [i32; 6] = [193874, 22186, 141300, 25030997, 229984, 20070360];
 
 pub struct Server {
     pub base: Base,
@@ -50,6 +58,7 @@ pub struct Server {
     pub version_id_cache_ttl: Duration,
     pub cdn_user_agent: String,
     pub balance_capacity: BalanceCapacityConfig,
+    pub gh_admin_user_ids: HashSet<i32>,
 
     /// Should the server serve the frontend assets in the `dist` directory?
     pub serve_dist: bool,
@@ -94,6 +103,9 @@ impl Default for Server {
     ///   endpoint even with a healthy database pool.
     /// - `BLOCKED_ROUTES`: A comma separated list of HTTP route patterns that are manually blocked
     ///   by an operator (e.g. `/crates/:crate_id/:version/download`).
+    /// - `GH_ADMIN_USER_IDS`: A comma separated list of GitHub user IDs that will be considered
+    ///   admins. If not set, a default list comprised of the crates.io team as of May 2023 will be
+    ///   used.
     ///
     /// # Panics
     ///
@@ -185,6 +197,10 @@ impl Default for Server {
             cdn_user_agent: dotenvy::var("WEB_CDN_USER_AGENT")
                 .unwrap_or_else(|_| "Amazon CloudFront".into()),
             balance_capacity: BalanceCapacityConfig::from_environment(),
+            gh_admin_user_ids: env_optional("GH_ADMIN_USER_IDS")
+                .map(parse_gh_admin_user_ids)
+                .unwrap_or_else(|| Ok(DEFAULT_GH_ADMIN_USER_IDS.into_iter().collect()))
+                .expect("invalid GH_ADMIN_USER_IDS"),
             serve_dist: true,
             serve_html: true,
             use_fastboot: dotenvy::var("USE_FASTBOOT").ok(),
@@ -325,4 +341,29 @@ fn parse_ipv6_based_cidr_blocks() {
             .parse::<IpNetwork>()
             .unwrap()
     );
+}
+
+fn parse_gh_admin_user_ids(users: String) -> Result<HashSet<i32>, ParseIntError> {
+    users
+        .split(|c: char| !(c.is_ascii_digit()))
+        .filter(|uid| !uid.is_empty())
+        .map(i32::from_str)
+        .collect()
+}
+
+#[test]
+fn test_gh_admin_user_ids() {
+    fn assert_authorized(input: &str, expected: &[i32]) {
+        assert_eq!(
+            parse_gh_admin_user_ids(input.into()).unwrap(),
+            expected.iter().copied().collect()
+        );
+    }
+
+    assert_authorized("", &[]);
+    assert_authorized("12345", &[12345]);
+    assert_authorized("12345, 6789", &[12345, 6789]);
+    assert_authorized("   12345  6789 ", &[12345, 6789]);
+    assert_authorized("12345;6789", &[12345, 6789]);
+    assert_authorized("12345;6789;12345", &[12345, 6789]);
 }

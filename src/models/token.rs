@@ -98,28 +98,28 @@ pub struct CreatedApiToken {
 }
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use super::*;
     use chrono::NaiveDate;
 
     #[test]
     fn api_token_serializes_to_rfc3339() {
-        let tok = ApiToken {
-            id: 12345,
-            user_id: 23456,
-            revoked: false,
-            name: "".to_string(),
-            created_at: NaiveDate::from_ymd_opt(2017, 1, 6)
-                .unwrap()
-                .and_hms_opt(14, 23, 11)
+        let tok = build_mock()
+            .created_at(
+                NaiveDate::from_ymd_opt(2017, 1, 6)
+                    .unwrap()
+                    .and_hms_opt(14, 23, 11)
+                    .unwrap(),
+            )
+            .last_used_at(
+                Some(
+                    NaiveDate::from_ymd_opt(2017, 1, 6)
+                        .unwrap()
+                        .and_hms_opt(14, 23, 12),
+                )
                 .unwrap(),
-            last_used_at: NaiveDate::from_ymd_opt(2017, 1, 6)
-                .unwrap()
-                .and_hms_opt(14, 23, 12),
-            crate_scopes: None,
-            endpoint_scopes: None,
-            expired_at: None,
-        };
+            )
+            .token();
         let json = serde_json::to_string(&tok).unwrap();
         assert_some!(json
             .as_str()
@@ -127,5 +127,67 @@ mod tests {
         assert_some!(json
             .as_str()
             .find(r#""last_used_at":"2017-01-06T14:23:12+00:00""#));
+    }
+
+    pub struct MockBuilder(ApiToken);
+
+    impl MockBuilder {
+        pub fn token(self) -> ApiToken {
+            self.0
+        }
+
+        pub fn id(mut self, id: i32) -> Self {
+            self.0.id = id;
+            self
+        }
+
+        pub fn user_id(mut self, user_id: i32) -> Self {
+            self.0.user_id = user_id;
+            self
+        }
+
+        pub fn name(mut self, name: String) -> Self {
+            self.0.name = name;
+            self
+        }
+
+        pub fn created_at(mut self, created_at: NaiveDateTime) -> Self {
+            self.0.created_at = created_at;
+            self
+        }
+
+        pub fn last_used_at(mut self, last_used_at: Option<NaiveDateTime>) -> Self {
+            self.0.last_used_at = last_used_at;
+            self
+        }
+
+        pub fn revoked(mut self, revoked: bool) -> Self {
+            self.0.revoked = revoked;
+            self
+        }
+
+        pub fn crate_scopes(mut self, crate_scopes: Option<Vec<CrateScope>>) -> Self {
+            self.0.crate_scopes = crate_scopes;
+            self
+        }
+
+        pub fn endpoint_scopes(mut self, endpoint_scopes: Option<Vec<EndpointScope>>) -> Self {
+            self.0.endpoint_scopes = endpoint_scopes;
+            self
+        }
+    }
+
+    pub fn build_mock() -> MockBuilder {
+        MockBuilder(ApiToken {
+            id: 12345,
+            user_id: 23456,
+            revoked: false,
+            name: "".to_string(),
+            created_at: NaiveDateTime::default(),
+            last_used_at: None,
+            crate_scopes: None,
+            endpoint_scopes: None,
+            expired_at: None,
+        })
     }
 }

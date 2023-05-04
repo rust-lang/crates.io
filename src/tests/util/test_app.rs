@@ -439,6 +439,7 @@ fn simple_config() -> config::Server {
         version_id_cache_ttl: Duration::from_secs(5 * 60),
         cdn_user_agent: "Amazon CloudFront".to_string(),
         balance_capacity,
+        gh_admin_user_ids: HashSet::new(),
 
         // The frontend code is not needed for the backend tests.
         serve_dist: false,
