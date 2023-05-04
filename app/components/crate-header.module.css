@@ -12,6 +12,26 @@
     }
 }
 
+.yanked-badge {
+    background: #d30000;
+    border-radius: 99999px;
+    padding: var(--space-3xs) var(--space-s);
+    font-size: var(--space-s);
+    color: white;
+    align-self: center;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3xs);
+    white-space: nowrap;
+    cursor: default;
+
+    svg {
+        width: 1em;
+        height: 1em;
+        flex-shrink: 0;
+    }
+}
+
 .description {
     margin-top: var(--space-xs);
     line-height: 1.35;

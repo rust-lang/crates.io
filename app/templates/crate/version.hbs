@@ -6,115 +6,102 @@
   @versionNum={{this.requestedVersion}}
 />
 
-{{#if this.currentVersion.yanked}}
-  <div>
-    <p>
-      This crate has been yanked, but it is still available for download for other crates that
-      may be depending on it.
-    </p>
-    <p>
-      You may wish to <LinkTo @route="crate.versions" @model={{this.crate}}>view all versions</LinkTo> to find
-      one that has not been yanked.
-    </p>
-  </div>
-{{else}}
-  <div local-class='crate-info'>
-    <div local-class="docs">
-      {{#if this.loadReadmeTask.isRunning}}
-        <div local-class="readme-spinner">
-          <Placeholder local-class="placeholder-title" />
-          <Placeholder local-class="placeholder-text" />
-          <Placeholder local-class="placeholder-text" />
-          <Placeholder local-class="placeholder-text" />
-          <Placeholder local-class="placeholder-text" />
-          <Placeholder local-class="placeholder-text" />
-          <Placeholder local-class="placeholder-subtitle" />
-          <Placeholder local-class="placeholder-text" />
-          <Placeholder local-class="placeholder-text" />
-          <Placeholder local-class="placeholder-text" />
-        </div>
-      {{else if this.readme}}
-        <article aria-label="Readme" data-test-readme>
-          <RenderedHtml @html={{this.readme}} local-class="readme" />
-        </article>
-      {{else}}
-        <div local-class="no-readme" data-test-no-readme>
-          {{this.crate.name}} v{{this.currentVersion.num}} appears to have no <code>README.md</code> file
-        </div>
-      {{/if}}
-    </div>
-
-    <CrateSidebar
-      @crate={{this.crate}}
-      @version={{this.currentVersion}}
-      @requestedVersion={{this.requestedVersion}}
-      local-class="sidebar"
-    />
+<div local-class='crate-info'>
+  <div local-class="docs" data-test-docs>
+    {{#if this.loadReadmeTask.isRunning}}
+      <div local-class="readme-spinner">
+        <Placeholder local-class="placeholder-title" />
+        <Placeholder local-class="placeholder-text" />
+        <Placeholder local-class="placeholder-text" />
+        <Placeholder local-class="placeholder-text" />
+        <Placeholder local-class="placeholder-text" />
+        <Placeholder local-class="placeholder-text" />
+        <Placeholder local-class="placeholder-subtitle" />
+        <Placeholder local-class="placeholder-text" />
+        <Placeholder local-class="placeholder-text" />
+        <Placeholder local-class="placeholder-text" />
+      </div>
+    {{else if this.readme}}
+      <article aria-label="Readme" data-test-readme>
+        <RenderedHtml @html={{this.readme}} local-class="readme" />
+      </article>
+    {{else}}
+      <div local-class="no-readme" data-test-no-readme>
+        {{this.crate.name}} v{{this.currentVersion.num}} appears to have no <code>README.md</code> file
+      </div>
+    {{/if}}
   </div>
 
-  <div local-class='crate-downloads'>
-    <div local-class='stats'>
-      {{#if this.downloadsContext.num}}
-        <h3 data-test-crate-stats-label>
-          Stats Overview for {{this.downloadsContext.num}}
-          <LinkTo @route="crate" @model={{this.crate}}>(see all)</LinkTo>
-        </h3>
+  <CrateSidebar
+    @crate={{this.crate}}
+    @version={{this.currentVersion}}
+    @requestedVersion={{this.requestedVersion}}
+    local-class="sidebar"
+  />
+</div>
 
-      {{else}}
-        <h3 data-test-crate-stats-label>Stats Overview</h3>
-      {{/if}}
-      <div local-class='stat'>
-        <span local-class='num'>
-          {{svg-jar "download"}}
-          <span local-class="num__align">{{ format-num this.downloadsContext.downloads }}</span>
-        </span>
-        <span local-class="stat-description">Downloads all time</span>
-      </div>
-      <div local-class='stat'>
-        <span local-class="num">
-          {{svg-jar "crate"}}
-          <span local-class="num__align">{{ this.crate.versions.length }}</span>
-        </span>
-        <span local-class="stat-description">Versions published</span>
-      </div>
+<div local-class='crate-downloads'>
+  <div local-class='stats'>
+    {{#if this.downloadsContext.num}}
+      <h3 data-test-crate-stats-label>
+        Stats Overview for {{this.downloadsContext.num}}
+        <LinkTo @route="crate" @model={{this.crate}}>(see all)</LinkTo>
+      </h3>
+
+    {{else}}
+      <h3 data-test-crate-stats-label>Stats Overview</h3>
+    {{/if}}
+    <div local-class='stat'>
+      <span local-class='num'>
+        {{svg-jar "download"}}
+        <span local-class="num__align">{{ format-num this.downloadsContext.downloads }}</span>
+      </span>
+      <span local-class="stat-description">Downloads all time</span>
     </div>
-    <div local-class='graph'>
-      <h4>Downloads over the last 90 days</h4>
-      <div local-class="toggle-stacked">
-        <span local-class="toggle-stacked-label">Display as </span>
-        <Dropdown as |dd|>
-          <dd.Trigger local-class="trigger">
-            <span local-class="trigger-label">
-              {{#if this.stackedGraph}}
-                Stacked
-              {{else}}
-                Unstacked
-              {{/if}}
-            </span>
-          </dd.Trigger>
-          <dd.Menu as |menu|>
-            <menu.Item>
-              <button
-                type="button"
-                local-class="dropdown-button"
-                {{on "click" this.setStackedGraph}}
-              >
-                Stacked
-              </button>
-            </menu.Item>
-            <menu.Item>
-              <button
-                type="button"
-                local-class="dropdown-button"
-                {{on "click" this.setUnstackedGraph}}
-              >
-                Unstacked
-              </button>
-            </menu.Item>
-          </dd.Menu>
-        </Dropdown>
-      </div>
-      <DownloadGraph @data={{this.downloads}} @stacked={{this.stackedGraph}} local-class="graph-data" />
+    <div local-class='stat'>
+      <span local-class="num">
+        {{svg-jar "crate"}}
+        <span local-class="num__align">{{ this.crate.versions.length }}</span>
+      </span>
+      <span local-class="stat-description">Versions published</span>
     </div>
   </div>
-{{/if}}
+  <div local-class='graph'>
+    <h4>Downloads over the last 90 days</h4>
+    <div local-class="toggle-stacked">
+      <span local-class="toggle-stacked-label">Display as </span>
+      <Dropdown as |dd|>
+        <dd.Trigger local-class="trigger">
+          <span local-class="trigger-label">
+            {{#if this.stackedGraph}}
+              Stacked
+            {{else}}
+              Unstacked
+            {{/if}}
+          </span>
+        </dd.Trigger>
+        <dd.Menu as |menu|>
+          <menu.Item>
+            <button
+              type="button"
+              local-class="dropdown-button"
+              {{on "click" this.setStackedGraph}}
+            >
+              Stacked
+            </button>
+          </menu.Item>
+          <menu.Item>
+            <button
+              type="button"
+              local-class="dropdown-button"
+              {{on "click" this.setUnstackedGraph}}
+            >
+              Unstacked
+            </button>
+          </menu.Item>
+        </dd.Menu>
+      </Dropdown>
+    </div>
+    <DownloadGraph @data={{this.downloads}} @stacked={{this.stackedGraph}} local-class="graph-data" />
+  </div>
+</div>
