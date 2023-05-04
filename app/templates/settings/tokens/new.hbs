@@ -2,19 +2,21 @@
 
 <form local-class="form" {{on "submit" (prevent-default (perform this.saveTokenTask))}}>
   <div local-class="form-group">
-    <label for={{this.id}}>Name</label>
-    <Input
-      id={{this.id}}
-      @type="text"
-      @value={{this.name}}
-      disabled={{this.saveTokenTask.isRunning}}
-      aria-required="true"
-      aria-invalid={{if this.nameInvalid "true" "false"}}
-      local-class="name-input"
-      data-test-name
-      {{auto-focus}}
-      {{on "input" this.resetNameValidation}}
-    />
+    {{#let (unique-id) as |id|}}
+      <label for={{id}}>Name</label>
+      <Input
+        id={{id}}
+        @type="text"
+        @value={{this.name}}
+        disabled={{this.saveTokenTask.isRunning}}
+        aria-required="true"
+        aria-invalid={{if this.nameInvalid "true" "false"}}
+        local-class="name-input"
+        data-test-name
+        {{auto-focus}}
+        {{on "input" this.resetNameValidation}}
+      />
+    {{/let}}
   </div>
 
   <div local-class="buttons">
