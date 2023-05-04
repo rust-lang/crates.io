@@ -1,9 +1,10 @@
 <h2>New API Token</h2>
 
 <form local-class="form" {{on "submit" (prevent-default (perform this.saveTokenTask))}}>
-  <div local-class="form-group">
+  <div local-class="form-group" data-test-name-group>
     {{#let (unique-id) as |id|}}
-      <label for={{id}}>Name</label>
+      <label for={{id}} local-class="form-group-name">Name</label>
+
       <Input
         id={{id}}
         @type="text"
@@ -16,7 +17,41 @@
         {{auto-focus}}
         {{on "input" this.resetNameValidation}}
       />
+
+      {{#if this.nameInvalid}}
+        <div local-class="form-group-error" data-test-error>
+          Please enter a name for this token.
+        </div>
+      {{/if}}
     {{/let}}
+  </div>
+
+  <div local-class="form-group" data-test-scopes-group>
+    <div local-class="form-group-name">Scopes</div>
+
+    <ul role="list" local-class="scopes-list {{if this.scopesInvalid "invalid"}}">
+      {{#each this.ENDPOINT_SCOPES as |scope|}}
+        <li>
+          <label data-test-scope={{scope.id}}>
+            <Input
+              @type="checkbox"
+              @checked={{this.isScopeSelected scope.id}}
+              disabled={{this.saveTokenTask.isRunning}}
+              {{on "change" (fn this.toggleScope scope.id)}}
+            />
+
+            <span local-class="scope-id">{{scope.id}}</span>
+            <span local-class="scope-description">{{scope.description}}</span>
+          </label>
+        </li>
+      {{/each}}
+    </ul>
+
+    {{#if this.scopesInvalid}}
+      <div local-class="form-group-error" data-test-error>
+        Please select at least one token scope.
+      </div>
+    {{/if}}
   </div>
 
   <div local-class="buttons">

@@ -54,13 +54,14 @@ module('/settings/tokens/new', function (hooks) {
     assert.strictEqual(currentURL(), '/settings/tokens/new');
 
     await fillIn('[data-test-name]', 'token-name');
+    await click('[data-test-scope="publish-update"]');
     await click('[data-test-generate]');
 
     let token = this.server.schema.apiTokens.findBy({ name: 'token-name' });
     assert.ok(Boolean(token), 'API token has been created in the backend database');
     assert.strictEqual(token.name, 'token-name');
     assert.strictEqual(token.crateScopes, null);
-    assert.strictEqual(token.endpointScopes, null);
+    assert.deepEqual(token.endpointScopes, ['publish-update']);
 
     assert.strictEqual(currentURL(), '/settings/tokens');
     assert.dom('[data-test-api-token="1"] [data-test-name]').hasText('token-name');
@@ -77,6 +78,7 @@ module('/settings/tokens/new', function (hooks) {
     assert.strictEqual(currentURL(), '/settings/tokens/new');
 
     await fillIn('[data-test-name]', 'token-name');
+    await click('[data-test-scope="publish-update"]');
     let clickPromise = click('[data-test-generate]');
     await waitFor('[data-test-generate] [data-test-spinner]');
     assert.dom('[data-test-name]').isDisabled();
@@ -107,8 +109,24 @@ module('/settings/tokens/new', function (hooks) {
     await visit('/settings/tokens/new');
     assert.strictEqual(currentURL(), '/settings/tokens/new');
 
+    await click('[data-test-scope="publish-update"]');
     await click('[data-test-generate]');
     assert.strictEqual(currentURL(), '/settings/tokens/new');
     assert.dom('[data-test-name]').hasAria('invalid', 'true');
+    assert.dom('[data-test-name-group] [data-test-error]').exists();
+    assert.dom('[data-test-scopes-group] [data-test-error]').doesNotExist();
+  });
+
+  test('no scopes selected shows an error', async function (assert) {
+    prepare(this);
+
+    await visit('/settings/tokens/new');
+    assert.strictEqual(currentURL(), '/settings/tokens/new');
+
+    await fillIn('[data-test-name]', 'token-name');
+    await click('[data-test-generate]');
+    assert.strictEqual(currentURL(), '/settings/tokens/new');
+    assert.dom('[data-test-name-group] [data-test-error]').doesNotExist();
+    assert.dom('[data-test-scopes-group] [data-test-error]').exists();
   });
 });
