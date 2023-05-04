@@ -428,6 +428,7 @@ fn simple_config() -> config::Server {
         version_id_cache_ttl: Duration::from_secs(5 * 60),
         cdn_user_agent: "Amazon CloudFront".to_string(),
         balance_capacity,
+        admin_user_github_ids: HashSet::new(),
 
         // The middleware has its own unit tests to verify its functionality.
         // Here, we can test what would happen if we toggled the status code

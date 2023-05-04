@@ -57,6 +57,7 @@ pub struct Server {
     pub version_id_cache_ttl: Duration,
     pub cdn_user_agent: String,
     pub balance_capacity: BalanceCapacityConfig,
+    pub admin_user_github_ids: HashSet<i32>,
 
     /// Instructs the `cargo_compat` middleware whether to adjust response
     /// status codes to `200 OK` for all endpoints that are relevant for cargo.
@@ -104,6 +105,8 @@ impl Server {
     ///   endpoint even with a healthy database pool.
     /// - `BLOCKED_ROUTES`: A comma separated list of HTTP route patterns that are manually blocked
     ///   by an operator (e.g. `/crates/:crate_id/:version/download`).
+    /// - `ADMIN_USER_GH_IDS`: A comma separated list of GitHub user IDs that will be considered
+    ///   admins.
     ///
     /// # Panics
     ///
@@ -206,6 +209,10 @@ impl Server {
             balance_capacity: BalanceCapacityConfig::from_environment()?,
             cargo_compat_status_code_config: var_parsed("CARGO_COMPAT_STATUS_CODES")?
                 .unwrap_or(StatusCodeConfig::AdjustAll),
+            admin_user_github_ids: HashSet::from_iter(list_parsed(
+                "ADMIN_USER_GH_IDS",
+                i32::from_str,
+            )?),
             serve_dist: true,
             serve_html: true,
             content_security_policy: Some(content_security_policy.parse()?),
