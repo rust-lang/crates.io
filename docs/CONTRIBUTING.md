@@ -3,10 +3,10 @@
 ## Attending the weekly team meetings
 
 Each Friday at 11:00am US east coast time the crates.io team gets together
-on Zoom or [Discord] (`#crates-io-team`) for our weekly team meeting and we invite
+on Zoom or [Zulip] (`#t-crates-io`) for our weekly team meeting, and we invite
 everyone who wants to contribute to crates.io to participate.
 
-[Discord]: https://discord.gg/rust-lang
+[Zulip]: https://rust-lang.zulipchat.com/#narrow/stream/318791-t-crates-io/
 
 ## Finding an issue to work on
 
