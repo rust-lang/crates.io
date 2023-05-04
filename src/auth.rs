@@ -62,7 +62,10 @@ impl AuthCheck {
         conn: &mut PgConnection,
     ) -> AppResult<Authentication> {
         let auth = authenticate(request, conn)?;
+        self.check_authentication(auth)
+    }
 
+    pub fn check_authentication(&self, auth: Authentication) -> AppResult<Authentication> {
         if let Some(token) = auth.api_token() {
             if !self.allow_token {
                 let error_message =
