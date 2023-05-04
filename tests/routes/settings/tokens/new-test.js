@@ -58,6 +58,9 @@ module('/settings/tokens/new', function (hooks) {
 
     let token = this.server.schema.apiTokens.findBy({ name: 'token-name' });
     assert.ok(Boolean(token), 'API token has been created in the backend database');
+    assert.strictEqual(token.name, 'token-name');
+    assert.strictEqual(token.crateScopes, null);
+    assert.strictEqual(token.endpointScopes, null);
 
     assert.strictEqual(currentURL(), '/settings/tokens');
     assert.dom('[data-test-api-token="1"] [data-test-name]').hasText('token-name');
