@@ -1,5 +1,8 @@
+use std::collections::HashSet;
+
 use crate::controllers;
 use crate::controllers::util::RequestPartsExt;
+use crate::middleware::app::RequestApp;
 use crate::middleware::log_request::RequestLogExt;
 use crate::middleware::session::RequestSession;
 use crate::models::token::{CrateScope, EndpointScope};
@@ -16,6 +19,7 @@ pub struct AuthCheck {
     allow_token: bool,
     endpoint_scope: Option<EndpointScope>,
     crate_name: Option<String>,
+    require_admin: bool,
 }
 
 impl AuthCheck {
@@ -27,6 +31,7 @@ impl AuthCheck {
             allow_token: true,
             endpoint_scope: None,
             crate_name: None,
+            require_admin: false,
         }
     }
 
@@ -36,6 +41,7 @@ impl AuthCheck {
             allow_token: false,
             endpoint_scope: None,
             crate_name: None,
+            require_admin: false,
         }
     }
 
@@ -44,6 +50,7 @@ impl AuthCheck {
             allow_token: self.allow_token,
             endpoint_scope: Some(endpoint_scope),
             crate_name: self.crate_name.clone(),
+            require_admin: self.require_admin,
         }
     }
 
@@ -52,6 +59,16 @@ impl AuthCheck {
             allow_token: self.allow_token,
             endpoint_scope: self.endpoint_scope,
             crate_name: Some(crate_name.to_string()),
+            require_admin: self.require_admin,
+        }
+    }
+
+    pub fn require_admin(&self) -> Self {
+        Self {
+            allow_token: self.allow_token,
+            endpoint_scope: self.endpoint_scope,
+            crate_name: self.crate_name.clone(),
+            require_admin: true,
         }
     }
 
@@ -62,10 +79,14 @@ impl AuthCheck {
         conn: &mut PgConnection,
     ) -> AppResult<Authentication> {
         let auth = authenticate(request, conn)?;
-        self.check_authentication(auth)
+        self.check_authentication(auth, &request.app().config.admin_user_github_ids)
     }
 
-    pub fn check_authentication(&self, auth: Authentication) -> AppResult<Authentication> {
+    fn check_authentication(
+        &self,
+        auth: Authentication,
+        gh_admin_user_ids: &HashSet<i32>,
+    ) -> AppResult<Authentication> {
         if let Some(token) = auth.api_token() {
             if !self.allow_token {
                 let error_message =
@@ -82,6 +103,11 @@ impl AuthCheck {
                 let error_message = "Crate scope mismatch";
                 return Err(internal(error_message).chain(forbidden()));
             }
+        }
+
+        if self.require_admin && !gh_admin_user_ids.contains(&auth.user().gh_id) {
+            let error_message = "User is unauthorized";
+            return Err(internal(error_message).chain(forbidden()));
         }
 
         Ok(auth)
@@ -349,5 +375,42 @@ mod tests {
         assert!(auth_check.crate_scope_matches(Some(&vec![cs("tokio-*")])));
         assert!(!auth_check.crate_scope_matches(Some(&vec![cs("anyhow")])));
         assert!(!auth_check.crate_scope_matches(Some(&vec![cs("actix-*")])));
+    }
+
+    #[test]
+    fn require_admin() {
+        let auth_check = AuthCheck::default().require_admin();
+        let gh_admin_user_ids = [42, 43].into_iter().collect();
+
+        assert_ok!(auth_check.check_authentication(mock_cookie(42), &gh_admin_user_ids));
+        assert_err!(auth_check.check_authentication(mock_cookie(44), &gh_admin_user_ids));
+        assert_ok!(auth_check.check_authentication(mock_token(43), &gh_admin_user_ids));
+        assert_err!(auth_check.check_authentication(mock_token(45), &gh_admin_user_ids));
+    }
+
+    fn mock_user(gh_id: i32) -> User {
+        User {
+            id: 3,
+            gh_access_token: "arbitrary".into(),
+            gh_login: "literally_anything".into(),
+            name: None,
+            gh_avatar: None,
+            gh_id,
+            account_lock_reason: None,
+            account_lock_until: None,
+        }
+    }
+
+    fn mock_cookie(gh_id: i32) -> Authentication {
+        Authentication::Cookie(CookieAuthentication {
+            user: mock_user(gh_id),
+        })
+    }
+
+    fn mock_token(gh_id: i32) -> Authentication {
+        Authentication::Token(TokenAuthentication {
+            token: ApiToken::mock_builder().user_id(gh_id).build().unwrap(),
+            user: mock_user(gh_id),
+        })
     }
 }
