@@ -68,6 +68,73 @@ module('/settings/tokens/new', function (hooks) {
     assert.dom('[data-test-api-token="1"] [data-test-token]').hasText(token.token);
   });
 
+  test('crate scopes', async function (assert) {
+    prepare(this);
+
+    await visit('/settings/tokens/new');
+    assert.strictEqual(currentURL(), '/settings/tokens/new');
+
+    await fillIn('[data-test-name]', 'token-name');
+    await click('[data-test-scope="publish-update"]');
+
+    assert.dom('[data-test-crates-unrestricted]').exists();
+    assert.dom('[data-test-crate-pattern]').doesNotExist();
+
+    await click('[data-test-add-crate-pattern]');
+    assert.dom('[data-test-crates-unrestricted]').doesNotExist();
+    assert.dom('[data-test-crate-pattern]').exists({ count: 1 });
+    assert.dom('[data-test-crate-pattern="0"] [data-test-description]').hasText('Please enter a crate name pattern');
+
+    await fillIn('[data-test-crate-pattern="0"] input', 'serde');
+    assert.dom('[data-test-crate-pattern="0"] [data-test-description]').hasText('Matches only the serde crate');
+
+    await click('[data-test-crate-pattern="0"] [data-test-remove]');
+    assert.dom('[data-test-crates-unrestricted]').exists();
+    assert.dom('[data-test-crate-pattern]').doesNotExist();
+
+    await click('[data-test-add-crate-pattern]');
+    assert.dom('[data-test-crates-unrestricted]').doesNotExist();
+    assert.dom('[data-test-crate-pattern]').exists({ count: 1 });
+    assert.dom('[data-test-crate-pattern="0"] [data-test-description]').hasText('Please enter a crate name pattern');
+
+    await fillIn('[data-test-crate-pattern="0"] input', 'serde-*');
+    assert
+      .dom('[data-test-crate-pattern="0"] [data-test-description]')
+      .hasText('Matches all crates starting with serde-');
+
+    await click('[data-test-add-crate-pattern]');
+    assert.dom('[data-test-crates-unrestricted]').doesNotExist();
+    assert.dom('[data-test-crate-pattern]').exists({ count: 2 });
+    assert.dom('[data-test-crate-pattern="1"] [data-test-description]').hasText('Please enter a crate name pattern');
+
+    await fillIn('[data-test-crate-pattern="1"] input', 'inv@lid');
+    assert.dom('[data-test-crate-pattern="1"] [data-test-description]').hasText('Invalid crate name pattern');
+
+    await click('[data-test-add-crate-pattern]');
+    assert.dom('[data-test-crates-unrestricted]').doesNotExist();
+    assert.dom('[data-test-crate-pattern]').exists({ count: 3 });
+    assert.dom('[data-test-crate-pattern="2"] [data-test-description]').hasText('Please enter a crate name pattern');
+
+    await fillIn('[data-test-crate-pattern="2"] input', 'serde');
+    assert.dom('[data-test-crate-pattern="2"] [data-test-description]').hasText('Matches only the serde crate');
+
+    await click('[data-test-crate-pattern="1"] [data-test-remove]');
+    assert.dom('[data-test-crates-unrestricted]').doesNotExist();
+    assert.dom('[data-test-crate-pattern]').exists({ count: 2 });
+
+    await click('[data-test-generate]');
+
+    let token = this.server.schema.apiTokens.findBy({ name: 'token-name' });
+    assert.ok(Boolean(token), 'API token has been created in the backend database');
+    assert.strictEqual(token.name, 'token-name');
+    assert.deepEqual(token.crateScopes, ['serde-*', 'serde']);
+    assert.deepEqual(token.endpointScopes, ['publish-update']);
+
+    assert.strictEqual(currentURL(), '/settings/tokens');
+    assert.dom('[data-test-api-token="1"] [data-test-name]').hasText('token-name');
+    assert.dom('[data-test-api-token="1"] [data-test-token]').hasText(token.token);
+  });
+
   test('loading and error state', async function (assert) {
     prepare(this);
 

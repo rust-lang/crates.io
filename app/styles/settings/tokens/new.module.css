@@ -93,6 +93,104 @@
     display: inline-block;
 }
 
+.crates-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    background-color: white;
+    border: 1px solid var(--gray-border);
+    border-radius: var(--space-3xs);
+
+    > * + * {
+        border-top: inherit;
+    }
+}
+
+.crates-unrestricted {
+    padding: var(--space-xs) var(--space-s);
+    font-size: 0.9em;
+}
+
+.crates-scope {
+    display: flex;
+
+    > div {
+        padding: var(--space-xs) var(--space-s);
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-xs);
+        font-size: 0.9em;
+        flex-grow: 1;
+    }
+
+    input {
+        margin: calc(-1 * var(--space-3xs) - 2px) 0;
+        padding: var(--space-3xs) var(--space-2xs);
+        border: 1px solid var(--gray-border);
+        border-radius: var(--space-3xs);
+    }
+
+    &.invalid input {
+        background: #fff2f2;
+        border-color: red;
+    }
+
+    > button {
+        margin: 0;
+        padding: 0 var(--space-xs);
+        border: none;
+        background: none;
+        cursor: pointer;
+        color: var(--grey700);
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+
+        &:hover {
+            background: var(--grey200);
+            color: var(--grey900);
+        }
+
+        svg {
+            height: 1.1em;
+            width: 1.1em;
+        }
+    }
+
+    &:first-child button {
+        border-top-right-radius: var(--space-3xs);
+    }
+}
+
+.pattern-description {
+    flex-grow: 1;
+    align-self: center;
+
+    .invalid & {
+        color: red;
+    }
+
+    > span {
+        font-weight: bold;
+    }
+}
+
+.crates-pattern-button button {
+    padding: var(--space-xs) var(--space-s);
+    font-size: 0.9em;
+    width: 100%;
+    border: none;
+    background: none;
+    border-bottom-left-radius: var(--space-3xs);
+    border-bottom-right-radius: var(--space-3xs);
+    cursor: pointer;
+    font-weight: bold;
+
+    &:hover {
+        background: var(--grey200);
+    }
+}
+
 .generate-button {
     composes: yellow-button small from '../../../styles/shared/buttons.module.css';
     border-radius: 4px;
