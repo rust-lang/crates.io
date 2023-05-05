@@ -21,7 +21,20 @@
       {{/if}}
 
       <EmberTooltip @side="right" data-test-release-track-title>
-        {{{this.releaseTrackTitle}}}
+        {{this.releaseTrackTitle}}
+        {{#if this.displaysReleaseTrackModifiers}}
+          <p local-class='mark-wrapper'>
+            {{#if @version.isPrerelease}}
+              <mark local-class="yellow">prerelease</mark>
+            {{/if}}
+            {{#if this.hasAllReleaseTrackModifiers}}
+              ,
+            {{/if}}
+            {{#if @version.isHighestOfReleaseTrack}}
+              <mark local-class="green">latest</mark>
+            {{/if}}
+          </p>
+        {{/if}}
       </EmberTooltip>
     </div>
 
@@ -59,7 +72,9 @@
         <EmberTooltip>
           {{date-format @version.created_at 'PPP'}}
           {{#if @version.isNew}}
-            (<mark local-class="orange">recent</mark>)
+            <p local-class='mark-wrapper'>
+              <mark local-class="orange">recent</mark>
+            </p>
           {{/if}}
         </EmberTooltip>
       </time>

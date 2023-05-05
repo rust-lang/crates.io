@@ -11,7 +11,7 @@ export default class VersionRow extends Component {
   get releaseTrackTitle() {
     let { version } = this.args;
     if (version.yanked) {
-      return 'This version was <mark style="color: hsl(0, 84%, 32%)">yanked</mark>';
+      return 'This version was yanked';
     }
     if (version.invalidSemver) {
       return `Failed to parse version ${version.num}`;
@@ -22,19 +22,19 @@ export default class VersionRow extends Component {
 
     let { releaseTrack } = version;
 
-    let modifiers = [];
-    if (version.isPrerelease) {
-      modifiers.push('<mark style="color: hsl(39, 71%, 45%)">prerelease</mark>');
-    }
-    if (version.isHighestOfReleaseTrack) {
-      modifiers.push('<mark style="color: hsl(136, 67%, 38%)">latest</mark>');
-    }
+    return `Release Track: ${releaseTrack}`;
+  }
 
-    let title = `Release Track: ${releaseTrack}`;
-    if (modifiers.length !== 0) {
-      title += ` (${modifiers.join(', ')})`;
-    }
-    return title;
+  get displaysReleaseTrackModifiers() {
+    let { version } = this.args;
+
+    return (version.isPrerelease || version.isHighestOfReleaseTrack) && !version.yanked;
+  }
+
+  get hasAllReleaseTrackModifiers() {
+    let { version } = this.args;
+
+    return version.isPrerelease && version.isHighestOfReleaseTrack;
   }
 
   get isOwner() {
