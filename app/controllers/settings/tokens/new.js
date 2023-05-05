@@ -13,20 +13,30 @@ export default class NewTokenController extends Controller {
 
   @tracked name;
   @tracked nameInvalid;
+  @tracked scopes;
+  @tracked scopesInvalid;
+
+  ENDPOINT_SCOPES = [
+    { id: 'change-owners', description: 'Invite new crate owners or remove existing ones' },
+    { id: 'publish-new', description: 'Publish new crates' },
+    { id: 'publish-update', description: 'Publish new versions of existing crates' },
+    { id: 'yank', description: 'Yank and unyank crate versions' },
+  ];
 
   constructor() {
     super(...arguments);
     this.reset();
   }
 
-  saveTokenTask = task(async () => {
-    let { name } = this;
-    if (!name) {
-      this.nameInvalid = true;
-      return;
-    }
+  @action isScopeSelected(id) {
+    return this.scopes.includes(id);
+  }
 
-    let token = this.store.createRecord('api-token', { name });
+  saveTokenTask = task(async () => {
+    if (!this.validate()) return;
+    let { name, scopes } = this;
+
+    let token = this.store.createRecord('api-token', { name, endpoint_scopes: scopes });
 
     try {
       // Save the new API token on the backend
@@ -48,9 +58,23 @@ export default class NewTokenController extends Controller {
   reset() {
     this.name = '';
     this.nameInvalid = false;
+    this.scopes = [];
+    this.scopesInvalid = false;
+  }
+
+  validate() {
+    this.nameInvalid = !this.name;
+    this.scopesInvalid = this.scopes.length === 0;
+
+    return !this.nameInvalid && !this.scopesInvalid;
   }
 
   @action resetNameValidation() {
     this.nameInvalid = false;
+  }
+
+  @action toggleScope(id) {
+    this.scopes = this.scopes.includes(id) ? this.scopes.filter(it => it !== id) : [...this.scopes, id];
+    this.scopesInvalid = false;
   }
 }

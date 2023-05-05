@@ -1,14 +1,19 @@
 .form-group, .buttons {
     position: relative;
-    margin: var(--space-s) 0;
+    margin: var(--space-m) 0;
 }
 
-.form-group {
-    label {
-        display: block;
-        margin-bottom: var(--space-3xs);
-        font-weight: 600;
-    }
+.form-group-name {
+    display: block;
+    margin-bottom: var(--space-2xs);
+    font-weight: 600;
+}
+
+.form-group-error {
+    display: block;
+    color: red;
+    font-size: 0.9em;
+    margin-top: var(--space-2xs);
 }
 
 .buttons {
@@ -21,13 +26,50 @@
     max-width: 440px;
     width: 100%;
     padding: var(--space-2xs);
-    border: 1px solid #ada796;
+    border: 1px solid var(--gray-border);
     border-radius: var(--space-3xs);
 
     &[aria-invalid="true"] {
         background: #fff2f2;
         border-color: red;
     }
+}
+
+.scopes-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    background-color: white;
+    border: 1px solid var(--gray-border);
+    border-radius: var(--space-3xs);
+
+    &.invalid {
+        background: #fff2f2;
+        border-color: red;
+    }
+
+    > * + * {
+        border-top: inherit;
+    }
+
+    label {
+        padding: var(--space-xs) var(--space-s);
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-xs);
+        font-size: 0.9em;
+    }
+}
+
+.scope-id {
+    display: inline-block;
+    max-width: 170px;
+    flex-grow: 1;
+    font-weight: bold;
+}
+
+.scope-description {
+    display: inline-block;
 }
 
 .generate-button {
