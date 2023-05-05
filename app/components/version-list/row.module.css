@@ -190,9 +190,12 @@
     }
 }
 
-mark.new{
-    background-color: transparent;
+mark.orange{
     color: hsl(39, 98%, 47%);
+}
+
+mark{
+    background-color: transparent;
 }
 
 .msrv {

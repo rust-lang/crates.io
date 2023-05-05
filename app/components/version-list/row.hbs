@@ -20,7 +20,9 @@
         {{@version.releaseTrack}}
       {{/if}}
 
-      <EmberTooltip @text={{this.releaseTrackTitle}} @side="right" data-test-release-track-title/>
+      <EmberTooltip @side="right" data-test-release-track-title>
+        {{{this.releaseTrackTitle}}}
+      </EmberTooltip>
     </div>
 
     <LinkTo
@@ -57,7 +59,7 @@
         <EmberTooltip>
           {{date-format @version.created_at 'PPP'}}
           {{#if @version.isNew}}
-            (<mark local-class="new">recent</mark>)
+            (<mark local-class="orange">recent</mark>)
           {{/if}}
         </EmberTooltip>
       </time>

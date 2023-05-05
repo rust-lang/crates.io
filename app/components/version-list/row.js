@@ -11,7 +11,7 @@ export default class VersionRow extends Component {
   get releaseTrackTitle() {
     let { version } = this.args;
     if (version.yanked) {
-      return 'This version was yanked';
+      return 'This version was <mark style="color: hsl(0, 84%, 32%)">yanked</mark>';
     }
     if (version.invalidSemver) {
       return `Failed to parse version ${version.num}`;
@@ -24,10 +24,10 @@ export default class VersionRow extends Component {
 
     let modifiers = [];
     if (version.isPrerelease) {
-      modifiers.push('prerelease');
+      modifiers.push('<mark style="color: hsl(39, 71%, 45%)">prerelease</mark>');
     }
     if (version.isHighestOfReleaseTrack) {
-      modifiers.push('latest');
+      modifiers.push('<mark style="color: hsl(136, 67%, 38%)">latest</mark>');
     }
 
     let title = `Release Track: ${releaseTrack}`;
