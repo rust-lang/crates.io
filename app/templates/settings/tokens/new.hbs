@@ -66,6 +66,67 @@
     {{/if}}
   </div>
 
+  <div local-class="form-group" data-test-scopes-group>
+    <div local-class="form-group-name">
+      Crates
+
+      <a
+        href="https://rust-lang.github.io/rfcs/2947-crates-io-token-scopes.html"
+        target="_blank"
+        rel="noopener noreferrer"
+        local-class="help-link"
+      >
+        <span local-class="hidden-label">Help</span>
+        {{svg-jar "circle-question"}}
+      </a>
+    </div>
+
+    <ul role="list" local-class="crates-list">
+      {{#each this.crateScopes as |pattern index|}}
+        <li
+          local-class="crates-scope {{if pattern.showAsInvalid "invalid"}}"
+          data-test-crate-pattern={{index}}
+        >
+          <div>
+            <Input
+              @value={{pattern.pattern}}
+              aria-label="Crate name pattern"
+              {{on "input" pattern.resetValidation}}
+              {{on "blur" pattern.validate}}
+            />
+
+            <span local-class="pattern-description" data-test-description>
+              {{pattern.description}}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            data-test-remove
+            {{on "click" (fn this.removeCrateScope index)}}
+          >
+            <span local-class="hidden-label">Remove pattern</span>
+            {{svg-jar "trash"}}
+          </button>
+        </li>
+      {{else}}
+        <li local-class="crates-unrestricted" data-test-crates-unrestricted>
+          <strong>Unrestricted</strong> – This token can be used for all of your crates.
+        </li>
+      {{/each}}
+
+      <li local-class="crates-pattern-button">
+        <button
+          type="button"
+          data-test-add-crate-pattern
+          {{on "click" this.addCratePattern}}
+        >
+          Add pattern
+        </button>
+      </li>
+    </ul>
+  </div>
+
   <div local-class="buttons">
     <button
       type="submit"
