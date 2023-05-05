@@ -27,8 +27,8 @@ dependencies:
     specifier: 2.30.0
     version: 2.30.0
   fastboot-app-server:
-    specifier: 4.1.0
-    version: 4.1.0
+    specifier: 4.1.1
+    version: 4.1.1
   highlight.js:
     specifier: 11.8.0
     version: 11.8.0
@@ -9172,29 +9172,16 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /fastboot-app-server@4.1.0:
-    resolution: {integrity: sha512-LNwV0DuomU6jmPrFK9RbXOhnxjrCR8mHONz32kfg1O2Z53aOXiXEEqDsbeTWpGib2uXCsR5hFHl9X0GarZQEhA==}
+  /fastboot-app-server@4.1.1:
+    resolution: {integrity: sha512-v7esODTxtPCZYXdW3B7at2otKHg7q5bR2YjkBISShqR5O2Ua4TrNslGQlI0VQIdSHG979g9g6bwr5EBCL2wtKw==}
     engines: {node: 12.* || 14.* || >=16}
     dependencies:
       basic-auth: 2.0.1
       chalk: 4.1.2
       compression: 1.7.4
       express: 4.18.2
-      fastboot: 4.1.0
-      fastboot-express-middleware: 4.1.0
-    transitivePeerDependencies:
-      - bufferutil
-      - canvas
-      - supports-color
-      - utf-8-validate
-    dev: false
-
-  /fastboot-express-middleware@4.1.0:
-    resolution: {integrity: sha512-RH/YnAn8S/CuzVsK0SLH5cVDP50R3MedqPFhf69T3z6h7LSFm12VAU2TKkqtW/N7qDs00CK1Clus2CwuzXVtWA==}
-    engines: {node: 12.* || 14.* || >=16}
-    dependencies:
-      chalk: 4.1.2
-      fastboot: 4.1.0
+      fastboot: 4.1.1
+      fastboot-express-middleware: 4.1.1
     transitivePeerDependencies:
       - bufferutil
       - canvas
@@ -9213,7 +9200,6 @@ packages:
       - canvas
       - supports-color
       - utf-8-validate
-    dev: true
 
   /fastboot-transform@0.1.3:
     resolution: {integrity: sha512-6otygPIJw1ARp1jJb+6KVO56iKBjhO+5x59RSC9qiZTbZRrv+HZAuP00KD3s+nWMvcFDemtdkugki9DNFTTwCQ==}
@@ -9223,24 +9209,6 @@ packages:
     transitivePeerDependencies:
       - supports-color
     dev: true
-
-  /fastboot@4.1.0:
-    resolution: {integrity: sha512-NoUUiWhLS4JfrYiHmbRjqqWmzttO+6hVyt+CawsZCg79ljTGAIhPThy8cxg11yiDNiaM9EY3kocWZrCMUM7o4g==}
-    engines: {node: 12.* || 14.* || >=16}
-    dependencies:
-      chalk: 4.1.2
-      cookie: 0.4.2
-      debug: 4.3.4(supports-color@8.1.1)
-      jsdom: 19.0.0
-      resolve: 1.22.2
-      simple-dom: 1.4.0
-      source-map-support: 0.5.21
-    transitivePeerDependencies:
-      - bufferutil
-      - canvas
-      - supports-color
-      - utf-8-validate
-    dev: false
 
   /fastboot@4.1.1:
     resolution: {integrity: sha512-XG7YprsAuAGZrUDhmJ0NFuEP0gpWg9LZwGWSS1I5+f0ETHKPWqb4x59sN2rU1nvCEETBK70z68tLsWsl9daomg==}
@@ -9258,7 +9226,6 @@ packages:
       - canvas
       - supports-color
       - utf-8-validate
-    dev: true
 
   /fastq@1.15.0:
     resolution: {integrity: sha512-wBrocU2LCXXa+lWBt8RoIRD89Fi8OdABODa/kEnyeyjS5aZO5/GNvI5sEINADqP/h8M29UHTHUb53sUu5Ihqdw==}
