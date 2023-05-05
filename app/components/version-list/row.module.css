@@ -190,6 +190,11 @@
     }
 }
 
+mark.new{
+    background-color: transparent;
+    color: hsl(39, 98%, 47%);
+}
+
 .msrv {
     text-transform: initial;
 
