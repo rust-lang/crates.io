@@ -4,9 +4,30 @@
 }
 
 .form-group-name {
-    display: block;
+    display: flex;
+    gap: var(--space-2xs);
     margin-bottom: var(--space-2xs);
     font-weight: 600;
+}
+
+.help-link {
+    flex-shrink: 0;
+    color: var(--grey600);
+    padding: var(--space-3xs);
+    margin: calc(-1 * var(--space-3xs));
+
+    &:hover {
+        color: var(--grey700);
+    }
+
+    svg {
+        width: 1em;
+        height: 1em;
+    }
+}
+
+.hidden-label {
+    composes: sr-only from '../../shared/a11y.module.css';
 }
 
 .form-group-error {

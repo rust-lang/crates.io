@@ -27,7 +27,19 @@
   </div>
 
   <div local-class="form-group" data-test-scopes-group>
-    <div local-class="form-group-name">Scopes</div>
+    <div local-class="form-group-name">
+      Scopes
+
+      <a
+        href="https://rust-lang.github.io/rfcs/2947-crates-io-token-scopes.html"
+        target="_blank"
+        rel="noopener noreferrer"
+        local-class="help-link"
+      >
+        <span local-class="hidden-label">Help</span>
+        {{svg-jar "circle-question"}}
+      </a>
+    </div>
 
     <ul role="list" local-class="scopes-list {{if this.scopesInvalid "invalid"}}">
       {{#each this.ENDPOINT_SCOPES as |scope|}}
