@@ -22,6 +22,16 @@ module('parseLicense()', function () {
       ],
     ],
     [
+      'MIT/Apache-2.0/BSD-3-Clause',
+      [
+        { isKeyword: false, link: 'https://choosealicense.com/licenses/mit', text: 'MIT' },
+        { isKeyword: true, link: undefined, text: 'OR' },
+        { isKeyword: false, link: 'https://choosealicense.com/licenses/apache-2.0', text: 'Apache-2.0' },
+        { isKeyword: true, link: undefined, text: 'OR' },
+        { isKeyword: false, link: 'https://choosealicense.com/licenses/bsd-3-clause', text: 'BSD-3-Clause' },
+      ],
+    ],
+    [
       'LGPL-2.1-only AND MIT AND BSD-2-Clause',
       [
         { isKeyword: false, link: 'https://spdx.org/licenses/LGPL-2.1-only.html', text: 'LGPL-2.1-only' },
