@@ -48,8 +48,6 @@ jobs:
         with:
           files_ignore: |
             cargo-registry-*/**
-            conduit/**
-            conduit-*/**
             migrations/**
             src/**
             build.rs
