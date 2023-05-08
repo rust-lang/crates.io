@@ -17,8 +17,6 @@ env:
   DIESEL_CLI_VERSION: 2.0.1
   # renovate: datasource=npm depName=pnpm
   PNPM_VERSION: 8.4.0
-  # renovate: datasource=github-releases depName=rust lookupName=rust-lang/rust
-  RUST_VERSION: 1.69.0
 
 jobs:
   changed-files:
@@ -56,6 +54,7 @@ jobs:
             Cargo.lock
             Cargo.toml
             RustConfig
+            rust-toolchain.toml
 
     outputs:
       non-js: ${{ steps.changed-files-non-js.outputs.any_modified }}
@@ -73,7 +72,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3.5.2
 
-      - run: rustup default ${{ env.RUST_VERSION }}
       - run: rustup component add rustfmt
       - run: rustup component add clippy
 
@@ -111,8 +109,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3.5.2
-
-      - run: rustup default ${{ env.RUST_VERSION }}
 
       - uses: Swatinem/rust-cache@v2.2.1
 
