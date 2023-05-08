@@ -5,6 +5,8 @@ import { tracked } from '@glimmer/tracking';
 
 import { task } from 'ember-concurrency';
 
+import { patternDescription, scopeDescription } from '../../utils/token-scopes';
+
 export default class ApiTokens extends Component {
   @service store;
   @service notifications;
@@ -12,8 +14,16 @@ export default class ApiTokens extends Component {
 
   @tracked newToken;
 
+  scopeDescription = scopeDescription;
+  patternDescription = patternDescription;
+
   get sortedTokens() {
     return this.args.tokens.filter(t => !t.isNew).sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+  }
+
+  listToParts(list) {
+    // We hardcode `en-US` here because the rest of the interface text is also currently displayed only in English.
+    return new Intl.ListFormat('en-US').formatToParts(list);
   }
 
   @action startNewToken(event) {
