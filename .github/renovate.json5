@@ -50,13 +50,6 @@
         "labels": ["A-backend ⚙️"],
     }, {
         "matchPackagePatterns": [
-            "^conduit$",
-            "^conduit-",
-            "^sentry-conduit$",
-        ],
-        "groupName": "conduit packages",
-    }, {
-        "matchPackagePatterns": [
             "^diesel$",
             "^diesel_",
         ],
