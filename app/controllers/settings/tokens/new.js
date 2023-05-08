@@ -1,13 +1,12 @@
 import Controller from '@ember/controller';
 import { action } from '@ember/object';
 import { inject as service } from '@ember/service';
-import { htmlSafe } from '@ember/template';
 import { tracked } from '@glimmer/tracking';
 
 import { task } from 'ember-concurrency';
 import { TrackedArray } from 'tracked-built-ins';
 
-import { scopeDescription } from '../../../utils/token-scopes';
+import { patternDescription, scopeDescription } from '../../../utils/token-scopes';
 
 export default class NewTokenController extends Controller {
   @service notifications;
@@ -119,14 +118,10 @@ class CratePattern {
   get description() {
     if (!this.pattern) {
       return 'Please enter a crate name pattern';
-    } else if (this.pattern === '*') {
-      return 'Matches all crates on crates.io';
-    } else if (!this.isValid) {
-      return 'Invalid crate name pattern';
-    } else if (this.hasWildcard) {
-      return htmlSafe(`Matches all crates starting with <strong>${this.pattern.slice(0, -1)}</strong>`);
+    } else if (this.isValid) {
+      return patternDescription(this.pattern);
     } else {
-      return htmlSafe(`Matches only the <strong>${this.pattern}</strong> crate`);
+      return 'Invalid crate name pattern';
     }
   }
 
