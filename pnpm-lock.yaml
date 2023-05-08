@@ -253,6 +253,9 @@ devDependencies:
   eslint-plugin-unicorn:
     specifier: 46.0.1
     version: 46.0.1(eslint@8.40.0)
+  http-proxy:
+    specifier: ^1.18.1
+    version: 1.18.1
   loader.js:
     specifier: 4.7.0
     version: 4.7.0
