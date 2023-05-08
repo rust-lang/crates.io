@@ -4,8 +4,8 @@
 //! - `S3_BUCKET`: The S3 bucket used to store crate files. If not present during development,
 //!    cargo_registry will fall back to a local uploader.
 //! - `S3_REGION`: The region in which the bucket was created. Optional if US standard.
-//! - `AWS_ACCESS_KEY`: The access key to interact with S3. Optional if running a mirror.
-//! - `AWS_SECRET_KEY`: The secret key to interact with S3. Optional if running a mirror.
+//! - `AWS_ACCESS_KEY`: The access key to interact with S3.
+//! - `AWS_SECRET_KEY`: The secret key to interact with S3.
 //! - `S3_CDN`: Optional CDN configuration for building public facing URLs.
 
 use crate::{env, uploaders::Uploader, Env};
