@@ -7,6 +7,8 @@ import { tracked } from '@glimmer/tracking';
 import { task } from 'ember-concurrency';
 import { TrackedArray } from 'tracked-built-ins';
 
+import { scopeDescription } from '../../../utils/token-scopes';
+
 export default class NewTokenController extends Controller {
   @service notifications;
   @service sentry;
@@ -19,12 +21,9 @@ export default class NewTokenController extends Controller {
   @tracked scopesInvalid;
   @tracked crateScopes;
 
-  ENDPOINT_SCOPES = [
-    { id: 'change-owners', description: 'Invite new crate owners or remove existing ones' },
-    { id: 'publish-new', description: 'Publish new crates' },
-    { id: 'publish-update', description: 'Publish new versions of existing crates' },
-    { id: 'yank', description: 'Yank and unyank crate versions' },
-  ];
+  ENDPOINT_SCOPES = ['change-owners', 'publish-new', 'publish-update', 'yank'];
+
+  scopeDescription = scopeDescription;
 
   constructor() {
     super(...arguments);

@@ -44,16 +44,16 @@
     <ul role="list" local-class="scopes-list {{if this.scopesInvalid "invalid"}}">
       {{#each this.ENDPOINT_SCOPES as |scope|}}
         <li>
-          <label data-test-scope={{scope.id}}>
+          <label data-test-scope={{scope}}>
             <Input
               @type="checkbox"
-              @checked={{this.isScopeSelected scope.id}}
+              @checked={{this.isScopeSelected scope}}
               disabled={{this.saveTokenTask.isRunning}}
-              {{on "change" (fn this.toggleScope scope.id)}}
+              {{on "change" (fn this.toggleScope scope)}}
             />
 
-            <span local-class="scope-id">{{scope.id}}</span>
-            <span local-class="scope-description">{{scope.description}}</span>
+            <span local-class="scope-id">{{scope}}</span>
+            <span local-class="scope-description">{{this.scopeDescription scope}}</span>
           </label>
         </li>
       {{/each}}
