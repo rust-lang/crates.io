@@ -5,6 +5,10 @@
     strong {
         color: var(--main-color);
     }
+
+    :global(.tooltip) strong {
+        color: inherit;
+    }
 }
 
 .small a, a.small {
