@@ -251,8 +251,8 @@ devDependencies:
     specifier: 0.2.0
     version: 0.2.0(eslint@8.40.0)
   eslint-plugin-unicorn:
-    specifier: 46.0.1
-    version: 46.0.1(eslint@8.40.0)
+    specifier: 47.0.0
+    version: 47.0.0(eslint@8.40.0)
   http-proxy:
     specifier: 1.18.1
     version: 1.18.1
@@ -8718,9 +8718,9 @@ packages:
       - eslint
     dev: true
 
-  /eslint-plugin-unicorn@46.0.1(eslint@8.40.0):
-    resolution: {integrity: sha512-setGhMTiLAddg1asdwjZ3hekIN5zLznNa5zll7pBPwFOka6greCKDQydfqy4fqyUhndi74wpDzClSQMEcmOaew==}
-    engines: {node: '>=14.18'}
+  /eslint-plugin-unicorn@47.0.0(eslint@8.40.0):
+    resolution: {integrity: sha512-ivB3bKk7fDIeWOUmmMm9o3Ax9zbMz1Bsza/R2qm46ufw4T6VBFBaJIR1uN3pCKSmSXm8/9Nri8V+iUut1NhQGA==}
+    engines: {node: '>=16'}
     peerDependencies:
       eslint: '*'
     dependencies:
@@ -8737,7 +8737,7 @@ packages:
       pluralize: 8.0.0
       read-pkg-up: 7.0.1
       regexp-tree: 0.1.27
-      regjsparser: 0.9.1
+      regjsparser: 0.10.0
       safe-regex: 2.1.1
       semver: 7.5.0
       strip-indent: 3.0.0
@@ -13846,6 +13846,13 @@ packages:
 
   /regjsparser@0.1.5:
     resolution: {integrity: sha512-jlQ9gYLfk2p3V5Ag5fYhA7fv7OHzd1KUH0PRP46xc3TgwjwgROIW572AfYg/X9kaNq/LJnu6oJcFRXlIrGoTRw==}
+    hasBin: true
+    dependencies:
+      jsesc: 0.5.0
+    dev: true
+
+  /regjsparser@0.10.0:
+    resolution: {integrity: sha512-qx+xQGZVsy55CH0a1hiVwHmqjLryfh7wQyF5HO07XJ9f7dQMY/gPQHhlyDkIzJKC+x2fUCpCcUODUUUFrm7SHA==}
     hasBin: true
     dependencies:
       jsesc: 0.5.0
