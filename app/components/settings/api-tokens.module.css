@@ -39,9 +39,6 @@
     font-weight: 500;
 }
 
-.dates {
-}
-
 .metadata {
     composes: small from '../../styles/shared/typography.module.css';
 
