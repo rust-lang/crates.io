@@ -71,16 +71,18 @@
           {{token.name}}
         </h3>
 
-        <div title={{token.last_used_at}} local-class="last-used-at" data-test-last-used-at>
-          {{#if token.last_used_at}}
-            Last used {{date-format-distance-to-now token.last_used_at addSuffix=true}}
-          {{else}}
-            Never used
-          {{/if}}
-        </div>
+        <div local-class="metadata">
+          <div title={{token.last_used_at}} local-class="last-used-at" data-test-last-used-at>
+            {{#if token.last_used_at}}
+              Last used {{date-format-distance-to-now token.last_used_at addSuffix=true}}
+            {{else}}
+              Never used
+            {{/if}}
+          </div>
 
-        <div title={{token.created_at}} local-class="created-at" data-test-created-at>
-          Created {{date-format-distance-to-now token.created_at addSuffix=true}}
+          <div title={{token.created_at}} local-class="created-at" data-test-created-at>
+            Created {{date-format-distance-to-now token.created_at addSuffix=true}}
+          </div>
         </div>
 
         {{#if token.token}}

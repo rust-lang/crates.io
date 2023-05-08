@@ -35,17 +35,19 @@
 }
 
 .name {
-    margin: 0 0 12px;
+    margin: 0 0 var(--space-s);
     font-weight: 500;
 }
 
 .dates {
 }
 
-.created-at,
-.last-used-at {
+.metadata {
     composes: small from '../../styles/shared/typography.module.css';
-    margin-top: 4px;
+
+    > * + * {
+        margin-top: var(--space-3xs);
+    }
 }
 
 .new-token-form {
@@ -168,10 +170,13 @@
         display: grid;
         grid-template:
             "name actions" auto
-            "last-user actions" auto
-            "created-at actions" auto
+            "metadata actions" auto
             "details details" auto
             / 1fr auto;
+
+        .metadata {
+            grid-area: metadata;
+        }
 
         .actions {
             grid-area: actions;
