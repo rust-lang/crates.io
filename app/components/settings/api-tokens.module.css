@@ -39,12 +39,17 @@
     font-weight: 500;
 }
 
+.scopes,
 .metadata {
     composes: small from '../../styles/shared/typography.module.css';
 
     > * + * {
         margin-top: var(--space-3xs);
     }
+}
+
+.scopes {
+    margin-bottom: var(--space-xs);
 }
 
 .new-token-form {
@@ -167,9 +172,14 @@
         display: grid;
         grid-template:
             "name actions" auto
+            "scopes actions" auto
             "metadata actions" auto
             "details details" auto
             / 1fr auto;
+
+        .scopes {
+            grid-area: scopes;
+        }
 
         .metadata {
             grid-area: metadata;

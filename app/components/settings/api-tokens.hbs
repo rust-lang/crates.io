@@ -71,6 +71,38 @@
           {{token.name}}
         </h3>
 
+        {{#if (or token.endpoint_scopes token.crate_scopes)}}
+          <div local-class="scopes">
+            {{#if token.endpoint_scopes}}
+              <div local-class="endpoint-scopes" data-test-endpoint-scopes>
+                Scopes:
+
+                {{#each (this.listToParts token.endpoint_scopes) as |part|~}}
+                  {{#if (eq part.type "element")}}
+                    <strong>{{part.value}}<EmberTooltip @text={{this.scopeDescription part.value}} /></strong>
+                    {{~else~}}
+                    {{part.value}}
+                  {{/if}}
+                {{~/each}}
+              </div>
+            {{/if}}
+
+            {{#if token.crate_scopes}}
+              <div local-class="crate-scopes" data-test-crate-scopes>
+                Crates:
+
+                {{#each (this.listToParts token.crate_scopes) as |part|~}}
+                  {{#if (eq part.type "element")}}
+                    <strong>{{part.value}}<EmberTooltip @text={{this.patternDescription part.value}} /></strong>
+                    {{~else~}}
+                    {{part.value}}
+                  {{/if}}
+                {{~/each}}
+              </div>
+            {{/if}}
+          </div>
+        {{/if}}
+
         <div local-class="metadata">
           <div title={{token.last_used_at}} local-class="last-used-at" data-test-last-used-at>
             {{#if token.last_used_at}}

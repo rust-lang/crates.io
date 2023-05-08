@@ -66,6 +66,8 @@ module('/settings/tokens/new', function (hooks) {
     assert.strictEqual(currentURL(), '/settings/tokens');
     assert.dom('[data-test-api-token="1"] [data-test-name]').hasText('token-name');
     assert.dom('[data-test-api-token="1"] [data-test-token]').hasText(token.token);
+    assert.dom('[data-test-api-token="1"] [data-test-endpoint-scopes]').hasText('Scopes: publish-update');
+    assert.dom('[data-test-api-token="1"] [data-test-crate-scopes]').doesNotExist();
   });
 
   test('crate scopes', async function (assert) {
@@ -76,6 +78,7 @@ module('/settings/tokens/new', function (hooks) {
 
     await fillIn('[data-test-name]', 'token-name');
     await click('[data-test-scope="publish-update"]');
+    await click('[data-test-scope="yank"]');
 
     assert.dom('[data-test-crates-unrestricted]').exists();
     assert.dom('[data-test-crate-pattern]').doesNotExist();
@@ -128,11 +131,13 @@ module('/settings/tokens/new', function (hooks) {
     assert.ok(Boolean(token), 'API token has been created in the backend database');
     assert.strictEqual(token.name, 'token-name');
     assert.deepEqual(token.crateScopes, ['serde-*', 'serde']);
-    assert.deepEqual(token.endpointScopes, ['publish-update']);
+    assert.deepEqual(token.endpointScopes, ['publish-update', 'yank']);
 
     assert.strictEqual(currentURL(), '/settings/tokens');
     assert.dom('[data-test-api-token="1"] [data-test-name]').hasText('token-name');
     assert.dom('[data-test-api-token="1"] [data-test-token]').hasText(token.token);
+    assert.dom('[data-test-api-token="1"] [data-test-endpoint-scopes]').hasText('Scopes: publish-update and yank');
+    assert.dom('[data-test-api-token="1"] [data-test-crate-scopes]').hasText('Crates: serde-* and serde');
   });
 
   test('loading and error state', async function (assert) {
