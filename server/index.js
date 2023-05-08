@@ -20,7 +20,7 @@
 // of prefixes in `middleware::ember_html::serve_html`.
 const proxyPaths = ['/api/'];
 
-const installBackendProxy = app => {
+function installBackendProxy(app) {
   // Load the proxy backend from the environment.
   const proxyBackend = process.env.PROXY_BACKEND;
 
@@ -49,7 +49,7 @@ const installBackendProxy = app => {
       proxy.web(req, res);
     });
   }
-};
+}
 
 module.exports = function (app) {
   // Log proxy requests.
