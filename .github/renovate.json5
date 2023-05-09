@@ -11,6 +11,7 @@
         ":automergeTesters",
         "regexManagers:dockerfileVersions",
         "regexManagers:githubActionsVersions",
+        "github>Turbo87/renovate-config//rust/updateToolchain",
     ],
     "js": {
         "labels": ["A-frontend 🐹"],
