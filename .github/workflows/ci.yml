@@ -51,7 +51,6 @@ jobs:
             build.rs
             Cargo.lock
             Cargo.toml
-            RustConfig
             rust-toolchain.toml
 
     outputs:
