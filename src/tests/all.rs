@@ -102,7 +102,7 @@ pub struct OkBool {
 // Return the environment variable only if it has been defined
 #[track_caller]
 fn env(var: &str) -> String {
-    match dotenv::var(var) {
+    match dotenvy::var(var) {
         Ok(ref s) if s.is_empty() => panic!("environment variable `{var}` must not be empty"),
         Ok(s) => s,
         _ => panic!("environment variable `{var}` must be defined and valid unicode"),

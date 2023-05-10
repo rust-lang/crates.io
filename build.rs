@@ -7,7 +7,7 @@ fn main() {
     println!("cargo:rerun-if-changed=.env");
     println!("cargo:rerun-if-changed=migrations/");
     if env::var("PROFILE") == Ok("debug".into()) {
-        if let Ok(database_url) = dotenv::var("TEST_DATABASE_URL") {
+        if let Ok(database_url) = dotenvy::var("TEST_DATABASE_URL") {
             let connection = &mut PgConnection::establish(&database_url)
                 .expect("Could not connect to TEST_DATABASE_URL");
             let migrations = FileBasedMigrations::find_migrations_directory()

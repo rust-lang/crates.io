@@ -461,7 +461,7 @@ dependencies = [
  "diesel",
  "diesel_full_text_search",
  "diesel_migrations",
- "dotenv",
+ "dotenvy",
  "flate2",
  "futures-channel",
  "futures-util",
@@ -516,7 +516,7 @@ dependencies = [
  "anyhow",
  "base64 0.13.1",
  "claims",
- "dotenv",
+ "dotenvy",
  "git2",
  "serde",
  "serde_json",
@@ -967,10 +967,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "dotenv"
-version = "0.15.0"
+name = "dotenvy"
+version = "0.15.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77c90badedccf4105eca100756a0b1289e191f6fcbdadd3cee1d2f614f97da8f"
+checksum = "1aaf95b3e5c8f23aa320147307562d361db0ae0d51242340f558153b4eb2439b"
 
 [[package]]
 name = "either"

@@ -88,7 +88,7 @@ pub fn build_handler(app: Arc<App>) -> axum::Router {
 
 /// Convenience function requiring that an environment variable is set.
 ///
-/// Ensures that we've initialized the dotenv crate in order to read environment variables
+/// Ensures that we've initialized the dotenvy crate in order to read environment variables
 /// from a *.env* file if present. Don't use this for optionally set environment variables.
 ///
 /// # Panics
@@ -97,12 +97,12 @@ pub fn build_handler(app: Arc<App>) -> axum::Router {
 /// in the current environment.
 #[track_caller]
 pub fn env(s: &str) -> String {
-    dotenv::var(s).unwrap_or_else(|_| panic!("must have `{s}` defined"))
+    dotenvy::var(s).unwrap_or_else(|_| panic!("must have `{s}` defined"))
 }
 
 /// Parse an optional environment variable
 ///
-/// Ensures that we've initialized the dotenv crate in order to read environment variables
+/// Ensures that we've initialized the dotenvy crate in order to read environment variables
 /// from a *.env* file if present. A variable that is set to invalid unicode will be handled
 /// as if it was unset.
 ///
@@ -111,7 +111,7 @@ pub fn env(s: &str) -> String {
 /// Panics if the environment variable is set but cannot be parsed as the requested type.
 #[track_caller]
 pub fn env_optional<T: FromStr>(s: &str) -> Option<T> {
-    dotenv::var(s).ok().map(|s| {
+    dotenvy::var(s).ok().map(|s| {
         s.parse()
             .unwrap_or_else(|_| panic!("`{s}` was defined but could not be parsed"))
     })

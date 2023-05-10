@@ -156,7 +156,7 @@ mod tests {
 
     fn pg_connection() -> PgConnection {
         let database_url =
-            dotenv::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set to run tests");
+            dotenvy::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set to run tests");
         PgConnection::establish(&database_url).unwrap()
     }
 

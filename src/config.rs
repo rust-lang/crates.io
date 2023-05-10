@@ -128,7 +128,7 @@ impl Default for Server {
             excluded_crate_names,
             domain_name: domain_name(),
             allowed_origins,
-            downloads_persist_interval_ms: dotenv::var("DOWNLOADS_PERSIST_INTERVAL_MS")
+            downloads_persist_interval_ms: dotenvy::var("DOWNLOADS_PERSIST_INTERVAL_MS")
                 .map(|interval| {
                     interval
                         .parse()
@@ -136,10 +136,10 @@ impl Default for Server {
                 })
                 .unwrap_or(60_000), // 1 minute
             ownership_invitations_expiration_days: 30,
-            metrics_authorization_token: dotenv::var("METRICS_AUTHORIZATION_TOKEN").ok(),
+            metrics_authorization_token: dotenvy::var("METRICS_AUTHORIZATION_TOKEN").ok(),
             use_test_database_pool: false,
             instance_metrics_log_every_seconds: env_optional("INSTANCE_METRICS_LOG_EVERY_SECONDS"),
-            force_unconditional_redirects: dotenv::var("FORCE_UNCONDITIONAL_REDIRECTS").is_ok(),
+            force_unconditional_redirects: dotenvy::var("FORCE_UNCONDITIONAL_REDIRECTS").is_ok(),
             blocked_routes: env_optional("BLOCKED_ROUTES")
                 .map(|routes: String| routes.split(',').map(|s| s.into()).collect())
                 .unwrap_or_else(HashSet::new),
@@ -148,7 +148,7 @@ impl Default for Server {
             version_id_cache_ttl: Duration::from_secs(
                 env_optional("VERSION_ID_CACHE_TTL").unwrap_or(DEFAULT_VERSION_ID_CACHE_TTL),
             ),
-            cdn_user_agent: dotenv::var("WEB_CDN_USER_AGENT")
+            cdn_user_agent: dotenvy::var("WEB_CDN_USER_AGENT")
                 .unwrap_or_else(|_| "Amazon CloudFront".into()),
             balance_capacity: BalanceCapacityConfig::from_environment(),
         }
@@ -166,7 +166,7 @@ impl Server {
 }
 
 pub(crate) fn domain_name() -> String {
-    dotenv::var("DOMAIN_NAME").unwrap_or_else(|_| "crates.io".into())
+    dotenvy::var("DOMAIN_NAME").unwrap_or_else(|_| "crates.io".into())
 }
 
 /// Parses a CIDR block string to a valid `IpNetwork` struct.
@@ -196,10 +196,10 @@ fn parse_cidr_block(block: &str) -> anyhow::Result<IpNetwork> {
 }
 
 fn blocked_traffic() -> Vec<(String, Vec<String>)> {
-    let pattern_list = dotenv::var("BLOCKED_TRAFFIC").unwrap_or_default();
+    let pattern_list = dotenvy::var("BLOCKED_TRAFFIC").unwrap_or_default();
     parse_traffic_patterns(&pattern_list)
         .map(|(header, value_env_var)| {
-            let value_list = dotenv::var(value_env_var).unwrap_or_default();
+            let value_list = dotenvy::var(value_env_var).unwrap_or_default();
             let values = value_list.split(',').map(String::from).collect();
             (header.into(), values)
         })

@@ -426,7 +426,7 @@ mod tests {
 
     fn runner() -> Runner {
         let database_url =
-            dotenv::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set to run tests");
+            dotenvy::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set to run tests");
 
         super::Runner::internal_test_runner(None, database_url)
     }

@@ -90,7 +90,7 @@ enum Record {
 
 pub fn proxy() -> (String, Bomb) {
     let me = thread::current().name().unwrap().to_string();
-    let record_env = dotenv::var("RECORD").ok();
+    let record_env = dotenvy::var("RECORD").ok();
 
     let (url_tx, url_rx) = mpsc::channel();
 
@@ -280,7 +280,7 @@ async fn record_http(req: Request<Body>, client: Client) -> Result<ResponseAndEx
         body: base64::encode(&body),
     };
 
-    let (status, headers, body) = if let Ok("passthrough") = dotenv::var("RECORD").as_deref() {
+    let (status, headers, body) = if let Ok("passthrough") = dotenvy::var("RECORD").as_deref() {
         // Construct an outgoing request
         let uri = uri.to_string().replace("http://", "https://");
         let uri = uri.parse::<Uri>().unwrap();

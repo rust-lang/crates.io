@@ -11,18 +11,18 @@ use std::sync::Arc;
 /// `HEROKU_SLUG_COMMIT`, if present, will be used as the `release` property
 /// on all events.
 pub fn init() -> ClientInitGuard {
-    let dsn = dotenv::var("SENTRY_DSN_API")
+    let dsn = dotenvy::var("SENTRY_DSN_API")
         .ok()
         .into_dsn()
         .expect("SENTRY_DSN_API is not a valid Sentry DSN value");
 
     let environment = dsn.as_ref().map(|_| {
-        dotenv::var("SENTRY_ENV_API")
+        dotenvy::var("SENTRY_ENV_API")
             .expect("SENTRY_ENV_API must be set when using SENTRY_DSN_API")
             .into()
     });
 
-    let release = dotenv::var("HEROKU_SLUG_COMMIT").ok().map(Into::into);
+    let release = dotenvy::var("HEROKU_SLUG_COMMIT").ok().map(Into::into);
 
     let traces_sample_rate = env_optional("SENTRY_TRACES_SAMPLE_RATE").unwrap_or(0.0);
 

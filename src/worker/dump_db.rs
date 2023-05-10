@@ -95,7 +95,7 @@ impl DumpDirectory {
         }
         let metadata = Metadata {
             timestamp: &self.timestamp,
-            crates_io_commit: dotenv::var("HEROKU_SLUG_COMMIT")
+            crates_io_commit: dotenvy::var("HEROKU_SLUG_COMMIT")
                 .unwrap_or_else(|_| "unknown".to_owned()),
         };
         let path = self.export_dir.join("metadata.json");

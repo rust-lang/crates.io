@@ -10,7 +10,7 @@ pub async fn show_deployed_sha(state: AppState) -> impl IntoResponse {
     let read_only = state.config.db.are_all_read_only();
 
     let deployed_sha =
-        dotenv::var("HEROKU_SLUG_COMMIT").unwrap_or_else(|_| String::from("unknown"));
+        dotenvy::var("HEROKU_SLUG_COMMIT").unwrap_or_else(|_| String::from("unknown"));
 
     Json(json!({
         "deployed_sha": &deployed_sha[..],

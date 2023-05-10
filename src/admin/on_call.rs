@@ -25,8 +25,8 @@ impl Event {
     /// If the variant is `Trigger`, this will page whoever is on call
     /// (potentially waking them up at 3 AM).
     pub fn send(self) -> Result<()> {
-        let api_token = dotenv::var("PAGERDUTY_API_TOKEN")?;
-        let service_key = dotenv::var("PAGERDUTY_INTEGRATION_KEY")?;
+        let api_token = dotenvy::var("PAGERDUTY_API_TOKEN")?;
+        let service_key = dotenvy::var("PAGERDUTY_INTEGRATION_KEY")?;
 
         let response = Client::new()
             .post("https://events.pagerduty.com/generic/2010-04-15/create_event.json")

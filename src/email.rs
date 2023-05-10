@@ -22,9 +22,9 @@ impl Emails {
     /// to a SMTP server or store the emails on the local filesystem.
     pub fn from_environment(config: &config::Server) -> Self {
         let backend = match (
-            dotenv::var("MAILGUN_SMTP_LOGIN"),
-            dotenv::var("MAILGUN_SMTP_PASSWORD"),
-            dotenv::var("MAILGUN_SMTP_SERVER"),
+            dotenvy::var("MAILGUN_SMTP_LOGIN"),
+            dotenvy::var("MAILGUN_SMTP_PASSWORD"),
+            dotenvy::var("MAILGUN_SMTP_SERVER"),
         ) {
             (Ok(login), Ok(password), Ok(server)) => EmailBackend::Smtp {
                 server,

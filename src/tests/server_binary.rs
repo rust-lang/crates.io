@@ -88,7 +88,7 @@ struct ServerBin {
 
 impl ServerBin {
     fn prepare() -> Result<Self, Error> {
-        let mut env = dotenv::vars().collect::<HashMap<_, _>>();
+        let mut env = dotenvy::vars().collect::<HashMap<_, _>>();
         // Bind a random port every time the server is started.
         env.insert("PORT".into(), "0".into());
         // Avoid creating too many database connections.

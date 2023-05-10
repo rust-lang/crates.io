@@ -51,14 +51,14 @@ fn main() {
 
     let db_url = db::connection_url(&config.db, &config.db.primary.url);
 
-    let job_start_timeout = dotenv::var("BACKGROUND_JOB_TIMEOUT")
+    let job_start_timeout = dotenvy::var("BACKGROUND_JOB_TIMEOUT")
         .unwrap_or_else(|_| "30".into())
         .parse()
         .expect("Invalid value for `BACKGROUND_JOB_TIMEOUT`");
 
     info!("Cloning index");
 
-    if dotenv::var("HEROKU").is_ok() {
+    if dotenvy::var("HEROKU").is_ok() {
         ssh::write_known_hosts_file().unwrap();
     }
 

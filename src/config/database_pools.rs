@@ -54,37 +54,37 @@ impl DatabasePools {
     /// This function panics if `DB_OFFLINE=leader` but `READ_ONLY_REPLICA_URL` is unset.
     pub fn full_from_environment(base: &Base) -> Self {
         let leader_url = env("DATABASE_URL");
-        let follower_url = dotenv::var("READ_ONLY_REPLICA_URL").ok();
-        let read_only_mode = dotenv::var("READ_ONLY_MODE").is_ok();
+        let follower_url = dotenvy::var("READ_ONLY_REPLICA_URL").ok();
+        let read_only_mode = dotenvy::var("READ_ONLY_MODE").is_ok();
 
-        let primary_pool_size = match dotenv::var("DB_PRIMARY_POOL_SIZE") {
+        let primary_pool_size = match dotenvy::var("DB_PRIMARY_POOL_SIZE") {
             Ok(num) => num.parse().expect("couldn't parse DB_PRIMARY_POOL_SIZE"),
             _ => Self::DEFAULT_POOL_SIZE,
         };
 
-        let replica_pool_size = match dotenv::var("DB_REPLICA_POOL_SIZE") {
+        let replica_pool_size = match dotenvy::var("DB_REPLICA_POOL_SIZE") {
             Ok(num) => num.parse().expect("couldn't parse DB_REPLICA_POOL_SIZE"),
             _ => Self::DEFAULT_POOL_SIZE,
         };
 
-        let primary_min_idle = match dotenv::var("DB_PRIMARY_MIN_IDLE") {
+        let primary_min_idle = match dotenvy::var("DB_PRIMARY_MIN_IDLE") {
             Ok(num) => Some(num.parse().expect("couldn't parse DB_PRIMARY_MIN_IDLE")),
             _ => None,
         };
 
-        let replica_min_idle = match dotenv::var("DB_REPLICA_MIN_IDLE") {
+        let replica_min_idle = match dotenvy::var("DB_REPLICA_MIN_IDLE") {
             Ok(num) => Some(num.parse().expect("couldn't parse DB_REPLICA_MIN_IDLE")),
             _ => None,
         };
 
-        let tcp_timeout_ms = match dotenv::var("DB_TCP_TIMEOUT_MS") {
+        let tcp_timeout_ms = match dotenvy::var("DB_TCP_TIMEOUT_MS") {
             Ok(num) => num.parse().expect("couldn't parse DB_TCP_TIMEOUT_MS"),
             Err(_) => 15 * 1000, // 15 seconds
         };
 
         let enforce_tls = base.env == Env::Production;
 
-        match dotenv::var("DB_OFFLINE").as_deref() {
+        match dotenvy::var("DB_OFFLINE").as_deref() {
             // The actual leader is down, use the follower in read-only mode as the primary and
             // don't configure a replica.
             Ok("leader") => Self {

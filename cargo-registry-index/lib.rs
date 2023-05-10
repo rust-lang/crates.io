@@ -230,12 +230,12 @@ pub struct RepositoryConfig {
 
 impl RepositoryConfig {
     pub fn from_environment() -> Self {
-        let username = dotenv::var("GIT_HTTP_USER");
-        let password = dotenv::var("GIT_HTTP_PWD");
-        let http_url = dotenv::var("GIT_REPO_URL");
+        let username = dotenvy::var("GIT_HTTP_USER");
+        let password = dotenvy::var("GIT_HTTP_PWD");
+        let http_url = dotenvy::var("GIT_REPO_URL");
 
-        let ssh_key = dotenv::var("GIT_SSH_KEY");
-        let ssh_url = dotenv::var("GIT_SSH_REPO_URL");
+        let ssh_key = dotenvy::var("GIT_SSH_KEY");
+        let ssh_url = dotenvy::var("GIT_SSH_REPO_URL");
 
         match (username, password, http_url, ssh_key, ssh_url) {
             (extra_user, extra_pass, extra_http_url, Ok(encoded_key), Ok(ssh_url)) => {
