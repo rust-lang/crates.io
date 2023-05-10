@@ -37,7 +37,7 @@ fn check_failing_background_jobs(conn: &mut PgConnection) -> Result<()> {
     println!("Checking for failed background jobs");
 
     // Max job execution time in minutes
-    let max_job_time = dotenv::var("MAX_JOB_TIME")
+    let max_job_time = dotenvy::var("MAX_JOB_TIME")
         .map(|s| s.parse::<i32>().unwrap())
         .unwrap_or(15);
 
@@ -78,7 +78,7 @@ fn check_stalled_update_downloads(conn: &mut PgConnection) -> Result<()> {
     println!("Checking for stalled background jobs");
 
     // Max job execution time in minutes
-    let max_job_time = dotenv::var("MONITOR_MAX_UPDATE_DOWNLOADS_TIME")
+    let max_job_time = dotenvy::var("MONITOR_MAX_UPDATE_DOWNLOADS_TIME")
         .map(|s| s.parse::<u32>().unwrap() as i64)
         .unwrap_or(120);
 
@@ -113,7 +113,7 @@ fn check_spam_attack(conn: &mut PgConnection) -> Result<()> {
 
     println!("Checking for crates indicating someone is spamming us");
 
-    let bad_crate_names = dotenv::var("SPAM_CRATE_NAMES");
+    let bad_crate_names = dotenvy::var("SPAM_CRATE_NAMES");
     let bad_crate_names: Vec<_> = bad_crate_names
         .as_ref()
         .map(|s| s.split(',').collect())

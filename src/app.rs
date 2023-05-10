@@ -92,14 +92,14 @@ impl App {
             ),
         );
 
-        let db_helper_threads = match (dotenv::var("DB_HELPER_THREADS"), config.env()) {
+        let db_helper_threads = match (dotenvy::var("DB_HELPER_THREADS"), config.env()) {
             (Ok(num), _) => num.parse().expect("couldn't parse DB_HELPER_THREADS"),
             (_, Env::Production) => 3,
             _ => 1,
         };
 
         // Used as the connection and statement timeout value for the database pool(s)
-        let db_connection_timeout = match (dotenv::var("DB_TIMEOUT"), config.env()) {
+        let db_connection_timeout = match (dotenvy::var("DB_TIMEOUT"), config.env()) {
             (Ok(num), _) => num.parse().expect("couldn't parse DB_TIMEOUT"),
             (_, Env::Production) => 10,
             (_, Env::Test) => 1,
@@ -170,7 +170,7 @@ impl App {
             .time_to_live(config.version_id_cache_ttl)
             .build();
 
-        let fastboot_client = match dotenv::var("USE_FASTBOOT") {
+        let fastboot_client = match dotenvy::var("USE_FASTBOOT") {
             Ok(val) if val == "staging-experimental" => Some(reqwest::Client::new()),
             _ => None,
         };

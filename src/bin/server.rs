@@ -43,9 +43,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let normalize_path = axum::middleware::from_fn(normalize_path);
     let axum_router = normalize_path.layer(axum_router);
 
-    let heroku = dotenv::var("HEROKU").is_ok();
-    let fastboot = dotenv::var("USE_FASTBOOT").is_ok();
-    let dev_docker = dotenv::var("DEV_DOCKER").is_ok();
+    let heroku = dotenvy::var("HEROKU").is_ok();
+    let fastboot = dotenvy::var("USE_FASTBOOT").is_ok();
+    let dev_docker = dotenvy::var("DEV_DOCKER").is_ok();
 
     let ip = if dev_docker {
         [0, 0, 0, 0]
@@ -57,7 +57,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         _ => 8888,
     };
 
-    let threads = dotenv::var("SERVER_THREADS")
+    let threads = dotenvy::var("SERVER_THREADS")
         .map(|s| s.parse().expect("SERVER_THREADS was not a valid number"))
         .unwrap_or_else(|_| match env {
             Env::Development => 5,

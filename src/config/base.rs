@@ -17,7 +17,7 @@ pub struct Base {
 
 impl Base {
     pub fn from_environment() -> Self {
-        let heroku = dotenv::var("HEROKU").is_ok();
+        let heroku = dotenvy::var("HEROKU").is_ok();
         let env = if heroku {
             Env::Production
         } else {
@@ -33,7 +33,7 @@ impl Base {
             }
             // In Development mode, either running as a primary instance or a read-only mirror
             _ => {
-                if dotenv::var("S3_BUCKET").is_ok() {
+                if dotenvy::var("S3_BUCKET").is_ok() {
                     // If we've set the `S3_BUCKET` variable to any value, use all of the values
                     // for the related S3 environment variables and configure the app to upload to
                     // and read from S3 like production does. All values except for bucket are
@@ -60,8 +60,8 @@ impl Base {
             bucket: Box::new(s3::Bucket::new(
                 String::from("alexcrichton-test"),
                 None,
-                dotenv::var("AWS_ACCESS_KEY").unwrap_or_default(),
-                dotenv::var("AWS_SECRET_KEY").unwrap_or_default(),
+                dotenvy::var("AWS_ACCESS_KEY").unwrap_or_default(),
+                dotenvy::var("AWS_SECRET_KEY").unwrap_or_default(),
                 // When testing we route all API traffic over HTTP so we can
                 // sniff/record it, but everywhere else we use https
                 "http",
@@ -69,8 +69,8 @@ impl Base {
             index_bucket: Some(Box::new(s3::Bucket::new(
                 String::from("alexcrichton-test"),
                 None,
-                dotenv::var("AWS_ACCESS_KEY").unwrap_or_default(),
-                dotenv::var("AWS_SECRET_KEY").unwrap_or_default(),
+                dotenvy::var("AWS_ACCESS_KEY").unwrap_or_default(),
+                dotenvy::var("AWS_SECRET_KEY").unwrap_or_default(),
                 // When testing we route all API traffic over HTTP so we can
                 // sniff/record it, but everywhere else we use https
                 "http",
@@ -88,10 +88,10 @@ impl Base {
     }
 
     fn s3_panic_if_missing_keys() -> Uploader {
-        let index_bucket = match dotenv::var("S3_INDEX_BUCKET") {
+        let index_bucket = match dotenvy::var("S3_INDEX_BUCKET") {
             Ok(name) => Some(Box::new(s3::Bucket::new(
                 name,
-                dotenv::var("S3_INDEX_REGION").ok(),
+                dotenvy::var("S3_INDEX_REGION").ok(),
                 env("AWS_ACCESS_KEY"),
                 env("AWS_SECRET_KEY"),
                 "https",
@@ -101,23 +101,23 @@ impl Base {
         Uploader::S3 {
             bucket: Box::new(s3::Bucket::new(
                 env("S3_BUCKET"),
-                dotenv::var("S3_REGION").ok(),
+                dotenvy::var("S3_REGION").ok(),
                 env("AWS_ACCESS_KEY"),
                 env("AWS_SECRET_KEY"),
                 "https",
             )),
             index_bucket,
-            cdn: dotenv::var("S3_CDN").ok(),
+            cdn: dotenvy::var("S3_CDN").ok(),
         }
     }
 
     fn s3_maybe_read_only() -> Uploader {
-        let index_bucket = match dotenv::var("S3_INDEX_BUCKET") {
+        let index_bucket = match dotenvy::var("S3_INDEX_BUCKET") {
             Ok(name) => Some(Box::new(s3::Bucket::new(
                 name,
-                dotenv::var("S3_INDEX_REGION").ok(),
-                dotenv::var("AWS_ACCESS_KEY").unwrap_or_default(),
-                dotenv::var("AWS_SECRET_KEY").unwrap_or_default(),
+                dotenvy::var("S3_INDEX_REGION").ok(),
+                dotenvy::var("AWS_ACCESS_KEY").unwrap_or_default(),
+                dotenvy::var("AWS_SECRET_KEY").unwrap_or_default(),
                 "https",
             ))),
             Err(_) => None,
@@ -125,13 +125,13 @@ impl Base {
         Uploader::S3 {
             bucket: Box::new(s3::Bucket::new(
                 env("S3_BUCKET"),
-                dotenv::var("S3_REGION").ok(),
-                dotenv::var("AWS_ACCESS_KEY").unwrap_or_default(),
-                dotenv::var("AWS_SECRET_KEY").unwrap_or_default(),
+                dotenvy::var("S3_REGION").ok(),
+                dotenvy::var("AWS_ACCESS_KEY").unwrap_or_default(),
+                dotenvy::var("AWS_SECRET_KEY").unwrap_or_default(),
                 "https",
             )),
             index_bucket,
-            cdn: dotenv::var("S3_CDN").ok(),
+            cdn: dotenvy::var("S3_CDN").ok(),
         }
     }
 }
