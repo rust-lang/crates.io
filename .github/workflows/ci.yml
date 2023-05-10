@@ -13,6 +13,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  # renovate: datasource=crate depName=cargo-deny versioning=semver
+  CARGO_DENY_VERSION: 0.13.9
   # renovate: datasource=crate depName=diesel_cli versioning=semver
   DIESEL_CLI_VERSION: 2.0.1
   # renovate: datasource=npm depName=pnpm
@@ -53,9 +55,15 @@ jobs:
             Cargo.toml
             rust-toolchain.toml
 
+      - uses: tj-actions/changed-files@v35.9.2
+        id: changed-files-rust-lockfile
+        with:
+          files: Cargo.lock
+
     outputs:
       non-js: ${{ steps.changed-files-non-js.outputs.any_modified }}
       non-rust: ${{ steps.changed-files-non-rust.outputs.any_modified }}
+      rust-lockfile: ${{ steps.changed-files-rust-lockfile.outputs.any_modified }}
 
   backend-lint:
     name: Backend / Lint
@@ -76,6 +84,23 @@ jobs:
 
       - run: cargo fmt --check
       - run: cargo clippy --all-targets --all-features --all
+
+  backend-cargo-deny:
+    name: Backend / cargo-deny
+    runs-on: ubuntu-22.04
+    needs: changed-files
+    if: needs.changed-files.outputs.rust-lockfile == 'true'
+
+    env:
+      RUSTFLAGS: "-D warnings"
+
+    steps:
+      - uses: actions/checkout@v3.5.2
+
+      - uses: Swatinem/rust-cache@v2.2.1
+
+      - run: cargo install cargo-deny --vers ${{ env.CARGO_DENY_VERSION }}
+      - run: cargo deny check
 
   backend-test:
     name: Backend / Test
