@@ -190,38 +190,6 @@
     }
 }
 
-mark{
-    background-color: transparent;
-
-    &.orange{
-         color: hsl(39, 98%, 47%);
-     }
-
-    &.yellow{
-         color: hsl(39, 71%, 45%);
-     }
-
-    &.green{
-         color: hsl(136, 67%, 38%);
-     }
-}
-
-.mark-wrapper{
-    display: inline;
-    margin: 0;
-    word-break: break-all;
-
-    &:before{
-        content: "(";
-        margin-right: -3px;
-    }
-
-    &:after{
-        content: ")";
-        margin-left: -3px;
-    }
-}
-
 .msrv {
     text-transform: initial;
 
