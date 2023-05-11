@@ -14,10 +14,8 @@
     border-radius: var(--space-4xs);
 }
 
-.sort-by{
-    display: flex;
-    align-items: center;
-    gap: 5px;
+.sort-by {
+    composes: v-center from './shared/sort-by.module.css';
 }
 
 .sort-by-label {
