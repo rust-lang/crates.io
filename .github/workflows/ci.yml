@@ -89,10 +89,7 @@ jobs:
     name: Backend / cargo-deny
     runs-on: ubuntu-22.04
     needs: changed-files
-    if: needs.changed-files.outputs.rust-lockfile == 'true'
-
-    env:
-      RUSTFLAGS: "-D warnings"
+    if: github.event_name != 'pull_request' || needs.changed-files.outputs.rust-lockfile == 'true'
 
     steps:
       - uses: actions/checkout@v3.5.2
