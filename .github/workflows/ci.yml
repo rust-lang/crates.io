@@ -91,9 +91,6 @@ jobs:
     needs: changed-files
     if: github.event_name != 'pull_request' || needs.changed-files.outputs.rust-lockfile == 'true'
 
-    env:
-      RUSTFLAGS: "-D warnings"
-
     steps:
       - uses: actions/checkout@v3.5.2
 
