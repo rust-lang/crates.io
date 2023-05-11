@@ -94,6 +94,18 @@
     }
 }
 
+.rt-latest {
+    color: hsl(136, 67%, 38%);
+}
+
+.rt-prerelease {
+    color: hsl(35, 95%, 59%);
+}
+
+.rt-yanked {
+    color: hsl(0, 87%, 58%);
+}
+
 .num-link {
     color: var(--fg-color);
     font-weight: 500;
@@ -184,10 +196,8 @@
     }
 }
 
-.date {
-    &.new {
-        color: hsl(39, 98%, 47%);
-    }
+.date.new, :global(.tooltip) .new {
+    color: hsl(39, 98%, 47%);
 }
 
 .msrv {

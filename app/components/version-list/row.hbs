@@ -54,7 +54,12 @@
         {{svg-jar "calendar"}}
         {{date-format-distance-to-now @version.created_at addSuffix=true}}
 
-        <EmberTooltip @text={{date-format @version.created_at 'PPP'}} />
+        <EmberTooltip>
+          {{date-format @version.created_at 'PPP'}}
+          {{#if @version.isNew}}
+            (<span local-class="new">new</span>)
+          {{/if}}
+        </EmberTooltip>
       </time>
     </div>
 
