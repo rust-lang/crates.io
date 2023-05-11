@@ -58,6 +58,10 @@
 
     h2 {
         font-size: 1.05rem;
+
+        a:not(:hover) {
+            color: var(--main-color);
+        }
     }
 }
 

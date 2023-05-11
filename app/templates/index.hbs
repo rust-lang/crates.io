@@ -57,7 +57,7 @@
 {{else}}
   <div local-class='lists' data-test-lists>
     <section data-test-new-crates >
-      <h2>New Crates <LinkTo @route="crates" @query={{hash sort="new"}}>(see all)</LinkTo></h2>
+      <h2><LinkTo @route="crates" @query={{hash sort="new"}}>New Crates</LinkTo></h2>
       <ol local-class="list" aria-busy="{{this.dataTask.isRunning}}">
         {{#if this.dataTask.isRunning}}
           {{#each (placeholders 10)}}
@@ -81,7 +81,7 @@
     </section>
 
     <section data-test-most-downloaded>
-      <h2>Most Downloaded <LinkTo @route="crates" @query={{hash sort="downloads"}}>(see all)</LinkTo></h2>
+      <h2><LinkTo @route="crates" @query={{hash sort="downloads"}}>Most Downloaded</LinkTo></h2>
       <ol local-class="list" aria-busy="{{this.dataTask.isRunning}}">
         {{#if this.dataTask.isRunning}}
           {{#each (placeholders 10)}}
@@ -104,7 +104,7 @@
     </section>
 
     <section data-test-just-updated>
-      <h2>Just Updated <LinkTo @route="crates" @query={{hash sort="recent-updates"}}>(see all)</LinkTo></h2>
+      <h2><LinkTo @route="crates" @query={{hash sort="recent-updates"}}>Just Updated</LinkTo></h2>
       <ol local-class="list" aria-busy="{{this.dataTask.isRunning}}">
         {{#if this.dataTask.isRunning}}
           {{#each (placeholders 10)}}
@@ -128,7 +128,7 @@
     </section>
 
     <section data-test-most-recently-downloaded>
-      <h2>Most Recent Downloads <LinkTo @route="crates" @query={{hash sort="recent-downloads"}}>(see all)</LinkTo></h2>
+      <h2><LinkTo @route="crates" @query={{hash sort="recent-downloads"}}>Most Recent Downloads</LinkTo></h2>
       <ol local-class="list" aria-busy="{{this.dataTask.isRunning}}">
         {{#if this.dataTask.isRunning}}
           {{#each (placeholders 10)}}
@@ -151,7 +151,7 @@
     </section>
 
     <section data-test-keywords>
-      <h2>Popular Keywords <LinkTo @route="keywords">(see all)</LinkTo></h2>
+      <h2><LinkTo @route="keywords">Popular Keywords</LinkTo></h2>
       <ul local-class="list" aria-busy="{{this.dataTask.isRunning}}">
         {{#if this.dataTask.isRunning}}
           {{#each (placeholders 10)}}
@@ -174,7 +174,7 @@
     </section>
 
     <section data-test-categories>
-      <h2>Popular Categories <LinkTo @route="categories">(see all)</LinkTo></h2>
+      <h2><LinkTo @route="categories">Popular Categories</LinkTo></h2>
       <ul local-class="list" aria-busy="{{this.dataTask.isRunning}}">
         {{#if this.dataTask.isRunning}}
           {{#each (placeholders 10)}}
