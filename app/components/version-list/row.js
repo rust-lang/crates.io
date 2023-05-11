@@ -1,7 +1,10 @@
 import { action } from '@ember/object';
 import { inject as service } from '@ember/service';
+import { htmlSafe } from '@ember/template';
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
+
+import styles from './row.module.css';
 
 export default class VersionRow extends Component {
   @service session;
@@ -11,7 +14,7 @@ export default class VersionRow extends Component {
   get releaseTrackTitle() {
     let { version } = this.args;
     if (version.yanked) {
-      return 'This version was yanked';
+      return htmlSafe(`This version was <span class="${styles['rt-yanked']}">yanked</span>`);
     }
     if (version.invalidSemver) {
       return `Failed to parse version ${version.num}`;
@@ -22,19 +25,26 @@ export default class VersionRow extends Component {
 
     let { releaseTrack } = version;
 
-    return `Release Track: ${releaseTrack}`;
-  }
+    let modifiers = [];
+    if (version.isPrerelease) {
+      modifiers.push('prerelease');
+    }
+    if (version.isHighestOfReleaseTrack) {
+      modifiers.push('latest');
+    }
 
-  get displaysReleaseTrackModifiers() {
-    let { version } = this.args;
+    let title = `Release Track: ${releaseTrack}`;
+    if (modifiers.length !== 0) {
+      let formattedModifiers = modifiers
+        .map(modifier => {
+          let klass = styles[`rt-${modifier}`];
+          return klass ? `<span class='${klass}'>${modifier}</span>` : modifier;
+        })
+        .join(', ');
 
-    return (version.isPrerelease || version.isHighestOfReleaseTrack) && !version.yanked;
-  }
-
-  get hasAllReleaseTrackModifiers() {
-    let { version } = this.args;
-
-    return version.isPrerelease && version.isHighestOfReleaseTrack;
+      title += ` (${formattedModifiers})`;
+    }
+    return htmlSafe(title);
   }
 
   get isOwner() {

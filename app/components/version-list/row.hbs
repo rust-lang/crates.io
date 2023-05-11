@@ -20,20 +20,7 @@
         {{@version.releaseTrack}}
       {{/if}}
 
-      <EmberTooltip @side="right" data-test-release-track-title>
-        {{this.releaseTrackTitle}}
-        {{#if this.displaysReleaseTrackModifiers}}
-          {{#if @version.isPrerelease}}
-            <BracketMark @color='yellow'>prerelease</BracketMark>
-          {{/if}}
-          {{#if this.hasAllReleaseTrackModifiers}}
-            ,
-          {{/if}}
-          {{#if @version.isHighestOfReleaseTrack}}
-            <BracketMark @color='green'>latest</BracketMark>
-          {{/if}}
-        {{/if}}
-      </EmberTooltip>
+      <EmberTooltip @text={{this.releaseTrackTitle}} @side="right" data-test-release-track-title/>
     </div>
 
     <LinkTo
@@ -70,7 +57,7 @@
         <EmberTooltip>
           {{date-format @version.created_at 'PPP'}}
           {{#if @version.isNew}}
-            <BracketMark @color='orange'>recent</BracketMark>
+            (<span local-class="new">new</span>)
           {{/if}}
         </EmberTooltip>
       </time>
