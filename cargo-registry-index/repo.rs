@@ -309,38 +309,17 @@ impl Repository {
     /// to the tip of the `origin/master` branch.
     #[instrument(skip_all)]
     pub fn reset_head(&self) -> anyhow::Result<()> {
-        let mut origin = self.repository.find_remote("origin")?;
         let original_head = self.head_oid()?;
-        origin.fetch(
-            // Force overwrite (`+` prefix) local master branch with the server's master branch.
-            // The git CLI will refuse to fetch into the current branch of a non-bare repo
-            // but libgit2 doesn't seem to prevent this potential footgun.
-            // The entire point is to do a hard reset, so this footgun is not a concern.
-            &["+refs/heads/master:refs/heads/master"],
-            Some(&mut Self::fetch_options(&self.credentials)),
-            None,
-        )?;
-        let head = self.head_oid()?;
 
+        self.run_command(Command::new("git").args(["fetch", "origin", "master"]))?;
+        self.run_command(Command::new("git").args(["reset", "--hard", "origin/master"]))?;
+
+        let head = self.head_oid()?;
         if head != original_head {
-            info!("Resetting index from {original_head} to {head}");
+            info!("Index reset from {original_head} to {head}");
         }
 
-        let obj = self.repository.find_object(head, None)?;
-        self.repository.reset(&obj, git2::ResetType::Hard, None)?;
         Ok(())
-    }
-
-    fn fetch_options(credentials: &Credentials) -> git2::FetchOptions<'_> {
-        let mut callbacks = git2::RemoteCallbacks::new();
-
-        callbacks.credentials(move |_, user_from_url, cred_type| {
-            credentials.git2_callback(user_from_url, cred_type)
-        });
-
-        let mut opts = git2::FetchOptions::new();
-        opts.remote_callbacks(callbacks);
-        opts
     }
 
     /// Reset `HEAD` to a single commit with all the index contents, but no parent
