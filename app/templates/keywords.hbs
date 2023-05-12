@@ -10,7 +10,7 @@
     data-test-keywords-nav
   />
 
-  <div data-test-keywords-sort>
+  <div data-test-keywords-sort local-class='sort-by'>
     <span local-class="sort-by-label">Sort by</span>
     <SortDropdown @current={{this.currentSortBy}} as |sd|>
       <sd.Option @query={{hash sort="alpha"}}>Alphabetical</sd.Option>
