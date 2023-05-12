@@ -48,17 +48,15 @@ pub struct Crate {
     pub v: Option<u32>,
 }
 
-impl Crate {
-    pub fn write_to<W: Write>(&self, mut writer: W) -> anyhow::Result<()> {
-        serde_json::to_writer(&mut writer, self)?;
-        writer.write_all(b"\n")?;
-        Ok(())
-    }
+fn write_crate<W: Write>(krate: &Crate, mut writer: W) -> anyhow::Result<()> {
+    serde_json::to_writer(&mut writer, krate)?;
+    writer.write_all(b"\n")?;
+    Ok(())
 }
 
 pub fn write_crates<W: Write>(crates: &[Crate], mut writer: W) -> anyhow::Result<()> {
     for krate in crates {
-        krate.write_to(&mut writer)?;
+        write_crate(krate, &mut writer)?;
     }
     Ok(())
 }
@@ -141,7 +139,7 @@ mod tests {
             v: None,
         };
         let mut buffer = Vec::new();
-        assert_ok!(krate.write_to(&mut buffer));
+        assert_ok!(write_crate(&krate, &mut buffer));
         assert_ok_eq!(String::from_utf8(buffer), "\
             {\"name\":\"foo\",\"vers\":\"1.2.3\",\"deps\":[],\"cksum\":\"0123456789asbcdef\",\"features\":{},\"yanked\":null}\n\
         ");
