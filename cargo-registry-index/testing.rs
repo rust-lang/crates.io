@@ -1,5 +1,5 @@
 use anyhow::anyhow;
-use git2::Repository;
+use git2::{ErrorCode, Repository, Sort};
 use std::env;
 use std::fs;
 use std::path::PathBuf;
@@ -22,6 +22,37 @@ impl UpstreamIndex {
 
     pub fn url() -> Url {
         Url::from_file_path(bare()).unwrap()
+    }
+
+    pub fn list_commits(&self) -> anyhow::Result<Vec<String>> {
+        let mut revwalk = self.repository.revwalk()?;
+        revwalk.set_sorting(Sort::TOPOLOGICAL | Sort::REVERSE)?;
+        revwalk.push_head()?;
+
+        revwalk
+            .map(|result| {
+                let oid = result?;
+                let commit = self.repository.find_commit(oid)?;
+                let message_bytes = commit.message_bytes();
+                let message = String::from_utf8(message_bytes.to_vec())?;
+                Ok(message)
+            })
+            .collect()
+    }
+
+    pub fn crate_exists(&self, crate_name: &str) -> anyhow::Result<bool> {
+        let repo = &self.repository;
+
+        let path = crate::Repository::relative_index_file(crate_name);
+
+        let head = repo.head()?;
+        let tree = head.peel_to_tree()?;
+
+        match tree.get_path(&path) {
+            Ok(_) => Ok(true),
+            Err(error) if error.code() == ErrorCode::NotFound => Ok(false),
+            Err(error) => Err(error.into()),
+        }
     }
 
     /// Obtain a list of crates from the index HEAD

@@ -50,6 +50,7 @@ mod unhealthy_database;
 mod user;
 mod util;
 mod version;
+mod worker;
 
 #[derive(Deserialize)]
 pub struct CrateList {

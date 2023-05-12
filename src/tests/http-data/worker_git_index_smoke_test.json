@@ -1,0 +1,114 @@
+[
+  {
+    "request": {
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/crates/serde/serde-1.0.0.crate",
+      "method": "PUT",
+      "headers": [
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip"
+        ],
+        [
+          "content-length",
+          "35"
+        ],
+        [
+          "content-type",
+          "application/gzip"
+        ]
+      ],
+      "body": "H4sIAAAAAAAA/+3AAQEAAACCIP+vbkhQwKsBLq+17wAEAAA="
+    },
+    "response": {
+      "status": 200,
+      "headers": [],
+      "body": ""
+    }
+  },
+  {
+    "request": {
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/se/rd/serde",
+      "method": "PUT",
+      "headers": [
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip"
+        ],
+        [
+          "content-length",
+          "146"
+        ],
+        [
+          "content-type",
+          "text/plain"
+        ]
+      ],
+      "body": "{\"name\":\"serde\",\"vers\":\"1.0.0\",\"deps\":[],\"cksum\":\"acb5604b126ac894c1eb11c4575bf2072fea61232a888e453770c79d7ed56419\",\"features\":{},\"yanked\":false}\n"
+    },
+    "response": {
+      "status": 200,
+      "headers": [],
+      "body": ""
+    }
+  },
+  {
+    "request": {
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/se/rd/serde",
+      "method": "PUT",
+      "headers": [
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip"
+        ],
+        [
+          "content-length",
+          "145"
+        ],
+        [
+          "content-type",
+          "text/plain"
+        ]
+      ],
+      "body": "{\"name\":\"serde\",\"vers\":\"1.0.0\",\"deps\":[],\"cksum\":\"acb5604b126ac894c1eb11c4575bf2072fea61232a888e453770c79d7ed56419\",\"features\":{},\"yanked\":true}\n"
+    },
+    "response": {
+      "status": 200,
+      "headers": [],
+      "body": ""
+    }
+  },
+  {
+    "request": {
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/se/rd/serde",
+      "method": "DELETE",
+      "headers": [
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip"
+        ]
+      ],
+      "body": ""
+    },
+    "response": {
+      "status": 200,
+      "headers": [],
+      "body": ""
+    }
+  }
+]
