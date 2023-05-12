@@ -190,7 +190,13 @@ impl Repository {
     fn perform_commit_and_push(&self, msg: &str, modified_file: &Path) -> anyhow::Result<()> {
         // git add $file
         let mut index = self.repository.index()?;
-        index.add_path(modified_file)?;
+
+        if self.checkout_path.path().join(modified_file).exists() {
+            index.add_path(modified_file)?;
+        } else {
+            index.remove_path(modified_file)?;
+        }
+
         index.write()?;
         let tree_id = index.write_tree()?;
         let tree = self.repository.find_tree(tree_id)?;
