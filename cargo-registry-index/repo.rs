@@ -208,7 +208,7 @@ impl Repository {
         self.repository
             .commit(Some("HEAD"), &sig, &sig, msg, &tree, &[&parent])?;
 
-        self.push("refs/heads/master")
+        self.push()
     }
 
     /// Gets a list of files that have been modified since a given `starting_commit`
@@ -258,32 +258,8 @@ impl Repository {
 
     /// Push the current branch to the provided refname
     #[instrument(skip_all)]
-    fn push(&self, refspec: &str) -> anyhow::Result<()> {
-        let mut ref_status = Ok(());
-        let mut callback_called = false;
-        {
-            let mut origin = self.repository.find_remote("origin")?;
-            let mut callbacks = git2::RemoteCallbacks::new();
-            callbacks.credentials(|_, user_from_url, cred_type| {
-                self.credentials.git2_callback(user_from_url, cred_type)
-            });
-            callbacks.push_update_reference(|_, status| {
-                if let Some(s) = status {
-                    ref_status = Err(anyhow!("failed to push a ref: {}", s))
-                }
-                callback_called = true;
-                Ok(())
-            });
-            let mut opts = git2::PushOptions::new();
-            opts.remote_callbacks(callbacks);
-            origin.push(&[refspec], Some(&mut opts))?;
-        }
-
-        if !callback_called {
-            ref_status = Err(anyhow!("update_reference callback was not called"));
-        }
-
-        ref_status
+    fn push(&self) -> anyhow::Result<()> {
+        self.run_command(Command::new("git").args(["push", "origin", "HEAD:master"]))
     }
 
     /// Commits the specified file with the specified commit message and pushes
