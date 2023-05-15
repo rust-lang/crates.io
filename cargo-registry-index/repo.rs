@@ -208,7 +208,7 @@ impl Repository {
         self.repository
             .commit(Some("HEAD"), &sig, &sig, msg, &tree, &[&parent])?;
 
-        self.push("refs/heads/master")
+        self.push()
     }
 
     /// Gets a list of files that have been modified since a given `starting_commit`
@@ -258,32 +258,8 @@ impl Repository {
 
     /// Push the current branch to the provided refname
     #[instrument(skip_all)]
-    fn push(&self, refspec: &str) -> anyhow::Result<()> {
-        let mut ref_status = Ok(());
-        let mut callback_called = false;
-        {
-            let mut origin = self.repository.find_remote("origin")?;
-            let mut callbacks = git2::RemoteCallbacks::new();
-            callbacks.credentials(|_, user_from_url, cred_type| {
-                self.credentials.git2_callback(user_from_url, cred_type)
-            });
-            callbacks.push_update_reference(|_, status| {
-                if let Some(s) = status {
-                    ref_status = Err(anyhow!("failed to push a ref: {}", s))
-                }
-                callback_called = true;
-                Ok(())
-            });
-            let mut opts = git2::PushOptions::new();
-            opts.remote_callbacks(callbacks);
-            origin.push(&[refspec], Some(&mut opts))?;
-        }
-
-        if !callback_called {
-            ref_status = Err(anyhow!("update_reference callback was not called"));
-        }
-
-        ref_status
+    fn push(&self) -> anyhow::Result<()> {
+        self.run_command(Command::new("git").args(["push", "origin", "HEAD:master"]))
     }
 
     /// Commits the specified file with the specified commit message and pushes
@@ -309,38 +285,17 @@ impl Repository {
     /// to the tip of the `origin/master` branch.
     #[instrument(skip_all)]
     pub fn reset_head(&self) -> anyhow::Result<()> {
-        let mut origin = self.repository.find_remote("origin")?;
         let original_head = self.head_oid()?;
-        origin.fetch(
-            // Force overwrite (`+` prefix) local master branch with the server's master branch.
-            // The git CLI will refuse to fetch into the current branch of a non-bare repo
-            // but libgit2 doesn't seem to prevent this potential footgun.
-            // The entire point is to do a hard reset, so this footgun is not a concern.
-            &["+refs/heads/master:refs/heads/master"],
-            Some(&mut Self::fetch_options(&self.credentials)),
-            None,
-        )?;
-        let head = self.head_oid()?;
 
+        self.run_command(Command::new("git").args(["fetch", "origin", "master"]))?;
+        self.run_command(Command::new("git").args(["reset", "--hard", "origin/master"]))?;
+
+        let head = self.head_oid()?;
         if head != original_head {
-            info!("Resetting index from {original_head} to {head}");
+            info!("Index reset from {original_head} to {head}");
         }
 
-        let obj = self.repository.find_object(head, None)?;
-        self.repository.reset(&obj, git2::ResetType::Hard, None)?;
         Ok(())
-    }
-
-    fn fetch_options(credentials: &Credentials) -> git2::FetchOptions<'_> {
-        let mut callbacks = git2::RemoteCallbacks::new();
-
-        callbacks.credentials(move |_, user_from_url, cred_type| {
-            credentials.git2_callback(user_from_url, cred_type)
-        });
-
-        let mut opts = git2::FetchOptions::new();
-        opts.remote_callbacks(callbacks);
-        opts
     }
 
     /// Reset `HEAD` to a single commit with all the index contents, but no parent
