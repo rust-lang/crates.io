@@ -26,6 +26,11 @@
         "matchPackageNames": ["@percy/cli", "tj-actions/changed-files", "webpack"],
         "extends": ["schedule:weekly"],
     }, {
+        // Avoid "Artifact update problem" for pnpm updates when the renovatebot
+        // setup does not support the new version yet.
+        "matchPackageNames": ["pnpm"],
+        "minimumReleaseAge": "24 hours"
+    }, {
         "matchLanguages": ["js"],
         "matchUpdateTypes": ["lockFileMaintenance"],
         "additionalBranchPrefix": "js-",
