@@ -67,7 +67,7 @@
     "@mainmatter/ember-api-actions": "0.6.0",
     "@percy/cli": "1.24.0",
     "@percy/ember": "4.2.0",
-    "@sinonjs/fake-timers": "10.1.0",
+    "@sinonjs/fake-timers": "10.2.0",
     "@zestia/ember-auto-focus": "5.0.0",
     "broccoli-asset-rev": "3.0.0",
     "ember-a11y-testing": "5.2.0",
