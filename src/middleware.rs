@@ -7,7 +7,6 @@ mod head;
 pub mod log_request;
 pub mod normalize_path;
 mod require_user_agent;
-mod sentry;
 pub mod session;
 mod static_or_continue;
 mod update_metrics;
@@ -40,7 +39,6 @@ pub fn apply_axum_middleware(state: AppState, router: Router) -> Router {
     let middleware = tower::ServiceBuilder::new()
         .layer(sentry_tower::NewSentryLayer::<Request>::new_from_top())
         .layer(sentry_tower::SentryHttpLayer::with_transaction())
-        .layer(from_fn(self::sentry::set_transaction))
         .layer(from_fn(log_request::log_requests))
         .layer(CatchPanicLayer::new())
         .layer(from_fn_with_state(
