@@ -45,7 +45,7 @@ jobs:
 
       # Set up Rust
       - run: rustup default ${{ env.RUST_VERSION }}
-      - uses: Swatinem/rust-cache@v2.3.0
+      - uses: Swatinem/rust-cache@v2.4.0
 
       # Set up database
       - run: cargo install diesel_cli --vers ${{ env.DIESEL_CLI_VERSION }} --no-default-features --features postgres --debug
