@@ -104,8 +104,8 @@ as well.
 
 In order to run the frontend on Windows and macOS, you will need to have installed:
 
-- [node](https://nodejs.org/en/) >= 16.15.0 (see `package.json` and `.github/workflows/ci.yml` for what we currently use)
-- [pnpm](https://pnpm.io)
+- [node](https://nodejs.org/en/) >= 18.16.0 (see `package.json` and `.github/workflows/ci.yml` for what we currently use)
+- [pnpm](https://pnpm.io) >= 8.5.1
 
 Follow the links for each of these tools for their recommended installation
 instructions. If you already have these tools, or you have a different
@@ -161,7 +161,7 @@ pnpm test
 
 In order to run the backend, you will need to have installed:
 
-- [Rust](https://www.rust-lang.org/en-US/) stable >= 1.16.0 and cargo, which comes with Rust
+- [Rust](https://www.rust-lang.org/en-US/) stable >= 1.56.0 and cargo, which comes with Rust
 - [Postgres](https://www.postgresql.org/) >= 9.5
 - [OpenSSL](https://www.openssl.org/) >= 1.0.2k
 - [diesel_cli](http://diesel.rs/guides/getting-started/) >= 2.0.0 and < 3.0.0
