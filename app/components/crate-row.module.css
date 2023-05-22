@@ -70,6 +70,8 @@
         width: 1em;
         margin-right: var(--space-xs);
 
+        flex-shrink: 0;
+
         &.download-icon {
             height: calc(1em + 20px);
             width: calc(1em + 20px);
