@@ -1,5 +1,6 @@
 use crate::builders::{CrateBuilder, DependencyBuilder, PublishBuilder};
 use crate::new_category;
+use crate::util::insta::assert_yaml_snapshot;
 use crate::util::{RequestHelper, TestApp};
 use cargo_registry::controllers::krate::publish::{
     missing_metadata_error_message, MISSING_RIGHTS_ERROR_MESSAGE, WILDCARD_ERROR_MESSAGE,
@@ -1034,4 +1035,55 @@ fn empty_payload() {
         response.into_json(),
         json!({ "errors": [{ "detail": "invalid metadata length" }] })
     );
+}
+
+fn version_with_build_metadata(v1: &str, v2: &str, expected_error: &str) {
+    let (_app, _anon, _cookie, token) = TestApp::full().with_token();
+
+    let response = token.publish_crate(PublishBuilder::new("foo").version(v1));
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_yaml_snapshot!(response.into_json(), {
+        ".crate.created_at" => "[datetime]",
+        ".crate.updated_at" => "[datetime]",
+    });
+
+    let response = token.publish_crate(PublishBuilder::new("foo").version(v2));
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response.into_json(),
+        json!({ "errors": [{ "detail": expected_error }] })
+    );
+}
+
+#[test]
+fn version_with_build_metadata_1() {
+    insta::with_settings!({ snapshot_suffix => "build_metadata_1" }, {
+        version_with_build_metadata(
+            "1.0.0+foo",
+            "1.0.0+bar",
+            "crate version `1.0.0` is already uploaded",
+        );
+    });
+}
+
+#[test]
+fn version_with_build_metadata_2() {
+    insta::with_settings!({ snapshot_suffix => "build_metadata_2" }, {
+        version_with_build_metadata(
+            "1.0.0-beta.1",
+            "1.0.0-beta.1+2",
+            "crate version `1.0.0-beta.1` is already uploaded",
+        );
+    });
+}
+
+#[test]
+fn version_with_build_metadata_3() {
+    insta::with_settings!({ snapshot_suffix => "build_metadata_3" }, {
+        version_with_build_metadata(
+            "1.0.0+foo",
+            "1.0.0",
+            "crate version `1.0.0` is already uploaded",
+        );
+    });
 }

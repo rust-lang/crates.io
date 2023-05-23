@@ -7,6 +7,7 @@ use crate::util::errors::{cargo_err, AppResult};
 
 use crate::models::{Crate, Dependency, User};
 use crate::schema::*;
+use crate::sql::split_part;
 
 // Queryable has a custom implementation below
 #[derive(Clone, Identifiable, Associations, Debug, Queryable, Deserialize, Serialize)]
@@ -168,14 +169,16 @@ impl NewVersion {
         use diesel::{insert_into, select};
 
         conn.transaction(|conn| {
+            let num_no_build = strip_build_metadata(&self.num);
+
             let already_uploaded = versions
                 .filter(crate_id.eq(self.crate_id))
-                .filter(num.eq(&self.num));
+                .filter(split_part(num, "+", 1).eq(num_no_build));
+
             if select(exists(already_uploaded)).get_result(conn)? {
                 return Err(cargo_err(&format_args!(
-                    "crate version `{}` is already \
-                     uploaded",
-                    self.num
+                    "crate version `{}` is already uploaded",
+                    num_no_build
                 )));
             }
 
@@ -217,6 +220,13 @@ fn validate_license_expr(s: &str) -> AppResult<()> {
     })?;
 
     Ok(())
+}
+
+fn strip_build_metadata(version: &str) -> &str {
+    version
+        .split_once('+')
+        .map(|parts| parts.0)
+        .unwrap_or(version)
 }
 
 #[cfg(test)]
