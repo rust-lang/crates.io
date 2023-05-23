@@ -1,7 +1,6 @@
 'use strict';
 
 const EmberApp = require('ember-cli/lib/broccoli/ember-app');
-const postcssCustomMedia = require('postcss-custom-media');
 
 module.exports = function (defaults) {
   let env = EmberApp.env();
@@ -44,11 +43,6 @@ module.exports = function (defaults) {
       extension: 'module.css',
       plugins: {
         before: [require('postcss-nested')],
-        after: [
-          postcssCustomMedia({
-            importFrom: `${__dirname}/app/styles/breakpoints.css`,
-          }),
-        ],
       },
     },
     fingerprint: {

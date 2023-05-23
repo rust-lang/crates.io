@@ -2,7 +2,7 @@
     display: grid;
     gap: var(--space-s);
 
-    @media (--min-m) {
+    @media (min-width: 768px) {
         grid-template:
             "menu content" auto /
             200px auto;
