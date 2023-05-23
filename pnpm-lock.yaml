@@ -209,8 +209,8 @@ devDependencies:
     specifier: 2.4.2
     version: 2.4.2
   ember-template-lint:
-    specifier: 5.7.3
-    version: 5.7.3
+    specifier: 5.8.0
+    version: 5.8.0
   ember-test-selectors:
     specifier: 6.0.0
     version: 6.0.0
@@ -8317,8 +8317,8 @@ packages:
       - supports-color
     dev: true
 
-  /ember-template-lint@5.7.3:
-    resolution: {integrity: sha512-7ev+5pSXe2qv5TFDkt7G90pfuaiGGWPCQDaNs1/9QqGW++3JiNdMdKxq1lpBcny7zRYSOWBRIN+YiVgREAxvUg==}
+  /ember-template-lint@5.8.0:
+    resolution: {integrity: sha512-5RL38HtDmDIWIUFzNw/8uQ2qz5kST3fYxLEdtD4d0zVN0m2LGYg7RgPe2kMt7N/ISvPMOTG67nQIQbKrWIi10g==}
     engines: {node: ^14.18.0 || ^16.0.0 || >= 18.0.0}
     hasBin: true
     dependencies:
