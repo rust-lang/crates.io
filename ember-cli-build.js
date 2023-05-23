@@ -66,8 +66,12 @@ module.exports = function (defaults) {
     packagerOptions: {
       webpackConfig: {
         resolve: {
-          // disables `crypto` import warning in `axe-core`
-          fallback: { crypto: false },
+          fallback: {
+            // disables `crypto` import warning in `axe-core`
+            crypto: false,
+            // disables `timers` import warning in `@sinon/fake-timers`
+            timers: false,
+          },
         },
       },
     },
