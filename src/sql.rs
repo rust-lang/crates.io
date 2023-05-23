@@ -1,4 +1,4 @@
-use diesel::sql_types::{Date, Double, Interval, SingleValue, Text, Timestamp};
+use diesel::sql_types::{Date, Double, Integer, Interval, SingleValue, Text, Timestamp};
 
 sql_function!(#[aggregate] fn array_agg<T: SingleValue>(x: T) -> Array<T>);
 sql_function!(fn canon_crate_name(x: Text) -> Text);
@@ -12,3 +12,4 @@ sql_function! {
 sql_function!(fn floor(x: Double) -> Integer);
 sql_function!(fn greatest<T: SingleValue>(x: T, y: T) -> T);
 sql_function!(fn least<T: SingleValue>(x: T, y: T) -> T);
+sql_function!(fn split_part(string: Text, delimiter: Text, n: Integer) -> Text);
