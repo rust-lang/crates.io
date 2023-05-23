@@ -135,6 +135,7 @@
     "webpack": "5.83.1"
   },
   "resolutions": {
+    "ember-cli-notifications>postcss-preset-env": "8.4.1",
     "ember-get-config": "2.1.1",
     "ember-inflector": "4.0.2",
     "ember-modifier": "4.1.0",
