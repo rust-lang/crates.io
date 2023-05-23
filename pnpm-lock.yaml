@@ -271,9 +271,6 @@ devDependencies:
   nyc:
     specifier: 15.1.0
     version: 15.1.0
-  postcss-custom-media:
-    specifier: 8.0.2
-    version: 8.0.2
   postcss-nested:
     specifier: 6.0.1
     version: 6.0.1
@@ -13007,18 +13004,6 @@ packages:
     engines: {node: '>=6.0.0'}
     dependencies:
       postcss: 7.0.39
-    dev: true
-
-  /postcss-custom-media@8.0.2:
-    resolution: {integrity: sha512-7yi25vDAoHAkbhAzX9dHx2yc6ntS4jQvejrNcC+csQJAXjj15e7VcWfMgLqBNAbOvqi5uIa9huOVwdHbf+sKqg==}
-    engines: {node: ^12 || ^14 || >=16}
-    peerDependencies:
-      postcss: ^8.3
-    peerDependenciesMeta:
-      postcss:
-        optional: true
-    dependencies:
-      postcss-value-parser: 4.2.0
     dev: true
 
   /postcss-custom-properties@8.0.11:
