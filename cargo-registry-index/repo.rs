@@ -1,5 +1,6 @@
 use crate::credentials::Credentials;
 use anyhow::{anyhow, Context};
+use secrecy::{ExposeSecret, SecretString};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use tempfile::TempDir;
@@ -13,10 +14,10 @@ pub struct RepositoryConfig {
 impl RepositoryConfig {
     pub fn from_environment() -> Self {
         let username = dotenvy::var("GIT_HTTP_USER");
-        let password = dotenvy::var("GIT_HTTP_PWD");
+        let password = dotenvy::var("GIT_HTTP_PWD").map(SecretString::from);
         let http_url = dotenvy::var("GIT_REPO_URL");
 
-        let ssh_key = dotenvy::var("GIT_SSH_KEY");
+        let ssh_key = dotenvy::var("GIT_SSH_KEY").map(SecretString::from);
         let ssh_url = dotenvy::var("GIT_SSH_REPO_URL");
 
         match (username, password, http_url, ssh_key, ssh_url) {
@@ -29,12 +30,11 @@ impl RepositoryConfig {
                 let index_location =
                     Url::parse(&ssh_url).expect("failed to parse GIT_SSH_REPO_URL");
 
-                let credentials = Credentials::Ssh {
-                    key: String::from_utf8(
-                        base64::decode(encoded_key).expect("failed to base64 decode the ssh key"),
-                    )
-                    .expect("failed to convert the ssh key to a string"),
-                };
+                let key = base64::decode(encoded_key.expose_secret())
+                    .expect("failed to base64 decode the ssh key");
+                let key =
+                    String::from_utf8(key).expect("failed to convert the ssh key to a string");
+                let credentials = Credentials::Ssh { key: key.into() };
 
                 Self {
                     index_location,
