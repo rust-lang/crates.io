@@ -1,6 +1,7 @@
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager, CustomizeConnection};
 use prometheus::Histogram;
+use secrecy::{ExposeSecret, SecretString};
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::{
     ops::{Deref, DerefMut},
@@ -27,12 +28,12 @@ pub enum DieselPool {
 
 impl DieselPool {
     pub(crate) fn new(
-        url: &str,
+        url: &SecretString,
         config: &config::DatabasePools,
         r2d2_config: r2d2::Builder<ConnectionManager<PgConnection>>,
         time_to_obtain_connection_metric: Histogram,
     ) -> Result<DieselPool, PoolError> {
-        let manager = ConnectionManager::new(connection_url(config, url));
+        let manager = ConnectionManager::new(connection_url(config, url.expose_secret()));
 
         // For crates.io we want the behavior of creating a database pool to be slightly different
         // than the defaults of R2D2: the library's build() method assumes its consumers always
@@ -69,8 +70,8 @@ impl DieselPool {
         }
     }
 
-    pub(crate) fn new_test(config: &config::DatabasePools, url: &str) -> DieselPool {
-        let mut conn = PgConnection::establish(&connection_url(config, url))
+    pub(crate) fn new_test(config: &config::DatabasePools, url: &SecretString) -> DieselPool {
+        let mut conn = PgConnection::establish(&connection_url(config, url.expose_secret()))
             .expect("failed to establish connection");
         conn.begin_test_transaction()
             .expect("failed to begin test transaction");
@@ -167,7 +168,7 @@ impl DerefMut for DieselPooledConn<'_> {
 pub fn oneoff_connection_with_config(
     config: &config::DatabasePools,
 ) -> ConnectionResult<PgConnection> {
-    let url = connection_url(config, &config.primary.url);
+    let url = connection_url(config, config.primary.url.expose_secret());
     PgConnection::establish(&url)
 }
 

@@ -20,6 +20,7 @@ use cargo_registry::worker::cloudfront::CloudFront;
 use cargo_registry::{background_jobs::*, db, ssh};
 use cargo_registry_index::{Repository, RepositoryConfig};
 use reqwest::blocking::Client;
+use secrecy::ExposeSecret;
 use std::sync::{Arc, Mutex};
 use std::thread::sleep;
 use std::time::{Duration, Instant};
@@ -49,7 +50,7 @@ fn main() {
         }
     }
 
-    let db_url = db::connection_url(&config.db, &config.db.primary.url);
+    let db_url = db::connection_url(&config.db, config.db.primary.url.expose_secret());
 
     let job_start_timeout = dotenvy::var("BACKGROUND_JOB_TIMEOUT")
         .unwrap_or_else(|_| "30".into())
