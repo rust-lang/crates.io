@@ -14,6 +14,10 @@ use crate::worker;
 use crate::worker::cloudfront::CloudFront;
 use cargo_registry_index::Repository;
 
+pub const PRIORITY_DEFAULT: i16 = 0;
+pub const PRIORITY_RENDER_README: i16 = 50;
+pub const PRIORITY_SYNC_TO_INDEX: i16 = 100;
+
 macro_rules! jobs {
     {
         $vis:vis enum $name:ident {
@@ -107,12 +111,14 @@ impl Job {
         let to_git = (
             job_type.eq(to_git.as_type_str()),
             data.eq(to_git.to_value()?),
+            priority.eq(PRIORITY_SYNC_TO_INDEX),
         );
 
         let to_sparse = Self::sync_to_sparse_index(krate.to_string());
         let to_sparse = (
             job_type.eq(to_sparse.as_type_str()),
             data.eq(to_sparse.to_value()?),
+            priority.eq(PRIORITY_SYNC_TO_INDEX),
         );
 
         diesel::insert_into(background_jobs)
@@ -173,13 +179,25 @@ impl Job {
         Self::UpdateDownloads
     }
 
-    #[instrument(name = "swirl.enqueue", skip(self, conn), fields(message = self.as_type_str()))]
     pub fn enqueue(&self, conn: &mut PgConnection) -> Result<(), EnqueueError> {
+        self.enqueue_with_priority(conn, PRIORITY_DEFAULT)
+    }
+
+    #[instrument(name = "swirl.enqueue", skip(self, conn), fields(message = self.as_type_str()))]
+    pub fn enqueue_with_priority(
+        &self,
+        conn: &mut PgConnection,
+        job_priority: i16,
+    ) -> Result<(), EnqueueError> {
         use crate::schema::background_jobs::dsl::*;
 
         let job_data = self.to_value()?;
         diesel::insert_into(background_jobs)
-            .values((job_type.eq(self.as_type_str()), data.eq(job_data)))
+            .values((
+                job_type.eq(self.as_type_str()),
+                data.eq(job_data),
+                priority.eq(job_priority),
+            ))
             .execute(conn)?;
         Ok(())
     }

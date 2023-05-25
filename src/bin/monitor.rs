@@ -44,6 +44,7 @@ fn check_failing_background_jobs(conn: &mut PgConnection) -> Result<()> {
     let stalled_jobs: Vec<i32> = background_jobs
         .select(1.into_sql::<Integer>())
         .filter(created_at.lt(now - max_job_time.minutes()))
+        .filter(priority.ge(0))
         .for_update()
         .skip_locked()
         .load(conn)?;

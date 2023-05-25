@@ -31,36 +31,6 @@
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/readmes/foo_readme/foo_readme-1.0.0.html",
-      "method": "PUT",
-      "headers": [
-        [
-          "accept",
-          "*/*"
-        ],
-        [
-          "accept-encoding",
-          "gzip"
-        ],
-        [
-          "content-length",
-          "0"
-        ],
-        [
-          "content-type",
-          "text/html"
-        ]
-      ],
-      "body": ""
-    },
-    "response": {
-      "status": 200,
-      "headers": [],
-      "body": ""
-    }
-  },
-  {
-    "request": {
       "uri": "http://alexcrichton-test.s3.amazonaws.com/fo/o_/foo_readme",
       "method": "PUT",
       "headers": [
@@ -82,6 +52,36 @@
         ]
       ],
       "body": "{\"name\":\"foo_readme\",\"vers\":\"1.0.0\",\"deps\":[],\"cksum\":\"acb5604b126ac894c1eb11c4575bf2072fea61232a888e453770c79d7ed56419\",\"features\":{},\"yanked\":false}\n"
+    },
+    "response": {
+      "status": 200,
+      "headers": [],
+      "body": ""
+    }
+  },
+  {
+    "request": {
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/readmes/foo_readme/foo_readme-1.0.0.html",
+      "method": "PUT",
+      "headers": [
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "content-type",
+          "text/html"
+        ]
+      ],
+      "body": ""
     },
     "response": {
       "status": 200,

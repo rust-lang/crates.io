@@ -30,7 +30,7 @@ pub(super) fn find_next_unlocked_job(conn: &mut PgConnection) -> QueryResult<Bac
     background_jobs
         .select((id, job_type, data))
         .filter(retriable())
-        .order(id)
+        .order((priority.desc(), id))
         .for_update()
         .skip_locked()
         .first::<BackgroundJob>(conn)

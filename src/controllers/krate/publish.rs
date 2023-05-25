@@ -1,7 +1,7 @@
 //! Functionality related to publishing a new crate or version of a crate.
 
 use crate::auth::AuthCheck;
-use crate::background_jobs::Job;
+use crate::background_jobs::{Job, PRIORITY_RENDER_README};
 use axum::body::Bytes;
 use flate2::read::GzDecoder;
 use hex::ToHex;
@@ -246,7 +246,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                     repo,
                     pkg_path_in_vcs,
                 )
-                .enqueue(conn)?;
+                .enqueue_with_priority(conn, PRIORITY_RENDER_README)?;
             }
 
             // Upload crate tarball
