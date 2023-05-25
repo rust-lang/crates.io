@@ -36,6 +36,7 @@ data = "private"
 retries = "private"
 last_retry = "private"
 created_at = "private"
+priority = "private"
 
 [badges]
 dependencies = ["crates"]
