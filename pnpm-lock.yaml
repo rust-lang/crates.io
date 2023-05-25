@@ -182,8 +182,8 @@ devDependencies:
     specifier: 8.2.0
     version: 8.2.0(@ember/test-helpers@2.9.3)(ember-source@5.0.0)
   ember-link:
-    specifier: 2.0.1
-    version: 2.0.1
+    specifier: 2.1.0
+    version: 2.1.0
   ember-load-initializers:
     specifier: 2.1.2
     version: 2.1.2
@@ -8476,8 +8476,8 @@ packages:
       - supports-color
     dev: true
 
-  /ember-link@2.0.1:
-    resolution: {integrity: sha512-M4RypknF/4EOtigGtWyfaajmGyPl4hpdU4CuiVbX6lOSqRv17w25+n7anrDD/uh6yk6LqkQw7FoAcBwRPBM4xw==}
+  /ember-link@2.1.0:
+    resolution: {integrity: sha512-j2huXQzWrlj8LtslWuoqsgT0/dUtASxtGtCQqd8XdXLoMyN8JYYRifNpp/iFmsxPyYuRMIaokfXSB00+Ztmofw==}
     engines: {node: '>= 12.*'}
     dependencies:
       '@glimmer/tracking': 1.1.2
