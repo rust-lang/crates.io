@@ -13,6 +13,7 @@
 
 use crate::config::Base;
 use crate::{env, Env};
+use secrecy::SecretString;
 
 pub struct DatabasePools {
     /// Settings for the primary database. This is usually writeable, but will be read-only in
@@ -32,7 +33,7 @@ pub struct DatabasePools {
 
 #[derive(Debug)]
 pub struct DbPoolConfig {
-    pub url: String,
+    pub url: SecretString,
     pub read_only_mode: bool,
     pub pool_size: u32,
     pub min_idle: Option<u32>,
@@ -53,8 +54,8 @@ impl DatabasePools {
     ///
     /// This function panics if `DB_OFFLINE=leader` but `READ_ONLY_REPLICA_URL` is unset.
     pub fn full_from_environment(base: &Base) -> Self {
-        let leader_url = env("DATABASE_URL");
-        let follower_url = dotenvy::var("READ_ONLY_REPLICA_URL").ok();
+        let leader_url = env("DATABASE_URL").into();
+        let follower_url = dotenvy::var("READ_ONLY_REPLICA_URL").map(Into::into).ok();
         let read_only_mode = dotenvy::var("READ_ONLY_MODE").is_ok();
 
         let primary_pool_size = match dotenvy::var("DB_PRIMARY_POOL_SIZE") {
@@ -136,7 +137,7 @@ impl DatabasePools {
     pub fn test_from_environment() -> Self {
         DatabasePools {
             primary: DbPoolConfig {
-                url: env("TEST_DATABASE_URL"),
+                url: env("TEST_DATABASE_URL").into(),
                 read_only_mode: false,
                 pool_size: 1,
                 min_idle: None,

@@ -13,6 +13,7 @@ use cargo_registry::swirl::Runner;
 use diesel::PgConnection;
 use oauth2::{ClientId, ClientSecret};
 use reqwest::{blocking::Client, Proxy};
+use secrecy::ExposeSecret;
 use std::collections::HashSet;
 
 struct TestAppInner {
@@ -201,17 +202,17 @@ impl TestAppBuilder {
         // The schema will be cleared up once the app is dropped.
         let (primary_db_chaosproxy, replica_db_chaosproxy, fresh_schema) =
             if !self.config.use_test_database_pool {
-                let fresh_schema = FreshSchema::new(&self.config.db.primary.url);
+                let fresh_schema = FreshSchema::new(self.config.db.primary.url.expose_secret());
                 let (primary_proxy, url) =
                     ChaosProxy::proxy_database_url(fresh_schema.database_url()).unwrap();
-                self.config.db.primary.url = url;
+                self.config.db.primary.url = url.into();
 
                 let replica_proxy = match self.test_database {
                     TestDatabase::SlowRealPool { replica: true } => {
                         let (replica_proxy, url) =
                             ChaosProxy::proxy_database_url(fresh_schema.database_url()).unwrap();
                         self.config.db.replica = Some(DbPoolConfig {
-                            url,
+                            url: url.into(),
                             read_only_mode: true,
                             pool_size: 1,
                             min_idle: None,

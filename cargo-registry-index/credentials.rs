@@ -1,15 +1,21 @@
 use anyhow::{anyhow, Context};
+use secrecy::{ExposeSecret, SecretString};
 use std::io::Write;
 
 #[derive(Clone)]
 pub enum Credentials {
     Missing,
-    Http { username: String, password: String },
-    Ssh { key: String },
+    Http {
+        username: String,
+        password: SecretString,
+    },
+    Ssh {
+        key: SecretString,
+    },
 }
 
 impl Credentials {
-    pub(crate) fn ssh_key(&self) -> Option<&str> {
+    pub(crate) fn ssh_key(&self) -> Option<&SecretString> {
         match self {
             Credentials::Ssh { key } => Some(key),
             _ => None,
@@ -48,7 +54,7 @@ impl Credentials {
             .context("Failed to create temporary file")?;
 
         temp_key_file
-            .write_all(key.as_bytes())
+            .write_all(key.expose_secret().as_bytes())
             .context("Failed to write SSH key to temporary file")?;
 
         Ok(temp_key_file.into_temp_path())
