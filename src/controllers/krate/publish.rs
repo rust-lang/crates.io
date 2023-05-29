@@ -460,7 +460,7 @@ fn missing_metadata_error_message(missing: &[&str]) -> String {
     format!(
         "missing or empty metadata fields: {}. Please \
          see https://doc.rust-lang.org/cargo/reference/manifest.html for \
-         how to upload metadata",
+         more information on configuring these fields",
         missing.join(", ")
     )
 }
@@ -706,8 +706,8 @@ mod tests {
 
     #[test]
     fn missing_metadata_error_message_test() {
-        assert_eq!(missing_metadata_error_message(&["a"]), "missing or empty metadata fields: a. Please see https://doc.rust-lang.org/cargo/reference/manifest.html for how to upload metadata");
-        assert_eq!(missing_metadata_error_message(&["a", "b"]), "missing or empty metadata fields: a, b. Please see https://doc.rust-lang.org/cargo/reference/manifest.html for how to upload metadata");
-        assert_eq!(missing_metadata_error_message(&["a", "b", "c"]), "missing or empty metadata fields: a, b, c. Please see https://doc.rust-lang.org/cargo/reference/manifest.html for how to upload metadata");
+        assert_eq!(missing_metadata_error_message(&["a"]), "missing or empty metadata fields: a. Please see https://doc.rust-lang.org/cargo/reference/manifest.html for more information on configuring these fields");
+        assert_eq!(missing_metadata_error_message(&["a", "b"]), "missing or empty metadata fields: a, b. Please see https://doc.rust-lang.org/cargo/reference/manifest.html for more information on configuring these fields");
+        assert_eq!(missing_metadata_error_message(&["a", "b", "c"]), "missing or empty metadata fields: a, b, c. Please see https://doc.rust-lang.org/cargo/reference/manifest.html for more information on configuring these fields");
     }
 }
