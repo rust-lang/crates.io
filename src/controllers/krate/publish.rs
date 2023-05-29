@@ -38,10 +38,6 @@ const MISSING_RIGHTS_ERROR_MESSAGE: &str = "this crate exists but you don't seem
      to accept an invitation to be an owner before \
      publishing.";
 
-const LICENSE_ERROR: &str = "unknown or invalid license expression; \
-    see http://opensource.org/licenses for options, \
-    and http://spdx.org/licenses/ for their identifiers";
-
 /// Handles the `PUT /crates/new` route.
 /// Used by `cargo publish` to publish a new crate or to publish a new version of an
 /// existing crate.
@@ -172,7 +168,17 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         }
 
         if let Some(ref license) = license {
-            parse_license_expr(license).map_err(|_| cargo_err(LICENSE_ERROR))?;
+            parse_license_expr(license).map_err(|e| cargo_err(&format_args!(
+                "unknown or invalid license expression; \
+                see http://opensource.org/licenses for options, \
+                and http://spdx.org/licenses/ for their identifiers\n\
+                Note: If you have a non-standard license that is not listed by SPDX, \
+                use the license-file field to specify the path to a file containing \
+                the text of the license.\n\
+                See https://doc.rust-lang.org/cargo/reference/manifest.html#the-license-and-license-file-fields \
+                for more information.\n\
+                {e}"
+            )))?;
         } else if license_file.is_some() {
             // If no license is given, but a license file is given, flag this
             // crate as having a nonstandard license. Note that we don't
