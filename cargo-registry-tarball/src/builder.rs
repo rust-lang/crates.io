@@ -2,13 +2,20 @@ use flate2::read::GzEncoder;
 use std::io::Read;
 
 pub struct TarballBuilder {
+    prefix: String,
     inner: tar::Builder<Vec<u8>>,
 }
 
 impl TarballBuilder {
-    pub fn new() -> Self {
+    pub fn new(name: &str, version: &str) -> Self {
+        let prefix = format!("{name}-{version}");
         let inner = tar::Builder::new(vec![]);
-        Self { inner }
+        Self { prefix, inner }
+    }
+
+    pub fn add_raw_manifest(self, content: &[u8]) -> Self {
+        let path = format!("{}/Cargo.toml", self.prefix);
+        self.add_file(&path, content)
     }
 
     pub fn add_file(mut self, path: &str, content: &[u8]) -> Self {

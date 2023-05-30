@@ -101,8 +101,8 @@ mod tests {
 
     #[test]
     fn process_tarball_test() {
-        let tarball = TarballBuilder::new()
-            .add_file("foo-0.0.1/Cargo.toml", b"")
+        let tarball = TarballBuilder::new("foo", "0.0.1")
+            .add_raw_manifest(b"")
             .build();
 
         let limit = 512 * 1024 * 1024;
@@ -117,8 +117,8 @@ mod tests {
 
     #[test]
     fn process_tarball_test_incomplete_vcs_info() {
-        let tarball = TarballBuilder::new()
-            .add_file("foo-0.0.1/Cargo.toml", b"")
+        let tarball = TarballBuilder::new("foo", "0.0.1")
+            .add_raw_manifest(b"")
             .add_file("foo-0.0.1/.cargo_vcs_info.json", br#"{"unknown": "field"}"#)
             .build();
 
@@ -132,8 +132,8 @@ mod tests {
 
     #[test]
     fn process_tarball_test_vcs_info() {
-        let tarball = TarballBuilder::new()
-            .add_file("foo-0.0.1/Cargo.toml", b"")
+        let tarball = TarballBuilder::new("foo", "0.0.1")
+            .add_raw_manifest(b"")
             .add_file(
                 "foo-0.0.1/.cargo_vcs_info.json",
                 br#"{"path_in_vcs": "path/in/vcs"}"#,
@@ -150,9 +150,8 @@ mod tests {
 
     #[test]
     fn process_tarball_test_manifest() {
-        let tarball = TarballBuilder::new()
-            .add_file(
-                "foo-0.0.1/Cargo.toml",
+        let tarball = TarballBuilder::new("foo", "0.0.1")
+            .add_raw_manifest(
                 br#"
 [package]
 rust-version = "1.59"
