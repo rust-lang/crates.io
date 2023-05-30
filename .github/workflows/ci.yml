@@ -16,7 +16,7 @@ env:
   # renovate: datasource=crate depName=cargo-deny versioning=semver
   CARGO_DENY_VERSION: 0.13.9
   # renovate: datasource=crate depName=diesel_cli versioning=semver
-  DIESEL_CLI_VERSION: 2.0.1
+  DIESEL_CLI_VERSION: 2.1.0
   # renovate: datasource=npm depName=pnpm
   PNPM_VERSION: 8.6.0
 
