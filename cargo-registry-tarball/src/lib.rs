@@ -2,6 +2,8 @@
 #[macro_use]
 extern crate claims;
 
+#[cfg(any(feature = "builder", test))]
+pub use crate::builder::TarballBuilder;
 use crate::limit_reader::LimitErrorReader;
 pub use crate::manifest::Manifest;
 pub use crate::vcs_info::CargoVcsInfo;
@@ -10,6 +12,8 @@ use std::io::Read;
 use std::path::Path;
 use tracing::instrument;
 
+#[cfg(any(feature = "builder", test))]
+mod builder;
 mod limit_reader;
 mod manifest;
 mod vcs_info;
@@ -93,50 +97,33 @@ pub fn process_tarball(
 #[cfg(test)]
 mod tests {
     use super::process_tarball;
-    use flate2::read::GzEncoder;
-    use std::io::{Read, Write};
-
-    fn add_file<W: Write>(pkg: &mut tar::Builder<W>, path: &str, content: &[u8]) {
-        let mut header = tar::Header::new_gnu();
-        header.set_size(content.len() as u64);
-        header.set_cksum();
-        pkg.append_data(&mut header, path, content).unwrap();
-    }
+    use crate::TarballBuilder;
 
     #[test]
     fn process_tarball_test() {
-        let mut pkg = tar::Builder::new(vec![]);
-        add_file(&mut pkg, "foo-0.0.1/Cargo.toml", b"");
-        let mut serialized_archive = vec![];
-        GzEncoder::new(pkg.into_inner().unwrap().as_slice(), Default::default())
-            .read_to_end(&mut serialized_archive)
-            .unwrap();
+        let tarball = TarballBuilder::new()
+            .add_file("foo-0.0.1/Cargo.toml", b"")
+            .build();
 
         let limit = 512 * 1024 * 1024;
         assert_eq!(
-            process_tarball("foo-0.0.1", &serialized_archive, limit)
+            process_tarball("foo-0.0.1", &tarball, limit)
                 .unwrap()
                 .vcs_info,
             None
         );
-        assert_err!(process_tarball("bar-0.0.1", &serialized_archive, limit));
+        assert_err!(process_tarball("bar-0.0.1", &tarball, limit));
     }
 
     #[test]
     fn process_tarball_test_incomplete_vcs_info() {
-        let mut pkg = tar::Builder::new(vec![]);
-        add_file(&mut pkg, "foo-0.0.1/Cargo.toml", b"");
-        add_file(
-            &mut pkg,
-            "foo-0.0.1/.cargo_vcs_info.json",
-            br#"{"unknown": "field"}"#,
-        );
-        let mut serialized_archive = vec![];
-        GzEncoder::new(pkg.into_inner().unwrap().as_slice(), Default::default())
-            .read_to_end(&mut serialized_archive)
-            .unwrap();
+        let tarball = TarballBuilder::new()
+            .add_file("foo-0.0.1/Cargo.toml", b"")
+            .add_file("foo-0.0.1/.cargo_vcs_info.json", br#"{"unknown": "field"}"#)
+            .build();
+
         let limit = 512 * 1024 * 1024;
-        let vcs_info = process_tarball("foo-0.0.1", &serialized_archive, limit)
+        let vcs_info = process_tarball("foo-0.0.1", &tarball, limit)
             .unwrap()
             .vcs_info
             .unwrap();
@@ -145,19 +132,16 @@ mod tests {
 
     #[test]
     fn process_tarball_test_vcs_info() {
-        let mut pkg = tar::Builder::new(vec![]);
-        add_file(&mut pkg, "foo-0.0.1/Cargo.toml", b"");
-        add_file(
-            &mut pkg,
-            "foo-0.0.1/.cargo_vcs_info.json",
-            br#"{"path_in_vcs": "path/in/vcs"}"#,
-        );
-        let mut serialized_archive = vec![];
-        GzEncoder::new(pkg.into_inner().unwrap().as_slice(), Default::default())
-            .read_to_end(&mut serialized_archive)
-            .unwrap();
+        let tarball = TarballBuilder::new()
+            .add_file("foo-0.0.1/Cargo.toml", b"")
+            .add_file(
+                "foo-0.0.1/.cargo_vcs_info.json",
+                br#"{"path_in_vcs": "path/in/vcs"}"#,
+            )
+            .build();
+
         let limit = 512 * 1024 * 1024;
-        let vcs_info = process_tarball("foo-0.0.1", &serialized_archive, limit)
+        let vcs_info = process_tarball("foo-0.0.1", &tarball, limit)
             .unwrap()
             .vcs_info
             .unwrap();
@@ -166,24 +150,20 @@ mod tests {
 
     #[test]
     fn process_tarball_test_manifest() {
-        let mut pkg = tar::Builder::new(vec![]);
-        add_file(
-            &mut pkg,
-            "foo-0.0.1/Cargo.toml",
-            br#"
+        let tarball = TarballBuilder::new()
+            .add_file(
+                "foo-0.0.1/Cargo.toml",
+                br#"
 [package]
 rust-version = "1.59"
 readme = "README.md"
 repository = "https://github.com/foo/bar"
 "#,
-        );
-        let mut serialized_archive = vec![];
-        GzEncoder::new(pkg.into_inner().unwrap().as_slice(), Default::default())
-            .read_to_end(&mut serialized_archive)
-            .unwrap();
+            )
+            .build();
 
         let limit = 512 * 1024 * 1024;
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &serialized_archive, limit));
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &tarball, limit));
         let manifest = assert_some!(tarball_info.manifest);
         assert_some_eq!(manifest.package.readme, "README.md");
         assert_some_eq!(manifest.package.repository, "https://github.com/foo/bar");
