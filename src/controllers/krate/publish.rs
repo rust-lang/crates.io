@@ -190,7 +190,8 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             let hex_cksum: String = Sha256::digest(&tarball_bytes).encode_hex();
 
             let pkg_name = format!("{}-{}", krate.name, vers);
-            let tarball_info = verify_tarball(&pkg_name, &tarball_bytes, maximums.max_unpack_size)?;
+            let tarball_info = verify_tarball(&pkg_name, &tarball_bytes, maximums.max_unpack_size)
+                .map_err(tarball_to_app_error)?;
 
             let rust_version = tarball_info
                 .manifest
@@ -394,8 +395,32 @@ struct TarballInfo {
     vcs_info: Option<CargoVcsInfo>,
 }
 
+#[derive(Debug, thiserror::Error)]
+enum TarballError {
+    #[error("uploaded tarball is malformed or too large when decompressed")]
+    Malformed(#[source] std::io::Error),
+    #[error("invalid tarball uploaded")]
+    Invalid,
+    #[error(transparent)]
+    IO(#[from] std::io::Error),
+}
+
+fn tarball_to_app_error(error: TarballError) -> BoxedAppError {
+    match error {
+        TarballError::Malformed(err) => err.chain(cargo_err(
+            "uploaded tarball is malformed or too large when decompressed",
+        )),
+        TarballError::Invalid => cargo_err("invalid tarball uploaded"),
+        TarballError::IO(err) => err.into(),
+    }
+}
+
 #[instrument(skip_all, fields(%pkg_name))]
-fn verify_tarball(pkg_name: &str, tarball: &[u8], max_unpack: u64) -> AppResult<TarballInfo> {
+fn verify_tarball(
+    pkg_name: &str,
+    tarball: &[u8],
+    max_unpack: u64,
+) -> Result<TarballInfo, TarballError> {
     // All our data is currently encoded with gzip
     let decoder = GzDecoder::new(tarball);
 
@@ -413,11 +438,7 @@ fn verify_tarball(pkg_name: &str, tarball: &[u8], max_unpack: u64) -> AppResult<
     let mut manifest = None;
 
     for entry in archive.entries()? {
-        let mut entry = entry.map_err(|err| {
-            err.chain(cargo_err(
-                "uploaded tarball is malformed or too large when decompressed",
-            ))
-        })?;
+        let mut entry = entry.map_err(TarballError::Malformed)?;
 
         // Verify that all entries actually start with `$name-$vers/`.
         // Historically Cargo didn't verify this on extraction so you could
@@ -426,7 +447,7 @@ fn verify_tarball(pkg_name: &str, tarball: &[u8], max_unpack: u64) -> AppResult<
         // the registry!
         let entry_path = entry.path()?;
         if !entry_path.starts_with(pkg_name) {
-            return Err(cargo_err("invalid tarball uploaded"));
+            return Err(TarballError::Invalid);
         }
         if entry_path == vcs_info_path {
             let mut contents = String::new();
@@ -447,7 +468,7 @@ fn verify_tarball(pkg_name: &str, tarball: &[u8], max_unpack: u64) -> AppResult<
         // generate a tarball with these file types so this should work for now.
         let entry_type = entry.header().entry_type();
         if entry_type.is_hard_link() || entry_type.is_symlink() {
-            return Err(cargo_err("invalid tarball uploaded"));
+            return Err(TarballError::Invalid);
         }
     }
 
