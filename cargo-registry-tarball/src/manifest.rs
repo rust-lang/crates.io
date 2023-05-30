@@ -1,3 +1,4 @@
+use derive_deref::Deref;
 use serde::{de, Deserialize, Deserializer};
 
 #[derive(Debug, Deserialize)]

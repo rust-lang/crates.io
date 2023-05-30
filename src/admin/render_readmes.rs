@@ -3,12 +3,12 @@ use crate::{
     models::Version,
     schema::{crates, readme_renderings, versions},
     uploaders::Uploader,
-    util::manifest::Manifest,
 };
 use anyhow::{anyhow, Context};
 use std::{io::Read, path::Path, sync::Arc, thread};
 
 use cargo_registry_markdown::text_to_html;
+use cargo_registry_tarball::Manifest;
 use chrono::{TimeZone, Utc};
 use diesel::prelude::*;
 use flate2::read::GzDecoder;
