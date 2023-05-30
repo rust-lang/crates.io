@@ -31,7 +31,7 @@ pub enum TarballError {
 }
 
 #[instrument(skip_all, fields(%pkg_name))]
-pub fn verify_tarball(
+pub fn process_tarball(
     pkg_name: &str,
     tarball: &[u8],
     max_unpack: u64,
@@ -92,7 +92,7 @@ pub fn verify_tarball(
 
 #[cfg(test)]
 mod tests {
-    use super::verify_tarball;
+    use super::process_tarball;
     use flate2::read::GzEncoder;
     use std::io::{Read, Write};
 
@@ -104,7 +104,7 @@ mod tests {
     }
 
     #[test]
-    fn verify_tarball_test() {
+    fn process_tarball_test() {
         let mut pkg = tar::Builder::new(vec![]);
         add_file(&mut pkg, "foo-0.0.1/Cargo.toml", b"");
         let mut serialized_archive = vec![];
@@ -114,16 +114,16 @@ mod tests {
 
         let limit = 512 * 1024 * 1024;
         assert_eq!(
-            verify_tarball("foo-0.0.1", &serialized_archive, limit)
+            process_tarball("foo-0.0.1", &serialized_archive, limit)
                 .unwrap()
                 .vcs_info,
             None
         );
-        assert_err!(verify_tarball("bar-0.0.1", &serialized_archive, limit));
+        assert_err!(process_tarball("bar-0.0.1", &serialized_archive, limit));
     }
 
     #[test]
-    fn verify_tarball_test_incomplete_vcs_info() {
+    fn process_tarball_test_incomplete_vcs_info() {
         let mut pkg = tar::Builder::new(vec![]);
         add_file(&mut pkg, "foo-0.0.1/Cargo.toml", b"");
         add_file(
@@ -136,7 +136,7 @@ mod tests {
             .read_to_end(&mut serialized_archive)
             .unwrap();
         let limit = 512 * 1024 * 1024;
-        let vcs_info = verify_tarball("foo-0.0.1", &serialized_archive, limit)
+        let vcs_info = process_tarball("foo-0.0.1", &serialized_archive, limit)
             .unwrap()
             .vcs_info
             .unwrap();
@@ -144,7 +144,7 @@ mod tests {
     }
 
     #[test]
-    fn verify_tarball_test_vcs_info() {
+    fn process_tarball_test_vcs_info() {
         let mut pkg = tar::Builder::new(vec![]);
         add_file(&mut pkg, "foo-0.0.1/Cargo.toml", b"");
         add_file(
@@ -157,7 +157,7 @@ mod tests {
             .read_to_end(&mut serialized_archive)
             .unwrap();
         let limit = 512 * 1024 * 1024;
-        let vcs_info = verify_tarball("foo-0.0.1", &serialized_archive, limit)
+        let vcs_info = process_tarball("foo-0.0.1", &serialized_archive, limit)
             .unwrap()
             .vcs_info
             .unwrap();
@@ -165,7 +165,7 @@ mod tests {
     }
 
     #[test]
-    fn verify_tarball_test_manifest() {
+    fn process_tarball_test_manifest() {
         let mut pkg = tar::Builder::new(vec![]);
         add_file(
             &mut pkg,
@@ -183,7 +183,7 @@ repository = "https://github.com/foo/bar"
             .unwrap();
 
         let limit = 512 * 1024 * 1024;
-        let tarball_info = assert_ok!(verify_tarball("foo-0.0.1", &serialized_archive, limit));
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &serialized_archive, limit));
         let manifest = assert_some!(tarball_info.manifest);
         assert_some_eq!(manifest.package.readme, "README.md");
         assert_some_eq!(manifest.package.repository, "https://github.com/foo/bar");
