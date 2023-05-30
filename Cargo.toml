@@ -38,7 +38,7 @@ base64 = "=0.13.1"
 cargo-registry-index = { path = "cargo-registry-index" }
 cargo-registry-markdown = { path = "cargo-registry-markdown" }
 cargo-registry-s3 = { path = "cargo-registry-s3" }
-chrono = { version = "=0.4.25", default-features = false, features = ["serde"] }
+chrono = { version = "=0.4.26", default-features = false, features = ["serde"] }
 clap = { version = "=4.3.0", features = ["derive", "env", "unicode", "wrap_help"] }
 cookie = { version = "=0.17.0", features = ["secure"] }
 dashmap = { version = "=5.4.0", features = ["raw-api"] }
