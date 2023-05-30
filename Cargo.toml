@@ -94,6 +94,7 @@ url = "=2.3.1"
 
 [dev-dependencies]
 cargo-registry-index = { path = "cargo-registry-index", features = ["testing"] }
+cargo-registry-tarball = { path = "cargo-registry-tarball", features = ["builder"] }
 claims = "=0.7.1"
 hyper-tls = "=0.5.0"
 insta = { version = "=1.29.0", features = ["redactions", "yaml"] }

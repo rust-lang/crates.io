@@ -20,8 +20,12 @@ impl TarballBuilder {
         self
     }
 
+    pub fn build_unzipped(self) -> Vec<u8> {
+        self.inner.into_inner().unwrap()
+    }
+
     pub fn build(self) -> Vec<u8> {
-        let tarball_bytes = self.inner.into_inner().unwrap();
+        let tarball_bytes = self.build_unzipped();
 
         let mut gzip_bytes = vec![];
         GzEncoder::new(tarball_bytes.as_slice(), Default::default())

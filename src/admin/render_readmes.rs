@@ -226,31 +226,23 @@ fn find_file_by_path<R: Read>(
 
 #[cfg(test)]
 pub mod tests {
-    use std::io::Write;
-    use tar;
+    use cargo_registry_tarball::TarballBuilder;
 
     use super::render_pkg_readme;
 
-    pub fn add_file<W: Write>(pkg: &mut tar::Builder<W>, path: &str, content: &[u8]) {
-        let mut header = tar::Header::new_gnu();
-        header.set_size(content.len() as u64);
-        header.set_cksum();
-        pkg.append_data(&mut header, path, content).unwrap();
-    }
-
     #[test]
     fn test_render_pkg_readme() {
-        let mut pkg = tar::Builder::new(vec![]);
-        add_file(
-            &mut pkg,
-            "foo-0.0.1/Cargo.toml",
-            br#"
+        let serialized_archive = TarballBuilder::new()
+            .add_file(
+                "foo-0.0.1/Cargo.toml",
+                br#"
 [package]
 readme = "README.md"
 "#,
-        );
-        add_file(&mut pkg, "foo-0.0.1/README.md", b"readme");
-        let serialized_archive = pkg.into_inner().unwrap();
+            )
+            .add_file("foo-0.0.1/README.md", b"readme")
+            .build_unzipped();
+
         let result =
             render_pkg_readme(tar::Archive::new(&*serialized_archive), "foo-0.0.1").unwrap();
         assert!(result.contains("readme"))
@@ -258,15 +250,15 @@ readme = "README.md"
 
     #[test]
     fn test_render_pkg_no_readme() {
-        let mut pkg = tar::Builder::new(vec![]);
-        add_file(
-            &mut pkg,
-            "foo-0.0.1/Cargo.toml",
-            br#"
+        let serialized_archive = TarballBuilder::new()
+            .add_file(
+                "foo-0.0.1/Cargo.toml",
+                br#"
 [package]
 "#,
-        );
-        let serialized_archive = pkg.into_inner().unwrap();
+            )
+            .build_unzipped();
+
         assert_err!(render_pkg_readme(
             tar::Archive::new(&*serialized_archive),
             "foo-0.0.1"
@@ -275,16 +267,16 @@ readme = "README.md"
 
     #[test]
     fn test_render_pkg_implicit_readme() {
-        let mut pkg = tar::Builder::new(vec![]);
-        add_file(
-            &mut pkg,
-            "foo-0.0.1/Cargo.toml",
-            br#"
+        let serialized_archive = TarballBuilder::new()
+            .add_file(
+                "foo-0.0.1/Cargo.toml",
+                br#"
 [package]
 "#,
-        );
-        add_file(&mut pkg, "foo-0.0.1/README.md", b"readme");
-        let serialized_archive = pkg.into_inner().unwrap();
+            )
+            .add_file("foo-0.0.1/README.md", b"readme")
+            .build_unzipped();
+
         let result =
             render_pkg_readme(tar::Archive::new(&*serialized_archive), "foo-0.0.1").unwrap();
         assert!(result.contains("readme"))
@@ -292,22 +284,18 @@ readme = "README.md"
 
     #[test]
     fn test_render_pkg_readme_w_link() {
-        let mut pkg = tar::Builder::new(vec![]);
-        add_file(
-            &mut pkg,
-            "foo-0.0.1/Cargo.toml",
-            br#"
+        let serialized_archive = TarballBuilder::new()
+            .add_file(
+                "foo-0.0.1/Cargo.toml",
+                br#"
 [package]
 readme = "README.md"
 repository = "https://github.com/foo/foo"
 "#,
-        );
-        add_file(
-            &mut pkg,
-            "foo-0.0.1/README.md",
-            b"readme [link](./Other.md)",
-        );
-        let serialized_archive = pkg.into_inner().unwrap();
+            )
+            .add_file("foo-0.0.1/README.md", b"readme [link](./Other.md)")
+            .build_unzipped();
+
         let result =
             render_pkg_readme(tar::Archive::new(&*serialized_archive), "foo-0.0.1").unwrap();
         assert!(result.contains("\"https://github.com/foo/foo/blob/HEAD/./Other.md\""))
@@ -315,22 +303,21 @@ repository = "https://github.com/foo/foo"
 
     #[test]
     fn test_render_pkg_readme_not_at_root() {
-        let mut pkg = tar::Builder::new(vec![]);
-        add_file(
-            &mut pkg,
-            "foo-0.0.1/Cargo.toml",
-            br#"
+        let serialized_archive = TarballBuilder::new()
+            .add_file(
+                "foo-0.0.1/Cargo.toml",
+                br#"
 [package]
 readme = "docs/README.md"
 repository = "https://github.com/foo/foo"
 "#,
-        );
-        add_file(
-            &mut pkg,
-            "foo-0.0.1/docs/README.md",
-            b"docs/readme [link](./Other.md)",
-        );
-        let serialized_archive = pkg.into_inner().unwrap();
+            )
+            .add_file(
+                "foo-0.0.1/docs/README.md",
+                b"docs/readme [link](./Other.md)",
+            )
+            .build_unzipped();
+
         let result =
             render_pkg_readme(tar::Archive::new(&*serialized_archive), "foo-0.0.1").unwrap();
         assert!(result.contains("docs/readme"));
