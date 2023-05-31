@@ -463,6 +463,7 @@ dependencies = [
  "cargo-registry-index",
  "cargo-registry-markdown",
  "cargo-registry-s3",
+ "cargo-registry-tarball",
  "chrono",
  "claims",
  "clap",
@@ -557,6 +558,22 @@ dependencies = [
  "hmac",
  "reqwest",
  "sha-1",
+]
+
+[[package]]
+name = "cargo-registry-tarball"
+version = "0.0.0"
+dependencies = [
+ "claims",
+ "derive_deref",
+ "flate2",
+ "semver",
+ "serde",
+ "serde_json",
+ "tar",
+ "thiserror",
+ "toml",
+ "tracing",
 ]
 
 [[package]]

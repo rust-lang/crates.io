@@ -3,13 +3,11 @@
 use crate::auth::AuthCheck;
 use crate::background_jobs::{Job, PRIORITY_RENDER_README};
 use axum::body::Bytes;
-use flate2::read::GzDecoder;
+use cargo_registry_tarball::{process_tarball, TarballError};
 use hex::ToHex;
 use hyper::body::Buf;
 use sha2::{Digest, Sha256};
-use std::io::Read;
 use std::ops::Deref;
-use std::path::Path;
 
 use crate::controllers::cargo_prelude::*;
 use crate::controllers::util::RequestPartsExt;
@@ -22,8 +20,7 @@ use crate::middleware::log_request::RequestLogExt;
 use crate::models::token::EndpointScope;
 use crate::schema::*;
 use crate::util::errors::{cargo_err, AppResult};
-use crate::util::manifest::Manifest;
-use crate::util::{CargoVcsInfo, LimitErrorReader, Maximums};
+use crate::util::Maximums;
 use crate::views::{
     EncodableCrate, EncodableCrateDependency, EncodableCrateUpload, GoodCrate, PublishWarnings,
 };
@@ -190,7 +187,8 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             let hex_cksum: String = Sha256::digest(&tarball_bytes).encode_hex();
 
             let pkg_name = format!("{}-{}", krate.name, vers);
-            let tarball_info = verify_tarball(&pkg_name, &tarball_bytes, maximums.max_unpack_size)?;
+            let tarball_info = process_tarball(&pkg_name, &tarball_bytes, maximums.max_unpack_size)
+                .map_err(tarball_to_app_error)?;
 
             let rust_version = tarball_info
                 .manifest
@@ -388,170 +386,24 @@ pub fn add_dependencies(
     Ok(())
 }
 
-#[derive(Debug)]
-struct TarballInfo {
-    manifest: Option<Manifest>,
-    vcs_info: Option<CargoVcsInfo>,
-}
-
-#[instrument(skip_all, fields(%pkg_name))]
-fn verify_tarball(pkg_name: &str, tarball: &[u8], max_unpack: u64) -> AppResult<TarballInfo> {
-    // All our data is currently encoded with gzip
-    let decoder = GzDecoder::new(tarball);
-
-    // Don't let gzip decompression go into the weeeds, apply a fixed cap after
-    // which point we say the decompressed source is "too large".
-    let decoder = LimitErrorReader::new(decoder, max_unpack);
-
-    // Use this I/O object now to take a peek inside
-    let mut archive = tar::Archive::new(decoder);
-
-    let vcs_info_path = Path::new(&pkg_name).join(".cargo_vcs_info.json");
-    let mut vcs_info = None;
-
-    let manifest_path = Path::new(&pkg_name).join("Cargo.toml");
-    let mut manifest = None;
-
-    for entry in archive.entries()? {
-        let mut entry = entry.map_err(|err| {
-            err.chain(cargo_err(
-                "uploaded tarball is malformed or too large when decompressed",
-            ))
-        })?;
-
-        // Verify that all entries actually start with `$name-$vers/`.
-        // Historically Cargo didn't verify this on extraction so you could
-        // upload a tarball that contains both `foo-0.1.0/` source code as well
-        // as `bar-0.1.0/` source code, and this could overwrite other crates in
-        // the registry!
-        let entry_path = entry.path()?;
-        if !entry_path.starts_with(pkg_name) {
-            return Err(cargo_err("invalid tarball uploaded"));
-        }
-        if entry_path == vcs_info_path {
-            let mut contents = String::new();
-            entry.read_to_string(&mut contents)?;
-            vcs_info = CargoVcsInfo::from_contents(&contents).ok();
-        } else if entry_path == manifest_path {
-            // Try to extract and read the Cargo.toml from the tarball, silently
-            // erroring if it cannot be read.
-            let mut contents = String::new();
-            entry.read_to_string(&mut contents)?;
-            manifest = toml::from_str(&contents).ok();
-        }
-
-        // Historical versions of the `tar` crate which Cargo uses internally
-        // don't properly prevent hard links and symlinks from overwriting
-        // arbitrary files on the filesystem. As a bit of a hammer we reject any
-        // tarball with these sorts of links. Cargo doesn't currently ever
-        // generate a tarball with these file types so this should work for now.
-        let entry_type = entry.header().entry_type();
-        if entry_type.is_hard_link() || entry_type.is_symlink() {
-            return Err(cargo_err("invalid tarball uploaded"));
-        }
+fn tarball_to_app_error(error: TarballError) -> BoxedAppError {
+    match error {
+        TarballError::Malformed(err) => err.chain(cargo_err(
+            "uploaded tarball is malformed or too large when decompressed",
+        )),
+        TarballError::Invalid => cargo_err("invalid tarball uploaded"),
+        TarballError::IO(err) => err.into(),
     }
-
-    Ok(TarballInfo { manifest, vcs_info })
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{missing_metadata_error_message, verify_tarball};
-    use crate::admin::render_readmes::tests::add_file;
-    use flate2::read::GzEncoder;
-    use std::io::Read;
+    use super::missing_metadata_error_message;
 
     #[test]
     fn missing_metadata_error_message_test() {
         assert_eq!(missing_metadata_error_message(&["a"]), "missing or empty metadata fields: a. Please see https://doc.rust-lang.org/cargo/reference/manifest.html for how to upload metadata");
         assert_eq!(missing_metadata_error_message(&["a", "b"]), "missing or empty metadata fields: a, b. Please see https://doc.rust-lang.org/cargo/reference/manifest.html for how to upload metadata");
         assert_eq!(missing_metadata_error_message(&["a", "b", "c"]), "missing or empty metadata fields: a, b, c. Please see https://doc.rust-lang.org/cargo/reference/manifest.html for how to upload metadata");
-    }
-
-    #[test]
-    fn verify_tarball_test() {
-        let mut pkg = tar::Builder::new(vec![]);
-        add_file(&mut pkg, "foo-0.0.1/Cargo.toml", b"");
-        let mut serialized_archive = vec![];
-        GzEncoder::new(pkg.into_inner().unwrap().as_slice(), Default::default())
-            .read_to_end(&mut serialized_archive)
-            .unwrap();
-
-        let limit = 512 * 1024 * 1024;
-        assert_eq!(
-            verify_tarball("foo-0.0.1", &serialized_archive, limit)
-                .unwrap()
-                .vcs_info,
-            None
-        );
-        assert_err!(verify_tarball("bar-0.0.1", &serialized_archive, limit));
-    }
-
-    #[test]
-    fn verify_tarball_test_incomplete_vcs_info() {
-        let mut pkg = tar::Builder::new(vec![]);
-        add_file(&mut pkg, "foo-0.0.1/Cargo.toml", b"");
-        add_file(
-            &mut pkg,
-            "foo-0.0.1/.cargo_vcs_info.json",
-            br#"{"unknown": "field"}"#,
-        );
-        let mut serialized_archive = vec![];
-        GzEncoder::new(pkg.into_inner().unwrap().as_slice(), Default::default())
-            .read_to_end(&mut serialized_archive)
-            .unwrap();
-        let limit = 512 * 1024 * 1024;
-        let vcs_info = verify_tarball("foo-0.0.1", &serialized_archive, limit)
-            .unwrap()
-            .vcs_info
-            .unwrap();
-        assert_eq!(vcs_info.path_in_vcs, "");
-    }
-
-    #[test]
-    fn verify_tarball_test_vcs_info() {
-        let mut pkg = tar::Builder::new(vec![]);
-        add_file(&mut pkg, "foo-0.0.1/Cargo.toml", b"");
-        add_file(
-            &mut pkg,
-            "foo-0.0.1/.cargo_vcs_info.json",
-            br#"{"path_in_vcs": "path/in/vcs"}"#,
-        );
-        let mut serialized_archive = vec![];
-        GzEncoder::new(pkg.into_inner().unwrap().as_slice(), Default::default())
-            .read_to_end(&mut serialized_archive)
-            .unwrap();
-        let limit = 512 * 1024 * 1024;
-        let vcs_info = verify_tarball("foo-0.0.1", &serialized_archive, limit)
-            .unwrap()
-            .vcs_info
-            .unwrap();
-        assert_eq!(vcs_info.path_in_vcs, "path/in/vcs");
-    }
-
-    #[test]
-    fn verify_tarball_test_manifest() {
-        let mut pkg = tar::Builder::new(vec![]);
-        add_file(
-            &mut pkg,
-            "foo-0.0.1/Cargo.toml",
-            br#"
-[package]
-rust-version = "1.59"
-readme = "README.md"
-repository = "https://github.com/foo/bar"
-"#,
-        );
-        let mut serialized_archive = vec![];
-        GzEncoder::new(pkg.into_inner().unwrap().as_slice(), Default::default())
-            .read_to_end(&mut serialized_archive)
-            .unwrap();
-
-        let limit = 512 * 1024 * 1024;
-        let tarball_info = assert_ok!(verify_tarball("foo-0.0.1", &serialized_archive, limit));
-        let manifest = assert_some!(tarball_info.manifest);
-        assert_some_eq!(manifest.package.readme, "README.md");
-        assert_some_eq!(manifest.package.repository, "https://github.com/foo/bar");
-        assert_some_eq!(manifest.package.rust_version, "1.59");
     }
 }

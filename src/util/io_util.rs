@@ -2,31 +2,6 @@ use std::io;
 use std::io::prelude::*;
 use std::mem;
 
-#[derive(Debug)]
-pub struct LimitErrorReader<R> {
-    inner: io::Take<R>,
-}
-
-impl<R: Read> LimitErrorReader<R> {
-    pub fn new(r: R, limit: u64) -> LimitErrorReader<R> {
-        LimitErrorReader {
-            inner: r.take(limit),
-        }
-    }
-}
-
-impl<R: Read> Read for LimitErrorReader<R> {
-    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        match self.inner.read(buf) {
-            Ok(0) if self.inner.limit() == 0 => Err(io::Error::new(
-                io::ErrorKind::Other,
-                "maximum limit reached when reading",
-            )),
-            e => e,
-        }
-    }
-}
-
 pub fn read_le_u32<R: Read + ?Sized>(r: &mut R) -> io::Result<u32> {
     let mut b = [0; 4];
     read_fill(r, &mut b)?;
