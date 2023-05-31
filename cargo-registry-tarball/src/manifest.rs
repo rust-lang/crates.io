@@ -3,6 +3,7 @@ use serde::{de, Deserialize, Deserializer};
 
 #[derive(Debug, Deserialize)]
 pub struct Manifest {
+    #[serde(alias = "project")]
     pub package: Package,
 }
 

@@ -168,4 +168,21 @@ repository = "https://github.com/foo/bar"
         assert_some_eq!(manifest.package.repository, "https://github.com/foo/bar");
         assert_some_eq!(manifest.package.rust_version, "1.59");
     }
+
+    #[test]
+    fn process_tarball_test_manifest_with_project() {
+        let tarball = TarballBuilder::new("foo", "0.0.1")
+            .add_raw_manifest(
+                br#"
+                [project]
+                rust-version = "1.23"
+                "#,
+            )
+            .build();
+
+        let limit = 512 * 1024 * 1024;
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &tarball, limit));
+        let manifest = assert_some!(tarball_info.manifest);
+        assert_some_eq!(manifest.package.rust_version, "1.23");
+    }
 }
