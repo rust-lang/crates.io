@@ -420,7 +420,7 @@ fn new_krate_wrong_files() {
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.into_json(),
-        json!({ "errors": [{ "detail": "invalid tarball uploaded" }] })
+        json!({ "errors": [{ "detail": "invalid path found: bar-1.0.0/a" }] })
     );
 }
 
@@ -846,7 +846,7 @@ fn new_krate_tarball_with_hard_links() {
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.into_json(),
-        json!({ "errors": [{ "detail": "invalid tarball uploaded" }] })
+        json!({ "errors": [{ "detail": "unexpected symlink or hard link found: foo-1.1.0/bar" }] })
     );
 }
 

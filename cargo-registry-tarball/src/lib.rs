@@ -28,8 +28,10 @@ pub struct TarballInfo {
 pub enum TarballError {
     #[error("uploaded tarball is malformed or too large when decompressed")]
     Malformed(#[source] std::io::Error),
-    #[error("invalid tarball uploaded")]
-    Invalid,
+    #[error("invalid path found: {0}")]
+    InvalidPath(String),
+    #[error("unexpected symlink or hard link found: {0}")]
+    UnexpectedSymlink(String),
     #[error(transparent)]
     IO(#[from] std::io::Error),
 }
@@ -66,8 +68,21 @@ pub fn process_tarball(
         // the registry!
         let entry_path = entry.path()?;
         if !entry_path.starts_with(pkg_name) {
-            return Err(TarballError::Invalid);
+            return Err(TarballError::InvalidPath(entry_path.display().to_string()));
         }
+
+        // Historical versions of the `tar` crate which Cargo uses internally
+        // don't properly prevent hard links and symlinks from overwriting
+        // arbitrary files on the filesystem. As a bit of a hammer we reject any
+        // tarball with these sorts of links. Cargo doesn't currently ever
+        // generate a tarball with these file types so this should work for now.
+        let entry_type = entry.header().entry_type();
+        if entry_type.is_hard_link() || entry_type.is_symlink() {
+            return Err(TarballError::UnexpectedSymlink(
+                entry_path.display().to_string(),
+            ));
+        }
+
         if entry_path == vcs_info_path {
             let mut contents = String::new();
             entry.read_to_string(&mut contents)?;
@@ -78,16 +93,6 @@ pub fn process_tarball(
             let mut contents = String::new();
             entry.read_to_string(&mut contents)?;
             manifest = toml::from_str(&contents).ok();
-        }
-
-        // Historical versions of the `tar` crate which Cargo uses internally
-        // don't properly prevent hard links and symlinks from overwriting
-        // arbitrary files on the filesystem. As a bit of a hammer we reject any
-        // tarball with these sorts of links. Cargo doesn't currently ever
-        // generate a tarball with these file types so this should work for now.
-        let entry_type = entry.header().entry_type();
-        if entry_type.is_hard_link() || entry_type.is_symlink() {
-            return Err(TarballError::Invalid);
         }
     }
 

@@ -391,7 +391,10 @@ fn tarball_to_app_error(error: TarballError) -> BoxedAppError {
         TarballError::Malformed(err) => err.chain(cargo_err(
             "uploaded tarball is malformed or too large when decompressed",
         )),
-        TarballError::Invalid => cargo_err("invalid tarball uploaded"),
+        TarballError::InvalidPath(path) => cargo_err(&format!("invalid path found: {path}")),
+        TarballError::UnexpectedSymlink(path) => {
+            cargo_err(&format!("unexpected symlink or hard link found: {path}"))
+        }
         TarballError::IO(err) => err.into(),
     }
 }
