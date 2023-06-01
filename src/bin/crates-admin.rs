@@ -7,6 +7,7 @@ use cargo_registry::admin::{
     delete_crate, delete_version, enqueue_job, git_import, migrate, populate, render_readmes,
     test_pagerduty, transfer_crates, upload_index, verify_token, yank_version,
 };
+use tracing_subscriber::filter::LevelFilter;
 
 #[derive(clap::Parser, Debug)]
 #[command(name = "crates-admin")]
@@ -30,7 +31,7 @@ fn main() -> anyhow::Result<()> {
     let _sentry = cargo_registry::sentry::init();
 
     // Initialize logging
-    cargo_registry::util::tracing::init();
+    cargo_registry::util::tracing::init_with_default_level(LevelFilter::INFO);
 
     use clap::Parser;
 

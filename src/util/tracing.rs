@@ -12,10 +12,18 @@ use tracing_subscriber::{prelude::*, EnvFilter};
 /// This function also sets up the Sentry error reporting integration for the
 /// `tracing` framework, which is hardcoded to include all `INFO` level events.
 pub fn init() {
+    init_with_default_level(LevelFilter::ERROR)
+}
+
+pub fn init_with_default_level(level: LevelFilter) {
+    let env_filter = EnvFilter::builder()
+        .with_default_directive(level.into())
+        .from_env_lossy();
+
     let log_layer = tracing_subscriber::fmt::layer()
         .compact()
         .without_time()
-        .with_filter(EnvFilter::from_default_env());
+        .with_filter(env_filter);
 
     let sentry_layer = sentry::integrations::tracing::layer()
         .event_filter(event_filter)
