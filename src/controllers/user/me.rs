@@ -98,7 +98,7 @@ pub async fn updates(app: AppState, req: Parts) -> AppResult<Json<Value>> {
 
 /// Handles the `PUT /users/:user_id` route.
 pub async fn update_user(
-    app: AppState,
+    state: AppState,
     Path(param_user_id): Path<i32>,
     req: BytesRequest,
 ) -> AppResult<Response> {
@@ -106,7 +106,6 @@ pub async fn update_user(
         use self::emails::user_id;
         use diesel::insert_into;
 
-        let state = app.clone();
         let conn = &mut state.db_write()?;
 
         let auth = AuthCheck::default().check(&req, conn)?;
