@@ -63,8 +63,8 @@ devDependencies:
     specifier: 2.0.0
     version: 2.0.0
   '@ember/render-modifiers':
-    specifier: 2.0.5
-    version: 2.0.5(ember-source@5.0.0)
+    specifier: 2.1.0
+    version: 2.1.0(ember-source@5.0.0)
   '@ember/string':
     specifier: 3.1.1
     version: 3.1.1
@@ -2426,11 +2426,15 @@ packages:
       - supports-color
     dev: true
 
-  /@ember/render-modifiers@2.0.5(ember-source@5.0.0):
-    resolution: {integrity: sha512-5cJ1niIdOJC6k6KtIn9HGbr1DATJQp4ZqMv1vbi6LKQWbVCQ3byvKONtUEi3H0wcewlrcaWCqXOgm0nACzCOQA==}
+  /@ember/render-modifiers@2.1.0(ember-source@5.0.0):
+    resolution: {integrity: sha512-LruhfoDv2itpk0fA0IC76Sxjcnq/7BC6txpQo40hOko8Dn6OxwQfxkPIbZGV0Cz7df+iX+VJrcYzNIvlc3w2EQ==}
     engines: {node: 12.* || 14.* || >= 16}
     peerDependencies:
-      ember-source: ^3.8 || ^4.0.0
+      '@glint/template': ^1.0.2
+      ember-source: ^3.8 || ^4.0.0 || ^5.0.0
+    peerDependenciesMeta:
+      '@glint/template':
+        optional: true
     dependencies:
       '@embroider/macros': 1.11.0
       ember-cli-babel: 7.26.11
@@ -2438,7 +2442,6 @@ packages:
       ember-source: 5.0.0(@glimmer/component@1.1.2)(webpack@5.84.1)
     transitivePeerDependencies:
       - '@babel/core'
-      - '@glint/template'
       - supports-color
     dev: true
 
