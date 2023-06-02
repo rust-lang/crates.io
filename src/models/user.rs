@@ -24,7 +24,7 @@ pub struct User {
 
 /// Represents a new user record insertable to the `users` table
 #[derive(Insertable, Debug, Default)]
-#[diesel(table_name = users)]
+#[diesel(table_name = users, check_for_backend(diesel::pg::Pg))]
 pub struct NewUser<'a> {
     pub gh_id: i32,
     pub gh_login: &'a str,

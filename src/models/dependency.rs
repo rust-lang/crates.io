@@ -9,7 +9,7 @@ use cargo_registry_index::DependencyKind as IndexDependencyKind;
 #[derive(Identifiable, Associations, Debug, Queryable, QueryableByName)]
 #[diesel(belongs_to(Version))]
 #[diesel(belongs_to(Crate))]
-#[diesel(table_name = dependencies)]
+#[diesel(table_name = dependencies, check_for_backend(diesel::pg::Pg))]
 pub struct Dependency {
     pub id: i32,
     pub version_id: i32,

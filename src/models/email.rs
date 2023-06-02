@@ -15,7 +15,7 @@ pub struct Email {
 }
 
 #[derive(Debug, Insertable, AsChangeset)]
-#[diesel(table_name = emails)]
+#[diesel(table_name = emails, check_for_backend(diesel::pg::Pg))]
 pub struct NewEmail<'a> {
     pub user_id: i32,
     pub email: &'a str,

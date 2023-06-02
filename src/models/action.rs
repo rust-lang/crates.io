@@ -58,7 +58,7 @@ impl ToSql<Integer, Pg> for VersionAction {
 #[diesel(belongs_to(Version))]
 #[diesel(belongs_to(User, foreign_key = user_id))]
 #[diesel(belongs_to(ApiToken, foreign_key = api_token_id))]
-#[diesel(table_name = version_owner_actions)]
+#[diesel(table_name = version_owner_actions, check_for_backend(diesel::pg::Pg))]
 pub struct VersionOwnerAction {
     pub id: i32,
     pub version_id: i32,
