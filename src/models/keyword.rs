@@ -14,10 +14,13 @@ pub struct Keyword {
 }
 
 #[derive(Associations, Insertable, Identifiable, Debug, Clone, Copy)]
-#[diesel(belongs_to(Keyword))]
-#[diesel(belongs_to(Crate))]
-#[diesel(table_name = crates_keywords, check_for_backend(diesel::pg::Pg))]
-#[diesel(primary_key(crate_id, keyword_id))]
+#[diesel(
+    table_name = crates_keywords,
+    check_for_backend(diesel::pg::Pg),
+    primary_key(crate_id, keyword_id),
+    belongs_to(Keyword),
+    belongs_to(Crate),
+)]
 pub struct CrateKeyword {
     crate_id: i32,
     keyword_id: i32,

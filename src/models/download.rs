@@ -3,8 +3,7 @@ use crate::schema::version_downloads;
 use chrono::NaiveDate;
 
 #[derive(Queryable, Identifiable, Associations, Debug, Clone, Copy)]
-#[diesel(belongs_to(Version))]
-#[diesel(primary_key(version_id, date))]
+#[diesel(primary_key(version_id, date), belongs_to(Version))]
 pub struct VersionDownload {
     pub version_id: i32,
     pub downloads: i32,

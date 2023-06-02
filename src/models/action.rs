@@ -55,10 +55,13 @@ impl ToSql<Integer, Pg> for VersionAction {
 }
 
 #[derive(Debug, Clone, Copy, Queryable, Identifiable, Associations)]
-#[diesel(belongs_to(Version))]
-#[diesel(belongs_to(User, foreign_key = user_id))]
-#[diesel(belongs_to(ApiToken, foreign_key = api_token_id))]
-#[diesel(table_name = version_owner_actions, check_for_backend(diesel::pg::Pg))]
+#[diesel(
+    table_name = version_owner_actions,
+    check_for_backend(diesel::pg::Pg),
+    belongs_to(Version),
+    belongs_to(User, foreign_key = user_id),
+    belongs_to(ApiToken, foreign_key = api_token_id),
+)]
 pub struct VersionOwnerAction {
     pub id: i32,
     pub version_id: i32,
