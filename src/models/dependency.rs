@@ -7,9 +7,12 @@ use crate::schema::*;
 use cargo_registry_index::DependencyKind as IndexDependencyKind;
 
 #[derive(Identifiable, Associations, Debug, Queryable, QueryableByName)]
-#[diesel(belongs_to(Version))]
-#[diesel(belongs_to(Crate))]
-#[diesel(table_name = dependencies, check_for_backend(diesel::pg::Pg))]
+#[diesel(
+    table_name = dependencies,
+    check_for_backend(diesel::pg::Pg),
+    belongs_to(Version),
+    belongs_to(Crate),
+)]
 pub struct Dependency {
     pub id: i32,
     pub version_id: i32,
@@ -29,8 +32,7 @@ pub struct ReverseDependency {
     pub dependency: Dependency,
     #[diesel(sql_type = Integer)]
     pub crate_downloads: i32,
-    #[diesel(sql_type = Text)]
-    #[diesel(column_name = crate_name)]
+    #[diesel(sql_type = Text, column_name = crate_name)]
     pub name: String,
 }
 

@@ -19,10 +19,13 @@ type WithSlug<'a> = diesel::dsl::Eq<categories::slug, crate::sql::lower::HelperT
 type BySlug<'a> = diesel::dsl::Filter<categories::table, WithSlug<'a>>;
 
 #[derive(Associations, Insertable, Identifiable, Debug, Clone, Copy)]
-#[diesel(belongs_to(Category))]
-#[diesel(belongs_to(Crate))]
-#[diesel(table_name = crates_categories, check_for_backend(diesel::pg::Pg))]
-#[diesel(primary_key(crate_id, category_id))]
+#[diesel(
+    table_name = crates_categories,
+    check_for_backend(diesel::pg::Pg),
+    primary_key(crate_id, category_id),
+    belongs_to(Category),
+    belongs_to(Crate),
+)]
 pub struct CrateCategory {
     crate_id: i32,
     category_id: i32,
