@@ -24,14 +24,14 @@ use crate::sql::canon_crate_name;
 #[derive(Debug, Queryable, Identifiable, Associations, Clone, Copy)]
 #[diesel(belongs_to(Crate))]
 #[diesel(primary_key(crate_id))]
-#[diesel(table_name = recent_crate_downloads)]
+#[diesel(table_name = recent_crate_downloads, check_for_backend(diesel::pg::Pg))]
 pub struct RecentCrateDownloads {
     pub crate_id: i32,
     pub downloads: i32,
 }
 
 #[derive(Debug, Clone, Queryable, Identifiable, AsChangeset, QueryableByName)]
-#[diesel(table_name = crates)]
+#[diesel(table_name = crates, check_for_backend(diesel::pg::Pg))]
 pub struct Crate {
     pub id: i32,
     pub name: String,
@@ -82,7 +82,7 @@ type ByName<'a> = diesel::dsl::Filter<All, WithName<'a>>;
 type ByExactName<'a> = diesel::dsl::Filter<All, diesel::dsl::Eq<crates::name, &'a str>>;
 
 #[derive(Insertable, AsChangeset, Default, Debug)]
-#[diesel(table_name = crates)]
+#[diesel(table_name = crates, check_for_backend(diesel::pg::Pg))]
 #[diesel(treat_none_as_null = true)]
 #[diesel(primary_key(name, max_upload_size))] // This is actually just to skip updating them
 pub struct NewCrate<'a> {

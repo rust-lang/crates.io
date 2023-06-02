@@ -30,7 +30,7 @@ pub struct Version {
 }
 
 #[derive(Insertable, Debug)]
-#[diesel(table_name = versions)]
+#[diesel(table_name = versions, check_for_backend(diesel::pg::Pg))]
 pub struct NewVersion {
     crate_id: i32,
     num: String,

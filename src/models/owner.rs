@@ -12,7 +12,7 @@ use crate::sql::lower;
 #[diesel(belongs_to(Crate))]
 #[diesel(belongs_to(User, foreign_key = owner_id))]
 #[diesel(belongs_to(Team, foreign_key = owner_id))]
-#[diesel(table_name = crate_owners)]
+#[diesel(table_name = crate_owners, check_for_backend(diesel::pg::Pg))]
 #[diesel(primary_key(crate_id, owner_id, owner_kind))]
 pub struct CrateOwner {
     pub crate_id: i32,

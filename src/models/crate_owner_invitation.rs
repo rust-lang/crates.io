@@ -33,7 +33,7 @@ impl CrateOwnerInvitation {
         config: &config::Server,
     ) -> AppResult<NewCrateOwnerInvitationOutcome> {
         #[derive(Insertable, Clone, Copy, Debug)]
-        #[diesel(table_name = crate_owner_invitations)]
+        #[diesel(table_name = crate_owner_invitations, check_for_backend(diesel::pg::Pg))]
         struct NewRecord {
             invited_user_id: i32,
             invited_by_user_id: i32,

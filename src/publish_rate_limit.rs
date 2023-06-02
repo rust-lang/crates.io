@@ -34,7 +34,7 @@ impl Default for PublishRateLimit {
 }
 
 #[derive(Queryable, Insertable, Debug, PartialEq, Clone, Copy)]
-#[diesel(table_name = publish_limit_buckets)]
+#[diesel(table_name = publish_limit_buckets, check_for_backend(diesel::pg::Pg))]
 #[allow(dead_code)] // Most fields only read in tests
 struct Bucket {
     user_id: i32,

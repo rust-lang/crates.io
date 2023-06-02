@@ -30,7 +30,7 @@ pub struct Team {
 }
 
 #[derive(Insertable, AsChangeset, Debug)]
-#[diesel(table_name = teams)]
+#[diesel(table_name = teams, check_for_backend(diesel::pg::Pg))]
 pub struct NewTeam<'a> {
     pub login: &'a str,
     pub github_id: i32,

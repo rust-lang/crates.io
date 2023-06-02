@@ -5,7 +5,7 @@ use crate::models::Crate;
 use crate::schema::*;
 
 #[derive(Clone, Identifiable, Queryable, QueryableByName, Debug)]
-#[diesel(table_name = categories)]
+#[diesel(table_name = categories, check_for_backend(diesel::pg::Pg))]
 pub struct Category {
     pub id: i32,
     pub category: String,
@@ -21,7 +21,7 @@ type BySlug<'a> = diesel::dsl::Filter<categories::table, WithSlug<'a>>;
 #[derive(Associations, Insertable, Identifiable, Debug, Clone, Copy)]
 #[diesel(belongs_to(Category))]
 #[diesel(belongs_to(Crate))]
-#[diesel(table_name = crates_categories)]
+#[diesel(table_name = crates_categories, check_for_backend(diesel::pg::Pg))]
 #[diesel(primary_key(crate_id, category_id))]
 pub struct CrateCategory {
     crate_id: i32,
@@ -122,7 +122,7 @@ impl Category {
 /// Struct for inserting categories; only used in tests. Actual categories are inserted
 /// in src/boot/categories.rs.
 #[derive(Insertable, AsChangeset, Default, Debug)]
-#[diesel(table_name = categories)]
+#[diesel(table_name = categories, check_for_backend(diesel::pg::Pg))]
 pub struct NewCategory<'a> {
     pub category: &'a str,
     pub slug: &'a str,
