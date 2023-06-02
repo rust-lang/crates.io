@@ -42,6 +42,7 @@ cargo-registry-tarball = { path = "cargo-registry-tarball" }
 chrono = { version = "=0.4.26", default-features = false, features = ["serde"] }
 clap = { version = "=4.3.0", features = ["derive", "env", "unicode", "wrap_help"] }
 cookie = { version = "=0.17.0", features = ["secure"] }
+crossbeam-channel = "=0.5.8"
 dashmap = { version = "=5.4.0", features = ["raw-api"] }
 derive_deref = "=1.1.1"
 dialoguer = "=0.10.4"
