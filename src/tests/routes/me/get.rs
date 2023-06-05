@@ -1,6 +1,6 @@
 use crate::builders::CrateBuilder;
 use crate::util::{RequestHelper, TestApp};
-use cargo_registry::views::{EncodablePrivateUser, OwnedCrate};
+use crates_io::views::{EncodablePrivateUser, OwnedCrate};
 
 impl crate::util::MockCookieUser {
     pub fn show_me(&self) -> UserShowPrivateResponse {

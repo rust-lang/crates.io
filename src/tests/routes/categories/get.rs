@@ -1,7 +1,7 @@
 use crate::builders::CrateBuilder;
 use crate::new_category;
 use crate::util::{MockAnonymousUser, RequestHelper, TestApp};
-use cargo_registry::models::Category;
+use crates_io::models::Category;
 use insta::assert_yaml_snapshot;
 use serde_json::Value;
 

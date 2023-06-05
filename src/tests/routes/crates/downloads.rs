@@ -1,7 +1,7 @@
 use crate::builders::{CrateBuilder, VersionBuilder};
 use crate::util::{MockAnonymousUser, RequestHelper, TestApp};
-use cargo_registry::views::EncodableVersionDownload;
 use chrono::{Duration, Utc};
+use crates_io::views::EncodableVersionDownload;
 use http::StatusCode;
 
 #[derive(Deserialize)]

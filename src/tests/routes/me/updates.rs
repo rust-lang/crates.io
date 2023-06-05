@@ -1,8 +1,8 @@
 use crate::builders::{CrateBuilder, VersionBuilder};
 use crate::util::{RequestHelper, TestApp};
 use crate::OkBool;
-use cargo_registry::schema::versions;
-use cargo_registry::views::EncodableVersion;
+use crates_io::schema::versions;
+use crates_io::views::EncodableVersion;
 use diesel::prelude::*;
 use diesel::update;
 use http::StatusCode;

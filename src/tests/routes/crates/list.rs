@@ -1,8 +1,8 @@
 use crate::builders::{CrateBuilder, VersionBuilder};
 use crate::util::{RequestHelper, TestApp};
 use crate::{new_category, new_user};
-use cargo_registry::models::Category;
-use cargo_registry::schema::crates;
+use crates_io::models::Category;
+use crates_io::schema::crates;
 use diesel::{dsl::*, prelude::*, update};
 use http::StatusCode;
 

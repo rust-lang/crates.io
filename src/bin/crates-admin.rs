@@ -3,7 +3,7 @@
 #[macro_use]
 extern crate tracing;
 
-use cargo_registry::admin::{
+use crates_io::admin::{
     backfill, delete_crate, delete_version, enqueue_job, git_import, migrate, populate,
     render_readmes, test_pagerduty, transfer_crates, upload_index, verify_token, yank_version,
 };
@@ -30,10 +30,10 @@ enum Command {
 }
 
 fn main() -> anyhow::Result<()> {
-    let _sentry = cargo_registry::sentry::init();
+    let _sentry = crates_io::sentry::init();
 
     // Initialize logging
-    cargo_registry::util::tracing::init_with_default_level(LevelFilter::INFO);
+    crates_io::util::tracing::init_with_default_level(LevelFilter::INFO);
 
     use clap::Parser;
 

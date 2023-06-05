@@ -65,7 +65,7 @@ fn force_unconditional_redirect() {
 #[test]
 fn download_caches_version_id() {
     use super::super::downloads;
-    use cargo_registry::schema::crates::dsl::*;
+    use crates_io::schema::crates::dsl::*;
     use diesel::prelude::*;
 
     let (app, anon, user) = TestApp::init().with_user();

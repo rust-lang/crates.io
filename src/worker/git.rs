@@ -2,8 +2,8 @@ use crate::background_jobs::{Environment, NormalizeIndexJob};
 use crate::models;
 use crate::swirl::PerformError;
 use anyhow::Context;
-use cargo_registry_index::{Crate, Repository};
 use chrono::Utc;
+use crates_io_index::{Crate, Repository};
 use diesel::prelude::*;
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader, ErrorKind, Write};
@@ -93,7 +93,7 @@ pub fn get_index_data(name: &str, conn: &mut PgConnection) -> anyhow::Result<Opt
 
     debug!("Serializing index data");
     let mut bytes = Vec::new();
-    cargo_registry_index::write_crates(&crates, &mut bytes)
+    crates_io_index::write_crates(&crates, &mut bytes)
         .context("Failed to serialize index metadata")?;
 
     let str = String::from_utf8(bytes).context("Failed to decode index metadata as utf8")?;
@@ -175,10 +175,7 @@ pub fn perform_normalize_index(
                 // Remove deps with empty features
                 dep.features.retain(|d| !d.is_empty());
                 // Set null DependencyKind to Normal
-                dep.kind = Some(
-                    dep.kind
-                        .unwrap_or(cargo_registry_index::DependencyKind::Normal),
-                );
+                dep.kind = Some(dep.kind.unwrap_or(crates_io_index::DependencyKind::Normal));
             }
             krate.deps.sort();
             versions.push(krate);

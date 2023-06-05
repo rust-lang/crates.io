@@ -6,7 +6,7 @@ use std::{
 };
 
 use anyhow::Context;
-use cargo_registry_index::{Repository, RepositoryConfig};
+use crates_io_index::{Repository, RepositoryConfig};
 use diesel::prelude::*;
 use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
 
@@ -55,7 +55,7 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
         let reader = BufReader::new(file);
         let result = conn.transaction(|conn| -> anyhow::Result<()> {
             for line in reader.lines() {
-                let krate: cargo_registry_index::Crate = serde_json::from_str(&line?)?;
+                let krate: crates_io_index::Crate = serde_json::from_str(&line?)?;
                 if krate.links.is_some() {
                     let rows = import_data(conn, &krate).with_context(|| {
                         format!("Failed to update crate {}#{}", krate.name, krate.vers)
@@ -78,10 +78,7 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn import_data(
-    conn: &mut PgConnection,
-    krate: &cargo_registry_index::Crate,
-) -> anyhow::Result<usize> {
+fn import_data(conn: &mut PgConnection, krate: &crates_io_index::Crate) -> anyhow::Result<usize> {
     let version_id: i32 = versions::table
         .inner_join(crates::table)
         .filter(crates::name.eq(&krate.name))

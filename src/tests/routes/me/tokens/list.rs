@@ -1,7 +1,7 @@
 use crate::util::insta::{self, assert_yaml_snapshot};
 use crate::util::{RequestHelper, TestApp};
-use cargo_registry::models::token::{CrateScope, EndpointScope};
-use cargo_registry::models::ApiToken;
+use crates_io::models::token::{CrateScope, EndpointScope};
+use crates_io::models::ApiToken;
 use http::StatusCode;
 
 #[test]

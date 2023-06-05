@@ -452,132 +452,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cargo-registry"
-version = "0.2.2"
-dependencies = [
- "anyhow",
- "aws-sigv4",
- "axum",
- "axum-extra",
- "base64 0.13.1",
- "cargo-registry-index",
- "cargo-registry-markdown",
- "cargo-registry-s3",
- "cargo-registry-tarball",
- "chrono",
- "claims",
- "clap",
- "cookie",
- "crossbeam-channel",
- "dashmap",
- "derive_deref",
- "dialoguer",
- "diesel",
- "diesel_full_text_search",
- "diesel_migrations",
- "dotenvy",
- "flate2",
- "futures-channel",
- "futures-util",
- "hex",
- "http",
- "http-body",
- "hyper",
- "hyper-tls",
- "indexmap",
- "indicatif",
- "insta",
- "ipnetwork",
- "lettre",
- "minijinja",
- "moka",
- "oauth2",
- "once_cell",
- "parking_lot",
- "paste",
- "prometheus",
- "rand",
- "reqwest",
- "retry",
- "ring",
- "scheduled-thread-pool",
- "secrecy",
- "semver",
- "sentry",
- "serde",
- "serde_json",
- "sha2",
- "spdx",
- "tar",
- "tempfile",
- "thiserror",
- "threadpool",
- "tikv-jemallocator",
- "tokio",
- "toml",
- "tower",
- "tower-http",
- "tower-service",
- "tracing",
- "tracing-subscriber",
- "url",
-]
-
-[[package]]
-name = "cargo-registry-index"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "base64 0.13.1",
- "claims",
- "dotenvy",
- "git2",
- "secrecy",
- "serde",
- "serde_json",
- "tempfile",
- "tracing",
- "url",
-]
-
-[[package]]
-name = "cargo-registry-markdown"
-version = "0.0.0"
-dependencies = [
- "ammonia",
- "comrak",
- "htmlescape",
- "url",
-]
-
-[[package]]
-name = "cargo-registry-s3"
-version = "0.2.0"
-dependencies = [
- "base64 0.13.1",
- "chrono",
- "hmac",
- "reqwest",
- "sha-1",
-]
-
-[[package]]
-name = "cargo-registry-tarball"
-version = "0.0.0"
-dependencies = [
- "claims",
- "derive_deref",
- "flate2",
- "semver",
- "serde",
- "serde_json",
- "tar",
- "thiserror",
- "toml",
- "tracing",
-]
-
-[[package]]
 name = "cargo_metadata"
 version = "0.14.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -766,6 +640,132 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3e4c1eaa2012c47becbbad2ab175484c2a84d1185b566fb2cc5b8707343dfe58"
 dependencies = [
  "libc",
+]
+
+[[package]]
+name = "crates_io"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "aws-sigv4",
+ "axum",
+ "axum-extra",
+ "base64 0.13.1",
+ "chrono",
+ "claims",
+ "clap",
+ "cookie",
+ "crates_io_index",
+ "crates_io_markdown",
+ "crates_io_s3",
+ "crates_io_tarball",
+ "crossbeam-channel",
+ "dashmap",
+ "derive_deref",
+ "dialoguer",
+ "diesel",
+ "diesel_full_text_search",
+ "diesel_migrations",
+ "dotenvy",
+ "flate2",
+ "futures-channel",
+ "futures-util",
+ "hex",
+ "http",
+ "http-body",
+ "hyper",
+ "hyper-tls",
+ "indexmap",
+ "indicatif",
+ "insta",
+ "ipnetwork",
+ "lettre",
+ "minijinja",
+ "moka",
+ "oauth2",
+ "once_cell",
+ "parking_lot",
+ "paste",
+ "prometheus",
+ "rand",
+ "reqwest",
+ "retry",
+ "ring",
+ "scheduled-thread-pool",
+ "secrecy",
+ "semver",
+ "sentry",
+ "serde",
+ "serde_json",
+ "sha2",
+ "spdx",
+ "tar",
+ "tempfile",
+ "thiserror",
+ "threadpool",
+ "tikv-jemallocator",
+ "tokio",
+ "toml",
+ "tower",
+ "tower-http",
+ "tower-service",
+ "tracing",
+ "tracing-subscriber",
+ "url",
+]
+
+[[package]]
+name = "crates_io_index"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "base64 0.13.1",
+ "claims",
+ "dotenvy",
+ "git2",
+ "secrecy",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "tracing",
+ "url",
+]
+
+[[package]]
+name = "crates_io_markdown"
+version = "0.0.0"
+dependencies = [
+ "ammonia",
+ "comrak",
+ "htmlescape",
+ "url",
+]
+
+[[package]]
+name = "crates_io_s3"
+version = "0.0.0"
+dependencies = [
+ "base64 0.13.1",
+ "chrono",
+ "hmac",
+ "reqwest",
+ "sha-1",
+]
+
+[[package]]
+name = "crates_io_tarball"
+version = "0.0.0"
+dependencies = [
+ "claims",
+ "derive_deref",
+ "flate2",
+ "semver",
+ "serde",
+ "serde_json",
+ "tar",
+ "thiserror",
+ "toml",
+ "tracing",
 ]
 
 [[package]]

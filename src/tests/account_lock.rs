@@ -7,7 +7,7 @@ const LOCK_REASON: &str = "test lock reason";
 
 fn lock_account(app: &TestApp, user_id: i32, until: Option<NaiveDateTime>) {
     app.db(|conn| {
-        use cargo_registry::schema::users;
+        use crates_io::schema::users;
         use diesel::prelude::*;
 
         diesel::update(users::table)

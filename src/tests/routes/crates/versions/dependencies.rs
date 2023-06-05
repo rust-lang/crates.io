@@ -1,6 +1,6 @@
 use crate::builders::{CrateBuilder, VersionBuilder};
 use crate::util::{RequestHelper, TestApp};
-use cargo_registry::views::EncodableDependency;
+use crates_io::views::EncodableDependency;
 use http::StatusCode;
 
 #[derive(Deserialize)]

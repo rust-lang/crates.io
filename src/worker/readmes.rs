@@ -1,7 +1,7 @@
 //! Render README files to HTML.
 
 use crate::swirl::PerformError;
-use cargo_registry_markdown::text_to_html;
+use crates_io_markdown::text_to_html;
 use diesel::PgConnection;
 
 use crate::background_jobs::Environment;

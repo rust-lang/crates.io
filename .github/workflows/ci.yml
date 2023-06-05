@@ -47,7 +47,7 @@ jobs:
         id: changed-files-non-rust
         with:
           files_ignore: |
-            cargo-registry-*/**
+            crates_io_*/**
             migrations/**
             src/**
             build.rs

@@ -30,7 +30,7 @@ fn show_by_crate_name_and_version() {
 
 #[test]
 fn show_by_crate_name_and_semver_no_published_by() {
-    use cargo_registry::schema::versions;
+    use crates_io::schema::versions;
     use diesel::{update, RunQueryDsl};
 
     let (app, anon, user) = TestApp::init().with_user();

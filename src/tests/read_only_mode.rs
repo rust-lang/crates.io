@@ -49,7 +49,7 @@ fn can_download_crate_in_read_only_mode() {
 
     // We're in read only mode so the download should not have been counted
     app.db(|conn| {
-        use cargo_registry::schema::version_downloads::dsl::*;
+        use crates_io::schema::version_downloads::dsl::*;
         use diesel::dsl::sum;
 
         let dl_count: Result<Option<i64>, _> =

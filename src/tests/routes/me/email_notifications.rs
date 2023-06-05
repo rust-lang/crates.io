@@ -1,7 +1,7 @@
 use crate::builders::CrateBuilder;
 use crate::util::{RequestHelper, TestApp};
 use crate::{new_user, OkBool};
-use cargo_registry::schema::crate_owners;
+use crates_io::schema::crate_owners;
 use diesel::prelude::*;
 
 #[derive(Serialize)]

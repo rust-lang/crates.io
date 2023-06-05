@@ -12,7 +12,7 @@ use crate::swirl::PerformError;
 use crate::uploaders::Uploader;
 use crate::worker;
 use crate::worker::cloudfront::CloudFront;
-use cargo_registry_index::Repository;
+use crates_io_index::Repository;
 
 pub const PRIORITY_DEFAULT: i16 = 0;
 pub const PRIORITY_RENDER_README: i16 = 50;
@@ -257,7 +257,7 @@ pub struct DumpDbJob {
 
 #[derive(Serialize, Deserialize)]
 pub struct AddCrateJob {
-    pub(super) krate: cargo_registry_index::Crate,
+    pub(super) krate: crates_io_index::Crate,
 }
 
 #[derive(Serialize, Deserialize)]

@@ -2,12 +2,12 @@ use crate::builders::{CrateBuilder, DependencyBuilder, PublishBuilder};
 use crate::new_category;
 use crate::util::insta::assert_yaml_snapshot;
 use crate::util::{RequestHelper, TestApp};
-use cargo_registry::controllers::krate::publish::{
+use crates_io::controllers::krate::publish::{
     missing_metadata_error_message, MISSING_RIGHTS_ERROR_MESSAGE, WILDCARD_ERROR_MESSAGE,
 };
-use cargo_registry::models::krate::MAX_NAME_LENGTH;
-use cargo_registry::schema::{api_tokens, emails, versions_published_by};
-use cargo_registry::views::GoodCrate;
+use crates_io::models::krate::MAX_NAME_LENGTH;
+use crates_io::schema::{api_tokens, emails, versions_published_by};
+use crates_io::views::GoodCrate;
 use diesel::{delete, update, ExpressionMethods, QueryDsl, RunQueryDsl};
 use flate2::write::GzEncoder;
 use flate2::Compression;
@@ -23,7 +23,7 @@ fn uploading_new_version_touches_crate() {
     use crate::builders::PublishBuilder;
     use crate::util::{RequestHelper, TestApp};
     use crate::CrateResponse;
-    use cargo_registry::schema::crates;
+    use crates_io::schema::crates;
     use diesel::dsl::*;
     use diesel::{ExpressionMethods, RunQueryDsl};
 
@@ -653,7 +653,7 @@ fn new_krate_records_verified_email() {
 
 #[test]
 fn publish_records_an_audit_action() {
-    use cargo_registry::models::VersionOwnerAction;
+    use crates_io::models::VersionOwnerAction;
 
     let (app, anon, _, token) = TestApp::full().with_token();
 

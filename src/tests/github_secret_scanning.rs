@@ -1,10 +1,10 @@
 use crate::util::MockRequestExt;
 use crate::{RequestHelper, TestApp};
-use cargo_registry::controllers::github::secret_scanning::{
+use crates_io::controllers::github::secret_scanning::{
     GitHubSecretAlertFeedback, GitHubSecretAlertFeedbackLabel,
 };
-use cargo_registry::util::token::SecureToken;
-use cargo_registry::{models::ApiToken, schema::api_tokens};
+use crates_io::util::token::SecureToken;
+use crates_io::{models::ApiToken, schema::api_tokens};
 use diesel::prelude::*;
 use http::StatusCode;
 

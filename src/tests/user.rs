@@ -3,7 +3,7 @@ use crate::{
     util::{MockCookieUser, RequestHelper},
     OkBool, TestApp,
 };
-use cargo_registry::models::{Email, NewUser, User};
+use crates_io::models::{Email, NewUser, User};
 use diesel::prelude::*;
 
 impl crate::util::MockCookieUser {
@@ -91,7 +91,7 @@ fn github_without_email_does_not_overwrite_email() {
 /// sign in again, that the email in crates.io will remain set to the original email used on GitHub.
 #[test]
 fn github_with_email_does_not_overwrite_email() {
-    use cargo_registry::schema::emails;
+    use crates_io::schema::emails;
 
     let (app, _, user) = TestApp::init().with_user();
     let model = user.as_model();
@@ -147,7 +147,7 @@ fn test_email_get_and_put() {
 /// the email_verified field on user is now set to true.
 #[test]
 fn test_confirm_user_email() {
-    use cargo_registry::schema::emails;
+    use crates_io::schema::emails;
 
     let (app, _) = TestApp::init().empty();
 
@@ -186,8 +186,8 @@ fn test_confirm_user_email() {
 /// make the user think we've sent an email when we haven't.
 #[test]
 fn test_existing_user_email() {
-    use cargo_registry::schema::emails;
     use chrono::NaiveDateTime;
+    use crates_io::schema::emails;
     use diesel::update;
 
     let (app, _) = TestApp::init().empty();

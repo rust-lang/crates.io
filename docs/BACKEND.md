@@ -9,10 +9,10 @@ The server does the following things:
 
 1. Initialize logging
 2. Check out the index git repository, if it isn't already checked out
-3. Reads values from environment variables to configure a new instance of `cargo_registry::App`
-4. Adds middleware to the app by calling `cargo_registry::middleware`
+3. Reads values from environment variables to configure a new instance of `crates_io::App`
+4. Adds middleware to the app by calling `crates_io::middleware`
 5. Syncs the categories defined in *src/categories.toml* with the categories in the database
-6. Starts a [hyper] server that uses the `cargo_registry::App` instance
+6. Starts a [hyper] server that uses the `crates_io::App` instance
 7. Tells Nginx on Heroku that the application is ready to receive requests, if running on Heroku
 8. Blocks forever (or until the process is killed)
 
