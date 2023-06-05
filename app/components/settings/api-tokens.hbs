@@ -4,7 +4,6 @@
     <button
       type="button"
       local-class="new-token-button"
-      disabled={{this.newToken}}
       data-test-new-token-button
       {{on "click" this.startNewToken}}
     >
@@ -32,36 +31,6 @@
   <a href="https://doc.rust-lang.org/cargo/reference/config.html?highlight=CARGO_REGISTRY_TOKEN#credentials"><code>CARGO_REGISTRY_TOKEN</code></a>
   environment variable, but make sure that the token stays secret!
 </p>
-
-{{#if this.newToken}}
-  <form local-class="new-token-form" {{on "submit" (prevent-default (perform this.saveTokenTask))}}>
-    <Input
-      @type="text"
-      placeholder="New token name"
-      aria-label="New token name"
-      disabled={{this.newToken.isSaving}}
-      @value={{this.newToken.name}}
-      local-class="input"
-      data-test-focused-input
-      {{auto-focus}}
-    />
-
-    <div local-class="actions">
-      <button
-        type="submit"
-        local-class="save-button"
-        disabled={{or this.newToken.isSaving (not this.newToken.name)}}
-        title={{unless this.newToken.name "You must specify a name"}}
-        data-test-save-token-button
-      >
-        Create
-      </button>
-      {{#if this.newToken.isSaving}}
-        <LoadingSpinner local-class="spinner" data-test-saving-spinner />
-      {{/if}}
-    </div>
-  </form>
-{{/if}}
 
 {{#if this.sortedTokens}}
   <ul role="list" local-class="token-list">
@@ -168,7 +137,6 @@
     <button
       type="button"
       local-class="empty-state-button"
-      disabled={{this.newToken}}
       data-test-empty-state-button
       {{on "click" this.startNewToken}}
     >

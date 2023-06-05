@@ -1,7 +1,6 @@
 import { action } from '@ember/object';
 import { inject as service } from '@ember/service';
 import Component from '@glimmer/component';
-import { tracked } from '@glimmer/tracking';
 
 import { task } from 'ember-concurrency';
 
@@ -11,8 +10,6 @@ export default class ApiTokens extends Component {
   @service store;
   @service notifications;
   @service router;
-
-  @tracked newToken;
 
   scopeDescription = scopeDescription;
   patternDescription = patternDescription;
@@ -29,23 +26,6 @@ export default class ApiTokens extends Component {
   @action startNewToken() {
     this.router.transitionTo('settings.tokens.new');
   }
-
-  saveTokenTask = task(async () => {
-    let token = this.newToken;
-
-    try {
-      await token.save();
-      this.args.tokens.unshift(token);
-      this.newToken = undefined;
-    } catch (error) {
-      let msg =
-        error.errors && error.errors[0] && error.errors[0].detail
-          ? `An error occurred while saving this token, ${error.errors[0].detail}`
-          : 'An unknown error occurred while saving this token';
-
-      this.notifications.error(msg);
-    }
-  });
 
   revokeTokenTask = task(async token => {
     try {
