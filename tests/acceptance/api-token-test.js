@@ -106,24 +106,18 @@ module('Acceptance | api-tokens', function (hooks) {
     await visit('/settings/tokens');
     assert.strictEqual(currentURL(), '/settings/tokens');
     assert.dom('[data-test-api-token]').exists({ count: 2 });
-    assert.dom('[data-test-focused-input]').doesNotExist();
-    assert.dom('[data-test-save-token-button]').doesNotExist();
 
     await click('[data-test-new-token-button]');
-    assert.dom('[data-test-new-token-button]').isDisabled();
-    assert.dom('[data-test-focused-input]').isFocused();
-    assert.dom('[data-test-save-token-button]').exists();
+    assert.strictEqual(currentURL(), '/settings/tokens/new');
 
-    await fillIn('[data-test-focused-input]', 'the new token');
+    await fillIn('[data-test-name]', 'the new token');
+    await click('[data-test-scope="publish-update"]');
     await percySnapshot(assert);
 
-    await click('[data-test-save-token-button]');
+    await click('[data-test-generate]');
 
     let token = this.server.schema.apiTokens.findBy({ name: 'the new token' });
     assert.ok(Boolean(token), 'API token has been created in the backend database');
-
-    assert.dom('[data-test-focused-input]').doesNotExist();
-    assert.dom('[data-test-save-token-button]').doesNotExist();
 
     assert.dom('[data-test-api-token="3"] [data-test-name]').hasText('the new token');
     assert.dom('[data-test-api-token="3"] [data-test-save-token-button]').doesNotExist();
@@ -138,8 +132,9 @@ module('Acceptance | api-tokens', function (hooks) {
 
     await visit('/settings/tokens');
     await click('[data-test-new-token-button]');
-    await fillIn('[data-test-focused-input]', 'the new token');
-    await click('[data-test-save-token-button]');
+    await fillIn('[data-test-name]', 'the new token');
+    await click('[data-test-scope="publish-update"]');
+    await click('[data-test-generate]');
 
     let token = this.server.schema.apiTokens.findBy({ name: 'the new token' });
     assert.dom('[data-test-token]').hasText(token.token);
@@ -159,7 +154,6 @@ module('Acceptance | api-tokens', function (hooks) {
     assert.dom('[data-test-api-token]').exists({ count: 2 });
 
     await click('[data-test-new-token-button]');
-    await fillIn('[data-test-focused-input]', 'the new token');
 
     await visit('/settings/profile');
 

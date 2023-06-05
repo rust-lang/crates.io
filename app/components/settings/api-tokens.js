@@ -26,12 +26,8 @@ export default class ApiTokens extends Component {
     return new Intl.ListFormat('en-US').formatToParts(list);
   }
 
-  @action startNewToken(event) {
-    if (event.altKey) {
-      this.router.transitionTo('settings.tokens.new');
-    } else {
-      this.newToken = this.store.createRecord('api-token');
-    }
+  @action startNewToken() {
+    this.router.transitionTo('settings.tokens.new');
   }
 
   saveTokenTask = task(async () => {
