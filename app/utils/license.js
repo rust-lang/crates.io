@@ -562,10 +562,10 @@ const LICENSE_KEYWORDS = new Set(['OR', 'AND', 'WITH', '(', ')']);
 export function parseLicense(text) {
   return text
     .trim()
-    .replaceAll('/', ' OR ')
-    .replaceAll(/(^\(| \()/g, ' ( ')
-    .replaceAll(/(\)$|\) )/g, ' ) ')
-    .replaceAll(/ +/g, ' ')
+    .replace(/\//g, ' OR ')
+    .replace(/(^\(| \()/g, ' ( ')
+    .replace(/(\)$|\) )/g, ' ) ')
+    .replace(/ +/g, ' ')
     .split(' ')
     .filter(Boolean)
     .map(text => {
