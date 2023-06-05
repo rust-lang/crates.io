@@ -91,7 +91,7 @@ tower = "=0.4.13"
 tower-http = { version = "=0.4.0", features = ["fs", "catch-panic"] }
 tracing = "=0.1.37"
 tracing-subscriber = { version = "=0.3.17", features = ["env-filter"] }
-url = "=2.3.1"
+url = "=2.4.0"
 
 [dev-dependencies]
 cargo-registry-index = { path = "cargo-registry-index", features = ["testing"] }
