@@ -1,14 +1,13 @@
 <div local-class="me-subheading">
   <h2>API Tokens</h2>
   <div local-class="right">
-    <button
-      type="button"
+    <LinkTo
+      @route="settings.tokens.new"
       local-class="new-token-button"
       data-test-new-token-button
-      {{on "click" this.startNewToken}}
     >
       New Token
-    </button>
+    </LinkTo>
   </div>
 </div>
 
@@ -134,13 +133,12 @@
       You have not generated any API tokens yet.
     </div>
 
-    <button
-      type="button"
+    <LinkTo
+      @route="settings.tokens.new"
       local-class="empty-state-button"
       data-test-empty-state-button
-      {{on "click" this.startNewToken}}
     >
       New Token
-    </button>
+    </LinkTo>
   </div>
 {{/if}}
