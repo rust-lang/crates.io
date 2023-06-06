@@ -14,7 +14,7 @@ testing = []
 
 [dependencies]
 anyhow = "=1.0.71"
-base64 = "=0.13.1"
+base64 = "=0.21.2"
 dotenvy = "=0.15.7"
 git2 = "=0.17.2"
 secrecy = "=0.8.0"
