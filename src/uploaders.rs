@@ -89,7 +89,7 @@ impl Uploader {
 
     /// Returns the internal path of an uploaded crate's index file.
     fn index_path(name: &str) -> String {
-        cargo_registry_index::Repository::relative_index_file_for_url(name)
+        crates_io_index::Repository::relative_index_file_for_url(name)
     }
 
     /// Returns the absolute path to the locally uploaded file.

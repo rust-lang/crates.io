@@ -1,9 +1,9 @@
 use crate::util::FreshSchema;
-use cargo_registry::worker::dump_db;
+use crates_io::worker::dump_db;
 
 #[test]
 fn dump_db_and_reimport_dump() {
-    cargo_registry::util::tracing::init_for_test();
+    crates_io::util::tracing::init_for_test();
 
     let database_url = crate::env("TEST_DATABASE_URL");
 

@@ -3,8 +3,8 @@
 #[macro_use]
 extern crate tracing;
 
-use cargo_registry::middleware::normalize_path::normalize_path;
-use cargo_registry::{env_optional, metrics::LogEncoder, util::errors::AppResult, App, Env};
+use crates_io::middleware::normalize_path::normalize_path;
+use crates_io::{env_optional, metrics::LogEncoder, util::errors::AppResult, App, Env};
 use std::{fs::File, process::Command, sync::Arc, time::Duration};
 
 use axum::ServiceExt;
@@ -19,14 +19,14 @@ use tower::Layer;
 const CORE_THREADS: usize = 4;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let _sentry = cargo_registry::sentry::init();
+    let _sentry = crates_io::sentry::init();
 
     // Initialize logging
-    cargo_registry::util::tracing::init();
+    crates_io::util::tracing::init();
 
     let _span = info_span!("server.run");
 
-    let config = cargo_registry::config::Server::default();
+    let config = crates_io::config::Server::default();
     let env = config.env();
     let client = Client::new();
     let app = Arc::new(App::new(config, Some(client)));
@@ -37,7 +37,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Start the background thread periodically logging instance metrics.
     log_instance_metrics_thread(app.clone());
 
-    let axum_router = cargo_registry::build_handler(app.clone());
+    let axum_router = crates_io::build_handler(app.clone());
 
     // Apply the `normalize_path` middleware around the axum router
     let normalize_path = axum::middleware::from_fn(normalize_path);

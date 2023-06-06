@@ -1,4 +1,4 @@
-use cargo_registry::views::krate_publish as u;
+use crates_io::views::krate_publish as u;
 use std::{collections::BTreeMap, io::Read};
 
 use flate2::{write::GzEncoder, Compression};

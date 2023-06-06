@@ -1,9 +1,9 @@
 use crate::builders::{CrateBuilder, VersionBuilder};
 use crate::new_category;
 use crate::util::{RequestHelper, TestApp};
-use cargo_registry::schema::metadata;
-use cargo_registry::views::{EncodableCategory, EncodableCrate, EncodableKeyword};
 use chrono::Utc;
+use crates_io::schema::metadata;
+use crates_io::views::{EncodableCategory, EncodableCrate, EncodableKeyword};
 use diesel::{update, ExpressionMethods, RunQueryDsl};
 
 #[derive(Deserialize)]

@@ -1,7 +1,7 @@
 use crate::builders::CrateBuilder;
 use crate::util::{ChaosProxy, FreshSchema};
 use anyhow::{Context, Error};
-use cargo_registry::models::{NewUser, User};
+use crates_io::models::{NewUser, User};
 use diesel::prelude::*;
 use reqwest::blocking::{Client, Response};
 use std::collections::HashMap;
@@ -62,7 +62,7 @@ fn startup_without_database() {
 }
 
 fn initialize_dummy_crate(conn: &mut PgConnection) {
-    use cargo_registry::schema::users;
+    use crates_io::schema::users;
 
     let user: User = diesel::insert_into(users::table)
         .values(NewUser {

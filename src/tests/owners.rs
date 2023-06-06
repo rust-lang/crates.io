@@ -5,7 +5,7 @@ use crate::{
     util::{MockAnonymousUser, MockCookieUser, MockTokenUser, RequestHelper, Response},
     TestApp,
 };
-use cargo_registry::{
+use crates_io::{
     models::Crate,
     views::{
         EncodableCrateOwnerInvitation, EncodableCrateOwnerInvitationV1, EncodableOwner,
@@ -14,8 +14,8 @@ use cargo_registry::{
     Emails,
 };
 
-use cargo_registry::models::token::{CrateScope, EndpointScope};
 use chrono::{Duration, Utc};
+use crates_io::models::token::{CrateScope, EndpointScope};
 use diesel::prelude::*;
 use http::StatusCode;
 
@@ -742,7 +742,7 @@ fn test_accept_invitation_by_mail() {
 //// Hacky way to simulate the expiration of an ownership invitation. Instead of letting a month
 //// pass, the creation date of the invite is moved back a month.
 fn expire_invitation(app: &TestApp, crate_id: i32) {
-    use cargo_registry::schema::crate_owner_invitations;
+    use crates_io::schema::crate_owner_invitations;
 
     app.db(|conn| {
         let expiration = app.as_inner().config.ownership_invitations_expiration_days as i64;
@@ -848,7 +848,7 @@ fn test_accept_expired_invitation_by_mail() {
 
 #[test]
 fn inactive_users_dont_get_invitations() {
-    use cargo_registry::models::NewUser;
+    use crates_io::models::NewUser;
     use std::borrow::Cow;
 
     let (app, _, owner, owner_token) = TestApp::init().with_token();

@@ -4,7 +4,7 @@ use diesel::sql_types::{Integer, Text};
 
 use crate::models::{Crate, Version};
 use crate::schema::*;
-use cargo_registry_index::DependencyKind as IndexDependencyKind;
+use crates_io_index::DependencyKind as IndexDependencyKind;
 
 #[derive(Identifiable, Associations, Debug, Queryable, QueryableByName)]
 #[diesel(

@@ -1,6 +1,6 @@
 use crate::util::{RequestHelper, TestApp};
-use cargo_registry::models::ApiToken;
-use cargo_registry::schema::api_tokens;
+use crates_io::models::ApiToken;
+use crates_io::schema::api_tokens;
 use diesel::prelude::*;
 
 #[derive(Deserialize)]

@@ -1,9 +1,9 @@
-use cargo_registry::controllers::github::secret_scanning::GitHubPublicKey;
-use cargo_registry::github::{
+use crates_io::controllers::github::secret_scanning::GitHubPublicKey;
+use crates_io::github::{
     GitHubClient, GitHubOrgMembership, GitHubOrganization, GitHubTeam, GitHubTeamMembership,
     GithubUser,
 };
-use cargo_registry::util::errors::{not_found, AppResult};
+use crates_io::util::errors::{not_found, AppResult};
 use oauth2::AccessToken;
 
 pub(crate) const MOCK_GITHUB_DATA: MockData = MockData {

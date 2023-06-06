@@ -95,7 +95,7 @@ fn unyank_records_an_audit_action() {
 mod auth {
     use super::*;
     use crate::util::{MockAnonymousUser, MockCookieUser};
-    use cargo_registry::models::token::{CrateScope, EndpointScope};
+    use crates_io::models::token::{CrateScope, EndpointScope};
 
     const CRATE_NAME: &str = "fyk";
     const CRATE_VERSION: &str = "1.0.0";

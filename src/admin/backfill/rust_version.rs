@@ -1,9 +1,9 @@
 use crate::db;
 use crate::schema::{crates, versions};
 use anyhow::anyhow;
-use cargo_registry_index::Repository;
-use cargo_registry_tarball::process_tarball;
 use chrono::{Days, NaiveDate};
+use crates_io_index::Repository;
+use crates_io_tarball::process_tarball;
 use crossbeam_channel::unbounded;
 use diesel::connection::DefaultLoadingMode;
 use diesel::prelude::*;

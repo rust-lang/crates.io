@@ -1,15 +1,15 @@
 use super::{MockAnonymousUser, MockCookieUser, MockTokenUser};
 use crate::record;
 use crate::util::{chaosproxy::ChaosProxy, fresh_schema::FreshSchema};
-use cargo_registry::config::{self, BalanceCapacityConfig, DbPoolConfig};
-use cargo_registry::{background_jobs::Environment, App, Emails};
-use cargo_registry_index::testing::UpstreamIndex;
-use cargo_registry_index::{Credentials, Repository as WorkerRepository, RepositoryConfig};
+use crates_io::config::{self, BalanceCapacityConfig, DbPoolConfig};
+use crates_io::{background_jobs::Environment, App, Emails};
+use crates_io_index::testing::UpstreamIndex;
+use crates_io_index::{Credentials, Repository as WorkerRepository, RepositoryConfig};
 use std::{rc::Rc, sync::Arc, time::Duration};
 
 use crate::util::github::{MockGitHubClient, MOCK_GITHUB_DATA};
-use cargo_registry::models::token::{CrateScope, EndpointScope};
-use cargo_registry::swirl::Runner;
+use crates_io::models::token::{CrateScope, EndpointScope};
+use crates_io::swirl::Runner;
 use diesel::PgConnection;
 use oauth2::{ClientId, ClientSecret};
 use reqwest::{blocking::Client, Proxy};
@@ -33,7 +33,7 @@ struct TestAppInner {
 
 impl Drop for TestAppInner {
     fn drop(&mut self) {
-        use cargo_registry::schema::background_jobs::dsl::*;
+        use crates_io::schema::background_jobs::dsl::*;
         use diesel::prelude::*;
 
         // Avoid a double-panic if the test is already failing
@@ -67,7 +67,7 @@ pub struct TestApp(Rc<TestAppInner>);
 impl TestApp {
     /// Initialize an application with an `Uploader` that panics
     pub fn init() -> TestAppBuilder {
-        cargo_registry::util::tracing::init_for_test();
+        crates_io::util::tracing::init_for_test();
 
         TestAppBuilder {
             config: simple_config(),
@@ -104,7 +104,7 @@ impl TestApp {
     ///
     /// This method updates the database directly
     pub fn db_new_user(&self, username: &str) -> MockCookieUser {
-        use cargo_registry::schema::emails;
+        use crates_io::schema::emails;
         use diesel::prelude::*;
 
         let user = self.db(|conn| {
@@ -135,7 +135,7 @@ impl TestApp {
     }
 
     /// Obtain a list of crates from the index HEAD
-    pub fn crates_from_index_head(&self, crate_name: &str) -> Vec<cargo_registry_index::Crate> {
+    pub fn crates_from_index_head(&self, crate_name: &str) -> Vec<crates_io_index::Crate> {
         self.upstream_index()
             .crates_from_index_head(crate_name)
             .unwrap()
@@ -384,6 +384,6 @@ fn build_app(config: config::Server, proxy: Option<String>) -> (Arc<App>, axum::
     app.github = Box::new(MockGitHubClient::new(&MOCK_GITHUB_DATA));
 
     let app = Arc::new(app);
-    let router = cargo_registry::build_handler(Arc::clone(&app));
+    let router = crates_io::build_handler(Arc::clone(&app));
     (app, router)
 }

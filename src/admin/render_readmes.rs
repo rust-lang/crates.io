@@ -7,9 +7,9 @@ use crate::{
 use anyhow::{anyhow, Context};
 use std::{io::Read, path::Path, sync::Arc, thread};
 
-use cargo_registry_markdown::text_to_html;
-use cargo_registry_tarball::Manifest;
 use chrono::{TimeZone, Utc};
+use crates_io_markdown::text_to_html;
+use crates_io_tarball::Manifest;
 use diesel::prelude::*;
 use flate2::read::GzDecoder;
 use reqwest::{blocking::Client, header};
@@ -21,7 +21,7 @@ const USER_AGENT: &str = "crates-admin";
 #[command(
     name = "render-readmes",
     about = "Iterates over every crate versions ever uploaded and (re-)renders their \
-        readme using the readme renderer from the cargo_registry crate.",
+        readme using the readme renderer from the crates_io crate.",
     after_help = "Warning: this can take a lot of time."
 )]
 pub struct Opts {
@@ -226,7 +226,7 @@ fn find_file_by_path<R: Read>(
 
 #[cfg(test)]
 pub mod tests {
-    use cargo_registry_tarball::TarballBuilder;
+    use crates_io_tarball::TarballBuilder;
 
     use super::render_pkg_readme;
 

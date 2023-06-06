@@ -447,7 +447,7 @@ impl Crate {
     pub fn index_metadata(
         &self,
         conn: &mut PgConnection,
-    ) -> QueryResult<Vec<cargo_registry_index::Crate>> {
+    ) -> QueryResult<Vec<crates_io_index::Crate>> {
         let mut versions: Vec<Version> = self.all_versions().load(conn)?;
 
         // We sort by `created_at` by default, but since tests run within a
@@ -479,7 +479,7 @@ impl Crate {
                             None => (name, None),
                         };
 
-                        cargo_registry_index::Dependency {
+                        crates_io_index::Dependency {
                             name,
                             req: dep.req,
                             features: dep.features,
@@ -509,7 +509,7 @@ impl Crate {
                     (Some(features2), Some(2))
                 };
 
-                let krate = cargo_registry_index::Crate {
+                let krate = crates_io_index::Crate {
                     name: self.name.clone(),
                     vers: version.num.to_string(),
                     cksum: version.checksum,

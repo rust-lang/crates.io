@@ -8,7 +8,7 @@ fn show() {
     let user = user.as_model();
 
     let krate = app.db(|conn| {
-        use cargo_registry::schema::versions;
+        use crates_io::schema::versions;
         use diesel::{update, ExpressionMethods};
 
         let krate = CrateBuilder::new("foo_show", user.id)
@@ -76,7 +76,7 @@ fn show_minimal() {
     let user = user.as_model();
 
     let krate = app.db(|conn| {
-        use cargo_registry::schema::versions;
+        use crates_io::schema::versions;
         use diesel::{update, ExpressionMethods};
 
         let krate = CrateBuilder::new("foo_show_minimal", user.id)

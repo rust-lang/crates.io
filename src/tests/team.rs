@@ -3,7 +3,7 @@ use crate::{
     builders::{CrateBuilder, PublishBuilder},
     new_team, OwnerTeamsResponse, RequestHelper, TestApp,
 };
-use cargo_registry::models::{Crate, NewTeam};
+use crates_io::models::{Crate, NewTeam};
 
 use diesel::*;
 use http::StatusCode;
@@ -91,7 +91,7 @@ fn add_renamed_team() {
     let owner_id = user.as_model().id;
 
     app.db(|conn| {
-        use cargo_registry::schema::teams::dsl::*;
+        use crates_io::schema::teams::dsl::*;
 
         CrateBuilder::new("foo_renamed_team", owner_id).expect_build(conn);
 

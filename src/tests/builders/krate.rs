@@ -1,4 +1,4 @@
-use cargo_registry::{
+use crates_io::{
     models::{Category, Crate, Keyword, NewCrate},
     schema::{crates, version_downloads},
     util::errors::AppResult,
@@ -124,7 +124,7 @@ impl<'a> CrateBuilder<'a> {
         if let Some(downloads) = self.downloads {
             krate = update(&krate)
                 .set(crates::downloads.eq(downloads))
-                .returning(cargo_registry::models::krate::ALL_COLUMNS)
+                .returning(crates_io::models::krate::ALL_COLUMNS)
                 .get_result(connection)?;
         }
 
@@ -162,7 +162,7 @@ impl<'a> CrateBuilder<'a> {
         if let Some(updated_at) = self.updated_at {
             krate = update(&krate)
                 .set(crates::updated_at.eq(updated_at))
-                .returning(cargo_registry::models::krate::ALL_COLUMNS)
+                .returning(crates_io::models::krate::ALL_COLUMNS)
                 .get_result(connection)?;
         }
 

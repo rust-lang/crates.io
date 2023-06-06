@@ -1,7 +1,7 @@
 use crate::builders::{CrateBuilder, VersionBuilder};
 use crate::util::{RequestHelper, TestApp};
 use crate::CrateMeta;
-use cargo_registry::views::{EncodableDependency, EncodableVersion};
+use crates_io::views::{EncodableDependency, EncodableVersion};
 
 #[derive(Deserialize)]
 struct RevDeps {
@@ -134,7 +134,7 @@ fn yanked_versions_not_included_in_reverse_dependencies() {
     assert_eq!(deps.dependencies[0].crate_id, "c1");
 
     app.db(|conn| {
-        use cargo_registry::schema::versions;
+        use crates_io::schema::versions;
         use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 
         diesel::update(versions::table.filter(versions::num.eq("2.0.0")))
@@ -154,7 +154,7 @@ fn reverse_dependencies_includes_published_by_user_when_present() {
     let user = user.as_model();
 
     app.db(|conn| {
-        use cargo_registry::schema::versions;
+        use crates_io::schema::versions;
         use diesel::{update, ExpressionMethods, RunQueryDsl};
 
         let c1 = CrateBuilder::new("c1", user.id)

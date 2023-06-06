@@ -1,4 +1,4 @@
-use cargo_registry::views::krate_publish as u;
+use crates_io::views::krate_publish as u;
 
 /// A builder for constructing a dependency of another crate.
 pub struct DependencyBuilder {

@@ -1,5 +1,5 @@
 use crate::admin::dialoguer;
-use cargo_registry_index::{Repository, RepositoryConfig};
+use crates_io_index::{Repository, RepositoryConfig};
 use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
 use reqwest::blocking::Client;
 

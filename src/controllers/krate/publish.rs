@@ -3,7 +3,7 @@
 use crate::auth::AuthCheck;
 use crate::background_jobs::{Job, PRIORITY_RENDER_README};
 use axum::body::Bytes;
-use cargo_registry_tarball::{process_tarball, TarballError};
+use crates_io_tarball::{process_tarball, TarballError};
 use hex::ToHex;
 use hyper::body::Buf;
 use sha2::{Digest, Sha256};

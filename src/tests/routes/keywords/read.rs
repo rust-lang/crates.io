@@ -1,7 +1,7 @@
 use crate::builders::CrateBuilder;
 use crate::util::{RequestHelper, TestApp};
-use cargo_registry::models::Keyword;
-use cargo_registry::views::EncodableKeyword;
+use crates_io::models::Keyword;
+use crates_io::views::EncodableKeyword;
 
 #[derive(Deserialize)]
 struct GoodKeyword {

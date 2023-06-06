@@ -1,6 +1,6 @@
 use crate::builders::{CrateBuilder, VersionBuilder};
 use crate::TestApp;
-use cargo_registry::models::Version;
+use crates_io::models::Version;
 
 #[test]
 fn record_rerendered_readme_time() {

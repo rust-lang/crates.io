@@ -1,6 +1,6 @@
 [package]
-name = "cargo-registry-s3"
-version = "0.2.0"
+name = "crates_io_s3"
+version = "0.0.0"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/rust-lang/crates.io"

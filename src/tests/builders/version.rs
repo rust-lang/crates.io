@@ -1,4 +1,4 @@
-use cargo_registry::{
+use crates_io::{
     models::{Crate, NewVersion, Version},
     schema::{dependencies, versions},
     util::errors::AppResult,

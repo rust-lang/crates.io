@@ -46,7 +46,7 @@ pub fn apply_axum_middleware(state: AppState, router: Router) -> Router {
             update_metrics::update_metrics,
         ))
         // Optionally print debug information for each request
-        // To enable, set the environment variable: `RUST_LOG=cargo_registry::middleware=debug`
+        // To enable, set the environment variable: `RUST_LOG=crates_io::middleware=debug`
         .layer(conditional_layer(env == Env::Development, || {
             from_fn(debug::debug_requests)
         }))

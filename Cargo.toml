@@ -1,7 +1,7 @@
 [package]
-name = "cargo-registry"
+name = "crates_io"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
-version = "0.2.2"
+version = "0.0.0"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/rust-lang/crates.io"
 description = "Backend of crates.io"
@@ -14,7 +14,7 @@ default-run = "server"
 opt-level = 2
 
 [lib]
-name = "cargo_registry"
+name = "crates_io"
 doctest = true
 
 [[test]]
@@ -35,10 +35,10 @@ aws-sigv4 = "=0.55.3"
 axum = { version = "=0.6.18", features = ["headers", "macros", "matched-path"] }
 axum-extra = { version = "=0.7.4", features = ["cookie-signed"] }
 base64 = "=0.13.1"
-cargo-registry-index = { path = "cargo-registry-index" }
-cargo-registry-markdown = { path = "cargo-registry-markdown" }
-cargo-registry-s3 = { path = "cargo-registry-s3" }
-cargo-registry-tarball = { path = "cargo-registry-tarball" }
+crates_io_index = { path = "crates_io_index" }
+crates_io_markdown = { path = "crates_io_markdown" }
+crates_io_s3 = { path = "crates_io_s3" }
+crates_io_tarball = { path = "crates_io_tarball" }
 chrono = { version = "=0.4.26", default-features = false, features = ["serde"] }
 clap = { version = "=4.3.2", features = ["derive", "env", "unicode", "wrap_help"] }
 cookie = { version = "=0.17.0", features = ["secure"] }
@@ -94,8 +94,8 @@ tracing-subscriber = { version = "=0.3.17", features = ["env-filter"] }
 url = "=2.4.0"
 
 [dev-dependencies]
-cargo-registry-index = { path = "cargo-registry-index", features = ["testing"] }
-cargo-registry-tarball = { path = "cargo-registry-tarball", features = ["builder"] }
+crates_io_index = { path = "crates_io_index", features = ["testing"] }
+crates_io_tarball = { path = "crates_io_tarball", features = ["builder"] }
 claims = "=0.7.1"
 hyper-tls = "=0.5.0"
 insta = { version = "=1.29.0", features = ["redactions", "yaml"] }

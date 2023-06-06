@@ -10,7 +10,7 @@ extern crate serde_json;
 extern crate tracing;
 
 use crate::util::{RequestHelper, TestApp};
-use cargo_registry::{
+use crates_io::{
     models::{Crate, CrateOwner, NewCategory, NewTeam, NewUser, Team, User},
     schema::crate_owners,
     views::{

@@ -1,7 +1,7 @@
 use crate::builders::{CrateBuilder, VersionBuilder};
 use crate::util::insta::{self, assert_yaml_snapshot};
 use crate::util::{RequestHelper, TestApp};
-use cargo_registry::schema::versions;
+use crates_io::schema::versions;
 use diesel::{QueryDsl, RunQueryDsl};
 use serde_json::Value;
 

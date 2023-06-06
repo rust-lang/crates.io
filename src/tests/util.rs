@@ -23,14 +23,14 @@ use crate::{
     builders::PublishBuilder, CategoryListResponse, CategoryResponse, CrateList, CrateResponse,
     GoodCrate, OkBool, OwnersResponse, VersionResponse,
 };
-use cargo_registry::middleware::session;
-use cargo_registry::models::{ApiToken, CreatedApiToken, User};
+use crates_io::middleware::session;
+use crates_io::models::{ApiToken, CreatedApiToken, User};
 
 use http::{Method, Request};
 
 use axum::body::Bytes;
-use cargo_registry::models::token::{CrateScope, EndpointScope};
 use cookie::Cookie;
+use crates_io::models::token::{CrateScope, EndpointScope};
 use http::header;
 use std::collections::HashMap;
 use tower_service::Service;

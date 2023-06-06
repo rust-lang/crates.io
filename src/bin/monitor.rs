@@ -7,7 +7,7 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
 use anyhow::Result;
-use cargo_registry::{admin::on_call, db, schema::*};
+use crates_io::{admin::on_call, db, schema::*};
 use diesel::prelude::*;
 
 fn main() -> Result<()> {
@@ -28,7 +28,7 @@ fn main() -> Result<()> {
 /// Within the default 15 minute time, a job should have already had several
 /// failed retry attempts.
 fn check_failing_background_jobs(conn: &mut PgConnection) -> Result<()> {
-    use cargo_registry::schema::background_jobs::dsl::*;
+    use crates_io::schema::background_jobs::dsl::*;
     use diesel::dsl::*;
     use diesel::sql_types::Integer;
 
@@ -71,8 +71,8 @@ fn check_failing_background_jobs(conn: &mut PgConnection) -> Result<()> {
 
 /// Check for an `update_downloads` job that has run longer than expected
 fn check_stalled_update_downloads(conn: &mut PgConnection) -> Result<()> {
-    use cargo_registry::schema::background_jobs::dsl::*;
     use chrono::{DateTime, NaiveDateTime, Utc};
+    use crates_io::schema::background_jobs::dsl::*;
 
     const EVENT_KEY: &str = "update_downloads_stalled";
 
@@ -108,7 +108,7 @@ fn check_stalled_update_downloads(conn: &mut PgConnection) -> Result<()> {
 
 /// Check for known spam patterns
 fn check_spam_attack(conn: &mut PgConnection) -> Result<()> {
-    use cargo_registry::sql::canon_crate_name;
+    use crates_io::sql::canon_crate_name;
 
     const EVENT_KEY: &str = "spam_attack";
 
