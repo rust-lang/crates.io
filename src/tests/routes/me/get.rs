@@ -19,7 +19,7 @@ pub struct UserShowPrivateResponse {
 fn me() {
     let url = "/api/v1/me";
     let (app, anon) = TestApp::init().empty();
-    anon.get(url).assert_forbidden();
+    anon.get::<()>(url).assert_forbidden();
 
     let user = app.db_new_user("foo");
     let json = user.show_me();

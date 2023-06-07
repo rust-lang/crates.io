@@ -5,7 +5,7 @@ use crate::util::{RequestHelper, TestApp};
 fn diesel_not_found_results_in_404() {
     let (_, _, user) = TestApp::init().with_user();
 
-    user.get("/api/v1/crates/foo_following/following")
+    user.get::<()>("/api/v1/crates/foo_following/following")
         .assert_not_found();
 }
 
@@ -22,6 +22,6 @@ fn disallow_api_token_auth_for_get_crate_following_status() {
 
     // Token auth on GET for get following status is disallowed
     token
-        .get(&format!("/api/v1/crates/{a_crate}/following"))
+        .get::<()>(&format!("/api/v1/crates/{a_crate}/following"))
         .assert_forbidden();
 }

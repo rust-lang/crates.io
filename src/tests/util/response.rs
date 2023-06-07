@@ -23,6 +23,18 @@ where
         }
         json(self.response)
     }
+
+    /// Assert that the status code is 404
+    #[track_caller]
+    pub fn assert_not_found(&self) {
+        assert_eq!(StatusCode::NOT_FOUND, self.status());
+    }
+
+    /// Assert that the status code is 403
+    #[track_caller]
+    pub fn assert_forbidden(&self) {
+        assert_eq!(StatusCode::FORBIDDEN, self.status());
+    }
 }
 
 impl<T> Response<T> {
@@ -56,20 +68,6 @@ impl<T> Response<T> {
             .unwrap()
             .ends_with(target));
         self
-    }
-}
-
-impl Response<()> {
-    /// Assert that the status code is 404
-    #[track_caller]
-    pub fn assert_not_found(&self) {
-        assert_eq!(StatusCode::NOT_FOUND, self.status());
-    }
-
-    /// Assert that the status code is 403
-    #[track_caller]
-    pub fn assert_forbidden(&self) {
-        assert_eq!(StatusCode::FORBIDDEN, self.status());
     }
 }
 

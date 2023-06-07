@@ -12,7 +12,7 @@ struct GoodKeyword {
 fn show() {
     let url = "/api/v1/keywords/foo";
     let (app, anon) = TestApp::init().empty();
-    anon.get(url).assert_not_found();
+    anon.get::<()>(url).assert_not_found();
 
     app.db(|conn| {
         Keyword::find_or_create_all(conn, &["foo"]).unwrap();
@@ -25,7 +25,7 @@ fn show() {
 fn uppercase() {
     let url = "/api/v1/keywords/UPPER";
     let (app, anon) = TestApp::init().empty();
-    anon.get(url).assert_not_found();
+    anon.get::<()>(url).assert_not_found();
 
     app.db(|conn| {
         Keyword::find_or_create_all(conn, &["UPPER"]).unwrap();

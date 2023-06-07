@@ -9,7 +9,7 @@ fn using_token_updates_last_used_at() {
     let url = "/api/v1/me";
     let (app, anon, user, token) = TestApp::init().with_token();
 
-    anon.get(url).assert_forbidden();
+    anon.get::<()>(url).assert_forbidden();
     user.get::<EncodableMe>(url).good();
     assert_none!(token.as_model().last_used_at);
 

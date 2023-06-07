@@ -589,7 +589,7 @@ fn api_token_cannot_list_invitations_v1() {
     let (_, _, _, token) = TestApp::init().with_token();
 
     token
-        .get("/api/v1/me/crate_owner_invitations")
+        .get::<()>("/api/v1/me/crate_owner_invitations")
         .assert_forbidden();
 }
 

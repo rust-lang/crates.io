@@ -11,7 +11,8 @@ static NEW_BAR: &[u8] = br#"{ "api_token": { "name": "bar" } }"#;
 #[test]
 fn create_token_logged_out() {
     let (_, anon) = TestApp::init().empty();
-    anon.put("/api/v1/me/tokens", NEW_BAR).assert_forbidden();
+    anon.put::<()>("/api/v1/me/tokens", NEW_BAR)
+        .assert_forbidden();
 }
 
 #[test]

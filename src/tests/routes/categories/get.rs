@@ -11,7 +11,7 @@ fn show() {
     let url = "/api/v1/categories/foo-bar";
 
     // Return not found if a category doesn't exist
-    anon.get(url).assert_not_found();
+    anon.get::<()>(url).assert_not_found();
 
     // Create a category and a subcategory
     app.db(|conn| {

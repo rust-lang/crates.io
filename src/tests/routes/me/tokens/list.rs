@@ -7,13 +7,13 @@ use http::StatusCode;
 #[test]
 fn list_logged_out() {
     let (_, anon) = TestApp::init().empty();
-    anon.get("/api/v1/me/tokens").assert_forbidden();
+    anon.get::<()>("/api/v1/me/tokens").assert_forbidden();
 }
 
 #[test]
 fn list_with_api_token_is_forbidden() {
     let (_, _, _, token) = TestApp::init().with_token();
-    token.get("/api/v1/me/tokens").assert_forbidden();
+    token.get::<()>("/api/v1/me/tokens").assert_forbidden();
 }
 
 #[test]

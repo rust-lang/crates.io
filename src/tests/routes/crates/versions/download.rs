@@ -10,7 +10,7 @@ fn download_nonexistent_version_of_existing_crate_404s() {
         CrateBuilder::new("foo_bad", user.id).expect_build(conn);
     });
 
-    anon.get("/api/v1/crates/foo_bad/0.1.0/download")
+    anon.get::<()>("/api/v1/crates/foo_bad/0.1.0/download")
         .assert_not_found();
 }
 

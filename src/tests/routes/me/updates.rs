@@ -10,7 +10,7 @@ use http::StatusCode;
 #[test]
 fn api_token_cannot_get_user_updates() {
     let (_, _, _, token) = TestApp::init().with_token();
-    token.get("/api/v1/me/updates").assert_forbidden();
+    token.get::<()>("/api/v1/me/updates").assert_forbidden();
 }
 
 #[test]
