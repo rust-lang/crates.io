@@ -756,7 +756,9 @@ dependencies = [
 name = "crates_io_tarball"
 version = "0.0.0"
 dependencies = [
+ "anyhow",
  "claims",
+ "clap",
  "derive_deref",
  "flate2",
  "semver",
@@ -766,6 +768,7 @@ dependencies = [
  "thiserror",
  "toml",
  "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]
