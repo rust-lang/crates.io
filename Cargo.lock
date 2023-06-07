@@ -650,7 +650,7 @@ dependencies = [
  "aws-sigv4",
  "axum",
  "axum-extra",
- "base64 0.13.1",
+ "base64 0.21.2",
  "chrono",
  "claims",
  "clap",
@@ -719,7 +719,7 @@ name = "crates_io_index"
 version = "0.0.0"
 dependencies = [
  "anyhow",
- "base64 0.13.1",
+ "base64 0.21.2",
  "claims",
  "dotenvy",
  "git2",
@@ -745,7 +745,7 @@ dependencies = [
 name = "crates_io_s3"
 version = "0.0.0"
 dependencies = [
- "base64 0.13.1",
+ "base64 0.21.2",
  "chrono",
  "hmac",
  "reqwest",

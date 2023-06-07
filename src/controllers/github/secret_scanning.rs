@@ -5,7 +5,7 @@ use crate::schema::api_tokens;
 use crate::util::token::SecureToken;
 use anyhow::{anyhow, Context};
 use axum::body::Bytes;
-use base64;
+use base64::{engine::general_purpose, Engine};
 use http::HeaderMap;
 use once_cell::sync::Lazy;
 use parking_lot::Mutex;
@@ -58,7 +58,8 @@ fn key_from_spki(key: &GitHubPublicKey) -> Result<Vec<u8>, std::io::Error> {
         .find(PEM_FOOTER)
         .ok_or(std::io::ErrorKind::InvalidData)?;
     let gh_key = gh_key[..end_idx].replace('\n', "");
-    let gh_key = base64::decode(gh_key)
+    let gh_key = general_purpose::STANDARD
+        .decode(gh_key)
         .map_err(|_| std::io::Error::from(std::io::ErrorKind::InvalidData))?;
     if gh_key.len() != 91 {
         return Err(std::io::Error::from(std::io::ErrorKind::InvalidData));
@@ -110,7 +111,8 @@ fn verify_github_signature(
     let sig = headers
         .get("GITHUB-PUBLIC-KEY-SIGNATURE")
         .ok_or_else(|| bad_request("missing HTTP header: GITHUB-PUBLIC-KEY-SIGNATURE"))?;
-    let sig = base64::decode(sig)
+    let sig = general_purpose::STANDARD
+        .decode(sig)
         .map_err(|e| bad_request(&format!("failed to decode signature as base64: {e:?}")))?;
     let public_keys = get_public_keys(state)
         .map_err(|e| bad_request(&format!("failed to fetch GitHub public keys: {e:?}")))?;

@@ -3,6 +3,7 @@ use axum::extract::{Extension, FromRequestParts};
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
 use axum_extra::extract::SignedCookieJar;
+use base64::{engine::general_purpose, Engine};
 use cookie::time::Duration;
 use cookie::{Cookie, SameSite};
 use http::Request;
@@ -110,7 +111,9 @@ impl<T: RequestPartsExt> RequestSession for T {
 
 pub fn decode(cookie: Cookie<'_>) -> HashMap<String, String> {
     let mut ret = HashMap::new();
-    let bytes = base64::decode(cookie.value().as_bytes()).unwrap_or_default();
+    let bytes = general_purpose::STANDARD
+        .decode(cookie.value().as_bytes())
+        .unwrap_or_default();
     let mut parts = bytes.split(|&a| a == 0xff);
     while let (Some(key), Some(value)) = (parts.next(), parts.next()) {
         if key.is_empty() {
@@ -136,5 +139,5 @@ pub fn encode(h: &HashMap<String, String>) -> String {
     while ret.len() * 8 % 6 != 0 {
         ret.push(0xff);
     }
-    base64::encode(&ret[..])
+    general_purpose::STANDARD.encode(&ret[..])
 }

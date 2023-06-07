@@ -1,5 +1,6 @@
 use crate::credentials::Credentials;
 use anyhow::{anyhow, Context};
+use base64::{engine::general_purpose, Engine};
 use secrecy::{ExposeSecret, SecretString};
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -30,7 +31,8 @@ impl RepositoryConfig {
                 let index_location =
                     Url::parse(&ssh_url).expect("failed to parse GIT_SSH_REPO_URL");
 
-                let key = base64::decode(encoded_key.expose_secret())
+                let key = general_purpose::STANDARD
+                    .decode(encoded_key.expose_secret())
                     .expect("failed to base64 decode the ssh key");
                 let key =
                     String::from_utf8(key).expect("failed to convert the ssh key to a string");

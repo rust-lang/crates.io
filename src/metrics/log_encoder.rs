@@ -1,4 +1,4 @@
-use base64::write::EncoderWriter;
+use base64::{engine::general_purpose::STANDARD, write::EncoderWriter};
 use indexmap::IndexMap;
 use prometheus::proto::{MetricFamily, MetricType};
 use prometheus::{Encoder, Error};
@@ -135,7 +135,7 @@ fn serialize_and_split_list<'a, S: Serialize + 'a>(
     while items.peek().is_some() {
         let mut writer = TrackedWriter::new();
         let written_count = writer.written_count.clone();
-        let mut serializer = Serializer::new(EncoderWriter::new(&mut writer, base64::STANDARD));
+        let mut serializer = Serializer::new(EncoderWriter::new(&mut writer, &STANDARD));
 
         let mut seq = serializer.serialize_seq(None)?;
         #[allow(clippy::while_let_on_iterator)]
@@ -215,6 +215,7 @@ enum VectorMetricData {
 mod tests {
     use super::*;
     use anyhow::Error;
+    use base64::{engine::general_purpose, Engine};
     use prometheus::{Histogram, HistogramOpts, IntCounter, IntGauge, IntGaugeVec, Opts, Registry};
 
     #[test]
@@ -391,7 +392,7 @@ mod tests {
         assert_eq!(chunks.len(), 1);
         assert!(chunks[0].len() <= 256);
         assert_eq!(
-            serde_json::from_slice::<Vec<usize>>(&base64::decode(&chunks[0])?)?,
+            serde_json::from_slice::<Vec<usize>>(&general_purpose::STANDARD.decode(&chunks[0])?)?,
             small,
         );
 
@@ -407,11 +408,11 @@ mod tests {
         assert!(chunks[0].len() >= 256);
         assert!(chunks[1].len() <= 256);
         assert_eq!(
-            serde_json::from_slice::<Vec<usize>>(&base64::decode(&chunks[0])?)?,
+            serde_json::from_slice::<Vec<usize>>(&general_purpose::STANDARD.decode(&chunks[0])?)?,
             (0..=67).collect::<Vec<_>>(),
         );
         assert_eq!(
-            serde_json::from_slice::<Vec<usize>>(&base64::decode(&chunks[1])?)?,
+            serde_json::from_slice::<Vec<usize>>(&general_purpose::STANDARD.decode(&chunks[1])?)?,
             (68..100).collect::<Vec<_>>(),
         );
 

@@ -11,6 +11,7 @@ use std::{
     thread,
 };
 
+use base64::{engine::general_purpose, Engine};
 use futures_channel::oneshot;
 use futures_util::future;
 use http::header::CONTENT_TYPE;
@@ -277,7 +278,7 @@ async fn record_http(req: Request<Body>, client: Client) -> Result<ResponseAndEx
             .filter(|h| !IGNORED_HEADERS.contains(&h.0.as_str()))
             .map(|h| (h.0.as_str().to_string(), h.1.to_str().unwrap().to_string()))
             .collect(),
-        body: base64::encode(&body),
+        body: general_purpose::STANDARD.encode(&body),
     };
 
     let (status, headers, body) = if let Ok("passthrough") = dotenvy::var("RECORD").as_deref() {
@@ -312,7 +313,7 @@ async fn record_http(req: Request<Body>, client: Client) -> Result<ResponseAndEx
             .iter()
             .map(|h| (h.0.as_str().to_string(), h.1.to_str().unwrap().to_string()))
             .collect(),
-        body: base64::encode(&body),
+        body: general_purpose::STANDARD.encode(&body),
     };
 
     // Construct an outgoing response
@@ -374,7 +375,7 @@ fn replay_http(
                 assert_eq!(body, exchange.request.body);
             }
             _ => {
-                let body = base64::encode(body);
+                let body = general_purpose::STANDARD.encode(body);
                 assert_eq!(body, exchange.request.body);
             }
         }
@@ -383,7 +384,9 @@ fn replay_http(
         for (key, value) in exchange.response.headers {
             builder = builder.header(key.as_str(), value.as_str());
         }
-        let body = base64::decode(exchange.response.body.as_bytes()).unwrap();
+        let body = general_purpose::STANDARD
+            .decode(exchange.response.body.as_bytes())
+            .unwrap();
         let status = StatusCode::from_u16(exchange.response.status).unwrap();
         let response = builder.status(status).body(body.into()).unwrap();
 

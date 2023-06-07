@@ -1,5 +1,6 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
+use base64::{engine::general_purpose, Engine};
 use chrono::prelude::Utc;
 use hmac::{Hmac, Mac};
 use reqwest::{
@@ -103,7 +104,7 @@ impl Bucket {
             let mut h = Hmac::<Sha1>::new_from_slice(key).expect("HMAC can take key of any size");
             h.update(string.as_bytes());
             let res = h.finalize().into_bytes();
-            base64::encode(res)
+            general_purpose::STANDARD.encode(res)
         };
         format!("AWS {}:{}", self.access_key, signature)
     }

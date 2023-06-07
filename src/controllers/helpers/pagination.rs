@@ -6,6 +6,7 @@ use crate::models::helpers::with_count::*;
 use crate::util::errors::{bad_request, AppResult};
 use crate::util::HeaderMapExt;
 
+use base64::{engine::general_purpose, Engine};
 use diesel::pg::Pg;
 use diesel::query_builder::*;
 use diesel::query_dsl::LoadQuery;
@@ -290,18 +291,14 @@ fn is_useragent_or_ip_blocked(config: &Server, headers: &HeaderMap) -> bool {
 /// technical measure to prevent API consumers for manually creating or modifying them, but
 /// hopefully the base64 will be enough to convey that doing it is unsupported.
 pub(crate) fn encode_seek<S: Serialize>(params: S) -> AppResult<String> {
-    Ok(base64::encode_config(
-        serde_json::to_vec(&params)?,
-        base64::URL_SAFE_NO_PAD,
-    ))
+    let encoded = general_purpose::URL_SAFE_NO_PAD.encode(serde_json::to_vec(&params)?);
+    Ok(encoded)
 }
 
 /// Decode a list of params previously encoded with [`encode_seek`].
 pub(crate) fn decode_seek<D: for<'a> Deserialize<'a>>(seek: &str) -> AppResult<D> {
-    Ok(serde_json::from_slice(&base64::decode_config(
-        seek,
-        base64::URL_SAFE_NO_PAD,
-    )?)?)
+    let decoded = serde_json::from_slice(&general_purpose::URL_SAFE_NO_PAD.decode(seek)?)?;
+    Ok(decoded)
 }
 
 #[cfg(test)]
