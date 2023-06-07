@@ -83,7 +83,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2.4.0
 
       - run: cargo fmt --check --all
-      - run: cargo clippy --all-targets --all-features --all
+      - run: cargo clippy --all-targets --all-features --workspace
 
   backend-cargo-deny:
     name: Backend / cargo-deny
