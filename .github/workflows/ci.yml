@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v3.5.2
+      - uses: actions/checkout@v3.5.3
 
       - uses: tj-actions/changed-files@v36.0.17
         id: changed-files-non-js
@@ -75,7 +75,7 @@ jobs:
       RUSTFLAGS: "-D warnings"
 
     steps:
-      - uses: actions/checkout@v3.5.2
+      - uses: actions/checkout@v3.5.3
 
       - run: rustup component add rustfmt
       - run: rustup component add clippy
@@ -92,7 +92,7 @@ jobs:
     if: github.event_name != 'pull_request' || needs.changed-files.outputs.rust-lockfile == 'true'
 
     steps:
-      - uses: actions/checkout@v3.5.2
+      - uses: actions/checkout@v3.5.3
 
       - uses: Swatinem/rust-cache@v2.4.0
 
@@ -127,7 +127,7 @@ jobs:
           - 5432:5432
 
     steps:
-      - uses: actions/checkout@v3.5.2
+      - uses: actions/checkout@v3.5.3
 
       - uses: Swatinem/rust-cache@v2.4.0
 
@@ -143,7 +143,7 @@ jobs:
     if: needs.changed-files.outputs.non-rust == 'true'
 
     steps:
-      - uses: actions/checkout@v3.5.2
+      - uses: actions/checkout@v3.5.3
 
       - uses: pnpm/action-setup@v2.2.4
         with:
@@ -175,7 +175,7 @@ jobs:
       PERCY_PROJECT: crates-io/crates.io
 
     steps:
-      - uses: actions/checkout@v3.5.2
+      - uses: actions/checkout@v3.5.3
 
       - uses: pnpm/action-setup@v2.2.4
         with:
