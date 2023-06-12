@@ -13,7 +13,6 @@
     background-color: white;
     border-radius: var(--space-3xs);
     box-shadow: var(--shadow);
-    tab-size: 4;
 
     @media only screen and (max-width: 550px) {
         margin-left: calc(var(--main-layout-padding) * -1);
