@@ -37,6 +37,7 @@
 
     code {
         font-family: var(--font-monospace);
+        tab-size: 4;
     }
 
     kbd {
