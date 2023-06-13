@@ -58,19 +58,20 @@ impl Base {
     pub fn test() -> Self {
         let uploader = Uploader::S3 {
             bucket: Box::new(s3::Bucket::new(
-                String::from("alexcrichton-test"),
-                s3::Region::Default,
-                dotenvy::var("AWS_ACCESS_KEY").unwrap_or_default(),
-                dotenvy::var("AWS_SECRET_KEY").unwrap_or_default(),
+                dotenvy::var("TEST_S3_BUCKET").unwrap_or_else(|_err| "crates-test".into()),
+                parse_region(dotenvy::var("TEST_S3_REGION").ok()),
+                dotenvy::var("TEST_AWS_ACCESS_KEY").unwrap_or_default(),
+                dotenvy::var("TEST_AWS_SECRET_KEY").unwrap_or_default(),
                 // When testing we route all API traffic over HTTP so we can
                 // sniff/record it, but everywhere else we use https
                 "http",
             )),
             index_bucket: Some(Box::new(s3::Bucket::new(
-                String::from("alexcrichton-test"),
-                s3::Region::Default,
-                dotenvy::var("AWS_ACCESS_KEY").unwrap_or_default(),
-                dotenvy::var("AWS_SECRET_KEY").unwrap_or_default(),
+                dotenvy::var("TEST_S3_INDEX_BUCKET")
+                    .unwrap_or_else(|_err| "crates-index-test".into()),
+                parse_region(dotenvy::var("TEST_S3_INDEX_REGION").ok()),
+                dotenvy::var("TEST_AWS_ACCESS_KEY").unwrap_or_default(),
+                dotenvy::var("TEST_AWS_SECRET_KEY").unwrap_or_default(),
                 // When testing we route all API traffic over HTTP so we can
                 // sniff/record it, but everywhere else we use https
                 "http",
@@ -136,6 +137,42 @@ impl Base {
             )),
             index_bucket,
             cdn: dotenvy::var("S3_CDN").ok(),
+        }
+    }
+}
+
+static DEFAULT_TEST_REGION: &str = "127.0.0.1:19000";
+
+fn parse_region(maybe_region: Option<String>) -> s3::Region {
+    match maybe_region {
+        Some(region) if region.contains("://") => {
+            let (_proto, host) = region.split_once("://").unwrap();
+            s3::Region::Host(host.to_string())
+        }
+        Some(region) if !region.is_empty() => s3::Region::Region(region),
+        // An empty or missing region will use the default. This needs to match the region
+        // configuration that was used to generate the cassettes in `src/tests/http-data`.
+        _ => s3::Region::Host(DEFAULT_TEST_REGION.to_string()),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_region() {
+        for (input, expected) in [
+            (None, s3::Region::Host(DEFAULT_TEST_REGION.into())),
+            (Some(""), s3::Region::Host(DEFAULT_TEST_REGION.into())),
+            (Some("us-west-2"), s3::Region::Region("us-west-2".into())),
+            (Some("http://foo.bar"), s3::Region::Host("foo.bar".into())),
+            (
+                Some("https://127.0.0.1:9000"),
+                s3::Region::Host("127.0.0.1:9000".into()),
+            ),
+        ] {
+            assert_eq!(parse_region(input.map(String::from)), expected);
         }
     }
 }

@@ -1,7 +1,7 @@
 [
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/crates/foo_readme/foo_readme-1.0.0.crate",
+      "uri": "http://127.0.0.1:19000/crates-test/crates/foo_readme/foo_readme-1.0.0.crate",
       "method": "PUT",
       "headers": [
         [
@@ -25,13 +25,66 @@
     },
     "response": {
       "status": 200,
-      "headers": [],
+      "headers": [
+        [
+          "accept-ranges",
+          "bytes"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "content-security-policy",
+          "block-all-mixed-content"
+        ],
+        [
+          "date",
+          "Tue, 13 Jun 2023 23:04:33 GMT"
+        ],
+        [
+          "etag",
+          "\"f9016ad360cebb4fe2e6e96e5949f022\""
+        ],
+        [
+          "server",
+          "MinIO"
+        ],
+        [
+          "strict-transport-security",
+          "max-age=31536000; includeSubDomains"
+        ],
+        [
+          "vary",
+          "Origin"
+        ],
+        [
+          "vary",
+          "Accept-Encoding"
+        ],
+        [
+          "x-amz-id-2",
+          "dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8"
+        ],
+        [
+          "x-amz-request-id",
+          "17685A6A5C13BF3C"
+        ],
+        [
+          "x-content-type-options",
+          "nosniff"
+        ],
+        [
+          "x-xss-protection",
+          "1; mode=block"
+        ]
+      ],
       "body": ""
     }
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/fo/o_/foo_readme",
+      "uri": "http://127.0.0.1:19000/crates-index-test/fo/o_/foo_readme",
       "method": "PUT",
       "headers": [
         [
@@ -55,13 +108,66 @@
     },
     "response": {
       "status": 200,
-      "headers": [],
+      "headers": [
+        [
+          "accept-ranges",
+          "bytes"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "content-security-policy",
+          "block-all-mixed-content"
+        ],
+        [
+          "date",
+          "Tue, 13 Jun 2023 23:04:33 GMT"
+        ],
+        [
+          "etag",
+          "\"cf380f14a440ced148f97ac8a6d0bc0d\""
+        ],
+        [
+          "server",
+          "MinIO"
+        ],
+        [
+          "strict-transport-security",
+          "max-age=31536000; includeSubDomains"
+        ],
+        [
+          "vary",
+          "Accept-Encoding"
+        ],
+        [
+          "vary",
+          "Origin"
+        ],
+        [
+          "x-amz-id-2",
+          "dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8"
+        ],
+        [
+          "x-amz-request-id",
+          "17685A6A60B5472D"
+        ],
+        [
+          "x-content-type-options",
+          "nosniff"
+        ],
+        [
+          "x-xss-protection",
+          "1; mode=block"
+        ]
+      ],
       "body": ""
     }
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/readmes/foo_readme/foo_readme-1.0.0.html",
+      "uri": "http://127.0.0.1:19000/crates-test/readmes/foo_readme/foo_readme-1.0.0.html",
       "method": "PUT",
       "headers": [
         [
@@ -85,7 +191,60 @@
     },
     "response": {
       "status": 200,
-      "headers": [],
+      "headers": [
+        [
+          "accept-ranges",
+          "bytes"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "content-security-policy",
+          "block-all-mixed-content"
+        ],
+        [
+          "date",
+          "Tue, 13 Jun 2023 23:04:33 GMT"
+        ],
+        [
+          "etag",
+          "\"d41d8cd98f00b204e9800998ecf8427e\""
+        ],
+        [
+          "server",
+          "MinIO"
+        ],
+        [
+          "strict-transport-security",
+          "max-age=31536000; includeSubDomains"
+        ],
+        [
+          "vary",
+          "Origin"
+        ],
+        [
+          "vary",
+          "Accept-Encoding"
+        ],
+        [
+          "x-amz-id-2",
+          "dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8"
+        ],
+        [
+          "x-amz-request-id",
+          "17685A6A61677EBE"
+        ],
+        [
+          "x-content-type-options",
+          "nosniff"
+        ],
+        [
+          "x-xss-protection",
+          "1; mode=block"
+        ]
+      ],
       "body": ""
     }
   }

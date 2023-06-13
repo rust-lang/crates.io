@@ -84,6 +84,7 @@ fn cache_file(name: &str) -> PathBuf {
         .with_extension("json")
 }
 
+#[derive(Debug)]
 enum Record {
     Capture(Vec<Exchange>, PathBuf),
     Replay(Vec<Exchange>),
@@ -91,14 +92,11 @@ enum Record {
 
 pub fn proxy() -> (String, Bomb) {
     let me = thread::current().name().unwrap().to_string();
-    let record_env = dotenvy::var("RECORD").ok();
 
     let (url_tx, url_rx) = mpsc::channel();
 
     let path = cache_file(&me.replace("::", "_"));
-    let should_capture =
-        record_env.is_some() && (!path.exists() || record_env.as_deref() == Some("force"));
-    let record = if should_capture {
+    let record = if should_record() {
         Record::Capture(Vec::new(), path)
     } else if !path.exists() {
         Record::Replay(serde_json::from_slice(b"[]").unwrap())
@@ -114,7 +112,12 @@ pub fn proxy() -> (String, Bomb) {
     let (quittx, quitrx) = oneshot::channel();
 
     let thread = thread::spawn(move || {
-        let rt = assert_ok!(runtime::Builder::new_current_thread().enable_io().build());
+        let rt = assert_ok!(runtime::Builder::new_current_thread()
+            .enable_io()
+            .enable_time()
+            .build());
+        // TODO: handle switching protocols for the client to http unconditionally, then detecting
+        // the protocol to use in any upstream request in the proxy service.
         let needs_client = matches!(record, Record::Capture(_, _));
         let record = Arc::new(Mutex::new(record));
         rt.block_on(async {
@@ -219,13 +222,13 @@ impl<'a> tower_service::Service<&'a AddrStream> for Proxy {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 struct Exchange {
     request: RecordedRequest,
     response: RecordedResponse,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 struct RecordedRequest {
     uri: String,
     method: String,
@@ -234,7 +237,7 @@ struct RecordedRequest {
     body: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 struct RecordedResponse {
     status: u16,
     #[serde(serialize_with = "sorted_headers")]
@@ -285,10 +288,21 @@ async fn record_http(req: Request<Body>, client: Client) -> Result<ResponseAndEx
         },
     };
 
-    let (status, headers, body) = if let Ok("passthrough") = dotenvy::var("RECORD").as_deref() {
+    let (status, headers, body) = if should_record() {
+        // When we're constructing the outbound request, if the request is to the _actual_ S3,
+        // we're going to replace the HTTP protocol with HTTPS. This is the flip side of the hard
+        // coding of "http" as the protocol in Base::test().
+        //
+        // This is, admittedly, hacky as hell.
+        let uri = match uri.host() {
+            Some(host) if host.ends_with(".amazonaws.com") => {
+                let uri = uri.to_string().replace("http://", "https://");
+                uri.parse::<Uri>().unwrap()
+            }
+            _ => uri,
+        };
+
         // Construct an outgoing request
-        let uri = uri.to_string().replace("http://", "https://");
-        let uri = uri.parse::<Uri>().unwrap();
         let mut req = Request::builder()
             .method(method.clone())
             .uri(uri)
@@ -402,4 +416,8 @@ fn is_plain_text(headers: &HeaderMap<HeaderValue>) -> bool {
         }
     }
     false
+}
+
+fn should_record() -> bool {
+    dotenvy::var("RECORD").ok().as_deref() == Some("yes")
 }

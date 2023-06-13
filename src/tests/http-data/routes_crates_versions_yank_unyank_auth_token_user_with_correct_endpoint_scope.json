@@ -1,122 +1,334 @@
 [
-    {
-        "request": {
-            "uri": "http://alexcrichton-test.s3.amazonaws.com/crates/fyk/fyk-1.0.0.crate",
-            "method": "PUT",
-            "headers": [
-                [
-                    "accept",
-                    "*/*"
-                ],
-                [
-                    "accept-encoding",
-                    "gzip"
-                ],
-                [
-                    "content-length",
-                    "35"
-                ],
-                [
-                    "content-type",
-                    "application/gzip"
-                ]
-            ],
-            "body": "H4sIAAAAAAAA/+3AAQEAAACCIP+vbkhQwKsBLq+17wAEAAA="
-        },
-        "response": {
-            "status": 200,
-            "headers": [],
-            "body": ""
-        }
+  {
+    "request": {
+      "uri": "http://127.0.0.1:19000/crates-test/crates/fyk/fyk-1.0.0.crate",
+      "method": "PUT",
+      "headers": [
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip"
+        ],
+        [
+          "content-length",
+          "35"
+        ],
+        [
+          "content-type",
+          "application/gzip"
+        ]
+      ],
+      "body": "H4sIAAAAAAAA/+3AAQEAAACCIP+vbkhQwKsBLq+17wAEAAA="
     },
-    {
-        "request": {
-            "uri": "http://alexcrichton-test.s3.amazonaws.com/3/f/fyk",
-            "method": "PUT",
-            "headers": [
-                [
-                    "accept",
-                    "*/*"
-                ],
-                [
-                    "accept-encoding",
-                    "gzip"
-                ],
-                [
-                    "content-length",
-                    "144"
-                ],
-                [
-                    "content-type",
-                    "text/plain"
-                ]
-            ],
-            "body": "{\"name\":\"fyk\",\"vers\":\"1.0.0\",\"deps\":[],\"cksum\":\"acb5604b126ac894c1eb11c4575bf2072fea61232a888e453770c79d7ed56419\",\"features\":{},\"yanked\":false}\n"
-        },
-        "response": {
-            "status": 200,
-            "headers": [],
-            "body": ""
-        }
-    },
-    {
-        "request": {
-            "uri": "http://alexcrichton-test.s3.amazonaws.com/3/f/fyk",
-            "method": "PUT",
-            "headers": [
-                [
-                    "accept",
-                    "*/*"
-                ],
-                [
-                    "accept-encoding",
-                    "gzip"
-                ],
-                [
-                    "content-length",
-                    "143"
-                ],
-                [
-                    "content-type",
-                    "text/plain"
-                ]
-            ],
-            "body": "{\"name\":\"fyk\",\"vers\":\"1.0.0\",\"deps\":[],\"cksum\":\"acb5604b126ac894c1eb11c4575bf2072fea61232a888e453770c79d7ed56419\",\"features\":{},\"yanked\":true}\n"
-        },
-        "response": {
-            "status": 200,
-            "headers": [],
-            "body": ""
-        }
-    },
-    {
-        "request": {
-            "uri": "http://alexcrichton-test.s3.amazonaws.com/3/f/fyk",
-            "method": "PUT",
-            "headers": [
-                [
-                    "accept",
-                    "*/*"
-                ],
-                [
-                    "accept-encoding",
-                    "gzip"
-                ],
-                [
-                    "content-length",
-                    "144"
-                ],
-                [
-                    "content-type",
-                    "text/plain"
-                ]
-            ],
-            "body": "{\"name\":\"fyk\",\"vers\":\"1.0.0\",\"deps\":[],\"cksum\":\"acb5604b126ac894c1eb11c4575bf2072fea61232a888e453770c79d7ed56419\",\"features\":{},\"yanked\":false}\n"
-        },
-        "response": {
-            "status": 200,
-            "headers": [],
-            "body": ""
-        }
+    "response": {
+      "status": 200,
+      "headers": [
+        [
+          "accept-ranges",
+          "bytes"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "content-security-policy",
+          "block-all-mixed-content"
+        ],
+        [
+          "date",
+          "Tue, 13 Jun 2023 23:04:37 GMT"
+        ],
+        [
+          "etag",
+          "\"f9016ad360cebb4fe2e6e96e5949f022\""
+        ],
+        [
+          "server",
+          "MinIO"
+        ],
+        [
+          "strict-transport-security",
+          "max-age=31536000; includeSubDomains"
+        ],
+        [
+          "vary",
+          "Accept-Encoding"
+        ],
+        [
+          "vary",
+          "Origin"
+        ],
+        [
+          "x-amz-id-2",
+          "dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8"
+        ],
+        [
+          "x-amz-request-id",
+          "17685A6B4B26C58D"
+        ],
+        [
+          "x-content-type-options",
+          "nosniff"
+        ],
+        [
+          "x-xss-protection",
+          "1; mode=block"
+        ]
+      ],
+      "body": ""
     }
+  },
+  {
+    "request": {
+      "uri": "http://127.0.0.1:19000/crates-index-test/3/f/fyk",
+      "method": "PUT",
+      "headers": [
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip"
+        ],
+        [
+          "content-length",
+          "144"
+        ],
+        [
+          "content-type",
+          "text/plain"
+        ]
+      ],
+      "body": "{\"name\":\"fyk\",\"vers\":\"1.0.0\",\"deps\":[],\"cksum\":\"acb5604b126ac894c1eb11c4575bf2072fea61232a888e453770c79d7ed56419\",\"features\":{},\"yanked\":false}\n"
+    },
+    "response": {
+      "status": 200,
+      "headers": [
+        [
+          "accept-ranges",
+          "bytes"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "content-security-policy",
+          "block-all-mixed-content"
+        ],
+        [
+          "date",
+          "Tue, 13 Jun 2023 23:04:37 GMT"
+        ],
+        [
+          "etag",
+          "\"134db012c3d8c43621b636616a105314\""
+        ],
+        [
+          "server",
+          "MinIO"
+        ],
+        [
+          "strict-transport-security",
+          "max-age=31536000; includeSubDomains"
+        ],
+        [
+          "vary",
+          "Origin"
+        ],
+        [
+          "vary",
+          "Accept-Encoding"
+        ],
+        [
+          "x-amz-id-2",
+          "dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8"
+        ],
+        [
+          "x-amz-request-id",
+          "17685A6B4E727BCA"
+        ],
+        [
+          "x-content-type-options",
+          "nosniff"
+        ],
+        [
+          "x-xss-protection",
+          "1; mode=block"
+        ]
+      ],
+      "body": ""
+    }
+  },
+  {
+    "request": {
+      "uri": "http://127.0.0.1:19000/crates-index-test/3/f/fyk",
+      "method": "PUT",
+      "headers": [
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip"
+        ],
+        [
+          "content-length",
+          "143"
+        ],
+        [
+          "content-type",
+          "text/plain"
+        ]
+      ],
+      "body": "{\"name\":\"fyk\",\"vers\":\"1.0.0\",\"deps\":[],\"cksum\":\"acb5604b126ac894c1eb11c4575bf2072fea61232a888e453770c79d7ed56419\",\"features\":{},\"yanked\":true}\n"
+    },
+    "response": {
+      "status": 200,
+      "headers": [
+        [
+          "accept-ranges",
+          "bytes"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "content-security-policy",
+          "block-all-mixed-content"
+        ],
+        [
+          "date",
+          "Tue, 13 Jun 2023 23:04:37 GMT"
+        ],
+        [
+          "etag",
+          "\"538b58c710749dbfdc5631fe7b565e9a\""
+        ],
+        [
+          "server",
+          "MinIO"
+        ],
+        [
+          "strict-transport-security",
+          "max-age=31536000; includeSubDomains"
+        ],
+        [
+          "vary",
+          "Origin"
+        ],
+        [
+          "vary",
+          "Accept-Encoding"
+        ],
+        [
+          "x-amz-id-2",
+          "dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8"
+        ],
+        [
+          "x-amz-request-id",
+          "17685A6B51D71FE4"
+        ],
+        [
+          "x-content-type-options",
+          "nosniff"
+        ],
+        [
+          "x-xss-protection",
+          "1; mode=block"
+        ]
+      ],
+      "body": ""
+    }
+  },
+  {
+    "request": {
+      "uri": "http://127.0.0.1:19000/crates-index-test/3/f/fyk",
+      "method": "PUT",
+      "headers": [
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip"
+        ],
+        [
+          "content-length",
+          "144"
+        ],
+        [
+          "content-type",
+          "text/plain"
+        ]
+      ],
+      "body": "{\"name\":\"fyk\",\"vers\":\"1.0.0\",\"deps\":[],\"cksum\":\"acb5604b126ac894c1eb11c4575bf2072fea61232a888e453770c79d7ed56419\",\"features\":{},\"yanked\":false}\n"
+    },
+    "response": {
+      "status": 200,
+      "headers": [
+        [
+          "accept-ranges",
+          "bytes"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "content-security-policy",
+          "block-all-mixed-content"
+        ],
+        [
+          "date",
+          "Tue, 13 Jun 2023 23:04:37 GMT"
+        ],
+        [
+          "etag",
+          "\"134db012c3d8c43621b636616a105314\""
+        ],
+        [
+          "server",
+          "MinIO"
+        ],
+        [
+          "strict-transport-security",
+          "max-age=31536000; includeSubDomains"
+        ],
+        [
+          "vary",
+          "Accept-Encoding"
+        ],
+        [
+          "vary",
+          "Origin"
+        ],
+        [
+          "x-amz-id-2",
+          "dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8"
+        ],
+        [
+          "x-amz-request-id",
+          "17685A6B5537BD98"
+        ],
+        [
+          "x-content-type-options",
+          "nosniff"
+        ],
+        [
+          "x-xss-protection",
+          "1; mode=block"
+        ]
+      ],
+      "body": ""
+    }
+  }
 ]
