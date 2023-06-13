@@ -1,5 +1,6 @@
 import Model, { attr } from '@ember-data/model';
 import { inject as service } from '@ember/service';
+import { waitForPromise } from '@ember/test-waiters';
 
 import { apiAction } from '@mainmatter/ember-api-actions';
 
@@ -16,11 +17,11 @@ export default class User extends Model {
   @attr kind;
 
   async stats() {
-    return await apiAction(this, { method: 'GET', path: 'stats' });
+    return await waitForPromise(apiAction(this, { method: 'GET', path: 'stats' }));
   }
 
   async changeEmail(email) {
-    await apiAction(this, { method: 'PUT', data: { user: { email } } });
+    await waitForPromise(apiAction(this, { method: 'PUT', data: { user: { email } } }));
 
     this.store.pushPayload({
       user: {
@@ -33,6 +34,6 @@ export default class User extends Model {
   }
 
   async resendVerificationEmail() {
-    return await apiAction(this, { method: 'PUT', path: 'resend' });
+    return await waitForPromise(apiAction(this, { method: 'PUT', path: 'resend' }));
   }
 }
