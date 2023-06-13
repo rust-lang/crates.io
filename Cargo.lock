@@ -751,6 +751,7 @@ dependencies = [
  "reqwest",
  "sha-1",
  "thiserror",
+ "url",
 ]
 
 [[package]]

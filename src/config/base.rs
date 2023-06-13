@@ -59,7 +59,7 @@ impl Base {
         let uploader = Uploader::S3 {
             bucket: Box::new(s3::Bucket::new(
                 String::from("alexcrichton-test"),
-                None,
+                s3::Region::Default,
                 dotenvy::var("AWS_ACCESS_KEY").unwrap_or_default(),
                 dotenvy::var("AWS_SECRET_KEY").unwrap_or_default(),
                 // When testing we route all API traffic over HTTP so we can
@@ -68,7 +68,7 @@ impl Base {
             )),
             index_bucket: Some(Box::new(s3::Bucket::new(
                 String::from("alexcrichton-test"),
-                None,
+                s3::Region::Default,
                 dotenvy::var("AWS_ACCESS_KEY").unwrap_or_default(),
                 dotenvy::var("AWS_SECRET_KEY").unwrap_or_default(),
                 // When testing we route all API traffic over HTTP so we can
@@ -91,7 +91,8 @@ impl Base {
         let index_bucket = match dotenvy::var("S3_INDEX_BUCKET") {
             Ok(name) => Some(Box::new(s3::Bucket::new(
                 name,
-                dotenvy::var("S3_INDEX_REGION").ok(),
+                dotenvy::var("S3_INDEX_REGION")
+                    .map_or_else(|_err| s3::Region::Default, s3::Region::Region),
                 env("AWS_ACCESS_KEY"),
                 env("AWS_SECRET_KEY"),
                 "https",
@@ -101,7 +102,8 @@ impl Base {
         Uploader::S3 {
             bucket: Box::new(s3::Bucket::new(
                 env("S3_BUCKET"),
-                dotenvy::var("S3_REGION").ok(),
+                dotenvy::var("S3_REGION")
+                    .map_or_else(|_err| s3::Region::Default, s3::Region::Region),
                 env("AWS_ACCESS_KEY"),
                 env("AWS_SECRET_KEY"),
                 "https",
@@ -115,7 +117,8 @@ impl Base {
         let index_bucket = match dotenvy::var("S3_INDEX_BUCKET") {
             Ok(name) => Some(Box::new(s3::Bucket::new(
                 name,
-                dotenvy::var("S3_INDEX_REGION").ok(),
+                dotenvy::var("S3_INDEX_REGION")
+                    .map_or_else(|_err| s3::Region::Default, s3::Region::Region),
                 dotenvy::var("AWS_ACCESS_KEY").unwrap_or_default(),
                 dotenvy::var("AWS_SECRET_KEY").unwrap_or_default(),
                 "https",
@@ -125,7 +128,8 @@ impl Base {
         Uploader::S3 {
             bucket: Box::new(s3::Bucket::new(
                 env("S3_BUCKET"),
-                dotenvy::var("S3_REGION").ok(),
+                dotenvy::var("S3_REGION")
+                    .map_or_else(|_err| s3::Region::Default, s3::Region::Region),
                 dotenvy::var("AWS_ACCESS_KEY").unwrap_or_default(),
                 dotenvy::var("AWS_SECRET_KEY").unwrap_or_default(),
                 "https",
