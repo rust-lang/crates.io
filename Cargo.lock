@@ -750,6 +750,7 @@ dependencies = [
  "hmac",
  "reqwest",
  "sha-1",
+ "thiserror",
 ]
 
 [[package]]

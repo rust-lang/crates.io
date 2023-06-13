@@ -9,8 +9,13 @@ use reqwest::{
 };
 use sha1::Sha1;
 use std::time::Duration;
+use thiserror::Error;
 
-pub use reqwest::Error;
+#[derive(Debug, Error)]
+pub enum Error {
+    #[error(transparent)]
+    Reqwest(#[from] reqwest::Error),
+}
 
 #[derive(Clone, Debug)]
 pub struct Bucket {
