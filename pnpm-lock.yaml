@@ -228,8 +228,8 @@ devDependencies:
     specifier: 5.0.1
     version: 5.0.1
   ember-window-mock:
-    specifier: 0.8.1
-    version: 0.8.1
+    specifier: 0.9.0
+    version: 0.9.0(ember-source@5.0.0)
   eslint:
     specifier: 8.42.0
     version: 8.42.0
@@ -8928,12 +8928,15 @@ packages:
       - utf-8-validate
     dev: true
 
-  /ember-window-mock@0.8.1:
-    resolution: {integrity: sha512-wl9TJuBYFWKsPqDY2gms2jbre1L39AkrPQ9EqbhqHbZI4aEq8u8IZJ0nJaOa7IVr/Jy/kSUXYQGTgvNhz1AzPw==}
-    engines: {node: 12.* || 14.* || >= 16}
+  /ember-window-mock@0.9.0(ember-source@5.0.0):
+    resolution: {integrity: sha512-jFWq8zNFhiKNA0QnJFnhsYW+Y+2FwpvFuAf4s393Il5f1fJJfZoiwjL5l8FMpxV1alf2o8jZ2XqNQWh8rM9YBA==}
+    engines: {node: 16.* || >= 18}
+    peerDependencies:
+      ember-source: ^4.0.0
     dependencies:
       ember-cli-babel: 7.26.11
       ember-cli-htmlbars: 6.2.0
+      ember-source: 5.0.0(@glimmer/component@1.1.2)(webpack@5.86.0)
     transitivePeerDependencies:
       - supports-color
     dev: true
