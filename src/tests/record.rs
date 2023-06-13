@@ -14,7 +14,7 @@ use std::{
 use base64::{engine::general_purpose, Engine};
 use futures_channel::oneshot;
 use futures_util::future;
-use http::header::CONTENT_TYPE;
+use http::{header::CONTENT_TYPE, HeaderMap, HeaderValue};
 use hyper::{
     body::to_bytes, server::conn::AddrStream, Body, Error, Request, Response, Server, StatusCode,
     Uri,
@@ -278,7 +278,11 @@ async fn record_http(req: Request<Body>, client: Client) -> Result<ResponseAndEx
             .filter(|h| !IGNORED_HEADERS.contains(&h.0.as_str()))
             .map(|h| (h.0.as_str().to_string(), h.1.to_str().unwrap().to_string()))
             .collect(),
-        body: general_purpose::STANDARD.encode(&body),
+        body: if is_plain_text(&headers) {
+            String::from_utf8_lossy(&body).into()
+        } else {
+            general_purpose::STANDARD.encode(&body)
+        },
     };
 
     let (status, headers, body) = if let Ok("passthrough") = dotenvy::var("RECORD").as_deref() {
@@ -366,18 +370,14 @@ fn replay_http(
     async {
         let _ = &exchange;
 
-        let content_type = req.headers().get(CONTENT_TYPE).cloned();
-
+        let plain_text = is_plain_text(req.headers());
         let body = to_bytes(req.into_body()).await.unwrap();
-        match content_type {
-            Some(t) if t == "text/plain" => {
-                let body = String::from_utf8_lossy(&body);
-                assert_eq!(body, exchange.request.body);
-            }
-            _ => {
-                let body = general_purpose::STANDARD.encode(body);
-                assert_eq!(body, exchange.request.body);
-            }
+        if plain_text {
+            let body = String::from_utf8_lossy(&body);
+            assert_eq!(body, exchange.request.body);
+        } else {
+            let body = general_purpose::STANDARD.encode(body);
+            assert_eq!(body, exchange.request.body);
         }
 
         let mut builder = Response::builder();
@@ -393,4 +393,13 @@ fn replay_http(
         debug!("-> {response:?}");
         Ok(response)
     }
+}
+
+fn is_plain_text(headers: &HeaderMap<HeaderValue>) -> bool {
+    if let Some(header_value) = headers.get(CONTENT_TYPE) {
+        if let Ok(value) = header_value.to_str() {
+            return value == "text/plain";
+        }
+    }
+    false
 }
