@@ -1,4 +1,5 @@
 import Model, { attr, hasMany } from '@ember-data/model';
+import { waitForPromise } from '@ember/test-waiters';
 
 import { apiAction } from '@mainmatter/ember-api-actions';
 
@@ -47,15 +48,17 @@ export default class Crate extends Model {
   }
 
   async follow() {
-    return await apiAction(this, { method: 'PUT', path: 'follow' });
+    return await waitForPromise(apiAction(this, { method: 'PUT', path: 'follow' }));
   }
 
   async unfollow() {
-    return await apiAction(this, { method: 'DELETE', path: 'follow' });
+    return await waitForPromise(apiAction(this, { method: 'DELETE', path: 'follow' }));
   }
 
   async inviteOwner(username) {
-    let response = await apiAction(this, { method: 'PUT', path: 'owners', data: { owners: [username] } });
+    let response = await waitForPromise(
+      apiAction(this, { method: 'PUT', path: 'owners', data: { owners: [username] } }),
+    );
     if (response.ok) {
       return response;
     } else {
@@ -64,7 +67,9 @@ export default class Crate extends Model {
   }
 
   async removeOwner(username) {
-    let response = await apiAction(this, { method: 'DELETE', path: 'owners', data: { owners: [username] } });
+    let response = await waitForPromise(
+      apiAction(this, { method: 'DELETE', path: 'owners', data: { owners: [username] } }),
+    );
     if (response.ok) {
       return response;
     } else {
