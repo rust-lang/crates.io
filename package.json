@@ -70,7 +70,7 @@
     "@sinonjs/fake-timers": "11.0.0",
     "@zestia/ember-auto-focus": "5.0.0",
     "broccoli-asset-rev": "3.0.0",
-    "ember-a11y-testing": "5.2.1",
+    "ember-a11y-testing": "6.0.0-0",
     "ember-auto-import": "2.6.3",
     "ember-cli": "4.12.1",
     "ember-cli-app-version": "6.0.0",
