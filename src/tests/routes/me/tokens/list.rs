@@ -41,7 +41,8 @@ fn list_tokens() {
                     CrateScope::try_from("serde").unwrap(),
                     CrateScope::try_from("serde-*").unwrap()
                 ]),
-                Some(vec![EndpointScope::PublishUpdate])
+                Some(vec![EndpointScope::PublishUpdate]),
+                None
             )),
         ]
     });

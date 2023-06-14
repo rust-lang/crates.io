@@ -289,8 +289,15 @@ impl MockCookieUser {
         endpoint_scopes: Option<Vec<EndpointScope>>,
     ) -> MockTokenUser {
         let token = self.app.db(|conn| {
-            ApiToken::insert_with_scopes(conn, self.user.id, name, crate_scopes, endpoint_scopes)
-                .unwrap()
+            ApiToken::insert_with_scopes(
+                conn,
+                self.user.id,
+                name,
+                crate_scopes,
+                endpoint_scopes,
+                None,
+            )
+            .unwrap()
         });
         MockTokenUser {
             app: self.app.clone(),
