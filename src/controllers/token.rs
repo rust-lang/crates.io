@@ -9,6 +9,7 @@ use crate::auth::AuthCheck;
 use crate::models::token::{CrateScope, EndpointScope};
 use axum::response::IntoResponse;
 use chrono::NaiveDateTime;
+use diesel::dsl::now;
 use serde_json as json;
 
 /// Handles the `GET /me/tokens` route.
@@ -20,6 +21,11 @@ pub async fn list(app: AppState, req: Parts) -> AppResult<Json<Value>> {
 
         let tokens: Vec<ApiToken> = ApiToken::belonging_to(user)
             .filter(api_tokens::revoked.eq(false))
+            .filter(
+                api_tokens::expired_at
+                    .is_null()
+                    .or(api_tokens::expired_at.gt(now)),
+            )
             .order(api_tokens::created_at.desc())
             .load(conn)?;
 
