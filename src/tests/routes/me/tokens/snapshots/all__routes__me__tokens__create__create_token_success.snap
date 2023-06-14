@@ -6,6 +6,7 @@ api_token:
   crate_scopes: ~
   created_at: "[datetime]"
   endpoint_scopes: ~
+  expired_at: ~
   id: "[id]"
   last_used_at: "[datetime]"
   name: bar

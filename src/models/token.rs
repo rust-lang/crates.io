@@ -31,7 +31,7 @@ pub struct ApiToken {
     pub crate_scopes: Option<Vec<CrateScope>>,
     /// A list of endpoint scopes or `None` for the `legacy` endpoint scope (see RFC #2947)
     pub endpoint_scopes: Option<Vec<EndpointScope>>,
-    #[serde(skip)]
+    #[serde(with = "rfc3339::option")]
     pub expired_at: Option<NaiveDateTime>,
 }
 
