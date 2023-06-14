@@ -159,7 +159,7 @@ mod auth {
     fn token_user_with_correct_endpoint_scope() {
         let (_, _, client) = prepare();
         let client =
-            client.db_new_scoped_token("test-token", None, Some(vec![EndpointScope::Yank]));
+            client.db_new_scoped_token("test-token", None, Some(vec![EndpointScope::Yank]), None);
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::OK);
@@ -177,6 +177,7 @@ mod auth {
             "test-token",
             None,
             Some(vec![EndpointScope::PublishUpdate]),
+            None,
         );
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
@@ -201,6 +202,7 @@ mod auth {
             "test-token",
             Some(vec![CrateScope::try_from(CRATE_NAME).unwrap()]),
             None,
+            None,
         );
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
@@ -220,6 +222,7 @@ mod auth {
             "test-token",
             Some(vec![CrateScope::try_from(wildcard).unwrap()]),
             None,
+            None,
         );
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
@@ -237,6 +240,7 @@ mod auth {
         let client = client.db_new_scoped_token(
             "test-token",
             Some(vec![CrateScope::try_from("foo").unwrap()]),
+            None,
             None,
         );
 
@@ -261,6 +265,7 @@ mod auth {
         let client = client.db_new_scoped_token(
             "test-token",
             Some(vec![CrateScope::try_from("foo*").unwrap()]),
+            None,
             None,
         );
 

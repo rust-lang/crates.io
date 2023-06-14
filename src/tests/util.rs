@@ -29,6 +29,7 @@ use crates_io::models::{ApiToken, CreatedApiToken, User};
 use http::{Method, Request};
 
 use axum::body::Bytes;
+use chrono::NaiveDateTime;
 use cookie::Cookie;
 use crates_io::models::token::{CrateScope, EndpointScope};
 use http::header;
@@ -276,7 +277,7 @@ impl MockCookieUser {
     ///
     /// This method updates the database directly
     pub fn db_new_token(&self, name: &str) -> MockTokenUser {
-        self.db_new_scoped_token(name, None, None)
+        self.db_new_scoped_token(name, None, None, None)
     }
 
     /// Creates a scoped token and wraps it in a helper struct
@@ -287,6 +288,7 @@ impl MockCookieUser {
         name: &str,
         crate_scopes: Option<Vec<CrateScope>>,
         endpoint_scopes: Option<Vec<EndpointScope>>,
+        expired_at: Option<NaiveDateTime>,
     ) -> MockTokenUser {
         let token = self.app.db(|conn| {
             ApiToken::insert_with_scopes(
@@ -295,7 +297,7 @@ impl MockCookieUser {
                 name,
                 crate_scopes,
                 endpoint_scopes,
-                None,
+                expired_at,
             )
             .unwrap()
         });
