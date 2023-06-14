@@ -44,6 +44,9 @@ readonly DATABASE_NAME
 # standard `postgres` container is being used in Docker.
 readonly DROP_CREATE_DATABASE_NAME="${DROP_CREATE_DATABASE_NAME:-postgres}"
 
+ORIG_WD="$(pwd)"
+readonly ORIG_WD
+
 cd $DUMP_PATH
 echo "Creating '$DATABASE_NAME' database"
 psql --command="DROP DATABASE IF EXISTS $DATABASE_NAME" "$DROP_CREATE_DATABASE_NAME"
@@ -58,3 +61,8 @@ psql -a "$DATABASE_NAME" < import.sql
 # Importing the database doesn't cause materialised views to be refreshed, so
 # let's do that.
 psql --command="REFRESH MATERIALIZED VIEW recent_crate_downloads" "$DATABASE_NAME"
+
+# Importing the database also doesn't insert Diesel migration metadata, but we
+# can infer that from the dump metadata and an up to date crates.io repo.
+cd "$ORIG_WD"
+python3 "$(dirname "$0")/infer-database-dump-version.py" -m "$DUMP_PATH/metadata.json" | psql -a "$DATABASE_NAME"
