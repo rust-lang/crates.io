@@ -31,6 +31,8 @@ pub struct ApiToken {
     pub crate_scopes: Option<Vec<CrateScope>>,
     /// A list of endpoint scopes or `None` for the `legacy` endpoint scope (see RFC #2947)
     pub endpoint_scopes: Option<Vec<EndpointScope>>,
+    #[serde(skip)]
+    pub expired_at: Option<NaiveDateTime>,
 }
 
 impl ApiToken {
@@ -118,6 +120,7 @@ mod tests {
             .unwrap(),
             crate_scopes: None,
             endpoint_scopes: None,
+            expired_at: None,
         };
         let json = serde_json::to_string(&tok).unwrap();
         assert_some!(json
