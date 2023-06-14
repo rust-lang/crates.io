@@ -95,6 +95,7 @@ fn unyank_records_an_audit_action() {
 mod auth {
     use super::*;
     use crate::util::{MockAnonymousUser, MockCookieUser};
+    use chrono::{Duration, Utc};
     use crates_io::models::token::{CrateScope, EndpointScope};
 
     const CRATE_NAME: &str = "fyk";
@@ -153,6 +154,46 @@ mod auth {
         let response = client.unyank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.into_json(), json!({ "ok": true }));
+    }
+
+    #[test]
+    fn token_user_not_expired() {
+        let expired_at = Utc::now() + Duration::days(7);
+
+        let (_, _, client) = prepare();
+        let client =
+            client.db_new_scoped_token("test-token", None, None, Some(expired_at.naive_utc()));
+
+        let response = client.yank(CRATE_NAME, CRATE_VERSION);
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.into_json(), json!({ "ok": true }));
+
+        let response = client.unyank(CRATE_NAME, CRATE_VERSION);
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.into_json(), json!({ "ok": true }));
+    }
+
+    #[test]
+    fn token_user_expired() {
+        let expired_at = Utc::now() - Duration::days(7);
+
+        let (_, _, client) = prepare();
+        let client =
+            client.db_new_scoped_token("test-token", None, None, Some(expired_at.naive_utc()));
+
+        let response = client.yank(CRATE_NAME, CRATE_VERSION);
+        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+        assert_eq!(
+            response.into_json(),
+            json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
+        );
+
+        let response = client.unyank(CRATE_NAME, CRATE_VERSION);
+        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+        assert_eq!(
+            response.into_json(),
+            json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
+        );
     }
 
     #[test]

@@ -77,6 +77,7 @@ impl ApiToken {
 
         let tokens = api_tokens
             .filter(revoked.eq(false))
+            .filter(expired_at.is_null().or(expired_at.gt(now)))
             .filter(token.eq(&token_));
 
         // If the database is in read only mode, we can't update last_used_at.
