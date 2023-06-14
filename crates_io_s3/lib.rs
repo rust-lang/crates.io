@@ -9,22 +9,50 @@ use reqwest::{
 };
 use sha1::Sha1;
 use std::time::Duration;
+use thiserror::Error;
+use url::Url;
 
-pub use reqwest::Error;
+#[derive(Debug, Error)]
+pub enum Error {
+    #[error(transparent)]
+    Reqwest(#[from] reqwest::Error),
+
+    #[error(transparent)]
+    Url(#[from] url::ParseError),
+}
 
 #[derive(Clone, Debug)]
 pub struct Bucket {
     name: String,
-    region: Option<String>,
+    region: Region,
     access_key: String,
     secret_key: String,
     proto: String,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum Region {
+    Host(String),
+    Region(String),
+    Default,
+}
+
+impl Region {
+    fn request_url(&self, proto: &str, bucket: &str, path: &str) -> Result<Url, Error> {
+        Ok(Url::parse(&match self {
+            Region::Host(host) => format!("{proto}://{host}/{bucket}/{path}"),
+            Region::Region(region) => {
+                format!("{proto}://{bucket}.s3-{region}.amazonaws.com/{path}")
+            }
+            Region::Default => format!("{proto}://{bucket}.s3.amazonaws.com/{path}"),
+        })?)
+    }
+}
+
 impl Bucket {
     pub fn new(
         name: String,
-        region: Option<String>,
+        region: Region,
         access_key: String,
         secret_key: String,
         proto: &str,
@@ -49,7 +77,7 @@ impl Bucket {
         let path = path.strip_prefix('/').unwrap_or(path);
         let date = Utc::now().to_rfc2822();
         let auth = self.auth("PUT", &date, path, "", content_type);
-        let url = self.url(path);
+        let url = self.url(path)?;
 
         client
             .put(url)
@@ -69,7 +97,7 @@ impl Bucket {
         let path = path.strip_prefix('/').unwrap_or(path);
         let date = Utc::now().to_rfc2822();
         let auth = self.auth("DELETE", &date, path, "", "");
-        let url = self.url(path);
+        let url = self.url(path)?;
 
         client
             .delete(url)
@@ -78,18 +106,6 @@ impl Bucket {
             .send()?
             .error_for_status()
             .map_err(Into::into)
-    }
-
-    pub fn host(&self) -> String {
-        format!(
-            "{}.s3{}.amazonaws.com",
-            self.name,
-            match self.region {
-                Some(ref r) if !r.is_empty() => format!("-{r}"),
-                Some(_) => String::new(),
-                None => String::new(),
-            }
-        )
     }
 
     fn auth(&self, verb: &str, date: &str, path: &str, md5: &str, content_type: &str) -> String {
@@ -109,7 +125,51 @@ impl Bucket {
         format!("AWS {}:{}", self.access_key, signature)
     }
 
-    fn url(&self, path: &str) -> String {
-        format!("{}://{}/{}", self.proto, self.host(), path)
+    pub fn url(&self, path: &str) -> Result<String, Error> {
+        self.region
+            .request_url(&self.proto, &self.name, path)
+            .map(|url| url.into())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn bucket_url() -> Result<(), Error> {
+        for (bucket, path, expected) in [
+            (
+                bucket("buckey", region("us-west-2"), "https"),
+                "foo/bar",
+                "https://buckey.s3-us-west-2.amazonaws.com/foo/bar",
+            ),
+            (
+                bucket("buck-rogers", host("127.0.0.1:19000"), "http"),
+                "foo/bar",
+                "http://127.0.0.1:19000/buck-rogers/foo/bar",
+            ),
+            (
+                bucket("buckminster-fuller", Region::Default, "gopher"),
+                "",
+                "gopher://buckminster-fuller.s3.amazonaws.com/",
+            ),
+        ] {
+            assert_eq!(&bucket.url(path)?, expected);
+        }
+
+        Ok(())
+    }
+
+    fn bucket(name: &str, region: Region, proto: &str) -> Bucket {
+        Bucket::new(name.into(), region, "".into(), "".into(), proto)
+    }
+
+    fn region(name: &str) -> Region {
+        Region::Region(name.into())
+    }
+
+    fn host(host: &str) -> Region {
+        Region::Host(host.into())
     }
 }

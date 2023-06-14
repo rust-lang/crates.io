@@ -45,12 +45,11 @@ impl Uploader {
                 ref cdn,
                 ..
             } => {
-                let host = match *cdn {
-                    Some(ref s) => s.clone(),
-                    None => bucket.host(),
-                };
                 let path = Uploader::crate_path(crate_name, version);
-                format!("https://{host}/{path}")
+                match *cdn {
+                    Some(ref host) => format!("https://{host}/{path}"),
+                    None => bucket.url(&path).unwrap(),
+                }
             }
             Uploader::Local => format!("/{}", Uploader::crate_path(crate_name, version)),
         }
@@ -66,12 +65,11 @@ impl Uploader {
                 ref cdn,
                 ..
             } => {
-                let host = match *cdn {
-                    Some(ref s) => s.clone(),
-                    None => bucket.host(),
-                };
                 let path = Uploader::readme_path(crate_name, version);
-                format!("https://{host}/{path}")
+                match *cdn {
+                    Some(ref host) => format!("https://{host}/{path}"),
+                    None => bucket.url(&path).unwrap(),
+                }
             }
             Uploader::Local => format!("/{}", Uploader::readme_path(crate_name, version)),
         }
