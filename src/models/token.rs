@@ -9,7 +9,7 @@ use crate::models::User;
 use crate::schema::api_tokens;
 use crate::util::errors::{AppResult, InsecurelyGeneratedTokenRevoked};
 use crate::util::rfc3339;
-use crate::util::token::{SecureToken, SecureTokenKind};
+use crate::util::token::SecureToken;
 
 /// The model representing a row in the `api_tokens` database table.
 #[derive(Clone, Debug, PartialEq, Eq, Identifiable, Queryable, Associations, Serialize)]
@@ -46,7 +46,7 @@ impl ApiToken {
         crate_scopes: Option<Vec<CrateScope>>,
         endpoint_scopes: Option<Vec<EndpointScope>>,
     ) -> AppResult<CreatedApiToken> {
-        let token = SecureToken::generate(SecureTokenKind::Api);
+        let token = SecureToken::generate();
 
         let model: ApiToken = diesel::insert_into(api_tokens::table)
             .values((
@@ -68,8 +68,8 @@ impl ApiToken {
         use crate::schema::api_tokens::dsl::*;
         use diesel::{dsl::now, update};
 
-        let token_ = SecureToken::parse(SecureTokenKind::Api, token_)
-            .ok_or_else(InsecurelyGeneratedTokenRevoked::boxed)?;
+        let token_ =
+            SecureToken::parse(token_).ok_or_else(InsecurelyGeneratedTokenRevoked::boxed)?;
 
         let tokens = api_tokens
             .filter(revoked.eq(false))
@@ -103,7 +103,7 @@ mod tests {
         let tok = ApiToken {
             id: 12345,
             user_id: 23456,
-            token: SecureToken::generate(SecureTokenKind::Api).into_inner(),
+            token: SecureToken::generate().into_inner(),
             revoked: false,
             name: "".to_string(),
             created_at: NaiveDate::from_ymd_opt(2017, 1, 6)
