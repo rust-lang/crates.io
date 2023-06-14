@@ -30,7 +30,7 @@ pub async fn list(app: AppState, req: Parts) -> AppResult<Json<Value>> {
 pub async fn new(app: AppState, req: BytesRequest) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         /// The incoming serialization format for the `ApiToken` model.
-        #[derive(Deserialize, Serialize)]
+        #[derive(Deserialize)]
         struct NewApiToken {
             name: String,
             crate_scopes: Option<Vec<String>>,
@@ -38,7 +38,7 @@ pub async fn new(app: AppState, req: BytesRequest) -> AppResult<Json<Value>> {
         }
 
         /// The incoming serialization format for the `ApiToken` model.
-        #[derive(Deserialize, Serialize)]
+        #[derive(Deserialize)]
         struct NewApiTokenRequest {
             api_token: NewApiToken,
         }
