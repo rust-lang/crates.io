@@ -1,4 +1,5 @@
 use chrono::NaiveDateTime;
+use secrecy::ExposeSecret;
 use url::Url;
 
 use crate::github;
@@ -479,7 +480,7 @@ impl From<CreatedApiToken> for EncodableApiTokenWithToken {
     fn from(token: CreatedApiToken) -> Self {
         EncodableApiTokenWithToken {
             token: token.model,
-            plaintext: token.plaintext,
+            plaintext: token.plaintext.expose_secret().clone(),
         }
     }
 }

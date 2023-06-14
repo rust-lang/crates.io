@@ -32,6 +32,7 @@ use axum::body::Bytes;
 use cookie::Cookie;
 use crates_io::models::token::{CrateScope, EndpointScope};
 use http::header;
+use secrecy::{ExposeSecret, SecretString};
 use std::collections::HashMap;
 use tower_service::Service;
 
@@ -307,7 +308,7 @@ pub struct MockTokenUser {
 impl RequestHelper for MockTokenUser {
     fn request_builder(&self, method: Method, path: &str) -> MockRequest {
         let mut request = req(method, path);
-        request.header(header::AUTHORIZATION, &self.token.plaintext);
+        request.header(header::AUTHORIZATION, self.token.plaintext.expose_secret());
         request
     }
 
@@ -322,7 +323,7 @@ impl MockTokenUser {
         &self.token.model
     }
 
-    pub fn plaintext(&self) -> &str {
+    pub fn plaintext(&self) -> &SecretString {
         &self.token.plaintext
     }
 

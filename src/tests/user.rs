@@ -5,6 +5,7 @@ use crate::{
 };
 use crates_io::models::{Email, NewUser, User};
 use diesel::prelude::*;
+use secrecy::ExposeSecret;
 
 impl crate::util::MockCookieUser {
     fn confirm_email(&self, email_token: &str) -> OkBool {
@@ -30,7 +31,7 @@ fn updating_existing_user_doesnt_change_api_token() {
         );
 
         // Use the original API token to find the now updated user
-        assert_ok!(User::find_by_api_token(conn, token))
+        assert_ok!(User::find_by_api_token(conn, token.expose_secret()))
     });
 
     assert_eq!("bar", user.gh_login);
