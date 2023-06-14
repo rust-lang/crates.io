@@ -2,6 +2,7 @@ mod scopes;
 
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
+use secrecy::SecretString;
 
 pub use self::scopes::{CrateScope, EndpointScope};
 use crate::models::User;
@@ -58,7 +59,7 @@ impl ApiToken {
             .get_result(conn)?;
 
         Ok(CreatedApiToken {
-            plaintext: token.plaintext().into(),
+            plaintext: SecretString::from(token.plaintext().to_string()),
             model,
         })
     }
@@ -86,19 +87,10 @@ impl ApiToken {
     }
 }
 
+#[derive(Debug)]
 pub struct CreatedApiToken {
     pub model: ApiToken,
-    pub plaintext: String,
-}
-
-// Use a custom implementation of Debug to hide the plaintext token.
-impl std::fmt::Debug for CreatedApiToken {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("CreatedApiToken")
-            .field("model", &self.model)
-            .field("plaintext", &"(sensitive)")
-            .finish()
-    }
+    pub plaintext: SecretString,
 }
 
 #[cfg(test)]
