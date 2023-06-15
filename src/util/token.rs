@@ -1,5 +1,6 @@
 use diesel::{deserialize::FromSql, pg::Pg, serialize::ToSql, sql_types::Bytea};
 use rand::{distributions::Uniform, rngs::OsRng, Rng};
+use secrecy::{ExposeSecret, SecretString};
 use sha2::{Digest, Sha256};
 
 const TOKEN_LENGTH: usize = 32;
@@ -51,7 +52,7 @@ impl FromSql<Bytea, Pg> for HashedToken {
 }
 
 pub(crate) struct PlainToken {
-    plaintext: String,
+    plaintext: SecretString,
 }
 
 impl PlainToken {
@@ -60,17 +61,18 @@ impl PlainToken {
             "{}{}",
             TOKEN_PREFIX,
             generate_secure_alphanumeric_string(TOKEN_LENGTH)
-        );
+        )
+        .into();
 
         Self { plaintext }
     }
 
     pub(crate) fn plaintext(&self) -> &str {
-        &self.plaintext
+        self.plaintext.expose_secret()
     }
 
     pub fn hashed(&self) -> HashedToken {
-        let sha256 = HashedToken::hash(&self.plaintext);
+        let sha256 = HashedToken::hash(self.plaintext());
         HashedToken { sha256 }
     }
 }
