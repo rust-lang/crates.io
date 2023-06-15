@@ -51,7 +51,8 @@ impl FromSql<Bytea, Pg> for HashedToken {
     }
 }
 
-pub(crate) struct PlainToken {
+#[derive(Debug)]
+pub struct PlainToken {
     plaintext: SecretString,
 }
 
