@@ -2,7 +2,7 @@ mod scopes;
 
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
-use secrecy::SecretString;
+use secrecy::{ExposeSecret, SecretString};
 
 pub use self::scopes::{CrateScope, EndpointScope};
 use crate::models::User;
@@ -64,7 +64,7 @@ impl ApiToken {
             .get_result(conn)?;
 
         Ok(CreatedApiToken {
-            plaintext: SecretString::from(token.plaintext().to_string()),
+            plaintext: SecretString::from(token.expose_secret().to_string()),
             model,
         })
     }

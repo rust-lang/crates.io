@@ -67,13 +67,15 @@ impl PlainToken {
         Self { plaintext }
     }
 
-    pub(crate) fn plaintext(&self) -> &str {
-        self.plaintext.expose_secret()
-    }
-
     pub fn hashed(&self) -> HashedToken {
-        let sha256 = HashedToken::hash(self.plaintext());
+        let sha256 = HashedToken::hash(self.plaintext.expose_secret());
         HashedToken { sha256 }
+    }
+}
+
+impl ExposeSecret<String> for PlainToken {
+    fn expose_secret(&self) -> &String {
+        self.plaintext.expose_secret()
     }
 }
 
@@ -94,13 +96,14 @@ mod tests {
     #[test]
     fn test_generated_and_parse() {
         let token = PlainToken::generate();
-        assert!(token.plaintext().starts_with(TOKEN_PREFIX));
+        assert!(token.expose_secret().starts_with(TOKEN_PREFIX));
         assert_eq!(
             token.hashed().sha256,
-            Sha256::digest(token.plaintext().as_bytes()).as_slice()
+            Sha256::digest(token.expose_secret().as_bytes()).as_slice()
         );
 
-        let parsed = HashedToken::parse(token.plaintext()).expect("failed to parse back the token");
+        let parsed =
+            HashedToken::parse(token.expose_secret()).expect("failed to parse back the token");
         assert_eq!(parsed.sha256, token.hashed().sha256);
     }
 
