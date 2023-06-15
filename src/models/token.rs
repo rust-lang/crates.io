@@ -9,7 +9,7 @@ use crate::models::User;
 use crate::schema::api_tokens;
 use crate::util::errors::{AppResult, InsecurelyGeneratedTokenRevoked};
 use crate::util::rfc3339;
-use crate::util::token::{HashedToken, NewSecureToken};
+use crate::util::token::{HashedToken, PlainToken};
 
 /// The model representing a row in the `api_tokens` database table.
 #[derive(Debug, Identifiable, Queryable, Associations, Serialize)]
@@ -50,7 +50,7 @@ impl ApiToken {
         endpoint_scopes: Option<Vec<EndpointScope>>,
         expired_at: Option<NaiveDateTime>,
     ) -> AppResult<CreatedApiToken> {
-        let token = NewSecureToken::generate();
+        let token = PlainToken::generate();
 
         let model: ApiToken = diesel::insert_into(api_tokens::table)
             .values((
@@ -109,7 +109,7 @@ mod tests {
         let tok = ApiToken {
             id: 12345,
             user_id: 23456,
-            token: NewSecureToken::generate().hashed(),
+            token: PlainToken::generate().hashed(),
             revoked: false,
             name: "".to_string(),
             created_at: NaiveDate::from_ymd_opt(2017, 1, 6)

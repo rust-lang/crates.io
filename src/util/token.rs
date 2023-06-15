@@ -50,11 +50,11 @@ impl FromSql<Bytea, Pg> for HashedToken {
     }
 }
 
-pub(crate) struct NewSecureToken {
+pub(crate) struct PlainToken {
     plaintext: String,
 }
 
-impl NewSecureToken {
+impl PlainToken {
     pub(crate) fn generate() -> Self {
         let plaintext = format!(
             "{}{}",
@@ -91,7 +91,7 @@ mod tests {
 
     #[test]
     fn test_generated_and_parse() {
-        let token = NewSecureToken::generate();
+        let token = PlainToken::generate();
         assert!(token.plaintext().starts_with(TOKEN_PREFIX));
         assert_eq!(
             token.hashed().sha256,
