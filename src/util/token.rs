@@ -8,7 +8,7 @@ const TOKEN_LENGTH: usize = 32;
 /// revoke all the tokens, disrupting production users.
 const TOKEN_PREFIX: &str = "cio";
 
-#[derive(FromSqlRow, AsExpression, PartialEq, Eq)]
+#[derive(FromSqlRow, AsExpression)]
 #[diesel(sql_type = Bytea)]
 pub struct SecureToken {
     sha256: Vec<u8>,

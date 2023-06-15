@@ -12,12 +12,13 @@ use crate::util::rfc3339;
 use crate::util::token::{NewSecureToken, SecureToken};
 
 /// The model representing a row in the `api_tokens` database table.
-#[derive(Debug, PartialEq, Eq, Identifiable, Queryable, Associations, Serialize)]
+#[derive(Debug, Identifiable, Queryable, Associations, Serialize)]
 #[diesel(belongs_to(User))]
 pub struct ApiToken {
     pub id: i32,
     #[serde(skip)]
     pub user_id: i32,
+    #[allow(dead_code)]
     #[serde(skip)]
     token: SecureToken,
     pub name: String,
