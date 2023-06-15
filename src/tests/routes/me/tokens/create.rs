@@ -223,3 +223,26 @@ fn create_token_with_invalid_endpoint_scope() {
         json!({ "errors": [{ "detail": "invalid endpoint scope" }] })
     );
 }
+
+#[test]
+fn create_token_with_expiry_date() {
+    let (_app, _, user) = TestApp::init().with_user();
+
+    let json = json!({
+        "api_token": {
+            "name": "bar",
+            "crate_scopes": null,
+            "endpoint_scopes": null,
+            "expired_at": "2024-12-24T12:34:56+05:00",
+        }
+    });
+
+    let response = user.put::<()>("/api/v1/me/tokens", &serde_json::to_vec(&json).unwrap());
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_yaml_snapshot!(response.into_json(), {
+        ".api_token.id" => insta::any_id_redaction(),
+        ".api_token.created_at" => "[datetime]",
+        ".api_token.last_used_at" => "[datetime]",
+        ".api_token.token" => insta::api_token_redaction(),
+    });
+}

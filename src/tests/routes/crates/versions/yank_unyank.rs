@@ -95,6 +95,7 @@ fn unyank_records_an_audit_action() {
 mod auth {
     use super::*;
     use crate::util::{MockAnonymousUser, MockCookieUser};
+    use chrono::{Duration, Utc};
     use crates_io::models::token::{CrateScope, EndpointScope};
 
     const CRATE_NAME: &str = "fyk";
@@ -156,10 +157,50 @@ mod auth {
     }
 
     #[test]
+    fn token_user_not_expired() {
+        let expired_at = Utc::now() + Duration::days(7);
+
+        let (_, _, client) = prepare();
+        let client =
+            client.db_new_scoped_token("test-token", None, None, Some(expired_at.naive_utc()));
+
+        let response = client.yank(CRATE_NAME, CRATE_VERSION);
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.into_json(), json!({ "ok": true }));
+
+        let response = client.unyank(CRATE_NAME, CRATE_VERSION);
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.into_json(), json!({ "ok": true }));
+    }
+
+    #[test]
+    fn token_user_expired() {
+        let expired_at = Utc::now() - Duration::days(7);
+
+        let (_, _, client) = prepare();
+        let client =
+            client.db_new_scoped_token("test-token", None, None, Some(expired_at.naive_utc()));
+
+        let response = client.yank(CRATE_NAME, CRATE_VERSION);
+        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+        assert_eq!(
+            response.into_json(),
+            json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
+        );
+
+        let response = client.unyank(CRATE_NAME, CRATE_VERSION);
+        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+        assert_eq!(
+            response.into_json(),
+            json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
+        );
+    }
+
+    #[test]
     fn token_user_with_correct_endpoint_scope() {
         let (_, _, client) = prepare();
         let client =
-            client.db_new_scoped_token("test-token", None, Some(vec![EndpointScope::Yank]));
+            client.db_new_scoped_token("test-token", None, Some(vec![EndpointScope::Yank]), None);
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::OK);
@@ -177,6 +218,7 @@ mod auth {
             "test-token",
             None,
             Some(vec![EndpointScope::PublishUpdate]),
+            None,
         );
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
@@ -201,6 +243,7 @@ mod auth {
             "test-token",
             Some(vec![CrateScope::try_from(CRATE_NAME).unwrap()]),
             None,
+            None,
         );
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
@@ -220,6 +263,7 @@ mod auth {
             "test-token",
             Some(vec![CrateScope::try_from(wildcard).unwrap()]),
             None,
+            None,
         );
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
@@ -237,6 +281,7 @@ mod auth {
         let client = client.db_new_scoped_token(
             "test-token",
             Some(vec![CrateScope::try_from("foo").unwrap()]),
+            None,
             None,
         );
 
@@ -261,6 +306,7 @@ mod auth {
         let client = client.db_new_scoped_token(
             "test-token",
             Some(vec![CrateScope::try_from("foo*").unwrap()]),
+            None,
             None,
         );
 

@@ -31,12 +31,14 @@ pub struct ApiToken {
     pub crate_scopes: Option<Vec<CrateScope>>,
     /// A list of endpoint scopes or `None` for the `legacy` endpoint scope (see RFC #2947)
     pub endpoint_scopes: Option<Vec<EndpointScope>>,
+    #[serde(with = "rfc3339::option")]
+    pub expired_at: Option<NaiveDateTime>,
 }
 
 impl ApiToken {
     /// Generates a new named API token for a user
     pub fn insert(conn: &mut PgConnection, user_id: i32, name: &str) -> AppResult<CreatedApiToken> {
-        Self::insert_with_scopes(conn, user_id, name, None, None)
+        Self::insert_with_scopes(conn, user_id, name, None, None, None)
     }
 
     pub fn insert_with_scopes(
@@ -45,6 +47,7 @@ impl ApiToken {
         name: &str,
         crate_scopes: Option<Vec<CrateScope>>,
         endpoint_scopes: Option<Vec<EndpointScope>>,
+        expired_at: Option<NaiveDateTime>,
     ) -> AppResult<CreatedApiToken> {
         let token = NewSecureToken::generate();
 
@@ -55,6 +58,7 @@ impl ApiToken {
                 api_tokens::token.eq(&*token),
                 api_tokens::crate_scopes.eq(crate_scopes),
                 api_tokens::endpoint_scopes.eq(endpoint_scopes),
+                api_tokens::expired_at.eq(expired_at),
             ))
             .get_result(conn)?;
 
@@ -73,6 +77,7 @@ impl ApiToken {
 
         let tokens = api_tokens
             .filter(revoked.eq(false))
+            .filter(expired_at.is_null().or(expired_at.gt(now)))
             .filter(token.eq(&token_));
 
         // If the database is in read only mode, we can't update last_used_at.
@@ -118,6 +123,7 @@ mod tests {
             .unwrap(),
             crate_scopes: None,
             endpoint_scopes: None,
+            expired_at: None,
         };
         let json = serde_json::to_string(&tok).unwrap();
         assert_some!(json

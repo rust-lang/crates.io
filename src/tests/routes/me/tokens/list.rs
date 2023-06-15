@@ -1,5 +1,6 @@
 use crate::util::insta::{self, assert_yaml_snapshot};
 use crate::util::{RequestHelper, TestApp};
+use chrono::NaiveDate;
 use crates_io::models::token::{CrateScope, EndpointScope};
 use crates_io::models::ApiToken;
 use http::StatusCode;
@@ -41,7 +42,21 @@ fn list_tokens() {
                     CrateScope::try_from("serde").unwrap(),
                     CrateScope::try_from("serde-*").unwrap()
                 ]),
-                Some(vec![EndpointScope::PublishUpdate])
+                Some(vec![EndpointScope::PublishUpdate]),
+                None
+            )),
+            assert_ok!(ApiToken::insert_with_scopes(
+                conn,
+                id,
+                "qux",
+                None,
+                None,
+                Some(
+                    NaiveDate::from_ymd_opt(2016, 7, 8)
+                        .unwrap()
+                        .and_hms_opt(9, 10, 11)
+                        .unwrap()
+                )
             )),
         ]
     });

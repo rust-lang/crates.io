@@ -2,11 +2,14 @@ use super::frontend_prelude::*;
 
 use crate::models::ApiToken;
 use crate::schema::api_tokens;
+use crate::util::rfc3339;
 use crate::views::EncodableApiTokenWithToken;
 
 use crate::auth::AuthCheck;
 use crate::models::token::{CrateScope, EndpointScope};
 use axum::response::IntoResponse;
+use chrono::NaiveDateTime;
+use diesel::dsl::now;
 use serde_json as json;
 
 /// Handles the `GET /me/tokens` route.
@@ -18,6 +21,11 @@ pub async fn list(app: AppState, req: Parts) -> AppResult<Json<Value>> {
 
         let tokens: Vec<ApiToken> = ApiToken::belonging_to(user)
             .filter(api_tokens::revoked.eq(false))
+            .filter(
+                api_tokens::expired_at
+                    .is_null()
+                    .or(api_tokens::expired_at.gt(now)),
+            )
             .order(api_tokens::created_at.desc())
             .load(conn)?;
 
@@ -35,6 +43,8 @@ pub async fn new(app: AppState, req: BytesRequest) -> AppResult<Json<Value>> {
             name: String,
             crate_scopes: Option<Vec<String>>,
             endpoint_scopes: Option<Vec<String>>,
+            #[serde(default, with = "rfc3339::option")]
+            expired_at: Option<NaiveDateTime>,
         }
 
         /// The incoming serialization format for the `ApiToken` model.
@@ -94,8 +104,14 @@ pub async fn new(app: AppState, req: BytesRequest) -> AppResult<Json<Value>> {
             .transpose()
             .map_err(|_err| bad_request("invalid endpoint scope"))?;
 
-        let api_token =
-            ApiToken::insert_with_scopes(conn, user.id, name, crate_scopes, endpoint_scopes)?;
+        let api_token = ApiToken::insert_with_scopes(
+            conn,
+            user.id,
+            name,
+            crate_scopes,
+            endpoint_scopes,
+            new.api_token.expired_at,
+        )?;
         let api_token = EncodableApiTokenWithToken::from(api_token);
 
         Ok(Json(json!({ "api_token": api_token })))
