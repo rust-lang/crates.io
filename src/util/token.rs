@@ -1,6 +1,6 @@
 use diesel::{deserialize::FromSql, pg::Pg, serialize::ToSql, sql_types::Bytea};
 use rand::{distributions::Uniform, rngs::OsRng, Rng};
-use secrecy::{ExposeSecret, SecretString};
+use secrecy::{ExposeSecret, SecretString, SecretVec};
 use sha2::{Digest, Sha256};
 
 const TOKEN_LENGTH: usize = 32;
@@ -12,7 +12,7 @@ const TOKEN_PREFIX: &str = "cio";
 #[derive(FromSqlRow, AsExpression)]
 #[diesel(sql_type = Bytea)]
 pub struct HashedToken {
-    sha256: Vec<u8>,
+    sha256: SecretVec<u8>,
 }
 
 impl HashedToken {
@@ -22,7 +22,7 @@ impl HashedToken {
             return None;
         }
 
-        let sha256 = Self::hash(plaintext);
+        let sha256 = Self::hash(plaintext).into();
         Some(Self { sha256 })
     }
 
@@ -39,14 +39,15 @@ impl std::fmt::Debug for HashedToken {
 
 impl ToSql<Bytea, Pg> for HashedToken {
     fn to_sql(&self, out: &mut diesel::serialize::Output<'_, '_, Pg>) -> diesel::serialize::Result {
-        ToSql::<Bytea, Pg>::to_sql(&self.sha256, &mut out.reborrow())
+        ToSql::<Bytea, Pg>::to_sql(&self.sha256.expose_secret(), &mut out.reborrow())
     }
 }
 
 impl FromSql<Bytea, Pg> for HashedToken {
     fn from_sql(bytes: diesel::pg::PgValue<'_>) -> diesel::deserialize::Result<Self> {
+        let bytes: Vec<u8> = FromSql::<Bytea, Pg>::from_sql(bytes)?;
         Ok(Self {
-            sha256: FromSql::<Bytea, Pg>::from_sql(bytes)?,
+            sha256: bytes.into(),
         })
     }
 }
@@ -69,7 +70,7 @@ impl PlainToken {
     }
 
     pub fn hashed(&self) -> HashedToken {
-        let sha256 = HashedToken::hash(self.plaintext.expose_secret());
+        let sha256 = HashedToken::hash(self.plaintext.expose_secret()).into();
         HashedToken { sha256 }
     }
 }
@@ -99,13 +100,16 @@ mod tests {
         let token = PlainToken::generate();
         assert!(token.expose_secret().starts_with(TOKEN_PREFIX));
         assert_eq!(
-            token.hashed().sha256,
+            token.hashed().sha256.expose_secret(),
             Sha256::digest(token.expose_secret().as_bytes()).as_slice()
         );
 
         let parsed =
             HashedToken::parse(token.expose_secret()).expect("failed to parse back the token");
-        assert_eq!(parsed.sha256, token.hashed().sha256);
+        assert_eq!(
+            parsed.sha256.expose_secret(),
+            token.hashed().sha256.expose_secret()
+        );
     }
 
     #[test]
