@@ -53,9 +53,7 @@ impl FromSql<Bytea, Pg> for HashedToken {
 }
 
 #[derive(Debug)]
-pub struct PlainToken {
-    plaintext: SecretString,
-}
+pub struct PlainToken(SecretString);
 
 impl PlainToken {
     pub(crate) fn generate() -> Self {
@@ -66,18 +64,18 @@ impl PlainToken {
         )
         .into();
 
-        Self { plaintext }
+        Self(plaintext)
     }
 
     pub fn hashed(&self) -> HashedToken {
-        let sha256 = HashedToken::hash(self.plaintext.expose_secret()).into();
+        let sha256 = HashedToken::hash(self.expose_secret()).into();
         HashedToken { sha256 }
     }
 }
 
 impl ExposeSecret<String> for PlainToken {
     fn expose_secret(&self) -> &String {
-        self.plaintext.expose_secret()
+        self.0.expose_secret()
     }
 }
 
