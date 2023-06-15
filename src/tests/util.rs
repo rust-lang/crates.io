@@ -361,8 +361,3 @@ impl MockTokenUser {
         self.add_named_owner(krate_name, username).good();
     }
 }
-
-#[derive(Deserialize, Debug)]
-pub struct Error {
-    pub detail: String,
-}
