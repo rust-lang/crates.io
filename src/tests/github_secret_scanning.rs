@@ -3,7 +3,7 @@ use crate::{RequestHelper, TestApp};
 use crates_io::controllers::github::secret_scanning::{
     GitHubSecretAlertFeedback, GitHubSecretAlertFeedbackLabel,
 };
-use crates_io::util::token::SecureToken;
+use crates_io::util::token::HashedToken;
 use crates_io::{models::ApiToken, schema::api_tokens};
 use diesel::prelude::*;
 use http::StatusCode;
@@ -35,7 +35,7 @@ fn github_secret_alert_revokes_token() {
 
     // Set token to expected value in signed request
     app.db(|conn| {
-        let hashed_token = SecureToken::hash("some_token");
+        let hashed_token = HashedToken::hash("some_token");
         diesel::update(api_tokens::table)
             .set(api_tokens::token.eq(hashed_token))
             .execute(conn)
@@ -93,7 +93,7 @@ fn github_secret_alert_for_revoked_token() {
 
     // Set token to expected value in signed request and revoke it
     app.db(|conn| {
-        let hashed_token = SecureToken::hash("some_token");
+        let hashed_token = HashedToken::hash("some_token");
         diesel::update(api_tokens::table)
             .set((
                 api_tokens::token.eq(hashed_token),

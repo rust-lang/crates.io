@@ -2,7 +2,7 @@ use crate::app::AppState;
 use crate::controllers::frontend_prelude::*;
 use crate::models::{ApiToken, User};
 use crate::schema::api_tokens;
-use crate::util::token::SecureToken;
+use crate::util::token::HashedToken;
 use anyhow::{anyhow, Context};
 use axum::body::Bytes;
 use base64::{engine::general_purpose, Engine};
@@ -159,7 +159,7 @@ fn alert_revoke_token(
 ) -> Result<GitHubSecretAlertFeedbackLabel, BoxedAppError> {
     let conn = &mut *state.db_write()?;
 
-    let hashed_token = SecureToken::hash(&alert.token);
+    let hashed_token = HashedToken::hash(&alert.token);
 
     // Not using `ApiToken::find_by_api_token()` in order to preserve `last_used_at`
     let token = api_tokens::table

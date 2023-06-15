@@ -9,7 +9,7 @@ use crate::models::User;
 use crate::schema::api_tokens;
 use crate::util::errors::{AppResult, InsecurelyGeneratedTokenRevoked};
 use crate::util::rfc3339;
-use crate::util::token::{NewSecureToken, SecureToken};
+use crate::util::token::{HashedToken, NewSecureToken};
 
 /// The model representing a row in the `api_tokens` database table.
 #[derive(Debug, Identifiable, Queryable, Associations, Serialize)]
@@ -20,7 +20,7 @@ pub struct ApiToken {
     pub user_id: i32,
     #[allow(dead_code)]
     #[serde(skip)]
-    token: SecureToken,
+    token: HashedToken,
     pub name: String,
     #[serde(with = "rfc3339")]
     pub created_at: NaiveDateTime,
@@ -74,7 +74,7 @@ impl ApiToken {
         use diesel::{dsl::now, update};
 
         let token_ =
-            SecureToken::parse(token_).ok_or_else(InsecurelyGeneratedTokenRevoked::boxed)?;
+            HashedToken::parse(token_).ok_or_else(InsecurelyGeneratedTokenRevoked::boxed)?;
 
         let tokens = api_tokens
             .filter(revoked.eq(false))

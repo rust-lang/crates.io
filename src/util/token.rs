@@ -10,11 +10,11 @@ const TOKEN_PREFIX: &str = "cio";
 
 #[derive(FromSqlRow, AsExpression)]
 #[diesel(sql_type = Bytea)]
-pub struct SecureToken {
+pub struct HashedToken {
     sha256: Vec<u8>,
 }
 
-impl SecureToken {
+impl HashedToken {
     pub(crate) fn parse(plaintext: &str) -> Option<Self> {
         // This will both reject tokens without a prefix and tokens of the wrong kind.
         if !plaintext.starts_with(TOKEN_PREFIX) {
@@ -30,19 +30,19 @@ impl SecureToken {
     }
 }
 
-impl std::fmt::Debug for SecureToken {
+impl std::fmt::Debug for HashedToken {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str("SecureToken")
+        f.write_str("HashedToken")
     }
 }
 
-impl ToSql<Bytea, Pg> for SecureToken {
+impl ToSql<Bytea, Pg> for HashedToken {
     fn to_sql(&self, out: &mut diesel::serialize::Output<'_, '_, Pg>) -> diesel::serialize::Result {
         ToSql::<Bytea, Pg>::to_sql(&self.sha256, &mut out.reborrow())
     }
 }
 
-impl FromSql<Bytea, Pg> for SecureToken {
+impl FromSql<Bytea, Pg> for HashedToken {
     fn from_sql(bytes: diesel::pg::PgValue<'_>) -> diesel::deserialize::Result<Self> {
         Ok(Self {
             sha256: FromSql::<Bytea, Pg>::from_sql(bytes)?,
@@ -52,7 +52,7 @@ impl FromSql<Bytea, Pg> for SecureToken {
 
 pub(crate) struct NewSecureToken {
     plaintext: String,
-    inner: SecureToken,
+    inner: HashedToken,
 }
 
 impl NewSecureToken {
@@ -62,11 +62,11 @@ impl NewSecureToken {
             TOKEN_PREFIX,
             generate_secure_alphanumeric_string(TOKEN_LENGTH)
         );
-        let sha256 = SecureToken::hash(&plaintext);
+        let sha256 = HashedToken::hash(&plaintext);
 
         Self {
             plaintext,
-            inner: SecureToken { sha256 },
+            inner: HashedToken { sha256 },
         }
     }
 
@@ -75,13 +75,13 @@ impl NewSecureToken {
     }
 
     #[cfg(test)]
-    pub(crate) fn into_inner(self) -> SecureToken {
+    pub(crate) fn into_inner(self) -> HashedToken {
         self.inner
     }
 }
 
 impl std::ops::Deref for NewSecureToken {
-    type Target = SecureToken;
+    type Target = HashedToken;
 
     fn deref(&self) -> &Self::Target {
         &self.inner
@@ -111,12 +111,12 @@ mod tests {
             Sha256::digest(token.plaintext().as_bytes()).as_slice()
         );
 
-        let parsed = SecureToken::parse(token.plaintext()).expect("failed to parse back the token");
+        let parsed = HashedToken::parse(token.plaintext()).expect("failed to parse back the token");
         assert_eq!(parsed.sha256, token.sha256);
     }
 
     #[test]
     fn test_parse_no_kind() {
-        assert!(SecureToken::parse("nokind").is_none());
+        assert!(HashedToken::parse("nokind").is_none());
     }
 }
