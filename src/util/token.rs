@@ -15,20 +15,6 @@ pub struct SecureToken {
 }
 
 impl SecureToken {
-    pub(crate) fn generate() -> NewSecureToken {
-        let plaintext = format!(
-            "{}{}",
-            TOKEN_PREFIX,
-            generate_secure_alphanumeric_string(TOKEN_LENGTH)
-        );
-        let sha256 = Self::hash(&plaintext);
-
-        NewSecureToken {
-            plaintext,
-            inner: Self { sha256 },
-        }
-    }
-
     pub(crate) fn parse(plaintext: &str) -> Option<Self> {
         // This will both reject tokens without a prefix and tokens of the wrong kind.
         if !plaintext.starts_with(TOKEN_PREFIX) {
@@ -70,6 +56,20 @@ pub(crate) struct NewSecureToken {
 }
 
 impl NewSecureToken {
+    pub(crate) fn generate() -> Self {
+        let plaintext = format!(
+            "{}{}",
+            TOKEN_PREFIX,
+            generate_secure_alphanumeric_string(TOKEN_LENGTH)
+        );
+        let sha256 = SecureToken::hash(&plaintext);
+
+        Self {
+            plaintext,
+            inner: SecureToken { sha256 },
+        }
+    }
+
     pub(crate) fn plaintext(&self) -> &str {
         &self.plaintext
     }
@@ -104,7 +104,7 @@ mod tests {
 
     #[test]
     fn test_generated_and_parse() {
-        let token = SecureToken::generate();
+        let token = NewSecureToken::generate();
         assert!(token.plaintext().starts_with(TOKEN_PREFIX));
         assert_eq!(
             token.sha256,
