@@ -52,7 +52,6 @@ impl FromSql<Bytea, Pg> for HashedToken {
 
 pub(crate) struct NewSecureToken {
     plaintext: String,
-    inner: HashedToken,
 }
 
 impl NewSecureToken {
@@ -62,29 +61,17 @@ impl NewSecureToken {
             TOKEN_PREFIX,
             generate_secure_alphanumeric_string(TOKEN_LENGTH)
         );
-        let sha256 = HashedToken::hash(&plaintext);
 
-        Self {
-            plaintext,
-            inner: HashedToken { sha256 },
-        }
+        Self { plaintext }
     }
 
     pub(crate) fn plaintext(&self) -> &str {
         &self.plaintext
     }
 
-    #[cfg(test)]
-    pub(crate) fn into_inner(self) -> HashedToken {
-        self.inner
-    }
-}
-
-impl std::ops::Deref for NewSecureToken {
-    type Target = HashedToken;
-
-    fn deref(&self) -> &Self::Target {
-        &self.inner
+    pub fn hashed(&self) -> HashedToken {
+        let sha256 = HashedToken::hash(&self.plaintext);
+        HashedToken { sha256 }
     }
 }
 
@@ -107,12 +94,12 @@ mod tests {
         let token = NewSecureToken::generate();
         assert!(token.plaintext().starts_with(TOKEN_PREFIX));
         assert_eq!(
-            token.sha256,
+            token.hashed().sha256,
             Sha256::digest(token.plaintext().as_bytes()).as_slice()
         );
 
         let parsed = HashedToken::parse(token.plaintext()).expect("failed to parse back the token");
-        assert_eq!(parsed.sha256, token.sha256);
+        assert_eq!(parsed.sha256, token.hashed().sha256);
     }
 
     #[test]

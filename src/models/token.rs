@@ -56,7 +56,7 @@ impl ApiToken {
             .values((
                 api_tokens::user_id.eq(user_id),
                 api_tokens::name.eq(name),
-                api_tokens::token.eq(&*token),
+                api_tokens::token.eq(token.hashed()),
                 api_tokens::crate_scopes.eq(crate_scopes),
                 api_tokens::endpoint_scopes.eq(endpoint_scopes),
                 api_tokens::expired_at.eq(expired_at),
@@ -109,7 +109,7 @@ mod tests {
         let tok = ApiToken {
             id: 12345,
             user_id: 23456,
-            token: NewSecureToken::generate().into_inner(),
+            token: NewSecureToken::generate().hashed(),
             revoked: false,
             name: "".to_string(),
             created_at: NaiveDate::from_ymd_opt(2017, 1, 6)
