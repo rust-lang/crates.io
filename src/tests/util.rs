@@ -32,8 +32,9 @@ use axum::body::Bytes;
 use chrono::NaiveDateTime;
 use cookie::Cookie;
 use crates_io::models::token::{CrateScope, EndpointScope};
+use crates_io::util::token::PlainToken;
 use http::header;
-use secrecy::{ExposeSecret, SecretString};
+use secrecy::ExposeSecret;
 use std::collections::HashMap;
 use tower_service::Service;
 
@@ -332,7 +333,7 @@ impl MockTokenUser {
         &self.token.model
     }
 
-    pub fn plaintext(&self) -> &SecretString {
+    pub fn plaintext(&self) -> &PlainToken {
         &self.token.plaintext
     }
 

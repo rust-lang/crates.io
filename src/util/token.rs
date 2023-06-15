@@ -1,5 +1,6 @@
 use diesel::{deserialize::FromSql, pg::Pg, serialize::ToSql, sql_types::Bytea};
 use rand::{distributions::Uniform, rngs::OsRng, Rng};
+use secrecy::{ExposeSecret, SecretString, SecretVec};
 use sha2::{Digest, Sha256};
 
 const TOKEN_LENGTH: usize = 32;
@@ -10,19 +11,17 @@ const TOKEN_PREFIX: &str = "cio";
 
 #[derive(FromSqlRow, AsExpression)]
 #[diesel(sql_type = Bytea)]
-pub struct SecureToken {
-    sha256: Vec<u8>,
-}
+pub struct HashedToken(SecretVec<u8>);
 
-impl SecureToken {
+impl HashedToken {
     pub(crate) fn parse(plaintext: &str) -> Option<Self> {
         // This will both reject tokens without a prefix and tokens of the wrong kind.
         if !plaintext.starts_with(TOKEN_PREFIX) {
             return None;
         }
 
-        let sha256 = Self::hash(plaintext);
-        Some(Self { sha256 })
+        let sha256 = Self::hash(plaintext).into();
+        Some(Self(sha256))
     }
 
     pub fn hash(plaintext: &str) -> Vec<u8> {
@@ -30,61 +29,49 @@ impl SecureToken {
     }
 }
 
-impl std::fmt::Debug for SecureToken {
+impl std::fmt::Debug for HashedToken {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str("SecureToken")
+        f.write_str("HashedToken")
     }
 }
 
-impl ToSql<Bytea, Pg> for SecureToken {
+impl ToSql<Bytea, Pg> for HashedToken {
     fn to_sql(&self, out: &mut diesel::serialize::Output<'_, '_, Pg>) -> diesel::serialize::Result {
-        ToSql::<Bytea, Pg>::to_sql(&self.sha256, &mut out.reborrow())
+        ToSql::<Bytea, Pg>::to_sql(&self.0.expose_secret(), &mut out.reborrow())
     }
 }
 
-impl FromSql<Bytea, Pg> for SecureToken {
+impl FromSql<Bytea, Pg> for HashedToken {
     fn from_sql(bytes: diesel::pg::PgValue<'_>) -> diesel::deserialize::Result<Self> {
-        Ok(Self {
-            sha256: FromSql::<Bytea, Pg>::from_sql(bytes)?,
-        })
+        let bytes: Vec<u8> = FromSql::<Bytea, Pg>::from_sql(bytes)?;
+        Ok(Self(bytes.into()))
     }
 }
 
-pub(crate) struct NewSecureToken {
-    plaintext: String,
-    inner: SecureToken,
-}
+#[derive(Debug)]
+pub struct PlainToken(SecretString);
 
-impl NewSecureToken {
+impl PlainToken {
     pub(crate) fn generate() -> Self {
         let plaintext = format!(
             "{}{}",
             TOKEN_PREFIX,
             generate_secure_alphanumeric_string(TOKEN_LENGTH)
-        );
-        let sha256 = SecureToken::hash(&plaintext);
+        )
+        .into();
 
-        Self {
-            plaintext,
-            inner: SecureToken { sha256 },
-        }
+        Self(plaintext)
     }
 
-    pub(crate) fn plaintext(&self) -> &str {
-        &self.plaintext
-    }
-
-    #[cfg(test)]
-    pub(crate) fn into_inner(self) -> SecureToken {
-        self.inner
+    pub fn hashed(&self) -> HashedToken {
+        let sha256 = HashedToken::hash(self.expose_secret()).into();
+        HashedToken(sha256)
     }
 }
 
-impl std::ops::Deref for NewSecureToken {
-    type Target = SecureToken;
-
-    fn deref(&self) -> &Self::Target {
-        &self.inner
+impl ExposeSecret<String> for PlainToken {
+    fn expose_secret(&self) -> &String {
+        self.0.expose_secret()
     }
 }
 
@@ -104,19 +91,20 @@ mod tests {
 
     #[test]
     fn test_generated_and_parse() {
-        let token = NewSecureToken::generate();
-        assert!(token.plaintext().starts_with(TOKEN_PREFIX));
+        let token = PlainToken::generate();
+        assert!(token.expose_secret().starts_with(TOKEN_PREFIX));
         assert_eq!(
-            token.sha256,
-            Sha256::digest(token.plaintext().as_bytes()).as_slice()
+            token.hashed().0.expose_secret(),
+            Sha256::digest(token.expose_secret().as_bytes()).as_slice()
         );
 
-        let parsed = SecureToken::parse(token.plaintext()).expect("failed to parse back the token");
-        assert_eq!(parsed.sha256, token.sha256);
+        let parsed =
+            HashedToken::parse(token.expose_secret()).expect("failed to parse back the token");
+        assert_eq!(parsed.0.expose_secret(), token.hashed().0.expose_secret());
     }
 
     #[test]
     fn test_parse_no_kind() {
-        assert!(SecureToken::parse("nokind").is_none());
+        assert!(HashedToken::parse("nokind").is_none());
     }
 }
