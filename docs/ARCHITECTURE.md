@@ -17,11 +17,11 @@ Documentation about the codebase appears in these locations:
 ## Backend - Rust
 
 The backend of crates.io is written in Rust. Most of that code lives in the *src* directory. It
-serves a JSON API over HTTP, and the HTTP server interface is provided by the [conduit][] crate and
+serves a JSON API over HTTP, and the HTTP server interface is provided by the [axum][] crate and
 related crates. More information about the backend is in
 [`docs/BACKEND.md`](https://github.com/rust-lang/crates.io/blob/master/docs/BACKEND.md).
 
-[conduit]: https://crates.io/crates/conduit
+[axum]: https://crates.io/crates/axum
 
 These files and directories have to do with the backend:
 
