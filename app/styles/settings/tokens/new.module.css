@@ -43,10 +43,9 @@
     flex-wrap: wrap;
 }
 
-.name-input {
-    max-width: 440px;
-    width: 100%;
+.base-input {
     padding: var(--space-2xs);
+    background-color: white;
     border: 1px solid var(--gray-border);
     border-radius: var(--space-3xs);
 
@@ -54,6 +53,13 @@
         background: #fff2f2;
         border-color: red;
     }
+}
+
+.name-input {
+    composes: base-input;
+
+    max-width: 440px;
+    width: 100%;
 }
 
 .scopes-list {
