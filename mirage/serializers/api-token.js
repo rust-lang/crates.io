@@ -20,6 +20,9 @@ export default BaseSerializer.extend({
     if (hash.created_at) {
       hash.created_at = new Date(hash.created_at).toISOString();
     }
+    if (hash.expired_at) {
+      hash.expired_at = new Date(hash.expired_at).toISOString();
+    }
     if (hash.last_used_at) {
       hash.last_used_at = new Date(hash.last_used_at).toISOString();
     }

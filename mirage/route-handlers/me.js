@@ -28,7 +28,10 @@ export function register(server) {
       return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
     }
 
-    return schema.apiTokens.where({ userId: user.id }).sort((a, b) => Number(b.id) - Number(a.id));
+    return schema.apiTokens
+      .where({ userId: user.id })
+      .filter(token => !token.expiredAt || new Date(token.expiredAt) > new Date())
+      .sort((a, b) => Number(b.id) - Number(a.id));
   });
 
   server.put('/api/v1/me/tokens', function (schema) {
@@ -37,12 +40,19 @@ export function register(server) {
       return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
     }
 
-    let { name, crateScopes = null, endpointScopes = null } = this.normalizedRequestAttrs('api-token');
+    let {
+      name,
+      crateScopes = null,
+      endpointScopes = null,
+      expiredAt = null,
+    } = this.normalizedRequestAttrs('api-token');
+
     let token = server.create('api-token', {
       user,
       name,
       crateScopes,
       endpointScopes,
+      expiredAt,
       createdAt: new Date().toISOString(),
     });
 
