@@ -19,8 +19,9 @@ module('Mirage | GET /api/v1/me/tokens', function (hooks) {
       crateScopes: ['serde', 'serde-*'],
       endpointScopes: ['publish-update'],
     });
-    this.server.create('api-token', { user, createdAt: '2017-11-19T13:59:22Z' });
+    this.server.create('api-token', { user, createdAt: '2017-11-19T13:59:22Z', expiredAt: '2023-11-20T10:59:22Z' });
     this.server.create('api-token', { user, createdAt: '2017-11-19T14:59:22Z' });
+    this.server.create('api-token', { user, createdAt: '2017-11-19T15:59:22Z', expiredAt: '2017-11-20T10:59:22Z' });
 
     let response = await fetch('/api/v1/me/tokens');
     assert.strictEqual(response.status, 200);
@@ -31,6 +32,7 @@ module('Mirage | GET /api/v1/me/tokens', function (hooks) {
           crate_scopes: null,
           created_at: '2017-11-19T14:59:22.000Z',
           endpoint_scopes: null,
+          expired_at: null,
           last_used_at: null,
           name: 'API Token 3',
         },
@@ -39,6 +41,7 @@ module('Mirage | GET /api/v1/me/tokens', function (hooks) {
           crate_scopes: null,
           created_at: '2017-11-19T13:59:22.000Z',
           endpoint_scopes: null,
+          expired_at: '2023-11-20T10:59:22.000Z',
           last_used_at: null,
           name: 'API Token 2',
         },
@@ -47,6 +50,7 @@ module('Mirage | GET /api/v1/me/tokens', function (hooks) {
           crate_scopes: ['serde', 'serde-*'],
           created_at: '2017-11-19T12:59:22.000Z',
           endpoint_scopes: ['publish-update'],
+          expired_at: null,
           last_used_at: null,
           name: 'API Token 1',
         },
