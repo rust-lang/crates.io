@@ -9,4 +9,6 @@ export default class ApiToken extends Model {
   @attr crate_scopes;
   /** @type string[] | null */
   @attr endpoint_scopes;
+  /** @type string | null */
+  @attr('date') expired_at;
 }

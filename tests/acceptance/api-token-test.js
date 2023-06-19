@@ -31,6 +31,7 @@ module('Acceptance | api-tokens', function (hooks) {
       name: 'BAR',
       createdAt: '2017-11-19T17:59:22',
       lastUsedAt: null,
+      expiredAt: '2017-12-19T17:59:22',
     });
 
     context.authenticateAs(user);
@@ -47,6 +48,7 @@ module('Acceptance | api-tokens', function (hooks) {
     assert.dom('[data-test-name]', row1).hasText('BAR');
     assert.dom('[data-test-created-at]', row1).hasText('Created about 18 hours ago');
     assert.dom('[data-test-last-used-at]', row1).hasText('Never used');
+    assert.dom('[data-test-expired-at]', row1).hasText('Expires in 29 days');
     assert.dom('[data-test-save-token-button]', row1).doesNotExist();
     assert.dom('[data-test-revoke-token-button]', row1).exists();
     assert.dom('[data-test-saving-spinner]', row1).doesNotExist();
@@ -56,6 +58,7 @@ module('Acceptance | api-tokens', function (hooks) {
     assert.dom('[data-test-name]', row2).hasText('foo');
     assert.dom('[data-test-created-at]', row2).hasText('Created 4 months ago');
     assert.dom('[data-test-last-used-at]', row2).hasText('Last used 18 days ago');
+    assert.dom('[data-test-expired-at]', row2).doesNotExist();
     assert.dom('[data-test-save-token-button]', row2).doesNotExist();
     assert.dom('[data-test-revoke-token-button]', row2).exists();
     assert.dom('[data-test-saving-spinner]', row2).doesNotExist();

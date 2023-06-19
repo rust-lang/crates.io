@@ -115,6 +115,12 @@
           <div title={{token.created_at}} local-class="created-at" data-test-created-at>
             Created {{date-format-distance-to-now token.created_at addSuffix=true}}
           </div>
+
+          {{#if token.expired_at}}
+            <div title={{token.expired_at}} local-class="expired-at" data-test-expired-at>
+              Expires {{date-format-distance-to-now token.expired_at addSuffix=true}}
+            </div>
+          {{/if}}
         </div>
 
         {{#if token.token}}
