@@ -16,6 +16,9 @@ export default class NewTokenController extends Controller {
 
   @tracked name;
   @tracked nameInvalid;
+  @tracked expirySelection;
+  @tracked expiryDateInput;
+  @tracked expiryDateInvalid;
   @tracked scopes;
   @tracked scopesInvalid;
   @tracked crateScopes;
@@ -27,6 +30,31 @@ export default class NewTokenController extends Controller {
   constructor() {
     super(...arguments);
     this.reset();
+  }
+
+  get today() {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  get expiryDate() {
+    if (this.expirySelection === 'none') return null;
+    if (this.expirySelection === 'custom') {
+      if (!this.expiryDateInput) return null;
+
+      let now = new Date();
+      let timeSuffix = now.toISOString().slice(10);
+      return new Date(this.expiryDateInput + timeSuffix);
+    }
+
+    let date = new Date();
+    date.setDate(date.getDate() + Number(this.expirySelection));
+    return date;
+  }
+
+  get expiryDescription() {
+    return this.expirySelection === 'none'
+      ? 'The token will never expire'
+      : `The token will expire on ${this.expiryDate.toLocaleDateString(undefined, { dateStyle: 'long' })}`;
   }
 
   @action isScopeSelected(id) {
@@ -46,6 +74,7 @@ export default class NewTokenController extends Controller {
       name,
       endpoint_scopes: scopes,
       crate_scopes: crateScopes,
+      expired_at: this.expiryDate,
     });
 
     try {
@@ -68,6 +97,9 @@ export default class NewTokenController extends Controller {
   reset() {
     this.name = '';
     this.nameInvalid = false;
+    this.expirySelection = 'none';
+    this.expiryDateInput = null;
+    this.expiryDateInvalid = false;
     this.scopes = [];
     this.scopesInvalid = false;
     this.crateScopes = TrackedArray.of();
@@ -75,14 +107,24 @@ export default class NewTokenController extends Controller {
 
   validate() {
     this.nameInvalid = !this.name;
+    this.expiryDateInvalid = this.expirySelection === 'custom' && !this.expiryDateInput;
     this.scopesInvalid = this.scopes.length === 0;
     let crateScopesValid = this.crateScopes.map(pattern => pattern.validate(false)).every(Boolean);
 
-    return !this.nameInvalid && !this.scopesInvalid && crateScopesValid;
+    return !this.nameInvalid && !this.expiryDateInvalid && !this.scopesInvalid && crateScopesValid;
   }
 
   @action resetNameValidation() {
     this.nameInvalid = false;
+  }
+
+  @action updateExpirySelection(event) {
+    this.expiryDateInput = this.expiryDate?.toISOString().slice(0, 10);
+    this.expirySelection = event.target.value;
+  }
+
+  @action resetExpiryDateValidation() {
+    this.expiryDateInvalid = false;
   }
 
   @action toggleScope(id) {

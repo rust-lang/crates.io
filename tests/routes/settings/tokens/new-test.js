@@ -1,4 +1,4 @@
-import { click, currentURL, fillIn, waitFor } from '@ember/test-helpers';
+import { click, currentURL, fillIn, select, waitFor } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
 import { defer } from 'rsvp';
@@ -60,6 +60,7 @@ module('/settings/tokens/new', function (hooks) {
     let token = this.server.schema.apiTokens.findBy({ name: 'token-name' });
     assert.ok(Boolean(token), 'API token has been created in the backend database');
     assert.strictEqual(token.name, 'token-name');
+    assert.strictEqual(token.expiredAt, null);
     assert.strictEqual(token.crateScopes, null);
     assert.deepEqual(token.endpointScopes, ['publish-update']);
 
@@ -68,6 +69,7 @@ module('/settings/tokens/new', function (hooks) {
     assert.dom('[data-test-api-token="1"] [data-test-token]').hasText(token.token);
     assert.dom('[data-test-api-token="1"] [data-test-endpoint-scopes]').hasText('Scopes: publish-update');
     assert.dom('[data-test-api-token="1"] [data-test-crate-scopes]').doesNotExist();
+    assert.dom('[data-test-api-token="1"] [data-test-expired-at]').doesNotExist();
   });
 
   test('crate scopes', async function (assert) {
@@ -138,6 +140,75 @@ module('/settings/tokens/new', function (hooks) {
     assert.dom('[data-test-api-token="1"] [data-test-token]').hasText(token.token);
     assert.dom('[data-test-api-token="1"] [data-test-endpoint-scopes]').hasText('Scopes: publish-update and yank');
     assert.dom('[data-test-api-token="1"] [data-test-crate-scopes]').hasText('Crates: serde-* and serde');
+    assert.dom('[data-test-api-token="1"] [data-test-expired-at]').doesNotExist();
+  });
+
+  test('token expiry', async function (assert) {
+    prepare(this);
+
+    await visit('/settings/tokens/new');
+    assert.strictEqual(currentURL(), '/settings/tokens/new');
+    assert.dom('[data-test-expiry-description]').hasText('The token will never expire');
+
+    await fillIn('[data-test-name]', 'token-name');
+    await select('[data-test-expiry]', '30');
+
+    let expiryDate = new Date('2017-12-20');
+    let expectedDate = expiryDate.toLocaleDateString(undefined, { dateStyle: 'long' });
+    let expectedDescription = `The token will expire on ${expectedDate}`;
+    assert.dom('[data-test-expiry-description]').hasText(expectedDescription);
+
+    await click('[data-test-scope="publish-update"]');
+    await click('[data-test-generate]');
+
+    let token = this.server.schema.apiTokens.findBy({ name: 'token-name' });
+    assert.ok(Boolean(token), 'API token has been created in the backend database');
+    assert.strictEqual(token.name, 'token-name');
+    assert.strictEqual(token.expiredAt.slice(0, 10), '2017-12-20');
+    assert.strictEqual(token.crateScopes, null);
+    assert.deepEqual(token.endpointScopes, ['publish-update']);
+
+    assert.strictEqual(currentURL(), '/settings/tokens');
+    assert.dom('[data-test-api-token="1"] [data-test-name]').hasText('token-name');
+    assert.dom('[data-test-api-token="1"] [data-test-token]').hasText(token.token);
+    assert.dom('[data-test-api-token="1"] [data-test-endpoint-scopes]').hasText('Scopes: publish-update');
+    assert.dom('[data-test-api-token="1"] [data-test-crate-scopes]').doesNotExist();
+    assert.dom('[data-test-api-token="1"] [data-test-expired-at]').hasText('Expires in about 1 month');
+  });
+
+  test('token expiry with custom date', async function (assert) {
+    prepare(this);
+
+    await visit('/settings/tokens/new');
+    assert.strictEqual(currentURL(), '/settings/tokens/new');
+    assert.dom('[data-test-expiry-description]').hasText('The token will never expire');
+
+    await fillIn('[data-test-name]', 'token-name');
+    await select('[data-test-expiry]', 'custom');
+    assert.dom('[data-test-expiry-description]').doesNotExist();
+
+    await click('[data-test-scope="publish-update"]');
+    await click('[data-test-generate]');
+    assert.dom('[data-test-expiry-date]').hasAria('invalid', 'true');
+
+    await fillIn('[data-test-expiry-date]', '2024-05-04');
+    assert.dom('[data-test-expiry-description]').doesNotExist();
+
+    await click('[data-test-generate]');
+
+    let token = this.server.schema.apiTokens.findBy({ name: 'token-name' });
+    assert.ok(Boolean(token), 'API token has been created in the backend database');
+    assert.strictEqual(token.name, 'token-name');
+    assert.strictEqual(token.expiredAt.slice(0, 10), '2024-05-04');
+    assert.strictEqual(token.crateScopes, null);
+    assert.deepEqual(token.endpointScopes, ['publish-update']);
+
+    assert.strictEqual(currentURL(), '/settings/tokens');
+    assert.dom('[data-test-api-token="1"] [data-test-name]').hasText('token-name');
+    assert.dom('[data-test-api-token="1"] [data-test-token]').hasText(token.token);
+    assert.dom('[data-test-api-token="1"] [data-test-endpoint-scopes]').hasText('Scopes: publish-update');
+    assert.dom('[data-test-api-token="1"] [data-test-crate-scopes]').doesNotExist();
+    assert.dom('[data-test-api-token="1"] [data-test-expired-at]').hasText('Expires in over 6 years');
   });
 
   test('loading and error state', async function (assert) {
