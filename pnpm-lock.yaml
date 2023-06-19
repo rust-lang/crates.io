@@ -264,8 +264,8 @@ devDependencies:
     specifier: 4.7.0
     version: 4.7.0
   match-json:
-    specifier: 1.3.5
-    version: 1.3.5
+    specifier: 1.3.6
+    version: 1.3.6
   miragejs:
     specifier: 0.1.47
     version: 0.1.47
@@ -12293,8 +12293,8 @@ packages:
       uc.micro: 1.0.6
     dev: true
 
-  /match-json@1.3.5:
-    resolution: {integrity: sha512-V5Jw1rIdjt37vfQRqvKtXW4dKbSTpvgwyEPKOBikY90xQ5Wr5yOmfpjcTm12d0Kqq+TfMqlXJkETf4yOF9JhUw==}
+  /match-json@1.3.6:
+    resolution: {integrity: sha512-oRc8HWm1HAf0GdoOy0Qh0dpIVW6XLrHZx5TNv4O5M84Da4JhSEI7kkq5wgBCI8J0j9KTZW+nMOtHAHaDS8KTJA==}
     dev: true
 
   /matcher-collection@1.1.2:
