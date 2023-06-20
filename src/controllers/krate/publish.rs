@@ -248,6 +248,17 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             }
 
             // Upload crate tarball
+
+            if !vers.build.is_empty() {
+                let escaped_version = vers.to_string().replace('+', "%2B");
+                app.config.uploader().upload_crate(
+                    app.http_client(),
+                    tarball_bytes.clone(),
+                    &krate.name,
+                    &escaped_version,
+                )?;
+            }
+
             app.config.uploader().upload_crate(
                 app.http_client(),
                 tarball_bytes,
