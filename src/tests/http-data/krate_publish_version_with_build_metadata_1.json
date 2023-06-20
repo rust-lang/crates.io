@@ -1,6 +1,36 @@
 [
   {
     "request": {
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/crates/foo/foo-1.0.0%2Bfoo.crate",
+      "method": "PUT",
+      "headers": [
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip"
+        ],
+        [
+          "content-length",
+          "35"
+        ],
+        [
+          "content-type",
+          "application/gzip"
+        ]
+      ],
+      "body": "H4sIAAAAAAAA/+3AAQEAAACCIP+vbkhQwKsBLq+17wAEAAA="
+    },
+    "response": {
+      "status": 200,
+      "headers": [],
+      "body": ""
+    }
+  },
+  {
+    "request": {
       "uri": "http://alexcrichton-test.s3.amazonaws.com/crates/foo/foo-1.0.0+foo.crate",
       "method": "PUT",
       "headers": [

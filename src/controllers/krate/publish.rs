@@ -248,9 +248,23 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             }
 
             // Upload crate tarball
-            app.config
-                .uploader()
-                .upload_crate(app.http_client(), tarball_bytes, &krate, vers)?;
+
+            if !vers.build.is_empty() {
+                let escaped_version = vers.to_string().replace('+', "%2B");
+                app.config.uploader().upload_crate(
+                    app.http_client(),
+                    tarball_bytes.clone(),
+                    &krate.name,
+                    &escaped_version,
+                )?;
+            }
+
+            app.config.uploader().upload_crate(
+                app.http_client(),
+                tarball_bytes,
+                &krate.name,
+                &vers.to_string(),
+            )?;
 
             Job::enqueue_sync_to_index(&krate.name, conn)?;
 

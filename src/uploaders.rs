@@ -8,8 +8,6 @@ use std::env;
 use std::fs::{self, File};
 use std::path::PathBuf;
 
-use crate::models::Crate;
-
 const CACHE_CONTROL_IMMUTABLE: &str = "public,max-age=31536000,immutable";
 const CACHE_CONTROL_README: &str = "public,max-age=604800";
 const CACHE_CONTROL_INDEX: &str = "public,max-age=600";
@@ -181,10 +179,10 @@ impl Uploader {
         &self,
         http_client: &Client,
         body: R,
-        krate: &Crate,
-        vers: &semver::Version,
+        krate: &str,
+        vers: &str,
     ) -> AppResult<()> {
-        let path = Uploader::crate_path(&krate.name, &vers.to_string());
+        let path = Uploader::crate_path(krate, vers);
         let mut extra_headers = header::HeaderMap::new();
         extra_headers.insert(
             header::CACHE_CONTROL,
