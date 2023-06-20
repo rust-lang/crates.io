@@ -36,7 +36,7 @@ module('/settings/tokens/new', function (hooks) {
     await click('[data-test-settings-menu] [data-test-tokens] a');
     assert.strictEqual(currentURL(), '/settings/tokens');
 
-    await click('[data-test-new-token-button]', { altKey: true });
+    await click('[data-test-new-token-button]');
     assert.strictEqual(currentURL(), '/settings/tokens/new');
   });
 
