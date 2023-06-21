@@ -1,4 +1,5 @@
 use anyhow::{anyhow, Context};
+use reqwest::blocking::Client;
 use std::{
     fs::{self, File},
     path::{Path, PathBuf},
@@ -6,6 +7,8 @@ use std::{
 
 use self::configuration::VisibilityConfig;
 use crate::swirl::PerformError;
+use crate::worker::cloudfront::CloudFront;
+use crate::worker::fastly::Fastly;
 use crate::{
     background_jobs::Environment,
     uploaders::{UploadBucket, Uploader},
@@ -30,6 +33,10 @@ pub fn perform_dump_db(
     info!("Uploading tarball");
     let size = tarball.upload(&target_name, &env.uploader)?;
     info!("Database dump uploaded {} bytes to {}.", size, &target_name);
+
+    info!("Invalidating CDN caches");
+    InvalidateCaches::create(env.http_client(), &target_name)?;
+
     Ok(())
 }
 
@@ -243,6 +250,22 @@ impl DumpTarball {
 impl Drop for DumpTarball {
     fn drop(&mut self) {
         std::fs::remove_file(&self.tarball_path).unwrap();
+    }
+}
+
+struct InvalidateCaches {}
+
+impl InvalidateCaches {
+    pub fn create(client: &Client, target_name: &str) -> Result<(), PerformError> {
+        let cloudfront = CloudFront::from_environment()
+            .context("failed to create CloudFront client from environment")?;
+        cloudfront.invalidate(client, target_name)?;
+
+        let fastly = Fastly::from_environment()
+            .context("failed to create Fastly client from environment")?;
+        fastly.invalidate(client, target_name)?;
+
+        Ok(())
     }
 }
 
