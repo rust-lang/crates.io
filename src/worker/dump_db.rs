@@ -35,7 +35,7 @@ pub fn perform_dump_db(
     info!("Database dump uploaded {} bytes to {}.", size, &target_name);
 
     info!("Invalidating CDN caches");
-    InvalidateCaches::create(env.http_client(), &target_name)?;
+    invalidate_caches(env.http_client(), &target_name)?;
 
     Ok(())
 }
@@ -253,20 +253,16 @@ impl Drop for DumpTarball {
     }
 }
 
-struct InvalidateCaches {}
+fn invalidate_caches(client: &Client, target_name: &str) -> Result<(), PerformError> {
+    let cloudfront = CloudFront::from_environment()
+        .context("failed to create CloudFront client from environment")?;
+    cloudfront.invalidate(client, target_name)?;
 
-impl InvalidateCaches {
-    pub fn create(client: &Client, target_name: &str) -> Result<(), PerformError> {
-        let cloudfront = CloudFront::from_environment()
-            .context("failed to create CloudFront client from environment")?;
-        cloudfront.invalidate(client, target_name)?;
+    let fastly =
+        Fastly::from_environment().context("failed to create Fastly client from environment")?;
+    fastly.invalidate(client, target_name)?;
 
-        let fastly = Fastly::from_environment()
-            .context("failed to create Fastly client from environment")?;
-        fastly.invalidate(client, target_name)?;
-
-        Ok(())
-    }
+    Ok(())
 }
 
 mod configuration;
