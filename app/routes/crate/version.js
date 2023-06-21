@@ -1,5 +1,6 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
+import { waitForPromise } from '@ember/test-waiters';
 
 import { didCancel } from 'ember-concurrency';
 
@@ -39,7 +40,7 @@ export default class VersionRoute extends Route {
   setupController(controller, model) {
     super.setupController(...arguments);
 
-    controller.loadReadmeTask.perform().catch(() => {
+    waitForPromise(controller.loadReadmeTask.perform()).catch(() => {
       // ignored
     });
 

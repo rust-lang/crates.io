@@ -7,6 +7,7 @@ import { task } from 'ember-concurrency';
 import { alias } from 'macro-decorators';
 
 export default class CrateVersionController extends Controller {
+  @service mermaid;
   @service session;
 
   get downloadsContext() {
@@ -40,6 +41,17 @@ export default class CrateVersionController extends Controller {
     let readme = version.loadReadmeTask.lastSuccessful
       ? version.loadReadmeTask.lastSuccessful.value
       : await version.loadReadmeTask.perform();
+
+    // If the README contains `language-mermaid` we ensure that the `mermaid` library has loaded before we continue
+    if (readme.includes('language-mermaid') && !this.mermaid.loadTask.lastSuccessful?.value) {
+      try {
+        await this.mermaid.loadTask.perform();
+      } catch (error) {
+        // If we failed to load the library due to network issues, it is not the end of the world, and we just log
+        // the error to the console.
+        console.error(error);
+      }
+    }
 
     if (typeof document !== 'undefined') {
       setTimeout(() => {
