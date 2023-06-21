@@ -26,6 +26,7 @@ use std::thread::sleep;
 use std::time::{Duration, Instant};
 
 use crates_io::swirl;
+use crates_io::worker::fastly::Fastly;
 
 fn main() {
     let _sentry = crates_io::sentry::init();
@@ -73,6 +74,7 @@ fn main() {
     info!(duration = ?clone_duration, "Index cloned");
 
     let cloudfront = CloudFront::from_environment();
+    let fastly = Fastly::from_environment();
 
     let build_runner = || {
         let client = Client::builder()
@@ -84,6 +86,7 @@ fn main() {
             uploader.clone(),
             client,
             cloudfront.clone(),
+            fastly.clone(),
         );
         swirl::Runner::production_runner(environment, db_url.clone(), job_start_timeout)
     };

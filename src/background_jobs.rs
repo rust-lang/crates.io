@@ -12,6 +12,7 @@ use crate::swirl::PerformError;
 use crate::uploaders::Uploader;
 use crate::worker;
 use crate::worker::cloudfront::CloudFront;
+use crate::worker::fastly::Fastly;
 use crates_io_index::Repository;
 
 pub const PRIORITY_DEFAULT: i16 = 0;
@@ -295,6 +296,7 @@ pub struct Environment {
     pub uploader: Uploader,
     http_client: AssertUnwindSafe<Client>,
     cloudfront: Option<CloudFront>,
+    fastly: Option<Fastly>,
 }
 
 impl Clone for Environment {
@@ -304,6 +306,7 @@ impl Clone for Environment {
             uploader: self.uploader.clone(),
             http_client: AssertUnwindSafe(self.http_client.0.clone()),
             cloudfront: self.cloudfront.clone(),
+            fastly: self.fastly.clone(),
         }
     }
 }
@@ -314,12 +317,14 @@ impl Environment {
         uploader: Uploader,
         http_client: Client,
         cloudfront: Option<CloudFront>,
+        fastly: Option<Fastly>,
     ) -> Self {
         Self::new_shared(
             Arc::new(Mutex::new(index)),
             uploader,
             http_client,
             cloudfront,
+            fastly,
         )
     }
 
@@ -328,12 +333,14 @@ impl Environment {
         uploader: Uploader,
         http_client: Client,
         cloudfront: Option<CloudFront>,
+        fastly: Option<Fastly>,
     ) -> Self {
         Self {
             index,
             uploader,
             http_client: AssertUnwindSafe(http_client),
             cloudfront,
+            fastly,
         }
     }
 
@@ -351,5 +358,9 @@ impl Environment {
 
     pub(crate) fn cloudfront(&self) -> Option<&CloudFront> {
         self.cloudfront.as_ref()
+    }
+
+    pub(crate) fn fastly(&self) -> Option<&Fastly> {
+        self.fastly.as_ref()
     }
 }

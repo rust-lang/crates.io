@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Context};
 use reqwest::blocking::Client;
 
+#[derive(Clone, Debug)]
 pub struct Fastly {
     api_token: String,
     static_domain_name: String,

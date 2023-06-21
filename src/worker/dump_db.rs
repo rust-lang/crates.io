@@ -1,5 +1,4 @@
 use anyhow::{anyhow, Context};
-use reqwest::blocking::Client;
 use std::{
     fs::{self, File},
     path::{Path, PathBuf},
@@ -7,8 +6,6 @@ use std::{
 
 use self::configuration::VisibilityConfig;
 use crate::swirl::PerformError;
-use crate::worker::cloudfront::CloudFront;
-use crate::worker::fastly::Fastly;
 use crate::{
     background_jobs::Environment,
     uploaders::{UploadBucket, Uploader},
@@ -35,7 +32,7 @@ pub fn perform_dump_db(
     info!("Database dump uploaded {} bytes to {}.", size, &target_name);
 
     info!("Invalidating CDN caches");
-    invalidate_caches(env.http_client(), &target_name)?;
+    invalidate_caches(env, &target_name)?;
 
     Ok(())
 }
@@ -253,19 +250,17 @@ impl Drop for DumpTarball {
     }
 }
 
-fn invalidate_caches(client: &Client, target_name: &str) -> Result<(), PerformError> {
-    let cloudfront = CloudFront::from_environment()
-        .context("failed to create CloudFront client from environment")?;
-
-    if let Err(error) = cloudfront.invalidate(client, target_name) {
-        warn!("failed to invalidate CloudFront cache: {}", error);
+fn invalidate_caches(env: &Environment, target_name: &str) -> Result<(), PerformError> {
+    if let Some(cloudfront) = env.cloudfront() {
+        if let Err(error) = cloudfront.invalidate(env.http_client(), target_name) {
+            warn!("failed to invalidate CloudFront cache: {}", error);
+        }
     }
 
-    let fastly =
-        Fastly::from_environment().context("failed to create Fastly client from environment")?;
-
-    if let Err(error) = fastly.invalidate(client, target_name) {
-        warn!("failed to invalidate Fastly cache: {}", error);
+    if let Some(fastly) = env.fastly() {
+        if let Err(error) = fastly.invalidate(env.http_client(), target_name) {
+            warn!("failed to invalidate Fastly cache: {}", error);
+        }
     }
 
     Ok(())
