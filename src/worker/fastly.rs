@@ -9,7 +9,7 @@ pub struct Fastly {
 
 impl Fastly {
     pub fn from_environment() -> Option<Self> {
-        let api_token = dotenvy::var("FASTLY_API_TOKEN").expect("missing FASTLY_API_TOKEN");
+        let api_token = dotenvy::var("FASTLY_API_TOKEN").ok()?;
         let static_domain_name = dotenvy::var("S3_CDN").expect("missing S3_CDN");
 
         Some(Self {
