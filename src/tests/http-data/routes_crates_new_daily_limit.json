@@ -1,7 +1,7 @@
 [
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/crates/foo_daily_limit/foo_daily_limit-0.0.1.crate",
+      "uri": "http://127.0.0.1:19000/crates-test/crates/foo_daily_limit/foo_daily_limit-0.0.1.crate",
       "method": "PUT",
       "headers": [
         [
@@ -25,13 +25,66 @@
     },
     "response": {
       "status": 200,
-      "headers": [],
+      "headers": [
+        [
+          "accept-ranges",
+          "bytes"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "content-security-policy",
+          "block-all-mixed-content"
+        ],
+        [
+          "date",
+          "Tue, 13 Jun 2023 23:04:36 GMT"
+        ],
+        [
+          "etag",
+          "\"f9016ad360cebb4fe2e6e96e5949f022\""
+        ],
+        [
+          "server",
+          "MinIO"
+        ],
+        [
+          "strict-transport-security",
+          "max-age=31536000; includeSubDomains"
+        ],
+        [
+          "vary",
+          "Origin"
+        ],
+        [
+          "vary",
+          "Accept-Encoding"
+        ],
+        [
+          "x-amz-id-2",
+          "dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8"
+        ],
+        [
+          "x-amz-request-id",
+          "17685A6AFC8D0C97"
+        ],
+        [
+          "x-content-type-options",
+          "nosniff"
+        ],
+        [
+          "x-xss-protection",
+          "1; mode=block"
+        ]
+      ],
       "body": ""
     }
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/fo/o_/foo_daily_limit",
+      "uri": "http://127.0.0.1:19000/crates-index-test/fo/o_/foo_daily_limit",
       "method": "PUT",
       "headers": [
         [
@@ -55,13 +108,66 @@
     },
     "response": {
       "status": 200,
-      "headers": [],
+      "headers": [
+        [
+          "accept-ranges",
+          "bytes"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "content-security-policy",
+          "block-all-mixed-content"
+        ],
+        [
+          "date",
+          "Tue, 13 Jun 2023 23:04:36 GMT"
+        ],
+        [
+          "etag",
+          "\"fe7dee3cbb802cc7e9a08d63c86081ad\""
+        ],
+        [
+          "server",
+          "MinIO"
+        ],
+        [
+          "strict-transport-security",
+          "max-age=31536000; includeSubDomains"
+        ],
+        [
+          "vary",
+          "Origin"
+        ],
+        [
+          "vary",
+          "Accept-Encoding"
+        ],
+        [
+          "x-amz-id-2",
+          "dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8"
+        ],
+        [
+          "x-amz-request-id",
+          "17685A6B001B0E88"
+        ],
+        [
+          "x-content-type-options",
+          "nosniff"
+        ],
+        [
+          "x-xss-protection",
+          "1; mode=block"
+        ]
+      ],
       "body": ""
     }
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/crates/foo_daily_limit/foo_daily_limit-0.0.2.crate",
+      "uri": "http://127.0.0.1:19000/crates-test/crates/foo_daily_limit/foo_daily_limit-0.0.2.crate",
       "method": "PUT",
       "headers": [
         [
@@ -85,13 +191,66 @@
     },
     "response": {
       "status": 200,
-      "headers": [],
+      "headers": [
+        [
+          "accept-ranges",
+          "bytes"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "content-security-policy",
+          "block-all-mixed-content"
+        ],
+        [
+          "date",
+          "Tue, 13 Jun 2023 23:04:36 GMT"
+        ],
+        [
+          "etag",
+          "\"f9016ad360cebb4fe2e6e96e5949f022\""
+        ],
+        [
+          "server",
+          "MinIO"
+        ],
+        [
+          "strict-transport-security",
+          "max-age=31536000; includeSubDomains"
+        ],
+        [
+          "vary",
+          "Origin"
+        ],
+        [
+          "vary",
+          "Accept-Encoding"
+        ],
+        [
+          "x-amz-id-2",
+          "dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8"
+        ],
+        [
+          "x-amz-request-id",
+          "17685A6B01389434"
+        ],
+        [
+          "x-content-type-options",
+          "nosniff"
+        ],
+        [
+          "x-xss-protection",
+          "1; mode=block"
+        ]
+      ],
       "body": ""
     }
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/fo/o_/foo_daily_limit",
+      "uri": "http://127.0.0.1:19000/crates-index-test/fo/o_/foo_daily_limit",
       "method": "PUT",
       "headers": [
         [
@@ -115,13 +274,66 @@
     },
     "response": {
       "status": 200,
-      "headers": [],
+      "headers": [
+        [
+          "accept-ranges",
+          "bytes"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "content-security-policy",
+          "block-all-mixed-content"
+        ],
+        [
+          "date",
+          "Tue, 13 Jun 2023 23:04:36 GMT"
+        ],
+        [
+          "etag",
+          "\"9e56bb97add63496075c1c3bc03784a9\""
+        ],
+        [
+          "server",
+          "MinIO"
+        ],
+        [
+          "strict-transport-security",
+          "max-age=31536000; includeSubDomains"
+        ],
+        [
+          "vary",
+          "Origin"
+        ],
+        [
+          "vary",
+          "Accept-Encoding"
+        ],
+        [
+          "x-amz-id-2",
+          "dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8"
+        ],
+        [
+          "x-amz-request-id",
+          "17685A6B0429E38F"
+        ],
+        [
+          "x-content-type-options",
+          "nosniff"
+        ],
+        [
+          "x-xss-protection",
+          "1; mode=block"
+        ]
+      ],
       "body": ""
     }
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/crates/foo_daily_limit/foo_daily_limit-0.0.3.crate",
+      "uri": "http://127.0.0.1:19000/crates-test/crates/foo_daily_limit/foo_daily_limit-0.0.3.crate",
       "method": "PUT",
       "headers": [
         [
@@ -145,13 +357,66 @@
     },
     "response": {
       "status": 200,
-      "headers": [],
+      "headers": [
+        [
+          "accept-ranges",
+          "bytes"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "content-security-policy",
+          "block-all-mixed-content"
+        ],
+        [
+          "date",
+          "Tue, 13 Jun 2023 23:04:36 GMT"
+        ],
+        [
+          "etag",
+          "\"f9016ad360cebb4fe2e6e96e5949f022\""
+        ],
+        [
+          "server",
+          "MinIO"
+        ],
+        [
+          "strict-transport-security",
+          "max-age=31536000; includeSubDomains"
+        ],
+        [
+          "vary",
+          "Origin"
+        ],
+        [
+          "vary",
+          "Accept-Encoding"
+        ],
+        [
+          "x-amz-id-2",
+          "dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8"
+        ],
+        [
+          "x-amz-request-id",
+          "17685A6B054537F0"
+        ],
+        [
+          "x-content-type-options",
+          "nosniff"
+        ],
+        [
+          "x-xss-protection",
+          "1; mode=block"
+        ]
+      ],
       "body": ""
     }
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/fo/o_/foo_daily_limit",
+      "uri": "http://127.0.0.1:19000/crates-index-test/fo/o_/foo_daily_limit",
       "method": "PUT",
       "headers": [
         [
@@ -175,13 +440,66 @@
     },
     "response": {
       "status": 200,
-      "headers": [],
+      "headers": [
+        [
+          "accept-ranges",
+          "bytes"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "content-security-policy",
+          "block-all-mixed-content"
+        ],
+        [
+          "date",
+          "Tue, 13 Jun 2023 23:04:36 GMT"
+        ],
+        [
+          "etag",
+          "\"5d72b4742e057895bd0436fe2d46cee5\""
+        ],
+        [
+          "server",
+          "MinIO"
+        ],
+        [
+          "strict-transport-security",
+          "max-age=31536000; includeSubDomains"
+        ],
+        [
+          "vary",
+          "Accept-Encoding"
+        ],
+        [
+          "vary",
+          "Origin"
+        ],
+        [
+          "x-amz-id-2",
+          "dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8"
+        ],
+        [
+          "x-amz-request-id",
+          "17685A6B08A813A8"
+        ],
+        [
+          "x-content-type-options",
+          "nosniff"
+        ],
+        [
+          "x-xss-protection",
+          "1; mode=block"
+        ]
+      ],
       "body": ""
     }
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/crates/foo_daily_limit/foo_daily_limit-0.0.4.crate",
+      "uri": "http://127.0.0.1:19000/crates-test/crates/foo_daily_limit/foo_daily_limit-0.0.4.crate",
       "method": "PUT",
       "headers": [
         [
@@ -205,13 +523,66 @@
     },
     "response": {
       "status": 200,
-      "headers": [],
+      "headers": [
+        [
+          "accept-ranges",
+          "bytes"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "content-security-policy",
+          "block-all-mixed-content"
+        ],
+        [
+          "date",
+          "Tue, 13 Jun 2023 23:04:36 GMT"
+        ],
+        [
+          "etag",
+          "\"f9016ad360cebb4fe2e6e96e5949f022\""
+        ],
+        [
+          "server",
+          "MinIO"
+        ],
+        [
+          "strict-transport-security",
+          "max-age=31536000; includeSubDomains"
+        ],
+        [
+          "vary",
+          "Accept-Encoding"
+        ],
+        [
+          "vary",
+          "Origin"
+        ],
+        [
+          "x-amz-id-2",
+          "dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8"
+        ],
+        [
+          "x-amz-request-id",
+          "17685A6B09D9DC3F"
+        ],
+        [
+          "x-content-type-options",
+          "nosniff"
+        ],
+        [
+          "x-xss-protection",
+          "1; mode=block"
+        ]
+      ],
       "body": ""
     }
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/fo/o_/foo_daily_limit",
+      "uri": "http://127.0.0.1:19000/crates-index-test/fo/o_/foo_daily_limit",
       "method": "PUT",
       "headers": [
         [
@@ -235,13 +606,66 @@
     },
     "response": {
       "status": 200,
-      "headers": [],
+      "headers": [
+        [
+          "accept-ranges",
+          "bytes"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "content-security-policy",
+          "block-all-mixed-content"
+        ],
+        [
+          "date",
+          "Tue, 13 Jun 2023 23:04:36 GMT"
+        ],
+        [
+          "etag",
+          "\"e175f71912f12be855380d7039fe9986\""
+        ],
+        [
+          "server",
+          "MinIO"
+        ],
+        [
+          "strict-transport-security",
+          "max-age=31536000; includeSubDomains"
+        ],
+        [
+          "vary",
+          "Origin"
+        ],
+        [
+          "vary",
+          "Accept-Encoding"
+        ],
+        [
+          "x-amz-id-2",
+          "dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8"
+        ],
+        [
+          "x-amz-request-id",
+          "17685A6B0E3C8685"
+        ],
+        [
+          "x-content-type-options",
+          "nosniff"
+        ],
+        [
+          "x-xss-protection",
+          "1; mode=block"
+        ]
+      ],
       "body": ""
     }
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/crates/foo_daily_limit/foo_daily_limit-0.0.5.crate",
+      "uri": "http://127.0.0.1:19000/crates-test/crates/foo_daily_limit/foo_daily_limit-0.0.5.crate",
       "method": "PUT",
       "headers": [
         [
@@ -265,13 +689,66 @@
     },
     "response": {
       "status": 200,
-      "headers": [],
+      "headers": [
+        [
+          "accept-ranges",
+          "bytes"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "content-security-policy",
+          "block-all-mixed-content"
+        ],
+        [
+          "date",
+          "Tue, 13 Jun 2023 23:04:36 GMT"
+        ],
+        [
+          "etag",
+          "\"f9016ad360cebb4fe2e6e96e5949f022\""
+        ],
+        [
+          "server",
+          "MinIO"
+        ],
+        [
+          "strict-transport-security",
+          "max-age=31536000; includeSubDomains"
+        ],
+        [
+          "vary",
+          "Accept-Encoding"
+        ],
+        [
+          "vary",
+          "Origin"
+        ],
+        [
+          "x-amz-id-2",
+          "dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8"
+        ],
+        [
+          "x-amz-request-id",
+          "17685A6B0F903867"
+        ],
+        [
+          "x-content-type-options",
+          "nosniff"
+        ],
+        [
+          "x-xss-protection",
+          "1; mode=block"
+        ]
+      ],
       "body": ""
     }
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/fo/o_/foo_daily_limit",
+      "uri": "http://127.0.0.1:19000/crates-index-test/fo/o_/foo_daily_limit",
       "method": "PUT",
       "headers": [
         [
@@ -295,13 +772,66 @@
     },
     "response": {
       "status": 200,
-      "headers": [],
+      "headers": [
+        [
+          "accept-ranges",
+          "bytes"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "content-security-policy",
+          "block-all-mixed-content"
+        ],
+        [
+          "date",
+          "Tue, 13 Jun 2023 23:04:36 GMT"
+        ],
+        [
+          "etag",
+          "\"57e0777e31f3a96cda073a466b134056\""
+        ],
+        [
+          "server",
+          "MinIO"
+        ],
+        [
+          "strict-transport-security",
+          "max-age=31536000; includeSubDomains"
+        ],
+        [
+          "vary",
+          "Origin"
+        ],
+        [
+          "vary",
+          "Accept-Encoding"
+        ],
+        [
+          "x-amz-id-2",
+          "dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8"
+        ],
+        [
+          "x-amz-request-id",
+          "17685A6B13ECAF24"
+        ],
+        [
+          "x-content-type-options",
+          "nosniff"
+        ],
+        [
+          "x-xss-protection",
+          "1; mode=block"
+        ]
+      ],
       "body": ""
     }
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/crates/foo_daily_limit/foo_daily_limit-0.0.6.crate",
+      "uri": "http://127.0.0.1:19000/crates-test/crates/foo_daily_limit/foo_daily_limit-0.0.6.crate",
       "method": "PUT",
       "headers": [
         [
@@ -325,13 +855,66 @@
     },
     "response": {
       "status": 200,
-      "headers": [],
+      "headers": [
+        [
+          "accept-ranges",
+          "bytes"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "content-security-policy",
+          "block-all-mixed-content"
+        ],
+        [
+          "date",
+          "Tue, 13 Jun 2023 23:04:36 GMT"
+        ],
+        [
+          "etag",
+          "\"f9016ad360cebb4fe2e6e96e5949f022\""
+        ],
+        [
+          "server",
+          "MinIO"
+        ],
+        [
+          "strict-transport-security",
+          "max-age=31536000; includeSubDomains"
+        ],
+        [
+          "vary",
+          "Origin"
+        ],
+        [
+          "vary",
+          "Accept-Encoding"
+        ],
+        [
+          "x-amz-id-2",
+          "dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8"
+        ],
+        [
+          "x-amz-request-id",
+          "17685A6B14C0DC6B"
+        ],
+        [
+          "x-content-type-options",
+          "nosniff"
+        ],
+        [
+          "x-xss-protection",
+          "1; mode=block"
+        ]
+      ],
       "body": ""
     }
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/fo/o_/foo_daily_limit",
+      "uri": "http://127.0.0.1:19000/crates-index-test/fo/o_/foo_daily_limit",
       "method": "PUT",
       "headers": [
         [
@@ -355,13 +938,66 @@
     },
     "response": {
       "status": 200,
-      "headers": [],
+      "headers": [
+        [
+          "accept-ranges",
+          "bytes"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "content-security-policy",
+          "block-all-mixed-content"
+        ],
+        [
+          "date",
+          "Tue, 13 Jun 2023 23:04:36 GMT"
+        ],
+        [
+          "etag",
+          "\"428341d93d1bc228b4c0374c4fa90af3\""
+        ],
+        [
+          "server",
+          "MinIO"
+        ],
+        [
+          "strict-transport-security",
+          "max-age=31536000; includeSubDomains"
+        ],
+        [
+          "vary",
+          "Origin"
+        ],
+        [
+          "vary",
+          "Accept-Encoding"
+        ],
+        [
+          "x-amz-id-2",
+          "dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8"
+        ],
+        [
+          "x-amz-request-id",
+          "17685A6B175B4550"
+        ],
+        [
+          "x-content-type-options",
+          "nosniff"
+        ],
+        [
+          "x-xss-protection",
+          "1; mode=block"
+        ]
+      ],
       "body": ""
     }
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/crates/foo_daily_limit/foo_daily_limit-0.0.7.crate",
+      "uri": "http://127.0.0.1:19000/crates-test/crates/foo_daily_limit/foo_daily_limit-0.0.7.crate",
       "method": "PUT",
       "headers": [
         [
@@ -385,13 +1021,66 @@
     },
     "response": {
       "status": 200,
-      "headers": [],
+      "headers": [
+        [
+          "accept-ranges",
+          "bytes"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "content-security-policy",
+          "block-all-mixed-content"
+        ],
+        [
+          "date",
+          "Tue, 13 Jun 2023 23:04:36 GMT"
+        ],
+        [
+          "etag",
+          "\"f9016ad360cebb4fe2e6e96e5949f022\""
+        ],
+        [
+          "server",
+          "MinIO"
+        ],
+        [
+          "strict-transport-security",
+          "max-age=31536000; includeSubDomains"
+        ],
+        [
+          "vary",
+          "Origin"
+        ],
+        [
+          "vary",
+          "Accept-Encoding"
+        ],
+        [
+          "x-amz-id-2",
+          "dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8"
+        ],
+        [
+          "x-amz-request-id",
+          "17685A6B18644144"
+        ],
+        [
+          "x-content-type-options",
+          "nosniff"
+        ],
+        [
+          "x-xss-protection",
+          "1; mode=block"
+        ]
+      ],
       "body": ""
     }
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/fo/o_/foo_daily_limit",
+      "uri": "http://127.0.0.1:19000/crates-index-test/fo/o_/foo_daily_limit",
       "method": "PUT",
       "headers": [
         [
@@ -415,13 +1104,66 @@
     },
     "response": {
       "status": 200,
-      "headers": [],
+      "headers": [
+        [
+          "accept-ranges",
+          "bytes"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "content-security-policy",
+          "block-all-mixed-content"
+        ],
+        [
+          "date",
+          "Tue, 13 Jun 2023 23:04:36 GMT"
+        ],
+        [
+          "etag",
+          "\"a511c1aa494215c1342e625cb8b866b9\""
+        ],
+        [
+          "server",
+          "MinIO"
+        ],
+        [
+          "strict-transport-security",
+          "max-age=31536000; includeSubDomains"
+        ],
+        [
+          "vary",
+          "Origin"
+        ],
+        [
+          "vary",
+          "Accept-Encoding"
+        ],
+        [
+          "x-amz-id-2",
+          "dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8"
+        ],
+        [
+          "x-amz-request-id",
+          "17685A6B1A75AA17"
+        ],
+        [
+          "x-content-type-options",
+          "nosniff"
+        ],
+        [
+          "x-xss-protection",
+          "1; mode=block"
+        ]
+      ],
       "body": ""
     }
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/crates/foo_daily_limit/foo_daily_limit-0.0.8.crate",
+      "uri": "http://127.0.0.1:19000/crates-test/crates/foo_daily_limit/foo_daily_limit-0.0.8.crate",
       "method": "PUT",
       "headers": [
         [
@@ -445,13 +1187,66 @@
     },
     "response": {
       "status": 200,
-      "headers": [],
+      "headers": [
+        [
+          "accept-ranges",
+          "bytes"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "content-security-policy",
+          "block-all-mixed-content"
+        ],
+        [
+          "date",
+          "Tue, 13 Jun 2023 23:04:36 GMT"
+        ],
+        [
+          "etag",
+          "\"f9016ad360cebb4fe2e6e96e5949f022\""
+        ],
+        [
+          "server",
+          "MinIO"
+        ],
+        [
+          "strict-transport-security",
+          "max-age=31536000; includeSubDomains"
+        ],
+        [
+          "vary",
+          "Origin"
+        ],
+        [
+          "vary",
+          "Accept-Encoding"
+        ],
+        [
+          "x-amz-id-2",
+          "dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8"
+        ],
+        [
+          "x-amz-request-id",
+          "17685A6B1B184615"
+        ],
+        [
+          "x-content-type-options",
+          "nosniff"
+        ],
+        [
+          "x-xss-protection",
+          "1; mode=block"
+        ]
+      ],
       "body": ""
     }
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/fo/o_/foo_daily_limit",
+      "uri": "http://127.0.0.1:19000/crates-index-test/fo/o_/foo_daily_limit",
       "method": "PUT",
       "headers": [
         [
@@ -475,13 +1270,66 @@
     },
     "response": {
       "status": 200,
-      "headers": [],
+      "headers": [
+        [
+          "accept-ranges",
+          "bytes"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "content-security-policy",
+          "block-all-mixed-content"
+        ],
+        [
+          "date",
+          "Tue, 13 Jun 2023 23:04:36 GMT"
+        ],
+        [
+          "etag",
+          "\"a4d57123977b3b31e7e2a875f8291c09\""
+        ],
+        [
+          "server",
+          "MinIO"
+        ],
+        [
+          "strict-transport-security",
+          "max-age=31536000; includeSubDomains"
+        ],
+        [
+          "vary",
+          "Accept-Encoding"
+        ],
+        [
+          "vary",
+          "Origin"
+        ],
+        [
+          "x-amz-id-2",
+          "dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8"
+        ],
+        [
+          "x-amz-request-id",
+          "17685A6B1D41D306"
+        ],
+        [
+          "x-content-type-options",
+          "nosniff"
+        ],
+        [
+          "x-xss-protection",
+          "1; mode=block"
+        ]
+      ],
       "body": ""
     }
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/crates/foo_daily_limit/foo_daily_limit-0.0.9.crate",
+      "uri": "http://127.0.0.1:19000/crates-test/crates/foo_daily_limit/foo_daily_limit-0.0.9.crate",
       "method": "PUT",
       "headers": [
         [
@@ -505,13 +1353,66 @@
     },
     "response": {
       "status": 200,
-      "headers": [],
+      "headers": [
+        [
+          "accept-ranges",
+          "bytes"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "content-security-policy",
+          "block-all-mixed-content"
+        ],
+        [
+          "date",
+          "Tue, 13 Jun 2023 23:04:36 GMT"
+        ],
+        [
+          "etag",
+          "\"f9016ad360cebb4fe2e6e96e5949f022\""
+        ],
+        [
+          "server",
+          "MinIO"
+        ],
+        [
+          "strict-transport-security",
+          "max-age=31536000; includeSubDomains"
+        ],
+        [
+          "vary",
+          "Origin"
+        ],
+        [
+          "vary",
+          "Accept-Encoding"
+        ],
+        [
+          "x-amz-id-2",
+          "dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8"
+        ],
+        [
+          "x-amz-request-id",
+          "17685A6B1DF2A940"
+        ],
+        [
+          "x-content-type-options",
+          "nosniff"
+        ],
+        [
+          "x-xss-protection",
+          "1; mode=block"
+        ]
+      ],
       "body": ""
     }
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/fo/o_/foo_daily_limit",
+      "uri": "http://127.0.0.1:19000/crates-index-test/fo/o_/foo_daily_limit",
       "method": "PUT",
       "headers": [
         [
@@ -535,13 +1436,66 @@
     },
     "response": {
       "status": 200,
-      "headers": [],
+      "headers": [
+        [
+          "accept-ranges",
+          "bytes"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "content-security-policy",
+          "block-all-mixed-content"
+        ],
+        [
+          "date",
+          "Tue, 13 Jun 2023 23:04:36 GMT"
+        ],
+        [
+          "etag",
+          "\"81908fbd7b50c668011c89a81040f5e9\""
+        ],
+        [
+          "server",
+          "MinIO"
+        ],
+        [
+          "strict-transport-security",
+          "max-age=31536000; includeSubDomains"
+        ],
+        [
+          "vary",
+          "Origin"
+        ],
+        [
+          "vary",
+          "Accept-Encoding"
+        ],
+        [
+          "x-amz-id-2",
+          "dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8"
+        ],
+        [
+          "x-amz-request-id",
+          "17685A6B2044BA65"
+        ],
+        [
+          "x-content-type-options",
+          "nosniff"
+        ],
+        [
+          "x-xss-protection",
+          "1; mode=block"
+        ]
+      ],
       "body": ""
     }
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/crates/foo_daily_limit/foo_daily_limit-0.0.10.crate",
+      "uri": "http://127.0.0.1:19000/crates-test/crates/foo_daily_limit/foo_daily_limit-0.0.10.crate",
       "method": "PUT",
       "headers": [
         [
@@ -565,13 +1519,66 @@
     },
     "response": {
       "status": 200,
-      "headers": [],
+      "headers": [
+        [
+          "accept-ranges",
+          "bytes"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "content-security-policy",
+          "block-all-mixed-content"
+        ],
+        [
+          "date",
+          "Tue, 13 Jun 2023 23:04:36 GMT"
+        ],
+        [
+          "etag",
+          "\"f9016ad360cebb4fe2e6e96e5949f022\""
+        ],
+        [
+          "server",
+          "MinIO"
+        ],
+        [
+          "strict-transport-security",
+          "max-age=31536000; includeSubDomains"
+        ],
+        [
+          "vary",
+          "Accept-Encoding"
+        ],
+        [
+          "vary",
+          "Origin"
+        ],
+        [
+          "x-amz-id-2",
+          "dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8"
+        ],
+        [
+          "x-amz-request-id",
+          "17685A6B20F96912"
+        ],
+        [
+          "x-content-type-options",
+          "nosniff"
+        ],
+        [
+          "x-xss-protection",
+          "1; mode=block"
+        ]
+      ],
       "body": ""
     }
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/fo/o_/foo_daily_limit",
+      "uri": "http://127.0.0.1:19000/crates-index-test/fo/o_/foo_daily_limit",
       "method": "PUT",
       "headers": [
         [
@@ -595,7 +1602,60 @@
     },
     "response": {
       "status": 200,
-      "headers": [],
+      "headers": [
+        [
+          "accept-ranges",
+          "bytes"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "content-security-policy",
+          "block-all-mixed-content"
+        ],
+        [
+          "date",
+          "Tue, 13 Jun 2023 23:04:36 GMT"
+        ],
+        [
+          "etag",
+          "\"469878878dcf35072574ac72363bb37a\""
+        ],
+        [
+          "server",
+          "MinIO"
+        ],
+        [
+          "strict-transport-security",
+          "max-age=31536000; includeSubDomains"
+        ],
+        [
+          "vary",
+          "Origin"
+        ],
+        [
+          "vary",
+          "Accept-Encoding"
+        ],
+        [
+          "x-amz-id-2",
+          "dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8"
+        ],
+        [
+          "x-amz-request-id",
+          "17685A6B234ECDE4"
+        ],
+        [
+          "x-content-type-options",
+          "nosniff"
+        ],
+        [
+          "x-xss-protection",
+          "1; mode=block"
+        ]
+      ],
       "body": ""
     }
   }

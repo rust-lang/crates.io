@@ -1,7 +1,7 @@
 [
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/crates/fyk/fyk-1.0.0.crate",
+      "uri": "http://127.0.0.1:19000/crates-test/crates/fyk/fyk-1.0.0.crate",
       "method": "PUT",
       "headers": [
         [
@@ -25,13 +25,66 @@
     },
     "response": {
       "status": 200,
-      "headers": [],
+      "headers": [
+        [
+          "accept-ranges",
+          "bytes"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "content-security-policy",
+          "block-all-mixed-content"
+        ],
+        [
+          "date",
+          "Tue, 13 Jun 2023 23:04:36 GMT"
+        ],
+        [
+          "etag",
+          "\"f9016ad360cebb4fe2e6e96e5949f022\""
+        ],
+        [
+          "server",
+          "MinIO"
+        ],
+        [
+          "strict-transport-security",
+          "max-age=31536000; includeSubDomains"
+        ],
+        [
+          "vary",
+          "Origin"
+        ],
+        [
+          "vary",
+          "Accept-Encoding"
+        ],
+        [
+          "x-amz-id-2",
+          "dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8"
+        ],
+        [
+          "x-amz-request-id",
+          "17685A6B23512B50"
+        ],
+        [
+          "x-content-type-options",
+          "nosniff"
+        ],
+        [
+          "x-xss-protection",
+          "1; mode=block"
+        ]
+      ],
       "body": ""
     }
   },
   {
     "request": {
-      "uri": "http://alexcrichton-test.s3.amazonaws.com/3/f/fyk",
+      "uri": "http://127.0.0.1:19000/crates-index-test/3/f/fyk",
       "method": "PUT",
       "headers": [
         [
@@ -55,7 +108,60 @@
     },
     "response": {
       "status": 200,
-      "headers": [],
+      "headers": [
+        [
+          "accept-ranges",
+          "bytes"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "content-security-policy",
+          "block-all-mixed-content"
+        ],
+        [
+          "date",
+          "Tue, 13 Jun 2023 23:04:36 GMT"
+        ],
+        [
+          "etag",
+          "\"134db012c3d8c43621b636616a105314\""
+        ],
+        [
+          "server",
+          "MinIO"
+        ],
+        [
+          "strict-transport-security",
+          "max-age=31536000; includeSubDomains"
+        ],
+        [
+          "vary",
+          "Accept-Encoding"
+        ],
+        [
+          "vary",
+          "Origin"
+        ],
+        [
+          "x-amz-id-2",
+          "dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8"
+        ],
+        [
+          "x-amz-request-id",
+          "17685A6B26173ECD"
+        ],
+        [
+          "x-content-type-options",
+          "nosniff"
+        ],
+        [
+          "x-xss-protection",
+          "1; mode=block"
+        ]
+      ],
       "body": ""
     }
   }
