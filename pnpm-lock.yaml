@@ -108,8 +108,8 @@ devDependencies:
     specifier: 3.0.0
     version: 3.0.0
   ember-a11y-testing:
-    specifier: 6.0.0-0
-    version: 6.0.0-0(@ember/test-helpers@3.1.0)(qunit@2.19.4)(webpack@5.87.0)
+    specifier: 6.1.0
+    version: 6.1.0(@ember/test-helpers@3.1.0)(qunit@2.19.4)(webpack@5.87.0)
   ember-auto-import:
     specifier: 2.6.3
     version: 2.6.3(webpack@5.87.0)
@@ -7554,8 +7554,8 @@ packages:
       minimalistic-crypto-utils: 1.0.1
     dev: true
 
-  /ember-a11y-testing@6.0.0-0(@ember/test-helpers@3.1.0)(qunit@2.19.4)(webpack@5.87.0):
-    resolution: {integrity: sha512-VzVLd/XS/uuvFTtmm56aCdylKLUzAfgOKUXtmJVnv6HJ0Hwso2F+319y+yoQefa8Ifnk7CIHaNf7rbpYLVWmzw==}
+  /ember-a11y-testing@6.1.0(@ember/test-helpers@3.1.0)(qunit@2.19.4)(webpack@5.87.0):
+    resolution: {integrity: sha512-sMxP3q1F1Jv5ocWzfRr8XoLVbVYLMBGsL5TE++BUl/eTxo1MR4ukEy6wiXRz8zlbxnXDaYXwXppXOrWMpyNyjw==}
     engines: {node: 16.* || >= 18}
     peerDependencies:
       '@ember/test-helpers': ^3.0.3
