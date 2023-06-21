@@ -256,11 +256,17 @@ impl Drop for DumpTarball {
 fn invalidate_caches(client: &Client, target_name: &str) -> Result<(), PerformError> {
     let cloudfront = CloudFront::from_environment()
         .context("failed to create CloudFront client from environment")?;
-    cloudfront.invalidate(client, target_name)?;
+
+    if let Err(error) = cloudfront.invalidate(client, target_name) {
+        warn!("failed to invalidate CloudFront cache: {}", error);
+    }
 
     let fastly =
         Fastly::from_environment().context("failed to create Fastly client from environment")?;
-    fastly.invalidate(client, target_name)?;
+
+    if let Err(error) = fastly.invalidate(client, target_name) {
+        warn!("failed to invalidate Fastly cache: {}", error);
+    }
 
     Ok(())
 }
