@@ -59,7 +59,7 @@ impl Base {
         let uploader = Uploader::S3 {
             bucket: Box::new(s3::Bucket::new(
                 dotenvy::var("TEST_S3_BUCKET").unwrap_or_else(|_err| "crates-test".into()),
-                parse_region(dotenvy::var("TEST_S3_REGION").ok()),
+                parse_test_region(dotenvy::var("TEST_S3_REGION").ok()),
                 dotenvy::var("TEST_AWS_ACCESS_KEY").unwrap_or_default(),
                 dotenvy::var("TEST_AWS_SECRET_KEY").unwrap_or_default(),
                 // When testing we route all API traffic over HTTP so we can
@@ -69,7 +69,7 @@ impl Base {
             index_bucket: Some(Box::new(s3::Bucket::new(
                 dotenvy::var("TEST_S3_INDEX_BUCKET")
                     .unwrap_or_else(|_err| "crates-index-test".into()),
-                parse_region(dotenvy::var("TEST_S3_INDEX_REGION").ok()),
+                parse_test_region(dotenvy::var("TEST_S3_INDEX_REGION").ok()),
                 dotenvy::var("TEST_AWS_ACCESS_KEY").unwrap_or_default(),
                 dotenvy::var("TEST_AWS_SECRET_KEY").unwrap_or_default(),
                 // When testing we route all API traffic over HTTP so we can
@@ -143,7 +143,7 @@ impl Base {
 
 static DEFAULT_TEST_REGION: &str = "127.0.0.1:19000";
 
-fn parse_region(maybe_region: Option<String>) -> s3::Region {
+fn parse_test_region(maybe_region: Option<String>) -> s3::Region {
     match maybe_region {
         Some(region) if region.contains("://") => {
             let (_proto, host) = region.split_once("://").unwrap();
@@ -172,7 +172,7 @@ mod tests {
                 s3::Region::Host("127.0.0.1:9000".into()),
             ),
         ] {
-            assert_eq!(parse_region(input.map(String::from)), expected);
+            assert_eq!(parse_test_region(input.map(String::from)), expected);
         }
     }
 }
