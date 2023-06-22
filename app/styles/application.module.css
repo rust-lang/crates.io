@@ -142,6 +142,22 @@ noscript {
     color: white;
 }
 
+/* see https://github.com/twbs/bootstrap/pull/30269 */
+::-webkit-datetime-edit,
+::-webkit-datetime-edit-fields-wrapper,
+::-webkit-datetime-edit-text,
+::-webkit-datetime-edit-minute,
+::-webkit-datetime-edit-hour-field,
+::-webkit-datetime-edit-day-field,
+::-webkit-datetime-edit-month-field,
+::-webkit-datetime-edit-year-field {
+    padding: 0;
+}
+
+::-webkit-calendar-picker-indicator {
+    font-size: 0.9em
+}
+
 :global {
     .c-notification__icon {
         display: flex;
