@@ -63,7 +63,7 @@ impl Fastly {
             Err(error) => {
                 let headers = response.headers().clone();
                 let body = response.text();
-                warn!(
+                debug!(
                     ?status,
                     ?headers,
                     ?body,
