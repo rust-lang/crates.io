@@ -6,6 +6,7 @@
 pub mod cloudfront;
 mod daily_db_maintenance;
 pub mod dump_db;
+pub mod fastly;
 mod git;
 mod readmes;
 mod update_downloads;

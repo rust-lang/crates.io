@@ -30,6 +30,10 @@ pub fn perform_dump_db(
     info!("Uploading tarball");
     let size = tarball.upload(&target_name, &env.uploader)?;
     info!("Database dump uploaded {} bytes to {}.", size, &target_name);
+
+    info!("Invalidating CDN caches");
+    invalidate_caches(env, &target_name);
+
     Ok(())
 }
 
@@ -243,6 +247,20 @@ impl DumpTarball {
 impl Drop for DumpTarball {
     fn drop(&mut self) {
         std::fs::remove_file(&self.tarball_path).unwrap();
+    }
+}
+
+fn invalidate_caches(env: &Environment, target_name: &str) {
+    if let Some(cloudfront) = env.cloudfront() {
+        if let Err(error) = cloudfront.invalidate(env.http_client(), target_name) {
+            warn!("failed to invalidate CloudFront cache: {}", error);
+        }
+    }
+
+    if let Some(fastly) = env.fastly() {
+        if let Err(error) = fastly.invalidate(env.http_client(), target_name) {
+            warn!("failed to invalidate Fastly cache: {}", error);
+        }
     }
 }
 
