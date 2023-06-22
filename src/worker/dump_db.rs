@@ -32,7 +32,7 @@ pub fn perform_dump_db(
     info!("Database dump uploaded {} bytes to {}.", size, &target_name);
 
     info!("Invalidating CDN caches");
-    invalidate_caches(env, &target_name)?;
+    invalidate_caches(env, &target_name);
 
     Ok(())
 }
@@ -250,7 +250,7 @@ impl Drop for DumpTarball {
     }
 }
 
-fn invalidate_caches(env: &Environment, target_name: &str) -> Result<(), PerformError> {
+fn invalidate_caches(env: &Environment, target_name: &str) {
     if let Some(cloudfront) = env.cloudfront() {
         if let Err(error) = cloudfront.invalidate(env.http_client(), target_name) {
             warn!("failed to invalidate CloudFront cache: {}", error);
@@ -262,8 +262,6 @@ fn invalidate_caches(env: &Environment, target_name: &str) -> Result<(), Perform
             warn!("failed to invalidate Fastly cache: {}", error);
         }
     }
-
-    Ok(())
 }
 
 mod configuration;
