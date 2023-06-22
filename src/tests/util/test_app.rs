@@ -240,6 +240,7 @@ impl TestAppBuilder {
                 app.config.uploader().clone(),
                 app.http_client().clone(),
                 None,
+                None,
             );
 
             Some(Runner::test_runner(
