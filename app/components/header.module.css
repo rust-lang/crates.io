@@ -101,7 +101,7 @@
 .nav {
     grid-area: nav;
     display: flex;
-    align-items: center;
+    align-items: stretch;
     justify-self: end;
 
     @media only screen and (max-width: 900px) {
@@ -166,7 +166,8 @@
     padding: 0;
 
     img {
-        vertical-align: top;
+        /* 22px is the hard coded size of a UserAvatar when @size="small" */
+        margin-top: calc((22px - 1em) * -0.5);
     }
 }
 
