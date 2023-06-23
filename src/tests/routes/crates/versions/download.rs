@@ -97,3 +97,21 @@ fn download_caches_version_id() {
     // Check download count against the new name, rather than rename it back to the original value
     downloads::assert_dl_count(&anon, "other/1.0.0", None, 2);
 }
+
+#[test]
+fn download_with_build_metadata() {
+    let (app, anon, user) = TestApp::init().with_user();
+    let user = user.as_model();
+
+    app.db(|conn| {
+        CrateBuilder::new("foo", user.id)
+            .version(VersionBuilder::new("1.0.0+bar"))
+            .expect_build(conn);
+    });
+
+    anon.get::<()>("/api/v1/crates/foo/1.0.0+bar/download")
+        .assert_redirect_ends_with("/crates/foo/foo-1.0.0%2Bbar.crate");
+
+    anon.get::<()>("/api/v1/crates/foo/1.0.0+bar/readme")
+        .assert_redirect_ends_with("/readmes/foo/foo-1.0.0%2Bbar.html");
+}
