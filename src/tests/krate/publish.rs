@@ -681,10 +681,8 @@ fn new_krate_with_readme_and_plus_version() {
     assert_eq!(json.krate.max_version, "1.0.0+foo");
 
     let expected_files = vec![
-        "crates/foo_readme/foo_readme-1.0.0 foo.crate",
         "crates/foo_readme/foo_readme-1.0.0+foo.crate",
         "index/fo/o_/foo_readme",
-        "readmes/foo_readme/foo_readme-1.0.0 foo.html",
         "readmes/foo_readme/foo_readme-1.0.0+foo.html",
     ];
     assert_eq!(app.stored_files(), expected_files);

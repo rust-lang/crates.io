@@ -191,24 +191,12 @@ impl Storage {
 
     #[instrument(skip(self))]
     pub async fn upload_crate_file(&self, name: &str, version: &str, bytes: Bytes) -> Result<()> {
-        if version.contains('+') {
-            let version = version.replace('+', " ");
-            let path = crate_file_path(name, &version);
-            self.crate_upload_store.put(&path, bytes.clone()).await?
-        }
-
         let path = crate_file_path(name, version);
         self.crate_upload_store.put(&path, bytes).await
     }
 
     #[instrument(skip(self))]
     pub async fn upload_readme(&self, name: &str, version: &str, bytes: Bytes) -> Result<()> {
-        if version.contains('+') {
-            let version = version.replace('+', " ");
-            let path = readme_path(name, &version);
-            self.readme_upload_store.put(&path, bytes.clone()).await?
-        }
-
         let path = readme_path(name, version);
         self.readme_upload_store.put(&path, bytes).await
     }
@@ -381,7 +369,6 @@ mod tests {
 
         let expected_files = vec![
             "crates/foo/foo-1.2.3.crate",
-            "crates/foo/foo-2.0.0 foo.crate",
             "crates/foo/foo-2.0.0+foo.crate",
         ];
         assert_eq!(stored_files(&s.store).await, expected_files);
@@ -403,7 +390,6 @@ mod tests {
 
         let expected_files = vec![
             "readmes/foo/foo-1.2.3.html",
-            "readmes/foo/foo-2.0.0 foo.html",
             "readmes/foo/foo-2.0.0+foo.html",
         ];
         assert_eq!(stored_files(&s.store).await, expected_files);
