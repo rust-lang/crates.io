@@ -11,4 +11,11 @@ export default class ApiToken extends Model {
   @attr endpoint_scopes;
   /** @type string | null */
   @attr('date') expired_at;
+
+  get isExpired() {
+    if (this.expired_at) {
+      return Date.now() > this.expired_at.getTime();
+    }
+    return false;
+  }
 }

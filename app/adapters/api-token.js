@@ -7,6 +7,13 @@ export default class ApiTokenAdapter extends ApplicationAdapter {
     return 'tokens';
   }
 
+  buildQuery(...args) {
+    const query = super.buildQuery(...args);
+    query.expired_days = 30;
+
+    return query;
+  }
+
   createRecord(store, type, snapshot) {
     let data = {};
     let serializer = store.serializerFor(type.modelName);
