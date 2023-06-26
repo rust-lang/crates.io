@@ -22,15 +22,20 @@ export function register(server) {
     return json;
   });
 
-  server.get('/api/v1/me/tokens', function (schema) {
+  server.get('/api/v1/me/tokens', function (schema, request) {
     let { user } = getSession(schema);
     if (!user) {
       return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
     }
 
+    let expiredAfter = new Date();
+    if (request.queryParams.expired_days) {
+      expiredAfter.setUTCDate(expiredAfter.getUTCDate() - request.queryParams.expired_days);
+    }
+
     return schema.apiTokens
       .where({ userId: user.id })
-      .filter(token => !token.expiredAt || new Date(token.expiredAt) > new Date())
+      .filter(token => !token.expiredAt || new Date(token.expiredAt) > expiredAfter)
       .sort((a, b) => Number(b.id) - Number(a.id));
   });
 

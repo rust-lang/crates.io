@@ -34,6 +34,14 @@ module('Acceptance | api-tokens', function (hooks) {
       expiredAt: '2017-12-19T17:59:22',
     });
 
+    context.server.create('api-token', {
+      user,
+      name: 'recently expired',
+      createdAt: '2017-08-01T12:34:56',
+      lastUsedAt: '2017-11-02T01:45:14',
+      expiredAt: '2017-11-19T17:59:22',
+    });
+
     context.authenticateAs(user);
   }
 
@@ -42,9 +50,9 @@ module('Acceptance | api-tokens', function (hooks) {
 
     await visit('/settings/tokens');
     assert.strictEqual(currentURL(), '/settings/tokens');
-    assert.dom('[data-test-api-token]').exists({ count: 2 });
+    assert.dom('[data-test-api-token]').exists({ count: 3 });
 
-    let [row1, row2] = findAll('[data-test-api-token]');
+    let [row1, row2, row3] = findAll('[data-test-api-token]');
     assert.dom('[data-test-name]', row1).hasText('BAR');
     assert.dom('[data-test-created-at]', row1).hasText('Created about 18 hours ago');
     assert.dom('[data-test-last-used-at]', row1).hasText('Never used');
@@ -64,6 +72,16 @@ module('Acceptance | api-tokens', function (hooks) {
     assert.dom('[data-test-saving-spinner]', row2).doesNotExist();
     assert.dom('[data-test-error]', row2).doesNotExist();
     assert.dom('[data-test-token]', row2).doesNotExist();
+
+    assert.dom('[data-test-name]', row3).hasText('recently expired');
+    assert.dom('[data-test-created-at]', row3).hasText('Created 4 months ago');
+    assert.dom('[data-test-last-used-at]', row3).hasText('Last used 18 days ago');
+    assert.dom('[data-test-expired-at]', row3).hasText('Expired about 18 hours ago');
+    assert.dom('[data-test-save-token-button]', row3).doesNotExist();
+    assert.dom('[data-test-revoke-token-button]', row3).doesNotExist();
+    assert.dom('[data-test-saving-spinner]', row3).doesNotExist();
+    assert.dom('[data-test-error]', row3).doesNotExist();
+    assert.dom('[data-test-token]', row3).doesNotExist();
   });
 
   test('API tokens can be revoked', async function (assert) {
@@ -71,16 +89,16 @@ module('Acceptance | api-tokens', function (hooks) {
 
     await visit('/settings/tokens');
     assert.strictEqual(currentURL(), '/settings/tokens');
-    assert.dom('[data-test-api-token]').exists({ count: 2 });
+    assert.dom('[data-test-api-token]').exists({ count: 3 });
 
     await click('[data-test-api-token="1"] [data-test-revoke-token-button]');
     assert.strictEqual(
       this.server.schema.apiTokens.all().length,
-      1,
+      2,
       'API token has been deleted from the backend database',
     );
 
-    assert.dom('[data-test-api-token]').exists({ count: 1 });
+    assert.dom('[data-test-api-token]').exists({ count: 2 });
     assert.dom('[data-test-api-token="2"]').exists();
     assert.dom('[data-test-error]').doesNotExist();
   });
@@ -94,10 +112,10 @@ module('Acceptance | api-tokens', function (hooks) {
 
     await visit('/settings/tokens');
     assert.strictEqual(currentURL(), '/settings/tokens');
-    assert.dom('[data-test-api-token]').exists({ count: 2 });
+    assert.dom('[data-test-api-token]').exists({ count: 3 });
 
     await click('[data-test-api-token="1"] [data-test-revoke-token-button]');
-    assert.dom('[data-test-api-token]').exists({ count: 2 });
+    assert.dom('[data-test-api-token]').exists({ count: 3 });
     assert.dom('[data-test-api-token="2"]').exists();
     assert.dom('[data-test-api-token="1"]').exists();
     assert.dom('[data-test-notification-message="error"]').includesText('An error occurred while revoking this token');
@@ -108,7 +126,7 @@ module('Acceptance | api-tokens', function (hooks) {
 
     await visit('/settings/tokens');
     assert.strictEqual(currentURL(), '/settings/tokens');
-    assert.dom('[data-test-api-token]').exists({ count: 2 });
+    assert.dom('[data-test-api-token]').exists({ count: 3 });
 
     await click('[data-test-new-token-button]');
     assert.strictEqual(currentURL(), '/settings/tokens/new');
@@ -122,11 +140,11 @@ module('Acceptance | api-tokens', function (hooks) {
     let token = this.server.schema.apiTokens.findBy({ name: 'the new token' });
     assert.ok(Boolean(token), 'API token has been created in the backend database');
 
-    assert.dom('[data-test-api-token="3"] [data-test-name]').hasText('the new token');
-    assert.dom('[data-test-api-token="3"] [data-test-save-token-button]').doesNotExist();
-    assert.dom('[data-test-api-token="3"] [data-test-revoke-token-button]').exists();
-    assert.dom('[data-test-api-token="3"] [data-test-saving-spinner]').doesNotExist();
-    assert.dom('[data-test-api-token="3"] [data-test-error]').doesNotExist();
+    assert.dom('[data-test-api-token="4"] [data-test-name]').hasText('the new token');
+    assert.dom('[data-test-api-token="4"] [data-test-save-token-button]').doesNotExist();
+    assert.dom('[data-test-api-token="4"] [data-test-revoke-token-button]').exists();
+    assert.dom('[data-test-api-token="4"] [data-test-saving-spinner]').doesNotExist();
+    assert.dom('[data-test-api-token="4"] [data-test-error]').doesNotExist();
     assert.dom('[data-test-token]').hasText(token.token);
   });
 
@@ -154,13 +172,13 @@ module('Acceptance | api-tokens', function (hooks) {
     prepare(this);
 
     await visit('/settings/tokens');
-    assert.dom('[data-test-api-token]').exists({ count: 2 });
+    assert.dom('[data-test-api-token]').exists({ count: 3 });
 
     await click('[data-test-new-token-button]');
 
     await visit('/settings/profile');
 
     await visit('/settings/tokens');
-    assert.dom('[data-test-api-token]').exists({ count: 2 });
+    assert.dom('[data-test-api-token]').exists({ count: 3 });
   });
 });

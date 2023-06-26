@@ -34,7 +34,7 @@
 {{#if this.sortedTokens}}
   <ul role="list" local-class="token-list">
     {{#each this.sortedTokens as |token|}}
-      <li local-class="row" data-test-api-token={{or token.id true}}>
+      <li local-class="row {{if token.isExpired "expired"}}" data-test-api-token={{or token.id true}}>
         <h3 local-class="name" data-test-name>
           {{token.name}}
         </h3>
@@ -86,7 +86,7 @@
 
           {{#if token.expired_at}}
             <div title={{token.expired_at}} local-class="expired-at" data-test-expired-at>
-              Expires {{date-format-distance-to-now token.expired_at addSuffix=true}}
+              {{if token.isExpired "Expired" "Expires"}} {{date-format-distance-to-now token.expired_at addSuffix=true}}
             </div>
           {{/if}}
         </div>
@@ -111,18 +111,20 @@
         {{/if}}
 
         <div local-class="actions">
-          <button
-            type="button"
-            local-class="revoke-button"
-            disabled={{token.isSaving}}
-            data-test-revoke-token-button
-            {{on "click" (perform this.revokeTokenTask token)}}
-          >
-            Revoke
-          </button>
-          {{#if token.isSaving}}
-            <LoadingSpinner local-class="spinner" data-test-saving-spinner />
-          {{/if}}
+          {{#unless token.isExpired}}
+            <button
+              type="button"
+              local-class="revoke-button"
+              disabled={{token.isSaving}}
+              data-test-revoke-token-button
+              {{on "click" (perform this.revokeTokenTask token)}}
+            >
+              Revoke
+            </button>
+            {{#if token.isSaving}}
+              <LoadingSpinner local-class="spinner" data-test-saving-spinner />
+            {{/if}}
+          {{/unless}}
         </div>
       </li>
     {{/each}}

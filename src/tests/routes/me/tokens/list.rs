@@ -1,6 +1,6 @@
 use crate::util::insta::{self, assert_yaml_snapshot};
 use crate::util::{RequestHelper, TestApp};
-use chrono::NaiveDate;
+use chrono::{Duration, Utc};
 use crates_io::models::token::{CrateScope, EndpointScope};
 use crates_io::models::ApiToken;
 use http::StatusCode;
@@ -51,12 +51,7 @@ fn list_tokens() {
                 "qux",
                 None,
                 None,
-                Some(
-                    NaiveDate::from_ymd_opt(2016, 7, 8)
-                        .unwrap()
-                        .and_hms_opt(9, 10, 11)
-                        .unwrap()
-                )
+                Some((Utc::now() - Duration::days(1)).naive_utc()),
             )),
         ]
     });
@@ -68,6 +63,58 @@ fn list_tokens() {
         ".api_tokens[].created_at" => "[datetime]",
         ".api_tokens[].last_used_at" => "[datetime]",
     });
+}
+
+#[test]
+fn list_recently_expired_tokens() {
+    #[track_caller]
+    fn assert_response_tokens_contain_name(response_tokens: &[serde_json::Value], name: &str) {
+        assert_some!(response_tokens.iter().find(|token| token["name"] == name));
+    }
+
+    let (app, _, user) = TestApp::init().with_user();
+    let id = user.as_model().id;
+    app.db(|conn| {
+        vec![
+            assert_ok!(ApiToken::insert(conn, id, "bar")),
+            assert_ok!(ApiToken::insert_with_scopes(
+                conn,
+                id,
+                "ancient",
+                Some(vec![
+                    CrateScope::try_from("serde").unwrap(),
+                    CrateScope::try_from("serde-*").unwrap()
+                ]),
+                Some(vec![EndpointScope::PublishUpdate]),
+                Some((Utc::now() - Duration::days(31)).naive_utc()),
+            )),
+            assert_ok!(ApiToken::insert_with_scopes(
+                conn,
+                id,
+                "recent",
+                None,
+                None,
+                Some((Utc::now() - Duration::days(1)).naive_utc()),
+            )),
+        ]
+    });
+
+    let response = user.get::<()>("/api/v1/me/tokens?expired_days=30");
+    assert_eq!(response.status(), StatusCode::OK);
+    let json = response.into_json();
+    let response_tokens = json["api_tokens"].as_array().unwrap();
+    assert_eq!(response_tokens.len(), 2);
+    assert_response_tokens_contain_name(response_tokens, "bar");
+    assert_response_tokens_contain_name(response_tokens, "recent");
+
+    let response = user.get::<()>("/api/v1/me/tokens?expired_days=60");
+    assert_eq!(response.status(), StatusCode::OK);
+    let json = response.into_json();
+    let response_tokens = json["api_tokens"].as_array().unwrap();
+    assert_eq!(response_tokens.len(), 3);
+    assert_response_tokens_contain_name(response_tokens, "bar");
+    assert_response_tokens_contain_name(response_tokens, "ancient");
+    assert_response_tokens_contain_name(response_tokens, "recent");
 }
 
 #[test]

@@ -7,13 +7,35 @@ use crate::views::EncodableApiTokenWithToken;
 
 use crate::auth::AuthCheck;
 use crate::models::token::{CrateScope, EndpointScope};
+use axum::extract::Query;
 use axum::response::IntoResponse;
 use chrono::NaiveDateTime;
-use diesel::dsl::now;
+use diesel::data_types::PgInterval;
+use diesel::dsl::{now, sql, IntervalDsl};
+use diesel::sql_types::{Interval, Timestamp};
 use serde_json as json;
 
+#[derive(Deserialize)]
+pub struct GetParams {
+    expired_days: Option<i32>,
+}
+
+impl GetParams {
+    fn expired_days_interval(&self) -> PgInterval {
+        match self.expired_days {
+            Some(days) if days > 0 => days,
+            _ => 0,
+        }
+        .days()
+    }
+}
+
 /// Handles the `GET /me/tokens` route.
-pub async fn list(app: AppState, req: Parts) -> AppResult<Json<Value>> {
+pub async fn list(
+    app: AppState,
+    Query(params): Query<GetParams>,
+    req: Parts,
+) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         let conn = &mut *app.db_read_prefer_primary()?;
         let auth = AuthCheck::only_cookie().check(&req, conn)?;
@@ -24,7 +46,14 @@ pub async fn list(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             .filter(
                 api_tokens::expired_at
                     .is_null()
-                    .or(api_tokens::expired_at.gt(now)),
+                    // now - PgInterval can't be used as a Nullable<Timestamp>: while now has
+                    // an impl of AsExpression that allows that, the combination does not.
+                    // Instead, we'll just build this with a little bit of raw SQL.
+                    .or(api_tokens::expired_at.gt(sql("(")
+                        .bind::<Timestamp, _>(now)
+                        .sql(" - ")
+                        .bind::<Interval, _>(params.expired_days_interval())
+                        .sql(")"))),
             )
             .order(api_tokens::created_at.desc())
             .load(conn)?;
