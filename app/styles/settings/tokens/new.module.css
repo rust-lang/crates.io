@@ -150,7 +150,7 @@
     }
 
     input {
-        margin: calc(-1 * var(--space-3xs) - 2px) 0;
+        margin: calc(-1 * var(--space-4xs)) 0;
         padding: var(--space-3xs) var(--space-2xs);
         border: 1px solid var(--gray-border);
         border-radius: var(--space-3xs);
