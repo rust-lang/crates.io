@@ -7,7 +7,7 @@ export default class TokenListRoute extends Route {
   @service store;
 
   async model() {
-    let apiTokens = await this.store.findAll('api-token', { reload: true });
+    let apiTokens = await this.store.query('api-token', { expired_days: 30 });
     return TrackedArray.from(apiTokens.slice());
   }
 
