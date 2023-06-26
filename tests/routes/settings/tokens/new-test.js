@@ -153,7 +153,7 @@ module('/settings/tokens/new', function (hooks) {
     await fillIn('[data-test-name]', 'token-name');
     await select('[data-test-expiry]', '30');
 
-    let expiryDate = new Date('2017-12-20');
+    let expiryDate = new Date('2017-12-20T00:00:00');
     let expectedDate = expiryDate.toLocaleDateString(undefined, { dateStyle: 'long' });
     let expectedDescription = `The token will expire on ${expectedDate}`;
     assert.dom('[data-test-expiry-description]').hasText(expectedDescription);
