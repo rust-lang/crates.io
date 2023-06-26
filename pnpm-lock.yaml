@@ -240,8 +240,8 @@ devDependencies:
     specifier: 8.8.0
     version: 8.8.0(eslint@8.43.0)
   eslint-plugin-ember:
-    specifier: 11.8.0
-    version: 11.8.0(eslint@8.43.0)
+    specifier: 11.9.0
+    version: 11.9.0(eslint@8.43.0)
   eslint-plugin-ember-concurrency:
     specifier: 0.5.1
     version: 0.5.1(eslint@8.43.0)
@@ -9659,8 +9659,8 @@ packages:
       eslint: 8.43.0
     dev: true
 
-  /eslint-plugin-ember@11.8.0(eslint@8.43.0):
-    resolution: {integrity: sha512-oZ6My7LlbyhNCguHuyBnajGbpU5+raQ5zkaF9Vqe8EkWf3Ji2uJZH7BxzMMcR4gAuyx5qTUZRXVs42km1nTzVg==}
+  /eslint-plugin-ember@11.9.0(eslint@8.43.0):
+    resolution: {integrity: sha512-kpsvbdQOFw9ikzwmhxR8mmsAXtwwj+DPMGn1NOHAHJOnhTkyioKEiNO6tQK/b33VtQy1VpJP6zFu+Bt6m/cYxA==}
     engines: {node: 14.* || 16.* || >= 18}
     peerDependencies:
       eslint: '*'
@@ -9670,6 +9670,7 @@ packages:
       css-tree: 2.3.1
       ember-rfc176-data: 0.3.18
       ember-template-imports: 3.4.2
+      ember-template-recast: 6.1.4
       eslint: 8.43.0
       eslint-utils: 3.0.0(eslint@8.43.0)
       estraverse: 5.3.0
