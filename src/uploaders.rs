@@ -37,19 +37,21 @@ impl Uploader {
     ///
     /// The function doesn't check for the existence of the file.
     pub fn crate_location(&self, crate_name: &str, version: &str) -> String {
+        let version = version.replace('+', "%2B");
+
         match *self {
             Uploader::S3 {
                 ref bucket,
                 ref cdn,
                 ..
             } => {
-                let path = Uploader::crate_path(crate_name, version);
+                let path = Uploader::crate_path(crate_name, &version);
                 match *cdn {
                     Some(ref host) => format!("https://{host}/{path}"),
                     None => bucket.url(&path).unwrap(),
                 }
             }
-            Uploader::Local => format!("/{}", Uploader::crate_path(crate_name, version)),
+            Uploader::Local => format!("/{}", Uploader::crate_path(crate_name, &version)),
         }
     }
 
@@ -57,19 +59,21 @@ impl Uploader {
     ///
     /// The function doesn't check for the existence of the file.
     pub fn readme_location(&self, crate_name: &str, version: &str) -> String {
+        let version = version.replace('+', "%2B");
+
         match *self {
             Uploader::S3 {
                 ref bucket,
                 ref cdn,
                 ..
             } => {
-                let path = Uploader::readme_path(crate_name, version);
+                let path = Uploader::readme_path(crate_name, &version);
                 match *cdn {
                     Some(ref host) => format!("https://{host}/{path}"),
                     None => bucket.url(&path).unwrap(),
                 }
             }
-            Uploader::Local => format!("/{}", Uploader::readme_path(crate_name, version)),
+            Uploader::Local => format!("/{}", Uploader::readme_path(crate_name, &version)),
         }
     }
 
