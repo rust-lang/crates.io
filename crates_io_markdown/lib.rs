@@ -29,6 +29,7 @@ impl<'a> MarkdownRenderer<'a> {
                 "language-javascript",
                 "language-json",
                 "language-markup",
+                "language-mermaid",
                 "language-protobuf",
                 "language-ruby",
                 "language-rust",
@@ -365,6 +366,17 @@ mod tests {
                            ```"#;
         let result = markdown_to_html(code_block, None, "");
         assert!(result.contains("<code class=\"language-rust\">"));
+    }
+
+    #[test]
+    fn code_block_with_mermaid_highlighting() {
+        let code_block = r#"```mermaid \
+                            graph LR \
+                            A --> C \
+                            C --> A \
+                           ```"#;
+        let result = markdown_to_html(code_block, None, "");
+        assert!(result.contains("<code class=\"language-mermaid\">"));
     }
 
     #[test]

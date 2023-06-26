@@ -53,6 +53,13 @@ on StackOverflow</a>, the <a href="https://www.reddit.com/r/rust" rel="nofollow 
 weekly easy questions post, or the Rust <a href="https://users.rust-lang.org" rel="nofollow noopener noreferrer">Discourse forum</a>. It's
 acceptable to file a support issue in this repo but they tend not to get as many
 eyes as any of the above and may get closed without a response after some time.</p>
+<pre><code class="language-mermaid">
+graph TD;
+    A-->B;
+    A-->C;
+    B-->D;
+    C-->D;
+</code></pre>
 `;
 
 module('Acceptance | README rendering', function (hooks) {
@@ -66,6 +73,7 @@ module('Acceptance | README rendering', function (hooks) {
     assert.dom('[data-test-readme]').exists();
     assert.dom('[data-test-readme] ul > li').exists({ count: 6 });
     assert.dom('[data-test-readme] pre > code.language-rust.hljs').exists();
+    assert.dom('[data-test-readme] pre > code.language-mermaid iframe').exists();
 
     await percySnapshot(assert);
   });
