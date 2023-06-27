@@ -203,7 +203,7 @@ fn maybe_append_url_param(url: &mut Url, key: &str, value: &str) {
 
 #[derive(Debug, Clone, Copy)]
 pub struct ConnectionConfig {
-    pub statement_timeout: u64,
+    pub statement_timeout: Duration,
     pub read_only: bool,
 }
 
@@ -213,7 +213,7 @@ impl CustomizeConnection<PgConnection, r2d2::Error> for ConnectionConfig {
 
         sql_query(format!(
             "SET statement_timeout = {}",
-            self.statement_timeout * 1000
+            self.statement_timeout.as_millis()
         ))
         .execute(conn)
         .map_err(r2d2::Error::QueryError)?;

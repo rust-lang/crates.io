@@ -1,10 +1,10 @@
 //! Application-wide components in a struct accessible from each request
 
+use crate::config;
 use crate::db::{ConnectionConfig, DieselPool, DieselPooledConn, PoolError};
-use crate::{config, Env};
 use std::ops::Deref;
 use std::sync::atomic::AtomicUsize;
-use std::{sync::Arc, time::Duration};
+use std::sync::Arc;
 
 use crate::downloads_counter::DownloadsCounter;
 use crate::email::Emails;
@@ -92,33 +92,20 @@ impl App {
             ),
         );
 
-        let db_helper_threads = match dotenvy::var("DB_HELPER_THREADS") {
-            Ok(num) => num.parse().expect("couldn't parse DB_HELPER_THREADS"),
-            _ => 3,
-        };
-
-        // Used as the connection and statement timeout value for the database pool(s)
-        let db_connection_timeout = match (dotenvy::var("DB_TIMEOUT"), config.env()) {
-            (Ok(num), _) => num.parse().expect("couldn't parse DB_TIMEOUT"),
-            (_, Env::Production) => 10,
-            (_, Env::Test) => 1,
-            _ => 30,
-        };
-
-        let thread_pool = Arc::new(ScheduledThreadPool::new(db_helper_threads));
+        let thread_pool = Arc::new(ScheduledThreadPool::new(config.db.helper_threads));
 
         let primary_database = if config.use_test_database_pool {
             DieselPool::new_test(&config.db, &config.db.primary.url)
         } else {
             let primary_db_connection_config = ConnectionConfig {
-                statement_timeout: db_connection_timeout,
+                statement_timeout: config.db.statement_timeout,
                 read_only: config.db.primary.read_only_mode,
             };
 
             let primary_db_config = r2d2::Pool::builder()
                 .max_size(config.db.primary.pool_size)
                 .min_idle(config.db.primary.min_idle)
-                .connection_timeout(Duration::from_secs(db_connection_timeout))
+                .connection_timeout(config.db.connection_timeout)
                 .connection_customizer(Box::new(primary_db_connection_config))
                 .thread_pool(thread_pool.clone());
 
@@ -138,14 +125,14 @@ impl App {
                 Some(DieselPool::new_test(&config.db, &pool_config.url))
             } else {
                 let replica_db_connection_config = ConnectionConfig {
-                    statement_timeout: db_connection_timeout,
+                    statement_timeout: config.db.statement_timeout,
                     read_only: true,
                 };
 
                 let replica_db_config = r2d2::Pool::builder()
                     .max_size(pool_config.pool_size)
                     .min_idle(pool_config.min_idle)
-                    .connection_timeout(Duration::from_secs(db_connection_timeout))
+                    .connection_timeout(config.db.connection_timeout)
                     .connection_customizer(Box::new(replica_db_connection_config))
                     .thread_pool(thread_pool);
 

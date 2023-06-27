@@ -369,6 +369,9 @@ fn simple_config() -> config::Server {
         },
         replica: None,
         tcp_timeout_ms: 1000, // 1 second
+        connection_timeout: Duration::from_secs(1),
+        statement_timeout: Duration::from_secs(1),
+        helper_threads: 1,
         enforce_tls: false,
     };
 

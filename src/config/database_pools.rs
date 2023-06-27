@@ -14,6 +14,7 @@
 use crate::config::Base;
 use crate::{env, Env};
 use secrecy::SecretString;
+use std::time::Duration;
 
 pub struct DatabasePools {
     /// Settings for the primary database. This is usually writeable, but will be read-only in
@@ -27,6 +28,15 @@ pub struct DatabasePools {
     /// unnecessarily long outage (before the unhealthy database logic kicks in), while setting it
     /// too low might result in healthy connections being dropped.
     pub tcp_timeout_ms: u64,
+    /// Time to wait for a connection to become available from the connection
+    /// pool before returning an error.
+    pub connection_timeout: Duration,
+    /// Time to wait for a query response before canceling the query and
+    /// returning an error.
+    pub statement_timeout: Duration,
+    /// Number of threads to use for asynchronous operations such as connection
+    /// creation.
+    pub helper_threads: usize,
     /// Whether to enforce that all the database connections are encrypted with TLS.
     pub enforce_tls: bool,
 }
@@ -83,6 +93,21 @@ impl DatabasePools {
             Err(_) => 15 * 1000, // 15 seconds
         };
 
+        let connection_timeout = match dotenvy::var("DB_TIMEOUT") {
+            Ok(num) => num.parse().expect("couldn't parse DB_TIMEOUT"),
+            _ => 30,
+        };
+        let connection_timeout = Duration::from_secs(connection_timeout);
+
+        // `DB_TIMEOUT` currently configures both the connection timeout and
+        // the statement timeout, so we can copy the parsed connection timeout.
+        let statement_timeout = connection_timeout;
+
+        let helper_threads = match dotenvy::var("DB_HELPER_THREADS") {
+            Ok(num) => num.parse().expect("couldn't parse DB_HELPER_THREADS"),
+            _ => 3,
+        };
+
         let enforce_tls = base.env == Env::Production;
 
         match dotenvy::var("DB_OFFLINE").as_deref() {
@@ -98,6 +123,9 @@ impl DatabasePools {
                 },
                 replica: None,
                 tcp_timeout_ms,
+                connection_timeout,
+                statement_timeout,
+                helper_threads,
                 enforce_tls,
             },
             // The follower is down, don't configure the replica.
@@ -110,6 +138,9 @@ impl DatabasePools {
                 },
                 replica: None,
                 tcp_timeout_ms,
+                connection_timeout,
+                statement_timeout,
+                helper_threads,
                 enforce_tls,
             },
             _ => Self {
@@ -129,6 +160,9 @@ impl DatabasePools {
                     min_idle: replica_min_idle,
                 }),
                 tcp_timeout_ms,
+                connection_timeout,
+                statement_timeout,
+                helper_threads,
                 enforce_tls,
             },
         }
