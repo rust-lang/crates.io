@@ -89,16 +89,7 @@ impl Keyword {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use diesel::connection::SimpleConnection;
-
-    fn pg_connection() -> PgConnection {
-        let database_url =
-            dotenvy::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set to run tests");
-        let mut conn = PgConnection::establish(&database_url).unwrap();
-        // These tests deadlock if run concurrently
-        conn.batch_execute("BEGIN;").unwrap();
-        conn
-    }
+    use crate::test_util::pg_connection;
 
     #[test]
     fn dont_associate_with_non_lowercased_keywords() {

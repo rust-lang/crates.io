@@ -226,13 +226,6 @@ impl CustomizeConnection<PgConnection, r2d2::Error> for ConnectionConfig {
     }
 }
 
-#[cfg(test)]
-pub(crate) fn test_conn() -> PgConnection {
-    let mut conn = PgConnection::establish(&crate::env("TEST_DATABASE_URL")).unwrap();
-    conn.begin_test_transaction().unwrap();
-    conn
-}
-
 #[derive(Debug, Error)]
 pub enum PoolError {
     #[error(transparent)]
