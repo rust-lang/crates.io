@@ -1,8 +1,8 @@
 use super::{MockAnonymousUser, MockCookieUser, MockTokenUser};
 use crate::record;
 use crate::util::{chaosproxy::ChaosProxy, fresh_schema::FreshSchema};
-use crates_io::config::{self, BalanceCapacityConfig, DbPoolConfig};
-use crates_io::{background_jobs::Environment, App, Emails};
+use crates_io::config::{self, BalanceCapacityConfig, DatabasePools, DbPoolConfig};
+use crates_io::{background_jobs::Environment, env, App, Emails};
 use crates_io_index::testing::UpstreamIndex;
 use crates_io_index::{Credentials, Repository as WorkerRepository, RepositoryConfig};
 use std::{rc::Rc, sync::Arc, time::Duration};
@@ -333,9 +333,21 @@ impl TestAppBuilder {
 }
 
 fn simple_config() -> config::Server {
+    let db = DatabasePools {
+        primary: DbPoolConfig {
+            url: env("TEST_DATABASE_URL").into(),
+            read_only_mode: false,
+            pool_size: 1,
+            min_idle: None,
+        },
+        replica: None,
+        tcp_timeout_ms: 1000, // 1 second
+        enforce_tls: false,
+    };
+
     config::Server {
         base: config::Base::test(),
-        db: config::DatabasePools::test_from_environment(),
+        db,
         session_key: cookie::Key::derive_from("test this has to be over 32 bytes long".as_bytes()),
         gh_client_id: ClientId::new(dotenvy::var("GH_CLIENT_ID").unwrap_or_default()),
         gh_client_secret: ClientSecret::new(dotenvy::var("GH_CLIENT_SECRET").unwrap_or_default()),
