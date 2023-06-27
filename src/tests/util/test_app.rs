@@ -387,6 +387,7 @@ fn simple_config() -> config::Server {
         base,
         ip: [127, 0, 0, 1].into(),
         max_blocking_threads: None,
+        use_nginx_wrapper: false,
         db,
         session_key: cookie::Key::derive_from("test this has to be over 32 bytes long".as_bytes()),
         gh_client_id: ClientId::new(dotenvy::var("GH_CLIENT_ID").unwrap_or_default()),

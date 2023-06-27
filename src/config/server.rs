@@ -20,6 +20,7 @@ pub struct Server {
     pub base: Base,
     pub ip: IpAddr,
     pub max_blocking_threads: Option<usize>,
+    pub use_nginx_wrapper: bool,
     pub db: DatabasePools,
     pub session_key: cookie::Key,
     pub gh_client_id: ClientId,
@@ -98,6 +99,8 @@ impl Default for Server {
             _ => [127, 0, 0, 1].into(),
         };
 
+        let use_nginx_wrapper = dotenvy::var("HEROKU").is_ok();
+
         let allowed_origins = AllowedOrigins::from_default_env();
         let page_offset_ua_blocklist = match env_optional::<String>("WEB_PAGE_OFFSET_UA_BLOCKLIST")
         {
@@ -132,6 +135,7 @@ impl Default for Server {
             base,
             ip,
             max_blocking_threads,
+            use_nginx_wrapper,
             session_key: cookie::Key::derive_from(env("SESSION_KEY").as_bytes()),
             gh_client_id: ClientId::new(env("GH_CLIENT_ID")),
             gh_client_secret: ClientSecret::new(env("GH_CLIENT_SECRET")),

@@ -42,10 +42,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let normalize_path = axum::middleware::from_fn(normalize_path);
     let axum_router = normalize_path.layer(axum_router);
 
-    let heroku = dotenvy::var("HEROKU").is_ok();
     let fastboot = dotenvy::var("USE_FASTBOOT").is_ok();
 
-    let port = match (heroku, env_optional("PORT")) {
+    let port = match (app.config.use_nginx_wrapper, env_optional("PORT")) {
         (false, Some(port)) => port,
         _ => 8888,
     };
@@ -90,7 +89,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Creating this file tells heroku to tell nginx that the application is ready
     // to receive traffic.
-    if heroku {
+    if app.config.use_nginx_wrapper {
         let path = if fastboot {
             "/tmp/backend-initialized"
         } else {
