@@ -1,5 +1,5 @@
-use crate::env_optional;
-use sentry::{ClientInitGuard, ClientOptions, IntoDsn, TransactionContext};
+use crate::config::SentryConfig;
+use sentry::{ClientInitGuard, ClientOptions, TransactionContext};
 use std::sync::Arc;
 
 /// Initializes the Sentry SDK from the environment variables.
@@ -11,20 +11,7 @@ use std::sync::Arc;
 /// `HEROKU_SLUG_COMMIT`, if present, will be used as the `release` property
 /// on all events.
 pub fn init() -> ClientInitGuard {
-    let dsn = dotenvy::var("SENTRY_DSN_API")
-        .ok()
-        .into_dsn()
-        .expect("SENTRY_DSN_API is not a valid Sentry DSN value");
-
-    let environment = dsn.as_ref().map(|_| {
-        dotenvy::var("SENTRY_ENV_API")
-            .expect("SENTRY_ENV_API must be set when using SENTRY_DSN_API")
-            .into()
-    });
-
-    let release = dotenvy::var("HEROKU_SLUG_COMMIT").ok().map(Into::into);
-
-    let traces_sample_rate = env_optional("SENTRY_TRACES_SAMPLE_RATE").unwrap_or(0.0);
+    let config = SentryConfig::from_environment();
 
     let traces_sampler = move |ctx: &TransactionContext| -> f32 {
         if let Some(sampled) = ctx.sampled() {
@@ -39,7 +26,7 @@ pub fn init() -> ClientInitGuard {
             if is_download_endpoint {
                 // Reduce the sample rate for the download endpoint, since we have significantly
                 // more traffic on that endpoint compared to the rest
-                return traces_sample_rate / 100.;
+                return config.traces_sample_rate / 100.;
             } else if ctx.name() == "PUT /api/v1/crates/new" {
                 // Record all traces for crate publishing
                 return 1.;
@@ -55,14 +42,14 @@ pub fn init() -> ClientInitGuard {
             return 0.;
         }
 
-        traces_sample_rate
+        config.traces_sample_rate
     };
 
     let opts = ClientOptions {
         auto_session_tracking: true,
-        dsn,
-        environment,
-        release,
+        dsn: config.dsn,
+        environment: config.environment.map(Into::into),
+        release: config.release.map(Into::into),
         session_mode: sentry::SessionMode::Request,
         traces_sampler: Some(Arc::new(traces_sampler)),
         ..Default::default()
