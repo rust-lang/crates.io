@@ -19,6 +19,7 @@ const DEFAULT_VERSION_ID_CACHE_TTL: u64 = 5 * 60; // 5 minutes
 pub struct Server {
     pub base: Base,
     pub ip: IpAddr,
+    pub port: u16,
     pub max_blocking_threads: Option<usize>,
     pub use_nginx_wrapper: bool,
     pub db: DatabasePools,
@@ -101,6 +102,11 @@ impl Default for Server {
 
         let use_nginx_wrapper = dotenvy::var("HEROKU").is_ok();
 
+        let port = match (use_nginx_wrapper, env_optional("PORT")) {
+            (false, Some(port)) => port,
+            _ => 8888,
+        };
+
         let allowed_origins = AllowedOrigins::from_default_env();
         let page_offset_ua_blocklist = match env_optional::<String>("WEB_PAGE_OFFSET_UA_BLOCKLIST")
         {
@@ -134,6 +140,7 @@ impl Default for Server {
             db: DatabasePools::full_from_environment(&base),
             base,
             ip,
+            port,
             max_blocking_threads,
             use_nginx_wrapper,
             session_key: cookie::Key::derive_from(env("SESSION_KEY").as_bytes()),

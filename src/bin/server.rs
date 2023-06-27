@@ -4,7 +4,7 @@
 extern crate tracing;
 
 use crates_io::middleware::normalize_path::normalize_path;
-use crates_io::{env_optional, metrics::LogEncoder, util::errors::AppResult, App};
+use crates_io::{metrics::LogEncoder, util::errors::AppResult, App};
 use std::{fs::File, process::Command, sync::Arc, time::Duration};
 
 use axum::ServiceExt;
@@ -44,11 +44,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let fastboot = dotenvy::var("USE_FASTBOOT").is_ok();
 
-    let port = match (app.config.use_nginx_wrapper, env_optional("PORT")) {
-        (false, Some(port)) => port,
-        _ => 8888,
-    };
-
     let mut builder = tokio::runtime::Builder::new_multi_thread();
     builder.enable_all();
     builder.worker_threads(CORE_THREADS);
@@ -61,7 +56,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let make_service = axum_router.into_make_service_with_connect_info::<SocketAddr>();
 
     let (addr, server) = rt.block_on(async {
-        let socket_addr = (app.config.ip, port).into();
+        let socket_addr = (app.config.ip, app.config.port).into();
         let server = hyper::Server::bind(&socket_addr).serve(make_service);
 
         // When the user configures PORT=0 the operating system will allocate a random unused port.

@@ -386,6 +386,7 @@ fn simple_config() -> config::Server {
     config::Server {
         base,
         ip: [127, 0, 0, 1].into(),
+        port: 8888,
         max_blocking_threads: None,
         use_nginx_wrapper: false,
         db,
