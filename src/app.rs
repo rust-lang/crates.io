@@ -103,7 +103,7 @@ impl App {
             DieselPool::new_test(&config.db, &config.db.primary.url)
         } else {
             let primary_db_connection_config = ConnectionConfig {
-                statement_timeout: config.db.connection_timeout.as_secs(),
+                statement_timeout: config.db.connection_timeout,
                 read_only: config.db.primary.read_only_mode,
             };
 
@@ -130,7 +130,7 @@ impl App {
                 Some(DieselPool::new_test(&config.db, &pool_config.url))
             } else {
                 let replica_db_connection_config = ConnectionConfig {
-                    statement_timeout: config.db.connection_timeout.as_secs(),
+                    statement_timeout: config.db.connection_timeout,
                     read_only: true,
                 };
 
