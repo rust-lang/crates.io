@@ -385,6 +385,10 @@ fn simple_config() -> config::Server {
 
     config::Server {
         base,
+        ip: [127, 0, 0, 1].into(),
+        port: 8888,
+        max_blocking_threads: None,
+        use_nginx_wrapper: false,
         db,
         session_key: cookie::Key::derive_from("test this has to be over 32 bytes long".as_bytes()),
         gh_client_id: ClientId::new(dotenvy::var("GH_CLIENT_ID").unwrap_or_default()),
@@ -415,6 +419,7 @@ fn simple_config() -> config::Server {
         // The frontend code is not needed for the backend tests.
         serve_dist: false,
         serve_html: false,
+        use_fastboot: None,
     }
 }
 

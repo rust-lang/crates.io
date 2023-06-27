@@ -10,6 +10,7 @@ use super::database_pools::DatabasePools;
 use crate::config::balance_capacity::BalanceCapacityConfig;
 use http::HeaderValue;
 use std::collections::HashSet;
+use std::net::IpAddr;
 use std::time::Duration;
 
 const DEFAULT_VERSION_ID_CACHE_SIZE: u64 = 10_000;
@@ -17,6 +18,10 @@ const DEFAULT_VERSION_ID_CACHE_TTL: u64 = 5 * 60; // 5 minutes
 
 pub struct Server {
     pub base: Base,
+    pub ip: IpAddr,
+    pub port: u16,
+    pub max_blocking_threads: Option<usize>,
+    pub use_nginx_wrapper: bool,
     pub db: DatabasePools,
     pub session_key: cookie::Key,
     pub gh_client_id: ClientId,
@@ -50,6 +55,8 @@ pub struct Server {
     /// Should the server serve the frontend `index.html` for all
     /// non-API requests?
     pub serve_html: bool,
+
+    pub use_fastboot: Option<String>,
 }
 
 impl Default for Server {
@@ -90,6 +97,18 @@ impl Default for Server {
     ///
     /// This function panics if the Server configuration is invalid.
     fn default() -> Self {
+        let ip = match dotenvy::var("DEV_DOCKER") {
+            Ok(_) => [0, 0, 0, 0].into(),
+            _ => [127, 0, 0, 1].into(),
+        };
+
+        let use_nginx_wrapper = dotenvy::var("HEROKU").is_ok();
+
+        let port = match (use_nginx_wrapper, env_optional("PORT")) {
+            (false, Some(port)) => port,
+            _ => 8888,
+        };
+
         let allowed_origins = AllowedOrigins::from_default_env();
         let page_offset_ua_blocklist = match env_optional::<String>("WEB_PAGE_OFFSET_UA_BLOCKLIST")
         {
@@ -114,9 +133,18 @@ impl Default for Server {
             Some(s) if s.is_empty() => vec![],
             Some(s) => s.split(',').map(String::from).collect(),
         };
+
+        let max_blocking_threads = dotenvy::var("SERVER_THREADS")
+            .map(|s| s.parse().expect("SERVER_THREADS was not a valid number"))
+            .ok();
+
         Server {
             db: DatabasePools::full_from_environment(&base),
             base,
+            ip,
+            port,
+            max_blocking_threads,
+            use_nginx_wrapper,
             session_key: cookie::Key::derive_from(env("SESSION_KEY").as_bytes()),
             gh_client_id: ClientId::new(env("GH_CLIENT_ID")),
             gh_client_secret: ClientSecret::new(env("GH_CLIENT_SECRET")),
@@ -156,6 +184,7 @@ impl Default for Server {
             balance_capacity: BalanceCapacityConfig::from_environment(),
             serve_dist: true,
             serve_html: true,
+            use_fastboot: dotenvy::var("USE_FASTBOOT").ok(),
         }
     }
 }
