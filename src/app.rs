@@ -156,8 +156,8 @@ impl App {
             .time_to_live(config.version_id_cache_ttl)
             .build();
 
-        let fastboot_client = match dotenvy::var("USE_FASTBOOT") {
-            Ok(val) if val == "staging-experimental" => Some(reqwest::Client::new()),
+        let fastboot_client = match config.use_fastboot.as_deref() {
+            Some("staging-experimental") => Some(reqwest::Client::new()),
             _ => None,
         };
 

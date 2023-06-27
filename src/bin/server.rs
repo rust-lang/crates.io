@@ -42,8 +42,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let normalize_path = axum::middleware::from_fn(normalize_path);
     let axum_router = normalize_path.layer(axum_router);
 
-    let fastboot = dotenvy::var("USE_FASTBOOT").is_ok();
-
     let mut builder = tokio::runtime::Builder::new_multi_thread();
     builder.enable_all();
     builder.worker_threads(CORE_THREADS);
@@ -85,7 +83,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Creating this file tells heroku to tell nginx that the application is ready
     // to receive traffic.
     if app.config.use_nginx_wrapper {
-        let path = if fastboot {
+        let path = if app.config.use_fastboot.is_some() {
             "/tmp/backend-initialized"
         } else {
             "/tmp/app-initialized"
