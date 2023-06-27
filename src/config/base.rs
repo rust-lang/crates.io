@@ -17,11 +17,9 @@ pub struct Base {
 
 impl Base {
     pub fn from_environment() -> Self {
-        let heroku = dotenvy::var("HEROKU").is_ok();
-        let env = if heroku {
-            Env::Production
-        } else {
-            Env::Development
+        let env = match dotenvy::var("HEROKU") {
+            Ok(_) => Env::Production,
+            _ => Env::Development,
         };
 
         let uploader = if env == Env::Production {
