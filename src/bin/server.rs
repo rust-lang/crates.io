@@ -57,15 +57,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let threads = dotenvy::var("SERVER_THREADS")
-        .map(|s| s.parse().expect("SERVER_THREADS was not a valid number"))
-        .unwrap_or(512);
+        .map(|s| s.parse().expect("SERVER_THREADS was not a valid number"));
 
-    let rt = tokio::runtime::Builder::new_multi_thread()
-        .enable_all()
-        .worker_threads(CORE_THREADS)
-        .max_blocking_threads(threads as usize)
-        .build()
-        .unwrap();
+    let mut builder = tokio::runtime::Builder::new_multi_thread();
+    builder.enable_all();
+    builder.worker_threads(CORE_THREADS);
+    if let Ok(threads) = threads {
+        builder.max_blocking_threads(threads);
+    }
+
+    let rt = builder.build().unwrap();
 
     let make_service = axum_router.into_make_service_with_connect_info::<SocketAddr>();
 
