@@ -20,14 +20,4 @@ impl BalanceCapacityConfig {
             dl_only_at_percentage: env_optional("WEB_CAPACITY_DL_ONLY_PCT").unwrap_or(80),
         }
     }
-
-    pub fn for_testing() -> Self {
-        Self {
-            report_only: false,
-            log_total_at_count: 50,
-            log_at_percentage: 50,
-            throttle_at_percentage: 70,
-            dl_only_at_percentage: 80,
-        }
-    }
 }

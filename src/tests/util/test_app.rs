@@ -372,6 +372,14 @@ fn simple_config() -> config::Server {
         enforce_tls: false,
     };
 
+    let balance_capacity = BalanceCapacityConfig {
+        report_only: false,
+        log_total_at_count: 50,
+        log_at_percentage: 50,
+        throttle_at_percentage: 70,
+        dl_only_at_percentage: 80,
+    };
+
     config::Server {
         base,
         db,
@@ -399,7 +407,7 @@ fn simple_config() -> config::Server {
         version_id_cache_size: 10000,
         version_id_cache_ttl: Duration::from_secs(5 * 60),
         cdn_user_agent: "Amazon CloudFront".to_string(),
-        balance_capacity: BalanceCapacityConfig::for_testing(),
+        balance_capacity,
     }
 }
 
