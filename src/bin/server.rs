@@ -58,7 +58,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let threads = dotenvy::var("SERVER_THREADS")
         .map(|s| s.parse().expect("SERVER_THREADS was not a valid number"))
-        .unwrap_or(5);
+        .unwrap_or(512);
 
     let rt = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
