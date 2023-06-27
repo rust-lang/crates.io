@@ -34,6 +34,9 @@ pub struct DatabasePools {
     /// Time to wait for a query response before canceling the query and
     /// returning an error.
     pub statement_timeout: Duration,
+    /// Number of threads to use for asynchronous operations such as connection
+    /// creation.
+    pub helper_threads: usize,
     /// Whether to enforce that all the database connections are encrypted with TLS.
     pub enforce_tls: bool,
 }
@@ -100,6 +103,11 @@ impl DatabasePools {
         // the statement timeout, so we can copy the parsed connection timeout.
         let statement_timeout = connection_timeout;
 
+        let helper_threads = match dotenvy::var("DB_HELPER_THREADS") {
+            Ok(num) => num.parse().expect("couldn't parse DB_HELPER_THREADS"),
+            _ => 3,
+        };
+
         let enforce_tls = base.env == Env::Production;
 
         match dotenvy::var("DB_OFFLINE").as_deref() {
@@ -117,6 +125,7 @@ impl DatabasePools {
                 tcp_timeout_ms,
                 connection_timeout,
                 statement_timeout,
+                helper_threads,
                 enforce_tls,
             },
             // The follower is down, don't configure the replica.
@@ -131,6 +140,7 @@ impl DatabasePools {
                 tcp_timeout_ms,
                 connection_timeout,
                 statement_timeout,
+                helper_threads,
                 enforce_tls,
             },
             _ => Self {
@@ -152,6 +162,7 @@ impl DatabasePools {
                 tcp_timeout_ms,
                 connection_timeout,
                 statement_timeout,
+                helper_threads,
                 enforce_tls,
             },
         }

@@ -92,12 +92,7 @@ impl App {
             ),
         );
 
-        let db_helper_threads = match dotenvy::var("DB_HELPER_THREADS") {
-            Ok(num) => num.parse().expect("couldn't parse DB_HELPER_THREADS"),
-            _ => 3,
-        };
-
-        let thread_pool = Arc::new(ScheduledThreadPool::new(db_helper_threads));
+        let thread_pool = Arc::new(ScheduledThreadPool::new(config.db.helper_threads));
 
         let primary_database = if config.use_test_database_pool {
             DieselPool::new_test(&config.db, &config.db.primary.url)
