@@ -7,6 +7,7 @@ use reqwest::{
     blocking::{Body, Client, Response},
     header,
 };
+use secrecy::{ExposeSecret, SecretString};
 use sha1::Sha1;
 use std::time::Duration;
 use thiserror::Error;
@@ -26,7 +27,7 @@ pub struct Bucket {
     name: String,
     region: Region,
     access_key: String,
-    secret_key: String,
+    secret_key: SecretString,
     proto: String,
 }
 
@@ -50,18 +51,18 @@ impl Region {
 }
 
 impl Bucket {
-    pub fn new(
+    pub fn new<T: Into<SecretString>>(
         name: String,
         region: Region,
         access_key: String,
-        secret_key: String,
+        secret_key: T,
         proto: &str,
     ) -> Bucket {
         Bucket {
             name,
             region,
             access_key,
-            secret_key,
+            secret_key: secret_key.into(),
             proto: proto.to_string(),
         }
     }
@@ -116,7 +117,7 @@ impl Bucket {
             name = self.name,
         );
         let signature = {
-            let key = self.secret_key.as_bytes();
+            let key = self.secret_key.expose_secret().as_bytes();
             let mut h = Hmac::<Sha1>::new_from_slice(key).expect("HMAC can take key of any size");
             h.update(string.as_bytes());
             let res = h.finalize().into_bytes();
@@ -162,7 +163,7 @@ mod tests {
     }
 
     fn bucket(name: &str, region: Region, proto: &str) -> Bucket {
-        Bucket::new(name.into(), region, "".into(), "".into(), proto)
+        Bucket::new(name.into(), region, "".into(), "".to_string(), proto)
     }
 
     fn region(name: &str) -> Region {

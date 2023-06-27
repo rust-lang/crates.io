@@ -749,6 +749,7 @@ dependencies = [
  "chrono",
  "hmac",
  "reqwest",
+ "secrecy",
  "sha-1",
  "thiserror",
  "url",
