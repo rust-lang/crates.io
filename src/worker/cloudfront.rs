@@ -8,19 +8,23 @@ use aws_sigv4::{
 use reqwest::blocking::Client;
 use retry::delay::{jitter, Exponential};
 use retry::OperationResult;
+use secrecy::{ExposeSecret, SecretString};
 
 #[derive(Clone)]
 pub struct CloudFront {
     distribution_id: String,
     access_key: String,
-    secret_key: String,
+    secret_key: SecretString,
 }
 
 impl CloudFront {
     pub fn from_environment() -> Option<Self> {
         let distribution_id = dotenvy::var("CLOUDFRONT_DISTRIBUTION").ok()?;
         let access_key = dotenvy::var("AWS_ACCESS_KEY").expect("missing AWS_ACCESS_KEY");
-        let secret_key = dotenvy::var("AWS_SECRET_KEY").expect("missing AWS_SECRET_KEY");
+        let secret_key = dotenvy::var("AWS_SECRET_KEY")
+            .expect("missing AWS_SECRET_KEY")
+            .into();
+
         Some(Self {
             distribution_id,
             access_key,
@@ -76,7 +80,7 @@ impl CloudFront {
             let request = SignableRequest::from(&request);
             let params = SigningParams::builder()
                 .access_key(&self.access_key)
-                .secret_key(&self.secret_key)
+                .secret_key(self.secret_key.expose_secret())
                 .region("us-east-1") // cloudfront is a regionless service, use the default region for signing.
                 .service_name("cloudfront")
                 .settings(SigningSettings::default())
