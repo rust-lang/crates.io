@@ -79,11 +79,13 @@ fn new_wrong_token() {
         response.into_json(),
         json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
     );
+
+    assert!(app.stored_files().is_empty());
 }
 
 #[test]
 fn invalid_names() {
-    let (_, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token();
 
     let bad_name = |name: &str, error_message: &str| {
         let crate_to_publish = PublishBuilder::new(name).version("1.0.0");
@@ -111,6 +113,8 @@ fn invalid_names() {
     bad_name("compiler-rt", error_message);
     bad_name("compiler_rt", error_message);
     bad_name("coMpiLer_Rt", error_message);
+
+    assert!(app.stored_files().is_empty());
 }
 
 #[test]
@@ -133,6 +137,9 @@ fn new_krate() {
         "acb5604b126ac894c1eb11c4575bf2072fea61232a888e453770c79d7ed56419"
     );
 
+    let files = app.stored_files();
+    assert_eq!(files, vec!["crates/foo_new/foo_new-1.0.0.crate"]);
+
     app.db(|conn| {
         let email: String = versions_published_by::table
             .select(versions_published_by::email)
@@ -144,24 +151,30 @@ fn new_krate() {
 
 #[test]
 fn new_krate_with_token() {
-    let (_, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token();
 
     let crate_to_publish = PublishBuilder::new("foo_new").version("1.0.0");
     let json: GoodCrate = token.publish_crate(crate_to_publish).good();
 
     assert_eq!(json.krate.name, "foo_new");
     assert_eq!(json.krate.max_version, "1.0.0");
+
+    let files = app.stored_files();
+    assert_eq!(files, vec!["crates/foo_new/foo_new-1.0.0.crate"]);
 }
 
 #[test]
 fn new_krate_weird_version() {
-    let (_, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token();
 
     let crate_to_publish = PublishBuilder::new("foo_weird").version("0.0.0-pre");
     let json: GoodCrate = token.publish_crate(crate_to_publish).good();
 
     assert_eq!(json.krate.name, "foo_weird");
     assert_eq!(json.krate.max_version, "0.0.0-pre");
+
+    let files = app.stored_files();
+    assert_eq!(files, vec!["crates/foo_weird/foo_weird-0.0.0-pre.crate"]);
 }
 
 #[test]
@@ -278,6 +291,8 @@ fn new_krate_with_broken_dependency_requirement() {
         response,
         json!({"errors": [{"detail": "invalid upload request: invalid value: string \"broken\", expected a valid version req at line 1 column 136"}]})
     );
+
+    assert!(app.stored_files().is_empty());
 }
 
 #[test]
@@ -301,6 +316,8 @@ fn reject_new_krate_with_non_exact_dependency() {
         response.into_json(),
         json!({ "errors": [{ "detail": "no known crate named `foo_dep`" }] })
     );
+
+    assert!(app.stored_files().is_empty());
 }
 
 #[test]
@@ -318,7 +335,7 @@ fn new_crate_allow_empty_alternative_registry_dependency() {
 
 #[test]
 fn reject_new_crate_with_alternative_registry_dependency() {
-    let (_, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token();
 
     let dependency =
         DependencyBuilder::new("dep").registry("https://server.example/path/to/registry");
@@ -330,6 +347,8 @@ fn reject_new_crate_with_alternative_registry_dependency() {
         response.into_json(),
         json!({ "errors": [{ "detail": "Dependency `dep` is hosted on another registry. Cross-registry dependencies are not permitted on crates.io." }] })
     );
+
+    assert!(app.stored_files().is_empty());
 }
 
 #[test]
@@ -353,6 +372,8 @@ fn new_krate_with_wildcard_dependency() {
         response.into_json(),
         json!({ "errors": [{ "detail": WILDCARD_ERROR_MESSAGE }] })
     );
+
+    assert!(app.stored_files().is_empty());
 }
 
 #[test]
@@ -378,6 +399,14 @@ fn new_krate_twice() {
     assert_eq!(crates[1].name, "foo_twice");
     assert_eq!(crates[1].vers, "2.0.0");
     assert!(crates[1].deps.is_empty());
+
+    assert_eq!(
+        app.stored_files(),
+        vec![
+            "crates/foo_twice/foo_twice-0.99.0.crate",
+            "crates/foo_twice/foo_twice-2.0.0.crate"
+        ]
+    );
 }
 
 #[test]
@@ -399,11 +428,13 @@ fn new_krate_wrong_user() {
         response.into_json(),
         json!({ "errors": [{ "detail": MISSING_RIGHTS_ERROR_MESSAGE }] })
     );
+
+    assert!(app.stored_files().is_empty());
 }
 
 #[test]
 fn new_krate_too_big() {
-    let (_, _, user) = TestApp::full().with_user();
+    let (app, _, user) = TestApp::full().with_user();
 
     let files = [("foo_big-1.0.0/big", &[b'a'; 2000] as &[_])];
     let builder = PublishBuilder::new("foo_big").files(&files);
@@ -414,6 +445,8 @@ fn new_krate_too_big() {
         response.into_json(),
         json!({ "errors": [{ "detail": "uploaded tarball is malformed or too large when decompressed" }] })
     );
+
+    assert!(app.stored_files().is_empty());
 }
 
 #[test]
@@ -432,11 +465,17 @@ fn new_krate_too_big_but_whitelisted() {
         .files(&files);
 
     token.publish_crate(crate_to_publish).good();
+
+    let files = app.stored_files();
+    assert_eq!(
+        files,
+        vec!["crates/foo_whitelist/foo_whitelist-1.1.0.crate"]
+    );
 }
 
 #[test]
 fn new_krate_wrong_files() {
-    let (_, _, user) = TestApp::full().with_user();
+    let (app, _, user) = TestApp::full().with_user();
     let data: &[u8] = &[1];
     let files = [("foo-1.0.0/a", data), ("bar-1.0.0/a", data)];
     let builder = PublishBuilder::new("foo").files(&files);
@@ -447,11 +486,13 @@ fn new_krate_wrong_files() {
         response.into_json(),
         json!({ "errors": [{ "detail": "invalid path found: bar-1.0.0/a" }] })
     );
+
+    assert!(app.stored_files().is_empty());
 }
 
 #[test]
 fn new_krate_gzip_bomb() {
-    let (_, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token();
 
     let len = 512 * 1024;
     let mut body = io::repeat(0).take(len);
@@ -466,6 +507,8 @@ fn new_krate_gzip_bomb() {
         response.into_json(),
         json!({ "errors": [{ "detail": "uploaded tarball is malformed or too large when decompressed" }] })
     );
+
+    assert!(app.stored_files().is_empty());
 }
 
 #[test]
@@ -486,6 +529,8 @@ fn new_krate_duplicate_version() {
         response.into_json(),
         json!({ "errors": [{ "detail": "crate version `1.0.0` is already uploaded" }] })
     );
+
+    assert!(app.stored_files().is_empty());
 }
 
 #[test]
@@ -505,6 +550,8 @@ fn new_crate_similar_name() {
         response.into_json(),
         json!({ "errors": [{ "detail": "crate was previously named `Foo_similar`" }] })
     );
+
+    assert!(app.stored_files().is_empty());
 }
 
 #[test]
@@ -524,6 +571,8 @@ fn new_crate_similar_name_hyphen() {
         response.into_json(),
         json!({ "errors": [{ "detail": "crate was previously named `foo_bar_hyphen`" }] })
     );
+
+    assert!(app.stored_files().is_empty());
 }
 
 #[test]
@@ -543,6 +592,8 @@ fn new_crate_similar_name_underscore() {
         response.into_json(),
         json!({ "errors": [{ "detail": "crate was previously named `foo-bar-underscore`" }] })
     );
+
+    assert!(app.stored_files().is_empty());
 }
 
 #[test]
@@ -553,11 +604,16 @@ fn new_krate_git_upload_with_conflicts() {
 
     let crate_to_publish = PublishBuilder::new("foo_conflicts");
     token.publish_crate(crate_to_publish).good();
+
+    assert_eq!(
+        app.stored_files(),
+        vec!["crates/foo_conflicts/foo_conflicts-1.0.0.crate"]
+    );
 }
 
 #[test]
 fn new_krate_dependency_missing() {
-    let (_, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token();
 
     // Deliberately not inserting this crate in the database to test behavior when a dependency
     // doesn't exist!
@@ -570,22 +626,27 @@ fn new_krate_dependency_missing() {
         response.into_json(),
         json!({ "errors": [{ "detail": "no known crate named `bar_missing`" }] })
     );
+
+    assert!(app.stored_files().is_empty());
 }
 
 #[test]
 fn new_krate_with_readme() {
-    let (_, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token();
 
     let crate_to_publish = PublishBuilder::new("foo_readme").readme("");
     let json = token.publish_crate(crate_to_publish).good();
 
     assert_eq!(json.krate.name, "foo_readme");
     assert_eq!(json.krate.max_version, "1.0.0");
+
+    let files = app.stored_files();
+    assert_eq!(files, vec!["crates/foo_readme/foo_readme-1.0.0.crate",]);
 }
 
 #[test]
 fn new_krate_with_readme_and_plus_version() {
-    let (_, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token();
 
     let crate_to_publish = PublishBuilder::new("foo_readme")
         .version("1.0.0+foo")
@@ -594,6 +655,14 @@ fn new_krate_with_readme_and_plus_version() {
 
     assert_eq!(json.krate.name, "foo_readme");
     assert_eq!(json.krate.max_version, "1.0.0+foo");
+
+    assert_eq!(
+        app.stored_files(),
+        vec![
+            "crates/foo_readme/foo_readme-1.0.0 foo.crate",
+            "crates/foo_readme/foo_readme-1.0.0+foo.crate"
+        ]
+    );
 }
 
 #[test]
@@ -612,6 +681,8 @@ fn new_krate_without_any_email_fails() {
         response.into_json(),
         json!({ "errors": [{ "detail": "A verified email address is required to publish crates to crates.io. Visit https://crates.io/settings/profile to set and verify your email address." }] })
     );
+
+    assert!(app.stored_files().is_empty());
 }
 
 #[test]
@@ -633,6 +704,8 @@ fn new_krate_with_unverified_email_fails() {
         response.into_json(),
         json!({ "errors": [{ "detail": "A verified email address is required to publish crates to crates.io. Visit https://crates.io/settings/profile to set and verify your email address." }] })
     );
+
+    assert!(app.stored_files().is_empty());
 }
 
 #[test]
@@ -768,7 +841,7 @@ fn ignored_categories() {
 
 #[test]
 fn license_and_description_required() {
-    let (_, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token();
 
     let crate_to_publish = PublishBuilder::new("foo_metadata")
         .version("1.1.0")
@@ -805,11 +878,13 @@ fn license_and_description_required() {
         response.into_json(),
         json!({ "errors": [{ "detail": missing_metadata_error_message(&["description"]) }] })
     );
+
+    assert!(app.stored_files().is_empty());
 }
 
 #[test]
 fn new_krate_tarball_with_hard_links() {
-    let (_, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token();
 
     let mut tarball = Vec::new();
     {
@@ -832,6 +907,8 @@ fn new_krate_tarball_with_hard_links() {
         response.into_json(),
         json!({ "errors": [{ "detail": "unexpected symlink or hard link found: foo-1.1.0/bar" }] })
     );
+
+    assert!(app.stored_files().is_empty());
 }
 
 #[test]
@@ -840,7 +917,7 @@ fn tarball_between_default_axum_limit_and_max_upload_size() {
     let compression = Compression::none();
 
     let max_upload_size = 5 * 1024 * 1024;
-    let (_, _, _, token) = TestApp::full()
+    let (app, _, _, token) = TestApp::full()
         .with_config(|config| {
             config.max_upload_size = max_upload_size;
             config.max_unpack_size = max_upload_size;
@@ -868,6 +945,8 @@ fn tarball_between_default_axum_limit_and_max_upload_size() {
     let json = response.good();
     assert_eq!(json.krate.name, "foo");
     assert_eq!(json.krate.max_version, "1.1.0");
+
+    assert_eq!(app.stored_files().len(), 1);
 }
 
 #[test]
@@ -876,7 +955,7 @@ fn tarball_bigger_than_max_upload_size() {
     let compression = Compression::none();
 
     let max_upload_size = 5 * 1024 * 1024;
-    let (_, _, _, token) = TestApp::full()
+    let (app, _, _, token) = TestApp::full()
         .with_config(|config| {
             config.max_upload_size = max_upload_size;
             config.max_unpack_size = max_upload_size;
@@ -905,11 +984,13 @@ fn tarball_bigger_than_max_upload_size() {
         response.into_json(),
         json!({ "errors": [{ "detail": format!("max upload size is: {max_upload_size}") }] })
     );
+
+    assert!(app.stored_files().is_empty());
 }
 
 #[test]
 fn publish_new_crate_rate_limited() {
-    let (_, anon, _, token) = TestApp::full()
+    let (app, anon, _, token) = TestApp::full()
         .with_publish_rate_limit(Duration::from_millis(500), 1)
         .with_token();
 
@@ -917,10 +998,14 @@ fn publish_new_crate_rate_limited() {
     let crate_to_publish = PublishBuilder::new("rate_limited1");
     token.publish_crate(crate_to_publish).good();
 
+    assert_eq!(app.stored_files().len(), 1);
+
     // Uploading a second crate is limited
     let crate_to_publish = PublishBuilder::new("rate_limited2");
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::TOO_MANY_REQUESTS);
+
+    assert_eq!(app.stored_files().len(), 1);
 
     let response = anon.get::<()>("/api/v1/crates/rate_limited2");
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
@@ -933,6 +1018,8 @@ fn publish_new_crate_rate_limited() {
 
     let json = anon.show_crate("rate_limited2");
     assert_eq!(json.krate.max_version, "1.0.0");
+
+    assert_eq!(app.stored_files().len(), 2);
 }
 
 #[test]
@@ -1011,7 +1098,7 @@ fn new_krate_sorts_deps() {
 
 #[test]
 fn empty_payload() {
-    let (_, _, user) = TestApp::full().with_user();
+    let (app, _, user) = TestApp::full().with_user();
 
     let response = user.put::<()>("/api/v1/crates/new", &[]);
     assert_eq!(response.status(), StatusCode::OK);
@@ -1019,6 +1106,8 @@ fn empty_payload() {
         response.into_json(),
         json!({ "errors": [{ "detail": "invalid metadata length" }] })
     );
+
+    assert!(app.stored_files().is_empty());
 }
 
 fn version_with_build_metadata(v1: &str, v2: &str, expected_error: &str) {
