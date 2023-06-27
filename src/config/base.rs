@@ -17,39 +17,29 @@ pub struct Base {
 
 impl Base {
     pub fn from_environment() -> Self {
-        let heroku = dotenvy::var("HEROKU").is_ok();
-        let env = if heroku {
-            Env::Production
-        } else {
-            Env::Development
+        let env = match dotenvy::var("HEROKU") {
+            Ok(_) => Env::Production,
+            _ => Env::Development,
         };
 
-        let uploader = match env {
-            Env::Production => {
-                // `env` panics if these vars are not set, and in production for a primary instance,
-                // that's what we want since we don't want to be able to start the server if the
-                // server doesn't know where to upload crates.
-                Self::s3_panic_if_missing_keys()
-            }
-            // In Development mode, either running as a primary instance or a read-only mirror
-            _ => {
-                if dotenvy::var("S3_BUCKET").is_ok() {
-                    // If we've set the `S3_BUCKET` variable to any value, use all of the values
-                    // for the related S3 environment variables and configure the app to upload to
-                    // and read from S3 like production does. All values except for bucket are
-                    // optional, like production read-only mirrors.
-                    info!("Using S3 uploader");
-                    Self::s3_maybe_read_only()
-                } else {
-                    // If we don't set the `S3_BUCKET` variable, we'll use a development-only
-                    // uploader that makes it possible to run and publish to a locally-running
-                    // crates.io instance without needing to set up an account and a bucket in S3.
-                    info!(
-                        "Using local uploader, crate files will be in the local_uploads directory"
-                    );
-                    Uploader::Local
-                }
-            }
+        let uploader = if env == Env::Production {
+            // `env` panics if these vars are not set, and in production for a primary instance,
+            // that's what we want since we don't want to be able to start the server if the
+            // server doesn't know where to upload crates.
+            Self::s3_panic_if_missing_keys()
+        } else if dotenvy::var("S3_BUCKET").is_ok() {
+            // If we've set the `S3_BUCKET` variable to any value, use all of the values
+            // for the related S3 environment variables and configure the app to upload to
+            // and read from S3 like production does. All values except for bucket are
+            // optional, like production read-only mirrors.
+            info!("Using S3 uploader");
+            Self::s3_maybe_read_only()
+        } else {
+            // If we don't set the `S3_BUCKET` variable, we'll use a development-only
+            // uploader that makes it possible to run and publish to a locally-running
+            // crates.io instance without needing to set up an account and a bucket in S3.
+            info!("Using local uploader, crate files will be in the local_uploads directory");
+            Uploader::Local
         };
 
         Self { env, uploader }
