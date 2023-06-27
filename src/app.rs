@@ -92,10 +92,9 @@ impl App {
             ),
         );
 
-        let db_helper_threads = match (dotenvy::var("DB_HELPER_THREADS"), config.env()) {
-            (Ok(num), _) => num.parse().expect("couldn't parse DB_HELPER_THREADS"),
-            (_, Env::Production) => 3,
-            _ => 1,
+        let db_helper_threads = match dotenvy::var("DB_HELPER_THREADS") {
+            Ok(num) => num.parse().expect("couldn't parse DB_HELPER_THREADS"),
+            _ => 3,
         };
 
         // Used as the connection and statement timeout value for the database pool(s)
