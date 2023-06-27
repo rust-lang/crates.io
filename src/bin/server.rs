@@ -4,7 +4,7 @@
 extern crate tracing;
 
 use crates_io::middleware::normalize_path::normalize_path;
-use crates_io::{env_optional, metrics::LogEncoder, util::errors::AppResult, App, Env};
+use crates_io::{env_optional, metrics::LogEncoder, util::errors::AppResult, App};
 use std::{fs::File, process::Command, sync::Arc, time::Duration};
 
 use axum::ServiceExt;
@@ -27,7 +27,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let _span = info_span!("server.run");
 
     let config = crates_io::config::Server::default();
-    let env = config.env();
     let client = Client::new();
     let app = Arc::new(App::new(config, Some(client)));
 
@@ -59,12 +58,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let threads = dotenvy::var("SERVER_THREADS")
         .map(|s| s.parse().expect("SERVER_THREADS was not a valid number"))
-        .unwrap_or_else(|_| match env {
-            Env::Development => 5,
-            // A large default because this can be easily changed via env and in production we
-            // want the logging middleware to accurately record the start time.
-            _ => 500,
-        });
+        .unwrap_or(5);
 
     let rt = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
