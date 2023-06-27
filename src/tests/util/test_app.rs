@@ -385,6 +385,7 @@ fn simple_config() -> config::Server {
 
     config::Server {
         base,
+        max_blocking_threads: None,
         db,
         session_key: cookie::Key::derive_from("test this has to be over 32 bytes long".as_bytes()),
         gh_client_id: ClientId::new(dotenvy::var("GH_CLIENT_ID").unwrap_or_default()),

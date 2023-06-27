@@ -17,6 +17,7 @@ const DEFAULT_VERSION_ID_CACHE_TTL: u64 = 5 * 60; // 5 minutes
 
 pub struct Server {
     pub base: Base,
+    pub max_blocking_threads: Option<usize>,
     pub db: DatabasePools,
     pub session_key: cookie::Key,
     pub gh_client_id: ClientId,
@@ -114,9 +115,15 @@ impl Default for Server {
             Some(s) if s.is_empty() => vec![],
             Some(s) => s.split(',').map(String::from).collect(),
         };
+
+        let max_blocking_threads = dotenvy::var("SERVER_THREADS")
+            .map(|s| s.parse().expect("SERVER_THREADS was not a valid number"))
+            .ok();
+
         Server {
             db: DatabasePools::full_from_environment(&base),
             base,
+            max_blocking_threads,
             session_key: cookie::Key::derive_from(env("SESSION_KEY").as_bytes()),
             gh_client_id: ClientId::new(env("GH_CLIENT_ID")),
             gh_client_secret: ClientSecret::new(env("GH_CLIENT_SECRET")),
