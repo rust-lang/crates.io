@@ -27,9 +27,10 @@ use crate::Env;
 pub fn apply_axum_middleware(state: AppState, router: Router) -> Router {
     type Request = http::Request<axum::body::Body>;
 
-    let env = state.config.env();
+    let config = &state.config;
+    let env = config.env();
 
-    let capacity = state.config.db.primary.pool_size;
+    let capacity = config.db.primary.pool_size;
     if capacity >= 10 {
         info!(?capacity, "Enabling BalanceCapacity middleware");
     } else {
@@ -67,12 +68,10 @@ pub fn apply_axum_middleware(state: AppState, router: Router) -> Router {
         .layer(conditional_layer(env == Env::Development, || {
             from_fn(static_or_continue::serve_local_uploads)
         }))
-        // Serve the static files in the *dist* directory, which are the frontend assets.
-        // Not needed for the backend tests.
-        .layer(conditional_layer(env != Env::Test, || {
+        .layer(conditional_layer(config.serve_dist, || {
             from_fn(static_or_continue::serve_dist)
         }))
-        .layer(conditional_layer(env != Env::Test, || {
+        .layer(conditional_layer(config.serve_html, || {
             from_fn_with_state(state.clone(), ember_html::serve_html)
         }))
         .layer(from_fn_with_state(state.clone(), add_app_state_extension))

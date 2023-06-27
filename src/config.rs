@@ -47,6 +47,13 @@ pub struct Server {
     pub version_id_cache_ttl: Duration,
     pub cdn_user_agent: String,
     pub balance_capacity: BalanceCapacityConfig,
+
+    /// Should the server serve the frontend assets in the `dist` directory?
+    pub serve_dist: bool,
+
+    /// Should the server serve the frontend `index.html` for all
+    /// non-API requests?
+    pub serve_html: bool,
 }
 
 impl Default for Server {
@@ -151,6 +158,8 @@ impl Default for Server {
             cdn_user_agent: dotenvy::var("WEB_CDN_USER_AGENT")
                 .unwrap_or_else(|_| "Amazon CloudFront".into()),
             balance_capacity: BalanceCapacityConfig::from_environment(),
+            serve_dist: true,
+            serve_html: true,
         }
     }
 }
