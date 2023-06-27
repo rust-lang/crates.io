@@ -31,6 +31,9 @@ pub struct DatabasePools {
     /// Time to wait for a connection to become available from the connection
     /// pool before returning an error.
     pub connection_timeout: Duration,
+    /// Time to wait for a query response before canceling the query and
+    /// returning an error.
+    pub statement_timeout: Duration,
     /// Whether to enforce that all the database connections are encrypted with TLS.
     pub enforce_tls: bool,
 }
@@ -93,6 +96,10 @@ impl DatabasePools {
         };
         let connection_timeout = Duration::from_secs(connection_timeout);
 
+        // `DB_TIMEOUT` currently configures both the connection timeout and
+        // the statement timeout, so we can copy the parsed connection timeout.
+        let statement_timeout = connection_timeout;
+
         let enforce_tls = base.env == Env::Production;
 
         match dotenvy::var("DB_OFFLINE").as_deref() {
@@ -109,6 +116,7 @@ impl DatabasePools {
                 replica: None,
                 tcp_timeout_ms,
                 connection_timeout,
+                statement_timeout,
                 enforce_tls,
             },
             // The follower is down, don't configure the replica.
@@ -122,6 +130,7 @@ impl DatabasePools {
                 replica: None,
                 tcp_timeout_ms,
                 connection_timeout,
+                statement_timeout,
                 enforce_tls,
             },
             _ => Self {
@@ -142,6 +151,7 @@ impl DatabasePools {
                 }),
                 tcp_timeout_ms,
                 connection_timeout,
+                statement_timeout,
                 enforce_tls,
             },
         }
