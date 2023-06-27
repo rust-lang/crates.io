@@ -44,13 +44,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let heroku = dotenvy::var("HEROKU").is_ok();
     let fastboot = dotenvy::var("USE_FASTBOOT").is_ok();
-    let dev_docker = dotenvy::var("DEV_DOCKER").is_ok();
 
-    let ip = if dev_docker {
-        [0, 0, 0, 0]
-    } else {
-        [127, 0, 0, 1]
-    };
     let port = match (heroku, env_optional("PORT")) {
         (false, Some(port)) => port,
         _ => 8888,
@@ -68,7 +62,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let make_service = axum_router.into_make_service_with_connect_info::<SocketAddr>();
 
     let (addr, server) = rt.block_on(async {
-        let server = hyper::Server::bind(&(ip, port).into()).serve(make_service);
+        let socket_addr = (app.config.ip, port).into();
+        let server = hyper::Server::bind(&socket_addr).serve(make_service);
 
         // When the user configures PORT=0 the operating system will allocate a random unused port.
         // This fetches that random port and uses it to display the correct url later.

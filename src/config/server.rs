@@ -10,6 +10,7 @@ use super::database_pools::DatabasePools;
 use crate::config::balance_capacity::BalanceCapacityConfig;
 use http::HeaderValue;
 use std::collections::HashSet;
+use std::net::IpAddr;
 use std::time::Duration;
 
 const DEFAULT_VERSION_ID_CACHE_SIZE: u64 = 10_000;
@@ -17,6 +18,7 @@ const DEFAULT_VERSION_ID_CACHE_TTL: u64 = 5 * 60; // 5 minutes
 
 pub struct Server {
     pub base: Base,
+    pub ip: IpAddr,
     pub max_blocking_threads: Option<usize>,
     pub db: DatabasePools,
     pub session_key: cookie::Key,
@@ -91,6 +93,11 @@ impl Default for Server {
     ///
     /// This function panics if the Server configuration is invalid.
     fn default() -> Self {
+        let ip = match dotenvy::var("DEV_DOCKER") {
+            Ok(_) => [0, 0, 0, 0].into(),
+            _ => [127, 0, 0, 1].into(),
+        };
+
         let allowed_origins = AllowedOrigins::from_default_env();
         let page_offset_ua_blocklist = match env_optional::<String>("WEB_PAGE_OFFSET_UA_BLOCKLIST")
         {
@@ -123,6 +130,7 @@ impl Default for Server {
         Server {
             db: DatabasePools::full_from_environment(&base),
             base,
+            ip,
             max_blocking_threads,
             session_key: cookie::Key::derive_from(env("SESSION_KEY").as_bytes()),
             gh_client_id: ClientId::new(env("GH_CLIENT_ID")),
