@@ -133,18 +133,4 @@ impl DatabasePools {
             },
         }
     }
-
-    pub fn test_from_environment() -> Self {
-        DatabasePools {
-            primary: DbPoolConfig {
-                url: env("TEST_DATABASE_URL").into(),
-                read_only_mode: false,
-                pool_size: 1,
-                min_idle: None,
-            },
-            replica: None,
-            tcp_timeout_ms: 1000, // 1 second
-            enforce_tls: false,
-        }
-    }
 }

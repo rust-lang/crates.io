@@ -1,8 +1,8 @@
 use super::{MockAnonymousUser, MockCookieUser, MockTokenUser};
 use crate::record;
 use crate::util::{chaosproxy::ChaosProxy, fresh_schema::FreshSchema};
-use crates_io::config::{self, BalanceCapacityConfig, DbPoolConfig};
-use crates_io::{background_jobs::Environment, App, Emails};
+use crates_io::config::{self, BalanceCapacityConfig, Base, DatabasePools, DbPoolConfig};
+use crates_io::{background_jobs::Environment, env, App, Emails, Env, Uploader};
 use crates_io_index::testing::UpstreamIndex;
 use crates_io_index::{Credentials, Repository as WorkerRepository, RepositoryConfig};
 use std::{rc::Rc, sync::Arc, time::Duration};
@@ -333,9 +333,56 @@ impl TestAppBuilder {
 }
 
 fn simple_config() -> config::Server {
+    let uploader = Uploader::S3 {
+        bucket: Box::new(s3::Bucket::new(
+            dotenvy::var("TEST_S3_BUCKET").unwrap_or_else(|_err| "crates-test".into()),
+            parse_test_region(dotenvy::var("TEST_S3_REGION").ok()),
+            dotenvy::var("TEST_AWS_ACCESS_KEY").unwrap_or_default(),
+            dotenvy::var("TEST_AWS_SECRET_KEY").unwrap_or_default(),
+            // When testing we route all API traffic over HTTP so we can
+            // sniff/record it, but everywhere else we use https
+            "http",
+        )),
+        index_bucket: Some(Box::new(s3::Bucket::new(
+            dotenvy::var("TEST_S3_INDEX_BUCKET").unwrap_or_else(|_err| "crates-index-test".into()),
+            parse_test_region(dotenvy::var("TEST_S3_INDEX_REGION").ok()),
+            dotenvy::var("TEST_AWS_ACCESS_KEY").unwrap_or_default(),
+            dotenvy::var("TEST_AWS_SECRET_KEY").unwrap_or_default(),
+            // When testing we route all API traffic over HTTP so we can
+            // sniff/record it, but everywhere else we use https
+            "http",
+        ))),
+        cdn: None,
+    };
+
+    let base = Base {
+        env: Env::Test,
+        uploader,
+    };
+
+    let db = DatabasePools {
+        primary: DbPoolConfig {
+            url: env("TEST_DATABASE_URL").into(),
+            read_only_mode: false,
+            pool_size: 1,
+            min_idle: None,
+        },
+        replica: None,
+        tcp_timeout_ms: 1000, // 1 second
+        enforce_tls: false,
+    };
+
+    let balance_capacity = BalanceCapacityConfig {
+        report_only: false,
+        log_total_at_count: 50,
+        log_at_percentage: 50,
+        throttle_at_percentage: 70,
+        dl_only_at_percentage: 80,
+    };
+
     config::Server {
-        base: config::Base::test(),
-        db: config::DatabasePools::test_from_environment(),
+        base,
+        db,
         session_key: cookie::Key::derive_from("test this has to be over 32 bytes long".as_bytes()),
         gh_client_id: ClientId::new(dotenvy::var("GH_CLIENT_ID").unwrap_or_default()),
         gh_client_secret: ClientSecret::new(dotenvy::var("GH_CLIENT_SECRET").unwrap_or_default()),
@@ -360,7 +407,22 @@ fn simple_config() -> config::Server {
         version_id_cache_size: 10000,
         version_id_cache_ttl: Duration::from_secs(5 * 60),
         cdn_user_agent: "Amazon CloudFront".to_string(),
-        balance_capacity: BalanceCapacityConfig::for_testing(),
+        balance_capacity,
+    }
+}
+
+static DEFAULT_TEST_REGION: &str = "127.0.0.1:19000";
+
+fn parse_test_region(maybe_region: Option<String>) -> s3::Region {
+    match maybe_region {
+        Some(region) if region.contains("://") => {
+            let (_proto, host) = region.split_once("://").unwrap();
+            s3::Region::Host(host.to_string())
+        }
+        Some(region) if !region.is_empty() => s3::Region::Region(region),
+        // An empty or missing region will use the default. This needs to match the region
+        // configuration that was used to generate the cassettes in `src/tests/http-data`.
+        _ => s3::Region::Host(DEFAULT_TEST_REGION.to_string()),
     }
 }
 
@@ -387,4 +449,20 @@ fn build_app(config: config::Server, proxy: Option<String>) -> (Arc<App>, axum::
     let app = Arc::new(app);
     let router = crates_io::build_handler(Arc::clone(&app));
     (app, router)
+}
+
+#[test]
+fn test_parse_region() {
+    for (input, expected) in [
+        (None, s3::Region::Host(DEFAULT_TEST_REGION.into())),
+        (Some(""), s3::Region::Host(DEFAULT_TEST_REGION.into())),
+        (Some("us-west-2"), s3::Region::Region("us-west-2".into())),
+        (Some("http://foo.bar"), s3::Region::Host("foo.bar".into())),
+        (
+            Some("https://127.0.0.1:9000"),
+            s3::Region::Host("127.0.0.1:9000".into()),
+        ),
+    ] {
+        assert_eq!(parse_test_region(input.map(String::from)), expected);
+    }
 }
