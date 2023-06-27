@@ -153,17 +153,12 @@ pub async fn logout(session: SessionExtension) -> Json<bool> {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    fn pg_connection() -> PgConnection {
-        let database_url =
-            dotenvy::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set to run tests");
-        PgConnection::establish(&database_url).unwrap()
-    }
+    use crate::test_util::pg_connection_no_transaction;
 
     #[test]
     fn gh_user_with_invalid_email_doesnt_fail() {
         let emails = Emails::new_in_memory();
-        let conn = &mut pg_connection();
+        let conn = &mut pg_connection_no_transaction();
         let gh_user = GithubUser {
             email: Some("String.Format(\"{0}.{1}@live.com\", FirstName, LastName)".into()),
             name: Some("My Name".into()),

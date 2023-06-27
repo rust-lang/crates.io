@@ -84,6 +84,7 @@ mod test {
     use super::*;
     use crate::email::Emails;
     use crate::models::{Crate, NewCrate, NewUser, NewVersion, User, Version};
+    use crate::test_util::pg_connection;
     use std::collections::BTreeMap;
 
     fn user(conn: &mut PgConnection) -> User {
@@ -120,7 +121,7 @@ mod test {
     fn increment() {
         use diesel::dsl::*;
 
-        let conn = &mut crate::db::test_conn();
+        let conn = &mut pg_connection();
         let user = user(conn);
         let (krate, version) = crate_and_version(conn, user.id);
         insert_into(version_downloads::table)
@@ -159,7 +160,7 @@ mod test {
     fn set_processed_true() {
         use diesel::dsl::*;
 
-        let conn = &mut crate::db::test_conn();
+        let conn = &mut pg_connection();
         let user = user(conn);
         let (_, version) = crate_and_version(conn, user.id);
         insert_into(version_downloads::table)
@@ -183,7 +184,7 @@ mod test {
     #[test]
     fn dont_process_recent_row() {
         use diesel::dsl::*;
-        let conn = &mut crate::db::test_conn();
+        let conn = &mut pg_connection();
         let user = user(conn);
         let (_, version) = crate_and_version(conn, user.id);
         insert_into(version_downloads::table)
@@ -209,7 +210,7 @@ mod test {
         use diesel::dsl::*;
         use diesel::update;
 
-        let conn = &mut crate::db::test_conn();
+        let conn = &mut pg_connection();
         let user = user(conn);
         let (krate, version) = crate_and_version(conn, user.id);
         update(versions::table)
@@ -263,7 +264,7 @@ mod test {
         use diesel::dsl::*;
         use diesel::update;
 
-        let conn = &mut crate::db::test_conn();
+        let conn = &mut pg_connection();
         let user = user(conn);
         let (_, version) = crate_and_version(conn, user.id);
         update(versions::table)
