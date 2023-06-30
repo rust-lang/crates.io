@@ -21,7 +21,7 @@ export default class ReverseDependenciesRoute extends Route {
       let message = `Could not load reverse dependencies for the "${crateName}" crate`;
 
       let details = error.errors?.[0]?.detail;
-      if (details && details !== '[object Object]') {
+      if (details && !details.startsWith('{')) {
         message += `: ${details}`;
       }
 

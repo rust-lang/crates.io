@@ -124,7 +124,7 @@ module('Acceptance | Email Change', function (hooks) {
     assert.dom('[data-test-email-input] [data-test-email-address]').doesNotExist();
     assert
       .dom('[data-test-notification-message="error"]')
-      .includesText('Error in saving email: An error occurred while saving this email');
+      .hasText('Error in saving email: An unknown error occurred while saving this email.');
 
     user.reload();
     assert.strictEqual(user.email, 'old@email.com');
@@ -169,7 +169,7 @@ module('Acceptance | Email Change', function (hooks) {
 
       await click('[data-test-email-input] [data-test-resend-button]');
       assert.dom('[data-test-email-input] [data-test-resend-button]').isEnabled().hasText('Resend');
-      assert.dom('[data-test-notification-message="error"]').hasText('Error in resending message: [object Object]');
+      assert.dom('[data-test-notification-message="error"]').hasText('Unknown error in resending message');
     });
   });
 });

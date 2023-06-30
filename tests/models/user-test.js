@@ -41,7 +41,7 @@ module('Model | User', function (hooks) {
       await assert.rejects(currentUser.changeEmail('new@email.com'), function (error) {
         assert.deepEqual(error.errors, [
           {
-            detail: '[object Object]',
+            detail: '{}',
             status: '500',
             title: 'The backend responded with an error',
           },
@@ -74,7 +74,7 @@ module('Model | User', function (hooks) {
       await assert.rejects(currentUser.resendVerificationEmail(), function (error) {
         assert.deepEqual(error.errors, [
           {
-            detail: '[object Object]',
+            detail: '{}',
             status: '500',
             title: 'The backend responded with an error',
           },

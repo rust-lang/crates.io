@@ -17,8 +17,9 @@ export default class EmailInput extends Component {
       await this.args.user.resendVerificationEmail();
       this.disableResend = true;
     } catch (error) {
-      if (error.errors) {
-        this.notifications.error(`Error in resending message: ${error.errors[0].detail}`);
+      let detail = error.errors?.[0]?.detail;
+      if (detail && !detail.startsWith('{')) {
+        this.notifications.error(`Error in resending message: ${detail}`);
       } else {
         this.notifications.error('Unknown error in resending message');
       }
@@ -41,9 +42,11 @@ export default class EmailInput extends Component {
       this.isEditing = false;
       this.disableResend = false;
     } catch (error) {
+      let detail = error.errors?.[0]?.detail;
+
       let msg =
-        error.errors && error.errors[0] && error.errors[0].detail
-          ? `An error occurred while saving this email, ${error.errors[0].detail}`
+        detail && !detail.startsWith('{')
+          ? `An error occurred while saving this email, ${detail}`
           : 'An unknown error occurred while saving this email.';
 
       this.notifications.error(`Error in saving email: ${msg}`);
