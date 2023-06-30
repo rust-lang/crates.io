@@ -23,8 +23,9 @@ export default class ConfirmRoute extends Route {
 
       this.notifications.success('Thank you for confirming your email! :)');
     } catch (error) {
-      if (error.errors) {
-        this.notifications.error(`Error in email confirmation: ${error.errors[0].detail}`);
+      let detail = error.errors?.[0]?.detail;
+      if (detail && !detail.startsWith('{')) {
+        this.notifications.error(`Error in email confirmation: ${detail}`);
       } else {
         this.notifications.error(`Unknown error in email confirmation`);
       }

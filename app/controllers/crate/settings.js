@@ -16,8 +16,9 @@ export default class CrateSettingsController extends Controller {
       await this.crate.inviteOwner(username);
       this.notifications.success(`An invite has been sent to ${username}`);
     } catch (error) {
-      if (error.errors) {
-        this.notifications.error(`Error sending invite: ${error.errors[0].detail}`);
+      let detail = error.errors?.[0]?.detail;
+      if (detail && !detail.startsWith('{')) {
+        this.notifications.error(`Error sending invite: ${detail}`);
       } else {
         this.notifications.error('Error sending invite');
       }
@@ -38,8 +39,10 @@ export default class CrateSettingsController extends Controller {
     } catch (error) {
       let subject = owner.kind === 'team' ? `team ${owner.get('display_name')}` : `user ${owner.get('login')}`;
       let message = `Failed to remove the ${subject} as crate owner`;
-      if (error.errors) {
-        message += `: ${error.errors[0].detail}`;
+
+      let detail = error.errors?.[0]?.detail;
+      if (detail && !detail.startsWith('{')) {
+        message += `: ${detail}`;
       }
 
       this.notifications.error(message);

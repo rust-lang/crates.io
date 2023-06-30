@@ -17,8 +17,9 @@ export default class PendingOwnerInviteRow extends Component {
       await this.args.invite.save();
       this.isAccepted = true;
     } catch (error) {
-      if (error.errors?.[0]?.detail && error.errors[0].detail !== '[object Object]') {
-        this.notifications.error(`Error in accepting invite: ${error.errors[0].detail}`);
+      let detail = error.errors?.[0]?.detail;
+      if (detail && !detail.startsWith('{')) {
+        this.notifications.error(`Error in accepting invite: ${detail}`);
       } else {
         this.notifications.error('Error in accepting invite');
       }
@@ -32,8 +33,9 @@ export default class PendingOwnerInviteRow extends Component {
       await this.args.invite.save();
       this.isDeclined = true;
     } catch (error) {
-      if (error.errors?.[0]?.detail && error.errors[0].detail !== '[object Object]') {
-        this.notifications.error(`Error in declining invite: ${error.errors[0].detail}`);
+      let detail = error.errors?.[0]?.detail;
+      if (detail && !detail.startsWith('{')) {
+        this.notifications.error(`Error in declining invite: ${detail}`);
       } else {
         this.notifications.error('Error in declining invite');
       }

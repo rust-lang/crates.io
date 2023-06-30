@@ -48,9 +48,11 @@ export default class ApiTokens extends Component {
         this.args.tokens.splice(index, 1);
       }
     } catch (error) {
+      let detail = error.errors?.[0]?.detail;
+
       let msg =
-        error.errors && error.errors[0] && error.errors[0].detail
-          ? `An error occurred while revoking this token, ${error.errors[0].detail}`
+        detail && !detail.startsWith('{')
+          ? `An error occurred while revoking this token, ${detail}`
           : 'An unknown error occurred while revoking this token';
 
       this.notifications.error(msg);
