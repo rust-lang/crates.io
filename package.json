@@ -58,7 +58,7 @@
     "@ember/optional-features": "2.0.0",
     "@ember/render-modifiers": "2.1.0",
     "@ember/string": "3.1.1",
-    "@ember/test-helpers": "3.1.0",
+    "@ember/test-helpers": "3.2.0",
     "@ember/test-waiters": "3.0.2",
     "@embroider/compat": "2.1.1",
     "@embroider/core": "2.1.1",
