@@ -78,7 +78,7 @@ scheduled-thread-pool = "=0.2.7"
 secrecy = "=0.8.0"
 semver = { version = "=1.0.17", features = ["serde"] }
 sentry = { version = "=0.31.5", features = ["tracing", "tower", "tower-axum-matched-path", "tower-http"] }
-serde = { version = "=1.0.164", features = ["derive"] }
+serde = { version = "=1.0.165", features = ["derive"] }
 serde_json = "=1.0.99"
 sha2 = "=0.10.7"
 spdx = "=0.10.1"
