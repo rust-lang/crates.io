@@ -11,7 +11,7 @@ builder = []
 derive_deref = "=1.1.1"
 flate2 = "=1.0.26"
 semver = { version = "=1.0.17", features = ["serde"] }
-serde = { version = "=1.0.164", features = ["derive"] }
+serde = { version = "=1.0.165", features = ["derive"] }
 serde_json = "=1.0.99"
 tar = "=0.4.38"
 thiserror = "=1.0.40"
