@@ -1,11 +1,7 @@
 use crate::background_jobs::Job;
-use crate::{
-    admin::dialoguer,
-    db,
-    models::{Crate, Version},
-    schema::versions,
-};
-
+use crate::schema::crates;
+use crate::{admin::dialoguer, db, schema::versions};
+use anyhow::Context;
 use diesel::prelude::*;
 
 #[derive(clap::Parser, Debug)]
@@ -17,47 +13,65 @@ use diesel::prelude::*;
 pub struct Opts {
     /// Name of the crate
     crate_name: String,
-    /// Version number that should be deleted
-    version: String,
+
+    /// Version numbers that should be deleted
+    #[arg(value_name = "VERSION", required = true)]
+    versions: Vec<String>,
+
     /// Don't ask for confirmation: yes, we are sure. Best for scripting.
     #[arg(short, long)]
     yes: bool,
 }
 
 pub fn run(opts: Opts) {
-    let conn = &mut db::oneoff_connection().unwrap();
-    conn.transaction::<_, diesel::result::Error, _>(|conn| {
-        delete(opts, conn);
-        Ok(())
-    })
-    .unwrap()
-}
+    let crate_name = &opts.crate_name;
 
-fn delete(opts: Opts, conn: &mut PgConnection) {
-    let krate: Crate = Crate::by_name(&opts.crate_name).first(conn).unwrap();
-    let v: Version = Version::belonging_to(&krate)
-        .filter(versions::num.eq(&opts.version))
-        .first(conn)
+    let conn = &mut db::oneoff_connection()
+        .context("Failed to establish database connection")
         .unwrap();
 
-    if !opts.yes {
-        let prompt = format!(
-            "Are you sure you want to delete {}#{} ({})?",
-            opts.crate_name, opts.version, v.id
-        );
-        if !dialoguer::confirm(&prompt) {
-            return;
+    let crate_id: i32 = crates::table
+        .select(crates::id)
+        .filter(crates::name.eq(crate_name))
+        .first(conn)
+        .context("Failed to look up crate id from the database")
+        .unwrap();
+
+    println!("Deleting the following versions of the `{crate_name}` crate:");
+    println!();
+    for version in &opts.versions {
+        println!(" - {version}");
+    }
+    println!();
+
+    if !opts.yes && !dialoguer::confirm("Do you want to permanently delete these versions?") {
+        return;
+    }
+
+    info!(%crate_name, %crate_id, versions = ?opts.versions, "Deleting versions from the database");
+    let result = diesel::delete(
+        versions::table
+            .filter(versions::crate_id.eq(crate_id))
+            .filter(versions::num.eq_any(&opts.versions)),
+    )
+    .execute(conn);
+
+    match result {
+        Ok(num_deleted) if num_deleted == opts.versions.len() => {}
+        Ok(num_deleted) => {
+            warn!(
+                %crate_name,
+                "Deleted only {num_deleted} of {num_expected} versions from the database",
+                num_expected = opts.versions.len()
+            );
+        }
+        Err(error) => {
+            warn!(%crate_name, ?error, "Failed to delete versions from the database")
         }
     }
 
-    println!("deleting version {} ({})", v.num, v.id);
-    diesel::delete(versions::table.find(&v.id))
-        .execute(conn)
-        .unwrap();
-
-    if !opts.yes && !dialoguer::confirm("commit?") {
-        panic!("aborting transaction");
+    info!(%crate_name, "Enqueuing index sync jobs");
+    if let Err(error) = Job::enqueue_sync_to_index(crate_name, conn) {
+        warn!(%crate_name, ?error, "Failed to enqueue index sync jobs");
     }
-
-    Job::enqueue_sync_to_index(&krate.name, conn).unwrap();
 }
