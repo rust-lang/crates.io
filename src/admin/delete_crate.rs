@@ -1,5 +1,7 @@
 use crate::background_jobs::Job;
-use crate::{admin::dialoguer, db, models::Crate, schema::crates};
+use crate::{admin::dialoguer, db, schema::crates};
+use anyhow::Context;
+use std::collections::HashMap;
 
 use diesel::prelude::*;
 
@@ -10,8 +12,9 @@ use diesel::prelude::*;
     after_help = "Please be super sure you want to do this before running this!"
 )]
 pub struct Opts {
-    /// Name of the crate
-    crate_name: String,
+    /// Names of the crates
+    #[arg(value_name = "NAME", required = true)]
+    crate_names: Vec<String>,
 
     /// Don't ask for confirmation: yes, we are sure. Best for scripting.
     #[arg(short, long)]
@@ -19,36 +22,49 @@ pub struct Opts {
 }
 
 pub fn run(opts: Opts) {
-    let conn = &mut db::oneoff_connection().unwrap();
-    conn.transaction::<_, diesel::result::Error, _>(|conn| {
-        delete(opts, conn);
-        Ok(())
-    })
-    .unwrap()
-}
+    let conn = &mut db::oneoff_connection()
+        .context("Failed to establish database connection")
+        .unwrap();
 
-fn delete(opts: Opts, conn: &mut PgConnection) {
-    let krate: Crate = Crate::by_name(&opts.crate_name).first(conn).unwrap();
+    let mut crate_names = opts.crate_names;
+    crate_names.sort();
 
-    if !opts.yes {
-        let prompt = format!(
-            "Are you sure you want to delete {} ({})?",
-            opts.crate_name, krate.id
-        );
-        if !dialoguer::confirm(&prompt) {
-            return;
+    let existing_crates = crates::table
+        .select((crates::name, crates::id))
+        .filter(crates::name.eq_any(&crate_names))
+        .load(conn)
+        .context("Failed to look up crate name from the database")
+        .unwrap();
+
+    let existing_crates: HashMap<String, i32> = existing_crates.into_iter().collect();
+
+    println!("Deleting the following crates:");
+    println!();
+    for name in &crate_names {
+        match existing_crates.get(name) {
+            Some(id) => println!(" - {name} (id={id})"),
+            None => println!(" - {name} (⚠️ crate not found)"),
         }
     }
+    println!();
 
-    println!("deleting the crate");
-    let n = diesel::delete(crates::table.find(krate.id))
-        .execute(conn)
-        .unwrap();
-    println!("  {n} deleted");
-
-    if !opts.yes && !dialoguer::confirm("commit?") {
-        panic!("aborting transaction");
+    if !opts.yes && !dialoguer::confirm("Do you want to permanently delete these crates?") {
+        return;
     }
 
-    Job::enqueue_sync_to_index(&krate.name, conn).unwrap();
+    for name in &crate_names {
+        info!(%name, "Deleting crate");
+
+        if let Some(id) = existing_crates.get(name) {
+            if let Err(error) = diesel::delete(crates::table.find(id)).execute(conn) {
+                warn!(%name, %id, ?error, "Failed to delete crate from the database");
+            }
+        } else {
+            info!(%name, "Skipping missing crate");
+        };
+
+        if let Err(error) = Job::enqueue_sync_to_index(name, conn) {
+            warn!(%name, ?error, "Failed to enqueue index sync jobs");
+        }
+    }
 }
