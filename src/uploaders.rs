@@ -78,12 +78,12 @@ impl Uploader {
     }
 
     /// Returns the internal path of an uploaded crate's version archive.
-    fn crate_path(name: &str, version: &str) -> String {
+    pub fn crate_path(name: &str, version: &str) -> String {
         format!("crates/{name}/{name}-{version}.crate")
     }
 
     /// Returns the internal path of an uploaded crate's version readme.
-    fn readme_path(name: &str, version: &str) -> String {
+    pub fn readme_path(name: &str, version: &str) -> String {
         format!("readmes/{name}/{name}-{version}.html")
     }
 
