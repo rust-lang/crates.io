@@ -61,7 +61,7 @@ export function register(server) {
       ...this.serialize(crate),
       ...this.serialize(crate.categories),
       ...this.serialize(crate.keywords),
-      ...this.serialize(crate.versions),
+      ...this.serialize(crate.versions.sort((a, b) => Number(b.id) - Number(a.id))),
     };
   });
 
