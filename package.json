@@ -69,7 +69,7 @@
     "@percy/cli": "1.26.1",
     "@percy/ember": "4.2.0",
     "@sinonjs/fake-timers": "11.0.0",
-    "@zestia/ember-auto-focus": "5.0.0",
+    "@zestia/ember-auto-focus": "5.1.0",
     "broccoli-asset-rev": "3.0.0",
     "ember-a11y-testing": "6.1.0",
     "ember-auto-import": "2.6.3",
