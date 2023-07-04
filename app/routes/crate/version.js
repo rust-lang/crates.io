@@ -3,6 +3,7 @@ import { inject as service } from '@ember/service';
 import { waitForPromise } from '@ember/test-waiters';
 
 import { didCancel } from 'ember-concurrency';
+import semverSort from 'semver/functions/rsort';
 
 import { AjaxError } from '../../utils/ajax';
 
@@ -31,7 +32,14 @@ export default class VersionRoute extends Route {
       }
     } else {
       let { defaultVersion } = crate;
-      version = versions.find(version => version.num === defaultVersion) ?? versions.lastObject;
+      version = versions.find(version => version.num === defaultVersion);
+
+      if (!version) {
+        let versionNums = versions.map(it => it.num);
+        semverSort(versionNums, { loose: true });
+
+        version = versions.find(version => version.num === versionNums[0]);
+      }
     }
 
     return { crate, requestedVersion, version };
