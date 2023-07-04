@@ -53,9 +53,8 @@ pub fn run(opts: Opts) {
     }
 
     for name in &crate_names {
-        info!(%name, "Deleting crate");
-
         if let Some(id) = existing_crates.get(name) {
+            info!(%name, "Deleting crate from the database");
             if let Err(error) = diesel::delete(crates::table.find(id)).execute(conn) {
                 warn!(%name, %id, ?error, "Failed to delete crate from the database");
             }
@@ -63,6 +62,7 @@ pub fn run(opts: Opts) {
             info!(%name, "Skipping missing crate");
         };
 
+        info!(%name, "Enqueuing index sync jobs");
         if let Err(error) = Job::enqueue_sync_to_index(name, conn) {
             warn!(%name, ?error, "Failed to enqueue index sync jobs");
         }
