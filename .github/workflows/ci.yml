@@ -73,6 +73,7 @@ jobs:
 
     env:
       RUSTFLAGS: "-D warnings"
+      RUSTDOCFLAGS: "-D warnings"
 
     steps:
       - uses: actions/checkout@v3.5.3
@@ -84,6 +85,7 @@ jobs:
 
       - run: cargo fmt --check --all
       - run: cargo clippy --all-targets --all-features --workspace
+      - run: cargo doc --no-deps --document-private-items
 
   backend-cargo-deny:
     name: Backend / cargo-deny
