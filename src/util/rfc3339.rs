@@ -21,7 +21,7 @@ where
     Ok(dt.naive_utc())
 }
 
-/// Wrapper for dealing with Option<NaiveDateTime>
+/// Wrapper for dealing with `Option<NaiveDateTime>`
 pub mod option {
     use chrono::NaiveDateTime;
     use serde::{Deserializer, Serializer};
