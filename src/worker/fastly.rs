@@ -27,7 +27,7 @@ impl Fastly {
     /// the application as an environment variable.
     ///
     /// More information on Fastly's APIs for cache invalidations can be found here:
-    /// https://developer.fastly.com/reference/api/purging/
+    /// <https://developer.fastly.com/reference/api/purging/>
     #[instrument(skip(self, client))]
     pub fn invalidate(&self, client: &Client, path: &str) -> anyhow::Result<()> {
         if path.contains('*') {
