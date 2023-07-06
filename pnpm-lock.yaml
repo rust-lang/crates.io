@@ -57,11 +57,11 @@ dependencies:
 
 devDependencies:
   '@babel/eslint-parser':
-    specifier: 7.22.6
-    version: 7.22.6(eslint@8.44.0)
+    specifier: 7.22.7
+    version: 7.22.7(eslint@8.44.0)
   '@babel/plugin-proposal-decorators':
-    specifier: 7.22.6
-    version: 7.22.6(@babel/core@7.22.5)
+    specifier: 7.22.7
+    version: 7.22.7(@babel/core@7.22.5)
   '@ember/optional-features':
     specifier: 2.0.0
     version: 2.0.0
@@ -346,8 +346,8 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /@babel/eslint-parser@7.22.6(eslint@8.44.0):
-    resolution: {integrity: sha512-KAom7E7d6bAh5/PflF3luynWlDLOIqfX+ZJcL0LRs6/6rtXJmJxPiWuIGfxNPtcWdtQ5lSSJbKbQlz/c/R60Ng==}
+  /@babel/eslint-parser@7.22.7(eslint@8.44.0):
+    resolution: {integrity: sha512-LH6HJqjOyu/Qtp7LuSycZXK/CYXQ4ohdkliEaL1QTdtOXVdOVpTBKVxAo/+eeyt+x/2SRzB+zUPduVl+xiEvdg==}
     engines: {node: ^10.13.0 || ^12.13.0 || >=14.0.0}
     peerDependencies:
       '@babel/core': '>=7.11.0'
@@ -644,8 +644,8 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /@babel/plugin-proposal-decorators@7.22.6(@babel/core@7.22.5):
-    resolution: {integrity: sha512-cgskJ9W7kxTk/wBM16JNHhlTkeyDK6slMJg1peaI4LM3y2HtTv+6I85sW9UXSUZilndIBvDBETA1BRoOYdxWKw==}
+  /@babel/plugin-proposal-decorators@7.22.7(@babel/core@7.22.5):
+    resolution: {integrity: sha512-omXqPF7Onq4Bb7wHxXjM3jSMSJvUUbvDvmmds7KI5n9Cq6Ln5I05I1W2nRlRof1rGdiUxJrxwe285WF96XlBXQ==}
     engines: {node: '>=6.9.0'}
     peerDependencies:
       '@babel/core': ^7.0.0-0
@@ -8147,7 +8147,7 @@ packages:
     dependencies:
       '@babel/core': 7.22.5(supports-color@8.1.1)
       '@babel/plugin-proposal-class-properties': 7.18.6(@babel/core@7.22.5)
-      '@babel/plugin-proposal-decorators': 7.22.6(@babel/core@7.22.5)
+      '@babel/plugin-proposal-decorators': 7.22.7(@babel/core@7.22.5)
       '@babel/preset-env': 7.22.5(@babel/core@7.22.5)
       '@embroider/macros': 1.12.2
       '@embroider/shared-internals': 2.2.2
@@ -8236,7 +8236,7 @@ packages:
       '@babel/core': 7.22.5(supports-color@8.1.1)
       '@babel/helper-compilation-targets': 7.22.5(@babel/core@7.22.5)
       '@babel/plugin-proposal-class-properties': 7.18.6(@babel/core@7.22.5)
-      '@babel/plugin-proposal-decorators': 7.22.6(@babel/core@7.22.5)
+      '@babel/plugin-proposal-decorators': 7.22.7(@babel/core@7.22.5)
       '@babel/plugin-proposal-private-methods': 7.18.6(@babel/core@7.22.5)
       '@babel/plugin-proposal-private-property-in-object': 7.21.11(@babel/core@7.22.5)
       '@babel/plugin-transform-modules-amd': 7.22.5(@babel/core@7.22.5)
