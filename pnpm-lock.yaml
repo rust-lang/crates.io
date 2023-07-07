@@ -25,8 +25,8 @@ dependencies:
     specifier: 4.3.0
     version: 4.3.0
   copy-text-to-clipboard:
-    specifier: 3.1.0
-    version: 3.1.0
+    specifier: 3.2.0
+    version: 3.2.0
   date-fns:
     specifier: 2.30.0
     version: 2.30.0
@@ -7120,8 +7120,8 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: true
 
-  /copy-text-to-clipboard@3.1.0:
-    resolution: {integrity: sha512-PFM6BnjLnOON/lB3ta/Jg7Ywsv+l9kQGD4TWDCSlRBGmqnnTM5MrDkhAFgw+8HZt0wW6Q2BBE4cmy9sq+s9Qng==}
+  /copy-text-to-clipboard@3.2.0:
+    resolution: {integrity: sha512-RnJFp1XR/LOBDckxTib5Qjr/PMfkatD0MUCQgdpqS8MdKiNUzBjAQBEN6oUy+jW7LI93BBG3DtMB2KOOKpGs2Q==}
     engines: {node: '>=12'}
     dev: false
 
