@@ -49,7 +49,7 @@
     "mermaid": "10.2.4",
     "morgan": "1.10.0",
     "pretty-bytes": "6.1.0",
-    "semver": "7.5.3",
+    "semver": "7.5.4",
     "tracked-toolbox": "2.0.0"
   },
   "devDependencies": {
