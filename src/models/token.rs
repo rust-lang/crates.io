@@ -11,15 +11,12 @@ use crate::util::rfc3339;
 use crate::util::token::{HashedToken, PlainToken};
 
 /// The model representing a row in the `api_tokens` database table.
-#[derive(Debug, Identifiable, Queryable, Associations, Serialize)]
+#[derive(Debug, Identifiable, Queryable, Selectable, Associations, Serialize)]
 #[diesel(belongs_to(User))]
 pub struct ApiToken {
     pub id: i32,
     #[serde(skip)]
     pub user_id: i32,
-    #[allow(dead_code)]
-    #[serde(skip)]
-    token: HashedToken,
     pub name: String,
     #[serde(with = "rfc3339")]
     pub created_at: NaiveDateTime,
@@ -60,6 +57,7 @@ impl ApiToken {
                 api_tokens::endpoint_scopes.eq(endpoint_scopes),
                 api_tokens::expired_at.eq(expired_at),
             ))
+            .returning(ApiToken::as_returning())
             .get_result(conn)?;
 
         Ok(CreatedApiToken {
@@ -85,9 +83,10 @@ impl ApiToken {
         conn.transaction(|conn| {
             update(tokens)
                 .set(last_used_at.eq(now.nullable()))
+                .returning(ApiToken::as_returning())
                 .get_result(conn)
         })
-        .or_else(|_| tokens.first(conn))
+        .or_else(|_| tokens.select(ApiToken::as_select()).first(conn))
         .map_err(Into::into)
     }
 }
@@ -108,7 +107,6 @@ mod tests {
         let tok = ApiToken {
             id: 12345,
             user_id: 23456,
-            token: PlainToken::generate().hashed(),
             revoked: false,
             name: "".to_string(),
             created_at: NaiveDate::from_ymd_opt(2017, 1, 6)

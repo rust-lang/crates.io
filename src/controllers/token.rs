@@ -42,6 +42,7 @@ pub async fn list(
         let user = auth.user();
 
         let tokens: Vec<ApiToken> = ApiToken::belonging_to(user)
+            .select(ApiToken::as_select())
             .filter(api_tokens::revoked.eq(false))
             .filter(
                 api_tokens::expired_at

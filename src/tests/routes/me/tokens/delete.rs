@@ -21,7 +21,9 @@ fn revoke_token_doesnt_revoke_other_users_token() {
 
     // List tokens for first user contains the token
     app.db(|conn| {
-        let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user1).load(conn));
+        let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user1)
+            .select(ApiToken::as_select())
+            .load(conn));
         assert_eq!(tokens.len(), 1);
         assert_eq!(tokens[0].name, token.name);
     });
@@ -33,7 +35,9 @@ fn revoke_token_doesnt_revoke_other_users_token() {
 
     // List tokens for first user still contains the token
     app.db(|conn| {
-        let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user1).load(conn));
+        let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user1)
+            .select(ApiToken::as_select())
+            .load(conn));
         assert_eq!(tokens.len(), 1);
         assert_eq!(tokens[0].name, token.name);
     });
@@ -45,7 +49,9 @@ fn revoke_token_success() {
 
     // List tokens contains the token
     app.db(|conn| {
-        let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user.as_model()).load(conn));
+        let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user.as_model())
+            .select(ApiToken::as_select())
+            .load(conn));
         assert_eq!(tokens.len(), 1);
         assert_eq!(tokens[0].name, token.as_model().name);
     });
