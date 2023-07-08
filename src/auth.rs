@@ -167,7 +167,9 @@ fn authenticate_via_cookie<T: RequestPartsExt>(
         .get("user_id")
         .and_then(|s| s.parse::<i32>().ok());
 
-    let Some(id) = user_id_from_session else { return Ok(None) };
+    let Some(id) = user_id_from_session else {
+        return Ok(None);
+    };
 
     let user = User::find(conn, id)
         .map_err(|err| err.chain(internal("user_id from cookie not found in database")))?;
@@ -189,7 +191,9 @@ fn authenticate_via_token<T: RequestPartsExt>(
         .get(header::AUTHORIZATION)
         .and_then(|h| h.to_str().ok());
 
-    let Some(header_value) = maybe_authorization else { return Ok(None) };
+    let Some(header_value) = maybe_authorization else {
+        return Ok(None);
+    };
 
     let token = ApiToken::find_by_api_token(conn, header_value).map_err(|e| {
         if e.is::<InsecurelyGeneratedTokenRevoked>() {

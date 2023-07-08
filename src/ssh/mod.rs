@@ -5,7 +5,7 @@ use std::{env, fs};
 /// Writes the public GitHub SSH keys to the `$HOME/.ssh/known_hosts` file.
 pub fn write_known_hosts_file() -> anyhow::Result<()> {
     let Some(home) = env::var_os("HOME").map(PathBuf::from) else {
-        return Err(anyhow!("Failed to read HOME environment variable"))
+        return Err(anyhow!("Failed to read HOME environment variable"));
     };
 
     let ssh_path = home.join(".ssh");
