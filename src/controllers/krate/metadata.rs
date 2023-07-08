@@ -160,7 +160,7 @@ pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppRes
             Some(
                 versions_and_publishers
                     .into_iter()
-                    .zip(VersionOwnerAction::for_versions(conn, &versions)?.into_iter())
+                    .zip(VersionOwnerAction::for_versions(conn, &versions)?)
                     .map(|((v, pb), aas)| (v, pb, aas))
                     .collect::<Vec<_>>(),
             )
@@ -342,7 +342,7 @@ pub async fn versions(state: AppState, Path(crate_name): Path<String>) -> AppRes
             .collect::<Vec<_>>();
         let versions = versions_and_publishers
             .into_iter()
-            .zip(VersionOwnerAction::for_versions(conn, &versions)?.into_iter())
+            .zip(VersionOwnerAction::for_versions(conn, &versions)?)
             .map(|((v, pb), aas)| EncodableVersion::from(v, &crate_name, pb, aas))
             .collect::<Vec<_>>();
 
@@ -386,7 +386,7 @@ pub async fn reverse_dependencies(
             .collect::<Vec<_>>();
         let versions = versions_and_publishers
             .into_iter()
-            .zip(VersionOwnerAction::for_versions(conn, &versions)?.into_iter())
+            .zip(VersionOwnerAction::for_versions(conn, &versions)?)
             .map(|((version, krate_name, published_by), actions)| {
                 EncodableVersion::from(version, &krate_name, published_by, actions)
             })
