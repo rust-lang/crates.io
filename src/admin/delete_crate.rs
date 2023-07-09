@@ -4,6 +4,7 @@ use anyhow::Context;
 use diesel::prelude::*;
 use futures_util::{StreamExt, TryStreamExt};
 use object_store::aws::{AmazonS3, AmazonS3Builder};
+use object_store::path::Path;
 use object_store::ObjectStore;
 use std::collections::HashMap;
 
@@ -90,28 +91,24 @@ pub fn run(opts: Opts) {
         }
 
         info!(%name, "Deleting crate files from S3");
-        let prefix = format!("crates/{name}");
-        let prefix = object_store::path::Path::from(prefix);
+        let prefix = format!("crates/{name}").into();
         if let Err(error) = rt.block_on(delete_from_s3(&s3, &prefix)) {
             warn!(%name, ?error, "Failed to delete crate files from S3");
         }
 
         info!(%name, "Deleting readme files from S3");
-        let prefix = format!("readmes/{name}");
-        let prefix = object_store::path::Path::from(prefix);
+        let prefix = format!("readmes/{name}").into();
         if let Err(error) = rt.block_on(delete_from_s3(&s3, &prefix)) {
             warn!(%name, ?error, "Failed to delete readme files from S3");
         }
     }
 }
 
-async fn delete_from_s3(s3: &AmazonS3, prefix: &object_store::path::Path) -> anyhow::Result<()> {
+async fn delete_from_s3(s3: &AmazonS3, prefix: &Path) -> anyhow::Result<()> {
     let objects = s3.list(Some(prefix)).await?;
     let locations = objects.map(|meta| meta.map(|m| m.location)).boxed();
 
-    s3.delete_stream(locations)
-        .try_collect::<Vec<object_store::path::Path>>()
-        .await?;
+    s3.delete_stream(locations).try_collect::<Vec<_>>().await?;
 
     Ok(())
 }
