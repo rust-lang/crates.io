@@ -31,7 +31,7 @@ pub fn run(opts: Opts) {
         .context("Failed to establish database connection")
         .unwrap();
 
-    let s3 = storage::from_environment();
+    let store = storage::from_environment();
 
     let crate_id: i32 = crates::table
         .select(crates::id)
@@ -88,14 +88,14 @@ pub fn run(opts: Opts) {
         let path = Uploader::crate_path(crate_name, version);
         let path = object_store::path::Path::from(path);
         debug!(%crate_name, %version, ?path, "Deleting crate file from S3");
-        if let Err(error) = rt.block_on(s3.delete(&path)) {
+        if let Err(error) = rt.block_on(store.delete(&path)) {
             warn!(%crate_name, %version, ?error, "Failed to delete crate file from S3");
         }
 
         let path = Uploader::readme_path(crate_name, version);
         let path = object_store::path::Path::from(path);
         debug!(%crate_name, %version, ?path, "Deleting readme file from S3");
-        match rt.block_on(s3.delete(&path)) {
+        match rt.block_on(store.delete(&path)) {
             Err(object_store::Error::NotFound { .. }) => {}
             Err(error) => {
                 warn!(%crate_name, %version, ?error, "Failed to delete readme file from S3")
