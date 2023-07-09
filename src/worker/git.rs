@@ -82,7 +82,9 @@ pub fn sync_to_sparse_index(
 #[instrument(skip_all, fields(krate.name = ?name))]
 pub fn get_index_data(name: &str, conn: &mut PgConnection) -> anyhow::Result<Option<String>> {
     debug!("Looking up crate by name");
-    let Some(krate): Option<models::Crate> = models::Crate::by_exact_name(name).first(conn).optional()? else {
+    let Some(krate): Option<models::Crate> =
+        models::Crate::by_exact_name(name).first(conn).optional()?
+    else {
         return Ok(None);
     };
 
