@@ -1,9 +1,8 @@
 use crate::background_jobs::Job;
-use crate::{admin::dialoguer, db, env, schema::crates};
+use crate::{admin::dialoguer, db, schema::crates, storage};
 use anyhow::Context;
 use diesel::prelude::*;
 use futures_util::{StreamExt, TryStreamExt};
-use object_store::aws::{AmazonS3, AmazonS3Builder};
 use object_store::path::Path;
 use object_store::ObjectStore;
 use std::collections::HashMap;
@@ -29,19 +28,7 @@ pub fn run(opts: Opts) {
         .context("Failed to establish database connection")
         .unwrap();
 
-    let region = dotenvy::var("S3_REGION").unwrap_or("us-west-1".to_string());
-    let bucket = env("S3_BUCKET");
-    let access_key = env("AWS_ACCESS_KEY");
-    let secret_key = env("AWS_SECRET_KEY");
-
-    let s3 = AmazonS3Builder::new()
-        .with_region(region)
-        .with_bucket_name(bucket)
-        .with_access_key_id(access_key)
-        .with_secret_access_key(secret_key)
-        .build()
-        .context("Failed to initialize S3 code")
-        .unwrap();
+    let store = storage::from_environment();
 
     let mut crate_names = opts.crate_names;
     crate_names.sort();
@@ -92,23 +79,26 @@ pub fn run(opts: Opts) {
 
         info!(%name, "Deleting crate files from S3");
         let prefix = format!("crates/{name}").into();
-        if let Err(error) = rt.block_on(delete_from_s3(&s3, &prefix)) {
+        if let Err(error) = rt.block_on(delete_from_store(&store, &prefix)) {
             warn!(%name, ?error, "Failed to delete crate files from S3");
         }
 
         info!(%name, "Deleting readme files from S3");
         let prefix = format!("readmes/{name}").into();
-        if let Err(error) = rt.block_on(delete_from_s3(&s3, &prefix)) {
+        if let Err(error) = rt.block_on(delete_from_store(&store, &prefix)) {
             warn!(%name, ?error, "Failed to delete readme files from S3");
         }
     }
 }
 
-async fn delete_from_s3(s3: &AmazonS3, prefix: &Path) -> anyhow::Result<()> {
-    let objects = s3.list(Some(prefix)).await?;
+async fn delete_from_store<S: ObjectStore>(store: &S, prefix: &Path) -> anyhow::Result<()> {
+    let objects = store.list(Some(prefix)).await?;
     let locations = objects.map(|meta| meta.map(|m| m.location)).boxed();
 
-    s3.delete_stream(locations).try_collect::<Vec<_>>().await?;
+    store
+        .delete_stream(locations)
+        .try_collect::<Vec<_>>()
+        .await?;
 
     Ok(())
 }
