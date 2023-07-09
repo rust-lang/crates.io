@@ -132,6 +132,14 @@ fn new_krate() {
         crates[0].cksum,
         "acb5604b126ac894c1eb11c4575bf2072fea61232a888e453770c79d7ed56419"
     );
+
+    app.db(|conn| {
+        let email: String = versions_published_by::table
+            .select(versions_published_by::email)
+            .first(conn)
+            .unwrap();
+        assert_eq!(email, "something@example.com");
+    });
 }
 
 #[test]
@@ -625,23 +633,6 @@ fn new_krate_with_unverified_email_fails() {
         response.into_json(),
         json!({ "errors": [{ "detail": "A verified email address is required to publish crates to crates.io. Visit https://crates.io/settings/profile to set and verify your email address." }] })
     );
-}
-
-#[test]
-fn new_krate_records_verified_email() {
-    let (app, _, _, token) = TestApp::full().with_token();
-
-    let crate_to_publish = PublishBuilder::new("foo_verified_email");
-
-    token.publish_crate(crate_to_publish).good();
-
-    app.db(|conn| {
-        let email: String = versions_published_by::table
-            .select(versions_published_by::email)
-            .first(conn)
-            .unwrap();
-        assert_eq!(email, "something@example.com");
-    });
 }
 
 #[test]
