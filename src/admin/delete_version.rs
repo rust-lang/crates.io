@@ -85,15 +85,13 @@ pub fn run(opts: Opts) {
         .unwrap();
 
     for version in &opts.versions {
-        let path = Uploader::crate_path(crate_name, version);
-        let path = object_store::path::Path::from(path);
+        let path = Uploader::crate_path(crate_name, version).into();
         debug!(%crate_name, %version, ?path, "Deleting crate file from S3");
         if let Err(error) = rt.block_on(store.delete(&path)) {
             warn!(%crate_name, %version, ?error, "Failed to delete crate file from S3");
         }
 
-        let path = Uploader::readme_path(crate_name, version);
-        let path = object_store::path::Path::from(path);
+        let path = Uploader::readme_path(crate_name, version).into();
         debug!(%crate_name, %version, ?path, "Deleting readme file from S3");
         match rt.block_on(store.delete(&path)) {
             Err(object_store::Error::NotFound { .. }) => {}
