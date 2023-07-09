@@ -8,6 +8,7 @@ use crate::{env, env_optional, uploaders::Uploader, Env};
 use super::base::Base;
 use super::database_pools::DatabasePools;
 use crate::config::balance_capacity::BalanceCapacityConfig;
+use crate::storage::StorageConfig;
 use http::HeaderValue;
 use std::collections::HashSet;
 use std::net::IpAddr;
@@ -23,6 +24,7 @@ pub struct Server {
     pub max_blocking_threads: Option<usize>,
     pub use_nginx_wrapper: bool,
     pub db: DatabasePools,
+    pub storage: StorageConfig,
     pub session_key: cookie::Key,
     pub gh_client_id: ClientId,
     pub gh_client_secret: ClientSecret,
@@ -140,6 +142,7 @@ impl Default for Server {
 
         Server {
             db: DatabasePools::full_from_environment(&base),
+            storage: StorageConfig::from_environment(),
             base,
             ip,
             port,

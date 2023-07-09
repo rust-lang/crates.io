@@ -2,6 +2,7 @@ use super::{MockAnonymousUser, MockCookieUser, MockTokenUser};
 use crate::record;
 use crate::util::{chaosproxy::ChaosProxy, fresh_schema::FreshSchema};
 use crates_io::config::{self, BalanceCapacityConfig, Base, DatabasePools, DbPoolConfig};
+use crates_io::storage::StorageConfig;
 use crates_io::{background_jobs::Environment, env, App, Emails, Env, Uploader};
 use crates_io_index::testing::UpstreamIndex;
 use crates_io_index::{Credentials, Repository as WorkerRepository, RepositoryConfig};
@@ -390,6 +391,7 @@ fn simple_config() -> config::Server {
         max_blocking_threads: None,
         use_nginx_wrapper: false,
         db,
+        storage: StorageConfig::InMemory,
         session_key: cookie::Key::derive_from("test this has to be over 32 bytes long".as_bytes()),
         gh_client_id: ClientId::new(dotenvy::var("GH_CLIENT_ID").unwrap_or_default()),
         gh_client_secret: ClientSecret::new(dotenvy::var("GH_CLIENT_SECRET").unwrap_or_default()),
