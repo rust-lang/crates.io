@@ -115,13 +115,23 @@ fn invalid_names() {
 
 #[test]
 fn new_krate() {
-    let (_, _, user) = TestApp::full().with_user();
+    let (app, _, user) = TestApp::full().with_user();
 
     let crate_to_publish = PublishBuilder::new("foo_new").version("1.0.0");
     let json: GoodCrate = user.publish_crate(crate_to_publish).good();
 
     assert_eq!(json.krate.name, "foo_new");
     assert_eq!(json.krate.max_version, "1.0.0");
+
+    let crates = app.crates_from_index_head("foo_new");
+    assert_eq!(crates.len(), 1);
+    assert_eq!(crates[0].name, "foo_new");
+    assert_eq!(crates[0].vers, "1.0.0");
+    assert!(crates[0].deps.is_empty());
+    assert_eq!(
+        crates[0].cksum,
+        "acb5604b126ac894c1eb11c4575bf2072fea61232a888e453770c79d7ed56419"
+    );
 }
 
 #[test]
@@ -339,12 +349,10 @@ fn new_krate_with_wildcard_dependency() {
 
 #[test]
 fn new_krate_twice() {
-    let (app, _, user, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token();
 
-    app.db(|conn| {
-        // Insert a crate directly into the database and then we'll try to publish another version
-        CrateBuilder::new("foo_twice", user.as_model().id).expect_build(conn);
-    });
+    let crate_to_publish = PublishBuilder::new("foo_twice").version("0.99.0");
+    token.publish_crate(crate_to_publish).good();
 
     let crate_to_publish = PublishBuilder::new("foo_twice")
         .version("2.0.0")
@@ -353,6 +361,15 @@ fn new_krate_twice() {
 
     assert_eq!(json.krate.name, "foo_twice");
     assert_eq!(json.krate.description.unwrap(), "2.0.0 description");
+
+    let crates = app.crates_from_index_head("foo_twice");
+    assert_eq!(crates.len(), 2);
+    assert_eq!(crates[0].name, "foo_twice");
+    assert_eq!(crates[0].vers, "0.99.0");
+    assert!(crates[0].deps.is_empty());
+    assert_eq!(crates[1].name, "foo_twice");
+    assert_eq!(crates[1].vers, "2.0.0");
+    assert!(crates[1].deps.is_empty());
 }
 
 #[test]
@@ -518,43 +535,6 @@ fn new_crate_similar_name_underscore() {
         response.into_json(),
         json!({ "errors": [{ "detail": "crate was previously named `foo-bar-underscore`" }] })
     );
-}
-
-#[test]
-fn new_krate_git_upload() {
-    let (app, _, _, token) = TestApp::full().with_token();
-
-    let crate_to_publish = PublishBuilder::new("fgt");
-    token.publish_crate(crate_to_publish).good();
-
-    let crates = app.crates_from_index_head("fgt");
-    assert_eq!(crates.len(), 1);
-    assert_eq!(crates[0].name, "fgt");
-    assert_eq!(crates[0].vers, "1.0.0");
-    assert!(crates[0].deps.is_empty());
-    assert_eq!(
-        crates[0].cksum,
-        "acb5604b126ac894c1eb11c4575bf2072fea61232a888e453770c79d7ed56419"
-    );
-}
-
-#[test]
-fn new_krate_git_upload_appends() {
-    let (app, _, _, token) = TestApp::full().with_token();
-
-    let crate_to_publish = PublishBuilder::new("FPP").version("0.0.1");
-    token.publish_crate(crate_to_publish).good();
-    let crate_to_publish = PublishBuilder::new("FPP").version("1.0.0");
-    token.publish_crate(crate_to_publish).good();
-
-    let crates = app.crates_from_index_head("fpp");
-    assert!(crates.len() == 2);
-    assert_eq!(crates[0].name, "FPP");
-    assert_eq!(crates[0].vers, "0.0.1");
-    assert!(crates[0].deps.is_empty());
-    assert_eq!(crates[1].name, "FPP");
-    assert_eq!(crates[1].vers, "1.0.0");
-    assert!(crates[1].deps.is_empty());
 }
 
 #[test]
