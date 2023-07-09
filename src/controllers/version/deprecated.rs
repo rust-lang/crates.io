@@ -39,7 +39,7 @@ pub async fn index(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             .collect::<Vec<_>>();
         let versions = versions_and_publishers
             .into_iter()
-            .zip(VersionOwnerAction::for_versions(conn, &versions)?.into_iter())
+            .zip(VersionOwnerAction::for_versions(conn, &versions)?)
             .map(|((version, crate_name, published_by), actions)| {
                 EncodableVersion::from(version, &crate_name, published_by, actions)
             })

@@ -78,7 +78,7 @@ pub async fn updates(app: AppState, req: Parts) -> AppResult<Json<Value>> {
         let versions = data.iter().map(|(v, _, _)| v).cloned().collect::<Vec<_>>();
         let data = data
             .into_iter()
-            .zip(VersionOwnerAction::for_versions(conn, &versions)?.into_iter())
+            .zip(VersionOwnerAction::for_versions(conn, &versions)?)
             .map(|((v, cn, pb), voas)| (v, cn, pb, voas));
 
         let versions = data

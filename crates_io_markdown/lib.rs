@@ -370,11 +370,11 @@ mod tests {
 
     #[test]
     fn code_block_with_mermaid_highlighting() {
-        let code_block = r#"```mermaid \
+        let code_block = r"```mermaid \
                             graph LR \
                             A --> C \
                             C --> A \
-                           ```"#;
+                           ```";
         let result = markdown_to_html(code_block, None, "");
         assert!(result.contains("<code class=\"language-mermaid\">"));
     }

@@ -115,12 +115,9 @@ mod tests {
                 .unwrap()
                 .and_hms_opt(14, 23, 11)
                 .unwrap(),
-            last_used_at: Some(
-                NaiveDate::from_ymd_opt(2017, 1, 6)
-                    .unwrap()
-                    .and_hms_opt(14, 23, 12),
-            )
-            .unwrap(),
+            last_used_at: NaiveDate::from_ymd_opt(2017, 1, 6)
+                .unwrap()
+                .and_hms_opt(14, 23, 12),
             crate_scopes: None,
             endpoint_scopes: None,
             expired_at: None,
