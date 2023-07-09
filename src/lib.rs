@@ -61,6 +61,7 @@ pub mod controllers;
 pub mod models;
 mod router;
 pub mod sentry;
+pub mod storage;
 pub mod views;
 
 /// Used for setting different values depending on whether the app is being run in production,

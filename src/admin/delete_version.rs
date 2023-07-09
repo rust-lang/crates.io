@@ -1,9 +1,8 @@
 use crate::background_jobs::Job;
 use crate::schema::crates;
-use crate::{admin::dialoguer, db, env, schema::versions, Uploader};
+use crate::{admin::dialoguer, db, schema::versions, storage, Uploader};
 use anyhow::Context;
 use diesel::prelude::*;
-use object_store::aws::AmazonS3Builder;
 use object_store::ObjectStore;
 
 #[derive(clap::Parser, Debug)]
@@ -32,19 +31,7 @@ pub fn run(opts: Opts) {
         .context("Failed to establish database connection")
         .unwrap();
 
-    let region = dotenvy::var("S3_REGION").unwrap_or("us-west-1".to_string());
-    let bucket = env("S3_BUCKET");
-    let access_key = env("AWS_ACCESS_KEY");
-    let secret_key = env("AWS_SECRET_KEY");
-
-    let s3 = AmazonS3Builder::new()
-        .with_region(region)
-        .with_bucket_name(bucket)
-        .with_access_key_id(access_key)
-        .with_secret_access_key(secret_key)
-        .build()
-        .context("Failed to initialize S3 code")
-        .unwrap();
+    let s3 = storage::from_environment();
 
     let crate_id: i32 = crates::table
         .select(crates::id)
