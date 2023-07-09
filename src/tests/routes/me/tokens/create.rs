@@ -68,8 +68,11 @@ fn create_token_success() {
         ".api_token.token" => insta::api_token_redaction(),
     });
 
-    let tokens: Vec<ApiToken> =
-        app.db(|conn| assert_ok!(ApiToken::belonging_to(user.as_model()).load(conn)));
+    let tokens: Vec<ApiToken> = app.db(|conn| {
+        assert_ok!(ApiToken::belonging_to(user.as_model())
+            .select(ApiToken::as_select())
+            .load(conn))
+    });
     assert_eq!(tokens.len(), 1);
     assert_eq!(tokens[0].name, "bar");
     assert!(!tokens[0].revoked);
@@ -134,8 +137,11 @@ fn create_token_with_scopes() {
         ".api_token.token" => insta::api_token_redaction(),
     });
 
-    let tokens: Vec<ApiToken> =
-        app.db(|conn| assert_ok!(ApiToken::belonging_to(user.as_model()).load(conn)));
+    let tokens: Vec<ApiToken> = app.db(|conn| {
+        assert_ok!(ApiToken::belonging_to(user.as_model())
+            .select(ApiToken::as_select())
+            .load(conn))
+    });
     assert_eq!(tokens.len(), 1);
     assert_eq!(tokens[0].name, "bar");
     assert!(!tokens[0].revoked);
@@ -174,8 +180,11 @@ fn create_token_with_null_scopes() {
         ".api_token.token" => insta::api_token_redaction(),
     });
 
-    let tokens: Vec<ApiToken> =
-        app.db(|conn| assert_ok!(ApiToken::belonging_to(user.as_model()).load(conn)));
+    let tokens: Vec<ApiToken> = app.db(|conn| {
+        assert_ok!(ApiToken::belonging_to(user.as_model())
+            .select(ApiToken::as_select())
+            .load(conn))
+    });
     assert_eq!(tokens.len(), 1);
     assert_eq!(tokens[0].name, "bar");
     assert!(!tokens[0].revoked);

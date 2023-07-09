@@ -62,7 +62,7 @@ pub async fn show_by_id(state: AppState, Path(id): Path<i32>) -> AppResult<Json<
             .left_outer_join(users::table)
             .select((
                 versions::all_columns,
-                crate::models::krate::ALL_COLUMNS,
+                Crate::as_select(),
                 users::all_columns.nullable(),
             ))
             .first(conn)?;

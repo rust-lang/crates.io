@@ -27,6 +27,7 @@ fn github_secret_alert_revokes_token() {
     // Ensure that the token currently exists in the database
     app.db(|conn| {
         let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user.as_model())
+            .select(ApiToken::as_select())
             .filter(api_tokens::revoked.eq(false))
             .load(conn));
         assert_eq!(tokens.len(), 1);
@@ -62,10 +63,12 @@ fn github_secret_alert_revokes_token() {
     // Ensure that the token was revoked
     app.db(|conn| {
         let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user.as_model())
+            .select(ApiToken::as_select())
             .filter(api_tokens::revoked.eq(false))
             .load(conn));
         assert_eq!(tokens.len(), 0);
         let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user.as_model())
+            .select(ApiToken::as_select())
             .filter(api_tokens::revoked.eq(true))
             .load(conn));
         assert_eq!(tokens.len(), 1);
@@ -85,6 +88,7 @@ fn github_secret_alert_for_revoked_token() {
     // Ensure that the token currently exists in the database
     app.db(|conn| {
         let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user.as_model())
+            .select(ApiToken::as_select())
             .filter(api_tokens::revoked.eq(false))
             .load(conn));
         assert_eq!(tokens.len(), 1);
@@ -123,10 +127,12 @@ fn github_secret_alert_for_revoked_token() {
     // Ensure that the token is still revoked
     app.db(|conn| {
         let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user.as_model())
+            .select(ApiToken::as_select())
             .filter(api_tokens::revoked.eq(false))
             .load(conn));
         assert_eq!(tokens.len(), 0);
         let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user.as_model())
+            .select(ApiToken::as_select())
             .filter(api_tokens::revoked.eq(true))
             .load(conn));
         assert_eq!(tokens.len(), 1);
@@ -146,6 +152,7 @@ fn github_secret_alert_for_unknown_token() {
     // Ensure that the token currently exists in the database
     app.db(|conn| {
         let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user.as_model())
+            .select(ApiToken::as_select())
             .filter(api_tokens::revoked.eq(false))
             .load(conn));
         assert_eq!(tokens.len(), 1);
@@ -172,6 +179,7 @@ fn github_secret_alert_for_unknown_token() {
     // Ensure that the token was not revoked
     app.db(|conn| {
         let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user.as_model())
+            .select(ApiToken::as_select())
             .filter(api_tokens::revoked.eq(false))
             .load(conn));
         assert_eq!(tokens.len(), 1);

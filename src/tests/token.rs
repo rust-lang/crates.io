@@ -16,8 +16,11 @@ fn using_token_updates_last_used_at() {
     // Use the token once
     token.search("following=1");
 
-    let token: ApiToken =
-        app.db(|conn| assert_ok!(ApiToken::belonging_to(user.as_model()).first(conn)));
+    let token: ApiToken = app.db(|conn| {
+        assert_ok!(ApiToken::belonging_to(user.as_model())
+            .select(ApiToken::as_select())
+            .first(conn))
+    });
     assert_some!(token.last_used_at);
 
     // Would check that it updates the timestamp here, but the timestamp is

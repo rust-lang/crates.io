@@ -11,6 +11,7 @@ fn revoke_current_token_success() {
     // Ensure that the token currently exists in the database
     app.db(|conn| {
         let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user.as_model())
+            .select(ApiToken::as_select())
             .filter(api_tokens::revoked.eq(false))
             .load(conn));
         assert_eq!(tokens.len(), 1);
@@ -24,6 +25,7 @@ fn revoke_current_token_success() {
     // Ensure that the token was removed from the database
     app.db(|conn| {
         let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user.as_model())
+            .select(ApiToken::as_select())
             .filter(api_tokens::revoked.eq(false))
             .load(conn));
         assert_eq!(tokens.len(), 0);
@@ -49,6 +51,7 @@ fn revoke_current_token_with_cookie_user() {
     // Ensure that the token currently exists in the database
     app.db(|conn| {
         let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user.as_model())
+            .select(ApiToken::as_select())
             .filter(api_tokens::revoked.eq(false))
             .load(conn));
         assert_eq!(tokens.len(), 1);
@@ -66,6 +69,7 @@ fn revoke_current_token_with_cookie_user() {
     // Ensure that the token still exists in the database after the failed request
     app.db(|conn| {
         let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user.as_model())
+            .select(ApiToken::as_select())
             .filter(api_tokens::revoked.eq(false))
             .load(conn));
         assert_eq!(tokens.len(), 1);

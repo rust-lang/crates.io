@@ -33,7 +33,7 @@ pub struct RecentCrateDownloads {
     pub downloads: i32,
 }
 
-#[derive(Debug, Clone, Queryable, Identifiable, AsChangeset, QueryableByName)]
+#[derive(Debug, Clone, Queryable, Identifiable, AsChangeset, QueryableByName, Selectable)]
 #[diesel(table_name = crates, check_for_backend(diesel::pg::Pg))]
 pub struct Crate {
     pub id: i32,
@@ -79,7 +79,7 @@ pub const ALL_COLUMNS: AllColumns = (
 pub const MAX_NAME_LENGTH: usize = 64;
 
 type CanonCrateName<T> = canon_crate_name::HelperType<T>;
-type All = diesel::dsl::Select<crates::table, AllColumns>;
+type All = diesel::dsl::Select<crates::table, diesel::dsl::AsSelect<Crate, diesel::pg::Pg>>;
 type WithName<'a> = diesel::dsl::Eq<CanonCrateName<crates::name>, CanonCrateName<&'a str>>;
 type ByName<'a> = diesel::dsl::Filter<All, WithName<'a>>;
 type ByExactName<'a> = diesel::dsl::Filter<All, diesel::dsl::Eq<crates::name, &'a str>>;
@@ -127,7 +127,7 @@ impl<'a> NewCrate<'a> {
             update(crates::table)
                 .filter(canon_crate_name(crates::name).eq(canon_crate_name(self.name)))
                 .set(&self)
-                .returning(ALL_COLUMNS)
+                .returning(Crate::as_returning())
                 .get_result(conn)
                 .map_err(Into::into)
         })
@@ -183,7 +183,7 @@ impl<'a> NewCrate<'a> {
             let maybe_inserted: Option<Crate> = diesel::insert_into(crates)
                 .values(self)
                 .on_conflict_do_nothing()
-                .returning(ALL_COLUMNS)
+                .returning(Crate::as_returning())
                 .get_result(conn)
                 .optional()?;
 
@@ -242,7 +242,7 @@ impl Crate {
     }
 
     pub fn all() -> All {
-        crates::table.select(ALL_COLUMNS)
+        crates::table.select(Self::as_select())
     }
 
     pub fn find_version(&self, conn: &mut PgConnection, version: &str) -> AppResult<Version> {

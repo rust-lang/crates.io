@@ -163,6 +163,7 @@ fn alert_revoke_token(
 
     // Not using `ApiToken::find_by_api_token()` in order to preserve `last_used_at`
     let token = api_tokens::table
+        .select(ApiToken::as_select())
         .filter(api_tokens::token.eq(hashed_token))
         .get_result::<ApiToken>(conn)
         .optional()?;

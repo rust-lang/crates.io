@@ -124,7 +124,7 @@ impl<'a> CrateBuilder<'a> {
         if let Some(downloads) = self.downloads {
             krate = update(&krate)
                 .set(crates::downloads.eq(downloads))
-                .returning(crates_io::models::krate::ALL_COLUMNS)
+                .returning(Crate::as_returning())
                 .get_result(connection)?;
         }
 
@@ -162,7 +162,7 @@ impl<'a> CrateBuilder<'a> {
         if let Some(updated_at) = self.updated_at {
             krate = update(&krate)
                 .set(crates::updated_at.eq(updated_at))
-                .returning(crates_io::models::krate::ALL_COLUMNS)
+                .returning(Crate::as_returning())
                 .get_result(connection)?;
         }
 
