@@ -189,8 +189,8 @@ devDependencies:
     specifier: 8.2.0
     version: 8.2.0(@ember/test-helpers@3.2.0)(ember-source@5.1.2)
   ember-link:
-    specifier: 2.1.0
-    version: 2.1.0
+    specifier: 3.0.0
+    version: 3.0.0(@ember/test-helpers@3.2.0)(@glimmer/tracking@1.1.2)
   ember-load-initializers:
     specifier: 2.1.2
     version: 2.1.2
@@ -9100,15 +9100,20 @@ packages:
       - supports-color
     dev: true
 
-  /ember-link@2.1.0:
-    resolution: {integrity: sha512-j2huXQzWrlj8LtslWuoqsgT0/dUtASxtGtCQqd8XdXLoMyN8JYYRifNpp/iFmsxPyYuRMIaokfXSB00+Ztmofw==}
-    engines: {node: '>= 12.*'}
+  /ember-link@3.0.0(@ember/test-helpers@3.2.0)(@glimmer/tracking@1.1.2):
+    resolution: {integrity: sha512-Gu9vG6UVSRgUPXgS2X+u7huLlQOSil33k/8+NwmKjN7S9YDN/J481+N4iV0tbgL9+Sbe33LYcDeCBr2DmEYbEQ==}
+    engines: {node: '>= 16.*'}
+    peerDependencies:
+      '@ember/test-helpers': ^2.9.3
+      '@glimmer/tracking': ^1.1.2
     dependencies:
+      '@ember/test-helpers': 3.2.0(ember-source@5.1.2)(webpack@5.88.1)
+      '@embroider/addon-shim': 1.8.5
+      '@embroider/macros': 1.12.2
+      '@glimmer/env': 0.1.7
       '@glimmer/tracking': 1.1.2
-      ember-cli-babel: 7.26.11
-      ember-cli-htmlbars: 6.2.0
-      ember-cli-typescript: 4.2.1
     transitivePeerDependencies:
+      - '@glint/template'
       - supports-color
     dev: true
 
