@@ -9,9 +9,11 @@ use crates_io_index::{Credentials, Repository as WorkerRepository, RepositoryCon
 use std::{rc::Rc, sync::Arc, time::Duration};
 
 use crate::util::github::{MockGitHubClient, MOCK_GITHUB_DATA};
+use anyhow::Context;
 use crates_io::models::token::{CrateScope, EndpointScope};
 use crates_io::swirl::Runner;
 use diesel::PgConnection;
+use futures_util::TryStreamExt;
 use oauth2::{ClientId, ClientSecret};
 use reqwest::{blocking::Client, Proxy};
 use secrecy::ExposeSecret;
@@ -140,6 +142,25 @@ impl TestApp {
         self.upstream_index()
             .crates_from_index_head(crate_name)
             .unwrap()
+    }
+
+    pub fn stored_files(&self) -> Vec<String> {
+        let store = self.as_inner().storage.as_inner();
+
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .context("Failed to initialize tokio runtime")
+            .unwrap();
+
+        let list = rt.block_on(async {
+            let stream = store.list(None).await.unwrap();
+            stream.try_collect::<Vec<_>>().await.unwrap()
+        });
+
+        list.into_iter()
+            .map(|meta| meta.location.to_string())
+            .collect()
     }
 
     #[track_caller]

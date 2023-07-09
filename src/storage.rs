@@ -152,6 +152,11 @@ impl Storage {
         self.crate_upload_store.put(&path, bytes).await
     }
 
+    /// This should only be used for assertions in the test suite!
+    pub fn as_inner(&self) -> &dyn ObjectStore {
+        &self.store
+    }
+
     async fn delete_all_with_prefix(&self, prefix: &Path) -> Result<()> {
         let objects = self.store.list(Some(prefix)).await?;
         let locations = objects.map(|meta| meta.map(|m| m.location)).boxed();
