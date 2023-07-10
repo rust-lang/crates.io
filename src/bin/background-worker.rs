@@ -76,20 +76,19 @@ fn main() {
     let cloudfront = CloudFront::from_environment();
     let fastly = Fastly::from_environment();
 
-    let build_runner = || {
-        let client = Client::builder()
-            .timeout(Duration::from_secs(45))
-            .build()
-            .expect("Couldn't build client");
-        let environment = Environment::new_shared(
-            repository.clone(),
-            uploader.clone(),
-            client,
-            cloudfront.clone(),
-            fastly.clone(),
-        );
-        swirl::Runner::production_runner(environment, db_url.clone(), job_start_timeout)
-    };
+    let client = Client::builder()
+        .timeout(Duration::from_secs(45))
+        .build()
+        .expect("Couldn't build client");
+
+    let environment =
+        Environment::new_shared(repository, uploader.clone(), client, cloudfront, fastly);
+
+    let environment = Arc::new(Some(environment));
+
+    let build_runner =
+        || swirl::Runner::production_runner(environment.clone(), db_url.clone(), job_start_timeout);
+
     let mut runner = build_runner();
 
     info!("Runner booted, running jobs");

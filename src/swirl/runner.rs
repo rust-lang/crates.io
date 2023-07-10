@@ -28,7 +28,7 @@ pub struct Runner {
 
 impl Runner {
     pub fn production_runner(
-        environment: Environment,
+        environment: Arc<Option<Environment>>,
         url: String,
         job_start_timeout: u64,
     ) -> Self {
@@ -39,7 +39,7 @@ impl Runner {
         Self {
             connection_pool: DieselPool::new_background_worker(connection_pool),
             thread_pool: ThreadPool::new(5),
-            environment: Arc::new(Some(environment)),
+            environment,
             job_start_timeout: Duration::from_secs(job_start_timeout),
         }
     }
