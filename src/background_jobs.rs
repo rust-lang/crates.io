@@ -299,18 +299,6 @@ pub struct Environment {
     fastly: Option<Fastly>,
 }
 
-impl Clone for Environment {
-    fn clone(&self) -> Self {
-        Self {
-            index: self.index.clone(),
-            uploader: self.uploader.clone(),
-            http_client: AssertUnwindSafe(self.http_client.0.clone()),
-            cloudfront: self.cloudfront.clone(),
-            fastly: self.fastly.clone(),
-        }
-    }
-}
-
 impl Environment {
     pub fn new(
         index: Repository,
