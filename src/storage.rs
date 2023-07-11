@@ -1,7 +1,7 @@
 use crate::env;
 use anyhow::Context;
 use futures_util::{StreamExt, TryStreamExt};
-use object_store::aws::AmazonS3Builder;
+use object_store::aws::{AmazonS3, AmazonS3Builder};
 use object_store::local::LocalFileSystem;
 use object_store::memory::InMemory;
 use object_store::path::Path;
@@ -67,16 +67,7 @@ impl Storage {
     pub fn from_config(config: &StorageConfig) -> Self {
         match config {
             StorageConfig::S3(s3) => {
-                let s3 = AmazonS3Builder::new()
-                    .with_region(s3.region.as_deref().unwrap_or(DEFAULT_REGION))
-                    .with_bucket_name(&s3.bucket)
-                    .with_access_key_id(&s3.access_key)
-                    .with_secret_access_key(s3.secret_key.expose_secret())
-                    .build()
-                    .context("Failed to initialize S3 code")
-                    .unwrap();
-
-                let store = Box::new(s3);
+                let store = Box::new(build_s3(s3));
                 Self { store }
             }
 
@@ -116,13 +107,13 @@ impl Storage {
 
     #[instrument(skip(self))]
     pub async fn delete_crate_file(&self, name: &str, version: &str) -> Result<()> {
-        let path = format!("{PREFIX_CRATES}/{name}/{name}-{version}.crate").into();
+        let path = crate_file_path(name, version);
         self.store.delete(&path).await
     }
 
     #[instrument(skip(self))]
     pub async fn delete_readme(&self, name: &str, version: &str) -> Result<()> {
-        let path = format!("{PREFIX_READMES}/{name}/{name}-{version}.html").into();
+        let path = readme_path(name, version);
         self.store.delete(&path).await
     }
 
@@ -137,6 +128,25 @@ impl Storage {
 
         Ok(())
     }
+}
+
+fn build_s3(config: &S3Config) -> AmazonS3 {
+    AmazonS3Builder::new()
+        .with_region(config.region.as_deref().unwrap_or(DEFAULT_REGION))
+        .with_bucket_name(&config.bucket)
+        .with_access_key_id(&config.access_key)
+        .with_secret_access_key(config.secret_key.expose_secret())
+        .build()
+        .context("Failed to initialize S3 code")
+        .unwrap()
+}
+
+fn crate_file_path(name: &str, version: &str) -> Path {
+    format!("{PREFIX_CRATES}/{name}/{name}-{version}.crate").into()
+}
+
+fn readme_path(name: &str, version: &str) -> Path {
+    format!("{PREFIX_READMES}/{name}/{name}-{version}.html").into()
 }
 
 #[cfg(test)]
