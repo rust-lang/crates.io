@@ -105,7 +105,7 @@
     "ember-resolver": "10.1.1",
     "ember-router-scroll": "4.1.2",
     "ember-source": "5.1.2",
-    "ember-svg-jar": "2.4.2",
+    "ember-svg-jar": "2.4.3",
     "ember-template-lint": "5.11.0",
     "ember-test-selectors": "6.0.0",
     "ember-tooltips": "3.6.0",
