@@ -3,6 +3,7 @@ use anyhow::Context;
 use futures_util::{StreamExt, TryStreamExt};
 use object_store::aws::AmazonS3Builder;
 use object_store::local::LocalFileSystem;
+use object_store::memory::InMemory;
 use object_store::path::Path;
 use object_store::{ObjectStore, Result};
 use secrecy::{ExposeSecret, SecretString};
@@ -17,6 +18,7 @@ const DEFAULT_REGION: &str = "us-west-1";
 pub enum StorageConfig {
     S3(S3Config),
     LocalFileSystem { path: PathBuf },
+    InMemory,
 }
 
 #[derive(Debug)]
@@ -89,6 +91,12 @@ impl Storage {
                     .unwrap();
 
                 let store = Box::new(local);
+                Self { store }
+            }
+
+            StorageConfig::InMemory => {
+                warn!("Using in-memory file storage");
+                let store = Box::new(InMemory::new());
                 Self { store }
             }
         }
