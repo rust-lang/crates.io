@@ -11,6 +11,7 @@ use object_store::aws::{AmazonS3, AmazonS3Builder};
 use object_store::local::LocalFileSystem;
 use object_store::memory::InMemory;
 use object_store::path::Path;
+use object_store::prefix::PrefixStore;
 use object_store::{ClientOptions, ObjectStore, Result};
 use secrecy::{ExposeSecret, SecretString};
 use std::fs;
@@ -20,13 +21,15 @@ const PREFIX_CRATES: &str = "crates";
 const PREFIX_READMES: &str = "readmes";
 const DEFAULT_REGION: &str = "us-west-1";
 const CONTENT_TYPE_CRATE: &str = "application/gzip";
+const CONTENT_TYPE_INDEX: &str = "text/plain";
 const CONTENT_TYPE_README: &str = "text/html";
 const CACHE_CONTROL_IMMUTABLE: &str = "public,max-age=31536000,immutable";
+const CACHE_CONTROL_INDEX: &str = "public,max-age=600";
 const CACHE_CONTROL_README: &str = "public,max-age=604800";
 
 #[derive(Debug)]
 pub enum StorageConfig {
-    S3(S3Config),
+    S3 { default: S3Config, index: S3Config },
     LocalFileSystem { path: PathBuf },
     InMemory,
 }
@@ -43,16 +46,28 @@ impl StorageConfig {
     pub fn from_environment() -> Self {
         if let Ok(bucket) = dotenvy::var("S3_BUCKET") {
             let region = dotenvy::var("S3_REGION").ok();
+
+            let index_bucket = env("S3_INDEX_BUCKET");
+            let index_region = dotenvy::var("S3_INDEX_REGION").ok();
+
             let access_key = env("AWS_ACCESS_KEY");
-            let secret_key = env("AWS_SECRET_KEY").into();
-            let s3 = S3Config {
+            let secret_key: SecretString = env("AWS_SECRET_KEY").into();
+
+            let default = S3Config {
                 bucket,
                 region,
+                access_key: access_key.clone(),
+                secret_key: secret_key.clone(),
+            };
+
+            let index = S3Config {
+                bucket: index_bucket,
+                region: index_region,
                 access_key,
                 secret_key,
             };
 
-            return Self::S3(s3);
+            return Self::S3 { default, index };
         }
 
         let current_dir = std::env::current_dir()
@@ -69,6 +84,9 @@ pub struct Storage {
     store: Box<dyn ObjectStore>,
     crate_upload_store: Box<dyn ObjectStore>,
     readme_upload_store: Box<dyn ObjectStore>,
+
+    index_store: Box<dyn ObjectStore>,
+    index_upload_store: Box<dyn ObjectStore>,
 }
 
 impl Storage {
@@ -78,48 +96,70 @@ impl Storage {
 
     pub fn from_config(config: &StorageConfig) -> Self {
         match config {
-            StorageConfig::S3(s3) => {
+            StorageConfig::S3 { default, index } => {
                 let options = ClientOptions::default();
-                let store = build_s3(s3, options);
+                let store = build_s3(default, options);
 
                 let options = client_options(CONTENT_TYPE_CRATE, CACHE_CONTROL_IMMUTABLE);
-                let crate_upload_store = build_s3(s3, options);
+                let crate_upload_store = build_s3(default, options);
 
                 let options = client_options(CONTENT_TYPE_README, CACHE_CONTROL_README);
-                let readme_upload_store = build_s3(s3, options);
+                let readme_upload_store = build_s3(default, options);
+
+                let options = ClientOptions::default();
+                let index_store = build_s3(index, options);
+
+                let options = client_options(CONTENT_TYPE_INDEX, CACHE_CONTROL_INDEX);
+                let index_upload_store = build_s3(index, options);
 
                 Self {
                     store: Box::new(store),
                     crate_upload_store: Box::new(crate_upload_store),
                     readme_upload_store: Box::new(readme_upload_store),
+                    index_store: Box::new(index_store),
+                    index_upload_store: Box::new(index_upload_store),
                 }
             }
 
             StorageConfig::LocalFileSystem { path } => {
-                fs::create_dir_all(path)
-                    .context("Failed to create `local_uploads` directory")
+                warn!(?path, "Using local file system for file storage");
+
+                let index_path = path.join("index");
+
+                fs::create_dir_all(&index_path)
+                    .context("Failed to create file storage directories")
                     .unwrap();
 
-                warn!(?path, "Using local file system for file storage");
                 let local = LocalFileSystem::new_with_prefix(path)
                     .context("Failed to initialize local file system storage")
                     .unwrap();
 
+                let local_index = LocalFileSystem::new_with_prefix(index_path)
+                    .context("Failed to initialize local file system storage")
+                    .unwrap();
+
                 let store = ArcStore::new(local);
+                let index_store = ArcStore::new(local_index);
+
                 Self {
                     store: Box::new(store.clone()),
                     crate_upload_store: Box::new(store.clone()),
                     readme_upload_store: Box::new(store),
+                    index_store: Box::new(index_store.clone()),
+                    index_upload_store: Box::new(index_store),
                 }
             }
 
             StorageConfig::InMemory => {
                 warn!("Using in-memory file storage");
                 let store = ArcStore::new(InMemory::new());
+
                 Self {
                     store: Box::new(store.clone()),
                     crate_upload_store: Box::new(store.clone()),
-                    readme_upload_store: Box::new(store),
+                    readme_upload_store: Box::new(store.clone()),
+                    index_store: Box::new(PrefixStore::new(store.clone(), "index")),
+                    index_upload_store: Box::new(PrefixStore::new(store, "index")),
                 }
             }
         }
@@ -171,6 +211,16 @@ impl Storage {
 
         let path = readme_path(name, version);
         self.readme_upload_store.put(&path, bytes).await
+    }
+
+    #[instrument(skip(self))]
+    pub async fn sync_index(&self, name: &str, content: Option<String>) -> Result<()> {
+        let path = crates_io_index::Repository::relative_index_file_for_url(name).into();
+        if let Some(content) = content {
+            self.index_upload_store.put(&path, content.into()).await
+        } else {
+            self.index_store.delete(&path).await
+        }
     }
 
     /// This should only be used for assertions in the test suite!
@@ -356,5 +406,22 @@ mod tests {
             "readmes/foo/foo-2.0.0+foo.html",
         ];
         assert_eq!(stored_files(&s.store).await, expected_files);
+    }
+
+    #[tokio::test]
+    async fn sync_index() {
+        let s = Storage::from_config(&StorageConfig::InMemory);
+
+        assert!(stored_files(&s.store).await.is_empty());
+
+        let content = "foo".to_string();
+        s.sync_index("foo", Some(content)).await.unwrap();
+
+        let expected_files = vec!["index/3/f/foo"];
+        assert_eq!(stored_files(&s.store).await, expected_files);
+
+        s.sync_index("foo", None).await.unwrap();
+
+        assert!(stored_files(&s.store).await.is_empty());
     }
 }
