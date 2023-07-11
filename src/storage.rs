@@ -107,13 +107,13 @@ impl Storage {
 
     #[instrument(skip(self))]
     pub async fn delete_crate_file(&self, name: &str, version: &str) -> Result<()> {
-        let path = format!("{PREFIX_CRATES}/{name}/{name}-{version}.crate").into();
+        let path = crate_file_path(name, version);
         self.store.delete(&path).await
     }
 
     #[instrument(skip(self))]
     pub async fn delete_readme(&self, name: &str, version: &str) -> Result<()> {
-        let path = format!("{PREFIX_READMES}/{name}/{name}-{version}.html").into();
+        let path = readme_path(name, version);
         self.store.delete(&path).await
     }
 
@@ -139,6 +139,14 @@ fn build_s3(config: &S3Config) -> AmazonS3 {
         .build()
         .context("Failed to initialize S3 code")
         .unwrap()
+}
+
+fn crate_file_path(name: &str, version: &str) -> Path {
+    format!("{PREFIX_CRATES}/{name}/{name}-{version}.crate").into()
+}
+
+fn readme_path(name: &str, version: &str) -> Path {
+    format!("{PREFIX_READMES}/{name}/{name}-{version}.html").into()
 }
 
 #[cfg(test)]
