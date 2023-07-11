@@ -137,8 +137,8 @@ fn new_krate() {
         "acb5604b126ac894c1eb11c4575bf2072fea61232a888e453770c79d7ed56419"
     );
 
-    let files = app.stored_files();
-    assert_eq!(files, vec!["crates/foo_new/foo_new-1.0.0.crate"]);
+    let expected_files = vec!["crates/foo_new/foo_new-1.0.0.crate", "index/fo/o_/foo_new"];
+    assert_eq!(app.stored_files(), expected_files);
 
     app.db(|conn| {
         let email: String = versions_published_by::table
@@ -159,8 +159,8 @@ fn new_krate_with_token() {
     assert_eq!(json.krate.name, "foo_new");
     assert_eq!(json.krate.max_version, "1.0.0");
 
-    let files = app.stored_files();
-    assert_eq!(files, vec!["crates/foo_new/foo_new-1.0.0.crate"]);
+    let expected_files = vec!["crates/foo_new/foo_new-1.0.0.crate", "index/fo/o_/foo_new"];
+    assert_eq!(app.stored_files(), expected_files);
 }
 
 #[test]
@@ -173,8 +173,11 @@ fn new_krate_weird_version() {
     assert_eq!(json.krate.name, "foo_weird");
     assert_eq!(json.krate.max_version, "0.0.0-pre");
 
-    let files = app.stored_files();
-    assert_eq!(files, vec!["crates/foo_weird/foo_weird-0.0.0-pre.crate"]);
+    let expected_files = vec![
+        "crates/foo_weird/foo_weird-0.0.0-pre.crate",
+        "index/fo/o_/foo_weird",
+    ];
+    assert_eq!(app.stored_files(), expected_files);
 }
 
 #[test]
@@ -400,13 +403,12 @@ fn new_krate_twice() {
     assert_eq!(crates[1].vers, "2.0.0");
     assert!(crates[1].deps.is_empty());
 
-    assert_eq!(
-        app.stored_files(),
-        vec![
-            "crates/foo_twice/foo_twice-0.99.0.crate",
-            "crates/foo_twice/foo_twice-2.0.0.crate"
-        ]
-    );
+    let expected_files = vec![
+        "crates/foo_twice/foo_twice-0.99.0.crate",
+        "crates/foo_twice/foo_twice-2.0.0.crate",
+        "index/fo/o_/foo_twice",
+    ];
+    assert_eq!(app.stored_files(), expected_files);
 }
 
 #[test]
@@ -466,11 +468,11 @@ fn new_krate_too_big_but_whitelisted() {
 
     token.publish_crate(crate_to_publish).good();
 
-    let files = app.stored_files();
-    assert_eq!(
-        files,
-        vec!["crates/foo_whitelist/foo_whitelist-1.1.0.crate"]
-    );
+    let expected_files = vec![
+        "crates/foo_whitelist/foo_whitelist-1.1.0.crate",
+        "index/fo/o_/foo_whitelist",
+    ];
+    assert_eq!(app.stored_files(), expected_files);
 }
 
 #[test]
@@ -605,10 +607,11 @@ fn new_krate_git_upload_with_conflicts() {
     let crate_to_publish = PublishBuilder::new("foo_conflicts");
     token.publish_crate(crate_to_publish).good();
 
-    assert_eq!(
-        app.stored_files(),
-        vec!["crates/foo_conflicts/foo_conflicts-1.0.0.crate"]
-    );
+    let expected_files = vec![
+        "crates/foo_conflicts/foo_conflicts-1.0.0.crate",
+        "index/fo/o_/foo_conflicts",
+    ];
+    assert_eq!(app.stored_files(), expected_files);
 }
 
 #[test]
@@ -640,14 +643,12 @@ fn new_krate_with_readme() {
     assert_eq!(json.krate.name, "foo_readme");
     assert_eq!(json.krate.max_version, "1.0.0");
 
-    let files = app.stored_files();
-    assert_eq!(
-        files,
-        vec![
-            "crates/foo_readme/foo_readme-1.0.0.crate",
-            "readmes/foo_readme/foo_readme-1.0.0.html",
-        ]
-    );
+    let expected_files = vec![
+        "crates/foo_readme/foo_readme-1.0.0.crate",
+        "index/fo/o_/foo_readme",
+        "readmes/foo_readme/foo_readme-1.0.0.html",
+    ];
+    assert_eq!(app.stored_files(), expected_files);
 }
 
 #[test]
@@ -662,15 +663,14 @@ fn new_krate_with_readme_and_plus_version() {
     assert_eq!(json.krate.name, "foo_readme");
     assert_eq!(json.krate.max_version, "1.0.0+foo");
 
-    assert_eq!(
-        app.stored_files(),
-        vec![
-            "crates/foo_readme/foo_readme-1.0.0 foo.crate",
-            "crates/foo_readme/foo_readme-1.0.0+foo.crate",
-            "readmes/foo_readme/foo_readme-1.0.0 foo.html",
-            "readmes/foo_readme/foo_readme-1.0.0+foo.html",
-        ]
-    );
+    let expected_files = vec![
+        "crates/foo_readme/foo_readme-1.0.0 foo.crate",
+        "crates/foo_readme/foo_readme-1.0.0+foo.crate",
+        "index/fo/o_/foo_readme",
+        "readmes/foo_readme/foo_readme-1.0.0 foo.html",
+        "readmes/foo_readme/foo_readme-1.0.0+foo.html",
+    ];
+    assert_eq!(app.stored_files(), expected_files);
 }
 
 #[test]
@@ -954,7 +954,7 @@ fn tarball_between_default_axum_limit_and_max_upload_size() {
     assert_eq!(json.krate.name, "foo");
     assert_eq!(json.krate.max_version, "1.1.0");
 
-    assert_eq!(app.stored_files().len(), 1);
+    assert_eq!(app.stored_files().len(), 2);
 }
 
 #[test]
@@ -1006,14 +1006,14 @@ fn publish_new_crate_rate_limited() {
     let crate_to_publish = PublishBuilder::new("rate_limited1");
     token.publish_crate(crate_to_publish).good();
 
-    assert_eq!(app.stored_files().len(), 1);
+    assert_eq!(app.stored_files().len(), 2);
 
     // Uploading a second crate is limited
     let crate_to_publish = PublishBuilder::new("rate_limited2");
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::TOO_MANY_REQUESTS);
 
-    assert_eq!(app.stored_files().len(), 1);
+    assert_eq!(app.stored_files().len(), 2);
 
     let response = anon.get::<()>("/api/v1/crates/rate_limited2");
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
@@ -1027,7 +1027,7 @@ fn publish_new_crate_rate_limited() {
     let json = anon.show_crate("rate_limited2");
     assert_eq!(json.krate.max_version, "1.0.0");
 
-    assert_eq!(app.stored_files().len(), 2);
+    assert_eq!(app.stored_files().len(), 4);
 }
 
 #[test]
