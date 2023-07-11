@@ -1,9 +1,9 @@
 use crate::background_jobs::Job;
 use crate::schema::crates;
-use crate::{admin::dialoguer, db, schema::versions, storage, Uploader};
+use crate::storage::Storage;
+use crate::{admin::dialoguer, db, schema::versions};
 use anyhow::Context;
 use diesel::prelude::*;
-use object_store::ObjectStore;
 
 #[derive(clap::Parser, Debug)]
 #[command(
@@ -31,7 +31,7 @@ pub fn run(opts: Opts) {
         .context("Failed to establish database connection")
         .unwrap();
 
-    let store = storage::from_environment();
+    let store = Storage::from_environment();
 
     let crate_id: i32 = crates::table
         .select(crates::id)
@@ -85,15 +85,13 @@ pub fn run(opts: Opts) {
         .unwrap();
 
     for version in &opts.versions {
-        let path = Uploader::crate_path(crate_name, version).into();
-        debug!(%crate_name, %version, ?path, "Deleting crate file from S3");
-        if let Err(error) = rt.block_on(store.delete(&path)) {
+        debug!(%crate_name, %version, "Deleting crate file from S3");
+        if let Err(error) = rt.block_on(store.delete_crate_file(crate_name, version)) {
             warn!(%crate_name, %version, ?error, "Failed to delete crate file from S3");
         }
 
-        let path = Uploader::readme_path(crate_name, version).into();
-        debug!(%crate_name, %version, ?path, "Deleting readme file from S3");
-        match rt.block_on(store.delete(&path)) {
+        debug!(%crate_name, %version, "Deleting readme file from S3");
+        match rt.block_on(store.delete_readme(crate_name, version)) {
             Err(object_store::Error::NotFound { .. }) => {}
             Err(error) => {
                 warn!(%crate_name, %version, ?error, "Failed to delete readme file from S3")
