@@ -5,34 +5,42 @@ use object_store::aws::AmazonS3Builder;
 use object_store::local::LocalFileSystem;
 use object_store::path::Path;
 use object_store::{ObjectStore, Result};
+use secrecy::{ExposeSecret, SecretString};
 use std::fs;
+use std::path::PathBuf;
 
 const PREFIX_CRATES: &str = "crates";
 const PREFIX_READMES: &str = "readmes";
 const DEFAULT_REGION: &str = "us-west-1";
 
-pub struct Storage {
-    store: Box<dyn ObjectStore>,
+#[derive(Debug)]
+pub enum StorageConfig {
+    S3(S3Config),
+    LocalFileSystem { path: PathBuf },
 }
 
-impl Storage {
+#[derive(Debug)]
+pub struct S3Config {
+    bucket: String,
+    region: Option<String>,
+    access_key: String,
+    secret_key: SecretString,
+}
+
+impl StorageConfig {
     pub fn from_environment() -> Self {
         if let Ok(bucket) = dotenvy::var("S3_BUCKET") {
-            let region = dotenvy::var("S3_REGION").unwrap_or(DEFAULT_REGION.to_string());
+            let region = dotenvy::var("S3_REGION").ok();
             let access_key = env("AWS_ACCESS_KEY");
-            let secret_key = env("AWS_SECRET_KEY");
+            let secret_key = env("AWS_SECRET_KEY").into();
+            let s3 = S3Config {
+                bucket,
+                region,
+                access_key,
+                secret_key,
+            };
 
-            let s3 = AmazonS3Builder::new()
-                .with_region(region)
-                .with_bucket_name(bucket)
-                .with_access_key_id(access_key)
-                .with_secret_access_key(secret_key)
-                .build()
-                .context("Failed to initialize S3 code")
-                .unwrap();
-
-            let store = Box::new(s3);
-            return Self { store };
+            return Self::S3(s3);
         }
 
         let current_dir = std::env::current_dir()
@@ -41,17 +49,49 @@ impl Storage {
 
         let path = current_dir.join("local_uploads");
 
-        fs::create_dir_all(&path)
-            .context("Failed to create `local_uploads` directory")
-            .unwrap();
+        Self::LocalFileSystem { path }
+    }
+}
 
-        warn!(?path, "Using local file system for file storage");
-        let local = LocalFileSystem::new_with_prefix(path)
-            .context("Failed to initialize local file system storage")
-            .unwrap();
+pub struct Storage {
+    store: Box<dyn ObjectStore>,
+}
 
-        let store = Box::new(local);
-        Self { store }
+impl Storage {
+    pub fn from_environment() -> Self {
+        Self::from_config(&StorageConfig::from_environment())
+    }
+
+    pub fn from_config(config: &StorageConfig) -> Self {
+        match config {
+            StorageConfig::S3(s3) => {
+                let s3 = AmazonS3Builder::new()
+                    .with_region(s3.region.as_deref().unwrap_or(DEFAULT_REGION))
+                    .with_bucket_name(&s3.bucket)
+                    .with_access_key_id(&s3.access_key)
+                    .with_secret_access_key(s3.secret_key.expose_secret())
+                    .build()
+                    .context("Failed to initialize S3 code")
+                    .unwrap();
+
+                let store = Box::new(s3);
+                Self { store }
+            }
+
+            StorageConfig::LocalFileSystem { path } => {
+                fs::create_dir_all(path)
+                    .context("Failed to create `local_uploads` directory")
+                    .unwrap();
+
+                warn!(?path, "Using local file system for file storage");
+                let local = LocalFileSystem::new_with_prefix(path)
+                    .context("Failed to initialize local file system storage")
+                    .unwrap();
+
+                let store = Box::new(local);
+                Self { store }
+            }
+        }
     }
 
     #[instrument(skip(self))]
