@@ -1,3 +1,5 @@
+mod arc_store;
+
 use crate::env;
 use anyhow::Context;
 use futures_util::{StreamExt, TryStreamExt};
