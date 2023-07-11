@@ -1,8 +1,11 @@
 mod arc_store;
 
 use crate::env;
+use crate::storage::arc_store::ArcStore;
 use anyhow::Context;
 use futures_util::{StreamExt, TryStreamExt};
+use http::header::CACHE_CONTROL;
+use http::{HeaderMap, HeaderValue};
 use object_store::aws::{AmazonS3, AmazonS3Builder};
 use object_store::local::LocalFileSystem;
 use object_store::memory::InMemory;
@@ -15,6 +18,8 @@ use std::path::PathBuf;
 const PREFIX_CRATES: &str = "crates";
 const PREFIX_READMES: &str = "readmes";
 const DEFAULT_REGION: &str = "us-west-1";
+const CONTENT_TYPE_CRATE: &str = "application/gzip";
+const CACHE_CONTROL_IMMUTABLE: &str = "public,max-age=31536000,immutable";
 
 #[derive(Debug)]
 pub enum StorageConfig {
@@ -59,6 +64,7 @@ impl StorageConfig {
 
 pub struct Storage {
     store: Box<dyn ObjectStore>,
+    crate_upload_store: Box<dyn ObjectStore>,
 }
 
 impl Storage {
@@ -70,8 +76,15 @@ impl Storage {
         match config {
             StorageConfig::S3(s3) => {
                 let options = ClientOptions::default();
-                let store = Box::new(build_s3(s3, options));
-                Self { store }
+                let store = build_s3(s3, options);
+
+                let options = client_options(CONTENT_TYPE_CRATE, CACHE_CONTROL_IMMUTABLE);
+                let crate_upload_store = build_s3(s3, options);
+
+                Self {
+                    store: Box::new(store),
+                    crate_upload_store: Box::new(crate_upload_store),
+                }
             }
 
             StorageConfig::LocalFileSystem { path } => {
@@ -84,14 +97,20 @@ impl Storage {
                     .context("Failed to initialize local file system storage")
                     .unwrap();
 
-                let store = Box::new(local);
-                Self { store }
+                let store = ArcStore::new(local);
+                Self {
+                    store: Box::new(store.clone()),
+                    crate_upload_store: Box::new(store),
+                }
             }
 
             StorageConfig::InMemory => {
                 warn!("Using in-memory file storage");
-                let store = Box::new(InMemory::new());
-                Self { store }
+                let store = ArcStore::new(InMemory::new());
+                Self {
+                    store: Box::new(store.clone()),
+                    crate_upload_store: Box::new(store),
+                }
             }
         }
     }
@@ -131,6 +150,15 @@ impl Storage {
 
         Ok(())
     }
+}
+
+fn client_options(content_type: &str, cache_control: &'static str) -> ClientOptions {
+    let mut headers = HeaderMap::new();
+    headers.insert(CACHE_CONTROL, HeaderValue::from_static(cache_control));
+
+    ClientOptions::default()
+        .with_default_content_type(content_type)
+        .with_default_headers(headers)
 }
 
 fn build_s3(config: &S3Config, client_options: ClientOptions) -> AmazonS3 {
