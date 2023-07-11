@@ -263,6 +263,7 @@ impl TestAppBuilder {
                 app.http_client().clone(),
                 None,
                 None,
+                app.storage.clone(),
             );
 
             Some(Runner::test_runner(

@@ -48,7 +48,7 @@ pub struct App {
     /// Backend used to send emails
     pub emails: Emails,
 
-    pub storage: Storage,
+    pub storage: Arc<Storage>,
 
     /// Metrics related to the service as a whole
     pub service_metrics: ServiceMetrics,
@@ -172,7 +172,7 @@ impl App {
             version_id_cacher,
             downloads_counter: DownloadsCounter::new(),
             emails: Emails::from_environment(&config),
-            storage: Storage::from_config(&config.storage),
+            storage: Arc::new(Storage::from_config(&config.storage)),
             service_metrics: ServiceMetrics::new().expect("could not initialize service metrics"),
             instance_metrics,
             http_client,
