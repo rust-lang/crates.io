@@ -138,3 +138,98 @@ impl Storage {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use hyper::body::Bytes;
+
+    pub async fn prepare() -> Storage {
+        let storage = Storage::from_config(&StorageConfig::InMemory);
+
+        let files_to_create = vec![
+            "crates/bar/bar-2.0.0.crate",
+            "crates/foo/foo-1.0.0.crate",
+            "crates/foo/foo-1.2.3.crate",
+            "readmes/bar/bar-2.0.0.html",
+            "readmes/foo/foo-1.0.0.html",
+            "readmes/foo/foo-1.2.3.html",
+        ];
+        for path in files_to_create {
+            storage.store.put(&path.into(), Bytes::new()).await.unwrap();
+        }
+
+        storage
+    }
+
+    pub async fn stored_files(store: &dyn ObjectStore) -> Vec<String> {
+        let stream = store.list(None).await.unwrap();
+        let list = stream.try_collect::<Vec<_>>().await.unwrap();
+
+        list.into_iter()
+            .map(|meta| meta.location.to_string())
+            .collect()
+    }
+
+    #[tokio::test]
+    async fn delete_all_crate_files() {
+        let storage = prepare().await;
+
+        storage.delete_all_crate_files("foo").await.unwrap();
+
+        let expected_files = vec![
+            "crates/bar/bar-2.0.0.crate",
+            "readmes/bar/bar-2.0.0.html",
+            "readmes/foo/foo-1.0.0.html",
+            "readmes/foo/foo-1.2.3.html",
+        ];
+        assert_eq!(stored_files(&storage.store).await, expected_files);
+    }
+
+    #[tokio::test]
+    async fn delete_all_readmes() {
+        let storage = prepare().await;
+
+        storage.delete_all_readmes("foo").await.unwrap();
+
+        let expected_files = vec![
+            "crates/bar/bar-2.0.0.crate",
+            "crates/foo/foo-1.0.0.crate",
+            "crates/foo/foo-1.2.3.crate",
+            "readmes/bar/bar-2.0.0.html",
+        ];
+        assert_eq!(stored_files(&storage.store).await, expected_files);
+    }
+
+    #[tokio::test]
+    async fn delete_crate_file() {
+        let storage = prepare().await;
+
+        storage.delete_crate_file("foo", "1.2.3").await.unwrap();
+
+        let expected_files = vec![
+            "crates/bar/bar-2.0.0.crate",
+            "crates/foo/foo-1.0.0.crate",
+            "readmes/bar/bar-2.0.0.html",
+            "readmes/foo/foo-1.0.0.html",
+            "readmes/foo/foo-1.2.3.html",
+        ];
+        assert_eq!(stored_files(&storage.store).await, expected_files);
+    }
+
+    #[tokio::test]
+    async fn delete_readme() {
+        let storage = prepare().await;
+
+        storage.delete_readme("foo", "1.2.3").await.unwrap();
+
+        let expected_files = vec![
+            "crates/bar/bar-2.0.0.crate",
+            "crates/foo/foo-1.0.0.crate",
+            "crates/foo/foo-1.2.3.crate",
+            "readmes/bar/bar-2.0.0.html",
+            "readmes/foo/foo-1.0.0.html",
+        ];
+        assert_eq!(stored_files(&storage.store).await, expected_files);
+    }
+}
