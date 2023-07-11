@@ -7,7 +7,7 @@ use object_store::aws::{AmazonS3, AmazonS3Builder};
 use object_store::local::LocalFileSystem;
 use object_store::memory::InMemory;
 use object_store::path::Path;
-use object_store::{ObjectStore, Result};
+use object_store::{ClientOptions, ObjectStore, Result};
 use secrecy::{ExposeSecret, SecretString};
 use std::fs;
 use std::path::PathBuf;
@@ -69,7 +69,8 @@ impl Storage {
     pub fn from_config(config: &StorageConfig) -> Self {
         match config {
             StorageConfig::S3(s3) => {
-                let store = Box::new(build_s3(s3));
+                let options = ClientOptions::default();
+                let store = Box::new(build_s3(s3, options));
                 Self { store }
             }
 
@@ -132,12 +133,13 @@ impl Storage {
     }
 }
 
-fn build_s3(config: &S3Config) -> AmazonS3 {
+fn build_s3(config: &S3Config, client_options: ClientOptions) -> AmazonS3 {
     AmazonS3Builder::new()
         .with_region(config.region.as_deref().unwrap_or(DEFAULT_REGION))
         .with_bucket_name(&config.bucket)
         .with_access_key_id(&config.access_key)
         .with_secret_access_key(config.secret_key.expose_secret())
+        .with_client_options(client_options)
         .build()
         .context("Failed to initialize S3 code")
         .unwrap()
