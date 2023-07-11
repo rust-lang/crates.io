@@ -6,6 +6,7 @@ use anyhow::Context;
 use futures_util::{StreamExt, TryStreamExt};
 use http::header::CACHE_CONTROL;
 use http::{HeaderMap, HeaderValue};
+use hyper::body::Bytes;
 use object_store::aws::{AmazonS3, AmazonS3Builder};
 use object_store::local::LocalFileSystem;
 use object_store::memory::InMemory;
@@ -137,6 +138,18 @@ impl Storage {
     pub async fn delete_readme(&self, name: &str, version: &str) -> Result<()> {
         let path = readme_path(name, version);
         self.store.delete(&path).await
+    }
+
+    #[instrument(skip(self))]
+    pub async fn upload_crate_file(&self, name: &str, version: &str, bytes: Bytes) -> Result<()> {
+        if version.contains('+') {
+            let version = version.replace('+', " ");
+            let path = crate_file_path(name, &version);
+            self.crate_upload_store.put(&path, bytes.clone()).await?
+        }
+
+        let path = crate_file_path(name, version);
+        self.crate_upload_store.put(&path, bytes).await
     }
 
     async fn delete_all_with_prefix(&self, prefix: &Path) -> Result<()> {
@@ -273,5 +286,28 @@ mod tests {
             "readmes/foo/foo-1.0.0.html",
         ];
         assert_eq!(stored_files(&storage.store).await, expected_files);
+    }
+
+    #[tokio::test]
+    async fn upload_crate_file() {
+        let s = Storage::from_config(&StorageConfig::InMemory);
+
+        s.upload_crate_file("foo", "1.2.3", Bytes::new())
+            .await
+            .unwrap();
+
+        let expected_files = vec!["crates/foo/foo-1.2.3.crate"];
+        assert_eq!(stored_files(&s.store).await, expected_files);
+
+        s.upload_crate_file("foo", "2.0.0+foo", Bytes::new())
+            .await
+            .unwrap();
+
+        let expected_files = vec![
+            "crates/foo/foo-1.2.3.crate",
+            "crates/foo/foo-2.0.0 foo.crate",
+            "crates/foo/foo-2.0.0+foo.crate",
+        ];
+        assert_eq!(stored_files(&s.store).await, expected_files);
     }
 }
