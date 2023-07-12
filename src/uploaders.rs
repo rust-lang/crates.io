@@ -203,17 +203,4 @@ impl Uploader {
         self.delete(http_client, &path, UploadBucket::Index)?;
         Ok(())
     }
-
-    pub(crate) fn sync_index(
-        &self,
-        http_client: &Client,
-        crate_name: &str,
-        index: Option<String>,
-    ) -> Result<()> {
-        if let Some(index) = index {
-            self.upload_index(http_client, crate_name, index)
-        } else {
-            self.delete_index(http_client, crate_name)
-        }
-    }
 }
