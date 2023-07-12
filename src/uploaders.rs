@@ -81,11 +81,6 @@ impl Uploader {
         format!("readmes/{name}/{name}-{version}.html")
     }
 
-    /// Returns the internal path of an uploaded crate's index file.
-    fn index_path(name: &str) -> String {
-        crates_io_index::Repository::relative_index_file_for_url(name)
-    }
-
     /// Returns the absolute path to the locally uploaded file.
     fn local_uploads_path(path: &str, upload_bucket: UploadBucket) -> PathBuf {
         let path = match upload_bucket {
