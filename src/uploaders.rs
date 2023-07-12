@@ -6,7 +6,6 @@ use std::env;
 use std::fs::{self, File};
 use std::path::PathBuf;
 
-const CACHE_CONTROL_README: &str = "public,max-age=604800";
 const CACHE_CONTROL_INDEX: &str = "public,max-age=600";
 
 #[derive(Clone, Debug)]
@@ -171,31 +170,6 @@ impl Uploader {
                 let _ = std::fs::remove_file(filename);
             }
         }
-        Ok(())
-    }
-
-    #[instrument(skip_all)]
-    pub(crate) fn upload_readme(
-        &self,
-        http_client: &Client,
-        crate_name: &str,
-        vers: &str,
-        readme: String,
-    ) -> Result<()> {
-        let path = Uploader::readme_path(crate_name, vers);
-        let mut extra_headers = header::HeaderMap::new();
-        extra_headers.insert(
-            header::CACHE_CONTROL,
-            header::HeaderValue::from_static(CACHE_CONTROL_README),
-        );
-        self.upload(
-            http_client,
-            &path,
-            readme,
-            "text/html",
-            extra_headers,
-            UploadBucket::Default,
-        )?;
         Ok(())
     }
 
