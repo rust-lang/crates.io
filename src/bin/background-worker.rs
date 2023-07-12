@@ -16,6 +16,7 @@
 extern crate tracing;
 
 use crates_io::config;
+use crates_io::storage::Storage;
 use crates_io::worker::cloudfront::CloudFront;
 use crates_io::{background_jobs::*, db, ssh};
 use crates_io_index::{Repository, RepositoryConfig};
@@ -75,14 +76,21 @@ fn main() {
 
     let cloudfront = CloudFront::from_environment();
     let fastly = Fastly::from_environment();
+    let storage = Arc::new(Storage::from_config(&config.storage));
 
     let client = Client::builder()
         .timeout(Duration::from_secs(45))
         .build()
         .expect("Couldn't build client");
 
-    let environment =
-        Environment::new_shared(repository, uploader.clone(), client, cloudfront, fastly);
+    let environment = Environment::new_shared(
+        repository,
+        uploader.clone(),
+        client,
+        cloudfront,
+        fastly,
+        storage,
+    );
 
     let environment = Arc::new(Some(environment));
 

@@ -1,6 +1,7 @@
 //! Render README files to HTML.
 
 use crate::swirl::PerformError;
+use anyhow::Context;
 use crates_io_markdown::text_to_html;
 use diesel::PgConnection;
 
@@ -34,18 +35,15 @@ pub fn perform_render_and_upload_readme(
 
         tracing::Span::current().record("krate.name", tracing::field::display(&crate_name));
 
-        if vers.contains('+') {
-            let escaped_version = vers.replace('+', "%2B");
-            env.uploader.upload_readme(
-                env.http_client(),
-                &crate_name,
-                &escaped_version,
-                rendered.clone(),
-            )?;
-        }
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .context("Failed to initialize tokio runtime")
+            .unwrap();
 
-        env.uploader
-            .upload_readme(env.http_client(), &crate_name, &vers, rendered)?;
+        let bytes = rendered.into();
+        let future = env.storage.upload_readme(&crate_name, &vers, bytes);
+        rt.block_on(future)?;
 
         Ok(())
     })

@@ -20,7 +20,9 @@ const PREFIX_CRATES: &str = "crates";
 const PREFIX_READMES: &str = "readmes";
 const DEFAULT_REGION: &str = "us-west-1";
 const CONTENT_TYPE_CRATE: &str = "application/gzip";
+const CONTENT_TYPE_README: &str = "text/html";
 const CACHE_CONTROL_IMMUTABLE: &str = "public,max-age=31536000,immutable";
+const CACHE_CONTROL_README: &str = "public,max-age=604800";
 
 #[derive(Debug)]
 pub enum StorageConfig {
@@ -66,6 +68,7 @@ impl StorageConfig {
 pub struct Storage {
     store: Box<dyn ObjectStore>,
     crate_upload_store: Box<dyn ObjectStore>,
+    readme_upload_store: Box<dyn ObjectStore>,
 }
 
 impl Storage {
@@ -82,9 +85,13 @@ impl Storage {
                 let options = client_options(CONTENT_TYPE_CRATE, CACHE_CONTROL_IMMUTABLE);
                 let crate_upload_store = build_s3(s3, options);
 
+                let options = client_options(CONTENT_TYPE_README, CACHE_CONTROL_README);
+                let readme_upload_store = build_s3(s3, options);
+
                 Self {
                     store: Box::new(store),
                     crate_upload_store: Box::new(crate_upload_store),
+                    readme_upload_store: Box::new(readme_upload_store),
                 }
             }
 
@@ -101,7 +108,8 @@ impl Storage {
                 let store = ArcStore::new(local);
                 Self {
                     store: Box::new(store.clone()),
-                    crate_upload_store: Box::new(store),
+                    crate_upload_store: Box::new(store.clone()),
+                    readme_upload_store: Box::new(store),
                 }
             }
 
@@ -110,7 +118,8 @@ impl Storage {
                 let store = ArcStore::new(InMemory::new());
                 Self {
                     store: Box::new(store.clone()),
-                    crate_upload_store: Box::new(store),
+                    crate_upload_store: Box::new(store.clone()),
+                    readme_upload_store: Box::new(store),
                 }
             }
         }
@@ -150,6 +159,18 @@ impl Storage {
 
         let path = crate_file_path(name, version);
         self.crate_upload_store.put(&path, bytes).await
+    }
+
+    #[instrument(skip(self))]
+    pub async fn upload_readme(&self, name: &str, version: &str, bytes: Bytes) -> Result<()> {
+        if version.contains('+') {
+            let version = version.replace('+', " ");
+            let path = readme_path(name, &version);
+            self.readme_upload_store.put(&path, bytes.clone()).await?
+        }
+
+        let path = readme_path(name, version);
+        self.readme_upload_store.put(&path, bytes).await
     }
 
     /// This should only be used for assertions in the test suite!
@@ -312,6 +333,27 @@ mod tests {
             "crates/foo/foo-1.2.3.crate",
             "crates/foo/foo-2.0.0 foo.crate",
             "crates/foo/foo-2.0.0+foo.crate",
+        ];
+        assert_eq!(stored_files(&s.store).await, expected_files);
+    }
+
+    #[tokio::test]
+    async fn upload_readme() {
+        let s = Storage::from_config(&StorageConfig::InMemory);
+
+        s.upload_readme("foo", "1.2.3", Bytes::new()).await.unwrap();
+
+        let expected_files = vec!["readmes/foo/foo-1.2.3.html"];
+        assert_eq!(stored_files(&s.store).await, expected_files);
+
+        s.upload_readme("foo", "2.0.0+foo", Bytes::new())
+            .await
+            .unwrap();
+
+        let expected_files = vec![
+            "readmes/foo/foo-1.2.3.html",
+            "readmes/foo/foo-2.0.0 foo.html",
+            "readmes/foo/foo-2.0.0+foo.html",
         ];
         assert_eq!(stored_files(&s.store).await, expected_files);
     }

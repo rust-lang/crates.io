@@ -7,6 +7,7 @@ use std::panic::AssertUnwindSafe;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
 use crate::db::ConnectionPool;
+use crate::storage::Storage;
 use crate::swirl::errors::EnqueueError;
 use crate::swirl::PerformError;
 use crate::uploaders::Uploader;
@@ -297,6 +298,7 @@ pub struct Environment {
     http_client: AssertUnwindSafe<Client>,
     cloudfront: Option<CloudFront>,
     fastly: Option<Fastly>,
+    pub storage: AssertUnwindSafe<Arc<Storage>>,
 }
 
 impl Environment {
@@ -306,6 +308,7 @@ impl Environment {
         http_client: Client,
         cloudfront: Option<CloudFront>,
         fastly: Option<Fastly>,
+        storage: Arc<Storage>,
     ) -> Self {
         Self::new_shared(
             Arc::new(Mutex::new(index)),
@@ -313,6 +316,7 @@ impl Environment {
             http_client,
             cloudfront,
             fastly,
+            storage,
         )
     }
 
@@ -322,6 +326,7 @@ impl Environment {
         http_client: Client,
         cloudfront: Option<CloudFront>,
         fastly: Option<Fastly>,
+        storage: Arc<Storage>,
     ) -> Self {
         Self {
             index,
@@ -329,6 +334,7 @@ impl Environment {
             http_client: AssertUnwindSafe(http_client),
             cloudfront,
             fastly,
+            storage: AssertUnwindSafe(storage),
         }
     }
 
