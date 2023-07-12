@@ -7,6 +7,7 @@ use crate::{
 use anyhow::{anyhow, Context};
 use std::{io::Read, path::Path, sync::Arc, thread};
 
+use crate::storage::Storage;
 use chrono::{TimeZone, Utc};
 use crates_io_markdown::text_to_html;
 use crates_io_tarball::Manifest;
@@ -40,6 +41,7 @@ pub struct Opts {
 
 pub fn run(opts: Opts) -> anyhow::Result<()> {
     let base_config = Arc::new(config::Base::from_environment());
+    let storage = Arc::new(Storage::from_environment());
     let conn = &mut db::oneoff_connection().unwrap();
 
     let start_time = Utc::now();
@@ -108,13 +110,18 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
 
             let client = client.clone();
             let base_config = base_config.clone();
+            let storage = storage.clone();
             let handle = thread::spawn::<_, anyhow::Result<()>>(move || {
                 println!("[{}-{}] Rendering README...", krate_name, version.num);
                 let readme = get_readme(base_config.uploader(), &client, &version, &krate_name)?;
 
-                base_config
-                    .uploader()
-                    .upload_readme(&client, &krate_name, &version.num, readme)
+                let rt = tokio::runtime::Builder::new_current_thread()
+                    .enable_all()
+                    .build()
+                    .context("Failed to initialize tokio runtime")
+                    .unwrap();
+
+                rt.block_on(storage.upload_readme(&krate_name, &version.num, readme.into()))
                     .context("Failed to upload rendered README file to S3")?;
 
                 Ok(())
