@@ -145,34 +145,6 @@ impl Uploader {
         }
     }
 
-    /// Deletes a file using the configured uploader (either `S3`, `Local`).
-    #[instrument(skip_all, fields(%path))]
-    pub fn delete(&self, client: &Client, path: &str, upload_bucket: UploadBucket) -> Result<()> {
-        match *self {
-            Uploader::S3 {
-                ref bucket,
-                ref index_bucket,
-                ..
-            } => {
-                let bucket = match upload_bucket {
-                    UploadBucket::Default => Some(bucket),
-                    UploadBucket::Index => index_bucket.as_ref(),
-                };
-
-                if let Some(bucket) = bucket {
-                    bucket.delete(client, path)?;
-                }
-            }
-            Uploader::Local => {
-                let filename = Self::local_uploads_path(path, upload_bucket);
-                // Ignore errors if the local index file doesn't exist; this can happen if you
-                // aren't running the background job worker locally
-                let _ = std::fs::remove_file(filename);
-            }
-        }
-        Ok(())
-    }
-
     #[instrument(skip_all)]
     pub(crate) fn upload_index(
         &self,
