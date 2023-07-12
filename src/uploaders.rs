@@ -6,8 +6,6 @@ use std::env;
 use std::fs::{self, File};
 use std::path::PathBuf;
 
-const CACHE_CONTROL_INDEX: &str = "public,max-age=600";
-
 #[derive(Clone, Debug)]
 pub enum Uploader {
     /// For production usage, uploads and redirects to s3.
@@ -143,29 +141,5 @@ impl Uploader {
                 Ok(filename.to_str().map(String::from))
             }
         }
-    }
-
-    #[instrument(skip_all)]
-    pub(crate) fn upload_index(
-        &self,
-        http_client: &Client,
-        crate_name: &str,
-        index: String,
-    ) -> Result<()> {
-        let path = Uploader::index_path(crate_name);
-        let mut extra_headers = header::HeaderMap::new();
-        extra_headers.insert(
-            header::CACHE_CONTROL,
-            header::HeaderValue::from_static(CACHE_CONTROL_INDEX),
-        );
-        self.upload(
-            http_client,
-            &path,
-            index,
-            "text/plain",
-            extra_headers,
-            UploadBucket::Index,
-        )?;
-        Ok(())
     }
 }
