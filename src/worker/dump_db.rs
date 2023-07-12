@@ -21,10 +21,10 @@ pub fn perform_dump_db(
 ) -> Result<(), PerformError> {
     let directory = DumpDirectory::create()?;
 
-    info!("Begin exporting database");
+    info!(path = ?directory.export_dir, "Begin exporting database");
     directory.populate(&database_url)?;
 
-    info!("Creating tarball");
+    info!(path = ?directory.export_dir, "Creating tarball");
     let tarball = DumpTarball::create(&directory.export_dir)?;
 
     info!("Uploading tarball");
@@ -195,12 +195,17 @@ struct DumpTarball {
 impl DumpTarball {
     fn create(export_dir: &Path) -> Result<Self, PerformError> {
         let tarball_path = export_dir.with_extension("tar.gz");
+
+        debug!(path = ?tarball_path, "Creating tarball file");
         let tarfile = File::create(&tarball_path)?;
+
         let result = Self { tarball_path };
         let encoder = flate2::write::GzEncoder::new(tarfile, flate2::Compression::default());
 
         let mut archive = tar::Builder::new(encoder);
+
         let tar_top_dir = PathBuf::from(export_dir.file_name().unwrap());
+        debug!(path = ?tar_top_dir, "Appending directory to tarball");
         archive.append_dir(&tar_top_dir, export_dir)?;
 
         // Append readme, metadata, schemas.
@@ -209,17 +214,26 @@ impl DumpTarball {
             let file_type = entry.file_type()?;
             if file_type.is_file() {
                 let name_in_tar = tar_top_dir.join(entry.file_name());
+                debug!(name = ?name_in_tar, "Appending file to tarball");
                 archive.append_path_with_name(entry.path(), name_in_tar)?;
             }
         }
 
         // Append topologically sorted tables to make it possible to pipeline
         // importing with gz extraction.
-        archive.append_dir(tar_top_dir.join("data"), export_dir.join("data"))?;
-        for table in VisibilityConfig::get().topological_sort() {
+
+        debug!("Sorting database tables");
+        let visibility_config = VisibilityConfig::get();
+        let sorted_tables = visibility_config.topological_sort();
+
+        let path = tar_top_dir.join("data");
+        debug!(?path, "Appending directory to tarball");
+        archive.append_dir(path, export_dir.join("data"))?;
+        for table in sorted_tables {
             let csv_path = export_dir.join("data").join(table).with_extension("csv");
             if csv_path.exists() {
                 let name_in_tar = tar_top_dir.join("data").join(table).with_extension("csv");
+                debug!(name = ?name_in_tar, "Appending file to tarball");
                 archive.append_path_with_name(csv_path, name_in_tar)?;
             }
         }
