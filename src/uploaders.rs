@@ -196,11 +196,4 @@ impl Uploader {
         )?;
         Ok(())
     }
-
-    #[instrument(skip_all)]
-    pub(crate) fn delete_index(&self, http_client: &Client, crate_name: &str) -> Result<()> {
-        let path = Uploader::index_path(crate_name);
-        self.delete(http_client, &path, UploadBucket::Index)?;
-        Ok(())
-    }
 }
