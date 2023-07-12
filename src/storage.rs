@@ -1,11 +1,17 @@
+mod arc_store;
+
 use crate::env;
+use crate::storage::arc_store::ArcStore;
 use anyhow::Context;
 use futures_util::{StreamExt, TryStreamExt};
+use http::header::CACHE_CONTROL;
+use http::{HeaderMap, HeaderValue};
+use hyper::body::Bytes;
 use object_store::aws::{AmazonS3, AmazonS3Builder};
 use object_store::local::LocalFileSystem;
 use object_store::memory::InMemory;
 use object_store::path::Path;
-use object_store::{ObjectStore, Result};
+use object_store::{ClientOptions, ObjectStore, Result};
 use secrecy::{ExposeSecret, SecretString};
 use std::fs;
 use std::path::PathBuf;
@@ -13,6 +19,8 @@ use std::path::PathBuf;
 const PREFIX_CRATES: &str = "crates";
 const PREFIX_READMES: &str = "readmes";
 const DEFAULT_REGION: &str = "us-west-1";
+const CONTENT_TYPE_CRATE: &str = "application/gzip";
+const CACHE_CONTROL_IMMUTABLE: &str = "public,max-age=31536000,immutable";
 
 #[derive(Debug)]
 pub enum StorageConfig {
@@ -57,6 +65,7 @@ impl StorageConfig {
 
 pub struct Storage {
     store: Box<dyn ObjectStore>,
+    crate_upload_store: Box<dyn ObjectStore>,
 }
 
 impl Storage {
@@ -67,8 +76,16 @@ impl Storage {
     pub fn from_config(config: &StorageConfig) -> Self {
         match config {
             StorageConfig::S3(s3) => {
-                let store = Box::new(build_s3(s3));
-                Self { store }
+                let options = ClientOptions::default();
+                let store = build_s3(s3, options);
+
+                let options = client_options(CONTENT_TYPE_CRATE, CACHE_CONTROL_IMMUTABLE);
+                let crate_upload_store = build_s3(s3, options);
+
+                Self {
+                    store: Box::new(store),
+                    crate_upload_store: Box::new(crate_upload_store),
+                }
             }
 
             StorageConfig::LocalFileSystem { path } => {
@@ -81,14 +98,20 @@ impl Storage {
                     .context("Failed to initialize local file system storage")
                     .unwrap();
 
-                let store = Box::new(local);
-                Self { store }
+                let store = ArcStore::new(local);
+                Self {
+                    store: Box::new(store.clone()),
+                    crate_upload_store: Box::new(store),
+                }
             }
 
             StorageConfig::InMemory => {
                 warn!("Using in-memory file storage");
-                let store = Box::new(InMemory::new());
-                Self { store }
+                let store = ArcStore::new(InMemory::new());
+                Self {
+                    store: Box::new(store.clone()),
+                    crate_upload_store: Box::new(store),
+                }
             }
         }
     }
@@ -117,6 +140,23 @@ impl Storage {
         self.store.delete(&path).await
     }
 
+    #[instrument(skip(self))]
+    pub async fn upload_crate_file(&self, name: &str, version: &str, bytes: Bytes) -> Result<()> {
+        if version.contains('+') {
+            let version = version.replace('+', " ");
+            let path = crate_file_path(name, &version);
+            self.crate_upload_store.put(&path, bytes.clone()).await?
+        }
+
+        let path = crate_file_path(name, version);
+        self.crate_upload_store.put(&path, bytes).await
+    }
+
+    /// This should only be used for assertions in the test suite!
+    pub fn as_inner(&self) -> &dyn ObjectStore {
+        &self.store
+    }
+
     async fn delete_all_with_prefix(&self, prefix: &Path) -> Result<()> {
         let objects = self.store.list(Some(prefix)).await?;
         let locations = objects.map(|meta| meta.map(|m| m.location)).boxed();
@@ -130,12 +170,22 @@ impl Storage {
     }
 }
 
-fn build_s3(config: &S3Config) -> AmazonS3 {
+fn client_options(content_type: &str, cache_control: &'static str) -> ClientOptions {
+    let mut headers = HeaderMap::new();
+    headers.insert(CACHE_CONTROL, HeaderValue::from_static(cache_control));
+
+    ClientOptions::default()
+        .with_default_content_type(content_type)
+        .with_default_headers(headers)
+}
+
+fn build_s3(config: &S3Config, client_options: ClientOptions) -> AmazonS3 {
     AmazonS3Builder::new()
         .with_region(config.region.as_deref().unwrap_or(DEFAULT_REGION))
         .with_bucket_name(&config.bucket)
         .with_access_key_id(&config.access_key)
         .with_secret_access_key(config.secret_key.expose_secret())
+        .with_client_options(client_options)
         .build()
         .context("Failed to initialize S3 code")
         .unwrap()
@@ -241,5 +291,28 @@ mod tests {
             "readmes/foo/foo-1.0.0.html",
         ];
         assert_eq!(stored_files(&storage.store).await, expected_files);
+    }
+
+    #[tokio::test]
+    async fn upload_crate_file() {
+        let s = Storage::from_config(&StorageConfig::InMemory);
+
+        s.upload_crate_file("foo", "1.2.3", Bytes::new())
+            .await
+            .unwrap();
+
+        let expected_files = vec!["crates/foo/foo-1.2.3.crate"];
+        assert_eq!(stored_files(&s.store).await, expected_files);
+
+        s.upload_crate_file("foo", "2.0.0+foo", Bytes::new())
+            .await
+            .unwrap();
+
+        let expected_files = vec![
+            "crates/foo/foo-1.2.3.crate",
+            "crates/foo/foo-2.0.0 foo.crate",
+            "crates/foo/foo-2.0.0+foo.crate",
+        ];
+        assert_eq!(stored_files(&s.store).await, expected_files);
     }
 }

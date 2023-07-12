@@ -2,15 +2,18 @@ use super::{MockAnonymousUser, MockCookieUser, MockTokenUser};
 use crate::record;
 use crate::util::{chaosproxy::ChaosProxy, fresh_schema::FreshSchema};
 use crates_io::config::{self, BalanceCapacityConfig, Base, DatabasePools, DbPoolConfig};
+use crates_io::storage::StorageConfig;
 use crates_io::{background_jobs::Environment, env, App, Emails, Env, Uploader};
 use crates_io_index::testing::UpstreamIndex;
 use crates_io_index::{Credentials, Repository as WorkerRepository, RepositoryConfig};
 use std::{rc::Rc, sync::Arc, time::Duration};
 
 use crate::util::github::{MockGitHubClient, MOCK_GITHUB_DATA};
+use anyhow::Context;
 use crates_io::models::token::{CrateScope, EndpointScope};
 use crates_io::swirl::Runner;
 use diesel::PgConnection;
+use futures_util::TryStreamExt;
 use oauth2::{ClientId, ClientSecret};
 use reqwest::{blocking::Client, Proxy};
 use secrecy::ExposeSecret;
@@ -139,6 +142,25 @@ impl TestApp {
         self.upstream_index()
             .crates_from_index_head(crate_name)
             .unwrap()
+    }
+
+    pub fn stored_files(&self) -> Vec<String> {
+        let store = self.as_inner().storage.as_inner();
+
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .context("Failed to initialize tokio runtime")
+            .unwrap();
+
+        let list = rt.block_on(async {
+            let stream = store.list(None).await.unwrap();
+            stream.try_collect::<Vec<_>>().await.unwrap()
+        });
+
+        list.into_iter()
+            .map(|meta| meta.location.to_string())
+            .collect()
     }
 
     #[track_caller]
@@ -390,6 +412,7 @@ fn simple_config() -> config::Server {
         max_blocking_threads: None,
         use_nginx_wrapper: false,
         db,
+        storage: StorageConfig::InMemory,
         session_key: cookie::Key::derive_from("test this has to be over 32 bytes long".as_bytes()),
         gh_client_id: ClientId::new(dotenvy::var("GH_CLIENT_ID").unwrap_or_default()),
         gh_client_secret: ClientSecret::new(dotenvy::var("GH_CLIENT_SECRET").unwrap_or_default()),

@@ -8,6 +8,7 @@ use hex::ToHex;
 use hyper::body::Buf;
 use sha2::{Digest, Sha256};
 use std::ops::Deref;
+use tokio::runtime::Handle;
 
 use crate::controllers::cargo_prelude::*;
 use crate::controllers::util::RequestPartsExt;
@@ -19,7 +20,7 @@ use crate::models::{
 use crate::middleware::log_request::RequestLogExt;
 use crate::models::token::EndpointScope;
 use crate::schema::*;
-use crate::util::errors::{cargo_err, AppResult};
+use crate::util::errors::{cargo_err, internal, AppResult};
 use crate::util::Maximums;
 use crate::views::{
     EncodableCrate, EncodableCrateDependency, EncodableCrateUpload, GoodCrate, PublishWarnings,
@@ -248,23 +249,13 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             }
 
             // Upload crate tarball
-
-            if !vers.build.is_empty() {
-                let escaped_version = vers.to_string().replace('+', "%2B");
-                app.config.uploader().upload_crate(
-                    app.http_client(),
-                    tarball_bytes.clone(),
+            Handle::current()
+                .block_on(app.storage.upload_crate_file(
                     &krate.name,
-                    &escaped_version,
-                )?;
-            }
-
-            app.config.uploader().upload_crate(
-                app.http_client(),
-                tarball_bytes,
-                &krate.name,
-                &vers.to_string(),
-            )?;
+                    &vers.to_string(),
+                    tarball_bytes,
+                ))
+                .map_err(|e| internal(format!("failed to upload crate: {e}")))?;
 
             Job::enqueue_sync_to_index(&krate.name, conn)?;
 

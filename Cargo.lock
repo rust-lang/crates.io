@@ -646,6 +646,7 @@ name = "crates_io"
 version = "0.0.0"
 dependencies = [
  "anyhow",
+ "async-trait",
  "aws-sigv4",
  "axum",
  "axum-extra",

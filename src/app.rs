@@ -10,6 +10,7 @@ use crate::downloads_counter::DownloadsCounter;
 use crate::email::Emails;
 use crate::github::{GitHubClient, RealGitHubClient};
 use crate::metrics::{InstanceMetrics, ServiceMetrics};
+use crate::storage::Storage;
 use axum::extract::{FromRef, FromRequestParts, State};
 use diesel::r2d2;
 use moka::future::{Cache, CacheBuilder};
@@ -46,6 +47,8 @@ pub struct App {
 
     /// Backend used to send emails
     pub emails: Emails,
+
+    pub storage: Storage,
 
     /// Metrics related to the service as a whole
     pub service_metrics: ServiceMetrics,
@@ -169,6 +172,7 @@ impl App {
             version_id_cacher,
             downloads_counter: DownloadsCounter::new(),
             emails: Emails::from_environment(&config),
+            storage: Storage::from_config(&config.storage),
             service_metrics: ServiceMetrics::new().expect("could not initialize service metrics"),
             instance_metrics,
             http_client,
