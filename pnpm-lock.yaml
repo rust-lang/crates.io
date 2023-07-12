@@ -213,8 +213,8 @@ devDependencies:
     specifier: 5.1.2
     version: 5.1.2(@glimmer/component@1.1.2)(rsvp@4.8.5)(webpack@5.88.1)
   ember-svg-jar:
-    specifier: 2.4.2
-    version: 2.4.2
+    specifier: 2.4.3
+    version: 2.4.3
   ember-template-lint:
     specifier: 5.11.0
     version: 5.11.0
@@ -9363,10 +9363,11 @@ packages:
       - supports-color
       - webpack
 
-  /ember-svg-jar@2.4.2:
-    resolution: {integrity: sha512-TwtCwlxjp347+v7PK3xWpx7KXV3RDYogFe+WZA1+1ftiZqJfk9NzvXeMFA3thkhXmoT6IOYYnLR2ryjCmDiLsw==}
+  /ember-svg-jar@2.4.3:
+    resolution: {integrity: sha512-dY3tA+7iKHa1C8x5MnAM+2kVLbb8j1ECdFAdR4Sys74nje79UFWtJDGERizW2ZSALnsqb3uRgEFINP0V3vCeeg==}
     engines: {node: 12.* || 14.* || >= 16}
     dependencies:
+      '@embroider/macros': 1.12.2
       broccoli-caching-writer: 3.0.3
       broccoli-concat: 4.2.5
       broccoli-funnel: 3.0.8
@@ -9382,6 +9383,7 @@ packages:
       lodash: 4.17.21
       safe-stable-stringify: 2.4.3
     transitivePeerDependencies:
+      - '@glint/template'
       - supports-color
     dev: true
 
