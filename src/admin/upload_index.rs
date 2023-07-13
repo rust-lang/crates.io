@@ -1,9 +1,8 @@
 use crate::admin::dialoguer;
+use crate::storage::Storage;
+use anyhow::Context;
 use crates_io_index::{Repository, RepositoryConfig};
 use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
-use reqwest::blocking::Client;
-
-use crate::config;
 
 #[derive(clap::Parser, Debug)]
 #[command(
@@ -16,9 +15,7 @@ pub struct Opts {
 }
 
 pub fn run(opts: Opts) -> anyhow::Result<()> {
-    let config = config::Base::from_environment();
-    let uploader = config.uploader();
-    let client = Client::new();
+    let storage = Storage::from_environment();
 
     println!("fetching git repo");
     let config = RepositoryConfig::from_environment();
@@ -32,6 +29,12 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
         return Ok(());
     }
 
+    let rt = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .context("Failed to initialize tokio runtime")
+        .unwrap();
+
     let pb = ProgressBar::new(files.len() as u64);
     pb.set_style(ProgressStyle::with_template("{bar:60} ({pos}/{len}, ETA {eta})").unwrap());
 
@@ -44,7 +47,7 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
         }
 
         let contents = std::fs::read_to_string(&path)?;
-        uploader.upload_index(&client, crate_name, contents)?;
+        rt.block_on(storage.sync_index(crate_name, Some(contents)))?;
     }
 
     println!(

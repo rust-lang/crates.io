@@ -6,8 +6,6 @@ use std::env;
 use std::fs::{self, File};
 use std::path::PathBuf;
 
-const CACHE_CONTROL_INDEX: &str = "public,max-age=600";
-
 #[derive(Clone, Debug)]
 pub enum Uploader {
     /// For production usage, uploads and redirects to s3.
@@ -83,11 +81,6 @@ impl Uploader {
         format!("readmes/{name}/{name}-{version}.html")
     }
 
-    /// Returns the internal path of an uploaded crate's index file.
-    fn index_path(name: &str) -> String {
-        crates_io_index::Repository::relative_index_file_for_url(name)
-    }
-
     /// Returns the absolute path to the locally uploaded file.
     fn local_uploads_path(path: &str, upload_bucket: UploadBucket) -> PathBuf {
         let path = match upload_bucket {
@@ -142,78 +135,6 @@ impl Uploader {
                 std::io::copy(&mut buffer, &mut file)?;
                 Ok(filename.to_str().map(String::from))
             }
-        }
-    }
-
-    /// Deletes a file using the configured uploader (either `S3`, `Local`).
-    #[instrument(skip_all, fields(%path))]
-    pub fn delete(&self, client: &Client, path: &str, upload_bucket: UploadBucket) -> Result<()> {
-        match *self {
-            Uploader::S3 {
-                ref bucket,
-                ref index_bucket,
-                ..
-            } => {
-                let bucket = match upload_bucket {
-                    UploadBucket::Default => Some(bucket),
-                    UploadBucket::Index => index_bucket.as_ref(),
-                };
-
-                if let Some(bucket) = bucket {
-                    bucket.delete(client, path)?;
-                }
-            }
-            Uploader::Local => {
-                let filename = Self::local_uploads_path(path, upload_bucket);
-                // Ignore errors if the local index file doesn't exist; this can happen if you
-                // aren't running the background job worker locally
-                let _ = std::fs::remove_file(filename);
-            }
-        }
-        Ok(())
-    }
-
-    #[instrument(skip_all)]
-    pub(crate) fn upload_index(
-        &self,
-        http_client: &Client,
-        crate_name: &str,
-        index: String,
-    ) -> Result<()> {
-        let path = Uploader::index_path(crate_name);
-        let mut extra_headers = header::HeaderMap::new();
-        extra_headers.insert(
-            header::CACHE_CONTROL,
-            header::HeaderValue::from_static(CACHE_CONTROL_INDEX),
-        );
-        self.upload(
-            http_client,
-            &path,
-            index,
-            "text/plain",
-            extra_headers,
-            UploadBucket::Index,
-        )?;
-        Ok(())
-    }
-
-    #[instrument(skip_all)]
-    pub(crate) fn delete_index(&self, http_client: &Client, crate_name: &str) -> Result<()> {
-        let path = Uploader::index_path(crate_name);
-        self.delete(http_client, &path, UploadBucket::Index)?;
-        Ok(())
-    }
-
-    pub(crate) fn sync_index(
-        &self,
-        http_client: &Client,
-        crate_name: &str,
-        index: Option<String>,
-    ) -> Result<()> {
-        if let Some(index) = index {
-            self.upload_index(http_client, crate_name, index)
-        } else {
-            self.delete_index(http_client, crate_name)
         }
     }
 }

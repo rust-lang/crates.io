@@ -64,9 +64,14 @@ pub fn sync_to_sparse_index(
 
     let content = get_index_data(krate, conn).context("Failed to get index data")?;
 
-    env.uploader
-        .sync_index(env.http_client(), krate, content)
-        .context("Failed to sync index data")?;
+    let rt = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .context("Failed to initialize tokio runtime")
+        .unwrap();
+
+    let future = env.storage.sync_index(krate, content);
+    rt.block_on(future).context("Failed to sync index data")?;
 
     if let Some(cloudfront) = env.cloudfront() {
         let path = Repository::relative_index_file_for_url(krate);
