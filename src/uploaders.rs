@@ -1,6 +1,3 @@
-use std::env;
-use std::path::PathBuf;
-
 #[derive(Clone, Debug)]
 pub enum Uploader {
     /// For production usage, uploads and redirects to s3.
@@ -74,14 +71,5 @@ impl Uploader {
     /// Returns the internal path of an uploaded crate's version readme.
     pub fn readme_path(name: &str, version: &str) -> String {
         format!("readmes/{name}/{name}-{version}.html")
-    }
-
-    /// Returns the absolute path to the locally uploaded file.
-    fn local_uploads_path(path: &str, upload_bucket: UploadBucket) -> PathBuf {
-        let path = match upload_bucket {
-            UploadBucket::Index => PathBuf::from("index").join(path),
-            UploadBucket::Default => PathBuf::from(path),
-        };
-        env::current_dir().unwrap().join("local_uploads").join(path)
     }
 }
