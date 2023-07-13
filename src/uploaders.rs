@@ -1,9 +1,4 @@
-use anyhow::Result;
-use reqwest::{blocking::Client, header};
-
-use reqwest::blocking::Body;
 use std::env;
-use std::fs::{self, File};
 use std::path::PathBuf;
 
 #[derive(Clone, Debug)]
@@ -88,53 +83,5 @@ impl Uploader {
             UploadBucket::Default => PathBuf::from(path),
         };
         env::current_dir().unwrap().join("local_uploads").join(path)
-    }
-
-    /// Uploads a file using the configured uploader (either `S3`, `Local`).
-    ///
-    /// It returns the path of the uploaded file.
-    ///
-    /// # Panics
-    ///
-    /// This function can panic on an `Self::Local` during development.
-    /// Production and tests use `Self::S3` which should not panic.
-    #[instrument(skip_all, fields(%path))]
-    pub fn upload<R: Into<Body>>(
-        &self,
-        client: &Client,
-        path: &str,
-        content: R,
-        content_type: &str,
-        extra_headers: header::HeaderMap,
-        upload_bucket: UploadBucket,
-    ) -> Result<Option<String>> {
-        match *self {
-            Uploader::S3 {
-                ref bucket,
-                ref index_bucket,
-                ..
-            } => {
-                let bucket = match upload_bucket {
-                    UploadBucket::Default => Some(bucket),
-                    UploadBucket::Index => index_bucket.as_ref(),
-                };
-
-                if let Some(bucket) = bucket {
-                    bucket.put(client, path, content, content_type, extra_headers)?;
-                }
-
-                Ok(Some(String::from(path)))
-            }
-            Uploader::Local => {
-                let filename = Self::local_uploads_path(path, upload_bucket);
-                let dir = filename.parent().unwrap();
-                fs::create_dir_all(dir)?;
-                let mut file = File::create(&filename)?;
-                let mut body = content.into();
-                let mut buffer = body.buffer()?;
-                std::io::copy(&mut buffer, &mut file)?;
-                Ok(filename.to_str().map(String::from))
-            }
-        }
     }
 }
