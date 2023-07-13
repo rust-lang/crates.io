@@ -236,16 +236,18 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             let pkg_path_in_vcs = tarball_info.vcs_info.map(|info| info.path_in_vcs);
 
             if let Some(readme) = new_crate.readme {
-                Job::render_and_upload_readme(
-                    version.id,
-                    readme,
-                    new_crate
-                        .readme_file
-                        .unwrap_or_else(|| String::from("README.md")),
-                    repo,
-                    pkg_path_in_vcs,
-                )
-                .enqueue_with_priority(conn, PRIORITY_RENDER_README)?;
+                if !readme.is_empty() {
+                    Job::render_and_upload_readme(
+                        version.id,
+                        readme,
+                        new_crate
+                            .readme_file
+                            .unwrap_or_else(|| String::from("README.md")),
+                        repo,
+                        pkg_path_in_vcs,
+                    )
+                    .enqueue_with_priority(conn, PRIORITY_RENDER_README)?;
+                }
             }
 
             // Upload crate tarball

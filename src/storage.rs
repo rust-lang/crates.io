@@ -341,14 +341,15 @@ mod tests {
     async fn upload_readme() {
         let s = Storage::from_config(&StorageConfig::InMemory);
 
-        s.upload_readme("foo", "1.2.3", Bytes::new()).await.unwrap();
+        let bytes = Bytes::from_static(b"hello world");
+        s.upload_readme("foo", "1.2.3", bytes.clone())
+            .await
+            .unwrap();
 
         let expected_files = vec!["readmes/foo/foo-1.2.3.html"];
         assert_eq!(stored_files(&s.store).await, expected_files);
 
-        s.upload_readme("foo", "2.0.0+foo", Bytes::new())
-            .await
-            .unwrap();
+        s.upload_readme("foo", "2.0.0+foo", bytes).await.unwrap();
 
         let expected_files = vec![
             "readmes/foo/foo-1.2.3.html",

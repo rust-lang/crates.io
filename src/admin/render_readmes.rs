@@ -114,15 +114,16 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
             let handle = thread::spawn::<_, anyhow::Result<()>>(move || {
                 println!("[{}-{}] Rendering README...", krate_name, version.num);
                 let readme = get_readme(base_config.uploader(), &client, &version, &krate_name)?;
+                if !readme.is_empty() {
+                    let rt = tokio::runtime::Builder::new_current_thread()
+                        .enable_all()
+                        .build()
+                        .context("Failed to initialize tokio runtime")
+                        .unwrap();
 
-                let rt = tokio::runtime::Builder::new_current_thread()
-                    .enable_all()
-                    .build()
-                    .context("Failed to initialize tokio runtime")
-                    .unwrap();
-
-                rt.block_on(storage.upload_readme(&krate_name, &version.num, readme.into()))
-                    .context("Failed to upload rendered README file to S3")?;
+                    rt.block_on(storage.upload_readme(&krate_name, &version.num, readme.into()))
+                        .context("Failed to upload rendered README file to S3")?;
+                }
 
                 Ok(())
             });
