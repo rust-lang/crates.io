@@ -5,6 +5,7 @@ use anyhow::Context;
 use chrono::Utc;
 use crates_io_index::{Crate, Repository};
 use diesel::prelude::*;
+use sentry::Level;
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader, ErrorKind, Write};
 use std::process::Command;
@@ -92,6 +93,18 @@ pub fn get_index_data(name: &str, conn: &mut PgConnection) -> anyhow::Result<Opt
     let crates = krate
         .index_metadata(conn)
         .context("Failed to gather index metadata")?;
+
+    // This can sometimes happen when we delete versions upon owner request
+    // but don't realize that the crate is now left with no versions at all.
+    //
+    // In this case we will delete the crate from the index and log a warning to
+    // Sentry to clean this up in the database.
+    if crates.is_empty() {
+        let message = format!("Crate `{name}` has no versions left");
+        sentry::capture_message(&message, Level::Warning);
+
+        return Ok(None);
+    }
 
     debug!("Serializing index data");
     let mut bytes = Vec::new();
