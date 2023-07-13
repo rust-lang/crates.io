@@ -73,7 +73,7 @@ module('Acceptance | README rendering', function (hooks) {
     assert.dom('[data-test-readme]').exists();
     assert.dom('[data-test-readme] ul > li').exists({ count: 6 });
     assert.dom('[data-test-readme] pre > code.language-rust.hljs').exists();
-    assert.dom('[data-test-readme] pre > code.language-mermaid iframe').exists();
+    assert.dom('[data-test-readme] pre > code.language-mermaid svg').exists();
 
     await percySnapshot(assert);
   });
