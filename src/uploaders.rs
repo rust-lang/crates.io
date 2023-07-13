@@ -13,11 +13,6 @@ pub enum Uploader {
     Local,
 }
 
-pub enum UploadBucket {
-    Default,
-    Index,
-}
-
 impl Uploader {
     /// Returns the URL of an uploaded crate's version archive.
     ///
