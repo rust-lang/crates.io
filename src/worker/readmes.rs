@@ -24,6 +24,9 @@ pub fn perform_render_and_upload_readme(
     info!(?version_id, "Rendering README");
 
     let rendered = text_to_html(text, readme_path, base_url, pkg_path_in_vcs);
+    if rendered.is_empty() {
+        return Ok(());
+    }
 
     conn.transaction(|conn| {
         Version::record_readme_rendering(version_id, conn)?;
