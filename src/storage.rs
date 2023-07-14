@@ -16,16 +16,21 @@ use object_store::{ClientOptions, ObjectStore, Result};
 use secrecy::{ExposeSecret, SecretString};
 use std::fs;
 use std::path::PathBuf;
+use tokio::fs::File;
+use tokio::io::AsyncWriteExt;
 
 const PREFIX_CRATES: &str = "crates";
 const PREFIX_READMES: &str = "readmes";
 const DEFAULT_REGION: &str = "us-west-1";
 const CONTENT_TYPE_CRATE: &str = "application/gzip";
+const CONTENT_TYPE_DB_DUMP: &str = "application/gzip";
 const CONTENT_TYPE_INDEX: &str = "text/plain";
 const CONTENT_TYPE_README: &str = "text/html";
 const CACHE_CONTROL_IMMUTABLE: &str = "public,max-age=31536000,immutable";
 const CACHE_CONTROL_INDEX: &str = "public,max-age=600";
 const CACHE_CONTROL_README: &str = "public,max-age=604800";
+
+type StdPath = std::path::Path;
 
 #[derive(Debug)]
 pub enum StorageConfig {
@@ -84,6 +89,7 @@ pub struct Storage {
     store: Box<dyn ObjectStore>,
     crate_upload_store: Box<dyn ObjectStore>,
     readme_upload_store: Box<dyn ObjectStore>,
+    db_dump_upload_store: Box<dyn ObjectStore>,
 
     index_store: Box<dyn ObjectStore>,
     index_upload_store: Box<dyn ObjectStore>,
@@ -106,6 +112,10 @@ impl Storage {
                 let options = client_options(CONTENT_TYPE_README, CACHE_CONTROL_README);
                 let readme_upload_store = build_s3(default, options);
 
+                let options =
+                    ClientOptions::default().with_default_content_type(CONTENT_TYPE_DB_DUMP);
+                let db_dump_upload_store = build_s3(default, options);
+
                 let options = ClientOptions::default();
                 let index_store = build_s3(index, options);
 
@@ -116,6 +126,7 @@ impl Storage {
                     store: Box::new(store),
                     crate_upload_store: Box::new(crate_upload_store),
                     readme_upload_store: Box::new(readme_upload_store),
+                    db_dump_upload_store: Box::new(db_dump_upload_store),
                     index_store: Box::new(index_store),
                     index_upload_store: Box::new(index_upload_store),
                 }
@@ -144,7 +155,8 @@ impl Storage {
                 Self {
                     store: Box::new(store.clone()),
                     crate_upload_store: Box::new(store.clone()),
-                    readme_upload_store: Box::new(store),
+                    readme_upload_store: Box::new(store.clone()),
+                    db_dump_upload_store: Box::new(store),
                     index_store: Box::new(index_store.clone()),
                     index_upload_store: Box::new(index_store),
                 }
@@ -158,6 +170,7 @@ impl Storage {
                     store: Box::new(store.clone()),
                     crate_upload_store: Box::new(store.clone()),
                     readme_upload_store: Box::new(store.clone()),
+                    db_dump_upload_store: Box::new(store.clone()),
                     index_store: Box::new(PrefixStore::new(store.clone(), "index")),
                     index_upload_store: Box::new(PrefixStore::new(store, "index")),
                 }
@@ -223,6 +236,30 @@ impl Storage {
         }
     }
 
+    #[instrument(skip(self))]
+    pub async fn upload_db_dump(&self, target: &str, local_path: &StdPath) -> anyhow::Result<()> {
+        let store = &self.db_dump_upload_store;
+
+        // Open the local tarball file
+        let mut local_file = File::open(local_path).await?;
+
+        // Set up a multipart upload
+        let path = target.into();
+        let (id, mut writer) = store.put_multipart(&path).await?;
+
+        // Upload file contents
+        if let Err(error) = tokio::io::copy(&mut local_file, &mut writer).await {
+            // Abort the upload if something failed
+            store.abort_multipart(&path, &id).await?;
+            return Err(error.into());
+        }
+
+        // ... or finalize upload
+        writer.shutdown().await?;
+
+        Ok(())
+    }
+
     /// This should only be used for assertions in the test suite!
     pub fn as_inner(&self) -> &dyn ObjectStore {
         &self.store
@@ -274,6 +311,7 @@ fn readme_path(name: &str, version: &str) -> Path {
 mod tests {
     use super::*;
     use hyper::body::Bytes;
+    use tempfile::NamedTempFile;
 
     pub async fn prepare() -> Storage {
         let storage = Storage::from_config(&StorageConfig::InMemory);
@@ -424,5 +462,19 @@ mod tests {
         s.sync_index("foo", None).await.unwrap();
 
         assert!(stored_files(&s.store).await.is_empty());
+    }
+
+    #[tokio::test]
+    async fn upload_db_dump() {
+        let s = Storage::from_config(&StorageConfig::InMemory);
+
+        assert!(stored_files(&s.store).await.is_empty());
+
+        let target = "db-dump.tar.gz";
+        let file = NamedTempFile::new().unwrap();
+        s.upload_db_dump(target, file.path()).await.unwrap();
+
+        let expected_files = vec![target];
+        assert_eq!(stored_files(&s.store).await, expected_files);
     }
 }

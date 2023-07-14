@@ -5,12 +5,9 @@ use std::{
 };
 
 use self::configuration::VisibilityConfig;
+use crate::background_jobs::Environment;
+use crate::storage::Storage;
 use crate::swirl::PerformError;
-use crate::{
-    background_jobs::Environment,
-    uploaders::{UploadBucket, Uploader},
-};
-use reqwest::header;
 
 /// Create CSV dumps of the public information in the database, wrap them in a
 /// tarball and upload to S3.
@@ -28,8 +25,16 @@ pub fn perform_dump_db(
     let tarball = DumpTarball::create(&directory.export_dir)?;
 
     info!("Uploading tarball");
-    let size = tarball.upload(&target_name, &env.uploader)?;
-    info!("Database dump uploaded {} bytes to {}.", size, &target_name);
+    let rt = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .context("Failed to initialize tokio runtime")
+        .unwrap();
+
+    let storage = Storage::from_environment();
+
+    rt.block_on(storage.upload_db_dump(&target_name, &tarball.tarball_path))?;
+    info!("Database dump tarball uploaded");
 
     info!("Invalidating CDN caches");
     invalidate_caches(env, &target_name);
@@ -239,22 +244,6 @@ impl DumpTarball {
         }
 
         Ok(result)
-    }
-
-    fn upload(&self, target_name: &str, uploader: &Uploader) -> Result<u64, PerformError> {
-        let client = reqwest::blocking::Client::new();
-        let tarfile = File::open(&self.tarball_path)?;
-        let content_length = tarfile.metadata()?.len();
-        // TODO Figure out the correct content type.
-        uploader.upload(
-            &client,
-            target_name,
-            tarfile,
-            "application/gzip",
-            header::HeaderMap::new(),
-            UploadBucket::Default,
-        )?;
-        Ok(content_length)
     }
 }
 
