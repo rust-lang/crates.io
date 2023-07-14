@@ -64,6 +64,7 @@ mod prelude {
 pub mod helpers;
 pub mod util;
 
+pub mod admin;
 pub mod category;
 mod conduit_axum;
 pub mod crate_owner_invitation;

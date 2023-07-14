@@ -2,6 +2,7 @@
 
 use crate::config;
 use crate::db::{ConnectionConfig, DieselPool, DieselPooledConn, PoolError};
+use crate::views::admin::templating;
 use std::ops::Deref;
 use std::sync::atomic::AtomicUsize;
 use std::sync::Arc;
@@ -68,6 +69,9 @@ pub struct App {
 
     /// In-flight request counters for the `balance_capacity` middleware.
     pub balance_capacity: BalanceCapacityState,
+
+    /// Admin templating engine.
+    pub admin_engine: templating::Engine,
 }
 
 impl App {
@@ -179,6 +183,8 @@ impl App {
             fastboot_client,
             balance_capacity: Default::default(),
             config,
+            admin_engine: templating::engine()
+                .expect("could not initialize admin templating engine"),
         }
     }
 

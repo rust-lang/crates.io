@@ -18,7 +18,7 @@
 //
 // This list must be kept up to date with the nginx configuration _and_ the list
 // of prefixes in `middleware::ember_html::serve_html`.
-const proxyPaths = ['/api/'];
+const proxyPaths = ['/admin/', '/api/'];
 
 function installBackendProxy(app) {
   // Load the proxy backend from the environment.

@@ -184,6 +184,25 @@ impl<T> Paginated<T> {
         Some(opts)
     }
 
+    pub(crate) fn current_page(&self) -> &Page {
+        &self.options.page
+    }
+
+    pub(crate) fn total_pages(&self) -> i64 {
+        let total = self.total();
+
+        if total <= self.options.per_page {
+            0
+        } else {
+            total / self.options.per_page
+                + (if total % self.options.per_page > 0 {
+                    1
+                } else {
+                    0
+                })
+        }
+    }
+
     pub(crate) fn iter(&self) -> impl Iterator<Item = &T> {
         self.records_and_total.iter().map(|row| &row.record)
     }
@@ -405,6 +424,56 @@ mod tests {
         );
     }
 
+    #[test]
+    fn test_paginated_page_calculation() {
+        let options = PaginationOptions {
+            page: Page::Numeric(1),
+            per_page: 50,
+        };
+
+        struct TestCase {
+            page_size: usize,
+            total: i64,
+            expected_total: i64,
+        }
+
+        for tc in [
+            TestCase {
+                page_size: 0,
+                total: 0,
+                expected_total: 0,
+            },
+            TestCase {
+                page_size: 10,
+                total: 10,
+                expected_total: 0,
+            },
+            TestCase {
+                page_size: 50,
+                total: 50,
+                expected_total: 0,
+            },
+            TestCase {
+                page_size: 50,
+                total: 100,
+                expected_total: 2,
+            },
+            TestCase {
+                page_size: 50,
+                total: 101,
+                expected_total: 3,
+            },
+        ] {
+            let rs = Paginated {
+                records_and_total: mock_resultset(tc.page_size, tc.total),
+                options: options.clone(),
+            };
+
+            assert_eq!(rs.current_page(), &options.page);
+            assert_eq!(rs.total_pages(), tc.expected_total);
+        }
+    }
+
     fn mock(query: &str) -> Request<()> {
         Request::builder()
             .method(Method::GET)
@@ -419,5 +488,11 @@ mod tests {
 
         let response = error.response();
         assert_eq!(StatusCode::BAD_REQUEST, response.status());
+    }
+
+    fn mock_resultset(page_size: usize, total: i64) -> Vec<WithCount<usize>> {
+        (0..page_size)
+            .map(|i| WithCount { record: i, total })
+            .collect()
     }
 }

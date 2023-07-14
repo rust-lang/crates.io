@@ -25,8 +25,11 @@ pub async fn serve_html<B: Send + 'static>(
 ) -> Response {
     let path = &request.uri().path();
 
-    // The "/git/" prefix is only used in development (when within a docker container)
-    if path.starts_with("/api/") || path.starts_with("/git/") {
+    // The "/git/" prefix is only used in development (when within a docker container).
+    //
+    // The other prefixes must be kept in sync with the `proxyPaths` defined in `server/index.js`
+    // and the nginx configuration.
+    if path.starts_with("/admin/") || path.starts_with("/api/") || path.starts_with("/git/") {
         next.run(request).await
     } else {
         if let Some(client) = &state.fastboot_client {

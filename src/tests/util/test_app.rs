@@ -325,6 +325,41 @@ impl TestAppBuilder {
         (app, anon, user, token)
     }
 
+    /// Create a `TestApp` with a database including a default user and token, and an admin user
+    /// and token.
+    pub fn with_user_and_admin_tokens(
+        self,
+    ) -> (
+        TestApp,
+        MockAnonymousUser,
+        MockCookieUser,
+        MockTokenUser,
+        MockCookieUser,
+        MockTokenUser,
+    ) {
+        let (app, anon) = self.empty();
+        let user = app.db_new_user("foo");
+        let token = user.db_new_token("bar");
+
+        // This is hacky, but avoids us needing to mutate the app config: it has -1 hardcoded as an
+        // admin GitHub ID, which otherwise can't ever be generated, since new_user will only
+        // generate positive GitHub IDs from the NEXT_GH_ID atomic.
+        let mut admin = app.db_new_user("admin");
+        admin.user = app.db(|conn| {
+            use crates_io::schema::users;
+            use diesel::prelude::*;
+
+            diesel::update(users::table)
+                .filter(users::id.eq(admin.user.id))
+                .set(users::gh_id.eq(-1))
+                .get_result(conn)
+                .unwrap()
+        });
+        let admin_token = admin.db_new_token("admin token");
+
+        (app, anon, user, token, admin, admin_token)
+    }
+
     pub fn with_config(mut self, f: impl FnOnce(&mut config::Server)) -> Self {
         f(&mut self.config);
         self
@@ -439,7 +474,7 @@ fn simple_config() -> config::Server {
         version_id_cache_ttl: Duration::from_secs(5 * 60),
         cdn_user_agent: "Amazon CloudFront".to_string(),
         balance_capacity,
-        gh_admin_user_ids: HashSet::new(),
+        gh_admin_user_ids: [-1].into(),
 
         // The frontend code is not needed for the backend tests.
         serve_dist: false,

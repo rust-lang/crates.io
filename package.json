@@ -34,7 +34,20 @@
     "printWidth": 120,
     "singleQuote": true,
     "tabWidth": 2,
-    "trailingComma": "all"
+    "trailingComma": "all",
+    "overrides": [
+      {
+        "files": [
+          "admin/templates/**/*.html"
+        ],
+        "options": {
+          "parser": "melody"
+        }
+      }
+    ],
+    "plugins": [
+      "prettier-plugin-django"
+    ]
   },
   "dependencies": {
     "@juggle/resize-observer": "3.4.0",
@@ -129,6 +142,7 @@
     "nyc": "15.1.0",
     "postcss-nested": "6.0.1",
     "prettier": "3.0.0",
+    "prettier-plugin-django": "^0.5.7",
     "qunit": "2.19.4",
     "qunit-console-grouper": "0.3.0",
     "qunit-dom": "2.0.0",
@@ -144,8 +158,13 @@
   },
   "pnpm": {
     "peerDependencyRules": {
-      "allowAny": ["eslint"],
-      "ignoreMissing": ["@babel/core", "postcss"]
+      "allowAny": [
+        "eslint"
+      ],
+      "ignoreMissing": [
+        "@babel/core",
+        "postcss"
+      ]
     }
   },
   "engines": {

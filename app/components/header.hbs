@@ -29,6 +29,9 @@
             <menu.Item><LinkTo @route="dashboard">Dashboard</LinkTo></menu.Item>
             <menu.Item><LinkTo @route="settings" data-test-settings>Account Settings</LinkTo></menu.Item>
             <menu.Item><LinkTo @route="me.pending-invites">Owner Invites</LinkTo></menu.Item>
+            {{#if this.session.currentUser.admin}}
+              <menu.Item><a href="/admin/">Site Admin</a></menu.Item>
+            {{/if}}
             <menu.Item local-class="menu-item-with-separator">
               <button
                 type="button"

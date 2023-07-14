@@ -143,3 +143,36 @@ fn publish_after_yank_max_version() {
     let json = anon.show_crate("fyk_max");
     assert_eq!(json.krate.max_version, "2.0.0");
 }
+
+#[test]
+fn yank_permissions() {
+    let (_, anon, _, user_token, _, admin_token) = TestApp::full().with_user_and_admin_tokens();
+
+    // Let's create a crate owned by the regular user.
+    let krate = PublishBuilder::new("fyk");
+    user_token.publish_crate(krate).good();
+    assert_max_version(&anon, "fyk", "1.0.0");
+
+    // Yank and unyank as the owning user and as an admin. Both should succeed.
+    for token in [&user_token, &admin_token] {
+        token.yank("fyk", "1.0.0").good();
+        assert_max_version(&anon, "fyk", "0.0.0");
+
+        token.unyank("fyk", "1.0.0").good();
+        assert_max_version(&anon, "fyk", "1.0.0");
+    }
+
+    // Yank and unyank as the anonymous user. Both should fail.
+    anon.yank("fyk", "1.0.0").assert_forbidden();
+    assert_max_version(&anon, "fyk", "1.0.0");
+    user_token.yank("fyk", "1.0.0").good();
+
+    anon.unyank("fyk", "1.0.0").assert_forbidden();
+    assert_max_version(&anon, "fyk", "0.0.0");
+    user_token.unyank("fyk", "1.0.0").good();
+}
+
+#[track_caller]
+fn assert_max_version<T: RequestHelper>(token: &T, krate: &str, want: &str) {
+    assert_eq!(token.show_crate(krate).krate.max_version, want);
+}

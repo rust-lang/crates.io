@@ -284,6 +284,9 @@ devDependencies:
   prettier:
     specifier: 3.0.0
     version: 3.0.0
+  prettier-plugin-django:
+    specifier: ^0.5.7
+    version: 0.5.7
   qunit:
     specifier: 2.19.4
     version: 2.19.4
@@ -12985,6 +12988,32 @@ packages:
     resolution: {integrity: sha512-dq+qelQ9akHpcOl/gUVRTxVIOkAJ1wR3QAvb4RsVjS8oVoFjDGTc679wJYmUmknUF5HwMLOgb5O+a3KxfWapPQ==}
     engines: {node: '>= 0.6'}
 
+  /melody-code-frame@1.7.5:
+    resolution: {integrity: sha512-q/Do+7ZFxRHLN7IhT5RIJrTKh7xNmX3JG4+AD1ZST9iB8gUPYs6yfgGexDRDvtOAAGgLfFbT1DlMWJtldqYaPQ==}
+    dependencies:
+      lodash: 4.17.21
+    dev: true
+
+  /melody-idom@1.7.5:
+    resolution: {integrity: sha512-CsMg+vPyaIs9Wl/pTEgevQs+DfPzEpsNnHcaZNBGgQo3GvLItVgrg3Z8z3obVkPikRrHyRnwBPWIWiRyeh6KHg==}
+    dependencies:
+      lodash: 4.17.21
+    dev: true
+
+  /melody-traverse@1.7.5(melody-types@1.7.5):
+    resolution: {integrity: sha512-k9agECp5qEyIDybedgMNHPalb6wfwy5WlczJriOAn/swggeoq3+HojXSABo3uKM7K8xXNmpVhW/wOJA86oqjIQ==}
+    peerDependencies:
+      melody-types: ^1.1.0
+    dependencies:
+      melody-types: 1.7.5
+    dev: true
+
+  /melody-types@1.7.5:
+    resolution: {integrity: sha512-KkZmYlkmHtK10Hyx0mVNBZg1OXctIzZo2w3Vyc5AOV+KLA5lRiG6Z3Lp+G8o1LD6UZY0PC83/57hw3gs2Qj+Tg==}
+    dependencies:
+      babel-types: 6.26.0
+    dev: true
+
   /mem@5.1.1:
     resolution: {integrity: sha512-qvwipnozMohxLXG1pOqoLiZKNkC4r4qqRucSoDwXowsNGDSULiqFTRUF05vcZWnwJSG22qTsynQhxbaMtnX9gw==}
     engines: {node: '>=8'}
@@ -14822,6 +14851,21 @@ packages:
     engines: {node: '>=6.0.0'}
     dependencies:
       fast-diff: 1.3.0
+    dev: true
+
+  /prettier-plugin-django@0.5.7:
+    resolution: {integrity: sha512-kO86NWFpF2xRM/Fzg+crPSsLiT+xuJFOnqTIp2W/+qshnsQW5XV/3Ef4UtRchdtvn/K99eox+BDIxHq1blIN1w==}
+    engines: {node: '>=6'}
+    dependencies:
+      babel-template: 6.26.0(supports-color@8.1.1)
+      entities: 4.5.0
+      melody-code-frame: 1.7.5
+      melody-idom: 1.7.5
+      melody-traverse: 1.7.5(melody-types@1.7.5)
+      melody-types: 1.7.5
+      resolve: 1.22.2
+    transitivePeerDependencies:
+      - supports-color
     dev: true
 
   /prettier@2.8.8:

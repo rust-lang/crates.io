@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import datetime, page_list, user %}
+
+{% block head %}
+  <script src="https://unpkg.com/htmx.org@1.9.2"
+    integrity="sha384-L6OqL9pRWyyFU3+/bjdSri+iIphTN/bvYyM37tICVyOJkWZLpP2vGn6VUEXgzg6h"
+    crossorigin="anonymous"></script>
+
+  <!--
+    htmx doesn't load its styles until after the initial render, so we need
+    to hide the indicators ourselves.
+  -->
+  <style>
+    .htmx-indicator {
+      opacity: 0;
+    }
+    .htmx-request .htmx-indicator {
+      opacity: 1;
+    }
+  </style>
+{% endblock %}
+
+{% block title %}
+  Crates
+{% endblock %}
+
+{% block content %}
+  <div class="d-flex align-items-end mt-3 mb-3">
+    <h1 class="me-auto">Crates</h1>
+    <form class="d-flex align-items-center" method="GET">
+      <input class="form-control"
+        name="q"
+        type="search"
+        placeholder="crate name"
+        spellcheck="false"
+        value="{{ view.q }}" />
+    </form>
+  </div>
+
+  <div id="error-alert" class="alert alert-danger d-none">
+    <h3>Error</h3>
+
+    <pre></pre>
+  </div>
+
+  <table class="table align-middle">
+    <thead>
+      <tr>
+        <th>Crate</th>
+        <th>Version</th>
+        <th>Published</th>
+        <th />
+      </tr>
+    </thead>
+    <tbody>
+      {% for version in view.versions %}
+        <tr>
+          <td>
+            <div>
+              <a href="/crates/{{ version.name }}">
+                {% if version.yanked %}
+                  <s>{{ version.name }}</s>
+                {% else %}
+                  {{ version.name }}
+                {% endif %}
+              </a>
+              {% if version.yanked %}
+                <i title="Yanked" class="bi bi-trash-fill"></i>
+              {% endif %}
+            </div>
+            <div style="font-size: 80%">
+              <a href="https://index.crates.io/{{ version.name|crate_index_path }}">
+                View in sparse index
+              </a>
+            </div>
+          </td>
+          <td>{{ version.num }}</td>
+          <td>
+            <em>{{ datetime(version.created_at) }}</em>
+            by
+            {{ user(version.publisher) }}
+          </td>
+          <td class="text-end">
+            <div id="action-spinner"
+              class="spinner-border htmx-indicator"
+              role="status"></div>
+            {% if version.yanked %}
+              <button type="button"
+                class="btn btn-outline-primary unyank"
+                hx-put="/api/v1/crates/{{ version.name }}/{{
+                version.num
+                }}/unyank"
+                hx-swap="none"
+                hx-indicator="#action-spinner"
+                hx-confirm="Are you sure you want to unyank {{
+                version.name
+                }} {{ version.num }}?">
+                Unyank
+              </button>
+            {% else %}
+              <button type="button"
+                class="btn btn-danger yank"
+                hx-delete="/api/v1/crates/{{ version.name }}/{{
+                version.num
+                }}/yank"
+                hx-swap="none"
+                hx-indicator="#action-spinner"
+                hx-confirm="Are you sure you want to yank {{ version.name }} {{
+                version.num
+                }}?">
+                Yank
+              </button>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {{ page_list(view.page) }}
+
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      document.body.addEventListener('htmx:beforeSwap', event => {
+        if (event.detail.xhr.status >= 400) {
+          const container = document.getElementById('error-alert');
+          container.style.display = 'block';
+          container.querySelector('pre').innerText =
+            event.detail.xhr.responseText;
+        } else {
+          window.location.reload();
+        }
+      });
+    });
+  </script>
+{% endblock %}

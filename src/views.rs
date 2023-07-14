@@ -10,6 +10,7 @@ use crate::models::{
 };
 use crate::util::rfc3339;
 
+pub mod admin;
 pub mod krate_publish;
 pub use self::krate_publish::{EncodableCrateDependency, EncodableCrateUpload};
 
@@ -498,9 +499,8 @@ pub struct EncodableMe {
     pub owned_crates: Vec<OwnedCrate>,
 }
 
-/// The serialization format for the `User` model.
-/// Same as public user, except for addition of
-/// email field
+/// The serialization format for the `User` model. Same as public user, except for addition of
+/// email and admin fields.
 #[derive(Deserialize, Serialize, Debug)]
 pub struct EncodablePrivateUser {
     pub id: i32,
@@ -511,6 +511,7 @@ pub struct EncodablePrivateUser {
     pub email: Option<String>,
     pub avatar: Option<String>,
     pub url: Option<String>,
+    pub admin: bool,
 }
 
 impl EncodablePrivateUser {
@@ -520,6 +521,7 @@ impl EncodablePrivateUser {
         email: Option<String>,
         email_verified: bool,
         email_verification_sent: bool,
+        admin: bool,
     ) -> Self {
         let User {
             id,
@@ -539,6 +541,7 @@ impl EncodablePrivateUser {
             login: gh_login,
             name,
             url: Some(url),
+            admin,
         }
     }
 }

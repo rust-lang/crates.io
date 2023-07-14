@@ -46,8 +46,9 @@ pub async fn me(app: AppState, req: Parts) -> AppResult<Json<EncodableMe>> {
 
         let verified = verified.unwrap_or(false);
         let verification_sent = verified || verification_sent;
+        let admin = app.config.gh_admin_user_ids.contains(&user.gh_id);
         Ok(Json(EncodableMe {
-            user: EncodablePrivateUser::from(user, email, verified, verification_sent),
+            user: EncodablePrivateUser::from(user, email, verified, verification_sent, admin),
             owned_crates,
         }))
     })

@@ -1,0 +1,53 @@
+{% macro datetime(dt) %}
+  <span title="{{ dt.absolute }}">{{ dt.human }}</span>
+{% endmacro %}
+
+{% macro page_list(page) %}
+  {% if page.paginated %}
+    <nav>
+      <ul class="pagination">
+        {% if page.previous %}
+          <li class="page-item">
+            <a class="page-link" href="{{ page.previous }}">
+              <span>&laquo;</span>
+            </a>
+          </li>
+        {% endif %}
+
+        {% for page in page.pages %}
+          <li class="page-item">
+            {% if page.active %}
+              <a class="page-link active" href="{{ page.url }}">
+                <span>{{ page.number }}</span>
+              </a>
+            {% else %}
+              <a class="page-link" href="{{ page.url }}">
+                <span>{{ page.number }}</span>
+              </a>
+            {% endif %}
+          </li>
+        {% endfor %}
+
+        {% if page.next %}
+          <li class="page-item">
+            <a class="page-link" href="{{ page.next }}"><span>&raquo;</span></a>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+  {% endif %}
+{% endmacro %}
+
+{% macro user(user) %}
+  <a href="/users/{{ user.username }}">
+    {% if user.avatar %}
+      <img src="{{ user.avatar }}"
+        alt="{{ user.username }}"
+        aria-hidden="true"
+        width="32"
+        height="32"
+        class="d-inline-block me-1" />
+    {%- endif -%}
+    {{- user.username }}
+  </a>
+{% endmacro %}

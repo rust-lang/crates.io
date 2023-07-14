@@ -241,6 +241,10 @@ http {
 				proxy_pass http://app_server;
 			}
 
+			location /admin/ {
+					proxy_pass http://app_server;
+			}
+
 			# FastBoot
 			location / {
 				proxy_pass http://localhost:9000;
