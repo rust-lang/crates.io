@@ -5,7 +5,7 @@
 <div
   local-class="wrapper"
   ...attributes
-  {{highlight-syntax selector="pre > code"}}
+  {{highlight-syntax selector="pre > code:not(.language-mermaid)"}}
   {{render-mermaids}}
 >
   {{html-safe @html}}
