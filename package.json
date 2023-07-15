@@ -112,7 +112,7 @@
     "ember-truth-helpers": "3.1.1",
     "ember-web-app": "5.0.1",
     "ember-window-mock": "0.9.0",
-    "eslint": "8.44.0",
+    "eslint": "8.45.0",
     "eslint-config-prettier": "8.8.0",
     "eslint-plugin-ember": "11.10.0",
     "eslint-plugin-ember-concurrency": "0.5.1",
