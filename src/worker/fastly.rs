@@ -1,15 +1,17 @@
 use anyhow::{anyhow, Context};
+use http::HeaderValue;
 use reqwest::blocking::Client;
+use secrecy::{ExposeSecret, SecretString};
 
 #[derive(Clone, Debug)]
 pub struct Fastly {
-    api_token: String,
+    api_token: SecretString,
     static_domain_name: String,
 }
 
 impl Fastly {
     pub fn from_environment() -> Option<Self> {
-        let api_token = dotenvy::var("FASTLY_API_TOKEN").ok()?;
+        let api_token = dotenvy::var("FASTLY_API_TOKEN").ok()?.into();
         let static_domain_name = dotenvy::var("S3_CDN").expect("missing S3_CDN");
 
         Some(Self {
@@ -43,8 +45,12 @@ impl Fastly {
         );
         trace!(?url);
 
+        let api_token = self.api_token.expose_secret();
+        let mut api_token = HeaderValue::try_from(api_token)?;
+        api_token.set_sensitive(true);
+
         let mut headers = reqwest::header::HeaderMap::new();
-        headers.append("Fastly-Key", self.api_token.parse()?);
+        headers.append("Fastly-Key", api_token);
 
         debug!("sending invalidation request to Fastly");
         let response = client
