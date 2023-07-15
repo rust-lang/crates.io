@@ -100,7 +100,7 @@ crates_io_index = { path = "crates_io_index", features = ["testing"] }
 crates_io_tarball = { path = "crates_io_tarball", features = ["builder"] }
 claims = "=0.7.1"
 hyper-tls = "=0.5.0"
-insta = { version = "=1.30.0", features = ["redactions", "yaml"] }
+insta = { version = "=1.31.0", features = ["redactions", "yaml"] }
 tokio = "=1.29.1"
 tower-service = "=0.3.2"
 
