@@ -28,7 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3.5.3
 
-      - uses: tj-actions/changed-files@v37.1.0
+      - uses: tj-actions/changed-files@v37.1.2
         id: changed-files-non-js
         with:
           files_ignore: |
@@ -43,7 +43,7 @@ jobs:
             pnpm-lock.yaml
             testem.js
 
-      - uses: tj-actions/changed-files@v37.1.0
+      - uses: tj-actions/changed-files@v37.1.2
         id: changed-files-non-rust
         with:
           files_ignore: |
@@ -55,7 +55,7 @@ jobs:
             Cargo.toml
             rust-toolchain.toml
 
-      - uses: tj-actions/changed-files@v37.1.0
+      - uses: tj-actions/changed-files@v37.1.2
         id: changed-files-rust-lockfile
         with:
           files: Cargo.lock
