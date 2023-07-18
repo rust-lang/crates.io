@@ -6,16 +6,17 @@ use tracing_subscriber::{prelude::*, EnvFilter};
 
 /// Initializes the `tracing` logging framework.
 ///
-/// Regular CLI output is influenced by the
-/// [`RUST_LOG`](tracing_subscriber::filter::EnvFilter) environment variable.
+/// Regular CLI output is influenced by the optional
+/// [`RUST_LOG`](tracing_subscriber::filter::EnvFilter) environment variable
+/// and is showing all `INFO` level events by default.
 ///
 /// This function also sets up the Sentry error reporting integration for the
 /// `tracing` framework, which is hardcoded to include all `INFO` level events.
 pub fn init() {
-    init_with_default_level(LevelFilter::ERROR)
+    init_with_default_level(LevelFilter::INFO)
 }
 
-pub fn init_with_default_level(level: LevelFilter) {
+fn init_with_default_level(level: LevelFilter) {
     let env_filter = EnvFilter::builder()
         .with_default_directive(level.into())
         .from_env_lossy();
