@@ -38,8 +38,8 @@
   },
   "dependencies": {
     "@juggle/resize-observer": "3.4.0",
-    "@sentry/browser": "7.58.1",
-    "@sentry/utils": "7.58.1",
+    "@sentry/browser": "7.59.2",
+    "@sentry/utils": "7.59.2",
     "chart.js": "4.3.0",
     "copy-text-to-clipboard": "3.2.0",
     "date-fns": "2.30.0",
