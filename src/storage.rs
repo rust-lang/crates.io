@@ -195,6 +195,20 @@ impl Storage {
         }
     }
 
+    /// Returns the URL of an uploaded crate's version archive.
+    ///
+    /// The function doesn't check for the existence of the file.
+    pub fn crate_location(&self, name: &str, version: &str) -> String {
+        format!("{}{}", self.cdn_prefix, crate_file_path(name, version)).replace('+', "%2B")
+    }
+
+    /// Returns the URL of an uploaded crate's version readme.
+    ///
+    /// The function doesn't check for the existence of the file.
+    pub fn readme_location(&self, name: &str, version: &str) -> String {
+        format!("{}{}", self.cdn_prefix, readme_path(name, version)).replace('+', "%2B")
+    }
+
     #[instrument(skip(self))]
     pub async fn delete_all_crate_files(&self, name: &str) -> Result<()> {
         let prefix = format!("{PREFIX_CRATES}/{name}").into();
@@ -343,6 +357,35 @@ mod tests {
         list.into_iter()
             .map(|meta| meta.location.to_string())
             .collect()
+    }
+
+    #[test]
+    fn locations() {
+        let storage = Storage::from_config(&StorageConfig::InMemory);
+
+        let crate_tests = vec![
+            ("foo", "1.2.3", "/crates/foo/foo-1.2.3.crate"),
+            (
+                "some-long-crate-name",
+                "42.0.5-beta.1+foo",
+                "/crates/some-long-crate-name/some-long-crate-name-42.0.5-beta.1%2Bfoo.crate",
+            ),
+        ];
+        for (name, version, expected) in crate_tests {
+            assert_eq!(storage.crate_location(name, version), expected);
+        }
+
+        let readme_tests = vec![
+            ("foo", "1.2.3", "/readmes/foo/foo-1.2.3.html"),
+            (
+                "some-long-crate-name",
+                "42.0.5-beta.1+foo",
+                "/readmes/some-long-crate-name/some-long-crate-name-42.0.5-beta.1%2Bfoo.html",
+            ),
+        ];
+        for (name, version, expected) in readme_tests {
+            assert_eq!(storage.readme_location(name, version), expected);
+        }
     }
 
     #[tokio::test]
