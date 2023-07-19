@@ -1,8 +1,7 @@
 use crate::{
-    config, db,
+    db,
     models::Version,
     schema::{crates, readme_renderings, versions},
-    uploaders::Uploader,
 };
 use anyhow::{anyhow, Context};
 use std::{io::Read, path::Path, sync::Arc, thread};
@@ -40,7 +39,6 @@ pub struct Opts {
 }
 
 pub fn run(opts: Opts) -> anyhow::Result<()> {
-    let base_config = Arc::new(config::Base::from_environment());
     let storage = Arc::new(Storage::from_environment());
     let conn = &mut db::oneoff_connection().unwrap();
 
@@ -109,11 +107,10 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
                 .context("Couldn't record rendering time")?;
 
             let client = client.clone();
-            let base_config = base_config.clone();
             let storage = storage.clone();
             let handle = thread::spawn::<_, anyhow::Result<()>>(move || {
                 println!("[{}-{}] Rendering README...", krate_name, version.num);
-                let readme = get_readme(base_config.uploader(), &client, &version, &krate_name)?;
+                let readme = get_readme(&storage, &client, &version, &krate_name)?;
                 if !readme.is_empty() {
                     let rt = tokio::runtime::Builder::new_current_thread()
                         .enable_all()
@@ -143,19 +140,14 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
 
 /// Renders the readme of an uploaded crate version.
 fn get_readme(
-    uploader: &Uploader,
+    storage: &Storage,
     client: &Client,
     version: &Version,
     krate_name: &str,
 ) -> anyhow::Result<String> {
     let pkg_name = format!("{}-{}", krate_name, version.num);
 
-    let location = uploader.crate_location(krate_name, &version.num.to_string());
-
-    let location = match uploader {
-        Uploader::S3 { .. } => location,
-        Uploader::Local => format!("http://localhost:8888/{location}"),
-    };
+    let location = storage.crate_location(krate_name, &version.num.to_string());
 
     let mut extra_headers = header::HeaderMap::new();
     extra_headers.insert(
