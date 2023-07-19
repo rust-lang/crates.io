@@ -4,15 +4,13 @@
 extern crate tracing;
 
 use crates_io::admin::{
-    backfill, delete_crate, delete_version, enqueue_job, git_import, migrate, populate,
-    render_readmes, test_pagerduty, transfer_crates, upload_index, verify_token, yank_version,
+    delete_crate, delete_version, enqueue_job, git_import, migrate, populate, render_readmes,
+    test_pagerduty, transfer_crates, upload_index, verify_token, yank_version,
 };
 
 #[derive(clap::Parser, Debug)]
 #[command(name = "crates-admin")]
 enum Command {
-    #[clap(subcommand)]
-    Backfill(backfill::Command),
     DeleteCrate(delete_crate::Opts),
     DeleteVersion(delete_version::Opts),
     Populate(populate::Opts),
@@ -41,7 +39,6 @@ fn main() -> anyhow::Result<()> {
     span.record("command", tracing::field::debug(&command));
 
     match command {
-        Command::Backfill(command) => backfill::run(command)?,
         Command::DeleteCrate(opts) => delete_crate::run(opts),
         Command::DeleteVersion(opts) => delete_version::run(opts),
         Command::Populate(opts) => populate::run(opts),
