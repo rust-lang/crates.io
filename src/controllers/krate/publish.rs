@@ -183,8 +183,9 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             let hex_cksum: String = Sha256::digest(&tarball_bytes).encode_hex();
 
             let pkg_name = format!("{}-{}", krate.name, vers);
-            let tarball_info = process_tarball(&pkg_name, &tarball_bytes, maximums.max_unpack_size)
-                .map_err(tarball_to_app_error)?;
+            let tarball_info =
+                process_tarball(&pkg_name, &*tarball_bytes, maximums.max_unpack_size)
+                    .map_err(tarball_to_app_error)?;
 
             let rust_version = tarball_info
                 .manifest
