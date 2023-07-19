@@ -125,7 +125,7 @@ pub async fn download(
         .await?
     };
 
-    let redirect_url = app.config.uploader().crate_location(&crate_name, &version);
+    let redirect_url = app.storage.crate_location(&crate_name, &version);
     if wants_json {
         Ok(Json(json!({ "url": redirect_url })).into_response())
     } else {

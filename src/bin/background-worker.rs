@@ -40,7 +40,6 @@ fn main() {
     info!("Booting runner");
 
     let config = config::Server::default();
-    let uploader = config.base.uploader();
 
     if config.db.are_all_read_only() {
         loop {
@@ -83,14 +82,7 @@ fn main() {
         .build()
         .expect("Couldn't build client");
 
-    let environment = Environment::new_shared(
-        repository,
-        uploader.clone(),
-        client,
-        cloudfront,
-        fastly,
-        storage,
-    );
+    let environment = Environment::new_shared(repository, client, cloudfront, fastly, storage);
 
     let environment = Arc::new(Some(environment));
 
