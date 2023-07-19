@@ -657,7 +657,6 @@ dependencies = [
  "cookie",
  "crates_io_index",
  "crates_io_markdown",
- "crates_io_s3",
  "crates_io_tarball",
  "crossbeam-channel",
  "dashmap",
@@ -739,20 +738,6 @@ dependencies = [
  "ammonia",
  "comrak",
  "htmlescape",
- "url",
-]
-
-[[package]]
-name = "crates_io_s3"
-version = "0.0.0"
-dependencies = [
- "base64 0.21.2",
- "chrono",
- "hmac",
- "reqwest",
- "secrecy",
- "sha-1",
- "thiserror",
  "url",
 ]
 
@@ -3056,17 +3041,6 @@ dependencies = [
  "itoa",
  "ryu",
  "serde",
-]
-
-[[package]]
-name = "sha-1"
-version = "0.10.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f5058ada175748e33390e40e872bd0fe59a19f265d0158daa551c5a88a76009c"
-dependencies = [
- "cfg-if",
- "cpufeatures",
- "digest",
 ]
 
 [[package]]

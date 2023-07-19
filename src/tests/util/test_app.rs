@@ -421,21 +421,6 @@ fn simple_config() -> config::Server {
     }
 }
 
-static DEFAULT_TEST_REGION: &str = "127.0.0.1:19000";
-
-fn parse_test_region(maybe_region: Option<String>) -> s3::Region {
-    match maybe_region {
-        Some(region) if region.contains("://") => {
-            let (_proto, host) = region.split_once("://").unwrap();
-            s3::Region::Host(host.to_string())
-        }
-        Some(region) if !region.is_empty() => s3::Region::Region(region),
-        // An empty or missing region will use the default. This needs to match the region
-        // configuration that was used to generate the cassettes in `src/tests/http-data`.
-        _ => s3::Region::Host(DEFAULT_TEST_REGION.to_string()),
-    }
-}
-
 fn build_app(config: config::Server, proxy: Option<String>) -> (Arc<App>, axum::Router) {
     let client = if let Some(proxy) = proxy {
         let mut builder = Client::builder();
@@ -459,20 +444,4 @@ fn build_app(config: config::Server, proxy: Option<String>) -> (Arc<App>, axum::
     let app = Arc::new(app);
     let router = crates_io::build_handler(Arc::clone(&app));
     (app, router)
-}
-
-#[test]
-fn test_parse_region() {
-    for (input, expected) in [
-        (None, s3::Region::Host(DEFAULT_TEST_REGION.into())),
-        (Some(""), s3::Region::Host(DEFAULT_TEST_REGION.into())),
-        (Some("us-west-2"), s3::Region::Region("us-west-2".into())),
-        (Some("http://foo.bar"), s3::Region::Host("foo.bar".into())),
-        (
-            Some("https://127.0.0.1:9000"),
-            s3::Region::Host("127.0.0.1:9000".into()),
-        ),
-    ] {
-        assert_eq!(parse_test_region(input.map(String::from)), expected);
-    }
 }
