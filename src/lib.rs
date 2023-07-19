@@ -23,7 +23,7 @@ extern crate serde_json;
 #[macro_use]
 extern crate tracing;
 
-pub use crate::{app::App, email::Emails, uploaders::Uploader};
+pub use crate::{app::App, email::Emails};
 use std::str::FromStr;
 use std::sync::Arc;
 
@@ -52,7 +52,6 @@ pub mod sql;
 pub mod ssh;
 pub mod swirl;
 mod test_util;
-pub mod uploaders;
 pub mod util;
 pub mod worker;
 
