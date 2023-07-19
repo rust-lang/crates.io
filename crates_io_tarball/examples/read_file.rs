@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Context};
 use clap::Parser;
 use crates_io_tarball::process_tarball;
+use std::fs::File;
 use std::path::PathBuf;
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::EnvFilter;
@@ -24,13 +25,13 @@ fn main() -> anyhow::Result<()> {
         return Err(anyhow!("`{}` not found or not a file", path.display()));
     }
 
-    let content = std::fs::read(&path).context("Failed to read tarball")?;
+    let file = File::open(&path).context("Failed to read tarball")?;
 
     let path_no_ext = path.with_extension("");
     let pkg_name = path_no_ext.file_name().unwrap().to_string_lossy();
 
     let result =
-        process_tarball(&pkg_name, &content, u64::MAX).context("Failed to process tarball")?;
+        process_tarball(&pkg_name, &file, u64::MAX).context("Failed to process tarball")?;
 
     println!("{result:#?}");
 

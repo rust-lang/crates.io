@@ -258,7 +258,7 @@ fn process_version(
     let crate_location = crate_location(&options.crates_path, name, version);
 
     debug!(%name, %version, crate_location = %crate_location.display(), "Reading tarball…");
-    let tarball = std::fs::read(crate_location)?;
+    let tarball = File::open(crate_location)?;
 
     debug!(%name, %version, "Processing tarball…");
     let pkg_name = format!("{name}-{version}");

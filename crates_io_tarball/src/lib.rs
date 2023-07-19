@@ -37,9 +37,9 @@ pub enum TarballError {
 }
 
 #[instrument(skip_all, fields(%pkg_name))]
-pub fn process_tarball(
+pub fn process_tarball<R: Read>(
     pkg_name: &str,
-    tarball: &[u8],
+    tarball: R,
     max_unpack: u64,
 ) -> Result<TarballInfo, TarballError> {
     // All our data is currently encoded with gzip
@@ -112,12 +112,12 @@ mod tests {
 
         let limit = 512 * 1024 * 1024;
         assert_eq!(
-            process_tarball("foo-0.0.1", &tarball, limit)
+            process_tarball("foo-0.0.1", &*tarball, limit)
                 .unwrap()
                 .vcs_info,
             None
         );
-        assert_err!(process_tarball("bar-0.0.1", &tarball, limit));
+        assert_err!(process_tarball("bar-0.0.1", &*tarball, limit));
     }
 
     #[test]
@@ -128,7 +128,7 @@ mod tests {
             .build();
 
         let limit = 512 * 1024 * 1024;
-        let vcs_info = process_tarball("foo-0.0.1", &tarball, limit)
+        let vcs_info = process_tarball("foo-0.0.1", &*tarball, limit)
             .unwrap()
             .vcs_info
             .unwrap();
@@ -146,7 +146,7 @@ mod tests {
             .build();
 
         let limit = 512 * 1024 * 1024;
-        let vcs_info = process_tarball("foo-0.0.1", &tarball, limit)
+        let vcs_info = process_tarball("foo-0.0.1", &*tarball, limit)
             .unwrap()
             .vcs_info
             .unwrap();
@@ -167,7 +167,7 @@ repository = "https://github.com/foo/bar"
             .build();
 
         let limit = 512 * 1024 * 1024;
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &tarball, limit));
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, limit));
         let manifest = assert_some!(tarball_info.manifest);
         assert_some_eq!(manifest.package.readme, "README.md");
         assert_some_eq!(manifest.package.repository, "https://github.com/foo/bar");
@@ -186,7 +186,7 @@ repository = "https://github.com/foo/bar"
             .build();
 
         let limit = 512 * 1024 * 1024;
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &tarball, limit));
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, limit));
         let manifest = assert_some!(tarball_info.manifest);
         assert_some_eq!(manifest.package.rust_version, "1.23");
     }
