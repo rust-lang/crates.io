@@ -3,7 +3,7 @@ use crate::new_category;
 use crate::util::insta::assert_yaml_snapshot;
 use crate::util::{RequestHelper, TestApp};
 use crates_io::controllers::krate::publish::{
-    missing_metadata_error_message, MISSING_RIGHTS_ERROR_MESSAGE, WILDCARD_ERROR_MESSAGE,
+    missing_metadata_error_message, MISSING_RIGHTS_ERROR_MESSAGE,
 };
 use crates_io::models::krate::MAX_NAME_LENGTH;
 use crates_io::schema::{api_tokens, emails, versions_published_by};
@@ -373,7 +373,10 @@ fn new_krate_with_wildcard_dependency() {
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.into_json(),
-        json!({ "errors": [{ "detail": WILDCARD_ERROR_MESSAGE }] })
+        json!({ "errors": [{ "detail": "wildcard (`*`) dependency constraints are not allowed \
+                        on crates.io. Crate with this problem: `foo_wild` See https://doc.rust-lang.org/cargo/faq.html#can-\
+                        libraries-use--as-a-version-for-their-dependencies for more \
+                        information" }] })
     );
 
     assert!(app.stored_files().is_empty());

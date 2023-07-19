@@ -32,11 +32,6 @@ pub const MISSING_RIGHTS_ERROR_MESSAGE: &str =
      to accept an invitation to be an owner before \
      publishing.";
 
-pub const WILDCARD_ERROR_MESSAGE: &str = "wildcard (`*`) dependency constraints are not allowed \
-     on crates.io. See https://doc.rust-lang.org/cargo/faq.html#can-\
-     libraries-use--as-a-version-for-their-dependencies for more \
-     information";
-
 /// Handles the `PUT /crates/new` route.
 /// Used by `cargo publish` to publish a new crate or to publish a new version of an
 /// existing crate.
@@ -367,8 +362,11 @@ pub fn add_dependencies(
                 .map_err(|_| cargo_err(&format_args!("no known crate named `{}`", &*dep.name)))?;
 
             if let Ok(version_req) = semver::VersionReq::parse(&dep.version_req.0) {
-                if version_req == semver::VersionReq::STAR {
-                    return Err(cargo_err(WILDCARD_ERROR_MESSAGE));
+                 if version_req == semver::VersionReq::STAR {
+                    return Err(cargo_err(&format_args!("wildcard (`*`) dependency constraints are not allowed \
+                        on crates.io. Crate with this problem: `{}` See https://doc.rust-lang.org/cargo/faq.html#can-\
+                        libraries-use--as-a-version-for-their-dependencies for more \
+                        information", &*dep.name)));
                 }
             }
 
