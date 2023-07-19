@@ -33,6 +33,7 @@ const CACHE_CONTROL_README: &str = "public,max-age=604800";
 type StdPath = std::path::Path;
 
 #[derive(Debug)]
+#[allow(clippy::large_enum_variant)]
 pub enum StorageConfig {
     S3 { default: S3Config, index: S3Config },
     LocalFileSystem { path: PathBuf },
@@ -45,12 +46,14 @@ pub struct S3Config {
     region: Option<String>,
     access_key: String,
     secret_key: SecretString,
+    cdn_prefix: Option<String>,
 }
 
 impl StorageConfig {
     pub fn from_environment() -> Self {
         if let Ok(bucket) = dotenvy::var("S3_BUCKET") {
             let region = dotenvy::var("S3_REGION").ok();
+            let cdn_prefix = dotenvy::var("S3_CDN").ok();
 
             let index_bucket = env("S3_INDEX_BUCKET");
             let index_region = dotenvy::var("S3_INDEX_REGION").ok();
@@ -63,6 +66,7 @@ impl StorageConfig {
                 region,
                 access_key: access_key.clone(),
                 secret_key: secret_key.clone(),
+                cdn_prefix,
             };
 
             let index = S3Config {
@@ -70,6 +74,7 @@ impl StorageConfig {
                 region: index_region,
                 access_key,
                 secret_key,
+                cdn_prefix: None,
             };
 
             return Self::S3 { default, index };
@@ -90,6 +95,7 @@ pub struct Storage {
     crate_upload_store: Box<dyn ObjectStore>,
     readme_upload_store: Box<dyn ObjectStore>,
     db_dump_upload_store: Box<dyn ObjectStore>,
+    cdn_prefix: String,
 
     index_store: Box<dyn ObjectStore>,
     index_upload_store: Box<dyn ObjectStore>,
@@ -116,6 +122,14 @@ impl Storage {
                     ClientOptions::default().with_default_content_type(CONTENT_TYPE_DB_DUMP);
                 let db_dump_upload_store = build_s3(default, options);
 
+                let cdn_prefix = match default.cdn_prefix.as_ref() {
+                    None => panic!("Missing S3_CDN environment variable"),
+                    Some(cdn_prefix) if !cdn_prefix.starts_with("https://") => {
+                        format!("https://{cdn_prefix}")
+                    }
+                    Some(cdn_prefix) => cdn_prefix.clone(),
+                };
+
                 let options = ClientOptions::default();
                 let index_store = build_s3(index, options);
 
@@ -127,6 +141,7 @@ impl Storage {
                     crate_upload_store: Box::new(crate_upload_store),
                     readme_upload_store: Box::new(readme_upload_store),
                     db_dump_upload_store: Box::new(db_dump_upload_store),
+                    cdn_prefix,
                     index_store: Box::new(index_store),
                     index_upload_store: Box::new(index_upload_store),
                 }
@@ -157,6 +172,7 @@ impl Storage {
                     crate_upload_store: Box::new(store.clone()),
                     readme_upload_store: Box::new(store.clone()),
                     db_dump_upload_store: Box::new(store),
+                    cdn_prefix: "/".into(),
                     index_store: Box::new(index_store.clone()),
                     index_upload_store: Box::new(index_store),
                 }
@@ -171,6 +187,7 @@ impl Storage {
                     crate_upload_store: Box::new(store.clone()),
                     readme_upload_store: Box::new(store.clone()),
                     db_dump_upload_store: Box::new(store.clone()),
+                    cdn_prefix: "/".into(),
                     index_store: Box::new(PrefixStore::new(store.clone(), "index")),
                     index_upload_store: Box::new(PrefixStore::new(store, "index")),
                 }
