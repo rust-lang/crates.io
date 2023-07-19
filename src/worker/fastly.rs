@@ -23,7 +23,8 @@ impl Fastly {
     /// Invalidate a path on Fastly
     ///
     /// This method takes a path and invalidates the cached content on Fastly. The path must not
-    /// contain a wildcard, since the Fastly API does not support wildcard invalidations.
+    /// contain a wildcard, since the Fastly API does not support wildcard invalidations. Paths are
+    /// invalidated for both domains that are associated with the Fastly service.
     ///
     /// Requests are authenticated using a token that is sent in a header. The token is passed to
     /// the application as an environment variable.
@@ -38,11 +39,21 @@ impl Fastly {
             ));
         }
 
+        let domains = [
+            &self.static_domain_name,
+            &format!("fastly-{}", self.static_domain_name),
+        ];
         let path = path.trim_start_matches('/');
-        let url = format!(
-            "https://api.fastly.com/purge/{}/{}",
-            self.static_domain_name, path
-        );
+
+        for domain in domains.iter() {
+            let url = format!("https://api.fastly.com/purge/{}/{}", domain, path);
+            self.purge_url(client, &url)?;
+        }
+
+        Ok(())
+    }
+
+    fn purge_url(&self, client: &Client, url: &str) -> anyhow::Result<()> {
         trace!(?url);
 
         let api_token = self.api_token.expose_secret();
@@ -54,7 +65,7 @@ impl Fastly {
 
         debug!("sending invalidation request to Fastly");
         let response = client
-            .post(&url)
+            .post(url)
             .headers(headers)
             .send()
             .context("failed to send invalidation request to Fastly")?;
@@ -76,7 +87,7 @@ impl Fastly {
                     "invalidation request to Fastly failed"
                 );
 
-                Err(error).with_context(|| format!("failed to invalidate {path} on Fastly"))
+                Err(error).with_context(|| format!("failed to purge {url}"))
             }
         }
     }
