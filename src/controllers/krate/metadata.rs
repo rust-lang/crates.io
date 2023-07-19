@@ -312,7 +312,7 @@ pub async fn readme(
     Path((crate_name, version)): Path<(String, String)>,
     req: Parts,
 ) -> Response {
-    let redirect_url = app.config.uploader().readme_location(&crate_name, &version);
+    let redirect_url = app.storage.readme_location(&crate_name, &version);
     if req.wants_json() {
         Json(json!({ "url": redirect_url })).into_response()
     } else {
