@@ -3,7 +3,7 @@ use crate::record;
 use crate::util::{chaosproxy::ChaosProxy, fresh_schema::FreshSchema};
 use crates_io::config::{self, BalanceCapacityConfig, Base, DatabasePools, DbPoolConfig};
 use crates_io::storage::StorageConfig;
-use crates_io::{background_jobs::Environment, env, App, Emails, Env, Uploader};
+use crates_io::{background_jobs::Environment, env, App, Emails, Env};
 use crates_io_index::testing::UpstreamIndex;
 use crates_io_index::{Credentials, Repository as WorkerRepository, RepositoryConfig};
 use std::{rc::Rc, sync::Arc, time::Duration};
@@ -355,32 +355,7 @@ impl TestAppBuilder {
 }
 
 fn simple_config() -> config::Server {
-    let uploader = Uploader::S3 {
-        bucket: Box::new(s3::Bucket::new(
-            dotenvy::var("TEST_S3_BUCKET").unwrap_or_else(|_err| "crates-test".into()),
-            parse_test_region(dotenvy::var("TEST_S3_REGION").ok()),
-            dotenvy::var("TEST_AWS_ACCESS_KEY").unwrap_or_default(),
-            dotenvy::var("TEST_AWS_SECRET_KEY").unwrap_or_default(),
-            // When testing we route all API traffic over HTTP so we can
-            // sniff/record it, but everywhere else we use https
-            "http",
-        )),
-        index_bucket: Some(Box::new(s3::Bucket::new(
-            dotenvy::var("TEST_S3_INDEX_BUCKET").unwrap_or_else(|_err| "crates-index-test".into()),
-            parse_test_region(dotenvy::var("TEST_S3_INDEX_REGION").ok()),
-            dotenvy::var("TEST_AWS_ACCESS_KEY").unwrap_or_default(),
-            dotenvy::var("TEST_AWS_SECRET_KEY").unwrap_or_default(),
-            // When testing we route all API traffic over HTTP so we can
-            // sniff/record it, but everywhere else we use https
-            "http",
-        ))),
-        cdn: None,
-    };
-
-    let base = Base {
-        env: Env::Test,
-        uploader,
-    };
+    let base = Base { env: Env::Test };
 
     let db = DatabasePools {
         primary: DbPoolConfig {

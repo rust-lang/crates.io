@@ -3,7 +3,7 @@ use ipnetwork::IpNetwork;
 use oauth2::{ClientId, ClientSecret};
 
 use crate::publish_rate_limit::PublishRateLimit;
-use crate::{env, env_optional, uploaders::Uploader, Env};
+use crate::{env, env_optional, Env};
 
 use super::base::Base;
 use super::database_pools::DatabasePools;
@@ -195,10 +195,6 @@ impl Default for Server {
 impl Server {
     pub fn env(&self) -> Env {
         self.base.env
-    }
-
-    pub fn uploader(&self) -> &Uploader {
-        self.base.uploader()
     }
 }
 
