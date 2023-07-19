@@ -10,7 +10,6 @@ use crate::db::ConnectionPool;
 use crate::storage::Storage;
 use crate::swirl::errors::EnqueueError;
 use crate::swirl::PerformError;
-use crate::uploaders::Uploader;
 use crate::worker;
 use crate::worker::cloudfront::CloudFront;
 use crate::worker::fastly::Fastly;
@@ -294,7 +293,6 @@ pub struct RenderAndUploadReadmeJob {
 
 pub struct Environment {
     index: Arc<Mutex<Repository>>,
-    pub uploader: Uploader,
     http_client: AssertUnwindSafe<Client>,
     cloudfront: Option<CloudFront>,
     fastly: Option<Fastly>,
@@ -304,7 +302,6 @@ pub struct Environment {
 impl Environment {
     pub fn new(
         index: Repository,
-        uploader: Uploader,
         http_client: Client,
         cloudfront: Option<CloudFront>,
         fastly: Option<Fastly>,
@@ -312,7 +309,6 @@ impl Environment {
     ) -> Self {
         Self::new_shared(
             Arc::new(Mutex::new(index)),
-            uploader,
             http_client,
             cloudfront,
             fastly,
@@ -322,7 +318,6 @@ impl Environment {
 
     pub fn new_shared(
         index: Arc<Mutex<Repository>>,
-        uploader: Uploader,
         http_client: Client,
         cloudfront: Option<CloudFront>,
         fastly: Option<Fastly>,
@@ -330,7 +325,6 @@ impl Environment {
     ) -> Self {
         Self {
             index,
-            uploader,
             http_client: AssertUnwindSafe(http_client),
             cloudfront,
             fastly,

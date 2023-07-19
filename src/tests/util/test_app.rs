@@ -259,7 +259,6 @@ impl TestAppBuilder {
             let index = WorkerRepository::open(&repository_config).expect("Could not clone index");
             let environment = Environment::new(
                 index,
-                app.config.uploader().clone(),
                 app.http_client().clone(),
                 None,
                 None,
