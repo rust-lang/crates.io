@@ -957,7 +957,7 @@ fn tarball_between_default_axum_limit_and_max_upload_size() {
 
         let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, compression));
         let mut header = tar::Header::new_gnu();
-        assert_ok!(header.set_path("foo-1.1.0/Cargo.toml"));
+        assert_ok!(header.set_path("foo-1.1.0/big-file.txt"));
         header.set_size(data.len() as u64);
         header.set_cksum();
         assert_ok!(ar.append(&header, data));
