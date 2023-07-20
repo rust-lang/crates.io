@@ -181,11 +181,13 @@ fn render_pkg_readme<R: Read>(mut archive: Archive<R>, pkg_name: &str) -> anyhow
     };
 
     let rendered = {
-        let readme_path = manifest
-            .package
-            .readme
-            .unwrap_or_else(|| Path::new("README.md").to_path_buf());
-        let path = Path::new(pkg_name).join(&readme_path);
+        let readme = manifest.package.readme;
+        if !readme.is_some() {
+            return Ok("".to_string());
+        }
+
+        let readme_path = readme.as_path().unwrap_or_else(|| Path::new("README.md"));
+        let path = Path::new(pkg_name).join(readme_path);
         let contents = find_file_by_path(&mut entries, Path::new(&path))
             .with_context(|| format!("Failed to read {} file", readme_path.display()))?;
 

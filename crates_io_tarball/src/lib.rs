@@ -103,6 +103,7 @@ pub fn process_tarball<R: Read>(
 mod tests {
     use super::process_tarball;
     use crate::TarballBuilder;
+    use cargo_toml::OptionalFile;
     use std::path::Path;
 
     #[test]
@@ -170,7 +171,7 @@ repository = "https://github.com/foo/bar"
         let limit = 512 * 1024 * 1024;
         let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, limit));
         let manifest = assert_some!(tarball_info.manifest);
-        assert_some_eq!(manifest.package.readme, Path::new("README.md"));
+        assert_some_eq!(manifest.package.readme.as_path(), Path::new("README.md"));
         assert_some_eq!(manifest.package.repository, "https://github.com/foo/bar");
         assert_some_eq!(manifest.package.rust_version, "1.59");
     }
@@ -190,5 +191,38 @@ repository = "https://github.com/foo/bar"
         let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, limit));
         let manifest = assert_some!(tarball_info.manifest);
         assert_some_eq!(manifest.package.rust_version, "1.23");
+    }
+
+    #[test]
+    fn process_tarball_test_manifest_with_default_readme() {
+        let tarball = TarballBuilder::new("foo", "0.0.1")
+            .add_raw_manifest(
+                br#"
+                [package]
+                "#,
+            )
+            .build();
+
+        let limit = 512 * 1024 * 1024;
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, limit));
+        let manifest = assert_some!(tarball_info.manifest);
+        assert_matches!(manifest.package.readme, OptionalFile::Flag(true));
+    }
+
+    #[test]
+    fn process_tarball_test_manifest_with_boolean_readme() {
+        let tarball = TarballBuilder::new("foo", "0.0.1")
+            .add_raw_manifest(
+                br#"
+                [package]
+                readme = false
+                "#,
+            )
+            .build();
+
+        let limit = 512 * 1024 * 1024;
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, limit));
+        let manifest = assert_some!(tarball_info.manifest);
+        assert_matches!(manifest.package.readme, OptionalFile::Flag(false));
     }
 }
