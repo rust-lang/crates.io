@@ -465,6 +465,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "cargo_toml"
+version = "0.15.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f83bc2e401ed041b7057345ebc488c005efa0341d5541ce7004d30458d0090b"
+dependencies = [
+ "serde",
+ "toml",
+]
+
+[[package]]
 name = "cc"
 version = "1.0.79"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -746,6 +756,7 @@ name = "crates_io_tarball"
 version = "0.0.0"
 dependencies = [
  "anyhow",
+ "cargo_toml",
  "claims",
  "clap",
  "derive_deref",

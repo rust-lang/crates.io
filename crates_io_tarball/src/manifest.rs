@@ -1,6 +1,6 @@
+use cargo_toml::OptionalFile;
 use derive_deref::Deref;
 use serde::{de, Deserialize, Deserializer};
-use std::path::PathBuf;
 
 #[derive(Debug, Deserialize)]
 pub struct Manifest {
@@ -11,7 +11,8 @@ pub struct Manifest {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Package {
-    pub readme: Option<PathBuf>,
+    #[serde(default)]
+    pub readme: OptionalFile,
     pub repository: Option<String>,
     pub rust_version: Option<RustVersion>,
 }
