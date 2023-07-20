@@ -199,14 +199,20 @@ impl Storage {
     ///
     /// The function doesn't check for the existence of the file.
     pub fn crate_location(&self, name: &str, version: &str) -> String {
-        format!("{}{}", self.cdn_prefix, crate_file_path(name, version)).replace('+', "%2B")
+        self.with_cdn_prefix(&crate_file_path(name, version))
+            .replace('+', "%2B")
     }
 
     /// Returns the URL of an uploaded crate's version readme.
     ///
     /// The function doesn't check for the existence of the file.
     pub fn readme_location(&self, name: &str, version: &str) -> String {
-        format!("{}{}", self.cdn_prefix, readme_path(name, version)).replace('+', "%2B")
+        self.with_cdn_prefix(&readme_path(name, version))
+            .replace('+', "%2B")
+    }
+
+    fn with_cdn_prefix(&self, path: &Path) -> String {
+        format!("{}{}", self.cdn_prefix, path)
     }
 
     #[instrument(skip(self))]
