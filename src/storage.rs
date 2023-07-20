@@ -50,6 +50,10 @@ pub struct S3Config {
 }
 
 impl StorageConfig {
+    pub fn in_memory() -> Self {
+        Self::InMemory
+    }
+
     pub fn from_environment() -> Self {
         if let Ok(bucket) = dotenvy::var("S3_BUCKET") {
             let region = dotenvy::var("S3_REGION").ok();
@@ -339,7 +343,7 @@ mod tests {
     use tempfile::NamedTempFile;
 
     pub async fn prepare() -> Storage {
-        let storage = Storage::from_config(&StorageConfig::InMemory);
+        let storage = Storage::from_config(&StorageConfig::in_memory());
 
         let files_to_create = vec![
             "crates/bar/bar-2.0.0.crate",
@@ -367,7 +371,7 @@ mod tests {
 
     #[test]
     fn locations() {
-        let storage = Storage::from_config(&StorageConfig::InMemory);
+        let storage = Storage::from_config(&StorageConfig::in_memory());
 
         let crate_tests = vec![
             ("foo", "1.2.3", "/crates/foo/foo-1.2.3.crate"),
@@ -458,7 +462,7 @@ mod tests {
 
     #[tokio::test]
     async fn upload_crate_file() {
-        let s = Storage::from_config(&StorageConfig::InMemory);
+        let s = Storage::from_config(&StorageConfig::in_memory());
 
         s.upload_crate_file("foo", "1.2.3", Bytes::new())
             .await
@@ -480,7 +484,7 @@ mod tests {
 
     #[tokio::test]
     async fn upload_readme() {
-        let s = Storage::from_config(&StorageConfig::InMemory);
+        let s = Storage::from_config(&StorageConfig::in_memory());
 
         let bytes = Bytes::from_static(b"hello world");
         s.upload_readme("foo", "1.2.3", bytes.clone())
@@ -501,7 +505,7 @@ mod tests {
 
     #[tokio::test]
     async fn sync_index() {
-        let s = Storage::from_config(&StorageConfig::InMemory);
+        let s = Storage::from_config(&StorageConfig::in_memory());
 
         assert!(stored_files(&s.store).await.is_empty());
 
@@ -518,7 +522,7 @@ mod tests {
 
     #[tokio::test]
     async fn upload_db_dump() {
-        let s = Storage::from_config(&StorageConfig::InMemory);
+        let s = Storage::from_config(&StorageConfig::in_memory());
 
         assert!(stored_files(&s.store).await.is_empty());
 

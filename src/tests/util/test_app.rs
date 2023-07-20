@@ -387,7 +387,7 @@ fn simple_config() -> config::Server {
         max_blocking_threads: None,
         use_nginx_wrapper: false,
         db,
-        storage: StorageConfig::InMemory,
+        storage: StorageConfig::in_memory(),
         session_key: cookie::Key::derive_from("test this has to be over 32 bytes long".as_bytes()),
         gh_client_id: ClientId::new(dotenvy::var("GH_CLIENT_ID").unwrap_or_default()),
         gh_client_secret: ClientSecret::new(dotenvy::var("GH_CLIENT_SECRET").unwrap_or_default()),
