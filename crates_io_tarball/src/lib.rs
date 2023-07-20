@@ -103,6 +103,7 @@ pub fn process_tarball<R: Read>(
 mod tests {
     use super::process_tarball;
     use crate::TarballBuilder;
+    use std::path::Path;
 
     #[test]
     fn process_tarball_test() {
@@ -169,7 +170,7 @@ repository = "https://github.com/foo/bar"
         let limit = 512 * 1024 * 1024;
         let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, limit));
         let manifest = assert_some!(tarball_info.manifest);
-        assert_some_eq!(manifest.package.readme, "README.md");
+        assert_some_eq!(manifest.package.readme, Path::new("README.md"));
         assert_some_eq!(manifest.package.repository, "https://github.com/foo/bar");
         assert_some_eq!(manifest.package.rust_version, "1.59");
     }
