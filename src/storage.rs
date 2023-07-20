@@ -392,14 +392,17 @@ mod tests {
 
     #[test]
     fn locations() {
-        let storage = Storage::from_config(&StorageConfig::in_memory());
+        let mut config = StorageConfig::in_memory();
+        config.cdn_prefix = Some("static.crates.io".to_string());
+
+        let storage = Storage::from_config(&config);
 
         let crate_tests = vec![
-            ("foo", "1.2.3", "/crates/foo/foo-1.2.3.crate"),
+            ("foo", "1.2.3", "https://static.crates.io/crates/foo/foo-1.2.3.crate"),
             (
                 "some-long-crate-name",
                 "42.0.5-beta.1+foo",
-                "/crates/some-long-crate-name/some-long-crate-name-42.0.5-beta.1%2Bfoo.crate",
+                "https://static.crates.io/crates/some-long-crate-name/some-long-crate-name-42.0.5-beta.1%2Bfoo.crate",
             ),
         ];
         for (name, version, expected) in crate_tests {
@@ -407,11 +410,11 @@ mod tests {
         }
 
         let readme_tests = vec![
-            ("foo", "1.2.3", "/readmes/foo/foo-1.2.3.html"),
+            ("foo", "1.2.3", "https://static.crates.io/readmes/foo/foo-1.2.3.html"),
             (
                 "some-long-crate-name",
                 "42.0.5-beta.1+foo",
-                "/readmes/some-long-crate-name/some-long-crate-name-42.0.5-beta.1%2Bfoo.html",
+                "https://static.crates.io/readmes/some-long-crate-name/some-long-crate-name-42.0.5-beta.1%2Bfoo.html",
             ),
         ];
         for (name, version, expected) in readme_tests {
