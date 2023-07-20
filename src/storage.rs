@@ -33,8 +33,14 @@ const CACHE_CONTROL_README: &str = "public,max-age=604800";
 type StdPath = std::path::Path;
 
 #[derive(Debug)]
+pub struct StorageConfig {
+    backend: StorageBackend,
+    cdn_prefix: Option<String>,
+}
+
+#[derive(Debug)]
 #[allow(clippy::large_enum_variant)]
-pub enum StorageConfig {
+pub enum StorageBackend {
     S3 { default: S3Config, index: S3Config },
     LocalFileSystem { path: PathBuf },
     InMemory,
@@ -46,12 +52,14 @@ pub struct S3Config {
     region: Option<String>,
     access_key: String,
     secret_key: SecretString,
-    cdn_prefix: Option<String>,
 }
 
 impl StorageConfig {
     pub fn in_memory() -> Self {
-        Self::InMemory
+        Self {
+            backend: StorageBackend::InMemory,
+            cdn_prefix: None,
+        }
     }
 
     pub fn from_environment() -> Self {
@@ -70,7 +78,6 @@ impl StorageConfig {
                 region,
                 access_key: access_key.clone(),
                 secret_key: secret_key.clone(),
-                cdn_prefix,
             };
 
             let index = S3Config {
@@ -78,10 +85,14 @@ impl StorageConfig {
                 region: index_region,
                 access_key,
                 secret_key,
-                cdn_prefix: None,
             };
 
-            return Self::S3 { default, index };
+            let backend = StorageBackend::S3 { default, index };
+
+            return Self {
+                backend,
+                cdn_prefix,
+            };
         }
 
         let current_dir = std::env::current_dir()
@@ -90,16 +101,22 @@ impl StorageConfig {
 
         let path = current_dir.join("local_uploads");
 
-        Self::LocalFileSystem { path }
+        let backend = StorageBackend::LocalFileSystem { path };
+
+        Self {
+            backend,
+            cdn_prefix: None,
+        }
     }
 }
 
 pub struct Storage {
+    cdn_prefix: Option<String>,
+
     store: Box<dyn ObjectStore>,
     crate_upload_store: Box<dyn ObjectStore>,
     readme_upload_store: Box<dyn ObjectStore>,
     db_dump_upload_store: Box<dyn ObjectStore>,
-    cdn_prefix: String,
 
     index_store: Box<dyn ObjectStore>,
     index_upload_store: Box<dyn ObjectStore>,
@@ -111,8 +128,10 @@ impl Storage {
     }
 
     pub fn from_config(config: &StorageConfig) -> Self {
-        match config {
-            StorageConfig::S3 { default, index } => {
+        let cdn_prefix = config.cdn_prefix.clone();
+
+        match &config.backend {
+            StorageBackend::S3 { default, index } => {
                 let options = ClientOptions::default();
                 let store = build_s3(default, options);
 
@@ -126,19 +145,15 @@ impl Storage {
                     ClientOptions::default().with_default_content_type(CONTENT_TYPE_DB_DUMP);
                 let db_dump_upload_store = build_s3(default, options);
 
-                let cdn_prefix = match default.cdn_prefix.as_ref() {
-                    None => panic!("Missing S3_CDN environment variable"),
-                    Some(cdn_prefix) if !cdn_prefix.starts_with("https://") => {
-                        format!("https://{cdn_prefix}")
-                    }
-                    Some(cdn_prefix) => cdn_prefix.clone(),
-                };
-
                 let options = ClientOptions::default();
                 let index_store = build_s3(index, options);
 
                 let options = client_options(CONTENT_TYPE_INDEX, CACHE_CONTROL_INDEX);
                 let index_upload_store = build_s3(index, options);
+
+                if cdn_prefix.is_none() {
+                    panic!("Missing S3_CDN environment variable");
+                }
 
                 Self {
                     store: Box::new(store),
@@ -151,7 +166,7 @@ impl Storage {
                 }
             }
 
-            StorageConfig::LocalFileSystem { path } => {
+            StorageBackend::LocalFileSystem { path } => {
                 warn!(?path, "Using local file system for file storage");
 
                 let index_path = path.join("index");
@@ -176,13 +191,13 @@ impl Storage {
                     crate_upload_store: Box::new(store.clone()),
                     readme_upload_store: Box::new(store.clone()),
                     db_dump_upload_store: Box::new(store),
-                    cdn_prefix: "/".into(),
+                    cdn_prefix,
                     index_store: Box::new(index_store.clone()),
                     index_upload_store: Box::new(index_store),
                 }
             }
 
-            StorageConfig::InMemory => {
+            StorageBackend::InMemory => {
                 warn!("Using in-memory file storage");
                 let store = ArcStore::new(InMemory::new());
 
@@ -191,7 +206,7 @@ impl Storage {
                     crate_upload_store: Box::new(store.clone()),
                     readme_upload_store: Box::new(store.clone()),
                     db_dump_upload_store: Box::new(store.clone()),
-                    cdn_prefix: "/".into(),
+                    cdn_prefix,
                     index_store: Box::new(PrefixStore::new(store.clone(), "index")),
                     index_upload_store: Box::new(PrefixStore::new(store, "index")),
                 }
@@ -216,7 +231,13 @@ impl Storage {
     }
 
     fn with_cdn_prefix(&self, path: &Path) -> String {
-        format!("{}{}", self.cdn_prefix, path)
+        match self.cdn_prefix.as_ref() {
+            Some(cdn_prefix) if !cdn_prefix.starts_with("https://") => {
+                format!("https://{cdn_prefix}/{path}")
+            }
+            Some(cdn_prefix) => format!("{cdn_prefix}/{path}"),
+            None => format!("/{path}"),
+        }
     }
 
     #[instrument(skip(self))]
