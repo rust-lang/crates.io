@@ -253,13 +253,17 @@ static MARKDOWN_EXTENSIONS: [&str; 7] =
 /// let rendered = text_to_html(text, "README.md", None, None);
 /// assert_eq!(rendered, "<p><a href=\"https://rust-lang.org/\" rel=\"nofollow noopener noreferrer\">Rust</a> is an awesome <em>systems programming</em> language!</p>\n");
 /// ```
-pub fn text_to_html(
+pub fn text_to_html<P: AsRef<Path>>(
     text: &str,
-    readme_path_in_pkg: &str,
+    readme_path_in_pkg: P,
     base_url: Option<&str>,
-    pkg_path_in_vcs: Option<&str>,
+    pkg_path_in_vcs: Option<P>,
 ) -> String {
-    let path_in_vcs = Path::new(pkg_path_in_vcs.unwrap_or("")).join(readme_path_in_pkg);
+    let path_in_vcs = match pkg_path_in_vcs {
+        None => readme_path_in_pkg.as_ref().to_path_buf(),
+        Some(pkg_path_in_vcs) => pkg_path_in_vcs.as_ref().join(readme_path_in_pkg),
+    };
+
     let base_dir = path_in_vcs.parent().and_then(|p| p.to_str()).unwrap_or("");
 
     if path_in_vcs.extension().is_none() {
