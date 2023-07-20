@@ -47,3 +47,9 @@ impl TarballBuilder {
         gzip_bytes
     }
 }
+
+impl AsMut<tar::Builder<Vec<u8>>> for TarballBuilder {
+    fn as_mut(&mut self) -> &mut tar::Builder<Vec<u8>> {
+        &mut self.inner
+    }
+}
