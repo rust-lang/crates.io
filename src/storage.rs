@@ -35,7 +35,7 @@ type StdPath = std::path::Path;
 #[derive(Debug)]
 pub struct StorageConfig {
     backend: StorageBackend,
-    cdn_prefix: Option<String>,
+    pub cdn_prefix: Option<String>,
 }
 
 #[derive(Debug)]
