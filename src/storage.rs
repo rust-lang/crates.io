@@ -33,8 +33,14 @@ const CACHE_CONTROL_README: &str = "public,max-age=604800";
 type StdPath = std::path::Path;
 
 #[derive(Debug)]
+pub struct StorageConfig {
+    backend: StorageBackend,
+    pub cdn_prefix: Option<String>,
+}
+
+#[derive(Debug)]
 #[allow(clippy::large_enum_variant)]
-pub enum StorageConfig {
+pub enum StorageBackend {
     S3 { default: S3Config, index: S3Config },
     LocalFileSystem { path: PathBuf },
     InMemory,
@@ -46,10 +52,16 @@ pub struct S3Config {
     region: Option<String>,
     access_key: String,
     secret_key: SecretString,
-    cdn_prefix: Option<String>,
 }
 
 impl StorageConfig {
+    pub fn in_memory() -> Self {
+        Self {
+            backend: StorageBackend::InMemory,
+            cdn_prefix: None,
+        }
+    }
+
     pub fn from_environment() -> Self {
         if let Ok(bucket) = dotenvy::var("S3_BUCKET") {
             let region = dotenvy::var("S3_REGION").ok();
@@ -66,7 +78,6 @@ impl StorageConfig {
                 region,
                 access_key: access_key.clone(),
                 secret_key: secret_key.clone(),
-                cdn_prefix,
             };
 
             let index = S3Config {
@@ -74,10 +85,14 @@ impl StorageConfig {
                 region: index_region,
                 access_key,
                 secret_key,
-                cdn_prefix: None,
             };
 
-            return Self::S3 { default, index };
+            let backend = StorageBackend::S3 { default, index };
+
+            return Self {
+                backend,
+                cdn_prefix,
+            };
         }
 
         let current_dir = std::env::current_dir()
@@ -86,16 +101,22 @@ impl StorageConfig {
 
         let path = current_dir.join("local_uploads");
 
-        Self::LocalFileSystem { path }
+        let backend = StorageBackend::LocalFileSystem { path };
+
+        Self {
+            backend,
+            cdn_prefix: None,
+        }
     }
 }
 
 pub struct Storage {
+    cdn_prefix: Option<String>,
+
     store: Box<dyn ObjectStore>,
     crate_upload_store: Box<dyn ObjectStore>,
     readme_upload_store: Box<dyn ObjectStore>,
     db_dump_upload_store: Box<dyn ObjectStore>,
-    cdn_prefix: String,
 
     index_store: Box<dyn ObjectStore>,
     index_upload_store: Box<dyn ObjectStore>,
@@ -107,8 +128,10 @@ impl Storage {
     }
 
     pub fn from_config(config: &StorageConfig) -> Self {
-        match config {
-            StorageConfig::S3 { default, index } => {
+        let cdn_prefix = config.cdn_prefix.clone();
+
+        match &config.backend {
+            StorageBackend::S3 { default, index } => {
                 let options = ClientOptions::default();
                 let store = build_s3(default, options);
 
@@ -122,19 +145,15 @@ impl Storage {
                     ClientOptions::default().with_default_content_type(CONTENT_TYPE_DB_DUMP);
                 let db_dump_upload_store = build_s3(default, options);
 
-                let cdn_prefix = match default.cdn_prefix.as_ref() {
-                    None => panic!("Missing S3_CDN environment variable"),
-                    Some(cdn_prefix) if !cdn_prefix.starts_with("https://") => {
-                        format!("https://{cdn_prefix}")
-                    }
-                    Some(cdn_prefix) => cdn_prefix.clone(),
-                };
-
                 let options = ClientOptions::default();
                 let index_store = build_s3(index, options);
 
                 let options = client_options(CONTENT_TYPE_INDEX, CACHE_CONTROL_INDEX);
                 let index_upload_store = build_s3(index, options);
+
+                if cdn_prefix.is_none() {
+                    panic!("Missing S3_CDN environment variable");
+                }
 
                 Self {
                     store: Box::new(store),
@@ -147,7 +166,7 @@ impl Storage {
                 }
             }
 
-            StorageConfig::LocalFileSystem { path } => {
+            StorageBackend::LocalFileSystem { path } => {
                 warn!(?path, "Using local file system for file storage");
 
                 let index_path = path.join("index");
@@ -172,13 +191,13 @@ impl Storage {
                     crate_upload_store: Box::new(store.clone()),
                     readme_upload_store: Box::new(store.clone()),
                     db_dump_upload_store: Box::new(store),
-                    cdn_prefix: "/".into(),
+                    cdn_prefix,
                     index_store: Box::new(index_store.clone()),
                     index_upload_store: Box::new(index_store),
                 }
             }
 
-            StorageConfig::InMemory => {
+            StorageBackend::InMemory => {
                 warn!("Using in-memory file storage");
                 let store = ArcStore::new(InMemory::new());
 
@@ -187,7 +206,7 @@ impl Storage {
                     crate_upload_store: Box::new(store.clone()),
                     readme_upload_store: Box::new(store.clone()),
                     db_dump_upload_store: Box::new(store.clone()),
-                    cdn_prefix: "/".into(),
+                    cdn_prefix,
                     index_store: Box::new(PrefixStore::new(store.clone(), "index")),
                     index_upload_store: Box::new(PrefixStore::new(store, "index")),
                 }
@@ -199,14 +218,14 @@ impl Storage {
     ///
     /// The function doesn't check for the existence of the file.
     pub fn crate_location(&self, name: &str, version: &str) -> String {
-        format!("{}{}", self.cdn_prefix, crate_file_path(name, version)).replace('+', "%2B")
+        apply_cdn_prefix(&self.cdn_prefix, &crate_file_path(name, version)).replace('+', "%2B")
     }
 
     /// Returns the URL of an uploaded crate's version readme.
     ///
     /// The function doesn't check for the existence of the file.
     pub fn readme_location(&self, name: &str, version: &str) -> String {
-        format!("{}{}", self.cdn_prefix, readme_path(name, version)).replace('+', "%2B")
+        apply_cdn_prefix(&self.cdn_prefix, &readme_path(name, version)).replace('+', "%2B")
     }
 
     #[instrument(skip(self))]
@@ -326,6 +345,16 @@ fn readme_path(name: &str, version: &str) -> Path {
     format!("{PREFIX_READMES}/{name}/{name}-{version}.html").into()
 }
 
+fn apply_cdn_prefix(cdn_prefix: &Option<String>, path: &Path) -> String {
+    match cdn_prefix {
+        Some(cdn_prefix) if !cdn_prefix.starts_with("https://") => {
+            format!("https://{cdn_prefix}/{path}")
+        }
+        Some(cdn_prefix) => format!("{cdn_prefix}/{path}"),
+        None => format!("/{path}"),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -333,7 +362,7 @@ mod tests {
     use tempfile::NamedTempFile;
 
     pub async fn prepare() -> Storage {
-        let storage = Storage::from_config(&StorageConfig::InMemory);
+        let storage = Storage::from_config(&StorageConfig::in_memory());
 
         let files_to_create = vec![
             "crates/bar/bar-2.0.0.crate",
@@ -361,14 +390,17 @@ mod tests {
 
     #[test]
     fn locations() {
-        let storage = Storage::from_config(&StorageConfig::InMemory);
+        let mut config = StorageConfig::in_memory();
+        config.cdn_prefix = Some("static.crates.io".to_string());
+
+        let storage = Storage::from_config(&config);
 
         let crate_tests = vec![
-            ("foo", "1.2.3", "/crates/foo/foo-1.2.3.crate"),
+            ("foo", "1.2.3", "https://static.crates.io/crates/foo/foo-1.2.3.crate"),
             (
                 "some-long-crate-name",
                 "42.0.5-beta.1+foo",
-                "/crates/some-long-crate-name/some-long-crate-name-42.0.5-beta.1%2Bfoo.crate",
+                "https://static.crates.io/crates/some-long-crate-name/some-long-crate-name-42.0.5-beta.1%2Bfoo.crate",
             ),
         ];
         for (name, version, expected) in crate_tests {
@@ -376,16 +408,42 @@ mod tests {
         }
 
         let readme_tests = vec![
-            ("foo", "1.2.3", "/readmes/foo/foo-1.2.3.html"),
+            ("foo", "1.2.3", "https://static.crates.io/readmes/foo/foo-1.2.3.html"),
             (
                 "some-long-crate-name",
                 "42.0.5-beta.1+foo",
-                "/readmes/some-long-crate-name/some-long-crate-name-42.0.5-beta.1%2Bfoo.html",
+                "https://static.crates.io/readmes/some-long-crate-name/some-long-crate-name-42.0.5-beta.1%2Bfoo.html",
             ),
         ];
         for (name, version, expected) in readme_tests {
             assert_eq!(storage.readme_location(name, version), expected);
         }
+    }
+
+    #[test]
+    fn cdn_prefix() {
+        assert_eq!(apply_cdn_prefix(&None, &"foo".into()), "/foo");
+        assert_eq!(
+            apply_cdn_prefix(&Some("static.crates.io".to_string()), &"foo".into()),
+            "https://static.crates.io/foo"
+        );
+        assert_eq!(
+            apply_cdn_prefix(
+                &Some("https://fastly-static.crates.io".to_string()),
+                &"foo".into()
+            ),
+            "https://fastly-static.crates.io/foo"
+        );
+
+        assert_eq!(
+            apply_cdn_prefix(&Some("static.crates.io".to_string()), &"/foo/bar".into()),
+            "https://static.crates.io/foo/bar"
+        );
+
+        assert_eq!(
+            apply_cdn_prefix(&Some("static.crates.io/".to_string()), &"/foo/bar".into()),
+            "https://static.crates.io//foo/bar"
+        );
     }
 
     #[tokio::test]
@@ -452,7 +510,7 @@ mod tests {
 
     #[tokio::test]
     async fn upload_crate_file() {
-        let s = Storage::from_config(&StorageConfig::InMemory);
+        let s = Storage::from_config(&StorageConfig::in_memory());
 
         s.upload_crate_file("foo", "1.2.3", Bytes::new())
             .await
@@ -474,7 +532,7 @@ mod tests {
 
     #[tokio::test]
     async fn upload_readme() {
-        let s = Storage::from_config(&StorageConfig::InMemory);
+        let s = Storage::from_config(&StorageConfig::in_memory());
 
         let bytes = Bytes::from_static(b"hello world");
         s.upload_readme("foo", "1.2.3", bytes.clone())
@@ -495,7 +553,7 @@ mod tests {
 
     #[tokio::test]
     async fn sync_index() {
-        let s = Storage::from_config(&StorageConfig::InMemory);
+        let s = Storage::from_config(&StorageConfig::in_memory());
 
         assert!(stored_files(&s.store).await.is_empty());
 
@@ -512,7 +570,7 @@ mod tests {
 
     #[tokio::test]
     async fn upload_db_dump() {
-        let s = Storage::from_config(&StorageConfig::InMemory);
+        let s = Storage::from_config(&StorageConfig::in_memory());
 
         assert!(stored_files(&s.store).await.is_empty());
 
