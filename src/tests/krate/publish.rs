@@ -8,8 +8,8 @@ use crates_io::controllers::krate::publish::{
 use crates_io::models::krate::MAX_NAME_LENGTH;
 use crates_io::schema::{api_tokens, emails, versions_published_by};
 use crates_io::views::GoodCrate;
+use crates_io_tarball::TarballBuilder;
 use diesel::{delete, update, ExpressionMethods, QueryDsl, RunQueryDsl};
-use flate2::write::GzEncoder;
 use flate2::Compression;
 use http::StatusCode;
 use std::collections::BTreeMap;
@@ -912,18 +912,19 @@ fn license_and_description_required() {
 fn new_krate_tarball_with_hard_links() {
     let (app, _, _, token) = TestApp::full().with_token();
 
-    let mut tarball = Vec::new();
-    {
-        let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, Compression::default()));
+    let tarball = {
+        let mut builder = TarballBuilder::new("foo", "1.1.0");
+
         let mut header = tar::Header::new_gnu();
         assert_ok!(header.set_path("foo-1.1.0/bar"));
         header.set_size(0);
         header.set_entry_type(tar::EntryType::hard_link());
         assert_ok!(header.set_link_name("foo-1.1.0/another"));
         header.set_cksum();
-        assert_ok!(ar.append(&header, &[][..]));
-        assert_ok!(ar.finish());
-    }
+        assert_ok!(builder.as_mut().append(&header, &[][..]));
+
+        builder.build()
+    };
 
     let crate_to_publish = PublishBuilder::new("foo").version("1.1.0").tarball(tarball);
 
@@ -939,9 +940,6 @@ fn new_krate_tarball_with_hard_links() {
 
 #[test]
 fn tarball_between_default_axum_limit_and_max_upload_size() {
-    // We explicitly disable compression to be able to influence the final tarball size
-    let compression = Compression::none();
-
     let max_upload_size = 5 * 1024 * 1024;
     let (app, _, _, token) = TestApp::full()
         .with_config(|config| {
@@ -950,19 +948,21 @@ fn tarball_between_default_axum_limit_and_max_upload_size() {
         })
         .with_token();
 
-    let mut tarball = Vec::new();
-    {
+    let tarball = {
         // `data` is smaller than `max_upload_size`, but bigger than the regular request body limit
         let data = &[b'a'; 3 * 1024 * 1024] as &[_];
 
-        let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, compression));
+        let mut builder = TarballBuilder::new("foo", "1.1.0");
+
         let mut header = tar::Header::new_gnu();
         assert_ok!(header.set_path("foo-1.1.0/Cargo.toml"));
         header.set_size(data.len() as u64);
         header.set_cksum();
-        assert_ok!(ar.append(&header, data));
-        assert_ok!(ar.finish());
-    }
+        assert_ok!(builder.as_mut().append(&header, data));
+
+        // We explicitly disable compression to be able to influence the final tarball size
+        builder.build_with_compression(Compression::none())
+    };
 
     let crate_to_publish = PublishBuilder::new("foo").version("1.1.0").tarball(tarball);
 
@@ -977,9 +977,6 @@ fn tarball_between_default_axum_limit_and_max_upload_size() {
 
 #[test]
 fn tarball_bigger_than_max_upload_size() {
-    // We explicitly disable compression to be able to influence the final tarball size
-    let compression = Compression::none();
-
     let max_upload_size = 5 * 1024 * 1024;
     let (app, _, _, token) = TestApp::full()
         .with_config(|config| {
@@ -988,19 +985,21 @@ fn tarball_bigger_than_max_upload_size() {
         })
         .with_token();
 
-    let mut tarball = Vec::new();
-    {
+    let tarball = {
         // `data` is bigger than `max_upload_size`
         let data = &[b'a'; 6 * 1024 * 1024] as &[_];
 
-        let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, compression));
+        let mut builder = TarballBuilder::new("foo", "1.1.0");
+
         let mut header = tar::Header::new_gnu();
         assert_ok!(header.set_path("foo-1.1.0/Cargo.toml"));
         header.set_size(data.len() as u64);
         header.set_cksum();
-        assert_ok!(ar.append(&header, data));
-        assert_ok!(ar.finish());
-    }
+        assert_ok!(builder.as_mut().append(&header, data));
+
+        // We explicitly disable compression to be able to influence the final tarball size
+        builder.build_with_compression(Compression::none())
+    };
 
     let crate_to_publish = PublishBuilder::new("foo").version("1.1.0").tarball(tarball);
 
