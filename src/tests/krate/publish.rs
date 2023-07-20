@@ -1185,3 +1185,29 @@ fn version_with_build_metadata_3() {
         );
     });
 }
+
+#[test]
+fn boolean_readme() {
+    // see https://github.com/rust-lang/crates.io/issues/6847
+
+    let (_app, _anon, _cookie, token) = TestApp::full().with_token();
+
+    let tarball = TarballBuilder::new("foo", "1.0.0")
+        .add_raw_manifest(
+            br#"[package]
+            name = "foo"
+            version = "1.0.0"
+            rust-version = "1.69"
+            readme = false"#,
+        )
+        .build();
+
+    let response =
+        token.publish_crate(PublishBuilder::new("foo").version("1.0.0").tarball(tarball));
+    assert_eq!(response.status(), StatusCode::OK);
+
+    let response = token.get::<()>("/api/v1/crates/foo/1.0.0");
+    assert_eq!(response.status(), StatusCode::OK);
+    let json = response.into_json();
+    assert_some_eq!(json["version"]["rust_version"].as_str(), "1.69");
+}
