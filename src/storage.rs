@@ -218,26 +218,14 @@ impl Storage {
     ///
     /// The function doesn't check for the existence of the file.
     pub fn crate_location(&self, name: &str, version: &str) -> String {
-        self.with_cdn_prefix(&crate_file_path(name, version))
-            .replace('+', "%2B")
+        apply_cdn_prefix(&self.cdn_prefix, &crate_file_path(name, version)).replace('+', "%2B")
     }
 
     /// Returns the URL of an uploaded crate's version readme.
     ///
     /// The function doesn't check for the existence of the file.
     pub fn readme_location(&self, name: &str, version: &str) -> String {
-        self.with_cdn_prefix(&readme_path(name, version))
-            .replace('+', "%2B")
-    }
-
-    fn with_cdn_prefix(&self, path: &Path) -> String {
-        match self.cdn_prefix.as_ref() {
-            Some(cdn_prefix) if !cdn_prefix.starts_with("https://") => {
-                format!("https://{cdn_prefix}/{path}")
-            }
-            Some(cdn_prefix) => format!("{cdn_prefix}/{path}"),
-            None => format!("/{path}"),
-        }
+        apply_cdn_prefix(&self.cdn_prefix, &readme_path(name, version)).replace('+', "%2B")
     }
 
     #[instrument(skip(self))]
@@ -357,6 +345,16 @@ fn readme_path(name: &str, version: &str) -> Path {
     format!("{PREFIX_READMES}/{name}/{name}-{version}.html").into()
 }
 
+fn apply_cdn_prefix(cdn_prefix: &Option<String>, path: &Path) -> String {
+    match cdn_prefix {
+        Some(cdn_prefix) if !cdn_prefix.starts_with("https://") => {
+            format!("https://{cdn_prefix}/{path}")
+        }
+        Some(cdn_prefix) => format!("{cdn_prefix}/{path}"),
+        None => format!("/{path}"),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -420,6 +418,32 @@ mod tests {
         for (name, version, expected) in readme_tests {
             assert_eq!(storage.readme_location(name, version), expected);
         }
+    }
+
+    #[test]
+    fn cdn_prefix() {
+        assert_eq!(apply_cdn_prefix(&None, &"foo".into()), "/foo");
+        assert_eq!(
+            apply_cdn_prefix(&Some("static.crates.io".to_string()), &"foo".into()),
+            "https://static.crates.io/foo"
+        );
+        assert_eq!(
+            apply_cdn_prefix(
+                &Some("https://fastly-static.crates.io".to_string()),
+                &"foo".into()
+            ),
+            "https://fastly-static.crates.io/foo"
+        );
+
+        assert_eq!(
+            apply_cdn_prefix(&Some("static.crates.io".to_string()), &"/foo/bar".into()),
+            "https://static.crates.io/foo/bar"
+        );
+
+        assert_eq!(
+            apply_cdn_prefix(&Some("static.crates.io/".to_string()), &"/foo/bar".into()),
+            "https://static.crates.io//foo/bar"
+        );
     }
 
     #[tokio::test]
