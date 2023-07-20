@@ -1,24 +1,10 @@
 use crates_io::views::krate_publish as u;
 use std::{collections::BTreeMap, io::Read};
 
+use crates_io_tarball::TarballBuilder;
 use flate2::{write::GzEncoder, Compression};
-use once_cell::sync::Lazy;
 
 use super::DependencyBuilder;
-
-// The bytes of an empty tarball is not an empty vector of bytes because of tarball headers.
-// Unless files are added to a PublishBuilder, the `.crate` tarball that gets uploaded
-// will be empty, so precompute the empty tarball bytes to use as a default.
-static EMPTY_TARBALL_BYTES: Lazy<Vec<u8>> = Lazy::new(generate_empty_tarball);
-
-fn generate_empty_tarball() -> Vec<u8> {
-    let mut empty_tarball = vec![];
-    {
-        let mut ar = tar::Builder::new(GzEncoder::new(&mut empty_tarball, Compression::default()));
-        assert_ok!(ar.finish());
-    }
-    empty_tarball
-}
 
 /// A builder for constructing a crate for the purposes of testing publishing. If you only need
 /// a crate to exist and don't need to test behavior caused by the publish request, inserting
@@ -52,7 +38,7 @@ impl PublishBuilder {
             license: Some("MIT".to_string()),
             license_file: None,
             readme: None,
-            tarball: EMPTY_TARBALL_BYTES.to_vec(),
+            tarball: TarballBuilder::new(krate_name, "1.0.0").build(),
             version: semver::Version::parse("1.0.0").unwrap(),
             features: BTreeMap::new(),
         }
