@@ -1,5 +1,7 @@
+use diesel::dsl::{exists, not};
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, PooledConnection};
+use diesel::sql_types::{Int2, Jsonb, Text};
 use paste::paste;
 use reqwest::blocking::Client;
 use std::fmt::Display;
@@ -101,6 +103,13 @@ pub(crate) struct PerformState<'a> {
 }
 
 impl Job {
+    /// Enqueue both index sync jobs (git and sparse) for a crate, unless they
+    /// already exist in the background job queue.
+    ///
+    /// Note that there are currently no explicit tests for this functionality,
+    /// since our test suite only allows us to use a single database connection
+    /// and the background worker queue locking only work when using multiple
+    /// connections.
     #[instrument(name = "swirl.enqueue", skip_all, fields(message = "sync_to_index", krate = %krate))]
     pub fn enqueue_sync_to_index<T: ToString + Display>(
         krate: T,
@@ -108,23 +117,51 @@ impl Job {
     ) -> Result<(), EnqueueError> {
         use crate::schema::background_jobs::dsl::*;
 
+        // Returns jobs with matching `job_type`, `data` and `priority`,
+        // skipping ones that are already locked by the background worker.
+        let find_similar_jobs_query = |job: &Job| {
+            let query = background_jobs
+                .select(id)
+                .filter(job_type.eq(job.as_type_str()))
+                .filter(data.eq(job.to_value()?))
+                .filter(priority.eq(PRIORITY_SYNC_TO_INDEX))
+                .for_update()
+                .skip_locked();
+
+            Ok::<_, serde_json::Error>(query)
+        };
+
+        // Returns one `job_type, data, priority` row with values from the
+        // passed-in `job`, unless a similar row already exists.
+        let deduplicated_select_query = |job: &Job| {
+            let query = diesel::select((
+                job.as_type_str().into_sql::<Text>(),
+                job.to_value()?.into_sql::<Jsonb>(),
+                PRIORITY_SYNC_TO_INDEX.into_sql::<Int2>(),
+            ))
+            .filter(not(exists(find_similar_jobs_query(job)?)));
+
+            Ok::<_, serde_json::Error>(query)
+        };
+
         let to_git = Self::sync_to_git_index(krate.to_string());
-        let to_git = (
-            job_type.eq(to_git.as_type_str()),
-            data.eq(to_git.to_value()?),
-            priority.eq(PRIORITY_SYNC_TO_INDEX),
-        );
+        let to_git = deduplicated_select_query(&to_git)?;
 
         let to_sparse = Self::sync_to_sparse_index(krate.to_string());
-        let to_sparse = (
-            job_type.eq(to_sparse.as_type_str()),
-            data.eq(to_sparse.to_value()?),
-            priority.eq(PRIORITY_SYNC_TO_INDEX),
-        );
+        let to_sparse = deduplicated_select_query(&to_sparse)?;
 
-        diesel::insert_into(background_jobs)
-            .values(vec![to_git, to_sparse])
+        // Insert index update background jobs, but only if they do not
+        // already exist.
+        let added_jobs_count = diesel::insert_into(background_jobs)
+            .values(to_git.union_all(to_sparse))
+            .into_columns((job_type, data, priority))
             .execute(conn)?;
+
+        // Print a log event if we skipped inserting a job due to deduplication.
+        if added_jobs_count != 2 {
+            let skipped_jobs_count = 2 - added_jobs_count;
+            info!(%skipped_jobs_count, "Skipped adding duplicate jobs to the background worker queue");
+        }
 
         Ok(())
     }
