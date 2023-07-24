@@ -10,6 +10,7 @@
         @type="text"
         @value={{this.name}}
         disabled={{this.saveTokenTask.isRunning}}
+        autocomplete="off"
         aria-required="true"
         aria-invalid={{if this.nameInvalid "true" "false"}}
         local-class="name-input"
