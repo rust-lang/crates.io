@@ -33,6 +33,14 @@ impl LimitedAction {
             LimitedAction::PublishNew => "PUBLISH_NEW",
         }
     }
+
+    pub fn error_messagge(&self) -> &'static str {
+        match self {
+            LimitedAction::PublishNew => {
+                "You have published too many new crates in a short period of time"
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -62,6 +70,7 @@ impl RateLimiter {
             Ok(())
         } else {
             Err(Box::new(TooManyRequests {
+                action: performed_action,
                 retry_after: bucket.last_refill
                     + chrono::Duration::from_std(self.config_for_action(performed_action).rate)
                         .unwrap(),
