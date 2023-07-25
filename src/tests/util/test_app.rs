@@ -11,6 +11,7 @@ use std::{rc::Rc, sync::Arc, time::Duration};
 use crate::util::github::{MockGitHubClient, MOCK_GITHUB_DATA};
 use anyhow::Context;
 use crates_io::models::token::{CrateScope, EndpointScope};
+use crates_io::rate_limiter::{LimitedAction, RateLimiterConfig};
 use crates_io::swirl::Runner;
 use diesel::PgConnection;
 use futures_util::TryStreamExt;
@@ -329,10 +330,11 @@ impl TestAppBuilder {
         self
     }
 
-    pub fn with_publish_rate_limit(self, rate: Duration, burst: i32) -> Self {
+    pub fn with_rate_limit(self, action: LimitedAction, rate: Duration, burst: i32) -> Self {
         self.with_config(|config| {
-            config.rate_limiter.rate = rate;
-            config.rate_limiter.burst = burst;
+            config
+                .rate_limiter
+                .insert(action, RateLimiterConfig { rate, burst });
         })
     }
 

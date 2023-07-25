@@ -20,12 +20,16 @@ macro_rules! pg_enum {
             $($item:ident = $int:expr,)*
         }
     ) => {
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize, FromSqlRow, AsExpression)]
+        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, FromSqlRow, AsExpression)]
         #[diesel(sql_type = diesel::sql_types::Integer)]
         #[serde(rename_all = "snake_case")]
         #[repr(i32)]
         $vis enum $name {
             $($item = $int,)*
+        }
+
+        impl $name {
+            $vis const VARIANTS: &[$name] = &[$($name::$item),*];
         }
 
         impl diesel::deserialize::FromSql<diesel::sql_types::Integer, diesel::pg::Pg> for $name {

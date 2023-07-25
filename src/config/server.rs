@@ -2,7 +2,7 @@ use anyhow::{anyhow, Context};
 use ipnetwork::IpNetwork;
 use oauth2::{ClientId, ClientSecret};
 
-use crate::rate_limiter::RateLimiter;
+use crate::rate_limiter::{LimitedAction, RateLimiterConfig};
 use crate::{env, env_optional, Env};
 
 use super::base::Base;
@@ -10,7 +10,7 @@ use super::database_pools::DatabasePools;
 use crate::config::balance_capacity::BalanceCapacityConfig;
 use crate::storage::StorageConfig;
 use http::HeaderValue;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::net::IpAddr;
 use std::time::Duration;
 
@@ -30,7 +30,7 @@ pub struct Server {
     pub gh_client_secret: ClientSecret,
     pub max_upload_size: u64,
     pub max_unpack_size: u64,
-    pub rate_limiter: RateLimiter,
+    pub rate_limiter: HashMap<LimitedAction, RateLimiterConfig>,
     pub new_version_rate_limit: Option<u32>,
     pub blocked_traffic: Vec<(String, Vec<String>)>,
     pub max_allowed_page_offset: u32,
@@ -140,6 +140,24 @@ impl Default for Server {
             .map(|s| s.parse().expect("SERVER_THREADS was not a valid number"))
             .ok();
 
+        // Dynamically load the configuration for all the rate limiting actions. See
+        // `src/rate_limiter.rs` for their definition.
+        let mut rate_limiter = HashMap::new();
+        for action in LimitedAction::VARIANTS {
+            let env_var_key = action.env_var_key();
+            rate_limiter.insert(
+                *action,
+                RateLimiterConfig {
+                    rate: Duration::from_secs(
+                        env_optional(&format!("RATE_LIMITER_{env_var_key}_RATE_SECONDS"))
+                            .unwrap_or_else(|| action.default_rate_seconds()),
+                    ),
+                    burst: env_optional(&format!("RATE_LIMITER_{env_var_key}_BURST"))
+                        .unwrap_or_else(|| action.default_burst()),
+                },
+            );
+        }
+
         Server {
             db: DatabasePools::full_from_environment(&base),
             storage: StorageConfig::from_environment(),
@@ -153,7 +171,7 @@ impl Default for Server {
             gh_client_secret: ClientSecret::new(env("GH_CLIENT_SECRET")),
             max_upload_size: 10 * 1024 * 1024, // 10 MB default file upload size limit
             max_unpack_size: 512 * 1024 * 1024, // 512 MB max when decompressed
-            rate_limiter: Default::default(),
+            rate_limiter,
             new_version_rate_limit: env_optional("MAX_NEW_VERSIONS_DAILY"),
             blocked_traffic: blocked_traffic(),
             max_allowed_page_offset: env_optional("WEB_MAX_ALLOWED_PAGE_OFFSET").unwrap_or(200),

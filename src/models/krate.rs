@@ -17,7 +17,7 @@ use crate::models::{
 use crate::util::errors::{cargo_err, AppResult};
 
 use crate::models::helpers::with_count::*;
-use crate::rate_limiter::RateLimiter;
+use crate::rate_limiter::{LimitedAction, RateLimiter};
 use crate::schema::*;
 use crate::sql::canon_crate_name;
 
@@ -119,7 +119,7 @@ impl<'a> NewCrate<'a> {
             // first so we know whether to add an owner
             if let Some(krate) = self.save_new_crate(conn, uploader)? {
                 if let Some(rate_limit) = rate_limit {
-                    rate_limit.check_rate_limit(uploader, conn)?;
+                    rate_limit.check_rate_limit(uploader, LimitedAction::PublishNew, conn)?;
                 }
                 return Ok(krate);
             }

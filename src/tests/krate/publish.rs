@@ -6,6 +6,7 @@ use crates_io::controllers::krate::publish::{
     missing_metadata_error_message, MISSING_RIGHTS_ERROR_MESSAGE,
 };
 use crates_io::models::krate::MAX_NAME_LENGTH;
+use crates_io::rate_limiter::LimitedAction;
 use crates_io::schema::{api_tokens, emails, versions_published_by};
 use crates_io::views::GoodCrate;
 use crates_io_tarball::TarballBuilder;
@@ -1004,7 +1005,7 @@ fn tarball_bigger_than_max_upload_size() {
 #[test]
 fn publish_new_crate_rate_limited() {
     let (app, anon, _, token) = TestApp::full()
-        .with_publish_rate_limit(Duration::from_millis(500), 1)
+        .with_rate_limit(LimitedAction::PublishNew, Duration::from_millis(500), 1)
         .with_token();
 
     // Upload a new crate
@@ -1038,7 +1039,7 @@ fn publish_new_crate_rate_limited() {
 #[test]
 fn publish_rate_limit_doesnt_affect_existing_crates() {
     let (_, _, _, token) = TestApp::full()
-        .with_publish_rate_limit(Duration::from_millis(500), 1)
+        .with_rate_limit(LimitedAction::PublishNew, Duration::from_millis(500), 1)
         .with_token();
 
     // Upload a new crate
