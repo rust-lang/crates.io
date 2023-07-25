@@ -147,7 +147,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3.5.3
 
-      - uses: pnpm/action-setup@v2.2.4
+      - uses: pnpm/action-setup@v2.3.0
         with:
           version: ${{ env.PNPM_VERSION }}
 
@@ -179,7 +179,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3.5.3
 
-      - uses: pnpm/action-setup@v2.2.4
+      - uses: pnpm/action-setup@v2.3.0
         with:
           version: ${{ env.PNPM_VERSION }}
 
