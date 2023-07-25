@@ -17,7 +17,6 @@ use crate::models::{
 use crate::util::errors::{cargo_err, AppResult};
 
 use crate::models::helpers::with_count::*;
-use crate::rate_limiter::{LimitedAction, RateLimiter};
 use crate::schema::*;
 use crate::sql::canon_crate_name;
 
@@ -103,12 +102,7 @@ pub struct NewCrate<'a> {
 }
 
 impl<'a> NewCrate<'a> {
-    pub fn create_or_update(
-        self,
-        conn: &mut PgConnection,
-        uploader: i32,
-        rate_limit: Option<&RateLimiter>,
-    ) -> AppResult<Crate> {
+    pub fn create_or_update(self, conn: &mut PgConnection, uploader: i32) -> AppResult<Crate> {
         use diesel::update;
 
         self.validate()?;
@@ -118,9 +112,6 @@ impl<'a> NewCrate<'a> {
             // To avoid race conditions, we try to insert
             // first so we know whether to add an owner
             if let Some(krate) = self.save_new_crate(conn, uploader)? {
-                if let Some(rate_limit) = rate_limit {
-                    rate_limit.check_rate_limit(uploader, LimitedAction::PublishNew, conn)?;
-                }
                 return Ok(krate);
             }
 

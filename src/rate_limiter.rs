@@ -12,6 +12,7 @@ use std::time::Duration;
 pg_enum! {
     pub enum LimitedAction {
         PublishNew = 0,
+        PublishUpdate = 1,
     }
 }
 
@@ -19,18 +20,21 @@ impl LimitedAction {
     pub fn default_rate_seconds(&self) -> u64 {
         match self {
             LimitedAction::PublishNew => 60 * 60,
+            LimitedAction::PublishUpdate => 60,
         }
     }
 
     pub fn default_burst(&self) -> i32 {
         match self {
             LimitedAction::PublishNew => 5,
+            LimitedAction::PublishUpdate => 30,
         }
     }
 
     pub fn env_var_key(&self) -> &'static str {
         match self {
             LimitedAction::PublishNew => "PUBLISH_NEW",
+            LimitedAction::PublishUpdate => "PUBLISH_EXISTING",
         }
     }
 
@@ -38,6 +42,9 @@ impl LimitedAction {
         match self {
             LimitedAction::PublishNew => {
                 "You have published too many new crates in a short period of time"
+            }
+            LimitedAction::PublishUpdate => {
+                "You have published too many updates to existing crates in a short period of time"
             }
         }
     }

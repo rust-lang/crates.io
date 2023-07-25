@@ -19,6 +19,7 @@ use crate::models::{
 
 use crate::middleware::log_request::RequestLogExt;
 use crate::models::token::EndpointScope;
+use crate::rate_limiter::LimitedAction;
 use crate::schema::*;
 use crate::util::errors::{cargo_err, internal, AppResult};
 use crate::util::Maximums;
@@ -101,6 +102,14 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             ))
         })?;
 
+        // Use a different rate limit whether this is a new or an existing crate.
+        let rate_limit_action = match existing_crate {
+            Some(_) => LimitedAction::PublishUpdate,
+            None => LimitedAction::PublishNew,
+        };
+        app.rate_limiter
+            .check_rate_limit(user.id, rate_limit_action, conn)?;
+
         // Create a transaction on the database, if there are no errors,
         // commit the transactions to record a new or updated crate.
         conn.transaction(|conn| {
@@ -137,7 +146,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             };
 
             let license_file = new_crate.license_file.as_deref();
-            let krate = persist.create_or_update(conn, user.id, Some(&app.rate_limiter))?;
+            let krate = persist.create_or_update(conn, user.id)?;
 
             let owners = krate.owners(conn)?;
             if user.rights(&app, &owners)? < Rights::Publish {
