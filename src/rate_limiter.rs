@@ -15,12 +15,12 @@ crate::pg_enum! {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct PublishRateLimit {
+pub struct RateLimiter {
     pub rate: Duration,
     pub burst: i32,
 }
 
-impl Default for PublishRateLimit {
+impl Default for RateLimiter {
     fn default() -> Self {
         let minutes = dotenvy::var("WEB_NEW_PKG_RATE_LIMIT_RATE_MINUTES")
             .unwrap_or_default()
@@ -39,7 +39,7 @@ impl Default for PublishRateLimit {
     }
 }
 
-impl PublishRateLimit {
+impl RateLimiter {
     pub fn check_rate_limit(&self, uploader: i32, conn: &mut PgConnection) -> AppResult<()> {
         let bucket = self.take_token(uploader, Utc::now().naive_utc(), conn)?;
         if bucket.tokens >= 1 {
@@ -67,8 +67,10 @@ impl PublishRateLimit {
     ) -> QueryResult<Bucket> {
         use self::publish_limit_buckets::dsl::*;
 
+        let performed_action = LimitedAction::PublishNew;
+
         let burst: i32 = publish_rate_overrides::table
-            .find((uploader, LimitedAction::PublishNew))
+            .find((uploader, performed_action))
             .filter(
                 publish_rate_overrides::expires_at
                     .is_null()
@@ -88,8 +90,13 @@ impl PublishRateLimit {
         );
 
         diesel::insert_into(publish_limit_buckets)
-            .values((user_id.eq(uploader), tokens.eq(burst), last_refill.eq(now)))
-            .on_conflict(user_id)
+            .values((
+                user_id.eq(uploader),
+                action.eq(performed_action),
+                tokens.eq(burst),
+                last_refill.eq(now),
+            ))
+            .on_conflict((user_id, action))
             .do_update()
             .set((
                 tokens.eq(least(burst, greatest(0, tokens - 1) + tokens_to_add)),
@@ -126,7 +133,7 @@ mod tests {
         let conn = &mut pg_connection();
         let now = now();
 
-        let rate = PublishRateLimit {
+        let rate = RateLimiter {
             rate: Duration::from_secs(1),
             burst: 10,
         };
@@ -139,7 +146,7 @@ mod tests {
         };
         assert_eq!(expected, bucket);
 
-        let rate = PublishRateLimit {
+        let rate = RateLimiter {
             rate: Duration::from_millis(50),
             burst: 20,
         };
@@ -159,7 +166,7 @@ mod tests {
         let conn = &mut pg_connection();
         let now = now();
 
-        let rate = PublishRateLimit {
+        let rate = RateLimiter {
             rate: Duration::from_secs(1),
             burst: 10,
         };
@@ -180,7 +187,7 @@ mod tests {
         let conn = &mut pg_connection();
         let now = now();
 
-        let rate = PublishRateLimit {
+        let rate = RateLimiter {
             rate: Duration::from_secs(1),
             burst: 10,
         };
@@ -206,7 +213,7 @@ mod tests {
             NaiveDateTime::parse_from_str("2019-03-19T21:11:24.620401", "%Y-%m-%dT%H:%M:%S%.f")
                 .unwrap();
 
-        let rate = PublishRateLimit {
+        let rate = RateLimiter {
             rate: Duration::from_millis(100),
             burst: 10,
         };
@@ -228,7 +235,7 @@ mod tests {
         let conn = &mut pg_connection();
         let now = now();
 
-        let rate = PublishRateLimit {
+        let rate = RateLimiter {
             rate: Duration::from_millis(100),
             burst: 10,
         };
@@ -250,7 +257,7 @@ mod tests {
         let conn = &mut pg_connection();
         let now = now();
 
-        let rate = PublishRateLimit {
+        let rate = RateLimiter {
             rate: Duration::from_secs(1),
             burst: 10,
         };
@@ -274,7 +281,7 @@ mod tests {
         let conn = &mut pg_connection();
         let now = now();
 
-        let rate = PublishRateLimit {
+        let rate = RateLimiter {
             rate: Duration::from_secs(1),
             burst: 10,
         };
@@ -297,7 +304,7 @@ mod tests {
         let conn = &mut pg_connection();
         let now = now();
 
-        let rate = PublishRateLimit {
+        let rate = RateLimiter {
             rate: Duration::from_secs(1),
             burst: 10,
         };
@@ -320,7 +327,7 @@ mod tests {
         let conn = &mut pg_connection();
         let now = now();
 
-        let rate = PublishRateLimit {
+        let rate = RateLimiter {
             rate: Duration::from_secs(1),
             burst: 10,
         };
@@ -347,7 +354,7 @@ mod tests {
         let conn = &mut pg_connection();
         let now = now();
 
-        let rate = PublishRateLimit {
+        let rate = RateLimiter {
             rate: Duration::from_secs(1),
             burst: 10,
         };

@@ -46,7 +46,7 @@ pub mod github;
 pub mod headers;
 pub mod metrics;
 pub mod middleware;
-mod publish_rate_limit;
+mod rate_limiter;
 pub mod schema;
 pub mod sql;
 pub mod ssh;
