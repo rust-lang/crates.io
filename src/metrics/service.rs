@@ -13,7 +13,7 @@
 use crate::schema::{background_jobs, crates, versions};
 use crate::util::errors::AppResult;
 use diesel::{dsl::count_star, prelude::*, PgConnection};
-use prometheus::{proto::MetricFamily, IntGauge};
+use prometheus::{proto::MetricFamily, IntGauge, IntGaugeVec};
 
 metrics! {
     pub struct ServiceMetrics {
@@ -22,7 +22,7 @@ metrics! {
         /// Number of versions ever published
         versions_total: IntGauge,
         /// Number of queued up background jobs
-        background_jobs: IntGauge,
+        background_jobs: IntGaugeVec["priority", "job"],
     }
 
     // All service metrics will be prefixed with this namespace.
@@ -35,8 +35,21 @@ impl ServiceMetrics {
             .set(crates::table.select(count_star()).first(conn)?);
         self.versions_total
             .set(versions::table.select(count_star()).first(conn)?);
-        self.background_jobs
-            .set(background_jobs::table.select(count_star()).first(conn)?);
+
+        let background_jobs = background_jobs::table
+            .group_by((background_jobs::job_type, background_jobs::priority))
+            .select((
+                background_jobs::job_type,
+                background_jobs::priority,
+                count_star(),
+            ))
+            .load::<(String, i16, i64)>(conn)?;
+        for (job, priority, count) in background_jobs {
+            let priority = format!("{priority}");
+            self.background_jobs
+                .get_metric_with_label_values(&[&job, &priority])?
+                .set(count);
+        }
 
         Ok(self.registry.gather())
     }
