@@ -404,6 +404,49 @@ mod tests {
     }
 
     #[test]
+    fn two_actions_dont_interfere_with_each_other() -> QueryResult<()> {
+        let conn = &mut pg_connection();
+        let now = now();
+
+        let mut config = HashMap::new();
+        config.insert(
+            LimitedAction::PublishNew,
+            RateLimiterConfig {
+                rate: Duration::from_secs(1),
+                burst: 10,
+            },
+        );
+        config.insert(
+            LimitedAction::YankUnyank,
+            RateLimiterConfig {
+                rate: Duration::from_secs(1),
+                burst: 20,
+            },
+        );
+        let rate = RateLimiter::new(config);
+
+        let user_id = new_user(conn, "user")?;
+
+        assert_eq!(
+            10,
+            rate.take_token(user_id, LimitedAction::PublishNew, now, conn)?
+                .tokens
+        );
+        assert_eq!(
+            9,
+            rate.take_token(user_id, LimitedAction::PublishNew, now, conn)?
+                .tokens
+        );
+        assert_eq!(
+            20,
+            rate.take_token(user_id, LimitedAction::YankUnyank, now, conn)?
+                .tokens
+        );
+
+        Ok(())
+    }
+
+    #[test]
     fn override_is_used_instead_of_global_burst_if_present() -> QueryResult<()> {
         let conn = &mut pg_connection();
         let now = now();
@@ -476,6 +519,46 @@ mod tests {
         // the new burst limit.
         assert_eq!(10, bucket.tokens);
         assert_eq!(9, other_bucket.tokens);
+
+        Ok(())
+    }
+
+    #[test]
+    fn override_is_different_for_each_action() -> QueryResult<()> {
+        let conn = &mut pg_connection();
+        let now = now();
+        let user_id = new_user(conn, "user")?;
+
+        let mut config = HashMap::new();
+        for action in [LimitedAction::PublishNew, LimitedAction::YankUnyank] {
+            config.insert(
+                action,
+                RateLimiterConfig {
+                    rate: Duration::from_secs(1),
+                    burst: 10,
+                },
+            );
+        }
+        let rate = RateLimiter::new(config);
+
+        diesel::insert_into(publish_rate_overrides::table)
+            .values((
+                publish_rate_overrides::user_id.eq(user_id),
+                publish_rate_overrides::action.eq(LimitedAction::PublishNew),
+                publish_rate_overrides::burst.eq(20),
+            ))
+            .execute(conn)?;
+
+        assert_eq!(
+            20,
+            rate.take_token(user_id, LimitedAction::PublishNew, now, conn)?
+                .tokens,
+        );
+        assert_eq!(
+            10,
+            rate.take_token(user_id, LimitedAction::YankUnyank, now, conn)?
+                .tokens,
+        );
 
         Ok(())
     }
