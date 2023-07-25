@@ -13,6 +13,7 @@ pg_enum! {
     pub enum LimitedAction {
         PublishNew = 0,
         PublishUpdate = 1,
+        YankUnyank = 2,
     }
 }
 
@@ -21,6 +22,7 @@ impl LimitedAction {
         match self {
             LimitedAction::PublishNew => 60 * 60,
             LimitedAction::PublishUpdate => 60,
+            LimitedAction::YankUnyank => 60,
         }
     }
 
@@ -28,13 +30,15 @@ impl LimitedAction {
         match self {
             LimitedAction::PublishNew => 5,
             LimitedAction::PublishUpdate => 30,
+            LimitedAction::YankUnyank => 100,
         }
     }
 
     pub fn env_var_key(&self) -> &'static str {
         match self {
             LimitedAction::PublishNew => "PUBLISH_NEW",
-            LimitedAction::PublishUpdate => "PUBLISH_EXISTING",
+            LimitedAction::PublishUpdate => "PUBLISH_UPDATE",
+            LimitedAction::YankUnyank => "YANK_UNYANK",
         }
     }
 
@@ -45,6 +49,9 @@ impl LimitedAction {
             }
             LimitedAction::PublishUpdate => {
                 "You have published too many updates to existing crates in a short period of time"
+            }
+            LimitedAction::YankUnyank => {
+                "You have yanked or unyanked too many versions in a short period of time"
             }
         }
     }

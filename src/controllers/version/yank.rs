@@ -8,6 +8,7 @@ use crate::controllers::cargo_prelude::*;
 use crate::models::token::EndpointScope;
 use crate::models::Rights;
 use crate::models::{insert_version_owner_action, VersionAction};
+use crate::rate_limiter::LimitedAction;
 use crate::schema::versions;
 
 /// Handles the `DELETE /crates/:crate_id/:version/yank` route.
@@ -57,6 +58,10 @@ fn modify_yank(
         .with_endpoint_scope(EndpointScope::Yank)
         .for_crate(crate_name)
         .check(req, conn)?;
+
+    state
+        .rate_limiter
+        .check_rate_limit(auth.user_id(), LimitedAction::YankUnyank, conn)?;
 
     let (version, krate) = version_and_crate(conn, crate_name, version)?;
     let api_token_id = auth.api_token_id();
