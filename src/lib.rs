@@ -48,7 +48,6 @@ pub mod metrics;
 pub mod middleware;
 mod rate_limiter;
 pub mod schema;
-#[macro_use]
 pub mod sql;
 pub mod ssh;
 pub mod swirl;

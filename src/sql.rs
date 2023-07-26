@@ -14,7 +14,6 @@ sql_function!(fn greatest<T: SingleValue>(x: T, y: T) -> T);
 sql_function!(fn least<T: SingleValue>(x: T, y: T) -> T);
 sql_function!(fn split_part(string: Text, delimiter: Text, n: Integer) -> Text);
 
-#[macro_export]
 macro_rules! pg_enum {
     (
         $vis:vis enum $name:ident {
@@ -48,3 +47,5 @@ macro_rules! pg_enum {
         }
     }
 }
+
+pub(crate) use pg_enum;

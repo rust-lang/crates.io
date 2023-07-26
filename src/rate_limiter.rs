@@ -5,10 +5,10 @@ use diesel::sql_types::Interval;
 use std::time::Duration;
 
 use crate::schema::{publish_limit_buckets, publish_rate_overrides};
-use crate::sql::{date_part, floor, greatest, interval_part, least};
+use crate::sql::{date_part, floor, greatest, interval_part, least, pg_enum};
 use crate::util::errors::{AppResult, TooManyRequests};
 
-crate::pg_enum! {
+pg_enum! {
     pub enum LimitedAction {
         PublishNew = 0,
     }
