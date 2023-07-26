@@ -1,8 +1,11 @@
 #[macro_use]
 extern crate tracing;
 
+use anyhow::{anyhow, Context};
 use clap::Parser;
 use secrecy::SecretString;
+use std::process::Command;
+use tempfile::tempdir;
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
@@ -23,8 +26,26 @@ fn main() -> anyhow::Result<()> {
     init_tracing();
 
     let options = Options::parse();
+    debug!(?options);
 
-    info!(?options);
+    info!("Creating temporary working folder…");
+    let tempdir = tempdir().context("Failed to create temporary working folder")?;
+    debug!(tempdir.path = %tempdir.path().display());
+
+    info!("Creating `{}` project…", options.crate_name);
+    let exit_status = Command::new("cargo")
+        .args(["new", "--lib", &options.crate_name])
+        .current_dir(tempdir.path())
+        .env("CARGO_TERM_COLOR", "always")
+        .status()
+        .context("Failed to run `cargo new`")?;
+
+    if !exit_status.success() {
+        return Err(anyhow!("Failed to run `cargo new`"));
+    }
+
+    let project_path = tempdir.path().join(&options.crate_name);
+    debug!(project_path = %project_path.display());
 
     Ok(())
 }

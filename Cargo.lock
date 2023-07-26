@@ -758,6 +758,7 @@ dependencies = [
  "anyhow",
  "clap",
  "secrecy",
+ "tempfile",
  "tracing",
  "tracing-subscriber",
 ]
