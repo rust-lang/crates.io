@@ -10,6 +10,10 @@ use tracing_subscriber::{EnvFilter, Layer};
 
 #[derive(clap::Parser, Debug)]
 struct Options {
+    /// name of the test crate that will be published to staging.crates.io
+    #[arg(long, default_value = "crates-staging-test-tb")]
+    crate_name: String,
+
     /// staging.crates.io API token that will be used to publish a new version
     #[arg(long, env = "CARGO_REGISTRY_TOKEN", hide_env_values = true)]
     token: SecretString,
@@ -18,9 +22,9 @@ struct Options {
 fn main() -> anyhow::Result<()> {
     init_tracing();
 
-    let _options = Options::parse();
+    let options = Options::parse();
 
-    info!("Hello world!");
+    info!(?options);
 
     Ok(())
 }
