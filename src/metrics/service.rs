@@ -48,7 +48,7 @@ impl ServiceMetrics {
         for (job, priority, count) in background_jobs {
             let priority = format!("{priority}");
             self.background_jobs
-                .get_metric_with_label_values(&[&job, &priority])?
+                .get_metric_with_label_values(&[&priority, &job])?
                 .set(count);
         }
 
