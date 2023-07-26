@@ -7,6 +7,7 @@ on:
       - master
 
 env:
+  CARGO_TERM_COLOR: always
   # renovate: datasource=crate depName=cargo-tarpaulin versioning=semver
   CARGO_TARPAULIN_VERSION: 0.26.1
   # renovate: datasource=crate depName=diesel_cli versioning=semver
