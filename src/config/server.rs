@@ -2,7 +2,7 @@ use anyhow::{anyhow, Context};
 use ipnetwork::IpNetwork;
 use oauth2::{ClientId, ClientSecret};
 
-use crate::publish_rate_limit::PublishRateLimit;
+use crate::rate_limiter::RateLimiter;
 use crate::{env, env_optional, Env};
 
 use super::base::Base;
@@ -30,7 +30,7 @@ pub struct Server {
     pub gh_client_secret: ClientSecret,
     pub max_upload_size: u64,
     pub max_unpack_size: u64,
-    pub publish_rate_limit: PublishRateLimit,
+    pub rate_limiter: RateLimiter,
     pub new_version_rate_limit: Option<u32>,
     pub blocked_traffic: Vec<(String, Vec<String>)>,
     pub max_allowed_page_offset: u32,
@@ -153,7 +153,7 @@ impl Default for Server {
             gh_client_secret: ClientSecret::new(env("GH_CLIENT_SECRET")),
             max_upload_size: 10 * 1024 * 1024, // 10 MB default file upload size limit
             max_unpack_size: 512 * 1024 * 1024, // 512 MB max when decompressed
-            publish_rate_limit: Default::default(),
+            rate_limiter: Default::default(),
             new_version_rate_limit: env_optional("MAX_NEW_VERSIONS_DAILY"),
             blocked_traffic: blocked_traffic(),
             max_allowed_page_offset: env_optional("WEB_MAX_ALLOWED_PAGE_OFFSET").unwrap_or(200),

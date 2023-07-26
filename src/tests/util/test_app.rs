@@ -331,8 +331,8 @@ impl TestAppBuilder {
 
     pub fn with_publish_rate_limit(self, rate: Duration, burst: i32) -> Self {
         self.with_config(|config| {
-            config.publish_rate_limit.rate = rate;
-            config.publish_rate_limit.burst = burst;
+            config.rate_limiter.rate = rate;
+            config.rate_limiter.burst = burst;
         })
     }
 
@@ -396,7 +396,7 @@ fn simple_config() -> config::Server {
         gh_client_secret: ClientSecret::new(dotenvy::var("GH_CLIENT_SECRET").unwrap_or_default()),
         max_upload_size: 3000,
         max_unpack_size: 2000,
-        publish_rate_limit: Default::default(),
+        rate_limiter: Default::default(),
         new_version_rate_limit: Some(10),
         blocked_traffic: Default::default(),
         max_allowed_page_offset: 200,

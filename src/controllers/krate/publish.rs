@@ -137,8 +137,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             };
 
             let license_file = new_crate.license_file.as_deref();
-            let krate =
-                persist.create_or_update(conn, user.id, Some(&app.config.publish_rate_limit))?;
+            let krate = persist.create_or_update(conn, user.id, Some(&app.config.rate_limiter))?;
 
             let owners = krate.owners(conn)?;
             if user.rights(&app, &owners)? < Rights::Publish {

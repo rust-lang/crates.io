@@ -8,13 +8,19 @@ use crate::schema::{publish_limit_buckets, publish_rate_overrides};
 use crate::sql::{date_part, floor, greatest, interval_part, least};
 use crate::util::errors::{AppResult, TooManyRequests};
 
+crate::pg_enum! {
+    pub enum LimitedAction {
+        PublishNew = 0,
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
-pub struct PublishRateLimit {
+pub struct RateLimiter {
     pub rate: Duration,
     pub burst: i32,
 }
 
-impl Default for PublishRateLimit {
+impl Default for RateLimiter {
     fn default() -> Self {
         let minutes = dotenvy::var("WEB_NEW_PKG_RATE_LIMIT_RATE_MINUTES")
             .unwrap_or_default()
@@ -33,16 +39,7 @@ impl Default for PublishRateLimit {
     }
 }
 
-#[derive(Queryable, Insertable, Debug, PartialEq, Clone, Copy)]
-#[diesel(table_name = publish_limit_buckets, check_for_backend(diesel::pg::Pg))]
-#[allow(dead_code)] // Most fields only read in tests
-struct Bucket {
-    user_id: i32,
-    tokens: i32,
-    last_refill: NaiveDateTime,
-}
-
-impl PublishRateLimit {
+impl RateLimiter {
     pub fn check_rate_limit(&self, uploader: i32, conn: &mut PgConnection) -> AppResult<()> {
         let bucket = self.take_token(uploader, Utc::now().naive_utc(), conn)?;
         if bucket.tokens >= 1 {
@@ -70,8 +67,10 @@ impl PublishRateLimit {
     ) -> QueryResult<Bucket> {
         use self::publish_limit_buckets::dsl::*;
 
+        let performed_action = LimitedAction::PublishNew;
+
         let burst: i32 = publish_rate_overrides::table
-            .find(uploader)
+            .find((uploader, performed_action))
             .filter(
                 publish_rate_overrides::expires_at
                     .is_null()
@@ -91,8 +90,13 @@ impl PublishRateLimit {
         );
 
         diesel::insert_into(publish_limit_buckets)
-            .values((user_id.eq(uploader), tokens.eq(burst), last_refill.eq(now)))
-            .on_conflict(user_id)
+            .values((
+                user_id.eq(uploader),
+                action.eq(performed_action),
+                tokens.eq(burst),
+                last_refill.eq(now),
+            ))
+            .on_conflict((user_id, action))
             .do_update()
             .set((
                 tokens.eq(least(burst, greatest(0, tokens - 1) + tokens_to_add)),
@@ -108,6 +112,16 @@ impl PublishRateLimit {
     }
 }
 
+#[derive(Queryable, Insertable, Debug, PartialEq, Clone, Copy)]
+#[diesel(table_name = publish_limit_buckets, check_for_backend(diesel::pg::Pg))]
+#[allow(dead_code)] // Most fields only read in tests
+struct Bucket {
+    user_id: i32,
+    tokens: i32,
+    last_refill: NaiveDateTime,
+    action: LimitedAction,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -119,7 +133,7 @@ mod tests {
         let conn = &mut pg_connection();
         let now = now();
 
-        let rate = PublishRateLimit {
+        let rate = RateLimiter {
             rate: Duration::from_secs(1),
             burst: 10,
         };
@@ -128,10 +142,11 @@ mod tests {
             user_id: bucket.user_id,
             tokens: 10,
             last_refill: now,
+            action: LimitedAction::PublishNew,
         };
         assert_eq!(expected, bucket);
 
-        let rate = PublishRateLimit {
+        let rate = RateLimiter {
             rate: Duration::from_millis(50),
             burst: 20,
         };
@@ -140,6 +155,7 @@ mod tests {
             user_id: bucket.user_id,
             tokens: 20,
             last_refill: now,
+            action: LimitedAction::PublishNew,
         };
         assert_eq!(expected, bucket);
         Ok(())
@@ -150,7 +166,7 @@ mod tests {
         let conn = &mut pg_connection();
         let now = now();
 
-        let rate = PublishRateLimit {
+        let rate = RateLimiter {
             rate: Duration::from_secs(1),
             burst: 10,
         };
@@ -160,6 +176,7 @@ mod tests {
             user_id,
             tokens: 4,
             last_refill: now,
+            action: LimitedAction::PublishNew,
         };
         assert_eq!(expected, bucket);
         Ok(())
@@ -170,7 +187,7 @@ mod tests {
         let conn = &mut pg_connection();
         let now = now();
 
-        let rate = PublishRateLimit {
+        let rate = RateLimiter {
             rate: Duration::from_secs(1),
             burst: 10,
         };
@@ -181,6 +198,7 @@ mod tests {
             user_id,
             tokens: 6,
             last_refill: refill_time,
+            action: LimitedAction::PublishNew,
         };
         assert_eq!(expected, bucket);
         Ok(())
@@ -195,7 +213,7 @@ mod tests {
             NaiveDateTime::parse_from_str("2019-03-19T21:11:24.620401", "%Y-%m-%dT%H:%M:%S%.f")
                 .unwrap();
 
-        let rate = PublishRateLimit {
+        let rate = RateLimiter {
             rate: Duration::from_millis(100),
             burst: 10,
         };
@@ -206,6 +224,7 @@ mod tests {
             user_id,
             tokens: 7,
             last_refill: refill_time,
+            action: LimitedAction::PublishNew,
         };
         assert_eq!(expected, bucket);
         Ok(())
@@ -216,7 +235,7 @@ mod tests {
         let conn = &mut pg_connection();
         let now = now();
 
-        let rate = PublishRateLimit {
+        let rate = RateLimiter {
             rate: Duration::from_millis(100),
             burst: 10,
         };
@@ -227,6 +246,7 @@ mod tests {
             user_id,
             tokens: 6,
             last_refill: expected_refill_time,
+            action: LimitedAction::PublishNew,
         };
         assert_eq!(expected, bucket);
         Ok(())
@@ -237,7 +257,7 @@ mod tests {
         let conn = &mut pg_connection();
         let now = now();
 
-        let rate = PublishRateLimit {
+        let rate = RateLimiter {
             rate: Duration::from_secs(1),
             burst: 10,
         };
@@ -247,6 +267,7 @@ mod tests {
             user_id,
             tokens: 0,
             last_refill: now,
+            action: LimitedAction::PublishNew,
         };
         assert_eq!(expected, bucket);
 
@@ -260,7 +281,7 @@ mod tests {
         let conn = &mut pg_connection();
         let now = now();
 
-        let rate = PublishRateLimit {
+        let rate = RateLimiter {
             rate: Duration::from_secs(1),
             burst: 10,
         };
@@ -271,6 +292,7 @@ mod tests {
             user_id,
             tokens: 1,
             last_refill: refill_time,
+            action: LimitedAction::PublishNew,
         };
         assert_eq!(expected, bucket);
 
@@ -282,7 +304,7 @@ mod tests {
         let conn = &mut pg_connection();
         let now = now();
 
-        let rate = PublishRateLimit {
+        let rate = RateLimiter {
             rate: Duration::from_secs(1),
             burst: 10,
         };
@@ -293,6 +315,7 @@ mod tests {
             user_id,
             tokens: 10,
             last_refill: refill_time,
+            action: LimitedAction::PublishNew,
         };
         assert_eq!(expected, bucket);
 
@@ -304,7 +327,7 @@ mod tests {
         let conn = &mut pg_connection();
         let now = now();
 
-        let rate = PublishRateLimit {
+        let rate = RateLimiter {
             rate: Duration::from_secs(1),
             burst: 10,
         };
@@ -331,7 +354,7 @@ mod tests {
         let conn = &mut pg_connection();
         let now = now();
 
-        let rate = PublishRateLimit {
+        let rate = RateLimiter {
             rate: Duration::from_secs(1),
             burst: 10,
         };
@@ -391,6 +414,7 @@ mod tests {
                 user_id: new_user(conn, "new_user")?,
                 tokens,
                 last_refill: now,
+                action: LimitedAction::PublishNew,
             })
             .get_result(conn)
     }
