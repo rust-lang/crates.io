@@ -1,5 +1,6 @@
 use crate::models::{ApiToken, User, Version};
 use crate::schema::*;
+use crate::sql::pg_enum;
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 
