@@ -757,7 +757,10 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "clap",
+ "reqwest",
  "secrecy",
+ "semver",
+ "serde",
  "tempfile",
  "tracing",
  "tracing-subscriber",

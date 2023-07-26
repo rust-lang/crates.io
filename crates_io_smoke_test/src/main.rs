@@ -3,6 +3,7 @@ extern crate tracing;
 
 use anyhow::{anyhow, Context};
 use clap::Parser;
+use reqwest::blocking::Client;
 use secrecy::SecretString;
 use std::process::Command;
 use tempfile::tempdir;
@@ -27,6 +28,47 @@ fn main() -> anyhow::Result<()> {
 
     let options = Options::parse();
     debug!(?options);
+
+    let http_client = Client::builder()
+        .user_agent("crates.io smoke test")
+        .build()
+        .context("Failed to initialize HTTP client")?;
+
+    info!("Loading crate information from staging.crates.io…");
+    let url = format!(
+        "https://staging.crates.io/api/v1/crates/{}?include=versions",
+        &options.crate_name
+    );
+    debug!(?url);
+
+    let response = http_client
+        .get(url)
+        .send()
+        .context("Failed to load crate information from staging.crates.io")?
+        .error_for_status()
+        .context("Failed to load crate information from staging.crates.io")?;
+
+    #[derive(Debug, serde::Deserialize)]
+    struct CrateResponse {
+        #[serde(rename = "crate")]
+        krate: Crate,
+    }
+
+    #[derive(Debug, serde::Deserialize)]
+    struct Crate {
+        max_version: semver::Version,
+    }
+
+    let json: CrateResponse = response
+        .json()
+        .context("Failed to deserialize crate information")?;
+    debug!(?json);
+
+    let old_version = json.krate.max_version;
+    let mut new_version = old_version.clone();
+    new_version.patch += 1;
+
+    info!(%old_version, %new_version, "Calculated new version number");
 
     info!("Creating temporary working folder…");
     let tempdir = tempdir().context("Failed to create temporary working folder")?;
