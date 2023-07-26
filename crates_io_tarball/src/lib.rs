@@ -56,6 +56,7 @@ pub fn process_tarball<R: Read>(
     let mut vcs_info = None;
 
     let manifest_path = Path::new(&pkg_name).join("Cargo.toml");
+    let manifest_path_lower = Path::new(&pkg_name).join("cargo.toml");
     let mut manifest = None;
 
     for entry in archive.entries()? {
@@ -87,7 +88,7 @@ pub fn process_tarball<R: Read>(
             let mut contents = String::new();
             entry.read_to_string(&mut contents)?;
             vcs_info = CargoVcsInfo::from_contents(&contents).ok();
-        } else if entry_path == manifest_path {
+        } else if entry_path == manifest_path || entry_path == manifest_path_lower {
             // Try to extract and read the Cargo.toml from the tarball, silently
             // erroring if it cannot be read.
             let mut contents = String::new();
@@ -224,5 +225,23 @@ repository = "https://github.com/foo/bar"
         let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, limit));
         let manifest = assert_some!(tarball_info.manifest);
         assert_matches!(manifest.package.readme, OptionalFile::Flag(false));
+    }
+
+    #[test]
+    fn process_tarball_test_lowercase_manifest() {
+        let tarball = TarballBuilder::new("foo", "0.0.1")
+            .add_file(
+                "foo-0.0.1/cargo.toml",
+                br#"
+[package]
+repository = "https://github.com/foo/bar"
+"#,
+            )
+            .build();
+
+        let limit = 512 * 1024 * 1024;
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, limit));
+        let manifest = assert_some!(tarball_info.manifest);
+        assert_some_eq!(manifest.package.repository, "https://github.com/foo/bar");
     }
 }
