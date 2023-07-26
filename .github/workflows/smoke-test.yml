@@ -1,0 +1,21 @@
+name: Smoke Test
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: smoke-test
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v3.5.3
+      - uses: Swatinem/rust-cache@v2.5.1
+      - run: cargo build --manifest-path crates_io_smoke_test/Cargo.toml
+      - run: cargo run --manifest-path crates_io_smoke_test/Cargo.toml --quiet

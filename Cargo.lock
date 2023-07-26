@@ -752,6 +752,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "crates_io_smoke_test"
+version = "0.0.0"
+
+[[package]]
 name = "crates_io_tarball"
 version = "0.0.0"
 dependencies = [
