@@ -1,15 +1,23 @@
 #[macro_use]
 extern crate tracing;
 
+use anyhow::Context;
+use secrecy::SecretString;
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 use tracing_subscriber::{EnvFilter, Layer};
 
-fn main() {
+fn main() -> anyhow::Result<()> {
     init_tracing();
 
+    let _token: SecretString = std::env::var("CARGO_REGISTRY_TOKEN")
+        .context("Failed to read CARGO_REGISTRY_TOKEN environment variable")?
+        .into();
+
     info!("Hello world!");
+
+    Ok(())
 }
 
 fn init_tracing() {

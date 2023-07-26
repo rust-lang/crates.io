@@ -19,3 +19,5 @@ jobs:
       - uses: Swatinem/rust-cache@v2.5.1
       - run: cargo build --manifest-path crates_io_smoke_test/Cargo.toml
       - run: cargo run --manifest-path crates_io_smoke_test/Cargo.toml --quiet
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.STAGING_SMOKE_TEST_TOKEN }}

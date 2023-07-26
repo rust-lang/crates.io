@@ -755,6 +755,8 @@ dependencies = [
 name = "crates_io_smoke_test"
 version = "0.0.0"
 dependencies = [
+ "anyhow",
+ "secrecy",
  "tracing",
  "tracing-subscriber",
 ]
