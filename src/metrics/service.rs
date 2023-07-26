@@ -10,6 +10,7 @@
 //! As a rule of thumb, if the metric is not straight up fetched from the database it's probably an
 //! instance-level metric, and you should add it to `src/metrics/instance.rs`.
 
+use crate::metrics::macros::metrics;
 use crate::schema::{background_jobs, crates, versions};
 use crate::util::errors::AppResult;
 use diesel::{dsl::count_star, prelude::*, PgConnection};

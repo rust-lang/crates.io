@@ -17,6 +17,7 @@
 //! As a rule of thumb, if the metric requires a database query to be updated it's probably a
 //! service-level metric, and you should add it to `src/metrics/service.rs` instead.
 
+use crate::metrics::macros::metrics;
 use crate::{app::App, db::DieselPool};
 use prometheus::{
     proto::MetricFamily, Histogram, HistogramVec, IntCounter, IntCounterVec, IntGauge, IntGaugeVec,
