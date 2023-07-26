@@ -5,3 +5,5 @@ license = "MIT OR Apache-2.0"
 edition = "2021"
 
 [dependencies]
+tracing = "=0.1.37"
+tracing-subscriber = { version = "=0.3.17", features = ["env-filter"] }
