@@ -4,7 +4,7 @@ extern crate tracing;
 use anyhow::{anyhow, Context};
 use clap::Parser;
 use reqwest::blocking::Client;
-use secrecy::SecretString;
+use secrecy::{ExposeSecret, SecretString};
 use std::fs::File;
 use std::io::Write;
 use std::process::Command;
@@ -127,6 +127,26 @@ description = "test crate"
         readme_file
             .write_all(new_content.as_bytes())
             .context("Failed to write `README.md` file content")?;
+    }
+
+    info!("Publishing to staging.crates.io…");
+    let exit_status = Command::new("cargo")
+        .args(["publish", "--registry", "staging", "--allow-dirty"])
+        .current_dir(project_path)
+        .env("CARGO_TERM_COLOR", "always")
+        .env(
+            "CARGO_REGISTRIES_STAGING_INDEX",
+            "https://github.com/rust-lang/staging.crates.io-index",
+        )
+        .env(
+            "CARGO_REGISTRIES_STAGING_TOKEN",
+            options.token.expose_secret(),
+        )
+        .status()
+        .context("Failed to run `cargo publish`")?;
+
+    if !exit_status.success() {
+        return Err(anyhow!("Failed to run `cargo publish`"));
     }
 
     Ok(())
