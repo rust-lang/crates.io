@@ -13,6 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  CARGO_TERM_COLOR: always
   # renovate: datasource=crate depName=cargo-deny versioning=semver
   CARGO_DENY_VERSION: 0.13.9
   # renovate: datasource=crate depName=diesel_cli versioning=semver
