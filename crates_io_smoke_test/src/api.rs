@@ -85,6 +85,25 @@ impl ApiClient {
             .map(|line| serde_json::from_str(line).map_err(Into::into))
             .collect()
     }
+
+    pub fn load_from_git_index(&self, name: &str) -> anyhow::Result<Vec<crates_io_index::Crate>> {
+        let path = Repository::relative_index_file_for_url(name);
+
+        let url = format!(
+            "https://raw.githubusercontent.com/rust-lang/staging.crates.io-index/master/{path}",
+        );
+
+        let text = self
+            .http_client
+            .get(url)
+            .send()?
+            .error_for_status()?
+            .text()?;
+
+        text.lines()
+            .map(|line| serde_json::from_str(line).map_err(Into::into))
+            .collect()
+    }
 }
 
 #[derive(Debug, serde::Deserialize)]
