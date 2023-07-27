@@ -752,6 +752,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "crates_io_smoke_test"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "reqwest",
+ "secrecy",
+ "semver",
+ "serde",
+ "tempfile",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "crates_io_tarball"
 version = "0.0.0"
 dependencies = [
