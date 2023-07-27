@@ -149,6 +149,55 @@ description = "test crate"
         return Err(anyhow!("Failed to run `cargo publish`"));
     }
 
+    let version = new_version;
+    info!(%version, "Checking staging.crates.io API for the new version…");
+
+    let url = format!(
+        "https://staging.crates.io/api/v1/crates/{}/{}",
+        &options.crate_name, &version
+    );
+    debug!(?url);
+
+    let response = http_client
+        .get(url)
+        .send()
+        .context("Failed to load version information from staging.crates.io")?
+        .error_for_status()
+        .context("Failed to load version information from staging.crates.io")?;
+
+    #[derive(Debug, serde::Deserialize)]
+    struct VersionResponse {
+        version: Version,
+    }
+
+    #[derive(Debug, serde::Deserialize)]
+    struct Version {
+        #[serde(rename = "crate")]
+        krate: String,
+        num: semver::Version,
+    }
+
+    let json: VersionResponse = response
+        .json()
+        .context("Failed to deserialize version information")?;
+    debug!(?json);
+
+    if json.version.krate != options.crate_name {
+        return Err(anyhow!(
+            "API returned an unexpected crate name; expected `{}` found `{}`",
+            options.crate_name,
+            json.version.krate
+        ));
+    }
+
+    if json.version.num != version {
+        return Err(anyhow!(
+            "API returned an unexpected version number; expected `{}` found `{}`",
+            version,
+            json.version.num
+        ));
+    }
+
     Ok(())
 }
 
