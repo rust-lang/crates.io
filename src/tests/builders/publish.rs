@@ -48,15 +48,14 @@ impl PublishBuilder {
     }
 
     /// Set the files in the crate's tarball.
-    pub fn files(mut self, files: &[(&str, &[u8])]) -> Self {
+    pub fn files(self, files: &[(&str, &[u8])]) -> Self {
         let mut builder = TarballBuilder::new(&self.krate_name, &self.version.to_string());
 
         for (name, data) in files {
             builder = builder.add_file(name, data);
         }
 
-        self.tarball = builder.build();
-        self
+        self.tarball(builder.build())
     }
 
     /// Set the tarball directly to the given Vec of bytes
