@@ -51,7 +51,7 @@ impl PublishBuilder {
     }
 
     /// Set the files in the crate's tarball.
-    pub fn files(self, files: &[(&str, &[u8])]) -> Self {
+    pub fn files(mut self, files: &[(&str, &[u8])]) -> Self {
         let mut slices = files.iter().map(|p| p.1).collect::<Vec<_>>();
         let mut files = files
             .iter()
@@ -62,15 +62,10 @@ impl PublishBuilder {
             })
             .collect::<Vec<_>>();
 
-        self.files_with_io(&mut files)
-    }
-
-    /// Set the tarball from a Read trait object
-    pub fn files_with_io(mut self, files: &mut [(&str, &mut dyn Read, u64)]) -> Self {
         let mut tarball = Vec::new();
         {
             let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, Compression::default()));
-            for &mut (name, ref mut data, size) in files {
+            for &mut (name, ref mut data, size) in &mut files {
                 let mut header = tar::Header::new_gnu();
                 assert_ok!(header.set_path(name));
                 header.set_size(size);
