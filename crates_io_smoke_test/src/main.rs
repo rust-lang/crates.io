@@ -1,9 +1,11 @@
+mod api;
+
 #[macro_use]
 extern crate tracing;
 
+use crate::api::ApiClient;
 use anyhow::{anyhow, Context};
 use clap::Parser;
-use reqwest::blocking::Client;
 use secrecy::{ExposeSecret, SecretString};
 use std::fs::File;
 use std::io::Write;
@@ -36,42 +38,15 @@ fn main() -> anyhow::Result<()> {
     let options = Options::parse();
     debug!(?options);
 
-    let http_client = Client::builder()
-        .user_agent("crates.io smoke test")
-        .build()
-        .context("Failed to initialize HTTP client")?;
+    let api_client = ApiClient::new().context("Failed to initialize API client")?;
 
     info!("Loading crate information from staging.crates.io…");
-    let url = format!(
-        "https://staging.crates.io/api/v1/crates/{}?include=versions",
-        &options.crate_name
-    );
-    debug!(?url);
-
-    let response = http_client
-        .get(url)
-        .send()
+    let krate = api_client
+        .load_crate(&options.crate_name)
         .context("Failed to load crate information from staging.crates.io")?
-        .error_for_status()
-        .context("Failed to load crate information from staging.crates.io")?;
+        .krate;
 
-    #[derive(Debug, serde::Deserialize)]
-    struct CrateResponse {
-        #[serde(rename = "crate")]
-        krate: Crate,
-    }
-
-    #[derive(Debug, serde::Deserialize)]
-    struct Crate {
-        max_version: semver::Version,
-    }
-
-    let json: CrateResponse = response
-        .json()
-        .context("Failed to deserialize crate information")?;
-    debug!(?json);
-
-    let old_version = json.krate.max_version;
+    let old_version = krate.max_version;
     let mut new_version = old_version.clone();
 
     if options.skip_publish {
@@ -161,35 +136,9 @@ description = "test crate"
     let version = new_version;
     info!(%version, "Checking staging.crates.io API for the new version…");
 
-    let url = format!(
-        "https://staging.crates.io/api/v1/crates/{}/{}",
-        &options.crate_name, &version
-    );
-    debug!(?url);
-
-    let response = http_client
-        .get(url)
-        .send()
-        .context("Failed to load version information from staging.crates.io")?
-        .error_for_status()
+    let json = api_client
+        .load_version(&options.crate_name, &version)
         .context("Failed to load version information from staging.crates.io")?;
-
-    #[derive(Debug, serde::Deserialize)]
-    struct VersionResponse {
-        version: Version,
-    }
-
-    #[derive(Debug, serde::Deserialize)]
-    struct Version {
-        #[serde(rename = "crate")]
-        krate: String,
-        num: semver::Version,
-    }
-
-    let json: VersionResponse = response
-        .json()
-        .context("Failed to deserialize version information")?;
-    debug!(?json);
 
     if json.version.krate != options.crate_name {
         return Err(anyhow!(
