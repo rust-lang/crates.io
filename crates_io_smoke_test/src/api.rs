@@ -1,3 +1,4 @@
+use bytes::Bytes;
 use reqwest::blocking::Client;
 use std::fmt::Display;
 
@@ -43,6 +44,24 @@ impl ApiClient {
             .send()?
             .error_for_status()?
             .json()
+            .map_err(Into::into)
+    }
+
+    pub fn download_crate_file<N: Display, V: Display>(
+        &self,
+        name: N,
+        version: V,
+    ) -> anyhow::Result<Bytes> {
+        let url = format!(
+            "https://staging.crates.io/api/v1/crates/{}/{}/download",
+            name, version
+        );
+
+        self.http_client
+            .get(url)
+            .send()?
+            .error_for_status()?
+            .bytes()
             .map_err(Into::into)
     }
 }

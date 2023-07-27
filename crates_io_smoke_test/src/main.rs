@@ -92,6 +92,19 @@ fn main() -> anyhow::Result<()> {
         ));
     }
 
+    info!(%version, "Checking crate file download from staging.crates.io API…");
+
+    let bytes = api_client
+        .download_crate_file(&options.crate_name, &version)
+        .context("Failed to download crate file")?;
+
+    if bytes.len() < 500 {
+        return Err(anyhow!(
+            "API returned an unexpectedly small crate file; size: {}",
+            bytes.len()
+        ));
+    }
+
     Ok(())
 }
 
