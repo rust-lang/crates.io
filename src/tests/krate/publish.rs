@@ -500,11 +500,12 @@ fn new_krate_gzip_bomb() {
     let (app, _, _, token) = TestApp::full().with_token();
 
     let len = 512 * 1024;
-    let mut body = io::repeat(0).take(len);
+    let mut body = Vec::new();
+    io::repeat(0).take(len).read_to_end(&mut body).unwrap();
 
     let crate_to_publish = PublishBuilder::new("foo")
         .version("1.1.0")
-        .files_with_io(&mut [("foo-1.1.0/a", &mut body, len)]);
+        .files(&[("foo-1.1.0/a", &body)]);
 
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);

@@ -1,5 +1,5 @@
 use crates_io::views::krate_publish as u;
-use std::{collections::BTreeMap, io::Read};
+use std::collections::BTreeMap;
 
 use crates_io_tarball::TarballBuilder;
 use flate2::{write::GzEncoder, Compression};
@@ -51,31 +51,14 @@ impl PublishBuilder {
     }
 
     /// Set the files in the crate's tarball.
-    pub fn files(self, files: &[(&str, &[u8])]) -> Self {
-        let mut slices = files.iter().map(|p| p.1).collect::<Vec<_>>();
-        let mut files = files
-            .iter()
-            .zip(&mut slices)
-            .map(|(&(name, _), data)| {
-                let len = data.len() as u64;
-                (name, data as &mut dyn Read, len)
-            })
-            .collect::<Vec<_>>();
-
-        self.files_with_io(&mut files)
-    }
-
-    /// Set the tarball from a Read trait object
-    pub fn files_with_io(mut self, files: &mut [(&str, &mut dyn Read, u64)]) -> Self {
+    pub fn files(mut self, files: &[(&str, &[u8])]) -> Self {
         let mut tarball = Vec::new();
         {
             let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, Compression::default()));
-            for &mut (name, ref mut data, size) in files {
+            for (name, data) in files {
                 let mut header = tar::Header::new_gnu();
-                assert_ok!(header.set_path(name));
-                header.set_size(size);
-                header.set_cksum();
-                assert_ok!(ar.append(&header, data));
+                header.set_size(data.len() as u64);
+                assert_ok!(ar.append_data(&mut header, name, *data));
             }
             assert_ok!(ar.finish());
         }
