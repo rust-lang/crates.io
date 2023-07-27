@@ -11,6 +11,7 @@ use crate::api::ApiClient;
 use anyhow::{anyhow, Context};
 use clap::Parser;
 use secrecy::SecretString;
+use std::path::{Path, PathBuf};
 use tempfile::tempdir;
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::layer::SubscriberExt;
@@ -61,42 +62,8 @@ fn main() -> anyhow::Result<()> {
         debug!(tempdir.path = %tempdir.path().display());
 
         info!("Creating `{}` project…", options.crate_name);
-        cargo::new_lib(tempdir.path(), &options.crate_name).context("Failed to run `cargo new`")?;
-
-        let project_path = tempdir.path().join(&options.crate_name);
-        debug!(project_path = %project_path.display());
-
-        {
-            let manifest_path = project_path.join("Cargo.toml");
-            info!(manifest_path = %manifest_path.display(), "Overriding `Cargo.toml` file…");
-
-            let new_content = format!(
-                r#"[package]
-name = "{}"
-version = "{}"
-edition = "2018"
-license = "MIT"
-description = "test crate"
-"#,
-                &options.crate_name, &new_version
-            );
-
-            std::fs::write(&manifest_path, new_content)
-                .context("Failed to write `Cargo.toml` file content")?;
-        }
-
-        {
-            let readme_path = project_path.join("README.md");
-            info!(readme_path = %readme_path.display(), "Creating `README.md` file…");
-
-            let new_content = format!(
-                "# {} v{}\n\n![](https://media1.giphy.com/media/Ju7l5y9osyymQ/200.gif)\n",
-                &options.crate_name, &new_version
-            );
-
-            std::fs::write(&readme_path, new_content)
-                .context("Failed to write `README.md` file content")?;
-        }
+        let project_path = create_project(tempdir.path(), &options.crate_name, &new_version)
+            .context("Failed to create project")?;
 
         info!("Publishing to staging.crates.io…");
         cargo::publish(&project_path, &options.token).context("Failed to run `cargo publish`")?;
@@ -138,4 +105,47 @@ fn init_tracing() {
         .with_filter(env_filter);
 
     tracing_subscriber::registry().with(log_layer).init();
+}
+
+fn create_project(
+    parent_path: &Path,
+    name: &str,
+    version: &semver::Version,
+) -> anyhow::Result<PathBuf> {
+    cargo::new_lib(parent_path, name).context("Failed to run `cargo new`")?;
+
+    let project_path = parent_path.join(name);
+    debug!(project_path = %project_path.display());
+
+    {
+        let manifest_path = project_path.join("Cargo.toml");
+        info!(manifest_path = %manifest_path.display(), "Overriding `Cargo.toml` file…");
+
+        let new_content = format!(
+            r#"[package]
+name = "{name}"
+version = "{version}"
+edition = "2018"
+license = "MIT"
+description = "test crate"
+"#,
+        );
+
+        std::fs::write(&manifest_path, new_content)
+            .context("Failed to write `Cargo.toml` file content")?;
+    }
+
+    {
+        let readme_path = project_path.join("README.md");
+        info!(readme_path = %readme_path.display(), "Creating `README.md` file…");
+
+        let new_content = format!(
+            "# {name} v{version}\n\n![](https://media1.giphy.com/media/Ju7l5y9osyymQ/200.gif)\n",
+        );
+
+        std::fs::write(&readme_path, new_content)
+            .context("Failed to write `README.md` file content")?;
+    }
+
+    Ok(project_path)
 }
