@@ -25,9 +25,9 @@ pub struct PublishBuilder {
 }
 
 impl PublishBuilder {
-    /// Create a request to publish a crate with the given name, version 1.0.0, and no files
+    /// Create a request to publish a crate with the given name and version, and no files
     /// in its tarball.
-    pub fn new(krate_name: &str) -> Self {
+    pub fn new(krate_name: &str, version: &str) -> Self {
         PublishBuilder {
             categories: vec![],
             deps: vec![],
@@ -38,16 +38,10 @@ impl PublishBuilder {
             license: Some("MIT".to_string()),
             license_file: None,
             readme: None,
-            tarball: TarballBuilder::new(krate_name, "1.0.0").build(),
-            version: semver::Version::parse("1.0.0").unwrap(),
+            tarball: TarballBuilder::new(krate_name, version).build(),
+            version: semver::Version::parse(version).unwrap(),
             features: BTreeMap::new(),
         }
-    }
-
-    /// Set the version of the crate being published to something other than the default of 1.0.0.
-    pub fn version(mut self, version: &str) -> Self {
-        self.version = semver::Version::parse(version).unwrap();
-        self
     }
 
     /// Set the files in the crate's tarball.

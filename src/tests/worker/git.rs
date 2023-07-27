@@ -12,7 +12,7 @@ fn index_smoke_test() {
 
     // Add a new crate
 
-    let body = PublishBuilder::new("serde").version("1.0.0").body();
+    let body = PublishBuilder::new("serde", "1.0.0").body();
     let response = token.put::<()>("/api/v1/crates/new", &body);
     assert_eq!(response.status(), StatusCode::OK);
 

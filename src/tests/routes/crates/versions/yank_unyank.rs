@@ -52,7 +52,7 @@ fn yank_records_an_audit_action() {
     let (_, anon, _, token) = TestApp::full().with_token();
 
     // Upload a new crate, putting it in the git index
-    let crate_to_publish = PublishBuilder::new("fyk");
+    let crate_to_publish = PublishBuilder::new("fyk", "1.0.0");
     token.publish_crate(crate_to_publish).good();
 
     // Yank it
@@ -73,7 +73,7 @@ fn unyank_records_an_audit_action() {
     let (_, anon, _, token) = TestApp::full().with_token();
 
     // Upload a new crate
-    let crate_to_publish = PublishBuilder::new("fyk");
+    let crate_to_publish = PublishBuilder::new("fyk", "1.0.0");
     token.publish_crate(crate_to_publish).good();
 
     // Yank version 1.0.0
@@ -104,7 +104,7 @@ mod auth {
     fn prepare() -> (TestApp, MockAnonymousUser, MockCookieUser) {
         let (app, anon, cookie) = TestApp::full().with_user();
 
-        let pb = PublishBuilder::new(CRATE_NAME).version(CRATE_VERSION);
+        let pb = PublishBuilder::new(CRATE_NAME, CRATE_VERSION);
         cookie.publish_crate(pb).good();
 
         (app, anon, cookie)
