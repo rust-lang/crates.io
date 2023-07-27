@@ -57,10 +57,8 @@ impl PublishBuilder {
             let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, Compression::default()));
             for (name, data) in files {
                 let mut header = tar::Header::new_gnu();
-                assert_ok!(header.set_path(name));
                 header.set_size(data.len() as u64);
-                header.set_cksum();
-                assert_ok!(ar.append(&header, *data));
+                assert_ok!(ar.append_data(&mut header, name, *data));
             }
             assert_ok!(ar.finish());
         }
