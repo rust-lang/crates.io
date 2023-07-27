@@ -762,6 +762,7 @@ dependencies = [
  "semver",
  "serde",
  "tempfile",
+ "thiserror",
  "tracing",
  "tracing-subscriber",
 ]

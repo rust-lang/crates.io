@@ -12,5 +12,6 @@ secrecy = "=0.8.0"
 semver = { version = "=1.0.18", features = ["serde"] }
 serde = { version = "=1.0.176", features = ["derive"] }
 tempfile = "=3.7.0"
+thiserror = "=1.0.44"
 tracing = "=0.1.37"
 tracing-subscriber = { version = "=0.3.17", features = ["env-filter"] }

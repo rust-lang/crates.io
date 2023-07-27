@@ -1,9 +1,13 @@
+#![allow(unstable_name_collisions)]
+
 mod api;
+mod exit_status_ext;
 
 #[macro_use]
 extern crate tracing;
 
 use crate::api::ApiClient;
+use crate::exit_status_ext::ExitStatusExt;
 use anyhow::{anyhow, Context};
 use clap::Parser;
 use secrecy::{ExposeSecret, SecretString};
@@ -60,16 +64,14 @@ fn main() -> anyhow::Result<()> {
         debug!(tempdir.path = %tempdir.path().display());
 
         info!("Creating `{}` project…", options.crate_name);
-        let exit_status = Command::new("cargo")
+        Command::new("cargo")
             .args(["new", "--lib", &options.crate_name])
             .current_dir(tempdir.path())
             .env("CARGO_TERM_COLOR", "always")
             .status()
+            .context("Failed to run `cargo new`")?
+            .exit_ok()
             .context("Failed to run `cargo new`")?;
-
-        if !exit_status.success() {
-            return Err(anyhow!("Failed to run `cargo new`"));
-        }
 
         let project_path = tempdir.path().join(&options.crate_name);
         debug!(project_path = %project_path.display());
@@ -113,7 +115,7 @@ description = "test crate"
         }
 
         info!("Publishing to staging.crates.io…");
-        let exit_status = Command::new("cargo")
+        Command::new("cargo")
             .args(["publish", "--registry", "staging", "--allow-dirty"])
             .current_dir(project_path)
             .env("CARGO_TERM_COLOR", "always")
@@ -126,11 +128,9 @@ description = "test crate"
                 options.token.expose_secret(),
             )
             .status()
+            .context("Failed to run `cargo publish`")?
+            .exit_ok()
             .context("Failed to run `cargo publish`")?;
-
-        if !exit_status.success() {
-            return Err(anyhow!("Failed to run `cargo publish`"));
-        }
     }
 
     let version = new_version;
