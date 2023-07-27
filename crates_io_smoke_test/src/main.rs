@@ -1,19 +1,18 @@
 #![allow(unstable_name_collisions)]
 
 mod api;
+mod cargo;
 mod exit_status_ext;
 
 #[macro_use]
 extern crate tracing;
 
 use crate::api::ApiClient;
-use crate::exit_status_ext::ExitStatusExt;
 use anyhow::{anyhow, Context};
 use clap::Parser;
-use secrecy::{ExposeSecret, SecretString};
+use secrecy::SecretString;
 use std::fs::File;
 use std::io::Write;
-use std::process::Command;
 use tempfile::tempdir;
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::layer::SubscriberExt;
@@ -64,14 +63,7 @@ fn main() -> anyhow::Result<()> {
         debug!(tempdir.path = %tempdir.path().display());
 
         info!("Creating `{}` project…", options.crate_name);
-        Command::new("cargo")
-            .args(["new", "--lib", &options.crate_name])
-            .current_dir(tempdir.path())
-            .env("CARGO_TERM_COLOR", "always")
-            .status()
-            .context("Failed to run `cargo new`")?
-            .exit_ok()
-            .context("Failed to run `cargo new`")?;
+        cargo::new_lib(tempdir.path(), &options.crate_name).context("Failed to run `cargo new`")?;
 
         let project_path = tempdir.path().join(&options.crate_name);
         debug!(project_path = %project_path.display());
@@ -115,22 +107,7 @@ description = "test crate"
         }
 
         info!("Publishing to staging.crates.io…");
-        Command::new("cargo")
-            .args(["publish", "--registry", "staging", "--allow-dirty"])
-            .current_dir(project_path)
-            .env("CARGO_TERM_COLOR", "always")
-            .env(
-                "CARGO_REGISTRIES_STAGING_INDEX",
-                "https://github.com/rust-lang/staging.crates.io-index",
-            )
-            .env(
-                "CARGO_REGISTRIES_STAGING_TOKEN",
-                options.token.expose_secret(),
-            )
-            .status()
-            .context("Failed to run `cargo publish`")?
-            .exit_ok()
-            .context("Failed to run `cargo publish`")?;
+        cargo::publish(&project_path, &options.token).context("Failed to run `cargo publish`")?;
     }
 
     let version = new_version;
