@@ -105,6 +105,11 @@ fn main() -> anyhow::Result<()> {
         ));
     }
 
+    info!(
+        "All automated smoke tests have passed.\n\nPlease visit https://staging.crates.io/crates/{}/{} for further manual testing.",
+        &options.crate_name, &version
+    );
+
     Ok(())
 }
 
