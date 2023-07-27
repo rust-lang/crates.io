@@ -105,6 +105,33 @@ fn main() -> anyhow::Result<()> {
         ));
     }
 
+    info!("Checking sparse index…");
+    let sparse_index_records = api_client
+        .load_from_sparse_index(&options.crate_name)
+        .context("Failed to load sparse index data")?;
+
+    let version_str = version.to_string();
+    let record = sparse_index_records
+        .iter()
+        .find(|record| record.vers == version_str);
+    if record.is_none() {
+        return Err(anyhow!(
+            "Failed to find published version on the sparse index"
+        ));
+    }
+
+    info!("Checking git index…");
+    let git_index_records = api_client
+        .load_from_git_index(&options.crate_name)
+        .context("Failed to load git index data")?;
+
+    let record = git_index_records
+        .iter()
+        .find(|record| record.vers == version_str);
+    if record.is_none() {
+        return Err(anyhow!("Failed to find published version on the git index"));
+    }
+
     info!(
         "All automated smoke tests have passed.\n\nPlease visit https://staging.crates.io/crates/{}/{} for further manual testing.",
         &options.crate_name, &version
