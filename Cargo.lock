@@ -756,12 +756,14 @@ name = "crates_io_smoke_test"
 version = "0.0.0"
 dependencies = [
  "anyhow",
+ "bytes",
  "clap",
  "reqwest",
  "secrecy",
  "semver",
  "serde",
  "tempfile",
+ "thiserror",
  "tracing",
  "tracing-subscriber",
 ]
