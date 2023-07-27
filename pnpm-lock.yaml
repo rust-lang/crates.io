@@ -16,11 +16,11 @@ dependencies:
     specifier: 3.4.0
     version: 3.4.0
   '@sentry/browser':
-    specifier: 7.60.0
-    version: 7.60.0
+    specifier: 7.60.1
+    version: 7.60.1
   '@sentry/utils':
-    specifier: 7.60.0
-    version: 7.60.0
+    specifier: 7.60.1
+    version: 7.60.1
   chart.js:
     specifier: 4.3.2
     version: 4.3.2
@@ -3591,56 +3591,56 @@ packages:
       - supports-color
     dev: true
 
-  /@sentry-internal/tracing@7.60.0:
-    resolution: {integrity: sha512-2qvxmR954H+K7u4o92sS2u+hntzshem9XwfHAqDvBe51arNbFVy8LfJTJ5fffgZq/6jXlozCO0/6aR5yLR5mBg==}
+  /@sentry-internal/tracing@7.60.1:
+    resolution: {integrity: sha512-2vM+3/ddzmoBfi92OOD9FFTHXf0HdQhKtNM26+/RsmkKnTid+/inbvA7nKi+Qa7ExcnlC6eclEHQEg+0X3yDkQ==}
     engines: {node: '>=8'}
     dependencies:
-      '@sentry/core': 7.60.0
-      '@sentry/types': 7.60.0
-      '@sentry/utils': 7.60.0
+      '@sentry/core': 7.60.1
+      '@sentry/types': 7.60.1
+      '@sentry/utils': 7.60.1
       tslib: 2.6.0
     dev: false
 
-  /@sentry/browser@7.60.0:
-    resolution: {integrity: sha512-WznY6zrJxCUHZns8jTvDsZw3aaHriSP+jqD+wkXZG3ceooQwFn0RkAstUuoG7YyP4Foinznn3+caeQD4ZjWaXQ==}
+  /@sentry/browser@7.60.1:
+    resolution: {integrity: sha512-opZQee3S0c459LXt8YGpwOM/qiTlzluHEEnfW2q+D2yVCWh8iegsDX3kbRiv4i/mtQu9yPhM9M761KDnc/0eZw==}
     engines: {node: '>=8'}
     dependencies:
-      '@sentry-internal/tracing': 7.60.0
-      '@sentry/core': 7.60.0
-      '@sentry/replay': 7.60.0
-      '@sentry/types': 7.60.0
-      '@sentry/utils': 7.60.0
+      '@sentry-internal/tracing': 7.60.1
+      '@sentry/core': 7.60.1
+      '@sentry/replay': 7.60.1
+      '@sentry/types': 7.60.1
+      '@sentry/utils': 7.60.1
       tslib: 2.6.0
     dev: false
 
-  /@sentry/core@7.60.0:
-    resolution: {integrity: sha512-B02OlFMoqdkfDZlbQfmk7tL2vObShofk7ySd/7mp+oRdUuCvX0tyrGlwI87YJvd8YWSZOCKINs3aVYivw/b6gg==}
+  /@sentry/core@7.60.1:
+    resolution: {integrity: sha512-yr/0VFYWOJyXj+F2nifkRYxXskotsNnDggUnFOZZN2ZgTG94IzRFsOZQ6RslHJ8nrYPTBNO74reU0C0GB++xRw==}
     engines: {node: '>=8'}
     dependencies:
-      '@sentry/types': 7.60.0
-      '@sentry/utils': 7.60.0
+      '@sentry/types': 7.60.1
+      '@sentry/utils': 7.60.1
       tslib: 2.6.0
     dev: false
 
-  /@sentry/replay@7.60.0:
-    resolution: {integrity: sha512-iVSs+mhgjeK0qqLdCqbCa1P4I6hETHCUq14pTYp0bwGrI1D/a1Ho/6wLkwXv47Gnrwaba/7JFM+IxZcN4FzfmQ==}
+  /@sentry/replay@7.60.1:
+    resolution: {integrity: sha512-WHQxEpJbHICs12L17LGgS/ql91yn9wJDH/hgb+1H90HaasjoR54ofWCKul29OvYV0snTWuHd6xauwtzyv9tzvg==}
     engines: {node: '>=12'}
     dependencies:
-      '@sentry/core': 7.60.0
-      '@sentry/types': 7.60.0
-      '@sentry/utils': 7.60.0
+      '@sentry/core': 7.60.1
+      '@sentry/types': 7.60.1
+      '@sentry/utils': 7.60.1
     dev: false
 
-  /@sentry/types@7.60.0:
-    resolution: {integrity: sha512-MSEuF9YjE0j+UKdqee2AzcNlMnShVNTkCB2Wnng6Bc5hHhn4fyYeTLbuFpNxL0ffN65lxblaWx6doDsMcvRxcA==}
+  /@sentry/types@7.60.1:
+    resolution: {integrity: sha512-8lKKSCOhZ953cWxwnfZwoR3ZFFlZG4P3PQFTaFt/u4LxLh/0zYbdtgvtUqXRURjMCi5P6ddeE9Uw9FGnTJCsTw==}
     engines: {node: '>=8'}
     dev: false
 
-  /@sentry/utils@7.60.0:
-    resolution: {integrity: sha512-Oc/PQqzeNDOSy4ZzVj6h9U+GEGRkg2PEVn9PC2V9/v3HDD20mndFqR/S2B5OOgDb/6pNGyz8XiZYI5rb29WFHA==}
+  /@sentry/utils@7.60.1:
+    resolution: {integrity: sha512-ik+5sKGBx4DWuvf6UUKPSafaDiASxP+Xvjg3C9ppop2I/JWxP1FfZ5g22n5ZmPmNahD6clTSoTWly8qyDUlUOw==}
     engines: {node: '>=8'}
     dependencies:
-      '@sentry/types': 7.60.0
+      '@sentry/types': 7.60.1
       tslib: 2.6.0
     dev: false
 
