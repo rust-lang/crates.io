@@ -23,6 +23,11 @@ struct Options {
     /// staging.crates.io API token that will be used to publish a new version
     #[arg(long, env = "CARGO_REGISTRY_TOKEN", hide_env_values = true)]
     token: SecretString,
+
+    /// skip the publishing step and run the verifications for the highest
+    /// uploaded version instead.
+    #[arg(long)]
+    skip_publish: bool,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -68,85 +73,89 @@ fn main() -> anyhow::Result<()> {
 
     let old_version = json.krate.max_version;
     let mut new_version = old_version.clone();
-    new_version.patch += 1;
 
-    info!(%old_version, %new_version, "Calculated new version number");
+    if options.skip_publish {
+        info!("Skipping publish step");
+    } else {
+        new_version.patch += 1;
+        info!(%old_version, %new_version, "Calculated new version number");
 
-    info!("Creating temporary working folder…");
-    let tempdir = tempdir().context("Failed to create temporary working folder")?;
-    debug!(tempdir.path = %tempdir.path().display());
+        info!("Creating temporary working folder…");
+        let tempdir = tempdir().context("Failed to create temporary working folder")?;
+        debug!(tempdir.path = %tempdir.path().display());
 
-    info!("Creating `{}` project…", options.crate_name);
-    let exit_status = Command::new("cargo")
-        .args(["new", "--lib", &options.crate_name])
-        .current_dir(tempdir.path())
-        .env("CARGO_TERM_COLOR", "always")
-        .status()
-        .context("Failed to run `cargo new`")?;
+        info!("Creating `{}` project…", options.crate_name);
+        let exit_status = Command::new("cargo")
+            .args(["new", "--lib", &options.crate_name])
+            .current_dir(tempdir.path())
+            .env("CARGO_TERM_COLOR", "always")
+            .status()
+            .context("Failed to run `cargo new`")?;
 
-    if !exit_status.success() {
-        return Err(anyhow!("Failed to run `cargo new`"));
-    }
+        if !exit_status.success() {
+            return Err(anyhow!("Failed to run `cargo new`"));
+        }
 
-    let project_path = tempdir.path().join(&options.crate_name);
-    debug!(project_path = %project_path.display());
+        let project_path = tempdir.path().join(&options.crate_name);
+        debug!(project_path = %project_path.display());
 
-    {
-        let manifest_path = project_path.join("Cargo.toml");
-        info!(manifest_path = %manifest_path.display(), "Overriding `Cargo.toml` file…");
-        let mut manifest_file =
-            File::create(manifest_path).context("Failed to open `Cargo.toml` file")?;
+        {
+            let manifest_path = project_path.join("Cargo.toml");
+            info!(manifest_path = %manifest_path.display(), "Overriding `Cargo.toml` file…");
+            let mut manifest_file =
+                File::create(manifest_path).context("Failed to open `Cargo.toml` file")?;
 
-        let new_content = format!(
-            r#"[package]
+            let new_content = format!(
+                r#"[package]
 name = "{}"
 version = "{}"
 edition = "2018"
 license = "MIT"
 description = "test crate"
 "#,
-            &options.crate_name, &new_version
-        );
+                &options.crate_name, &new_version
+            );
 
-        manifest_file
-            .write_all(new_content.as_bytes())
-            .context("Failed to write `Cargo.toml` file content")?;
-    }
+            manifest_file
+                .write_all(new_content.as_bytes())
+                .context("Failed to write `Cargo.toml` file content")?;
+        }
 
-    {
-        let readme_path = project_path.join("README.md");
-        info!(readme_path = %readme_path.display(), "Creating `README.md` file…");
-        let mut readme_file =
-            File::create(readme_path).context("Failed to open `README.md` file")?;
+        {
+            let readme_path = project_path.join("README.md");
+            info!(readme_path = %readme_path.display(), "Creating `README.md` file…");
+            let mut readme_file =
+                File::create(readme_path).context("Failed to open `README.md` file")?;
 
-        let new_content = format!(
-            "# {} v{}\n\n![](https://media1.giphy.com/media/Ju7l5y9osyymQ/200.gif)\n",
-            &options.crate_name, &new_version
-        );
+            let new_content = format!(
+                "# {} v{}\n\n![](https://media1.giphy.com/media/Ju7l5y9osyymQ/200.gif)\n",
+                &options.crate_name, &new_version
+            );
 
-        readme_file
-            .write_all(new_content.as_bytes())
-            .context("Failed to write `README.md` file content")?;
-    }
+            readme_file
+                .write_all(new_content.as_bytes())
+                .context("Failed to write `README.md` file content")?;
+        }
 
-    info!("Publishing to staging.crates.io…");
-    let exit_status = Command::new("cargo")
-        .args(["publish", "--registry", "staging", "--allow-dirty"])
-        .current_dir(project_path)
-        .env("CARGO_TERM_COLOR", "always")
-        .env(
-            "CARGO_REGISTRIES_STAGING_INDEX",
-            "https://github.com/rust-lang/staging.crates.io-index",
-        )
-        .env(
-            "CARGO_REGISTRIES_STAGING_TOKEN",
-            options.token.expose_secret(),
-        )
-        .status()
-        .context("Failed to run `cargo publish`")?;
+        info!("Publishing to staging.crates.io…");
+        let exit_status = Command::new("cargo")
+            .args(["publish", "--registry", "staging", "--allow-dirty"])
+            .current_dir(project_path)
+            .env("CARGO_TERM_COLOR", "always")
+            .env(
+                "CARGO_REGISTRIES_STAGING_INDEX",
+                "https://github.com/rust-lang/staging.crates.io-index",
+            )
+            .env(
+                "CARGO_REGISTRIES_STAGING_TOKEN",
+                options.token.expose_secret(),
+            )
+            .status()
+            .context("Failed to run `cargo publish`")?;
 
-    if !exit_status.success() {
-        return Err(anyhow!("Failed to run `cargo publish`"));
+        if !exit_status.success() {
+            return Err(anyhow!("Failed to run `cargo publish`"));
+        }
     }
 
     let version = new_version;
