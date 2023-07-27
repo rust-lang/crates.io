@@ -28,6 +28,10 @@ impl PublishBuilder {
     /// Create a request to publish a crate with the given name and version, and no files
     /// in its tarball.
     pub fn new(krate_name: &str, version: &str) -> Self {
+        let tarball = TarballBuilder::new(krate_name, version)
+            .add_raw_manifest(b"[package]")
+            .build();
+
         PublishBuilder {
             categories: vec![],
             deps: vec![],
@@ -38,7 +42,7 @@ impl PublishBuilder {
             license: Some("MIT".to_string()),
             license_file: None,
             readme: None,
-            tarball: TarballBuilder::new(krate_name, version).build(),
+            tarball,
             version: semver::Version::parse(version).unwrap(),
             features: BTreeMap::new(),
         }
