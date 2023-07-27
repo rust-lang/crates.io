@@ -8,7 +8,7 @@ fn yank_works_as_intended() {
     let (app, anon, cookie, token) = TestApp::full().with_token();
 
     // Upload a new crate, putting it in the git index
-    let crate_to_publish = PublishBuilder::new("fyk");
+    let crate_to_publish = PublishBuilder::new("fyk", "1.0.0");
     token.publish_crate(crate_to_publish).good();
 
     let crates = app.crates_from_index_head("fyk");
@@ -65,7 +65,7 @@ fn yank_max_version() {
     let (_, anon, _, token) = TestApp::full().with_token();
 
     // Upload a new crate
-    let crate_to_publish = PublishBuilder::new("fyk_max");
+    let crate_to_publish = PublishBuilder::new("fyk_max", "1.0.0");
     token.publish_crate(crate_to_publish).good();
 
     // double check the max version
@@ -73,7 +73,7 @@ fn yank_max_version() {
     assert_eq!(json.krate.max_version, "1.0.0");
 
     // add version 2.0.0
-    let crate_to_publish = PublishBuilder::new("fyk_max").version("2.0.0");
+    let crate_to_publish = PublishBuilder::new("fyk_max", "2.0.0");
     let json = token.publish_crate(crate_to_publish).good();
     assert_eq!(json.krate.max_version, "2.0.0");
 
@@ -119,7 +119,7 @@ fn publish_after_yank_max_version() {
     let (_, anon, _, token) = TestApp::full().with_token();
 
     // Upload a new crate
-    let crate_to_publish = PublishBuilder::new("fyk_max");
+    let crate_to_publish = PublishBuilder::new("fyk_max", "1.0.0");
     token.publish_crate(crate_to_publish).good();
 
     // double check the max version
@@ -133,7 +133,7 @@ fn publish_after_yank_max_version() {
     assert_eq!(json.krate.max_version, "0.0.0");
 
     // add version 2.0.0
-    let crate_to_publish = PublishBuilder::new("fyk_max").version("2.0.0");
+    let crate_to_publish = PublishBuilder::new("fyk_max", "2.0.0");
     let json = token.publish_crate(crate_to_publish).good();
     assert_eq!(json.krate.max_version, "2.0.0");
 

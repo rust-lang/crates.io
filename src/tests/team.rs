@@ -222,7 +222,7 @@ fn remove_team_as_named_owner() {
         .good();
 
     let user_on_one_team = app.db_new_user("user-one-team");
-    let crate_to_publish = PublishBuilder::new("foo_remove_team").version("2.0.0");
+    let crate_to_publish = PublishBuilder::new("foo_remove_team", "2.0.0");
     let response = user_on_one_team.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
@@ -285,7 +285,7 @@ fn publish_not_owned() {
 
     let user_on_one_team = app.db_new_user("user-one-team");
 
-    let crate_to_publish = PublishBuilder::new("foo_not_owned").version("2.0.0");
+    let crate_to_publish = PublishBuilder::new("foo_not_owned", "2.0.0");
     let response = user_on_one_team.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
@@ -310,7 +310,7 @@ fn publish_org_owner_owned() {
 
     let user_org_owner = app.db_new_user("user-org-owner");
 
-    let crate_to_publish = PublishBuilder::new("foo_not_owned").version("2.0.0");
+    let crate_to_publish = PublishBuilder::new("foo_not_owned", "2.0.0");
     let response = user_org_owner.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
@@ -336,7 +336,7 @@ fn publish_owned() {
 
     let user_on_one_team = app.db_new_user("user-one-team");
 
-    let crate_to_publish = PublishBuilder::new("foo_team_owned").version("2.0.0");
+    let crate_to_publish = PublishBuilder::new("foo_team_owned", "2.0.0");
     user_on_one_team.publish_crate(crate_to_publish).good();
 }
 

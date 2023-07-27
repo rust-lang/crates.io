@@ -136,7 +136,7 @@ fn new_crate_owner() {
     let (app, _, _, token) = TestApp::full().with_token();
 
     // Create a crate under one user
-    let crate_to_publish = PublishBuilder::new("foo_owner").version("1.0.0");
+    let crate_to_publish = PublishBuilder::new("foo_owner", "1.0.0");
     token.publish_crate(crate_to_publish).good();
 
     // Add the second user as an owner (with a different case to make sure that works)
@@ -152,7 +152,7 @@ fn new_crate_owner() {
     assert_eq!(crates.crates.len(), 1);
 
     // And upload a new version as the second user
-    let crate_to_publish = PublishBuilder::new("foo_owner").version("2.0.0");
+    let crate_to_publish = PublishBuilder::new("foo_owner", "2.0.0");
     user2
         .db_new_token("bar_token")
         .publish_crate(crate_to_publish)
