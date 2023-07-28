@@ -118,7 +118,7 @@ mod tests {
     #[test]
     fn process_tarball_test() {
         let tarball = TarballBuilder::new("foo", "0.0.1")
-            .add_raw_manifest(b"[package]")
+            .add_raw_manifest(b"[package]\nname = \"foo\"\nversion = \"0.0.1\"\n")
             .build();
 
         let limit = 512 * 1024 * 1024;
@@ -134,7 +134,7 @@ mod tests {
     #[test]
     fn process_tarball_test_incomplete_vcs_info() {
         let tarball = TarballBuilder::new("foo", "0.0.1")
-            .add_raw_manifest(b"[package]")
+            .add_raw_manifest(b"[package]\nname = \"foo\"\nversion = \"0.0.1\"\n")
             .add_file("foo-0.0.1/.cargo_vcs_info.json", br#"{"unknown": "field"}"#)
             .build();
 
@@ -149,7 +149,7 @@ mod tests {
     #[test]
     fn process_tarball_test_vcs_info() {
         let tarball = TarballBuilder::new("foo", "0.0.1")
-            .add_raw_manifest(b"[package]")
+            .add_raw_manifest(b"[package]\nname = \"foo\"\nversion = \"0.0.1\"\n")
             .add_file(
                 "foo-0.0.1/.cargo_vcs_info.json",
                 br#"{"path_in_vcs": "path/in/vcs"}"#,
@@ -170,6 +170,8 @@ mod tests {
             .add_raw_manifest(
                 br#"
 [package]
+name = "foo"
+version = "0.0.1"
 rust-version = "1.59"
 readme = "README.md"
 repository = "https://github.com/foo/bar"
@@ -191,6 +193,8 @@ repository = "https://github.com/foo/bar"
             .add_raw_manifest(
                 br#"
                 [project]
+                name = "foo"
+                version = "0.0.1"
                 rust-version = "1.23"
                 "#,
             )
@@ -208,6 +212,8 @@ repository = "https://github.com/foo/bar"
             .add_raw_manifest(
                 br#"
                 [package]
+                name = "foo"
+                version = "0.0.1"
                 "#,
             )
             .build();
@@ -224,6 +230,8 @@ repository = "https://github.com/foo/bar"
             .add_raw_manifest(
                 br#"
                 [package]
+                name = "foo"
+                version = "0.0.1"
                 readme = false
                 "#,
             )
@@ -242,6 +250,8 @@ repository = "https://github.com/foo/bar"
                 "foo-0.0.1/cargo.toml",
                 br#"
 [package]
+name = "foo"
+version = "0.0.1"
 repository = "https://github.com/foo/bar"
 "#,
             )

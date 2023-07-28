@@ -11,6 +11,8 @@ pub struct Manifest {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Package {
+    pub name: String,
+    pub version: String,
     #[serde(default)]
     pub readme: OptionalFile,
     pub repository: Option<String>,
