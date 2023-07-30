@@ -54,7 +54,7 @@ export default class VersionRoute extends Route {
 
     let { crate, version } = model;
     if (!crate.documentation || crate.documentation.startsWith('https://docs.rs/')) {
-      version.loadDocsBuildsTask.perform().catch(error => {
+      version.loadDocsStatusTask.perform().catch(error => {
         // report unexpected errors to Sentry and ignore `ajax()` errors
         if (!didCancel(error) && !(error instanceof AjaxError)) {
           this.sentry.captureException(error);

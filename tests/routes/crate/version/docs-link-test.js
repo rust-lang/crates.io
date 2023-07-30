@@ -18,7 +18,7 @@ module('Route | crate.version | docs link', function (hooks) {
     let crate = this.server.create('crate', { name: 'foo' });
     this.server.create('version', { crate, num: '1.0.0' });
 
-    this.server.get('https://docs.rs/crate/:crate/:version/builds.json', []);
+    this.server.get('https://docs.rs/crate/:crate/:version/status.json', 'not found', 404);
 
     await visit('/crates/foo');
     assert.dom('[data-test-docs-link] a').doesNotExist();
@@ -28,16 +28,10 @@ module('Route | crate.version | docs link', function (hooks) {
     let crate = this.server.create('crate', { name: 'foo' });
     this.server.create('version', { crate, num: '1.0.0' });
 
-    this.server.get('https://docs.rs/crate/:crate/:version/builds.json', [
-      {
-        id: 42,
-        rustc_version: 'rustc 1.50.0-nightly (1c389ffef 2020-11-24)',
-        docsrs_version: 'docsrs 0.6.0 (31c864e 2020-11-22)',
-        build_status: true,
-        build_time: '2020-12-06T09:04:36.610302Z',
-        output: null,
-      },
-    ]);
+    this.server.get('https://docs.rs/crate/:crate/:version/status.json', {
+      doc_status: true,
+      version: '1.0.0',
+    });
 
     await visit('/crates/foo');
     assert.dom('[data-test-docs-link] a').hasAttribute('href', 'https://docs.rs/foo/1.0.0');
@@ -47,7 +41,7 @@ module('Route | crate.version | docs link', function (hooks) {
     let crate = this.server.create('crate', { name: 'foo', documentation: 'https://docs.rs/foo/0.6.2' });
     this.server.create('version', { crate, num: '1.0.0' });
 
-    this.server.get('https://docs.rs/crate/:crate/:version/builds.json', []);
+    this.server.get('https://docs.rs/crate/:crate/:version/status.json', 'not found', 404);
 
     await visit('/crates/foo');
     assert.dom('[data-test-docs-link] a').hasAttribute('href', 'https://docs.rs/foo/0.6.2');
@@ -57,16 +51,10 @@ module('Route | crate.version | docs link', function (hooks) {
     let crate = this.server.create('crate', { name: 'foo', documentation: 'https://docs.rs/foo/0.6.2' });
     this.server.create('version', { crate, num: '1.0.0' });
 
-    this.server.get('https://docs.rs/crate/:crate/:version/builds.json', [
-      {
-        id: 42,
-        rustc_version: 'rustc 1.50.0-nightly (1c389ffef 2020-11-24)',
-        docsrs_version: 'docsrs 0.6.0 (31c864e 2020-11-22)',
-        build_status: true,
-        build_time: '2020-12-06T09:04:36.610302Z',
-        output: null,
-      },
-    ]);
+    this.server.get('https://docs.rs/crate/:crate/:version/status.json', {
+      doc_status: true,
+      version: '1.0.0',
+    });
 
     await visit('/crates/foo');
     assert.dom('[data-test-docs-link] a').hasAttribute('href', 'https://docs.rs/foo/1.0.0');
@@ -76,27 +64,17 @@ module('Route | crate.version | docs link', function (hooks) {
     let crate = this.server.create('crate', { name: 'foo', documentation: 'https://docs.rs/foo/0.6.2' });
     this.server.create('version', { crate, num: '1.0.0' });
 
-    this.server.get('https://docs.rs/crate/:crate/:version/builds.json', {}, 500);
+    this.server.get('https://docs.rs/crate/:crate/:version/status.json', 'error', 500);
 
     await visit('/crates/foo');
     assert.dom('[data-test-docs-link] a').hasAttribute('href', 'https://docs.rs/foo/0.6.2');
   });
 
-  test('null builds in docs.rs responses are ignored', async function (assert) {
+  test('empty docs.rs responses are ignored', async function (assert) {
     let crate = this.server.create('crate', { name: 'foo', documentation: 'https://docs.rs/foo/0.6.2' });
     this.server.create('version', { crate, num: '0.6.2' });
 
-    this.server.get('https://docs.rs/crate/:crate/:version/builds.json', [null]);
-
-    await visit('/crates/foo');
-    assert.dom('[data-test-docs-link] a').hasAttribute('href', 'https://docs.rs/foo/0.6.2');
-  });
-
-  test('empty arrays in docs.rs responses are ignored', async function (assert) {
-    let crate = this.server.create('crate', { name: 'foo', documentation: 'https://docs.rs/foo/0.6.2' });
-    this.server.create('version', { crate, num: '0.6.2' });
-
-    this.server.get('https://docs.rs/crate/:crate/:version/builds.json', []);
+    this.server.get('https://docs.rs/crate/:crate/:version/status.json', {});
 
     await visit('/crates/foo');
     assert.dom('[data-test-docs-link] a').hasAttribute('href', 'https://docs.rs/foo/0.6.2');
