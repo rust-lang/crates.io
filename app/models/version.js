@@ -133,13 +133,13 @@ export default class Version extends Model {
     }
   });
 
-  loadDocsBuildsTask = task(async () => {
-    return await ajax(`https://docs.rs/crate/${this.crateName}/${this.num}/builds.json`);
+  loadDocsStatusTask = task(async () => {
+    return await ajax(`https://docs.rs/crate/${this.crateName}/=${this.num}/status.json`);
   });
 
   get hasDocsRsLink() {
-    let docsBuilds = this.loadDocsBuildsTask.lastSuccessful?.value;
-    return docsBuilds?.[0]?.build_status === true;
+    let docsStatus = this.loadDocsStatusTask.lastSuccessful?.value;
+    return docsStatus?.doc_status === true;
   }
 
   get docsRsLink() {
