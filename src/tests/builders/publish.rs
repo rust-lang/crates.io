@@ -2,7 +2,6 @@ use crates_io::views::krate_publish as u;
 use std::collections::BTreeMap;
 
 use crates_io_tarball::TarballBuilder;
-use flate2::{write::GzEncoder, Compression};
 
 use super::DependencyBuilder;
 
@@ -49,20 +48,14 @@ impl PublishBuilder {
     }
 
     /// Set the files in the crate's tarball.
-    pub fn files(mut self, files: &[(&str, &[u8])]) -> Self {
-        let mut tarball = Vec::new();
-        {
-            let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, Compression::default()));
-            for (name, data) in files {
-                let mut header = tar::Header::new_gnu();
-                header.set_size(data.len() as u64);
-                assert_ok!(ar.append_data(&mut header, name, *data));
-            }
-            assert_ok!(ar.finish());
+    pub fn files(self, files: &[(&str, &[u8])]) -> Self {
+        let mut builder = TarballBuilder::new(&self.krate_name, &self.version.to_string());
+
+        for (name, data) in files {
+            builder = builder.add_file(name, data);
         }
 
-        self.tarball = tarball;
-        self
+        self.tarball(builder.build())
     }
 
     /// Set the tarball directly to the given Vec of bytes
