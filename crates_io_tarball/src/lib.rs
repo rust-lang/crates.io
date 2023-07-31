@@ -20,7 +20,7 @@ mod vcs_info;
 
 #[derive(Debug)]
 pub struct TarballInfo {
-    pub manifest: Option<Manifest>,
+    pub manifest: Manifest,
     pub vcs_info: Option<CargoVcsInfo>,
 }
 
@@ -32,6 +32,10 @@ pub enum TarballError {
     InvalidPath(String),
     #[error("unexpected symlink or hard link found: {0}")]
     UnexpectedSymlink(String),
+    #[error("Cargo.toml manifest is missing")]
+    MissingManifest,
+    #[error("Cargo.toml manifest is invalid: {0}")]
+    InvalidManifest(#[source] toml::de::Error),
     #[error(transparent)]
     IO(#[from] std::io::Error),
 }
@@ -93,9 +97,13 @@ pub fn process_tarball<R: Read>(
             // erroring if it cannot be read.
             let mut contents = String::new();
             entry.read_to_string(&mut contents)?;
-            manifest = toml::from_str(&contents).ok();
+            manifest = Some(toml::from_str(&contents).map_err(TarballError::InvalidManifest)?);
         }
     }
+
+    let Some(manifest) = manifest else {
+        return Err(TarballError::MissingManifest);
+    };
 
     Ok(TarballInfo { manifest, vcs_info })
 }
@@ -110,7 +118,7 @@ mod tests {
     #[test]
     fn process_tarball_test() {
         let tarball = TarballBuilder::new("foo", "0.0.1")
-            .add_raw_manifest(b"")
+            .add_raw_manifest(b"[package]")
             .build();
 
         let limit = 512 * 1024 * 1024;
@@ -126,7 +134,7 @@ mod tests {
     #[test]
     fn process_tarball_test_incomplete_vcs_info() {
         let tarball = TarballBuilder::new("foo", "0.0.1")
-            .add_raw_manifest(b"")
+            .add_raw_manifest(b"[package]")
             .add_file("foo-0.0.1/.cargo_vcs_info.json", br#"{"unknown": "field"}"#)
             .build();
 
@@ -141,7 +149,7 @@ mod tests {
     #[test]
     fn process_tarball_test_vcs_info() {
         let tarball = TarballBuilder::new("foo", "0.0.1")
-            .add_raw_manifest(b"")
+            .add_raw_manifest(b"[package]")
             .add_file(
                 "foo-0.0.1/.cargo_vcs_info.json",
                 br#"{"path_in_vcs": "path/in/vcs"}"#,
@@ -171,7 +179,7 @@ repository = "https://github.com/foo/bar"
 
         let limit = 512 * 1024 * 1024;
         let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, limit));
-        let manifest = assert_some!(tarball_info.manifest);
+        let manifest = tarball_info.manifest;
         assert_some_eq!(manifest.package.readme.as_path(), Path::new("README.md"));
         assert_some_eq!(manifest.package.repository, "https://github.com/foo/bar");
         assert_some_eq!(manifest.package.rust_version, "1.59");
@@ -190,7 +198,7 @@ repository = "https://github.com/foo/bar"
 
         let limit = 512 * 1024 * 1024;
         let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, limit));
-        let manifest = assert_some!(tarball_info.manifest);
+        let manifest = tarball_info.manifest;
         assert_some_eq!(manifest.package.rust_version, "1.23");
     }
 
@@ -206,7 +214,7 @@ repository = "https://github.com/foo/bar"
 
         let limit = 512 * 1024 * 1024;
         let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, limit));
-        let manifest = assert_some!(tarball_info.manifest);
+        let manifest = tarball_info.manifest;
         assert_matches!(manifest.package.readme, OptionalFile::Flag(true));
     }
 
@@ -223,7 +231,7 @@ repository = "https://github.com/foo/bar"
 
         let limit = 512 * 1024 * 1024;
         let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, limit));
-        let manifest = assert_some!(tarball_info.manifest);
+        let manifest = tarball_info.manifest;
         assert_matches!(manifest.package.readme, OptionalFile::Flag(false));
     }
 
@@ -241,7 +249,7 @@ repository = "https://github.com/foo/bar"
 
         let limit = 512 * 1024 * 1024;
         let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, limit));
-        let manifest = assert_some!(tarball_info.manifest);
+        let manifest = tarball_info.manifest;
         assert_some_eq!(manifest.package.repository, "https://github.com/foo/bar");
     }
 }

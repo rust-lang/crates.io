@@ -134,7 +134,7 @@ fn new_krate() {
     assert!(crates[0].deps.is_empty());
     assert_eq!(
         crates[0].cksum,
-        "acb5604b126ac894c1eb11c4575bf2072fea61232a888e453770c79d7ed56419"
+        "148a5e65dd9ee2c7d2310ff798b14a3f593a05c3dde5f47b40b8d328a11d78af"
     );
 
     let expected_files = vec!["crates/foo_new/foo_new-1.0.0.crate", "index/fo/o_/foo_new"];
@@ -452,7 +452,10 @@ fn new_krate_too_big_but_whitelisted() {
             .expect_build(conn);
     });
 
-    let files = [("foo_whitelist-1.1.0/big", &[b'a'; 2000] as &[_])];
+    let files = [
+        ("foo_whitelist-1.1.0/Cargo.toml", b"[package]" as &[_]),
+        ("foo_whitelist-1.1.0/big", &[b'a'; 2000] as &[_]),
+    ];
     let crate_to_publish = PublishBuilder::new("foo_whitelist", "1.1.0").files(&files);
 
     token.publish_crate(crate_to_publish).good();
@@ -926,10 +929,18 @@ fn tarball_between_default_axum_limit_and_max_upload_size() {
         .with_token();
 
     let tarball = {
+        let mut builder = TarballBuilder::new("foo", "1.1.0");
+
+        let data = b"[package]" as &[_];
+
+        let mut header = tar::Header::new_gnu();
+        assert_ok!(header.set_path("foo-1.1.0/Cargo.toml"));
+        header.set_size(data.len() as u64);
+        header.set_cksum();
+        assert_ok!(builder.as_mut().append(&header, data));
+
         // `data` is smaller than `max_upload_size`, but bigger than the regular request body limit
         let data = &[b'a'; 3 * 1024 * 1024] as &[_];
-
-        let mut builder = TarballBuilder::new("foo", "1.1.0");
 
         let mut header = tar::Header::new_gnu();
         assert_ok!(header.set_path("foo-1.1.0/big-file.txt"));
@@ -1184,4 +1195,34 @@ fn boolean_readme() {
     assert_eq!(response.status(), StatusCode::OK);
     let json = response.into_json();
     assert_some_eq!(json["version"]["rust_version"].as_str(), "1.69");
+}
+
+#[test]
+fn missing_manifest() {
+    let (_app, _anon, _cookie, token) = TestApp::full().with_token();
+
+    let tarball = TarballBuilder::new("foo", "1.0.0").build();
+
+    let response = token.publish_crate(PublishBuilder::new("foo", "1.0.0").tarball(tarball));
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response.into_json(),
+        json!({ "errors": [{ "detail": "uploaded tarball is missing a `Cargo.toml` manifest file" }] })
+    );
+}
+
+#[test]
+fn invalid_manifest() {
+    let (_app, _anon, _cookie, token) = TestApp::full().with_token();
+
+    let tarball = TarballBuilder::new("foo", "1.0.0")
+        .add_raw_manifest(b"")
+        .build();
+
+    let response = token.publish_crate(PublishBuilder::new("foo", "1.0.0").tarball(tarball));
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response.into_json(),
+        json!({ "errors": [{ "detail": "failed to parse `Cargo.toml` manifest file\n\nTOML parse error at line 1, column 1\n  |\n1 | \n  | ^\nmissing field `package`\n" }] })
+    );
 }

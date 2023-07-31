@@ -188,7 +188,8 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
 
             let rust_version = tarball_info
                 .manifest
-                .and_then(|m| m.package.rust_version)
+                .package
+                .rust_version
                 .map(|rv| rv.deref().to_string());
 
             // Persist the new version of this crate
@@ -401,6 +402,12 @@ fn tarball_to_app_error(error: TarballError) -> BoxedAppError {
             cargo_err(&format!("unexpected symlink or hard link found: {path}"))
         }
         TarballError::IO(err) => err.into(),
+        TarballError::MissingManifest => {
+            cargo_err("uploaded tarball is missing a `Cargo.toml` manifest file")
+        }
+        TarballError::InvalidManifest(err) => cargo_err(&format!(
+            "failed to parse `Cargo.toml` manifest file\n\n{err}"
+        )),
     }
 }
 
