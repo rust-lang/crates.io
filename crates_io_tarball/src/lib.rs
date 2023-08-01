@@ -122,12 +122,10 @@ mod tests {
             .build();
 
         let limit = 512 * 1024 * 1024;
-        assert_eq!(
-            process_tarball("foo-0.0.1", &*tarball, limit)
-                .unwrap()
-                .vcs_info,
-            None
-        );
+
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, limit));
+        assert_none!(tarball_info.vcs_info);
+
         assert_err!(process_tarball("bar-0.0.1", &*tarball, limit));
     }
 
@@ -139,10 +137,9 @@ mod tests {
             .build();
 
         let limit = 512 * 1024 * 1024;
-        let vcs_info = process_tarball("foo-0.0.1", &*tarball, limit)
-            .unwrap()
-            .vcs_info
-            .unwrap();
+
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, limit));
+        let vcs_info = assert_some!(tarball_info.vcs_info);
         assert_eq!(vcs_info.path_in_vcs, "");
     }
 
@@ -157,10 +154,9 @@ mod tests {
             .build();
 
         let limit = 512 * 1024 * 1024;
-        let vcs_info = process_tarball("foo-0.0.1", &*tarball, limit)
-            .unwrap()
-            .vcs_info
-            .unwrap();
+
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, limit));
+        let vcs_info = assert_some!(tarball_info.vcs_info);
         assert_eq!(vcs_info.path_in_vcs, "path/in/vcs");
     }
 
@@ -180,11 +176,12 @@ repository = "https://github.com/foo/bar"
             .build();
 
         let limit = 512 * 1024 * 1024;
+
         let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, limit));
-        let manifest = tarball_info.manifest;
-        assert_some_eq!(manifest.package.readme.as_path(), Path::new("README.md"));
-        assert_some_eq!(manifest.package.repository, "https://github.com/foo/bar");
-        assert_some_eq!(manifest.package.rust_version, "1.59");
+        let package = tarball_info.manifest.package;
+        assert_some_eq!(package.readme.as_path(), Path::new("README.md"));
+        assert_some_eq!(package.repository, "https://github.com/foo/bar");
+        assert_some_eq!(package.rust_version, "1.59");
     }
 
     #[test]
@@ -201,9 +198,10 @@ repository = "https://github.com/foo/bar"
             .build();
 
         let limit = 512 * 1024 * 1024;
+
         let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, limit));
-        let manifest = tarball_info.manifest;
-        assert_some_eq!(manifest.package.rust_version, "1.23");
+        let package = tarball_info.manifest.package;
+        assert_some_eq!(package.rust_version, "1.23");
     }
 
     #[test]
@@ -219,9 +217,10 @@ repository = "https://github.com/foo/bar"
             .build();
 
         let limit = 512 * 1024 * 1024;
+
         let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, limit));
-        let manifest = tarball_info.manifest;
-        assert_matches!(manifest.package.readme, OptionalFile::Flag(true));
+        let package = tarball_info.manifest.package;
+        assert_matches!(package.readme, OptionalFile::Flag(true));
     }
 
     #[test]
@@ -238,9 +237,10 @@ repository = "https://github.com/foo/bar"
             .build();
 
         let limit = 512 * 1024 * 1024;
+
         let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, limit));
-        let manifest = tarball_info.manifest;
-        assert_matches!(manifest.package.readme, OptionalFile::Flag(false));
+        let package = tarball_info.manifest.package;
+        assert_matches!(package.readme, OptionalFile::Flag(false));
     }
 
     #[test]
@@ -258,8 +258,9 @@ repository = "https://github.com/foo/bar"
             .build();
 
         let limit = 512 * 1024 * 1024;
+
         let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, limit));
-        let manifest = tarball_info.manifest;
-        assert_some_eq!(manifest.package.repository, "https://github.com/foo/bar");
+        let package = tarball_info.manifest.package;
+        assert_some_eq!(package.repository, "https://github.com/foo/bar");
     }
 }
