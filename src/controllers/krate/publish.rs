@@ -197,8 +197,8 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
 
             let rust_version = tarball_info
                 .manifest
-                .package
-                .rust_version
+                .package()
+                .rust_version()
                 .map(|rv| rv.deref().to_string());
 
             // Persist the new version of this crate
