@@ -237,6 +237,8 @@ pub mod tests {
             .add_raw_manifest(
                 br#"
 [package]
+name = "foo"
+version = "0.0.1"
 readme = "README.md"
 "#,
             )
@@ -270,6 +272,8 @@ readme = "README.md"
             .add_raw_manifest(
                 br#"
 [package]
+name = "foo"
+version = "0.0.1"
 "#,
             )
             .add_file("foo-0.0.1/README.md", b"readme")
@@ -286,6 +290,8 @@ readme = "README.md"
             .add_raw_manifest(
                 br#"
 [package]
+name = "foo"
+version = "0.0.1"
 readme = "README.md"
 repository = "https://github.com/foo/foo"
 "#,
@@ -304,6 +310,8 @@ repository = "https://github.com/foo/foo"
             .add_raw_manifest(
                 br#"
 [package]
+name = "foo"
+version = "0.0.1"
 readme = "docs/README.md"
 repository = "https://github.com/foo/foo"
 "#,

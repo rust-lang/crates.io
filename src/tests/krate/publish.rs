@@ -134,7 +134,7 @@ fn new_krate() {
     assert!(crates[0].deps.is_empty());
     assert_eq!(
         crates[0].cksum,
-        "148a5e65dd9ee2c7d2310ff798b14a3f593a05c3dde5f47b40b8d328a11d78af"
+        "8a8d84b87f379d5e32566b14df153c0ab0e1ea87dae79a00b891bb41f93dbbf6"
     );
 
     let expected_files = vec!["crates/foo_new/foo_new-1.0.0.crate", "index/fo/o_/foo_new"];
@@ -453,7 +453,10 @@ fn new_krate_too_big_but_whitelisted() {
     });
 
     let files = [
-        ("foo_whitelist-1.1.0/Cargo.toml", b"[package]" as &[_]),
+        (
+            "foo_whitelist-1.1.0/Cargo.toml",
+            b"[package]\nname = \"foo_whitelist\"\nversion = \"1.1.0\"\n" as &[_],
+        ),
         ("foo_whitelist-1.1.0/big", &[b'a'; 2000] as &[_]),
     ];
     let crate_to_publish = PublishBuilder::new("foo_whitelist", "1.1.0").files(&files);
@@ -931,7 +934,7 @@ fn tarball_between_default_axum_limit_and_max_upload_size() {
     let tarball = {
         let mut builder = TarballBuilder::new("foo", "1.1.0");
 
-        let data = b"[package]" as &[_];
+        let data = b"[package]\nname = \"foo\"\nversion = \"1.1.0\"\n" as &[_];
 
         let mut header = tar::Header::new_gnu();
         assert_ok!(header.set_path("foo-1.1.0/Cargo.toml"));
@@ -1224,5 +1227,37 @@ fn invalid_manifest() {
     assert_eq!(
         response.into_json(),
         json!({ "errors": [{ "detail": "failed to parse `Cargo.toml` manifest file\n\nTOML parse error at line 1, column 1\n  |\n1 | \n  | ^\nmissing field `package`\n" }] })
+    );
+}
+
+#[test]
+fn invalid_manifest_missing_name() {
+    let (_app, _anon, _cookie, token) = TestApp::full().with_token();
+
+    let tarball = TarballBuilder::new("foo", "1.0.0")
+        .add_raw_manifest(b"[package]\nversion = \"1.0.0\"")
+        .build();
+
+    let response = token.publish_crate(PublishBuilder::new("foo", "1.0.0").tarball(tarball));
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response.into_json(),
+        json!({ "errors": [{ "detail": "failed to parse `Cargo.toml` manifest file\n\nTOML parse error at line 1, column 1\n  |\n1 | [package]\n  | ^^^^^^^^^\nmissing field `name`\n" }] })
+    );
+}
+
+#[test]
+fn invalid_manifest_missing_version() {
+    let (_app, _anon, _cookie, token) = TestApp::full().with_token();
+
+    let tarball = TarballBuilder::new("foo", "1.0.0")
+        .add_raw_manifest(b"[package]\nname = \"foo\"")
+        .build();
+
+    let response = token.publish_crate(PublishBuilder::new("foo", "1.0.0").tarball(tarball));
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response.into_json(),
+        json!({ "errors": [{ "detail": "failed to parse `Cargo.toml` manifest file\n\nTOML parse error at line 1, column 1\n  |\n1 | [package]\n  | ^^^^^^^^^\nmissing field `version`\n" }] })
     );
 }

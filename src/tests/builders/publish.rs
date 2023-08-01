@@ -27,8 +27,10 @@ impl PublishBuilder {
     /// Create a request to publish a crate with the given name and version, and no files
     /// in its tarball.
     pub fn new(krate_name: &str, version: &str) -> Self {
+        let manifest = format!("[package]\nname = \"{krate_name}\"\nversion = \"{version}\"\n");
+
         let tarball = TarballBuilder::new(krate_name, version)
-            .add_raw_manifest(b"[package]")
+            .add_raw_manifest(manifest.as_bytes())
             .build();
 
         PublishBuilder {
