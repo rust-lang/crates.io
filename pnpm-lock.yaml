@@ -162,8 +162,8 @@ devDependencies:
     specifier: 6.0.1
     version: 6.0.1(ember-source@5.1.2)
   ember-concurrency:
-    specifier: 3.0.0
-    version: 3.0.0
+    specifier: 3.1.0
+    version: 3.1.0(ember-source@5.1.2)
   ember-css-modules:
     specifier: 2.0.1
     version: 2.0.1
@@ -8949,18 +8949,20 @@ packages:
       - '@babel/core'
       - supports-color
 
-  /ember-concurrency@3.0.0:
-    resolution: {integrity: sha512-MUsOgl4qLkINxrY+9FuohSOsn7Ytd3xCxu9mThSrMPatxomscZz/0lT4M95S7xy2aNO4o/zGfAEULECQ09YkWA==}
-    engines: {node: 10.* || 12.* || 14.* || >= 16}
+  /ember-concurrency@3.1.0(ember-source@5.1.2):
+    resolution: {integrity: sha512-vJrP+awbiYJvm2y9xYIYO96n2Jx1FXp7mbM7ucjSp+hPuNwNw9i7xXVrgxBYIuJ/0zlbSMF0P2XJoyi4A0XCrQ==}
+    engines: {node: 16.* || >= 18}
+    peerDependencies:
+      ember-source: ^3.28.0 || ^4.0.0
     dependencies:
       '@babel/helper-plugin-utils': 7.22.5
       '@babel/types': 7.22.5
       '@glimmer/tracking': 1.1.2
       ember-cli-babel: 7.26.11
       ember-cli-babel-plugin-helpers: 1.1.1
-      ember-cli-htmlbars: 5.7.2
+      ember-cli-htmlbars: 6.2.0
       ember-compatibility-helpers: 1.2.6
-      ember-destroyable-polyfill: 2.0.3
+      ember-source: 5.1.2(@glimmer/component@1.1.2)(rsvp@4.8.5)(webpack@5.88.2)
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
