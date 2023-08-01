@@ -2,6 +2,7 @@ use serde_json::Value;
 use std::marker::PhantomData;
 use std::ops::Deref;
 
+use crates_io::rate_limiter::LimitedAction;
 use http::{header, StatusCode};
 
 /// A type providing helper methods for working with responses
@@ -56,6 +57,29 @@ impl<T> Response<T> {
             .unwrap()
             .ends_with(target));
         self
+    }
+
+    /// Assert that the status code is 429 and that the body matches a rate limit.
+    #[track_caller]
+    pub fn assert_rate_limited(self, action: LimitedAction) {
+        #[derive(serde::Deserialize)]
+        #[serde(deny_unknown_fields)]
+        struct ErrorResponse {
+            errors: Vec<ErrorDetails>,
+        }
+        #[derive(serde::Deserialize)]
+        #[serde(deny_unknown_fields)]
+        struct ErrorDetails {
+            detail: String,
+        }
+
+        assert_eq!(StatusCode::TOO_MANY_REQUESTS, self.status());
+
+        let expected_message_start =
+            format!("{}. Please try again after ", action.error_messagge());
+        let error: ErrorResponse = json(self.response);
+        assert_eq!(1, error.errors.len());
+        assert!(error.errors[0].detail.starts_with(&expected_message_start));
     }
 }
 

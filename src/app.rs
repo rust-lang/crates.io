@@ -10,6 +10,7 @@ use crate::downloads_counter::DownloadsCounter;
 use crate::email::Emails;
 use crate::github::{GitHubClient, RealGitHubClient};
 use crate::metrics::{InstanceMetrics, ServiceMetrics};
+use crate::rate_limiter::RateLimiter;
 use crate::storage::Storage;
 use axum::extract::{FromRef, FromRequestParts, State};
 use diesel::r2d2;
@@ -68,6 +69,9 @@ pub struct App {
 
     /// In-flight request counters for the `balance_capacity` middleware.
     pub balance_capacity: BalanceCapacityState,
+
+    /// Rate limit select actions.
+    pub rate_limiter: RateLimiter,
 }
 
 impl App {
@@ -178,6 +182,7 @@ impl App {
             http_client,
             fastboot_client,
             balance_capacity: Default::default(),
+            rate_limiter: RateLimiter::new(config.rate_limiter.clone()),
             config,
         }
     }

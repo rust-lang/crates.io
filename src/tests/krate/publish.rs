@@ -6,6 +6,7 @@ use crates_io::controllers::krate::publish::{
     missing_metadata_error_message, MISSING_RIGHTS_ERROR_MESSAGE,
 };
 use crates_io::models::krate::MAX_NAME_LENGTH;
+use crates_io::rate_limiter::LimitedAction;
 use crates_io::schema::{api_tokens, emails, versions_published_by};
 use crates_io::views::GoodCrate;
 use crates_io_tarball::TarballBuilder;
@@ -1007,7 +1008,7 @@ fn tarball_bigger_than_max_upload_size() {
 #[test]
 fn publish_new_crate_rate_limited() {
     let (app, anon, _, token) = TestApp::full()
-        .with_publish_rate_limit(Duration::from_millis(500), 1)
+        .with_rate_limit(LimitedAction::PublishNew, Duration::from_millis(500), 1)
         .with_token();
 
     // Upload a new crate
@@ -1018,8 +1019,9 @@ fn publish_new_crate_rate_limited() {
 
     // Uploading a second crate is limited
     let crate_to_publish = PublishBuilder::new("rate_limited2", "1.0.0");
-    let response = token.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::TOO_MANY_REQUESTS);
+    token
+        .publish_crate(crate_to_publish)
+        .assert_rate_limited(LimitedAction::PublishNew);
 
     assert_eq!(app.stored_files().len(), 2);
 
@@ -1039,9 +1041,9 @@ fn publish_new_crate_rate_limited() {
 }
 
 #[test]
-fn publish_rate_limit_doesnt_affect_existing_crates() {
+fn publish_new_crate_rate_limit_doesnt_affect_existing_crates() {
     let (_, _, _, token) = TestApp::full()
-        .with_publish_rate_limit(Duration::from_millis(500), 1)
+        .with_rate_limit(LimitedAction::PublishNew, Duration::from_secs(60 * 60), 1)
         .with_token();
 
     // Upload a new crate
@@ -1050,6 +1052,69 @@ fn publish_rate_limit_doesnt_affect_existing_crates() {
 
     let new_version = PublishBuilder::new("rate_limited1", "1.0.1");
     token.publish_crate(new_version).good();
+}
+
+#[test]
+fn publish_existing_crate_rate_limited() {
+    let (app, anon, _, token) = TestApp::full()
+        .with_rate_limit(LimitedAction::PublishUpdate, Duration::from_millis(500), 1)
+        .with_token();
+
+    // Upload a new crate
+    let crate_to_publish = PublishBuilder::new("rate_limited1", "1.0.0");
+    token.publish_crate(crate_to_publish).good();
+
+    let json = anon.show_crate("rate_limited1");
+    assert_eq!(json.krate.max_version, "1.0.0");
+    assert_eq!(app.stored_files().len(), 2);
+
+    // Uploading the first update to the crate works
+    let crate_to_publish = PublishBuilder::new("rate_limited1", "1.0.1");
+    token.publish_crate(crate_to_publish).good();
+
+    let json = anon.show_crate("rate_limited1");
+    assert_eq!(json.krate.max_version, "1.0.1");
+    assert_eq!(app.stored_files().len(), 3);
+
+    // Uploading the second update to the crate is rate limited
+    let crate_to_publish = PublishBuilder::new("rate_limited1", "1.0.2");
+    token
+        .publish_crate(crate_to_publish)
+        .assert_rate_limited(LimitedAction::PublishUpdate);
+
+    // Check that  version 1.0.2 was not published
+    let json = anon.show_crate("rate_limited1");
+    assert_eq!(json.krate.max_version, "1.0.1");
+    assert_eq!(app.stored_files().len(), 3);
+
+    // Wait for the limit to be up
+    thread::sleep(Duration::from_millis(500));
+
+    let crate_to_publish = PublishBuilder::new("rate_limited1", "1.0.2");
+    token.publish_crate(crate_to_publish).good();
+
+    let json = anon.show_crate("rate_limited1");
+    assert_eq!(json.krate.max_version, "1.0.2");
+    assert_eq!(app.stored_files().len(), 4);
+}
+
+#[test]
+fn publish_existing_crate_rate_limit_doesnt_affect_new_crates() {
+    let (_, _, _, token) = TestApp::full()
+        .with_rate_limit(
+            LimitedAction::PublishUpdate,
+            Duration::from_secs(60 * 60),
+            1,
+        )
+        .with_token();
+
+    // Upload a new crate
+    let crate_to_publish = PublishBuilder::new("rate_limited1", "1.0.0");
+    token.publish_crate(crate_to_publish).good();
+
+    // Upload a second new crate
+    let crate_to_publish = PublishBuilder::new("rate_limited2", "1.0.0");
+    token.publish_crate(crate_to_publish).good();
 }
 
 #[test]

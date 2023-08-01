@@ -4,6 +4,7 @@ use std::fmt;
 
 use super::{AppError, BoxedAppError, InternalAppErrorStatic};
 
+use crate::rate_limiter::LimitedAction;
 use chrono::NaiveDateTime;
 use http::{header, StatusCode};
 
@@ -74,6 +75,7 @@ pub(super) struct ServerError(pub(super) String);
 pub(crate) struct ServiceUnavailable(pub(super) String);
 #[derive(Debug)]
 pub(crate) struct TooManyRequests {
+    pub action: LimitedAction,
     pub retry_after: NaiveDateTime,
 }
 
@@ -131,9 +133,9 @@ impl AppError for TooManyRequests {
         let retry_after = self.retry_after.format(HTTP_DATE_FORMAT);
 
         let detail = format!(
-            "You have published too many crates in a \
-             short period of time. Please try again after {retry_after} or email \
-             help@crates.io to have your limit increased."
+            "{}. Please try again after {retry_after} or email \
+             help@crates.io to have your limit increased.",
+            self.action.error_messagge()
         );
         let mut response = json_error(&detail, StatusCode::TOO_MANY_REQUESTS);
         response.headers_mut().insert(

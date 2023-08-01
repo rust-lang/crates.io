@@ -1,52 +1,93 @@
-use chrono::{NaiveDateTime, Utc};
-use diesel::data_types::PgInterval;
-use diesel::prelude::*;
-use diesel::sql_types::Interval;
-use std::time::Duration;
-
 use crate::schema::{publish_limit_buckets, publish_rate_overrides};
 use crate::sql::{date_part, floor, greatest, interval_part, least, pg_enum};
 use crate::util::errors::{AppResult, TooManyRequests};
+use chrono::{NaiveDateTime, Utc};
+use diesel::dsl::IntervalDsl;
+use diesel::prelude::*;
+use diesel::sql_types::Interval;
+use std::borrow::Cow;
+use std::collections::HashMap;
+use std::time::Duration;
 
 pg_enum! {
     pub enum LimitedAction {
         PublishNew = 0,
+        PublishUpdate = 1,
+        YankUnyank = 2,
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct RateLimiter {
-    pub rate: Duration,
-    pub burst: i32,
-}
+impl LimitedAction {
+    pub fn default_rate_seconds(&self) -> u64 {
+        match self {
+            LimitedAction::PublishNew => 60 * 60,
+            LimitedAction::PublishUpdate => 60,
+            LimitedAction::YankUnyank => 60,
+        }
+    }
 
-impl Default for RateLimiter {
-    fn default() -> Self {
-        let minutes = dotenvy::var("WEB_NEW_PKG_RATE_LIMIT_RATE_MINUTES")
-            .unwrap_or_default()
-            .parse()
-            .ok()
-            .unwrap_or(10);
-        let burst = dotenvy::var("WEB_NEW_PKG_RATE_LIMIT_BURST")
-            .unwrap_or_default()
-            .parse()
-            .ok()
-            .unwrap_or(5);
-        Self {
-            rate: Duration::from_secs(60) * minutes,
-            burst,
+    pub fn default_burst(&self) -> i32 {
+        match self {
+            LimitedAction::PublishNew => 5,
+            LimitedAction::PublishUpdate => 30,
+            LimitedAction::YankUnyank => 100,
+        }
+    }
+
+    pub fn env_var_key(&self) -> &'static str {
+        match self {
+            LimitedAction::PublishNew => "PUBLISH_NEW",
+            LimitedAction::PublishUpdate => "PUBLISH_UPDATE",
+            LimitedAction::YankUnyank => "YANK_UNYANK",
+        }
+    }
+
+    pub fn error_messagge(&self) -> &'static str {
+        match self {
+            LimitedAction::PublishNew => {
+                "You have published too many new crates in a short period of time"
+            }
+            LimitedAction::PublishUpdate => {
+                "You have published too many updates to existing crates in a short period of time"
+            }
+            LimitedAction::YankUnyank => {
+                "You have yanked or unyanked too many versions in a short period of time"
+            }
         }
     }
 }
 
+#[derive(Debug, Clone, Copy)]
+pub struct RateLimiterConfig {
+    pub rate: Duration,
+    pub burst: i32,
+}
+
+#[derive(Debug)]
+pub struct RateLimiter {
+    config: HashMap<LimitedAction, RateLimiterConfig>,
+}
+
 impl RateLimiter {
-    pub fn check_rate_limit(&self, uploader: i32, conn: &mut PgConnection) -> AppResult<()> {
-        let bucket = self.take_token(uploader, Utc::now().naive_utc(), conn)?;
+    pub fn new(config: HashMap<LimitedAction, RateLimiterConfig>) -> Self {
+        Self { config }
+    }
+
+    pub fn check_rate_limit(
+        &self,
+        uploader: i32,
+        performed_action: LimitedAction,
+        conn: &mut PgConnection,
+    ) -> AppResult<()> {
+        let bucket = self.take_token(uploader, performed_action, Utc::now().naive_utc(), conn)?;
         if bucket.tokens >= 1 {
             Ok(())
         } else {
             Err(Box::new(TooManyRequests {
-                retry_after: bucket.last_refill + chrono::Duration::from_std(self.rate).unwrap(),
+                action: performed_action,
+                retry_after: bucket.last_refill
+                    + chrono::Duration::from_std(self.config_for_action(performed_action).rate)
+                        .unwrap(),
             }))
         }
     }
@@ -62,12 +103,14 @@ impl RateLimiter {
     fn take_token(
         &self,
         uploader: i32,
+        performed_action: LimitedAction,
         now: NaiveDateTime,
         conn: &mut PgConnection,
     ) -> QueryResult<Bucket> {
         use self::publish_limit_buckets::dsl::*;
 
-        let performed_action = LimitedAction::PublishNew;
+        let config = self.config_for_action(performed_action);
+        let refill_rate = (config.rate.as_millis() as i64).milliseconds();
 
         let burst: i32 = publish_rate_overrides::table
             .find((uploader, performed_action))
@@ -79,14 +122,14 @@ impl RateLimiter {
             .select(publish_rate_overrides::burst)
             .first(conn)
             .optional()?
-            .unwrap_or(self.burst);
+            .unwrap_or(config.burst);
 
         // Interval division is poorly defined in general (what is 1 month / 30 days?)
         // However, for the intervals we're dealing with, it is always well
         // defined, so we convert to an f64 of seconds to represent this.
         let tokens_to_add = floor(
             (date_part("epoch", now) - date_part("epoch", last_refill))
-                / interval_part("epoch", self.refill_rate()),
+                / interval_part("epoch", refill_rate),
         );
 
         diesel::insert_into(publish_limit_buckets)
@@ -100,15 +143,20 @@ impl RateLimiter {
             .do_update()
             .set((
                 tokens.eq(least(burst, greatest(0, tokens - 1) + tokens_to_add)),
-                last_refill
-                    .eq(last_refill + self.refill_rate().into_sql::<Interval>() * tokens_to_add),
+                last_refill.eq(last_refill + refill_rate.into_sql::<Interval>() * tokens_to_add),
             ))
             .get_result(conn)
     }
 
-    fn refill_rate(&self) -> PgInterval {
-        use diesel::dsl::*;
-        (self.rate.as_millis() as i64).milliseconds()
+    fn config_for_action(&self, action: LimitedAction) -> Cow<'_, RateLimiterConfig> {
+        // The wrapper returns the default config for the action when not configured.
+        match self.config.get(&action) {
+            Some(config) => Cow::Borrowed(config),
+            None => Cow::Owned(RateLimiterConfig {
+                rate: Duration::from_secs(action.default_rate_seconds()),
+                burst: action.default_burst(),
+            }),
+        }
     }
 }
 
@@ -133,11 +181,18 @@ mod tests {
         let conn = &mut pg_connection();
         let now = now();
 
-        let rate = RateLimiter {
+        let rate = SampleRateLimiter {
             rate: Duration::from_secs(1),
             burst: 10,
-        };
-        let bucket = rate.take_token(new_user(conn, "user1")?, now, conn)?;
+            action: LimitedAction::PublishNew,
+        }
+        .create();
+        let bucket = rate.take_token(
+            new_user(conn, "user1")?,
+            LimitedAction::PublishNew,
+            now,
+            conn,
+        )?;
         let expected = Bucket {
             user_id: bucket.user_id,
             tokens: 10,
@@ -146,11 +201,18 @@ mod tests {
         };
         assert_eq!(expected, bucket);
 
-        let rate = RateLimiter {
+        let rate = SampleRateLimiter {
             rate: Duration::from_millis(50),
             burst: 20,
-        };
-        let bucket = rate.take_token(new_user(conn, "user2")?, now, conn)?;
+            action: LimitedAction::PublishNew,
+        }
+        .create();
+        let bucket = rate.take_token(
+            new_user(conn, "user2")?,
+            LimitedAction::PublishNew,
+            now,
+            conn,
+        )?;
         let expected = Bucket {
             user_id: bucket.user_id,
             tokens: 20,
@@ -166,12 +228,14 @@ mod tests {
         let conn = &mut pg_connection();
         let now = now();
 
-        let rate = RateLimiter {
+        let rate = SampleRateLimiter {
             rate: Duration::from_secs(1),
             burst: 10,
-        };
+            action: LimitedAction::PublishNew,
+        }
+        .create();
         let user_id = new_user_bucket(conn, 5, now)?.user_id;
-        let bucket = rate.take_token(user_id, now, conn)?;
+        let bucket = rate.take_token(user_id, LimitedAction::PublishNew, now, conn)?;
         let expected = Bucket {
             user_id,
             tokens: 4,
@@ -187,13 +251,15 @@ mod tests {
         let conn = &mut pg_connection();
         let now = now();
 
-        let rate = RateLimiter {
+        let rate = SampleRateLimiter {
             rate: Duration::from_secs(1),
             burst: 10,
-        };
+            action: LimitedAction::PublishNew,
+        }
+        .create();
         let user_id = new_user_bucket(conn, 5, now)?.user_id;
         let refill_time = now + chrono::Duration::seconds(2);
-        let bucket = rate.take_token(user_id, refill_time, conn)?;
+        let bucket = rate.take_token(user_id, LimitedAction::PublishNew, refill_time, conn)?;
         let expected = Bucket {
             user_id,
             tokens: 6,
@@ -213,13 +279,15 @@ mod tests {
             NaiveDateTime::parse_from_str("2019-03-19T21:11:24.620401", "%Y-%m-%dT%H:%M:%S%.f")
                 .unwrap();
 
-        let rate = RateLimiter {
+        let rate = SampleRateLimiter {
             rate: Duration::from_millis(100),
             burst: 10,
-        };
+            action: LimitedAction::PublishNew,
+        }
+        .create();
         let user_id = new_user_bucket(conn, 5, now)?.user_id;
         let refill_time = now + chrono::Duration::milliseconds(300);
-        let bucket = rate.take_token(user_id, refill_time, conn)?;
+        let bucket = rate.take_token(user_id, LimitedAction::PublishNew, refill_time, conn)?;
         let expected = Bucket {
             user_id,
             tokens: 7,
@@ -235,12 +303,19 @@ mod tests {
         let conn = &mut pg_connection();
         let now = now();
 
-        let rate = RateLimiter {
+        let rate = SampleRateLimiter {
             rate: Duration::from_millis(100),
             burst: 10,
-        };
+            action: LimitedAction::PublishNew,
+        }
+        .create();
         let user_id = new_user_bucket(conn, 5, now)?.user_id;
-        let bucket = rate.take_token(user_id, now + chrono::Duration::milliseconds(250), conn)?;
+        let bucket = rate.take_token(
+            user_id,
+            LimitedAction::PublishNew,
+            now + chrono::Duration::milliseconds(250),
+            conn,
+        )?;
         let expected_refill_time = now + chrono::Duration::milliseconds(200);
         let expected = Bucket {
             user_id,
@@ -257,12 +332,14 @@ mod tests {
         let conn = &mut pg_connection();
         let now = now();
 
-        let rate = RateLimiter {
+        let rate = SampleRateLimiter {
             rate: Duration::from_secs(1),
             burst: 10,
-        };
+            action: LimitedAction::PublishNew,
+        }
+        .create();
         let user_id = new_user_bucket(conn, 1, now)?.user_id;
-        let bucket = rate.take_token(user_id, now, conn)?;
+        let bucket = rate.take_token(user_id, LimitedAction::PublishNew, now, conn)?;
         let expected = Bucket {
             user_id,
             tokens: 0,
@@ -271,7 +348,7 @@ mod tests {
         };
         assert_eq!(expected, bucket);
 
-        let bucket = rate.take_token(user_id, now, conn)?;
+        let bucket = rate.take_token(user_id, LimitedAction::PublishNew, now, conn)?;
         assert_eq!(expected, bucket);
         Ok(())
     }
@@ -281,13 +358,15 @@ mod tests {
         let conn = &mut pg_connection();
         let now = now();
 
-        let rate = RateLimiter {
+        let rate = SampleRateLimiter {
             rate: Duration::from_secs(1),
             burst: 10,
-        };
+            action: LimitedAction::PublishNew,
+        }
+        .create();
         let user_id = new_user_bucket(conn, 0, now)?.user_id;
         let refill_time = now + chrono::Duration::seconds(1);
-        let bucket = rate.take_token(user_id, refill_time, conn)?;
+        let bucket = rate.take_token(user_id, LimitedAction::PublishNew, refill_time, conn)?;
         let expected = Bucket {
             user_id,
             tokens: 1,
@@ -304,13 +383,15 @@ mod tests {
         let conn = &mut pg_connection();
         let now = now();
 
-        let rate = RateLimiter {
+        let rate = SampleRateLimiter {
             rate: Duration::from_secs(1),
             burst: 10,
-        };
+            action: LimitedAction::PublishNew,
+        }
+        .create();
         let user_id = new_user_bucket(conn, 8, now)?.user_id;
         let refill_time = now + chrono::Duration::seconds(4);
-        let bucket = rate.take_token(user_id, refill_time, conn)?;
+        let bucket = rate.take_token(user_id, LimitedAction::PublishNew, refill_time, conn)?;
         let expected = Bucket {
             user_id,
             tokens: 10,
@@ -323,26 +404,72 @@ mod tests {
     }
 
     #[test]
+    fn two_actions_dont_interfere_with_each_other() -> QueryResult<()> {
+        let conn = &mut pg_connection();
+        let now = now();
+
+        let mut config = HashMap::new();
+        config.insert(
+            LimitedAction::PublishNew,
+            RateLimiterConfig {
+                rate: Duration::from_secs(1),
+                burst: 10,
+            },
+        );
+        config.insert(
+            LimitedAction::YankUnyank,
+            RateLimiterConfig {
+                rate: Duration::from_secs(1),
+                burst: 20,
+            },
+        );
+        let rate = RateLimiter::new(config);
+
+        let user_id = new_user(conn, "user")?;
+
+        assert_eq!(
+            10,
+            rate.take_token(user_id, LimitedAction::PublishNew, now, conn)?
+                .tokens
+        );
+        assert_eq!(
+            9,
+            rate.take_token(user_id, LimitedAction::PublishNew, now, conn)?
+                .tokens
+        );
+        assert_eq!(
+            20,
+            rate.take_token(user_id, LimitedAction::YankUnyank, now, conn)?
+                .tokens
+        );
+
+        Ok(())
+    }
+
+    #[test]
     fn override_is_used_instead_of_global_burst_if_present() -> QueryResult<()> {
         let conn = &mut pg_connection();
         let now = now();
 
-        let rate = RateLimiter {
+        let rate = SampleRateLimiter {
             rate: Duration::from_secs(1),
             burst: 10,
-        };
+            action: LimitedAction::PublishNew,
+        }
+        .create();
         let user_id = new_user(conn, "user1")?;
         let other_user_id = new_user(conn, "user2")?;
 
         diesel::insert_into(publish_rate_overrides::table)
             .values((
                 publish_rate_overrides::user_id.eq(user_id),
+                publish_rate_overrides::action.eq(LimitedAction::PublishNew),
                 publish_rate_overrides::burst.eq(20),
             ))
             .execute(conn)?;
 
-        let bucket = rate.take_token(user_id, now, conn)?;
-        let other_bucket = rate.take_token(other_user_id, now, conn)?;
+        let bucket = rate.take_token(user_id, LimitedAction::PublishNew, now, conn)?;
+        let other_bucket = rate.take_token(other_user_id, LimitedAction::PublishNew, now, conn)?;
 
         assert_eq!(20, bucket.tokens);
         assert_eq!(10, other_bucket.tokens);
@@ -354,23 +481,26 @@ mod tests {
         let conn = &mut pg_connection();
         let now = now();
 
-        let rate = RateLimiter {
+        let rate = SampleRateLimiter {
             rate: Duration::from_secs(1),
             burst: 10,
-        };
+            action: LimitedAction::PublishNew,
+        }
+        .create();
         let user_id = new_user(conn, "user1")?;
         let other_user_id = new_user(conn, "user2")?;
 
         diesel::insert_into(publish_rate_overrides::table)
             .values((
                 publish_rate_overrides::user_id.eq(user_id),
+                publish_rate_overrides::action.eq(LimitedAction::PublishNew),
                 publish_rate_overrides::burst.eq(20),
                 publish_rate_overrides::expires_at.eq(now + chrono::Duration::days(30)),
             ))
             .execute(conn)?;
 
-        let bucket = rate.take_token(user_id, now, conn)?;
-        let other_bucket = rate.take_token(other_user_id, now, conn)?;
+        let bucket = rate.take_token(user_id, LimitedAction::PublishNew, now, conn)?;
+        let other_bucket = rate.take_token(other_user_id, LimitedAction::PublishNew, now, conn)?;
 
         assert_eq!(20, bucket.tokens);
         assert_eq!(10, other_bucket.tokens);
@@ -381,14 +511,54 @@ mod tests {
             .filter(publish_rate_overrides::user_id.eq(user_id))
             .execute(conn)?;
 
-        let bucket = rate.take_token(user_id, now, conn)?;
-        let other_bucket = rate.take_token(other_user_id, now, conn)?;
+        let bucket = rate.take_token(user_id, LimitedAction::PublishNew, now, conn)?;
+        let other_bucket = rate.take_token(other_user_id, LimitedAction::PublishNew, now, conn)?;
 
         // The number of tokens of user_id is 10 and not 9 because when the new burst limit is
         // lower than the amount of available tokens, the number of available tokens is reset to
         // the new burst limit.
         assert_eq!(10, bucket.tokens);
         assert_eq!(9, other_bucket.tokens);
+
+        Ok(())
+    }
+
+    #[test]
+    fn override_is_different_for_each_action() -> QueryResult<()> {
+        let conn = &mut pg_connection();
+        let now = now();
+        let user_id = new_user(conn, "user")?;
+
+        let mut config = HashMap::new();
+        for action in [LimitedAction::PublishNew, LimitedAction::YankUnyank] {
+            config.insert(
+                action,
+                RateLimiterConfig {
+                    rate: Duration::from_secs(1),
+                    burst: 10,
+                },
+            );
+        }
+        let rate = RateLimiter::new(config);
+
+        diesel::insert_into(publish_rate_overrides::table)
+            .values((
+                publish_rate_overrides::user_id.eq(user_id),
+                publish_rate_overrides::action.eq(LimitedAction::PublishNew),
+                publish_rate_overrides::burst.eq(20),
+            ))
+            .execute(conn)?;
+
+        assert_eq!(
+            20,
+            rate.take_token(user_id, LimitedAction::PublishNew, now, conn)?
+                .tokens,
+        );
+        assert_eq!(
+            10,
+            rate.take_token(user_id, LimitedAction::YankUnyank, now, conn)?
+                .tokens,
+        );
 
         Ok(())
     }
@@ -417,6 +587,26 @@ mod tests {
                 action: LimitedAction::PublishNew,
             })
             .get_result(conn)
+    }
+
+    struct SampleRateLimiter {
+        rate: Duration,
+        burst: i32,
+        action: LimitedAction,
+    }
+
+    impl SampleRateLimiter {
+        fn create(self) -> RateLimiter {
+            let mut config = HashMap::new();
+            config.insert(
+                self.action,
+                RateLimiterConfig {
+                    rate: self.rate,
+                    burst: self.burst,
+                },
+            );
+            RateLimiter::new(config)
+        }
     }
 
     /// Strips ns precision from `Utc::now`. PostgreSQL only has microsecond
