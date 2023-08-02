@@ -455,6 +455,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "cargo-manifest"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1736b349e902d565a0a6a3d00927ed9440ba1a6c3ad756d64afad15f235da0b3"
+dependencies = [
+ "serde",
+ "toml",
+]
+
+[[package]]
 name = "cargo-platform"
 version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -474,16 +484,6 @@ dependencies = [
  "semver",
  "serde",
  "serde_json",
-]
-
-[[package]]
-name = "cargo_toml"
-version = "0.15.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "599aa35200ffff8f04c1925aa1acc92fa2e08874379ef42e210a80e527e60838"
-dependencies = [
- "serde",
- "toml",
 ]
 
 [[package]]
@@ -788,7 +788,7 @@ name = "crates_io_tarball"
 version = "0.0.0"
 dependencies = [
  "anyhow",
- "cargo_toml",
+ "cargo-manifest",
  "claims",
  "clap",
  "derive_deref",
@@ -3541,6 +3541,7 @@ version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c17e963a819c331dcacd7ab957d80bc2b9a9c1e71c804826d2f283dd65306542"
 dependencies = [
+ "indexmap 2.0.0",
  "serde",
  "serde_spanned",
  "toml_datetime",

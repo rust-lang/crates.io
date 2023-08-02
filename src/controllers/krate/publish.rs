@@ -7,7 +7,6 @@ use crates_io_tarball::{process_tarball, TarballError};
 use hex::ToHex;
 use hyper::body::Buf;
 use sha2::{Digest, Sha256};
-use std::ops::Deref;
 use tokio::runtime::Handle;
 
 use crate::controllers::cargo_prelude::*;
@@ -195,11 +194,11 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 process_tarball(&pkg_name, &*tarball_bytes, maximums.max_unpack_size)
                     .map_err(tarball_to_app_error)?;
 
-            let rust_version = tarball_info
-                .manifest
-                .package()
-                .rust_version()
-                .map(|rv| rv.deref().to_string());
+            // `unwrap()` is safe here since `process_tarball()` validates that
+            // we only accept manifests with a `package` section and without
+            // inheritance.
+            let package = tarball_info.manifest.package.unwrap();
+            let rust_version = package.rust_version.map(|rv| rv.as_local().unwrap());
 
             // Persist the new version of this crate
             let version = NewVersion::new(
