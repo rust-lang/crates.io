@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3.5.3
-      - uses: Swatinem/rust-cache@v2.5.1
+      - uses: Swatinem/rust-cache@v2.6.0
       - run: cargo build --manifest-path crates_io_smoke_test/Cargo.toml
       - run: cargo run --manifest-path crates_io_smoke_test/Cargo.toml --quiet
         env:
