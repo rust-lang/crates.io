@@ -34,7 +34,7 @@ slow-tests = []
 anyhow = "=1.0.72"
 async-trait = "=0.1.72"
 aws-sigv4 = "=0.55.3"
-axum = { version = "=0.6.19", features = ["headers", "macros", "matched-path"] }
+axum = { version = "=0.6.20", features = ["headers", "macros", "matched-path"] }
 axum-extra = { version = "=0.7.6", features = ["cookie-signed"] }
 base64 = "=0.21.2"
 crates_io_index = { path = "crates_io_index" }
