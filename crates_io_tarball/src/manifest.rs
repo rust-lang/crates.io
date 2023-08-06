@@ -1,44 +1,89 @@
-use cargo_toml::OptionalFile;
-use derive_deref::Deref;
-use serde::{de, Deserialize, Deserializer};
+use cargo_toml::{Dependency, DepsSet, Error, Inheritable, Manifest, Package};
 
-#[derive(Debug, Deserialize)]
-pub struct Manifest {
-    #[serde(alias = "project")]
-    pub package: Package,
+pub fn validate_manifest(manifest: &Manifest) -> Result<(), Error> {
+    let package = manifest.package.as_ref();
+
+    // Check that a `[package]` table exists in the manifest, since crates.io
+    // does not accept workspace manifests.
+    let package = package.ok_or(Error::Other("missing field `package`"))?;
+
+    validate_package(package)?;
+
+    // These checks ensure that dependency workspace inheritance has been
+    // normalized by cargo before publishing.
+    if manifest.dependencies.is_inherited()
+        || manifest.dev_dependencies.is_inherited()
+        || manifest.build_dependencies.is_inherited()
+    {
+        return Err(Error::InheritedUnknownValue);
+    }
+
+    Ok(())
 }
 
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub struct Package {
-    pub name: String,
-    pub version: String,
-    #[serde(default)]
-    pub readme: OptionalFile,
-    pub repository: Option<String>,
-    pub rust_version: Option<RustVersion>,
+pub fn validate_package(package: &Package) -> Result<(), Error> {
+    // These checks ensure that package field workspace inheritance has been
+    // normalized by cargo before publishing.
+    if package.edition.is_inherited()
+        || package.rust_version.is_inherited()
+        || package.version.is_inherited()
+        || package.authors.is_inherited()
+        || package.description.is_inherited()
+        || package.homepage.is_inherited()
+        || package.documentation.is_inherited()
+        || package.readme.is_inherited()
+        || package.keywords.is_inherited()
+        || package.categories.is_inherited()
+        || package.exclude.is_inherited()
+        || package.include.is_inherited()
+        || package.license.is_inherited()
+        || package.license_file.is_inherited()
+        || package.repository.is_inherited()
+        || package.publish.is_inherited()
+    {
+        return Err(Error::InheritedUnknownValue);
+    }
+
+    // Check that the `rust-version` field has a valid value, if it exists.
+    if let Some(rust_version) = package.rust_version() {
+        validate_rust_version(rust_version)?;
+    }
+
+    Ok(())
 }
 
-#[derive(Debug, Deref)]
-pub struct RustVersion(String);
+trait IsInherited {
+    fn is_inherited(&self) -> bool;
+}
 
-impl PartialEq<&str> for RustVersion {
-    fn eq(&self, other: &&str) -> bool {
-        self.0.eq(other)
+impl<T> IsInherited for Inheritable<T> {
+    fn is_inherited(&self) -> bool {
+        !self.is_set()
     }
 }
 
-impl<'de> Deserialize<'de> for RustVersion {
-    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<RustVersion, D::Error> {
-        let s = String::deserialize(d)?;
-        match semver::VersionReq::parse(&s) {
-            // Exclude semver operators like `^` and pre-release identifiers
-            Ok(_) if s.chars().all(|c| c.is_ascii_digit() || c == '.') => Ok(RustVersion(s)),
-            Ok(_) | Err(..) => {
-                let value = de::Unexpected::Str(&s);
-                let expected = "a valid rust_version";
-                Err(de::Error::invalid_value(value, &expected))
-            }
-        }
+impl<T: IsInherited> IsInherited for Option<T> {
+    fn is_inherited(&self) -> bool {
+        self.as_ref().map(|it| it.is_inherited()).unwrap_or(false)
+    }
+}
+
+impl IsInherited for Dependency {
+    fn is_inherited(&self) -> bool {
+        matches!(self, Dependency::Inherited(_))
+    }
+}
+
+impl IsInherited for DepsSet {
+    fn is_inherited(&self) -> bool {
+        self.iter().any(|(_key, dep)| dep.is_inherited())
+    }
+}
+
+pub fn validate_rust_version(value: &str) -> Result<(), Error> {
+    match semver::VersionReq::parse(value) {
+        // Exclude semver operators like `^` and pre-release identifiers
+        Ok(_) if value.chars().all(|c| c.is_ascii_digit() || c == '.') => Ok(()),
+        Ok(_) | Err(..) => Err(Error::Other("invalid `rust-version` value")),
     }
 }

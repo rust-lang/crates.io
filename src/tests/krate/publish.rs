@@ -1291,7 +1291,7 @@ fn invalid_manifest() {
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.into_json(),
-        json!({ "errors": [{ "detail": "failed to parse `Cargo.toml` manifest file\n\nTOML parse error at line 1, column 1\n  |\n1 | \n  | ^\nmissing field `package`\n" }] })
+        json!({ "errors": [{ "detail": "failed to parse `Cargo.toml` manifest file\n\nmissing field `name`\n" }] })
     );
 }
 
@@ -1339,7 +1339,7 @@ fn invalid_rust_version() {
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.into_json(),
-        json!({ "errors": [{ "detail": "failed to parse `Cargo.toml` manifest file\n\nTOML parse error at line 4, column 16\n  |\n4 | rust-version = \"\"\n  |                ^^\ninvalid value: string \"\", expected a valid rust_version\n" }] })
+        json!({ "errors": [{ "detail": "failed to parse `Cargo.toml` manifest file\n\ninvalid `rust-version` value" }] })
     );
 
     let tarball = TarballBuilder::new("foo", "1.0.0")
@@ -1352,6 +1352,40 @@ fn invalid_rust_version() {
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.into_json(),
-        json!({ "errors": [{ "detail": "failed to parse `Cargo.toml` manifest file\n\nTOML parse error at line 4, column 16\n  |\n4 | rust-version = \"1.0.0-beta.2\"\n  |                ^^^^^^^^^^^^^^\ninvalid value: string \"1.0.0-beta.2\", expected a valid rust_version\n" }] })
+        json!({ "errors": [{ "detail": "failed to parse `Cargo.toml` manifest file\n\ninvalid `rust-version` value" }] })
+    );
+}
+
+#[test]
+fn workspace_inheritance() {
+    let (_app, _anon, _cookie, token) = TestApp::full().with_token();
+
+    let tarball = TarballBuilder::new("foo", "1.0.0")
+        .add_raw_manifest(b"[package]\nname = \"foo\"\nversion.workspace = true\n")
+        .build();
+
+    let response = token.publish_crate(PublishBuilder::new("foo", "1.0.0").tarball(tarball));
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response.into_json(),
+        json!({ "errors": [{ "detail": "failed to parse `Cargo.toml` manifest file\n\nvalue from workspace hasn't been set" }] })
+    );
+}
+
+#[test]
+fn workspace_inheritance_with_dep() {
+    let (_app, _anon, _cookie, token) = TestApp::full().with_token();
+
+    let tarball = TarballBuilder::new("foo", "1.0.0")
+        .add_raw_manifest(
+            b"[package]\nname = \"foo\"\nversion = \"1.0.0\"\n\n[dependencies]\nserde.workspace = true\n",
+        )
+        .build();
+
+    let response = token.publish_crate(PublishBuilder::new("foo", "1.0.0").tarball(tarball));
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response.into_json(),
+        json!({ "errors": [{ "detail": "failed to parse `Cargo.toml` manifest file\n\nvalue from workspace hasn't been set" }] })
     );
 }
