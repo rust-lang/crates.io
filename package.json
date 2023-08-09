@@ -83,7 +83,7 @@
     "ember-cli-deprecation-workflow": "2.1.0",
     "ember-cli-fastboot": "4.1.1",
     "ember-cli-head": "2.0.0",
-    "ember-cli-htmlbars": "6.2.0",
+    "ember-cli-htmlbars": "6.3.0",
     "ember-cli-inject-live-reload": "2.1.0",
     "ember-cli-mirage": "3.0.0-alpha.3",
     "ember-cli-notifications": "8.0.0",
