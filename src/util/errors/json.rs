@@ -135,7 +135,7 @@ impl AppError for TooManyRequests {
         let detail = format!(
             "{}. Please try again after {retry_after} or email \
              help@crates.io to have your limit increased.",
-            self.action.error_messagge()
+            self.action.error_message()
         );
         let mut response = json_error(&detail, StatusCode::TOO_MANY_REQUESTS);
         response.headers_mut().insert(
