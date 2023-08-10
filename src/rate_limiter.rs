@@ -42,7 +42,7 @@ impl LimitedAction {
         }
     }
 
-    pub fn error_messagge(&self) -> &'static str {
+    pub fn error_message(&self) -> &'static str {
         match self {
             LimitedAction::PublishNew => {
                 "You have published too many new crates in a short period of time"
