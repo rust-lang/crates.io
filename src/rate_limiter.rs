@@ -20,9 +20,9 @@ pg_enum! {
 impl LimitedAction {
     pub fn default_rate_seconds(&self) -> u64 {
         match self {
-            LimitedAction::PublishNew => 60 * 60,
-            LimitedAction::PublishUpdate => 60,
-            LimitedAction::YankUnyank => 60,
+            LimitedAction::PublishNew => 10 * 60, // 10 minutes
+            LimitedAction::PublishUpdate => 60,   // 1 minute
+            LimitedAction::YankUnyank => 60,      // 1 minute
         }
     }
 
