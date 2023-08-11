@@ -20,9 +20,9 @@ pg_enum! {
 impl LimitedAction {
     pub fn default_rate_seconds(&self) -> u64 {
         match self {
-            LimitedAction::PublishNew => 60 * 60,
-            LimitedAction::PublishUpdate => 60,
-            LimitedAction::YankUnyank => 60,
+            LimitedAction::PublishNew => 10 * 60, // 10 minutes
+            LimitedAction::PublishUpdate => 60,   // 1 minute
+            LimitedAction::YankUnyank => 60,      // 1 minute
         }
     }
 
@@ -175,6 +175,74 @@ mod tests {
     use super::*;
     use crate::email::Emails;
     use crate::test_util::*;
+
+    #[test]
+    fn default_rate_limits() -> QueryResult<()> {
+        let conn = &mut pg_connection();
+        let now = now();
+
+        // Set the defaults as if no env vars have been set in production
+        let mut rate_limiter = HashMap::new();
+        for action in LimitedAction::VARIANTS {
+            rate_limiter.insert(
+                *action,
+                RateLimiterConfig {
+                    rate: Duration::from_secs(action.default_rate_seconds()),
+                    burst: action.default_burst(),
+                },
+            );
+        }
+        let rate = RateLimiter::new(rate_limiter);
+
+        let user_id = new_user_bucket(conn, 5, now)?.user_id;
+
+        // Publishing new crates has a burst of 5 and refill time of 1 every 10 minutes, which
+        // means we should be able to publish every 10 min, always have tokens remaining, and
+        // set the last_refill based on the refill time.
+        let action = LimitedAction::PublishNew;
+        let mut last_refill_times = vec![];
+        let mut expected_last_refill_times = vec![];
+        for publish_num in 1..=10 {
+            let publish_time = now + chrono::Duration::minutes(10 * publish_num);
+            let bucket = rate.take_token(user_id, action, publish_time, conn)?;
+
+            last_refill_times.push(bucket.last_refill);
+            expected_last_refill_times.push(publish_time);
+        }
+        assert_eq!(expected_last_refill_times, last_refill_times);
+
+        // Publishing new versions has a burst of 30 and refill time of every minute, which
+        // means we should be able to publish every min, always have tokens remaining, and
+        // set the last_refill based on the refill time.
+        let action = LimitedAction::PublishUpdate;
+        let mut last_refill_times = vec![];
+        let mut expected_last_refill_times = vec![];
+        for publish_num in 1..=35 {
+            let publish_time = now + chrono::Duration::minutes(publish_num);
+            let bucket = rate.take_token(user_id, action, publish_time, conn)?;
+
+            last_refill_times.push(bucket.last_refill);
+            expected_last_refill_times.push(publish_time);
+        }
+        assert_eq!(expected_last_refill_times, last_refill_times);
+
+        // Yanking/unyanking has a burst of 100 and refill time of every minute, which
+        // means we should be able to yank/unyank every min, always have tokens remaining, and
+        // set the last_refill based on the refill time.
+        let action = LimitedAction::YankUnyank;
+        let mut last_refill_times = vec![];
+        let mut expected_last_refill_times = vec![];
+        for publish_num in 1..=110 {
+            let publish_time = now + chrono::Duration::minutes(publish_num);
+            let bucket = rate.take_token(user_id, action, publish_time, conn)?;
+
+            last_refill_times.push(bucket.last_refill);
+            expected_last_refill_times.push(publish_time);
+        }
+        assert_eq!(expected_last_refill_times, last_refill_times);
+
+        Ok(())
+    }
 
     #[test]
     fn take_token_with_no_bucket_creates_new_one() -> QueryResult<()> {
