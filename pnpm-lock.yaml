@@ -40,8 +40,8 @@ dependencies:
     specifier: 0.1.2
     version: 0.1.2
   mermaid:
-    specifier: 10.3.0
-    version: 10.3.0
+    specifier: 10.3.1
+    version: 10.3.1
   morgan:
     specifier: 1.10.0
     version: 1.10.0
@@ -13115,8 +13115,8 @@ packages:
     engines: {node: '>= 8'}
     dev: true
 
-  /mermaid@10.3.0:
-    resolution: {integrity: sha512-H5quxuQjwXC8M1WuuzhAp2TdqGg74t5skfDBrNKJ7dt3z8Wprl5S6h9VJsRhoBUTSs1TMtHEdplLhCqXleZZLw==}
+  /mermaid@10.3.1:
+    resolution: {integrity: sha512-hkenh7WkuRWPcob3oJtrN3W+yzrrIYuWF1OIfk/d0xGE8UWlvDhfexaHmDwwe8DKQgqMLI8DWEPwGprxkumjuw==}
     dependencies:
       '@braintree/sanitize-url': 6.0.4
       '@types/d3-scale': 4.0.3
