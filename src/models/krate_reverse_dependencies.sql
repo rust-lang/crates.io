@@ -31,7 +31,10 @@ SELECT *, COUNT(*) OVER () as total FROM (
       ON crates.id = versions.crate_id
     WHERE dependencies.crate_id = $1
       AND rn = 1
+    -- this ORDER BY is redundant with the outer one but benefits
+    -- the `DISTINCT ON`
     ORDER BY crate_downloads DESC
 ) t
+ORDER BY crate_downloads DESC
 OFFSET $2
 LIMIT $3
