@@ -216,8 +216,8 @@ devDependencies:
     specifier: 2.4.4
     version: 2.4.4
   ember-template-lint:
-    specifier: 5.11.1
-    version: 5.11.1
+    specifier: 5.11.2
+    version: 5.11.2
   ember-test-selectors:
     specifier: 6.0.0
     version: 6.0.0
@@ -3334,11 +3334,11 @@ packages:
     resolution: {integrity: sha512-fuscdXJ9G1qb7W8VdHi+IwRqij3lBkosAm4ydQtEmbY58OzHXqQhvlxqEkoz0yssNVn38bcpRWgA9PP+OGoisw==}
     dev: false
 
-  /@lint-todo/utils@13.1.0:
-    resolution: {integrity: sha512-uzcZPIPH7hcs+hKMiHfp58MosJpI9sTTgl1pGYau4zq34q1ppswJ6nLeohv/cDhqEBrHjtvldt8zDnVJXRvBlA==}
+  /@lint-todo/utils@13.1.1:
+    resolution: {integrity: sha512-F5z53uvRIF4dYfFfJP3a2Cqg+4P1dgJchJsFnsZE0eZp0LK8X7g2J0CsJHRgns+skpXOlM7n5vFGwkWCWj8qJg==}
     engines: {node: 12.* || >= 14}
     dependencies:
-      '@types/eslint': 7.29.0
+      '@types/eslint': 8.44.2
       find-up: 5.0.0
       fs-extra: 9.1.0
       proper-lockfile: 4.1.2
@@ -3920,13 +3920,6 @@ packages:
     dependencies:
       '@types/eslint': 8.44.2
       '@types/estree': 1.0.1
-
-  /@types/eslint@7.29.0:
-    resolution: {integrity: sha512-VNcvioYDH8/FxaeTKkM4/TiTwt6pBV9E3OfGmvaw8tPl0rrHCJ4Ll15HRT+pMiFAf/MLQvAzC+6RzUMEL9Ceng==}
-    dependencies:
-      '@types/estree': 1.0.1
-      '@types/json-schema': 7.0.12
-    dev: true
 
   /@types/eslint@8.44.2:
     resolution: {integrity: sha512-sdPRb9K6iL5XZOmBubg8yiFp5yS/JdUDQsq5e6h95km91MCYMuvp7mh1fjPEYUhvHepKpZOjnEaMBR4PxjWDzg==}
@@ -9458,12 +9451,12 @@ packages:
       - supports-color
     dev: true
 
-  /ember-template-lint@5.11.1:
-    resolution: {integrity: sha512-PucOG+Wx96h8NNjgD4kTjBzg6qTGOCqvo3agubuHJ3/T9ucO0P88FzEPxWRPWgn4b/PqIyDXj8HhkM7QUccBIQ==}
+  /ember-template-lint@5.11.2:
+    resolution: {integrity: sha512-G8KXmFCYLKM9ifMb+rluL8CNIawUl45i4z4VrK+Nn5ciWSo+Vx2jUp+sS6wKCdBqGYoiqjUgn/hmGnCVOId+yQ==}
     engines: {node: ^14.18.0 || ^16.0.0 || >= 18.0.0}
     hasBin: true
     dependencies:
-      '@lint-todo/utils': 13.1.0
+      '@lint-todo/utils': 13.1.1
       aria-query: 5.3.0
       chalk: 5.3.0
       ci-info: 3.8.0
