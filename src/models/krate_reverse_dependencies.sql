@@ -13,7 +13,7 @@ SELECT *, COUNT(*) OVER () as total FROM (
         row_number() OVER (
             PARTITION BY crate_id
             ORDER BY
-                to_semver_no_prerelease(num) DESC NULLS LAST,
+                semver_no_prerelease DESC NULLS LAST,
                 id DESC
         ) rn
         FROM versions
