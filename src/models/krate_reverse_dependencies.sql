@@ -35,8 +35,12 @@ SELECT *, COUNT(*) OVER () as total FROM (
       AND rn = 1
     -- this ORDER BY is redundant with the outer one but benefits
     -- the `DISTINCT ON`
-    ORDER BY crate_downloads DESC
+    ORDER BY
+        crate_downloads DESC,
+        crate_name ASC
 ) t
-ORDER BY crate_downloads DESC
+ORDER BY
+    crate_downloads DESC,
+    crate_name ASC
 OFFSET $2
 LIMIT $3
