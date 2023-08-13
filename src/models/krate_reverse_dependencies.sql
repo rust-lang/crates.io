@@ -37,7 +37,8 @@ SELECT *, COUNT(*) OVER () as total FROM (
     -- the `DISTINCT ON`
     ORDER BY
         crate_downloads DESC,
-        crate_name ASC
+        crate_name ASC,
+        dependencies.id ASC
 ) t
 ORDER BY
     crate_downloads DESC,
