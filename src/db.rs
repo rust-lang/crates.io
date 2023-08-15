@@ -12,6 +12,8 @@ use url::Url;
 
 use crate::config;
 
+pub mod sql_types;
+
 pub type ConnectionPool = r2d2::Pool<ConnectionManager<PgConnection>>;
 
 #[derive(Clone)]
