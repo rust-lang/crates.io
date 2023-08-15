@@ -20,7 +20,7 @@ toml = "=0.7.6"
 tracing = "=0.1.37"
 
 [dev-dependencies]
-anyhow = "=1.0.72"
+anyhow = "=1.0.74"
 claims = "=0.7.1"
 clap = { version = "=4.3.21", features = ["derive", "unicode", "wrap_help"] }
 indicatif = { version = "=0.17.6", features = ["rayon"] }
