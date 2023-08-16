@@ -87,7 +87,7 @@ tar = "=0.4.40"
 tempfile = "=3.7.1"
 thiserror = "=1.0.46"
 threadpool = "=1.8.1"
-tokio = { version = "=1.31.0", features = ["net", "signal", "io-std", "io-util", "rt-multi-thread", "macros"]}
+tokio = { version = "=1.32.0", features = ["net", "signal", "io-std", "io-util", "rt-multi-thread", "macros"]}
 toml = "=0.7.6"
 tower = "=0.4.13"
 tower-http = { version = "=0.4.3", features = ["fs", "catch-panic"] }
@@ -101,7 +101,7 @@ crates_io_tarball = { path = "crates_io_tarball", features = ["builder"] }
 claims = "=0.7.1"
 hyper-tls = "=0.5.0"
 insta = { version = "=1.31.0", features = ["redactions", "yaml"] }
-tokio = "=1.31.0"
+tokio = "=1.32.0"
 tower-service = "=0.3.2"
 
 [build-dependencies]
