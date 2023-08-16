@@ -186,8 +186,8 @@ devDependencies:
     specifier: 8.1.2
     version: 8.1.2
   ember-keyboard:
-    specifier: 8.2.0
-    version: 8.2.0(@ember/test-helpers@3.2.0)(ember-source@5.2.0)
+    specifier: 8.2.1
+    version: 8.2.1(@ember/test-helpers@3.2.0)(ember-source@5.2.0)
   ember-link:
     specifier: 3.1.0
     version: 3.1.0(@ember/test-helpers@3.2.0)(@glimmer/tracking@1.1.2)
@@ -9133,11 +9133,10 @@ packages:
       - supports-color
     dev: true
 
-  /ember-keyboard@8.2.0(@ember/test-helpers@3.2.0)(ember-source@5.2.0):
-    resolution: {integrity: sha512-h2kuS2irtIyvNbAMkGDlDTB4TPXwgmC6Nu9bIuGWoCjkGdgJbUg0VegfyRJ1TlxbIHlAelbqVpE8UhfgY5wEag==}
-    engines: {node: 12.* || 14.* || >= 16}
+  /ember-keyboard@8.2.1(@ember/test-helpers@3.2.0)(ember-source@5.2.0):
+    resolution: {integrity: sha512-wT9xpt3GKsiodGZoifKU4OyeRjXWlmKV9ZHHsp6wJBwMFpl4wWPjTNdINxivk2qg/WFNIh8nUiwuG4+soWXPdw==}
     peerDependencies:
-      '@ember/test-helpers': ^2.6.0
+      '@ember/test-helpers': ^2.6.0 || ^3.0.0
     peerDependenciesMeta:
       '@ember/test-helpers':
         optional: true
