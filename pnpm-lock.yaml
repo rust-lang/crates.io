@@ -102,8 +102,8 @@ devDependencies:
     specifier: 4.2.0
     version: 4.2.0
   '@sinonjs/fake-timers':
-    specifier: 11.0.0
-    version: 11.0.0
+    specifier: 11.1.0
+    version: 11.1.0
   '@zestia/ember-auto-focus':
     specifier: 5.1.0
     version: 5.1.0(ember-source@5.2.0)(webpack@5.88.2)
@@ -3653,8 +3653,8 @@ packages:
       type-detect: 4.0.8
     dev: true
 
-  /@sinonjs/fake-timers@11.0.0:
-    resolution: {integrity: sha512-bqiI/5ur6ZOozG06BeJjbplIqHY/KftV1zaewbZHORH902GrHURKwl7H1G/4OC5EaxDYQJlrD0OLJ1XD6x01dQ==}
+  /@sinonjs/fake-timers@11.1.0:
+    resolution: {integrity: sha512-pUBaWhXoa9N0R/LeYKLqkrN9mqN3jwKBeMfbvlRtHUzLmk55o+0swncIuZBcSH/PpXDttRf/AcPF22pknAzORQ==}
     dependencies:
       '@sinonjs/commons': 3.0.0
     dev: true
@@ -13681,6 +13681,7 @@ packages:
   /normalize-path@2.1.1:
     resolution: {integrity: sha512-3pKJwH184Xo/lnH6oyP1q2pMd7HcypqqmRs91/6/i2CGtWwIKGCkOOMTm/zXbgTEWHw1uNpNi/igc3ePOYHb6w==}
     engines: {node: '>=0.10.0'}
+    requiresBuild: true
     dependencies:
       remove-trailing-separator: 1.1.0
     dev: true
@@ -15302,6 +15303,7 @@ packages:
 
   /remove-trailing-separator@1.1.0:
     resolution: {integrity: sha512-/hS+Y0u3aOfIETiaiirUFwDBDzmXPvO+jAfKTitUngIPzdKc6Z0LoFjM/CK5PL4C+eKwHohlHAb6H0VFfmmUsw==}
+    requiresBuild: true
     dev: true
 
   /remove-types@1.0.0:
