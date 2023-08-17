@@ -85,7 +85,7 @@ sha2 = "=0.10.7"
 spdx = "=0.10.2"
 tar = "=0.4.40"
 tempfile = "=3.7.1"
-thiserror = "=1.0.46"
+thiserror = "=1.0.47"
 threadpool = "=1.8.1"
 tokio = { version = "=1.32.0", features = ["net", "signal", "io-std", "io-util", "rt-multi-thread", "macros"]}
 toml = "=0.7.6"
