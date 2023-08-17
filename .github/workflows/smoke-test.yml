@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3.5.3
       - uses: Swatinem/rust-cache@v2.6.1
-      - run: cargo build --manifest-path crates_io_smoke_test/Cargo.toml
-      - run: cargo run --manifest-path crates_io_smoke_test/Cargo.toml --quiet
+      - run: cargo build --package crates_io_smoke_test
+      - run: cargo run --package crates_io_smoke_test --quiet
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.STAGING_SMOKE_TEST_TOKEN }}
