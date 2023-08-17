@@ -5,7 +5,7 @@ license = "MIT OR Apache-2.0"
 edition = "2021"
 
 [dependencies]
-anyhow = "=1.0.74"
+anyhow = "=1.0.75"
 bytes = "=1.4.0"
 clap = { version = "=4.3.21", features = ["derive", "env", "unicode", "wrap_help"] }
 crates_io_index = { path = "../crates_io_index" }
