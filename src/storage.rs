@@ -1,7 +1,4 @@
-mod arc_store;
-
 use crate::env;
-use crate::storage::arc_store::ArcStore;
 use anyhow::Context;
 use futures_util::{StreamExt, TryStreamExt};
 use http::header::CACHE_CONTROL;
@@ -16,6 +13,7 @@ use object_store::{ClientOptions, ObjectStore, Result};
 use secrecy::{ExposeSecret, SecretString};
 use std::fs;
 use std::path::PathBuf;
+use std::sync::Arc;
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
 
@@ -183,8 +181,8 @@ impl Storage {
                     .context("Failed to initialize local file system storage")
                     .unwrap();
 
-                let store = ArcStore::new(local);
-                let index_store = ArcStore::new(local_index);
+                let store: Arc<dyn ObjectStore> = Arc::new(local);
+                let index_store: Arc<dyn ObjectStore> = Arc::new(local_index);
 
                 Self {
                     store: Box::new(store.clone()),
@@ -199,7 +197,7 @@ impl Storage {
 
             StorageBackend::InMemory => {
                 warn!("Using in-memory file storage");
-                let store = ArcStore::new(InMemory::new());
+                let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
 
                 Self {
                     store: Box::new(store.clone()),
