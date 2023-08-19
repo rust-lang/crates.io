@@ -152,7 +152,7 @@ jobs:
         with:
           version: ${{ env.PNPM_VERSION }}
 
-      - uses: actions/setup-node@v3.8.0
+      - uses: actions/setup-node@v3.8.1
         with:
           cache: pnpm
           node-version-file: package.json
@@ -184,7 +184,7 @@ jobs:
         with:
           version: ${{ env.PNPM_VERSION }}
 
-      - uses: actions/setup-node@v3.8.0
+      - uses: actions/setup-node@v3.8.1
         with:
           cache: pnpm
           node-version-file: package.json
