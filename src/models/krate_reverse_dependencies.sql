@@ -12,7 +12,9 @@ SELECT *, COUNT(*) OVER () as total FROM (
         SELECT versions.*,
         row_number() OVER (
             PARTITION BY crate_id
-            ORDER BY to_semver_no_prerelease(num) DESC NULLS LAST
+            ORDER BY
+                to_semver_no_prerelease(num) DESC NULLS LAST,
+                id DESC
         ) rn
         FROM versions
         WHERE NOT yanked
@@ -31,7 +33,15 @@ SELECT *, COUNT(*) OVER () as total FROM (
       ON crates.id = versions.crate_id
     WHERE dependencies.crate_id = $1
       AND rn = 1
-    ORDER BY crate_downloads DESC
+    -- this ORDER BY is redundant with the outer one but benefits
+    -- the `DISTINCT ON`
+    ORDER BY
+        crate_downloads DESC,
+        crate_name ASC,
+        dependencies.id ASC
 ) t
+ORDER BY
+    crate_downloads DESC,
+    crate_name ASC
 OFFSET $2
 LIMIT $3
