@@ -1,1 +1,1 @@
-ALTER TABLE versions DROP COLUMN semver_no_prerelease;
+ALTER TABLE versions DROP COLUMN IF EXISTS semver_no_prerelease;
