@@ -37,6 +37,7 @@ aws-sigv4 = "=0.56.0"
 axum = { version = "=0.6.20", features = ["headers", "macros", "matched-path"] }
 axum-extra = { version = "=0.7.7", features = ["cookie-signed"] }
 base64 = "=0.21.2"
+bigdecimal = "=0.3.1"
 crates_io_index = { path = "crates_io_index" }
 crates_io_markdown = { path = "crates_io_markdown" }
 crates_io_tarball = { path = "crates_io_tarball" }
@@ -47,7 +48,7 @@ crossbeam-channel = "=0.5.8"
 dashmap = { version = "=5.5.1", features = ["raw-api"] }
 derive_deref = "=1.1.1"
 dialoguer = "=0.10.4"
-diesel = { version = "=2.1.0", features = ["postgres", "serde_json", "chrono", "r2d2"] }
+diesel = { version = "=2.1.0", features = ["postgres", "serde_json", "chrono", "r2d2", "numeric"] }
 diesel_full_text_search = "=2.1.0"
 diesel_migrations = { version = "=2.1.0", features = ["postgres"] }
 dotenvy = "=0.15.7"

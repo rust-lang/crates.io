@@ -5,6 +5,7 @@ use diesel::prelude::*;
 
 use crate::util::errors::{cargo_err, AppResult};
 
+use crate::db::sql_types::semver::Triple;
 use crate::models::{Crate, Dependency, User};
 use crate::schema::*;
 use crate::sql::split_part;
@@ -27,6 +28,7 @@ pub struct Version {
     pub checksum: String,
     pub links: Option<String>,
     pub rust_version: Option<String>,
+    pub semver_no_prerelease: Option<Triple>,
 }
 
 #[derive(Insertable, Debug)]
