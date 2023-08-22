@@ -240,8 +240,8 @@ devDependencies:
     specifier: 9.0.0
     version: 9.0.0(eslint@8.47.0)
   eslint-plugin-ember:
-    specifier: 11.10.0
-    version: 11.10.0(eslint@8.47.0)
+    specifier: 11.11.1
+    version: 11.11.1(eslint@8.47.0)
   eslint-plugin-ember-concurrency:
     specifier: 0.5.1
     version: 0.5.1(eslint@8.47.0)
@@ -9754,8 +9754,8 @@ packages:
       eslint: 8.47.0
     dev: true
 
-  /eslint-plugin-ember@11.10.0(eslint@8.47.0):
-    resolution: {integrity: sha512-/5VanfpfzIdmWgXWyQ6ylAJWITu8mXivRce06h0uoifVpUoGaBdAkwuto/PLGfDxWdi43xWUFLb5Tpkhx2MoFg==}
+  /eslint-plugin-ember@11.11.1(eslint@8.47.0):
+    resolution: {integrity: sha512-dvsDa4LkDkGqCE2bzBIguRMi1g40JVwRWMSHmn8S7toRDxSOU3M7yromgi5eSAJX2O2vEvJZ9QnR15YDbvNfVQ==}
     engines: {node: 14.* || 16.* || >= 18}
     peerDependencies:
       eslint: '*'
