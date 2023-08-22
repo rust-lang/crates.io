@@ -9,8 +9,9 @@ use crate::manifest::validate_manifest;
 pub use crate::vcs_info::CargoVcsInfo;
 pub use cargo_toml::Manifest;
 use flate2::read::GzDecoder;
+use std::collections::HashMap;
 use std::io::Read;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use tracing::instrument;
 
 #[cfg(any(feature = "builder", test))]
@@ -37,6 +38,10 @@ pub enum TarballError {
     MissingManifest,
     #[error("Cargo.toml manifest is invalid: {0}")]
     InvalidManifest(#[from] cargo_toml::Error),
+    #[error("Cargo.toml manifest is incorrectly cased: {0:?}")]
+    IncorrectlyCasedManifest(PathBuf),
+    #[error("more than one Cargo.toml manifest in tarball: {0:?}")]
+    TooManyManifests(Vec<PathBuf>),
     #[error(transparent)]
     IO(#[from] std::io::Error),
 }
@@ -57,12 +62,10 @@ pub fn process_tarball<R: Read>(
     // Use this I/O object now to take a peek inside
     let mut archive = tar::Archive::new(decoder);
 
-    let vcs_info_path = Path::new(&pkg_name).join(".cargo_vcs_info.json");
-    let mut vcs_info = None;
+    let pkg_root = Path::new(&pkg_name);
 
-    let manifest_path = Path::new(&pkg_name).join("Cargo.toml");
-    let manifest_path_lower = Path::new(&pkg_name).join("cargo.toml");
-    let mut manifest = None;
+    let mut vcs_info = None;
+    let mut manifests = HashMap::new();
 
     for entry in archive.entries()? {
         let mut entry = entry.map_err(TarballError::Malformed)?;
@@ -89,25 +92,46 @@ pub fn process_tarball<R: Read>(
             ));
         }
 
-        if entry_path == vcs_info_path {
-            let mut contents = String::new();
-            entry.read_to_string(&mut contents)?;
-            vcs_info = CargoVcsInfo::from_contents(&contents).ok();
-        } else if entry_path == manifest_path || entry_path == manifest_path_lower {
-            // Try to extract and read the Cargo.toml from the tarball, silently
-            // erroring if it cannot be read.
-            let mut contents = String::new();
-            entry.read_to_string(&mut contents)?;
-            manifest = Some({
+        if entry_path.parent() == Some(pkg_root) {
+            let entry_file = entry_path.file_name().unwrap_or_default();
+            if entry_file == ".cargo_vcs_info.json" {
+                let mut contents = String::new();
+                entry.read_to_string(&mut contents)?;
+                vcs_info = CargoVcsInfo::from_contents(&contents).ok();
+            } else if entry_file.to_ascii_lowercase() == "cargo.toml" {
+                // Try to extract and read the Cargo.toml from the tarball, silently erroring if it
+                // cannot be read.
+                let owned_entry_path = entry_path.into_owned();
+                let mut contents = String::new();
+                entry.read_to_string(&mut contents)?;
+
                 let manifest = Manifest::from_str(&contents)?;
                 validate_manifest(&manifest)?;
-                manifest
-            });
+
+                manifests.insert(owned_entry_path, manifest);
+            }
         }
     }
 
-    let Some(manifest) = manifest else {
-        return Err(TarballError::MissingManifest);
+    let manifest = if manifests.len() > 1 {
+        // There are no scenarios where we want to accept a crate file with multiple manifests.
+        return Err(TarballError::TooManyManifests(
+            manifests.into_keys().collect(),
+        ));
+    } else {
+        // Although we're interested in all possible cases of `Cargo.toml` above to protect users
+        // on case-insensitive filesystems, to match the behaviour of cargo we should only actually
+        // accept `Cargo.toml` and (the now deprecated) `cargo.toml` as valid options for the
+        // manifest.
+        let (path, manifest) = manifests
+            .into_iter()
+            .next()
+            .ok_or(TarballError::MissingManifest)?;
+        let file = path.file_name().unwrap_or_default();
+        if file != "Cargo.toml" && file != "cargo.toml" {
+            return Err(TarballError::IncorrectlyCasedManifest(file.into()));
+        }
+        manifest
     };
 
     Ok(TarballInfo { manifest, vcs_info })
@@ -116,9 +140,9 @@ pub fn process_tarball<R: Read>(
 #[cfg(test)]
 mod tests {
     use super::process_tarball;
-    use crate::TarballBuilder;
+    use crate::{TarballBuilder, TarballError};
     use cargo_toml::OptionalFile;
-    use std::path::Path;
+    use std::path::{Path, PathBuf};
 
     #[test]
     fn process_tarball_test() {
@@ -267,5 +291,72 @@ repository = "https://github.com/foo/bar"
         let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, limit));
         let package = assert_some!(tarball_info.manifest.package);
         assert_some_eq!(package.repository(), "https://github.com/foo/bar");
+    }
+
+    #[test]
+    fn process_tarball_test_incorrect_manifest_casing() {
+        for file in ["CARGO.TOML", "Cargo.Toml"] {
+            let tarball = TarballBuilder::new("foo", "0.0.1")
+                .add_file(
+                    &format!("foo-0.0.1/{file}"),
+                    br#"
+[package]
+name = "foo"
+version = "0.0.1"
+repository = "https://github.com/foo/bar"
+"#,
+                )
+                .build();
+
+            let limit = 512 * 1024 * 1024;
+
+            let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, limit));
+            if let TarballError::IncorrectlyCasedManifest(have) = err {
+                assert_eq!(have, PathBuf::from(file));
+            } else {
+                panic!("expected IncorrectlyCasedManifest, got {err:?} instead");
+            }
+        }
+    }
+
+    #[test]
+    fn process_tarball_test_multiple_manifests() {
+        for files in [
+            vec!["cargo.toml", "Cargo.toml"],
+            vec!["Cargo.toml", "Cargo.Toml"],
+            vec!["Cargo.toml", "cargo.toml", "CARGO.TOML"],
+        ] {
+            let tarball = files
+                .iter()
+                .fold(TarballBuilder::new("foo", "0.0.1"), |builder, file| {
+                    builder.add_file(
+                        &format!("foo-0.0.1/{file}"),
+                        br#"
+[package]
+name = "foo"
+version = "0.0.1"
+repository = "https://github.com/foo/bar"
+"#,
+                    )
+                })
+                .build();
+
+            let limit = 512 * 1024 * 1024;
+
+            let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, limit));
+            if let TarballError::TooManyManifests(mut have) = err {
+                // We need to sort these, since the Vec is otherwise just coming out of a hashmap.
+                have.sort();
+                let mut want: Vec<_> = files
+                    .into_iter()
+                    .map(|file| PathBuf::from("foo-0.0.1").join(file))
+                    .collect();
+                want.sort();
+
+                assert_eq!(have, want);
+            } else {
+                panic!("expected TooManyManifests, got {err:?} instead");
+            }
+        }
     }
 }
