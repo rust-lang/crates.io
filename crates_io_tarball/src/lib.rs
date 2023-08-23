@@ -92,6 +92,8 @@ pub fn process_tarball<R: Read>(
             ));
         }
 
+        // Let's go hunting for the VCS info and crate manifest. The only valid place for these is
+        // in the package root in the tarball.
         if entry_path.parent() == Some(pkg_root) {
             let entry_file = entry_path.file_name().unwrap_or_default();
             if entry_file == ".cargo_vcs_info.json" {
