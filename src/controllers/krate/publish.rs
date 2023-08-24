@@ -414,6 +414,27 @@ fn tarball_to_app_error(error: TarballError) -> BoxedAppError {
         TarballError::MissingManifest => {
             cargo_err("uploaded tarball is missing a `Cargo.toml` manifest file")
         }
+        TarballError::IncorrectlyCasedManifest(name) => {
+            cargo_err(&format!(
+                "uploaded tarball is missing a `Cargo.toml` manifest file; `{name}` was found, but must be named `Cargo.toml` with that exact casing",
+                name = name.to_string_lossy(),
+            ))
+        }
+        TarballError::TooManyManifests(paths) => {
+            let paths = paths
+                .into_iter()
+                .map(|path| {
+                    path.file_name()
+                        .unwrap_or_default()
+                        .to_string_lossy()
+                        .into_owned()
+                })
+                .collect::<Vec<_>>()
+                .join("`, `");
+            cargo_err(&format!(
+                "uploaded tarball contains more than one `Cargo.toml` manifest file; found `{paths}`"
+            ))
+        }
         TarballError::InvalidManifest(err) => cargo_err(&format!(
             "failed to parse `Cargo.toml` manifest file\n\n{err}"
         )),
