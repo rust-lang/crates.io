@@ -42,7 +42,7 @@ crates_io_index = { path = "crates_io_index" }
 crates_io_markdown = { path = "crates_io_markdown" }
 crates_io_tarball = { path = "crates_io_tarball" }
 chrono = { version = "=0.4.26", default-features = false, features = ["serde"] }
-clap = { version = "=4.3.24", features = ["derive", "env", "unicode", "wrap_help"] }
+clap = { version = "=4.4.0", features = ["derive", "env", "unicode", "wrap_help"] }
 cookie = { version = "=0.17.0", features = ["secure"] }
 crossbeam-channel = "=0.5.8"
 dashmap = { version = "=5.5.1", features = ["raw-api"] }
