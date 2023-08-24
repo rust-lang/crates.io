@@ -63,7 +63,9 @@ fn process_path(path: &Path, pb: &ProgressBar) {
     let file =
         File::open(path).map_err(|error| pb.suspend(|| warn!(%error, "Failed to read crate file")));
 
-    let Ok(file) = file else { return; };
+    let Ok(file) = file else {
+        return;
+    };
 
     let path_no_ext = path.with_extension("");
     let pkg_name = path_no_ext.file_name().unwrap().to_string_lossy();
