@@ -379,17 +379,6 @@ dependencies = [
 
 [[package]]
 name = "bigdecimal"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a6773ddc0eafc0e509fb60e48dff7f450f8e674a0686ae8605e8d9901bd5eefa"
-dependencies = [
- "num-bigint",
- "num-integer",
- "num-traits",
-]
-
-[[package]]
-name = "bigdecimal"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "454bca3db10617b88b566f205ed190aedb0e0e6dd4cad61d3988a72e8c5594cb"
@@ -685,7 +674,7 @@ dependencies = [
  "axum",
  "axum-extra",
  "base64 0.21.2",
- "bigdecimal 0.4.1",
+ "bigdecimal",
  "chrono",
  "claims",
  "clap",
@@ -954,7 +943,7 @@ version = "2.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d98235fdc2f355d330a8244184ab6b4b33c28679c0b4158f63138e51d6cf7e88"
 dependencies = [
- "bigdecimal 0.3.1",
+ "bigdecimal",
  "bitflags 2.4.0",
  "byteorder",
  "chrono",
