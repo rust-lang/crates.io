@@ -162,8 +162,8 @@ devDependencies:
     specifier: 6.0.1
     version: 6.0.1(ember-source@5.2.0)
   ember-concurrency:
-    specifier: 3.1.0
-    version: 3.1.0(ember-source@5.2.0)
+    specifier: 3.1.1
+    version: 3.1.1(ember-source@5.2.0)
   ember-css-modules:
     specifier: 2.0.1
     version: 2.0.1
@@ -8919,11 +8919,11 @@ packages:
       - '@babel/core'
       - supports-color
 
-  /ember-concurrency@3.1.0(ember-source@5.2.0):
-    resolution: {integrity: sha512-vJrP+awbiYJvm2y9xYIYO96n2Jx1FXp7mbM7ucjSp+hPuNwNw9i7xXVrgxBYIuJ/0zlbSMF0P2XJoyi4A0XCrQ==}
+  /ember-concurrency@3.1.1(ember-source@5.2.0):
+    resolution: {integrity: sha512-doXFYYfy1C7jez+jDDlfahTp03QdjXeSY/W3Zbnx/q3UNJ9g10Shf2d7M/HvWo/TC22eU+6dPLIpqd/6q4pR+Q==}
     engines: {node: 16.* || >= 18}
     peerDependencies:
-      ember-source: ^3.28.0 || ^4.0.0
+      ember-source: ^3.28.0 || ^4.0.0 || >=5.0.0
     dependencies:
       '@babel/helper-plugin-utils': 7.22.5
       '@babel/types': 7.22.10
