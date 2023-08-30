@@ -89,7 +89,7 @@ fn check_stalled_update_downloads(conn: &mut PgConnection) -> Result<()> {
         .first(conn);
 
     if let Ok(start_time) = start_time {
-        let start_time = DateTime::<Utc>::from_utc(start_time, Utc);
+        let start_time = DateTime::<Utc>::from_naive_utc_and_offset(start_time, Utc);
         let minutes = Utc::now().signed_duration_since(start_time).num_minutes();
 
         if minutes > max_job_time {
