@@ -228,8 +228,8 @@ devDependencies:
     specifier: 3.6.0
     version: 3.6.0
   ember-truth-helpers:
-    specifier: 3.1.1
-    version: 3.1.1
+    specifier: 4.0.0
+    version: 4.0.0(ember-source@5.2.0)
   ember-web-app:
     specifier: 5.0.1
     version: 5.0.1
@@ -9147,6 +9147,20 @@ packages:
       - supports-color
     dev: true
 
+  /ember-functions-as-helper-polyfill@2.1.2(ember-source@5.2.0):
+    resolution: {integrity: sha512-yvW6xykvZEIYzzwlrC/g9yu6LtLkkj5F+ho6U+BDxN1uREMgoMOZnji7sSILn5ITVpaJ055DPcO+utEFD7IZOA==}
+    engines: {node: '>= 14.0.0'}
+    peerDependencies:
+      ember-source: ^3.25.0 || >=4.0.0
+    dependencies:
+      ember-cli-babel: 7.26.11
+      ember-cli-typescript: 5.2.1
+      ember-cli-version-checker: 5.1.2
+      ember-source: 5.2.0(@babel/core@7.22.11)(@glimmer/component@1.1.2)(rsvp@4.8.5)(webpack@5.88.2)
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
   /ember-get-config@2.1.1:
     resolution: {integrity: sha512-uNmv1cPG/4qsac8oIf5txJ2FZ8p88LEpG4P3dNcjsJS98Y8hd0GPMFwVqpnzI78Lz7VYRGQWY4jnE4qm5R3j4g==}
     engines: {node: 12.* || 14.* || >= 16}
@@ -9530,11 +9544,14 @@ packages:
       - supports-color
     dev: true
 
-  /ember-truth-helpers@3.1.1:
-    resolution: {integrity: sha512-FHwJAx77aA5q27EhdaaiBFuy9No+8yaWNT5A7zs0sIFCmf14GbcLn69vJEp6mW7vkITezizGAWhw7gL0Wbk7DA==}
-    engines: {node: 10.* || >= 12}
+  /ember-truth-helpers@4.0.0(ember-source@5.2.0):
+    resolution: {integrity: sha512-u8UAd8jcRvuz23+UlKPZJ9gvcqtRZToBy9YOqO7hpeXXcmQwR6iHsi/9HHTbwGAYCVMluh+xWeLyd8RgX+I65w==}
+    peerDependencies:
+      ember-source: '>=4.8.4'
     dependencies:
-      ember-cli-babel: 7.26.11
+      '@embroider/addon-shim': 1.8.6
+      ember-functions-as-helper-polyfill: 2.1.2(ember-source@5.2.0)
+      ember-source: 5.2.0(@babel/core@7.22.11)(@glimmer/component@1.1.2)(rsvp@4.8.5)(webpack@5.88.2)
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -13747,6 +13764,7 @@ packages:
   /normalize-path@2.1.1:
     resolution: {integrity: sha512-3pKJwH184Xo/lnH6oyP1q2pMd7HcypqqmRs91/6/i2CGtWwIKGCkOOMTm/zXbgTEWHw1uNpNi/igc3ePOYHb6w==}
     engines: {node: '>=0.10.0'}
+    requiresBuild: true
     dependencies:
       remove-trailing-separator: 1.1.0
     dev: true
@@ -15368,6 +15386,7 @@ packages:
 
   /remove-trailing-separator@1.1.0:
     resolution: {integrity: sha512-/hS+Y0u3aOfIETiaiirUFwDBDzmXPvO+jAfKTitUngIPzdKc6Z0LoFjM/CK5PL4C+eKwHohlHAb6H0VFfmmUsw==}
+    requiresBuild: true
     dev: true
 
   /remove-types@1.0.0:

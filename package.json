@@ -110,7 +110,7 @@
     "ember-template-lint": "5.11.2",
     "ember-test-selectors": "6.0.0",
     "ember-tooltips": "3.6.0",
-    "ember-truth-helpers": "3.1.1",
+    "ember-truth-helpers": "4.0.0",
     "ember-web-app": "5.0.1",
     "ember-window-mock": "0.9.0",
     "eslint": "8.48.0",
