@@ -216,8 +216,8 @@ devDependencies:
     specifier: 5.2.0
     version: 5.2.0(@babel/core@7.22.15)(@glimmer/component@1.1.2)(rsvp@4.8.5)(webpack@5.88.2)
   ember-svg-jar:
-    specifier: 2.4.4
-    version: 2.4.4
+    specifier: 2.4.5
+    version: 2.4.5
   ember-template-lint:
     specifier: 5.11.2
     version: 5.11.2
@@ -406,6 +406,7 @@ packages:
       browserslist: 4.21.10
       lru-cache: 5.1.1
       semver: 6.3.1
+    dev: true
 
   /@babel/helper-compilation-targets@7.22.15:
     resolution: {integrity: sha512-y6EEzULok0Qvz8yyLkCvVX+02ic+By2UdOhylwUOvOn9dvYc9mKICJuuU1n1XBI02YWsNsnrY1kc6DVbjcXbtw==}
@@ -480,7 +481,7 @@ packages:
         optional: true
     dependencies:
       '@babel/core': 7.22.15(supports-color@8.1.1)
-      '@babel/helper-compilation-targets': 7.22.10
+      '@babel/helper-compilation-targets': 7.22.15
       '@babel/helper-plugin-utils': 7.22.5
       debug: 4.3.4(supports-color@8.1.1)
       lodash.debounce: 4.0.8
@@ -1106,7 +1107,7 @@ packages:
     dependencies:
       '@babel/core': 7.22.15(supports-color@8.1.1)
       '@babel/helper-annotate-as-pure': 7.22.5
-      '@babel/helper-compilation-targets': 7.22.10
+      '@babel/helper-compilation-targets': 7.22.15
       '@babel/helper-environment-visitor': 7.22.5
       '@babel/helper-function-name': 7.22.5
       '@babel/helper-optimise-call-expression': 7.22.5
@@ -1226,7 +1227,7 @@ packages:
         optional: true
     dependencies:
       '@babel/core': 7.22.15(supports-color@8.1.1)
-      '@babel/helper-compilation-targets': 7.22.10
+      '@babel/helper-compilation-targets': 7.22.15
       '@babel/helper-function-name': 7.22.5
       '@babel/helper-plugin-utils': 7.22.5
 
@@ -1397,7 +1398,7 @@ packages:
     dependencies:
       '@babel/compat-data': 7.22.9
       '@babel/core': 7.22.15(supports-color@8.1.1)
-      '@babel/helper-compilation-targets': 7.22.10
+      '@babel/helper-compilation-targets': 7.22.15
       '@babel/helper-plugin-utils': 7.22.5
       '@babel/plugin-syntax-object-rest-spread': 7.8.3(@babel/core@7.22.15)
       '@babel/plugin-transform-parameters': 7.22.5(@babel/core@7.22.15)
@@ -1709,7 +1710,7 @@ packages:
     dependencies:
       '@babel/compat-data': 7.22.9
       '@babel/core': 7.22.15(supports-color@8.1.1)
-      '@babel/helper-compilation-targets': 7.22.10
+      '@babel/helper-compilation-targets': 7.22.15
       '@babel/helper-plugin-utils': 7.22.5
       '@babel/helper-validator-option': 7.22.5
       '@babel/plugin-bugfix-safari-id-destructuring-collision-in-function-expression': 7.22.5(@babel/core@7.22.15)
@@ -8459,7 +8460,7 @@ packages:
     engines: {node: 6.* || 8.* || >= 10.*}
     dependencies:
       '@babel/core': 7.22.15(supports-color@8.1.1)
-      '@babel/helper-compilation-targets': 7.22.10
+      '@babel/helper-compilation-targets': 7.22.15
       '@babel/plugin-proposal-class-properties': 7.18.6(@babel/core@7.22.15)
       '@babel/plugin-proposal-decorators': 7.22.15(@babel/core@7.22.15)
       '@babel/plugin-proposal-private-methods': 7.18.6(@babel/core@7.22.15)
@@ -9559,8 +9560,8 @@ packages:
       - supports-color
       - webpack
 
-  /ember-svg-jar@2.4.4:
-    resolution: {integrity: sha512-hzSMuyc6A4FbPBaT9JFYicInq+hVJCgS+1EeoK1zQSMEITiEEzjOGCrAd31GZh8L3g8GOLxpdNBpv982D4loyA==}
+  /ember-svg-jar@2.4.5:
+    resolution: {integrity: sha512-crLQ6A44keR/xfDOwsfSKBcT210h7tRQqUutrNwMyQ00sN7t7T2xg8/+LDEcygu3umoLRoA09jlTzJw8bXmb/A==}
     engines: {node: 12.* || 14.* || >= 16}
     dependencies:
       '@embroider/macros': 1.13.1
