@@ -133,7 +133,7 @@
     "qunit": "2.19.4",
     "qunit-console-grouper": "0.3.0",
     "qunit-dom": "2.0.0",
-    "tracked-built-ins": "3.1.1",
+    "tracked-built-ins": "3.2.0",
     "webpack": "5.88.2"
   },
   "resolutions": {
