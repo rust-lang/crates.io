@@ -179,7 +179,7 @@ methods we'd recommend for each operating system:
 - Windows: use the [Windows installers recommended by
   Postgres](https://www.postgresql.org/download/windows/)
 - macOS: Either [Postgres.app](https://postgresapp.com/) or through
-  [Homebrew](https://brew.sh/) by running `brew install postgresql` and
+  [Homebrew](https://brew.sh/) by running `brew install postgresql@13` and
   following the post-installation instructions
 - Linux: Postgres is generally available in the distribution repositories as
   `postgresql` or `postgresql-server`. You will also need the developer package 
