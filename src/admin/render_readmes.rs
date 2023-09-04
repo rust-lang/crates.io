@@ -4,15 +4,17 @@ use crate::{
     schema::{crates, readme_renderings, versions},
 };
 use anyhow::{anyhow, Context};
+use std::path::PathBuf;
 use std::{io::Read, path::Path, sync::Arc, thread};
 
 use crate::storage::Storage;
 use chrono::{TimeZone, Utc};
 use crates_io_markdown::text_to_html;
-use crates_io_tarball::Manifest;
+use crates_io_tarball::{Manifest, StringOrBool};
 use diesel::prelude::*;
 use flate2::read::GzDecoder;
 use reqwest::{blocking::Client, header};
+use std::str::FromStr;
 use tar::{self, Archive};
 
 const USER_AGENT: &str = "crates-admin";
@@ -184,13 +186,19 @@ fn render_pkg_readme<R: Read>(mut archive: Archive<R>, pkg_name: &str) -> anyhow
     };
 
     let rendered = {
-        let readme = manifest.package().readme();
-        if !readme.is_some() {
-            return Ok("".to_string());
-        }
+        let readme = manifest
+            .package
+            .as_ref()
+            .and_then(|p| p.readme.as_ref())
+            .and_then(|r| r.as_ref().as_local());
 
-        let readme_path = readme.as_path().unwrap_or_else(|| Path::new("README.md"));
-        let path = Path::new(pkg_name).join(readme_path);
+        let readme_path = match readme {
+            Some(StringOrBool::Bool(bool)) if !(*bool) => return Ok("".to_string()),
+            Some(StringOrBool::String(path)) => PathBuf::from(path),
+            _ => PathBuf::from("README.md"),
+        };
+
+        let path = Path::new(pkg_name).join(&readme_path);
         let contents = find_file_by_path(&mut entries, Path::new(&path))
             .with_context(|| format!("Failed to read {} file", readme_path.display()))?;
 
@@ -198,12 +206,14 @@ fn render_pkg_readme<R: Read>(mut archive: Archive<R>, pkg_name: &str) -> anyhow
         // Would need access to cargo_vcs_info
         let pkg_path_in_vcs = None;
 
-        text_to_html(
-            &contents,
-            &readme_path,
-            manifest.package().repository(),
-            pkg_path_in_vcs,
-        )
+        let repository = manifest
+            .package
+            .as_ref()
+            .and_then(|p| p.repository.as_ref())
+            .and_then(|r| r.as_ref().as_local())
+            .map(|s| s.as_str());
+
+        text_to_html(&contents, &readme_path, repository, pkg_path_in_vcs)
     };
     Ok(rendered)
 }

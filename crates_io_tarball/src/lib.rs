@@ -7,11 +7,12 @@ pub use crate::builder::TarballBuilder;
 use crate::limit_reader::LimitErrorReader;
 use crate::manifest::validate_manifest;
 pub use crate::vcs_info::CargoVcsInfo;
-pub use cargo_toml::Manifest;
+pub use cargo_manifest::{Manifest, StringOrBool};
 use flate2::read::GzDecoder;
 use std::collections::HashMap;
 use std::io::Read;
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 use tracing::instrument;
 
 #[cfg(any(feature = "builder", test))]
@@ -37,7 +38,7 @@ pub enum TarballError {
     #[error("Cargo.toml manifest is missing")]
     MissingManifest,
     #[error("Cargo.toml manifest is invalid: {0}")]
-    InvalidManifest(#[from] cargo_toml::Error),
+    InvalidManifest(#[from] cargo_manifest::Error),
     #[error("Cargo.toml manifest is incorrectly cased: {0:?}")]
     IncorrectlyCasedManifest(PathBuf),
     #[error("more than one Cargo.toml manifest in tarball: {0:?}")]
@@ -143,8 +144,8 @@ pub fn process_tarball<R: Read>(
 mod tests {
     use super::process_tarball;
     use crate::{TarballBuilder, TarballError};
-    use cargo_toml::OptionalFile;
-    use std::path::{Path, PathBuf};
+    use cargo_manifest::{MaybeInherited, StringOrBool};
+    use std::path::PathBuf;
 
     #[test]
     fn process_tarball_test() {
@@ -210,9 +211,9 @@ repository = "https://github.com/foo/bar"
 
         let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, limit));
         let package = assert_some!(tarball_info.manifest.package);
-        assert_some_eq!(package.readme().as_path(), Path::new("README.md"));
-        assert_some_eq!(package.repository(), "https://github.com/foo/bar");
-        assert_some_eq!(package.rust_version(), "1.59");
+        assert_matches!(package.readme, Some(MaybeInherited::Local(StringOrBool::String(s))) if s == "README.md");
+        assert_matches!(package.repository, Some(MaybeInherited::Local(s)) if s ==  "https://github.com/foo/bar");
+        assert_matches!(package.rust_version, Some(MaybeInherited::Local(s)) if s == "1.59");
     }
 
     #[test]
@@ -232,7 +233,7 @@ repository = "https://github.com/foo/bar"
 
         let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, limit));
         let package = assert_some!(tarball_info.manifest.package);
-        assert_some_eq!(package.rust_version(), "1.23");
+        assert_matches!(package.rust_version, Some(MaybeInherited::Local(s)) if s == "1.23");
     }
 
     #[test]
@@ -251,7 +252,7 @@ repository = "https://github.com/foo/bar"
 
         let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, limit));
         let package = assert_some!(tarball_info.manifest.package);
-        assert_matches!(package.readme(), OptionalFile::Flag(true));
+        assert_none!(package.readme);
     }
 
     #[test]
@@ -271,7 +272,7 @@ repository = "https://github.com/foo/bar"
 
         let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, limit));
         let package = assert_some!(tarball_info.manifest.package);
-        assert_matches!(package.readme(), OptionalFile::Flag(false));
+        assert_matches!(package.readme, Some(MaybeInherited::Local(StringOrBool::Bool(b))) if !b);
     }
 
     #[test]
@@ -292,7 +293,7 @@ repository = "https://github.com/foo/bar"
 
         let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, limit));
         let package = assert_some!(tarball_info.manifest.package);
-        assert_some_eq!(package.repository(), "https://github.com/foo/bar");
+        assert_matches!(package.repository, Some(MaybeInherited::Local(s)) if s ==  "https://github.com/foo/bar");
     }
 
     #[test]

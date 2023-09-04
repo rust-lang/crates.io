@@ -1,11 +1,11 @@
-use cargo_toml::{Dependency, DepsSet, Error, Inheritable, Manifest, Package};
+use cargo_manifest::{Dependency, DepsSet, Error, Manifest, MaybeInherited, Package};
 
 pub fn validate_manifest(manifest: &Manifest) -> Result<(), Error> {
     let package = manifest.package.as_ref();
 
     // Check that a `[package]` table exists in the manifest, since crates.io
     // does not accept workspace manifests.
-    let package = package.ok_or(Error::Other("missing field `package`"))?;
+    let package = package.ok_or(Error::Other("missing field `package`".to_string()))?;
 
     validate_package(package)?;
 
@@ -15,7 +15,9 @@ pub fn validate_manifest(manifest: &Manifest) -> Result<(), Error> {
         || manifest.dev_dependencies.is_inherited()
         || manifest.build_dependencies.is_inherited()
     {
-        return Err(Error::InheritedUnknownValue);
+        return Err(Error::Other(
+            "value from workspace hasn't been set".to_string(),
+        ));
     }
 
     Ok(())
@@ -41,11 +43,13 @@ pub fn validate_package(package: &Package) -> Result<(), Error> {
         || package.repository.is_inherited()
         || package.publish.is_inherited()
     {
-        return Err(Error::InheritedUnknownValue);
+        return Err(Error::Other(
+            "value from workspace hasn't been set".to_string(),
+        ));
     }
 
     // Check that the `rust-version` field has a valid value, if it exists.
-    if let Some(rust_version) = package.rust_version() {
+    if let Some(MaybeInherited::Local(ref rust_version)) = package.rust_version {
         validate_rust_version(rust_version)?;
     }
 
@@ -56,9 +60,9 @@ trait IsInherited {
     fn is_inherited(&self) -> bool;
 }
 
-impl<T> IsInherited for Inheritable<T> {
+impl<T> IsInherited for MaybeInherited<T> {
     fn is_inherited(&self) -> bool {
-        !self.is_set()
+        matches!(self, MaybeInherited::Inherited { .. })
     }
 }
 
@@ -70,7 +74,7 @@ impl<T: IsInherited> IsInherited for Option<T> {
 
 impl IsInherited for Dependency {
     fn is_inherited(&self) -> bool {
-        matches!(self, Dependency::Inherited(_))
+        matches!(self, Dependency::Detailed(detail) if detail.workspace.unwrap_or(false))
     }
 }
 
@@ -84,6 +88,6 @@ pub fn validate_rust_version(value: &str) -> Result<(), Error> {
     match semver::VersionReq::parse(value) {
         // Exclude semver operators like `^` and pre-release identifiers
         Ok(_) if value.chars().all(|c| c.is_ascii_digit() || c == '.') => Ok(()),
-        Ok(_) | Err(..) => Err(Error::Other("invalid `rust-version` value")),
+        Ok(_) | Err(..) => Err(Error::Other("invalid `rust-version` value".to_string())),
     }
 }
