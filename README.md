@@ -25,7 +25,7 @@ Welcome! We love contributions! Crates.io is an [Ember](https://emberjs.com/)
 frontend with a Rust backend, and there are many tasks appropriate for a
 variety of skill levels.
 
-Please see [docs/CONTRIBUTING.md](https://github.com/rust-lang/crates.io/blob/master/docs/CONTRIBUTING.md) for ideas about what to work on and how to set up a development
+Please see [docs/CONTRIBUTING.md](https://github.com/rust-lang/crates.io/blob/main/docs/CONTRIBUTING.md) for ideas about what to work on and how to set up a development
 environment.
 
 ### Categories
@@ -35,7 +35,7 @@ Adding or editing the categories and corresponding descriptions displayed on
 development environment set up.
 
 The list of categories available on crates.io is stored in
-[`src/boot/categories.toml`](https://github.com/rust-lang/crates.io/blob/master/src/boot/categories.toml).
+[`src/boot/categories.toml`](https://github.com/rust-lang/crates.io/blob/main/src/boot/categories.toml).
 To propose adding, removing, or changing a category, send a pull request making
 the appropriate change to that file as noted in the comment at the top of the
 file. Please add a description that will help others to know what crates are in
