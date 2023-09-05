@@ -112,6 +112,8 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         // Create a transaction on the database, if there are no errors,
         // commit the transactions to record a new or updated crate.
         conn.transaction(|conn| {
+            // Capture full `new_crate` in closure.
+            // See: https://blog.rust-lang.org/2021/05/11/edition-2021.html#disjoint-capture-in-closures
             let _ = &new_crate;
             let name = new_crate.name;
             let vers = &*new_crate.vers;

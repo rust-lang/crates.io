@@ -382,6 +382,8 @@ fn replay_http(
     }
 
     async {
+        // Capture full `new_crate` in closure.
+        // See: https://blog.rust-lang.org/2021/05/11/edition-2021.html#disjoint-capture-in-closures
         let _ = &exchange;
 
         let plain_text = is_plain_text(req.headers());
