@@ -49,11 +49,9 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
     let older_than = if let Some(ref time) = opts.older_than {
         NaiveDateTime::parse_from_str(time, "%Y-%m-%d %H:%M:%S")
             .expect("Could not parse --older-than argument as a time")
-            .and_utc()
     } else {
-        start_time
+        start_time.naive_utc()
     };
-    let older_than = older_than.naive_utc();
 
     println!("Start time:                   {start_time}");
     println!("Rendering readmes older than: {older_than}");
