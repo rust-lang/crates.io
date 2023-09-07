@@ -228,8 +228,8 @@ devDependencies:
     specifier: 3.6.0
     version: 3.6.0
   ember-truth-helpers:
-    specifier: 4.0.0
-    version: 4.0.0(ember-source@5.2.0)
+    specifier: 4.0.1
+    version: 4.0.1(ember-source@5.2.0)
   ember-web-app:
     specifier: 5.0.1
     version: 5.0.1
@@ -9690,10 +9690,10 @@ packages:
       - supports-color
     dev: true
 
-  /ember-truth-helpers@4.0.0(ember-source@5.2.0):
-    resolution: {integrity: sha512-u8UAd8jcRvuz23+UlKPZJ9gvcqtRZToBy9YOqO7hpeXXcmQwR6iHsi/9HHTbwGAYCVMluh+xWeLyd8RgX+I65w==}
+  /ember-truth-helpers@4.0.1(ember-source@5.2.0):
+    resolution: {integrity: sha512-dwXAxB0l7p+ieMJpY/+v1rxKklQP/MH9uxZZ/9Sbrn9NxUeb3F3a1YHEMuQlb6rHJF2TQrwM+AIb90Lh/264dg==}
     peerDependencies:
-      ember-source: '>=4.8.4'
+      ember-source: '>=3.28.0'
     dependencies:
       '@embroider/addon-shim': 1.8.6
       ember-functions-as-helper-polyfill: 2.1.2(ember-source@5.2.0)
