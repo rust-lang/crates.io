@@ -89,7 +89,7 @@ tempfile = "=3.8.0"
 thiserror = "=1.0.48"
 threadpool = "=1.8.1"
 tokio = { version = "=1.32.0", features = ["net", "signal", "io-std", "io-util", "rt-multi-thread", "macros"]}
-toml = "=0.7.6"
+toml = "=0.7.7"
 tower = "=0.4.13"
 tower-http = { version = "=0.4.4", features = ["fs", "catch-panic"] }
 tracing = "=0.1.37"
