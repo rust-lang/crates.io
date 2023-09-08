@@ -228,8 +228,8 @@ devDependencies:
     specifier: 3.6.0
     version: 3.6.0
   ember-truth-helpers:
-    specifier: 4.0.1
-    version: 4.0.1(ember-source@5.2.0)
+    specifier: 4.0.2
+    version: 4.0.2(ember-source@5.2.0)
   ember-web-app:
     specifier: 5.0.1
     version: 5.0.1
@@ -9690,8 +9690,8 @@ packages:
       - supports-color
     dev: true
 
-  /ember-truth-helpers@4.0.1(ember-source@5.2.0):
-    resolution: {integrity: sha512-dwXAxB0l7p+ieMJpY/+v1rxKklQP/MH9uxZZ/9Sbrn9NxUeb3F3a1YHEMuQlb6rHJF2TQrwM+AIb90Lh/264dg==}
+  /ember-truth-helpers@4.0.2(ember-source@5.2.0):
+    resolution: {integrity: sha512-mTsPwKAVf6D0Mm5leHRPSGl/WkSpKIvgooQKIT9iqQr0FbPHBa10yjYinQ+xR1w4Ea7wDblJ+HtRY426z0koAQ==}
     peerDependencies:
       ember-source: '>=3.28.0'
     dependencies:
