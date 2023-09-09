@@ -397,14 +397,8 @@ impl Crate {
         }
     }
 
-    pub fn owner_remove(
-        &self,
-        app: &App,
-        conn: &mut PgConnection,
-        req_user: &User,
-        login: &str,
-    ) -> AppResult<()> {
-        let owner = Owner::find_or_create_by_login(app, conn, req_user, login)?;
+    pub fn owner_remove(&self, conn: &mut PgConnection, login: &str) -> AppResult<()> {
+        let owner = Owner::find_by_login(conn, login)?;
 
         let target = crate_owners::table.find((self.id(), owner.id(), owner.kind()));
         diesel::update(target)

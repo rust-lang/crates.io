@@ -42,9 +42,7 @@ fn test_user_owned_crates_doesnt_include_deleted_ownership() {
 
     app.db(|conn| {
         let krate = CrateBuilder::new("foo_my_packages", user_model.id).expect_build(conn);
-        krate
-            .owner_remove(app.as_inner(), conn, user_model, &user_model.gh_login)
-            .unwrap();
+        krate.owner_remove(conn, &user_model.gh_login).unwrap();
     });
 
     let json = user.show_me();

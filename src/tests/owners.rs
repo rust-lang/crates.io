@@ -567,9 +567,7 @@ fn deleted_ownership_isnt_in_owner_user() {
 
     app.db(|conn| {
         let krate = CrateBuilder::new("foo_my_packages", user.id).expect_build(conn);
-        krate
-            .owner_remove(app.as_inner(), conn, user, &user.gh_login)
-            .unwrap();
+        krate.owner_remove(conn, &user.gh_login).unwrap();
     });
 
     let json: UserResponse = anon.get("/api/v1/crates/foo_my_packages/owner_user").good();

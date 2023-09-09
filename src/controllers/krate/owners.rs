@@ -141,7 +141,7 @@ fn modify_owners(
             msgs.join(",")
         } else {
             for login in &logins {
-                krate.owner_remove(app, conn, user, login)?;
+                krate.owner_remove(conn, login)?;
             }
             if User::owning(&krate, conn)?.is_empty() {
                 return Err(cargo_err(

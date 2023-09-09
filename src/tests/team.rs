@@ -449,9 +449,7 @@ fn crates_by_team_id_not_including_deleted_owners() {
 
         let krate = CrateBuilder::new("foo", user.id).expect_build(conn);
         add_team_to_crate(&t, &krate, user, conn).unwrap();
-        krate
-            .owner_remove(app.as_inner(), conn, user, &t.login)
-            .unwrap();
+        krate.owner_remove(conn, &t.login).unwrap();
         t
     });
 
