@@ -16,7 +16,7 @@ serde = { version = "=1.0.188", features = ["derive"] }
 serde_json = "=1.0.105"
 tar = "=0.4.40"
 thiserror = "=1.0.48"
-toml = "=0.7.7"
+toml = "=0.7.8"
 tracing = "=0.1.37"
 
 [dev-dependencies]
