@@ -8,7 +8,7 @@ edition = "2021"
 builder = []
 
 [dependencies]
-cargo-manifest = "=0.10.0"
+cargo-manifest = "=0.11.0"
 derive_deref = "=1.1.1"
 flate2 = "=1.0.27"
 semver = { version = "=1.0.18", features = ["serde"] }
