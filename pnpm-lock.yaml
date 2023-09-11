@@ -216,8 +216,8 @@ devDependencies:
     specifier: 5.2.0
     version: 5.2.0(@babel/core@7.22.17)(@glimmer/component@1.1.2)(rsvp@4.8.5)(webpack@5.88.2)
   ember-svg-jar:
-    specifier: 2.4.5
-    version: 2.4.5
+    specifier: 2.4.6
+    version: 2.4.6
   ember-template-lint:
     specifier: 5.11.2
     version: 5.11.2
@@ -9574,8 +9574,8 @@ packages:
       - supports-color
       - webpack
 
-  /ember-svg-jar@2.4.5:
-    resolution: {integrity: sha512-crLQ6A44keR/xfDOwsfSKBcT210h7tRQqUutrNwMyQ00sN7t7T2xg8/+LDEcygu3umoLRoA09jlTzJw8bXmb/A==}
+  /ember-svg-jar@2.4.6:
+    resolution: {integrity: sha512-W+t6sRAiPhRl4imGKEMWsQDiCV8Nl2GRwzUpqZ1a+CZoW+2aCkF+kcngeDlHn5XzT16bQXg/QYXUvwtKJlSLfg==}
     engines: {node: 12.* || 14.* || >= 16}
     dependencies:
       '@embroider/macros': 1.13.1
