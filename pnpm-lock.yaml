@@ -228,8 +228,8 @@ devDependencies:
     specifier: 3.6.0
     version: 3.6.0
   ember-truth-helpers:
-    specifier: 4.0.2
-    version: 4.0.2(ember-source@5.2.0)
+    specifier: 4.0.3
+    version: 4.0.3(ember-source@5.2.0)
   ember-web-app:
     specifier: 5.0.1
     version: 5.0.1
@@ -9575,8 +9575,8 @@ packages:
       - supports-color
     dev: true
 
-  /ember-truth-helpers@4.0.2(ember-source@5.2.0):
-    resolution: {integrity: sha512-mTsPwKAVf6D0Mm5leHRPSGl/WkSpKIvgooQKIT9iqQr0FbPHBa10yjYinQ+xR1w4Ea7wDblJ+HtRY426z0koAQ==}
+  /ember-truth-helpers@4.0.3(ember-source@5.2.0):
+    resolution: {integrity: sha512-T6Ogd3pk9FxYiZfSxdjgn3Hb3Ksqgw7CD23V9qfig9jktNdkNEHo4+3PA3cSD/+3a2kdH3KmNvKyarVuzdtEkA==}
     peerDependencies:
       ember-source: '>=3.28.0'
     dependencies:
@@ -13791,6 +13791,7 @@ packages:
   /normalize-path@2.1.1:
     resolution: {integrity: sha512-3pKJwH184Xo/lnH6oyP1q2pMd7HcypqqmRs91/6/i2CGtWwIKGCkOOMTm/zXbgTEWHw1uNpNi/igc3ePOYHb6w==}
     engines: {node: '>=0.10.0'}
+    requiresBuild: true
     dependencies:
       remove-trailing-separator: 1.1.0
     dev: true
@@ -15412,6 +15413,7 @@ packages:
 
   /remove-trailing-separator@1.1.0:
     resolution: {integrity: sha512-/hS+Y0u3aOfIETiaiirUFwDBDzmXPvO+jAfKTitUngIPzdKc6Z0LoFjM/CK5PL4C+eKwHohlHAb6H0VFfmmUsw==}
+    requiresBuild: true
     dev: true
 
   /remove-types@1.0.0:
