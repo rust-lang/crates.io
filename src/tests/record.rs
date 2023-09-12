@@ -74,33 +74,15 @@ impl Drop for Bomb {
     }
 }
 
-fn cache_file(name: &str) -> PathBuf {
-    PathBuf::from(file!())
-        .parent()
-        .unwrap()
-        .join("http-data")
-        .join(name)
-        .with_extension("json")
-}
-
 #[derive(Debug)]
 enum Record {
     Replay(Vec<Exchange>),
 }
 
 pub fn proxy() -> (String, Bomb) {
-    let me = thread::current().name().unwrap().to_string();
-
     let (url_tx, url_rx) = mpsc::channel();
 
-    let path = cache_file(&me.replace("::", "_"));
-    let record = if !path.exists() {
-        Record::Replay(serde_json::from_slice(b"[]").unwrap())
-    } else {
-        let mut body = Vec::new();
-        assert_ok!(assert_ok!(File::open(&path)).read_to_end(&mut body));
-        Record::Replay(serde_json::from_slice(&body).unwrap())
-    };
+    let record = Record::Replay(serde_json::from_slice(b"[]").unwrap());
 
     let sink = Arc::new(Mutex::new(Vec::new()));
     let sink2 = Sink(Arc::clone(&sink));
