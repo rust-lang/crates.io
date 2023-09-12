@@ -112,7 +112,6 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         // Create a transaction on the database, if there are no errors,
         // commit the transactions to record a new or updated crate.
         conn.transaction(|conn| {
-            let _ = &new_crate;
             let name = new_crate.name;
             let vers = &*new_crate.vers;
             let links = new_crate.links;
