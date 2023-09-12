@@ -6,8 +6,6 @@ extern crate claims;
 extern crate serde;
 #[macro_use]
 extern crate serde_json;
-#[macro_use]
-extern crate tracing;
 
 use crate::util::{RequestHelper, TestApp};
 use crates_io::{
@@ -39,7 +37,6 @@ mod not_found_error;
 mod owners;
 mod pagination;
 mod read_only_mode;
-mod record;
 mod routes;
 mod schema_details;
 mod server;
