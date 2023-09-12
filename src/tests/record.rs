@@ -17,7 +17,6 @@ use futures_util::future;
 use http::{header::CONTENT_TYPE, HeaderMap, HeaderValue};
 use hyper::{
     body::to_bytes, server::conn::AddrStream, Body, Error, Request, Response, Server, StatusCode,
-    Uri,
 };
 use tokio::runtime;
 
@@ -86,7 +85,6 @@ fn cache_file(name: &str) -> PathBuf {
 
 #[derive(Debug)]
 enum Record {
-    Capture(Vec<Exchange>, PathBuf),
     Replay(Vec<Exchange>),
 }
 
@@ -96,9 +94,7 @@ pub fn proxy() -> (String, Bomb) {
     let (url_tx, url_rx) = mpsc::channel();
 
     let path = cache_file(&me.replace("::", "_"));
-    let record = if should_record() {
-        Record::Capture(Vec::new(), path)
-    } else if !path.exists() {
+    let record = if !path.exists() {
         Record::Replay(serde_json::from_slice(b"[]").unwrap())
     } else {
         let mut body = Vec::new();
@@ -118,20 +114,12 @@ pub fn proxy() -> (String, Bomb) {
             .build());
         // TODO: handle switching protocols for the client to http unconditionally, then detecting
         // the protocol to use in any upstream request in the proxy service.
-        let needs_client = matches!(record, Record::Capture(_, _));
         let record = Arc::new(Mutex::new(record));
         rt.block_on(async {
-            let client = if needs_client {
-                Some(hyper::Client::builder().build(hyper_tls::HttpsConnector::new()))
-            } else {
-                None
-            };
-
             let addr = ([127, 0, 0, 1], 0).into();
             let server = Server::bind(&addr).serve(Proxy {
                 sink: sink2,
                 record: Arc::clone(&record),
-                client,
             });
 
             url_tx
@@ -148,11 +136,6 @@ pub fn proxy() -> (String, Bomb) {
 
         let record = record.lock().unwrap();
         match *record {
-            Record::Capture(ref data, ref path) => {
-                let mut data = assert_ok!(serde_json::to_string_pretty(data));
-                data.push('\n');
-                Some((data.into_bytes(), path.clone()))
-            }
             Record::Replay(ref remaining_exchanges) if !remaining_exchanges.is_empty() =>
                 panic!(
                     "The HTTP proxy for this test received fewer requests than expected (remaining: {})",
@@ -176,7 +159,6 @@ pub fn proxy() -> (String, Bomb) {
 struct Proxy {
     sink: Sink,
     record: Arc<Mutex<Record>>,
-    client: Option<Client>,
 }
 
 impl tower_service::Service<Request<Body>> for Proxy {
@@ -190,17 +172,6 @@ impl tower_service::Service<Request<Body>> for Proxy {
 
     fn call(&mut self, req: Request<Body>) -> Self::Future {
         match *self.record.lock().unwrap() {
-            Record::Capture(_, _) => {
-                let client = self.client.as_ref().unwrap().clone();
-                let record2 = self.record.clone();
-                Box::pin(async move {
-                    let (response, exchange) = record_http(req, client).await?;
-                    if let Record::Capture(ref mut d, _) = *record2.lock().unwrap() {
-                        d.push(exchange);
-                    }
-                    Ok(response)
-                })
-            }
             Record::Replay(ref mut exchanges) => {
                 Box::pin(replay_http(req, exchanges.remove(0), &mut &self.sink))
             }
@@ -258,90 +229,6 @@ where
         seq.serialize_element(header)?;
     }
     seq.end()
-}
-
-type Client = hyper::Client<hyper_tls::HttpsConnector<hyper::client::HttpConnector>>;
-type ResponseAndExchange = (Response<Body>, Exchange);
-
-/// Capture the request and simulate a successful response
-async fn record_http(req: Request<Body>, client: Client) -> Result<ResponseAndExchange, Error> {
-    // Deconstruct the incoming request and await for the full body
-    let (header_parts, body) = req.into_parts();
-    let method = header_parts.method;
-    let uri = header_parts.uri;
-    let headers = header_parts.headers;
-    let body = to_bytes(body).await?;
-
-    // Save info on the incoming request for the exchange log
-    let request = RecordedRequest {
-        uri: uri.to_string(),
-        method: method.to_string(),
-        headers: headers
-            .iter()
-            .filter(|h| !IGNORED_HEADERS.contains(&h.0.as_str()))
-            .map(|h| (h.0.as_str().to_string(), h.1.to_str().unwrap().to_string()))
-            .collect(),
-        body: if is_plain_text(&headers) {
-            String::from_utf8_lossy(&body).into()
-        } else {
-            general_purpose::STANDARD.encode(&body)
-        },
-    };
-
-    let (status, headers, body) = if should_record() {
-        // When we're constructing the outbound request, if the request is to the _actual_ S3,
-        // we're going to replace the HTTP protocol with HTTPS. This is the flip side of the hard
-        // coding of "http" as the protocol in Base::test().
-        //
-        // This is, admittedly, hacky as hell.
-        let uri = match uri.host() {
-            Some(host) if host.ends_with(".amazonaws.com") => {
-                let uri = uri.to_string().replace("http://", "https://");
-                uri.parse::<Uri>().unwrap()
-            }
-            _ => uri,
-        };
-
-        // Construct an outgoing request
-        let mut req = Request::builder()
-            .method(method.clone())
-            .uri(uri)
-            .body(body.into())
-            .unwrap();
-        *req.headers_mut() = headers.clone();
-
-        // Deconstruct the incoming response and await for the full body
-        let hyper_response = client.request(req).await?;
-        let status = hyper_response.status();
-        let headers = hyper_response.headers().clone();
-        let body = to_bytes(hyper_response.into_body()).await?;
-        (status, headers, body)
-    } else {
-        (
-            StatusCode::OK,
-            http::HeaderMap::default(),
-            hyper::body::Bytes::new(),
-        )
-    };
-
-    // Save the response for the exchange log
-    let response = RecordedResponse {
-        status: status.as_u16(),
-        headers: headers
-            .iter()
-            .map(|h| (h.0.as_str().to_string(), h.1.to_str().unwrap().to_string()))
-            .collect(),
-        body: general_purpose::STANDARD.encode(&body),
-    };
-
-    // Construct an outgoing response
-    let mut hyper_response = Response::builder()
-        .status(status)
-        .body(body.into())
-        .unwrap();
-    *hyper_response.headers_mut() = headers;
-
-    Ok((hyper_response, Exchange { request, response }))
 }
 
 fn replay_http(
@@ -414,8 +301,4 @@ fn is_plain_text(headers: &HeaderMap<HeaderValue>) -> bool {
         }
     }
     false
-}
-
-fn should_record() -> bool {
-    dotenvy::var("RECORD").ok().as_deref() == Some("yes")
 }
