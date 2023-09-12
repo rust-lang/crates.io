@@ -8,7 +8,7 @@ use std::path::PathBuf;
 use std::{io::Read, path::Path, sync::Arc, thread};
 
 use crate::storage::Storage;
-use chrono::{TimeZone, Utc};
+use chrono::{NaiveDateTime, Utc};
 use crates_io_markdown::text_to_html;
 use crates_io_tarball::{Manifest, StringOrBool};
 use diesel::prelude::*;
@@ -47,12 +47,11 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
     let start_time = Utc::now();
 
     let older_than = if let Some(ref time) = opts.older_than {
-        Utc.datetime_from_str(time, "%Y-%m-%d %H:%M:%S")
+        NaiveDateTime::parse_from_str(time, "%Y-%m-%d %H:%M:%S")
             .expect("Could not parse --older-than argument as a time")
     } else {
-        start_time
+        start_time.naive_utc()
     };
-    let older_than = older_than.naive_utc();
 
     println!("Start time:                   {start_time}");
     println!("Rendering readmes older than: {older_than}");
