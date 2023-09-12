@@ -381,9 +381,7 @@ fn replay_http(
         panic!("didn't find header {:?}", (name, value));
     }
 
-    async {
-        let _ = &exchange;
-
+    async move {
         let plain_text = is_plain_text(req.headers());
         let body = to_bytes(req.into_body()).await.unwrap();
         if plain_text {
