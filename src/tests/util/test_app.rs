@@ -1,5 +1,4 @@
 use super::{MockAnonymousUser, MockCookieUser, MockTokenUser};
-use crate::record;
 use crate::util::{chaosproxy::ChaosProxy, fresh_schema::FreshSchema};
 use crates_io::config::{self, BalanceCapacityConfig, Base, DatabasePools, DbPoolConfig};
 use crates_io::storage::StorageConfig;
@@ -22,8 +21,6 @@ use std::collections::HashSet;
 
 struct TestAppInner {
     app: Arc<App>,
-    // The bomb (if created) needs to be held in scope until the end of the test.
-    _bomb: Option<record::Bomb>,
     router: axum::Router,
     index: Option<UpstreamIndex>,
     runner: Option<Runner>,
@@ -76,7 +73,6 @@ impl TestApp {
         TestAppBuilder {
             config: simple_config(),
             proxy: None,
-            bomb: None,
             index: None,
             build_job_runner: false,
             test_database: TestDatabase::TestPool,
@@ -212,7 +208,6 @@ pub enum TestDatabase {
 pub struct TestAppBuilder {
     config: config::Server,
     proxy: Option<String>,
-    bomb: Option<record::Bomb>,
     index: Option<UpstreamIndex>,
     build_job_runner: bool,
     test_database: TestDatabase,
@@ -277,7 +272,6 @@ impl TestAppBuilder {
         let test_app_inner = TestAppInner {
             app,
             _fresh_schema: fresh_schema,
-            _bomb: self.bomb,
             router,
             index: self.index,
             runner,
@@ -293,9 +287,9 @@ impl TestAppBuilder {
 
     /// Create a proxy for use with this app
     pub fn with_proxy(mut self) -> Self {
-        let (proxy, bomb) = record::proxy();
-        self.proxy = Some(proxy);
-        self.bomb = Some(bomb);
+        // Use a dummy proxy address so that we do not accidentally perform real
+        // HTTP requests when running the test suite.
+        self.proxy = Some("http://127.0.0.1:0".into());
         self
     }
 
