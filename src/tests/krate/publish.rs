@@ -1053,7 +1053,7 @@ fn publish_new_crate_ratelimit_expires() {
     // Set up the database so it'll think we've massively ratelimited ourselves
     app.db(|conn| {
         // Ratelimit bucket should next refill right now!
-        let just_now = Utc::now().naive_utc() - Duration::from_secs(1);
+        let just_now = Utc::now().naive_utc() - Duration::from_millis(500);
         diesel::insert_into(publish_limit_buckets::table)
             .values((
                 publish_limit_buckets::user_id.eq(token.as_model().user_id),
