@@ -1,5 +1,5 @@
 ---
-source: src/tests/krate/publish.rs
+source: src/tests/krate/publish/build_metadata.rs
 expression: response.into_json()
 ---
 crate:
@@ -20,10 +20,10 @@ crate:
     reverse_dependencies: /api/v1/crates/foo/reverse_dependencies
     version_downloads: /api/v1/crates/foo/downloads
     versions: /api/v1/crates/foo/versions
-  max_stable_version: ~
-  max_version: 1.0.0-beta.1
+  max_stable_version: 1.0.0+foo
+  max_version: 1.0.0+foo
   name: foo
-  newest_version: 1.0.0-beta.1
+  newest_version: 1.0.0+foo
   recent_downloads: ~
   repository: ~
   updated_at: "[datetime]"

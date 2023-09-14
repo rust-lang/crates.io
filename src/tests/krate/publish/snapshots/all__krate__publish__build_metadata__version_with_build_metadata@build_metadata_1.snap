@@ -1,5 +1,5 @@
 ---
-source: src/tests/krate/publish.rs
+source: src/tests/krate/publish/build_metadata.rs
 expression: response.into_json()
 ---
 crate:
