@@ -211,3 +211,30 @@ fn new_krate_dependency_missing() {
 
     assert!(app.stored_files().is_empty());
 }
+
+#[test]
+fn new_krate_sorts_deps() {
+    let (app, _, user, token) = TestApp::full().with_token();
+
+    app.db(|conn| {
+        // Insert crates directly into the database so that two-deps can depend on it
+        CrateBuilder::new("dep-a", user.as_model().id).expect_build(conn);
+        CrateBuilder::new("dep-b", user.as_model().id).expect_build(conn);
+    });
+
+    let dep_a = DependencyBuilder::new("dep-a");
+    let dep_b = DependencyBuilder::new("dep-b");
+
+    // Add the deps in reverse order to ensure they get sorted.
+    let crate_to_publish = PublishBuilder::new("two-deps", "1.0.0")
+        .dependency(dep_b)
+        .dependency(dep_a);
+    token.publish_crate(crate_to_publish).good();
+
+    let crates = app.crates_from_index_head("two-deps");
+    assert!(crates.len() == 1);
+    let deps = &crates[0].deps;
+    assert!(deps.len() == 2);
+    assert_eq!(deps[0].name, "dep-a");
+    assert_eq!(deps[1].name, "dep-b");
+}

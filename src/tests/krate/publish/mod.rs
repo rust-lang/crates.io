@@ -209,42 +209,6 @@ fn new_krate_duplicate_version() {
 }
 
 #[test]
-fn publish_after_removing_documentation() {
-    let (app, anon, user, token) = TestApp::full().with_token();
-    let user = user.as_model();
-
-    // 1. Start with a crate with no documentation
-    app.db(|conn| {
-        CrateBuilder::new("docscrate", user.id)
-            .version("0.2.0")
-            .expect_build(conn);
-    });
-
-    // Verify that crates start without any documentation so the next assertion can *prove*
-    // that it was the one that added the documentation
-    let json = anon.show_crate("docscrate");
-    assert_eq!(json.krate.documentation, None);
-
-    // 2. Add documentation
-    let crate_to_publish = PublishBuilder::new("docscrate", "0.2.1").documentation("http://foo.rs");
-    let json = token.publish_crate(crate_to_publish).good();
-    assert_eq!(json.krate.documentation, Some("http://foo.rs".to_owned()));
-
-    // Ensure latest version also has the same documentation
-    let json = anon.show_crate("docscrate");
-    assert_eq!(json.krate.documentation, Some("http://foo.rs".to_owned()));
-
-    // 3. Remove the documentation
-    let crate_to_publish = PublishBuilder::new("docscrate", "0.2.2");
-    let json = token.publish_crate(crate_to_publish).good();
-    assert_eq!(json.krate.documentation, None);
-
-    // Ensure latest version no longer has documentation
-    let json = anon.show_crate("docscrate");
-    assert_eq!(json.krate.documentation, None);
-}
-
-#[test]
 fn license_and_description_required() {
     let (app, _, _, token) = TestApp::full().with_token();
 
@@ -312,33 +276,6 @@ fn features_version_2() {
         vec!["dep:bar".to_string(), "bar?/feat".to_string()],
     )]);
     assert_eq!(crates[0].features2, Some(features2));
-}
-
-#[test]
-fn new_krate_sorts_deps() {
-    let (app, _, user, token) = TestApp::full().with_token();
-
-    app.db(|conn| {
-        // Insert crates directly into the database so that two-deps can depend on it
-        CrateBuilder::new("dep-a", user.as_model().id).expect_build(conn);
-        CrateBuilder::new("dep-b", user.as_model().id).expect_build(conn);
-    });
-
-    let dep_a = DependencyBuilder::new("dep-a");
-    let dep_b = DependencyBuilder::new("dep-b");
-
-    // Add the deps in reverse order to ensure they get sorted.
-    let crate_to_publish = PublishBuilder::new("two-deps", "1.0.0")
-        .dependency(dep_b)
-        .dependency(dep_a);
-    token.publish_crate(crate_to_publish).good();
-
-    let crates = app.crates_from_index_head("two-deps");
-    assert!(crates.len() == 1);
-    let deps = &crates[0].deps;
-    assert!(deps.len() == 2);
-    assert_eq!(deps[0].name, "dep-a");
-    assert_eq!(deps[1].name, "dep-b");
 }
 
 #[test]
