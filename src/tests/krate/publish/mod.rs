@@ -24,6 +24,8 @@ use std::iter::FromIterator;
 use std::time::Duration;
 use std::{io, thread};
 
+mod inheritance;
+
 #[test]
 fn uploading_new_version_touches_crate() {
     use crate::builders::PublishBuilder;
@@ -1484,39 +1486,5 @@ fn invalid_rust_version() {
     assert_eq!(
         response.into_json(),
         json!({ "errors": [{ "detail": "failed to parse `Cargo.toml` manifest file\n\ninvalid `rust-version` value" }] })
-    );
-}
-
-#[test]
-fn workspace_inheritance() {
-    let (_app, _anon, _cookie, token) = TestApp::full().with_token();
-
-    let tarball = TarballBuilder::new("foo", "1.0.0")
-        .add_raw_manifest(b"[package]\nname = \"foo\"\nversion.workspace = true\n")
-        .build();
-
-    let response = token.publish_crate(PublishBuilder::new("foo", "1.0.0").tarball(tarball));
-    assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": "failed to parse `Cargo.toml` manifest file\n\nvalue from workspace hasn't been set" }] })
-    );
-}
-
-#[test]
-fn workspace_inheritance_with_dep() {
-    let (_app, _anon, _cookie, token) = TestApp::full().with_token();
-
-    let tarball = TarballBuilder::new("foo", "1.0.0")
-        .add_raw_manifest(
-            b"[package]\nname = \"foo\"\nversion = \"1.0.0\"\n\n[dependencies]\nserde.workspace = true\n",
-        )
-        .build();
-
-    let response = token.publish_crate(PublishBuilder::new("foo", "1.0.0").tarball(tarball));
-    assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": "failed to parse `Cargo.toml` manifest file\n\nvalue from workspace hasn't been set" }] })
     );
 }
