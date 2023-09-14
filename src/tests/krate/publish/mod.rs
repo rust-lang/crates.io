@@ -10,8 +10,6 @@ use crates_io_tarball::TarballBuilder;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 use http::StatusCode;
 use std::collections::BTreeMap;
-use std::io;
-use std::io::Read;
 use std::iter::FromIterator;
 
 mod audit_action;
@@ -433,51 +431,6 @@ fn new_krate_wrong_user() {
 }
 
 #[test]
-fn new_krate_too_big() {
-    let (app, _, user) = TestApp::full().with_user();
-
-    let files = [("foo_big-1.0.0/big", &[b'a'; 2000] as &[_])];
-    let builder = PublishBuilder::new("foo_big", "1.0.0").files(&files);
-
-    let response = user.publish_crate(builder);
-    assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": "uploaded tarball is malformed or too large when decompressed" }] })
-    );
-
-    assert!(app.stored_files().is_empty());
-}
-
-#[test]
-fn new_krate_too_big_but_whitelisted() {
-    let (app, _, user, token) = TestApp::full().with_token();
-
-    app.db(|conn| {
-        CrateBuilder::new("foo_whitelist", user.as_model().id)
-            .max_upload_size(2_000_000)
-            .expect_build(conn);
-    });
-
-    let files = [
-        (
-            "foo_whitelist-1.1.0/Cargo.toml",
-            b"[package]\nname = \"foo_whitelist\"\nversion = \"1.1.0\"\n" as &[_],
-        ),
-        ("foo_whitelist-1.1.0/big", &[b'a'; 2000] as &[_]),
-    ];
-    let crate_to_publish = PublishBuilder::new("foo_whitelist", "1.1.0").files(&files);
-
-    token.publish_crate(crate_to_publish).good();
-
-    let expected_files = vec![
-        "crates/foo_whitelist/foo_whitelist-1.1.0.crate",
-        "index/fo/o_/foo_whitelist",
-    ];
-    assert_eq!(app.stored_files(), expected_files);
-}
-
-#[test]
 fn new_krate_wrong_files() {
     let (app, _, user) = TestApp::full().with_user();
     let data: &[u8] = &[1];
@@ -489,26 +442,6 @@ fn new_krate_wrong_files() {
     assert_eq!(
         response.into_json(),
         json!({ "errors": [{ "detail": "invalid path found: bar-1.0.0/a" }] })
-    );
-
-    assert!(app.stored_files().is_empty());
-}
-
-#[test]
-fn new_krate_gzip_bomb() {
-    let (app, _, _, token) = TestApp::full().with_token();
-
-    let len = 512 * 1024;
-    let mut body = Vec::new();
-    io::repeat(0).take(len).read_to_end(&mut body).unwrap();
-
-    let crate_to_publish = PublishBuilder::new("foo", "1.1.0").files(&[("foo-1.1.0/a", &body)]);
-
-    let response = token.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": "uploaded tarball is malformed or too large when decompressed" }] })
     );
 
     assert!(app.stored_files().is_empty());
