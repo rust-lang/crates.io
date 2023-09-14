@@ -16,6 +16,7 @@ mod build_metadata;
 mod categories;
 mod dependencies;
 mod emails;
+mod git;
 mod inheritance;
 mod keywords;
 mod manifest;
@@ -284,22 +285,6 @@ fn new_crate_similar_name_underscore() {
     );
 
     assert!(app.stored_files().is_empty());
-}
-
-#[test]
-fn new_krate_git_upload_with_conflicts() {
-    let (app, _, _, token) = TestApp::full().with_token();
-
-    app.upstream_index().create_empty_commit().unwrap();
-
-    let crate_to_publish = PublishBuilder::new("foo_conflicts", "1.0.0");
-    token.publish_crate(crate_to_publish).good();
-
-    let expected_files = vec![
-        "crates/foo_conflicts/foo_conflicts-1.0.0.crate",
-        "index/fo/o_/foo_conflicts",
-    ];
-    assert_eq!(app.stored_files(), expected_files);
 }
 
 #[test]
