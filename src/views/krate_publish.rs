@@ -4,7 +4,7 @@
 //! integration tests.
 use std::collections::BTreeMap;
 
-use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
+use serde::{de, Deserialize, Deserializer, Serialize};
 
 use crate::models::krate::MAX_NAME_LENGTH;
 
@@ -38,9 +38,9 @@ pub struct EncodableCrateUpload {
 pub struct EncodableCrateName(pub String);
 #[derive(Serialize, Debug, Deref)]
 pub struct EncodableDependencyName(pub String);
-#[derive(Debug, Deref)]
+#[derive(Serialize, Debug, Deref)]
 pub struct EncodableCrateVersion(pub semver::Version);
-#[derive(Debug, Deref)]
+#[derive(Serialize, Debug, Deref)]
 pub struct EncodableCrateVersionReq(pub String);
 #[derive(Serialize, Debug, Deref, Default)]
 pub struct EncodableKeywordList(pub Vec<EncodableKeyword>);
@@ -203,24 +203,6 @@ impl<'de> Deserialize<'de> for EncodableCategoryList {
         } else {
             Ok(EncodableCategoryList(inner))
         }
-    }
-}
-
-impl Serialize for EncodableCrateVersion {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        serializer.serialize_str(&(**self).to_string())
-    }
-}
-
-impl Serialize for EncodableCrateVersionReq {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        serializer.serialize_str(&(**self).to_string())
     }
 }
 
