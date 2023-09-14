@@ -4,7 +4,6 @@ use crates_io::controllers::krate::publish::missing_metadata_error_message;
 use crates_io::models::krate::MAX_NAME_LENGTH;
 use crates_io::schema::versions_published_by;
 use crates_io::views::GoodCrate;
-use crates_io_tarball::TarballBuilder;
 use diesel::{QueryDsl, RunQueryDsl};
 use http::StatusCode;
 use std::collections::BTreeMap;
@@ -24,6 +23,7 @@ mod max_size;
 mod rate_limit;
 mod readme;
 mod similar_names;
+mod tarball;
 
 #[test]
 fn uploading_new_version_touches_crate() {
@@ -187,23 +187,6 @@ fn new_krate_twice() {
 }
 
 #[test]
-fn new_krate_wrong_files() {
-    let (app, _, user) = TestApp::full().with_user();
-    let data: &[u8] = &[1];
-    let files = [("foo-1.0.0/a", data), ("bar-1.0.0/a", data)];
-    let builder = PublishBuilder::new("foo", "1.0.0").files(&files);
-
-    let response = user.publish_crate(builder);
-    assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": "invalid path found: bar-1.0.0/a" }] })
-    );
-
-    assert!(app.stored_files().is_empty());
-}
-
-#[test]
 fn new_krate_duplicate_version() {
     let (app, _, user, token) = TestApp::full().with_token();
 
@@ -295,36 +278,6 @@ fn license_and_description_required() {
     assert_eq!(
         response.into_json(),
         json!({ "errors": [{ "detail": missing_metadata_error_message(&["description"]) }] })
-    );
-
-    assert!(app.stored_files().is_empty());
-}
-
-#[test]
-fn new_krate_tarball_with_hard_links() {
-    let (app, _, _, token) = TestApp::full().with_token();
-
-    let tarball = {
-        let mut builder = TarballBuilder::new("foo", "1.1.0");
-
-        let mut header = tar::Header::new_gnu();
-        assert_ok!(header.set_path("foo-1.1.0/bar"));
-        header.set_size(0);
-        header.set_entry_type(tar::EntryType::hard_link());
-        assert_ok!(header.set_link_name("foo-1.1.0/another"));
-        header.set_cksum();
-        assert_ok!(builder.as_mut().append(&header, &[][..]));
-
-        builder.build()
-    };
-
-    let crate_to_publish = PublishBuilder::new("foo", "1.1.0").tarball(tarball);
-
-    let response = token.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": "unexpected symlink or hard link found: foo-1.1.0/bar" }] })
     );
 
     assert!(app.stored_files().is_empty());
