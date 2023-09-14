@@ -1,5 +1,4 @@
 use crate::builders::{CrateBuilder, DependencyBuilder, PublishBuilder};
-use crate::new_category;
 use crate::util::{RequestHelper, TestApp};
 use crates_io::controllers::krate::publish::{
     missing_metadata_error_message, MISSING_RIGHTS_ERROR_MESSAGE,
@@ -16,6 +15,7 @@ use std::io::Read;
 use std::iter::FromIterator;
 
 mod build_metadata;
+mod categories;
 mod inheritance;
 mod manifest;
 mod max_size;
@@ -823,36 +823,6 @@ fn bad_keywords() {
         response.into_json(),
         json!({ "errors": [{ "detail": "invalid upload request: invalid value: string \"áccênts\", expected a valid keyword specifier at line 1 column 183" }] })
     );
-}
-
-#[test]
-fn good_categories() {
-    let (app, _, _, token) = TestApp::full().with_token();
-
-    app.db(|conn| {
-        new_category("Category 1", "cat1", "Category 1 crates")
-            .create_or_update(conn)
-            .unwrap();
-    });
-
-    let crate_to_publish = PublishBuilder::new("foo_good_cat", "1.0.0").category("cat1");
-    let json = token.publish_crate(crate_to_publish).good();
-
-    assert_eq!(json.krate.name, "foo_good_cat");
-    assert_eq!(json.krate.max_version, "1.0.0");
-    assert_eq!(json.warnings.invalid_categories.len(), 0);
-}
-
-#[test]
-fn ignored_categories() {
-    let (_, _, _, token) = TestApp::full().with_token();
-
-    let crate_to_publish = PublishBuilder::new("foo_ignored_cat", "1.0.0").category("bar");
-    let json = token.publish_crate(crate_to_publish).good();
-
-    assert_eq!(json.krate.name, "foo_ignored_cat");
-    assert_eq!(json.krate.max_version, "1.0.0");
-    assert_eq!(json.warnings.invalid_categories, vec!["bar"]);
 }
 
 #[test]
