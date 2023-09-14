@@ -1,7 +1,5 @@
 use crate::builders::{CrateBuilder, PublishBuilder};
 use crate::util::{RequestHelper, TestApp};
-use crates_io::controllers::krate::publish::missing_metadata_error_message;
-use crates_io::models::krate::MAX_NAME_LENGTH;
 use crates_io::schema::versions_published_by;
 use crates_io::views::GoodCrate;
 use diesel::{QueryDsl, RunQueryDsl};
@@ -23,6 +21,7 @@ mod rate_limit;
 mod readme;
 mod similar_names;
 mod tarball;
+mod validation;
 
 #[test]
 fn uploading_new_version_touches_crate() {
@@ -55,40 +54,6 @@ fn uploading_new_version_touches_crate() {
     let updated_at_after = json.krate.updated_at;
 
     assert_ne!(updated_at_before, updated_at_after);
-}
-
-#[test]
-fn invalid_names() {
-    let (app, _, _, token) = TestApp::full().with_token();
-
-    let bad_name = |name: &str, error_message: &str| {
-        let crate_to_publish = PublishBuilder::new(name, "1.0.0");
-        let response = token.publish_crate(crate_to_publish);
-        assert_eq!(response.status(), StatusCode::OK);
-
-        let json = response.into_json();
-        let json = json.as_object().unwrap();
-        let errors = json.get("errors").unwrap().as_array().unwrap();
-        let first_error = errors.first().unwrap().as_object().unwrap();
-        let detail = first_error.get("detail").unwrap().as_str().unwrap();
-        assert!(detail.contains(error_message), "{detail:?}");
-    };
-
-    let error_message = "expected a valid crate name";
-    bad_name("", error_message);
-    bad_name("foo bar", error_message);
-    bad_name(&"a".repeat(MAX_NAME_LENGTH + 1), error_message);
-    bad_name("snow☃", error_message);
-    bad_name("áccênts", error_message);
-
-    let error_message = "cannot upload a crate with a reserved name";
-    bad_name("std", error_message);
-    bad_name("STD", error_message);
-    bad_name("compiler-rt", error_message);
-    bad_name("compiler_rt", error_message);
-    bad_name("coMpiLer_Rt", error_message);
-
-    assert!(app.stored_files().is_empty());
 }
 
 #[test]
@@ -202,45 +167,6 @@ fn new_krate_duplicate_version() {
     assert_eq!(
         response.into_json(),
         json!({ "errors": [{ "detail": "crate version `1.0.0` is already uploaded" }] })
-    );
-
-    assert!(app.stored_files().is_empty());
-}
-
-#[test]
-fn license_and_description_required() {
-    let (app, _, _, token) = TestApp::full().with_token();
-
-    let crate_to_publish = PublishBuilder::new("foo_metadata", "1.1.0")
-        .unset_license()
-        .unset_description();
-
-    let response = token.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": missing_metadata_error_message(&["description", "license"]) }] })
-    );
-
-    let crate_to_publish = PublishBuilder::new("foo_metadata", "1.1.0").unset_description();
-
-    let response = token.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": missing_metadata_error_message(&["description"]) }] })
-    );
-
-    let crate_to_publish = PublishBuilder::new("foo_metadata", "1.1.0")
-        .unset_license()
-        .license_file("foo")
-        .unset_description();
-
-    let response = token.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": missing_metadata_error_message(&["description"]) }] })
     );
 
     assert!(app.stored_files().is_empty());
