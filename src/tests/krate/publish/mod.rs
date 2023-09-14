@@ -4,10 +4,10 @@ use crates_io::controllers::krate::publish::{
     missing_metadata_error_message, MISSING_RIGHTS_ERROR_MESSAGE,
 };
 use crates_io::models::krate::MAX_NAME_LENGTH;
-use crates_io::schema::{api_tokens, emails, versions_published_by};
+use crates_io::schema::{api_tokens, versions_published_by};
 use crates_io::views::GoodCrate;
 use crates_io_tarball::TarballBuilder;
-use diesel::{delete, update, ExpressionMethods, QueryDsl, RunQueryDsl};
+use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 use http::StatusCode;
 use std::collections::BTreeMap;
 use std::io;
@@ -17,6 +17,7 @@ use std::iter::FromIterator;
 mod audit_action;
 mod build_metadata;
 mod categories;
+mod emails;
 mod inheritance;
 mod keywords;
 mod manifest;
@@ -683,49 +684,6 @@ fn new_krate_with_readme_and_plus_version() {
         "readmes/foo_readme/foo_readme-1.0.0+foo.html",
     ];
     assert_eq!(app.stored_files(), expected_files);
-}
-
-#[test]
-fn new_krate_without_any_email_fails() {
-    let (app, _, _, token) = TestApp::full().with_token();
-
-    app.db(|conn| {
-        delete(emails::table).execute(conn).unwrap();
-    });
-
-    let crate_to_publish = PublishBuilder::new("foo_no_email", "1.0.0");
-
-    let response = token.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": "A verified email address is required to publish crates to crates.io. Visit https://crates.io/settings/profile to set and verify your email address." }] })
-    );
-
-    assert!(app.stored_files().is_empty());
-}
-
-#[test]
-fn new_krate_with_unverified_email_fails() {
-    let (app, _, _, token) = TestApp::full().with_token();
-
-    app.db(|conn| {
-        update(emails::table)
-            .set((emails::verified.eq(false),))
-            .execute(conn)
-            .unwrap();
-    });
-
-    let crate_to_publish = PublishBuilder::new("foo_unverified_email", "1.0.0");
-
-    let response = token.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": "A verified email address is required to publish crates to crates.io. Visit https://crates.io/settings/profile to set and verify your email address." }] })
-    );
-
-    assert!(app.stored_files().is_empty());
 }
 
 #[test]
