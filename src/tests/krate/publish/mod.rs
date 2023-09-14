@@ -14,6 +14,7 @@ use std::io;
 use std::io::Read;
 use std::iter::FromIterator;
 
+mod audit_action;
 mod build_metadata;
 mod categories;
 mod inheritance;
@@ -725,28 +726,6 @@ fn new_krate_with_unverified_email_fails() {
     );
 
     assert!(app.stored_files().is_empty());
-}
-
-#[test]
-fn publish_records_an_audit_action() {
-    use crates_io::models::VersionOwnerAction;
-
-    let (app, anon, _, token) = TestApp::full().with_token();
-
-    app.db(|conn| assert!(VersionOwnerAction::all(conn).unwrap().is_empty()));
-
-    // Upload a new crate, putting it in the git index
-    let crate_to_publish = PublishBuilder::new("fyk", "1.0.0");
-    token.publish_crate(crate_to_publish).good();
-
-    // Make sure it has one publish audit action
-    let json = anon.show_version("fyk", "1.0.0");
-    let actions = json.version.audit_actions;
-
-    assert_eq!(actions.len(), 1);
-    let action = &actions[0];
-    assert_eq!(action.action, "publish");
-    assert_eq!(action.user.id, token.as_model().user_id);
 }
 
 #[test]
