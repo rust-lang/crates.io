@@ -23,6 +23,7 @@ mod manifest;
 mod max_size;
 mod rate_limit;
 mod readme;
+mod similar_names;
 
 #[test]
 fn uploading_new_version_touches_crate() {
@@ -219,69 +220,6 @@ fn new_krate_duplicate_version() {
     assert_eq!(
         response.into_json(),
         json!({ "errors": [{ "detail": "crate version `1.0.0` is already uploaded" }] })
-    );
-
-    assert!(app.stored_files().is_empty());
-}
-
-#[test]
-fn new_crate_similar_name() {
-    let (app, _, user, token) = TestApp::full().with_token();
-
-    app.db(|conn| {
-        CrateBuilder::new("Foo_similar", user.as_model().id)
-            .version("1.0.0")
-            .expect_build(conn);
-    });
-
-    let crate_to_publish = PublishBuilder::new("foo_similar", "1.1.0");
-    let response = token.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": "crate was previously named `Foo_similar`" }] })
-    );
-
-    assert!(app.stored_files().is_empty());
-}
-
-#[test]
-fn new_crate_similar_name_hyphen() {
-    let (app, _, user, token) = TestApp::full().with_token();
-
-    app.db(|conn| {
-        CrateBuilder::new("foo_bar_hyphen", user.as_model().id)
-            .version("1.0.0")
-            .expect_build(conn);
-    });
-
-    let crate_to_publish = PublishBuilder::new("foo-bar-hyphen", "1.1.0");
-    let response = token.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": "crate was previously named `foo_bar_hyphen`" }] })
-    );
-
-    assert!(app.stored_files().is_empty());
-}
-
-#[test]
-fn new_crate_similar_name_underscore() {
-    let (app, _, user, token) = TestApp::full().with_token();
-
-    app.db(|conn| {
-        CrateBuilder::new("foo-bar-underscore", user.as_model().id)
-            .version("1.0.0")
-            .expect_build(conn);
-    });
-
-    let crate_to_publish = PublishBuilder::new("foo_bar_underscore", "1.1.0");
-    let response = token.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": "crate was previously named `foo-bar-underscore`" }] })
     );
 
     assert!(app.stored_files().is_empty());
