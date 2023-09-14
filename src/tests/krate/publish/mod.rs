@@ -1,4 +1,4 @@
-use crate::builders::{CrateBuilder, DependencyBuilder, PublishBuilder};
+use crate::builders::{CrateBuilder, PublishBuilder};
 use crate::util::{RequestHelper, TestApp};
 use crates_io::controllers::krate::publish::missing_metadata_error_message;
 use crates_io::models::krate::MAX_NAME_LENGTH;
@@ -6,8 +6,6 @@ use crates_io::schema::versions_published_by;
 use crates_io::views::GoodCrate;
 use diesel::{QueryDsl, RunQueryDsl};
 use http::StatusCode;
-use std::collections::BTreeMap;
-use std::iter::FromIterator;
 
 mod audit_action;
 mod auth;
@@ -15,6 +13,7 @@ mod build_metadata;
 mod categories;
 mod dependencies;
 mod emails;
+mod features;
 mod git;
 mod inheritance;
 mod keywords;
@@ -245,37 +244,6 @@ fn license_and_description_required() {
     );
 
     assert!(app.stored_files().is_empty());
-}
-
-#[test]
-fn features_version_2() {
-    let (app, _, user, token) = TestApp::full().with_token();
-
-    app.db(|conn| {
-        // Insert a crate directly into the database so that foo_new can depend on it
-        CrateBuilder::new("bar", user.as_model().id).expect_build(conn);
-    });
-
-    let dependency = DependencyBuilder::new("bar");
-
-    let crate_to_publish = PublishBuilder::new("foo", "1.0.0")
-        .dependency(dependency)
-        .feature("new_feat", &["dep:bar", "bar?/feat"])
-        .feature("old_feat", &[]);
-    token.publish_crate(crate_to_publish).good();
-
-    let crates = app.crates_from_index_head("foo");
-    assert_eq!(crates.len(), 1);
-    assert_eq!(crates[0].name, "foo");
-    assert_eq!(crates[0].deps.len(), 1);
-    assert_eq!(crates[0].v, Some(2));
-    let features = BTreeMap::from_iter([("old_feat".to_string(), vec![])]);
-    assert_eq!(crates[0].features, features);
-    let features2 = BTreeMap::from_iter([(
-        "new_feat".to_string(),
-        vec!["dep:bar".to_string(), "bar?/feat".to_string()],
-    )]);
-    assert_eq!(crates[0].features2, Some(features2));
 }
 
 #[test]
