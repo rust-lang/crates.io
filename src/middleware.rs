@@ -3,7 +3,6 @@ mod balance_capacity;
 mod block_traffic;
 mod debug;
 mod ember_html;
-mod head;
 pub mod log_request;
 pub mod normalize_path;
 mod require_user_agent;
@@ -64,7 +63,6 @@ pub fn apply_axum_middleware(state: AppState, router: Router) -> Router {
             state.clone(),
             block_traffic::block_routes,
         ))
-        .layer(from_fn(head::support_head_requests))
         .layer(conditional_layer(env == Env::Development, || {
             from_fn(static_or_continue::serve_local_uploads)
         }))

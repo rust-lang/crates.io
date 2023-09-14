@@ -2,6 +2,7 @@ use axum::extract::DefaultBodyLimit;
 use axum::response::IntoResponse;
 use axum::routing::{delete, get, post, put};
 use axum::Router;
+use http::{Method, StatusCode};
 
 use crate::app::AppState;
 use crate::controllers::*;
@@ -169,7 +170,12 @@ pub fn build_axum_router(state: AppState) -> Router {
     }
 
     router
-        .fallback(|| async { not_found().into_response() })
+        .fallback(|method: Method| async move {
+            match method {
+                Method::HEAD => StatusCode::NOT_FOUND.into_response(),
+                _ => not_found().into_response(),
+            }
+        })
         .with_state(state)
 }
 
