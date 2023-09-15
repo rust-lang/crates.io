@@ -1,8 +1,8 @@
 use crate::builders::PublishBuilder;
 use crate::util::{RequestHelper, TestApp};
-use crates_io::controllers::krate::publish::missing_metadata_error_message;
 use crates_io::models::krate::MAX_NAME_LENGTH;
 use http::StatusCode;
+use insta::assert_yaml_snapshot;
 
 #[test]
 fn invalid_names() {
@@ -48,19 +48,13 @@ fn license_and_description_required() {
 
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": missing_metadata_error_message(&["description", "license"]) }] })
-    );
+    assert_yaml_snapshot!(response.into_json());
 
     let crate_to_publish = PublishBuilder::new("foo_metadata", "1.1.0").unset_description();
 
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": missing_metadata_error_message(&["description"]) }] })
-    );
+    assert_yaml_snapshot!(response.into_json());
 
     let crate_to_publish = PublishBuilder::new("foo_metadata", "1.1.0")
         .unset_license()
@@ -69,10 +63,7 @@ fn license_and_description_required() {
 
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": missing_metadata_error_message(&["description"]) }] })
-    );
+    assert_yaml_snapshot!(response.into_json());
 
     assert!(app.stored_files().is_empty());
 }

@@ -336,7 +336,7 @@ fn split_body<R: RequestPartsExt>(mut bytes: Bytes, req: &R) -> AppResult<(Bytes
     Ok((json_bytes, tarball_bytes))
 }
 
-pub fn missing_metadata_error_message(missing: &[&str]) -> String {
+fn missing_metadata_error_message(missing: &[&str]) -> String {
     format!(
         "missing or empty metadata fields: {}. Please \
          see https://doc.rust-lang.org/cargo/reference/manifest.html for \

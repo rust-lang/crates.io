@@ -1,0 +1,7 @@
+---
+source: src/tests/krate/publish/validation.rs
+expression: response.into_json()
+---
+errors:
+  - detail: "missing or empty metadata fields: description. Please see https://doc.rust-lang.org/cargo/reference/manifest.html for how to upload metadata"
+
