@@ -9,7 +9,7 @@ use crate::manifest::validate_manifest;
 pub use crate::vcs_info::CargoVcsInfo;
 pub use cargo_manifest::{Manifest, StringOrBool};
 use flate2::read::GzDecoder;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
@@ -66,7 +66,7 @@ pub fn process_tarball<R: Read>(
     let pkg_root = Path::new(&pkg_name);
 
     let mut vcs_info = None;
-    let mut manifests = HashMap::new();
+    let mut manifests = BTreeMap::new();
 
     for entry in archive.entries()? {
         let mut entry = entry.map_err(TarballError::Malformed)?;
@@ -347,9 +347,7 @@ repository = "https://github.com/foo/bar"
             let limit = 512 * 1024 * 1024;
 
             let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, limit));
-            if let TarballError::TooManyManifests(mut have) = err {
-                // We need to sort these, since the Vec is otherwise just coming out of a hashmap.
-                have.sort();
+            if let TarballError::TooManyManifests(have) = err {
                 let mut want: Vec<_> = files
                     .into_iter()
                     .map(|file| PathBuf::from("foo-0.0.1").join(file))
