@@ -26,8 +26,7 @@ use crate::views::{
     EncodableCrate, EncodableCrateDependency, EncodableCrateUpload, GoodCrate, PublishWarnings,
 };
 
-pub const MISSING_RIGHTS_ERROR_MESSAGE: &str =
-    "this crate exists but you don't seem to be an owner. \
+const MISSING_RIGHTS_ERROR_MESSAGE: &str = "this crate exists but you don't seem to be an owner. \
      If you believe this is a mistake, perhaps you need \
      to accept an invitation to be an owner before \
      publishing.";
@@ -336,7 +335,7 @@ fn split_body<R: RequestPartsExt>(mut bytes: Bytes, req: &R) -> AppResult<(Bytes
     Ok((json_bytes, tarball_bytes))
 }
 
-pub fn missing_metadata_error_message(missing: &[&str]) -> String {
+fn missing_metadata_error_message(missing: &[&str]) -> String {
     format!(
         "missing or empty metadata fields: {}. Please \
          see https://doc.rust-lang.org/cargo/reference/manifest.html for \

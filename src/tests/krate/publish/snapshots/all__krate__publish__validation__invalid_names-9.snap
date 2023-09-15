@@ -1,0 +1,7 @@
+---
+source: src/tests/krate/publish/validation.rs
+expression: response.into_json()
+---
+errors:
+  - detail: cannot upload a crate with a reserved name
+
