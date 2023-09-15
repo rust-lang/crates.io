@@ -1,5 +1,5 @@
 use crate::builders::{CrateBuilder, VersionBuilder};
-use crate::util::insta::{self, assert_yaml_snapshot};
+use crate::util::insta::{self, assert_json_snapshot};
 use crate::util::{RequestHelper, TestApp};
 use crates_io::schema::versions;
 use diesel::{QueryDsl, RunQueryDsl};
@@ -13,7 +13,7 @@ fn index() {
     let url = "/api/v1/versions";
 
     let json: Value = anon.get(url).good();
-    assert_yaml_snapshot!(json);
+    assert_json_snapshot!(json);
 
     let (v1, v2) = app.db(|conn| {
         CrateBuilder::new("foo_vers_index", user.id)
@@ -26,7 +26,7 @@ fn index() {
 
     let query = format!("ids[]={v1}&ids[]={v2}");
     let json: Value = anon.get_with_query(url, &query).good();
-    assert_yaml_snapshot!(json, {
+    assert_json_snapshot!(json, {
         ".versions" => insta::sorted_redaction(),
         ".versions[].id" => insta::any_id_redaction(),
         ".versions[].created_at" => "[datetime]",

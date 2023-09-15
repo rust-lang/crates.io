@@ -1,14 +1,14 @@
 use crate::builders::PublishBuilder;
 use crate::util::{RequestHelper, TestApp};
 use http::StatusCode;
-use insta::assert_yaml_snapshot;
+use insta::assert_json_snapshot;
 
 fn version_with_build_metadata(v1: &str, v2: &str, expected_error: &str) {
     let (_app, _anon, _cookie, token) = TestApp::full().with_token();
 
     let response = token.publish_crate(PublishBuilder::new("foo", v1));
     assert_eq!(response.status(), StatusCode::OK);
-    assert_yaml_snapshot!(response.into_json(), {
+    assert_json_snapshot!(response.into_json(), {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
     });

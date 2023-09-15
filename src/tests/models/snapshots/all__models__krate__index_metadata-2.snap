@@ -2,35 +2,47 @@
 source: src/tests/models/krate.rs
 expression: metadata
 ---
-- name: bar
-  vers: 1.0.0-beta.1
-  deps: []
-  cksum: "                                                                "
-  features: {}
-  yanked: true
-- name: bar
-  vers: 1.0.0
-  deps: []
-  cksum: "                                                                "
-  features: {}
-  yanked: false
-- name: bar
-  vers: 2.0.0
-  deps:
-    - name: foo
-      req: ">= 0"
-      features: []
-      optional: false
-      default_features: false
-      target: ~
-      kind: normal
-  cksum: "                                                                "
-  features: {}
-  yanked: false
-- name: bar
-  vers: 1.0.1
-  deps: []
-  cksum: "0123456789abcdef                                                "
-  features: {}
-  yanked: false
-
+[
+  {
+    "name": "bar",
+    "vers": "1.0.0-beta.1",
+    "deps": [],
+    "cksum": "                                                                ",
+    "features": {},
+    "yanked": true
+  },
+  {
+    "name": "bar",
+    "vers": "1.0.0",
+    "deps": [],
+    "cksum": "                                                                ",
+    "features": {},
+    "yanked": false
+  },
+  {
+    "name": "bar",
+    "vers": "2.0.0",
+    "deps": [
+      {
+        "name": "foo",
+        "req": ">= 0",
+        "features": [],
+        "optional": false,
+        "default_features": false,
+        "target": null,
+        "kind": "normal"
+      }
+    ],
+    "cksum": "                                                                ",
+    "features": {},
+    "yanked": false
+  },
+  {
+    "name": "bar",
+    "vers": "1.0.1",
+    "deps": [],
+    "cksum": "0123456789abcdef                                                ",
+    "features": {},
+    "yanked": false
+  }
+]

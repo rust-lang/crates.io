@@ -1,4 +1,4 @@
-use crate::util::insta::{self, assert_yaml_snapshot};
+use crate::util::insta::{self, assert_json_snapshot};
 use crate::util::{RequestHelper, TestApp};
 use crates_io::models::token::{CrateScope, EndpointScope};
 use crates_io::models::ApiToken;
@@ -61,7 +61,7 @@ fn create_token_success() {
 
     let response = user.put::<()>("/api/v1/me/tokens", NEW_BAR);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_yaml_snapshot!(response.into_json(), {
+    assert_json_snapshot!(response.into_json(), {
         ".api_token.id" => insta::any_id_redaction(),
         ".api_token.created_at" => "[datetime]",
         ".api_token.last_used_at" => "[datetime]",
@@ -130,7 +130,7 @@ fn create_token_with_scopes() {
 
     let response = user.put::<()>("/api/v1/me/tokens", &serde_json::to_vec(&json).unwrap());
     assert_eq!(response.status(), StatusCode::OK);
-    assert_yaml_snapshot!(response.into_json(), {
+    assert_json_snapshot!(response.into_json(), {
         ".api_token.id" => insta::any_id_redaction(),
         ".api_token.created_at" => "[datetime]",
         ".api_token.last_used_at" => "[datetime]",
@@ -173,7 +173,7 @@ fn create_token_with_null_scopes() {
 
     let response = user.put::<()>("/api/v1/me/tokens", &serde_json::to_vec(&json).unwrap());
     assert_eq!(response.status(), StatusCode::OK);
-    assert_yaml_snapshot!(response.into_json(), {
+    assert_json_snapshot!(response.into_json(), {
         ".api_token.id" => insta::any_id_redaction(),
         ".api_token.created_at" => "[datetime]",
         ".api_token.last_used_at" => "[datetime]",
@@ -248,7 +248,7 @@ fn create_token_with_expiry_date() {
 
     let response = user.put::<()>("/api/v1/me/tokens", &serde_json::to_vec(&json).unwrap());
     assert_eq!(response.status(), StatusCode::OK);
-    assert_yaml_snapshot!(response.into_json(), {
+    assert_json_snapshot!(response.into_json(), {
         ".api_token.id" => insta::any_id_redaction(),
         ".api_token.created_at" => "[datetime]",
         ".api_token.last_used_at" => "[datetime]",

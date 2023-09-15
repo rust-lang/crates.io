@@ -2,13 +2,15 @@
 source: src/tests/routes/me/tokens/create.rs
 expression: response.into_json()
 ---
-api_token:
-  crate_scopes: ~
-  created_at: "[datetime]"
-  endpoint_scopes: ~
-  expired_at: "2024-12-24T07:34:56+00:00"
-  id: "[id]"
-  last_used_at: "[datetime]"
-  name: bar
-  token: "[token]"
-
+{
+  "api_token": {
+    "crate_scopes": null,
+    "created_at": "[datetime]",
+    "endpoint_scopes": null,
+    "expired_at": "2024-12-24T07:34:56+00:00",
+    "id": "[id]",
+    "last_used_at": "[datetime]",
+    "name": "bar",
+    "token": "[token]"
+  }
+}

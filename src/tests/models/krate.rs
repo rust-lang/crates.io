@@ -1,5 +1,5 @@
 use crate::builders::{CrateBuilder, VersionBuilder};
-use crate::util::insta::assert_yaml_snapshot;
+use crate::util::insta::assert_json_snapshot;
 use crate::TestApp;
 use chrono::{Days, Utc};
 
@@ -24,7 +24,7 @@ fn index_metadata() {
             .expect_build(conn);
 
         let metadata = fooo.index_metadata(conn).unwrap();
-        assert_yaml_snapshot!(metadata);
+        assert_json_snapshot!(metadata);
 
         let bar = CrateBuilder::new("bar", user.id)
             .version(
@@ -42,6 +42,6 @@ fn index_metadata() {
             .expect_build(conn);
 
         let metadata = bar.index_metadata(conn).unwrap();
-        assert_yaml_snapshot!(metadata);
+        assert_json_snapshot!(metadata);
     });
 }

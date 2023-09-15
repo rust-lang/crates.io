@@ -1,57 +1,66 @@
 ---
 source: src/tests/routes/versions/list.rs
-assertion_line: 29
 expression: json
 ---
-versions:
-  - audit_actions: []
-    checksum: "                                                                "
-    crate: foo_vers_index
-    crate_size: 0
-    created_at: "[datetime]"
-    dl_path: /api/v1/crates/foo_vers_index/2.0.0/download
-    downloads: 0
-    features: {}
-    id: "[id]"
-    license: MIT
-    links:
-      authors: /api/v1/crates/foo_vers_index/2.0.0/authors
-      dependencies: /api/v1/crates/foo_vers_index/2.0.0/dependencies
-      version_downloads: /api/v1/crates/foo_vers_index/2.0.0/downloads
-    num: 2.0.0
-    published_by:
-      avatar: ~
-      id: "[id]"
-      login: foo
-      name: ~
-      url: "https://github.com/foo"
-    readme_path: /api/v1/crates/foo_vers_index/2.0.0/readme
-    rust_version: ~
-    updated_at: "[datetime]"
-    yanked: false
-  - audit_actions: []
-    checksum: "                                                                "
-    crate: foo_vers_index
-    crate_size: 0
-    created_at: "[datetime]"
-    dl_path: /api/v1/crates/foo_vers_index/2.0.1/download
-    downloads: 0
-    features: {}
-    id: "[id]"
-    license: MIT/Apache-2.0
-    links:
-      authors: /api/v1/crates/foo_vers_index/2.0.1/authors
-      dependencies: /api/v1/crates/foo_vers_index/2.0.1/dependencies
-      version_downloads: /api/v1/crates/foo_vers_index/2.0.1/downloads
-    num: 2.0.1
-    published_by:
-      avatar: ~
-      id: "[id]"
-      login: foo
-      name: ~
-      url: "https://github.com/foo"
-    readme_path: /api/v1/crates/foo_vers_index/2.0.1/readme
-    rust_version: ~
-    updated_at: "[datetime]"
-    yanked: false
-
+{
+  "versions": [
+    {
+      "audit_actions": [],
+      "checksum": "                                                                ",
+      "crate": "foo_vers_index",
+      "crate_size": 0,
+      "created_at": "[datetime]",
+      "dl_path": "/api/v1/crates/foo_vers_index/2.0.0/download",
+      "downloads": 0,
+      "features": {},
+      "id": "[id]",
+      "license": "MIT",
+      "links": {
+        "authors": "/api/v1/crates/foo_vers_index/2.0.0/authors",
+        "dependencies": "/api/v1/crates/foo_vers_index/2.0.0/dependencies",
+        "version_downloads": "/api/v1/crates/foo_vers_index/2.0.0/downloads"
+      },
+      "num": "2.0.0",
+      "published_by": {
+        "avatar": null,
+        "id": "[id]",
+        "login": "foo",
+        "name": null,
+        "url": "https://github.com/foo"
+      },
+      "readme_path": "/api/v1/crates/foo_vers_index/2.0.0/readme",
+      "rust_version": null,
+      "updated_at": "[datetime]",
+      "yanked": false
+    },
+    {
+      "audit_actions": [],
+      "checksum": "                                                                ",
+      "crate": "foo_vers_index",
+      "crate_size": 0,
+      "created_at": "[datetime]",
+      "dl_path": "/api/v1/crates/foo_vers_index/2.0.1/download",
+      "downloads": 0,
+      "features": {},
+      "id": "[id]",
+      "license": "MIT/Apache-2.0",
+      "links": {
+        "authors": "/api/v1/crates/foo_vers_index/2.0.1/authors",
+        "dependencies": "/api/v1/crates/foo_vers_index/2.0.1/dependencies",
+        "version_downloads": "/api/v1/crates/foo_vers_index/2.0.1/downloads"
+      },
+      "num": "2.0.1",
+      "published_by": {
+        "avatar": null,
+        "id": "[id]",
+        "login": "foo",
+        "name": null,
+        "url": "https://github.com/foo"
+      },
+      "readme_path": "/api/v1/crates/foo_vers_index/2.0.1/readme",
+      "rust_version": null,
+      "updated_at": "[datetime]",
+      "yanked": false
+    }
+  ]
+}

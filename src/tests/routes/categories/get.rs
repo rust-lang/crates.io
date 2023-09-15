@@ -2,7 +2,7 @@ use crate::builders::CrateBuilder;
 use crate::new_category;
 use crate::util::{MockAnonymousUser, RequestHelper, TestApp};
 use crates_io::models::Category;
-use insta::assert_yaml_snapshot;
+use insta::assert_json_snapshot;
 use serde_json::Value;
 
 #[test]
@@ -23,7 +23,7 @@ fn show() {
 
     // The category and its subcategories should be in the json
     let json: Value = anon.get(url).good();
-    assert_yaml_snapshot!(json, {
+    assert_json_snapshot!(json, {
         ".**.created_at" => "[datetime]",
     });
 }
