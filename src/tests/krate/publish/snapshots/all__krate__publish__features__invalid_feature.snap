@@ -1,0 +1,11 @@
+---
+source: src/tests/krate/publish/features.rs
+expression: response.into_json()
+---
+{
+  "errors": [
+    {
+      "detail": "invalid upload request: invalid value: string \"!bar\", expected a valid feature name at line 1 column 65"
+    }
+  ]
+}
