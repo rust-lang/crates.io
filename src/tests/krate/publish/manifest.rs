@@ -2,6 +2,7 @@ use crate::builders::PublishBuilder;
 use crate::util::{RequestHelper, TestApp};
 use crates_io_tarball::TarballBuilder;
 use http::StatusCode;
+use insta::assert_json_snapshot;
 
 #[test]
 fn boolean_readme() {
@@ -40,6 +41,42 @@ fn missing_manifest() {
         response.into_json(),
         json!({ "errors": [{ "detail": "uploaded tarball is missing a `Cargo.toml` manifest file" }] })
     );
+}
+
+#[test]
+fn manifest_casing() {
+    let (_app, _anon, _cookie, token) = TestApp::full().with_token();
+
+    let tarball = TarballBuilder::new("foo", "1.0.0")
+        .add_file(
+            "foo-1.0.0/CARGO.TOML",
+            b"[package]\nname = \"foo\"\nversion = \"1.0.0\"\n",
+        )
+        .build();
+
+    let response = token.publish_crate(PublishBuilder::new("foo", "1.0.0").tarball(tarball));
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json());
+}
+
+#[test]
+fn multiple_manifests() {
+    let (_app, _anon, _cookie, token) = TestApp::full().with_token();
+
+    let tarball = TarballBuilder::new("foo", "1.0.0")
+        .add_file(
+            "foo-1.0.0/Cargo.toml",
+            b"[package]\nname = \"foo\"\nversion = \"1.0.0\"\n",
+        )
+        .add_file(
+            "foo-1.0.0/cargo.toml",
+            b"[package]\nname = \"foo\"\nversion = \"1.0.0\"\n",
+        )
+        .build();
+
+    let response = token.publish_crate(PublishBuilder::new("foo", "1.0.0").tarball(tarball));
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json());
 }
 
 #[test]
