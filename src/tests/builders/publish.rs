@@ -170,25 +170,23 @@ impl PublishBuilder {
 
     pub fn create_publish_body(json: &str, tarball: &[u8]) -> Vec<u8> {
         let mut body = Vec::new();
-        body.extend(
-            [
-                json.len() as u8,
-                (json.len() >> 8) as u8,
-                (json.len() >> 16) as u8,
-                (json.len() >> 24) as u8,
-            ]
-            .iter()
-            .cloned(),
-        );
-        body.extend(json.as_bytes().iter().cloned());
 
-        body.extend([
-            tarball.len() as u8,
-            (tarball.len() >> 8) as u8,
-            (tarball.len() >> 16) as u8,
-            (tarball.len() >> 24) as u8,
-        ]);
+        let json_len = json.len();
+        body.push(json_len as u8);
+        body.push((json_len >> 8) as u8);
+        body.push((json_len >> 16) as u8);
+        body.push((json_len >> 24) as u8);
+
+        body.extend(json.as_bytes());
+
+        let tarball_len = tarball.len();
+        body.push(tarball_len as u8);
+        body.push((tarball_len >> 8) as u8);
+        body.push((tarball_len >> 16) as u8);
+        body.push((tarball_len >> 24) as u8);
+
         body.extend(tarball);
+
         body
     }
 }
