@@ -1,0 +1,11 @@
+---
+source: src/tests/krate/publish/tarball.rs
+expression: response.into_json()
+---
+{
+  "errors": [
+    {
+      "detail": "invalid metadata length"
+    }
+  ]
+}

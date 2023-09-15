@@ -120,17 +120,3 @@ fn new_krate_duplicate_version() {
 
     assert!(app.stored_files().is_empty());
 }
-
-#[test]
-fn empty_payload() {
-    let (app, _, user) = TestApp::full().with_user();
-
-    let response = user.put::<()>("/api/v1/crates/new", &[]);
-    assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": "invalid metadata length" }] })
-    );
-
-    assert!(app.stored_files().is_empty());
-}
