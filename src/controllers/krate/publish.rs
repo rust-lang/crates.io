@@ -190,8 +190,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
 
             let pkg_name = format!("{}-{}", krate.name, vers);
             let tarball_info =
-                process_tarball(&pkg_name, &*tarball_bytes, maximums.max_unpack_size)
-                    .map_err(tarball_to_app_error)?;
+                process_tarball(&pkg_name, &*tarball_bytes, maximums.max_unpack_size)?;
 
             // `unwrap()` is safe here since `process_tarball()` validates that
             // we only accept manifests with a `package` section and without
@@ -399,43 +398,45 @@ pub fn add_dependencies(
     Ok(())
 }
 
-fn tarball_to_app_error(error: TarballError) -> BoxedAppError {
-    match error {
-        TarballError::Malformed(err) => err.chain(cargo_err(
-            "uploaded tarball is malformed or too large when decompressed",
-        )),
-        TarballError::InvalidPath(path) => cargo_err(&format!("invalid path found: {path}")),
-        TarballError::UnexpectedSymlink(path) => {
-            cargo_err(&format!("unexpected symlink or hard link found: {path}"))
+impl From<TarballError> for BoxedAppError {
+    fn from(error: TarballError) -> Self {
+        match error {
+            TarballError::Malformed(err) => err.chain(cargo_err(
+                "uploaded tarball is malformed or too large when decompressed",
+            )),
+            TarballError::InvalidPath(path) => cargo_err(&format!("invalid path found: {path}")),
+            TarballError::UnexpectedSymlink(path) => {
+                cargo_err(&format!("unexpected symlink or hard link found: {path}"))
+            }
+            TarballError::IO(err) => err.into(),
+            TarballError::MissingManifest => {
+                cargo_err("uploaded tarball is missing a `Cargo.toml` manifest file")
+            }
+            TarballError::IncorrectlyCasedManifest(name) => {
+                cargo_err(&format!(
+                    "uploaded tarball is missing a `Cargo.toml` manifest file; `{name}` was found, but must be named `Cargo.toml` with that exact casing",
+                    name = name.to_string_lossy(),
+                ))
+            }
+            TarballError::TooManyManifests(paths) => {
+                let paths = paths
+                    .into_iter()
+                    .map(|path| {
+                        path.file_name()
+                            .unwrap_or_default()
+                            .to_string_lossy()
+                            .into_owned()
+                    })
+                    .collect::<Vec<_>>()
+                    .join("`, `");
+                cargo_err(&format!(
+                    "uploaded tarball contains more than one `Cargo.toml` manifest file; found `{paths}`"
+                ))
+            }
+            TarballError::InvalidManifest(err) => cargo_err(&format!(
+                "failed to parse `Cargo.toml` manifest file\n\n{err}"
+            )),
         }
-        TarballError::IO(err) => err.into(),
-        TarballError::MissingManifest => {
-            cargo_err("uploaded tarball is missing a `Cargo.toml` manifest file")
-        }
-        TarballError::IncorrectlyCasedManifest(name) => {
-            cargo_err(&format!(
-                "uploaded tarball is missing a `Cargo.toml` manifest file; `{name}` was found, but must be named `Cargo.toml` with that exact casing",
-                name = name.to_string_lossy(),
-            ))
-        }
-        TarballError::TooManyManifests(paths) => {
-            let paths = paths
-                .into_iter()
-                .map(|path| {
-                    path.file_name()
-                        .unwrap_or_default()
-                        .to_string_lossy()
-                        .into_owned()
-                })
-                .collect::<Vec<_>>()
-                .join("`, `");
-            cargo_err(&format!(
-                "uploaded tarball contains more than one `Cargo.toml` manifest file; found `{paths}`"
-            ))
-        }
-        TarballError::InvalidManifest(err) => cargo_err(&format!(
-            "failed to parse `Cargo.toml` manifest file\n\n{err}"
-        )),
     }
 }
 
