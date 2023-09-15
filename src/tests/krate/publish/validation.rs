@@ -5,6 +5,19 @@ use http::StatusCode;
 use insta::assert_json_snapshot;
 
 #[test]
+fn empty_json() {
+    let (app, _, _, token) = TestApp::full().with_token();
+
+    let (_json, tarball) = PublishBuilder::new("foo", "1.0.0").build();
+    let body = PublishBuilder::create_publish_body("{}", &tarball);
+
+    let response = token.put::<()>("/api/v1/crates/new", &body);
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json());
+    assert!(app.stored_files().is_empty());
+}
+
+#[test]
 fn invalid_names() {
     let (app, _, _, token) = TestApp::full().with_token();
 

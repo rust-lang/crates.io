@@ -1,0 +1,11 @@
+---
+source: src/tests/krate/publish/validation.rs
+expression: response.into_json()
+---
+{
+  "errors": [
+    {
+      "detail": "invalid upload request: missing field `name` at line 1 column 2"
+    }
+  ]
+}
