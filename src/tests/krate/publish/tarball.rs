@@ -2,6 +2,7 @@ use crate::builders::PublishBuilder;
 use crate::util::{RequestHelper, TestApp};
 use crates_io_tarball::TarballBuilder;
 use http::StatusCode;
+use insta::assert_json_snapshot;
 
 #[test]
 fn new_krate_wrong_files() {
@@ -47,5 +48,58 @@ fn new_krate_tarball_with_hard_links() {
         json!({ "errors": [{ "detail": "unexpected symlink or hard link found: foo-1.1.0/bar" }] })
     );
 
+    assert!(app.stored_files().is_empty());
+}
+
+#[test]
+fn empty() {
+    let (app, _, user) = TestApp::full().with_user();
+
+    let response = user.put::<()>("/api/v1/crates/new", &[]);
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json());
+    assert!(app.stored_files().is_empty());
+}
+
+#[test]
+fn json_len_truncated() {
+    let (app, _, _, token) = TestApp::full().with_token();
+
+    let response = token.put::<()>("/api/v1/crates/new", &[0, 0]);
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json());
+    assert!(app.stored_files().is_empty());
+}
+
+#[test]
+fn json_bytes_truncated() {
+    let (app, _, _, token) = TestApp::full().with_token();
+
+    let response = token.put::<()>("/api/v1/crates/new", &[100, 0, 0, 0, 0]);
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json());
+    assert!(app.stored_files().is_empty());
+}
+
+#[test]
+fn tarball_len_truncated() {
+    let (app, _, _, token) = TestApp::full().with_token();
+
+    let response = token.put::<()>("/api/v1/crates/new", &[2, 0, 0, 0, b'{', b'}', 0, 0]);
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json());
+    assert!(app.stored_files().is_empty());
+}
+
+#[test]
+fn tarball_bytes_truncated() {
+    let (app, _, _, token) = TestApp::full().with_token();
+
+    let response = token.put::<()>(
+        "/api/v1/crates/new",
+        &[2, 0, 0, 0, b'{', b'}', 100, 0, 0, 0, 0],
+    );
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json());
     assert!(app.stored_files().is_empty());
 }
