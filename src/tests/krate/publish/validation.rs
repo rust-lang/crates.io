@@ -44,6 +44,20 @@ fn invalid_names() {
 }
 
 #[test]
+fn invalid_version() {
+    let (app, _, _, token) = TestApp::init().with_token();
+
+    let (json, tarball) = PublishBuilder::new("foo", "1.0.0").build();
+    let new_json = json.replace(r#""vers":"1.0.0""#, r#""vers":"broken""#);
+    assert_ne!(json, new_json);
+    let body = PublishBuilder::create_publish_body(&new_json, &tarball);
+
+    let response = token.put::<()>("/api/v1/crates/new", &body);
+    assert_json_snapshot!(response.into_json());
+    assert!(app.stored_files().is_empty());
+}
+
+#[test]
 fn license_and_description_required() {
     let (app, _, _, token) = TestApp::full().with_token();
 
