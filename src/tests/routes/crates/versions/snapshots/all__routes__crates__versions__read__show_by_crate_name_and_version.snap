@@ -1,32 +1,35 @@
 ---
 source: src/tests/routes/crates/versions/read.rs
-assertion_line: 23
 expression: json
 ---
-version:
-  audit_actions: []
-  checksum: c241cd77c3723ccf1aa453f169ee60c0a888344da504bee0142adb859092acb4
-  crate: foo_vers_show
-  crate_size: 1234
-  created_at: "[datetime]"
-  dl_path: /api/v1/crates/foo_vers_show/2.0.0/download
-  downloads: 0
-  features: {}
-  id: "[id]"
-  license: ~
-  links:
-    authors: /api/v1/crates/foo_vers_show/2.0.0/authors
-    dependencies: /api/v1/crates/foo_vers_show/2.0.0/dependencies
-    version_downloads: /api/v1/crates/foo_vers_show/2.0.0/downloads
-  num: 2.0.0
-  published_by:
-    avatar: ~
-    id: "[id]"
-    login: foo
-    name: ~
-    url: "https://github.com/foo"
-  readme_path: /api/v1/crates/foo_vers_show/2.0.0/readme
-  rust_version: "1.64"
-  updated_at: "[datetime]"
-  yanked: false
-
+{
+  "version": {
+    "audit_actions": [],
+    "checksum": "c241cd77c3723ccf1aa453f169ee60c0a888344da504bee0142adb859092acb4",
+    "crate": "foo_vers_show",
+    "crate_size": 1234,
+    "created_at": "[datetime]",
+    "dl_path": "/api/v1/crates/foo_vers_show/2.0.0/download",
+    "downloads": 0,
+    "features": {},
+    "id": "[id]",
+    "license": null,
+    "links": {
+      "authors": "/api/v1/crates/foo_vers_show/2.0.0/authors",
+      "dependencies": "/api/v1/crates/foo_vers_show/2.0.0/dependencies",
+      "version_downloads": "/api/v1/crates/foo_vers_show/2.0.0/downloads"
+    },
+    "num": "2.0.0",
+    "published_by": {
+      "avatar": null,
+      "id": "[id]",
+      "login": "foo",
+      "name": null,
+      "url": "https://github.com/foo"
+    },
+    "readme_path": "/api/v1/crates/foo_vers_show/2.0.0/readme",
+    "rust_version": "1.64",
+    "updated_at": "[datetime]",
+    "yanked": false
+  }
+}

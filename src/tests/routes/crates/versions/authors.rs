@@ -1,6 +1,6 @@
 use crate::builders::CrateBuilder;
 use crate::util::{RequestHelper, TestApp};
-use insta::assert_yaml_snapshot;
+use insta::assert_json_snapshot;
 use serde_json::Value;
 
 #[test]
@@ -16,5 +16,5 @@ fn authors() {
 
     let json: Value = anon.get("/api/v1/crates/foo_authors/1.0.0/authors").good();
     let json = json.as_object().unwrap();
-    assert_yaml_snapshot!(json);
+    assert_json_snapshot!(json);
 }

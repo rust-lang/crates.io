@@ -1,5 +1,5 @@
 use crate::builders::{CrateBuilder, VersionBuilder};
-use crate::util::insta::{self, assert_yaml_snapshot};
+use crate::util::insta::{self, assert_json_snapshot};
 use crate::util::{RequestHelper, TestApp};
 use serde_json::Value;
 
@@ -17,7 +17,7 @@ fn show_by_id() {
 
     let url = format!("/api/v1/versions/{}", v.id);
     let json: Value = anon.get(&url).good();
-    assert_yaml_snapshot!(json, {
+    assert_json_snapshot!(json, {
         ".version.id" => insta::id_redaction(v.id),
         ".version.created_at" => "[datetime]",
         ".version.updated_at" => "[datetime]",

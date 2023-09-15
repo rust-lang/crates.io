@@ -1,5 +1,5 @@
 use crate::builders::{CrateBuilder, VersionBuilder};
-use crate::util::insta::{self, assert_yaml_snapshot};
+use crate::util::insta::{self, assert_json_snapshot};
 use crate::util::{RequestHelper, TestApp};
 use diesel::prelude::*;
 use serde_json::Value;
@@ -20,7 +20,7 @@ fn show_by_crate_name_and_version() {
 
     let url = "/api/v1/crates/foo_vers_show/2.0.0";
     let json: Value = anon.get(url).good();
-    assert_yaml_snapshot!(json, {
+    assert_json_snapshot!(json, {
         ".version.id" => insta::id_redaction(v.id),
         ".version.created_at" => "[datetime]",
         ".version.updated_at" => "[datetime]",
@@ -52,7 +52,7 @@ fn show_by_crate_name_and_semver_no_published_by() {
 
     let url = "/api/v1/crates/foo_vers_show_no_pb/1.0.0";
     let json: Value = anon.get(url).good();
-    assert_yaml_snapshot!(json, {
+    assert_json_snapshot!(json, {
         ".version.id" => insta::id_redaction(v.id),
         ".version.created_at" => "[datetime]",
         ".version.updated_at" => "[datetime]",

@@ -1,9 +1,10 @@
 ---
 source: src/tests/routes/categories/list.rs
-assertion_line: 12
 expression: json
 ---
-categories: []
-meta:
-  total: 0
-
+{
+  "categories": [],
+  "meta": {
+    "total": 0
+  }
+}

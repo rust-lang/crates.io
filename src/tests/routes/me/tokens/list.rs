@@ -1,4 +1,4 @@
-use crate::util::insta::{self, assert_yaml_snapshot};
+use crate::util::insta::{self, assert_json_snapshot};
 use crate::util::{RequestHelper, TestApp};
 use chrono::{Duration, Utc};
 use crates_io::models::token::{CrateScope, EndpointScope};
@@ -58,7 +58,7 @@ fn list_tokens() {
 
     let response = user.get::<()>("/api/v1/me/tokens");
     assert_eq!(response.status(), StatusCode::OK);
-    assert_yaml_snapshot!(response.into_json(), {
+    assert_json_snapshot!(response.into_json(), {
         ".api_tokens[].id" => insta::any_id_redaction(),
         ".api_tokens[].created_at" => "[datetime]",
         ".api_tokens[].last_used_at" => "[datetime]",

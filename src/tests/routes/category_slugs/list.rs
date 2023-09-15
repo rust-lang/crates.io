@@ -1,6 +1,6 @@
 use crate::new_category;
 use crate::util::{RequestHelper, TestApp};
-use insta::assert_yaml_snapshot;
+use insta::assert_json_snapshot;
 use serde_json::Value;
 
 #[test]
@@ -16,5 +16,5 @@ fn category_slugs_returns_all_slugs_in_alphabetical_order() {
     });
 
     let response: Value = anon.get("/api/v1/category_slugs").good();
-    assert_yaml_snapshot!(response);
+    assert_json_snapshot!(response);
 }

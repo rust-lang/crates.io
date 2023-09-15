@@ -1,27 +1,29 @@
 ---
 source: src/tests/routes/crates/versions/read.rs
-assertion_line: 54
 expression: json
 ---
-version:
-  audit_actions: []
-  checksum: "                                                                "
-  crate: foo_vers_show_no_pb
-  crate_size: 0
-  created_at: "[datetime]"
-  dl_path: /api/v1/crates/foo_vers_show_no_pb/1.0.0/download
-  downloads: 0
-  features: {}
-  id: "[id]"
-  license: ~
-  links:
-    authors: /api/v1/crates/foo_vers_show_no_pb/1.0.0/authors
-    dependencies: /api/v1/crates/foo_vers_show_no_pb/1.0.0/dependencies
-    version_downloads: /api/v1/crates/foo_vers_show_no_pb/1.0.0/downloads
-  num: 1.0.0
-  published_by: ~
-  readme_path: /api/v1/crates/foo_vers_show_no_pb/1.0.0/readme
-  rust_version: ~
-  updated_at: "[datetime]"
-  yanked: false
-
+{
+  "version": {
+    "audit_actions": [],
+    "checksum": "                                                                ",
+    "crate": "foo_vers_show_no_pb",
+    "crate_size": 0,
+    "created_at": "[datetime]",
+    "dl_path": "/api/v1/crates/foo_vers_show_no_pb/1.0.0/download",
+    "downloads": 0,
+    "features": {},
+    "id": "[id]",
+    "license": null,
+    "links": {
+      "authors": "/api/v1/crates/foo_vers_show_no_pb/1.0.0/authors",
+      "dependencies": "/api/v1/crates/foo_vers_show_no_pb/1.0.0/dependencies",
+      "version_downloads": "/api/v1/crates/foo_vers_show_no_pb/1.0.0/downloads"
+    },
+    "num": "1.0.0",
+    "published_by": null,
+    "readme_path": "/api/v1/crates/foo_vers_show_no_pb/1.0.0/readme",
+    "rust_version": null,
+    "updated_at": "[datetime]",
+    "yanked": false
+  }
+}

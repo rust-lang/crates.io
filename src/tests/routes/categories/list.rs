@@ -1,6 +1,6 @@
 use crate::new_category;
 use crate::util::{RequestHelper, TestApp};
-use insta::assert_yaml_snapshot;
+use insta::assert_json_snapshot;
 use serde_json::Value;
 
 #[test]
@@ -9,7 +9,7 @@ fn index() {
 
     // List 0 categories if none exist
     let json: Value = anon.get("/api/v1/categories").good();
-    assert_yaml_snapshot!(json);
+    assert_json_snapshot!(json);
 
     // Create a category and a subcategory
     app.db(|conn| {
@@ -23,7 +23,7 @@ fn index() {
 
     // Only the top-level categories should be on the page
     let json: Value = anon.get("/api/v1/categories").good();
-    assert_yaml_snapshot!(json, {
+    assert_json_snapshot!(json, {
         ".categories[].created_at" => "[datetime]",
     });
 }

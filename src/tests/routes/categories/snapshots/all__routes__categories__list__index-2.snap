@@ -1,15 +1,19 @@
 ---
 source: src/tests/routes/categories/list.rs
-assertion_line: 26
 expression: json
 ---
-categories:
-  - category: foo
-    crates_cnt: 0
-    created_at: "[datetime]"
-    description: Foo crates
-    id: foo
-    slug: foo
-meta:
-  total: 1
-
+{
+  "categories": [
+    {
+      "category": "foo",
+      "crates_cnt": 0,
+      "created_at": "[datetime]",
+      "description": "Foo crates",
+      "id": "foo",
+      "slug": "foo"
+    }
+  ],
+  "meta": {
+    "total": 1
+  }
+}

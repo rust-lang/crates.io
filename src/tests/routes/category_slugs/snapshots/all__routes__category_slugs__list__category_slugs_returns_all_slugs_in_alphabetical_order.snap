@@ -1,13 +1,18 @@
 ---
 source: src/tests/routes/category_slugs/list.rs
-assertion_line: 19
 expression: response
 ---
-category_slugs:
-  - description: For crates that bar
-    id: bar
-    slug: bar
-  - description: For crates that foo
-    id: foo
-    slug: foo
-
+{
+  "category_slugs": [
+    {
+      "description": "For crates that bar",
+      "id": "bar",
+      "slug": "bar"
+    },
+    {
+      "description": "For crates that foo",
+      "id": "foo",
+      "slug": "foo"
+    }
+  ]
+}

@@ -3,7 +3,7 @@ use crate::util::{RequestHelper, TestApp};
 use crates_io::schema::api_tokens;
 use diesel::{ExpressionMethods, RunQueryDsl};
 use http::StatusCode;
-use insta::assert_yaml_snapshot;
+use insta::assert_json_snapshot;
 
 #[test]
 fn new_wrong_token() {
@@ -52,7 +52,7 @@ fn new_krate_wrong_user() {
 
     let response = another_user.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_yaml_snapshot!(response.into_json());
+    assert_json_snapshot!(response.into_json());
 
     assert!(app.stored_files().is_empty());
 }

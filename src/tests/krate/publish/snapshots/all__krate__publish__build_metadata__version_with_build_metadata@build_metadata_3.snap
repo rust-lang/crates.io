@@ -2,34 +2,38 @@
 source: src/tests/krate/publish/build_metadata.rs
 expression: response.into_json()
 ---
-crate:
-  badges: ~
-  categories: ~
-  created_at: "[datetime]"
-  description: description
-  documentation: ~
-  downloads: 0
-  exact_match: false
-  homepage: ~
-  id: foo
-  keywords: ~
-  links:
-    owner_team: /api/v1/crates/foo/owner_team
-    owner_user: /api/v1/crates/foo/owner_user
-    owners: /api/v1/crates/foo/owners
-    reverse_dependencies: /api/v1/crates/foo/reverse_dependencies
-    version_downloads: /api/v1/crates/foo/downloads
-    versions: /api/v1/crates/foo/versions
-  max_stable_version: 1.0.0+foo
-  max_version: 1.0.0+foo
-  name: foo
-  newest_version: 1.0.0+foo
-  recent_downloads: ~
-  repository: ~
-  updated_at: "[datetime]"
-  versions: ~
-warnings:
-  invalid_badges: []
-  invalid_categories: []
-  other: []
-
+{
+  "crate": {
+    "badges": null,
+    "categories": null,
+    "created_at": "[datetime]",
+    "description": "description",
+    "documentation": null,
+    "downloads": 0,
+    "exact_match": false,
+    "homepage": null,
+    "id": "foo",
+    "keywords": null,
+    "links": {
+      "owner_team": "/api/v1/crates/foo/owner_team",
+      "owner_user": "/api/v1/crates/foo/owner_user",
+      "owners": "/api/v1/crates/foo/owners",
+      "reverse_dependencies": "/api/v1/crates/foo/reverse_dependencies",
+      "version_downloads": "/api/v1/crates/foo/downloads",
+      "versions": "/api/v1/crates/foo/versions"
+    },
+    "max_stable_version": "1.0.0+foo",
+    "max_version": "1.0.0+foo",
+    "name": "foo",
+    "newest_version": "1.0.0+foo",
+    "recent_downloads": null,
+    "repository": null,
+    "updated_at": "[datetime]",
+    "versions": null
+  },
+  "warnings": {
+    "invalid_badges": [],
+    "invalid_categories": [],
+    "other": []
+  }
+}
