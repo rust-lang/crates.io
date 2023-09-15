@@ -26,8 +26,7 @@ use crate::views::{
     EncodableCrate, EncodableCrateDependency, EncodableCrateUpload, GoodCrate, PublishWarnings,
 };
 
-pub const MISSING_RIGHTS_ERROR_MESSAGE: &str =
-    "this crate exists but you don't seem to be an owner. \
+const MISSING_RIGHTS_ERROR_MESSAGE: &str = "this crate exists but you don't seem to be an owner. \
      If you believe this is a mistake, perhaps you need \
      to accept an invitation to be an owner before \
      publishing.";
