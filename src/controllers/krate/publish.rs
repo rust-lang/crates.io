@@ -320,13 +320,13 @@ fn split_body<R: RequestPartsExt>(mut bytes: Bytes, req: &R) -> AppResult<(Bytes
 
     if bytes.len() < 4 {
         // Avoid panic in `get_u32_le()` if there is not enough remaining data
-        return Err(cargo_err("invalid metadata length"));
+        return Err(cargo_err("invalid tarball length"));
     }
 
     let tarball_len = bytes.get_u32_le() as usize;
     if tarball_len > bytes.len() {
         return Err(cargo_err(&format!(
-            "invalid metadata length for remaining payload: {tarball_len}"
+            "invalid tarball length for remaining payload: {tarball_len}"
         )));
     }
 
