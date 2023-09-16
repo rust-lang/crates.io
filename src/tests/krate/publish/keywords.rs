@@ -1,6 +1,7 @@
 use crate::builders::PublishBuilder;
 use crate::util::{RequestHelper, TestApp};
 use http::StatusCode;
+use insta::assert_json_snapshot;
 
 #[test]
 fn good_keywords() {
@@ -41,4 +42,21 @@ fn bad_keywords() {
         response.into_json(),
         json!({ "errors": [{ "detail": "invalid upload request: invalid value: string \"áccênts\", expected a valid keyword specifier at line 1 column 183" }] })
     );
+}
+
+#[test]
+fn too_many_keywords() {
+    let (app, _, _, token) = TestApp::full().with_token();
+    let response = token.publish_crate(
+        PublishBuilder::new("foo", "1.0.0")
+            .keyword("one")
+            .keyword("two")
+            .keyword("three")
+            .keyword("four")
+            .keyword("five")
+            .keyword("six"),
+    );
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json());
+    assert!(app.stored_files().is_empty());
 }

@@ -1,0 +1,11 @@
+---
+source: src/tests/krate/publish/keywords.rs
+expression: response.into_json()
+---
+{
+  "errors": [
+    {
+      "detail": "invalid upload request: invalid length 6, expected at most 5 keywords per crate at line 1 column 203"
+    }
+  ]
+}
