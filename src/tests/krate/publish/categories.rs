@@ -1,6 +1,8 @@
 use crate::builders::PublishBuilder;
 use crate::new_category;
 use crate::util::{RequestHelper, TestApp};
+use http::StatusCode;
+use insta::assert_json_snapshot;
 
 #[test]
 fn good_categories() {
@@ -30,4 +32,22 @@ fn ignored_categories() {
     assert_eq!(json.krate.name, "foo_ignored_cat");
     assert_eq!(json.krate.max_version, "1.0.0");
     assert_eq!(json.warnings.invalid_categories, vec!["bar"]);
+}
+
+#[test]
+fn too_many_categories() {
+    let (app, _, _, token) = TestApp::full().with_token();
+
+    let response = token.publish_crate(
+        PublishBuilder::new("foo", "1.0.0")
+            .category("one")
+            .category("two")
+            .category("three")
+            .category("four")
+            .category("five")
+            .category("six"),
+    );
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json());
+    assert!(app.stored_files().is_empty());
 }
