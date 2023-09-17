@@ -1,6 +1,7 @@
 use crate::builders::{CrateBuilder, DependencyBuilder, PublishBuilder};
 use crate::util::{RequestHelper, TestApp};
 use http::StatusCode;
+use insta::assert_json_snapshot;
 
 #[test]
 fn new_with_renamed_dependency() {
@@ -23,6 +24,24 @@ fn new_with_renamed_dependency() {
     assert_eq!(crates[0].deps.len(), 1);
     assert_eq!(crates[0].deps[0].name, "my-name");
     assert_eq!(crates[0].deps[0].package.as_ref().unwrap(), "package-name");
+}
+
+#[test]
+fn invalid_dependency_rename() {
+    let (app, _, user, token) = TestApp::full().with_token();
+
+    app.db(|conn| {
+        // Insert a crate directly into the database so that new-krate can depend on it
+        CrateBuilder::new("package-name", user.as_model().id).expect_build(conn);
+    });
+
+    let response = token.publish_crate(
+        PublishBuilder::new("new-krate", "1.0.0")
+            .dependency(DependencyBuilder::new("package-name").rename("💩")),
+    );
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json());
+    assert!(app.stored_files().is_empty());
 }
 
 #[test]

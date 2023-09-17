@@ -5,6 +5,19 @@ use http::StatusCode;
 use insta::assert_json_snapshot;
 
 #[test]
+fn empty_json() {
+    let (app, _, _, token) = TestApp::full().with_token();
+
+    let (_json, tarball) = PublishBuilder::new("foo", "1.0.0").build();
+    let body = PublishBuilder::create_publish_body("{}", &tarball);
+
+    let response = token.put::<()>("/api/v1/crates/new", &body);
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json());
+    assert!(app.stored_files().is_empty());
+}
+
+#[test]
 fn invalid_names() {
     let (app, _, _, token) = TestApp::full().with_token();
 
@@ -27,6 +40,20 @@ fn invalid_names() {
     bad_name("compiler_rt");
     bad_name("coMpiLer_Rt");
 
+    assert!(app.stored_files().is_empty());
+}
+
+#[test]
+fn invalid_version() {
+    let (app, _, _, token) = TestApp::init().with_token();
+
+    let (json, tarball) = PublishBuilder::new("foo", "1.0.0").build();
+    let new_json = json.replace(r#""vers":"1.0.0""#, r#""vers":"broken""#);
+    assert_ne!(json, new_json);
+    let body = PublishBuilder::create_publish_body(&new_json, &tarball);
+
+    let response = token.put::<()>("/api/v1/crates/new", &body);
+    assert_json_snapshot!(response.into_json());
     assert!(app.stored_files().is_empty());
 }
 

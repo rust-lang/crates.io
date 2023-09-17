@@ -1,0 +1,11 @@
+---
+source: src/tests/krate/publish/validation.rs
+expression: response.into_json()
+---
+{
+  "errors": [
+    {
+      "detail": "invalid upload request: invalid value: string \"broken\", expected a valid semver at line 1 column 29"
+    }
+  ]
+}

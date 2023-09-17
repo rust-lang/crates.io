@@ -1,5 +1,7 @@
 use crate::builders::{CrateBuilder, DependencyBuilder, PublishBuilder};
 use crate::util::{RequestHelper, TestApp};
+use http::StatusCode;
+use insta::assert_json_snapshot;
 use std::collections::BTreeMap;
 
 #[test]
@@ -31,4 +33,26 @@ fn features_version_2() {
         vec!["dep:bar".to_string(), "bar?/feat".to_string()],
     )]);
     assert_eq!(crates[0].features2, Some(features2));
+}
+
+#[test]
+fn invalid_feature_name() {
+    let (app, _, _, token) = TestApp::full().with_token();
+
+    let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("~foo", &[]);
+    let response = token.publish_crate(crate_to_publish);
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json());
+    assert!(app.stored_files().is_empty());
+}
+
+#[test]
+fn invalid_feature() {
+    let (app, _, _, token) = TestApp::full().with_token();
+
+    let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("foo", &["!bar"]);
+    let response = token.publish_crate(crate_to_publish);
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json());
+    assert!(app.stored_files().is_empty());
 }
