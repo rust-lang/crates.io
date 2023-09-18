@@ -34,13 +34,13 @@ pub struct EncodableCrateUpload {
     pub links: Option<String>,
 }
 
-#[derive(PartialEq, Eq, Hash, Serialize, Debug, Deref)]
+#[derive(PartialEq, Eq, Hash, Serialize, Clone, Debug, Deref)]
 pub struct EncodableCrateName(pub String);
-#[derive(Serialize, Debug, Deref)]
+#[derive(Serialize, Clone, Debug, Deref)]
 pub struct EncodableDependencyName(pub String);
 #[derive(Serialize, Debug, Deref)]
 pub struct EncodableCrateVersion(pub semver::Version);
-#[derive(Serialize, Debug, Deref)]
+#[derive(Serialize, Clone, Debug, Deref)]
 pub struct EncodableCrateVersionReq(pub String);
 #[derive(Serialize, Debug, Deref, Default)]
 pub struct EncodableKeywordList(pub Vec<EncodableKeyword>);
@@ -55,7 +55,7 @@ pub struct EncodableFeature(pub String);
 #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Clone, Debug, Deref)]
 pub struct EncodableFeatureName(pub String);
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct EncodableCrateDependency {
     pub optional: bool,
     pub default_features: bool,

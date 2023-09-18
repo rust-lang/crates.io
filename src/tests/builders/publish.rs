@@ -1,4 +1,5 @@
-use cargo_manifest::{FeatureSet, MaybeInherited};
+use cargo_manifest::{DependencyDetail, DepsSet, FeatureSet, MaybeInherited};
+use crates_io::models::DependencyKind;
 use crates_io::views::krate_publish as u;
 use hyper::body::Bytes;
 use std::collections::BTreeMap;
@@ -140,7 +141,7 @@ impl PublishBuilder {
             name: u::EncodableCrateName(self.krate_name.clone()),
             vers: u::EncodableCrateVersion(self.version.clone()),
             features: self.features.clone(),
-            deps: self.deps,
+            deps: self.deps.clone(),
             description: self.desc.clone(),
             homepage: None,
             documentation: self.doc_url.clone(),
@@ -182,8 +183,24 @@ impl PublishBuilder {
                 package.license = self.license.map(MaybeInherited::Local);
                 package.license_file = self.license_file.map(MaybeInherited::Local);
 
+                let mut build_deps = DepsSet::new();
+                let mut deps = DepsSet::new();
+                let mut dev_deps = DepsSet::new();
+
+                for encoded in self.deps {
+                    let (name, dependency) = convert_dependency(&encoded);
+                    match encoded.kind {
+                        Some(DependencyKind::Build) => build_deps.insert(name, dependency),
+                        None | Some(DependencyKind::Normal) => deps.insert(name, dependency),
+                        Some(DependencyKind::Dev) => dev_deps.insert(name, dependency),
+                    };
+                }
+
                 let manifest = cargo_manifest::Manifest {
                     package: Some(package),
+                    build_dependencies: build_deps.none_or_filled(),
+                    dependencies: deps.none_or_filled(),
+                    dev_dependencies: dev_deps.none_or_filled(),
                     features: convert_features(self.features).none_or_filled(),
                     ..Default::default()
                 };
@@ -232,6 +249,58 @@ impl PublishBuilder {
 
         body
     }
+}
+
+fn convert_dependency(
+    encoded: &u::EncodableCrateDependency,
+) -> (String, cargo_manifest::Dependency) {
+    if is_simple_dependency(encoded) {
+        let dependency = cargo_manifest::Dependency::Simple(encoded.version_req.to_string());
+        return (encoded.name.to_string(), dependency);
+    }
+
+    let (name, package) = match encoded.explicit_name_in_toml.as_ref() {
+        None => (encoded.name.to_string(), None),
+        Some(explicit_name_in_toml) => (
+            explicit_name_in_toml.to_string(),
+            Some(encoded.name.to_string()),
+        ),
+    };
+
+    let features = encoded
+        .features
+        .iter()
+        .map(|f| f.to_string())
+        .collect::<Vec<_>>()
+        .none_or_filled();
+
+    let dependency = DependencyDetail {
+        version: Some(encoded.version_req.to_string()),
+        registry: encoded.registry.clone(),
+        features,
+        optional: match encoded.optional {
+            true => Some(true),
+            false => None,
+        },
+        default_features: match encoded.default_features {
+            true => None,
+            false => Some(false),
+        },
+        package,
+        ..Default::default()
+    };
+
+    let dependency = cargo_manifest::Dependency::Detailed(dependency);
+    (name, dependency)
+}
+
+fn is_simple_dependency(dep: &u::EncodableCrateDependency) -> bool {
+    !dep.optional
+        && dep.default_features
+        && dep.features.is_empty()
+        && dep.target.is_none()
+        && dep.explicit_name_in_toml.is_none()
+        && dep.registry.is_none()
 }
 
 fn convert_features(
