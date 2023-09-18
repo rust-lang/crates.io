@@ -165,11 +165,17 @@ impl PublishBuilder {
         match self.manifest {
             Manifest::None => {}
             Manifest::Generated => {
-                let manifest = format!(
-                    "[package]\nname = \"{name}\"\nversion = \"{version}\"\n",
-                    name = self.krate_name,
-                    version = self.version
+                let package = cargo_manifest::Package::<()>::new(
+                    self.krate_name.clone(),
+                    self.version.to_string(),
                 );
+
+                let manifest = cargo_manifest::Manifest {
+                    package: Some(package),
+                    ..Default::default()
+                };
+
+                let manifest = toml::to_string(&manifest).unwrap();
 
                 tarball_builder = tarball_builder.add_raw_manifest(manifest.as_bytes());
             }

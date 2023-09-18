@@ -97,6 +97,7 @@ tracing-subscriber = { version = "=0.3.17", features = ["env-filter"] }
 url = "=2.4.1"
 
 [dev-dependencies]
+cargo-manifest = "=0.11.1"
 crates_io_index = { path = "crates_io_index", features = ["testing"] }
 crates_io_tarball = { path = "crates_io_tarball", features = ["builder"] }
 claims = "=0.7.1"

@@ -676,6 +676,7 @@ dependencies = [
  "axum-extra",
  "base64 0.21.4",
  "bigdecimal",
+ "cargo-manifest",
  "chrono",
  "claims",
  "clap",
