@@ -339,7 +339,9 @@ impl MockTokenUser {
 
     /// Add to the specified crate the specified owners.
     pub fn add_named_owners(&self, krate_name: &str, owners: &[&str]) -> Response<OkBool> {
-        self.modify_owners(krate_name, owners, Self::put)
+        let url = format!("/api/v1/crates/{krate_name}/owners");
+        let body = json!({ "owners": owners }).to_string();
+        self.put(&url, body.as_bytes())
     }
 
     /// Add a single owner to the specified crate.
@@ -349,21 +351,14 @@ impl MockTokenUser {
 
     /// Remove from the specified crate the specified owners.
     pub fn remove_named_owners(&self, krate_name: &str, owners: &[&str]) -> Response<OkBool> {
-        self.modify_owners(krate_name, owners, Self::delete_with_body)
+        let url = format!("/api/v1/crates/{krate_name}/owners");
+        let body = json!({ "owners": owners }).to_string();
+        self.delete_with_body(&url, body.as_bytes())
     }
 
     /// Remove a single owner to the specified crate.
     pub fn remove_named_owner(&self, krate_name: &str, owner: &str) -> Response<OkBool> {
         self.remove_named_owners(krate_name, &[owner])
-    }
-
-    fn modify_owners<F>(&self, krate_name: &str, owners: &[&str], method: F) -> Response<OkBool>
-    where
-        F: Fn(&MockTokenUser, &str, &[u8]) -> Response<OkBool>,
-    {
-        let url = format!("/api/v1/crates/{krate_name}/owners");
-        let body = json!({ "owners": owners }).to_string();
-        method(self, &url, body.as_bytes())
     }
 
     /// Add a user as an owner for a crate.
