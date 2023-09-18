@@ -147,10 +147,15 @@ impl PublishBuilder {
             readme: self.readme,
             readme_file: None,
             keywords: u::EncodableKeywordList(
-                self.keywords.into_iter().map(u::EncodableKeyword).collect(),
+                self.keywords
+                    .clone()
+                    .into_iter()
+                    .map(u::EncodableKeyword)
+                    .collect(),
             ),
             categories: u::EncodableCategoryList(
                 self.categories
+                    .clone()
                     .into_iter()
                     .map(u::EncodableCategory)
                     .collect(),
@@ -170,8 +175,10 @@ impl PublishBuilder {
                     self.krate_name.clone(),
                     self.version.to_string(),
                 );
+                package.categories = self.categories.none_or_filled().map(MaybeInherited::Local);
                 package.description = self.desc.map(MaybeInherited::Local);
                 package.documentation = self.doc_url.map(MaybeInherited::Local);
+                package.keywords = self.keywords.none_or_filled().map(MaybeInherited::Local);
                 package.license = self.license.map(MaybeInherited::Local);
                 package.license_file = self.license_file.map(MaybeInherited::Local);
 
@@ -223,5 +230,19 @@ impl PublishBuilder {
         body.extend(tarball);
 
         body
+    }
+}
+
+trait NoneOrFilled {
+    fn none_or_filled(self) -> Option<Self>;
+}
+
+impl<T> NoneOrFilled for Vec<T> {
+    fn none_or_filled(self) -> Option<Self> {
+        if self.is_empty() {
+            None
+        } else {
+            Some(self)
+        }
     }
 }
