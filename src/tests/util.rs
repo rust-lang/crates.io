@@ -140,7 +140,7 @@ pub trait RequestHelper {
     #[track_caller]
     fn put<T>(&self, path: &str, body: &[u8]) -> Response<T> {
         let mut request = self.request_builder(Method::PUT, path);
-        request.with_body(body);
+        *request.body_mut() = body.to_vec().into();
         self.run(request)
     }
 
@@ -155,7 +155,7 @@ pub trait RequestHelper {
     #[track_caller]
     fn delete_with_body<T>(&self, path: &str, body: &[u8]) -> Response<T> {
         let mut request = self.request_builder(Method::DELETE, path);
-        request.with_body(body);
+        *request.body_mut() = body.to_vec().into();
         self.run(request)
     }
 

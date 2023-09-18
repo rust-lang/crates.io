@@ -4,16 +4,10 @@ use http::{header::IntoHeaderName, HeaderValue, Request};
 pub type MockRequest = Request<Bytes>;
 
 pub trait MockRequestExt {
-    fn with_body(&mut self, bytes: &[u8]);
-
     fn header<K: IntoHeaderName>(&mut self, name: K, value: &str);
 }
 
 impl MockRequestExt for MockRequest {
-    fn with_body(&mut self, bytes: &[u8]) {
-        *self.body_mut() = bytes.to_vec().into();
-    }
-
     fn header<K>(&mut self, name: K, value: &str)
     where
         K: IntoHeaderName,
@@ -51,7 +45,7 @@ mod tests {
     #[test]
     fn request_body_test() {
         let mut req = mock_request(Method::POST, "/articles");
-        req.with_body(b"Hello world");
+        *req.body_mut() = Bytes::from_static(b"Hello world");
 
         assert_eq!(req.method(), Method::POST);
         assert_eq!(req.uri(), "/articles");
