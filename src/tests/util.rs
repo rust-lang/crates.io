@@ -138,9 +138,9 @@ pub trait RequestHelper {
 
     /// Issue a PUT request
     #[track_caller]
-    fn put<T>(&self, path: &str, body: &[u8]) -> Response<T> {
+    fn put<T>(&self, path: &str, body: impl Into<Bytes>) -> Response<T> {
         let mut request = self.request_builder(Method::PUT, path);
-        request.with_body(body);
+        *request.body_mut() = body.into();
         self.run(request)
     }
 
@@ -153,9 +153,9 @@ pub trait RequestHelper {
 
     /// Issue a DELETE request with a body... yes we do it, for crate owner removal
     #[track_caller]
-    fn delete_with_body<T>(&self, path: &str, body: &[u8]) -> Response<T> {
+    fn delete_with_body<T>(&self, path: &str, body: impl Into<Bytes>) -> Response<T> {
         let mut request = self.request_builder(Method::DELETE, path);
-        request.with_body(body);
+        *request.body_mut() = body.into();
         self.run(request)
     }
 
@@ -174,7 +174,7 @@ pub trait RequestHelper {
     /// Background jobs will publish to the git index and sync to the HTTP index.
     #[track_caller]
     fn publish_crate(&self, publish_builder: PublishBuilder) -> Response<GoodCrate> {
-        let response = self.put("/api/v1/crates/new", &publish_builder.body());
+        let response = self.put("/api/v1/crates/new", publish_builder.body());
         self.app().run_pending_background_jobs();
         response
     }
@@ -341,7 +341,7 @@ impl MockTokenUser {
     pub fn add_named_owners(&self, krate_name: &str, owners: &[&str]) -> Response<OkBool> {
         let url = format!("/api/v1/crates/{krate_name}/owners");
         let body = json!({ "owners": owners }).to_string();
-        self.put(&url, body.as_bytes())
+        self.put(&url, body)
     }
 
     /// Add a single owner to the specified crate.
@@ -353,7 +353,7 @@ impl MockTokenUser {
     pub fn remove_named_owners(&self, krate_name: &str, owners: &[&str]) -> Response<OkBool> {
         let url = format!("/api/v1/crates/{krate_name}/owners");
         let body = json!({ "owners": owners }).to_string();
-        self.delete_with_body(&url, body.as_bytes())
+        self.delete_with_body(&url, body)
     }
 
     /// Remove a single owner to the specified crate.

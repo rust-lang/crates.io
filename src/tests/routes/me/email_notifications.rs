@@ -12,11 +12,8 @@ struct EmailNotificationsUpdate {
 
 impl crate::util::MockCookieUser {
     fn update_email_notifications(&self, updates: Vec<EmailNotificationsUpdate>) -> OkBool {
-        self.put(
-            "/api/v1/me/email_notifications",
-            json!(updates).to_string().as_bytes(),
-        )
-        .good()
+        self.put("/api/v1/me/email_notifications", json!(updates).to_string())
+            .good()
     }
 }
 

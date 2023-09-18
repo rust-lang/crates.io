@@ -50,9 +50,9 @@ fn following() {
     assert_eq!(r.versions.len(), 0);
     assert!(!r.meta.more);
 
-    user.put::<OkBool>("/api/v1/crates/foo_fighters/follow", b"")
+    user.put::<OkBool>("/api/v1/crates/foo_fighters/follow", b"" as &[u8])
         .good();
-    user.put::<OkBool>("/api/v1/crates/bar_fighters/follow", b"")
+    user.put::<OkBool>("/api/v1/crates/bar_fighters/follow", b"" as &[u8])
         .good();
 
     let r: R = user.get("/api/v1/me/updates").good();

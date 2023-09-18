@@ -11,7 +11,7 @@ fn empty_json() {
     let (_json, tarball) = PublishBuilder::new("foo", "1.0.0").build();
     let body = PublishBuilder::create_publish_body("{}", &tarball);
 
-    let response = token.put::<()>("/api/v1/crates/new", &body);
+    let response = token.put::<()>("/api/v1/crates/new", body);
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
     assert!(app.stored_files().is_empty());
@@ -52,7 +52,7 @@ fn invalid_version() {
     assert_ne!(json, new_json);
     let body = PublishBuilder::create_publish_body(&new_json, &tarball);
 
-    let response = token.put::<()>("/api/v1/crates/new", &body);
+    let response = token.put::<()>("/api/v1/crates/new", body);
     assert_json_snapshot!(response.into_json());
     assert!(app.stored_files().is_empty());
 }

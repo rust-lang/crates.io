@@ -10,7 +10,7 @@ use secrecy::ExposeSecret;
 impl crate::util::MockCookieUser {
     fn confirm_email(&self, email_token: &str) -> OkBool {
         let url = format!("/api/v1/confirm/{email_token}");
-        self.put(&url, &[]).good()
+        self.put(&url, &[] as &[u8]).good()
     }
 }
 

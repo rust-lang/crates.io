@@ -28,7 +28,7 @@ fn test_cargo_invite_owners() {
         owners: Some(vec![new_user.as_model().gh_login.clone()]),
     });
     let json: OwnerResp = owner
-        .put("/api/v1/crates/guacamole/owners", body.unwrap().as_bytes())
+        .put("/api/v1/crates/guacamole/owners", body.unwrap())
         .good();
 
     // this ok:true field is what old versions of Cargo

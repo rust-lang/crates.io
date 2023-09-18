@@ -44,7 +44,7 @@ fn github_secret_alert_revokes_token() {
     });
 
     let mut request = anon.post_request(URL);
-    request.with_body(GITHUB_ALERT);
+    *request.body_mut() = GITHUB_ALERT.into();
     request.header("GITHUB-PUBLIC-KEY-IDENTIFIER", GITHUB_PUBLIC_KEY_IDENTIFIER);
     request.header("GITHUB-PUBLIC-KEY-SIGNATURE", GITHUB_PUBLIC_KEY_SIGNATURE);
     let response = anon.run::<Vec<GitHubSecretAlertFeedback>>(request);
@@ -108,7 +108,7 @@ fn github_secret_alert_for_revoked_token() {
     });
 
     let mut request = anon.post_request(URL);
-    request.with_body(GITHUB_ALERT);
+    *request.body_mut() = GITHUB_ALERT.into();
     request.header("GITHUB-PUBLIC-KEY-IDENTIFIER", GITHUB_PUBLIC_KEY_IDENTIFIER);
     request.header("GITHUB-PUBLIC-KEY-SIGNATURE", GITHUB_PUBLIC_KEY_SIGNATURE);
     let response = anon.run::<Vec<GitHubSecretAlertFeedback>>(request);
@@ -160,7 +160,7 @@ fn github_secret_alert_for_unknown_token() {
     });
 
     let mut request = anon.post_request(URL);
-    request.with_body(GITHUB_ALERT);
+    *request.body_mut() = GITHUB_ALERT.into();
     request.header("GITHUB-PUBLIC-KEY-IDENTIFIER", GITHUB_PUBLIC_KEY_IDENTIFIER);
     request.header("GITHUB-PUBLIC-KEY-SIGNATURE", GITHUB_PUBLIC_KEY_SIGNATURE);
     let response = anon.run::<Vec<GitHubSecretAlertFeedback>>(request);
@@ -201,7 +201,7 @@ fn github_secret_alert_invalid_signature_fails() {
 
     // Request body but no headers
     let mut request = anon.post_request(URL);
-    request.with_body(GITHUB_ALERT);
+    *request.body_mut() = GITHUB_ALERT.into();
     let response = anon.run::<()>(request);
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
 
@@ -214,14 +214,14 @@ fn github_secret_alert_invalid_signature_fails() {
 
     // Request body but only key identifier header
     let mut request = anon.post_request(URL);
-    request.with_body(GITHUB_ALERT);
+    *request.body_mut() = GITHUB_ALERT.into();
     request.header("GITHUB-PUBLIC-KEY-IDENTIFIER", GITHUB_PUBLIC_KEY_IDENTIFIER);
     let response = anon.run::<()>(request);
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
 
     // Invalid signature
     let mut request = anon.post_request(URL);
-    request.with_body(GITHUB_ALERT);
+    *request.body_mut() = GITHUB_ALERT.into();
     request.header("GITHUB-PUBLIC-KEY-IDENTIFIER", GITHUB_PUBLIC_KEY_IDENTIFIER);
     request.header("GITHUB-PUBLIC-KEY-SIGNATURE", "bad signature");
     let response = anon.run::<()>(request);
@@ -229,7 +229,7 @@ fn github_secret_alert_invalid_signature_fails() {
 
     // Invalid signature that is valid base64
     let mut request = anon.post_request(URL);
-    request.with_body(GITHUB_ALERT);
+    *request.body_mut() = GITHUB_ALERT.into();
     request.header("GITHUB-PUBLIC-KEY-IDENTIFIER", GITHUB_PUBLIC_KEY_IDENTIFIER);
     request.header("GITHUB-PUBLIC-KEY-SIGNATURE", "YmFkIHNpZ25hdHVyZQ==");
     let response = anon.run::<()>(request);
