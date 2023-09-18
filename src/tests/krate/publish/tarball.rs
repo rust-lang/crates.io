@@ -7,9 +7,10 @@ use insta::assert_json_snapshot;
 #[test]
 fn new_krate_wrong_files() {
     let (app, _, user) = TestApp::full().with_user();
-    let data: &[u8] = &[1];
-    let files = [("foo-1.0.0/a", data), ("bar-1.0.0/a", data)];
-    let builder = PublishBuilder::new("foo", "1.0.0").files(&files);
+
+    let builder = PublishBuilder::new("foo", "1.0.0")
+        .add_file("foo-1.0.0/a", "")
+        .add_file("bar-1.0.0/a", "");
 
     let response = user.publish_crate(builder);
     assert_eq!(response.status(), StatusCode::OK);
@@ -39,15 +40,17 @@ fn new_krate_tarball_with_hard_links() {
         builder.build()
     };
 
-    let crate_to_publish = PublishBuilder::new("foo", "1.1.0").tarball(tarball);
+    let (json, _tarball) = PublishBuilder::new("foo", "1.1.0").build();
+    let body = PublishBuilder::create_publish_body(&json, &tarball);
 
-    let response = token.publish_crate(crate_to_publish);
+    let response = token.put::<()>("/api/v1/crates/new", body);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.into_json(),
         json!({ "errors": [{ "detail": "unexpected symlink or hard link found: foo-1.1.0/bar" }] })
     );
 
+    app.run_pending_background_jobs();
     assert!(app.stored_files().is_empty());
 }
 

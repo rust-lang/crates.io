@@ -124,14 +124,8 @@ fn version_size() {
     user.publish_crate(crate_to_publish).good();
 
     // Add a file to version 2 so that it's a different size than version 1
-    let files = [
-        (
-            "foo_version_size-2.0.0/Cargo.toml",
-            b"[package]\nname = \"foo_version_size\"\nversion = \"2.0.0\"\n" as &[_],
-        ),
-        ("foo_version_size-2.0.0/big", &[b'a'; 1] as &[_]),
-    ];
-    let crate_to_publish = PublishBuilder::new("foo_version_size", "2.0.0").files(&files);
+    let crate_to_publish = PublishBuilder::new("foo_version_size", "2.0.0")
+        .add_file("foo_version_size-2.0.0/big", "a");
     user.publish_crate(crate_to_publish).good();
 
     let crate_json = user.show_crate("foo_version_size");

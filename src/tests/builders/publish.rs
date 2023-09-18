@@ -1,4 +1,5 @@
 use crates_io::views::krate_publish as u;
+use hyper::body::Bytes;
 use std::collections::BTreeMap;
 
 use crates_io_tarball::TarballBuilder;
@@ -13,57 +14,42 @@ pub struct PublishBuilder {
     deps: Vec<u::EncodableCrateDependency>,
     desc: Option<String>,
     doc_url: Option<String>,
+    files: Vec<(String, Bytes)>,
     keywords: Vec<String>,
     krate_name: String,
     license: Option<String>,
     license_file: Option<String>,
+    manifest: Manifest,
     readme: Option<String>,
-    tarball: Vec<u8>,
     version: semver::Version,
     features: BTreeMap<u::EncodableFeatureName, Vec<u::EncodableFeature>>,
+}
+
+enum Manifest {
+    None,
+    Generated,
+    Custom(Bytes),
 }
 
 impl PublishBuilder {
     /// Create a request to publish a crate with the given name and version, and no files
     /// in its tarball.
     pub fn new(krate_name: &str, version: &str) -> Self {
-        let manifest = format!("[package]\nname = \"{krate_name}\"\nversion = \"{version}\"\n");
-
-        let tarball = TarballBuilder::new(krate_name, version)
-            .add_raw_manifest(manifest.as_bytes())
-            .build();
-
         PublishBuilder {
             categories: vec![],
             deps: vec![],
             desc: Some("description".to_string()),
             doc_url: None,
+            files: vec![],
             keywords: vec![],
             krate_name: krate_name.into(),
             license: Some("MIT".to_string()),
             license_file: None,
+            manifest: Manifest::Generated,
             readme: None,
-            tarball,
             version: semver::Version::parse(version).unwrap(),
             features: BTreeMap::new(),
         }
-    }
-
-    /// Set the files in the crate's tarball.
-    pub fn files(self, files: &[(&str, &[u8])]) -> Self {
-        let mut builder = TarballBuilder::new(&self.krate_name, &self.version.to_string());
-
-        for (name, data) in files {
-            builder = builder.add_file(name, data);
-        }
-
-        self.tarball(builder.build())
-    }
-
-    /// Set the tarball directly to the given Vec of bytes
-    pub fn tarball(mut self, tarball: Vec<u8>) -> Self {
-        self.tarball = tarball;
-        self
     }
 
     /// Add a dependency to this crate. Make sure the dependency already exists in the
@@ -133,10 +119,25 @@ impl PublishBuilder {
         self
     }
 
+    pub fn no_manifest(mut self) -> Self {
+        self.manifest = Manifest::None;
+        self
+    }
+
+    pub fn custom_manifest(mut self, manifest: impl Into<Bytes>) -> Self {
+        self.manifest = Manifest::Custom(manifest.into());
+        self
+    }
+
+    pub fn add_file(mut self, path: impl ToString, content: impl Into<Bytes>) -> Self {
+        self.files.push((path.to_string(), content.into()));
+        self
+    }
+
     pub fn build(self) -> (String, Vec<u8>) {
         let new_crate = u::EncodableCrateUpload {
             name: u::EncodableCrateName(self.krate_name.clone()),
-            vers: u::EncodableCrateVersion(self.version),
+            vers: u::EncodableCrateVersion(self.version.clone()),
             features: self.features,
             deps: self.deps,
             description: self.desc,
@@ -159,7 +160,30 @@ impl PublishBuilder {
             links: None,
         };
 
-        (serde_json::to_string(&new_crate).unwrap(), self.tarball)
+        let mut tarball_builder = TarballBuilder::new(&self.krate_name, &self.version.to_string());
+
+        match self.manifest {
+            Manifest::None => {}
+            Manifest::Generated => {
+                let manifest = format!(
+                    "[package]\nname = \"{name}\"\nversion = \"{version}\"\n",
+                    name = self.krate_name,
+                    version = self.version
+                );
+
+                tarball_builder = tarball_builder.add_raw_manifest(manifest.as_bytes());
+            }
+            Manifest::Custom(bytes) => {
+                tarball_builder = tarball_builder.add_raw_manifest(&bytes);
+            }
+        }
+
+        for (path, content) in self.files {
+            tarball_builder = tarball_builder.add_file(&path, &content);
+        }
+
+        let tarball = tarball_builder.build();
+        (serde_json::to_string(&new_crate).unwrap(), tarball)
     }
 
     /// Consume this builder to make the Put request body
