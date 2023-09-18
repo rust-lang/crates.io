@@ -14,7 +14,7 @@ pub struct PublishBuilder {
     desc: Option<String>,
     doc_url: Option<String>,
     keywords: Vec<String>,
-    pub krate_name: String,
+    krate_name: String,
     license: Option<String>,
     license_file: Option<String>,
     readme: Option<String>,
