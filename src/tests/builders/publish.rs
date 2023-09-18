@@ -1,4 +1,4 @@
-use cargo_manifest::MaybeInherited;
+use cargo_manifest::{FeatureSet, MaybeInherited};
 use crates_io::views::krate_publish as u;
 use hyper::body::Bytes;
 use std::collections::BTreeMap;
@@ -139,7 +139,7 @@ impl PublishBuilder {
         let new_crate = u::EncodableCrateUpload {
             name: u::EncodableCrateName(self.krate_name.clone()),
             vers: u::EncodableCrateVersion(self.version.clone()),
-            features: self.features,
+            features: self.features.clone(),
             deps: self.deps,
             description: self.desc.clone(),
             homepage: None,
@@ -184,6 +184,7 @@ impl PublishBuilder {
 
                 let manifest = cargo_manifest::Manifest {
                     package: Some(package),
+                    features: convert_features(self.features).none_or_filled(),
                     ..Default::default()
                 };
 
@@ -233,11 +234,30 @@ impl PublishBuilder {
     }
 }
 
-trait NoneOrFilled {
+fn convert_features(
+    encoded: BTreeMap<u::EncodableFeatureName, Vec<u::EncodableFeature>>,
+) -> FeatureSet {
+    encoded
+        .into_iter()
+        .map(|(key, value)| (key.0, value.into_iter().map(|f| f.0).collect()))
+        .collect()
+}
+
+trait NoneOrFilled: Sized {
     fn none_or_filled(self) -> Option<Self>;
 }
 
 impl<T> NoneOrFilled for Vec<T> {
+    fn none_or_filled(self) -> Option<Self> {
+        if self.is_empty() {
+            None
+        } else {
+            Some(self)
+        }
+    }
+}
+
+impl<K, V> NoneOrFilled for BTreeMap<K, V> {
     fn none_or_filled(self) -> Option<Self> {
         if self.is_empty() {
             None

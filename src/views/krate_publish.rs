@@ -50,9 +50,9 @@ pub struct EncodableKeyword(pub String);
 pub struct EncodableCategoryList(pub Vec<EncodableCategory>);
 #[derive(Serialize, Deserialize, Debug, Deref)]
 pub struct EncodableCategory(pub String);
-#[derive(Serialize, Debug, Deref)]
+#[derive(Serialize, Clone, Debug, Deref)]
 pub struct EncodableFeature(pub String);
-#[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Debug, Deref)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Clone, Debug, Deref)]
 pub struct EncodableFeatureName(pub String);
 
 #[derive(Serialize, Deserialize, Debug)]
