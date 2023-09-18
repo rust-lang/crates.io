@@ -17,7 +17,7 @@ fn create_token_logged_out() {
 #[test]
 fn create_token_invalid_request() {
     let (_, _, user) = TestApp::init().with_user();
-    let invalid = br#"{ "name": "" }"#;
+    let invalid: &[u8] = br#"{ "name": "" }"#;
     let response = user.put::<()>("/api/v1/me/tokens", invalid);
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
@@ -29,7 +29,7 @@ fn create_token_invalid_request() {
 #[test]
 fn create_token_no_name() {
     let (_, _, user) = TestApp::init().with_user();
-    let empty_name = br#"{ "api_token": { "name": "" } }"#;
+    let empty_name: &[u8] = br#"{ "api_token": { "name": "" } }"#;
     let response = user.put::<()>("/api/v1/me/tokens", empty_name);
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
@@ -107,7 +107,7 @@ fn cannot_create_token_with_token() {
     let (_, _, _, token) = TestApp::init().with_token();
     let response = token.put::<()>(
         "/api/v1/me/tokens",
-        br#"{ "api_token": { "name": "baz" } }"#,
+        br#"{ "api_token": { "name": "baz" } }"# as &[u8],
     );
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
@@ -128,7 +128,7 @@ fn create_token_with_scopes() {
         }
     });
 
-    let response = user.put::<()>("/api/v1/me/tokens", &serde_json::to_vec(&json).unwrap());
+    let response = user.put::<()>("/api/v1/me/tokens", serde_json::to_vec(&json).unwrap());
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json(), {
         ".api_token.id" => insta::any_id_redaction(),
@@ -171,7 +171,7 @@ fn create_token_with_null_scopes() {
         }
     });
 
-    let response = user.put::<()>("/api/v1/me/tokens", &serde_json::to_vec(&json).unwrap());
+    let response = user.put::<()>("/api/v1/me/tokens", serde_json::to_vec(&json).unwrap());
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json(), {
         ".api_token.id" => insta::any_id_redaction(),
@@ -205,7 +205,7 @@ fn create_token_with_empty_crate_scope() {
         }
     });
 
-    let response = user.put::<()>("/api/v1/me/tokens", &serde_json::to_vec(&json).unwrap());
+    let response = user.put::<()>("/api/v1/me/tokens", serde_json::to_vec(&json).unwrap());
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         response.into_json(),
@@ -225,7 +225,7 @@ fn create_token_with_invalid_endpoint_scope() {
         }
     });
 
-    let response = user.put::<()>("/api/v1/me/tokens", &serde_json::to_vec(&json).unwrap());
+    let response = user.put::<()>("/api/v1/me/tokens", serde_json::to_vec(&json).unwrap());
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         response.into_json(),
@@ -246,7 +246,7 @@ fn create_token_with_expiry_date() {
         }
     });
 
-    let response = user.put::<()>("/api/v1/me/tokens", &serde_json::to_vec(&json).unwrap());
+    let response = user.put::<()>("/api/v1/me/tokens", serde_json::to_vec(&json).unwrap());
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json(), {
         ".api_token.id" => insta::any_id_redaction(),

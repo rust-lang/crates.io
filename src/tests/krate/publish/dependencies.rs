@@ -120,7 +120,7 @@ fn new_krate_with_broken_dependency_requirement() {
     let body = PublishBuilder::create_publish_body(&new_json, &tarball);
 
     let response = token
-        .put::<serde_json::Value>("/api/v1/crates/new", &body)
+        .put::<serde_json::Value>("/api/v1/crates/new", body)
         .good();
 
     assert_eq!(

@@ -61,7 +61,7 @@ impl MockCookieUser {
         });
 
         let url = format!("/api/v1/me/crate_owner_invitations/{krate_id}");
-        self.put(&url, body.to_string().as_bytes())
+        self.put(&url, body.to_string())
     }
 
     /// As the currently logged in user, accept an invitation to become an owner of the named
@@ -99,8 +99,7 @@ impl MockCookieUser {
         }
 
         let url = format!("/api/v1/me/crate_owner_invitations/{krate_id}");
-        let crate_owner_invite: CrateOwnerInvitation =
-            self.put(&url, body.to_string().as_bytes()).good();
+        let crate_owner_invite: CrateOwnerInvitation = self.put(&url, body.to_string()).good();
         assert!(!crate_owner_invite.crate_owner_invitation.accepted);
         assert_eq!(crate_owner_invite.crate_owner_invitation.crate_id, krate_id);
     }
@@ -127,7 +126,7 @@ impl MockAnonymousUser {
         token: &str,
     ) -> Response<T> {
         let url = format!("/api/v1/me/crate_owner_invitations/accept/{token}");
-        self.put(&url, &[])
+        self.put(&url, &[] as &[u8])
     }
 }
 
@@ -277,7 +276,7 @@ fn owner_change_via_cookie() {
     let url = format!("/api/v1/crates/{}/owners", krate.name);
     let body = json!({ "owners": [user2.gh_login] });
     let body = serde_json::to_vec(&body).unwrap();
-    let response = cookie.put::<()>(&url, &body);
+    let response = cookie.put::<()>(&url, body);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.into_json(),
@@ -298,7 +297,7 @@ fn owner_change_via_token() {
     let url = format!("/api/v1/crates/{}/owners", krate.name);
     let body = json!({ "owners": [user2.gh_login] });
     let body = serde_json::to_vec(&body).unwrap();
-    let response = token.put::<()>(&url, &body);
+    let response = token.put::<()>(&url, body);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.into_json(),
@@ -320,7 +319,7 @@ fn owner_change_via_change_owner_token() {
     let url = format!("/api/v1/crates/{}/owners", krate.name);
     let body = json!({ "owners": [user2.gh_login] });
     let body = serde_json::to_vec(&body).unwrap();
-    let response = token.put::<()>(&url, &body);
+    let response = token.put::<()>(&url, body);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.into_json(),
@@ -343,7 +342,7 @@ fn owner_change_via_change_owner_token_with_matching_crate_scope() {
     let url = format!("/api/v1/crates/{}/owners", krate.name);
     let body = json!({ "owners": [user2.gh_login] });
     let body = serde_json::to_vec(&body).unwrap();
-    let response = token.put::<()>(&url, &body);
+    let response = token.put::<()>(&url, body);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.into_json(),
@@ -366,7 +365,7 @@ fn owner_change_via_change_owner_token_with_wrong_crate_scope() {
     let url = format!("/api/v1/crates/{}/owners", krate.name);
     let body = json!({ "owners": [user2.gh_login] });
     let body = serde_json::to_vec(&body).unwrap();
-    let response = token.put::<()>(&url, &body);
+    let response = token.put::<()>(&url, body);
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
         response.into_json(),
@@ -388,7 +387,7 @@ fn owner_change_via_publish_token() {
     let url = format!("/api/v1/crates/{}/owners", krate.name);
     let body = json!({ "owners": [user2.gh_login] });
     let body = serde_json::to_vec(&body).unwrap();
-    let response = token.put::<()>(&url, &body);
+    let response = token.put::<()>(&url, body);
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
         response.into_json(),
@@ -409,7 +408,7 @@ fn owner_change_without_auth() {
     let url = format!("/api/v1/crates/{}/owners", krate.name);
     let body = json!({ "owners": [user2.gh_login] });
     let body = serde_json::to_vec(&body).unwrap();
-    let response = anon.put::<()>(&url, &body);
+    let response = anon.put::<()>(&url, body);
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
         response.into_json(),

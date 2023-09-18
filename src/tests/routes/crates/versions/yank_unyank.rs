@@ -21,7 +21,7 @@ impl<T: RequestHelper> YankRequestHelper for T {
 
     fn unyank(&self, krate_name: &str, version: &str) -> Response<OkBool> {
         let url = format!("/api/v1/crates/{krate_name}/{version}/unyank");
-        let response = self.put(&url, &[]);
+        let response = self.put(&url, &[] as &[u8]);
         self.app().run_pending_background_jobs();
         response
     }

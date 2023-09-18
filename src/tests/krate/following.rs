@@ -24,7 +24,7 @@ fn following() {
 
     let follow = || {
         assert!(
-            user.put::<OkBool>("/api/v1/crates/foo_following/follow", b"")
+            user.put::<OkBool>("/api/v1/crates/foo_following/follow", b"" as &[u8])
                 .good()
                 .ok
         );
@@ -78,7 +78,7 @@ fn getting_followed_crates_allows_api_token_auth() {
     let follow = |crate_name: &str| {
         assert!(
             token
-                .put::<OkBool>(&format!("/api/v1/crates/{crate_name}/follow"), b"")
+                .put::<OkBool>(&format!("/api/v1/crates/{crate_name}/follow"), b"" as &[u8])
                 .good()
                 .ok
         );
