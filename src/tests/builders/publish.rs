@@ -1,3 +1,4 @@
+use cargo_manifest::MaybeInherited;
 use crates_io::views::krate_publish as u;
 use hyper::body::Bytes;
 use std::collections::BTreeMap;
@@ -140,9 +141,9 @@ impl PublishBuilder {
             vers: u::EncodableCrateVersion(self.version.clone()),
             features: self.features,
             deps: self.deps,
-            description: self.desc,
+            description: self.desc.clone(),
             homepage: None,
-            documentation: self.doc_url,
+            documentation: self.doc_url.clone(),
             readme: self.readme,
             readme_file: None,
             keywords: u::EncodableKeywordList(
@@ -154,8 +155,8 @@ impl PublishBuilder {
                     .map(u::EncodableCategory)
                     .collect(),
             ),
-            license: self.license,
-            license_file: self.license_file,
+            license: self.license.clone(),
+            license_file: self.license_file.clone(),
             repository: None,
             links: None,
         };
@@ -165,10 +166,14 @@ impl PublishBuilder {
         match self.manifest {
             Manifest::None => {}
             Manifest::Generated => {
-                let package = cargo_manifest::Package::<()>::new(
+                let mut package = cargo_manifest::Package::<()>::new(
                     self.krate_name.clone(),
                     self.version.to_string(),
                 );
+                package.description = self.desc.map(MaybeInherited::Local);
+                package.documentation = self.doc_url.map(MaybeInherited::Local);
+                package.license = self.license.map(MaybeInherited::Local);
+                package.license_file = self.license_file.map(MaybeInherited::Local);
 
                 let manifest = cargo_manifest::Manifest {
                     package: Some(package),
