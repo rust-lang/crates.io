@@ -120,8 +120,8 @@ devDependencies:
     specifier: 2.6.3
     version: 2.6.3(webpack@5.88.2)
   ember-cli:
-    specifier: 5.2.1
-    version: 5.2.1
+    specifier: 5.3.0
+    version: 5.3.0
   ember-cli-app-version:
     specifier: 6.0.1
     version: 6.0.1(ember-source@5.3.0)
@@ -136,7 +136,7 @@ devDependencies:
     version: 2.0.0
   ember-cli-dependency-checker:
     specifier: 3.3.2
-    version: 3.3.2(ember-cli@5.2.1)
+    version: 3.3.2(ember-cli@5.3.0)
   ember-cli-dependency-lint:
     specifier: 2.0.1
     version: 2.0.1
@@ -8462,14 +8462,14 @@ packages:
       - utf-8-validate
     dev: true
 
-  /ember-cli-dependency-checker@3.3.2(ember-cli@5.2.1):
+  /ember-cli-dependency-checker@3.3.2(ember-cli@5.3.0):
     resolution: {integrity: sha512-PwkrW5oYsdPWwt+0Tojufmv/hxVETTjkrEdK7ANQB2VSnqpA5UcYubwpQM9ONuR2J8wyNDMwEHlqIrk/FYtBsQ==}
     engines: {node: '>= 6'}
     peerDependencies:
       ember-cli: ^3.2.0 || >=4.0.0
     dependencies:
       chalk: 2.4.2
-      ember-cli: 5.2.1
+      ember-cli: 5.3.0
       find-yarn-workspace-root: 1.2.1
       is-git-url: 1.0.0
       resolve: 1.22.6
@@ -8831,8 +8831,8 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /ember-cli@5.2.1:
-    resolution: {integrity: sha512-TYojG0uxyvX0rEgb3GkOVVUPCtfLmQbw2YHnAdZxHTJ1d45oRaDHlJmPfsaY8suVbP4EjXOiPR1CkFKoOvAuXg==}
+  /ember-cli@5.3.0:
+    resolution: {integrity: sha512-Om19C49hAYFgVduidtfQPbZcR3bmdHhYJ4XxEEEvW+sP1WAXNOPWf5e3W6HGDarjIeg04bZxOMkMZy28bubOBA==}
     engines: {node: '>= 16'}
     hasBin: true
     dependencies:
@@ -8890,7 +8890,6 @@ packages:
       is-git-url: 1.0.0
       is-language-code: 3.1.0
       isbinaryfile: 5.0.0
-      js-yaml: 4.1.0
       leek: 0.0.24
       lodash.template: 4.5.0
       markdown-it: 13.0.1
