@@ -149,8 +149,11 @@ mod tests {
 
     #[test]
     fn process_tarball_test() {
-        let tarball = TarballBuilder::new("foo", "0.0.1")
-            .add_raw_manifest(b"[package]\nname = \"foo\"\nversion = \"0.0.1\"\n")
+        let tarball = TarballBuilder::new()
+            .add_file(
+                "foo-0.0.1/Cargo.toml",
+                b"[package]\nname = \"foo\"\nversion = \"0.0.1\"\n",
+            )
             .build();
 
         let limit = 512 * 1024 * 1024;
@@ -163,8 +166,11 @@ mod tests {
 
     #[test]
     fn process_tarball_test_incomplete_vcs_info() {
-        let tarball = TarballBuilder::new("foo", "0.0.1")
-            .add_raw_manifest(b"[package]\nname = \"foo\"\nversion = \"0.0.1\"\n")
+        let tarball = TarballBuilder::new()
+            .add_file(
+                "foo-0.0.1/Cargo.toml",
+                b"[package]\nname = \"foo\"\nversion = \"0.0.1\"\n",
+            )
             .add_file("foo-0.0.1/.cargo_vcs_info.json", br#"{"unknown": "field"}"#)
             .build();
 
@@ -177,8 +183,11 @@ mod tests {
 
     #[test]
     fn process_tarball_test_vcs_info() {
-        let tarball = TarballBuilder::new("foo", "0.0.1")
-            .add_raw_manifest(b"[package]\nname = \"foo\"\nversion = \"0.0.1\"\n")
+        let tarball = TarballBuilder::new()
+            .add_file(
+                "foo-0.0.1/Cargo.toml",
+                b"[package]\nname = \"foo\"\nversion = \"0.0.1\"\n",
+            )
             .add_file(
                 "foo-0.0.1/.cargo_vcs_info.json",
                 br#"{"path_in_vcs": "path/in/vcs"}"#,
@@ -194,8 +203,9 @@ mod tests {
 
     #[test]
     fn process_tarball_test_manifest() {
-        let tarball = TarballBuilder::new("foo", "0.0.1")
-            .add_raw_manifest(
+        let tarball = TarballBuilder::new()
+            .add_file(
+                "foo-0.0.1/Cargo.toml",
                 br#"
 [package]
 name = "foo"
@@ -218,8 +228,9 @@ repository = "https://github.com/foo/bar"
 
     #[test]
     fn process_tarball_test_manifest_with_project() {
-        let tarball = TarballBuilder::new("foo", "0.0.1")
-            .add_raw_manifest(
+        let tarball = TarballBuilder::new()
+            .add_file(
+                "foo-0.0.1/Cargo.toml",
                 br#"
                 [project]
                 name = "foo"
@@ -238,8 +249,9 @@ repository = "https://github.com/foo/bar"
 
     #[test]
     fn process_tarball_test_manifest_with_default_readme() {
-        let tarball = TarballBuilder::new("foo", "0.0.1")
-            .add_raw_manifest(
+        let tarball = TarballBuilder::new()
+            .add_file(
+                "foo-0.0.1/Cargo.toml",
                 br#"
                 [package]
                 name = "foo"
@@ -257,8 +269,9 @@ repository = "https://github.com/foo/bar"
 
     #[test]
     fn process_tarball_test_manifest_with_boolean_readme() {
-        let tarball = TarballBuilder::new("foo", "0.0.1")
-            .add_raw_manifest(
+        let tarball = TarballBuilder::new()
+            .add_file(
+                "foo-0.0.1/Cargo.toml",
                 br#"
                 [package]
                 name = "foo"
@@ -277,7 +290,7 @@ repository = "https://github.com/foo/bar"
 
     #[test]
     fn process_tarball_test_lowercase_manifest() {
-        let tarball = TarballBuilder::new("foo", "0.0.1")
+        let tarball = TarballBuilder::new()
             .add_file(
                 "foo-0.0.1/cargo.toml",
                 br#"
@@ -299,7 +312,7 @@ repository = "https://github.com/foo/bar"
     #[test]
     fn process_tarball_test_incorrect_manifest_casing() {
         for file in ["CARGO.TOML", "Cargo.Toml"] {
-            let tarball = TarballBuilder::new("foo", "0.0.1")
+            let tarball = TarballBuilder::new()
                 .add_file(
                     &format!("foo-0.0.1/{file}"),
                     br#"
@@ -331,7 +344,7 @@ repository = "https://github.com/foo/bar"
         ] {
             let tarball = files
                 .iter()
-                .fold(TarballBuilder::new("foo", "0.0.1"), |builder, file| {
+                .fold(TarballBuilder::new(), |builder, file| {
                     builder.add_file(
                         &format!("foo-0.0.1/{file}"),
                         br#"

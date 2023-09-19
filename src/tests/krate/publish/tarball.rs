@@ -27,7 +27,7 @@ fn new_krate_tarball_with_hard_links() {
     let (app, _, _, token) = TestApp::full().with_token();
 
     let tarball = {
-        let mut builder = TarballBuilder::new("foo", "1.1.0");
+        let mut builder = TarballBuilder::new();
 
         let mut header = tar::Header::new_gnu();
         assert_ok!(header.set_path("foo-1.1.0/bar"));

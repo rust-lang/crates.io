@@ -167,7 +167,7 @@ impl PublishBuilder {
             links: None,
         };
 
-        let mut tarball_builder = TarballBuilder::new(&self.krate_name, &self.version.to_string());
+        let mut tarball_builder = TarballBuilder::new();
 
         match self.manifest {
             Manifest::None => {}
@@ -207,10 +207,14 @@ impl PublishBuilder {
 
                 let manifest = toml::to_string(&manifest).unwrap();
 
-                tarball_builder = tarball_builder.add_raw_manifest(manifest.as_bytes());
+                let content = manifest.as_bytes();
+
+                let path = format!("{}-{}/Cargo.toml", self.krate_name, self.version);
+                tarball_builder = tarball_builder.add_file(&path, content);
             }
             Manifest::Custom(bytes) => {
-                tarball_builder = tarball_builder.add_raw_manifest(&bytes);
+                let path = format!("{}-{}/Cargo.toml", self.krate_name, self.version);
+                tarball_builder = tarball_builder.add_file(&path, &bytes);
             }
         }
 

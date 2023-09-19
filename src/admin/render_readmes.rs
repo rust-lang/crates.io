@@ -245,8 +245,9 @@ pub mod tests {
 
     #[test]
     fn test_render_pkg_readme() {
-        let serialized_archive = TarballBuilder::new("foo", "0.0.1")
-            .add_raw_manifest(
+        let serialized_archive = TarballBuilder::new()
+            .add_file(
+                "foo-0.0.1/Cargo.toml",
                 br#"
 [package]
 name = "foo"
@@ -264,8 +265,9 @@ readme = "README.md"
 
     #[test]
     fn test_render_pkg_no_readme() {
-        let serialized_archive = TarballBuilder::new("foo", "0.0.1")
-            .add_raw_manifest(
+        let serialized_archive = TarballBuilder::new()
+            .add_file(
+                "foo-0.0.1/Cargo.toml",
                 br#"
 [package]
 "#,
@@ -280,8 +282,9 @@ readme = "README.md"
 
     #[test]
     fn test_render_pkg_implicit_readme() {
-        let serialized_archive = TarballBuilder::new("foo", "0.0.1")
-            .add_raw_manifest(
+        let serialized_archive = TarballBuilder::new()
+            .add_file(
+                "foo-0.0.1/Cargo.toml",
                 br#"
 [package]
 name = "foo"
@@ -298,8 +301,9 @@ version = "0.0.1"
 
     #[test]
     fn test_render_pkg_readme_w_link() {
-        let serialized_archive = TarballBuilder::new("foo", "0.0.1")
-            .add_raw_manifest(
+        let serialized_archive = TarballBuilder::new()
+            .add_file(
+                "foo-0.0.1/Cargo.toml",
                 br#"
 [package]
 name = "foo"
@@ -318,8 +322,9 @@ repository = "https://github.com/foo/foo"
 
     #[test]
     fn test_render_pkg_readme_not_at_root() {
-        let serialized_archive = TarballBuilder::new("foo", "0.0.1")
-            .add_raw_manifest(
+        let serialized_archive = TarballBuilder::new()
+            .add_file(
+                "foo-0.0.1/Cargo.toml",
                 br#"
 [package]
 name = "foo"
