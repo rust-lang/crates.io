@@ -1,4 +1,7 @@
 {
+    schedule: [
+        'before 5am on Monday',
+    ],
     "extends": [
         "config:base",
         ":pinAllExceptPeerDependencies",
