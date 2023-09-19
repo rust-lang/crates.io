@@ -3,15 +3,14 @@ use flate2::Compression;
 use std::io::Read;
 
 pub struct TarballBuilder {
-    prefix: String,
     inner: tar::Builder<Vec<u8>>,
 }
 
 impl TarballBuilder {
-    pub fn new(name: &str, version: &str) -> Self {
-        let prefix = format!("{name}-{version}");
+    #[allow(clippy::new_without_default)]
+    pub fn new() -> Self {
         let inner = tar::Builder::new(vec![]);
-        Self { prefix, inner }
+        Self { inner }
     }
 
     pub fn add_file(mut self, path: &str, content: &[u8]) -> Self {

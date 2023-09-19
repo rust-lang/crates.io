@@ -167,7 +167,7 @@ impl PublishBuilder {
             links: None,
         };
 
-        let mut tarball_builder = TarballBuilder::new(&self.krate_name, &self.version.to_string());
+        let mut tarball_builder = TarballBuilder::new();
 
         match self.manifest {
             Manifest::None => {}

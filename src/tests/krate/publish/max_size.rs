@@ -18,7 +18,7 @@ fn tarball_between_default_axum_limit_and_max_upload_size() {
         .with_token();
 
     let tarball = {
-        let mut builder = TarballBuilder::new("foo", "1.1.0");
+        let mut builder = TarballBuilder::new();
 
         let data = b"[package]\nname = \"foo\"\nversion = \"1.1.0\"\n" as &[_];
 
@@ -68,7 +68,7 @@ fn tarball_bigger_than_max_upload_size() {
         // `data` is bigger than `max_upload_size`
         let data = &[b'a'; 6 * 1024 * 1024] as &[_];
 
-        let mut builder = TarballBuilder::new("foo", "1.1.0");
+        let mut builder = TarballBuilder::new();
 
         let mut header = tar::Header::new_gnu();
         assert_ok!(header.set_path("foo-1.1.0/Cargo.toml"));
