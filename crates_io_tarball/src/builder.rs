@@ -14,11 +14,6 @@ impl TarballBuilder {
         Self { prefix, inner }
     }
 
-    pub fn add_raw_manifest(self, content: &[u8]) -> Self {
-        let path = format!("{}/Cargo.toml", self.prefix);
-        self.add_file(&path, content)
-    }
-
     pub fn add_file(mut self, path: &str, content: &[u8]) -> Self {
         let mut header = tar::Header::new_gnu();
         header.set_size(content.len() as u64);

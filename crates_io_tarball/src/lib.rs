@@ -150,7 +150,10 @@ mod tests {
     #[test]
     fn process_tarball_test() {
         let tarball = TarballBuilder::new("foo", "0.0.1")
-            .add_raw_manifest(b"[package]\nname = \"foo\"\nversion = \"0.0.1\"\n")
+            .add_file(
+                "foo-0.0.1/Cargo.toml",
+                b"[package]\nname = \"foo\"\nversion = \"0.0.1\"\n",
+            )
             .build();
 
         let limit = 512 * 1024 * 1024;
@@ -164,7 +167,10 @@ mod tests {
     #[test]
     fn process_tarball_test_incomplete_vcs_info() {
         let tarball = TarballBuilder::new("foo", "0.0.1")
-            .add_raw_manifest(b"[package]\nname = \"foo\"\nversion = \"0.0.1\"\n")
+            .add_file(
+                "foo-0.0.1/Cargo.toml",
+                b"[package]\nname = \"foo\"\nversion = \"0.0.1\"\n",
+            )
             .add_file("foo-0.0.1/.cargo_vcs_info.json", br#"{"unknown": "field"}"#)
             .build();
 
@@ -178,7 +184,10 @@ mod tests {
     #[test]
     fn process_tarball_test_vcs_info() {
         let tarball = TarballBuilder::new("foo", "0.0.1")
-            .add_raw_manifest(b"[package]\nname = \"foo\"\nversion = \"0.0.1\"\n")
+            .add_file(
+                "foo-0.0.1/Cargo.toml",
+                b"[package]\nname = \"foo\"\nversion = \"0.0.1\"\n",
+            )
             .add_file(
                 "foo-0.0.1/.cargo_vcs_info.json",
                 br#"{"path_in_vcs": "path/in/vcs"}"#,
@@ -195,7 +204,8 @@ mod tests {
     #[test]
     fn process_tarball_test_manifest() {
         let tarball = TarballBuilder::new("foo", "0.0.1")
-            .add_raw_manifest(
+            .add_file(
+                "foo-0.0.1/Cargo.toml",
                 br#"
 [package]
 name = "foo"
@@ -219,7 +229,8 @@ repository = "https://github.com/foo/bar"
     #[test]
     fn process_tarball_test_manifest_with_project() {
         let tarball = TarballBuilder::new("foo", "0.0.1")
-            .add_raw_manifest(
+            .add_file(
+                "foo-0.0.1/Cargo.toml",
                 br#"
                 [project]
                 name = "foo"
@@ -239,7 +250,8 @@ repository = "https://github.com/foo/bar"
     #[test]
     fn process_tarball_test_manifest_with_default_readme() {
         let tarball = TarballBuilder::new("foo", "0.0.1")
-            .add_raw_manifest(
+            .add_file(
+                "foo-0.0.1/Cargo.toml",
                 br#"
                 [package]
                 name = "foo"
@@ -258,7 +270,8 @@ repository = "https://github.com/foo/bar"
     #[test]
     fn process_tarball_test_manifest_with_boolean_readme() {
         let tarball = TarballBuilder::new("foo", "0.0.1")
-            .add_raw_manifest(
+            .add_file(
+                "foo-0.0.1/Cargo.toml",
                 br#"
                 [package]
                 name = "foo"
