@@ -112,7 +112,10 @@ impl<'de> Deserialize<'de> for EncodableDependencyName {
 impl<'de> Deserialize<'de> for EncodableKeyword {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<EncodableKeyword, D::Error> {
         let s = String::deserialize(d)?;
-        if !CrateKeyword::valid_name(&s) {
+        if s.len() > 20 {
+            let expected = "a keyword with less than 20 characters";
+            Err(de::Error::invalid_length(s.len(), &expected))
+        } else if !CrateKeyword::valid_name(&s) {
             let value = de::Unexpected::Str(&s);
             let expected = "a valid keyword specifier";
             Err(de::Error::invalid_value(value, &expected))
@@ -183,12 +186,6 @@ impl<'de> Deserialize<'de> for EncodableKeywordList {
         if inner.len() > 5 {
             let expected = "at most 5 keywords per crate";
             return Err(de::Error::invalid_length(inner.len(), &expected));
-        }
-        for val in &inner {
-            if val.len() > 20 {
-                let expected = "a keyword with less than 20 characters";
-                return Err(de::Error::invalid_length(val.len(), &expected));
-            }
         }
         Ok(EncodableKeywordList(inner))
     }
