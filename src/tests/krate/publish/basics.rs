@@ -22,7 +22,7 @@ fn new_krate() {
     assert!(crates[0].deps.is_empty());
     assert_eq!(
         crates[0].cksum,
-        "8a8d84b87f379d5e32566b14df153c0ab0e1ea87dae79a00b891bb41f93dbbf6"
+        "270bbe1624abd766746bf9938b791fadd88e7e0135339510837e11b45e167350"
     );
 
     let expected_files = vec!["crates/foo_new/foo_new-1.0.0.crate", "index/fo/o_/foo_new"];

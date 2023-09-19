@@ -1,5 +1,6 @@
 use crate::builders::{CrateBuilder, PublishBuilder};
 use crate::util::{RequestHelper, TestApp};
+use crates_io::views::GoodCrate;
 use crates_io_tarball::TarballBuilder;
 use flate2::Compression;
 use http::StatusCode;
@@ -40,14 +41,16 @@ fn tarball_between_default_axum_limit_and_max_upload_size() {
         builder.build_with_compression(Compression::none())
     };
 
-    let crate_to_publish = PublishBuilder::new("foo", "1.1.0").tarball(tarball);
+    let (json, _tarball) = PublishBuilder::new("foo", "1.1.0").build();
+    let body = PublishBuilder::create_publish_body(&json, &tarball);
 
-    let response = token.publish_crate(crate_to_publish);
+    let response = token.put("/api/v1/crates/new", body);
     assert_eq!(response.status(), StatusCode::OK);
-    let json = response.good();
+    let json: GoodCrate = response.good();
     assert_eq!(json.krate.name, "foo");
     assert_eq!(json.krate.max_version, "1.1.0");
 
+    app.run_pending_background_jobs();
     assert_eq!(app.stored_files().len(), 2);
 }
 
@@ -77,15 +80,17 @@ fn tarball_bigger_than_max_upload_size() {
         builder.build_with_compression(Compression::none())
     };
 
-    let crate_to_publish = PublishBuilder::new("foo", "1.1.0").tarball(tarball);
+    let (json, _tarball) = PublishBuilder::new("foo", "1.1.0").build();
+    let body = PublishBuilder::create_publish_body(&json, &tarball);
 
-    let response = token.publish_crate(crate_to_publish);
+    let response = token.put::<()>("/api/v1/crates/new", body);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.into_json(),
         json!({ "errors": [{ "detail": format!("max upload size is: {max_upload_size}") }] })
     );
 
+    app.run_pending_background_jobs();
     assert!(app.stored_files().is_empty());
 }
 
@@ -97,7 +102,7 @@ fn new_krate_gzip_bomb() {
     let mut body = Vec::new();
     io::repeat(0).take(len).read_to_end(&mut body).unwrap();
 
-    let crate_to_publish = PublishBuilder::new("foo", "1.1.0").files(&[("foo-1.1.0/a", &body)]);
+    let crate_to_publish = PublishBuilder::new("foo", "1.1.0").add_file("foo-1.1.0/a", body);
 
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
@@ -113,8 +118,8 @@ fn new_krate_gzip_bomb() {
 fn new_krate_too_big() {
     let (app, _, user) = TestApp::full().with_user();
 
-    let files = [("foo_big-1.0.0/big", &[b'a'; 2000] as &[_])];
-    let builder = PublishBuilder::new("foo_big", "1.0.0").files(&files);
+    let builder = PublishBuilder::new("foo_big", "1.0.0")
+        .add_file("foo_big-1.0.0/big", &[b'a'; 2000] as &[_]);
 
     let response = user.publish_crate(builder);
     assert_eq!(response.status(), StatusCode::OK);
@@ -136,14 +141,8 @@ fn new_krate_too_big_but_whitelisted() {
             .expect_build(conn);
     });
 
-    let files = [
-        (
-            "foo_whitelist-1.1.0/Cargo.toml",
-            b"[package]\nname = \"foo_whitelist\"\nversion = \"1.1.0\"\n" as &[_],
-        ),
-        ("foo_whitelist-1.1.0/big", &[b'a'; 2000] as &[_]),
-    ];
-    let crate_to_publish = PublishBuilder::new("foo_whitelist", "1.1.0").files(&files);
+    let crate_to_publish = PublishBuilder::new("foo_whitelist", "1.1.0")
+        .add_file("foo_whitelist-1.1.0/big", &[b'a'; 2000] as &[_]);
 
     token.publish_crate(crate_to_publish).good();
 

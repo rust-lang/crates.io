@@ -1,17 +1,15 @@
 use crate::builders::PublishBuilder;
 use crate::util::{RequestHelper, TestApp};
-use crates_io_tarball::TarballBuilder;
 use http::StatusCode;
 
 #[test]
 fn workspace_inheritance() {
     let (_app, _anon, _cookie, token) = TestApp::full().with_token();
 
-    let tarball = TarballBuilder::new("foo", "1.0.0")
-        .add_raw_manifest(b"[package]\nname = \"foo\"\nversion.workspace = true\n")
-        .build();
-
-    let response = token.publish_crate(PublishBuilder::new("foo", "1.0.0").tarball(tarball));
+    let response = token.publish_crate(
+        PublishBuilder::new("foo", "1.0.0")
+            .custom_manifest("[package]\nname = \"foo\"\nversion.workspace = true\n"),
+    );
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.into_json(),
@@ -23,13 +21,9 @@ fn workspace_inheritance() {
 fn workspace_inheritance_with_dep() {
     let (_app, _anon, _cookie, token) = TestApp::full().with_token();
 
-    let tarball = TarballBuilder::new("foo", "1.0.0")
-        .add_raw_manifest(
-            b"[package]\nname = \"foo\"\nversion = \"1.0.0\"\n\n[dependencies]\nserde.workspace = true\n",
-        )
-        .build();
-
-    let response = token.publish_crate(PublishBuilder::new("foo", "1.0.0").tarball(tarball));
+    let response = token.publish_crate(PublishBuilder::new("foo", "1.0.0").custom_manifest(
+        "[package]\nname = \"foo\"\nversion = \"1.0.0\"\n\n[dependencies]\nserde.workspace = true\n",
+    ));
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.into_json(),
