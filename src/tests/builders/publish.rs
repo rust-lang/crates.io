@@ -1,7 +1,7 @@
+use bytes::{BufMut, Bytes, BytesMut};
 use cargo_manifest::{DependencyDetail, DepsSet, FeatureSet, MaybeInherited};
 use crates_io::models::DependencyKind;
 use crates_io::views::krate_publish as u;
-use hyper::body::Bytes;
 use std::collections::BTreeMap;
 
 use crates_io_tarball::TarballBuilder;
@@ -223,31 +223,22 @@ impl PublishBuilder {
     }
 
     /// Consume this builder to make the Put request body
-    pub fn body(self) -> Vec<u8> {
+    pub fn body(self) -> Bytes {
         let (json, tarball) = self.build();
         PublishBuilder::create_publish_body(&json, &tarball)
     }
 
-    pub fn create_publish_body(json: &str, tarball: &[u8]) -> Vec<u8> {
-        let mut body = Vec::new();
-
+    pub fn create_publish_body(json: &str, tarball: &[u8]) -> Bytes {
         let json_len = json.len();
-        body.push(json_len as u8);
-        body.push((json_len >> 8) as u8);
-        body.push((json_len >> 16) as u8);
-        body.push((json_len >> 24) as u8);
-
-        body.extend(json.as_bytes());
-
         let tarball_len = tarball.len();
-        body.push(tarball_len as u8);
-        body.push((tarball_len >> 8) as u8);
-        body.push((tarball_len >> 16) as u8);
-        body.push((tarball_len >> 24) as u8);
 
-        body.extend(tarball);
+        let mut body = BytesMut::with_capacity(json_len + tarball_len + 2);
+        body.put_u32_le(json_len as u32);
+        body.put_slice(json.as_bytes());
+        body.put_u32_le(tarball_len as u32);
+        body.put_slice(tarball);
 
-        body
+        body.freeze()
     }
 }
 
