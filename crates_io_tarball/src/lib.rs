@@ -127,10 +127,10 @@ pub fn process_tarball<R: Read>(
     // on case-insensitive filesystems, to match the behaviour of cargo we should only actually
     // accept `Cargo.toml` and (the now deprecated) `cargo.toml` as valid options for the
     // manifest.
-    let (path, manifest) = manifests
-        .into_iter()
-        .next()
-        .ok_or(TarballError::MissingManifest)?;
+    let Some((path, manifest)) = manifests.into_iter().next() else {
+        return Err(TarballError::MissingManifest);
+    };
+
     let file = path.file_name().unwrap_or_default();
     if file != "Cargo.toml" && file != "cargo.toml" {
         return Err(TarballError::IncorrectlyCasedManifest(file.into()));
