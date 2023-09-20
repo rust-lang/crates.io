@@ -73,11 +73,11 @@ impl<T> Response<T> {
             detail: String,
         }
 
-        assert_eq!(StatusCode::TOO_MANY_REQUESTS, self.status());
+        assert_eq!(self.status(), StatusCode::TOO_MANY_REQUESTS);
 
         let expected_message_start = format!("{}. Please try again after ", action.error_message());
         let error: ErrorResponse = json(self.response);
-        assert_eq!(1, error.errors.len());
+        assert_eq!(error.errors.len(), 1);
         assert!(error.errors[0].detail.starts_with(&expected_message_start));
     }
 }
