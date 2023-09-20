@@ -17,7 +17,7 @@ fn test_non_blocked_download_route() {
     });
 
     let status = anon.get::<()>("/api/v1/crates/foo/1.0.0/download").status();
-    assert_eq!(StatusCode::FOUND, status);
+    assert_eq!(status, StatusCode::FOUND);
 }
 
 #[test]
@@ -38,5 +38,5 @@ fn test_blocked_download_route() {
     });
 
     let status = anon.get::<()>("/api/v1/crates/foo/1.0.0/download").status();
-    assert_eq!(StatusCode::SERVICE_UNAVAILABLE, status);
+    assert_eq!(status, StatusCode::SERVICE_UNAVAILABLE);
 }

@@ -423,7 +423,7 @@ fn invite_already_invited_user() {
     app.db(|conn| CrateBuilder::new("crate_name", owner.as_model().user_id).expect_build(conn));
 
     // Ensure no emails were sent up to this point
-    assert_eq!(0, app.as_inner().emails.mails_in_memory().unwrap().len());
+    assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 0);
 
     // Invite the user the first time
     let response = owner.add_named_owner("crate_name", "invited_user");
@@ -437,7 +437,7 @@ fn invite_already_invited_user() {
     );
 
     // Check one email was sent, this will be the ownership invite email
-    assert_eq!(1, app.as_inner().emails.mails_in_memory().unwrap().len());
+    assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 1);
 
     // Then invite the user a second time, the message should point out the user is already invited
     let response = owner.add_named_owner("crate_name", "invited_user");
@@ -451,7 +451,7 @@ fn invite_already_invited_user() {
     );
 
     // Check that no new email is sent after the second invitation
-    assert_eq!(1, app.as_inner().emails.mails_in_memory().unwrap().len());
+    assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 1);
 }
 
 #[test]
@@ -462,7 +462,7 @@ fn invite_with_existing_expired_invite() {
         app.db(|conn| CrateBuilder::new("crate_name", owner.as_model().user_id).expect_build(conn));
 
     // Ensure no emails were sent up to this point
-    assert_eq!(0, app.as_inner().emails.mails_in_memory().unwrap().len());
+    assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 0);
 
     // Invite the user the first time
     let response = owner.add_named_owner("crate_name", "invited_user");
@@ -476,7 +476,7 @@ fn invite_with_existing_expired_invite() {
     );
 
     // Check one email was sent, this will be the ownership invite email
-    assert_eq!(1, app.as_inner().emails.mails_in_memory().unwrap().len());
+    assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 1);
 
     // Simulate the previous invite expiring
     expire_invitation(&app, krate.id);
@@ -493,7 +493,7 @@ fn invite_with_existing_expired_invite() {
     );
 
     // Check that the email for the second invite was sent
-    assert_eq!(2, app.as_inner().emails.mails_in_memory().unwrap().len());
+    assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 2);
 }
 
 /// Testing the crate ownership between two crates and one team.
@@ -770,8 +770,9 @@ fn test_accept_expired_invitation() {
 
     // New owner tries to accept the invitation but it fails
     let resp = invited_user.try_accept_ownership_invitation::<()>(&krate.name, krate.id);
-    assert_eq!(StatusCode::GONE, resp.status());
+    assert_eq!(resp.status(), StatusCode::GONE);
     assert_eq!(
+        resp.into_json(),
         json!({
             "errors": [
                 {
@@ -779,8 +780,7 @@ fn test_accept_expired_invitation() {
                                Please reach out to an owner of the crate to request a new invitation.",
                 }
             ]
-        }),
-        resp.into_json()
+        })
     );
 
     // Invited user is NOT listed as an owner, so the crate still only has one owner
@@ -827,8 +827,9 @@ fn test_accept_expired_invitation_by_mail() {
 
     // Try to accept the invitation, and ensure it fails.
     let resp = anon.try_accept_ownership_invitation_by_token::<()>(&invite_token);
-    assert_eq!(StatusCode::GONE, resp.status());
+    assert_eq!(resp.status(), StatusCode::GONE);
     assert_eq!(
+        resp.into_json(),
         json!({
             "errors": [
                 {
@@ -836,8 +837,7 @@ fn test_accept_expired_invitation_by_mail() {
                                Please reach out to an owner of the crate to request a new invitation.",
                 }
             ]
-        }),
-        resp.into_json()
+        })
     );
 
     // Invited user is NOT listed as an owner, so the crate still only has one owner

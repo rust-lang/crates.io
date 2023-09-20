@@ -142,18 +142,18 @@ mod test {
             .find(version.id)
             .select(versions::downloads)
             .first(conn);
-        assert_eq!(Ok(1), version_downloads);
+        assert_eq!(version_downloads, Ok(1));
         let crate_downloads = crates::table
             .find(krate.id)
             .select(crates::downloads)
             .first(conn);
-        assert_eq!(Ok(1), crate_downloads);
+        assert_eq!(crate_downloads, Ok(1));
         super::update(conn).unwrap();
         let version_downloads = versions::table
             .find(version.id)
             .select(versions::downloads)
             .first(conn);
-        assert_eq!(Ok(1), version_downloads);
+        assert_eq!(version_downloads, Ok(1));
     }
 
     #[test]
@@ -178,7 +178,7 @@ mod test {
             .filter(version_downloads::version_id.eq(version.id))
             .select(version_downloads::processed)
             .first(conn);
-        assert_eq!(Ok(true), processed);
+        assert_eq!(processed, Ok(true));
     }
 
     #[test]
@@ -202,7 +202,7 @@ mod test {
             .filter(version_downloads::version_id.eq(version.id))
             .select(version_downloads::processed)
             .first(conn);
-        assert_eq!(Ok(false), processed);
+        assert_eq!(processed, Ok(false));
     }
 
     #[test]
@@ -293,7 +293,7 @@ mod test {
         let crates_changed = crates::table
             .select(crates::updated_at.ne(now - 2.days()))
             .get_result(conn);
-        assert_eq!(Ok(false), versions_changed);
-        assert_eq!(Ok(false), crates_changed);
+        assert_eq!(versions_changed, Ok(false));
+        assert_eq!(crates_changed, Ok(false));
     }
 }

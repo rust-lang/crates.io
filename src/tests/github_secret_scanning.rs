@@ -22,7 +22,7 @@ fn github_secret_alert_revokes_token() {
     let (app, anon, user, token) = TestApp::init().with_token();
 
     // Ensure no emails were sent up to this point
-    assert_eq!(0, app.as_inner().emails.mails_in_memory().unwrap().len());
+    assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 0);
 
     // Ensure that the token currently exists in the database
     app.db(|conn| {
@@ -75,7 +75,7 @@ fn github_secret_alert_revokes_token() {
     });
 
     // Ensure exactly one email was sent
-    assert_eq!(1, app.as_inner().emails.mails_in_memory().unwrap().len());
+    assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 1);
 }
 
 #[test]
@@ -83,7 +83,7 @@ fn github_secret_alert_for_revoked_token() {
     let (app, anon, user, token) = TestApp::init().with_token();
 
     // Ensure no emails were sent up to this point
-    assert_eq!(0, app.as_inner().emails.mails_in_memory().unwrap().len());
+    assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 0);
 
     // Ensure that the token currently exists in the database
     app.db(|conn| {
@@ -139,7 +139,7 @@ fn github_secret_alert_for_revoked_token() {
     });
 
     // Ensure still no emails were sent
-    assert_eq!(0, app.as_inner().emails.mails_in_memory().unwrap().len());
+    assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 0);
 }
 
 #[test]
@@ -147,7 +147,7 @@ fn github_secret_alert_for_unknown_token() {
     let (app, anon, user, token) = TestApp::init().with_token();
 
     // Ensure no emails were sent up to this point
-    assert_eq!(0, app.as_inner().emails.mails_in_memory().unwrap().len());
+    assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 0);
 
     // Ensure that the token currently exists in the database
     app.db(|conn| {
@@ -187,7 +187,7 @@ fn github_secret_alert_for_unknown_token() {
     });
 
     // Ensure still no emails were sent
-    assert_eq!(0, app.as_inner().emails.mails_in_memory().unwrap().len());
+    assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 0);
 }
 
 #[test]

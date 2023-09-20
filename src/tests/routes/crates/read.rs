@@ -59,8 +59,8 @@ fn show() {
         versions[0].dl_path
     );
     let keywords = json.keywords.as_ref().unwrap();
-    assert_eq!(1, keywords.len());
-    assert_eq!("kw1", keywords[0].id);
+    assert_eq!(keywords.len(), 1);
+    assert_eq!(keywords[0].id, "kw1");
 
     assert_eq!(versions[1].num, "0.5.1");
     assert_eq!(versions[2].num, "0.5.0");

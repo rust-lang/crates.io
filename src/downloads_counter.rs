@@ -267,7 +267,7 @@ mod tests {
         for _ in 0..5 {
             counter.increment(v2);
         }
-        assert_eq!(15, counter.pending_count.load(Ordering::SeqCst));
+        assert_eq!(counter.pending_count.load(Ordering::SeqCst), 15);
 
         // Persist everything to the database
         let stats = counter
@@ -314,7 +314,7 @@ mod tests {
         for _ in 0..5 {
             counter.increment(v2);
         }
-        assert_eq!(15, counter.pending_count.load(Ordering::SeqCst));
+        assert_eq!(counter.pending_count.load(Ordering::SeqCst), 15);
 
         // Persist one shard at the time and ensure the stats returned for each shard are expected.
         let mut pending = 15;

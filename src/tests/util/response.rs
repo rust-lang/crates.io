@@ -86,13 +86,13 @@ impl Response<()> {
     /// Assert that the status code is 404
     #[track_caller]
     pub fn assert_not_found(&self) {
-        assert_eq!(StatusCode::NOT_FOUND, self.status());
+        assert_eq!(self.status(), StatusCode::NOT_FOUND);
     }
 
     /// Assert that the status code is 403
     #[track_caller]
     pub fn assert_forbidden(&self) {
-        assert_eq!(StatusCode::FORBIDDEN, self.status());
+        assert_eq!(self.status(), StatusCode::FORBIDDEN);
     }
 }
 

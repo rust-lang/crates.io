@@ -751,17 +751,17 @@ fn seek_based_pagination() {
         );
 
         if let Some(new_url) = resp.meta.next_page {
-            assert_eq!(1, resp.crates.len());
+            assert_eq!(resp.crates.len(), 1);
             url = Some(new_url);
         } else {
             assert!(resp.crates.is_empty());
         }
 
-        assert_eq!(None, resp.meta.prev_page);
-        assert_eq!(3, resp.meta.total);
+        assert_eq!(resp.meta.prev_page, None);
+        assert_eq!(resp.meta.total, 3);
     }
 
-    assert_eq!(4, calls);
+    assert_eq!(calls, 4);
     assert_eq!(
         vec![
             "pagination_links_1",
