@@ -96,7 +96,12 @@ fn tarball_bigger_than_max_upload_size() {
 
 #[test]
 fn new_krate_gzip_bomb() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full()
+        .with_config(|config| {
+            config.max_upload_size = 3000;
+            config.max_unpack_size = 2000;
+        })
+        .with_token();
 
     let len = 512 * 1024;
     let mut body = Vec::new();
@@ -116,7 +121,12 @@ fn new_krate_gzip_bomb() {
 
 #[test]
 fn new_krate_too_big() {
-    let (app, _, user) = TestApp::full().with_user();
+    let (app, _, user) = TestApp::full()
+        .with_config(|config| {
+            config.max_upload_size = 3000;
+            config.max_unpack_size = 2000;
+        })
+        .with_user();
 
     let builder = PublishBuilder::new("foo_big", "1.0.0")
         .add_file("foo_big-1.0.0/big", &[b'a'; 2000] as &[_]);
