@@ -116,26 +116,25 @@ pub fn process_tarball<R: Read>(
         }
     }
 
-    let manifest = if manifests.len() > 1 {
+    if manifests.len() > 1 {
         // There are no scenarios where we want to accept a crate file with multiple manifests.
         return Err(TarballError::TooManyManifests(
             manifests.into_keys().collect(),
         ));
-    } else {
-        // Although we're interested in all possible cases of `Cargo.toml` above to protect users
-        // on case-insensitive filesystems, to match the behaviour of cargo we should only actually
-        // accept `Cargo.toml` and (the now deprecated) `cargo.toml` as valid options for the
-        // manifest.
-        let (path, manifest) = manifests
-            .into_iter()
-            .next()
-            .ok_or(TarballError::MissingManifest)?;
-        let file = path.file_name().unwrap_or_default();
-        if file != "Cargo.toml" && file != "cargo.toml" {
-            return Err(TarballError::IncorrectlyCasedManifest(file.into()));
-        }
-        manifest
+    }
+
+    // Although we're interested in all possible cases of `Cargo.toml` above to protect users
+    // on case-insensitive filesystems, to match the behaviour of cargo we should only actually
+    // accept `Cargo.toml` and (the now deprecated) `cargo.toml` as valid options for the
+    // manifest.
+    let Some((path, manifest)) = manifests.pop_first() else {
+        return Err(TarballError::MissingManifest);
     };
+
+    let file = path.file_name().unwrap_or_default();
+    if file != "Cargo.toml" && file != "cargo.toml" {
+        return Err(TarballError::IncorrectlyCasedManifest(file.into()));
+    }
 
     Ok(TarballInfo { manifest, vcs_info })
 }
