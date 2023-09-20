@@ -113,7 +113,7 @@ module('ajax()', function (hooks) {
       let { cause } = error;
       assert.notOk(cause instanceof HttpError);
       assert.strictEqual(cause.name, 'SyntaxError');
-      assert.ok(expectedCauseMessages.includes(cause.message));
+      assert.ok(expectedCauseMessages.includes(cause.message), `"${cause.message}" is an expected error message`);
       return true;
     });
   });
