@@ -390,8 +390,8 @@ fn simple_config() -> config::Server {
         session_key: cookie::Key::derive_from("test this has to be over 32 bytes long".as_bytes()),
         gh_client_id: ClientId::new(dotenvy::var("GH_CLIENT_ID").unwrap_or_default()),
         gh_client_secret: ClientSecret::new(dotenvy::var("GH_CLIENT_SECRET").unwrap_or_default()),
-        max_upload_size: 3000,
-        max_unpack_size: 2000,
+        max_upload_size: 128 * 1024, // 128 kB should be enough for most testing purposes
+        max_unpack_size: 128 * 1024, // 128 kB should be enough for most testing purposes
         rate_limiter: Default::default(),
         new_version_rate_limit: Some(10),
         blocked_traffic: Default::default(),
