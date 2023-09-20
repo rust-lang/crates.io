@@ -539,8 +539,8 @@ mod tests {
         let bucket = rate.take_token(user_id, LimitedAction::PublishNew, now, conn)?;
         let other_bucket = rate.take_token(other_user_id, LimitedAction::PublishNew, now, conn)?;
 
-        assert_eq!(20, bucket.tokens);
-        assert_eq!(10, other_bucket.tokens);
+        assert_eq!(bucket.tokens, 20);
+        assert_eq!(other_bucket.tokens, 10);
         Ok(())
     }
 
@@ -570,8 +570,8 @@ mod tests {
         let bucket = rate.take_token(user_id, LimitedAction::PublishNew, now, conn)?;
         let other_bucket = rate.take_token(other_user_id, LimitedAction::PublishNew, now, conn)?;
 
-        assert_eq!(20, bucket.tokens);
-        assert_eq!(10, other_bucket.tokens);
+        assert_eq!(bucket.tokens, 20);
+        assert_eq!(other_bucket.tokens, 10);
 
         // Manually expire the rate limit
         diesel::update(publish_rate_overrides::table)
@@ -585,8 +585,8 @@ mod tests {
         // The number of tokens of user_id is 10 and not 9 because when the new burst limit is
         // lower than the amount of available tokens, the number of available tokens is reset to
         // the new burst limit.
-        assert_eq!(10, bucket.tokens);
-        assert_eq!(9, other_bucket.tokens);
+        assert_eq!(bucket.tokens, 10);
+        assert_eq!(other_bucket.tokens, 9);
 
         Ok(())
     }

@@ -9,13 +9,13 @@ fn metrics_endpoint_works() {
         .empty();
 
     let resp = request_metrics(&anon, "service", Some("foobar"));
-    assert_eq!(StatusCode::OK, resp.status());
+    assert_eq!(resp.status(), StatusCode::OK);
 
     let resp = request_metrics(&anon, "instance", Some("foobar"));
-    assert_eq!(StatusCode::OK, resp.status());
+    assert_eq!(resp.status(), StatusCode::OK);
 
     let resp = request_metrics(&anon, "missing", Some("foobar"));
-    assert_eq!(StatusCode::NOT_FOUND, resp.status());
+    assert_eq!(resp.status(), StatusCode::NOT_FOUND);
 }
 
 #[test]
@@ -27,24 +27,24 @@ fn metrics_endpoint_wrong_auth() {
     // Wrong secret
 
     let resp = request_metrics(&anon, "service", Some("foobar"));
-    assert_eq!(StatusCode::FORBIDDEN, resp.status());
+    assert_eq!(resp.status(), StatusCode::FORBIDDEN);
 
     let resp = request_metrics(&anon, "instance", Some("foobar"));
-    assert_eq!(StatusCode::FORBIDDEN, resp.status());
+    assert_eq!(resp.status(), StatusCode::FORBIDDEN);
 
     let resp = request_metrics(&anon, "missing", Some("foobar"));
-    assert_eq!(StatusCode::FORBIDDEN, resp.status());
+    assert_eq!(resp.status(), StatusCode::FORBIDDEN);
 
     // No secret
 
     let resp = request_metrics(&anon, "service", None);
-    assert_eq!(StatusCode::FORBIDDEN, resp.status());
+    assert_eq!(resp.status(), StatusCode::FORBIDDEN);
 
     let resp = request_metrics(&anon, "instance", None);
-    assert_eq!(StatusCode::FORBIDDEN, resp.status());
+    assert_eq!(resp.status(), StatusCode::FORBIDDEN);
 
     let resp = request_metrics(&anon, "missing", None);
-    assert_eq!(StatusCode::FORBIDDEN, resp.status());
+    assert_eq!(resp.status(), StatusCode::FORBIDDEN);
 }
 
 #[test]
@@ -56,24 +56,24 @@ fn metrics_endpoint_auth_disabled() {
     // Wrong secret
 
     let resp = request_metrics(&anon, "service", Some("foobar"));
-    assert_eq!(StatusCode::NOT_FOUND, resp.status());
+    assert_eq!(resp.status(), StatusCode::NOT_FOUND);
 
     let resp = request_metrics(&anon, "instance", Some("foobar"));
-    assert_eq!(StatusCode::NOT_FOUND, resp.status());
+    assert_eq!(resp.status(), StatusCode::NOT_FOUND);
 
     let resp = request_metrics(&anon, "missing", Some("foobar"));
-    assert_eq!(StatusCode::NOT_FOUND, resp.status());
+    assert_eq!(resp.status(), StatusCode::NOT_FOUND);
 
     // No secret
 
     let resp = request_metrics(&anon, "service", None);
-    assert_eq!(StatusCode::NOT_FOUND, resp.status());
+    assert_eq!(resp.status(), StatusCode::NOT_FOUND);
 
     let resp = request_metrics(&anon, "instance", None);
-    assert_eq!(StatusCode::NOT_FOUND, resp.status());
+    assert_eq!(resp.status(), StatusCode::NOT_FOUND);
 
     let resp = request_metrics(&anon, "missing", None);
-    assert_eq!(StatusCode::NOT_FOUND, resp.status());
+    assert_eq!(resp.status(), StatusCode::NOT_FOUND);
 }
 
 fn request_metrics(anon: &MockAnonymousUser, kind: &str, token: Option<&str>) -> Response<()> {

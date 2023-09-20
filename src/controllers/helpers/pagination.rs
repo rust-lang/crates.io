@@ -342,7 +342,7 @@ mod tests {
         let pagination = PaginationOptions::builder()
             .gather(&mock("per_page=5"))
             .unwrap();
-        assert_eq!(5, pagination.per_page);
+        assert_eq!(pagination.per_page, 5);
     }
 
     #[test]
@@ -359,7 +359,7 @@ mod tests {
             .unwrap();
 
         if let Page::Seek(raw) = pagination.page {
-            assert_eq!(98, raw.decode::<i32>().unwrap());
+            assert_ok_eq!(raw.decode::<i32>(), 98);
         } else {
             panic!(
                 "did not parse a seek page, parsed {:?} instead",
@@ -394,14 +394,14 @@ mod tests {
     #[test]
     fn test_seek_encode_and_decode() {
         // Encoding produces the results we expect
-        assert_eq!("OTg", encode_seek(98).unwrap());
-        assert_eq!("WyJmb28iLDQyXQ", encode_seek(("foo", 42)).unwrap());
+        assert_ok_eq!(encode_seek(98), "OTg");
+        assert_ok_eq!(encode_seek(("foo", 42)), "WyJmb28iLDQyXQ");
 
         // Encoded values can be then decoded.
-        assert_eq!(98, decode_seek::<i32>(&encode_seek(98).unwrap()).unwrap(),);
-        assert_eq!(
+        assert_ok_eq!(decode_seek::<i32>(&encode_seek(98).unwrap()), 98);
+        assert_ok_eq!(
+            decode_seek::<(String, i32)>(&encode_seek(("foo", 42)).unwrap()),
             ("foo".into(), 42),
-            decode_seek::<(String, i32)>(&encode_seek(("foo", 42)).unwrap()).unwrap(),
         );
     }
 
@@ -418,6 +418,6 @@ mod tests {
         assert_eq!(error.to_string(), message);
 
         let response = error.response();
-        assert_eq!(StatusCode::BAD_REQUEST, response.status());
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     }
 }

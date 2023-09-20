@@ -54,7 +54,7 @@ fn can_download_crate_in_read_only_mode() {
 
         let dl_count: Result<Option<i64>, _> =
             version_downloads.select(sum(downloads)).get_result(conn);
-        assert_eq!(Ok(None), dl_count);
+        assert_ok_eq!(dl_count, None);
     })
 }
 

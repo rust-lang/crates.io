@@ -13,11 +13,11 @@ fn show() {
     app.db_new_user("Bar");
 
     let json: UserShowPublicResponse = anon.get("/api/v1/users/foo").good();
-    assert_eq!("foo", json.user.login);
+    assert_eq!(json.user.login, "foo");
 
     let json: UserShowPublicResponse = anon.get("/api/v1/users/bAr").good();
-    assert_eq!("Bar", json.user.login);
-    assert_eq!(Some("https://github.com/Bar".into()), json.user.url);
+    assert_eq!(json.user.login, "Bar");
+    assert_eq!(json.user.url, Some("https://github.com/Bar".into()));
 }
 
 #[test]

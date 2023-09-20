@@ -335,7 +335,7 @@ mod tests {
         let remaining_jobs = background_jobs
             .count()
             .get_result(&mut *runner.connection().unwrap());
-        assert_eq!(Ok(0), remaining_jobs);
+        assert_eq!(remaining_jobs, Ok(0));
     }
 
     #[test]
@@ -369,7 +369,7 @@ mod tests {
             .for_update()
             .load::<i64>(conn)
             .unwrap();
-        assert_eq!(0, available_jobs.len());
+        assert_eq!(available_jobs.len(), 0);
 
         // Sanity check to make sure the job actually is there
         let total_jobs_including_failed = background_jobs
@@ -377,7 +377,7 @@ mod tests {
             .for_update()
             .load::<i64>(conn)
             .unwrap();
-        assert_eq!(1, total_jobs_including_failed.len());
+        assert_eq!(total_jobs_including_failed.len(), 1);
 
         runner.wait_for_jobs().unwrap();
     }
@@ -397,7 +397,7 @@ mod tests {
             .for_update()
             .first::<i32>(&mut *runner.connection().unwrap())
             .unwrap();
-        assert_eq!(1, tries);
+        assert_eq!(tries, 1);
     }
 
     // Since these tests deal with behavior concerning multiple connections
