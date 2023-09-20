@@ -127,7 +127,7 @@ pub fn process_tarball<R: Read>(
     // on case-insensitive filesystems, to match the behaviour of cargo we should only actually
     // accept `Cargo.toml` and (the now deprecated) `cargo.toml` as valid options for the
     // manifest.
-    let Some((path, manifest)) = manifests.into_iter().next() else {
+    let Some((path, manifest)) = manifests.pop_first() else {
         return Err(TarballError::MissingManifest);
     };
 
