@@ -1,5 +1,5 @@
 use crate::builders::PublishBuilder;
-use crate::util::{RequestHelper, TestApp, TestDatabase};
+use crate::util::{RequestHelper, TestApp};
 use chrono::{NaiveDateTime, Utc};
 use crates_io::rate_limiter::LimitedAction;
 use crates_io::schema::{publish_limit_buckets, publish_rate_overrides};
@@ -12,7 +12,6 @@ use std::time::Duration;
 fn publish_new_crate_ratelimit_hit() {
     let (app, anon, _, token) = TestApp::full()
         .with_rate_limit(LimitedAction::PublishNew, Duration::from_millis(500), 1)
-        .with_database(TestDatabase::TestPool)
         .with_token();
 
     // Set up the database so it'll think we've massively ratelimited ourselves
@@ -45,7 +44,6 @@ fn publish_new_crate_ratelimit_hit() {
 fn publish_new_crate_ratelimit_expires() {
     let (app, anon, _, token) = TestApp::full()
         .with_rate_limit(LimitedAction::PublishNew, Duration::from_millis(500), 1)
-        .with_database(TestDatabase::TestPool)
         .with_token();
 
     // Set up the database so it'll think we've massively ratelimited ourselves
@@ -81,7 +79,6 @@ fn publish_new_crate_override_loosens_ratelimit() {
             Duration::from_secs(60 * 60 * 24),
             1,
         )
-        .with_database(TestDatabase::TestPool)
         .with_token();
 
     app.db(|conn| {
@@ -133,7 +130,6 @@ fn publish_new_crate_expired_override_ignored() {
             Duration::from_secs(60 * 60 * 24),
             1,
         )
-        .with_database(TestDatabase::TestPool)
         .with_token();
 
     app.db(|conn| {
