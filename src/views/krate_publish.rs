@@ -13,7 +13,7 @@ use crate::models::DependencyKind;
 use crate::models::Keyword as CrateKeyword;
 
 #[derive(Deserialize, Serialize, Debug)]
-pub struct EncodableCrateUpload {
+pub struct PublishMetadata {
     pub name: EncodableCrateName,
     pub vers: EncodableCrateVersion,
     pub deps: Vec<EncodableCrateDependency>,

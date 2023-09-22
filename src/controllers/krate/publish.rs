@@ -23,7 +23,7 @@ use crate::schema::*;
 use crate::util::errors::{cargo_err, internal, AppResult};
 use crate::util::Maximums;
 use crate::views::{
-    EncodableCrate, EncodableCrateDependency, EncodableCrateUpload, GoodCrate, PublishWarnings,
+    EncodableCrate, EncodableCrateDependency, GoodCrate, PublishMetadata, PublishWarnings,
 };
 
 const MISSING_RIGHTS_ERROR_MESSAGE: &str = "this crate exists but you don't seem to be an owner. \
@@ -42,12 +42,12 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
     let (req, bytes) = req.0.into_parts();
     let (json_bytes, tarball_bytes) = split_body(bytes, &req)?;
 
-    let new_crate: EncodableCrateUpload = serde_json::from_slice(&json_bytes)
+    let metadata: PublishMetadata = serde_json::from_slice(&json_bytes)
         .map_err(|e| cargo_err(&format_args!("invalid upload request: {e}")))?;
 
     let request_log = req.request_log();
-    request_log.add("crate_name", new_crate.name.to_string());
-    request_log.add("crate_version", new_crate.vers.to_string());
+    request_log.add("crate_name", metadata.name.to_string());
+    request_log.add("crate_version", metadata.vers.to_string());
 
     // Make sure required fields are provided
     fn empty(s: Option<&String>) -> bool {
@@ -57,10 +57,10 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
     // It can have up to three elements per below conditions.
     let mut missing = Vec::with_capacity(3);
 
-    if empty(new_crate.description.as_ref()) {
+    if empty(metadata.description.as_ref()) {
         missing.push("description");
     }
-    if empty(new_crate.license.as_ref()) && empty(new_crate.license_file.as_ref()) {
+    if empty(metadata.license.as_ref()) && empty(metadata.license_file.as_ref()) {
         missing.push("license");
     }
     if !missing.is_empty() {
@@ -74,7 +74,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         // this query should only be used for the endpoint scope calculation
         // since a race condition there would only cause `publish-new` instead of
         // `publish-update` to be used.
-        let existing_crate = Crate::by_name(&new_crate.name)
+        let existing_crate = Crate::by_name(&metadata.name)
             .first::<Crate>(conn)
             .optional()?;
 
@@ -85,7 +85,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
 
         let auth = AuthCheck::default()
             .with_endpoint_scope(endpoint_scope)
-            .for_crate(&new_crate.name)
+            .for_crate(&metadata.name)
             .check(&req, conn)?;
 
         let api_token_id = auth.api_token_id();
@@ -111,21 +111,21 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         // Create a transaction on the database, if there are no errors,
         // commit the transactions to record a new or updated crate.
         conn.transaction(|conn| {
-            let name = new_crate.name;
-            let vers = &*new_crate.vers;
-            let links = new_crate.links;
-            let repo = new_crate.repository;
-            let features = new_crate
+            let name = metadata.name;
+            let vers = &*metadata.vers;
+            let links = metadata.links;
+            let repo = metadata.repository;
+            let features = metadata
                 .features
                 .into_iter()
                 .map(|(k, v)| (k.0, v.into_iter().map(|v| v.0).collect()))
                 .collect();
-            let keywords = new_crate
+            let keywords = metadata
                 .keywords
                 .iter()
                 .map(|s| s.as_str())
                 .collect::<Vec<_>>();
-            let categories = new_crate
+            let categories = metadata
                 .categories
                 .iter()
                 .map(|s| s.as_str())
@@ -134,15 +134,15 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             // Persist the new crate, if it doesn't already exist
             let persist = NewCrate {
                 name: &name,
-                description: new_crate.description.as_deref(),
-                homepage: new_crate.homepage.as_deref(),
-                documentation: new_crate.documentation.as_deref(),
-                readme: new_crate.readme.as_deref(),
+                description: metadata.description.as_deref(),
+                homepage: metadata.homepage.as_deref(),
+                documentation: metadata.documentation.as_deref(),
+                readme: metadata.readme.as_deref(),
                 repository: repo.as_deref(),
                 max_upload_size: None,
             };
 
-            let license_file = new_crate.license_file.as_deref();
+            let license_file = metadata.license_file.as_deref();
             let krate = persist.create_or_update(conn, user.id)?;
 
             let owners = krate.owners(conn)?;
@@ -182,7 +182,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             }
 
             // This is only redundant for now. Eventually the duplication will be removed.
-            let license = new_crate.license.clone();
+            let license = metadata.license.clone();
 
             // Read tarball from request
             let hex_cksum: String = Sha256::digest(&tarball_bytes).encode_hex();
@@ -223,7 +223,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             )?;
 
             // Link this new version to all dependencies
-            add_dependencies(conn, &new_crate.deps, version.id)?;
+            add_dependencies(conn, &metadata.deps, version.id)?;
 
             // Update all keywords for this crate
             Keyword::update_crate(conn, &krate, &keywords)?;
@@ -236,12 +236,12 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
 
             let pkg_path_in_vcs = tarball_info.vcs_info.map(|info| info.path_in_vcs);
 
-            if let Some(readme) = new_crate.readme {
+            if let Some(readme) = metadata.readme {
                 if !readme.is_empty() {
                     Job::render_and_upload_readme(
                         version.id,
                         readme,
-                        new_crate
+                        metadata
                             .readme_file
                             .unwrap_or_else(|| String::from("README.md")),
                         repo,
