@@ -47,7 +47,7 @@ cookie = { version = "=0.17.0", features = ["secure"] }
 crossbeam-channel = "=0.5.8"
 dashmap = { version = "=5.5.3", features = ["raw-api"] }
 derive_deref = "=1.1.1"
-dialoguer = "=0.10.4"
+dialoguer = "=0.11.0"
 diesel = { version = "=2.1.1", features = ["postgres", "serde_json", "chrono", "r2d2", "numeric"] }
 diesel_full_text_search = "=2.1.0"
 diesel_migrations = { version = "=2.1.0", features = ["postgres"] }
