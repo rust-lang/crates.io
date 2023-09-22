@@ -45,8 +45,8 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         .map_err(|e| cargo_err(&format_args!("invalid upload request: {e}")))?;
 
     let request_log = req.request_log();
-    request_log.add("crate_name", metadata.name.to_string());
-    request_log.add("crate_version", metadata.vers.to_string());
+    request_log.add("crate_name", &*metadata.name);
+    request_log.add("crate_version", &*metadata.vers);
 
     // Make sure required fields are provided
     fn empty(s: Option<&String>) -> bool {
