@@ -10,7 +10,6 @@ use sha2::{Digest, Sha256};
 use tokio::runtime::Handle;
 
 use crate::controllers::cargo_prelude::*;
-use crate::controllers::util::RequestPartsExt;
 use crate::models::{
     insert_version_owner_action, Category, Crate, Keyword, NewCrate, NewVersion, Rights,
     VersionAction,
@@ -40,7 +39,7 @@ const MISSING_RIGHTS_ERROR_MESSAGE: &str = "this crate exists but you don't seem
 /// --status` command, via crates.io's front end, or email.
 pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCrate>> {
     let (req, bytes) = req.0.into_parts();
-    let (json_bytes, tarball_bytes) = split_body(bytes, &req)?;
+    let (json_bytes, tarball_bytes) = split_body(bytes)?;
 
     let metadata: PublishMetadata = serde_json::from_slice(&json_bytes)
         .map_err(|e| cargo_err(&format_args!("invalid upload request: {e}")))?;
@@ -294,7 +293,7 @@ fn count_versions_published_today(krate_id: i32, conn: &mut PgConnection) -> Que
 }
 
 #[instrument(skip_all)]
-fn split_body<R: RequestPartsExt>(mut bytes: Bytes, req: &R) -> AppResult<(Bytes, Bytes)> {
+fn split_body(mut bytes: Bytes) -> AppResult<(Bytes, Bytes)> {
     // The format of the req.body() of a publish request is as follows:
     //
     // metadata length
@@ -308,8 +307,6 @@ fn split_body<R: RequestPartsExt>(mut bytes: Bytes, req: &R) -> AppResult<(Bytes
     }
 
     let json_len = bytes.get_u32_le() as usize;
-    req.request_log().add("metadata_length", json_len);
-
     if json_len > bytes.len() {
         return Err(cargo_err(&format!(
             "invalid metadata length for remaining payload: {json_len}"
