@@ -60,7 +60,7 @@ http = "=0.2.9"
 http-body = "=0.4.5"
 hyper = { version = "=0.14.27", features = ["backports", "client", "deprecated", "http1"] }
 indexmap = { version = "=2.0.0", features = ["serde"] }
-indicatif = "=0.17.6"
+indicatif = "=0.17.7"
 ipnetwork = "=0.20.0"
 tikv-jemallocator = { version = "=0.5.4", features = ['unprefixed_malloc_on_supported_platforms', 'profiling'] }
 lettre = { version = "=0.10.4", default-features = false, features = ["file-transport", "smtp-transport", "native-tls", "hostname", "builder"] }
