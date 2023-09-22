@@ -11,7 +11,7 @@ use crate::models::{
 use crate::util::rfc3339;
 
 pub mod krate_publish;
-pub use self::krate_publish::{EncodableCrateDependency, EncodableCrateUpload};
+pub use self::krate_publish::{EncodableCrateDependency, PublishMetadata};
 
 /// Hosts in this list are known to not be hosting documentation,
 /// and are possibly of malicious intent e.g. ad tracking networks, etc.

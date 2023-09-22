@@ -137,7 +137,7 @@ impl PublishBuilder {
     }
 
     pub fn build(self) -> (String, Vec<u8>) {
-        let new_crate = u::EncodableCrateUpload {
+        let metadata = u::PublishMetadata {
             name: u::EncodableCrateName(self.krate_name.clone()),
             vers: u::EncodableCrateVersion(self.version.clone()),
             features: self.features.clone(),
@@ -223,7 +223,7 @@ impl PublishBuilder {
         }
 
         let tarball = tarball_builder.build();
-        (serde_json::to_string(&new_crate).unwrap(), tarball)
+        (serde_json::to_string(&metadata).unwrap(), tarball)
     }
 
     /// Consume this builder to make the Put request body
