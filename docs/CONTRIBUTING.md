@@ -76,7 +76,7 @@ up git](https://help.github.com/articles/set-up-git/), and once you've done
 that, you should be able to clone the repo and change into the repo's directory
 from your terminal:
 
-```
+```console
 git clone https://github.com/rust-lang/crates.io.git
 cd crates.io/
 ```
@@ -121,7 +121,7 @@ into any trouble.
 
 To install the npm packages that crates.io uses, run:
 
-```
+```console
 pnpm install
 ```
 
@@ -151,7 +151,7 @@ talk to:
 
 You can run the frontend tests with:
 
-```
+```console
 pnpm test
 ```
 
@@ -182,7 +182,7 @@ methods we'd recommend for each operating system:
   [Homebrew](https://brew.sh/) by running `brew install postgresql@13` and
   following the post-installation instructions
 - Linux: Postgres is generally available in the distribution repositories as
-  `postgresql` or `postgresql-server`. You will also need the developer package 
+  `postgresql` or `postgresql-server`. You will also need the developer package
   (known either as `postgresql-devel` or `libpq-dev`),
   as well as `postgresql-contrib`. Here
   are some examples of installation commands that have been tested for the
@@ -211,7 +211,7 @@ by typing `\q`) without any errors to connect to your running Postgres server.
 > ```
 > psql: could not connect to server: No such file or directory
 > Is the server running locally and accepting
-> connections on Unix domain socket "/var/run/postgresql/.s.PGSQL.5432"?  
+> connections on Unix domain socket "/var/run/postgresql/.s.PGSQL.5432"?
 > ```
 > You may need to start the postgreql server on your system. On a Linux system,
 > you can start it with this command:
@@ -284,7 +284,7 @@ by typing `\q`) without any errors to connect to your running Postgres server.
 
 On all platforms, install through `cargo` by running:
 
-```
+```console
 cargo install diesel_cli --no-default-features --features postgres --version ^2
 ```
 
@@ -325,8 +325,8 @@ Try using `postgres://postgres@localhost/cargo_registry` first.
 > If you receive an error that looks like:
 >
 > ```
-> password authentication failed for user \"postgres\"\nFATAL:  
-> password authentication failed for user \"postgres\"\n"` 
+> password authentication failed for user \"postgres\"\nFATAL:
+> password authentication failed for user \"postgres\"\n"`
 > ```
 >
 > You may need to update the pg_hba.conf file on your development workstation.
@@ -341,13 +341,13 @@ named `cargo_registry`.
 
 Create a new database by running:
 
-```
+```console
 createdb cargo_registry
 ```
 
 Then run the migrations:
 
-```
+```console
 diesel migration run
 ```
 
@@ -355,7 +355,7 @@ diesel migration run
 
 Set up the git repo for the crate index by running:
 
-```
+```console
 ./script/init-local-index.sh
 ```
 
@@ -364,13 +364,13 @@ Set up the git repo for the crate index by running:
 Build and start the server by running this command (you'll need to stop this
 with `CTRL-C` and rerun this command every time you change the backend code):
 
-```
+```console
 cargo run
 ```
 
 Then start the background worker (which will process uploaded READMEs):
 
-```
+```console
 cargo run --bin background-worker
 ```
 
@@ -379,7 +379,7 @@ terminal session (the frontend picks up frontend changes using live reload
 without a restart needed, and you can leave the frontend running while you
 restart the server):
 
-```
+```console
 pnpm start:local
 ```
 
@@ -440,7 +440,7 @@ using `postgres://postgres@localhost/cargo_registry_test`.
 
 Create the test database by running:
 
-```
+```console
 createdb cargo_registry_test
 ```
 
@@ -448,7 +448,7 @@ The test harness will ensure that migrations are run.
 
 Run the backend API server tests with this command:
 
-```
+```console
 cargo test
 ```
 
@@ -491,7 +491,7 @@ live crates.io, you won't be able to publish that crate locally.
 
 In your crate directory, run:
 
-```
+```console
 cargo publish --index file:///path/to/your/crates.io/tmp/index-bare --token $YOUR_TOKEN
 ```
 
@@ -529,7 +529,7 @@ replace-with = "mirror"
 Then add the crate you published to your local crates.io as a dependency in
 this crate's `Cargo.toml`, and `cargo build` should display output like this:
 
-```
+```console
     Updating registry `file:///path/to/your/crates.io/tmp/index-bare`
  Downloading yourcrate v0.1.0 (registry file:///path/to/your/crates.io/tmp/index-bare)
    Compiling yourcrate v0.1.0
@@ -544,8 +544,8 @@ There are Dockerfiles to build both the backend and the frontend,
 useful to just use docker-compose to bring up everything that's needed all in
 one go:
 
-```
-docker-compose up -d
+```console
+docker compose up -d
 ```
 
 The Compose file is filled out with a sane set of defaults that should Just
@@ -564,7 +564,7 @@ services:
 ```
 
 These environment variables can also be defined in a local `.env` file, see `.env.sample`
-for various configuration options. 
+for various configuration options.
 
 #### Accessing services
 
@@ -581,8 +581,8 @@ These can be changed with the `docker-compose.override.yml` file.
 Unlike a local setup, the Git index is not stored in the `./tmp` folder, so in
 order to publish to the Dockerized crates.io, run
 
-```
-cargo publish --index http://localhost:4200/git/index --token $YOUR_TOKEN
+```console
+cargo publish --index http://localhost:8888/git/index --token $YOUR_TOKEN
 ```
 
 #### Changing code
@@ -592,34 +592,34 @@ which means that the Ember live-reload server will still just work. If
 anything outside of `app/` is changed, the base Docker image will have to be
 rebuilt:
 
-```sh
+```console
 # Rebuild frontend Docker image
-docker-compose build frontend
+docker compose build frontend
 
 # Restart running frontend container (if it's already running)
-docker-compose stop frontend
-docker-compose rm frontend
-docker-compose up -d
+docker compose stop frontend
+docker compose rm frontend
+docker compose up -d
 ```
 
 Similarly, the `src/` directory is mounted into the backend Docker container,
 so in order to recompile the backend, run:
 
-```
-docker-compose restart backend
+```console
+docker compose restart backend
 ```
 
 If anything outside of `src/` is changed, the base Docker image will have to be
 rebuilt:
 
-```sh
+```console
 # Rebuild backend Docker image
-docker-compose build backend
+docker compose build backend
 
 # Restart running backend container (if it's already running)
-docker-compose stop backend
-docker-compose rm backend
-docker-compose up -d
+docker compose stop backend
+docker compose rm backend
+docker compose up -d
 ```
 
 #### Volumes
