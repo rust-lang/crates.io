@@ -297,8 +297,8 @@ devDependencies:
     specifier: 2.0.0
     version: 2.0.0
   tracked-built-ins:
-    specifier: 3.2.0
-    version: 3.2.0
+    specifier: 3.3.0
+    version: 3.3.0
   webpack:
     specifier: 5.88.2
     version: 5.88.2
@@ -16988,9 +16988,8 @@ packages:
     dependencies:
       punycode: 2.3.0
 
-  /tracked-built-ins@3.2.0:
-    resolution: {integrity: sha512-dB8cFBpyJco3tmMO0w/+K8GYaL4iBjff4avLmNju0q6o8VvKLPpvPk/JHiwSXgX6aDCcOQv4J5JUBCAXBHaiGQ==}
-    engines: {node: 14.* || 16.* || >= 18}
+  /tracked-built-ins@3.3.0:
+    resolution: {integrity: sha512-ewKFrW/AQs05oLPM5isOUb/1aOwBRfHfmF408CCzTk21FLAhKrKVOP5Q5ebX+zCT4kvg81PGBGwrBiEGND1nWA==}
     dependencies:
       '@embroider/addon-shim': 1.8.6
       ember-tracked-storage-polyfill: 1.0.0
