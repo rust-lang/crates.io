@@ -115,7 +115,7 @@ devDependencies:
     version: 3.0.0
   ember-a11y-testing:
     specifier: 6.1.1
-    version: 6.1.1(@babel/core@7.22.20)(@ember/test-helpers@3.2.0)(qunit@2.19.4)(webpack@5.88.2)
+    version: 6.1.1(@babel/core@7.22.20)(@ember/test-helpers@3.2.0)(qunit@2.20.0)(webpack@5.88.2)
   ember-auto-import:
     specifier: 2.6.3
     version: 2.6.3(webpack@5.88.2)
@@ -184,7 +184,7 @@ devDependencies:
     version: 0.1.1
   ember-exam:
     specifier: 8.0.0
-    version: 8.0.0(ember-qunit@8.0.1)(qunit@2.19.4)(webpack@5.88.2)
+    version: 8.0.0(ember-qunit@8.0.1)(qunit@2.20.0)(webpack@5.88.2)
   ember-fetch:
     specifier: 8.1.2
     version: 8.1.2
@@ -205,7 +205,7 @@ devDependencies:
     version: 8.0.0
   ember-qunit:
     specifier: 8.0.1
-    version: 8.0.1(@ember/test-helpers@3.2.0)(ember-source@5.3.0)(qunit@2.19.4)
+    version: 8.0.1(@ember/test-helpers@3.2.0)(ember-source@5.3.0)(qunit@2.20.0)
   ember-resolver:
     specifier: 11.0.1
     version: 11.0.1(ember-source@5.3.0)
@@ -288,8 +288,8 @@ devDependencies:
     specifier: 3.0.3
     version: 3.0.3
   qunit:
-    specifier: 2.19.4
-    version: 2.19.4
+    specifier: 2.20.0
+    version: 2.20.0
   qunit-console-grouper:
     specifier: 0.3.0
     version: 0.3.0
@@ -8175,7 +8175,7 @@ packages:
       minimalistic-crypto-utils: 1.0.1
     dev: true
 
-  /ember-a11y-testing@6.1.1(@babel/core@7.22.20)(@ember/test-helpers@3.2.0)(qunit@2.19.4)(webpack@5.88.2):
+  /ember-a11y-testing@6.1.1(@babel/core@7.22.20)(@ember/test-helpers@3.2.0)(qunit@2.20.0)(webpack@5.88.2):
     resolution: {integrity: sha512-bDpw5+B2q++xwz5DWcbYB6dXp6nNe4jBwDkT6CqMESiVWWsSKPHs3ygt1Y89ESucesRIiv/49gNKMftZNsCpkw==}
     engines: {node: 16.* || >= 18}
     peerDependencies:
@@ -8197,7 +8197,7 @@ packages:
       ember-cli-version-checker: 5.1.2
       ember-destroyable-polyfill: 2.0.3(@babel/core@7.22.20)
       fs-extra: 10.1.0
-      qunit: 2.19.4
+      qunit: 2.20.0
       validate-peer-dependencies: 2.2.0
     transitivePeerDependencies:
       - '@babel/core'
@@ -8631,7 +8631,7 @@ packages:
       ember-destroyable-polyfill: 2.0.3(@babel/core@7.22.20)
       ember-get-config: 2.1.1
       ember-inflector: 4.0.2
-      ember-qunit: 8.0.1(@ember/test-helpers@3.2.0)(ember-source@5.3.0)(qunit@2.19.4)
+      ember-qunit: 8.0.1(@ember/test-helpers@3.2.0)(ember-source@5.3.0)(qunit@2.20.0)
       lodash-es: 4.17.21
       miragejs: 0.1.47
     transitivePeerDependencies:
@@ -9126,7 +9126,7 @@ packages:
       - supports-color
     dev: true
 
-  /ember-exam@8.0.0(ember-qunit@8.0.1)(qunit@2.19.4)(webpack@5.88.2):
+  /ember-exam@8.0.0(ember-qunit@8.0.1)(qunit@2.20.0)(webpack@5.88.2):
     resolution: {integrity: sha512-XKfFC0bpSDSJWFkmrcVxOtjwoVf8sPlMDizhNZF06O/R0UyH9lMOrUT/KWcIZ1vQd4Vqbg9DpakONmOyYQGXhw==}
     engines: {node: 12.* || 14.* || >= 16}
     peerDependencies:
@@ -9148,12 +9148,12 @@ packages:
       ember-auto-import: 2.6.3(webpack@5.88.2)
       ember-cli-babel: 7.26.11
       ember-cli-version-checker: 5.1.2
-      ember-qunit: 8.0.1(@ember/test-helpers@3.2.0)(ember-source@5.3.0)(qunit@2.19.4)
+      ember-qunit: 8.0.1(@ember/test-helpers@3.2.0)(ember-source@5.3.0)(qunit@2.20.0)
       execa: 4.1.0
       fs-extra: 10.1.0
       js-yaml: 4.1.0
       npmlog: 6.0.2
-      qunit: 2.19.4
+      qunit: 2.20.0
       rimraf: 3.0.2
       semver: 7.5.4
       silent-error: 1.1.1
@@ -9329,7 +9329,7 @@ packages:
       - supports-color
     dev: true
 
-  /ember-qunit@8.0.1(@ember/test-helpers@3.2.0)(ember-source@5.3.0)(qunit@2.19.4):
+  /ember-qunit@8.0.1(@ember/test-helpers@3.2.0)(ember-source@5.3.0)(qunit@2.20.0):
     resolution: {integrity: sha512-13PtywHNPTQKkDW4o8QRkJvcdsZr8hRyvh6xh/YLAX8+HaRLd3nPL8mBF4O/Kur/DAj3QWLvjzktZ2uRNGSh3A==}
     peerDependencies:
       '@ember/test-helpers': '>=3.0.3'
@@ -9341,7 +9341,7 @@ packages:
       '@embroider/macros': 1.13.1
       ember-cli-test-loader: 3.1.0
       ember-source: 5.3.0(@babel/core@7.22.20)(@glimmer/component@1.1.2)(rsvp@4.8.5)(webpack@5.88.2)
-      qunit: 2.19.4
+      qunit: 2.20.0
     transitivePeerDependencies:
       - '@glint/template'
       - supports-color
@@ -15148,8 +15148,8 @@ packages:
       - supports-color
     dev: true
 
-  /qunit@2.19.4:
-    resolution: {integrity: sha512-aqUzzUeCqlleWYKlpgfdHHw9C6KxkB9H3wNfiBg5yHqQMzy0xw/pbCRHYFkjl8MsP/t8qkTQE+JTYL71azgiew==}
+  /qunit@2.20.0:
+    resolution: {integrity: sha512-N8Fp1J55waE+QG1KwX2LOyqulZUToRrrPBqDOfYfuAMkEglFL15uwvmH1P4Tq/omQ/mGbBI8PEB3PhIfvUb+jg==}
     engines: {node: '>=10'}
     hasBin: true
     dependencies:
