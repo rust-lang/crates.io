@@ -106,8 +106,10 @@ module('ajax()', function (hooks) {
       let expectedCauseMessages = [
         // Chrome < 104
         'Unexpected token f in JSON at position 2',
-        // Chrome >= 104
+        // Chrome 104 – 117
         "Expected property name or '}' in JSON at position 2",
+        // Chrome >= 117
+        "Expected property name or '}' in JSON at position 2 (line 1 column 3)",
       ];
 
       let { cause } = error;
