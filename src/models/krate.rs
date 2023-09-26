@@ -105,9 +105,6 @@ impl<'a> NewCrate<'a> {
     pub fn create_or_update(self, conn: &mut PgConnection, uploader: i32) -> AppResult<Crate> {
         use diesel::update;
 
-        self.validate()?;
-        self.ensure_name_not_reserved(conn)?;
-
         conn.transaction(|conn| {
             // To avoid race conditions, we try to insert
             // first so we know whether to add an owner
@@ -124,7 +121,7 @@ impl<'a> NewCrate<'a> {
         })
     }
 
-    fn validate(&self) -> AppResult<()> {
+    pub fn validate(&self) -> AppResult<()> {
         fn validate_url(url: Option<&str>, field: &str) -> AppResult<()> {
             let url = match url {
                 Some(s) => s,
@@ -151,7 +148,7 @@ impl<'a> NewCrate<'a> {
         Ok(())
     }
 
-    fn ensure_name_not_reserved(&self, conn: &mut PgConnection) -> AppResult<()> {
+    pub fn ensure_name_not_reserved(&self, conn: &mut PgConnection) -> AppResult<()> {
         use crate::schema::reserved_crate_names::dsl::*;
         use diesel::dsl::exists;
         use diesel::select;

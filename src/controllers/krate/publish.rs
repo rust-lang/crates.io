@@ -142,6 +142,10 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             };
 
             let license_file = metadata.license_file.as_deref();
+
+            persist.validate()?;
+            persist.ensure_name_not_reserved(conn)?;
+
             let krate = persist.create_or_update(conn, user.id)?;
 
             let owners = krate.owners(conn)?;
