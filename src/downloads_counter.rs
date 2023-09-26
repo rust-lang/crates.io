@@ -65,12 +65,12 @@ impl DownloadsCounter {
     }
 
     pub fn persist_all_shards(&self, app: &App) -> Result<PersistStats, Error> {
-        let conn = &mut app.primary_database.get()?;
+        let conn = &mut app.db_write()?;
         self.persist_all_shards_with_conn(conn)
     }
 
     pub fn persist_next_shard(&self, app: &App) -> Result<PersistStats, Error> {
-        let conn = &mut app.primary_database.get()?;
+        let conn = &mut app.db_write()?;
         self.persist_next_shard_with_conn(conn)
     }
 

@@ -71,7 +71,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
     }
 
     conduit_compat(move || {
-        let conn = &mut *app.primary_database.get()?;
+        let conn = &mut *app.db_write()?;
 
         // this query should only be used for the endpoint scope calculation
         // since a race condition there would only cause `publish-new` instead of
