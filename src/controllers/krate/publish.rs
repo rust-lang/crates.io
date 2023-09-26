@@ -339,16 +339,18 @@ fn split_body(mut bytes: Bytes) -> AppResult<(Bytes, Bytes)> {
 }
 
 fn ensure_name_not_reserved(name: &str, conn: &mut PgConnection) -> AppResult<()> {
-    let reserved_name: bool = select(exists(
-        reserved_crate_names::table
-            .filter(canon_crate_name(reserved_crate_names::name).eq(canon_crate_name(name))),
-    ))
-    .get_result(conn)?;
-    if reserved_name {
+    if is_reserved_name(name, conn)? {
         Err(cargo_err("cannot upload a crate with a reserved name"))
     } else {
         Ok(())
     }
+}
+
+fn is_reserved_name(name: &str, conn: &mut PgConnection) -> QueryResult<bool> {
+    select(exists(reserved_crate_names::table.filter(
+        canon_crate_name(reserved_crate_names::name).eq(canon_crate_name(name)),
+    )))
+    .get_result(conn)
 }
 
 fn missing_metadata_error_message(missing: &[&str]) -> String {
