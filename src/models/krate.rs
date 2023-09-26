@@ -148,22 +148,6 @@ impl<'a> NewCrate<'a> {
         Ok(())
     }
 
-    pub fn ensure_name_not_reserved(&self, conn: &mut PgConnection) -> AppResult<()> {
-        use crate::schema::reserved_crate_names::dsl::*;
-        use diesel::dsl::exists;
-        use diesel::select;
-
-        let reserved_name: bool = select(exists(
-            reserved_crate_names.filter(canon_crate_name(name).eq(canon_crate_name(self.name))),
-        ))
-        .get_result(conn)?;
-        if reserved_name {
-            Err(cargo_err("cannot upload a crate with a reserved name"))
-        } else {
-            Ok(())
-        }
-    }
-
     fn save_new_crate(&self, conn: &mut PgConnection, user_id: i32) -> QueryResult<Option<Crate>> {
         use crate::schema::crates::dsl::*;
 

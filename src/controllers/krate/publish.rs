@@ -4,6 +4,7 @@ use crate::auth::AuthCheck;
 use crate::background_jobs::{Job, PRIORITY_RENDER_README};
 use axum::body::Bytes;
 use crates_io_tarball::{process_tarball, TarballError};
+use diesel::dsl::{exists, select};
 use hex::ToHex;
 use hyper::body::Buf;
 use sha2::{Digest, Sha256};
@@ -19,6 +20,7 @@ use crate::middleware::log_request::RequestLogExt;
 use crate::models::token::EndpointScope;
 use crate::rate_limiter::LimitedAction;
 use crate::schema::*;
+use crate::sql::canon_crate_name;
 use crate::util::errors::{cargo_err, internal, AppResult};
 use crate::util::Maximums;
 use crate::views::{
@@ -144,7 +146,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             let license_file = metadata.license_file.as_deref();
 
             persist.validate()?;
-            persist.ensure_name_not_reserved(conn)?;
+            ensure_name_not_reserved(persist.name, conn)?;
 
             let krate = persist.create_or_update(conn, user.id)?;
 
@@ -334,6 +336,19 @@ fn split_body(mut bytes: Bytes) -> AppResult<(Bytes, Bytes)> {
     let tarball_bytes = bytes.split_to(tarball_len);
 
     Ok((json_bytes, tarball_bytes))
+}
+
+fn ensure_name_not_reserved(name: &str, conn: &mut PgConnection) -> AppResult<()> {
+    let reserved_name: bool = select(exists(
+        reserved_crate_names::table
+            .filter(canon_crate_name(reserved_crate_names::name).eq(canon_crate_name(name))),
+    ))
+    .get_result(conn)?;
+    if reserved_name {
+        Err(cargo_err("cannot upload a crate with a reserved name"))
+    } else {
+        Ok(())
+    }
 }
 
 fn missing_metadata_error_message(missing: &[&str]) -> String {
