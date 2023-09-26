@@ -146,7 +146,9 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             let license_file = metadata.license_file.as_deref();
 
             persist.validate()?;
-            ensure_name_not_reserved(persist.name, conn)?;
+            if is_reserved_name(persist.name, conn)? {
+                return Err(cargo_err("cannot upload a crate with a reserved name"));
+            }
 
             let krate = persist.create_or_update(conn, user.id)?;
 
@@ -336,14 +338,6 @@ fn split_body(mut bytes: Bytes) -> AppResult<(Bytes, Bytes)> {
     let tarball_bytes = bytes.split_to(tarball_len);
 
     Ok((json_bytes, tarball_bytes))
-}
-
-fn ensure_name_not_reserved(name: &str, conn: &mut PgConnection) -> AppResult<()> {
-    if is_reserved_name(name, conn)? {
-        Err(cargo_err("cannot upload a crate with a reserved name"))
-    } else {
-        Ok(())
-    }
 }
 
 fn is_reserved_name(name: &str, conn: &mut PgConnection) -> QueryResult<bool> {
