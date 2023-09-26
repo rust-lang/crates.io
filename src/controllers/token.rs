@@ -56,7 +56,7 @@ pub async fn list(
                         .bind::<Interval, _>(params.expired_days_interval())
                         .sql(")"))),
             )
-            .order(api_tokens::created_at.desc())
+            .order(api_tokens::id.desc())
             .load(conn)?;
 
         Ok(Json(json!({ "api_tokens": tokens })))
