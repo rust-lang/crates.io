@@ -9,6 +9,7 @@ use hex::ToHex;
 use hyper::body::Buf;
 use sha2::{Digest, Sha256};
 use tokio::runtime::Handle;
+use url::Url;
 
 use crate::controllers::cargo_prelude::*;
 use crate::models::{
@@ -145,7 +146,10 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
 
             let license_file = metadata.license_file.as_deref();
 
-            persist.validate()?;
+            validate_url(persist.homepage, "homepage")?;
+            validate_url(persist.documentation, "documentation")?;
+            validate_url(persist.repository, "repository")?;
+
             if is_reserved_name(persist.name, conn)? {
                 return Err(cargo_err("cannot upload a crate with a reserved name"));
             }
@@ -347,6 +351,26 @@ fn is_reserved_name(name: &str, conn: &mut PgConnection) -> QueryResult<bool> {
     .get_result(conn)
 }
 
+fn validate_url(url: Option<&str>, field: &str) -> AppResult<()> {
+    let url = match url {
+        Some(s) => s,
+        None => return Ok(()),
+    };
+
+    // Manually check the string, as `Url::parse` may normalize relative URLs
+    // making it difficult to ensure that both slashes are present.
+    if !url.starts_with("http://") && !url.starts_with("https://") {
+        return Err(cargo_err(&format_args!(
+            "URL for field `{field}` must begin with http:// or https:// (url: {url})"
+        )));
+    }
+
+    // Ensure the entire URL parses as well
+    Url::parse(url)
+        .map_err(|_| cargo_err(&format_args!("`{field}` is not a valid url: `{url}`")))?;
+    Ok(())
+}
+
 fn missing_metadata_error_message(missing: &[&str]) -> String {
     format!(
         "missing or empty metadata fields: {}. Please \
@@ -453,7 +477,12 @@ impl From<TarballError> for BoxedAppError {
 
 #[cfg(test)]
 mod tests {
-    use super::missing_metadata_error_message;
+    use super::{missing_metadata_error_message, validate_url};
+
+    #[test]
+    fn deny_relative_urls() {
+        assert_err!(validate_url(Some("https:/example.com/home"), "homepage"));
+    }
 
     #[test]
     fn missing_metadata_error_message_test() {

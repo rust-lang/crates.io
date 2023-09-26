@@ -5,7 +5,6 @@ use diesel::associations::Identifiable;
 use diesel::pg::Pg;
 use diesel::prelude::*;
 use diesel::sql_types::{Bool, Text};
-use url::Url;
 
 use crate::app::App;
 use crate::controllers::helpers::pagination::*;
@@ -119,33 +118,6 @@ impl<'a> NewCrate<'a> {
                 .get_result(conn)
                 .map_err(Into::into)
         })
-    }
-
-    pub fn validate(&self) -> AppResult<()> {
-        fn validate_url(url: Option<&str>, field: &str) -> AppResult<()> {
-            let url = match url {
-                Some(s) => s,
-                None => return Ok(()),
-            };
-
-            // Manually check the string, as `Url::parse` may normalize relative URLs
-            // making it difficult to ensure that both slashes are present.
-            if !url.starts_with("http://") && !url.starts_with("https://") {
-                return Err(cargo_err(&format_args!(
-                    "URL for field `{field}` must begin with http:// or https:// (url: {url})"
-                )));
-            }
-
-            // Ensure the entire URL parses as well
-            Url::parse(url)
-                .map_err(|_| cargo_err(&format_args!("`{field}` is not a valid url: `{url}`")))?;
-            Ok(())
-        }
-
-        validate_url(self.homepage, "homepage")?;
-        validate_url(self.documentation, "documentation")?;
-        validate_url(self.repository, "repository")?;
-        Ok(())
     }
 
     fn save_new_crate(&self, conn: &mut PgConnection, user_id: i32) -> QueryResult<Option<Crate>> {
@@ -502,21 +474,7 @@ impl Crate {
 
 #[cfg(test)]
 mod tests {
-    use crate::models::{Crate, NewCrate};
-
-    #[test]
-    fn deny_relative_urls() {
-        let krate = NewCrate {
-            name: "name",
-            description: None,
-            homepage: Some("https:/example.com/home"),
-            documentation: None,
-            readme: None,
-            repository: None,
-            max_upload_size: None,
-        };
-        assert_err!(krate.validate());
-    }
+    use crate::models::Crate;
 
     #[test]
     fn valid_name() {
