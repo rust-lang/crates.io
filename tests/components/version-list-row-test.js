@@ -18,7 +18,7 @@ module('Component | VersionList::Row', function (hooks) {
 
     let store = this.owner.lookup('service:store');
     let crateRecord = await store.findRecord('crate', crate.name);
-    let versions = (await crateRecord.versions).toArray();
+    let versions = (await crateRecord.versions).slice();
     this.firstVersion = versions[0];
     this.secondVersion = versions[1];
 
@@ -38,7 +38,7 @@ module('Component | VersionList::Row', function (hooks) {
 
     let store = this.owner.lookup('service:store');
     let crateRecord = await store.findRecord('crate', crate.name);
-    this.version = (await crateRecord.versions).toArray()[0];
+    this.version = (await crateRecord.versions).slice()[0];
 
     await render(hbs`<VersionList::Row @version={{this.version}} />`);
     assert.dom('[data-test-release-track]').hasText('?');
@@ -71,7 +71,7 @@ module('Component | VersionList::Row', function (hooks) {
 
     let store = this.owner.lookup('service:store');
     let crateRecord = await store.findRecord('crate', crate.name);
-    let versions = (await crateRecord.versions).toArray();
+    let versions = (await crateRecord.versions).slice();
     this.firstVersion = versions[0];
     this.secondVersion = versions[1];
     this.thirdVersion = versions[2];
