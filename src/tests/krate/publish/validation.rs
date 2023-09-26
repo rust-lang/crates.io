@@ -86,3 +86,16 @@ fn license_and_description_required() {
 
     assert!(app.stored_files().is_empty());
 }
+
+#[test]
+fn invalid_urls() {
+    let (app, _, _, token) = TestApp::full().with_token();
+
+    let response = token.publish_crate(
+        PublishBuilder::new("foo", "1.0.0").documentation("javascript:alert('boom')"),
+    );
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json());
+
+    assert!(app.stored_files().is_empty());
+}

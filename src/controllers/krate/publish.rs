@@ -4,10 +4,12 @@ use crate::auth::AuthCheck;
 use crate::background_jobs::{Job, PRIORITY_RENDER_README};
 use axum::body::Bytes;
 use crates_io_tarball::{process_tarball, TarballError};
+use diesel::dsl::{exists, select};
 use hex::ToHex;
 use hyper::body::Buf;
 use sha2::{Digest, Sha256};
 use tokio::runtime::Handle;
+use url::Url;
 
 use crate::controllers::cargo_prelude::*;
 use crate::models::{
@@ -19,6 +21,7 @@ use crate::middleware::log_request::RequestLogExt;
 use crate::models::token::EndpointScope;
 use crate::rate_limiter::LimitedAction;
 use crate::schema::*;
+use crate::sql::canon_crate_name;
 use crate::util::errors::{cargo_err, internal, AppResult};
 use crate::util::Maximums;
 use crate::views::{
@@ -142,6 +145,15 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             };
 
             let license_file = metadata.license_file.as_deref();
+
+            validate_url(persist.homepage, "homepage")?;
+            validate_url(persist.documentation, "documentation")?;
+            validate_url(persist.repository, "repository")?;
+
+            if is_reserved_name(persist.name, conn)? {
+                return Err(cargo_err("cannot upload a crate with a reserved name"));
+            }
+
             let krate = persist.create_or_update(conn, user.id)?;
 
             let owners = krate.owners(conn)?;
@@ -332,6 +344,32 @@ fn split_body(mut bytes: Bytes) -> AppResult<(Bytes, Bytes)> {
     Ok((json_bytes, tarball_bytes))
 }
 
+fn is_reserved_name(name: &str, conn: &mut PgConnection) -> QueryResult<bool> {
+    select(exists(reserved_crate_names::table.filter(
+        canon_crate_name(reserved_crate_names::name).eq(canon_crate_name(name)),
+    )))
+    .get_result(conn)
+}
+
+fn validate_url(url: Option<&str>, field: &str) -> AppResult<()> {
+    let Some(url) = url else {
+        return Ok(());
+    };
+
+    // Manually check the string, as `Url::parse` may normalize relative URLs
+    // making it difficult to ensure that both slashes are present.
+    if !url.starts_with("http://") && !url.starts_with("https://") {
+        return Err(cargo_err(&format_args!(
+            "URL for field `{field}` must begin with http:// or https:// (url: {url})"
+        )));
+    }
+
+    // Ensure the entire URL parses as well
+    Url::parse(url)
+        .map_err(|_| cargo_err(&format_args!("`{field}` is not a valid url: `{url}`")))?;
+    Ok(())
+}
+
 fn missing_metadata_error_message(missing: &[&str]) -> String {
     format!(
         "missing or empty metadata fields: {}. Please \
@@ -438,7 +476,12 @@ impl From<TarballError> for BoxedAppError {
 
 #[cfg(test)]
 mod tests {
-    use super::missing_metadata_error_message;
+    use super::{missing_metadata_error_message, validate_url};
+
+    #[test]
+    fn deny_relative_urls() {
+        assert_err!(validate_url(Some("https:/example.com/home"), "homepage"));
+    }
 
     #[test]
     fn missing_metadata_error_message_test() {
