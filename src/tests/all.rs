@@ -169,6 +169,6 @@ fn recursive_get_of_db_conn_in_tests_will_panic() {
     let (app, _) = TestApp::init().empty();
     let app = app.as_inner();
 
-    let _conn1 = app.primary_database.get().unwrap();
-    let _conn2 = app.primary_database.get().unwrap();
+    let _conn1 = app.db_write().unwrap();
+    let _conn2 = app.db_write().unwrap();
 }

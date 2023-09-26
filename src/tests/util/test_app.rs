@@ -50,7 +50,7 @@ impl Drop for TestAppInner {
 
         // Manually verify that all jobs have completed successfully
         // This will catch any tests that enqueued a job but forgot to initialize the runner
-        let conn = &mut *self.app.primary_database.get().unwrap();
+        let conn = &mut *self.app.db_write().unwrap();
         let job_count: i64 = background_jobs.count().get_result(conn).unwrap();
         assert_eq!(
             0, job_count,
@@ -95,7 +95,7 @@ impl TestApp {
     /// connection before making any API calls.  Once the closure returns, the connection is
     /// dropped, ensuring it is returned to the pool and available for any future API calls.
     pub fn db<T, F: FnOnce(&mut PgConnection) -> T>(&self, f: F) -> T {
-        let conn = &mut self.0.app.primary_database.get().unwrap();
+        let conn = &mut self.0.app.db_write().unwrap();
         f(conn)
     }
 
