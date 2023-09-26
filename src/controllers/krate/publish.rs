@@ -352,9 +352,8 @@ fn is_reserved_name(name: &str, conn: &mut PgConnection) -> QueryResult<bool> {
 }
 
 fn validate_url(url: Option<&str>, field: &str) -> AppResult<()> {
-    let url = match url {
-        Some(s) => s,
-        None => return Ok(()),
+    let Some(url) = url else {
+        return Ok(());
     };
 
     // Manually check the string, as `Url::parse` may normalize relative URLs
