@@ -22,26 +22,17 @@ fn bad_keywords() {
         PublishBuilder::new("foo_bad_key", "1.0.0").keyword("super-long-keyword-name-oh-no");
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": "invalid upload request: invalid length 29, expected a keyword with less than 20 characters at line 1 column 203" }] })
-    );
+    assert_json_snapshot!(response.into_json());
 
     let crate_to_publish = PublishBuilder::new("foo_bad_key", "1.0.0").keyword("?@?%");
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": "invalid upload request: invalid value: string \"?@?%\", expected a valid keyword specifier at line 1 column 178" }] })
-    );
+    assert_json_snapshot!(response.into_json());
 
     let crate_to_publish = PublishBuilder::new("foo_bad_key", "1.0.0").keyword("áccênts");
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": "invalid upload request: invalid value: string \"áccênts\", expected a valid keyword specifier at line 1 column 183" }] })
-    );
+    assert_json_snapshot!(response.into_json());
 }
 
 #[test]
