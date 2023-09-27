@@ -101,50 +101,39 @@ pub struct NewCrate<'a> {
 }
 
 impl<'a> NewCrate<'a> {
-    pub fn create_or_update(self, conn: &mut PgConnection, uploader: i32) -> AppResult<Crate> {
+    pub fn update(&self, conn: &mut PgConnection) -> QueryResult<Crate> {
         use diesel::update;
 
-        conn.transaction(|conn| {
-            // To avoid race conditions, we try to insert
-            // first so we know whether to add an owner
-            if let Some(krate) = self.save_new_crate(conn, uploader)? {
-                return Ok(krate);
-            }
-
-            update(crates::table)
-                .filter(canon_crate_name(crates::name).eq(canon_crate_name(self.name)))
-                .set(&self)
-                .returning(Crate::as_returning())
-                .get_result(conn)
-                .map_err(Into::into)
-        })
+        update(crates::table)
+            .filter(canon_crate_name(crates::name).eq(canon_crate_name(self.name)))
+            .set(self)
+            .returning(Crate::as_returning())
+            .get_result(conn)
     }
 
-    fn save_new_crate(&self, conn: &mut PgConnection, user_id: i32) -> QueryResult<Option<Crate>> {
+    pub fn create(&self, conn: &mut PgConnection, user_id: i32) -> QueryResult<Crate> {
         use crate::schema::crates::dsl::*;
 
         conn.transaction(|conn| {
-            let maybe_inserted: Option<Crate> = diesel::insert_into(crates)
+            let krate: Crate = diesel::insert_into(crates)
                 .values(self)
                 .on_conflict_do_nothing()
                 .returning(Crate::as_returning())
-                .get_result(conn)
-                .optional()?;
+                .get_result(conn)?;
 
-            if let Some(ref krate) = maybe_inserted {
-                let owner = CrateOwner {
-                    crate_id: krate.id,
-                    owner_id: user_id,
-                    created_by: user_id,
-                    owner_kind: OwnerKind::User as i32,
-                    email_notifications: true,
-                };
-                diesel::insert_into(crate_owners::table)
-                    .values(&owner)
-                    .execute(conn)?;
-            }
+            let owner = CrateOwner {
+                crate_id: krate.id,
+                owner_id: user_id,
+                created_by: user_id,
+                owner_kind: OwnerKind::User as i32,
+                email_notifications: true,
+            };
 
-            Ok(maybe_inserted)
+            diesel::insert_into(crate_owners::table)
+                .values(&owner)
+                .execute(conn)?;
+
+            Ok(krate)
         })
     }
 }
