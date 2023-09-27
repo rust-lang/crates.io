@@ -20,7 +20,7 @@ fn tarball_between_default_axum_limit_and_max_upload_size() {
     let tarball = {
         let mut builder = TarballBuilder::new();
 
-        let data = b"[package]\nname = \"foo\"\nversion = \"1.1.0\"\n" as &[_];
+        let data = b"[package]\nname = \"foo\"\nversion = \"1.1.0\"\ndescription = \"description\"\nlicense = \"MIT\"\n" as &[_];
 
         let mut header = tar::Header::new_gnu();
         assert_ok!(header.set_path("foo-1.1.0/Cargo.toml"));
