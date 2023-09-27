@@ -142,7 +142,6 @@ impl PublishBuilder {
             vers: u::EncodableCrateVersion(self.version.clone()),
             features: self.features.clone(),
             deps: self.deps.clone(),
-            description: self.desc.clone(),
             homepage: None,
             documentation: self.doc_url.clone(),
             readme: self.readme,
@@ -161,8 +160,6 @@ impl PublishBuilder {
                     .map(u::EncodableCategory)
                     .collect(),
             ),
-            license: self.license.clone(),
-            license_file: self.license_file.clone(),
             repository: None,
             links: None,
         };

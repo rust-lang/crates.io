@@ -18,7 +18,6 @@ pub struct PublishMetadata {
     pub vers: EncodableCrateVersion,
     pub deps: Vec<EncodableCrateDependency>,
     pub features: BTreeMap<EncodableFeatureName, Vec<EncodableFeature>>,
-    pub description: Option<String>,
     pub homepage: Option<String>,
     pub documentation: Option<String>,
     pub readme: Option<String>,
@@ -27,8 +26,6 @@ pub struct PublishMetadata {
     pub keywords: EncodableKeywordList,
     #[serde(default)]
     pub categories: EncodableCategoryList,
-    pub license: Option<String>,
-    pub license_file: Option<String>,
     pub repository: Option<String>,
     #[serde(default)]
     pub links: Option<String>,
