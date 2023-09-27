@@ -157,11 +157,10 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             let krate = conn.transaction(|conn| {
                 // To avoid race conditions, we try to insert
                 // first so we know whether to add an owner
-                if let Some(krate) = persist.create(conn, user.id).optional()? {
-                    return Ok(krate);
+                match persist.create(conn, user.id).optional()? {
+                    Some(krate) => Ok(krate),
+                    None => persist.update(conn),
                 }
-
-                persist.update(conn)
             })?;
 
             let owners = krate.owners(conn)?;
