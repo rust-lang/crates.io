@@ -105,7 +105,7 @@ impl<'a> NewCrate<'a> {
         conn.transaction(|conn| {
             // To avoid race conditions, we try to insert
             // first so we know whether to add an owner
-            if let Some(krate) = conn.transaction(|conn| self.create(conn, uploader).optional())? {
+            if let Some(krate) = self.create(conn, uploader).optional()? {
                 return Ok(krate);
             }
 
