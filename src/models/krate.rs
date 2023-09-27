@@ -120,32 +120,34 @@ impl<'a> NewCrate<'a> {
         })
     }
 
-    fn save_new_crate(&self, conn: &mut PgConnection, user_id: i32) -> QueryResult<Option<Crate>> {
+    pub fn create(&self, conn: &mut PgConnection, user_id: i32) -> QueryResult<Crate> {
         use crate::schema::crates::dsl::*;
 
         conn.transaction(|conn| {
-            let maybe_inserted: Option<Crate> = diesel::insert_into(crates)
+            let krate: Crate = diesel::insert_into(crates)
                 .values(self)
                 .on_conflict_do_nothing()
                 .returning(Crate::as_returning())
-                .get_result(conn)
-                .optional()?;
+                .get_result(conn)?;
 
-            if let Some(ref krate) = maybe_inserted {
-                let owner = CrateOwner {
-                    crate_id: krate.id,
-                    owner_id: user_id,
-                    created_by: user_id,
-                    owner_kind: OwnerKind::User as i32,
-                    email_notifications: true,
-                };
-                diesel::insert_into(crate_owners::table)
-                    .values(&owner)
-                    .execute(conn)?;
-            }
+            let owner = CrateOwner {
+                crate_id: krate.id,
+                owner_id: user_id,
+                created_by: user_id,
+                owner_kind: OwnerKind::User as i32,
+                email_notifications: true,
+            };
 
-            Ok(maybe_inserted)
+            diesel::insert_into(crate_owners::table)
+                .values(&owner)
+                .execute(conn)?;
+
+            Ok(krate)
         })
+    }
+
+    fn save_new_crate(&self, conn: &mut PgConnection, user_id: i32) -> QueryResult<Option<Crate>> {
+        conn.transaction(|conn| self.create(conn, user_id).optional())
     }
 }
 
