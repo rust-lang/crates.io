@@ -154,14 +154,12 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 return Err(cargo_err("cannot upload a crate with a reserved name"));
             }
 
-            let krate = conn.transaction(|conn| {
-                // To avoid race conditions, we try to insert
-                // first so we know whether to add an owner
-                match persist.create(conn, user.id).optional()? {
-                    Some(krate) => Ok(krate),
-                    None => persist.update(conn),
-                }
-            })?;
+            // To avoid race conditions, we try to insert
+            // first so we know whether to add an owner
+            let krate = match persist.create(conn, user.id).optional()? {
+                Some(krate) => krate,
+                None => persist.update(conn)?,
+            };
 
             let owners = krate.owners(conn)?;
             if user.rights(&app, &owners)? < Rights::Publish {
