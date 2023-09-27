@@ -17,9 +17,9 @@ use crate::models::{
     VersionAction,
 };
 
+use crate::licenses::validate_license_expr;
 use crate::middleware::log_request::RequestLogExt;
 use crate::models::token::EndpointScope;
-use crate::models::version::validate_license_expr;
 use crate::rate_limiter::LimitedAction;
 use crate::schema::*;
 use crate::sql::canon_crate_name;

@@ -57,6 +57,7 @@ pub mod worker;
 
 pub mod auth;
 pub mod controllers;
+mod licenses;
 pub mod models;
 mod router;
 pub mod sentry;
