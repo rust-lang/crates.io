@@ -51,25 +51,6 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
     request_log.add("crate_name", &*metadata.name);
     request_log.add("crate_version", &*metadata.vers);
 
-    // Make sure required fields are provided
-    fn empty(s: Option<&String>) -> bool {
-        s.map_or(true, String::is_empty)
-    }
-
-    // It can have up to three elements per below conditions.
-    let mut missing = Vec::with_capacity(3);
-
-    if empty(metadata.description.as_ref()) {
-        missing.push("description");
-    }
-    if empty(metadata.license.as_ref()) && empty(metadata.license_file.as_ref()) {
-        missing.push("license");
-    }
-    if !missing.is_empty() {
-        let message = missing_metadata_error_message(&missing);
-        return Err(cargo_err(&message));
-    }
-
     conduit_compat(move || {
         let conn = &mut *app.db_write()?;
 
@@ -133,6 +114,28 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         // inheritance.
         let package = tarball_info.manifest.package.unwrap();
 
+        let description = package.description.map(|it| it.as_local().unwrap());
+        let license = package.license.map(|it| it.as_local().unwrap());
+        let license_file = package.license_file.map(|it| it.as_local().unwrap());
+
+        // Make sure required fields are provided
+        fn empty(s: Option<&String>) -> bool {
+            s.map_or(true, String::is_empty)
+        }
+
+        // It can have up to three elements per below conditions.
+        let mut missing = Vec::with_capacity(3);
+        if empty(description.as_ref()) {
+            missing.push("description");
+        }
+        if empty(license.as_ref()) && empty(license_file.as_ref()) {
+            missing.push("license");
+        }
+        if !missing.is_empty() {
+            let message = missing_metadata_error_message(&missing);
+            return Err(cargo_err(&message));
+        }
+
         // Create a transaction on the database, if there are no errors,
         // commit the transactions to record a new or updated crate.
         conn.transaction(|conn| {
@@ -159,7 +162,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             // Persist the new crate, if it doesn't already exist
             let persist = NewCrate {
                 name: &name,
-                description: metadata.description.as_deref(),
+                description: description.as_deref(),
                 homepage: metadata.homepage.as_deref(),
                 documentation: metadata.documentation.as_deref(),
                 readme: metadata.readme.as_deref(),
@@ -167,7 +170,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 max_upload_size: None,
             };
 
-            let license_file = metadata.license_file.as_deref();
+            let license_file = license_file.as_deref();
 
             validate_url(persist.homepage, "homepage")?;
             validate_url(persist.documentation, "documentation")?;
@@ -210,7 +213,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 krate.id,
                 vers,
                 &features,
-                metadata.license,
+                license,
                 license_file,
                 // Downcast is okay because the file length must be less than the max upload size
                 // to get here, and max upload sizes are way less than i32 max
