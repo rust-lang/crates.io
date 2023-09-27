@@ -209,7 +209,7 @@ impl NewVersion {
     }
 }
 
-fn validate_license_expr(s: &str) -> AppResult<()> {
+pub fn validate_license_expr(s: &str) -> AppResult<()> {
     pub const PARSE_MODE: spdx::ParseMode = spdx::ParseMode {
         allow_lower_case_operators: false,
         allow_slash_as_or_operator: true,

@@ -30,4 +30,4 @@ mod rights;
 mod team;
 pub mod token;
 pub mod user;
-mod version;
+pub mod version;
