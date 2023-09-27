@@ -110,6 +110,21 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         app.rate_limiter
             .check_rate_limit(user.id, rate_limit_action, conn)?;
 
+        let content_length = tarball_bytes.len() as u64;
+
+        let maximums = Maximums::new(
+            existing_crate.as_ref().and_then(|c| c.max_upload_size),
+            app.config.max_upload_size,
+            app.config.max_unpack_size,
+        );
+
+        if content_length > maximums.max_upload_size {
+            return Err(cargo_err(&format_args!(
+                "max upload size is: {}",
+                maximums.max_upload_size
+            )));
+        }
+
         // Create a transaction on the database, if there are no errors,
         // commit the transactions to record a new or updated crate.
         conn.transaction(|conn| {
@@ -175,21 +190,6 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                         "You have published too many versions of this crate in the last 24 hours",
                     ));
                 }
-            }
-
-            let content_length = tarball_bytes.len() as u64;
-
-            let maximums = Maximums::new(
-                krate.max_upload_size,
-                app.config.max_upload_size,
-                app.config.max_unpack_size,
-            );
-
-            if content_length > maximums.max_upload_size {
-                return Err(cargo_err(&format_args!(
-                    "max upload size is: {}",
-                    maximums.max_upload_size
-                )));
             }
 
             // Read tarball from request
