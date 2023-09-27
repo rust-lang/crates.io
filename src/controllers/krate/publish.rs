@@ -125,6 +125,14 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             )));
         }
 
+        let pkg_name = format!("{}-{}", &*metadata.name, &*metadata.vers);
+        let tarball_info = process_tarball(&pkg_name, &*tarball_bytes, maximums.max_unpack_size)?;
+
+        // `unwrap()` is safe here since `process_tarball()` validates that
+        // we only accept manifests with a `package` section and without
+        // inheritance.
+        let package = tarball_info.manifest.package.unwrap();
+
         // Create a transaction on the database, if there are no errors,
         // commit the transactions to record a new or updated crate.
         conn.transaction(|conn| {
@@ -195,14 +203,6 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             // Read tarball from request
             let hex_cksum: String = Sha256::digest(&tarball_bytes).encode_hex();
 
-            let pkg_name = format!("{}-{}", krate.name, vers);
-            let tarball_info =
-                process_tarball(&pkg_name, &*tarball_bytes, maximums.max_unpack_size)?;
-
-            // `unwrap()` is safe here since `process_tarball()` validates that
-            // we only accept manifests with a `package` section and without
-            // inheritance.
-            let package = tarball_info.manifest.package.unwrap();
             let rust_version = package.rust_version.map(|rv| rv.as_local().unwrap());
 
             // Persist the new version of this crate
