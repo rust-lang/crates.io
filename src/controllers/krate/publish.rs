@@ -192,9 +192,6 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 )));
             }
 
-            // This is only redundant for now. Eventually the duplication will be removed.
-            let license = metadata.license.clone();
-
             // Read tarball from request
             let hex_cksum: String = Sha256::digest(&tarball_bytes).encode_hex();
 
@@ -213,7 +210,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 krate.id,
                 vers,
                 &features,
-                license,
+                metadata.license,
                 license_file,
                 // Downcast is okay because the file length must be less than the max upload size
                 // to get here, and max upload sizes are way less than i32 max
