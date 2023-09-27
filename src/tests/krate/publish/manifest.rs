@@ -13,6 +13,8 @@ fn boolean_readme() {
         r#"[package]
             name = "foo"
             version = "1.0.0"
+            description = "description"
+            license = "MIT"
             rust-version = "1.69"
             readme = false"#,
     ));
