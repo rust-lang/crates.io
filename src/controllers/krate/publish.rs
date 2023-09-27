@@ -19,6 +19,7 @@ use crate::models::{
 
 use crate::middleware::log_request::RequestLogExt;
 use crate::models::token::EndpointScope;
+use crate::models::version::validate_license_expr;
 use crate::rate_limiter::LimitedAction;
 use crate::schema::*;
 use crate::sql::canon_crate_name;
@@ -115,7 +116,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         let package = tarball_info.manifest.package.unwrap();
 
         let description = package.description.map(|it| it.as_local().unwrap());
-        let license = package.license.map(|it| it.as_local().unwrap());
+        let mut license = package.license.map(|it| it.as_local().unwrap());
         let license_file = package.license_file.map(|it| it.as_local().unwrap());
 
         // Make sure required fields are provided
@@ -134,6 +135,15 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         if !missing.is_empty() {
             let message = missing_metadata_error_message(&missing);
             return Err(cargo_err(&message));
+        }
+
+        if let Some(ref license) = license {
+            validate_license_expr(license)?;
+        } else if license_file.is_some() {
+            // If no license is given, but a license file is given, flag this
+            // crate as having a nonstandard license. Note that we don't
+            // actually do anything else with license_file currently.
+            license = Some(String::from("non-standard"));
         }
 
         // Create a transaction on the database, if there are no errors,

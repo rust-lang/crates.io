@@ -139,7 +139,7 @@ impl NewVersion {
         num: &semver::Version,
         features: &BTreeMap<String, Vec<String>>,
         license: Option<String>,
-        license_file: Option<&str>,
+        #[allow(unused_variables)] license_file: Option<&str>,
         crate_size: i32,
         published_by: i32,
         checksum: String,
@@ -148,7 +148,7 @@ impl NewVersion {
     ) -> AppResult<Self> {
         let features = serde_json::to_value(features)?;
 
-        let mut new_version = NewVersion {
+        Ok(NewVersion {
             crate_id,
             num: num.to_string(),
             features,
@@ -158,11 +158,7 @@ impl NewVersion {
             checksum,
             links,
             rust_version,
-        };
-
-        new_version.validate_license(license_file)?;
-
-        Ok(new_version)
+        })
     }
 
     pub fn save(&self, conn: &mut PgConnection, published_by_email: &str) -> AppResult<Version> {
@@ -194,18 +190,6 @@ impl NewVersion {
                 .execute(conn)?;
             Ok(version)
         })
-    }
-
-    fn validate_license(&mut self, license_file: Option<&str>) -> AppResult<()> {
-        if let Some(ref license) = self.license {
-            validate_license_expr(license)?;
-        } else if license_file.is_some() {
-            // If no license is given, but a license file is given, flag this
-            // crate as having a nonstandard license. Note that we don't
-            // actually do anything else with license_file currently.
-            self.license = Some(String::from("non-standard"));
-        }
-        Ok(())
     }
 }
 
