@@ -102,8 +102,6 @@ pub struct NewCrate<'a> {
 
 impl<'a> NewCrate<'a> {
     pub fn create_or_update(self, conn: &mut PgConnection, uploader: i32) -> AppResult<Crate> {
-        use diesel::update;
-
         conn.transaction(|conn| {
             // To avoid race conditions, we try to insert
             // first so we know whether to add an owner
@@ -111,13 +109,18 @@ impl<'a> NewCrate<'a> {
                 return Ok(krate);
             }
 
-            update(crates::table)
-                .filter(canon_crate_name(crates::name).eq(canon_crate_name(self.name)))
-                .set(&self)
-                .returning(Crate::as_returning())
-                .get_result(conn)
-                .map_err(Into::into)
+            Ok(self.update(conn)?)
         })
+    }
+
+    pub fn update(&self, conn: &mut PgConnection) -> QueryResult<Crate> {
+        use diesel::update;
+
+        update(crates::table)
+            .filter(canon_crate_name(crates::name).eq(canon_crate_name(self.name)))
+            .set(self)
+            .returning(Crate::as_returning())
+            .get_result(conn)
     }
 
     pub fn create(&self, conn: &mut PgConnection, user_id: i32) -> QueryResult<Crate> {
