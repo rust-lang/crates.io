@@ -139,7 +139,6 @@ impl NewVersion {
         num: &semver::Version,
         features: &BTreeMap<String, Vec<String>>,
         license: Option<String>,
-        #[allow(unused_variables)] license_file: Option<&str>,
         crate_size: i32,
         published_by: i32,
         checksum: String,

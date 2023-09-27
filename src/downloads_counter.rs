@@ -455,7 +455,6 @@ mod tests {
                 &Version::parse(&format!("{}.0.0", self.next_version)).unwrap(),
                 &BTreeMap::new(),
                 None,
-                None,
                 0,
                 self.user.id,
                 "0000000000000000000000000000000000000000000000000000000000000000".to_string(),

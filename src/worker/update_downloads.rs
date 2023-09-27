@@ -105,7 +105,6 @@ mod test {
             &semver::Version::parse("1.0.0").unwrap(),
             &BTreeMap::new(),
             None,
-            None,
             0,
             user_id,
             "0000000000000000000000000000000000000000000000000000000000000000".to_string(),

@@ -180,8 +180,6 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 max_upload_size: None,
             };
 
-            let license_file = license_file.as_deref();
-
             validate_url(persist.homepage, "homepage")?;
             validate_url(persist.documentation, "documentation")?;
             validate_url(persist.repository, "repository")?;
@@ -229,7 +227,6 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 vers,
                 &features,
                 license,
-                license_file,
                 // Downcast is okay because the file length must be less than the max upload size
                 // to get here, and max upload sizes are way less than i32 max
                 content_length as i32,
