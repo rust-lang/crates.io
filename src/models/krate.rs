@@ -101,18 +101,6 @@ pub struct NewCrate<'a> {
 }
 
 impl<'a> NewCrate<'a> {
-    pub fn create_or_update(self, conn: &mut PgConnection, uploader: i32) -> AppResult<Crate> {
-        conn.transaction(|conn| {
-            // To avoid race conditions, we try to insert
-            // first so we know whether to add an owner
-            if let Some(krate) = self.create(conn, uploader).optional()? {
-                return Ok(krate);
-            }
-
-            Ok(self.update(conn)?)
-        })
-    }
-
     pub fn update(&self, conn: &mut PgConnection) -> QueryResult<Crate> {
         use diesel::update;
 
