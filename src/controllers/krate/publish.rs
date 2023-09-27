@@ -17,7 +17,7 @@ use crate::models::{
     VersionAction,
 };
 
-use crate::licenses::validate_license_expr;
+use crate::licenses::parse_license_expr;
 use crate::middleware::log_request::RequestLogExt;
 use crate::models::token::EndpointScope;
 use crate::rate_limiter::LimitedAction;
@@ -33,6 +33,10 @@ const MISSING_RIGHTS_ERROR_MESSAGE: &str = "this crate exists but you don't seem
      If you believe this is a mistake, perhaps you need \
      to accept an invitation to be an owner before \
      publishing.";
+
+const LICENSE_ERROR: &str = "unknown or invalid license expression; \
+    see http://opensource.org/licenses for options, \
+    and http://spdx.org/licenses/ for their identifiers";
 
 /// Handles the `PUT /crates/new` route.
 /// Used by `cargo publish` to publish a new crate or to publish a new version of an
@@ -138,7 +142,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         }
 
         if let Some(ref license) = license {
-            validate_license_expr(license)?;
+            parse_license_expr(license).map_err(|_| cargo_err(LICENSE_ERROR))?;
         } else if license_file.is_some() {
             // If no license is given, but a license file is given, flag this
             // crate as having a nonstandard license. Note that we don't

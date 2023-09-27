@@ -1,4 +1,4 @@
-use crate::util::errors::{cargo_err, AppResult};
+use spdx::{Expression, ParseError};
 
 const PARSE_MODE: spdx::ParseMode = spdx::ParseMode {
     allow_lower_case_operators: false,
@@ -7,28 +7,23 @@ const PARSE_MODE: spdx::ParseMode = spdx::ParseMode {
     allow_postfix_plus_on_gpl: true,
 };
 
-pub fn validate_license_expr(s: &str) -> AppResult<()> {
-    spdx::Expression::parse_mode(s, PARSE_MODE).map_err(|_| {
-        cargo_err("unknown or invalid license expression; see http://opensource.org/licenses for options, and http://spdx.org/licenses/ for their identifiers")
-    })?;
-
-    Ok(())
+pub fn parse_license_expr(s: &str) -> Result<Expression, ParseError> {
+    Expression::parse_mode(s, PARSE_MODE)
 }
 
 #[cfg(test)]
 mod tests {
-    use super::validate_license_expr;
+    use super::parse_license_expr;
 
     #[test]
     fn licenses() {
-        assert_ok!(validate_license_expr("MIT"));
-        assert_ok!(validate_license_expr("MIT OR Apache-2.0"));
-        assert_ok!(validate_license_expr("MIT/Apache-2.0"));
-        assert_ok!(validate_license_expr("MIT AND Apache-2.0"));
-        assert_ok!(validate_license_expr("MIT OR (Apache-2.0 AND MIT)"));
-        assert_ok!(validate_license_expr("GPL-3.0+"));
+        assert_ok!(parse_license_expr("MIT"));
+        assert_ok!(parse_license_expr("MIT OR Apache-2.0"));
+        assert_ok!(parse_license_expr("MIT/Apache-2.0"));
+        assert_ok!(parse_license_expr("MIT AND Apache-2.0"));
+        assert_ok!(parse_license_expr("MIT OR (Apache-2.0 AND MIT)"));
+        assert_ok!(parse_license_expr("GPL-3.0+"));
 
-        let error = assert_err!(validate_license_expr("apache 2.0")).to_string();
-        assert!(error.starts_with("unknown or invalid license expression; see http"));
+        assert_err!(parse_license_expr("apache 2.0"));
     }
 }
