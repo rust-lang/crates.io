@@ -105,7 +105,7 @@ impl<'a> NewCrate<'a> {
         conn.transaction(|conn| {
             // To avoid race conditions, we try to insert
             // first so we know whether to add an owner
-            if let Some(krate) = self.save_new_crate(conn, uploader)? {
+            if let Some(krate) = conn.transaction(|conn| self.create(conn, uploader).optional())? {
                 return Ok(krate);
             }
 
@@ -147,10 +147,6 @@ impl<'a> NewCrate<'a> {
 
             Ok(krate)
         })
-    }
-
-    fn save_new_crate(&self, conn: &mut PgConnection, user_id: i32) -> QueryResult<Option<Crate>> {
-        conn.transaction(|conn| self.create(conn, user_id).optional())
     }
 }
 
