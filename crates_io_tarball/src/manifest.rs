@@ -74,7 +74,7 @@ impl<T: IsInherited> IsInherited for Option<T> {
 
 impl IsInherited for Dependency {
     fn is_inherited(&self) -> bool {
-        matches!(self, Dependency::Detailed(detail) if detail.workspace.unwrap_or(false))
+        matches!(self, Dependency::Inherited(_))
     }
 }
 
