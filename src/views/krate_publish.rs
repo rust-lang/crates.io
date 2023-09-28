@@ -18,15 +18,12 @@ pub struct PublishMetadata {
     pub vers: EncodableCrateVersion,
     pub deps: Vec<EncodableCrateDependency>,
     pub features: BTreeMap<EncodableFeatureName, Vec<EncodableFeature>>,
-    pub homepage: Option<String>,
-    pub documentation: Option<String>,
     pub readme: Option<String>,
     pub readme_file: Option<String>,
     #[serde(default)]
     pub keywords: EncodableKeywordList,
     #[serde(default)]
     pub categories: EncodableCategoryList,
-    pub repository: Option<String>,
     #[serde(default)]
     pub links: Option<String>,
 }

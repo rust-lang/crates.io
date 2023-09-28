@@ -122,6 +122,9 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         let description = package.description.map(|it| it.as_local().unwrap());
         let mut license = package.license.map(|it| it.as_local().unwrap());
         let license_file = package.license_file.map(|it| it.as_local().unwrap());
+        let homepage = package.homepage.map(|it| it.as_local().unwrap());
+        let documentation = package.documentation.map(|it| it.as_local().unwrap());
+        let repository = package.repository.map(|it| it.as_local().unwrap());
 
         // Make sure required fields are provided
         fn empty(s: Option<&String>) -> bool {
@@ -150,13 +153,16 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             license = Some(String::from("non-standard"));
         }
 
+        validate_url(homepage.as_deref(), "homepage")?;
+        validate_url(documentation.as_deref(), "documentation")?;
+        validate_url(repository.as_deref(), "repository")?;
+
         // Create a transaction on the database, if there are no errors,
         // commit the transactions to record a new or updated crate.
         conn.transaction(|conn| {
             let name = metadata.name;
             let vers = &*metadata.vers;
             let links = metadata.links;
-            let repo = metadata.repository;
             let features = metadata
                 .features
                 .into_iter()
@@ -177,16 +183,12 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             let persist = NewCrate {
                 name: &name,
                 description: description.as_deref(),
-                homepage: metadata.homepage.as_deref(),
-                documentation: metadata.documentation.as_deref(),
+                homepage: homepage.as_deref(),
+                documentation: documentation.as_deref(),
                 readme: metadata.readme.as_deref(),
-                repository: repo.as_deref(),
+                repository: repository.as_deref(),
                 max_upload_size: None,
             };
-
-            validate_url(persist.homepage, "homepage")?;
-            validate_url(persist.documentation, "documentation")?;
-            validate_url(persist.repository, "repository")?;
 
             if is_reserved_name(persist.name, conn)? {
                 return Err(cargo_err("cannot upload a crate with a reserved name"));
@@ -271,7 +273,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                         metadata
                             .readme_file
                             .unwrap_or_else(|| String::from("README.md")),
-                        repo,
+                        repository,
                         pkg_path_in_vcs,
                     )
                     .enqueue_with_priority(conn, PRIORITY_RENDER_README)?;
