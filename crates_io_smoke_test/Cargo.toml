@@ -7,7 +7,7 @@ edition = "2021"
 [dependencies]
 anyhow = "=1.0.75"
 bytes = "=1.5.0"
-clap = { version = "=4.4.5", features = ["derive", "env", "unicode", "wrap_help"] }
+clap = { version = "=4.4.6", features = ["derive", "env", "unicode", "wrap_help"] }
 crates_io_index = { path = "../crates_io_index" }
 reqwest = { version = "=0.11.20", features = ["blocking", "gzip", "json"] }
 secrecy = "=0.8.0"
