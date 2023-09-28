@@ -162,7 +162,6 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         conn.transaction(|conn| {
             let name = metadata.name;
             let vers = &*metadata.vers;
-            let links = metadata.links;
             let features = metadata
                 .features
                 .into_iter()
@@ -238,7 +237,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 content_length as i32,
                 user.id,
                 hex_cksum,
-                links,
+                package.links,
                 rust_version,
             )?
             .save(conn, &verified_email_address)?;

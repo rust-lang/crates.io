@@ -24,8 +24,6 @@ pub struct PublishMetadata {
     pub keywords: EncodableKeywordList,
     #[serde(default)]
     pub categories: EncodableCategoryList,
-    #[serde(default)]
-    pub links: Option<String>,
 }
 
 #[derive(PartialEq, Eq, Hash, Serialize, Clone, Debug, Deref)]

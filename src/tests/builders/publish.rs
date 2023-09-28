@@ -158,7 +158,6 @@ impl PublishBuilder {
                     .map(u::EncodableCategory)
                     .collect(),
             ),
-            links: None,
         };
 
         let mut tarball_builder = TarballBuilder::new();
