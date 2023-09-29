@@ -151,7 +151,6 @@ impl PublishBuilder {
                     .map(u::EncodableKeyword)
                     .collect(),
             ),
-            categories: u::EncodableCategoryList(self.categories.clone()),
         };
 
         let mut tarball_builder = TarballBuilder::new();
