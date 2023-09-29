@@ -1,5 +1,5 @@
 use bytes::{BufMut, Bytes, BytesMut};
-use cargo_manifest::{DependencyDetail, DepsSet, FeatureSet, MaybeInherited};
+use cargo_manifest::{DependencyDetail, DepsSet, MaybeInherited};
 use crates_io::models::DependencyKind;
 use crates_io::views::krate_publish as u;
 use std::collections::BTreeMap;
@@ -24,7 +24,7 @@ pub struct PublishBuilder {
     manifest: Manifest,
     readme: Option<String>,
     version: semver::Version,
-    features: BTreeMap<u::EncodableFeatureName, Vec<u::EncodableFeature>>,
+    features: BTreeMap<String, Vec<String>>,
 }
 
 enum Manifest {
@@ -112,12 +112,8 @@ impl PublishBuilder {
 
     // Adds a feature.
     pub fn feature(mut self, name: &str, values: &[&str]) -> Self {
-        let values = values
-            .iter()
-            .map(|s| u::EncodableFeature(s.to_string()))
-            .collect();
-        self.features
-            .insert(u::EncodableFeatureName(name.to_string()), values);
+        let values = values.iter().map(ToString::to_string).collect();
+        self.features.insert(name.to_string(), values);
         self
     }
 
@@ -140,7 +136,6 @@ impl PublishBuilder {
         let metadata = u::PublishMetadata {
             name: u::EncodableCrateName(self.krate_name.clone()),
             vers: u::EncodableCrateVersion(self.version.clone()),
-            features: self.features.clone(),
             deps: self.deps.clone(),
             readme: self.readme,
             readme_file: None,
@@ -180,7 +175,7 @@ impl PublishBuilder {
                     build_dependencies: build_deps.none_or_filled(),
                     dependencies: deps.none_or_filled(),
                     dev_dependencies: dev_deps.none_or_filled(),
-                    features: convert_features(self.features).none_or_filled(),
+                    features: self.features.none_or_filled(),
                     ..Default::default()
                 };
 
@@ -275,15 +270,6 @@ fn is_simple_dependency(dep: &u::EncodableCrateDependency) -> bool {
         && dep.target.is_none()
         && dep.explicit_name_in_toml.is_none()
         && dep.registry.is_none()
-}
-
-fn convert_features(
-    encoded: BTreeMap<u::EncodableFeatureName, Vec<u::EncodableFeature>>,
-) -> FeatureSet {
-    encoded
-        .into_iter()
-        .map(|(key, value)| (key.0, value.into_iter().map(|f| f.0).collect()))
-        .collect()
 }
 
 trait NoneOrFilled: Sized {
