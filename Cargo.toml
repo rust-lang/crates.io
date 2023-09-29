@@ -59,7 +59,7 @@ hex = "=0.4.3"
 http = "=0.2.9"
 http-body = "=0.4.5"
 hyper = { version = "=0.14.27", features = ["backports", "client", "deprecated", "http1"] }
-indexmap = { version = "=2.0.1", features = ["serde"] }
+indexmap = { version = "=2.0.2", features = ["serde"] }
 indicatif = "=0.17.7"
 ipnetwork = "=0.20.0"
 tikv-jemallocator = { version = "=0.5.4", features = ['unprefixed_malloc_on_supported_platforms', 'profiling'] }
