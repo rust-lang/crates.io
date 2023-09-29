@@ -144,13 +144,6 @@ impl PublishBuilder {
             deps: self.deps.clone(),
             readme: self.readme,
             readme_file: None,
-            keywords: u::EncodableKeywordList(
-                self.keywords
-                    .clone()
-                    .into_iter()
-                    .map(u::EncodableKeyword)
-                    .collect(),
-            ),
         };
 
         let mut tarball_builder = TarballBuilder::new();

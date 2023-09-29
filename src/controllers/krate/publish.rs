@@ -157,6 +157,25 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         validate_url(documentation.as_deref(), "documentation")?;
         validate_url(repository.as_deref(), "repository")?;
 
+        let keywords = package
+            .keywords
+            .map(|it| it.as_local().unwrap())
+            .unwrap_or_default();
+
+        if keywords.len() > 5 {
+            return Err(cargo_err("expected at most 5 keywords per crate"));
+        }
+
+        for keyword in keywords.iter() {
+            if keyword.len() > 20 {
+                return Err(cargo_err(&format!(
+                    "\"{keyword}\" is an invalid keyword (keywords must have less than 20 characters)"
+                )));
+            } else if !Keyword::valid_name(keyword) {
+                return Err(cargo_err(&format!("\"{keyword}\" is an invalid keyword")));
+            }
+        }
+
         let categories = package
             .categories
             .map(|it| it.as_local().unwrap())
@@ -176,11 +195,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 .into_iter()
                 .map(|(k, v)| (k.0, v.into_iter().map(|v| v.0).collect()))
                 .collect();
-            let keywords = metadata
-                .keywords
-                .iter()
-                .map(|s| s.as_str())
-                .collect::<Vec<_>>();
+            let keywords = keywords.iter().map(|s| s.as_str()).collect::<Vec<_>>();
             let categories = categories.iter().map(|s| s.as_str()).collect::<Vec<_>>();
 
             // Persist the new crate, if it doesn't already exist

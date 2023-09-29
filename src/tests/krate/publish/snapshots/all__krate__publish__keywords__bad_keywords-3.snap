@@ -5,7 +5,7 @@ expression: response.into_json()
 {
   "errors": [
     {
-      "detail": "invalid upload request: invalid value: string \"áccênts\", expected a valid keyword specifier at line 1 column 118"
+      "detail": "\"áccênts\" is an invalid keyword"
     }
   ]
 }

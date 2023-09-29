@@ -13,7 +13,6 @@ use crate::models::krate::MAX_NAME_LENGTH;
 
 use crate::models::Crate;
 use crate::models::DependencyKind;
-use crate::models::Keyword as CrateKeyword;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct PublishMetadata {
@@ -23,8 +22,6 @@ pub struct PublishMetadata {
     pub features: BTreeMap<EncodableFeatureName, Vec<EncodableFeature>>,
     pub readme: Option<String>,
     pub readme_file: Option<String>,
-    #[serde(default)]
-    pub keywords: EncodableKeywordList,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -83,25 +80,6 @@ impl<'de> Deserialize<'de> for EncodableDependencyName {
             Err(de::Error::invalid_value(value, &expected.as_ref()))
         } else {
             Ok(EncodableDependencyName(s))
-        }
-    }
-}
-
-#[derive(Serialize, Debug, Deref)]
-pub struct EncodableKeyword(pub String);
-
-impl<'de> Deserialize<'de> for EncodableKeyword {
-    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<EncodableKeyword, D::Error> {
-        let s = String::deserialize(d)?;
-        if s.len() > 20 {
-            let expected = "a keyword with less than 20 characters";
-            Err(de::Error::invalid_length(s.len(), &expected))
-        } else if !CrateKeyword::valid_name(&s) {
-            let value = de::Unexpected::Str(&s);
-            let expected = "a valid keyword specifier";
-            Err(de::Error::invalid_value(value, &expected))
-        } else {
-            Ok(EncodableKeyword(s))
         }
     }
 }
@@ -176,20 +154,6 @@ impl<'de> Deserialize<'de> for EncodableCrateVersionReq {
                 Err(de::Error::invalid_value(value, &expected))
             }
         }
-    }
-}
-
-#[derive(Serialize, Debug, Deref, Default)]
-pub struct EncodableKeywordList(pub Vec<EncodableKeyword>);
-
-impl<'de> Deserialize<'de> for EncodableKeywordList {
-    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<EncodableKeywordList, D::Error> {
-        let inner = <Vec<EncodableKeyword> as Deserialize<'de>>::deserialize(d)?;
-        if inner.len() > 5 {
-            let expected = "at most 5 keywords per crate";
-            return Err(de::Error::invalid_length(inner.len(), &expected));
-        }
-        Ok(EncodableKeywordList(inner))
     }
 }
 
