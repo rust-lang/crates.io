@@ -39,9 +39,7 @@ pub struct EncodableKeywordList(pub Vec<EncodableKeyword>);
 #[derive(Serialize, Debug, Deref)]
 pub struct EncodableKeyword(pub String);
 #[derive(Serialize, Debug, Deref, Default)]
-pub struct EncodableCategoryList(pub Vec<EncodableCategory>);
-#[derive(Serialize, Deserialize, Debug, Deref)]
-pub struct EncodableCategory(pub String);
+pub struct EncodableCategoryList(pub Vec<String>);
 #[derive(Serialize, Clone, Debug, Deref)]
 pub struct EncodableFeature(pub String);
 #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Clone, Debug, Deref)]
@@ -185,7 +183,7 @@ impl<'de> Deserialize<'de> for EncodableKeywordList {
 
 impl<'de> Deserialize<'de> for EncodableCategoryList {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<EncodableCategoryList, D::Error> {
-        let inner = <Vec<EncodableCategory> as Deserialize<'de>>::deserialize(d)?;
+        let inner = <Vec<String> as Deserialize<'de>>::deserialize(d)?;
         if inner.len() > 5 {
             let expected = "at most 5 categories per crate";
             Err(de::Error::invalid_length(inner.len(), &expected))
