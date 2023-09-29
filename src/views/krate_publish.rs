@@ -4,6 +4,9 @@
 //! integration tests.
 use std::collections::BTreeMap;
 
+use diesel::pg::Pg;
+use diesel::serialize::{self, Output, ToSql};
+use diesel::sql_types::Text;
 use serde::{de, Deserialize, Deserializer, Serialize};
 
 use crate::models::krate::MAX_NAME_LENGTH;
@@ -26,25 +29,6 @@ pub struct PublishMetadata {
     pub categories: EncodableCategoryList,
 }
 
-#[derive(PartialEq, Eq, Hash, Serialize, Clone, Debug, Deref)]
-pub struct EncodableCrateName(pub String);
-#[derive(Serialize, Clone, Debug, Deref)]
-pub struct EncodableDependencyName(pub String);
-#[derive(Serialize, Debug, Deref)]
-pub struct EncodableCrateVersion(pub semver::Version);
-#[derive(Serialize, Clone, Debug, Deref)]
-pub struct EncodableCrateVersionReq(pub String);
-#[derive(Serialize, Debug, Deref, Default)]
-pub struct EncodableKeywordList(pub Vec<EncodableKeyword>);
-#[derive(Serialize, Debug, Deref)]
-pub struct EncodableKeyword(pub String);
-#[derive(Serialize, Debug, Deref, Default)]
-pub struct EncodableCategoryList(pub Vec<String>);
-#[derive(Serialize, Clone, Debug, Deref)]
-pub struct EncodableFeature(pub String);
-#[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Clone, Debug, Deref)]
-pub struct EncodableFeatureName(pub String);
-
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct EncodableCrateDependency {
     pub optional: bool,
@@ -57,6 +41,9 @@ pub struct EncodableCrateDependency {
     pub explicit_name_in_toml: Option<EncodableDependencyName>,
     pub registry: Option<String>,
 }
+
+#[derive(PartialEq, Eq, Hash, Serialize, Clone, Debug, Deref)]
+pub struct EncodableCrateName(pub String);
 
 impl<'de> Deserialize<'de> for EncodableCrateName {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<EncodableCrateName, D::Error> {
@@ -83,6 +70,9 @@ where
     }
 }
 
+#[derive(Serialize, Clone, Debug, Deref)]
+pub struct EncodableDependencyName(pub String);
+
 impl<'de> Deserialize<'de> for EncodableDependencyName {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<EncodableDependencyName, D::Error> {
         let s = String::deserialize(d)?;
@@ -98,6 +88,9 @@ impl<'de> Deserialize<'de> for EncodableDependencyName {
         }
     }
 }
+
+#[derive(Serialize, Debug, Deref)]
+pub struct EncodableKeyword(pub String);
 
 impl<'de> Deserialize<'de> for EncodableKeyword {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<EncodableKeyword, D::Error> {
@@ -115,6 +108,9 @@ impl<'de> Deserialize<'de> for EncodableKeyword {
     }
 }
 
+#[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Clone, Debug, Deref)]
+pub struct EncodableFeatureName(pub String);
+
 impl<'de> Deserialize<'de> for EncodableFeatureName {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
         let s = String::deserialize(d)?;
@@ -129,6 +125,9 @@ impl<'de> Deserialize<'de> for EncodableFeatureName {
     }
 }
 
+#[derive(Serialize, Clone, Debug, Deref)]
+pub struct EncodableFeature(pub String);
+
 impl<'de> Deserialize<'de> for EncodableFeature {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<EncodableFeature, D::Error> {
         let s = String::deserialize(d)?;
@@ -141,6 +140,15 @@ impl<'de> Deserialize<'de> for EncodableFeature {
         }
     }
 }
+
+impl ToSql<Text, Pg> for EncodableFeature {
+    fn to_sql(&self, out: &mut Output<'_, '_, Pg>) -> serialize::Result {
+        ToSql::<Text, Pg>::to_sql(&**self, &mut out.reborrow())
+    }
+}
+
+#[derive(Serialize, Debug, Deref)]
+pub struct EncodableCrateVersion(pub semver::Version);
 
 impl<'de> Deserialize<'de> for EncodableCrateVersion {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<EncodableCrateVersion, D::Error> {
@@ -156,6 +164,9 @@ impl<'de> Deserialize<'de> for EncodableCrateVersion {
     }
 }
 
+#[derive(Serialize, Clone, Debug, Deref)]
+pub struct EncodableCrateVersionReq(pub String);
+
 impl<'de> Deserialize<'de> for EncodableCrateVersionReq {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<EncodableCrateVersionReq, D::Error> {
         let s = String::deserialize(d)?;
@@ -170,6 +181,9 @@ impl<'de> Deserialize<'de> for EncodableCrateVersionReq {
     }
 }
 
+#[derive(Serialize, Debug, Deref, Default)]
+pub struct EncodableKeywordList(pub Vec<EncodableKeyword>);
+
 impl<'de> Deserialize<'de> for EncodableKeywordList {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<EncodableKeywordList, D::Error> {
         let inner = <Vec<EncodableKeyword> as Deserialize<'de>>::deserialize(d)?;
@@ -181,6 +195,9 @@ impl<'de> Deserialize<'de> for EncodableKeywordList {
     }
 }
 
+#[derive(Serialize, Debug, Deref, Default)]
+pub struct EncodableCategoryList(pub Vec<String>);
+
 impl<'de> Deserialize<'de> for EncodableCategoryList {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<EncodableCategoryList, D::Error> {
         let inner = <Vec<String> as Deserialize<'de>>::deserialize(d)?;
@@ -190,16 +207,6 @@ impl<'de> Deserialize<'de> for EncodableCategoryList {
         } else {
             Ok(EncodableCategoryList(inner))
         }
-    }
-}
-
-use diesel::pg::Pg;
-use diesel::serialize::{self, Output, ToSql};
-use diesel::sql_types::Text;
-
-impl ToSql<Text, Pg> for EncodableFeature {
-    fn to_sql(&self, out: &mut Output<'_, '_, Pg>) -> serialize::Result {
-        ToSql::<Text, Pg>::to_sql(&**self, &mut out.reborrow())
     }
 }
 
