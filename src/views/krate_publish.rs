@@ -25,8 +25,6 @@ pub struct PublishMetadata {
     pub readme_file: Option<String>,
     #[serde(default)]
     pub keywords: EncodableKeywordList,
-    #[serde(default)]
-    pub categories: EncodableCategoryList,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -192,21 +190,6 @@ impl<'de> Deserialize<'de> for EncodableKeywordList {
             return Err(de::Error::invalid_length(inner.len(), &expected));
         }
         Ok(EncodableKeywordList(inner))
-    }
-}
-
-#[derive(Serialize, Debug, Deref, Default)]
-pub struct EncodableCategoryList(pub Vec<String>);
-
-impl<'de> Deserialize<'de> for EncodableCategoryList {
-    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<EncodableCategoryList, D::Error> {
-        let inner = <Vec<String> as Deserialize<'de>>::deserialize(d)?;
-        if inner.len() > 5 {
-            let expected = "at most 5 categories per crate";
-            Err(de::Error::invalid_length(inner.len(), &expected))
-        } else {
-            Ok(EncodableCategoryList(inner))
-        }
     }
 }
 

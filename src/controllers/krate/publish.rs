@@ -157,6 +157,15 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         validate_url(documentation.as_deref(), "documentation")?;
         validate_url(repository.as_deref(), "repository")?;
 
+        let categories = package
+            .categories
+            .map(|it| it.as_local().unwrap())
+            .unwrap_or_default();
+
+        if categories.len() > 5 {
+            return Err(cargo_err("expected at most 5 categories per crate"));
+        }
+
         // Create a transaction on the database, if there are no errors,
         // commit the transactions to record a new or updated crate.
         conn.transaction(|conn| {
@@ -172,11 +181,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 .iter()
                 .map(|s| s.as_str())
                 .collect::<Vec<_>>();
-            let categories = metadata
-                .categories
-                .iter()
-                .map(|s| s.as_str())
-                .collect::<Vec<_>>();
+            let categories = categories.iter().map(|s| s.as_str()).collect::<Vec<_>>();
 
             // Persist the new crate, if it doesn't already exist
             let persist = NewCrate {

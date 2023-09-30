@@ -5,7 +5,7 @@ expression: response.into_json()
 {
   "errors": [
     {
-      "detail": "invalid upload request: invalid length 6, expected at most 5 categories per crate at line 1 column 155"
+      "detail": "expected at most 5 categories per crate"
     }
   ]
 }
