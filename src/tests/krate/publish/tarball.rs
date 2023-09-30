@@ -45,10 +45,7 @@ fn new_krate_tarball_with_hard_links() {
 
     let response = token.put::<()>("/api/v1/crates/new", body);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": "unexpected symlink or hard link found: foo-1.1.0/bar" }] })
-    );
+    assert_json_snapshot!(response.into_json());
 
     app.run_pending_background_jobs();
     assert!(app.stored_files().is_empty());

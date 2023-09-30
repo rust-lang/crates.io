@@ -1,0 +1,11 @@
+---
+source: src/tests/krate/publish/dependencies.rs
+expression: response.into_json()
+---
+{
+  "errors": [
+    {
+      "detail": "invalid upload request: invalid value: string \"broken\", expected a valid version req at line 1 column 136"
+    }
+  ]
+}

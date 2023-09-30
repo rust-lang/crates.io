@@ -1,6 +1,7 @@
 use crate::builders::PublishBuilder;
 use crate::util::{RequestHelper, TestApp};
 use http::StatusCode;
+use insta::assert_json_snapshot;
 
 #[test]
 fn workspace_inheritance() {
@@ -11,10 +12,7 @@ fn workspace_inheritance() {
             .custom_manifest("[package]\nname = \"foo\"\nversion.workspace = true\n"),
     );
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": "failed to parse `Cargo.toml` manifest file\n\nvalue from workspace hasn't been set" }] })
-    );
+    assert_json_snapshot!(response.into_json());
 }
 
 #[test]
@@ -25,8 +23,5 @@ fn workspace_inheritance_with_dep() {
         "[package]\nname = \"foo\"\nversion = \"1.0.0\"\n\n[dependencies]\nserde.workspace = true\n",
     ));
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": "failed to parse `Cargo.toml` manifest file\n\nvalue from workspace hasn't been set" }] })
-    );
+    assert_json_snapshot!(response.into_json());
 }

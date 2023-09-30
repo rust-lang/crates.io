@@ -1,0 +1,39 @@
+---
+source: src/tests/krate/publish/basics.rs
+expression: response.into_json()
+---
+{
+  "crate": {
+    "badges": null,
+    "categories": null,
+    "created_at": "[datetime]",
+    "description": "description",
+    "documentation": null,
+    "downloads": 0,
+    "exact_match": false,
+    "homepage": null,
+    "id": "foo_weird",
+    "keywords": null,
+    "links": {
+      "owner_team": "/api/v1/crates/foo_weird/owner_team",
+      "owner_user": "/api/v1/crates/foo_weird/owner_user",
+      "owners": "/api/v1/crates/foo_weird/owners",
+      "reverse_dependencies": "/api/v1/crates/foo_weird/reverse_dependencies",
+      "version_downloads": "/api/v1/crates/foo_weird/downloads",
+      "versions": "/api/v1/crates/foo_weird/versions"
+    },
+    "max_stable_version": null,
+    "max_version": "0.0.0-pre",
+    "name": "foo_weird",
+    "newest_version": "0.0.0-pre",
+    "recent_downloads": null,
+    "repository": null,
+    "updated_at": "[datetime]",
+    "versions": null
+  },
+  "warnings": {
+    "invalid_badges": [],
+    "invalid_categories": [],
+    "other": []
+  }
+}

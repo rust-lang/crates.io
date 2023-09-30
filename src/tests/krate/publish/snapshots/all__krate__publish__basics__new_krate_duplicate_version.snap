@@ -1,0 +1,11 @@
+---
+source: src/tests/krate/publish/basics.rs
+expression: response.into_json()
+---
+{
+  "errors": [
+    {
+      "detail": "crate version `1.0.0` is already uploaded"
+    }
+  ]
+}

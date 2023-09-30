@@ -3,6 +3,7 @@ use crate::util::{RequestHelper, TestApp};
 use crates_io::schema::emails;
 use diesel::{delete, update, ExpressionMethods, RunQueryDsl};
 use http::StatusCode;
+use insta::assert_json_snapshot;
 
 #[test]
 fn new_krate_without_any_email_fails() {
@@ -16,11 +17,7 @@ fn new_krate_without_any_email_fails() {
 
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": "A verified email address is required to publish crates to crates.io. Visit https://crates.io/settings/profile to set and verify your email address." }] })
-    );
-
+    assert_json_snapshot!(response.into_json());
     assert!(app.stored_files().is_empty());
 }
 
@@ -39,10 +36,6 @@ fn new_krate_with_unverified_email_fails() {
 
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": "A verified email address is required to publish crates to crates.io. Visit https://crates.io/settings/profile to set and verify your email address." }] })
-    );
-
+    assert_json_snapshot!(response.into_json());
     assert!(app.stored_files().is_empty());
 }
