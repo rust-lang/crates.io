@@ -5,7 +5,7 @@ expression: response.into_json()
 {
   "errors": [
     {
-      "detail": "invalid upload request: invalid length 29, expected a keyword with less than 20 characters at line 1 column 138"
+      "detail": "\"super-long-keyword-name-oh-no\" is an invalid keyword (keywords must have less than 20 characters)"
     }
   ]
 }
