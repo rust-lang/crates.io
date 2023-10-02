@@ -22,5 +22,5 @@ module('Unit | Helper | pretty-bytes', function (hooks) {
 
     await render(hbs`{{pretty-bytes 42424242}}`);
     assert.dom().hasText('40.5 MiB');
-  })
+  });
 });
