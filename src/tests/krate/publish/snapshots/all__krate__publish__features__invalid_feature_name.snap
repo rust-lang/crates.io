@@ -5,7 +5,7 @@ expression: response.into_json()
 {
   "errors": [
     {
-      "detail": "invalid upload request: invalid value: string \"~foo\", expected a valid feature name containing only letters, numbers, '-', '+', or '_' at line 1 column 57"
+      "detail": "\"~foo\" is an invalid feature name (feature names must contain only letters, numbers, '-', '+', or '_')"
     }
   ]
 }

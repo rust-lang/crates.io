@@ -185,16 +185,27 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             return Err(cargo_err("expected at most 5 categories per crate"));
         }
 
+        let features = tarball_info.manifest.features.unwrap_or_default();
+        for (key, values) in features.iter() {
+            if !Crate::valid_feature_name(key) {
+                return Err(cargo_err(&format!(
+                    "\"{key}\" is an invalid feature name (feature names must contain only letters, numbers, '-', '+', or '_')"
+                )));
+            }
+
+            for value in values.iter() {
+                if !Crate::valid_feature(value) {
+                    return Err(cargo_err(&format!("\"{value}\" is an invalid feature name")));
+                }
+            }
+        }
+
+
         // Create a transaction on the database, if there are no errors,
         // commit the transactions to record a new or updated crate.
         conn.transaction(|conn| {
             let name = metadata.name;
             let vers = &*metadata.vers;
-            let features = metadata
-                .features
-                .into_iter()
-                .map(|(k, v)| (k.0, v.into_iter().map(|v| v.0).collect()))
-                .collect();
             let keywords = keywords.iter().map(|s| s.as_str()).collect::<Vec<_>>();
             let categories = categories.iter().map(|s| s.as_str()).collect::<Vec<_>>();
 

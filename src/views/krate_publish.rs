@@ -2,7 +2,6 @@
 //! and manages the serialising and deserializing of this information
 //! to and from structs. The serializing is only utilised in
 //! integration tests.
-use std::collections::BTreeMap;
 
 use diesel::pg::Pg;
 use diesel::serialize::{self, Output, ToSql};
@@ -19,7 +18,6 @@ pub struct PublishMetadata {
     pub name: EncodableCrateName,
     pub vers: EncodableCrateVersion,
     pub deps: Vec<EncodableCrateDependency>,
-    pub features: BTreeMap<EncodableFeatureName, Vec<EncodableFeature>>,
     pub readme: Option<String>,
     pub readme_file: Option<String>,
 }
@@ -80,23 +78,6 @@ impl<'de> Deserialize<'de> for EncodableDependencyName {
             Err(de::Error::invalid_value(value, &expected.as_ref()))
         } else {
             Ok(EncodableDependencyName(s))
-        }
-    }
-}
-
-#[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Clone, Debug, Deref)]
-pub struct EncodableFeatureName(pub String);
-
-impl<'de> Deserialize<'de> for EncodableFeatureName {
-    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
-        let s = String::deserialize(d)?;
-        if !Crate::valid_feature_name(&s) {
-            let value = de::Unexpected::Str(&s);
-            let expected = "a valid feature name containing only letters, \
-                            numbers, '-', '+', or '_'";
-            Err(de::Error::invalid_value(value, &expected))
-        } else {
-            Ok(EncodableFeatureName(s))
         }
     }
 }
