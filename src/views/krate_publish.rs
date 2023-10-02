@@ -54,15 +54,6 @@ impl<'de> Deserialize<'de> for EncodableCrateName {
     }
 }
 
-impl<T: ?Sized> PartialEq<T> for EncodableCrateName
-where
-    String: PartialEq<T>,
-{
-    fn eq(&self, rhs: &T) -> bool {
-        self.0 == *rhs
-    }
-}
-
 #[derive(Serialize, Clone, Debug, Deref)]
 pub struct EncodableDependencyName(pub String);
 
