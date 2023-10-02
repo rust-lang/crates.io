@@ -1,4 +1,5 @@
 use crate::builders::PublishBuilder;
+use crate::util::insta::{any_id_redaction, id_redaction};
 use crate::util::{RequestHelper, TestApp};
 use http::StatusCode;
 use insta::assert_json_snapshot;
@@ -19,11 +20,21 @@ fn boolean_readme() {
             readme = false"#,
     ));
     assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json(), {
+        ".crate.created_at" => "[datetime]",
+        ".crate.updated_at" => "[datetime]",
+    });
 
     let response = token.get::<()>("/api/v1/crates/foo/1.0.0");
     assert_eq!(response.status(), StatusCode::OK);
-    let json = response.into_json();
-    assert_some_eq!(json["version"]["rust_version"].as_str(), "1.69");
+    assert_json_snapshot!(response.into_json(), {
+        ".version.id" => any_id_redaction(),
+        ".version.created_at" => "[datetime]",
+        ".version.updated_at" => "[datetime]",
+        ".version.published_by.id" => id_redaction(token.as_model().user_id),
+        ".version.audit_actions[].time" => "[datetime]",
+        ".version.audit_actions[].user.id" => id_redaction(token.as_model().user_id),
+    });
 }
 
 #[test]
@@ -32,10 +43,7 @@ fn missing_manifest() {
 
     let response = token.publish_crate(PublishBuilder::new("foo", "1.0.0").no_manifest());
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": "uploaded tarball is missing a `Cargo.toml` manifest file" }] })
-    );
+    assert_json_snapshot!(response.into_json());
 }
 
 #[test]
@@ -80,10 +88,7 @@ fn invalid_manifest() {
 
     let response = token.publish_crate(PublishBuilder::new("foo", "1.0.0").custom_manifest(""));
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": "failed to parse `Cargo.toml` manifest file\n\nmissing field `name`\n" }] })
-    );
+    assert_json_snapshot!(response.into_json());
 }
 
 #[test]
@@ -94,10 +99,7 @@ fn invalid_manifest_missing_name() {
         PublishBuilder::new("foo", "1.0.0").custom_manifest("[package]\nversion = \"1.0.0\""),
     );
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": "failed to parse `Cargo.toml` manifest file\n\nTOML parse error at line 1, column 1\n  |\n1 | [package]\n  | ^^^^^^^^^\nmissing field `name`\n" }] })
-    );
+    assert_json_snapshot!(response.into_json());
 }
 
 #[test]
@@ -108,10 +110,7 @@ fn invalid_manifest_missing_version() {
         PublishBuilder::new("foo", "1.0.0").custom_manifest("[package]\nname = \"foo\""),
     );
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": "failed to parse `Cargo.toml` manifest file\n\nTOML parse error at line 1, column 1\n  |\n1 | [package]\n  | ^^^^^^^^^\nmissing field `version`\n" }] })
-    );
+    assert_json_snapshot!(response.into_json());
 }
 
 #[test]
@@ -123,17 +122,11 @@ fn invalid_rust_version() {
             "[package]\nname = \"foo\"\nversion = \"1.0.0\"\nrust-version = \"\"\n",
         ));
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": "failed to parse `Cargo.toml` manifest file\n\ninvalid `rust-version` value" }] })
-    );
+    assert_json_snapshot!(response.into_json());
 
     let response = token.publish_crate(PublishBuilder::new("foo", "1.0.0").custom_manifest(
         "[package]\nname = \"foo\"\nversion = \"1.0.0\"\nrust-version = \"1.0.0-beta.2\"\n",
     ));
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": "failed to parse `Cargo.toml` manifest file\n\ninvalid `rust-version` value" }] })
-    );
+    assert_json_snapshot!(response.into_json());
 }

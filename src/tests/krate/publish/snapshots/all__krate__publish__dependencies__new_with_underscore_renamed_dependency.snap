@@ -1,0 +1,25 @@
+---
+source: src/tests/krate/publish/dependencies.rs
+expression: crates
+---
+[
+  {
+    "name": "new-krate",
+    "vers": "1.0.0",
+    "deps": [
+      {
+        "name": "_my-name",
+        "req": "> 0",
+        "features": [],
+        "optional": false,
+        "default_features": true,
+        "target": null,
+        "kind": "normal",
+        "package": "package-name"
+      }
+    ],
+    "cksum": "a53250c08af1d1cc060bc5145afadfd0b07708406d8943ae1d6b76131d78955f",
+    "features": {},
+    "yanked": false
+  }
+]

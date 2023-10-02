@@ -1,6 +1,7 @@
 use crate::builders::{CrateBuilder, PublishBuilder};
 use crate::util::{RequestHelper, TestApp};
 use http::StatusCode;
+use insta::assert_json_snapshot;
 
 #[test]
 fn new_crate_similar_name() {
@@ -15,10 +16,7 @@ fn new_crate_similar_name() {
     let crate_to_publish = PublishBuilder::new("foo_similar", "1.1.0");
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": "crate was previously named `Foo_similar`" }] })
-    );
+    assert_json_snapshot!(response.into_json());
 
     assert!(app.stored_files().is_empty());
 }
@@ -36,10 +34,7 @@ fn new_crate_similar_name_hyphen() {
     let crate_to_publish = PublishBuilder::new("foo-bar-hyphen", "1.1.0");
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": "crate was previously named `foo_bar_hyphen`" }] })
-    );
+    assert_json_snapshot!(response.into_json());
 
     assert!(app.stored_files().is_empty());
 }
@@ -57,10 +52,7 @@ fn new_crate_similar_name_underscore() {
     let crate_to_publish = PublishBuilder::new("foo_bar_underscore", "1.1.0");
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": "crate was previously named `foo-bar-underscore`" }] })
-    );
+    assert_json_snapshot!(response.into_json());
 
     assert!(app.stored_files().is_empty());
 }

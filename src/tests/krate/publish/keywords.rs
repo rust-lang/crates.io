@@ -10,9 +10,12 @@ fn good_keywords() {
         .keyword("c++")
         .keyword("crates-io_index")
         .keyword("1password");
-    let json = token.publish_crate(crate_to_publish).good();
-    assert_eq!(json.krate.name, "foo_good_key");
-    assert_eq!(json.krate.max_version, "1.0.0");
+    let response = token.publish_crate(crate_to_publish);
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json(), {
+        ".crate.created_at" => "[datetime]",
+        ".crate.updated_at" => "[datetime]",
+    });
 }
 
 #[test]

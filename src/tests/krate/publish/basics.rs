@@ -1,29 +1,24 @@
 use crate::builders::{CrateBuilder, PublishBuilder};
 use crate::util::{RequestHelper, TestApp};
 use crates_io::schema::versions_published_by;
-use crates_io::views::GoodCrate;
 use diesel::{QueryDsl, RunQueryDsl};
 use http::StatusCode;
+use insta::assert_json_snapshot;
 
 #[test]
 fn new_krate() {
     let (app, _, user) = TestApp::full().with_user();
 
     let crate_to_publish = PublishBuilder::new("foo_new", "1.0.0");
-    let json: GoodCrate = user.publish_crate(crate_to_publish).good();
-
-    assert_eq!(json.krate.name, "foo_new");
-    assert_eq!(json.krate.max_version, "1.0.0");
+    let response = user.publish_crate(crate_to_publish);
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json(), {
+        ".crate.created_at" => "[datetime]",
+        ".crate.updated_at" => "[datetime]",
+    });
 
     let crates = app.crates_from_index_head("foo_new");
-    assert_eq!(crates.len(), 1);
-    assert_eq!(crates[0].name, "foo_new");
-    assert_eq!(crates[0].vers, "1.0.0");
-    assert!(crates[0].deps.is_empty());
-    assert_eq!(
-        crates[0].cksum,
-        "270bbe1624abd766746bf9938b791fadd88e7e0135339510837e11b45e167350"
-    );
+    assert_json_snapshot!(crates);
 
     let expected_files = vec!["crates/foo_new/foo_new-1.0.0.crate", "index/fo/o_/foo_new"];
     assert_eq!(app.stored_files(), expected_files);
@@ -42,10 +37,12 @@ fn new_krate_with_token() {
     let (app, _, _, token) = TestApp::full().with_token();
 
     let crate_to_publish = PublishBuilder::new("foo_new", "1.0.0");
-    let json: GoodCrate = token.publish_crate(crate_to_publish).good();
-
-    assert_eq!(json.krate.name, "foo_new");
-    assert_eq!(json.krate.max_version, "1.0.0");
+    let response = token.publish_crate(crate_to_publish);
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json(), {
+        ".crate.created_at" => "[datetime]",
+        ".crate.updated_at" => "[datetime]",
+    });
 
     let expected_files = vec!["crates/foo_new/foo_new-1.0.0.crate", "index/fo/o_/foo_new"];
     assert_eq!(app.stored_files(), expected_files);
@@ -56,10 +53,12 @@ fn new_krate_weird_version() {
     let (app, _, _, token) = TestApp::full().with_token();
 
     let crate_to_publish = PublishBuilder::new("foo_weird", "0.0.0-pre");
-    let json: GoodCrate = token.publish_crate(crate_to_publish).good();
-
-    assert_eq!(json.krate.name, "foo_weird");
-    assert_eq!(json.krate.max_version, "0.0.0-pre");
+    let response = token.publish_crate(crate_to_publish);
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json(), {
+        ".crate.created_at" => "[datetime]",
+        ".crate.updated_at" => "[datetime]",
+    });
 
     let expected_files = vec![
         "crates/foo_weird/foo_weird-0.0.0-pre.crate",
@@ -77,19 +76,15 @@ fn new_krate_twice() {
 
     let crate_to_publish =
         PublishBuilder::new("foo_twice", "2.0.0").description("2.0.0 description");
-    let json = token.publish_crate(crate_to_publish).good();
-
-    assert_eq!(json.krate.name, "foo_twice");
-    assert_eq!(json.krate.description.unwrap(), "2.0.0 description");
+    let response = token.publish_crate(crate_to_publish);
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json(), {
+        ".crate.created_at" => "[datetime]",
+        ".crate.updated_at" => "[datetime]",
+    });
 
     let crates = app.crates_from_index_head("foo_twice");
-    assert_eq!(crates.len(), 2);
-    assert_eq!(crates[0].name, "foo_twice");
-    assert_eq!(crates[0].vers, "0.99.0");
-    assert!(crates[0].deps.is_empty());
-    assert_eq!(crates[1].name, "foo_twice");
-    assert_eq!(crates[1].vers, "2.0.0");
-    assert!(crates[1].deps.is_empty());
+    assert_json_snapshot!(crates);
 
     let expected_files = vec![
         "crates/foo_twice/foo_twice-0.99.0.crate",
@@ -113,10 +108,7 @@ fn new_krate_duplicate_version() {
     let crate_to_publish = PublishBuilder::new("foo_dupe", "1.0.0");
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": "crate version `1.0.0` is already uploaded" }] })
-    );
+    assert_json_snapshot!(response.into_json());
 
     assert!(app.stored_files().is_empty());
 }

@@ -1,9 +1,9 @@
 use crate::builders::{CrateBuilder, PublishBuilder};
 use crate::util::{RequestHelper, TestApp};
-use crates_io::views::GoodCrate;
 use crates_io_tarball::TarballBuilder;
 use flate2::Compression;
 use http::StatusCode;
+use insta::assert_json_snapshot;
 use std::io;
 use std::io::Read;
 
@@ -44,11 +44,12 @@ fn tarball_between_default_axum_limit_and_max_upload_size() {
     let (json, _tarball) = PublishBuilder::new("foo", "1.1.0").build();
     let body = PublishBuilder::create_publish_body(&json, &tarball);
 
-    let response = token.put("/api/v1/crates/new", body);
+    let response = token.put::<()>("/api/v1/crates/new", body);
     assert_eq!(response.status(), StatusCode::OK);
-    let json: GoodCrate = response.good();
-    assert_eq!(json.krate.name, "foo");
-    assert_eq!(json.krate.max_version, "1.1.0");
+    assert_json_snapshot!(response.into_json(), {
+        ".crate.created_at" => "[datetime]",
+        ".crate.updated_at" => "[datetime]",
+    });
 
     app.run_pending_background_jobs();
     assert_eq!(app.stored_files().len(), 2);
@@ -85,10 +86,7 @@ fn tarball_bigger_than_max_upload_size() {
 
     let response = token.put::<()>("/api/v1/crates/new", body);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": format!("max upload size is: {max_upload_size}") }] })
-    );
+    assert_json_snapshot!(response.into_json());
 
     app.run_pending_background_jobs();
     assert!(app.stored_files().is_empty());
@@ -111,10 +109,7 @@ fn new_krate_gzip_bomb() {
 
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": "uploaded tarball is malformed or too large when decompressed" }] })
-    );
+    assert_json_snapshot!(response.into_json());
 
     assert!(app.stored_files().is_empty());
 }
@@ -133,10 +128,7 @@ fn new_krate_too_big() {
 
     let response = user.publish_crate(builder);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.into_json(),
-        json!({ "errors": [{ "detail": "uploaded tarball is malformed or too large when decompressed" }] })
-    );
+    assert_json_snapshot!(response.into_json());
 
     assert!(app.stored_files().is_empty());
 }

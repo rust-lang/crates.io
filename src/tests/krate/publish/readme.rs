@@ -1,15 +1,19 @@
 use crate::builders::{CrateBuilder, PublishBuilder};
 use crate::util::{RequestHelper, TestApp};
+use http::StatusCode;
+use insta::assert_json_snapshot;
 
 #[test]
 fn new_krate_with_readme() {
     let (app, _, _, token) = TestApp::full().with_token();
 
     let crate_to_publish = PublishBuilder::new("foo_readme", "1.0.0").readme("hello world");
-    let json = token.publish_crate(crate_to_publish).good();
-
-    assert_eq!(json.krate.name, "foo_readme");
-    assert_eq!(json.krate.max_version, "1.0.0");
+    let response = token.publish_crate(crate_to_publish);
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json(), {
+        ".crate.created_at" => "[datetime]",
+        ".crate.updated_at" => "[datetime]",
+    });
 
     let expected_files = vec![
         "crates/foo_readme/foo_readme-1.0.0.crate",
@@ -24,10 +28,12 @@ fn new_krate_with_empty_readme() {
     let (app, _, _, token) = TestApp::full().with_token();
 
     let crate_to_publish = PublishBuilder::new("foo_readme", "1.0.0").readme("");
-    let json = token.publish_crate(crate_to_publish).good();
-
-    assert_eq!(json.krate.name, "foo_readme");
-    assert_eq!(json.krate.max_version, "1.0.0");
+    let response = token.publish_crate(crate_to_publish);
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json(), {
+        ".crate.created_at" => "[datetime]",
+        ".crate.updated_at" => "[datetime]",
+    });
 
     let expected_files = vec![
         "crates/foo_readme/foo_readme-1.0.0.crate",
@@ -41,10 +47,12 @@ fn new_krate_with_readme_and_plus_version() {
     let (app, _, _, token) = TestApp::full().with_token();
 
     let crate_to_publish = PublishBuilder::new("foo_readme", "1.0.0+foo").readme("hello world");
-    let json = token.publish_crate(crate_to_publish).good();
-
-    assert_eq!(json.krate.name, "foo_readme");
-    assert_eq!(json.krate.max_version, "1.0.0+foo");
+    let response = token.publish_crate(crate_to_publish);
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json(), {
+        ".crate.created_at" => "[datetime]",
+        ".crate.updated_at" => "[datetime]",
+    });
 
     let expected_files = vec![
         "crates/foo_readme/foo_readme-1.0.0+foo.crate",

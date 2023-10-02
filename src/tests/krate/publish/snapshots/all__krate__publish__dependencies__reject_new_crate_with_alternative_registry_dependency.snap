@@ -1,0 +1,11 @@
+---
+source: src/tests/krate/publish/dependencies.rs
+expression: response.into_json()
+---
+{
+  "errors": [
+    {
+      "detail": "Dependency `dep` is hosted on another registry. Cross-registry dependencies are not permitted on crates.io."
+    }
+  ]
+}
