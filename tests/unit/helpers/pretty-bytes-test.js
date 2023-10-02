@@ -8,7 +8,7 @@ import { setupRenderingTest } from 'cargo/tests/helpers';
 module('Unit | Helper | pretty-bytes', function (hooks) {
   setupRenderingTest(hooks);
 
-  test("it displays as expected", async function (assert) {
+  test('it displays as expected', async function (assert) {
     this.owner.lookup('service:intl').locale = 'en';
 
     await render(hbs`{{pretty-bytes 42}}`);
