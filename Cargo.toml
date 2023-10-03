@@ -30,8 +30,23 @@ default = ["slow-tests"]
 # to disable these tests.
 slow-tests = []
 
-[dependencies]
+[workspace.dependencies]
 anyhow = "=1.0.75"
+clap = "4.4.6"
+crates_io_index = { path = "crates_io_index" }
+reqwest = "=0.11.22"
+secrecy = "=0.8.0"
+semver = "=1.0.20"
+serde = "=1.0.189"
+serde_json = "=1.0.107"
+tempfile = "=3.8.0"
+thiserror = "=1.0.49"
+tracing = "=0.1.37"
+tracing-subscriber = "=0.3.17"
+bytes = "=1.5.0"
+
+[dependencies]
+anyhow.workspace = true
 async-trait = "=0.1.73"
 aws-sigv4 = "=0.56.1"
 axum = { version = "=0.6.20", features = ["headers", "macros", "matched-path"] }
@@ -39,11 +54,11 @@ axum-extra = { version = "=0.8.0", features = ["cookie-signed"] }
 base64 = "=0.21.4"
 bigdecimal = "=0.4.1"
 cargo-manifest = "=0.12.0"
-crates_io_index = { path = "crates_io_index" }
+crates_io_index.workspace = true
 crates_io_markdown = { path = "crates_io_markdown" }
 crates_io_tarball = { path = "crates_io_tarball" }
 chrono = { version = "=0.4.31", default-features = false, features = ["serde"] }
-clap = { version = "=4.4.6", features = ["derive", "env", "unicode", "wrap_help"] }
+clap = { workspace = true, features = ["derive", "env", "unicode", "wrap_help"] }
 cookie = { version = "=0.17.0", features = ["secure"] }
 crossbeam-channel = "=0.5.8"
 dashmap = { version = "=5.5.3", features = ["raw-api"] }
@@ -75,30 +90,31 @@ parking_lot = "=0.12.1"
 paste = "=1.0.14"
 prometheus = { version = "=0.13.3", default-features = false }
 rand = "=0.8.5"
-reqwest = { version = "=0.11.22", features = ["blocking", "gzip", "json"] }
+reqwest = { workspace = true, features = ["blocking", "gzip", "json"] }
 retry = "=2.0.0"
 scheduled-thread-pool = "=0.2.7"
-secrecy = "=0.8.0"
-semver = { version = "=1.0.20", features = ["serde"] }
+secrecy.workspace = true
+semver = { workspace = true, features = ["serde"] }
 sentry = { version = "=0.31.7", features = ["tracing", "tower", "tower-axum-matched-path", "tower-http"] }
-serde = { version = "=1.0.189", features = ["derive"] }
-serde_json = "=1.0.107"
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
 sha2 = "=0.10.8"
 spdx = "=0.10.2"
 tar = "=0.4.40"
-tempfile = "=3.8.0"
-thiserror = "=1.0.49"
+tempfile.workspace = true
+thiserror.workspace = true
 threadpool = "=1.8.1"
 tokio = { version = "=1.33.0", features = ["net", "signal", "io-std", "io-util", "rt-multi-thread", "macros"]}
 toml = "=0.8.2"
 tower = "=0.4.13"
 tower-http = { version = "=0.4.4", features = ["fs", "catch-panic"] }
-tracing = "=0.1.37"
-tracing-subscriber = { version = "=0.3.17", features = ["env-filter"] }
+tracing.workspace = true
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
 url = "=2.4.1"
 
 [dev-dependencies]
-bytes = "=1.5.0"
+bytes.workspace = true
+cargo-manifest = "=0.12.0"
 crates_io_index = { path = "crates_io_index", features = ["testing"] }
 crates_io_tarball = { path = "crates_io_tarball", features = ["builder"] }
 claims = "=0.7.1"
