@@ -61,20 +61,21 @@ impl<'a> MarkdownRenderer<'a> {
             ComrakRenderOptions,
         };
 
+        let mut render_options = ComrakRenderOptions::default();
+        // The output will be sanitized with `ammonia`
+        render_options.unsafe_ = true;
+
+        let mut extension_options = ComrakExtensionOptions::default();
+        extension_options.autolink = true;
+        extension_options.strikethrough = true;
+        extension_options.table = true;
+        extension_options.tagfilter = true;
+        extension_options.tasklist = true;
+        extension_options.header_ids = Some("user-content-".to_string());
+
         let options = ComrakOptions {
-            render: ComrakRenderOptions {
-                unsafe_: true, // The output will be sanitized with `ammonia`
-                ..ComrakRenderOptions::default()
-            },
-            extension: ComrakExtensionOptions {
-                autolink: true,
-                strikethrough: true,
-                table: true,
-                tagfilter: true,
-                tasklist: true,
-                header_ids: Some("user-content-".to_string()),
-                ..ComrakExtensionOptions::default()
-            },
+            render: render_options,
+            extension: extension_options,
             ..ComrakOptions::default()
         };
 
