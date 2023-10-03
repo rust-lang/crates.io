@@ -223,3 +223,16 @@ fn new_krate_sorts_deps() {
     let crates = app.crates_from_index_head("two-deps");
     assert_json_snapshot!(crates);
 }
+
+#[test]
+fn invalid_feature_name() {
+    let (app, _, _, token) = TestApp::full().with_token();
+
+    let response = token.publish_crate(
+        PublishBuilder::new("foo", "1.0.0")
+            .dependency(DependencyBuilder::new("bar").add_feature("🍺")),
+    );
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json());
+    assert!(app.stored_files().is_empty());
+}

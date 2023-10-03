@@ -1,0 +1,11 @@
+---
+source: src/tests/krate/publish/dependencies.rs
+expression: response.into_json()
+---
+{
+  "errors": [
+    {
+      "detail": "invalid upload request: invalid value: string \"🍺\", expected a valid feature name at line 1 column 111"
+    }
+  ]
+}
