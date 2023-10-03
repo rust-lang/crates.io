@@ -15,8 +15,8 @@ use url::Url;
 
 use crate::controllers::cargo_prelude::*;
 use crate::models::{
-    insert_version_owner_action, Category, Crate, Keyword, NewCrate, NewVersion, Rights,
-    VersionAction,
+    insert_version_owner_action, Category, Crate, DependencyKind, Keyword, NewCrate, NewVersion,
+    Rights, VersionAction,
 };
 
 use crate::licenses::parse_license_expr;
@@ -470,7 +470,7 @@ pub fn add_dependencies(
                 dependencies::version_id.eq(version_id),
                 dependencies::crate_id.eq(crate_id),
                 dependencies::req.eq(dep.version_req.to_string()),
-                dep.kind.map(|k| dependencies::kind.eq(k)),
+                dependencies::kind.eq(dep.kind.unwrap_or(DependencyKind::Normal)),
                 dependencies::optional.eq(dep.optional),
                 dependencies::default_features.eq(dep.default_features),
                 dependencies::features.eq(&dep.features),
