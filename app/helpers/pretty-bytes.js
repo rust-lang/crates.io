@@ -10,9 +10,9 @@ import prettyBytes from 'pretty-bytes';
  */
 export default helper(([bytes], options) =>
   prettyBytes(bytes, {
-    ...options,
     binary: true,
     minimumFractionDigits: 1,
     maximumFractionDigits: 1,
+    ...options,
   }),
 );
