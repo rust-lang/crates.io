@@ -4,6 +4,18 @@ use http::StatusCode;
 use insta::assert_json_snapshot;
 
 #[test]
+fn invalid_dependency_name() {
+    let (app, _, _, token) = TestApp::full().with_token();
+
+    let response = token.publish_crate(
+        PublishBuilder::new("foo", "1.0.0").dependency(DependencyBuilder::new("🦀")),
+    );
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json());
+    assert!(app.stored_files().is_empty());
+}
+
+#[test]
 fn new_with_renamed_dependency() {
     let (app, _, user, token) = TestApp::full().with_token();
 
