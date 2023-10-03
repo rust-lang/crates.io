@@ -284,8 +284,11 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 VersionAction::Publish,
             )?;
 
+            for dep in &metadata.deps {
+                validate_dependency(dep)?;
+            }
+
             // Link this new version to all dependencies
-            validate_dependencies(&metadata.deps)?;
             add_dependencies(conn, &metadata.deps, version.id)?;
 
             // Update all keywords for this crate
@@ -429,15 +432,6 @@ fn missing_metadata_error_message(missing: &[&str]) -> String {
          how to upload metadata",
         missing.join(", ")
     )
-}
-
-#[instrument(skip_all)]
-pub fn validate_dependencies(deps: &[EncodableCrateDependency]) -> AppResult<()> {
-    for dep in deps {
-        validate_dependency(dep)?;
-    }
-
-    Ok(())
 }
 
 pub fn validate_dependency(dep: &EncodableCrateDependency) -> AppResult<()> {
