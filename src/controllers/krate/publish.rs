@@ -453,7 +453,7 @@ pub fn add_dependencies(
             }
 
             // Match only identical names to ensure the index always references the original crate name
-            let Some(&krate_id) = crate_ids.get(&dep.name.0) else {
+            let Some(&crate_id) = crate_ids.get(&dep.name.0) else {
                 return Err(cargo_err(&format_args!("no known crate named `{}`", &*dep.name)));
             };
 
@@ -468,7 +468,7 @@ pub fn add_dependencies(
 
             Ok((
                 dependencies::version_id.eq(version_id),
-                dependencies::crate_id.eq(krate_id),
+                dependencies::crate_id.eq(crate_id),
                 dependencies::req.eq(dep.version_req.to_string()),
                 dep.kind.map(|k| dependencies::kind.eq(k)),
                 dependencies::optional.eq(dep.optional),
