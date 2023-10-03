@@ -433,9 +433,8 @@ fn missing_metadata_error_message(missing: &[&str]) -> String {
 pub fn add_dependencies(
     conn: &mut PgConnection,
     deps: &[EncodableCrateDependency],
-    target_version_id: i32,
+    version_id: i32,
 ) -> AppResult<()> {
-    use self::dependencies::dsl::*;
     use diesel::insert_into;
 
     let crate_ids = crates::table
@@ -454,7 +453,7 @@ pub fn add_dependencies(
             }
 
             // Match only identical names to ensure the index always references the original crate name
-            let Some(&krate_id) = crate_ids.get(&dep.name.0) else {
+            let Some(&crate_id) = crate_ids.get(&dep.name.0) else {
                 return Err(cargo_err(&format_args!("no known crate named `{}`", &*dep.name)));
             };
 
@@ -468,20 +467,20 @@ pub fn add_dependencies(
             }
 
             Ok((
-                version_id.eq(target_version_id),
-                crate_id.eq(krate_id),
-                req.eq(dep.version_req.to_string()),
-                dep.kind.map(|k| kind.eq(k)),
-                optional.eq(dep.optional),
-                default_features.eq(dep.default_features),
-                features.eq(&dep.features),
-                target.eq(dep.target.as_deref()),
-                explicit_name.eq(dep.explicit_name_in_toml.as_deref())
+                dependencies::version_id.eq(version_id),
+                dependencies::crate_id.eq(crate_id),
+                dependencies::req.eq(dep.version_req.to_string()),
+                dep.kind.map(|k| dependencies::kind.eq(k)),
+                dependencies::optional.eq(dep.optional),
+                dependencies::default_features.eq(dep.default_features),
+                dependencies::features.eq(&dep.features),
+                dependencies::target.eq(dep.target.as_deref()),
+                dependencies::explicit_name.eq(dep.explicit_name_in_toml.as_deref())
             ))
         })
         .collect::<Result<Vec<_>, _>>()?;
 
-    insert_into(dependencies)
+    insert_into(dependencies::table)
         .values(&new_dependencies)
         .execute(conn)?;
 
