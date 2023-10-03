@@ -14,6 +14,7 @@ use tokio::runtime::Handle;
 use url::Url;
 
 use crate::controllers::cargo_prelude::*;
+use crate::models::krate::MAX_NAME_LENGTH;
 use crate::models::{
     insert_version_owner_action, Category, Crate, DependencyKind, Keyword, NewCrate, NewVersion,
     Rights, VersionAction,
@@ -433,9 +434,18 @@ fn missing_metadata_error_message(missing: &[&str]) -> String {
 #[instrument(skip_all)]
 pub fn validate_dependencies(deps: &[EncodableCrateDependency]) -> AppResult<()> {
     for dep in deps {
+        if !Crate::valid_name(&dep.name) {
+            return Err(cargo_err(&format_args!(
+                "\"{}\" is an invalid dependency name (dependency names must \
+                start with a letter, contain only letters, numbers, hyphens, \
+                or underscores and have at most {MAX_NAME_LENGTH} characters)",
+                dep.name
+            )));
+        }
+
         if let Some(registry) = &dep.registry {
             if !registry.is_empty() {
-                return Err(cargo_err(&format_args!("Dependency `{}` is hosted on another registry. Cross-registry dependencies are not permitted on crates.io.", &*dep.name)));
+                return Err(cargo_err(&format_args!("Dependency `{}` is hosted on another registry. Cross-registry dependencies are not permitted on crates.io.", dep.name)));
             }
         }
 
@@ -444,7 +454,7 @@ pub fn validate_dependencies(deps: &[EncodableCrateDependency]) -> AppResult<()>
                 return Err(cargo_err(&format_args!("wildcard (`*`) dependency constraints are not allowed \
                     on crates.io. Crate with this problem: `{}` See https://doc.rust-lang.org/cargo/faq.html#can-\
                     libraries-use--as-a-version-for-their-dependencies for more \
-                    information", &*dep.name)));
+                    information", dep.name)));
             }
         }
     }
@@ -462,7 +472,7 @@ pub fn add_dependencies(
 
     let crate_ids = crates::table
         .select((crates::name, crates::id))
-        .filter(crates::name.eq_any(deps.iter().map(|d| &d.name.0)))
+        .filter(crates::name.eq_any(deps.iter().map(|d| &d.name)))
         .load_iter::<(String, i32), DefaultLoadingMode>(conn)?
         .collect::<QueryResult<HashMap<_, _>>>()?;
 
@@ -470,10 +480,10 @@ pub fn add_dependencies(
         .iter()
         .map(|dep| {
             // Match only identical names to ensure the index always references the original crate name
-            let Some(&crate_id) = crate_ids.get(&dep.name.0) else {
+            let Some(&crate_id) = crate_ids.get(&dep.name) else {
                 return Err(cargo_err(&format_args!(
                     "no known crate named `{}`",
-                    &*dep.name
+                    dep.name
                 )));
             };
 

@@ -60,7 +60,7 @@ impl DependencyBuilder {
             .collect();
 
         u::EncodableCrateDependency {
-            name: u::EncodableCrateName(self.name),
+            name: self.name,
             optional: false,
             default_features: true,
             features,

@@ -26,7 +26,7 @@ pub struct PublishMetadata {
 pub struct EncodableCrateDependency {
     pub optional: bool,
     pub default_features: bool,
-    pub name: EncodableCrateName,
+    pub name: String,
     pub features: Vec<EncodableFeature>,
     pub version_req: EncodableCrateVersionReq,
     pub target: Option<String>,
