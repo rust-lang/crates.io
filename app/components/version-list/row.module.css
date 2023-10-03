@@ -211,6 +211,7 @@
 
 .bytes {
     font-variant-numeric: tabular-nums;
+    text-transform: none;
 }
 
 .feature-list {
