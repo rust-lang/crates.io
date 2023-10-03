@@ -25,7 +25,7 @@ pub struct EncodableCrateDependency {
     pub default_features: bool,
     pub name: String,
     pub features: Vec<String>,
-    pub version_req: EncodableCrateVersionReq,
+    pub version_req: String,
     pub target: Option<String>,
     pub kind: Option<DependencyKind>,
     pub explicit_name_in_toml: Option<EncodableDependencyName>,
@@ -81,23 +81,6 @@ impl<'de> Deserialize<'de> for EncodableCrateVersion {
             Err(..) => {
                 let value = de::Unexpected::Str(&s);
                 let expected = "a valid semver";
-                Err(de::Error::invalid_value(value, &expected))
-            }
-        }
-    }
-}
-
-#[derive(Serialize, Clone, Debug, Deref)]
-pub struct EncodableCrateVersionReq(pub String);
-
-impl<'de> Deserialize<'de> for EncodableCrateVersionReq {
-    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<EncodableCrateVersionReq, D::Error> {
-        let s = String::deserialize(d)?;
-        match semver::VersionReq::parse(&s) {
-            Ok(_) => Ok(EncodableCrateVersionReq(s)),
-            Err(..) => {
-                let value = de::Unexpected::Str(&s);
-                let expected = "a valid version req";
                 Err(de::Error::invalid_value(value, &expected))
             }
         }

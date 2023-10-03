@@ -457,13 +457,20 @@ pub fn validate_dependencies(deps: &[EncodableCrateDependency]) -> AppResult<()>
             }
         }
 
-        if let Ok(version_req) = semver::VersionReq::parse(&dep.version_req.0) {
-            if version_req == semver::VersionReq::STAR {
+        match semver::VersionReq::parse(&dep.version_req) {
+            Err(_) => {
+                return Err(cargo_err(&format_args!(
+                    "\"{}\" is an invalid version requirement",
+                    dep.version_req
+                )));
+            }
+            Ok(req) if req == semver::VersionReq::STAR => {
                 return Err(cargo_err(&format_args!("wildcard (`*`) dependency constraints are not allowed \
                     on crates.io. Crate with this problem: `{}` See https://doc.rust-lang.org/cargo/faq.html#can-\
                     libraries-use--as-a-version-for-their-dependencies for more \
                     information", dep.name)));
             }
+            _ => {}
         }
     }
 

@@ -6,7 +6,7 @@ pub struct DependencyBuilder {
     name: String,
     features: Vec<String>,
     registry: Option<String>,
-    version_req: u::EncodableCrateVersionReq,
+    version_req: String,
 }
 
 impl DependencyBuilder {
@@ -17,7 +17,7 @@ impl DependencyBuilder {
             name: name.to_string(),
             features: vec![],
             registry: None,
-            version_req: u::EncodableCrateVersionReq("> 0".to_string()),
+            version_req: "> 0".to_string(),
         }
     }
 
@@ -40,7 +40,7 @@ impl DependencyBuilder {
     /// Panics if the `version_req` string specified isn't a valid `semver::VersionReq`.
     #[track_caller]
     pub fn version_req(mut self, version_req: &str) -> Self {
-        self.version_req = u::EncodableCrateVersionReq(version_req.to_string());
+        self.version_req = version_req.to_string();
         self
     }
 
