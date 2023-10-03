@@ -134,8 +134,8 @@ impl PublishBuilder {
 
     pub fn build(self) -> (String, Vec<u8>) {
         let metadata = u::PublishMetadata {
-            name: u::EncodableCrateName(self.krate_name.clone()),
-            vers: u::EncodableCrateVersion(self.version.clone()),
+            name: self.krate_name.clone(),
+            vers: self.version.to_string(),
             deps: self.deps.clone(),
             readme: self.readme,
             readme_file: None,

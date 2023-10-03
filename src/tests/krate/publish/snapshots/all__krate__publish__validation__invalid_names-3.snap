@@ -5,7 +5,7 @@ expression: response.into_json()
 {
   "errors": [
     {
-      "detail": "invalid upload request: invalid value: string \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\", expected a valid crate name to start with a letter, contain only letters, numbers, hyphens, or underscores and have at most 64 characters at line 1 column 75"
+      "detail": "\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\" is an invalid crate name (crate names must start with a letter, contain only letters, numbers, hyphens, or underscores and have at most 64 characters)"
     }
   ]
 }

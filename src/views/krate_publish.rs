@@ -3,17 +3,14 @@
 //! to and from structs. The serializing is only utilised in
 //! integration tests.
 
-use serde::{de, Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Serialize};
 
-use crate::models::krate::MAX_NAME_LENGTH;
-
-use crate::models::Crate;
 use crate::models::DependencyKind;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct PublishMetadata {
-    pub name: EncodableCrateName,
-    pub vers: EncodableCrateVersion,
+    pub name: String,
+    pub vers: String,
     pub deps: Vec<EncodableCrateDependency>,
     pub readme: Option<String>,
     pub readme_file: Option<String>,
@@ -30,40 +27,4 @@ pub struct EncodableCrateDependency {
     pub kind: Option<DependencyKind>,
     pub explicit_name_in_toml: Option<String>,
     pub registry: Option<String>,
-}
-
-#[derive(PartialEq, Eq, Hash, Serialize, Clone, Debug, Deref)]
-pub struct EncodableCrateName(pub String);
-
-impl<'de> Deserialize<'de> for EncodableCrateName {
-    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<EncodableCrateName, D::Error> {
-        let s = String::deserialize(d)?;
-        if !Crate::valid_name(&s) {
-            let value = de::Unexpected::Str(&s);
-            let expected = format!(
-                "a valid crate name to start with a letter, contain only letters, \
-                 numbers, hyphens, or underscores and have at most {MAX_NAME_LENGTH} characters"
-            );
-            Err(de::Error::invalid_value(value, &expected.as_ref()))
-        } else {
-            Ok(EncodableCrateName(s))
-        }
-    }
-}
-
-#[derive(Serialize, Debug, Deref)]
-pub struct EncodableCrateVersion(pub semver::Version);
-
-impl<'de> Deserialize<'de> for EncodableCrateVersion {
-    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<EncodableCrateVersion, D::Error> {
-        let s = String::deserialize(d)?;
-        match semver::Version::parse(&s) {
-            Ok(v) => Ok(EncodableCrateVersion(v)),
-            Err(..) => {
-                let value = de::Unexpected::Str(&s);
-                let expected = "a valid semver";
-                Err(de::Error::invalid_value(value, &expected))
-            }
-        }
-    }
 }

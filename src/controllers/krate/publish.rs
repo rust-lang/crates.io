@@ -55,9 +55,31 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
     let metadata: PublishMetadata = serde_json::from_slice(&json_bytes)
         .map_err(|e| cargo_err(&format_args!("invalid upload request: {e}")))?;
 
+    if !Crate::valid_name(&metadata.name) {
+        return Err(cargo_err(&format_args!(
+            "\"{}\" is an invalid crate name (crate names must start with a \
+            letter, contain only letters, numbers, hyphens, or underscores and \
+            have at most {MAX_NAME_LENGTH} characters)",
+            metadata.name
+        )));
+    }
+
+    let version = match semver::Version::parse(&metadata.vers) {
+        Ok(parsed) => parsed,
+        Err(_) => {
+            return Err(cargo_err(&format_args!(
+                "\"{}\" is an invalid semver version",
+                metadata.vers
+            )))
+        }
+    };
+
+    // Convert the version back to a string to deal with any inconsistencies
+    let version_string = version.to_string();
+
     let request_log = req.request_log();
     request_log.add("crate_name", &*metadata.name);
-    request_log.add("crate_version", &*metadata.vers);
+    request_log.add("crate_version", &version_string);
 
     conduit_compat(move || {
         let conn = &mut *app.db_write()?;
@@ -114,7 +136,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             )));
         }
 
-        let pkg_name = format!("{}-{}", &*metadata.name, &*metadata.vers);
+        let pkg_name = format!("{}-{}", &*metadata.name, &version_string);
         let tarball_info = process_tarball(&pkg_name, &*tarball_bytes, maximums.max_unpack_size)?;
 
         // `unwrap()` is safe here since `process_tarball()` validates that
@@ -208,7 +230,6 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         // commit the transactions to record a new or updated crate.
         conn.transaction(|conn| {
             let name = metadata.name;
-            let vers = &*metadata.vers;
             let keywords = keywords.iter().map(|s| s.as_str()).collect::<Vec<_>>();
             let categories = categories.iter().map(|s| s.as_str()).collect::<Vec<_>>();
 
@@ -263,7 +284,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             // Persist the new version of this crate
             let version = NewVersion::new(
                 krate.id,
-                vers,
+                &version,
                 &features,
                 license,
                 // Downcast is okay because the file length must be less than the max upload size
@@ -321,7 +342,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             Handle::current()
                 .block_on(app.storage.upload_crate_file(
                     &krate.name,
-                    &vers.to_string(),
+                    &version_string,
                     tarball_bytes,
                 ))
                 .map_err(|e| internal(format!("failed to upload crate: {e}")))?;
