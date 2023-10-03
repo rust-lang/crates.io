@@ -463,7 +463,7 @@ pub fn add_dependencies(
                 version_id.eq(target_version_id),
                 crate_id.eq(krate.id),
                 req.eq(dep.version_req.to_string()),
-                dep.kind.map(|k| kind.eq(k as i32)),
+                dep.kind.map(|k| kind.eq(k)),
                 optional.eq(dep.optional),
                 default_features.eq(dep.default_features),
                 features.eq(&dep.features),
