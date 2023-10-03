@@ -433,7 +433,7 @@ fn missing_metadata_error_message(missing: &[&str]) -> String {
 pub fn add_dependencies(
     conn: &mut PgConnection,
     deps: &[EncodableCrateDependency],
-    target_version_id: i32,
+    version_id: i32,
 ) -> AppResult<()> {
     use diesel::insert_into;
 
@@ -467,7 +467,7 @@ pub fn add_dependencies(
             }
 
             Ok((
-                dependencies::version_id.eq(target_version_id),
+                dependencies::version_id.eq(version_id),
                 dependencies::crate_id.eq(krate_id),
                 dependencies::req.eq(dep.version_req.to_string()),
                 dep.kind.map(|k| dependencies::kind.eq(k)),
