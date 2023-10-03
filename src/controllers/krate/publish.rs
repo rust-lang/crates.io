@@ -432,27 +432,22 @@ fn missing_metadata_error_message(missing: &[&str]) -> String {
 
 #[instrument(skip_all)]
 pub fn validate_dependencies(deps: &[EncodableCrateDependency]) -> AppResult<()> {
-    deps
-        .iter()
-        .map(|dep| {
-            if let Some(registry) = &dep.registry {
-                if !registry.is_empty() {
-                    return Err(cargo_err(&format_args!("Dependency `{}` is hosted on another registry. Cross-registry dependencies are not permitted on crates.io.", &*dep.name)));
-                }
+    for dep in deps {
+        if let Some(registry) = &dep.registry {
+            if !registry.is_empty() {
+                return Err(cargo_err(&format_args!("Dependency `{}` is hosted on another registry. Cross-registry dependencies are not permitted on crates.io.", &*dep.name)));
             }
+        }
 
-            if let Ok(version_req) = semver::VersionReq::parse(&dep.version_req.0) {
-                if version_req == semver::VersionReq::STAR {
-                    return Err(cargo_err(&format_args!("wildcard (`*`) dependency constraints are not allowed \
-                        on crates.io. Crate with this problem: `{}` See https://doc.rust-lang.org/cargo/faq.html#can-\
-                        libraries-use--as-a-version-for-their-dependencies for more \
-                        information", &*dep.name)));
-                }
+        if let Ok(version_req) = semver::VersionReq::parse(&dep.version_req.0) {
+            if version_req == semver::VersionReq::STAR {
+                return Err(cargo_err(&format_args!("wildcard (`*`) dependency constraints are not allowed \
+                    on crates.io. Crate with this problem: `{}` See https://doc.rust-lang.org/cargo/faq.html#can-\
+                    libraries-use--as-a-version-for-their-dependencies for more \
+                    information", &*dep.name)));
             }
-
-            Ok(())
-        })
-        .collect::<Result<Vec<_>, _>>()?;
+        }
+    }
 
     Ok(())
 }
