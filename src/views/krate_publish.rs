@@ -11,12 +11,11 @@ use crate::models::DependencyKind;
 pub struct PublishMetadata {
     pub name: String,
     pub vers: String,
-    pub deps: Vec<EncodableCrateDependency>,
     pub readme: Option<String>,
     pub readme_file: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Debug)]
 pub struct EncodableCrateDependency {
     pub optional: bool,
     pub default_features: bool,

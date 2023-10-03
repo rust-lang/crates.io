@@ -136,7 +136,6 @@ impl PublishBuilder {
         let metadata = u::PublishMetadata {
             name: self.krate_name.clone(),
             vers: self.version.to_string(),
-            deps: self.deps.clone(),
             readme: self.readme,
             readme_file: None,
         };
