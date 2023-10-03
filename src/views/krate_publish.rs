@@ -3,9 +3,6 @@
 //! to and from structs. The serializing is only utilised in
 //! integration tests.
 
-use diesel::pg::Pg;
-use diesel::serialize::{self, Output, ToSql};
-use diesel::sql_types::Text;
 use serde::{de, Deserialize, Deserializer, Serialize};
 
 use crate::models::krate::MAX_NAME_LENGTH;
@@ -27,7 +24,7 @@ pub struct EncodableCrateDependency {
     pub optional: bool,
     pub default_features: bool,
     pub name: String,
-    pub features: Vec<EncodableFeature>,
+    pub features: Vec<String>,
     pub version_req: EncodableCrateVersionReq,
     pub target: Option<String>,
     pub kind: Option<DependencyKind>,
@@ -73,28 +70,6 @@ impl<'de> Deserialize<'de> for EncodableDependencyName {
     }
 }
 
-#[derive(Serialize, Clone, Debug, Deref)]
-pub struct EncodableFeature(pub String);
-
-impl<'de> Deserialize<'de> for EncodableFeature {
-    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<EncodableFeature, D::Error> {
-        let s = String::deserialize(d)?;
-        if !Crate::valid_feature(&s) {
-            let value = de::Unexpected::Str(&s);
-            let expected = "a valid feature name";
-            Err(de::Error::invalid_value(value, &expected))
-        } else {
-            Ok(EncodableFeature(s))
-        }
-    }
-}
-
-impl ToSql<Text, Pg> for EncodableFeature {
-    fn to_sql(&self, out: &mut Output<'_, '_, Pg>) -> serialize::Result {
-        ToSql::<Text, Pg>::to_sql(&**self, &mut out.reborrow())
-    }
-}
-
 #[derive(Serialize, Debug, Deref)]
 pub struct EncodableCrateVersion(pub semver::Version);
 
@@ -127,16 +102,4 @@ impl<'de> Deserialize<'de> for EncodableCrateVersionReq {
             }
         }
     }
-}
-
-#[test]
-fn feature_deserializes_for_valid_features() {
-    use serde_json as json;
-
-    assert_ok!(json::from_str::<EncodableFeature>("\"foo\""));
-    assert_err!(json::from_str::<EncodableFeature>("\"\""));
-    assert_err!(json::from_str::<EncodableFeature>("\"/\""));
-    assert_err!(json::from_str::<EncodableFeature>("\"%/%\""));
-    assert_ok!(json::from_str::<EncodableFeature>("\"a/a\""));
-    assert_ok!(json::from_str::<EncodableFeature>("\"32-column-tables\""));
 }

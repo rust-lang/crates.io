@@ -443,6 +443,14 @@ pub fn validate_dependencies(deps: &[EncodableCrateDependency]) -> AppResult<()>
             )));
         }
 
+        for feature in &dep.features {
+            if !Crate::valid_feature(feature) {
+                return Err(cargo_err(&format_args!(
+                    "\"{feature}\" is an invalid feature name",
+                )));
+            }
+        }
+
         if let Some(registry) = &dep.registry {
             if !registry.is_empty() {
                 return Err(cargo_err(&format_args!("Dependency `{}` is hosted on another registry. Cross-registry dependencies are not permitted on crates.io.", dep.name)));
