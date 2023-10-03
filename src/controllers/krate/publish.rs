@@ -284,6 +284,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             )?;
 
             // Link this new version to all dependencies
+            validate_dependencies(&metadata.deps)?;
             add_dependencies(conn, &metadata.deps, version.id)?;
 
             // Update all keywords for this crate
@@ -430,6 +431,33 @@ fn missing_metadata_error_message(missing: &[&str]) -> String {
 }
 
 #[instrument(skip_all)]
+pub fn validate_dependencies(deps: &[EncodableCrateDependency]) -> AppResult<()> {
+    deps
+        .iter()
+        .map(|dep| {
+            if let Some(registry) = &dep.registry {
+                if !registry.is_empty() {
+                    return Err(cargo_err(&format_args!("Dependency `{}` is hosted on another registry. Cross-registry dependencies are not permitted on crates.io.", &*dep.name)));
+                }
+            }
+
+            if let Ok(version_req) = semver::VersionReq::parse(&dep.version_req.0) {
+                if version_req == semver::VersionReq::STAR {
+                    return Err(cargo_err(&format_args!("wildcard (`*`) dependency constraints are not allowed \
+                        on crates.io. Crate with this problem: `{}` See https://doc.rust-lang.org/cargo/faq.html#can-\
+                        libraries-use--as-a-version-for-their-dependencies for more \
+                        information", &*dep.name)));
+                }
+            }
+
+            Ok(())
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+
+    Ok(())
+}
+
+#[instrument(skip_all)]
 pub fn add_dependencies(
     conn: &mut PgConnection,
     deps: &[EncodableCrateDependency],
@@ -446,25 +474,13 @@ pub fn add_dependencies(
     let new_dependencies = deps
         .iter()
         .map(|dep| {
-            if let Some(registry) = &dep.registry {
-                if !registry.is_empty() {
-                    return Err(cargo_err(&format_args!("Dependency `{}` is hosted on another registry. Cross-registry dependencies are not permitted on crates.io.", &*dep.name)));
-                }
-            }
-
             // Match only identical names to ensure the index always references the original crate name
             let Some(&crate_id) = crate_ids.get(&dep.name.0) else {
-                return Err(cargo_err(&format_args!("no known crate named `{}`", &*dep.name)));
+                return Err(cargo_err(&format_args!(
+                    "no known crate named `{}`",
+                    &*dep.name
+                )));
             };
-
-            if let Ok(version_req) = semver::VersionReq::parse(&dep.version_req.0) {
-                 if version_req == semver::VersionReq::STAR {
-                    return Err(cargo_err(&format_args!("wildcard (`*`) dependency constraints are not allowed \
-                        on crates.io. Crate with this problem: `{}` See https://doc.rust-lang.org/cargo/faq.html#can-\
-                        libraries-use--as-a-version-for-their-dependencies for more \
-                        information", &*dep.name)));
-                }
-            }
 
             Ok((
                 dependencies::version_id.eq(version_id),
@@ -475,7 +491,7 @@ pub fn add_dependencies(
                 dependencies::default_features.eq(dep.default_features),
                 dependencies::features.eq(&dep.features),
                 dependencies::target.eq(dep.target.as_deref()),
-                dependencies::explicit_name.eq(dep.explicit_name_in_toml.as_deref())
+                dependencies::explicit_name.eq(dep.explicit_name_in_toml.as_deref()),
             ))
         })
         .collect::<Result<Vec<_>, _>>()?;
