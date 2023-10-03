@@ -28,7 +28,7 @@ pub struct EncodableCrateDependency {
     pub version_req: String,
     pub target: Option<String>,
     pub kind: Option<DependencyKind>,
-    pub explicit_name_in_toml: Option<EncodableDependencyName>,
+    pub explicit_name_in_toml: Option<String>,
     pub registry: Option<String>,
 }
 
@@ -47,25 +47,6 @@ impl<'de> Deserialize<'de> for EncodableCrateName {
             Err(de::Error::invalid_value(value, &expected.as_ref()))
         } else {
             Ok(EncodableCrateName(s))
-        }
-    }
-}
-
-#[derive(Serialize, Clone, Debug, Deref)]
-pub struct EncodableDependencyName(pub String);
-
-impl<'de> Deserialize<'de> for EncodableDependencyName {
-    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<EncodableDependencyName, D::Error> {
-        let s = String::deserialize(d)?;
-        if !Crate::valid_dependency_name(&s) {
-            let value = de::Unexpected::Str(&s);
-            let expected = format!(
-                "a valid dependency name to start with a letter or underscore, contain only letters, \
-                 numbers, hyphens, or underscores and have at most {MAX_NAME_LENGTH} characters"
-            );
-            Err(de::Error::invalid_value(value, &expected.as_ref()))
-        } else {
-            Ok(EncodableDependencyName(s))
         }
     }
 }

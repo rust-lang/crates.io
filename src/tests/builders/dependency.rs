@@ -2,7 +2,7 @@ use crates_io::views::krate_publish as u;
 
 /// A builder for constructing a dependency of another crate.
 pub struct DependencyBuilder {
-    explicit_name_in_toml: Option<u::EncodableDependencyName>,
+    explicit_name_in_toml: Option<String>,
     name: String,
     features: Vec<String>,
     registry: Option<String>,
@@ -23,7 +23,7 @@ impl DependencyBuilder {
 
     /// Rename this dependency.
     pub fn rename(mut self, new_name: &str) -> Self {
-        self.explicit_name_in_toml = Some(u::EncodableDependencyName(new_name.to_string()));
+        self.explicit_name_in_toml = Some(new_name.to_string());
         self
     }
 
