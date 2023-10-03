@@ -434,54 +434,60 @@ fn missing_metadata_error_message(missing: &[&str]) -> String {
 #[instrument(skip_all)]
 pub fn validate_dependencies(deps: &[EncodableCrateDependency]) -> AppResult<()> {
     for dep in deps {
-        if !Crate::valid_name(&dep.name) {
+        validate_dependency(dep)?;
+    }
+
+    Ok(())
+}
+
+pub fn validate_dependency(dep: &EncodableCrateDependency) -> AppResult<()> {
+    if !Crate::valid_name(&dep.name) {
+        return Err(cargo_err(&format_args!(
+            "\"{}\" is an invalid dependency name (dependency names must \
+            start with a letter, contain only letters, numbers, hyphens, \
+            or underscores and have at most {MAX_NAME_LENGTH} characters)",
+            dep.name
+        )));
+    }
+
+    for feature in &dep.features {
+        if !Crate::valid_feature(feature) {
             return Err(cargo_err(&format_args!(
-                "\"{}\" is an invalid dependency name (dependency names must \
-                start with a letter, contain only letters, numbers, hyphens, \
-                or underscores and have at most {MAX_NAME_LENGTH} characters)",
-                dep.name
+                "\"{feature}\" is an invalid feature name",
             )));
         }
+    }
 
-        for feature in &dep.features {
-            if !Crate::valid_feature(feature) {
-                return Err(cargo_err(&format_args!(
-                    "\"{feature}\" is an invalid feature name",
-                )));
-            }
+    if let Some(registry) = &dep.registry {
+        if !registry.is_empty() {
+            return Err(cargo_err(&format_args!("Dependency `{}` is hosted on another registry. Cross-registry dependencies are not permitted on crates.io.", dep.name)));
         }
+    }
 
-        if let Some(registry) = &dep.registry {
-            if !registry.is_empty() {
-                return Err(cargo_err(&format_args!("Dependency `{}` is hosted on another registry. Cross-registry dependencies are not permitted on crates.io.", dep.name)));
-            }
+    match semver::VersionReq::parse(&dep.version_req) {
+        Err(_) => {
+            return Err(cargo_err(&format_args!(
+                "\"{}\" is an invalid version requirement",
+                dep.version_req
+            )));
         }
-
-        match semver::VersionReq::parse(&dep.version_req) {
-            Err(_) => {
-                return Err(cargo_err(&format_args!(
-                    "\"{}\" is an invalid version requirement",
-                    dep.version_req
-                )));
-            }
-            Ok(req) if req == semver::VersionReq::STAR => {
-                return Err(cargo_err(&format_args!("wildcard (`*`) dependency constraints are not allowed \
-                    on crates.io. Crate with this problem: `{}` See https://doc.rust-lang.org/cargo/faq.html#can-\
-                    libraries-use--as-a-version-for-their-dependencies for more \
-                    information", dep.name)));
-            }
-            _ => {}
+        Ok(req) if req == semver::VersionReq::STAR => {
+            return Err(cargo_err(&format_args!("wildcard (`*`) dependency constraints are not allowed \
+                on crates.io. Crate with this problem: `{}` See https://doc.rust-lang.org/cargo/faq.html#can-\
+                libraries-use--as-a-version-for-their-dependencies for more \
+                information", dep.name)));
         }
+        _ => {}
+    }
 
-        if let Some(toml_name) = &dep.explicit_name_in_toml {
-            if !Crate::valid_dependency_name(toml_name) {
-                return Err(cargo_err(&format_args!(
-                    "\"{toml_name}\" is an invalid dependency name (dependency \
-                    names must start with a letter or underscore, contain only \
-                    letters, numbers, hyphens, or underscores and have at most \
-                    {MAX_NAME_LENGTH} characters)"
-                )));
-            }
+    if let Some(toml_name) = &dep.explicit_name_in_toml {
+        if !Crate::valid_dependency_name(toml_name) {
+            return Err(cargo_err(&format_args!(
+                "\"{toml_name}\" is an invalid dependency name (dependency \
+                names must start with a letter or underscore, contain only \
+                letters, numbers, hyphens, or underscores and have at most \
+                {MAX_NAME_LENGTH} characters)"
+            )));
         }
     }
 
