@@ -89,7 +89,7 @@ fn new_krate_with_dependency() {
 
 #[test]
 fn new_krate_with_broken_dependency_requirement() {
-    let (app, _, user, token) = TestApp::init().with_token();
+    let (app, _, user, token) = TestApp::full().with_token();
 
     app.db(|conn| {
         // Insert a crate directly into the database so that new_dep can depend on it
@@ -99,17 +99,10 @@ fn new_krate_with_broken_dependency_requirement() {
         CrateBuilder::new("foo-dep", user.as_model().id).expect_build(conn);
     });
 
-    let dependency = DependencyBuilder::new("foo-dep").version_req("1.2.3");
+    let dependency = DependencyBuilder::new("foo-dep").version_req("broken");
 
     let crate_to_publish = PublishBuilder::new("new_dep", "1.0.0").dependency(dependency);
-
-    // create a request body with `version_req: "broken"`
-    let (json, tarball) = crate_to_publish.build();
-    let new_json = json.replace(r#""version_req":"1.2.3""#, r#""version_req":"broken""#);
-    assert_ne!(json, new_json);
-    let body = PublishBuilder::create_publish_body(&new_json, &tarball);
-
-    let response = token.put::<()>("/api/v1/crates/new", body);
+    let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
     assert!(app.stored_files().is_empty());
