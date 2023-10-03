@@ -2,4 +2,12 @@ import { helper } from '@ember/component/helper';
 
 import prettyBytes from 'pretty-bytes';
 
-export default helper(([bytes], options) => prettyBytes(bytes, options));
+/**
+ * See https://github.com/rust-lang/crates.io/discussions/7177
+ */
+export default helper(([bytes], options) =>
+  prettyBytes(bytes, {
+    binary: true,
+    ...options,
+  }),
+);
