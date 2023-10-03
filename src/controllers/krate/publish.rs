@@ -4,10 +4,12 @@ use crate::auth::AuthCheck;
 use crate::background_jobs::{Job, PRIORITY_RENDER_README};
 use axum::body::Bytes;
 use crates_io_tarball::{process_tarball, TarballError};
+use diesel::connection::DefaultLoadingMode;
 use diesel::dsl::{exists, select};
 use hex::ToHex;
 use hyper::body::Buf;
 use sha2::{Digest, Sha256};
+use std::collections::HashMap;
 use tokio::runtime::Handle;
 use url::Url;
 
@@ -436,6 +438,12 @@ pub fn add_dependencies(
     use self::dependencies::dsl::*;
     use diesel::insert_into;
 
+    let crate_ids = crates::table
+        .select((crates::name, crates::id))
+        .filter(crates::name.eq_any(deps.iter().map(|d| &d.name.0)))
+        .load_iter::<(String, i32), DefaultLoadingMode>(conn)?
+        .collect::<QueryResult<HashMap<_, _>>>()?;
+
     let new_dependencies = deps
         .iter()
         .map(|dep| {
@@ -446,9 +454,9 @@ pub fn add_dependencies(
             }
 
             // Match only identical names to ensure the index always references the original crate name
-            let krate:Crate = Crate::by_exact_name(&dep.name)
-                .first(conn)
-                .map_err(|_| cargo_err(&format_args!("no known crate named `{}`", &*dep.name)))?;
+            let Some(&krate_id) = crate_ids.get(&dep.name.0) else {
+                return Err(cargo_err(&format_args!("no known crate named `{}`", &*dep.name)));
+            };
 
             if let Ok(version_req) = semver::VersionReq::parse(&dep.version_req.0) {
                  if version_req == semver::VersionReq::STAR {
@@ -461,7 +469,7 @@ pub fn add_dependencies(
 
             Ok((
                 version_id.eq(target_version_id),
-                crate_id.eq(krate.id),
+                crate_id.eq(krate_id),
                 req.eq(dep.version_req.to_string()),
                 dep.kind.map(|k| kind.eq(k)),
                 optional.eq(dep.optional),
