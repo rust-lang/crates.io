@@ -236,17 +236,10 @@ fn convert_dependency(
         ),
     };
 
-    let features = encoded
-        .features
-        .iter()
-        .map(|f| f.to_string())
-        .collect::<Vec<_>>()
-        .none_or_filled();
-
     let dependency = DependencyDetail {
         version: Some(encoded.version_req.to_string()),
         registry: encoded.registry.clone(),
-        features,
+        features: encoded.features.clone().none_or_filled(),
         optional: match encoded.optional {
             true => Some(true),
             false => None,

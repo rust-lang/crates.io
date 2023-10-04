@@ -5,7 +5,7 @@ expression: response.into_json()
 {
   "errors": [
     {
-      "detail": "\"broken\" is an invalid version requirement"
+      "detail": "\"🍺\" is an invalid feature name"
     }
   ]
 }
