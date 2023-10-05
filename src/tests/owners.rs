@@ -738,8 +738,8 @@ fn test_accept_invitation_by_mail() {
     assert_eq!(json.users.len(), 2);
 }
 
-//// Hacky way to simulate the expiration of an ownership invitation. Instead of letting a month
-//// pass, the creation date of the invite is moved back a month.
+/// Hacky way to simulate the expiration of an ownership invitation. Instead of letting a month
+/// pass, the creation date of the invite is moved back a month.
 fn expire_invitation(app: &TestApp, crate_id: i32) {
     use crates_io::schema::crate_owner_invitations;
 
