@@ -4,21 +4,20 @@ expression: crates
 ---
 [
   {
-    "name": "new-krate",
+    "name": "new_dep",
     "vers": "1.0.0",
     "deps": [
       {
-        "name": "_my-name",
-        "req": ">0",
+        "name": "foo-dep",
+        "req": "^1.0.0",
         "features": [],
         "optional": false,
         "default_features": true,
         "target": null,
-        "kind": "normal",
-        "package": "package-name"
+        "kind": "normal"
       }
     ],
-    "cksum": "a53250c08af1d1cc060bc5145afadfd0b07708406d8943ae1d6b76131d78955f",
+    "cksum": "b1ce14dbe59036a964369747770d2d64695039065384b1ab56f09a59525300a6",
     "features": {},
     "yanked": false
   }
