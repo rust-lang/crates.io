@@ -96,7 +96,7 @@ fn new_krate_with_dependency() {
 
     assert_eq!(dependencies.len(), 1);
     assert_eq!(dependencies[0].crate_id, "foo-dep");
-    assert_eq!(dependencies[0].req, "1.0.0");
+    assert_eq!(dependencies[0].req, "^1.0.0");
 
     let crates = app.crates_from_index_head("new_dep");
     assert_json_snapshot!(crates);

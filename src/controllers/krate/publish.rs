@@ -506,7 +506,15 @@ fn convert_dependency(
     target: Option<&str>,
 ) -> EncodableCrateDependency {
     let details = dep.detail();
-    let req = dep.req();
+
+    // Normalize version requirement with a `parse()` and `to_string()` cycle.
+    //
+    // If the value can't be parsed the `validate_dependency()` fn will return
+    // an error later in the call chain. Parsing the value twice is a bit
+    // wasteful, but we can clean this up later.
+    let req = semver::VersionReq::parse(dep.req())
+        .map(|req| req.to_string())
+        .unwrap_or_else(|_| dep.req().to_string());
 
     let (crate_name, explicit_name_in_toml) = match details.and_then(|it| it.package.clone()) {
         None => (name.to_string(), None),
@@ -522,7 +530,7 @@ fn convert_dependency(
 
     EncodableCrateDependency {
         name: crate_name,
-        version_req: req.to_string(),
+        version_req: req,
         optional,
         default_features,
         features,

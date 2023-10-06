@@ -9,7 +9,7 @@ expression: crates
     "deps": [
       {
         "name": "foo-dep",
-        "req": "1.0.0",
+        "req": "^1.0.0",
         "features": [],
         "optional": false,
         "default_features": true,
