@@ -12,8 +12,6 @@ env:
   CARGO_TARPAULIN_VERSION: 0.27.1
   # renovate: datasource=crate depName=diesel_cli versioning=semver
   DIESEL_CLI_VERSION: 2.1.1
-  # renovate: datasource=github-releases depName=rust lookupName=rust-lang/rust
-  RUST_VERSION: 1.73.0
 
 jobs:
   coverage:
@@ -45,7 +43,6 @@ jobs:
       - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
 
       # Set up Rust
-      - run: rustup default ${{ env.RUST_VERSION }}
       - uses: Swatinem/rust-cache@v2.7.0
 
       # Set up database
