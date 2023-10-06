@@ -38,6 +38,7 @@ axum = { version = "=0.6.20", features = ["headers", "macros", "matched-path"] }
 axum-extra = { version = "=0.8.0", features = ["cookie-signed"] }
 base64 = "=0.21.4"
 bigdecimal = "=0.4.1"
+cargo-manifest = "=0.12.0"
 crates_io_index = { path = "crates_io_index" }
 crates_io_markdown = { path = "crates_io_markdown" }
 crates_io_tarball = { path = "crates_io_tarball" }
@@ -98,7 +99,6 @@ url = "=2.4.1"
 
 [dev-dependencies]
 bytes = "=1.5.0"
-cargo-manifest = "=0.12.0"
 crates_io_index = { path = "crates_io_index", features = ["testing"] }
 crates_io_tarball = { path = "crates_io_tarball", features = ["builder"] }
 claims = "=0.7.1"

@@ -3,6 +3,7 @@
 use crate::auth::AuthCheck;
 use crate::background_jobs::{Job, PRIORITY_RENDER_README};
 use axum::body::Bytes;
+use cargo_manifest::{Dependency, DepsSet, TargetDepsSet};
 use crates_io_tarball::{process_tarball, TarballError};
 use diesel::connection::DefaultLoadingMode;
 use diesel::dsl::{exists, select};
@@ -305,12 +306,19 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 VersionAction::Publish,
             )?;
 
-            for dep in &metadata.deps {
+            let deps = convert_dependencies(
+                tarball_info.manifest.dependencies.as_ref(),
+                tarball_info.manifest.dev_dependencies.as_ref(),
+                tarball_info.manifest.build_dependencies.as_ref(),
+                tarball_info.manifest.target.as_ref()
+            );
+
+            for dep in &deps {
                 validate_dependency(dep)?;
             }
 
             // Link this new version to all dependencies
-            add_dependencies(conn, &metadata.deps, version.id)?;
+            add_dependencies(conn, &deps, version.id)?;
 
             // Update all keywords for this crate
             Keyword::update_crate(conn, &krate, &keywords)?;
@@ -453,6 +461,76 @@ fn missing_metadata_error_message(missing: &[&str]) -> String {
          how to upload metadata",
         missing.join(", ")
     )
+}
+
+fn convert_dependencies(
+    normal_deps: Option<&DepsSet>,
+    dev_deps: Option<&DepsSet>,
+    build_deps: Option<&DepsSet>,
+    targets: Option<&TargetDepsSet>,
+) -> Vec<EncodableCrateDependency> {
+    use DependencyKind as Kind;
+
+    let mut result = vec![];
+
+    let mut add = |deps_set: &DepsSet, kind: Kind, target: Option<&str>| {
+        for (name, dep) in deps_set {
+            result.push(convert_dependency(name, dep, kind, target));
+        }
+    };
+
+    if let Some(deps) = normal_deps {
+        add(deps, Kind::Normal, None);
+    }
+    if let Some(deps) = dev_deps {
+        add(deps, Kind::Dev, None);
+    }
+    if let Some(deps_set) = build_deps {
+        add(deps_set, Kind::Build, None);
+    }
+    if let Some(target_deps_set) = targets {
+        for (target, deps) in target_deps_set {
+            add(&deps.dependencies, Kind::Normal, Some(target));
+            add(&deps.dev_dependencies, Kind::Dev, Some(target));
+            add(&deps.build_dependencies, Kind::Build, Some(target));
+        }
+    }
+
+    result
+}
+
+fn convert_dependency(
+    name: &str,
+    dep: &Dependency,
+    kind: DependencyKind,
+    target: Option<&str>,
+) -> EncodableCrateDependency {
+    let details = dep.detail();
+    let req = dep.req();
+
+    let (crate_name, explicit_name_in_toml) = match details.and_then(|it| it.package.clone()) {
+        None => (name.to_string(), None),
+        Some(package) => (package, Some(name.to_string())),
+    };
+
+    let optional = details.and_then(|it| it.optional).unwrap_or(false);
+    let default_features = details.and_then(|it| it.default_features).unwrap_or(true);
+    let features = details
+        .and_then(|it| it.features.clone())
+        .unwrap_or_default();
+    let registry = details.and_then(|it| it.registry.clone());
+
+    EncodableCrateDependency {
+        name: crate_name,
+        version_req: req.to_string(),
+        optional,
+        default_features,
+        features,
+        target: target.map(ToString::to_string),
+        kind: Some(kind),
+        explicit_name_in_toml,
+        registry,
+    }
 }
 
 pub fn validate_dependency(dep: &EncodableCrateDependency) -> AppResult<()> {
