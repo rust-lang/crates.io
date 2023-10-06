@@ -3,7 +3,10 @@ use crate::{
     builders::{CrateBuilder, PublishBuilder},
     new_team, OwnerTeamsResponse, RequestHelper, TestApp,
 };
-use crates_io::models::{Crate, NewTeam};
+use crates_io::{
+    models::{Crate, NewTeam},
+    schema::teams,
+};
 
 use diesel::*;
 use http::StatusCode;
@@ -67,14 +70,15 @@ fn one_colon() {
 }
 
 #[test]
-fn nonexistent_team() {
+fn add_nonexistent_team() {
     let (app, _, user, token) = TestApp::init().with_token();
 
     app.db(|conn| {
-        CrateBuilder::new("foo_nonexistent", user.as_model().id).expect_build(conn);
+        CrateBuilder::new("foo_add_nonexistent", user.as_model().id).expect_build(conn);
     });
 
-    let response = token.add_named_owner("foo_nonexistent", "github:test-org:this-does-not-exist");
+    let response =
+        token.add_named_owner("foo_add_nonexistent", "github:test-org:this-does-not-exist");
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.into_json(),
@@ -268,6 +272,29 @@ fn remove_team_as_team_owner() {
     );
 }
 
+#[test]
+fn remove_nonexistent_team() {
+    let (app, _, user, token) = TestApp::init().with_token();
+
+    app.db(|conn| {
+        CrateBuilder::new("foo_remove_nonexistent", user.as_model().id).expect_build(conn);
+        insert_into(teams::table)
+            .values((
+                teams::login.eq("github:test-org:this-does-not-exist"),
+                teams::github_id.eq(5678),
+            ))
+            .execute(conn)
+            .expect("couldn't insert nonexistent team")
+    });
+
+    token
+        .remove_named_owner(
+            "foo_remove_nonexistent",
+            "github:test-org:this-does-not-exist",
+        )
+        .good();
+}
+
 /// Test trying to publish a crate we don't own
 #[test]
 fn publish_not_owned() {
@@ -422,9 +449,7 @@ fn crates_by_team_id_not_including_deleted_owners() {
 
         let krate = CrateBuilder::new("foo", user.id).expect_build(conn);
         add_team_to_crate(&t, &krate, user, conn).unwrap();
-        krate
-            .owner_remove(app.as_inner(), conn, user, &t.login)
-            .unwrap();
+        krate.owner_remove(conn, &t.login).unwrap();
         t
     });
 

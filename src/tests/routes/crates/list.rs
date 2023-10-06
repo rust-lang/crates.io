@@ -839,9 +839,7 @@ fn crates_by_user_id_not_including_deleted_owners() {
 
     app.db(|conn| {
         let krate = CrateBuilder::new("foo_my_packages", user.id).expect_build(conn);
-        krate
-            .owner_remove(app.as_inner(), conn, user, "foo")
-            .unwrap();
+        krate.owner_remove(conn, "foo").unwrap();
     });
 
     let response = anon.search_by_user_id(user.id);

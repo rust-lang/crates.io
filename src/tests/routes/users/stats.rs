@@ -39,7 +39,7 @@ fn user_total_downloads() {
             .execute(conn)
             .unwrap();
         no_longer_my_krate
-            .owner_remove(app.as_inner(), conn, user, &user.gh_login)
+            .owner_remove(conn, &user.gh_login)
             .unwrap();
     });
 
