@@ -162,8 +162,8 @@ devDependencies:
     specifier: 8.0.0
     version: 8.0.0(@babel/core@7.23.0)
   ember-click-outside:
-    specifier: 6.0.1
-    version: 6.0.1(ember-source@5.3.0)
+    specifier: 6.1.0
+    version: 6.1.0(ember-source@5.3.0)
   ember-concurrency:
     specifier: 3.1.1
     version: 3.1.1(@babel/core@7.23.0)(ember-source@5.3.0)
@@ -9042,8 +9042,8 @@ packages:
       - whiskers
     dev: true
 
-  /ember-click-outside@6.0.1(ember-source@5.3.0):
-    resolution: {integrity: sha512-1aI0vaggymp8JR2gARy7kgDnJ0Bk+ZDcjOzT+Cgtr2cRCBYFuJeU0OMKJW8c7pRm2LwIDZgzdTRK+AaKQbt9mw==}
+  /ember-click-outside@6.1.0(ember-source@5.3.0):
+    resolution: {integrity: sha512-TUsGRAPkfiLC2XtXO8i9SNsgo7lEekvOuqTp9Ab88d1FKmTps8jlYBH1F0ZwFPyI2bz+dlE1J8WqGnsleALk9g==}
     dependencies:
       '@embroider/addon-shim': 1.8.6
       ember-modifier: 4.1.0(ember-source@5.3.0)
