@@ -151,6 +151,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         let homepage = package.homepage.map(|it| it.as_local().unwrap());
         let documentation = package.documentation.map(|it| it.as_local().unwrap());
         let repository = package.repository.map(|it| it.as_local().unwrap());
+        let rust_version = package.rust_version.map(|rv| rv.as_local().unwrap());
 
         // Make sure required fields are provided
         fn empty(s: Option<&String>) -> bool {
@@ -182,6 +183,9 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         validate_url(homepage.as_deref(), "homepage")?;
         validate_url(documentation.as_deref(), "documentation")?;
         validate_url(repository.as_deref(), "repository")?;
+        if let Some(ref rust_version) =  rust_version {
+            validate_rust_version(rust_version)?;
+        }
 
         let keywords = package
             .keywords
@@ -279,8 +283,6 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
 
             // Read tarball from request
             let hex_cksum: String = Sha256::digest(&tarball_bytes).encode_hex();
-
-            let rust_version = package.rust_version.map(|rv| rv.as_local().unwrap());
 
             // Persist the new version of this crate
             let version = NewVersion::new(
@@ -461,6 +463,16 @@ fn missing_metadata_error_message(missing: &[&str]) -> String {
          how to upload metadata",
         missing.join(", ")
     )
+}
+
+fn validate_rust_version(value: &str) -> AppResult<()> {
+    match semver::VersionReq::parse(value) {
+        // Exclude semver operators like `^` and pre-release identifiers
+        Ok(_) if value.chars().all(|c| c.is_ascii_digit() || c == '.') => Ok(()),
+        Ok(_) | Err(..) => Err(cargo_err(
+            "failed to parse `Cargo.toml` manifest file\n\ninvalid `rust-version` value",
+        )),
+    }
 }
 
 fn convert_dependencies(

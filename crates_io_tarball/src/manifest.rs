@@ -48,11 +48,6 @@ pub fn validate_package(package: &Package) -> Result<(), Error> {
         ));
     }
 
-    // Check that the `rust-version` field has a valid value, if it exists.
-    if let Some(MaybeInherited::Local(ref rust_version)) = package.rust_version {
-        validate_rust_version(rust_version)?;
-    }
-
     Ok(())
 }
 
@@ -81,13 +76,5 @@ impl IsInherited for Dependency {
 impl IsInherited for DepsSet {
     fn is_inherited(&self) -> bool {
         self.iter().any(|(_key, dep)| dep.is_inherited())
-    }
-}
-
-pub fn validate_rust_version(value: &str) -> Result<(), Error> {
-    match semver::VersionReq::parse(value) {
-        // Exclude semver operators like `^` and pre-release identifiers
-        Ok(_) if value.chars().all(|c| c.is_ascii_digit() || c == '.') => Ok(()),
-        Ok(_) | Err(..) => Err(Error::Other("invalid `rust-version` value".to_string())),
     }
 }

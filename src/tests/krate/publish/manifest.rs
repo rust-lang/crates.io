@@ -119,13 +119,13 @@ fn invalid_rust_version() {
 
     let response =
         token.publish_crate(PublishBuilder::new("foo", "1.0.0").custom_manifest(
-            "[package]\nname = \"foo\"\nversion = \"1.0.0\"\nrust-version = \"\"\n",
+            "[package]\nname = \"foo\"\nversion = \"1.0.0\"\ndescription = \"description\"\nlicense = \"MIT\"\nrust-version = \"\"\n",
         ));
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
 
     let response = token.publish_crate(PublishBuilder::new("foo", "1.0.0").custom_manifest(
-        "[package]\nname = \"foo\"\nversion = \"1.0.0\"\nrust-version = \"1.0.0-beta.2\"\n",
+        "[package]\nname = \"foo\"\nversion = \"1.0.0\"\ndescription = \"description\"\nlicense = \"MIT\"\nrust-version = \"1.0.0-beta.2\"\n",
     ));
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
