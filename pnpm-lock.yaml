@@ -255,8 +255,8 @@ devDependencies:
     specifier: 5.0.0
     version: 5.0.0(eslint-config-prettier@9.0.0)(eslint@8.50.0)(prettier@3.0.3)
   eslint-plugin-qunit:
-    specifier: 8.0.0
-    version: 8.0.0(eslint@8.50.0)
+    specifier: 8.0.1
+    version: 8.0.1(eslint@8.50.0)
   eslint-plugin-qunit-dom:
     specifier: 0.2.0
     version: 0.2.0(eslint@8.50.0)
@@ -9971,8 +9971,8 @@ packages:
       eslint: 8.50.0
     dev: true
 
-  /eslint-plugin-qunit@8.0.0(eslint@8.50.0):
-    resolution: {integrity: sha512-ly2x/pmJPcS0ztGAPap6qLC13GjOFwhBbvun0K1dAjaxaC6KB3TYjeBo+5pGvXqL3WdicmYxEKhTGwmhvoxMBQ==}
+  /eslint-plugin-qunit@8.0.1(eslint@8.50.0):
+    resolution: {integrity: sha512-3bFOPryXoQOez95oP/JfWTxHBc/bgDQQZqTuv9uYTwH5sdIvSM2TES1iHDcy/F/LvqiqIpscDAOPAjlqSCnNPg==}
     engines: {node: ^16.0.0 || ^18.0.0 || >=20.0.0}
     dependencies:
       eslint-utils: 3.0.0(eslint@8.50.0)
