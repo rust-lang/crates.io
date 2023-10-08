@@ -43,11 +43,12 @@ impl<'a> MarkdownRenderer<'a> {
 
         let mut html_sanitizer = Builder::default();
         html_sanitizer
-            .add_tags(&["input"])
+            .add_tags(&["input", "ol", "section"])
             .link_rel(Some("nofollow noopener noreferrer"))
             .add_generic_attributes(&["align"])
             .add_tag_attributes("a", &["id", "target"])
             .add_tag_attributes("input", &["checked", "disabled", "type"])
+            .add_tag_attributes("li", &["id"])
             .allowed_classes(allowed_classes)
             .url_relative(sanitize_url)
             .id_prefix(Some("user-content-"));
@@ -72,6 +73,7 @@ impl<'a> MarkdownRenderer<'a> {
         extension_options.tagfilter = true;
         extension_options.tasklist = true;
         extension_options.header_ids = Some("user-content-".to_string());
+        extension_options.footnotes = true;
 
         let options = ComrakOptions {
             render: render_options,
@@ -184,7 +186,17 @@ fn is_media_url(url: &str) -> MediaUrl {
 
 impl UrlRelativeEvaluate for SanitizeUrl {
     fn evaluate<'a>(&self, url: &'a str) -> Option<Cow<'a, str>> {
-        if url.starts_with('#') {
+        if let Some(clean) = url.strip_prefix('#') {
+            // Handle auto-generated footnote links
+            if clean
+                .strip_prefix("fn-")
+                .or_else(|| clean.strip_prefix("fnref-"))
+                .map(|num| num.parse::<u32>().is_ok())
+                .unwrap_or(false)
+            {
+                return Some(Cow::Owned(format!("#user-content-{}", clean)));
+            }
+
             // Always allow fragment URLs.
             return Some(Cow::Borrowed(url));
         }
@@ -396,6 +408,21 @@ mod tests {
         let text = "<p class='bad-class'>Hello World!</p>";
         assert_snapshot!(markdown_to_html(text, None, ""), @r###"
         <p>Hello World!</p>
+        "###);
+    }
+
+    #[test]
+    fn text_with_footnote() {
+        let text = "Hello World![^1]\n\n[^1]: Hello Ferris, actually!";
+        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
+        <p>Hello World!<sup><a href="#user-content-fn-1" id="user-content-fnref-1" rel="nofollow noopener noreferrer">1</a></sup></p>
+        <section>
+        <ol>
+        <li id="user-content-fn-1">
+        <p>Hello Ferris, actually! <a href="#user-content-fnref-1" rel="nofollow noopener noreferrer">↩</a></p>
+        </li>
+        </ol>
+        </section>
         "###);
     }
 
