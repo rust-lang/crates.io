@@ -81,8 +81,8 @@ devDependencies:
     specifier: 3.0.2
     version: 3.0.2
   '@embroider/compat':
-    specifier: 3.2.2
-    version: 3.2.2(@embroider/core@3.3.0)
+    specifier: 3.2.3
+    version: 3.2.3(@embroider/core@3.3.0)
   '@embroider/core':
     specifier: 3.3.0
     version: 3.3.0
@@ -2584,8 +2584,8 @@ packages:
       - utf-8-validate
     dev: true
 
-  /@embroider/compat@3.2.2(@embroider/core@3.3.0):
-    resolution: {integrity: sha512-212w3FtbOYiIxle2J7Fk0Qtpdr60FobIe2ava6WNSLY7iOgKGPGq3v/H+8A4ATAPjl1MGuEn74gzPmJiO+VWpA==}
+  /@embroider/compat@3.2.3(@embroider/core@3.3.0):
+    resolution: {integrity: sha512-sszGNEqi3EiAY6uJesfiCgXwuZwGzdHXmjpiQIoSqJn/kVIRlHi220fGIIX6rJBWW2SAUO6pvTBE8VO89InDWw==}
     engines: {node: 12.* || 14.* || >= 16}
     hasBin: true
     peerDependencies:
