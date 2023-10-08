@@ -8,12 +8,12 @@ use axum::body::Bytes;
 use base64::{engine::general_purpose, Engine};
 use http::HeaderMap;
 use once_cell::sync::Lazy;
+use p256::ecdsa::signature::Verifier;
+use p256::ecdsa::VerifyingKey;
+use p256::PublicKey;
 use parking_lot::Mutex;
-use ring::signature;
 use serde_json as json;
-
-static PEM_HEADER: &str = "-----BEGIN PUBLIC KEY-----\n";
-static PEM_FOOTER: &str = "\n-----END PUBLIC KEY-----";
+use std::str::FromStr;
 
 // Minimum number of seconds to wait before refreshing cache of GitHub's public keys
 static PUBLIC_KEY_CACHE_LIFETIME_SECONDS: i64 = 60 * 60 * 24; // 24 hours
@@ -44,28 +44,6 @@ pub struct GitHubPublicKeyList {
 struct GitHubPublicKeyCache {
     keys: Vec<GitHubPublicKey>,
     timestamp: Option<chrono::DateTime<chrono::Utc>>,
-}
-
-/// Converts a PEM format ECDSA P-256 SHA-256 public key in SubjectPublicKeyInfo format into
-/// the Octet-String-to-Elliptic-Curve-Point format expected by ring::signature::verify
-fn key_from_spki(key: &GitHubPublicKey) -> Result<Vec<u8>, std::io::Error> {
-    let start_idx = key
-        .key
-        .find(PEM_HEADER)
-        .ok_or(std::io::ErrorKind::InvalidData)?;
-    let gh_key = &key.key[(start_idx + PEM_HEADER.len())..];
-    let end_idx = gh_key
-        .find(PEM_FOOTER)
-        .ok_or(std::io::ErrorKind::InvalidData)?;
-    let gh_key = gh_key[..end_idx].replace('\n', "");
-    let gh_key = general_purpose::STANDARD
-        .decode(gh_key)
-        .map_err(|_| std::io::Error::from(std::io::ErrorKind::InvalidData))?;
-    if gh_key.len() != 91 {
-        return Err(std::io::Error::from(std::io::ErrorKind::InvalidData));
-    }
-    // extract the key bytes from the fixed position in the ASN.1 structure
-    Ok(gh_key[26..91].to_vec())
 }
 
 /// Check if cache of public keys is populated and not expired
@@ -108,12 +86,16 @@ fn verify_github_signature(
         .ok_or_else(|| bad_request("missing HTTP header: GITHUB-PUBLIC-KEY-IDENTIFIER"))?
         .to_str()
         .map_err(|e| bad_request(&format!("failed to decode HTTP header: {e:?}")))?;
+
     let sig = headers
         .get("GITHUB-PUBLIC-KEY-SIGNATURE")
         .ok_or_else(|| bad_request("missing HTTP header: GITHUB-PUBLIC-KEY-SIGNATURE"))?;
     let sig = general_purpose::STANDARD
         .decode(sig)
         .map_err(|e| bad_request(&format!("failed to decode signature as base64: {e:?}")))?;
+    let sig = p256::ecdsa::Signature::from_der(&sig)
+        .map_err(|e| bad_request(&format!("failed to parse signature from ASN.1 DER: {e:?}")))?;
+
     let public_keys = get_public_keys(state)
         .map_err(|e| bad_request(&format!("failed to fetch GitHub public keys: {e:?}")))?;
 
@@ -130,10 +112,10 @@ fn verify_github_signature(
         return Err(error);
     }
 
-    let key_bytes = key_from_spki(key).map_err(|_| bad_request("cannot parse public key"))?;
-    let gh_key = signature::UnparsedPublicKey::new(&signature::ECDSA_P256_SHA256_ASN1, &key_bytes);
+    let public_key =
+        PublicKey::from_str(&key.key).map_err(|_| bad_request("cannot parse public key"))?;
 
-    gh_key
+    VerifyingKey::from(public_key)
         .verify(json, &sig)
         .map_err(|e| bad_request(&format!("invalid signature: {e:?}")))?;
 
