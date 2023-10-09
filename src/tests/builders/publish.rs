@@ -98,6 +98,12 @@ impl PublishBuilder {
         self
     }
 
+    /// Set the license from this crate.
+    pub fn license<T: Into<String>>(mut self, license: T) -> Self {
+        self.license = Some(license.into());
+        self
+    }
+
     /// Remove the license from this crate. Publish will fail unless license or license file is set.
     pub fn unset_license(mut self) -> Self {
         self.license = None;
