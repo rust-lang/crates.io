@@ -150,13 +150,13 @@
     }
   },
   "engines": {
-    "node": "18.17.1",
+    "node": "20.8.0",
     "pnpm": "8.8.0"
   },
   "ember": {
     "edition": "octane"
   },
   "volta": {
-    "node": "18.17.1"
+    "node": "20.8.0"
   }
 }
