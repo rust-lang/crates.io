@@ -49,6 +49,7 @@ pub struct App {
     /// Backend used to send emails
     pub emails: Emails,
 
+    /// Storage backend for crate files and other large objects.
     pub storage: Arc<Storage>,
 
     /// Metrics related to the service as a whole
