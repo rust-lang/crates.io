@@ -1,0 +1,11 @@
+---
+source: src/tests/krate/publish/validation.rs
+expression: response.into_json()
+---
+{
+  "errors": [
+    {
+      "detail": "unknown or invalid license expression; see http://opensource.org/licenses for options, and http://spdx.org/licenses/ for their identifiers"
+    }
+  ]
+}

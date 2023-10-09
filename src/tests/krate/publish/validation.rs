@@ -88,6 +88,17 @@ fn license_and_description_required() {
 }
 
 #[test]
+fn invalid_license() {
+    let (app, _, _, token) = TestApp::full().with_token();
+
+    let response =
+        token.publish_crate(PublishBuilder::new("foo", "1.0.0").license("MIT AND foobar"));
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json());
+    assert!(app.stored_files().is_empty());
+}
+
+#[test]
 fn invalid_urls() {
     let (app, _, _, token) = TestApp::full().with_token();
 
