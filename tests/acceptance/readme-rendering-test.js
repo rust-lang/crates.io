@@ -53,6 +53,9 @@ on StackOverflow</a>, the <a href="https://www.reddit.com/r/rust" rel="nofollow 
 weekly easy questions post, or the Rust <a href="https://users.rust-lang.org" rel="nofollow noopener noreferrer">Discourse forum</a>. It's
 acceptable to file a support issue in this repo but they tend not to get as many
 eyes as any of the above and may get closed without a response after some time.</p>
+
+<p>Hello World!<sup><a href="#user-content-fn-1" id="user-content-fnref-1" rel="nofollow noopener noreferrer">1</a></sup></p>
+
 <pre><code class="language-mermaid">
 graph TD;
     A-->B;
@@ -60,6 +63,14 @@ graph TD;
     B-->D;
     C-->D;
 </code></pre>
+
+<section class="footnotes">
+<ol>
+<li id="user-content-fn-1">
+<p>Hello Ferris, actually! <a href="#user-content-fnref-1" rel="nofollow noopener noreferrer">↩</a></p>
+</li>
+</ol>
+</section>
 `;
 
 module('Acceptance | README rendering', function (hooks) {

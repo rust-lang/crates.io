@@ -65,4 +65,18 @@
             padding: var(--space-2xs) var(--space-s);
         }
     }
+
+    :global(section.footnotes) {
+        color: var(--main-color-light);
+        font-size: 80%;
+        border-top: 1px solid var(--gray-border);
+
+        a {
+            color: var(--main-color-light);
+
+            &:hover {
+                color: var(--main-color);
+            }
+        }
+    }
 }
