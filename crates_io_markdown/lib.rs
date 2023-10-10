@@ -18,27 +18,30 @@ impl<'a> MarkdownRenderer<'a> {
     /// Per `text_to_html`, `base_url` is the base URL prepended to any
     /// relative links in the input document.  See that function for more detail.
     fn new(base_url: Option<&'a str>, base_dir: &'a str) -> MarkdownRenderer<'a> {
-        let allowed_classes = hashmap(&[(
-            "code",
-            hashset(&[
-                "language-bash",
-                "language-clike",
-                "language-glsl",
-                "language-go",
-                "language-ini",
-                "language-javascript",
-                "language-json",
-                "language-markup",
-                "language-mermaid",
-                "language-protobuf",
-                "language-ruby",
-                "language-rust",
-                "language-scss",
-                "language-sql",
-                "language-toml",
-                "language-yaml",
-            ]),
-        )]);
+        let allowed_classes = hashmap(&[
+            (
+                "code",
+                hashset(&[
+                    "language-bash",
+                    "language-clike",
+                    "language-glsl",
+                    "language-go",
+                    "language-ini",
+                    "language-javascript",
+                    "language-json",
+                    "language-markup",
+                    "language-mermaid",
+                    "language-protobuf",
+                    "language-ruby",
+                    "language-rust",
+                    "language-scss",
+                    "language-sql",
+                    "language-toml",
+                    "language-yaml",
+                ]),
+            ),
+            ("section", hashset(&["footnotes"])),
+        ]);
         let sanitize_url = UrlRelative::Custom(Box::new(SanitizeUrl::new(base_url, base_dir)));
 
         let mut html_sanitizer = Builder::default();
@@ -411,7 +414,7 @@ mod tests {
         let text = "Hello World![^1]\n\n[^1]: Hello Ferris, actually!";
         assert_snapshot!(markdown_to_html(text, None, ""), @r###"
         <p>Hello World!<sup><a href="#user-content-fn-1" id="user-content-fnref-1" rel="nofollow noopener noreferrer">1</a></sup></p>
-        <section>
+        <section class="footnotes">
         <ol>
         <li id="user-content-fn-1">
         <p>Hello Ferris, actually! <a href="#user-content-fnref-1" rel="nofollow noopener noreferrer">↩</a></p>
@@ -440,7 +443,7 @@ There can also be some text in between!
         assert_snapshot!(markdown_to_html(text, None, ""), @r###"
         <p>Here's a simple footnote,<sup><a href="#user-content-fn-1" id="user-content-fnref-1" rel="nofollow noopener noreferrer">1</a></sup> and here's a longer one.<sup><a href="#user-content-fn-bignote" id="user-content-fnref-bignote" rel="nofollow noopener noreferrer">2</a></sup></p>
         <p>There can also be some text in between!</p>
-        <section>
+        <section class="footnotes">
         <ol>
         <li id="user-content-fn-1">
         <p>This is the first footnote. <a href="#user-content-fnref-1" rel="nofollow noopener noreferrer">↩</a></p>
