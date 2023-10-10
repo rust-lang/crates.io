@@ -300,59 +300,56 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use insta::assert_snapshot;
 
     #[test]
     fn empty_text() {
         let text = "";
-        let result = markdown_to_html(text, None, "");
-        assert_eq!(result, "");
+        assert_eq!(markdown_to_html(text, None, ""), "");
     }
 
     #[test]
     fn text_with_script_tag() {
         let text = "foo_readme\n\n<script>alert('Hello World')</script>";
-        let result = markdown_to_html(text, None, "");
-        assert_eq!(
-            result,
-            "<p>foo_readme</p>\n&lt;script&gt;alert(\'Hello World\')&lt;/script&gt;\n"
-        );
+        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
+        <p>foo_readme</p>
+        &lt;script&gt;alert('Hello World')&lt;/script&gt;
+        "###);
     }
 
     #[test]
     fn text_with_iframe_tag() {
         let text = "foo_readme\n\n<iframe>alert('Hello World')</iframe>";
-        let result = markdown_to_html(text, None, "");
-        assert_eq!(
-            result,
-            "<p>foo_readme</p>\n&lt;iframe&gt;alert(\'Hello World\')&lt;/iframe&gt;\n"
-        );
+        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
+        <p>foo_readme</p>
+        &lt;iframe&gt;alert('Hello World')&lt;/iframe&gt;
+        "###);
     }
 
     #[test]
     fn text_with_unknown_tag() {
         let text = "foo_readme\n\n<unknown>alert('Hello World')</unknown>";
-        let result = markdown_to_html(text, None, "");
-        assert_eq!(result, "<p>foo_readme</p>\n<p>alert(\'Hello World\')</p>\n");
+        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
+        <p>foo_readme</p>
+        <p>alert('Hello World')</p>
+        "###);
     }
 
     #[test]
     fn text_with_kbd_tag() {
         let text = "foo_readme\n\nHello <kbd>alert('Hello World')</kbd>";
-        let result = markdown_to_html(text, None, "");
-        assert_eq!(
-            result,
-            "<p>foo_readme</p>\n<p>Hello <kbd>alert(\'Hello World\')</kbd></p>\n"
-        );
+        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
+        <p>foo_readme</p>
+        <p>Hello <kbd>alert('Hello World')</kbd></p>
+        "###);
     }
 
     #[test]
     fn text_with_inline_javascript() {
         let text = r#"foo_readme\n\n<a href="https://crates.io/crates/cargo-registry" onclick="window.alert('Got you')">Crate page</a>"#;
-        let result = markdown_to_html(text, None, "");
-        assert_eq!(
-            result,
-            "<p>foo_readme\\n\\n<a href=\"https://crates.io/crates/cargo-registry\" rel=\"nofollow noopener noreferrer\">Crate page</a></p>\n"
-        );
+        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
+        <p>foo_readme\n\n<a href="https://crates.io/crates/cargo-registry" rel="nofollow noopener noreferrer">Crate page</a></p>
+        "###);
     }
 
     // See https://github.com/kivikakk/comrak/issues/37. This panic happened
@@ -360,8 +357,9 @@ mod tests {
     #[test]
     fn text_with_fancy_single_quotes() {
         let text = "wb’";
-        let result = markdown_to_html(text, None, "");
-        assert_eq!(result, "<p>wb’</p>\n");
+        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
+        <p>wb’</p>
+        "###);
     }
 
     #[test]
@@ -369,8 +367,11 @@ mod tests {
         let code_block = r#"```rust \
                             println!("Hello World"); \
                            ```"#;
-        let result = markdown_to_html(code_block, None, "");
-        assert!(result.contains("<code class=\"language-rust\">"));
+        assert_snapshot!(markdown_to_html(code_block, None, ""), @r###"
+        <pre><code class="language-rust">                            println!("Hello World"); \
+                                   ```
+        </code></pre>
+        "###);
     }
 
     #[test]
@@ -380,8 +381,13 @@ mod tests {
                             A --> C \
                             C --> A \
                            ```";
-        let result = markdown_to_html(code_block, None, "");
-        assert!(result.contains("<code class=\"language-mermaid\">"));
+        assert_snapshot!(markdown_to_html(code_block, None, ""), @r###"
+        <pre><code class="language-mermaid">                            graph LR \
+                                    A --&gt; C \
+                                    C --&gt; A \
+                                   ```
+        </code></pre>
+        "###);
     }
 
     #[test]
@@ -389,15 +395,19 @@ mod tests {
         let code_block = r#"```rust  ,  no_run \
                             println!("Hello World"); \
                            ```"#;
-        let result = markdown_to_html(code_block, None, "");
-        assert!(result.contains("<code class=\"language-rust\">"));
+        assert_snapshot!(markdown_to_html(code_block, None, ""), @r###"
+        <pre><code class="language-rust">                            println!("Hello World"); \
+                                   ```
+        </code></pre>
+        "###);
     }
 
     #[test]
     fn text_with_forbidden_class_attribute() {
         let text = "<p class='bad-class'>Hello World!</p>";
-        let result = markdown_to_html(text, None, "");
-        assert_eq!(result, "<p>Hello World!</p>\n");
+        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
+        <p>Hello World!</p>
+        "###);
     }
 
     #[test]
@@ -487,27 +497,22 @@ mod tests {
         let text =
             "[![Crates.io](https://img.shields.io/crates/v/clap.svg)](https://crates.io/crates/clap)";
         let repository = "https://github.com/kbknapp/clap-rs/";
-        let result = markdown_to_html(text, Some(repository), "");
-
-        assert_eq!(
-            result,
-            "<p><a href=\"https://crates.io/crates/clap\" rel=\"nofollow noopener noreferrer\"><img src=\"https://img.shields.io/crates/v/clap.svg\" alt=\"Crates.io\"></a></p>\n"
-        );
+        assert_snapshot!(markdown_to_html(text, Some(repository), ""), @r###"
+        <p><a href="https://crates.io/crates/clap" rel="nofollow noopener noreferrer"><img src="https://img.shields.io/crates/v/clap.svg" alt="Crates.io"></a></p>
+        "###);
     }
 
     #[test]
     fn rustdoc_links() {
         let repository = "https://github.com/foo/bar/";
 
-        assert_eq!(
-            markdown_to_html("[stylish](::stylish)", Some(repository), ""),
-            "<p><a rel=\"nofollow noopener noreferrer\">stylish</a></p>\n"
-        );
+        assert_snapshot!(markdown_to_html("[stylish](::stylish)", Some(repository), ""), @r###"
+        <p><a rel="nofollow noopener noreferrer">stylish</a></p>
+        "###);
 
-        assert_eq!(
-            markdown_to_html("[Display](stylish::Display)", Some(repository), ""),
-            "<p><a rel=\"nofollow noopener noreferrer\">Display</a></p>\n"
-        );
+        assert_snapshot!(markdown_to_html("[Display](stylish::Display)", Some(repository), ""), @r###"
+        <p><a rel="nofollow noopener noreferrer">Display</a></p>
+        "###);
     }
 
     #[test]
@@ -526,26 +531,21 @@ mod tests {
             );
         }
 
-        assert_eq!(
-            text_to_html("*[lobster](docs/lobster)*", "readme.md", Some("https://github.com/rust-lang/test"), None),
-            "<p><em><a href=\"https://github.com/rust-lang/test/blob/HEAD/docs/lobster\" rel=\"nofollow noopener noreferrer\">lobster</a></em></p>\n"
-        );
-        assert_eq!(
-            text_to_html("*[lobster](docs/lobster)*", "s/readme.md", Some("https://github.com/rust-lang/test"), None),
-            "<p><em><a href=\"https://github.com/rust-lang/test/blob/HEAD/s/docs/lobster\" rel=\"nofollow noopener noreferrer\">lobster</a></em></p>\n"
-        );
-        assert_eq!(
-            text_to_html("*[lobster](docs/lobster)*", "s1/s2/readme.md", Some("https://github.com/rust-lang/test"), None),
-            "<p><em><a href=\"https://github.com/rust-lang/test/blob/HEAD/s1/s2/docs/lobster\" rel=\"nofollow noopener noreferrer\">lobster</a></em></p>\n"
-        );
-        assert_eq!(
-            text_to_html("*[lobster](docs/lobster)*", "s1/s2/readme.md", Some("https://github.com/rust-lang/test"), Some("path/in/vcs/")),
-            "<p><em><a href=\"https://github.com/rust-lang/test/blob/HEAD/path/in/vcs/s1/s2/docs/lobster\" rel=\"nofollow noopener noreferrer\">lobster</a></em></p>\n"
-        );
-        assert_eq!(
-            text_to_html("*[lobster](docs/lobster)*", "s1/s2/readme.md", Some("https://github.com/rust-lang/test"), Some("path/in/vcs")),
-            "<p><em><a href=\"https://github.com/rust-lang/test/blob/HEAD/path/in/vcs/s1/s2/docs/lobster\" rel=\"nofollow noopener noreferrer\">lobster</a></em></p>\n"
-        );
+        assert_snapshot!(text_to_html("*[lobster](docs/lobster)*", "readme.md", Some("https://github.com/rust-lang/test"), None), @r###"
+        <p><em><a href="https://github.com/rust-lang/test/blob/HEAD/docs/lobster" rel="nofollow noopener noreferrer">lobster</a></em></p>
+        "###);
+        assert_snapshot!(text_to_html("*[lobster](docs/lobster)*", "s/readme.md", Some("https://github.com/rust-lang/test"), None), @r###"
+        <p><em><a href="https://github.com/rust-lang/test/blob/HEAD/s/docs/lobster" rel="nofollow noopener noreferrer">lobster</a></em></p>
+        "###);
+        assert_snapshot!(text_to_html("*[lobster](docs/lobster)*", "s1/s2/readme.md", Some("https://github.com/rust-lang/test"), None), @r###"
+        <p><em><a href="https://github.com/rust-lang/test/blob/HEAD/s1/s2/docs/lobster" rel="nofollow noopener noreferrer">lobster</a></em></p>
+        "###);
+        assert_snapshot!(text_to_html("*[lobster](docs/lobster)*", "s1/s2/readme.md", Some("https://github.com/rust-lang/test"), Some("path/in/vcs/")), @r###"
+        <p><em><a href="https://github.com/rust-lang/test/blob/HEAD/path/in/vcs/s1/s2/docs/lobster" rel="nofollow noopener noreferrer">lobster</a></em></p>
+        "###);
+        assert_snapshot!(text_to_html("*[lobster](docs/lobster)*", "s1/s2/readme.md", Some("https://github.com/rust-lang/test"), Some("path/in/vcs")), @r###"
+        <p><em><a href="https://github.com/rust-lang/test/blob/HEAD/path/in/vcs/s1/s2/docs/lobster" rel="nofollow noopener noreferrer">lobster</a></em></p>
+        "###);
     }
 
     #[test]
@@ -561,52 +561,45 @@ mod tests {
     #[test]
     fn header_has_tags() {
         let text = "# My crate\n\nHello, world!\n";
-        let result = markdown_to_html(text, None, "");
-        assert_eq!(
-            result,
-            "<h1><a href=\"#my-crate\" id=\"user-content-my-crate\" rel=\"nofollow noopener noreferrer\"></a>My crate</h1>\n<p>Hello, world!</p>\n"
-        );
+        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
+        <h1><a href="#my-crate" id="user-content-my-crate" rel="nofollow noopener noreferrer"></a>My crate</h1>
+        <p>Hello, world!</p>
+        "###);
     }
 
     #[test]
     fn manual_anchor_is_sanitized() {
         let text =
             "<h1><a href=\"#my-crate\" id=\"my-crate\"></a>My crate</h1>\n<p>Hello, world!</p>\n";
-        let result = markdown_to_html(text, None, "");
-        assert_eq!(
-            result,
-            "<h1><a href=\"#my-crate\" id=\"user-content-my-crate\" rel=\"nofollow noopener noreferrer\"></a>My crate</h1>\n<p>Hello, world!</p>\n"
-        );
+        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
+        <h1><a href="#my-crate" id="user-content-my-crate" rel="nofollow noopener noreferrer"></a>My crate</h1>
+        <p>Hello, world!</p>
+        "###);
     }
 
     #[test]
     fn tables_with_rowspan_and_colspan() {
         let text = "<table><tr><th rowspan=\"1\" colspan=\"2\">Target</th></tr></table>\n";
-        let result = markdown_to_html(text, None, "");
-        assert_eq!(
-            result,
-            "<table><tbody><tr><th rowspan=\"1\" colspan=\"2\">Target</th></tr></tbody></table>\n"
-        );
+        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
+        <table><tbody><tr><th rowspan="1" colspan="2">Target</th></tr></tbody></table>
+        "###);
     }
 
     #[test]
     fn text_alignment() {
         let text = "<h1 align=\"center\">foo-bar</h1>\n<h5 align=\"center\">Hello World!</h5>\n";
-        let result = markdown_to_html(text, None, "");
-        assert_eq!(
-            result,
-            "<h1 align=\"center\">foo-bar</h1>\n<h5 align=\"center\">Hello World!</h5>\n"
-        );
+        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
+        <h1 align="center">foo-bar</h1>
+        <h5 align="center">Hello World!</h5>
+        "###);
     }
 
     #[test]
     fn image_alignment() {
         let text =
             "<p align=\"center\"><img src=\"https://img.shields.io/crates/v/clap.svg\" alt=\"\"></p>\n";
-        let result = markdown_to_html(text, None, "");
-        assert_eq!(
-            result,
-            "<p align=\"center\"><img src=\"https://img.shields.io/crates/v/clap.svg\" alt=\"\"></p>\n"
-        );
+        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
+        <p align="center"><img src="https://img.shields.io/crates/v/clap.svg" alt=""></p>
+        "###);
     }
 }

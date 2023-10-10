@@ -784,6 +784,7 @@ dependencies = [
  "ammonia",
  "comrak",
  "htmlescape",
+ "insta",
  "url",
 ]
 
