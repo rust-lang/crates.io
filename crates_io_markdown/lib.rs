@@ -364,40 +364,29 @@ mod tests {
 
     #[test]
     fn code_block_with_syntax_highlighting() {
-        let code_block = r#"```rust \
-                            println!("Hello World"); \
-                           ```"#;
+        let code_block = "```rust\nprintln!(\"Hello World\");\n```";
         assert_snapshot!(markdown_to_html(code_block, None, ""), @r###"
-        <pre><code class="language-rust">                            println!("Hello World"); \
-                                   ```
+        <pre><code class="language-rust">println!("Hello World");
         </code></pre>
         "###);
     }
 
     #[test]
     fn code_block_with_mermaid_highlighting() {
-        let code_block = r"```mermaid \
-                            graph LR \
-                            A --> C \
-                            C --> A \
-                           ```";
+        let code_block = "```mermaid\ngraph LR\nA --> C\nC --> A\n```";
         assert_snapshot!(markdown_to_html(code_block, None, ""), @r###"
-        <pre><code class="language-mermaid">                            graph LR \
-                                    A --&gt; C \
-                                    C --&gt; A \
-                                   ```
+        <pre><code class="language-mermaid">graph LR
+        A --&gt; C
+        C --&gt; A
         </code></pre>
         "###);
     }
 
     #[test]
     fn code_block_with_syntax_highlighting_even_if_annot_has_no_run() {
-        let code_block = r#"```rust  ,  no_run \
-                            println!("Hello World"); \
-                           ```"#;
+        let code_block = "```rust, no_run\nprintln!(\"Hello World\");\n```";
         assert_snapshot!(markdown_to_html(code_block, None, ""), @r###"
-        <pre><code class="language-rust">                            println!("Hello World"); \
-                                   ```
+        <pre><code class="language-rust">println!("Hello World");
         </code></pre>
         "###);
     }
