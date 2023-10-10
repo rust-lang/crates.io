@@ -188,12 +188,7 @@ impl UrlRelativeEvaluate for SanitizeUrl {
     fn evaluate<'a>(&self, url: &'a str) -> Option<Cow<'a, str>> {
         if let Some(clean) = url.strip_prefix('#') {
             // Handle auto-generated footnote links
-            if clean
-                .strip_prefix("fn-")
-                .or_else(|| clean.strip_prefix("fnref-"))
-                .map(|num| num.parse::<u32>().is_ok())
-                .unwrap_or(false)
-            {
+            if clean.starts_with("fn-") || clean.starts_with("fnref-") {
                 return Some(Cow::Owned(format!("#user-content-{}", clean)));
             }
 
@@ -443,7 +438,7 @@ There can also be some text in between!
     Add as many paragraphs as you like."#;
 
         assert_snapshot!(markdown_to_html(text, None, ""), @r###"
-        <p>Here's a simple footnote,<sup><a href="#user-content-fn-1" id="user-content-fnref-1" rel="nofollow noopener noreferrer">1</a></sup> and here's a longer one.<sup><a href="#fn-bignote" id="user-content-fnref-bignote" rel="nofollow noopener noreferrer">2</a></sup></p>
+        <p>Here's a simple footnote,<sup><a href="#user-content-fn-1" id="user-content-fnref-1" rel="nofollow noopener noreferrer">1</a></sup> and here's a longer one.<sup><a href="#user-content-fn-bignote" id="user-content-fnref-bignote" rel="nofollow noopener noreferrer">2</a></sup></p>
         <p>There can also be some text in between!</p>
         <section>
         <ol>
@@ -454,7 +449,7 @@ There can also be some text in between!
         <p>Here's one with multiple paragraphs and code.</p>
         <p>Indent paragraphs to include them in the footnote.</p>
         <p><code>{ my code }</code></p>
-        <p>Add as many paragraphs as you like. <a href="#fnref-bignote" rel="nofollow noopener noreferrer">↩</a></p>
+        <p>Add as many paragraphs as you like. <a href="#user-content-fnref-bignote" rel="nofollow noopener noreferrer">↩</a></p>
         </li>
         </ol>
         </section>
