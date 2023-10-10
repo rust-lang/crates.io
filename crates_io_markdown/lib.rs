@@ -427,6 +427,41 @@ mod tests {
     }
 
     #[test]
+    fn text_with_complex_footnotes() {
+        let text = r#"Here's a simple footnote,[^1] and here's a longer one.[^bignote]
+
+[^1]: This is the first footnote.
+
+There can also be some text in between!
+
+[^bignote]: Here's one with multiple paragraphs and code.
+
+    Indent paragraphs to include them in the footnote.
+
+    `{ my code }`
+
+    Add as many paragraphs as you like."#;
+
+        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
+        <p>Here's a simple footnote,<sup><a href="#user-content-fn-1" id="user-content-fnref-1" rel="nofollow noopener noreferrer">1</a></sup> and here's a longer one.<sup><a href="#fn-bignote" id="user-content-fnref-bignote" rel="nofollow noopener noreferrer">2</a></sup></p>
+        <p>There can also be some text in between!</p>
+        <section>
+        <ol>
+        <li id="user-content-fn-1">
+        <p>This is the first footnote. <a href="#user-content-fnref-1" rel="nofollow noopener noreferrer">↩</a></p>
+        </li>
+        <li id="user-content-fn-bignote">
+        <p>Here's one with multiple paragraphs and code.</p>
+        <p>Indent paragraphs to include them in the footnote.</p>
+        <p><code>{ my code }</code></p>
+        <p>Add as many paragraphs as you like. <a href="#fnref-bignote" rel="nofollow noopener noreferrer">↩</a></p>
+        </li>
+        </ol>
+        </section>
+        "###);
+    }
+
+    #[test]
     fn relative_links() {
         let absolute = "[hi](/hi)";
         let relative = "[there](there)";
