@@ -718,7 +718,7 @@ dependencies = [
  "rand",
  "reqwest",
  "retry",
- "ring 0.17.0",
+ "ring 0.17.3",
  "scheduled-thread-pool",
  "secrecy",
  "semver",
@@ -2812,9 +2812,9 @@ dependencies = [
 
 [[package]]
 name = "ring"
-version = "0.17.0"
+version = "0.17.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fb9d44f9bf6b635117787f72416783eb7e4227aaf255e5ce739563d817176a7e"
+checksum = "9babe80d5c16becf6594aa32ad2be8fe08498e7ae60b77de8df700e67f191d7e"
 dependencies = [
  "cc",
  "getrandom",
