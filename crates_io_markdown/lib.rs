@@ -18,36 +18,40 @@ impl<'a> MarkdownRenderer<'a> {
     /// Per `text_to_html`, `base_url` is the base URL prepended to any
     /// relative links in the input document.  See that function for more detail.
     fn new(base_url: Option<&'a str>, base_dir: &'a str) -> MarkdownRenderer<'a> {
-        let allowed_classes = hashmap(&[(
-            "code",
-            hashset(&[
-                "language-bash",
-                "language-clike",
-                "language-glsl",
-                "language-go",
-                "language-ini",
-                "language-javascript",
-                "language-json",
-                "language-markup",
-                "language-mermaid",
-                "language-protobuf",
-                "language-ruby",
-                "language-rust",
-                "language-scss",
-                "language-sql",
-                "language-toml",
-                "language-yaml",
-            ]),
-        )]);
+        let allowed_classes = hashmap(&[
+            (
+                "code",
+                hashset(&[
+                    "language-bash",
+                    "language-clike",
+                    "language-glsl",
+                    "language-go",
+                    "language-ini",
+                    "language-javascript",
+                    "language-json",
+                    "language-markup",
+                    "language-mermaid",
+                    "language-protobuf",
+                    "language-ruby",
+                    "language-rust",
+                    "language-scss",
+                    "language-sql",
+                    "language-toml",
+                    "language-yaml",
+                ]),
+            ),
+            ("section", hashset(&["footnotes"])),
+        ]);
         let sanitize_url = UrlRelative::Custom(Box::new(SanitizeUrl::new(base_url, base_dir)));
 
         let mut html_sanitizer = Builder::default();
         html_sanitizer
-            .add_tags(&["input"])
+            .add_tags(&["input", "ol", "section"])
             .link_rel(Some("nofollow noopener noreferrer"))
             .add_generic_attributes(&["align"])
             .add_tag_attributes("a", &["id", "target"])
             .add_tag_attributes("input", &["checked", "disabled", "type"])
+            .add_tag_attributes("li", &["id"])
             .allowed_classes(allowed_classes)
             .url_relative(sanitize_url)
             .id_prefix(Some("user-content-"));
@@ -72,6 +76,7 @@ impl<'a> MarkdownRenderer<'a> {
         extension_options.tagfilter = true;
         extension_options.tasklist = true;
         extension_options.header_ids = Some("user-content-".to_string());
+        extension_options.footnotes = true;
 
         let options = ComrakOptions {
             render: render_options,
@@ -184,7 +189,12 @@ fn is_media_url(url: &str) -> MediaUrl {
 
 impl UrlRelativeEvaluate for SanitizeUrl {
     fn evaluate<'a>(&self, url: &'a str) -> Option<Cow<'a, str>> {
-        if url.starts_with('#') {
+        if let Some(clean) = url.strip_prefix('#') {
+            // Handle auto-generated footnote links
+            if clean.starts_with("fn-") || clean.starts_with("fnref-") {
+                return Some(Cow::Owned(format!("#user-content-{}", clean)));
+            }
+
             // Always allow fragment URLs.
             return Some(Cow::Borrowed(url));
         }
@@ -396,6 +406,56 @@ mod tests {
         let text = "<p class='bad-class'>Hello World!</p>";
         assert_snapshot!(markdown_to_html(text, None, ""), @r###"
         <p>Hello World!</p>
+        "###);
+    }
+
+    #[test]
+    fn text_with_footnote() {
+        let text = "Hello World![^1]\n\n[^1]: Hello Ferris, actually!";
+        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
+        <p>Hello World!<sup><a href="#user-content-fn-1" id="user-content-fnref-1" rel="nofollow noopener noreferrer">1</a></sup></p>
+        <section class="footnotes">
+        <ol>
+        <li id="user-content-fn-1">
+        <p>Hello Ferris, actually! <a href="#user-content-fnref-1" rel="nofollow noopener noreferrer">↩</a></p>
+        </li>
+        </ol>
+        </section>
+        "###);
+    }
+
+    #[test]
+    fn text_with_complex_footnotes() {
+        let text = r#"Here's a simple footnote,[^1] and here's a longer one.[^bignote]
+
+[^1]: This is the first footnote.
+
+There can also be some text in between!
+
+[^bignote]: Here's one with multiple paragraphs and code.
+
+    Indent paragraphs to include them in the footnote.
+
+    `{ my code }`
+
+    Add as many paragraphs as you like."#;
+
+        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
+        <p>Here's a simple footnote,<sup><a href="#user-content-fn-1" id="user-content-fnref-1" rel="nofollow noopener noreferrer">1</a></sup> and here's a longer one.<sup><a href="#user-content-fn-bignote" id="user-content-fnref-bignote" rel="nofollow noopener noreferrer">2</a></sup></p>
+        <p>There can also be some text in between!</p>
+        <section class="footnotes">
+        <ol>
+        <li id="user-content-fn-1">
+        <p>This is the first footnote. <a href="#user-content-fnref-1" rel="nofollow noopener noreferrer">↩</a></p>
+        </li>
+        <li id="user-content-fn-bignote">
+        <p>Here's one with multiple paragraphs and code.</p>
+        <p>Indent paragraphs to include them in the footnote.</p>
+        <p><code>{ my code }</code></p>
+        <p>Add as many paragraphs as you like. <a href="#user-content-fnref-bignote" rel="nofollow noopener noreferrer">↩</a></p>
+        </li>
+        </ol>
+        </section>
         "###);
     }
 
