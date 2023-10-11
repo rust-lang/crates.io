@@ -63,8 +63,8 @@ devDependencies:
     specifier: 7.22.15
     version: 7.22.15(@babel/core@7.23.0)(eslint@8.51.0)
   '@babel/plugin-proposal-decorators':
-    specifier: 7.23.0
-    version: 7.23.0(@babel/core@7.23.0)
+    specifier: 7.23.2
+    version: 7.23.2(@babel/core@7.23.0)
   '@ember/optional-features':
     specifier: 2.0.0
     version: 2.0.0
@@ -635,8 +635,8 @@ packages:
       '@babel/helper-create-class-features-plugin': 7.22.15(@babel/core@7.23.0)
       '@babel/helper-plugin-utils': 7.22.5
 
-  /@babel/plugin-proposal-decorators@7.23.0(@babel/core@7.23.0):
-    resolution: {integrity: sha512-kYsT+f5ARWF6AdFmqoEEp+hpqxEB8vGmRWfw2aj78M2vTwS2uHW91EF58iFm1Z9U8Y/RrLu2XKJn46P9ca1b0w==}
+  /@babel/plugin-proposal-decorators@7.23.2(@babel/core@7.23.0):
+    resolution: {integrity: sha512-eR0gJQc830fJVGz37oKLvt9W9uUIQSAovUl0e9sJ3YeO09dlcoBVYD3CLrjCj4qHdXmfiyTyFt8yeQYSN5fxLg==}
     engines: {node: '>=6.9.0'}
     peerDependencies:
       '@babel/core': ^7.0.0-0
@@ -8286,7 +8286,7 @@ packages:
     dependencies:
       '@babel/core': 7.23.0(supports-color@8.1.1)
       '@babel/plugin-proposal-class-properties': 7.18.6(@babel/core@7.23.0)
-      '@babel/plugin-proposal-decorators': 7.23.0(@babel/core@7.23.0)
+      '@babel/plugin-proposal-decorators': 7.23.2(@babel/core@7.23.0)
       '@babel/preset-env': 7.22.20(@babel/core@7.23.0)
       '@embroider/macros': 1.13.2
       '@embroider/shared-internals': 2.5.0(supports-color@8.1.1)
@@ -8375,7 +8375,7 @@ packages:
       '@babel/core': 7.23.0(supports-color@8.1.1)
       '@babel/helper-compilation-targets': 7.22.15
       '@babel/plugin-proposal-class-properties': 7.18.6(@babel/core@7.23.0)
-      '@babel/plugin-proposal-decorators': 7.23.0(@babel/core@7.23.0)
+      '@babel/plugin-proposal-decorators': 7.23.2(@babel/core@7.23.0)
       '@babel/plugin-proposal-private-methods': 7.18.6(@babel/core@7.23.0)
       '@babel/plugin-proposal-private-property-in-object': 7.21.11(@babel/core@7.23.0)
       '@babel/plugin-transform-modules-amd': 7.23.0(@babel/core@7.23.0)
@@ -8417,7 +8417,7 @@ packages:
       '@babel/core': 7.23.0(supports-color@8.1.1)
       '@babel/helper-compilation-targets': 7.22.15
       '@babel/plugin-proposal-class-properties': 7.18.6(@babel/core@7.23.0)
-      '@babel/plugin-proposal-decorators': 7.23.0(@babel/core@7.23.0)
+      '@babel/plugin-proposal-decorators': 7.23.2(@babel/core@7.23.0)
       '@babel/plugin-proposal-private-methods': 7.18.6(@babel/core@7.23.0)
       '@babel/plugin-proposal-private-property-in-object': 7.21.11(@babel/core@7.23.0)
       '@babel/plugin-transform-class-static-block': 7.22.11(@babel/core@7.23.0)
