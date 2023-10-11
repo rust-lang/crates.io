@@ -126,8 +126,8 @@ devDependencies:
     specifier: 6.0.1
     version: 6.0.1(ember-source@5.3.0)
   ember-cli-babel:
-    specifier: 8.1.0
-    version: 8.1.0(@babel/core@7.23.0)
+    specifier: 8.2.0
+    version: 8.2.0(@babel/core@7.23.0)
   ember-cli-bundle-analyzer:
     specifier: 1.0.0
     version: 1.0.0
@@ -8405,8 +8405,8 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /ember-cli-babel@8.1.0(@babel/core@7.23.0):
-    resolution: {integrity: sha512-zudhce/GzEm2JFVjBKdsJvhnFTPZ3blYG8jK2YnrkmJp65TCMMkOM9LiKLlG9ANtiAMsljEl89YXWdsHY/xR4g==}
+  /ember-cli-babel@8.2.0(@babel/core@7.23.0):
+    resolution: {integrity: sha512-8H4+jQElCDo6tA7CamksE66NqBXWs7VNpS3a738L9pZCjg2kXIX4zoyHzkORUqCtr0Au7YsCnrlAMi1v2ALo7A==}
     engines: {node: 16.* || 18.* || >= 20}
     peerDependencies:
       '@babel/core': ^7.12.0
@@ -8652,7 +8652,7 @@ packages:
       broccoli-funnel: 3.0.8
       broccoli-merge-trees: 4.2.0
       ember-auto-import: 2.6.3(webpack@5.88.2)
-      ember-cli-babel: 8.1.0(@babel/core@7.23.0)
+      ember-cli-babel: 8.2.0(@babel/core@7.23.0)
       ember-data: 4.12.3(@babel/core@7.23.0)(@ember/string@3.1.1)(@glimmer/tracking@1.1.2)(ember-source@5.3.0)(webpack@5.88.2)
       ember-get-config: 2.1.1
       ember-inflector: 4.0.2
