@@ -294,8 +294,8 @@ devDependencies:
     specifier: 0.3.0
     version: 0.3.0
   qunit-dom:
-    specifier: 2.0.0
-    version: 2.0.0
+    specifier: 3.0.0
+    version: 3.0.0
   tracked-built-ins:
     specifier: 3.3.0
     version: 3.3.0
@@ -15191,16 +15191,8 @@ packages:
       - supports-color
     dev: true
 
-  /qunit-dom@2.0.0:
-    resolution: {integrity: sha512-mElzLN99wYPOGekahqRA+mq7NcThXY9c+/tDkgJmT7W5LeZAFNyITr2rFKNnCbWLIhuLdFw88kCBMrJSfyBYpA==}
-    engines: {node: 12.* || 14.* || >= 16.*}
-    dependencies:
-      broccoli-funnel: 3.0.8
-      broccoli-merge-trees: 4.2.0
-      ember-cli-babel: 7.26.11
-      ember-cli-version-checker: 5.1.2
-    transitivePeerDependencies:
-      - supports-color
+  /qunit-dom@3.0.0:
+    resolution: {integrity: sha512-rqGZ9ZgOvtOY+Ph2ElCJ4pRIHouMZmI3DWK35Xr3x3c17/gIwOHHyKAQk6XetqhqepS6p+oXvK6Bx1uZu5jJuw==}
     dev: true
 
   /qunit@2.20.0:

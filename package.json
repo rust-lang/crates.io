@@ -132,7 +132,7 @@
     "prettier": "3.0.3",
     "qunit": "2.20.0",
     "qunit-console-grouper": "0.3.0",
-    "qunit-dom": "2.0.0",
+    "qunit-dom": "3.0.0",
     "tracked-built-ins": "3.3.0",
     "webpack": "5.88.2"
   },
