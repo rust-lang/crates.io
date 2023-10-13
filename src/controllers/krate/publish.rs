@@ -221,11 +221,31 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             return Err(cargo_err("expected at most 5 categories per crate"));
         }
 
+        let max_features = existing_crate
+            .and_then(|c| c.max_features.map(|mf| mf as usize))
+            .unwrap_or(app.config.max_features);
+
         let features = tarball_info.manifest.features.unwrap_or_default();
+        let num_features = features.len();
+        if num_features > max_features {
+            return Err(cargo_err(&format!(
+                "Maximum number of features was reached (uploaded: {}, limit: {})",
+                num_features, max_features
+            )));
+        }
+
         for (key, values) in features.iter() {
             if !Crate::valid_feature_name(key) {
                 return Err(cargo_err(&format!(
                     "\"{key}\" is an invalid feature name (feature names must contain only letters, numbers, '-', '+', or '_')"
+                )));
+            }
+
+            let num_features = values.len();
+            if num_features > max_features {
+                return Err(cargo_err(&format!(
+                    "Maximum number of enabled features was reached for feature \"{key}\" (uploaded: {}, limit: {})",
+                    num_features, max_features
                 )));
             }
 

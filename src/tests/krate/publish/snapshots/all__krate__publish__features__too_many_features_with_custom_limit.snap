@@ -1,0 +1,11 @@
+---
+source: src/tests/krate/publish/features.rs
+expression: response.into_json()
+---
+{
+  "errors": [
+    {
+      "detail": "Maximum number of features was reached (uploaded: 5, limit: 4)"
+    }
+  ]
+}
