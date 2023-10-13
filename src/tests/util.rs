@@ -20,8 +20,8 @@
 //! to the underlying database model value (`User` and `ApiToken` respectively).
 
 use crate::{
-    builders::PublishBuilder, CategoryListResponse, CategoryResponse, CrateList, CrateResponse,
-    GoodCrate, OkBool, OwnersResponse, VersionResponse,
+    CategoryListResponse, CategoryResponse, CrateList, CrateResponse, GoodCrate, OkBool,
+    OwnersResponse, VersionResponse,
 };
 use crates_io::middleware::session;
 use crates_io::models::{ApiToken, CreatedApiToken, User};
@@ -173,8 +173,8 @@ pub trait RequestHelper {
     ///
     /// Background jobs will publish to the git index and sync to the HTTP index.
     #[track_caller]
-    fn publish_crate(&self, publish_builder: PublishBuilder) -> Response<GoodCrate> {
-        let response = self.put("/api/v1/crates/new", publish_builder.body());
+    fn publish_crate(&self, body: impl Into<Bytes>) -> Response<GoodCrate> {
+        let response = self.put("/api/v1/crates/new", body);
         self.app().run_pending_background_jobs();
         response
     }
