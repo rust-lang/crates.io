@@ -43,11 +43,9 @@ fn new_krate_tarball_with_hard_links() {
     let (json, _tarball) = PublishBuilder::new("foo", "1.1.0").build();
     let body = PublishBuilder::create_publish_body(&json, &tarball);
 
-    let response = token.put::<()>("/api/v1/crates/new", body);
+    let response = token.publish_crate(body);
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
-
-    app.run_pending_background_jobs();
     assert!(app.stored_files().is_empty());
 }
 
@@ -55,7 +53,7 @@ fn new_krate_tarball_with_hard_links() {
 fn empty() {
     let (app, _, user) = TestApp::full().with_user();
 
-    let response = user.put::<()>("/api/v1/crates/new", &[] as &[u8]);
+    let response = user.publish_crate(&[] as &[u8]);
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
     assert!(app.stored_files().is_empty());
@@ -65,7 +63,7 @@ fn empty() {
 fn json_len_truncated() {
     let (app, _, _, token) = TestApp::full().with_token();
 
-    let response = token.put::<()>("/api/v1/crates/new", &[0u8, 0] as &[u8]);
+    let response = token.publish_crate(&[0u8, 0] as &[u8]);
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
     assert!(app.stored_files().is_empty());
@@ -75,7 +73,7 @@ fn json_len_truncated() {
 fn json_bytes_truncated() {
     let (app, _, _, token) = TestApp::full().with_token();
 
-    let response = token.put::<()>("/api/v1/crates/new", &[100u8, 0, 0, 0, 0] as &[u8]);
+    let response = token.publish_crate(&[100u8, 0, 0, 0, 0] as &[u8]);
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
     assert!(app.stored_files().is_empty());
@@ -85,10 +83,7 @@ fn json_bytes_truncated() {
 fn tarball_len_truncated() {
     let (app, _, _, token) = TestApp::full().with_token();
 
-    let response = token.put::<()>(
-        "/api/v1/crates/new",
-        &[2, 0, 0, 0, b'{', b'}', 0, 0] as &[u8],
-    );
+    let response = token.publish_crate(&[2, 0, 0, 0, b'{', b'}', 0, 0] as &[u8]);
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
     assert!(app.stored_files().is_empty());
@@ -98,10 +93,7 @@ fn tarball_len_truncated() {
 fn tarball_bytes_truncated() {
     let (app, _, _, token) = TestApp::full().with_token();
 
-    let response = token.put::<()>(
-        "/api/v1/crates/new",
-        &[2, 0, 0, 0, b'{', b'}', 100, 0, 0, 0, 0] as &[u8],
-    );
+    let response = token.publish_crate(&[2, 0, 0, 0, b'{', b'}', 100, 0, 0, 0, 0] as &[u8]);
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
     assert!(app.stored_files().is_empty());

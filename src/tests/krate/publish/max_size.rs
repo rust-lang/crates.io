@@ -44,14 +44,12 @@ fn tarball_between_default_axum_limit_and_max_upload_size() {
     let (json, _tarball) = PublishBuilder::new("foo", "1.1.0").build();
     let body = PublishBuilder::create_publish_body(&json, &tarball);
 
-    let response = token.put::<()>("/api/v1/crates/new", body);
+    let response = token.publish_crate(body);
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json(), {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
     });
-
-    app.run_pending_background_jobs();
     assert_eq!(app.stored_files().len(), 2);
 }
 
@@ -84,11 +82,9 @@ fn tarball_bigger_than_max_upload_size() {
     let (json, _tarball) = PublishBuilder::new("foo", "1.1.0").build();
     let body = PublishBuilder::create_publish_body(&json, &tarball);
 
-    let response = token.put::<()>("/api/v1/crates/new", body);
+    let response = token.publish_crate(body);
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
-
-    app.run_pending_background_jobs();
     assert!(app.stored_files().is_empty());
 }
 

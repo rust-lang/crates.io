@@ -225,6 +225,12 @@ impl PublishBuilder {
     }
 }
 
+impl From<PublishBuilder> for Bytes {
+    fn from(builder: PublishBuilder) -> Self {
+        builder.body()
+    }
+}
+
 fn convert_dependency(
     encoded: &u::EncodableCrateDependency,
 ) -> (String, cargo_manifest::Dependency) {
