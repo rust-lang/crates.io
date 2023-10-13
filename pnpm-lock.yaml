@@ -16,11 +16,11 @@ dependencies:
     specifier: 3.4.0
     version: 3.4.0
   '@sentry/browser':
-    specifier: 7.73.0
-    version: 7.73.0
+    specifier: 7.74.0
+    version: 7.74.0
   '@sentry/utils':
-    specifier: 7.73.0
-    version: 7.73.0
+    specifier: 7.74.0
+    version: 7.74.0
   chart.js:
     specifier: 4.4.0
     version: 4.4.0
@@ -3594,56 +3594,56 @@ packages:
       - supports-color
     dev: true
 
-  /@sentry-internal/tracing@7.73.0:
-    resolution: {integrity: sha512-ig3WL/Nqp8nRQ52P205NaypGKNfIl/G+cIqge9xPW6zfRb5kJdM1YParw9GSJ1SPjEZBkBORGAML0on5H2FILw==}
+  /@sentry-internal/tracing@7.74.0:
+    resolution: {integrity: sha512-JK6IRGgdtZjswGfaGIHNWIThffhOHzVIIaGmglui+VFIzOsOqePjoxaDV0MEvzafxXZD7eWqGE5RGuZ0n6HFVg==}
     engines: {node: '>=8'}
     dependencies:
-      '@sentry/core': 7.73.0
-      '@sentry/types': 7.73.0
-      '@sentry/utils': 7.73.0
+      '@sentry/core': 7.74.0
+      '@sentry/types': 7.74.0
+      '@sentry/utils': 7.74.0
       tslib: 2.6.2
     dev: false
 
-  /@sentry/browser@7.73.0:
-    resolution: {integrity: sha512-e301hUixcJ5+HNKCJwajFF5smF4opXEFSclyWsJuFNufv5J/1C1SDhbwG2JjBt5zzdSoKWJKT1ewR6vpICyoDw==}
+  /@sentry/browser@7.74.0:
+    resolution: {integrity: sha512-Njr8216Z1dFUcl6NqBOk20dssK9SjoVddY74Xq+Q4p3NfXBG3lkMcACXor7SFoJRZXq8CZWGS13Cc5KwViRw4g==}
     engines: {node: '>=8'}
     dependencies:
-      '@sentry-internal/tracing': 7.73.0
-      '@sentry/core': 7.73.0
-      '@sentry/replay': 7.73.0
-      '@sentry/types': 7.73.0
-      '@sentry/utils': 7.73.0
+      '@sentry-internal/tracing': 7.74.0
+      '@sentry/core': 7.74.0
+      '@sentry/replay': 7.74.0
+      '@sentry/types': 7.74.0
+      '@sentry/utils': 7.74.0
       tslib: 2.6.2
     dev: false
 
-  /@sentry/core@7.73.0:
-    resolution: {integrity: sha512-9FEz4Gq848LOgVN2OxJGYuQqxv7cIVw69VlAzWHEm3njt8mjvlTq+7UiFsGRo84+59V2FQuHxzA7vVjl90WfSg==}
+  /@sentry/core@7.74.0:
+    resolution: {integrity: sha512-83NRuqn7nDZkSVBN5yJQqcpXDG4yMYiB7TkYUKrGTzBpRy6KUOrkCdybuKk0oraTIGiGSe5WEwCFySiNgR9FzA==}
     engines: {node: '>=8'}
     dependencies:
-      '@sentry/types': 7.73.0
-      '@sentry/utils': 7.73.0
+      '@sentry/types': 7.74.0
+      '@sentry/utils': 7.74.0
       tslib: 2.6.2
     dev: false
 
-  /@sentry/replay@7.73.0:
-    resolution: {integrity: sha512-a8IC9SowBisLYD2IdLkXzx7gN4iVwHDJhQvLp2B8ARs1PyPjJ7gCxSMHeGrYp94V0gOXtorNYkrxvuX8ayPROA==}
+  /@sentry/replay@7.74.0:
+    resolution: {integrity: sha512-GoYa3cHTTFVI/J1cnZ0i4X128mf/JljaswO3PWNTe2k3lSHq/LM5aV0keClRvwM0W8hlix8oOTT06nnenOUmmw==}
     engines: {node: '>=12'}
     dependencies:
-      '@sentry/core': 7.73.0
-      '@sentry/types': 7.73.0
-      '@sentry/utils': 7.73.0
+      '@sentry/core': 7.74.0
+      '@sentry/types': 7.74.0
+      '@sentry/utils': 7.74.0
     dev: false
 
-  /@sentry/types@7.73.0:
-    resolution: {integrity: sha512-/v8++bly8jW7r4cP2wswYiiVpn7eLLcqwnfPUMeCQze4zj3F3nTRIKc9BGHzU0V+fhHa3RwRC2ksqTGq1oJMDg==}
+  /@sentry/types@7.74.0:
+    resolution: {integrity: sha512-rI5eIRbUycWjn6s6o3yAjjWtIvYSxZDdnKv5je2EZINfLKcMPj1dkl6wQd2F4y7gLfD/N6Y0wZYIXC3DUdJQQg==}
     engines: {node: '>=8'}
     dev: false
 
-  /@sentry/utils@7.73.0:
-    resolution: {integrity: sha512-h3ZK/qpf4k76FhJV9uiSbvMz3V/0Ovy94C+5/9UgPMVCJXFmVsdw8n/dwANJ7LupVPfYP23xFGgebDMFlK1/2w==}
+  /@sentry/utils@7.74.0:
+    resolution: {integrity: sha512-k3np8nuTPtx5KDODPtULfFln4UXdE56MZCcF19Jv6Ljxf+YN/Ady1+0Oi3e0XoSvFpWNyWnglauT7M65qCE6kg==}
     engines: {node: '>=8'}
     dependencies:
-      '@sentry/types': 7.73.0
+      '@sentry/types': 7.74.0
       tslib: 2.6.2
     dev: false
 
@@ -13834,6 +13834,7 @@ packages:
   /normalize-path@2.1.1:
     resolution: {integrity: sha512-3pKJwH184Xo/lnH6oyP1q2pMd7HcypqqmRs91/6/i2CGtWwIKGCkOOMTm/zXbgTEWHw1uNpNi/igc3ePOYHb6w==}
     engines: {node: '>=0.10.0'}
+    requiresBuild: true
     dependencies:
       remove-trailing-separator: 1.1.0
     dev: true
@@ -15454,6 +15455,7 @@ packages:
 
   /remove-trailing-separator@1.1.0:
     resolution: {integrity: sha512-/hS+Y0u3aOfIETiaiirUFwDBDzmXPvO+jAfKTitUngIPzdKc6Z0LoFjM/CK5PL4C+eKwHohlHAb6H0VFfmmUsw==}
+    requiresBuild: true
     dev: true
 
   /remove-types@1.0.0:
