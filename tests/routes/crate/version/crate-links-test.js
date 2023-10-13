@@ -1,7 +1,7 @@
 import { visit } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
-import { setupApplicationTest } from 'cargo/tests/helpers';
+import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 module('Route | crate.version | crate links', function (hooks) {
   setupApplicationTest(hooks);

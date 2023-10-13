@@ -2,7 +2,7 @@ import { module, test } from 'qunit';
 
 import percySnapshot from '@percy/ember';
 
-import { setupApplicationTest } from 'cargo/tests/helpers';
+import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 import { visit } from '../helpers/visit-ignoring-abort';
 

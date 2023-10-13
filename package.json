@@ -1,5 +1,5 @@
 {
-  "name": "cargo",
+  "name": "crates-io",
   "version": "0.0.0",
   "private": true,
   "homepage": "https://github.com/rust-lang/crates.io#readme",

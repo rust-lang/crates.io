@@ -4,7 +4,7 @@ import { module, test } from 'qunit';
 import window from 'ember-window-mock';
 import { setupWindowMock } from 'ember-window-mock/test-support';
 
-import { setupApplicationTest } from 'cargo/tests/helpers';
+import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 import { visit } from '../helpers/visit-ignoring-abort';
 

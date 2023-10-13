@@ -7,7 +7,7 @@ import percySnapshot from '@percy/ember';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import { getPageTitle } from 'ember-page-title/test-support';
 
-import { setupApplicationTest } from 'cargo/tests/helpers';
+import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 import { summary } from '../../mirage/route-handlers/summary';
 import axeConfig from '../axe-config';

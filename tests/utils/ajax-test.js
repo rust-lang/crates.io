@@ -1,7 +1,7 @@
 import { module, test } from 'qunit';
 
-import { setupTest } from 'cargo/tests/helpers';
-import ajax, { AjaxError, HttpError } from 'cargo/utils/ajax';
+import { setupTest } from 'crates-io/tests/helpers';
+import ajax, { AjaxError, HttpError } from 'crates-io/utils/ajax';
 
 import setupMirage from '../helpers/setup-mirage';
 

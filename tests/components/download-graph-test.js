@@ -9,7 +9,7 @@ import { dropTask } from 'ember-concurrency';
 import window from 'ember-window-mock';
 import { setupWindowMock } from 'ember-window-mock/test-support';
 
-import { setupRenderingTest } from 'cargo/tests/helpers';
+import { setupRenderingTest } from 'crates-io/tests/helpers';
 
 import { toChartData } from '../../components/download-graph';
 import ChartJsLoader from '../../services/chartjs';

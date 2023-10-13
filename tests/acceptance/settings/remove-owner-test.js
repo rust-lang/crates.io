@@ -1,7 +1,7 @@
 import { click, visit } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
-import { setupApplicationTest } from 'cargo/tests/helpers';
+import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 module('Acceptance | Settings | Remove Owner', function (hooks) {
   setupApplicationTest(hooks);

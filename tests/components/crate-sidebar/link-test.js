@@ -3,7 +3,7 @@ import { module, test } from 'qunit';
 
 import { hbs } from 'ember-cli-htmlbars';
 
-import { setupRenderingTest } from 'cargo/tests/helpers';
+import { setupRenderingTest } from 'crates-io/tests/helpers';
 
 module('Component | CrateSidebar::Link', function (hooks) {
   setupRenderingTest(hooks);

@@ -3,7 +3,7 @@ import { module, test } from 'qunit';
 import window from 'ember-window-mock';
 import { setupWindowMock } from 'ember-window-mock/test-support';
 
-import { setupTest } from 'cargo/tests/helpers';
+import { setupTest } from 'crates-io/tests/helpers';
 
 const URL = 'https://turbo.fish/';
 

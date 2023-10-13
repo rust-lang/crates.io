@@ -1,7 +1,7 @@
 import { visit } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
-import { setupApplicationTest } from 'cargo/tests/helpers';
+import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 import { AjaxError } from '../../utils/ajax';
 
