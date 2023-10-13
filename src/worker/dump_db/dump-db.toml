@@ -89,6 +89,7 @@ readme = "public"
 textsearchable_index_col = "private" # This Postgres specific and can be derived from exported data
 repository = "public"
 max_upload_size = "public"
+max_features = "public"
 
 [crates_categories]
 dependencies = ["categories", "crates"]

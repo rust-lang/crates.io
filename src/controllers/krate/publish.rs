@@ -253,6 +253,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 readme: metadata.readme.as_deref(),
                 repository: repository.as_deref(),
                 max_upload_size: None,
+                max_features: None,
             };
 
             if is_reserved_name(persist.name, conn)? {
