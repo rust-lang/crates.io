@@ -9,7 +9,7 @@ edition = "2021"
 default-run = "server"
 
 [workspace]
-members = ["crates_io_smoke_test"]
+members = ["crates_io_*"]
 
 [profile.release]
 opt-level = 2
