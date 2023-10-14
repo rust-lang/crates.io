@@ -1,5 +1,5 @@
 {
-    "extends": [
+    extends: [
         "config:best-practices",
         ":pinAllExceptPeerDependencies",
         ":maintainLockFilesWeekly",
@@ -12,43 +12,52 @@
         "regexManagers:githubActionsVersions",
         "github>Turbo87/renovate-config//rust/updateToolchain",
     ],
-    "js": {
-        "labels": ["A-frontend 🐹"],
-    },
-    "rust": {
-        "labels": ["A-backend ⚙️"],
-    },
-    "packageRules": [{
-        "matchPackageNames": ["ember-cli", "ember-data", "ember-source"],
-        "separateMinorPatch": true,
-    }, {
-        "matchPackageNames": ["@percy/cli", "tj-actions/changed-files", "webpack"],
-        "extends": ["schedule:weekly"],
-    }, {
-        // Avoid "Artifact update problem" for pnpm updates when the renovatebot
-        // setup does not support the new version yet.
-        "matchPackageNames": ["pnpm"],
-        "minimumReleaseAge": "24 hours"
-    }, {
-        "matchLanguages": ["js"],
-        "matchUpdateTypes": ["lockFileMaintenance"],
-        "additionalBranchPrefix": "js-",
-        "commitMessageSuffix": "(JS)",
-    }, {
-        "matchLanguages": ["rust"],
-        "matchUpdateTypes": ["lockFileMaintenance"],
-        "additionalBranchPrefix": "rust-",
-        "commitMessageSuffix": "(Rust)",
-    }, {
-        "matchManagers": ["regex"],
-        "matchPackageNames": ["rust"],
-        "commitMessageTopic": "Rust",
-        "labels": ["A-backend ⚙️"],
-    }, {
-        "matchPackagePatterns": [
-            "^diesel$",
-            "^diesel_",
-        ],
-        "groupName": "diesel packages",
-    }],
+    packageRules: [
+        {
+            matchCategories: ["rust"],
+            labels: ["A-backend ⚙️"],
+        },
+        {
+            matchCategories: ["js"],
+            labels: ["A-frontend 🐹"],
+        },
+        {
+            matchPackageNames: ["ember-cli", "ember-data", "ember-source"],
+            separateMinorPatch: true,
+        },
+        {
+            matchPackageNames: [
+                "@percy/cli",
+                "tj-actions/changed-files",
+                "webpack",
+            ],
+            extends: ["schedule:weekly"],
+        },
+        {
+            matchPackageNames: ["pnpm"],
+            minimumReleaseAge: "24 hours",
+        },
+        {
+            matchCategories: ["js"],
+            matchUpdateTypes: ["lockFileMaintenance"],
+            additionalBranchPrefix: "js-",
+            commitMessageSuffix: "(JS)",
+        },
+        {
+            matchCategories: ["rust"],
+            matchUpdateTypes: ["lockFileMaintenance"],
+            additionalBranchPrefix: "rust-",
+            commitMessageSuffix: "(Rust)",
+        },
+        {
+            matchManagers: ["regex"],
+            matchPackageNames: ["rust"],
+            commitMessageTopic: "Rust",
+            labels: ["A-backend ⚙️"],
+        },
+        {
+            matchPackagePatterns: ["^diesel$", "^diesel_"],
+            groupName: "diesel packages",
+        },
+    ],
 }
