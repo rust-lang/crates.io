@@ -26,7 +26,7 @@ x-backend: &backend
 
 services:
   postgres:
-    image: postgres:13
+    image: postgres:13@sha256:eee22204934b36935237e7c92355e3178cfdf3c5377dec9c19c848115cc4637b
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
