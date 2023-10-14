@@ -8,7 +8,7 @@ import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import { keyDown } from 'ember-keyboard/test-support/test-helpers';
 import { getPageTitle } from 'ember-page-title/test-support';
 
-import { setupApplicationTest } from 'cargo/tests/helpers';
+import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 import { list as listCrates } from '../../mirage/route-handlers/crates';
 import axeConfig from '../axe-config';

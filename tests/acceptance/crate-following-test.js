@@ -3,7 +3,7 @@ import { module, test } from 'qunit';
 
 import { defer } from 'rsvp';
 
-import { setupApplicationTest } from 'cargo/tests/helpers';
+import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 module('Acceptance | Crate following', function (hooks) {
   setupApplicationTest(hooks);

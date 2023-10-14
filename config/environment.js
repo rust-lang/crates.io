@@ -2,7 +2,7 @@
 
 module.exports = function (environment) {
   let ENV = {
-    modulePrefix: 'cargo',
+    modulePrefix: 'crates-io',
     environment,
     rootURL: '/',
     locationType: 'history',

@@ -1,7 +1,7 @@
 import { click, currentURL, visit } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
-import { setupApplicationTest } from 'cargo/tests/helpers';
+import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 const TAB_README = '[data-test-readme-tab] a';
 const TAB_VERSIONS = '[data-test-versions-tab] a';

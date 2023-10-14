@@ -5,7 +5,7 @@ import { defer } from 'rsvp';
 
 import { Response } from 'miragejs';
 
-import { setupApplicationTest } from 'cargo/tests/helpers';
+import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 import { visit } from '../../../helpers/visit-ignoring-abort';
 

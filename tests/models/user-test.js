@@ -1,6 +1,6 @@
 import { module, test } from 'qunit';
 
-import { setupTest } from 'cargo/tests/helpers';
+import { setupTest } from 'crates-io/tests/helpers';
 
 import setupMirage from '../helpers/setup-mirage';
 

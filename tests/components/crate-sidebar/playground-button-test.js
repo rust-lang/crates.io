@@ -5,7 +5,7 @@ import { defer } from 'rsvp';
 
 import { hbs } from 'ember-cli-htmlbars';
 
-import { setupRenderingTest } from 'cargo/tests/helpers';
+import { setupRenderingTest } from 'crates-io/tests/helpers';
 
 import setupMirage from '../../helpers/setup-mirage';
 

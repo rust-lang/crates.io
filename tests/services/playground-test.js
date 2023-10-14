@@ -2,7 +2,7 @@ import { module, test } from 'qunit';
 
 import { setupMirage } from 'ember-cli-mirage/test-support';
 
-import { setupTest } from 'cargo/tests/helpers';
+import { setupTest } from 'crates-io/tests/helpers';
 
 module('Service | Playground', function (hooks) {
   setupTest(hooks);
