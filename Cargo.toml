@@ -37,7 +37,7 @@ aws-sigv4 = "=0.56.1"
 axum = { version = "=0.6.20", features = ["headers", "macros", "matched-path"] }
 axum-extra = { version = "=0.8.0", features = ["cookie-signed"] }
 base64 = "=0.21.4"
-bigdecimal = "=0.4.1"
+bigdecimal = "=0.4.2"
 cargo-manifest = "=0.12.1"
 crates_io_index = { path = "crates_io_index" }
 crates_io_markdown = { path = "crates_io_markdown" }
