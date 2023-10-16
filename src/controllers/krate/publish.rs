@@ -221,11 +221,37 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             return Err(cargo_err("expected at most 5 categories per crate"));
         }
 
+        let max_features = existing_crate
+            .and_then(|c| c.max_features.map(|mf| mf as usize))
+            .unwrap_or(app.config.max_features);
+
         let features = tarball_info.manifest.features.unwrap_or_default();
+        let num_features = features.len();
+        if num_features > max_features {
+            return Err(cargo_err(&format!(
+                "crates.io only allows a maximum number of {max_features} \
+                features, but your crate is declaring {num_features} features. \
+                If you have a valid use case needing more features, please \
+                send us an email to help@crates.io to discuss the details."
+            )));
+        }
+
         for (key, values) in features.iter() {
             if !Crate::valid_feature_name(key) {
                 return Err(cargo_err(&format!(
                     "\"{key}\" is an invalid feature name (feature names must contain only letters, numbers, '-', '+', or '_')"
+                )));
+            }
+
+            let num_features = values.len();
+            if num_features > max_features {
+                return Err(cargo_err(&format!(
+                    "crates.io only allows a maximum number of {max_features} \
+                    features or dependencies that another feature can enable, \
+                    but the \"{key}\" feature of your crate is enabling \
+                    {num_features} features or dependencies. If you have a \
+                    valid use case needing to increase this limit, please send \
+                    us an email to help@crates.io to discuss the details."
                 )));
             }
 
@@ -253,6 +279,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 readme: metadata.readme.as_deref(),
                 repository: repository.as_deref(),
                 max_upload_size: None,
+                max_features: None,
             };
 
             if is_reserved_name(persist.name, conn)? {

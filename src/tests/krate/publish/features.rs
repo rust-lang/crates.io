@@ -45,3 +45,98 @@ fn invalid_feature() {
     assert_json_snapshot!(response.into_json());
     assert!(app.stored_files().is_empty());
 }
+
+#[test]
+fn too_many_features() {
+    let (app, _, _, token) = TestApp::full()
+        .with_config(|config| {
+            config.max_features = 3;
+        })
+        .with_token();
+
+    let publish_builder = PublishBuilder::new("foo", "1.0.0")
+        .feature("one", &[])
+        .feature("two", &[])
+        .feature("three", &[])
+        .feature("four", &[])
+        .feature("five", &[]);
+    let response = token.publish_crate(publish_builder);
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json());
+    assert!(app.stored_files().is_empty());
+}
+
+#[test]
+fn too_many_features_with_custom_limit() {
+    let (app, _, user, token) = TestApp::full()
+        .with_config(|config| {
+            config.max_features = 3;
+        })
+        .with_token();
+
+    app.db(|conn| {
+        CrateBuilder::new("foo", user.as_model().id)
+            .max_features(4)
+            .expect_build(conn)
+    });
+
+    let publish_builder = PublishBuilder::new("foo", "1.0.0")
+        .feature("one", &[])
+        .feature("two", &[])
+        .feature("three", &[])
+        .feature("four", &[])
+        .feature("five", &[]);
+    let response = token.publish_crate(publish_builder);
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json());
+    assert!(app.stored_files().is_empty());
+
+    let publish_builder = PublishBuilder::new("foo", "1.0.0")
+        .feature("one", &[])
+        .feature("two", &[])
+        .feature("three", &[])
+        .feature("four", &[]);
+    token.publish_crate(publish_builder).good();
+}
+
+#[test]
+fn too_many_enabled_features() {
+    let (app, _, _, token) = TestApp::full()
+        .with_config(|config| {
+            config.max_features = 3;
+        })
+        .with_token();
+
+    let publish_builder = PublishBuilder::new("foo", "1.0.0")
+        .feature("default", &["one", "two", "three", "four", "five"]);
+    let response = token.publish_crate(publish_builder);
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json());
+    assert!(app.stored_files().is_empty());
+}
+
+#[test]
+fn too_many_enabled_features_with_custom_limit() {
+    let (app, _, user, token) = TestApp::full()
+        .with_config(|config| {
+            config.max_features = 3;
+        })
+        .with_token();
+
+    app.db(|conn| {
+        CrateBuilder::new("foo", user.as_model().id)
+            .max_features(4)
+            .expect_build(conn)
+    });
+
+    let publish_builder = PublishBuilder::new("foo", "1.0.0")
+        .feature("default", &["one", "two", "three", "four", "five"]);
+    let response = token.publish_crate(publish_builder);
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json());
+    assert!(app.stored_files().is_empty());
+
+    let publish_builder =
+        PublishBuilder::new("foo", "1.0.0").feature("default", &["one", "two", "three", "four"]);
+    token.publish_crate(publish_builder).good();
+}

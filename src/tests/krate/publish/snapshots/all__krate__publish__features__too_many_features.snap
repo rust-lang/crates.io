@@ -1,0 +1,11 @@
+---
+source: src/tests/krate/publish/features.rs
+expression: response.into_json()
+---
+{
+  "errors": [
+    {
+      "detail": "crates.io only allows a maximum number of 3 features, but your crate is declaring 5 features. If you have a valid use case needing more features, please send us an email to help@crates.io to discuss the details."
+    }
+  ]
+}

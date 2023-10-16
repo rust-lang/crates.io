@@ -111,6 +111,11 @@ impl<'a> CrateBuilder<'a> {
         self
     }
 
+    pub fn max_features(mut self, max_features: i16) -> Self {
+        self.krate.max_features = Some(max_features);
+        self
+    }
+
     pub fn build(mut self, connection: &mut PgConnection) -> AppResult<Crate> {
         use diesel::{insert_into, select, update};
 

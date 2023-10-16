@@ -1,0 +1,11 @@
+---
+source: src/tests/krate/publish/features.rs
+expression: response.into_json()
+---
+{
+  "errors": [
+    {
+      "detail": "crates.io only allows a maximum number of 3 features or dependencies that another feature can enable, but the \"default\" feature of your crate is enabling 5 features or dependencies. If you have a valid use case needing to increase this limit, please send us an email to help@crates.io to discuss the details."
+    }
+  ]
+}
