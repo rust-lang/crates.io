@@ -4,7 +4,7 @@ use diesel::{
     pg::Pg,
     sql_types::{Numeric, Record},
 };
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use crate::schema::sql_types::SemverTriple;
@@ -69,24 +69,6 @@ impl From<SerializedTriple> for Triple {
             minor: value.1,
             teeny: value.2,
         }
-    }
-}
-
-impl<'de> Deserialize<'de> for Triple {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        Ok(SerializedTriple::deserialize(deserializer)?.into())
-    }
-}
-
-impl Serialize for Triple {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        SerializedTriple::from(self).serialize(serializer)
     }
 }
 
