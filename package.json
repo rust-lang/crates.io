@@ -134,7 +134,7 @@
     "qunit-console-grouper": "0.3.0",
     "qunit-dom": "3.0.0",
     "tracked-built-ins": "3.3.0",
-    "webpack": "5.88.2"
+    "webpack": "5.89.0"
   },
   "resolutions": {
     "ember-cli-notifications>postcss-preset-env": "8.4.1",
