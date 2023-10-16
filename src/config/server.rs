@@ -62,8 +62,6 @@ pub struct Server {
     /// Should the server serve the frontend `index.html` for all
     /// non-API requests?
     pub serve_html: bool,
-
-    pub use_fastboot: Option<String>,
 }
 
 impl Default for Server {
@@ -211,7 +209,6 @@ impl Default for Server {
             balance_capacity: BalanceCapacityConfig::from_environment(),
             serve_dist: true,
             serve_html: true,
-            use_fastboot: dotenvy::var("USE_FASTBOOT").ok(),
         }
     }
 }

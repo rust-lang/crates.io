@@ -65,9 +65,6 @@ pub struct App {
     /// will panic) or a `Client` configured with a per-test replay proxy.
     pub(crate) http_client: Option<Client>,
 
-    /// A client for HTTP requests to the Ember.js fastboot server
-    pub fastboot_client: Option<reqwest::Client>,
-
     /// In-flight request counters for the `balance_capacity` middleware.
     pub balance_capacity: BalanceCapacityState,
 
@@ -164,11 +161,6 @@ impl App {
             .time_to_live(config.version_id_cache_ttl)
             .build();
 
-        let fastboot_client = match config.use_fastboot.as_deref() {
-            Some("staging-experimental") => Some(reqwest::Client::new()),
-            _ => None,
-        };
-
         App {
             primary_database,
             read_only_replica_database: replica_database,
@@ -181,7 +173,6 @@ impl App {
             service_metrics: ServiceMetrics::new().expect("could not initialize service metrics"),
             instance_metrics,
             http_client,
-            fastboot_client,
             balance_capacity: Default::default(),
             rate_limiter: RateLimiter::new(config.rate_limiter.clone()),
             config,

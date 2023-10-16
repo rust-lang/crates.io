@@ -32,10 +32,6 @@ function hashchange() {
 }
 
 export function initialize() {
-  if (typeof window === 'undefined' || window.addEventListener === undefined) {
-    // Don't run this initializer under FastBoot
-    return;
-  }
   window.addEventListener('hashchange', hashchange);
 
   // If clicking on a link to the same fragment as currently in the address bar,

@@ -6,11 +6,9 @@ import Resolver from 'ember-resolver';
 import config from './config/environment';
 import * as Sentry from './sentry';
 
-if (typeof FastBoot === 'undefined') {
-  // eslint-disable-next-line unicorn/prefer-add-event-listener
-  window.onerror = undefined;
-  Sentry.init();
-}
+// eslint-disable-next-line unicorn/prefer-add-event-listener
+window.onerror = undefined;
+Sentry.init();
 
 export default class App extends Application {
   modulePrefix = config.modulePrefix;

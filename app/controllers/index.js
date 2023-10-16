@@ -5,8 +5,9 @@ import { inject as service } from '@ember/service';
 import { dropTask } from 'ember-concurrency';
 import { reads } from 'macro-decorators';
 
+import ajax from '../utils/ajax';
+
 export default class IndexController extends Controller {
-  @service fetcher;
   @service store;
 
   @reads('dataTask.lastSuccessful.value') model;
@@ -22,7 +23,7 @@ export default class IndexController extends Controller {
   }
 
   dataTask = dropTask(async () => {
-    let data = await this.fetcher.ajax('/api/v1/summary');
+    let data = await ajax('/api/v1/summary');
 
     addCrates(this.store, data.new_crates);
     addCrates(this.store, data.most_downloaded);

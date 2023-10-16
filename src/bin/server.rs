@@ -83,11 +83,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Creating this file tells heroku to tell nginx that the application is ready
     // to receive traffic.
     if app.config.use_nginx_wrapper {
-        let path = if app.config.use_fastboot.is_some() {
-            "/tmp/backend-initialized"
-        } else {
-            "/tmp/app-initialized"
-        };
+        let path = "/tmp/app-initialized";
         info!("Writing to {path}");
         File::create(path).unwrap();
 
