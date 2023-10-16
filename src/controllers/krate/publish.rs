@@ -229,8 +229,10 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         let num_features = features.len();
         if num_features > max_features {
             return Err(cargo_err(&format!(
-                "Maximum number of features was reached (uploaded: {}, limit: {})",
-                num_features, max_features
+                "crates.io only allows a maximum number of {max_features} \
+                features, but your crate is declaring {num_features} features. \
+                If you have a valid use case needing more features, please \
+                send us an email to help@crates.io to discuss the details."
             )));
         }
 
@@ -244,8 +246,12 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             let num_features = values.len();
             if num_features > max_features {
                 return Err(cargo_err(&format!(
-                    "Maximum number of enabled features was reached for feature \"{key}\" (uploaded: {}, limit: {})",
-                    num_features, max_features
+                    "crates.io only allows a maximum number of {max_features} \
+                    features or dependencies that another feature can enable, \
+                    but the \"{key}\" feature of your crate is enabling \
+                    {num_features} features or dependencies. If you have a \
+                    valid use case needing to increase this limit, please send \
+                    us an email to help@crates.io to discuss the details."
                 )));
             }
 
