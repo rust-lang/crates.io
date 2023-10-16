@@ -11,7 +11,7 @@ use crate::schema::*;
 use crate::sql::split_part;
 
 // Queryable has a custom implementation below
-#[derive(Clone, Identifiable, Associations, Debug, Queryable, Deserialize, Serialize)]
+#[derive(Clone, Identifiable, Associations, Debug, Queryable)]
 #[diesel(belongs_to(Crate))]
 pub struct Version {
     pub id: i32,
