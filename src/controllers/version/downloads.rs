@@ -10,6 +10,7 @@ use crate::models::{Crate, VersionDownload};
 use crate::schema::*;
 use crate::views::EncodableVersionDownload;
 use chrono::{Duration, NaiveDate, Utc};
+use tracing::Instrument;
 
 /// Handles the `GET /crates/:crate_id/:version/download` route.
 /// This returns a URL to the location where the crate is stored.
@@ -22,8 +23,11 @@ pub async fn download(
 
     let cache_key = (crate_name.to_string(), version.to_string());
 
-    let cache_result =
-        info_span!("cache.read", ?cache_key).in_scope(|| app.version_id_cacher.get(&cache_key));
+    let cache_result = app
+        .version_id_cacher
+        .get(&cache_key)
+        .instrument(info_span!("cache.read", ?cache_key))
+        .await;
 
     let (crate_name, version) = if let Some(version_id) = cache_result {
         app.instance_metrics.version_id_cache_hits.inc();
@@ -37,6 +41,7 @@ pub async fn download(
         app.instance_metrics.version_id_cache_misses.inc();
 
         let app = app.clone();
+        let rt = tokio::runtime::Handle::current();
         conduit_compat(move || {
             // When no database connection is ready unconditional redirects will be performed. This could
             // happen if the pool is not healthy or if an operator manually configured the application to
@@ -89,9 +94,12 @@ pub async fn download(
                     // Non-canonical requests fallback to the "slow" path with a DB query, but
                     // we typically only get a few hundred non-canonical requests in a day anyway.
                     info_span!("cache.write", ?cache_key).in_scope(|| {
-                        app.version_id_cacher
-                            .blocking()
-                            .insert(cache_key, version_id)
+                        // SAFETY: This block_on should not panic. block_on will panic if the
+                        // current thread is an executor thread of a Tokio runtime. (Will panic
+                        // by "Cannot start a runtime from within a runtime"). Here, we are in
+                        // a spawn_blocking call because of conduit_compat, so our current thread
+                        // is not an executor of the runtime.
+                        rt.block_on(app.version_id_cacher.insert(cache_key, version_id))
                     });
 
                     Ok((crate_name, version))
