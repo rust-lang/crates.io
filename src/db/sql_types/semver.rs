@@ -4,7 +4,6 @@ use diesel::{
     pg::Pg,
     sql_types::{Numeric, Record},
 };
-use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use crate::schema::sql_types::SemverTriple;
@@ -46,29 +45,6 @@ impl FromSql<SemverTriple, Pg> for Triple {
                 value: teeny,
             })?,
         })
-    }
-}
-
-// `Triple` is used in `models::Version`, which requires it to implement `Serialize` and
-// `Deserialize`. Deriving those traits would result in this being serialised as a map, which feels
-// wasteful, since the field names are basically just noise. We'll serialise as a tuple instead.
-
-#[derive(Deserialize, Serialize)]
-struct SerializedTriple(u64, u64, u64);
-
-impl From<&Triple> for SerializedTriple {
-    fn from(value: &Triple) -> Self {
-        Self(value.major, value.minor, value.teeny)
-    }
-}
-
-impl From<SerializedTriple> for Triple {
-    fn from(value: SerializedTriple) -> Self {
-        Self {
-            major: value.0,
-            minor: value.1,
-            teeny: value.2,
-        }
     }
 }
 
