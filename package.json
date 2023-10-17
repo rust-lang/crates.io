@@ -156,7 +156,7 @@
   },
   "engines": {
     "node": "20.8.0",
-    "pnpm": "8.9.1"
+    "pnpm": "8.9.2"
   },
   "ember": {
     "edition": "octane"
