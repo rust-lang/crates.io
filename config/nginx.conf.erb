@@ -232,33 +232,8 @@ http {
 			rewrite ^ https://$host$request_uri? permanent;
 		}
 
-		<% if ENV['USE_FASTBOOT'] == "staging-experimental" %>
-			# Experimentally send all non-backend requests to FastBoot
-
-			location /api/ {
-				proxy_pass http://app_server;
-			}
-
-			# FastBoot
-			location / {
-				proxy_pass http://localhost:9000;
-			}
-		<% elsif ENV['USE_FASTBOOT'] && !ENV['USE_FASTBOOT'].empty? %>
-			# Fastboot is enabled only for allowed paths
-
-			location = /policies {
-				proxy_pass http://localhost:9000;
-			}
-
-			location / {
-				proxy_pass http://app_server;
-			}
-		<% else %>
-			# FastBoot is disabled, backend sends the static Ember index HTML for non-backend paths
-
-			location / {
-				proxy_pass http://app_server;
-			}
-		<% end %>
+        location / {
+            proxy_pass http://app_server;
+        }
 	}
 }

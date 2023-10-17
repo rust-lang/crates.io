@@ -23,10 +23,6 @@ module.exports = function (environment) {
       // when it is created
     },
 
-    fastboot: {
-      hostWhitelist: ['crates.io', /^localhost:\d+$/, /\.herokuapp\.com$/],
-    },
-
     'ember-cli-notifications': {
       autoClear: true,
       clearDuration: 10_000,
