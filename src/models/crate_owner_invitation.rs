@@ -108,7 +108,7 @@ impl CrateOwnerInvitation {
                     crate_id: self.crate_id,
                     owner_id: self.invited_user_id,
                     created_by: self.invited_by_user_id,
-                    owner_kind: OwnerKind::User as i32,
+                    owner_kind: OwnerKind::User,
                     email_notifications: true,
                 })
                 .on_conflict(crate_owners::table.primary_key())
