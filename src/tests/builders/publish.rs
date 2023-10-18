@@ -234,11 +234,6 @@ impl From<PublishBuilder> for Bytes {
 fn convert_dependency(
     encoded: &u::EncodableCrateDependency,
 ) -> (String, cargo_manifest::Dependency) {
-    if is_simple_dependency(encoded) {
-        let dependency = cargo_manifest::Dependency::Simple(encoded.version_req.to_string());
-        return (encoded.name.to_string(), dependency);
-    }
-
     let (name, package) = match encoded.explicit_name_in_toml.as_ref() {
         None => (encoded.name.to_string(), None),
         Some(explicit_name_in_toml) => (
@@ -263,17 +258,8 @@ fn convert_dependency(
         ..Default::default()
     };
 
-    let dependency = cargo_manifest::Dependency::Detailed(dependency);
+    let dependency = cargo_manifest::Dependency::Detailed(dependency).simplify();
     (name, dependency)
-}
-
-fn is_simple_dependency(dep: &u::EncodableCrateDependency) -> bool {
-    !dep.optional
-        && dep.default_features
-        && dep.features.is_empty()
-        && dep.target.is_none()
-        && dep.explicit_name_in_toml.is_none()
-        && dep.registry.is_none()
 }
 
 trait NoneOrFilled: Sized {
