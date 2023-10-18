@@ -6,7 +6,7 @@ use crate::{app::App, schema::teams};
 
 use crate::models::{Crate, Team, User};
 use crate::schema::{crate_owners, users};
-use crate::sql::lower;
+use crate::sql::{lower, pg_enum};
 
 #[derive(Insertable, Associations, Identifiable, Debug, Clone, Copy)]
 #[diesel(
@@ -21,7 +21,7 @@ pub struct CrateOwner {
     pub crate_id: i32,
     pub owner_id: i32,
     pub created_by: i32,
-    pub owner_kind: i32,
+    pub owner_kind: OwnerKind,
     pub email_notifications: bool,
 }
 
@@ -35,16 +35,16 @@ impl CrateOwner {
 
         crate_owners
             .filter(deleted.eq(false))
-            .filter(owner_kind.eq(kind as i32))
+            .filter(owner_kind.eq(kind))
             .into_boxed()
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-#[repr(u32)]
-pub enum OwnerKind {
-    User = 0,
-    Team = 1,
+pg_enum! {
+    pub enum OwnerKind {
+        User = 0,
+        Team = 1,
+    }
 }
 
 /// Unifies the notion of a User or a Team.

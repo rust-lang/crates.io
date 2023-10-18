@@ -129,7 +129,7 @@ impl<'a> NewCrate<'a> {
                 crate_id: krate.id,
                 owner_id: user_id,
                 created_by: user_id,
-                owner_kind: OwnerKind::User as i32,
+                owner_kind: OwnerKind::User,
                 email_notifications: true,
             };
 
@@ -326,7 +326,7 @@ impl Crate {
                         crate_id: self.id,
                         owner_id: owner.id(),
                         created_by: req_user.id,
-                        owner_kind: OwnerKind::Team as i32,
+                        owner_kind: OwnerKind::Team,
                         email_notifications: true,
                     })
                     .on_conflict(crate_owners::table.primary_key())

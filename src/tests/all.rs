@@ -9,7 +9,7 @@ extern crate serde_json;
 
 use crate::util::{RequestHelper, TestApp};
 use crates_io::{
-    models::{Crate, CrateOwner, NewCategory, NewTeam, NewUser, Team, User},
+    models::{Crate, CrateOwner, NewCategory, NewTeam, NewUser, OwnerKind, Team, User},
     schema::crate_owners,
     views::{
         EncodableCategory, EncodableCategoryWithSubcategories, EncodableCrate, EncodableKeyword,
@@ -139,7 +139,7 @@ fn add_team_to_crate(
         crate_id: krate.id,
         owner_id: t.id,
         created_by: u.id,
-        owner_kind: 1, // Team owner kind is 1 according to owner.rs
+        owner_kind: OwnerKind::Team,
         email_notifications: true,
     };
 

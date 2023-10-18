@@ -188,7 +188,7 @@ impl Team {
         let teams = base_query
             .inner_join(teams::table)
             .select(teams::all_columns)
-            .filter(crate_owners::owner_kind.eq(OwnerKind::Team as i32))
+            .filter(crate_owners::owner_kind.eq(OwnerKind::Team))
             .load(conn)?
             .into_iter()
             .map(Owner::Team);
