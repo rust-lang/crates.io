@@ -176,7 +176,7 @@ http {
 		server_name _;
 		keepalive_timeout 5;
 
-		location ~ ^/(assets|ember-fetch|moment)/ {
+		location ~ ^/assets/ {
 			add_header X-Content-Type-Options nosniff;
 			add_header Cache-Control public;
 			root dist;
