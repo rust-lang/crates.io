@@ -1,6 +1,7 @@
 pub mod app;
 mod balance_capacity;
 mod block_traffic;
+mod common_headers;
 mod debug;
 mod ember_html;
 pub mod log_request;
@@ -62,6 +63,10 @@ pub fn apply_axum_middleware(state: AppState, router: Router) -> Router {
         .layer(from_fn_with_state(
             state.clone(),
             block_traffic::block_routes,
+        ))
+        .layer(from_fn_with_state(
+            state.clone(),
+            common_headers::add_common_headers,
         ))
         .layer(conditional_layer(env == Env::Development, || {
             from_fn(static_or_continue::serve_local_uploads)
