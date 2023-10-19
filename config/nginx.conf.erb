@@ -176,27 +176,6 @@ http {
 		server_name _;
 		keepalive_timeout 5;
 
-		location ~ ^/assets/ {
-			add_header X-Content-Type-Options nosniff;
-			add_header Cache-Control public;
-			root dist;
-			expires max;
-		}
-
-		location ~ /(favicon\.ico|robots\.txt|opensearch\.xml) {
-			add_header X-Content-Type-Options nosniff;
-			add_header Cache-Control public;
-			root dist;
-			expires 1d;
-		}
-
-		location = /github-redirect.html {
-			add_header X-Content-Type-Options nosniff;
-			add_header Cache-Control public;
-			root dist;
-			expires 1d;
-		}
-
 		proxy_set_header Host $http_host;
 		proxy_set_header X-Real-Ip $remote_addr;
 		proxy_redirect off;

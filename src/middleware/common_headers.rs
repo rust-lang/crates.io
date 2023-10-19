@@ -1,10 +1,15 @@
 use crate::app::AppState;
+use axum::headers::{CacheControl, Expires, HeaderMapExt};
 use axum::middleware::Next;
 use axum::response::IntoResponse;
 use http::{header, HeaderMap, HeaderValue, Request};
+use std::time::{Duration, SystemTime};
 
 // see http://nginx.org/en/docs/http/ngx_http_headers_module.html#add_header
 const NGINX_SUCCESS_CODES: [u16; 10] = [200, 201, 204, 206, 301, 203, 303, 304, 307, 308];
+
+const ONE_DAY: Duration = Duration::from_secs(24 * 60 * 60);
+const ONE_YEAR: Duration = Duration::from_secs(365 * 24 * 60 * 60);
 
 #[instrument(skip_all)]
 pub async fn add_common_headers<B: Send + 'static>(
@@ -12,11 +17,28 @@ pub async fn add_common_headers<B: Send + 'static>(
     request: Request<B>,
     next: Next<B>,
 ) -> impl IntoResponse {
-    let response = next.run(request).await;
-
     let v = HeaderValue::from_static;
 
     let mut headers = HeaderMap::new();
+
+    let path = request.uri().path();
+
+    const STATIC_FILES: [&str; 4] = [
+        "/github-redirect.html",
+        "/favicon.ico",
+        "/robots.txt",
+        "/opensearch.xml",
+    ];
+    if STATIC_FILES.contains(&path) {
+        expires(&mut headers, ONE_DAY);
+    }
+
+    if path.starts_with("/assets/") {
+        expires(&mut headers, 10 * ONE_YEAR);
+    }
+
+    let response = next.run(request).await;
+
     headers.insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, v("*"));
     headers.insert(header::STRICT_TRANSPORT_SECURITY, v("max-age=31536000"));
 
@@ -31,4 +53,13 @@ pub async fn add_common_headers<B: Send + 'static>(
     }
 
     (headers, response)
+}
+
+fn expires(headers: &mut HeaderMap, cache_duration: Duration) {
+    headers.typed_insert(Expires::from(SystemTime::now() + cache_duration));
+    headers.typed_insert(
+        CacheControl::new()
+            .with_public()
+            .with_max_age(cache_duration),
+    );
 }
