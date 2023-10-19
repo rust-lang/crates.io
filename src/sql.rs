@@ -84,8 +84,8 @@ mod tests {
         test(&mut conn, "1.2.4", Some((1, 2, 4)));
         test(&mut conn, "1.2.4+metadata", Some((1, 2, 4)));
         test(&mut conn, "1.2.4-beta.3", None);
-        // TODO: see https://github.com/rust-lang/crates.io/issues/3882
-        test(&mut conn, "0.4.45+curl-7.78.0", None);
+        // see https://github.com/rust-lang/crates.io/issues/3882
+        test(&mut conn, "0.4.45+curl-7.78.0", Some((0, 4, 45)));
         test(&mut conn, "0.1.4-preview+4.3.2", None);
     }
 }
