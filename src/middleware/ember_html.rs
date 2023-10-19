@@ -13,6 +13,7 @@ use http::{header, Request, StatusCode};
 use tower::ServiceExt;
 use tower_http::services::ServeFile;
 
+#[instrument(skip_all)]
 pub async fn serve_html<B: Send + 'static>(request: Request<B>, next: Next<B>) -> Response {
     let path = &request.uri().path();
 
