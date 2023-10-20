@@ -18,8 +18,10 @@ use axum::middleware::{from_fn, from_fn_with_state};
 use axum::Router;
 use axum_extra::either::Either;
 use axum_extra::middleware::option_layer;
+use std::time::Duration;
 use tower::layer::util::Identity;
 use tower_http::catch_panic::CatchPanicLayer;
+use tower_http::timeout::TimeoutLayer;
 
 use crate::app::AppState;
 use crate::Env;
@@ -36,6 +38,7 @@ pub fn apply_axum_middleware(state: AppState, router: Router) -> Router {
     }
 
     let middleware = tower::ServiceBuilder::new()
+        .layer(TimeoutLayer::new(Duration::from_secs(30)))
         .layer(sentry_tower::NewSentryLayer::new_from_top())
         .layer(sentry_tower::SentryHttpLayer::with_transaction())
         .layer(from_fn(log_request::log_requests))
