@@ -3,6 +3,8 @@ use axum::response::IntoResponse;
 use axum::routing::{delete, get, post, put};
 use axum::Router;
 use http::{Method, StatusCode};
+use hyper::Body;
+use tower_http::timeout::TimeoutBody;
 
 use crate::app::AppState;
 use crate::controllers::*;
@@ -11,7 +13,7 @@ use crate::Env;
 
 const MAX_PUBLISH_CONTENT_LENGTH: usize = 128 * 1024 * 1024; // 128 MB
 
-pub fn build_axum_router(state: AppState) -> Router {
+pub fn build_axum_router(state: AppState) -> Router<(), TimeoutBody<Body>> {
     let mut router = Router::new()
         // Route used by both `cargo search` and the frontend
         .route("/api/v1/crates", get(krate::search::search))
