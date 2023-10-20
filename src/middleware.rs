@@ -24,8 +24,6 @@ use crate::app::AppState;
 use crate::Env;
 
 pub fn apply_axum_middleware(state: AppState, router: Router) -> Router {
-    type Request = http::Request<axum::body::Body>;
-
     let config = &state.config;
     let env = config.env();
 
@@ -37,7 +35,7 @@ pub fn apply_axum_middleware(state: AppState, router: Router) -> Router {
     }
 
     let middleware = tower::ServiceBuilder::new()
-        .layer(sentry_tower::NewSentryLayer::<Request>::new_from_top())
+        .layer(sentry_tower::NewSentryLayer::new_from_top())
         .layer(sentry_tower::SentryHttpLayer::with_transaction())
         .layer(from_fn(log_request::log_requests))
         .layer(CatchPanicLayer::new())
