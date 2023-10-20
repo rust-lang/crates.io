@@ -4,8 +4,7 @@ use axum::extract::FromRequest;
 use axum::response::{IntoResponse, Response};
 use axum::{async_trait, Extension, RequestExt};
 use http::{Request, StatusCode};
-use http_body::LengthLimitError;
-use hyper::Body;
+use http_body::{Body, LengthLimitError};
 use std::error::Error;
 use std::ops::{Deref, DerefMut};
 
@@ -27,13 +26,16 @@ impl DerefMut for BytesRequest {
 }
 
 #[async_trait]
-impl<S> FromRequest<S, Body> for BytesRequest
+impl<S, B> FromRequest<S, B> for BytesRequest
 where
     S: Send + Sync,
+    B: Body + Send + 'static,
+    B::Data: Send,
+    B::Error: Into<Box<dyn Error + Send + Sync>>,
 {
     type Rejection = Response;
 
-    async fn from_request(req: Request<Body>, _state: &S) -> Result<Self, Self::Rejection> {
+    async fn from_request(req: Request<B>, _state: &S) -> Result<Self, Self::Rejection> {
         let request = match req.with_limited_body() {
             Ok(req) => {
                 let (parts, body) = req.into_parts();
@@ -53,7 +55,7 @@ where
 
                 let bytes = hyper::body::to_bytes(body)
                     .await
-                    .map_err(|err| server_error_response(&err))?;
+                    .map_err(|err| server_error_response(&*err.into()))?;
 
                 Request::from_parts(parts, bytes)
             }
