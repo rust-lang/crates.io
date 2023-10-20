@@ -7,7 +7,6 @@ use http::Request;
 use prometheus::IntGauge;
 use std::time::Instant;
 
-#[instrument(skip_all)]
 pub async fn update_metrics<B>(
     state: AppState,
     matched_path: Option<MatchedPath>,

@@ -16,7 +16,6 @@ use axum::middleware::Next;
 use axum::response::IntoResponse;
 use http::StatusCode;
 
-#[instrument(skip_all)]
 pub async fn block_traffic<B>(
     state: AppState,
     req: http::Request<B>,
@@ -58,7 +57,6 @@ pub async fn block_traffic<B>(
 
 /// Allow blocking individual routes by their pattern through the `BLOCKED_ROUTES`
 /// environment variable.
-#[instrument(skip_all)]
 pub async fn block_routes<B>(
     matched_path: Option<MatchedPath>,
     state: AppState,

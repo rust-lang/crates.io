@@ -112,7 +112,6 @@ impl Display for Metadata<'_> {
     }
 }
 
-#[instrument(skip_all)]
 pub async fn log_requests<B>(
     request_metadata: RequestMetadata,
     mut req: Request<B>,

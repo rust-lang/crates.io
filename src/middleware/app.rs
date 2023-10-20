@@ -6,7 +6,6 @@ use crate::app::AppState;
 use crate::controllers::util::RequestPartsExt;
 
 /// `axum` middleware that injects the `AppState` instance into the `Request` extensions.
-#[instrument(skip_all)]
 pub async fn add_app_state_extension<B>(
     app_state: AppState,
     mut request: Request<B>,

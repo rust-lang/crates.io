@@ -8,12 +8,10 @@ use std::path::Path;
 use tower::ServiceExt;
 use tower_http::services::ServeDir;
 
-#[instrument(skip_all)]
 pub async fn serve_local_uploads<B>(request: Request<B>, next: Next<B>) -> Response {
     serve("local_uploads", request, next).await
 }
 
-#[instrument(skip_all)]
 pub async fn serve_dist<B>(request: Request<B>, next: Next<B>) -> Response {
     serve("dist", request, next).await
 }
