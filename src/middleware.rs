@@ -11,8 +11,6 @@ pub mod session;
 mod static_or_continue;
 mod update_metrics;
 
-use app::add_app_state_extension;
-
 use ::sentry::integrations::tower as sentry_tower;
 use axum::middleware::{from_fn, from_fn_with_state};
 use axum::Router;
@@ -21,6 +19,7 @@ use axum_extra::middleware::option_layer;
 use hyper::Body;
 use std::time::Duration;
 use tower::layer::util::Identity;
+use tower_http::add_extension::AddExtensionLayer;
 use tower_http::catch_panic::CatchPanicLayer;
 use tower_http::compression::{CompressionLayer, CompressionLevel};
 use tower_http::timeout::{RequestBodyTimeoutLayer, TimeoutBody, TimeoutLayer};
@@ -82,7 +81,7 @@ pub fn apply_axum_middleware(state: AppState, router: Router<(), TimeoutBody<Bod
         .layer(conditional_layer(config.serve_html, || {
             from_fn_with_state(state.clone(), ember_html::serve_html)
         }))
-        .layer(from_fn_with_state(state.clone(), add_app_state_extension))
+        .layer(AddExtensionLayer::new(state.clone()))
         // This is currently the final middleware to run. If a middleware layer requires a database
         // connection, it should be run after this middleware so that the potential pool usage can be
         // tracked here.
