@@ -50,7 +50,6 @@ impl Deref for SessionExtension {
     }
 }
 
-#[instrument(skip_all)]
 pub async fn attach_session<B>(
     jar: SignedCookieJar,
     mut req: Request<B>,

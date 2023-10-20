@@ -11,7 +11,6 @@ const NGINX_SUCCESS_CODES: [u16; 10] = [200, 201, 204, 206, 301, 203, 303, 304, 
 const ONE_DAY: Duration = Duration::from_secs(24 * 60 * 60);
 const ONE_YEAR: Duration = Duration::from_secs(365 * 24 * 60 * 60);
 
-#[instrument(skip_all)]
 pub async fn add_common_headers<B: Send + 'static>(
     state: AppState,
     request: Request<B>,

@@ -40,7 +40,6 @@ async fn handle_high_load<B>(
     }
 }
 
-#[instrument(skip_all)]
 pub async fn balance_capacity<B>(
     app_state: AppState,
     request: Request<B>,
