@@ -1,21 +1,3 @@
-<%
-def s3_host(env)
-	cdn = env['S3_CDN']
-	if cdn and !cdn.empty?
-		return cdn
-	end
-
-	region = env['S3_REGION']
-	bucket = env['S3_BUCKET']
-
-	if region and !region.empty?
-		region = "-#{region}"
-	end
-
-	return "#{bucket}.s3#{region}.amazonaws.com"
-end
-%>
-
 daemon off;
 #Heroku dynos have at least 4 cores.
 worker_processes <%= ENV['NGINX_WORKERS'] || 4 %>;
@@ -214,16 +196,6 @@ http {
 			root dist;
 			expires 1d;
 		}
-
-		add_header X-Content-Type-Options "nosniff";
-		add_header X-Frame-Options "SAMEORIGIN";
-		add_header X-XSS-Protection "0";
-
-		add_header Content-Security-Policy "default-src 'self'; connect-src 'self' *.ingest.sentry.io https://docs.rs https://play.rust-lang.org https://<%= s3_host(ENV) %>; script-src 'self' 'unsafe-eval' 'sha256-n1+BB7Ckjcal1Pr7QNBh/dKRTtBQsIytFodRiIosXdE='; style-src 'self' 'unsafe-inline' https://code.cdn.mozilla.net; font-src https://code.cdn.mozilla.net; img-src *; object-src 'none'";
-		add_header Access-Control-Allow-Origin "*" always;
-
-		add_header Strict-Transport-Security "max-age=31536000" always;
-		add_header Vary 'Accept, Accept-Encoding, Cookie';
 
 		proxy_set_header Host $http_host;
 		proxy_set_header X-Real-Ip $remote_addr;

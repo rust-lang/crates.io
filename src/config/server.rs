@@ -62,6 +62,8 @@ pub struct Server {
     /// Should the server serve the frontend `index.html` for all
     /// non-API requests?
     pub serve_html: bool,
+
+    pub content_security_policy: Option<HeaderValue>,
 }
 
 impl Default for Server {
@@ -161,9 +163,22 @@ impl Default for Server {
             );
         }
 
+        let storage = StorageConfig::from_environment();
+
+        let content_security_policy = format!(
+            "default-src 'self'; \
+            connect-src 'self' *.ingest.sentry.io https://docs.rs https://play.rust-lang.org {cdn_domain}; \
+            script-src 'self' 'unsafe-eval' 'sha256-n1+BB7Ckjcal1Pr7QNBh/dKRTtBQsIytFodRiIosXdE='; \
+            style-src 'self' 'unsafe-inline' https://code.cdn.mozilla.net; \
+            font-src https://code.cdn.mozilla.net; \
+            img-src *; \
+            object-src 'none'",
+            cdn_domain = storage.cdn_prefix.as_ref().map(|cdn_prefix| format!("https://{cdn_prefix}")).unwrap_or_default()
+        );
+
         Server {
             db: DatabasePools::full_from_environment(&base),
-            storage: StorageConfig::from_environment(),
+            storage,
             base,
             ip,
             port,
@@ -209,6 +224,7 @@ impl Default for Server {
             balance_capacity: BalanceCapacityConfig::from_environment(),
             serve_dist: true,
             serve_html: true,
+            content_security_policy: Some(content_security_policy.parse().unwrap()),
         }
     }
 }
