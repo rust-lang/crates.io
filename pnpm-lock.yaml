@@ -257,6 +257,9 @@ devDependencies:
   eslint-plugin-unicorn:
     specifier: 48.0.1
     version: 48.0.1(eslint@8.52.0)
+  globby:
+    specifier: ^13.2.2
+    version: 13.2.2
   http-proxy:
     specifier: 1.18.1
     version: 1.18.1
@@ -16850,7 +16853,6 @@ packages:
 
   /undici-types@5.25.3:
     resolution: {integrity: sha512-Ga1jfYwRn7+cP9v8auvEXN1rX3sWqlayd4HP7OKk4mZWylEmu3KzXDUGrQUN6Ol7qo1gPvB2e5gX6udnyEPgdA==}
-    requiresBuild: true
 
   /unicode-canonical-property-names-ecmascript@2.0.0:
     resolution: {integrity: sha512-yY5PpDlfVIU5+y/BSCxAJRBIS1Zc2dDG3Ujq+sR0U+JjUevW2JhocOF+soROYDSaAezOzOKuyyixhD6mBknSmQ==}

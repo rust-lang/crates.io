@@ -23,7 +23,8 @@ async fn serve<P: AsRef<Path>, B>(path: P, request: Request<B>, next: Next<B>) -
         *static_req.uri_mut() = request.uri().clone();
         *static_req.headers_mut() = request.headers().clone();
 
-        if let Ok(response) = ServeDir::new(path).oneshot(static_req).await {
+        let serve_dir = ServeDir::new(path).precompressed_br().precompressed_gzip();
+        if let Ok(response) = serve_dir.oneshot(static_req).await {
             if response.status() != StatusCode::NOT_FOUND {
                 return response.map(axum::body::boxed);
             }
