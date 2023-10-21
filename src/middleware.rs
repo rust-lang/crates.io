@@ -22,6 +22,7 @@ use hyper::Body;
 use std::time::Duration;
 use tower::layer::util::Identity;
 use tower_http::catch_panic::CatchPanicLayer;
+use tower_http::compression::{CompressionLayer, CompressionLevel};
 use tower_http::timeout::{RequestBodyTimeoutLayer, TimeoutBody, TimeoutLayer};
 
 use crate::app::AppState;
@@ -39,6 +40,7 @@ pub fn apply_axum_middleware(state: AppState, router: Router<(), TimeoutBody<Bod
     }
 
     let middleware = tower::ServiceBuilder::new()
+        .layer(CompressionLayer::new().quality(CompressionLevel::Fastest))
         .layer(RequestBodyTimeoutLayer::new(Duration::from_secs(30)))
         .layer(TimeoutLayer::new(Duration::from_secs(30)))
         .layer(sentry_tower::NewSentryLayer::new_from_top())

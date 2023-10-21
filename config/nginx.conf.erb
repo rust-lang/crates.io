@@ -158,17 +158,6 @@ http {
 	set_real_ip_from 223.71.71.96/27;
 	set_real_ip_from 223.71.71.128/25;
 
-    # Enable gzip compression of responses
-	gzip on;
-	# Set the gzip compression level to 2 (range: 1-9, nginx default: 1)
-	gzip_comp_level 2;
-	# Enable gzip compression for all proxied requests
-	gzip_proxied any;
-	# Set the minimum length of a response that will be gzipped. The length is determined only from the “Content-Length” response header field.
-	gzip_min_length 512;
-	# Enable gzip for responses with the specified MIME types in addition to “text/html”. Responses with the “text/html” type are always compressed.
-	gzip_types text/plain text/css application/json application/javascript application/x-javascript text/javascript text/xml application/xml application/rss+xml application/atom+xml application/rdf+xml image/svg+xml;
-
     # Disable emitting nginx version on error pages and in the “Server” response header field
 	server_tokens off;
 
