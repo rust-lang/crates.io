@@ -130,7 +130,7 @@ libraries that crates.io uses change. Usually you'll know they've changed
 because you'll run the next step and it will fail saying it can't find some
 libraries.
 
-To build and serve the frontend assets, use the command `yarn start`. There
+To build and serve the frontend assets, use the command `pnpm start`. There
 are variations on this command that change which backend your frontend tries to
 talk to:
 
