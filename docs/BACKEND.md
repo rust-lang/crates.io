@@ -2,7 +2,7 @@
 
 ## Server
 
-The code to actually run the server is in *src/bin/server.rs*. This is where most of the pieces of
+The code to actually run the server is in _src/bin/server.rs_. This is where most of the pieces of
 the system are instantiated and configured, and can be thought of as the "entry point" to crates.io.
 
 The server does the following things:
@@ -11,7 +11,7 @@ The server does the following things:
 2. Check out the index git repository, if it isn't already checked out
 3. Reads values from environment variables to configure a new instance of `crates_io::App`
 4. Adds middleware to the app by calling `crates_io::middleware`
-5. Syncs the categories defined in *src/categories.toml* with the categories in the database
+5. Syncs the categories defined in _src/categories.toml_ with the categories in the database
 6. Starts a [hyper] server that uses the `crates_io::App` instance
 7. Tells Nginx on Heroku that the application is ready to receive requests, if running on Heroku
 8. Blocks forever (or until the process is killed)
@@ -21,7 +21,7 @@ The server does the following things:
 ## Routes
 
 The API URLs that the server responds to (aka "routes") are defined in
-*src/router.rs*.
+_src/router.rs_.
 
 All of the `api_router` routes are mounted under the `/api/v1` path (see the
 lines that look like `router.get("/api/v1/*path", R(api_router.clone()));`).
@@ -43,7 +43,7 @@ succeed. The `C` struct's purpose is to reduce some boilerplate.
 
 ## Code having to do with running a web application
 
-These modules could *maybe* be refactored into another crate. Maybe not. But their primary purpose
+These modules could _maybe_ be refactored into another crate. Maybe not. But their primary purpose
 is supporting the running of crates.io's web application parts, and they don't have much to do with
 the crate registry purpose of the application.
 
@@ -142,16 +142,16 @@ In addition to setting `RECORD`, you will also need to set a number of other
 environment variables to handle any requests to S3. These are in `.env.sample`,
 but are also reproduced here for convenience:
 
-* `TEST_S3_BUCKET`: the S3 bucket used for package uploads.
-* `TEST_S3_REGION`: the S3 region used to package uploads. This may also be an
+- `TEST_S3_BUCKET`: the S3 bucket used for package uploads.
+- `TEST_S3_REGION`: the S3 region used to package uploads. This may also be an
   absolute URL (such as `http://127.0.0.1:19000`), in which that will be used as
   the endpoint. If this is an S3 region name, then it must be one that supports
   what [AWS documents as `s3-Region` host names][s3-region].
-* `TEST_S3_INDEX_BUCKET`: the S3 bucket used for sparse index uploads.
-* `TEST_S3_INDEX_REGION`: the S3 region used for sparse index uploads. This has
+- `TEST_S3_INDEX_BUCKET`: the S3 bucket used for sparse index uploads.
+- `TEST_S3_INDEX_REGION`: the S3 region used for sparse index uploads. This has
   the same semantics as `TEST_S3_REGION`.
-* `TEST_AWS_ACCESS_KEY`: the AWS access key used with S3.
-* `TEST_AWS_SECRET_KEY`: the AWS secret key used with S3.
+- `TEST_AWS_ACCESS_KEY`: the AWS access key used with S3.
+- `TEST_AWS_SECRET_KEY`: the AWS secret key used with S3.
 
 Note that, if the bucket and region environment variables are set, they _must_
 match the values used when `src/tests/http-data` was regenerated for existing

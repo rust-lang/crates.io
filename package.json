@@ -21,7 +21,7 @@
     "lint:deps": "ember dependency-lint",
     "lint:hbs": "ember-template-lint app",
     "lint:js": "eslint . --cache",
-    "prettier": "prettier --write package.json '**/*.js'",
+    "prettier": "prettier --write package.json '**/*.js' '**/*.md'",
     "start": "ember serve",
     "start:live": "PROXY_BACKEND=https://crates.io ember serve",
     "start:local": "PROXY_BACKEND=http://127.0.0.1:8888 ember serve",
