@@ -134,13 +134,13 @@ To build and serve the frontend assets, use the command `pnpm start`. There
 are variations on this command that change which backend your frontend tries to
 talk to:
 
-| Command                                      | Backend | Use case |
-|----------------------------------------------|---------|----------|
-| `pnpm start:live`                            | https://crates.io | Testing UI changes with the full live site's data |
-| `pnpm start:staging`                         | https://staging-crates-io.herokuapp.com | Testing UI changes with a smaller set of realistic data |
-| `pnpm start`                                 | Static fixture test data in `mirage/fixtures` | Setting up particular situations, see note |
-| `pnpm start:local`                           | Backend server running locally | See the Working on the backend section for setup |
-| `PROXY_BACKEND=https://crates.io pnpm start` | Whatever is specified in the `PROXY_BACKEND` environment variable | If your use case is not covered here |
+| Command                                      | Backend                                                           | Use case                                                |
+| -------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------- |
+| `pnpm start:live`                            | https://crates.io                                                 | Testing UI changes with the full live site's data       |
+| `pnpm start:staging`                         | https://staging-crates-io.herokuapp.com                           | Testing UI changes with a smaller set of realistic data |
+| `pnpm start`                                 | Static fixture test data in `mirage/fixtures`                     | Setting up particular situations, see note              |
+| `pnpm start:local`                           | Backend server running locally                                    | See the Working on the backend section for setup        |
+| `PROXY_BACKEND=https://crates.io pnpm start` | Whatever is specified in the `PROXY_BACKEND` environment variable | If your use case is not covered here                    |
 
 > Note: If you want to set up a particular situation, you can edit the fixture
 > data used for tests in `mirage/fixtures`. The fixture data does not currently
@@ -192,7 +192,7 @@ methods we'd recommend for each operating system:
   - Fedora: `sudo dnf install postgresql-server postgresql-contrib postgresql-devel pkgconfig`
 
   > If you're missing a package, when you try to `cargo install` or `cargo
-  > build` later, you'll get an error that looks like this:
+build` later, you'll get an error that looks like this:
   >
   >     ```
   >     error: linking with `cc` failed: exit code: 1
@@ -213,6 +213,7 @@ by typing `\q`) without any errors to connect to your running Postgres server.
 > Is the server running locally and accepting
 > connections on Unix domain socket "/var/run/postgresql/.s.PGSQL.5432"?
 > ```
+>
 > You may need to start the postgreql server on your system. On a Linux system,
 > you can start it with this command:
 >
@@ -222,7 +223,7 @@ by typing `\q`) without any errors to connect to your running Postgres server.
 
 > Depending on your system, its permissions, and how Postgres was installed, you
 > may need to use the `postgres` user for some operations (by using `sudo su -
-> postgres`). Generally, the problem is that by default the postgres server is
+postgres`). Generally, the problem is that by default the postgres server is
 > only set up to allow connections by the `postrges` user. You'll know if you're
 > in this situation because if you try to run `psql` as yourself, you'll get
 > this error:
@@ -292,7 +293,7 @@ This will install a binary named `diesel`, so you should be able to run `diesel
 --version` to confirm successful installation.
 
 > If you're on Linux and this fails with an error that looks like `error:
-> linking with `cc` failed: exit code: 1`, you're probably missing some
+linking with `cc` failed: exit code: 1`, you're probably missing some
 > Postgres related libraries. See the Postgres section above on how to fix this.
 
 #### Building and serving the backend
@@ -320,7 +321,6 @@ Try using `postgres://postgres@localhost/cargo_registry` first.
 > - Replace `[database_name]` with the name of the database you'd like to use.
 >   We're going to create a database named `cargo_registry` in the next
 >   section; change this if you'd like to name it something else.
-
 
 > If you receive an error that looks like:
 >
@@ -405,6 +405,7 @@ link below to verify your email address. Thank you!
 
 https://crates.io/confirm/RiphVyFo31wuKQhpyTw7RF2LIf
 ```
+
 When verifying the email, you need to change the prefix to your frontend host.
 For example, change the above link to `http://localhost:4200/confirm/RiphVyFo31wuKQhpyTw7RF2LIf`.
 
@@ -504,13 +505,13 @@ that `./script/init-local-index.sh` set up.
 Note that when you're running crates.io in development mode without the S3
 variables set (which is what we've done in these setup steps), the crate files
 will be stored in `local_uploads/crates` and served from there when a
-crate is downloaded.  If you try to install a crate from your local crates.io and
+crate is downloaded. If you try to install a crate from your local crates.io and
 `cargo` can't find the crate files, it is probably because this directory does not
 exist.
 
 ##### Downloading a crate from your local crates.io
 
-In *another* crate, you can use the crate you've published as a dependency by
+In _another_ crate, you can use the crate you've published as a dependency by
 telling `cargo` to replace crates.io with your local crates.io as a source.
 
 In this other crate's directory, create a `.cargo/config` file with this
@@ -555,7 +556,7 @@ For example, in order to specify a set of Github OAuth Client credentials, a
 `docker-compose.override.yml` file might look like this:
 
 ```yaml
-version: "3"
+version: '3'
 services:
   backend:
     environment:
@@ -570,9 +571,9 @@ for various configuration options.
 
 By default, the services will be exposed on their normal ports:
 
-* `5432` for Postgres
-* `8888` for the crates.io backend
-* `4200` for the crates.io frontend
+- `5432` for Postgres
+- `8888` for the crates.io backend
+- `4200` for the crates.io frontend
 
 These can be changed with the `docker-compose.override.yml` file.
 
