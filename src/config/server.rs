@@ -165,10 +165,12 @@ impl Default for Server {
 
         let storage = StorageConfig::from_environment();
 
+        // `sha256-dbf9FMl76C7BnK1CC3eWb3pvsQAUaTYSHAlBy9tNTG0=` refers to
+        // the `script` in `public/github-redirect.html`
         let content_security_policy = format!(
             "default-src 'self'; \
             connect-src 'self' *.ingest.sentry.io https://docs.rs https://play.rust-lang.org {cdn_domain}; \
-            script-src 'self' 'unsafe-eval' 'sha256-n1+BB7Ckjcal1Pr7QNBh/dKRTtBQsIytFodRiIosXdE='; \
+            script-src 'self' 'unsafe-eval' 'sha256-n1+BB7Ckjcal1Pr7QNBh/dKRTtBQsIytFodRiIosXdE=' 'sha256-dbf9FMl76C7BnK1CC3eWb3pvsQAUaTYSHAlBy9tNTG0='; \
             style-src 'self' 'unsafe-inline' https://code.cdn.mozilla.net; \
             font-src https://code.cdn.mozilla.net; \
             img-src *; \
