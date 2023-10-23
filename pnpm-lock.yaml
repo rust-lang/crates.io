@@ -258,7 +258,7 @@ devDependencies:
     specifier: 48.0.1
     version: 48.0.1(eslint@8.52.0)
   globby:
-    specifier: ^13.2.2
+    specifier: 13.2.2
     version: 13.2.2
   http-proxy:
     specifier: 1.18.1
