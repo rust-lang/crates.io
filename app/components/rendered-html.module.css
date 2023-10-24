@@ -15,14 +15,20 @@
     }
 
     pre {
-        code {
-            display: block;
-            overflow-x: auto;
-            padding: var(--space-s);
-            background-color: #f6f8fa;
-            font-size: 85%;
-            border-radius: var(--space-3xs);
-        }
+        display: block;
+        overflow-x: auto;
+        padding: var(--space-xs);
+        background-color: #f6f8fa;
+        font-size: 85%;
+        border-radius: var(--space-3xs);
+    }
+
+    :global(.hljs) {
+        color: unset;
+        background: unset;
+        display: unset;
+        overflow-x: unset;
+        padding: 0;
     }
 
     p, li {
