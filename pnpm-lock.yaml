@@ -75,8 +75,8 @@ devDependencies:
     specifier: 3.2.0
     version: 3.2.0(ember-source@5.3.0)(webpack@5.89.0)
   '@ember/test-waiters':
-    specifier: 3.0.2
-    version: 3.0.2
+    specifier: 3.1.0
+    version: 3.1.0
   '@embroider/compat':
     specifier: 3.2.3
     version: 3.2.3(@embroider/core@3.3.0)
@@ -2345,7 +2345,7 @@ packages:
     engines: {node: 16.* || >= 18}
     dependencies:
       '@ember-data/private-build-infra': 4.12.4
-      '@ember/test-waiters': 3.0.2
+      '@ember/test-waiters': 3.1.0
       '@embroider/macros': 1.13.2
       ember-cli-babel: 7.26.11
     transitivePeerDependencies:
@@ -2478,7 +2478,7 @@ packages:
     peerDependencies:
       ember-source: ^4.0.0 || ^5.0.0
     dependencies:
-      '@ember/test-waiters': 3.0.2
+      '@ember/test-waiters': 3.1.0
       '@embroider/macros': 1.13.2
       '@simple-dom/interface': 1.4.0
       broccoli-debug: 0.6.5
@@ -2493,8 +2493,8 @@ packages:
       - webpack
     dev: true
 
-  /@ember/test-waiters@3.0.2:
-    resolution: {integrity: sha512-H8Q3Xy9rlqhDKnQpwt2pzAYDouww4TZIGSI1pZJhM7mQIGufQKuB0ijzn/yugA6Z+bNdjYp1HioP8Y4hn2zazQ==}
+  /@ember/test-waiters@3.1.0:
+    resolution: {integrity: sha512-bb9h95ktG2wKY9+ja1sdsFBdOms2lB19VWs8wmNpzgHv1NCetonBoV5jHBV4DHt0uS1tg9z66cZqhUVlYs96KQ==}
     engines: {node: 10.* || 12.* || >= 14.*}
     dependencies:
       calculate-cache-key-for-tree: 2.0.0
@@ -8119,7 +8119,7 @@ packages:
         optional: true
     dependencies:
       '@ember/test-helpers': 3.2.0(ember-source@5.3.0)(webpack@5.89.0)
-      '@ember/test-waiters': 3.0.2
+      '@ember/test-waiters': 3.1.0
       '@scalvert/ember-setup-middleware-reporter': 0.1.1
       axe-core: 4.8.2
       body-parser: 1.20.2
@@ -8143,7 +8143,7 @@ packages:
     resolution: {integrity: sha512-7140A/4OJuYBlncfxmreZHX5S7FxO/4KX5NswowIrvGZpaLuoeULjBHgiKBWC1OUzsdHST4jwaDufniHEROajg==}
     engines: {node: 12.* || 14.* || >= 16}
     dependencies:
-      '@ember/test-waiters': 3.0.2
+      '@ember/test-waiters': 3.1.0
       '@types/ember': 3.16.11
       '@types/rsvp': 4.0.6
       ember-cli-babel: 7.26.11
