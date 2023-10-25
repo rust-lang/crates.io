@@ -1,10 +1,21 @@
-use http::HeaderValue;
+use http::{HeaderMap, HeaderValue};
 use std::net::IpAddr;
 use std::str::from_utf8;
 
+const X_FORWARDED_FOR: &str = "X-Forwarded-For";
+
+#[allow(dead_code)]
+pub fn process_xff_headers(headers: &HeaderMap) -> Option<IpAddr> {
+    headers
+        .get_all(X_FORWARDED_FOR)
+        .iter()
+        .flat_map(parse_xff_header)
+        .filter_map(|r| r.ok())
+        .next_back()
+}
+
 /// Parses the content of an `X-Forwarded-For` header into a
 /// `Vec<Result<IpAddr, &[u8]>>`.
-#[allow(dead_code)]
 fn parse_xff_header(header: &HeaderValue) -> Vec<Result<IpAddr, &[u8]>> {
     let bytes = header.as_bytes();
     if bytes.is_empty() {
@@ -29,6 +40,33 @@ fn parse_ip_addr(bytes: &[u8]) -> Result<IpAddr, &[u8]> {
 mod tests {
     use super::*;
     use http::HeaderValue;
+
+    #[test]
+    fn test_process_xff_headers() {
+        #[track_caller]
+        fn test(input: Vec<&[u8]>, expectation: Option<&str>) {
+            let mut headers = HeaderMap::new();
+            for value in input {
+                let value = HeaderValue::from_bytes(value).unwrap();
+                headers.append(X_FORWARDED_FOR, value);
+            }
+
+            let expectation: Option<IpAddr> = expectation.map(|ip| ip.parse().unwrap());
+
+            assert_eq!(process_xff_headers(&headers), expectation)
+        }
+
+        // Generic behavior
+        test(vec![], None);
+        test(vec![b""], None);
+        test(vec![b"1.1.1.1"], Some("1.1.1.1"));
+        test(vec![b"1.1.1.1, 2.2.2.2"], Some("2.2.2.2"));
+        test(vec![b"1.1.1.1, 2.2.2.2, 3.3.3.3"], Some("3.3.3.3"));
+        test(
+            vec![b"oh, hi,,127.0.0.1,,,,, 12.34.56.78  "],
+            Some("12.34.56.78"),
+        );
+    }
 
     #[test]
     fn test_parse_xff_header() {
