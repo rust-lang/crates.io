@@ -156,7 +156,6 @@ fn is_cloud_front_ip(ip: &IpAddr) -> bool {
         .any(|trusted_proxy| trusted_proxy.contains(*ip))
 }
 
-#[allow(dead_code)]
 pub fn process_xff_headers(headers: &HeaderMap) -> Option<IpAddr> {
     let mut xff_iter = headers.get_all(X_FORWARDED_FOR).iter();
     let first_header = xff_iter.next()?;
