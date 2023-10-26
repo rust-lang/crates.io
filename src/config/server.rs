@@ -104,12 +104,16 @@ impl Default for Server {
     ///
     /// This function panics if the Server configuration is invalid.
     fn default() -> Self {
-        let ip = match dotenvy::var("DEV_DOCKER") {
-            Ok(_) => [0, 0, 0, 0].into(),
-            _ => [127, 0, 0, 1].into(),
-        };
+        let docker = dotenvy::var("DEV_DOCKER").is_ok();
 
-        let use_nginx_wrapper = dotenvy::var("HEROKU").is_ok();
+        let heroku = dotenvy::var("HEROKU").is_ok();
+        let use_nginx_wrapper = heroku && dotenvy::var("USE_NGINX").unwrap_or_default() != "n";
+
+        let ip = if (heroku && !use_nginx_wrapper) || docker {
+            [0, 0, 0, 0].into()
+        } else {
+            [127, 0, 0, 1].into()
+        };
 
         let port = match (use_nginx_wrapper, env_optional("PORT")) {
             (false, Some(port)) => port,
