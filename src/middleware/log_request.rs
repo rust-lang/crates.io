@@ -2,7 +2,7 @@
 //! information that we care about like User-Agent
 
 use crate::controllers::util::RequestPartsExt;
-use crate::headers::{XRealIp, XRequestId};
+use crate::headers::XRequestId;
 use crate::middleware::normalize_path::OriginalPath;
 use crate::real_ip::process_xff_headers;
 use axum::headers::UserAgent;
@@ -32,7 +32,6 @@ pub struct RequestMetadata {
     original_path: Option<Extension<OriginalPath>>,
     user_agent: TypedHeader<UserAgent>,
     request_id: Option<TypedHeader<XRequestId>>,
-    real_ip: Option<TypedHeader<XRealIp>>,
 }
 
 pub struct Metadata<'a> {
@@ -76,17 +75,6 @@ impl Display for Metadata<'_> {
 
         let real_ip = self.real_ip.map(|ip| ip.to_string()).unwrap_or_default();
         line.add_quoted_field("ip", &real_ip)?;
-
-        let x_real_ip = self.request.real_ip.as_ref();
-        let x_real_ip = x_real_ip
-            .map(|ip| ip.as_str().to_string())
-            .unwrap_or_default();
-        line.add_quoted_field("fwd", &x_real_ip)?;
-
-        // TODO: Remove this once production traffic has shown that `ip == fwd`
-        if real_ip != x_real_ip {
-            line.add_marker("ip!=fwd")?;
-        }
 
         let response_time_in_ms = self.duration.as_millis();
         if !is_download_redirect || response_time_in_ms > 0 {
