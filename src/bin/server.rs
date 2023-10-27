@@ -5,7 +5,7 @@ extern crate tracing;
 
 use crates_io::middleware::normalize_path::normalize_path;
 use crates_io::{metrics::LogEncoder, util::errors::AppResult, App};
-use std::{fs::File, process::Command, sync::Arc, time::Duration};
+use std::{sync::Arc, time::Duration};
 
 use axum::ServiceExt;
 use futures_util::future::FutureExt;
@@ -79,21 +79,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Do not change this line! Removing the line or changing its contents in any way will break
     // the test suite :)
     info!("Listening at http://{addr}");
-
-    // Creating this file tells heroku to tell nginx that the application is ready
-    // to receive traffic.
-    if app.config.use_nginx_wrapper {
-        let path = "/tmp/app-initialized";
-        info!("Writing to {path}");
-        File::create(path).unwrap();
-
-        // Launch nginx via the Heroku nginx buildpack
-        // `wait()` is never called on the child process, but it should be okay to leave a zombie
-        // process around on shutdown when Heroku is tearing down the entire container anyway.
-        Command::new("./script/start-web.sh")
-            .spawn()
-            .expect("Couldn't spawn nginx");
-    }
 
     // Block the main thread until the server has shutdown
     rt.block_on(server)?;

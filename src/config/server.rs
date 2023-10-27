@@ -26,7 +26,6 @@ pub struct Server {
     pub ip: IpAddr,
     pub port: u16,
     pub max_blocking_threads: Option<usize>,
-    pub use_nginx_wrapper: bool,
     pub db: DatabasePools,
     pub storage: StorageConfig,
     pub session_key: cookie::Key,
@@ -105,20 +104,15 @@ impl Default for Server {
     /// This function panics if the Server configuration is invalid.
     fn default() -> Self {
         let docker = dotenvy::var("DEV_DOCKER").is_ok();
-
         let heroku = dotenvy::var("HEROKU").is_ok();
-        let use_nginx_wrapper = heroku && dotenvy::var("USE_NGINX").unwrap_or_default() != "n";
 
-        let ip = if (heroku && !use_nginx_wrapper) || docker {
+        let ip = if heroku || docker {
             [0, 0, 0, 0].into()
         } else {
             [127, 0, 0, 1].into()
         };
 
-        let port = match (use_nginx_wrapper, env_optional("PORT")) {
-            (false, Some(port)) => port,
-            _ => 8888,
-        };
+        let port = env_optional("PORT").unwrap_or(8888);
 
         let allowed_origins = AllowedOrigins::from_default_env();
         let page_offset_ua_blocklist = match env_optional::<String>("WEB_PAGE_OFFSET_UA_BLOCKLIST")
@@ -189,7 +183,6 @@ impl Default for Server {
             ip,
             port,
             max_blocking_threads,
-            use_nginx_wrapper,
             session_key: cookie::Key::derive_from(env("SESSION_KEY").as_bytes()),
             gh_client_id: ClientId::new(env("GH_CLIENT_ID")),
             gh_client_secret: ClientSecret::new(env("GH_CLIENT_SECRET")),
