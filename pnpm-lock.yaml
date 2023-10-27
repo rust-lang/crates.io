@@ -19,8 +19,8 @@ dependencies:
     specifier: 7.76.0
     version: 7.76.0
   '@sentry/utils':
-    specifier: 7.75.1
-    version: 7.75.1
+    specifier: 7.76.0
+    version: 7.76.0
   chart.js:
     specifier: 4.4.0
     version: 4.4.0
@@ -3614,21 +3614,9 @@ packages:
       '@sentry/utils': 7.76.0
     dev: false
 
-  /@sentry/types@7.75.1:
-    resolution: {integrity: sha512-km+ygqgMDaFfTrbQwdhrptFqx0Oq15jZABqIoIpbaOCkCAMm+tyCqrFS8dTfaq5wpCktqWOy2qU/DOpppO99Cg==}
-    engines: {node: '>=8'}
-    dev: false
-
   /@sentry/types@7.76.0:
     resolution: {integrity: sha512-vj6z+EAbVrKAXmJPxSv/clpwS9QjPqzkraMFk2hIdE/kii8s8kwnkBwTSpIrNc8GnzV3qYC4r3qD+BXDxAGPaw==}
     engines: {node: '>=8'}
-    dev: false
-
-  /@sentry/utils@7.75.1:
-    resolution: {integrity: sha512-QzW2eRjY20epD//9/tQ0FTNwdAL6XZi+LyJNUQIeK3NMnc5NgHrgpxId87gmFq8cNx47utH1Blub8RuMbKqiwQ==}
-    engines: {node: '>=8'}
-    dependencies:
-      '@sentry/types': 7.75.1
     dev: false
 
   /@sentry/utils@7.76.0:
