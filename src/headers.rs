@@ -35,38 +35,3 @@ impl Header for XRequestId {
         values.extend(std::iter::once(value));
     }
 }
-
-static X_REAL_IP: HeaderName = HeaderName::from_static("x-real-ip");
-
-pub struct XRealIp(String);
-
-impl XRealIp {
-    pub fn as_str(&self) -> &str {
-        self.0.as_str()
-    }
-}
-
-impl Header for XRealIp {
-    fn name() -> &'static HeaderName {
-        &X_REAL_IP
-    }
-
-    fn decode<'i, I>(values: &mut I) -> Result<Self, Error>
-    where
-        I: Iterator<Item = &'i HeaderValue>,
-    {
-        values
-            .next()
-            .and_then(|value| value.to_str().ok())
-            .map(|value| Self(value.to_string()))
-            .ok_or_else(Error::invalid)
-    }
-
-    fn encode<E>(&self, values: &mut E)
-    where
-        E: Extend<HeaderValue>,
-    {
-        let value = HeaderValue::from_str(&self.0).unwrap();
-        values.extend(std::iter::once(value));
-    }
-}
