@@ -1,4 +1,3 @@
 https://github.com/DataDog/heroku-buildpack-datadog.git#8d0b795
-https://github.com/unfold/heroku-buildpack-pnpm#b8dcee8
 https://github.com/heroku/heroku-buildpack-nginx#37a84b640e419fac6e58b77433d87194f7496c03
-https://github.com/Turbo87/heroku-buildpack-rust#30429b2
+https://github.com/Turbo87/heroku-buildpack-crates-io#7bc6b2637282e11206b42e9e5feddec058d527a2
