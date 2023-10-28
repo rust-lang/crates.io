@@ -55,7 +55,7 @@ impl ChaosProxy {
         let backend_addr = db_url
             .socket_addrs(|| Some(5432))
             .context("could not resolve database url")?
-            .get(0)
+            .first()
             .copied()
             .ok_or_else(|| anyhow::anyhow!("the database url does not point to any IP"))?;
 

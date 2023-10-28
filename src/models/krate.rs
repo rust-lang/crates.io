@@ -459,6 +459,32 @@ impl Crate {
     }
 }
 
+pub trait CrateVersions {
+    fn versions(&self) -> versions::BoxedQuery<'_, Pg> {
+        self.all_versions().filter(versions::yanked.eq(false))
+    }
+
+    fn all_versions(&self) -> versions::BoxedQuery<'_, Pg>;
+}
+
+impl CrateVersions for Crate {
+    fn all_versions(&self) -> versions::BoxedQuery<'_, Pg> {
+        Version::belonging_to(self).into_boxed()
+    }
+}
+
+impl CrateVersions for Vec<Crate> {
+    fn all_versions(&self) -> versions::BoxedQuery<'_, Pg> {
+        self.as_slice().all_versions()
+    }
+}
+
+impl CrateVersions for [Crate] {
+    fn all_versions(&self) -> versions::BoxedQuery<'_, Pg> {
+        Version::belonging_to(self).into_boxed()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::models::Crate;
@@ -507,31 +533,5 @@ mod tests {
         assert!(!Crate::valid_feature("dep:foo?/bar"));
         assert!(!Crate::valid_feature("foo/?bar"));
         assert!(!Crate::valid_feature("foo?bar"));
-    }
-}
-
-pub trait CrateVersions {
-    fn versions(&self) -> versions::BoxedQuery<'_, Pg> {
-        self.all_versions().filter(versions::yanked.eq(false))
-    }
-
-    fn all_versions(&self) -> versions::BoxedQuery<'_, Pg>;
-}
-
-impl CrateVersions for Crate {
-    fn all_versions(&self) -> versions::BoxedQuery<'_, Pg> {
-        Version::belonging_to(self).into_boxed()
-    }
-}
-
-impl CrateVersions for Vec<Crate> {
-    fn all_versions(&self) -> versions::BoxedQuery<'_, Pg> {
-        self.as_slice().all_versions()
-    }
-}
-
-impl CrateVersions for [Crate] {
-    fn all_versions(&self) -> versions::BoxedQuery<'_, Pg> {
-        Version::belonging_to(self).into_boxed()
     }
 }

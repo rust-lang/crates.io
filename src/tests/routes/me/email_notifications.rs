@@ -30,7 +30,7 @@ fn test_update_email_notifications() {
         ]
     });
 
-    let a_id = my_crates.get(0).unwrap().id;
+    let a_id = my_crates.first().unwrap().id;
     let b_id = my_crates.get(1).unwrap().id;
 
     // Update crate_a: email_notifications = false

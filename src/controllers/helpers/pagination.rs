@@ -156,7 +156,7 @@ pub struct Paginated<T> {
 impl<T> Paginated<T> {
     pub(crate) fn total(&self) -> i64 {
         self.records_and_total
-            .get(0)
+            .first()
             .map(|row| row.total)
             .unwrap_or_default() // If there is no first row, then the total is zero.
     }
