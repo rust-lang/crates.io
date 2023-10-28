@@ -29,7 +29,7 @@ macro_rules! pg_enum {
         }
 
         impl $name {
-            $vis const VARIANTS: &[$name] = &[$($name::$item),*];
+            $vis const VARIANTS: &'static [$name] = &[$($name::$item),*];
         }
 
         impl diesel::deserialize::FromSql<diesel::sql_types::Integer, diesel::pg::Pg> for $name {

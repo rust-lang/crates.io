@@ -6,7 +6,6 @@ use crate::models::token::EndpointScope;
 use crate::models::{Crate, Owner, Rights, Team, User};
 use crate::views::EncodableOwner;
 use axum::body::Bytes;
-use http::Request;
 
 /// Handles the `GET /crates/:crate_id/owners` route.
 pub async fn owners(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
