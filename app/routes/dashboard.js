@@ -2,10 +2,14 @@ import { A } from '@ember/array';
 import { inject as service } from '@ember/service';
 import RSVP from 'rsvp';
 
+import { didCancel } from 'ember-concurrency';
+
+import { AjaxError } from '../utils/ajax';
 import AuthenticatedRoute from './-authenticated-route';
 
 export default class DashboardRoute extends AuthenticatedRoute {
   @service store;
+  @service sentry;
 
   async model() {
     let user = this.session.currentUser;
@@ -22,7 +26,12 @@ export default class DashboardRoute extends AuthenticatedRoute {
 
     if (!controller.isRunning) {
       controller.set('myFeed', A());
-      controller.loadMoreTask.perform();
+      controller.loadMoreTask.perform().catch(error => {
+        // report unexpected errors to Sentry and ignore `ajax()` errors
+        if (!didCancel(error) && !(error instanceof AjaxError)) {
+          this.sentry.captureException(error);
+        }
+      });
     }
   }
 }
