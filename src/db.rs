@@ -1,3 +1,5 @@
+use deadpool::managed::HookError;
+use deadpool_diesel::postgres::Hook;
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager, CustomizeConnection, State};
 use prometheus::Histogram;
@@ -162,6 +164,19 @@ impl ConnectionConfig {
 impl CustomizeConnection<PgConnection, r2d2::Error> for ConnectionConfig {
     fn on_acquire(&self, conn: &mut PgConnection) -> Result<(), r2d2::Error> {
         self.apply(conn).map_err(r2d2::Error::QueryError)
+    }
+}
+
+impl From<ConnectionConfig> for Hook {
+    fn from(config: ConnectionConfig) -> Self {
+        Hook::async_fn(move |conn, _| {
+            Box::pin(async move {
+                conn.interact(move |conn| config.apply(conn))
+                    .await
+                    .map_err(|err| HookError::Message(err.to_string()))?
+                    .map_err(|err| HookError::Message(err.to_string()))
+            })
+        })
     }
 }
 

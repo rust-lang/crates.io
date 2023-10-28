@@ -178,6 +178,18 @@ impl From<PoolError> for BoxedAppError {
     }
 }
 
+impl From<deadpool_diesel::PoolError> for BoxedAppError {
+    fn from(err: deadpool_diesel::PoolError) -> BoxedAppError {
+        Box::new(err)
+    }
+}
+
+impl From<deadpool_diesel::InteractError> for BoxedAppError {
+    fn from(err: deadpool_diesel::InteractError) -> BoxedAppError {
+        Box::new(err)
+    }
+}
+
 impl From<prometheus::Error> for BoxedAppError {
     fn from(err: prometheus::Error) -> BoxedAppError {
         Box::new(err)

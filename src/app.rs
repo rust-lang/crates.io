@@ -1,7 +1,7 @@
 //! Application-wide components in a struct accessible from each request
 
 use crate::config;
-use crate::db::{ConnectionConfig, DieselPool, DieselPooledConn, PoolError};
+use crate::db::{connection_url, ConnectionConfig, DieselPool, DieselPooledConn, PoolError};
 use std::ops::Deref;
 use std::sync::atomic::AtomicUsize;
 use std::sync::Arc;
@@ -13,10 +13,14 @@ use crate::rate_limiter::RateLimiter;
 use crate::storage::Storage;
 use axum::extract::{FromRef, FromRequestParts, State};
 use crates_io_github::GitHubClient;
+use deadpool_diesel::postgres::{Manager, Pool};
+use deadpool_diesel::Runtime;
 use diesel::r2d2;
 use moka::future::{Cache, CacheBuilder};
 use oauth2::basic::BasicClient;
 use scheduled_thread_pool::ScheduledThreadPool;
+
+type DeadpoolResult = Result<deadpool_diesel::postgres::Connection, deadpool_diesel::PoolError>;
 
 /// The `App` struct holds the main components of the application like
 /// the database connection pool and configurations
@@ -24,8 +28,16 @@ pub struct App {
     /// The primary database connection pool
     pub primary_database: DieselPool,
 
+    /// Async database connection pool based on `deadpool` connected
+    /// to the primary database
+    pub deadpool_primary: Pool,
+
     /// The read-only replica database connection pool
     pub read_only_replica_database: Option<DieselPool>,
+
+    /// Async database connection pool based on `deadpool` connected
+    /// to the read-only replica database
+    pub deadpool_replica: Option<Pool>,
 
     /// GitHub API client
     pub github: Box<dyn GitHubClient>,
@@ -113,6 +125,26 @@ impl App {
             .unwrap()
         };
 
+        let primary_database_async = {
+            use secrecy::ExposeSecret;
+
+            let primary_db_connection_config = ConnectionConfig {
+                statement_timeout: config.db.statement_timeout,
+                read_only: config.db.primary.read_only_mode,
+            };
+
+            let url = connection_url(&config.db, config.db.primary.url.expose_secret());
+            let manager = Manager::new(url, Runtime::Tokio1);
+
+            Pool::builder(manager)
+                .runtime(Runtime::Tokio1)
+                .max_size(config.db.primary.async_pool_size)
+                .wait_timeout(Some(config.db.connection_timeout))
+                .post_create(primary_db_connection_config)
+                .build()
+                .unwrap()
+        };
+
         let replica_database = if let Some(pool_config) = config.db.replica.as_ref() {
             let replica_db_connection_config = ConnectionConfig {
                 statement_timeout: config.db.statement_timeout,
@@ -141,13 +173,39 @@ impl App {
             None
         };
 
+        let replica_database_async = if let Some(pool_config) = config.db.replica.as_ref() {
+            use secrecy::ExposeSecret;
+
+            let replica_db_connection_config = ConnectionConfig {
+                statement_timeout: config.db.statement_timeout,
+                read_only: pool_config.read_only_mode,
+            };
+
+            let url = connection_url(&config.db, pool_config.url.expose_secret());
+            let manager = Manager::new(url, Runtime::Tokio1);
+
+            let pool = Pool::builder(manager)
+                .runtime(Runtime::Tokio1)
+                .max_size(pool_config.async_pool_size)
+                .wait_timeout(Some(config.db.connection_timeout))
+                .post_create(replica_db_connection_config)
+                .build()
+                .unwrap();
+
+            Some(pool)
+        } else {
+            None
+        };
+
         let version_id_cacher = CacheBuilder::new(config.version_id_cache_size)
             .time_to_live(config.version_id_cache_ttl)
             .build();
 
         App {
             primary_database,
+            deadpool_primary: primary_database_async,
             read_only_replica_database: replica_database,
+            deadpool_replica: replica_database_async,
             github,
             github_oauth,
             version_id_cacher,
@@ -171,6 +229,12 @@ impl App {
     #[instrument(skip_all)]
     pub fn db_write(&self) -> Result<DieselPooledConn, PoolError> {
         self.primary_database.get()
+    }
+
+    /// Obtain a read/write database connection from the async primary pool
+    #[instrument(skip_all)]
+    pub async fn db_write_async(&self) -> DeadpoolResult {
+        self.deadpool_primary.get().await
     }
 
     /// Obtain a readonly database connection from the replica pool
@@ -203,6 +267,37 @@ impl App {
         }
     }
 
+    /// Obtain a readonly database connection from the replica pool
+    ///
+    /// If the replica pool is disabled or unavailable, the primary pool is used instead.
+    #[instrument(skip_all)]
+    pub async fn db_read_async(&self) -> DeadpoolResult {
+        let Some(read_only_pool) = self.deadpool_replica.as_ref() else {
+            // Replica is disabled, but primary might be available
+            return self.deadpool_primary.get().await;
+        };
+
+        match read_only_pool.get().await {
+            // Replica is available
+            Ok(connection) => Ok(connection),
+
+            // Replica is not available, but primary might be available
+            Err(deadpool_diesel::PoolError::Backend(error)) => {
+                let _ = self
+                    .instance_metrics
+                    .database_fallback_used
+                    .get_metric_with_label_values(&["follower"])
+                    .map(|metric| metric.inc());
+
+                warn!("Replica is unavailable, falling back to primary ({error})");
+                self.deadpool_primary.get().await
+            }
+
+            // Replica failed
+            Err(error) => Err(error),
+        }
+    }
+
     /// Obtain a readonly database connection from the primary pool
     ///
     /// If the primary pool is unavailable, the replica pool is used instead, if not disabled.
@@ -225,6 +320,36 @@ impl App {
                     .map(|metric| metric.inc());
 
                 read_only_pool.get()
+            }
+
+            // Primary failed
+            Err(error) => Err(error),
+        }
+    }
+
+    /// Obtain a readonly database connection from the primary pool
+    ///
+    /// If the primary pool is unavailable, the replica pool is used instead, if not disabled.
+    #[instrument(skip_all)]
+    pub async fn db_read_prefer_primary_async(&self) -> DeadpoolResult {
+        let Some(read_only_pool) = self.deadpool_replica.as_ref() else {
+            return self.deadpool_primary.get().await;
+        };
+
+        match self.deadpool_primary.get().await {
+            // Primary is available
+            Ok(connection) => Ok(connection),
+
+            // Primary is not available, but replica might be available
+            Err(deadpool_diesel::PoolError::Backend(error)) => {
+                let _ = self
+                    .instance_metrics
+                    .database_fallback_used
+                    .get_metric_with_label_values(&["primary"])
+                    .map(|metric| metric.inc());
+
+                warn!("Primary is unavailable, falling back to replica ({error})");
+                read_only_pool.get().await
             }
 
             // Primary failed
