@@ -225,7 +225,7 @@ impl Crate {
         !name.is_empty()
             && name
                 .chars()
-                .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-' || c == '+')
+                .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-' || c == '+' || c == '.')
     }
 
     /// Validates the prefix in front of the slash: `features = ["THIS/feature"]`.
@@ -531,5 +531,7 @@ mod tests {
         assert!(!Crate::valid_feature("dep:foo?/bar"));
         assert!(!Crate::valid_feature("foo/?bar"));
         assert!(!Crate::valid_feature("foo?bar"));
+        assert!(Crate::valid_feature("bar.web"));
+        assert!(Crate::valid_feature("foo/bar.web"));
     }
 }
