@@ -124,10 +124,9 @@ fn downloads_counter_thread(app: Arc<App>) {
 
 fn log_instance_metrics_thread(app: Arc<App>) {
     // Only run the thread if the configuration is provided
-    let interval = if let Some(secs) = app.config.instance_metrics_log_every_seconds {
-        Duration::from_secs(secs)
-    } else {
-        return;
+    let interval = match app.config.instance_metrics_log_every_seconds {
+        Some(secs) => Duration::from_secs(secs),
+        None => return,
     };
 
     std::thread::spawn(move || loop {
