@@ -1,0 +1,16 @@
+---
+source: src/tests/krate/publish/features.rs
+expression: crates
+---
+[
+  {
+    "name": "foo",
+    "vers": "1.0.0",
+    "deps": [],
+    "cksum": "d0bfdbcd4905a15b3dc6db5ce23e206ac413b4d780053fd38e145a75197fb1e1",
+    "features": {
+      "foo.bar": []
+    },
+    "yanked": false
+  }
+]

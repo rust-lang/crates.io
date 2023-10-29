@@ -25,6 +25,15 @@ fn features_version_2() {
 }
 
 #[test]
+fn feature_name_with_dot() {
+    let (app, _, _, token) = TestApp::full().with_token();
+    let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("foo.bar", &[]);
+    token.publish_crate(crate_to_publish).good();
+    let crates = app.crates_from_index_head("foo");
+    assert_json_snapshot!(crates);
+}
+
+#[test]
 fn invalid_feature_name() {
     let (app, _, _, token) = TestApp::full().with_token();
 
