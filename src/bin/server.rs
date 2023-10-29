@@ -109,9 +109,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn downloads_counter_thread(app: Arc<App>) {
-    let interval = Duration::from_millis(
-        (app.config.downloads_persist_interval_ms / app.downloads_counter.shards_count()) as u64,
-    );
+    let interval =
+        app.config.downloads_persist_interval / app.downloads_counter.shards_count() as u32;
 
     std::thread::spawn(move || loop {
         std::thread::sleep(interval);
