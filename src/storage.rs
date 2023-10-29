@@ -250,19 +250,19 @@ impl Storage {
         self.store.delete(&path).await
     }
 
-    #[instrument(skip(self))]
+    #[instrument(skip(self, bytes))]
     pub async fn upload_crate_file(&self, name: &str, version: &str, bytes: Bytes) -> Result<()> {
         let path = crate_file_path(name, version);
         self.crate_upload_store.put(&path, bytes).await
     }
 
-    #[instrument(skip(self))]
+    #[instrument(skip(self, bytes))]
     pub async fn upload_readme(&self, name: &str, version: &str, bytes: Bytes) -> Result<()> {
         let path = readme_path(name, version);
         self.readme_upload_store.put(&path, bytes).await
     }
 
-    #[instrument(skip(self))]
+    #[instrument(skip(self, content))]
     pub async fn sync_index(&self, name: &str, content: Option<String>) -> Result<()> {
         let path = crates_io_index::Repository::relative_index_file_for_url(name).into();
         if let Some(content) = content {
