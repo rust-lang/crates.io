@@ -2,6 +2,7 @@ use diesel::connection::SimpleConnection;
 use diesel::prelude::*;
 use diesel_migrations::{FileBasedMigrations, MigrationHarness};
 use rand::Rng;
+use tracing::instrument;
 
 pub(crate) struct FreshSchema {
     database_url: String,
@@ -13,20 +14,9 @@ impl FreshSchema {
     pub(crate) fn new(database_url: &str) -> Self {
         let schema_name = generate_schema_name();
 
-        let mut conn = PgConnection::establish(database_url).expect("can't connect to the test db");
-        conn.batch_execute(&format!(
-            "
-                DROP SCHEMA IF EXISTS {schema_name} CASCADE;
-                CREATE SCHEMA {schema_name};
-                SET search_path TO {schema_name}, public;
-            "
-        ))
-        .expect("failed to initialize schema");
-
-        let migrations =
-            FileBasedMigrations::find_migrations_directory().expect("Could not find migrations");
-        conn.run_pending_migrations(migrations)
-            .expect("failed to run migrations on the test schema");
+        let mut conn = connect(database_url).expect("can't connect to the test db");
+        create_schema(&schema_name, &mut conn).expect("failed to initialize schema");
+        run_migrations(&mut conn).expect("failed to run migrations on the test schema");
 
         let database_url = url::Url::parse_with_params(
             database_url,
@@ -49,10 +39,37 @@ impl FreshSchema {
 
 impl Drop for FreshSchema {
     fn drop(&mut self) {
-        self.management_conn
-            .batch_execute(&format!("DROP SCHEMA {} CASCADE;", self.schema_name))
+        drop_schema(&self.schema_name, &mut self.management_conn)
             .expect("failed to drop the test schema");
     }
+}
+
+#[instrument]
+fn connect(database_url: &str) -> ConnectionResult<PgConnection> {
+    PgConnection::establish(database_url)
+}
+
+#[instrument(skip(conn))]
+fn create_schema(schema_name: &str, conn: &mut PgConnection) -> QueryResult<()> {
+    conn.batch_execute(&format!(
+        "
+            DROP SCHEMA IF EXISTS {schema_name} CASCADE;
+            CREATE SCHEMA {schema_name};
+            SET search_path TO {schema_name}, public;
+        "
+    ))
+}
+
+#[instrument(skip(conn))]
+fn drop_schema(schema_name: &str, conn: &mut PgConnection) -> QueryResult<()> {
+    conn.batch_execute(&format!("DROP SCHEMA {schema_name} CASCADE;"))
+}
+
+#[instrument(skip(conn))]
+fn run_migrations(conn: &mut PgConnection) -> diesel::migration::Result<()> {
+    let migrations = FileBasedMigrations::find_migrations_directory()?;
+    conn.run_pending_migrations(migrations)?;
+    Ok(())
 }
 
 fn generate_schema_name() -> String {
