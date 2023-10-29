@@ -402,7 +402,7 @@ fn simple_config() -> config::Server {
         excluded_crate_names: vec![],
         domain_name: "crates.io".into(),
         allowed_origins: Default::default(),
-        downloads_persist_interval_ms: 1000,
+        downloads_persist_interval: Duration::from_secs(1),
         ownership_invitations_expiration_days: 30,
         metrics_authorization_token: None,
         use_test_database_pool: true,

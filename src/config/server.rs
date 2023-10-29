@@ -44,7 +44,7 @@ pub struct Server {
     pub excluded_crate_names: Vec<String>,
     pub domain_name: String,
     pub allowed_origins: AllowedOrigins,
-    pub downloads_persist_interval_ms: usize,
+    pub downloads_persist_interval: Duration,
     pub ownership_invitations_expiration_days: u64,
     pub metrics_authorization_token: Option<String>,
     pub use_test_database_pool: bool,
@@ -205,13 +205,14 @@ impl Default for Server {
             excluded_crate_names,
             domain_name: domain_name(),
             allowed_origins,
-            downloads_persist_interval_ms: dotenvy::var("DOWNLOADS_PERSIST_INTERVAL_MS")
+            downloads_persist_interval: dotenvy::var("DOWNLOADS_PERSIST_INTERVAL_MS")
                 .map(|interval| {
                     interval
                         .parse()
+                        .map(Duration::from_millis)
                         .expect("invalid DOWNLOADS_PERSIST_INTERVAL_MS")
                 })
-                .unwrap_or(60_000), // 1 minute
+                .unwrap_or(Duration::from_secs(60)),
             ownership_invitations_expiration_days: 30,
             metrics_authorization_token: dotenvy::var("METRICS_AUTHORIZATION_TOKEN").ok(),
             use_test_database_pool: false,
