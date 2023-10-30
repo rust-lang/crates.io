@@ -172,7 +172,7 @@ impl App {
 
     /// Obtain a read/write database connection from the primary pool
     #[instrument(skip_all)]
-    pub fn db_write(&self) -> Result<DieselPooledConn<'_>, PoolError> {
+    pub fn db_write(&self) -> Result<DieselPooledConn, PoolError> {
         self.primary_database.get()
     }
 
@@ -180,7 +180,7 @@ impl App {
     ///
     /// If the replica pool is disabled or unavailable, the primary pool is used instead.
     #[instrument(skip_all)]
-    pub fn db_read(&self) -> Result<DieselPooledConn<'_>, PoolError> {
+    pub fn db_read(&self) -> Result<DieselPooledConn, PoolError> {
         let read_only_pool = self.read_only_replica_database.as_ref();
         match read_only_pool.map(|pool| pool.get()) {
             // Replica is available
@@ -209,7 +209,7 @@ impl App {
     ///
     /// If the primary pool is unavailable, the replica pool is used instead, if not disabled.
     #[instrument(skip_all)]
-    pub fn db_read_prefer_primary(&self) -> Result<DieselPooledConn<'_>, PoolError> {
+    pub fn db_read_prefer_primary(&self) -> Result<DieselPooledConn, PoolError> {
         match (
             self.primary_database.get(),
             &self.read_only_replica_database,

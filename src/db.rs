@@ -2,7 +2,6 @@ use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager, CustomizeConnection};
 use prometheus::Histogram;
 use secrecy::{ExposeSecret, SecretString};
-use std::sync::{Arc, Mutex, MutexGuard};
 use std::{
     ops::{Deref, DerefMut},
     time::Duration,
@@ -25,7 +24,6 @@ pub enum DieselPool {
     BackgroundJobPool {
         pool: ConnectionPool,
     },
-    Test(Arc<Mutex<PgConnection>>),
 }
 
 impl DieselPool {
@@ -66,7 +64,7 @@ impl DieselPool {
     }
 
     #[instrument(name = "db.connect", skip_all)]
-    pub fn get(&self) -> Result<DieselPooledConn<'_>, PoolError> {
+    pub fn get(&self) -> Result<DieselPooledConn, PoolError> {
         match self {
             DieselPool::Pool {
                 pool,
@@ -81,10 +79,6 @@ impl DieselPool {
                 }
             }),
             DieselPool::BackgroundJobPool { pool } => Ok(DieselPooledConn::Pool(pool.get()?)),
-            DieselPool::Test(conn) => Ok(DieselPooledConn::Test(
-                conn.try_lock()
-                    .map_err(|_e| PoolError::TestConnectionUnavailable)?,
-            )),
         }
     }
 
@@ -97,10 +91,6 @@ impl DieselPool {
                     idle_connections: state.idle_connections,
                 }
             }
-            DieselPool::Test(_) => PoolState {
-                connections: 0,
-                idle_connections: 0,
-            },
         }
     }
 
@@ -114,7 +104,6 @@ impl DieselPool {
                     Err(err) => Err(PoolError::R2D2(err)),
                 }
             }
-            DieselPool::Test(_) => Ok(()),
         }
     }
 
@@ -130,27 +119,24 @@ pub struct PoolState {
 }
 
 #[allow(clippy::large_enum_variant)]
-pub enum DieselPooledConn<'a> {
+pub enum DieselPooledConn {
     Pool(r2d2::PooledConnection<ConnectionManager<PgConnection>>),
-    Test(MutexGuard<'a, PgConnection>),
 }
 
-impl Deref for DieselPooledConn<'_> {
+impl Deref for DieselPooledConn {
     type Target = PgConnection;
 
     fn deref(&self) -> &Self::Target {
         match self {
             DieselPooledConn::Pool(conn) => conn.deref(),
-            DieselPooledConn::Test(conn) => conn.deref(),
         }
     }
 }
 
-impl DerefMut for DieselPooledConn<'_> {
+impl DerefMut for DieselPooledConn {
     fn deref_mut(&mut self) -> &mut Self::Target {
         match self {
             DieselPooledConn::Pool(conn) => conn.deref_mut(),
-            DieselPooledConn::Test(conn) => conn.deref_mut(),
         }
     }
 }
