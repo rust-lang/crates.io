@@ -2,10 +2,7 @@ use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager, CustomizeConnection};
 use prometheus::Histogram;
 use secrecy::{ExposeSecret, SecretString};
-use std::{
-    ops::{Deref, DerefMut},
-    time::Duration,
-};
+use std::time::Duration;
 use thiserror::Error;
 use url::Url;
 
@@ -71,14 +68,14 @@ impl DieselPool {
                 time_to_obtain_connection_metric,
             } => time_to_obtain_connection_metric.observe_closure_duration(|| {
                 if let Some(conn) = pool.try_get() {
-                    Ok(DieselPooledConn::Pool(conn))
+                    Ok(conn)
                 } else if !self.is_healthy() {
                     Err(PoolError::UnhealthyPool)
                 } else {
-                    Ok(DieselPooledConn::Pool(pool.get()?))
+                    Ok(pool.get()?)
                 }
             }),
-            DieselPool::BackgroundJobPool { pool } => Ok(DieselPooledConn::Pool(pool.get()?)),
+            DieselPool::BackgroundJobPool { pool } => Ok(pool.get()?),
         }
     }
 
@@ -118,28 +115,7 @@ pub struct PoolState {
     pub idle_connections: u32,
 }
 
-#[allow(clippy::large_enum_variant)]
-pub enum DieselPooledConn {
-    Pool(r2d2::PooledConnection<ConnectionManager<PgConnection>>),
-}
-
-impl Deref for DieselPooledConn {
-    type Target = PgConnection;
-
-    fn deref(&self) -> &Self::Target {
-        match self {
-            DieselPooledConn::Pool(conn) => conn.deref(),
-        }
-    }
-}
-
-impl DerefMut for DieselPooledConn {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        match self {
-            DieselPooledConn::Pool(conn) => conn.deref_mut(),
-        }
-    }
-}
+pub type DieselPooledConn = r2d2::PooledConnection<ConnectionManager<PgConnection>>;
 
 pub fn oneoff_connection_with_config(
     config: &config::DatabasePools,
