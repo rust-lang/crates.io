@@ -1,5 +1,5 @@
 use diesel::prelude::*;
-use diesel::r2d2::{self, ConnectionManager, CustomizeConnection};
+use diesel::r2d2::{self, ConnectionManager, CustomizeConnection, State};
 use prometheus::Histogram;
 use secrecy::{ExposeSecret, SecretString};
 use std::time::Duration;
@@ -75,12 +75,8 @@ impl DieselPool {
         }
     }
 
-    pub fn state(&self) -> PoolState {
-        let state = self.pool.state();
-        PoolState {
-            connections: state.connections,
-            idle_connections: state.idle_connections,
-        }
+    pub fn state(&self) -> State {
+        self.pool.state()
     }
 
     #[instrument(skip_all)]
@@ -95,12 +91,6 @@ impl DieselPool {
     fn is_healthy(&self) -> bool {
         self.state().connections > 0
     }
-}
-
-#[derive(Debug, Copy, Clone)]
-pub struct PoolState {
-    pub connections: u32,
-    pub idle_connections: u32,
 }
 
 pub type DieselPooledConn = r2d2::PooledConnection<ConnectionManager<PgConnection>>;
