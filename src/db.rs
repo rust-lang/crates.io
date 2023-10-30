@@ -65,14 +65,6 @@ impl DieselPool {
         Self::BackgroundJobPool { pool }
     }
 
-    pub(crate) fn new_test(config: &config::DatabasePools, url: &SecretString) -> DieselPool {
-        let mut conn = PgConnection::establish(&connection_url(config, url.expose_secret()))
-            .expect("failed to establish connection");
-        conn.begin_test_transaction()
-            .expect("failed to begin test transaction");
-        DieselPool::Test(Arc::new(Mutex::new(conn)))
-    }
-
     #[instrument(name = "db.connect", skip_all)]
     pub fn get(&self) -> Result<DieselPooledConn<'_>, PoolError> {
         match self {
