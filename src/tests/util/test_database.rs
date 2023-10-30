@@ -80,6 +80,7 @@ impl Drop for TemplateDatabase {
 pub struct TestDatabase {
     name: String,
     url: Url,
+    pool: Option<Pool<ConnectionManager<PgConnection>>>,
 }
 
 impl TestDatabase {
@@ -99,17 +100,36 @@ impl TestDatabase {
         let mut url = template.base_url.clone();
         url.set_path(&format!("/{name}"));
 
-        TestDatabase { name, url }
+        let pool = Pool::builder()
+            .min_idle(Some(0))
+            .build_unchecked(ConnectionManager::new(url.as_ref()));
+
+        let pool = Some(pool);
+        TestDatabase { name, url, pool }
     }
 
     pub fn url(&self) -> &str {
         self.url.as_ref()
+    }
+
+    #[instrument(skip(self))]
+    pub fn connect(&self) -> PooledConnection<ConnectionManager<PgConnection>> {
+        self.pool
+            .as_ref()
+            .unwrap()
+            .get()
+            .expect("Failed to get database connection")
     }
 }
 
 impl Drop for TestDatabase {
     #[instrument(skip(self))]
     fn drop(&mut self) {
+        // Essentially `drop(self.pool)` to make sure any connections to the
+        // test database have been disconnected before dropping the database
+        // itself.
+        self.pool = None;
+
         let mut conn = TemplateDatabase::instance().get_connection();
         drop_database(&self.name, &mut conn).expect("failed to drop test database");
     }

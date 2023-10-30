@@ -28,7 +28,7 @@ struct TestAppInner {
     replica_db_chaosproxy: Option<Arc<ChaosProxy>>,
 
     // Must be the last field of the struct!
-    _test_database: Option<TestDatabase>,
+    test_database: Option<TestDatabase>,
 }
 
 impl Drop for TestAppInner {
@@ -94,8 +94,10 @@ impl TestApp {
     /// connection before making any API calls.  Once the closure returns, the connection is
     /// dropped, ensuring it is returned to the pool and available for any future API calls.
     pub fn db<T, F: FnOnce(&mut PgConnection) -> T>(&self, f: F) -> T {
-        let conn = &mut self.0.app.db_write().unwrap();
-        f(conn)
+        match self.0.test_database.as_ref() {
+            Some(test_database) => f(&mut test_database.connect()),
+            None => f(&mut self.0.app.db_write().unwrap()),
+        }
     }
 
     /// Create a new user with a verified email address in the database and return a mock user
@@ -208,7 +210,7 @@ impl TestAppBuilder {
     pub fn empty(mut self) -> (TestApp, MockAnonymousUser) {
         // Run each test inside a fresh database schema, deleted at the end of the test,
         // The schema will be cleared up once the app is dropped.
-        let (primary_db_chaosproxy, replica_db_chaosproxy, _test_database) =
+        let (primary_db_chaosproxy, replica_db_chaosproxy, test_database) =
             if !self.config.use_test_database_pool {
                 let test_database = TestDatabase::new();
 
@@ -268,7 +270,7 @@ impl TestAppBuilder {
 
         let test_app_inner = TestAppInner {
             app,
-            _test_database,
+            test_database,
             router,
             index: self.index,
             runner,
