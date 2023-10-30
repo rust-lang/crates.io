@@ -427,7 +427,7 @@ fn simple_config() -> config::Server {
         downloads_persist_interval: Duration::from_secs(1),
         ownership_invitations_expiration_days: 30,
         metrics_authorization_token: None,
-        use_test_database_pool: true,
+        use_test_database_pool: false,
         instance_metrics_log_every_seconds: None,
         force_unconditional_redirects: false,
         blocked_routes: HashSet::new(),
