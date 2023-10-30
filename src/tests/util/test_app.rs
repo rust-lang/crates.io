@@ -348,14 +348,9 @@ impl TestAppBuilder {
         self
     }
 
-    pub fn without_test_database_pool(mut self) -> Self {
-        self.config.use_test_database_pool = false;
-        self
-    }
-
     pub fn with_chaos_proxy(mut self) -> Self {
         self.use_chaos_proxy = true;
-        self.without_test_database_pool()
+        self
     }
 
     pub fn with_replica(mut self) -> Self {

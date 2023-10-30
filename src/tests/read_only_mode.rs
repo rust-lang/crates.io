@@ -7,7 +7,6 @@ use http::StatusCode;
 #[test]
 fn can_hit_read_only_endpoints_in_read_only_mode() {
     let (_app, anon) = TestApp::init()
-        .without_test_database_pool()
         .with_config(|config| {
             config.db.primary.read_only_mode = true;
         })
@@ -20,7 +19,6 @@ fn can_hit_read_only_endpoints_in_read_only_mode() {
 #[test]
 fn cannot_hit_endpoint_which_writes_db_in_read_only_mode() {
     let (app, _, user, token) = TestApp::init()
-        .without_test_database_pool()
         .with_config(|config| {
             config.db.primary.read_only_mode = true;
         })
@@ -39,7 +37,6 @@ fn cannot_hit_endpoint_which_writes_db_in_read_only_mode() {
 #[test]
 fn can_download_crate_in_read_only_mode() {
     let (app, anon, user) = TestApp::init()
-        .without_test_database_pool()
         .with_config(|config| {
             config.db.primary.read_only_mode = true;
         })
