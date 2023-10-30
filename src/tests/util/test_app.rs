@@ -75,7 +75,7 @@ impl TestApp {
             proxy: None,
             index: None,
             build_job_runner: false,
-            test_database: TestDatabase::TestPool,
+            use_chaos_proxy: false,
         }
     }
 
@@ -196,21 +196,12 @@ impl TestApp {
     }
 }
 
-/// Defines the type of test database.
-pub enum TestDatabase {
-    /// Use the fast test database pool
-    TestPool,
-    /// Use the slow test database pool with a fresh schema that enables ChaosProxy
-    /// TODO rewrite comment, uses a database pool
-    SlowRealPool { replica: bool },
-}
-
 pub struct TestAppBuilder {
     config: config::Server,
     proxy: Option<String>,
     index: Option<UpstreamIndex>,
     build_job_runner: bool,
-    test_database: TestDatabase,
+    use_chaos_proxy: bool,
 }
 
 impl TestAppBuilder {
@@ -221,26 +212,32 @@ impl TestAppBuilder {
         let (primary_db_chaosproxy, replica_db_chaosproxy, fresh_schema) =
             if !self.config.use_test_database_pool {
                 let fresh_schema = FreshSchema::new(self.config.db.primary.url.expose_secret());
-                let (primary_proxy, url) =
-                    ChaosProxy::proxy_database_url(fresh_schema.database_url()).unwrap();
-                self.config.db.primary.url = url.into();
 
-                let replica_proxy = match self.test_database {
-                    TestDatabase::SlowRealPool { replica: true } => {
-                        let (replica_proxy, url) =
-                            ChaosProxy::proxy_database_url(fresh_schema.database_url()).unwrap();
-                        self.config.db.replica = Some(DbPoolConfig {
-                            url: url.into(),
-                            read_only_mode: true,
-                            pool_size: 1,
-                            min_idle: None,
-                        });
-                        Some(replica_proxy)
-                    }
-                    _ => None,
+                let primary_proxy = if self.use_chaos_proxy {
+                    let (primary_proxy, url) =
+                        ChaosProxy::proxy_database_url(fresh_schema.database_url()).unwrap();
+
+                    self.config.db.primary.url = url.into();
+                    Some(primary_proxy)
+                } else {
+                    self.config.db.primary.url = fresh_schema.database_url().to_string().into();
+                    None
                 };
 
-                (Some(primary_proxy), replica_proxy, Some(fresh_schema))
+                let replica_proxy = self.config.db.replica.as_mut().and_then(|replica| {
+                    if self.use_chaos_proxy {
+                        let (primary_proxy, url) =
+                            ChaosProxy::proxy_database_url(fresh_schema.database_url()).unwrap();
+
+                        replica.url = url.into();
+                        Some(primary_proxy)
+                    } else {
+                        replica.url = fresh_schema.database_url().to_string().into();
+                        None
+                    }
+                });
+
+                (primary_proxy, replica_proxy, Some(fresh_schema))
             } else {
                 (None, None, None)
             };
@@ -342,10 +339,26 @@ impl TestAppBuilder {
         self
     }
 
-    /// Configures the test database
-    pub fn with_database(mut self, test_database: TestDatabase) -> Self {
+    pub fn without_test_database_pool(mut self) -> Self {
         self.config.use_test_database_pool = false;
-        self.test_database = test_database;
+        self
+    }
+
+    pub fn with_chaos_proxy(mut self) -> Self {
+        self.use_chaos_proxy = true;
+        self.without_test_database_pool()
+    }
+
+    pub fn with_replica(mut self) -> Self {
+        let primary = &self.config.db.primary;
+
+        self.config.db.replica = Some(DbPoolConfig {
+            url: primary.url.clone(),
+            read_only_mode: true,
+            pool_size: primary.pool_size,
+            min_idle: primary.min_idle,
+        });
+
         self
     }
 }

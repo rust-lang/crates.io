@@ -51,7 +51,7 @@ pub(crate) use fresh_schema::FreshSchema;
 use mock_request::MockRequest;
 pub use mock_request::MockRequestExt;
 pub use response::Response;
-pub use test_app::{TestApp, TestDatabase};
+pub use test_app::TestApp;
 
 /// This function can be used to create a `Cookie` header for mock requests that
 /// include cookie-based authentication.

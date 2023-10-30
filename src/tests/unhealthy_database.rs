@@ -1,6 +1,6 @@
 use crate::{
     builders::CrateBuilder,
-    util::{MockAnonymousUser, RequestHelper, TestApp, TestDatabase},
+    util::{MockAnonymousUser, RequestHelper, TestApp},
 };
 use http::StatusCode;
 use std::time::Duration;
@@ -9,9 +9,7 @@ const DB_HEALTHY_TIMEOUT: Duration = Duration::from_millis(2000);
 
 #[test]
 fn download_crate_with_broken_networking_primary_database() {
-    let (app, anon, _, owner) = TestApp::init()
-        .with_database(TestDatabase::SlowRealPool { replica: false })
-        .with_token();
+    let (app, anon, _, owner) = TestApp::init().with_chaos_proxy().with_token();
     app.db(|conn| {
         CrateBuilder::new("crate_name", owner.as_model().user_id)
             .version("1.0.0")
@@ -72,9 +70,7 @@ fn assert_unconditional_redirects(anon: &MockAnonymousUser) {
 
 #[test]
 fn http_error_with_unhealthy_database() {
-    let (app, anon) = TestApp::init()
-        .with_database(TestDatabase::SlowRealPool { replica: false })
-        .empty();
+    let (app, anon) = TestApp::init().with_chaos_proxy().empty();
 
     let response = anon.get::<()>("/api/v1/summary");
     assert_eq!(response.status(), StatusCode::OK);
@@ -99,7 +95,8 @@ fn fallback_to_replica_returns_user_info() {
     const URL: &str = "/api/v1/users/foo";
 
     let (app, _, owner) = TestApp::init()
-        .with_database(TestDatabase::SlowRealPool { replica: true })
+        .with_replica()
+        .with_chaos_proxy()
         .with_user();
     app.db_new_user("foo");
     app.primary_db_chaosproxy().break_networking();
@@ -121,7 +118,8 @@ fn restored_replica_returns_user_info() {
     const URL: &str = "/api/v1/users/foo";
 
     let (app, _, owner) = TestApp::init()
-        .with_database(TestDatabase::SlowRealPool { replica: true })
+        .with_replica()
+        .with_chaos_proxy()
         .with_user();
     app.db_new_user("foo");
     app.primary_db_chaosproxy().break_networking();
@@ -156,7 +154,8 @@ fn restored_primary_returns_user_info() {
     const URL: &str = "/api/v1/users/foo";
 
     let (app, _, owner) = TestApp::init()
-        .with_database(TestDatabase::SlowRealPool { replica: true })
+        .with_replica()
+        .with_chaos_proxy()
         .with_user();
     app.db_new_user("foo");
     app.primary_db_chaosproxy().break_networking();
