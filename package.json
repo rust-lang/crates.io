@@ -125,7 +125,7 @@
     "http-proxy": "1.18.1",
     "loader.js": "4.7.0",
     "match-json": "1.3.7",
-    "miragejs": "0.1.47",
+    "miragejs": "0.1.48",
     "normalize.css": "8.0.1",
     "nyc": "15.1.0",
     "postcss-nested": "6.0.1",
@@ -141,7 +141,7 @@
     "ember-get-config": "2.1.1",
     "ember-inflector": "4.0.2",
     "ember-modifier": "4.1.0",
-    "miragejs": "0.1.47"
+    "miragejs": "0.1.48"
   },
   "pnpm": {
     "peerDependencyRules": {
