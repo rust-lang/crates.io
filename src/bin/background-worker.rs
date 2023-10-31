@@ -16,17 +16,20 @@
 extern crate tracing;
 
 use crates_io::config;
+use crates_io::db::DieselPool;
 use crates_io::storage::Storage;
 use crates_io::worker::cloudfront::CloudFront;
 use crates_io::{background_jobs::*, db, env_optional, ssh};
 use crates_io_index::{Repository, RepositoryConfig};
+use diesel::r2d2;
+use diesel::r2d2::ConnectionManager;
 use reqwest::blocking::Client;
 use secrecy::ExposeSecret;
 use std::sync::{Arc, Mutex};
 use std::thread::sleep;
 use std::time::{Duration, Instant};
 
-use crates_io::swirl;
+use crates_io::swirl::Runner;
 use crates_io::worker::fastly::Fastly;
 
 fn main() {
@@ -83,8 +86,18 @@ fn main() {
 
     let environment = Arc::new(Some(environment));
 
-    let build_runner =
-        || swirl::Runner::production_runner(environment.clone(), db_url.clone(), job_start_timeout);
+    let build_runner = || {
+        let connection_pool = r2d2::Pool::builder()
+            .max_size(10)
+            .min_idle(Some(0))
+            .build_unchecked(ConnectionManager::new(&db_url));
+
+        let connection_pool = DieselPool::new_background_worker(connection_pool);
+
+        Runner::new(connection_pool, environment.clone())
+            .num_workers(5)
+            .job_start_timeout(Duration::from_secs(job_start_timeout))
+    };
 
     let mut runner = build_runner();
 

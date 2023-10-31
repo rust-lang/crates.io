@@ -1,7 +1,5 @@
 use diesel::connection::{AnsiTransactionManager, TransactionManager};
 use diesel::prelude::*;
-use diesel::r2d2;
-use diesel::r2d2::ConnectionManager;
 use std::any::Any;
 use std::error::Error;
 use std::panic::{catch_unwind, AssertUnwindSafe, PanicInfo, UnwindSafe};
@@ -18,6 +16,8 @@ use event::Event;
 
 mod event;
 
+const DEFAULT_JOB_START_TIMEOUT: Duration = Duration::from_secs(30);
+
 /// The core runner responsible for locking and running jobs
 pub struct Runner {
     connection_pool: DieselPool,
@@ -27,43 +27,23 @@ pub struct Runner {
 }
 
 impl Runner {
-    pub fn production_runner(
-        environment: Arc<Option<Environment>>,
-        url: String,
-        job_start_timeout: u64,
-    ) -> Self {
-        let connection_pool = r2d2::Pool::builder()
-            .max_size(10)
-            .min_idle(Some(0))
-            .build_unchecked(ConnectionManager::new(url));
-        Self {
-            connection_pool: DieselPool::new_background_worker(connection_pool),
-            thread_pool: ThreadPool::new(5),
-            environment,
-            job_start_timeout: Duration::from_secs(job_start_timeout),
-        }
-    }
-
-    #[cfg(test)]
-    fn internal_test_runner(environment: Option<Environment>, url: String) -> Self {
-        let connection_pool = r2d2::Pool::builder()
-            .max_size(4)
-            .build_unchecked(ConnectionManager::new(url));
-        Self {
-            connection_pool: DieselPool::new_background_worker(connection_pool),
-            thread_pool: ThreadPool::new(2),
-            environment: Arc::new(environment),
-            job_start_timeout: Duration::from_secs(10),
-        }
-    }
-
-    pub fn test_runner(environment: Environment, connection_pool: DieselPool) -> Self {
+    pub fn new(connection_pool: DieselPool, environment: Arc<Option<Environment>>) -> Self {
         Self {
             connection_pool,
             thread_pool: ThreadPool::new(1),
-            environment: Arc::new(Some(environment)),
-            job_start_timeout: Duration::from_secs(5),
+            environment,
+            job_start_timeout: DEFAULT_JOB_START_TIMEOUT,
         }
+    }
+
+    pub fn num_workers(mut self, num_workers: usize) -> Self {
+        self.thread_pool.set_num_threads(num_workers);
+        self
+    }
+
+    pub fn job_start_timeout(mut self, job_start_timeout: Duration) -> Self {
+        self.job_start_timeout = job_start_timeout;
+        self
     }
 
     /// Runs all pending jobs in the queue
@@ -285,6 +265,8 @@ mod tests {
 
     use super::*;
     use crate::schema::background_jobs;
+    use diesel::r2d2;
+    use diesel::r2d2::ConnectionManager;
     use std::panic::AssertUnwindSafe;
     use std::sync::mpsc::{sync_channel, SyncSender};
     use std::sync::{Arc, Barrier, Mutex, MutexGuard};
@@ -428,7 +410,15 @@ mod tests {
         let database_url =
             dotenvy::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set to run tests");
 
-        super::Runner::internal_test_runner(None, database_url)
+        let connection_pool = r2d2::Pool::builder()
+            .max_size(4)
+            .build_unchecked(ConnectionManager::new(database_url));
+
+        let connection_pool = DieselPool::new_background_worker(connection_pool);
+
+        Runner::new(connection_pool, Arc::new(None))
+            .num_workers(2)
+            .job_start_timeout(Duration::from_secs(10))
     }
 
     fn create_dummy_job(runner: &Runner) -> storage::BackgroundJob {

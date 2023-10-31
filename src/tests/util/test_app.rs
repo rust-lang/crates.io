@@ -258,10 +258,11 @@ impl TestAppBuilder {
                 app.storage.clone(),
             );
 
-            Some(Runner::test_runner(
-                environment,
-                app.primary_database.clone(),
-            ))
+            let runner = Runner::new(app.primary_database.clone(), Arc::new(Some(environment)))
+                .num_workers(1)
+                .job_start_timeout(Duration::from_secs(5));
+
+            Some(runner)
         } else {
             None
         };
