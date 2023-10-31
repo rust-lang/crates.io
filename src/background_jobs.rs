@@ -111,12 +111,12 @@ impl PerformState<'_> {
     fn fresh_connection(
         &self,
     ) -> Result<PooledConnection<ConnectionManager<PgConnection>>, PerformError> {
-        let Some(pool) = self.pool.as_ref() else {
+        match self.pool {
             // In production a pool should be available. This can only be hit in tests, which don't
             // provide the pool.
-            return Err(String::from("Database pool was unavailable").into());
-        };
-        Ok(pool.get()?)
+            None => Err(String::from("Database pool was unavailable").into()),
+            Some(ref pool) => Ok(pool.get()?),
+        }
     }
 }
 
