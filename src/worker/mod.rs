@@ -13,6 +13,8 @@ mod update_downloads;
 
 pub(crate) use daily_db_maintenance::perform_daily_db_maintenance;
 pub(crate) use dump_db::DumpDbJob;
-pub(crate) use git::{perform_index_squash, NormalizeIndexJob, SyncToIndexJob};
+pub(crate) use git::{
+    perform_index_squash, NormalizeIndexJob, SyncToGitIndexJob, SyncToSparseIndexJob,
+};
 pub(crate) use readmes::RenderAndUploadReadmeJob;
 pub(crate) use update_downloads::perform_update_downloads;

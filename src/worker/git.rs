@@ -11,18 +11,14 @@ use std::io::{BufRead, BufReader, ErrorKind, Write};
 use std::process::Command;
 
 #[derive(Serialize, Deserialize)]
-pub struct SyncToIndexJob {
+pub struct SyncToGitIndexJob {
     pub(crate) krate: String,
 }
 
-impl SyncToIndexJob {
+impl SyncToGitIndexJob {
     /// Regenerates or removes an index file for a single crate
-    #[instrument(skip_all, fields(krate.name = ?self.krate))]
-    pub fn run_git_sync(
-        &self,
-        state: PerformState<'_>,
-        env: &Environment,
-    ) -> Result<(), PerformError> {
+    #[instrument(skip_all, fields(krate.name = ? self.krate))]
+    pub fn run(&self, state: PerformState<'_>, env: &Environment) -> Result<(), PerformError> {
         info!("Syncing to git index");
 
         let new = get_index_data(&self.krate, state.conn).context("Failed to get index data")?;
@@ -58,14 +54,17 @@ impl SyncToIndexJob {
 
         Ok(())
     }
+}
 
+#[derive(Serialize, Deserialize)]
+pub struct SyncToSparseIndexJob {
+    pub(crate) krate: String,
+}
+
+impl SyncToSparseIndexJob {
     /// Regenerates or removes an index file for a single crate
     #[instrument(skip_all, fields(krate.name = ?self.krate))]
-    pub fn run_sparse_sync(
-        &self,
-        state: PerformState<'_>,
-        env: &Environment,
-    ) -> Result<(), PerformError> {
+    pub fn run(&self, state: PerformState<'_>, env: &Environment) -> Result<(), PerformError> {
         info!("Syncing to sparse index");
 
         let content =

@@ -16,7 +16,9 @@ use crate::swirl::PerformError;
 use crate::worker;
 use crate::worker::cloudfront::CloudFront;
 use crate::worker::fastly::Fastly;
-use crate::worker::{DumpDbJob, NormalizeIndexJob, RenderAndUploadReadmeJob, SyncToIndexJob};
+use crate::worker::{
+    DumpDbJob, NormalizeIndexJob, RenderAndUploadReadmeJob, SyncToGitIndexJob, SyncToSparseIndexJob,
+};
 use crates_io_index::Repository;
 
 pub const PRIORITY_DEFAULT: i16 = 0;
@@ -84,8 +86,8 @@ jobs! {
         NormalizeIndex(NormalizeIndexJob),
         RenderAndUploadReadme(RenderAndUploadReadmeJob),
         SquashIndex,
-        SyncToGitIndex(SyncToIndexJob),
-        SyncToSparseIndex(SyncToIndexJob),
+        SyncToGitIndex(SyncToGitIndexJob),
+        SyncToSparseIndex(SyncToSparseIndexJob),
         UpdateDownloads,
     }
 }
@@ -219,13 +221,13 @@ impl Job {
     }
 
     pub fn sync_to_git_index<T: ToString>(krate: T) -> Self {
-        Self::SyncToGitIndex(SyncToIndexJob {
+        Self::SyncToGitIndex(SyncToGitIndexJob {
             krate: krate.to_string(),
         })
     }
 
     pub fn sync_to_sparse_index<T: ToString>(krate: T) -> Self {
-        Self::SyncToSparseIndex(SyncToIndexJob {
+        Self::SyncToSparseIndex(SyncToSparseIndexJob {
             krate: krate.to_string(),
         })
     }
@@ -269,8 +271,8 @@ impl Job {
             Job::SquashIndex => worker::perform_index_squash(state, env),
             Job::NormalizeIndex(job) => job.run(state, env),
             Job::RenderAndUploadReadme(job) => job.run(state, env),
-            Job::SyncToGitIndex(job) => job.run_git_sync(state, env),
-            Job::SyncToSparseIndex(job) => job.run_sparse_sync(state, env),
+            Job::SyncToGitIndex(job) => job.run(state, env),
+            Job::SyncToSparseIndex(job) => job.run(state, env),
             Job::UpdateDownloads => worker::perform_update_downloads(state, env),
         }
     }
