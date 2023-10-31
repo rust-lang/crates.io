@@ -5,33 +5,34 @@ use anyhow::Context;
 use crates_io_markdown::text_to_html;
 use diesel::PgConnection;
 
-use crate::background_jobs::Environment;
+use crate::background_jobs::{Environment, RenderAndUploadReadmeJob};
 use crate::models::Version;
 
 #[instrument(skip_all, fields(krate.name))]
 pub fn perform_render_and_upload_readme(
+    job: &RenderAndUploadReadmeJob,
     conn: &mut PgConnection,
     env: &Environment,
-    version_id: i32,
-    text: &str,
-    readme_path: &str,
-    base_url: Option<&str>,
-    pkg_path_in_vcs: Option<&str>,
 ) -> Result<(), PerformError> {
     use crate::schema::*;
     use diesel::prelude::*;
 
-    info!(?version_id, "Rendering README");
+    info!(version_id = ?job.version_id, "Rendering README");
 
-    let rendered = text_to_html(text, readme_path, base_url, pkg_path_in_vcs);
+    let rendered = text_to_html(
+        &job.text,
+        &job.readme_path,
+        job.base_url.as_deref(),
+        job.pkg_path_in_vcs.as_ref(),
+    );
     if rendered.is_empty() {
         return Ok(());
     }
 
     conn.transaction(|conn| {
-        Version::record_readme_rendering(version_id, conn)?;
+        Version::record_readme_rendering(job.version_id, conn)?;
         let (crate_name, vers): (String, String) = versions::table
-            .find(version_id)
+            .find(job.version_id)
             .inner_join(crates::table)
             .select((crates::name, versions::num))
             .first(conn)?;

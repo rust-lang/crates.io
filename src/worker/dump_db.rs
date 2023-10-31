@@ -5,21 +5,17 @@ use std::{
 };
 
 use self::configuration::VisibilityConfig;
-use crate::background_jobs::Environment;
+use crate::background_jobs::{DumpDbJob, Environment};
 use crate::storage::Storage;
 use crate::swirl::PerformError;
 
 /// Create CSV dumps of the public information in the database, wrap them in a
 /// tarball and upload to S3.
-pub fn perform_dump_db(
-    env: &Environment,
-    database_url: &str,
-    target_name: &str,
-) -> Result<(), PerformError> {
+pub fn perform_dump_db(job: &DumpDbJob, env: &Environment) -> Result<(), PerformError> {
     let directory = DumpDirectory::create()?;
 
     info!(path = ?directory.export_dir, "Begin exporting database");
-    directory.populate(database_url)?;
+    directory.populate(&job.database_url)?;
 
     info!(path = ?directory.export_dir, "Creating tarball");
     let tarball = DumpTarball::create(&directory.export_dir)?;
@@ -33,11 +29,11 @@ pub fn perform_dump_db(
 
     let storage = Storage::from_environment();
 
-    rt.block_on(storage.upload_db_dump(target_name, &tarball.tarball_path))?;
+    rt.block_on(storage.upload_db_dump(&job.target_name, &tarball.tarball_path))?;
     info!("Database dump tarball uploaded");
 
     info!("Invalidating CDN caches");
-    invalidate_caches(env, target_name);
+    invalidate_caches(env, &job.target_name);
 
     Ok(())
 }
