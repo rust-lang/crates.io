@@ -2,7 +2,6 @@ use diesel::dsl::{exists, not};
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, PooledConnection};
 use diesel::sql_types::{Int2, Jsonb, Text};
-use paste::paste;
 use reqwest::blocking::Client;
 use std::fmt::Display;
 use std::panic::AssertUnwindSafe;
@@ -35,38 +34,36 @@ macro_rules! jobs {
             $($variant ($content),)+
         }
 
-        paste! {
-            impl $name {
-                fn as_type_str(&self) -> &'static str {
-                    match self {
-                        $(Self::$variant(_) => $content::JOB_NAME,)+
-                    }
+        impl $name {
+            fn as_type_str(&self) -> &'static str {
+                match self {
+                    $(Self::$variant(_) => $content::JOB_NAME,)+
                 }
+            }
 
-                fn to_value(&self) -> serde_json::Result<serde_json::Value> {
-                    match self {
-                        $(Self::$variant(job) => serde_json::to_value(job),)+
-                    }
+            fn to_value(&self) -> serde_json::Result<serde_json::Value> {
+                match self {
+                    $(Self::$variant(job) => serde_json::to_value(job),)+
                 }
+            }
 
-                pub fn from_value(job_type: &str, value: serde_json::Value) -> Result<Self, PerformError> {
-                    Ok(match job_type {
-                        $($content::JOB_NAME => Self::$variant(serde_json::from_value(value)?),)+
-                        job_type => Err(PerformError::from(format!("Unknown job type {job_type}")))?,
-                    })
-                }
+            pub fn from_value(job_type: &str, value: serde_json::Value) -> Result<Self, PerformError> {
+                Ok(match job_type {
+                    $($content::JOB_NAME => Self::$variant(serde_json::from_value(value)?),)+
+                    job_type => Err(PerformError::from(format!("Unknown job type {job_type}")))?,
+                })
+            }
 
-                pub(super) fn perform(
-                    &self,
-                    env: &Option<Environment>,
-                    state: PerformState<'_>,
-                ) -> Result<(), PerformError> {
-                    let env = env
-                        .as_ref()
-                        .expect("Application should configure a background runner environment");
-                    match self {
-                        $(Self::$variant(job) => job.run(state, env),)+
-                    }
+            pub(super) fn perform(
+                &self,
+                env: &Option<Environment>,
+                state: PerformState<'_>,
+            ) -> Result<(), PerformError> {
+                let env = env
+                    .as_ref()
+                    .expect("Application should configure a background runner environment");
+                match self {
+                    $(Self::$variant(job) => job.run(state, env),)+
                 }
             }
         }
