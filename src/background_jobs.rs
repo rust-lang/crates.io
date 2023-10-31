@@ -103,6 +103,23 @@ pub(crate) struct PerformState<'a> {
     pub(crate) pool: Option<ConnectionPool>,
 }
 
+impl PerformState<'_> {
+    /// A helper function for jobs needing a fresh connection (i.e. not already within a transaction).
+    ///
+    /// This will error when run from our main test framework, as there most work is expected to be
+    /// done within an existing transaction.
+    fn fresh_connection(
+        &self,
+    ) -> Result<PooledConnection<ConnectionManager<PgConnection>>, PerformError> {
+        match self.pool {
+            // In production a pool should be available. This can only be hit in tests, which don't
+            // provide the pool.
+            None => Err(String::from("Database pool was unavailable").into()),
+            Some(ref pool) => Ok(pool.get()?),
+        }
+    }
+}
+
 impl Job {
     /// Enqueue both index sync jobs (git and sparse) for a crate, unless they
     /// already exist in the background job queue.
@@ -242,13 +259,12 @@ impl Job {
         env: &Option<Environment>,
         state: PerformState<'_>,
     ) -> Result<(), PerformError> {
-        let PerformState { conn, pool } = state;
         let env = env
             .as_ref()
             .expect("Application should configure a background runner environment");
         match self {
             Job::DailyDbMaintenance => {
-                worker::perform_daily_db_maintenance(&mut *fresh_connection(pool)?)
+                worker::perform_daily_db_maintenance(&mut *state.fresh_connection()?)
             }
             Job::DumpDb(args) => {
                 worker::perform_dump_db(env, &args.database_url, &args.target_name)
@@ -256,7 +272,7 @@ impl Job {
             Job::SquashIndex => worker::perform_index_squash(env),
             Job::NormalizeIndex(args) => worker::perform_normalize_index(env, args),
             Job::RenderAndUploadReadme(args) => worker::perform_render_and_upload_readme(
-                conn,
+                state.conn,
                 env,
                 args.version_id,
                 &args.text,
@@ -264,26 +280,15 @@ impl Job {
                 args.base_url.as_deref(),
                 args.pkg_path_in_vcs.as_deref(),
             ),
-            Job::SyncToGitIndex(args) => worker::sync_to_git_index(env, conn, &args.krate),
-            Job::SyncToSparseIndex(args) => worker::sync_to_sparse_index(env, conn, &args.krate),
-            Job::UpdateDownloads => worker::perform_update_downloads(&mut *fresh_connection(pool)?),
+            Job::SyncToGitIndex(args) => worker::sync_to_git_index(env, state.conn, &args.krate),
+            Job::SyncToSparseIndex(args) => {
+                worker::sync_to_sparse_index(env, state.conn, &args.krate)
+            }
+            Job::UpdateDownloads => {
+                worker::perform_update_downloads(&mut *state.fresh_connection()?)
+            }
         }
     }
-}
-
-/// A helper function for jobs needing a fresh connection (i.e. not already within a transaction).
-///
-/// This will error when run from our main test framework, as there most work is expected to be
-/// done within an existing transaction.
-fn fresh_connection(
-    pool: Option<ConnectionPool>,
-) -> Result<PooledConnection<ConnectionManager<PgConnection>>, PerformError> {
-    let Some(pool) = pool else {
-        // In production a pool should be available. This can only be hit in tests, which don't
-        // provide the pool.
-        return Err(String::from("Database pool was unavailable").into());
-    };
-    Ok(pool.get()?)
 }
 
 #[derive(Serialize, Deserialize)]
