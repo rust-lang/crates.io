@@ -296,24 +296,8 @@ pub struct DumpDbJob {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct AddCrateJob {
-    pub(super) krate: crates_io_index::Crate,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct UpdateCrateIndexJob {
-    pub(super) crate_name: String,
-}
-
-#[derive(Serialize, Deserialize)]
 pub struct SyncToIndexJob {
     pub(super) krate: String,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct SyncYankedJob {
-    pub(super) krate: String,
-    pub(super) version_num: String,
 }
 
 #[derive(Serialize, Deserialize)]
