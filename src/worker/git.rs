@@ -160,7 +160,7 @@ pub fn perform_index_squash(env: &Environment) -> Result<(), PerformError> {
 
 pub fn perform_normalize_index(
     env: &Environment,
-    args: NormalizeIndexJob,
+    args: &NormalizeIndexJob,
 ) -> Result<(), PerformError> {
     info!("Normalizing the index");
 

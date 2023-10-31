@@ -241,7 +241,7 @@ impl Job {
     }
 
     pub(super) fn perform(
-        self,
+        &self,
         env: &Option<Environment>,
         state: PerformState<'_>,
     ) -> Result<(), PerformError> {
@@ -253,7 +253,9 @@ impl Job {
             Job::DailyDbMaintenance => {
                 worker::perform_daily_db_maintenance(&mut *fresh_connection(pool)?)
             }
-            Job::DumpDb(args) => worker::perform_dump_db(env, args.database_url, args.target_name),
+            Job::DumpDb(args) => {
+                worker::perform_dump_db(env, &args.database_url, &args.target_name)
+            }
             Job::SquashIndex => worker::perform_index_squash(env),
             Job::NormalizeIndex(args) => worker::perform_normalize_index(env, args),
             Job::RenderAndUploadReadme(args) => worker::perform_render_and_upload_readme(
