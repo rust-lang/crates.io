@@ -11,6 +11,8 @@ use diesel::prelude::*;
 pub struct UpdateDownloadsJob;
 
 impl UpdateDownloadsJob {
+    pub const JOB_NAME: &'static str = "update_downloads";
+
     pub fn run(&self, state: PerformState<'_>, _env: &Environment) -> Result<(), PerformError> {
         let mut conn = state.fresh_connection()?;
         update(&mut conn)?;

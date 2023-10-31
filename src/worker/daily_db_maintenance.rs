@@ -6,6 +6,8 @@ use diesel::{sql_query, RunQueryDsl};
 pub struct DailyDbMaintenanceJob;
 
 impl DailyDbMaintenanceJob {
+    pub const JOB_NAME: &'static str = "daily_db_maintenance";
+
     /// Run daily database maintenance tasks
     ///
     /// By default PostgreSQL will run an auto-vacuum when 20% of the tuples in a table are dead.

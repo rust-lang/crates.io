@@ -17,6 +17,8 @@ pub struct RenderAndUploadReadmeJob {
 }
 
 impl RenderAndUploadReadmeJob {
+    pub const JOB_NAME: &'static str = "render_and_upload_readme";
+
     #[instrument(skip_all, fields(krate.name))]
     pub fn run(&self, state: PerformState<'_>, env: &Environment) -> Result<(), PerformError> {
         use crate::schema::*;

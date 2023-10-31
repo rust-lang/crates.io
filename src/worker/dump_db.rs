@@ -16,6 +16,8 @@ pub struct DumpDbJob {
 }
 
 impl DumpDbJob {
+    pub const JOB_NAME: &'static str = "dump_db";
+
     /// Create CSV dumps of the public information in the database, wrap them in a
     /// tarball and upload to S3.
     pub fn run(&self, _state: PerformState<'_>, env: &Environment) -> Result<(), PerformError> {

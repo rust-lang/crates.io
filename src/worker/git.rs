@@ -16,6 +16,8 @@ pub struct SyncToGitIndexJob {
 }
 
 impl SyncToGitIndexJob {
+    pub const JOB_NAME: &'static str = "sync_to_git_index";
+
     /// Regenerates or removes an index file for a single crate
     #[instrument(skip_all, fields(krate.name = ? self.krate))]
     pub fn run(&self, state: PerformState<'_>, env: &Environment) -> Result<(), PerformError> {
@@ -62,6 +64,8 @@ pub struct SyncToSparseIndexJob {
 }
 
 impl SyncToSparseIndexJob {
+    pub const JOB_NAME: &'static str = "sync_to_sparse_index";
+
     /// Regenerates or removes an index file for a single crate
     #[instrument(skip_all, fields(krate.name = ?self.krate))]
     pub fn run(&self, state: PerformState<'_>, env: &Environment) -> Result<(), PerformError> {
@@ -132,6 +136,8 @@ pub fn get_index_data(name: &str, conn: &mut PgConnection) -> anyhow::Result<Opt
 pub struct SquashIndexJob;
 
 impl SquashIndexJob {
+    pub const JOB_NAME: &'static str = "squash_index";
+
     /// Collapse the index into a single commit, archiving the current history in a snapshot branch.
     #[instrument(skip_all)]
     pub fn run(&self, _state: PerformState<'_>, env: &Environment) -> Result<(), PerformError> {
@@ -176,6 +182,8 @@ pub struct NormalizeIndexJob {
 }
 
 impl NormalizeIndexJob {
+    pub const JOB_NAME: &'static str = "normalize_index";
+
     pub fn run(&self, _state: PerformState<'_>, env: &Environment) -> Result<(), PerformError> {
         info!("Normalizing the index");
 
