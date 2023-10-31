@@ -12,6 +12,7 @@ use anyhow::Context;
 use crates_io::models::token::{CrateScope, EndpointScope};
 use crates_io::rate_limiter::{LimitedAction, RateLimiterConfig};
 use crates_io::swirl::Runner;
+use crates_io::worker::RunnerExt;
 use diesel::PgConnection;
 use futures_util::TryStreamExt;
 use oauth2::{ClientId, ClientSecret};
@@ -259,7 +260,8 @@ impl TestAppBuilder {
 
             let runner = Runner::new(app.primary_database.clone(), Arc::new(Some(environment)))
                 .num_workers(1)
-                .job_start_timeout(Duration::from_secs(5));
+                .job_start_timeout(Duration::from_secs(5))
+                .register_crates_io_job_types();
 
             Some(runner)
         } else {

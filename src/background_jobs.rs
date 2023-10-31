@@ -16,10 +16,7 @@ use crate::swirl::errors::EnqueueError;
 use crate::swirl::PerformError;
 use crate::worker::cloudfront::CloudFront;
 use crate::worker::fastly::Fastly;
-use crate::worker::{
-    DailyDbMaintenanceJob, DumpDbJob, NormalizeIndexJob, RenderAndUploadReadmeJob, SquashIndexJob,
-    SyncToGitIndexJob, SyncToSparseIndexJob, UpdateDownloadsJob,
-};
+use crate::worker::{SyncToGitIndexJob, SyncToSparseIndexJob};
 use crates_io_index::Repository;
 
 pub trait BackgroundJob: Serialize + DeserializeOwned + 'static {
@@ -55,53 +52,6 @@ pub trait BackgroundJob: Serialize + DeserializeOwned + 'static {
             ))
             .execute(conn)?;
         Ok(())
-    }
-}
-
-macro_rules! jobs {
-    {
-        $vis:vis enum $name:ident {
-            $($variant:ident ($content:ident)),+ $(,)?
-        }
-    } => {
-        $vis enum $name {
-            $($variant ($content),)+
-        }
-
-        impl $name {
-            pub fn from_value(job_type: &str, value: serde_json::Value) -> Result<Self, PerformError> {
-                Ok(match job_type {
-                    $($content::JOB_NAME => Self::$variant(serde_json::from_value(value)?),)+
-                    job_type => Err(PerformError::from(format!("Unknown job type {job_type}")))?,
-                })
-            }
-
-            pub(super) fn perform(
-                &self,
-                env: &Option<Environment>,
-                state: PerformState<'_>,
-            ) -> Result<(), PerformError> {
-                let env = env
-                    .as_ref()
-                    .expect("Application should configure a background runner environment");
-                match self {
-                    $(Self::$variant(job) => job.run(state, env),)+
-                }
-            }
-        }
-    }
-}
-
-jobs! {
-    pub enum Job {
-        DailyDbMaintenance(DailyDbMaintenanceJob),
-        DumpDb(DumpDbJob),
-        NormalizeIndex(NormalizeIndexJob),
-        RenderAndUploadReadme(RenderAndUploadReadmeJob),
-        SquashIndex(SquashIndexJob),
-        SyncToGitIndex(SyncToGitIndexJob),
-        SyncToSparseIndex(SyncToSparseIndexJob),
-        UpdateDownloads(UpdateDownloadsJob),
     }
 }
 

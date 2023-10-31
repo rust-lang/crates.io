@@ -1,6 +1,8 @@
 use diesel::connection::{AnsiTransactionManager, TransactionManager};
 use diesel::prelude::*;
+use parking_lot::RwLock;
 use std::any::Any;
+use std::collections::HashMap;
 use std::error::Error;
 use std::panic::{catch_unwind, AssertUnwindSafe, PanicInfo, UnwindSafe};
 use std::sync::mpsc::{sync_channel, SyncSender};
@@ -10,7 +12,7 @@ use threadpool::ThreadPool;
 
 use super::errors::*;
 use super::storage;
-use crate::background_jobs::{Environment, Job, PerformState};
+use crate::background_jobs::{BackgroundJob, Environment, PerformState};
 use crate::db::{DieselPool, DieselPooledConn};
 use event::Event;
 
@@ -18,10 +20,26 @@ mod event;
 
 const DEFAULT_JOB_START_TIMEOUT: Duration = Duration::from_secs(30);
 
+type RunTaskFn = Arc<
+    dyn Fn(&Environment, PerformState<'_>, serde_json::Value) -> Result<(), PerformError>
+        + Send
+        + Sync,
+>;
+
+fn runnable<J: BackgroundJob>(
+    env: &Environment,
+    state: PerformState<'_>,
+    payload: serde_json::Value,
+) -> Result<(), PerformError> {
+    let job: J = serde_json::from_value(payload)?;
+    job.run(state, env)
+}
+
 /// The core runner responsible for locking and running jobs
 pub struct Runner {
     connection_pool: DieselPool,
     thread_pool: ThreadPool,
+    job_registry: Arc<RwLock<HashMap<String, RunTaskFn>>>,
     environment: Arc<Option<Environment>>,
     job_start_timeout: Duration,
 }
@@ -31,6 +49,7 @@ impl Runner {
         Self {
             connection_pool,
             thread_pool: ThreadPool::new(1),
+            job_registry: Default::default(),
             environment,
             job_start_timeout: DEFAULT_JOB_START_TIMEOUT,
         }
@@ -43,6 +62,14 @@ impl Runner {
 
     pub fn job_start_timeout(mut self, job_start_timeout: Duration) -> Self {
         self.job_start_timeout = job_start_timeout;
+        self
+    }
+
+    pub fn register_job_type<J: BackgroundJob>(self) -> Self {
+        self.job_registry
+            .write()
+            .insert(J::JOB_NAME.to_string(), Arc::new(runnable::<J>));
+
         self
     }
 
@@ -88,10 +115,20 @@ impl Runner {
     }
 
     fn run_single_job(&self, sender: SyncSender<Event>) {
+        let job_registry = AssertUnwindSafe(self.job_registry.clone());
         let environment = self.environment.clone();
         self.get_single_job(sender, move |job, state| {
-            let job = Job::from_value(&job.job_type, job.data)?;
-            job.perform(&environment, state)
+            let job_registry = job_registry.read();
+            let run_task_fn = job_registry
+                .get(&job.job_type)
+                .ok_or_else(|| PerformError::from(format!("Unknown job type {}", job.job_type)))?;
+
+            let environment = environment
+                .as_ref()
+                .as_ref()
+                .expect("Application should configure a background runner environment");
+
+            run_task_fn(environment, state, job.data)
         })
     }
 

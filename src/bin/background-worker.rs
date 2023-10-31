@@ -31,6 +31,7 @@ use std::time::{Duration, Instant};
 
 use crates_io::swirl::Runner;
 use crates_io::worker::fastly::Fastly;
+use crates_io::worker::RunnerExt;
 
 fn main() {
     let _sentry = crates_io::sentry::init();
@@ -95,6 +96,7 @@ fn main() {
         Runner::new(connection_pool, environment.clone())
             .num_workers(5)
             .job_start_timeout(Duration::from_secs(job_start_timeout))
+            .register_crates_io_job_types()
     };
 
     let mut runner = build_runner();
