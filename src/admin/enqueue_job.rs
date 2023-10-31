@@ -1,6 +1,6 @@
 use crate::background_jobs::Job;
 use crate::db;
-use crate::schema::background_jobs::dsl::*;
+use crate::schema::background_jobs;
 use anyhow::Result;
 use diesel::prelude::*;
 use secrecy::{ExposeSecret, SecretString};
@@ -33,8 +33,8 @@ pub fn run(command: Command) -> Result<()> {
 
     match command {
         Command::UpdateDownloads => {
-            let count: i64 = background_jobs
-                .filter(job_type.eq("update_downloads"))
+            let count: i64 = background_jobs::table
+                .filter(background_jobs::job_type.eq("update_downloads"))
                 .count()
                 .get_result(conn)
                 .unwrap();

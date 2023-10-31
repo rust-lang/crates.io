@@ -95,7 +95,7 @@ fn add_renamed_team() {
     let owner_id = user.as_model().id;
 
     app.db(|conn| {
-        use crates_io::schema::teams::dsl::*;
+        use crates_io::schema::teams;
 
         CrateBuilder::new("foo_renamed_team", owner_id).expect_build(conn);
 
@@ -111,7 +111,7 @@ fn add_renamed_team() {
         .create_or_update(conn)
         .unwrap();
 
-        assert_eq!(teams.count().get_result::<i64>(conn).unwrap(), 1);
+        assert_eq!(teams::table.count().get_result::<i64>(conn).unwrap(), 1);
     });
 
     token

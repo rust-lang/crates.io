@@ -9,6 +9,7 @@ use std::panic::AssertUnwindSafe;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
 use crate::db::ConnectionPool;
+use crate::schema::background_jobs;
 use crate::storage::Storage;
 use crate::swirl::errors::EnqueueError;
 use crate::swirl::PerformError;
@@ -115,16 +116,14 @@ impl Job {
         krate: T,
         conn: &mut PgConnection,
     ) -> Result<(), EnqueueError> {
-        use crate::schema::background_jobs::dsl::*;
-
         // Returns jobs with matching `job_type`, `data` and `priority`,
         // skipping ones that are already locked by the background worker.
         let find_similar_jobs_query = |job: &Job| {
-            let query = background_jobs
-                .select(id)
-                .filter(job_type.eq(job.as_type_str()))
-                .filter(data.eq(job.to_value()?))
-                .filter(priority.eq(PRIORITY_SYNC_TO_INDEX))
+            let query = background_jobs::table
+                .select(background_jobs::id)
+                .filter(background_jobs::job_type.eq(job.as_type_str()))
+                .filter(background_jobs::data.eq(job.to_value()?))
+                .filter(background_jobs::priority.eq(PRIORITY_SYNC_TO_INDEX))
                 .for_update()
                 .skip_locked();
 
@@ -152,9 +151,13 @@ impl Job {
 
         // Insert index update background jobs, but only if they do not
         // already exist.
-        let added_jobs_count = diesel::insert_into(background_jobs)
+        let added_jobs_count = diesel::insert_into(background_jobs::table)
             .values(to_git.union_all(to_sparse))
-            .into_columns((job_type, data, priority))
+            .into_columns((
+                background_jobs::job_type,
+                background_jobs::data,
+                background_jobs::priority,
+            ))
             .execute(conn)?;
 
         // Print a log event if we skipped inserting a job due to deduplication.
@@ -227,14 +230,12 @@ impl Job {
         conn: &mut PgConnection,
         job_priority: i16,
     ) -> Result<(), EnqueueError> {
-        use crate::schema::background_jobs::dsl::*;
-
         let job_data = self.to_value()?;
-        diesel::insert_into(background_jobs)
+        diesel::insert_into(background_jobs::table)
             .values((
-                job_type.eq(self.as_type_str()),
-                data.eq(job_data),
-                priority.eq(job_priority),
+                background_jobs::job_type.eq(self.as_type_str()),
+                background_jobs::data.eq(job_data),
+                background_jobs::priority.eq(job_priority),
             ))
             .execute(conn)?;
         Ok(())

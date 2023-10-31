@@ -57,14 +57,13 @@ impl<'a> NewUser<'a> {
         emails: &Emails,
         conn: &mut PgConnection,
     ) -> QueryResult<User> {
-        use crate::schema::users::dsl::*;
         use diesel::dsl::sql;
         use diesel::insert_into;
         use diesel::pg::upsert::excluded;
         use diesel::sql_types::Integer;
 
         conn.transaction(|conn| {
-            let user: User = insert_into(users)
+            let user: User = insert_into(users::table)
                 .values(self)
                 // We need the `WHERE gh_id > 0` condition here because `gh_id` set
                 // to `-1` indicates that we were unable to find a GitHub ID for
@@ -77,10 +76,10 @@ impl<'a> NewUser<'a> {
                 .on_conflict(sql::<Integer>("(gh_id) WHERE gh_id > 0"))
                 .do_update()
                 .set((
-                    gh_login.eq(excluded(gh_login)),
-                    name.eq(excluded(name)),
-                    gh_avatar.eq(excluded(gh_avatar)),
-                    gh_access_token.eq(excluded(gh_access_token)),
+                    users::gh_login.eq(excluded(users::gh_login)),
+                    users::name.eq(excluded(users::name)),
+                    users::gh_avatar.eq(excluded(users::gh_avatar)),
+                    users::gh_access_token.eq(excluded(users::gh_access_token)),
                 ))
                 .get_result(conn)?;
 

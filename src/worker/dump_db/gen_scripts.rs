@@ -182,11 +182,11 @@ mod tests {
     }
 
     fn get_db_columns(conn: &mut PgConnection) -> Vec<Column> {
-        use information_schema::columns::dsl::*;
-        columns
-            .select((table_name, column_name))
-            .filter(table_schema.eq("public"))
-            .order_by((table_name, ordinal_position))
+        use information_schema::columns;
+        columns::table
+            .select((columns::table_name, columns::column_name))
+            .filter(columns::table_schema.eq("public"))
+            .order_by((columns::table_name, columns::ordinal_position))
             .load(conn)
             .unwrap()
     }

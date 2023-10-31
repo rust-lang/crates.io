@@ -228,7 +228,6 @@ pub async fn regenerate_token_and_send(
 /// Handles `PUT /me/email_notifications` route
 pub async fn update_email_notifications(app: AppState, req: BytesRequest) -> AppResult<Response> {
     conduit_compat(move || {
-        use self::crate_owners::dsl::*;
         use diesel::pg::upsert::excluded;
 
         #[derive(Deserialize)]
@@ -249,8 +248,13 @@ pub async fn update_email_notifications(app: AppState, req: BytesRequest) -> App
 
         // Build inserts from existing crates belonging to the current user
         let to_insert = CrateOwner::by_owner_kind(OwnerKind::User)
-            .filter(owner_id.eq(user_id))
-            .select((crate_id, owner_id, owner_kind, email_notifications))
+            .filter(crate_owners::owner_id.eq(user_id))
+            .select((
+                crate_owners::crate_id,
+                crate_owners::owner_id,
+                crate_owners::owner_kind,
+                crate_owners::email_notifications,
+            ))
             .load(conn)?
             .into_iter()
             // Remove records whose `email_notifications` will not change from their current value
@@ -258,21 +262,25 @@ pub async fn update_email_notifications(app: AppState, req: BytesRequest) -> App
                 |(c_id, o_id, o_kind, e_notifications): (i32, i32, i32, bool)| {
                     let current_e_notifications = *updates.get(&c_id).unwrap_or(&e_notifications);
                     (
-                        crate_id.eq(c_id),
-                        owner_id.eq(o_id),
-                        owner_kind.eq(o_kind),
-                        email_notifications.eq(current_e_notifications),
+                        crate_owners::crate_id.eq(c_id),
+                        crate_owners::owner_id.eq(o_id),
+                        crate_owners::owner_kind.eq(o_kind),
+                        crate_owners::email_notifications.eq(current_e_notifications),
                     )
                 },
             )
             .collect::<Vec<_>>();
 
         // Upsert crate owners; this should only actually exectute updates
-        diesel::insert_into(crate_owners)
+        diesel::insert_into(crate_owners::table)
             .values(&to_insert)
-            .on_conflict((crate_id, owner_id, owner_kind))
+            .on_conflict((
+                crate_owners::crate_id,
+                crate_owners::owner_id,
+                crate_owners::owner_kind,
+            ))
             .do_update()
-            .set(email_notifications.eq(excluded(email_notifications)))
+            .set(crate_owners::email_notifications.eq(excluded(crate_owners::email_notifications)))
             .execute(conn)?;
 
         ok_true()

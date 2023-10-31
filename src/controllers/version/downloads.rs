@@ -58,8 +58,6 @@ pub async fn download(
             };
 
             if let Some(mut conn) = conn {
-                use self::versions::dsl::*;
-
                 // Returns the crate name as stored in the database, or an error if we could
                 // not load the version ID from the database.
                 let (version_id, canonical_crate_name) = app
@@ -68,11 +66,11 @@ pub async fn download(
                     .observe_closure_duration(|| {
                         info_span!("db.query", message = "SELECT ... FROM versions").in_scope(
                             || {
-                                versions
+                                versions::table
                                     .inner_join(crates::table)
-                                    .select((id, crates::name))
+                                    .select((versions::id, crates::name))
                                     .filter(Crate::with_name(&crate_name))
-                                    .filter(num.eq(&version))
+                                    .filter(versions::num.eq(&version))
                                     .first::<(i32, String)>(&mut *conn)
                             },
                         )

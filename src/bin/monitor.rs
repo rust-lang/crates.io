@@ -28,7 +28,6 @@ fn main() -> Result<()> {
 /// Within the default 15 minute time, a job should have already had several
 /// failed retry attempts.
 fn check_failing_background_jobs(conn: &mut PgConnection) -> Result<()> {
-    use crates_io::schema::background_jobs::dsl::*;
     use diesel::dsl::*;
     use diesel::sql_types::Integer;
 
@@ -41,10 +40,10 @@ fn check_failing_background_jobs(conn: &mut PgConnection) -> Result<()> {
         .map(|s| s.parse::<i32>().unwrap())
         .unwrap_or(15);
 
-    let stalled_jobs: Vec<i32> = background_jobs
+    let stalled_jobs: Vec<i32> = background_jobs::table
         .select(1.into_sql::<Integer>())
-        .filter(created_at.lt(now - max_job_time.minutes()))
-        .filter(priority.ge(0))
+        .filter(background_jobs::created_at.lt(now - max_job_time.minutes()))
+        .filter(background_jobs::priority.ge(0))
         .for_update()
         .skip_locked()
         .load(conn)?;
@@ -72,7 +71,6 @@ fn check_failing_background_jobs(conn: &mut PgConnection) -> Result<()> {
 /// Check for an `update_downloads` job that has run longer than expected
 fn check_stalled_update_downloads(conn: &mut PgConnection) -> Result<()> {
     use chrono::{DateTime, NaiveDateTime, Utc};
-    use crates_io::schema::background_jobs::dsl::*;
 
     const EVENT_KEY: &str = "update_downloads_stalled";
 
@@ -83,9 +81,9 @@ fn check_stalled_update_downloads(conn: &mut PgConnection) -> Result<()> {
         .map(|s| s.parse::<u32>().unwrap() as i64)
         .unwrap_or(120);
 
-    let start_time: Result<NaiveDateTime, _> = background_jobs
-        .filter(job_type.eq("update_downloads"))
-        .select(created_at)
+    let start_time: Result<NaiveDateTime, _> = background_jobs::table
+        .filter(background_jobs::job_type.eq("update_downloads"))
+        .select(background_jobs::created_at)
         .first(conn);
 
     if let Ok(start_time) = start_time {

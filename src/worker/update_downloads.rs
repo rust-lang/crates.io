@@ -12,13 +12,12 @@ pub fn perform_update_downloads(conn: &mut PgConnection) -> Result<(), PerformEr
 }
 
 fn update(conn: &mut PgConnection) -> QueryResult<()> {
-    use self::version_downloads::dsl::*;
     use diesel::dsl::now;
     use diesel::select;
 
-    let rows = version_downloads
-        .filter(processed.eq(false))
-        .filter(downloads.ne(counted))
+    let rows = version_downloads::table
+        .filter(version_downloads::processed.eq(false))
+        .filter(version_downloads::downloads.ne(version_downloads::counted))
         .load(conn)?;
 
     info!(rows = rows.len(), "Updating versions");
@@ -27,11 +26,11 @@ fn update(conn: &mut PgConnection) -> QueryResult<()> {
 
     // Anything older than 24 hours ago will be frozen and will not be queried
     // against again.
-    diesel::update(version_downloads)
-        .set(processed.eq(true))
-        .filter(date.lt(diesel::dsl::date(now)))
-        .filter(downloads.eq(counted))
-        .filter(processed.eq(false))
+    diesel::update(version_downloads::table)
+        .set(version_downloads::processed.eq(true))
+        .filter(version_downloads::date.lt(diesel::dsl::date(now)))
+        .filter(version_downloads::downloads.eq(version_downloads::counted))
+        .filter(version_downloads::processed.eq(false))
         .execute(conn)?;
     info!("Finished freezing old version_downloads");
 

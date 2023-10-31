@@ -66,23 +66,25 @@ impl ApiToken {
         })
     }
 
-    pub fn find_by_api_token(conn: &mut PgConnection, token_: &str) -> AppResult<ApiToken> {
-        use crate::schema::api_tokens::dsl::*;
+    pub fn find_by_api_token(conn: &mut PgConnection, token: &str) -> AppResult<ApiToken> {
         use diesel::{dsl::now, update};
 
-        let token_ =
-            HashedToken::parse(token_).ok_or_else(InsecurelyGeneratedTokenRevoked::boxed)?;
+        let token = HashedToken::parse(token).ok_or_else(InsecurelyGeneratedTokenRevoked::boxed)?;
 
-        let tokens = api_tokens
-            .filter(revoked.eq(false))
-            .filter(expired_at.is_null().or(expired_at.gt(now)))
-            .filter(token.eq(&token_));
+        let tokens = api_tokens::table
+            .filter(api_tokens::revoked.eq(false))
+            .filter(
+                api_tokens::expired_at
+                    .is_null()
+                    .or(api_tokens::expired_at.gt(now)),
+            )
+            .filter(api_tokens::token.eq(&token));
 
         // If the database is in read only mode, we can't update last_used_at.
         // Try updating in a new transaction, if that fails, fall back to reading
         conn.transaction(|conn| {
             update(tokens)
-                .set(last_used_at.eq(now.nullable()))
+                .set(api_tokens::last_used_at.eq(now.nullable()))
                 .returning(ApiToken::as_returning())
                 .get_result(conn)
         })

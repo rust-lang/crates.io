@@ -116,10 +116,8 @@ impl<'a> NewCrate<'a> {
     }
 
     pub fn create(&self, conn: &mut PgConnection, user_id: i32) -> QueryResult<Crate> {
-        use crate::schema::crates::dsl::*;
-
         conn.transaction(|conn| {
-            let krate: Crate = diesel::insert_into(crates)
+            let krate: Crate = diesel::insert_into(crates::table)
                 .values(self)
                 .on_conflict_do_nothing()
                 .returning(Crate::as_returning())
@@ -253,10 +251,10 @@ impl Crate {
     /// Return both the newest (most recently updated) and
     /// highest version (in semver order) for the current crate.
     pub fn top_versions(&self, conn: &mut PgConnection) -> QueryResult<TopVersions> {
-        use crate::schema::versions::dsl::*;
-
         Ok(TopVersions::from_date_version_pairs(
-            self.versions().select((created_at, num)).load(conn)?,
+            self.versions()
+                .select((versions::created_at, versions::num))
+                .load(conn)?,
         ))
     }
 
