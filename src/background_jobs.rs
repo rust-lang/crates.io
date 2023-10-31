@@ -112,7 +112,7 @@ impl Job {
     /// and the background worker queue locking only work when using multiple
     /// connections.
     #[instrument(name = "swirl.enqueue", skip_all, fields(message = "sync_to_index", krate = %krate))]
-    pub fn enqueue_sync_to_index<T: ToString + Display>(
+    pub fn enqueue_sync_to_index<T: Display>(
         krate: T,
         conn: &mut PgConnection,
     ) -> Result<(), EnqueueError> {
