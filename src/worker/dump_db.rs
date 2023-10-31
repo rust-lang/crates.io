@@ -15,33 +15,35 @@ pub struct DumpDbJob {
     pub(crate) target_name: String,
 }
 
-/// Create CSV dumps of the public information in the database, wrap them in a
-/// tarball and upload to S3.
-pub fn perform_dump_db(job: &DumpDbJob, env: &Environment) -> Result<(), PerformError> {
-    let directory = DumpDirectory::create()?;
+impl DumpDbJob {
+    /// Create CSV dumps of the public information in the database, wrap them in a
+    /// tarball and upload to S3.
+    pub fn run(&self, env: &Environment) -> Result<(), PerformError> {
+        let directory = DumpDirectory::create()?;
 
-    info!(path = ?directory.export_dir, "Begin exporting database");
-    directory.populate(&job.database_url)?;
+        info!(path = ?directory.export_dir, "Begin exporting database");
+        directory.populate(&self.database_url)?;
 
-    info!(path = ?directory.export_dir, "Creating tarball");
-    let tarball = DumpTarball::create(&directory.export_dir)?;
+        info!(path = ?directory.export_dir, "Creating tarball");
+        let tarball = DumpTarball::create(&directory.export_dir)?;
 
-    info!("Uploading tarball");
-    let rt = tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .context("Failed to initialize tokio runtime")
-        .unwrap();
+        info!("Uploading tarball");
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .context("Failed to initialize tokio runtime")
+            .unwrap();
 
-    let storage = Storage::from_environment();
+        let storage = Storage::from_environment();
 
-    rt.block_on(storage.upload_db_dump(&job.target_name, &tarball.tarball_path))?;
-    info!("Database dump tarball uploaded");
+        rt.block_on(storage.upload_db_dump(&self.target_name, &tarball.tarball_path))?;
+        info!("Database dump tarball uploaded");
 
-    info!("Invalidating CDN caches");
-    invalidate_caches(env, &job.target_name);
+        info!("Invalidating CDN caches");
+        invalidate_caches(env, &self.target_name);
 
-    Ok(())
+        Ok(())
+    }
 }
 
 /// Manage the export directory.
