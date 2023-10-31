@@ -128,44 +128,46 @@ pub fn get_index_data(name: &str, conn: &mut PgConnection) -> anyhow::Result<Opt
     Ok(Some(str))
 }
 
-/// Collapse the index into a single commit, archiving the current history in a snapshot branch.
-#[instrument(skip_all)]
-pub fn perform_index_squash(
-    _state: PerformState<'_>,
-    env: &Environment,
-) -> Result<(), PerformError> {
-    info!("Squashing the index into a single commit");
+#[derive(Serialize, Deserialize)]
+pub struct SquashIndexJob;
 
-    let repo = env.lock_index()?;
+impl SquashIndexJob {
+    /// Collapse the index into a single commit, archiving the current history in a snapshot branch.
+    #[instrument(skip_all)]
+    pub fn run(&self, _state: PerformState<'_>, env: &Environment) -> Result<(), PerformError> {
+        info!("Squashing the index into a single commit");
 
-    let now = Utc::now().format("%Y-%m-%d");
-    let original_head = repo.head_oid()?.to_string();
-    let msg = format!("Collapse index into one commit\n\n\
+        let repo = env.lock_index()?;
+
+        let now = Utc::now().format("%Y-%m-%d");
+        let original_head = repo.head_oid()?.to_string();
+        let msg = format!("Collapse index into one commit\n\n\
         Previous HEAD was {original_head}, now on the `snapshot-{now}` branch\n\n\
         More information about this change can be found [online] and on [this issue].\n\n\
         [online]: https://internals.rust-lang.org/t/cargos-crate-index-upcoming-squash-into-one-commit/8440\n\
         [this issue]: https://github.com/rust-lang/crates-io-cargo-teams/issues/47");
 
-    repo.squash_to_single_commit(&msg)?;
+        repo.squash_to_single_commit(&msg)?;
 
-    // Shell out to git because libgit2 does not currently support push leases
+        // Shell out to git because libgit2 does not currently support push leases
 
-    repo.run_command(Command::new("git").args([
-        "push",
-        // Both updates should succeed or fail together
-        "--atomic",
-        "origin",
-        // Overwrite master, but only if it server matches the expected value
-        &format!("--force-with-lease=refs/heads/master:{original_head}"),
-        // The new squashed commit is pushed to master
-        "HEAD:refs/heads/master",
-        // The previous value of HEAD is pushed to a snapshot branch
-        &format!("{original_head}:refs/heads/snapshot-{now}"),
-    ]))?;
+        repo.run_command(Command::new("git").args([
+            "push",
+            // Both updates should succeed or fail together
+            "--atomic",
+            "origin",
+            // Overwrite master, but only if it server matches the expected value
+            &format!("--force-with-lease=refs/heads/master:{original_head}"),
+            // The new squashed commit is pushed to master
+            "HEAD:refs/heads/master",
+            // The previous value of HEAD is pushed to a snapshot branch
+            &format!("{original_head}:refs/heads/snapshot-{now}"),
+        ]))?;
 
-    info!("The index has been successfully squashed.");
+        info!("The index has been successfully squashed.");
 
-    Ok(())
+        Ok(())
+    }
 }
 
 #[derive(Serialize, Deserialize)]

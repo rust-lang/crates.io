@@ -7,13 +7,15 @@ use crate::background_jobs::{Environment, PerformState};
 use crate::swirl::PerformError;
 use diesel::prelude::*;
 
-pub fn perform_update_downloads(
-    state: PerformState<'_>,
-    _env: &Environment,
-) -> Result<(), PerformError> {
-    let mut conn = state.fresh_connection()?;
-    update(&mut conn)?;
-    Ok(())
+#[derive(Serialize, Deserialize)]
+pub struct UpdateDownloadsJob;
+
+impl UpdateDownloadsJob {
+    pub fn run(&self, state: PerformState<'_>, _env: &Environment) -> Result<(), PerformError> {
+        let mut conn = state.fresh_connection()?;
+        update(&mut conn)?;
+        Ok(())
+    }
 }
 
 fn update(conn: &mut PgConnection) -> QueryResult<()> {

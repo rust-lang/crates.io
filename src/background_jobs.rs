@@ -13,11 +13,11 @@ use crate::schema::background_jobs;
 use crate::storage::Storage;
 use crate::swirl::errors::EnqueueError;
 use crate::swirl::PerformError;
-use crate::worker;
 use crate::worker::cloudfront::CloudFront;
 use crate::worker::fastly::Fastly;
 use crate::worker::{
-    DumpDbJob, NormalizeIndexJob, RenderAndUploadReadmeJob, SyncToGitIndexJob, SyncToSparseIndexJob,
+    DailyDbMaintenanceJob, DumpDbJob, NormalizeIndexJob, RenderAndUploadReadmeJob, SquashIndexJob,
+    SyncToGitIndexJob, SyncToSparseIndexJob, UpdateDownloadsJob,
 };
 use crates_io_index::Repository;
 
@@ -81,14 +81,14 @@ macro_rules! job_variant_from_value {
 
 jobs! {
     pub enum Job {
-        DailyDbMaintenance,
+        DailyDbMaintenance(DailyDbMaintenanceJob),
         DumpDb(DumpDbJob),
         NormalizeIndex(NormalizeIndexJob),
         RenderAndUploadReadme(RenderAndUploadReadmeJob),
-        SquashIndex,
+        SquashIndex(SquashIndexJob),
         SyncToGitIndex(SyncToGitIndexJob),
         SyncToSparseIndex(SyncToSparseIndexJob),
-        UpdateDownloads,
+        UpdateDownloads(UpdateDownloadsJob),
     }
 }
 
@@ -186,7 +186,7 @@ impl Job {
     }
 
     pub fn daily_db_maintenance() -> Self {
-        Self::DailyDbMaintenance
+        Self::DailyDbMaintenance(DailyDbMaintenanceJob)
     }
 
     pub fn dump_db(database_url: String, target_name: String) -> Self {
@@ -217,7 +217,7 @@ impl Job {
     }
 
     pub fn squash_index() -> Self {
-        Self::SquashIndex
+        Self::SquashIndex(SquashIndexJob)
     }
 
     pub fn sync_to_git_index<T: ToString>(krate: T) -> Self {
@@ -233,7 +233,7 @@ impl Job {
     }
 
     pub fn update_downloads() -> Self {
-        Self::UpdateDownloads
+        Self::UpdateDownloads(UpdateDownloadsJob)
     }
 
     pub fn enqueue(&self, conn: &mut PgConnection) -> Result<(), EnqueueError> {
@@ -266,14 +266,14 @@ impl Job {
             .as_ref()
             .expect("Application should configure a background runner environment");
         match self {
-            Job::DailyDbMaintenance => worker::perform_daily_db_maintenance(state, env),
+            Job::DailyDbMaintenance(job) => job.run(state, env),
             Job::DumpDb(job) => job.run(state, env),
-            Job::SquashIndex => worker::perform_index_squash(state, env),
+            Job::SquashIndex(job) => job.run(state, env),
             Job::NormalizeIndex(job) => job.run(state, env),
             Job::RenderAndUploadReadme(job) => job.run(state, env),
             Job::SyncToGitIndex(job) => job.run(state, env),
             Job::SyncToSparseIndex(job) => job.run(state, env),
-            Job::UpdateDownloads => worker::perform_update_downloads(state, env),
+            Job::UpdateDownloads(job) => job.run(state, env),
         }
     }
 }
