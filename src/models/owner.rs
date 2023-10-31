@@ -31,11 +31,9 @@ impl CrateOwner {
     /// Returns a base crate owner query filtered by the owner kind argument. This query also
     /// filters out deleted records.
     pub fn by_owner_kind(kind: OwnerKind) -> BoxedQuery<'static> {
-        use self::crate_owners::dsl::*;
-
-        crate_owners
-            .filter(deleted.eq(false))
-            .filter(owner_kind.eq(kind))
+        crate_owners::table
+            .filter(crate_owners::deleted.eq(false))
+            .filter(crate_owners::owner_kind.eq(kind))
             .into_boxed()
     }
 }

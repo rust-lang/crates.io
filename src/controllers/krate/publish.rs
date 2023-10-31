@@ -410,15 +410,14 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
     .await
 }
 
-/// Counts the number of versions for `krate_id` that were published within
+/// Counts the number of versions for `crate_id` that were published within
 /// the last 24 hours.
-fn count_versions_published_today(krate_id: i32, conn: &mut PgConnection) -> QueryResult<i64> {
-    use crate::schema::versions::dsl::*;
+fn count_versions_published_today(crate_id: i32, conn: &mut PgConnection) -> QueryResult<i64> {
     use diesel::dsl::{now, IntervalDsl};
 
-    versions
-        .filter(crate_id.eq(krate_id))
-        .filter(created_at.gt(now - 24.hours()))
+    versions::table
+        .filter(versions::crate_id.eq(crate_id))
+        .filter(versions::created_at.gt(now - 24.hours()))
         .count()
         .get_result(conn)
 }

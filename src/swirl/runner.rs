@@ -284,7 +284,7 @@ mod tests {
     use once_cell::sync::Lazy;
 
     use super::*;
-    use crate::schema::background_jobs::dsl::*;
+    use crate::schema::background_jobs;
     use std::panic::AssertUnwindSafe;
     use std::sync::mpsc::{sync_channel, SyncSender};
     use std::sync::{Arc, Barrier, Mutex, MutexGuard};
@@ -332,7 +332,7 @@ mod tests {
         runner.get_single_job(dummy_sender(), |_, _| Ok(()));
         runner.wait_for_jobs().unwrap();
 
-        let remaining_jobs = background_jobs
+        let remaining_jobs = background_jobs::table
             .count()
             .get_result(&mut *runner.connection().unwrap());
         assert_eq!(remaining_jobs, Ok(0));
@@ -363,17 +363,17 @@ mod tests {
         // the lock on the first job is released.
         // If there is any point where the row is unlocked, but the retry
         // count is not updated, we will get a row here.
-        let available_jobs = background_jobs
-            .select(id)
-            .filter(retries.eq(0))
+        let available_jobs = background_jobs::table
+            .select(background_jobs::id)
+            .filter(background_jobs::retries.eq(0))
             .for_update()
             .load::<i64>(conn)
             .unwrap();
         assert_eq!(available_jobs.len(), 0);
 
         // Sanity check to make sure the job actually is there
-        let total_jobs_including_failed = background_jobs
-            .select(id)
+        let total_jobs_including_failed = background_jobs::table
+            .select(background_jobs::id)
             .for_update()
             .load::<i64>(conn)
             .unwrap();
@@ -391,9 +391,9 @@ mod tests {
         runner.get_single_job(dummy_sender(), |_, _| panic!());
         runner.wait_for_jobs().unwrap();
 
-        let tries = background_jobs
+        let tries = background_jobs::table
             .find(job_id)
-            .select(retries)
+            .select(background_jobs::retries)
             .for_update()
             .first::<i32>(&mut *runner.connection().unwrap())
             .unwrap();
@@ -432,9 +432,16 @@ mod tests {
     }
 
     fn create_dummy_job(runner: &Runner) -> storage::BackgroundJob {
-        diesel::insert_into(background_jobs)
-            .values((job_type.eq("Foo"), data.eq(serde_json::json!(null))))
-            .returning((id, job_type, data))
+        diesel::insert_into(background_jobs::table)
+            .values((
+                background_jobs::job_type.eq("Foo"),
+                background_jobs::data.eq(serde_json::json!(null)),
+            ))
+            .returning((
+                background_jobs::id,
+                background_jobs::job_type,
+                background_jobs::data,
+            ))
             .get_result(&mut *runner.connection().unwrap())
             .unwrap()
     }

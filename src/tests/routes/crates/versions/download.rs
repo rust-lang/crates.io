@@ -65,7 +65,7 @@ fn force_unconditional_redirect() {
 #[test]
 fn download_caches_version_id() {
     use super::super::downloads;
-    use crates_io::schema::crates::dsl::*;
+    use crates_io::schema::crates;
     use diesel::prelude::*;
 
     let (app, anon, user) = TestApp::init().with_user();
@@ -82,8 +82,8 @@ fn download_caches_version_id() {
 
     // Rename the crate, so that `foo_download` will not be found if its version_id was not cached
     app.db(|conn| {
-        diesel::update(crates.filter(name.eq("foo_download")))
-            .set(name.eq("other"))
+        diesel::update(crates::table.filter(crates::name.eq("foo_download")))
+            .set(crates::name.eq("other"))
             .execute(conn)
             .unwrap();
     });

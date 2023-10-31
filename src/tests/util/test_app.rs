@@ -34,7 +34,7 @@ struct TestAppInner {
 
 impl Drop for TestAppInner {
     fn drop(&mut self) {
-        use crates_io::schema::background_jobs::dsl::*;
+        use crates_io::schema::background_jobs;
         use diesel::prelude::*;
 
         // Avoid a double-panic if the test is already failing
@@ -51,7 +51,7 @@ impl Drop for TestAppInner {
         // Manually verify that all jobs have completed successfully
         // This will catch any tests that enqueued a job but forgot to initialize the runner
         let conn = &mut *self.app.db_write().unwrap();
-        let job_count: i64 = background_jobs.count().get_result(conn).unwrap();
+        let job_count: i64 = background_jobs::table.count().get_result(conn).unwrap();
         assert_eq!(
             0, job_count,
             "Unprocessed or failed jobs remain in the queue"

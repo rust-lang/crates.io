@@ -107,8 +107,6 @@ impl RateLimiter {
         now: NaiveDateTime,
         conn: &mut PgConnection,
     ) -> QueryResult<Bucket> {
-        use self::publish_limit_buckets::dsl::*;
-
         let config = self.config_for_action(performed_action);
         let refill_rate = (config.rate.as_millis() as i64).milliseconds();
 
@@ -128,22 +126,29 @@ impl RateLimiter {
         // However, for the intervals we're dealing with, it is always well
         // defined, so we convert to an f64 of seconds to represent this.
         let tokens_to_add = floor(
-            (date_part("epoch", now) - date_part("epoch", last_refill))
+            (date_part("epoch", now) - date_part("epoch", publish_limit_buckets::last_refill))
                 / interval_part("epoch", refill_rate),
         );
 
-        diesel::insert_into(publish_limit_buckets)
+        diesel::insert_into(publish_limit_buckets::table)
             .values((
-                user_id.eq(uploader),
-                action.eq(performed_action),
-                tokens.eq(burst),
-                last_refill.eq(now),
+                publish_limit_buckets::user_id.eq(uploader),
+                publish_limit_buckets::action.eq(performed_action),
+                publish_limit_buckets::tokens.eq(burst),
+                publish_limit_buckets::last_refill.eq(now),
             ))
-            .on_conflict((user_id, action))
+            .on_conflict((
+                publish_limit_buckets::user_id,
+                publish_limit_buckets::action,
+            ))
             .do_update()
             .set((
-                tokens.eq(least(burst, greatest(0, tokens - 1) + tokens_to_add)),
-                last_refill.eq(last_refill + refill_rate.into_sql::<Interval>() * tokens_to_add),
+                publish_limit_buckets::tokens.eq(least(
+                    burst,
+                    greatest(0, publish_limit_buckets::tokens - 1) + tokens_to_add,
+                )),
+                publish_limit_buckets::last_refill.eq(publish_limit_buckets::last_refill
+                    + refill_rate.into_sql::<Interval>() * tokens_to_add),
             ))
             .get_result(conn)
     }

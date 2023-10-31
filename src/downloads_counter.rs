@@ -470,12 +470,12 @@ mod tests {
         }
 
         fn assert_downloads_count(&self, conn: &mut PgConnection, version: i32, expected: i64) {
-            use crate::schema::version_downloads::dsl::*;
+            use crate::schema::version_downloads;
             use diesel::dsl::*;
 
-            let actual: Option<i64> = version_downloads
-                .select(sum(downloads))
-                .filter(version_id.eq(version))
+            let actual: Option<i64> = version_downloads::table
+                .select(sum(version_downloads::downloads))
+                .filter(version_downloads::version_id.eq(version))
                 .first(conn)
                 .unwrap();
             assert_eq!(actual.unwrap_or(0), expected);

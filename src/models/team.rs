@@ -57,12 +57,11 @@ impl<'a> NewTeam<'a> {
     }
 
     pub fn create_or_update(&self, conn: &mut PgConnection) -> QueryResult<Team> {
-        use crate::schema::teams::dsl::*;
         use diesel::insert_into;
 
-        insert_into(teams)
+        insert_into(teams::table)
             .values(self)
-            .on_conflict(github_id)
+            .on_conflict(teams::github_id)
             .do_update()
             .set(self)
             .get_result(conn)

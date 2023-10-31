@@ -76,7 +76,7 @@ fn categories_from_toml(
 }
 
 pub fn sync_with_connection(toml_str: &str, conn: &mut PgConnection) -> Result<()> {
-    use crate::schema::categories::dsl::*;
+    use crate::schema::categories;
     use diesel::pg::upsert::excluded;
 
     let toml: toml::value::Table =
@@ -87,27 +87,27 @@ pub fn sync_with_connection(toml_str: &str, conn: &mut PgConnection) -> Result<(
         .into_iter()
         .map(|c| {
             (
-                slug.eq(c.slug.to_lowercase()),
-                category.eq(c.name),
-                description.eq(c.description),
+                categories::slug.eq(c.slug.to_lowercase()),
+                categories::category.eq(c.name),
+                categories::description.eq(c.description),
             )
         })
         .collect::<Vec<_>>();
 
     conn.transaction(|conn| {
-        let slugs: Vec<String> = diesel::insert_into(categories)
+        let slugs: Vec<String> = diesel::insert_into(categories::table)
             .values(&to_insert)
-            .on_conflict(slug)
+            .on_conflict(categories::slug)
             .do_update()
             .set((
-                category.eq(excluded(category)),
-                description.eq(excluded(description)),
+                categories::category.eq(excluded(categories::category)),
+                categories::description.eq(excluded(categories::description)),
             ))
-            .returning(slug)
+            .returning(categories::slug)
             .get_results(conn)?;
 
-        diesel::delete(categories)
-            .filter(slug.ne_all(slugs))
+        diesel::delete(categories::table)
+            .filter(categories::slug.ne_all(slugs))
             .execute(conn)?;
         Ok(())
     })

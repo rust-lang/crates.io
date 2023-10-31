@@ -49,11 +49,12 @@ fn can_download_crate_in_read_only_mode() {
 
     // We're in read only mode so the download should not have been counted
     app.db(|conn| {
-        use crates_io::schema::version_downloads::dsl::*;
+        use crates_io::schema::version_downloads;
         use diesel::dsl::sum;
 
-        let dl_count: Result<Option<i64>, _> =
-            version_downloads.select(sum(downloads)).get_result(conn);
+        let dl_count: Result<Option<i64>, _> = version_downloads::table
+            .select(sum(version_downloads::downloads))
+            .get_result(conn);
         assert_ok_eq!(dl_count, None);
     })
 }
