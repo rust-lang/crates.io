@@ -269,7 +269,7 @@ impl Job {
             }
             Job::DumpDb(job) => worker::perform_dump_db(job, env),
             Job::SquashIndex => worker::perform_index_squash(env),
-            Job::NormalizeIndex(args) => worker::perform_normalize_index(env, args),
+            Job::NormalizeIndex(job) => job.run(env),
             Job::RenderAndUploadReadme(job) => {
                 worker::perform_render_and_upload_readme(job, state.conn, env)
             }
