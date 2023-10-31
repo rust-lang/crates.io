@@ -46,19 +46,6 @@ impl Runner {
             .job_start_timeout(Duration::from_secs(job_start_timeout))
     }
 
-    #[cfg(test)]
-    fn internal_test_runner(environment: Option<Environment>, url: String) -> Self {
-        let connection_pool = r2d2::Pool::builder()
-            .max_size(4)
-            .build_unchecked(ConnectionManager::new(url));
-
-        let connection_pool = DieselPool::new_background_worker(connection_pool);
-
-        Self::new(connection_pool, Arc::new(environment))
-            .num_workers(2)
-            .job_start_timeout(Duration::from_secs(10))
-    }
-
     pub fn test_runner(environment: Environment, connection_pool: DieselPool) -> Self {
         Self::new(connection_pool, Arc::new(Some(environment)))
             .num_workers(1)
@@ -446,7 +433,15 @@ mod tests {
         let database_url =
             dotenvy::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set to run tests");
 
-        super::Runner::internal_test_runner(None, database_url)
+        let connection_pool = r2d2::Pool::builder()
+            .max_size(4)
+            .build_unchecked(ConnectionManager::new(database_url));
+
+        let connection_pool = DieselPool::new_background_worker(connection_pool);
+
+        Runner::new(connection_pool, Arc::new(None))
+            .num_workers(2)
+            .job_start_timeout(Duration::from_secs(10))
     }
 
     fn create_dummy_job(runner: &Runner) -> storage::BackgroundJob {
