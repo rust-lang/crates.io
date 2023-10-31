@@ -56,6 +56,18 @@ macro_rules! jobs {
                     })
                 }
 
+                pub(super) fn perform(
+                    &self,
+                    env: &Option<Environment>,
+                    state: PerformState<'_>,
+                ) -> Result<(), PerformError> {
+                    let env = env
+                        .as_ref()
+                        .expect("Application should configure a background runner environment");
+                    match self {
+                        $(Self::$variant(job) => job.run(state, env),)+
+                    }
+                }
             }
         }
     }
@@ -237,26 +249,6 @@ impl Job {
             ))
             .execute(conn)?;
         Ok(())
-    }
-
-    pub(super) fn perform(
-        &self,
-        env: &Option<Environment>,
-        state: PerformState<'_>,
-    ) -> Result<(), PerformError> {
-        let env = env
-            .as_ref()
-            .expect("Application should configure a background runner environment");
-        match self {
-            Job::DailyDbMaintenance(job) => job.run(state, env),
-            Job::DumpDb(job) => job.run(state, env),
-            Job::SquashIndex(job) => job.run(state, env),
-            Job::NormalizeIndex(job) => job.run(state, env),
-            Job::RenderAndUploadReadme(job) => job.run(state, env),
-            Job::SyncToGitIndex(job) => job.run(state, env),
-            Job::SyncToSparseIndex(job) => job.run(state, env),
-            Job::UpdateDownloads(job) => job.run(state, env),
-        }
     }
 }
 
