@@ -1,7 +1,5 @@
 use diesel::connection::{AnsiTransactionManager, TransactionManager};
 use diesel::prelude::*;
-use diesel::r2d2;
-use diesel::r2d2::ConnectionManager;
 use std::any::Any;
 use std::error::Error;
 use std::panic::{catch_unwind, AssertUnwindSafe, PanicInfo, UnwindSafe};
@@ -29,23 +27,6 @@ pub struct Runner {
 }
 
 impl Runner {
-    pub fn production_runner(
-        environment: Arc<Option<Environment>>,
-        url: String,
-        job_start_timeout: u64,
-    ) -> Self {
-        let connection_pool = r2d2::Pool::builder()
-            .max_size(10)
-            .min_idle(Some(0))
-            .build_unchecked(ConnectionManager::new(url));
-
-        let connection_pool = DieselPool::new_background_worker(connection_pool);
-
-        Self::new(connection_pool, environment)
-            .num_workers(5)
-            .job_start_timeout(Duration::from_secs(job_start_timeout))
-    }
-
     pub fn new(connection_pool: DieselPool, environment: Arc<Option<Environment>>) -> Self {
         Self {
             connection_pool,
@@ -284,6 +265,8 @@ mod tests {
 
     use super::*;
     use crate::schema::background_jobs;
+    use diesel::r2d2;
+    use diesel::r2d2::ConnectionManager;
     use std::panic::AssertUnwindSafe;
     use std::sync::mpsc::{sync_channel, SyncSender};
     use std::sync::{Arc, Barrier, Mutex, MutexGuard};
