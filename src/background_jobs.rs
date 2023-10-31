@@ -270,9 +270,7 @@ impl Job {
             Job::DumpDb(job) => worker::perform_dump_db(job, env),
             Job::SquashIndex => worker::perform_index_squash(env),
             Job::NormalizeIndex(job) => job.run(env),
-            Job::RenderAndUploadReadme(job) => {
-                worker::perform_render_and_upload_readme(job, state.conn, env)
-            }
+            Job::RenderAndUploadReadme(job) => job.run(state.conn, env),
             Job::SyncToGitIndex(args) => worker::sync_to_git_index(env, state.conn, &args.krate),
             Job::SyncToSparseIndex(args) => {
                 worker::sync_to_sparse_index(env, state.conn, &args.krate)
