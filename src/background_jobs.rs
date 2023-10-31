@@ -317,7 +317,7 @@ pub struct RenderAndUploadReadmeJob {
 }
 
 pub struct Environment {
-    index: Arc<Mutex<Repository>>,
+    index: Mutex<Repository>,
     http_client: AssertUnwindSafe<Client>,
     cloudfront: Option<CloudFront>,
     fastly: Option<Fastly>,
@@ -333,7 +333,7 @@ impl Environment {
         storage: Arc<Storage>,
     ) -> Self {
         Self {
-            index: Arc::new(Mutex::new(index)),
+            index: Mutex::new(index),
             http_client: AssertUnwindSafe(http_client),
             cloudfront,
             fastly,
