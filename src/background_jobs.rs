@@ -118,36 +118,32 @@ impl Job {
     ) -> Result<(), EnqueueError> {
         // Returns jobs with matching `job_type`, `data` and `priority`,
         // skipping ones that are already locked by the background worker.
-        let find_similar_jobs_query = |job: &Job| {
-            let query = background_jobs::table
+        let find_similar_jobs_query = |job_type: &'static str, data: serde_json::Value| {
+            background_jobs::table
                 .select(background_jobs::id)
-                .filter(background_jobs::job_type.eq(job.as_type_str()))
-                .filter(background_jobs::data.eq(job.to_value()?))
+                .filter(background_jobs::job_type.eq(job_type))
+                .filter(background_jobs::data.eq(data))
                 .filter(background_jobs::priority.eq(PRIORITY_SYNC_TO_INDEX))
                 .for_update()
-                .skip_locked();
-
-            Ok::<_, serde_json::Error>(query)
+                .skip_locked()
         };
 
         // Returns one `job_type, data, priority` row with values from the
         // passed-in `job`, unless a similar row already exists.
-        let deduplicated_select_query = |job: &Job| {
-            let query = diesel::select((
-                job.as_type_str().into_sql::<Text>(),
-                job.to_value()?.into_sql::<Jsonb>(),
+        let deduplicated_select_query = |job_type: &'static str, data: serde_json::Value| {
+            diesel::select((
+                job_type.into_sql::<Text>(),
+                data.clone().into_sql::<Jsonb>(),
                 PRIORITY_SYNC_TO_INDEX.into_sql::<Int2>(),
             ))
-            .filter(not(exists(find_similar_jobs_query(job)?)));
-
-            Ok::<_, serde_json::Error>(query)
+            .filter(not(exists(find_similar_jobs_query(job_type, data))))
         };
 
         let to_git = Self::sync_to_git_index(krate.to_string());
-        let to_git = deduplicated_select_query(&to_git)?;
+        let to_git = deduplicated_select_query(to_git.as_type_str(), to_git.to_value()?);
 
         let to_sparse = Self::sync_to_sparse_index(krate.to_string());
-        let to_sparse = deduplicated_select_query(&to_sparse)?;
+        let to_sparse = deduplicated_select_query(to_sparse.as_type_str(), to_sparse.to_value()?);
 
         // Insert index update background jobs, but only if they do not
         // already exist.
