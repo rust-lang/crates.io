@@ -28,30 +28,30 @@ pub const PRIORITY_SYNC_TO_INDEX: i16 = 100;
 macro_rules! jobs {
     {
         $vis:vis enum $name:ident {
-            $($variant:ident $(($content:ident))?),+ $(,)?
+            $($variant:ident ($content:ident)),+ $(,)?
         }
     } => {
         $vis enum $name {
-            $($variant $(($content))?,)+
+            $($variant ($content),)+
         }
 
         paste! {
             impl $name {
                 fn as_type_str(&self) -> &'static str {
                     match self {
-                        $(Self:: $variant $(([<_ $content:snake:lower>]))? => stringify!([<$variant:snake:lower>]),)+
+                        $(Self:: $variant ([<_ $content:snake:lower>]) => stringify!([<$variant:snake:lower>]),)+
                     }
                 }
 
                 fn to_value(&self) -> serde_json::Result<serde_json::Value> {
                     match self {
-                        $(Self:: $variant $(([<$content:snake:lower>]))? => job_variant_to_value!($([<$content:snake:lower>])?),)+
+                        $(Self:: $variant ([<$content:snake:lower>]) => serde_json::to_value([<$content:snake:lower>]),)+
                     }
                 }
 
                 pub fn from_value(job_type: &str, value: serde_json::Value) -> Result<Self, PerformError> {
                     Ok(match job_type {
-                        $(stringify!([<$variant:snake:lower>]) => job_variant_from_value!($variant value $($content)?),)+
+                        $(stringify!([<$variant:snake:lower>]) => Self::$variant(serde_json::from_value(value)?),)+
                         job_type => Err(PerformError::from(format!("Unknown job type {job_type}")))?,
                     })
                 }
@@ -59,24 +59,6 @@ macro_rules! jobs {
             }
         }
     }
-}
-
-macro_rules! job_variant_to_value {
-    () => {
-        Ok(serde_json::Value::Null)
-    };
-    ($content:ident) => {
-        serde_json::to_value($content)
-    };
-}
-
-macro_rules! job_variant_from_value {
-    ($variant:ident $value:ident) => {
-        Self::$variant
-    };
-    ($variant:ident $value:ident $content:ident) => {
-        Self::$variant(serde_json::from_value($value)?)
-    };
 }
 
 jobs! {
