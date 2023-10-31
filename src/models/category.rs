@@ -190,24 +190,21 @@ mod tests {
     #[test]
     fn category_toplevel_orders_by_crates_cnt_when_sort_given() {
         use self::categories;
+
+        let new_cat = |category, slug, crates_cnt| {
+            (
+                categories::category.eq(category),
+                categories::slug.eq(slug),
+                categories::crates_cnt.eq(crates_cnt),
+            )
+        };
+
         let conn = &mut pg_connection();
         insert_into(categories::table)
             .values(&vec![
-                (
-                    categories::category.eq("Cat 1"),
-                    categories::slug.eq("cat1"),
-                    categories::crates_cnt.eq(0),
-                ),
-                (
-                    categories::category.eq("Cat 2"),
-                    categories::slug.eq("cat2"),
-                    categories::crates_cnt.eq(2),
-                ),
-                (
-                    categories::category.eq("Cat 3"),
-                    categories::slug.eq("cat3"),
-                    categories::crates_cnt.eq(1),
-                ),
+                new_cat("Cat 1", "cat1", 0),
+                new_cat("Cat 2", "cat2", 2),
+                new_cat("Cat 3", "cat3", 1),
             ])
             .execute(conn)
             .unwrap();
@@ -263,39 +260,24 @@ mod tests {
     #[test]
     fn category_toplevel_includes_subcategories_in_crate_cnt() {
         use self::categories;
+
+        let new_cat = |category, slug, crates_cnt| {
+            (
+                categories::category.eq(category),
+                categories::slug.eq(slug),
+                categories::crates_cnt.eq(crates_cnt),
+            )
+        };
+
         let conn = &mut pg_connection();
         insert_into(categories::table)
             .values(&vec![
-                (
-                    categories::category.eq("Cat 1"),
-                    categories::slug.eq("cat1"),
-                    categories::crates_cnt.eq(1),
-                ),
-                (
-                    categories::category.eq("Cat 1::sub"),
-                    categories::slug.eq("cat1::sub"),
-                    categories::crates_cnt.eq(2),
-                ),
-                (
-                    categories::category.eq("Cat 2"),
-                    categories::slug.eq("cat2"),
-                    categories::crates_cnt.eq(3),
-                ),
-                (
-                    categories::category.eq("Cat 2::Sub 1"),
-                    categories::slug.eq("cat2::sub1"),
-                    categories::crates_cnt.eq(4),
-                ),
-                (
-                    categories::category.eq("Cat 2::Sub 2"),
-                    categories::slug.eq("cat2::sub2"),
-                    categories::crates_cnt.eq(5),
-                ),
-                (
-                    categories::category.eq("Cat 3"),
-                    categories::slug.eq("cat3"),
-                    categories::crates_cnt.eq(6),
-                ),
+                new_cat("Cat 1", "cat1", 1),
+                new_cat("Cat 1::sub", "cat1::sub", 2),
+                new_cat("Cat 2", "cat2", 3),
+                new_cat("Cat 2::Sub 1", "cat2::sub1", 4),
+                new_cat("Cat 2::Sub 2", "cat2::sub2", 5),
+                new_cat("Cat 3", "cat3", 6),
             ])
             .execute(conn)
             .unwrap();
@@ -316,39 +298,24 @@ mod tests {
     #[test]
     fn category_toplevel_applies_limit_and_offset_after_grouping() {
         use self::categories;
+
+        let new_cat = |category, slug, crates_cnt| {
+            (
+                categories::category.eq(category),
+                categories::slug.eq(slug),
+                categories::crates_cnt.eq(crates_cnt),
+            )
+        };
+
         let conn = &mut pg_connection();
         insert_into(categories::table)
             .values(&vec![
-                (
-                    categories::category.eq("Cat 1"),
-                    categories::slug.eq("cat1"),
-                    categories::crates_cnt.eq(1),
-                ),
-                (
-                    categories::category.eq("Cat 1::sub"),
-                    categories::slug.eq("cat1::sub"),
-                    categories::crates_cnt.eq(2),
-                ),
-                (
-                    categories::category.eq("Cat 2"),
-                    categories::slug.eq("cat2"),
-                    categories::crates_cnt.eq(3),
-                ),
-                (
-                    categories::category.eq("Cat 2::Sub 1"),
-                    categories::slug.eq("cat2::sub1"),
-                    categories::crates_cnt.eq(4),
-                ),
-                (
-                    categories::category.eq("Cat 2::Sub 2"),
-                    categories::slug.eq("cat2::sub2"),
-                    categories::crates_cnt.eq(5),
-                ),
-                (
-                    categories::category.eq("Cat 3"),
-                    categories::slug.eq("cat3"),
-                    categories::crates_cnt.eq(6),
-                ),
+                new_cat("Cat 1", "cat1", 1),
+                new_cat("Cat 1::sub", "cat1::sub", 2),
+                new_cat("Cat 2", "cat2", 3),
+                new_cat("Cat 2::Sub 1", "cat2::sub1", 4),
+                new_cat("Cat 2::Sub 2", "cat2::sub2", 5),
+                new_cat("Cat 3", "cat3", 6),
             ])
             .execute(conn)
             .unwrap();
@@ -373,49 +340,26 @@ mod tests {
     #[test]
     fn category_parent_categories_includes_path_to_node_with_count() {
         use self::categories;
+
+        let new_cat = |category, slug, crates_cnt| {
+            (
+                categories::category.eq(category),
+                categories::slug.eq(slug),
+                categories::crates_cnt.eq(crates_cnt),
+            )
+        };
+
         let conn = &mut pg_connection();
         insert_into(categories::table)
             .values(&vec![
-                (
-                    categories::category.eq("Cat 1"),
-                    categories::slug.eq("cat1"),
-                    categories::crates_cnt.eq(1),
-                ),
-                (
-                    categories::category.eq("Cat 1::sub1"),
-                    categories::slug.eq("cat1::sub1"),
-                    categories::crates_cnt.eq(2),
-                ),
-                (
-                    categories::category.eq("Cat 1::sub2"),
-                    categories::slug.eq("cat1::sub2"),
-                    categories::crates_cnt.eq(2),
-                ),
-                (
-                    categories::category.eq("Cat 1::sub1::subsub1"),
-                    categories::slug.eq("cat1::sub1::subsub1"),
-                    categories::crates_cnt.eq(2),
-                ),
-                (
-                    categories::category.eq("Cat 2"),
-                    categories::slug.eq("cat2"),
-                    categories::crates_cnt.eq(3),
-                ),
-                (
-                    categories::category.eq("Cat 2::Sub 1"),
-                    categories::slug.eq("cat2::sub1"),
-                    categories::crates_cnt.eq(4),
-                ),
-                (
-                    categories::category.eq("Cat 2::Sub 2"),
-                    categories::slug.eq("cat2::sub2"),
-                    categories::crates_cnt.eq(5),
-                ),
-                (
-                    categories::category.eq("Cat 3"),
-                    categories::slug.eq("cat3"),
-                    categories::crates_cnt.eq(200),
-                ),
+                new_cat("Cat 1", "cat1", 1),
+                new_cat("Cat 1::sub1", "cat1::sub1", 2),
+                new_cat("Cat 1::sub2", "cat1::sub2", 2),
+                new_cat("Cat 1::sub1::subsub1", "cat1::sub1::subsub1", 2),
+                new_cat("Cat 2", "cat2", 3),
+                new_cat("Cat 2::Sub 1", "cat2::sub1", 4),
+                new_cat("Cat 2::Sub 2", "cat2::sub2", 5),
+                new_cat("Cat 3", "cat3", 200),
             ])
             .execute(conn)
             .unwrap();
