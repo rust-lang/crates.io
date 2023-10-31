@@ -1,4 +1,4 @@
-use crate::background_jobs::{Environment, NormalizeIndexJob};
+use crate::background_jobs::Environment;
 use crate::models;
 use crate::swirl::PerformError;
 use anyhow::Context;
@@ -9,6 +9,11 @@ use sentry::Level;
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader, ErrorKind, Write};
 use std::process::Command;
+
+#[derive(Serialize, Deserialize)]
+pub struct SyncToIndexJob {
+    pub(crate) krate: String,
+}
 
 /// Regenerates or removes an index file for a single crate
 #[instrument(skip_all, fields(krate.name = ?krate))]
@@ -156,6 +161,11 @@ pub fn perform_index_squash(env: &Environment) -> Result<(), PerformError> {
     info!("The index has been successfully squashed.");
 
     Ok(())
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct NormalizeIndexJob {
+    pub dry_run: bool,
 }
 
 pub fn perform_normalize_index(

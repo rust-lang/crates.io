@@ -5,9 +5,15 @@ use std::{
 };
 
 use self::configuration::VisibilityConfig;
-use crate::background_jobs::{DumpDbJob, Environment};
+use crate::background_jobs::Environment;
 use crate::storage::Storage;
 use crate::swirl::PerformError;
+
+#[derive(Serialize, Deserialize)]
+pub struct DumpDbJob {
+    pub(crate) database_url: String,
+    pub(crate) target_name: String,
+}
 
 /// Create CSV dumps of the public information in the database, wrap them in a
 /// tarball and upload to S3.

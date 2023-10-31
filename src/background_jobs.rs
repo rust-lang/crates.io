@@ -16,6 +16,7 @@ use crate::swirl::PerformError;
 use crate::worker;
 use crate::worker::cloudfront::CloudFront;
 use crate::worker::fastly::Fastly;
+use crate::worker::{DumpDbJob, NormalizeIndexJob, RenderAndUploadReadmeJob, SyncToIndexJob};
 use crates_io_index::Repository;
 
 pub const PRIORITY_DEFAULT: i16 = 0;
@@ -281,31 +282,6 @@ impl Job {
             }
         }
     }
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct DumpDbJob {
-    pub(super) database_url: String,
-    pub(super) target_name: String,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct SyncToIndexJob {
-    pub(super) krate: String,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct NormalizeIndexJob {
-    pub dry_run: bool,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct RenderAndUploadReadmeJob {
-    pub(super) version_id: i32,
-    pub(super) text: String,
-    pub(super) readme_path: String,
-    pub(super) base_url: Option<String>,
-    pub(super) pkg_path_in_vcs: Option<String>,
 }
 
 pub struct Environment {

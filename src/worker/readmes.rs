@@ -5,8 +5,17 @@ use anyhow::Context;
 use crates_io_markdown::text_to_html;
 use diesel::PgConnection;
 
-use crate::background_jobs::{Environment, RenderAndUploadReadmeJob};
+use crate::background_jobs::Environment;
 use crate::models::Version;
+
+#[derive(Serialize, Deserialize)]
+pub struct RenderAndUploadReadmeJob {
+    pub(crate) version_id: i32,
+    pub(crate) text: String,
+    pub(crate) readme_path: String,
+    pub(crate) base_url: Option<String>,
+    pub(crate) pkg_path_in_vcs: Option<String>,
+}
 
 #[instrument(skip_all, fields(krate.name))]
 pub fn perform_render_and_upload_readme(
