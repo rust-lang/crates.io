@@ -271,15 +271,9 @@ impl Job {
             }
             Job::SquashIndex => worker::perform_index_squash(env),
             Job::NormalizeIndex(args) => worker::perform_normalize_index(env, args),
-            Job::RenderAndUploadReadme(args) => worker::perform_render_and_upload_readme(
-                state.conn,
-                env,
-                args.version_id,
-                &args.text,
-                &args.readme_path,
-                args.base_url.as_deref(),
-                args.pkg_path_in_vcs.as_deref(),
-            ),
+            Job::RenderAndUploadReadme(job) => {
+                worker::perform_render_and_upload_readme(job, state.conn, env)
+            }
             Job::SyncToGitIndex(args) => worker::sync_to_git_index(env, state.conn, &args.krate),
             Job::SyncToSparseIndex(args) => {
                 worker::sync_to_sparse_index(env, state.conn, &args.krate)
