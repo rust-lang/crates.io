@@ -46,12 +46,6 @@ impl Runner {
             .job_start_timeout(Duration::from_secs(job_start_timeout))
     }
 
-    pub fn test_runner(environment: Environment, connection_pool: DieselPool) -> Self {
-        Self::new(connection_pool, Arc::new(Some(environment)))
-            .num_workers(1)
-            .job_start_timeout(Duration::from_secs(5))
-    }
-
     pub fn new(connection_pool: DieselPool, environment: Arc<Option<Environment>>) -> Self {
         Self {
             connection_pool,
