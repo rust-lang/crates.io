@@ -332,24 +332,8 @@ impl Environment {
         fastly: Option<Fastly>,
         storage: Arc<Storage>,
     ) -> Self {
-        Self::new_shared(
-            Arc::new(Mutex::new(index)),
-            http_client,
-            cloudfront,
-            fastly,
-            storage,
-        )
-    }
-
-    pub fn new_shared(
-        index: Arc<Mutex<Repository>>,
-        http_client: Client,
-        cloudfront: Option<CloudFront>,
-        fastly: Option<Fastly>,
-        storage: Arc<Storage>,
-    ) -> Self {
         Self {
-            index,
+            index: Arc::new(Mutex::new(index)),
             http_client: AssertUnwindSafe(http_client),
             cloudfront,
             fastly,
