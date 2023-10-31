@@ -257,7 +257,7 @@ impl Job {
                 worker::perform_dump_db(env, &args.database_url, &args.target_name)
             }
             Job::SquashIndex => worker::perform_index_squash(env),
-            Job::NormalizeIndex(args) => worker::perform_normalize_index(env, args),
+            Job::NormalizeIndex(args) => worker::perform_normalize_index(env, &args),
             Job::RenderAndUploadReadme(args) => worker::perform_render_and_upload_readme(
                 conn,
                 env,
