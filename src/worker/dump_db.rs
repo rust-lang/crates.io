@@ -13,13 +13,13 @@ use crate::swirl::PerformError;
 /// tarball and upload to S3.
 pub fn perform_dump_db(
     env: &Environment,
-    database_url: String,
-    target_name: String,
+    database_url: &str,
+    target_name: &str,
 ) -> Result<(), PerformError> {
     let directory = DumpDirectory::create()?;
 
     info!(path = ?directory.export_dir, "Begin exporting database");
-    directory.populate(&database_url)?;
+    directory.populate(database_url)?;
 
     info!(path = ?directory.export_dir, "Creating tarball");
     let tarball = DumpTarball::create(&directory.export_dir)?;
@@ -33,11 +33,11 @@ pub fn perform_dump_db(
 
     let storage = Storage::from_environment();
 
-    rt.block_on(storage.upload_db_dump(&target_name, &tarball.tarball_path))?;
+    rt.block_on(storage.upload_db_dump(target_name, &tarball.tarball_path))?;
     info!("Database dump tarball uploaded");
 
     info!("Invalidating CDN caches");
-    invalidate_caches(env, &target_name);
+    invalidate_caches(env, target_name);
 
     Ok(())
 }
