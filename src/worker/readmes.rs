@@ -3,9 +3,8 @@
 use crate::swirl::PerformError;
 use anyhow::Context;
 use crates_io_markdown::text_to_html;
-use diesel::PgConnection;
 
-use crate::background_jobs::Environment;
+use crate::background_jobs::{Environment, PerformState};
 use crate::models::Version;
 
 #[derive(Serialize, Deserialize)]
@@ -19,7 +18,7 @@ pub struct RenderAndUploadReadmeJob {
 
 impl RenderAndUploadReadmeJob {
     #[instrument(skip_all, fields(krate.name))]
-    pub fn run(&self, conn: &mut PgConnection, env: &Environment) -> Result<(), PerformError> {
+    pub fn run(&self, state: PerformState<'_>, env: &Environment) -> Result<(), PerformError> {
         use crate::schema::*;
         use diesel::prelude::*;
 
@@ -35,7 +34,7 @@ impl RenderAndUploadReadmeJob {
             return Ok(());
         }
 
-        conn.transaction(|conn| {
+        state.conn.transaction(|conn| {
             Version::record_readme_rendering(self.version_id, conn)?;
             let (crate_name, vers): (String, String) = versions::table
                 .find(self.version_id)

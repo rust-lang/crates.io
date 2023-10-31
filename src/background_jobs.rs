@@ -91,7 +91,7 @@ jobs! {
 }
 
 /// Database state that is passed to `Job::perform()`.
-pub(crate) struct PerformState<'a> {
+pub struct PerformState<'a> {
     /// The existing connection used to lock the background job.
     ///
     /// Most jobs can reuse the existing connection, however it will already be within a
@@ -109,7 +109,7 @@ impl PerformState<'_> {
     ///
     /// This will error when run from our main test framework, as there most work is expected to be
     /// done within an existing transaction.
-    fn fresh_connection(
+    pub fn fresh_connection(
         &self,
     ) -> Result<PooledConnection<ConnectionManager<PgConnection>>, PerformError> {
         match self.pool {
@@ -264,18 +264,14 @@ impl Job {
             .as_ref()
             .expect("Application should configure a background runner environment");
         match self {
-            Job::DailyDbMaintenance => {
-                worker::perform_daily_db_maintenance(&mut *state.fresh_connection()?)
-            }
-            Job::DumpDb(job) => job.run(env),
-            Job::SquashIndex => worker::perform_index_squash(env),
-            Job::NormalizeIndex(job) => job.run(env),
-            Job::RenderAndUploadReadme(job) => job.run(state.conn, env),
-            Job::SyncToGitIndex(job) => job.run_git_sync(env, state.conn),
-            Job::SyncToSparseIndex(job) => job.run_sparse_sync(env, state.conn),
-            Job::UpdateDownloads => {
-                worker::perform_update_downloads(&mut *state.fresh_connection()?)
-            }
+            Job::DailyDbMaintenance => worker::perform_daily_db_maintenance(state, env),
+            Job::DumpDb(job) => job.run(state, env),
+            Job::SquashIndex => worker::perform_index_squash(state, env),
+            Job::NormalizeIndex(job) => job.run(state, env),
+            Job::RenderAndUploadReadme(job) => job.run(state, env),
+            Job::SyncToGitIndex(job) => job.run_git_sync(state, env),
+            Job::SyncToSparseIndex(job) => job.run_sparse_sync(state, env),
+            Job::UpdateDownloads => worker::perform_update_downloads(state, env),
         }
     }
 }

@@ -3,11 +3,16 @@ use crate::{
     schema::{crates, metadata, version_downloads, versions},
 };
 
+use crate::background_jobs::{Environment, PerformState};
 use crate::swirl::PerformError;
 use diesel::prelude::*;
 
-pub fn perform_update_downloads(conn: &mut PgConnection) -> Result<(), PerformError> {
-    update(conn)?;
+pub fn perform_update_downloads(
+    state: PerformState<'_>,
+    _env: &Environment,
+) -> Result<(), PerformError> {
+    let mut conn = state.fresh_connection()?;
+    update(&mut conn)?;
     Ok(())
 }
 

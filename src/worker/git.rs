@@ -1,4 +1,4 @@
-use crate::background_jobs::Environment;
+use crate::background_jobs::{Environment, PerformState};
 use crate::models;
 use crate::swirl::PerformError;
 use anyhow::Context;
@@ -20,12 +20,12 @@ impl SyncToIndexJob {
     #[instrument(skip_all, fields(krate.name = ?self.krate))]
     pub fn run_git_sync(
         &self,
+        state: PerformState<'_>,
         env: &Environment,
-        conn: &mut PgConnection,
     ) -> Result<(), PerformError> {
         info!("Syncing to git index");
 
-        let new = get_index_data(&self.krate, conn).context("Failed to get index data")?;
+        let new = get_index_data(&self.krate, state.conn).context("Failed to get index data")?;
 
         let repo = env.lock_index()?;
         let dst = repo.index_file(&self.krate);
@@ -63,12 +63,13 @@ impl SyncToIndexJob {
     #[instrument(skip_all, fields(krate.name = ?self.krate))]
     pub fn run_sparse_sync(
         &self,
+        state: PerformState<'_>,
         env: &Environment,
-        conn: &mut PgConnection,
     ) -> Result<(), PerformError> {
         info!("Syncing to sparse index");
 
-        let content = get_index_data(&self.krate, conn).context("Failed to get index data")?;
+        let content =
+            get_index_data(&self.krate, state.conn).context("Failed to get index data")?;
 
         let rt = tokio::runtime::Builder::new_current_thread()
             .enable_all()
@@ -129,8 +130,11 @@ pub fn get_index_data(name: &str, conn: &mut PgConnection) -> anyhow::Result<Opt
 }
 
 /// Collapse the index into a single commit, archiving the current history in a snapshot branch.
-#[instrument(skip(env))]
-pub fn perform_index_squash(env: &Environment) -> Result<(), PerformError> {
+#[instrument(skip_all)]
+pub fn perform_index_squash(
+    _state: PerformState<'_>,
+    env: &Environment,
+) -> Result<(), PerformError> {
     info!("Squashing the index into a single commit");
 
     let repo = env.lock_index()?;
@@ -171,7 +175,7 @@ pub struct NormalizeIndexJob {
 }
 
 impl NormalizeIndexJob {
-    pub fn run(&self, env: &Environment) -> Result<(), PerformError> {
+    pub fn run(&self, _state: PerformState<'_>, env: &Environment) -> Result<(), PerformError> {
         info!("Normalizing the index");
 
         let repo = env.lock_index()?;

@@ -5,7 +5,7 @@ use std::{
 };
 
 use self::configuration::VisibilityConfig;
-use crate::background_jobs::Environment;
+use crate::background_jobs::{Environment, PerformState};
 use crate::storage::Storage;
 use crate::swirl::PerformError;
 
@@ -18,7 +18,7 @@ pub struct DumpDbJob {
 impl DumpDbJob {
     /// Create CSV dumps of the public information in the database, wrap them in a
     /// tarball and upload to S3.
-    pub fn run(&self, env: &Environment) -> Result<(), PerformError> {
+    pub fn run(&self, _state: PerformState<'_>, env: &Environment) -> Result<(), PerformError> {
         let directory = DumpDirectory::create()?;
 
         info!(path = ?directory.export_dir, "Begin exporting database");
