@@ -266,9 +266,7 @@ impl Job {
             Job::DailyDbMaintenance => {
                 worker::perform_daily_db_maintenance(&mut *state.fresh_connection()?)
             }
-            Job::DumpDb(args) => {
-                worker::perform_dump_db(env, &args.database_url, &args.target_name)
-            }
+            Job::DumpDb(job) => worker::perform_dump_db(job, env),
             Job::SquashIndex => worker::perform_index_squash(env),
             Job::NormalizeIndex(args) => worker::perform_normalize_index(env, args),
             Job::RenderAndUploadReadme(job) => {
