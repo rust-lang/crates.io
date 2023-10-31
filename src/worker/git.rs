@@ -15,79 +15,81 @@ pub struct SyncToIndexJob {
     pub(crate) krate: String,
 }
 
-/// Regenerates or removes an index file for a single crate
-#[instrument(skip_all, fields(krate.name = ?krate))]
-pub fn sync_to_git_index(
-    env: &Environment,
-    conn: &mut PgConnection,
-    krate: &str,
-) -> Result<(), PerformError> {
-    info!("Syncing to git index");
+impl SyncToIndexJob {
+    /// Regenerates or removes an index file for a single crate
+    #[instrument(skip_all, fields(krate.name = ?self.krate))]
+    pub fn run_git_sync(
+        &self,
+        env: &Environment,
+        conn: &mut PgConnection,
+    ) -> Result<(), PerformError> {
+        info!("Syncing to git index");
 
-    let new = get_index_data(krate, conn).context("Failed to get index data")?;
+        let new = get_index_data(&self.krate, conn).context("Failed to get index data")?;
 
-    let repo = env.lock_index()?;
-    let dst = repo.index_file(krate);
+        let repo = env.lock_index()?;
+        let dst = repo.index_file(&self.krate);
 
-    // Read the previous crate contents
-    let old = match fs::read_to_string(&dst) {
-        Ok(content) => Some(content),
-        Err(error) if error.kind() == ErrorKind::NotFound => None,
-        Err(error) => return Err(error.into()),
-    };
+        // Read the previous crate contents
+        let old = match fs::read_to_string(&dst) {
+            Ok(content) => Some(content),
+            Err(error) if error.kind() == ErrorKind::NotFound => None,
+            Err(error) => return Err(error.into()),
+        };
 
-    match (old, new) {
-        (None, Some(new)) => {
-            fs::create_dir_all(dst.parent().unwrap())?;
-            let mut file = File::create(&dst)?;
-            file.write_all(new.as_bytes())?;
-            repo.commit_and_push(&format!("Create crate `{}`", krate), &dst)?;
+        match (old, new) {
+            (None, Some(new)) => {
+                fs::create_dir_all(dst.parent().unwrap())?;
+                let mut file = File::create(&dst)?;
+                file.write_all(new.as_bytes())?;
+                repo.commit_and_push(&format!("Create crate `{}`", self.krate), &dst)?;
+            }
+            (Some(old), Some(new)) if old != new => {
+                let mut file = File::create(&dst)?;
+                file.write_all(new.as_bytes())?;
+                repo.commit_and_push(&format!("Update crate `{}`", self.krate), &dst)?;
+            }
+            (Some(_old), None) => {
+                fs::remove_file(&dst)?;
+                repo.commit_and_push(&format!("Delete crate `{}`", self.krate), &dst)?;
+            }
+            _ => debug!("Skipping sync because index is up-to-date"),
         }
-        (Some(old), Some(new)) if old != new => {
-            let mut file = File::create(&dst)?;
-            file.write_all(new.as_bytes())?;
-            repo.commit_and_push(&format!("Update crate `{}`", krate), &dst)?;
-        }
-        (Some(_old), None) => {
-            fs::remove_file(&dst)?;
-            repo.commit_and_push(&format!("Delete crate `{}`", krate), &dst)?;
-        }
-        _ => debug!("Skipping sync because index is up-to-date"),
+
+        Ok(())
     }
 
-    Ok(())
-}
+    /// Regenerates or removes an index file for a single crate
+    #[instrument(skip_all, fields(krate.name = ?self.krate))]
+    pub fn run_sparse_sync(
+        &self,
+        env: &Environment,
+        conn: &mut PgConnection,
+    ) -> Result<(), PerformError> {
+        info!("Syncing to sparse index");
 
-/// Regenerates or removes an index file for a single crate
-#[instrument(skip_all, fields(krate.name = ?krate))]
-pub fn sync_to_sparse_index(
-    env: &Environment,
-    conn: &mut PgConnection,
-    krate: &str,
-) -> Result<(), PerformError> {
-    info!("Syncing to sparse index");
+        let content = get_index_data(&self.krate, conn).context("Failed to get index data")?;
 
-    let content = get_index_data(krate, conn).context("Failed to get index data")?;
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .context("Failed to initialize tokio runtime")
+            .unwrap();
 
-    let rt = tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .context("Failed to initialize tokio runtime")
-        .unwrap();
+        let future = env.storage.sync_index(&self.krate, content);
+        rt.block_on(future).context("Failed to sync index data")?;
 
-    let future = env.storage.sync_index(krate, content);
-    rt.block_on(future).context("Failed to sync index data")?;
+        if let Some(cloudfront) = env.cloudfront() {
+            let path = Repository::relative_index_file_for_url(&self.krate);
 
-    if let Some(cloudfront) = env.cloudfront() {
-        let path = Repository::relative_index_file_for_url(krate);
+            info!(%path, "Invalidating index file on CloudFront");
+            cloudfront
+                .invalidate(env.http_client(), &path)
+                .context("Failed to invalidate CloudFront")?;
+        }
 
-        info!(%path, "Invalidating index file on CloudFront");
-        cloudfront
-            .invalidate(env.http_client(), &path)
-            .context("Failed to invalidate CloudFront")?;
+        Ok(())
     }
-
-    Ok(())
 }
 
 #[instrument(skip_all, fields(krate.name = ?name))]

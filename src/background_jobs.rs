@@ -271,10 +271,8 @@ impl Job {
             Job::SquashIndex => worker::perform_index_squash(env),
             Job::NormalizeIndex(job) => job.run(env),
             Job::RenderAndUploadReadme(job) => job.run(state.conn, env),
-            Job::SyncToGitIndex(args) => worker::sync_to_git_index(env, state.conn, &args.krate),
-            Job::SyncToSparseIndex(args) => {
-                worker::sync_to_sparse_index(env, state.conn, &args.krate)
-            }
+            Job::SyncToGitIndex(job) => job.run_git_sync(env, state.conn),
+            Job::SyncToSparseIndex(job) => job.run_sparse_sync(env, state.conn),
             Job::UpdateDownloads => {
                 worker::perform_update_downloads(&mut *state.fresh_connection()?)
             }
