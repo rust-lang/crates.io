@@ -25,7 +25,7 @@ use diesel::r2d2;
 use diesel::r2d2::ConnectionManager;
 use reqwest::blocking::Client;
 use secrecy::ExposeSecret;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::thread::sleep;
 use std::time::{Duration, Instant};
 
@@ -66,9 +66,7 @@ fn main() {
 
     let clone_start = Instant::now();
     let repository_config = RepositoryConfig::from_environment();
-    let repository = Arc::new(Mutex::new(
-        Repository::open(&repository_config).expect("Failed to clone index"),
-    ));
+    let repository = Repository::open(&repository_config).expect("Failed to clone index");
 
     let clone_duration = clone_start.elapsed();
     info!(duration = ?clone_duration, "Index cloned");
@@ -82,7 +80,7 @@ fn main() {
         .build()
         .expect("Couldn't build client");
 
-    let environment = Environment::new_shared(repository, client, cloudfront, fastly, storage);
+    let environment = Environment::new(repository, client, cloudfront, fastly, storage);
 
     let environment = Arc::new(Some(environment));
 
