@@ -18,7 +18,7 @@ extern crate tracing;
 use crates_io::config;
 use crates_io::storage::Storage;
 use crates_io::worker::cloudfront::CloudFront;
-use crates_io::{background_jobs::*, db, ssh};
+use crates_io::{background_jobs::*, db, env_optional, ssh};
 use crates_io_index::{Repository, RepositoryConfig};
 use reqwest::blocking::Client;
 use secrecy::ExposeSecret;
@@ -53,10 +53,7 @@ fn main() {
 
     let db_url = db::connection_url(&config.db, config.db.primary.url.expose_secret());
 
-    let job_start_timeout = dotenvy::var("BACKGROUND_JOB_TIMEOUT")
-        .unwrap_or_else(|_| "30".into())
-        .parse()
-        .expect("Invalid value for `BACKGROUND_JOB_TIMEOUT`");
+    let job_start_timeout = env_optional("BACKGROUND_JOB_TIMEOUT").unwrap_or(30);
 
     info!("Cloning index");
 
