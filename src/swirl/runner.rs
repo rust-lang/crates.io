@@ -18,6 +18,8 @@ use event::Event;
 
 mod event;
 
+const DEFAULT_JOB_START_TIMEOUT: Duration = Duration::from_secs(30);
+
 /// The core runner responsible for locking and running jobs
 pub struct Runner {
     connection_pool: DieselPool,
@@ -36,12 +38,12 @@ impl Runner {
             .max_size(10)
             .min_idle(Some(0))
             .build_unchecked(ConnectionManager::new(url));
-        Self {
-            connection_pool: DieselPool::new_background_worker(connection_pool),
-            thread_pool: ThreadPool::new(5),
-            environment,
-            job_start_timeout: Duration::from_secs(job_start_timeout),
-        }
+
+        let connection_pool = DieselPool::new_background_worker(connection_pool);
+
+        Self::new(connection_pool, environment)
+            .num_workers(5)
+            .job_start_timeout(Duration::from_secs(job_start_timeout))
     }
 
     #[cfg(test)]
@@ -49,21 +51,37 @@ impl Runner {
         let connection_pool = r2d2::Pool::builder()
             .max_size(4)
             .build_unchecked(ConnectionManager::new(url));
-        Self {
-            connection_pool: DieselPool::new_background_worker(connection_pool),
-            thread_pool: ThreadPool::new(2),
-            environment: Arc::new(environment),
-            job_start_timeout: Duration::from_secs(10),
-        }
+
+        let connection_pool = DieselPool::new_background_worker(connection_pool);
+
+        Self::new(connection_pool, Arc::new(environment))
+            .num_workers(2)
+            .job_start_timeout(Duration::from_secs(10))
     }
 
     pub fn test_runner(environment: Environment, connection_pool: DieselPool) -> Self {
+        Self::new(connection_pool, Arc::new(Some(environment)))
+            .num_workers(1)
+            .job_start_timeout(Duration::from_secs(5))
+    }
+
+    pub fn new(connection_pool: DieselPool, environment: Arc<Option<Environment>>) -> Self {
         Self {
             connection_pool,
             thread_pool: ThreadPool::new(1),
-            environment: Arc::new(Some(environment)),
-            job_start_timeout: Duration::from_secs(5),
+            environment,
+            job_start_timeout: DEFAULT_JOB_START_TIMEOUT,
         }
+    }
+
+    pub fn num_workers(mut self, num_workers: usize) -> Self {
+        self.thread_pool.set_num_threads(num_workers);
+        self
+    }
+
+    pub fn job_start_timeout(mut self, job_start_timeout: Duration) -> Self {
+        self.job_start_timeout = job_start_timeout;
+        self
     }
 
     /// Runs all pending jobs in the queue
