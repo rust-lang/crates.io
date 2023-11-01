@@ -12,7 +12,14 @@ use std::process::Command;
 
 #[derive(Serialize, Deserialize)]
 pub struct SyncToGitIndexJob {
-    pub(crate) krate: String,
+    krate: String,
+}
+
+impl SyncToGitIndexJob {
+    pub fn new(krate: impl Into<String>) -> Self {
+        let krate = krate.into();
+        Self { krate }
+    }
 }
 
 impl SyncToGitIndexJob {

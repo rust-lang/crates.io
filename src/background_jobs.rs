@@ -208,10 +208,8 @@ impl Job {
         Self::SquashIndex(SquashIndexJob)
     }
 
-    pub fn sync_to_git_index<T: ToString>(krate: T) -> Self {
-        Self::SyncToGitIndex(SyncToGitIndexJob {
-            krate: krate.to_string(),
-        })
+    pub fn sync_to_git_index(krate: impl Into<String>) -> Self {
+        Self::SyncToGitIndex(SyncToGitIndexJob::new(krate))
     }
 
     pub fn sync_to_sparse_index<T: ToString>(krate: T) -> Self {
