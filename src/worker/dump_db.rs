@@ -5,37 +5,47 @@ use std::{
 };
 
 use self::configuration::VisibilityConfig;
-use crate::background_jobs::{DumpDbJob, Environment};
+use crate::background_jobs::{Environment, PerformState};
 use crate::storage::Storage;
 use crate::swirl::PerformError;
 
-/// Create CSV dumps of the public information in the database, wrap them in a
-/// tarball and upload to S3.
-pub fn perform_dump_db(job: &DumpDbJob, env: &Environment) -> Result<(), PerformError> {
-    let directory = DumpDirectory::create()?;
+#[derive(Serialize, Deserialize)]
+pub struct DumpDbJob {
+    pub(crate) database_url: String,
+    pub(crate) target_name: String,
+}
 
-    info!(path = ?directory.export_dir, "Begin exporting database");
-    directory.populate(&job.database_url)?;
+impl DumpDbJob {
+    pub const JOB_NAME: &'static str = "dump_db";
 
-    info!(path = ?directory.export_dir, "Creating tarball");
-    let tarball = DumpTarball::create(&directory.export_dir)?;
+    /// Create CSV dumps of the public information in the database, wrap them in a
+    /// tarball and upload to S3.
+    pub fn run(&self, _state: PerformState<'_>, env: &Environment) -> Result<(), PerformError> {
+        let directory = DumpDirectory::create()?;
 
-    info!("Uploading tarball");
-    let rt = tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .context("Failed to initialize tokio runtime")
-        .unwrap();
+        info!(path = ?directory.export_dir, "Begin exporting database");
+        directory.populate(&self.database_url)?;
 
-    let storage = Storage::from_environment();
+        info!(path = ?directory.export_dir, "Creating tarball");
+        let tarball = DumpTarball::create(&directory.export_dir)?;
 
-    rt.block_on(storage.upload_db_dump(&job.target_name, &tarball.tarball_path))?;
-    info!("Database dump tarball uploaded");
+        info!("Uploading tarball");
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .context("Failed to initialize tokio runtime")
+            .unwrap();
 
-    info!("Invalidating CDN caches");
-    invalidate_caches(env, &job.target_name);
+        let storage = Storage::from_environment();
 
-    Ok(())
+        rt.block_on(storage.upload_db_dump(&self.target_name, &tarball.tarball_path))?;
+        info!("Database dump tarball uploaded");
+
+        info!("Invalidating CDN caches");
+        invalidate_caches(env, &self.target_name);
+
+        Ok(())
+    }
 }
 
 /// Manage the export directory.

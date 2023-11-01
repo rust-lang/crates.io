@@ -1,4 +1,4 @@
-use crate::background_jobs::{Environment, NormalizeIndexJob};
+use crate::background_jobs::{Environment, PerformState};
 use crate::models;
 use crate::swirl::PerformError;
 use anyhow::Context;
@@ -10,79 +10,90 @@ use std::fs::{self, File};
 use std::io::{BufRead, BufReader, ErrorKind, Write};
 use std::process::Command;
 
-/// Regenerates or removes an index file for a single crate
-#[instrument(skip_all, fields(krate.name = ?krate))]
-pub fn sync_to_git_index(
-    env: &Environment,
-    conn: &mut PgConnection,
-    krate: &str,
-) -> Result<(), PerformError> {
-    info!("Syncing to git index");
-
-    let new = get_index_data(krate, conn).context("Failed to get index data")?;
-
-    let repo = env.lock_index()?;
-    let dst = repo.index_file(krate);
-
-    // Read the previous crate contents
-    let old = match fs::read_to_string(&dst) {
-        Ok(content) => Some(content),
-        Err(error) if error.kind() == ErrorKind::NotFound => None,
-        Err(error) => return Err(error.into()),
-    };
-
-    match (old, new) {
-        (None, Some(new)) => {
-            fs::create_dir_all(dst.parent().unwrap())?;
-            let mut file = File::create(&dst)?;
-            file.write_all(new.as_bytes())?;
-            repo.commit_and_push(&format!("Create crate `{}`", krate), &dst)?;
-        }
-        (Some(old), Some(new)) if old != new => {
-            let mut file = File::create(&dst)?;
-            file.write_all(new.as_bytes())?;
-            repo.commit_and_push(&format!("Update crate `{}`", krate), &dst)?;
-        }
-        (Some(_old), None) => {
-            fs::remove_file(&dst)?;
-            repo.commit_and_push(&format!("Delete crate `{}`", krate), &dst)?;
-        }
-        _ => debug!("Skipping sync because index is up-to-date"),
-    }
-
-    Ok(())
+#[derive(Serialize, Deserialize)]
+pub struct SyncToGitIndexJob {
+    pub(crate) krate: String,
 }
 
-/// Regenerates or removes an index file for a single crate
-#[instrument(skip_all, fields(krate.name = ?krate))]
-pub fn sync_to_sparse_index(
-    env: &Environment,
-    conn: &mut PgConnection,
-    krate: &str,
-) -> Result<(), PerformError> {
-    info!("Syncing to sparse index");
+impl SyncToGitIndexJob {
+    pub const JOB_NAME: &'static str = "sync_to_git_index";
 
-    let content = get_index_data(krate, conn).context("Failed to get index data")?;
+    /// Regenerates or removes an index file for a single crate
+    #[instrument(skip_all, fields(krate.name = ? self.krate))]
+    pub fn run(&self, state: PerformState<'_>, env: &Environment) -> Result<(), PerformError> {
+        info!("Syncing to git index");
 
-    let rt = tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .context("Failed to initialize tokio runtime")
-        .unwrap();
+        let new = get_index_data(&self.krate, state.conn).context("Failed to get index data")?;
 
-    let future = env.storage.sync_index(krate, content);
-    rt.block_on(future).context("Failed to sync index data")?;
+        let repo = env.lock_index()?;
+        let dst = repo.index_file(&self.krate);
 
-    if let Some(cloudfront) = env.cloudfront() {
-        let path = Repository::relative_index_file_for_url(krate);
+        // Read the previous crate contents
+        let old = match fs::read_to_string(&dst) {
+            Ok(content) => Some(content),
+            Err(error) if error.kind() == ErrorKind::NotFound => None,
+            Err(error) => return Err(error.into()),
+        };
 
-        info!(%path, "Invalidating index file on CloudFront");
-        cloudfront
-            .invalidate(env.http_client(), &path)
-            .context("Failed to invalidate CloudFront")?;
+        match (old, new) {
+            (None, Some(new)) => {
+                fs::create_dir_all(dst.parent().unwrap())?;
+                let mut file = File::create(&dst)?;
+                file.write_all(new.as_bytes())?;
+                repo.commit_and_push(&format!("Create crate `{}`", self.krate), &dst)?;
+            }
+            (Some(old), Some(new)) if old != new => {
+                let mut file = File::create(&dst)?;
+                file.write_all(new.as_bytes())?;
+                repo.commit_and_push(&format!("Update crate `{}`", self.krate), &dst)?;
+            }
+            (Some(_old), None) => {
+                fs::remove_file(&dst)?;
+                repo.commit_and_push(&format!("Delete crate `{}`", self.krate), &dst)?;
+            }
+            _ => debug!("Skipping sync because index is up-to-date"),
+        }
+
+        Ok(())
     }
+}
 
-    Ok(())
+#[derive(Serialize, Deserialize)]
+pub struct SyncToSparseIndexJob {
+    pub(crate) krate: String,
+}
+
+impl SyncToSparseIndexJob {
+    pub const JOB_NAME: &'static str = "sync_to_sparse_index";
+
+    /// Regenerates or removes an index file for a single crate
+    #[instrument(skip_all, fields(krate.name = ?self.krate))]
+    pub fn run(&self, state: PerformState<'_>, env: &Environment) -> Result<(), PerformError> {
+        info!("Syncing to sparse index");
+
+        let content =
+            get_index_data(&self.krate, state.conn).context("Failed to get index data")?;
+
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .context("Failed to initialize tokio runtime")
+            .unwrap();
+
+        let future = env.storage.sync_index(&self.krate, content);
+        rt.block_on(future).context("Failed to sync index data")?;
+
+        if let Some(cloudfront) = env.cloudfront() {
+            let path = Repository::relative_index_file_for_url(&self.krate);
+
+            info!(%path, "Invalidating index file on CloudFront");
+            cloudfront
+                .invalidate(env.http_client(), &path)
+                .context("Failed to invalidate CloudFront")?;
+        }
+
+        Ok(())
+    }
 }
 
 #[instrument(skip_all, fields(krate.name = ?name))]
@@ -121,106 +132,119 @@ pub fn get_index_data(name: &str, conn: &mut PgConnection) -> anyhow::Result<Opt
     Ok(Some(str))
 }
 
-/// Collapse the index into a single commit, archiving the current history in a snapshot branch.
-#[instrument(skip(env))]
-pub fn perform_index_squash(env: &Environment) -> Result<(), PerformError> {
-    info!("Squashing the index into a single commit");
+#[derive(Serialize, Deserialize)]
+pub struct SquashIndexJob;
 
-    let repo = env.lock_index()?;
+impl SquashIndexJob {
+    pub const JOB_NAME: &'static str = "squash_index";
 
-    let now = Utc::now().format("%Y-%m-%d");
-    let original_head = repo.head_oid()?.to_string();
-    let msg = format!("Collapse index into one commit\n\n\
+    /// Collapse the index into a single commit, archiving the current history in a snapshot branch.
+    #[instrument(skip_all)]
+    pub fn run(&self, _state: PerformState<'_>, env: &Environment) -> Result<(), PerformError> {
+        info!("Squashing the index into a single commit");
+
+        let repo = env.lock_index()?;
+
+        let now = Utc::now().format("%Y-%m-%d");
+        let original_head = repo.head_oid()?.to_string();
+        let msg = format!("Collapse index into one commit\n\n\
         Previous HEAD was {original_head}, now on the `snapshot-{now}` branch\n\n\
         More information about this change can be found [online] and on [this issue].\n\n\
         [online]: https://internals.rust-lang.org/t/cargos-crate-index-upcoming-squash-into-one-commit/8440\n\
         [this issue]: https://github.com/rust-lang/crates-io-cargo-teams/issues/47");
 
-    repo.squash_to_single_commit(&msg)?;
+        repo.squash_to_single_commit(&msg)?;
 
-    // Shell out to git because libgit2 does not currently support push leases
+        // Shell out to git because libgit2 does not currently support push leases
 
-    repo.run_command(Command::new("git").args([
-        "push",
-        // Both updates should succeed or fail together
-        "--atomic",
-        "origin",
-        // Overwrite master, but only if it server matches the expected value
-        &format!("--force-with-lease=refs/heads/master:{original_head}"),
-        // The new squashed commit is pushed to master
-        "HEAD:refs/heads/master",
-        // The previous value of HEAD is pushed to a snapshot branch
-        &format!("{original_head}:refs/heads/snapshot-{now}"),
-    ]))?;
+        repo.run_command(Command::new("git").args([
+            "push",
+            // Both updates should succeed or fail together
+            "--atomic",
+            "origin",
+            // Overwrite master, but only if it server matches the expected value
+            &format!("--force-with-lease=refs/heads/master:{original_head}"),
+            // The new squashed commit is pushed to master
+            "HEAD:refs/heads/master",
+            // The previous value of HEAD is pushed to a snapshot branch
+            &format!("{original_head}:refs/heads/snapshot-{now}"),
+        ]))?;
 
-    info!("The index has been successfully squashed.");
+        info!("The index has been successfully squashed.");
 
-    Ok(())
+        Ok(())
+    }
 }
 
-pub fn perform_normalize_index(
-    env: &Environment,
-    args: &NormalizeIndexJob,
-) -> Result<(), PerformError> {
-    info!("Normalizing the index");
+#[derive(Serialize, Deserialize)]
+pub struct NormalizeIndexJob {
+    pub dry_run: bool,
+}
 
-    let repo = env.lock_index()?;
+impl NormalizeIndexJob {
+    pub const JOB_NAME: &'static str = "normalize_index";
 
-    let files = repo.get_files_modified_since(None)?;
-    let num_files = files.len();
+    pub fn run(&self, _state: PerformState<'_>, env: &Environment) -> Result<(), PerformError> {
+        info!("Normalizing the index");
 
-    for (i, file) in files.iter().enumerate() {
-        if i % 50 == 0 {
-            info!(num_files, i, ?file);
-        }
+        let repo = env.lock_index()?;
 
-        let crate_name = file.file_name().unwrap().to_str().unwrap();
-        let path = repo.index_file(crate_name);
-        if !path.exists() {
-            continue;
-        }
+        let files = repo.get_files_modified_since(None)?;
+        let num_files = files.len();
 
-        let mut body: Vec<u8> = Vec::new();
-        let file = fs::File::open(&path)?;
-        let reader = BufReader::new(file);
-        let mut versions = Vec::new();
-        for line in reader.lines() {
-            let line = line?;
-            if line.is_empty() {
+        for (i, file) in files.iter().enumerate() {
+            if i % 50 == 0 {
+                info!(num_files, i, ?file);
+            }
+
+            let crate_name = file.file_name().unwrap().to_str().unwrap();
+            let path = repo.index_file(crate_name);
+            if !path.exists() {
                 continue;
             }
 
-            let mut krate: Crate = serde_json::from_str(&line)?;
-            for dep in &mut krate.deps {
-                // Remove deps with empty features
-                dep.features.retain(|d| !d.is_empty());
-                // Set null DependencyKind to Normal
-                dep.kind = Some(dep.kind.unwrap_or(crates_io_index::DependencyKind::Normal));
+            let mut body: Vec<u8> = Vec::new();
+            let file = fs::File::open(&path)?;
+            let reader = BufReader::new(file);
+            let mut versions = Vec::new();
+            for line in reader.lines() {
+                let line = line?;
+                if line.is_empty() {
+                    continue;
+                }
+
+                let mut krate: Crate = serde_json::from_str(&line)?;
+                for dep in &mut krate.deps {
+                    // Remove deps with empty features
+                    dep.features.retain(|d| !d.is_empty());
+                    // Set null DependencyKind to Normal
+                    dep.kind = Some(dep.kind.unwrap_or(crates_io_index::DependencyKind::Normal));
+                }
+                krate.deps.sort();
+                versions.push(krate);
             }
-            krate.deps.sort();
-            versions.push(krate);
+            for version in versions {
+                serde_json::to_writer(&mut body, &version).unwrap();
+                body.push(b'\n');
+            }
+            fs::write(path, body)?;
         }
-        for version in versions {
-            serde_json::to_writer(&mut body, &version).unwrap();
-            body.push(b'\n');
-        }
-        fs::write(path, body)?;
-    }
 
-    info!("Committing normalization");
-    let msg = "Normalize index format\n\n\
+        info!("Committing normalization");
+        let msg = "Normalize index format\n\n\
         More information can be found at https://github.com/rust-lang/crates.io/pull/5066";
-    repo.run_command(Command::new("git").args(["commit", "-am", msg]))?;
+        repo.run_command(Command::new("git").args(["commit", "-am", msg]))?;
 
-    let branch = match args.dry_run {
-        false => "master",
-        true => "normalization-dry-run",
-    };
+        let branch = match self.dry_run {
+            false => "master",
+            true => "normalization-dry-run",
+        };
 
-    info!(?branch, "Pushing to upstream repository");
-    repo.run_command(Command::new("git").args(["push", "origin", &format!("HEAD:{branch}")]))?;
+        info!(?branch, "Pushing to upstream repository");
+        repo.run_command(Command::new("git").args(["push", "origin", &format!("HEAD:{branch}")]))?;
 
-    info!("Index normalization completed");
+        info!("Index normalization completed");
 
-    Ok(())
+        Ok(())
+    }
 }

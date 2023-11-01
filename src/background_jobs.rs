@@ -2,7 +2,6 @@ use diesel::dsl::{exists, not};
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, PooledConnection};
 use diesel::sql_types::{Int2, Jsonb, Text};
-use paste::paste;
 use reqwest::blocking::Client;
 use std::fmt::Display;
 use std::panic::AssertUnwindSafe;
@@ -13,9 +12,12 @@ use crate::schema::background_jobs;
 use crate::storage::Storage;
 use crate::swirl::errors::EnqueueError;
 use crate::swirl::PerformError;
-use crate::worker;
 use crate::worker::cloudfront::CloudFront;
 use crate::worker::fastly::Fastly;
+use crate::worker::{
+    DailyDbMaintenanceJob, DumpDbJob, NormalizeIndexJob, RenderAndUploadReadmeJob, SquashIndexJob,
+    SyncToGitIndexJob, SyncToSparseIndexJob, UpdateDownloadsJob,
+};
 use crates_io_index::Repository;
 
 pub const PRIORITY_DEFAULT: i16 = 0;
@@ -25,72 +27,64 @@ pub const PRIORITY_SYNC_TO_INDEX: i16 = 100;
 macro_rules! jobs {
     {
         $vis:vis enum $name:ident {
-            $($variant:ident $(($content:ident))?),+ $(,)?
+            $($variant:ident ($content:ident)),+ $(,)?
         }
     } => {
         $vis enum $name {
-            $($variant $(($content))?,)+
+            $($variant ($content),)+
         }
 
-        paste! {
-            impl $name {
-                fn as_type_str(&self) -> &'static str {
-                    match self {
-                        $(Self:: $variant $(([<_ $content:snake:lower>]))? => stringify!([<$variant:snake:lower>]),)+
-                    }
+        impl $name {
+            fn as_type_str(&self) -> &'static str {
+                match self {
+                    $(Self::$variant(_) => $content::JOB_NAME,)+
                 }
+            }
 
-                fn to_value(&self) -> serde_json::Result<serde_json::Value> {
-                    match self {
-                        $(Self:: $variant $(([<$content:snake:lower>]))? => job_variant_to_value!($([<$content:snake:lower>])?),)+
-                    }
+            fn to_value(&self) -> serde_json::Result<serde_json::Value> {
+                match self {
+                    $(Self::$variant(job) => serde_json::to_value(job),)+
                 }
+            }
 
-                pub fn from_value(job_type: &str, value: serde_json::Value) -> Result<Self, PerformError> {
-                    Ok(match job_type {
-                        $(stringify!([<$variant:snake:lower>]) => job_variant_from_value!($variant value $($content)?),)+
-                        job_type => Err(PerformError::from(format!("Unknown job type {job_type}")))?,
-                    })
+            pub fn from_value(job_type: &str, value: serde_json::Value) -> Result<Self, PerformError> {
+                Ok(match job_type {
+                    $($content::JOB_NAME => Self::$variant(serde_json::from_value(value)?),)+
+                    job_type => Err(PerformError::from(format!("Unknown job type {job_type}")))?,
+                })
+            }
+
+            pub(super) fn perform(
+                &self,
+                env: &Option<Environment>,
+                state: PerformState<'_>,
+            ) -> Result<(), PerformError> {
+                let env = env
+                    .as_ref()
+                    .expect("Application should configure a background runner environment");
+                match self {
+                    $(Self::$variant(job) => job.run(state, env),)+
                 }
-
             }
         }
     }
 }
 
-macro_rules! job_variant_to_value {
-    () => {
-        Ok(serde_json::Value::Null)
-    };
-    ($content:ident) => {
-        serde_json::to_value($content)
-    };
-}
-
-macro_rules! job_variant_from_value {
-    ($variant:ident $value:ident) => {
-        Self::$variant
-    };
-    ($variant:ident $value:ident $content:ident) => {
-        Self::$variant(serde_json::from_value($value)?)
-    };
-}
-
 jobs! {
     pub enum Job {
-        DailyDbMaintenance,
+        DailyDbMaintenance(DailyDbMaintenanceJob),
         DumpDb(DumpDbJob),
         NormalizeIndex(NormalizeIndexJob),
         RenderAndUploadReadme(RenderAndUploadReadmeJob),
-        SquashIndex,
-        SyncToGitIndex(SyncToIndexJob),
-        SyncToSparseIndex(SyncToIndexJob),
-        UpdateDownloads,
+        SquashIndex(SquashIndexJob),
+        SyncToGitIndex(SyncToGitIndexJob),
+        SyncToSparseIndex(SyncToSparseIndexJob),
+        UpdateDownloads(UpdateDownloadsJob),
     }
 }
 
 /// Database state that is passed to `Job::perform()`.
-pub(crate) struct PerformState<'a> {
+pub struct PerformState<'a> {
     /// The existing connection used to lock the background job.
     ///
     /// Most jobs can reuse the existing connection, however it will already be within a
@@ -108,7 +102,7 @@ impl PerformState<'_> {
     ///
     /// This will error when run from our main test framework, as there most work is expected to be
     /// done within an existing transaction.
-    fn fresh_connection(
+    pub fn fresh_connection(
         &self,
     ) -> Result<PooledConnection<ConnectionManager<PgConnection>>, PerformError> {
         match self.pool {
@@ -183,7 +177,7 @@ impl Job {
     }
 
     pub fn daily_db_maintenance() -> Self {
-        Self::DailyDbMaintenance
+        Self::DailyDbMaintenance(DailyDbMaintenanceJob)
     }
 
     pub fn dump_db(database_url: String, target_name: String) -> Self {
@@ -214,23 +208,23 @@ impl Job {
     }
 
     pub fn squash_index() -> Self {
-        Self::SquashIndex
+        Self::SquashIndex(SquashIndexJob)
     }
 
     pub fn sync_to_git_index<T: ToString>(krate: T) -> Self {
-        Self::SyncToGitIndex(SyncToIndexJob {
+        Self::SyncToGitIndex(SyncToGitIndexJob {
             krate: krate.to_string(),
         })
     }
 
     pub fn sync_to_sparse_index<T: ToString>(krate: T) -> Self {
-        Self::SyncToSparseIndex(SyncToIndexJob {
+        Self::SyncToSparseIndex(SyncToSparseIndexJob {
             krate: krate.to_string(),
         })
     }
 
     pub fn update_downloads() -> Self {
-        Self::UpdateDownloads
+        Self::UpdateDownloads(UpdateDownloadsJob)
     }
 
     pub fn enqueue(&self, conn: &mut PgConnection) -> Result<(), EnqueueError> {
@@ -253,59 +247,6 @@ impl Job {
             .execute(conn)?;
         Ok(())
     }
-
-    pub(super) fn perform(
-        &self,
-        env: &Option<Environment>,
-        state: PerformState<'_>,
-    ) -> Result<(), PerformError> {
-        let env = env
-            .as_ref()
-            .expect("Application should configure a background runner environment");
-        match self {
-            Job::DailyDbMaintenance => {
-                worker::perform_daily_db_maintenance(&mut *state.fresh_connection()?)
-            }
-            Job::DumpDb(job) => worker::perform_dump_db(job, env),
-            Job::SquashIndex => worker::perform_index_squash(env),
-            Job::NormalizeIndex(args) => worker::perform_normalize_index(env, args),
-            Job::RenderAndUploadReadme(job) => {
-                worker::perform_render_and_upload_readme(job, state.conn, env)
-            }
-            Job::SyncToGitIndex(args) => worker::sync_to_git_index(env, state.conn, &args.krate),
-            Job::SyncToSparseIndex(args) => {
-                worker::sync_to_sparse_index(env, state.conn, &args.krate)
-            }
-            Job::UpdateDownloads => {
-                worker::perform_update_downloads(&mut *state.fresh_connection()?)
-            }
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct DumpDbJob {
-    pub(super) database_url: String,
-    pub(super) target_name: String,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct SyncToIndexJob {
-    pub(super) krate: String,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct NormalizeIndexJob {
-    pub dry_run: bool,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct RenderAndUploadReadmeJob {
-    pub(super) version_id: i32,
-    pub(super) text: String,
-    pub(super) readme_path: String,
-    pub(super) base_url: Option<String>,
-    pub(super) pkg_path_in_vcs: Option<String>,
 }
 
 pub struct Environment {
