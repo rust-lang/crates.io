@@ -212,10 +212,8 @@ impl Job {
         Self::SyncToGitIndex(SyncToGitIndexJob::new(krate))
     }
 
-    pub fn sync_to_sparse_index<T: ToString>(krate: T) -> Self {
-        Self::SyncToSparseIndex(SyncToSparseIndexJob {
-            krate: krate.to_string(),
-        })
+    pub fn sync_to_sparse_index(krate: impl Into<String>) -> Self {
+        Self::SyncToSparseIndex(SyncToSparseIndexJob::new(krate))
     }
 
     pub fn update_downloads() -> Self {

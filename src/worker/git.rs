@@ -67,7 +67,14 @@ impl SyncToGitIndexJob {
 
 #[derive(Serialize, Deserialize)]
 pub struct SyncToSparseIndexJob {
-    pub(crate) krate: String,
+    krate: String,
+}
+
+impl SyncToSparseIndexJob {
+    pub fn new(krate: impl Into<String>) -> Self {
+        let krate = krate.into();
+        Self { krate }
+    }
 }
 
 impl SyncToSparseIndexJob {
