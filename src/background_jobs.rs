@@ -185,7 +185,7 @@ impl Job {
     }
 
     pub fn normalize_index(dry_run: bool) -> Self {
-        Self::NormalizeIndex(NormalizeIndexJob { dry_run })
+        Self::NormalizeIndex(NormalizeIndexJob::new(dry_run))
     }
 
     pub fn render_and_upload_readme(

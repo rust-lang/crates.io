@@ -192,7 +192,13 @@ impl SquashIndexJob {
 
 #[derive(Serialize, Deserialize)]
 pub struct NormalizeIndexJob {
-    pub dry_run: bool,
+    dry_run: bool,
+}
+
+impl NormalizeIndexJob {
+    pub fn new(dry_run: bool) -> Self {
+        Self { dry_run }
+    }
 }
 
 impl NormalizeIndexJob {
