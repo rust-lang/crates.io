@@ -39,19 +39,19 @@ use std::collections::HashMap;
 use tower_service::Service;
 
 mod chaosproxy;
-mod fresh_schema;
 mod github;
 pub mod insta;
 mod mock_request;
 mod response;
 mod test_app;
+mod test_database;
 
 pub(crate) use chaosproxy::ChaosProxy;
-pub(crate) use fresh_schema::FreshSchema;
 use mock_request::MockRequest;
 pub use mock_request::MockRequestExt;
 pub use response::Response;
 pub use test_app::TestApp;
+pub(crate) use test_database::TestDatabase;
 
 /// This function can be used to create a `Cookie` header for mock requests that
 /// include cookie-based authentication.

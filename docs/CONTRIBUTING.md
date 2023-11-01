@@ -435,9 +435,11 @@ dashboard, which should take you to your Mailgun dashboard.
 #### Running the backend tests
 
 In your `.env` file, set `TEST_DATABASE_URL` to a value that's the same as
-`DATABASE_URL` except with a different database name at the end, since
-everything in the test database will be deleted every time you run tests. Try
-using `postgres://postgres@localhost/cargo_registry_test`.
+`DATABASE_URL`, or use a different database name. The `TEST_DATABASE_URL`
+connection will be used to create new databases for the tests, with names
+prefixed with the database name from `TEST_DATABASE_URL`.
+
+Example: `postgres://postgres@localhost/cargo_registry_test`.
 
 Create the test database by running:
 

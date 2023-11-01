@@ -1,5 +1,5 @@
 use crate::builders::CrateBuilder;
-use crate::util::{ChaosProxy, FreshSchema};
+use crate::util::{ChaosProxy, TestDatabase};
 use anyhow::{Context, Error};
 use crates_io::models::{NewUser, User};
 use diesel::prelude::*;
@@ -83,7 +83,7 @@ struct ServerBin {
     chaosproxy: Arc<ChaosProxy>,
     db_url: String,
     env: HashMap<String, String>,
-    fresh_schema: FreshSchema,
+    test_database: TestDatabase,
 }
 
 impl ServerBin {
@@ -102,8 +102,8 @@ impl ServerBin {
         env.insert("GH_CLIENT_SECRET".into(), String::new());
 
         // Use a proxied fresh schema as the database url.
-        let fresh_schema = FreshSchema::new(env.get("TEST_DATABASE_URL").unwrap());
-        let (chaosproxy, db_url) = ChaosProxy::proxy_database_url(fresh_schema.database_url())?;
+        let test_database = TestDatabase::new();
+        let (chaosproxy, db_url) = ChaosProxy::proxy_database_url(test_database.url())?;
         env.remove("TEST_DATABASE_URL");
         env.insert("DATABASE_URL".into(), db_url.clone());
         env.insert("READ_ONLY_REPLICA_URL".into(), db_url.clone());
@@ -112,7 +112,7 @@ impl ServerBin {
             chaosproxy,
             db_url,
             env,
-            fresh_schema,
+            test_database,
         })
     }
 
@@ -151,7 +151,7 @@ impl ServerBin {
             port,
             http,
             _chaosproxy: self.chaosproxy,
-            _fresh_schema: self.fresh_schema,
+            _test_database: self.test_database,
         })
     }
 }
@@ -163,7 +163,7 @@ struct RunningServer {
 
     // Keep these two items at the bottom in this order to drop everything in the correct order.
     _chaosproxy: Arc<ChaosProxy>,
-    _fresh_schema: FreshSchema,
+    _test_database: TestDatabase,
 }
 
 impl RunningServer {

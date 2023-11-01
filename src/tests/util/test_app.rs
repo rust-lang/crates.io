@@ -1,5 +1,5 @@
 use super::{MockAnonymousUser, MockCookieUser, MockTokenUser};
-use crate::util::{chaosproxy::ChaosProxy, fresh_schema::FreshSchema};
+use crate::util::{chaosproxy::ChaosProxy, test_database::TestDatabase};
 use crates_io::config::{self, BalanceCapacityConfig, Base, DatabasePools, DbPoolConfig};
 use crates_io::storage::StorageConfig;
 use crates_io::{background_jobs::Environment, env, App, Emails, Env};
@@ -16,7 +16,6 @@ use diesel::PgConnection;
 use futures_util::TryStreamExt;
 use oauth2::{ClientId, ClientSecret};
 use reqwest::{blocking::Client, Proxy};
-use secrecy::ExposeSecret;
 use std::collections::HashSet;
 
 struct TestAppInner {
@@ -29,7 +28,7 @@ struct TestAppInner {
     replica_db_chaosproxy: Option<Arc<ChaosProxy>>,
 
     // Must be the last field of the struct!
-    _fresh_schema: Option<FreshSchema>,
+    _test_database: Option<TestDatabase>,
 }
 
 impl Drop for TestAppInner {
@@ -209,35 +208,35 @@ impl TestAppBuilder {
     pub fn empty(mut self) -> (TestApp, MockAnonymousUser) {
         // Run each test inside a fresh database schema, deleted at the end of the test,
         // The schema will be cleared up once the app is dropped.
-        let (primary_db_chaosproxy, replica_db_chaosproxy, fresh_schema) =
+        let (primary_db_chaosproxy, replica_db_chaosproxy, _test_database) =
             if !self.config.use_test_database_pool {
-                let fresh_schema = FreshSchema::new(self.config.db.primary.url.expose_secret());
+                let test_database = TestDatabase::new();
 
                 let primary_proxy = if self.use_chaos_proxy {
                     let (primary_proxy, url) =
-                        ChaosProxy::proxy_database_url(fresh_schema.database_url()).unwrap();
+                        ChaosProxy::proxy_database_url(test_database.url()).unwrap();
 
                     self.config.db.primary.url = url.into();
                     Some(primary_proxy)
                 } else {
-                    self.config.db.primary.url = fresh_schema.database_url().to_string().into();
+                    self.config.db.primary.url = test_database.url().to_string().into();
                     None
                 };
 
                 let replica_proxy = self.config.db.replica.as_mut().and_then(|replica| {
                     if self.use_chaos_proxy {
                         let (primary_proxy, url) =
-                            ChaosProxy::proxy_database_url(fresh_schema.database_url()).unwrap();
+                            ChaosProxy::proxy_database_url(test_database.url()).unwrap();
 
                         replica.url = url.into();
                         Some(primary_proxy)
                     } else {
-                        replica.url = fresh_schema.database_url().to_string().into();
+                        replica.url = test_database.url().to_string().into();
                         None
                     }
                 });
 
-                (primary_proxy, replica_proxy, Some(fresh_schema))
+                (primary_proxy, replica_proxy, Some(test_database))
             } else {
                 (None, None, None)
             };
@@ -269,7 +268,7 @@ impl TestAppBuilder {
 
         let test_app_inner = TestAppInner {
             app,
-            _fresh_schema: fresh_schema,
+            _test_database,
             router,
             index: self.index,
             runner,
