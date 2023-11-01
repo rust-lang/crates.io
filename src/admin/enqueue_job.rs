@@ -1,6 +1,9 @@
-use crate::background_jobs::{BackgroundJob, Job};
+use crate::background_jobs::BackgroundJob;
 use crate::db;
 use crate::schema::background_jobs;
+use crate::worker::{
+    DailyDbMaintenanceJob, DumpDbJob, NormalizeIndexJob, SquashIndexJob, UpdateDownloadsJob,
+};
 use anyhow::Result;
 use diesel::prelude::*;
 use secrecy::{ExposeSecret, SecretString};
@@ -43,15 +46,15 @@ pub fn run(command: Command) -> Result<()> {
                 println!("Did not enqueue update_downloads, existing job already in progress");
                 Ok(())
             } else {
-                Ok(Job::update_downloads().enqueue(conn)?)
+                Ok(UpdateDownloadsJob.enqueue(conn)?)
             }
         }
         Command::DumpDb {
             database_url,
             target_name,
-        } => Ok(Job::dump_db(database_url.expose_secret().to_string(), target_name).enqueue(conn)?),
-        Command::DailyDbMaintenance => Ok(Job::daily_db_maintenance().enqueue(conn)?),
-        Command::SquashIndex => Ok(Job::squash_index().enqueue(conn)?),
-        Command::NormalizeIndex { dry_run } => Ok(Job::normalize_index(dry_run).enqueue(conn)?),
+        } => Ok(DumpDbJob::new(database_url.expose_secret(), target_name).enqueue(conn)?),
+        Command::DailyDbMaintenance => Ok(DailyDbMaintenanceJob.enqueue(conn)?),
+        Command::SquashIndex => Ok(SquashIndexJob.enqueue(conn)?),
+        Command::NormalizeIndex { dry_run } => Ok(NormalizeIndexJob::new(dry_run).enqueue(conn)?),
     }
 }

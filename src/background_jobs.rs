@@ -196,36 +196,6 @@ impl Job {
 
         Ok(())
     }
-
-    pub fn daily_db_maintenance() -> DailyDbMaintenanceJob {
-        DailyDbMaintenanceJob
-    }
-
-    pub fn dump_db(database_url: String, target_name: String) -> DumpDbJob {
-        DumpDbJob::new(database_url, target_name)
-    }
-
-    pub fn normalize_index(dry_run: bool) -> NormalizeIndexJob {
-        NormalizeIndexJob::new(dry_run)
-    }
-
-    pub fn render_and_upload_readme(
-        version_id: i32,
-        text: String,
-        readme_path: String,
-        base_url: Option<String>,
-        pkg_path_in_vcs: Option<String>,
-    ) -> RenderAndUploadReadmeJob {
-        RenderAndUploadReadmeJob::new(version_id, text, readme_path, base_url, pkg_path_in_vcs)
-    }
-
-    pub fn squash_index() -> SquashIndexJob {
-        SquashIndexJob
-    }
-
-    pub fn update_downloads() -> UpdateDownloadsJob {
-        UpdateDownloadsJob
-    }
 }
 
 pub struct Environment {
