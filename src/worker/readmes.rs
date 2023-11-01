@@ -36,6 +36,7 @@ impl RenderAndUploadReadmeJob {
 
 impl BackgroundJob for RenderAndUploadReadmeJob {
     const JOB_NAME: &'static str = "render_and_upload_readme";
+    const PRIORITY: i16 = 50;
 
     #[instrument(skip_all, fields(krate.name))]
     fn run(&self, state: PerformState<'_>, env: &Environment) -> Result<(), PerformError> {

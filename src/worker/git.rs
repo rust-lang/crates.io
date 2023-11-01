@@ -24,6 +24,7 @@ impl SyncToGitIndexJob {
 
 impl BackgroundJob for SyncToGitIndexJob {
     const JOB_NAME: &'static str = "sync_to_git_index";
+    const PRIORITY: i16 = 100;
 
     /// Regenerates or removes an index file for a single crate
     #[instrument(skip_all, fields(krate.name = ? self.krate))]
@@ -79,6 +80,7 @@ impl SyncToSparseIndexJob {
 
 impl BackgroundJob for SyncToSparseIndexJob {
     const JOB_NAME: &'static str = "sync_to_sparse_index";
+    const PRIORITY: i16 = 100;
 
     /// Regenerates or removes an index file for a single crate
     #[instrument(skip_all, fields(krate.name = ?self.krate))]
