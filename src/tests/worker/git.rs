@@ -1,6 +1,6 @@
 use crate::builders::PublishBuilder;
 use crate::util::{RequestHelper, TestApp};
-use crates_io::background_jobs::Job;
+use crates_io::background_jobs::enqueue_sync_to_index;
 use crates_io::models::Crate;
 use diesel::prelude::*;
 use http::StatusCode;
@@ -51,7 +51,7 @@ fn index_smoke_test() {
         let krate: Crate = assert_ok!(Crate::by_name("serde").first(conn));
         assert_ok!(diesel::delete(crates::table.find(krate.id)).execute(conn));
 
-        assert_ok!(Job::enqueue_sync_to_index("serde", conn));
+        assert_ok!(enqueue_sync_to_index("serde", conn));
     });
 
     app.run_pending_background_jobs();

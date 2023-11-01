@@ -1,4 +1,4 @@
-use crate::background_jobs::Job;
+use crate::background_jobs::enqueue_sync_to_index;
 use crate::schema::crates;
 use crate::storage::Storage;
 use crate::{admin::dialoguer, db, schema::versions};
@@ -74,7 +74,7 @@ pub fn run(opts: Opts) {
     }
 
     info!(%crate_name, "Enqueuing index sync jobs");
-    if let Err(error) = Job::enqueue_sync_to_index(crate_name, conn) {
+    if let Err(error) = enqueue_sync_to_index(crate_name, conn) {
         warn!(%crate_name, ?error, "Failed to enqueue index sync jobs");
     }
 

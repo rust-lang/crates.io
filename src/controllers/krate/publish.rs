@@ -1,7 +1,7 @@
 //! Functionality related to publishing a new crate or version of a crate.
 
 use crate::auth::AuthCheck;
-use crate::background_jobs::{BackgroundJob, Job};
+use crate::background_jobs::{enqueue_sync_to_index, BackgroundJob};
 use crate::worker::RenderAndUploadReadmeJob;
 use axum::body::Bytes;
 use cargo_manifest::{Dependency, DepsSet, TargetDepsSet};
@@ -391,7 +391,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 ))
                 .map_err(|e| internal(format!("failed to upload crate: {e}")))?;
 
-            Job::enqueue_sync_to_index(&krate.name, conn)?;
+            enqueue_sync_to_index(&krate.name, conn)?;
 
             // The `other` field on `PublishWarnings` was introduced to handle a temporary warning
             // that is no longer needed. As such, crates.io currently does not return any `other`

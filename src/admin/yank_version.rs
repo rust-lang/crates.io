@@ -5,7 +5,7 @@ use crate::{
     schema::versions,
 };
 
-use crate::background_jobs::Job;
+use crate::background_jobs::enqueue_sync_to_index;
 use diesel::prelude::*;
 
 #[derive(clap::Parser, Debug)]
@@ -65,5 +65,5 @@ fn yank(opts: Opts, conn: &mut PgConnection) {
         .execute(conn)
         .unwrap();
 
-    Job::enqueue_sync_to_index(&krate.name, conn).unwrap();
+    enqueue_sync_to_index(&krate.name, conn).unwrap();
 }

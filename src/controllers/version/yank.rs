@@ -1,7 +1,7 @@
 //! Endpoints for yanking and unyanking specific versions of crates
 
 use crate::auth::AuthCheck;
-use crate::background_jobs::Job;
+use crate::background_jobs::enqueue_sync_to_index;
 
 use super::version_and_crate;
 use crate::controllers::cargo_prelude::*;
@@ -89,7 +89,7 @@ fn modify_yank(
 
     insert_version_owner_action(conn, version.id, user.id, api_token_id, action)?;
 
-    Job::enqueue_sync_to_index(&krate.name, conn)?;
+    enqueue_sync_to_index(&krate.name, conn)?;
 
     ok_true()
 }
