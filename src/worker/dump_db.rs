@@ -11,8 +11,17 @@ use crate::swirl::PerformError;
 
 #[derive(Serialize, Deserialize)]
 pub struct DumpDbJob {
-    pub(crate) database_url: String,
-    pub(crate) target_name: String,
+    database_url: String,
+    target_name: String,
+}
+
+impl DumpDbJob {
+    pub fn new(database_url: impl Into<String>, target_name: impl Into<String>) -> Self {
+        Self {
+            database_url: database_url.into(),
+            target_name: target_name.into(),
+        }
+    }
 }
 
 impl DumpDbJob {

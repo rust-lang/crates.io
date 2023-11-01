@@ -181,10 +181,7 @@ impl Job {
     }
 
     pub fn dump_db(database_url: String, target_name: String) -> Self {
-        Self::DumpDb(DumpDbJob {
-            database_url,
-            target_name,
-        })
+        Self::DumpDb(DumpDbJob::new(database_url, target_name))
     }
 
     pub fn normalize_index(dry_run: bool) -> Self {
