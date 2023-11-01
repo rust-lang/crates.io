@@ -68,18 +68,6 @@ macro_rules! jobs {
         }
 
         impl $name {
-            fn as_type_str(&self) -> &'static str {
-                match self {
-                    $(Self::$variant(_) => $content::JOB_NAME,)+
-                }
-            }
-
-            fn to_value(&self) -> serde_json::Result<serde_json::Value> {
-                match self {
-                    $(Self::$variant(job) => serde_json::to_value(job),)+
-                }
-            }
-
             pub fn from_value(job_type: &str, value: serde_json::Value) -> Result<Self, PerformError> {
                 Ok(match job_type {
                     $($content::JOB_NAME => Self::$variant(serde_json::from_value(value)?),)+
