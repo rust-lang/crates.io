@@ -23,7 +23,7 @@ struct TestAppInner {
     app: Arc<App>,
     router: axum::Router,
     index: Option<UpstreamIndex>,
-    runner: Option<Runner>,
+    runner: Option<Runner<Arc<Environment>>>,
 
     primary_db_chaosproxy: Option<Arc<ChaosProxy>>,
     replica_db_chaosproxy: Option<Arc<ChaosProxy>>,
@@ -260,7 +260,7 @@ impl TestAppBuilder {
                 app.storage.clone(),
             );
 
-            let runner = Runner::new(app.primary_database.clone(), Arc::new(Some(environment)))
+            let runner = Runner::new(app.primary_database.clone(), Arc::new(environment))
                 .num_workers(1)
                 .job_start_timeout(Duration::from_secs(5))
                 .register_crates_io_job_types();

@@ -2,6 +2,7 @@ use crate::{
     models::VersionDownload,
     schema::{crates, metadata, version_downloads, versions},
 };
+use std::sync::Arc;
 
 use crate::background_jobs::{BackgroundJob, Environment, PerformState};
 use crate::swirl::PerformError;
@@ -13,7 +14,9 @@ pub struct UpdateDownloadsJob;
 impl BackgroundJob for UpdateDownloadsJob {
     const JOB_NAME: &'static str = "update_downloads";
 
-    fn run(&self, state: PerformState<'_>, _env: &Environment) -> Result<(), PerformError> {
+    type Context = Arc<Environment>;
+
+    fn run(&self, state: PerformState<'_>, _env: &Self::Context) -> Result<(), PerformError> {
         let mut conn = state.fresh_connection()?;
         update(&mut conn)?;
         Ok(())

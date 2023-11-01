@@ -30,8 +30,11 @@ pub trait BackgroundJob: Serialize + DeserializeOwned + 'static {
     /// [Self::enqueue_with_priority] can be used to override the priority value.
     const PRIORITY: i16 = 0;
 
+    /// The application data provided to this job at runtime.
+    type Context: Clone + Send + 'static;
+
     /// Execute the task. This method should define its logic
-    fn run(&self, state: PerformState<'_>, env: &Environment) -> Result<(), PerformError>;
+    fn run(&self, state: PerformState<'_>, env: &Self::Context) -> Result<(), PerformError>;
 
     fn enqueue(&self, conn: &mut PgConnection) -> Result<(), EnqueueError> {
         self.enqueue_with_priority(conn, Self::PRIORITY)

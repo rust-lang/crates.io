@@ -83,7 +83,7 @@ fn main() {
 
     let environment = Environment::new(repository, client, cloudfront, fastly, storage);
 
-    let environment = Arc::new(Some(environment));
+    let environment = Arc::new(environment);
 
     let build_runner = || {
         let connection_pool = r2d2::Pool::builder()

@@ -12,37 +12,35 @@ use threadpool::ThreadPool;
 
 use super::errors::*;
 use super::storage;
-use crate::background_jobs::{BackgroundJob, Environment, PerformState};
+use crate::background_jobs::{BackgroundJob, PerformState};
 use crate::db::{DieselPool, DieselPooledConn, PoolError};
 
 const DEFAULT_JOB_START_TIMEOUT: Duration = Duration::from_secs(30);
 
-type RunTaskFn = Arc<
-    dyn Fn(&Environment, PerformState<'_>, serde_json::Value) -> Result<(), PerformError>
-        + Send
-        + Sync,
+type RunTaskFn<Context> = Arc<
+    dyn Fn(Context, PerformState<'_>, serde_json::Value) -> Result<(), PerformError> + Send + Sync,
 >;
 
 fn runnable<J: BackgroundJob>(
-    env: &Environment,
+    env: J::Context,
     state: PerformState<'_>,
     payload: serde_json::Value,
 ) -> Result<(), PerformError> {
     let job: J = serde_json::from_value(payload)?;
-    job.run(state, env)
+    job.run(state, &env)
 }
 
 /// The core runner responsible for locking and running jobs
-pub struct Runner {
+pub struct Runner<Context: Clone + Send + UnwindSafe + 'static> {
     connection_pool: DieselPool,
     thread_pool: ThreadPool,
-    job_registry: Arc<RwLock<HashMap<String, RunTaskFn>>>,
-    environment: Arc<Option<Environment>>,
+    job_registry: Arc<RwLock<HashMap<String, RunTaskFn<Context>>>>,
+    environment: Context,
     job_start_timeout: Duration,
 }
 
-impl Runner {
-    pub fn new(connection_pool: DieselPool, environment: Arc<Option<Environment>>) -> Self {
+impl<Context: Clone + Send + UnwindSafe + 'static> Runner<Context> {
+    pub fn new(connection_pool: DieselPool, environment: Context) -> Self {
         Self {
             connection_pool,
             thread_pool: ThreadPool::new(1),
@@ -62,7 +60,7 @@ impl Runner {
         self
     }
 
-    pub fn register_job_type<J: BackgroundJob>(self) -> Self {
+    pub fn register_job_type<J: BackgroundJob<Context = Context>>(self) -> Self {
         self.job_registry
             .write()
             .insert(J::JOB_NAME.to_string(), Arc::new(runnable::<J>));
@@ -119,11 +117,6 @@ impl Runner {
             let run_task_fn = job_registry
                 .get(&job.job_type)
                 .ok_or_else(|| PerformError::from(format!("Unknown job type {}", job.job_type)))?;
-
-            let environment = environment
-                .as_ref()
-                .as_ref()
-                .expect("Application should configure a background runner environment");
 
             run_task_fn(environment, state, job.data)
         })
@@ -448,7 +441,7 @@ mod tests {
         }
     }
 
-    fn runner() -> Runner {
+    fn runner() -> Runner<()> {
         let database_url =
             dotenvy::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set to run tests");
 
@@ -458,12 +451,12 @@ mod tests {
 
         let connection_pool = DieselPool::new_background_worker(connection_pool);
 
-        Runner::new(connection_pool, Arc::new(None))
+        Runner::new(connection_pool, ())
             .num_workers(2)
             .job_start_timeout(Duration::from_secs(10))
     }
 
-    fn create_dummy_job(runner: &Runner) -> storage::BackgroundJob {
+    fn create_dummy_job(runner: &Runner<()>) -> storage::BackgroundJob {
         diesel::insert_into(background_jobs::table)
             .values((
                 background_jobs::job_type.eq("Foo"),

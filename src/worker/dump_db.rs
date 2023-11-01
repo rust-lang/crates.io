@@ -1,4 +1,5 @@
 use anyhow::{anyhow, Context};
+use std::sync::Arc;
 use std::{
     fs::{self, File},
     path::{Path, PathBuf},
@@ -27,9 +28,11 @@ impl DumpDbJob {
 impl BackgroundJob for DumpDbJob {
     const JOB_NAME: &'static str = "dump_db";
 
+    type Context = Arc<Environment>;
+
     /// Create CSV dumps of the public information in the database, wrap them in a
     /// tarball and upload to S3.
-    fn run(&self, _state: PerformState<'_>, env: &Environment) -> Result<(), PerformError> {
+    fn run(&self, _state: PerformState<'_>, env: &Self::Context) -> Result<(), PerformError> {
         let directory = DumpDirectory::create()?;
 
         info!(path = ?directory.export_dir, "Begin exporting database");
