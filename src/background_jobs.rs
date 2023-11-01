@@ -22,21 +22,22 @@ use crate::worker::{
 };
 use crates_io_index::Repository;
 
-pub const PRIORITY_DEFAULT: i16 = 0;
-pub const PRIORITY_RENDER_README: i16 = 50;
-pub const PRIORITY_SYNC_TO_INDEX: i16 = 100;
-
 pub trait BackgroundJob: Serialize + DeserializeOwned + 'static {
     /// Unique name of the task.
     ///
     /// This MUST be unique for the whole application.
     const JOB_NAME: &'static str;
 
+    /// Default priority of the task.
+    ///
+    /// [Self::enqueue_with_priority] can be used to override the priority value.
+    const PRIORITY: i16 = 0;
+
     /// Execute the task. This method should define its logic
     fn run(&self, state: PerformState<'_>, env: &Environment) -> Result<(), PerformError>;
 
     fn enqueue(&self, conn: &mut PgConnection) -> Result<(), EnqueueError> {
-        self.enqueue_with_priority(conn, PRIORITY_DEFAULT)
+        self.enqueue_with_priority(conn, Self::PRIORITY)
     }
 
     #[instrument(name = "swirl.enqueue", skip(self, conn), fields(message = Self::JOB_NAME))]
@@ -150,32 +151,42 @@ impl Job {
     ) -> Result<(), EnqueueError> {
         // Returns jobs with matching `job_type`, `data` and `priority`,
         // skipping ones that are already locked by the background worker.
-        let find_similar_jobs_query = |job_type: &'static str, data: serde_json::Value| {
-            background_jobs::table
-                .select(background_jobs::id)
-                .filter(background_jobs::job_type.eq(job_type))
-                .filter(background_jobs::data.eq(data))
-                .filter(background_jobs::priority.eq(PRIORITY_SYNC_TO_INDEX))
-                .for_update()
-                .skip_locked()
-        };
+        let find_similar_jobs_query =
+            |job_type: &'static str, data: serde_json::Value, priority: i16| {
+                background_jobs::table
+                    .select(background_jobs::id)
+                    .filter(background_jobs::job_type.eq(job_type))
+                    .filter(background_jobs::data.eq(data))
+                    .filter(background_jobs::priority.eq(priority))
+                    .for_update()
+                    .skip_locked()
+            };
 
         // Returns one `job_type, data, priority` row with values from the
         // passed-in `job`, unless a similar row already exists.
-        let deduplicated_select_query = |job_type: &'static str, data: serde_json::Value| {
-            diesel::select((
-                job_type.into_sql::<Text>(),
-                data.clone().into_sql::<Jsonb>(),
-                PRIORITY_SYNC_TO_INDEX.into_sql::<Int2>(),
-            ))
-            .filter(not(exists(find_similar_jobs_query(job_type, data))))
-        };
+        let deduplicated_select_query =
+            |job_type: &'static str, data: serde_json::Value, priority: i16| {
+                diesel::select((
+                    job_type.into_sql::<Text>(),
+                    data.clone().into_sql::<Jsonb>(),
+                    priority.into_sql::<Int2>(),
+                ))
+                .filter(not(exists(find_similar_jobs_query(
+                    job_type, data, priority,
+                ))))
+            };
 
-        let to_git = serde_json::to_value(SyncToGitIndexJob::new(krate.to_string()))?;
-        let to_git = deduplicated_select_query(SyncToGitIndexJob::JOB_NAME, to_git);
+        let to_git = deduplicated_select_query(
+            SyncToGitIndexJob::JOB_NAME,
+            serde_json::to_value(SyncToGitIndexJob::new(krate.to_string()))?,
+            SyncToGitIndexJob::PRIORITY,
+        );
 
-        let to_sparse = serde_json::to_value(SyncToSparseIndexJob::new(krate.to_string()))?;
-        let to_sparse = deduplicated_select_query(SyncToSparseIndexJob::JOB_NAME, to_sparse);
+        let to_sparse = deduplicated_select_query(
+            SyncToSparseIndexJob::JOB_NAME,
+            serde_json::to_value(SyncToSparseIndexJob::new(krate.to_string()))?,
+            SyncToSparseIndexJob::PRIORITY,
+        );
 
         // Insert index update background jobs, but only if they do not
         // already exist.

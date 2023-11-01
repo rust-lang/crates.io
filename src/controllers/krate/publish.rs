@@ -1,7 +1,7 @@
 //! Functionality related to publishing a new crate or version of a crate.
 
 use crate::auth::AuthCheck;
-use crate::background_jobs::{BackgroundJob, Job, PRIORITY_RENDER_README};
+use crate::background_jobs::{BackgroundJob, Job};
 use crate::worker::RenderAndUploadReadmeJob;
 use axum::body::Bytes;
 use cargo_manifest::{Dependency, DepsSet, TargetDepsSet};
@@ -378,7 +378,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                         repository,
                         pkg_path_in_vcs,
                     )
-                    .enqueue_with_priority(conn, PRIORITY_RENDER_README)?;
+                    .enqueue(conn)?;
                 }
             }
 
