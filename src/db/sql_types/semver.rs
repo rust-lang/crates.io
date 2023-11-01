@@ -13,7 +13,7 @@ use crate::schema::sql_types::SemverTriple;
 /// Note that this implements `FromSql` but not `ToSql` as this is only used in a generated column
 /// and therefore we should never have to insert a record that includes an instance of this.
 /// Implementing `ToSql` is trivial, but therefore unnecessary.
-#[derive(Debug, Clone, AsExpression)]
+#[derive(Debug, Clone, Eq, PartialEq, AsExpression)]
 #[diesel(sql_type = SemverTriple)]
 pub struct Triple {
     pub major: u64,
