@@ -9,11 +9,29 @@ use crate::models::Version;
 
 #[derive(Serialize, Deserialize)]
 pub struct RenderAndUploadReadmeJob {
-    pub(crate) version_id: i32,
-    pub(crate) text: String,
-    pub(crate) readme_path: String,
-    pub(crate) base_url: Option<String>,
-    pub(crate) pkg_path_in_vcs: Option<String>,
+    version_id: i32,
+    text: String,
+    readme_path: String,
+    base_url: Option<String>,
+    pkg_path_in_vcs: Option<String>,
+}
+
+impl RenderAndUploadReadmeJob {
+    pub fn new(
+        version_id: i32,
+        text: String,
+        readme_path: String,
+        base_url: Option<String>,
+        pkg_path_in_vcs: Option<String>,
+    ) -> Self {
+        Self {
+            version_id,
+            text,
+            readme_path,
+            base_url,
+            pkg_path_in_vcs,
+        }
+    }
 }
 
 impl RenderAndUploadReadmeJob {

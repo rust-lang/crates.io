@@ -195,13 +195,10 @@ impl Job {
         base_url: Option<String>,
         pkg_path_in_vcs: Option<String>,
     ) -> Self {
-        Self::RenderAndUploadReadme(RenderAndUploadReadmeJob {
-            version_id,
-            text,
-            readme_path,
-            base_url,
-            pkg_path_in_vcs,
-        })
+        let job =
+            RenderAndUploadReadmeJob::new(version_id, text, readme_path, base_url, pkg_path_in_vcs);
+
+        Self::RenderAndUploadReadme(job)
     }
 
     pub fn squash_index() -> Self {
