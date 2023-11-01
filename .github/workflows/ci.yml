@@ -137,6 +137,7 @@ jobs:
       - run: cargo install diesel_cli --vers ${{ env.DIESEL_CLI_VERSION }} --no-default-features --features postgres --debug
       - run: diesel database setup --locked-schema
 
+      - run: cargo build --tests --workspace
       - run: cargo test --workspace
 
   frontend-lint:
