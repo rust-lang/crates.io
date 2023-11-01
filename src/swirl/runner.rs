@@ -13,10 +13,7 @@ use threadpool::ThreadPool;
 use super::errors::*;
 use super::storage;
 use crate::background_jobs::{BackgroundJob, Environment, PerformState};
-use crate::db::{DieselPool, DieselPooledConn};
-use event::Event;
-
-mod event;
+use crate::db::{DieselPool, DieselPooledConn, PoolError};
 
 const DEFAULT_JOB_START_TIMEOUT: Duration = Duration::from_secs(30);
 
@@ -267,6 +264,14 @@ impl Runner {
             Err(format!("{panic_count} threads panicked").into())
         }
     }
+}
+
+#[derive(Debug)]
+enum Event {
+    Working,
+    NoJobAvailable,
+    ErrorLoadingJob(diesel::result::Error),
+    FailedToAcquireConnection(PoolError),
 }
 
 fn get_transaction_depth(conn: &mut PgConnection) -> QueryResult<u32> {
