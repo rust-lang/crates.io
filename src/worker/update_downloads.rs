@@ -3,17 +3,17 @@ use crate::{
     schema::{crates, metadata, version_downloads, versions},
 };
 
-use crate::background_jobs::{Environment, PerformState};
+use crate::background_jobs::{BackgroundJob, Environment, PerformState};
 use crate::swirl::PerformError;
 use diesel::prelude::*;
 
 #[derive(Serialize, Deserialize)]
 pub struct UpdateDownloadsJob;
 
-impl UpdateDownloadsJob {
-    pub const JOB_NAME: &'static str = "update_downloads";
+impl BackgroundJob for UpdateDownloadsJob {
+    const JOB_NAME: &'static str = "update_downloads";
 
-    pub fn run(&self, state: PerformState<'_>, _env: &Environment) -> Result<(), PerformError> {
+    fn run(&self, state: PerformState<'_>, _env: &Environment) -> Result<(), PerformError> {
         let mut conn = state.fresh_connection()?;
         update(&mut conn)?;
         Ok(())

@@ -3,6 +3,8 @@ use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, PooledConnection};
 use diesel::sql_types::{Int2, Jsonb, Text};
 use reqwest::blocking::Client;
+use serde::de::DeserializeOwned;
+use serde::Serialize;
 use std::fmt::Display;
 use std::panic::AssertUnwindSafe;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
@@ -23,6 +25,16 @@ use crates_io_index::Repository;
 pub const PRIORITY_DEFAULT: i16 = 0;
 pub const PRIORITY_RENDER_README: i16 = 50;
 pub const PRIORITY_SYNC_TO_INDEX: i16 = 100;
+
+pub trait BackgroundJob: Serialize + DeserializeOwned + 'static {
+    /// Unique name of the task.
+    ///
+    /// This MUST be unique for the whole application.
+    const JOB_NAME: &'static str;
+
+    /// Execute the task. This method should define its logic
+    fn run(&self, state: PerformState<'_>, env: &Environment) -> Result<(), PerformError>;
+}
 
 macro_rules! jobs {
     {

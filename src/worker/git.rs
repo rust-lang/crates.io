@@ -1,4 +1,4 @@
-use crate::background_jobs::{Environment, PerformState};
+use crate::background_jobs::{BackgroundJob, Environment, PerformState};
 use crate::models;
 use crate::swirl::PerformError;
 use anyhow::Context;
@@ -15,12 +15,12 @@ pub struct SyncToGitIndexJob {
     pub(crate) krate: String,
 }
 
-impl SyncToGitIndexJob {
-    pub const JOB_NAME: &'static str = "sync_to_git_index";
+impl BackgroundJob for SyncToGitIndexJob {
+    const JOB_NAME: &'static str = "sync_to_git_index";
 
     /// Regenerates or removes an index file for a single crate
     #[instrument(skip_all, fields(krate.name = ? self.krate))]
-    pub fn run(&self, state: PerformState<'_>, env: &Environment) -> Result<(), PerformError> {
+    fn run(&self, state: PerformState<'_>, env: &Environment) -> Result<(), PerformError> {
         info!("Syncing to git index");
 
         let new = get_index_data(&self.krate, state.conn).context("Failed to get index data")?;
@@ -63,12 +63,12 @@ pub struct SyncToSparseIndexJob {
     pub(crate) krate: String,
 }
 
-impl SyncToSparseIndexJob {
-    pub const JOB_NAME: &'static str = "sync_to_sparse_index";
+impl BackgroundJob for SyncToSparseIndexJob {
+    const JOB_NAME: &'static str = "sync_to_sparse_index";
 
     /// Regenerates or removes an index file for a single crate
     #[instrument(skip_all, fields(krate.name = ?self.krate))]
-    pub fn run(&self, state: PerformState<'_>, env: &Environment) -> Result<(), PerformError> {
+    fn run(&self, state: PerformState<'_>, env: &Environment) -> Result<(), PerformError> {
         info!("Syncing to sparse index");
 
         let content =
@@ -135,12 +135,12 @@ pub fn get_index_data(name: &str, conn: &mut PgConnection) -> anyhow::Result<Opt
 #[derive(Serialize, Deserialize)]
 pub struct SquashIndexJob;
 
-impl SquashIndexJob {
-    pub const JOB_NAME: &'static str = "squash_index";
+impl BackgroundJob for SquashIndexJob {
+    const JOB_NAME: &'static str = "squash_index";
 
     /// Collapse the index into a single commit, archiving the current history in a snapshot branch.
     #[instrument(skip_all)]
-    pub fn run(&self, _state: PerformState<'_>, env: &Environment) -> Result<(), PerformError> {
+    fn run(&self, _state: PerformState<'_>, env: &Environment) -> Result<(), PerformError> {
         info!("Squashing the index into a single commit");
 
         let repo = env.lock_index()?;
@@ -181,10 +181,10 @@ pub struct NormalizeIndexJob {
     pub dry_run: bool,
 }
 
-impl NormalizeIndexJob {
-    pub const JOB_NAME: &'static str = "normalize_index";
+impl BackgroundJob for NormalizeIndexJob {
+    const JOB_NAME: &'static str = "normalize_index";
 
-    pub fn run(&self, _state: PerformState<'_>, env: &Environment) -> Result<(), PerformError> {
+    fn run(&self, _state: PerformState<'_>, env: &Environment) -> Result<(), PerformError> {
         info!("Normalizing the index");
 
         let repo = env.lock_index()?;
