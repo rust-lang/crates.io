@@ -16,3 +16,22 @@ pub(crate) use dump_db::DumpDbJob;
 pub(crate) use git::{NormalizeIndexJob, SquashIndexJob, SyncToGitIndexJob, SyncToSparseIndexJob};
 pub(crate) use readmes::RenderAndUploadReadmeJob;
 pub(crate) use update_downloads::UpdateDownloadsJob;
+
+use crate::swirl::Runner;
+
+pub trait RunnerExt {
+    fn register_crates_io_job_types(self) -> Self;
+}
+
+impl RunnerExt for Runner {
+    fn register_crates_io_job_types(self) -> Self {
+        self.register_job_type::<DailyDbMaintenanceJob>()
+            .register_job_type::<DumpDbJob>()
+            .register_job_type::<NormalizeIndexJob>()
+            .register_job_type::<RenderAndUploadReadmeJob>()
+            .register_job_type::<SquashIndexJob>()
+            .register_job_type::<SyncToGitIndexJob>()
+            .register_job_type::<SyncToSparseIndexJob>()
+            .register_job_type::<UpdateDownloadsJob>()
+    }
+}

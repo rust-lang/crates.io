@@ -16,10 +16,7 @@ use crate::swirl::errors::EnqueueError;
 use crate::swirl::PerformError;
 use crate::worker::cloudfront::CloudFront;
 use crate::worker::fastly::Fastly;
-use crate::worker::{
-    DailyDbMaintenanceJob, DumpDbJob, NormalizeIndexJob, RenderAndUploadReadmeJob, SquashIndexJob,
-    SyncToGitIndexJob, SyncToSparseIndexJob, UpdateDownloadsJob,
-};
+use crate::worker::{SyncToGitIndexJob, SyncToSparseIndexJob};
 use crates_io_index::Repository;
 
 pub trait BackgroundJob: Serialize + DeserializeOwned + 'static {
@@ -58,53 +55,6 @@ pub trait BackgroundJob: Serialize + DeserializeOwned + 'static {
     }
 }
 
-macro_rules! jobs {
-    {
-        $vis:vis enum $name:ident {
-            $($variant:ident ($content:ident)),+ $(,)?
-        }
-    } => {
-        $vis enum $name {
-            $($variant ($content),)+
-        }
-
-        impl $name {
-            pub fn from_value(job_type: &str, value: serde_json::Value) -> Result<Self, PerformError> {
-                Ok(match job_type {
-                    $($content::JOB_NAME => Self::$variant(serde_json::from_value(value)?),)+
-                    job_type => Err(PerformError::from(format!("Unknown job type {job_type}")))?,
-                })
-            }
-
-            pub(super) fn perform(
-                &self,
-                env: &Option<Environment>,
-                state: PerformState<'_>,
-            ) -> Result<(), PerformError> {
-                let env = env
-                    .as_ref()
-                    .expect("Application should configure a background runner environment");
-                match self {
-                    $(Self::$variant(job) => job.run(state, env),)+
-                }
-            }
-        }
-    }
-}
-
-jobs! {
-    pub enum Job {
-        DailyDbMaintenance(DailyDbMaintenanceJob),
-        DumpDb(DumpDbJob),
-        NormalizeIndex(NormalizeIndexJob),
-        RenderAndUploadReadme(RenderAndUploadReadmeJob),
-        SquashIndex(SquashIndexJob),
-        SyncToGitIndex(SyncToGitIndexJob),
-        SyncToSparseIndex(SyncToSparseIndexJob),
-        UpdateDownloads(UpdateDownloadsJob),
-    }
-}
-
 /// Database state that is passed to `Job::perform()`.
 pub struct PerformState<'a> {
     /// The existing connection used to lock the background job.
@@ -136,77 +86,75 @@ impl PerformState<'_> {
     }
 }
 
-impl Job {
-    /// Enqueue both index sync jobs (git and sparse) for a crate, unless they
-    /// already exist in the background job queue.
-    ///
-    /// Note that there are currently no explicit tests for this functionality,
-    /// since our test suite only allows us to use a single database connection
-    /// and the background worker queue locking only work when using multiple
-    /// connections.
-    #[instrument(name = "swirl.enqueue", skip_all, fields(message = "sync_to_index", krate = %krate))]
-    pub fn enqueue_sync_to_index<T: Display>(
-        krate: T,
-        conn: &mut PgConnection,
-    ) -> Result<(), EnqueueError> {
-        // Returns jobs with matching `job_type`, `data` and `priority`,
-        // skipping ones that are already locked by the background worker.
-        let find_similar_jobs_query =
-            |job_type: &'static str, data: serde_json::Value, priority: i16| {
-                background_jobs::table
-                    .select(background_jobs::id)
-                    .filter(background_jobs::job_type.eq(job_type))
-                    .filter(background_jobs::data.eq(data))
-                    .filter(background_jobs::priority.eq(priority))
-                    .for_update()
-                    .skip_locked()
-            };
+/// Enqueue both index sync jobs (git and sparse) for a crate, unless they
+/// already exist in the background job queue.
+///
+/// Note that there are currently no explicit tests for this functionality,
+/// since our test suite only allows us to use a single database connection
+/// and the background worker queue locking only work when using multiple
+/// connections.
+#[instrument(name = "swirl.enqueue", skip_all, fields(message = "sync_to_index", krate = %krate))]
+pub fn enqueue_sync_to_index<T: Display>(
+    krate: T,
+    conn: &mut PgConnection,
+) -> Result<(), EnqueueError> {
+    // Returns jobs with matching `job_type`, `data` and `priority`,
+    // skipping ones that are already locked by the background worker.
+    let find_similar_jobs_query =
+        |job_type: &'static str, data: serde_json::Value, priority: i16| {
+            background_jobs::table
+                .select(background_jobs::id)
+                .filter(background_jobs::job_type.eq(job_type))
+                .filter(background_jobs::data.eq(data))
+                .filter(background_jobs::priority.eq(priority))
+                .for_update()
+                .skip_locked()
+        };
 
-        // Returns one `job_type, data, priority` row with values from the
-        // passed-in `job`, unless a similar row already exists.
-        let deduplicated_select_query =
-            |job_type: &'static str, data: serde_json::Value, priority: i16| {
-                diesel::select((
-                    job_type.into_sql::<Text>(),
-                    data.clone().into_sql::<Jsonb>(),
-                    priority.into_sql::<Int2>(),
-                ))
-                .filter(not(exists(find_similar_jobs_query(
-                    job_type, data, priority,
-                ))))
-            };
-
-        let to_git = deduplicated_select_query(
-            SyncToGitIndexJob::JOB_NAME,
-            serde_json::to_value(SyncToGitIndexJob::new(krate.to_string()))?,
-            SyncToGitIndexJob::PRIORITY,
-        );
-
-        let to_sparse = deduplicated_select_query(
-            SyncToSparseIndexJob::JOB_NAME,
-            serde_json::to_value(SyncToSparseIndexJob::new(krate.to_string()))?,
-            SyncToSparseIndexJob::PRIORITY,
-        );
-
-        // Insert index update background jobs, but only if they do not
-        // already exist.
-        let added_jobs_count = diesel::insert_into(background_jobs::table)
-            .values(to_git.union_all(to_sparse))
-            .into_columns((
-                background_jobs::job_type,
-                background_jobs::data,
-                background_jobs::priority,
+    // Returns one `job_type, data, priority` row with values from the
+    // passed-in `job`, unless a similar row already exists.
+    let deduplicated_select_query =
+        |job_type: &'static str, data: serde_json::Value, priority: i16| {
+            diesel::select((
+                job_type.into_sql::<Text>(),
+                data.clone().into_sql::<Jsonb>(),
+                priority.into_sql::<Int2>(),
             ))
-            .execute(conn)?;
+            .filter(not(exists(find_similar_jobs_query(
+                job_type, data, priority,
+            ))))
+        };
 
-        // Print a log event if we skipped inserting a job due to deduplication.
-        if added_jobs_count != 2 {
-            let skipped_jobs_count = 2 - added_jobs_count;
-            info!(%skipped_jobs_count, "Skipped adding duplicate jobs to the background worker queue");
-        }
+    let to_git = deduplicated_select_query(
+        SyncToGitIndexJob::JOB_NAME,
+        serde_json::to_value(SyncToGitIndexJob::new(krate.to_string()))?,
+        SyncToGitIndexJob::PRIORITY,
+    );
 
-        Ok(())
+    let to_sparse = deduplicated_select_query(
+        SyncToSparseIndexJob::JOB_NAME,
+        serde_json::to_value(SyncToSparseIndexJob::new(krate.to_string()))?,
+        SyncToSparseIndexJob::PRIORITY,
+    );
+
+    // Insert index update background jobs, but only if they do not
+    // already exist.
+    let added_jobs_count = diesel::insert_into(background_jobs::table)
+        .values(to_git.union_all(to_sparse))
+        .into_columns((
+            background_jobs::job_type,
+            background_jobs::data,
+            background_jobs::priority,
+        ))
+        .execute(conn)?;
+
+    // Print a log event if we skipped inserting a job due to deduplication.
+    if added_jobs_count != 2 {
+        let skipped_jobs_count = 2 - added_jobs_count;
+        info!(%skipped_jobs_count, "Skipped adding duplicate jobs to the background worker queue");
     }
+
+    Ok(())
 }
 
 pub struct Environment {
