@@ -12,7 +12,14 @@ use std::process::Command;
 
 #[derive(Serialize, Deserialize)]
 pub struct SyncToGitIndexJob {
-    pub(crate) krate: String,
+    krate: String,
+}
+
+impl SyncToGitIndexJob {
+    pub fn new(krate: impl Into<String>) -> Self {
+        let krate = krate.into();
+        Self { krate }
+    }
 }
 
 impl BackgroundJob for SyncToGitIndexJob {
@@ -60,7 +67,14 @@ impl BackgroundJob for SyncToGitIndexJob {
 
 #[derive(Serialize, Deserialize)]
 pub struct SyncToSparseIndexJob {
-    pub(crate) krate: String,
+    krate: String,
+}
+
+impl SyncToSparseIndexJob {
+    pub fn new(krate: impl Into<String>) -> Self {
+        let krate = krate.into();
+        Self { krate }
+    }
 }
 
 impl BackgroundJob for SyncToSparseIndexJob {
@@ -178,7 +192,13 @@ impl BackgroundJob for SquashIndexJob {
 
 #[derive(Serialize, Deserialize)]
 pub struct NormalizeIndexJob {
-    pub dry_run: bool,
+    dry_run: bool,
+}
+
+impl NormalizeIndexJob {
+    pub fn new(dry_run: bool) -> Self {
+        Self { dry_run }
+    }
 }
 
 impl BackgroundJob for NormalizeIndexJob {

@@ -193,14 +193,11 @@ impl Job {
     }
 
     pub fn dump_db(database_url: String, target_name: String) -> Self {
-        Self::DumpDb(DumpDbJob {
-            database_url,
-            target_name,
-        })
+        Self::DumpDb(DumpDbJob::new(database_url, target_name))
     }
 
     pub fn normalize_index(dry_run: bool) -> Self {
-        Self::NormalizeIndex(NormalizeIndexJob { dry_run })
+        Self::NormalizeIndex(NormalizeIndexJob::new(dry_run))
     }
 
     pub fn render_and_upload_readme(
@@ -210,29 +207,22 @@ impl Job {
         base_url: Option<String>,
         pkg_path_in_vcs: Option<String>,
     ) -> Self {
-        Self::RenderAndUploadReadme(RenderAndUploadReadmeJob {
-            version_id,
-            text,
-            readme_path,
-            base_url,
-            pkg_path_in_vcs,
-        })
+        let job =
+            RenderAndUploadReadmeJob::new(version_id, text, readme_path, base_url, pkg_path_in_vcs);
+
+        Self::RenderAndUploadReadme(job)
     }
 
     pub fn squash_index() -> Self {
         Self::SquashIndex(SquashIndexJob)
     }
 
-    pub fn sync_to_git_index<T: ToString>(krate: T) -> Self {
-        Self::SyncToGitIndex(SyncToGitIndexJob {
-            krate: krate.to_string(),
-        })
+    pub fn sync_to_git_index(krate: impl Into<String>) -> Self {
+        Self::SyncToGitIndex(SyncToGitIndexJob::new(krate))
     }
 
-    pub fn sync_to_sparse_index<T: ToString>(krate: T) -> Self {
-        Self::SyncToSparseIndex(SyncToSparseIndexJob {
-            krate: krate.to_string(),
-        })
+    pub fn sync_to_sparse_index(krate: impl Into<String>) -> Self {
+        Self::SyncToSparseIndex(SyncToSparseIndexJob::new(krate))
     }
 
     pub fn update_downloads() -> Self {
