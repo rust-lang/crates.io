@@ -4,7 +4,7 @@ use crate::swirl::PerformError;
 use anyhow::Context;
 use crates_io_markdown::text_to_html;
 
-use crate::background_jobs::{Environment, PerformState};
+use crate::background_jobs::{BackgroundJob, Environment, PerformState};
 use crate::models::Version;
 
 #[derive(Serialize, Deserialize)]
@@ -16,11 +16,11 @@ pub struct RenderAndUploadReadmeJob {
     pub(crate) pkg_path_in_vcs: Option<String>,
 }
 
-impl RenderAndUploadReadmeJob {
-    pub const JOB_NAME: &'static str = "render_and_upload_readme";
+impl BackgroundJob for RenderAndUploadReadmeJob {
+    const JOB_NAME: &'static str = "render_and_upload_readme";
 
     #[instrument(skip_all, fields(krate.name))]
-    pub fn run(&self, state: PerformState<'_>, env: &Environment) -> Result<(), PerformError> {
+    fn run(&self, state: PerformState<'_>, env: &Environment) -> Result<(), PerformError> {
         use crate::schema::*;
         use diesel::prelude::*;
 

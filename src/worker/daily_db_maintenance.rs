@@ -1,12 +1,12 @@
-use crate::background_jobs::{Environment, PerformState};
+use crate::background_jobs::{BackgroundJob, Environment, PerformState};
 use crate::swirl::PerformError;
 use diesel::{sql_query, RunQueryDsl};
 
 #[derive(Serialize, Deserialize)]
 pub struct DailyDbMaintenanceJob;
 
-impl DailyDbMaintenanceJob {
-    pub const JOB_NAME: &'static str = "daily_db_maintenance";
+impl BackgroundJob for DailyDbMaintenanceJob {
+    const JOB_NAME: &'static str = "daily_db_maintenance";
 
     /// Run daily database maintenance tasks
     ///
@@ -17,7 +17,7 @@ impl DailyDbMaintenanceJob {
     /// We only need to keep 90 days of entries in `version_downloads`. Once we have a mechanism to
     /// archive daily download counts and drop historical data, we can drop this task and rely on
     /// auto-vacuum again.
-    pub fn run(&self, state: PerformState<'_>, _env: &Environment) -> Result<(), PerformError> {
+    fn run(&self, state: PerformState<'_>, _env: &Environment) -> Result<(), PerformError> {
         let mut conn = state.fresh_connection()?;
 
         info!("Running VACUUM on version_downloads table");
