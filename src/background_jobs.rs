@@ -34,6 +34,27 @@ pub trait BackgroundJob: Serialize + DeserializeOwned + 'static {
 
     /// Execute the task. This method should define its logic
     fn run(&self, state: PerformState<'_>, env: &Environment) -> Result<(), PerformError>;
+
+    fn enqueue(&self, conn: &mut PgConnection) -> Result<(), EnqueueError> {
+        self.enqueue_with_priority(conn, PRIORITY_DEFAULT)
+    }
+
+    #[instrument(name = "swirl.enqueue", skip(self, conn), fields(message = Self::JOB_NAME))]
+    fn enqueue_with_priority(
+        &self,
+        conn: &mut PgConnection,
+        job_priority: i16,
+    ) -> Result<(), EnqueueError> {
+        let job_data = serde_json::to_value(self)?;
+        diesel::insert_into(background_jobs::table)
+            .values((
+                background_jobs::job_type.eq(Self::JOB_NAME),
+                background_jobs::data.eq(job_data),
+                background_jobs::priority.eq(job_priority),
+            ))
+            .execute(conn)?;
+        Ok(())
+    }
 }
 
 macro_rules! jobs {
@@ -188,16 +209,16 @@ impl Job {
         Ok(())
     }
 
-    pub fn daily_db_maintenance() -> Self {
-        Self::DailyDbMaintenance(DailyDbMaintenanceJob)
+    pub fn daily_db_maintenance() -> DailyDbMaintenanceJob {
+        DailyDbMaintenanceJob
     }
 
-    pub fn dump_db(database_url: String, target_name: String) -> Self {
-        Self::DumpDb(DumpDbJob::new(database_url, target_name))
+    pub fn dump_db(database_url: String, target_name: String) -> DumpDbJob {
+        DumpDbJob::new(database_url, target_name)
     }
 
-    pub fn normalize_index(dry_run: bool) -> Self {
-        Self::NormalizeIndex(NormalizeIndexJob::new(dry_run))
+    pub fn normalize_index(dry_run: bool) -> NormalizeIndexJob {
+        NormalizeIndexJob::new(dry_run)
     }
 
     pub fn render_and_upload_readme(
@@ -206,40 +227,16 @@ impl Job {
         readme_path: String,
         base_url: Option<String>,
         pkg_path_in_vcs: Option<String>,
-    ) -> Self {
-        let job =
-            RenderAndUploadReadmeJob::new(version_id, text, readme_path, base_url, pkg_path_in_vcs);
-
-        Self::RenderAndUploadReadme(job)
+    ) -> RenderAndUploadReadmeJob {
+        RenderAndUploadReadmeJob::new(version_id, text, readme_path, base_url, pkg_path_in_vcs)
     }
 
-    pub fn squash_index() -> Self {
-        Self::SquashIndex(SquashIndexJob)
+    pub fn squash_index() -> SquashIndexJob {
+        SquashIndexJob
     }
 
-    pub fn update_downloads() -> Self {
-        Self::UpdateDownloads(UpdateDownloadsJob)
-    }
-
-    pub fn enqueue(&self, conn: &mut PgConnection) -> Result<(), EnqueueError> {
-        self.enqueue_with_priority(conn, PRIORITY_DEFAULT)
-    }
-
-    #[instrument(name = "swirl.enqueue", skip(self, conn), fields(message = self.as_type_str()))]
-    pub fn enqueue_with_priority(
-        &self,
-        conn: &mut PgConnection,
-        job_priority: i16,
-    ) -> Result<(), EnqueueError> {
-        let job_data = self.to_value()?;
-        diesel::insert_into(background_jobs::table)
-            .values((
-                background_jobs::job_type.eq(self.as_type_str()),
-                background_jobs::data.eq(job_data),
-                background_jobs::priority.eq(job_priority),
-            ))
-            .execute(conn)?;
-        Ok(())
+    pub fn update_downloads() -> UpdateDownloadsJob {
+        UpdateDownloadsJob
     }
 }
 

@@ -1,4 +1,4 @@
-use crate::background_jobs::Job;
+use crate::background_jobs::{BackgroundJob, Job};
 use crate::db;
 use crate::schema::background_jobs;
 use anyhow::Result;
