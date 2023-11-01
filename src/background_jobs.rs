@@ -162,11 +162,11 @@ impl Job {
             .filter(not(exists(find_similar_jobs_query(job_type, data))))
         };
 
-        let to_git = Self::sync_to_git_index(krate.to_string());
-        let to_git = deduplicated_select_query(to_git.as_type_str(), to_git.to_value()?);
+        let to_git = serde_json::to_value(SyncToGitIndexJob::new(krate.to_string()))?;
+        let to_git = deduplicated_select_query(SyncToGitIndexJob::JOB_NAME, to_git);
 
-        let to_sparse = Self::sync_to_sparse_index(krate.to_string());
-        let to_sparse = deduplicated_select_query(to_sparse.as_type_str(), to_sparse.to_value()?);
+        let to_sparse = serde_json::to_value(SyncToSparseIndexJob::new(krate.to_string()))?;
+        let to_sparse = deduplicated_select_query(SyncToSparseIndexJob::JOB_NAME, to_sparse);
 
         // Insert index update background jobs, but only if they do not
         // already exist.
@@ -215,14 +215,6 @@ impl Job {
 
     pub fn squash_index() -> Self {
         Self::SquashIndex(SquashIndexJob)
-    }
-
-    pub fn sync_to_git_index(krate: impl Into<String>) -> Self {
-        Self::SyncToGitIndex(SyncToGitIndexJob::new(krate))
-    }
-
-    pub fn sync_to_sparse_index(krate: impl Into<String>) -> Self {
-        Self::SyncToSparseIndex(SyncToSparseIndexJob::new(krate))
     }
 
     pub fn update_downloads() -> Self {
