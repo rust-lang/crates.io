@@ -116,7 +116,7 @@
           {{#each this.model.just_updated as |crate index|}}
             <li>
               <FrontPageList::Item
-                @link={{link "crate" crate.id}}
+                @link={{link "crate.version" crate.id crate.newest_version}}
                 @title={{crate.name}}
                 @subtitle="v{{crate.newest_version}}"
                 data-test-crate-link={{index}}

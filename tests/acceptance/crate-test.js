@@ -20,7 +20,7 @@ module('Acceptance | crate page', function (hooks) {
     await visit('/');
     await click('[data-test-just-updated] [data-test-crate-link="0"]');
 
-    assert.strictEqual(currentURL(), '/crates/nanomsg');
+    assert.strictEqual(currentURL(), '/crates/nanomsg/0.6.1');
     assert.strictEqual(getPageTitle(), 'nanomsg - crates.io: Rust Package Registry');
 
     assert.dom('[data-test-heading] [data-test-crate-name]').hasText('nanomsg');
@@ -124,7 +124,7 @@ module('Acceptance | crate page', function (hooks) {
 
     await visit('/');
     await click('[data-test-just-updated] [data-test-crate-link="0"]');
-    assert.strictEqual(currentURL(), '/crates/nanomsg');
+    assert.strictEqual(currentURL(), '/crates/nanomsg/0.6.0');
     assert.dom('[data-test-404-page]').exists();
     assert.dom('[data-test-title]').hasText('nanomsg: Failed to load version data');
     assert.dom('[data-test-go-back]').doesNotExist();
