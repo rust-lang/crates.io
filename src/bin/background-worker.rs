@@ -32,7 +32,7 @@ use std::sync::Arc;
 use std::thread::sleep;
 use std::time::{Duration, Instant};
 
-fn main() {
+fn main() -> anyhow::Result<()> {
     let _sentry = crates_io::sentry::init();
 
     // Initialize logging
@@ -42,7 +42,7 @@ fn main() {
 
     info!("Booting runner");
 
-    let config = config::Server::default();
+    let config = config::Server::from_environment()?;
 
     if config.db.are_all_read_only() {
         loop {
@@ -65,7 +65,7 @@ fn main() {
     }
 
     let clone_start = Instant::now();
-    let repository_config = RepositoryConfig::from_environment();
+    let repository_config = RepositoryConfig::from_environment()?;
     let repository = Repository::open(&repository_config).expect("Failed to clone index");
 
     let clone_duration = clone_start.elapsed();

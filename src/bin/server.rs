@@ -18,7 +18,7 @@ use tower::Layer;
 
 const CORE_THREADS: usize = 4;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> anyhow::Result<()> {
     let _sentry = crates_io::sentry::init();
 
     // Initialize logging
@@ -26,7 +26,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let _span = info_span!("server.run");
 
-    let config = crates_io::config::Server::default();
+    let config = crates_io::config::Server::from_environment()?;
     let client = Client::new();
     let app = Arc::new(App::new(config, Some(client)));
 

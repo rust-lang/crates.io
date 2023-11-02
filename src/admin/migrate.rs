@@ -16,8 +16,8 @@ pub struct Opts;
 
 pub fn run(_opts: Opts) -> Result<(), Error> {
     let config = crate::config::DatabasePools::full_from_environment(
-        &crate::config::Base::from_environment(),
-    );
+        &crate::config::Base::from_environment()?,
+    )?;
 
     // TODO: Refactor logic so that we can also check things from App::new() here.
     // If the app will panic due to bad configuration, it is better to error in the release phase

@@ -30,7 +30,7 @@ pub struct Opts {
 pub fn run(opts: Opts) -> anyhow::Result<()> {
     let mut conn = db::oneoff_connection()?;
     println!("fetching git repo");
-    let config = RepositoryConfig::from_environment();
+    let config = RepositoryConfig::from_environment()?;
     let repo = Repository::open(&config)?;
     repo.reset_head()?;
     println!("HEAD is at {}", repo.head_oid()?);

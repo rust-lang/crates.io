@@ -9,12 +9,12 @@ pub struct Base {
 }
 
 impl Base {
-    pub fn from_environment() -> Self {
+    pub fn from_environment() -> anyhow::Result<Self> {
         let env = match dotenvy::var("HEROKU") {
             Ok(_) => Env::Production,
             _ => Env::Development,
         };
 
-        Self { env }
+        Ok(Self { env })
     }
 }

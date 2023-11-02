@@ -65,7 +65,7 @@ pub struct Server {
     pub content_security_policy: Option<HeaderValue>,
 }
 
-impl Default for Server {
+impl Server {
     /// Returns a default value for the application's config
     ///
     /// Sets the following default values:
@@ -102,7 +102,7 @@ impl Default for Server {
     /// # Panics
     ///
     /// This function panics if the Server configuration is invalid.
-    fn default() -> Self {
+    pub fn from_environment() -> anyhow::Result<Self> {
         let docker = dotenvy::var("DEV_DOCKER").is_ok();
         let heroku = dotenvy::var("HEROKU").is_ok();
 
@@ -114,7 +114,7 @@ impl Default for Server {
 
         let port = env_optional("PORT").unwrap_or(8888);
 
-        let allowed_origins = AllowedOrigins::from_default_env();
+        let allowed_origins = AllowedOrigins::from_default_env()?;
         let page_offset_ua_blocklist = match env_optional::<String>("WEB_PAGE_OFFSET_UA_BLOCKLIST")
         {
             None => vec![],
@@ -128,11 +128,10 @@ impl Default for Server {
                 Some(s) => s
                     .split(',')
                     .map(parse_cidr_block)
-                    .collect::<Result<_, _>>()
-                    .unwrap(),
+                    .collect::<Result<_, _>>()?,
             };
 
-        let base = Base::from_environment();
+        let base = Base::from_environment()?;
         let excluded_crate_names = match env_optional::<String>("EXCLUDED_CRATE_NAMES") {
             None => vec![],
             Some(s) if s.is_empty() => vec![],
@@ -176,8 +175,8 @@ impl Default for Server {
             cdn_domain = storage.cdn_prefix.as_ref().map(|cdn_prefix| format!("https://{cdn_prefix}")).unwrap_or_default()
         );
 
-        Server {
-            db: DatabasePools::full_from_environment(&base),
+        Ok(Server {
+            db: DatabasePools::full_from_environment(&base)?,
             storage,
             base,
             ip,
@@ -221,11 +220,11 @@ impl Default for Server {
             ),
             cdn_user_agent: dotenvy::var("WEB_CDN_USER_AGENT")
                 .unwrap_or_else(|_| "Amazon CloudFront".into()),
-            balance_capacity: BalanceCapacityConfig::from_environment(),
+            balance_capacity: BalanceCapacityConfig::from_environment()?,
             serve_dist: true,
             serve_html: true,
-            content_security_policy: Some(content_security_policy.parse().unwrap()),
-        }
+            content_security_policy: Some(content_security_policy.parse()?),
+        })
     }
 }
 
@@ -291,13 +290,13 @@ fn parse_traffic_patterns(patterns: &str) -> impl Iterator<Item = (&str, &str)> 
 pub struct AllowedOrigins(Vec<String>);
 
 impl AllowedOrigins {
-    pub fn from_default_env() -> Self {
+    pub fn from_default_env() -> anyhow::Result<Self> {
         let allowed_origins = env("WEB_ALLOWED_ORIGINS")
             .split(',')
             .map(ToString::to_string)
             .collect();
 
-        Self(allowed_origins)
+        Ok(Self(allowed_origins))
     }
 
     pub fn contains(&self, value: &HeaderValue) -> bool {

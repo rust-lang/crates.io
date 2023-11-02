@@ -13,7 +13,7 @@ pub struct RepositoryConfig {
 }
 
 impl RepositoryConfig {
-    pub fn from_environment() -> Self {
+    pub fn from_environment() -> anyhow::Result<Self> {
         let username = dotenvy::var("GIT_HTTP_USER");
         let password = dotenvy::var("GIT_HTTP_PWD").map(SecretString::from);
         let http_url = dotenvy::var("GIT_REPO_URL");
@@ -38,30 +38,30 @@ impl RepositoryConfig {
                     String::from_utf8(key).expect("failed to convert the ssh key to a string");
                 let credentials = Credentials::Ssh { key: key.into() };
 
-                Self {
+                Ok(Self {
                     index_location,
                     credentials,
-                }
+                })
             }
             (Ok(username), Ok(password), Ok(http_url), Err(_), Err(_)) => {
                 let index_location = Url::parse(&http_url).expect("failed to parse GIT_REPO_URL");
                 let credentials = Credentials::Http { username, password };
 
-                Self {
+                Ok(Self {
                     index_location,
                     credentials,
-                }
+                })
             }
             (_, _, Ok(http_url), _, _) => {
                 let index_location = Url::parse(&http_url).expect("failed to parse GIT_REPO_URL");
                 let credentials = Credentials::Missing;
 
-                Self {
+                Ok(Self {
                     index_location,
                     credentials,
-                }
+                })
             }
-            _ => panic!("must have `GIT_REPO_URL` defined"),
+            _ => Err(anyhow!("must have `GIT_REPO_URL` defined")),
         }
     }
 }

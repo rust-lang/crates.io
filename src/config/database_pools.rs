@@ -63,7 +63,7 @@ impl DatabasePools {
     /// # Panics
     ///
     /// This function panics if `DB_OFFLINE=leader` but `READ_ONLY_REPLICA_URL` is unset.
-    pub fn full_from_environment(base: &Base) -> Self {
+    pub fn full_from_environment(base: &Base) -> anyhow::Result<Self> {
         let leader_url = env("DATABASE_URL").into();
         let follower_url = dotenvy::var("READ_ONLY_REPLICA_URL").map(Into::into).ok();
         let read_only_mode = dotenvy::var("READ_ONLY_MODE").is_ok();
@@ -110,7 +110,7 @@ impl DatabasePools {
 
         let enforce_tls = base.env == Env::Production;
 
-        match dotenvy::var("DB_OFFLINE").as_deref() {
+        Ok(match dotenvy::var("DB_OFFLINE").as_deref() {
             // The actual leader is down, use the follower in read-only mode as the primary and
             // don't configure a replica.
             Ok("leader") => Self {
@@ -165,6 +165,6 @@ impl DatabasePools {
                 helper_threads,
                 enforce_tls,
             },
-        }
+        })
     }
 }

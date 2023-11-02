@@ -10,8 +10,14 @@ use std::sync::Arc;
 ///
 /// `HEROKU_SLUG_COMMIT`, if present, will be used as the `release` property
 /// on all events.
-pub fn init() -> ClientInitGuard {
-    let config = SentryConfig::from_environment();
+pub fn init() -> Option<ClientInitGuard> {
+    let config = match SentryConfig::from_environment() {
+        Ok(config) => config,
+        Err(error) => {
+            warn!(%error, "Failed to read Sentry configuration from environment");
+            return None;
+        }
+    };
 
     let traces_sampler = move |ctx: &TransactionContext| -> f32 {
         if let Some(sampled) = ctx.sampled() {
@@ -55,5 +61,5 @@ pub fn init() -> ClientInitGuard {
         ..Default::default()
     };
 
-    sentry::init(opts)
+    Some(sentry::init(opts))
 }
