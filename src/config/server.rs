@@ -104,8 +104,8 @@ impl Server {
     ///
     /// This function panics if the Server configuration is invalid.
     pub fn from_environment() -> anyhow::Result<Self> {
-        let docker = dotenvy::var("DEV_DOCKER").is_ok();
-        let heroku = dotenvy::var("HEROKU").is_ok();
+        let docker = var("DEV_DOCKER")?.is_some();
+        let heroku = var("HEROKU")?.is_some();
 
         let ip = if heroku || docker {
             [0, 0, 0, 0].into()
@@ -146,9 +146,7 @@ impl Server {
             Some(s) => s.split(',').map(String::from).collect(),
         };
 
-        let max_blocking_threads = dotenvy::var("SERVER_THREADS")
-            .map(|s| s.parse().expect("SERVER_THREADS was not a valid number"))
-            .ok();
+        let max_blocking_threads = var_parsed("SERVER_THREADS")?;
 
         // Dynamically load the configuration for all the rate limiting actions. See
         // `src/rate_limiter.rs` for their definition.
@@ -206,19 +204,14 @@ impl Server {
             excluded_crate_names,
             domain_name: domain_name(),
             allowed_origins,
-            downloads_persist_interval: dotenvy::var("DOWNLOADS_PERSIST_INTERVAL_MS")
-                .map(|interval| {
-                    interval
-                        .parse()
-                        .map(Duration::from_millis)
-                        .expect("invalid DOWNLOADS_PERSIST_INTERVAL_MS")
-                })
+            downloads_persist_interval: var_parsed("DOWNLOADS_PERSIST_INTERVAL_MS")?
+                .map(Duration::from_millis)
                 .unwrap_or(Duration::from_secs(60)),
             ownership_invitations_expiration_days: 30,
-            metrics_authorization_token: dotenvy::var("METRICS_AUTHORIZATION_TOKEN").ok(),
+            metrics_authorization_token: var("METRICS_AUTHORIZATION_TOKEN")?,
             use_test_database_pool: false,
             instance_metrics_log_every_seconds: var_parsed("INSTANCE_METRICS_LOG_EVERY_SECONDS")?,
-            force_unconditional_redirects: dotenvy::var("FORCE_UNCONDITIONAL_REDIRECTS").is_ok(),
+            force_unconditional_redirects: var("FORCE_UNCONDITIONAL_REDIRECTS")?.is_some(),
             blocked_routes: var("BLOCKED_ROUTES")?
                 .map(|routes| routes.split(',').map(|s| s.into()).collect())
                 .unwrap_or_default(),
@@ -227,8 +220,8 @@ impl Server {
             version_id_cache_ttl: Duration::from_secs(
                 var_parsed("VERSION_ID_CACHE_TTL")?.unwrap_or(DEFAULT_VERSION_ID_CACHE_TTL),
             ),
-            cdn_user_agent: dotenvy::var("WEB_CDN_USER_AGENT")
-                .unwrap_or_else(|_| "Amazon CloudFront".into()),
+            cdn_user_agent: var("WEB_CDN_USER_AGENT")?
+                .unwrap_or_else(|| "Amazon CloudFront".into()),
             balance_capacity: BalanceCapacityConfig::from_environment()?,
             serve_dist: true,
             serve_html: true,
