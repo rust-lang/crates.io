@@ -226,7 +226,6 @@ fn req(method: Method, path: &str) -> MockRequest {
         .method(method)
         .uri(path)
         .header(header::USER_AGENT, "conduit-test")
-        .header("x-real-ip", "127.0.0.1")
         .body(Bytes::new())
         .unwrap()
 }
