@@ -6,6 +6,7 @@ mod debug;
 mod ember_html;
 pub mod log_request;
 pub mod normalize_path;
+pub mod real_ip;
 mod require_user_agent;
 pub mod session;
 mod static_or_continue;
@@ -44,6 +45,7 @@ pub fn apply_axum_middleware(state: AppState, router: Router<(), TimeoutBody<Bod
         .layer(TimeoutLayer::new(Duration::from_secs(30)))
         .layer(sentry_tower::NewSentryLayer::new_from_top())
         .layer(sentry_tower::SentryHttpLayer::with_transaction())
+        .layer(from_fn(self::real_ip::middleware))
         .layer(from_fn(log_request::log_requests))
         .layer(CatchPanicLayer::new())
         .layer(from_fn_with_state(

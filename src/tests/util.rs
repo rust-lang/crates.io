@@ -29,6 +29,7 @@ use crates_io::models::{ApiToken, CreatedApiToken, User};
 use http::{Method, Request};
 
 use axum::body::Bytes;
+use axum::extract::connect_info::MockConnectInfo;
 use chrono::NaiveDateTime;
 use cookie::Cookie;
 use crates_io::models::token::{CrateScope, EndpointScope};
@@ -36,6 +37,7 @@ use crates_io::util::token::PlainToken;
 use http::header;
 use secrecy::ExposeSecret;
 use std::collections::HashMap;
+use std::net::SocketAddr;
 use tower_service::Service;
 
 mod chaosproxy;
@@ -92,7 +94,12 @@ pub trait RequestHelper {
     /// Run a request that is expected to succeed
     #[track_caller]
     fn run<T>(&self, request: MockRequest) -> Response<T> {
-        let mut router = self.app().router().clone();
+        let router = self.app().router().clone();
+
+        // Add a mock `SocketAddr` to the requests so that the `ConnectInfo`
+        // extractor has something to extract.
+        let mocket_addr = SocketAddr::from(([127, 0, 0, 1], 52381));
+        let mut router = router.layer(MockConnectInfo(mocket_addr));
 
         let rt = tokio::runtime::Builder::new_current_thread()
             .enable_all()
