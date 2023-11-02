@@ -24,7 +24,7 @@ pub trait BackgroundJob: Serialize + DeserializeOwned + 'static {
     /// Execute the task. This method should define its logic
     fn run(&self, state: PerformState<'_>, env: &Self::Context) -> Result<(), PerformError>;
 
-    fn enqueue(&self, conn: &mut PgConnection) -> Result<(), EnqueueError> {
+    fn enqueue(&self, conn: &mut PgConnection) -> Result<i64, EnqueueError> {
         self.enqueue_with_priority(conn, Self::PRIORITY)
     }
 
@@ -33,15 +33,16 @@ pub trait BackgroundJob: Serialize + DeserializeOwned + 'static {
         &self,
         conn: &mut PgConnection,
         job_priority: i16,
-    ) -> Result<(), EnqueueError> {
+    ) -> Result<i64, EnqueueError> {
         let job_data = serde_json::to_value(self)?;
-        diesel::insert_into(background_jobs::table)
+        let id = diesel::insert_into(background_jobs::table)
             .values((
                 background_jobs::job_type.eq(Self::JOB_NAME),
                 background_jobs::data.eq(job_data),
                 background_jobs::priority.eq(job_priority),
             ))
-            .execute(conn)?;
-        Ok(())
+            .returning(background_jobs::id)
+            .get_result(conn)?;
+        Ok(id)
     }
 }
