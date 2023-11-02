@@ -220,7 +220,7 @@ impl Server {
             ),
             cdn_user_agent: dotenvy::var("WEB_CDN_USER_AGENT")
                 .unwrap_or_else(|_| "Amazon CloudFront".into()),
-            balance_capacity: BalanceCapacityConfig::from_environment(),
+            balance_capacity: BalanceCapacityConfig::from_environment()?,
             serve_dist: true,
             serve_html: true,
             content_security_policy: Some(content_security_policy.parse()?),
