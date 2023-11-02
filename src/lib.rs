@@ -24,11 +24,13 @@ extern crate serde_json;
 extern crate tracing;
 
 pub use crate::{app::App, email::Emails};
+use std::error::Error;
 use std::str::FromStr;
 use std::sync::Arc;
 
 use crate::app::AppState;
 use crate::router::build_axum_router;
+use crates_io_env_vars::{required_var, var_parsed};
 use tikv_jemallocator::Jemalloc;
 
 #[global_allocator]
@@ -98,7 +100,7 @@ pub fn build_handler(app: Arc<App>) -> axum::Router {
 /// in the current environment.
 #[track_caller]
 pub fn env(s: &str) -> String {
-    dotenvy::var(s).unwrap_or_else(|_| panic!("must have `{s}` defined"))
+    required_var(s).unwrap()
 }
 
 /// Parse an optional environment variable
@@ -111,9 +113,10 @@ pub fn env(s: &str) -> String {
 ///
 /// Panics if the environment variable is set but cannot be parsed as the requested type.
 #[track_caller]
-pub fn env_optional<T: FromStr>(s: &str) -> Option<T> {
-    dotenvy::var(s).ok().map(|s| {
-        s.parse()
-            .unwrap_or_else(|_| panic!("`{s}` was defined but could not be parsed"))
-    })
+pub fn env_optional<R>(s: &str) -> Option<R>
+where
+    R: FromStr,
+    R::Err: Error + Send + Sync + 'static,
+{
+    var_parsed(s).unwrap()
 }

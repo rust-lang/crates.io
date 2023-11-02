@@ -740,6 +740,7 @@ dependencies = [
  "claims",
  "clap",
  "cookie",
+ "crates_io_env_vars",
  "crates_io_index",
  "crates_io_markdown",
  "crates_io_tarball",
@@ -797,6 +798,14 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "url",
+]
+
+[[package]]
+name = "crates_io_env_vars"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "dotenvy",
 ]
 
 [[package]]

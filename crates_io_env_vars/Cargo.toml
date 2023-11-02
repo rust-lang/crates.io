@@ -1,0 +1,9 @@
+[package]
+name = "crates_io_env_vars"
+version = "0.0.0"
+license = "MIT OR Apache-2.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "=1.0.75"
+dotenvy = "=0.15.7"
