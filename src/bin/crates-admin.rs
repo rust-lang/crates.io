@@ -44,7 +44,7 @@ fn main() -> anyhow::Result<()> {
         Command::Populate(opts) => populate::run(opts)?,
         Command::RenderReadmes(opts) => render_readmes::run(opts)?,
         Command::TestPagerduty(opts) => test_pagerduty::run(opts)?,
-        Command::TransferCrates(opts) => transfer_crates::run(opts),
+        Command::TransferCrates(opts) => transfer_crates::run(opts)?,
         Command::VerifyToken(opts) => verify_token::run(opts).unwrap(),
         Command::Migrate(opts) => migrate::run(opts)?,
         Command::UploadIndex(opts) => upload_index::run(opts)?,
