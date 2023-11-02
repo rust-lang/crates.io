@@ -308,72 +308,149 @@ mod tests {
         sync_channel(1).0
     }
 
+    fn job_exists(id: i64, conn: &mut PgConnection) -> bool {
+        background_jobs::table
+            .find(id)
+            .select(background_jobs::id)
+            .get_result::<i64>(conn)
+            .optional()
+            .unwrap()
+            .is_some()
+    }
+
+    fn job_is_locked(id: i64, conn: &mut PgConnection) -> bool {
+        background_jobs::table
+            .find(id)
+            .select(background_jobs::id)
+            .for_update()
+            .skip_locked()
+            .get_result::<i64>(conn)
+            .optional()
+            .unwrap()
+            .is_none()
+    }
+
     #[test]
     fn jobs_are_locked_when_fetched() {
+        #[derive(Clone)]
+        struct TestContext {
+            job_started_barrier: Arc<AssertUnwindSafe<Barrier>>,
+            assertions_finished_barrier: Arc<AssertUnwindSafe<Barrier>>,
+        }
+
+        #[derive(Serialize, Deserialize)]
+        struct TestJob;
+
+        impl BackgroundJob for TestJob {
+            const JOB_NAME: &'static str = "test";
+            type Context = TestContext;
+
+            fn run(&self, _: PerformState<'_>, ctx: &Self::Context) -> Result<(), PerformError> {
+                ctx.job_started_barrier.wait();
+                ctx.assertions_finished_barrier.wait();
+                Ok(())
+            }
+        }
+
         let test_database = TestDatabase::new();
 
-        let runner = runner(test_database.url(), ());
-        let first_job_id = create_dummy_job(&runner).id;
-        let second_job_id = create_dummy_job(&runner).id;
-        let fetch_barrier = Arc::new(AssertUnwindSafe(Barrier::new(2)));
-        let fetch_barrier2 = fetch_barrier.clone();
-        let return_barrier = Arc::new(AssertUnwindSafe(Barrier::new(2)));
-        let return_barrier2 = return_barrier.clone();
+        let test_context = TestContext {
+            job_started_barrier: Arc::new(AssertUnwindSafe(Barrier::new(2))),
+            assertions_finished_barrier: Arc::new(AssertUnwindSafe(Barrier::new(2))),
+        };
 
-        runner.get_single_job(dummy_sender(), move |job, _| {
-            fetch_barrier.0.wait(); // Tell thread 2 it can lock its job
-            assert_eq!(first_job_id, job.id);
-            return_barrier.0.wait(); // Wait for thread 2 to lock its job
-            Ok(())
-        });
+        let runner =
+            runner(test_database.url(), test_context.clone()).register_job_type::<TestJob>();
 
-        fetch_barrier2.0.wait(); // Wait until thread 1 locks its job
-        runner.get_single_job(dummy_sender(), move |job, _| {
-            assert_eq!(second_job_id, job.id);
-            return_barrier2.0.wait(); // Tell thread 1 it can unlock its job
-            Ok(())
-        });
+        let mut conn = runner.connection().unwrap();
+        let job_id = TestJob.enqueue(&mut conn).unwrap();
 
+        assert!(job_exists(job_id, &mut conn));
+        assert!(!job_is_locked(job_id, &mut conn));
+
+        runner.run_all_pending_jobs().unwrap();
+        test_context.job_started_barrier.wait();
+
+        assert!(job_exists(job_id, &mut conn));
+        assert!(job_is_locked(job_id, &mut conn));
+
+        test_context.assertions_finished_barrier.wait();
         runner.wait_for_jobs().unwrap();
+
+        assert!(!job_exists(job_id, &mut conn));
     }
 
     #[test]
     fn jobs_are_deleted_when_successfully_run() {
+        #[derive(Serialize, Deserialize)]
+        struct TestJob;
+
+        impl BackgroundJob for TestJob {
+            const JOB_NAME: &'static str = "test";
+            type Context = ();
+
+            fn run(&self, _: PerformState<'_>, _: &Self::Context) -> Result<(), PerformError> {
+                Ok(())
+            }
+        }
+
+        fn remaining_jobs(conn: &mut PgConnection) -> i64 {
+            background_jobs::table
+                .count()
+                .get_result(&mut *conn)
+                .unwrap()
+        }
+
         let test_database = TestDatabase::new();
 
-        let runner = runner(test_database.url(), ());
-        create_dummy_job(&runner);
+        let runner = runner(test_database.url(), ()).register_job_type::<TestJob>();
 
-        runner.get_single_job(dummy_sender(), |_, _| Ok(()));
+        let mut conn = runner.connection().unwrap();
+        assert_eq!(remaining_jobs(&mut conn), 0);
+
+        TestJob.enqueue(&mut conn).unwrap();
+        assert_eq!(remaining_jobs(&mut conn), 1);
+
+        runner.run_all_pending_jobs().unwrap();
         runner.wait_for_jobs().unwrap();
-
-        let remaining_jobs = background_jobs::table
-            .count()
-            .get_result(&mut *runner.connection().unwrap());
-        assert_eq!(remaining_jobs, Ok(0));
+        assert_eq!(remaining_jobs(&mut conn), 0);
     }
 
     #[test]
     fn failed_jobs_do_not_release_lock_before_updating_retry_time() {
+        #[derive(Clone)]
+        struct TestContext {
+            job_started_barrier: Arc<AssertUnwindSafe<Barrier>>,
+        }
+
+        #[derive(Serialize, Deserialize)]
+        struct TestJob;
+
+        impl BackgroundJob for TestJob {
+            const JOB_NAME: &'static str = "test";
+            type Context = TestContext;
+
+            fn run(&self, _: PerformState<'_>, ctx: &Self::Context) -> Result<(), PerformError> {
+                ctx.job_started_barrier.wait();
+                panic!();
+            }
+        }
+
         let test_database = TestDatabase::new();
 
-        let runner = runner(test_database.url(), ());
-        create_dummy_job(&runner);
-        let barrier = Arc::new(AssertUnwindSafe(Barrier::new(2)));
-        let barrier2 = barrier.clone();
+        let test_context = TestContext {
+            job_started_barrier: Arc::new(AssertUnwindSafe(Barrier::new(2))),
+        };
 
-        runner.get_single_job(dummy_sender(), move |_, state| {
-            state.conn.transaction(|_| {
-                barrier.0.wait();
-                // The job should go back into the queue after a panic
-                panic!();
-            })
-        });
+        let runner =
+            runner(test_database.url(), test_context.clone()).register_job_type::<TestJob>();
 
-        let conn = &mut *runner.connection().unwrap();
-        // Wait for the first thread to acquire the lock
-        barrier2.0.wait();
-        // We are intentionally not using `get_single_job` here.
+        let mut conn = runner.connection().unwrap();
+        TestJob.enqueue(&mut conn).unwrap();
+
+        runner.run_all_pending_jobs().unwrap();
+        test_context.job_started_barrier.wait();
+
         // `SKIP LOCKED` is intentionally omitted here, so we block until
         // the lock on the first job is released.
         // If there is any point where the row is unlocked, but the retry
@@ -382,7 +459,7 @@ mod tests {
             .select(background_jobs::id)
             .filter(background_jobs::retries.eq(0))
             .for_update()
-            .load::<i64>(conn)
+            .load::<i64>(&mut *conn)
             .unwrap();
         assert_eq!(available_jobs.len(), 0);
 
@@ -390,7 +467,7 @@ mod tests {
         let total_jobs_including_failed = background_jobs::table
             .select(background_jobs::id)
             .for_update()
-            .load::<i64>(conn)
+            .load::<i64>(&mut *conn)
             .unwrap();
         assert_eq!(total_jobs_including_failed.len(), 1);
 
@@ -399,12 +476,25 @@ mod tests {
 
     #[test]
     fn panicking_in_jobs_updates_retry_counter() {
+        #[derive(Serialize, Deserialize)]
+        struct TestJob;
+
+        impl BackgroundJob for TestJob {
+            const JOB_NAME: &'static str = "test";
+            type Context = ();
+
+            fn run(&self, _: PerformState<'_>, _: &Self::Context) -> Result<(), PerformError> {
+                panic!()
+            }
+        }
+
         let test_database = TestDatabase::new();
 
-        let runner = runner(test_database.url(), ());
-        let job_id = create_dummy_job(&runner).id;
+        let runner = runner(test_database.url(), ()).register_job_type::<TestJob>();
 
-        runner.get_single_job(dummy_sender(), |_, _| panic!());
+        let job_id = TestJob.enqueue(&mut runner.connection().unwrap()).unwrap();
+
+        runner.run_all_pending_jobs().unwrap();
         runner.wait_for_jobs().unwrap();
 
         let tries = background_jobs::table
