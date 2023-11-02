@@ -815,6 +815,7 @@ dependencies = [
  "anyhow",
  "base64 0.21.5",
  "claims",
+ "crates_io_env_vars",
  "dotenvy",
  "git2",
  "secrecy",

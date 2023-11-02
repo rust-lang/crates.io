@@ -1,6 +1,7 @@
 use crate::credentials::Credentials;
 use anyhow::{anyhow, Context};
 use base64::{engine::general_purpose, Engine};
+use crates_io_env_vars::var;
 use secrecy::{ExposeSecret, SecretString};
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -14,16 +15,16 @@ pub struct RepositoryConfig {
 
 impl RepositoryConfig {
     pub fn from_environment() -> anyhow::Result<Self> {
-        let username = dotenvy::var("GIT_HTTP_USER");
-        let password = dotenvy::var("GIT_HTTP_PWD").map(SecretString::from);
-        let http_url = dotenvy::var("GIT_REPO_URL");
+        let username = var("GIT_HTTP_USER")?;
+        let password = var("GIT_HTTP_PWD")?.map(SecretString::from);
+        let http_url = var("GIT_REPO_URL")?;
 
-        let ssh_key = dotenvy::var("GIT_SSH_KEY").map(SecretString::from);
-        let ssh_url = dotenvy::var("GIT_SSH_REPO_URL");
+        let ssh_key = var("GIT_SSH_KEY")?.map(SecretString::from);
+        let ssh_url = var("GIT_SSH_REPO_URL")?;
 
         match (username, password, http_url, ssh_key, ssh_url) {
-            (extra_user, extra_pass, extra_http_url, Ok(encoded_key), Ok(ssh_url)) => {
-                if let (Ok(_), Ok(_), Ok(_)) = (extra_user, extra_pass, extra_http_url) {
+            (extra_user, extra_pass, extra_http_url, Some(encoded_key), Some(ssh_url)) => {
+                if let (Some(_), Some(_), Some(_)) = (extra_user, extra_pass, extra_http_url) {
                     warn!("both http and ssh credentials to authenticate with git are set");
                     info!("note: ssh credentials will take precedence over the http ones");
                 }
@@ -43,7 +44,7 @@ impl RepositoryConfig {
                     credentials,
                 })
             }
-            (Ok(username), Ok(password), Ok(http_url), Err(_), Err(_)) => {
+            (Some(username), Some(password), Some(http_url), None, None) => {
                 let index_location = Url::parse(&http_url).expect("failed to parse GIT_REPO_URL");
                 let credentials = Credentials::Http { username, password };
 
@@ -52,7 +53,7 @@ impl RepositoryConfig {
                     credentials,
                 })
             }
-            (_, _, Ok(http_url), _, _) => {
+            (_, _, Some(http_url), _, _) => {
                 let index_location = Url::parse(&http_url).expect("failed to parse GIT_REPO_URL");
                 let credentials = Credentials::Missing;
 
