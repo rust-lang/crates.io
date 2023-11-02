@@ -42,7 +42,7 @@ pub struct Opts {
 
 pub fn run(opts: Opts) -> anyhow::Result<()> {
     let storage = Arc::new(Storage::from_environment());
-    let conn = &mut db::oneoff_connection().unwrap();
+    let conn = &mut db::oneoff_connection()?;
 
     let start_time = Utc::now();
 
@@ -116,8 +116,7 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
                     let rt = tokio::runtime::Builder::new_current_thread()
                         .enable_all()
                         .build()
-                        .context("Failed to initialize tokio runtime")
-                        .unwrap();
+                        .context("Failed to initialize tokio runtime")?;
 
                     rt.block_on(storage.upload_readme(&krate_name, &version.num, readme.into()))
                         .context("Failed to upload rendered README file to S3")?;
@@ -161,7 +160,7 @@ fn get_readme(
     if !response.status().is_success() {
         return Err(anyhow!(
             "Failed to get a 200 response: {}",
-            response.text().unwrap()
+            response.text()?
         ));
     }
 

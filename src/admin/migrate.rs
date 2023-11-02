@@ -46,7 +46,7 @@ pub fn run(_opts: Opts) -> Result<(), Error> {
         .expect("failed to run migrations");
 
     info!("Synchronizing crate categories");
-    crate::boot::categories::sync_with_connection(CATEGORIES_TOML, conn).unwrap();
+    crate::boot::categories::sync_with_connection(CATEGORIES_TOML, conn)?;
 
     Ok(())
 }

@@ -37,8 +37,7 @@ pub fn run(command: Command) -> Result<()> {
             let count: i64 = background_jobs::table
                 .filter(background_jobs::job_type.eq("update_downloads"))
                 .count()
-                .get_result(conn)
-                .unwrap();
+                .get_result(conn)?;
 
             if count > 0 {
                 println!("Did not enqueue update_downloads, existing job already in progress");

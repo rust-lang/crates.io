@@ -5,7 +5,7 @@ use std::{
     time::Duration,
 };
 
-use anyhow::Context;
+use anyhow::{anyhow, Context};
 use crates_io_index::{Repository, RepositoryConfig};
 use diesel::prelude::*;
 use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
@@ -28,7 +28,7 @@ pub struct Opts {
 }
 
 pub fn run(opts: Opts) -> anyhow::Result<()> {
-    let mut conn = db::oneoff_connection().unwrap();
+    let mut conn = db::oneoff_connection()?;
     println!("fetching git repo");
     let config = RepositoryConfig::from_environment();
     let repo = Repository::open(&config)?;
@@ -41,11 +41,23 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
     }
 
     let pb = ProgressBar::new(files.len() as u64);
-    pb.set_style(ProgressStyle::with_template("{bar:60} ({pos}/{len}, ETA {eta})").unwrap());
+    pb.set_style(ProgressStyle::with_template(
+        "{bar:60} ({pos}/{len}, ETA {eta})",
+    )?);
 
     for file in files.iter().progress_with(pb.clone()) {
         thread::sleep(Duration::from_millis(opts.delay));
-        let crate_name = file.file_name().unwrap().to_str().unwrap();
+
+        let file_name = file.file_name().ok_or_else(|| {
+            let file = file.display();
+            anyhow!("Failed to get file name from path: {file}")
+        })?;
+
+        let crate_name = file_name.to_str().ok_or_else(|| {
+            let file_name = file_name.to_string_lossy();
+            anyhow!("Failed to convert file name to utf8: {file_name}",)
+        })?;
+
         let path = repo.index_file(crate_name);
         if !path.exists() {
             pb.suspend(|| println!("skipping {}", path.display()));

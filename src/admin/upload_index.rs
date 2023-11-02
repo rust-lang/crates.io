@@ -1,6 +1,6 @@
 use crate::admin::dialoguer;
 use crate::storage::Storage;
-use anyhow::Context;
+use anyhow::{anyhow, Context};
 use crates_io_index::{Repository, RepositoryConfig};
 use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
 
@@ -32,14 +32,24 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
     let rt = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
-        .context("Failed to initialize tokio runtime")
-        .unwrap();
+        .context("Failed to initialize tokio runtime")?;
 
     let pb = ProgressBar::new(files.len() as u64);
-    pb.set_style(ProgressStyle::with_template("{bar:60} ({pos}/{len}, ETA {eta})").unwrap());
+    pb.set_style(ProgressStyle::with_template(
+        "{bar:60} ({pos}/{len}, ETA {eta})",
+    )?);
 
     for file in files.iter().progress_with(pb.clone()) {
-        let crate_name = file.file_name().unwrap().to_str().unwrap();
+        let file_name = file.file_name().ok_or_else(|| {
+            let file = file.display();
+            anyhow!("Failed to get file name from path: {file}")
+        })?;
+
+        let crate_name = file_name.to_str().ok_or_else(|| {
+            let file_name = file_name.to_string_lossy();
+            anyhow!("Failed to convert file name to utf8: {file_name}",)
+        })?;
+
         let path = repo.index_file(crate_name);
         if !path.exists() {
             pb.suspend(|| println!("skipping file `{crate_name}`"));
