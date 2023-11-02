@@ -14,7 +14,7 @@
 use crate::config::Base;
 use crate::Env;
 use anyhow::anyhow;
-use crates_io_env_vars::{required_var, var_parsed};
+use crates_io_env_vars::{required_var, var, var_parsed};
 use secrecy::SecretString;
 use std::time::Duration;
 
@@ -67,8 +67,8 @@ impl DatabasePools {
     /// This function panics if `DB_OFFLINE=leader` but `READ_ONLY_REPLICA_URL` is unset.
     pub fn full_from_environment(base: &Base) -> anyhow::Result<Self> {
         let leader_url = required_var("DATABASE_URL")?.into();
-        let follower_url = dotenvy::var("READ_ONLY_REPLICA_URL").map(Into::into).ok();
-        let read_only_mode = dotenvy::var("READ_ONLY_MODE").is_ok();
+        let follower_url = var("READ_ONLY_REPLICA_URL")?.map(Into::into);
+        let read_only_mode = var("READ_ONLY_MODE")?.is_some();
 
         let primary_pool_size =
             var_parsed("DB_PRIMARY_POOL_SIZE")?.unwrap_or(Self::DEFAULT_POOL_SIZE);
@@ -91,10 +91,10 @@ impl DatabasePools {
 
         let enforce_tls = base.env == Env::Production;
 
-        Ok(match dotenvy::var("DB_OFFLINE").as_deref() {
+        Ok(match var("DB_OFFLINE")?.as_deref() {
             // The actual leader is down, use the follower in read-only mode as the primary and
             // don't configure a replica.
-            Ok("leader") => Self {
+            Some("leader") => Self {
                 primary: DbPoolConfig {
                     url: follower_url.ok_or_else(|| {
                         anyhow!("Must set `READ_ONLY_REPLICA_URL` when using `DB_OFFLINE=leader`.")
@@ -111,7 +111,7 @@ impl DatabasePools {
                 enforce_tls,
             },
             // The follower is down, don't configure the replica.
-            Ok("follower") => Self {
+            Some("follower") => Self {
                 primary: DbPoolConfig {
                     url: leader_url,
                     read_only_mode,

@@ -23,7 +23,7 @@ use crates_io::storage::Storage;
 use crates_io::worker::swirl::Runner;
 use crates_io::worker::{Environment, RunnerExt};
 use crates_io::{db, ssh};
-use crates_io_env_vars::var_parsed;
+use crates_io_env_vars::{var, var_parsed};
 use crates_io_index::{Repository, RepositoryConfig};
 use diesel::r2d2;
 use diesel::r2d2::ConnectionManager;
@@ -61,7 +61,7 @@ fn main() -> anyhow::Result<()> {
 
     info!("Cloning index");
 
-    if dotenvy::var("HEROKU").is_ok() {
+    if var("HEROKU")?.is_some() {
         ssh::write_known_hosts_file().unwrap();
     }
 

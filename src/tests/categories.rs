@@ -1,5 +1,6 @@
 use crates_io::schema::categories;
 
+use crates_io_env_vars::required_var;
 use diesel::*;
 
 const ALGORITHMS: &str = r#"
@@ -38,8 +39,7 @@ description = "Another category ho hum"
 "#;
 
 fn pg_connection() -> PgConnection {
-    let database_url =
-        dotenvy::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set to run tests");
+    let database_url = required_var("TEST_DATABASE_URL").unwrap();
     let mut conn = PgConnection::establish(&database_url).unwrap();
     conn.begin_test_transaction().unwrap();
     conn
