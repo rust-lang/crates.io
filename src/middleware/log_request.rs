@@ -4,7 +4,7 @@
 use crate::controllers::util::RequestPartsExt;
 use crate::headers::XRequestId;
 use crate::middleware::normalize_path::OriginalPath;
-use crate::real_ip::process_xff_headers;
+use crate::middleware::real_ip::RealIp;
 use axum::headers::UserAgent;
 use axum::middleware::Next;
 use axum::response::IntoResponse;
@@ -12,7 +12,6 @@ use axum::{Extension, TypedHeader};
 use http::{Method, Request, StatusCode, Uri};
 use parking_lot::Mutex;
 use std::fmt::{self, Display, Formatter};
-use std::net::IpAddr;
 use std::ops::Deref;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -30,6 +29,7 @@ pub struct RequestMetadata {
     method: Method,
     uri: Uri,
     original_path: Option<Extension<OriginalPath>>,
+    real_ip: Extension<RealIp>,
     user_agent: TypedHeader<UserAgent>,
     request_id: Option<TypedHeader<XRequestId>>,
 }
@@ -40,7 +40,6 @@ pub struct Metadata<'a> {
     cause: Option<&'a CauseField>,
     error: Option<&'a ErrorField>,
     duration: Duration,
-    real_ip: Option<IpAddr>,
     custom_metadata: RequestLog,
 }
 
@@ -73,8 +72,7 @@ impl Display for Metadata<'_> {
             };
         }
 
-        let real_ip = self.real_ip.map(|ip| ip.to_string()).unwrap_or_default();
-        line.add_quoted_field("ip", &real_ip)?;
+        line.add_quoted_field("ip", **self.request.real_ip)?;
 
         let response_time_in_ms = self.duration.as_millis();
         if !is_download_redirect || response_time_in_ms > 0 {
@@ -122,8 +120,6 @@ pub async fn log_requests<B>(
     let custom_metadata = RequestLog::default();
     req.extensions_mut().insert(custom_metadata.clone());
 
-    let real_ip = process_xff_headers(req.headers());
-
     let response = next.run(req).await;
 
     let metadata = Metadata {
@@ -132,7 +128,6 @@ pub async fn log_requests<B>(
         cause: response.extensions().get(),
         error: response.extensions().get(),
         duration: start_instant.elapsed(),
-        real_ip,
         custom_metadata,
     };
 
