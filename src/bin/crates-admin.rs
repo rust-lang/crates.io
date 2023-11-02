@@ -39,7 +39,7 @@ fn main() -> anyhow::Result<()> {
     span.record("command", tracing::field::debug(&command));
 
     match command {
-        Command::DeleteCrate(opts) => delete_crate::run(opts),
+        Command::DeleteCrate(opts) => delete_crate::run(opts)?,
         Command::DeleteVersion(opts) => delete_version::run(opts),
         Command::Populate(opts) => populate::run(opts),
         Command::RenderReadmes(opts) => render_readmes::run(opts)?,
