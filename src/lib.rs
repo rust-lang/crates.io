@@ -28,7 +28,6 @@ use std::sync::Arc;
 
 use crate::app::AppState;
 use crate::router::build_axum_router;
-use crates_io_env_vars::required_var;
 use tikv_jemallocator::Jemalloc;
 
 #[global_allocator]
@@ -85,18 +84,4 @@ pub fn build_handler(app: Arc<App>) -> axum::Router {
 
     let axum_router = build_axum_router(state.clone());
     middleware::apply_axum_middleware(state, axum_router)
-}
-
-/// Convenience function requiring that an environment variable is set.
-///
-/// Ensures that we've initialized the dotenvy crate in order to read environment variables
-/// from a *.env* file if present. Don't use this for optionally set environment variables.
-///
-/// # Panics
-///
-/// Panics if the environment variable with the name passed in as an argument is not defined
-/// in the current environment.
-#[track_caller]
-pub fn env(s: &str) -> String {
-    required_var(s).unwrap()
 }

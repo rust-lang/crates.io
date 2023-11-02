@@ -12,7 +12,8 @@
 //! - `DB_TCP_TIMEOUT_MS`: TCP timeout in milliseconds. See the doc comment for more details.
 
 use crate::config::Base;
-use crate::{env, Env};
+use crate::Env;
+use crates_io_env_vars::required_var;
 use secrecy::SecretString;
 use std::time::Duration;
 
@@ -64,7 +65,7 @@ impl DatabasePools {
     ///
     /// This function panics if `DB_OFFLINE=leader` but `READ_ONLY_REPLICA_URL` is unset.
     pub fn full_from_environment(base: &Base) -> anyhow::Result<Self> {
-        let leader_url = env("DATABASE_URL").into();
+        let leader_url = required_var("DATABASE_URL")?.into();
         let follower_url = dotenvy::var("READ_ONLY_REPLICA_URL").map(Into::into).ok();
         let read_only_mode = dotenvy::var("READ_ONLY_MODE").is_ok();
 

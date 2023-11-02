@@ -8,7 +8,8 @@ use crates_io::rate_limiter::{LimitedAction, RateLimiterConfig};
 use crates_io::storage::StorageConfig;
 use crates_io::worker::swirl::Runner;
 use crates_io::worker::{Environment, RunnerExt};
-use crates_io::{env, App, Emails, Env};
+use crates_io::{App, Emails, Env};
+use crates_io_env_vars::required_var;
 use crates_io_index::testing::UpstreamIndex;
 use crates_io_index::{Credentials, Repository as WorkerRepository, RepositoryConfig};
 use crates_io_test_db::TestDatabase;
@@ -372,7 +373,7 @@ fn simple_config() -> config::Server {
 
     let db = DatabasePools {
         primary: DbPoolConfig {
-            url: env("TEST_DATABASE_URL").into(),
+            url: required_var("TEST_DATABASE_URL").unwrap().into(),
             read_only_mode: false,
             pool_size: 1,
             min_idle: None,

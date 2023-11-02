@@ -1,5 +1,5 @@
-use crate::env;
 use anyhow::Context;
+use crates_io_env_vars::required_var;
 use futures_util::{StreamExt, TryStreamExt};
 use http::header::CACHE_CONTROL;
 use http::{HeaderMap, HeaderValue};
@@ -65,11 +65,11 @@ impl StorageConfig {
             let region = dotenvy::var("S3_REGION").ok();
             let cdn_prefix = dotenvy::var("S3_CDN").ok();
 
-            let index_bucket = env("S3_INDEX_BUCKET");
+            let index_bucket = required_var("S3_INDEX_BUCKET").unwrap();
             let index_region = dotenvy::var("S3_INDEX_REGION").ok();
 
-            let access_key = env("AWS_ACCESS_KEY");
-            let secret_key: SecretString = env("AWS_SECRET_KEY").into();
+            let access_key = required_var("AWS_ACCESS_KEY").unwrap();
+            let secret_key: SecretString = required_var("AWS_SECRET_KEY").unwrap().into();
 
             let default = S3Config {
                 bucket,

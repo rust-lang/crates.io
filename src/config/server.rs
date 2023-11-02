@@ -3,13 +3,13 @@ use ipnetwork::IpNetwork;
 use oauth2::{ClientId, ClientSecret};
 
 use crate::rate_limiter::{LimitedAction, RateLimiterConfig};
-use crate::{env, Env};
+use crate::Env;
 
 use super::base::Base;
 use super::database_pools::DatabasePools;
 use crate::config::balance_capacity::BalanceCapacityConfig;
 use crate::storage::StorageConfig;
-use crates_io_env_vars::{var, var_parsed};
+use crates_io_env_vars::{required_var, var, var_parsed};
 use http::HeaderValue;
 use std::collections::{HashMap, HashSet};
 use std::net::IpAddr;
@@ -190,9 +190,9 @@ impl Server {
             ip,
             port,
             max_blocking_threads,
-            session_key: cookie::Key::derive_from(env("SESSION_KEY").as_bytes()),
-            gh_client_id: ClientId::new(env("GH_CLIENT_ID")),
-            gh_client_secret: ClientSecret::new(env("GH_CLIENT_SECRET")),
+            session_key: cookie::Key::derive_from(required_var("SESSION_KEY")?.as_bytes()),
+            gh_client_id: ClientId::new(required_var("GH_CLIENT_ID")?),
+            gh_client_secret: ClientSecret::new(required_var("GH_CLIENT_SECRET")?),
             max_upload_size: 10 * 1024 * 1024, // 10 MB default file upload size limit
             max_unpack_size: 512 * 1024 * 1024, // 512 MB max when decompressed
             max_features: DEFAULT_MAX_FEATURES,
@@ -300,7 +300,7 @@ pub struct AllowedOrigins(Vec<String>);
 
 impl AllowedOrigins {
     pub fn from_default_env() -> anyhow::Result<Self> {
-        let allowed_origins = env("WEB_ALLOWED_ORIGINS")
+        let allowed_origins = required_var("WEB_ALLOWED_ORIGINS")?
             .split(',')
             .map(ToString::to_string)
             .collect();
