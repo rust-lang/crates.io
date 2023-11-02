@@ -42,13 +42,13 @@ pub struct Opts {
 
 pub fn run(opts: Opts) -> anyhow::Result<()> {
     let storage = Arc::new(Storage::from_environment());
-    let conn = &mut db::oneoff_connection().unwrap();
+    let conn = &mut db::oneoff_connection()?;
 
     let start_time = Utc::now();
 
     let older_than = if let Some(ref time) = opts.older_than {
         NaiveDateTime::parse_from_str(time, "%Y-%m-%d %H:%M:%S")
-            .expect("Could not parse --older-than argument as a time")
+            .context("Could not parse --older-than argument as a time")?
     } else {
         start_time.naive_utc()
     };
@@ -72,7 +72,7 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
         query = query.filter(crates::name.eq(crate_name));
     }
 
-    let version_ids: Vec<i32> = query.load(conn).expect("error loading version ids");
+    let version_ids: Vec<i32> = query.load(conn).context("error loading version ids")?;
 
     let total_versions = version_ids.len();
     println!("Rendering {total_versions} versions");
@@ -100,7 +100,7 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
             .filter(versions::id.eq_any(version_ids_chunk))
             .select((versions::all_columns, crates::name))
             .load(conn)
-            .expect("error loading versions");
+            .context("error loading versions")?;
 
         let mut tasks = Vec::with_capacity(page_size);
         for (version, krate_name) in versions {
@@ -116,8 +116,7 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
                     let rt = tokio::runtime::Builder::new_current_thread()
                         .enable_all()
                         .build()
-                        .context("Failed to initialize tokio runtime")
-                        .unwrap();
+                        .context("Failed to initialize tokio runtime")?;
 
                     rt.block_on(storage.upload_readme(&krate_name, &version.num, readme.into()))
                         .context("Failed to upload rendered README file to S3")?;
@@ -161,7 +160,7 @@ fn get_readme(
     if !response.status().is_success() {
         return Err(anyhow!(
             "Failed to get a 200 response: {}",
-            response.text().unwrap()
+            response.text()?
         ));
     }
 

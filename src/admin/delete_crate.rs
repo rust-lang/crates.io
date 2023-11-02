@@ -21,10 +21,8 @@ pub struct Opts {
     yes: bool,
 }
 
-pub fn run(opts: Opts) {
-    let conn = &mut db::oneoff_connection()
-        .context("Failed to establish database connection")
-        .unwrap();
+pub fn run(opts: Opts) -> anyhow::Result<()> {
+    let conn = &mut db::oneoff_connection().context("Failed to establish database connection")?;
 
     let store = Storage::from_environment();
 
@@ -35,8 +33,7 @@ pub fn run(opts: Opts) {
         .select((crates::name, crates::id))
         .filter(crates::name.eq_any(&crate_names))
         .load(conn)
-        .context("Failed to look up crate name from the database")
-        .unwrap();
+        .context("Failed to look up crate name from the database")?;
 
     let existing_crates: HashMap<String, i32> = existing_crates.into_iter().collect();
 
@@ -51,14 +48,13 @@ pub fn run(opts: Opts) {
     println!();
 
     if !opts.yes && !dialoguer::confirm("Do you want to permanently delete these crates?") {
-        return;
+        return Ok(());
     }
 
     let rt = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
-        .context("Failed to initialize tokio runtime")
-        .unwrap();
+        .context("Failed to initialize tokio runtime")?;
 
     for name in &crate_names {
         if let Some(id) = existing_crates.get(name) {
@@ -85,4 +81,6 @@ pub fn run(opts: Opts) {
             warn!(%name, ?error, "Failed to delete readme files from S3");
         }
     }
+
+    Ok(())
 }

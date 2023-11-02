@@ -20,25 +20,20 @@ pub struct Opts {
     to_user: String,
 }
 
-pub fn run(opts: Opts) {
-    let conn = &mut db::oneoff_connection().unwrap();
-    conn.transaction::<_, diesel::result::Error, _>(|conn| {
-        transfer(opts, conn);
-        Ok(())
-    })
-    .unwrap()
+pub fn run(opts: Opts) -> anyhow::Result<()> {
+    let conn = &mut db::oneoff_connection()?;
+    conn.transaction(|conn| transfer(opts, conn))?;
+    Ok(())
 }
 
-fn transfer(opts: Opts, conn: &mut PgConnection) {
+fn transfer(opts: Opts, conn: &mut PgConnection) -> anyhow::Result<()> {
     let from: User = users::table
         .filter(users::gh_login.eq(opts.from_user))
-        .first(conn)
-        .unwrap();
+        .first(conn)?;
 
     let to: User = users::table
         .filter(users::gh_login.eq(opts.to_user))
-        .first(conn)
-        .unwrap();
+        .first(conn)?;
 
     if from.gh_id != to.gh_id {
         println!("====================================================");
@@ -63,11 +58,10 @@ fn transfer(opts: Opts, conn: &mut PgConnection) {
         .filter(crate_owners::owner_kind.eq(OwnerKind::User));
     let crates: Vec<Crate> = Crate::all()
         .filter(crates::id.eq_any(crate_owners.select(crate_owners::crate_id)))
-        .load(conn)
-        .unwrap();
+        .load(conn)?;
 
     for krate in crates {
-        let owners = krate.owners(conn).unwrap();
+        let owners = krate.owners(conn)?;
         if owners.len() != 1 {
             println!("warning: not exactly one owner for {}", krate.name);
         }
@@ -75,10 +69,11 @@ fn transfer(opts: Opts, conn: &mut PgConnection) {
 
     diesel::update(crate_owners)
         .set(crate_owners::owner_id.eq(to.id))
-        .execute(conn)
-        .unwrap();
+        .execute(conn)?;
 
     get_confirm("commit?");
+
+    Ok(())
 }
 
 fn get_confirm(msg: &str) {
