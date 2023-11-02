@@ -61,5 +61,9 @@
             matchPackagePatterns: ["^diesel$", "^diesel_"],
             groupName: "diesel packages",
         },
+        {
+            "matchUpdateTypes": ["digest"],
+            "enabled": false,
+        },
     ],
 }
