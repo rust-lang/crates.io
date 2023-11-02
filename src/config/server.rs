@@ -90,8 +90,7 @@ impl Server {
     ///   list will block *all* user-agents exceeding the offset. If not set or empty, no blocking
     ///   will occur.
     /// - `WEB_PAGE_OFFSET_CIDR_BLOCKLIST`: A comma separated list of CIDR blocks that will be used
-    ///   to block IP addresses given in the `X-Real-Ip` HTTP header, e.g. `192.168.1.0/24`.
-    ///   If not set or empty, no blocking will occur.
+    ///   to block IP addresses, e.g. `192.168.1.0/24`. If not set or empty, no blocking will occur.
     /// - `INSTANCE_METRICS_LOG_EVERY_SECONDS`: How frequently should instance metrics be logged.
     ///   If the environment variable is not present instance metrics are not logged.
     /// - `FORCE_UNCONDITIONAL_REDIRECTS`: Whether to force unconditional redirects in the download

@@ -2,6 +2,7 @@ use crate::config::Server;
 use crate::controllers::prelude::*;
 use crate::controllers::util::RequestPartsExt;
 use crate::middleware::log_request::RequestLogExt;
+use crate::middleware::real_ip::RealIp;
 use crate::models::helpers::with_count::*;
 use crate::util::errors::{bad_request, AppResult};
 use crate::util::HeaderMapExt;
@@ -11,11 +12,8 @@ use diesel::pg::Pg;
 use diesel::query_builder::*;
 use diesel::query_dsl::LoadQuery;
 use diesel::sql_types::BigInt;
-use http::HeaderMap;
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
-use std::net::IpAddr;
-use std::str::FromStr;
 
 const MAX_PAGE_BEFORE_SUSPECTED_BOT: u32 = 10;
 const DEFAULT_PER_PAGE: i64 = 10;
@@ -102,7 +100,7 @@ impl PaginationOptionsBuilder {
                 if self.limit_page_numbers {
                     let config = &req.app().config;
                     if numeric_page > config.max_allowed_page_offset
-                        && is_useragent_or_ip_blocked(config, req.headers())
+                        && is_useragent_or_ip_blocked(config, req)
                     {
                         req.request_log().add("cause", "large page offset");
                         return Err(bad_request("requested page offset is too large"));
@@ -258,9 +256,9 @@ impl RawSeekPayload {
 ///
 /// A request can be blocked if either the User Agent is on the User Agent block list or if the client
 /// IP is on the CIDR block list.
-fn is_useragent_or_ip_blocked(config: &Server, headers: &HeaderMap) -> bool {
-    let user_agent = headers.get_str_or_default(header::USER_AGENT);
-    let client_ip = headers.get_str_or_default("x-real-ip");
+fn is_useragent_or_ip_blocked<T: RequestPartsExt>(config: &Server, req: &T) -> bool {
+    let user_agent = req.headers().get_str_or_default(header::USER_AGENT);
+    let client_ip = req.extensions().get::<RealIp>();
 
     // check if user agent is blocked
     if config
@@ -272,11 +270,11 @@ fn is_useragent_or_ip_blocked(config: &Server, headers: &HeaderMap) -> bool {
     }
 
     // check if client ip is blocked, needs to be an IPv4 address
-    if let Ok(client_ip) = IpAddr::from_str(client_ip) {
+    if let Some(client_ip) = client_ip {
         if config
             .page_offset_cidr_blocklist
             .iter()
-            .any(|blocked| blocked.contains(client_ip))
+            .any(|blocked| blocked.contains(**client_ip))
         {
             return true;
         }
