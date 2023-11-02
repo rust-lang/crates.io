@@ -176,7 +176,7 @@ impl Server {
         );
 
         Ok(Server {
-            db: DatabasePools::full_from_environment(&base),
+            db: DatabasePools::full_from_environment(&base)?,
             storage,
             base,
             ip,
