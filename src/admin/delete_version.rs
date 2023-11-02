@@ -24,12 +24,10 @@ pub struct Opts {
     yes: bool,
 }
 
-pub fn run(opts: Opts) {
+pub fn run(opts: Opts) -> anyhow::Result<()> {
     let crate_name = &opts.crate_name;
 
-    let conn = &mut db::oneoff_connection()
-        .context("Failed to establish database connection")
-        .unwrap();
+    let conn = &mut db::oneoff_connection().context("Failed to establish database connection")?;
 
     let store = Storage::from_environment();
 
@@ -37,8 +35,7 @@ pub fn run(opts: Opts) {
         .select(crates::id)
         .filter(crates::name.eq(crate_name))
         .first(conn)
-        .context("Failed to look up crate id from the database")
-        .unwrap();
+        .context("Failed to look up crate id from the database")?;
 
     println!("Deleting the following versions of the `{crate_name}` crate:");
     println!();
@@ -48,7 +45,7 @@ pub fn run(opts: Opts) {
     println!();
 
     if !opts.yes && !dialoguer::confirm("Do you want to permanently delete these versions?") {
-        return;
+        return Ok(());
     }
 
     info!(%crate_name, %crate_id, versions = ?opts.versions, "Deleting versions from the database");
@@ -81,8 +78,7 @@ pub fn run(opts: Opts) {
     let rt = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
-        .context("Failed to initialize tokio runtime")
-        .unwrap();
+        .context("Failed to initialize tokio runtime")?;
 
     for version in &opts.versions {
         debug!(%crate_name, %version, "Deleting crate file from S3");
@@ -99,4 +95,6 @@ pub fn run(opts: Opts) {
             Ok(_) => {}
         }
     }
+
+    Ok(())
 }
