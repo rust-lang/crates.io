@@ -64,7 +64,7 @@ pub fn apply_axum_middleware(state: AppState, router: Router<(), TimeoutBody<Bod
         ))
         .layer(from_fn_with_state(
             state.clone(),
-            block_traffic::block_traffic,
+            block_traffic::block_by_header,
         ))
         .layer(from_fn_with_state(
             state.clone(),

@@ -16,7 +16,7 @@ use axum::middleware::Next;
 use axum::response::IntoResponse;
 use http::StatusCode;
 
-pub async fn block_traffic<B>(
+pub async fn block_by_header<B>(
     state: AppState,
     req: http::Request<B>,
     next: Next<B>,
