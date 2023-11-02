@@ -1,5 +1,6 @@
 use crate::builders::*;
 use crate::util::*;
+use std::collections::HashSet;
 
 use ::insta::assert_display_snapshot;
 use http::{header, Method, StatusCode};
@@ -75,4 +76,17 @@ fn block_traffic_via_arbitrary_header_and_value() {
     );
     let resp = anon.run::<()>(req);
     assert_eq!(resp.status(), StatusCode::FOUND);
+}
+
+#[test]
+fn block_traffic_via_ip() {
+    let (_app, anon) = TestApp::init()
+        .with_config(|config| {
+            config.blocked_ips = HashSet::from(["127.0.0.1".parse().unwrap()]);
+        })
+        .empty();
+
+    let resp = anon.get::<()>("/api/v1/crates");
+    assert_eq!(resp.status(), StatusCode::FORBIDDEN);
+    assert_display_snapshot!(resp.into_text());
 }

@@ -411,6 +411,7 @@ fn simple_config() -> config::Server {
         rate_limiter: Default::default(),
         new_version_rate_limit: Some(10),
         blocked_traffic: Default::default(),
+        blocked_ips: Default::default(),
         max_allowed_page_offset: 200,
         page_offset_ua_blocklist: vec![],
         page_offset_cidr_blocklist: vec![],
