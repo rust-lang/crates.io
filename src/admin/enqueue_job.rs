@@ -41,19 +41,26 @@ pub fn run(command: Command) -> Result<()> {
 
             if count > 0 {
                 println!("Did not enqueue update_downloads, existing job already in progress");
-                Ok(())
             } else {
-                Ok(jobs::UpdateDownloads.enqueue(conn)?)
+                jobs::UpdateDownloads.enqueue(conn)?;
             }
         }
         Command::DumpDb {
             database_url,
             target_name,
-        } => Ok(jobs::DumpDb::new(database_url.expose_secret(), target_name).enqueue(conn)?),
-        Command::DailyDbMaintenance => Ok(jobs::DailyDbMaintenance.enqueue(conn)?),
-        Command::SquashIndex => Ok(jobs::SquashIndex.enqueue(conn)?),
-        Command::NormalizeIndex { dry_run } => {
-            Ok(jobs::NormalizeIndex::new(dry_run).enqueue(conn)?)
+        } => {
+            jobs::DumpDb::new(database_url.expose_secret(), target_name).enqueue(conn)?;
         }
-    }
+        Command::DailyDbMaintenance => {
+            jobs::DailyDbMaintenance.enqueue(conn)?;
+        }
+        Command::SquashIndex => {
+            jobs::SquashIndex.enqueue(conn)?;
+        }
+        Command::NormalizeIndex { dry_run } => {
+            jobs::NormalizeIndex::new(dry_run).enqueue(conn)?;
+        }
+    };
+
+    Ok(())
 }
