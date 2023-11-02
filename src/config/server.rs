@@ -37,6 +37,7 @@ pub struct Server {
     pub rate_limiter: HashMap<LimitedAction, RateLimiterConfig>,
     pub new_version_rate_limit: Option<u32>,
     pub blocked_traffic: Vec<(String, Vec<String>)>,
+    pub blocked_ips: HashSet<IpAddr>,
     pub max_allowed_page_offset: u32,
     pub page_offset_ua_blocklist: Vec<String>,
     pub page_offset_cidr_blocklist: Vec<IpNetwork>,
@@ -112,6 +113,15 @@ impl Server {
         };
 
         let port = env_optional("PORT").unwrap_or(8888);
+
+        let blocked_ips = match env_optional::<String>("BLOCKED_IPS") {
+            None => HashSet::new(),
+            Some(s) if s.is_empty() => HashSet::new(),
+            Some(s) => s
+                .split(',')
+                .map(|s| s.trim().parse())
+                .collect::<Result<_, _>>()?,
+        };
 
         let allowed_origins = AllowedOrigins::from_default_env()?;
         let page_offset_ua_blocklist = match env_optional::<String>("WEB_PAGE_OFFSET_UA_BLOCKLIST")
@@ -190,6 +200,7 @@ impl Server {
             rate_limiter,
             new_version_rate_limit: env_optional("MAX_NEW_VERSIONS_DAILY"),
             blocked_traffic: blocked_traffic(),
+            blocked_ips,
             max_allowed_page_offset: env_optional("WEB_MAX_ALLOWED_PAGE_OFFSET").unwrap_or(200),
             page_offset_ua_blocklist,
             page_offset_cidr_blocklist,

@@ -1,21 +1,20 @@
-//! Middleware that blocks requests if a header matches the given list
-//!
-//! To use, set the `BLOCKED_TRAFFIC` environment variable to a comma-separated list of pairs
-//! containing a header name, an equals sign, and the name of another environment variable that
-//! contains the values of that header that should be blocked. For example, set `BLOCKED_TRAFFIC`
-//! to `User-Agent=BLOCKED_UAS,X-Real-Ip=BLOCKED_IPS`, `BLOCKED_UAS` to `curl/7.54.0,cargo 1.36.0
-//! (c4fcfb725 2019-05-15)`, and `BLOCKED_IPS` to `192.168.0.1,127.0.0.1` to block requests from
-//! the versions of curl or Cargo specified or from either of the IPs (values are nonsensical
-//! examples). Values of the headers must match exactly.
-
 use crate::app::AppState;
 use crate::middleware::log_request::RequestLogExt;
+use crate::middleware::real_ip::RealIp;
 use crate::util::errors::RouteBlocked;
-use axum::extract::MatchedPath;
+use axum::extract::{Extension, MatchedPath};
 use axum::middleware::Next;
 use axum::response::IntoResponse;
 use http::StatusCode;
 
+/// Middleware that blocks requests if a header matches the given list
+///
+/// To use, set the `BLOCKED_TRAFFIC` environment variable to a comma-separated list of pairs
+/// containing a header name, an equals sign, and the name of another environment variable that
+/// contains the values of that header that should be blocked. For example, set `BLOCKED_TRAFFIC`
+/// to `User-Agent=BLOCKED_UAS` and `BLOCKED_UAS` to `curl/7.54.0,cargo 1.36.0 (c4fcfb725 2019-05-15)`
+/// to block requests from the versions of curl or Cargo specified (values are nonsensical examples).
+/// Values of the headers must match exactly.
 pub async fn block_by_header<B>(
     state: AppState,
     req: http::Request<B>,
@@ -38,6 +37,19 @@ pub async fn block_by_header<B>(
     }
 
     next.run(req).await
+}
+
+pub async fn block_by_ip<B>(
+    Extension(real_ip): Extension<RealIp>,
+    state: AppState,
+    req: http::Request<B>,
+    next: Next<B>,
+) -> axum::response::Response {
+    if state.config.blocked_ips.contains(&real_ip) {
+        rejection_response_from(&state, &req).into_response()
+    } else {
+        next.run(req).await
+    }
 }
 
 fn rejection_response_from<B>(state: &AppState, req: &http::Request<B>) -> impl IntoResponse {
