@@ -20,30 +20,26 @@ pub struct Opts {
     yes: bool,
 }
 
-pub fn run(opts: Opts) {
-    let mut conn = db::oneoff_connection().unwrap();
-    conn.transaction::<_, diesel::result::Error, _>(|conn| {
-        yank(opts, conn);
-        Ok(())
-    })
-    .unwrap()
+pub fn run(opts: Opts) -> anyhow::Result<()> {
+    let mut conn = db::oneoff_connection()?;
+    conn.transaction(|conn| yank(opts, conn))?;
+    Ok(())
 }
 
-fn yank(opts: Opts, conn: &mut PgConnection) {
+fn yank(opts: Opts, conn: &mut PgConnection) -> anyhow::Result<()> {
     let Opts {
         crate_name,
         version,
         yes,
     } = opts;
-    let krate: Crate = Crate::by_name(&crate_name).first(conn).unwrap();
+    let krate: Crate = Crate::by_name(&crate_name).first(conn)?;
     let v: Version = Version::belonging_to(&krate)
         .filter(versions::num.eq(&version))
-        .first(conn)
-        .unwrap();
+        .first(conn)?;
 
     if v.yanked {
         println!("Version {version} of crate {crate_name} is already yanked");
-        return;
+        return Ok(());
     }
 
     if !yes {
@@ -52,15 +48,16 @@ fn yank(opts: Opts, conn: &mut PgConnection) {
             v.id
         );
         if !dialoguer::confirm(&prompt) {
-            return;
+            return Ok(());
         }
     }
 
     println!("yanking version {} ({})", v.num, v.id);
     diesel::update(&v)
         .set(versions::yanked.eq(true))
-        .execute(conn)
-        .unwrap();
+        .execute(conn)?;
 
-    jobs::enqueue_sync_to_index(&krate.name, conn).unwrap();
+    jobs::enqueue_sync_to_index(&krate.name, conn)?;
+
+    Ok(())
 }
