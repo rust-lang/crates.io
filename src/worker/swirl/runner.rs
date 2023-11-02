@@ -312,7 +312,7 @@ mod tests {
     fn jobs_are_locked_when_fetched() {
         let test_database = TestDatabase::new();
 
-        let runner = runner(test_database.url());
+        let runner = runner(test_database.url(), ());
         let first_job_id = create_dummy_job(&runner).id;
         let second_job_id = create_dummy_job(&runner).id;
         let fetch_barrier = Arc::new(AssertUnwindSafe(Barrier::new(2)));
@@ -341,7 +341,7 @@ mod tests {
     fn jobs_are_deleted_when_successfully_run() {
         let test_database = TestDatabase::new();
 
-        let runner = runner(test_database.url());
+        let runner = runner(test_database.url(), ());
         create_dummy_job(&runner);
 
         runner.get_single_job(dummy_sender(), |_, _| Ok(()));
@@ -357,7 +357,7 @@ mod tests {
     fn failed_jobs_do_not_release_lock_before_updating_retry_time() {
         let test_database = TestDatabase::new();
 
-        let runner = runner(test_database.url());
+        let runner = runner(test_database.url(), ());
         create_dummy_job(&runner);
         let barrier = Arc::new(AssertUnwindSafe(Barrier::new(2)));
         let barrier2 = barrier.clone();
@@ -401,7 +401,7 @@ mod tests {
     fn panicking_in_jobs_updates_retry_counter() {
         let test_database = TestDatabase::new();
 
-        let runner = runner(test_database.url());
+        let runner = runner(test_database.url(), ());
         let job_id = create_dummy_job(&runner).id;
 
         runner.get_single_job(dummy_sender(), |_, _| panic!());
@@ -416,7 +416,10 @@ mod tests {
         assert_eq!(tries, 1);
     }
 
-    fn runner(database_url: &str) -> Runner<()> {
+    fn runner<Context: Clone + Send + UnwindSafe + 'static>(
+        database_url: &str,
+        context: Context,
+    ) -> Runner<Context> {
         let connection_pool = r2d2::Pool::builder()
             .max_size(4)
             .min_idle(Some(0))
@@ -424,7 +427,7 @@ mod tests {
 
         let connection_pool = DieselPool::new_background_worker(connection_pool);
 
-        Runner::new(connection_pool, ())
+        Runner::new(connection_pool, context)
             .num_workers(2)
             .job_start_timeout(Duration::from_secs(10))
     }
