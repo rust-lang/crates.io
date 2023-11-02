@@ -41,7 +41,7 @@ fn main() -> anyhow::Result<()> {
     match command {
         Command::DeleteCrate(opts) => delete_crate::run(opts)?,
         Command::DeleteVersion(opts) => delete_version::run(opts)?,
-        Command::Populate(opts) => populate::run(opts),
+        Command::Populate(opts) => populate::run(opts)?,
         Command::RenderReadmes(opts) => render_readmes::run(opts)?,
         Command::TestPagerduty(opts) => test_pagerduty::run(opts)?,
         Command::TransferCrates(opts) => transfer_crates::run(opts),
