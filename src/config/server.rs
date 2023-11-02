@@ -65,7 +65,7 @@ pub struct Server {
     pub content_security_policy: Option<HeaderValue>,
 }
 
-impl Default for Server {
+impl Server {
     /// Returns a default value for the application's config
     ///
     /// Sets the following default values:
@@ -102,7 +102,7 @@ impl Default for Server {
     /// # Panics
     ///
     /// This function panics if the Server configuration is invalid.
-    fn default() -> Self {
+    pub fn from_environment() -> anyhow::Result<Self> {
         let docker = dotenvy::var("DEV_DOCKER").is_ok();
         let heroku = dotenvy::var("HEROKU").is_ok();
 
@@ -128,8 +128,7 @@ impl Default for Server {
                 Some(s) => s
                     .split(',')
                     .map(parse_cidr_block)
-                    .collect::<Result<_, _>>()
-                    .unwrap(),
+                    .collect::<Result<_, _>>()?,
             };
 
         let base = Base::from_environment();
@@ -176,7 +175,7 @@ impl Default for Server {
             cdn_domain = storage.cdn_prefix.as_ref().map(|cdn_prefix| format!("https://{cdn_prefix}")).unwrap_or_default()
         );
 
-        Server {
+        Ok(Server {
             db: DatabasePools::full_from_environment(&base),
             storage,
             base,
@@ -224,8 +223,8 @@ impl Default for Server {
             balance_capacity: BalanceCapacityConfig::from_environment(),
             serve_dist: true,
             serve_html: true,
-            content_security_policy: Some(content_security_policy.parse().unwrap()),
-        }
+            content_security_policy: Some(content_security_policy.parse()?),
+        })
     }
 }
 

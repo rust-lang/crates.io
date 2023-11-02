@@ -42,7 +42,7 @@ fn main() -> anyhow::Result<()> {
 
     info!("Booting runner");
 
-    let config = config::Server::default();
+    let config = config::Server::from_environment()?;
 
     if config.db.are_all_read_only() {
         loop {

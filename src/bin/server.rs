@@ -26,7 +26,7 @@ fn main() -> anyhow::Result<()> {
 
     let _span = info_span!("server.run");
 
-    let config = crates_io::config::Server::default();
+    let config = crates_io::config::Server::from_environment()?;
     let client = Client::new();
     let app = Arc::new(App::new(config, Some(client)));
 
