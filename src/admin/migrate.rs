@@ -1,4 +1,4 @@
-use anyhow::Error;
+use anyhow::{anyhow, Error};
 use diesel_migrations::{
     embed_migrations, EmbeddedMigrations, HarnessWithOutput, MigrationHarness,
 };
@@ -43,7 +43,7 @@ pub fn run(_opts: Opts) -> Result<(), Error> {
     let mut harness = HarnessWithOutput::new(conn, &mut stdout);
     harness
         .run_pending_migrations(MIGRATIONS)
-        .expect("failed to run migrations");
+        .map_err(|err| anyhow!("Failed to run migrations: {err}"))?;
 
     info!("Synchronizing crate categories");
     crate::boot::categories::sync_with_connection(CATEGORIES_TOML, conn)?;
