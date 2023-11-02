@@ -97,16 +97,6 @@ pub struct OkBool {
     ok: bool,
 }
 
-// Return the environment variable only if it has been defined
-#[track_caller]
-fn env(var: &str) -> String {
-    match dotenvy::var(var) {
-        Ok(ref s) if s.is_empty() => panic!("environment variable `{var}` must not be empty"),
-        Ok(s) => s,
-        _ => panic!("environment variable `{var}` must be defined and valid unicode"),
-    }
-}
-
 static NEXT_GH_ID: AtomicUsize = AtomicUsize::new(0);
 
 fn new_user(login: &str) -> NewUser<'_> {

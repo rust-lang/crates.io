@@ -743,6 +743,7 @@ dependencies = [
  "crates_io_index",
  "crates_io_markdown",
  "crates_io_tarball",
+ "crates_io_test_db",
  "crossbeam-channel",
  "dashmap",
  "derive_deref",
@@ -866,6 +867,19 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "walkdir",
+]
+
+[[package]]
+name = "crates_io_test_db"
+version = "0.0.0"
+dependencies = [
+ "diesel",
+ "diesel_migrations",
+ "dotenvy",
+ "once_cell",
+ "rand",
+ "tracing",
+ "url",
 ]
 
 [[package]]

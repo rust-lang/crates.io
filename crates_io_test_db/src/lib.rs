@@ -1,4 +1,3 @@
-use crate::env;
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
 use diesel::sql_query;
@@ -132,6 +131,16 @@ impl Drop for TestDatabase {
 
         let mut conn = TemplateDatabase::instance().get_connection();
         drop_database(&self.name, &mut conn).expect("failed to drop test database");
+    }
+}
+
+/// Return the environment variable only if it has been defined
+#[track_caller]
+fn env(var: &str) -> String {
+    match dotenvy::var(var) {
+        Ok(ref s) if s.is_empty() => panic!("environment variable `{var}` must not be empty"),
+        Ok(s) => s,
+        _ => panic!("environment variable `{var}` must be defined and valid unicode"),
     }
 }
 

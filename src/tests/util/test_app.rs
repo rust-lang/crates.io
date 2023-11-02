@@ -1,6 +1,6 @@
 use super::{MockAnonymousUser, MockCookieUser, MockTokenUser};
+use crate::util::chaosproxy::ChaosProxy;
 use crate::util::github::{MockGitHubClient, MOCK_GITHUB_DATA};
-use crate::util::{chaosproxy::ChaosProxy, test_database::TestDatabase};
 use anyhow::Context;
 use crates_io::config::{self, BalanceCapacityConfig, Base, DatabasePools, DbPoolConfig};
 use crates_io::models::token::{CrateScope, EndpointScope};
@@ -11,6 +11,7 @@ use crates_io::worker::{Environment, RunnerExt};
 use crates_io::{env, App, Emails, Env};
 use crates_io_index::testing::UpstreamIndex;
 use crates_io_index::{Credentials, Repository as WorkerRepository, RepositoryConfig};
+use crates_io_test_db::TestDatabase;
 use diesel::PgConnection;
 use futures_util::TryStreamExt;
 use oauth2::{ClientId, ClientSecret};

@@ -1,7 +1,8 @@
 use crate::builders::CrateBuilder;
-use crate::util::{ChaosProxy, TestDatabase};
+use crate::util::ChaosProxy;
 use anyhow::{Context, Error};
 use crates_io::models::{NewUser, User};
+use crates_io_test_db::TestDatabase;
 use diesel::prelude::*;
 use reqwest::blocking::{Client, Response};
 use std::collections::HashMap;

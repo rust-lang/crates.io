@@ -46,14 +46,12 @@ pub mod insta;
 mod mock_request;
 mod response;
 mod test_app;
-mod test_database;
 
 pub(crate) use chaosproxy::ChaosProxy;
 use mock_request::MockRequest;
 pub use mock_request::MockRequestExt;
 pub use response::Response;
 pub use test_app::TestApp;
-pub(crate) use test_database::TestDatabase;
 
 /// This function can be used to create a `Cookie` header for mock requests that
 /// include cookie-based authentication.
