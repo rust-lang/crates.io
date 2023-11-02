@@ -305,57 +305,62 @@ impl AllowedOrigins {
     }
 }
 
-#[test]
-fn parse_traffic_patterns_splits_on_comma_and_looks_for_equal_sign() {
-    let pattern_string_1 = "Foo=BAR,Bar=BAZ";
-    let pattern_string_2 = "Baz=QUX";
-    let pattern_string_3 = "";
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-    let patterns_1 = parse_traffic_patterns(pattern_string_1).collect::<Vec<_>>();
-    assert_eq!(vec![("Foo", "BAR"), ("Bar", "BAZ")], patterns_1);
+    #[test]
+    fn parse_traffic_patterns_splits_on_comma_and_looks_for_equal_sign() {
+        let pattern_string_1 = "Foo=BAR,Bar=BAZ";
+        let pattern_string_2 = "Baz=QUX";
+        let pattern_string_3 = "";
 
-    let patterns_2 = parse_traffic_patterns(pattern_string_2).collect::<Vec<_>>();
-    assert_eq!(vec![("Baz", "QUX")], patterns_2);
+        let patterns_1 = parse_traffic_patterns(pattern_string_1).collect::<Vec<_>>();
+        assert_eq!(vec![("Foo", "BAR"), ("Bar", "BAZ")], patterns_1);
 
-    assert_none!(parse_traffic_patterns(pattern_string_3).next());
-}
+        let patterns_2 = parse_traffic_patterns(pattern_string_2).collect::<Vec<_>>();
+        assert_eq!(vec![("Baz", "QUX")], patterns_2);
 
-#[test]
-fn parse_cidr_block_list_successfully() {
-    assert_ok_eq!(
-        parse_cidr_block("127.0.0.1/24"),
-        "127.0.0.1/24".parse::<IpNetwork>().unwrap()
-    );
-    assert_ok_eq!(
-        parse_cidr_block("192.168.0.1/31"),
-        "192.168.0.1/31".parse::<IpNetwork>().unwrap()
-    );
-}
+        assert_none!(parse_traffic_patterns(pattern_string_3).next());
+    }
 
-#[test]
-fn parse_cidr_blocks_panics_when_host_ipv4_prefix_is_too_low() {
-    assert_err!(parse_cidr_block("127.0.0.1/8"));
-}
+    #[test]
+    fn parse_cidr_block_list_successfully() {
+        assert_ok_eq!(
+            parse_cidr_block("127.0.0.1/24"),
+            "127.0.0.1/24".parse::<IpNetwork>().unwrap()
+        );
+        assert_ok_eq!(
+            parse_cidr_block("192.168.0.1/31"),
+            "192.168.0.1/31".parse::<IpNetwork>().unwrap()
+        );
+    }
 
-#[test]
-fn parse_cidr_blocks_panics_when_host_ipv6_prefix_is_too_low() {
-    assert_err!(parse_cidr_block(
-        "2001:0db8:0123:4567:89ab:cdef:1234:5678/56"
-    ));
-}
+    #[test]
+    fn parse_cidr_blocks_panics_when_host_ipv4_prefix_is_too_low() {
+        assert_err!(parse_cidr_block("127.0.0.1/8"));
+    }
 
-#[test]
-fn parse_ipv6_based_cidr_blocks() {
-    assert_ok_eq!(
-        parse_cidr_block("2002::1234:abcd:ffff:c0a8:101/64"),
-        "2002::1234:abcd:ffff:c0a8:101/64"
-            .parse::<IpNetwork>()
-            .unwrap()
-    );
-    assert_ok_eq!(
-        parse_cidr_block("2001:0db8:0123:4567:89ab:cdef:1234:5678/92"),
-        "2001:0db8:0123:4567:89ab:cdef:1234:5678/92"
-            .parse::<IpNetwork>()
-            .unwrap()
-    );
+    #[test]
+    fn parse_cidr_blocks_panics_when_host_ipv6_prefix_is_too_low() {
+        assert_err!(parse_cidr_block(
+            "2001:0db8:0123:4567:89ab:cdef:1234:5678/56"
+        ));
+    }
+
+    #[test]
+    fn parse_ipv6_based_cidr_blocks() {
+        assert_ok_eq!(
+            parse_cidr_block("2002::1234:abcd:ffff:c0a8:101/64"),
+            "2002::1234:abcd:ffff:c0a8:101/64"
+                .parse::<IpNetwork>()
+                .unwrap()
+        );
+        assert_ok_eq!(
+            parse_cidr_block("2001:0db8:0123:4567:89ab:cdef:1234:5678/92"),
+            "2001:0db8:0123:4567:89ab:cdef:1234:5678/92"
+                .parse::<IpNetwork>()
+                .unwrap()
+        );
+    }
 }
