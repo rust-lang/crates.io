@@ -18,7 +18,7 @@ use tower::Layer;
 
 const CORE_THREADS: usize = 4;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> anyhow::Result<()> {
     let _sentry = crates_io::sentry::init();
 
     // Initialize logging
