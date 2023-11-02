@@ -1,4 +1,5 @@
-use crate::{db, models::User, util::errors::AppResult};
+use crate::{db, models::User};
+use anyhow::anyhow;
 
 #[derive(clap::Parser, Debug)]
 #[command(
@@ -12,9 +13,9 @@ pub struct Opts {
     api_token: String,
 }
 
-pub fn run(opts: Opts) -> AppResult<()> {
+pub fn run(opts: Opts) -> anyhow::Result<()> {
     let conn = &mut db::oneoff_connection()?;
-    let user = User::find_by_api_token(conn, &opts.api_token)?;
+    let user = User::find_by_api_token(conn, &opts.api_token).map_err(|err| anyhow!("{err}"))?;
     println!("The token belongs to user {}", user.gh_login);
     Ok(())
 }
