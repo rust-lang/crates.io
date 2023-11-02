@@ -13,7 +13,8 @@
 
 use crate::config::Base;
 use crate::Env;
-use crates_io_env_vars::required_var;
+use anyhow::anyhow;
+use crates_io_env_vars::{required_var, var_parsed};
 use secrecy::SecretString;
 use std::time::Duration;
 
@@ -69,45 +70,24 @@ impl DatabasePools {
         let follower_url = dotenvy::var("READ_ONLY_REPLICA_URL").map(Into::into).ok();
         let read_only_mode = dotenvy::var("READ_ONLY_MODE").is_ok();
 
-        let primary_pool_size = match dotenvy::var("DB_PRIMARY_POOL_SIZE") {
-            Ok(num) => num.parse().expect("couldn't parse DB_PRIMARY_POOL_SIZE"),
-            _ => Self::DEFAULT_POOL_SIZE,
-        };
+        let primary_pool_size =
+            var_parsed("DB_PRIMARY_POOL_SIZE")?.unwrap_or(Self::DEFAULT_POOL_SIZE);
+        let replica_pool_size =
+            var_parsed("DB_REPLICA_POOL_SIZE")?.unwrap_or(Self::DEFAULT_POOL_SIZE);
 
-        let replica_pool_size = match dotenvy::var("DB_REPLICA_POOL_SIZE") {
-            Ok(num) => num.parse().expect("couldn't parse DB_REPLICA_POOL_SIZE"),
-            _ => Self::DEFAULT_POOL_SIZE,
-        };
+        let primary_min_idle = var_parsed("DB_PRIMARY_MIN_IDLE")?;
+        let replica_min_idle = var_parsed("DB_REPLICA_MIN_IDLE")?;
 
-        let primary_min_idle = match dotenvy::var("DB_PRIMARY_MIN_IDLE") {
-            Ok(num) => Some(num.parse().expect("couldn't parse DB_PRIMARY_MIN_IDLE")),
-            _ => None,
-        };
+        let tcp_timeout_ms = var_parsed("DB_TCP_TIMEOUT_MS")?.unwrap_or(15 * 1000);
 
-        let replica_min_idle = match dotenvy::var("DB_REPLICA_MIN_IDLE") {
-            Ok(num) => Some(num.parse().expect("couldn't parse DB_REPLICA_MIN_IDLE")),
-            _ => None,
-        };
-
-        let tcp_timeout_ms = match dotenvy::var("DB_TCP_TIMEOUT_MS") {
-            Ok(num) => num.parse().expect("couldn't parse DB_TCP_TIMEOUT_MS"),
-            Err(_) => 15 * 1000, // 15 seconds
-        };
-
-        let connection_timeout = match dotenvy::var("DB_TIMEOUT") {
-            Ok(num) => num.parse().expect("couldn't parse DB_TIMEOUT"),
-            _ => 30,
-        };
+        let connection_timeout = var_parsed("DB_TIMEOUT")?.unwrap_or(30);
         let connection_timeout = Duration::from_secs(connection_timeout);
 
         // `DB_TIMEOUT` currently configures both the connection timeout and
         // the statement timeout, so we can copy the parsed connection timeout.
         let statement_timeout = connection_timeout;
 
-        let helper_threads = match dotenvy::var("DB_HELPER_THREADS") {
-            Ok(num) => num.parse().expect("couldn't parse DB_HELPER_THREADS"),
-            _ => 3,
-        };
+        let helper_threads = var_parsed("DB_HELPER_THREADS")?.unwrap_or(3);
 
         let enforce_tls = base.env == Env::Production;
 
@@ -116,8 +96,9 @@ impl DatabasePools {
             // don't configure a replica.
             Ok("leader") => Self {
                 primary: DbPoolConfig {
-                    url: follower_url
-                        .expect("Must set `READ_ONLY_REPLICA_URL` when using `DB_OFFLINE=leader`."),
+                    url: follower_url.ok_or_else(|| {
+                        anyhow!("Must set `READ_ONLY_REPLICA_URL` when using `DB_OFFLINE=leader`.")
+                    })?,
                     read_only_mode: true,
                     pool_size: primary_pool_size,
                     min_idle: primary_min_idle,
