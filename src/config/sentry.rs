@@ -1,5 +1,5 @@
-use crate::env_optional;
 use anyhow::Context;
+use crates_io_env_vars::var_parsed;
 use sentry::types::Dsn;
 use sentry::IntoDsn;
 
@@ -29,7 +29,7 @@ impl SentryConfig {
             dsn,
             environment,
             release: dotenvy::var("HEROKU_SLUG_COMMIT").ok(),
-            traces_sample_rate: env_optional("SENTRY_TRACES_SAMPLE_RATE").unwrap_or(0.0),
+            traces_sample_rate: var_parsed("SENTRY_TRACES_SAMPLE_RATE")?.unwrap_or(0.0),
         })
     }
 }

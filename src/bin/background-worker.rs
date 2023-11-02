@@ -22,7 +22,8 @@ use crates_io::fastly::Fastly;
 use crates_io::storage::Storage;
 use crates_io::worker::swirl::Runner;
 use crates_io::worker::{Environment, RunnerExt};
-use crates_io::{db, env_optional, ssh};
+use crates_io::{db, ssh};
+use crates_io_env_vars::var_parsed;
 use crates_io_index::{Repository, RepositoryConfig};
 use diesel::r2d2;
 use diesel::r2d2::ConnectionManager;
@@ -56,7 +57,7 @@ fn main() -> anyhow::Result<()> {
 
     let db_url = db::connection_url(&config.db, config.db.primary.url.expose_secret());
 
-    let job_start_timeout = env_optional("BACKGROUND_JOB_TIMEOUT").unwrap_or(30);
+    let job_start_timeout = var_parsed("BACKGROUND_JOB_TIMEOUT")?.unwrap_or(30);
 
     info!("Cloning index");
 
