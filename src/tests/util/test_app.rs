@@ -400,7 +400,6 @@ fn simple_config() -> config::Server {
         ip: [127, 0, 0, 1].into(),
         port: 8888,
         max_blocking_threads: None,
-        use_nginx_wrapper: false,
         db,
         storage,
         session_key: cookie::Key::derive_from("test this has to be over 32 bytes long".as_bytes()),
