@@ -65,7 +65,7 @@ fn main() -> anyhow::Result<()> {
     }
 
     let clone_start = Instant::now();
-    let repository_config = RepositoryConfig::from_environment();
+    let repository_config = RepositoryConfig::from_environment()?;
     let repository = Repository::open(&repository_config).expect("Failed to clone index");
 
     let clone_duration = clone_start.elapsed();
