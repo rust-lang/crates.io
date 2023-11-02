@@ -21,7 +21,6 @@ pub async fn block_by_header<B>(
     req: http::Request<B>,
     next: Next<B>,
 ) -> axum::response::Response {
-    let domain_name = &state.config.domain_name;
     let blocked_traffic = &state.config.blocked_traffic;
 
     for (header_name, blocked_values) in blocked_traffic {
@@ -34,27 +33,33 @@ pub async fn block_by_header<B>(
             let cause = format!("blocked due to contents of header {header_name}");
             req.request_log().add("cause", cause);
 
-            // Heroku should always set this header
-            let request_id = req
-                .headers()
-                .get("x-request-id")
-                .map(|val| val.to_str().unwrap_or_default())
-                .unwrap_or_default();
+            return rejection_response_from(&state, &req).into_response();
+        }
+    }
 
-            let body = format!(
-                "We are unable to process your request at this time. \
+    next.run(req).await
+}
+
+fn rejection_response_from<B>(state: &AppState, req: &http::Request<B>) -> impl IntoResponse {
+    let domain_name = &state.config.domain_name;
+
+    // Heroku should always set this header
+    let request_id = req
+        .headers()
+        .get("x-request-id")
+        .map(|val| val.to_str().unwrap_or_default())
+        .unwrap_or_default();
+
+    let body = format!(
+        "We are unable to process your request at this time. \
                  This usually means that you are in violation of our crawler \
                  policy (https://{domain_name}/policies#crawlers). \
                  Please open an issue at https://github.com/rust-lang/crates.io \
                  or email help@crates.io \
                  and provide the request id {request_id}"
-            );
+    );
 
-            return (StatusCode::FORBIDDEN, body).into_response();
-        }
-    }
-
-    next.run(req).await
+    (StatusCode::FORBIDDEN, body).into_response()
 }
 
 /// Allow blocking individual routes by their pattern through the `BLOCKED_ROUTES`
