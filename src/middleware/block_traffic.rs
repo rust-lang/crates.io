@@ -33,6 +33,14 @@ pub async fn block_by_header<B>(
         if has_blocked_value {
             let cause = format!("blocked due to contents of header {header_name}");
             req.request_log().add("cause", cause);
+
+            // Heroku should always set this header
+            let request_id = req
+                .headers()
+                .get("x-request-id")
+                .map(|val| val.to_str().unwrap_or_default())
+                .unwrap_or_default();
+
             let body = format!(
                 "We are unable to process your request at this time. \
                  This usually means that you are in violation of our crawler \
@@ -40,12 +48,7 @@ pub async fn block_by_header<B>(
                  Please open an issue at https://github.com/rust-lang/crates.io \
                  or email help@crates.io \
                  and provide the request id {}",
-                domain_name,
-                // Heroku should always set this header
-                req.headers()
-                    .get("x-request-id")
-                    .map(|val| val.to_str().unwrap_or_default())
-                    .unwrap_or_default()
+                domain_name, request_id
             );
 
             return (StatusCode::FORBIDDEN, body).into_response();
