@@ -1,3 +1,6 @@
+use crate::db::{DieselPool, DieselPooledConn, PoolError};
+use crate::worker::swirl::errors::{FailedJobsError, FetchError};
+use crate::worker::swirl::{storage, BackgroundJob, PerformError, PerformState};
 use diesel::connection::{AnsiTransactionManager, TransactionManager};
 use diesel::prelude::*;
 use parking_lot::RwLock;
@@ -9,11 +12,6 @@ use std::sync::mpsc::{sync_channel, SyncSender};
 use std::sync::Arc;
 use std::time::Duration;
 use threadpool::ThreadPool;
-
-use super::errors::*;
-use super::storage;
-use crate::background_jobs::{BackgroundJob, PerformState};
-use crate::db::{DieselPool, DieselPooledConn, PoolError};
 
 const DEFAULT_JOB_START_TIMEOUT: Duration = Duration::from_secs(30);
 
@@ -244,7 +242,7 @@ impl<Context: Clone + Send + UnwindSafe + 'static> Runner<Context> {
         if failed_jobs == 0 {
             Ok(())
         } else {
-            Err(JobsFailed(failed_jobs))
+            Err(FailedJobsError::JobsFailed(failed_jobs))
         }
     }
 

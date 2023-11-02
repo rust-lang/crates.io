@@ -1,11 +1,8 @@
-use crate::{
-    admin::dialoguer,
-    db,
-    models::{Crate, Version},
-    schema::versions,
-};
-
-use crate::background_jobs::enqueue_sync_to_index;
+use crate::admin::dialoguer;
+use crate::db;
+use crate::models::{Crate, Version};
+use crate::schema::versions;
+use crate::worker::jobs;
 use diesel::prelude::*;
 
 #[derive(clap::Parser, Debug)]
@@ -65,5 +62,5 @@ fn yank(opts: Opts, conn: &mut PgConnection) {
         .execute(conn)
         .unwrap();
 
-    enqueue_sync_to_index(&krate.name, conn).unwrap();
+    jobs::enqueue_sync_to_index(&krate.name, conn).unwrap();
 }

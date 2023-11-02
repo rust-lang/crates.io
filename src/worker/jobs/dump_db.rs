@@ -1,22 +1,19 @@
-use anyhow::{anyhow, Context};
-use std::sync::Arc;
-use std::{
-    fs::{self, File},
-    path::{Path, PathBuf},
-};
-
 use self::configuration::VisibilityConfig;
-use crate::background_jobs::{BackgroundJob, Environment, PerformState};
 use crate::storage::Storage;
-use crate::swirl::PerformError;
+use crate::worker::swirl::{BackgroundJob, PerformError, PerformState};
+use crate::worker::Environment;
+use anyhow::{anyhow, Context};
+use std::fs::{self, File};
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 #[derive(Serialize, Deserialize)]
-pub struct DumpDbJob {
+pub struct DumpDb {
     database_url: String,
     target_name: String,
 }
 
-impl DumpDbJob {
+impl DumpDb {
     pub fn new(database_url: impl Into<String>, target_name: impl Into<String>) -> Self {
         Self {
             database_url: database_url.into(),
@@ -25,7 +22,7 @@ impl DumpDbJob {
     }
 }
 
-impl BackgroundJob for DumpDbJob {
+impl BackgroundJob for DumpDb {
     const JOB_NAME: &'static str = "dump_db";
 
     type Context = Arc<Environment>;

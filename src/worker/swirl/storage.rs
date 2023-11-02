@@ -1,10 +1,9 @@
+use crate::schema::background_jobs;
 use diesel::dsl::now;
 use diesel::pg::Pg;
 use diesel::prelude::*;
 use diesel::sql_types::{Bool, Integer, Interval};
 use diesel::{delete, update};
-
-use crate::schema::background_jobs;
 
 #[derive(Queryable, Identifiable, Debug, Clone)]
 pub(super) struct BackgroundJob {

@@ -1,15 +1,14 @@
 //! Endpoints for yanking and unyanking specific versions of crates
 
-use crate::auth::AuthCheck;
-use crate::background_jobs::enqueue_sync_to_index;
-
 use super::version_and_crate;
+use crate::auth::AuthCheck;
 use crate::controllers::cargo_prelude::*;
 use crate::models::token::EndpointScope;
 use crate::models::Rights;
 use crate::models::{insert_version_owner_action, VersionAction};
 use crate::rate_limiter::LimitedAction;
 use crate::schema::versions;
+use crate::worker::jobs;
 
 /// Handles the `DELETE /crates/:crate_id/:version/yank` route.
 /// This does not delete a crate version, it makes the crate
@@ -89,7 +88,7 @@ fn modify_yank(
 
     insert_version_owner_action(conn, version.id, user.id, api_token_id, action)?;
 
-    enqueue_sync_to_index(&krate.name, conn)?;
+    jobs::enqueue_sync_to_index(&krate.name, conn)?;
 
     ok_true()
 }

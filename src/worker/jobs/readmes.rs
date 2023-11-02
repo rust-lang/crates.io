@@ -1,15 +1,14 @@
 //! Render README files to HTML.
 
-use crate::swirl::PerformError;
+use crate::models::Version;
+use crate::worker::swirl::{BackgroundJob, PerformError, PerformState};
+use crate::worker::Environment;
 use anyhow::Context;
 use crates_io_markdown::text_to_html;
 use std::sync::Arc;
 
-use crate::background_jobs::{BackgroundJob, Environment, PerformState};
-use crate::models::Version;
-
 #[derive(Serialize, Deserialize)]
-pub struct RenderAndUploadReadmeJob {
+pub struct RenderAndUploadReadme {
     version_id: i32,
     text: String,
     readme_path: String,
@@ -17,7 +16,7 @@ pub struct RenderAndUploadReadmeJob {
     pkg_path_in_vcs: Option<String>,
 }
 
-impl RenderAndUploadReadmeJob {
+impl RenderAndUploadReadme {
     pub fn new(
         version_id: i32,
         text: String,
@@ -35,7 +34,7 @@ impl RenderAndUploadReadmeJob {
     }
 }
 
-impl BackgroundJob for RenderAndUploadReadmeJob {
+impl BackgroundJob for RenderAndUploadReadme {
     const JOB_NAME: &'static str = "render_and_upload_readme";
     const PRIORITY: i16 = 50;
 

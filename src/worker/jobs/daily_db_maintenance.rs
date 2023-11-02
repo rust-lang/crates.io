@@ -1,12 +1,12 @@
-use crate::background_jobs::{BackgroundJob, Environment, PerformState};
-use crate::swirl::PerformError;
+use crate::worker::swirl::{BackgroundJob, PerformError, PerformState};
+use crate::worker::Environment;
 use diesel::{sql_query, RunQueryDsl};
 use std::sync::Arc;
 
 #[derive(Serialize, Deserialize)]
-pub struct DailyDbMaintenanceJob;
+pub struct DailyDbMaintenance;
 
-impl BackgroundJob for DailyDbMaintenanceJob {
+impl BackgroundJob for DailyDbMaintenance {
     const JOB_NAME: &'static str = "daily_db_maintenance";
 
     type Context = Arc<Environment>;

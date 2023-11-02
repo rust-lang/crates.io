@@ -1,14 +1,11 @@
-use std::time::{Duration, SystemTime};
-
 use anyhow::Context;
-use aws_sigv4::{
-    http_request::{self, SignableRequest, SigningSettings},
-    SigningParams,
-};
+use aws_sigv4::http_request::{self, SignableRequest, SigningSettings};
+use aws_sigv4::SigningParams;
 use reqwest::blocking::Client;
 use retry::delay::{jitter, Exponential};
 use retry::OperationResult;
 use secrecy::{ExposeSecret, SecretString};
+use std::time::{Duration, SystemTime};
 
 #[derive(Clone)]
 pub struct CloudFront {
