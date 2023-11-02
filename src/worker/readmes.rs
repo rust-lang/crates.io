@@ -3,6 +3,7 @@
 use crate::swirl::PerformError;
 use anyhow::Context;
 use crates_io_markdown::text_to_html;
+use std::sync::Arc;
 
 use crate::background_jobs::{BackgroundJob, Environment, PerformState};
 use crate::models::Version;
@@ -38,8 +39,10 @@ impl BackgroundJob for RenderAndUploadReadmeJob {
     const JOB_NAME: &'static str = "render_and_upload_readme";
     const PRIORITY: i16 = 50;
 
+    type Context = Arc<Environment>;
+
     #[instrument(skip_all, fields(krate.name))]
-    fn run(&self, state: PerformState<'_>, env: &Environment) -> Result<(), PerformError> {
+    fn run(&self, state: PerformState<'_>, env: &Self::Context) -> Result<(), PerformError> {
         use crate::schema::*;
         use diesel::prelude::*;
 

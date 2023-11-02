@@ -9,6 +9,7 @@ use sentry::Level;
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader, ErrorKind, Write};
 use std::process::Command;
+use std::sync::Arc;
 
 #[derive(Serialize, Deserialize)]
 pub struct SyncToGitIndexJob {
@@ -26,9 +27,11 @@ impl BackgroundJob for SyncToGitIndexJob {
     const JOB_NAME: &'static str = "sync_to_git_index";
     const PRIORITY: i16 = 100;
 
+    type Context = Arc<Environment>;
+
     /// Regenerates or removes an index file for a single crate
     #[instrument(skip_all, fields(krate.name = ? self.krate))]
-    fn run(&self, state: PerformState<'_>, env: &Environment) -> Result<(), PerformError> {
+    fn run(&self, state: PerformState<'_>, env: &Self::Context) -> Result<(), PerformError> {
         info!("Syncing to git index");
 
         let new = get_index_data(&self.krate, state.conn).context("Failed to get index data")?;
@@ -82,9 +85,11 @@ impl BackgroundJob for SyncToSparseIndexJob {
     const JOB_NAME: &'static str = "sync_to_sparse_index";
     const PRIORITY: i16 = 100;
 
+    type Context = Arc<Environment>;
+
     /// Regenerates or removes an index file for a single crate
     #[instrument(skip_all, fields(krate.name = ?self.krate))]
-    fn run(&self, state: PerformState<'_>, env: &Environment) -> Result<(), PerformError> {
+    fn run(&self, state: PerformState<'_>, env: &Self::Context) -> Result<(), PerformError> {
         info!("Syncing to sparse index");
 
         let content =
@@ -154,9 +159,11 @@ pub struct SquashIndexJob;
 impl BackgroundJob for SquashIndexJob {
     const JOB_NAME: &'static str = "squash_index";
 
+    type Context = Arc<Environment>;
+
     /// Collapse the index into a single commit, archiving the current history in a snapshot branch.
     #[instrument(skip_all)]
-    fn run(&self, _state: PerformState<'_>, env: &Environment) -> Result<(), PerformError> {
+    fn run(&self, _state: PerformState<'_>, env: &Self::Context) -> Result<(), PerformError> {
         info!("Squashing the index into a single commit");
 
         let repo = env.lock_index()?;
@@ -206,7 +213,9 @@ impl NormalizeIndexJob {
 impl BackgroundJob for NormalizeIndexJob {
     const JOB_NAME: &'static str = "normalize_index";
 
-    fn run(&self, _state: PerformState<'_>, env: &Environment) -> Result<(), PerformError> {
+    type Context = Arc<Environment>;
+
+    fn run(&self, _state: PerformState<'_>, env: &Self::Context) -> Result<(), PerformError> {
         info!("Normalizing the index");
 
         let repo = env.lock_index()?;

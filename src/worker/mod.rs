@@ -17,13 +17,15 @@ pub(crate) use git::{NormalizeIndexJob, SquashIndexJob, SyncToGitIndexJob, SyncT
 pub(crate) use readmes::RenderAndUploadReadmeJob;
 pub(crate) use update_downloads::UpdateDownloadsJob;
 
+use crate::background_jobs::Environment;
 use crate::swirl::Runner;
+use std::sync::Arc;
 
 pub trait RunnerExt {
     fn register_crates_io_job_types(self) -> Self;
 }
 
-impl RunnerExt for Runner {
+impl RunnerExt for Runner<Arc<Environment>> {
     fn register_crates_io_job_types(self) -> Self {
         self.register_job_type::<DailyDbMaintenanceJob>()
             .register_job_type::<DumpDbJob>()
