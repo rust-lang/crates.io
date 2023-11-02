@@ -32,7 +32,7 @@ use std::sync::Arc;
 use std::thread::sleep;
 use std::time::{Duration, Instant};
 
-fn main() {
+fn main() -> anyhow::Result<()> {
     let _sentry = crates_io::sentry::init();
 
     // Initialize logging
