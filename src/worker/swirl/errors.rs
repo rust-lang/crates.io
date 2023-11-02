@@ -1,7 +1,6 @@
+use crate::db::PoolError;
 use diesel::result::Error as DieselError;
 use std::error::Error;
-
-use crate::db::PoolError;
 
 /// An error occurred queueing the job
 #[derive(Debug, thiserror::Error)]
@@ -17,7 +16,7 @@ pub enum EnqueueError {
 }
 
 /// An error occurred performing the job
-pub(crate) type PerformError = Box<dyn Error>;
+pub type PerformError = Box<dyn Error>;
 
 /// An error occurred while attempting to fetch jobs from the queue
 #[derive(Debug, thiserror::Error)]
@@ -59,8 +58,6 @@ pub enum FailedJobsError {
     __Unknown(#[from] Box<dyn Error + Send + Sync>),
 }
 
-pub(super) use FailedJobsError::JobsFailed;
-
 impl From<DieselError> for FailedJobsError {
     fn from(e: DieselError) -> Self {
         FailedJobsError::__Unknown(e.into())
@@ -70,7 +67,7 @@ impl From<DieselError> for FailedJobsError {
 impl PartialEq for FailedJobsError {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (JobsFailed(x), JobsFailed(y)) => x == y,
+            (FailedJobsError::JobsFailed(x), FailedJobsError::JobsFailed(y)) => x == y,
             _ => false,
         }
     }

@@ -36,34 +36,33 @@ static ALLOC: Jemalloc = Jemalloc;
 
 pub mod admin;
 mod app;
-pub mod background_jobs;
+pub mod auth;
 pub mod boot;
+pub mod cloudfront;
 pub mod config;
+pub mod controllers;
 pub mod db;
 mod downloads_counter;
 pub mod email;
+pub mod fastly;
 pub mod github;
 pub mod headers;
+mod licenses;
 pub mod metrics;
 pub mod middleware;
-pub mod rate_limiter;
-pub mod schema;
-pub mod sql;
-pub mod ssh;
-pub mod swirl;
-mod test_util;
-pub mod util;
-pub mod worker;
-
-pub mod auth;
-pub mod controllers;
-mod licenses;
 pub mod models;
+pub mod rate_limiter;
 mod real_ip;
 mod router;
+pub mod schema;
 pub mod sentry;
+pub mod sql;
+pub mod ssh;
 pub mod storage;
+mod test_util;
+pub mod util;
 pub mod views;
+pub mod worker;
 
 /// Used for setting different values depending on whether the app is being run in production,
 /// in development, or for testing.

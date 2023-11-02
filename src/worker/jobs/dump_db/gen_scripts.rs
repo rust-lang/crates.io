@@ -1,7 +1,9 @@
 use anyhow::Context;
 use std::{fs::File, path::Path};
 
-use crate::worker::dump_db::configuration::{ColumnVisibility, TableConfig, VisibilityConfig};
+use crate::worker::jobs::dump_db::configuration::{
+    ColumnVisibility, TableConfig, VisibilityConfig,
+};
 
 pub fn gen_scripts(export_script: &Path, import_script: &Path) -> anyhow::Result<()> {
     let config = VisibilityConfig::get();

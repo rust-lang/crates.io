@@ -1,23 +1,22 @@
 use super::{MockAnonymousUser, MockCookieUser, MockTokenUser};
-use crate::util::{chaosproxy::ChaosProxy, test_database::TestDatabase};
-use crates_io::config::{self, BalanceCapacityConfig, Base, DatabasePools, DbPoolConfig};
-use crates_io::storage::StorageConfig;
-use crates_io::{background_jobs::Environment, env, App, Emails, Env};
-use crates_io_index::testing::UpstreamIndex;
-use crates_io_index::{Credentials, Repository as WorkerRepository, RepositoryConfig};
-use std::{rc::Rc, sync::Arc, time::Duration};
-
 use crate::util::github::{MockGitHubClient, MOCK_GITHUB_DATA};
+use crate::util::{chaosproxy::ChaosProxy, test_database::TestDatabase};
 use anyhow::Context;
+use crates_io::config::{self, BalanceCapacityConfig, Base, DatabasePools, DbPoolConfig};
 use crates_io::models::token::{CrateScope, EndpointScope};
 use crates_io::rate_limiter::{LimitedAction, RateLimiterConfig};
-use crates_io::swirl::Runner;
-use crates_io::worker::RunnerExt;
+use crates_io::storage::StorageConfig;
+use crates_io::worker::swirl::Runner;
+use crates_io::worker::{Environment, RunnerExt};
+use crates_io::{env, App, Emails, Env};
+use crates_io_index::testing::UpstreamIndex;
+use crates_io_index::{Credentials, Repository as WorkerRepository, RepositoryConfig};
 use diesel::PgConnection;
 use futures_util::TryStreamExt;
 use oauth2::{ClientId, ClientSecret};
 use reqwest::{blocking::Client, Proxy};
 use std::collections::HashSet;
+use std::{rc::Rc, sync::Arc, time::Duration};
 
 struct TestAppInner {
     app: Arc<App>,

@@ -15,11 +15,14 @@
 #[macro_use]
 extern crate tracing;
 
+use crates_io::cloudfront::CloudFront;
 use crates_io::config;
 use crates_io::db::DieselPool;
+use crates_io::fastly::Fastly;
 use crates_io::storage::Storage;
-use crates_io::worker::cloudfront::CloudFront;
-use crates_io::{background_jobs::*, db, env_optional, ssh};
+use crates_io::worker::swirl::Runner;
+use crates_io::worker::{Environment, RunnerExt};
+use crates_io::{db, env_optional, ssh};
 use crates_io_index::{Repository, RepositoryConfig};
 use diesel::r2d2;
 use diesel::r2d2::ConnectionManager;
@@ -28,10 +31,6 @@ use secrecy::ExposeSecret;
 use std::sync::Arc;
 use std::thread::sleep;
 use std::time::{Duration, Instant};
-
-use crates_io::swirl::Runner;
-use crates_io::worker::fastly::Fastly;
-use crates_io::worker::RunnerExt;
 
 fn main() {
     let _sentry = crates_io::sentry::init();

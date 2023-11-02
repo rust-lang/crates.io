@@ -1,17 +1,14 @@
-use crate::{
-    models::VersionDownload,
-    schema::{crates, metadata, version_downloads, versions},
-};
+use crate::models::VersionDownload;
+use crate::schema::{crates, metadata, version_downloads, versions};
+use crate::worker::swirl::{BackgroundJob, PerformError, PerformState};
+use crate::worker::Environment;
+use diesel::prelude::*;
 use std::sync::Arc;
 
-use crate::background_jobs::{BackgroundJob, Environment, PerformState};
-use crate::swirl::PerformError;
-use diesel::prelude::*;
-
 #[derive(Serialize, Deserialize)]
-pub struct UpdateDownloadsJob;
+pub struct UpdateDownloads;
 
-impl BackgroundJob for UpdateDownloadsJob {
+impl BackgroundJob for UpdateDownloads {
     const JOB_NAME: &'static str = "update_downloads";
 
     type Context = Arc<Environment>;

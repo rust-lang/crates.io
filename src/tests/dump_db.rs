@@ -1,5 +1,5 @@
 use crate::util::TestDatabase;
-use crates_io::worker::dump_db;
+use crates_io::worker::jobs::dump_db;
 
 #[test]
 fn dump_db_and_reimport_dump() {

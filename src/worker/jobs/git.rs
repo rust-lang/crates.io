@@ -1,6 +1,6 @@
-use crate::background_jobs::{BackgroundJob, Environment, PerformState};
 use crate::models;
-use crate::swirl::PerformError;
+use crate::worker::swirl::{BackgroundJob, PerformError, PerformState};
+use crate::worker::Environment;
 use anyhow::Context;
 use chrono::Utc;
 use crates_io_index::{Crate, Repository};
@@ -12,18 +12,18 @@ use std::process::Command;
 use std::sync::Arc;
 
 #[derive(Serialize, Deserialize)]
-pub struct SyncToGitIndexJob {
+pub struct SyncToGitIndex {
     krate: String,
 }
 
-impl SyncToGitIndexJob {
+impl SyncToGitIndex {
     pub fn new(krate: impl Into<String>) -> Self {
         let krate = krate.into();
         Self { krate }
     }
 }
 
-impl BackgroundJob for SyncToGitIndexJob {
+impl BackgroundJob for SyncToGitIndex {
     const JOB_NAME: &'static str = "sync_to_git_index";
     const PRIORITY: i16 = 100;
 
@@ -70,18 +70,18 @@ impl BackgroundJob for SyncToGitIndexJob {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct SyncToSparseIndexJob {
+pub struct SyncToSparseIndex {
     krate: String,
 }
 
-impl SyncToSparseIndexJob {
+impl SyncToSparseIndex {
     pub fn new(krate: impl Into<String>) -> Self {
         let krate = krate.into();
         Self { krate }
     }
 }
 
-impl BackgroundJob for SyncToSparseIndexJob {
+impl BackgroundJob for SyncToSparseIndex {
     const JOB_NAME: &'static str = "sync_to_sparse_index";
     const PRIORITY: i16 = 100;
 
@@ -154,9 +154,9 @@ pub fn get_index_data(name: &str, conn: &mut PgConnection) -> anyhow::Result<Opt
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct SquashIndexJob;
+pub struct SquashIndex;
 
-impl BackgroundJob for SquashIndexJob {
+impl BackgroundJob for SquashIndex {
     const JOB_NAME: &'static str = "squash_index";
 
     type Context = Arc<Environment>;
@@ -200,17 +200,17 @@ impl BackgroundJob for SquashIndexJob {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct NormalizeIndexJob {
+pub struct NormalizeIndex {
     dry_run: bool,
 }
 
-impl NormalizeIndexJob {
+impl NormalizeIndex {
     pub fn new(dry_run: bool) -> Self {
         Self { dry_run }
     }
 }
 
-impl BackgroundJob for NormalizeIndexJob {
+impl BackgroundJob for NormalizeIndex {
     const JOB_NAME: &'static str = "normalize_index";
 
     type Context = Arc<Environment>;
