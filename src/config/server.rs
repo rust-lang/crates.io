@@ -114,7 +114,7 @@ impl Server {
 
         let port = env_optional("PORT").unwrap_or(8888);
 
-        let allowed_origins = AllowedOrigins::from_default_env();
+        let allowed_origins = AllowedOrigins::from_default_env()?;
         let page_offset_ua_blocklist = match env_optional::<String>("WEB_PAGE_OFFSET_UA_BLOCKLIST")
         {
             None => vec![],
@@ -290,13 +290,13 @@ fn parse_traffic_patterns(patterns: &str) -> impl Iterator<Item = (&str, &str)> 
 pub struct AllowedOrigins(Vec<String>);
 
 impl AllowedOrigins {
-    pub fn from_default_env() -> Self {
+    pub fn from_default_env() -> anyhow::Result<Self> {
         let allowed_origins = env("WEB_ALLOWED_ORIGINS")
             .split(',')
             .map(ToString::to_string)
             .collect();
 
-        Self(allowed_origins)
+        Ok(Self(allowed_origins))
     }
 
     pub fn contains(&self, value: &HeaderValue) -> bool {
