@@ -294,15 +294,15 @@ fn try_to_extract_panic_info(info: &(dyn Any + Send + 'static)) -> PerformError 
 #[cfg(test)]
 mod tests {
     use diesel::prelude::*;
-    use once_cell::sync::Lazy;
 
     use super::*;
     use crate::schema::background_jobs;
+    use crates_io_test_db::TestDatabase;
     use diesel::r2d2;
     use diesel::r2d2::ConnectionManager;
     use std::panic::AssertUnwindSafe;
     use std::sync::mpsc::{sync_channel, SyncSender};
-    use std::sync::{Arc, Barrier, Mutex, MutexGuard};
+    use std::sync::{Arc, Barrier};
 
     fn dummy_sender<T>() -> SyncSender<T> {
         sync_channel(1).0
@@ -310,9 +310,9 @@ mod tests {
 
     #[test]
     fn jobs_are_locked_when_fetched() {
-        let _guard = TestGuard::lock();
+        let test_database = TestDatabase::new();
 
-        let runner = runner();
+        let runner = runner(test_database.url());
         let first_job_id = create_dummy_job(&runner).id;
         let second_job_id = create_dummy_job(&runner).id;
         let fetch_barrier = Arc::new(AssertUnwindSafe(Barrier::new(2)));
@@ -339,9 +339,9 @@ mod tests {
 
     #[test]
     fn jobs_are_deleted_when_successfully_run() {
-        let _guard = TestGuard::lock();
+        let test_database = TestDatabase::new();
 
-        let runner = runner();
+        let runner = runner(test_database.url());
         create_dummy_job(&runner);
 
         runner.get_single_job(dummy_sender(), |_, _| Ok(()));
@@ -355,9 +355,9 @@ mod tests {
 
     #[test]
     fn failed_jobs_do_not_release_lock_before_updating_retry_time() {
-        let _guard = TestGuard::lock();
+        let test_database = TestDatabase::new();
 
-        let runner = runner();
+        let runner = runner(test_database.url());
         create_dummy_job(&runner);
         let barrier = Arc::new(AssertUnwindSafe(Barrier::new(2)));
         let barrier2 = barrier.clone();
@@ -399,8 +399,9 @@ mod tests {
 
     #[test]
     fn panicking_in_jobs_updates_retry_counter() {
-        let _guard = TestGuard::lock();
-        let runner = runner();
+        let test_database = TestDatabase::new();
+
+        let runner = runner(test_database.url());
         let job_id = create_dummy_job(&runner).id;
 
         runner.get_single_job(dummy_sender(), |_, _| panic!());
@@ -415,36 +416,10 @@ mod tests {
         assert_eq!(tries, 1);
     }
 
-    // Since these tests deal with behavior concerning multiple connections
-    // running concurrently, they have to run outside of a transaction.
-    // Therefore we can't run more than one at a time.
-    //
-    // Rather than forcing the whole suite to be run with `--test-threads 1`,
-    // we just lock these tests instead.
-    static TEST_MUTEX: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
-
-    struct TestGuard<'a>(MutexGuard<'a, ()>);
-
-    impl<'a> TestGuard<'a> {
-        fn lock() -> Self {
-            TestGuard(TEST_MUTEX.lock().unwrap())
-        }
-    }
-
-    impl<'a> Drop for TestGuard<'a> {
-        fn drop(&mut self) {
-            diesel::sql_query("TRUNCATE TABLE background_jobs")
-                .execute(&mut *runner().connection().unwrap())
-                .unwrap();
-        }
-    }
-
-    fn runner() -> Runner<()> {
-        let database_url =
-            dotenvy::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set to run tests");
-
+    fn runner(database_url: &str) -> Runner<()> {
         let connection_pool = r2d2::Pool::builder()
             .max_size(4)
+            .min_idle(Some(0))
             .build_unchecked(ConnectionManager::new(database_url));
 
         let connection_pool = DieselPool::new_background_worker(connection_pool);
