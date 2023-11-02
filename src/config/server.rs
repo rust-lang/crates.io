@@ -131,7 +131,7 @@ impl Server {
                     .collect::<Result<_, _>>()?,
             };
 
-        let base = Base::from_environment();
+        let base = Base::from_environment()?;
         let excluded_crate_names = match env_optional::<String>("EXCLUDED_CRATE_NAMES") {
             None => vec![],
             Some(s) if s.is_empty() => vec![],

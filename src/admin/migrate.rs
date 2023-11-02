@@ -16,7 +16,7 @@ pub struct Opts;
 
 pub fn run(_opts: Opts) -> Result<(), Error> {
     let config = crate::config::DatabasePools::full_from_environment(
-        &crate::config::Base::from_environment(),
+        &crate::config::Base::from_environment()?,
     );
 
     // TODO: Refactor logic so that we can also check things from App::new() here.

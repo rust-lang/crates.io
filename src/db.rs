@@ -175,7 +175,7 @@ pub fn oneoff_connection_with_config(
 }
 
 pub fn oneoff_connection() -> anyhow::Result<PgConnection> {
-    let config = config::DatabasePools::full_from_environment(&config::Base::from_environment());
+    let config = config::DatabasePools::full_from_environment(&config::Base::from_environment()?);
     oneoff_connection_with_config(&config).map_err(Into::into)
 }
 
