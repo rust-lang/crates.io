@@ -21,7 +21,7 @@ pub async fn block_by_header<B>(
     req: http::Request<B>,
     next: Next<B>,
 ) -> axum::response::Response {
-    let domain_name = state.config.domain_name.clone();
+    let domain_name = &state.config.domain_name;
     let blocked_traffic = &state.config.blocked_traffic;
 
     for (header_name, blocked_values) in blocked_traffic {
