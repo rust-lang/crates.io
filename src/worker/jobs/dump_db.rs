@@ -51,7 +51,17 @@ impl BackgroundJob for DumpDb {
         info!("Database dump tarball uploaded");
 
         info!("Invalidating CDN caches");
-        invalidate_caches(env, &self.target_name);
+        if let Some(cloudfront) = env.cloudfront() {
+            if let Err(error) = cloudfront.invalidate(&self.target_name, &rt) {
+                warn!("failed to invalidate CloudFront cache: {}", error);
+            }
+        }
+
+        if let Some(fastly) = env.fastly() {
+            if let Err(error) = fastly.invalidate(env.http_client(), &self.target_name) {
+                warn!("failed to invalidate Fastly cache: {}", error);
+            }
+        }
 
         Ok(())
     }
@@ -265,20 +275,6 @@ impl DumpTarball {
 impl Drop for DumpTarball {
     fn drop(&mut self) {
         std::fs::remove_file(&self.tarball_path).unwrap();
-    }
-}
-
-fn invalidate_caches(env: &Environment, target_name: &str) {
-    if let Some(cloudfront) = env.cloudfront() {
-        if let Err(error) = cloudfront.invalidate(env.http_client(), target_name) {
-            warn!("failed to invalidate CloudFront cache: {}", error);
-        }
-    }
-
-    if let Some(fastly) = env.fastly() {
-        if let Err(error) = fastly.invalidate(env.http_client(), target_name) {
-            warn!("failed to invalidate Fastly cache: {}", error);
-        }
     }
 }
 
