@@ -1,4 +1,5 @@
 use anyhow::{anyhow, Result};
+use crates_io_env_vars::required_var;
 use reqwest::{blocking::Client, header, StatusCode as Status};
 
 #[derive(serde::Serialize, Debug)]
@@ -25,8 +26,8 @@ impl Event {
     /// If the variant is `Trigger`, this will page whoever is on call
     /// (potentially waking them up at 3 AM).
     pub fn send(self) -> Result<()> {
-        let api_token = dotenvy::var("PAGERDUTY_API_TOKEN")?;
-        let service_key = dotenvy::var("PAGERDUTY_INTEGRATION_KEY")?;
+        let api_token = required_var("PAGERDUTY_API_TOKEN")?;
+        let service_key = required_var("PAGERDUTY_INTEGRATION_KEY")?;
 
         let response = Client::new()
             .post("https://events.pagerduty.com/generic/2010-04-15/create_event.json")

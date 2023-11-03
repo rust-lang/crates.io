@@ -740,6 +740,7 @@ dependencies = [
  "claims",
  "clap",
  "cookie",
+ "crates_io_env_vars",
  "crates_io_index",
  "crates_io_markdown",
  "crates_io_tarball",
@@ -800,12 +801,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "crates_io_env_vars"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "dotenvy",
+]
+
+[[package]]
 name = "crates_io_index"
 version = "0.0.0"
 dependencies = [
  "anyhow",
  "base64 0.21.5",
  "claims",
+ "crates_io_env_vars",
  "dotenvy",
  "git2",
  "secrecy",
@@ -873,9 +883,9 @@ dependencies = [
 name = "crates_io_test_db"
 version = "0.0.0"
 dependencies = [
+ "crates_io_env_vars",
  "diesel",
  "diesel_migrations",
- "dotenvy",
  "once_cell",
  "rand",
  "tracing",

@@ -1,10 +1,10 @@
 #![cfg(test)]
 
+use crates_io_env_vars::required_var;
 use diesel::prelude::*;
 
 pub fn pg_connection_no_transaction() -> PgConnection {
-    let database_url =
-        dotenvy::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set to run tests");
+    let database_url = required_var("TEST_DATABASE_URL").unwrap();
     PgConnection::establish(&database_url).unwrap()
 }
 

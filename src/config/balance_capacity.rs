@@ -1,4 +1,4 @@
-use crate::env_optional;
+use crates_io_env_vars::var_parsed;
 use std::env;
 
 pub struct BalanceCapacityConfig {
@@ -13,11 +13,11 @@ impl BalanceCapacityConfig {
     pub fn from_environment() -> anyhow::Result<Self> {
         Ok(Self {
             report_only: env::var("WEB_CAPACITY_REPORT_ONLY").is_ok(),
-            log_total_at_count: env_optional("WEB_CAPACITY_LOG_TOTAL_AT_COUNT").unwrap_or(50),
+            log_total_at_count: var_parsed("WEB_CAPACITY_LOG_TOTAL_AT_COUNT")?.unwrap_or(50),
             // The following are a percentage of `db_capacity`
-            log_at_percentage: env_optional("WEB_CAPACITY_LOG_PCT").unwrap_or(50),
-            throttle_at_percentage: env_optional("WEB_CAPACITY_THROTTLE_PCT").unwrap_or(70),
-            dl_only_at_percentage: env_optional("WEB_CAPACITY_DL_ONLY_PCT").unwrap_or(80),
+            log_at_percentage: var_parsed("WEB_CAPACITY_LOG_PCT")?.unwrap_or(50),
+            throttle_at_percentage: var_parsed("WEB_CAPACITY_THROTTLE_PCT")?.unwrap_or(70),
+            dl_only_at_percentage: var_parsed("WEB_CAPACITY_DL_ONLY_PCT")?.unwrap_or(80),
         })
     }
 }

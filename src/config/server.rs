@@ -3,12 +3,13 @@ use ipnetwork::IpNetwork;
 use oauth2::{ClientId, ClientSecret};
 
 use crate::rate_limiter::{LimitedAction, RateLimiterConfig};
-use crate::{env, env_optional, Env};
+use crate::Env;
 
 use super::base::Base;
 use super::database_pools::DatabasePools;
 use crate::config::balance_capacity::BalanceCapacityConfig;
 use crate::storage::StorageConfig;
+use crates_io_env_vars::{required_var, var, var_parsed};
 use http::HeaderValue;
 use std::collections::{HashMap, HashSet};
 use std::net::IpAddr;
@@ -103,8 +104,8 @@ impl Server {
     ///
     /// This function panics if the Server configuration is invalid.
     pub fn from_environment() -> anyhow::Result<Self> {
-        let docker = dotenvy::var("DEV_DOCKER").is_ok();
-        let heroku = dotenvy::var("HEROKU").is_ok();
+        let docker = var("DEV_DOCKER")?.is_some();
+        let heroku = var("HEROKU")?.is_some();
 
         let ip = if heroku || docker {
             [0, 0, 0, 0].into()
@@ -112,9 +113,9 @@ impl Server {
             [127, 0, 0, 1].into()
         };
 
-        let port = env_optional("PORT").unwrap_or(8888);
+        let port = var_parsed("PORT")?.unwrap_or(8888);
 
-        let blocked_ips = match env_optional::<String>("BLOCKED_IPS") {
+        let blocked_ips = match var("BLOCKED_IPS")? {
             None => HashSet::new(),
             Some(s) if s.is_empty() => HashSet::new(),
             Some(s) => s
@@ -124,32 +125,28 @@ impl Server {
         };
 
         let allowed_origins = AllowedOrigins::from_default_env()?;
-        let page_offset_ua_blocklist = match env_optional::<String>("WEB_PAGE_OFFSET_UA_BLOCKLIST")
-        {
+        let page_offset_ua_blocklist = match var("WEB_PAGE_OFFSET_UA_BLOCKLIST")? {
             None => vec![],
             Some(s) if s.is_empty() => vec![],
             Some(s) => s.split(',').map(String::from).collect(),
         };
-        let page_offset_cidr_blocklist =
-            match env_optional::<String>("WEB_PAGE_OFFSET_CIDR_BLOCKLIST") {
-                None => vec![],
-                Some(s) if s.is_empty() => vec![],
-                Some(s) => s
-                    .split(',')
-                    .map(parse_cidr_block)
-                    .collect::<Result<_, _>>()?,
-            };
+        let page_offset_cidr_blocklist = match var("WEB_PAGE_OFFSET_CIDR_BLOCKLIST")? {
+            None => vec![],
+            Some(s) if s.is_empty() => vec![],
+            Some(s) => s
+                .split(',')
+                .map(parse_cidr_block)
+                .collect::<Result<_, _>>()?,
+        };
 
         let base = Base::from_environment()?;
-        let excluded_crate_names = match env_optional::<String>("EXCLUDED_CRATE_NAMES") {
+        let excluded_crate_names = match var("EXCLUDED_CRATE_NAMES")? {
             None => vec![],
             Some(s) if s.is_empty() => vec![],
             Some(s) => s.split(',').map(String::from).collect(),
         };
 
-        let max_blocking_threads = dotenvy::var("SERVER_THREADS")
-            .map(|s| s.parse().expect("SERVER_THREADS was not a valid number"))
-            .ok();
+        let max_blocking_threads = var_parsed("SERVER_THREADS")?;
 
         // Dynamically load the configuration for all the rate limiting actions. See
         // `src/rate_limiter.rs` for their definition.
@@ -160,10 +157,10 @@ impl Server {
                 *action,
                 RateLimiterConfig {
                     rate: Duration::from_secs(
-                        env_optional(&format!("RATE_LIMITER_{env_var_key}_RATE_SECONDS"))
+                        var_parsed(&format!("RATE_LIMITER_{env_var_key}_RATE_SECONDS"))?
                             .unwrap_or_else(|| action.default_rate_seconds()),
                     ),
-                    burst: env_optional(&format!("RATE_LIMITER_{env_var_key}_BURST"))
+                    burst: var_parsed(&format!("RATE_LIMITER_{env_var_key}_BURST"))?
                         .unwrap_or_else(|| action.default_burst()),
                 },
             );
@@ -191,45 +188,40 @@ impl Server {
             ip,
             port,
             max_blocking_threads,
-            session_key: cookie::Key::derive_from(env("SESSION_KEY").as_bytes()),
-            gh_client_id: ClientId::new(env("GH_CLIENT_ID")),
-            gh_client_secret: ClientSecret::new(env("GH_CLIENT_SECRET")),
+            session_key: cookie::Key::derive_from(required_var("SESSION_KEY")?.as_bytes()),
+            gh_client_id: ClientId::new(required_var("GH_CLIENT_ID")?),
+            gh_client_secret: ClientSecret::new(required_var("GH_CLIENT_SECRET")?),
             max_upload_size: 10 * 1024 * 1024, // 10 MB default file upload size limit
             max_unpack_size: 512 * 1024 * 1024, // 512 MB max when decompressed
             max_features: DEFAULT_MAX_FEATURES,
             rate_limiter,
-            new_version_rate_limit: env_optional("MAX_NEW_VERSIONS_DAILY"),
+            new_version_rate_limit: var_parsed("MAX_NEW_VERSIONS_DAILY")?,
             blocked_traffic: blocked_traffic(),
             blocked_ips,
-            max_allowed_page_offset: env_optional("WEB_MAX_ALLOWED_PAGE_OFFSET").unwrap_or(200),
+            max_allowed_page_offset: var_parsed("WEB_MAX_ALLOWED_PAGE_OFFSET")?.unwrap_or(200),
             page_offset_ua_blocklist,
             page_offset_cidr_blocklist,
             excluded_crate_names,
             domain_name: domain_name(),
             allowed_origins,
-            downloads_persist_interval: dotenvy::var("DOWNLOADS_PERSIST_INTERVAL_MS")
-                .map(|interval| {
-                    interval
-                        .parse()
-                        .map(Duration::from_millis)
-                        .expect("invalid DOWNLOADS_PERSIST_INTERVAL_MS")
-                })
+            downloads_persist_interval: var_parsed("DOWNLOADS_PERSIST_INTERVAL_MS")?
+                .map(Duration::from_millis)
                 .unwrap_or(Duration::from_secs(60)),
             ownership_invitations_expiration_days: 30,
-            metrics_authorization_token: dotenvy::var("METRICS_AUTHORIZATION_TOKEN").ok(),
+            metrics_authorization_token: var("METRICS_AUTHORIZATION_TOKEN")?,
             use_test_database_pool: false,
-            instance_metrics_log_every_seconds: env_optional("INSTANCE_METRICS_LOG_EVERY_SECONDS"),
-            force_unconditional_redirects: dotenvy::var("FORCE_UNCONDITIONAL_REDIRECTS").is_ok(),
-            blocked_routes: env_optional("BLOCKED_ROUTES")
-                .map(|routes: String| routes.split(',').map(|s| s.into()).collect())
-                .unwrap_or_else(HashSet::new),
-            version_id_cache_size: env_optional("VERSION_ID_CACHE_SIZE")
+            instance_metrics_log_every_seconds: var_parsed("INSTANCE_METRICS_LOG_EVERY_SECONDS")?,
+            force_unconditional_redirects: var("FORCE_UNCONDITIONAL_REDIRECTS")?.is_some(),
+            blocked_routes: var("BLOCKED_ROUTES")?
+                .map(|routes| routes.split(',').map(|s| s.into()).collect())
+                .unwrap_or_default(),
+            version_id_cache_size: var_parsed("VERSION_ID_CACHE_SIZE")?
                 .unwrap_or(DEFAULT_VERSION_ID_CACHE_SIZE),
             version_id_cache_ttl: Duration::from_secs(
-                env_optional("VERSION_ID_CACHE_TTL").unwrap_or(DEFAULT_VERSION_ID_CACHE_TTL),
+                var_parsed("VERSION_ID_CACHE_TTL")?.unwrap_or(DEFAULT_VERSION_ID_CACHE_TTL),
             ),
-            cdn_user_agent: dotenvy::var("WEB_CDN_USER_AGENT")
-                .unwrap_or_else(|_| "Amazon CloudFront".into()),
+            cdn_user_agent: var("WEB_CDN_USER_AGENT")?
+                .unwrap_or_else(|| "Amazon CloudFront".into()),
             balance_capacity: BalanceCapacityConfig::from_environment()?,
             serve_dist: true,
             serve_html: true,
@@ -301,7 +293,7 @@ pub struct AllowedOrigins(Vec<String>);
 
 impl AllowedOrigins {
     pub fn from_default_env() -> anyhow::Result<Self> {
-        let allowed_origins = env("WEB_ALLOWED_ORIGINS")
+        let allowed_origins = required_var("WEB_ALLOWED_ORIGINS")?
             .split(',')
             .map(ToString::to_string)
             .collect();

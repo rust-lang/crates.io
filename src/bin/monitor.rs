@@ -8,6 +8,7 @@
 
 use anyhow::Result;
 use crates_io::{admin::on_call, db, schema::*};
+use crates_io_env_vars::{var, var_parsed};
 use diesel::prelude::*;
 
 fn main() -> Result<()> {
@@ -36,9 +37,7 @@ fn check_failing_background_jobs(conn: &mut PgConnection) -> Result<()> {
     println!("Checking for failed background jobs");
 
     // Max job execution time in minutes
-    let max_job_time = dotenvy::var("MAX_JOB_TIME")
-        .map(|s| s.parse::<i32>().unwrap())
-        .unwrap_or(15);
+    let max_job_time = var_parsed("MAX_JOB_TIME")?.unwrap_or(15);
 
     let stalled_jobs: Vec<i32> = background_jobs::table
         .select(1.into_sql::<Integer>())
@@ -77,9 +76,7 @@ fn check_stalled_update_downloads(conn: &mut PgConnection) -> Result<()> {
     println!("Checking for stalled background jobs");
 
     // Max job execution time in minutes
-    let max_job_time = dotenvy::var("MONITOR_MAX_UPDATE_DOWNLOADS_TIME")
-        .map(|s| s.parse::<u32>().unwrap() as i64)
-        .unwrap_or(120);
+    let max_job_time = var_parsed("MONITOR_MAX_UPDATE_DOWNLOADS_TIME")?.unwrap_or(120);
 
     let start_time: Result<NaiveDateTime, _> = background_jobs::table
         .filter(background_jobs::job_type.eq("update_downloads"))
@@ -112,7 +109,7 @@ fn check_spam_attack(conn: &mut PgConnection) -> Result<()> {
 
     println!("Checking for crates indicating someone is spamming us");
 
-    let bad_crate_names = dotenvy::var("SPAM_CRATE_NAMES");
+    let bad_crate_names = var("SPAM_CRATE_NAMES")?;
     let bad_crate_names: Vec<_> = bad_crate_names
         .as_ref()
         .map(|s| s.split(',').collect())

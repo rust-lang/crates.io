@@ -24,7 +24,6 @@ extern crate serde_json;
 extern crate tracing;
 
 pub use crate::{app::App, email::Emails};
-use std::str::FromStr;
 use std::sync::Arc;
 
 use crate::app::AppState;
@@ -85,35 +84,4 @@ pub fn build_handler(app: Arc<App>) -> axum::Router {
 
     let axum_router = build_axum_router(state.clone());
     middleware::apply_axum_middleware(state, axum_router)
-}
-
-/// Convenience function requiring that an environment variable is set.
-///
-/// Ensures that we've initialized the dotenvy crate in order to read environment variables
-/// from a *.env* file if present. Don't use this for optionally set environment variables.
-///
-/// # Panics
-///
-/// Panics if the environment variable with the name passed in as an argument is not defined
-/// in the current environment.
-#[track_caller]
-pub fn env(s: &str) -> String {
-    dotenvy::var(s).unwrap_or_else(|_| panic!("must have `{s}` defined"))
-}
-
-/// Parse an optional environment variable
-///
-/// Ensures that we've initialized the dotenvy crate in order to read environment variables
-/// from a *.env* file if present. A variable that is set to invalid unicode will be handled
-/// as if it was unset.
-///
-/// # Panics
-///
-/// Panics if the environment variable is set but cannot be parsed as the requested type.
-#[track_caller]
-pub fn env_optional<T: FromStr>(s: &str) -> Option<T> {
-    dotenvy::var(s).ok().map(|s| {
-        s.parse()
-            .unwrap_or_else(|_| panic!("`{s}` was defined but could not be parsed"))
-    })
 }
