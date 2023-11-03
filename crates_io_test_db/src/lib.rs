@@ -5,7 +5,7 @@ use diesel::sql_query;
 use diesel_migrations::{FileBasedMigrations, MigrationHarness};
 use once_cell::sync::Lazy;
 use rand::Rng;
-use tracing::instrument;
+use tracing::{debug, instrument};
 use url::Url;
 
 struct TemplateDatabase {
@@ -136,11 +136,13 @@ impl Drop for TestDatabase {
 
 #[instrument]
 fn connect(database_url: &str) -> ConnectionResult<PgConnection> {
+    debug!("Connecting to database…");
     PgConnection::establish(database_url)
 }
 
 #[instrument(skip(conn))]
 fn create_template_database(name: &str, conn: &mut PgConnection) -> QueryResult<()> {
+    debug!("Creating new template database…");
     sql_query(format!("CREATE DATABASE {name};")).execute(conn)?;
     Ok(())
 }
@@ -151,18 +153,21 @@ fn create_database_from_template(
     template_name: &str,
     conn: &mut PgConnection,
 ) -> QueryResult<()> {
+    debug!("Creating new test database from template…");
     sql_query(format!("CREATE DATABASE {name} TEMPLATE {template_name}")).execute(conn)?;
     Ok(())
 }
 
 #[instrument(skip(conn))]
 fn drop_database(name: &str, conn: &mut PgConnection) -> QueryResult<()> {
+    debug!("Dropping database…");
     sql_query(format!("DROP DATABASE {name}")).execute(conn)?;
     Ok(())
 }
 
 #[instrument(skip(conn))]
 fn run_migrations(conn: &mut PgConnection) -> diesel::migration::Result<()> {
+    debug!("Running pending database migrations…");
     let migrations = FileBasedMigrations::find_migrations_directory()?;
     conn.run_pending_migrations(migrations)?;
     Ok(())
