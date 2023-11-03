@@ -68,14 +68,6 @@ impl TemplateDatabase {
     }
 }
 
-impl Drop for TemplateDatabase {
-    #[instrument(skip(self))]
-    fn drop(&mut self) {
-        let mut conn = self.get_connection();
-        drop_database(&self.template_name, &mut conn).expect("failed to drop template database");
-    }
-}
-
 pub struct TestDatabase {
     name: String,
     url: Url,
