@@ -3,7 +3,7 @@ use http::HeaderValue;
 use reqwest::blocking::Client;
 use secrecy::{ExposeSecret, SecretString};
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct Fastly {
     api_token: SecretString,
     static_domain_name: String,
