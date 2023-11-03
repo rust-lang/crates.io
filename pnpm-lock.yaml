@@ -151,7 +151,7 @@ devDependencies:
     version: 2.1.0
   ember-cli-mirage:
     specifier: 3.0.2
-    version: 3.0.2(@ember/test-helpers@3.2.0)(ember-data@4.12.4)(ember-qunit@8.0.1)(ember-source@5.4.0)(miragejs@0.1.48)(webpack@5.89.0)
+    version: 3.0.2(@ember/test-helpers@3.2.0)(ember-data@4.12.4)(ember-qunit@8.0.2)(ember-source@5.4.0)(miragejs@0.1.48)(webpack@5.89.0)
   ember-cli-notifications:
     specifier: 8.0.0
     version: 8.0.0(@babel/core@7.23.2)
@@ -178,7 +178,7 @@ devDependencies:
     version: 0.1.1
   ember-exam:
     specifier: 8.0.0
-    version: 8.0.0(ember-qunit@8.0.1)(qunit@2.20.0)(webpack@5.89.0)
+    version: 8.0.0(ember-qunit@8.0.2)(qunit@2.20.0)(webpack@5.89.0)
   ember-fetch:
     specifier: 8.1.2
     version: 8.1.2
@@ -198,8 +198,8 @@ devDependencies:
     specifier: 8.1.0
     version: 8.1.0(ember-source@5.4.0)
   ember-qunit:
-    specifier: 8.0.1
-    version: 8.0.1(@ember/test-helpers@3.2.0)(ember-source@5.4.0)(qunit@2.20.0)
+    specifier: 8.0.2
+    version: 8.0.2(@ember/test-helpers@3.2.0)(ember-source@5.4.0)(qunit@2.20.0)
   ember-resolver:
     specifier: 11.0.1
     version: 11.0.1(ember-source@5.4.0)
@@ -8469,7 +8469,7 @@ packages:
     engines: {node: ^4.5 || 6.* || >= 7.*}
     dev: true
 
-  /ember-cli-mirage@3.0.2(@ember/test-helpers@3.2.0)(ember-data@4.12.4)(ember-qunit@8.0.1)(ember-source@5.4.0)(miragejs@0.1.48)(webpack@5.89.0):
+  /ember-cli-mirage@3.0.2(@ember/test-helpers@3.2.0)(ember-data@4.12.4)(ember-qunit@8.0.2)(ember-source@5.4.0)(miragejs@0.1.48)(webpack@5.89.0):
     resolution: {integrity: sha512-SthtL8i/tvo7F/XwkSa/XEE1h99p2o1wS2O3DzyEzPqySpSD8a8YKauvN/FgZQVwjcXJuprSrCiWne8+bb6rYA==}
     engines: {node: 16.* || >= 18}
     peerDependencies:
@@ -8500,7 +8500,7 @@ packages:
       ember-data: 4.12.4(@babel/core@7.23.2)(@ember/string@3.1.1)(@glimmer/tracking@1.1.2)(ember-source@5.4.0)(webpack@5.89.0)
       ember-get-config: 2.1.1
       ember-inflector: 4.0.2
-      ember-qunit: 8.0.1(@ember/test-helpers@3.2.0)(ember-source@5.4.0)(qunit@2.20.0)
+      ember-qunit: 8.0.2(@ember/test-helpers@3.2.0)(ember-source@5.4.0)(qunit@2.20.0)
       ember-source: 5.4.0(@babel/core@7.23.2)(@glimmer/component@1.1.2)(rsvp@4.8.5)(webpack@5.89.0)
       miragejs: 0.1.48
     transitivePeerDependencies:
@@ -8980,7 +8980,7 @@ packages:
       - supports-color
     dev: true
 
-  /ember-exam@8.0.0(ember-qunit@8.0.1)(qunit@2.20.0)(webpack@5.89.0):
+  /ember-exam@8.0.0(ember-qunit@8.0.2)(qunit@2.20.0)(webpack@5.89.0):
     resolution: {integrity: sha512-XKfFC0bpSDSJWFkmrcVxOtjwoVf8sPlMDizhNZF06O/R0UyH9lMOrUT/KWcIZ1vQd4Vqbg9DpakONmOyYQGXhw==}
     engines: {node: 12.* || 14.* || >= 16}
     peerDependencies:
@@ -9002,7 +9002,7 @@ packages:
       ember-auto-import: 2.6.3(webpack@5.89.0)
       ember-cli-babel: 7.26.11
       ember-cli-version-checker: 5.1.2
-      ember-qunit: 8.0.1(@ember/test-helpers@3.2.0)(ember-source@5.4.0)(qunit@2.20.0)
+      ember-qunit: 8.0.2(@ember/test-helpers@3.2.0)(ember-source@5.4.0)(qunit@2.20.0)
       execa: 4.1.0
       fs-extra: 10.1.0
       js-yaml: 4.1.0
@@ -9186,8 +9186,8 @@ packages:
       - supports-color
     dev: true
 
-  /ember-qunit@8.0.1(@ember/test-helpers@3.2.0)(ember-source@5.4.0)(qunit@2.20.0):
-    resolution: {integrity: sha512-13PtywHNPTQKkDW4o8QRkJvcdsZr8hRyvh6xh/YLAX8+HaRLd3nPL8mBF4O/Kur/DAj3QWLvjzktZ2uRNGSh3A==}
+  /ember-qunit@8.0.2(@ember/test-helpers@3.2.0)(ember-source@5.4.0)(qunit@2.20.0):
+    resolution: {integrity: sha512-Rf60jeUTWNsF3Imf/FLujW/B/DFmKVXKmXO1lirTXjpertKfwRhp/3MnN8a/U/WyodTIsERkInGT1IqTtphCdQ==}
     peerDependencies:
       '@ember/test-helpers': '>=3.0.3'
       ember-source: '>=4.0.0'
