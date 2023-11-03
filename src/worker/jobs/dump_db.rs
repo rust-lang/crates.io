@@ -52,7 +52,7 @@ impl BackgroundJob for DumpDb {
 
         info!("Invalidating CDN caches");
         if let Some(cloudfront) = env.cloudfront() {
-            if let Err(error) = cloudfront.invalidate(env.http_client(), &self.target_name) {
+            if let Err(error) = cloudfront.invalidate(&self.target_name, &rt) {
                 warn!("failed to invalidate CloudFront cache: {}", error);
             }
         }

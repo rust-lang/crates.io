@@ -1,45 +1,50 @@
-use anyhow::Context;
-use aws_sigv4::http_request::{self, SignableRequest, SigningSettings};
-use aws_sigv4::SigningParams;
-use reqwest::blocking::Client;
+use aws_credential_types::Credentials;
+use aws_sdk_cloudfront::config::Region;
+use aws_sdk_cloudfront::error::SdkError;
+use aws_sdk_cloudfront::types::{InvalidationBatch, Paths};
+use aws_sdk_cloudfront::{Client, Config};
 use retry::delay::{jitter, Exponential};
 use retry::OperationResult;
-use secrecy::{ExposeSecret, SecretString};
-use std::time::{Duration, SystemTime};
+use std::panic::AssertUnwindSafe;
+use std::time::Duration;
+use tokio::runtime::Runtime;
 
-#[derive(Clone)]
 pub struct CloudFront {
+    client: AssertUnwindSafe<Client>,
     distribution_id: String,
-    access_key: String,
-    secret_key: SecretString,
 }
 
 impl CloudFront {
     pub fn from_environment() -> Option<Self> {
         let distribution_id = dotenvy::var("CLOUDFRONT_DISTRIBUTION").ok()?;
         let access_key = dotenvy::var("AWS_ACCESS_KEY").expect("missing AWS_ACCESS_KEY");
-        let secret_key = dotenvy::var("AWS_SECRET_KEY")
-            .expect("missing AWS_SECRET_KEY")
-            .into();
+        let secret_key = dotenvy::var("AWS_SECRET_KEY").expect("missing AWS_SECRET_KEY");
+
+        let credentials = Credentials::from_keys(access_key, secret_key, None);
+
+        let config = Config::builder()
+            .region(Region::new("us-east-1"))
+            .credentials_provider(credentials)
+            .build();
+
+        let client = AssertUnwindSafe(Client::from_conf(config));
 
         Some(Self {
+            client,
             distribution_id,
-            access_key,
-            secret_key,
         })
     }
 
     /// Invalidate a file on CloudFront
     ///
     /// `path` is the path to the file to invalidate, such as `config.json`, or `re/ge/regex`
-    #[instrument(skip(self, client))]
-    pub fn invalidate(&self, client: &Client, path: &str) -> anyhow::Result<()> {
-        let path = path.trim_start_matches('/');
-        let url = format!(
-            "https://cloudfront.amazonaws.com/2020-05-31/distribution/{}/invalidation",
-            self.distribution_id
-        );
-        trace!(?url);
+    #[instrument(skip(self, rt))]
+    pub fn invalidate(&self, path: &str, rt: &Runtime) -> anyhow::Result<()> {
+        let path = if path.starts_with('/') {
+            path.to_string()
+        } else {
+            format!("/{path}")
+        };
 
         let attempts = 10;
         let backoff = Exponential::from_millis(500)
@@ -49,77 +54,44 @@ impl CloudFront {
 
         retry::retry_with_index(backoff, |attempt| {
             let now = chrono::offset::Utc::now().timestamp_micros();
-            let body = format!(
-                r#"
-<?xml version="1.0" encoding="UTF-8"?>
-<InvalidationBatch xmlns="http://cloudfront.amazonaws.com/doc/2020-05-31/">
-    <CallerReference>{now}</CallerReference>
-    <Paths>
-        <Items>
-            <Path>/{path}</Path>
-        </Items>
-        <Quantity>1</Quantity>
-    </Paths>
-</InvalidationBatch>
-"#
-            );
-            trace!(?body);
 
-            let request = match http::Request::post(&url)
-                .body(&body)
-                .context("Failed to construct HTTP request")
-            {
-                Ok(request) => request,
-                Err(error) => return OperationResult::Err(error),
+            let paths = match Paths::builder().quantity(1).items(&path).build() {
+                Ok(paths) => paths,
+                Err(error) => return OperationResult::Err(error.into()),
             };
 
-            trace!("Signing invalidation request");
-            let request = SignableRequest::from(&request);
-            let params = SigningParams::builder()
-                .access_key(&self.access_key)
-                .secret_key(self.secret_key.expose_secret())
-                .region("us-east-1") // cloudfront is a regionless service, use the default region for signing.
-                .service_name("cloudfront")
-                .settings(SigningSettings::default())
-                .time(SystemTime::now())
+            let invalidation_batch = match InvalidationBatch::builder()
+                .caller_reference(format!("{now}"))
+                .paths(paths)
                 .build()
-                .unwrap(); // all required fields are set
+            {
+                Ok(invalidation_batch) => invalidation_batch,
+                Err(error) => return OperationResult::Err(error.into()),
+            };
 
-            let (mut signature_headers, _) =
-                http_request::sign(request, &params).unwrap().into_parts();
+            let invalidation_request = self
+                .client
+                .create_invalidation()
+                .distribution_id(&self.distribution_id)
+                .invalidation_batch(invalidation_batch);
 
             debug!(?attempt, "Sending invalidation request");
-            let response = match client
-                .post(&url)
-                .headers(signature_headers.take_headers().unwrap_or_default())
-                .body(body)
-                .send()
-                .context("Failed to send invalidation request")
-            {
-                Ok(response) => response,
-                Err(error) => return OperationResult::Retry(error),
-            };
 
-            let status = response.status();
-
-            let result = match response.error_for_status_ref() {
+            match rt.block_on(invalidation_request.send()) {
                 Ok(_) => {
-                    debug!(?status, "Invalidation request successful");
-                    Ok(())
+                    debug!("Invalidation request successful");
+                    OperationResult::Ok(())
+                }
+                Err(SdkError::ServiceError(error))
+                    if error.err().is_too_many_invalidations_in_progress() =>
+                {
+                    warn!("Invalidation request failed (TooManyInvalidationsInProgress)");
+                    OperationResult::Retry(SdkError::ServiceError(error).into())
                 }
                 Err(error) => {
-                    let headers = response.headers().clone();
-                    let body = response.text();
-                    warn!(?status, ?headers, ?body, "Invalidation request failed");
-
-                    Err(error).with_context(|| format!("Failed to invalidate {path}"))
+                    warn!(?error, "Invalidation request failed");
+                    OperationResult::Err(error.into())
                 }
-            };
-
-            match result {
-                Ok(_) => OperationResult::Ok(()),
-                Err(error) if status.is_server_error() => OperationResult::Retry(error),
-                Err(error) => OperationResult::Err(error),
             }
         })
         .map_err(|error| error.error)
