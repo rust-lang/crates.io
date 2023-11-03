@@ -40,8 +40,7 @@ impl TemplateDatabase {
         // Get a connection from the pool, and create the template database
         let mut conn = pool.get().expect("failed to connect to the database");
 
-        let template_name = format!("{prefix}_template_{}", generate_name().to_lowercase());
-        let _ = drop_database(&template_name, &mut conn);
+        let template_name = format!("{prefix}_template");
         create_template_database(&template_name, &mut conn)
             .expect("failed to create template database");
 
@@ -134,8 +133,25 @@ fn connect(database_url: &str) -> ConnectionResult<PgConnection> {
 
 #[instrument(skip(conn))]
 fn create_template_database(name: &str, conn: &mut PgConnection) -> QueryResult<()> {
-    debug!("Creating new template database…");
-    sql_query(format!("CREATE DATABASE {name};")).execute(conn)?;
+    table! {
+        pg_database (datname) {
+            datname -> Text,
+        }
+    }
+
+    debug!("Checking if template database already exists…");
+    let count: i64 = pg_database::table
+        .count()
+        .filter(pg_database::datname.eq(name))
+        .get_result(conn)?;
+
+    if count == 0 {
+        debug!("Creating new template database…");
+        sql_query(format!("CREATE DATABASE {name}")).execute(conn)?;
+    } else {
+        debug!(%count, "Skipping template database creation");
+    }
+
     Ok(())
 }
 
