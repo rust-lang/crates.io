@@ -1,3 +1,4 @@
+use crates_io_env_vars::required_var_parsed;
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
 use diesel::sql_query;
@@ -23,8 +24,7 @@ impl TemplateDatabase {
 
     #[instrument]
     fn new() -> Self {
-        let base_url = env("TEST_DATABASE_URL");
-        let base_url = Url::parse(&base_url).expect("failed to parse TEST_DATABASE_URL");
+        let base_url: Url = required_var_parsed("TEST_DATABASE_URL").unwrap();
 
         let prefix = base_url.path().strip_prefix('/');
         let prefix = prefix.expect("failed to parse database name").to_string();
@@ -131,16 +131,6 @@ impl Drop for TestDatabase {
 
         let mut conn = TemplateDatabase::instance().get_connection();
         drop_database(&self.name, &mut conn).expect("failed to drop test database");
-    }
-}
-
-/// Return the environment variable only if it has been defined
-#[track_caller]
-fn env(var: &str) -> String {
-    match dotenvy::var(var) {
-        Ok(ref s) if s.is_empty() => panic!("environment variable `{var}` must not be empty"),
-        Ok(s) => s,
-        _ => panic!("environment variable `{var}` must be defined and valid unicode"),
     }
 }
 
