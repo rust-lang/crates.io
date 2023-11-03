@@ -62,18 +62,7 @@ pub fn apply_axum_middleware(state: AppState, router: Router<(), TimeoutBody<Bod
             state.clone(),
             require_user_agent::require_user_agent,
         ))
-        .layer(from_fn_with_state(
-            state.clone(),
-            block_traffic::block_by_ip,
-        ))
-        .layer(from_fn_with_state(
-            state.clone(),
-            block_traffic::block_by_header,
-        ))
-        .layer(from_fn_with_state(
-            state.clone(),
-            block_traffic::block_routes,
-        ))
+        .layer(from_fn_with_state(state.clone(), block_traffic::middleware))
         .layer(from_fn_with_state(
             state.clone(),
             common_headers::add_common_headers,

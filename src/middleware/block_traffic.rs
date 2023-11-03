@@ -4,8 +4,22 @@ use crate::middleware::real_ip::RealIp;
 use crate::util::errors::RouteBlocked;
 use axum::extract::{Extension, MatchedPath};
 use axum::middleware::Next;
-use axum::response::IntoResponse;
-use http::StatusCode;
+use axum::response::{IntoResponse, Response};
+use http::{HeaderMap, StatusCode};
+
+pub async fn middleware<B>(
+    Extension(real_ip): Extension<RealIp>,
+    matched_path: Option<MatchedPath>,
+    state: AppState,
+    req: http::Request<B>,
+    next: Next<B>,
+) -> Result<impl IntoResponse, Response> {
+    block_by_ip(&real_ip, &state, req.headers())?;
+    block_by_header(&state, &req)?;
+    block_routes(matched_path.as_ref(), &state)?;
+
+    Ok(next.run(req).await)
+}
 
 /// Middleware that blocks requests if a header matches the given list
 ///
@@ -15,11 +29,7 @@ use http::StatusCode;
 /// to `User-Agent=BLOCKED_UAS` and `BLOCKED_UAS` to `curl/7.54.0,cargo 1.36.0 (c4fcfb725 2019-05-15)`
 /// to block requests from the versions of curl or Cargo specified (values are nonsensical examples).
 /// Values of the headers must match exactly.
-pub async fn block_by_header<B>(
-    state: AppState,
-    req: http::Request<B>,
-    next: Next<B>,
-) -> axum::response::Response {
+pub fn block_by_header<B>(state: &AppState, req: &http::Request<B>) -> Result<(), Response> {
     let blocked_traffic = &state.config.blocked_traffic;
 
     for (header_name, blocked_values) in blocked_traffic {
@@ -32,32 +42,30 @@ pub async fn block_by_header<B>(
             let cause = format!("blocked due to contents of header {header_name}");
             req.request_log().add("cause", cause);
 
-            return rejection_response_from(&state, &req).into_response();
+            return Err(rejection_response_from(state, req.headers()));
         }
     }
 
-    next.run(req).await
+    Ok(())
 }
 
-pub async fn block_by_ip<B>(
-    Extension(real_ip): Extension<RealIp>,
-    state: AppState,
-    req: http::Request<B>,
-    next: Next<B>,
-) -> axum::response::Response {
-    if state.config.blocked_ips.contains(&real_ip) {
-        rejection_response_from(&state, &req).into_response()
-    } else {
-        next.run(req).await
+pub fn block_by_ip(
+    real_ip: &RealIp,
+    state: &AppState,
+    headers: &HeaderMap,
+) -> Result<(), Response> {
+    if state.config.blocked_ips.contains(real_ip) {
+        return Err(rejection_response_from(state, headers));
     }
+
+    Ok(())
 }
 
-fn rejection_response_from<B>(state: &AppState, req: &http::Request<B>) -> impl IntoResponse {
+fn rejection_response_from(state: &AppState, headers: &HeaderMap) -> Response {
     let domain_name = &state.config.domain_name;
 
     // Heroku should always set this header
-    let request_id = req
-        .headers()
+    let request_id = headers
         .get("x-request-id")
         .map(|val| val.to_str().unwrap_or_default())
         .unwrap_or_default();
@@ -76,17 +84,12 @@ fn rejection_response_from<B>(state: &AppState, req: &http::Request<B>) -> impl 
 
 /// Allow blocking individual routes by their pattern through the `BLOCKED_ROUTES`
 /// environment variable.
-pub async fn block_routes<B>(
-    matched_path: Option<MatchedPath>,
-    state: AppState,
-    req: http::Request<B>,
-    next: Next<B>,
-) -> axum::response::Response {
+pub fn block_routes(matched_path: Option<&MatchedPath>, state: &AppState) -> Result<(), Response> {
     if let Some(matched_path) = matched_path {
         if state.config.blocked_routes.contains(matched_path.as_str()) {
-            return RouteBlocked.into_response();
+            return Err(RouteBlocked.into_response());
         }
     }
 
-    next.run(req).await
+    Ok(())
 }
