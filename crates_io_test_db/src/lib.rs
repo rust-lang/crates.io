@@ -5,7 +5,7 @@ use diesel::sql_query;
 use diesel_migrations::{FileBasedMigrations, MigrationHarness};
 use once_cell::sync::Lazy;
 use rand::Rng;
-use tracing::instrument;
+use tracing::{debug, instrument};
 use url::Url;
 
 struct TemplateDatabase {
@@ -40,8 +40,7 @@ impl TemplateDatabase {
         // Get a connection from the pool, and create the template database
         let mut conn = pool.get().expect("failed to connect to the database");
 
-        let template_name = format!("{prefix}_template_{}", generate_name().to_lowercase());
-        let _ = drop_database(&template_name, &mut conn);
+        let template_name = format!("{prefix}_template");
         create_template_database(&template_name, &mut conn)
             .expect("failed to create template database");
 
@@ -65,14 +64,6 @@ impl TemplateDatabase {
     #[instrument(skip(self))]
     fn get_connection(&self) -> PooledConnection<ConnectionManager<PgConnection>> {
         self.pool.get().expect("Failed to get database connection")
-    }
-}
-
-impl Drop for TemplateDatabase {
-    #[instrument(skip(self))]
-    fn drop(&mut self) {
-        let mut conn = self.get_connection();
-        drop_database(&self.template_name, &mut conn).expect("failed to drop template database");
     }
 }
 
@@ -136,12 +127,31 @@ impl Drop for TestDatabase {
 
 #[instrument]
 fn connect(database_url: &str) -> ConnectionResult<PgConnection> {
+    debug!("Connecting to database…");
     PgConnection::establish(database_url)
 }
 
 #[instrument(skip(conn))]
 fn create_template_database(name: &str, conn: &mut PgConnection) -> QueryResult<()> {
-    sql_query(format!("CREATE DATABASE {name};")).execute(conn)?;
+    table! {
+        pg_database (datname) {
+            datname -> Text,
+        }
+    }
+
+    debug!("Checking if template database already exists…");
+    let count: i64 = pg_database::table
+        .count()
+        .filter(pg_database::datname.eq(name))
+        .get_result(conn)?;
+
+    if count == 0 {
+        debug!("Creating new template database…");
+        sql_query(format!("CREATE DATABASE {name}")).execute(conn)?;
+    } else {
+        debug!(%count, "Skipping template database creation");
+    }
+
     Ok(())
 }
 
@@ -151,18 +161,21 @@ fn create_database_from_template(
     template_name: &str,
     conn: &mut PgConnection,
 ) -> QueryResult<()> {
+    debug!("Creating new test database from template…");
     sql_query(format!("CREATE DATABASE {name} TEMPLATE {template_name}")).execute(conn)?;
     Ok(())
 }
 
 #[instrument(skip(conn))]
 fn drop_database(name: &str, conn: &mut PgConnection) -> QueryResult<()> {
+    debug!("Dropping database…");
     sql_query(format!("DROP DATABASE {name}")).execute(conn)?;
     Ok(())
 }
 
 #[instrument(skip(conn))]
 fn run_migrations(conn: &mut PgConnection) -> diesel::migration::Result<()> {
+    debug!("Running pending database migrations…");
     let migrations = FileBasedMigrations::find_migrations_directory()?;
     conn.run_pending_migrations(migrations)?;
     Ok(())
