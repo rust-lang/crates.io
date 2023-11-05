@@ -301,12 +301,7 @@ mod tests {
     use diesel::r2d2;
     use diesel::r2d2::ConnectionManager;
     use std::panic::AssertUnwindSafe;
-    use std::sync::mpsc::{sync_channel, SyncSender};
     use std::sync::{Arc, Barrier};
-
-    fn dummy_sender<T>() -> SyncSender<T> {
-        sync_channel(1).0
-    }
 
     fn job_exists(id: i64, conn: &mut PgConnection) -> bool {
         background_jobs::table
@@ -520,20 +515,5 @@ mod tests {
         Runner::new(connection_pool, context)
             .num_workers(2)
             .job_start_timeout(Duration::from_secs(10))
-    }
-
-    fn create_dummy_job(runner: &Runner<()>) -> storage::BackgroundJob {
-        diesel::insert_into(background_jobs::table)
-            .values((
-                background_jobs::job_type.eq("Foo"),
-                background_jobs::data.eq(serde_json::json!(null)),
-            ))
-            .returning((
-                background_jobs::id,
-                background_jobs::job_type,
-                background_jobs::data,
-            ))
-            .get_result(&mut *runner.connection().unwrap())
-            .unwrap()
     }
 }
