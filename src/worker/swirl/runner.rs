@@ -108,10 +108,6 @@ impl<Context: Clone + Send + UnwindSafe + 'static> Runner<Context> {
     }
 
     fn run_single_job(&self, sender: SyncSender<Event>) {
-        self.get_single_job(sender)
-    }
-
-    fn get_single_job(&self, sender: SyncSender<Event>) {
         use diesel::result::Error::RollbackTransaction;
 
         let job_registry = AssertUnwindSafe(self.job_registry.clone());
