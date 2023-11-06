@@ -5,12 +5,11 @@ use aws_sdk_cloudfront::types::{InvalidationBatch, Paths};
 use aws_sdk_cloudfront::{Client, Config};
 use retry::delay::{jitter, Exponential};
 use retry::OperationResult;
-use std::panic::AssertUnwindSafe;
 use std::time::Duration;
 use tokio::runtime::Runtime;
 
 pub struct CloudFront {
-    client: AssertUnwindSafe<Client>,
+    client: Client,
     distribution_id: String,
 }
 
@@ -27,7 +26,7 @@ impl CloudFront {
             .credentials_provider(credentials)
             .build();
 
-        let client = AssertUnwindSafe(Client::from_conf(config));
+        let client = Client::from_conf(config);
 
         Some(Self {
             client,

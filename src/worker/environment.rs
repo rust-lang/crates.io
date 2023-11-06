@@ -4,15 +4,14 @@ use crate::storage::Storage;
 use crate::worker::swirl::PerformError;
 use crates_io_index::Repository;
 use reqwest::blocking::Client;
-use std::panic::AssertUnwindSafe;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
 pub struct Environment {
     index: Mutex<Repository>,
-    http_client: AssertUnwindSafe<Client>,
+    http_client: Client,
     cloudfront: Option<CloudFront>,
     fastly: Option<Fastly>,
-    pub storage: AssertUnwindSafe<Arc<Storage>>,
+    pub storage: Arc<Storage>,
 }
 
 impl Environment {
@@ -25,10 +24,10 @@ impl Environment {
     ) -> Self {
         Self {
             index: Mutex::new(index),
-            http_client: AssertUnwindSafe(http_client),
+            http_client,
             cloudfront,
             fastly,
-            storage: AssertUnwindSafe(storage),
+            storage,
         }
     }
 
