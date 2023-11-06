@@ -29,7 +29,7 @@ fn runnable<J: BackgroundJob>(
 }
 
 /// The core runner responsible for locking and running jobs
-pub struct Runner<Context: Clone + Send + 'static> {
+pub struct Runner<Context> {
     connection_pool: DieselPool,
     thread_pool: ThreadPool,
     job_registry: Arc<RwLock<HashMap<String, RunTaskFn<Context>>>>,
