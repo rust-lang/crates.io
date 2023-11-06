@@ -154,7 +154,7 @@ impl TestApp {
             .unwrap();
 
         let list = rt.block_on(async {
-            let stream = store.list(None).await.unwrap();
+            let stream = store.list(None);
             stream.try_collect::<Vec<_>>().await.unwrap()
         });
 

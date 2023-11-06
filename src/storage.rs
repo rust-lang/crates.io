@@ -253,23 +253,27 @@ impl Storage {
     #[instrument(skip(self, bytes))]
     pub async fn upload_crate_file(&self, name: &str, version: &str, bytes: Bytes) -> Result<()> {
         let path = crate_file_path(name, version);
-        self.crate_upload_store.put(&path, bytes).await
+        self.crate_upload_store.put(&path, bytes).await?;
+        Ok(())
     }
 
     #[instrument(skip(self, bytes))]
     pub async fn upload_readme(&self, name: &str, version: &str, bytes: Bytes) -> Result<()> {
         let path = readme_path(name, version);
-        self.readme_upload_store.put(&path, bytes).await
+        self.readme_upload_store.put(&path, bytes).await?;
+        Ok(())
     }
 
     #[instrument(skip(self, content))]
     pub async fn sync_index(&self, name: &str, content: Option<String>) -> Result<()> {
         let path = crates_io_index::Repository::relative_index_file_for_url(name).into();
         if let Some(content) = content {
-            self.index_upload_store.put(&path, content.into()).await
+            self.index_upload_store.put(&path, content.into()).await?;
         } else {
-            self.index_store.delete(&path).await
+            self.index_store.delete(&path).await?;
         }
+
+        Ok(())
     }
 
     #[instrument(skip(self))]
@@ -302,7 +306,7 @@ impl Storage {
     }
 
     async fn delete_all_with_prefix(&self, prefix: &Path) -> Result<()> {
-        let objects = self.store.list(Some(prefix)).await?;
+        let objects = self.store.list(Some(prefix));
         let locations = objects.map(|meta| meta.map(|m| m.location)).boxed();
 
         self.store
@@ -378,7 +382,7 @@ mod tests {
     }
 
     pub async fn stored_files(store: &dyn ObjectStore) -> Vec<String> {
-        let stream = store.list(None).await.unwrap();
+        let stream = store.list(None);
         let list = stream.try_collect::<Vec<_>>().await.unwrap();
 
         list.into_iter()
