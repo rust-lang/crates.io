@@ -78,6 +78,15 @@ fn main() -> anyhow::Result<()> {
 
     let environment = Arc::new(environment);
 
+    std::thread::spawn({
+        let environment = environment.clone();
+        move || {
+            if let Err(err) = environment.lock_index() {
+                warn!(%err, "Failed to clone index");
+            };
+        }
+    });
+
     let connection_pool = r2d2::Pool::builder()
         .max_size(10)
         .min_idle(Some(0))
