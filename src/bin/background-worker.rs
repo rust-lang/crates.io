@@ -99,16 +99,9 @@ fn main() -> anyhow::Result<()> {
 
     info!("Runner booted, running jobs");
 
-    let mut failure_count = 0;
-
     loop {
-        if let Err(e) = runner.run_all_pending_jobs() {
-            failure_count += 1;
-            if failure_count < 5 {
-                warn!(?failure_count, err = ?e, "Error running jobs -- retrying");
-            } else {
-                panic!("Failed to begin running jobs 5 times. Restarting the process");
-            }
+        if let Err(err) = runner.run_all_pending_jobs() {
+            warn!(%err, "Failed to run background jobs");
         }
         sleep(Duration::from_secs(1));
     }
