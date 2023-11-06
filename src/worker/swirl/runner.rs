@@ -147,39 +147,23 @@ impl<Context: Clone + Send + 'static> Runner<Context> {
                     warn!("Initial transaction depth is not 1. This is very unexpected");
                 }
 
-                let tx_ctx = sentry::TransactionContext::new(&job.job_type, "swirl.perform");
-                let tx = sentry::start_transaction(tx_ctx);
+                let result = with_sentry_transaction(&job.job_type, || {
+                    conn.transaction(|conn| {
+                        let pool = pool.to_real_pool();
+                        let state = PerformState { conn, pool };
+                        catch_unwind(AssertUnwindSafe(|| {
+                            let job_registry = job_registry.read();
+                            let run_task_fn = job_registry.get(&job.job_type).ok_or_else(|| {
+                                PerformError::from(format!("Unknown job type {}", job.job_type))
+                            })?;
 
-                let result = sentry::with_scope(
-                    |scope| scope.set_span(Some(tx.clone().into())),
-                    || {
-                        conn.transaction(|conn| {
-                            let pool = pool.to_real_pool();
-                            let state = PerformState { conn, pool };
-                            catch_unwind(AssertUnwindSafe(|| {
-                                let job_registry = job_registry.read();
-                                let run_task_fn =
-                                    job_registry.get(&job.job_type).ok_or_else(|| {
-                                        PerformError::from(format!(
-                                            "Unknown job type {}",
-                                            job.job_type
-                                        ))
-                                    })?;
-
-                                run_task_fn(environment, state, job.data)
-                            }))
-                            .map_err(|e| try_to_extract_panic_info(&e))
-                        })
-                        // TODO: Replace with flatten() once that stabilizes
-                        .and_then(std::convert::identity)
-                    },
-                );
-
-                tx.set_status(match result.is_ok() {
-                    true => sentry::protocol::SpanStatus::Ok,
-                    false => sentry::protocol::SpanStatus::UnknownError,
+                            run_task_fn(environment, state, job.data)
+                        }))
+                        .map_err(|e| try_to_extract_panic_info(&e))
+                    })
+                    // TODO: Replace with flatten() once that stabilizes
+                    .and_then(std::convert::identity)
                 });
-                tx.finish();
 
                 // If the job panics it could leave the connection inside an inner transaction(s).
                 // Attempt to roll those back so we can mark the job as failed, but if the rollback
@@ -246,6 +230,24 @@ impl<Context: Clone + Send + 'static> Runner<Context> {
             Err(format!("{panic_count} threads panicked").into())
         }
     }
+}
+
+fn with_sentry_transaction<F, R, E>(transaction_name: &str, callback: F) -> Result<R, E>
+where
+    F: FnOnce() -> Result<R, E>,
+{
+    let tx_ctx = sentry::TransactionContext::new(transaction_name, "swirl.perform");
+    let tx = sentry::start_transaction(tx_ctx);
+
+    let result = sentry::with_scope(|scope| scope.set_span(Some(tx.clone().into())), callback);
+
+    tx.set_status(match result.is_ok() {
+        true => sentry::protocol::SpanStatus::Ok,
+        false => sentry::protocol::SpanStatus::UnknownError,
+    });
+    tx.finish();
+
+    result
 }
 
 #[derive(Debug)]
