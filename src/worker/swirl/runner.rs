@@ -7,7 +7,7 @@ use parking_lot::RwLock;
 use std::any::Any;
 use std::collections::HashMap;
 use std::error::Error;
-use std::panic::{catch_unwind, AssertUnwindSafe, PanicInfo, UnwindSafe};
+use std::panic::{catch_unwind, AssertUnwindSafe, PanicInfo};
 use std::sync::mpsc::{sync_channel, SyncSender};
 use std::sync::Arc;
 use std::time::Duration;
@@ -29,7 +29,7 @@ fn runnable<J: BackgroundJob>(
 }
 
 /// The core runner responsible for locking and running jobs
-pub struct Runner<Context: Clone + Send + UnwindSafe + 'static> {
+pub struct Runner<Context: Clone + Send + 'static> {
     connection_pool: DieselPool,
     thread_pool: ThreadPool,
     job_registry: Arc<RwLock<HashMap<String, RunTaskFn<Context>>>>,
@@ -37,7 +37,7 @@ pub struct Runner<Context: Clone + Send + UnwindSafe + 'static> {
     job_start_timeout: Duration,
 }
 
-impl<Context: Clone + Send + UnwindSafe + 'static> Runner<Context> {
+impl<Context: Clone + Send + 'static> Runner<Context> {
     pub fn new(connection_pool: DieselPool, environment: Context) -> Self {
         Self {
             connection_pool,
@@ -110,7 +110,7 @@ impl<Context: Clone + Send + UnwindSafe + 'static> Runner<Context> {
     fn run_single_job(&self, sender: SyncSender<Event>) {
         use diesel::result::Error::RollbackTransaction;
 
-        let job_registry = AssertUnwindSafe(self.job_registry.clone());
+        let job_registry = self.job_registry.clone();
         let environment = self.environment.clone();
 
         // The connection may not be `Send` so we need to clone the pool instead
@@ -155,11 +155,8 @@ impl<Context: Clone + Send + UnwindSafe + 'static> Runner<Context> {
                     || {
                         conn.transaction(|conn| {
                             let pool = pool.to_real_pool();
-                            let state = AssertUnwindSafe(PerformState { conn, pool });
-                            catch_unwind(|| {
-                                // Ensure the whole `AssertUnwindSafe(_)` is moved
-                                let state = state;
-
+                            let state = PerformState { conn, pool };
+                            catch_unwind(AssertUnwindSafe(|| {
                                 let job_registry = job_registry.read();
                                 let run_task_fn =
                                     job_registry.get(&job.job_type).ok_or_else(|| {
@@ -169,8 +166,8 @@ impl<Context: Clone + Send + UnwindSafe + 'static> Runner<Context> {
                                         ))
                                     })?;
 
-                                run_task_fn(environment, state.0, job.data)
-                            })
+                                run_task_fn(environment, state, job.data)
+                            }))
                             .map_err(|e| try_to_extract_panic_info(&e))
                         })
                         // TODO: Replace with flatten() once that stabilizes
@@ -294,7 +291,6 @@ mod tests {
     use crates_io_test_db::TestDatabase;
     use diesel::r2d2;
     use diesel::r2d2::ConnectionManager;
-    use std::panic::AssertUnwindSafe;
     use std::sync::{Arc, Barrier};
 
     fn job_exists(id: i64, conn: &mut PgConnection) -> bool {
@@ -323,8 +319,8 @@ mod tests {
     fn jobs_are_locked_when_fetched() {
         #[derive(Clone)]
         struct TestContext {
-            job_started_barrier: Arc<AssertUnwindSafe<Barrier>>,
-            assertions_finished_barrier: Arc<AssertUnwindSafe<Barrier>>,
+            job_started_barrier: Arc<Barrier>,
+            assertions_finished_barrier: Arc<Barrier>,
         }
 
         #[derive(Serialize, Deserialize)]
@@ -344,8 +340,8 @@ mod tests {
         let test_database = TestDatabase::new();
 
         let test_context = TestContext {
-            job_started_barrier: Arc::new(AssertUnwindSafe(Barrier::new(2))),
-            assertions_finished_barrier: Arc::new(AssertUnwindSafe(Barrier::new(2))),
+            job_started_barrier: Arc::new(Barrier::new(2)),
+            assertions_finished_barrier: Arc::new(Barrier::new(2)),
         };
 
         let runner =
@@ -409,7 +405,7 @@ mod tests {
     fn failed_jobs_do_not_release_lock_before_updating_retry_time() {
         #[derive(Clone)]
         struct TestContext {
-            job_started_barrier: Arc<AssertUnwindSafe<Barrier>>,
+            job_started_barrier: Arc<Barrier>,
         }
 
         #[derive(Serialize, Deserialize)]
@@ -428,7 +424,7 @@ mod tests {
         let test_database = TestDatabase::new();
 
         let test_context = TestContext {
-            job_started_barrier: Arc::new(AssertUnwindSafe(Barrier::new(2))),
+            job_started_barrier: Arc::new(Barrier::new(2)),
         };
 
         let runner =
@@ -495,7 +491,7 @@ mod tests {
         assert_eq!(tries, 1);
     }
 
-    fn runner<Context: Clone + Send + UnwindSafe + 'static>(
+    fn runner<Context: Clone + Send + 'static>(
         database_url: &str,
         context: Context,
     ) -> Runner<Context> {
