@@ -24,14 +24,14 @@ use crates_io::worker::swirl::Runner;
 use crates_io::worker::{Environment, RunnerExt};
 use crates_io::{db, ssh};
 use crates_io_env_vars::{var, var_parsed};
-use crates_io_index::{Repository, RepositoryConfig};
+use crates_io_index::RepositoryConfig;
 use diesel::r2d2;
 use diesel::r2d2::ConnectionManager;
 use reqwest::blocking::Client;
 use secrecy::ExposeSecret;
 use std::sync::Arc;
 use std::thread::sleep;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 fn main() -> anyhow::Result<()> {
     let _sentry = crates_io::sentry::init();
@@ -59,18 +59,11 @@ fn main() -> anyhow::Result<()> {
 
     let job_start_timeout = var_parsed("BACKGROUND_JOB_TIMEOUT")?.unwrap_or(30);
 
-    info!("Cloning index");
-
     if var("HEROKU")?.is_some() {
         ssh::write_known_hosts_file().unwrap();
     }
 
-    let clone_start = Instant::now();
     let repository_config = RepositoryConfig::from_environment()?;
-    let repository = Repository::open(&repository_config).expect("Failed to clone index");
-
-    let clone_duration = clone_start.elapsed();
-    info!(duration = ?clone_duration, "Index cloned");
 
     let cloudfront = CloudFront::from_environment();
     let fastly = Fastly::from_environment();
@@ -81,7 +74,7 @@ fn main() -> anyhow::Result<()> {
         .build()
         .expect("Couldn't build client");
 
-    let environment = Environment::new(repository, client, cloudfront, fastly, storage);
+    let environment = Environment::new(repository_config, client, cloudfront, fastly, storage);
 
     let environment = Arc::new(environment);
 

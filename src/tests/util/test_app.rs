@@ -11,7 +11,7 @@ use crates_io::worker::{Environment, RunnerExt};
 use crates_io::{App, Emails, Env};
 use crates_io_env_vars::required_var;
 use crates_io_index::testing::UpstreamIndex;
-use crates_io_index::{Credentials, Repository as WorkerRepository, RepositoryConfig};
+use crates_io_index::{Credentials, RepositoryConfig};
 use crates_io_test_db::TestDatabase;
 use diesel::PgConnection;
 use futures_util::TryStreamExt;
@@ -252,9 +252,8 @@ impl TestAppBuilder {
                 index_location: UpstreamIndex::url(),
                 credentials: Credentials::Missing,
             };
-            let index = WorkerRepository::open(&repository_config).expect("Could not clone index");
             let environment = Environment::new(
-                index,
+                repository_config,
                 app.http_client().clone(),
                 None,
                 None,
