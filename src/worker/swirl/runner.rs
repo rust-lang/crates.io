@@ -108,26 +108,10 @@ impl<Context: Clone + Send + UnwindSafe + 'static> Runner<Context> {
     }
 
     fn run_single_job(&self, sender: SyncSender<Event>) {
+        use diesel::result::Error::RollbackTransaction;
+
         let job_registry = AssertUnwindSafe(self.job_registry.clone());
         let environment = self.environment.clone();
-        self.get_single_job(sender, move |job, state| {
-            let job_registry = job_registry.read();
-            let run_task_fn = job_registry
-                .get(&job.job_type)
-                .ok_or_else(|| PerformError::from(format!("Unknown job type {}", job.job_type)))?;
-
-            run_task_fn(environment, state, job.data)
-        })
-    }
-
-    fn get_single_job<F>(&self, sender: SyncSender<Event>, f: F)
-    where
-        F: FnOnce(storage::BackgroundJob, PerformState<'_>) -> Result<(), PerformError>
-            + Send
-            + UnwindSafe
-            + 'static,
-    {
-        use diesel::result::Error::RollbackTransaction;
 
         // The connection may not be `Send` so we need to clone the pool instead
         let pool = self.connection_pool.clone();
@@ -175,7 +159,17 @@ impl<Context: Clone + Send + UnwindSafe + 'static> Runner<Context> {
                             catch_unwind(|| {
                                 // Ensure the whole `AssertUnwindSafe(_)` is moved
                                 let state = state;
-                                f(job, state.0)
+
+                                let job_registry = job_registry.read();
+                                let run_task_fn =
+                                    job_registry.get(&job.job_type).ok_or_else(|| {
+                                        PerformError::from(format!(
+                                            "Unknown job type {}",
+                                            job.job_type
+                                        ))
+                                    })?;
+
+                                run_task_fn(environment, state.0, job.data)
                             })
                             .map_err(|e| try_to_extract_panic_info(&e))
                         })
