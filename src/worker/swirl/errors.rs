@@ -1,6 +1,5 @@
 use crate::db::PoolError;
 use diesel::result::Error as DieselError;
-use std::error::Error;
 use std::sync::mpsc::RecvTimeoutError;
 
 /// An error occurred queueing the job
@@ -17,7 +16,7 @@ pub enum EnqueueError {
 }
 
 /// An error occurred performing the job
-pub type PerformError = Box<dyn Error>;
+pub type PerformError = anyhow::Error;
 
 /// An error occurred while attempting to fetch jobs from the queue
 #[derive(Debug, thiserror::Error)]

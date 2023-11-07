@@ -196,7 +196,7 @@ impl<Context: Clone + Send + 'static> Worker<Context> {
                     catch_unwind(AssertUnwindSafe(|| {
                         let job_registry = self.job_registry.read();
                         let run_task_fn = job_registry.get(&job.job_type).ok_or_else(|| {
-                            PerformError::from(format!("Unknown job type {}", job.job_type))
+                            anyhow!("Unknown job type {}", job.job_type)
                         })?;
 
                         run_task_fn(&self.environment, state, job.data)
@@ -281,13 +281,13 @@ fn get_transaction_depth(conn: &mut PgConnection) -> QueryResult<u32> {
 /// and give up if we didn't get one of those three types.
 fn try_to_extract_panic_info(info: &(dyn Any + Send + 'static)) -> PerformError {
     if let Some(x) = info.downcast_ref::<PanicInfo<'_>>() {
-        format!("job panicked: {x}").into()
+        anyhow!("job panicked: {x}")
     } else if let Some(x) = info.downcast_ref::<&'static str>() {
-        format!("job panicked: {x}").into()
+        anyhow!("job panicked: {x}")
     } else if let Some(x) = info.downcast_ref::<String>() {
-        format!("job panicked: {x}").into()
+        anyhow!("job panicked: {x}")
     } else {
-        "job panicked".into()
+        anyhow!("job panicked")
     }
 }
 
