@@ -116,8 +116,8 @@ impl<Context: Clone + Send + 'static> Runner<Context> {
         }
     }
 
-    fn connection(&self) -> Result<DieselPooledConn<'_>, Box<dyn Error + Send + Sync>> {
-        self.connection_pool.get().map_err(Into::into)
+    fn connection(&self) -> Result<DieselPooledConn<'_>, PoolError> {
+        self.connection_pool.get()
     }
 
     /// Waits for all running jobs to complete, and returns an error if any
@@ -132,7 +132,11 @@ impl<Context: Clone + Send + 'static> Runner<Context> {
     // FIXME: Only public for `src/tests/util/test_app.rs`
     pub fn check_for_failed_jobs(&self) -> Result<(), FailedJobsError> {
         self.wait_for_jobs()?;
-        let failed_jobs = storage::failed_job_count(&mut *self.connection()?)?;
+        let failed_jobs = storage::failed_job_count(
+            &mut *self
+                .connection()
+                .map_err(|e| FailedJobsError::__Unknown(e.into()))?,
+        )?;
         if failed_jobs == 0 {
             Ok(())
         } else {
