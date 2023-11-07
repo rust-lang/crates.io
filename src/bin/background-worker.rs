@@ -85,35 +85,23 @@ fn main() -> anyhow::Result<()> {
 
     let environment = Arc::new(environment);
 
-    let build_runner = || {
-        let connection_pool = r2d2::Pool::builder()
-            .max_size(10)
-            .min_idle(Some(0))
-            .build_unchecked(ConnectionManager::new(&db_url));
+    let connection_pool = r2d2::Pool::builder()
+        .max_size(10)
+        .min_idle(Some(0))
+        .build_unchecked(ConnectionManager::new(&db_url));
 
-        let connection_pool = DieselPool::new_background_worker(connection_pool);
+    let connection_pool = DieselPool::new_background_worker(connection_pool);
 
-        Runner::new(connection_pool, environment.clone())
-            .num_workers(5)
-            .job_start_timeout(Duration::from_secs(job_start_timeout))
-            .register_crates_io_job_types()
-    };
-
-    let mut runner = build_runner();
+    let runner = Runner::new(connection_pool, environment.clone())
+        .num_workers(5)
+        .job_start_timeout(Duration::from_secs(job_start_timeout))
+        .register_crates_io_job_types();
 
     info!("Runner booted, running jobs");
 
-    let mut failure_count = 0;
-
     loop {
-        if let Err(e) = runner.run_all_pending_jobs() {
-            failure_count += 1;
-            if failure_count < 5 {
-                warn!(?failure_count, err = ?e, "Error running jobs -- retrying");
-                runner = build_runner();
-            } else {
-                panic!("Failed to begin running jobs 5 times. Restarting the process");
-            }
+        if let Err(err) = runner.run_all_pending_jobs() {
+            warn!(%err, "Failed to run background jobs");
         }
         sleep(Duration::from_secs(1));
     }
