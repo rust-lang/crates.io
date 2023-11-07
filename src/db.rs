@@ -65,13 +65,6 @@ impl DieselPool {
         Self::BackgroundJobPool { pool }
     }
 
-    pub(crate) fn to_real_pool(&self) -> Option<ConnectionPool> {
-        match self {
-            Self::Pool { pool, .. } | Self::BackgroundJobPool { pool } => Some(pool.clone()),
-            _ => None,
-        }
-    }
-
     pub(crate) fn new_test(config: &config::DatabasePools, url: &SecretString) -> DieselPool {
         let mut conn = PgConnection::establish(&connection_url(config, url.expose_secret()))
             .expect("failed to establish connection");

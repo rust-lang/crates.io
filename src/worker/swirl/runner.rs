@@ -193,8 +193,7 @@ impl<Context: Clone + Send + 'static> Worker<Context> {
 
             let result = with_sentry_transaction(&job.job_type, || {
                 conn.transaction(|conn| {
-                    let pool = self.connection_pool.to_real_pool();
-                    let state = PerformState { conn, pool };
+                    let state = PerformState { conn };
                     catch_unwind(AssertUnwindSafe(|| {
                         let job_registry = self.job_registry.read();
                         let run_task_fn = job_registry.get(&job.job_type).ok_or_else(|| {
