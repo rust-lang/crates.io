@@ -13,8 +13,8 @@ impl BackgroundJob for UpdateDownloads {
 
     type Context = Arc<Environment>;
 
-    fn run(&self, state: PerformState<'_>, _env: &Self::Context) -> Result<(), PerformError> {
-        let mut conn = state.fresh_connection()?;
+    fn run(&self, _state: PerformState<'_>, env: &Self::Context) -> Result<(), PerformError> {
+        let mut conn = env.connection_pool.get()?;
         update(&mut conn)?;
         Ok(())
     }
