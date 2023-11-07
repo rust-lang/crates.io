@@ -220,12 +220,41 @@ impl Crate {
                 .unwrap_or(false)
     }
 
-    /// Validates the THIS parts of `features = ["THIS", "and/THIS"]`.
-    pub fn valid_feature_name(name: &str) -> bool {
-        !name.is_empty()
-            && name
-                .chars()
-                .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-' || c == '+' || c == '.')
+    /// Validates the THIS parts of `features = ["THIS", "and/THIS", "dep:THIS", "dep?/THIS"]`.
+    /// 1. The name must be non-empty.
+    /// 2. The first character must be a Unicode XID start character, `_`, or a digit.
+    /// 3. The remaining characters must be Unicode XID characters, `_`, `+`, `-`, or `.`.
+    pub fn valid_feature_name(name: &str) -> AppResult<()> {
+        if name.is_empty() {
+            return Err(cargo_err("feature cannot be an empty"));
+        }
+        let mut chars = name.chars();
+        if let Some(ch) = chars.next() {
+            if !(unicode_xid::UnicodeXID::is_xid_start(ch) || ch == '_' || ch.is_ascii_digit()) {
+                return Err(cargo_err(&format!(
+                    "invalid character `{}` in feature `{}`, \
+                the first character must be a Unicode XID start character or digit \
+                (most letters or `_` or `0` to `9`)",
+                    ch, name,
+                )));
+            }
+        }
+        for ch in chars {
+            if !(unicode_xid::UnicodeXID::is_xid_continue(ch)
+                || ch == '+'
+                || ch == '-'
+                || ch == '.')
+            {
+                return Err(cargo_err(&format!(
+                    "invalid character `{}` in feature `{}`, \
+                characters must be Unicode XID characters, `+`, `-`, or `.` \
+                (numbers, `+`, `-`, `_`, `.`, or most letters)",
+                    ch, name,
+                )));
+            }
+        }
+
+        Ok(())
     }
 
     /// Validates the prefix in front of the slash: `features = ["THIS/feature"]`.
@@ -242,9 +271,9 @@ impl Crate {
         match name.split_once('/') {
             Some((dep, dep_feat)) => {
                 let dep = dep.strip_suffix('?').unwrap_or(dep);
-                Crate::valid_feature_prefix(dep) && Crate::valid_feature_name(dep_feat)
+                Crate::valid_feature_prefix(dep) && Crate::valid_feature_name(dep_feat).is_ok()
             }
-            None => Crate::valid_feature_name(name.strip_prefix("dep:").unwrap_or(name)),
+            None => Crate::valid_feature_name(name.strip_prefix("dep:").unwrap_or(name)).is_ok(),
         }
     }
 
@@ -518,6 +547,10 @@ mod tests {
     #[test]
     fn valid_feature_names() {
         assert!(Crate::valid_feature("foo"));
+        assert!(Crate::valid_feature("1foo"));
+        assert!(Crate::valid_feature("_foo"));
+        assert!(Crate::valid_feature("_foo-_+.1"));
+        assert!(Crate::valid_feature("_foo-_+.1"));
         assert!(!Crate::valid_feature(""));
         assert!(!Crate::valid_feature("/"));
         assert!(!Crate::valid_feature("%/%"));

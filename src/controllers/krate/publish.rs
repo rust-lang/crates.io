@@ -238,12 +238,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         }
 
         for (key, values) in features.iter() {
-            if !Crate::valid_feature_name(key) {
-                return Err(cargo_err(&format!(
-                    "\"{key}\" is an invalid feature name (feature names must contain only letters, numbers, '-', '+', or '_')"
-                )));
-            }
-
+            Crate::valid_feature_name(key)?;
             let num_features = values.len();
             if num_features > max_features {
                 return Err(cargo_err(&format!(
