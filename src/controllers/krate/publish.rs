@@ -16,7 +16,6 @@ use tokio::runtime::Handle;
 use url::Url;
 
 use crate::controllers::cargo_prelude::*;
-use crate::models::krate::MAX_NAME_LENGTH;
 use crate::models::{
     insert_version_owner_action, Category, Crate, DependencyKind, Keyword, NewCrate, NewVersion,
     Rights, VersionAction,
@@ -53,14 +52,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
     let metadata: PublishMetadata = serde_json::from_slice(&json_bytes)
         .map_err(|e| cargo_err(&format_args!("invalid upload request: {e}")))?;
 
-    if !Crate::valid_name(&metadata.name) {
-        return Err(cargo_err(&format_args!(
-            "\"{}\" is an invalid crate name (crate names must start with a \
-            letter, contain only letters, numbers, hyphens, or underscores and \
-            have at most {MAX_NAME_LENGTH} characters)",
-            metadata.name
-        )));
-    }
+    Crate::valid_name(&metadata.name)?;
 
     let version = match semver::Version::parse(&metadata.vers) {
         Ok(parsed) => parsed,
@@ -582,14 +574,7 @@ fn convert_dependency(
 }
 
 pub fn validate_dependency(dep: &EncodableCrateDependency) -> AppResult<()> {
-    if !Crate::valid_name(&dep.name) {
-        return Err(cargo_err(&format_args!(
-            "\"{}\" is an invalid dependency name (dependency names must \
-            start with a letter, contain only letters, numbers, hyphens, \
-            or underscores and have at most {MAX_NAME_LENGTH} characters)",
-            dep.name
-        )));
-    }
+    Crate::valid_name(&dep.name)?;
 
     for feature in &dep.features {
         if !Crate::valid_feature(feature) {
@@ -622,14 +607,7 @@ pub fn validate_dependency(dep: &EncodableCrateDependency) -> AppResult<()> {
     }
 
     if let Some(toml_name) = &dep.explicit_name_in_toml {
-        if !Crate::valid_dependency_name(toml_name) {
-            return Err(cargo_err(&format_args!(
-                "\"{toml_name}\" is an invalid dependency name (dependency \
-                names must start with a letter or underscore, contain only \
-                letters, numbers, hyphens, or underscores and have at most \
-                {MAX_NAME_LENGTH} characters)"
-            )));
-        }
+        Crate::valid_dependency_name(toml_name)?;
     }
 
     Ok(())

@@ -108,7 +108,7 @@ impl CrateScope {
         }
 
         let name_without_wildcard = pattern.strip_suffix('*').unwrap_or(pattern);
-        Crate::valid_name(name_without_wildcard)
+        Crate::valid_name(name_without_wildcard).is_ok()
     }
 
     pub fn matches(&self, crate_name: &str) -> bool {
