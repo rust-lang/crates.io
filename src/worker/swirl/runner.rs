@@ -3,6 +3,7 @@ use crate::worker::swirl::errors::{FailedJobsError, FetchError};
 use crate::worker::swirl::{storage, BackgroundJob, PerformError, PerformState};
 use diesel::connection::{AnsiTransactionManager, TransactionManager};
 use diesel::prelude::*;
+use diesel::result::Error::RollbackTransaction;
 use parking_lot::RwLock;
 use std::any::Any;
 use std::collections::HashMap;
@@ -107,93 +108,14 @@ impl<Context: Clone + Send + 'static> Runner<Context> {
     }
 
     fn run_single_job(&self, sender: SyncSender<Event>) {
-        use diesel::result::Error::RollbackTransaction;
+        let worker = Worker {
+            connection_pool: self.connection_pool.clone(),
+            environment: self.environment.clone(),
+            job_registry: self.job_registry.clone(),
+            sender,
+        };
 
-        let job_registry = self.job_registry.clone();
-        let environment = self.environment.clone();
-
-        // The connection may not be `Send` so we need to clone the pool instead
-        let pool = self.connection_pool.clone();
-        self.thread_pool.execute(move || {
-            let conn = &mut *match pool.get() {
-                Ok(conn) => conn,
-                Err(e) => {
-                    // TODO: Review error handling and possibly drop all usage of `let _ =` in this file
-                    let _ = sender.send(Event::FailedToAcquireConnection(e));
-                    return;
-                }
-            };
-
-            let job_run_result = conn.transaction::<_, diesel::result::Error, _>(|conn| {
-                let job = match storage::find_next_unlocked_job(conn).optional() {
-                    Ok(Some(j)) => {
-                        let _ = sender.send(Event::Working);
-                        j
-                    }
-                    Ok(None) => {
-                        let _ = sender.send(Event::NoJobAvailable);
-                        return Ok(());
-                    }
-                    Err(e) => {
-                        let _ = sender.send(Event::ErrorLoadingJob(e));
-                        return Err(RollbackTransaction);
-                    }
-                };
-                let job_id = job.id;
-
-                let initial_depth = get_transaction_depth(conn)?;
-                if initial_depth != 1 {
-                    warn!("Initial transaction depth is not 1. This is very unexpected");
-                }
-
-                let result = with_sentry_transaction(&job.job_type, || {
-                    conn.transaction(|conn| {
-                        let pool = pool.to_real_pool();
-                        let state = PerformState { conn, pool };
-                        catch_unwind(AssertUnwindSafe(|| {
-                            let job_registry = job_registry.read();
-                            let run_task_fn = job_registry.get(&job.job_type).ok_or_else(|| {
-                                PerformError::from(format!("Unknown job type {}", job.job_type))
-                            })?;
-
-                            run_task_fn(environment, state, job.data)
-                        }))
-                        .map_err(|e| try_to_extract_panic_info(&e))
-                    })
-                    // TODO: Replace with flatten() once that stabilizes
-                    .and_then(std::convert::identity)
-                });
-
-                // If the job panics it could leave the connection inside an inner transaction(s).
-                // Attempt to roll those back so we can mark the job as failed, but if the rollback
-                // fails then there isn't much we can do at this point so return early. `r2d2` will
-                // detect the bad state and drop it from the pool.
-                loop {
-                    let depth = get_transaction_depth(conn)?;
-                    if depth == initial_depth {
-                        break;
-                    }
-                    warn!("Rolling back a transaction due to a panic in a background task");
-                    AnsiTransactionManager::rollback_transaction(conn)?;
-                }
-
-                match result {
-                    Ok(_) => storage::delete_successful_job(conn, job_id)?,
-                    Err(e) => {
-                        eprintln!("Job {job_id} failed to run: {e}");
-                        storage::update_failed_job(conn, job_id);
-                    }
-                }
-                Ok(())
-            });
-
-            match job_run_result {
-                Ok(_) | Err(RollbackTransaction) => {}
-                Err(e) => {
-                    panic!("Failed to update job: {e:?}");
-                }
-            }
-        })
+        self.thread_pool.execute(move || worker.run_next_job())
     }
 
     fn connection(&self) -> Result<DieselPooledConn<'_>, Box<dyn Error + Send + Sync>> {
@@ -227,6 +149,96 @@ impl<Context: Clone + Send + 'static> Runner<Context> {
             Ok(())
         } else {
             Err(format!("{panic_count} threads panicked").into())
+        }
+    }
+}
+
+struct Worker<Context> {
+    connection_pool: DieselPool,
+    environment: Context,
+    job_registry: Arc<RwLock<HashMap<String, Box<RunTaskFn<Context>>>>>,
+    sender: SyncSender<Event>,
+}
+
+impl<Context: Clone + Send + 'static> Worker<Context> {
+    fn run_next_job(&self) {
+        let conn = &mut *match self.connection_pool.get() {
+            Ok(conn) => conn,
+            Err(e) => {
+                // TODO: Review error handling and possibly drop all usage of `let _ =` in this file
+                let _ = self.sender.send(Event::FailedToAcquireConnection(e));
+                return;
+            }
+        };
+
+        let job_run_result = conn.transaction::<_, diesel::result::Error, _>(|conn| {
+            let job = match storage::find_next_unlocked_job(conn).optional() {
+                Ok(Some(j)) => {
+                    let _ = self.sender.send(Event::Working);
+                    j
+                }
+                Ok(None) => {
+                    let _ = self.sender.send(Event::NoJobAvailable);
+                    return Ok(());
+                }
+                Err(e) => {
+                    let _ = self.sender.send(Event::ErrorLoadingJob(e));
+                    return Err(RollbackTransaction);
+                }
+            };
+            let job_id = job.id;
+
+            let initial_depth = get_transaction_depth(conn)?;
+            if initial_depth != 1 {
+                warn!("Initial transaction depth is not 1. This is very unexpected");
+            }
+
+            let result = with_sentry_transaction(&job.job_type, || {
+                conn.transaction(|conn| {
+                    let pool = self.connection_pool.to_real_pool();
+                    let state = PerformState { conn, pool };
+                    catch_unwind(AssertUnwindSafe(|| {
+                        let job_registry = self.job_registry.read();
+                        let run_task_fn = job_registry.get(&job.job_type).ok_or_else(|| {
+                            PerformError::from(format!("Unknown job type {}", job.job_type))
+                        })?;
+
+                        run_task_fn(self.environment.clone(), state, job.data)
+                    }))
+                    .map_err(|e| try_to_extract_panic_info(&e))
+                })
+                // TODO: Replace with flatten() once that stabilizes
+                .and_then(std::convert::identity)
+            });
+
+            // If the job panics it could leave the connection inside an inner transaction(s).
+            // Attempt to roll those back so we can mark the job as failed, but if the rollback
+            // fails then there isn't much we can do at this point so return early. `r2d2` will
+            // detect the bad state and drop it from the pool.
+            loop {
+                let depth = get_transaction_depth(conn)?;
+                if depth == initial_depth {
+                    break;
+                }
+                warn!("Rolling back a transaction due to a panic in a background task");
+                AnsiTransactionManager::rollback_transaction(conn)?;
+            }
+
+            match result {
+                Ok(_) => storage::delete_successful_job(conn, job_id)?,
+                Err(e) => {
+                    eprintln!("Job {job_id} failed to run: {e}");
+                    storage::update_failed_job(conn, job_id);
+                }
+            }
+            Ok(())
+        });
+
+        match job_run_result {
+            Ok(_) | Err(RollbackTransaction) => {}
+            Err(e) => {
+                panic!("Failed to update job: {e:?}");
+            }
         }
     }
 }
