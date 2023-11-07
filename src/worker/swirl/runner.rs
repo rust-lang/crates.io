@@ -104,14 +104,13 @@ impl<Context: Clone + Send + 'static> Runner<Context> {
             }
 
             pending_messages += jobs_to_queue;
-            match receiver.recv_timeout(self.job_start_timeout) {
-                Ok(Event::Working) => pending_messages -= 1,
-                Ok(Event::NoJobAvailable) => return Ok(()),
-                Ok(Event::ErrorLoadingJob(e)) => return Err(FetchError::FailedLoadingJob(e)),
-                Ok(Event::FailedToAcquireConnection(e)) => {
+            match receiver.recv_timeout(self.job_start_timeout)? {
+                Event::Working => pending_messages -= 1,
+                Event::NoJobAvailable => return Ok(()),
+                Event::ErrorLoadingJob(e) => return Err(FetchError::FailedLoadingJob(e)),
+                Event::FailedToAcquireConnection(e) => {
                     return Err(FetchError::NoDatabaseConnection(e));
                 }
-                Err(_) => return Err(FetchError::NoMessageReceived),
             }
         }
     }

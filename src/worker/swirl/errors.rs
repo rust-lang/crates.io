@@ -1,6 +1,7 @@
 use crate::db::PoolError;
 use diesel::result::Error as DieselError;
 use std::error::Error;
+use std::sync::mpsc::RecvTimeoutError;
 
 /// An error occurred queueing the job
 #[derive(Debug, thiserror::Error)]
@@ -36,5 +37,5 @@ pub enum FetchError {
     ///
     /// Either the thread pool is too small, or jobs have hung indefinitely
     #[error("No message was received from the worker thread. Try increasing the thread pool size or timeout period.")]
-    NoMessageReceived,
+    NoMessageReceived(#[from] RecvTimeoutError),
 }
