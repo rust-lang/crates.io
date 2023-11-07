@@ -19,6 +19,8 @@ const DEFAULT_JOB_START_TIMEOUT: Duration = Duration::from_secs(30);
 type RunTaskFn<Context> =
     dyn Fn(Context, PerformState<'_>, serde_json::Value) -> Result<(), PerformError> + Send + Sync;
 
+type JobRegistry<Context> = Arc<RwLock<HashMap<String, Box<RunTaskFn<Context>>>>>;
+
 fn runnable<J: BackgroundJob>(
     env: J::Context,
     state: PerformState<'_>,
@@ -32,7 +34,7 @@ fn runnable<J: BackgroundJob>(
 pub struct Runner<Context> {
     connection_pool: DieselPool,
     thread_pool: ThreadPool,
-    job_registry: Arc<RwLock<HashMap<String, Box<RunTaskFn<Context>>>>>,
+    job_registry: JobRegistry<Context>,
     environment: Context,
     job_start_timeout: Duration,
 }
@@ -152,7 +154,7 @@ impl<Context: Clone + Send + 'static> Runner<Context> {
 struct Worker<Context> {
     connection_pool: DieselPool,
     environment: Context,
-    job_registry: Arc<RwLock<HashMap<String, Box<RunTaskFn<Context>>>>>,
+    job_registry: JobRegistry<Context>,
     sender: SyncSender<Event>,
 }
 
