@@ -224,8 +224,8 @@ impl<Context: Clone + Send + 'static> Worker<Context> {
 
             match result {
                 Ok(_) => storage::delete_successful_job(conn, job_id)?,
-                Err(e) => {
-                    eprintln!("Job {job_id} failed to run: {e}");
+                Err(error) => {
+                    warn!(%job_id, %error, "Failed to run job");
                     storage::update_failed_job(conn, job_id);
                 }
             }
