@@ -169,7 +169,7 @@ fn create_database_from_template(
 #[instrument(skip(conn))]
 fn drop_database(name: &str, conn: &mut PgConnection) -> QueryResult<()> {
     debug!("Dropping database…");
-    sql_query(format!("DROP DATABASE {name}")).execute(conn)?;
+    sql_query(format!("DROP DATABASE {name} WITH (FORCE)")).execute(conn)?;
     Ok(())
 }
 
