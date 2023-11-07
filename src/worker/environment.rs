@@ -3,8 +3,9 @@ use crate::db::DieselPool;
 use crate::fastly::Fastly;
 use crate::storage::Storage;
 use crates_io_index::{Repository, RepositoryConfig};
+use parking_lot::{Mutex, MutexGuard};
 use std::ops::{Deref, DerefMut};
-use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
+use std::sync::Arc;
 use std::time::Instant;
 
 pub struct Environment {
@@ -36,10 +37,7 @@ impl Environment {
 
     #[instrument(skip_all)]
     pub fn lock_index(&self) -> anyhow::Result<RepositoryLock<'_>> {
-        let mut repo = self
-            .repository
-            .lock()
-            .unwrap_or_else(PoisonError::into_inner);
+        let mut repo = self.repository.lock();
 
         if repo.is_none() {
             info!("Cloning index");
