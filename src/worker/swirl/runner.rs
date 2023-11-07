@@ -91,7 +91,14 @@ impl<Context: Clone + Send + 'static> Runner<Context> {
             };
 
             for _ in 0..jobs_to_queue {
-                self.run_single_job(sender.clone());
+                let worker = Worker {
+                    connection_pool: self.connection_pool.clone(),
+                    environment: self.environment.clone(),
+                    job_registry: self.job_registry.clone(),
+                    sender: sender.clone(),
+                };
+
+                self.thread_pool.execute(move || worker.run_next_job())
             }
 
             pending_messages += jobs_to_queue;
@@ -105,17 +112,6 @@ impl<Context: Clone + Send + 'static> Runner<Context> {
                 Err(_) => return Err(FetchError::NoMessageReceived),
             }
         }
-    }
-
-    fn run_single_job(&self, sender: SyncSender<Event>) {
-        let worker = Worker {
-            connection_pool: self.connection_pool.clone(),
-            environment: self.environment.clone(),
-            job_registry: self.job_registry.clone(),
-            sender,
-        };
-
-        self.thread_pool.execute(move || worker.run_next_job())
     }
 
     fn connection(&self) -> Result<DieselPooledConn<'_>, Box<dyn Error + Send + Sync>> {
