@@ -1,6 +1,6 @@
 use crate::db::{DieselPool, DieselPooledConn, PoolError};
 use crate::worker::swirl::errors::FetchError;
-use crate::worker::swirl::{storage, BackgroundJob, PerformError, PerformState};
+use crate::worker::swirl::{storage, BackgroundJob, PerformState};
 use anyhow::anyhow;
 use diesel::connection::{AnsiTransactionManager, TransactionManager};
 use diesel::prelude::*;
@@ -16,8 +16,9 @@ use threadpool::ThreadPool;
 
 const DEFAULT_JOB_START_TIMEOUT: Duration = Duration::from_secs(30);
 
-type RunTaskFn<Context> =
-    dyn Fn(&Context, PerformState<'_>, serde_json::Value) -> Result<(), PerformError> + Send + Sync;
+type RunTaskFn<Context> = dyn Fn(&Context, PerformState<'_>, serde_json::Value) -> Result<(), anyhow::Error>
+    + Send
+    + Sync;
 
 type JobRegistry<Context> = Arc<RwLock<HashMap<String, Box<RunTaskFn<Context>>>>>;
 
@@ -25,7 +26,7 @@ fn runnable<J: BackgroundJob>(
     env: &J::Context,
     state: PerformState<'_>,
     payload: serde_json::Value,
-) -> Result<(), PerformError> {
+) -> Result<(), anyhow::Error> {
     let job: J = serde_json::from_value(payload)?;
     job.run(state, env)
 }
@@ -279,7 +280,7 @@ fn get_transaction_depth(conn: &mut PgConnection) -> QueryResult<u32> {
 /// However, the `panic::set_hook` functions deal with a `PanicInfo` type, and its payload is
 /// documented as "commonly but not always `&'static str` or `String`". So we can try all of those,
 /// and give up if we didn't get one of those three types.
-fn try_to_extract_panic_info(info: &(dyn Any + Send + 'static)) -> PerformError {
+fn try_to_extract_panic_info(info: &(dyn Any + Send + 'static)) -> anyhow::Error {
     if let Some(x) = info.downcast_ref::<PanicInfo<'_>>() {
         anyhow!("job panicked: {x}")
     } else if let Some(x) = info.downcast_ref::<&'static str>() {
@@ -339,7 +340,7 @@ mod tests {
             const JOB_NAME: &'static str = "test";
             type Context = TestContext;
 
-            fn run(&self, _: PerformState<'_>, ctx: &Self::Context) -> Result<(), PerformError> {
+            fn run(&self, _: PerformState<'_>, ctx: &Self::Context) -> Result<(), anyhow::Error> {
                 ctx.job_started_barrier.wait();
                 ctx.assertions_finished_barrier.wait();
                 Ok(())
@@ -383,7 +384,7 @@ mod tests {
             const JOB_NAME: &'static str = "test";
             type Context = ();
 
-            fn run(&self, _: PerformState<'_>, _: &Self::Context) -> Result<(), PerformError> {
+            fn run(&self, _: PerformState<'_>, _: &Self::Context) -> Result<(), anyhow::Error> {
                 Ok(())
             }
         }
@@ -424,7 +425,7 @@ mod tests {
             const JOB_NAME: &'static str = "test";
             type Context = TestContext;
 
-            fn run(&self, _: PerformState<'_>, ctx: &Self::Context) -> Result<(), PerformError> {
+            fn run(&self, _: PerformState<'_>, ctx: &Self::Context) -> Result<(), anyhow::Error> {
                 ctx.job_started_barrier.wait();
                 panic!();
             }
@@ -477,7 +478,7 @@ mod tests {
             const JOB_NAME: &'static str = "test";
             type Context = ();
 
-            fn run(&self, _: PerformState<'_>, _: &Self::Context) -> Result<(), PerformError> {
+            fn run(&self, _: PerformState<'_>, _: &Self::Context) -> Result<(), anyhow::Error> {
                 panic!()
             }
         }

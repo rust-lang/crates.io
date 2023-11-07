@@ -1,6 +1,6 @@
 use crate::models::VersionDownload;
 use crate::schema::{crates, metadata, version_downloads, versions};
-use crate::worker::swirl::{BackgroundJob, PerformError, PerformState};
+use crate::worker::swirl::{BackgroundJob, PerformState};
 use crate::worker::Environment;
 use diesel::prelude::*;
 use std::sync::Arc;
@@ -13,7 +13,7 @@ impl BackgroundJob for UpdateDownloads {
 
     type Context = Arc<Environment>;
 
-    fn run(&self, _state: PerformState<'_>, env: &Self::Context) -> Result<(), PerformError> {
+    fn run(&self, _state: PerformState<'_>, env: &Self::Context) -> Result<(), anyhow::Error> {
         let mut conn = env.connection_pool.get()?;
         update(&mut conn)?;
         Ok(())

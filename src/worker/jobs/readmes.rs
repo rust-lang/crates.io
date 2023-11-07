@@ -1,7 +1,7 @@
 //! Render README files to HTML.
 
 use crate::models::Version;
-use crate::worker::swirl::{BackgroundJob, PerformError, PerformState};
+use crate::worker::swirl::{BackgroundJob, PerformState};
 use crate::worker::Environment;
 use anyhow::Context;
 use crates_io_markdown::text_to_html;
@@ -41,7 +41,7 @@ impl BackgroundJob for RenderAndUploadReadme {
     type Context = Arc<Environment>;
 
     #[instrument(skip_all, fields(krate.name))]
-    fn run(&self, state: PerformState<'_>, env: &Self::Context) -> Result<(), PerformError> {
+    fn run(&self, state: PerformState<'_>, env: &Self::Context) -> Result<(), anyhow::Error> {
         use crate::schema::*;
         use diesel::prelude::*;
 

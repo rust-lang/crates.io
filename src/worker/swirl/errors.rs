@@ -15,9 +15,6 @@ pub enum EnqueueError {
     DatabaseError(#[from] DieselError),
 }
 
-/// An error occurred performing the job
-pub type PerformError = anyhow::Error;
-
 /// An error occurred while attempting to fetch jobs from the queue
 #[derive(Debug, thiserror::Error)]
 pub enum FetchError {
