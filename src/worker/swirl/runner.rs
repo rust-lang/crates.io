@@ -16,9 +16,8 @@ use threadpool::ThreadPool;
 
 const DEFAULT_JOB_START_TIMEOUT: Duration = Duration::from_secs(30);
 
-type RunTaskFn<Context> = dyn Fn(&Context, PerformState<'_>, serde_json::Value) -> Result<(), anyhow::Error>
-    + Send
-    + Sync;
+type RunTaskFn<Context> =
+    dyn Fn(&Context, PerformState<'_>, serde_json::Value) -> anyhow::Result<()> + Send + Sync;
 
 type JobRegistry<Context> = Arc<RwLock<HashMap<String, Box<RunTaskFn<Context>>>>>;
 
@@ -26,7 +25,7 @@ fn runnable<J: BackgroundJob>(
     env: &J::Context,
     state: PerformState<'_>,
     payload: serde_json::Value,
-) -> Result<(), anyhow::Error> {
+) -> anyhow::Result<()> {
     let job: J = serde_json::from_value(payload)?;
     job.run(state, env)
 }
@@ -340,7 +339,7 @@ mod tests {
             const JOB_NAME: &'static str = "test";
             type Context = TestContext;
 
-            fn run(&self, _: PerformState<'_>, ctx: &Self::Context) -> Result<(), anyhow::Error> {
+            fn run(&self, _: PerformState<'_>, ctx: &Self::Context) -> anyhow::Result<()> {
                 ctx.job_started_barrier.wait();
                 ctx.assertions_finished_barrier.wait();
                 Ok(())
@@ -384,7 +383,7 @@ mod tests {
             const JOB_NAME: &'static str = "test";
             type Context = ();
 
-            fn run(&self, _: PerformState<'_>, _: &Self::Context) -> Result<(), anyhow::Error> {
+            fn run(&self, _: PerformState<'_>, _: &Self::Context) -> anyhow::Result<()> {
                 Ok(())
             }
         }
@@ -425,7 +424,7 @@ mod tests {
             const JOB_NAME: &'static str = "test";
             type Context = TestContext;
 
-            fn run(&self, _: PerformState<'_>, ctx: &Self::Context) -> Result<(), anyhow::Error> {
+            fn run(&self, _: PerformState<'_>, ctx: &Self::Context) -> anyhow::Result<()> {
                 ctx.job_started_barrier.wait();
                 panic!();
             }
@@ -478,7 +477,7 @@ mod tests {
             const JOB_NAME: &'static str = "test";
             type Context = ();
 
-            fn run(&self, _: PerformState<'_>, _: &Self::Context) -> Result<(), anyhow::Error> {
+            fn run(&self, _: PerformState<'_>, _: &Self::Context) -> anyhow::Result<()> {
                 panic!()
             }
         }

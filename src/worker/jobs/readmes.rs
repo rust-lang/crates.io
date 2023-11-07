@@ -41,7 +41,7 @@ impl BackgroundJob for RenderAndUploadReadme {
     type Context = Arc<Environment>;
 
     #[instrument(skip_all, fields(krate.name))]
-    fn run(&self, state: PerformState<'_>, env: &Self::Context) -> Result<(), anyhow::Error> {
+    fn run(&self, state: PerformState<'_>, env: &Self::Context) -> anyhow::Result<()> {
         use crate::schema::*;
         use diesel::prelude::*;
 

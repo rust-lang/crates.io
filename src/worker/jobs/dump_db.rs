@@ -29,7 +29,7 @@ impl BackgroundJob for DumpDb {
 
     /// Create CSV dumps of the public information in the database, wrap them in a
     /// tarball and upload to S3.
-    fn run(&self, _state: PerformState<'_>, env: &Self::Context) -> Result<(), anyhow::Error> {
+    fn run(&self, _state: PerformState<'_>, env: &Self::Context) -> anyhow::Result<()> {
         let directory = DumpDirectory::create()?;
 
         info!(path = ?directory.export_dir, "Begin exporting database");
@@ -223,7 +223,7 @@ struct DumpTarball {
 }
 
 impl DumpTarball {
-    fn create(export_dir: &Path) -> Result<Self, anyhow::Error> {
+    fn create(export_dir: &Path) -> anyhow::Result<Self> {
         let tarball_path = export_dir.with_extension("tar.gz");
 
         debug!(path = ?tarball_path, "Creating tarball file");

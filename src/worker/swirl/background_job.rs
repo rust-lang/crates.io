@@ -21,7 +21,7 @@ pub trait BackgroundJob: Serialize + DeserializeOwned + 'static {
     type Context: Clone + Send + 'static;
 
     /// Execute the task. This method should define its logic
-    fn run(&self, state: PerformState<'_>, env: &Self::Context) -> Result<(), anyhow::Error>;
+    fn run(&self, state: PerformState<'_>, env: &Self::Context) -> anyhow::Result<()>;
 
     fn enqueue(&self, conn: &mut PgConnection) -> Result<i64, EnqueueError> {
         self.enqueue_with_priority(conn, Self::PRIORITY)

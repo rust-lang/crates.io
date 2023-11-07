@@ -39,7 +39,7 @@ impl Environment {
     }
 
     #[instrument(skip_all)]
-    pub fn lock_index(&self) -> Result<RepositoryLock<'_>, anyhow::Error> {
+    pub fn lock_index(&self) -> anyhow::Result<RepositoryLock<'_>> {
         let mut repo = self
             .repository
             .lock()
