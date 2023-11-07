@@ -20,11 +20,11 @@ impl BackgroundJob for DailyDbMaintenance {
     /// We only need to keep 90 days of entries in `version_downloads`. Once we have a mechanism to
     /// archive daily download counts and drop historical data, we can drop this task and rely on
     /// auto-vacuum again.
-    fn run(&self, state: PerformState<'_>, _env: &Self::Context) -> Result<(), PerformError> {
-        let mut conn = state.fresh_connection()?;
+    fn run(&self, _state: PerformState<'_>, env: &Self::Context) -> Result<(), PerformError> {
+        let mut conn = env.connection_pool.get()?;
 
         info!("Running VACUUM on version_downloads table");
-        sql_query("VACUUM version_downloads;").execute(&mut conn)?;
+        sql_query("VACUUM version_downloads;").execute(&mut *conn)?;
         info!("Finished running VACUUM on version_downloads table");
         Ok(())
     }
