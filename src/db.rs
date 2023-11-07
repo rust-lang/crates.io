@@ -96,7 +96,10 @@ impl DieselPool {
                 }
             }),
             DieselPool::BackgroundJobPool { pool } => Ok(DieselPooledConn::Pool(pool.get()?)),
-            DieselPool::Test(conn) => Ok(DieselPooledConn::Test(conn.try_lock().unwrap())),
+            DieselPool::Test(conn) => Ok(DieselPooledConn::Test(
+                conn.try_lock()
+                    .map_err(|_e| PoolError::TestConnectionUnavailable)?,
+            )),
         }
     }
 
@@ -234,4 +237,6 @@ pub enum PoolError {
     R2D2(#[from] r2d2::PoolError),
     #[error("unhealthy database pool")]
     UnhealthyPool,
+    #[error("Failed to lock test database connection")]
+    TestConnectionUnavailable,
 }
