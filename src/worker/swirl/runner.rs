@@ -1,6 +1,7 @@
 use crate::db::{DieselPool, DieselPooledConn, PoolError};
-use crate::worker::swirl::errors::{FailedJobsError, FetchError};
+use crate::worker::swirl::errors::FetchError;
 use crate::worker::swirl::{storage, BackgroundJob, PerformError, PerformState};
+use anyhow::anyhow;
 use diesel::connection::{AnsiTransactionManager, TransactionManager};
 use diesel::prelude::*;
 use diesel::result::Error::RollbackTransaction;
@@ -130,17 +131,13 @@ impl<Context: Clone + Send + 'static> Runner<Context> {
     /// or an error loading the job count from the database, an opaque error
     /// will be returned.
     // FIXME: Only public for `src/tests/util/test_app.rs`
-    pub fn check_for_failed_jobs(&self) -> Result<(), FailedJobsError> {
+    pub fn check_for_failed_jobs(&self) -> anyhow::Result<()> {
         self.wait_for_jobs()?;
-        let failed_jobs = storage::failed_job_count(
-            &mut *self
-                .connection()
-                .map_err(|e| FailedJobsError::__Unknown(e.into()))?,
-        )?;
+        let failed_jobs = storage::failed_job_count(&mut *self.connection()?)?;
         if failed_jobs == 0 {
             Ok(())
         } else {
-            Err(FailedJobsError::JobsFailed(failed_jobs))
+            Err(anyhow!("{failed_jobs} jobs failed"))
         }
     }
 
