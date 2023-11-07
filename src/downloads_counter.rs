@@ -9,10 +9,11 @@ use std::sync::atomic::{AtomicI64, AtomicUsize, Ordering};
 /// database during each connection for performance reasons. To reduce the write load, this struct
 /// collects the pending updates from the current process and writes in batch.
 ///
-/// To avoid locking the whole data structure behind a RwLock, which could potentially delay
-/// requests, this uses the dashmap crate. A DashMap has the same public API as an HashMap, but
-/// stores the items into `num_cpus()*4` individually locked shards. This approach reduces the
-/// likelihood of a request encountering a locked shard.
+/// To avoid locking the whole data structure behind a [RwLock](std::sync::RwLock), which could
+/// potentially delay requests, this uses the [dashmap] crate. A [DashMap] has the same public API
+/// as an [HashMap](std::collections::HashMap), but stores the items into `num_cpus()*4`
+/// individually locked shards. This approach reduces the likelihood of a request encountering a
+/// locked shard.
 ///
 /// Persisting the download counts in the database also takes advantage of the inner sharding of
 /// DashMaps: to avoid locking all the download requests at the same time each iteration only
