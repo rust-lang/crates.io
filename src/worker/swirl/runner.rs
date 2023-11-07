@@ -188,7 +188,7 @@ impl<Context: Clone + Send + 'static> Worker<Context> {
 
             let initial_depth = get_transaction_depth(conn)?;
             if initial_depth != 1 {
-                warn!("Initial transaction depth is not 1. This is very unexpected");
+                warn!(%initial_depth, "Unexpected initial transaction depth detected");
             }
 
             let result = with_sentry_transaction(&job.job_type, || {
@@ -218,14 +218,14 @@ impl<Context: Clone + Send + 'static> Worker<Context> {
                 if depth == initial_depth {
                     break;
                 }
-                warn!("Rolling back a transaction due to a panic in a background task");
+                warn!(%initial_depth, %depth, "Rolling back a transaction due to a panic in a background task");
                 AnsiTransactionManager::rollback_transaction(conn)?;
             }
 
             match result {
                 Ok(_) => storage::delete_successful_job(conn, job_id)?,
-                Err(e) => {
-                    eprintln!("Job {job_id} failed to run: {e}");
+                Err(error) => {
+                    warn!(%job_id, %error, "Failed to run job");
                     storage::update_failed_job(conn, job_id);
                 }
             }
