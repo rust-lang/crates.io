@@ -218,7 +218,7 @@ impl<Context: Clone + Send + 'static> Worker<Context> {
                 if depth == initial_depth {
                     break;
                 }
-                warn!("Rolling back a transaction due to a panic in a background task");
+                warn!(%initial_depth, %depth, "Rolling back a transaction due to a panic in a background task");
                 AnsiTransactionManager::rollback_transaction(conn)?;
             }
 
