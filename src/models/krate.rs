@@ -288,15 +288,15 @@ impl Crate {
         Ok(())
     }
 
-    /// Validates a whole feature string, `features = ["THIS", "ALL/THIS"]`.
-    pub fn valid_feature(name: &str) -> bool {
+    /// Validates a whole feature string, `features = ["THIS", "and/THIS", "dep:THIS", "dep?/THIS"]`.
+    pub fn valid_feature(name: &str) -> AppResult<()> {
         match name.split_once('/') {
             Some((dep, dep_feat)) => {
                 let dep = dep.strip_suffix('?').unwrap_or(dep);
-                Crate::valid_dependency_name(dep).is_ok()
-                    && Crate::valid_feature_name(dep_feat).is_ok()
+                Crate::valid_dependency_name(dep)?;
+                Crate::valid_feature_name(dep_feat)
             }
-            None => Crate::valid_feature_name(name.strip_prefix("dep:").unwrap_or(name)).is_ok(),
+            None => Crate::valid_feature_name(name.strip_prefix("dep:").unwrap_or(name)),
         }
     }
 
@@ -567,25 +567,25 @@ mod tests {
 
     #[test]
     fn valid_feature_names() {
-        assert!(Crate::valid_feature("foo"));
-        assert!(Crate::valid_feature("1foo"));
-        assert!(Crate::valid_feature("_foo"));
-        assert!(Crate::valid_feature("_foo-_+.1"));
-        assert!(Crate::valid_feature("_foo-_+.1"));
-        assert!(!Crate::valid_feature(""));
-        assert!(!Crate::valid_feature("/"));
-        assert!(!Crate::valid_feature("%/%"));
-        assert!(Crate::valid_feature("a/a"));
-        assert!(Crate::valid_feature("32-column-tables"));
-        assert!(Crate::valid_feature("c++20"));
-        assert!(Crate::valid_feature("krate/c++20"));
-        assert!(!Crate::valid_feature("c++20/wow"));
-        assert!(Crate::valid_feature("foo?/bar"));
-        assert!(Crate::valid_feature("dep:foo"));
-        assert!(!Crate::valid_feature("dep:foo?/bar"));
-        assert!(!Crate::valid_feature("foo/?bar"));
-        assert!(!Crate::valid_feature("foo?bar"));
-        assert!(Crate::valid_feature("bar.web"));
-        assert!(Crate::valid_feature("foo/bar.web"));
+        assert!(Crate::valid_feature("foo").is_ok());
+        assert!(Crate::valid_feature("1foo").is_ok());
+        assert!(Crate::valid_feature("_foo").is_ok());
+        assert!(Crate::valid_feature("_foo-_+.1").is_ok());
+        assert!(Crate::valid_feature("_foo-_+.1").is_ok());
+        assert!(Crate::valid_feature("").is_err());
+        assert!(Crate::valid_feature("/").is_err());
+        assert!(Crate::valid_feature("%/%").is_err());
+        assert!(Crate::valid_feature("a/a").is_ok());
+        assert!(Crate::valid_feature("32-column-tables").is_ok());
+        assert!(Crate::valid_feature("c++20").is_ok());
+        assert!(Crate::valid_feature("krate/c++20").is_ok());
+        assert!(Crate::valid_feature("c++20/wow").is_err());
+        assert!(Crate::valid_feature("foo?/bar").is_ok());
+        assert!(Crate::valid_feature("dep:foo").is_ok());
+        assert!(Crate::valid_feature("dep:foo?/bar").is_err());
+        assert!(Crate::valid_feature("foo/?bar").is_err());
+        assert!(Crate::valid_feature("foo?bar").is_err());
+        assert!(Crate::valid_feature("bar.web").is_ok());
+        assert!(Crate::valid_feature("foo/bar.web").is_ok());
     }
 }
