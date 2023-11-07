@@ -8,7 +8,6 @@ use diesel::result::Error::RollbackTransaction;
 use parking_lot::RwLock;
 use std::any::Any;
 use std::collections::HashMap;
-use std::error::Error;
 use std::panic::{catch_unwind, AssertUnwindSafe, PanicInfo};
 use std::sync::mpsc::{sync_channel, SyncSender};
 use std::sync::Arc;
@@ -141,13 +140,13 @@ impl<Context: Clone + Send + 'static> Runner<Context> {
         }
     }
 
-    fn wait_for_jobs(&self) -> Result<(), Box<dyn Error + Send + Sync>> {
+    fn wait_for_jobs(&self) -> anyhow::Result<()> {
         self.thread_pool.join();
         let panic_count = self.thread_pool.panic_count();
         if panic_count == 0 {
             Ok(())
         } else {
-            Err(format!("{panic_count} threads panicked").into())
+            Err(anyhow!("{panic_count} threads panicked"))
         }
     }
 }
