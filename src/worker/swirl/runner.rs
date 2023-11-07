@@ -17,17 +17,17 @@ use threadpool::ThreadPool;
 const DEFAULT_JOB_START_TIMEOUT: Duration = Duration::from_secs(30);
 
 type RunTaskFn<Context> =
-    dyn Fn(Context, PerformState<'_>, serde_json::Value) -> Result<(), PerformError> + Send + Sync;
+    dyn Fn(&Context, PerformState<'_>, serde_json::Value) -> Result<(), PerformError> + Send + Sync;
 
 type JobRegistry<Context> = Arc<RwLock<HashMap<String, Box<RunTaskFn<Context>>>>>;
 
 fn runnable<J: BackgroundJob>(
-    env: J::Context,
+    env: &J::Context,
     state: PerformState<'_>,
     payload: serde_json::Value,
 ) -> Result<(), PerformError> {
     let job: J = serde_json::from_value(payload)?;
-    job.run(state, &env)
+    job.run(state, env)
 }
 
 /// The core runner responsible for locking and running jobs
@@ -200,7 +200,7 @@ impl<Context: Clone + Send + 'static> Worker<Context> {
                             PerformError::from(format!("Unknown job type {}", job.job_type))
                         })?;
 
-                        run_task_fn(self.environment.clone(), state, job.data)
+                        run_task_fn(&self.environment, state, job.data)
                     }))
                     .map_err(|e| try_to_extract_panic_info(&e))
                 })
