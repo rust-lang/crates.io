@@ -1,4 +1,5 @@
 use crate::cloudfront::CloudFront;
+use crate::db::DieselPool;
 use crate::fastly::Fastly;
 use crate::storage::Storage;
 use crate::worker::swirl::PerformError;
@@ -15,6 +16,7 @@ pub struct Environment {
     cloudfront: Option<CloudFront>,
     fastly: Option<Fastly>,
     pub storage: Arc<Storage>,
+    pub connection_pool: DieselPool,
 }
 
 impl Environment {
@@ -24,6 +26,7 @@ impl Environment {
         cloudfront: Option<CloudFront>,
         fastly: Option<Fastly>,
         storage: Arc<Storage>,
+        connection_pool: DieselPool,
     ) -> Self {
         Self {
             repository_config,
@@ -32,6 +35,7 @@ impl Environment {
             cloudfront,
             fastly,
             storage,
+            connection_pool,
         }
     }
 
