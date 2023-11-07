@@ -2,12 +2,15 @@ use crate::cloudfront::CloudFront;
 use crate::fastly::Fastly;
 use crate::storage::Storage;
 use crate::worker::swirl::PerformError;
-use crates_io_index::Repository;
+use crates_io_index::{Repository, RepositoryConfig};
 use reqwest::blocking::Client;
+use std::ops::{Deref, DerefMut};
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
+use std::time::Instant;
 
 pub struct Environment {
-    index: Mutex<Repository>,
+    repository_config: RepositoryConfig,
+    repository: Mutex<Option<Repository>>,
     http_client: Client,
     cloudfront: Option<CloudFront>,
     fastly: Option<Fastly>,
@@ -16,14 +19,15 @@ pub struct Environment {
 
 impl Environment {
     pub fn new(
-        index: Repository,
+        repository_config: RepositoryConfig,
         http_client: Client,
         cloudfront: Option<CloudFront>,
         fastly: Option<Fastly>,
         storage: Arc<Storage>,
     ) -> Self {
         Self {
-            index: Mutex::new(index),
+            repository_config,
+            repository: Mutex::new(None),
             http_client,
             cloudfront,
             fastly,
@@ -32,10 +36,25 @@ impl Environment {
     }
 
     #[instrument(skip_all)]
-    pub fn lock_index(&self) -> Result<MutexGuard<'_, Repository>, PerformError> {
-        let repo = self.index.lock().unwrap_or_else(PoisonError::into_inner);
-        repo.reset_head()?;
-        Ok(repo)
+    pub fn lock_index(&self) -> Result<RepositoryLock<'_>, PerformError> {
+        let mut repo = self
+            .repository
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner);
+
+        if repo.is_none() {
+            info!("Cloning index");
+            let clone_start = Instant::now();
+
+            *repo = Some(Repository::open(&self.repository_config)?);
+
+            let clone_duration = clone_start.elapsed();
+            info!(duration = ?clone_duration, "Index cloned");
+        }
+
+        let repo_lock = RepositoryLock { repo };
+        repo_lock.reset_head()?;
+        Ok(repo_lock)
     }
 
     /// Returns a client for making HTTP requests to upload crate files.
@@ -49,5 +68,23 @@ impl Environment {
 
     pub(crate) fn fastly(&self) -> Option<&Fastly> {
         self.fastly.as_ref()
+    }
+}
+
+pub struct RepositoryLock<'a> {
+    repo: MutexGuard<'a, Option<Repository>>,
+}
+
+impl Deref for RepositoryLock<'_> {
+    type Target = Repository;
+
+    fn deref(&self) -> &Self::Target {
+        self.repo.as_ref().unwrap()
+    }
+}
+
+impl DerefMut for RepositoryLock<'_> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.repo.as_mut().unwrap()
     }
 }
