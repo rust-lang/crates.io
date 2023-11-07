@@ -188,7 +188,7 @@ impl<Context: Clone + Send + 'static> Worker<Context> {
 
             let initial_depth = get_transaction_depth(conn)?;
             if initial_depth != 1 {
-                warn!("Initial transaction depth is not 1. This is very unexpected");
+                warn!(%initial_depth, "Unexpected initial transaction depth detected");
             }
 
             let result = with_sentry_transaction(&job.job_type, || {
