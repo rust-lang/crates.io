@@ -21,7 +21,7 @@ use std::sync::atomic::{AtomicI64, AtomicUsize, Ordering};
 ///
 /// The disadvantage of this approach is that download counts are stored in memory until they're
 /// persisted, so it's possible to lose some of them if the process exits ungracefully. While
-/// that's far from ideal, the advantage of batching database updates far outweights potentially
+/// that's far from ideal, the advantage of batching database updates far outweighs potentially
 /// losing some download counts.
 #[derive(Debug)]
 pub struct DownloadsCounter {
