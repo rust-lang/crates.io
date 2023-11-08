@@ -38,7 +38,7 @@ use http::header;
 use secrecy::ExposeSecret;
 use std::collections::HashMap;
 use std::net::SocketAddr;
-use tower_service::Service;
+use tower::ServiceExt;
 
 mod chaosproxy;
 mod github;
@@ -97,7 +97,7 @@ pub trait RequestHelper {
         // Add a mock `SocketAddr` to the requests so that the `ConnectInfo`
         // extractor has something to extract.
         let mocket_addr = SocketAddr::from(([127, 0, 0, 1], 52381));
-        let mut router = router.layer(MockConnectInfo(mocket_addr));
+        let router = router.layer(MockConnectInfo(mocket_addr));
 
         let rt = tokio::runtime::Builder::new_current_thread()
             .enable_all()
@@ -105,7 +105,7 @@ pub trait RequestHelper {
             .unwrap();
 
         let axum_response = rt
-            .block_on(router.call(request.map(hyper::Body::from)))
+            .block_on(router.oneshot(request.map(hyper::Body::from)))
             .unwrap();
 
         // axum responses can't be converted directly to reqwest responses,
