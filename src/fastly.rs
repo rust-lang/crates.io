@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Context};
 use http::HeaderValue;
-use reqwest::blocking::Client;
+use reqwest::Client;
 use secrecy::{ExposeSecret, SecretString};
 
 #[derive(Debug)]
@@ -34,7 +34,7 @@ impl Fastly {
     /// More information on Fastly's APIs for cache invalidations can be found here:
     /// <https://developer.fastly.com/reference/api/purging/>
     #[instrument(skip(self))]
-    pub fn invalidate(&self, path: &str) -> anyhow::Result<()> {
+    pub async fn invalidate(&self, path: &str) -> anyhow::Result<()> {
         if path.contains('*') {
             return Err(anyhow!(
                 "wildcard invalidations are not supported for Fastly"
@@ -49,13 +49,13 @@ impl Fastly {
 
         for domain in domains.iter() {
             let url = format!("https://api.fastly.com/purge/{}/{}", domain, path);
-            self.purge_url(&self.client, &url)?;
+            self.purge_url(&self.client, &url).await?;
         }
 
         Ok(())
     }
 
-    fn purge_url(&self, client: &Client, url: &str) -> anyhow::Result<()> {
+    async fn purge_url(&self, client: &Client, url: &str) -> anyhow::Result<()> {
         trace!(?url);
 
         let api_token = self.api_token.expose_secret();
@@ -70,6 +70,7 @@ impl Fastly {
             .post(url)
             .headers(headers)
             .send()
+            .await
             .context("failed to send invalidation request to Fastly")?;
 
         let status = response.status();
@@ -81,7 +82,7 @@ impl Fastly {
             }
             Err(error) => {
                 let headers = response.headers().clone();
-                let body = response.text();
+                let body = response.text().await;
                 debug!(
                     ?status,
                     ?headers,
