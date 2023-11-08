@@ -1,6 +1,6 @@
 use bytes::Bytes;
 use crates_io_index::Repository;
-use reqwest::blocking::Client;
+use reqwest::Client;
 use std::fmt::Display;
 
 pub struct ApiClient {
@@ -16,21 +16,18 @@ impl ApiClient {
         Ok(Self { http_client })
     }
 
-    pub fn load_crate<N: Display>(&self, name: N) -> anyhow::Result<CrateResponse> {
+    pub async fn load_crate<N: Display>(&self, name: N) -> anyhow::Result<CrateResponse> {
         let url = format!(
             "https://staging.crates.io/api/v1/crates/{}?include=versions",
             name
         );
 
-        self.http_client
-            .get(url)
-            .send()?
-            .error_for_status()?
-            .json()
-            .map_err(Into::into)
+        let response = self.http_client.get(url).send().await?;
+        let response = response.error_for_status()?;
+        response.json().await.map_err(Into::into)
     }
 
-    pub fn load_version<N: Display, V: Display>(
+    pub async fn load_version<N: Display, V: Display>(
         &self,
         name: N,
         version: V,
@@ -40,15 +37,12 @@ impl ApiClient {
             name, version
         );
 
-        self.http_client
-            .get(url)
-            .send()?
-            .error_for_status()?
-            .json()
-            .map_err(Into::into)
+        let response = self.http_client.get(url).send().await?;
+        let response = response.error_for_status()?;
+        response.json().await.map_err(Into::into)
     }
 
-    pub fn download_crate_file<N: Display, V: Display>(
+    pub async fn download_crate_file<N: Display, V: Display>(
         &self,
         name: N,
         version: V,
@@ -58,15 +52,12 @@ impl ApiClient {
             name, version
         );
 
-        self.http_client
-            .get(url)
-            .send()?
-            .error_for_status()?
-            .bytes()
-            .map_err(Into::into)
+        let response = self.http_client.get(url).send().await?;
+        let response = response.error_for_status()?;
+        response.bytes().await.map_err(Into::into)
     }
 
-    pub fn load_from_sparse_index(
+    pub async fn load_from_sparse_index(
         &self,
         name: &str,
     ) -> anyhow::Result<Vec<crates_io_index::Crate>> {
@@ -74,31 +65,28 @@ impl ApiClient {
 
         let url = format!("https://index.staging.crates.io/{path}",);
 
-        let text = self
-            .http_client
-            .get(url)
-            .send()?
-            .error_for_status()?
-            .text()?;
+        let response = self.http_client.get(url).send().await?;
+        let response = response.error_for_status()?;
+        let text = response.text().await?;
 
         text.lines()
             .map(|line| serde_json::from_str(line).map_err(Into::into))
             .collect()
     }
 
-    pub fn load_from_git_index(&self, name: &str) -> anyhow::Result<Vec<crates_io_index::Crate>> {
+    pub async fn load_from_git_index(
+        &self,
+        name: &str,
+    ) -> anyhow::Result<Vec<crates_io_index::Crate>> {
         let path = Repository::relative_index_file_for_url(name);
 
         let url = format!(
             "https://raw.githubusercontent.com/rust-lang/staging.crates.io-index/master/{path}",
         );
 
-        let text = self
-            .http_client
-            .get(url)
-            .send()?
-            .error_for_status()?
-            .text()?;
+        let response = self.http_client.get(url).send().await?;
+        let response = response.error_for_status()?;
+        let text = response.text().await?;
 
         text.lines()
             .map(|line| serde_json::from_str(line).map_err(Into::into))

@@ -9,12 +9,13 @@ anyhow = "=1.0.75"
 bytes = "=1.5.0"
 clap = { version = "=4.4.7", features = ["derive", "env", "unicode", "wrap_help"] }
 crates_io_index = { path = "../crates_io_index" }
-reqwest = { version = "=0.11.22", features = ["blocking", "gzip", "json"] }
+reqwest = { version = "=0.11.22", features = ["gzip", "json"] }
 secrecy = "=0.8.0"
 semver = { version = "=1.0.20", features = ["serde"] }
 serde = { version = "=1.0.192", features = ["derive"] }
 serde_json = "=1.0.108"
 tempfile = "=3.8.1"
 thiserror = "=1.0.50"
+tokio = { version = "=1.33.0", features = ["fs", "macros", "process", "rt-multi-thread"]}
 tracing = "=0.1.40"
 tracing-subscriber = { version = "=0.3.17", features = ["env-filter"] }
