@@ -73,7 +73,7 @@ fn main() -> anyhow::Result<()> {
         .build()
         .expect("Couldn't build client");
 
-    let fastly = Fastly::from_environment(client.clone());
+    let fastly = Fastly::from_environment(client);
 
     let connection_pool = r2d2::Pool::builder()
         .max_size(10)
@@ -84,7 +84,6 @@ fn main() -> anyhow::Result<()> {
 
     let environment = Environment::new(
         repository_config,
-        client,
         cloudfront,
         fastly,
         storage,

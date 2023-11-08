@@ -254,7 +254,6 @@ impl TestAppBuilder {
             };
             let environment = Environment::new(
                 repository_config,
-                app.http_client().clone(),
                 None,
                 None,
                 app.storage.clone(),
