@@ -49,13 +49,13 @@ impl Fastly {
 
         for domain in domains.iter() {
             let url = format!("https://api.fastly.com/purge/{}/{}", domain, path);
-            self.purge_url(&self.client, &url).await?;
+            self.purge_url(&url).await?;
         }
 
         Ok(())
     }
 
-    async fn purge_url(&self, client: &Client, url: &str) -> anyhow::Result<()> {
+    async fn purge_url(&self, url: &str) -> anyhow::Result<()> {
         trace!(?url);
 
         let api_token = self.api_token.expose_secret();
@@ -66,7 +66,8 @@ impl Fastly {
         headers.append("Fastly-Key", api_token);
 
         debug!("sending invalidation request to Fastly");
-        let response = client
+        let response = self
+            .client
             .post(url)
             .headers(headers)
             .send()
