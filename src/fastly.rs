@@ -5,16 +5,18 @@ use secrecy::{ExposeSecret, SecretString};
 
 #[derive(Debug)]
 pub struct Fastly {
+    client: Client,
     api_token: SecretString,
     static_domain_name: String,
 }
 
 impl Fastly {
-    pub fn from_environment() -> Option<Self> {
+    pub fn from_environment(client: Client) -> Option<Self> {
         let api_token = dotenvy::var("FASTLY_API_TOKEN").ok()?.into();
         let static_domain_name = dotenvy::var("S3_CDN").expect("missing S3_CDN");
 
         Some(Self {
+            client,
             api_token,
             static_domain_name,
         })
@@ -31,8 +33,8 @@ impl Fastly {
     ///
     /// More information on Fastly's APIs for cache invalidations can be found here:
     /// <https://developer.fastly.com/reference/api/purging/>
-    #[instrument(skip(self, client))]
-    pub fn invalidate(&self, client: &Client, path: &str) -> anyhow::Result<()> {
+    #[instrument(skip(self))]
+    pub fn invalidate(&self, path: &str) -> anyhow::Result<()> {
         if path.contains('*') {
             return Err(anyhow!(
                 "wildcard invalidations are not supported for Fastly"
@@ -47,7 +49,7 @@ impl Fastly {
 
         for domain in domains.iter() {
             let url = format!("https://api.fastly.com/purge/{}/{}", domain, path);
-            self.purge_url(client, &url)?;
+            self.purge_url(&self.client, &url)?;
         }
 
         Ok(())

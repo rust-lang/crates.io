@@ -58,7 +58,7 @@ impl BackgroundJob for DumpDb {
         }
 
         if let Some(fastly) = env.fastly() {
-            if let Err(error) = fastly.invalidate(env.http_client(), &self.target_name) {
+            if let Err(error) = fastly.invalidate(&self.target_name) {
                 warn!("failed to invalidate Fastly cache: {}", error);
             }
         }

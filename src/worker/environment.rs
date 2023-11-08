@@ -3,7 +3,6 @@ use crate::db::DieselPool;
 use crate::fastly::Fastly;
 use crate::storage::Storage;
 use crates_io_index::{Repository, RepositoryConfig};
-use reqwest::blocking::Client;
 use std::ops::{Deref, DerefMut};
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use std::time::Instant;
@@ -11,7 +10,6 @@ use std::time::Instant;
 pub struct Environment {
     repository_config: RepositoryConfig,
     repository: Mutex<Option<Repository>>,
-    http_client: Client,
     cloudfront: Option<CloudFront>,
     fastly: Option<Fastly>,
     pub storage: Arc<Storage>,
@@ -21,7 +19,6 @@ pub struct Environment {
 impl Environment {
     pub fn new(
         repository_config: RepositoryConfig,
-        http_client: Client,
         cloudfront: Option<CloudFront>,
         fastly: Option<Fastly>,
         storage: Arc<Storage>,
@@ -30,7 +27,6 @@ impl Environment {
         Self {
             repository_config,
             repository: Mutex::new(None),
-            http_client,
             cloudfront,
             fastly,
             storage,
@@ -58,11 +54,6 @@ impl Environment {
         let repo_lock = RepositoryLock { repo };
         repo_lock.reset_head()?;
         Ok(repo_lock)
-    }
-
-    /// Returns a client for making HTTP requests to upload crate files.
-    pub(crate) fn http_client(&self) -> &Client {
-        &self.http_client
     }
 
     pub(crate) fn cloudfront(&self) -> Option<&CloudFront> {

@@ -66,13 +66,14 @@ fn main() -> anyhow::Result<()> {
     let repository_config = RepositoryConfig::from_environment()?;
 
     let cloudfront = CloudFront::from_environment();
-    let fastly = Fastly::from_environment();
     let storage = Arc::new(Storage::from_config(&config.storage));
 
     let client = Client::builder()
         .timeout(Duration::from_secs(45))
         .build()
         .expect("Couldn't build client");
+
+    let fastly = Fastly::from_environment(client);
 
     let connection_pool = r2d2::Pool::builder()
         .max_size(10)
@@ -83,7 +84,6 @@ fn main() -> anyhow::Result<()> {
 
     let environment = Environment::new(
         repository_config,
-        client,
         cloudfront,
         fastly,
         storage,
