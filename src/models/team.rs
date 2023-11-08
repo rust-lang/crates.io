@@ -4,6 +4,7 @@ use crate::app::App;
 use crate::util::errors::{cargo_err, AppResult, NotFound};
 
 use oauth2::AccessToken;
+use tokio::runtime::Handle;
 
 use crate::models::{Crate, CrateOwner, Owner, OwnerKind, User};
 use crate::schema::{crate_owners, teams};
@@ -137,9 +138,8 @@ impl Team {
         }
 
         let token = AccessToken::new(req_user.gh_access_token.clone());
-        let team = app
-            .github
-            .team_by_name(org_name, team_name, &token)
+        let team = Handle::current()
+            .block_on(app.github.team_by_name(org_name, team_name, &token))
             .map_err(|_| {
                 cargo_err(&format_args!(
                     "could not find the github team {org_name}/{team_name}"
@@ -148,13 +148,13 @@ impl Team {
 
         let org_id = team.organization.id;
 
-        if !can_add_team(app, org_id, team.id, req_user)? {
+        if !Handle::current().block_on(can_add_team(app, org_id, team.id, req_user))? {
             return Err(cargo_err(
                 "only members of a team or organization owners can add it as an owner",
             ));
         }
 
-        let org = app.github.org_by_name(org_name, &token)?;
+        let org = Handle::current().block_on(app.github.org_by_name(org_name, &token))?;
 
         NewTeam::new(
             &login.to_lowercase(),
@@ -171,9 +171,9 @@ impl Team {
     /// Note that we're assuming that the given user is the one interested in
     /// the answer. If this is not the case, then we could accidentally leak
     /// private membership information here.
-    pub fn contains_user(&self, app: &App, user: &User) -> AppResult<bool> {
+    pub async fn contains_user(&self, app: &App, user: &User) -> AppResult<bool> {
         match self.org_id {
-            Some(org_id) => team_with_gh_id_contains_user(app, org_id, self.github_id, user),
+            Some(org_id) => team_with_gh_id_contains_user(app, org_id, self.github_id, user).await,
             // This means we don't have an org_id on file for the `self` team. It much
             // probably was deleted from github by the time we backfilled the database.
             // Short-circuiting to false since a non-existent team cannot contain any
@@ -196,21 +196,27 @@ impl Team {
     }
 }
 
-fn can_add_team(app: &App, org_id: i32, team_id: i32, user: &User) -> AppResult<bool> {
-    Ok(team_with_gh_id_contains_user(app, org_id, team_id, user)?
-        || is_gh_org_owner(app, org_id, user)?)
+async fn can_add_team(app: &App, org_id: i32, team_id: i32, user: &User) -> AppResult<bool> {
+    Ok(
+        team_with_gh_id_contains_user(app, org_id, team_id, user).await?
+            || is_gh_org_owner(app, org_id, user).await?,
+    )
 }
 
-fn is_gh_org_owner(app: &App, org_id: i32, user: &User) -> AppResult<bool> {
+async fn is_gh_org_owner(app: &App, org_id: i32, user: &User) -> AppResult<bool> {
     let token = AccessToken::new(user.gh_access_token.clone());
-    match app.github.org_membership(org_id, &user.gh_login, &token) {
+    match app
+        .github
+        .org_membership(org_id, &user.gh_login, &token)
+        .await
+    {
         Ok(membership) => Ok(membership.state == "active" && membership.role == "admin"),
         Err(e) if e.is::<NotFound>() => Ok(false),
         Err(e) => Err(e),
     }
 }
 
-fn team_with_gh_id_contains_user(
+async fn team_with_gh_id_contains_user(
     app: &App,
     github_org_id: i32,
     github_team_id: i32,
@@ -220,15 +226,15 @@ fn team_with_gh_id_contains_user(
     // check that "state": "active"
 
     let token = AccessToken::new(user.gh_access_token.clone());
-    let membership =
-        match app
-            .github
-            .team_membership(github_org_id, github_team_id, &user.gh_login, &token)
-        {
-            // Officially how `false` is returned
-            Err(ref e) if e.is::<NotFound>() => return Ok(false),
-            x => x?,
-        };
+    let membership = match app
+        .github
+        .team_membership(github_org_id, github_team_id, &user.gh_login, &token)
+        .await
+    {
+        // Officially how `false` is returned
+        Err(ref e) if e.is::<NotFound>() => return Ok(false),
+        x => x?,
+    };
 
     // There is also `state: pending` for which we could possibly give
     // some feedback, but it's not obvious how that should work.

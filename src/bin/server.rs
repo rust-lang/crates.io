@@ -10,7 +10,7 @@ use std::{sync::Arc, time::Duration};
 use axum::ServiceExt;
 use futures_util::future::FutureExt;
 use prometheus::Encoder;
-use reqwest::blocking::Client;
+use reqwest::Client;
 use std::io::{self, Write};
 use std::net::SocketAddr;
 use tokio::signal::unix::{signal, SignalKind};

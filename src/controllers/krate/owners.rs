@@ -6,6 +6,7 @@ use crate::models::token::EndpointScope;
 use crate::models::{Crate, Owner, Rights, Team, User};
 use crate::views::EncodableOwner;
 use axum::body::Bytes;
+use tokio::runtime::Handle;
 
 /// Handles the `GET /crates/:crate_id/owners` route.
 pub async fn owners(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
@@ -113,7 +114,7 @@ fn modify_owners(
         let krate: Crate = Crate::by_name(crate_name).first(conn)?;
         let owners = krate.owners(conn)?;
 
-        match user.rights(app, &owners)? {
+        match Handle::current().block_on(user.rights(app, &owners))? {
             Rights::Full => {}
             // Yes!
             Rights::Publish => {

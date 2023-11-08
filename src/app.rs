@@ -16,7 +16,7 @@ use axum::extract::{FromRef, FromRequestParts, State};
 use diesel::r2d2;
 use moka::future::{Cache, CacheBuilder};
 use oauth2::basic::BasicClient;
-use reqwest::blocking::Client;
+use reqwest::Client;
 use scheduled_thread_pool::ScheduledThreadPool;
 
 /// The `App` struct holds the main components of the application like

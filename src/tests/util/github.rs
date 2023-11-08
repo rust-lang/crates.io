@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 use crates_io::controllers::github::secret_scanning::GitHubPublicKey;
 use crates_io::github::{
     GitHubClient, GitHubOrgMembership, GitHubOrganization, GitHubTeam, GitHubTeamMembership,
@@ -64,8 +65,9 @@ impl MockGitHubClient {
     }
 }
 
+#[async_trait]
 impl GitHubClient for MockGitHubClient {
-    fn current_user(&self, _auth: &AccessToken) -> AppResult<GithubUser> {
+    async fn current_user(&self, _auth: &AccessToken) -> AppResult<GithubUser> {
         let user = &self.data.users[0];
         Ok(GithubUser {
             id: user.id,
@@ -76,7 +78,11 @@ impl GitHubClient for MockGitHubClient {
         })
     }
 
-    fn org_by_name(&self, org_name: &str, _auth: &AccessToken) -> AppResult<GitHubOrganization> {
+    async fn org_by_name(
+        &self,
+        org_name: &str,
+        _auth: &AccessToken,
+    ) -> AppResult<GitHubOrganization> {
         let org = self
             .data
             .orgs
@@ -89,7 +95,7 @@ impl GitHubClient for MockGitHubClient {
         })
     }
 
-    fn team_by_name(
+    async fn team_by_name(
         &self,
         org_name: &str,
         team_name: &str,
@@ -108,11 +114,11 @@ impl GitHubClient for MockGitHubClient {
         Ok(GitHubTeam {
             id: team.id,
             name: Some(team.name.into()),
-            organization: self.org_by_name(org_name, auth)?,
+            organization: self.org_by_name(org_name, auth).await?,
         })
     }
 
-    fn team_membership(
+    async fn team_membership(
         &self,
         org_id: i32,
         team_id: i32,
@@ -138,7 +144,7 @@ impl GitHubClient for MockGitHubClient {
         }
     }
 
-    fn org_membership(
+    async fn org_membership(
         &self,
         org_id: i32,
         username: &str,
@@ -169,7 +175,11 @@ impl GitHubClient for MockGitHubClient {
         }
     }
 
-    fn public_keys(&self, _username: &str, _password: &str) -> AppResult<Vec<GitHubPublicKey>> {
+    async fn public_keys(
+        &self,
+        _username: &str,
+        _password: &str,
+    ) -> AppResult<Vec<GitHubPublicKey>> {
         Ok(self.data.public_keys.iter().map(Into::into).collect())
     }
 }

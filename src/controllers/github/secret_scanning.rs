@@ -11,9 +11,9 @@ use once_cell::sync::Lazy;
 use p256::ecdsa::signature::Verifier;
 use p256::ecdsa::VerifyingKey;
 use p256::PublicKey;
-use parking_lot::Mutex;
 use serde_json as json;
 use std::str::FromStr;
+use tokio::sync::Mutex;
 
 // Minimum number of seconds to wait before refreshing cache of GitHub's public keys
 static PUBLIC_KEY_CACHE_LIFETIME_SECONDS: i64 = 60 * 60 * 24; // 24 hours
@@ -55,18 +55,17 @@ fn is_cache_valid(timestamp: Option<chrono::DateTime<chrono::Utc>>) -> bool {
 }
 
 // Fetches list of public keys from GitHub API
-fn get_public_keys(state: &AppState) -> Result<Vec<GitHubPublicKey>, BoxedAppError> {
+async fn get_public_keys(state: &AppState) -> Result<Vec<GitHubPublicKey>, BoxedAppError> {
     // Return list from cache if populated and still valid
-    let mut cache = PUBLIC_KEY_CACHE.lock();
+    let mut cache = PUBLIC_KEY_CACHE.lock().await;
     if is_cache_valid(cache.timestamp) {
         return Ok(cache.keys.clone());
     }
 
     // Fetch from GitHub API
-    let keys = state.github.public_keys(
-        &state.config.gh_client_id,
-        state.config.gh_client_secret.secret(),
-    )?;
+    let client_id = &state.config.gh_client_id;
+    let client_secret = state.config.gh_client_secret.secret();
+    let keys = state.github.public_keys(client_id, client_secret).await?;
 
     // Populate cache
     cache.keys = keys.clone();
@@ -76,7 +75,7 @@ fn get_public_keys(state: &AppState) -> Result<Vec<GitHubPublicKey>, BoxedAppErr
 }
 
 /// Verifies that the GitHub signature in request headers is valid
-fn verify_github_signature(
+async fn verify_github_signature(
     headers: &HeaderMap,
     state: &AppState,
     json: &[u8],
@@ -98,6 +97,7 @@ fn verify_github_signature(
         .map_err(|e| bad_request(&format!("failed to parse signature from ASN.1 DER: {e:?}")))?;
 
     let public_keys = get_public_keys(state)
+        .await
         .map_err(|e| bad_request(&format!("failed to fetch GitHub public keys: {e:?}")))?;
 
     let key = public_keys
@@ -222,13 +222,14 @@ pub async fn verify(
     headers: HeaderMap,
     body: Bytes,
 ) -> AppResult<Json<Vec<GitHubSecretAlertFeedback>>> {
+    verify_github_signature(&headers, &state, &body)
+        .await
+        .map_err(|e| bad_request(&format!("failed to verify request signature: {e:?}")))?;
+
+    let alerts: Vec<GitHubSecretAlert> = json::from_slice(&body)
+        .map_err(|e| bad_request(&format!("invalid secret alert request: {e:?}")))?;
+
     conduit_compat(move || {
-        verify_github_signature(&headers, &state, &body)
-            .map_err(|e| bad_request(&format!("failed to verify request signature: {e:?}")))?;
-
-        let alerts: Vec<GitHubSecretAlert> = json::from_slice(&body)
-            .map_err(|e| bad_request(&format!("invalid secret alert request: {e:?}")))?;
-
         let feedback = alerts
             .into_iter()
             .map(|alert| {

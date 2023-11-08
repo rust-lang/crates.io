@@ -9,31 +9,37 @@ use std::str;
 
 use crate::controllers::github::secret_scanning::{GitHubPublicKey, GitHubPublicKeyList};
 use crate::util::errors::{cargo_err, internal, not_found, AppResult, BoxedAppError};
-use reqwest::blocking::Client;
+use async_trait::async_trait;
+use reqwest::Client;
 
+#[async_trait]
 pub trait GitHubClient: Send + Sync {
-    fn current_user(&self, auth: &AccessToken) -> AppResult<GithubUser>;
-    fn org_by_name(&self, org_name: &str, auth: &AccessToken) -> AppResult<GitHubOrganization>;
-    fn team_by_name(
+    async fn current_user(&self, auth: &AccessToken) -> AppResult<GithubUser>;
+    async fn org_by_name(
+        &self,
+        org_name: &str,
+        auth: &AccessToken,
+    ) -> AppResult<GitHubOrganization>;
+    async fn team_by_name(
         &self,
         org_name: &str,
         team_name: &str,
         auth: &AccessToken,
     ) -> AppResult<GitHubTeam>;
-    fn team_membership(
+    async fn team_membership(
         &self,
         org_id: i32,
         team_id: i32,
         username: &str,
         auth: &AccessToken,
     ) -> AppResult<GitHubTeamMembership>;
-    fn org_membership(
+    async fn org_membership(
         &self,
         org_id: i32,
         username: &str,
         auth: &AccessToken,
     ) -> AppResult<GitHubOrgMembership>;
-    fn public_keys(&self, username: &str, password: &str) -> AppResult<Vec<GitHubPublicKey>>;
+    async fn public_keys(&self, username: &str, password: &str) -> AppResult<Vec<GitHubPublicKey>>;
 }
 
 #[derive(Debug)]
@@ -47,7 +53,7 @@ impl RealGitHubClient {
     }
 
     /// Does all the nonsense for sending a GET to Github.
-    fn _request<T>(&self, url: &str, auth: &str) -> AppResult<T>
+    async fn _request<T>(&self, url: &str, auth: &str) -> AppResult<T>
     where
         T: DeserializeOwned,
     {
@@ -59,27 +65,31 @@ impl RealGitHubClient {
             .header(header::ACCEPT, "application/vnd.github.v3+json")
             .header(header::AUTHORIZATION, auth)
             .header(header::USER_AGENT, "crates.io (https://crates.io)")
-            .send()?
+            .send()
+            .await?
             .error_for_status()
             .map_err(|e| handle_error_response(&e))?
             .json()
+            .await
             .map_err(Into::into)
     }
 
     /// Sends a GET to GitHub using OAuth access token authentication
-    pub fn request<T>(&self, url: &str, auth: &AccessToken) -> AppResult<T>
+    pub async fn request<T>(&self, url: &str, auth: &AccessToken) -> AppResult<T>
     where
         T: DeserializeOwned,
     {
         self._request(url, &format!("token {}", auth.secret()))
+            .await
     }
 
     /// Sends a GET to GitHub using basic authentication
-    pub fn request_basic<T>(&self, url: &str, username: &str, password: &str) -> AppResult<T>
+    pub async fn request_basic<T>(&self, url: &str, username: &str, password: &str) -> AppResult<T>
     where
         T: DeserializeOwned,
     {
         self._request(url, &format!("basic {username}:{password}"))
+            .await
     }
 
     /// Returns a client for making HTTP requests to upload crate files.
@@ -98,27 +108,32 @@ impl RealGitHubClient {
     }
 }
 
+#[async_trait]
 impl GitHubClient for RealGitHubClient {
-    fn current_user(&self, auth: &AccessToken) -> AppResult<GithubUser> {
-        self.request("/user", auth)
+    async fn current_user(&self, auth: &AccessToken) -> AppResult<GithubUser> {
+        self.request("/user", auth).await
     }
 
-    fn org_by_name(&self, org_name: &str, auth: &AccessToken) -> AppResult<GitHubOrganization> {
+    async fn org_by_name(
+        &self,
+        org_name: &str,
+        auth: &AccessToken,
+    ) -> AppResult<GitHubOrganization> {
         let url = format!("/orgs/{org_name}");
-        self.request(&url, auth)
+        self.request(&url, auth).await
     }
 
-    fn team_by_name(
+    async fn team_by_name(
         &self,
         org_name: &str,
         team_name: &str,
         auth: &AccessToken,
     ) -> AppResult<GitHubTeam> {
         let url = format!("/orgs/{org_name}/teams/{team_name}");
-        self.request(&url, auth)
+        self.request(&url, auth).await
     }
 
-    fn team_membership(
+    async fn team_membership(
         &self,
         org_id: i32,
         team_id: i32,
@@ -126,10 +141,10 @@ impl GitHubClient for RealGitHubClient {
         auth: &AccessToken,
     ) -> AppResult<GitHubTeamMembership> {
         let url = format!("/organizations/{org_id}/team/{team_id}/memberships/{username}");
-        self.request(&url, auth)
+        self.request(&url, auth).await
     }
 
-    fn org_membership(
+    async fn org_membership(
         &self,
         org_id: i32,
         username: &str,
@@ -139,12 +154,16 @@ impl GitHubClient for RealGitHubClient {
             &format!("/organizations/{org_id}/memberships/{username}"),
             auth,
         )
+        .await
     }
 
     /// Returns the list of public keys that can be used to verify GitHub secret alert signatures
-    fn public_keys(&self, username: &str, password: &str) -> AppResult<Vec<GitHubPublicKey>> {
+    async fn public_keys(&self, username: &str, password: &str) -> AppResult<Vec<GitHubPublicKey>> {
         let url = "/meta/public_keys/secret_scanning";
-        match self.request_basic::<GitHubPublicKeyList>(url, username, password) {
+        match self
+            .request_basic::<GitHubPublicKeyList>(url, username, password)
+            .await
+        {
             Ok(v) => Ok(v.public_keys),
             Err(e) => Err(e),
         }
