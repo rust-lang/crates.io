@@ -13,6 +13,7 @@ use clap::Parser;
 use secrecy::SecretString;
 use std::path::{Path, PathBuf};
 use tempfile::tempdir;
+use tokio::fs;
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
@@ -34,7 +35,8 @@ struct Options {
     skip_publish: bool,
 }
 
-fn main() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
     init_tracing();
 
     let options = Options::parse();
@@ -45,6 +47,7 @@ fn main() -> anyhow::Result<()> {
     info!("Loading crate information from staging.crates.io…");
     let krate = api_client
         .load_crate(&options.crate_name)
+        .await
         .context("Failed to load crate information from staging.crates.io")?
         .krate;
 
@@ -63,10 +66,13 @@ fn main() -> anyhow::Result<()> {
 
         info!("Creating `{}` project…", options.crate_name);
         let project_path = create_project(tempdir.path(), &options.crate_name, &new_version)
+            .await
             .context("Failed to create project")?;
 
         info!("Publishing to staging.crates.io…");
-        cargo::publish(&project_path, &options.token).context("Failed to run `cargo publish`")?;
+        cargo::publish(&project_path, &options.token)
+            .await
+            .context("Failed to run `cargo publish`")?;
     }
 
     let version = new_version;
@@ -74,6 +80,7 @@ fn main() -> anyhow::Result<()> {
 
     let json = api_client
         .load_version(&options.crate_name, &version)
+        .await
         .context("Failed to load version information from staging.crates.io")?;
 
     if json.version.krate != options.crate_name {
@@ -96,6 +103,7 @@ fn main() -> anyhow::Result<()> {
 
     let bytes = api_client
         .download_crate_file(&options.crate_name, &version)
+        .await
         .context("Failed to download crate file")?;
 
     if bytes.len() < 500 {
@@ -108,6 +116,7 @@ fn main() -> anyhow::Result<()> {
     info!("Checking sparse index…");
     let sparse_index_records = api_client
         .load_from_sparse_index(&options.crate_name)
+        .await
         .context("Failed to load sparse index data")?;
 
     let version_str = version.to_string();
@@ -123,6 +132,7 @@ fn main() -> anyhow::Result<()> {
     info!("Checking git index…");
     let git_index_records = api_client
         .load_from_git_index(&options.crate_name)
+        .await
         .context("Failed to load git index data")?;
 
     let record = git_index_records
@@ -152,12 +162,14 @@ fn init_tracing() {
     tracing_subscriber::registry().with(log_layer).init();
 }
 
-fn create_project(
+async fn create_project(
     parent_path: &Path,
     name: &str,
     version: &semver::Version,
 ) -> anyhow::Result<PathBuf> {
-    cargo::new_lib(parent_path, name).context("Failed to run `cargo new`")?;
+    cargo::new_lib(parent_path, name)
+        .await
+        .context("Failed to run `cargo new`")?;
 
     let project_path = parent_path.join(name);
     debug!(project_path = %project_path.display());
@@ -176,7 +188,8 @@ description = "test crate"
 "#,
         );
 
-        std::fs::write(&manifest_path, new_content)
+        fs::write(&manifest_path, new_content)
+            .await
             .context("Failed to write `Cargo.toml` file content")?;
     }
 
@@ -188,7 +201,8 @@ description = "test crate"
             "# {name} v{version}\n\n![](https://media1.giphy.com/media/Ju7l5y9osyymQ/200.gif)\n",
         );
 
-        std::fs::write(&readme_path, new_content)
+        fs::write(&readme_path, new_content)
+            .await
             .context("Failed to write `README.md` file content")?;
     }
 

@@ -1,19 +1,20 @@
 use crate::exit_status_ext::ExitStatusExt;
 use secrecy::{ExposeSecret, SecretString};
 use std::path::Path;
-use std::process::Command;
+use tokio::process::Command;
 
-pub fn new_lib(parent_path: &Path, name: &str) -> anyhow::Result<()> {
+pub async fn new_lib(parent_path: &Path, name: &str) -> anyhow::Result<()> {
     Command::new("cargo")
         .args(["new", "--lib", name])
         .current_dir(parent_path)
         .env("CARGO_TERM_COLOR", "always")
-        .status()?
+        .status()
+        .await?
         .exit_ok()
         .map_err(Into::into)
 }
 
-pub fn publish(project_path: &Path, token: &SecretString) -> anyhow::Result<()> {
+pub async fn publish(project_path: &Path, token: &SecretString) -> anyhow::Result<()> {
     Command::new("cargo")
         .args(["publish", "--registry", "staging", "--allow-dirty"])
         .current_dir(project_path)
@@ -23,7 +24,8 @@ pub fn publish(project_path: &Path, token: &SecretString) -> anyhow::Result<()> 
             "https://github.com/rust-lang/staging.crates.io-index",
         )
         .env("CARGO_REGISTRIES_STAGING_TOKEN", token.expose_secret())
-        .status()?
+        .status()
+        .await?
         .exit_ok()
         .map_err(Into::into)
 }
