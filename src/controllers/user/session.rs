@@ -75,12 +75,12 @@ pub async fn authorize(
 ) -> AppResult<Json<EncodableMe>> {
     let app_clone = app.clone();
 
-    let req = conduit_compat(move || {
-        // Parse the url query
-        let mut query = req.query();
-        let code = query.remove("code").unwrap_or_default();
-        let state = query.remove("state").unwrap_or_default();
+    // Parse the url query
+    let mut query = req.query();
+    let code = query.remove("code").unwrap_or_default();
+    let state = query.remove("state").unwrap_or_default();
 
+    let req = conduit_compat(move || {
         // Make sure that the state we just got matches the session state that we
         // should have issued earlier.
         {
