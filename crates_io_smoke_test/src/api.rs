@@ -22,14 +22,9 @@ impl ApiClient {
             name
         );
 
-        self.http_client
-            .get(url)
-            .send()
-            .await?
-            .error_for_status()?
-            .json()
-            .await
-            .map_err(Into::into)
+        let response = self.http_client.get(url).send().await?;
+        let response = response.error_for_status()?;
+        response.json().await.map_err(Into::into)
     }
 
     pub async fn load_version<N: Display, V: Display>(
@@ -42,14 +37,9 @@ impl ApiClient {
             name, version
         );
 
-        self.http_client
-            .get(url)
-            .send()
-            .await?
-            .error_for_status()?
-            .json()
-            .await
-            .map_err(Into::into)
+        let response = self.http_client.get(url).send().await?;
+        let response = response.error_for_status()?;
+        response.json().await.map_err(Into::into)
     }
 
     pub async fn download_crate_file<N: Display, V: Display>(
@@ -62,14 +52,9 @@ impl ApiClient {
             name, version
         );
 
-        self.http_client
-            .get(url)
-            .send()
-            .await?
-            .error_for_status()?
-            .bytes()
-            .await
-            .map_err(Into::into)
+        let response = self.http_client.get(url).send().await?;
+        let response = response.error_for_status()?;
+        response.bytes().await.map_err(Into::into)
     }
 
     pub async fn load_from_sparse_index(
@@ -80,14 +65,9 @@ impl ApiClient {
 
         let url = format!("https://index.staging.crates.io/{path}",);
 
-        let text = self
-            .http_client
-            .get(url)
-            .send()
-            .await?
-            .error_for_status()?
-            .text()
-            .await?;
+        let response = self.http_client.get(url).send().await?;
+        let response = response.error_for_status()?;
+        let text = response.text().await?;
 
         text.lines()
             .map(|line| serde_json::from_str(line).map_err(Into::into))
@@ -104,14 +84,9 @@ impl ApiClient {
             "https://raw.githubusercontent.com/rust-lang/staging.crates.io-index/master/{path}",
         );
 
-        let text = self
-            .http_client
-            .get(url)
-            .send()
-            .await?
-            .error_for_status()?
-            .text()
-            .await?;
+        let response = self.http_client.get(url).send().await?;
+        let response = response.error_for_status()?;
+        let text = response.text().await?;
 
         text.lines()
             .map(|line| serde_json::from_str(line).map_err(Into::into))
