@@ -27,7 +27,7 @@ use crates_io_env_vars::{var, var_parsed};
 use crates_io_index::RepositoryConfig;
 use diesel::r2d2;
 use diesel::r2d2::ConnectionManager;
-use reqwest::blocking::Client;
+use reqwest::Client;
 use secrecy::ExposeSecret;
 use std::sync::Arc;
 use std::thread::sleep;
