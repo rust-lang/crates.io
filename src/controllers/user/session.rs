@@ -80,7 +80,7 @@ pub async fn authorize(
     let code = query.remove("code").unwrap_or_default();
     let state = query.remove("state").unwrap_or_default();
 
-    let req = conduit_compat(move || {
+    conduit_compat(move || {
         // Make sure that the state we just got matches the session state that we
         // should have issued earlier.
         {
@@ -108,7 +108,7 @@ pub async fn authorize(
         // Log in by setting a cookie and the middleware authentication
         session.insert("user_id".to_string(), user.id.to_string());
 
-        Ok(req)
+        Ok(())
     })
     .await?;
 
