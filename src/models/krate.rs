@@ -290,13 +290,14 @@ impl Crate {
 
     /// Validates a whole feature string, `features = ["THIS", "and/THIS", "dep:THIS", "dep?/THIS"]`.
     pub fn valid_feature(name: &str) -> AppResult<()> {
-        match name.split_once('/') {
-            Some((dep, dep_feat)) => {
-                let dep = dep.strip_suffix('?').unwrap_or(dep);
-                Crate::valid_dependency_name(dep)?;
-                Crate::valid_feature_name(dep_feat)
-            }
-            None => Crate::valid_feature_name(name.strip_prefix("dep:").unwrap_or(name)),
+        if let Some((dep, dep_feat)) = name.split_once('/') {
+            let dep = dep.strip_suffix('?').unwrap_or(dep);
+            Crate::valid_dependency_name(dep)?;
+            Crate::valid_feature_name(dep_feat)
+        } else if let Some((_, dep)) = name.split_once("dep:") {
+            Crate::valid_dependency_name(dep)
+        } else {
+            Crate::valid_feature_name(name)
         }
     }
 
@@ -587,5 +588,7 @@ mod tests {
         assert!(Crate::valid_feature("foo?bar").is_err());
         assert!(Crate::valid_feature("bar.web").is_ok());
         assert!(Crate::valid_feature("foo/bar.web").is_ok());
+        assert!(Crate::valid_feature("dep:0foo").is_err());
+        assert!(Crate::valid_feature("0foo?/bar.web").is_err());
     }
 }
