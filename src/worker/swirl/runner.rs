@@ -1,13 +1,13 @@
 use crate::db::{DieselPool, DieselPooledConn, PoolError};
-use crate::worker::swirl::errors::{FailedJobsError, FetchError};
-use crate::worker::swirl::{storage, BackgroundJob, PerformError, PerformState};
+use crate::worker::swirl::errors::FetchError;
+use crate::worker::swirl::{storage, BackgroundJob, PerformState};
+use anyhow::anyhow;
 use diesel::connection::{AnsiTransactionManager, TransactionManager};
 use diesel::prelude::*;
 use diesel::result::Error::RollbackTransaction;
 use parking_lot::RwLock;
 use std::any::Any;
 use std::collections::HashMap;
-use std::error::Error;
 use std::panic::{catch_unwind, AssertUnwindSafe, PanicInfo};
 use std::sync::mpsc::{sync_channel, SyncSender};
 use std::sync::Arc;
@@ -17,7 +17,7 @@ use threadpool::ThreadPool;
 const DEFAULT_JOB_START_TIMEOUT: Duration = Duration::from_secs(30);
 
 type RunTaskFn<Context> =
-    dyn Fn(&Context, PerformState<'_>, serde_json::Value) -> Result<(), PerformError> + Send + Sync;
+    dyn Fn(&Context, PerformState<'_>, serde_json::Value) -> anyhow::Result<()> + Send + Sync;
 
 type JobRegistry<Context> = Arc<RwLock<HashMap<String, Box<RunTaskFn<Context>>>>>;
 
@@ -25,7 +25,7 @@ fn runnable<J: BackgroundJob>(
     env: &J::Context,
     state: PerformState<'_>,
     payload: serde_json::Value,
-) -> Result<(), PerformError> {
+) -> anyhow::Result<()> {
     let job: J = serde_json::from_value(payload)?;
     job.run(state, env)
 }
@@ -104,20 +104,19 @@ impl<Context: Clone + Send + 'static> Runner<Context> {
             }
 
             pending_messages += jobs_to_queue;
-            match receiver.recv_timeout(self.job_start_timeout) {
-                Ok(Event::Working) => pending_messages -= 1,
-                Ok(Event::NoJobAvailable) => return Ok(()),
-                Ok(Event::ErrorLoadingJob(e)) => return Err(FetchError::FailedLoadingJob(e)),
-                Ok(Event::FailedToAcquireConnection(e)) => {
+            match receiver.recv_timeout(self.job_start_timeout)? {
+                Event::Working => pending_messages -= 1,
+                Event::NoJobAvailable => return Ok(()),
+                Event::ErrorLoadingJob(e) => return Err(FetchError::FailedLoadingJob(e)),
+                Event::FailedToAcquireConnection(e) => {
                     return Err(FetchError::NoDatabaseConnection(e));
                 }
-                Err(_) => return Err(FetchError::NoMessageReceived),
             }
         }
     }
 
-    fn connection(&self) -> Result<DieselPooledConn<'_>, Box<dyn Error + Send + Sync>> {
-        self.connection_pool.get().map_err(Into::into)
+    fn connection(&self) -> Result<DieselPooledConn<'_>, PoolError> {
+        self.connection_pool.get()
     }
 
     /// Waits for all running jobs to complete, and returns an error if any
@@ -130,23 +129,23 @@ impl<Context: Clone + Send + 'static> Runner<Context> {
     /// or an error loading the job count from the database, an opaque error
     /// will be returned.
     // FIXME: Only public for `src/tests/util/test_app.rs`
-    pub fn check_for_failed_jobs(&self) -> Result<(), FailedJobsError> {
+    pub fn check_for_failed_jobs(&self) -> anyhow::Result<()> {
         self.wait_for_jobs()?;
         let failed_jobs = storage::failed_job_count(&mut *self.connection()?)?;
         if failed_jobs == 0 {
             Ok(())
         } else {
-            Err(FailedJobsError::JobsFailed(failed_jobs))
+            Err(anyhow!("{failed_jobs} jobs failed"))
         }
     }
 
-    fn wait_for_jobs(&self) -> Result<(), Box<dyn Error + Send + Sync>> {
+    fn wait_for_jobs(&self) -> anyhow::Result<()> {
         self.thread_pool.join();
         let panic_count = self.thread_pool.panic_count();
         if panic_count == 0 {
             Ok(())
         } else {
-            Err(format!("{panic_count} threads panicked").into())
+            Err(anyhow!("{panic_count} threads panicked"))
         }
     }
 }
@@ -197,7 +196,7 @@ impl<Context: Clone + Send + 'static> Worker<Context> {
                     catch_unwind(AssertUnwindSafe(|| {
                         let job_registry = self.job_registry.read();
                         let run_task_fn = job_registry.get(&job.job_type).ok_or_else(|| {
-                            PerformError::from(format!("Unknown job type {}", job.job_type))
+                            anyhow!("Unknown job type {}", job.job_type)
                         })?;
 
                         run_task_fn(&self.environment, state, job.data)
@@ -280,15 +279,15 @@ fn get_transaction_depth(conn: &mut PgConnection) -> QueryResult<u32> {
 /// However, the `panic::set_hook` functions deal with a `PanicInfo` type, and its payload is
 /// documented as "commonly but not always `&'static str` or `String`". So we can try all of those,
 /// and give up if we didn't get one of those three types.
-fn try_to_extract_panic_info(info: &(dyn Any + Send + 'static)) -> PerformError {
+fn try_to_extract_panic_info(info: &(dyn Any + Send + 'static)) -> anyhow::Error {
     if let Some(x) = info.downcast_ref::<PanicInfo<'_>>() {
-        format!("job panicked: {x}").into()
+        anyhow!("job panicked: {x}")
     } else if let Some(x) = info.downcast_ref::<&'static str>() {
-        format!("job panicked: {x}").into()
+        anyhow!("job panicked: {x}")
     } else if let Some(x) = info.downcast_ref::<String>() {
-        format!("job panicked: {x}").into()
+        anyhow!("job panicked: {x}")
     } else {
-        "job panicked".into()
+        anyhow!("job panicked")
     }
 }
 
@@ -340,7 +339,7 @@ mod tests {
             const JOB_NAME: &'static str = "test";
             type Context = TestContext;
 
-            fn run(&self, _: PerformState<'_>, ctx: &Self::Context) -> Result<(), PerformError> {
+            fn run(&self, _: PerformState<'_>, ctx: &Self::Context) -> anyhow::Result<()> {
                 ctx.job_started_barrier.wait();
                 ctx.assertions_finished_barrier.wait();
                 Ok(())
@@ -384,7 +383,7 @@ mod tests {
             const JOB_NAME: &'static str = "test";
             type Context = ();
 
-            fn run(&self, _: PerformState<'_>, _: &Self::Context) -> Result<(), PerformError> {
+            fn run(&self, _: PerformState<'_>, _: &Self::Context) -> anyhow::Result<()> {
                 Ok(())
             }
         }
@@ -425,7 +424,7 @@ mod tests {
             const JOB_NAME: &'static str = "test";
             type Context = TestContext;
 
-            fn run(&self, _: PerformState<'_>, ctx: &Self::Context) -> Result<(), PerformError> {
+            fn run(&self, _: PerformState<'_>, ctx: &Self::Context) -> anyhow::Result<()> {
                 ctx.job_started_barrier.wait();
                 panic!();
             }
@@ -478,7 +477,7 @@ mod tests {
             const JOB_NAME: &'static str = "test";
             type Context = ();
 
-            fn run(&self, _: PerformState<'_>, _: &Self::Context) -> Result<(), PerformError> {
+            fn run(&self, _: PerformState<'_>, _: &Self::Context) -> anyhow::Result<()> {
                 panic!()
             }
         }

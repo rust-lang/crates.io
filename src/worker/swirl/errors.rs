@@ -1,6 +1,6 @@
 use crate::db::PoolError;
 use diesel::result::Error as DieselError;
-use std::error::Error;
+use std::sync::mpsc::RecvTimeoutError;
 
 /// An error occurred queueing the job
 #[derive(Debug, thiserror::Error)]
@@ -14,9 +14,6 @@ pub enum EnqueueError {
     #[error(transparent)]
     DatabaseError(#[from] DieselError),
 }
-
-/// An error occurred performing the job
-pub type PerformError = Box<dyn Error>;
 
 /// An error occurred while attempting to fetch jobs from the queue
 #[derive(Debug, thiserror::Error)]
@@ -36,39 +33,5 @@ pub enum FetchError {
     ///
     /// Either the thread pool is too small, or jobs have hung indefinitely
     #[error("No message was received from the worker thread. Try increasing the thread pool size or timeout period.")]
-    NoMessageReceived,
-}
-
-/// An error returned by `Runner::check_for_failed_jobs`. Only used in tests.
-#[derive(Debug, thiserror::Error)]
-pub enum FailedJobsError {
-    /// Jobs failed to run
-    #[error("{0} jobs failed")]
-    JobsFailed(
-        /// The number of failed jobs
-        i64,
-    ),
-
-    #[doc(hidden)]
-    /// Match on `_` instead, more variants may be added in the future
-    /// Some other error occurred. Worker threads may have panicked, an error
-    /// occurred counting failed jobs in the DB, or something else
-    /// unexpectedly went wrong.
-    #[error(transparent)]
-    __Unknown(#[from] Box<dyn Error + Send + Sync>),
-}
-
-impl From<DieselError> for FailedJobsError {
-    fn from(e: DieselError) -> Self {
-        FailedJobsError::__Unknown(e.into())
-    }
-}
-
-impl PartialEq for FailedJobsError {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (FailedJobsError::JobsFailed(x), FailedJobsError::JobsFailed(y)) => x == y,
-            _ => false,
-        }
-    }
+    NoMessageReceived(#[from] RecvTimeoutError),
 }

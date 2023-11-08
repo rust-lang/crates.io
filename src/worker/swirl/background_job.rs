@@ -1,7 +1,6 @@
 use crate::schema::background_jobs;
 use crate::worker::swirl::errors::EnqueueError;
 use crate::worker::swirl::perform_state::PerformState;
-use crate::worker::swirl::PerformError;
 use diesel::prelude::*;
 use diesel::PgConnection;
 use serde::de::DeserializeOwned;
@@ -22,7 +21,7 @@ pub trait BackgroundJob: Serialize + DeserializeOwned + 'static {
     type Context: Clone + Send + 'static;
 
     /// Execute the task. This method should define its logic
-    fn run(&self, state: PerformState<'_>, env: &Self::Context) -> Result<(), PerformError>;
+    fn run(&self, state: PerformState<'_>, env: &Self::Context) -> anyhow::Result<()>;
 
     fn enqueue(&self, conn: &mut PgConnection) -> Result<i64, EnqueueError> {
         self.enqueue_with_priority(conn, Self::PRIORITY)

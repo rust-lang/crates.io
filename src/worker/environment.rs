@@ -2,7 +2,6 @@ use crate::cloudfront::CloudFront;
 use crate::db::DieselPool;
 use crate::fastly::Fastly;
 use crate::storage::Storage;
-use crate::worker::swirl::PerformError;
 use crates_io_index::{Repository, RepositoryConfig};
 use reqwest::blocking::Client;
 use std::ops::{Deref, DerefMut};
@@ -40,7 +39,7 @@ impl Environment {
     }
 
     #[instrument(skip_all)]
-    pub fn lock_index(&self) -> Result<RepositoryLock<'_>, PerformError> {
+    pub fn lock_index(&self) -> anyhow::Result<RepositoryLock<'_>> {
         let mut repo = self
             .repository
             .lock()
