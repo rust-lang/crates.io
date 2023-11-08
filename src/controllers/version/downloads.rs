@@ -10,6 +10,7 @@ use crate::models::{Crate, VersionDownload};
 use crate::schema::*;
 use crate::views::EncodableVersionDownload;
 use chrono::{Duration, NaiveDate, Utc};
+use tokio::runtime::Handle;
 use tracing::Instrument;
 
 /// Handles the `GET /crates/:crate_id/:version/download` route.
@@ -41,7 +42,6 @@ pub async fn download(
         app.instance_metrics.version_id_cache_misses.inc();
 
         let app = app.clone();
-        let rt = tokio::runtime::Handle::current();
         conduit_compat(move || {
             // When no database connection is ready unconditional redirects will be performed. This could
             // happen if the pool is not healthy or if an operator manually configured the application to
@@ -97,7 +97,8 @@ pub async fn download(
                         // by "Cannot start a runtime from within a runtime"). Here, we are in
                         // a spawn_blocking call because of conduit_compat, so our current thread
                         // is not an executor of the runtime.
-                        rt.block_on(app.version_id_cacher.insert(cache_key, version_id))
+                        Handle::current()
+                            .block_on(app.version_id_cacher.insert(cache_key, version_id))
                     });
 
                     Ok((crate_name, version))
