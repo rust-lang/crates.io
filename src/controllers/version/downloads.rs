@@ -85,8 +85,6 @@ pub async fn download(
                         .downloads_non_canonical_crate_name_total
                         .inc();
                     req.request_log().add("bot", "dl");
-
-                    Ok((canonical_crate_name, version))
                 } else {
                     // The version_id is only cached if the provided crate name was canonical.
                     // Non-canonical requests fallback to the "slow" path with a DB query, but
@@ -103,9 +101,9 @@ pub async fn download(
                             .insert(cache_key, version_id)
                             .instrument(span),
                     );
-
-                    Ok((crate_name, version))
                 }
+
+                Ok((canonical_crate_name, version))
             } else {
                 // The download endpoint is the most critical route in the whole crates.io application,
                 // as it's relied upon by users and automations to download crates. Keeping it working
