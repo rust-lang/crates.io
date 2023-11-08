@@ -58,13 +58,6 @@ pub struct App {
     /// Metrics related to this specific instance of the service
     pub instance_metrics: InstanceMetrics,
 
-    /// A configured client for outgoing HTTP requests
-    ///
-    /// In production this shares a single connection pool across requests.  In tests
-    /// this is either None (in which case any attempt to create an outgoing connection
-    /// will panic) or a `Client` configured with a per-test replay proxy.
-    pub(crate) http_client: Option<Client>,
-
     /// In-flight request counters for the `balance_capacity` middleware.
     pub balance_capacity: BalanceCapacityState,
 
@@ -172,26 +165,10 @@ impl App {
             storage: Arc::new(Storage::from_config(&config.storage)),
             service_metrics: ServiceMetrics::new().expect("could not initialize service metrics"),
             instance_metrics,
-            http_client,
             balance_capacity: Default::default(),
             rate_limiter: RateLimiter::new(config.rate_limiter.clone()),
             config,
         }
-    }
-
-    /// Returns a client for making HTTP requests to upload crate files.
-    ///
-    /// The client will go through a proxy if the application was configured via
-    /// `TestApp::with_proxy()`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the application was not initialized with a client.  This should only occur in
-    /// tests that were not properly initialized.
-    pub fn http_client(&self) -> &Client {
-        self.http_client
-            .as_ref()
-            .expect("No HTTP client is configured.  In tests, use `TestApp::with_proxy()`.")
     }
 
     /// A unique key to generate signed cookies
