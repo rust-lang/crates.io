@@ -1,6 +1,6 @@
 use crate::builders::CrateBuilder;
 use crate::util::{RequestHelper, TestApp};
-use crate::OkBool;
+use http::StatusCode;
 
 fn is_following(crate_name: &str, user: &impl RequestHelper) -> bool {
     #[derive(Deserialize)]
@@ -14,19 +14,15 @@ fn is_following(crate_name: &str, user: &impl RequestHelper) -> bool {
 }
 
 fn follow(crate_name: &str, user: &impl RequestHelper) {
-    assert!(
-        user.put::<OkBool>(&format!("/api/v1/crates/{crate_name}/follow"), b"" as &[u8])
-            .good()
-            .ok
-    );
+    let response = user.put::<()>(&format!("/api/v1/crates/{crate_name}/follow"), b"" as &[u8]);
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.into_json(), json!({ "ok": true }));
 }
 
 fn unfollow(crate_name: &str, user: &impl RequestHelper) {
-    assert!(
-        user.delete::<OkBool>(&format!("/api/v1/crates/{crate_name}/follow"))
-            .good()
-            .ok
-    );
+    let response = user.delete::<()>(&format!("/api/v1/crates/{crate_name}/follow"));
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.into_json(), json!({ "ok": true }));
 }
 
 #[test]
