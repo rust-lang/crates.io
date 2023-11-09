@@ -23,15 +23,20 @@ impl UpstreamIndex {
                 .bare(true)
                 .initial_head("master"),
         )?;
-        let mut config = bare.config()?;
-        config.set_str("user.name", "name")?;
-        config.set_str("user.email", "email")?;
-        let mut index = bare.index()?;
-        let id = index.write_tree()?;
-        let tree = bare.find_tree(id)?;
-        let sig = bare.signature()?;
-        bare.commit(Some("HEAD"), &sig, &sig, "Initial Commit", &tree, &[])?;
-        drop(tree);
+
+        {
+            let mut config = bare.config()?;
+            config.set_str("user.name", "name")?;
+            config.set_str("user.email", "email")?;
+        }
+
+        {
+            let mut index = bare.index()?;
+            let id = index.write_tree()?;
+            let tree = bare.find_tree(id)?;
+            let sig = bare.signature()?;
+            bare.commit(Some("HEAD"), &sig, &sig, "Initial Commit", &tree, &[])?;
+        };
 
         Ok(Self {
             temp_dir,
