@@ -2,7 +2,7 @@ use anyhow::anyhow;
 use git2::{ErrorCode, Repository, Sort};
 use std::env;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Once;
 use std::thread;
 use url::Url;
@@ -13,9 +13,10 @@ pub struct UpstreamIndex {
 
 impl UpstreamIndex {
     pub fn new() -> anyhow::Result<Self> {
-        init();
-
         let thread_local_path = bare();
+
+        init(&thread_local_path);
+
         let repository = Repository::open_bare(thread_local_path)?;
         Ok(Self { repository })
     }
@@ -105,16 +106,16 @@ fn bare() -> PathBuf {
     root().join("bare")
 }
 
-fn init() {
+fn init(path: &Path) {
     static INIT: Once = Once::new();
-    let _ = fs::remove_dir_all(bare());
+    let _ = fs::remove_dir_all(path);
 
     INIT.call_once(|| {
         fs::create_dir_all(root().parent().unwrap()).unwrap();
     });
 
     let bare = git2::Repository::init_opts(
-        bare(),
+        path,
         git2::RepositoryInitOptions::new()
             .bare(true)
             .initial_head("master"),
