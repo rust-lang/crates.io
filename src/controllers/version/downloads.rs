@@ -10,6 +10,7 @@ use crate::models::{Crate, VersionDownload};
 use crate::schema::*;
 use crate::views::EncodableVersionDownload;
 use chrono::{Duration, NaiveDate, Utc};
+use tokio::runtime::Handle;
 use tracing::Instrument;
 
 /// Handles the `GET /crates/:crate_id/:version/download` route.
@@ -41,7 +42,6 @@ pub async fn download(
         app.instance_metrics.version_id_cache_misses.inc();
 
         let app = app.clone();
-        let rt = tokio::runtime::Handle::current();
         conduit_compat(move || {
             // When no database connection is ready unconditional redirects will be performed. This could
             // happen if the pool is not healthy or if an operator manually configured the application to
@@ -85,23 +85,25 @@ pub async fn download(
                         .downloads_non_canonical_crate_name_total
                         .inc();
                     req.request_log().add("bot", "dl");
-
-                    Ok((canonical_crate_name, version))
                 } else {
                     // The version_id is only cached if the provided crate name was canonical.
                     // Non-canonical requests fallback to the "slow" path with a DB query, but
                     // we typically only get a few hundred non-canonical requests in a day anyway.
-                    info_span!("cache.write", ?cache_key).in_scope(|| {
-                        // SAFETY: This block_on should not panic. block_on will panic if the
-                        // current thread is an executor thread of a Tokio runtime. (Will panic
-                        // by "Cannot start a runtime from within a runtime"). Here, we are in
-                        // a spawn_blocking call because of conduit_compat, so our current thread
-                        // is not an executor of the runtime.
-                        rt.block_on(app.version_id_cacher.insert(cache_key, version_id))
-                    });
+                    let span = info_span!("cache.write", ?cache_key);
 
-                    Ok((crate_name, version))
+                    // SAFETY: This block_on should not panic. block_on will panic if the
+                    // current thread is an executor thread of a Tokio runtime. (Will panic
+                    // by "Cannot start a runtime from within a runtime"). Here, we are in
+                    // a spawn_blocking call because of conduit_compat, so our current thread
+                    // is not an executor of the runtime.
+                    Handle::current().block_on(
+                        app.version_id_cacher
+                            .insert(cache_key, version_id)
+                            .instrument(span),
+                    );
                 }
+
+                Ok((canonical_crate_name, version))
             } else {
                 // The download endpoint is the most critical route in the whole crates.io application,
                 // as it's relied upon by users and automations to download crates. Keeping it working
