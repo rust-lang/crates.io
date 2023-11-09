@@ -1,16 +1,19 @@
 use crate::{
     new_user,
     util::{MockCookieUser, RequestHelper},
-    OkBool, TestApp,
+    TestApp,
 };
 use crates_io::models::{Email, NewUser, User};
 use diesel::prelude::*;
+use http::StatusCode;
 use secrecy::ExposeSecret;
 
 impl crate::util::MockCookieUser {
-    fn confirm_email(&self, email_token: &str) -> OkBool {
+    fn confirm_email(&self, email_token: &str) {
         let url = format!("/api/v1/confirm/{email_token}");
-        self.put(&url, &[] as &[u8]).good()
+        let response = self.put::<()>(&url, &[] as &[u8]);
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.into_json(), json!({ "ok": true }));
     }
 }
 
