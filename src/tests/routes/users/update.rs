@@ -1,12 +1,11 @@
 use crate::util::{RequestHelper, Response, TestApp};
-use crate::OkBool;
 use http::StatusCode;
 
 pub trait MockEmailHelper: RequestHelper {
     // TODO: I don't like the name of this method or `update_email` on the `MockCookieUser` impl;
     // this is starting to look like a builder might help?
     // I want to explore alternative abstractions in any case.
-    fn update_email_more_control(&self, user_id: i32, email: Option<&str>) -> Response<OkBool> {
+    fn update_email_more_control(&self, user_id: i32, email: Option<&str>) -> Response<()> {
         // When updating your email in crates.io, the request goes to the user route with PUT.
         // Ember sends all the user attributes. We check to make sure the ID in the URL matches
         // the ID of the currently logged in user, then we ignore everything but the email address.
@@ -27,9 +26,11 @@ impl MockEmailHelper for crate::util::MockCookieUser {}
 impl MockEmailHelper for crate::util::MockAnonymousUser {}
 
 impl crate::util::MockCookieUser {
-    pub fn update_email(&self, email: &str) -> OkBool {
+    pub fn update_email(&self, email: &str) {
         let model = self.as_model();
-        self.update_email_more_control(model.id, Some(email)).good()
+        let response = self.update_email_more_control(model.id, Some(email));
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.into_json(), json!({ "ok": true }));
     }
 }
 
