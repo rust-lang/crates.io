@@ -1,8 +1,9 @@
 use crate::builders::CrateBuilder;
+use crate::new_user;
 use crate::util::{RequestHelper, TestApp};
-use crate::{new_user, OkBool};
 use crates_io::schema::crate_owners;
 use diesel::prelude::*;
+use http::StatusCode;
 
 #[derive(Serialize)]
 struct EmailNotificationsUpdate {
@@ -11,9 +12,10 @@ struct EmailNotificationsUpdate {
 }
 
 impl crate::util::MockCookieUser {
-    fn update_email_notifications(&self, updates: Vec<EmailNotificationsUpdate>) -> OkBool {
-        self.put("/api/v1/me/email_notifications", json!(updates).to_string())
-            .good()
+    fn update_email_notifications(&self, updates: Vec<EmailNotificationsUpdate>) {
+        let response = self.put::<()>("/api/v1/me/email_notifications", json!(updates).to_string());
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.into_json(), json!({ "ok": true }));
     }
 }
 
