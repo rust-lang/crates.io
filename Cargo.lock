@@ -924,6 +924,7 @@ dependencies = [
  "flate2",
  "futures-channel",
  "futures-util",
+ "googletest",
  "hex",
  "http",
  "http-body",
@@ -1724,6 +1725,28 @@ name = "glob"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d2fabcfbdc87f4758337ca535fb41a6d701b65693ce38287d856d1674551ec9b"
+
+[[package]]
+name = "googletest"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "09213705c85aa0e4b4fff44a3a826a556979a34a266df6bcda703a49c69fb61e"
+dependencies = [
+ "googletest_macro",
+ "num-traits",
+ "regex",
+ "rustversion",
+]
+
+[[package]]
+name = "googletest_macro"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "005e4cb962c56efd249bdeeb4ac232b11e1c45a2e49793bba2b2982dcc3f2e9d"
+dependencies = [
+ "quote",
+ "syn 2.0.39",
+]
 
 [[package]]
 name = "group"
