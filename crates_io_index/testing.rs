@@ -1,38 +1,69 @@
 use anyhow::anyhow;
 use git2::{ErrorCode, Repository, Sort};
-use std::env;
-use std::fs;
-use std::path::PathBuf;
-use std::sync::Once;
+use std::path::Path;
+use std::sync::Mutex;
 use std::thread;
+use tempfile::{Builder, TempDir};
 use url::Url;
 
 pub struct UpstreamIndex {
-    pub repository: Repository,
+    temp_dir: TempDir,
+    pub repository: Mutex<Repository>,
 }
 
 impl UpstreamIndex {
     pub fn new() -> anyhow::Result<Self> {
-        init();
+        let temp_dir = Builder::new()
+            .prefix(thread::current().name().unwrap())
+            .tempdir()?;
 
-        let thread_local_path = bare();
-        let repository = Repository::open_bare(thread_local_path)?;
-        Ok(Self { repository })
+        debug!(path = %temp_dir.path().display(), "Creating upstream git repository…");
+        let bare = git2::Repository::init_opts(
+            temp_dir.path(),
+            git2::RepositoryInitOptions::new()
+                .bare(true)
+                .initial_head("master"),
+        )?;
+
+        {
+            let mut config = bare.config()?;
+            config.set_str("user.name", "name")?;
+            config.set_str("user.email", "email")?;
+        }
+
+        {
+            let mut index = bare.index()?;
+            let id = index.write_tree()?;
+            let tree = bare.find_tree(id)?;
+            let sig = bare.signature()?;
+            bare.commit(Some("HEAD"), &sig, &sig, "Initial Commit", &tree, &[])?;
+        };
+
+        Ok(Self {
+            temp_dir,
+            repository: Mutex::new(bare),
+        })
     }
 
-    pub fn url() -> Url {
-        Url::from_file_path(bare()).unwrap()
+    pub fn path(&self) -> &Path {
+        self.temp_dir.path()
+    }
+
+    pub fn url(&self) -> Url {
+        Url::from_file_path(self.path()).unwrap()
     }
 
     pub fn list_commits(&self) -> anyhow::Result<Vec<String>> {
-        let mut revwalk = self.repository.revwalk()?;
+        let repo = self.repository.lock().unwrap();
+
+        let mut revwalk = repo.revwalk()?;
         revwalk.set_sorting(Sort::TOPOLOGICAL | Sort::REVERSE)?;
         revwalk.push_head()?;
 
         revwalk
             .map(|result| {
                 let oid = result?;
-                let commit = self.repository.find_commit(oid)?;
+                let commit = repo.find_commit(oid)?;
                 let message_bytes = commit.message_bytes();
                 let message = String::from_utf8(message_bytes.to_vec())?;
                 Ok(message)
@@ -41,7 +72,7 @@ impl UpstreamIndex {
     }
 
     pub fn crate_exists(&self, crate_name: &str) -> anyhow::Result<bool> {
-        let repo = &self.repository;
+        let repo = self.repository.lock().unwrap();
 
         let path = crate::Repository::relative_index_file(crate_name);
 
@@ -57,13 +88,13 @@ impl UpstreamIndex {
 
     /// Obtain a list of crates from the index HEAD
     pub fn crates_from_index_head(&self, crate_name: &str) -> anyhow::Result<Vec<crate::Crate>> {
-        let repo = &self.repository;
+        let repo = self.repository.lock().unwrap();
 
         let path = crate::Repository::relative_index_file(crate_name);
 
         let head = repo.head()?;
         let tree = head.peel_to_tree()?;
-        let blob = tree.get_path(&path)?.to_object(repo)?.peel_to_blob()?;
+        let blob = tree.get_path(&path)?.to_object(&repo)?.peel_to_blob()?;
 
         let content = blob.content();
 
@@ -76,7 +107,7 @@ impl UpstreamIndex {
     }
 
     pub fn create_empty_commit(&self) -> anyhow::Result<()> {
-        let repo = &self.repository;
+        let repo = self.repository.lock().unwrap();
 
         let head = repo.head()?;
         let target = head
@@ -93,40 +124,19 @@ impl UpstreamIndex {
     }
 }
 
-fn root() -> PathBuf {
-    env::current_dir()
-        .unwrap()
-        .join("tmp")
-        .join("tests")
-        .join(thread::current().name().unwrap())
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-fn bare() -> PathBuf {
-    root().join("bare")
-}
+    #[test]
+    fn test_send() {
+        fn assert_send<T: Send>() {}
+        assert_send::<UpstreamIndex>();
+    }
 
-fn init() {
-    static INIT: Once = Once::new();
-    let _ = fs::remove_dir_all(bare());
-
-    INIT.call_once(|| {
-        fs::create_dir_all(root().parent().unwrap()).unwrap();
-    });
-
-    let bare = git2::Repository::init_opts(
-        bare(),
-        git2::RepositoryInitOptions::new()
-            .bare(true)
-            .initial_head("master"),
-    )
-    .unwrap();
-    let mut config = bare.config().unwrap();
-    config.set_str("user.name", "name").unwrap();
-    config.set_str("user.email", "email").unwrap();
-    let mut index = bare.index().unwrap();
-    let id = index.write_tree().unwrap();
-    let tree = bare.find_tree(id).unwrap();
-    let sig = bare.signature().unwrap();
-    bare.commit(Some("HEAD"), &sig, &sig, "Initial Commit", &tree, &[])
-        .unwrap();
+    #[test]
+    fn test_sync() {
+        fn assert_sync<T: Sync>() {}
+        assert_sync::<UpstreamIndex>();
+    }
 }
