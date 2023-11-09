@@ -31,12 +31,11 @@ impl UpstreamIndex {
         let tree = bare.find_tree(id)?;
         let sig = bare.signature()?;
         bare.commit(Some("HEAD"), &sig, &sig, "Initial Commit", &tree, &[])?;
-
-        let repository = Repository::open_bare(temp_dir.path())?;
+        drop(tree);
 
         Ok(Self {
             temp_dir,
-            repository,
+            repository: bare,
         })
     }
 
