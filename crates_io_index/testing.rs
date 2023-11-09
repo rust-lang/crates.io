@@ -22,17 +22,15 @@ impl UpstreamIndex {
             git2::RepositoryInitOptions::new()
                 .bare(true)
                 .initial_head("master"),
-        )
-        .unwrap();
-        let mut config = bare.config().unwrap();
-        config.set_str("user.name", "name").unwrap();
-        config.set_str("user.email", "email").unwrap();
-        let mut index = bare.index().unwrap();
-        let id = index.write_tree().unwrap();
-        let tree = bare.find_tree(id).unwrap();
-        let sig = bare.signature().unwrap();
-        bare.commit(Some("HEAD"), &sig, &sig, "Initial Commit", &tree, &[])
-            .unwrap();
+        )?;
+        let mut config = bare.config()?;
+        config.set_str("user.name", "name")?;
+        config.set_str("user.email", "email")?;
+        let mut index = bare.index()?;
+        let id = index.write_tree()?;
+        let tree = bare.find_tree(id)?;
+        let sig = bare.signature()?;
+        bare.commit(Some("HEAD"), &sig, &sig, "Initial Commit", &tree, &[])?;
 
         let repository = Repository::open_bare(temp_dir.path())?;
 
