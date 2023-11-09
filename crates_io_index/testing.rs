@@ -1,13 +1,14 @@
 use anyhow::anyhow;
 use git2::{ErrorCode, Repository, Sort};
 use std::path::Path;
+use std::sync::Mutex;
 use std::thread;
 use tempfile::{Builder, TempDir};
 use url::Url;
 
 pub struct UpstreamIndex {
     temp_dir: TempDir,
-    pub repository: Repository,
+    pub repository: Mutex<Repository>,
 }
 
 impl UpstreamIndex {
@@ -40,7 +41,7 @@ impl UpstreamIndex {
 
         Ok(Self {
             temp_dir,
-            repository: bare,
+            repository: Mutex::new(bare),
         })
     }
 
@@ -53,14 +54,16 @@ impl UpstreamIndex {
     }
 
     pub fn list_commits(&self) -> anyhow::Result<Vec<String>> {
-        let mut revwalk = self.repository.revwalk()?;
+        let repo = self.repository.lock().unwrap();
+
+        let mut revwalk = repo.revwalk()?;
         revwalk.set_sorting(Sort::TOPOLOGICAL | Sort::REVERSE)?;
         revwalk.push_head()?;
 
         revwalk
             .map(|result| {
                 let oid = result?;
-                let commit = self.repository.find_commit(oid)?;
+                let commit = repo.find_commit(oid)?;
                 let message_bytes = commit.message_bytes();
                 let message = String::from_utf8(message_bytes.to_vec())?;
                 Ok(message)
@@ -69,7 +72,7 @@ impl UpstreamIndex {
     }
 
     pub fn crate_exists(&self, crate_name: &str) -> anyhow::Result<bool> {
-        let repo = &self.repository;
+        let repo = self.repository.lock().unwrap();
 
         let path = crate::Repository::relative_index_file(crate_name);
 
@@ -85,13 +88,13 @@ impl UpstreamIndex {
 
     /// Obtain a list of crates from the index HEAD
     pub fn crates_from_index_head(&self, crate_name: &str) -> anyhow::Result<Vec<crate::Crate>> {
-        let repo = &self.repository;
+        let repo = self.repository.lock().unwrap();
 
         let path = crate::Repository::relative_index_file(crate_name);
 
         let head = repo.head()?;
         let tree = head.peel_to_tree()?;
-        let blob = tree.get_path(&path)?.to_object(repo)?.peel_to_blob()?;
+        let blob = tree.get_path(&path)?.to_object(&repo)?.peel_to_blob()?;
 
         let content = blob.content();
 
@@ -104,7 +107,7 @@ impl UpstreamIndex {
     }
 
     pub fn create_empty_commit(&self) -> anyhow::Result<()> {
-        let repo = &self.repository;
+        let repo = self.repository.lock().unwrap();
 
         let head = repo.head()?;
         let target = head
@@ -118,5 +121,22 @@ impl UpstreamIndex {
         repo.commit(Some("HEAD"), &sig, &sig, "empty commit", &tree, &[&parent])?;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_send() {
+        fn assert_send<T: Send>() {}
+        assert_send::<UpstreamIndex>();
+    }
+
+    #[test]
+    fn test_sync() {
+        fn assert_sync<T: Sync>() {}
+        assert_sync::<UpstreamIndex>();
     }
 }
