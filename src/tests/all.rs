@@ -94,6 +94,7 @@ pub struct CategoryMeta {
 }
 #[derive(Deserialize)]
 pub struct OkBool {
+    #[allow(dead_code)]
     ok: bool,
 }
 
