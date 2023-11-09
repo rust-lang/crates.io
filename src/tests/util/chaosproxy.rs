@@ -111,7 +111,7 @@ impl ChaosProxy {
             .into_split();
 
         let self_clone = self.clone();
-        self.runtime.spawn(async move {
+        tokio::spawn(async move {
             if let Err(err) = self_clone.proxy_data(client_read, backend_write).await {
                 eprintln!("ChaosProxy connection error: {err}");
             }
