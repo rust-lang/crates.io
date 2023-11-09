@@ -1,27 +1,34 @@
 use anyhow::anyhow;
 use git2::{ErrorCode, Repository, Sort};
-use std::env;
-use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::thread;
+use tempfile::{Builder, TempDir};
 use url::Url;
 
 pub struct UpstreamIndex {
+    temp_dir: TempDir,
     pub repository: Repository,
 }
 
 impl UpstreamIndex {
     pub fn new() -> anyhow::Result<Self> {
-        let thread_local_path = bare();
+        let temp_dir = Builder::new()
+            .prefix(thread::current().name().unwrap())
+            .tempdir()?;
 
-        init(&thread_local_path);
+        debug!(path = %temp_dir.path().display(), "Creating upstream git repository…");
+        init(temp_dir.path());
 
-        let repository = Repository::open_bare(thread_local_path)?;
-        Ok(Self { repository })
+        let repository = Repository::open_bare(temp_dir.path())?;
+
+        Ok(Self {
+            temp_dir,
+            repository,
+        })
     }
 
     pub fn path(&self) -> &Path {
-        self.repository.path()
+        self.temp_dir.path()
     }
 
     pub fn url(&self) -> Url {
@@ -95,26 +102,6 @@ impl UpstreamIndex {
 
         Ok(())
     }
-}
-
-impl Drop for UpstreamIndex {
-    fn drop(&mut self) {
-        if let Err(error) = fs::remove_dir_all(self.path()) {
-            warn!(%error, "Failed to remove upstream index")
-        }
-    }
-}
-
-fn root() -> PathBuf {
-    env::current_dir()
-        .unwrap()
-        .join("tmp")
-        .join("tests")
-        .join(thread::current().name().unwrap())
-}
-
-fn bare() -> PathBuf {
-    root().join("bare")
 }
 
 fn init(path: &Path) {
