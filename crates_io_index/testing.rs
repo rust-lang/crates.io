@@ -17,7 +17,22 @@ impl UpstreamIndex {
             .tempdir()?;
 
         debug!(path = %temp_dir.path().display(), "Creating upstream git repository…");
-        init(temp_dir.path());
+        let bare = git2::Repository::init_opts(
+            temp_dir.path(),
+            git2::RepositoryInitOptions::new()
+                .bare(true)
+                .initial_head("master"),
+        )
+        .unwrap();
+        let mut config = bare.config().unwrap();
+        config.set_str("user.name", "name").unwrap();
+        config.set_str("user.email", "email").unwrap();
+        let mut index = bare.index().unwrap();
+        let id = index.write_tree().unwrap();
+        let tree = bare.find_tree(id).unwrap();
+        let sig = bare.signature().unwrap();
+        bare.commit(Some("HEAD"), &sig, &sig, "Initial Commit", &tree, &[])
+            .unwrap();
 
         let repository = Repository::open_bare(temp_dir.path())?;
 
@@ -102,23 +117,4 @@ impl UpstreamIndex {
 
         Ok(())
     }
-}
-
-fn init(path: &Path) {
-    let bare = git2::Repository::init_opts(
-        path,
-        git2::RepositoryInitOptions::new()
-            .bare(true)
-            .initial_head("master"),
-    )
-    .unwrap();
-    let mut config = bare.config().unwrap();
-    config.set_str("user.name", "name").unwrap();
-    config.set_str("user.email", "email").unwrap();
-    let mut index = bare.index().unwrap();
-    let id = index.write_tree().unwrap();
-    let tree = bare.find_tree(id).unwrap();
-    let sig = bare.signature().unwrap();
-    bare.commit(Some("HEAD"), &sig, &sig, "Initial Commit", &tree, &[])
-        .unwrap();
 }
