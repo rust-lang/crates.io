@@ -9,6 +9,7 @@ use crate::models::{insert_version_owner_action, VersionAction};
 use crate::rate_limiter::LimitedAction;
 use crate::schema::versions;
 use crate::worker::jobs;
+use tokio::runtime::Handle;
 
 /// Handles the `DELETE /crates/:crate_id/:version/yank` route.
 /// This does not delete a crate version, it makes the crate
@@ -67,7 +68,7 @@ fn modify_yank(
     let user = auth.user();
     let owners = krate.owners(conn)?;
 
-    if user.rights(state, &owners)? < Rights::Publish {
+    if Handle::current().block_on(user.rights(state, &owners))? < Rights::Publish {
         return Err(cargo_err("must already be an owner to yank or unyank"));
     }
 

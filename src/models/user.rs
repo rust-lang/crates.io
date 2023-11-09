@@ -140,7 +140,7 @@ impl User {
     /// `Publish` as well, but this is a non-obvious invariant so we don't bother.
     /// Sweet free optimization if teams are proving burdensome to check.
     /// More than one team isn't really expected, though.
-    pub fn rights(&self, app: &App, owners: &[Owner]) -> AppResult<Rights> {
+    pub async fn rights(&self, app: &App, owners: &[Owner]) -> AppResult<Rights> {
         let mut best = Rights::None;
         for owner in owners {
             match *owner {
@@ -150,7 +150,7 @@ impl User {
                     }
                 }
                 Owner::Team(ref team) => {
-                    if team.contains_user(app, self)? {
+                    if team.contains_user(app, self).await? {
                         best = Rights::Publish;
                     }
                 }

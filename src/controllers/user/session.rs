@@ -2,6 +2,7 @@ use crate::controllers::frontend_prelude::*;
 
 use oauth2::reqwest::http_client;
 use oauth2::{AuthorizationCode, Scope, TokenResponse};
+use tokio::runtime::Handle;
 
 use crate::email::Emails;
 use crate::github::GithubUser;
@@ -100,7 +101,7 @@ pub async fn authorize(
         let token = token.access_token();
 
         // Fetch the user info from GitHub using the access token we just got and create a user record
-        let ghuser = app.github.current_user(token)?;
+        let ghuser = Handle::current().block_on(app.github.current_user(token))?;
         let user =
             save_user_to_database(&ghuser, token.secret(), &app.emails, &mut *app.db_write()?)?;
 

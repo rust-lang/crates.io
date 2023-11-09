@@ -295,7 +295,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             };
 
             let owners = krate.owners(conn)?;
-            if user.rights(&app, &owners)? < Rights::Publish {
+            if Handle::current().block_on(user.rights(&app, &owners))? < Rights::Publish {
                 return Err(cargo_err(MISSING_RIGHTS_ERROR_MESSAGE));
             }
 

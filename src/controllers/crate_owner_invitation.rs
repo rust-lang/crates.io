@@ -14,6 +14,7 @@ use chrono::{Duration, Utc};
 use diesel::{pg::Pg, sql_types::Bool};
 use indexmap::IndexMap;
 use std::collections::{HashMap, HashSet};
+use tokio::runtime::Handle;
 
 /// Handles the `GET /api/v1/me/crate_owner_invitations` route.
 pub async fn list(app: AppState, req: Parts) -> AppResult<Json<Value>> {
@@ -106,7 +107,7 @@ fn prepare_list(
                 // Only allow crate owners to query pending invitations for their crate.
                 let krate: Crate = Crate::by_name(&crate_name).first(conn)?;
                 let owners = krate.owners(conn)?;
-                if user.rights(state, &owners)? != Rights::Full {
+                if Handle::current().block_on(user.rights(state, &owners))? != Rights::Full {
                     return Err(forbidden());
                 }
 

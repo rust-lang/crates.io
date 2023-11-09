@@ -16,7 +16,7 @@ use crates_io_test_db::TestDatabase;
 use diesel::PgConnection;
 use futures_util::TryStreamExt;
 use oauth2::{ClientId, ClientSecret};
-use reqwest::{blocking::Client, Proxy};
+use reqwest::{Client, Proxy};
 use std::collections::HashSet;
 use std::{rc::Rc, sync::Arc, time::Duration};
 
