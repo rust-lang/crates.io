@@ -2,15 +2,10 @@ use crate::builders::CrateBuilder;
 use crate::util::{RequestHelper, TestApp};
 use http::StatusCode;
 
-fn is_following(crate_name: &str, user: &impl RequestHelper) -> bool {
-    #[derive(Deserialize)]
-    struct F {
-        following: bool,
-    }
-
-    user.get::<F>(&format!("/api/v1/crates/{crate_name}/following"))
-        .good()
-        .following
+fn assert_is_following(crate_name: &str, expected: bool, user: &impl RequestHelper) {
+    let response = user.get::<()>(&format!("/api/v1/crates/{crate_name}/following"));
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.into_json(), json!({ "following": expected }));
 }
 
 fn follow(crate_name: &str, user: &impl RequestHelper) {
@@ -35,15 +30,15 @@ fn following() {
         CrateBuilder::new(crate_name, user.as_model().id).expect_build(conn);
     });
 
-    assert!(!is_following(crate_name, &user));
+    assert_is_following(crate_name, false, &user);
     follow(crate_name, &user);
     follow(crate_name, &user);
-    assert!(is_following(crate_name, &user));
+    assert_is_following(crate_name, true, &user);
     assert_eq!(user.search("following=1").crates.len(), 1);
 
     unfollow(crate_name, &user);
     unfollow(crate_name, &user);
-    assert!(!is_following(crate_name, &user));
+    assert_is_following(crate_name, false, &user);
     assert_eq!(user.search("following=1").crates.len(), 0);
 }
 
@@ -63,8 +58,8 @@ fn getting_followed_crates_allows_api_token_auth() {
     follow(crate_to_follow, &token);
 
     // Token auth on GET for get following status is disallowed
-    assert!(is_following(crate_to_follow, &user));
-    assert!(!is_following(crate_not_followed, &user));
+    assert_is_following(crate_to_follow, true, &user);
+    assert_is_following(crate_not_followed, false, &user);
 
     let json = token.search("following=1");
     assert_eq!(json.crates.len(), 1);
