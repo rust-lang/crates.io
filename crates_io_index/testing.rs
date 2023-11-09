@@ -3,7 +3,6 @@ use git2::{ErrorCode, Repository, Sort};
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::sync::Once;
 use std::thread;
 use url::Url;
 
@@ -98,6 +97,14 @@ impl UpstreamIndex {
     }
 }
 
+impl Drop for UpstreamIndex {
+    fn drop(&mut self) {
+        if let Err(error) = fs::remove_dir_all(self.path()) {
+            warn!(%error, "Failed to remove upstream index")
+        }
+    }
+}
+
 fn root() -> PathBuf {
     env::current_dir()
         .unwrap()
@@ -111,13 +118,6 @@ fn bare() -> PathBuf {
 }
 
 fn init(path: &Path) {
-    static INIT: Once = Once::new();
-    let _ = fs::remove_dir_all(path);
-
-    INIT.call_once(|| {
-        fs::create_dir_all(root().parent().unwrap()).unwrap();
-    });
-
     let bare = git2::Repository::init_opts(
         path,
         git2::RepositoryInitOptions::new()
