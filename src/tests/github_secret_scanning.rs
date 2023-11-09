@@ -1,12 +1,10 @@
 use crate::util::MockRequestExt;
 use crate::{RequestHelper, TestApp};
-use crates_io::controllers::github::secret_scanning::{
-    GitHubSecretAlertFeedback, GitHubSecretAlertFeedbackLabel,
-};
 use crates_io::util::token::HashedToken;
 use crates_io::{models::ApiToken, schema::api_tokens};
 use diesel::prelude::*;
 use http::StatusCode;
+use insta::assert_json_snapshot;
 
 static URL: &str = "/api/github/secret-scanning/verify";
 
@@ -47,18 +45,9 @@ fn github_secret_alert_revokes_token() {
     *request.body_mut() = GITHUB_ALERT.into();
     request.header("GITHUB-PUBLIC-KEY-IDENTIFIER", GITHUB_PUBLIC_KEY_IDENTIFIER);
     request.header("GITHUB-PUBLIC-KEY-SIGNATURE", GITHUB_PUBLIC_KEY_SIGNATURE);
-    let response = anon.run::<Vec<GitHubSecretAlertFeedback>>(request);
+    let response = anon.run::<()>(request);
     assert_eq!(response.status(), StatusCode::OK);
-
-    // Ensure feedback is a true positive
-    let feedback = response.good();
-    assert_eq!(feedback.len(), 1);
-    assert_eq!(feedback[0].token_raw, "some_token");
-    assert_eq!(feedback[0].token_type, "some_type");
-    assert_eq!(
-        feedback[0].label,
-        GitHubSecretAlertFeedbackLabel::TruePositive
-    );
+    assert_json_snapshot!(response.into_json());
 
     // Ensure that the token was revoked
     app.db(|conn| {
@@ -111,18 +100,9 @@ fn github_secret_alert_for_revoked_token() {
     *request.body_mut() = GITHUB_ALERT.into();
     request.header("GITHUB-PUBLIC-KEY-IDENTIFIER", GITHUB_PUBLIC_KEY_IDENTIFIER);
     request.header("GITHUB-PUBLIC-KEY-SIGNATURE", GITHUB_PUBLIC_KEY_SIGNATURE);
-    let response = anon.run::<Vec<GitHubSecretAlertFeedback>>(request);
+    let response = anon.run::<()>(request);
     assert_eq!(response.status(), StatusCode::OK);
-
-    // Ensure feedback is a true positive
-    let feedback = response.good();
-    assert_eq!(feedback.len(), 1);
-    assert_eq!(feedback[0].token_raw, "some_token");
-    assert_eq!(feedback[0].token_type, "some_type");
-    assert_eq!(
-        feedback[0].label,
-        GitHubSecretAlertFeedbackLabel::TruePositive
-    );
+    assert_json_snapshot!(response.into_json());
 
     // Ensure that the token is still revoked
     app.db(|conn| {
@@ -163,18 +143,9 @@ fn github_secret_alert_for_unknown_token() {
     *request.body_mut() = GITHUB_ALERT.into();
     request.header("GITHUB-PUBLIC-KEY-IDENTIFIER", GITHUB_PUBLIC_KEY_IDENTIFIER);
     request.header("GITHUB-PUBLIC-KEY-SIGNATURE", GITHUB_PUBLIC_KEY_SIGNATURE);
-    let response = anon.run::<Vec<GitHubSecretAlertFeedback>>(request);
+    let response = anon.run::<()>(request);
     assert_eq!(response.status(), StatusCode::OK);
-
-    // Ensure feedback is a false positive
-    let feedback = response.good();
-    assert_eq!(feedback.len(), 1);
-    assert_eq!(feedback[0].token_raw, "some_token");
-    assert_eq!(feedback[0].token_type, "some_type");
-    assert_eq!(
-        feedback[0].label,
-        GitHubSecretAlertFeedbackLabel::FalsePositive
-    );
+    assert_json_snapshot!(response.into_json());
 
     // Ensure that the token was not revoked
     app.db(|conn| {
