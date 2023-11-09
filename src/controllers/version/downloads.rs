@@ -10,6 +10,7 @@ use crate::models::{Crate, VersionDownload};
 use crate::schema::*;
 use crate::views::EncodableVersionDownload;
 use chrono::{Duration, NaiveDate, Utc};
+use std::fmt::Display;
 use tokio::runtime::Handle;
 use tracing::Instrument;
 
@@ -85,6 +86,13 @@ pub async fn download(
                         .downloads_non_canonical_crate_name_total
                         .inc();
                     req.request_log().add("bot", "dl");
+
+                    if app.config.reject_non_canonical_downloads {
+                        return Err(Box::new(NonCanonicalDownload {
+                            requested_name: crate_name,
+                            canonical_name: canonical_crate_name,
+                        }));
+                    }
                 } else {
                     // The version_id is only cached if the provided crate name was canonical.
                     // Non-canonical requests fallback to the "slow" path with a DB query, but
@@ -138,6 +146,33 @@ pub async fn download(
         Ok(Json(json!({ "url": redirect_url })).into_response())
     } else {
         Ok(redirect(redirect_url))
+    }
+}
+
+#[derive(Debug)]
+struct NonCanonicalDownload {
+    requested_name: String,
+    canonical_name: String,
+}
+
+impl Display for NonCanonicalDownload {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Your request is for a version of the `{requested_name}` crate, \
+            but that crate is actually named `{canonical_name}`. Support for \
+            \"non-canonical\" downloads has been deprecated and disabled. See \
+            https://blog.rust-lang.org/2023/10/27/crates-io-non-canonical-downloads.html \
+            for more detail.",
+            requested_name = self.requested_name,
+            canonical_name = self.canonical_name,
+        )
+    }
+}
+
+impl AppError for NonCanonicalDownload {
+    fn response(&self) -> Response {
+        (StatusCode::NOT_FOUND, self.to_string()).into_response()
     }
 }
 

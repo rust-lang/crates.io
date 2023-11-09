@@ -40,7 +40,9 @@ pub fn assert_dl_count(
 
 #[test]
 fn download() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init()
+        .with_config(|config| config.reject_non_canonical_downloads = false)
+        .with_user();
     let user = user.as_model();
 
     app.db(|conn| {
