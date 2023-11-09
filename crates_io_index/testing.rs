@@ -20,8 +20,8 @@ impl UpstreamIndex {
         Ok(Self { repository })
     }
 
-    pub fn url() -> Url {
-        Url::from_file_path(bare()).unwrap()
+    pub fn url(&self) -> Url {
+        Url::from_file_path(self.repository.path()).unwrap()
     }
 
     pub fn list_commits(&self) -> anyhow::Result<Vec<String>> {

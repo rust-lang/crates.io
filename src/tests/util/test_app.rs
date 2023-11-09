@@ -248,8 +248,13 @@ impl TestAppBuilder {
         let (app, router) = build_app(self.config, self.proxy);
 
         let runner = if self.build_job_runner {
+            let index = self
+                .index
+                .as_ref()
+                .expect("Index must be initialized to build a job runner");
+
             let repository_config = RepositoryConfig {
-                index_location: UpstreamIndex::url(),
+                index_location: index.url(),
                 credentials: Credentials::Missing,
             };
             let environment = Environment::new(
