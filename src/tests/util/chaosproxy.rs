@@ -1,4 +1,4 @@
-use anyhow::Context;
+use anyhow::{anyhow, Context};
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::{
@@ -57,11 +57,18 @@ impl ChaosProxy {
             .context("could not resolve database url")?
             .first()
             .copied()
-            .ok_or_else(|| anyhow::anyhow!("the database url does not point to any IP"))?;
+            .ok_or_else(|| anyhow!("the database url does not point to any IP"))?;
 
-        let instance = ChaosProxy::new(backend_addr).unwrap();
-        db_url.set_ip_host(instance.address.ip()).unwrap();
-        db_url.set_port(Some(instance.address.port())).unwrap();
+        let instance = ChaosProxy::new(backend_addr)?;
+
+        db_url
+            .set_ip_host(instance.address.ip())
+            .map_err(|_| anyhow!("Failed to set IP host on the URL"))?;
+
+        db_url
+            .set_port(Some(instance.address.port()))
+            .map_err(|_| anyhow!("Failed to set post on the URL"))?;
+
         Ok((instance, db_url.into()))
     }
 
