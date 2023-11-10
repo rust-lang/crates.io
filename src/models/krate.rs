@@ -199,7 +199,47 @@ impl Crate {
                 name, MAX_NAME_LENGTH
             )));
         }
-        Crate::valid_ident(name, "crate name")
+        Crate::valid_create_ident(name)
+    }
+
+    // Checks that the name is a valid crate name.
+    // 1. The name must be non-empty.
+    // 2. The first character must be an ASCII character.
+    // 3. The remaining characters must be ASCII alphanumerics or `-` or `_`.
+    // Note: This differs from `valid_dependency_name`, which allows `_` as the first character.
+    fn valid_create_ident(name: &str) -> AppResult<()> {
+        if name.is_empty() {
+            return Err(cargo_err("the crate name cannot be an empty"));
+        }
+        let mut chars = name.chars();
+        if let Some(ch) = chars.next() {
+            if ch.is_ascii_digit() {
+                return Err(cargo_err(&format!(
+                    "the name `{}` cannot be used as a crate name, \
+                the name cannot start with a digit",
+                    name,
+                )));
+            }
+            if !ch.is_ascii_alphabetic() {
+                return Err(cargo_err(&format!(
+                    "invalid character `{}` in crate name: `{}`, \
+                the first character must be an ASCII character",
+                    ch, name
+                )));
+            }
+        }
+
+        for ch in chars {
+            if !(ch.is_ascii_alphanumeric() || ch == '-' || ch == '_') {
+                return Err(cargo_err(&format!(
+                    "invalid character `{}` in crate name: `{}`, \
+                characters must be an ASCII alphanumeric characters, `-`, or `_`",
+                    ch, name
+                )));
+            }
+        }
+
+        Ok(())
     }
 
     pub fn valid_dependency_name(name: &str) -> AppResult<()> {
@@ -209,31 +249,31 @@ impl Crate {
                 name, MAX_NAME_LENGTH
             )));
         }
-        Crate::valid_ident(name, "dependency name")
+        Crate::valid_dependency_ident(name)
     }
 
-    // Checks that the name is a valid identifier.
+    // Checks that the name is a valid dependency name.
     // 1. The name must be non-empty.
     // 2. The first character must be an ASCII character or `_`.
     // 3. The remaining characters must be ASCII alphanumerics or `-` or `_`.
-    fn valid_ident(name: &str, what: &str) -> AppResult<()> {
+    fn valid_dependency_ident(name: &str) -> AppResult<()> {
         if name.is_empty() {
-            return Err(cargo_err(&format!("the {} cannot be an empty", what)));
+            return Err(cargo_err("the dependency name cannot be an empty"));
         }
         let mut chars = name.chars();
         if let Some(ch) = chars.next() {
             if ch.is_ascii_digit() {
                 return Err(cargo_err(&format!(
-                    "the name `{}` cannot be used as a {}, \
+                    "the name `{}` cannot be used as a dependency name, \
                 the name cannot start with a digit",
-                    name, what,
+                    name,
                 )));
             }
             if !(ch.is_ascii_alphabetic() || ch == '_') {
                 return Err(cargo_err(&format!(
-                    "invalid character `{}` in {}: `{}`, \
+                    "invalid character `{}` in dependency name: `{}`, \
                 the first character must be an ASCII character, or `_`",
-                    ch, what, name
+                    ch, name
                 )));
             }
         }
@@ -241,9 +281,9 @@ impl Crate {
         for ch in chars {
             if !(ch.is_ascii_alphanumeric() || ch == '-' || ch == '_') {
                 return Err(cargo_err(&format!(
-                    "invalid character `{}` in {}: `{}`, \
+                    "invalid character `{}` in dependency name: `{}`, \
                 characters must be an ASCII alphanumeric characters, `-`, or `_`",
-                    ch, what, name
+                    ch, name
                 )));
             }
         }
@@ -549,7 +589,7 @@ mod tests {
         assert!(Crate::valid_name("foo_underscore").is_ok());
         assert!(Crate::valid_name("foo-dash").is_ok());
         assert!(Crate::valid_name("foo+plus").is_err());
-        assert!(Crate::valid_name("_foo").is_ok());
+        assert!(Crate::valid_name("_foo").is_err());
         assert!(Crate::valid_name("-foo").is_err());
     }
 

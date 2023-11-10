@@ -5,7 +5,7 @@ expression: response.into_json()
 {
   "errors": [
     {
-      "detail": "invalid character `🦀` in crate name: `🦀`, the first character must be an ASCII character, or `_`"
+      "detail": "invalid character `🦀` in crate name: `🦀`, the first character must be an ASCII character"
     }
   ]
 }
