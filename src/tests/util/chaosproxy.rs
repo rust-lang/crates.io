@@ -110,45 +110,45 @@ impl ChaosProxy {
             .await?
             .into_split();
 
-        let self_clone = self.clone();
+        let break_networking_send = self.break_networking_send.clone();
         tokio::spawn(async move {
-            if let Err(err) = self_clone.proxy_data(client_read, backend_write).await {
+            if let Err(err) = proxy_data(break_networking_send, client_read, backend_write).await {
                 eprintln!("ChaosProxy connection error: {err}");
             }
         });
 
-        let self_clone = self.clone();
+        let break_networking_send = self.break_networking_send.clone();
         tokio::spawn(async move {
-            if let Err(err) = self_clone.proxy_data(backend_read, client_write).await {
+            if let Err(err) = proxy_data(break_networking_send, backend_read, client_write).await {
                 eprintln!("ChaosProxy connection error: {err}");
             }
         });
 
         Ok(())
     }
+}
 
-    async fn proxy_data(
-        &self,
-        mut from: OwnedReadHalf,
-        mut to: OwnedWriteHalf,
-    ) -> Result<(), Error> {
-        let mut break_connections_recv = self.break_networking_send.subscribe();
-        let mut buf = [0; 1024];
+async fn proxy_data(
+    break_networking_send: Sender<()>,
+    mut from: OwnedReadHalf,
+    mut to: OwnedWriteHalf,
+) -> Result<(), Error> {
+    let mut break_connections_recv = break_networking_send.subscribe();
+    let mut buf = [0; 1024];
 
-        loop {
-            tokio::select! {
-                len = from.read(&mut buf) => {
-                    let len = len?;
-                    if len == 0 {
-                        // EOF, the socket was closed
-                        return Ok(());
-                    }
-                    to.write_all(&buf[0..len]).await?;
-                }
-                _ = break_connections_recv.recv() => {
-                    to.shutdown().await?;
+    loop {
+        tokio::select! {
+            len = from.read(&mut buf) => {
+                let len = len?;
+                if len == 0 {
+                    // EOF, the socket was closed
                     return Ok(());
                 }
+                to.write_all(&buf[0..len]).await?;
+            }
+            _ = break_connections_recv.recv() => {
+                to.shutdown().await?;
+                return Ok(());
             }
         }
     }
