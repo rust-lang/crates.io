@@ -10,6 +10,7 @@ use tokio::{
     runtime::Runtime,
     sync::broadcast::Sender,
 };
+use tracing::error;
 use url::Url;
 
 pub(crate) struct ChaosProxy {
@@ -42,8 +43,8 @@ impl ChaosProxy {
 
         let instance_clone = instance.clone();
         instance.runtime.spawn(async move {
-            if let Err(err) = instance_clone.server_loop(listener).await {
-                eprintln!("ChaosProxy server error: {err}");
+            if let Err(error) = instance_clone.server_loop(listener).await {
+                error!(%error, "ChaosProxy server error");
             }
         });
 
@@ -119,15 +120,17 @@ impl ChaosProxy {
 
         let break_networking_send = self.break_networking_send.clone();
         tokio::spawn(async move {
-            if let Err(err) = proxy_data(break_networking_send, client_read, backend_write).await {
-                eprintln!("ChaosProxy connection error: {err}");
+            if let Err(error) = proxy_data(break_networking_send, client_read, backend_write).await
+            {
+                error!(%error, "ChaosProxy connection error");
             }
         });
 
         let break_networking_send = self.break_networking_send.clone();
         tokio::spawn(async move {
-            if let Err(err) = proxy_data(break_networking_send, backend_read, client_write).await {
-                eprintln!("ChaosProxy connection error: {err}");
+            if let Err(error) = proxy_data(break_networking_send, backend_read, client_write).await
+            {
+                error!(%error, "ChaosProxy connection error");
             }
         });
 
