@@ -4,10 +4,13 @@ use crate::fastly::Fastly;
 use crate::storage::Storage;
 use crate::Emails;
 use crates_io_index::{Repository, RepositoryConfig};
+use diesel::PgConnection;
 use parking_lot::{Mutex, MutexGuard};
 use std::ops::{Deref, DerefMut};
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 use std::time::Instant;
+
+use super::typosquat;
 
 pub struct Environment {
     repository_config: RepositoryConfig,
@@ -17,6 +20,9 @@ pub struct Environment {
     pub storage: Arc<Storage>,
     pub connection_pool: DieselPool,
     pub emails: Emails,
+
+    /// A lazily initialised cache of the most popular crates ready to use in typosquatting checks.
+    typosquat_cache: OnceLock<Result<typosquat::Cache, typosquat::CacheError>>,
 }
 
 impl Environment {
@@ -36,6 +42,7 @@ impl Environment {
             storage,
             connection_pool,
             emails,
+            typosquat_cache: OnceLock::default(),
         }
     }
 
@@ -64,6 +71,19 @@ impl Environment {
 
     pub(crate) fn fastly(&self) -> Option<&Fastly> {
         self.fastly.as_ref()
+    }
+
+    /// Returns the typosquatting cache, initialising it if required.
+    pub(crate) fn typosquat_cache(
+        &self,
+        conn: &mut PgConnection,
+    ) -> Result<&typosquat::Cache, typosquat::CacheError> {
+        // We have to pass conn back in here because the caller might be in a transaction, and
+        // getting a new connection here to query crates can result in a deadlock.
+        self.typosquat_cache
+            .get_or_init(|| typosquat::Cache::from_env(conn))
+            .as_ref()
+            .map_err(|e| e.clone())
     }
 }
 

@@ -1,7 +1,7 @@
 //! Functionality related to publishing a new crate or version of a crate.
 
 use crate::auth::AuthCheck;
-use crate::worker::jobs;
+use crate::worker::jobs::{self, CheckTyposquat};
 use crate::worker::swirl::BackgroundJob;
 use axum::body::Bytes;
 use cargo_manifest::{Dependency, DepsSet, TargetDepsSet};
@@ -85,7 +85,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         // this query should only be used for the endpoint scope calculation
         // since a race condition there would only cause `publish-new` instead of
         // `publish-update` to be used.
-        let existing_crate = Crate::by_name(&metadata.name)
+        let existing_crate: Option<Crate> = Crate::by_name(&metadata.name)
             .first::<Crate>(conn)
             .optional()?;
 
@@ -222,9 +222,10 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             return Err(cargo_err("expected at most 5 categories per crate"));
         }
 
-        let max_features = existing_crate
-            .and_then(|c| c.max_features.map(|mf| mf as usize))
-            .unwrap_or(app.config.max_features);
+        let max_features = match &existing_crate {
+            Some(c) => c.max_features.map(|mf| mf as usize),
+            None => None,
+        }.unwrap_or(app.config.max_features);
 
         let features = tarball_info.manifest.features.unwrap_or_default();
         let num_features = features.len();
@@ -392,6 +393,11 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 .map_err(|e| internal(format!("failed to upload crate: {e}")))?;
 
             jobs::enqueue_sync_to_index(&krate.name, conn)?;
+
+            // Experiment: check new crates for potential typosquatting.
+            if existing_crate.is_none() {
+                CheckTyposquat::new(&krate.name).enqueue(conn)?;
+            }
 
             // The `other` field on `PublishWarnings` was introduced to handle a temporary warning
             // that is no longer needed. As such, crates.io currently does not return any `other`

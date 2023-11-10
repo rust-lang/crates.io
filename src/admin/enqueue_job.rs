@@ -1,5 +1,5 @@
 use crate::db;
-use crate::schema::background_jobs;
+use crate::schema::{background_jobs, crates};
 use crate::worker::jobs;
 use crate::worker::swirl::BackgroundJob;
 use anyhow::Result;
@@ -25,6 +25,10 @@ pub enum Command {
     NormalizeIndex {
         #[arg(long = "dry-run")]
         dry_run: bool,
+    },
+    CheckTyposquat {
+        #[arg()]
+        name: String,
     },
 }
 
@@ -59,6 +63,21 @@ pub fn run(command: Command) -> Result<()> {
         }
         Command::NormalizeIndex { dry_run } => {
             jobs::NormalizeIndex::new(dry_run).enqueue(conn)?;
+        }
+        Command::CheckTyposquat { name } => {
+            // The job will fail if the crate doesn't actually exist, so let's check that up front.
+            if crates::table
+                .filter(crates::name.eq(&name))
+                .count()
+                .get_result::<i64>(conn)?
+                == 0
+            {
+                anyhow::bail!(
+                    "cannot enqueue a typosquat check for a crate that doesn't exist: {name}"
+                );
+            }
+
+            jobs::CheckTyposquat::new(&name).enqueue(conn)?;
         }
     };
 
