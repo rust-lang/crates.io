@@ -91,6 +91,35 @@ or go to https://{domain}/me/pending-invites to manage all of your crate ownersh
         self.send(email, subject, &body)
     }
 
+    /// Attempts to send a notification that a new crate may be typosquatting another crate.
+    pub fn send_possible_typosquat_notification(
+        &self,
+        email: &str,
+        crate_name: &str,
+        squats: &[typomania::checks::Squat],
+    ) -> AppResult<()> {
+        let domain = crate::config::domain_name();
+        let subject = "Possible typosquatting in new crate";
+        let body = format!(
+            "New crate {crate_name} may be typosquatting one or more other crates.\n
+Visit https://{domain}/crates/{crate_name} to see the offending crate.\n
+\n
+Specific squat checks that triggered:\n
+\n
+{squats}",
+            squats = squats
+                .iter()
+                .map(|squat| format!(
+                    "- {squat} (https://{domain}/crates/{crate_name})\n",
+                    crate_name = squat.package()
+                ))
+                .collect::<Vec<_>>()
+                .join(""),
+        );
+
+        self.send(email, subject, &body)
+    }
+
     /// Attempts to send an API token exposure notification email
     pub fn send_token_exposed_notification(
         &self,
