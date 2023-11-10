@@ -100,6 +100,7 @@ tracing = "=0.1.40"
 tracing-subscriber = { version = "=0.3.18", features = ["env-filter"] }
 typomania = { version = "=0.1.2", default-features = false }
 url = "=2.4.1"
+unicode-xid = "0.2.4"
 
 [dev-dependencies]
 bytes = "=1.5.0"
