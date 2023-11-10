@@ -44,7 +44,7 @@ fn startup_without_database() {
     // Break the networking *before* starting the binary, to ensure the binary can fully startup
     // without a database connection. Most of crates.io should not work when started without a
     // database, but unconditional redirects will work.
-    server_bin.chaosproxy.break_networking();
+    server_bin.chaosproxy.break_networking().unwrap();
 
     let running_server = server_bin.start().unwrap();
 

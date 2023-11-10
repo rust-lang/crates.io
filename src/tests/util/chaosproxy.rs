@@ -65,16 +65,16 @@ impl ChaosProxy {
         Ok((instance, db_url.into()))
     }
 
-    pub(crate) fn break_networking(&self) {
+    pub(crate) fn break_networking(&self) -> anyhow::Result<usize> {
         self.break_networking_send
             .send(())
-            .expect("failed to send the break_networking message");
+            .context("Failed to send the break_networking message")
     }
 
-    pub(crate) fn restore_networking(&self) {
+    pub(crate) fn restore_networking(&self) -> anyhow::Result<usize> {
         self.restore_networking_send
             .send(())
-            .expect("failed to send the restore_networking message");
+            .context("Failed to send the restore_networking message")
     }
 
     async fn server_loop(&self, initial_listener: TcpListener) -> Result<(), Error> {
