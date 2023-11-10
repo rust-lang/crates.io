@@ -220,6 +220,15 @@ impl Crate {
                 .unwrap_or(false)
     }
 
+    pub fn invalid_dependency_name_msg(dep: &str) -> String {
+        format!(
+            "\"{dep}\" is an invalid dependency name (dependency \
+                names must start with a letter or underscore, contain only \
+                letters, numbers, hyphens, or underscores and have at most \
+                {MAX_NAME_LENGTH} characters)"
+        )
+    }
+
     /// Validates the THIS parts of `features = ["THIS", "and/THIS", "dep:THIS", "dep?/THIS"]`.
     /// 1. The name must be non-empty.
     /// 2. The first character must be a Unicode XID start character, `_`, or a digit.
@@ -262,22 +271,12 @@ impl Crate {
         if let Some((dep, dep_feat)) = name.split_once('/') {
             let dep = dep.strip_suffix('?').unwrap_or(dep);
             if !Crate::valid_dependency_name(dep) {
-                return Err(cargo_err(&format_args!(
-                    "\"{dep}\" is an invalid dependency name (dependency \
-                names must start with a letter or underscore, contain only \
-                letters, numbers, hyphens, or underscores and have at most \
-                {MAX_NAME_LENGTH} characters)"
-                )));
+                return Err(cargo_err(&Crate::invalid_dependency_name_msg(dep)));
             }
             Crate::valid_feature_name(dep_feat)
         } else if let Some((_, dep)) = name.split_once("dep:") {
             if !Crate::valid_dependency_name(dep) {
-                return Err(cargo_err(&format_args!(
-                    "\"{dep}\" is an invalid dependency name (dependency \
-                names must start with a letter or underscore, contain only \
-                letters, numbers, hyphens, or underscores and have at most \
-                {MAX_NAME_LENGTH} characters)"
-                )));
+                return Err(cargo_err(&Crate::invalid_dependency_name_msg(dep)));
             }
             return Ok(());
         } else {

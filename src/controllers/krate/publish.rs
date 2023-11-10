@@ -623,12 +623,7 @@ pub fn validate_dependency(dep: &EncodableCrateDependency) -> AppResult<()> {
 
     if let Some(toml_name) = &dep.explicit_name_in_toml {
         if !Crate::valid_dependency_name(toml_name) {
-            return Err(cargo_err(&format_args!(
-                "\"{toml_name}\" is an invalid dependency name (dependency \
-                names must start with a letter or underscore, contain only \
-                letters, numbers, hyphens, or underscores and have at most \
-                {MAX_NAME_LENGTH} characters)"
-            )));
+            return Err(cargo_err(&Crate::invalid_dependency_name_msg(toml_name)));
         }
     }
 
