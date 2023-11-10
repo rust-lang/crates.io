@@ -598,6 +598,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "327762f6e5a765692301e5bb513e0d9fef63be86bbc14528052b1cd3e6f03e07"
 
 [[package]]
+name = "bitflip"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7006e6395f41477e1052dfff8381b32c0d740c2ff3d48ffd72d19132293b4578"
+
+[[package]]
 name = "block-buffer"
 version = "0.10.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -965,6 +971,7 @@ dependencies = [
  "tower-http",
  "tracing",
  "tracing-subscriber",
+ "typomania",
  "url",
 ]
 
@@ -4225,6 +4232,18 @@ name = "typenum"
 version = "1.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "42ff0bf0c66b8238c6f3b578df37d0b7848e55df8577b3f74f92a69acceeb825"
+
+[[package]]
+name = "typomania"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "38f8c4efb88486b445b83759c6589b97a0fe4cf82bd36be336c164b49af13bef"
+dependencies = [
+ "bitflip",
+ "itertools",
+ "thiserror",
+ "tracing",
+]
 
 [[package]]
 name = "ucd-trie"
