@@ -92,17 +92,14 @@ pub trait RequestHelper {
     /// Run a request that is expected to succeed
     #[track_caller]
     fn run<T>(&self, request: MockRequest) -> Response<T> {
-        let router = self.app().router().clone();
+        let app = self.app();
+        let rt = app.runtime();
+        let router = app.router().clone();
 
         // Add a mock `SocketAddr` to the requests so that the `ConnectInfo`
         // extractor has something to extract.
         let mocket_addr = SocketAddr::from(([127, 0, 0, 1], 52381));
         let router = router.layer(MockConnectInfo(mocket_addr));
-
-        let rt = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .unwrap();
 
         let axum_response = rt
             .block_on(router.oneshot(request.map(hyper::Body::from)))
