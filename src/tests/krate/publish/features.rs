@@ -46,6 +46,15 @@ fn feature_name_start_with_number_and_underscore() {
 }
 
 #[test]
+fn feature_name_with_unicode_chars() {
+    let (app, _, _, token) = TestApp::full().with_token();
+    let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("foo.你好世界", &[]);
+    token.publish_crate(crate_to_publish).good();
+    let crates = app.crates_from_index_head("foo");
+    assert_json_snapshot!(crates);
+}
+
+#[test]
 fn empty_feature_name() {
     let (app, _, _, token) = TestApp::full().with_token();
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("", &[]);
