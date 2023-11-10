@@ -1,3 +1,10 @@
+.boxed {
+    padding: var(--space-m);
+    background-color: white;
+    margin-bottom: var(--space-s);
+    border-radius: 5px;
+}
+
 .wrapper {
     line-height: 1.5;
     overflow-wrap: break-word;
