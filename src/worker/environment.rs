@@ -2,6 +2,7 @@ use crate::cloudfront::CloudFront;
 use crate::db::DieselPool;
 use crate::fastly::Fastly;
 use crate::storage::Storage;
+use crate::Emails;
 use crates_io_index::{Repository, RepositoryConfig};
 use parking_lot::{Mutex, MutexGuard};
 use std::ops::{Deref, DerefMut};
@@ -15,6 +16,7 @@ pub struct Environment {
     fastly: Option<Fastly>,
     pub storage: Arc<Storage>,
     pub connection_pool: DieselPool,
+    pub emails: Emails,
 }
 
 impl Environment {
@@ -24,6 +26,7 @@ impl Environment {
         fastly: Option<Fastly>,
         storage: Arc<Storage>,
         connection_pool: DieselPool,
+        emails: Emails,
     ) -> Self {
         Self {
             repository_config,
@@ -32,6 +35,7 @@ impl Environment {
             fastly,
             storage,
             connection_pool,
+            emails,
         }
     }
 

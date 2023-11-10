@@ -1,5 +1,5 @@
 use std::path::PathBuf;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 use crate::util::errors::{server_error, AppResult};
 
@@ -12,7 +12,7 @@ use lettre::transport::smtp::SmtpTransport;
 use lettre::{Message, Transport};
 use rand::distributions::{Alphanumeric, DistString};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Emails {
     backend: EmailBackend,
 }
@@ -48,7 +48,7 @@ impl Emails {
     pub fn new_in_memory() -> Self {
         Self {
             backend: EmailBackend::Memory {
-                mails: Mutex::new(Vec::new()),
+                mails: Arc::new(Mutex::new(Vec::new())),
             },
         }
     }
@@ -204,6 +204,7 @@ Source type: {source}\n",
     }
 }
 
+#[derive(Clone)]
 enum EmailBackend {
     /// Backend used in production to send mails using SMTP.
     Smtp {
@@ -214,7 +215,7 @@ enum EmailBackend {
     /// Backend used locally during development, will store the emails in the provided directory.
     FileSystem { path: PathBuf },
     /// Backend used during tests, will keep messages in memory to allow tests to retrieve them.
-    Memory { mails: Mutex<Vec<StoredEmail>> },
+    Memory { mails: Arc<Mutex<Vec<StoredEmail>>> },
 }
 
 // Custom Debug implementation to avoid showing the SMTP password.

@@ -269,6 +269,7 @@ impl TestAppBuilder {
                 None,
                 app.storage.clone(),
                 app.primary_database.clone(),
+                app.emails.clone(),
             );
 
             let runner = Runner::new(app.primary_database.clone(), Arc::new(environment))
