@@ -1,4 +1,4 @@
-use anyhow::{Context, Error};
+use anyhow::Context;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::{
@@ -23,7 +23,7 @@ pub(crate) struct ChaosProxy {
 }
 
 impl ChaosProxy {
-    pub(crate) fn new(backend_address: SocketAddr) -> Result<Arc<Self>, Error> {
+    pub(crate) fn new(backend_address: SocketAddr) -> anyhow::Result<Arc<Self>> {
         let runtime = Runtime::new().expect("failed to create Tokio runtime");
         let listener = runtime.block_on(TcpListener::bind("127.0.0.1:0"))?;
 
@@ -50,7 +50,7 @@ impl ChaosProxy {
         Ok(instance)
     }
 
-    pub(crate) fn proxy_database_url(url: &str) -> Result<(Arc<Self>, String), Error> {
+    pub(crate) fn proxy_database_url(url: &str) -> anyhow::Result<(Arc<Self>, String)> {
         let mut db_url = Url::parse(url).context("failed to parse database url")?;
         let backend_addr = db_url
             .socket_addrs(|| Some(5432))
@@ -77,7 +77,7 @@ impl ChaosProxy {
             .context("Failed to send the restore_networking message")
     }
 
-    async fn server_loop(&self, initial_listener: TcpListener) -> Result<(), Error> {
+    async fn server_loop(&self, initial_listener: TcpListener) -> anyhow::Result<()> {
         let mut listener = Some(initial_listener);
 
         let mut break_networking_recv = self.break_networking_send.subscribe();
@@ -104,7 +104,7 @@ impl ChaosProxy {
         }
     }
 
-    async fn accept_connection(&self, accepted: TcpStream) -> Result<(), Error> {
+    async fn accept_connection(&self, accepted: TcpStream) -> anyhow::Result<()> {
         let (client_read, client_write) = accepted.into_split();
         let (backend_read, backend_write) = TcpStream::connect(&self.backend_address)
             .await?
@@ -132,7 +132,7 @@ async fn proxy_data(
     break_networking_send: Sender<()>,
     mut from: OwnedReadHalf,
     mut to: OwnedWriteHalf,
-) -> Result<(), Error> {
+) -> anyhow::Result<()> {
     let mut break_connections_recv = break_networking_send.subscribe();
     let mut buf = [0; 1024];
 
