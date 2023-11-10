@@ -1,7 +1,8 @@
 use crate::controllers::frontend_prelude::*;
 
+use axum::extract::{FromRequestParts, Query};
 use oauth2::reqwest::http_client;
-use oauth2::{AuthorizationCode, Scope, TokenResponse};
+use oauth2::{AuthorizationCode, CsrfToken, Scope, TokenResponse};
 use tokio::runtime::Handle;
 
 use crate::email::Emails;
@@ -40,6 +41,13 @@ pub async fn begin(app: AppState, session: SessionExtension) -> Json<Value> {
     Json(json!({ "url": url.to_string(), "state": state }))
 }
 
+#[derive(Clone, Debug, Deserialize, FromRequestParts)]
+#[from_request(via(Query))]
+pub struct AuthorizeQuery {
+    code: AuthorizationCode,
+    state: CsrfToken,
+}
+
 /// Handles the `GET /api/private/session/authorize` route.
 ///
 /// This route is called from the GitHub API OAuth flow after the user accepted or rejected
@@ -69,33 +77,25 @@ pub async fn begin(app: AppState, session: SessionExtension) -> Json<Value> {
 /// }
 /// ```
 pub async fn authorize(
+    query: AuthorizeQuery,
     app: AppState,
     session: SessionExtension,
     req: Parts,
 ) -> AppResult<Json<EncodableMe>> {
     let app_clone = app.clone();
 
-    let req = conduit_compat(move || {
-        // Parse the url query
-        let mut query = req.query();
-        let code = query.remove("code").unwrap_or_default();
-        let state = query.remove("state").unwrap_or_default();
-
+    conduit_compat(move || {
         // Make sure that the state we just got matches the session state that we
         // should have issued earlier.
-        {
-            let session_state = session.remove("github_oauth_state");
-            let session_state = session_state.as_deref();
-            if Some(&state[..]) != session_state {
-                return Err(bad_request("invalid state parameter"));
-            }
+        let session_state = session.remove("github_oauth_state").map(CsrfToken::new);
+        if !session_state.is_some_and(|state| query.state.secret() == state.secret()) {
+            return Err(bad_request("invalid state parameter"));
         }
 
         // Fetch the access token from GitHub using the code we just got
-        let code = AuthorizationCode::new(code);
         let token = app
             .github_oauth
-            .exchange_code(code)
+            .exchange_code(query.code)
             .request(http_client)
             .map_err(|err| err.chain(server_error("Error obtaining token")))?;
         let token = token.access_token();
@@ -108,7 +108,7 @@ pub async fn authorize(
         // Log in by setting a cookie and the middleware authentication
         session.insert("user_id".to_string(), user.id.to_string());
 
-        Ok(req)
+        Ok(())
     })
     .await?;
 
