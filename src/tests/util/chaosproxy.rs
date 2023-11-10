@@ -77,7 +77,7 @@ impl ChaosProxy {
             .expect("failed to send the restore_networking message");
     }
 
-    async fn server_loop(self: Arc<Self>, initial_listener: TcpListener) -> Result<(), Error> {
+    async fn server_loop(&self, initial_listener: TcpListener) -> Result<(), Error> {
         let mut listener = Some(initial_listener);
 
         let mut break_networking_recv = self.break_networking_send.subscribe();
@@ -87,7 +87,7 @@ impl ChaosProxy {
             if let Some(l) = &listener {
                 tokio::select! {
                     accepted = l.accept() => {
-                        self.clone().accept_connection(accepted?.0).await?;
+                        self.accept_connection(accepted?.0).await?;
                     },
 
                     _ = break_networking_recv.recv() => {
@@ -104,7 +104,7 @@ impl ChaosProxy {
         }
     }
 
-    async fn accept_connection(self: Arc<Self>, accepted: TcpStream) -> Result<(), Error> {
+    async fn accept_connection(&self, accepted: TcpStream) -> Result<(), Error> {
         let (client_read, client_write) = accepted.into_split();
         let (backend_read, backend_write) = TcpStream::connect(&self.backend_address)
             .await?
