@@ -48,14 +48,10 @@ impl<T> Response<T> {
 
     #[track_caller]
     pub fn assert_redirect_ends_with(&self, target: &str) -> &Self {
-        assert!(self
-            .response
-            .headers()
-            .get(header::LOCATION)
-            .unwrap()
-            .to_str()
-            .unwrap()
-            .ends_with(target));
+        let headers = self.response.headers();
+        let location = assert_some!(headers.get(header::LOCATION));
+        let location = assert_ok!(location.to_str());
+        assert!(location.ends_with(target));
         self
     }
 
@@ -108,21 +104,16 @@ fn json<T>(r: reqwest::blocking::Response) -> T
 where
     for<'de> T: serde::Deserialize<'de>,
 {
-    let content_type = r
-        .headers()
-        .get(header::CONTENT_TYPE)
-        .expect("Missing content-type header");
+    let headers = r.headers();
 
-    assert_eq!(content_type, "application/json");
+    assert_some_eq!(headers.get(header::CONTENT_TYPE), "application/json");
 
-    let content_length: usize = r
-        .headers()
-        .get(header::CONTENT_LENGTH)
-        .expect("Missing content-length header")
-        .to_str()
-        .unwrap()
-        .parse()
-        .unwrap();
+    let content_length = assert_some!(
+        r.headers().get(header::CONTENT_LENGTH),
+        "Missing content-length header"
+    );
+    let content_length = assert_ok!(content_length.to_str());
+    let content_length: usize = assert_ok!(content_length.parse());
 
     let bytes = r.bytes().unwrap();
     assert_eq!(content_length, bytes.len());
