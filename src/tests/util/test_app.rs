@@ -19,8 +19,11 @@ use oauth2::{ClientId, ClientSecret};
 use reqwest::{Client, Proxy};
 use std::collections::HashSet;
 use std::{rc::Rc, sync::Arc, time::Duration};
+use tokio::runtime::Runtime;
 
 struct TestAppInner {
+    pub runtime: Runtime,
+
     app: Arc<App>,
     router: axum::Router,
     index: Option<UpstreamIndex>,
@@ -132,6 +135,10 @@ impl TestApp {
         }
     }
 
+    pub fn runtime(&self) -> &Runtime {
+        &self.0.runtime
+    }
+
     /// Obtain a reference to the upstream repository ("the index")
     pub fn upstream_index(&self) -> &UpstreamIndex {
         assert_some!(self.0.index.as_ref())
@@ -147,11 +154,7 @@ impl TestApp {
     pub fn stored_files(&self) -> Vec<String> {
         let store = self.as_inner().storage.as_inner();
 
-        let rt = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .context("Failed to initialize tokio runtime")
-            .unwrap();
+        let rt = self.runtime();
 
         let list = rt.block_on(async {
             let stream = store.list(None);
@@ -210,6 +213,12 @@ pub struct TestAppBuilder {
 impl TestAppBuilder {
     /// Create a `TestApp` with an empty database
     pub fn empty(mut self) -> (TestApp, MockAnonymousUser) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .context("Failed to initialize tokio runtime")
+            .unwrap();
+
         // Run each test inside a fresh database schema, deleted at the end of the test,
         // The schema will be cleared up once the app is dropped.
         let (primary_db_chaosproxy, replica_db_chaosproxy, test_database) =
@@ -276,6 +285,7 @@ impl TestAppBuilder {
         };
 
         let test_app_inner = TestAppInner {
+            runtime,
             app,
             test_database,
             router,
