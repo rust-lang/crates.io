@@ -126,11 +126,12 @@ impl CrateScope {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use googletest::prelude::*;
 
-    #[test]
+    #[googletest::test]
     fn endpoint_scope_serialization() {
         fn assert(scope: EndpointScope, expected: &str) {
-            assert_ok_eq!(serde_json::to_string(&scope), expected);
+            expect_that!(serde_json::to_string(&scope), ok(eq(expected)));
         }
 
         assert(EndpointScope::ChangeOwners, "\"change-owners\"");
@@ -139,11 +140,11 @@ mod tests {
         assert(EndpointScope::Yank, "\"yank\"");
     }
 
-    #[test]
+    #[googletest::test]
     fn crate_scope_serialization() {
         fn assert(scope: &str, expected: &str) {
             let scope = assert_ok!(CrateScope::try_from(scope));
-            assert_ok_eq!(serde_json::to_string(&scope), expected);
+            expect_that!(serde_json::to_string(&scope), ok(eq(expected)));
         }
 
         assert("foo", "\"foo\"");
@@ -155,54 +156,54 @@ mod tests {
         assert("FooBar", "\"FooBar\"");
     }
 
-    #[test]
+    #[googletest::test]
     fn crate_scope_validation() {
-        assert_ok!(CrateScope::try_from("foo"));
+        expect_that!(CrateScope::try_from("foo"), ok(anything()));
 
         // wildcards
-        assert_ok!(CrateScope::try_from("foo*"));
-        assert_ok!(CrateScope::try_from("f*"));
-        assert_ok!(CrateScope::try_from("*"));
-        assert_err!(CrateScope::try_from("te*st"));
+        expect_that!(CrateScope::try_from("foo*"), ok(anything()));
+        expect_that!(CrateScope::try_from("f*"), ok(anything()));
+        expect_that!(CrateScope::try_from("*"), ok(anything()));
+        expect_that!(CrateScope::try_from("te*st"), err(anything()));
 
         // hyphens and underscores
-        assert_ok!(CrateScope::try_from("foo-bar"));
-        assert_ok!(CrateScope::try_from("foo_bar"));
+        expect_that!(CrateScope::try_from("foo-bar"), ok(anything()));
+        expect_that!(CrateScope::try_from("foo_bar"), ok(anything()));
 
         // empty string
-        assert_err!(CrateScope::try_from(""));
+        expect_that!(CrateScope::try_from(""), err(anything()));
 
         // invalid characters
-        assert_err!(CrateScope::try_from("test#"));
+        expect_that!(CrateScope::try_from("test#"), err(anything()));
     }
 
-    #[test]
+    #[googletest::test]
     fn crate_scope_matching() {
         let scope = |pattern: &str| CrateScope::try_from(pattern).unwrap();
 
-        assert!(scope("foo").matches("foo"));
-        assert!(!scope("foo").matches("bar"));
-        assert!(!scope("foo").matches("fo"));
-        assert!(!scope("foo").matches("fooo"));
+        expect_that!(scope("foo").matches("foo"), eq(true));
+        expect_that!(scope("foo").matches("bar"), eq(false));
+        expect_that!(scope("foo").matches("fo"), eq(false));
+        expect_that!(scope("foo").matches("fooo"), eq(false));
 
         // wildcards
-        assert!(scope("foo*").matches("foo"));
-        assert!(!scope("foo*").matches("bar"));
-        assert!(scope("foo*").matches("foo-bar"));
-        assert!(scope("foo*").matches("foo_bar"));
-        assert!(scope("f*").matches("foo"));
-        assert!(scope("*").matches("foo"));
+        expect_that!(scope("foo*").matches("foo"), eq(true));
+        expect_that!(scope("foo*").matches("bar"), eq(false));
+        expect_that!(scope("foo*").matches("foo-bar"), eq(true));
+        expect_that!(scope("foo*").matches("foo_bar"), eq(true));
+        expect_that!(scope("f*").matches("foo"), eq(true));
+        expect_that!(scope("*").matches("foo"), eq(true));
 
         // hyphens and underscores
-        assert!(!scope("foo").matches("foo-bar"));
-        assert!(!scope("foo").matches("foo_bar"));
-        assert!(scope("foo-bar").matches("foo-bar"));
-        assert!(!scope("foo-bar").matches("foo_bar"));
-        assert!(!scope("foo_bar").matches("foo-bar"));
-        assert!(scope("foo_bar").matches("foo_bar"));
-        assert!(scope("foo-*").matches("foo-bar"));
-        assert!(!scope("foo-*").matches("foo_bar"));
-        assert!(!scope("foo_*").matches("foo-bar"));
-        assert!(scope("foo_*").matches("foo_bar"));
+        expect_that!(scope("foo").matches("foo-bar"), eq(false));
+        expect_that!(scope("foo").matches("foo_bar"), eq(false));
+        expect_that!(scope("foo-bar").matches("foo-bar"), eq(true));
+        expect_that!(scope("foo-bar").matches("foo_bar"), eq(false));
+        expect_that!(scope("foo_bar").matches("foo-bar"), eq(false));
+        expect_that!(scope("foo_bar").matches("foo_bar"), eq(true));
+        expect_that!(scope("foo-*").matches("foo-bar"), eq(true));
+        expect_that!(scope("foo-*").matches("foo_bar"), eq(false));
+        expect_that!(scope("foo_*").matches("foo-bar"), eq(false));
+        expect_that!(scope("foo_*").matches("foo_bar"), eq(true));
     }
 }
