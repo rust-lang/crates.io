@@ -1,6 +1,6 @@
 use crate::db::{DieselPool, DieselPooledConn, PoolError};
 use crate::worker::swirl::errors::FetchError;
-use crate::worker::swirl::{storage, BackgroundJob, PerformState};
+use crate::worker::swirl::{storage, BackgroundJob};
 use anyhow::anyhow;
 use diesel::connection::{AnsiTransactionManager, TransactionManager};
 use diesel::prelude::*;
@@ -16,18 +16,13 @@ use threadpool::ThreadPool;
 
 const DEFAULT_JOB_START_TIMEOUT: Duration = Duration::from_secs(30);
 
-type RunTaskFn<Context> =
-    dyn Fn(&Context, PerformState<'_>, serde_json::Value) -> anyhow::Result<()> + Send + Sync;
+type RunTaskFn<Context> = dyn Fn(&Context, serde_json::Value) -> anyhow::Result<()> + Send + Sync;
 
 type JobRegistry<Context> = Arc<RwLock<HashMap<String, Box<RunTaskFn<Context>>>>>;
 
-fn runnable<J: BackgroundJob>(
-    env: &J::Context,
-    state: PerformState<'_>,
-    payload: serde_json::Value,
-) -> anyhow::Result<()> {
+fn runnable<J: BackgroundJob>(env: &J::Context, payload: serde_json::Value) -> anyhow::Result<()> {
     let job: J = serde_json::from_value(payload)?;
-    job.run(state, env)
+    job.run(env)
 }
 
 /// The core runner responsible for locking and running jobs
@@ -191,15 +186,14 @@ impl<Context: Clone + Send + 'static> Worker<Context> {
             }
 
             let result = with_sentry_transaction(&job.job_type, || {
-                conn.transaction(|conn| {
-                    let state = PerformState { conn };
+                conn.transaction(|_conn| {
                     catch_unwind(AssertUnwindSafe(|| {
                         let job_registry = self.job_registry.read();
                         let run_task_fn = job_registry.get(&job.job_type).ok_or_else(|| {
                             anyhow!("Unknown job type {}", job.job_type)
                         })?;
 
-                        run_task_fn(&self.environment, state, job.data)
+                        run_task_fn(&self.environment, job.data)
                     }))
                     .map_err(|e| try_to_extract_panic_info(&e))
                 })
@@ -339,7 +333,7 @@ mod tests {
             const JOB_NAME: &'static str = "test";
             type Context = TestContext;
 
-            fn run(&self, _: PerformState<'_>, ctx: &Self::Context) -> anyhow::Result<()> {
+            fn run(&self, ctx: &Self::Context) -> anyhow::Result<()> {
                 ctx.job_started_barrier.wait();
                 ctx.assertions_finished_barrier.wait();
                 Ok(())
@@ -383,7 +377,7 @@ mod tests {
             const JOB_NAME: &'static str = "test";
             type Context = ();
 
-            fn run(&self, _: PerformState<'_>, _: &Self::Context) -> anyhow::Result<()> {
+            fn run(&self, _ctx: &Self::Context) -> anyhow::Result<()> {
                 Ok(())
             }
         }
@@ -424,7 +418,7 @@ mod tests {
             const JOB_NAME: &'static str = "test";
             type Context = TestContext;
 
-            fn run(&self, _: PerformState<'_>, ctx: &Self::Context) -> anyhow::Result<()> {
+            fn run(&self, ctx: &Self::Context) -> anyhow::Result<()> {
                 ctx.job_started_barrier.wait();
                 panic!();
             }
@@ -477,7 +471,7 @@ mod tests {
             const JOB_NAME: &'static str = "test";
             type Context = ();
 
-            fn run(&self, _: PerformState<'_>, _: &Self::Context) -> anyhow::Result<()> {
+            fn run(&self, _ctx: &Self::Context) -> anyhow::Result<()> {
                 panic!()
             }
         }
