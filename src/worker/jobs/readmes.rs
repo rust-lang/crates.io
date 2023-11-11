@@ -41,7 +41,7 @@ impl BackgroundJob for RenderAndUploadReadme {
     type Context = Arc<Environment>;
 
     #[instrument(skip_all, fields(krate.name))]
-    fn run(&self, state: PerformState<'_>, env: &Self::Context) -> anyhow::Result<()> {
+    fn run(&self, _state: PerformState<'_>, env: &Self::Context) -> anyhow::Result<()> {
         use crate::schema::*;
         use diesel::prelude::*;
 
@@ -57,7 +57,8 @@ impl BackgroundJob for RenderAndUploadReadme {
             return Ok(());
         }
 
-        state.conn.transaction(|conn| {
+        let mut conn = env.connection_pool.get()?;
+        conn.transaction(|conn| {
             Version::record_readme_rendering(self.version_id, conn)?;
             let (crate_name, vers): (String, String) = versions::table
                 .find(self.version_id)

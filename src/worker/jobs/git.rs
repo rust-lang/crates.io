@@ -31,10 +31,11 @@ impl BackgroundJob for SyncToGitIndex {
 
     /// Regenerates or removes an index file for a single crate
     #[instrument(skip_all, fields(krate.name = ? self.krate))]
-    fn run(&self, state: PerformState<'_>, env: &Self::Context) -> anyhow::Result<()> {
+    fn run(&self, _state: PerformState<'_>, env: &Self::Context) -> anyhow::Result<()> {
         info!("Syncing to git index");
 
-        let new = get_index_data(&self.krate, state.conn).context("Failed to get index data")?;
+        let mut conn = env.connection_pool.get()?;
+        let new = get_index_data(&self.krate, &mut conn).context("Failed to get index data")?;
 
         let repo = env.lock_index()?;
         let dst = repo.index_file(&self.krate);
@@ -89,11 +90,11 @@ impl BackgroundJob for SyncToSparseIndex {
 
     /// Regenerates or removes an index file for a single crate
     #[instrument(skip_all, fields(krate.name = ?self.krate))]
-    fn run(&self, state: PerformState<'_>, env: &Self::Context) -> anyhow::Result<()> {
+    fn run(&self, _state: PerformState<'_>, env: &Self::Context) -> anyhow::Result<()> {
         info!("Syncing to sparse index");
 
-        let content =
-            get_index_data(&self.krate, state.conn).context("Failed to get index data")?;
+        let mut conn = env.connection_pool.get()?;
+        let content = get_index_data(&self.krate, &mut conn).context("Failed to get index data")?;
 
         let rt = tokio::runtime::Builder::new_current_thread()
             .enable_all()
