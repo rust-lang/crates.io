@@ -221,38 +221,35 @@ impl TestAppBuilder {
 
         // Run each test inside a fresh database schema, deleted at the end of the test,
         // The schema will be cleared up once the app is dropped.
-        let (primary_db_chaosproxy, replica_db_chaosproxy, test_database) =
-            if !self.config.use_test_database_pool {
-                let test_database = TestDatabase::new();
+        let (primary_db_chaosproxy, replica_db_chaosproxy, test_database) = {
+            let test_database = TestDatabase::new();
 
-                let primary_proxy = if self.use_chaos_proxy {
+            let primary_proxy = if self.use_chaos_proxy {
+                let (primary_proxy, url) =
+                    ChaosProxy::proxy_database_url(test_database.url()).unwrap();
+
+                self.config.db.primary.url = url.into();
+                Some(primary_proxy)
+            } else {
+                self.config.db.primary.url = test_database.url().to_string().into();
+                None
+            };
+
+            let replica_proxy = self.config.db.replica.as_mut().and_then(|replica| {
+                if self.use_chaos_proxy {
                     let (primary_proxy, url) =
                         ChaosProxy::proxy_database_url(test_database.url()).unwrap();
 
-                    self.config.db.primary.url = url.into();
+                    replica.url = url.into();
                     Some(primary_proxy)
                 } else {
-                    self.config.db.primary.url = test_database.url().to_string().into();
+                    replica.url = test_database.url().to_string().into();
                     None
-                };
+                }
+            });
 
-                let replica_proxy = self.config.db.replica.as_mut().and_then(|replica| {
-                    if self.use_chaos_proxy {
-                        let (primary_proxy, url) =
-                            ChaosProxy::proxy_database_url(test_database.url()).unwrap();
-
-                        replica.url = url.into();
-                        Some(primary_proxy)
-                    } else {
-                        replica.url = test_database.url().to_string().into();
-                        None
-                    }
-                });
-
-                (primary_proxy, replica_proxy, Some(test_database))
-            } else {
-                (None, None, None)
-            };
+            (primary_proxy, replica_proxy, Some(test_database))
+        };
 
         let (app, router) = build_app(self.config, self.proxy);
 
@@ -358,14 +355,9 @@ impl TestAppBuilder {
         self
     }
 
-    pub fn without_test_database_pool(mut self) -> Self {
-        self.config.use_test_database_pool = false;
-        self
-    }
-
     pub fn with_chaos_proxy(mut self) -> Self {
         self.use_chaos_proxy = true;
-        self.without_test_database_pool()
+        self
     }
 
     pub fn with_replica(mut self) -> Self {
@@ -437,7 +429,6 @@ fn simple_config() -> config::Server {
         downloads_persist_interval: Duration::from_secs(1),
         ownership_invitations_expiration_days: 30,
         metrics_authorization_token: None,
-        use_test_database_pool: true,
         instance_metrics_log_every_seconds: None,
         force_unconditional_redirects: false,
         blocked_routes: HashSet::new(),

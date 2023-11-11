@@ -1,12 +1,8 @@
 use diesel::prelude::*;
-use diesel::r2d2::{self, ConnectionManager, CustomizeConnection};
+use diesel::r2d2::{self, ConnectionManager, CustomizeConnection, State};
 use prometheus::Histogram;
 use secrecy::{ExposeSecret, SecretString};
-use std::sync::{Arc, Mutex, MutexGuard};
-use std::{
-    ops::{Deref, DerefMut},
-    time::Duration,
-};
+use std::time::Duration;
 use thiserror::Error;
 use url::Url;
 
@@ -17,15 +13,9 @@ pub mod sql_types;
 pub type ConnectionPool = r2d2::Pool<ConnectionManager<PgConnection>>;
 
 #[derive(Clone)]
-pub enum DieselPool {
-    Pool {
-        pool: ConnectionPool,
-        time_to_obtain_connection_metric: Histogram,
-    },
-    BackgroundJobPool {
-        pool: ConnectionPool,
-    },
-    Test(Arc<Mutex<PgConnection>>),
+pub struct DieselPool {
+    pool: ConnectionPool,
+    time_to_obtain_connection_metric: Option<Histogram>,
 }
 
 impl DieselPool {
@@ -48,9 +38,9 @@ impl DieselPool {
         // serving errors for the first connections until the pool is initialized) and if we can't
         // establish any connection continue booting up the application. The database pool will
         // automatically be marked as unhealthy and the rest of the application will adapt.
-        let pool = DieselPool::Pool {
+        let pool = DieselPool {
             pool: r2d2_config.build_unchecked(manager),
-            time_to_obtain_connection_metric,
+            time_to_obtain_connection_metric: Some(time_to_obtain_connection_metric),
         };
         match pool.wait_until_healthy(Duration::from_secs(5)) {
             Ok(()) => {}
@@ -62,67 +52,39 @@ impl DieselPool {
     }
 
     pub fn new_background_worker(pool: r2d2::Pool<ConnectionManager<PgConnection>>) -> Self {
-        Self::BackgroundJobPool { pool }
-    }
-
-    pub(crate) fn new_test(config: &config::DatabasePools, url: &SecretString) -> DieselPool {
-        let mut conn = PgConnection::establish(&connection_url(config, url.expose_secret()))
-            .expect("failed to establish connection");
-        conn.begin_test_transaction()
-            .expect("failed to begin test transaction");
-        DieselPool::Test(Arc::new(Mutex::new(conn)))
+        Self {
+            pool,
+            time_to_obtain_connection_metric: None,
+        }
     }
 
     #[instrument(name = "db.connect", skip_all)]
-    pub fn get(&self) -> Result<DieselPooledConn<'_>, PoolError> {
-        match self {
-            DieselPool::Pool {
-                pool,
-                time_to_obtain_connection_metric,
-            } => time_to_obtain_connection_metric.observe_closure_duration(|| {
-                if let Some(conn) = pool.try_get() {
-                    Ok(DieselPooledConn::Pool(conn))
-                } else if !self.is_healthy() {
-                    Err(PoolError::UnhealthyPool)
-                } else {
-                    Ok(DieselPooledConn::Pool(pool.get()?))
-                }
-            }),
-            DieselPool::BackgroundJobPool { pool } => Ok(DieselPooledConn::Pool(pool.get()?)),
-            DieselPool::Test(conn) => Ok(DieselPooledConn::Test(
-                conn.try_lock()
-                    .map_err(|_e| PoolError::TestConnectionUnavailable)?,
-            )),
+    pub fn get(&self) -> Result<DieselPooledConn, PoolError> {
+        match self.time_to_obtain_connection_metric.as_ref() {
+            Some(time_to_obtain_connection_metric) => time_to_obtain_connection_metric
+                .observe_closure_duration(|| {
+                    if let Some(conn) = self.pool.try_get() {
+                        Ok(conn)
+                    } else if !self.is_healthy() {
+                        Err(PoolError::UnhealthyPool)
+                    } else {
+                        Ok(self.pool.get()?)
+                    }
+                }),
+            None => Ok(self.pool.get()?),
         }
     }
 
-    pub fn state(&self) -> PoolState {
-        match self {
-            DieselPool::Pool { pool, .. } | DieselPool::BackgroundJobPool { pool } => {
-                let state = pool.state();
-                PoolState {
-                    connections: state.connections,
-                    idle_connections: state.idle_connections,
-                }
-            }
-            DieselPool::Test(_) => PoolState {
-                connections: 0,
-                idle_connections: 0,
-            },
-        }
+    pub fn state(&self) -> State {
+        self.pool.state()
     }
 
     #[instrument(skip_all)]
     pub fn wait_until_healthy(&self, timeout: Duration) -> Result<(), PoolError> {
-        match self {
-            DieselPool::Pool { pool, .. } | DieselPool::BackgroundJobPool { pool } => {
-                match pool.get_timeout(timeout) {
-                    Ok(_) => Ok(()),
-                    Err(_) if !self.is_healthy() => Err(PoolError::UnhealthyPool),
-                    Err(err) => Err(PoolError::R2D2(err)),
-                }
-            }
-            DieselPool::Test(_) => Ok(()),
+        match self.pool.get_timeout(timeout) {
+            Ok(_) => Ok(()),
+            Err(_) if !self.is_healthy() => Err(PoolError::UnhealthyPool),
+            Err(err) => Err(PoolError::R2D2(err)),
         }
     }
 
@@ -131,37 +93,7 @@ impl DieselPool {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
-pub struct PoolState {
-    pub connections: u32,
-    pub idle_connections: u32,
-}
-
-#[allow(clippy::large_enum_variant)]
-pub enum DieselPooledConn<'a> {
-    Pool(r2d2::PooledConnection<ConnectionManager<PgConnection>>),
-    Test(MutexGuard<'a, PgConnection>),
-}
-
-impl Deref for DieselPooledConn<'_> {
-    type Target = PgConnection;
-
-    fn deref(&self) -> &Self::Target {
-        match self {
-            DieselPooledConn::Pool(conn) => conn.deref(),
-            DieselPooledConn::Test(conn) => conn.deref(),
-        }
-    }
-}
-
-impl DerefMut for DieselPooledConn<'_> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        match self {
-            DieselPooledConn::Pool(conn) => conn.deref_mut(),
-            DieselPooledConn::Test(conn) => conn.deref_mut(),
-        }
-    }
-}
+pub type DieselPooledConn = r2d2::PooledConnection<ConnectionManager<PgConnection>>;
 
 pub fn oneoff_connection_with_config(
     config: &config::DatabasePools,

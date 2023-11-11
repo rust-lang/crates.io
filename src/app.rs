@@ -92,9 +92,7 @@ impl App {
 
         let thread_pool = Arc::new(ScheduledThreadPool::new(config.db.helper_threads));
 
-        let primary_database = if config.use_test_database_pool {
-            DieselPool::new_test(&config.db, &config.db.primary.url)
-        } else {
+        let primary_database = {
             let primary_db_connection_config = ConnectionConfig {
                 statement_timeout: config.db.statement_timeout,
                 read_only: config.db.primary.read_only_mode,
@@ -119,33 +117,29 @@ impl App {
         };
 
         let replica_database = if let Some(pool_config) = config.db.replica.as_ref() {
-            if config.use_test_database_pool {
-                Some(DieselPool::new_test(&config.db, &pool_config.url))
-            } else {
-                let replica_db_connection_config = ConnectionConfig {
-                    statement_timeout: config.db.statement_timeout,
-                    read_only: true,
-                };
+            let replica_db_connection_config = ConnectionConfig {
+                statement_timeout: config.db.statement_timeout,
+                read_only: true,
+            };
 
-                let replica_db_config = r2d2::Pool::builder()
-                    .max_size(pool_config.pool_size)
-                    .min_idle(pool_config.min_idle)
-                    .connection_timeout(config.db.connection_timeout)
-                    .connection_customizer(Box::new(replica_db_connection_config))
-                    .thread_pool(thread_pool);
+            let replica_db_config = r2d2::Pool::builder()
+                .max_size(pool_config.pool_size)
+                .min_idle(pool_config.min_idle)
+                .connection_timeout(config.db.connection_timeout)
+                .connection_customizer(Box::new(replica_db_connection_config))
+                .thread_pool(thread_pool);
 
-                Some(
-                    DieselPool::new(
-                        &pool_config.url,
-                        &config.db,
-                        replica_db_config,
-                        instance_metrics
-                            .database_time_to_obtain_connection
-                            .with_label_values(&["follower"]),
-                    )
-                    .unwrap(),
+            Some(
+                DieselPool::new(
+                    &pool_config.url,
+                    &config.db,
+                    replica_db_config,
+                    instance_metrics
+                        .database_time_to_obtain_connection
+                        .with_label_values(&["follower"]),
                 )
-            }
+                .unwrap(),
+            )
         } else {
             None
         };
@@ -178,7 +172,7 @@ impl App {
 
     /// Obtain a read/write database connection from the primary pool
     #[instrument(skip_all)]
-    pub fn db_write(&self) -> Result<DieselPooledConn<'_>, PoolError> {
+    pub fn db_write(&self) -> Result<DieselPooledConn, PoolError> {
         self.primary_database.get()
     }
 
@@ -186,7 +180,7 @@ impl App {
     ///
     /// If the replica pool is disabled or unavailable, the primary pool is used instead.
     #[instrument(skip_all)]
-    pub fn db_read(&self) -> Result<DieselPooledConn<'_>, PoolError> {
+    pub fn db_read(&self) -> Result<DieselPooledConn, PoolError> {
         let read_only_pool = self.read_only_replica_database.as_ref();
         match read_only_pool.map(|pool| pool.get()) {
             // Replica is available
@@ -215,7 +209,7 @@ impl App {
     ///
     /// If the primary pool is unavailable, the replica pool is used instead, if not disabled.
     #[instrument(skip_all)]
-    pub fn db_read_prefer_primary(&self) -> Result<DieselPooledConn<'_>, PoolError> {
+    pub fn db_read_prefer_primary(&self) -> Result<DieselPooledConn, PoolError> {
         match (
             self.primary_database.get(),
             &self.read_only_replica_database,

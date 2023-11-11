@@ -115,7 +115,7 @@ impl<Context: Clone + Send + 'static> Runner<Context> {
         }
     }
 
-    fn connection(&self) -> Result<DieselPooledConn<'_>, PoolError> {
+    fn connection(&self) -> Result<DieselPooledConn, PoolError> {
         self.connection_pool.get()
     }
 
