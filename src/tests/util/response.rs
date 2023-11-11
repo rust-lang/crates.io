@@ -74,7 +74,7 @@ impl<T> Response<T> {
         let expected_message_start = format!("{}. Please try again after ", action.error_message());
         let error: ErrorResponse = json(self.response);
         assert_eq!(error.errors.len(), 1);
-        assert!(error.errors[0].detail.starts_with(&expected_message_start));
+        assert_that!(error.errors[0].detail, starts_with(expected_message_start));
     }
 }
 

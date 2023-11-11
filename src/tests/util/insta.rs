@@ -1,4 +1,5 @@
 pub use ::insta::*;
+use googletest::prelude::*;
 
 pub fn id_redaction(expected_id: i32) -> insta::internals::Redaction {
     insta::dynamic_redaction(move |value, _path| {
@@ -16,7 +17,7 @@ pub fn any_id_redaction() -> insta::internals::Redaction {
 
 pub fn api_token_redaction() -> insta::internals::Redaction {
     insta::dynamic_redaction(move |value, _path| {
-        assert!(assert_some!(value.as_str()).starts_with("cio"));
+        assert_that!(assert_some!(value.as_str()), starts_with("cio"));
         "[token]"
     })
 }

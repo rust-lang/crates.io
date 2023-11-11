@@ -88,11 +88,12 @@ fn generate_secure_alphanumeric_string(len: usize) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use googletest::prelude::*;
 
     #[test]
     fn test_generated_and_parse() {
         let token = PlainToken::generate();
-        assert!(token.expose_secret().starts_with(TOKEN_PREFIX));
+        assert_that!(token.expose_secret(), starts_with(TOKEN_PREFIX));
         assert_eq!(
             token.hashed().0.expose_secret(),
             Sha256::digest(token.expose_secret().as_bytes()).as_slice()
