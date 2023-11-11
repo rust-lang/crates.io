@@ -5,6 +5,7 @@ use crates_io::schema::versions;
 use crates_io::views::EncodableVersion;
 use diesel::prelude::*;
 use diesel::update;
+use googletest::prelude::*;
 use http::StatusCode;
 
 #[test]
@@ -47,7 +48,7 @@ fn following() {
     });
 
     let r: R = user.get("/api/v1/me/updates").good();
-    assert_eq!(r.versions.len(), 0);
+    assert_that!(r.versions, len(eq(0)));
     assert!(!r.meta.more);
 
     user.put::<OkBool>("/api/v1/crates/foo_fighters/follow", b"" as &[u8])
@@ -56,7 +57,7 @@ fn following() {
         .good();
 
     let r: R = user.get("/api/v1/me/updates").good();
-    assert_eq!(r.versions.len(), 2);
+    assert_that!(r.versions, len(eq(2)));
     assert!(!r.meta.more);
     let foo_version = r
         .versions
@@ -77,7 +78,7 @@ fn following() {
     let r: R = user
         .get_with_query("/api/v1/me/updates", "per_page=1")
         .good();
-    assert_eq!(r.versions.len(), 1);
+    assert_that!(r.versions, len(eq(1)));
     assert!(r.meta.more);
 
     user.delete::<OkBool>("/api/v1/crates/bar_fighters/follow")
@@ -85,7 +86,7 @@ fn following() {
     let r: R = user
         .get_with_query("/api/v1/me/updates", "page=2&per_page=1")
         .good();
-    assert_eq!(r.versions.len(), 0);
+    assert_that!(r.versions, len(eq(0)));
     assert!(!r.meta.more);
 
     let response = user.get_with_query::<()>("/api/v1/me/updates", "page=0");

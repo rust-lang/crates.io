@@ -5,6 +5,7 @@ use chrono::Utc;
 use crates_io::rate_limiter::LimitedAction;
 use crates_io::schema::publish_limit_buckets;
 use diesel::{ExpressionMethods, RunQueryDsl};
+use googletest::prelude::*;
 use std::time::Duration;
 
 #[test]
@@ -17,7 +18,7 @@ fn yank_works_as_intended() {
     token.publish_crate(crate_to_publish).good();
 
     let crates = app.crates_from_index_head("fyk");
-    assert_eq!(crates.len(), 1);
+    assert_that!(crates, len(eq(1)));
     assert_some_eq!(crates[0].yanked, false);
 
     // make sure it's not yanked
@@ -28,7 +29,7 @@ fn yank_works_as_intended() {
     token.yank("fyk", "1.0.0").good();
 
     let crates = app.crates_from_index_head("fyk");
-    assert_eq!(crates.len(), 1);
+    assert_that!(crates, len(eq(1)));
     assert_some_eq!(crates[0].yanked, true);
 
     let json = anon.show_version("fyk", "1.0.0");
@@ -38,7 +39,7 @@ fn yank_works_as_intended() {
     token.unyank("fyk", "1.0.0").good();
 
     let crates = app.crates_from_index_head("fyk");
-    assert_eq!(crates.len(), 1);
+    assert_that!(crates, len(eq(1)));
     assert_some_eq!(crates[0].yanked, false);
 
     let json = anon.show_version("fyk", "1.0.0");
@@ -48,7 +49,7 @@ fn yank_works_as_intended() {
     cookie.yank("fyk", "1.0.0").good();
 
     let crates = app.crates_from_index_head("fyk");
-    assert_eq!(crates.len(), 1);
+    assert_that!(crates, len(eq(1)));
     assert_some_eq!(crates[0].yanked, true);
 
     let json = anon.show_version("fyk", "1.0.0");
@@ -58,7 +59,7 @@ fn yank_works_as_intended() {
     cookie.unyank("fyk", "1.0.0").good();
 
     let crates = app.crates_from_index_head("fyk");
-    assert_eq!(crates.len(), 1);
+    assert_that!(crates, len(eq(1)));
     assert_some_eq!(crates[0].yanked, false);
 
     let json = anon.show_version("fyk", "1.0.0");
@@ -68,7 +69,7 @@ fn yank_works_as_intended() {
 #[track_caller]
 fn check_yanked(app: &TestApp, is_yanked: bool) {
     let crates = app.crates_from_index_head("yankable");
-    assert_eq!(crates.len(), 1);
+    assert_that!(crates, len(eq(1)));
     assert_some_eq!(crates[0].yanked, is_yanked);
 }
 

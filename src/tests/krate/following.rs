@@ -1,5 +1,6 @@
 use crate::builders::CrateBuilder;
 use crate::util::{RequestHelper, TestApp};
+use googletest::prelude::*;
 use http::StatusCode;
 
 fn assert_is_following(crate_name: &str, expected: bool, user: &impl RequestHelper) {
@@ -34,12 +35,12 @@ fn following() {
     follow(crate_name, &user);
     follow(crate_name, &user);
     assert_is_following(crate_name, true, &user);
-    assert_eq!(user.search("following=1").crates.len(), 1);
+    assert_that!(user.search("following=1").crates, len(eq(1)));
 
     unfollow(crate_name, &user);
     unfollow(crate_name, &user);
     assert_is_following(crate_name, false, &user);
-    assert_eq!(user.search("following=1").crates.len(), 0);
+    assert_that!(user.search("following=1").crates, empty());
 }
 
 #[test]
@@ -62,5 +63,5 @@ fn getting_followed_crates_allows_api_token_auth() {
     assert_is_following(crate_not_followed, false, &user);
 
     let json = token.search("following=1");
-    assert_eq!(json.crates.len(), 1);
+    assert_that!(json.crates, len(eq(1)));
 }
