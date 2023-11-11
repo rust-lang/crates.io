@@ -63,7 +63,7 @@ impl<T> Response<T> {
         struct ErrorResponse {
             errors: Vec<ErrorDetails>,
         }
-        #[derive(serde::Deserialize)]
+        #[derive(Debug, serde::Deserialize)]
         #[serde(deny_unknown_fields)]
         struct ErrorDetails {
             detail: String,
@@ -73,7 +73,7 @@ impl<T> Response<T> {
 
         let expected_message_start = format!("{}. Please try again after ", action.error_message());
         let error: ErrorResponse = json(self.response);
-        assert_eq!(error.errors.len(), 1);
+        assert_that!(error.errors, len(eq(1)));
         assert_that!(error.errors[0].detail, starts_with(expected_message_start));
     }
 }
@@ -116,7 +116,7 @@ where
     let content_length: usize = assert_ok!(content_length.parse());
 
     let bytes = r.bytes().unwrap();
-    assert_eq!(content_length, bytes.len());
+    assert_that!(bytes, len(eq(content_length)));
 
     match serde_json::from_slice(&bytes) {
         Ok(t) => t,

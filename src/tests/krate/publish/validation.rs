@@ -1,6 +1,7 @@
 use crate::builders::PublishBuilder;
 use crate::util::{RequestHelper, TestApp};
 use crates_io::models::krate::MAX_NAME_LENGTH;
+use googletest::prelude::*;
 use http::StatusCode;
 use insta::assert_json_snapshot;
 
@@ -14,7 +15,7 @@ fn empty_json() {
     let response = token.publish_crate(body);
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
-    assert!(app.stored_files().is_empty());
+    assert_that!(app.stored_files(), empty());
 }
 
 #[test]
@@ -40,7 +41,7 @@ fn invalid_names() {
     bad_name("compiler_rt");
     bad_name("coMpiLer_Rt");
 
-    assert!(app.stored_files().is_empty());
+    assert_that!(app.stored_files(), empty());
 }
 
 #[test]
@@ -54,7 +55,7 @@ fn invalid_version() {
 
     let response = token.publish_crate(body);
     assert_json_snapshot!(response.into_json());
-    assert!(app.stored_files().is_empty());
+    assert_that!(app.stored_files(), empty());
 }
 
 #[test]
@@ -84,7 +85,7 @@ fn license_and_description_required() {
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
 
-    assert!(app.stored_files().is_empty());
+    assert_that!(app.stored_files(), empty());
 }
 
 #[test]
@@ -95,7 +96,7 @@ fn invalid_license() {
         token.publish_crate(PublishBuilder::new("foo", "1.0.0").license("MIT AND foobar"));
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
-    assert!(app.stored_files().is_empty());
+    assert_that!(app.stored_files(), empty());
 }
 
 #[test]
@@ -108,5 +109,5 @@ fn invalid_urls() {
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
 
-    assert!(app.stored_files().is_empty());
+    assert_that!(app.stored_files(), empty());
 }

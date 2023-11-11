@@ -2,6 +2,7 @@ use crate::builders::{CrateBuilder, PublishBuilder};
 use crate::util::{RequestHelper, TestApp};
 use crates_io::schema::api_tokens;
 use diesel::{ExpressionMethods, RunQueryDsl};
+use googletest::prelude::*;
 use http::StatusCode;
 use insta::assert_json_snapshot;
 
@@ -33,8 +34,7 @@ fn new_wrong_token() {
         response.into_json(),
         json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
     );
-
-    assert!(app.stored_files().is_empty());
+    assert_that!(app.stored_files(), empty());
 }
 
 #[test]
@@ -54,5 +54,5 @@ fn new_krate_wrong_user() {
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
 
-    assert!(app.stored_files().is_empty());
+    assert_that!(app.stored_files(), empty());
 }

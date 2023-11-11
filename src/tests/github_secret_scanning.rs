@@ -3,6 +3,7 @@ use crate::{RequestHelper, TestApp};
 use crates_io::util::token::HashedToken;
 use crates_io::{models::ApiToken, schema::api_tokens};
 use diesel::prelude::*;
+use googletest::prelude::*;
 use http::StatusCode;
 use insta::assert_json_snapshot;
 
@@ -28,7 +29,7 @@ fn github_secret_alert_revokes_token() {
             .select(ApiToken::as_select())
             .filter(api_tokens::revoked.eq(false))
             .load(conn));
-        assert_eq!(tokens.len(), 1);
+        assert_that!(tokens, len(eq(1)));
         assert_eq!(tokens[0].name, token.as_model().name);
     });
 
@@ -55,12 +56,12 @@ fn github_secret_alert_revokes_token() {
             .select(ApiToken::as_select())
             .filter(api_tokens::revoked.eq(false))
             .load(conn));
-        assert_eq!(tokens.len(), 0);
+        assert_that!(tokens, empty());
         let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user.as_model())
             .select(ApiToken::as_select())
             .filter(api_tokens::revoked.eq(true))
             .load(conn));
-        assert_eq!(tokens.len(), 1);
+        assert_that!(tokens, len(eq(1)));
     });
 
     // Ensure exactly one email was sent
@@ -80,7 +81,7 @@ fn github_secret_alert_for_revoked_token() {
             .select(ApiToken::as_select())
             .filter(api_tokens::revoked.eq(false))
             .load(conn));
-        assert_eq!(tokens.len(), 1);
+        assert_that!(tokens, len(eq(1)));
         assert_eq!(tokens[0].name, token.as_model().name);
     });
 
@@ -110,12 +111,12 @@ fn github_secret_alert_for_revoked_token() {
             .select(ApiToken::as_select())
             .filter(api_tokens::revoked.eq(false))
             .load(conn));
-        assert_eq!(tokens.len(), 0);
+        assert_that!(tokens, empty());
         let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user.as_model())
             .select(ApiToken::as_select())
             .filter(api_tokens::revoked.eq(true))
             .load(conn));
-        assert_eq!(tokens.len(), 1);
+        assert_that!(tokens, len(eq(1)));
     });
 
     // Ensure still no emails were sent
@@ -135,7 +136,7 @@ fn github_secret_alert_for_unknown_token() {
             .select(ApiToken::as_select())
             .filter(api_tokens::revoked.eq(false))
             .load(conn));
-        assert_eq!(tokens.len(), 1);
+        assert_that!(tokens, len(eq(1)));
         assert_eq!(tokens[0].name, token.as_model().name);
     });
 
@@ -153,7 +154,7 @@ fn github_secret_alert_for_unknown_token() {
             .select(ApiToken::as_select())
             .filter(api_tokens::revoked.eq(false))
             .load(conn));
-        assert_eq!(tokens.len(), 1);
+        assert_that!(tokens, len(eq(1)));
         assert_eq!(tokens[0].name, token.as_model().name);
     });
 

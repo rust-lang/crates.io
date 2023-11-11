@@ -4,6 +4,7 @@ use crate::{new_category, new_user};
 use crates_io::models::Category;
 use crates_io::schema::crates;
 use diesel::{dsl::*, prelude::*, update};
+use googletest::prelude::*;
 use http::StatusCode;
 
 #[test]
@@ -751,10 +752,10 @@ fn seek_based_pagination() {
         );
 
         if let Some(new_url) = resp.meta.next_page {
-            assert_eq!(resp.crates.len(), 1);
+            assert_that!(resp.crates, len(eq(1)));
             url = Some(new_url);
         } else {
-            assert!(resp.crates.is_empty());
+            assert_that!(resp.crates, empty());
         }
 
         assert_eq!(resp.meta.prev_page, None);

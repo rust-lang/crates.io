@@ -2,6 +2,7 @@ use crate::builders::{CrateBuilder, PublishBuilder};
 use crate::util::{RequestHelper, TestApp};
 use crates_io::schema::versions_published_by;
 use diesel::{QueryDsl, RunQueryDsl};
+use googletest::prelude::*;
 use http::StatusCode;
 use insta::assert_json_snapshot;
 
@@ -110,5 +111,5 @@ fn new_krate_duplicate_version() {
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
 
-    assert!(app.stored_files().is_empty());
+    assert_that!(app.stored_files(), empty());
 }

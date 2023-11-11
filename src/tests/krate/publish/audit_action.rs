@@ -1,3 +1,5 @@
+use googletest::prelude::*;
+
 #[test]
 fn publish_records_an_audit_action() {
     use crate::builders::PublishBuilder;
@@ -16,7 +18,7 @@ fn publish_records_an_audit_action() {
     let json = anon.show_version("fyk", "1.0.0");
     let actions = json.version.audit_actions;
 
-    assert_eq!(actions.len(), 1);
+    assert_that!(actions, len(eq(1)));
     let action = &actions[0];
     assert_eq!(action.action, "publish");
     assert_eq!(action.user.id, token.as_model().user_id);

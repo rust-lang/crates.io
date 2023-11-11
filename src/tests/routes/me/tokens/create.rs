@@ -3,6 +3,7 @@ use crate::util::{RequestHelper, TestApp};
 use crates_io::models::token::{CrateScope, EndpointScope};
 use crates_io::models::ApiToken;
 use diesel::prelude::*;
+use googletest::prelude::*;
 use http::StatusCode;
 use serde_json::Value;
 
@@ -73,7 +74,7 @@ fn create_token_success() {
             .select(ApiToken::as_select())
             .load(conn))
     });
-    assert_eq!(tokens.len(), 1);
+    assert_that!(tokens, len(eq(1)));
     assert_eq!(tokens[0].name, "bar");
     assert!(!tokens[0].revoked);
     assert_eq!(tokens[0].last_used_at, None);
@@ -142,7 +143,7 @@ fn create_token_with_scopes() {
             .select(ApiToken::as_select())
             .load(conn))
     });
-    assert_eq!(tokens.len(), 1);
+    assert_that!(tokens, len(eq(1)));
     assert_eq!(tokens[0].name, "bar");
     assert!(!tokens[0].revoked);
     assert_eq!(tokens[0].last_used_at, None);
@@ -185,7 +186,7 @@ fn create_token_with_null_scopes() {
             .select(ApiToken::as_select())
             .load(conn))
     });
-    assert_eq!(tokens.len(), 1);
+    assert_that!(tokens, len(eq(1)));
     assert_eq!(tokens[0].name, "bar");
     assert!(!tokens[0].revoked);
     assert_eq!(tokens[0].last_used_at, None);
