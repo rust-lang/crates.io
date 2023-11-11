@@ -51,7 +51,7 @@ impl<T> Response<T> {
         let headers = self.response.headers();
         let location = assert_some!(headers.get(header::LOCATION));
         let location = assert_ok!(location.to_str());
-        assert!(location.ends_with(target));
+        assert_that!(location, ends_with(target));
         self
     }
 
@@ -74,7 +74,7 @@ impl<T> Response<T> {
         let expected_message_start = format!("{}. Please try again after ", action.error_message());
         let error: ErrorResponse = json(self.response);
         assert_eq!(error.errors.len(), 1);
-        assert!(error.errors[0].detail.starts_with(&expected_message_start));
+        assert_that!(error.errors[0].detail, starts_with(expected_message_start));
     }
 }
 
