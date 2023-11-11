@@ -51,7 +51,7 @@ impl<T> Response<T> {
         let headers = self.response.headers();
         let location = assert_some!(headers.get(header::LOCATION));
         let location = assert_ok!(location.to_str());
-        assert!(location.ends_with(target));
+        assert_that!(location, ends_with(target));
         self
     }
 

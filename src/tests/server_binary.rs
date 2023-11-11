@@ -29,13 +29,10 @@ fn normal_startup() {
         .get("api/v1/crates/FOO/1.0.0/download")
         .unwrap();
     assert_that!(resp.status(), is_redirection());
-    assert!(resp
-        .headers()
-        .get("location")
-        .unwrap()
-        .to_str()
-        .unwrap()
-        .ends_with("/crates/foo/foo-1.0.0.crate"));
+
+    let location = assert_some!(resp.headers().get("location"));
+    let location = assert_ok!(location.to_str());
+    assert_that!(location, ends_with("/crates/foo/foo-1.0.0.crate"));
 }
 
 #[cfg(feature = "slow-tests")]
@@ -56,13 +53,10 @@ fn startup_without_database() {
         .get("api/v1/crates/FOO/1.0.0/download")
         .unwrap();
     assert_that!(resp.status(), is_redirection());
-    assert!(resp
-        .headers()
-        .get("location")
-        .unwrap()
-        .to_str()
-        .unwrap()
-        .ends_with("/crates/FOO/FOO-1.0.0.crate"));
+
+    let location = assert_some!(resp.headers().get("location"));
+    let location = assert_ok!(location.to_str());
+    assert_that!(location, ends_with("/crates/FOO/FOO-1.0.0.crate"));
 }
 
 fn initialize_dummy_crate(conn: &mut PgConnection) {
