@@ -1,3 +1,5 @@
+use crate::util::matchers::is_success;
+use googletest::prelude::*;
 use serde_json::Value;
 use std::marker::PhantomData;
 use std::ops::Deref;
@@ -19,9 +21,7 @@ where
     /// Assert that the response is good and deserialize the message
     #[track_caller]
     pub fn good(self) -> T {
-        if !self.status().is_success() {
-            panic!("bad response: {:?}", self.status());
-        }
+        assert_that!(self.status(), is_success());
         json(self.response)
     }
 }

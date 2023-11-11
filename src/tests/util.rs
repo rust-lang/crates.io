@@ -43,6 +43,7 @@ use tower::ServiceExt;
 mod chaosproxy;
 mod github;
 pub mod insta;
+pub mod matchers;
 mod mock_request;
 mod response;
 mod test_app;
