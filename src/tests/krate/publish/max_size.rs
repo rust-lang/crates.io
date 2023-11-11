@@ -2,6 +2,7 @@ use crate::builders::{CrateBuilder, PublishBuilder};
 use crate::util::{RequestHelper, TestApp};
 use crates_io_tarball::TarballBuilder;
 use flate2::Compression;
+use googletest::prelude::*;
 use http::StatusCode;
 use insta::assert_json_snapshot;
 use std::io;
@@ -85,7 +86,7 @@ fn tarball_bigger_than_max_upload_size() {
     let response = token.publish_crate(body);
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
-    assert!(app.stored_files().is_empty());
+    assert_that!(app.stored_files(), empty());
 }
 
 #[test]
@@ -107,7 +108,7 @@ fn new_krate_gzip_bomb() {
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
 
-    assert!(app.stored_files().is_empty());
+    assert_that!(app.stored_files(), empty());
 }
 
 #[test]
@@ -126,7 +127,7 @@ fn new_krate_too_big() {
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
 
-    assert!(app.stored_files().is_empty());
+    assert_that!(app.stored_files(), empty());
 }
 
 #[test]

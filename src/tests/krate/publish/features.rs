@@ -1,5 +1,6 @@
 use crate::builders::{CrateBuilder, DependencyBuilder, PublishBuilder};
 use crate::util::{RequestHelper, TestApp};
+use googletest::prelude::*;
 use http::StatusCode;
 use insta::assert_json_snapshot;
 
@@ -32,7 +33,7 @@ fn invalid_feature_name() {
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
-    assert!(app.stored_files().is_empty());
+    assert_that!(app.stored_files(), empty());
 }
 
 #[test]
@@ -43,7 +44,7 @@ fn invalid_feature() {
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
-    assert!(app.stored_files().is_empty());
+    assert_that!(app.stored_files(), empty());
 }
 
 #[test]
@@ -63,7 +64,7 @@ fn too_many_features() {
     let response = token.publish_crate(publish_builder);
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
-    assert!(app.stored_files().is_empty());
+    assert_that!(app.stored_files(), empty());
 }
 
 #[test]
@@ -89,7 +90,7 @@ fn too_many_features_with_custom_limit() {
     let response = token.publish_crate(publish_builder);
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
-    assert!(app.stored_files().is_empty());
+    assert_that!(app.stored_files(), empty());
 
     let publish_builder = PublishBuilder::new("foo", "1.0.0")
         .feature("one", &[])
@@ -112,7 +113,7 @@ fn too_many_enabled_features() {
     let response = token.publish_crate(publish_builder);
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
-    assert!(app.stored_files().is_empty());
+    assert_that!(app.stored_files(), empty());
 }
 
 #[test]
@@ -134,7 +135,7 @@ fn too_many_enabled_features_with_custom_limit() {
     let response = token.publish_crate(publish_builder);
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
-    assert!(app.stored_files().is_empty());
+    assert_that!(app.stored_files(), empty());
 
     let publish_builder =
         PublishBuilder::new("foo", "1.0.0").feature("default", &["one", "two", "three", "four"]);

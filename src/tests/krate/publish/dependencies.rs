@@ -1,5 +1,6 @@
 use crate::builders::{CrateBuilder, DependencyBuilder, PublishBuilder};
 use crate::util::{RequestHelper, TestApp};
+use googletest::prelude::*;
 use http::StatusCode;
 use insta::assert_json_snapshot;
 
@@ -12,7 +13,7 @@ fn invalid_dependency_name() {
     );
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
-    assert!(app.stored_files().is_empty());
+    assert_that!(app.stored_files(), empty());
 }
 
 #[test]
@@ -48,7 +49,7 @@ fn invalid_dependency_rename() {
     );
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
-    assert!(app.stored_files().is_empty());
+    assert_that!(app.stored_files(), empty());
 }
 
 #[test]
@@ -120,7 +121,7 @@ fn new_krate_with_broken_dependency_requirement() {
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
-    assert!(app.stored_files().is_empty());
+    assert_that!(app.stored_files(), empty());
 }
 
 #[test]
@@ -139,7 +140,7 @@ fn reject_new_krate_with_non_exact_dependency() {
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
-    assert!(app.stored_files().is_empty());
+    assert_that!(app.stored_files(), empty());
 }
 
 #[test]
@@ -167,7 +168,7 @@ fn reject_new_crate_with_alternative_registry_dependency() {
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
-    assert!(app.stored_files().is_empty());
+    assert_that!(app.stored_files(), empty());
 }
 
 #[test]
@@ -186,7 +187,7 @@ fn new_krate_with_wildcard_dependency() {
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
-    assert!(app.stored_files().is_empty());
+    assert_that!(app.stored_files(), empty());
 }
 
 #[test]
@@ -201,7 +202,7 @@ fn new_krate_dependency_missing() {
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
-    assert!(app.stored_files().is_empty());
+    assert_that!(app.stored_files(), empty());
 }
 
 #[test]
@@ -237,5 +238,5 @@ fn invalid_feature_name() {
     );
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
-    assert!(app.stored_files().is_empty());
+    assert_that!(app.stored_files(), empty());
 }

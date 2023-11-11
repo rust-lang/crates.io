@@ -2,6 +2,7 @@ use crate::builders::PublishBuilder;
 use crate::util::{RequestHelper, TestApp};
 use crates_io::schema::emails;
 use diesel::{delete, update, ExpressionMethods, RunQueryDsl};
+use googletest::prelude::*;
 use http::StatusCode;
 use insta::assert_json_snapshot;
 
@@ -18,7 +19,7 @@ fn new_krate_without_any_email_fails() {
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
-    assert!(app.stored_files().is_empty());
+    assert_that!(app.stored_files(), empty());
 }
 
 #[test]
@@ -37,5 +38,5 @@ fn new_krate_with_unverified_email_fails() {
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
-    assert!(app.stored_files().is_empty());
+    assert_that!(app.stored_files(), empty());
 }

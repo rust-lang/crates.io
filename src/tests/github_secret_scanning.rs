@@ -56,7 +56,7 @@ fn github_secret_alert_revokes_token() {
             .select(ApiToken::as_select())
             .filter(api_tokens::revoked.eq(false))
             .load(conn));
-        assert_that!(tokens, len(eq(0)));
+        assert_that!(tokens, empty());
         let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user.as_model())
             .select(ApiToken::as_select())
             .filter(api_tokens::revoked.eq(true))
@@ -111,7 +111,7 @@ fn github_secret_alert_for_revoked_token() {
             .select(ApiToken::as_select())
             .filter(api_tokens::revoked.eq(false))
             .load(conn));
-        assert_that!(tokens, len(eq(0)));
+        assert_that!(tokens, empty());
         let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user.as_model())
             .select(ApiToken::as_select())
             .filter(api_tokens::revoked.eq(true))

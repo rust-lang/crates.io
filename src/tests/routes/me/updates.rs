@@ -48,7 +48,7 @@ fn following() {
     });
 
     let r: R = user.get("/api/v1/me/updates").good();
-    assert_that!(r.versions, len(eq(0)));
+    assert_that!(r.versions, empty());
     assert!(!r.meta.more);
 
     user.put::<OkBool>("/api/v1/crates/foo_fighters/follow", b"" as &[u8])
@@ -86,7 +86,7 @@ fn following() {
     let r: R = user
         .get_with_query("/api/v1/me/updates", "page=2&per_page=1")
         .good();
-    assert_that!(r.versions, len(eq(0)));
+    assert_that!(r.versions, empty());
     assert!(!r.meta.more);
 
     let response = user.get_with_query::<()>("/api/v1/me/updates", "page=0");

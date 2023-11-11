@@ -1,5 +1,6 @@
 use crate::builders::PublishBuilder;
 use crate::util::{RequestHelper, TestApp};
+use googletest::prelude::*;
 use http::StatusCode;
 use insta::assert_json_snapshot;
 
@@ -52,5 +53,5 @@ fn too_many_keywords() {
     );
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
-    assert!(app.stored_files().is_empty());
+    assert_that!(app.stored_files(), empty());
 }

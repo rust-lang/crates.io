@@ -755,7 +755,7 @@ fn seek_based_pagination() {
             assert_that!(resp.crates, len(eq(1)));
             url = Some(new_url);
         } else {
-            assert!(resp.crates.is_empty());
+            assert_that!(resp.crates, empty());
         }
 
         assert_eq!(resp.meta.prev_page, None);
