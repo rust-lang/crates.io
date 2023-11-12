@@ -1,5 +1,5 @@
 use crate::models;
-use crate::worker::swirl::{BackgroundJob, PerformState};
+use crate::worker::swirl::BackgroundJob;
 use crate::worker::Environment;
 use anyhow::Context;
 use chrono::Utc;
@@ -31,10 +31,11 @@ impl BackgroundJob for SyncToGitIndex {
 
     /// Regenerates or removes an index file for a single crate
     #[instrument(skip_all, fields(krate.name = ? self.krate))]
-    fn run(&self, state: PerformState<'_>, env: &Self::Context) -> anyhow::Result<()> {
+    fn run(&self, env: &Self::Context) -> anyhow::Result<()> {
         info!("Syncing to git index");
 
-        let new = get_index_data(&self.krate, state.conn).context("Failed to get index data")?;
+        let mut conn = env.connection_pool.get()?;
+        let new = get_index_data(&self.krate, &mut conn).context("Failed to get index data")?;
 
         let repo = env.lock_index()?;
         let dst = repo.index_file(&self.krate);
@@ -89,11 +90,11 @@ impl BackgroundJob for SyncToSparseIndex {
 
     /// Regenerates or removes an index file for a single crate
     #[instrument(skip_all, fields(krate.name = ?self.krate))]
-    fn run(&self, state: PerformState<'_>, env: &Self::Context) -> anyhow::Result<()> {
+    fn run(&self, env: &Self::Context) -> anyhow::Result<()> {
         info!("Syncing to sparse index");
 
-        let content =
-            get_index_data(&self.krate, state.conn).context("Failed to get index data")?;
+        let mut conn = env.connection_pool.get()?;
+        let content = get_index_data(&self.krate, &mut conn).context("Failed to get index data")?;
 
         let rt = tokio::runtime::Builder::new_current_thread()
             .enable_all()
@@ -163,7 +164,7 @@ impl BackgroundJob for SquashIndex {
 
     /// Collapse the index into a single commit, archiving the current history in a snapshot branch.
     #[instrument(skip_all)]
-    fn run(&self, _state: PerformState<'_>, env: &Self::Context) -> anyhow::Result<()> {
+    fn run(&self, env: &Self::Context) -> anyhow::Result<()> {
         info!("Squashing the index into a single commit");
 
         let repo = env.lock_index()?;
@@ -215,7 +216,7 @@ impl BackgroundJob for NormalizeIndex {
 
     type Context = Arc<Environment>;
 
-    fn run(&self, _state: PerformState<'_>, env: &Self::Context) -> anyhow::Result<()> {
+    fn run(&self, env: &Self::Context) -> anyhow::Result<()> {
         info!("Normalizing the index");
 
         let repo = env.lock_index()?;

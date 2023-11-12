@@ -1,6 +1,6 @@
 use self::configuration::VisibilityConfig;
 use crate::storage::Storage;
-use crate::worker::swirl::{BackgroundJob, PerformState};
+use crate::worker::swirl::BackgroundJob;
 use crate::worker::Environment;
 use anyhow::{anyhow, Context};
 use std::fs::{self, File};
@@ -29,7 +29,7 @@ impl BackgroundJob for DumpDb {
 
     /// Create CSV dumps of the public information in the database, wrap them in a
     /// tarball and upload to S3.
-    fn run(&self, _state: PerformState<'_>, env: &Self::Context) -> anyhow::Result<()> {
+    fn run(&self, env: &Self::Context) -> anyhow::Result<()> {
         let directory = DumpDirectory::create()?;
 
         info!(path = ?directory.export_dir, "Begin exporting database");

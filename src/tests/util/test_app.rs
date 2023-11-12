@@ -381,7 +381,7 @@ fn simple_config() -> config::Server {
         primary: DbPoolConfig {
             url: required_var("TEST_DATABASE_URL").unwrap().into(),
             read_only_mode: false,
-            pool_size: 1,
+            pool_size: 5,
             min_idle: None,
         },
         replica: None,

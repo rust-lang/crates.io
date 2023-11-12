@@ -1,7 +1,7 @@
 //! Render README files to HTML.
 
 use crate::models::Version;
-use crate::worker::swirl::{BackgroundJob, PerformState};
+use crate::worker::swirl::BackgroundJob;
 use crate::worker::Environment;
 use anyhow::Context;
 use crates_io_markdown::text_to_html;
@@ -41,7 +41,7 @@ impl BackgroundJob for RenderAndUploadReadme {
     type Context = Arc<Environment>;
 
     #[instrument(skip_all, fields(krate.name))]
-    fn run(&self, state: PerformState<'_>, env: &Self::Context) -> anyhow::Result<()> {
+    fn run(&self, env: &Self::Context) -> anyhow::Result<()> {
         use crate::schema::*;
         use diesel::prelude::*;
 
@@ -57,7 +57,8 @@ impl BackgroundJob for RenderAndUploadReadme {
             return Ok(());
         }
 
-        state.conn.transaction(|conn| {
+        let mut conn = env.connection_pool.get()?;
+        conn.transaction(|conn| {
             Version::record_readme_rendering(self.version_id, conn)?;
             let (crate_name, vers): (String, String) = versions::table
                 .find(self.version_id)
