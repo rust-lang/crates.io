@@ -924,6 +924,7 @@ dependencies = [
  "flate2",
  "futures-channel",
  "futures-util",
+ "github-meta",
  "googletest",
  "hex",
  "http",
@@ -1718,6 +1719,16 @@ dependencies = [
  "openssl-probe",
  "openssl-sys",
  "url",
+]
+
+[[package]]
+name = "github-meta"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "be0b46f370a709ba4324525925d7ad7d44765f82652cb3616c2634fee4752813"
+dependencies = [
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
