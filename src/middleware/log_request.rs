@@ -1,6 +1,7 @@
 //! Log all requests in a format similar to Heroku's router, but with additional
 //! information that we care about like User-Agent
 
+use crate::ci::CiService;
 use crate::controllers::util::RequestPartsExt;
 use crate::headers::XRequestId;
 use crate::middleware::normalize_path::OriginalPath;
@@ -32,6 +33,7 @@ pub struct RequestMetadata {
     real_ip: Extension<RealIp>,
     user_agent: TypedHeader<UserAgent>,
     request_id: Option<TypedHeader<XRequestId>>,
+    ci_service: Option<CiService>,
 }
 
 pub struct Metadata<'a> {
@@ -87,6 +89,10 @@ impl Display for Metadata<'_> {
 
         if self.request.original_path.is_some() {
             line.add_quoted_field("normalized_path", &self.request.uri)?;
+        }
+
+        if let Some(ci_service) = self.request.ci_service {
+            line.add_quoted_field("ci", ci_service)?;
         }
 
         let metadata = self.custom_metadata.lock();
