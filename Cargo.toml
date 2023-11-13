@@ -60,7 +60,7 @@ futures-channel = { version = "=0.3.29", default-features = false }
 futures-util = "=0.3.29"
 github-meta = "=0.5.0"
 hex = "=0.4.3"
-http = "=0.2.10"
+http = "=0.2.11"
 http-body = "=0.4.5"
 hyper = { version = "=0.14.27", features = ["backports", "client", "deprecated", "http1"] }
 indexmap = { version = "=2.1.0", features = ["serde"] }
