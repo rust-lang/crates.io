@@ -37,6 +37,7 @@ pub mod admin;
 mod app;
 pub mod auth;
 pub mod boot;
+pub mod ci;
 pub mod cloudfront;
 pub mod config;
 pub mod controllers;
