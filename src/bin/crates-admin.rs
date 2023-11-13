@@ -53,3 +53,9 @@ fn main() -> anyhow::Result<()> {
         Command::EnqueueJob(command) => enqueue_job::run(command),
     }
 }
+
+#[test]
+fn verify_cli() {
+    use clap::CommandFactory;
+    Command::command().debug_assert();
+}
