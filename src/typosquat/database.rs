@@ -161,7 +161,7 @@ impl From<crate::models::Owner> for Owner {
 
 #[cfg(test)]
 mod tests {
-    use crate::{test_util::pg_connection, worker::typosquat::test_util::Faker};
+    use crate::{test_util::pg_connection, typosquat::test_util::Faker};
     use thiserror::Error;
 
     use super::*;

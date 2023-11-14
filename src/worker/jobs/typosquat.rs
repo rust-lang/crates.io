@@ -4,11 +4,8 @@ use diesel::PgConnection;
 use typomania::Package;
 
 use crate::{
-    worker::{
-        swirl::BackgroundJob,
-        typosquat::{Cache, Crate},
-        Environment,
-    },
+    typosquat::{Cache, Crate},
+    worker::{swirl::BackgroundJob, Environment},
     Emails,
 };
 
@@ -67,7 +64,7 @@ fn check(
 
 #[cfg(test)]
 mod tests {
-    use crate::{test_util::pg_connection, worker::typosquat::test_util::Faker};
+    use crate::{test_util::pg_connection, typosquat::test_util::Faker};
 
     use super::*;
 

@@ -2,6 +2,7 @@ use crate::cloudfront::CloudFront;
 use crate::db::DieselPool;
 use crate::fastly::Fastly;
 use crate::storage::Storage;
+use crate::typosquat;
 use crate::Emails;
 use crates_io_index::{Repository, RepositoryConfig};
 use diesel::PgConnection;
@@ -9,8 +10,6 @@ use parking_lot::{Mutex, MutexGuard};
 use std::ops::{Deref, DerefMut};
 use std::sync::{Arc, OnceLock};
 use std::time::Instant;
-
-use super::typosquat;
 
 pub struct Environment {
     repository_config: RepositoryConfig,

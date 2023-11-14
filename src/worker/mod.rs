@@ -11,7 +11,6 @@ use std::sync::Arc;
 mod environment;
 pub mod jobs;
 pub mod swirl;
-mod typosquat;
 
 pub use self::environment::Environment;
 
