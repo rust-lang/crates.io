@@ -1,4 +1,3 @@
-use crates_io_env_vars::var;
 use sentry::integrations::tracing::EventFilter;
 use tracing::Level;
 use tracing::Metadata;
@@ -18,15 +17,12 @@ pub fn init() {
 }
 
 fn init_with_default_level(level: LevelFilter) {
-    let is_heroku = matches!(var("HEROKU"), Ok(Some(_)));
-
     let env_filter = EnvFilter::builder()
         .with_default_directive(level.into())
         .from_env_lossy();
 
     let log_layer = tracing_subscriber::fmt::layer()
         .compact()
-        .with_ansi(!is_heroku)
         .without_time()
         .with_filter(env_filter);
 
