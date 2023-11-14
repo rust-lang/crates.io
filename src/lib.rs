@@ -60,6 +60,7 @@ pub mod sql;
 pub mod ssh;
 pub mod storage;
 mod test_util;
+pub mod typosquat;
 pub mod util;
 pub mod views;
 pub mod worker;

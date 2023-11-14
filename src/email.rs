@@ -1,5 +1,5 @@
 use std::path::PathBuf;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 use crate::util::errors::{server_error, AppResult};
 
@@ -12,7 +12,7 @@ use lettre::transport::smtp::SmtpTransport;
 use lettre::{Message, Transport};
 use rand::distributions::{Alphanumeric, DistString};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Emails {
     backend: EmailBackend,
 }
@@ -48,7 +48,7 @@ impl Emails {
     pub fn new_in_memory() -> Self {
         Self {
             backend: EmailBackend::Memory {
-                mails: Mutex::new(Vec::new()),
+                mails: Arc::new(Mutex::new(Vec::new())),
             },
         }
     }
@@ -86,6 +86,35 @@ https://{}/confirm/{}",
 Visit https://{domain}/accept-invite/{token} to accept this invitation,
 or go to https://{domain}/me/pending-invites to manage all of your crate ownership invitations.",
             domain = crate::config::domain_name()
+        );
+
+        self.send(email, subject, &body)
+    }
+
+    /// Attempts to send a notification that a new crate may be typosquatting another crate.
+    pub fn send_possible_typosquat_notification(
+        &self,
+        email: &str,
+        crate_name: &str,
+        squats: &[typomania::checks::Squat],
+    ) -> AppResult<()> {
+        let domain = crate::config::domain_name();
+        let subject = "Possible typosquatting in new crate";
+        let body = format!(
+            "New crate {crate_name} may be typosquatting one or more other crates.\n
+Visit https://{domain}/crates/{crate_name} to see the offending crate.\n
+\n
+Specific squat checks that triggered:\n
+\n
+{squats}",
+            squats = squats
+                .iter()
+                .map(|squat| format!(
+                    "- {squat} (https://{domain}/crates/{crate_name})\n",
+                    crate_name = squat.package()
+                ))
+                .collect::<Vec<_>>()
+                .join(""),
         );
 
         self.send(email, subject, &body)
@@ -204,6 +233,7 @@ Source type: {source}\n",
     }
 }
 
+#[derive(Clone)]
 enum EmailBackend {
     /// Backend used in production to send mails using SMTP.
     Smtp {
@@ -214,7 +244,7 @@ enum EmailBackend {
     /// Backend used locally during development, will store the emails in the provided directory.
     FileSystem { path: PathBuf },
     /// Backend used during tests, will keep messages in memory to allow tests to retrieve them.
-    Memory { mails: Mutex<Vec<StoredEmail>> },
+    Memory { mails: Arc<Mutex<Vec<StoredEmail>>> },
 }
 
 // Custom Debug implementation to avoid showing the SMTP password.

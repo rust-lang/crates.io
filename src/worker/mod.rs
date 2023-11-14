@@ -20,7 +20,8 @@ pub trait RunnerExt {
 
 impl RunnerExt for Runner<Arc<Environment>> {
     fn register_crates_io_job_types(self) -> Self {
-        self.register_job_type::<jobs::DailyDbMaintenance>()
+        self.register_job_type::<jobs::CheckTyposquat>()
+            .register_job_type::<jobs::DailyDbMaintenance>()
             .register_job_type::<jobs::DumpDb>()
             .register_job_type::<jobs::NormalizeIndex>()
             .register_job_type::<jobs::RenderAndUploadReadme>()

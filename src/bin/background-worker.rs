@@ -16,12 +16,12 @@
 extern crate tracing;
 
 use crates_io::cloudfront::CloudFront;
-use crates_io::config;
 use crates_io::db::DieselPool;
 use crates_io::fastly::Fastly;
 use crates_io::storage::Storage;
 use crates_io::worker::swirl::Runner;
 use crates_io::worker::{Environment, RunnerExt};
+use crates_io::{config, Emails};
 use crates_io::{db, ssh};
 use crates_io_env_vars::{var, var_parsed};
 use crates_io_index::RepositoryConfig;
@@ -73,6 +73,7 @@ fn main() -> anyhow::Result<()> {
         .build()
         .expect("Couldn't build client");
 
+    let emails = Emails::from_environment(&config);
     let fastly = Fastly::from_environment(client);
 
     let connection_pool = r2d2::Pool::builder()
@@ -88,6 +89,7 @@ fn main() -> anyhow::Result<()> {
         fastly,
         storage,
         connection_pool.clone(),
+        emails,
     );
 
     let environment = Arc::new(environment);

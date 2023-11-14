@@ -2,10 +2,13 @@ use crate::cloudfront::CloudFront;
 use crate::db::DieselPool;
 use crate::fastly::Fastly;
 use crate::storage::Storage;
+use crate::typosquat;
+use crate::Emails;
 use crates_io_index::{Repository, RepositoryConfig};
+use diesel::PgConnection;
 use parking_lot::{Mutex, MutexGuard};
 use std::ops::{Deref, DerefMut};
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 use std::time::Instant;
 
 pub struct Environment {
@@ -15,6 +18,10 @@ pub struct Environment {
     fastly: Option<Fastly>,
     pub storage: Arc<Storage>,
     pub connection_pool: DieselPool,
+    pub emails: Emails,
+
+    /// A lazily initialised cache of the most popular crates ready to use in typosquatting checks.
+    typosquat_cache: OnceLock<Result<typosquat::Cache, typosquat::CacheError>>,
 }
 
 impl Environment {
@@ -24,6 +31,7 @@ impl Environment {
         fastly: Option<Fastly>,
         storage: Arc<Storage>,
         connection_pool: DieselPool,
+        emails: Emails,
     ) -> Self {
         Self {
             repository_config,
@@ -32,6 +40,8 @@ impl Environment {
             fastly,
             storage,
             connection_pool,
+            emails,
+            typosquat_cache: OnceLock::default(),
         }
     }
 
@@ -60,6 +70,23 @@ impl Environment {
 
     pub(crate) fn fastly(&self) -> Option<&Fastly> {
         self.fastly.as_ref()
+    }
+
+    /// Returns the typosquatting cache, initialising it if required.
+    pub(crate) fn typosquat_cache(
+        &self,
+        conn: &mut PgConnection,
+    ) -> Result<&typosquat::Cache, typosquat::CacheError> {
+        // We have to pass conn back in here because the caller might be in a transaction, and
+        // getting a new connection here to query crates can result in a deadlock.
+        //
+        // Note that this intentionally won't retry if the initial call to `from_env` fails:
+        // typosquatting checks aren't on the critical path for publishing, and a warning will be
+        // generated if initialising the cache fails.
+        self.typosquat_cache
+            .get_or_init(|| typosquat::Cache::from_env(conn))
+            .as_ref()
+            .map_err(|e| e.clone())
     }
 }
 

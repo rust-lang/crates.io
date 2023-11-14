@@ -9,12 +9,14 @@ mod daily_db_maintenance;
 pub mod dump_db;
 mod git;
 mod readmes;
+mod typosquat;
 mod update_downloads;
 
 pub use self::daily_db_maintenance::DailyDbMaintenance;
 pub use self::dump_db::DumpDb;
 pub use self::git::{NormalizeIndex, SquashIndex, SyncToGitIndex, SyncToSparseIndex};
 pub use self::readmes::RenderAndUploadReadme;
+pub use self::typosquat::CheckTyposquat;
 pub use self::update_downloads::UpdateDownloads;
 
 /// Enqueue both index sync jobs (git and sparse) for a crate, unless they
