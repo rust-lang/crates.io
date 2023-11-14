@@ -292,8 +292,8 @@ cargo install diesel_cli --no-default-features --features postgres --version ^2
 This will install a binary named `diesel`, so you should be able to run `diesel
 --version` to confirm successful installation.
 
-> If you're on Linux and this fails with an error that looks like `error:
-linking with cc failed: exit code: 1`, you're probably missing some
+> If you're on Linux and this fails with an error that looks like ``error:
+linking with `cc` failed: exit code: 1``, you're probably missing some
 > Postgres related libraries. See the Postgres section above on how to fix this.
 
 #### Building and serving the backend
