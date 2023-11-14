@@ -7,6 +7,8 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
 use anyhow::Result;
+use crates_io::worker::jobs;
+use crates_io::worker::swirl::BackgroundJob;
 use crates_io::{admin::on_call, db, schema::*};
 use crates_io_env_vars::{var, var_parsed};
 use diesel::prelude::*;
@@ -79,7 +81,7 @@ fn check_stalled_update_downloads(conn: &mut PgConnection) -> Result<()> {
     let max_job_time = var_parsed("MONITOR_MAX_UPDATE_DOWNLOADS_TIME")?.unwrap_or(120);
 
     let start_time: Result<NaiveDateTime, _> = background_jobs::table
-        .filter(background_jobs::job_type.eq("update_downloads"))
+        .filter(background_jobs::job_type.eq(jobs::UpdateDownloads::JOB_NAME))
         .select(background_jobs::created_at)
         .first(conn);
 
