@@ -238,12 +238,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         }
 
         for (key, values) in features.iter() {
-            if !Crate::valid_feature_name(key) {
-                return Err(cargo_err(&format!(
-                    "\"{key}\" is an invalid feature name (feature names must contain only Unicode XID characters, `+`, `-`, or `.` \
-                (numbers, `+`, `-`, `_`, `.`, or most letters)"
-                )));
-            }
+            Crate::valid_feature_name(key)?;
 
             let num_features = values.len();
             if num_features > max_features {
@@ -258,9 +253,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             }
 
             for value in values.iter() {
-                if !Crate::valid_feature(value) {
-                    return Err(cargo_err(&format!("\"{value}\" is an invalid feature name")));
-                }
+                Crate::valid_feature(value)?;
             }
         }
 
@@ -603,11 +596,7 @@ pub fn validate_dependency(dep: &EncodableCrateDependency) -> AppResult<()> {
     }
 
     for feature in &dep.features {
-        if !Crate::valid_feature(feature) {
-            return Err(cargo_err(&format_args!(
-                "\"{feature}\" is an invalid feature name",
-            )));
-        }
+        Crate::valid_feature(feature)?;
     }
 
     if let Some(registry) = &dep.registry {

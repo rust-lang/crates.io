@@ -5,7 +5,7 @@ expression: response.into_json()
 {
   "errors": [
     {
-      "detail": "\"🍺\" is an invalid feature name"
+      "detail": "invalid character `🍺` in feature `🍺`, the first character must be a Unicode XID start character or digit (most letters or `_` or `0` to `9`)"
     }
   ]
 }
