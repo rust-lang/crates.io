@@ -222,10 +222,9 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             return Err(cargo_err("expected at most 5 categories per crate"));
         }
 
-        let max_features = match &existing_crate {
-            Some(c) => c.max_features.map(|mf| mf as usize),
-            None => None,
-        }.unwrap_or(app.config.max_features);
+        let max_features = existing_crate.as_ref()
+            .and_then(|c| c.max_features.map(|mf| mf as usize))
+            .unwrap_or(app.config.max_features);
 
         let features = tarball_info.manifest.features.unwrap_or_default();
         let num_features = features.len();
