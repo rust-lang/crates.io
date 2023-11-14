@@ -79,6 +79,10 @@ impl Environment {
     ) -> Result<&typosquat::Cache, typosquat::CacheError> {
         // We have to pass conn back in here because the caller might be in a transaction, and
         // getting a new connection here to query crates can result in a deadlock.
+        //
+        // Note that this intentionally won't retry if the initial call to `from_env` fails:
+        // typosquatting checks aren't on the critical path for publishing, and a warning will be
+        // generated if initialising the cache fails.
         self.typosquat_cache
             .get_or_init(|| typosquat::Cache::from_env(conn))
             .as_ref()
