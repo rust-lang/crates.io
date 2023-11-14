@@ -136,8 +136,8 @@ talk to:
 
 | Command                                      | Backend                                                           | Use case                                                |
 | -------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------- |
-| `pnpm start:live`                            | https://crates.io                                                 | Testing UI changes with the full live site's data       |
-| `pnpm start:staging`                         | https://staging-crates-io.herokuapp.com                           | Testing UI changes with a smaller set of realistic data |
+| `pnpm start:live`                            | <https://crates.io>                                               | Testing UI changes with the full live site's data       |
+| `pnpm start:staging`                         | <https://staging-crates-io.herokuapp.com>                         | Testing UI changes with a smaller set of realistic data |
 | `pnpm start`                                 | Static fixture test data in `mirage/fixtures`                     | Setting up particular situations, see note              |
 | `pnpm start:local`                           | Backend server running locally                                    | See the Working on the backend section for setup        |
 | `PROXY_BACKEND=https://crates.io pnpm start` | Whatever is specified in the `PROXY_BACKEND` environment variable | If your use case is not covered here                    |
@@ -194,11 +194,11 @@ methods we'd recommend for each operating system:
   > If you're missing a package, when you try to `cargo install` or `cargo
 build` later, you'll get an error that looks like this:
   >
-  >     ```
-  >     error: linking with `cc` failed: exit code: 1
-  >     [lots of output]
-  >     = note: /usr/bin/ld: cannot find -l[something]
-  >     ```
+  > ```text
+  > error: linking with `cc` failed: exit code: 1
+  > [lots of output]
+  > = note: /usr/bin/ld: cannot find -l[something]
+  > ```
   >
   > That `[something]` is what you're missing; you'll need to do some research
   > to figure out what package will get you the missing library.
@@ -208,7 +208,7 @@ by typing `\q`) without any errors to connect to your running Postgres server.
 
 > If you see an error that looks like this:
 >
-> ```
+> ```text
 > psql: could not connect to server: No such file or directory
 > Is the server running locally and accepting
 > connections on Unix domain socket "/var/run/postgresql/.s.PGSQL.5432"?
@@ -217,10 +217,10 @@ by typing `\q`) without any errors to connect to your running Postgres server.
 > You may need to start the postgreql server on your system. On a Linux system,
 > you can start it with this command:
 >
-> ```
+> ```console
 > sudo service postgresql start
 > ```
-
+>
 > Depending on your system, its permissions, and how Postgres was installed, you
 > may need to use the `postgres` user for some operations (by using `sudo su -
 postgres`). Generally, the problem is that by default the postgres server is
@@ -228,26 +228,26 @@ postgres`). Generally, the problem is that by default the postgres server is
 > in this situation because if you try to run `psql` as yourself, you'll get
 > this error:
 >
-> ```
+> ```text
 > psql: FATAL:  role "yourusername" does not exist
 > ```
 >
 > One way of fixing this is to first give yourself superuser permissions in the
 > database by running this and replacing `[yourusername]` with your username:
 >
-> ```
+> ```console
 > sudo -u postgres createuser --superuser [yourusername]
 > ```
 >
 > Next, if you try to run `psql` and get this error:
 >
-> ```
+> ```text
 > psql: FATAL:  database "yourusername" does not exist
 > ```
 >
 > Fix that by creating a template database for yourself:
 >
-> ```
+> ```console
 > createdb [yourusername]
 > ```
 >
@@ -292,8 +292,8 @@ cargo install diesel_cli --no-default-features --features postgres --version ^2
 This will install a binary named `diesel`, so you should be able to run `diesel
 --version` to confirm successful installation.
 
-> If you're on Linux and this fails with an error that looks like `error:
-linking with `cc` failed: exit code: 1`, you're probably missing some
+> If you're on Linux and this fails with an error that looks like ``error:
+linking with `cc` failed: exit code: 1``, you're probably missing some
 > Postgres related libraries. See the Postgres section above on how to fix this.
 
 #### Building and serving the backend
@@ -307,7 +307,7 @@ Try using `postgres://postgres@localhost/cargo_registry` first.
 > If that doesn't work, change this by filling in this template with the
 > appropriate values where there are `[]`s:
 >
-> ```
+> ```text
 > postgres://[postgresuser]:[password]@[localhost]:[5432]/[database_name]
 > ```
 >
@@ -321,10 +321,10 @@ Try using `postgres://postgres@localhost/cargo_registry` first.
 > - Replace `[database_name]` with the name of the database you'd like to use.
 >   We're going to create a database named `cargo_registry` in the next
 >   section; change this if you'd like to name it something else.
-
+>
 > If you receive an error that looks like:
 >
-> ```
+> ```text
 > password authentication failed for user \"postgres\"\nFATAL:
 > password authentication failed for user \"postgres\"\n"`
 > ```
@@ -383,7 +383,7 @@ restart the server):
 pnpm start:local
 ```
 
-And then you should be able to visit http://localhost:4200!
+And then you should be able to visit <http://localhost:4200>!
 
 ##### Using Mailgun to Send Emails
 
@@ -457,7 +457,7 @@ cargo test
 
 #### Using your local crates.io with cargo
 
-Once you have a local instance of crates.io running at http://localhost:4200 by
+Once you have a local instance of crates.io running at <http://localhost:4200> by
 following the instructions in the "Working on the Backend" section, you can go
 to another Rust project and tell cargo to use your local crates.io instead of
 production.
@@ -483,7 +483,7 @@ them as the values of the `GH_CLIENT_ID` and `GH_CLIENT_SECRET` in your `.env`.
 Then restart your backend, and you should be able to log in to your local
 crates.io with your GitHub account.
 
-Go to http://localhost:4200/me to get your API token and run the `cargo login`
+Go to <http://localhost:4200/me> to get your API token and run the `cargo login`
 command as directed.
 
 Now you should be able to go to the directory of a crate that has no
@@ -519,7 +519,7 @@ telling `cargo` to replace crates.io with your local crates.io as a source.
 In this other crate's directory, create a `.cargo/config` file with this
 content:
 
-```
+```toml
 [source]
 
 [source.mirror]
