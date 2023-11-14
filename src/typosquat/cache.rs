@@ -24,7 +24,7 @@ pub struct Cache {
 impl Cache {
     /// Instantiates a new [`Cache`] from the environment.
     ///
-    /// This reads the [`NOTIFICATION_EMAILS_ENV`] environment variable to get the list of e-mail
+    /// This reads the `NOTIFICATION_EMAILS_ENV` environment variable to get the list of e-mail
     /// addresses to send notifications to, then invokes [`Cache::new`] to read popular crates from
     /// the database.
     #[instrument(skip_all, err)]
@@ -55,7 +55,7 @@ impl Cache {
 
     /// Instantiates a cache by querying popular crates and building them into a typomania harness.
     ///
-    /// This relies on configuration in the [`super::config`] module.
+    /// This relies on configuration in the `super::config` module.
     pub fn new(emails: Vec<String>, conn: &mut PgConnection) -> Result<Self, Error> {
         let top = TopCrates::new(conn, config::TOP_CRATES)?;
 
