@@ -240,7 +240,8 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         for (key, values) in features.iter() {
             if !Crate::valid_feature_name(key) {
                 return Err(cargo_err(&format!(
-                    "\"{key}\" is an invalid feature name (feature names must contain only letters, numbers, '-', '+', or '_')"
+                    "\"{key}\" is an invalid feature name (feature names must contain only Unicode XID characters, `+`, `-`, or `.` \
+                (numbers, `+`, `-`, `_`, `.`, or most letters)"
                 )));
             }
 
