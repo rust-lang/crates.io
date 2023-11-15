@@ -559,29 +559,30 @@ mod tests {
         assert!(Crate::valid_dependency_name("_foo"));
         assert!(!Crate::valid_dependency_name("-foo"));
     }
+
     #[test]
     fn valid_feature_names() {
-        assert!(Crate::valid_feature("foo").is_ok());
-        assert!(Crate::valid_feature("1foo").is_ok());
-        assert!(Crate::valid_feature("_foo").is_ok());
-        assert!(Crate::valid_feature("_foo-_+.1").is_ok());
-        assert!(Crate::valid_feature("_foo-_+.1").is_ok());
-        assert!(Crate::valid_feature("").is_err());
-        assert!(Crate::valid_feature("/").is_err());
-        assert!(Crate::valid_feature("%/%").is_err());
-        assert!(Crate::valid_feature("a/a").is_ok());
-        assert!(Crate::valid_feature("32-column-tables").is_ok());
-        assert!(Crate::valid_feature("c++20").is_ok());
-        assert!(Crate::valid_feature("krate/c++20").is_ok());
-        assert!(Crate::valid_feature("c++20/wow").is_err());
-        assert!(Crate::valid_feature("foo?/bar").is_ok());
-        assert!(Crate::valid_feature("dep:foo").is_ok());
-        assert!(Crate::valid_feature("dep:foo?/bar").is_err());
-        assert!(Crate::valid_feature("foo/?bar").is_err());
-        assert!(Crate::valid_feature("foo?bar").is_err());
-        assert!(Crate::valid_feature("bar.web").is_ok());
-        assert!(Crate::valid_feature("foo/bar.web").is_ok());
-        assert!(Crate::valid_feature("dep:0foo").is_err());
-        assert!(Crate::valid_feature("0foo?/bar.web").is_err());
+        assert_ok!(Crate::valid_feature("foo"));
+        assert_ok!(Crate::valid_feature("1foo"));
+        assert_ok!(Crate::valid_feature("_foo"));
+        assert_ok!(Crate::valid_feature("_foo-_+.1"));
+        assert_ok!(Crate::valid_feature("_foo-_+.1"));
+        assert_err!(Crate::valid_feature(""));
+        assert_err!(Crate::valid_feature("/"));
+        assert_err!(Crate::valid_feature("%/%"));
+        assert_ok!(Crate::valid_feature("a/a"));
+        assert_ok!(Crate::valid_feature("32-column-tables"));
+        assert_ok!(Crate::valid_feature("c++20"));
+        assert_ok!(Crate::valid_feature("krate/c++20"));
+        assert_err!(Crate::valid_feature("c++20/wow"));
+        assert_ok!(Crate::valid_feature("foo?/bar"));
+        assert_ok!(Crate::valid_feature("dep:foo"));
+        assert_err!(Crate::valid_feature("dep:foo?/bar"));
+        assert_err!(Crate::valid_feature("foo/?bar"));
+        assert_err!(Crate::valid_feature("foo?bar"));
+        assert_ok!(Crate::valid_feature("bar.web"));
+        assert_ok!(Crate::valid_feature("foo/bar.web"));
+        assert_err!(Crate::valid_feature("dep:0foo"));
+        assert_err!(Crate::valid_feature("0foo?/bar.web"));
     }
 }
