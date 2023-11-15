@@ -220,32 +220,18 @@ impl Crate {
                 .unwrap_or(false)
     }
 
-    pub fn invalid_dependency_name_msg(dep: &str) -> String {
-        format!(
-            "\"{dep}\" is an invalid dependency name (dependency \
-                names must start with a letter or underscore, contain only \
-                letters, numbers, hyphens, or underscores and have at most \
-                {MAX_NAME_LENGTH} characters)"
-        )
-    }
-
     /// Validates the THIS parts of `features = ["THIS", "and/THIS", "dep:THIS", "dep?/THIS"]`.
     /// 1. The name must be non-empty.
     /// 2. The first character must be a Unicode XID start character, `_`, or a digit.
     /// 3. The remaining characters must be Unicode XID characters, `_`, `+`, `-`, or `.`.
-    pub fn validate_feature_name(name: &str) -> AppResult<()> {
+    pub fn validate_feature_name(name: &str) -> Result<(), InvalidFeature> {
         if name.is_empty() {
-            return Err(cargo_err("feature cannot be an empty"));
+            return Err(InvalidFeature::Empty);
         }
         let mut chars = name.chars();
         if let Some(ch) = chars.next() {
             if !(unicode_xid::UnicodeXID::is_xid_start(ch) || ch == '_' || ch.is_ascii_digit()) {
-                return Err(cargo_err(&format!(
-                    "invalid character `{}` in feature `{}`, \
-                the first character must be a Unicode XID start character or digit \
-                (most letters or `_` or `0` to `9`)",
-                    ch, name,
-                )));
+                return Err(InvalidFeature::Start(ch, name.into()));
             }
         }
         for ch in chars {
@@ -254,12 +240,7 @@ impl Crate {
                 || ch == '-'
                 || ch == '.')
             {
-                return Err(cargo_err(&format!(
-                    "invalid character `{}` in feature `{}`, \
-                characters must be Unicode XID characters, `+`, `-`, or `.` \
-                (numbers, `+`, `-`, `_`, `.`, or most letters)",
-                    ch, name,
-                )));
+                return Err(InvalidFeature::Char(ch, name.into()));
             }
         }
 
@@ -267,16 +248,18 @@ impl Crate {
     }
 
     /// Validates a whole feature string, `features = ["THIS", "and/THIS", "dep:THIS", "dep?/THIS"]`.
-    pub fn validate_feature(name: &str) -> AppResult<()> {
+    pub fn validate_feature(name: &str) -> Result<(), InvalidFeature> {
         if let Some((dep, dep_feat)) = name.split_once('/') {
             let dep = dep.strip_suffix('?').unwrap_or(dep);
             if !Crate::valid_dependency_name(dep) {
-                return Err(cargo_err(&Crate::invalid_dependency_name_msg(dep)));
+                let err = InvalidDependencyName(dep.into());
+                return Err(InvalidFeature::DependencyName(err));
             }
             Crate::validate_feature_name(dep_feat)
         } else if let Some((_, dep)) = name.split_once("dep:") {
             if !Crate::valid_dependency_name(dep) {
-                return Err(cargo_err(&Crate::invalid_dependency_name_msg(dep)));
+                let err = InvalidDependencyName(dep.into());
+                return Err(InvalidFeature::DependencyName(err));
             }
             return Ok(());
         } else {
@@ -528,6 +511,34 @@ impl CrateVersions for [Crate] {
     }
 }
 
+#[derive(Debug, Eq, PartialEq, thiserror::Error)]
+pub enum InvalidFeature {
+    #[error("feature cannot be an empty")]
+    Empty,
+    #[error(
+        "invalid character `{0}` in feature `{1}`, the first character must be \
+        a Unicode XID start character or digit (most letters or `_` or `0` to \
+        `9`)"
+    )]
+    Start(char, String),
+    #[error(
+        "invalid character `{0}` in feature `{1}`, characters must be Unicode \
+        XID characters, `+`, `-`, or `.` (numbers, `+`, `-`, `_`, `.`, or most \
+        letters)"
+    )]
+    Char(char, String),
+    #[error(transparent)]
+    DependencyName(#[from] InvalidDependencyName),
+}
+
+#[derive(Debug, Eq, PartialEq, thiserror::Error)]
+#[error(
+    "\"{0}\" is an invalid dependency name (dependency names must start with a \
+    letter or underscore, contain only letters, numbers, hyphens, or \
+    underscores and have at most {MAX_NAME_LENGTH} characters)"
+)]
+pub struct InvalidDependencyName(pub String);
+
 #[cfg(test)]
 mod tests {
     use crate::models::Crate;
@@ -562,27 +573,54 @@ mod tests {
 
     #[test]
     fn valid_feature_names() {
+        use super::InvalidDependencyName;
+        use super::InvalidFeature::*;
+
         assert_ok!(Crate::validate_feature("foo"));
         assert_ok!(Crate::validate_feature("1foo"));
         assert_ok!(Crate::validate_feature("_foo"));
         assert_ok!(Crate::validate_feature("_foo-_+.1"));
         assert_ok!(Crate::validate_feature("_foo-_+.1"));
-        assert_err!(Crate::validate_feature(""));
-        assert_err!(Crate::validate_feature("/"));
-        assert_err!(Crate::validate_feature("%/%"));
+        assert_err_eq!(Crate::validate_feature(""), Empty);
+        assert_err_eq!(
+            Crate::validate_feature("/"),
+            InvalidDependencyName("".into()).into()
+        );
+        assert_err_eq!(
+            Crate::validate_feature("%/%"),
+            InvalidDependencyName("%".into()).into()
+        );
         assert_ok!(Crate::validate_feature("a/a"));
         assert_ok!(Crate::validate_feature("32-column-tables"));
         assert_ok!(Crate::validate_feature("c++20"));
         assert_ok!(Crate::validate_feature("krate/c++20"));
-        assert_err!(Crate::validate_feature("c++20/wow"));
+        assert_err_eq!(
+            Crate::validate_feature("c++20/wow"),
+            InvalidDependencyName("c++20".into()).into()
+        );
         assert_ok!(Crate::validate_feature("foo?/bar"));
         assert_ok!(Crate::validate_feature("dep:foo"));
-        assert_err!(Crate::validate_feature("dep:foo?/bar"));
-        assert_err!(Crate::validate_feature("foo/?bar"));
-        assert_err!(Crate::validate_feature("foo?bar"));
+        assert_err_eq!(
+            Crate::validate_feature("dep:foo?/bar"),
+            InvalidDependencyName("dep:foo".into()).into()
+        );
+        assert_err_eq!(
+            Crate::validate_feature("foo/?bar"),
+            Start('?', "?bar".into())
+        );
+        assert_err_eq!(
+            Crate::validate_feature("foo?bar"),
+            Char('?', "foo?bar".into())
+        );
         assert_ok!(Crate::validate_feature("bar.web"));
         assert_ok!(Crate::validate_feature("foo/bar.web"));
-        assert_err!(Crate::validate_feature("dep:0foo"));
-        assert_err!(Crate::validate_feature("0foo?/bar.web"));
+        assert_err_eq!(
+            Crate::validate_feature("dep:0foo"),
+            InvalidDependencyName("0foo".into()).into()
+        );
+        assert_err_eq!(
+            Crate::validate_feature("0foo?/bar.web"),
+            InvalidDependencyName("0foo".into()).into()
+        );
     }
 }

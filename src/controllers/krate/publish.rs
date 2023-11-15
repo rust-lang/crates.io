@@ -16,7 +16,7 @@ use tokio::runtime::Handle;
 use url::Url;
 
 use crate::controllers::cargo_prelude::*;
-use crate::models::krate::MAX_NAME_LENGTH;
+use crate::models::krate::{InvalidDependencyName, MAX_NAME_LENGTH};
 use crate::models::{
     insert_version_owner_action, Category, Crate, DependencyKind, Keyword, NewCrate, NewVersion,
     Rights, VersionAction,
@@ -238,7 +238,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         }
 
         for (key, values) in features.iter() {
-            Crate::validate_feature_name(key)?;
+            Crate::validate_feature_name(key).map_err(|error| cargo_err(&error))?;
 
             let num_features = values.len();
             if num_features > max_features {
@@ -253,7 +253,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             }
 
             for value in values.iter() {
-                Crate::validate_feature(value)?;
+                Crate::validate_feature(value).map_err(|error| cargo_err(&error))?;
             }
         }
 
@@ -596,7 +596,7 @@ pub fn validate_dependency(dep: &EncodableCrateDependency) -> AppResult<()> {
     }
 
     for feature in &dep.features {
-        Crate::validate_feature(feature)?;
+        Crate::validate_feature(feature).map_err(|error| cargo_err(&error))?;
     }
 
     if let Some(registry) = &dep.registry {
@@ -623,7 +623,7 @@ pub fn validate_dependency(dep: &EncodableCrateDependency) -> AppResult<()> {
 
     if let Some(toml_name) = &dep.explicit_name_in_toml {
         if !Crate::valid_dependency_name(toml_name) {
-            return Err(cargo_err(&Crate::invalid_dependency_name_msg(toml_name)));
+            return Err(cargo_err(&InvalidDependencyName(toml_name.into())));
         }
     }
 
