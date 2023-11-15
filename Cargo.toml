@@ -33,8 +33,8 @@ slow-tests = []
 [dependencies]
 anyhow = "=1.0.75"
 async-trait = "=0.1.74"
-aws-credential-types = { version = "=0.57.1", features = ["hardcoded-credentials"] }
-aws-sdk-cloudfront = "=0.35.0"
+aws-credential-types = { version = "=0.57.2", features = ["hardcoded-credentials"] }
+aws-sdk-cloudfront = "=0.36.0"
 axum = { version = "=0.6.20", features = ["headers", "macros", "matched-path"] }
 axum-extra = { version = "=0.8.0", features = ["cookie-signed"] }
 base64 = "=0.21.5"
