@@ -513,7 +513,7 @@ impl CrateVersions for [Crate] {
 
 #[derive(Debug, Eq, PartialEq, thiserror::Error)]
 pub enum InvalidFeature {
-    #[error("feature cannot be an empty")]
+    #[error("feature cannot be empty")]
     Empty,
     #[error(
         "invalid character `{0}` in feature `{1}`, the first character must be \
