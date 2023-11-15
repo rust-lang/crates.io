@@ -175,8 +175,7 @@ jobs:
 
       # Percy secrets are included here to enable Percy's GitHub integration
       # on community-submitted PRs
-      PERCY_TOKEN: 0d8707a02b19aebbec79bb0bf302b8d2fa95edb33169cfe41b084289596670b1
-      PERCY_PROJECT: crates-io/crates.io
+      PERCY_TOKEN: web_0a783d8086b6f996809f3e751d032dd6d156782082bcd1423b9b860113c75054
 
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
