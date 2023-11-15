@@ -39,12 +39,15 @@ pub fn run(command: Command) -> Result<()> {
     match command {
         Command::UpdateDownloads => {
             let count: i64 = background_jobs::table
-                .filter(background_jobs::job_type.eq("update_downloads"))
+                .filter(background_jobs::job_type.eq(jobs::UpdateDownloads::JOB_NAME))
                 .count()
                 .get_result(conn)?;
 
             if count > 0 {
-                println!("Did not enqueue update_downloads, existing job already in progress");
+                println!(
+                    "Did not enqueue {}, existing job already in progress",
+                    jobs::UpdateDownloads::JOB_NAME
+                );
             } else {
                 jobs::UpdateDownloads.enqueue(conn)?;
             }
