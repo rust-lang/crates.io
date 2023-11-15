@@ -238,7 +238,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         }
 
         for (key, values) in features.iter() {
-            Crate::valid_feature_name(key)?;
+            Crate::validate_feature_name(key)?;
 
             let num_features = values.len();
             if num_features > max_features {
@@ -253,7 +253,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             }
 
             for value in values.iter() {
-                Crate::valid_feature(value)?;
+                Crate::validate_feature(value)?;
             }
         }
 
@@ -596,7 +596,7 @@ pub fn validate_dependency(dep: &EncodableCrateDependency) -> AppResult<()> {
     }
 
     for feature in &dep.features {
-        Crate::valid_feature(feature)?;
+        Crate::validate_feature(feature)?;
     }
 
     if let Some(registry) = &dep.registry {

@@ -233,7 +233,7 @@ impl Crate {
     /// 1. The name must be non-empty.
     /// 2. The first character must be a Unicode XID start character, `_`, or a digit.
     /// 3. The remaining characters must be Unicode XID characters, `_`, `+`, `-`, or `.`.
-    pub fn valid_feature_name(name: &str) -> AppResult<()> {
+    pub fn validate_feature_name(name: &str) -> AppResult<()> {
         if name.is_empty() {
             return Err(cargo_err("feature cannot be an empty"));
         }
@@ -267,20 +267,20 @@ impl Crate {
     }
 
     /// Validates a whole feature string, `features = ["THIS", "and/THIS", "dep:THIS", "dep?/THIS"]`.
-    pub fn valid_feature(name: &str) -> AppResult<()> {
+    pub fn validate_feature(name: &str) -> AppResult<()> {
         if let Some((dep, dep_feat)) = name.split_once('/') {
             let dep = dep.strip_suffix('?').unwrap_or(dep);
             if !Crate::valid_dependency_name(dep) {
                 return Err(cargo_err(&Crate::invalid_dependency_name_msg(dep)));
             }
-            Crate::valid_feature_name(dep_feat)
+            Crate::validate_feature_name(dep_feat)
         } else if let Some((_, dep)) = name.split_once("dep:") {
             if !Crate::valid_dependency_name(dep) {
                 return Err(cargo_err(&Crate::invalid_dependency_name_msg(dep)));
             }
             return Ok(());
         } else {
-            Crate::valid_feature_name(name)
+            Crate::validate_feature_name(name)
         }
     }
 
@@ -562,27 +562,27 @@ mod tests {
 
     #[test]
     fn valid_feature_names() {
-        assert_ok!(Crate::valid_feature("foo"));
-        assert_ok!(Crate::valid_feature("1foo"));
-        assert_ok!(Crate::valid_feature("_foo"));
-        assert_ok!(Crate::valid_feature("_foo-_+.1"));
-        assert_ok!(Crate::valid_feature("_foo-_+.1"));
-        assert_err!(Crate::valid_feature(""));
-        assert_err!(Crate::valid_feature("/"));
-        assert_err!(Crate::valid_feature("%/%"));
-        assert_ok!(Crate::valid_feature("a/a"));
-        assert_ok!(Crate::valid_feature("32-column-tables"));
-        assert_ok!(Crate::valid_feature("c++20"));
-        assert_ok!(Crate::valid_feature("krate/c++20"));
-        assert_err!(Crate::valid_feature("c++20/wow"));
-        assert_ok!(Crate::valid_feature("foo?/bar"));
-        assert_ok!(Crate::valid_feature("dep:foo"));
-        assert_err!(Crate::valid_feature("dep:foo?/bar"));
-        assert_err!(Crate::valid_feature("foo/?bar"));
-        assert_err!(Crate::valid_feature("foo?bar"));
-        assert_ok!(Crate::valid_feature("bar.web"));
-        assert_ok!(Crate::valid_feature("foo/bar.web"));
-        assert_err!(Crate::valid_feature("dep:0foo"));
-        assert_err!(Crate::valid_feature("0foo?/bar.web"));
+        assert_ok!(Crate::validate_feature("foo"));
+        assert_ok!(Crate::validate_feature("1foo"));
+        assert_ok!(Crate::validate_feature("_foo"));
+        assert_ok!(Crate::validate_feature("_foo-_+.1"));
+        assert_ok!(Crate::validate_feature("_foo-_+.1"));
+        assert_err!(Crate::validate_feature(""));
+        assert_err!(Crate::validate_feature("/"));
+        assert_err!(Crate::validate_feature("%/%"));
+        assert_ok!(Crate::validate_feature("a/a"));
+        assert_ok!(Crate::validate_feature("32-column-tables"));
+        assert_ok!(Crate::validate_feature("c++20"));
+        assert_ok!(Crate::validate_feature("krate/c++20"));
+        assert_err!(Crate::validate_feature("c++20/wow"));
+        assert_ok!(Crate::validate_feature("foo?/bar"));
+        assert_ok!(Crate::validate_feature("dep:foo"));
+        assert_err!(Crate::validate_feature("dep:foo?/bar"));
+        assert_err!(Crate::validate_feature("foo/?bar"));
+        assert_err!(Crate::validate_feature("foo?bar"));
+        assert_ok!(Crate::validate_feature("bar.web"));
+        assert_ok!(Crate::validate_feature("foo/bar.web"));
+        assert_err!(Crate::validate_feature("dep:0foo"));
+        assert_err!(Crate::validate_feature("0foo?/bar.web"));
     }
 }
