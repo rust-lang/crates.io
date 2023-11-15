@@ -248,6 +248,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "aws-ip-ranges"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2fc178845633feff2a37ff5ecd7cdf6fbe09c407eb428ae62db81a4d5054458a"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "aws-runtime"
 version = "0.57.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -902,6 +912,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "aws-credential-types",
+ "aws-ip-ranges",
  "aws-sdk-cloudfront",
  "axum",
  "axum-extra",
