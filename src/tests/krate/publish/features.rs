@@ -26,7 +26,46 @@ fn features_version_2() {
 }
 
 #[test]
-fn invalid_feature_name() {
+fn feature_name_with_dot() {
+    let (app, _, _, token) = TestApp::full().with_token();
+    let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("foo.bar", &[]);
+    token.publish_crate(crate_to_publish).good();
+    let crates = app.crates_from_index_head("foo");
+    assert_json_snapshot!(crates);
+}
+
+#[test]
+fn feature_name_start_with_number_and_underscore() {
+    let (app, _, _, token) = TestApp::full().with_token();
+    let crate_to_publish = PublishBuilder::new("foo", "1.0.0")
+        .feature("0foo1.bar", &[])
+        .feature("_foo2.bar", &[]);
+    token.publish_crate(crate_to_publish).good();
+    let crates = app.crates_from_index_head("foo");
+    assert_json_snapshot!(crates);
+}
+
+#[test]
+fn feature_name_with_unicode_chars() {
+    let (app, _, _, token) = TestApp::full().with_token();
+    let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("foo.你好世界", &[]);
+    token.publish_crate(crate_to_publish).good();
+    let crates = app.crates_from_index_head("foo");
+    assert_json_snapshot!(crates);
+}
+
+#[test]
+fn empty_feature_name() {
+    let (app, _, _, token) = TestApp::full().with_token();
+    let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("", &[]);
+    let response = token.publish_crate(crate_to_publish);
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json());
+    assert!(app.stored_files().is_empty());
+}
+
+#[test]
+fn invalid_feature_name1() {
     let (app, _, _, token) = TestApp::full().with_token();
 
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("~foo", &[]);
@@ -37,7 +76,7 @@ fn invalid_feature_name() {
 }
 
 #[test]
-fn invalid_feature() {
+fn invalid_feature_name2() {
     let (app, _, _, token) = TestApp::full().with_token();
 
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("foo", &["!bar"]);
@@ -45,6 +84,16 @@ fn invalid_feature() {
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.into_json());
     assert_that!(app.stored_files(), empty());
+}
+
+#[test]
+fn invalid_feature_name_start_with_hyphen() {
+    let (app, _, _, token) = TestApp::full().with_token();
+    let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("-foo1.bar", &[]);
+    let response = token.publish_crate(crate_to_publish);
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json());
+    assert!(app.stored_files().is_empty());
 }
 
 #[test]

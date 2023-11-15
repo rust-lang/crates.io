@@ -1,0 +1,16 @@
+---
+source: src/tests/krate/publish/features.rs
+expression: crates
+---
+[
+  {
+    "name": "foo",
+    "vers": "1.0.0",
+    "deps": [],
+    "cksum": "493720846371607438c1a4eb90c9cc7d7286600ca9c4e2ca04151aad9563b47a",
+    "features": {
+      "foo.你好世界": []
+    },
+    "yanked": false
+  }
+]

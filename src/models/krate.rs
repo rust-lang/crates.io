@@ -220,12 +220,68 @@ impl Crate {
                 .unwrap_or(false)
     }
 
-    /// Validates the THIS parts of `features = ["THIS", "and/THIS"]`.
-    pub fn valid_feature_name(name: &str) -> bool {
-        !name.is_empty()
-            && name
-                .chars()
-                .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-' || c == '+')
+    pub fn invalid_dependency_name_msg(dep: &str) -> String {
+        format!(
+            "\"{dep}\" is an invalid dependency name (dependency \
+                names must start with a letter or underscore, contain only \
+                letters, numbers, hyphens, or underscores and have at most \
+                {MAX_NAME_LENGTH} characters)"
+        )
+    }
+
+    /// Validates the THIS parts of `features = ["THIS", "and/THIS", "dep:THIS", "dep?/THIS"]`.
+    /// 1. The name must be non-empty.
+    /// 2. The first character must be a Unicode XID start character, `_`, or a digit.
+    /// 3. The remaining characters must be Unicode XID characters, `_`, `+`, `-`, or `.`.
+    pub fn valid_feature_name(name: &str) -> AppResult<()> {
+        if name.is_empty() {
+            return Err(cargo_err("feature cannot be an empty"));
+        }
+        let mut chars = name.chars();
+        if let Some(ch) = chars.next() {
+            if !(unicode_xid::UnicodeXID::is_xid_start(ch) || ch == '_' || ch.is_ascii_digit()) {
+                return Err(cargo_err(&format!(
+                    "invalid character `{}` in feature `{}`, \
+                the first character must be a Unicode XID start character or digit \
+                (most letters or `_` or `0` to `9`)",
+                    ch, name,
+                )));
+            }
+        }
+        for ch in chars {
+            if !(unicode_xid::UnicodeXID::is_xid_continue(ch)
+                || ch == '+'
+                || ch == '-'
+                || ch == '.')
+            {
+                return Err(cargo_err(&format!(
+                    "invalid character `{}` in feature `{}`, \
+                characters must be Unicode XID characters, `+`, `-`, or `.` \
+                (numbers, `+`, `-`, `_`, `.`, or most letters)",
+                    ch, name,
+                )));
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Validates a whole feature string, `features = ["THIS", "and/THIS", "dep:THIS", "dep?/THIS"]`.
+    pub fn valid_feature(name: &str) -> AppResult<()> {
+        if let Some((dep, dep_feat)) = name.split_once('/') {
+            let dep = dep.strip_suffix('?').unwrap_or(dep);
+            if !Crate::valid_dependency_name(dep) {
+                return Err(cargo_err(&Crate::invalid_dependency_name_msg(dep)));
+            }
+            Crate::valid_feature_name(dep_feat)
+        } else if let Some((_, dep)) = name.split_once("dep:") {
+            if !Crate::valid_dependency_name(dep) {
+                return Err(cargo_err(&Crate::invalid_dependency_name_msg(dep)));
+            }
+            return Ok(());
+        } else {
+            Crate::valid_feature_name(name)
+        }
     }
 
     /// Validates the prefix in front of the slash: `features = ["THIS/feature"]`.
@@ -235,17 +291,6 @@ impl Crate {
             && name
                 .chars()
                 .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
-    }
-
-    /// Validates a whole feature string, `features = ["THIS", "ALL/THIS"]`.
-    pub fn valid_feature(name: &str) -> bool {
-        match name.split_once('/') {
-            Some((dep, dep_feat)) => {
-                let dep = dep.strip_suffix('?').unwrap_or(dep);
-                Crate::valid_feature_prefix(dep) && Crate::valid_feature_name(dep_feat)
-            }
-            None => Crate::valid_feature_name(name.strip_prefix("dep:").unwrap_or(name)),
-        }
     }
 
     /// Return both the newest (most recently updated) and
@@ -514,22 +559,29 @@ mod tests {
         assert!(Crate::valid_dependency_name("_foo"));
         assert!(!Crate::valid_dependency_name("-foo"));
     }
-
     #[test]
     fn valid_feature_names() {
-        assert!(Crate::valid_feature("foo"));
-        assert!(!Crate::valid_feature(""));
-        assert!(!Crate::valid_feature("/"));
-        assert!(!Crate::valid_feature("%/%"));
-        assert!(Crate::valid_feature("a/a"));
-        assert!(Crate::valid_feature("32-column-tables"));
-        assert!(Crate::valid_feature("c++20"));
-        assert!(Crate::valid_feature("krate/c++20"));
-        assert!(!Crate::valid_feature("c++20/wow"));
-        assert!(Crate::valid_feature("foo?/bar"));
-        assert!(Crate::valid_feature("dep:foo"));
-        assert!(!Crate::valid_feature("dep:foo?/bar"));
-        assert!(!Crate::valid_feature("foo/?bar"));
-        assert!(!Crate::valid_feature("foo?bar"));
+        assert!(Crate::valid_feature("foo").is_ok());
+        assert!(Crate::valid_feature("1foo").is_ok());
+        assert!(Crate::valid_feature("_foo").is_ok());
+        assert!(Crate::valid_feature("_foo-_+.1").is_ok());
+        assert!(Crate::valid_feature("_foo-_+.1").is_ok());
+        assert!(Crate::valid_feature("").is_err());
+        assert!(Crate::valid_feature("/").is_err());
+        assert!(Crate::valid_feature("%/%").is_err());
+        assert!(Crate::valid_feature("a/a").is_ok());
+        assert!(Crate::valid_feature("32-column-tables").is_ok());
+        assert!(Crate::valid_feature("c++20").is_ok());
+        assert!(Crate::valid_feature("krate/c++20").is_ok());
+        assert!(Crate::valid_feature("c++20/wow").is_err());
+        assert!(Crate::valid_feature("foo?/bar").is_ok());
+        assert!(Crate::valid_feature("dep:foo").is_ok());
+        assert!(Crate::valid_feature("dep:foo?/bar").is_err());
+        assert!(Crate::valid_feature("foo/?bar").is_err());
+        assert!(Crate::valid_feature("foo?bar").is_err());
+        assert!(Crate::valid_feature("bar.web").is_ok());
+        assert!(Crate::valid_feature("foo/bar.web").is_ok());
+        assert!(Crate::valid_feature("dep:0foo").is_err());
+        assert!(Crate::valid_feature("0foo?/bar.web").is_err());
     }
 }
