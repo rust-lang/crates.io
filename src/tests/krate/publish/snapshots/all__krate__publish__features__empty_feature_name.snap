@@ -5,7 +5,7 @@ expression: response.into_json()
 {
   "errors": [
     {
-      "detail": "feature cannot be an empty"
+      "detail": "feature cannot be empty"
     }
   ]
 }
