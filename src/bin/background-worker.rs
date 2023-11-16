@@ -79,7 +79,7 @@ fn main() -> anyhow::Result<()> {
     let connection_pool = r2d2::Pool::builder()
         .max_size(10)
         .min_idle(Some(0))
-        .build_unchecked(ConnectionManager::new(&db_url));
+        .build_unchecked(ConnectionManager::new(db_url));
 
     let connection_pool = DieselPool::new_background_worker(connection_pool);
 
