@@ -54,7 +54,7 @@
   </nav.Tab>
 
   <nav.Tab @link={{link "crate.versions" @crate}} data-test-versions-tab>
-    {{@crate.versions.length}} Versions
+    {{pluralize @crate.versions.length "Version"}}
   </nav.Tab>
 
   <nav.Tab
