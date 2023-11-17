@@ -11,6 +11,20 @@ default-run = "server"
 [workspace]
 members = ["crates_io_*"]
 
+[workspace.lints.rust]
+future_incompatible = "warn"
+nonstandard_style = "warn"
+rust_2018_idioms = "warn"
+rust_2018_compatibility = "warn"
+rust_2021_compatibility = "warn"
+unused = "warn"
+
+[workspace.lints.clippy]
+all = "warn"
+
+[lints]
+workspace = true
+
 [profile.release]
 opt-level = 2
 
