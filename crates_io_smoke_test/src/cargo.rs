@@ -3,6 +3,7 @@ use secrecy::{ExposeSecret, SecretString};
 use std::path::Path;
 use tokio::process::Command;
 
+#[allow(unstable_name_collisions)]
 pub async fn new_lib(parent_path: &Path, name: &str) -> anyhow::Result<()> {
     Command::new("cargo")
         .args(["new", "--lib", name])
@@ -14,6 +15,7 @@ pub async fn new_lib(parent_path: &Path, name: &str) -> anyhow::Result<()> {
         .map_err(Into::into)
 }
 
+#[allow(unstable_name_collisions)]
 pub async fn publish(project_path: &Path, token: &SecretString) -> anyhow::Result<()> {
     Command::new("cargo")
         .args(["publish", "--registry", "staging", "--allow-dirty"])

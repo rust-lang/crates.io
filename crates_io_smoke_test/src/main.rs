@@ -1,5 +1,3 @@
-#![allow(unstable_name_collisions)]
-
 mod api;
 mod cargo;
 mod exit_status_ext;
