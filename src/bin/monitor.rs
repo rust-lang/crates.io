@@ -4,8 +4,6 @@
 //! Usage:
 //!     cargo run --bin monitor
 
-#![warn(clippy::all, rust_2018_idioms)]
-
 use anyhow::Result;
 use crates_io::worker::jobs;
 use crates_io::worker::swirl::BackgroundJob;

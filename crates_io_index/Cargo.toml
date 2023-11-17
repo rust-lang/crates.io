@@ -6,6 +6,9 @@ repository = "https://github.com/rust-lang/crates.io"
 description = "crates.io package index utilities"
 edition = "2021"
 
+[lints]
+workspace = true
+
 [lib]
 path = "lib.rs"
 
