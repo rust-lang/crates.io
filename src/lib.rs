@@ -5,9 +5,6 @@
 //! [krate](krate/index.html), [user](user/index.html) and [version](version/index.html) modules.
 
 #![warn(clippy::all, rust_2018_idioms)]
-// `diesel` macros are currently generating code that breaks this rule, so
-// we have to disable it for now.
-#![allow(clippy::extra_unused_lifetimes)]
 
 #[cfg(test)]
 #[macro_use]
