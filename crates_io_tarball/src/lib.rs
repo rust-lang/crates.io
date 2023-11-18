@@ -148,11 +148,9 @@ mod tests {
 
     #[test]
     fn process_tarball_test() {
+        let manifest = b"[package]\nname = \"foo\"\nversion = \"0.0.1\"\n";
         let tarball = TarballBuilder::new()
-            .add_file(
-                "foo-0.0.1/Cargo.toml",
-                b"[package]\nname = \"foo\"\nversion = \"0.0.1\"\n",
-            )
+            .add_file("foo-0.0.1/Cargo.toml", manifest)
             .build();
 
         let limit = 512 * 1024 * 1024;
@@ -165,11 +163,9 @@ mod tests {
 
     #[test]
     fn process_tarball_test_incomplete_vcs_info() {
+        let manifest = b"[package]\nname = \"foo\"\nversion = \"0.0.1\"\n";
         let tarball = TarballBuilder::new()
-            .add_file(
-                "foo-0.0.1/Cargo.toml",
-                b"[package]\nname = \"foo\"\nversion = \"0.0.1\"\n",
-            )
+            .add_file("foo-0.0.1/Cargo.toml", manifest)
             .add_file("foo-0.0.1/.cargo_vcs_info.json", br#"{"unknown": "field"}"#)
             .build();
 
@@ -182,15 +178,11 @@ mod tests {
 
     #[test]
     fn process_tarball_test_vcs_info() {
+        let manifest = b"[package]\nname = \"foo\"\nversion = \"0.0.1\"\n";
+        let vcs_info = br#"{"path_in_vcs": "path/in/vcs"}"#;
         let tarball = TarballBuilder::new()
-            .add_file(
-                "foo-0.0.1/Cargo.toml",
-                b"[package]\nname = \"foo\"\nversion = \"0.0.1\"\n",
-            )
-            .add_file(
-                "foo-0.0.1/.cargo_vcs_info.json",
-                br#"{"path_in_vcs": "path/in/vcs"}"#,
-            )
+            .add_file("foo-0.0.1/Cargo.toml", manifest)
+            .add_file("foo-0.0.1/.cargo_vcs_info.json", vcs_info)
             .build();
 
         let limit = 512 * 1024 * 1024;
@@ -202,18 +194,16 @@ mod tests {
 
     #[test]
     fn process_tarball_test_manifest() {
+        let manifest = br#"
+            [package]
+            name = "foo"
+            version = "0.0.1"
+            rust-version = "1.59"
+            readme = "README.md"
+            repository = "https://github.com/foo/bar"
+            "#;
         let tarball = TarballBuilder::new()
-            .add_file(
-                "foo-0.0.1/Cargo.toml",
-                br#"
-[package]
-name = "foo"
-version = "0.0.1"
-rust-version = "1.59"
-readme = "README.md"
-repository = "https://github.com/foo/bar"
-"#,
-            )
+            .add_file("foo-0.0.1/Cargo.toml", manifest)
             .build();
 
         let limit = 512 * 1024 * 1024;
@@ -227,16 +217,14 @@ repository = "https://github.com/foo/bar"
 
     #[test]
     fn process_tarball_test_manifest_with_project() {
+        let manifest = br#"
+            [project]
+            name = "foo"
+            version = "0.0.1"
+            rust-version = "1.23"
+            "#;
         let tarball = TarballBuilder::new()
-            .add_file(
-                "foo-0.0.1/Cargo.toml",
-                br#"
-                [project]
-                name = "foo"
-                version = "0.0.1"
-                rust-version = "1.23"
-                "#,
-            )
+            .add_file("foo-0.0.1/Cargo.toml", manifest)
             .build();
 
         let limit = 512 * 1024 * 1024;
@@ -248,15 +236,13 @@ repository = "https://github.com/foo/bar"
 
     #[test]
     fn process_tarball_test_manifest_with_default_readme() {
+        let manifest = br#"
+            [package]
+            name = "foo"
+            version = "0.0.1"
+            "#;
         let tarball = TarballBuilder::new()
-            .add_file(
-                "foo-0.0.1/Cargo.toml",
-                br#"
-                [package]
-                name = "foo"
-                version = "0.0.1"
-                "#,
-            )
+            .add_file("foo-0.0.1/Cargo.toml", manifest)
             .build();
 
         let limit = 512 * 1024 * 1024;
@@ -268,16 +254,14 @@ repository = "https://github.com/foo/bar"
 
     #[test]
     fn process_tarball_test_manifest_with_boolean_readme() {
+        let manifest = br#"
+            [package]
+            name = "foo"
+            version = "0.0.1"
+            readme = false
+            "#;
         let tarball = TarballBuilder::new()
-            .add_file(
-                "foo-0.0.1/Cargo.toml",
-                br#"
-                [package]
-                name = "foo"
-                version = "0.0.1"
-                readme = false
-                "#,
-            )
+            .add_file("foo-0.0.1/Cargo.toml", manifest)
             .build();
 
         let limit = 512 * 1024 * 1024;
@@ -289,16 +273,14 @@ repository = "https://github.com/foo/bar"
 
     #[test]
     fn process_tarball_test_lowercase_manifest() {
+        let manifest = br#"
+            [package]
+            name = "foo"
+            version = "0.0.1"
+            repository = "https://github.com/foo/bar"
+            "#;
         let tarball = TarballBuilder::new()
-            .add_file(
-                "foo-0.0.1/cargo.toml",
-                br#"
-[package]
-name = "foo"
-version = "0.0.1"
-repository = "https://github.com/foo/bar"
-"#,
-            )
+            .add_file("foo-0.0.1/cargo.toml", manifest)
             .build();
 
         let limit = 512 * 1024 * 1024;
@@ -311,16 +293,14 @@ repository = "https://github.com/foo/bar"
     #[test]
     fn process_tarball_test_incorrect_manifest_casing() {
         for file in ["CARGO.TOML", "Cargo.Toml"] {
+            let manifest = br#"
+                [package]
+                name = "foo"
+                version = "0.0.1"
+                repository = "https://github.com/foo/bar"
+                "#;
             let tarball = TarballBuilder::new()
-                .add_file(
-                    &format!("foo-0.0.1/{file}"),
-                    br#"
-[package]
-name = "foo"
-version = "0.0.1"
-repository = "https://github.com/foo/bar"
-"#,
-                )
+                .add_file(&format!("foo-0.0.1/{file}"), manifest)
                 .build();
 
             let limit = 512 * 1024 * 1024;
@@ -336,6 +316,13 @@ repository = "https://github.com/foo/bar"
 
     #[test]
     fn process_tarball_test_multiple_manifests() {
+        let manifest = br#"
+            [package]
+            name = "foo"
+            version = "0.0.1"
+            repository = "https://github.com/foo/bar"
+            "#;
+
         for files in [
             vec!["cargo.toml", "Cargo.toml"],
             vec!["Cargo.toml", "Cargo.Toml"],
@@ -344,15 +331,7 @@ repository = "https://github.com/foo/bar"
             let tarball = files
                 .iter()
                 .fold(TarballBuilder::new(), |builder, file| {
-                    builder.add_file(
-                        &format!("foo-0.0.1/{file}"),
-                        br#"
-[package]
-name = "foo"
-version = "0.0.1"
-repository = "https://github.com/foo/bar"
-"#,
-                    )
+                    builder.add_file(&format!("foo-0.0.1/{file}"), manifest)
                 })
                 .build();
 
