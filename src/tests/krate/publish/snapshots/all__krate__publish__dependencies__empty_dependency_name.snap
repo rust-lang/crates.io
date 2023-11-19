@@ -1,0 +1,11 @@
+---
+source: src/tests/krate/publish/dependencies.rs
+expression: response.into_json()
+---
+{
+  "errors": [
+    {
+      "detail": "dependency name cannot be empty"
+    }
+  ]
+}

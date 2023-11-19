@@ -53,6 +53,78 @@ fn invalid_dependency_rename() {
 }
 
 #[test]
+fn invalid_dependency_name_starts_with_digit() {
+    let (app, _, user, token) = TestApp::full().with_token();
+
+    app.db(|conn| {
+        // Insert a crate directly into the database so that new-krate can depend on it
+        CrateBuilder::new("package-name", user.as_model().id).expect_build(conn);
+    });
+
+    let response = token.publish_crate(
+        PublishBuilder::new("new-krate", "1.0.0")
+            .dependency(DependencyBuilder::new("package-name").rename("1-foo")),
+    );
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json());
+    assert_that!(app.stored_files(), empty());
+}
+
+#[test]
+fn invalid_dependency_name_contains_unicode_chars() {
+    let (app, _, user, token) = TestApp::full().with_token();
+
+    app.db(|conn| {
+        // Insert a crate directly into the database so that new-krate can depend on it
+        CrateBuilder::new("package-name", user.as_model().id).expect_build(conn);
+    });
+
+    let response = token.publish_crate(
+        PublishBuilder::new("new-krate", "1.0.0")
+            .dependency(DependencyBuilder::new("package-name").rename("foo-🦀-bar")),
+    );
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json());
+    assert_that!(app.stored_files(), empty());
+}
+
+#[test]
+fn invalid_too_long_dependency_name() {
+    let (app, _, user, token) = TestApp::full().with_token();
+
+    app.db(|conn| {
+        // Insert a crate directly into the database so that new-krate can depend on it
+        CrateBuilder::new("package-name", user.as_model().id).expect_build(conn);
+    });
+
+    let response =
+        token
+            .publish_crate(PublishBuilder::new("new-krate", "1.0.0").dependency(
+                DependencyBuilder::new("package-name").rename("f".repeat(65).as_str()),
+            ));
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json());
+    assert_that!(app.stored_files(), empty());
+}
+
+#[test]
+fn empty_dependency_name() {
+    let (app, _, user, token) = TestApp::full().with_token();
+
+    app.db(|conn| {
+        // Insert a crate directly into the database so that new-krate can depend on it
+        CrateBuilder::new("package-name", user.as_model().id).expect_build(conn);
+    });
+    let response = token.publish_crate(
+        PublishBuilder::new("new-krate", "1.0.0")
+            .dependency(DependencyBuilder::new("package-name").rename("")),
+    );
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json());
+    assert_that!(app.stored_files(), empty());
+}
+
+#[test]
 fn new_with_underscore_renamed_dependency() {
     let (app, _, user, token) = TestApp::full().with_token();
 
