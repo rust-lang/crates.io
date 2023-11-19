@@ -622,7 +622,7 @@ pub fn validate_dependency(dep: &EncodableCrateDependency) -> AppResult<()> {
     }
 
     if let Some(toml_name) = &dep.explicit_name_in_toml {
-        Crate::valid_dependency_name(toml_name).map_err(|error| cargo_err(&error))?;
+        Crate::validate_dependency_name(toml_name).map_err(|error| cargo_err(&error))?;
     }
 
     Ok(())

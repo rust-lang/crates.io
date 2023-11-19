@@ -206,18 +206,18 @@ impl Crate {
                 .unwrap_or(false)
     }
 
-    pub fn valid_dependency_name(name: &str) -> Result<(), InvalidDependencyName> {
+    pub fn validate_dependency_name(name: &str) -> Result<(), InvalidDependencyName> {
         if name.chars().count() > MAX_NAME_LENGTH {
             return Err(InvalidDependencyName::TooLong(name.into()));
         }
-        Crate::valid_dependency_ident(name)
+        Crate::validate_dependency_ident(name)
     }
 
     // Checks that the name is a valid dependency name.
     // 1. The name must be non-empty.
     // 2. The first character must be an ASCII character or `_`.
     // 3. The remaining characters must be ASCII alphanumerics or `-` or `_`.
-    fn valid_dependency_ident(name: &str) -> Result<(), InvalidDependencyName> {
+    fn validate_dependency_ident(name: &str) -> Result<(), InvalidDependencyName> {
         if name.is_empty() {
             return Err(InvalidDependencyName::Empty);
         }
@@ -271,10 +271,10 @@ impl Crate {
     pub fn validate_feature(name: &str) -> Result<(), InvalidFeature> {
         if let Some((dep, dep_feat)) = name.split_once('/') {
             let dep = dep.strip_suffix('?').unwrap_or(dep);
-            Crate::valid_dependency_name(dep)?;
+            Crate::validate_dependency_name(dep)?;
             Crate::validate_feature_name(dep_feat)
         } else if let Some((_, dep)) = name.split_once("dep:") {
-            Crate::valid_dependency_name(dep)?;
+            Crate::validate_dependency_name(dep)?;
             return Ok(());
         } else {
             Crate::validate_feature_name(name)
@@ -587,36 +587,36 @@ mod tests {
     }
 
     #[test]
-    fn valid_dependency_name() {
+    fn validate_dependency_name() {
         use super::{InvalidDependencyName, MAX_NAME_LENGTH};
 
-        assert_ok!(Crate::valid_dependency_name("foo"));
+        assert_ok!(Crate::validate_dependency_name("foo"));
         assert_err_eq!(
-            Crate::valid_dependency_name("京"),
+            Crate::validate_dependency_name("京"),
             InvalidDependencyName::Start('京', "京".into())
         );
         assert_err_eq!(
-            Crate::valid_dependency_name(""),
+            Crate::validate_dependency_name(""),
             InvalidDependencyName::Empty
         );
         assert_err_eq!(
-            Crate::valid_dependency_name("💝"),
+            Crate::validate_dependency_name("💝"),
             InvalidDependencyName::Start('💝', "💝".into())
         );
-        assert_ok!(Crate::valid_dependency_name("foo_underscore"));
-        assert_ok!(Crate::valid_dependency_name("foo-dash"));
+        assert_ok!(Crate::validate_dependency_name("foo_underscore"));
+        assert_ok!(Crate::validate_dependency_name("foo-dash"));
         assert_err_eq!(
-            Crate::valid_dependency_name("foo+plus"),
+            Crate::validate_dependency_name("foo+plus"),
             InvalidDependencyName::Char('+', "foo+plus".into())
         );
         // Starting with an underscore is a valid dependency name.
-        assert_ok!(Crate::valid_dependency_name("_foo"));
+        assert_ok!(Crate::validate_dependency_name("_foo"));
         assert_err_eq!(
-            Crate::valid_dependency_name("-foo"),
+            Crate::validate_dependency_name("-foo"),
             InvalidDependencyName::Start('-', "-foo".into())
         );
         assert_err_eq!(
-            Crate::valid_dependency_name("o".repeat(MAX_NAME_LENGTH + 1).as_str()),
+            Crate::validate_dependency_name("o".repeat(MAX_NAME_LENGTH + 1).as_str()),
             InvalidDependencyName::TooLong("o".repeat(MAX_NAME_LENGTH + 1).as_str().into())
         );
     }
