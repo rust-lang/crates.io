@@ -207,17 +207,37 @@ impl Crate {
     }
 
     pub fn valid_dependency_name(name: &str) -> bool {
-        let under_max_length = name.chars().take(MAX_NAME_LENGTH + 1).count() <= MAX_NAME_LENGTH;
-        Crate::valid_dependency_ident(name) && under_max_length
+        if name.chars().count() > MAX_NAME_LENGTH {
+            return false;
+        }
+        Crate::valid_dependency_ident(name)
     }
 
+    // Checks that the name is a valid dependency name.
+    // 1. The name must be non-empty.
+    // 2. The first character must be an ASCII character or `_`.
+    // 3. The remaining characters must be ASCII alphanumerics or `-` or `_`.
     fn valid_dependency_ident(name: &str) -> bool {
-        Self::valid_feature_prefix(name)
-            && name
-                .chars()
-                .next()
-                .map(|n| n.is_alphabetic() || n == '_')
-                .unwrap_or(false)
+        if name.is_empty() {
+            return false;
+        }
+        let mut chars = name.chars();
+        if let Some(ch) = chars.next() {
+            if ch.is_ascii_digit() {
+                return false;
+            }
+            if !(ch.is_ascii_alphabetic() || ch == '_') {
+                return false;
+            }
+        }
+
+        for ch in chars {
+            if !(ch.is_ascii_alphanumeric() || ch == '-' || ch == '_') {
+                return false;
+            }
+        }
+
+        true
     }
 
     /// Validates the THIS parts of `features = ["THIS", "and/THIS", "dep:THIS", "dep?/THIS"]`.
