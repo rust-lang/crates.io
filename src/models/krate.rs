@@ -622,7 +622,7 @@ mod tests {
     }
 
     #[test]
-    fn valid_feature_names() {
+    fn validate_feature_names() {
         use super::InvalidDependencyName;
         use super::InvalidFeature;
 
