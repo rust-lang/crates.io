@@ -259,9 +259,9 @@ impl EncodableCrate {
         let keyword_ids = keywords.map(|kws| kws.iter().map(|kw| kw.keyword.clone()).collect());
         let category_ids = categories.map(|cats| cats.iter().map(|cat| cat.slug.clone()).collect());
         let badges = badges.map(|_| vec![]);
-        let homepage = Self::remove_blocked_urls(homepage);
-        let documentation = Self::remove_blocked_urls(documentation);
-        let repository = Self::remove_blocked_urls(repository);
+        let homepage = remove_blocked_urls(homepage);
+        let documentation = remove_blocked_urls(documentation);
+        let repository = remove_blocked_urls(repository);
 
         let max_version = top_versions
             .and_then(|v| v.highest.as_ref())
@@ -336,33 +336,33 @@ impl EncodableCrate {
             recent_downloads,
         )
     }
+}
 
-    /// Return `None` if the URL host matches a blocked host
-    fn remove_blocked_urls(url: Option<String>) -> Option<String> {
-        // Handles if URL is None
-        let url = match url {
-            Some(url) => url,
-            None => return None,
-        };
+/// Return `None` if the URL host matches a blocked host
+fn remove_blocked_urls(url: Option<String>) -> Option<String> {
+    // Handles if URL is None
+    let url = match url {
+        Some(url) => url,
+        None => return None,
+    };
 
-        // Handles unsuccessful parsing of URL
-        let parsed_url = match Url::parse(&url) {
-            Ok(parsed_url) => parsed_url,
-            Err(_) => return None,
-        };
+    // Handles unsuccessful parsing of URL
+    let parsed_url = match Url::parse(&url) {
+        Ok(parsed_url) => parsed_url,
+        Err(_) => return None,
+    };
 
-        // Extract host string from URL
-        let url_host = match parsed_url.host_str() {
-            Some(url_host) => url_host,
-            None => return None,
-        };
+    // Extract host string from URL
+    let url_host = match parsed_url.host_str() {
+        Some(url_host) => url_host,
+        None => return None,
+    };
 
-        // Match URL host against blocked host array elements
-        if domain_is_blocked(url_host) {
-            None
-        } else {
-            Some(url)
-        }
+    // Match URL host against blocked host array elements
+    if domain_is_blocked(url_host) {
+        None
+    } else {
+        Some(url)
     }
 }
 
@@ -883,21 +883,18 @@ mod tests {
 
     #[test]
     fn domain_blocked_no_url_provided() {
-        assert_eq!(EncodableCrate::remove_blocked_urls(None), None);
+        assert_eq!(remove_blocked_urls(None), None);
     }
 
     #[test]
     fn domain_blocked_invalid_url() {
-        assert_eq!(
-            EncodableCrate::remove_blocked_urls(Some(String::from("not a url"))),
-            None
-        );
+        assert_eq!(remove_blocked_urls(Some(String::from("not a url"))), None);
     }
 
     #[test]
     fn domain_blocked_url_contains_partial_match() {
         assert_eq!(
-            EncodableCrate::remove_blocked_urls(Some(String::from("http://rust-ci.organists.com")),),
+            remove_blocked_urls(Some(String::from("http://rust-ci.organists.com")),),
             Some(String::from("http://rust-ci.organists.com"))
         );
     }
@@ -905,7 +902,7 @@ mod tests {
     #[test]
     fn domain_blocked_url() {
         assert_eq!(
-            EncodableCrate::remove_blocked_urls(Some(String::from(
+            remove_blocked_urls(Some(String::from(
                 "http://rust-ci.org/crate/crate-0.1/doc/crate-0.1",
             ),),),
             None
@@ -915,7 +912,7 @@ mod tests {
     #[test]
     fn domain_blocked_subdomain() {
         assert_eq!(
-            EncodableCrate::remove_blocked_urls(Some(String::from(
+            remove_blocked_urls(Some(String::from(
                 "http://www.rust-ci.org/crate/crate-0.1/doc/crate-0.1",
             ),),),
             None
@@ -925,7 +922,7 @@ mod tests {
     #[test]
     fn documentation_blocked_non_subdomain() {
         let input = Some(String::from("http://foorust-ci.org/"));
-        let result = EncodableCrate::remove_blocked_urls(input);
+        let result = remove_blocked_urls(input);
         assert_some_eq!(result, "http://foorust-ci.org/");
     }
 }
