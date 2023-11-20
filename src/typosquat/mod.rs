@@ -1,4 +1,5 @@
 mod cache;
+mod checks;
 mod config;
 mod database;
 
