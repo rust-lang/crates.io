@@ -1,5 +1,5 @@
 use aws_credential_types::Credentials;
-use aws_sdk_cloudfront::config::Region;
+use aws_sdk_cloudfront::config::{BehaviorVersion, Region};
 use aws_sdk_cloudfront::error::SdkError;
 use aws_sdk_cloudfront::types::{InvalidationBatch, Paths};
 use aws_sdk_cloudfront::{Client, Config};
@@ -22,6 +22,7 @@ impl CloudFront {
         let credentials = Credentials::from_keys(access_key, secret_key, None);
 
         let config = Config::builder()
+            .behavior_version(BehaviorVersion::v2023_11_09())
             .region(Region::new("us-east-1"))
             .credentials_provider(credentials)
             .build();
