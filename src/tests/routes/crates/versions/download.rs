@@ -1,5 +1,7 @@
 use crate::builders::{CrateBuilder, VersionBuilder};
 use crate::util::{RequestHelper, TestApp};
+use http::StatusCode;
+use insta::assert_snapshot;
 
 #[test]
 fn download_nonexistent_version_of_existing_crate_404s() {
@@ -16,7 +18,9 @@ fn download_nonexistent_version_of_existing_crate_404s() {
 
 #[test]
 fn download_noncanonical_crate_name() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init()
+        .with_config(|config| config.reject_non_canonical_downloads = false)
+        .with_user();
     let user = user.as_model();
 
     app.db(|conn| {
@@ -29,6 +33,26 @@ fn download_noncanonical_crate_name() {
     // and assert that the correct download link is returned.
     anon.get::<()>("/api/v1/crates/foo-download/1.0.0/download")
         .assert_redirect_ends_with("/crates/foo_download/foo_download-1.0.0.crate");
+}
+
+#[test]
+fn rejected_non_canonical_download() {
+    let (app, anon, user) = TestApp::init()
+        .with_config(|config| config.reject_non_canonical_downloads = true)
+        .with_user();
+
+    app.db(|conn| {
+        let user = user.as_model();
+        CrateBuilder::new("foo_download", user.id)
+            .version(VersionBuilder::new("1.0.0"))
+            .expect_build(conn);
+    });
+
+    // Request download for "foo-download" with a dash instead of an underscore,
+    // and assert that the correct download link is returned.
+    let response = anon.get::<()>("/api/v1/crates/foo-download/1.0.0/download");
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_snapshot!(response.into_text());
 }
 
 #[test]
