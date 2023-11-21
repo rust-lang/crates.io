@@ -77,7 +77,7 @@ pub fn server_error<S: ToString>(error: S) -> BoxedAppError {
 }
 
 /// Returns an error with status 503 and the provided description as JSON
-pub fn service_unavailable<S: ToString + ?Sized>(error: &S) -> BoxedAppError {
+pub fn service_unavailable<S: ToString>(error: S) -> BoxedAppError {
     Box::new(json::ServiceUnavailable(error.to_string()))
 }
 
