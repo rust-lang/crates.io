@@ -254,7 +254,9 @@ impl EncodableCrate {
         let keyword_ids = keywords.map(|kws| kws.iter().map(|kw| kw.keyword.clone()).collect());
         let category_ids = categories.map(|cats| cats.iter().map(|cat| cat.slug.clone()).collect());
         let badges = badges.map(|_| vec![]);
+        let homepage = Self::remove_blocked_documentation_urls(homepage);
         let documentation = Self::remove_blocked_documentation_urls(documentation);
+        let repository = Self::remove_blocked_documentation_urls(repository);
 
         let max_version = top_versions
             .and_then(|v| v.highest.as_ref())
