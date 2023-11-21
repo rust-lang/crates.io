@@ -231,9 +231,13 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         if num_features > max_features {
             return Err(cargo_err(format!(
                 "crates.io only allows a maximum number of {max_features} \
-                features, but your crate is declaring {num_features} features. \
-                If you have a valid use case needing more features, please \
-                send us an email to help@crates.io to discuss the details."
+                features, but your crate is declaring {num_features} features.\n\
+                \n\
+                Take a look at https://blog.rust-lang.org/2023/10/26/broken-badges-and-23k-keywords.html \
+                to understand why this restriction was introduced.\n\
+                \n\
+                If you have a use case that requires an increase of this limit, \
+                please send us an email to help@crates.io to discuss the details."
             )));
         }
 
@@ -246,9 +250,13 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                     "crates.io only allows a maximum number of {max_features} \
                     features or dependencies that another feature can enable, \
                     but the \"{key}\" feature of your crate is enabling \
-                    {num_features} features or dependencies. If you have a \
-                    valid use case needing to increase this limit, please send \
-                    us an email to help@crates.io to discuss the details."
+                    {num_features} features or dependencies.\n\
+                    \n\
+                    Take a look at https://blog.rust-lang.org/2023/10/26/broken-badges-and-23k-keywords.html \
+                    to understand why this restriction was introduced.\n\
+                    \n\
+                    If you have a use case that requires an increase of this limit, \
+                    please send us an email to help@crates.io to discuss the details."
                 )));
             }
 
