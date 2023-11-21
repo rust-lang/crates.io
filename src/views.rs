@@ -15,7 +15,12 @@ pub use self::krate_publish::{EncodableCrateDependency, PublishMetadata};
 
 /// Hosts in this list are known to not be hosting documentation,
 /// and are possibly of malicious intent e.g. ad tracking networks, etc.
-const DOCUMENTATION_BLOCKLIST: &[&str] = &["rust-ci.org", "rustless.org", "ironframework.io"];
+const DOMAIN_BLOCKLIST: &[&str] = &[
+    "rust-ci.org",
+    "rustless.org",
+    "ironframework.io",
+    "nebulanet.cc",
+];
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct EncodableCategory {
@@ -254,7 +259,9 @@ impl EncodableCrate {
         let keyword_ids = keywords.map(|kws| kws.iter().map(|kw| kw.keyword.clone()).collect());
         let category_ids = categories.map(|cats| cats.iter().map(|cat| cat.slug.clone()).collect());
         let badges = badges.map(|_| vec![]);
-        let documentation = Self::remove_blocked_documentation_urls(documentation);
+        let homepage = Self::remove_blocked_urls(homepage);
+        let documentation = Self::remove_blocked_urls(documentation);
+        let repository = Self::remove_blocked_urls(repository);
 
         let max_version = top_versions
             .and_then(|v| v.highest.as_ref())
@@ -330,27 +337,27 @@ impl EncodableCrate {
         )
     }
 
-    /// Return `None` if the documentation URL host matches a blocked host
-    fn remove_blocked_documentation_urls(url: Option<String>) -> Option<String> {
-        // Handles if documentation URL is None
+    /// Return `None` if the URL host matches a blocked host
+    fn remove_blocked_urls(url: Option<String>) -> Option<String> {
+        // Handles if URL is None
         let url = match url {
             Some(url) => url,
             None => return None,
         };
 
-        // Handles unsuccessful parsing of documentation URL
+        // Handles unsuccessful parsing of URL
         let parsed_url = match Url::parse(&url) {
             Ok(parsed_url) => parsed_url,
             Err(_) => return None,
         };
 
-        // Extract host string from documentation URL
+        // Extract host string from URL
         let url_host = match parsed_url.host_str() {
             Some(url_host) => url_host,
             None => return None,
         };
 
-        // Match documentation URL host against blocked host array elements
+        // Match URL host against blocked host array elements
         if domain_is_blocked(url_host) {
             None
         } else {
@@ -360,7 +367,7 @@ impl EncodableCrate {
 }
 
 fn domain_is_blocked(domain: &str) -> bool {
-    DOCUMENTATION_BLOCKLIST
+    DOMAIN_BLOCKLIST
         .iter()
         .any(|blocked| &domain == blocked || domain_is_subdomain(domain, blocked))
 }
@@ -875,35 +882,30 @@ mod tests {
     }
 
     #[test]
-    fn documentation_blocked_no_url_provided() {
+    fn domain_blocked_no_url_provided() {
+        assert_eq!(EncodableCrate::remove_blocked_urls(None), None);
+    }
+
+    #[test]
+    fn domain_blocked_invalid_url() {
         assert_eq!(
-            EncodableCrate::remove_blocked_documentation_urls(None),
+            EncodableCrate::remove_blocked_urls(Some(String::from("not a url"))),
             None
         );
     }
 
     #[test]
-    fn documentation_blocked_invalid_url() {
+    fn domain_blocked_url_contains_partial_match() {
         assert_eq!(
-            EncodableCrate::remove_blocked_documentation_urls(Some(String::from("not a url"))),
-            None
-        );
-    }
-
-    #[test]
-    fn documentation_blocked_url_contains_partial_match() {
-        assert_eq!(
-            EncodableCrate::remove_blocked_documentation_urls(Some(String::from(
-                "http://rust-ci.organists.com"
-            )),),
+            EncodableCrate::remove_blocked_urls(Some(String::from("http://rust-ci.organists.com")),),
             Some(String::from("http://rust-ci.organists.com"))
         );
     }
 
     #[test]
-    fn documentation_blocked_url() {
+    fn domain_blocked_url() {
         assert_eq!(
-            EncodableCrate::remove_blocked_documentation_urls(Some(String::from(
+            EncodableCrate::remove_blocked_urls(Some(String::from(
                 "http://rust-ci.org/crate/crate-0.1/doc/crate-0.1",
             ),),),
             None
@@ -911,9 +913,9 @@ mod tests {
     }
 
     #[test]
-    fn documentation_blocked_subdomain() {
+    fn domain_blocked_subdomain() {
         assert_eq!(
-            EncodableCrate::remove_blocked_documentation_urls(Some(String::from(
+            EncodableCrate::remove_blocked_urls(Some(String::from(
                 "http://www.rust-ci.org/crate/crate-0.1/doc/crate-0.1",
             ),),),
             None
@@ -923,7 +925,7 @@ mod tests {
     #[test]
     fn documentation_blocked_non_subdomain() {
         let input = Some(String::from("http://foorust-ci.org/"));
-        let result = EncodableCrate::remove_blocked_documentation_urls(input);
+        let result = EncodableCrate::remove_blocked_urls(input);
         assert_some_eq!(result, "http://foorust-ci.org/");
     }
 }
