@@ -84,7 +84,7 @@ pub async fn new(app: AppState, req: BytesRequest) -> AppResult<Json<Value>> {
         }
 
         let new: NewApiTokenRequest = json::from_slice(req.body())
-            .map_err(|e| bad_request(&format!("invalid new token request: {e:?}")))?;
+            .map_err(|e| bad_request(format!("invalid new token request: {e:?}")))?;
 
         let name = &new.api_token.name;
         if name.is_empty() {

@@ -52,7 +52,7 @@ pub fn cargo_err<S: ToString>(error: S) -> BoxedAppError {
 // non-200 response codes for its stores to work properly.
 
 /// Return an error with status 400 and the provided description as JSON
-pub fn bad_request<S: ToString + ?Sized>(error: &S) -> BoxedAppError {
+pub fn bad_request<S: ToString>(error: S) -> BoxedAppError {
     Box::new(json::BadRequest(error.to_string()))
 }
 

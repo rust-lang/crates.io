@@ -85,20 +85,20 @@ async fn verify_github_signature(
         .get("GITHUB-PUBLIC-KEY-IDENTIFIER")
         .ok_or_else(|| bad_request("missing HTTP header: GITHUB-PUBLIC-KEY-IDENTIFIER"))?
         .to_str()
-        .map_err(|e| bad_request(&format!("failed to decode HTTP header: {e:?}")))?;
+        .map_err(|e| bad_request(format!("failed to decode HTTP header: {e:?}")))?;
 
     let sig = headers
         .get("GITHUB-PUBLIC-KEY-SIGNATURE")
         .ok_or_else(|| bad_request("missing HTTP header: GITHUB-PUBLIC-KEY-SIGNATURE"))?;
     let sig = general_purpose::STANDARD
         .decode(sig)
-        .map_err(|e| bad_request(&format!("failed to decode signature as base64: {e:?}")))?;
+        .map_err(|e| bad_request(format!("failed to decode signature as base64: {e:?}")))?;
     let sig = p256::ecdsa::Signature::from_der(&sig)
-        .map_err(|e| bad_request(&format!("failed to parse signature from ASN.1 DER: {e:?}")))?;
+        .map_err(|e| bad_request(format!("failed to parse signature from ASN.1 DER: {e:?}")))?;
 
     let public_keys = get_public_keys(state)
         .await
-        .map_err(|e| bad_request(&format!("failed to fetch GitHub public keys: {e:?}")))?;
+        .map_err(|e| bad_request(format!("failed to fetch GitHub public keys: {e:?}")))?;
 
     let key = public_keys
         .iter()
@@ -118,7 +118,7 @@ async fn verify_github_signature(
 
     VerifyingKey::from(public_key)
         .verify(json, &sig)
-        .map_err(|e| bad_request(&format!("invalid signature: {e:?}")))?;
+        .map_err(|e| bad_request(format!("invalid signature: {e:?}")))?;
 
     debug!(
         key_id = %key.key_identifier,
@@ -224,10 +224,10 @@ pub async fn verify(
 ) -> AppResult<Json<Vec<GitHubSecretAlertFeedback>>> {
     verify_github_signature(&headers, &state, &body)
         .await
-        .map_err(|e| bad_request(&format!("failed to verify request signature: {e:?}")))?;
+        .map_err(|e| bad_request(format!("failed to verify request signature: {e:?}")))?;
 
     let alerts: Vec<GitHubSecretAlert> = json::from_slice(&body)
-        .map_err(|e| bad_request(&format!("invalid secret alert request: {e:?}")))?;
+        .map_err(|e| bad_request(format!("invalid secret alert request: {e:?}")))?;
 
     conduit_compat(move || {
         let feedback = alerts
