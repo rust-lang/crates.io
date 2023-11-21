@@ -279,9 +279,9 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-cloudfront"
-version = "0.39.0"
+version = "0.39.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2c7ecb7f100393d16d2b09726b05b4ac2d6a3a96653952b8f5309d0458458d3b"
+checksum = "9e78d51555b3970a4d1f2d47d44e5ba68e05a314e8c1785653e612b72bde93a3"
 dependencies = [
  "aws-credential-types",
  "aws-http",
