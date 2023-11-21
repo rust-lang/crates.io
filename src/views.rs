@@ -15,7 +15,12 @@ pub use self::krate_publish::{EncodableCrateDependency, PublishMetadata};
 
 /// Hosts in this list are known to not be hosting documentation,
 /// and are possibly of malicious intent e.g. ad tracking networks, etc.
-const DOMAIN_BLOCKLIST: &[&str] = &["rust-ci.org", "rustless.org", "ironframework.io"];
+const DOMAIN_BLOCKLIST: &[&str] = &[
+    "rust-ci.org",
+    "rustless.org",
+    "ironframework.io",
+    "nebulanet.cc",
+];
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct EncodableCategory {
