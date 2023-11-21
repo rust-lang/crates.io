@@ -16,7 +16,7 @@ use tokio::runtime::Handle;
 use url::Url;
 
 use crate::controllers::cargo_prelude::*;
-use crate::models::krate::{InvalidDependencyName, MAX_NAME_LENGTH};
+use crate::models::krate::MAX_NAME_LENGTH;
 use crate::models::{
     insert_version_owner_action, Category, Crate, DependencyKind, Keyword, NewCrate, NewVersion,
     Rights, VersionAction,
@@ -622,9 +622,7 @@ pub fn validate_dependency(dep: &EncodableCrateDependency) -> AppResult<()> {
     }
 
     if let Some(toml_name) = &dep.explicit_name_in_toml {
-        if !Crate::valid_dependency_name(toml_name) {
-            return Err(cargo_err(&InvalidDependencyName(toml_name.into())));
-        }
+        Crate::validate_dependency_name(toml_name).map_err(|error| cargo_err(&error))?;
     }
 
     Ok(())
