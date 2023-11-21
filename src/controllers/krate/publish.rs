@@ -51,10 +51,10 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
     let (json_bytes, tarball_bytes) = split_body(bytes)?;
 
     let metadata: PublishMetadata = serde_json::from_slice(&json_bytes)
-        .map_err(|e| cargo_err(&format_args!("invalid upload request: {e}")))?;
+        .map_err(|e| cargo_err(format_args!("invalid upload request: {e}")))?;
 
     if !Crate::valid_name(&metadata.name) {
-        return Err(cargo_err(&format_args!(
+        return Err(cargo_err(format_args!(
             "\"{}\" is an invalid crate name (crate names must start with a \
             letter, contain only letters, numbers, hyphens, or underscores and \
             have at most {MAX_NAME_LENGTH} characters)",
@@ -65,7 +65,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
     let version = match semver::Version::parse(&metadata.vers) {
         Ok(parsed) => parsed,
         Err(_) => {
-            return Err(cargo_err(&format_args!(
+            return Err(cargo_err(format_args!(
                 "\"{}\" is an invalid semver version",
                 metadata.vers
             )))
@@ -104,7 +104,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
 
         let verified_email_address = user.verified_email(conn)?;
         let verified_email_address = verified_email_address.ok_or_else(|| {
-            cargo_err(&format!(
+            cargo_err(format!(
                 "A verified email address is required to publish crates to crates.io. \
              Visit https://{}/settings/profile to set and verify your email address.",
                 app.config.domain_name,
@@ -128,7 +128,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         );
 
         if content_length > maximums.max_upload_size {
-            return Err(cargo_err(&format_args!(
+            return Err(cargo_err(format_args!(
                 "max upload size is: {}",
                 maximums.max_upload_size
             )));
@@ -169,7 +169,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         }
 
         if let Some(ref license) = license {
-            parse_license_expr(license).map_err(|e| cargo_err(&format_args!(
+            parse_license_expr(license).map_err(|e| cargo_err(format_args!(
                 "unknown or invalid license expression; \
                 see http://opensource.org/licenses for options, \
                 and http://spdx.org/licenses/ for their identifiers\n\
@@ -205,11 +205,11 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
 
         for keyword in keywords.iter() {
             if keyword.len() > 20 {
-                return Err(cargo_err(&format!(
+                return Err(cargo_err(format!(
                     "\"{keyword}\" is an invalid keyword (keywords must have less than 20 characters)"
                 )));
             } else if !Keyword::valid_name(keyword) {
-                return Err(cargo_err(&format!("\"{keyword}\" is an invalid keyword")));
+                return Err(cargo_err(format!("\"{keyword}\" is an invalid keyword")));
             }
         }
 
@@ -229,7 +229,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         let features = tarball_info.manifest.features.unwrap_or_default();
         let num_features = features.len();
         if num_features > max_features {
-            return Err(cargo_err(&format!(
+            return Err(cargo_err(format!(
                 "crates.io only allows a maximum number of {max_features} \
                 features, but your crate is declaring {num_features} features. \
                 If you have a valid use case needing more features, please \
@@ -238,11 +238,11 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         }
 
         for (key, values) in features.iter() {
-            Crate::validate_feature_name(key).map_err(|error| cargo_err(&error))?;
+            Crate::validate_feature_name(key).map_err(cargo_err)?;
 
             let num_features = values.len();
             if num_features > max_features {
-                return Err(cargo_err(&format!(
+                return Err(cargo_err(format!(
                     "crates.io only allows a maximum number of {max_features} \
                     features or dependencies that another feature can enable, \
                     but the \"{key}\" feature of your crate is enabling \
@@ -253,7 +253,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             }
 
             for value in values.iter() {
-                Crate::validate_feature(value).map_err(|error| cargo_err(&error))?;
+                Crate::validate_feature(value).map_err(cargo_err)?;
             }
         }
 
@@ -294,7 +294,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             }
 
             if krate.name != *name {
-                return Err(cargo_err(&format_args!(
+                return Err(cargo_err(format_args!(
                     "crate was previously named `{}`",
                     krate.name
                 )));
@@ -438,7 +438,7 @@ fn split_body(mut bytes: Bytes) -> AppResult<(Bytes, Bytes)> {
 
     let json_len = bytes.get_u32_le() as usize;
     if json_len > bytes.len() {
-        return Err(cargo_err(&format!(
+        return Err(cargo_err(format!(
             "invalid metadata length for remaining payload: {json_len}"
         )));
     }
@@ -452,7 +452,7 @@ fn split_body(mut bytes: Bytes) -> AppResult<(Bytes, Bytes)> {
 
     let tarball_len = bytes.get_u32_le() as usize;
     if tarball_len > bytes.len() {
-        return Err(cargo_err(&format!(
+        return Err(cargo_err(format!(
             "invalid tarball length for remaining payload: {tarball_len}"
         )));
     }
@@ -477,14 +477,14 @@ fn validate_url(url: Option<&str>, field: &str) -> AppResult<()> {
     // Manually check the string, as `Url::parse` may normalize relative URLs
     // making it difficult to ensure that both slashes are present.
     if !url.starts_with("http://") && !url.starts_with("https://") {
-        return Err(cargo_err(&format_args!(
+        return Err(cargo_err(format_args!(
             "URL for field `{field}` must begin with http:// or https:// (url: {url})"
         )));
     }
 
     // Ensure the entire URL parses as well
     Url::parse(url)
-        .map_err(|_| cargo_err(&format_args!("`{field}` is not a valid url: `{url}`")))?;
+        .map_err(|_| cargo_err(format_args!("`{field}` is not a valid url: `{url}`")))?;
     Ok(())
 }
 
@@ -587,7 +587,7 @@ fn convert_dependency(
 
 pub fn validate_dependency(dep: &EncodableCrateDependency) -> AppResult<()> {
     if !Crate::valid_name(&dep.name) {
-        return Err(cargo_err(&format_args!(
+        return Err(cargo_err(format_args!(
             "\"{}\" is an invalid dependency name (dependency names must \
             start with a letter, contain only letters, numbers, hyphens, \
             or underscores and have at most {MAX_NAME_LENGTH} characters)",
@@ -596,24 +596,24 @@ pub fn validate_dependency(dep: &EncodableCrateDependency) -> AppResult<()> {
     }
 
     for feature in &dep.features {
-        Crate::validate_feature(feature).map_err(|error| cargo_err(&error))?;
+        Crate::validate_feature(feature).map_err(cargo_err)?;
     }
 
     if let Some(registry) = &dep.registry {
         if !registry.is_empty() {
-            return Err(cargo_err(&format_args!("Dependency `{}` is hosted on another registry. Cross-registry dependencies are not permitted on crates.io.", dep.name)));
+            return Err(cargo_err(format_args!("Dependency `{}` is hosted on another registry. Cross-registry dependencies are not permitted on crates.io.", dep.name)));
         }
     }
 
     match semver::VersionReq::parse(&dep.version_req) {
         Err(_) => {
-            return Err(cargo_err(&format_args!(
+            return Err(cargo_err(format_args!(
                 "\"{}\" is an invalid version requirement",
                 dep.version_req
             )));
         }
         Ok(req) if req == semver::VersionReq::STAR => {
-            return Err(cargo_err(&format_args!("wildcard (`*`) dependency constraints are not allowed \
+            return Err(cargo_err(format_args!("wildcard (`*`) dependency constraints are not allowed \
                 on crates.io. Crate with this problem: `{}` See https://doc.rust-lang.org/cargo/faq.html#can-\
                 libraries-use--as-a-version-for-their-dependencies for more \
                 information", dep.name)));
@@ -622,7 +622,7 @@ pub fn validate_dependency(dep: &EncodableCrateDependency) -> AppResult<()> {
     }
 
     if let Some(toml_name) = &dep.explicit_name_in_toml {
-        Crate::validate_dependency_name(toml_name).map_err(|error| cargo_err(&error))?;
+        Crate::validate_dependency_name(toml_name).map_err(cargo_err)?;
     }
 
     Ok(())
@@ -647,7 +647,7 @@ pub fn add_dependencies(
         .map(|dep| {
             // Match only identical names to ensure the index always references the original crate name
             let Some(&crate_id) = crate_ids.get(&dep.name) else {
-                return Err(cargo_err(&format_args!(
+                return Err(cargo_err(format_args!(
                     "no known crate named `{}`",
                     dep.name
                 )));
@@ -680,16 +680,16 @@ impl From<TarballError> for BoxedAppError {
             TarballError::Malformed(err) => err.chain(cargo_err(
                 "uploaded tarball is malformed or too large when decompressed",
             )),
-            TarballError::InvalidPath(path) => cargo_err(&format!("invalid path found: {path}")),
+            TarballError::InvalidPath(path) => cargo_err(format!("invalid path found: {path}")),
             TarballError::UnexpectedSymlink(path) => {
-                cargo_err(&format!("unexpected symlink or hard link found: {path}"))
+                cargo_err(format!("unexpected symlink or hard link found: {path}"))
             }
             TarballError::IO(err) => err.into(),
             TarballError::MissingManifest => {
                 cargo_err("uploaded tarball is missing a `Cargo.toml` manifest file")
             }
             TarballError::IncorrectlyCasedManifest(name) => {
-                cargo_err(&format!(
+                cargo_err(format!(
                     "uploaded tarball is missing a `Cargo.toml` manifest file; `{name}` was found, but must be named `Cargo.toml` with that exact casing",
                     name = name.to_string_lossy(),
                 ))
@@ -705,11 +705,11 @@ impl From<TarballError> for BoxedAppError {
                     })
                     .collect::<Vec<_>>()
                     .join("`, `");
-                cargo_err(&format!(
+                cargo_err(format!(
                     "uploaded tarball contains more than one `Cargo.toml` manifest file; found `{paths}`"
                 ))
             }
-            TarballError::InvalidManifest(err) => cargo_err(&format!(
+            TarballError::InvalidManifest(err) => cargo_err(format!(
                 "failed to parse `Cargo.toml` manifest file\n\n{err}"
             )),
         }

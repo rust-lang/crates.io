@@ -49,7 +49,7 @@ fn modify_yank(
     // lifetime issues with `req`.
 
     if semver::Version::parse(version).is_err() {
-        return Err(cargo_err(&format_args!("invalid semver: {version}")));
+        return Err(cargo_err(format_args!("invalid semver: {version}")));
     }
 
     let conn = &mut *state.db_write()?;

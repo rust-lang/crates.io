@@ -24,7 +24,7 @@ pub async fn dependencies(
 ) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         if semver::Version::parse(&version).is_err() {
-            return Err(cargo_err(&format_args!("invalid semver: {version}")));
+            return Err(cargo_err(format_args!("invalid semver: {version}")));
         }
 
         let conn = &mut state.db_read()?;
@@ -61,7 +61,7 @@ pub async fn show(
 ) -> AppResult<Json<Value>> {
     conduit_compat(move || {
         if semver::Version::parse(&version).is_err() {
-            return Err(cargo_err(&format_args!("invalid semver: {version}")));
+            return Err(cargo_err(format_args!("invalid semver: {version}")));
         }
 
         let conn = &mut state.db_read()?;

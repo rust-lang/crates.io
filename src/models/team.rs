@@ -131,7 +131,7 @@ impl Team {
         }
 
         if let Some(c) = org_name.chars().find(|c| !is_allowed_char(*c)) {
-            return Err(cargo_err(&format_args!(
+            return Err(cargo_err(format_args!(
                 "organization cannot contain special \
                  characters like {c}"
             )));
@@ -141,7 +141,7 @@ impl Team {
         let team = Handle::current()
             .block_on(app.github.team_by_name(org_name, team_name, &token))
             .map_err(|_| {
-                cargo_err(&format_args!(
+                cargo_err(format_args!(
                     "could not find the github team {org_name}/{team_name}"
                 ))
             })?;

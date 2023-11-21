@@ -185,7 +185,7 @@ impl Crate {
             .filter(versions::num.eq(version))
             .first(conn)
             .map_err(|_| {
-                cargo_err(&format_args!(
+                cargo_err(format_args!(
                     "crate `{}` does not have a version `{}`",
                     self.name, version
                 ))

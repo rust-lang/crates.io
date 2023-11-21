@@ -42,7 +42,7 @@ pub type BoxedAppError = Box<dyn AppError>;
 /// This is for backwards compatibility with cargo endpoints.  For all other
 /// endpoints, use helpers like `bad_request` or `server_error` which set a
 /// correct status code.
-pub fn cargo_err<S: ToString + ?Sized>(error: &S) -> BoxedAppError {
+pub fn cargo_err<S: ToString>(error: S) -> BoxedAppError {
     Box::new(json::Ok(error.to_string()))
 }
 
