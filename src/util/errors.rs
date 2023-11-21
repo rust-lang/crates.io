@@ -72,7 +72,7 @@ pub fn not_found() -> BoxedAppError {
 }
 
 /// Returns an error with status 500 and the provided description as JSON
-pub fn server_error<S: ToString + ?Sized>(error: &S) -> BoxedAppError {
+pub fn server_error<S: ToString>(error: S) -> BoxedAppError {
     Box::new(json::ServerError(error.to_string()))
 }
 
