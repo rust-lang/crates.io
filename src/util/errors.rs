@@ -42,7 +42,7 @@ pub type BoxedAppError = Box<dyn AppError>;
 /// This is for backwards compatibility with cargo endpoints.  For all other
 /// endpoints, use helpers like `bad_request` or `server_error` which set a
 /// correct status code.
-pub fn cargo_err<S: ToString + ?Sized>(error: &S) -> BoxedAppError {
+pub fn cargo_err<S: ToString>(error: S) -> BoxedAppError {
     Box::new(json::Ok(error.to_string()))
 }
 
@@ -52,7 +52,7 @@ pub fn cargo_err<S: ToString + ?Sized>(error: &S) -> BoxedAppError {
 // non-200 response codes for its stores to work properly.
 
 /// Return an error with status 400 and the provided description as JSON
-pub fn bad_request<S: ToString + ?Sized>(error: &S) -> BoxedAppError {
+pub fn bad_request<S: ToString>(error: S) -> BoxedAppError {
     Box::new(json::BadRequest(error.to_string()))
 }
 
@@ -72,12 +72,12 @@ pub fn not_found() -> BoxedAppError {
 }
 
 /// Returns an error with status 500 and the provided description as JSON
-pub fn server_error<S: ToString + ?Sized>(error: &S) -> BoxedAppError {
+pub fn server_error<S: ToString>(error: S) -> BoxedAppError {
     Box::new(json::ServerError(error.to_string()))
 }
 
 /// Returns an error with status 503 and the provided description as JSON
-pub fn service_unavailable<S: ToString + ?Sized>(error: &S) -> BoxedAppError {
+pub fn service_unavailable<S: ToString>(error: S) -> BoxedAppError {
     Box::new(json::ServiceUnavailable(error.to_string()))
 }
 

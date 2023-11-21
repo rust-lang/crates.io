@@ -85,9 +85,9 @@ impl PaginationOptionsBuilder {
 
         let page = if let Some(s) = page_param {
             if self.enable_pages {
-                let numeric_page = s.parse().map_err(|e| bad_request(&e))?;
+                let numeric_page = s.parse().map_err(bad_request)?;
                 if numeric_page < 1 {
-                    return Err(bad_request(&format_args!(
+                    return Err(bad_request(format_args!(
                         "page indexing starts from 1, page {numeric_page} is invalid",
                     )));
                 }
@@ -123,10 +123,10 @@ impl PaginationOptionsBuilder {
 
         let per_page = params
             .get("per_page")
-            .map(|s| s.parse().map_err(|e| bad_request(&e)))
+            .map(|s| s.parse().map_err(bad_request))
             .unwrap_or(Ok(DEFAULT_PER_PAGE))?;
         if per_page > MAX_PER_PAGE {
-            return Err(bad_request(&format_args!(
+            return Err(bad_request(format_args!(
                 "cannot request more than {MAX_PER_PAGE} items",
             )));
         }

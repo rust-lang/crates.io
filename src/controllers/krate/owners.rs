@@ -133,7 +133,7 @@ fn modify_owners(
                 let login_test =
                     |owner: &Owner| owner.login().to_lowercase() == *login.to_lowercase();
                 if owners.iter().any(login_test) {
-                    return Err(cargo_err(&format_args!("`{login}` is already an owner")));
+                    return Err(cargo_err(format_args!("`{login}` is already an owner")));
                 }
                 let msg = krate.owner_add(app, conn, user, login)?;
                 msgs.push(msg);
