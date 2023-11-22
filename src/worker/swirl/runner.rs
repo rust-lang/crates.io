@@ -205,19 +205,6 @@ impl<Context: Clone + Send + 'static> Worker<Context> {
                 .and_then(std::convert::identity)
             });
 
-            // If the job panics it could leave the connection inside an inner transaction(s).
-            // Attempt to roll those back so we can mark the job as failed, but if the rollback
-            // fails then there isn't much we can do at this point so return early. `r2d2` will
-            // detect the bad state and drop it from the pool.
-            loop {
-                let depth = get_transaction_depth(conn)?;
-                if depth == initial_depth {
-                    break;
-                }
-                warn!(%initial_depth, %depth, "Rolling back a transaction due to a panic in a background task");
-                AnsiTransactionManager::rollback_transaction(conn)?;
-            }
-
             match result {
                 Ok(_) => {
                     debug!("Deleting successful job…");
