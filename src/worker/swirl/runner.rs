@@ -2,7 +2,6 @@ use crate::db::{DieselPool, DieselPooledConn, PoolError};
 use crate::worker::swirl::errors::FetchError;
 use crate::worker::swirl::{storage, BackgroundJob};
 use anyhow::anyhow;
-use diesel::connection::{AnsiTransactionManager, TransactionManager};
 use diesel::prelude::*;
 use diesel::result::Error::RollbackTransaction;
 use parking_lot::RwLock;
@@ -186,39 +185,19 @@ impl<Context: Clone + Send + 'static> Worker<Context> {
             let job_id = job.id;
             debug!("Running job…");
 
-            let initial_depth = get_transaction_depth(conn)?;
-            if initial_depth != 1 {
-                warn!(%initial_depth, "Unexpected initial transaction depth detected");
-            }
-
             let result = with_sentry_transaction(&job.job_type, || {
-                conn.transaction(|_conn| {
-                    catch_unwind(AssertUnwindSafe(|| {
-                        let job_registry = self.job_registry.read();
-                        let run_task_fn = job_registry.get(&job.job_type).ok_or_else(|| {
-                            anyhow!("Unknown job type {}", job.job_type)
-                        })?;
+                catch_unwind(AssertUnwindSafe(|| {
+                    let job_registry = self.job_registry.read();
+                    let run_task_fn = job_registry
+                        .get(&job.job_type)
+                        .ok_or_else(|| anyhow!("Unknown job type {}", job.job_type))?;
 
-                        run_task_fn(&self.environment, job.data)
-                    }))
-                    .map_err(|e| try_to_extract_panic_info(&e))
-                })
+                    run_task_fn(&self.environment, job.data)
+                }))
+                .map_err(|e| try_to_extract_panic_info(&e))
                 // TODO: Replace with flatten() once that stabilizes
                 .and_then(std::convert::identity)
             });
-
-            // If the job panics it could leave the connection inside an inner transaction(s).
-            // Attempt to roll those back so we can mark the job as failed, but if the rollback
-            // fails then there isn't much we can do at this point so return early. `r2d2` will
-            // detect the bad state and drop it from the pool.
-            loop {
-                let depth = get_transaction_depth(conn)?;
-                if depth == initial_depth {
-                    break;
-                }
-                warn!(%initial_depth, %depth, "Rolling back a transaction due to a panic in a background task");
-                AnsiTransactionManager::rollback_transaction(conn)?;
-            }
 
             match result {
                 Ok(_) => {
@@ -266,14 +245,6 @@ enum Event {
     NoJobAvailable,
     ErrorLoadingJob(diesel::result::Error),
     FailedToAcquireConnection(PoolError),
-}
-
-fn get_transaction_depth(conn: &mut PgConnection) -> QueryResult<u32> {
-    let transaction_manager = AnsiTransactionManager::transaction_manager_status_mut(conn);
-    Ok(transaction_manager
-        .transaction_depth()?
-        .map(u32::from)
-        .unwrap_or(0))
 }
 
 /// Try to figure out what's in the box, and print it if we can.
