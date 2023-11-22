@@ -164,6 +164,7 @@ impl<Context: Clone + Send + 'static> Worker<Context> {
         };
 
         let job_run_result = conn.transaction::<_, diesel::result::Error, _>(|conn| {
+            debug!("Looking for next background worker job…");
             let job = match storage::find_next_unlocked_job(conn).optional() {
                 Ok(Some(j)) => {
                     let _ = self.sender.send(Event::Working);
@@ -178,7 +179,12 @@ impl<Context: Clone + Send + 'static> Worker<Context> {
                     return Err(RollbackTransaction);
                 }
             };
+
+            let span = info_span!("job", job.id = %job.id, job.typ = %job.job_type);
+            let _enter = span.enter();
+
             let job_id = job.id;
+            debug!("Running job…");
 
             let initial_depth = get_transaction_depth(conn)?;
             if initial_depth != 1 {
@@ -215,9 +221,12 @@ impl<Context: Clone + Send + 'static> Worker<Context> {
             }
 
             match result {
-                Ok(_) => storage::delete_successful_job(conn, job_id)?,
+                Ok(_) => {
+                    debug!("Deleting successful job…");
+                    storage::delete_successful_job(conn, job_id)?
+                }
                 Err(error) => {
-                    warn!(%job_id, %error, "Failed to run job");
+                    warn!(%error, "Failed to run job");
                     storage::update_failed_job(conn, job_id);
                 }
             }
