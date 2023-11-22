@@ -64,6 +64,7 @@ clap = { version = "=4.4.8", features = ["derive", "env", "unicode", "wrap_help"
 cookie = { version = "=0.17.0", features = ["secure"] }
 crossbeam-channel = "=0.5.8"
 dashmap = { version = "=5.5.3", features = ["raw-api"] }
+derive_builder = "=0.12.0"
 derive_deref = "=1.1.1"
 dialoguer = "=0.11.0"
 diesel = { version = "=2.1.4", features = ["postgres", "serde_json", "chrono", "r2d2", "numeric"] }

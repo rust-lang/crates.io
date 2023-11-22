@@ -81,14 +81,14 @@ fn main() -> anyhow::Result<()> {
 
     let connection_pool = DieselPool::new_background_worker(connection_pool);
 
-    let environment = Environment::new(
-        repository_config,
-        cloudfront,
-        fastly,
-        storage,
-        connection_pool.clone(),
-        emails,
-    );
+    let environment = Environment::builder()
+        .repository_config(repository_config)
+        .cloudfront(cloudfront)
+        .fastly(fastly)
+        .storage(storage)
+        .connection_pool(connection_pool.clone())
+        .emails(emails)
+        .build()?;
 
     let environment = Arc::new(environment);
 
