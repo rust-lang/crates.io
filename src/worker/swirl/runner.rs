@@ -4,7 +4,6 @@ use crate::worker::swirl::{storage, BackgroundJob};
 use anyhow::anyhow;
 use diesel::prelude::*;
 use diesel::result::Error::RollbackTransaction;
-use parking_lot::RwLock;
 use std::any::Any;
 use std::collections::HashMap;
 use std::panic::{catch_unwind, AssertUnwindSafe, PanicInfo};
@@ -17,7 +16,7 @@ const DEFAULT_JOB_START_TIMEOUT: Duration = Duration::from_secs(30);
 
 type RunTaskFn<Context> = dyn Fn(&Context, serde_json::Value) -> anyhow::Result<()> + Send + Sync;
 
-type JobRegistry<Context> = Arc<RwLock<HashMap<String, Box<RunTaskFn<Context>>>>>;
+type JobRegistry<Context> = HashMap<String, Arc<RunTaskFn<Context>>>;
 
 fn runnable<J: BackgroundJob>(env: &J::Context, payload: serde_json::Value) -> anyhow::Result<()> {
     let job: J = serde_json::from_value(payload)?;
@@ -54,10 +53,9 @@ impl<Context: Clone + Send + 'static> Runner<Context> {
         self
     }
 
-    pub fn register_job_type<J: BackgroundJob<Context = Context>>(self) -> Self {
+    pub fn register_job_type<J: BackgroundJob<Context = Context>>(mut self) -> Self {
         self.job_registry
-            .write()
-            .insert(J::JOB_NAME.to_string(), Box::new(runnable::<J>));
+            .insert(J::JOB_NAME.to_string(), Arc::new(runnable::<J>));
 
         self
     }
@@ -187,8 +185,8 @@ impl<Context: Clone + Send + 'static> Worker<Context> {
 
             let result = with_sentry_transaction(&job.job_type, || {
                 catch_unwind(AssertUnwindSafe(|| {
-                    let job_registry = self.job_registry.read();
-                    let run_task_fn = job_registry
+                    let run_task_fn = self
+                        .job_registry
                         .get(&job.job_type)
                         .ok_or_else(|| anyhow!("Unknown job type {}", job.job_type))?;
 
