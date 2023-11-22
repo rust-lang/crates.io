@@ -18,9 +18,9 @@ type RunTaskFn<Context> = dyn Fn(&Context, serde_json::Value) -> anyhow::Result<
 
 type JobRegistry<Context> = HashMap<String, Arc<RunTaskFn<Context>>>;
 
-fn runnable<J: BackgroundJob>(env: &J::Context, payload: serde_json::Value) -> anyhow::Result<()> {
+fn runnable<J: BackgroundJob>(ctx: &J::Context, payload: serde_json::Value) -> anyhow::Result<()> {
     let job: J = serde_json::from_value(payload)?;
-    job.run(env)
+    job.run(ctx)
 }
 
 /// The core runner responsible for locking and running jobs
@@ -28,17 +28,17 @@ pub struct Runner<Context> {
     connection_pool: DieselPool,
     thread_pool: ThreadPool,
     job_registry: JobRegistry<Context>,
-    environment: Context,
+    context: Context,
     job_start_timeout: Duration,
 }
 
 impl<Context: Clone + Send + 'static> Runner<Context> {
-    pub fn new(connection_pool: DieselPool, environment: Context) -> Self {
+    pub fn new(connection_pool: DieselPool, context: Context) -> Self {
         Self {
             connection_pool,
             thread_pool: ThreadPool::new(1),
             job_registry: Default::default(),
-            environment,
+            context,
             job_start_timeout: DEFAULT_JOB_START_TIMEOUT,
         }
     }
@@ -87,7 +87,7 @@ impl<Context: Clone + Send + 'static> Runner<Context> {
             for _ in 0..jobs_to_queue {
                 let worker = Worker {
                     connection_pool: self.connection_pool.clone(),
-                    environment: self.environment.clone(),
+                    context: self.context.clone(),
                     job_registry: self.job_registry.clone(),
                     sender: sender.clone(),
                 };
@@ -144,7 +144,7 @@ impl<Context: Clone + Send + 'static> Runner<Context> {
 
 struct Worker<Context> {
     connection_pool: DieselPool,
-    environment: Context,
+    context: Context,
     job_registry: JobRegistry<Context>,
     sender: SyncSender<Event>,
 }
@@ -190,7 +190,7 @@ impl<Context: Clone + Send + 'static> Worker<Context> {
                         .get(&job.job_type)
                         .ok_or_else(|| anyhow!("Unknown job type {}", job.job_type))?;
 
-                    run_task_fn(&self.environment, job.data)
+                    run_task_fn(&self.context, job.data)
                 }))
                 .map_err(|e| try_to_extract_panic_info(&e))
                 // TODO: Replace with flatten() once that stabilizes
