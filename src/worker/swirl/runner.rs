@@ -192,17 +192,15 @@ impl<Context: Clone + Send + 'static> Worker<Context> {
             }
 
             let result = with_sentry_transaction(&job.job_type, || {
-                conn.transaction(|_conn| {
-                    catch_unwind(AssertUnwindSafe(|| {
-                        let job_registry = self.job_registry.read();
-                        let run_task_fn = job_registry.get(&job.job_type).ok_or_else(|| {
-                            anyhow!("Unknown job type {}", job.job_type)
-                        })?;
+                catch_unwind(AssertUnwindSafe(|| {
+                    let job_registry = self.job_registry.read();
+                    let run_task_fn = job_registry
+                        .get(&job.job_type)
+                        .ok_or_else(|| anyhow!("Unknown job type {}", job.job_type))?;
 
-                        run_task_fn(&self.environment, job.data)
-                    }))
-                    .map_err(|e| try_to_extract_panic_info(&e))
-                })
+                    run_task_fn(&self.environment, job.data)
+                }))
+                .map_err(|e| try_to_extract_panic_info(&e))
                 // TODO: Replace with flatten() once that stabilizes
                 .and_then(std::convert::identity)
             });
