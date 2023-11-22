@@ -263,14 +263,13 @@ impl TestAppBuilder {
                 index_location: index.url(),
                 credentials: Credentials::Missing,
             };
-            let environment = Environment::new(
-                repository_config,
-                None,
-                None,
-                app.storage.clone(),
-                app.primary_database.clone(),
-                app.emails.clone(),
-            );
+            let environment = Environment::builder()
+                .repository_config(repository_config)
+                .storage(app.storage.clone())
+                .connection_pool(app.primary_database.clone())
+                .emails(app.emails.clone())
+                .build()
+                .unwrap();
 
             let runner = Runner::new(app.primary_database.clone(), Arc::new(environment))
                 .num_workers(1)

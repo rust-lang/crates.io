@@ -5,44 +5,35 @@ use crate::storage::Storage;
 use crate::typosquat;
 use crate::Emails;
 use crates_io_index::{Repository, RepositoryConfig};
+use derive_builder::Builder;
 use diesel::PgConnection;
 use parking_lot::{Mutex, MutexGuard};
 use std::ops::{Deref, DerefMut};
 use std::sync::{Arc, OnceLock};
 use std::time::Instant;
 
+#[derive(Builder)]
+#[builder(pattern = "owned")]
 pub struct Environment {
     repository_config: RepositoryConfig,
+    #[builder(default, setter(skip))]
     repository: Mutex<Option<Repository>>,
+    #[builder(default)]
     cloudfront: Option<CloudFront>,
+    #[builder(default)]
     fastly: Option<Fastly>,
     pub storage: Arc<Storage>,
     pub connection_pool: DieselPool,
     pub emails: Emails,
 
     /// A lazily initialised cache of the most popular crates ready to use in typosquatting checks.
+    #[builder(default, setter(skip))]
     typosquat_cache: OnceLock<Result<typosquat::Cache, typosquat::CacheError>>,
 }
 
 impl Environment {
-    pub fn new(
-        repository_config: RepositoryConfig,
-        cloudfront: Option<CloudFront>,
-        fastly: Option<Fastly>,
-        storage: Arc<Storage>,
-        connection_pool: DieselPool,
-        emails: Emails,
-    ) -> Self {
-        Self {
-            repository_config,
-            repository: Mutex::new(None),
-            cloudfront,
-            fastly,
-            storage,
-            connection_pool,
-            emails,
-            typosquat_cache: OnceLock::default(),
-        }
+    pub fn builder() -> EnvironmentBuilder {
+        EnvironmentBuilder::default()
     }
 
     #[instrument(skip_all)]

@@ -932,6 +932,7 @@ dependencies = [
  "crates_io_test_db",
  "crossbeam-channel",
  "dashmap",
+ "derive_builder",
  "derive_deref",
  "dialoguer",
  "diesel",
