@@ -2,7 +2,6 @@ use crate::db::{DieselPool, DieselPooledConn, PoolError};
 use crate::worker::swirl::errors::FetchError;
 use crate::worker::swirl::{storage, BackgroundJob};
 use anyhow::anyhow;
-use diesel::connection::{AnsiTransactionManager, TransactionManager};
 use diesel::prelude::*;
 use diesel::result::Error::RollbackTransaction;
 use parking_lot::RwLock;
@@ -186,11 +185,6 @@ impl<Context: Clone + Send + 'static> Worker<Context> {
             let job_id = job.id;
             debug!("Running job…");
 
-            let initial_depth = get_transaction_depth(conn)?;
-            if initial_depth != 1 {
-                warn!(%initial_depth, "Unexpected initial transaction depth detected");
-            }
-
             let result = with_sentry_transaction(&job.job_type, || {
                 catch_unwind(AssertUnwindSafe(|| {
                     let job_registry = self.job_registry.read();
@@ -251,14 +245,6 @@ enum Event {
     NoJobAvailable,
     ErrorLoadingJob(diesel::result::Error),
     FailedToAcquireConnection(PoolError),
-}
-
-fn get_transaction_depth(conn: &mut PgConnection) -> QueryResult<u32> {
-    let transaction_manager = AnsiTransactionManager::transaction_manager_status_mut(conn);
-    Ok(transaction_manager
-        .transaction_depth()?
-        .map(u32::from)
-        .unwrap_or(0))
 }
 
 /// Try to figure out what's in the box, and print it if we can.
