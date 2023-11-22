@@ -1,18 +1,15 @@
 use crate::db::{DieselPool, DieselPooledConn, PoolError};
-use crate::worker::swirl::errors::FetchError;
 use crate::worker::swirl::{storage, BackgroundJob};
 use anyhow::anyhow;
 use diesel::prelude::*;
-use diesel::result::Error::RollbackTransaction;
 use std::any::Any;
 use std::collections::HashMap;
 use std::panic::{catch_unwind, AssertUnwindSafe, PanicInfo};
-use std::sync::mpsc::{sync_channel, SyncSender};
 use std::sync::Arc;
+use std::thread::JoinHandle;
 use std::time::Duration;
-use threadpool::ThreadPool;
 
-const DEFAULT_JOB_START_TIMEOUT: Duration = Duration::from_secs(30);
+const DEFAULT_POLL_INTERVAL: Duration = Duration::from_secs(1);
 
 type RunTaskFn<Context> = dyn Fn(&Context, serde_json::Value) -> anyhow::Result<()> + Send + Sync;
 
@@ -26,33 +23,38 @@ fn runnable<J: BackgroundJob>(ctx: &J::Context, payload: serde_json::Value) -> a
 /// The core runner responsible for locking and running jobs
 pub struct Runner<Context> {
     connection_pool: DieselPool,
-    thread_pool: ThreadPool,
+    num_workers: usize,
     job_registry: JobRegistry<Context>,
     context: Context,
-    job_start_timeout: Duration,
+    poll_interval: Duration,
+    shutdown_when_queue_empty: bool,
 }
 
 impl<Context: Clone + Send + 'static> Runner<Context> {
     pub fn new(connection_pool: DieselPool, context: Context) -> Self {
         Self {
             connection_pool,
-            thread_pool: ThreadPool::new(1),
+            num_workers: 1,
             job_registry: Default::default(),
             context,
-            job_start_timeout: DEFAULT_JOB_START_TIMEOUT,
+            poll_interval: DEFAULT_POLL_INTERVAL,
+            shutdown_when_queue_empty: false,
         }
     }
 
+    /// Set the number of workers to spawn.
     pub fn num_workers(mut self, num_workers: usize) -> Self {
-        self.thread_pool.set_num_threads(num_workers);
+        self.num_workers = num_workers;
         self
     }
 
-    pub fn job_start_timeout(mut self, job_start_timeout: Duration) -> Self {
-        self.job_start_timeout = job_start_timeout;
+    /// Set the interval after which each worker polls for new jobs.
+    pub fn poll_interval(mut self, poll_interval: Duration) -> Self {
+        self.poll_interval = poll_interval;
         self
     }
 
+    /// Register a new job type for this job runner.
     pub fn register_job_type<J: BackgroundJob<Context = Context>>(mut self) -> Self {
         self.job_registry
             .insert(J::JOB_NAME.to_string(), Arc::new(runnable::<J>));
@@ -60,69 +62,49 @@ impl<Context: Clone + Send + 'static> Runner<Context> {
         self
     }
 
-    /// Runs all pending jobs in the queue
+    /// Set the runner to shut down when the background job queue is empty.
+    pub fn shutdown_when_queue_empty(mut self) -> Self {
+        self.shutdown_when_queue_empty = true;
+        self
+    }
+
+    /// Start the background workers.
     ///
-    /// This function will return once all jobs in the queue have begun running,
-    /// but does not wait for them to complete. When this function returns, at
-    /// least one thread will have tried to acquire a new job, and found there
-    /// were none in the queue.
-    pub fn run_all_pending_jobs(&self) -> Result<(), FetchError> {
-        use std::cmp::max;
+    /// This returns a `RunningRunner` which can be used to wait for the workers to shutdown.
+    pub fn start(&self) -> anyhow::Result<RunHandle> {
+        let handles = (0..self.num_workers)
+            .map(|i| {
+                let name = format!("background-worker-{i}");
+                info!(worker.name = %name, "Starting worker…");
 
-        let max_threads = self.thread_pool.max_count();
-        let (sender, receiver) = sync_channel(max_threads);
-        let mut pending_messages = 0;
-        loop {
-            let available_threads = max_threads - self.thread_pool.active_count();
-
-            let jobs_to_queue = if pending_messages == 0 {
-                // If we have no queued jobs talking to us, and there are no
-                // available threads, we still need to queue at least one job
-                // or we'll never receive a message
-                max(available_threads, 1)
-            } else {
-                available_threads
-            };
-
-            for _ in 0..jobs_to_queue {
                 let worker = Worker {
                     connection_pool: self.connection_pool.clone(),
                     context: self.context.clone(),
                     job_registry: self.job_registry.clone(),
-                    sender: sender.clone(),
+                    shutdown_when_queue_empty: self.shutdown_when_queue_empty,
+                    poll_interval: self.poll_interval,
                 };
 
-                self.thread_pool.execute(move || worker.run_next_job())
-            }
+                std::thread::Builder::new()
+                    .name(name.clone())
+                    .spawn(move || {
+                        info_span!("worker", worker.name = %name).in_scope(|| worker.run())
+                    })
+            })
+            .collect::<Result<_, _>>()?;
 
-            pending_messages += jobs_to_queue;
-            match receiver.recv_timeout(self.job_start_timeout)? {
-                Event::Working => pending_messages -= 1,
-                Event::NoJobAvailable => return Ok(()),
-                Event::ErrorLoadingJob(e) => return Err(FetchError::FailedLoadingJob(e)),
-                Event::FailedToAcquireConnection(e) => {
-                    return Err(FetchError::NoDatabaseConnection(e));
-                }
-            }
-        }
+        Ok(RunHandle { handles })
     }
 
     fn connection(&self) -> Result<DieselPooledConn, PoolError> {
         self.connection_pool.get()
     }
 
-    /// Waits for all running jobs to complete, and returns an error if any
-    /// failed
+    /// Check if any jobs in the queue have failed.
     ///
-    /// This function is intended for use in tests. If any jobs have failed, it
-    /// will return `swirl::JobsFailed` with the number of jobs that failed.
-    ///
-    /// If any other unexpected errors occurred, such as panicked worker threads
-    /// or an error loading the job count from the database, an opaque error
-    /// will be returned.
-    // FIXME: Only public for `src/tests/util/test_app.rs`
+    /// This function is intended for use in tests and will return an error if
+    /// any jobs have failed.
     pub fn check_for_failed_jobs(&self) -> anyhow::Result<()> {
-        self.wait_for_jobs()?;
         let failed_jobs = storage::failed_job_count(&mut *self.connection()?)?;
         if failed_jobs == 0 {
             Ok(())
@@ -130,15 +112,21 @@ impl<Context: Clone + Send + 'static> Runner<Context> {
             Err(anyhow!("{failed_jobs} jobs failed"))
         }
     }
+}
 
-    fn wait_for_jobs(&self) -> anyhow::Result<()> {
-        self.thread_pool.join();
-        let panic_count = self.thread_pool.panic_count();
-        if panic_count == 0 {
-            Ok(())
-        } else {
-            Err(anyhow!("{panic_count} threads panicked"))
-        }
+pub struct RunHandle {
+    handles: Vec<JoinHandle<()>>,
+}
+
+impl RunHandle {
+    /// Wait for all background workers to shut down.
+    pub fn wait_for_shutdown(self) {
+        self.handles.into_iter().for_each(|handle| {
+            if let Err(error) = handle.join() {
+                let error = try_to_extract_panic_info(&error);
+                warn!(%error, "Background worker thread panicked");
+            }
+        })
     }
 }
 
@@ -146,35 +134,48 @@ struct Worker<Context> {
     connection_pool: DieselPool,
     context: Context,
     job_registry: JobRegistry<Context>,
-    sender: SyncSender<Event>,
+    shutdown_when_queue_empty: bool,
+    poll_interval: Duration,
 }
 
 impl<Context: Clone + Send + 'static> Worker<Context> {
-    fn run_next_job(&self) {
-        let conn = &mut *match self.connection_pool.get() {
-            Ok(conn) => conn,
-            Err(e) => {
-                // TODO: Review error handling and possibly drop all usage of `let _ =` in this file
-                let _ = self.sender.send(Event::FailedToAcquireConnection(e));
-                return;
-            }
-        };
-
-        let job_run_result = conn.transaction::<_, diesel::result::Error, _>(|conn| {
-            debug!("Looking for next background worker job…");
-            let job = match storage::find_next_unlocked_job(conn).optional() {
-                Ok(Some(j)) => {
-                    let _ = self.sender.send(Event::Working);
-                    j
+    /// Run background jobs forever, or until the queue is empty if `shutdown_when_queue_empty` is set.
+    pub fn run(&self) {
+        loop {
+            match self.run_next_job() {
+                Ok(Some(_)) => {}
+                Ok(None) if self.shutdown_when_queue_empty => {
+                    debug!("No pending background worker jobs found. Shutting down the worker…");
+                    break;
                 }
                 Ok(None) => {
-                    let _ = self.sender.send(Event::NoJobAvailable);
-                    return Ok(());
+                    debug!(
+                        "No pending background worker jobs found. Polling again in {:?}…",
+                        self.poll_interval
+                    );
+                    std::thread::sleep(self.poll_interval);
                 }
-                Err(e) => {
-                    let _ = self.sender.send(Event::ErrorLoadingJob(e));
-                    return Err(RollbackTransaction);
+                Err(error) => {
+                    error!(%error, "Failed to run job");
+                    std::thread::sleep(self.poll_interval);
                 }
+            }
+        }
+    }
+
+    /// Run the next job in the queue, if there is one.
+    ///
+    /// Returns:
+    /// - `Ok(Some(job_id))` if a job was run
+    /// - `Ok(None)` if no jobs were waiting
+    /// - `Err(...)` if there was an error retrieving the job
+    fn run_next_job(&self) -> anyhow::Result<Option<i64>> {
+        let conn = &mut *self.connection_pool.get()?;
+
+        conn.transaction(|conn| {
+            debug!("Looking for next background worker job…");
+            let Some(job) = storage::find_next_unlocked_job(conn).optional()? else {
+                return Ok(None);
             };
 
             let span = info_span!("job", job.id = %job.id, job.typ = %job.job_type);
@@ -207,15 +208,9 @@ impl<Context: Clone + Send + 'static> Worker<Context> {
                     storage::update_failed_job(conn, job_id);
                 }
             }
-            Ok(())
-        });
 
-        match job_run_result {
-            Ok(_) | Err(RollbackTransaction) => {}
-            Err(e) => {
-                panic!("Failed to update job: {e:?}");
-            }
-        }
+            Ok(Some(job_id))
+        })
     }
 }
 
@@ -235,14 +230,6 @@ where
     tx.finish();
 
     result
-}
-
-#[derive(Debug)]
-enum Event {
-    Working,
-    NoJobAvailable,
-    ErrorLoadingJob(diesel::result::Error),
-    FailedToAcquireConnection(PoolError),
 }
 
 /// Try to figure out what's in the box, and print it if we can.
@@ -334,14 +321,14 @@ mod tests {
         assert!(job_exists(job_id, &mut conn));
         assert!(!job_is_locked(job_id, &mut conn));
 
-        runner.run_all_pending_jobs().unwrap();
+        let runner = runner.start().unwrap();
         test_context.job_started_barrier.wait();
 
         assert!(job_exists(job_id, &mut conn));
         assert!(job_is_locked(job_id, &mut conn));
 
         test_context.assertions_finished_barrier.wait();
-        runner.wait_for_jobs().unwrap();
+        runner.wait_for_shutdown();
 
         assert!(!job_exists(job_id, &mut conn));
     }
@@ -377,8 +364,8 @@ mod tests {
         TestJob.enqueue(&mut conn).unwrap();
         assert_eq!(remaining_jobs(&mut conn), 1);
 
-        runner.run_all_pending_jobs().unwrap();
-        runner.wait_for_jobs().unwrap();
+        let runner = runner.start().unwrap();
+        runner.wait_for_shutdown();
         assert_eq!(remaining_jobs(&mut conn), 0);
     }
 
@@ -414,7 +401,7 @@ mod tests {
         let mut conn = runner.connection().unwrap();
         TestJob.enqueue(&mut conn).unwrap();
 
-        runner.run_all_pending_jobs().unwrap();
+        let runner = runner.start().unwrap();
         test_context.job_started_barrier.wait();
 
         // `SKIP LOCKED` is intentionally omitted here, so we block until
@@ -437,7 +424,7 @@ mod tests {
             .unwrap();
         assert_eq!(total_jobs_including_failed.len(), 1);
 
-        runner.wait_for_jobs().unwrap();
+        runner.wait_for_shutdown();
     }
 
     #[test]
@@ -457,17 +444,18 @@ mod tests {
         let test_database = TestDatabase::new();
 
         let runner = runner(test_database.url(), ()).register_job_type::<TestJob>();
+        let mut conn = runner.connection().unwrap();
 
-        let job_id = TestJob.enqueue(&mut runner.connection().unwrap()).unwrap();
+        let job_id = TestJob.enqueue(&mut conn).unwrap();
 
-        runner.run_all_pending_jobs().unwrap();
-        runner.wait_for_jobs().unwrap();
+        let runner = runner.start().unwrap();
+        runner.wait_for_shutdown();
 
         let tries = background_jobs::table
             .find(job_id)
             .select(background_jobs::retries)
             .for_update()
-            .first::<i32>(&mut *runner.connection().unwrap())
+            .first::<i32>(&mut *conn)
             .unwrap();
         assert_eq!(tries, 1);
     }
@@ -485,6 +473,6 @@ mod tests {
 
         Runner::new(connection_pool, context)
             .num_workers(2)
-            .job_start_timeout(Duration::from_secs(10))
+            .shutdown_when_queue_empty()
     }
 }

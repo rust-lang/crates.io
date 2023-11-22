@@ -976,7 +976,6 @@ dependencies = [
  "tar",
  "tempfile",
  "thiserror",
- "threadpool",
  "tikv-jemallocator",
  "tokio",
  "toml 0.8.8",
@@ -3912,15 +3911,6 @@ checksum = "3fdd6f064ccff2d6567adcb3873ca630700f00b5ad3f060c25b5dcfd9a4ce152"
 dependencies = [
  "cfg-if",
  "once_cell",
-]
-
-[[package]]
-name = "threadpool"
-version = "1.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d050e60b33d41c19108b32cea32164033a9013fe3b46cbd4457559bfbf77afaa"
-dependencies = [
- "num_cpus",
 ]
 
 [[package]]
