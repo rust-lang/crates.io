@@ -16,7 +16,7 @@ path = "lib.rs"
 ammonia = "=3.3.0"
 comrak = { version = "=0.19.0", default-features = false }
 htmlescape = "=0.3.1"
-url = "=2.4.1"
+url = "=2.5.0"
 
 [dev-dependencies]
 insta = "=1.34.0"
