@@ -10,7 +10,7 @@ use tokio::runtime::Handle;
 
 /// Handles the `GET /crates/:crate_id/owners` route.
 pub async fn owners(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         let conn = &mut *state.db_read()?;
         let krate: Crate = Crate::by_name(&crate_name).first(conn)?;
         let owners = krate
@@ -26,7 +26,7 @@ pub async fn owners(state: AppState, Path(crate_name): Path<String>) -> AppResul
 
 /// Handles the `GET /crates/:crate_id/owner_team` route.
 pub async fn owner_team(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         let conn = &mut *state.db_read()?;
         let krate: Crate = Crate::by_name(&crate_name).first(conn)?;
         let owners = Team::owning(&krate, conn)?
@@ -41,7 +41,7 @@ pub async fn owner_team(state: AppState, Path(crate_name): Path<String>) -> AppR
 
 /// Handles the `GET /crates/:crate_id/owner_user` route.
 pub async fn owner_user(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         let conn = &mut *state.db_read()?;
         let krate: Crate = Crate::by_name(&crate_name).first(conn)?;
         let owners = User::owning(&krate, conn)?
@@ -60,7 +60,7 @@ pub async fn add_owners(
     Path(crate_name): Path<String>,
     req: BytesRequest,
 ) -> AppResult<Json<Value>> {
-    conduit_compat(move || modify_owners(&app, &crate_name, &req, true)).await
+    spawn_blocking(move || modify_owners(&app, &crate_name, &req, true)).await
 }
 
 /// Handles the `DELETE /crates/:crate_id/owners` route.
@@ -69,7 +69,7 @@ pub async fn remove_owners(
     Path(crate_name): Path<String>,
     req: BytesRequest,
 ) -> AppResult<Json<Value>> {
-    conduit_compat(move || modify_owners(&app, &crate_name, &req, false)).await
+    spawn_blocking(move || modify_owners(&app, &crate_name, &req, false)).await
 }
 
 /// Parse the JSON request body of requests to modify the owners of a crate.

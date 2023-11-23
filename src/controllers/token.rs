@@ -36,7 +36,7 @@ pub async fn list(
     Query(params): Query<GetParams>,
     req: Parts,
 ) -> AppResult<Json<Value>> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         let conn = &mut *app.db_read_prefer_primary()?;
         let auth = AuthCheck::only_cookie().check(&req, conn)?;
         let user = auth.user();
@@ -66,7 +66,7 @@ pub async fn list(
 
 /// Handles the `PUT /me/tokens` route.
 pub async fn new(app: AppState, req: BytesRequest) -> AppResult<Json<Value>> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         /// The incoming serialization format for the `ApiToken` model.
         #[derive(Deserialize)]
         struct NewApiToken {
@@ -151,7 +151,7 @@ pub async fn new(app: AppState, req: BytesRequest) -> AppResult<Json<Value>> {
 
 /// Handles the `DELETE /me/tokens/:id` route.
 pub async fn revoke(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult<Json<Value>> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         let conn = &mut *app.db_write()?;
         let auth = AuthCheck::default().check(&req, conn)?;
         let user = auth.user();
@@ -166,7 +166,7 @@ pub async fn revoke(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult
 
 /// Handles the `DELETE /tokens/current` route.
 pub async fn revoke_current(app: AppState, req: Parts) -> AppResult<Response> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         let conn = &mut *app.db_write()?;
         let auth = AuthCheck::default().check(&req, conn)?;
         let api_token_id = auth

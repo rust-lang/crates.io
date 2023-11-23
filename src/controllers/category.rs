@@ -7,7 +7,7 @@ use crate::views::{EncodableCategory, EncodableCategoryWithSubcategories};
 
 /// Handles the `GET /categories` route.
 pub async fn index(app: AppState, req: Parts) -> AppResult<Json<Value>> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         let query = req.query();
         // FIXME: There are 69 categories, 47 top level. This isn't going to
         // grow by an OoM. We need a limit for /summary, but we don't need
@@ -36,7 +36,7 @@ pub async fn index(app: AppState, req: Parts) -> AppResult<Json<Value>> {
 
 /// Handles the `GET /categories/:category_id` route.
 pub async fn show(state: AppState, Path(slug): Path<String>) -> AppResult<Json<Value>> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         let conn = &mut *state.db_read()?;
         let cat: Category = Category::by_slug(&slug).first(conn)?;
         let subcats = cat
@@ -69,7 +69,7 @@ pub async fn show(state: AppState, Path(slug): Path<String>) -> AppResult<Json<V
 
 /// Handles the `GET /category_slugs` route.
 pub async fn slugs(state: AppState) -> AppResult<Json<Value>> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         let conn = &mut *state.db_read()?;
         let slugs: Vec<Slug> = categories::table
             .select((categories::slug, categories::slug, categories::description))

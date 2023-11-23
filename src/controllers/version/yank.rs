@@ -25,7 +25,7 @@ pub async fn yank(
     Path((crate_name, version)): Path<(String, String)>,
     req: Parts,
 ) -> AppResult<Response> {
-    conduit_compat(move || modify_yank(&crate_name, &version, &app, &req, true)).await
+    spawn_blocking(move || modify_yank(&crate_name, &version, &app, &req, true)).await
 }
 
 /// Handles the `PUT /crates/:crate_id/:version/unyank` route.
@@ -34,7 +34,7 @@ pub async fn unyank(
     Path((crate_name, version)): Path<(String, String)>,
     req: Parts,
 ) -> AppResult<Response> {
-    conduit_compat(move || modify_yank(&crate_name, &version, &app, &req, false)).await
+    spawn_blocking(move || modify_yank(&crate_name, &version, &app, &req, false)).await
 }
 
 /// Changes `yanked` flag on a crate version record

@@ -6,7 +6,7 @@ use crate::views::EncodableTeam;
 
 /// Handles the `GET /teams/:team_id` route.
 pub async fn show_team(state: AppState, Path(name): Path<String>) -> AppResult<Json<Value>> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         use self::teams::dsl::{login, teams};
 
         let conn = &mut *state.db_read()?;

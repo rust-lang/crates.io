@@ -13,7 +13,7 @@ use crate::views::EncodableVersion;
 
 /// Handles the `GET /versions` route.
 pub async fn index(app: AppState, req: Parts) -> AppResult<Json<Value>> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         let conn = &mut *app.db_read()?;
 
         // Extract all ids requested.
@@ -54,7 +54,7 @@ pub async fn index(app: AppState, req: Parts) -> AppResult<Json<Value>> {
 /// The frontend doesn't appear to hit this endpoint. Instead, the version information appears to
 /// be returned by `krate::show`.
 pub async fn show_by_id(state: AppState, Path(id): Path<i32>) -> AppResult<Json<Value>> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         let conn = &mut *state.db_read()?;
         let (version, krate, published_by): (Version, Crate, Option<User>) = versions::table
             .find(id)

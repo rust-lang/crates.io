@@ -55,6 +55,7 @@ pub mod sentry;
 pub mod sql;
 pub mod ssh;
 pub mod storage;
+pub mod tasks;
 mod test_util;
 pub mod typosquat;
 pub mod util;
