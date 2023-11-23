@@ -15,7 +15,7 @@ pub struct IndexQuery {
 
 /// Handles the `GET /keywords` route.
 pub async fn index(state: AppState, qp: Query<IndexQuery>, req: Parts) -> AppResult<Json<Value>> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         use crate::schema::keywords;
 
         let mut query = keywords::table.into_boxed();
@@ -44,7 +44,7 @@ pub async fn index(state: AppState, qp: Query<IndexQuery>, req: Parts) -> AppRes
 
 /// Handles the `GET /keywords/:keyword_id` route.
 pub async fn show(Path(name): Path<String>, state: AppState) -> AppResult<Json<Value>> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         let conn = &mut state.db_read()?;
 
         let kw = Keyword::find_by_keyword(conn, &name)?;

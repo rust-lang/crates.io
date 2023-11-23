@@ -18,7 +18,7 @@ pub async fn follow(
     Path(crate_name): Path<String>,
     req: Parts,
 ) -> AppResult<Response> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         let conn = &mut *app.db_write()?;
         let user_id = AuthCheck::default().check(&req, conn)?.user_id();
         let follow = follow_target(&crate_name, conn, user_id)?;
@@ -38,7 +38,7 @@ pub async fn unfollow(
     Path(crate_name): Path<String>,
     req: Parts,
 ) -> AppResult<Response> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         let conn = &mut *app.db_write()?;
         let user_id = AuthCheck::default().check(&req, conn)?.user_id();
         let follow = follow_target(&crate_name, conn, user_id)?;
@@ -55,7 +55,7 @@ pub async fn following(
     Path(crate_name): Path<String>,
     req: Parts,
 ) -> AppResult<Json<Value>> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         use diesel::dsl::exists;
 
         let conn = &mut *app.db_read_prefer_primary()?;

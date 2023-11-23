@@ -79,7 +79,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
     request_log.add("crate_name", &*metadata.name);
     request_log.add("crate_version", &version_string);
 
-    conduit_compat(move || {
+    spawn_blocking(move || {
         let conn = &mut *app.db_write()?;
 
         // this query should only be used for the endpoint scope calculation

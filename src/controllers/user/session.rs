@@ -84,7 +84,7 @@ pub async fn authorize(
 ) -> AppResult<Json<EncodableMe>> {
     let app_clone = app.clone();
 
-    conduit_compat(move || {
+    spawn_blocking(move || {
         // Make sure that the state we just got matches the session state that we
         // should have issued earlier.
         let session_state = session.remove("github_oauth_state").map(CsrfToken::new);

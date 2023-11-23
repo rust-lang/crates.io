@@ -21,7 +21,7 @@ use crate::views::{
 
 /// Handles the `GET /summary` route.
 pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         let config = &state.config;
 
         let conn = &mut *state.db_read()?;
@@ -131,7 +131,7 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
 
 /// Handles the `GET /crates/:crate_id` route.
 pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppResult<Json<Value>> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         let include = req
             .query()
             .get("include")
@@ -323,7 +323,7 @@ pub async fn readme(
 // FIXME: Not sure why this is necessary since /crates/:crate_id returns
 // this information already, but ember is definitely requesting it
 pub async fn versions(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         let conn = &mut *state.db_read()?;
         let krate: Crate = Crate::by_name(&crate_name).first(conn)?;
         let mut versions_and_publishers: Vec<(Version, Option<User>)> = krate
@@ -357,7 +357,7 @@ pub async fn reverse_dependencies(
     Path(name): Path<String>,
     req: Parts,
 ) -> AppResult<Json<Value>> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         let pagination_options = PaginationOptions::builder().gather(&req)?;
         let conn = &mut *app.db_read()?;
         let krate: Crate = Crate::by_name(&name).first(conn)?;

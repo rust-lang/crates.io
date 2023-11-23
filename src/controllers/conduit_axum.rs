@@ -9,7 +9,7 @@ use tokio::task::JoinError;
 ///
 /// The function also returns a flattened [Result], which requires the error
 /// variant of the [Result] to implement [From\<JoinError>].
-pub async fn conduit_compat<F, R, E>(f: F) -> Result<R, E>
+pub async fn spawn_blocking<F, R, E>(f: F) -> Result<R, E>
 where
     F: FnOnce() -> Result<R, E> + Send + 'static,
     R: Send + 'static,
@@ -29,18 +29,18 @@ mod tests {
     use super::*;
     use crate::util::errors::BoxedAppError;
 
-    /// Test that [conduit_compat] works with [anyhow].
+    /// Test that [spawn_blocking] works with [anyhow].
     #[tokio::test]
-    async fn test_conduit_compat_anyhow() {
-        conduit_compat::<_, _, anyhow::Error>(|| Ok(()))
+    async fn test_spawn_blocking_anyhow() {
+        spawn_blocking::<_, _, anyhow::Error>(|| Ok(()))
             .await
             .unwrap()
     }
 
-    /// Test that [conduit_compat] works with [BoxedAppError].
+    /// Test that [spawn_blocking] works with [BoxedAppError].
     #[tokio::test]
-    async fn test_conduit_compat_apperror() {
-        conduit_compat::<_, _, BoxedAppError>(|| Ok(()))
+    async fn test_spawn_blocking_apperror() {
+        spawn_blocking::<_, _, BoxedAppError>(|| Ok(()))
             .await
             .unwrap()
     }

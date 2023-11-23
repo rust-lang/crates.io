@@ -18,7 +18,7 @@ use tokio::runtime::Handle;
 
 /// Handles the `GET /api/v1/me/crate_owner_invitations` route.
 pub async fn list(app: AppState, req: Parts) -> AppResult<Json<Value>> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         let conn = &mut app.db_read()?;
         let auth = AuthCheck::only_cookie().check(&req, conn)?;
         let user_id = auth.user_id();
@@ -58,7 +58,7 @@ pub async fn list(app: AppState, req: Parts) -> AppResult<Json<Value>> {
 
 /// Handles the `GET /api/private/crate_owner_invitations` route.
 pub async fn private_list(app: AppState, req: Parts) -> AppResult<Json<PrivateListResponse>> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         let conn = &mut app.db_read()?;
         let auth = AuthCheck::only_cookie().check(&req, conn)?;
 
@@ -260,7 +260,7 @@ struct OwnerInvitation {
 
 /// Handles the `PUT /api/v1/me/crate_owner_invitations/:crate_id` route.
 pub async fn handle_invite(state: AppState, req: BytesRequest) -> AppResult<Json<Value>> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         let crate_invite: OwnerInvitation =
             serde_json::from_slice(req.body()).map_err(|_| bad_request("invalid json request"))?;
 
@@ -290,7 +290,7 @@ pub async fn handle_invite_with_token(
     state: AppState,
     Path(token): Path<String>,
 ) -> AppResult<Json<Value>> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         let config = &state.config;
         let conn = &mut state.db_write()?;
 

@@ -39,7 +39,7 @@ use crate::sql::{array_agg, canon_crate_name, lower};
 /// function out to cover the different use cases, and create unit tests
 /// for them.
 pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         use diesel::sql_types::{Bool, Text};
 
         let params = req.query();

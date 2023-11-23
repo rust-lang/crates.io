@@ -9,7 +9,7 @@ pub async fn prometheus(
     Path(kind): Path<String>,
     req: Parts,
 ) -> AppResult<Response> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         if let Some(expected_token) = &app.config.metrics_authorization_token {
             let provided_token = req
                 .headers

@@ -18,7 +18,7 @@ mod prelude {
 
     pub use http::{header, request::Parts, Request, StatusCode};
 
-    pub use super::conduit_axum::conduit_compat;
+    pub use super::conduit_axum::spawn_blocking;
     pub use crate::app::AppState;
     use crate::controllers::util::RequestPartsExt;
     pub use crate::middleware::app::RequestApp;

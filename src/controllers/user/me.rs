@@ -14,7 +14,7 @@ use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCra
 
 /// Handles the `GET /me` route.
 pub async fn me(app: AppState, req: Parts) -> AppResult<Json<EncodableMe>> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         let conn = &mut *app.db_read_prefer_primary()?;
         let user_id = AuthCheck::only_cookie().check(&req, conn)?.user_id();
 
@@ -56,7 +56,7 @@ pub async fn me(app: AppState, req: Parts) -> AppResult<Json<EncodableMe>> {
 
 /// Handles the `GET /me/updates` route.
 pub async fn updates(app: AppState, req: Parts) -> AppResult<Json<Value>> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         let conn = &mut app.db_read_prefer_primary()?;
         let auth = AuthCheck::only_cookie().check(&req, conn)?;
         let user = auth.user();
@@ -102,7 +102,7 @@ pub async fn update_user(
     Path(param_user_id): Path<i32>,
     req: BytesRequest,
 ) -> AppResult<Response> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         use self::emails::user_id;
         use diesel::insert_into;
 
@@ -171,7 +171,7 @@ pub async fn update_user(
 
 /// Handles the `PUT /confirm/:email_token` route
 pub async fn confirm_user_email(state: AppState, Path(token): Path<String>) -> AppResult<Response> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         use diesel::update;
 
         let conn = &mut *state.db_write()?;
@@ -195,7 +195,7 @@ pub async fn regenerate_token_and_send(
     Path(param_user_id): Path<i32>,
     req: Parts,
 ) -> AppResult<Response> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         use diesel::dsl::sql;
         use diesel::update;
 
@@ -227,7 +227,7 @@ pub async fn regenerate_token_and_send(
 
 /// Handles `PUT /me/email_notifications` route
 pub async fn update_email_notifications(app: AppState, req: BytesRequest) -> AppResult<Response> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         use diesel::pg::upsert::excluded;
 
         #[derive(Deserialize)]

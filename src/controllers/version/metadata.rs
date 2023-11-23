@@ -22,7 +22,7 @@ pub async fn dependencies(
     state: AppState,
     Path((crate_name, version)): Path<(String, String)>,
 ) -> AppResult<Json<Value>> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         if semver::Version::parse(&version).is_err() {
             return Err(cargo_err(format_args!("invalid semver: {version}")));
         }
@@ -59,7 +59,7 @@ pub async fn show(
     state: AppState,
     Path((crate_name, version)): Path<(String, String)>,
 ) -> AppResult<Json<Value>> {
-    conduit_compat(move || {
+    spawn_blocking(move || {
         if semver::Version::parse(&version).is_err() {
             return Err(cargo_err(format_args!("invalid semver: {version}")));
         }

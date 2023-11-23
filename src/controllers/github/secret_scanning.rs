@@ -229,7 +229,7 @@ pub async fn verify(
     let alerts: Vec<GitHubSecretAlert> = json::from_slice(&body)
         .map_err(|e| bad_request(format!("invalid secret alert request: {e:?}")))?;
 
-    conduit_compat(move || {
+    spawn_blocking(move || {
         let feedback = alerts
             .into_iter()
             .map(|alert| {
