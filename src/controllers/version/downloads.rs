@@ -43,7 +43,7 @@ pub async fn download(
         app.instance_metrics.version_id_cache_misses.inc();
 
         let app = app.clone();
-        conduit_compat(move || {
+        conduit_compat::<_, _, BoxedAppError>(move || {
             // When no database connection is ready unconditional redirects will be performed. This could
             // happen if the pool is not healthy or if an operator manually configured the application to
             // always perform unconditional redirects (for example as part of the mitigations for an
