@@ -2,12 +2,14 @@ use crate::db::{DieselPool, DieselPooledConn, PoolError};
 use crate::worker::swirl::{storage, BackgroundJob};
 use anyhow::anyhow;
 use diesel::prelude::*;
+use futures_util::future::join_all;
 use std::any::Any;
 use std::collections::HashMap;
 use std::panic::{catch_unwind, AssertUnwindSafe, PanicInfo};
 use std::sync::Arc;
-use std::thread::JoinHandle;
 use std::time::Duration;
+use tokio::runtime::Handle;
+use tokio::task::JoinHandle;
 
 const DEFAULT_POLL_INTERVAL: Duration = Duration::from_secs(1);
 
@@ -22,6 +24,7 @@ fn runnable<J: BackgroundJob>(ctx: &J::Context, payload: serde_json::Value) -> a
 
 /// The core runner responsible for locking and running jobs
 pub struct Runner<Context> {
+    rt_handle: Handle,
     connection_pool: DieselPool,
     num_workers: usize,
     job_registry: JobRegistry<Context>,
@@ -31,8 +34,9 @@ pub struct Runner<Context> {
 }
 
 impl<Context: Clone + Send + 'static> Runner<Context> {
-    pub fn new(connection_pool: DieselPool, context: Context) -> Self {
+    pub fn new(rt_handle: &Handle, connection_pool: DieselPool, context: Context) -> Self {
         Self {
+            rt_handle: rt_handle.clone(),
             connection_pool,
             num_workers: 1,
             job_registry: Default::default(),
@@ -71,7 +75,7 @@ impl<Context: Clone + Send + 'static> Runner<Context> {
     /// Start the background workers.
     ///
     /// This returns a `RunningRunner` which can be used to wait for the workers to shutdown.
-    pub fn start(&self) -> anyhow::Result<RunHandle> {
+    pub fn start(&self) -> RunHandle {
         let handles = (0..self.num_workers)
             .map(|i| {
                 let name = format!("background-worker-{i}");
@@ -85,15 +89,13 @@ impl<Context: Clone + Send + 'static> Runner<Context> {
                     poll_interval: self.poll_interval,
                 };
 
-                std::thread::Builder::new()
-                    .name(name.clone())
-                    .spawn(move || {
-                        info_span!("worker", worker.name = %name).in_scope(|| worker.run())
-                    })
+                self.rt_handle.spawn_blocking(move || {
+                    info_span!("worker", worker.name = %name).in_scope(|| worker.run())
+                })
             })
-            .collect::<Result<_, _>>()?;
+            .collect();
 
-        Ok(RunHandle { handles })
+        RunHandle { handles }
     }
 
     fn connection(&self) -> Result<DieselPooledConn, PoolError> {
@@ -120,13 +122,12 @@ pub struct RunHandle {
 
 impl RunHandle {
     /// Wait for all background workers to shut down.
-    pub fn wait_for_shutdown(self) {
-        self.handles.into_iter().for_each(|handle| {
-            if let Err(error) = handle.join() {
-                let error = try_to_extract_panic_info(&error);
-                warn!(%error, "Background worker thread panicked");
+    pub async fn wait_for_shutdown(self) {
+        join_all(self.handles).await.into_iter().for_each(|result| {
+            if let Err(error) = result {
+                warn!(%error, "Background worker task panicked");
             }
-        })
+        });
     }
 }
 
@@ -260,6 +261,14 @@ mod tests {
     use diesel::r2d2;
     use diesel::r2d2::ConnectionManager;
     use std::sync::{Arc, Barrier};
+    use tokio::runtime::Runtime;
+
+    fn runtime() -> Runtime {
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+    }
 
     fn job_exists(id: i64, conn: &mut PgConnection) -> bool {
         background_jobs::table
@@ -312,8 +321,9 @@ mod tests {
             assertions_finished_barrier: Arc::new(Barrier::new(2)),
         };
 
+        let rt = runtime();
         let runner =
-            runner(test_database.url(), test_context.clone()).register_job_type::<TestJob>();
+            runner(&rt, test_database.url(), test_context.clone()).register_job_type::<TestJob>();
 
         let mut conn = runner.connection().unwrap();
         let job_id = TestJob.enqueue(&mut conn).unwrap();
@@ -321,14 +331,14 @@ mod tests {
         assert!(job_exists(job_id, &mut conn));
         assert!(!job_is_locked(job_id, &mut conn));
 
-        let runner = runner.start().unwrap();
+        let runner = runner.start();
         test_context.job_started_barrier.wait();
 
         assert!(job_exists(job_id, &mut conn));
         assert!(job_is_locked(job_id, &mut conn));
 
         test_context.assertions_finished_barrier.wait();
-        runner.wait_for_shutdown();
+        rt.block_on(runner.wait_for_shutdown());
 
         assert!(!job_exists(job_id, &mut conn));
     }
@@ -356,7 +366,8 @@ mod tests {
 
         let test_database = TestDatabase::new();
 
-        let runner = runner(test_database.url(), ()).register_job_type::<TestJob>();
+        let rt = runtime();
+        let runner = runner(&rt, test_database.url(), ()).register_job_type::<TestJob>();
 
         let mut conn = runner.connection().unwrap();
         assert_eq!(remaining_jobs(&mut conn), 0);
@@ -364,8 +375,8 @@ mod tests {
         TestJob.enqueue(&mut conn).unwrap();
         assert_eq!(remaining_jobs(&mut conn), 1);
 
-        let runner = runner.start().unwrap();
-        runner.wait_for_shutdown();
+        let runner = runner.start();
+        rt.block_on(runner.wait_for_shutdown());
         assert_eq!(remaining_jobs(&mut conn), 0);
     }
 
@@ -395,13 +406,14 @@ mod tests {
             job_started_barrier: Arc::new(Barrier::new(2)),
         };
 
+        let rt = runtime();
         let runner =
-            runner(test_database.url(), test_context.clone()).register_job_type::<TestJob>();
+            runner(&rt, test_database.url(), test_context.clone()).register_job_type::<TestJob>();
 
         let mut conn = runner.connection().unwrap();
         TestJob.enqueue(&mut conn).unwrap();
 
-        let runner = runner.start().unwrap();
+        let runner = runner.start();
         test_context.job_started_barrier.wait();
 
         // `SKIP LOCKED` is intentionally omitted here, so we block until
@@ -424,7 +436,7 @@ mod tests {
             .unwrap();
         assert_eq!(total_jobs_including_failed.len(), 1);
 
-        runner.wait_for_shutdown();
+        rt.block_on(runner.wait_for_shutdown());
     }
 
     #[test]
@@ -443,13 +455,15 @@ mod tests {
 
         let test_database = TestDatabase::new();
 
-        let runner = runner(test_database.url(), ()).register_job_type::<TestJob>();
+        let rt = runtime();
+        let runner = runner(&rt, test_database.url(), ()).register_job_type::<TestJob>();
+
         let mut conn = runner.connection().unwrap();
 
         let job_id = TestJob.enqueue(&mut conn).unwrap();
 
-        let runner = runner.start().unwrap();
-        runner.wait_for_shutdown();
+        let runner = runner.start();
+        rt.block_on(runner.wait_for_shutdown());
 
         let tries = background_jobs::table
             .find(job_id)
@@ -461,6 +475,7 @@ mod tests {
     }
 
     fn runner<Context: Clone + Send + 'static>(
+        runtime: &Runtime,
         database_url: &str,
         context: Context,
     ) -> Runner<Context> {
@@ -471,7 +486,7 @@ mod tests {
 
         let connection_pool = DieselPool::new_background_worker(connection_pool);
 
-        Runner::new(connection_pool, context)
+        Runner::new(runtime.handle(), connection_pool, context)
             .num_workers(2)
             .shutdown_when_queue_empty()
     }

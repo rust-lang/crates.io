@@ -3,9 +3,9 @@
 use crate::models::Version;
 use crate::worker::swirl::BackgroundJob;
 use crate::worker::Environment;
-use anyhow::Context;
 use crates_io_markdown::text_to_html;
 use std::sync::Arc;
+use tokio::runtime::Handle;
 
 #[derive(Serialize, Deserialize)]
 pub struct RenderAndUploadReadme {
@@ -68,15 +68,9 @@ impl BackgroundJob for RenderAndUploadReadme {
 
             tracing::Span::current().record("krate.name", tracing::field::display(&crate_name));
 
-            let rt = tokio::runtime::Builder::new_current_thread()
-                .enable_all()
-                .build()
-                .context("Failed to initialize tokio runtime")
-                .unwrap();
-
             let bytes = rendered.into();
             let future = env.storage.upload_readme(&crate_name, &vers, bytes);
-            rt.block_on(future)?;
+            Handle::current().block_on(future)?;
 
             Ok(())
         })

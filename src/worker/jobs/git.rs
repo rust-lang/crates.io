@@ -10,6 +10,7 @@ use std::fs::{self, File};
 use std::io::{BufRead, BufReader, ErrorKind, Write};
 use std::process::Command;
 use std::sync::Arc;
+use tokio::runtime::Handle;
 
 #[derive(Serialize, Deserialize)]
 pub struct SyncToGitIndex {
@@ -96,21 +97,17 @@ impl BackgroundJob for SyncToSparseIndex {
         let mut conn = env.connection_pool.get()?;
         let content = get_index_data(&self.krate, &mut conn).context("Failed to get index data")?;
 
-        let rt = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .context("Failed to initialize tokio runtime")
-            .unwrap();
-
         let future = env.storage.sync_index(&self.krate, content);
-        rt.block_on(future).context("Failed to sync index data")?;
+        Handle::current()
+            .block_on(future)
+            .context("Failed to sync index data")?;
 
         if let Some(cloudfront) = env.cloudfront() {
             let path = Repository::relative_index_file_for_url(&self.krate);
 
             info!(%path, "Invalidating index file on CloudFront");
             cloudfront
-                .invalidate(&path, rt.handle())
+                .invalidate(&path, &Handle::current())
                 .context("Failed to invalidate CloudFront")?;
         }
 

@@ -48,10 +48,8 @@ impl Drop for TestAppInner {
 
         // Lazily run any remaining jobs
         if let Some(runner) = &self.runner {
-            runner
-                .start()
-                .expect("Could not run jobs")
-                .wait_for_shutdown();
+            let handle = runner.start();
+            self.runtime.block_on(handle.wait_for_shutdown());
 
             runner.check_for_failed_jobs().expect("Failed jobs remain");
         }
@@ -175,10 +173,8 @@ impl TestApp {
         let runner = &self.0.runner;
         let runner = runner.as_ref().expect("Index has not been initialized");
 
-        runner
-            .start()
-            .expect("Could not run jobs")
-            .wait_for_shutdown();
+        let handle = runner.start();
+        self.runtime().block_on(handle.wait_for_shutdown());
 
         runner
             .check_for_failed_jobs()
@@ -279,10 +275,14 @@ impl TestAppBuilder {
                 .build()
                 .unwrap();
 
-            let runner = Runner::new(app.primary_database.clone(), Arc::new(environment))
-                .num_workers(1)
-                .shutdown_when_queue_empty()
-                .register_crates_io_job_types();
+            let runner = Runner::new(
+                runtime.handle(),
+                app.primary_database.clone(),
+                Arc::new(environment),
+            )
+            .num_workers(1)
+            .shutdown_when_queue_empty()
+            .register_crates_io_job_types();
 
             Some(runner)
         } else {

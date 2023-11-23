@@ -13,6 +13,7 @@
 #[macro_use]
 extern crate tracing;
 
+use anyhow::Context;
 use crates_io::cloudfront::CloudFront;
 use crates_io::db::DieselPool;
 use crates_io::fastly::Fastly;
@@ -42,6 +43,11 @@ fn main() -> anyhow::Result<()> {
     info!("Booting runner");
 
     let config = config::Server::from_environment()?;
+
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .context("Failed to initialize tokio runtime")?;
 
     if config.db.are_all_read_only() {
         loop {
@@ -99,13 +105,13 @@ fn main() -> anyhow::Result<()> {
         }
     });
 
-    let runner = Runner::new(connection_pool, environment.clone())
+    let runner = Runner::new(runtime.handle(), connection_pool, environment.clone())
         .num_workers(5)
         .register_crates_io_job_types()
-        .start()?;
+        .start();
 
     info!("Runner booted, running jobs");
-    runner.wait_for_shutdown();
+    runtime.block_on(runner.wait_for_shutdown());
 
     Ok(())
 }

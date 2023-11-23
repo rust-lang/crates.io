@@ -6,6 +6,7 @@ use anyhow::{anyhow, Context};
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
+use tokio::runtime::Handle;
 
 #[derive(Serialize, Deserialize)]
 pub struct DumpDb {
@@ -38,27 +39,22 @@ impl BackgroundJob for DumpDb {
         info!(path = ?directory.export_dir, "Creating tarball");
         let tarball = DumpTarball::create(&directory.export_dir)?;
 
+        let rt_handle = Handle::current();
+
         info!("Uploading tarball");
-        let rt = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .context("Failed to initialize tokio runtime")
-            .unwrap();
-
         let storage = Storage::from_environment();
-
-        rt.block_on(storage.upload_db_dump(&self.target_name, &tarball.tarball_path))?;
+        rt_handle.block_on(storage.upload_db_dump(&self.target_name, &tarball.tarball_path))?;
         info!("Database dump tarball uploaded");
 
         info!("Invalidating CDN caches");
         if let Some(cloudfront) = env.cloudfront() {
-            if let Err(error) = cloudfront.invalidate(&self.target_name, rt.handle()) {
+            if let Err(error) = cloudfront.invalidate(&self.target_name, &rt_handle) {
                 warn!("failed to invalidate CloudFront cache: {}", error);
             }
         }
 
         if let Some(fastly) = env.fastly() {
-            if let Err(error) = rt.block_on(fastly.invalidate(&self.target_name)) {
+            if let Err(error) = rt_handle.block_on(fastly.invalidate(&self.target_name)) {
                 warn!("failed to invalidate Fastly cache: {}", error);
             }
         }
