@@ -74,7 +74,7 @@ dotenvy = "=0.15.7"
 flate2 = "=1.0.28"
 futures-channel = { version = "=0.3.29", default-features = false }
 futures-util = "=0.3.29"
-github-meta = "=0.8.0"
+github-meta = "=0.10.0"
 hex = "=0.4.3"
 http = "=0.2.11"
 http-body = "=0.4.5"
