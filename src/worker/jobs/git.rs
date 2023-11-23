@@ -110,7 +110,7 @@ impl BackgroundJob for SyncToSparseIndex {
 
             info!(%path, "Invalidating index file on CloudFront");
             cloudfront
-                .invalidate(&path, &rt)
+                .invalidate(&path, rt.handle())
                 .context("Failed to invalidate CloudFront")?;
         }
 
