@@ -21,7 +21,7 @@ use crates_io::worker::swirl::Runner;
 use crates_io::worker::{Environment, RunnerExt};
 use crates_io::{config, Emails};
 use crates_io::{db, ssh};
-use crates_io_env_vars::{var, var_parsed};
+use crates_io_env_vars::var;
 use crates_io_index::RepositoryConfig;
 use diesel::r2d2;
 use diesel::r2d2::ConnectionManager;
@@ -54,8 +54,6 @@ fn main() -> anyhow::Result<()> {
     }
 
     let db_url = db::connection_url(&config.db, config.db.primary.url.expose_secret());
-
-    let job_start_timeout = var_parsed("BACKGROUND_JOB_TIMEOUT")?.unwrap_or(30);
 
     if var("HEROKU")?.is_some() {
         ssh::write_known_hosts_file().unwrap();
@@ -103,15 +101,11 @@ fn main() -> anyhow::Result<()> {
 
     let runner = Runner::new(connection_pool, environment.clone())
         .num_workers(5)
-        .job_start_timeout(Duration::from_secs(job_start_timeout))
-        .register_crates_io_job_types();
+        .register_crates_io_job_types()
+        .start()?;
 
     info!("Runner booted, running jobs");
+    runner.wait_for_shutdown();
 
-    loop {
-        if let Err(err) = runner.run_all_pending_jobs() {
-            warn!(%err, "Failed to run background jobs");
-        }
-        sleep(Duration::from_secs(1));
-    }
+    Ok(())
 }
