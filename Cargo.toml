@@ -114,7 +114,7 @@ tower-http = { version = "=0.4.4", features = ["add-extension", "fs", "catch-pan
 tracing = "=0.1.40"
 tracing-subscriber = { version = "=0.3.18", features = ["env-filter"] }
 typomania = { version = "=0.1.2", default-features = false }
-url = "=2.4.1"
+url = "=2.5.0"
 unicode-xid = "=0.2.4"
 
 [dev-dependencies]
