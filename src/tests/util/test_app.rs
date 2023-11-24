@@ -16,7 +16,6 @@ use crates_io_test_db::TestDatabase;
 use diesel::PgConnection;
 use futures_util::TryStreamExt;
 use oauth2::{ClientId, ClientSecret};
-use reqwest::{Client, Proxy};
 use std::collections::HashSet;
 use std::{rc::Rc, sync::Arc, time::Duration};
 use tokio::runtime::Runtime;
@@ -453,16 +452,7 @@ fn simple_config() -> config::Server {
     }
 }
 
-fn build_app(config: config::Server, proxy: Option<String>) -> (Arc<App>, axum::Router) {
-    let _client = if let Some(proxy) = proxy {
-        let mut builder = Client::builder();
-        builder = builder
-            .proxy(Proxy::all(proxy).expect("Unable to configure proxy with the provided URL"));
-        Some(builder.build().expect("TLS backend cannot be initialized"))
-    } else {
-        None
-    };
-
+fn build_app(config: config::Server, _proxy: Option<String>) -> (Arc<App>, axum::Router) {
     // Use a custom mock for the GitHub client, allowing to define the GitHub users and
     // organizations without actually having to create GitHub accounts.
     let github = Box::new(MockGitHubClient::new(&MOCK_GITHUB_DATA));
