@@ -4,7 +4,6 @@ use aws_sdk_cloudfront::config::{BehaviorVersion, Region};
 use aws_sdk_cloudfront::error::SdkError;
 use aws_sdk_cloudfront::types::{InvalidationBatch, Paths};
 use aws_sdk_cloudfront::{Client, Config};
-use tokio::runtime::Handle;
 
 pub struct CloudFront {
     client: Client,
@@ -37,8 +36,8 @@ impl CloudFront {
     /// Invalidate a file on CloudFront
     ///
     /// `path` is the path to the file to invalidate, such as `config.json`, or `re/ge/regex`
-    #[instrument(skip(self, rt))]
-    pub fn invalidate(&self, path: &str, rt: &Handle) -> anyhow::Result<()> {
+    #[instrument(skip(self))]
+    pub async fn invalidate(&self, path: &str) -> anyhow::Result<()> {
         let path = if path.starts_with('/') {
             path.to_string()
         } else {
@@ -62,7 +61,7 @@ impl CloudFront {
 
         debug!("Sending invalidation request");
 
-        match rt.block_on(invalidation_request.send()) {
+        match invalidation_request.send().await {
             Ok(_) => {
                 debug!("Invalidation request successful");
                 Ok(())
