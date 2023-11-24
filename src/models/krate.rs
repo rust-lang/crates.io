@@ -609,7 +609,7 @@ mod tests {
 
     #[test]
     fn validate_crate_name() {
-        use super::InvalidCrateName;
+        use super::{InvalidCrateName, MAX_NAME_LENGTH};
 
         assert_ok!(Crate::validate_crate_name("foo"));
         assert_err_eq!(
@@ -627,6 +627,7 @@ mod tests {
             Crate::validate_crate_name("foo+plus"),
             InvalidCrateName::Char('+', "foo+plus".into())
         );
+        // Crate names cannot start with an underscore on crates.io.
         assert_err_eq!(
             Crate::validate_crate_name("_foo"),
             InvalidCrateName::Start('_', "_foo".into())
@@ -634,6 +635,14 @@ mod tests {
         assert_err_eq!(
             Crate::validate_crate_name("-foo"),
             InvalidCrateName::Start('-', "-foo".into())
+        );
+        assert_err_eq!(
+            Crate::validate_crate_name("123"),
+            InvalidCrateName::StartWithDigit("123".into())
+        );
+        assert_err_eq!(
+            Crate::validate_crate_name("o".repeat(MAX_NAME_LENGTH + 1).as_str()),
+            InvalidCrateName::TooLong("o".repeat(MAX_NAME_LENGTH + 1).as_str().into())
         );
     }
 
