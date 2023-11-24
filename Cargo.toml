@@ -94,7 +94,6 @@ parking_lot = "=0.12.1"
 prometheus = { version = "=0.13.3", default-features = false }
 rand = "=0.8.5"
 reqwest = { version = "=0.11.22", features = ["gzip", "json"] }
-retry = "=2.0.0"
 scheduled-thread-pool = "=0.2.7"
 secrecy = "=0.8.0"
 semver = { version = "=1.0.20", features = ["serde"] }

@@ -106,8 +106,8 @@ impl BackgroundJob for SyncToSparseIndex {
             let path = Repository::relative_index_file_for_url(&self.krate);
 
             info!(%path, "Invalidating index file on CloudFront");
-            cloudfront
-                .invalidate(&path, &Handle::current())
+            Handle::current()
+                .block_on(cloudfront.invalidate(&path))
                 .context("Failed to invalidate CloudFront")?;
         }
 
