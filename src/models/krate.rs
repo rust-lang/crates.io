@@ -192,9 +192,9 @@ impl Crate {
             })
     }
 
-    pub fn validate_crate_name(name: &str) -> bool {
+    pub fn validate_crate_name(name: &str) -> Result<(), InvalidCrateName> {
         if name.chars().count() > MAX_NAME_LENGTH {
-            return false;
+            return Err(InvalidCrateName::TooLong(name.into()));
         }
         Crate::validate_create_ident(name)
     }
@@ -204,27 +204,27 @@ impl Crate {
     // 2. The first character must be an ASCII character.
     // 3. The remaining characters must be ASCII alphanumerics or `-` or `_`.
     // Note: This differs from `valid_dependency_name`, which allows `_` as the first character.
-    fn validate_create_ident(name: &str) -> bool {
+    fn validate_create_ident(name: &str) -> Result<(), InvalidCrateName> {
         if name.is_empty() {
-            return false;
+            return Err(InvalidCrateName::Empty);
         }
         let mut chars = name.chars();
         if let Some(ch) = chars.next() {
             if ch.is_ascii_digit() {
-                return false;
+                return Err(InvalidCrateName::StartWithDigit(name.into()));
             }
             if !ch.is_ascii_alphabetic() {
-                return false;
+                return Err(InvalidCrateName::Start(ch, name.into()));
             }
         }
 
         for ch in chars {
             if !(ch.is_ascii_alphanumeric() || ch == '-' || ch == '_') {
-                return false;
+                return Err(InvalidCrateName::Char(ch, name.into()));
             }
         }
 
-        true
+        Ok(())
     }
 
     pub fn validate_dependency_name(name: &str) -> Result<(), InvalidDependencyName> {
@@ -558,6 +558,29 @@ pub enum InvalidFeature {
 }
 
 #[derive(Debug, Eq, PartialEq, thiserror::Error)]
+pub enum InvalidCrateName {
+    #[error("the crate name `{0}` is too long (max {MAX_NAME_LENGTH} characters)")]
+    TooLong(String),
+    #[error("crate name cannot be empty")]
+    Empty,
+    #[error(
+        "the name `{0}` cannot be used as a crate name, \
+        the name cannot start with a digit"
+    )]
+    StartWithDigit(String),
+    #[error(
+        "invalid character `{0}` in crate name: `{1}`, \
+        the first character must be an ASCII character"
+    )]
+    Start(char, String),
+    #[error(
+        "invalid character `{0}` in crate name: `{1}`, \
+        characters must be an ASCII alphanumeric characters, `-`, or `_`"
+    )]
+    Char(char, String),
+}
+
+#[derive(Debug, Eq, PartialEq, thiserror::Error)]
 pub enum InvalidDependencyName {
     #[error("the dependency name `{0}` is too long (max {MAX_NAME_LENGTH} characters)")]
     TooLong(String),
@@ -586,16 +609,32 @@ mod tests {
 
     #[test]
     fn validate_crate_name() {
-        assert!(Crate::validate_crate_name("foo"));
-        assert!(!Crate::validate_crate_name("京"));
-        assert!(!Crate::validate_crate_name(""));
-        assert!(!Crate::validate_crate_name("💝"));
-        assert!(Crate::validate_crate_name("foo_underscore"));
-        assert!(Crate::validate_crate_name("foo-dash"));
-        assert!(!Crate::validate_crate_name("foo+plus"));
-        // Starting with an underscore is an invalid crate name.
-        assert!(!Crate::validate_crate_name("_foo"));
-        assert!(!Crate::validate_crate_name("-foo"));
+        use super::InvalidCrateName;
+
+        assert_ok!(Crate::validate_crate_name("foo"));
+        assert_err_eq!(
+            Crate::validate_crate_name("京"),
+            InvalidCrateName::Start('京', "京".into())
+        );
+        assert_err_eq!(Crate::validate_crate_name(""), InvalidCrateName::Empty);
+        assert_err_eq!(
+            Crate::validate_crate_name("💝"),
+            InvalidCrateName::Start('💝', "💝".into())
+        );
+        assert_ok!(Crate::validate_crate_name("foo_underscore"));
+        assert_ok!(Crate::validate_crate_name("foo-dash"));
+        assert_err_eq!(
+            Crate::validate_crate_name("foo+plus"),
+            InvalidCrateName::Char('+', "foo+plus".into())
+        );
+        assert_err_eq!(
+            Crate::validate_crate_name("_foo"),
+            InvalidCrateName::Start('_', "_foo".into())
+        );
+        assert_err_eq!(
+            Crate::validate_crate_name("-foo"),
+            InvalidCrateName::Start('-', "-foo".into())
+        );
     }
 
     #[test]
