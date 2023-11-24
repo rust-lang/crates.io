@@ -8,7 +8,7 @@ use std::sync::Arc;
 
 use crate::downloads_counter::DownloadsCounter;
 use crate::email::Emails;
-use crate::github::{GitHubClient, RealGitHubClient};
+use crate::github::GitHubClient;
 use crate::metrics::{InstanceMetrics, ServiceMetrics};
 use crate::rate_limiter::RateLimiter;
 use crate::storage::Storage;
@@ -16,7 +16,6 @@ use axum::extract::{FromRef, FromRequestParts, State};
 use diesel::r2d2;
 use moka::future::{Cache, CacheBuilder};
 use oauth2::basic::BasicClient;
-use reqwest::Client;
 use scheduled_thread_pool::ScheduledThreadPool;
 
 /// The `App` struct holds the main components of the application like
@@ -73,13 +72,11 @@ impl App {
     /// - GitHub OAuth
     /// - Database connection pools
     /// - A `git2::Repository` instance from the index repo checkout (that server.rs ensures exists)
-    pub fn new(config: config::Server, http_client: Option<Client>) -> App {
+    pub fn new(config: config::Server, github: Box<dyn GitHubClient>) -> App {
         use oauth2::{AuthUrl, TokenUrl};
 
         let instance_metrics =
             InstanceMetrics::new().expect("could not initialize instance metrics");
-
-        let github = Box::new(RealGitHubClient::new(http_client.clone()));
 
         let github_oauth = BasicClient::new(
             config.gh_client_id.clone(),

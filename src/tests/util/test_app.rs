@@ -16,7 +16,6 @@ use crates_io_test_db::TestDatabase;
 use diesel::PgConnection;
 use futures_util::TryStreamExt;
 use oauth2::{ClientId, ClientSecret};
-use reqwest::{Client, Proxy};
 use std::collections::HashSet;
 use std::{rc::Rc, sync::Arc, time::Duration};
 use tokio::runtime::Runtime;
@@ -78,21 +77,15 @@ impl TestApp {
 
         TestAppBuilder {
             config: simple_config(),
-            proxy: None,
             index: None,
             build_job_runner: false,
             use_chaos_proxy: false,
         }
     }
 
-    /// Initialize the app and a proxy that can record and playback outgoing HTTP requests
-    pub fn with_proxy() -> TestAppBuilder {
-        Self::init().with_proxy()
-    }
-
     /// Initialize a full application, with a proxy, index, and background worker
     pub fn full() -> TestAppBuilder {
-        Self::with_proxy().with_git_index().with_job_runner()
+        Self::init().with_git_index().with_job_runner()
     }
 
     /// Obtain the database connection and pass it to the closure
@@ -208,7 +201,6 @@ impl TestApp {
 
 pub struct TestAppBuilder {
     config: config::Server,
-    proxy: Option<String>,
     index: Option<UpstreamIndex>,
     build_job_runner: bool,
     use_chaos_proxy: bool,
@@ -255,7 +247,7 @@ impl TestAppBuilder {
             (primary_proxy, replica_proxy, Some(test_database))
         };
 
-        let (app, router) = build_app(self.config, self.proxy);
+        let (app, router) = build_app(self.config);
 
         let runner = if self.build_job_runner {
             let index = self
@@ -304,14 +296,6 @@ impl TestAppBuilder {
             app: test_app.clone(),
         };
         (test_app, anon)
-    }
-
-    /// Create a proxy for use with this app
-    pub fn with_proxy(mut self) -> Self {
-        // Use a dummy proxy address so that we do not accidentally perform real
-        // HTTP requests when running the test suite.
-        self.proxy = Some("http://127.0.0.1:0".into());
-        self
     }
 
     // Create a `TestApp` with a database including a default user
@@ -453,25 +437,16 @@ fn simple_config() -> config::Server {
     }
 }
 
-fn build_app(config: config::Server, proxy: Option<String>) -> (Arc<App>, axum::Router) {
-    let client = if let Some(proxy) = proxy {
-        let mut builder = Client::builder();
-        builder = builder
-            .proxy(Proxy::all(proxy).expect("Unable to configure proxy with the provided URL"));
-        Some(builder.build().expect("TLS backend cannot be initialized"))
-    } else {
-        None
-    };
+fn build_app(config: config::Server) -> (Arc<App>, axum::Router) {
+    // Use a custom mock for the GitHub client, allowing to define the GitHub users and
+    // organizations without actually having to create GitHub accounts.
+    let github = Box::new(MockGitHubClient::new(&MOCK_GITHUB_DATA));
 
-    let mut app = App::new(config, client);
+    let mut app = App::new(config, github);
 
     // Use the in-memory email backend for all tests, allowing tests to analyze the emails sent by
     // the application. This will also prevent cluttering the filesystem.
     app.emails = Emails::new_in_memory();
-
-    // Use a custom mock for the GitHub client, allowing to define the GitHub users and
-    // organizations without actually having to create GitHub accounts.
-    app.github = Box::new(MockGitHubClient::new(&MOCK_GITHUB_DATA));
 
     let app = Arc::new(app);
     let router = crates_io::build_handler(Arc::clone(&app));
