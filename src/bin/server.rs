@@ -6,6 +6,7 @@ use crates_io::{metrics::LogEncoder, util::errors::AppResult, App};
 use std::{sync::Arc, time::Duration};
 
 use axum::ServiceExt;
+use crates_io::github::RealGitHubClient;
 use futures_util::future::FutureExt;
 use prometheus::Encoder;
 use reqwest::Client;
@@ -25,8 +26,12 @@ fn main() -> anyhow::Result<()> {
     let _span = info_span!("server.run");
 
     let config = crates_io::config::Server::from_environment()?;
+
     let client = Client::new();
-    let app = Arc::new(App::new(config, Some(client)));
+    let github = RealGitHubClient::new(Some(client));
+    let github = Box::new(github);
+
+    let app = Arc::new(App::new(config, github));
 
     // Start the background thread periodically persisting download counts to the database.
     downloads_counter_thread(app.clone());

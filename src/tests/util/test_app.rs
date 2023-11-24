@@ -454,7 +454,7 @@ fn simple_config() -> config::Server {
 }
 
 fn build_app(config: config::Server, proxy: Option<String>) -> (Arc<App>, axum::Router) {
-    let client = if let Some(proxy) = proxy {
+    let _client = if let Some(proxy) = proxy {
         let mut builder = Client::builder();
         builder = builder
             .proxy(Proxy::all(proxy).expect("Unable to configure proxy with the provided URL"));
@@ -463,15 +463,15 @@ fn build_app(config: config::Server, proxy: Option<String>) -> (Arc<App>, axum::
         None
     };
 
-    let mut app = App::new(config, client);
+    // Use a custom mock for the GitHub client, allowing to define the GitHub users and
+    // organizations without actually having to create GitHub accounts.
+    let github = Box::new(MockGitHubClient::new(&MOCK_GITHUB_DATA));
+
+    let mut app = App::new(config, github);
 
     // Use the in-memory email backend for all tests, allowing tests to analyze the emails sent by
     // the application. This will also prevent cluttering the filesystem.
     app.emails = Emails::new_in_memory();
-
-    // Use a custom mock for the GitHub client, allowing to define the GitHub users and
-    // organizations without actually having to create GitHub accounts.
-    app.github = Box::new(MockGitHubClient::new(&MOCK_GITHUB_DATA));
 
     let app = Arc::new(app);
     let router = crates_io::build_handler(Arc::clone(&app));
