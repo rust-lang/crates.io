@@ -12,7 +12,6 @@ use std::fs::{self, File};
 use std::io::{BufRead, BufReader, ErrorKind, Write};
 use std::process::Command;
 use std::sync::Arc;
-use tokio::runtime::Handle;
 
 #[derive(Serialize, Deserialize)]
 pub struct SyncToGitIndex {
@@ -103,28 +102,24 @@ impl BackgroundJob for SyncToSparseIndex {
         info!("Syncing to sparse index");
 
         let crate_name = self.krate.clone();
-        spawn_blocking(move || {
-            let mut conn = env.connection_pool.get()?;
-            let content =
-                get_index_data(&crate_name, &mut conn).context("Failed to get index data")?;
-
-            let future = env.storage.sync_index(&crate_name, content);
-            Handle::current()
-                .block_on(future)
-                .context("Failed to sync index data")?;
-
-            if let Some(cloudfront) = env.cloudfront() {
-                let path = Repository::relative_index_file_for_url(&crate_name);
-
-                info!(%path, "Invalidating index file on CloudFront");
-                Handle::current()
-                    .block_on(cloudfront.invalidate(&path))
-                    .context("Failed to invalidate CloudFront")?;
-            }
-
-            Ok(())
+        let pool = env.connection_pool.clone();
+        let content = spawn_blocking(move || {
+            let mut conn = pool.get()?;
+            get_index_data(&crate_name, &mut conn).context("Failed to get index data")
         })
-        .await
+        .await?;
+
+        let future = env.storage.sync_index(&self.krate, content);
+        future.await.context("Failed to sync index data")?;
+
+        if let Some(cloudfront) = env.cloudfront() {
+            let path = Repository::relative_index_file_for_url(&self.krate);
+
+            info!(%path, "Invalidating index file on CloudFront");
+            let future = cloudfront.invalidate(&path);
+            future.await.context("Failed to invalidate CloudFront")?;
+        }
+        Ok(())
     }
 }
 
