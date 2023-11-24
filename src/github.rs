@@ -44,11 +44,11 @@ pub trait GitHubClient: Send + Sync {
 
 #[derive(Debug)]
 pub struct RealGitHubClient {
-    client: Option<Client>,
+    client: Client,
 }
 
 impl RealGitHubClient {
-    pub fn new(client: Option<Client>) -> Self {
+    pub fn new(client: Client) -> Self {
         Self { client }
     }
 
@@ -60,7 +60,7 @@ impl RealGitHubClient {
         let url = format!("https://api.github.com{url}");
         info!("GITHUB HTTP: {url}");
 
-        self.client()
+        self.client
             .get(&url)
             .header(header::ACCEPT, "application/vnd.github.v3+json")
             .header(header::AUTHORIZATION, auth)
@@ -90,21 +90,6 @@ impl RealGitHubClient {
     {
         self._request(url, &format!("basic {username}:{password}"))
             .await
-    }
-
-    /// Returns a client for making HTTP requests to upload crate files.
-    ///
-    /// The client will go through a proxy if the application was configured via
-    /// `TestApp::with_proxy()`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the application was not initialized with a client.  This should only occur in
-    /// tests that were not properly initialized.
-    fn client(&self) -> &Client {
-        self.client
-            .as_ref()
-            .expect("No HTTP client is configured.  In tests, use `TestApp::with_proxy()`.")
     }
 }
 

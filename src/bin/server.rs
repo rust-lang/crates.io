@@ -28,7 +28,7 @@ fn main() -> anyhow::Result<()> {
     let config = crates_io::config::Server::from_environment()?;
 
     let client = Client::new();
-    let github = RealGitHubClient::new(Some(client));
+    let github = RealGitHubClient::new(client);
     let github = Box::new(github);
 
     let app = Arc::new(App::new(config, github));
