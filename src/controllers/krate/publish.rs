@@ -53,7 +53,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
     let metadata: PublishMetadata = serde_json::from_slice(&json_bytes)
         .map_err(|e| cargo_err(format_args!("invalid upload request: {e}")))?;
 
-    if !Crate::valid_name(&metadata.name) {
+    if !Crate::validate_crate_name(&metadata.name) {
         return Err(cargo_err(format_args!(
             "\"{}\" is an invalid crate name (crate names must start with a \
             letter, contain only letters, numbers, hyphens, or underscores and \
@@ -594,7 +594,7 @@ fn convert_dependency(
 }
 
 pub fn validate_dependency(dep: &EncodableCrateDependency) -> AppResult<()> {
-    if !Crate::valid_name(&dep.name) {
+    if !Crate::validate_crate_name(&dep.name) {
         return Err(cargo_err(format_args!(
             "\"{}\" is an invalid dependency name (dependency names must \
             start with a letter, contain only letters, numbers, hyphens, \

@@ -192,11 +192,11 @@ impl Crate {
             })
     }
 
-    pub fn valid_name(name: &str) -> bool {
+    pub fn validate_crate_name(name: &str) -> bool {
         if name.chars().count() > MAX_NAME_LENGTH {
             return false;
         }
-        Crate::valid_create_ident(name)
+        Crate::validate_create_ident(name)
     }
 
     // Checks that the name is a valid crate name.
@@ -204,7 +204,7 @@ impl Crate {
     // 2. The first character must be an ASCII character.
     // 3. The remaining characters must be ASCII alphanumerics or `-` or `_`.
     // Note: This differs from `valid_dependency_name`, which allows `_` as the first character.
-    fn valid_create_ident(name: &str) -> bool {
+    fn validate_create_ident(name: &str) -> bool {
         if name.is_empty() {
             return false;
         }
@@ -585,17 +585,17 @@ mod tests {
     use crate::models::Crate;
 
     #[test]
-    fn valid_name() {
-        assert!(Crate::valid_name("foo"));
-        assert!(!Crate::valid_name("京"));
-        assert!(!Crate::valid_name(""));
-        assert!(!Crate::valid_name("💝"));
-        assert!(Crate::valid_name("foo_underscore"));
-        assert!(Crate::valid_name("foo-dash"));
-        assert!(!Crate::valid_name("foo+plus"));
+    fn validate_crate_name() {
+        assert!(Crate::validate_crate_name("foo"));
+        assert!(!Crate::validate_crate_name("京"));
+        assert!(!Crate::validate_crate_name(""));
+        assert!(!Crate::validate_crate_name("💝"));
+        assert!(Crate::validate_crate_name("foo_underscore"));
+        assert!(Crate::validate_crate_name("foo-dash"));
+        assert!(!Crate::validate_crate_name("foo+plus"));
         // Starting with an underscore is an invalid crate name.
-        assert!(!Crate::valid_name("_foo"));
-        assert!(!Crate::valid_name("-foo"));
+        assert!(!Crate::validate_crate_name("_foo"));
+        assert!(!Crate::validate_crate_name("-foo"));
     }
 
     #[test]
