@@ -1,7 +1,6 @@
 use aws_credential_types::Credentials;
 use aws_sdk_cloudfront::config::retry::RetryConfig;
 use aws_sdk_cloudfront::config::{BehaviorVersion, Region};
-use aws_sdk_cloudfront::error::SdkError;
 use aws_sdk_cloudfront::types::{InvalidationBatch, Paths};
 use aws_sdk_cloudfront::{Client, Config};
 
@@ -65,12 +64,6 @@ impl CloudFront {
             Ok(_) => {
                 debug!("Invalidation request successful");
                 Ok(())
-            }
-            Err(SdkError::ServiceError(error))
-                if error.err().is_too_many_invalidations_in_progress() =>
-            {
-                warn!("Invalidation request failed (TooManyInvalidationsInProgress)");
-                Err(SdkError::ServiceError(error).into())
             }
             Err(error) => {
                 warn!(?error, "Invalidation request failed");
