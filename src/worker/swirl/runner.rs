@@ -13,11 +13,11 @@ use tokio::task::JoinHandle;
 
 const DEFAULT_POLL_INTERVAL: Duration = Duration::from_secs(1);
 
-type RunTaskFn<Context> = dyn Fn(&Context, serde_json::Value) -> anyhow::Result<()> + Send + Sync;
+type RunTaskFn<Context> = dyn Fn(Context, serde_json::Value) -> anyhow::Result<()> + Send + Sync;
 
 type JobRegistry<Context> = HashMap<String, Arc<RunTaskFn<Context>>>;
 
-fn runnable<J: BackgroundJob>(ctx: &J::Context, payload: serde_json::Value) -> anyhow::Result<()> {
+fn runnable<J: BackgroundJob>(ctx: J::Context, payload: serde_json::Value) -> anyhow::Result<()> {
     let job: J = serde_json::from_value(payload)?;
     job.run(ctx)
 }
@@ -185,6 +185,8 @@ impl<Context: Clone + Send + 'static> Worker<Context> {
             let job_id = job.id;
             debug!("Running job…");
 
+            let context = self.context.clone();
+
             let result = with_sentry_transaction(&job.job_type, || {
                 catch_unwind(AssertUnwindSafe(|| {
                     let run_task_fn = self
@@ -192,7 +194,7 @@ impl<Context: Clone + Send + 'static> Worker<Context> {
                         .get(&job.job_type)
                         .ok_or_else(|| anyhow!("Unknown job type {}", job.job_type))?;
 
-                    run_task_fn(&self.context, job.data)
+                    run_task_fn(context, job.data)
                 }))
                 .map_err(|e| try_to_extract_panic_info(&e))
                 // TODO: Replace with flatten() once that stabilizes
@@ -307,7 +309,7 @@ mod tests {
             const JOB_NAME: &'static str = "test";
             type Context = TestContext;
 
-            fn run(&self, ctx: &Self::Context) -> anyhow::Result<()> {
+            fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
                 ctx.job_started_barrier.wait();
                 ctx.assertions_finished_barrier.wait();
                 Ok(())
@@ -352,7 +354,7 @@ mod tests {
             const JOB_NAME: &'static str = "test";
             type Context = ();
 
-            fn run(&self, _ctx: &Self::Context) -> anyhow::Result<()> {
+            fn run(&self, _ctx: Self::Context) -> anyhow::Result<()> {
                 Ok(())
             }
         }
@@ -394,7 +396,7 @@ mod tests {
             const JOB_NAME: &'static str = "test";
             type Context = TestContext;
 
-            fn run(&self, ctx: &Self::Context) -> anyhow::Result<()> {
+            fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
                 ctx.job_started_barrier.wait();
                 panic!();
             }
@@ -448,7 +450,7 @@ mod tests {
             const JOB_NAME: &'static str = "test";
             type Context = ();
 
-            fn run(&self, _ctx: &Self::Context) -> anyhow::Result<()> {
+            fn run(&self, _ctx: Self::Context) -> anyhow::Result<()> {
                 panic!()
             }
         }

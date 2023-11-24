@@ -28,7 +28,7 @@ impl BackgroundJob for CheckTyposquat {
     type Context = Arc<Environment>;
 
     #[instrument(skip(env), err)]
-    fn run(&self, env: &Self::Context) -> anyhow::Result<()> {
+    fn run(&self, env: Self::Context) -> anyhow::Result<()> {
         let mut conn = env.connection_pool.get()?;
         let cache = env.typosquat_cache(&mut conn)?;
         check(&env.emails, cache, &mut conn, &self.name)
