@@ -193,17 +193,38 @@ impl Crate {
     }
 
     pub fn valid_name(name: &str) -> bool {
-        let under_max_length = name.chars().take(MAX_NAME_LENGTH + 1).count() <= MAX_NAME_LENGTH;
-        Crate::valid_ident(name) && under_max_length
+        if name.chars().count() > MAX_NAME_LENGTH {
+            return false;
+        }
+        Crate::valid_create_ident(name)
     }
 
-    fn valid_ident(name: &str) -> bool {
-        Self::valid_feature_prefix(name)
-            && name
-                .chars()
-                .next()
-                .map(char::is_alphabetic)
-                .unwrap_or(false)
+    // Checks that the name is a valid crate name.
+    // 1. The name must be non-empty.
+    // 2. The first character must be an ASCII character.
+    // 3. The remaining characters must be ASCII alphanumerics or `-` or `_`.
+    // Note: This differs from `valid_dependency_name`, which allows `_` as the first character.
+    fn valid_create_ident(name: &str) -> bool {
+        if name.is_empty() {
+            return false;
+        }
+        let mut chars = name.chars();
+        if let Some(ch) = chars.next() {
+            if ch.is_ascii_digit() {
+                return false;
+            }
+            if !ch.is_ascii_alphabetic() {
+                return false;
+            }
+        }
+
+        for ch in chars {
+            if !(ch.is_ascii_alphanumeric() || ch == '-' || ch == '_') {
+                return false;
+            }
+        }
+
+        true
     }
 
     pub fn validate_dependency_name(name: &str) -> Result<(), InvalidDependencyName> {
@@ -279,15 +300,6 @@ impl Crate {
         } else {
             Crate::validate_feature_name(name)
         }
-    }
-
-    /// Validates the prefix in front of the slash: `features = ["THIS/feature"]`.
-    /// Normally this corresponds to the crate name of a dependency.
-    fn valid_feature_prefix(name: &str) -> bool {
-        !name.is_empty()
-            && name
-                .chars()
-                .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
     }
 
     /// Return both the newest (most recently updated) and
