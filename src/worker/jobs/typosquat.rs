@@ -1,8 +1,10 @@
+use async_trait::async_trait;
 use std::sync::Arc;
 
 use diesel::PgConnection;
 use typomania::Package;
 
+use crate::tasks::spawn_blocking;
 use crate::{
     typosquat::{Cache, Crate},
     worker::{swirl::BackgroundJob, Environment},
@@ -22,16 +24,22 @@ impl CheckTyposquat {
     }
 }
 
+#[async_trait]
 impl BackgroundJob for CheckTyposquat {
     const JOB_NAME: &'static str = "check_typosquat";
 
     type Context = Arc<Environment>;
 
     #[instrument(skip(env), err)]
-    fn run(&self, env: Self::Context) -> anyhow::Result<()> {
-        let mut conn = env.connection_pool.get()?;
-        let cache = env.typosquat_cache(&mut conn)?;
-        check(&env.emails, cache, &mut conn, &self.name)
+    async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
+        let crate_name = self.name.clone();
+
+        spawn_blocking(move || {
+            let mut conn = env.connection_pool.get()?;
+            let cache = env.typosquat_cache(&mut conn)?;
+            check(&env.emails, cache, &mut conn, &crate_name)
+        })
+        .await
     }
 }
 

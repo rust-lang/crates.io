@@ -1,14 +1,16 @@
 use self::configuration::VisibilityConfig;
 use crate::storage::Storage;
+use crate::tasks::spawn_blocking;
 use crate::worker::swirl::BackgroundJob;
 use crate::worker::Environment;
 use anyhow::{anyhow, Context};
+use async_trait::async_trait;
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::runtime::Handle;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct DumpDb {
     database_url: String,
     target_name: String,
@@ -23,6 +25,7 @@ impl DumpDb {
     }
 }
 
+#[async_trait]
 impl BackgroundJob for DumpDb {
     const JOB_NAME: &'static str = "dump_db";
 
@@ -30,36 +33,41 @@ impl BackgroundJob for DumpDb {
 
     /// Create CSV dumps of the public information in the database, wrap them in a
     /// tarball and upload to S3.
-    fn run(&self, env: Self::Context) -> anyhow::Result<()> {
-        let directory = DumpDirectory::create()?;
+    async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
+        let job = self.clone();
 
-        info!(path = ?directory.export_dir, "Begin exporting database");
-        directory.populate(&self.database_url)?;
+        spawn_blocking(move || {
+            let directory = DumpDirectory::create()?;
 
-        info!(path = ?directory.export_dir, "Creating tarball");
-        let tarball = DumpTarball::create(&directory.export_dir)?;
+            info!(path = ?directory.export_dir, "Begin exporting database");
+            directory.populate(&job.database_url)?;
 
-        let rt_handle = Handle::current();
+            info!(path = ?directory.export_dir, "Creating tarball");
+            let tarball = DumpTarball::create(&directory.export_dir)?;
 
-        info!("Uploading tarball");
-        let storage = Storage::from_environment();
-        rt_handle.block_on(storage.upload_db_dump(&self.target_name, &tarball.tarball_path))?;
-        info!("Database dump tarball uploaded");
+            let rt_handle = Handle::current();
 
-        info!("Invalidating CDN caches");
-        if let Some(cloudfront) = env.cloudfront() {
-            if let Err(error) = rt_handle.block_on(cloudfront.invalidate(&self.target_name)) {
-                warn!("failed to invalidate CloudFront cache: {}", error);
+            info!("Uploading tarball");
+            let storage = Storage::from_environment();
+            rt_handle.block_on(storage.upload_db_dump(&job.target_name, &tarball.tarball_path))?;
+            info!("Database dump tarball uploaded");
+
+            info!("Invalidating CDN caches");
+            if let Some(cloudfront) = env.cloudfront() {
+                if let Err(error) = rt_handle.block_on(cloudfront.invalidate(&job.target_name)) {
+                    warn!("failed to invalidate CloudFront cache: {}", error);
+                }
             }
-        }
 
-        if let Some(fastly) = env.fastly() {
-            if let Err(error) = rt_handle.block_on(fastly.invalidate(&self.target_name)) {
-                warn!("failed to invalidate Fastly cache: {}", error);
+            if let Some(fastly) = env.fastly() {
+                if let Err(error) = rt_handle.block_on(fastly.invalidate(&job.target_name)) {
+                    warn!("failed to invalidate Fastly cache: {}", error);
+                }
             }
-        }
 
-        Ok(())
+            Ok(())
+        })
+        .await
     }
 }
 

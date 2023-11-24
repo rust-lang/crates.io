@@ -1,22 +1,28 @@
 use crate::models::VersionDownload;
 use crate::schema::{crates, metadata, version_downloads, versions};
+use crate::tasks::spawn_blocking;
 use crate::worker::swirl::BackgroundJob;
 use crate::worker::Environment;
+use async_trait::async_trait;
 use diesel::prelude::*;
 use std::sync::Arc;
 
 #[derive(Serialize, Deserialize)]
 pub struct UpdateDownloads;
 
+#[async_trait]
 impl BackgroundJob for UpdateDownloads {
     const JOB_NAME: &'static str = "update_downloads";
 
     type Context = Arc<Environment>;
 
-    fn run(&self, env: Self::Context) -> anyhow::Result<()> {
-        let mut conn = env.connection_pool.get()?;
-        update(&mut conn)?;
-        Ok(())
+    async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
+        spawn_blocking(move || {
+            let mut conn = env.connection_pool.get()?;
+            update(&mut conn)?;
+            Ok(())
+        })
+        .await
     }
 }
 
