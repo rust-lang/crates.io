@@ -2,7 +2,7 @@
 extern crate tracing;
 
 use crates_io::middleware::normalize_path::normalize_path;
-use crates_io::{metrics::LogEncoder, util::errors::AppResult, App};
+use crates_io::{metrics::LogEncoder, util::errors::AppResult, App, Emails};
 use std::{sync::Arc, time::Duration};
 
 use axum::ServiceExt;
@@ -27,11 +27,13 @@ fn main() -> anyhow::Result<()> {
 
     let config = crates_io::config::Server::from_environment()?;
 
+    let emails = Emails::from_environment(&config);
+
     let client = Client::new();
     let github = RealGitHubClient::new(client);
     let github = Box::new(github);
 
-    let app = Arc::new(App::new(config, github));
+    let app = Arc::new(App::new(config, emails, github));
 
     // Start the background thread periodically persisting download counts to the database.
     downloads_counter_thread(app.clone());
