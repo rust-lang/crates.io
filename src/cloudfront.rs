@@ -6,7 +6,7 @@ use aws_sdk_cloudfront::{Client, Config};
 use retry::delay::{jitter, Exponential};
 use retry::OperationResult;
 use std::time::Duration;
-use tokio::runtime::Runtime;
+use tokio::runtime::Handle;
 
 pub struct CloudFront {
     client: Client,
@@ -39,7 +39,7 @@ impl CloudFront {
     ///
     /// `path` is the path to the file to invalidate, such as `config.json`, or `re/ge/regex`
     #[instrument(skip(self, rt))]
-    pub fn invalidate(&self, path: &str, rt: &Runtime) -> anyhow::Result<()> {
+    pub fn invalidate(&self, path: &str, rt: &Handle) -> anyhow::Result<()> {
         let path = if path.starts_with('/') {
             path.to_string()
         } else {
