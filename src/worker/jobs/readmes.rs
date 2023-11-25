@@ -1,13 +1,15 @@
 //! Render README files to HTML.
 
 use crate::models::Version;
+use crate::tasks::spawn_blocking;
 use crate::worker::swirl::BackgroundJob;
 use crate::worker::Environment;
+use async_trait::async_trait;
 use crates_io_markdown::text_to_html;
 use std::sync::Arc;
 use tokio::runtime::Handle;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct RenderAndUploadReadme {
     version_id: i32,
     text: String,
@@ -34,6 +36,7 @@ impl RenderAndUploadReadme {
     }
 }
 
+#[async_trait]
 impl BackgroundJob for RenderAndUploadReadme {
     const JOB_NAME: &'static str = "render_and_upload_readme";
     const PRIORITY: i16 = 50;
@@ -41,38 +44,42 @@ impl BackgroundJob for RenderAndUploadReadme {
     type Context = Arc<Environment>;
 
     #[instrument(skip_all, fields(krate.name))]
-    fn run(&self, env: Self::Context) -> anyhow::Result<()> {
+    async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
         use crate::schema::*;
         use diesel::prelude::*;
 
         info!(version_id = ?self.version_id, "Rendering README");
 
-        let rendered = text_to_html(
-            &self.text,
-            &self.readme_path,
-            self.base_url.as_deref(),
-            self.pkg_path_in_vcs.as_ref(),
-        );
-        if rendered.is_empty() {
-            return Ok(());
-        }
+        let job = self.clone();
+        spawn_blocking(move || {
+            let rendered = text_to_html(
+                &job.text,
+                &job.readme_path,
+                job.base_url.as_deref(),
+                job.pkg_path_in_vcs.as_ref(),
+            );
+            if rendered.is_empty() {
+                return Ok(());
+            }
 
-        let mut conn = env.connection_pool.get()?;
-        conn.transaction(|conn| {
-            Version::record_readme_rendering(self.version_id, conn)?;
-            let (crate_name, vers): (String, String) = versions::table
-                .find(self.version_id)
-                .inner_join(crates::table)
-                .select((crates::name, versions::num))
-                .first(conn)?;
+            let mut conn = env.connection_pool.get()?;
+            conn.transaction(|conn| {
+                Version::record_readme_rendering(job.version_id, conn)?;
+                let (crate_name, vers): (String, String) = versions::table
+                    .find(job.version_id)
+                    .inner_join(crates::table)
+                    .select((crates::name, versions::num))
+                    .first(conn)?;
 
-            tracing::Span::current().record("krate.name", tracing::field::display(&crate_name));
+                tracing::Span::current().record("krate.name", tracing::field::display(&crate_name));
 
-            let bytes = rendered.into();
-            let future = env.storage.upload_readme(&crate_name, &vers, bytes);
-            Handle::current().block_on(future)?;
+                let bytes = rendered.into();
+                let future = env.storage.upload_readme(&crate_name, &vers, bytes);
+                Handle::current().block_on(future)?;
 
-            Ok(())
+                Ok(())
+            })
         })
+        .await
     }
 }

@@ -1,11 +1,14 @@
+use crate::tasks::spawn_blocking;
 use crate::worker::swirl::BackgroundJob;
 use crate::worker::Environment;
+use async_trait::async_trait;
 use diesel::{sql_query, RunQueryDsl};
 use std::sync::Arc;
 
 #[derive(Serialize, Deserialize)]
 pub struct DailyDbMaintenance;
 
+#[async_trait]
 impl BackgroundJob for DailyDbMaintenance {
     const JOB_NAME: &'static str = "daily_db_maintenance";
 
@@ -20,12 +23,15 @@ impl BackgroundJob for DailyDbMaintenance {
     /// We only need to keep 90 days of entries in `version_downloads`. Once we have a mechanism to
     /// archive daily download counts and drop historical data, we can drop this task and rely on
     /// auto-vacuum again.
-    fn run(&self, env: Self::Context) -> anyhow::Result<()> {
-        let mut conn = env.connection_pool.get()?;
+    async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
+        spawn_blocking(move || {
+            let mut conn = env.connection_pool.get()?;
 
-        info!("Running VACUUM on version_downloads table");
-        sql_query("VACUUM version_downloads;").execute(&mut *conn)?;
-        info!("Finished running VACUUM on version_downloads table");
-        Ok(())
+            info!("Running VACUUM on version_downloads table");
+            sql_query("VACUUM version_downloads;").execute(&mut *conn)?;
+            info!("Finished running VACUUM on version_downloads table");
+            Ok(())
+        })
+        .await
     }
 }

@@ -19,7 +19,7 @@ type JobRegistry<Context> = HashMap<String, Arc<RunTaskFn<Context>>>;
 
 fn runnable<J: BackgroundJob>(ctx: J::Context, payload: serde_json::Value) -> anyhow::Result<()> {
     let job: J = serde_json::from_value(payload)?;
-    job.run(ctx)
+    Handle::current().block_on(job.run(ctx))
 }
 
 /// The core runner responsible for locking and running jobs
@@ -259,11 +259,13 @@ mod tests {
 
     use super::*;
     use crate::schema::background_jobs;
+    use async_trait::async_trait;
     use crates_io_test_db::TestDatabase;
     use diesel::r2d2;
     use diesel::r2d2::ConnectionManager;
-    use std::sync::{Arc, Barrier};
+    use std::sync::Arc;
     use tokio::runtime::Runtime;
+    use tokio::sync::Barrier;
 
     fn runtime() -> Runtime {
         tokio::runtime::Builder::new_current_thread()
@@ -305,13 +307,14 @@ mod tests {
         #[derive(Serialize, Deserialize)]
         struct TestJob;
 
+        #[async_trait]
         impl BackgroundJob for TestJob {
             const JOB_NAME: &'static str = "test";
             type Context = TestContext;
 
-            fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
-                ctx.job_started_barrier.wait();
-                ctx.assertions_finished_barrier.wait();
+            async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
+                ctx.job_started_barrier.wait().await;
+                ctx.assertions_finished_barrier.wait().await;
                 Ok(())
             }
         }
@@ -334,12 +337,12 @@ mod tests {
         assert!(!job_is_locked(job_id, &mut conn));
 
         let runner = runner.start();
-        test_context.job_started_barrier.wait();
+        rt.block_on(test_context.job_started_barrier.wait());
 
         assert!(job_exists(job_id, &mut conn));
         assert!(job_is_locked(job_id, &mut conn));
 
-        test_context.assertions_finished_barrier.wait();
+        rt.block_on(test_context.assertions_finished_barrier.wait());
         rt.block_on(runner.wait_for_shutdown());
 
         assert!(!job_exists(job_id, &mut conn));
@@ -350,11 +353,12 @@ mod tests {
         #[derive(Serialize, Deserialize)]
         struct TestJob;
 
+        #[async_trait]
         impl BackgroundJob for TestJob {
             const JOB_NAME: &'static str = "test";
             type Context = ();
 
-            fn run(&self, _ctx: Self::Context) -> anyhow::Result<()> {
+            async fn run(&self, _ctx: Self::Context) -> anyhow::Result<()> {
                 Ok(())
             }
         }
@@ -392,12 +396,13 @@ mod tests {
         #[derive(Serialize, Deserialize)]
         struct TestJob;
 
+        #[async_trait]
         impl BackgroundJob for TestJob {
             const JOB_NAME: &'static str = "test";
             type Context = TestContext;
 
-            fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
-                ctx.job_started_barrier.wait();
+            async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
+                ctx.job_started_barrier.wait().await;
                 panic!();
             }
         }
@@ -416,7 +421,7 @@ mod tests {
         TestJob.enqueue(&mut conn).unwrap();
 
         let runner = runner.start();
-        test_context.job_started_barrier.wait();
+        rt.block_on(test_context.job_started_barrier.wait());
 
         // `SKIP LOCKED` is intentionally omitted here, so we block until
         // the lock on the first job is released.
@@ -446,11 +451,12 @@ mod tests {
         #[derive(Serialize, Deserialize)]
         struct TestJob;
 
+        #[async_trait]
         impl BackgroundJob for TestJob {
             const JOB_NAME: &'static str = "test";
             type Context = ();
 
-            fn run(&self, _ctx: Self::Context) -> anyhow::Result<()> {
+            async fn run(&self, _ctx: Self::Context) -> anyhow::Result<()> {
                 panic!()
             }
         }

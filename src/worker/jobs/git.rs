@@ -1,7 +1,9 @@
 use crate::models;
+use crate::tasks::spawn_blocking;
 use crate::worker::swirl::BackgroundJob;
 use crate::worker::Environment;
 use anyhow::Context;
+use async_trait::async_trait;
 use chrono::Utc;
 use crates_io_index::{Crate, Repository};
 use diesel::prelude::*;
@@ -10,7 +12,6 @@ use std::fs::{self, File};
 use std::io::{BufRead, BufReader, ErrorKind, Write};
 use std::process::Command;
 use std::sync::Arc;
-use tokio::runtime::Handle;
 
 #[derive(Serialize, Deserialize)]
 pub struct SyncToGitIndex {
@@ -24,6 +25,7 @@ impl SyncToGitIndex {
     }
 }
 
+#[async_trait]
 impl BackgroundJob for SyncToGitIndex {
     const JOB_NAME: &'static str = "sync_to_git_index";
     const PRIORITY: i16 = 100;
@@ -32,42 +34,46 @@ impl BackgroundJob for SyncToGitIndex {
 
     /// Regenerates or removes an index file for a single crate
     #[instrument(skip_all, fields(krate.name = ? self.krate))]
-    fn run(&self, env: Self::Context) -> anyhow::Result<()> {
+    async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
         info!("Syncing to git index");
 
-        let mut conn = env.connection_pool.get()?;
-        let new = get_index_data(&self.krate, &mut conn).context("Failed to get index data")?;
+        let crate_name = self.krate.clone();
+        spawn_blocking(move || {
+            let mut conn = env.connection_pool.get()?;
+            let new = get_index_data(&crate_name, &mut conn).context("Failed to get index data")?;
 
-        let repo = env.lock_index()?;
-        let dst = repo.index_file(&self.krate);
+            let repo = env.lock_index()?;
+            let dst = repo.index_file(&crate_name);
 
-        // Read the previous crate contents
-        let old = match fs::read_to_string(&dst) {
-            Ok(content) => Some(content),
-            Err(error) if error.kind() == ErrorKind::NotFound => None,
-            Err(error) => return Err(error.into()),
-        };
+            // Read the previous crate contents
+            let old = match fs::read_to_string(&dst) {
+                Ok(content) => Some(content),
+                Err(error) if error.kind() == ErrorKind::NotFound => None,
+                Err(error) => return Err(error.into()),
+            };
 
-        match (old, new) {
-            (None, Some(new)) => {
-                fs::create_dir_all(dst.parent().unwrap())?;
-                let mut file = File::create(&dst)?;
-                file.write_all(new.as_bytes())?;
-                repo.commit_and_push(&format!("Create crate `{}`", self.krate), &dst)?;
+            match (old, new) {
+                (None, Some(new)) => {
+                    fs::create_dir_all(dst.parent().unwrap())?;
+                    let mut file = File::create(&dst)?;
+                    file.write_all(new.as_bytes())?;
+                    repo.commit_and_push(&format!("Create crate `{}`", &crate_name), &dst)?;
+                }
+                (Some(old), Some(new)) if old != new => {
+                    let mut file = File::create(&dst)?;
+                    file.write_all(new.as_bytes())?;
+                    repo.commit_and_push(&format!("Update crate `{}`", &crate_name), &dst)?;
+                }
+                (Some(_old), None) => {
+                    fs::remove_file(&dst)?;
+                    repo.commit_and_push(&format!("Delete crate `{}`", &crate_name), &dst)?;
+                }
+                _ => debug!("Skipping sync because index is up-to-date"),
             }
-            (Some(old), Some(new)) if old != new => {
-                let mut file = File::create(&dst)?;
-                file.write_all(new.as_bytes())?;
-                repo.commit_and_push(&format!("Update crate `{}`", self.krate), &dst)?;
-            }
-            (Some(_old), None) => {
-                fs::remove_file(&dst)?;
-                repo.commit_and_push(&format!("Delete crate `{}`", self.krate), &dst)?;
-            }
-            _ => debug!("Skipping sync because index is up-to-date"),
-        }
 
-        Ok(())
+            Ok(())
+        })
+        .await
     }
 }
 
@@ -83,6 +89,7 @@ impl SyncToSparseIndex {
     }
 }
 
+#[async_trait]
 impl BackgroundJob for SyncToSparseIndex {
     const JOB_NAME: &'static str = "sync_to_sparse_index";
     const PRIORITY: i16 = 100;
@@ -91,26 +98,27 @@ impl BackgroundJob for SyncToSparseIndex {
 
     /// Regenerates or removes an index file for a single crate
     #[instrument(skip_all, fields(krate.name = ?self.krate))]
-    fn run(&self, env: Self::Context) -> anyhow::Result<()> {
+    async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
         info!("Syncing to sparse index");
 
-        let mut conn = env.connection_pool.get()?;
-        let content = get_index_data(&self.krate, &mut conn).context("Failed to get index data")?;
+        let crate_name = self.krate.clone();
+        let pool = env.connection_pool.clone();
+        let content = spawn_blocking(move || {
+            let mut conn = pool.get()?;
+            get_index_data(&crate_name, &mut conn).context("Failed to get index data")
+        })
+        .await?;
 
         let future = env.storage.sync_index(&self.krate, content);
-        Handle::current()
-            .block_on(future)
-            .context("Failed to sync index data")?;
+        future.await.context("Failed to sync index data")?;
 
         if let Some(cloudfront) = env.cloudfront() {
             let path = Repository::relative_index_file_for_url(&self.krate);
 
             info!(%path, "Invalidating index file on CloudFront");
-            Handle::current()
-                .block_on(cloudfront.invalidate(&path))
-                .context("Failed to invalidate CloudFront")?;
+            let future = cloudfront.invalidate(&path);
+            future.await.context("Failed to invalidate CloudFront")?;
         }
-
         Ok(())
     }
 }
@@ -154,6 +162,7 @@ pub fn get_index_data(name: &str, conn: &mut PgConnection) -> anyhow::Result<Opt
 #[derive(Serialize, Deserialize)]
 pub struct SquashIndex;
 
+#[async_trait]
 impl BackgroundJob for SquashIndex {
     const JOB_NAME: &'static str = "squash_index";
 
@@ -161,39 +170,42 @@ impl BackgroundJob for SquashIndex {
 
     /// Collapse the index into a single commit, archiving the current history in a snapshot branch.
     #[instrument(skip_all)]
-    fn run(&self, env: Self::Context) -> anyhow::Result<()> {
+    async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
         info!("Squashing the index into a single commit");
 
-        let repo = env.lock_index()?;
+        spawn_blocking(move || {
+            let repo = env.lock_index()?;
 
-        let now = Utc::now().format("%Y-%m-%d");
-        let original_head = repo.head_oid()?.to_string();
-        let msg = format!("Collapse index into one commit\n\n\
-        Previous HEAD was {original_head}, now on the `snapshot-{now}` branch\n\n\
-        More information about this change can be found [online] and on [this issue].\n\n\
-        [online]: https://internals.rust-lang.org/t/cargos-crate-index-upcoming-squash-into-one-commit/8440\n\
-        [this issue]: https://github.com/rust-lang/crates-io-cargo-teams/issues/47");
+            let now = Utc::now().format("%Y-%m-%d");
+            let original_head = repo.head_oid()?.to_string();
+            let msg = format!("Collapse index into one commit\n\n\
+            Previous HEAD was {original_head}, now on the `snapshot-{now}` branch\n\n\
+            More information about this change can be found [online] and on [this issue].\n\n\
+            [online]: https://internals.rust-lang.org/t/cargos-crate-index-upcoming-squash-into-one-commit/8440\n\
+            [this issue]: https://github.com/rust-lang/crates-io-cargo-teams/issues/47");
 
-        repo.squash_to_single_commit(&msg)?;
+            repo.squash_to_single_commit(&msg)?;
 
-        // Shell out to git because libgit2 does not currently support push leases
+            // Shell out to git because libgit2 does not currently support push leases
 
-        repo.run_command(Command::new("git").args([
-            "push",
-            // Both updates should succeed or fail together
-            "--atomic",
-            "origin",
-            // Overwrite master, but only if it server matches the expected value
-            &format!("--force-with-lease=refs/heads/master:{original_head}"),
-            // The new squashed commit is pushed to master
-            "HEAD:refs/heads/master",
-            // The previous value of HEAD is pushed to a snapshot branch
-            &format!("{original_head}:refs/heads/snapshot-{now}"),
-        ]))?;
+            repo.run_command(Command::new("git").args([
+                "push",
+                // Both updates should succeed or fail together
+                "--atomic",
+                "origin",
+                // Overwrite master, but only if it server matches the expected value
+                &format!("--force-with-lease=refs/heads/master:{original_head}"),
+                // The new squashed commit is pushed to master
+                "HEAD:refs/heads/master",
+                // The previous value of HEAD is pushed to a snapshot branch
+                &format!("{original_head}:refs/heads/snapshot-{now}"),
+            ]))?;
 
-        info!("The index has been successfully squashed.");
+            info!("The index has been successfully squashed.");
 
-        Ok(())
+            Ok(())
+        })
+        .await
     }
 }
 
@@ -208,72 +220,82 @@ impl NormalizeIndex {
     }
 }
 
+#[async_trait]
 impl BackgroundJob for NormalizeIndex {
     const JOB_NAME: &'static str = "normalize_index";
 
     type Context = Arc<Environment>;
 
-    fn run(&self, env: Self::Context) -> anyhow::Result<()> {
+    async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
         info!("Normalizing the index");
 
-        let repo = env.lock_index()?;
+        let dry_run = self.dry_run;
+        spawn_blocking(move || {
+            let repo = env.lock_index()?;
 
-        let files = repo.get_files_modified_since(None)?;
-        let num_files = files.len();
+            let files = repo.get_files_modified_since(None)?;
+            let num_files = files.len();
 
-        for (i, file) in files.iter().enumerate() {
-            if i % 50 == 0 {
-                info!(num_files, i, ?file);
-            }
+            for (i, file) in files.iter().enumerate() {
+                if i % 50 == 0 {
+                    info!(num_files, i, ?file);
+                }
 
-            let crate_name = file.file_name().unwrap().to_str().unwrap();
-            let path = repo.index_file(crate_name);
-            if !path.exists() {
-                continue;
-            }
-
-            let mut body: Vec<u8> = Vec::new();
-            let file = fs::File::open(&path)?;
-            let reader = BufReader::new(file);
-            let mut versions = Vec::new();
-            for line in reader.lines() {
-                let line = line?;
-                if line.is_empty() {
+                let crate_name = file.file_name().unwrap().to_str().unwrap();
+                let path = repo.index_file(crate_name);
+                if !path.exists() {
                     continue;
                 }
 
-                let mut krate: Crate = serde_json::from_str(&line)?;
-                for dep in &mut krate.deps {
-                    // Remove deps with empty features
-                    dep.features.retain(|d| !d.is_empty());
-                    // Set null DependencyKind to Normal
-                    dep.kind = Some(dep.kind.unwrap_or(crates_io_index::DependencyKind::Normal));
+                let mut body: Vec<u8> = Vec::new();
+                let file = fs::File::open(&path)?;
+                let reader = BufReader::new(file);
+                let mut versions = Vec::new();
+                for line in reader.lines() {
+                    let line = line?;
+                    if line.is_empty() {
+                        continue;
+                    }
+
+                    let mut krate: Crate = serde_json::from_str(&line)?;
+                    for dep in &mut krate.deps {
+                        // Remove deps with empty features
+                        dep.features.retain(|d| !d.is_empty());
+                        // Set null DependencyKind to Normal
+                        dep.kind =
+                            Some(dep.kind.unwrap_or(crates_io_index::DependencyKind::Normal));
+                    }
+                    krate.deps.sort();
+                    versions.push(krate);
                 }
-                krate.deps.sort();
-                versions.push(krate);
+                for version in versions {
+                    serde_json::to_writer(&mut body, &version).unwrap();
+                    body.push(b'\n');
+                }
+                fs::write(path, body)?;
             }
-            for version in versions {
-                serde_json::to_writer(&mut body, &version).unwrap();
-                body.push(b'\n');
-            }
-            fs::write(path, body)?;
-        }
 
-        info!("Committing normalization");
-        let msg = "Normalize index format\n\n\
+            info!("Committing normalization");
+            let msg = "Normalize index format\n\n\
         More information can be found at https://github.com/rust-lang/crates.io/pull/5066";
-        repo.run_command(Command::new("git").args(["commit", "-am", msg]))?;
+            repo.run_command(Command::new("git").args(["commit", "-am", msg]))?;
 
-        let branch = match self.dry_run {
-            false => "master",
-            true => "normalization-dry-run",
-        };
+            let branch = match dry_run {
+                false => "master",
+                true => "normalization-dry-run",
+            };
 
-        info!(?branch, "Pushing to upstream repository");
-        repo.run_command(Command::new("git").args(["push", "origin", &format!("HEAD:{branch}")]))?;
+            info!(?branch, "Pushing to upstream repository");
+            repo.run_command(Command::new("git").args([
+                "push",
+                "origin",
+                &format!("HEAD:{branch}"),
+            ]))?;
 
-        info!("Index normalization completed");
+            info!("Index normalization completed");
 
-        Ok(())
+            Ok(())
+        })
+        .await
     }
 }
