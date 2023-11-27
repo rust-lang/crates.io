@@ -949,7 +949,6 @@ dependencies = [
  "http",
  "http-body",
  "hyper",
- "hyper-tls",
  "indexmap",
  "indicatif",
  "insta",
