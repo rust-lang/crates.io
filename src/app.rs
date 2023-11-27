@@ -72,7 +72,7 @@ impl App {
     /// - GitHub OAuth
     /// - Database connection pools
     /// - A `git2::Repository` instance from the index repo checkout (that server.rs ensures exists)
-    pub fn new(config: config::Server, github: Box<dyn GitHubClient>) -> App {
+    pub fn new(config: config::Server, emails: Emails, github: Box<dyn GitHubClient>) -> App {
         use oauth2::{AuthUrl, TokenUrl};
 
         let instance_metrics =
@@ -152,7 +152,7 @@ impl App {
             github_oauth,
             version_id_cacher,
             downloads_counter: DownloadsCounter::new(),
-            emails: Emails::from_environment(&config),
+            emails,
             storage: Arc::new(Storage::from_config(&config.storage)),
             service_metrics: ServiceMetrics::new().expect("could not initialize service metrics"),
             instance_metrics,
