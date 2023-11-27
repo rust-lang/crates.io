@@ -5,7 +5,7 @@ use diesel::prelude::*;
 use diesel::sql_types::{Bool, Integer, Interval};
 use diesel::{delete, update};
 
-#[derive(Queryable, Identifiable, Debug, Clone)]
+#[derive(Queryable, Selectable, Identifiable, Debug, Clone)]
 pub(super) struct BackgroundJob {
     pub(super) id: i64,
     pub(super) job_type: String,
@@ -27,11 +27,7 @@ fn retriable() -> Box<dyn BoxableExpression<background_jobs::table, Pg, SqlType 
 /// found, it will be locked.
 pub(super) fn find_next_unlocked_job(conn: &mut PgConnection) -> QueryResult<BackgroundJob> {
     background_jobs::table
-        .select((
-            background_jobs::id,
-            background_jobs::job_type,
-            background_jobs::data,
-        ))
+        .select(BackgroundJob::as_select())
         .filter(retriable())
         .order((background_jobs::priority.desc(), background_jobs::id))
         .for_update()
