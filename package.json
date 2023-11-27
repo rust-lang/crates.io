@@ -86,7 +86,7 @@
     "ember-cli-htmlbars": "6.3.0",
     "ember-cli-inject-live-reload": "2.1.0",
     "ember-cli-mirage": "3.0.2",
-    "ember-cli-notifications": "8.0.0",
+    "ember-cli-notifications": "9.0.0",
     "ember-click-outside": "6.1.0",
     "ember-concurrency": "3.1.1",
     "ember-css-modules": "2.0.1",
