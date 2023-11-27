@@ -1,7 +1,7 @@
-use crate::db::{DieselPool, DieselPooledConn, PoolError};
 use crate::worker::swirl::{storage, BackgroundJob};
 use anyhow::anyhow;
 use diesel::prelude::*;
+use diesel::r2d2::{ConnectionManager, Pool, PoolError, PooledConnection};
 use futures_util::future::join_all;
 use std::any::Any;
 use std::collections::HashMap;
@@ -12,6 +12,9 @@ use tokio::runtime::Handle;
 use tokio::task::JoinHandle;
 
 const DEFAULT_POLL_INTERVAL: Duration = Duration::from_secs(1);
+
+type ConnectionPool = Pool<ConnectionManager<PgConnection>>;
+type PooledConn = PooledConnection<ConnectionManager<PgConnection>>;
 
 type RunTaskFn<Context> = dyn Fn(Context, serde_json::Value) -> anyhow::Result<()> + Send + Sync;
 
@@ -25,7 +28,7 @@ fn runnable<J: BackgroundJob>(ctx: J::Context, payload: serde_json::Value) -> an
 /// The core runner responsible for locking and running jobs
 pub struct Runner<Context> {
     rt_handle: Handle,
-    connection_pool: DieselPool,
+    connection_pool: ConnectionPool,
     num_workers: usize,
     job_registry: JobRegistry<Context>,
     context: Context,
@@ -34,7 +37,7 @@ pub struct Runner<Context> {
 }
 
 impl<Context: Clone + Send + 'static> Runner<Context> {
-    pub fn new(rt_handle: &Handle, connection_pool: DieselPool, context: Context) -> Self {
+    pub fn new(rt_handle: &Handle, connection_pool: ConnectionPool, context: Context) -> Self {
         Self {
             rt_handle: rt_handle.clone(),
             connection_pool,
@@ -98,7 +101,7 @@ impl<Context: Clone + Send + 'static> Runner<Context> {
         RunHandle { handles }
     }
 
-    fn connection(&self) -> Result<DieselPooledConn, PoolError> {
+    fn connection(&self) -> Result<PooledConn, PoolError> {
         self.connection_pool.get()
     }
 
@@ -132,7 +135,7 @@ impl RunHandle {
 }
 
 struct Worker<Context> {
-    connection_pool: DieselPool,
+    connection_pool: ConnectionPool,
     context: Context,
     job_registry: JobRegistry<Context>,
     shutdown_when_queue_empty: bool,
@@ -487,12 +490,10 @@ mod tests {
         database_url: &str,
         context: Context,
     ) -> Runner<Context> {
-        let connection_pool = r2d2::Pool::builder()
+        let connection_pool = Pool::builder()
             .max_size(4)
             .min_idle(Some(0))
             .build_unchecked(ConnectionManager::new(database_url));
-
-        let connection_pool = DieselPool::new_background_worker(connection_pool);
 
         Runner::new(runtime.handle(), connection_pool, context)
             .num_workers(2)

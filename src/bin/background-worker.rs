@@ -83,14 +83,12 @@ fn main() -> anyhow::Result<()> {
         .min_idle(Some(0))
         .build_unchecked(ConnectionManager::new(db_url));
 
-    let connection_pool = DieselPool::new_background_worker(connection_pool);
-
     let environment = Environment::builder()
         .repository_config(repository_config)
         .cloudfront(cloudfront)
         .fastly(fastly)
         .storage(storage)
-        .connection_pool(connection_pool.clone())
+        .connection_pool(DieselPool::new_background_worker(connection_pool.clone()))
         .emails(emails)
         .build()?;
 

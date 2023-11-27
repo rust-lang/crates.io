@@ -269,7 +269,7 @@ impl TestAppBuilder {
 
             let runner = Runner::new(
                 runtime.handle(),
-                app.primary_database.clone(),
+                (*app.primary_database).clone(),
                 Arc::new(environment),
             )
             .num_workers(1)
