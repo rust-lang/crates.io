@@ -21,7 +21,7 @@ A volunteer will get back to you as soon as possible.
 
 ## Contributing
 
-Welcome! We love contributions! Crates.io is an [Ember](https://emberjs.com/)
+Welcome! We love contributions! crates.io is an [Ember](https://emberjs.com/)
 frontend with a Rust backend, and there are many tasks appropriate for a
 variety of skill levels.
 

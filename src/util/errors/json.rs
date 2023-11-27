@@ -51,7 +51,7 @@ impl fmt::Display for Forbidden {
 
 impl AppError for ReadOnlyMode {
     fn response(&self) -> Response {
-        let detail = "Crates.io is currently in read-only mode for maintenance. \
+        let detail = "crates.io is currently in read-only mode for maintenance. \
                       Please try again later.";
         json_error(detail, StatusCode::SERVICE_UNAVAILABLE)
     }

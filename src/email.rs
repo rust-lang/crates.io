@@ -61,7 +61,7 @@ impl Emails {
 
         let subject = "Please confirm your email address";
         let body = format!(
-            "Hello {}! Welcome to Crates.io. Please click the
+            "Hello {}! Welcome to crates.io. Please click the
 link below to verify your email address. Thank you!\n
 https://{}/confirm/{}",
             user_name,
