@@ -2,7 +2,6 @@ use crate::models;
 use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
 use anyhow::Context;
-use async_trait::async_trait;
 use chrono::Utc;
 use crates_io_env_vars::var_parsed;
 use crates_io_index::{Crate, Repository};
@@ -27,7 +26,6 @@ impl SyncToGitIndex {
     }
 }
 
-#[async_trait]
 impl BackgroundJob for SyncToGitIndex {
     const JOB_NAME: &'static str = "sync_to_git_index";
     const PRIORITY: i16 = 100;
@@ -92,7 +90,6 @@ impl SyncToSparseIndex {
     }
 }
 
-#[async_trait]
 impl BackgroundJob for SyncToSparseIndex {
     const JOB_NAME: &'static str = "sync_to_sparse_index";
     const PRIORITY: i16 = 100;
@@ -165,7 +162,6 @@ pub fn get_index_data(name: &str, conn: &mut PgConnection) -> anyhow::Result<Opt
 #[derive(Serialize, Deserialize)]
 pub struct SquashIndex;
 
-#[async_trait]
 impl BackgroundJob for SquashIndex {
     const JOB_NAME: &'static str = "squash_index";
     const QUEUE: &'static str = "repository";
@@ -232,7 +228,6 @@ impl NormalizeIndex {
     }
 }
 
-#[async_trait]
 impl BackgroundJob for NormalizeIndex {
     const JOB_NAME: &'static str = "normalize_index";
     const QUEUE: &'static str = "repository";

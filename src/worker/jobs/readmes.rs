@@ -3,7 +3,6 @@
 use crate::models::Version;
 use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
-use async_trait::async_trait;
 use crates_io_markdown::text_to_html;
 use crates_io_worker::BackgroundJob;
 use std::sync::Arc;
@@ -36,7 +35,6 @@ impl RenderAndUploadReadme {
     }
 }
 
-#[async_trait]
 impl BackgroundJob for RenderAndUploadReadme {
     const JOB_NAME: &'static str = "render_and_upload_readme";
     const PRIORITY: i16 = 50;

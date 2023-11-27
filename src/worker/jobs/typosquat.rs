@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use std::sync::Arc;
 
 use crates_io_worker::BackgroundJob;
@@ -26,7 +25,6 @@ impl CheckTyposquat {
     }
 }
 
-#[async_trait]
 impl BackgroundJob for CheckTyposquat {
     const JOB_NAME: &'static str = "check_typosquat";
 
