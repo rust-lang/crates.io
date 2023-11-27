@@ -4,7 +4,8 @@ use crate::storage;
 use crate::util::{try_to_extract_panic_info, with_sentry_transaction};
 use anyhow::anyhow;
 use diesel::prelude::*;
-use std::panic::{catch_unwind, AssertUnwindSafe};
+use futures_util::FutureExt;
+use std::panic::AssertUnwindSafe;
 use std::time::Duration;
 use tokio::runtime::Handle;
 use tracing::{debug, error, info_span, warn};
@@ -66,17 +67,19 @@ impl<Context: Clone + Send + 'static> Worker<Context> {
             let context = self.context.clone();
 
             let result = with_sentry_transaction(&job.job_type, || {
-                catch_unwind(AssertUnwindSafe(|| {
+                Handle::current().block_on(async {
                     let run_task_fn = self
                         .job_registry
                         .get(&job.job_type)
                         .ok_or_else(|| anyhow!("Unknown job type {}", job.job_type))?;
 
-                    Handle::current().block_on(run_task_fn(context, job.data))
-                }))
-                .map_err(|e| try_to_extract_panic_info(&e))
-                // TODO: Replace with flatten() once that stabilizes
-                .and_then(std::convert::identity)
+                    AssertUnwindSafe(run_task_fn(context, job.data))
+                        .catch_unwind()
+                        .await
+                        .map_err(|e| try_to_extract_panic_info(&e))
+                        // TODO: Replace with flatten() once that stabilizes
+                        .and_then(std::convert::identity)
+                })
             });
 
             match result {
