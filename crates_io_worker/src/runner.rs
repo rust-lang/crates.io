@@ -1,11 +1,10 @@
-use crate::job_registry::{runnable, JobRegistry};
+use crate::job_registry::JobRegistry;
 use crate::worker::Worker;
 use crate::{storage, BackgroundJob};
 use anyhow::anyhow;
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool, PoolError, PooledConnection};
 use futures_util::future::join_all;
-use std::sync::Arc;
 use std::time::Duration;
 use tokio::runtime::Handle;
 use tokio::task::JoinHandle;
@@ -54,9 +53,7 @@ impl<Context: Clone + Send + 'static> Runner<Context> {
 
     /// Register a new job type for this job runner.
     pub fn register_job_type<J: BackgroundJob<Context = Context>>(mut self) -> Self {
-        self.job_registry
-            .insert(J::JOB_NAME.to_string(), Arc::new(runnable::<J>));
-
+        self.job_registry.register::<J>();
         self
     }
 
