@@ -268,8 +268,8 @@ impl From<std::io::Error> for BoxedAppError {
     }
 }
 
-impl From<crate::worker::swirl::EnqueueError> for BoxedAppError {
-    fn from(err: crate::worker::swirl::EnqueueError) -> BoxedAppError {
+impl From<crates_io_worker::EnqueueError> for BoxedAppError {
+    fn from(err: crates_io_worker::EnqueueError) -> BoxedAppError {
         Box::new(err)
     }
 }

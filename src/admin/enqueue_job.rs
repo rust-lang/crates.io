@@ -1,8 +1,8 @@
 use crate::db;
 use crate::schema::{background_jobs, crates};
 use crate::worker::jobs;
-use crate::worker::swirl::BackgroundJob;
 use anyhow::Result;
+use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use secrecy::{ExposeSecret, SecretString};
 

@@ -1,7 +1,7 @@
 use crate::tasks::spawn_blocking;
-use crate::worker::swirl::BackgroundJob;
 use crate::worker::Environment;
 use async_trait::async_trait;
+use crates_io_worker::BackgroundJob;
 use diesel::{sql_query, RunQueryDsl};
 use std::sync::Arc;
 

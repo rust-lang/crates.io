@@ -5,12 +5,11 @@
 //! runner, and the `jobs` submodule contains the application-specific
 //! background job definitions.
 
-use self::swirl::Runner;
+use crates_io_worker::Runner;
 use std::sync::Arc;
 
 mod environment;
 pub mod jobs;
-pub mod swirl;
 
 pub use self::environment::Environment;
 

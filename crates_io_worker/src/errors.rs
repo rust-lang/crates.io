@@ -1,5 +1,3 @@
-use diesel::result::Error as DieselError;
-
 /// An error occurred queueing the job
 #[derive(Debug, thiserror::Error)]
 #[non_exhaustive]
@@ -10,5 +8,5 @@ pub enum EnqueueError {
 
     /// An error occurred inserting the job into the database
     #[error(transparent)]
-    DatabaseError(#[from] DieselError),
+    DatabaseError(#[from] diesel::result::Error),
 }

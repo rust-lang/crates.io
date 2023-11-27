@@ -1,13 +1,14 @@
 use async_trait::async_trait;
 use std::sync::Arc;
 
+use crates_io_worker::BackgroundJob;
 use diesel::PgConnection;
 use typomania::Package;
 
 use crate::tasks::spawn_blocking;
 use crate::{
     typosquat::{Cache, Crate},
-    worker::{swirl::BackgroundJob, Environment},
+    worker::Environment,
     Emails,
 };
 

@@ -1,10 +1,10 @@
 use self::configuration::VisibilityConfig;
 use crate::storage::Storage;
 use crate::tasks::spawn_blocking;
-use crate::worker::swirl::BackgroundJob;
 use crate::worker::Environment;
 use anyhow::{anyhow, Context};
 use async_trait::async_trait;
+use crates_io_worker::BackgroundJob;
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;

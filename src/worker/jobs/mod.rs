@@ -1,5 +1,5 @@
-use crate::schema::background_jobs;
-use crate::worker::swirl::{BackgroundJob, EnqueueError};
+use crates_io_worker::schema::background_jobs;
+use crates_io_worker::{BackgroundJob, EnqueueError};
 use diesel::dsl::{exists, not};
 use diesel::prelude::*;
 use diesel::sql_types::{Int2, Jsonb, Text};

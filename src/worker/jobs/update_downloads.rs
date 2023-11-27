@@ -1,9 +1,9 @@
 use crate::models::VersionDownload;
 use crate::schema::{crates, metadata, version_downloads, versions};
 use crate::tasks::spawn_blocking;
-use crate::worker::swirl::BackgroundJob;
 use crate::worker::Environment;
 use async_trait::async_trait;
+use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use std::sync::Arc;
 

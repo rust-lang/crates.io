@@ -1,31 +1,25 @@
-use crate::db::{DieselPool, DieselPooledConn, PoolError};
-use crate::worker::swirl::{storage, BackgroundJob};
+use crate::job_registry::{runnable, JobRegistry};
+use crate::worker::Worker;
+use crate::{storage, BackgroundJob};
 use anyhow::anyhow;
 use diesel::prelude::*;
+use diesel::r2d2::{ConnectionManager, Pool, PoolError, PooledConnection};
 use futures_util::future::join_all;
-use std::any::Any;
-use std::collections::HashMap;
-use std::panic::{catch_unwind, AssertUnwindSafe, PanicInfo};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::runtime::Handle;
 use tokio::task::JoinHandle;
+use tracing::{info, info_span, warn};
 
 const DEFAULT_POLL_INTERVAL: Duration = Duration::from_secs(1);
 
-type RunTaskFn<Context> = dyn Fn(Context, serde_json::Value) -> anyhow::Result<()> + Send + Sync;
-
-type JobRegistry<Context> = HashMap<String, Arc<RunTaskFn<Context>>>;
-
-fn runnable<J: BackgroundJob>(ctx: J::Context, payload: serde_json::Value) -> anyhow::Result<()> {
-    let job: J = serde_json::from_value(payload)?;
-    Handle::current().block_on(job.run(ctx))
-}
+pub type ConnectionPool = Pool<ConnectionManager<PgConnection>>;
+pub type PooledConn = PooledConnection<ConnectionManager<PgConnection>>;
 
 /// The core runner responsible for locking and running jobs
 pub struct Runner<Context> {
     rt_handle: Handle,
-    connection_pool: DieselPool,
+    connection_pool: ConnectionPool,
     num_workers: usize,
     job_registry: JobRegistry<Context>,
     context: Context,
@@ -34,7 +28,7 @@ pub struct Runner<Context> {
 }
 
 impl<Context: Clone + Send + 'static> Runner<Context> {
-    pub fn new(rt_handle: &Handle, connection_pool: DieselPool, context: Context) -> Self {
+    pub fn new(rt_handle: &Handle, connection_pool: ConnectionPool, context: Context) -> Self {
         Self {
             rt_handle: rt_handle.clone(),
             connection_pool,
@@ -98,7 +92,7 @@ impl<Context: Clone + Send + 'static> Runner<Context> {
         RunHandle { handles }
     }
 
-    fn connection(&self) -> Result<DieselPooledConn, PoolError> {
+    fn connection(&self) -> Result<PooledConn, PoolError> {
         self.connection_pool.get()
     }
 
@@ -131,128 +125,6 @@ impl RunHandle {
     }
 }
 
-struct Worker<Context> {
-    connection_pool: DieselPool,
-    context: Context,
-    job_registry: JobRegistry<Context>,
-    shutdown_when_queue_empty: bool,
-    poll_interval: Duration,
-}
-
-impl<Context: Clone + Send + 'static> Worker<Context> {
-    /// Run background jobs forever, or until the queue is empty if `shutdown_when_queue_empty` is set.
-    pub fn run(&self) {
-        loop {
-            match self.run_next_job() {
-                Ok(Some(_)) => {}
-                Ok(None) if self.shutdown_when_queue_empty => {
-                    debug!("No pending background worker jobs found. Shutting down the worker…");
-                    break;
-                }
-                Ok(None) => {
-                    debug!(
-                        "No pending background worker jobs found. Polling again in {:?}…",
-                        self.poll_interval
-                    );
-                    std::thread::sleep(self.poll_interval);
-                }
-                Err(error) => {
-                    error!(%error, "Failed to run job");
-                    std::thread::sleep(self.poll_interval);
-                }
-            }
-        }
-    }
-
-    /// Run the next job in the queue, if there is one.
-    ///
-    /// Returns:
-    /// - `Ok(Some(job_id))` if a job was run
-    /// - `Ok(None)` if no jobs were waiting
-    /// - `Err(...)` if there was an error retrieving the job
-    fn run_next_job(&self) -> anyhow::Result<Option<i64>> {
-        let conn = &mut *self.connection_pool.get()?;
-
-        conn.transaction(|conn| {
-            debug!("Looking for next background worker job…");
-            let Some(job) = storage::find_next_unlocked_job(conn).optional()? else {
-                return Ok(None);
-            };
-
-            let span = info_span!("job", job.id = %job.id, job.typ = %job.job_type);
-            let _enter = span.enter();
-
-            let job_id = job.id;
-            debug!("Running job…");
-
-            let context = self.context.clone();
-
-            let result = with_sentry_transaction(&job.job_type, || {
-                catch_unwind(AssertUnwindSafe(|| {
-                    let run_task_fn = self
-                        .job_registry
-                        .get(&job.job_type)
-                        .ok_or_else(|| anyhow!("Unknown job type {}", job.job_type))?;
-
-                    run_task_fn(context, job.data)
-                }))
-                .map_err(|e| try_to_extract_panic_info(&e))
-                // TODO: Replace with flatten() once that stabilizes
-                .and_then(std::convert::identity)
-            });
-
-            match result {
-                Ok(_) => {
-                    debug!("Deleting successful job…");
-                    storage::delete_successful_job(conn, job_id)?
-                }
-                Err(error) => {
-                    warn!(%error, "Failed to run job");
-                    storage::update_failed_job(conn, job_id);
-                }
-            }
-
-            Ok(Some(job_id))
-        })
-    }
-}
-
-fn with_sentry_transaction<F, R, E>(transaction_name: &str, callback: F) -> Result<R, E>
-where
-    F: FnOnce() -> Result<R, E>,
-{
-    let tx_ctx = sentry::TransactionContext::new(transaction_name, "swirl.perform");
-    let tx = sentry::start_transaction(tx_ctx);
-
-    let result = sentry::with_scope(|scope| scope.set_span(Some(tx.clone().into())), callback);
-
-    tx.set_status(match result.is_ok() {
-        true => sentry::protocol::SpanStatus::Ok,
-        false => sentry::protocol::SpanStatus::UnknownError,
-    });
-    tx.finish();
-
-    result
-}
-
-/// Try to figure out what's in the box, and print it if we can.
-///
-/// The actual error type we will get from `panic::catch_unwind` is really poorly documented.
-/// However, the `panic::set_hook` functions deal with a `PanicInfo` type, and its payload is
-/// documented as "commonly but not always `&'static str` or `String`". So we can try all of those,
-/// and give up if we didn't get one of those three types.
-fn try_to_extract_panic_info(info: &(dyn Any + Send + 'static)) -> anyhow::Error {
-    if let Some(x) = info.downcast_ref::<PanicInfo<'_>>() {
-        anyhow!("job panicked: {x}")
-    } else if let Some(x) = info.downcast_ref::<&'static str>() {
-        anyhow!("job panicked: {x}")
-    } else if let Some(x) = info.downcast_ref::<String>() {
-        anyhow!("job panicked: {x}")
-    } else {
-        anyhow!("job panicked")
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use diesel::prelude::*;
@@ -261,8 +133,8 @@ mod tests {
     use crate::schema::background_jobs;
     use async_trait::async_trait;
     use crates_io_test_db::TestDatabase;
-    use diesel::r2d2;
     use diesel::r2d2::ConnectionManager;
+    use serde::{Deserialize, Serialize};
     use std::sync::Arc;
     use tokio::runtime::Runtime;
     use tokio::sync::Barrier;
@@ -487,12 +359,10 @@ mod tests {
         database_url: &str,
         context: Context,
     ) -> Runner<Context> {
-        let connection_pool = r2d2::Pool::builder()
+        let connection_pool = Pool::builder()
             .max_size(4)
             .min_idle(Some(0))
             .build_unchecked(ConnectionManager::new(database_url));
-
-        let connection_pool = DieselPool::new_background_worker(connection_pool);
 
         Runner::new(runtime.handle(), connection_pool, context)
             .num_workers(2)

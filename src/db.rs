@@ -2,6 +2,7 @@ use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager, CustomizeConnection, State};
 use prometheus::Histogram;
 use secrecy::{ExposeSecret, SecretString};
+use std::ops::Deref;
 use std::time::Duration;
 use thiserror::Error;
 use url::Url;
@@ -90,6 +91,14 @@ impl DieselPool {
 
     fn is_healthy(&self) -> bool {
         self.state().connections > 0
+    }
+}
+
+impl Deref for DieselPool {
+    type Target = ConnectionPool;
+
+    fn deref(&self) -> &Self::Target {
+        &self.pool
     }
 }
 

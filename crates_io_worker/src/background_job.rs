@@ -1,10 +1,11 @@
+use crate::errors::EnqueueError;
 use crate::schema::background_jobs;
-use crate::worker::swirl::errors::EnqueueError;
 use async_trait::async_trait;
 use diesel::prelude::*;
 use diesel::PgConnection;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
+use tracing::instrument;
 
 #[async_trait]
 pub trait BackgroundJob: Serialize + DeserializeOwned + 'static {

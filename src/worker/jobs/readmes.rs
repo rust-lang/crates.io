@@ -2,10 +2,10 @@
 
 use crate::models::Version;
 use crate::tasks::spawn_blocking;
-use crate::worker::swirl::BackgroundJob;
 use crate::worker::Environment;
 use async_trait::async_trait;
 use crates_io_markdown::text_to_html;
+use crates_io_worker::BackgroundJob;
 use std::sync::Arc;
 use tokio::runtime::Handle;
 

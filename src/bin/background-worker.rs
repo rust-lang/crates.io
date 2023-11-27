@@ -18,12 +18,12 @@ use crates_io::cloudfront::CloudFront;
 use crates_io::db::DieselPool;
 use crates_io::fastly::Fastly;
 use crates_io::storage::Storage;
-use crates_io::worker::swirl::Runner;
 use crates_io::worker::{Environment, RunnerExt};
 use crates_io::{config, Emails};
 use crates_io::{db, ssh};
 use crates_io_env_vars::var;
 use crates_io_index::RepositoryConfig;
+use crates_io_worker::Runner;
 use diesel::r2d2;
 use diesel::r2d2::ConnectionManager;
 use reqwest::Client;
@@ -83,14 +83,12 @@ fn main() -> anyhow::Result<()> {
         .min_idle(Some(0))
         .build_unchecked(ConnectionManager::new(db_url));
 
-    let connection_pool = DieselPool::new_background_worker(connection_pool);
-
     let environment = Environment::builder()
         .repository_config(repository_config)
         .cloudfront(cloudfront)
         .fastly(fastly)
         .storage(storage)
-        .connection_pool(connection_pool.clone())
+        .connection_pool(DieselPool::new_background_worker(connection_pool.clone()))
         .emails(emails)
         .build()?;
 

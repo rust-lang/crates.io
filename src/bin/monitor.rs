@@ -6,9 +6,9 @@
 
 use anyhow::Result;
 use crates_io::worker::jobs;
-use crates_io::worker::swirl::BackgroundJob;
 use crates_io::{admin::on_call, db, schema::*};
 use crates_io_env_vars::{var, var_parsed};
+use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 
 fn main() -> Result<()> {
