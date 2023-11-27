@@ -12,18 +12,19 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use crate::app::AppState;
 use crate::middleware::log_request::RequestLogExt;
+use axum::extract::Request;
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
-use http::{Request, StatusCode};
+use http::StatusCode;
 
 /// Handle a request when load exceeds a threshold
 ///
 /// In report-only mode, log metadata is added but the request is still served. Otherwise,
 /// the request is rejected with a service unavailable response.
-async fn handle_high_load<B>(
+async fn handle_high_load(
     app_state: &AppState,
-    request: Request<B>,
-    next: Next<B>,
+    request: Request,
+    next: Next,
     note: &str,
 ) -> Response {
     let config = &app_state.config.balance_capacity;
@@ -40,11 +41,7 @@ async fn handle_high_load<B>(
     }
 }
 
-pub async fn balance_capacity<B>(
-    app_state: AppState,
-    request: Request<B>,
-    next: Next<B>,
-) -> Response {
+pub async fn balance_capacity(app_state: AppState, request: Request, next: Next) -> Response {
     let config = &app_state.config.balance_capacity;
     let db_capacity = app_state.config.db.primary.pool_size;
     let state = &app_state.balance_capacity;

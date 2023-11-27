@@ -75,7 +75,7 @@ pub fn encode_session_header(session_key: &cookie::Key, user_id: i32) -> String 
     let encoded = session::encode(&map);
 
     // put the cookie into a signed cookie jar
-    let cookie = Cookie::build(cookie_name, encoded).finish();
+    let cookie = Cookie::build((cookie_name, encoded));
     let mut jar = cookie::CookieJar::new();
     jar.signed_mut(session_key).add(cookie);
 
@@ -107,7 +107,7 @@ pub trait RequestHelper {
             .unwrap();
 
         let (parts, body) = axum_response.into_parts();
-        let bytes = rt.block_on(hyper::body::to_bytes(body)).unwrap();
+        let bytes = rt.block_on(axum::body::to_bytes(body, usize::MAX)).unwrap();
         let bytes_response = axum::response::Response::from_parts(parts, bytes);
 
         Response::new(bytes_response)

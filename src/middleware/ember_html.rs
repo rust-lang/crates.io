@@ -7,13 +7,14 @@
 //! For now, there is an additional check to see if the `Accept` header contains "html". This is
 //! likely to be removed in the future.
 
+use axum::extract::Request;
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
-use http::{header, Request, StatusCode};
+use http::{header, StatusCode};
 use tower::ServiceExt;
 use tower_http::services::ServeFile;
 
-pub async fn serve_html<B: Send + 'static>(request: Request<B>, next: Next<B>) -> Response {
+pub async fn serve_html(request: Request, next: Next) -> Response {
     let path = &request.uri().path();
 
     // The "/git/" prefix is only used in development (when within a docker container)
@@ -29,7 +30,7 @@ pub async fn serve_html<B: Send + 'static>(request: Request<B>, next: Next<B>) -
         ServeFile::new("dist/index.html")
             .oneshot(request)
             .await
-            .map(|response| response.map(axum::body::boxed))
+            .map(|response| response.map(axum::body::Body::new))
             .unwrap_or_else(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())
     } else {
         // Return a 404 to crawlers that don't send `Accept: text/hml`.

@@ -1,12 +1,11 @@
 use crate::controllers::util::RequestPartsExt;
-use axum::extract::{Extension, FromRequestParts};
+use axum::extract::{Extension, FromRequestParts, Request};
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
 use axum_extra::extract::SignedCookieJar;
 use base64::{engine::general_purpose, Engine};
 use cookie::time::Duration;
 use cookie::{Cookie, SameSite};
-use http::Request;
 use parking_lot::RwLock;
 use std::collections::HashMap;
 use std::ops::Deref;
@@ -50,11 +49,7 @@ impl Deref for SessionExtension {
     }
 }
 
-pub async fn attach_session<B>(
-    jar: SignedCookieJar,
-    mut req: Request<B>,
-    next: Next<B>,
-) -> Response {
+pub async fn attach_session(jar: SignedCookieJar, mut req: Request, next: Next) -> Response {
     // Decode session cookie
     let data = jar.get(COOKIE_NAME).map(decode).unwrap_or_default();
 
@@ -71,13 +66,12 @@ pub async fn attach_session<B>(
     if session.dirty {
         // Return response with additional `Set-Cookie` header
         let encoded = encode(&session.data);
-        let cookie = Cookie::build(COOKIE_NAME, encoded)
+        let cookie = Cookie::build((COOKIE_NAME, encoded))
             .http_only(true)
             .secure(true)
             .same_site(SameSite::Strict)
             .max_age(Duration::days(MAX_AGE_DAYS))
-            .path("/")
-            .finish();
+            .path("/");
 
         (jar.add(cookie), response).into_response()
     } else {

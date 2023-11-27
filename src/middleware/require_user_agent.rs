@@ -9,17 +9,18 @@
 
 use crate::app::AppState;
 use crate::middleware::log_request::RequestLogExt;
-use axum::headers::UserAgent;
+use axum::extract::Request;
 use axum::middleware::Next;
 use axum::response::IntoResponse;
-use axum::TypedHeader;
+use axum_extra::headers::UserAgent;
+use axum_extra::TypedHeader;
 use http::StatusCode;
 
-pub async fn require_user_agent<B>(
+pub async fn require_user_agent(
     user_agent: Option<TypedHeader<UserAgent>>,
     state: AppState,
-    req: http::Request<B>,
-    next: Next<B>,
+    req: Request,
+    next: Next,
 ) -> axum::response::Response {
     let cdn_user_agent = &state.config.cdn_user_agent;
 

@@ -1,10 +1,10 @@
 //! Debug middleware that prints debug info to stdout
 
+use axum::extract::Request;
 use axum::middleware::Next;
 use axum::response::IntoResponse;
-use http::Request;
 
-pub async fn debug_requests<B>(req: Request<B>, next: Next<B>) -> impl IntoResponse {
+pub async fn debug_requests(req: Request, next: Next) -> impl IntoResponse {
     debug!("  version: {:?}", req.version());
     debug!("  method: {:?}", req.method());
     debug!("  path: {}", req.uri().path());

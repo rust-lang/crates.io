@@ -1,8 +1,9 @@
 use crate::app::AppState;
-use axum::headers::{CacheControl, Expires, HeaderMapExt};
+use axum::extract::Request;
 use axum::middleware::Next;
 use axum::response::IntoResponse;
-use http::{header, HeaderMap, HeaderValue, Request};
+use axum_extra::headers::{CacheControl, Expires, HeaderMapExt};
+use http::{header, HeaderMap, HeaderValue};
 use std::time::{Duration, SystemTime};
 
 // see http://nginx.org/en/docs/http/ngx_http_headers_module.html#add_header
@@ -11,10 +12,10 @@ const NGINX_SUCCESS_CODES: [u16; 10] = [200, 201, 204, 206, 301, 203, 303, 304, 
 const ONE_DAY: Duration = Duration::from_secs(24 * 60 * 60);
 const ONE_YEAR: Duration = Duration::from_secs(365 * 24 * 60 * 60);
 
-pub async fn add_common_headers<B: Send + 'static>(
+pub async fn add_common_headers(
     state: AppState,
-    request: Request<B>,
-    next: Next<B>,
+    request: Request,
+    next: Next,
 ) -> impl IntoResponse {
     let v = HeaderValue::from_static;
 

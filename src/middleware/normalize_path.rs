@@ -1,19 +1,20 @@
 //! Normalize request path if necessary
 
+use axum::extract::Request;
 use axum::middleware::Next;
 use axum::response::Response;
-use http::{Request, Uri};
+use http::Uri;
 use std::path::{Component, Path, PathBuf};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct OriginalPath(pub String);
 
-pub async fn normalize_path<B>(mut req: Request<B>, next: Next<B>) -> Response {
+pub async fn normalize_path(mut req: Request, next: Next) -> Response {
     normalize_path_inner(&mut req);
     next.run(req).await
 }
 
-fn normalize_path_inner<B>(req: &mut Request<B>) {
+fn normalize_path_inner(req: &mut Request) {
     let uri = req.uri();
     let path = uri.path();
     if path.contains("//") || path.contains("/.") {
@@ -66,11 +67,12 @@ fn normalize_path_inner<B>(req: &mut Request<B>) {
 #[cfg(test)]
 mod tests {
     use super::{normalize_path_inner, OriginalPath};
-    use http::Request;
+    use axum::body::Body;
+    use axum::extract::Request;
 
     #[test]
     fn path_normalization() {
-        let mut req = Request::get("/api/v1/.").body(()).unwrap();
+        let mut req = Request::get("/api/v1/.").body(Body::empty()).unwrap();
         normalize_path_inner(&mut req);
         assert_eq!(req.uri().path(), "/api/v1");
         assert_eq!(
@@ -78,7 +80,7 @@ mod tests {
             "/api/v1/."
         );
 
-        let mut req = Request::get("/api/./v1").body(()).unwrap();
+        let mut req = Request::get("/api/./v1").body(Body::empty()).unwrap();
         normalize_path_inner(&mut req);
         assert_eq!(req.uri().path(), "/api/v1");
         assert_eq!(
@@ -86,7 +88,7 @@ mod tests {
             "/api/./v1"
         );
 
-        let mut req = Request::get("//api/v1/../v2").body(()).unwrap();
+        let mut req = Request::get("//api/v1/../v2").body(Body::empty()).unwrap();
         normalize_path_inner(&mut req);
         assert_eq!(req.uri().path(), "/api/v2");
         assert_eq!(

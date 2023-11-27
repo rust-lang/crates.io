@@ -1,4 +1,4 @@
-use axum::headers::{Error, Header};
+use axum_extra::headers::{Error, Header};
 use http::header::{HeaderName, HeaderValue};
 
 static X_REQUEST_ID: HeaderName = HeaderName::from_static("x-request-id");
