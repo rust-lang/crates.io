@@ -1,11 +1,11 @@
 use crate::models;
 use crate::tasks::spawn_blocking;
-use crate::worker::swirl::BackgroundJob;
 use crate::worker::Environment;
 use anyhow::Context;
 use async_trait::async_trait;
 use chrono::Utc;
 use crates_io_index::{Crate, Repository};
+use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use sentry::Level;
 use std::fs::{self, File};

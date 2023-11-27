@@ -6,13 +6,13 @@ use crates_io::config::{self, BalanceCapacityConfig, Base, DatabasePools, DbPool
 use crates_io::models::token::{CrateScope, EndpointScope};
 use crates_io::rate_limiter::{LimitedAction, RateLimiterConfig};
 use crates_io::storage::StorageConfig;
-use crates_io::worker::swirl::Runner;
 use crates_io::worker::{Environment, RunnerExt};
 use crates_io::{App, Emails, Env};
 use crates_io_env_vars::required_var;
 use crates_io_index::testing::UpstreamIndex;
 use crates_io_index::{Credentials, RepositoryConfig};
 use crates_io_test_db::TestDatabase;
+use crates_io_worker::Runner;
 use diesel::PgConnection;
 use futures_util::TryStreamExt;
 use oauth2::{ClientId, ClientSecret};

@@ -930,6 +930,7 @@ dependencies = [
  "crates_io_markdown",
  "crates_io_tarball",
  "crates_io_test_db",
+ "crates_io_worker",
  "crossbeam-channel",
  "dashmap",
  "derive_builder",
@@ -1078,6 +1079,23 @@ dependencies = [
  "rand",
  "tracing",
  "url",
+]
+
+[[package]]
+name = "crates_io_worker"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "crates_io_test_db",
+ "diesel",
+ "futures-util",
+ "sentry-core",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tokio",
+ "tracing",
 ]
 
 [[package]]

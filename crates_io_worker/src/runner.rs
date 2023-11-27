@@ -1,4 +1,4 @@
-use crate::worker::swirl::{storage, BackgroundJob};
+use crate::{storage, BackgroundJob};
 use anyhow::anyhow;
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool, PoolError, PooledConnection};
@@ -10,6 +10,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::runtime::Handle;
 use tokio::task::JoinHandle;
+use tracing::{debug, error, info, info_span, warn};
 
 const DEFAULT_POLL_INTERVAL: Duration = Duration::from_secs(1);
 
@@ -224,14 +225,14 @@ fn with_sentry_transaction<F, R, E>(transaction_name: &str, callback: F) -> Resu
 where
     F: FnOnce() -> Result<R, E>,
 {
-    let tx_ctx = sentry::TransactionContext::new(transaction_name, "swirl.perform");
-    let tx = sentry::start_transaction(tx_ctx);
+    let tx_ctx = sentry_core::TransactionContext::new(transaction_name, "swirl.perform");
+    let tx = sentry_core::start_transaction(tx_ctx);
 
-    let result = sentry::with_scope(|scope| scope.set_span(Some(tx.clone().into())), callback);
+    let result = sentry_core::with_scope(|scope| scope.set_span(Some(tx.clone().into())), callback);
 
     tx.set_status(match result.is_ok() {
-        true => sentry::protocol::SpanStatus::Ok,
-        false => sentry::protocol::SpanStatus::UnknownError,
+        true => sentry_core::protocol::SpanStatus::Ok,
+        false => sentry_core::protocol::SpanStatus::UnknownError,
     });
     tx.finish();
 
@@ -264,8 +265,8 @@ mod tests {
     use crate::schema::background_jobs;
     use async_trait::async_trait;
     use crates_io_test_db::TestDatabase;
-    use diesel::r2d2;
     use diesel::r2d2::ConnectionManager;
+    use serde::{Deserialize, Serialize};
     use std::sync::Arc;
     use tokio::runtime::Runtime;
     use tokio::sync::Barrier;

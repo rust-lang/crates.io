@@ -1,6 +1,7 @@
 mod background_job;
 mod errors;
 mod runner;
+pub mod schema;
 mod storage;
 
 pub use self::background_job::BackgroundJob;

@@ -2,10 +2,10 @@
 
 use crate::auth::AuthCheck;
 use crate::worker::jobs::{self, CheckTyposquat};
-use crate::worker::swirl::BackgroundJob;
 use axum::body::Bytes;
 use cargo_manifest::{Dependency, DepsSet, TargetDepsSet};
 use crates_io_tarball::{process_tarball, TarballError};
+use crates_io_worker::BackgroundJob;
 use diesel::connection::DefaultLoadingMode;
 use diesel::dsl::{exists, select};
 use hex::ToHex;
