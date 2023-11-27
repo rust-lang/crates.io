@@ -1,9 +1,11 @@
 use crate::BackgroundJob;
 use std::collections::HashMap;
+use std::future::Future;
+use std::pin::Pin;
 use std::sync::Arc;
-use tokio::runtime::Handle;
 
-type RunTaskFn<Context> = dyn Fn(Context, serde_json::Value) -> anyhow::Result<()> + Send + Sync;
+type RunTaskFnReturn = Pin<Box<dyn Future<Output = anyhow::Result<()>> + Send>>;
+type RunTaskFn<Context> = dyn Fn(Context, serde_json::Value) -> RunTaskFnReturn + Send + Sync;
 
 #[derive(Clone)]
 pub struct JobRegistry<Context> {
@@ -29,7 +31,9 @@ impl<Context: Clone + Send + 'static> JobRegistry<Context> {
     }
 }
 
-fn runnable<J: BackgroundJob>(ctx: J::Context, payload: serde_json::Value) -> anyhow::Result<()> {
-    let job: J = serde_json::from_value(payload)?;
-    Handle::current().block_on(job.run(ctx))
+fn runnable<J: BackgroundJob>(ctx: J::Context, payload: serde_json::Value) -> RunTaskFnReturn {
+    Box::pin(async move {
+        let job: J = serde_json::from_value(payload)?;
+        job.run(ctx).await
+    })
 }

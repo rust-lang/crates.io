@@ -6,6 +6,7 @@ use anyhow::anyhow;
 use diesel::prelude::*;
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::time::Duration;
+use tokio::runtime::Handle;
 use tracing::{debug, error, info_span, warn};
 
 pub struct Worker<Context> {
@@ -71,7 +72,7 @@ impl<Context: Clone + Send + 'static> Worker<Context> {
                         .get(&job.job_type)
                         .ok_or_else(|| anyhow!("Unknown job type {}", job.job_type))?;
 
-                    run_task_fn(context, job.data)
+                    Handle::current().block_on(run_task_fn(context, job.data))
                 }))
                 .map_err(|e| try_to_extract_panic_info(&e))
                 // TODO: Replace with flatten() once that stabilizes
