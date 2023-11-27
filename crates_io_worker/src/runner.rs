@@ -136,15 +136,7 @@ mod tests {
     use diesel::r2d2::ConnectionManager;
     use serde::{Deserialize, Serialize};
     use std::sync::Arc;
-    use tokio::runtime::Runtime;
     use tokio::sync::Barrier;
-
-    fn runtime() -> Runtime {
-        tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .unwrap()
-    }
 
     fn job_exists(id: i64, conn: &mut PgConnection) -> bool {
         background_jobs::table
@@ -168,8 +160,8 @@ mod tests {
             .is_none()
     }
 
-    #[test]
-    fn jobs_are_locked_when_fetched() {
+    #[tokio::test]
+    async fn jobs_are_locked_when_fetched() {
         #[derive(Clone)]
         struct TestContext {
             job_started_barrier: Arc<Barrier>,
@@ -198,9 +190,8 @@ mod tests {
             assertions_finished_barrier: Arc::new(Barrier::new(2)),
         };
 
-        let rt = runtime();
         let runner =
-            runner(&rt, test_database.url(), test_context.clone()).register_job_type::<TestJob>();
+            runner(test_database.url(), test_context.clone()).register_job_type::<TestJob>();
 
         let mut conn = runner.connection().unwrap();
         let job_id = TestJob.enqueue(&mut conn).unwrap();
@@ -209,19 +200,19 @@ mod tests {
         assert!(!job_is_locked(job_id, &mut conn));
 
         let runner = runner.start();
-        rt.block_on(test_context.job_started_barrier.wait());
+        test_context.job_started_barrier.wait().await;
 
         assert!(job_exists(job_id, &mut conn));
         assert!(job_is_locked(job_id, &mut conn));
 
-        rt.block_on(test_context.assertions_finished_barrier.wait());
-        rt.block_on(runner.wait_for_shutdown());
+        test_context.assertions_finished_barrier.wait().await;
+        runner.wait_for_shutdown().await;
 
         assert!(!job_exists(job_id, &mut conn));
     }
 
-    #[test]
-    fn jobs_are_deleted_when_successfully_run() {
+    #[tokio::test]
+    async fn jobs_are_deleted_when_successfully_run() {
         #[derive(Serialize, Deserialize)]
         struct TestJob;
 
@@ -244,8 +235,7 @@ mod tests {
 
         let test_database = TestDatabase::new();
 
-        let rt = runtime();
-        let runner = runner(&rt, test_database.url(), ()).register_job_type::<TestJob>();
+        let runner = runner(test_database.url(), ()).register_job_type::<TestJob>();
 
         let mut conn = runner.connection().unwrap();
         assert_eq!(remaining_jobs(&mut conn), 0);
@@ -254,12 +244,12 @@ mod tests {
         assert_eq!(remaining_jobs(&mut conn), 1);
 
         let runner = runner.start();
-        rt.block_on(runner.wait_for_shutdown());
+        runner.wait_for_shutdown().await;
         assert_eq!(remaining_jobs(&mut conn), 0);
     }
 
-    #[test]
-    fn failed_jobs_do_not_release_lock_before_updating_retry_time() {
+    #[tokio::test]
+    async fn failed_jobs_do_not_release_lock_before_updating_retry_time() {
         #[derive(Clone)]
         struct TestContext {
             job_started_barrier: Arc<Barrier>,
@@ -285,15 +275,14 @@ mod tests {
             job_started_barrier: Arc::new(Barrier::new(2)),
         };
 
-        let rt = runtime();
         let runner =
-            runner(&rt, test_database.url(), test_context.clone()).register_job_type::<TestJob>();
+            runner(test_database.url(), test_context.clone()).register_job_type::<TestJob>();
 
         let mut conn = runner.connection().unwrap();
         TestJob.enqueue(&mut conn).unwrap();
 
         let runner = runner.start();
-        rt.block_on(test_context.job_started_barrier.wait());
+        test_context.job_started_barrier.wait().await;
 
         // `SKIP LOCKED` is intentionally omitted here, so we block until
         // the lock on the first job is released.
@@ -315,11 +304,11 @@ mod tests {
             .unwrap();
         assert_eq!(total_jobs_including_failed.len(), 1);
 
-        rt.block_on(runner.wait_for_shutdown());
+        runner.wait_for_shutdown().await;
     }
 
-    #[test]
-    fn panicking_in_jobs_updates_retry_counter() {
+    #[tokio::test]
+    async fn panicking_in_jobs_updates_retry_counter() {
         #[derive(Serialize, Deserialize)]
         struct TestJob;
 
@@ -335,15 +324,14 @@ mod tests {
 
         let test_database = TestDatabase::new();
 
-        let rt = runtime();
-        let runner = runner(&rt, test_database.url(), ()).register_job_type::<TestJob>();
+        let runner = runner(test_database.url(), ()).register_job_type::<TestJob>();
 
         let mut conn = runner.connection().unwrap();
 
         let job_id = TestJob.enqueue(&mut conn).unwrap();
 
         let runner = runner.start();
-        rt.block_on(runner.wait_for_shutdown());
+        runner.wait_for_shutdown().await;
 
         let tries = background_jobs::table
             .find(job_id)
@@ -355,7 +343,6 @@ mod tests {
     }
 
     fn runner<Context: Clone + Send + 'static>(
-        runtime: &Runtime,
         database_url: &str,
         context: Context,
     ) -> Runner<Context> {
@@ -364,7 +351,7 @@ mod tests {
             .min_idle(Some(0))
             .build_unchecked(ConnectionManager::new(database_url));
 
-        Runner::new(runtime.handle(), connection_pool, context)
+        Runner::new(&Handle::current(), connection_pool, context)
             .num_workers(2)
             .shutdown_when_queue_empty()
     }
