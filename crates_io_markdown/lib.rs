@@ -544,10 +544,10 @@ There can also be some text in between!
     #[test]
     fn absolute_links_dont_get_resolved() {
         let text =
-            "[![Crates.io](https://img.shields.io/crates/v/clap.svg)](https://crates.io/crates/clap)";
+            "[![crates.io](https://img.shields.io/crates/v/clap.svg)](https://crates.io/crates/clap)";
         let repository = "https://github.com/kbknapp/clap-rs/";
         assert_snapshot!(markdown_to_html(text, Some(repository), ""), @r###"
-        <p><a href="https://crates.io/crates/clap" rel="nofollow noopener noreferrer"><img src="https://img.shields.io/crates/v/clap.svg" alt="Crates.io"></a></p>
+        <p><a href="https://crates.io/crates/clap" rel="nofollow noopener noreferrer"><img src="https://img.shields.io/crates/v/clap.svg" alt="crates.io"></a></p>
         "###);
     }
 

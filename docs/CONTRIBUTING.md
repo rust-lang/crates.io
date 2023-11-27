@@ -1,4 +1,4 @@
-# Contributing to Crates.io
+# Contributing to crates.io
 
 ## Attending the weekly team meetings
 
@@ -400,7 +400,7 @@ Subject: Please confirm your email address
 Content-Transfer-Encoding: 7bit
 Date: Thu, 24 Jun 2021 08:02:23 -0000
 
-Hello hi-rustin! Welcome to Crates.io. Please click the
+Hello hi-rustin! Welcome to crates.io. Please click the
 link below to verify your email address. Thank you!
 
 https://crates.io/confirm/RiphVyFo31wuKQhpyTw7RF2LIf

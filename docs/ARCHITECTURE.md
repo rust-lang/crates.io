@@ -1,4 +1,4 @@
-# Architecture of Crates.io
+# Architecture of crates.io
 
 This document is an intro to the codebase in this repo. If you want to work on a bug or a feature,
 hopefully after reading this doc, you'll have a good idea of where to start looking for the code
@@ -65,7 +65,7 @@ These files have to do with the frontend:
 
 ## Deployment - Heroku
 
-Crates.io is deployed on [Heroku](https://heroku.com/).
+crates.io is deployed on [Heroku](https://heroku.com/).
 
 These files are Heroku-specific; if you're deploying the crates.io codebase on another platform,
 there's useful information in these files that you might need to translate to a different format
